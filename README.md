@@ -44,6 +44,19 @@ which saves:
 ![gadfly_plt](img/gadfly1.png)
 
 
+Note that you do not need all underlying packages to use this.  I use Requires.jl to 
+perform lazy loading of the modules, so there's no initialization until you call `plotter()`.
+This has an added benefit that you can call `using Plot` and it should return quickly... 
+no more waiting for a plotting package to load when you don't even use it.  :)
+
+```
+julia> tic(); using Plot; toc();
+elapsed time: 0.356158445 seconds
+
+julia> tic(); using Gadfly; toc();
+WARNING: using Gadfly.Plot in module Main conflicts with an existing identifier.
+elapsed time: 3.1334697 seconds
+```
 
 # Author
 
