@@ -4,6 +4,8 @@
 
 Plotting interface and wrapper for several plotting packages.
 
+#### This is under development... please add your wishlist for the plotting interface to issue #1.
+
 First, clone the package, and get any plotting packages you need:
 
 ```
