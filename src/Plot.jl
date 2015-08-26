@@ -61,7 +61,7 @@ end
 type CurrentPlot
   nullableplot::Nullable
 end
-const CURRENT_PLOT = CurrentPlot(Nullable{Plot}())
+const CURRENT_PLOT = CurrentPlot(Nullable{Any}())
 
 isplotnull() = isnull(CURRENT_PLOT.nullableplot)
 
