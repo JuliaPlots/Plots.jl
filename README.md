@@ -1,6 +1,6 @@
-# Plot
+# Plots
 
-[![Build Status](https://travis-ci.org/tbreloff/Plot.jl.svg?branch=master)](https://travis-ci.org/tbreloff/Plot.jl)
+[![Build Status](https://travis-ci.org/tbreloff/Plots.jl.svg?branch=master)](https://travis-ci.org/tbreloff/Plots.jl)
 
 Plotting interface and wrapper for several plotting packages.
 
@@ -9,7 +9,7 @@ Plotting interface and wrapper for several plotting packages.
 First, clone the package, and get any plotting packages you need:
 
 ```
-Pkg.clone("https://github.com/JuliaPlot/Plot.jl.git")
+Pkg.clone("https://github.com/JuliaPlot/Plots.jl.git")
 Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # requires pyqt and pyqwt
 Pkg.add("Gadfly")  # might also need to Pkg.checkout("Gadfly") and maybe Colors/Compose... I had trouble with it
 ```
@@ -17,7 +17,7 @@ Pkg.add("Gadfly")  # might also need to Pkg.checkout("Gadfly") and maybe Colors/
 Now load it in:
 
 ```
-using Plot
+using Plots
 ```
 
 Do a plot in Qwt, then save a png:
@@ -25,7 +25,7 @@ Do a plot in Qwt, then save a png:
 ```
 plotter(:Qwt)
 plot(1:10)
-savepng(ans, Plot.IMG_DIR * "qwt1.png")
+savepng(ans, Plots.IMG_DIR * "qwt1.png")
 ```
 
 which saves:
@@ -38,7 +38,7 @@ Do a plot in Gadfly, then save a png:
 ```
 plotter(:Gadfly)
 plot(1:10)
-savepng(ans, Plot.IMG_DIR * "gadfly1.png", 6Gadfly.inch, 4Gadfly.inch)
+savepng(ans, Plots.IMG_DIR * "gadfly1.png", 6Gadfly.inch, 4Gadfly.inch)
 ```
 
 which saves:
@@ -48,15 +48,15 @@ which saves:
 
 Note that you do not need all underlying packages to use this.  I use Requires.jl to 
 perform lazy loading of the modules, so there's no initialization until you call `plotter()`.
-This has an added benefit that you can call `using Plot` and it should return quickly... 
+This has an added benefit that you can call `using Plots` and it should return quickly... 
 no more waiting for a plotting package to load when you don't even use it.  :)
 
 ```
-julia> tic(); using Plot; toc();
+julia> tic(); using Plots; toc();
 elapsed time: 0.356158445 seconds
 
 julia> tic(); using Gadfly; toc();
-WARNING: using Gadfly.Plot in module Main conflicts with an existing identifier.
+WARNING: using Gadfly.Plots in module Main conflicts with an existing identifier.
 elapsed time: 3.1334697 seconds
 ```
 

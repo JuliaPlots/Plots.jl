@@ -1,4 +1,4 @@
-module Plot
+module Plots
 
 using Requires
 
@@ -76,7 +76,7 @@ currentPlot!(plot) = (CURRENT_PLOT.nullableplot = Nullable(plot))
 
 # ---------------------------------------------------------
 
-const IMG_DIR = "$(ENV["HOME"])/.julia/v0.4/Plot/img/"
+const IMG_DIR = "$(ENV["HOME"])/.julia/v0.4/Plots/img/"
 
 
 # ---------------------------------------------------------

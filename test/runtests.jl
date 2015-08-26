@@ -1,4 +1,4 @@
-using Plot
+using Plots
 using Base.Test
 
 # write your own tests here
