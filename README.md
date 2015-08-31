@@ -84,17 +84,17 @@ Now that you know which plot object you're updating (new, current, or other), I'
 Here are some various args to supply, and the implicit mapping (AVec == AbstractVector and AMat == AbstractMatrix):
 
 ```
-  plot(y::AVec; kw...)                                # one line... x = 1:length(y)
-  plot(x::AVec, y::AVec; kw...)                       # one line (will assert length(x) == length(y))
-  plot(y::AMat; kw...)                                # multiple lines (one per column of x), all sharing x = 1:size(y,1)
-  plot(x::AVec, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
-  plot(x::AMat, y::AMat; kw...)                       # multiple lines (one per column of x/y... will assert size(x) == size(y))
-  plot(x::AVec, f::Function; kw...)                   # one line, y = f(x)
-  plot(x::AMat, f::Function; kw...)                   # multiple lines, yᵢⱼ = f(xᵢⱼ)
-  plot(x::AVec, fs::AVec{Function}; kw...)            # multiple lines, yᵢⱼ = fⱼ(xᵢ)
-  plot(x::AVec, y::AVec{AVec}; kw...)                 # multiple lines, will assert length(x) == length(y[i])
-  plot(x::AVec{AVec}, y::AVec{AVec}; kw...)           # multiple lines, will assert length(x[i]) == length(y[i])
-  plot(n::Integer; kw...)                             # n lines, all empty (for updating plots)
+  plot(y::AVec; kw...)                       # one line... x = 1:length(y)
+  plot(x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
+  plot(y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
+  plot(x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
+  plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
+  plot(x::AVec, f::Function; kw...)          # one line, y = f(x)
+  plot(x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
+  plot(x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
+  plot(x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
+  plot(x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
+  plot(n::Integer; kw...)                    # n lines, all empty (for updating plots)
 ```
 
   TODO: DataFrames
