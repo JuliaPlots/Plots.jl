@@ -185,7 +185,6 @@ When plotting multiple lines, you can give every line the same trait by using th
 - [ ] Scenes/Drawing
 - [ ] Graphs
 - [ ] Interactivity (GUIs)
-
 - [ ] Gadfly.jl
 - [ ] PyPlot.jl
 - [ ] Winston.jl
@@ -197,14 +196,12 @@ When plotting multiple lines, you can give every line the same trait by using th
 - [ ] GoogleCharts.jl
 - [ ] Vega.jl
 - [ ] PLplot.jl
-
 - [ ] TextPlots.jl
 - [ ] ASCIIPlots.jl
 - [ ] Sparklines.jl
 - [ ] UnicodePlots.jl
-- [ ] Hinton.jl (also outputs vector graphics)
+- [ ] Hinton.jl
 - [ ] ImageTerm.jl
-
 - [ ] GraphViz.jl
 - [ ] TikzGraphs.jl
 - [ ] GraphLayout.jl
