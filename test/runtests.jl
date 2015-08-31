@@ -1,5 +1,11 @@
-using Plots
-using Base.Test
+module PlotsTests
 
-# write your own tests here
-@test 1 == 1
+using Plots
+using FactCheck
+
+
+facts("Qwt") do
+  
+end
+
+end # module
