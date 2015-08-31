@@ -1,5 +1,7 @@
 
-# Qwt
+# https://github.com/tbreloff/Qwt.jl
+
+immutable QwtPackage <: PlottingPackage end
 
 plot(::QwtPackage, args...; kw...) = Qwt.plot(args...; kw...)
 subplot(::QwtPackage, args...; kw...) = Qwt.subplot(args...; kw...)

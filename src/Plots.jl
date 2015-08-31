@@ -11,8 +11,6 @@ using Requires
 
 abstract PlottingPackage
 
-immutable QwtPackage <: PlottingPackage end
-immutable GadflyPackage <: PlottingPackage end
 
 const AVAILABLE_PACKAGES = [:Qwt, :Gadfly]
 const INITIALIZED_PACKAGES = Set{Symbol}()
@@ -35,7 +33,8 @@ Setup the plot environment.
 Same for `plotter(:Gadfly)`, etc.
 """
 function plotter(modname)
-  if modname == :Qwt
+  
+  if modname in (:Qwt, :qwt)
     if !(modname in INITIALIZED_PACKAGES)
       qwt()
       push!(INITIALIZED_PACKAGES, modname)
@@ -43,7 +42,8 @@ function plotter(modname)
     global Qwt = Main.Qwt
     CURRENT_PACKAGE.pkg = Nullable(QwtPackage())
     return
-  elseif modname == :Gadfly
+
+  elseif modname in (:Gadfly, :gadfly)
     if !(modname in INITIALIZED_PACKAGES)
       gadfly()
       push!(INITIALIZED_PACKAGES, modname)
@@ -51,6 +51,7 @@ function plotter(modname)
     global Gadfly = Main.Gadfly
     CURRENT_PACKAGE.pkg = Nullable(GadflyPackage())
     return
+  
   end
   error("Unknown plotter $modname.  Choose from: $AVAILABLE_PACKAGES")
 end
