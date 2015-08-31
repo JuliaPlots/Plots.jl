@@ -1,60 +1,9 @@
 module Plots
 
-using Requires
-
-# these are the plotting packages you can load.  we use lazymod so that we
-# don't "import" the module until we want it
-@lazymod Qwt
-@lazymod Gadfly
 
 # ---------------------------------------------------------
 
-abstract PlottingPackage
-
-
-const AVAILABLE_PACKAGES = [:Qwt, :Gadfly]
-const INITIALIZED_PACKAGES = Set{Symbol}()
-
-type CurrentPackage
-  pkg::Nullable{PlottingPackage}
-end
-
-const CURRENT_PACKAGE = CurrentPackage(Nullable{PlottingPackage}())
-function currentPackage()
-  if isnull(CURRENT_PACKAGE.pkg)
-    error("Must choose a plotter.  Example: `plotter(:Qwt)`")
-  end
-  get(CURRENT_PACKAGE.pkg)
-end
-
-doc"""
-Setup the plot environment.
-`plotter(:Qwt)` will load package Qwt.jl and map all subsequent plot commands to that package.
-Same for `plotter(:Gadfly)`, etc.
-"""
-function plotter(modname)
-  
-  if modname in (:Qwt, :qwt)
-    if !(modname in INITIALIZED_PACKAGES)
-      qwt()
-      push!(INITIALIZED_PACKAGES, modname)
-    end
-    global Qwt = Main.Qwt
-    CURRENT_PACKAGE.pkg = Nullable(QwtPackage())
-    return
-
-  elseif modname in (:Gadfly, :gadfly)
-    if !(modname in INITIALIZED_PACKAGES)
-      gadfly()
-      push!(INITIALIZED_PACKAGES, modname)
-    end
-    global Gadfly = Main.Gadfly
-    CURRENT_PACKAGE.pkg = Nullable(GadflyPackage())
-    return
-  
-  end
-  error("Unknown plotter $modname.  Choose from: $AVAILABLE_PACKAGES")
-end
+const IMG_DIR = "$(ENV["HOME"])/.julia/v0.4/Plots/img/"
 
 
 # ---------------------------------------------------------
@@ -74,45 +23,17 @@ function currentPlot()
 end
 currentPlot!(plot) = (CURRENT_PLOT.nullableplot = Nullable(plot))
 
-
 # ---------------------------------------------------------
 
-const IMG_DIR = "$(ENV["HOME"])/.julia/v0.4/Plots/img/"
-
-
-# ---------------------------------------------------------
-
+include("plotter.jl")
 include("qwt.jl")
 include("gadfly.jl")
 
 # ---------------------------------------------------------
 
-const COLORS = [:black, :blue, :green, :red, :darkGray, :darkCyan, :darkYellow, :darkMagenta,
-                :darkBlue, :darkGreen, :darkRed, :gray, :cyan, :yellow, :magenta]
-const NUMCOLORS = length(COLORS)
+include("args.jl")
 
-# these are valid choices... first one is default value if unset
-const LINE_AXES = (:left, :right)
-const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap)
-const LINE_STYLES = (:solid, :dash, :dot, :dashdot, :dashdotdot)
-const LINE_MARKERS = (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)
-
-const DEFAULT_axis = LINE_AXES[1]
-const DEFAULT_color = :auto
-const DEFAULT_label = "AUTO"
-const DEFAULT_width = 2
-const DEFAULT_linetype = LINE_TYPES[1]
-const DEFAULT_linestyle = LINE_STYLES[1]
-const DEFAULT_marker = LINE_MARKERS[1]
-const DEFAULT_markercolor = :auto
-const DEFAULT_markersize = 10
-const DEFAULT_heatmap_n = 100
-const DEFAULT_heatmap_c = (0.15, 0.5)
-
-const DEFAULT_title = ""
-const DEFAULT_xlabel = ""
-const DEFAULT_ylabel = ""
-const DEFAULT_yrightlabel = ""
+# ---------------------------------------------------------
 
 export
   plotter,
