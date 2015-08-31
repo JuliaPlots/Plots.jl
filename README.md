@@ -92,12 +92,15 @@ Here are some various args to supply, and the implicit mapping (AVec == Abstract
   plot(x::AVec, f::Function; kw...)          # one line, y = f(x)
   plot(x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
   plot(x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
+  plot(y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
   plot(x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
   plot(x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
   plot(n::Integer; kw...)                    # n lines, all empty (for updating plots)
-```
 
-  TODO: DataFrames
+  # TODO: how do we handle NA values in dataframes?
+  plot(df::DataFrame; kw...)                 # one line per DataFrame column, labels == names(df)
+  plot(df::DataFrame, columns; kw...)        # one line per column, but on a subset of column names
+```
 
 You can swap out `plot` for `subplot`.  Each line will go into a separate plot.  Use the layout keyword:
 
@@ -107,6 +110,14 @@ You can swap out `plot` for `subplot`.  Each line will go into a separate plot. 
   subplot(y; layout=(1,3), kw...)           # again 3 plots, all in the same row
   subplot(y; layout=[1,[2,3]])              # pass a nested Array to fully specify the layout.  here the first plot will take up the first row, 
                                             # and the others will share the second row
+```
+
+Other potential shorthands:
+
+```
+  hist(args..., kw...)
+  scatter(args..., kw...)
+  heatmap(args..., kw...)
 ```
 
 Some keyword arguments you can set:
@@ -164,6 +175,39 @@ When plotting multiple lines, you can give every line the same trait by using th
   plot(rand(100,2); colors = [:red, RGB(.5,.5,0)], axiss = [:left, :right], width = 5)  # note the width=5 is applied to both lines
 ```
 
+# TODO
+
+- [ ] Plot vectors/matrices
+- [ ] Plot DataFrames
+- [ ] Subplots
+- [ ] Histograms
+- [ ] 3D plotting
+- [ ] Scenes/Drawing
+- [ ] Graphs
+- [ ] Interactivity (GUIs)
+
+- [ ] Gadfly.jl
+- [ ] PyPlot.jl
+- [ ] Winston.jl
+- [ ] Gaston.jl
+- [ ] GLPlot.jl
+- [ ] Qwt.jl
+- [ ] Bokeh.jl
+- [ ] Plotly.jl
+- [ ] GoogleCharts.jl
+- [ ] Vega.jl
+- [ ] PLplot.jl
+
+- [ ] TextPlots.jl
+- [ ] ASCIIPlots.jl
+- [ ] Sparklines.jl
+- [ ] UnicodePlots.jl
+- [ ] Hinton.jl (also outputs vector graphics)
+- [ ] ImageTerm.jl
+
+- [ ] GraphViz.jl
+- [ ] TikzGraphs.jl
+- [ ] GraphLayout.jl
 
 # Author
 

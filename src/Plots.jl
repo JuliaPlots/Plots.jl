@@ -81,21 +81,8 @@ const IMG_DIR = "$(ENV["HOME"])/.julia/v0.4/Plots/img/"
 
 # ---------------------------------------------------------
 
-# Qwt
-
-plot(::QwtPackage, args...; kw...) = Qwt.plot(args...; kw...)
-subplot(::QwtPackage, args...; kw...) = Qwt.subplot(args...; kw...)
-savepng(::QwtPackage, plt, fn::String, args...) = Qwt.savepng(plt, fn)
-
-# ---------------------------------------------------------
-
-# Gadfly
-
-plot(::GadflyPackage, y; kw...) = Gadfly.plot(; x = 1:length(y), y = y, kw...)
-plot(::GadflyPackage, x, y; kw...) = Gadfly.plot(; x = x, y = y, kw...)
-plot(::GadflyPackage; kw...) = Gadfly.plot(; kw...)
-savepng(::GadflyPackage, plt, fn::String, args...) = Gadfly.draw(Gadfly.PNG(fn, args...), plt)
-
+include("qwt.jl")
+include("gadfly.jl")
 
 # ---------------------------------------------------------
 
@@ -156,17 +143,22 @@ Now that you know which plot object you're updating (new, current, or other), I'
 Here are some various args to supply, and the implicit mapping (AVec == AbstractVector and AMat == AbstractMatrix):
 
 ```
-  plot(y::AVec; kw...)                                # one line... x = 1:length(y)
-  plot(x::AVec, y::AVec; kw...)                       # one line (will assert length(x) == length(y))
-  plot(y::AMat; kw...)                                # multiple lines (one per column of x), all sharing x = 1:size(y,1)
-  plot(x::AVec, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
-  plot(x::AMat, y::AMat; kw...)                       # multiple lines (one per column of x/y... will assert size(x) == size(y))
-  plot(x::AVec, f::Function; kw...)                   # one line, y = f(x)
-  plot(x::AMat, f::Function; kw...)                   # multiple lines, yᵢⱼ = f(xᵢⱼ)
-  plot(x::AVec, fs::AVec{Function}; kw...)            # multiple lines, yᵢⱼ = fⱼ(xᵢ)
-  plot(x::AVec, y::AVec{AVec}; kw...)                 # multiple lines, will assert length(x) == length(y[i])
-  plot(x::AVec{AVec}, y::AVec{AVec}; kw...)           # multiple lines, will assert length(x[i]) == length(y[i])
-  plot(n::Integer; kw...)                             # n lines, all empty (for updating plots)
+  plot(y::AVec; kw...)                       # one line... x = 1:length(y)
+  plot(x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
+  plot(y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
+  plot(x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
+  plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
+  plot(x::AVec, f::Function; kw...)          # one line, y = f(x)
+  plot(x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
+  plot(x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
+  plot(y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
+  plot(x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
+  plot(x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
+  plot(n::Integer; kw...)                    # n lines, all empty (for updating plots)
+
+  # TODO: how do we handle NA values in dataframes?
+  plot(df::DataFrame; kw...)                 # one line per DataFrame column, labels == names(df)
+  plot(df::DataFrame, columns; kw...)        # one line per column, but on a subset of column names
 ```
 
   TODO: DataFrames
