@@ -152,6 +152,79 @@ When plotting multiple lines, you can give every line the same trait by using th
 
 """
 
+function  plot(; kw...)
+  plt = Plot()
+  currentPlot@(plt)
+  plot!(plt; kw...)
+  plt
+end
+
+function  plot!(args...; kw...)
+  plt = currentPlot()
+  plot!(plt, args...; kw...)
+  plt
+end
+
+
+function plot!(plt::Plot, y::AVec; kw...)
+  plot!(plt; x = collect(1:length(y)); y=y, kw...)
+end
+
+function plot!(plt::Plot, x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
+  @assert length(x) == length(y)
+  plot!(plt; x=x, y=y, kw...)
+end
+
+function plot!(plt::Plot, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
+  n,m = size(y)
+  for i in 1:m
+    plot!(plt; x=1:m, y=y[:,i], kw...)
+  end
+  plt
+end
+
+function plot!(plt::Plot, x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
+  n,m = size(y)
+  for i in 1:m
+    @assert length(x) == n
+    plot!(plt; x=x, y=y[:,i], kw...)
+  end
+  plt
+end
+
+function plot!(plt::Plot, x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
+end
+
+function plot!(plt::Plot, x::AVec, f::Function; kw...)          # one line, y = f(x)
+end
+
+function plot!(plt::Plot, x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
+end
+
+function plot!(plt::Plot, x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
+end
+
+function plot!(plt::Plot, y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
+end
+
+function plot!(plt::Plot, x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
+end
+
+function plot!(plt::Plot, x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
+end
+
+function plot!(plt::Plot, n::Integer; kw...)                    # n lines, all empty (for updating plots)
+end
+
+
+# TODO: how do we handle NA values in dataframes?
+function plot!(plt::Plot, df::DataFrame; kw...)                 # one line per DataFrame column, labels == names(df)
+end
+
+function plot!(plt::Plot, df::DataFrame, columns; kw...)        # one line per column, but on a subset of column names
+end
+
+
 plot(args...; kw...) = currentPlot!(plot(currentPackage(), args...; kw...))
 
 
