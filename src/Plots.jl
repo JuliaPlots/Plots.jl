@@ -1,5 +1,7 @@
 module Plots
 
+typealias AVec AbstractVector
+typealias AMat AbstractMatrix
 
 # ---------------------------------------------------------
 
@@ -8,10 +10,18 @@ const IMG_DIR = "$(ENV["HOME"])/.julia/v0.4/Plots/img/"
 
 # ---------------------------------------------------------
 
-type CurrentPlot
-  nullableplot::Nullable
+type Plot
+  o  # the underlying object
+  plotter::symbol
+  xdata::Vector{AVec}
+  ydata::Vector{AVec}
 end
-const CURRENT_PLOT = CurrentPlot(Nullable{Any}())
+
+
+type CurrentPlot
+  nullableplot::Nullable{Plot}
+end
+const CURRENT_PLOT = CurrentPlot(Nullable{Plot}())
 
 isplotnull() = isnull(CURRENT_PLOT.nullableplot)
 
@@ -33,23 +43,26 @@ include("gadfly.jl")
 
 include("args.jl")
 
+
 # ---------------------------------------------------------
+
 
 export
   plotter,
+  plotter!,
   plot,
   plot!,
   # subplot,
   savepng
 
 doc"""
-The main plot command.  You must call `plotter(:ModuleName)` to set the current plotting environment first.
+The main plot command.  You must call `plotter!(:ModuleName)` to set the current plotting environment first.
 Commands are converted into the relevant plotting commands for that package:
 
 ```
-  plotter(:Gadfly)
+  plotter!(:gadfly)
   plot(1:10)    # this calls `y = 1:10; Gadfly.plot(x=1:length(y), y=y)`
-  plotter(:Qwt)
+  plotter!(:qwt)
   plot(1:10)    # this calls `Qwt.plot(1:10)`
 ```
 
@@ -152,22 +165,30 @@ When plotting multiple lines, you can give every line the same trait by using th
 
 """
 
-function  plot(; kw...)
-  plt = Plot()
-  currentPlot@(plt)
-  plot!(plt; kw...)
+
+# -------------------------
+
+# this creates a new plot with args/kw and sets it to be the current plot
+function  plot(args...; kw...)
+  plt = newplot(plotter())
+  currentPlot!(plt)
+  plot!(plt, args...; kw...)
   plt
 end
 
+# this adds to the current plot
 function  plot!(args...; kw...)
   plt = currentPlot()
   plot!(plt, args...; kw...)
   plt
 end
 
+# -------------------------
+
+# These methods are various ways to add to an existing plot
 
 function plot!(plt::Plot, y::AVec; kw...)
-  plot!(plt; x = collect(1:length(y)); y=y, kw...)
+  plot!(plt; x = 1:length(y); y = y, kw...)
 end
 
 function plot!(plt::Plot, x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
@@ -178,7 +199,7 @@ end
 function plot!(plt::Plot, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
   n,m = size(y)
   for i in 1:m
-    plot!(plt; x=1:m, y=y[:,i], kw...)
+    plot!(plt; x = 1:m, y = y[:,i], kw...)
   end
   plt
 end
@@ -187,50 +208,91 @@ function plot!(plt::Plot, x::AVec, y::AMat; kw...)              # multiple lines
   n,m = size(y)
   for i in 1:m
     @assert length(x) == n
-    plot!(plt; x=x, y=y[:,i], kw...)
+    plot!(plt; x = x, y = y[:,i], kw...)
   end
   plt
 end
 
 function plot!(plt::Plot, x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
+  @assert size(x) == size(y)
+  for i in 1:size(x,2)
+    plot!(plt; x = x[:,i], y = y[:,i], kw...)
+  end
+  plt
 end
 
 function plot!(plt::Plot, x::AVec, f::Function; kw...)          # one line, y = f(x)
+  plot!(plt; x = x, y = map(f,x), kw...)
 end
 
 function plot!(plt::Plot, x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
+  for i in 1:size(x,2)
+    xi = x[:,i]
+    plot!(plt; x = xi, y = map(f, xi), kw...)
+  end
+  plt
 end
 
 function plot!(plt::Plot, x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
+  for i in 1:length(fs)
+    plot!(plt; x = x, y = map(fs[i], x), kw...)
+  end
+  plt
 end
 
 function plot!(plt::Plot, y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
+  for i in 1:length(y)
+    plot!(plt; x = 1:length(y[i]), y = y[i], kw...)
+  end
+  plt
 end
 
 function plot!(plt::Plot, x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
+  for i in 1:length(y)
+    @assert length(x) == length(y[i])
+    plot!(plt; x = x, y = y[i], kw...)
+  end
+  plt
 end
 
 function plot!(plt::Plot, x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
+  @assert length(x) == length(y)
+  for i in 1:length(x)
+    @assert length(x[i]) == length(y[i])
+    plot!(plt; x = x[i], y = y[i], kw...)
+  end
+  plt
 end
 
 function plot!(plt::Plot, n::Integer; kw...)                    # n lines, all empty (for updating plots)
+  for i in 1:n
+    plot(plt, x = zeros(0), y = zeros(0), kw...)
+  end
 end
 
+# -------------------------
 
-# TODO: how do we handle NA values in dataframes?
-function plot!(plt::Plot, df::DataFrame; kw...)                 # one line per DataFrame column, labels == names(df)
+# this is the core method... add to a plot object using kwargs
+function plot!(plt::Plot; kw...)
+  plot!(plotter(), plt; kw...)
 end
 
-function plot!(plt::Plot, df::DataFrame, columns; kw...)        # one line per column, but on a subset of column names
-end
+# -------------------------
+
+# # TODO: how do we handle NA values in dataframes?
+# function plot!(plt::Plot, df::DataFrame; kw...)                 # one line per DataFrame column, labels == names(df)
+# end
+
+# function plot!(plt::Plot, df::DataFrame, columns; kw...)        # one line per column, but on a subset of column names
+# end
 
 
-plot(args...; kw...) = currentPlot!(plot(currentPackage(), args...; kw...))
+# plot(args...; kw...) = currentPlot!(plot(plotter(), args...; kw...))
 
 
 
-# subplot(args...; kw...) = subplot(currentPackage(), args...; kw...)
-savepng(args...; kw...) = savepng(currentPackage(), args...; kw...)
+# subplot(args...; kw...) = subplot(plotter(), args...; kw...)
+savepng(args...; kw...) = savepng(plotter(), args...; kw...)
 
 
 

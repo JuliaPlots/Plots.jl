@@ -23,7 +23,7 @@ using Plots
 Do a plot in Qwt, then save a png:
 
 ```
-plotter(:Qwt)
+plotter!(:qwt)
 plot(1:10)
 savepng(ans, Plots.IMG_DIR * "qwt1.png")
 ```
@@ -36,7 +36,7 @@ which saves:
 Do a plot in Gadfly, then save a png:
 
 ```
-plotter(:Gadfly)
+plotter!(:gadfly)
 plot(1:10)
 savepng(ans, Plots.IMG_DIR * "gadfly1.png", 6Gadfly.inch, 4Gadfly.inch)
 ```
@@ -47,7 +47,7 @@ which saves:
 
 
 Note that you do not need all underlying packages to use this.  I use Requires.jl to 
-perform lazy loading of the modules, so there's no initialization until you call `plotter()`.
+perform lazy loading of the modules, so there's no initialization until you call `plotter!()`.
 This has an added benefit that you can call `using Plots` and it should return quickly... 
 no more waiting for a plotting package to load when you don't even use it.  :)
 
@@ -60,15 +60,15 @@ WARNING: using Gadfly.Plots in module Main conflicts with an existing identifier
 elapsed time: 3.1334697 seconds
 ```
 
-# plot and plotter (proposal)
+# plot and plotter! (proposal)
 
-The main plot command.  You must call `plotter(:ModuleName)` to set the current plotting environment first.
+The main plot command.  You must call `plotter!(:ModuleName)` to set the current plotting environment first.
 Commands are converted into the relevant plotting commands for that package:
 
 ```
-  plotter(:Gadfly)
+  plotter!(:gadfly)
   plot(1:10)    # this calls `y = 1:10; Gadfly.plot(x=1:length(y), y=y)`
-  plotter(:Qwt)
+  plotter!(:qwt)
   plot(1:10)    # this calls `Qwt.plot(1:10)`
 ```
 
