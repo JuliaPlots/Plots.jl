@@ -21,15 +21,15 @@ const CURRENT_PACKAGE = CurrentPackage(Nullable{PlottingPackage}())
 doc"""Returns the current plotting package name."""
 function plotter()
   if isnull(CURRENT_PACKAGE.pkg)
-    error("Must choose a plotter.  Example: `plotter(:Qwt)`")
+    error("Must choose a plotter.  Example: `plotter!(:qwt)`")
   end
   get(CURRENT_PACKAGE.pkg)
 end
 
 doc"""
 Setup the plot environment.
-`plotter(:Qwt)` will load package Qwt.jl and map all subsequent plot commands to that package.
-Same for `plotter(:Gadfly)`, etc.
+`plotter!(:qwt)` will load package Qwt.jl and map all subsequent plot commands to that package.
+Same for `plotter!(:gadfly)`, etc.
 """
 function plotter!(modname)
   
