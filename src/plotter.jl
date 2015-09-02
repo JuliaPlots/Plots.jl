@@ -8,10 +8,8 @@ using Requires
 
 # ---------------------------------------------------------
 
-abstract PlottingPackage
 
-
-const AVAILABLE_PACKAGES = [:Qwt, :Gadfly]
+const AVAILABLE_PACKAGES = [:qwt, :gadfly]
 const INITIALIZED_PACKAGES = Set{Symbol}()
 
 type CurrentPackage
