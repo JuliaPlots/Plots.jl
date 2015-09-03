@@ -5,16 +5,18 @@ using FactCheck
 
 
 facts("Qwt") do
+  plotDefault!(:show, false)
+
   @fact plotter!(:qwt) --> nothing
   @fact plotter() --> Plots.QwtPackage()
-  @fact typeof(plot(1:10, show=false)) --> Plot
+  @fact typeof(plot(1:10)) --> Plot
 
   # plot(y::AVec; kw...)                       # one line... x = 1:length(y)
-  @fact plot(1:10, show=false) --> not(nothing)
+  @fact plot(1:10) --> not(nothing)
   @fact length(currentPlot().o.lines) --> 1
 
   # plot(x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
-  @fact plot(Int[1,2,3], rand(3); show=false) --> not(nothing)
+  @fact plot(Int[1,2,3], rand(3)) --> not(nothing)
   @fact_throws plot(1:5, 1:4)
   
   # plot(y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
@@ -37,7 +39,7 @@ end
 facts("Gadfly") do
   @fact plotter!(:gadfly) --> nothing
   @fact plotter() --> Plots.GadflyPackage()
-  @fact typeof(plot(1:10, show=false)) --> Plot
+  @fact typeof(plot(1:10)) --> Plot
 end
 
 FactCheck.exitstatus()

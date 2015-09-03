@@ -8,6 +8,8 @@ export
   plot!,
   currentPlot,
   currentPlot!,
+  plotDefault,
+  plotDefault!,
   savepng
 
 # ---------------------------------------------------------
