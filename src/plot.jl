@@ -116,8 +116,8 @@ When plotting multiple lines, you can give every line the same trait by using th
 # this creates a new plot with args/kw and sets it to be the current plot
 function  plot(args...; kw...)
   plt = newplot(plotter())
-  currentPlot!(plt)
   plot!(plt, args...; kw...)
+  currentPlot!(plt)
   plt
 end
 
@@ -144,7 +144,7 @@ end
 function plot!(plt::Plot, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
   n,m = size(y)
   for i in 1:m
-    plot!(plt; x = 1:m, y = y[:,i], kw...)
+    plot!(plt; x = 1:n, y = y[:,i], kw...)
   end
   plt
 end

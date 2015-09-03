@@ -6,6 +6,8 @@ export
   plotter!,
   plot,
   plot!,
+  currentPlot,
+  currentPlot!,
   savepng
 
 # ---------------------------------------------------------
