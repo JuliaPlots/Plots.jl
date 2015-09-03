@@ -55,19 +55,3 @@ function getPlotKeywordArgs(kw, i::Int)
   kw
 end
 
-# const DEFAULT_axis = LINE_AXES[1]
-# const DEFAULT_color = :auto
-# const DEFAULT_label = "AUTO"
-# const DEFAULT_width = 2
-# const DEFAULT_linetype = LINE_TYPES[1]
-# const DEFAULT_linestyle = LINE_STYLES[1]
-# const DEFAULT_marker = LINE_MARKERS[1]
-# const DEFAULT_markercolor = :auto
-# const DEFAULT_markersize = 10
-# const DEFAULT_heatmap_n = 100
-# const DEFAULT_heatmap_c = (0.15, 0.5)
-
-# const DEFAULT_title = ""
-# const DEFAULT_xlabel = ""
-# const DEFAULT_ylabel = ""
-# const DEFAULT_yrightlabel = ""
