@@ -1,6 +1,6 @@
 module Plots
 
-using Requires
+using Colors
 
 export
   Plot,
@@ -39,8 +39,6 @@ const IMG_DIR = "$(ENV["HOME"])/.julia/v0.4/Plots/img/"
 type Plot
   o  # the underlying object
   plotter::PlottingPackage
-  xdata::Vector{AVec}
-  ydata::Vector{AVec}
 end
 
 

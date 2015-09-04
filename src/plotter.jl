@@ -1,10 +1,5 @@
 
 
-# these are the plotting packages you can load.  we use lazymod so that we
-# don't "import" the module until we want it
-@lazymod Qwt
-@lazymod Gadfly
-
 plot(pkg::PlottingPackage; kw...) = error("plot($pkg; kw...) is not implemented")
 plot!(pkg::PlottingPackage, plt::Plot; kw...) = error("plot!($pkg, plt; kw...) is not implemented")
 Base.display(pkg::PlottingPackage, plt::Plot) = error("display($pkg, plt) is not implemented")
@@ -38,19 +33,21 @@ function plotter!(modname)
   
   if modname == :qwt
     if !(modname in INITIALIZED_PACKAGES)
-      qwt()
+      # qwt()
+      @eval import Qwt
       push!(INITIALIZED_PACKAGES, modname)
     end
-    global Qwt = Main.Qwt
+    # global Qwt = Main.Qwt
     CURRENT_PACKAGE.pkg = Nullable(QwtPackage())
     return
 
   elseif modname == :gadfly
     if !(modname in INITIALIZED_PACKAGES)
-      gadfly()
+      # gadfly()
+      @eval import Gadfly
       push!(INITIALIZED_PACKAGES, modname)
     end
-    global Gadfly = Main.Gadfly
+    # global Gadfly = Main.Gadfly
     CURRENT_PACKAGE.pkg = Nullable(GadflyPackage())
     return
   

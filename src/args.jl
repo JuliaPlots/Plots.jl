@@ -1,7 +1,8 @@
 
 
-const COLORS = [:black, :blue, :green, :red, :darkGray, :darkCyan, :darkYellow, :darkMagenta,
-                :darkBlue, :darkGreen, :darkRed, :gray, :cyan, :yellow, :magenta]
+# const COLORS = [:black, :blue, :green, :red, :darkGray, :darkCyan, :darkYellow, :darkMagenta,
+#                 :darkBlue, :darkGreen, :darkRed, :gray, :cyan, :yellow, :magenta]
+const COLORS = distinguishable_colors(20)
 const NUMCOLORS = length(COLORS)
 
 # these are valid choices... first one is default value if unset

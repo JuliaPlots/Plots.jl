@@ -3,8 +3,12 @@
 
 immutable QwtPackage <: PlottingPackage end
 
-plot(pkg::QwtPackage; kw...) = Plot(Qwt.plot(zeros(0,0); kw...), pkg, AVec[], AVec[])
-plot!(::QwtPackage, plt::Plot; kw...) = Qwt.oplot(plt.o; kw...)
+plot(pkg::QwtPackage; kw...) = Plot(Qwt.plot(zeros(0,0); kw...), pkg)
+
+function plot!(::QwtPackage, plt::Plot; kw...)
+  Qwt.oplot(plt.o; kw...)
+end
+
 function Base.display(::QwtPackage, plt::Plot)
   Qwt.refresh(plt.o)
   Qwt.showwidget(plt.o)

@@ -125,12 +125,16 @@ function  plot!(args...; kw...)
 end
 
 # this adds to a specific plot... most plot commands will flow through here
-function plot!(plt::Plot, args...; show=true, kw...)
+function plot!(plt::Plot, args...; kw...)
   plot!(plt.plotter, plt, args...; kw...)
   currentPlot!(plt)
-  if show
+
+  # do we want to show it?
+  d = Dict(kw)
+  if haskey(d, :show) && d[:show]
     display(plt)
   end
+
   plt
 end
 
