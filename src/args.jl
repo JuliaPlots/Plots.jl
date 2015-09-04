@@ -10,6 +10,7 @@ const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap
 const LINE_STYLES = (:solid, :dash, :dot, :dashdot, :dashdotdot)
 const LINE_MARKERS = (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)
 
+# -----------------------------------------------------------------------------
 
 const PLOT_DEFAULTS = Dict{Symbol, Any}()
 
@@ -36,10 +37,17 @@ PLOT_DEFAULTS[:background_color] = :white
 PLOT_DEFAULTS[:xticks] = true
 PLOT_DEFAULTS[:yticks] = true
 
+# TODO: x/y scales
+
+
+# -----------------------------------------------------------------------------
+
 plotDefault(sym::Symbol) = PLOT_DEFAULTS[sym]
 function plotDefault!(sym::Symbol, val)
   PLOT_DEFAULTS[sym] = val
 end
+
+# -----------------------------------------------------------------------------
 
 makeplural(s::Symbol) = Symbol(string(s,"s"))
 autocolor(idx::Integer) = COLORS[mod1(idx,NUMCOLORS)]

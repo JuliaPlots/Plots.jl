@@ -135,7 +135,7 @@ function plot!(plt::Plot, args...; show=true, kw...)
 end
 
 # show/update the plot
-function display(plt::Plot)
+function Base.display(plt::Plot)
   display(plt.plotter, plt)
 end
 

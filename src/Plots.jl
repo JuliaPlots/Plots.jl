@@ -5,18 +5,22 @@ using Requires
 export
   Plot,
   plotter,
-  plotter!,
   plot,
-  plot!,
   currentPlot,
-  currentPlot!,
   plotDefault,
-  plotDefault!,
-
   scatter,
   bar,
   hist,
   heatmap,
+
+  plotter!,
+  plot!,
+  currentPlot!,
+  plotDefault!,
+  scatter!,
+  bar!,
+  hist!,
+  heatmap!,
 
   savepng
 
