@@ -6,6 +6,9 @@ using Requires
 @lazymod Qwt
 @lazymod Gadfly
 
+plot(pkg::PlottingPackage; kw...) = error("plot($pkg; kw...) is not implemented")
+plot!(pkg::PlottingPackage, plt::Plot; kw...) = error("plot!($pkg, plt; kw...) is not implemented")
+
 # ---------------------------------------------------------
 
 

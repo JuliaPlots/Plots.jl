@@ -116,7 +116,7 @@ When plotting multiple lines, you can give every line the same trait by using th
 # this creates a new plot with args/kw and sets it to be the current plot
 function  plot(args...; kw...)
   plt = plot(plotter(); getPlotKeywordArgs(kw, 1)...)  # create a new, blank plot
-  plot!(plt, args...; kw...)    # add the series to that plot
+  plot!(plotter(), plt, args...; kw...)    # add the series to that plot
   currentPlot!(plt)             # set this as the current plot
   plt
 end
@@ -124,7 +124,7 @@ end
 # this adds to the current plot
 function  plot!(args...; kw...)
   plt = currentPlot()
-  plot!(plt, args...; kw...)
+  plot!(plotter(), plt, args...; kw...)
   plt
 end
 
@@ -132,104 +132,104 @@ end
 
 # These methods are various ways to add to an existing plot
 
-function plot!(plt::Plot, y::AVec; kw...)
+function plot!(pkg::PlottingPackage, plt::Plot, y::AVec; kw...)
   kw = getPlotKeywordArgs(kw, 1)
-  plot!(plt; x = 1:length(y), y = y, kw...)
+  plot!(pkg, plt; x = 1:length(y), y = y, kw...)
 end
 
-function plot!(plt::Plot, x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
+function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
   @assert length(x) == length(y)
   kw = getPlotKeywordArgs(kw, 1)
-  plot!(plt; x=x, y=y, kw...)
+  plot!(pkg, plt; x=x, y=y, kw...)
 end
 
-function plot!(plt::Plot, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
+function plot!(pkg::PlottingPackage, plt::Plot, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
   n,m = size(y)
   for i in 1:m
     kw = getPlotKeywordArgs(kw, i)
-    plot!(plt; x = 1:n, y = y[:,i], kw...)
+    plot!(pkg, plt; x = 1:n, y = y[:,i], kw...)
   end
   plt
 end
 
-function plot!(plt::Plot, x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
+function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
   n,m = size(y)
   for i in 1:m
     @assert length(x) == n
     kw = getPlotKeywordArgs(kw, i)
-    plot!(plt; x = x, y = y[:,i], kw...)
+    plot!(pkg, plt; x = x, y = y[:,i], kw...)
   end
   plt
 end
 
-function plot!(plt::Plot, x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
+function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
   @assert size(x) == size(y)
   for i in 1:size(x,2)
     kw = getPlotKeywordArgs(kw, i)
-    plot!(plt; x = x[:,i], y = y[:,i], kw...)
+    plot!(pkg, plt; x = x[:,i], y = y[:,i], kw...)
   end
   plt
 end
 
-function plot!(plt::Plot, x::AVec, f::Function; kw...)          # one line, y = f(x)
+function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, f::Function; kw...)          # one line, y = f(x)
   kw = getPlotKeywordArgs(kw, 1)
-  plot!(plt; x = x, y = map(f,x), kw...)
+  plot!(pkg, plt; x = x, y = map(f,x), kw...)
 end
 
-function plot!(plt::Plot, x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
+function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
   for i in 1:size(x,2)
     xi = x[:,i]
     kw = getPlotKeywordArgs(kw, i)
-    plot!(plt; x = xi, y = map(f, xi), kw...)
+    plot!(pkg, plt; x = xi, y = map(f, xi), kw...)
   end
   plt
 end
 
-function plot!(plt::Plot, x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
+function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
   for i in 1:length(fs)
     kw = getPlotKeywordArgs(kw, i)
-    plot!(plt; x = x, y = map(fs[i], x), kw...)
+    plot!(pkg, plt; x = x, y = map(fs[i], x), kw...)
   end
   plt
 end
 
-function plot!(plt::Plot, y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
+function plot!(pkg::PlottingPackage, plt::Plot, y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
   for i in 1:length(y)
     kw = getPlotKeywordArgs(kw, i)
-    plot!(plt; x = 1:length(y[i]), y = y[i], kw...)
+    plot!(pkg, plt; x = 1:length(y[i]), y = y[i], kw...)
   end
   plt
 end
 
-function plot!(plt::Plot, x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
+function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
   for i in 1:length(y)
     @assert length(x) == length(y[i])
     kw = getPlotKeywordArgs(kw, i)
-    plot!(plt; x = x, y = y[i], kw...)
+    plot!(pkg, plt; x = x, y = y[i], kw...)
   end
   plt
 end
 
-function plot!(plt::Plot, x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
+function plot!(pkg::PlottingPackage, plt::Plot, x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
   @assert length(x) == length(y)
   for i in 1:length(x)
     @assert length(x[i]) == length(y[i])
     kw = getPlotKeywordArgs(kw, i)
-    plot!(plt; x = x[i], y = y[i], kw...)
+    plot!(pkg, plt; x = x[i], y = y[i], kw...)
   end
   plt
 end
 
-function plot!(plt::Plot, n::Integer; kw...)                    # n lines, all empty (for updating plots)
+function plot!(pkg::PlottingPackage, plt::Plot, n::Integer; kw...)                    # n lines, all empty (for updating plots)
   for i in 1:n
     kw = getPlotKeywordArgs(kw, i)
-    plot(plt, x = zeros(0), y = zeros(0), kw...)
+    plot(pkg, plt, x = zeros(0), y = zeros(0), kw...)
   end
 end
 
 # -------------------------
 
-# this is the core method... add to a plot object using kwargs, with args already converted into kwargs
-function plot!(plt::Plot; kw...)
-  plot!(plotter(), plt; kw...)
-end
+# # this is the core method... add to a plot object using kwargs, with args already converted into kwargs
+# function plot!(pkg::PlottingPackage, plt::Plot; kw...)
+#   plot!(pl, plt; kw...)
+# end

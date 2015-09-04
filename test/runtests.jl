@@ -42,14 +42,16 @@ facts("Qwt") do
   # plot(x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
   @fact plot(1:10, Function[sin,cos]) --> not(nothing)
   @fact currentPlot().o.lines[1].y --> sin(collect(1:10))
-  @fact currentPlot().o.lines[1].y --> cos(collect(1:10))
+  @fact currentPlot().o.lines[2].y --> cos(collect(1:10))
 
   # plot(y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
-  @fact plot((11:20, rand(10))) --> not(nothing)
+  @fact plot([11:20 ; rand(10)]) --> not(nothing)
   @fact currentPlot().o.lines[1].x[4] --> 4
   @fact currentPlot().o.lines[1].y[4] --> 14
 
   # plot(x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
+
+
   # plot(x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
   # plot(n::Integer; kw...)                    # n lines, all empty (for updating plots)
 end
