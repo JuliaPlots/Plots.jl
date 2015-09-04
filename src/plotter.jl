@@ -1,5 +1,4 @@
 
-using Requires
 
 # these are the plotting packages you can load.  we use lazymod so that we
 # don't "import" the module until we want it
@@ -8,6 +7,7 @@ using Requires
 
 plot(pkg::PlottingPackage; kw...) = error("plot($pkg; kw...) is not implemented")
 plot!(pkg::PlottingPackage, plt::Plot; kw...) = error("plot!($pkg, plt; kw...) is not implemented")
+display(pkg::PlottingPackage, plt::Plot) = error("display($pkg, plt) is not implemented")
 
 # ---------------------------------------------------------
 

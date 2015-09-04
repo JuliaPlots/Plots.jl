@@ -1,5 +1,7 @@
 module Plots
 
+using Requires
+
 export
   Plot,
   plotter,
@@ -10,6 +12,12 @@ export
   currentPlot!,
   plotDefault,
   plotDefault!,
+
+  scatter,
+  bar,
+  hist,
+  heatmap,
+
   savepng
 
 # ---------------------------------------------------------
@@ -57,6 +65,18 @@ include("gadfly.jl")
 
 include("args.jl")
 include("plot.jl")
+
+
+# const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hist, :bar)
+scatter(args...; kw...) = plot(args...; kw..., linetype = :dots)
+scatter!(args...; kw...) = plot!(args...; kw..., linetype = :dots)
+bar(args...; kw...) = plot(args...; kw..., linetype = :bar)
+bar!(args...; kw...) = plot!(args...; kw..., linetype = :bar)
+hist(args...; kw...) = plot(args...; kw..., linetype = :hist)
+hist!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
+heatmap(args...; kw...) = plot(args...; kw..., linetype = :heatmap)
+heatmap!(args...; kw...) = plot!(args...; kw..., linetype = :heatmap)
+
 
 # ---------------------------------------------------------
 
