@@ -54,7 +54,7 @@ makeplural(s::Symbol) = Symbol(string(s,"s"))
 autocolor(idx::Integer) = COLORS[mod1(idx,NUMCOLORS)]
 
 
-function getPlotKeywordArgs(kw, i::Int)
+function getPlotKeywordArgs(kw, i::Int, plt = nothing)
   d = Dict(kw)
   outd = Dict()
 
@@ -66,6 +66,16 @@ function getPlotKeywordArgs(kw, i::Int)
       outd[k] = d[k]
     else
       outd[k] = PLOT_DEFAULTS[k]
+    end
+  end
+
+  # auto assign a color
+  if plt != nothing
+    if outd[:color] == :auto
+      outd[:color] = autocolor(plt.n)
+    end
+    if outd[:markercolor] == :auto
+      outd[:markercolor] = outd[:color]
     end
   end
 

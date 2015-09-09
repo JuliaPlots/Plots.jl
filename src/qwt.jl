@@ -3,7 +3,7 @@
 
 immutable QwtPackage <: PlottingPackage end
 
-plot(pkg::QwtPackage; kw...) = Plot(Qwt.plot(zeros(0,0); kw...), pkg)
+plot(pkg::QwtPackage; kw...) = Plot(Qwt.plot(zeros(0,0); kw...), pkg, 0)
 
 function plot!(::QwtPackage, plt::Plot; kw...)
   Qwt.oplot(plt.o; kw...)

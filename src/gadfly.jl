@@ -11,7 +11,7 @@ function plot(pkg::GadflyPackage; kw...)
   plt.mapping = Dict()
   plt.data_source = DataFrames.DataFrame()
   plt.layers = plt.layers[1:0]
-  Plot(plt, pkg)
+  Plot(plt, pkg, 0)
 end
 
 
@@ -44,14 +44,20 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
   # label
   
   # color
-  if d[:color] == :auto
-    color = convert(RGB{Float32}, autocolor(length(plt.o.layers)+1))
+  c = d[:color]
+  if isa(c, Symbol)
+    c = string(c)
   end
+  if isa(c, String)
+    c = parse(Colorant, c)
+  end
+  @assert isa(c, RGB)
+  push!(gfargs, Gadfly.Theme(default_color=c))
 
   # legend
   # guides (x/y labels, title, background, ticks)
 
-  append!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = d[:x], y = d[:y], color = [color]))
+  append!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = d[:x], y = d[:y]))
   plt
 end
 

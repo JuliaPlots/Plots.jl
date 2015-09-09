@@ -126,6 +126,12 @@ end
 
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
+
+  # increment n if we're going directly to the package's plot method
+  if length(args) == 0
+    plt.n += 1
+  end
+
   plot!(plt.plotter, plt, args...; kw...)
   currentPlot!(plt)
 
@@ -148,18 +154,21 @@ end
 # These methods are various ways to add to an existing plot
 
 function plot!(pkg::PlottingPackage, plt::Plot, y::AVec; kw...)
-  plot!(pkg, plt; x = 1:length(y), y = y, getPlotKeywordArgs(kw, 1)...)
+  plt.n += 1
+  plot!(pkg, plt; x = 1:length(y), y = y, getPlotKeywordArgs(kw, 1, plt)...)
 end
 
 function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
   @assert length(x) == length(y)
-  plot!(pkg, plt; x=x, y=y, getPlotKeywordArgs(kw, 1)...)
+  plt.n += 1
+  plot!(pkg, plt; x=x, y=y, getPlotKeywordArgs(kw, 1, plt)...)
 end
 
 function plot!(pkg::PlottingPackage, plt::Plot, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
   n,m = size(y)
   for i in 1:m
-    plot!(pkg, plt; x = 1:n, y = y[:,i], getPlotKeywordArgs(kw, i)...)
+    plt.n += 1
+    plot!(pkg, plt; x = 1:n, y = y[:,i], getPlotKeywordArgs(kw, i, plt)...)
   end
   plt
 end
@@ -168,7 +177,8 @@ function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AMat; kw...)        
   n,m = size(y)
   for i in 1:m
     @assert length(x) == n
-    plot!(pkg, plt; x = x, y = y[:,i], getPlotKeywordArgs(kw, i)...)
+    plt.n += 1
+    plot!(pkg, plt; x = x, y = y[:,i], getPlotKeywordArgs(kw, i, plt)...)
   end
   plt
 end
@@ -176,33 +186,37 @@ end
 function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
   @assert size(x) == size(y)
   for i in 1:size(x,2)
-    plot!(pkg, plt; x = x[:,i], y = y[:,i], getPlotKeywordArgs(kw, i)...)
+    plt.n += 1
+    plot!(pkg, plt; x = x[:,i], y = y[:,i], getPlotKeywordArgs(kw, i, plt)...)
   end
   plt
 end
 
 function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, f::Function; kw...)          # one line, y = f(x)
-  plot!(pkg, plt; x = x, y = map(f,x), getPlotKeywordArgs(kw, 1)...)
+  plot!(pkg, plt; x = x, y = map(f,x), getPlotKeywordArgs(kw, 1, plt)...)
 end
 
 function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
   for i in 1:size(x,2)
     xi = x[:,i]
-    plot!(pkg, plt; x = xi, y = map(f, xi), getPlotKeywordArgs(kw, i)...)
+    plt.n += 1
+    plot!(pkg, plt; x = xi, y = map(f, xi), getPlotKeywordArgs(kw, i, plt)...)
   end
   plt
 end
 
 function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
   for i in 1:length(fs)
-    plot!(pkg, plt; x = x, y = map(fs[i], x), getPlotKeywordArgs(kw, i)...)
+    plt.n += 1
+    plot!(pkg, plt; x = x, y = map(fs[i], x), getPlotKeywordArgs(kw, i, plt)...)
   end
   plt
 end
 
 function plot!(pkg::PlottingPackage, plt::Plot, y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
   for i in 1:length(y)
-    plot!(pkg, plt; x = 1:length(y[i]), y = y[i], getPlotKeywordArgs(kw, i)...)
+    plt.n += 1
+    plot!(pkg, plt; x = 1:length(y[i]), y = y[i], getPlotKeywordArgs(kw, i, plt)...)
   end
   plt
 end
@@ -210,7 +224,8 @@ end
 function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
   for i in 1:length(y)
     @assert length(x) == length(y[i])
-    plot!(pkg, plt; x = x, y = y[i], getPlotKeywordArgs(kw, i)...)
+    plt.n += 1
+    plot!(pkg, plt; x = x, y = y[i], getPlotKeywordArgs(kw, i, plt)...)
   end
   plt
 end
@@ -219,14 +234,16 @@ function plot!(pkg::PlottingPackage, plt::Plot, x::AVec{AVec}, y::AVec{AVec}; kw
   @assert length(x) == length(y)
   for i in 1:length(x)
     @assert length(x[i]) == length(y[i])
-    plot!(pkg, plt; x = x[i], y = y[i], getPlotKeywordArgs(kw, i)...)
+    plt.n += 1
+    plot!(pkg, plt; x = x[i], y = y[i], getPlotKeywordArgs(kw, i, plt)...)
   end
   plt
 end
 
 function plot!(pkg::PlottingPackage, plt::Plot, n::Integer; kw...)                    # n lines, all empty (for updating plots)
   for i in 1:n
-    plot(pkg, plt, x = zeros(0), y = zeros(0), getPlotKeywordArgs(kw, i)...)
+    plt.n += 1
+    plot(pkg, plt, x = zeros(0), y = zeros(0), getPlotKeywordArgs(kw, i, plt)...)
   end
 end
 
