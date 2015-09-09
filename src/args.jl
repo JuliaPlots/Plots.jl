@@ -23,7 +23,7 @@ PLOT_DEFAULTS[:width] = 1
 PLOT_DEFAULTS[:linetype] = :line
 PLOT_DEFAULTS[:linestyle] = :solid
 PLOT_DEFAULTS[:marker] = :none
-PLOT_DEFAULTS[:markercolor] = :auto
+PLOT_DEFAULTS[:markercolor] = :match
 PLOT_DEFAULTS[:markersize] = 10
 PLOT_DEFAULTS[:heatmap_n] = 100
 PLOT_DEFAULTS[:heatmap_c] = (0.15, 0.5)
@@ -54,6 +54,31 @@ makeplural(s::Symbol) = Symbol(string(s,"s"))
 autocolor(idx::Integer) = COLORS[mod1(idx,NUMCOLORS)]
 
 
+# converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
+# note: if plt is nothing, we aren't doing anything with the color anyways
+function getRGBColor(c, plt)
+
+  # auto-assign a color based on plot index
+  if c == :auto
+    c = autocolor(plt.n)
+  end
+
+  # convert it from a symbol/string
+  if isa(c, Symbol)
+    c = string(c)
+  end
+  if isa(c, String)
+    c = parse(Colorant, c)
+  end
+
+  # should be a RGB now... either it was passed in, generated automatically, or created from a string
+  @assert isa(c, RGB)
+
+  # return the RGB
+  c
+end
+
+
 function getPlotKeywordArgs(kw, i::Int, plt = nothing)
   d = Dict(kw)
   outd = Dict()
@@ -69,15 +94,25 @@ function getPlotKeywordArgs(kw, i::Int, plt = nothing)
     end
   end
 
-  # auto assign a color
   if plt != nothing
-    if outd[:color] == :auto
-      outd[:color] = autocolor(plt.n)
-    end
-    if outd[:markercolor] == :auto
-      outd[:markercolor] = outd[:color]
-    end
+    # update color
+    outd[:color] = getRGBColor(outd[:color], plt)
+
+    # update markercolor
+    mc = outd[:markercolor]
+    mc = (mc == :match ? outd[:color] : getRGBColor(mc, plt))
+    outd[:markercolor] = mc
   end
+
+  # # auto assign a color
+  # if plt != nothing
+  #   if outd[:color] == :auto
+  #     outd[:color] = autocolor(plt.n)
+  #   end
+  #   if outd[:markercolor] == :auto
+  #     outd[:markercolor] = outd[:color]
+  #   end
+  # end
 
   outd
 end

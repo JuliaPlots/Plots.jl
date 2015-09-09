@@ -43,16 +43,16 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
   # linestyle
   # label
   
-  # color
-  c = d[:color]
-  if isa(c, Symbol)
-    c = string(c)
-  end
-  if isa(c, String)
-    c = parse(Colorant, c)
-  end
-  @assert isa(c, RGB)
-  push!(gfargs, Gadfly.Theme(default_color=c))
+  # # color
+  # c = d[:color]
+  # if isa(c, Symbol)
+  #   c = string(c)
+  # end
+  # if isa(c, String)
+  #   c = parse(Colorant, c)
+  # end
+  # @assert isa(c, RGB)
+  push!(gfargs, Gadfly.Theme(default_color = d[:color]))
 
   # legend
   # guides (x/y labels, title, background, ticks)
