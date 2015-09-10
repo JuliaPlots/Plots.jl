@@ -31,7 +31,7 @@ typealias AMat AbstractMatrix
 
 abstract PlottingPackage
 
-const IMG_DIR = "$(ENV["HOME"])/.julia/v0.4/Plots/img/"
+const IMG_DIR = Pkg.dir("Plots") * "/img/"
 
 
 # ---------------------------------------------------------

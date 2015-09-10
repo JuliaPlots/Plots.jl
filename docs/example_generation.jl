@@ -4,6 +4,7 @@ module PlotExamples
 using Plots
 
 const DOCDIR = Pkg.dir("Plots") * "/docs"
+const IMGDIR = Pkg.dir("Plots") * "/img"
 
 doc"""
 Holds all data needed for a documentation example... header, description, and plotting expression (Expr)
@@ -14,7 +15,9 @@ type PlotExample
   expr::Expr
 end
 
-examples = PlotExample[
+
+# the examples we'll run for each
+const examples = PlotExample[
   PlotExample("Lines",
               "A simple line plot of the 3 columns.",
               :(plot(rand(100,3)))),
@@ -33,9 +36,41 @@ examples = PlotExample[
 ]
 
 
-function generate_markdown(modname)
-  plotter!(modname)
-  
+function generate_markdown(pkgname::Symbol)
+
+  # set up the plotter, and don't show the plots by default
+  plotter!(pkgname)
+
+
+  # open the markdown file
+  md = open("$DOCDIR/$(pkgname)_examples.md", "w")
+
+  for (i,example) in enumerate(examples)
+
+    try
+
+      # run the code
+      eval(example.expr)
+
+      # save the png
+      imgname = "$(pkgname)_example_$i.png"
+      savepng("$IMGDIR/$imgname")
+
+      write(md, "### $(example.header)\n\n")
+      write(md, "$(example.desc)\n\n")
+      write(md, "```julia\n$(string(example.expr))\n```\n\n")
+      write(md, "![](../$imgname)\n\n")
+
+    catch ex
+      # TODO: put error info into markdown?
+      warn("Example $pkgname:$i failed with: $ex")
+    end
+
+    #
+  end
+
+  close(md)
+
 end
 
 # run it!
