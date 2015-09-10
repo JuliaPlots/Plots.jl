@@ -114,6 +114,10 @@ function getPlotKeywordArgs(kw, i::Int, plt = nothing)
     mc = outd[:markercolor]
     mc = (mc == :match ? outd[:color] : getRGBColor(mc, plt.n))
     outd[:markercolor] = mc
+
+    # set label
+    label = outd[:label]
+    outd[:label] = string(label == "AUTO" ? "y_$i" : label, outd[:axis] == :left ? "" : " (R)")
   end
 
   outd

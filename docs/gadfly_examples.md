@@ -48,3 +48,14 @@ plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8,colors=[:red,:blue]
 
 ![](../img/gadfly_example_5.png)
 
+### Build plot in pieces
+
+You can add to a plot at any time.
+
+```julia
+plot(rand(100) / 3; reg=true,fillto=0)
+scatter!(rand(100); markersize=6,color=:blue)
+```
+
+![](../img/gadfly_example_6.png)
+

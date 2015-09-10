@@ -77,8 +77,8 @@ include("plot.jl")
 
 
 # const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hist, :bar)
-scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :rect)
-scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :rect)
+scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :hexagon)
+scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :hexagon)
 bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
 bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
 histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)

@@ -107,8 +107,8 @@ Here are some various args to supply, and the implicit mapping (AVec == Abstract
 Shorthands:
 
 ```
-  scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :rect)
-  scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :rect)
+  scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :hexagon)
+  scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :hexagon)
   bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
   bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
   histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)

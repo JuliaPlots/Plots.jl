@@ -26,7 +26,7 @@ function plotter()
   if !(currentPackageSymbol in INITIALIZED_PACKAGES)
 
     # initialize
-    print("Initializing package: $CURRENT_PACKAGE... ")
+    print("[Plots.jl] Initializing package: $CURRENT_PACKAGE... ")
     if currentPackageSymbol == :qwt
       @eval import Qwt
     elseif currentPackageSymbol == :gadfly

@@ -15,9 +15,17 @@ function plot(pkg::GadflyPackage; kw...)
   
   # add the title, axis labels, and theme
   d = Dict(kw)
-  plt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]), Gadfly.Guide.ylabel(d[:ylabel]), Gadfly.Guide.title(d[:title])]
+
+  plt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]),
+                                   Gadfly.Guide.ylabel(d[:ylabel]),
+                                   Gadfly.Guide.title(d[:title])]
+
+  # add the legend?
+  if d[:legend]
+    unshift!(plt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
+  end
+
   plt.theme = Gadfly.Theme(background_color = (haskey(d, :background_color) ? d[:background_color] : colorant"white"))
-                       # key_position = (d[:legend] ? :bottom : :none))
   
   Plot(plt, pkg, 0)
 end
@@ -75,6 +83,16 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
 
   # for histograms, set x=y
   x = d[d[:linetype] == :hist ? :y : :x]
+
+  # add to the legend
+  if length(plt.o.guides) > 0 && isa(plt.o.guides[1], Gadfly.Guide.ManualColorKey)
+    push!(plt.o.guides[1].labels, d[:label])
+    push!(plt.o.guides[1].colors, d[:color])
+  end
+
+  if d[:axis] != :left
+    warn("Gadly only supports one y axis")
+  end
 
   # add the layer to the Gadfly.Plot
   append!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
