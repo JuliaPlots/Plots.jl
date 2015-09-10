@@ -9,7 +9,7 @@ Plotting interface and wrapper for several plotting packages.
 First, clone the package, and get any plotting packages you need:
 
 ```
-Pkg.clone("https://github.com/JuliaPlot/Plots.jl.git")
+Pkg.clone("https://github.com/tbreloff/Plots.jl.git")
 Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
 Pkg.add("Gadfly")                                     # [optional]
 ```
