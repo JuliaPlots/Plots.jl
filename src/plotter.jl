@@ -14,7 +14,8 @@ type CurrentPackage
   sym::Symbol
   pkg::PlottingPackage
 end
-const CURRENT_PACKAGE = CurrentPackage(:qwt, QwtPackage())
+# const CURRENT_PACKAGE = CurrentPackage(:qwt, QwtPackage())
+const CURRENT_PACKAGE = CurrentPackage(:gadfly, GadflyPackage())
 
 
 doc"""

@@ -17,36 +17,23 @@ First, clone the package, and get any plotting packages you need:
 
 ```
 Pkg.clone("https://github.com/tbreloff/Plots.jl.git")
-Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
 Pkg.add("Gadfly")                                     # [optional]
+Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
 ```
 
 ## Use
 
 Load it in.  The underlying plotting backends are not imported until `plotter()` is called (which happens
 on your first call to `plot`).  This means that you don't need any backends to be installed when you call `using Plots`.
-For now, the default backend is Qwt.
+For now, the default backend is Gadfly.
 
 ```
 using Plots
 ```
 
-Do a plot in Qwt, then save a png:
-
-```
-plot(rand(10,2); marker = :rect)
-savepng(Plots.IMG_DIR * "qwt1.png")
-```
-
-which saves:
-
-![qwt_plt](img/qwt1.png)
-
-
 Do a plot in Gadfly, then save a png:
 
 ```
-plotter!(:gadfly)  # switches the backend to Gadfly
 plot(rand(10,2); marker = :rect)
 savepng(Plots.IMG_DIR * "gadfly1.png")
 ```
@@ -54,6 +41,19 @@ savepng(Plots.IMG_DIR * "gadfly1.png")
 which saves:
 
 ![gadfly_plt](img/gadfly1.png)
+
+
+Do a plot in Qwt, then save a png:
+
+```
+plotter!(:qwt)  # switches the backend to Qwt
+plot(rand(10,2); marker = :rect)
+savepng(Plots.IMG_DIR * "qwt1.png")
+```
+
+which saves:
+
+![qwt_plt](img/qwt1.png)
 
 
 
