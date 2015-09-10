@@ -39,6 +39,7 @@ PLOT_DEFAULTS[:legend] = true
 # PLOT_DEFAULTS[:background_color] = nothing
 PLOT_DEFAULTS[:xticks] = true
 PLOT_DEFAULTS[:yticks] = true
+PLOT_DEFAULTS[:size] = (600,400)
 
 # TODO: x/y scales
 

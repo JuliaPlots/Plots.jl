@@ -141,6 +141,7 @@ function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, y::AMat; kw...)        
 end
 
 function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, f::Function; kw...)          # one line, y = f(x)
+  plt.n += 1
   plot!(pkg, plt; x = x, y = map(f,x), getPlotKeywordArgs(kw, 1, plt)...)
 end
 
@@ -153,13 +154,13 @@ function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, f::Function; kw...)    
   plt
 end
 
-function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
-  for i in 1:length(fs)
-    plt.n += 1
-    plot!(pkg, plt; x = x, y = map(fs[i], x), getPlotKeywordArgs(kw, i, plt)...)
-  end
-  plt
-end
+# function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
+#   for i in 1:length(fs)
+#     plt.n += 1
+#     plot!(pkg, plt; x = x, y = map(fs[i], x), getPlotKeywordArgs(kw, i, plt)...)
+#   end
+#   plt
+# end
 
 function plot!(pkg::PlottingPackage, plt::Plot, y::AVec; kw...)                 # multiple lines, each with x = 1:length(y[i])
   for i in 1:length(y)
@@ -171,9 +172,14 @@ end
 
 function plot!{T<:Real}(pkg::PlottingPackage, plt::Plot, x::AVec{T}, y::AVec; kw...)        # multiple lines, will assert length(x) == length(y[i])
   for i in 1:length(y)
-    @assert length(x) == length(y[i])
-    plt.n += 1
-    plot!(pkg, plt; x = x, y = y[i], getPlotKeywordArgs(kw, i, plt)...)
+    if typeof(y[i]) <: AbstractVector
+      @assert length(x) == length(y[i])
+      plt.n += 1
+      plot!(pkg, plt; x = x, y = y[i], getPlotKeywordArgs(kw, i, plt)...)
+    elseif typeof(y[i]) == Function
+      plt.n += 1
+      plot!(pkg, plt; x = x, y = map(y[i], x), getPlotKeywordArgs(kw, 1, plt)...)
+    end
   end
   plt
 end
