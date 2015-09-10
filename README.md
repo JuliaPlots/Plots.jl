@@ -4,7 +4,9 @@
 
 Plotting interface and wrapper for several plotting packages.
 
-#### This is under development... please add your wishlist for the plotting interface to issue #1.
+Please add wishlist items, bugs, or any other comments/questions to the issues list.
+
+## Installation
 
 First, clone the package, and get any plotting packages you need:
 
@@ -13,6 +15,8 @@ Pkg.clone("https://github.com/tbreloff/Plots.jl.git")
 Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
 Pkg.add("Gadfly")                                     # [optional]
 ```
+
+## Use
 
 Load it in.  The underlying plotting backends are not imported until `plotter()` is called (which happens
 on your first call to `plot`).  This means that you don't need any backends to be installed when you call `using Plots`.
@@ -48,22 +52,22 @@ which saves:
 
 
 
-# plot and plotter! interface (WIP)
+## plot and plotter! interface (WIP)
 
 The main plot command.  Call `plotter!(:module)` to set the current plotting backend.
 Commands are converted into the relevant plotting commands for that package:
 
 ```
   plotter!(:gadfly)
-  plot(1:10)    # this calls `y = 1:10; Gadfly.plot(x=1:length(y), y=y)`
+  plot(1:10)    # this effectively calls `y = 1:10; Gadfly.plot(x=1:length(y), y=y)`
   plotter!(:qwt)
-  plot(1:10)    # this calls `Qwt.plot(1:10)`
+  plot(1:10)    # this effectively calls `Qwt.plot(1:10)`
 ```
 
 Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 
 ```
-  plot(args...; kw...)                  # creates a new plot window, and sets it to be the currentPlot
+  plot(args...; kw...)                  # creates a new plot window, and sets it to be the `currentPlot`
   plot!(args...; kw...)                 # adds to the `currentPlot`
   plot!(plotobj, args...; kw...)        # adds to the plot `plotobj`
 ```
