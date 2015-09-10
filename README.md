@@ -188,7 +188,7 @@ When plotting multiple lines, you can give every line the same trait by using th
 - [x] Plot vectors/matrices/functions
 - [ ] Plot DataFrames
 - [ ] Subplots
-- [x] Histograms
+- [ ] Histograms
 - [ ] 3D plotting
 - [ ] Scenes/Drawing
 - [ ] Graphs

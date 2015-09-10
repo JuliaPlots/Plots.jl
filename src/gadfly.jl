@@ -37,6 +37,7 @@ function getGeomFromLineType(linetype::Symbol)
   linetype == :step && return Gadfly.Geom.step
   linetype == :hist && return Gadfly.Geom.hist
   linetype == :none && return Gadfly.Geom.point  # change this? are we usually pairing no line with scatterplots?
+  linetype == :sticks && return Gadfly.Geom.bar
   error("linetype $linetype not currently supported with Gadfly")
 end
 

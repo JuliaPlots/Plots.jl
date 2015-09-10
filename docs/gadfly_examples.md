@@ -59,3 +59,24 @@ scatter!(rand(100); markersize=6,color=:blue)
 
 ![](../img/gadfly_example_6.png)
 
+### Heatmaps
+
+
+
+```julia
+heatmap(randn(10000),randn(10000); nbins=200)
+```
+
+![](../img/gadfly_example_7.png)
+
+### Lots of line types
+
+Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)  
+Note: some may not work with all backends
+
+```julia
+plot(rand(20,4); linetypes=[:line,:step,:sticks,:dots])
+```
+
+![](../img/gadfly_example_8.png)
+

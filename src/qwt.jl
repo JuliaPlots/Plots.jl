@@ -7,6 +7,9 @@ function adjustQwtKeywords(; kw...)
   d = Dict(kw)
   if d[:linetype] == :hexbin
     d[:linetype] = :heatmap
+  elseif d[:linetype] == :dots
+    d[:linetype] = :none
+    d[:marker] = :hexagon
   end
   d[:heatmap_n] = d[:nbins]
   d

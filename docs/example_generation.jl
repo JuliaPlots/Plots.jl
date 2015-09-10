@@ -37,6 +37,12 @@ const examples = PlotExample[
   PlotExample("Build plot in pieces",
               "You can add to a plot at any time.",
               [:(plot(rand(100)/3; reg=true, fillto=0)), :(scatter!(rand(100); markersize=6, color=:blue))]),
+  PlotExample("Heatmaps",
+              "",
+              [:(heatmap(randn(10000),randn(10000); nbins=200))]),
+  PlotExample("Lots of line types",
+              "Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)  \nNote: some may not work with all backends",
+              [:(plot(rand(20,4); linetypes=[:line, :step, :sticks, :dots]))]),
 ]
 
 
