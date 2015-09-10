@@ -11,8 +11,7 @@ First, clone the package, and get any plotting packages you need:
 ```
 Pkg.clone("https://github.com/JuliaPlot/Plots.jl.git")
 Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
-Pkg.add("Gadfly")                                     # [optional] might also need to Pkg.checkout("Gadfly")
-                                                      #            and maybe Colors/Compose... I had trouble with it
+Pkg.add("Gadfly")                                     # [optional]
 ```
 
 Load it in.  The underlying plotting backends are not imported until `plotter()` is called (which happens
