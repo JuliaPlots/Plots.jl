@@ -35,7 +35,7 @@ Do a plot in Qwt, then save a png:
 
 ```
 plot(rand(10,2); marker = :rect)
-savepng(ans, Plots.IMG_DIR * "qwt1.png")
+savepng(Plots.IMG_DIR * "qwt1.png")
 ```
 
 which saves:
@@ -48,7 +48,7 @@ Do a plot in Gadfly, then save a png:
 ```
 plotter!(:gadfly)  # switches the backend to Gadfly
 plot(rand(10,2); marker = :rect)
-savepng(ans, Plots.IMG_DIR * "gadfly1.png")
+savepng(Plots.IMG_DIR * "gadfly1.png")
 ```
 
 which saves:
