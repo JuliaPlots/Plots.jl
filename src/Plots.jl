@@ -10,7 +10,7 @@ export
   plotDefault,
   scatter,
   bar,
-  hist,
+  histogram,
   heatmap,
 
   plotter!,
@@ -19,7 +19,7 @@ export
   plotDefault!,
   scatter!,
   bar!,
-  hist!,
+  histogram!,
   heatmap!,
 
   savepng
@@ -77,14 +77,14 @@ include("plot.jl")
 
 
 # const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hist, :bar)
-scatter(args...; kw...) = plot(args...; kw..., linetype = :dots)
-scatter!(args...; kw...) = plot!(args...; kw..., linetype = :dots)
-bar(args...; kw...) = plot(args...; kw..., linetype = :bar)
-bar!(args...; kw...) = plot!(args...; kw..., linetype = :bar)
-hist(args...; kw...) = plot(args...; kw..., linetype = :hist)
-hist!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
-heatmap(args...; kw...) = plot(args...; kw..., linetype = :heatmap)
-heatmap!(args...; kw...) = plot!(args...; kw..., linetype = :heatmap)
+scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :rect)
+scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :rect)
+bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
+bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
+histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)
+histogram!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
+heatmap(args...; kw...)    = plot(args...; kw...,  linetype = :heatmap)
+heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
 
 
 # ---------------------------------------------------------

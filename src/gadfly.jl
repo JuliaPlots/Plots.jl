@@ -28,6 +28,7 @@ function getGeomFromLineType(linetype::Symbol)
   linetype == :bar && return Gadfly.Geom.bar
   linetype == :step && return Gadfly.Geom.step
   linetype == :hist && return Gadfly.Geom.hist
+  linetype == :none && return Gadfly.Geom.point  # change this? are we usually pairing no line with scatterplots?
   error("linetype $linetype not currently supported with Gadfly")
 end
 
@@ -59,7 +60,6 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
   gfargs = []
 
   # add the Geoms
-  println(d)
   append!(gfargs, getGeoms(d[:linetype], d[:marker], d[:nbins]))
 
   # set color, line width, and point size

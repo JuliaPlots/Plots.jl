@@ -10,11 +10,14 @@ First, clone the package, and get any plotting packages you need:
 
 ```
 Pkg.clone("https://github.com/JuliaPlot/Plots.jl.git")
-Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # requires pyqt and pyqwt
-Pkg.add("Gadfly")  # might also need to Pkg.checkout("Gadfly") and maybe Colors/Compose... I had trouble with it
+Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
+Pkg.add("Gadfly")                                     # [optional] might also need to Pkg.checkout("Gadfly")
+                                                      #            and maybe Colors/Compose... I had trouble with it
 ```
 
-Now load it in:
+Load it in.  The underlying plotting backends are not imported until `plotter()` is called (which happens
+on your first call to `plot`).  This means that you don't need any backends to be installed when you call `using Plots`.
+For now, the default backend is Qwt.
 
 ```
 using Plots
@@ -23,8 +26,7 @@ using Plots
 Do a plot in Qwt, then save a png:
 
 ```
-plotter!(:qwt)
-plot(1:10)
+plot(rand(10,2); marker = :rect)
 savepng(ans, Plots.IMG_DIR * "qwt1.png")
 ```
 
@@ -36,9 +38,9 @@ which saves:
 Do a plot in Gadfly, then save a png:
 
 ```
-plotter!(:gadfly)
-plot(1:10)
-savepng(ans, Plots.IMG_DIR * "gadfly1.png", 6Gadfly.inch, 4Gadfly.inch)
+plotter!(:gadfly)  # switches the backend to Gadfly
+plot(rand(10,2); marker = :rect)
+savepng(ans, Plots.IMG_DIR * "gadfly1.png", 6 * Gadfly.inch, 4 * Gadfly.inch)
 ```
 
 which saves:
@@ -46,23 +48,10 @@ which saves:
 ![gadfly_plt](img/gadfly1.png)
 
 
-Note that you do not need all underlying packages to use this.  I use Requires.jl to 
-perform lazy loading of the modules, so there's no initialization until you call `plotter!()`.
-This has an added benefit that you can call `using Plots` and it should return quickly... 
-no more waiting for a plotting package to load when you don't even use it.  :)
 
-```
-julia> tic(); using Plots; toc();
-elapsed time: 0.356158445 seconds
+# plot and plotter! interface (WIP)
 
-julia> tic(); using Gadfly; toc();
-WARNING: using Gadfly.Plots in module Main conflicts with an existing identifier.
-elapsed time: 3.1334697 seconds
-```
-
-# plot and plotter! (proposal)
-
-The main plot command.  You must call `plotter!(:ModuleName)` to set the current plotting environment first.
+The main plot command.  Call `plotter!(:module)` to set the current plotting backend.
 Commands are converted into the relevant plotting commands for that package:
 
 ```
@@ -102,7 +91,7 @@ Here are some various args to supply, and the implicit mapping (AVec == Abstract
   plot(df::DataFrame, columns; kw...)        # one line per column, but on a subset of column names
 ```
 
-You can swap out `plot` for `subplot`.  Each line will go into a separate plot.  Use the layout keyword:
+[TODO] You can swap out `plot` for `subplot`.  Each line will go into a separate plot.  Use the layout keyword:
 
 ```
   y = rand(100,3)
@@ -112,12 +101,17 @@ You can swap out `plot` for `subplot`.  Each line will go into a separate plot. 
                                             # and the others will share the second row
 ```
 
-Other potential shorthands:
+Shorthands:
 
 ```
-  hist(args..., kw...)
-  scatter(args..., kw...)
-  heatmap(args..., kw...)
+  scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :rect)
+  scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :rect)
+  bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
+  bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
+  histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)
+  histogram!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
+  heatmap(args...; kw...)    = plot(args...; kw...,  linetype = :heatmap)
+  heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
 ```
 
 Some keyword arguments you can set:
@@ -127,11 +121,14 @@ Some keyword arguments you can set:
   color           # can be a string ("red") or a symbol (:red) or a ColorsTypes.jl Colorant (RGB(1,0,0)) or :auto (which lets the package pick)
   label           # string or symbol, applies to that line, may go in a legend
   width           # width of a line
-  linetype        # :line, :step, :stepinverted, :sticks, :dots, :none, :heatmap
+  linetype        # :line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
   linestyle       # :solid, :dash, :dot, :dashdot, :dashdotdot
   marker          # :none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon
-  markercolor     # same choices as `color`
+  markercolor     # same choices as `color`, or :match will set the color to be the same as `color`
   markersize      # size of the marker
+  nbins           # number of bins for heatmap/hexbin and histograms
+  heatmap_c       # color cutoffs for Qwt heatmaps
+  fillto          # fillto value for area plots
   title           # string or symbol, title of the plot
   xlabel          # string or symbol, label on the bottom (x) axis
   ylabel          # string or symbol, label on the left (y) axis
@@ -150,12 +147,15 @@ If you don't include a keyword argument, these are the defaults:
   axis = :left
   color = :auto
   label = automatically generated (y1, y2, ...., or y1 (R), y2 (R) for the right axis)
-  width = 2
+  width = 1
   linetype = :line
   linestype = :solid
   marker = :none
-  markercolor = :auto
-  markersize = 5
+  markercolor = :match
+  markersize = 3
+  nbins = 100
+  heatmap_c = (0.15, 0.5)
+  fillto = nothing
   title = ""
   xlabel = ""
   ylabel = ""
@@ -177,20 +177,20 @@ When plotting multiple lines, you can give every line the same trait by using th
 
 # TODO
 
-- [ ] Plot vectors/matrices
+- [x] Plot vectors/matrices/functions
 - [ ] Plot DataFrames
 - [ ] Subplots
-- [ ] Histograms
+- [x] Histograms
 - [ ] 3D plotting
 - [ ] Scenes/Drawing
 - [ ] Graphs
 - [ ] Interactivity (GUIs)
-- [ ] Gadfly.jl
+- [x] Gadfly.jl
 - [ ] PyPlot.jl
 - [ ] Winston.jl
 - [ ] Gaston.jl
 - [ ] GLPlot.jl
-- [ ] Qwt.jl
+- [x] Qwt.jl
 - [ ] Bokeh.jl
 - [ ] Plotly.jl
 - [ ] GoogleCharts.jl
