@@ -7,55 +7,66 @@ immutable GadflyPackage <: PlottingPackage end
 # create a blank Gadfly.Plot object
 function plot(pkg::GadflyPackage; kw...)
   @eval import DataFrames
+
   plt = Gadfly.Plot()
   plt.mapping = Dict()
   plt.data_source = DataFrames.DataFrame()
   plt.layers = plt.layers[1:0]
+  
+  # add the title, axis labels, and theme
+  d = Dict(kw)
+  plt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]), Gadfly.Guide.ylabel(d[:ylabel]), Gadfly.Guide.title(d[:title])]
+  plt.theme = Gadfly.Theme(background_color = (haskey(d, :background_color) ? d[:background_color] : colorant"white"))
+                       # key_position = (d[:legend] ? :bottom : :none))
+  
   Plot(plt, pkg, 0)
 end
 
-
-
-# note: currently only accepts lines and dots
-function getGeomLine(linetype::Symbol)
-  linetype == :line && return [Gadfly.Geom.line]
-  linetype == :dots && return [Gadfly.Geom.point]
-  error("linetype $linetype not currently supported with Gadfly")
+function getGeoms(linetype::Symbol, marker::Symbol, heatmap_n::Int)
+  geoms = []
+  if linetype in (:heatmap,:hexbin)
+    push!(geoms, Gadfly.Geom.hexbin(xbincount=heatmap_n, ybincount=heatmap_n))
+  else
+    if linetype == :line
+      push!(geoms, Gadfly.Geom.line)
+    elseif linetype == :dots || marker != :none
+      push!(geoms, Gadfly.Geom.point)
+    elseif linetype != :dots
+      error("linetype $linetype not currently supported with Gadfly")
+    end
+  end
 end
 
-# note: currently map any marker to point
-function getGeomPoint(marker::Symbol)
-  marker == :none && return []
-  [Gadfly.Geom.point]
-end
+# # note: currently only accepts lines and dots
+# function getGeomLine(linetype::Symbol, heatmap_n::Int)
+#   linetype == :line && return [Gadfly.Geom.line]
+#   linetype == :dots && return [Gadfly.Geom.point]
+#   linetype in (:heatmap, :hexbin) && return [Gadfly.Geom.hexbin(xbincount=heatmap_n, ybincount=heatmap_n)]
+#   error("linetype $linetype not currently supported with Gadfly")
+# end
+
+# # note: currently map any marker to point
+# function getGeomPoint(linetype::Syombol, marker::Symbol)
+#   if marker == :none || linetype in (:heatmap, :hexbin) 
+#     return []
+#   end
+#   [Gadfly.Geom.point]
+# end
 
 # plot one data series
 function plot!(::GadflyPackage, plt::Plot; kw...)
   d = Dict(kw)
 
   gfargs = []
+  # append!(gfargs, getGeomLine(d[:linetype], d[:heatmap_n]))
+  # append!(gfargs, getGeomPoint(d[:marker]))
+  append!(gfargs, getGeoms(d[:linetype], d[:marker], d[:heatmap_n]))
 
-  append!(gfargs, getGeomLine(d[:linetype]))
-  append!(gfargs, getGeomPoint(d[:marker]))
+  theme = Gadfly.Theme(default_color = d[:color],
+                       line_width = d[:width] * Gadfly.px,
+                       default_point_size = d[:markersize] * Gadfly.px)
+  push!(gfargs, theme)
 
-
-  # todo: 
-  # linestyle
-  # label
-  
-  # # color
-  # c = d[:color]
-  # if isa(c, Symbol)
-  #   c = string(c)
-  # end
-  # if isa(c, String)
-  #   c = parse(Colorant, c)
-  # end
-  # @assert isa(c, RGB)
-  push!(gfargs, Gadfly.Theme(default_color = d[:color]))
-
-  # legend
-  # guides (x/y labels, title, background, ticks)
 
   append!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = d[:x], y = d[:y]))
   plt

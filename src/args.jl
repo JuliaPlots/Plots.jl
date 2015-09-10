@@ -7,7 +7,7 @@ const NUMCOLORS = length(COLORS)
 
 # these are valid choices... first one is default value if unset
 const LINE_AXES = (:left, :right)
-const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hist, :bar)
+const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)
 const LINE_STYLES = (:solid, :dash, :dot, :dashdot, :dashdotdot)
 const LINE_MARKERS = (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)
 
@@ -27,6 +27,7 @@ PLOT_DEFAULTS[:markercolor] = :match
 PLOT_DEFAULTS[:markersize] = 10
 PLOT_DEFAULTS[:heatmap_n] = 100
 PLOT_DEFAULTS[:heatmap_c] = (0.15, 0.5)
+PLOT_DEFAULTS[:fillto] = nothing  # fills in the area
 
 # plot globals
 PLOT_DEFAULTS[:title] = ""
@@ -34,7 +35,7 @@ PLOT_DEFAULTS[:xlabel] = ""
 PLOT_DEFAULTS[:ylabel] = ""
 PLOT_DEFAULTS[:yrightlabel] = ""
 PLOT_DEFAULTS[:legend] = true
-PLOT_DEFAULTS[:background_color] = :white
+# PLOT_DEFAULTS[:background_color] = nothing
 PLOT_DEFAULTS[:xticks] = true
 PLOT_DEFAULTS[:yticks] = true
 
@@ -56,11 +57,11 @@ autocolor(idx::Integer) = COLORS[mod1(idx,NUMCOLORS)]
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
 # note: if plt is nothing, we aren't doing anything with the color anyways
-function getRGBColor(c, plt)
+function getRGBColor(c, n::Int = 0)
 
   # auto-assign a color based on plot index
-  if c == :auto
-    c = autocolor(plt.n)
+  if c == :auto && n > 0
+    c = autocolor(n)
   end
 
   # convert it from a symbol/string
@@ -83,6 +84,14 @@ function getPlotKeywordArgs(kw, i::Int, plt = nothing)
   d = Dict(kw)
   outd = Dict()
 
+  # default to a white background, but only on the initial call (so we don't change the background automatically)
+  if haskey(d, :background_color)
+    outd[:background_color] = getRGBColor(d[:background_color])
+  elseif plt == nothing
+    d[:background_color] = colorant"white"
+  end
+
+  # fill in outd with either 1) plural value, 2) value, 3) default
   for k in keys(PLOT_DEFAULTS)
     plural = makeplural(k)
     if haskey(d, plural)
@@ -94,25 +103,16 @@ function getPlotKeywordArgs(kw, i::Int, plt = nothing)
     end
   end
 
+  # once the plot is created, we can get line/marker colors
   if plt != nothing
     # update color
-    outd[:color] = getRGBColor(outd[:color], plt)
+    outd[:color] = getRGBColor(outd[:color], plt.n)
 
     # update markercolor
     mc = outd[:markercolor]
-    mc = (mc == :match ? outd[:color] : getRGBColor(mc, plt))
+    mc = (mc == :match ? outd[:color] : getRGBColor(mc, plt.n))
     outd[:markercolor] = mc
   end
-
-  # # auto assign a color
-  # if plt != nothing
-  #   if outd[:color] == :auto
-  #     outd[:color] = autocolor(plt.n)
-  #   end
-  #   if outd[:markercolor] == :auto
-  #     outd[:markercolor] = outd[:color]
-  #   end
-  # end
 
   outd
 end

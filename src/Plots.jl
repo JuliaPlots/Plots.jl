@@ -42,6 +42,12 @@ type Plot
   n::Int # number of series
 end
 
+Base.string(plt::Plot) = "Plot{$(plt.plotter) n=$(plt.n)}"
+Base.print(io::IO, plt::Plot) = print(io, string(plt))
+Base.show(io::IO, plt::Plot) = print(io, string(plt))
+
+
+# ---------------------------------------------------------
 
 type CurrentPlot
   nullableplot::Nullable{Plot}
