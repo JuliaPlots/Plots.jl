@@ -153,12 +153,12 @@ end
 
 # These methods are various ways to add to an existing plot
 
-function plot!(pkg::PlottingPackage, plt::Plot, y::AVec; kw...)
+function plot!{T<:Real}(pkg::PlottingPackage, plt::Plot, y::AVec{T}; kw...)
   plt.n += 1
   plot!(pkg, plt; x = 1:length(y), y = y, getPlotKeywordArgs(kw, 1, plt)...)
 end
 
-function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
+function plot!{T<:Real,S<:Real}(pkg::PlottingPackage, plt::Plot, x::AVec{T}, y::AVec{S}; kw...)              # one line (will assert length(x) == length(y))
   @assert length(x) == length(y)
   plt.n += 1
   plot!(pkg, plt; x=x, y=y, getPlotKeywordArgs(kw, 1, plt)...)
@@ -213,7 +213,7 @@ function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, fs::AVec{Function}; kw.
   plt
 end
 
-function plot!(pkg::PlottingPackage, plt::Plot, y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
+function plot!(pkg::PlottingPackage, plt::Plot, y::AVec; kw...)                 # multiple lines, each with x = 1:length(y[i])
   for i in 1:length(y)
     plt.n += 1
     plot!(pkg, plt; x = 1:length(y[i]), y = y[i], getPlotKeywordArgs(kw, i, plt)...)
@@ -221,7 +221,7 @@ function plot!(pkg::PlottingPackage, plt::Plot, y::AVec{AVec}; kw...)           
   plt
 end
 
-function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
+function plot!{T<:Real}(pkg::PlottingPackage, plt::Plot, x::AVec{T}, y::AVec; kw...)        # multiple lines, will assert length(x) == length(y[i])
   for i in 1:length(y)
     @assert length(x) == length(y[i])
     plt.n += 1
@@ -230,7 +230,7 @@ function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec{AVec}; kw...)  
   plt
 end
 
-function plot!(pkg::PlottingPackage, plt::Plot, x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
+function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
   @assert length(x) == length(y)
   for i in 1:length(x)
     @assert length(x[i]) == length(y[i])

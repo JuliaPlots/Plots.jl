@@ -29,10 +29,14 @@ function getGeoms(linetype::Symbol, marker::Symbol, heatmap_n::Int)
   else
     if linetype == :line
       push!(geoms, Gadfly.Geom.line)
-    elseif linetype == :dots || marker != :none
+    elseif linetype == :dots
       push!(geoms, Gadfly.Geom.point)
-    elseif linetype != :dots
+    else
       error("linetype $linetype not currently supported with Gadfly")
+    end
+
+    if marker != :none
+      push!(geoms, Gadfly.Geom.point)
     end
   end
 end
