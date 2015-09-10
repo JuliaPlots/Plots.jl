@@ -66,9 +66,9 @@ currentPlot!(plot) = (CURRENT_PLOT.nullableplot = Nullable(plot))
 
 # ---------------------------------------------------------
 
-include("plotter.jl")
 include("qwt.jl")
 include("gadfly.jl")
+include("plotter.jl")
 
 # ---------------------------------------------------------
 

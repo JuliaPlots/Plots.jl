@@ -24,10 +24,11 @@ PLOT_DEFAULTS[:linetype] = :line
 PLOT_DEFAULTS[:linestyle] = :solid
 PLOT_DEFAULTS[:marker] = :none
 PLOT_DEFAULTS[:markercolor] = :match
-PLOT_DEFAULTS[:markersize] = 10
-PLOT_DEFAULTS[:heatmap_n] = 100
+PLOT_DEFAULTS[:markersize] = 3
+PLOT_DEFAULTS[:nbins] = 100               # number of bins for heatmaps and hists
 PLOT_DEFAULTS[:heatmap_c] = (0.15, 0.5)
-PLOT_DEFAULTS[:fillto] = nothing  # fills in the area
+PLOT_DEFAULTS[:fillto] = nothing          # fills in the area
+PLOT_DEFAULTS[:reg] = false               # regression line?
 
 # plot globals
 PLOT_DEFAULTS[:title] = ""

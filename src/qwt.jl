@@ -8,25 +8,18 @@ function adjustQwtKeywords(; kw...)
   if d[:linetype] == :hexbin
     d[:linetype] = :heatmap
   end
+  d[:heatmap_n] = d[:nbins]
   d
 end
 
 function plot(pkg::QwtPackage; kw...)
   kw = adjustQwtKeywords(;kw...)
   plt = Plot(Qwt.plot(zeros(0,0); kw..., show=false), pkg, 0)
-  # d = Dict(kw)
-  # if haskey(d, :background_color)
-  #   Qwt.background!(plt.o, Dict(kw)[:background_color])
-  # end
   plt
 end
 
 function plot!(::QwtPackage, plt::Plot; kw...)
   kw = adjustQwtKeywords(;kw...)
-  # d = Dict(kw)
-  # if haskey(d, :background_color)
-  #   Qwt.background!(plt.o, Dict(kw)[:background_color])
-  # end
   Qwt.oplot(plt.o; kw...)
 end
 

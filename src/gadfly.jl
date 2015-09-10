@@ -22,57 +22,62 @@ function plot(pkg::GadflyPackage; kw...)
   Plot(plt, pkg, 0)
 end
 
-function getGeoms(linetype::Symbol, marker::Symbol, heatmap_n::Int)
-  geoms = []
-  if linetype in (:heatmap,:hexbin)
-    push!(geoms, Gadfly.Geom.hexbin(xbincount=heatmap_n, ybincount=heatmap_n))
-  else
-    if linetype == :line
-      push!(geoms, Gadfly.Geom.line)
-    elseif linetype == :dots
-      push!(geoms, Gadfly.Geom.point)
-    else
-      error("linetype $linetype not currently supported with Gadfly")
-    end
+function getGeomFromLineType(linetype::Symbol)
+  linetype == :line && return Gadfly.Geom.line
+  linetype == :dots && return Gadfly.Geom.point
+  linetype == :bar && return Gadfly.Geom.bar
+  linetype == :step && return Gadfly.Geom.step
+  linetype == :hist && return Gadfly.Geom.hist
+  error("linetype $linetype not currently supported with Gadfly")
+end
 
+function getGeoms(linetype::Symbol, marker::Symbol, nbins::Int)
+  geoms = []
+
+  # handle heatmaps (hexbins) specially
+  if linetype in (:heatmap,:hexbin)
+    push!(geoms, Gadfly.Geom.hexbin(xbincount=nbins, ybincount=nbins))
+  else
+
+    # for other linetypes, get the correct Geom
+    push!(geoms, getGeomFromLineType(linetype))
+
+    # for any marker, add Geom.point
     if marker != :none
       push!(geoms, Gadfly.Geom.point)
     end
   end
+
+  geoms
 end
 
-# # note: currently only accepts lines and dots
-# function getGeomLine(linetype::Symbol, heatmap_n::Int)
-#   linetype == :line && return [Gadfly.Geom.line]
-#   linetype == :dots && return [Gadfly.Geom.point]
-#   linetype in (:heatmap, :hexbin) && return [Gadfly.Geom.hexbin(xbincount=heatmap_n, ybincount=heatmap_n)]
-#   error("linetype $linetype not currently supported with Gadfly")
-# end
-
-# # note: currently map any marker to point
-# function getGeomPoint(linetype::Syombol, marker::Symbol)
-#   if marker == :none || linetype in (:heatmap, :hexbin) 
-#     return []
-#   end
-#   [Gadfly.Geom.point]
-# end
 
 # plot one data series
 function plot!(::GadflyPackage, plt::Plot; kw...)
   d = Dict(kw)
 
   gfargs = []
-  # append!(gfargs, getGeomLine(d[:linetype], d[:heatmap_n]))
-  # append!(gfargs, getGeomPoint(d[:marker]))
-  append!(gfargs, getGeoms(d[:linetype], d[:marker], d[:heatmap_n]))
 
+  # add the Geoms
+  println(d)
+  append!(gfargs, getGeoms(d[:linetype], d[:marker], d[:nbins]))
+
+  # set color, line width, and point size
   theme = Gadfly.Theme(default_color = d[:color],
                        line_width = d[:width] * Gadfly.px,
                        default_point_size = d[:markersize] * Gadfly.px)
   push!(gfargs, theme)
 
+  # add a regression line?
+  if d[:reg]
+    push!(gfargs, Gadfly.Geom.smooth(method=:lm))
+  end
 
-  append!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = d[:x], y = d[:y]))
+  # for histograms, set x=y
+  x = d[d[:linetype] == :hist ? :y : :x]
+
+  # add the layer to the Gadfly.Plot
+  append!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
   plt
 end
 
