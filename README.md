@@ -8,8 +8,8 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 
 ## Examples
 
-[Qwt.jl](docs/qwt_examples.md)
-[Gadfly.jl](docs/gadfly_examples.md)
+- [Qwt.jl](docs/qwt_examples.md)
+- [Gadfly.jl](docs/gadfly_examples.md)
 
 ## Installation
 
