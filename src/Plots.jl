@@ -102,8 +102,10 @@ heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
 
 
 # subplot(args...; kw...) = subplot(plotter(), args...; kw...)
-savepng(args...; kw...) = savepng(plotter(), args...; kw...)
 
+# savepng(args...; kw...) = savepng(plotter(), args...; kw...)
+savepng(args...; kw...) = savepng(currentPlot(), args...; kw...)
+savepng(plt::Plot, args...; kw...) = savepng(plt.plotter, plt, args...; kw...)
 
 
 # ---------------------------------------------------------

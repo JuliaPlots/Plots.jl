@@ -43,7 +43,7 @@ Do a plot in Gadfly, then save a png:
 ```
 plotter!(:gadfly)  # switches the backend to Gadfly
 plot(rand(10,2); marker = :rect)
-savepng(ans, Plots.IMG_DIR * "gadfly1.png", 6 * Gadfly.inch, 4 * Gadfly.inch)
+savepng(ans, Plots.IMG_DIR * "gadfly1.png")
 ```
 
 which saves:
