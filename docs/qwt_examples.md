@@ -43,7 +43,7 @@ plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8)
 Mix arguments that apply to all series with arguments unique to each series.
 
 ```julia
-plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8,markercolors=[:red,:blue])
+plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8,colors=[:red,:blue])
 ```
 
 ![](../img/qwt_example_5.png)
