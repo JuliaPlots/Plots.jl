@@ -28,19 +28,21 @@ plot(rand(10); title="TITLE",xlabel="XLABEL",ylabel="YLABEL",background_color=RG
 
 ![](../img/qwt_example_3.png)
 
-### Vectors
+### Two-axis
 
-Plot multiple series with different numbers of points.
+Use the `axis` or `axiss` arguments.
+
+Note: This is only supported with Qwt right now
 
 ```julia
-plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8)
+plot(Vector[randn(100),randn(100) * 100]; axiss=[:left,:right])
 ```
 
 ![](../img/qwt_example_4.png)
 
 ### Vectors w/ pluralized args
 
-Mix arguments that apply to all series with arguments unique to each series.
+Plot multiple series with different numbers of points.  Mix arguments that apply to all series (singular... see `marker`) with arguments unique to each series (pluralized... see `colors`).
 
 ```julia
 plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8,colors=[:red,:blue])
