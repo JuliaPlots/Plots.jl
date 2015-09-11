@@ -82,7 +82,8 @@ include("plot.jl")
 include("subplot.jl")
 
 
-# const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hist, :bar)
+# ---------------------------------------------------------
+
 scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :hexagon)
 scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :hexagon)
 bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
@@ -94,13 +95,6 @@ heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
 
 
 # ---------------------------------------------------------
-
-# # TODO: how do we handle NA values in dataframes?
-# function plot!(plt::Plot, df::DataFrame; kw...)                 # one line per DataFrame column, labels == names(df)
-# end
-
-# function plot!(plt::Plot, df::DataFrame, columns; kw...)        # one line per column, but on a subset of column names
-# end
 
 
 savepng(args...; kw...) = savepng(currentPlot(), args...; kw...)

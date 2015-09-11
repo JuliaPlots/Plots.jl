@@ -241,6 +241,8 @@ function createKWargsList(plt::PlottingObject, n::Integer; kw...)
   ret
 end
 
+# TODO: handle DataFrames (might have NAs!)
+
 # -------------------------
 
 # most calls should flow through here now... we create a Dict with the keyword args for each series, and plot them
