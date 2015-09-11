@@ -12,7 +12,7 @@ export
   plotter!,
   plot!,
   subplot!,
-    
+
   currentPlot,
   plotDefault,
   scatter,
@@ -69,7 +69,7 @@ heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
 
 
 savepng(args...; kw...) = savepng(currentPlot(), args...; kw...)
-savepng(plt::Plot, args...; kw...) = savepng(plt.plotter, plt, args...; kw...)
+savepng(plt::PlottingObject, args...; kw...) = savepng(plt.plotter, plt, args...; kw...)
 
 
 # ---------------------------------------------------------

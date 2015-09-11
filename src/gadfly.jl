@@ -104,8 +104,9 @@ function Base.display(::GadflyPackage, plt::Plot)
   display(plt.o)
 end
 
+# -------------------------------
 
-function savepng(::GadflyPackage, plt::Plot, fn::String;
+function savepng(::GadflyPackage, plt::PlottingObject, fn::String;
                                     w = 6 * Gadfly.inch,
                                     h = 4 * Gadfly.inch)
   Gadfly.draw(Gadfly.PNG(fn, w, h), plt.o)

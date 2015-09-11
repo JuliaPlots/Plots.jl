@@ -115,7 +115,7 @@ function subplot!(subplt::Subplot, args...; kw...)
   # do we want to show it?
   d = Dict(kw)
   if haskey(d, :show) && d[:show]
-    display(subplt)
+    draw(subplt)
   end
 
   subplt

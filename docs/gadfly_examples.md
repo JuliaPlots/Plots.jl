@@ -100,3 +100,38 @@ histogram(randn(1000); nbins=50,fillto=20)
 
 ![](../img/gadfly_example_10.png)
 
+### Subplots
+
+  subplot and subplot! are distinct commands which create many plots and add series to them in a circular fashion.
+  You can define the layout with keyword params... either set the number of plots `n` (and optionally number of rows `nr` or 
+  number of columns `nc`), or you can set the layout directly with `layout`.  
+
+  Note: Gadfly is not very friendly here, and although you can create a plot and save a PNG, I haven't been able to actually display it.
+
+
+```julia
+subplot(randn(100,5); layout=[1,1,3],linetypes=[:line,:hist,:dots,:step,:bar],nbins=10,legend=false)
+```
+
+![](../img/gadfly_example_11.png)
+
+### Adding to subplots
+
+Note here the automatic grid layout, as well as the order in which new series are added to the plots.
+
+```julia
+subplot(randn(100,5); n=4)
+```
+
+![](../img/gadfly_example_12.png)
+
+### Adding to subplots (continued)
+
+
+
+```julia
+subplot!(randn(100,3))
+```
+
+![](../img/gadfly_example_13.png)
+
