@@ -125,7 +125,7 @@ subplot(randn(100,5); n=4)
 
 ![](../img/qwt_example_12.png)
 
-### Adding to subplots (continued)
+### 
 
 
 

@@ -61,7 +61,7 @@ const examples = PlotExample[
   PlotExample("Adding to subplots",
               "Note here the automatic grid layout, as well as the order in which new series are added to the plots.",
               [:(subplot(randn(100,5); n=4))]),
-  PlotExample("Adding to subplots (continued)",
+  PlotExample("",
               "",
               [:(subplot!(randn(100,3)))]),
 
