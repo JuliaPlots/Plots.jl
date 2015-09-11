@@ -12,17 +12,17 @@ type Plot <: PlottingObject
 end
 
 
-type SubPlotLayout
+type SubplotLayout
   numplts::Int
   rowcounts::AbstractVector{Int}
 end
 
 
-type SubPlot <: PlottingObject
+type Subplot <: PlottingObject
   o                           # the underlying object
   plts::Vector{Plot}          # the individual plots
   plotter::PlottingPackage
   p::Int                      # number of plots
   n::Int                      # number of series
-  layout::SubPlotLayout
+  layout::SubplotLayout
 end

@@ -137,7 +137,12 @@ doc"Build a vector of dictionaries which hold the keyword arguments for a call t
 
 # no args... 1 series
 function createKWargsList(plt::PlottingObject; kw...)
-  [getPlotKeywordArgs(kw, 1, plt.n + 1)]
+  d = Dict(kw)
+  @assert haskey(d, :y)
+  if !haskey(d, :x)
+    d[:x] = 1:length(d[:y])
+  end
+  [getPlotKeywordArgs(d, 1, plt.n + 1)]
 end
 
 # create one series where y is vectors of numbers

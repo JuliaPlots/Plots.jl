@@ -5,9 +5,14 @@ module Plots
 using Colors
 
 export
-  Plot,
   plotter,
   plot,
+  subplot,
+
+  plotter!,
+  plot!,
+  subplot!,
+    
   currentPlot,
   plotDefault,
   scatter,
@@ -15,8 +20,6 @@ export
   histogram,
   heatmap,
 
-  plotter!,
-  plot!,
   currentPlot!,
   plotDefault!,
   scatter!,

@@ -1,10 +1,10 @@
 
 
 # create a layout directly
-SubPlotLayout(rowcounts::AbstractVector{Int}) = SubPlotLayout(sum(rowcounts), rowcounts)
+SubplotLayout(rowcounts::AbstractVector{Int}) = SubplotLayout(sum(rowcounts), rowcounts)
 
 # create a layout given counts... numrows/numcols == -1 implies we figure out a good number automatically
-function SubPlotLayout(numplts::Int, numrows::Int, numcols::Int)
+function SubplotLayout(numplts::Int, numrows::Int, numcols::Int)
 
   # figure out how many rows/columns we need
   if numrows == -1
@@ -27,21 +27,21 @@ function SubPlotLayout(numplts::Int, numrows::Int, numcols::Int)
     i += cnt
   end
 
-  SubPlotLayout(numplts, rowcounts)
+  SubplotLayout(numplts, rowcounts)
 end
 
 
-Base.length(layout::SubPlotLayout) = layout.numplts
+Base.length(layout::SubplotLayout) = layout.numplts
 
 
 # ------------------------------------------------------------
 
 
-Base.string(subplt::SubPlot) = "SubPlot{$(subplt.plotter) p=$(subplt.p) n=$(subplt.n)}"
-Base.print(io::IO, subplt::SubPlot) = print(io, string(subplt))
-Base.show(io::IO, subplt::SubPlot) = print(io, string(subplt))
+Base.string(subplt::Subplot) = "Subplot{$(subplt.plotter) p=$(subplt.p) n=$(subplt.n)}"
+Base.print(io::IO, subplt::Subplot) = print(io, string(subplt))
+Base.show(io::IO, subplt::Subplot) = print(io, string(subplt))
 
-getplot(subplt::SubPlot) = subplt.plts[mod1(subplt.n, subplt.p)]
+getplot(subplt::Subplot) = subplt.plts[mod1(subplt.n, subplt.p)]
 
 # ------------------------------------------------------------
 
@@ -76,7 +76,7 @@ function subplot(args...; kw...)
   o = buildSubplotObject(plts, pkg, layout)
 
   # create the object and do the plotting
-  subplt = SubPlot(o, plts, pkg, length(layout), 0, layout)
+  subplt = Subplot(o, plts, pkg, length(layout), 0, layout)
   subplot!(subplt, args...; kw...)
 end
 
@@ -97,7 +97,7 @@ end
 
 
 # # this adds to a specific subplot... most plot commands will flow through here
-function subplot!(subplt::SubPlot, args...; kw...)
+function subplot!(subplt::Subplot, args...; kw...)
   kwList = createKWargsList(subplt, args...; kw...)
   for (i,d) in enumerate(kwList)
     subplt.n += 1
