@@ -47,16 +47,14 @@ savepng(::QwtPackage, plt::PlottingObject, fn::String, args...) = Qwt.savepng(pl
 # # create the underlying object (each backend will do this differently)
 # o = buildSubplotObject(plts, pkg, layout)
 
-function buildSubplotObject(plts::Vector{Plot}, pkg::QwtPackage, layout::SubplotLayout)
-  @show plts pkg layout
+function buildSubplotObject!(::QwtPackage, subplt::Subplot)
   i = 0
   rows = []
-  for rowcnt in layout.rowcounts
-    push!(rows, Qwt.hsplitter([plt.o for plt in plts[(1:rowcnt) + i]]...))
+  for rowcnt in subplt.layout.rowcounts
+    push!(rows, Qwt.hsplitter([plt.o for plt in subplt.plts[(1:rowcnt) + i]]...))
     i += rowcnt
   end
-  @show rows
-  Qwt.vsplitter(rows...)
+  subplt.o = Qwt.vsplitter(rows...)
 end
 
 

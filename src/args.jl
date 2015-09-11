@@ -82,15 +82,9 @@ function getRGBColor(c, n::Int = 0)
 end
 
 
-# note: i is the index of this series within this call, n is the index of the series from all calls to plot/subplot
-function getPlotKeywordArgs(kw, i::Int, n::Int)
+# note: idx is the index of this series within this call, n is the index of the series from all calls to plot/subplot
+function getPlotKeywordArgs(kw, idx::Int, n::Int)
   d = Dict(kw)
-
-  if n == 0
-    delete!(d, :x)
-    delete!(d, :y)
-  end
-  # outd = Dict()
 
   # default to a white background, but only on the initial call (so we don't change the background automatically)
   if haskey(d, :background_color)
@@ -102,17 +96,25 @@ function getPlotKeywordArgs(kw, i::Int, n::Int)
   # fill in d with either 1) plural value, 2) value, 3) default
   for k in keys(PLOT_DEFAULTS)
     plural = makeplural(k)
-    if haskey(d, plural)
-      d[k] = d[plural][i]
-    elseif haskey(d, k)
-      d[k] = d[k]
-    else
-      d[k] = PLOT_DEFAULTS[k]
+    # if haskey(d, plural)
+    #   d[k] = d[plural][idx]
+    if !haskey(d, k)
+      if n == 0 || k != :size
+        d[k] = haskey(d, plural) ? d[plural][idx] : PLOT_DEFAULTS[k]
+      end
     end
+    delete!(d, plural)
   end
 
-  # once the plot is created, we can get line/marker colors
-  if n > 0
+
+
+  # handle plot initialization differently
+  if n == 0
+    delete!(d, :x)
+    delete!(d, :y)
+  else
+    # once the plot is created, we can get line/marker colors
+  
     # update color
     d[:color] = getRGBColor(d[:color], n)
 

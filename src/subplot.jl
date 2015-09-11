@@ -3,26 +3,26 @@
 # create a layout directly
 SubplotLayout(rowcounts::AbstractVector{Int}) = SubplotLayout(sum(rowcounts), rowcounts)
 
-# create a layout given counts... numrows/numcols == -1 implies we figure out a good number automatically
-function SubplotLayout(numplts::Int, numrows::Int, numcols::Int)
+# create a layout given counts... nr/nc == -1 implies we figure out a good number automatically
+function SubplotLayout(numplts::Int, nr::Int, nc::Int)
 
   # figure out how many rows/columns we need
-  if numrows == -1
-    if numcols == -1
-      numrows = round(Int, sqrt(numplts))
-      numcols = ceil(Int, numplts / numrows)
+  if nr == -1
+    if nc == -1
+      nr = round(Int, sqrt(numplts))
+      nc = ceil(Int, numplts / nr)
     else
-      numrows = ceil(Int, numplts / numcols)
+      nr = ceil(Int, numplts / nc)
     end
   else
-    numcols = ceil(Int, numplts / numrows)
+    nc = ceil(Int, numplts / nr)
   end
 
   # create the rowcounts vector
   i = 0
   rowcounts = Int[]
-  for r in 1:numrows
-    cnt = min(numcols, numplts - i)
+  for r in 1:nr
+    cnt = min(nc, numplts - i)
     push!(rowcounts, cnt)
     i += cnt
   end
@@ -48,11 +48,13 @@ getplot(subplt::Subplot) = subplt.plts[mod1(subplt.n, subplt.p)]
 
 doc"""
 Create a series of plots:
+```
   y = rand(100,3)
-  subplot(y; n = 3)                # create an automatic grid, and let it figure out the numrows/numcols... will put plots 1 and 2 on the first row, and plot 3 by itself on the 2nd row
-  subplot(y; n = 3, numrows = 1)   # create an automatic grid, but fix the number of rows to 1 (so there are n columns)
-  subplot(y; n = 3, numcols = 1)   # create an automatic grid, but fix the number of columns to 1 (so there are n rows)
-  subplot(y; layout = [1, 2])      # explicit layout by row... plot #1 goes by itself in the first row, plots 2 and 3 split the 2nd row (note the n kw is unnecessary)
+  subplot(y; n = 3)             # create an automatic grid, and let it figure out the nr/nc... will put plots 1 and 2 on the first row, and plot 3 by itself on the 2nd row
+  subplot(y; n = 3, nr = 1)     # create an automatic grid, but fix the number of rows to 1 (so there are n columns)
+  subplot(y; n = 3, nc = 1)     # create an automatic grid, but fix the number of columns to 1 (so there are n rows)
+  subplot(y; layout = [1, 2])   # explicit layout by row... plot #1 goes by itself in the first row, plots 2 and 3 split the 2nd row (note the n kw is unnecessary)
+```
 """
 function subplot(args...; kw...)
   d = Dict(kw)
@@ -64,7 +66,7 @@ function subplot(args...; kw...)
     if !haskey(d, :n)
       error("You must specify either layout or n when creating a subplot: ", d)
     end
-    layout = SubplotLayout(d[:n], get(d, :numrows, -1), get(d, :numcols, -1))
+    layout = SubplotLayout(d[:n], get(d, :nr, -1), get(d, :nc, -1))
   end
 
   # initialize the individual plots
@@ -72,12 +74,11 @@ function subplot(args...; kw...)
   kw0 = getPlotKeywordArgs(kw, 1, 0)
   plts = Plot[plot(pkg; kw0..., show=false) for i in 1:length(layout)]
 
-  # create the underlying object (each backend will do this differently)
-  o = buildSubplotObject(plts, pkg, layout)
-
   # create the object and do the plotting
-  subplt = Subplot(o, plts, pkg, length(layout), 0, layout)
+  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout)
   subplot!(subplt, args...; kw...)
+
+  subplt
 end
 
 doc"""
@@ -105,6 +106,10 @@ function subplot!(subplt::Subplot, args...; kw...)
     plot!(plt; d...)
   end
 
+  # create the underlying object (each backend will do this differently)
+  buildSubplotObject!(subplt.plotter, subplt)
+
+  # set this to be current
   currentPlot!(subplt)
 
   # do we want to show it?
@@ -115,37 +120,5 @@ function subplot!(subplt::Subplot, args...; kw...)
 
   subplt
 end
-
-
-# # # this creates a new plot with args/kw and sets it to be the current plot
-# # function plot(args...; kw...)
-# #   plt = plot(plotter(); getPlotKeywordArgs(kw, 1, 0)...)  # create a new, blank plot
-# #   plot!(plt, args...; kw...)  # add to it
-# # end
-
-# # # this adds to the current plot
-# # function  plot!(args...; kw...)
-# #   plot!(currentPlot(), args...; kw...)
-# # end
-
-# # this adds to a specific plot... most plot commands will flow through here
-# function plot!(plt::Plot, args...; kw...)
-
-#   kwList = createKWargsList(plt, args...; kw...)
-#   for (i,d) in enumerate(kwList)
-#     plt.n += 1
-#     plot!(plt.plotter, plt; d...)
-#   end
-
-#   currentPlot!(plt)
-
-#   # do we want to show it?
-#   d = Dict(kw)
-#   if haskey(d, :show) && d[:show]
-#     display(plt)
-#   end
-
-#   plt
-# end
 
 

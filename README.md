@@ -214,6 +214,10 @@ When plotting multiple lines, you can give every line the same trait by using th
 - [ ] TikzGraphs.jl
 - [ ] GraphLayout.jl
 
+# Backends
+
+See the wiki at: https://github.com/JuliaPlot/juliaplot_docs/wiki
+
 # Author
 
 Thomas Breloff (@tbreloff)

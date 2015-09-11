@@ -112,3 +112,22 @@ function savepng(::GadflyPackage, plt::Plot, fn::String;
 end
 
 
+# -------------------------------
+
+# # create the underlying object (each backend will do this differently)
+# o = buildSubplotObject(plts, pkg, layout)
+
+function buildSubplotObject!(::GadflyPackage, subplt::Subplot)
+  i = 0
+  rows = []
+  for rowcnt in subplt.layout.rowcounts
+    push!(rows, Gadfly.hstack([plt.o for plt in subplt.plts[(1:rowcnt) + i]]...))
+    i += rowcnt
+  end
+  subplt.o = Gadfly.vstack(rows...)
+end
+
+
+function Base.display(::GadflyPackage, subplt::Subplot)
+  display(subplt.o)
+end

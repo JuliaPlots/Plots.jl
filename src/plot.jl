@@ -96,6 +96,11 @@ function  plot!(args...; kw...)
   plot!(currentPlot(), args...; kw...)
 end
 
+# not allowed:
+function plot!(subplt::Subplot, args...; kw...)
+  error("Can't call plot! on a Subplot!")
+end
+
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
 
