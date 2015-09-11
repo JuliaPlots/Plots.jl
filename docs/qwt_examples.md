@@ -50,14 +50,23 @@ plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8,colors=[:red,:blue]
 
 ### Build plot in pieces
 
-You can add to a plot at any time.
+Start with a base plot...
 
 ```julia
 plot(rand(100) / 3; reg=true,fillto=0)
-scatter!(rand(100); markersize=6,color=:blue)
 ```
 
 ![](../img/qwt_example_6.png)
+
+### 
+
+and add to it later.
+
+```julia
+scatter!(rand(100); markersize=6,color=:blue)
+```
+
+![](../img/qwt_example_7.png)
 
 ### Heatmaps
 
@@ -67,7 +76,7 @@ scatter!(rand(100); markersize=6,color=:blue)
 heatmap(randn(10000),randn(10000); nbins=200)
 ```
 
-![](../img/qwt_example_7.png)
+![](../img/qwt_example_8.png)
 
 ### Lots of line types
 
@@ -78,7 +87,7 @@ Note: some may not work with all backends
 plot(rand(20,4); linetypes=[:line,:step,:sticks,:dots])
 ```
 
-![](../img/qwt_example_8.png)
+![](../img/qwt_example_9.png)
 
 ### Bar
 
@@ -88,7 +97,7 @@ x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints
 bar(randn(1000))
 ```
 
-![](../img/qwt_example_9.png)
+![](../img/qwt_example_10.png)
 
 ### Histogram
 
@@ -98,7 +107,7 @@ note: fillto isn't supported on all backends
 histogram(randn(1000); nbins=50,fillto=20)
 ```
 
-![](../img/qwt_example_10.png)
+![](../img/qwt_example_11.png)
 
 ### Subplots
 
@@ -113,7 +122,7 @@ histogram(randn(1000); nbins=50,fillto=20)
 subplot(randn(100,5); layout=[1,1,3],linetypes=[:line,:hist,:dots,:step,:bar],nbins=10,legend=false)
 ```
 
-![](../img/qwt_example_11.png)
+![](../img/qwt_example_12.png)
 
 ### Adding to subplots
 
@@ -123,7 +132,7 @@ Note here the automatic grid layout, as well as the order in which new series ar
 subplot(randn(100,5); n=4)
 ```
 
-![](../img/qwt_example_12.png)
+![](../img/qwt_example_13.png)
 
 ### 
 
@@ -133,5 +142,5 @@ subplot(randn(100,5); n=4)
 subplot!(randn(100,3))
 ```
 
-![](../img/qwt_example_13.png)
+![](../img/qwt_example_14.png)
 
