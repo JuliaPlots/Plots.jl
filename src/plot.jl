@@ -1,4 +1,28 @@
 
+type CurrentPlot
+  nullableplot::Nullable{PlottingObject}
+end
+const CURRENT_PLOT = CurrentPlot(Nullable{PlottingObject}())
+
+isplotnull() = isnull(CURRENT_PLOT.nullableplot)
+
+function currentPlot()
+  if isplotnull()
+    error("No current plot/subplot")
+  end
+  get(CURRENT_PLOT.nullableplot)
+end
+currentPlot!(plot::PlottingObject) = (CURRENT_PLOT.nullableplot = Nullable(plot))
+
+# ---------------------------------------------------------
+
+
+Base.string(plt::Plot) = "Plot{$(plt.plotter) n=$(plt.n)}"
+Base.print(io::IO, plt::Plot) = print(io, string(plt))
+Base.show(io::IO, plt::Plot) = print(io, string(plt))
+
+getplot(plt::Plot) = plt
+
 
 doc"""
 The main plot command.  Call `plotter!(:module)` to set the current plotting backend.
@@ -75,12 +99,20 @@ end
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
 
-  # increment n if we're going directly to the package's plot method
-  if length(args) == 0
+  # # increment n if we're going directly to the package's plot method
+  # if length(args) == 0
+  #   plt.n += 1
+  # end
+
+  # plot!(plt.plotter, plt, args...; kw...)
+
+
+  kwList = createKWargsList(plt, args...; kw...)
+  for (i,d) in enumerate(kwList)
     plt.n += 1
+    plot!(plt.plotter, plt; d...)
   end
 
-  plot!(plt.plotter, plt, args...; kw...)
   currentPlot!(plt)
 
   # do we want to show it?
@@ -93,7 +125,7 @@ function plot!(plt::Plot, args...; kw...)
 end
 
 # show/update the plot
-function Base.display(plt::Plot)
+function Base.display(plt::PlottingObject)
   display(plt.plotter, plt)
 end
 
@@ -102,6 +134,11 @@ end
 
 
 doc"Build a vector of dictionaries which hold the keyword arguments for a call to plot!"
+
+# no args... 1 series
+function createKWargsList(plt::PlottingObject; kw...)
+  [getPlotKeywordArgs(kw, 1, plt.n + 1)]
+end
 
 # create one series where y is vectors of numbers
 function createKWargsList{T<:Real}(plt::PlottingObject, y::AVec{T}; kw...)
@@ -245,15 +282,15 @@ end
 
 # -------------------------
 
-# most calls should flow through here now... we create a Dict with the keyword args for each series, and plot them
-function plot!(pkg::PlottingPackage, plt::Plot, args...; kw...)
-  kwList = createKWargsList(plt, args...; kw...)
-  for (i,d) in enumerate(kwList)
-    plt.n += 1
-    plot!(pkg, plt; d...)
-  end
-  plt
-end
+# # most calls should flow through here now... we create a Dict with the keyword args for each series, and plot them
+# function plot!(pkg::PlottingPackage, plt::Plot, args...; kw...)
+#   kwList = createKWargsList(plt, args...; kw...)
+#   for (i,d) in enumerate(kwList)
+#     plt.n += 1
+#     plot!(pkg, plt; d...)
+#   end
+#   plt
+# end
 
 # -------------------------
 

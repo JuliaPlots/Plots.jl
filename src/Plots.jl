@@ -28,45 +28,14 @@ export
 
 # ---------------------------------------------------------
 
-typealias AVec AbstractVector
-typealias AMat AbstractMatrix
-
-abstract PlottingObject
-abstract PlottingPackage
 
 const IMG_DIR = Pkg.dir("Plots") * "/img/"
 
 
 # ---------------------------------------------------------
 
-type Plot <: PlottingObject
-  o  # the underlying object
-  plotter::PlottingPackage
-  n::Int # number of series
-end
-
-Base.string(plt::Plot) = "Plot{$(plt.plotter) n=$(plt.n)}"
-Base.print(io::IO, plt::Plot) = print(io, string(plt))
-Base.show(io::IO, plt::Plot) = print(io, string(plt))
-
-getplot(plt::Plot, args...) = plt
-
-# ---------------------------------------------------------
-
-type CurrentPlot
-  nullableplot::Nullable{PlottingObject}
-end
-const CURRENT_PLOT = CurrentPlot(Nullable{PlottingObject}())
-
-isplotnull() = isnull(CURRENT_PLOT.nullableplot)
-
-function currentPlot()
-  if isplotnull()
-    error("No current plot/subplot")
-  end
-  get(CURRENT_PLOT.nullableplot)
-end
-currentPlot!(plot::PlottingObject) = (CURRENT_PLOT.nullableplot = Nullable(plot))
+include("types.jl")
+include("utils.jl")
 
 # ---------------------------------------------------------
 
@@ -76,7 +45,6 @@ include("plotter.jl")
 
 # ---------------------------------------------------------
 
-include("utils.jl")
 include("args.jl")
 include("plot.jl")
 include("subplot.jl")
