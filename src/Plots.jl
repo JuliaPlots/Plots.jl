@@ -54,19 +54,19 @@ getplot(plt::Plot, args...) = plt
 # ---------------------------------------------------------
 
 type CurrentPlot
-  nullableplot::Nullable{Plot}
+  nullableplot::Nullable{PlottingObject}
 end
-const CURRENT_PLOT = CurrentPlot(Nullable{Plot}())
+const CURRENT_PLOT = CurrentPlot(Nullable{PlottingObject}())
 
 isplotnull() = isnull(CURRENT_PLOT.nullableplot)
 
 function currentPlot()
   if isplotnull()
-    error("No current plot")
+    error("No current plot/subplot")
   end
   get(CURRENT_PLOT.nullableplot)
 end
-currentPlot!(plot) = (CURRENT_PLOT.nullableplot = Nullable(plot))
+currentPlot!(plot::PlottingObject) = (CURRENT_PLOT.nullableplot = Nullable(plot))
 
 # ---------------------------------------------------------
 

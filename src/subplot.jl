@@ -22,6 +22,6 @@ getplot(subplt::SubPlot, i::Int) = subplt.plts[mod1(i, subplt.p)]
 # ------------------------------------------------------------
 
 
-function subplot(args...; )
+function subplot(args...; kw...)
 end
 
