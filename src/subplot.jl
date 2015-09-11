@@ -58,13 +58,13 @@ function subplot(args...; kw...)
   d = Dict(kw)
 
   # figure out the layout
-  if !haskey(d, :layout)
-    layout = FixedLayout(d[:layout])
+  if haskey(d, :layout)
+    layout = SubplotLayout(d[:layout])
   else
     if !haskey(d, :n)
       error("You must specify either layout or n when creating a subplot: ", d)
     end
-    layout = AutoGridLayout(d[:n], get(d, :numrows, -1), get(d, :numcols, -1))
+    layout = SubplotLayout(d[:n], get(d, :numrows, -1), get(d, :numcols, -1))
   end
 
   # initialize the individual plots
