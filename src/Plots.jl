@@ -31,6 +31,7 @@ export
 typealias AVec AbstractVector
 typealias AMat AbstractMatrix
 
+abstract PlottingObject
 abstract PlottingPackage
 
 const IMG_DIR = Pkg.dir("Plots") * "/img/"
@@ -38,7 +39,7 @@ const IMG_DIR = Pkg.dir("Plots") * "/img/"
 
 # ---------------------------------------------------------
 
-type Plot
+type Plot <: PlottingObject
   o  # the underlying object
   plotter::PlottingPackage
   n::Int # number of series
@@ -48,6 +49,7 @@ Base.string(plt::Plot) = "Plot{$(plt.plotter) n=$(plt.n)}"
 Base.print(io::IO, plt::Plot) = print(io, string(plt))
 Base.show(io::IO, plt::Plot) = print(io, string(plt))
 
+getplot(plt::Plot, args...) = plt
 
 # ---------------------------------------------------------
 
@@ -77,6 +79,7 @@ include("plotter.jl")
 include("utils.jl")
 include("args.jl")
 include("plot.jl")
+include("subplot.jl")
 
 
 # const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hist, :bar)

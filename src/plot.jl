@@ -63,7 +63,7 @@ When plotting multiple lines, you can give every line the same trait by using th
 
 # this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
-  plt = plot(plotter(); getPlotKeywordArgs(kw, 1)...)  # create a new, blank plot
+  plt = plot(plotter(); getPlotKeywordArgs(kw, 1, 0)...)  # create a new, blank plot
   plot!(plt, args...; kw...)  # add to it
 end
 
@@ -99,107 +99,185 @@ end
 
 # -------------------------
 
-# These methods are various ways to add to an existing plot
 
-function plot!{T<:Real}(pkg::PlottingPackage, plt::Plot, y::AVec{T}; kw...)
-  plt.n += 1
-  plot!(pkg, plt; x = 1:length(y), y = y, getPlotKeywordArgs(kw, 1, plt)...)
+
+doc"Build a vector of dictionaries which hold the keyword arguments for a call to plot!"
+
+# create one series where y is vectors of numbers
+function createKWargsList{T<:Real}(plt::PlottingObject, y::AVec{T}; kw...)
+  d = getPlotKeywordArgs(kw, 1, plt.n + 1)
+  d[:x] = 1:length(y)
+  d[:y] = y
+  [d]
 end
 
-function plot!{T<:Real,S<:Real}(pkg::PlottingPackage, plt::Plot, x::AVec{T}, y::AVec{S}; kw...)              # one line (will assert length(x) == length(y))
+# create one series where x/y are vectors of numbers
+function createKWargsList{T<:Real,S<:Real}(plt::PlottingObject, x::AVec{T}, y::AVec{S}; kw...)
   @assert length(x) == length(y)
-  plt.n += 1
-  plot!(pkg, plt; x=x, y=y, getPlotKeywordArgs(kw, 1, plt)...)
+  d = getPlotKeywordArgs(kw, 1, plt.n + 1)
+  d[:x] = x
+  d[:y] = y
+  [d]
 end
 
-function plot!(pkg::PlottingPackage, plt::Plot, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
+# create m series, 1 for each column of y
+function createKWargsList(plt::PlottingObject, y::AMat; kw...)
   n,m = size(y)
+  ret = []
   for i in 1:m
+    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d[:x] = 1:n
+    d[:y] = y[:,i]
+    push!(ret, d)
+  end
+  ret
+end
+
+# create m series, 1 for each column of y
+function createKWargsList(plt::PlottingObject, x::AVec, y::AMat; kw...)
+end
+
+# create m series, 1 for each column of y
+function createKWargsList(plt::PlottingObject, x::AMat, y::AMat; kw...)
+end
+
+# create 1 series, y = f(x)
+function createKWargsList(plt::PlottingObject, x::AVec, f::Function; kw...)
+end
+
+# create m series, y = f(x), 1 for each column of x
+function createKWargsList(plt::PlottingObject, x::AMat, f::Function; kw...)
+end
+
+# create m series, 1 for each item in y (assumes vectors of something other than numbers... functions? vectors?)
+function createKWargsList(plt::PlottingObject, y::AVec; kw...)
+end
+
+# same, but given an x to use for all series
+function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec{T}, y::AVec; kw...)
+end
+
+# same, but m series of (x[i],y[i])
+function createKWargsList(plt::PlottingObject, x::AVec, y::AVec; kw...)
+end
+
+# n empty series
+function createKWargsList(plt::PlottingObject, n::Integer; kw...)
+end
+
+
+function plot!(pkg::PlottingPackage, plt::Plot, args...; kw...)
+  kwList = createKWargsList(plt, args...; kw...)
+  for (i,d) in enumerate(kwList)
     plt.n += 1
-    plot!(pkg, plt; x = 1:n, y = y[:,i], getPlotKeywordArgs(kw, i, plt)...)
+    plot!(pkg, plt; d...)
   end
   plt
 end
 
-function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
-  n,m = size(y)
-  for i in 1:m
-    @assert length(x) == n
-    plt.n += 1
-    plot!(pkg, plt; x = x, y = y[:,i], getPlotKeywordArgs(kw, i, plt)...)
-  end
-  plt
-end
+# -------------------------
 
-function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
-  @assert size(x) == size(y)
-  for i in 1:size(x,2)
-    plt.n += 1
-    plot!(pkg, plt; x = x[:,i], y = y[:,i], getPlotKeywordArgs(kw, i, plt)...)
-  end
-  plt
-end
+# # These methods are various ways to add to an existing plot
 
-function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, f::Function; kw...)          # one line, y = f(x)
-  plt.n += 1
-  plot!(pkg, plt; x = x, y = map(f,x), getPlotKeywordArgs(kw, 1, plt)...)
-end
+# function plot!{T<:Real}(pkg::PlottingPackage, plt::Plot, y::AVec{T}; kw...)
+#   plt.n += 1
+#   # plot!(pkg, plt; x = 1:length(y), y = y, getPlotKeywordArgs(kw, 1, plt)...)
+# end
 
-function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
-  for i in 1:size(x,2)
-    xi = x[:,i]
-    plt.n += 1
-    plot!(pkg, plt; x = xi, y = map(f, xi), getPlotKeywordArgs(kw, i, plt)...)
-  end
-  plt
-end
+# function plot!{T<:Real,S<:Real}(pkg::PlottingPackage, plt::Plot, x::AVec{T}, y::AVec{S}; kw...)              # one line (will assert length(x) == length(y))
+#   @assert length(x) == length(y)
+#   plt.n += 1
+#   plot!(pkg, plt; x=x, y=y, getPlotKeywordArgs(kw, 1, plt)...)
+# end
 
-# function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
-#   for i in 1:length(fs)
+# function plot!(pkg::PlottingPackage, plt::Plot, y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
+#   n,m = size(y)
+#   for i in 1:m
 #     plt.n += 1
-#     plot!(pkg, plt; x = x, y = map(fs[i], x), getPlotKeywordArgs(kw, i, plt)...)
+#     plot!(pkg, plt; x = 1:n, y = y[:,i], getPlotKeywordArgs(kw, i, plt)...)
 #   end
 #   plt
 # end
 
-function plot!(pkg::PlottingPackage, plt::Plot, y::AVec; kw...)                 # multiple lines, each with x = 1:length(y[i])
-  for i in 1:length(y)
-    plt.n += 1
-    plot!(pkg, plt; x = 1:length(y[i]), y = y[i], getPlotKeywordArgs(kw, i, plt)...)
-  end
-  plt
-end
+# function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
+#   n,m = size(y)
+#   for i in 1:m
+#     @assert length(x) == n
+#     plt.n += 1
+#     plot!(pkg, plt; x = x, y = y[:,i], getPlotKeywordArgs(kw, i, plt)...)
+#   end
+#   plt
+# end
 
-function plot!{T<:Real}(pkg::PlottingPackage, plt::Plot, x::AVec{T}, y::AVec; kw...)        # multiple lines, will assert length(x) == length(y[i])
-  for i in 1:length(y)
-    if typeof(y[i]) <: AbstractVector
-      @assert length(x) == length(y[i])
-      plt.n += 1
-      plot!(pkg, plt; x = x, y = y[i], getPlotKeywordArgs(kw, i, plt)...)
-    elseif typeof(y[i]) == Function
-      plt.n += 1
-      plot!(pkg, plt; x = x, y = map(y[i], x), getPlotKeywordArgs(kw, 1, plt)...)
-    end
-  end
-  plt
-end
+# function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
+#   @assert size(x) == size(y)
+#   for i in 1:size(x,2)
+#     plt.n += 1
+#     plot!(pkg, plt; x = x[:,i], y = y[:,i], getPlotKeywordArgs(kw, i, plt)...)
+#   end
+#   plt
+# end
 
-function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
-  @assert length(x) == length(y)
-  for i in 1:length(x)
-    @assert length(x[i]) == length(y[i])
-    plt.n += 1
-    plot!(pkg, plt; x = x[i], y = y[i], getPlotKeywordArgs(kw, i, plt)...)
-  end
-  plt
-end
+# function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, f::Function; kw...)          # one line, y = f(x)
+#   plt.n += 1
+#   plot!(pkg, plt; x = x, y = map(f,x), getPlotKeywordArgs(kw, 1, plt)...)
+# end
 
-function plot!(pkg::PlottingPackage, plt::Plot, n::Integer; kw...)                    # n lines, all empty (for updating plots)
-  for i in 1:n
-    plt.n += 1
-    plot(pkg, plt, x = zeros(0), y = zeros(0), getPlotKeywordArgs(kw, i, plt)...)
-  end
-end
+# function plot!(pkg::PlottingPackage, plt::Plot, x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
+#   for i in 1:size(x,2)
+#     xi = x[:,i]
+#     plt.n += 1
+#     plot!(pkg, plt; x = xi, y = map(f, xi), getPlotKeywordArgs(kw, i, plt)...)
+#   end
+#   plt
+# end
+
+# # function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
+# #   for i in 1:length(fs)
+# #     plt.n += 1
+# #     plot!(pkg, plt; x = x, y = map(fs[i], x), getPlotKeywordArgs(kw, i, plt)...)
+# #   end
+# #   plt
+# # end
+
+# function plot!(pkg::PlottingPackage, plt::Plot, y::AVec; kw...)                 # multiple lines, each with x = 1:length(y[i])
+#   for i in 1:length(y)
+#     plt.n += 1
+#     plot!(pkg, plt; x = 1:length(y[i]), y = y[i], getPlotKeywordArgs(kw, i, plt)...)
+#   end
+#   plt
+# end
+
+# function plot!{T<:Real}(pkg::PlottingPackage, plt::Plot, x::AVec{T}, y::AVec; kw...)        # multiple lines, will assert length(x) == length(y[i])
+#   for i in 1:length(y)
+#     if typeof(y[i]) <: AbstractVector
+#       @assert length(x) == length(y[i])
+#       plt.n += 1
+#       plot!(pkg, plt; x = x, y = y[i], getPlotKeywordArgs(kw, i, plt)...)
+#     elseif typeof(y[i]) == Function
+#       plt.n += 1
+#       plot!(pkg, plt; x = x, y = map(y[i], x), getPlotKeywordArgs(kw, 1, plt)...)
+#     end
+#   end
+#   plt
+# end
+
+# function plot!(pkg::PlottingPackage, plt::Plot, x::AVec, y::AVec; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
+#   @assert length(x) == length(y)
+#   for i in 1:length(x)
+#     @assert length(x[i]) == length(y[i])
+#     plt.n += 1
+#     plot!(pkg, plt; x = x[i], y = y[i], getPlotKeywordArgs(kw, i, plt)...)
+#   end
+#   plt
+# end
+
+# function plot!(pkg::PlottingPackage, plt::Plot, n::Integer; kw...)                    # n lines, all empty (for updating plots)
+#   for i in 1:n
+#     plt.n += 1
+#     plot(pkg, plt, x = zeros(0), y = zeros(0), getPlotKeywordArgs(kw, i, plt)...)
+#   end
+# end
 
 # -------------------------
 

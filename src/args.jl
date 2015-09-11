@@ -82,14 +82,15 @@ function getRGBColor(c, n::Int = 0)
 end
 
 
-function getPlotKeywordArgs(kw, i::Int, plt = nothing)
+# note: i is the index of this series within this call, n is the index of the series from all calls to plot/subplot
+function getPlotKeywordArgs(kw, i::Int, n::Int)
   d = Dict(kw)
   outd = Dict()
 
   # default to a white background, but only on the initial call (so we don't change the background automatically)
   if haskey(d, :background_color)
     outd[:background_color] = getRGBColor(d[:background_color])
-  elseif plt == nothing
+  elseif n == 0
     d[:background_color] = colorant"white"
   end
 
@@ -106,18 +107,18 @@ function getPlotKeywordArgs(kw, i::Int, plt = nothing)
   end
 
   # once the plot is created, we can get line/marker colors
-  if plt != nothing
+  if n > 0
     # update color
-    outd[:color] = getRGBColor(outd[:color], plt.n)
+    outd[:color] = getRGBColor(outd[:color], n)
 
     # update markercolor
     mc = outd[:markercolor]
-    mc = (mc == :match ? outd[:color] : getRGBColor(mc, plt.n))
+    mc = (mc == :match ? outd[:color] : getRGBColor(mc, n))
     outd[:markercolor] = mc
 
     # set label
     label = outd[:label]
-    outd[:label] = string(label == "AUTO" ? "y_$i" : label, outd[:axis] == :left ? "" : " (R)")
+    outd[:label] = string(label == "AUTO" ? "y_$n" : label, outd[:axis] == :left ? "" : " (R)")
   end
 
   outd
