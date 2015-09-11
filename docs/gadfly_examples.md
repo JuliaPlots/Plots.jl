@@ -80,3 +80,23 @@ plot(rand(20,4); linetypes=[:line,:step,:sticks,:dots])
 
 ![](../img/gadfly_example_8.png)
 
+### Bar
+
+x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)
+
+```julia
+bar(randn(1000))
+```
+
+![](../img/gadfly_example_9.png)
+
+### Histogram
+
+note: fillto isn't supported on all backends
+
+```julia
+histogram(randn(1000); nbins=50,fillto=20)
+```
+
+![](../img/gadfly_example_10.png)
+

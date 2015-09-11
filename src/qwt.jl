@@ -3,26 +3,31 @@
 
 immutable QwtPackage <: PlottingPackage end
 
-function adjustQwtKeywords(; kw...)
+function adjustQwtKeywords(iscreating::Bool; kw...)
   d = Dict(kw)
+  d[:heatmap_n] = d[:nbins]
+
   if d[:linetype] == :hexbin
     d[:linetype] = :heatmap
   elseif d[:linetype] == :dots
     d[:linetype] = :none
     d[:marker] = :hexagon
+  elseif !iscreating && d[:linetype] == :bar
+    return barHack(; kw...)
+  elseif !iscreating && d[:linetype] == :hist
+    return barHack(; histogramHack(; kw...)...)
   end
-  d[:heatmap_n] = d[:nbins]
   d
 end
 
 function plot(pkg::QwtPackage; kw...)
-  kw = adjustQwtKeywords(;kw...)
+  kw = adjustQwtKeywords(true; kw...)
   plt = Plot(Qwt.plot(zeros(0,0); kw..., show=false), pkg, 0)
   plt
 end
 
 function plot!(::QwtPackage, plt::Plot; kw...)
-  kw = adjustQwtKeywords(;kw...)
+  kw = adjustQwtKeywords(false; kw...)
   Qwt.oplot(plt.o; kw...)
 end
 

@@ -74,6 +74,7 @@ include("plotter.jl")
 
 # ---------------------------------------------------------
 
+include("utils.jl")
 include("args.jl")
 include("plot.jl")
 

@@ -43,6 +43,12 @@ const examples = PlotExample[
   PlotExample("Lots of line types",
               "Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)  \nNote: some may not work with all backends",
               [:(plot(rand(20,4); linetypes=[:line, :step, :sticks, :dots]))]),
+  PlotExample("Bar",
+              "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
+              [:(bar(randn(1000)))]),
+  PlotExample("Histogram",
+              "note: fillto isn't supported on all backends",
+              [:(histogram(randn(1000); nbins=50, fillto=20))]),
 ]
 
 

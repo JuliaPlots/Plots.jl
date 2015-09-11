@@ -30,12 +30,12 @@ function plot(pkg::GadflyPackage; kw...)
   Plot(plt, pkg, 0)
 end
 
-function getGeomFromLineType(linetype::Symbol)
+function getGeomFromLineType(linetype::Symbol, nbins::Int)
   linetype == :line && return Gadfly.Geom.line
   linetype == :dots && return Gadfly.Geom.point
   linetype == :bar && return Gadfly.Geom.bar
   linetype == :step && return Gadfly.Geom.step
-  linetype == :hist && return Gadfly.Geom.hist
+  linetype == :hist && return Gadfly.Geom.histogram(bincount=nbins)
   linetype == :none && return Gadfly.Geom.point  # change this? are we usually pairing no line with scatterplots?
   linetype == :sticks && return Gadfly.Geom.bar
   error("linetype $linetype not currently supported with Gadfly")
@@ -50,7 +50,7 @@ function getGeoms(linetype::Symbol, marker::Symbol, nbins::Int)
   else
 
     # for other linetypes, get the correct Geom
-    push!(geoms, getGeomFromLineType(linetype))
+    push!(geoms, getGeomFromLineType(linetype, nbins))
 
     # for any marker, add Geom.point
     if marker != :none
@@ -96,7 +96,7 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
   end
 
   # add the layer to the Gadfly.Plot
-  append!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
+  prepend!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
   plt
 end
 
