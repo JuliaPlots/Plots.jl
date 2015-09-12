@@ -21,10 +21,8 @@ function rebuildUnicodePlot!(plt::Plot)
   xlim = [Inf, -Inf]
   ylim = [Inf, -Inf]
   for d in sargs
-    @show xlim ylim d[:x] d[:y]
     expandLimits!(xlim, d[:x])
     expandLimits!(ylim, d[:y])
-    @show xlim ylim d[:x] d[:y]
   end
   x = Float64[xlim[1]]
   y = Float64[ylim[1]]
@@ -57,7 +55,7 @@ end
 function addUnicodeSeries!(o, d::Dict, addlegend::Bool)
   
   lt = d[:linetype]
-  x, y = d[:x], d[:y]
+  x, y = [collect(float(d[s])) for s in (:x, :y)]
   label = addlegend ? d[:label] : ""
   stepstyle = :post
 
