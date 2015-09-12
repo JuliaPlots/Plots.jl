@@ -6,10 +6,11 @@ Plotting interface and wrapper for several plotting packages.
 
 Please add wishlist items, bugs, or any other comments/questions to the issues list.
 
-## Examples
+## Examples for each implemented backend:
 
 - [Qwt.jl](docs/qwt_examples.md)
 - [Gadfly.jl](docs/gadfly_examples.md)
+- [UnicodePlots.jl](docs/gadfly_examples.md)
 
 ## Installation
 
@@ -187,6 +188,10 @@ When plotting multiple lines, you can give every line the same trait by using th
 
 - [x] Plot vectors/matrices/functions
 - [ ] Plot DataFrames
+- [ ] Scales
+- [ ] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
+- [ ] Custom markers
+- [ ] Special plots (boxplot, ohlc?)
 - [x] Subplots
 - [x] Histograms
 - [ ] 3D plotting

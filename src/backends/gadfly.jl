@@ -27,7 +27,7 @@ function plot(pkg::GadflyPackage; kw...)
 
   plt.theme = Gadfly.Theme(background_color = (haskey(d, :background_color) ? d[:background_color] : colorant"white"))
   
-  Plot(plt, pkg, 0)
+  Plot(plt, pkg, 0, kw, Dict[])
 end
 
 function getGeomFromLineType(linetype::Symbol, nbins::Int)
@@ -95,6 +95,9 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
     warn("Gadly only supports one y axis")
   end
 
+  # save the kw args
+  plt.push!(plt.seriesargs, d)
+
   # add the layer to the Gadfly.Plot
   prepend!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
   plt
@@ -115,9 +118,7 @@ end
 
 # -------------------------------
 
-# # create the underlying object (each backend will do this differently)
-# o = buildSubplotObject(plts, pkg, layout)
-
+# create the underlying object (each backend will do this differently)
 function buildSubplotObject!(::GadflyPackage, subplt::Subplot)
   i = 0
   rows = []

@@ -39,15 +39,7 @@ const IMG_DIR = Pkg.dir("Plots") * "/img/"
 
 include("types.jl")
 include("utils.jl")
-
-# ---------------------------------------------------------
-
-include("qwt.jl")
-include("gadfly.jl")
 include("plotter.jl")
-
-# ---------------------------------------------------------
-
 include("args.jl")
 include("plot.jl")
 include("subplot.jl")

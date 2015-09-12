@@ -24,13 +24,16 @@ end
 
 function plot(pkg::QwtPackage; kw...)
   kw = adjustQwtKeywords(true; kw...)
-  plt = Plot(Qwt.plot(zeros(0,0); kw..., show=false), pkg, 0)
+  o = Qwt.plot(zeros(0,0); kw..., show=false)
+  plt = Plot(o, pkg, 0, kw, Dict[])
   plt
 end
 
 function plot!(::QwtPackage, plt::Plot; kw...)
   kw = adjustQwtKeywords(false; kw...)
   Qwt.oplot(plt.o; kw...)
+  plt.push!(plt.seriesargs, kw)
+  plt
 end
 
 function Base.display(::QwtPackage, plt::Plot)
@@ -44,9 +47,7 @@ savepng(::QwtPackage, plt::PlottingObject, fn::String, args...) = Qwt.savepng(pl
 
 # -------------------------------
 
-# # create the underlying object (each backend will do this differently)
-# o = buildSubplotObject(plts, pkg, layout)
-
+# create the underlying object (each backend will do this differently)
 function buildSubplotObject!(::QwtPackage, subplt::Subplot)
   i = 0
   rows = []

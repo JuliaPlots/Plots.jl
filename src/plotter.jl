@@ -1,5 +1,13 @@
 
 
+include("backends/qwt.jl")
+include("backends/gadfly.jl")
+include("backends/unicodeplots.jl")
+
+
+# ---------------------------------------------------------
+
+
 plot(pkg::PlottingPackage; kw...) = error("plot($pkg; kw...) is not implemented")
 plot!(pkg::PlottingPackage, plt::Plot; kw...) = error("plot!($pkg, plt; kw...) is not implemented")
 Base.display(pkg::PlottingPackage, plt::Plot) = error("display($pkg, plt) is not implemented")
@@ -7,14 +15,13 @@ Base.display(pkg::PlottingPackage, plt::Plot) = error("display($pkg, plt) is not
 # ---------------------------------------------------------
 
 
-const AVAILABLE_PACKAGES = [:qwt, :gadfly]
+const AVAILABLE_PACKAGES = [:qwt, :gadfly, :unicodeplots]
 const INITIALIZED_PACKAGES = Set{Symbol}()
 
 type CurrentPackage
   sym::Symbol
   pkg::PlottingPackage
 end
-# const CURRENT_PACKAGE = CurrentPackage(:qwt, QwtPackage())
 const CURRENT_PACKAGE = CurrentPackage(:gadfly, GadflyPackage())
 
 
@@ -32,6 +39,8 @@ function plotter()
       @eval import Qwt
     elseif currentPackageSymbol == :gadfly
       @eval import Gadfly
+    elseif currentPackageSymbol == :unicodeplots
+      @eval import UnicodePlots
     else
       error("Unknown plotter $currentPackageSymbol.  Choose from: $AVAILABLE_PACKAGES")
     end
@@ -43,7 +52,7 @@ function plotter()
 end
 
 doc"""
-Set the plot backend.  Choose from:  :qwt, :gadfly
+Set the plot backend.  Choose from:  :qwt, :gadfly, :unicodeplots
 """
 function plotter!(modname)
   
@@ -52,6 +61,8 @@ function plotter!(modname)
     CURRENT_PACKAGE.pkg = QwtPackage()
   elseif modname == :gadfly
     CURRENT_PACKAGE.pkg = GadflyPackage()
+  elseif modname == :unicodeplots
+    CURRENT_PACKAGE.pkg = UnicodePlotsPackage()
   else
     error("Unknown plotter $modname.  Choose from: $AVAILABLE_PACKAGES")
   end

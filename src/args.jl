@@ -125,7 +125,11 @@ function getPlotKeywordArgs(kw, idx::Int, n::Int)
 
     # set label
     label = d[:label]
-    d[:label] = string(label == "AUTO" ? "y_$n" : label, d[:axis] == :left ? "" : " (R)")
+    label = (label == "AUTO" ? "y_$n" : label)
+    if d[:axis] == :right && label[end-3:end] != " (R)"
+      label = string(label, " (R)")
+    end
+    d[:label] = label
   end
 
   d
