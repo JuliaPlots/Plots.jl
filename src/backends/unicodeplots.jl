@@ -92,7 +92,7 @@ function plot(pkg::UnicodePlotsPackage; kw...)
   if !haskey(plt.initargs, :size) || plt.initargs[:size] == PLOT_DEFAULTS[:size]
     plt.initargs[:size] = (60,20)
   end
-  
+
   plt
 end
 
@@ -114,7 +114,11 @@ end
 
 # -------------------------------
 
-savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::String, args...) = error("currently unsupported")
+function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::String, args...) # = error("currently unsupported")
+  display(plt)
+  # TODO
+  warn("savepng unimplemented")
+end
 
 # -------------------------------
 
