@@ -34,18 +34,30 @@ function plotter()
   if !(currentPackageSymbol in INITIALIZED_PACKAGES)
 
     # initialize
-    print("[Plots.jl] Initializing package: $CURRENT_PACKAGE... ")
+    println("[Plots.jl] Initializing package: $CURRENT_PACKAGE... ")
     if currentPackageSymbol == :qwt
-      @eval import Qwt
+      try
+        @eval import Qwt
+      catch
+        error("Couldn't import Qwt.  Install it with: Pkg.clone(\"https://github.com/tbreloff/Qwt.jl.git\")\n  (Note: also requires pyqt and pyqwt)")
+      end
     elseif currentPackageSymbol == :gadfly
-      @eval import Gadfly
+      try
+        @eval import Gadfly
+      catch
+        error("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\")")
+      end
     elseif currentPackageSymbol == :unicodeplots
-      @eval import UnicodePlots
+      try
+        @eval import UnicodePlots
+      catch
+        error("Couldn't import UnicodePlots.  Install it with: Pkg.add(\"UnicodePlots\")")
+      end
     else
       error("Unknown plotter $currentPackageSymbol.  Choose from: $AVAILABLE_PACKAGES")
     end
     push!(INITIALIZED_PACKAGES, currentPackageSymbol)
-    println("done.")
+    println("[Plots.jl] done.")
 
   end
   CURRENT_PACKAGE.pkg
