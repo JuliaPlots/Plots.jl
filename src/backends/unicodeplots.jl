@@ -66,12 +66,6 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool)
   elseif lt == :stepinverted
     func = UnicodePlots.stairs!
     stepstyle = :pre
-  # elseif lt in (:sticks, :bar)
-  #   d = barHack(; d...)
-  #   func = UnicodePlots.lineplot!
-  # elseif lt == :hist
-  #   d = histogramHack(; d...)
-  #   func = UnicodePlots.lineplot!
   else
     error("Linestyle $lt not supported by UnicodePlots")
   end
@@ -98,8 +92,7 @@ function plot(pkg::UnicodePlotsPackage; kw...)
   if !haskey(plt.initargs, :size) || plt.initargs[:size] == PLOT_DEFAULTS[:size]
     plt.initargs[:size] = (60,20)
   end
-  # w,h = plt.initargs[:size]
-  # plt.initargs[:size] = (min(200,w), min(200,h))
+  
   plt
 end
 

@@ -96,8 +96,6 @@ function getPlotKeywordArgs(kw, idx::Int, n::Int)
   # fill in d with either 1) plural value, 2) value, 3) default
   for k in keys(PLOT_DEFAULTS)
     plural = makeplural(k)
-    # if haskey(d, plural)
-    #   d[k] = d[plural][idx]
     if !haskey(d, k)
       if n == 0 || k != :size
         d[k] = haskey(d, plural) ? d[plural][idx] : PLOT_DEFAULTS[k]
