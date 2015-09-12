@@ -114,7 +114,7 @@ function generate_markdown(pkgname::Symbol)
 end
 
 # run it!
-map(generate_markdown, (:qwt, :gadfly))
+map(generate_markdown, (:qwt, :gadfly, :unicodeplots))
 
 
 end # module

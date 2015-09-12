@@ -116,8 +116,11 @@ end
 
 function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::String, args...) # = error("currently unsupported")
   display(plt)
-  # TODO
-  warn("savepng unimplemented")
+  @osx_only begin
+    run(`screencapture -w $fn`)
+    return
+  end
+  error("Can only savepng on osx with UnicodePlots.")
 end
 
 # -------------------------------
