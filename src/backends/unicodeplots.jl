@@ -116,8 +116,11 @@ end
 
 function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::String, args...) # = error("currently unsupported")
   display(plt)
-  @osx_only begin
-    run(`screencapture -w $fn`)
+  try
+    # run(`screencapture -w $fn`)
+    using PyCall
+    @pyimport pyscreenshot as pss
+    # todo: grab screen to $fn
     return
   end
   error("Can only savepng on osx with UnicodePlots.")
