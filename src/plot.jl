@@ -142,6 +142,12 @@ function createKWargsList(plt::PlottingObject; kw...)
   [getPlotKeywordArgs(d, 1, plt.n + 1)]
 end
 
+
+# ----------------------------------------------------------------------------
+# Arrays of numbers
+# ----------------------------------------------------------------------------
+
+
 # create one series where y is vectors of numbers
 function createKWargsList{T<:Real}(plt::PlottingObject, y::AVec{T}; kw...)
   d = getPlotKeywordArgs(kw, 1, plt.n + 1)
@@ -200,6 +206,35 @@ function createKWargsList(plt::PlottingObject, x::AMat, y::AMat; kw...)
   ret
 end
 
+# ----------------------------------------------------------------------------
+# Functions
+# ----------------------------------------------------------------------------
+
+
+# create 1 series, y = f(x), x ∈ [xmin, xmax]
+function createKWargsList(plt::PlottingObject, f::Function, xmin::Real, xmax::Real; kw...)
+  d = getPlotKeywordArgs(kw, 1, plt.n + 1)
+  width = plt.initargs[:size][1]
+  d[:x] = collect(linspace(xmin, xmax, width))  # we don't need more than the width
+  d[:y] = map(f, d[:x])
+  [d]
+end
+
+# create m series, yᵢ = fᵢ(x), x ∈ [xmin, xmax]
+function createKWargsList(plt::PlottingObject, fs::Vector{Function}, xmin::Real, xmax::Real; kw...)
+  m = length(fs)
+  ret = []
+  width = plt.initargs[:size][1]
+  x = collect(linspace(xmin, xmax, width)) # we don't need more than the width
+  for i in 1:m
+    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d[:x] = x
+    d[:y] = map(fs[i], x)
+    push!(ret, d)
+  end
+  ret
+end
+
 # create 1 series, y = f(x)
 function createKWargsList(plt::PlottingObject, x::AVec, f::Function; kw...)
   d = getPlotKeywordArgs(kw, 1, plt.n + 1)
@@ -207,6 +242,7 @@ function createKWargsList(plt::PlottingObject, x::AVec, f::Function; kw...)
   d[:y] = map(f, x)
   [d]
 end
+createKWargsList(plt::PlottingObject, f::Function, x::AVec; kw...) = createKWargsList(plt, x, f; kw...)
 
 # create m series, y = f(x), 1 for each column of x
 function createKWargsList(plt::PlottingObject, x::AMat, f::Function; kw...)
@@ -220,6 +256,13 @@ function createKWargsList(plt::PlottingObject, x::AMat, f::Function; kw...)
   end
   ret
 end
+createKWargsList(plt::PlottingObject, f::Function, x::AMat; kw...) = createKWargsList(plt, x, f; kw...)
+
+
+# ----------------------------------------------------------------------------
+# Other combinations... lists of vectors, etc
+# ----------------------------------------------------------------------------
+
 
 # create m series, 1 for each item in y (assumes vectors of something other than numbers... functions? vectors?)
 function createKWargsList(plt::PlottingObject, y::AVec; kw...)

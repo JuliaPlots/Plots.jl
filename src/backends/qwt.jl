@@ -32,7 +32,7 @@ end
 function plot!(::QwtPackage, plt::Plot; kw...)
   kw = adjustQwtKeywords(false; kw...)
   Qwt.oplot(plt.o; kw...)
-  plt.push!(plt.seriesargs, kw)
+  push!(plt.seriesargs, kw)
   plt
 end
 
