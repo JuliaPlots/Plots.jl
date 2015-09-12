@@ -53,15 +53,10 @@ end
 
 # add a single series
 function addUnicodeSeries!(o, d::Dict, addlegend::Bool)
-  
+
+  # get the function, or special handling for step/bar/hist
   lt = d[:linetype]
-  x, y = [collect(float(d[s])) for s in (:x, :y)]
-  label = addlegend ? d[:label] : ""
   stepstyle = :post
-
-  # if we happen to pass in allowed color symbols, great... otherwise let UnicodePlots decide
-  color = d[:color] in UnicodePlots.autoColors ? d[:color] : :auto
-
   if lt == :line
     func = UnicodePlots.lineplot!
   elseif lt == :dots || d[:marker] != :none
@@ -71,10 +66,24 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool)
   elseif lt == :stepinverted
     func = UnicodePlots.stairs!
     stepstyle = :pre
+  # elseif lt in (:sticks, :bar)
+  #   d = barHack(; d...)
+  #   func = UnicodePlots.lineplot!
+  # elseif lt == :hist
+  #   d = histogramHack(; d...)
+  #   func = UnicodePlots.lineplot!
   else
     error("Linestyle $lt not supported by UnicodePlots")
   end
+  
+  # get the series data and label
+  x, y = [collect(float(d[s])) for s in (:x, :y)]
+  label = addlegend ? d[:label] : ""
 
+  # if we happen to pass in allowed color symbols, great... otherwise let UnicodePlots decide
+  color = d[:color] in UnicodePlots.autoColors ? d[:color] : :auto
+
+  # add the series
   func(o, x, y; color = color, name = label, style = stepstyle)
 end
 
@@ -95,7 +104,13 @@ function plot(pkg::UnicodePlotsPackage; kw...)
 end
 
 function plot!(::UnicodePlotsPackage, plt::Plot; kw...)
-  push!(plt.seriesargs, Dict(kw))
+  d = Dict(kw)
+  if d[:linetype] in (:sticks, :bar)
+    d = barHack(; d...)
+  elseif d[:linetype] == :hist
+    d = barHack(; histogramHack(; d...)...)
+  end
+  push!(plt.seriesargs, d)
   plt
 end
 
