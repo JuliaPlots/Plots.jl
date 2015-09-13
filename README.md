@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tbreloff/Plots.jl.svg?branch=master)](https://travis-ci.org/tbreloff/Plots.jl)
 
-Author: Thomas Breloff (@tbreloff)
+#### Author: Thomas Breloff (@tbreloff)
 
 Plotting interface and wrapper for several plotting packages.
 
