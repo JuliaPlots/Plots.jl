@@ -29,7 +29,7 @@ Pkg.add("UnicodePlots")                               # [optional]
 
 Load it in.  The underlying plotting backends are not imported until `plotter()` is called (which happens
 on your first call to `plot`).  This means that you don't need any backends to be installed when you call `using Plots`.
-For now, the default backend is Gadfly.
+Plots will try to figure out a good default backend for you automatically based on what backends are installed.
 
 ```julia
 using Plots
@@ -38,6 +38,7 @@ using Plots
 Do a plot in Gadfly, then save a png:
 
 ```julia
+gadfly!()
 plot(rand(10,2); marker = :rect)   # this will bring up a browser window with the plot, set show=false if you don't want that
 savepng(Plots.IMG_DIR * "gadfly1.png")
 ```
@@ -46,20 +47,7 @@ which saves:
 
 ![gadfly_plt](img/gadfly1.png)
 
-
-Do a plot in Qwt, then save a png:
-
-```julia
-qwt!()  # switches the backend to Qwt... equivalent to `plotter!(:qwt)`
-plot(rand(10,2); marker = :rect)   # pops up an interactive window with the plot... set show=false to keep it hidden
-savepng(Plots.IMG_DIR * "qwt1.png")
-```
-
-which saves:
-
-![qwt_plt](img/qwt1.png)
-
-See the examples pages for much more in every supported backend.
+See the examples pages for lots of ways to plot in every supported backend.
 
 ## API
 
@@ -67,7 +55,7 @@ Call `plotter!(backend::Symbol)` or the shorthands (`gadfly!()`, `qwt!()`, `unic
 Subsequent commands are converted into the relevant plotting commands for that package:
 
 ```julia
-  gadfly!()    # equivalent to `plotter!(:gadfly)`
+  gadfly!()
   plot(1:10)    # this effectively calls `y = 1:10; Gadfly.plot(x=1:length(y), y=y)`
   qwt!()
   plot(1:10)    # this effectively calls `Qwt.plot(1:10)`
