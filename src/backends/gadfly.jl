@@ -101,7 +101,7 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
   push!(plt.seriesargs, d)
 
   # add the layer to the Gadfly.Plot
-  prepend!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
+  prepend!(plt.o.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
   plt
 end
 
