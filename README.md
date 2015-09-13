@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/tbreloff/Plots.jl.svg?branch=master)](https://travis-ci.org/tbreloff/Plots.jl)
 
+Author: Thomas Breloff (@tbreloff)
+
 Plotting interface and wrapper for several plotting packages.
 
 Please add wishlist items, bugs, or any other comments/questions to the issues list.
@@ -16,7 +18,7 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 
 First, clone the package, and get any plotting packages you need (obviously, you should get at least one backend):
 
-```
+```julia
 Pkg.clone("https://github.com/tbreloff/Plots.jl.git")
 Pkg.add("Gadfly")                                     # [optional]
 Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
@@ -29,14 +31,14 @@ Load it in.  The underlying plotting backends are not imported until `plotter()`
 on your first call to `plot`).  This means that you don't need any backends to be installed when you call `using Plots`.
 For now, the default backend is Gadfly.
 
-```
+```julia
 using Plots
 ```
 
 Do a plot in Gadfly, then save a png:
 
-```
-plot(rand(10,2); marker = :rect)
+```julia
+plot(rand(10,2); marker = :rect)   # this will bring up a browser window with the plot, set show=false if you don't want that
 savepng(Plots.IMG_DIR * "gadfly1.png")
 ```
 
@@ -47,9 +49,9 @@ which saves:
 
 Do a plot in Qwt, then save a png:
 
-```
+```julia
 qwt!()  # switches the backend to Qwt... equivalent to `plotter!(:qwt)`
-plot(rand(10,2); marker = :rect)
+plot(rand(10,2); marker = :rect)   # pops up an interactive window with the plot... set show=false to keep it hidden
 savepng(Plots.IMG_DIR * "qwt1.png")
 ```
 
@@ -64,8 +66,8 @@ See the examples pages for much more in every supported backend.
 The main plot command.  Call `plotter!(:module)` or `module!()` (i.e. `qwt!()`, `unicodeplots!()`, etc) to set the current plotting backend.
 Commands are converted into the relevant plotting commands for that package:
 
-```
-  gadfly!()
+```julia
+  gadfly!()    # equivalent to `plotter!(:gadfly)`
   plot(1:10)    # this effectively calls `y = 1:10; Gadfly.plot(x=1:length(y), y=y)`
   qwt!()
   plot(1:10)    # this effectively calls `Qwt.plot(1:10)`
@@ -73,7 +75,7 @@ Commands are converted into the relevant plotting commands for that package:
 
 Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 
-```
+```julia
   plot(args...; kw...)                  # creates a new plot window, and sets it to be the `currentPlot`
   plot!(args...; kw...)                 # adds to the `currentPlot`
   plot!(plotobj, args...; kw...)        # adds to the plot `plotobj`
@@ -82,7 +84,7 @@ Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 Now that you know which plot object you're updating (new, current, or other), I'll leave it off for simplicity.
 Here are some various args to supply, and the implicit mapping (AVec == AbstractVector and AMat == AbstractMatrix):
 
-```
+```julia
   plot(y::AVec; kw...)                       # one line... x = 1:length(y)
   plot(x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
   plot(y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
@@ -106,7 +108,7 @@ Here are some various args to supply, and the implicit mapping (AVec == Abstract
 
 [TODO] You can swap out `plot` for `subplot`.  Each line will go into a separate plot.  Use the layout keyword:
 
-```
+```julia
   y = rand(100,3)
   subplot(y; n = 3)             # create an automatic grid, and let it figure out the nr/nc... will put plots 1 and 2 on the first row, and plot 3 by itself on the 2nd row
   subplot(y; n = 3, nr = 1)     # create an automatic grid, but fix the number of rows to 1 (so there are n columns)
@@ -116,7 +118,7 @@ Here are some various args to supply, and the implicit mapping (AVec == Abstract
 
 Shorthands:
 
-```
+```julia
   scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :hexagon)
   scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :hexagon)
   bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
@@ -181,10 +183,12 @@ If you don't include a keyword argument, these are the defaults:
   show = true
 ```
 
-When plotting multiple lines, you can give every line the same trait by using the singular, or add an "s" to pluralize.
-  (yes I know it's not gramatically correct, but it's easy to use and implement)
+__Tip__: You can see the default value for a given argument with `plotDefault(arg::Symbol)`, and set the default value with `plotDefault!(arg::Symbol, value)`
 
-```
+__Tip__: When plotting multiple lines, you can give every line the same trait by using the singular, or add an "s" to pluralize.
+          (yes I know it's not gramatically correct, but it's easy to use and implement)
+
+```julia
   plot(rand(100,2); colors = [:red, RGB(.5,.5,0)], axiss = [:left, :right], width = 5)  # note the width=5 is applied to both lines
 ```
 
@@ -223,11 +227,8 @@ When plotting multiple lines, you can give every line the same trait by using th
 - [ ] TikzGraphs.jl
 - [ ] GraphLayout.jl
 
-# Backends
+# More information on backends (both supported and unsupported)
 
 See the wiki at: https://github.com/JuliaPlot/juliaplot_docs/wiki
 
-# Author
-
-Thomas Breloff (@tbreloff)
 

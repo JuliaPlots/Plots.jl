@@ -24,7 +24,26 @@ type CurrentPackage
   sym::Symbol
   pkg::PlottingPackage
 end
-const CURRENT_PACKAGE = CurrentPackage(:gadfly, GadflyPackage())
+
+function pickDefaultBackend()
+  try
+    Pkg.installed("Qwt")
+    return CurrentPackage(:qwt, QwtPackage())
+  end
+  try
+    Pkg.installed("Gadfly")
+    return CurrentPackage(:gadfly, GadflyPackage())
+  end
+  try
+    Pkg.installed("UnicodePlots")
+    return CurrentPackage(:unicodeplots, UnicodePlotsPackage())
+  end
+  warn("You don't have any of the supported backends installed!  Chose from ", backends())
+  return CurrentPackage(:gadfly, GadflyPackage())
+end
+const CURRENT_PACKAGE = pickDefaultBackend()
+println("[Plots.jl] Default backend: ", CURRENT_PACKAGE.sym)
+# const CURRENT_PACKAGE = CurrentPackage(:gadfly, GadflyPackage())
 
 
 doc"""
@@ -36,7 +55,7 @@ function plotter()
   if !(currentPackageSymbol in INITIALIZED_PACKAGES)
 
     # initialize
-    println("[Plots.jl] Initializing package: $CURRENT_PACKAGE... ")
+    println("[Plots.jl] Initializing package: ", CURRENT_PACKAGE.sym)
     if currentPackageSymbol == :qwt
       try
         @eval import Qwt
