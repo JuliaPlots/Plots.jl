@@ -235,6 +235,16 @@ function createKWargsList(plt::PlottingObject, fs::Vector{Function}, xmin::Real,
   ret
 end
 
+# create 1 series, x = fx(u), y = fy(u); u ∈ [umin, umax]
+function createKWargsList(plt::PlottingObject, fx::Function, fy::Function, umin::Real, umax::Real; kw...)
+  d = getPlotKeywordArgs(kw, 1, plt.n + 1)
+  width = plt.initargs[:size][1]
+  u = collect(linspace(umin, umax, width))  # we don't need more than the width
+  d[:x] = map(fx, u)
+  d[:y] = map(fy, u)
+  [d]
+end
+
 # create 1 series, y = f(x)
 function createKWargsList(plt::PlottingObject, x::AVec, f::Function; kw...)
   d = getPlotKeywordArgs(kw, 1, plt.n + 1)

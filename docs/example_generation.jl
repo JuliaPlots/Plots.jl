@@ -26,8 +26,11 @@ const examples = PlotExample[
               "Plot multiple functions.",
               [:(plot(0:0.01:4π, [sin,cos]))]),
   PlotExample("",
-              "You can also call it with (xmin, xmax).",
+              "You can also call it with plot(f, xmin, xmax).",
               [:(plot([sin,cos], 0, 4π))]),
+  PlotExample("",
+              "Or make a parametric plot with plot(fx, fy, umin, umax).",
+              [:(plot(sin, x->sin(2x), 0, 2π))]),
   PlotExample("Global",
               "Change the guides/background without a separate call.",
               [:(plot(rand(10); title="TITLE", xlabel="XLABEL", ylabel="YLABEL", background_color = RGB(0.5,0.5,0.5)))]),
@@ -120,9 +123,9 @@ end
 
 # run it!
 # note: generate separately so it's easy to comment out
-# generate_markdown(:qwt)
+generate_markdown(:qwt)
 generate_markdown(:gadfly)
-# generate_markdown(:unicodeplots) 
+generate_markdown(:unicodeplots) 
 
 
 end # module
