@@ -3,6 +3,8 @@
 include("backends/qwt.jl")
 include("backends/gadfly.jl")
 include("backends/unicodeplots.jl")
+include("backends/pyplot.jl")
+
 
 
 # ---------------------------------------------------------
@@ -12,39 +14,60 @@ plot(pkg::PlottingPackage; kw...) = error("plot($pkg; kw...) is not implemented"
 plot!(pkg::PlottingPackage, plt::Plot; kw...) = error("plot!($pkg, plt; kw...) is not implemented")
 Base.display(pkg::PlottingPackage, plt::Plot) = error("display($pkg, plt) is not implemented")
 
+subplot(pkg::PlottingPackage; kw...) = error("subplot($pkg; kw...) is not implemented")
+subplot!(pkg::PlottingPackage, subplt::Subplot; kw...) = error("subplot!($pkg, subplt; kw...) is not implemented")
+Base.display(pkg::PlottingPackage, subplt::Subplot) = error("display($pkg, subplt) is not implemented")
+
 # ---------------------------------------------------------
 
 
-const AVAILABLE_PACKAGES = [:qwt, :gadfly, :unicodeplots]
+const AVAILABLE_PACKAGES = [:qwt, :gadfly, :unicodeplots, :pyplot]
 const INITIALIZED_PACKAGES = Set{Symbol}()
 backends() = AVAILABLE_PACKAGES
+
+
+function getPlottingPackage(sym::Symbol)
+  sym == :qwt && return QwtPackage()
+  sym == :gadfly && return GadflyPackage()
+  sym == :unicodeplots && return UnicodePlotsPackage()
+  sym == :pyplot && return PyPlotPackage()
+  error("Unsupported backend $sym")
+end 
 
 
 type CurrentPackage
   sym::Symbol
   pkg::PlottingPackage
 end
+CurrentPackage(sym::Symbol) = CurrentPackage(sym, getPlottingPackage(sym))
+
+# ---------------------------------------------------------
 
 function pickDefaultBackend()
   try
     Pkg.installed("Qwt")
-    return CurrentPackage(:qwt, QwtPackage())
+    return CurrentPackage(:qwt)
+  end
+  try
+    Pkg.installed("PyPlot")
+    return CurrentPackage(:pyplot)
   end
   try
     Pkg.installed("Gadfly")
-    return CurrentPackage(:gadfly, GadflyPackage())
+    return CurrentPackage(:gadfly)
   end
   try
     Pkg.installed("UnicodePlots")
-    return CurrentPackage(:unicodeplots, UnicodePlotsPackage())
+    return CurrentPackage(:unicodeplots)
   end
   warn("You don't have any of the supported backends installed!  Chose from ", backends())
-  return CurrentPackage(:gadfly, GadflyPackage())
+  return CurrentPackage(:gadfly)
 end
 const CURRENT_PACKAGE = pickDefaultBackend()
 println("[Plots.jl] Default backend: ", CURRENT_PACKAGE.sym)
-# const CURRENT_PACKAGE = CurrentPackage(:gadfly, GadflyPackage())
 
+
+# ---------------------------------------------------------
 
 doc"""
 Returns the current plotting package name.  Initializes package on first call.
@@ -74,6 +97,12 @@ function plotter()
       catch
         error("Couldn't import UnicodePlots.  Install it with: Pkg.add(\"UnicodePlots\")")
       end
+    elseif currentPackageSymbol == :pyplot
+      try
+        @eval import PyPlot
+      catch
+        error("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\")")
+      end
     else
       error("Unknown plotter $currentPackageSymbol.  Choose from: $AVAILABLE_PACKAGES")
     end
@@ -96,6 +125,8 @@ function plotter!(modname)
     CURRENT_PACKAGE.pkg = GadflyPackage()
   elseif modname == :unicodeplots
     CURRENT_PACKAGE.pkg = UnicodePlotsPackage()
+  elseif modname == :pyplot
+    CURRENT_PACKAGE.pkg = PyPlotPackage()
   else
     error("Unknown plotter $modname.  Choose from: $AVAILABLE_PACKAGES")
   end

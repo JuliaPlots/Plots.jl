@@ -123,9 +123,10 @@ end
 
 # run it!
 # note: generate separately so it's easy to comment out
-generate_markdown(:qwt)
-generate_markdown(:gadfly)
-generate_markdown(:unicodeplots) 
+# generate_markdown(:qwt)
+# generate_markdown(:gadfly)
+# generate_markdown(:unicodeplots)
+generate_markdown(:pyplot)
 
 
 end # module

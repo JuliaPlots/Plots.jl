@@ -32,7 +32,8 @@ export
   backends,
   qwt!,
   gadfly!,
-  unicodeplots!
+  unicodeplots!,
+  pyplot!
 
 # ---------------------------------------------------------
 
@@ -67,6 +68,7 @@ heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
 
 savepng(args...; kw...) = savepng(currentPlot(), args...; kw...)
 savepng(plt::PlottingObject, args...; kw...) = savepng(plt.plotter, plt, args...; kw...)
+savepng(::PlottingPackage, plt::PlottingObject, fn::String, args...) = error("unsupported")  # fallback so multiple dispatch doesn't get confused if it's missing
 
 
 # ---------------------------------------------------------
