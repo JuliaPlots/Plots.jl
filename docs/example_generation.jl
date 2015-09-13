@@ -81,6 +81,11 @@ function generate_markdown(pkgname::Symbol)
   plotter!(pkgname)
   plotDefault!(:show, false)
 
+  # mkdir if necessary
+  try
+    mkdir("$IMGDIR/$pkgname")
+  end
+
   # open the markdown file
   md = open("$DOCDIR/$(pkgname)_examples.md", "w")
 
@@ -93,13 +98,13 @@ function generate_markdown(pkgname::Symbol)
 
       # save the png
       imgname = "$(pkgname)_example_$i.png"
-      savepng("$IMGDIR/$imgname")
+      savepng("$IMGDIR/$pkgname/$imgname")
 
       # write out the header, description, code block, and image link
       write(md, "### $(example.header)\n\n")
       write(md, "$(example.desc)\n\n")
       write(md, "```julia\n$(join(map(string, example.exprs), "\n"))\n```\n\n")
-      write(md, "![](../img/$imgname)\n\n")
+      write(md, "![](../img/$pkgname/$imgname)\n\n")
 
     catch ex
       # TODO: put error info into markdown?
@@ -114,8 +119,10 @@ function generate_markdown(pkgname::Symbol)
 end
 
 # run it!
-# map(generate_markdown, (:qwt, :gadfly))
-generate_markdown(:unicodeplots) # generate separately so it's easy to comment out
+# note: generate separately so it's easy to comment out
+# generate_markdown(:qwt)
+generate_markdown(:gadfly)
+# generate_markdown(:unicodeplots) 
 
 
 end # module

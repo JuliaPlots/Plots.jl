@@ -27,7 +27,7 @@ function plot(pkg::GadflyPackage; kw...)
 
   plt.theme = Gadfly.Theme(background_color = (haskey(d, :background_color) ? d[:background_color] : colorant"white"))
   
-  Plot(plt, pkg, 0, kw, Dict[])
+  Plot(plt, pkg, 0, d, Dict[])
 end
 
 function getGeomFromLineType(linetype::Symbol, nbins::Int)
@@ -96,7 +96,7 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
   end
 
   # save the kw args
-  plt.push!(plt.seriesargs, d)
+  push!(plt.seriesargs, d)
 
   # add the layer to the Gadfly.Plot
   prepend!(plt.o.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
