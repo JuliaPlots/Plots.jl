@@ -48,7 +48,7 @@ const examples = PlotExample[
               [:(heatmap(randn(10000),randn(10000); nbins=200))]),
   PlotExample("Lots of line types",
               "Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)  \nNote: some may not work with all backends",
-              [:(plot(rand(20,4); linetypes=[:line, :step, :sticks, :dots]))]),
+              [:(plot(rand(20,4); linetypes=[:line, :step, :sticks, :dots], labels=["line","step","sticks","dots"]))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
               [:(bar(randn(1000)))]),
@@ -114,7 +114,8 @@ function generate_markdown(pkgname::Symbol)
 end
 
 # run it!
-map(generate_markdown, (:qwt, :gadfly, :unicodeplots))
+# map(generate_markdown, (:qwt, :gadfly))
+generate_markdown(:unicodeplots) # generate separately so it's easy to comment out
 
 
 end # module

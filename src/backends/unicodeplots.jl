@@ -114,27 +114,46 @@ end
 
 # -------------------------------
 
-function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::String, args...) # = error("currently unsupported")
+function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::String, args...)
+
+  # make some whitespace and show the plot
+  println("\n\n\n\n\n\n")
   display(plt)
-  try
+
+  @osx_only begin
+    # BEGIN HACK
+
+    # wait while the plot gets drawn
+    sleep(0.5)
+
+    # use osx screen capture when my terminal is maximized and cursor starts at the bottom (I know, right?)
+    # TODO: compute size of plot to adjust these numbers (or maybe implement something good??)
+    run(`screencapture -R50,600,700,420 $fn`)
+
+    # # some other attempts:
     # run(`screencapture -w $fn`)
-    using PyCall
-    @pyimport pyscreenshot as pss
-    # todo: grab screen to $fn
+    # using PyCall
+    # @pyimport pyscreenshot as pss
+
+    # END HACK (phew)
     return
   end
-  error("Can only savepng on osx with UnicodePlots.")
+
+  error("Can only savepng on osx with UnicodePlots (though even then I wouldn't do it)")
 end
 
 # -------------------------------
 
-# create the underlying object (each backend will do this differently)
+# we don't do very much for subplots... just stack them vertically
+
 function buildSubplotObject!(::UnicodePlotsPackage, subplt::Subplot)
-  error("UnicodePlots doesn't support subplots")
+  nothing
 end
 
 
 function Base.display(::UnicodePlotsPackage, subplt::Subplot)
-  error("UnicodePlots doesn't support subplots")
+  for plt in subplt.plts
+    display(UnicodePlotsPackage(), plt)
+  end
 end
 

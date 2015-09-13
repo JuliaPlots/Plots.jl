@@ -86,7 +86,7 @@ Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin,
 Note: some may not work with all backends
 
 ```julia
-plot(rand(20,4); linetypes=[:line,:step,:sticks,:dots])
+plot(rand(20,4); linetypes=[:line,:step,:sticks,:dots],labels=["line","step","sticks","dots"])
 ```
 
 ![](../img/unicodeplots_example_10.png)
@@ -110,4 +110,39 @@ histogram(randn(1000); nbins=50,fillto=20)
 ```
 
 ![](../img/unicodeplots_example_12.png)
+
+### Subplots
+
+  subplot and subplot! are distinct commands which create many plots and add series to them in a circular fashion.
+  You can define the layout with keyword params... either set the number of plots `n` (and optionally number of rows `nr` or 
+  number of columns `nc`), or you can set the layout directly with `layout`.  
+
+  Note: Gadfly is not very friendly here, and although you can create a plot and save a PNG, I haven't been able to actually display it.
+
+
+```julia
+subplot(randn(100,5); layout=[1,1,3],linetypes=[:line,:hist,:dots,:step,:bar],nbins=10,legend=false)
+```
+
+![](../img/unicodeplots_example_13.png)
+
+### Adding to subplots
+
+Note here the automatic grid layout, as well as the order in which new series are added to the plots.
+
+```julia
+subplot(randn(100,5); n=4)
+```
+
+![](../img/unicodeplots_example_14.png)
+
+### 
+
+
+
+```julia
+subplot!(randn(100,3))
+```
+
+![](../img/unicodeplots_example_15.png)
 
