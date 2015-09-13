@@ -27,7 +27,12 @@ export
   histogram!,
   heatmap!,
 
-  savepng
+  savepng,
+
+  backends,
+  qwt!,
+  gadfly!,
+  unicodeplots!
 
 # ---------------------------------------------------------
 

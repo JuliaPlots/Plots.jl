@@ -48,7 +48,7 @@ which saves:
 Do a plot in Qwt, then save a png:
 
 ```
-plotter!(:qwt)  # switches the backend to Qwt
+qwt!()  # switches the backend to Qwt... equivalent to `plotter!(:qwt)`
 plot(rand(10,2); marker = :rect)
 savepng(Plots.IMG_DIR * "qwt1.png")
 ```
@@ -57,17 +57,17 @@ which saves:
 
 ![qwt_plt](img/qwt1.png)
 
-
+See the examples pages for much more in every supported backend.
 
 ## plot and plotter! interface (WIP)
 
-The main plot command.  Call `plotter!(:module)` to set the current plotting backend.
+The main plot command.  Call `plotter!(:module)` or `module!()` (i.e. `qwt!()`, `unicodeplots!()`, etc) to set the current plotting backend.
 Commands are converted into the relevant plotting commands for that package:
 
 ```
-  plotter!(:gadfly)
+  gadfly!()
   plot(1:10)    # this effectively calls `y = 1:10; Gadfly.plot(x=1:length(y), y=y)`
-  plotter!(:qwt)
+  qwt!()
   plot(1:10)    # this effectively calls `Qwt.plot(1:10)`
 ```
 
@@ -88,8 +88,11 @@ Here are some various args to supply, and the implicit mapping (AVec == Abstract
   plot(y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
   plot(x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
   plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
-  plot(x::AVec, f::Function; kw...)          # one line, y = f(x)
-  plot(x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)
+  plot(f::Function, xmin::Real, xmax::Real; kw...)        # one line, map function for range [xmin,xmax]
+  plot(f::AVec{Function}, xmin::Real, xmax::Real; kw...)  # multiple lines, map functions for range [xmin,xmax]
+  plot(fx::Function, fy::Function, umin::Real, umax::Real; kw...)  # parametric plot... x = fx(u), y = fy(u)
+  plot(x::AVec, f::Function; kw...)          # one line, y = f(x)... can swap x and f
+  plot(x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)... can swap f and x
   plot(x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
   plot(y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
   plot(x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
@@ -105,10 +108,10 @@ Here are some various args to supply, and the implicit mapping (AVec == Abstract
 
 ```
   y = rand(100,3)
-  subplot(y; layout=(2,2), kw...)           # creates 3 lines going into 3 separate plots, laid out on a 2x2 grid (last row is filled with plot #3)
-  subplot(y; layout=(1,3), kw...)           # again 3 plots, all in the same row
-  subplot(y; layout=[1,[2,3]])              # pass a nested Array to fully specify the layout.  here the first plot will take up the first row, 
-                                            # and the others will share the second row
+  subplot(y; n = 3)             # create an automatic grid, and let it figure out the nr/nc... will put plots 1 and 2 on the first row, and plot 3 by itself on the 2nd row
+  subplot(y; n = 3, nr = 1)     # create an automatic grid, but fix the number of rows to 1 (so there are n columns)
+  subplot(y; n = 3, nc = 1)     # create an automatic grid, but fix the number of columns to 1 (so there are n rows)
+  subplot(y; layout = [1, 2])   # explicit layout by row... plot #1 goes by itself in the first row, plots 2 and 3 split the 2nd row (note the n kw is unnecessary)
 ```
 
 Shorthands:
@@ -213,7 +216,7 @@ When plotting multiple lines, you can give every line the same trait by using th
 - [ ] TextPlots.jl
 - [ ] ASCIIPlots.jl
 - [ ] Sparklines.jl
-- [ ] UnicodePlots.jl
+- [x] UnicodePlots.jl
 - [ ] Hinton.jl
 - [ ] ImageTerm.jl
 - [ ] GraphViz.jl

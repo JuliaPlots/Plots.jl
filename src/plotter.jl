@@ -17,6 +17,8 @@ Base.display(pkg::PlottingPackage, plt::Plot) = error("display($pkg, plt) is not
 
 const AVAILABLE_PACKAGES = [:qwt, :gadfly, :unicodeplots]
 const INITIALIZED_PACKAGES = Set{Symbol}()
+backends() = AVAILABLE_PACKAGES
+
 
 type CurrentPackage
   sym::Symbol

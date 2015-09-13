@@ -3,6 +3,8 @@
 
 immutable UnicodePlotsPackage <: PlottingPackage end
 
+unicodeplots!() = plotter!(:unicodeplots)
+
 # -------------------------------
 
 function expandLimits!(lims, x)

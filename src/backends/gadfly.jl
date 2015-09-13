@@ -3,6 +3,8 @@
 
 immutable GadflyPackage <: PlottingPackage end
 
+gadfly!() = plotter!(:gadfly)
+
 
 # create a blank Gadfly.Plot object
 function plot(pkg::GadflyPackage; kw...)

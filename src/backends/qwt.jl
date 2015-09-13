@@ -3,6 +3,8 @@
 
 immutable QwtPackage <: PlottingPackage end
 
+qwt!() = plotter!(:qwt)
+
 # -------------------------------
 
 function adjustQwtKeywords(iscreating::Bool; kw...)
