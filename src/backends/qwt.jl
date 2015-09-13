@@ -25,16 +25,16 @@ function adjustQwtKeywords(iscreating::Bool; kw...)
 end
 
 function plot(pkg::QwtPackage; kw...)
-  kw = adjustQwtKeywords(true; kw...)
-  o = Qwt.plot(zeros(0,0); kw..., show=false)
-  plt = Plot(o, pkg, 0, kw, Dict[])
+  d = adjustQwtKeywords(true; kw...)
+  o = Qwt.plot(zeros(0,0); d..., show=false)
+  plt = Plot(o, pkg, 0, d, Dict[])
   plt
 end
 
 function plot!(::QwtPackage, plt::Plot; kw...)
-  kw = adjustQwtKeywords(false; kw...)
-  Qwt.oplot(plt.o; kw...)
-  push!(plt.seriesargs, kw)
+  d = adjustQwtKeywords(false; kw...)
+  Qwt.oplot(plt.o; d...)
+  push!(plt.seriesargs, d)
   plt
 end
 

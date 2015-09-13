@@ -69,3 +69,15 @@ function barHack(; kw...)
   d
 end
 
+
+# Some conversion functions
+# note: I borrowed these conversion constants from Compose.jl's Measure
+const INCH_SCALAR = 25.4
+const PX_SCALAR = 1 / 3.78 
+inch2px(inches::Real) = float(inches * INCH_SCALAR / PX_SCALAR)
+px2inch(px::Real) = float(px * PX_SCALAR / INCH_SCALAR)
+inch2mm(inches::Real) = float(inches * INCH_SCALAR)
+mm2inch(mm::Real) = float(mm / INCH_SCALAR)
+px2mm(px::Real) = float(px * PX_SCALAR)
+mm2px(mm::Real) = float(px / PX_SCALAR)
+
