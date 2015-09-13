@@ -61,10 +61,10 @@ which saves:
 
 See the examples pages for much more in every supported backend.
 
-## plot and plotter! interface (WIP)
+## API
 
-The main plot command.  Call `plotter!(:module)` or `module!()` (i.e. `qwt!()`, `unicodeplots!()`, etc) to set the current plotting backend.
-Commands are converted into the relevant plotting commands for that package:
+Call `plotter!(backend::Symbol)` or the shorthands (`gadfly!()`, `qwt!()`, `unicodeplots!()`, etc) to set the current plotting backend.
+Subsequent commands are converted into the relevant plotting commands for that package:
 
 ```julia
   gadfly!()    # equivalent to `plotter!(:gadfly)`
@@ -115,6 +115,9 @@ Here are some various args to supply, and the implicit mapping (AVec == Abstract
   subplot(y; n = 3, nc = 1)     # create an automatic grid, but fix the number of columns to 1 (so there are n rows)
   subplot(y; layout = [1, 2])   # explicit layout by row... plot #1 goes by itself in the first row, plots 2 and 3 split the 2nd row (note the n kw is unnecessary)
 ```
+
+__Tip__: You can call `subplot!(args...; kw...)` to add to an existing subplot.
+__Tip__: Calling `subplot!` on a `Plot` object, or `plot!` on a `Subplot` object will throw an error.
 
 Shorthands:
 
