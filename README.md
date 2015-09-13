@@ -94,9 +94,7 @@ plot(x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(
 plot(x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
 plot(n::Integer; kw...)                    # n lines, all empty (for updating plots)
 
-# TODO: how do we handle NA values in dataframes?
-plot(df::DataFrame; kw...)                 # one line per DataFrame column, labels == names(df)
-plot(df::DataFrame, columns; kw...)        # one line per column, but on a subset of column names
+# TODO: DataFrames, categorical values
 ```
 
 With `subplot`, create multiple plots at once, with flexible layout options:
@@ -186,7 +184,8 @@ __Tip__: When plotting multiple lines, you can give every line the same trait by
           (yes I know it's not gramatically correct, but it's easy to use and implement)
 
 ```julia
-plot(rand(100,2); colors = [:red, RGB(.5,.5,0)], axiss = [:left, :right], width = 5)  # note the width=5 is applied to both lines
+# note the same width is applied to both lines, whereas each line gets different color and axis
+plot(rand(100,2); colors = [:red, RGB(.5,.5,0)], axiss = [:left, :right], width = 5)
 ```
 
 # TODO
