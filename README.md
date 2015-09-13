@@ -16,10 +16,15 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 
 ## Installation
 
-First, clone the package, and get any plotting packages you need (obviously, you should get at least one backend):
+First, clone the package
 
 ```julia
 Pkg.clone("https://github.com/tbreloff/Plots.jl.git")
+```
+
+then get any plotting packages you need (obviously, you should get at least one backend):
+
+```julia
 Pkg.add("Gadfly")                                     # [optional]
 Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
 Pkg.add("UnicodePlots")                               # [optional]
@@ -28,7 +33,7 @@ Pkg.add("UnicodePlots")                               # [optional]
 ## Use
 
 Load it in.  The underlying plotting backends are not imported until `plotter()` is called (which happens
-on your first call to `plot`).  This means that you don't need any backends to be installed when you call `using Plots`.
+on your first call to `plot` or `subplot`).  This means that you don't need any backends to be installed when you call `using Plots`.
 Plots will try to figure out a good default backend for you automatically based on what backends are installed.
 
 ```julia
@@ -94,7 +99,7 @@ Here are some various args to supply, and the implicit mapping (AVec == Abstract
   plot(df::DataFrame, columns; kw...)        # one line per column, but on a subset of column names
 ```
 
-[TODO] You can swap out `plot` for `subplot`.  Each line will go into a separate plot.  Use the layout keyword:
+With `subplot`, create multiple plots at once, with flexible layout options:
 
 ```julia
   y = rand(100,3)
