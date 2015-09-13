@@ -78,21 +78,50 @@ Now that you know which plot object you're updating (new, current, or other), I'
 Here are some various args to supply, and the implicit mapping (AVec == AbstractVector and AMat == AbstractMatrix):
 
 ```julia
-plot(y::AVec; kw...)                       # one line... x = 1:length(y)
-plot(x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
-plot(y::AMat; kw...)                       # multiple lines (one per column of x), all sharing x = 1:size(y,1)
-plot(x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
-plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
-plot(f::Function, xmin::Real, xmax::Real; kw...)        # one line, map function for range [xmin,xmax]
-plot(f::AVec{Function}, xmin::Real, xmax::Real; kw...)  # multiple lines, map functions for range [xmin,xmax]
-plot(fx::Function, fy::Function, umin::Real, umax::Real; kw...)  # parametric plot... x = fx(u), y = fy(u)
-plot(x::AVec, f::Function; kw...)          # one line, y = f(x)... can swap x and f
-plot(x::AMat, f::Function; kw...)          # multiple lines, yᵢⱼ = f(xᵢⱼ)... can swap f and x
-plot(x::AVec, fs::AVec{Function}; kw...)   # multiple lines, yᵢⱼ = fⱼ(xᵢ)
-plot(y::AVec{AVec}; kw...)                 # multiple lines, each with x = 1:length(y[i])
-plot(x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])
-plot(x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
-plot(n::Integer; kw...)                    # n lines, all empty (for updating plots)
+# one line... x = 1:length(y)
+plot(y::AVec; kw...)
+
+# one line (will assert length(x) == length(y))
+plot(x::AVec, y::AVec; kw...)
+
+# multiple lines (one per column of x), all sharing x = 1:size(y,1)
+plot(y::AMat; kw...)
+
+# multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
+plot(x::AVec, y::AMat; kw...)
+
+# multiple lines (one per column of x/y... will assert size(x) == size(y))
+plot(x::AMat, y::AMat; kw...)
+
+# one line, map function for range [xmin,xmax]
+plot(f::Function, xmin::Real, xmax::Real; kw...)
+
+# multiple lines, map functions for range [xmin,xmax]
+plot(f::AVec{Function}, xmin::Real, xmax::Real; kw...)
+
+# parametric plot... x = fx(u), y = fy(u)
+plot(fx::Function, fy::Function, umin::Real, umax::Real; kw...)
+
+# one line, y = f(x)... can swap x and f
+plot(x::AVec, f::Function; kw...)
+
+# multiple lines, yᵢⱼ = f(xᵢⱼ)... can swap f and x
+plot(x::AMat, f::Function; kw...)
+
+# multiple lines, yᵢⱼ = fⱼ(xᵢ)
+plot(x::AVec, fs::AVec{Function}; kw...)
+
+# multiple lines, each with x = 1:length(y[i])
+plot(y::AVec{AVec}; kw...)
+
+# multiple lines, will assert length(x) == length(y[i])
+plot(x::AVec, y::AVec{AVec}; kw...)
+
+# multiple lines, will assert length(x[i]) == length(y[i])
+plot(x::AVec{AVec}, y::AVec{AVec}; kw...)
+
+# n lines, all empty (for updating plots)
+plot(n::Integer; kw...)
 
 # TODO: DataFrames, categorical values
 ```
@@ -128,12 +157,14 @@ Some keyword arguments you can set:
 
 ```
 axis            # :left or :right
-color           # can be a string ("red") or a symbol (:red) or a ColorsTypes.jl Colorant (RGB(1,0,0)) or :auto (which lets the package pick)
+color           # can be a string ("red") or a symbol (:red) or a ColorsTypes.jl 
+                #   Colorant (RGB(1,0,0)) or :auto (which lets the package pick)
 label           # string or symbol, applies to that line, may go in a legend
 width           # width of a line
 linetype        # :line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
 linestyle       # :solid, :dash, :dot, :dashdot, :dashdotdot
-marker          # :none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon
+marker          # :none, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
+                #   :cross, :xcross, :star1, :star2, :hexagon
 markercolor     # same choices as `color`, or :match will set the color to be the same as `color`
 markersize      # size of the marker
 nbins           # number of bins for heatmap/hexbin and histograms
@@ -150,6 +181,8 @@ windowtitle     # string or symbol, set the title of the enclosing windowtitle
 screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
 show            # true or false, show the plot (in case you don't want the window to pop up right away)
 ```
+
+Note that not every backend supports all options.
 
 If you don't include a keyword argument, these are the defaults:
   
@@ -184,8 +217,11 @@ __Tip__: When plotting multiple lines, you can give every line the same trait by
           (yes I know it's not gramatically correct, but it's easy to use and implement)
 
 ```julia
-# note the same width is applied to both lines, whereas each line gets different color and axis
-plot(rand(100,2); colors = [:red, RGB(.5,.5,0)], axiss = [:left, :right], width = 5)
+# Note: The same width is applied to both lines, whereas 
+#       each line gets different color and axis.
+plot(rand(100,2); colors = [:red, RGB(.5,.5,0)],
+                  axiss = [:left, :right],
+                  width = 5)
 ```
 
 # TODO
