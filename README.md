@@ -29,6 +29,7 @@ then get any plotting packages you need (obviously, you should get at least one 
 Pkg.add("Gadfly")                                     # [optional]
 Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
 Pkg.add("UnicodePlots")                               # [optional]
+Pkg.add("PyPlot")                                     # [optional] requires python and matplotlib
 ```
 
 ## Use
