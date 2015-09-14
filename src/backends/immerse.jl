@@ -7,7 +7,6 @@ immerse!() = plotter!(:immerse)
 
 
 function createImmerseFigure(d::Dict)
-  # d[:show] || return  # return nothing when we're not showing
   println("Creating immerse figure: ", d)
   w,h = d[:size]
   figidx = Immerse.figure(; name = d[:windowtitle], width = w, height = h)
@@ -22,21 +21,8 @@ function plot(pkg::ImmersePackage; kw...)
   # create the underlying Gadfly.Plot object
   gplt = createGadflyPlotObject(d)
 
-  # create the figure (or not).  Immerse just returns the index of the Figure in the GadflyDisplay... call Figure(figidx) to get the object
-  # fig = d[:show] ? createImmerseFigure(d) : nothing
-  fig =  nothing
-
-  # if d[:show]
-  #   # w,h = d[:size]
-  #   # figidx = Immerse.figure(; name = d[:windowtitle], width = w, height = h)
-  #   # fig = Immerse.Figure(figidx)
-  #   fig = createImmerseFigure(d)
-  # else
-  #   fig = nothing
-  # end
-
   # save both the Immerse.Figure and the Gadfly.Plot
-  Plot((fig,gplt), pkg, 0, d, Dict[])
+  Plot((nothing,gplt), pkg, 0, d, Dict[])
 end
 
 
@@ -51,13 +37,15 @@ end
 
 function Base.display(::ImmersePackage, plt::Plot)
   println("disp1")
+
   fig, gplt = plt.o
   if fig == nothing
     fig = createImmerseFigure(plt.initargs)
     plt.o = (fig, gplt)
   end
-  newfig = Immerse.Figure(fig.canvas, gplt)
-  display(newfig)
+
+  # display a new Figure object to force a redraw
+  display(Immerse.Figure(fig.canvas, gplt))
 end
 
 # -------------------------------
@@ -67,13 +55,16 @@ function savepng(::ImmersePackage, plt::PlottingObject, fn::String;
                                     h = 4 * Immerse.inch)
   gctx = plt.o[2]
   Gadfly.draw(Gadfly.PNG(fn, w, h), gctx)
+  nothing
 end
 
 
 # -------------------------------
 
-# create the underlying object (each backend will do this differently)
+# create the underlying object
 function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
+
+  # create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
   i = 0
   rows = []
   for rowcnt in subplt.layout.rowcounts
@@ -82,11 +73,8 @@ function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
   end
   gctx = Gadfly.vstack(rows...)
 
-  # fig = subplt.initargs[:show] ? createImmerseFigure(subplt.initargs) : nothing
-  fig = nothing
-  # fig = createImmerseFigure(subplt.initargs)
-
-  subplt.o = (fig, gctx)
+  # save this for later
+  subplt.o = (nothing, gctx)
 end
 
 
@@ -99,14 +87,16 @@ function Base.display(::ImmersePackage, subplt::Subplot)
     subplt.o = (fig, gctx)
   end
 
-  fig.prepped = Gadfly.render_prepare(gctx)
-  # Render in the current state
-  fig.cc = render_finish(fig.prepped; dynamic=false)
-  # Render the figure
-  display(fig.canvas, fig)
+  # fig.prepped = Gadfly.render_prepare(gctx)
+  # # Render in the current state
+  # fig.cc = render_finish(fig.prepped; dynamic=false)
+  # # Render the figure
+  # display(fig.canvas, fig)
 
-  # fig.cc = gctx
+  fig.cc = gctx
   # fig.prepped = nothing
 
-  # display(fig)
+  # display(fig.canvas, display(gctx))
+
+  display(fig)
 end

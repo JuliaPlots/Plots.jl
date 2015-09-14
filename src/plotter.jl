@@ -87,6 +87,7 @@ function plotter()
     if currentPackageSymbol == :qwt
       try
         @eval import Qwt
+        @eval export Qwt
       catch
         error("Couldn't import Qwt.  Install it with: Pkg.clone(\"https://github.com/tbreloff/Qwt.jl.git\")\n  (Note: also requires pyqt and pyqwt)")
       end
@@ -94,6 +95,7 @@ function plotter()
     elseif currentPackageSymbol == :gadfly
       try
         @eval import Gadfly
+        @eval export Gadfly
       catch
         error("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\")")
       end
@@ -101,6 +103,7 @@ function plotter()
     elseif currentPackageSymbol == :unicodeplots
       try
         @eval import UnicodePlots
+        @eval export UnicodePlots
       catch
         error("Couldn't import UnicodePlots.  Install it with: Pkg.add(\"UnicodePlots\")")
       end
@@ -108,14 +111,15 @@ function plotter()
     elseif currentPackageSymbol == :pyplot
       try
         @eval import PyPlot
+        @eval export PyPlot
       catch
         error("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\")")
       end
 
     elseif currentPackageSymbol == :immerse
       try
-        @eval import Immerse
-        @eval import Gadfly
+        @eval import Immerse, Gadfly
+        @eval export Immerse, Gadfly
       catch
         error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\")")
       end
