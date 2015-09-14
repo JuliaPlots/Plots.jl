@@ -61,17 +61,20 @@ end
 
 # -------------------------------
 
-# create the underlying object
-function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
-
-  # create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
+# create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
+function buildGadflySubplotContext(subplt::Subplot)
   i = 0
   rows = []
   for rowcnt in subplt.layout.rowcounts
     push!(rows, Gadfly.hstack([plt.o[2] for plt in subplt.plts[(1:rowcnt) + i]]...))
     i += rowcnt
   end
-  gctx = Gadfly.vstack(rows...)
+  Gadfly.vstack(rows...)
+end
+
+# create the underlying object
+function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
+  gctx = buildGadflySubplotContext(subplt)
 
   # save this for later
   subplt.o = (nothing, gctx)
@@ -87,16 +90,7 @@ function Base.display(::ImmersePackage, subplt::Subplot)
     subplt.o = (fig, gctx)
   end
 
-  # fig.prepped = Gadfly.render_prepare(gctx)
-  # # Render in the current state
-  # fig.cc = render_finish(fig.prepped; dynamic=false)
-  # # Render the figure
-  # display(fig.canvas, fig)
-
-  fig.cc = gctx
-  # fig.prepped = nothing
-
-  # display(fig.canvas, display(gctx))
-
-  display(fig)
+  newfig = Immerse.Figure(fig.canvas)
+  newfig.cc = buildGadflySubplotContext(subplt)
+  display(newfig)
 end
