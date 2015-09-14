@@ -90,7 +90,7 @@ function generate_markdown(pkgname::Symbol)
 
   # set up the plotter, and don't show the plots by default
   plotter!(pkgname)
-  plotDefault!(:show, false)
+  # plotDefault!(:show, false)
 
   # mkdir if necessary
   try
@@ -131,8 +131,8 @@ end
 
 # run it!
 # note: generate separately so it's easy to comment out
-# generate_markdown(:qwt)
-# generate_markdown(:gadfly)
+generate_markdown(:qwt)
+generate_markdown(:gadfly)
 # @osx_only generate_markdown(:unicodeplots)
 # generate_markdown(:pyplot)
 generate_markdown(:immerse)

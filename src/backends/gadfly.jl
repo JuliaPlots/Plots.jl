@@ -6,31 +6,6 @@ immutable GadflyPackage <: PlottingPackage end
 gadfly!() = plotter!(:gadfly)
 
 
-# # create a blank Gadfly.Plot object
-# function plot(pkg::GadflyPackage; kw...)
-#   @eval import DataFrames
-
-#   plt = Gadfly.Plot()
-#   plt.mapping = Dict()
-#   plt.data_source = DataFrames.DataFrame()
-#   plt.layers = plt.layers[1:0]
-  
-#   # add the title, axis labels, and theme
-#   d = Dict(kw)
-
-#   plt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]),
-#                                    Gadfly.Guide.ylabel(d[:ylabel]),
-#                                    Gadfly.Guide.title(d[:title])]
-
-#   # add the legend?
-#   if d[:legend]
-#     unshift!(plt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
-#   end
-
-#   plt.theme = Gadfly.Theme(background_color = (haskey(d, :background_color) ? d[:background_color] : colorant"white"))
-  
-#   Plot(plt, pkg, 0, d, Dict[])
-# end
 
 function createGadflyPlotObject(d::Dict)
   @eval import DataFrames
@@ -56,35 +31,67 @@ function createGadflyPlotObject(d::Dict)
 end
 
 
-function getGeomFromLineType(linetype::Symbol, nbins::Int)
-  linetype == :line && return Gadfly.Geom.line
-  linetype == :dots && return Gadfly.Geom.point
-  linetype == :bar && return Gadfly.Geom.bar
-  linetype == :step && return Gadfly.Geom.step
-  linetype == :hist && return Gadfly.Geom.histogram(bincount=nbins)
-  linetype == :none && return Gadfly.Geom.point  # change this? are we usually pairing no line with scatterplots?
-  linetype == :sticks && return Gadfly.Geom.bar
+function getGeomsFromLineType(linetype::Symbol)
+  linetype == :line && return [Gadfly.Geom.path]
+  linetype == :dots && return [Gadfly.Geom.point]
+  linetype == :bar && return [Gadfly.Geom.bar]
+  linetype == :step && return [Gadfly.Geom.step]
+  # linetype == :hist && return [Gadfly.Geom.histogram(bincount=nbins)]
+  # linetype == :none && return [Gadfly.Geom.point]  # change this? are we usually pairing no line with scatterplots?
+  linetype == :none && return []
+  linetype == :sticks && return [Gadfly.Geom.bar]
   error("linetype $linetype not currently supported with Gadfly")
 end
 
-function getGeoms(linetype::Symbol, marker::Symbol, nbins::Int)
-  geoms = []
+# function getGeoms(linetype::Symbol, marker::Symbol, markercolor::Colorant, nbins::Int)
+function getLineGeoms(d::Dict)
+  lt = d[:linetype]
+  lt in (:heatmap,:hexbin) && return [Gadfly.Geom.hexbin(xbincount = d[:nbins], ybincount = d[:nbins])]
+  lt == :hist && return [Gadfly.Geom.histogram(bincount = d[:nbins])]
+  lt == :none && return []
+  lt == :line && return [Gadfly.Geom.path]
+  lt == :dots && return [Gadfly.Geom.point]
+  lt == :bar && return [Gadfly.Geom.bar]
+  lt == :step && return [Gadfly.Geom.step]
+  lt == :sticks && return [Gadfly.Geom.bar]
+  error("linetype $lt not currently supported with Gadfly")
 
-  # handle heatmaps (hexbins) specially
-  if linetype in (:heatmap,:hexbin)
-    push!(geoms, Gadfly.Geom.hexbin(xbincount=nbins, ybincount=nbins))
-  else
+  # else
+  #   geoms = []
 
-    # for other linetypes, get the correct Geom
-    push!(geoms, getGeomFromLineType(linetype, nbins))
+  #   # for other linetypes, get the correct Geom
+  #   append!(geoms, getGeomFromLineType(lt, nbins))
 
-    # for any marker, add Geom.point
-    if marker != :none
-      push!(geoms, Gadfly.Geom.point)
-    end
+  #   # # for any marker, add Geom.point
+  #   # if marker != :none
+  #   #   # push!(geoms, Gadfly.Geom.default_point_size)
+  #   #   push!(geoms, getGadflyMarker(marker, markercolor))
+  #   # end
+  # end
+
+  # geoms
+end
+
+
+
+# serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...
+function getMarkerGeomsAndGuides(d::Dict)
+  marker = d[:marker]
+  if marker == :none
+    return [],[]
+  elseif marker == :rect
+    sz = d[:markersize] * Gadfly.px
+    # primitive = Gadfly.Compose.PolygonPrimitive()
+
+    xs = [xi * Gadfly.mm - sz/2 for xi in d[:x]]
+    ys = [yi * Gadfly.mm - sz/2 for yi in d[:y]]
+    # xs = collect(d[:x]) - sz/2
+    # ys = collect(d[:y]) - sz/2
+    # w = [d[:markersize] * Gadfly.px]
+    # h = [d[:markersize] * Gadfly.px]
+    return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,sz,sz), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
   end
-
-  geoms
+  [Gadfly.Geom.point], []
 end
 
 
@@ -92,18 +99,28 @@ function addGadflySeries!(gplt, d::Dict)
   gfargs = []
 
   # add the Geoms
-  append!(gfargs, getGeoms(d[:linetype], d[:marker], d[:nbins]))
-
-  # set color, line width, and point size
-  theme = Gadfly.Theme(default_color = d[:color],
-                       line_width = d[:width] * Gadfly.px,
-                       default_point_size = d[:markersize] * Gadfly.px)
-  push!(gfargs, theme)
+  append!(gfargs, getLineGeoms(d)) #[:linetype], d[:marker], d[:markercolor], d[:nbins]))
+  
+  # handle markers
+  geoms, guides = getMarkerGeomsAndGuides(d)
+  append!(gfargs, geoms)
+  append!(gplt.guides, guides)
 
   # add a regression line?
   if d[:reg]
     push!(gfargs, Gadfly.Geom.smooth(method=:lm))
   end
+
+
+  # if we haven't added any geoms, we're probably just going to use annotations?
+  isempty(gfargs) && return
+
+
+  # set theme: color, line width, and point size
+  theme = Gadfly.Theme(default_color = d[:color],
+                       line_width = d[:width] * Gadfly.px,
+                       default_point_size = d[:markersize] * Gadfly.px)
+  push!(gfargs, theme)
 
   # for histograms, set x=y
   x = d[d[:linetype] == :hist ? :y : :x]

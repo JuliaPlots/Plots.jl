@@ -33,7 +33,7 @@ plot([sin,cos],0,4π)
 Or make a parametric plot with plot(fx, fy, umin, umax).
 
 ```julia
-plot(sin,(x->begin  # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
+plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
             sin(2x)
         end),0,2π)
 ```
@@ -71,6 +71,16 @@ plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8,colors=[:red,:blue]
 ```
 
 ![](../img/gadfly/gadfly_example_7.png)
+
+### Build plot in pieces
+
+Start with a base plot...
+
+```julia
+plot(rand(100) / 3; reg=true,fillto=0)
+```
+
+![](../img/gadfly/gadfly_example_8.png)
 
 ### 
 
