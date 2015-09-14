@@ -52,6 +52,9 @@ const examples = PlotExample[
   PlotExample("Lots of line types",
               "Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)  \nNote: some may not work with all backends",
               [:(plot(rand(20,4); linetypes=[:line, :step, :sticks, :dots], labels=["line","step","sticks","dots"]))]),
+  PlotExample("Lots of line styles",
+              "Options: (:solid, :dash, :dot, :dashdot, :dashdotdot)  \nNote: some may not work with all backends",
+              [:(plot(rand(20,5); linestyles=[:solid, :dash, :dot, :dashdot, :dashdotdot], labels=["solid", "dash", "dot", "dashdot", "dashdotdot"]))]),
   PlotExample("Lots of marker types",
               "Options: (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)  \nNote: some may not work with all backends",
               [:(plot(repmat(collect(1:10)',10,1); markers=[:ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon],
@@ -128,9 +131,9 @@ end
 
 # run it!
 # note: generate separately so it's easy to comment out
-# generate_markdown(:qwt)
-# generate_markdown(:gadfly)
-# generate_markdown(:unicodeplots)
+generate_markdown(:qwt)
+generate_markdown(:gadfly)
+generate_markdown(:unicodeplots)
 generate_markdown(:pyplot)
 
 

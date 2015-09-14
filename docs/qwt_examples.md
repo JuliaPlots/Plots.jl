@@ -57,7 +57,7 @@ Use the `axis` or `axiss` arguments.
 Note: This is only supported with Qwt right now
 
 ```julia
-plot(Vector[randn(100),randn(100) * 100]; axiss=[:left,:right])
+plot(Vector[randn(100),randn(100) * 100]; axiss=[:left,:right],ylabel="LEFT",yrightlabel="RIGHT")
 ```
 
 ![](../img/qwt/qwt_example_6.png)
@@ -97,7 +97,7 @@ scatter!(rand(100); markersize=6,color=:blue)
 
 
 ```julia
-heatmap(randn(10000),randn(10000); nbins=200)
+heatmap(randn(10000),randn(10000); nbins=100)
 ```
 
 ![](../img/qwt/qwt_example_10.png)
@@ -113,6 +113,28 @@ plot(rand(20,4); linetypes=[:line,:step,:sticks,:dots],labels=["line","step","st
 
 ![](../img/qwt/qwt_example_11.png)
 
+### Lots of line styles
+
+Options: (:solid, :dash, :dot, :dashdot, :dashdotdot)  
+Note: some may not work with all backends
+
+```julia
+plot(rand(20,5); linestyles=[:solid,:dash,:dot,:dashdot,:dashdotdot],labels=["solid","dash","dot","dashdot","dashdotdot"])
+```
+
+![](../img/qwt/qwt_example_12.png)
+
+### Lots of marker types
+
+Options: (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)  
+Note: some may not work with all backends
+
+```julia
+plot(repmat(collect(1:10)',10,1); markers=[:ellipse,:rect,:diamond,:utriangle,:dtriangle,:cross,:xcross,:star1,:star2,:hexagon],labels=["ellipse","rect","diamond","utriangle","dtriangle","cross","xcross","star1","star2","hexagon"],linetype=:none,markersize=10)
+```
+
+![](../img/qwt/qwt_example_13.png)
+
 ### Bar
 
 x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)
@@ -121,7 +143,7 @@ x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints
 bar(randn(1000))
 ```
 
-![](../img/qwt/qwt_example_12.png)
+![](../img/qwt/qwt_example_14.png)
 
 ### Histogram
 
@@ -131,7 +153,7 @@ note: fillto isn't supported on all backends
 histogram(randn(1000); nbins=50,fillto=20)
 ```
 
-![](../img/qwt/qwt_example_13.png)
+![](../img/qwt/qwt_example_15.png)
 
 ### Subplots
 
@@ -146,7 +168,7 @@ histogram(randn(1000); nbins=50,fillto=20)
 subplot(randn(100,5); layout=[1,1,3],linetypes=[:line,:hist,:dots,:step,:bar],nbins=10,legend=false)
 ```
 
-![](../img/qwt/qwt_example_14.png)
+![](../img/qwt/qwt_example_16.png)
 
 ### Adding to subplots
 
@@ -156,7 +178,7 @@ Note here the automatic grid layout, as well as the order in which new series ar
 subplot(randn(100,5); n=4)
 ```
 
-![](../img/qwt/qwt_example_15.png)
+![](../img/qwt/qwt_example_17.png)
 
 ### 
 
@@ -166,5 +188,5 @@ subplot(randn(100,5); n=4)
 subplot!(randn(100,3))
 ```
 
-![](../img/qwt/qwt_example_16.png)
+![](../img/qwt/qwt_example_18.png)
 

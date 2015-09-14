@@ -113,6 +113,17 @@ plot(rand(20,4); linetypes=[:line,:step,:sticks,:dots],labels=["line","step","st
 
 ![](../img/pyplot/pyplot_example_11.png)
 
+### Lots of line styles
+
+Options: (:solid, :dash, :dot, :dashdot, :dashdotdot)  
+Note: some may not work with all backends
+
+```julia
+plot(rand(20,5); linestyles=[:solid,:dash,:dot,:dashdot,:dashdotdot],labels=["solid","dash","dot","dashdot","dashdotdot"])
+```
+
+![](../img/pyplot/pyplot_example_12.png)
+
 ### Lots of marker types
 
 Options: (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)  
@@ -122,7 +133,7 @@ Note: some may not work with all backends
 plot(repmat(collect(1:10)',10,1); markers=[:ellipse,:rect,:diamond,:utriangle,:dtriangle,:cross,:xcross,:star1,:star2,:hexagon],labels=["ellipse","rect","diamond","utriangle","dtriangle","cross","xcross","star1","star2","hexagon"],linetype=:none,markersize=10)
 ```
 
-![](../img/pyplot/pyplot_example_12.png)
+![](../img/pyplot/pyplot_example_13.png)
 
 ### Bar
 
@@ -132,7 +143,7 @@ x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints
 bar(randn(1000))
 ```
 
-![](../img/pyplot/pyplot_example_13.png)
+![](../img/pyplot/pyplot_example_14.png)
 
 ### Histogram
 
@@ -142,5 +153,5 @@ note: fillto isn't supported on all backends
 histogram(randn(1000); nbins=50,fillto=20)
 ```
 
-![](../img/pyplot/pyplot_example_14.png)
+![](../img/pyplot/pyplot_example_15.png)
 

@@ -13,6 +13,7 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 - [Qwt.jl](docs/qwt_examples.md)
 - [Gadfly.jl](docs/gadfly_examples.md)
 - [UnicodePlots.jl](docs/unicodeplots_examples.md)
+- [PyPlot.jl](docs/pyplot_examples.md)
 
 ## Installation
 
