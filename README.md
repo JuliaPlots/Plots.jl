@@ -26,10 +26,10 @@ Pkg.clone("https://github.com/tbreloff/Plots.jl.git")
 then get any plotting packages you need (obviously, you should get at least one backend):
 
 ```julia
-Pkg.add("Gadfly")                                     # [optional]
-Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")   # [optional] requires pyqt and pyqwt
-Pkg.add("UnicodePlots")                               # [optional]
-Pkg.add("PyPlot")                                     # [optional] requires python and matplotlib
+Pkg.add("Gadfly")
+Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")  # requires pyqt and pyqwt
+Pkg.add("UnicodePlots")
+Pkg.add("PyPlot")                                    # requires python and matplotlib
 ```
 
 ## Use
