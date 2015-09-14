@@ -14,6 +14,7 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 - [Gadfly.jl](docs/gadfly_examples.md)
 - [UnicodePlots.jl](docs/unicodeplots_examples.md)
 - [PyPlot.jl](docs/pyplot_examples.md)
+- [Immerse.jl](docs/immerse_examples.md)
 
 ## Installation
 
@@ -30,6 +31,7 @@ Pkg.add("Gadfly")
 Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")  # requires pyqt and pyqwt
 Pkg.add("UnicodePlots")
 Pkg.add("PyPlot")                                    # requires python and matplotlib
+Pkg.add("Immerse")
 ```
 
 ## Use
@@ -206,9 +208,9 @@ xlabel = ""
 ylabel = ""
 yrightlabel = ""
 reg = false
-size = (800,600)
+size = (600,400)
 pos = (0,0)
-windowtitle = ""
+windowtitle = "Plots.jl"
 screen = 1
 show = true
 ```

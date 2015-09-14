@@ -33,7 +33,8 @@ export
   qwt!,
   gadfly!,
   unicodeplots!,
-  pyplot!
+  pyplot!,
+  immerse!
 
 # ---------------------------------------------------------
 

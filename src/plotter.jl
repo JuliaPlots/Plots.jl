@@ -4,7 +4,7 @@ include("backends/qwt.jl")
 include("backends/gadfly.jl")
 include("backends/unicodeplots.jl")
 include("backends/pyplot.jl")
-
+include("backends/immerse.jl")
 
 
 # ---------------------------------------------------------
@@ -21,7 +21,7 @@ Base.display(pkg::PlottingPackage, subplt::Subplot) = error("display($pkg, subpl
 # ---------------------------------------------------------
 
 
-const AVAILABLE_PACKAGES = [:qwt, :gadfly, :unicodeplots, :pyplot]
+const AVAILABLE_PACKAGES = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse]
 const INITIALIZED_PACKAGES = Set{Symbol}()
 backends() = AVAILABLE_PACKAGES
 
@@ -31,6 +31,7 @@ function getPlottingPackage(sym::Symbol)
   sym == :gadfly && return GadflyPackage()
   sym == :unicodeplots && return UnicodePlotsPackage()
   sym == :pyplot && return PyPlotPackage()
+  sym == :immerse && return ImmersePackage()
   error("Unsupported backend $sym")
 end 
 
@@ -44,6 +45,10 @@ CurrentPackage(sym::Symbol) = CurrentPackage(sym, getPlottingPackage(sym))
 # ---------------------------------------------------------
 
 function pickDefaultBackend()
+  try
+    Pkg.installed("Immerse")
+    return CurrentPackage(:immerse)
+  end
   try
     Pkg.installed("Qwt")
     return CurrentPackage(:qwt)
@@ -85,24 +90,36 @@ function plotter()
       catch
         error("Couldn't import Qwt.  Install it with: Pkg.clone(\"https://github.com/tbreloff/Qwt.jl.git\")\n  (Note: also requires pyqt and pyqwt)")
       end
+
     elseif currentPackageSymbol == :gadfly
       try
         @eval import Gadfly
       catch
         error("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\")")
       end
+
     elseif currentPackageSymbol == :unicodeplots
       try
         @eval import UnicodePlots
       catch
         error("Couldn't import UnicodePlots.  Install it with: Pkg.add(\"UnicodePlots\")")
       end
+
     elseif currentPackageSymbol == :pyplot
       try
         @eval import PyPlot
       catch
         error("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\")")
       end
+
+    elseif currentPackageSymbol == :immerse
+      try
+        @eval import Immerse
+        @eval import Gadfly
+      catch
+        error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\")")
+      end
+
     else
       error("Unknown plotter $currentPackageSymbol.  Choose from: $AVAILABLE_PACKAGES")
     end
@@ -127,6 +144,8 @@ function plotter!(modname)
     CURRENT_PACKAGE.pkg = UnicodePlotsPackage()
   elseif modname == :pyplot
     CURRENT_PACKAGE.pkg = PyPlotPackage()
+  elseif modname == :immerse
+    CURRENT_PACKAGE.pkg = ImmersePackage()
   else
     error("Unknown plotter $modname.  Choose from: $AVAILABLE_PACKAGES")
   end

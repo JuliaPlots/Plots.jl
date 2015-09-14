@@ -6,31 +6,55 @@ immutable GadflyPackage <: PlottingPackage end
 gadfly!() = plotter!(:gadfly)
 
 
-# create a blank Gadfly.Plot object
-function plot(pkg::GadflyPackage; kw...)
+# # create a blank Gadfly.Plot object
+# function plot(pkg::GadflyPackage; kw...)
+#   @eval import DataFrames
+
+#   plt = Gadfly.Plot()
+#   plt.mapping = Dict()
+#   plt.data_source = DataFrames.DataFrame()
+#   plt.layers = plt.layers[1:0]
+  
+#   # add the title, axis labels, and theme
+#   d = Dict(kw)
+
+#   plt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]),
+#                                    Gadfly.Guide.ylabel(d[:ylabel]),
+#                                    Gadfly.Guide.title(d[:title])]
+
+#   # add the legend?
+#   if d[:legend]
+#     unshift!(plt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
+#   end
+
+#   plt.theme = Gadfly.Theme(background_color = (haskey(d, :background_color) ? d[:background_color] : colorant"white"))
+  
+#   Plot(plt, pkg, 0, d, Dict[])
+# end
+
+function createGadflyPlotObject(d::Dict)
   @eval import DataFrames
 
-  plt = Gadfly.Plot()
-  plt.mapping = Dict()
-  plt.data_source = DataFrames.DataFrame()
-  plt.layers = plt.layers[1:0]
+  gplt = Gadfly.Plot()
+  gplt.mapping = Dict()
+  gplt.data_source = DataFrames.DataFrame()
+  gplt.layers = gplt.layers[1:0]
   
   # add the title, axis labels, and theme
-  d = Dict(kw)
 
-  plt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]),
+  gplt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]),
                                    Gadfly.Guide.ylabel(d[:ylabel]),
                                    Gadfly.Guide.title(d[:title])]
 
   # add the legend?
   if d[:legend]
-    unshift!(plt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
+    unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
   end
 
-  plt.theme = Gadfly.Theme(background_color = (haskey(d, :background_color) ? d[:background_color] : colorant"white"))
-  
-  Plot(plt, pkg, 0, d, Dict[])
+  gplt.theme = Gadfly.Theme(background_color = (haskey(d, :background_color) ? d[:background_color] : colorant"white"))
+  gplt
 end
+
 
 function getGeomFromLineType(linetype::Symbol, nbins::Int)
   linetype == :line && return Gadfly.Geom.line
@@ -64,10 +88,7 @@ function getGeoms(linetype::Symbol, marker::Symbol, nbins::Int)
 end
 
 
-# plot one data series
-function plot!(::GadflyPackage, plt::Plot; kw...)
-  d = Dict(kw)
-
+function addGadflySeries!(gplt, d::Dict)
   gfargs = []
 
   # add the Geoms
@@ -88,22 +109,79 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
   x = d[d[:linetype] == :hist ? :y : :x]
 
   # add to the legend
-  if length(plt.o.guides) > 0 && isa(plt.o.guides[1], Gadfly.Guide.ManualColorKey)
-    push!(plt.o.guides[1].labels, d[:label])
-    push!(plt.o.guides[1].colors, d[:color])
+  if length(gplt.guides) > 0 && isa(gplt.guides[1], Gadfly.Guide.ManualColorKey)
+    push!(gplt.guides[1].labels, d[:label])
+    push!(gplt.guides[1].colors, d[:color])
   end
 
   if d[:axis] != :left
     warn("Gadly only supports one y axis")
   end
 
-  # save the kw args
-  push!(plt.seriesargs, d)
 
   # add the layer to the Gadfly.Plot
-  prepend!(plt.o.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
+  prepend!(gplt.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
+  nothing
+end
+
+# ---------------------------------------------------------------------------
+
+# create a blank Gadfly.Plot object
+function plot(pkg::GadflyPackage; kw...)
+  d = Dict(kw)
+  gplt = createGadflyPlotObject(d)
+  Plot(gplt, pkg, 0, d, Dict[])
+end
+
+
+# plot one data series
+function plot!(::GadflyPackage, plt::Plot; kw...)
+  d = Dict(kw)
+  addGadflySeries!(plt.o, d)
+  push!(plt.seriesargs, d)
   plt
 end
+
+# # plot one data series
+# function plot!(::GadflyPackage, plt::Plot; kw...)
+#   d = Dict(kw)
+
+#   gfargs = []
+
+#   # add the Geoms
+#   append!(gfargs, getGeoms(d[:linetype], d[:marker], d[:nbins]))
+
+#   # set color, line width, and point size
+#   theme = Gadfly.Theme(default_color = d[:color],
+#                        line_width = d[:width] * Gadfly.px,
+#                        default_point_size = d[:markersize] * Gadfly.px)
+#   push!(gfargs, theme)
+
+#   # add a regression line?
+#   if d[:reg]
+#     push!(gfargs, Gadfly.Geom.smooth(method=:lm))
+#   end
+
+#   # for histograms, set x=y
+#   x = d[d[:linetype] == :hist ? :y : :x]
+
+#   # add to the legend
+#   if length(plt.o.guides) > 0 && isa(plt.o.guides[1], Gadfly.Guide.ManualColorKey)
+#     push!(plt.o.guides[1].labels, d[:label])
+#     push!(plt.o.guides[1].colors, d[:color])
+#   end
+
+#   if d[:axis] != :left
+#     warn("Gadly only supports one y axis")
+#   end
+
+#   # save the kw args
+#   push!(plt.seriesargs, d)
+
+#   # add the layer to the Gadfly.Plot
+#   prepend!(plt.o.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
+#   plt
+# end
 
 function Base.display(::GadflyPackage, plt::Plot)
   display(plt.o)

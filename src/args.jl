@@ -40,6 +40,7 @@ PLOT_DEFAULTS[:legend] = true
 PLOT_DEFAULTS[:xticks] = true
 PLOT_DEFAULTS[:yticks] = true
 PLOT_DEFAULTS[:size] = (600,400)
+PLOT_DEFAULTS[:windowtitle] = "Plots.jl"
 
 PLOT_DEFAULTS[:args] = []     # additional args to pass to the backend
 PLOT_DEFAULTS[:kwargs] = []   # additional keyword args to pass to the backend
