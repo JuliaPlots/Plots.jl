@@ -50,10 +50,15 @@ end
 
 # -------------------------------
 
+getImmerseObject(plt::Plot) = plt.o[2]
+getImmerseObject(subplt::Subplot) = buildGadflySubplotContext(subplt)
+
 function savepng(::ImmersePackage, plt::PlottingObject, fn::String;
                                     w = 6 * Immerse.inch,
                                     h = 4 * Immerse.inch)
-  gctx = plt.o[2]
+  # gctx = plt.o[2]
+  # gctx = buildGadflySubplotContext(plt)
+  gctx = getImmerseObject(plt)
   Gadfly.draw(Gadfly.PNG(fn, w, h), gctx)
   nothing
 end
@@ -74,10 +79,11 @@ end
 
 # create the underlying object
 function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
-  gctx = buildGadflySubplotContext(subplt)
+  # gctx = buildGadflySubplotContext(subplt)
 
   # save this for later
-  subplt.o = (nothing, gctx)
+  # subplt.o = (nothing, gctx)
+  subplt.o = (nothing, nothing)
 end
 
 
