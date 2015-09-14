@@ -72,13 +72,13 @@ function subplot(args...; kw...)
   # initialize the individual plots
   pkg = plotter()
   tmpd = getPlotKeywordArgs(kw, 1, 0)
-  shouldShow = tmpd[:show]
-  tmpd[:show] = false
+  # shouldShow = tmpd[:show]
+  # tmpd[:show] = false
   plts = Plot[plot(pkg; tmpd...) for i in 1:length(layout)]
-  tmpd[:show] = shouldShow
+  # tmpd[:show] = shouldShow
 
   # create the object and do the plotting
-  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, tmpd)
+  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, tmpd, false)
   subplot!(subplt, args...; kw...)
 
   subplt
@@ -111,17 +111,22 @@ function subplot!(subplt::Subplot, args...; kw...)
   end
 
   # create the underlying object (each backend will do this differently)
-  buildSubplotObject!(subplt.plotter, subplt)
+  if !subplt.initialized
+    buildSubplotObject!(subplt.plotter, subplt)
+    subplt.initialized = true
+  end
 
   # set this to be current
   currentPlot!(subplt)
 
-  # do we want to show it?
-  d = Dict(kw)
-  @show d
-  if haskey(d, :show) && d[:show]
-    display(subplt)
-  end
+  # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
+  # # do we want to show it?
+  # d = Dict(kw)
+  # @show d
+  # if haskey(d, :show) && d[:show]
+  #   println("here...why?")
+  #   display(subplt)
+  # end
 
   subplt
 end

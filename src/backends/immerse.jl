@@ -8,6 +8,7 @@ immerse!() = plotter!(:immerse)
 
 function createImmerseFigure(d::Dict)
   # d[:show] || return  # return nothing when we're not showing
+  println("Creating immerse figure: ", d)
   w,h = d[:size]
   figidx = Immerse.figure(; name = d[:windowtitle], width = w, height = h)
   Immerse.Figure(figidx)
@@ -22,7 +23,9 @@ function plot(pkg::ImmersePackage; kw...)
   gplt = createGadflyPlotObject(d)
 
   # create the figure (or not).  Immerse just returns the index of the Figure in the GadflyDisplay... call Figure(figidx) to get the object
-  fig = d[:show] ? createImmerseFigure(d) : nothing
+  # fig = d[:show] ? createImmerseFigure(d) : nothing
+  fig =  nothing
+
   # if d[:show]
   #   # w,h = d[:size]
   #   # figidx = Immerse.figure(; name = d[:windowtitle], width = w, height = h)
@@ -51,6 +54,7 @@ function Base.display(::ImmersePackage, plt::Plot)
   fig, gplt = plt.o
   if fig == nothing
     fig = createImmerseFigure(plt.initargs)
+    plt.o = (fig, gplt)
   end
   newfig = Immerse.Figure(fig.canvas, gplt)
   display(newfig)
@@ -78,7 +82,8 @@ function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
   end
   gctx = Gadfly.vstack(rows...)
 
-  fig = subplt.initargs[:show] ? createImmerseFigure(subplt.initargs) : nothing
+  # fig = subplt.initargs[:show] ? createImmerseFigure(subplt.initargs) : nothing
+  fig = nothing
   # fig = createImmerseFigure(subplt.initargs)
 
   subplt.o = (fig, gctx)
@@ -87,13 +92,21 @@ end
 
 function Base.display(::ImmersePackage, subplt::Subplot)
   println("disp2")
-  # display(subplt.o[1])
+
   fig, gctx = subplt.o
   if fig == nothing
     fig = createImmerseFigure(subplt.initargs)
+    subplt.o = (fig, gctx)
   end
-  # newfig = Immerse.Figure(fig.canvas, gctx)
-  fig.cc = gctx
-  # error(fig)
-  display(fig)
+
+  fig.prepped = Gadfly.render_prepare(gctx)
+  # Render in the current state
+  fig.cc = render_finish(fig.prepped; dynamic=false)
+  # Render the figure
+  display(fig.canvas, fig)
+
+  # fig.cc = gctx
+  # fig.prepped = nothing
+
+  # display(fig)
 end

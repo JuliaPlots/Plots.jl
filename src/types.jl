@@ -30,4 +30,5 @@ type Subplot <: PlottingObject
   n::Int                      # number of series
   layout::SubplotLayout
   initargs::Dict
+  initialized::Bool
 end

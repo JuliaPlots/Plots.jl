@@ -112,11 +112,12 @@ function plot!(plt::Plot, args...; kw...)
 
   currentPlot!(plt)
 
-  # do we want to show it?
-  d = Dict(kw)
-  if haskey(d, :show) && d[:show]
-    display(plt)
-  end
+  # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
+  # # do we want to show it?
+  # d = Dict(kw)
+  # if haskey(d, :show) && d[:show]
+  #   display(plt)
+  # end
 
   plt
 end
