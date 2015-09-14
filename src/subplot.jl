@@ -71,11 +71,14 @@ function subplot(args...; kw...)
 
   # initialize the individual plots
   pkg = plotter()
-  kw0 = getPlotKeywordArgs(kw, 1, 0)
-  plts = Plot[plot(pkg; kw0..., show=false) for i in 1:length(layout)]
+  tmpd = getPlotKeywordArgs(kw, 1, 0)
+  shouldShow = tmpd[:show]
+  tmpd[:show] = false
+  plts = Plot[plot(pkg; tmpd...) for i in 1:length(layout)]
+  tmpd[:show] = shouldShow
 
   # create the object and do the plotting
-  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout)
+  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, tmpd)
   subplot!(subplt, args...; kw...)
 
   subplt
@@ -103,6 +106,7 @@ function subplot!(subplt::Subplot, args...; kw...)
   for (i,d) in enumerate(kwList)
     subplt.n += 1
     plt = getplot(subplt)  # get the Plot object where this series will be drawn
+    d[:show] = false
     plot!(plt; d...)
   end
 
@@ -114,8 +118,9 @@ function subplot!(subplt::Subplot, args...; kw...)
 
   # do we want to show it?
   d = Dict(kw)
+  @show d
   if haskey(d, :show) && d[:show]
-    draw(subplt)
+    display(subplt)
   end
 
   subplt

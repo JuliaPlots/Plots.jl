@@ -29,4 +29,5 @@ type Subplot <: PlottingObject
   p::Int                      # number of plots
   n::Int                      # number of series
   layout::SubplotLayout
+  initargs::Dict
 end
