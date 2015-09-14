@@ -69,14 +69,31 @@ function getPyPlotDrawStyle(linetype::Symbol)
   return "default"
 end
 
+# get a reference to the right axis
+getLeftAxis(o) = o.o[:axes][1]
+getRightAxis(o) = getLeftAxis(o)[:twinx]()
+
+# left axis is PyPlot.<func>, right axis is "f.axes[0].twinx().<func>"
+function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
+  if axis == :right
+    ax = getRightAxis(plt.o)  
+    ax[:set_ylabel](plt.initargs[:yrightlabel])
+    return ax[linetype == :hist ? :hist : (linetype in (:sticks,:bar) ? :bar : :plot)]
+  end
+  return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : PyPlot.plot)
+end
+
 
 function plot(pkg::PyPlotPackage; kw...)
   # create the figure
   d = Dict(kw)
   w,h = map(px2inch, d[:size])
   bgcolor = getPyPlotColor(d[:background_color])
-  @show w h
   o = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96)
+
+  PyPlot.title(d[:title])
+  PyPlot.xlabel(d[:xlabel])
+  PyPlot.ylabel(d[:ylabel])
 
   plt = Plot(o, pkg, 0, d, Dict[])
   plt
@@ -89,10 +106,6 @@ end
 # - fillto/area
 # - heatmap
 # - subplot
-# title           # string or symbol, title of the plot
-# xlabel          # string or symbol, label on the bottom (x) axis
-# ylabel          # string or symbol, label on the left (y) axis
-# yrightlabel     # string or symbol, label on the right (y) axis
 # reg             # true or false, add a regression line for each line
 # pos             # (Int,Int), move the enclosing window to this position
 # windowtitle     # string or symbol, set the title of the enclosing windowtitle
@@ -101,17 +114,74 @@ end
 
 function plot!(::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
-
   lt = d[:linetype]
-  PyPlot.plot(d[:x], d[:y]; figure = plt.o,
+  extraargs = Dict()
+
+  plotfunc = getPyPlotFunction(plt, d[:axis], lt)
+
+  # we have different args depending on plot type
+  if lt in (:hist, :sticks, :bar)
+
+    extraargs[:bottom] = d[:fillto]
+    if lt == :hist
+      extraargs[:bins] = d[:nbins]
+    else
+      extraargs[:width] = (lt == :sticks ? 0.01 : 0.9)
+    end
+
+  else
+
+    # all but color/label
+    extraargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
+    extraargs[:marker] = getPyPlotMarker(d[:marker])
+    extraargs[:markersize] = d[:markersize]
+    extraargs[:markerfacecolor] = getPyPlotColor(d[:markercolor])
+    extraargs[:drawstyle] = getPyPlotDrawStyle(lt)
+
+  end
+
+  # if lt == :hist
+  #   extraargs[:bins] = d[:nbins]
+  # elseif lt == :sticks
+  #   extraargs[:width] = 0.01
+  #   extraargs[:bottom] = d[:fillto]
+  # elseif lt == :bar
+  #   extraargs[:width] = 0.9
+  #   extraargs[:bottom] = d[:fillto]
+  # end
+
+  # namespace = d[:axis] == :right ? plt.o[:axes]()[:twiny]() : PyPlot
+  # plotfunc = plot
+  # if lt == :hist
+  #   plotfunc = hist
+  #   extraargs[:bins] = d[:nbins]
+  # elseif lt in (:sticks, :bar)
+  #   plotfunc = bar
+  #   extraargs[:width] = (lt == :sticks ? 0.01 : 0.9)
+  # end
+
+#   >>> p.plot([1,2],[2,1])
+# [<matplotlib.lines.Line2D object at 0x107a04a50>]
+# >>> a2 = f.axes[0].twinx()
+# >>> a2.plot([1,2],[1,2])
+# [<matplotlib.lines.Line2D object at 0x107a04f50>]
+# >>> f.show()
+
+  # PyPlot.plot
+
+  dump(plotfunc)
+
+  plotfunc(d[:x], d[:y];
+                     figure = plt.o,
                      color = getPyPlotColor(d[:color]),
                      linewidth = d[:width],
-                     linestyle = getPyPlotLineStyle(lt, d[:linestyle]),
-                     marker = getPyPlotMarker(d[:marker]),
-                     markersize = d[:markersize],
-                     markerfacecolor = getPyPlotColor(d[:markercolor]),
-                     drawstyle = getPyPlotDrawStyle(lt),
+                     # linestyle = getPyPlotLineStyle(lt, d[:linestyle]),
+                     # marker = getPyPlotMarker(d[:marker]),
+                     # markersize = d[:markersize],
+                     # markerfacecolor = getPyPlotColor(d[:markercolor]),
+                     # drawstyle = getPyPlotDrawStyle(lt),
                      label = d[:label],
+                     extraargs...
     )
 
   if plt.initargs[:legend]
@@ -128,7 +198,11 @@ end
 
 # -------------------------------
 
-savepng(::PyPlotPackage, plt::PlottingObject, fn::String, args...) = error("unsupported")
+function savepng(::PyPlotPackage, plt::PlottingObject, fn::String, args...)
+  f = open(fn)
+  writemime(f, MIME"image/png")
+  close(f)
+end
 
 # -------------------------------
 

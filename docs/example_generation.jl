@@ -36,7 +36,7 @@ const examples = PlotExample[
               [:(plot(rand(10); title="TITLE", xlabel="XLABEL", ylabel="YLABEL", background_color = RGB(0.5,0.5,0.5)))]),
   PlotExample("Two-axis",
               "Use the `axis` or `axiss` arguments.\n\nNote: This is only supported with Qwt right now",
-              [:(plot(Vector[randn(100), randn(100)*100]; axiss = [:left,:right]))]),
+              [:(plot(Vector[randn(100), randn(100)*100]; axiss = [:left,:right], ylabel="LEFT", yrightlabel="RIGHT"))]),
   PlotExample("Vectors w/ pluralized args",
               "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (singular... see `marker`) with arguments unique to each series (pluralized... see `colors`).",
               [:(plot(Vector[rand(10), rand(20)]; marker=:ellipse, markersize=8, colors=[:red,:blue]))]),
