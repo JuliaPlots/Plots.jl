@@ -141,6 +141,9 @@ function plot!(::PyPlotPackage, plt::Plot; kw...)
     d[:serieshandle] = plotfunc(d[:x], d[:y]; extraargs...)
   end
 
+  # this sets the bg color inside the grid (plt.o.o == matplotlib.Figure)
+  plt.o.o[:axes][1][:set_axis_bgcolor](getPyPlotColor(plt.initargs[:background_color]))
+
   push!(plt.seriesargs, d)
   plt
 end
