@@ -48,7 +48,7 @@ const examples = PlotExample[
               [:(scatter!(rand(100); markersize=6, color=:blue))]),
   PlotExample("Heatmaps",
               "",
-              [:(heatmap(randn(10000),randn(10000); nbins=200))]),
+              [:(heatmap(randn(10000),randn(10000); nbins=100))]),
   PlotExample("Lots of line types",
               "Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)  \nNote: some may not work with all backends",
               [:(plot(rand(20,4); linetypes=[:line, :step, :sticks, :dots], labels=["line","step","sticks","dots"]))]),

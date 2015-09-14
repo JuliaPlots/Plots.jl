@@ -1,28 +1,11 @@
 
-# https://github.com/tbreloff/Qwt.jl
+# https://github.com/stevengj/PyPlot.jl
 
 immutable PyPlotPackage <: PlottingPackage end
 
 pyplot!() = plotter!(:pyplot)
 
 # -------------------------------
-
-# function adjustQwtKeywords(iscreating::Bool; kw...)
-#   d = Dict(kw)
-#   d[:heatmap_n] = d[:nbins]
-
-#   if d[:linetype] == :hexbin
-#     d[:linetype] = :heatmap
-#   elseif d[:linetype] == :dots
-#     d[:linetype] = :none
-#     d[:marker] = :hexagon
-#   elseif !iscreating && d[:linetype] == :bar
-#     return barHack(; kw...)
-#   elseif !iscreating && d[:linetype] == :hist
-#     return barHack(; histogramHack(; kw...)...)
-#   end
-#   d
-# end
 
 
 # convert colorant to 4-tuple RGBA
@@ -64,8 +47,8 @@ function getPyPlotMarker(marker::String)
 end
 
 function getPyPlotDrawStyle(linetype::Symbol)
-  linetype == :step && "steps-post"
-  linetype == :stepinverted && "steps-pre"
+  linetype == :step && return "steps-post"
+  linetype == :stepinverted && return "steps-pre"
   return "default"
 end
 
@@ -78,11 +61,22 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
   if axis == :right
     ax = getRightAxis(plt.o)  
     ax[:set_ylabel](plt.initargs[:yrightlabel])
-    return ax[linetype == :hist ? :hist : (linetype in (:sticks,:bar) ? :bar : :plot)]
+    return ax[linetype == :hist ? :hist : (linetype in (:sticks,:bar) ? :bar : (linetype in (:heatmap,:hexbin) ? :hexbin : :plot))]
   end
-  return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : PyPlot.plot)
+  return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : (linetype in (:heatmap,:hexbin) ? PyPlot.hexbin : PyPlot.plot))
 end
 
+# ------------------------------------------------------------------
+
+# TODO:
+# fillto   # might have to use barHack/histogramHack??
+# heatmap
+# subplot
+# reg             # true or false, add a regression line for each line
+# pos             # (Int,Int), move the enclosing window to this position
+# windowtitle     # string or symbol, set the title of the enclosing windowtitle
+# screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
+# show            # true or false, show the plot (in case you don't want the window to pop up right away)
 
 function plot(pkg::PyPlotPackage; kw...)
   # create the figure
@@ -99,15 +93,6 @@ function plot(pkg::PyPlotPackage; kw...)
   plt
 end
 
-# TODO:
-# fillto   # might have to use barHack/histogramHack??
-# heatmap
-# subplot
-# reg             # true or false, add a regression line for each line
-# pos             # (Int,Int), move the enclosing window to this position
-# windowtitle     # string or symbol, set the title of the enclosing windowtitle
-# screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
-# show            # true or false, show the plot (in case you don't want the window to pop up right away)
 
 function plot!(::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
@@ -125,8 +110,12 @@ function plot!(::PyPlotPackage, plt::Plot; kw...)
     if lt == :hist
       extraargs[:bins] = d[:nbins]
     else
-      extraargs[:width] = (lt == :sticks ? 0.01 : 0.9)
+      extraargs[:width] = (lt == :sticks ? 0.1 : 0.9)
     end
+
+  elseif lt in (:heatmap, :hexbin)
+
+    extraargs[:gridsize] = d[:nbins]
 
   else
 
@@ -147,28 +136,40 @@ function plot!(::PyPlotPackage, plt::Plot; kw...)
 
   # do the plot
   if lt == :hist
-    plotfunc(d[:y]; extraargs...)
+    d[:serieshandle] = plotfunc(d[:y]; extraargs...)
   else
-    plotfunc(d[:x], d[:y]; extraargs...)
-  end
-
-  # add a legend?
-  if plt.initargs[:legend]
-    PyPlot.legend()
+    d[:serieshandle] = plotfunc(d[:x], d[:y]; extraargs...)
   end
 
   push!(plt.seriesargs, d)
   plt
 end
 
+function addPyPlotLegend(plt::Plot)
+  # add a legend?
+  # try
+    if plt.initargs[:legend]
+      # gotta do this to ensure both axes are included
+      args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap)), plt.seriesargs)
+      if length(args) > 0
+        PyPlot.legend([d[:serieshandle][1] for d in args], [d[:label] for d in args], loc="best")
+      end
+    end
+  # catch ex
+  #   warn("Error adding PyPlot legend: ", ex)
+  # end
+end
+
 function Base.display(::PyPlotPackage, plt::Plot)
+  addPyPlotLegend(plt)
   display(plt.o)
 end
 
 # -------------------------------
 
 function savepng(::PyPlotPackage, plt::PlottingObject, fn::String, args...)
-  f = open(fn)
+  addPyPlotLegend(plt)
+  f = open(fn, "w")
   writemime(f, "image/png", plt.o)
   close(f)
 end

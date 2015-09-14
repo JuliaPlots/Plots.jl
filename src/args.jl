@@ -85,10 +85,20 @@ function getRGBColor(c, n::Int = 0)
   c
 end
 
+# const ALT_ARG_NAMES = Dict{Tuple{Symbol,Symbol}, Any}()
+# ALT_ARG_NAMES[(:linetype, :scatter)] = :dots
+
 
 # note: idx is the index of this series within this call, n is the index of the series from all calls to plot/subplot
 function getPlotKeywordArgs(kw, idx::Int, n::Int)
   d = Dict(kw)
+
+  # # replace alternate names
+  # for tup in kw
+  #   if haskey(ALT_ARG_NAMES, tup)
+  #     d[tup[1]] = ALT_ARG_NAMES[tup]
+  #   end
+  # end
 
   # default to a white background, but only on the initial call (so we don't change the background automatically)
   if haskey(d, :background_color)
@@ -106,6 +116,14 @@ function getPlotKeywordArgs(kw, idx::Int, n::Int)
       end
     end
     delete!(d, plural)
+  end
+
+  # swap out dots for no line and a marker
+  if haskey(d, :linetype) && d[:linetype] == :dots
+    d[:linetype] = :none
+    if d[:marker] == :none
+      d[:marker] = :ellipse
+    end
   end
 
 
