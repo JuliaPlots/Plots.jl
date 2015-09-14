@@ -100,12 +100,9 @@ function plot(pkg::PyPlotPackage; kw...)
 end
 
 # TODO:
-# - 2-axis
-# - bar
-# - hist
-# - fillto/area
-# - heatmap
-# - subplot
+# fillto   # might have to use barHack/histogramHack??
+# heatmap
+# subplot
 # reg             # true or false, add a regression line for each line
 # pos             # (Int,Int), move the enclosing window to this position
 # windowtitle     # string or symbol, set the title of the enclosing windowtitle
@@ -122,7 +119,9 @@ function plot!(::PyPlotPackage, plt::Plot; kw...)
   # we have different args depending on plot type
   if lt in (:hist, :sticks, :bar)
 
-    extraargs[:bottom] = d[:fillto]
+    # NOTE: this is unsupported because it does the wrong thing... it shifts the whole axis
+    # extraargs[:bottom] = d[:fillto]
+
     if lt == :hist
       extraargs[:bins] = d[:nbins]
     else
@@ -140,50 +139,20 @@ function plot!(::PyPlotPackage, plt::Plot; kw...)
 
   end
 
-  # if lt == :hist
-  #   extraargs[:bins] = d[:nbins]
-  # elseif lt == :sticks
-  #   extraargs[:width] = 0.01
-  #   extraargs[:bottom] = d[:fillto]
-  # elseif lt == :bar
-  #   extraargs[:width] = 0.9
-  #   extraargs[:bottom] = d[:fillto]
-  # end
+  # set these for all types
+  extraargs[:figure] = plt.o
+  extraargs[:color] = getPyPlotColor(d[:color])
+  extraargs[:linewidth] = d[:width]
+  extraargs[:label] = d[:label]
 
-  # namespace = d[:axis] == :right ? plt.o[:axes]()[:twiny]() : PyPlot
-  # plotfunc = plot
-  # if lt == :hist
-  #   plotfunc = hist
-  #   extraargs[:bins] = d[:nbins]
-  # elseif lt in (:sticks, :bar)
-  #   plotfunc = bar
-  #   extraargs[:width] = (lt == :sticks ? 0.01 : 0.9)
-  # end
+  # do the plot
+  if lt == :hist
+    plotfunc(d[:y]; extraargs...)
+  else
+    plotfunc(d[:x], d[:y]; extraargs...)
+  end
 
-#   >>> p.plot([1,2],[2,1])
-# [<matplotlib.lines.Line2D object at 0x107a04a50>]
-# >>> a2 = f.axes[0].twinx()
-# >>> a2.plot([1,2],[1,2])
-# [<matplotlib.lines.Line2D object at 0x107a04f50>]
-# >>> f.show()
-
-  # PyPlot.plot
-
-  dump(plotfunc)
-
-  plotfunc(d[:x], d[:y];
-                     figure = plt.o,
-                     color = getPyPlotColor(d[:color]),
-                     linewidth = d[:width],
-                     # linestyle = getPyPlotLineStyle(lt, d[:linestyle]),
-                     # marker = getPyPlotMarker(d[:marker]),
-                     # markersize = d[:markersize],
-                     # markerfacecolor = getPyPlotColor(d[:markercolor]),
-                     # drawstyle = getPyPlotDrawStyle(lt),
-                     label = d[:label],
-                     extraargs...
-    )
-
+  # add a legend?
   if plt.initargs[:legend]
     PyPlot.legend()
   end
@@ -200,7 +169,7 @@ end
 
 function savepng(::PyPlotPackage, plt::PlottingObject, fn::String, args...)
   f = open(fn)
-  writemime(f, MIME"image/png")
+  writemime(f, "image/png", plt.o)
   close(f)
 end
 
