@@ -18,7 +18,7 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 
 ## Installation
 
-First, clone the package
+First, add the package
 
 ```julia
 Pkg.add("Plots")
@@ -28,10 +28,10 @@ then get any plotting packages you need (obviously, you should get at least one 
 
 ```julia
 Pkg.add("Gadfly")
-Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")  # requires pyqt and pyqwt
+Pkg.add("Immerse")
 Pkg.add("UnicodePlots")
 Pkg.add("PyPlot")                                    # requires python and matplotlib
-Pkg.add("Immerse")
+Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")  # requires pyqt and pyqwt
 ```
 
 ## Use
@@ -183,7 +183,6 @@ size            # (Int,Int), resize the enclosing window
 pos             # (Int,Int), move the enclosing window to this position
 windowtitle     # string or symbol, set the title of the enclosing windowtitle
 screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
-show            # true or false, show the plot (in case you don't want the window to pop up right away)
 ```
 
 Note that not every backend supports all options.
@@ -212,7 +211,6 @@ size = (600,400)
 pos = (0,0)
 windowtitle = "Plots.jl"
 screen = 1
-show = true
 ```
 
 __Tip__: You can see the default value for a given argument with `plotDefault(arg::Symbol)`, and set the default value with `plotDefault!(arg::Symbol, value)`
