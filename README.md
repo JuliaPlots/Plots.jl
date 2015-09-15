@@ -21,7 +21,7 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 First, clone the package
 
 ```julia
-Pkg.clone("https://github.com/tbreloff/Plots.jl.git")
+Pkg.add("Plots")
 ```
 
 then get any plotting packages you need (obviously, you should get at least one backend):
@@ -48,7 +48,7 @@ Do a plot in Gadfly, then save a png:
 
 ```julia
 gadfly!()
-plot(rand(10,2); marker = :rect)   # this will bring up a browser window with the plot, set show=false if you don't want that
+plot(rand(10,2); marker = :rect)   # this will bring up a browser window with the plot, add a semicolon to skip display
 savepng(Plots.IMG_DIR * "gadfly1.png")
 ```
 
@@ -228,7 +228,7 @@ plot(rand(100,2); colors = [:red, RGB(.5,.5,0)],
                   width = 5)
 ```
 
-# TODO
+## TODO features:
 
 - [x] Plot vectors/matrices/functions
 - [ ] Plot DataFrames
@@ -242,28 +242,32 @@ plot(rand(100,2); colors = [:red, RGB(.5,.5,0)],
 - [ ] Scenes/Drawing
 - [ ] Graphs
 - [ ] Interactivity (GUIs)
+
+## TODO backends:
+
 - [x] Gadfly.jl
-- [ ] PyPlot.jl
-- [ ] Winston.jl
-- [ ] Gaston.jl
-- [ ] GLPlot.jl
+- [x] Immerse.jl
+- [x] PyPlot.jl
+- [x] UnicodePlots.jl
 - [x] Qwt.jl
+- [ ] Winston.jl
+- [ ] GLPlot.jl
 - [ ] Bokeh.jl
+- [ ] Vega.jl
+- [ ] Gaston.jl
 - [ ] Plotly.jl
 - [ ] GoogleCharts.jl
-- [ ] Vega.jl
 - [ ] PLplot.jl
 - [ ] TextPlots.jl
 - [ ] ASCIIPlots.jl
 - [ ] Sparklines.jl
-- [x] UnicodePlots.jl
 - [ ] Hinton.jl
 - [ ] ImageTerm.jl
 - [ ] GraphViz.jl
 - [ ] TikzGraphs.jl
 - [ ] GraphLayout.jl
 
-# More information on backends (both supported and unsupported)
+## More information on backends (both supported and unsupported)
 
 See the wiki at: https://github.com/JuliaPlot/juliaplot_docs/wiki
 
