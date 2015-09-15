@@ -70,6 +70,41 @@ function barHack(; kw...)
 end
 
 
+doc"""
+A hacky replacement for a sticks graph when the backend doesn't support sticks directly.
+Convert it into a line chart that traces the sticks, and a scatter that sets markers at the points.
+"""
+function sticksHack(; kw...)
+  dLine = Dict(kw)
+  dScatter = copy(dLine)
+
+  # these are the line vertices
+  x = Float64[]
+  y = Float64[]
+  fillto = dLine[:fillto] == nothing ? 0.0 : dLine[:fillto]
+
+  # calculate the vertices
+  yScatter = dScatter[:y]
+  for (i,xi) in enumerate(dScatter[:x])
+    yi = yScatter[i]
+    for j in 1:3 push!(x, xi) end
+    append!(y, [fillto, yScatter[i], fillto])
+  end
+
+  # change the line args
+  dLine[:x] = x
+  dLine[:y] = y
+  dLine[:linetype] = :line
+  dLine[:marker] = :none
+  dLine[:fillto] = nothing
+
+  # change the scatter args
+  dScatter[:linetype] = :none
+
+  dLine, dScatter
+end
+
+
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
 const INCH_SCALAR = 25.4

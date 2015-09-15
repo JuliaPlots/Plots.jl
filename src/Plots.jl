@@ -19,6 +19,7 @@ export
   bar,
   histogram,
   heatmap,
+  sticks,
 
   currentPlot!,
   plotDefault!,
@@ -26,6 +27,7 @@ export
   bar!,
   histogram!,
   heatmap!,
+  sticks!,
 
   savepng,
 
@@ -62,6 +64,8 @@ histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)
 histogram!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
 heatmap(args...; kw...)    = plot(args...; kw...,  linetype = :heatmap)
 heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
+sticks(args...; kw...)     = plot(args...; kw...,  linetype = :sticks, marker = :ellipse)
+sticks!(args...; kw...)    = plot!(args...; kw..., linetype = :sticks, marker = :ellipse)
 
 
 # ---------------------------------------------------------

@@ -41,20 +41,14 @@ function getLineGeoms(d::Dict)
   # lt == :dots && return [Gadfly.Geom.point]
   lt == :bar && return [Gadfly.Geom.bar]
   lt == :step && return [Gadfly.Geom.step]
-  lt == :sticks && return [Gadfly.Geom.bar]
+  # lt == :sticks && return [Gadfly.Geom.bar]
   error("linetype $lt not currently supported with Gadfly")
 end
 
 
-
-# serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...
-function getMarkerGeomsAndGuides(d::Dict)
-  marker = d[:marker]
-  if marker == :none
-    return [],[]
-
-  # special handling for other marker shapes... gotta create Compose contexts and map them to series points using Guide.Annotation
-  elseif marker == :rect
+function createGadflyAnnotation(d::Dict)
+  
+  if d[:marker] == :rect
     # get the width/height of the square (both are sz)
     sz = d[:markersize] * Gadfly.px
     halfsz = sz/2
@@ -64,7 +58,7 @@ function getMarkerGeomsAndGuides(d::Dict)
     ys = map(z -> Gadfly.Compose.Measure(;cy=z) + halfsz, float(d[:y]))
 
     # return an Annotation which will add those shapes to each point in the series 
-    return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,[sz],[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
+    return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,[sz],[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))
 
   else
     # make circles
@@ -73,20 +67,66 @@ function getMarkerGeomsAndGuides(d::Dict)
     ys = collect(float(d[:y]))
 
     # return an Annotation which will add those shapes to each point in the series 
-    return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.circle(xs,ys,[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
+    return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.circle(xs,ys,[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))
 
   end
-
-  # otherwise just return a Geom.point
-  # [Gadfly.Geom.point], []
 end
 
 
+# serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...
+function getMarkerGeomsAndGuides(d::Dict)
+  marker = d[:marker]
+  if marker == :none
+    return [],[]
+  end
+  return [], [createGadflyAnnotation(d)]
+end
+
+  # # special handling for other marker shapes... gotta create Compose contexts and map them to series points using Guide.Annotation
+  # elseif marker == :rect
+  #   # get the width/height of the square (both are sz)
+  #   sz = d[:markersize] * Gadfly.px
+  #   halfsz = sz/2
+
+  #   # remap x/y to the corner position of the squares
+  #   xs = map(z -> Gadfly.Compose.Measure(;cx=z) - halfsz, float(d[:x]))
+  #   ys = map(z -> Gadfly.Compose.Measure(;cy=z) + halfsz, float(d[:y]))
+
+  #   # return an Annotation which will add those shapes to each point in the series 
+  #   return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,[sz],[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
+
+  # else
+  #   # make circles
+  #   sz = 0.5 * d[:markersize] * Gadfly.px
+  #   xs = collect(float(d[:x]))
+  #   ys = collect(float(d[:y]))
+
+  #   # return an Annotation which will add those shapes to each point in the series 
+  #   return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.circle(xs,ys,[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
+
+  # end
+
+  # otherwise just return a Geom.point
+  # [Gadfly.Geom.point], []
+# end
+
+
 function addGadflySeries!(gplt, d::Dict)
+
+  # first things first... lets so the sticks hack
+  if d[:linetype] == :sticks
+    d, dScatter = sticksHack(;d...)
+
+    # add the annotation
+    if dScatter[:marker] != :none
+      push!(gplt.guides, createGadflyAnnotation(dScatter))
+    end
+  end
+
   gfargs = []
 
   # add the Geoms
-  append!(gfargs, getLineGeoms(d)) #[:linetype], d[:marker], d[:markercolor], d[:nbins]))
+  append!(gfargs, getLineGeoms(d))
   
   # handle markers
   geoms, guides = getMarkerGeomsAndGuides(d)
