@@ -47,8 +47,13 @@ using Plots
 Do a plot in Gadfly, then save a png:
 
 ```julia
+# switch to Gadfly as a backend
 gadfly!()
-plot(rand(10,2); marker = :rect)   # this will bring up a browser window with the plot, add a semicolon to skip display
+
+# This will bring up a browser window with the plot. Add a semicolon to skip display. 
+plot(rand(10,2); marker = :rect, markersizes=[10,30])
+
+# save it as a PNG
 savepng(Plots.IMG_DIR * "gadfly1.png")
 ```
 
@@ -56,7 +61,7 @@ which saves:
 
 ![gadfly_plt](img/gadfly1.png)
 
-See the examples pages for lots of ways to plot in every supported backend.
+See the examples pages for lots of examples of plots, and what those commands produce for each supported backend.
 
 ## API
 
