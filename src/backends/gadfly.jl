@@ -83,13 +83,16 @@ function getMarkerGeomsAndGuides(d::Dict)
     sz = d[:markersize] * Gadfly.px
     # primitive = Gadfly.Compose.PolygonPrimitive()
 
-    xs = [xi * Gadfly.mm - sz/2 for xi in d[:x]]
-    ys = [yi * Gadfly.mm - sz/2 for yi in d[:y]]
+
+    # xs = [xi * Gadfly.mm - sz/2 for xi in d[:x]]
+    # ys = [yi * Gadfly.mm - sz/2 for yi in d[:y]]
+    xs = collect(d[:x])
+    ys = collect(d[:y])
     # xs = collect(d[:x]) - sz/2
     # ys = collect(d[:y]) - sz/2
     # w = [d[:markersize] * Gadfly.px]
     # h = [d[:markersize] * Gadfly.px]
-    return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,sz,sz), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
+    return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,[sz],[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
   end
   [Gadfly.Geom.point], []
 end
@@ -209,24 +212,44 @@ end
 function savepng(::GadflyPackage, plt::PlottingObject, fn::String;
                                     w = 6 * Gadfly.inch,
                                     h = 4 * Gadfly.inch)
-  Gadfly.draw(Gadfly.PNG(fn, w, h), plt.o)
+  o = getGadflyContext(plt.plotter, plt)
+  Gadfly.draw(Gadfly.PNG(fn, w, h), o)
 end
 
 
 # -------------------------------
 
-# create the underlying object (each backend will do this differently)
-function buildSubplotObject!(::GadflyPackage, subplt::Subplot)
+getGadflyContext(::GadflyPackage, plt::Plot) = plt.o
+getGadflyContext(::GadflyPackage, subplt::Subplot) = buildGadflySubplotContext(subplt)
+
+# create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
+function buildGadflySubplotContext(subplt::Subplot)
   i = 0
   rows = []
   for rowcnt in subplt.layout.rowcounts
-    push!(rows, Gadfly.hstack([plt.o for plt in subplt.plts[(1:rowcnt) + i]]...))
+    push!(rows, Gadfly.hstack([getGadflyContext(plt.plotter, plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
     i += rowcnt
   end
-  subplt.o = Gadfly.vstack(rows...)
+  Gadfly.vstack(rows...)
+end
+
+# create the underlying object (each backend will do this differently)
+function buildSubplotObject!(::GadflyPackage, subplt::Subplot)
+  # i = 0
+  # rows = []
+  # for rowcnt in subplt.layout.rowcounts
+  #   push!(rows, Gadfly.hstack([getGadflyContext(plt.plotter, plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
+  #   i += rowcnt
+  # end
+  # subplt.o = Gadfly.vstack(rows...)
+  # subplt.o = buildGadflySubplotContext(subplt)
+  subplt.o = nothing
 end
 
 
 function Base.display(::GadflyPackage, subplt::Subplot)
-  display(subplt.o)
+  # getGadflyContext!(subplt.plotter, subplt)
+  # display(subplt.o)
+  println("HERE"); sleep(2)
+  display(buildGadflySubplotContext(subplt))
 end
