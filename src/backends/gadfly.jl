@@ -31,45 +31,18 @@ function createGadflyPlotObject(d::Dict)
 end
 
 
-function getGeomsFromLineType(linetype::Symbol)
-  linetype == :line && return [Gadfly.Geom.path]
-  linetype == :dots && return [Gadfly.Geom.point]
-  linetype == :bar && return [Gadfly.Geom.bar]
-  linetype == :step && return [Gadfly.Geom.step]
-  # linetype == :hist && return [Gadfly.Geom.histogram(bincount=nbins)]
-  # linetype == :none && return [Gadfly.Geom.point]  # change this? are we usually pairing no line with scatterplots?
-  linetype == :none && return []
-  linetype == :sticks && return [Gadfly.Geom.bar]
-  error("linetype $linetype not currently supported with Gadfly")
-end
-
 # function getGeoms(linetype::Symbol, marker::Symbol, markercolor::Colorant, nbins::Int)
 function getLineGeoms(d::Dict)
   lt = d[:linetype]
   lt in (:heatmap,:hexbin) && return [Gadfly.Geom.hexbin(xbincount = d[:nbins], ybincount = d[:nbins])]
   lt == :hist && return [Gadfly.Geom.histogram(bincount = d[:nbins])]
-  lt == :none && return []
+  lt == :none && return [Gadfly.Geom.path]
   lt == :line && return [Gadfly.Geom.path]
-  lt == :dots && return [Gadfly.Geom.point]
+  # lt == :dots && return [Gadfly.Geom.point]
   lt == :bar && return [Gadfly.Geom.bar]
   lt == :step && return [Gadfly.Geom.step]
   lt == :sticks && return [Gadfly.Geom.bar]
   error("linetype $lt not currently supported with Gadfly")
-
-  # else
-  #   geoms = []
-
-  #   # for other linetypes, get the correct Geom
-  #   append!(geoms, getGeomFromLineType(lt, nbins))
-
-  #   # # for any marker, add Geom.point
-  #   # if marker != :none
-  #   #   # push!(geoms, Gadfly.Geom.default_point_size)
-  #   #   push!(geoms, getGadflyMarker(marker, markercolor))
-  #   # end
-  # end
-
-  # geoms
 end
 
 
@@ -79,22 +52,33 @@ function getMarkerGeomsAndGuides(d::Dict)
   marker = d[:marker]
   if marker == :none
     return [],[]
+
+  # special handling for other marker shapes... gotta create Compose contexts and map them to series points using Guide.Annotation
   elseif marker == :rect
+    # get the width/height of the square (both are sz)
     sz = d[:markersize] * Gadfly.px
-    # primitive = Gadfly.Compose.PolygonPrimitive()
+    halfsz = sz/2
 
+    # remap x/y to the corner position of the squares
+    xs = map(z -> Gadfly.Compose.Measure(;cx=z) - halfsz, float(d[:x]))
+    ys = map(z -> Gadfly.Compose.Measure(;cy=z) + halfsz, float(d[:y]))
 
-    # xs = [xi * Gadfly.mm - sz/2 for xi in d[:x]]
-    # ys = [yi * Gadfly.mm - sz/2 for yi in d[:y]]
-    xs = collect(d[:x])
-    ys = collect(d[:y])
-    # xs = collect(d[:x]) - sz/2
-    # ys = collect(d[:y]) - sz/2
-    # w = [d[:markersize] * Gadfly.px]
-    # h = [d[:markersize] * Gadfly.px]
+    # return an Annotation which will add those shapes to each point in the series 
     return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,[sz],[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
+
+  else
+    # make circles
+    sz = 0.5 * d[:markersize] * Gadfly.px
+    xs = collect(float(d[:x]))
+    ys = collect(float(d[:y]))
+
+    # return an Annotation which will add those shapes to each point in the series 
+    return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.circle(xs,ys,[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
+
   end
-  [Gadfly.Geom.point], []
+
+  # otherwise just return a Geom.point
+  # [Gadfly.Geom.point], []
 end
 
 
@@ -114,25 +98,26 @@ function addGadflySeries!(gplt, d::Dict)
     push!(gfargs, Gadfly.Geom.smooth(method=:lm))
   end
 
+  # add to the legend
+  if length(gplt.guides) > 0 && isa(gplt.guides[1], Gadfly.Guide.ManualColorKey)
+    push!(gplt.guides[1].labels, d[:label])
+    push!(gplt.guides[1].colors, d[:marker] == :none ? d[:color] : d[:markercolor])
+  end
 
-  # if we haven't added any geoms, we're probably just going to use annotations?
-  isempty(gfargs) && return
+
+  # # if we haven't added any geoms, we're probably just going to use annotations?
+  # isempty(gfargs) && return
 
 
   # set theme: color, line width, and point size
+  line_width = d[:width] * (d[:linetype] == :none ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
   theme = Gadfly.Theme(default_color = d[:color],
-                       line_width = d[:width] * Gadfly.px,
-                       default_point_size = d[:markersize] * Gadfly.px)
+                       line_width = line_width,
+                       default_point_size = 0.5 * d[:markersize] * Gadfly.px)
   push!(gfargs, theme)
 
   # for histograms, set x=y
   x = d[d[:linetype] == :hist ? :y : :x]
-
-  # add to the legend
-  if length(gplt.guides) > 0 && isa(gplt.guides[1], Gadfly.Guide.ManualColorKey)
-    push!(gplt.guides[1].labels, d[:label])
-    push!(gplt.guides[1].colors, d[:color])
-  end
 
   if d[:axis] != :left
     warn("Gadly only supports one y axis")
@@ -162,46 +147,6 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
   plt
 end
 
-# # plot one data series
-# function plot!(::GadflyPackage, plt::Plot; kw...)
-#   d = Dict(kw)
-
-#   gfargs = []
-
-#   # add the Geoms
-#   append!(gfargs, getGeoms(d[:linetype], d[:marker], d[:nbins]))
-
-#   # set color, line width, and point size
-#   theme = Gadfly.Theme(default_color = d[:color],
-#                        line_width = d[:width] * Gadfly.px,
-#                        default_point_size = d[:markersize] * Gadfly.px)
-#   push!(gfargs, theme)
-
-#   # add a regression line?
-#   if d[:reg]
-#     push!(gfargs, Gadfly.Geom.smooth(method=:lm))
-#   end
-
-#   # for histograms, set x=y
-#   x = d[d[:linetype] == :hist ? :y : :x]
-
-#   # add to the legend
-#   if length(plt.o.guides) > 0 && isa(plt.o.guides[1], Gadfly.Guide.ManualColorKey)
-#     push!(plt.o.guides[1].labels, d[:label])
-#     push!(plt.o.guides[1].colors, d[:color])
-#   end
-
-#   if d[:axis] != :left
-#     warn("Gadly only supports one y axis")
-#   end
-
-#   # save the kw args
-#   push!(plt.seriesargs, d)
-
-#   # add the layer to the Gadfly.Plot
-#   prepend!(plt.o.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
-#   plt
-# end
 
 function Base.display(::GadflyPackage, plt::Plot)
   display(plt.o)
@@ -235,21 +180,10 @@ end
 
 # create the underlying object (each backend will do this differently)
 function buildSubplotObject!(::GadflyPackage, subplt::Subplot)
-  # i = 0
-  # rows = []
-  # for rowcnt in subplt.layout.rowcounts
-  #   push!(rows, Gadfly.hstack([getGadflyContext(plt.plotter, plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
-  #   i += rowcnt
-  # end
-  # subplt.o = Gadfly.vstack(rows...)
-  # subplt.o = buildGadflySubplotContext(subplt)
   subplt.o = nothing
 end
 
 
 function Base.display(::GadflyPackage, subplt::Subplot)
-  # getGadflyContext!(subplt.plotter, subplt)
-  # display(subplt.o)
-  println("HERE"); sleep(2)
   display(buildGadflySubplotContext(subplt))
 end

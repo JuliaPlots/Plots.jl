@@ -7,7 +7,7 @@ immerse!() = plotter!(:immerse)
 
 
 function createImmerseFigure(d::Dict)
-  println("Creating immerse figure: ", d)
+  # println("Creating immerse figure: ", d)
   w,h = d[:size]
   figidx = Immerse.figure(; name = d[:windowtitle], width = w, height = h)
   Immerse.Figure(figidx)
@@ -36,7 +36,6 @@ function plot!(::ImmersePackage, plt::Plot; kw...)
 end
 
 function Base.display(::ImmersePackage, plt::Plot)
-  println("disp1")
 
   fig, gplt = plt.o
   if fig == nothing
@@ -65,6 +64,10 @@ end
 # -------------------------------
 
 
+# function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
+# end
+
+
 # create the underlying object
 function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
   subplt.o = (nothing, nothing)
@@ -72,7 +75,6 @@ end
 
 
 function Base.display(::ImmersePackage, subplt::Subplot)
-  println("disp2")
 
   fig, gctx = subplt.o
   if fig == nothing

@@ -33,7 +33,7 @@ plot([sin,cos],0,4π)
 Or make a parametric plot with plot(fx, fy, umin, umax).
 
 ```julia
-plot(sin,(x->begin  # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
+plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
             sin(2x)
         end),0,2π)
 ```
