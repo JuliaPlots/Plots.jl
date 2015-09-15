@@ -64,25 +64,67 @@ end
 # -------------------------------
 
 
-# function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
-# end
-
-
-# create the underlying object
 function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
-  subplt.o = (nothing, nothing)
+
+  # box, tb, c = createPlotGuiComponents()
+  vsep = Gtk.ShortNames.@Box(:v)
+
+  # now we create the GUI
+  i = 0
+  rows = []
+  for rowcnt in subplt.layout.rowcounts
+
+    # create a new row and add it to the main Box vsep
+    row = Gtk.ShortNames.@Box(:h)
+    push!(vsep, row)
+
+    # now add the plot components to the row
+    for plt in subplt.plts[(1:rowcnt) + i]
+
+      # get the components... box is the main plot GtkBox, and canvas is the GtkCanvas where it's plotted
+      box, toolbar, canvas = Immerse.createPlotGuiComponents()
+
+      # create and save the Figure
+      plt.o = (figure(canvas), plt.o[2])
+
+      # add the plot's box to the row
+      push!(row, box)
+    end
+    # push!(rows, Gadfly.hstack([getGadflyContext(plt.plotter, plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
+    i += rowcnt
+  end
+
+  d = subplt.initargs
+  w,h = d[:size]
+  win = Gtk.ShortNames.@GtkWindow(vsep, d[:windowtitle], w, h)
+  guidata[win, :toolbar] = tb
+  if closecb !== nothing
+      Gtk.ShortNames.on_signal_destroy(closecb, win)
+  end
+  showall(win)
+
+  subplt.o = win
 end
+
+
+# # create the underlying object
+# function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
+#   subplt.o = (nothing, nothing)
+# end
 
 
 function Base.display(::ImmersePackage, subplt::Subplot)
 
-  fig, gctx = subplt.o
-  if fig == nothing
-    fig = createImmerseFigure(subplt.initargs)
-    subplt.o = (fig, gctx)
-  end
+  # fig, gctx = subplt.o
+  # if fig == nothing
+  #   fig = createImmerseFigure(subplt.initargs)
+  #   subplt.o = (fig, gctx)
+  # end
 
-  newfig = Immerse.Figure(fig.canvas)
-  newfig.cc = buildGadflySubplotContext(subplt)
-  display(newfig)
+  # newfig = Immerse.Figure(fig.canvas)
+  # newfig.cc = buildGadflySubplotContext(subplt)
+  # display(newfig)
+
+  # o is the window... show it
+  showall(subplt.o)
 end

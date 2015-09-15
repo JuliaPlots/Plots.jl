@@ -118,8 +118,9 @@ function plotter()
 
     elseif currentPackageSymbol == :immerse
       try
-        @eval import Immerse, Gadfly
+        @eval import Immerse, Gadfly, Gtk.ShortNames
         @eval export Immerse, Gadfly
+        global const GTK = Gtk.ShortNames
       catch
         error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\")")
       end
