@@ -1,10 +1,10 @@
 # Examples for backend: unicodeplots
 
-- Supported arguments: args, axis, color, kwargs, label, legend, linestyle, linetype, marker, markercolor, markersize, nbins, size, title, width, windowtitle, xlabel, ylabel, yrightlabel
-- Supported values for axis: [:auto,:left]
-- Supported values for linetype: [:none,:line,:step,:sticks,:scatter,:heatmap,:hexbin,:hist,:bar]
-- Supported values for linestyle: [:auto,:solid]
-- Supported values for marker: [:none,:auto,:ellipse]
+- Supported arguments: `args`, `axis`, `color`, `kwargs`, `label`, `legend`, `linestyle`, `linetype`, `marker`, `markercolor`, `markersize`, `nbins`, `size`, `title`, `width`, `windowtitle`, `xlabel`, `ylabel`, `yrightlabel`
+- Supported values for axis: `:auto`, `:left`
+- Supported values for linetype: `:none`, `:line`, `:step`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`
+- Supported values for linestyle: `:auto`, `:solid`
+- Supported values for marker: `:none`, `:auto`, `:ellipse`
 - Is `subplot`/`subplot!` supported? Yes
 
 ### Initialize
@@ -49,7 +49,7 @@ plot([sin,cos],0,4π)
 Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).
 
 ```julia
-plot(sin,(x->begin  # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
+plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
             sin(2x)
         end),0,2π)
 ```
@@ -107,6 +107,16 @@ scatter!(rand(100); markersize=6,color=:blue)
 ```
 
 ![](../img/unicodeplots/unicodeplots_example_9.png)
+
+### Heatmaps
+
+
+
+```julia
+heatmap(randn(10000),randn(10000); nbins=100)
+```
+
+![](../img/unicodeplots/unicodeplots_example_10.png)
 
 ### Suported line types
 

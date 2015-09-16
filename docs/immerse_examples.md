@@ -1,11 +1,18 @@
 # Examples for backend: immerse
 
-- Supported arguments: args, axis, color, kwargs, label, legend, linestyle, linetype, marker, markercolor, markersize, nbins, reg, size, title, width, windowtitle, xlabel, ylabel, yrightlabel
-- Supported values for axis: [:auto,:left]
-- Supported values for linetype: [:line,:step,:sticks,:scatter,:heatmap,:hexbin,:hist,:bar]
-- Supported values for linestyle: [:auto,:solid]
-- Supported values for marker: [:none,:auto,:rect,:ellipse,:diamond,:cross]
+- Supported arguments: `args`, `axis`, `color`, `kwargs`, `label`, `legend`, `linestyle`, `linetype`, `marker`, `markercolor`, `markersize`, `nbins`, `reg`, `size`, `title`, `width`, `windowtitle`, `xlabel`, `ylabel`, `yrightlabel`
+- Supported values for axis: `:auto`, `:left`
+- Supported values for linetype: `:line`, `:step`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`
+- Supported values for linestyle: `:auto`, `:solid`
+- Supported values for marker: `:none`, `:auto`, `:rect`, `:ellipse`, `:diamond`, `:cross`
 - Is `subplot`/`subplot!` supported? Yes
+
+### Initialize
+
+```julia
+using Plots
+immerse!()
+```
 
 ### Lines
 

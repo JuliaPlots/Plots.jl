@@ -1,11 +1,18 @@
 # Examples for backend: pyplot
 
-- Supported arguments: args, axis, color, kwargs, label, legend, linestyle, linetype, marker, markercolor, markersize, nbins, size, title, width, windowtitle, xlabel, ylabel, yrightlabel
-- Supported values for axis: [:auto,:left,:right]
-- Supported values for linetype: [:none,:line,:step,:stepinverted,:sticks,:scatter,:heatmap,:hexbin,:hist,:bar]
-- Supported values for linestyle: [:auto,:solid,:dash,:dot,:dashdot]
-- Supported values for marker: [:none,:auto,:ellipse,:rect,:diamond,:utriangle,:dtriangle,:cross,:xcross,:star1,:hexagon]
+- Supported arguments: `args`, `axis`, `color`, `kwargs`, `label`, `legend`, `linestyle`, `linetype`, `marker`, `markercolor`, `markersize`, `nbins`, `size`, `title`, `width`, `windowtitle`, `xlabel`, `ylabel`, `yrightlabel`
+- Supported values for axis: `:auto`, `:left`, `:right`
+- Supported values for linetype: `:none`, `:line`, `:step`, `:stepinverted`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`
+- Supported values for linestyle: `:auto`, `:solid`, `:dash`, `:dot`, `:dashdot`
+- Supported values for marker: `:none`, `:auto`, `:ellipse`, `:rect`, `:diamond`, `:utriangle`, `:dtriangle`, `:cross`, `:xcross`, `:star1`, `:hexagon`
 - Is `subplot`/`subplot!` supported? No
+
+### Initialize
+
+```julia
+using Plots
+pyplot!()
+```
 
 ### Lines
 
