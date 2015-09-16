@@ -14,6 +14,7 @@ supportedAxes(::[PkgName]Package) = AXES
 supportedTypes(::[PkgName]Package) = TYPES
 supportedStyles(::[PkgName]Package) = STYLES
 supportedMarkers(::[PkgName]Package) = MARKERS
+subplotSupported(::[PkgName]Package) = false
 
 # ---------------------------------------------------------------------------
 

@@ -7,11 +7,12 @@ pyplot!() = plotter!(:pyplot)
 
 # -------------------------------
 
-suppportedArgs(::PyPlotPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
+suppportedArgs(::PyPlotPackage) = setdiff(ALL_ARGS, [:reg, :heatmap_c, :fillto, :pos])
 # supportedAxes(::PyPlotPackage) = [:left]
 # supportedTypes(::PyPlotPackage) = setdiff(TYPES, [:stepinverted])
-supportedStyles(::PyPlotPackage) = [:solid,:dash,:dot,:dashdot]
-supportedMarkers(::PyPlotPackage) = [:rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :hexagon]
+supportedStyles(::PyPlotPackage) = setdiff(ALL_STYLES, [:dashdotdot])
+supportedMarkers(::PyPlotPackage) = setdiff(ALL_MARKERS, [:star2])
+subplotSupported(::PyPlotPackage) = false
 
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
@@ -180,7 +181,7 @@ function plot!(::PyPlotPackage, plt::Plot; kw...)
   extraargs[:label] = d[:label]
 
   # do the plot
-  @show lt
+  # @show lt
   if lt == :hist
     d[:serieshandle] = plotfunc(d[:y]; extraargs...)[1]
   elseif lt in (:scatter, :heatmap, :hexbin)

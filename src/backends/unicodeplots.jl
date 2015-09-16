@@ -7,11 +7,11 @@ unicodeplots!() = plotter!(:unicodeplots)
 
 # -------------------------------
 
-suppportedArgs(::GadflyPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
-supportedAxes(::GadflyPackage) = [:left]
-supportedTypes(::GadflyPackage) = setdiff(TYPES, [:stepinverted])
-supportedStyles(::GadflyPackage) = [:solid]
-supportedMarkers(::GadflyPackage) = [:ellipse]
+suppportedArgs(::UnicodePlotsPackage) = setdiff(ALL_ARGS, [:reg, :heatmap_c, :fillto, :pos])
+supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
+supportedTypes(::UnicodePlotsPackage) = setdiff(ALL_TYPES, [:stepinverted])
+supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
+supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
 
 
 function expandLimits!(lims, x)

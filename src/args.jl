@@ -9,11 +9,16 @@ const TYPES = [:line, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin
 const STYLES = [:solid, :dash, :dot, :dashdot, :dashdotdot]
 const MARKERS = [:ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
 
-supportedAxes(::PlottingPackage) = AXES
-supportedTypes(::PlottingPackage) = TYPES
-supportedStyles(::PlottingPackage) = STYLES
-supportedMarkers(::PlottingPackage) = MARKERS
-subplotSupported(::GadflyPackage) = true
+const ALL_AXES = vcat(:auto, AXES)
+const ALL_TYPES = vcat(:none, TYPES)
+const ALL_STYLES = vcat(:auto, STYLES)
+const ALL_MARKERS = vcat(:none, :auto, MARKERS)
+
+supportedAxes(::PlottingPackage) = ALL_AXES
+supportedTypes(::PlottingPackage) = ALL_TYPES
+supportedStyles(::PlottingPackage) = ALL_STYLES
+supportedMarkers(::PlottingPackage) = ALL_MARKERS
+subplotSupported(::PlottingPackage) = true
 
 supportedAxes() = supportedAxes(plotter())
 supportedTypes() = supportedTypes(plotter())
@@ -78,6 +83,8 @@ makeplural(s::Symbol) = Symbol(string(s,"s"))
 autopick(arr::AVec, idx::Integer) = arr[mod1(idx,length(arr))]
 autopick(notarr, idx::Integer) = notarr
 
+autopick_ignore_none_auto(arr::AVec, idx::Integer) = autopick(setdiff(arr, [:none, :auto]), idx)
+autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
 # note: if plt is nothing, we aren't doing anything with the color anyways
@@ -146,16 +153,16 @@ function getPlotKeywordArgs(pkg::PlottingPackage, kw, idx::Int, n::Int)
   # auto-pick
   if n > 0
     if d[:axis] == :auto
-      d[:axis] = autopick(supportedAxes(pkg), n)
+      d[:axis] = autopick_ignore_none_auto(supportedAxes(pkg), n)
     end
-    if d[:linetype] == :auto
-      d[:linetype] = autopick(supportedTypes(pkg), n)
-    end
+    # if d[:linetype] == :auto
+    #   d[:linetype] = autopick_ignore_none_auto(supportedTypes(pkg), n)
+    # end
     if d[:linestyle] == :auto
-      d[:linestyle] = autopick(supportedStyles(pkg), n)
+      d[:linestyle] = autopick_ignore_none_auto(supportedStyles(pkg), n)
     end
     if d[:marker] == :auto
-      d[:marker] = autopick(supportedMarkers(pkg), n)
+      d[:marker] = autopick_ignore_none_auto(supportedMarkers(pkg), n)
     end
     
   end

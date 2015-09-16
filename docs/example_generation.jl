@@ -51,17 +51,17 @@ const examples = PlotExample[
               [:(heatmap(randn(10000),randn(10000); nbins=100))]),
   PlotExample("Suported line types",
               "All options: (:line, :orderedline, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)",
-              [:(types = intersect(supportedTypes(), [:line, :orderedline, :path, :step, :stepinverted, :sticks, :scatter])),
+              [:(types = intersect(supportedTypes(), [:line, :step, :stepinverted, :sticks, :scatter])),
                   :(n = length(types)),
                   :(x = Vector[sort(rand(20)) for i in 1:n]),
                   :(y = rand(20,n)),
-                  :(plot(x, y; linetype=:auto, labels=map(string,types)))]),
+                  :(plot(x, y; linetypes=types, labels=map(string,types)))]),
   PlotExample("Supported line styles",
               "All options: (:solid, :dash, :dot, :dashdot, :dashdotdot)",
-              [:(styles = supportedStyles()), :(plot(rand(20,length(styles)); linestyle=:auto, labels=map(string,styles)))]),
+              [:(styles = setdiff(supportedStyles(), [:auto])), :(plot(rand(20,length(styles)); linestyle=:auto, labels=map(string,styles)))]),
   PlotExample("Supported marker types",
               "All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)",
-              [:(markers = supportedMarkers()), :(plot([fill(i,10) for i=1:length(markers)]; marker=:auto, labels=map(string,markers), markersize=10))]),
+              [:(markers = setdiff(supportedMarkers(), [:none,:auto])), :(plot([fill(i,10) for i=1:length(markers)]; marker=:auto, labels=map(string,markers), markersize=10))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
               [:(bar(randn(1000)))]),
@@ -91,7 +91,7 @@ const examples = PlotExample[
 function generate_markdown(pkgname::Symbol)
 
   # set up the plotter, and don't show the plots by default
-  plotter!(pkgname)
+  pkg = plotter!(pkgname)
   # plotDefault!(:show, false)
 
   # mkdir if necessary
@@ -101,6 +101,15 @@ function generate_markdown(pkgname::Symbol)
 
   # open the markdown file
   md = open("$DOCDIR/$(pkgname)_examples.md", "w")
+
+  write(md, "# Examples for backend: $pkgname\n\n")
+  write(md, "- Supported arguments: $(supportedArgs(pkg))\n")
+  write(md, "- Supported values for axis: $(supportedAxes(pkg))\n")
+  write(md, "- Supported values for linetype: $(supportedTypes(pkg))\n")
+  write(md, "- Supported values for linestyle: $(supportedStyles(pkg))\n")
+  write(md, "- Supported values for marker: $(supportedMarkers(pkg))\n")
+  write(md, "- Is `subplot`/`subplot!` supported? $(subplotSupported(pkg) ? "Yes" : "No")\n\n")
+
 
   for (i,example) in enumerate(examples)
 
@@ -147,6 +156,10 @@ end
 function test_all_examples(pkgname::Symbol)
   plts = Dict()
   for i in 1:length(examples)
+    if examples[i].header == "Subplots" && !subplotSupported()
+      break
+    end
+
     try
       plt = test_example(pkgname, i)
       plts[i] = plt

@@ -1,3 +1,12 @@
+# Examples for backend: qwt
+
+- Supported arguments: [:args,:axis,:color,:fillto,:heatmap_c,:kwargs,:label,:legend,:linestyle,:linetype,:marker,:markercolor,:markersize,:nbins,:reg,:size,:title,:width,:windowtitle,:xlabel,:ylabel,:yrightlabel]
+- Supported values for axis: [:auto,:left,:right]
+- Supported values for linetype: [:none,:line,:step,:stepinverted,:sticks,:scatter,:heatmap,:hexbin,:hist,:bar]
+- Supported values for linestyle: [:auto,:solid,:dash,:dot,:dashdot,:dashdotdot]
+- Supported values for marker: [:none,:auto,:ellipse,:rect,:diamond,:utriangle,:dtriangle,:cross,:xcross,:star1,:star2,:hexagon]
+- Is `subplot`/`subplot!` supported? Yes
+
 ### Lines
 
 A simple line plot of the 3 columns.
@@ -10,7 +19,7 @@ plot(rand(100,3))
 
 ### Functions
 
-Plot multiple functions.
+Plot multiple functions.  You can also put the function first.
 
 ```julia
 plot(0:0.01:4π,[sin,cos])
@@ -30,7 +39,7 @@ plot([sin,cos],0,4π)
 
 ### 
 
-Or make a parametric plot with plot(fx, fy, umin, umax).
+Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).
 
 ```julia
 plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
@@ -54,7 +63,7 @@ plot(rand(10); title="TITLE",xlabel="XLABEL",ylabel="YLABEL",background_color=RG
 
 Use the `axis` or `axiss` arguments.
 
-Note: This is only supported with Qwt right now
+Note: Currently only supported with Qwt and PyPlot
 
 ```julia
 plot(Vector[randn(100),randn(100) * 100]; axiss=[:left,:right],ylabel="LEFT",yrightlabel="RIGHT")
@@ -102,35 +111,38 @@ heatmap(randn(10000),randn(10000); nbins=100)
 
 ![](../img/qwt/qwt_example_10.png)
 
-### Lots of line types
+### Suported line types
 
-Options: (:line, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)  
-Note: some may not work with all backends
+All options: (:line, :orderedline, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)
 
 ```julia
-plot(rand(20,4); linetypes=[:line,:step,:sticks,:scatter],labels=["line","step","sticks","dots"])
+types = intersect(supportedTypes(),[:line,:step,:stepinverted,:sticks,:scatter])
+n = length(types)
+x = Vector[sort(rand(20)) for i = 1:n]
+y = rand(20,n)
+plot(x,y; linetype=:auto,labels=map(string,types))
 ```
 
 ![](../img/qwt/qwt_example_11.png)
 
-### Lots of line styles
+### Supported line styles
 
-Options: (:solid, :dash, :dot, :dashdot, :dashdotdot)  
-Note: some may not work with all backends
+All options: (:solid, :dash, :dot, :dashdot, :dashdotdot)
 
 ```julia
-plot(rand(20,5); linestyles=[:solid,:dash,:dot,:dashdot,:dashdotdot],labels=["solid","dash","dot","dashdot","dashdotdot"])
+styles = setdiff(supportedStyles(),[:auto])
+plot(rand(20,length(styles)); linestyle=:auto,labels=map(string,styles))
 ```
 
 ![](../img/qwt/qwt_example_12.png)
 
-### Lots of marker types
+### Supported marker types
 
-Options: (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)  
-Note: some may not work with all backends
+All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)
 
 ```julia
-plot(repmat(collect(1:10)',10,1); markers=[:ellipse,:rect,:diamond,:utriangle,:dtriangle,:cross,:xcross,:star1,:star2,:hexagon],labels=["ellipse","rect","diamond","utriangle","dtriangle","cross","xcross","star1","star2","hexagon"],linetype=:none,markersize=10)
+markers = setdiff(supportedMarkers(),[:none,:auto])
+plot([fill(i,10) for i = 1:length(markers)]; marker=:auto,labels=map(string,markers),markersize=10)
 ```
 
 ![](../img/qwt/qwt_example_13.png)

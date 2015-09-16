@@ -21,12 +21,12 @@ Base.display(pkg::PlottingPackage, subplt::Subplot) = error("display($pkg, subpl
 # ---------------------------------------------------------
 
 
-const AVAILABLE_PACKAGES = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse]
-const INITIALIZED_PACKAGES = Set{Symbol}()
-backends() = AVAILABLE_PACKAGES
+const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse]
+const INITIALIZED_BACKENDS = Set{Symbol}()
+backends() = BACKENDS
 
 
-function getPlottingPackage(sym::Symbol)
+function backend(sym::Symbol)
   sym == :qwt && return QwtPackage()
   sym == :gadfly && return GadflyPackage()
   sym == :unicodeplots && return UnicodePlotsPackage()
@@ -36,40 +36,40 @@ function getPlottingPackage(sym::Symbol)
 end 
 
 
-type CurrentPackage
+type CurrentBackend
   sym::Symbol
   pkg::PlottingPackage
 end
-CurrentPackage(sym::Symbol) = CurrentPackage(sym, getPlottingPackage(sym))
+CurrentBackend(sym::Symbol) = CurrentBackend(sym, backend(sym))
 
 # ---------------------------------------------------------
 
 function pickDefaultBackend()
   try
     Pkg.installed("Immerse")
-    return CurrentPackage(:immerse)
+    return CurrentBackend(:immerse)
   end
   try
     Pkg.installed("Qwt")
-    return CurrentPackage(:qwt)
+    return CurrentBackend(:qwt)
   end
   try
     Pkg.installed("PyPlot")
-    return CurrentPackage(:pyplot)
+    return CurrentBackend(:pyplot)
   end
   try
     Pkg.installed("Gadfly")
-    return CurrentPackage(:gadfly)
+    return CurrentBackend(:gadfly)
   end
   try
     Pkg.installed("UnicodePlots")
-    return CurrentPackage(:unicodeplots)
+    return CurrentBackend(:unicodeplots)
   end
   warn("You don't have any of the supported backends installed!  Chose from ", backends())
-  return CurrentPackage(:gadfly)
+  return CurrentBackend(:gadfly)
 end
-const CURRENT_PACKAGE = pickDefaultBackend()
-println("[Plots.jl] Default backend: ", CURRENT_PACKAGE.sym)
+const CURRENT_BACKEND = pickDefaultBackend()
+println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
 
 
 # ---------------------------------------------------------
@@ -79,12 +79,12 @@ Returns the current plotting package name.  Initializes package on first call.
 """
 function plotter()
 
-  currentPackageSymbol = CURRENT_PACKAGE.sym
-  if !(currentPackageSymbol in INITIALIZED_PACKAGES)
+  currentBackendSymbol = CURRENT_BACKEND.sym
+  if !(currentBackendSymbol in INITIALIZED_BACKENDS)
 
     # initialize
-    println("[Plots.jl] Initializing package: ", CURRENT_PACKAGE.sym)
-    if currentPackageSymbol == :qwt
+    println("[Plots.jl] Initializing package: ", CURRENT_BACKEND.sym)
+    if currentBackendSymbol == :qwt
       try
         @eval import Qwt
         @eval export Qwt
@@ -92,7 +92,7 @@ function plotter()
         error("Couldn't import Qwt.  Install it with: Pkg.clone(\"https://github.com/tbreloff/Qwt.jl.git\")\n  (Note: also requires pyqt and pyqwt)")
       end
 
-    elseif currentPackageSymbol == :gadfly
+    elseif currentBackendSymbol == :gadfly
       try
         @eval import Gadfly, Compose
         @eval export Gadfly, Compose
@@ -100,7 +100,7 @@ function plotter()
         error("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\")")
       end
 
-    elseif currentPackageSymbol == :unicodeplots
+    elseif currentBackendSymbol == :unicodeplots
       try
         @eval import UnicodePlots
         @eval export UnicodePlots
@@ -108,7 +108,7 @@ function plotter()
         error("Couldn't import UnicodePlots.  Install it with: Pkg.add(\"UnicodePlots\")")
       end
 
-    elseif currentPackageSymbol == :pyplot
+    elseif currentBackendSymbol == :pyplot
       try
         @eval import PyPlot
         @eval export PyPlot
@@ -116,7 +116,7 @@ function plotter()
         error("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\")")
       end
 
-    elseif currentPackageSymbol == :immerse
+    elseif currentBackendSymbol == :immerse
       try
         @eval import Immerse, Gadfly, Compose, Gtk
         @eval export Immerse, Gadfly, Compose, Gtk
@@ -125,13 +125,13 @@ function plotter()
       end
 
     else
-      error("Unknown plotter $currentPackageSymbol.  Choose from: $AVAILABLE_PACKAGES")
+      error("Unknown plotter $currentBackendSymbol.  Choose from: $BACKENDS")
     end
-    push!(INITIALIZED_PACKAGES, currentPackageSymbol)
+    push!(INITIALIZED_BACKENDS, currentBackendSymbol)
     println("[Plots.jl] done.")
 
   end
-  CURRENT_PACKAGE.pkg
+  CURRENT_BACKEND.pkg
 end
 
 doc"""
@@ -141,22 +141,22 @@ function plotter!(modname)
   
   # set the PlottingPackage
   if modname == :qwt
-    CURRENT_PACKAGE.pkg = QwtPackage()
+    CURRENT_BACKEND.pkg = QwtPackage()
   elseif modname == :gadfly
-    CURRENT_PACKAGE.pkg = GadflyPackage()
+    CURRENT_BACKEND.pkg = GadflyPackage()
   elseif modname == :unicodeplots
-    CURRENT_PACKAGE.pkg = UnicodePlotsPackage()
+    CURRENT_BACKEND.pkg = UnicodePlotsPackage()
   elseif modname == :pyplot
-    CURRENT_PACKAGE.pkg = PyPlotPackage()
+    CURRENT_BACKEND.pkg = PyPlotPackage()
   elseif modname == :immerse
-    CURRENT_PACKAGE.pkg = ImmersePackage()
+    CURRENT_BACKEND.pkg = ImmersePackage()
   else
-    error("Unknown plotter $modname.  Choose from: $AVAILABLE_PACKAGES")
+    error("Unknown plotter $modname.  Choose from: $BACKENDS")
   end
 
   # update the symbol
-  CURRENT_PACKAGE.sym = modname
+  CURRENT_BACKEND.sym = modname
 
   # return the package
-  CURRENT_PACKAGE.pkg
+  CURRENT_BACKEND.pkg
 end

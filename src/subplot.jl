@@ -102,6 +102,10 @@ end
 
 # # this adds to a specific subplot... most plot commands will flow through here
 function subplot!(subplt::Subplot, args...; kw...)
+  if !subplotSupported()
+    error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(backend(pkg)), backends()),", "))
+  end
+
   kwList = createKWargsList(subplt, args...; kw...)
   for (i,d) in enumerate(kwList)
     subplt.n += 1

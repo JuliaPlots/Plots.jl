@@ -6,11 +6,11 @@ immutable GadflyPackage <: PlottingPackage end
 gadfly!() = plotter!(:gadfly)
 
 
-suppportedArgs(::GadflyPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos])
-supportedAxes(::GadflyPackage) = [:left]
+suppportedArgs(::GadflyPackage) = setdiff(ALL_ARGS, [:heatmap_c, :fillto, :pos])
+supportedAxes(::GadflyPackage) = setdiff(ALL_AXES, [:right])
 supportedTypes(::GadflyPackage) = setdiff(TYPES, [:stepinverted])
-supportedStyles(::GadflyPackage) = [:solid]
-supportedMarkers(::GadflyPackage) = [:rect, :ellipse, :diamond, :cross]
+supportedStyles(::GadflyPackage) = [:auto, :solid]
+supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :cross]
 
 
 include("gadfly_shapes.jl")

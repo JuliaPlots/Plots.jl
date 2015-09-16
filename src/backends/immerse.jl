@@ -6,7 +6,7 @@ immutable ImmersePackage <: PlottingPackage end
 immerse!() = plotter!(:immerse)
 
 
-suppportedArgs(::ImmersePackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos])
+suppportedArgs(::ImmersePackage) = suppportedArgs(GadflyPackage())
 supportedAxes(::ImmersePackage) = supportedAxes(GadflyPackage())
 supportedTypes(::ImmersePackage) = supportedTypes(GadflyPackage())
 supportedStyles(::ImmersePackage) = supportedStyles(GadflyPackage())
