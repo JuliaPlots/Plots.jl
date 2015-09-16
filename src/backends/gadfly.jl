@@ -6,7 +6,7 @@ immutable GadflyPackage <: PlottingPackage end
 gadfly!() = plotter!(:gadfly)
 
 
-suppportedArgs(::GadflyPackage) = setdiff(ALL_ARGS, [:heatmap_c, :fillto, :pos])
+supportedArgs(::GadflyPackage) = setdiff(ALL_ARGS, [:heatmap_c, :fillto, :pos])
 supportedAxes(::GadflyPackage) = setdiff(ALL_AXES, [:right])
 supportedTypes(::GadflyPackage) = setdiff(TYPES, [:stepinverted])
 supportedStyles(::GadflyPackage) = [:auto, :solid]

@@ -6,7 +6,7 @@ immutable ImmersePackage <: PlottingPackage end
 immerse!() = plotter!(:immerse)
 
 
-suppportedArgs(::ImmersePackage) = suppportedArgs(GadflyPackage())
+supportedArgs(::ImmersePackage) = supportedArgs(GadflyPackage())
 supportedAxes(::ImmersePackage) = supportedAxes(GadflyPackage())
 supportedTypes(::ImmersePackage) = supportedTypes(GadflyPackage())
 supportedStyles(::ImmersePackage) = supportedStyles(GadflyPackage())
