@@ -1,6 +1,6 @@
 # Examples for backend: gadfly
 
-- Supported arguments: args, axis, color, fillto, heatmap_c, kwargs, label, legend, linestyle, linetype, marker, markercolor, markersize, nbins, reg, size, title, width, windowtitle, xlabel, ylabel, yrightlabel
+- Supported arguments: args, axis, color, kwargs, label, legend, linestyle, linetype, marker, markercolor, markersize, nbins, reg, size, title, width, windowtitle, xlabel, ylabel, yrightlabel
 - Supported values for axis: [:auto,:left]
 - Supported values for linetype: [:line,:step,:sticks,:scatter,:heatmap,:hexbin,:hist,:bar]
 - Supported values for linestyle: [:auto,:solid]
