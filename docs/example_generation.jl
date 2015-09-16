@@ -104,7 +104,7 @@ function generate_markdown(pkgname::Symbol)
 
   write(md, "# Examples for backend: $pkgname\n\n")
   write(md, "- Supported arguments: $(join(supportedArgs(pkg), ", "))\n")
-  write(md, "- Supported values for axis: $(supportedAxes(pkg))\n")
+  write(md, "- Supported values for axis: `:$(join(supportedAxes(pkg), "`, `:"))`\n")
   write(md, "- Supported values for linetype: $(supportedTypes(pkg))\n")
   write(md, "- Supported values for linestyle: $(supportedStyles(pkg))\n")
   write(md, "- Supported values for marker: $(supportedMarkers(pkg))\n")
@@ -122,7 +122,7 @@ function generate_markdown(pkgname::Symbol)
 
       # save the png
       imgname = "$(pkgname)_example_$i.png"
-      savepng("$IMGDIR/$pkgname/$imgname")
+      # savepng("$IMGDIR/$pkgname/$imgname")
 
       # write out the header, description, code block, and image link
       write(md, "### $(example.header)\n\n")
