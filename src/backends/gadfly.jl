@@ -8,7 +8,7 @@ gadfly!() = plotter!(:gadfly)
 
 supportedArgs(::GadflyPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos])
 supportedAxes(::GadflyPackage) = setdiff(ALL_AXES, [:right])
-supportedTypes(::GadflyPackage) = setdiff(TYPES, [:stepinverted])
+supportedTypes(::GadflyPackage) = setdiff(ALL_TYPES, [:stepinverted])
 supportedStyles(::GadflyPackage) = [:auto, :solid]
 supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :cross]
 

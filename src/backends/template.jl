@@ -10,10 +10,10 @@ immutable [PkgName]Package <: PlottingPackage end
 # ---------------------------------------------------------------------------
 
 supportedArgs(::[PkgName]Package) = ARGS
-supportedAxes(::[PkgName]Package) = AXES
-supportedTypes(::[PkgName]Package) = TYPES
-supportedStyles(::[PkgName]Package) = STYLES
-supportedMarkers(::[PkgName]Package) = MARKERS
+supportedAxes(::[PkgName]Package) = ALL_AXES
+supportedTypes(::[PkgName]Package) = ALL_TYPES
+supportedStyles(::[PkgName]Package) = ALL_STYLES
+supportedMarkers(::[PkgName]Package) = ALL_MARKERS
 subplotSupported(::[PkgName]Package) = false
 
 # ---------------------------------------------------------------------------

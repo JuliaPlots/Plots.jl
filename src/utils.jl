@@ -105,6 +105,19 @@ function sticksHack(; kw...)
 end
 
 
+
+
+function regressionXY(x, y)
+  # regress
+  β, α = [x ones(length(x))] \ y
+
+  # make a line segment
+  regx = [minimum(x), maximum(x)]
+  regy = β * regx + α
+  regx, regy
+end
+
+
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
 const INCH_SCALAR = 25.4
