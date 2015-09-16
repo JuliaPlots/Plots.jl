@@ -87,7 +87,8 @@ When plotting multiple lines, you can give every line the same trait by using th
 
 # this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
-  plt = plot(plotter(); getPlotKeywordArgs(kw, 1, 0)...)  # create a new, blank plot
+  pkg = plotter()
+  plt = plot(pkg; getPlotKeywordArgs(pkg, kw, 1, 0)...)  # create a new, blank plot
   plot!(plt, args...; kw...)  # add to it
 end
 
@@ -140,7 +141,7 @@ function createKWargsList(plt::PlottingObject; kw...)
   if !haskey(d, :x)
     d[:x] = 1:length(d[:y])
   end
-  [getPlotKeywordArgs(d, 1, plt.n + 1)]
+  [getPlotKeywordArgs(plt.plotter, d, 1, plt.n + 1)]
 end
 
 
@@ -151,7 +152,7 @@ end
 
 # create one series where y is vectors of numbers
 function createKWargsList{T<:Real}(plt::PlottingObject, y::AVec{T}; kw...)
-  d = getPlotKeywordArgs(kw, 1, plt.n + 1)
+  d = getPlotKeywordArgs(plt.plotter, kw, 1, plt.n + 1)
   d[:x] = 1:length(y)
   d[:y] = y
   [d]
@@ -160,7 +161,7 @@ end
 # create one series where x/y are vectors of numbers
 function createKWargsList{T<:Real,S<:Real}(plt::PlottingObject, x::AVec{T}, y::AVec{S}; kw...)
   @assert length(x) == length(y)
-  d = getPlotKeywordArgs(kw, 1, plt.n + 1)
+  d = getPlotKeywordArgs(plt.plotter, kw, 1, plt.n + 1)
   d[:x] = x
   d[:y] = y
   [d]
@@ -171,7 +172,7 @@ function createKWargsList(plt::PlottingObject, y::AMat; kw...)
   n,m = size(y)
   ret = []
   for i in 1:m
-    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = 1:n
     d[:y] = y[:,i]
     push!(ret, d)
@@ -185,7 +186,7 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AMat; kw...)
   @assert length(x) == n
   ret = []
   for i in 1:m
-    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = x
     d[:y] = y[:,i]
     push!(ret, d)
@@ -199,7 +200,7 @@ function createKWargsList(plt::PlottingObject, x::AMat, y::AMat; kw...)
   n,m = size(y)
   ret = []
   for i in 1:m
-    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = x[:,i]
     d[:y] = y[:,i]
     push!(ret, d)
@@ -214,7 +215,7 @@ end
 
 # create 1 series, y = f(x), x ∈ [xmin, xmax]
 function createKWargsList(plt::PlottingObject, f::Function, xmin::Real, xmax::Real; kw...)
-  d = getPlotKeywordArgs(kw, 1, plt.n + 1)
+  d = getPlotKeywordArgs(plt.plotter, kw, 1, plt.n + 1)
   width = plt.initargs[:size][1]
   d[:x] = collect(linspace(xmin, xmax, width))  # we don't need more than the width
   d[:y] = map(f, d[:x])
@@ -228,7 +229,7 @@ function createKWargsList(plt::PlottingObject, fs::Vector{Function}, xmin::Real,
   width = plt.initargs[:size][1]
   x = collect(linspace(xmin, xmax, width)) # we don't need more than the width
   for i in 1:m
-    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = x
     d[:y] = map(fs[i], x)
     push!(ret, d)
@@ -238,7 +239,7 @@ end
 
 # create 1 series, x = fx(u), y = fy(u); u ∈ [umin, umax]
 function createKWargsList(plt::PlottingObject, fx::Function, fy::Function, umin::Real, umax::Real; kw...)
-  d = getPlotKeywordArgs(kw, 1, plt.n + 1)
+  d = getPlotKeywordArgs(plt.plotter, kw, 1, plt.n + 1)
   width = plt.initargs[:size][1]
   u = collect(linspace(umin, umax, width))  # we don't need more than the width
   d[:x] = map(fx, u)
@@ -248,7 +249,7 @@ end
 
 # create 1 series, y = f(x)
 function createKWargsList(plt::PlottingObject, x::AVec, f::Function; kw...)
-  d = getPlotKeywordArgs(kw, 1, plt.n + 1)
+  d = getPlotKeywordArgs(plt.plotter, kw, 1, plt.n + 1)
   d[:x] = x
   d[:y] = map(f, x)
   [d]
@@ -260,7 +261,7 @@ function createKWargsList(plt::PlottingObject, x::AMat, f::Function; kw...)
   n,m = size(x)
   ret = []
   for i in 1:m
-    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = x[:,i]
     d[:y] = map(f, d[:x])
     push!(ret, d)
@@ -280,7 +281,7 @@ function createKWargsList(plt::PlottingObject, y::AVec; kw...)
   m = length(y)
   ret = []
   for i in 1:m
-    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = 1:length(y[i])
     d[:y] = y[i]
     push!(ret, d)
@@ -300,7 +301,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec{T}, y::AVec; kw.
   m = length(y)
   ret = []
   for i in 1:m
-    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = x
     d[:y] = getyvec(x, y[i])
     push!(ret, d)
@@ -314,7 +315,7 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AVec; kw...)
   m = length(y)
   ret = []
   for i in 1:m
-    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = x[i]
     d[:y] = getyvec(x[i], y[i])
     push!(ret, d)
@@ -326,7 +327,7 @@ end
 function createKWargsList(plt::PlottingObject, n::Integer; kw...)
   ret = []
   for i in 1:n
-    d = getPlotKeywordArgs(kw, i, plt.n + i)
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = zeros(0)
     d[:y] = zeros(0)
     push!(ret, d)

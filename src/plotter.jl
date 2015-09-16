@@ -94,8 +94,8 @@ function plotter()
 
     elseif currentPackageSymbol == :gadfly
       try
-        @eval import Gadfly
-        @eval export Gadfly
+        @eval import Gadfly, Compose
+        @eval export Gadfly, Compose
       catch
         error("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\")")
       end
@@ -118,8 +118,8 @@ function plotter()
 
     elseif currentPackageSymbol == :immerse
       try
-        @eval import Immerse, Gadfly, Gtk
-        @eval export Immerse, Gadfly
+        @eval import Immerse, Gadfly, Compose, Gtk
+        @eval export Immerse, Gadfly, Compose, Gtk
       catch
         error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\")")
       end

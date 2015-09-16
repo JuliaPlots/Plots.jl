@@ -36,7 +36,12 @@ export
   gadfly!,
   unicodeplots!,
   pyplot!,
-  immerse!
+  immerse!,
+
+  supportedAxes,
+  supportedTypes,
+  supportedStyles,
+  supportedMarkers
 
 # ---------------------------------------------------------
 

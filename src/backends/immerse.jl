@@ -6,6 +6,12 @@ immutable ImmersePackage <: PlottingPackage end
 immerse!() = plotter!(:immerse)
 
 
+supportedAxes(::ImmersePackage) = supportedAxes(GadflyPackage())
+supportedTypes(::ImmersePackage) = supportedTypes(GadflyPackage())
+supportedStyles(::ImmersePackage) = supportedStyles(GadflyPackage())
+supportedMarkers(::ImmersePackage) = supportedMarkers(GadflyPackage())
+
+
 function createImmerseFigure(d::Dict)
   # println("Creating immerse figure: ", d)
   w,h = d[:size]

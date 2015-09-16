@@ -7,7 +7,13 @@ immutable [PkgName]Package <: PlottingPackage end
 
 [pkgname]!() = plotter!(:[pkgname])
 
+# ---------------------------------------------------------------------------
 
+
+supportedAxes(::[PkgName]Package) = AXES
+supportedTypes(::[PkgName]Package) = TYPES
+supportedStyles(::[PkgName]Package) = STYLES
+supportedMarkers(::[PkgName]Package) = MARKERS
 
 # ---------------------------------------------------------------------------
 

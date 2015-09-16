@@ -2,14 +2,22 @@
 
 # const COLORS = [:black, :blue, :green, :red, :darkGray, :darkCyan, :darkYellow, :darkMagenta,
 #                 :darkBlue, :darkGreen, :darkRed, :gray, :cyan, :yellow, :magenta]
-const COLORS = distinguishable_colors(20)
-const NUMCOLORS = length(COLORS)
 
-# these are valid choices... first one is default value if unset
-const LINE_AXES = (:left, :right)
-const LINE_TYPES = (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)
-const LINE_STYLES = (:solid, :dash, :dot, :dashdot, :dashdotdot)
-const LINE_MARKERS = (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)
+const COLORS = distinguishable_colors(20)
+const AXES = [:left, :right]
+const TYPES = [:line, :step, :stepinverted, :sticks, :dots, :heatmap, :hexbin, :hist, :bar]
+const STYLES = [:solid, :dash, :dot, :dashdot, :dashdotdot]
+const MARKERS = [:ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
+
+supportedAxes(::PlottingPackage) = AXES
+supportedTypes(::PlottingPackage) = TYPES
+supportedStyles(::PlottingPackage) = STYLES
+supportedMarkers(::PlottingPackage) = MARKERS
+
+supportedAxes() = supportedAxes(plotter())
+supportedTypes() = supportedTypes(plotter())
+supportedStyles() = supportedStyles(plotter())
+supportedMarkers() = supportedMarkers(plotter())
 
 # -----------------------------------------------------------------------------
 
@@ -60,7 +68,8 @@ end
 # -----------------------------------------------------------------------------
 
 makeplural(s::Symbol) = Symbol(string(s,"s"))
-autocolor(idx::Integer) = COLORS[mod1(idx,NUMCOLORS)]
+
+autopick(arr::AVec, idx::Integer) = arr[mod1(idx,length(arr))]
 
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
@@ -69,7 +78,7 @@ function getRGBColor(c, n::Int = 0)
 
   # auto-assign a color based on plot index
   if c == :auto && n > 0
-    c = autocolor(n)
+    c = autopick(COLORS, n)
   end
 
   # convert it from a symbol/string
@@ -90,9 +99,16 @@ end
 # const ALT_ARG_NAMES = Dict{Tuple{Symbol,Symbol}, Any}()
 # ALT_ARG_NAMES[(:linetype, :scatter)] = :dots
 
+function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
+  d[:axis] in supportedAxes(pkg) || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))")
+  d[:linetype] == :none || d[:linetype] in supportedTypes(pkg) || warn("linetype $(d[:linetype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))")
+  d[:linestyle] in supportedStyles(pkg) || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))")
+  d[:marker] == :none || d[:marker] in supportedMarkers(pkg) || warn("marker $(d[:marker]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))")
+end
+
 
 # note: idx is the index of this series within this call, n is the index of the series from all calls to plot/subplot
-function getPlotKeywordArgs(kw, idx::Int, n::Int)
+function getPlotKeywordArgs(pkg::PlottingPackage, kw, idx::Int, n::Int)
   d = Dict(kw)
 
   # # replace alternate names
@@ -118,6 +134,23 @@ function getPlotKeywordArgs(kw, idx::Int, n::Int)
       end
     end
     delete!(d, plural)
+  end
+
+  # auto-pick
+  if n > 0
+    if d[:axis] == :auto
+      d[:axis] = autopick(supportedAxes(pkg), n)
+    end
+    if d[:linetype] == :auto
+      d[:linetype] = autopick(supportedTypes(pkg), n)
+    end
+    if d[:linestyle] == :auto
+      d[:linestyle] = autopick(supportedStyles(pkg), n)
+    end
+    if d[:marker] == :auto
+      d[:marker] = autopick(supportedMarkers(pkg), n)
+    end
+    
   end
 
   # swap out dots for no line and a marker
@@ -152,7 +185,10 @@ function getPlotKeywordArgs(kw, idx::Int, n::Int)
       label = string(label, " (R)")
     end
     d[:label] = label
+
+    warnOnUnsupported(pkg, d)
   end
+
 
   d
 end

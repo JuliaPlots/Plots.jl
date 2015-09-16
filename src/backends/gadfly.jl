@@ -6,6 +6,13 @@ immutable GadflyPackage <: PlottingPackage end
 gadfly!() = plotter!(:gadfly)
 
 
+supportedAxes(::GadflyPackage) = [:left]
+supportedTypes(::GadflyPackage) = setdiff(TYPES, [:stepinverted])
+supportedStyles(::GadflyPackage) = [:solid]
+supportedMarkers(::GadflyPackage) = [:rect, :ellipse, :diamond, :cross]
+
+
+include("gadfly_shapes.jl")
 
 function createGadflyPlotObject(d::Dict)
   @eval import DataFrames
@@ -46,31 +53,31 @@ function getLineGeoms(d::Dict)
 end
 
 
-function createGadflyAnnotation(d::Dict)
+# function createGadflyAnnotation(d::Dict)
   
-  if d[:marker] == :rect
-    # get the width/height of the square (both are sz)
-    sz = d[:markersize] * Gadfly.px
-    halfsz = sz/2
+#   if d[:marker] == :rect
+#     # get the width/height of the square (both are sz)
+#     sz = d[:markersize] * Gadfly.px
+#     halfsz = sz/2
 
-    # remap x/y to the corner position of the squares
-    xs = map(z -> Gadfly.Compose.Measure(;cx=z) - halfsz, float(d[:x]))
-    ys = map(z -> Gadfly.Compose.Measure(;cy=z) + halfsz, float(d[:y]))
+#     # remap x/y to the corner position of the squares
+#     xs = map(z -> Gadfly.Compose.Measure(;cx=z) - halfsz, float(d[:x]))
+#     ys = map(z -> Gadfly.Compose.Measure(;cy=z) + halfsz, float(d[:y]))
 
-    # return an Annotation which will add those shapes to each point in the series 
-    return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,[sz],[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))
+#     # return an Annotation which will add those shapes to each point in the series 
+#     return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,[sz],[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))
 
-  else
-    # make circles
-    sz = 0.5 * d[:markersize] * Gadfly.px
-    xs = collect(float(d[:x]))
-    ys = collect(float(d[:y]))
+#   else
+#     # make circles
+#     sz = 0.5 * d[:markersize] * Gadfly.px
+#     xs = collect(float(d[:x]))
+#     ys = collect(float(d[:y]))
 
-    # return an Annotation which will add those shapes to each point in the series 
-    return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.circle(xs,ys,[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))
+#     # return an Annotation which will add those shapes to each point in the series 
+#     return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.circle(xs,ys,[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))
 
-  end
-end
+#   end
+# end
 
 
 # serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...

@@ -7,6 +7,10 @@ pyplot!() = plotter!(:pyplot)
 
 # -------------------------------
 
+# supportedAxes(::PyPlotPackage) = [:left]
+# supportedTypes(::PyPlotPackage) = setdiff(TYPES, [:stepinverted])
+supportedStyles(::PyPlotPackage) = [:solid,:dash,:dot,:dashdot]
+supportedMarkers(::PyPlotPackage) = [:rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :hexagon]
 
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
@@ -18,7 +22,6 @@ function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
   linestyle == :dash && return "--"
   linestyle == :dot && return ":"
   linestyle == :dashdot && return "-."
-  linestyle == :dashdotdot && return "-."
   warn("Unknown linestyle $linestyle")
   return "-"
 end
@@ -34,7 +37,7 @@ function getPyPlotMarker(marker::Symbol)
   marker == :cross && return "x"
   marker == :xcross && return "+"
   marker == :star1 && return "*"
-  marker == :star2 && return "*"
+  # marker == :star2 && return "*"
   marker == :hexagon && return "h"
   warn("Unknown marker $marker")
   return "o"
