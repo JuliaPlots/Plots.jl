@@ -132,8 +132,8 @@ function plotter()
 
     elseif currentBackendSymbol == :winston
       try
-        @eval import Winston
-        @eval export Winston
+        @eval import Winston, Gtk
+        @eval export Winston, Gtk
       catch
         error("Couldn't import Winston.  Install it with: Pkg.add(\"Winston\")")
       end

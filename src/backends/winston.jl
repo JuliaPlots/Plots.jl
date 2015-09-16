@@ -32,7 +32,7 @@ const winston_marker = Dict(:none=>".",
                             )
 
 
-supportedArgs(::WinstonPackage) = ARGS
+supportedArgs(::WinstonPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos, :markercolor, :background_color])
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :sticks, :scatter, :hist, :bar]
 supportedStyles(::WinstonPackage) = unshift!(collect(keys(winston_linestyle)), :auto)  # vcat(:auto, keys(winston_linestyle))
@@ -60,14 +60,19 @@ function plot(pkg::WinstonPackage; kw...)
   # the call to figure does a few things here:
   #   get a new unique id
   #   create a new GtkWindow (or Tk?)
-  w,h = d[:size]
-  figidx = Winston.figure(; name = d[:windowtitle], width = w, height = h)
 
-  # skip the current fig stuff... just grab the fig directly
-  fig = Winston._display.figs[figidx]
+  # w,h = d[:size]
+  # canvas = Gtk.GtkCanvasLeaf()
+  # window = Gtk.GtkWindowLeaf(canvas, d[:windowtitle], w, h)
+
+  # figidx = Winston.figure(; name = d[:windowtitle], width = w, height = h)
+
+  # # skip the current fig stuff... just grab the fig directly
+  # fig = Winston._display.figs[figidx]
 
   # overwrite the placeholder FramedPlot with our own
-  fig.plot = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
+  # fig.plot = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
+  wplt = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
 
   # # using the figure index returned from Winston.figure, make this plot current and get the 
   # # Figure object (fields: window::GtkWindow and plot::FramedPlot)
@@ -81,22 +86,36 @@ function plot(pkg::WinstonPackage; kw...)
   # Winston.setattr(fig.plot, "ylabel", d[:ylabel])
   # Winston.setattr(fig.plot, "title",  d[:title])
   
-  Plot((fig, figidx), pkg, 0, d, Dict[])
+  Plot(wplt, pkg, 0, d, Dict[])
+  # Plot((window, canvas, wplt), pkg, 0, d, Dict[])
+  # Plot((fig, figidx), pkg, 0, d, Dict[])
 end
 
 copy_remove(d::Dict, s::Symbol) = delete!(copy(d), s)
 
-function addRegressionLineWinston(d::Dict)
+function addRegressionLineWinston(d::Dict, wplt)
   xs, ys = regressionXY(d[:x], d[:y])
-  Winston.add(plt.o.plot, Winston.Curve(xs, ys, kind="dotted"))
+  Winston.add(wplt, Winston.Curve(xs, ys, kind="dotted"))
+end
+
+function getWinstonItems(plt::Plot)
+  if isa(plt.o, Winston.FramedPlot)
+    wplt = plt.o
+    window, canvas = nothing, nothing
+  else
+    window, canvas, wplt = plt.o
+  end
+  window, canvas, wplt
 end
 
 function plot!(::WinstonPackage, plt::Plot; kw...)
   d = Dict(kw)
   
-  # make this figure current
-  fig, figidx = plt.o
-  Winston.switchfig(Winston._display, figidx)
+  # # make this figure current
+  # fig, figidx = plt.o
+  # Winston.switchfig(Winston._display, figidx)
+
+  window, canvas, wplt = getWinstonItems(plt)
 
   # until we call it normally, do the hack
   if d[:linetype] == :bar
@@ -106,27 +125,24 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
   e = Dict()
   e[:color] = d[:color]
-  # label           # string or symbol, applies to that line, may go in a legend
   e[:linewidth] = d[:width]
   e[:kind] = winston_linestyle[d[:linestyle]]
   e[:symbolkind] = winston_marker[d[:marker]]
   # markercolor     # same choices as `color`, or :match will set the color to be the same as `color`
-  e[:symbolsize] = d[:markersize] / 3
+  e[:symbolsize] = d[:markersize] / 5
   # fillto          # fillto value for area plots
 
-  # size            # (Int,Int), resize the enclosing window
   # pos             # (Int,Int), move the enclosing window to this position
-  # windowtitle     # string or symbol, set the title of the enclosing windowtitle
   # screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
 
 
 
   ## lintype :line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
   if d[:linetype] == :none
-      Winston.add(fig.plot, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
+      Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
 
   elseif d[:linetype] == :line
-      Winston.add(fig.plot, Winston.Curve(d[:x], d[:y]; e...))
+      Winston.add(wplt, Winston.Curve(d[:x], d[:y]; e...))
 
   elseif d[:linetype] == :scatter
     if d[:marker] == :none
@@ -140,7 +156,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
   #     fn = Winston.XXX
 
   elseif d[:linetype] == :sticks
-      Winston.add(fig.plot, Winston.Stems(d[:x], d[:y]; e...))
+      Winston.add(wplt, Winston.Stems(d[:x], d[:y]; e...))
 
   # elseif d[:linetype] == :dots
   #     fn = Winston.XXX
@@ -153,7 +169,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
   elseif d[:linetype] == :hist
       hst = hist(d[:y], d[:nbins])
-      Winston.add(fig.plot, Winston.Histogram(hst...; copy_remove(e, :nbins)...))
+      Winston.add(wplt, Winston.Histogram(hst...; copy_remove(e, :nbins)...))
 
   # elseif d[:linetype] == :bar
   #     # fn = Winston.XXX
@@ -166,28 +182,48 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
   # marker
   if d[:marker] != :none
-    Winston.add(fig.plot, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
+    Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
   end
 
 
   # optionally add a regression line
-  d[:reg] && d[:linetype] != :hist && addRegressionLineWinston(d)
+  d[:reg] && d[:linetype] != :hist && addRegressionLineWinston(d, wplt)
 
   push!(plt.seriesargs, d)
-  println("DONE HERE ", figidx)
   plt
+end
+
+
+function addWinstonLegend(plt::Plot, wplt)
+  Winston.legend(wplt, [sd[:label] for sd in plt.seriesargs])
 end
 
 
 function Base.display(::WinstonPackage, plt::Plot)
   # recreate the legend
-  fig, figidx = plt.o
-  println("before legend")
-  Winston.legend(fig.plot, [sd[:label] for sd in plt.seriesargs])
-  println("after legend")
+  # fig, figidx = plt.o
 
-  # display the Figure
-  display(fig)
+  window, canvas, wplt = getWinstonItems(plt)
+
+  if window == nothing
+    # initialize window
+    w,h = plt.initargs[:size]
+    canvas = Gtk.GtkCanvasLeaf()
+    window = Gtk.GtkWindowLeaf(canvas, plt.initargs[:windowtitle], w, h)
+    # wplt = plt.o
+    plt.o = (window, canvas, wplt)
+  # else
+  #   window, canvas, wplt = plt.o
+  end
+
+  addWinstonLegend(plt, wplt)
+
+  Winston.display(canvas, wplt)
+  Gtk.showall(window)
+
+
+  # # display the Figure
+  # display(fig)
 
   # display(plt.o.window)
 
@@ -199,7 +235,9 @@ end
 
 function savepng(::WinstonPackage, plt::PlottingObject, fn::String; kw...)
   f = open(fn, "w")
-  writemime(f, "image/png", plt.o.plot)
+  window, canvas, wplt = getWinstonItems(plt)
+  addWinstonLegend(plt, wplt)
+  writemime(f, "image/png", wplt)
   close(f)
 end
 
