@@ -88,6 +88,12 @@ const examples = PlotExample[
 ]
 
 
+function createStringOfMarkDownCodeValues(arr, prefix = "")
+  string("`", prefix, join(arr, "`, `$prefix"), "`")
+end
+createStringOfMarkDownSymbols(arr) = createStringOfMarkDownCodeValues(arr, ":")
+
+
 function generate_markdown(pkgname::Symbol)
 
   # set up the plotter, and don't show the plots by default
@@ -103,11 +109,11 @@ function generate_markdown(pkgname::Symbol)
   md = open("$DOCDIR/$(pkgname)_examples.md", "w")
 
   write(md, "# Examples for backend: $pkgname\n\n")
-  write(md, "- Supported arguments: $(join(supportedArgs(pkg), ", "))\n")
-  write(md, "- Supported values for axis: `:$(join(supportedAxes(pkg), "`, `:"))`\n")
-  write(md, "- Supported values for linetype: $(supportedTypes(pkg))\n")
-  write(md, "- Supported values for linestyle: $(supportedStyles(pkg))\n")
-  write(md, "- Supported values for marker: $(supportedMarkers(pkg))\n")
+  write(md, "- Supported arguments: $(createStringOfMarkDownCodeValues(supportedArgs(pkg)))\n")
+  write(md, "- Supported values for axis: $(createStringOfMarkDownSymbols(supportedAxes(pkg)))\n")
+  write(md, "- Supported values for linetype: $(createStringOfMarkDownSymbols(supportedTypes(pkg)))\n")
+  write(md, "- Supported values for linestyle: $(createStringOfMarkDownSymbols(supportedStyles(pkg)))\n")
+  write(md, "- Supported values for marker: $(createStringOfMarkDownSymbols(supportedMarkers(pkg)))\n")
   write(md, "- Is `subplot`/`subplot!` supported? $(subplotSupported(pkg) ? "Yes" : "No")\n\n")
 
   write(md, "### Initialize\n\n```julia\nusing Plots\n$(pkgname)!()\n```\n\n")
@@ -122,6 +128,8 @@ function generate_markdown(pkgname::Symbol)
 
       # save the png
       imgname = "$(pkgname)_example_$i.png"
+
+      # NOTE: uncomment this to overwrite the images as well
       # savepng("$IMGDIR/$pkgname/$imgname")
 
       # write out the header, description, code block, and image link
