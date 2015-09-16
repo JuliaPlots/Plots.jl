@@ -15,6 +15,7 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 - [UnicodePlots.jl](docs/unicodeplots_examples.md)
 - [PyPlot.jl](docs/pyplot_examples.md)
 - [Immerse.jl](docs/immerse_examples.md)
+- [Winston.jl](docs/winston_examples.md)
 
 ## Installation
 
@@ -32,6 +33,7 @@ Pkg.add("Immerse")
 Pkg.add("UnicodePlots")
 Pkg.add("PyPlot")                                    # requires python and matplotlib
 Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")  # requires pyqt and pyqwt
+Pkg.add("Winston")
 ```
 
 ## Use
@@ -255,7 +257,7 @@ plot(rand(100,2); colors = [:red, RGB(.5,.5,0)],
 - [x] PyPlot.jl
 - [x] UnicodePlots.jl
 - [x] Qwt.jl
-- [ ] Winston.jl
+- [x] Winston.jl
 - [ ] GLPlot.jl
 - [ ] Bokeh.jl
 - [ ] Vega.jl

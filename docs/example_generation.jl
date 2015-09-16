@@ -188,6 +188,7 @@ end
 # generate_markdown(:gadfly)
 # generate_markdown(:pyplot)
 # generate_markdown(:immerse)
+# generate_markdown(:winston)
 
 
 end # module

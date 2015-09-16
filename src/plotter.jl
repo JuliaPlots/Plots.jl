@@ -5,6 +5,7 @@ include("backends/gadfly.jl")
 include("backends/unicodeplots.jl")
 include("backends/pyplot.jl")
 include("backends/immerse.jl")
+include("backends/winston.jl")
 
 
 # ---------------------------------------------------------
@@ -21,7 +22,7 @@ Base.display(pkg::PlottingPackage, subplt::Subplot) = error("display($pkg, subpl
 # ---------------------------------------------------------
 
 
-const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse]
+const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse, :winston]
 const INITIALIZED_BACKENDS = Set{Symbol}()
 backends() = BACKENDS
 
@@ -32,6 +33,7 @@ function backend(sym::Symbol)
   sym == :unicodeplots && return UnicodePlotsPackage()
   sym == :pyplot && return PyPlotPackage()
   sym == :immerse && return ImmersePackage()
+  sym == :winston && return WinstonPackage()
   error("Unsupported backend $sym")
 end 
 
@@ -64,6 +66,10 @@ function pickDefaultBackend()
   try
     Pkg.installed("UnicodePlots")
     return CurrentBackend(:unicodeplots)
+  end
+  try
+    Pkg.installed("Winston")
+    return CurrentBackend(:winston)
   end
   warn("You don't have any of the supported backends installed!  Chose from ", backends())
   return CurrentBackend(:gadfly)
@@ -124,6 +130,14 @@ function plotter()
         error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\")")
       end
 
+    elseif currentBackendSymbol == :winston
+      try
+        @eval import Winston
+        @eval export Winston
+      catch
+        error("Couldn't import Winston.  Install it with: Pkg.add(\"Winston\")")
+      end
+
     else
       error("Unknown plotter $currentBackendSymbol.  Choose from: $BACKENDS")
     end
@@ -150,6 +164,8 @@ function plotter!(modname)
     CURRENT_BACKEND.pkg = PyPlotPackage()
   elseif modname == :immerse
     CURRENT_BACKEND.pkg = ImmersePackage()
+  elseif modname == :winston
+    CURRENT_BACKEND.pkg = WinstonPackage()
   else
     error("Unknown plotter $modname.  Choose from: $BACKENDS")
   end
