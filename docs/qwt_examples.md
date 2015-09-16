@@ -1,6 +1,6 @@
 # Examples for backend: qwt
 
-- Supported arguments: [:args,:axis,:color,:fillto,:heatmap_c,:kwargs,:label,:legend,:linestyle,:linetype,:marker,:markercolor,:markersize,:nbins,:reg,:size,:title,:width,:windowtitle,:xlabel,:ylabel,:yrightlabel]
+- Supported arguments: args, axis, color, fillto, heatmap_c, kwargs, label, legend, linestyle, linetype, marker, markercolor, markersize, nbins, reg, size, title, width, windowtitle, xlabel, ylabel, yrightlabel
 - Supported values for axis: [:auto,:left,:right]
 - Supported values for linetype: [:none,:line,:step,:stepinverted,:sticks,:scatter,:heatmap,:hexbin,:hist,:bar]
 - Supported values for linestyle: [:auto,:solid,:dash,:dot,:dashdot,:dashdotdot]
@@ -120,7 +120,7 @@ types = intersect(supportedTypes(),[:line,:step,:stepinverted,:sticks,:scatter])
 n = length(types)
 x = Vector[sort(rand(20)) for i = 1:n]
 y = rand(20,n)
-plot(x,y; linetype=:auto,labels=map(string,types))
+plot(x,y; linetypes=types,labels=map(string,types))
 ```
 
 ![](../img/qwt/qwt_example_11.png)

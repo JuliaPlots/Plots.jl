@@ -1,3 +1,12 @@
+# Examples for backend: immerse
+
+- Supported arguments: args, axis, color, fillto, heatmap_c, kwargs, label, legend, linestyle, linetype, marker, markercolor, markersize, nbins, reg, size, title, width, windowtitle, xlabel, ylabel, yrightlabel
+- Supported values for axis: [:auto,:left]
+- Supported values for linetype: [:line,:step,:sticks,:scatter,:heatmap,:hexbin,:hist,:bar]
+- Supported values for linestyle: [:auto,:solid]
+- Supported values for marker: [:none,:auto,:rect,:ellipse,:diamond,:cross]
+- Is `subplot`/`subplot!` supported? Yes
+
 ### Lines
 
 A simple line plot of the 3 columns.
@@ -10,7 +19,7 @@ plot(rand(100,3))
 
 ### Functions
 
-Plot multiple functions.
+Plot multiple functions.  You can also put the function first.
 
 ```julia
 plot(0:0.01:4π,[sin,cos])
@@ -30,7 +39,7 @@ plot([sin,cos],0,4π)
 
 ### 
 
-Or make a parametric plot with plot(fx, fy, umin, umax).
+Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).
 
 ```julia
 plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
@@ -54,7 +63,7 @@ plot(rand(10); title="TITLE",xlabel="XLABEL",ylabel="YLABEL",background_color=RG
 
 Use the `axis` or `axiss` arguments.
 
-Note: This is only supported with Qwt right now
+Note: Currently only supported with Qwt and PyPlot
 
 ```julia
 plot(Vector[randn(100),randn(100) * 100]; axiss=[:left,:right],ylabel="LEFT",yrightlabel="RIGHT")
@@ -102,34 +111,37 @@ heatmap(randn(10000),randn(10000); nbins=100)
 
 ![](../img/immerse/immerse_example_10.png)
 
-### Lots of line types
+### Suported line types
 
-Options: (:line, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)  
-Note: some may not work with all backends
+All options: (:line, :orderedline, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)
 
 ```julia
-plot(rand(20,4); linetypes=[:line,:step,:sticks,:scatter],labels=["line","step","sticks","dots"])
+types = intersect(supportedTypes(),[:line,:step,:stepinverted,:sticks,:scatter])
+n = length(types)
+x = Vector[sort(rand(20)) for i = 1:n]
+y = rand(20,n)
+plot(x,y; linetypes=types,labels=map(string,types))
 ```
 
 ![](../img/immerse/immerse_example_11.png)
 
-### Lots of line styles
+### Supported line styles
 
-Options: (:solid, :dash, :dot, :dashdot, :dashdotdot)  
-Note: some may not work with all backends
+All options: (:solid, :dash, :dot, :dashdot, :dashdotdot)
 
 ```julia
-plot(rand(20,5); linestyles=[:solid,:dash,:dot,:dashdot,:dashdotdot],labels=["solid","dash","dot","dashdot","dashdotdot"])
+styles = setdiff(supportedStyles(),[:auto])
+plot(rand(20,length(styles)); linestyle=:auto,labels=map(string,styles))
 ```
 
 ![](../img/immerse/immerse_example_12.png)
 
-### Lots of marker types
+### Supported marker types
 
-
+All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)
 
 ```julia
-markers = supportedMarkers()
+markers = setdiff(supportedMarkers(),[:none,:auto])
 plot([fill(i,10) for i = 1:length(markers)]; marker=:auto,labels=map(string,markers),markersize=10)
 ```
 
@@ -154,4 +166,39 @@ histogram(randn(1000); nbins=50,fillto=20)
 ```
 
 ![](../img/immerse/immerse_example_15.png)
+
+### Subplots
+
+  subplot and subplot! are distinct commands which create many plots and add series to them in a circular fashion.
+  You can define the layout with keyword params... either set the number of plots `n` (and optionally number of rows `nr` or 
+  number of columns `nc`), or you can set the layout directly with `layout`.  
+
+  Note: Gadfly is not very friendly here, and although you can create a plot and save a PNG, I haven't been able to actually display it.
+
+
+```julia
+subplot(randn(100,5); layout=[1,1,3],linetypes=[:line,:hist,:scatter,:step,:bar],nbins=10,legend=false)
+```
+
+![](../img/immerse/immerse_example_16.png)
+
+### Adding to subplots
+
+Note here the automatic grid layout, as well as the order in which new series are added to the plots.
+
+```julia
+subplot(randn(100,5); n=4)
+```
+
+![](../img/immerse/immerse_example_17.png)
+
+### 
+
+
+
+```julia
+subplot!(randn(100,3))
+```
+
+![](../img/immerse/immerse_example_18.png)
 

@@ -103,7 +103,7 @@ function generate_markdown(pkgname::Symbol)
   md = open("$DOCDIR/$(pkgname)_examples.md", "w")
 
   write(md, "# Examples for backend: $pkgname\n\n")
-  write(md, "- Supported arguments: $(supportedArgs(pkg))\n")
+  write(md, "- Supported arguments: $(join(supportedArgs(pkg), ", "))\n")
   write(md, "- Supported values for axis: $(supportedAxes(pkg))\n")
   write(md, "- Supported values for linetype: $(supportedTypes(pkg))\n")
   write(md, "- Supported values for linestyle: $(supportedStyles(pkg))\n")
@@ -173,9 +173,9 @@ end
 
 # run it!
 # note: generate separately so it's easy to comment out
+# @osx_only generate_markdown(:unicodeplots)
 # generate_markdown(:qwt)
 # generate_markdown(:gadfly)
-# @osx_only generate_markdown(:unicodeplots)
 # generate_markdown(:pyplot)
 # generate_markdown(:immerse)
 

@@ -1,10 +1,10 @@
 # Examples for backend: gadfly
 
-- Supported arguments: [:args,:axis,:color,:fillto,:heatmap_c,:kwargs,:label,:legend,:linestyle,:linetype,:marker,:markercolor,:markersize,:nbins,:reg,:size,:title,:width,:windowtitle,:xlabel,:ylabel,:yrightlabel]
-- Supported values for axis: [:left]
+- Supported arguments: args, axis, color, fillto, heatmap_c, kwargs, label, legend, linestyle, linetype, marker, markercolor, markersize, nbins, reg, size, title, width, windowtitle, xlabel, ylabel, yrightlabel
+- Supported values for axis: [:auto,:left]
 - Supported values for linetype: [:line,:step,:sticks,:scatter,:heatmap,:hexbin,:hist,:bar]
-- Supported values for linestyle: [:solid]
-- Supported values for marker: [:rect,:ellipse,:diamond,:cross]
+- Supported values for linestyle: [:auto,:solid]
+- Supported values for marker: [:none,:auto,:rect,:ellipse,:diamond,:cross]
 - Is `subplot`/`subplot!` supported? Yes
 
 ### Lines
@@ -116,11 +116,11 @@ heatmap(randn(10000),randn(10000); nbins=100)
 All options: (:line, :orderedline, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)
 
 ```julia
-types = intersect(supportedTypes(),[:line,:orderedline,:path,:step,:stepinverted,:sticks,:scatter])
+types = intersect(supportedTypes(),[:line,:step,:stepinverted,:sticks,:scatter])
 n = length(types)
 x = Vector[sort(rand(20)) for i = 1:n]
 y = rand(20,n)
-plot(x,y; linetype=:auto,labels=map(string,types))
+plot(x,y; linetypes=types,labels=map(string,types))
 ```
 
 ![](../img/gadfly/gadfly_example_11.png)
@@ -130,7 +130,7 @@ plot(x,y; linetype=:auto,labels=map(string,types))
 All options: (:solid, :dash, :dot, :dashdot, :dashdotdot)
 
 ```julia
-styles = supportedStyles()
+styles = setdiff(supportedStyles(),[:auto])
 plot(rand(20,length(styles)); linestyle=:auto,labels=map(string,styles))
 ```
 
@@ -141,7 +141,7 @@ plot(rand(20,length(styles)); linestyle=:auto,labels=map(string,styles))
 All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)
 
 ```julia
-markers = supportedMarkers()
+markers = setdiff(supportedMarkers(),[:none,:auto])
 plot([fill(i,10) for i = 1:length(markers)]; marker=:auto,labels=map(string,markers),markersize=10)
 ```
 
