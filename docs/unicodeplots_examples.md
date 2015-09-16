@@ -120,7 +120,7 @@ Options: (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcr
 Note: some may not work with all backends
 
 ```julia
-plot(repmat(collect(1:10)',10,1); markers=[:ellipse,:rect,:diamond,:utriangle,:dtriangle,:cross,:xcross,:star1,:star2,:hexagon],labels=["ellipse","rect","diamond","utriangle","dtriangle","cross","xcross","star1","star2","hexagon"],linetype=:none,markersize=10)
+plot(repmat(collect(1:10)',10,1); markers=[:ellipse,:rect,:diamond,:utriangle,:dtriangle,:cross,:xcross,:star1,:star2,:hexagon],labels=["ellipse","rect","diamond","utriangle","dtriangle","cross","xcross","star1","star2","hexagon"],markersize=10)
 ```
 
 ![](../img/unicodeplots/unicodeplots_example_13.png)
