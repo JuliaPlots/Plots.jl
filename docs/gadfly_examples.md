@@ -104,11 +104,11 @@ heatmap(randn(10000),randn(10000); nbins=100)
 
 ### Lots of line types
 
-Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)  
+Options: (:line, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)  
 Note: some may not work with all backends
 
 ```julia
-plot(rand(20,4); linetypes=[:line,:step,:sticks,:dots],labels=["line","step","sticks","dots"])
+plot(rand(20,4); linetypes=[:line,:step,:sticks,:scatter],labels=["line","step","sticks","dots"])
 ```
 
 ![](../img/gadfly/gadfly_example_11.png)

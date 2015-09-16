@@ -7,6 +7,7 @@ pyplot!() = plotter!(:pyplot)
 
 # -------------------------------
 
+suppportedArgs(::PyPlotPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
 # supportedAxes(::PyPlotPackage) = [:left]
 # supportedTypes(::PyPlotPackage) = setdiff(TYPES, [:stepinverted])
 supportedStyles(::PyPlotPackage) = [:solid,:dash,:dot,:dashdot]
@@ -61,12 +62,34 @@ getRightAxis(o) = getLeftAxis(o)[:twinx]()
 
 # left axis is PyPlot.<func>, right axis is "f.axes[0].twinx().<func>"
 function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
+
+  # in the 2-axis case we need to get: <rightaxis>[:<func>]
   if axis == :right
     ax = getRightAxis(plt.o)  
     ax[:set_ylabel](plt.initargs[:yrightlabel])
-    return ax[linetype == :hist ? :hist : (linetype in (:sticks,:bar) ? :bar : (linetype in (:heatmap,:hexbin) ? :hexbin : :plot))]
+    fmap = Dict(
+        :hist => :hist,
+        :sticks => :bar,
+        :bar => :bar,
+        :heatmap => :hexbin,
+        :hexbin => :hexbin,
+        # :scatter => :scatter
+      )
+    return ax[get(fmap, linetype, :plot)]
+    # return ax[linetype == :hist ? :hist : (linetype in (:sticks,:bar) ? :bar : (linetype in (:heatmap,:hexbin) ? :hexbin : :plot))]
   end
-  return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : (linetype in (:heatmap,:hexbin) ? PyPlot.hexbin : PyPlot.plot))
+
+  # get the function
+  fmap = Dict(
+      :hist => PyPlot.plt[:hist],
+      :sticks => PyPlot.bar,
+      :bar => PyPlot.bar,
+      :heatmap => PyPlot.hexbin,
+      :hexbin => PyPlot.hexbin,
+      # :scatter => PyPlot.scatter
+    )
+  return get(fmap, linetype, PyPlot.plot)
+  # return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : (linetype in (:heatmap,:hexbin) ? PyPlot.hexbin : PyPlot.plot))
 end
 
 # ------------------------------------------------------------------
@@ -99,6 +122,17 @@ end
 
 function plot!(::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
+
+
+  if d[:linetype] == :sticks
+    d,_ = sticksHack(;d...)
+  elseif d[:linetype] == :scatter
+    d[:linetype] = :none
+    if d[:marker] == :none
+      d[:marker] = :ellipse
+    end
+  end
+
   lt = d[:linetype]
   extraargs = Dict()
 
@@ -122,13 +156,21 @@ function plot!(::PyPlotPackage, plt::Plot; kw...)
 
   else
 
-    # all but color/label
     extraargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
     extraargs[:marker] = getPyPlotMarker(d[:marker])
-    extraargs[:markersize] = d[:markersize]
-    extraargs[:markerfacecolor] = getPyPlotColor(d[:markercolor])
-    extraargs[:drawstyle] = getPyPlotDrawStyle(lt)
 
+    if lt == :scatter
+      extraargs[:s] = d[:markersize]
+      extraargs[:c] = getPyPlotColor(d[:markercolor])
+      extraargs[:linewidths] = d[:width]
+      if haskey(d, :colorscheme)
+        extraargs[:cmap] = d[:colorscheme]
+      end
+    else
+      extraargs[:markersize] = d[:markersize]
+      extraargs[:markerfacecolor] = getPyPlotColor(d[:markercolor])
+      extraargs[:drawstyle] = getPyPlotDrawStyle(lt)
+    end
   end
 
   # set these for all types
@@ -138,10 +180,16 @@ function plot!(::PyPlotPackage, plt::Plot; kw...)
   extraargs[:label] = d[:label]
 
   # do the plot
+  @show lt
   if lt == :hist
-    d[:serieshandle] = plotfunc(d[:y]; extraargs...)
-  else
+    d[:serieshandle] = plotfunc(d[:y]; extraargs...)[1]
+  elseif lt in (:scatter, :heatmap, :hexbin)
     d[:serieshandle] = plotfunc(d[:x], d[:y]; extraargs...)
+  else
+    d[:serieshandle] = plotfunc(d[:x], d[:y]; extraargs...)[1]
+    # retval = plotfunc(d[:x], d[:y]; extraargs...)
+    # @show retval
+    # d[:serieshandle] = retval
   end
 
   # this sets the bg color inside the grid (plt.o.o == matplotlib.Figure)
@@ -158,7 +206,7 @@ function addPyPlotLegend(plt::Plot)
       # gotta do this to ensure both axes are included
       args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap)), plt.seriesargs)
       if length(args) > 0
-        PyPlot.legend([d[:serieshandle][1] for d in args], [d[:label] for d in args], loc="best")
+        PyPlot.legend([d[:serieshandle] for d in args], [d[:label] for d in args], loc="best")
       end
     end
   # catch ex

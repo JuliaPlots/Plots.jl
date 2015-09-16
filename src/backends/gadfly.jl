@@ -6,6 +6,7 @@ immutable GadflyPackage <: PlottingPackage end
 gadfly!() = plotter!(:gadfly)
 
 
+suppportedArgs(::GadflyPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos])
 supportedAxes(::GadflyPackage) = [:left]
 supportedTypes(::GadflyPackage) = setdiff(TYPES, [:stepinverted])
 supportedStyles(::GadflyPackage) = [:solid]
@@ -45,7 +46,7 @@ function getLineGeoms(d::Dict)
   lt == :hist && return [Gadfly.Geom.histogram(bincount = d[:nbins])]
   lt == :none && return [Gadfly.Geom.path]
   lt == :line && return [Gadfly.Geom.path]
-  # lt == :dots && return [Gadfly.Geom.point]
+  lt == :scatter && return [Gadfly.Geom.point]
   lt == :bar && return [Gadfly.Geom.bar]
   lt == :step && return [Gadfly.Geom.step]
   # lt == :sticks && return [Gadfly.Geom.bar]

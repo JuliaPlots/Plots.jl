@@ -9,7 +9,7 @@ immutable [PkgName]Package <: PlottingPackage end
 
 # ---------------------------------------------------------------------------
 
-
+supportedArgs(::[PkgName]Package) = ARGS
 supportedAxes(::[PkgName]Package) = AXES
 supportedTypes(::[PkgName]Package) = TYPES
 supportedStyles(::[PkgName]Package) = STYLES

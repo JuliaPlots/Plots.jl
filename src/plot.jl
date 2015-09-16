@@ -53,7 +53,7 @@ Some keyword arguments you can set:
   color           # can be a string ("red") or a symbol (:red) or a ColorsTypes.jl Colorant (RGB(1,0,0)) or :auto (which lets the package pick)
   label           # string or symbol, applies to that line, may go in a legend
   width           # width of a line
-  linetype        # :line, :step, :stepinverted, :sticks, :dots, :none, :heatmap
+  linetype        # :line, :step, :stepinverted, :sticks, :scatter, :none, :heatmap
   linestyle       # :solid, :dash, :dot, :dashdot, :dashdotdot
   marker          # :none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon
   markercolor     # same choices as `color`
@@ -90,6 +90,13 @@ function plot(args...; kw...)
   pkg = plotter()
   plt = plot(pkg; getPlotKeywordArgs(pkg, kw, 1, 0)...)  # create a new, blank plot
   plot!(plt, args...; kw...)  # add to it
+end
+
+
+function plot_display(args...; kw...)
+  plt = plot(args...; kw...)
+  display(plt)
+  plt
 end
 
 # this adds to the current plot
@@ -168,7 +175,7 @@ function createKWargsList{T<:Real,S<:Real}(plt::PlottingObject, x::AVec{T}, y::A
 end
 
 # create m series, 1 for each column of y
-function createKWargsList(plt::PlottingObject, y::AMat; kw...)
+function createKWargsList{T<:Real}(plt::PlottingObject, y::AMat{T}; kw...)
   n,m = size(y)
   ret = []
   for i in 1:m
@@ -181,7 +188,7 @@ function createKWargsList(plt::PlottingObject, y::AMat; kw...)
 end
 
 # create m series, 1 for each column of y
-function createKWargsList(plt::PlottingObject, x::AVec, y::AMat; kw...)
+function createKWargsList{T<:Real,S<:Real}(plt::PlottingObject, x::AVec{T}, y::AMat{S}; kw...)
   n,m = size(y)
   @assert length(x) == n
   ret = []
@@ -195,7 +202,7 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AMat; kw...)
 end
 
 # create m series, 1 for each column of y
-function createKWargsList(plt::PlottingObject, x::AMat, y::AMat; kw...)
+function createKWargsList{T<:Real,S<:Real}(plt::PlottingObject, x::AMat{T}, y::AMat{S}; kw...)
   @assert size(x) == size(y)
   n,m = size(y)
   ret = []
@@ -248,16 +255,16 @@ function createKWargsList(plt::PlottingObject, fx::Function, fy::Function, umin:
 end
 
 # create 1 series, y = f(x)
-function createKWargsList(plt::PlottingObject, x::AVec, f::Function; kw...)
+function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec{T}, f::Function; kw...)
   d = getPlotKeywordArgs(plt.plotter, kw, 1, plt.n + 1)
   d[:x] = x
   d[:y] = map(f, x)
   [d]
 end
-createKWargsList(plt::PlottingObject, f::Function, x::AVec; kw...) = createKWargsList(plt, x, f; kw...)
+createKWargsList{T<:Real}(plt::PlottingObject, f::Function, x::AVec{T}; kw...) = createKWargsList(plt, x, f; kw...)
 
 # create m series, y = f(x), 1 for each column of x
-function createKWargsList(plt::PlottingObject, x::AMat, f::Function; kw...)
+function createKWargsList{T<:Real}(plt::PlottingObject, x::AMat{T}, f::Function; kw...)
   n,m = size(x)
   ret = []
   for i in 1:m
@@ -268,7 +275,7 @@ function createKWargsList(plt::PlottingObject, x::AMat, f::Function; kw...)
   end
   ret
 end
-createKWargsList(plt::PlottingObject, f::Function, x::AMat; kw...) = createKWargsList(plt, x, f; kw...)
+createKWargsList{T<:Real}(plt::PlottingObject, f::Function, x::AMat{T}; kw...) = createKWargsList(plt, x, f; kw...)
 
 
 # ----------------------------------------------------------------------------
@@ -304,6 +311,20 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec{T}, y::AVec; kw.
     d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
     d[:x] = x
     d[:y] = getyvec(x, y[i])
+    push!(ret, d)
+  end
+  ret
+end
+
+# x is vec of vec, but y is a matrix
+function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AMat{T}; kw...)
+  n,m = size(y)
+  @assert length(x) == m
+  ret = []
+  for i in 1:m
+    d = getPlotKeywordArgs(plt.plotter, kw, i, plt.n + i)
+    d[:x] = x[i]
+    d[:y] = getyvec(x[i], y[:,i])
     push!(ret, d)
   end
   ret

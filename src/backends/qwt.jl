@@ -13,9 +13,9 @@ function adjustQwtKeywords(iscreating::Bool; kw...)
 
   if d[:linetype] == :hexbin
     d[:linetype] = :heatmap
-  elseif d[:linetype] == :dots
+  elseif d[:linetype] == :scatter
     d[:linetype] = :none
-    d[:marker] = :hexagon
+    d[:marker] = :ellipse
   elseif !iscreating && d[:linetype] == :bar
     return barHack(; kw...)
   elseif !iscreating && d[:linetype] == :hist
@@ -58,6 +58,8 @@ function buildSubplotObject!(::QwtPackage, subplt::Subplot)
     i += rowcnt
   end
   subplt.o = Qwt.vsplitter(rows...)
+  Qwt.resizewidget(subplt.o, subplt.initargs[:size]...)
+  Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
 end
 
 
@@ -65,6 +67,7 @@ function Base.display(::QwtPackage, subplt::Subplot)
   for plt in subplt.plts
     Qwt.refresh(plt.o)
   end
+
   Qwt.showwidget(subplt.o)
 end
 

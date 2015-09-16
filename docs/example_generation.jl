@@ -23,19 +23,19 @@ const examples = PlotExample[
               "A simple line plot of the 3 columns.",
               [:(plot(rand(100,3)))]),
   PlotExample("Functions",
-              "Plot multiple functions.",
+              "Plot multiple functions.  You can also put the function first.",
               [:(plot(0:0.01:4π, [sin,cos]))]),
   PlotExample("",
               "You can also call it with plot(f, xmin, xmax).",
               [:(plot([sin,cos], 0, 4π))]),
   PlotExample("",
-              "Or make a parametric plot with plot(fx, fy, umin, umax).",
+              "Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).",
               [:(plot(sin, x->sin(2x), 0, 2π))]),
   PlotExample("Global",
               "Change the guides/background without a separate call.",
               [:(plot(rand(10); title="TITLE", xlabel="XLABEL", ylabel="YLABEL", background_color = RGB(0.5,0.5,0.5)))]),
   PlotExample("Two-axis",
-              "Use the `axis` or `axiss` arguments.\n\nNote: This is only supported with Qwt right now",
+              "Use the `axis` or `axiss` arguments.\n\nNote: Currently only supported with Qwt and PyPlot",
               [:(plot(Vector[randn(100), randn(100)*100]; axiss = [:left,:right], ylabel="LEFT", yrightlabel="RIGHT"))]),
   PlotExample("Vectors w/ pluralized args",
               "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (singular... see `marker`) with arguments unique to each series (pluralized... see `colors`).",
@@ -49,19 +49,18 @@ const examples = PlotExample[
   PlotExample("Heatmaps",
               "",
               [:(heatmap(randn(10000),randn(10000); nbins=100))]),
-  PlotExample("Lots of line types",
-              "Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)  \nNote: some may not work with all backends",
-              [:(plot(rand(20,4); linetypes=[:line, :step, :sticks, :dots], labels=["line","step","sticks","dots"]))]),
-  PlotExample("Lots of line styles",
-              "Options: (:solid, :dash, :dot, :dashdot, :dashdotdot)  \nNote: some may not work with all backends",
-              [:(plot(rand(20,5); linestyles=[:solid, :dash, :dot, :dashdot, :dashdotdot], labels=["solid", "dash", "dot", "dashdot", "dashdotdot"]))]),
-  # PlotExample("Lots of marker types",
-  #             "Options: (:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)  \nNote: some may not work with all backends",
-  #             [:(plot(repmat(collect(1:10)',10,1); markers=[:ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon],
-  #                                        labels=["ellipse", "rect", "diamond", "utriangle", "dtriangle", "cross", "xcross", "star1", "star2", "hexagon"],
-  #                                        markersize=10))]),
-  PlotExample("Lots of marker types",
-              "",
+  PlotExample("Suported line types",
+              "All options: (:line, :orderedline, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)",
+              [:(types = intersect(supportedTypes(), [:line, :orderedline, :path, :step, :stepinverted, :sticks, :scatter])),
+                  :(n = length(types)),
+                  :(x = Vector[sort(rand(20)) for i in 1:n]),
+                  :(y = rand(20,n)),
+                  :(plot(x, y; linetype=:auto, labels=map(string,types)))]),
+  PlotExample("Supported line styles",
+              "All options: (:solid, :dash, :dot, :dashdot, :dashdotdot)",
+              [:(styles = supportedStyles()), :(plot(rand(20,length(styles)); linestyle=:auto, labels=map(string,styles)))]),
+  PlotExample("Supported marker types",
+              "All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)",
               [:(markers = supportedMarkers()), :(plot([fill(i,10) for i=1:length(markers)]; marker=:auto, labels=map(string,markers), markersize=10))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
@@ -77,7 +76,7 @@ const examples = PlotExample[
 
                 Note: Gadfly is not very friendly here, and although you can create a plot and save a PNG, I haven't been able to actually display it.
               """,
-              [:(subplot(randn(100,5); layout=[1,1,3], linetypes=[:line,:hist,:dots,:step,:bar], nbins=10, legend=false))]),
+              [:(subplot(randn(100,5); layout=[1,1,3], linetypes=[:line,:hist,:scatter,:step,:bar], nbins=10, legend=false))]),
   PlotExample("Adding to subplots",
               "Note here the automatic grid layout, as well as the order in which new series are added to the plots.",
               [:(subplot(randn(100,5); n=4))]),
@@ -132,13 +131,40 @@ function generate_markdown(pkgname::Symbol)
 
 end
 
+
+# make and display one plot
+function test_example(pkgname::Symbol, idx::Int)
+  println("Testing plot: $pkgname:$idx:$(examples[idx].header)")
+  plotter!(pkgname)
+  plotter()
+  map(eval, examples[idx].exprs)
+  plt = currentPlot()
+  display(plt)
+  plt
+end
+
+# generate all plots and create a dict mapping idx --> plt
+function test_all_examples(pkgname::Symbol)
+  plts = Dict()
+  for i in 1:length(examples)
+    try
+      plt = test_example(pkgname, i)
+      plts[i] = plt
+    catch ex
+      # TODO: put error info into markdown?
+      warn("Example $pkgname:$i:$(examples[i].header) failed with: $ex")
+    end
+  end
+  plts
+end
+
 # run it!
 # note: generate separately so it's easy to comment out
 # generate_markdown(:qwt)
-generate_markdown(:gadfly)
+# generate_markdown(:gadfly)
 # @osx_only generate_markdown(:unicodeplots)
 # generate_markdown(:pyplot)
-generate_markdown(:immerse)
+# generate_markdown(:immerse)
 
 
 end # module

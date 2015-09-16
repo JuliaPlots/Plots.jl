@@ -71,7 +71,7 @@ function subplot(args...; kw...)
 
   # initialize the individual plots
   pkg = plotter()
-  tmpd = getPlotKeywordArgs(kw, 1, 0)
+  tmpd = getPlotKeywordArgs(pkg, kw, 1, 0)
   # shouldShow = tmpd[:show]
   # tmpd[:show] = false
   plts = Plot[plot(pkg; tmpd...) for i in 1:length(layout)]

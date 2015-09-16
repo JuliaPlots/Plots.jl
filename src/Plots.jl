@@ -7,10 +7,12 @@ using Colors
 export
   plotter,
   plot,
+  plot_display,
   subplot,
 
   plotter!,
   plot!,
+  plot_display!,
   subplot!,
 
   currentPlot,
@@ -38,10 +40,12 @@ export
   pyplot!,
   immerse!,
 
+  supportedArgs,
   supportedAxes,
   supportedTypes,
   supportedStyles,
-  supportedMarkers
+  supportedMarkers,
+  subplotSupported
 
 # ---------------------------------------------------------
 
@@ -61,8 +65,8 @@ include("subplot.jl")
 
 # ---------------------------------------------------------
 
-scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :hexagon)
-scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :hexagon)
+scatter(args...; kw...)    = plot(args...; kw...,  linetype = :scatter)
+scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :scatter)
 bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
 bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
 histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)

@@ -5,7 +5,7 @@
 
 const COLORS = distinguishable_colors(20)
 const AXES = [:left, :right]
-const TYPES = [:line, :step, :stepinverted, :sticks, :dots, :heatmap, :hexbin, :hist, :bar]
+const TYPES = [:line, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
 const STYLES = [:solid, :dash, :dot, :dashdot, :dashdotdot]
 const MARKERS = [:ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
 
@@ -13,11 +13,13 @@ supportedAxes(::PlottingPackage) = AXES
 supportedTypes(::PlottingPackage) = TYPES
 supportedStyles(::PlottingPackage) = STYLES
 supportedMarkers(::PlottingPackage) = MARKERS
+subplotSupported(::GadflyPackage) = true
 
 supportedAxes() = supportedAxes(plotter())
 supportedTypes() = supportedTypes(plotter())
 supportedStyles() = supportedStyles(plotter())
 supportedMarkers() = supportedMarkers(plotter())
+subplotSupported() = subplotSupported(plotter())
 
 # -----------------------------------------------------------------------------
 
@@ -45,8 +47,8 @@ PLOT_DEFAULTS[:ylabel] = ""
 PLOT_DEFAULTS[:yrightlabel] = ""
 PLOT_DEFAULTS[:legend] = true
 # PLOT_DEFAULTS[:background_color] = nothing
-PLOT_DEFAULTS[:xticks] = true
-PLOT_DEFAULTS[:yticks] = true
+# PLOT_DEFAULTS[:xticks] = true
+# PLOT_DEFAULTS[:yticks] = true
 PLOT_DEFAULTS[:size] = (600,400)
 PLOT_DEFAULTS[:windowtitle] = "Plots.jl"
 # PLOT_DEFAULTS[:show] = true
@@ -56,6 +58,10 @@ PLOT_DEFAULTS[:kwargs] = []   # additional keyword args to pass to the backend
                               # note: can be Vector{Dict} or Vector{Tuple} 
 
 # TODO: x/y scales
+
+const ARGS = sort(collect(keys(PLOT_DEFAULTS)))
+supportedArgs(::PlottingPackage) = ARGS
+supportedArgs() = supportedArgs(plotter())
 
 
 # -----------------------------------------------------------------------------
@@ -70,6 +76,7 @@ end
 makeplural(s::Symbol) = Symbol(string(s,"s"))
 
 autopick(arr::AVec, idx::Integer) = arr[mod1(idx,length(arr))]
+autopick(notarr, idx::Integer) = notarr
 
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
@@ -97,7 +104,7 @@ function getRGBColor(c, n::Int = 0)
 end
 
 # const ALT_ARG_NAMES = Dict{Tuple{Symbol,Symbol}, Any}()
-# ALT_ARG_NAMES[(:linetype, :scatter)] = :dots
+# ALT_ARG_NAMES[(:linetype, :scatter)] = :scatter
 
 function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
   d[:axis] in supportedAxes(pkg) || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))")
@@ -130,7 +137,7 @@ function getPlotKeywordArgs(pkg::PlottingPackage, kw, idx::Int, n::Int)
     plural = makeplural(k)
     if !haskey(d, k)
       if n == 0 || k != :size
-        d[k] = haskey(d, plural) ? d[plural][idx] : PLOT_DEFAULTS[k]
+        d[k] = haskey(d, plural) ? autopick(d[plural], idx) : PLOT_DEFAULTS[k]
       end
     end
     delete!(d, plural)
@@ -153,13 +160,13 @@ function getPlotKeywordArgs(pkg::PlottingPackage, kw, idx::Int, n::Int)
     
   end
 
-  # swap out dots for no line and a marker
-  if haskey(d, :linetype) && d[:linetype] == :dots
-    d[:linetype] = :none
-    if d[:marker] == :none
-      d[:marker] = :ellipse
-    end
-  end
+  # # swap out dots for no line and a marker
+  # if haskey(d, :linetype) && d[:linetype] == :scatter
+  #   d[:linetype] = :none
+  #   if d[:marker] == :none
+  #     d[:marker] = :ellipse
+  #   end
+  # end
 
 
 

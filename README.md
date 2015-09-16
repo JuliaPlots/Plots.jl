@@ -152,8 +152,8 @@ __Tip__: Calling `subplot!` on a `Plot` object, or `plot!` on a `Subplot` object
 Shorthands:
 
 ```julia
-scatter(args...; kw...)    = plot(args...; kw...,  linetype = :none, marker = :hexagon)
-scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :none, marker = :hexagon)
+scatter(args...; kw...)    = plot(args...; kw...,  linetype = :scatter)
+scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :scatter)
 bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
 bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
 histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)
@@ -172,7 +172,7 @@ color           # can be a string ("red") or a symbol (:red) or a ColorsTypes.jl
                 #   Colorant (RGB(1,0,0)) or :auto (which lets the package pick)
 label           # string or symbol, applies to that line, may go in a legend
 width           # width of a line
-linetype        # :line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
+linetype        # :line, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar
 linestyle       # :solid, :dash, :dot, :dashdot, :dashdotdot
 marker          # :none, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
                 #   :cross, :xcross, :star1, :star2, :hexagon

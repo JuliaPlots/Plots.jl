@@ -7,6 +7,13 @@ unicodeplots!() = plotter!(:unicodeplots)
 
 # -------------------------------
 
+suppportedArgs(::GadflyPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
+supportedAxes(::GadflyPackage) = [:left]
+supportedTypes(::GadflyPackage) = setdiff(TYPES, [:stepinverted])
+supportedStyles(::GadflyPackage) = [:solid]
+supportedMarkers(::GadflyPackage) = [:ellipse]
+
+
 function expandLimits!(lims, x)
   e1, e2 = extrema(x)
   lims[1] = min(lims[1], e1)
@@ -61,7 +68,7 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool)
   stepstyle = :post
   if lt == :line
     func = UnicodePlots.lineplot!
-  elseif lt == :dots || d[:marker] != :none
+  elseif lt == :scatter || d[:marker] != :none
     func = UnicodePlots.scatterplot!
   elseif lt == :step
     func = UnicodePlots.stairs!

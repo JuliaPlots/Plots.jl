@@ -94,11 +94,11 @@ scatter!(rand(100); markersize=6,color=:blue)
 
 ### Lots of line types
 
-Options: (:line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar)  
+Options: (:line, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)  
 Note: some may not work with all backends
 
 ```julia
-plot(rand(20,4); linetypes=[:line,:step,:sticks,:dots],labels=["line","step","sticks","dots"])
+plot(rand(20,4); linetypes=[:line,:step,:sticks,:scatter],labels=["line","step","sticks","dots"])
 ```
 
 ![](../img/unicodeplots/unicodeplots_example_11.png)
@@ -155,7 +155,7 @@ histogram(randn(1000); nbins=50,fillto=20)
 
 
 ```julia
-subplot(randn(100,5); layout=[1,1,3],linetypes=[:line,:hist,:dots,:step,:bar],nbins=10,legend=false)
+subplot(randn(100,5); layout=[1,1,3],linetypes=[:line,:hist,:scatter,:step,:bar],nbins=10,legend=false)
 ```
 
 ![](../img/unicodeplots/unicodeplots_example_16.png)
