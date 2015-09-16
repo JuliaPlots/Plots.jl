@@ -62,7 +62,7 @@ const examples = PlotExample[
   #                                        markersize=10))]),
   PlotExample("Lots of marker types",
               "",
-              [:(markers = supportedMarkers(), :(plot(repmat(collect(1:length(markers))',10,1); marker=:auto, labels=map(string,markers), markersize=10))]),
+              [:(markers = supportedMarkers()), :(plot([fill(i,10) for i=1:length(markers)]; marker=:auto, labels=map(string,markers), markersize=10))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
               [:(bar(randn(1000)))]),
@@ -135,10 +135,10 @@ end
 # run it!
 # note: generate separately so it's easy to comment out
 # generate_markdown(:qwt)
-# generate_markdown(:gadfly)
-@osx_only generate_markdown(:unicodeplots)
+generate_markdown(:gadfly)
+# @osx_only generate_markdown(:unicodeplots)
 # generate_markdown(:pyplot)
-# generate_markdown(:immerse)
+generate_markdown(:immerse)
 
 
 end # module
