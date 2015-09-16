@@ -3,6 +3,7 @@
 
 immutable GadflyPackage <: PlottingPackage end
 
+export gadfly!
 gadfly!() = plotter!(:gadfly)
 
 

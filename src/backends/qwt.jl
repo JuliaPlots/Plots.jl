@@ -3,6 +3,7 @@
 
 immutable QwtPackage <: PlottingPackage end
 
+export qwt!
 qwt!() = plotter!(:qwt)
 
 # -------------------------------

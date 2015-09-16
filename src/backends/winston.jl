@@ -5,6 +5,7 @@
 
 immutable WinstonPackage <: PlottingPackage end
 
+export winston!
 winston!() = plotter!(:winston)
 
 # ---------------------------------------------------------------------------

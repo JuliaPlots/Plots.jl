@@ -3,6 +3,7 @@
 
 immutable PyPlotPackage <: PlottingPackage end
 
+export pyplot!
 pyplot!() = plotter!(:pyplot)
 
 # -------------------------------

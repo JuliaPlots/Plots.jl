@@ -34,11 +34,6 @@ export
   savepng,
 
   backends,
-  qwt!,
-  gadfly!,
-  unicodeplots!,
-  pyplot!,
-  immerse!,
 
   supportedArgs,
   supportedAxes,

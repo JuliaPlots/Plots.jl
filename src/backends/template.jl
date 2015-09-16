@@ -5,6 +5,7 @@
 
 immutable [PkgName]Package <: PlottingPackage end
 
+export [pkgname]!
 [pkgname]!() = plotter!(:[pkgname])
 
 # ---------------------------------------------------------------------------

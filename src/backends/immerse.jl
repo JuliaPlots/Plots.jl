@@ -3,6 +3,7 @@
 
 immutable ImmersePackage <: PlottingPackage end
 
+export immerse!
 immerse!() = plotter!(:immerse)
 
 

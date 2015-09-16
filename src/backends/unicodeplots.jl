@@ -3,6 +3,7 @@
 
 immutable UnicodePlotsPackage <: PlottingPackage end
 
+export unicodeplots!
 unicodeplots!() = plotter!(:unicodeplots)
 
 # -------------------------------
