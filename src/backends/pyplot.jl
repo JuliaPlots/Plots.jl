@@ -7,7 +7,7 @@ pyplot!() = plotter!(:pyplot)
 
 # -------------------------------
 
-supportedArgs(::PyPlotPackage) = setdiff(ALL_ARGS, [:reg, :heatmap_c, :fillto, :pos])
+supportedArgs(::PyPlotPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
 # supportedAxes(::PyPlotPackage) = [:left]
 # supportedTypes(::PyPlotPackage) = setdiff(TYPES, [:stepinverted])
 supportedStyles(::PyPlotPackage) = setdiff(ALL_STYLES, [:dashdotdot])
