@@ -43,8 +43,11 @@ function Base.display(::ImmersePackage, plt::Plot)
     plt.o = (fig, gplt)
   end
 
-  # display a new Figure object to force a redraw
-  display(Immerse.Figure(fig.canvas, gplt))
+  # # display a new Figure object to force a redraw
+  # display(Immerse.Figure(fig.canvas, gplt))
+
+  Immerse.figure(fig.figno; displayfig = false)
+  display(gplt)
 end
 
 # -------------------------------
@@ -66,16 +69,20 @@ end
 
 function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
 
-  # box, tb, c = createPlotGuiComponents()
-  vsep = Gtk.ShortNames.@Box(:v)
+  # create the Gtk window with vertical box vsep
+  d = subplt.initargs
+  w,h = d[:size]
+  vsep = Gtk.GtkBoxLeaf(:v)
+  win = Gtk.GtkWindowLeaf(vsep, d[:windowtitle], w, h)
 
-  # now we create the GUI
+  # add the plot boxes
   i = 0
   rows = []
+  figindices = []
   for rowcnt in subplt.layout.rowcounts
 
     # create a new row and add it to the main Box vsep
-    row = Gtk.ShortNames.@Box(:h)
+    row = Gtk.GtkBoxLeaf(:h)
     push!(vsep, row)
 
     # now add the plot components to the row
@@ -84,24 +91,22 @@ function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
       # get the components... box is the main plot GtkBox, and canvas is the GtkCanvas where it's plotted
       box, toolbar, canvas = Immerse.createPlotGuiComponents()
 
-      # create and save the Figure
-      plt.o = (figure(canvas), plt.o[2])
-
       # add the plot's box to the row
       push!(row, box)
+
+      # create the figure and store the index returned for destruction later
+      figidx = Immerse.figure(canvas)
+      push!(figindices, figidx)
+
+      fig = Immerse.figure(figidx)
+      plt.o = (fig, plt.o[2])
     end
-    # push!(rows, Gadfly.hstack([getGadflyContext(plt.plotter, plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
+
     i += rowcnt
   end
 
-  d = subplt.initargs
-  w,h = d[:size]
-  win = Gtk.ShortNames.@GtkWindow(vsep, d[:windowtitle], w, h)
-  guidata[win, :toolbar] = tb
-  if closecb !== nothing
-      Gtk.ShortNames.on_signal_destroy(closecb, win)
-  end
-  showall(win)
+  # destructor... clean up plots
+  Gtk.on_signal_destroy((x...) -> [Immerse.dropfig(_display,i) for i in figindices], win)
 
   subplt.o = win
 end
@@ -115,15 +120,13 @@ end
 
 function Base.display(::ImmersePackage, subplt::Subplot)
 
-  # fig, gctx = subplt.o
-  # if fig == nothing
-  #   fig = createImmerseFigure(subplt.initargs)
-  #   subplt.o = (fig, gctx)
-  # end
-
-  # newfig = Immerse.Figure(fig.canvas)
-  # newfig.cc = buildGadflySubplotContext(subplt)
-  # display(newfig)
+  # display the plots by creating a fresh Immerse.Figure object from the GtkCanvas and Gadfly.Plot
+  for plt in subplt.plts
+    fig, gplt = plt.o
+    Immerse.figure(fig.figno; displayfig = false)
+    display(gplt)
+    # display(Immerse.Figure(fig.canvas, gplt))
+  end
 
   # o is the window... show it
   showall(subplt.o)
