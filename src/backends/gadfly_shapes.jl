@@ -22,8 +22,17 @@ function createGadflyAnnotation(d::Dict)
   elseif marker == :diamond
     shape = diamond(x, y, sz)
 
+  elseif marker == :utriangle
+    shape = utriangle(x, y, sz)
+
+  elseif marker == :dtriangle
+    shape = utriangle(x, y, sz, -1)
+
   elseif marker == :cross
     shape = cross(x, y, sz)
+
+  elseif marker == :xcross
+    shape = xcross(x, y, sz)
 
   else
     # make circles
@@ -45,9 +54,9 @@ function square(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   rect_ws = Vector{Compose.Measure}(n)
   s = 1/sqrt(2)
   for i in 1:n
-    x = Compose.x_measure(xs[1 + i % length(xs)])
-    y = Compose.y_measure(ys[1 + i % length(ys)])
-    r = rs[1 + i % length(rs)]
+    x = Compose.x_measure(xs[mod1(i, length(xs))])
+    y = Compose.y_measure(ys[mod1(i, length(ys))])
+    r = rs[mod1(i, length(rs))]
 
     rect_xs[i] = x - s*r
     rect_ys[i] = y + s*r
@@ -63,9 +72,9 @@ function diamond(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
 
   polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
   for i in 1:n
-    x = Compose.x_measure(xs[1 + i % length(xs)])
-    y = Compose.y_measure(ys[1 + i % length(ys)])
-    r = rs[1 + i % length(rs)]
+    x = Compose.x_measure(xs[mod1(i, length(xs))])
+    y = Compose.y_measure(ys[mod1(i, length(ys))])
+    r = rs[mod1(i, length(rs))]
     polys[i] = Tuple{Compose.Measure, Compose.Measure}[(x, y - r), (x + r, y), (x, y + r), (x - r, y)]
   end
 
@@ -79,22 +88,73 @@ function cross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
   s = 1/sqrt(5)
   for i in 1:n
-    x = Compose.x_measure(xs[1 + i % length(xs)])
-    y = Compose.y_measure(ys[1 + i % length(ys)])
-    r = rs[1 + i % length(rs)]
+    x = Compose.x_measure(xs[mod1(i, length(xs))])
+    y = Compose.y_measure(ys[mod1(i, length(ys))])
+    r = rs[mod1(i, length(rs))]
     u = s*r
     polys[i] = Tuple{Compose.Measure, Compose.Measure}[
-        (x, y - u), (x + u, y - 2u), (x + 2u, y - u),
-        (x + u, y), (x + 2u, y + u), (x + u, y + 2u),
-        (x, y + u), (x - u, y + 2u), (x - 2u, y + u),
-        (x - u, y), (x - 2u, y - u), (x - u, y - 2u) ]
+      (x, y - u), (x + u, y - 2u), (x + 2u, y - u),
+      (x + u, y), (x + 2u, y + u), (x + u, y + 2u),
+      (x, y + u), (x - u, y + 2u), (x - 2u, y + u),
+      (x - u, y), (x - 2u, y - u), (x - u, y - 2u)
+    ]
   end
 
   return Gadfly.polygon(polys)
 end
 
 
-# Base.isfinite{T<:Real}(x::Tuple{T,T,T,T}) = isfinite(x[1]) && isfinite(x[2]) && isfinite(x[3]) && isfinite(x[4])
+function xcross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
+  n = max(length(xs), length(ys), length(rs))
+
+  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  for i in 1:n
+    x = Compose.x_measure(xs[mod1(i, length(xs))])
+    y = Compose.y_measure(ys[mod1(i, length(ys))])
+    r = rs[mod1(i, length(rs))]
+    u = 0.4r
+
+    # make a "plus"
+    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+      (x-r, y-u), (x-r, y+u), # L edge
+      (x-u, y+u),             # BL inside
+      (x-u, y+r), (x+u, y+r), # B edge
+      (x+u, y+u),             # BR inside
+      (x+r, y+u), (x+r, y-u), # R edge
+      (x+u, y-u),             # TR inside
+      (x+u, y-r), (x-u, y-r), # T edge
+      (x-u, y-u)              # TL inside
+    ]
+  end
+
+  return Gadfly.polygon(polys)
+end
+
+
+function utriangle(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar = 1)
+  n = max(length(xs), length(ys), length(rs))
+
+  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  s = 0.8
+  for i in 1:n
+    x = Compose.x_measure(xs[mod1(i, length(xs))])
+    y = Compose.y_measure(ys[mod1(i, length(ys))])
+    r = rs[mod1(i, length(rs))]
+    u = 0.8 * scalar * r
+    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+        (x - r, y + u),
+        (x + r, y + u),
+        (x, y - u)
+    ]
+  end
+
+  return Gadfly.polygon(polys)
+end
+
+
+
+
+# ---------------------------
 
 function ohlcshape{T}(xs::AVec, ys::AVec{Tuple{T,T,T,T}}, tickwidth::Real)
   @assert length(xs) == length(ys)
@@ -112,4 +172,6 @@ function ohlcshape{T}(xs::AVec, ys::AVec{Tuple{T,T,T,T}}, tickwidth::Real)
   end
   return Gadfly.polygon(polys)
 end
+
+
 

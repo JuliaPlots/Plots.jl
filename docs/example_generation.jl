@@ -61,7 +61,7 @@ const examples = PlotExample[
               [:(styles = setdiff(supportedStyles(), [:auto])), :(plot(rand(20,length(styles)); linestyle=:auto, labels=map(string,styles)))]),
   PlotExample("Supported marker types",
               "All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)",
-              [:(markers = setdiff(supportedMarkers(), [:none,:auto])), :(plot([fill(i,10) for i=1:length(markers)]; marker=:auto, labels=map(string,markers), markersize=10))]),
+              [:(markers = setdiff(supportedMarkers(), [:none,:auto])), :(plot([fill(i-1,10) for i=1:length(markers)]; marker=:auto, labels=map(string,markers), markersize=10))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
               [:(bar(randn(1000)))]),
@@ -133,7 +133,7 @@ function generate_markdown(pkgname::Symbol)
       imgname = "$(pkgname)_example_$i.png"
 
       # NOTE: uncomment this to overwrite the images as well
-      savepng("$IMGDIR/$pkgname/$imgname")
+      # savepng("$IMGDIR/$pkgname/$imgname")
 
       # write out the header, description, code block, and image link
       write(md, "### $(example.header)\n\n")
