@@ -32,6 +32,8 @@ export
   hline!,
   vline,
   vline!,
+  ohlc,
+  ohlc!,
 
   savepng,
 
@@ -76,6 +78,8 @@ hline(args...; kw...)      = plot(args...; kw...,  linetype = :hline)
 hline!(args...; kw...)     = plot!(args...; kw..., linetype = :hline)
 vline(args...; kw...)      = plot(args...; kw...,  linetype = :vline)
 vline!(args...; kw...)     = plot!(args...; kw..., linetype = :vline)
+ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
+ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
 
 # ---------------------------------------------------------

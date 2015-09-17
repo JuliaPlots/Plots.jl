@@ -9,7 +9,7 @@ gadfly!() = plotter!(:gadfly)
 
 supportedArgs(::GadflyPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos])
 supportedAxes(::GadflyPackage) = setdiff(ALL_AXES, [:right])
-supportedTypes(::GadflyPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
+supportedTypes(::GadflyPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid]
 supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :cross]
 
@@ -45,79 +45,32 @@ function getLineGeoms(d::Dict)
   lt = d[:linetype]
   lt in (:heatmap,:hexbin) && return [Gadfly.Geom.hexbin(xbincount = d[:nbins], ybincount = d[:nbins])]
   lt == :hist && return [Gadfly.Geom.histogram(bincount = d[:nbins])]
-  lt == :none && return [Gadfly.Geom.path]
+  # lt == :none && return [Gadfly.Geom.path]
   lt == :line && return [Gadfly.Geom.path]
   lt == :scatter && return [Gadfly.Geom.point]
   lt == :bar && return [Gadfly.Geom.bar]
   lt == :step && return [Gadfly.Geom.step]
+
+  # NOTE: we won't actually show this (we'll set width to 0 later), but we need a geom so that Gadfly doesn't complain
+  if lt in (:none, :ohlc)
+    return [Gadfly.Geom.path]
+  end
+
   # lt == :sticks && return [Gadfly.Geom.bar]
   error("linetype $lt not currently supported with Gadfly")
 end
 
 
-# function createGadflyAnnotation(d::Dict)
-  
-#   if d[:marker] == :rect
-#     # get the width/height of the square (both are sz)
-#     sz = d[:markersize] * Gadfly.px
-#     halfsz = sz/2
-
-#     # remap x/y to the corner position of the squares
-#     xs = map(z -> Gadfly.Compose.Measure(;cx=z) - halfsz, float(d[:x]))
-#     ys = map(z -> Gadfly.Compose.Measure(;cy=z) + halfsz, float(d[:y]))
-
-#     # return an Annotation which will add those shapes to each point in the series 
-#     return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,[sz],[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))
-
-#   else
-#     # make circles
-#     sz = 0.5 * d[:markersize] * Gadfly.px
-#     xs = collect(float(d[:x]))
-#     ys = collect(float(d[:y]))
-
-#     # return an Annotation which will add those shapes to each point in the series 
-#     return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.circle(xs,ys,[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))
-
-#   end
-# end
-
 
 # serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...
 function getMarkerGeomsAndGuides(d::Dict)
   marker = d[:marker]
-  if marker == :none
+  if marker == :none && d[:linetype] != :ohlc
     return [],[]
   end
   return [], [createGadflyAnnotation(d)]
 end
 
-  # # special handling for other marker shapes... gotta create Compose contexts and map them to series points using Guide.Annotation
-  # elseif marker == :rect
-  #   # get the width/height of the square (both are sz)
-  #   sz = d[:markersize] * Gadfly.px
-  #   halfsz = sz/2
-
-  #   # remap x/y to the corner position of the squares
-  #   xs = map(z -> Gadfly.Compose.Measure(;cx=z) - halfsz, float(d[:x]))
-  #   ys = map(z -> Gadfly.Compose.Measure(;cy=z) + halfsz, float(d[:y]))
-
-  #   # return an Annotation which will add those shapes to each point in the series 
-  #   return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.rectangle(xs,ys,[sz],[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
-
-  # else
-  #   # make circles
-  #   sz = 0.5 * d[:markersize] * Gadfly.px
-  #   xs = collect(float(d[:x]))
-  #   ys = collect(float(d[:y]))
-
-  #   # return an Annotation which will add those shapes to each point in the series 
-  #   return [], [Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), Gadfly.circle(xs,ys,[sz]), Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))]
-
-  # end
-
-  # otherwise just return a Geom.point
-  # [Gadfly.Geom.point], []
-# end
 
 
 function addGadflyFixedLines!(gplt, d::Dict)
@@ -153,6 +106,7 @@ function addGadflySeries!(gplt, d::Dict)
   elseif d[:linetype] in (:hline, :vline)
     addGadflyFixedLines!(gplt, d)
     return
+
   end
 
   gfargs = []
@@ -161,7 +115,9 @@ function addGadflySeries!(gplt, d::Dict)
   append!(gfargs, getLineGeoms(d))
   
   # handle markers
+    # @show d[:y]
   geoms, guides = getMarkerGeomsAndGuides(d)
+    # @show d[:y]
   append!(gfargs, geoms)
   append!(gplt.guides, guides)
 

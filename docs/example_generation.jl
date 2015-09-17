@@ -83,6 +83,9 @@ const examples = PlotExample[
   PlotExample("",
               "",
               [:(subplot!(randn(100,3)))]),
+  PlotExample("Open/High/Low/Close",
+              "Pass in a vector of 4-tuples as your `y` argument.  Adjust the tick width with arg `markersize`.",
+              [:(n=10; hgt=rand(n)+1; bot=randn(n); openpct=rand(n); closepct=rand(n);), :(y = [(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n];), :(ohlc(y; markersize=10))]),
 
   
 ]

@@ -362,6 +362,17 @@ function createKWargsList(plt::PlottingObject, n::Integer; kw...)
   ret
 end
 
+# vector of tuples... to be used for things like OHLC
+createKWargsList{T<:Tuple}(plt::PlottingObject, y::AVec{T}; kw...) = createKWargsList(plt, 1:length(y), y; kw...)
+
+function createKWargsList{S<:Real, T<:Tuple}(plt::PlottingObject, x::AVec{S}, y::AVec{T}; kw...)
+  d = getPlotKeywordArgs(plt.plotter, kw, 1, plt.n + 1)
+  d[:x] = x
+  d[:y] = y
+  [d]
+end
+
+
 # TODO: handle DataFrames (might have NAs!)
 
 # -------------------------

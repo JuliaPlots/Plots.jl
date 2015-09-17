@@ -16,6 +16,7 @@ const TYPES = [:line,
                :bar,
                :hline,
                :vline,
+               :ohlc,
               ]
 const STYLES = [:solid, :dash, :dot, :dashdot, :dashdotdot]
 const MARKERS = [:ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]

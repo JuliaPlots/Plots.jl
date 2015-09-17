@@ -10,7 +10,13 @@ function createGadflyAnnotation(d::Dict)
   x, y = d[:x], d[:y]
   marker = d[:marker]
 
-  if marker == :rect
+  if d[:linetype] == :ohlc
+    shape = ohlcshape(x, y, d[:markersize])
+    d[:y] = Float64[z[1] for z in y]
+    d[:linetype] = :none
+    return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), shape, Gadfly.fill(nothing), Gadfly.stroke(d[:color])))  
+
+  elseif marker == :rect
     shape = square(x, y, sz)
 
   elseif marker == :diamond
@@ -86,3 +92,24 @@ function cross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
 
   return Gadfly.polygon(polys)
 end
+
+
+# Base.isfinite{T<:Real}(x::Tuple{T,T,T,T}) = isfinite(x[1]) && isfinite(x[2]) && isfinite(x[3]) && isfinite(x[4])
+
+function ohlcshape{T}(xs::AVec, ys::AVec{Tuple{T,T,T,T}}, tickwidth::Real)
+  @assert length(xs) == length(ys)
+  n = length(xs)
+  u = tickwidth * Compose.px
+  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  for i in 1:n
+    x = Compose.x_measure(xs[i])
+    o,h,l,c = map(Compose.y_measure, ys[i])
+    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+      (x, o), (x - u, o), (x, o),   # open tick
+      (x, l), (x, h), (x, c),       # high/low bar
+      (x + u, c), (x, c)            # close tick
+    ]
+  end
+  return Gadfly.polygon(polys)
+end
+

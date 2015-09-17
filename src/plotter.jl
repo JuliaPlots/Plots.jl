@@ -89,7 +89,7 @@ function plotter()
   if !(currentBackendSymbol in INITIALIZED_BACKENDS)
 
     # initialize
-    println("[Plots.jl] Initializing package: ", CURRENT_BACKEND.sym)
+    println("[Plots.jl] Initializing backend: ", CURRENT_BACKEND.sym)
     if currentBackendSymbol == :qwt
       try
         @eval import Qwt
