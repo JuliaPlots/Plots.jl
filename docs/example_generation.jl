@@ -84,8 +84,8 @@ const examples = PlotExample[
               "",
               [:(subplot!(randn(100,3)))]),
   PlotExample("Open/High/Low/Close",
-              "Pass in a vector of 4-tuples as your `y` argument.  Adjust the tick width with arg `markersize`.",
-              [:(n=10; hgt=rand(n)+1; bot=randn(n); openpct=rand(n); closepct=rand(n);), :(y = [(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n];), :(ohlc(y; markersize=10))]),
+              "Create an OHLC chart.  Pass in a vector of 4-tuples as your `y` argument.  Adjust the tick width with arg `markersize`.",
+              [:(n=20), :(hgt=rand(n)+1), :(bot=randn(n)), :(openpct=rand(n)), :(closepct=rand(n)), :(y = [(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n]), :(ohlc(y; markersize=8))]),
 
   
 ]
@@ -133,7 +133,7 @@ function generate_markdown(pkgname::Symbol)
       imgname = "$(pkgname)_example_$i.png"
 
       # NOTE: uncomment this to overwrite the images as well
-      # savepng("$IMGDIR/$pkgname/$imgname")
+      savepng("$IMGDIR/$pkgname/$imgname")
 
       # write out the header, description, code block, and image link
       write(md, "### $(example.header)\n\n")

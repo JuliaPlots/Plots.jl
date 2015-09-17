@@ -2,7 +2,7 @@
 
 - Supported arguments: `args`, `axis`, `color`, `kwargs`, `label`, `legend`, `linestyle`, `linetype`, `marker`, `markercolor`, `markersize`, `nbins`, `reg`, `size`, `title`, `width`, `windowtitle`, `xlabel`, `ylabel`, `yrightlabel`
 - Supported values for axis: `:auto`, `:left`
-- Supported values for linetype: `:line`, `:step`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`
+- Supported values for linetype: `:none`, `:line`, `:step`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`, `:hline`, `:vline`, `:ohlc`
 - Supported values for linestyle: `:auto`, `:solid`
 - Supported values for marker: `:none`, `:auto`, `:rect`, `:ellipse`, `:diamond`, `:cross`
 - Is `subplot`/`subplot!` supported? Yes
@@ -208,4 +208,20 @@ subplot!(randn(100,3))
 ```
 
 ![](../img/gadfly/gadfly_example_18.png)
+
+### Open/High/Low/Close
+
+Create an OHLC chart.  Pass in a vector of 4-tuples as your `y` argument.  Adjust the tick width with arg `markersize`.
+
+```julia
+n = 20
+hgt = rand(n) + 1
+bot = randn(n)
+openpct = rand(n)
+closepct = rand(n)
+y = [(openpct[i] * hgt[i] + bot[i],bot[i] + hgt[i],bot[i],closepct[i] * hgt[i] + bot[i]) for i = 1:n]
+ohlc(y; markersize=8)
+```
+
+![](../img/gadfly/gadfly_example_19.png)
 
