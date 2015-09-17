@@ -16,27 +16,28 @@ const winston_linestyle =  Dict(:solid=>"solid",
                                 :dash=>"dash",
                                 :dot=>"dotted",
                                 :dashdot=>"dotdashed",
-                                :dashdotdot=>"dotdashed")
+                                # :dashdotdot=>"dotdashed"
+                               )
 
 const winston_marker = Dict(:none=>".",
-                            :ellipse=>"circle",
                             :rect => "square",
+                            :ellipse=>"circle",
                             :diamond=>"diamond",
                             :utriangle=>"triangle",
                             :dtriangle=>"down-triangle",
                             :cross => "cross",
-                            :xcross => "cross",
+                            # :xcross => "cross",
                             :star1 => "asterisk",
-                            :star2 => "filled circle",
-                            :hexagon => "asterisk"
+                            # :star2 => "filled circle",
+                            # :hexagon => "asterisk"
                             )
 
 
 supportedArgs(::WinstonPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos, :markercolor, :background_color])
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :sticks, :scatter, :hist, :bar]
-supportedStyles(::WinstonPackage) = unshift!(collect(keys(winston_linestyle)), :auto)  # vcat(:auto, keys(winston_linestyle))
-supportedMarkers(::WinstonPackage) = unshift!(collect(keys(winston_marker)), :auto) # vcat(:auto, collect(keys(winston_marker)))
+supportedStyles(::WinstonPackage) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :star1]
 subplotSupported(::WinstonPackage) = false
 
 # ---------------------------------------------------------------------------

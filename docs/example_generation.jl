@@ -61,7 +61,7 @@ const examples = PlotExample[
               [:(styles = setdiff(supportedStyles(), [:auto])), :(plot(rand(20,length(styles)); linestyle=:auto, labels=map(string,styles)))]),
   PlotExample("Supported marker types",
               "All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)",
-              [:(markers = setdiff(supportedMarkers(), [:none,:auto])), :(plot([fill(i-1,10) for i=1:length(markers)]; marker=:auto, labels=map(string,markers), markersize=10))]),
+              [:(markers = setdiff(supportedMarkers(), [:none,:auto])), :(plot(0.5:9.5, [fill(i-0.5,10) for i=length(markers):-1:1]; marker=:auto, labels=map(string,markers), markersize=10))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
               [:(bar(randn(1000)))]),

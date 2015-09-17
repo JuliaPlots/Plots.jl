@@ -11,8 +11,8 @@ pyplot!() = plotter!(:pyplot)
 supportedArgs(::PyPlotPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
 supportedAxes(::PyPlotPackage) = ALL_AXES
 supportedTypes(::PyPlotPackage) = [:none, :line, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
-supportedStyles(::PyPlotPackage) = setdiff(ALL_STYLES, [:dashdotdot])
-supportedMarkers(::PyPlotPackage) = setdiff(ALL_MARKERS, [:star2])
+supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :hexagon]
 subplotSupported(::PyPlotPackage) = false
 
 # convert colorant to 4-tuple RGBA
@@ -37,8 +37,8 @@ function getPyPlotMarker(marker::Symbol)
   marker == :diamond && return "D"
   marker == :utriangle && return "^"
   marker == :dtriangle && return "v"
-  marker == :cross && return "x"
-  marker == :xcross && return "+"
+  marker == :cross && return "+"
+  marker == :xcross && return "x"
   marker == :star1 && return "*"
   # marker == :star2 && return "*"
   marker == :hexagon && return "h"
