@@ -10,7 +10,7 @@ unicodeplots!() = plotter!(:unicodeplots)
 
 supportedArgs(::UnicodePlotsPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
 supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
-supportedTypes(::UnicodePlotsPackage) = setdiff(ALL_TYPES, [:stepinverted])
+supportedTypes(::UnicodePlotsPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
 supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
 

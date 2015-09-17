@@ -10,7 +10,7 @@ pyplot!() = plotter!(:pyplot)
 
 supportedArgs(::PyPlotPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
 supportedAxes(::PyPlotPackage) = ALL_AXES
-supportedTypes(::PyPlotPackage) = ALL_TYPES
+supportedTypes(::PyPlotPackage) = [:none, :line, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
 supportedStyles(::PyPlotPackage) = setdiff(ALL_STYLES, [:dashdotdot])
 supportedMarkers(::PyPlotPackage) = setdiff(ALL_MARKERS, [:star2])
 subplotSupported(::PyPlotPackage) = false

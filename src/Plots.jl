@@ -6,30 +6,32 @@ using Colors
 
 export
   plotter,
-  plot,
-  plot_display,
-  subplot,
-
   plotter!,
+  plot,
   plot!,
+  plot_display,
   plot_display!,
+  subplot,
   subplot!,
 
   currentPlot,
-  plotDefault,
-  scatter,
-  bar,
-  histogram,
-  heatmap,
-  sticks,
-
   currentPlot!,
+  plotDefault,
   plotDefault!,
+  scatter,
   scatter!,
+  bar,
   bar!,
+  histogram,
   histogram!,
+  heatmap,
   heatmap!,
+  sticks,
   sticks!,
+  hline,
+  hline!,
+  vline,
+  vline!,
 
   savepng,
 
@@ -70,6 +72,10 @@ heatmap(args...; kw...)    = plot(args...; kw...,  linetype = :heatmap)
 heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
 sticks(args...; kw...)     = plot(args...; kw...,  linetype = :sticks, marker = :ellipse)
 sticks!(args...; kw...)    = plot!(args...; kw..., linetype = :sticks, marker = :ellipse)
+hline(args...; kw...)      = plot(args...; kw...,  linetype = :hline)
+hline!(args...; kw...)     = plot!(args...; kw..., linetype = :hline)
+vline(args...; kw...)      = plot(args...; kw...,  linetype = :vline)
+vline!(args...; kw...)     = plot!(args...; kw..., linetype = :vline)
 
 
 # ---------------------------------------------------------

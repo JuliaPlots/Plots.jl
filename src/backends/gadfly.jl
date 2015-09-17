@@ -9,7 +9,7 @@ gadfly!() = plotter!(:gadfly)
 
 supportedArgs(::GadflyPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos])
 supportedAxes(::GadflyPackage) = setdiff(ALL_AXES, [:right])
-supportedTypes(::GadflyPackage) = setdiff(ALL_TYPES, [:stepinverted])
+supportedTypes(::GadflyPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::GadflyPackage) = [:auto, :solid]
 supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :cross]
 
@@ -120,6 +120,25 @@ end
 # end
 
 
+function addGadflyFixedLines!(gplt, d::Dict)
+  
+  sz = d[:width] * Gadfly.px
+  c = d[:color]
+
+  if d[:linetype] == :hline
+    geom = Gadfly.Geom.hline(color=c, size=sz)
+    layer = Gadfly.layer(yintercept = d[:y], geom)
+  else
+    geom = Gadfly.Geom.vline(color=c, size=sz)
+    layer = Gadfly.layer(xintercept = d[:y], geom)
+  end
+  
+  prepend!(gplt.layers, layer)
+end
+
+
+
+
 function addGadflySeries!(gplt, d::Dict)
 
   # first things first... lets so the sticks hack
@@ -130,6 +149,10 @@ function addGadflySeries!(gplt, d::Dict)
     if dScatter[:marker] != :none
       push!(gplt.guides, createGadflyAnnotation(dScatter))
     end
+
+  elseif d[:linetype] in (:hline, :vline)
+    addGadflyFixedLines!(gplt, d)
+    return
   end
 
   gfargs = []

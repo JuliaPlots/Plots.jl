@@ -6,6 +6,8 @@ immutable QwtPackage <: PlottingPackage end
 export qwt!
 qwt!() = plotter!(:qwt)
 
+supportedTypes(::QwtPackage) = [:none, :line, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
+
 # -------------------------------
 
 function adjustQwtKeywords(iscreating::Bool; kw...)

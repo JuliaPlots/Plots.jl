@@ -5,7 +5,18 @@
 
 const COLORS = distinguishable_colors(20)
 const AXES = [:left, :right]
-const TYPES = [:line, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
+const TYPES = [:line,
+               :step,
+               :stepinverted,
+               :sticks,
+               :scatter,
+               :heatmap,
+               :hexbin,
+               :hist,
+               :bar,
+               :hline,
+               :vline,
+              ]
 const STYLES = [:solid, :dash, :dot, :dashdot, :dashdotdot]
 const MARKERS = [:ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
 
@@ -206,4 +217,10 @@ function getPlotKeywordArgs(pkg::PlottingPackage, kw, idx::Int, n::Int)
 
   d
 end
+
+
+# -----------------------------------------------------------------------------
+
+
+# TODO: arg aliases
 

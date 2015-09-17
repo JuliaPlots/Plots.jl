@@ -142,7 +142,7 @@ function plotter()
       error("Unknown plotter $currentBackendSymbol.  Choose from: $BACKENDS")
     end
     push!(INITIALIZED_BACKENDS, currentBackendSymbol)
-    println("[Plots.jl] done.")
+    # println("[Plots.jl] done.")
 
   end
   CURRENT_BACKEND.pkg
