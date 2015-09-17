@@ -118,9 +118,9 @@ heatmap(randn(10000),randn(10000); nbins=100)
 
 ![](../img/pyplot/pyplot_example_10.png)
 
-### Suported line types
+### Line types
 
-All options: (:line, :orderedline, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)
+
 
 ```julia
 types = intersect(supportedTypes(),[:line,:step,:stepinverted,:sticks,:scatter])
@@ -132,9 +132,9 @@ plot(x,y; linetypes=types,labels=map(string,types))
 
 ![](../img/pyplot/pyplot_example_11.png)
 
-### Supported line styles
+### Line styles
 
-All options: (:solid, :dash, :dot, :dashdot, :dashdotdot)
+
 
 ```julia
 styles = setdiff(supportedStyles(),[:auto])
@@ -143,9 +143,9 @@ plot(rand(20,length(styles)); linestyle=:auto,labels=map(string,styles))
 
 ![](../img/pyplot/pyplot_example_12.png)
 
-### Supported marker types
+### Marker types
 
-All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)
+
 
 ```julia
 markers = setdiff(supportedMarkers(),[:none,:auto])

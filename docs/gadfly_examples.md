@@ -51,7 +51,7 @@ Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, um
 ```julia
 plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
             sin(2x)
-        end),0,2π)
+        end),0,2π,legend=false)
 ```
 
 ![](../img/gadfly/gadfly_example_4.png)
@@ -118,9 +118,9 @@ heatmap(randn(10000),randn(10000); nbins=100)
 
 ![](../img/gadfly/gadfly_example_10.png)
 
-### Suported line types
+### Line types
 
-All options: (:line, :orderedline, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar)
+
 
 ```julia
 types = intersect(supportedTypes(),[:line,:step,:stepinverted,:sticks,:scatter])
@@ -132,9 +132,9 @@ plot(x,y; linetypes=types,labels=map(string,types))
 
 ![](../img/gadfly/gadfly_example_11.png)
 
-### Supported line styles
+### Line styles
 
-All options: (:solid, :dash, :dot, :dashdot, :dashdotdot)
+
 
 ```julia
 styles = setdiff(supportedStyles(),[:auto])
@@ -143,13 +143,13 @@ plot(rand(20,length(styles)); linestyle=:auto,labels=map(string,styles))
 
 ![](../img/gadfly/gadfly_example_12.png)
 
-### Supported marker types
+### Marker types
 
-All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon)
+
 
 ```julia
 markers = setdiff(supportedMarkers(),[:none,:auto])
-plot(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,labels=map(string,markers),markersize=10)
+scatter(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,labels=map(string,markers),markersize=10)
 ```
 
 ![](../img/gadfly/gadfly_example_13.png)
