@@ -142,7 +142,18 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
       Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
 
   elseif d[:linetype] == :line
-      Winston.add(wplt, Winston.Curve(d[:x], d[:y]; e...))
+    x, y = d[:x], d[:y]
+    Winston.add(wplt, Winston.Curve(x, y; e...))
+
+    fillto = d[:fillto]
+    if fillto != nothing
+      if isa(fillto, AbstractVector)
+        y2 = fillto
+      else
+        y2 = Float64[fillto for yi in y]
+      end
+      Winston.add(wplt, Winston.FillBetween(x, y, x, y2, fillcolor=d[:color]))
+    end
 
   elseif d[:linetype] == :scatter
     if d[:marker] == :none
