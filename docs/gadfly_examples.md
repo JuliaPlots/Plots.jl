@@ -4,7 +4,7 @@
 - Supported values for axis: `:auto`, `:left`
 - Supported values for linetype: `:none`, `:line`, `:step`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`, `:hline`, `:vline`, `:ohlc`
 - Supported values for linestyle: `:auto`, `:solid`
-- Supported values for marker: `:none`, `:auto`, `:rect`, `:ellipse`, `:diamond`, `:cross`
+- Supported values for marker: `:none`, `:auto`, `:rect`, `:ellipse`, `:diamond`, `:utriangle`, `:dtriangle`, `:cross`, `:xcross`, `:star1`, `:star2`, `:hexagon`
 - Is `subplot`/`subplot!` supported? Yes
 
 ### Initialize
@@ -149,7 +149,7 @@ All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :
 
 ```julia
 markers = setdiff(supportedMarkers(),[:none,:auto])
-plot([fill(i,10) for i = 1:length(markers)]; marker=:auto,labels=map(string,markers),markersize=10)
+plot(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,labels=map(string,markers),markersize=10)
 ```
 
 ![](../img/gadfly/gadfly_example_13.png)

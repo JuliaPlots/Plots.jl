@@ -133,7 +133,7 @@ function generate_markdown(pkgname::Symbol)
       imgname = "$(pkgname)_example_$i.png"
 
       # NOTE: uncomment this to overwrite the images as well
-      # savepng("$IMGDIR/$pkgname/$imgname")
+      savepng("$IMGDIR/$pkgname/$imgname")
 
       # write out the header, description, code block, and image link
       write(md, "### $(example.header)\n\n")
