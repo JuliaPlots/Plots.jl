@@ -206,7 +206,7 @@ function getPlotKeywordArgs(pkg::PlottingPackage, kw, idx::Int, n::Int)
 
     # set label
     label = d[:label]
-    label = (label == "AUTO" ? "y_$n" : label)
+    label = (label == "AUTO" ? "y$n" : label)
     if d[:axis] == :right && length(label) >= 4 && label[end-3:end] != " (R)"
       label = string(label, " (R)")
     end

@@ -3,8 +3,8 @@
 - Supported arguments: `args`, `axis`, `color`, `kwargs`, `label`, `legend`, `linestyle`, `linetype`, `marker`, `markersize`, `nbins`, `reg`, `size`, `title`, `width`, `windowtitle`, `xlabel`, `ylabel`, `yrightlabel`
 - Supported values for axis: `:auto`, `:left`
 - Supported values for linetype: `:none`, `:line`, `:sticks`, `:scatter`, `:hist`, `:bar`
-- Supported values for linestyle: `:auto`, `:solid`, `:dashdotdot`, `:dot`, `:dash`, `:dashdot`
-- Supported values for marker: `:auto`, `:hexagon`, `:none`, `:dtriangle`, `:ellipse`, `:xcross`, `:rect`, `:star1`, `:star2`, `:cross`, `:utriangle`, `:diamond`
+- Supported values for linestyle: `:solid`, `:dash`, `:dot`, `:dashdot`
+- Supported values for marker: `:none`, `:ellipse`, `:rect`, `:diamond`, `:utriangle`, `:dtriangle`, `:cross`, `:xcross`, `:star1`
 - Is `subplot`/`subplot!` supported? No
 
 ### Initialize
@@ -139,7 +139,7 @@ All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :
 
 ```julia
 markers = setdiff(supportedMarkers(),[:none,:auto])
-plot([fill(i,10) for i = 1:length(markers)]; marker=:auto,labels=map(string,markers),markersize=10)
+scatter(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,labels=map(string,markers),markersize=10)
 ```
 
 ![](../img/winston/winston_example_13.png)

@@ -122,9 +122,12 @@ function plot(pkg::PyPlotPackage; kw...)
 end
 
 
-function plot!(::PyPlotPackage, plt::Plot; kw...)
+function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
+  if !(d[:linetype] in supportedTypes(pkg))
+    error("linetype $(d[:linetype]) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
+  end
 
   if d[:linetype] == :sticks
     d,_ = sticksHack(;d...)

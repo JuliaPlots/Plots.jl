@@ -4,7 +4,7 @@
 - Supported values for axis: `:auto`, `:left`, `:right`
 - Supported values for linetype: `:none`, `:line`, `:step`, `:stepinverted`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`
 - Supported values for linestyle: `:auto`, `:solid`, `:dash`, `:dot`, `:dashdot`
-- Supported values for marker: `:none`, `:auto`, `:ellipse`, `:rect`, `:diamond`, `:utriangle`, `:dtriangle`, `:cross`, `:xcross`, `:star1`, `:hexagon`
+- Supported values for marker: `:none`, `:auto`, `:rect`, `:ellipse`, `:diamond`, `:utriangle`, `:dtriangle`, `:cross`, `:xcross`, `:star1`, `:hexagon`
 - Is `subplot`/`subplot!` supported? No
 
 ### Initialize
@@ -51,7 +51,7 @@ Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, um
 ```julia
 plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
             sin(2x)
-        end),0,2π)
+        end),0,2π,legend=false)
 ```
 
 ![](../img/pyplot/pyplot_example_4.png)
@@ -149,7 +149,7 @@ All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :
 
 ```julia
 markers = setdiff(supportedMarkers(),[:none,:auto])
-plot([fill(i,10) for i = 1:length(markers)]; marker=:auto,labels=map(string,markers),markersize=10)
+scatter(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,labels=map(string,markers),markersize=10)
 ```
 
 ![](../img/pyplot/pyplot_example_13.png)

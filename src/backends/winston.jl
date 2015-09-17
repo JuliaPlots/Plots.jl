@@ -15,8 +15,7 @@ winston!() = plotter!(:winston)
 const winston_linestyle =  Dict(:solid=>"solid",
                                 :dash=>"dash",
                                 :dot=>"dotted",
-                                :dashdot=>"dotdashed",
-                                # :dashdotdot=>"dotdashed"
+                                :dashdot=>"dotdashed"
                                )
 
 const winston_marker = Dict(:none=>".",
@@ -25,19 +24,17 @@ const winston_marker = Dict(:none=>".",
                             :diamond=>"diamond",
                             :utriangle=>"triangle",
                             :dtriangle=>"down-triangle",
-                            :cross => "cross",
-                            # :xcross => "cross",
-                            :star1 => "asterisk",
-                            # :star2 => "filled circle",
-                            # :hexagon => "asterisk"
-                            )
+                            :cross => "plus",
+                            :xcross => "cross",
+                            :star1 => "asterisk"
+                           )
 
 
 supportedArgs(::WinstonPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos, :markercolor, :background_color])
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :sticks, :scatter, :hist, :bar]
-supportedStyles(::WinstonPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :star1]
+supportedStyles(::WinstonPackage) = intersect(ALL_STYLES, collect(keys(winston_linestyle))) # [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::WinstonPackage) = intersect(ALL_MARKERS, collect(keys(winston_marker))) # [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1]
 subplotSupported(::WinstonPackage) = false
 
 # ---------------------------------------------------------------------------
@@ -140,7 +137,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
   ## lintype :line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
   if d[:linetype] == :none
-      Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
+    Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
 
   elseif d[:linetype] == :line
     x, y = d[:x], d[:y]

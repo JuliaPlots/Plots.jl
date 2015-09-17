@@ -149,7 +149,7 @@ All options: (:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :
 
 ```julia
 markers = setdiff(supportedMarkers(),[:none,:auto])
-plot([fill(i,10) for i = 1:length(markers)]; marker=:auto,labels=map(string,markers),markersize=10)
+plot(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,labels=map(string,markers),markersize=10)
 ```
 
 ![](../img/qwt/qwt_example_13.png)
