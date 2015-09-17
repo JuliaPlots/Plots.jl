@@ -18,7 +18,9 @@ function adjustQwtKeywords(iscreating::Bool; kw...)
     d[:linetype] = :heatmap
   elseif d[:linetype] == :scatter
     d[:linetype] = :none
-    d[:marker] = :ellipse
+    if d[:marker] == :none
+      d[:marker] = :ellipse
+    end
   elseif !iscreating && d[:linetype] == :bar
     return barHack(; kw...)
   elseif !iscreating && d[:linetype] == :hist

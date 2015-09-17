@@ -34,6 +34,15 @@ function createGadflyAnnotation(d::Dict)
   elseif marker == :xcross
     shape = xcross(x, y, sz)
 
+  elseif marker == :star1
+    shape = star1(x, y, sz)
+
+  elseif marker == :star2
+    shape = star2(x, y, sz)
+
+  elseif marker == :hexagon
+    shape = hexagon(x, y, sz)
+
   else
     # make circles
     sz = 0.8 * d[:markersize] * Gadfly.px
@@ -48,7 +57,6 @@ end
 
 function square(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
-
   rect_xs = Vector{Compose.Measure}(n)
   rect_ys = Vector{Compose.Measure}(n)
   rect_ws = Vector{Compose.Measure}(n)
@@ -69,7 +77,6 @@ end
 
 function diamond(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
-
   polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
@@ -85,7 +92,6 @@ end
 
 function cross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
-
   polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
@@ -111,7 +117,6 @@ end
 
 function xcross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
-
   polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
   s = 1/sqrt(5)
   for i in 1:n
@@ -133,7 +138,6 @@ end
 
 function utriangle(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar = 1)
   n = max(length(xs), length(ys), length(rs))
-
   polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
   s = 0.8
   for i in 1:n
@@ -142,9 +146,9 @@ function utriangle(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scal
     r = rs[mod1(i, length(rs))]
     u = 0.8 * scalar * r
     polys[i] = Tuple{Compose.Measure, Compose.Measure}[
-        (x - r, y + u),
-        (x + r, y + u),
-        (x, y - u)
+      (x - r, y + u),
+      (x + r, y + u),
+      (x, y - u)
     ]
   end
 
@@ -152,6 +156,78 @@ function utriangle(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scal
 end
 
 
+
+function star1(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar = 1)
+  n = max(length(xs), length(ys), length(rs))
+  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  
+  # some magic scalars
+  sx = 0.7
+  sy1, sy2 = 1.2, 0.4
+
+  for i in 1:n
+    x = Compose.x_measure(xs[mod1(i, length(xs))])
+    y = Compose.y_measure(ys[mod1(i, length(ys))])
+    r = rs[mod1(i, length(rs))]
+    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+      (x-sx*r, y+r),      # BL
+      (x,      y-sy1*r),  # T
+      (x+sx*r, y+r),      # BR
+      (x-r,    y-sy2*r),  # L
+      (x+r,    y-sy2*r)   # R
+    ]
+  end
+
+  return Gadfly.polygon(polys)
+end
+
+
+
+function star2(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar = 1)
+  n = max(length(xs), length(ys), length(rs))
+  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  for i in 1:n
+    x = Compose.x_measure(xs[mod1(i, length(xs))])
+    y = Compose.y_measure(ys[mod1(i, length(ys))])
+    r = rs[mod1(i, length(rs))]
+    u = 0.4r
+    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+      (x-u, y),   (x-r, y-r), # TL
+      (x,   y-u), (x+r, y-r), # TR
+      (x+u, y),   (x+r, y+r), # BR
+      (x,   y+u), (x-r, y+r)  # BL
+    ]
+  end
+
+  return Gadfly.polygon(polys)
+end
+
+
+function hexagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
+  n = max(length(xs), length(ys), length(rs))
+
+  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  for i in 1:n
+    x = Compose.x_measure(xs[mod1(i, length(xs))])
+    y = Compose.y_measure(ys[mod1(i, length(ys))])
+    r = rs[mod1(i, length(rs))]
+    u = 0.4r
+
+    # make a "plus sign"
+    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+      (x-r, y-u), (x-r, y+u), # L edge
+      # (x-u, y+u),             # BL inside
+      (x-u, y+r), (x+u, y+r), # B edge
+      # (x+u, y+u),             # BR inside
+      (x+r, y+u), (x+r, y-u), # R edge
+      # (x+u, y-u),             # TR inside
+      (x+u, y-r), (x-u, y-r), # T edge
+      # (x-u, y-u)              # TL inside
+    ]
+  end
+
+  return Gadfly.polygon(polys)
+end
 
 
 # ---------------------------
