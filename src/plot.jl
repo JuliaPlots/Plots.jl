@@ -112,6 +112,12 @@ end
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
 
+  # TODO: handle a "group by" mechanism.
+  # will probably want to check for the :group kw param, and split into
+  # index partitions/filters to be passed through to the next step.
+  # Ideally we don't change the insides ot createKWargsList too much to 
+  # save from code repetition.  We could consider adding a throw
+
   kwList = createKWargsList(plt, args...; kw...)
   for (i,d) in enumerate(kwList)
     plt.n += 1
