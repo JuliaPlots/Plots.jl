@@ -88,8 +88,10 @@ When plotting multiple lines, you can give every line the same trait by using th
 # this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
   pkg = plotter()
-  plt = plot(pkg; getPlotArgs(pkg, kw, 1)...)  # create a new, blank plot
-  plot!(plt, args...; kw...)  # add to it
+  d = Dict(kw)
+  replaceAliases!(d)
+  plt = plot(pkg; getPlotArgs(pkg, d, 1)...)  # create a new, blank plot
+  plot!(plt, args...; d...)  # add to it
 end
 
 

@@ -10,7 +10,7 @@ gadfly!() = plotter!(:gadfly)
 supportedArgs(::GadflyPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos])
 supportedAxes(::GadflyPackage) = setdiff(ALL_AXES, [:right])
 supportedTypes(::GadflyPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
-supportedStyles(::GadflyPackage) = [:auto, :solid]
+supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
 
 
@@ -35,7 +35,7 @@ function createGadflyPlotObject(d::Dict)
     unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
   end
 
-  gplt.theme = Gadfly.Theme(background_color = (haskey(d, :background_color) ? d[:background_color] : colorant"white"))
+  gplt.theme = Gadfly.Theme(background_color = d[:background_color])
   gplt
 end
 
@@ -73,26 +73,49 @@ end
 
 
 
-function addGadflyFixedLines!(gplt, d::Dict)
+function addGadflyFixedLines!(gplt, d::Dict, theme)
   
   sz = d[:width] * Gadfly.px
   c = d[:color]
 
   if d[:linetype] == :hline
     geom = Gadfly.Geom.hline(color=c, size=sz)
-    layer = Gadfly.layer(yintercept = d[:y], geom)
+    layer = Gadfly.layer(yintercept = d[:y], geom, theme)
   else
     geom = Gadfly.Geom.vline(color=c, size=sz)
-    layer = Gadfly.layer(xintercept = d[:y], geom)
+    layer = Gadfly.layer(xintercept = d[:y], geom, theme)
   end
   
   prepend!(gplt.layers, layer)
 end
 
 
+function getGadflyStrokeVector(linestyle::Symbol)
+  dash = 12 * Compose.mm
+  dot = 3 * Compose.mm
+  gap = 2 * Compose.mm
+  linestyle == :solid && return nothing
+  linestyle == :dash && return [dash, gap]
+  linestyle == :dot && return [dot, gap]
+  linestyle == :dashdot && return [dash, gap, dot, gap]
+  linestyle == :dashdotdot && return [dash, gap, dot, gap, dot, gap]
+  error("unsupported linestyle: ", linestyle)
+end
+
 
 
 function addGadflySeries!(gplt, d::Dict)
+
+  gfargs = []
+
+  # set theme: color, line width, and point size
+  line_width = d[:width] * (d[:linetype] == :none ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
+  line_style = getGadflyStrokeVector(d[:linestyle])
+  theme = Gadfly.Theme(default_color = d[:color],
+                       line_width = line_width,
+                       default_point_size = 0.5 * d[:markersize] * Gadfly.px,
+                       line_style = line_style)
+  push!(gfargs, theme)
 
   # first things first... lets so the sticks hack
   if d[:linetype] == :sticks
@@ -104,20 +127,16 @@ function addGadflySeries!(gplt, d::Dict)
     end
 
   elseif d[:linetype] in (:hline, :vline)
-    addGadflyFixedLines!(gplt, d)
+    addGadflyFixedLines!(gplt, d, theme)
     return
 
   end
-
-  gfargs = []
 
   # add the Geoms
   append!(gfargs, getLineGeoms(d))
   
   # handle markers
-    # @show d[:y]
   geoms, guides = getMarkerGeomsAndGuides(d)
-    # @show d[:y]
   append!(gfargs, geoms)
   append!(gplt.guides, guides)
 
@@ -132,17 +151,6 @@ function addGadflySeries!(gplt, d::Dict)
     push!(gplt.guides[1].colors, d[:marker] == :none ? d[:color] : d[:markercolor])
   end
 
-
-  # # if we haven't added any geoms, we're probably just going to use annotations?
-  # isempty(gfargs) && return
-
-
-  # set theme: color, line width, and point size
-  line_width = d[:width] * (d[:linetype] == :none ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
-  theme = Gadfly.Theme(default_color = d[:color],
-                       line_width = line_width,
-                       default_point_size = 0.5 * d[:markersize] * Gadfly.px)
-  push!(gfargs, theme)
 
   # for histograms, set x=y
   x = d[d[:linetype] == :hist ? :y : :x]

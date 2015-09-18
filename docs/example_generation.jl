@@ -58,7 +58,7 @@ const examples = PlotExample[
                   :(plot(x, y; linetypes=types, labels=map(string,types)))]),
   PlotExample("Line styles",
               "",
-              [:(styles = setdiff(supportedStyles(), [:auto])), :(plot(rand(20,length(styles)); linestyle=:auto, labels=map(string,styles)))]),
+              [:(styles = setdiff(supportedStyles(), [:auto])), :(plot(cumsum(randn(20,length(styles)),1); linestyle=:auto, labels=map(string,styles), width=5))]),
   PlotExample("Marker types",
               "",
               [:(markers = setdiff(supportedMarkers(), [:none,:auto])), :(scatter(0.5:9.5, [fill(i-0.5,10) for i=length(markers):-1:1]; marker=:auto, labels=map(string,markers), markersize=10))]),
