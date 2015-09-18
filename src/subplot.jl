@@ -41,7 +41,8 @@ Base.string(subplt::Subplot) = "Subplot{$(subplt.plotter) p=$(subplt.p) n=$(subp
 Base.print(io::IO, subplt::Subplot) = print(io, string(subplt))
 Base.show(io::IO, subplt::Subplot) = print(io, string(subplt))
 
-getplot(subplt::Subplot) = subplt.plts[mod1(subplt.n, subplt.p)]
+getplot(subplt::Subplot, idx::Int = subplt.n) = subplt.plts[mod1(idx, subplt.p)]
+getinitargs(subplt::Subplot, idx::Int) = getplot(subplt, idx).initargs
 
 # ------------------------------------------------------------
 
@@ -58,6 +59,7 @@ Create a series of plots:
 """
 function subplot(args...; kw...)
   d = Dict(kw)
+  replaceAliases!(d)
 
   # figure out the layout
   if haskey(d, :layout)
@@ -74,7 +76,7 @@ function subplot(args...; kw...)
   plts = Plot[]
   ds = Dict[]
   for i in 1:length(layout)
-    push!(ds, getPlotArgs(pkg, kw, i))
+    push!(ds, getPlotArgs(pkg, d, i))
     push!(plts, plot(pkg; ds[i]...))
   end
 
@@ -113,11 +115,20 @@ function subplot!(subplt::Subplot, args...; kw...)
     error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(backend(pkg)), backends()),", "))
   end
 
-  kwList = createKWargsList(subplt, args...; kw...)
+  d = Dict(kw)
+  replaceAliases!(d)
+  @show d
+  for k in keys(_plotDefaults)
+    delete!(d, k)
+  end
+  @show d
+
+  kwList = createKWargsList(subplt, args...; d...)
   for (i,d) in enumerate(kwList)
     subplt.n += 1
     plt = getplot(subplt)  # get the Plot object where this series will be drawn
     d[:show] = false
+    @show d
     plot!(plt; d...)
   end
 

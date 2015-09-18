@@ -3,7 +3,7 @@
 # const COLORS = [:black, :blue, :green, :red, :darkGray, :darkCyan, :darkYellow, :darkMagenta,
 #                 :darkBlue, :darkGreen, :darkRed, :gray, :cyan, :yellow, :magenta]
 
-const COLORS = distinguishable_colors(20)
+# const COLORS = distinguishable_colors(20)
 const AXES = [:left, :right]
 const TYPES = [:line,
                :step,
@@ -185,23 +185,76 @@ end
 
 # -----------------------------------------------------------------------------
 
+convertColor(c::Union{AbstractString, Symbol}) = parse(Colorant, string(c))
+convertColor(c::Colorant) = c
+convertColor(cvec::AbstractVector) = map(convertColor, cvec)
+
+# for now, choose a boundary value on the other side from the background value
+function adjustAway(bgval, vmin=0., vmax=100.)
+  bgval < 0.5 * (vmax+vmin) ? vmax : vmin
+end
+
+function getBackgroundRGBColor(c, d::Dict)
+  bgcolor = convertColor(d[:background_color])
+  d[:background_color] = bgcolor
+  # d[:color_palette] = RGB{Float64}[bgcolor]
+  palette = distinguishable_colors(20, bgcolor)[2:end]
+  @show palette
+
+  # try to adjust colors away from background color
+  # for now, lets do this by moving both lightness and chroma to to other side of the spectrum as compared to the background
+  bg_lab = Lab(bgcolor)
+  palette = RGB{Float64}[begin
+    lab = Lab(rgb)
+    Lab(
+        adjustAway(bg_lab.l, -128, 128),
+        # adjustAway(bg_lab.a, -128, 128),
+        lab.a,
+        lab.b
+      )
+  end for rgb in palette]
+
+  d[:color_palette] = palette
+  @show d[:color_palette]
+  bgcolor
+end
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
-# note: if plt is nothing, we aren't doing anything with the color anyways
-function getRGBColor(c, n::Int = 0)
+function getSeriesRGBColor(c, d::Dict, n::Int)
 
-  # auto-assign a color based on plot index
-  if c == :auto && n > 0
-    c = autopick(COLORS, n)
-  end
+  # # create a color palette on the fly using the background color as the seed
+  # if !haskey(d, :color_palette)
+  #   c = convertColor(d[:background_color])
+  #   d[:background_color] = c
+  #   d[:color_palette] = cp = RGB[c]
+  # else
 
-  # convert it from a symbol/string
-  if isa(c, Symbol)
-    c = string(c)
-  end
-  if isa(c, AbstractString)
-    c = parse(Colorant, c)
-  end
+  # cp = d[:color_palette]
+  # @show n cp
+  # if length(cp) < n+1
+  #   cp = distinguishable_colors(n+1, cp)
+  #   @show cp
+  #   d[:color_palette] = cp
+  # end
+
+  c = (c == :auto ? autopick(d[:color_palette], n) : convertColor(c))
+
+  # if c == :auto
+  #   # pick a new color
+  #   cp = d[:color_palette]
+  #   if length(cp) < n+1
+  #     cp = distinguishable_colors(n+1, cp)
+  #   end
+  #   c = cp[n+1]
+  #   d[:color_palette] = cp
+  # end
+  # @show d[:color_palette]
+  # @show c length(cp)
+
+  # # just to be safe
+  # c = convertColor(c)
+  # # push!(d[:color_palette], c)
+  # # @show c d[:color_palette]
 
   # should be a RGB now... either it was passed in, generated automatically, or created from a string
   @assert isa(c, RGB)
@@ -237,7 +290,7 @@ function getPlotArgs(pkg::PlottingPackage, kw, idx::Int)
   end
 
   # convert color
-  d[:background_color] = getRGBColor(d[:background_color])
+  d[:background_color] = getBackgroundRGBColor(d[:background_color], d)
 
   # no need for these
   delete!(d, :x)
@@ -249,7 +302,7 @@ end
 
 
 # note: idx is the index of this series within this call, n is the index of the series from all calls to plot/subplot
-function getSeriesArgs(pkg::PlottingPackage, kw, idx::Int, n::Int)
+function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, idx::Int, n::Int)  # TODO, pass in initargs, not plt
   d = Dict(kw)
 
   # add defaults?
@@ -277,11 +330,11 @@ function getSeriesArgs(pkg::PlottingPackage, kw, idx::Int, n::Int)
   end
 
   # update color
-  d[:color] = getRGBColor(d[:color], n)
+  d[:color] = getSeriesRGBColor(d[:color], initargs, n)
 
   # update markercolor
   mc = d[:markercolor]
-  mc = (mc == :match ? d[:color] : getRGBColor(mc, n))
+  mc = (mc == :match ? d[:color] : getSeriesRGBColor(mc, initargs, n))
   d[:markercolor] = mc
 
   # set label

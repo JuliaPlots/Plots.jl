@@ -22,6 +22,7 @@ Base.print(io::IO, plt::Plot) = print(io, string(plt))
 Base.show(io::IO, plt::Plot) = print(io, string(plt))
 
 getplot(plt::Plot) = plt
+getinitargs(plt::Plot, idx::Int = 1) = plt.initargs
 
 
 doc"""
@@ -90,7 +91,15 @@ function plot(args...; kw...)
   pkg = plotter()
   d = Dict(kw)
   replaceAliases!(d)
+
+  # # ensure we're passing in an RGB
+  # if haskey(d, :background_color)
+  #   d[:background_color] = convertColor(d[:background_color])
+  # end
+
   plt = plot(pkg; getPlotArgs(pkg, d, 1)...)  # create a new, blank plot
+
+  delete!(d, :background_color)
   plot!(plt, args...; d...)  # add to it
 end
 
@@ -158,7 +167,7 @@ function createKWargsList(plt::PlottingObject; kw...)
   if !haskey(d, :x)
     d[:x] = 1:length(d[:y])
   end
-  [getSeriesArgs(plt.plotter, d, 1, plt.n + 1)]
+  [getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), d, 1, plt.n + 1)]
 end
 
 
@@ -169,7 +178,7 @@ end
 
 # create one series where y is vectors of numbers
 function createKWargsList{T<:Real}(plt::PlottingObject, y::AVec{T}; kw...)
-  d = getSeriesArgs(plt.plotter, kw, 1, plt.n + 1)
+  d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, 1, plt.n + 1)
   d[:x] = 1:length(y)
   d[:y] = y
   [d]
@@ -178,7 +187,7 @@ end
 # create one series where x/y are vectors of numbers
 function createKWargsList{T<:Real,S<:Real}(plt::PlottingObject, x::AVec{T}, y::AVec{S}; kw...)
   @assert length(x) == length(y)
-  d = getSeriesArgs(plt.plotter, kw, 1, plt.n + 1)
+  d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, 1, plt.n + 1)
   d[:x] = x
   d[:y] = y
   [d]
@@ -189,7 +198,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, y::AMat{T}; kw...)
   n,m = size(y)
   ret = []
   for i in 1:m
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = 1:n
     d[:y] = y[:,i]
     push!(ret, d)
@@ -203,7 +212,7 @@ function createKWargsList{T<:Real,S<:Real}(plt::PlottingObject, x::AVec{T}, y::A
   @assert length(x) == n
   ret = []
   for i in 1:m
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = x
     d[:y] = y[:,i]
     push!(ret, d)
@@ -217,7 +226,7 @@ function createKWargsList{T<:Real,S<:Real}(plt::PlottingObject, x::AMat{T}, y::A
   n,m = size(y)
   ret = []
   for i in 1:m
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = x[:,i]
     d[:y] = y[:,i]
     push!(ret, d)
@@ -232,7 +241,7 @@ end
 
 # create 1 series, y = f(x), x ∈ [xmin, xmax]
 function createKWargsList(plt::PlottingObject, f::Function, xmin::Real, xmax::Real; kw...)
-  d = getSeriesArgs(plt.plotter, kw, 1, plt.n + 1)
+  d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, 1, plt.n + 1)
   width = plt.initargs[:size][1]
   d[:x] = collect(linspace(xmin, xmax, width))  # we don't need more than the width
   d[:y] = map(f, d[:x])
@@ -246,7 +255,7 @@ function createKWargsList(plt::PlottingObject, fs::Vector{Function}, xmin::Real,
   width = plt.initargs[:size][1]
   x = collect(linspace(xmin, xmax, width)) # we don't need more than the width
   for i in 1:m
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = x
     d[:y] = map(fs[i], x)
     push!(ret, d)
@@ -256,7 +265,7 @@ end
 
 # create 1 series, x = fx(u), y = fy(u); u ∈ [umin, umax]
 function createKWargsList(plt::PlottingObject, fx::Function, fy::Function, umin::Real, umax::Real; kw...)
-  d = getSeriesArgs(plt.plotter, kw, 1, plt.n + 1)
+  d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, 1, plt.n + 1)
   width = plt.initargs[:size][1]
   u = collect(linspace(umin, umax, width))  # we don't need more than the width
   d[:x] = map(fx, u)
@@ -266,7 +275,7 @@ end
 
 # create 1 series, y = f(x)
 function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec{T}, f::Function; kw...)
-  d = getSeriesArgs(plt.plotter, kw, 1, plt.n + 1)
+  d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, 1, plt.n + 1)
   d[:x] = x
   d[:y] = map(f, x)
   [d]
@@ -278,7 +287,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AMat{T}, f::Function;
   n,m = size(x)
   ret = []
   for i in 1:m
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = x[:,i]
     d[:y] = map(f, d[:x])
     push!(ret, d)
@@ -298,7 +307,7 @@ function createKWargsList(plt::PlottingObject, y::AVec; kw...)
   m = length(y)
   ret = []
   for i in 1:m
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = 1:length(y[i])
     d[:y] = y[i]
     push!(ret, d)
@@ -318,7 +327,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec{T}, y::AVec; kw.
   m = length(y)
   ret = []
   for i in 1:m
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = x
     d[:y] = getyvec(x, y[i])
     push!(ret, d)
@@ -332,7 +341,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AMat{T}; kw.
   @assert length(x) == m
   ret = []
   for i in 1:m
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = x[i]
     d[:y] = getyvec(x[i], y[:,i])
     push!(ret, d)
@@ -346,7 +355,7 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AVec; kw...)
   m = length(y)
   ret = []
   for i in 1:m
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = x[i]
     d[:y] = getyvec(x[i], y[i])
     push!(ret, d)
@@ -358,7 +367,7 @@ end
 function createKWargsList(plt::PlottingObject, n::Integer; kw...)
   ret = []
   for i in 1:n
-    d = getSeriesArgs(plt.plotter, kw, i, plt.n + i)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, i, plt.n + i)
     d[:x] = zeros(0)
     d[:y] = zeros(0)
     push!(ret, d)
@@ -370,7 +379,7 @@ end
 createKWargsList{T<:Tuple}(plt::PlottingObject, y::AVec{T}; kw...) = createKWargsList(plt, 1:length(y), y; kw...)
 
 function createKWargsList{S<:Real, T<:Tuple}(plt::PlottingObject, x::AVec{S}, y::AVec{T}; kw...)
-  d = getSeriesArgs(plt.plotter, kw, 1, plt.n + 1)
+  d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), kw, 1, plt.n + 1)
   d[:x] = x
   d[:y] = y
   [d]
