@@ -87,7 +87,7 @@ ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
 savepng(args...; kw...) = savepng(currentPlot(), args...; kw...)
 savepng(plt::PlottingObject, args...; kw...) = savepng(plt.plotter, plt, args...; kw...)
-savepng(::PlottingPackage, plt::PlottingObject, fn::String, args...) = error("unsupported")  # fallback so multiple dispatch doesn't get confused if it's missing
+savepng(::PlottingPackage, plt::PlottingObject, fn::AbstractString, args...) = error("unsupported")  # fallback so multiple dispatch doesn't get confused if it's missing
 
 
 # ---------------------------------------------------------

@@ -41,7 +41,7 @@ end
 
 # -------------------------------
 
-function savepng(::[PkgName]Package, plt::PlottingObject, fn::String; kw...)
+function savepng(::[PkgName]Package, plt::PlottingObject, fn::AbstractString; kw...)
   # TODO: save a PNG of the underlying plot/subplot object
 end
 

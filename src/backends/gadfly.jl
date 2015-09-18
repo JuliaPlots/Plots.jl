@@ -182,7 +182,7 @@ end
 
 # -------------------------------
 
-function savepng(::GadflyPackage, plt::PlottingObject, fn::String;
+function savepng(::GadflyPackage, plt::PlottingObject, fn::AbstractString;
                                     w = 6 * Gadfly.inch,
                                     h = 4 * Gadfly.inch)
   o = getGadflyContext(plt.plotter, plt)

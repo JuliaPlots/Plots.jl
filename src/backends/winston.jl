@@ -242,7 +242,7 @@ end
 
 # -------------------------------
 
-function savepng(::WinstonPackage, plt::PlottingObject, fn::String; kw...)
+function savepng(::WinstonPackage, plt::PlottingObject, fn::AbstractString; kw...)
   f = open(fn, "w")
   window, canvas, wplt = getWinstonItems(plt)
   addWinstonLegend(plt, wplt)

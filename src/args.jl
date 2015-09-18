@@ -111,7 +111,7 @@ function getRGBColor(c, n::Int = 0)
   if isa(c, Symbol)
     c = string(c)
   end
-  if isa(c, String)
+  if isa(c, AbstractString)
     c = parse(Colorant, c)
   end
 

@@ -63,7 +63,7 @@ end
 getGadflyContext(::ImmersePackage, plt::Plot) = plt.o[2]
 getGadflyContext(::ImmersePackage, subplt::Subplot) = buildGadflySubplotContext(subplt)
 
-function savepng(::ImmersePackage, plt::PlottingObject, fn::String;
+function savepng(::ImmersePackage, plt::PlottingObject, fn::AbstractString;
                                     w = 6 * Immerse.inch,
                                     h = 4 * Immerse.inch)
   gctx = getGadflyContext(plt.plotter, plt)

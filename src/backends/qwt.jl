@@ -50,7 +50,7 @@ end
 
 # -------------------------------
 
-savepng(::QwtPackage, plt::PlottingObject, fn::String, args...) = Qwt.savepng(plt.o, fn)
+savepng(::QwtPackage, plt::PlottingObject, fn::AbstractString, args...) = Qwt.savepng(plt.o, fn)
 
 # -------------------------------
 

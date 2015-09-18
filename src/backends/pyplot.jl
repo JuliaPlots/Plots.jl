@@ -47,7 +47,7 @@ function getPyPlotMarker(marker::Symbol)
 end
 
 # pass through
-function getPyPlotMarker(marker::String)
+function getPyPlotMarker(marker::AbstractString)
   @assert length(marker) == 1
   marker
 end
@@ -226,7 +226,7 @@ end
 
 # -------------------------------
 
-function savepng(::PyPlotPackage, plt::PlottingObject, fn::String, args...)
+function savepng(::PyPlotPackage, plt::PlottingObject, fn::AbstractString, args...)
   addPyPlotLegend(plt)
   f = open(fn, "w")
   writemime(f, "image/png", plt.o)

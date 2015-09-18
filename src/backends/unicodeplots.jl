@@ -124,7 +124,7 @@ end
 
 # -------------------------------
 
-function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::String, args...)
+function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::AbstractString, args...)
 
   # make some whitespace and show the plot
   println("\n\n\n\n\n\n")
