@@ -189,33 +189,37 @@ convertColor(c::Union{AbstractString, Symbol}) = parse(Colorant, string(c))
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 
-# for now, choose a boundary value on the other side from the background value
-function adjustAway(bgval, vmin=0., vmax=100.)
-  bgval < 0.5 * (vmax+vmin) ? vmax : vmin
+# # for now, choose a boundary value on the other side from the background value
+# function adjustAway(val, bgval, vmin=0., vmax=100.)
+#   bgval < 0.5 * (vmax+vmin) ? vmax : vmin
+# end
+
+# move closer to lighter/darker depending on background value
+function adjustAway(val, bgval, vmin=0., vmax=100.)
+  if bgval < 0.5 * (vmax+vmin)
+    return 0.5 * (max(val, bgval) + vmax)
+  else
+    return 0.5 * (min(val, bgval) + vmin)
+  end
 end
 
 function getBackgroundRGBColor(c, d::Dict)
   bgcolor = convertColor(d[:background_color])
   d[:background_color] = bgcolor
-  # d[:color_palette] = RGB{Float64}[bgcolor]
   palette = distinguishable_colors(20, bgcolor)[2:end]
-  @show palette
 
-  # try to adjust colors away from background color
-  # for now, lets do this by moving both lightness and chroma to to other side of the spectrum as compared to the background
+  # try to adjust lightness away from background color
   bg_lab = Lab(bgcolor)
   palette = RGB{Float64}[begin
     lab = Lab(rgb)
     Lab(
-        adjustAway(bg_lab.l, -128, 128),
-        # adjustAway(bg_lab.a, -128, 128),
+        adjustAway(lab.l, bg_lab.l, 25, 75),
         lab.a,
         lab.b
       )
   end for rgb in palette]
 
   d[:color_palette] = palette
-  @show d[:color_palette]
   bgcolor
 end
 
