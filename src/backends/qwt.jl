@@ -12,7 +12,9 @@ supportedTypes(::QwtPackage) = [:none, :line, :step, :stepinverted, :sticks, :sc
 
 function adjustQwtKeywords(iscreating::Bool; kw...)
   d = Dict(kw)
-  d[:heatmap_n] = d[:nbins]
+  if !iscreating
+    d[:heatmap_n] = d[:nbins]
+  end
 
   if d[:linetype] == :hexbin
     d[:linetype] = :heatmap
@@ -30,7 +32,8 @@ function adjustQwtKeywords(iscreating::Bool; kw...)
 end
 
 function plot(pkg::QwtPackage; kw...)
-  d = adjustQwtKeywords(true; kw...)
+  d = Dict(kw)
+  # d = adjustQwtKeywords(true; kw...)
   o = Qwt.plot(zeros(0,0); d..., show=false)
   plt = Plot(o, pkg, 0, d, Dict[])
   plt
@@ -63,7 +66,7 @@ function buildSubplotObject!(::QwtPackage, subplt::Subplot)
     i += rowcnt
   end
   subplt.o = Qwt.vsplitter(rows...)
-  Qwt.resizewidget(subplt.o, subplt.initargs[:size]...)
+  Qwt.resizewidget(subplt.o, subplt.initargs[1][:size]...)
   Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
 end
 

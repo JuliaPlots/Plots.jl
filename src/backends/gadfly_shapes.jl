@@ -43,6 +43,9 @@ function createGadflyAnnotation(d::Dict)
   elseif marker == :hexagon
     shape = hexagon(x, y, sz)
 
+  elseif marker == :octagon
+    shape = octagon(x, y, sz)
+
   else
     # make circles
     sz = 0.8 * d[:markersize] * Gadfly.px
@@ -203,7 +206,37 @@ function star2(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar =
 end
 
 
+
 function hexagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
+  n = max(length(xs), length(ys), length(rs))
+
+  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  for i in 1:n
+    x = Compose.x_measure(xs[mod1(i, length(xs))])
+    y = Compose.y_measure(ys[mod1(i, length(ys))])
+    r = rs[mod1(i, length(rs))]
+    u = 0.6r
+
+    # make a "plus sign"
+    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+      (x-r, y-u), (x-r, y+u), # L edge
+      # (x-u, y+u),             # BL inside
+      # (x-u, y+r), (x+u, y+r), # B edge
+      (x, y+r),
+      # (x+u, y+u),             # BR inside
+      (x+r, y+u), (x+r, y-u), # R edge
+      (x, y-r)
+      # (x+u, y-u),             # TR inside
+      # (x+u, y-r), (x-u, y-r), # T edge
+      # (x-u, y-u)              # TL inside
+    ]
+  end
+
+  return Gadfly.polygon(polys)
+end
+
+
+function octagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
 
   polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)

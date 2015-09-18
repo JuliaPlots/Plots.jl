@@ -71,14 +71,21 @@ function subplot(args...; kw...)
 
   # initialize the individual plots
   pkg = plotter()
-  tmpd = getPlotKeywordArgs(pkg, kw, 1, 0)
-  # shouldShow = tmpd[:show]
-  # tmpd[:show] = false
-  plts = Plot[plot(pkg; tmpd...) for i in 1:length(layout)]
-  # tmpd[:show] = shouldShow
+  plts = Plot[]
+  ds = Dict[]
+  for i in 1:length(layout)
+    push!(ds, getPlotArgs(pkg, kw, i))
+    push!(plts, plot(pkg; ds[i]...))
+  end
+
+  # tmpd = getPlotKeywordArgs(pkg, kw, 1, 0)   # TODO: this should happen in the plot creation loop... think... what if we want to set a title per subplot??
+  # # shouldShow = tmpd[:show]
+  # # tmpd[:show] = false
+  # plts = Plot[plot(pkg; tmpd...) for i in 1:length(layout)]
+  # # tmpd[:show] = shouldShow
 
   # create the object and do the plotting
-  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, tmpd, false)
+  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, ds, false)
   subplot!(subplt, args...; kw...)
 
   subplt

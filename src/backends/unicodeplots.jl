@@ -99,7 +99,7 @@ function plot(pkg::UnicodePlotsPackage; kw...)
   plt = Plot(nothing, pkg, 0, Dict(kw), Dict[])
 
   # do we want to give a new default size?
-  if !haskey(plt.initargs, :size) || plt.initargs[:size] == PLOT_DEFAULTS[:size]
+  if !haskey(plt.initargs, :size) || plt.initargs[:size] == _plotDefaults[:size]
     plt.initargs[:size] = (60,20)
   end
 

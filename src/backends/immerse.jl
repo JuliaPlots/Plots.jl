@@ -78,7 +78,7 @@ end
 function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
 
   # create the Gtk window with vertical box vsep
-  d = subplt.initargs
+  d = subplt.initargs[1]
   w,h = d[:size]
   vsep = Gtk.GtkBoxLeaf(:v)
   win = Gtk.GtkWindowLeaf(vsep, d[:windowtitle], w, h)
