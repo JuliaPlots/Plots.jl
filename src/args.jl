@@ -80,9 +80,6 @@ _plotDefaults[:show] = false
 
 
 
-# const seriesKeys = [:axis, :color, :label, :width, :linetype, :linestyle, :marker, :markercolor, :markersize, :nbins, :heatmap_c, :fillto, :reg, :group, :ribbon]
-# const plotKeys = [:title, :xlabel, :ylabel, :yrightlabel, :legend, :background_color, :xticks, :yticks, :size, :windowtitle, :show]
-
 # TODO: x/y scales
 
 const ARGS = sort(collect(intersect(keys(_seriesDefaults), keys(_plotDefaults))))
@@ -189,17 +186,16 @@ convertColor(c::Union{AbstractString, Symbol}) = parse(Colorant, string(c))
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 
-# # for now, choose a boundary value on the other side from the background value
-# function adjustAway(val, bgval, vmin=0., vmax=100.)
-#   bgval < 0.5 * (vmax+vmin) ? vmax : vmin
-# end
+isbackgrounddark(bgcolor::Color) = Lab(bgcolor).l < 0.5
 
 # move closer to lighter/darker depending on background value
 function adjustAway(val, bgval, vmin=0., vmax=100.)
   if bgval < 0.5 * (vmax+vmin)
-    return 0.5 * (max(val, bgval) + vmax)
+    tmp = max(val, bgval)
+    return 0.5 * (tmp + max(tmp, vmax))
   else
-    return 0.5 * (min(val, bgval) + vmin)
+    tmp = min(val, bgval)
+    return 0.5 * (tmp + min(tmp, vmin))
   end
 end
 
@@ -218,47 +214,24 @@ function getBackgroundRGBColor(c, d::Dict)
         lab.b
       )
   end for rgb in palette]
-
   d[:color_palette] = palette
+
+  # set the foreground color (text, ticks, gridlines) to be white or black depending
+  # on how dark the background is.  borrowed from http://stackoverflow.com/a/1855903
+  a = 0.299 * red(bgcolor) + 0.587 * green(bgcolor) + 0.114 * blue(bgcolor)
+  d[:foreground_color] = a < 0.5 ? colorant"white" : colorant"black"
+
   bgcolor
 end
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
 function getSeriesRGBColor(c, d::Dict, n::Int)
 
-  # # create a color palette on the fly using the background color as the seed
-  # if !haskey(d, :color_palette)
-  #   c = convertColor(d[:background_color])
-  #   d[:background_color] = c
-  #   d[:color_palette] = cp = RGB[c]
-  # else
-
-  # cp = d[:color_palette]
-  # @show n cp
-  # if length(cp) < n+1
-  #   cp = distinguishable_colors(n+1, cp)
-  #   @show cp
-  #   d[:color_palette] = cp
-  # end
-
-  c = (c == :auto ? autopick(d[:color_palette], n) : convertColor(c))
-
-  # if c == :auto
-  #   # pick a new color
-  #   cp = d[:color_palette]
-  #   if length(cp) < n+1
-  #     cp = distinguishable_colors(n+1, cp)
-  #   end
-  #   c = cp[n+1]
-  #   d[:color_palette] = cp
-  # end
-  # @show d[:color_palette]
-  # @show c length(cp)
-
-  # # just to be safe
-  # c = convertColor(c)
-  # # push!(d[:color_palette], c)
-  # # @show c d[:color_palette]
+  if c == :auto
+    c = autopick(d[:color_palette], n)
+  else
+    c = convertColor(c)
+  end
 
   # should be a RGB now... either it was passed in, generated automatically, or created from a string
   @assert isa(c, RGB)
