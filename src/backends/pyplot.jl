@@ -185,16 +185,12 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   extraargs[:label] = d[:label]
 
   # do the plot
-  # @show lt
   if lt == :hist
     d[:serieshandle] = plotfunc(d[:y]; extraargs...)[1]
   elseif lt in (:scatter, :heatmap, :hexbin)
     d[:serieshandle] = plotfunc(d[:x], d[:y]; extraargs...)
   else
     d[:serieshandle] = plotfunc(d[:x], d[:y]; extraargs...)[1]
-    # retval = plotfunc(d[:x], d[:y]; extraargs...)
-    # @show retval
-    # d[:serieshandle] = retval
   end
 
   # this sets the bg color inside the grid (plt.o.o == matplotlib.Figure)

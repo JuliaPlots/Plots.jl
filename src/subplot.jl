@@ -117,18 +117,15 @@ function subplot!(subplt::Subplot, args...; kw...)
 
   d = Dict(kw)
   replaceAliases!(d)
-  @show d
   for k in keys(_plotDefaults)
     delete!(d, k)
   end
-  @show d
 
   kwList = createKWargsList(subplt, args...; d...)
   for (i,d) in enumerate(kwList)
     subplt.n += 1
     plt = getplot(subplt)  # get the Plot object where this series will be drawn
     d[:show] = false
-    @show d
     plot!(plt; d...)
   end
 
