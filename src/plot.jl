@@ -154,7 +154,84 @@ function Base.display(plt::PlottingObject)
   display(plt.plotter, plt)
 end
 
-# -------------------------
+# --------------------------------------------------------------------
+
+
+# TODO: create a new "createKWargsList" which converts all inputs into xs = Any[xitems], ys = Any[yitems].
+# Special handling for: no args, xmin/xmax
+# Then once inputs have been converted, build the series args, map functions, etc.
+# This should cut down on boilerplate code and allow more focused dispatch on type
+
+typealias FuncOrFuncs Union(Function, AVec{Function})
+
+# missing
+convertToAnyVector(v::Void) = Any[nothing]
+
+# fixed number of blank series
+convertToAnyVector(n::Integer) = Any[zero(0) for i in 1:n]
+
+# numeric vector
+convertToAnyVector{T<:Real}(v::AVec{T}) = Any[v]
+
+# numeric matrix
+convertToAnyVector{T<:Real}(v::AMat{T}) = Any[v[:,i] for i in 1:size(v,2)]
+
+# function
+convertToAnyVector(f::Function) = Any[f]
+
+# list of things (maybe other vectors, functions, or something else)
+convertToAnyVector(v::AVec) = Any[vi for vi in v]
+
+
+# --------------------------------------------------------------------
+
+# in computeXandY, we take in any of the possible items, convert into proper x/y vectors, then return.
+# this is also where all the "set x to 1:length(y)" happens, and also where we assert on lengths.
+function computeXandY(x, y)
+  # TODO
+end
+
+# --------------------------------------------------------------------
+
+# create n=max(mx,my) series arguments. the shorter list is cycled through
+function createKWargsList2(plt::PlottingObject, x, y; kw...)
+  xs = convertToAnyVector(x)
+  ys = convertToAnyVector(y)
+  mx = length(xs)
+  my = length(ys)
+  ret = []
+  for i in 1:max(mx, my)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+i), kw, i, plt.n+i)
+    d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
+    push!(ret, d)
+  end
+  ret
+end
+
+# pass it off to the x/y version
+function createKWargsList2(plt::PlottingObject, y; kw...)
+  createKWargsList2(plt, nothing, y; kw...)
+end
+
+createKWargsList2(plt::PlottingObject, f::FuncOrFuncs, x; kw...) = createKWargsList2(plt, x, f; kw...)
+
+# special handling... xmin/xmax with function(s)
+function createKWargsList2(plt::PlottingObject, f::FuncOrFuncs, xmin::Real, xmax::Real; kw...)
+end
+
+
+# special handling... no args... 1 series
+function createKWargsList2(plt::PlottingObject; kw...)
+  d = Dict(kw)
+  @assert haskey(d, :y)
+  if !haskey(d, :x)
+    d[:x] = 1:length(d[:y])
+  end
+  [getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+1), d, 1, plt.n + 1)]
+end
+
+
+# --------------------------------------------------------------------
 
 
 
