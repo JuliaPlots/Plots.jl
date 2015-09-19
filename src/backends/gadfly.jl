@@ -134,6 +134,16 @@ function addGadflySeries!(gplt, d::Dict)
 
   # add the Geoms
   append!(gfargs, getLineGeoms(d))
+
+  # fillto
+  if d[:fillto] != nothing
+    fillto = makevec(d[:fillto])
+    n = length(fillto)
+    push!(d[:kwargs], (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
+    push!(d[:kwargs], (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
+    # push!(d[:kwargs], (:ymax, Float64[max(y, fillto) for y in d[:y]]))
+    push!(gfargs, Gadfly.Geom.ribbon)
+  end
   
   # handle markers
   geoms, guides = getMarkerGeomsAndGuides(d)

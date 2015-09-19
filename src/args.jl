@@ -234,7 +234,8 @@ function getSeriesRGBColor(c, d::Dict, n::Int)
   end
 
   # should be a RGB now... either it was passed in, generated automatically, or created from a string
-  @assert isa(c, RGB)
+  # @assert isa(c, RGB)
+  @assert isa(c, Colorant)
 
   # return the RGB
   c

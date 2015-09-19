@@ -104,7 +104,8 @@ function sticksHack(; kw...)
   dLine, dScatter
 end
 
-
+makevec(v::AVec) = v
+makevec{T}(v::T) = T[v]
 
 
 function regressionXY(x, y)
