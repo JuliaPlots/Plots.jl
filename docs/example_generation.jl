@@ -94,7 +94,7 @@ const examples = PlotExample[
 function createStringOfMarkDownCodeValues(arr, prefix = "")
   string("`", prefix, join(arr, "`, `$prefix"), "`")
 end
-createStringOfMarkDownSymbols(arr) = createStringOfMarkDownCodeValues(arr, ":")
+createStringOfMarkDownSymbols(arr) = isempty(arr) ? "" : createStringOfMarkDownCodeValues(arr, ":")
 
 
 function generate_markdown(pkgname::Symbol)

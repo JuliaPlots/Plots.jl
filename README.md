@@ -180,13 +180,13 @@ Keyword | Default | Type | Aliases
 `:legend` | `true` | Plot | `:leg`  
 `:show` | `false` | Plot | `:display`  
 `:size` | `(800,600)` | Plot | `:windowsize`, `:wsize`  
-`:title` | `` | Plot | `:`  
+`:title` | `` | Plot |   
 `:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
 `:xlabel` | `` | Plot | `:xlab`  
-`:xticks` | `true` | Plot | `:`  
+`:xticks` | `true` | Plot |   
 `:ylabel` | `` | Plot | `:ylab`  
 `:yrightlabel` | `` | Plot | `:y2lab`, `:y2label`, `:ylab2`, `:ylabel2`, `:ylabelright`, `:ylabr`, `:yrlab`  
-`:yticks` | `true` | Plot | `:`  
+`:yticks` | `true` | Plot |   
 
 
 Plot types:
@@ -200,13 +200,13 @@ Type | Desc | Aliases
 `:steppost` | Step plot (horizontal then vertical) | `:stair`, `:stairs`, `:step`  
 `:sticks` | Vertical lines | `:stem`  
 `:scatter` | Points, no lines | `:dots`  
-`:heatmap` | Colored regions by density | `:`  
-`:hexbin` | Similar to heatmap | `:`  
+`:heatmap` | Colored regions by density |   
+`:hexbin` | Similar to heatmap |   
 `:hist` | Histogram (doesn't use x) | `:histogram`  
-`:bar` | Bar plot (centered on x values) | `:`  
-`:hline` | Horizontal line (doesn't use x) | `:`  
-`:vline` | Vertical line (doesn't use x) | `:`  
-`:ohlc` | Open/High/Low/Close chart (expects y is vector of 4-tuples) | `:`  
+`:bar` | Bar plot (centered on x values) |   
+`:hline` | Horizontal line (doesn't use x) |   
+`:vline` | Vertical line (doesn't use x) |   
+`:ohlc` | Open/High/Low/Close chart (expects y is vector of 4-tuples) |   
 
 
 Line styles:
@@ -216,7 +216,7 @@ Type | Aliases
 `:auto` | `:a`  
 `:solid` | `:s`  
 `:dash` | `:d`  
-`:dot` | `:`  
+`:dot` |   
 `:dashdot` | `:dd`  
 `:dashdotdot` | `:ddd`  
 
