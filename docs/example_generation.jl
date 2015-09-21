@@ -51,7 +51,7 @@ const examples = PlotExample[
               [:(heatmap(randn(10000),randn(10000); nbins=100))]),
   PlotExample("Line types",
               "",
-              [:(types = intersect(supportedTypes(), [:line, :step, :stepinverted, :sticks, :scatter])),
+              [:(types = intersect(supportedTypes(), [:line, :path, :steppre, :steppost, :sticks, :scatter])),
                   :(n = length(types)),
                   :(x = Vector[sort(rand(20)) for i in 1:n]),
                   :(y = rand(20,n)),

@@ -6,19 +6,27 @@ immutable QwtPackage <: PlottingPackage end
 export qwt!
 qwt!() = plotter!(:qwt)
 
-supportedTypes(::QwtPackage) = [:none, :line, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
+supportedTypes(::QwtPackage) = [:none, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
 
 # -------------------------------
 
+const _qwtAliases = Dict(
+    :nbins => :heatmap_n,
+    :hexbin => :heatmap,
+    :path => :line,
+  )
+
 function adjustQwtKeywords(iscreating::Bool; kw...)
   d = Dict(kw)
-  if !iscreating
-    d[:heatmap_n] = d[:nbins]
-  end
+  replaceAliases!(d, _qwtAliases)
+  # if !iscreating
+  #   d[:heatmap_n] = d[:nbins]
+  # end
 
-  if d[:linetype] == :hexbin
-    d[:linetype] = :heatmap
-  elseif d[:linetype] == :scatter
+  # if d[:linetype] == :hexbin
+  #   d[:linetype] = :heatmap
+  # elseif d[:linetype] == :scatter
+  if d[:linetype] == :scatter
     d[:linetype] = :none
     if d[:marker] == :none
       d[:marker] = :ellipse

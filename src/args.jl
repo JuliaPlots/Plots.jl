@@ -1,10 +1,73 @@
 
 
-const _allAxes    = [:auto, :left, :right]
-const _allTypes   = [:none, :line, :step, :stepinverted, :sticks, :scatter,
-                     :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
-const _allStyles  = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
+const _allAxes        = [:auto, :left, :right]
+const _axesAliases    = Dict(
+    :a => :auto, 
+    :l => :left, 
+    :r => :right
+  )
+
+const _allTypes       = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter,
+                         :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
+const _typeAliases    = Dict(
+    :n            => :none,
+    :no           => :none,
+    :l            => :line,
+    :p            => :path,
+    :stepinv      => :steppre,
+    :stepinverted => :steppre,
+    :step         => :steppost,
+    :step         => :steppost,
+    :stair        => :steppost,
+    :stairs       => :steppost,
+    :stem         => :sticks,
+    :dots         => :scatter,
+    :histogram    => :hist,
+  )
+
+const _allStyles      = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+const _styleAliases   = Dict(
+    :a    => :auto,
+    :s    => :solid,
+    :d    => :dash,
+    :dd   => :dashdot,
+    :ddd  => :dashdotdot,
+  )
+
+const _allMarkers     = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
+const _markerAliases = Dict(
+    :n            => :none,
+    :no           => :none,
+    :a            => :auto,
+    :circle       => :ellipse,
+    :c            => :ellipse,
+    :square       => :rect,
+    :sq           => :rect,
+    :r            => :rect,
+    :d            => :diamond,
+    :^            => :utriangle,
+    :ut           => :utriangle,
+    :utri         => :utriangle,
+    :uptri        => :utriangle,
+    :uptriangle   => :utriangle,
+    :v            => :dtriangle,
+    :V            => :dtriangle,
+    :dt           => :dtriangle,
+    :dtri         => :dtriangle,
+    :downtri      => :dtriangle,
+    :downtriangle => :dtriangle,
+    :+            => :cross,
+    :plus         => :cross,
+    :x            => :xcross,
+    :X            => :xcross,
+    :star         => :star1,
+    :s            => :star1,
+    :s2           => :star2,
+    :h            => :hexagon,
+    :hex          => :hexagon,
+    :o            => :octagon,
+    :oct          => :octagon,
+  )
 
 supportedAxes(::PlottingPackage) = _allAxes
 supportedTypes(::PlottingPackage) = _allTypes
@@ -27,7 +90,7 @@ _seriesDefaults[:axis]        = :left
 _seriesDefaults[:color]       = :auto
 _seriesDefaults[:label]       = "AUTO"
 _seriesDefaults[:width]       = 1
-_seriesDefaults[:linetype]    = :line
+_seriesDefaults[:linetype]    = :path
 _seriesDefaults[:linestyle]   = :solid
 _seriesDefaults[:marker]      = :none
 _seriesDefaults[:markercolor] = :match
@@ -77,51 +140,65 @@ autopick(notarr, idx::Integer) = notarr
 autopick_ignore_none_auto(arr::AVec, idx::Integer) = autopick(setdiff(arr, [:none, :auto]), idx)
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
+function aliasesAndAutopick(d::Dict, sym::Symbol, aliases::Dict, options::AVec, plotIndex::Int)
+  if d[sym] == :auto
+    d[sym] = autopick_ignore_none_auto(options, plotIndex)
+  elseif haskey(aliases, d[sym])
+    d[sym] = aliases[d[sym]]
+  end
+end
+
+function aliases(aliasMap::Dict, val)
+  sort(vcat(val, collect(keys(filter((k,v)-> v==val, aliasMap)))))
+end
+
 # -----------------------------------------------------------------------------
 
 # Alternate args
 
 const _keyAliases = Dict(
-    :c => :color,
-    :l => :label,
-    :w => :width,
-    :linewidth => :width,
-    :type => :linetype,
-    :t => :linetype,
-    :style => :linestyle,
-    :s => :linestyle,
-    :m => :marker,
-    :mc => :markercolor,
-    :mcolor => :markercolor,
-    :ms => :markersize,
-    :msize => :markersize,
-    :nb => :nbins,
-    :nbin => :nbins,
-    :fill => :fillto,
-    :g => :group,
-    :r => :ribbon,
-    :xlab => :xlabel,
-    :ylab => :ylabel,
-    :yrlab => :yrightlabel,
-    :ylabr => :yrightlabel,
-    :y2lab => :yrightlabel,
-    :ylab2 => :yrightlabel,
-    :ylabelright => :yrightlabel,
-    :ylabel2 => :yrightlabel,
-    :y2label => :yrightlabel,
-    :leg => :legend,
-    :bg => :background_color,
-    :bgcolor => :background_color,
-    :bg_color => :background_color,
-    :background => :background_color,
-    :fg => :foreground_color,
-    :fgcolor => :foreground_color,
-    :fg_color => :foreground_color,
-    :foreground => :foreground_color,
-    :windowsize => :size,
-    :wsize => :size,
-    :wtitle => :windowtitle,
-    :display => :show,
+    :c            => :color,
+    :lab          => :label,
+    :w            => :width,
+    :linewidth    => :width,
+    :type         => :linetype,
+    :lt           => :linetype,
+    :t            => :linetype,
+    :style        => :linestyle,
+    :s            => :linestyle,
+    :ls           => :linestyle,
+    :m            => :marker,
+    :mc           => :markercolor,
+    :mcolor       => :markercolor,
+    :ms           => :markersize,
+    :msize        => :markersize,
+    :nb           => :nbins,
+    :nbin         => :nbins,
+    :fill         => :fillto,
+    :g            => :group,
+    :r            => :ribbon,
+    :xlab         => :xlabel,
+    :ylab         => :ylabel,
+    :yrlab        => :yrightlabel,
+    :ylabr        => :yrightlabel,
+    :y2lab        => :yrightlabel,
+    :ylab2        => :yrightlabel,
+    :ylabelright  => :yrightlabel,
+    :ylabel2      => :yrightlabel,
+    :y2label      => :yrightlabel,
+    :leg          => :legend,
+    :bg           => :background_color,
+    :bgcolor      => :background_color,
+    :bg_color     => :background_color,
+    :background   => :background_color,
+    :fg           => :foreground_color,
+    :fgcolor      => :foreground_color,
+    :fg_color     => :foreground_color,
+    :foreground   => :foreground_color,
+    :windowsize   => :size,
+    :wsize        => :size,
+    :wtitle       => :windowtitle,
+    :display      => :show,
   )
 
 # add all pluralized forms to the _keyAliases dict
@@ -130,14 +207,14 @@ for arg in keys(_seriesDefaults)
 end
 
 
-function replaceAliases!(d::Dict)
-  for (k,v) in d
-    if haskey(_keyAliases, k)
-      d[_keyAliases[k]] = v
-      delete!(d, k)
-    end
-  end
-end
+# function replaceAliases!(d::Dict)
+#   for (k,v) in d
+#     if haskey(_keyAliases, k)
+#       d[_keyAliases[k]] = v
+#       delete!(d, k)
+#     end
+#   end
+# end
 
 
 # -----------------------------------------------------------------------------
@@ -204,6 +281,7 @@ end
 
 
 
+
 # note: idx is the index of this series within this call, n is the index of the series from all calls to plot/subplot
 function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in initargs, not plt
   d = Dict(kw)
@@ -221,16 +299,20 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
     end
   end
 
-  # auto-pick
-  if d[:axis] == :auto
-    d[:axis] = autopick_ignore_none_auto(supportedAxes(pkg), plotIndex)
-  end
-  if d[:linestyle] == :auto
-    d[:linestyle] = autopick_ignore_none_auto(supportedStyles(pkg), plotIndex)
-  end
-  if d[:marker] == :auto
-    d[:marker] = autopick_ignore_none_auto(supportedMarkers(pkg), plotIndex)
-  end
+  aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
+  aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
+  aliasesAndAutopick(d, :marker, _markerAliases, supportedMarkers(pkg), plotIndex)
+
+  # # auto-pick
+  # if d[:axis] == :auto
+  #   d[:axis] = autopick_ignore_none_auto(supportedAxes(pkg), plotIndex)
+  # end
+  # if d[:linestyle] == :auto
+  #   d[:linestyle] = autopick_ignore_none_auto(supportedStyles(pkg), plotIndex)
+  # end
+  # if d[:marker] == :auto
+  #   d[:marker] = autopick_ignore_none_auto(supportedMarkers(pkg), plotIndex)
+  # end
 
   # update color
   d[:color] = getSeriesRGBColor(d[:color], initargs, plotIndex)

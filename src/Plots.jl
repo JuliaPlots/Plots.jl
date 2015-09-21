@@ -38,6 +38,7 @@ export
   savepng,
 
   backends,
+  aliases,
 
   supportedArgs,
   supportedAxes,

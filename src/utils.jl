@@ -108,6 +108,16 @@ makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]
 
 
+function replaceAliases!(d::Dict, aliases::Dict)
+  for (k,v) in d
+    if haskey(aliases, k)
+      d[aliases[k]] = v
+      delete!(d, k)
+    end
+  end
+end
+
+
 function regressionXY(x, y)
   # regress
   β, α = [x ones(length(x))] \ y

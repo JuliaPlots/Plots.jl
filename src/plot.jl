@@ -91,7 +91,7 @@ When plotting multiple lines, you can give every line the same trait by using th
 function plot(args...; kw...)
   pkg = plotter()
   d = Dict(kw)
-  replaceAliases!(d)
+  replaceAliases!(d, _keyAliases)
 
   # # ensure we're passing in an RGB
   # if haskey(d, :background_color)
@@ -125,7 +125,7 @@ end
 function plot!(plt::Plot, args...; kw...)
 
   d = Dict(kw)
-  replaceAliases!(d)
+  replaceAliases!(d, _keyAliases)
 
   # TODO: handle a "group by" mechanism.
   # will probably want to check for the :group kw param, and split into
