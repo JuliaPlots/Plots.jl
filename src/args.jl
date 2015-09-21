@@ -175,6 +175,7 @@ const _keyAliases = Dict(
     :nb           => :nbins,
     :nbin         => :nbins,
     :fill         => :fillto,
+    :area         => :fillto,
     :g            => :group,
     :r            => :ribbon,
     :xlab         => :xlabel,
@@ -206,15 +207,6 @@ for arg in keys(_seriesDefaults)
   _keyAliases[makeplural(arg)] = arg
 end
 
-
-# function replaceAliases!(d::Dict)
-#   for (k,v) in d
-#     if haskey(_keyAliases, k)
-#       d[_keyAliases[k]] = v
-#       delete!(d, k)
-#     end
-#   end
-# end
 
 
 # -----------------------------------------------------------------------------

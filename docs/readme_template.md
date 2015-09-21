@@ -159,61 +159,6 @@ Some keyword arguments you can set:
 
 [[KEYWORD_ARGS_TABLE]]
 
-[[REPLACE_START]]
-```
-axis            # :left or :right
-color           # can be a string ("red") or a symbol (:red) or a ColorsTypes.jl 
-                #   Colorant (RGB(1,0,0)) or :auto (which lets the package pick)
-label           # string or symbol, applies to that line, may go in a legend
-width           # width of a line
-linetype        # :line, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar
-linestyle       # :solid, :dash, :dot, :dashdot, :dashdotdot
-marker          # :none, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
-                #   :cross, :xcross, :star1, :star2, :hexagon
-markercolor     # same choices as `color`, or :match will set the color to be the same as `color`
-markersize      # size of the marker
-nbins           # number of bins for heatmap/hexbin and histograms
-heatmap_c       # color cutoffs for Qwt heatmaps
-fillto          # fillto value for area plots
-title           # string or symbol, title of the plot
-xlabel          # string or symbol, label on the bottom (x) axis
-ylabel          # string or symbol, label on the left (y) axis
-yrightlabel     # string or symbol, label on the right (y) axis
-reg             # true or false, add a regression line for each line
-size            # (Int,Int), resize the enclosing window
-pos             # (Int,Int), move the enclosing window to this position
-windowtitle     # string or symbol, set the title of the enclosing windowtitle
-screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
-```
-
-Note that not every backend supports all options.
-
-If you don't include a keyword argument, these are the defaults:
-  
-```
-axis = :left
-color = :auto
-label = automatically generated (y1, y2, ...., or y1 (R), y2 (R) for the right axis)
-width = 1
-linetype = :line
-linestype = :solid
-marker = :none
-markercolor = :match
-markersize = 3
-nbins = 100
-heatmap_c = (0.15, 0.5)
-fillto = nothing
-title = ""
-xlabel = ""
-ylabel = ""
-yrightlabel = ""
-reg = false
-size = (600,400)
-pos = (0,0)
-windowtitle = "Plots.jl"
-screen = 1
-```
-[[REPLACE_END]]
 
 __Tip__: You can see the default value for a given argument with `plotDefault(arg::Symbol)`, and set the default value with `plotDefault!(arg::Symbol, value)`
 

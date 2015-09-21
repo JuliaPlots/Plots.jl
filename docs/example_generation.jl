@@ -187,6 +187,51 @@ function test_all_examples(pkgname::Symbol)
   plts
 end
 
+# axis            # :left or :right
+# color           # can be a string ("red") or a symbol (:red) or a ColorsTypes.jl 
+#                 #   Colorant (RGB(1,0,0)) or :auto (which lets the package pick)
+# label           # string or symbol, applies to that line, may go in a legend
+# width           # width of a line
+# linetype        # :line, :step, :stepinverted, :sticks, :scatter, :none, :heatmap, :hexbin, :hist, :bar
+# linestyle       # :solid, :dash, :dot, :dashdot, :dashdotdot
+# marker          # :none, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
+#                 #   :cross, :xcross, :star1, :star2, :hexagon
+# markercolor     # same choices as `color`, or :match will set the color to be the same as `color`
+# markersize      # size of the marker
+# nbins           # number of bins for heatmap/hexbin and histograms
+# heatmap_c       # color cutoffs for Qwt heatmaps
+# fillto          # fillto value for area plots
+# title           # string or symbol, title of the plot
+# xlabel          # string or symbol, label on the bottom (x) axis
+# ylabel          # string or symbol, label on the left (y) axis
+# yrightlabel     # string or symbol, label on the right (y) axis
+# reg             # true or false, add a regression line for each line
+# size            # (Int,Int), resize the enclosing window
+# pos             # (Int,Int), move the enclosing window to this position
+# windowtitle     # string or symbol, set the title of the enclosing windowtitle
+# screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
+
+const kwNotes = Dict(
+  )
+
+function buildReadme()
+  readme = readall("$DOCDIR/readme_template.md")
+
+  # build keyword arg table
+  kwtable = "Keyword | Default Value | Aliases | Applies To\n-- | -- | -- | --\n"
+  for d in (Plots._seriesDefaults, Plots._plotDefaults)
+    for k in sort(collect(keys(d)))
+      kwtable = string(kwtable, "$k | $(d[k]) | $(aliases(Plots._keyAliases, k)) | $(d==Plots._seriesDefaults ? "Series" : "Plot") \n")
+    end
+  end
+  readme = replace(readme, "[[KEYWORD_ARGS_TABLE]]", kwtable)
+
+  readme_fn = Pkg.dir("Plots") * "/README.md"
+  f = open(readme_fn, "w")
+  write(f, readme)
+  close(f)
+end
+
 # run it!
 # note: generate separately so it's easy to comment out
 # @osx_only generate_markdown(:unicodeplots)
