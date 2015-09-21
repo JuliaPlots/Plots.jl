@@ -10,7 +10,7 @@ unicodeplots!() = plotter!(:unicodeplots)
 
 supportedArgs(::UnicodePlotsPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fillto, :pos])
 supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
-supportedTypes(::UnicodePlotsPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
+supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
 supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
 
@@ -67,7 +67,7 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool)
   # get the function, or special handling for step/bar/hist
   lt = d[:linetype]
   stepstyle = :post
-  if lt == :line
+  if lt == :path
     func = UnicodePlots.lineplot!
   elseif lt == :scatter || d[:marker] != :none
     func = UnicodePlots.scatterplot!

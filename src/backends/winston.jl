@@ -32,7 +32,7 @@ const winston_marker = Dict(:none=>".",
 
 supportedArgs(::WinstonPackage) = setdiff(_allArgs, [:heatmap_c, :fillto, :pos, :markercolor, :background_color])
 supportedAxes(::WinstonPackage) = [:auto, :left]
-supportedTypes(::WinstonPackage) = [:none, :line, :sticks, :scatter, :hist, :bar]
+supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
 supportedStyles(::WinstonPackage) = intersect(_allStyles, collect(keys(winston_linestyle))) # [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::WinstonPackage) = intersect(_allMarkers, collect(keys(winston_marker))) # [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1]
 subplotSupported(::WinstonPackage) = false
@@ -135,11 +135,11 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
 
 
-  ## lintype :line, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
+  ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
   if d[:linetype] == :none
     Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
 
-  elseif d[:linetype] == :line
+  elseif d[:linetype] == :path
     x, y = d[:x], d[:y]
     Winston.add(wplt, Winston.Curve(x, y; e...))
 

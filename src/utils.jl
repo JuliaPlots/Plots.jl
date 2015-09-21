@@ -64,7 +64,7 @@ function barHack(; kw...)
 
   d[:x] = x
   d[:y] = y
-  d[:linetype] = :line
+  d[:linetype] = :path
   d[:fillto] = fillto
   d
 end
@@ -94,7 +94,7 @@ function sticksHack(; kw...)
   # change the line args
   dLine[:x] = x
   dLine[:y] = y
-  dLine[:linetype] = :line
+  dLine[:linetype] = :path
   dLine[:marker] = :none
   dLine[:fillto] = nothing
 

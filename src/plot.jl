@@ -224,6 +224,15 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     n = plt.n + i
     d = getSeriesArgs(plt.plotter, getinitargs(plt, n), kw, i, convertSeriesIndex(plt, n), n)
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
+
+    if d[:linetype] == :line
+      # order by x
+      indices = sortperm(d[:x])
+      d[:x] = d[:x][indices]
+      d[:y] = d[:y][indices]
+      d[:linetype] = :path
+    end
+
     push!(ret, d)
   end
   ret
@@ -254,7 +263,7 @@ mapFuncOrFuncs(f::Function, u::AVec) = map(f, u)
 mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
 
 # special handling... xmin/xmax with parametric function(s)
-function createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000000; kw...)
+function createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...)
   u = collect(linspace(umin, umax, numPoints))
   createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
 end

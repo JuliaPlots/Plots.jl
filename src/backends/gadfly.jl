@@ -9,7 +9,7 @@ gadfly!() = plotter!(:gadfly)
 
 supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos])
 supportedAxes(::GadflyPackage) = setdiff(_allAxes, [:right])
-supportedTypes(::GadflyPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
+supportedTypes(::GadflyPackage) = [:none, :line, :path, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
 
@@ -46,7 +46,7 @@ function getLineGeoms(d::Dict)
   lt in (:heatmap,:hexbin) && return [Gadfly.Geom.hexbin(xbincount = d[:nbins], ybincount = d[:nbins])]
   lt == :hist && return [Gadfly.Geom.histogram(bincount = d[:nbins])]
   # lt == :none && return [Gadfly.Geom.path]
-  lt == :line && return [Gadfly.Geom.path]
+  lt == :path && return [Gadfly.Geom.path]
   lt == :scatter && return [Gadfly.Geom.point]
   lt == :bar && return [Gadfly.Geom.bar]
   lt == :step && return [Gadfly.Geom.step]
@@ -109,12 +109,19 @@ function addGadflySeries!(gplt, d::Dict)
   gfargs = []
 
   # if my PR isn't present, don't set the line_style
-  extra_theme_args = Gadfly.isdefined(:getStrokeVector) ? [(:line_style, getGadflyStrokeVector(d[:linestyle]))] : []
+  local extra_theme_args
+  try
+    Gadfly.getStrokeVector(:solid)
+    extra_theme_args = [(:line_style, getGadflyStrokeVector(d[:linestyle]))]
+  catch
+    extra_theme_args = []
+  end
+  # extra_theme_args = Gadfly.isdefined(:getStrokeVector) ? [(:line_style, getGadflyStrokeVector(d[:linestyle]))] : []
   # line_style = getGadflyStrokeVector(d[:linestyle])
   
   # set theme: color, line width, and point size
   line_width = d[:width] * (d[:linetype] == :none ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
-  theme = Gadfly.Theme(default_color = d[:color],
+  theme = Gadfly.Theme(; default_color = d[:color],
                        line_width = line_width,
                        default_point_size = 0.5 * d[:markersize] * Gadfly.px,
                        extra_theme_args...)

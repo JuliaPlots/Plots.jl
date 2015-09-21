@@ -6,7 +6,7 @@ immutable QwtPackage <: PlottingPackage end
 export qwt!
 qwt!() = plotter!(:qwt)
 
-supportedTypes(::QwtPackage) = [:none, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
+supportedTypes(::QwtPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
 
 # -------------------------------
 
@@ -41,6 +41,7 @@ end
 
 function plot(pkg::QwtPackage; kw...)
   d = Dict(kw)
+  replaceAliases!(d, _qwtAliases)
   # d = adjustQwtKeywords(true; kw...)
   o = Qwt.plot(zeros(0,0); d..., show=false)
   plt = Plot(o, pkg, 0, d, Dict[])
@@ -49,6 +50,7 @@ end
 
 function plot!(::QwtPackage, plt::Plot; kw...)
   d = adjustQwtKeywords(false; kw...)
+  @show d
   Qwt.oplot(plt.o; d...)
   push!(plt.seriesargs, d)
   plt
