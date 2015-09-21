@@ -6,7 +6,7 @@ immutable QwtPackage <: PlottingPackage end
 export qwt!
 qwt!() = plotter!(:qwt)
 
-supportedTypes(::QwtPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
+supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
 
 # -------------------------------
 
@@ -14,6 +14,8 @@ const _qwtAliases = Dict(
     :nbins => :heatmap_n,
     :hexbin => :heatmap,
     :path => :line,
+    :steppost => :step,
+    :steppre => :stepinverted,
   )
 
 function replaceLinetypeAlias(d)
@@ -58,7 +60,7 @@ end
 
 function plot!(::QwtPackage, plt::Plot; kw...)
   d = adjustQwtKeywords(false; kw...)
-  @show d
+  # @show d
   Qwt.oplot(plt.o; d...)
   push!(plt.seriesargs, d)
   plt
