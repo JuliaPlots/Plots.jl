@@ -134,6 +134,10 @@ const keyAliases = Dict(
     :bgcolor => :background_color,
     :bg_color => :background_color,
     :background => :background_color,
+    :fg => :foreground_color,
+    :fgcolor => :foreground_color,
+    :fg_color => :foreground_color,
+    :foreground => :foreground_color,
     :windowsize => :size,
     :wsize => :size,
     :wtitle => :windowtitle,
@@ -182,65 +186,6 @@ end
 
 # -----------------------------------------------------------------------------
 
-convertColor(c::Union{AbstractString, Symbol}) = parse(Colorant, string(c))
-convertColor(c::Colorant) = c
-convertColor(cvec::AbstractVector) = map(convertColor, cvec)
-
-isbackgrounddark(bgcolor::Color) = Lab(bgcolor).l < 0.5
-
-# move closer to lighter/darker depending on background value
-function adjustAway(val, bgval, vmin=0., vmax=100.)
-  if bgval < 0.5 * (vmax+vmin)
-    tmp = max(val, bgval)
-    return 0.5 * (tmp + max(tmp, vmax))
-  else
-    tmp = min(val, bgval)
-    return 0.5 * (tmp + min(tmp, vmin))
-  end
-end
-
-function getBackgroundRGBColor(c, d::Dict)
-  bgcolor = convertColor(d[:background_color])
-  d[:background_color] = bgcolor
-  palette = distinguishable_colors(20, bgcolor)[2:end]
-
-  # # try to adjust lightness away from background color
-  # bg_lab = Lab(bgcolor)
-  # palette = RGB{Float64}[begin
-  #   lab = Lab(rgb)
-  #   Lab(
-  #       adjustAway(lab.l, bg_lab.l, 25, 75),
-  #       lab.a,
-  #       lab.b
-  #     )
-  # end for rgb in palette]
-  d[:color_palette] = palette
-
-  # set the foreground color (text, ticks, gridlines) to be white or black depending
-  # on how dark the background is.  borrowed from http://stackoverflow.com/a/1855903
-  a = 0.299 * red(bgcolor) + 0.587 * green(bgcolor) + 0.114 * blue(bgcolor)
-  d[:foreground_color] = a < 0.5 ? colorant"white" : colorant"black"
-
-  bgcolor
-end
-
-# converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
-function getSeriesRGBColor(c, d::Dict, n::Int)
-
-  if c == :auto
-    c = autopick(d[:color_palette], n)
-  else
-    c = convertColor(c)
-  end
-
-  # should be a RGB now... either it was passed in, generated automatically, or created from a string
-  # @assert isa(c, RGB)
-  @assert isa(c, Colorant)
-
-  # return the RGB
-  c
-end
-
 
 
 function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
@@ -280,7 +225,7 @@ end
 
 
 # note: idx is the index of this series within this call, n is the index of the series from all calls to plot/subplot
-function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, idx::Int, n::Int)  # TODO, pass in initargs, not plt
+function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in initargs, not plt
   d = Dict(kw)
 
   # add defaults?
@@ -289,7 +234,7 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, idx::Int, n::In
       v = d[k]
       if isa(v, AbstractVector) && !isempty(v)
         # we got a vector, cycling through
-        d[k] = autopick(v, idx)
+        d[k] = autopick(v, commandIndex)
       end
     else
       d[k] = _seriesDefaults[k]
@@ -298,26 +243,26 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, idx::Int, n::In
 
   # auto-pick
   if d[:axis] == :auto
-    d[:axis] = autopick_ignore_none_auto(supportedAxes(pkg), n)
+    d[:axis] = autopick_ignore_none_auto(supportedAxes(pkg), plotIndex)
   end
   if d[:linestyle] == :auto
-    d[:linestyle] = autopick_ignore_none_auto(supportedStyles(pkg), n)
+    d[:linestyle] = autopick_ignore_none_auto(supportedStyles(pkg), plotIndex)
   end
   if d[:marker] == :auto
-    d[:marker] = autopick_ignore_none_auto(supportedMarkers(pkg), n)
+    d[:marker] = autopick_ignore_none_auto(supportedMarkers(pkg), plotIndex)
   end
 
   # update color
-  d[:color] = getSeriesRGBColor(d[:color], initargs, n)
+  d[:color] = getSeriesRGBColor(d[:color], initargs, plotIndex)
 
   # update markercolor
   mc = d[:markercolor]
-  mc = (mc == :match ? d[:color] : getSeriesRGBColor(mc, initargs, n))
+  mc = (mc == :match ? d[:color] : getSeriesRGBColor(mc, initargs, plotIndex))
   d[:markercolor] = mc
 
   # set label
   label = d[:label]
-  label = (label == "AUTO" ? "y$n" : label)
+  label = (label == "AUTO" ? "y$globalIndex" : label)
   if d[:axis] == :right && length(label) >= 4 && label[end-3:end] != " (R)"
     label = string(label, " (R)")
   end

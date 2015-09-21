@@ -23,6 +23,7 @@ Base.show(io::IO, plt::Plot) = print(io, string(plt))
 
 getplot(plt::Plot) = plt
 getinitargs(plt::Plot, idx::Int = 1) = plt.initargs
+convertSeriesIndex(plt::Plot, n::Int) = n
 
 
 doc"""
@@ -132,7 +133,7 @@ function plot!(plt::Plot, args...; kw...)
   # Ideally we don't change the insides ot createKWargsList too much to 
   # save from code repetition.  We could consider adding a throw
 
-  kwList = createKWargsList2(plt, args...; d...)
+  kwList = createKWargsList(plt, args...; d...)
   for (i,d) in enumerate(kwList)
     plt.n += 1
     plot!(plt.plotter, plt; d...)
@@ -213,14 +214,15 @@ end
 
 # create n=max(mx,my) series arguments. the shorter list is cycled through
 # note: everything should flow through this
-function createKWargsList2(plt::PlottingObject, x, y; kw...)
+function createKWargsList(plt::PlottingObject, x, y; kw...)
   xs = convertToAnyVector(x)
   ys = convertToAnyVector(y)
   mx = length(xs)
   my = length(ys)
   ret = []
   for i in 1:max(mx, my)
-    d = getSeriesArgs(plt.plotter, getinitargs(plt, plt.n+i), kw, i, plt.n+i)
+    n = plt.n + i
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, n), kw, i, convertSeriesIndex(plt, n), n)
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
     push!(ret, d)
   end
@@ -228,46 +230,46 @@ function createKWargsList2(plt::PlottingObject, x, y; kw...)
 end
 
 # pass it off to the x/y version
-function createKWargsList2(plt::PlottingObject, y; kw...)
-  createKWargsList2(plt, nothing, y; kw...)
+function createKWargsList(plt::PlottingObject, y; kw...)
+  createKWargsList(plt, nothing, y; kw...)
 end
 
-function createKWargsList2(plt::PlottingObject, f::FuncOrFuncs; kw...)
+function createKWargsList(plt::PlottingObject, f::FuncOrFuncs; kw...)
   error("Can't pass a Function or Vector{Function} for y without also passing x")
 end
 
-function createKWargsList2(plt::PlottingObject, f::FuncOrFuncs, x; kw...)
+function createKWargsList(plt::PlottingObject, f::FuncOrFuncs, x; kw...)
   @assert !(x <: FuncOrFuncs)  # otherwise we'd hit infinite recursion here
-  createKWargsList2(plt, x, f; kw...)
+  createKWargsList(plt, x, f; kw...)
 end
 
 # special handling... xmin/xmax with function(s)
-function createKWargsList2(plt::PlottingObject, f::FuncOrFuncs, xmin::Real, xmax::Real; kw...)
+function createKWargsList(plt::PlottingObject, f::FuncOrFuncs, xmin::Real, xmax::Real; kw...)
   width = plt.initargs[:size][1]
   x = collect(linspace(xmin, xmax, width))  # we don't need more than the width
-  createKWargsList2(plt, x, f; kw...)
+  createKWargsList(plt, x, f; kw...)
 end
 
 mapFuncOrFuncs(f::Function, u::AVec) = map(f, u)
 mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
 
 # special handling... xmin/xmax with parametric function(s)
-function createKWargsList2(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000000; kw...)
+function createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000000; kw...)
   u = collect(linspace(umin, umax, numPoints))
-  createKWargsList2(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
+  createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
 end
 
 
 # special handling... no args... 1 series
-function createKWargsList2(plt::PlottingObject; kw...)
+function createKWargsList(plt::PlottingObject; kw...)
   d = Dict(kw)
   if !haskey(d, :y)
     error("Called plot/subplot without args... must set y in the keyword args.  Example: plot(; y=rand(10))")
   end
   if haskey(d, :x)
-    return createKWargsList2(plt, d[:x], d[:y]; kw...)
+    return createKWargsList(plt, d[:x], d[:y]; kw...)
   else
-    return createKWargsList2(plt, d[:y]; kw...)
+    return createKWargsList(plt, d[:y]; kw...)
   end
 end
 

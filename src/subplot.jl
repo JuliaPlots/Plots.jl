@@ -43,6 +43,7 @@ Base.show(io::IO, subplt::Subplot) = print(io, string(subplt))
 
 getplot(subplt::Subplot, idx::Int = subplt.n) = subplt.plts[mod1(idx, subplt.p)]
 getinitargs(subplt::Subplot, idx::Int) = getplot(subplt, idx).initargs
+convertSeriesIndex(subplt::Subplot, n::Int) = ceil(Int, n / subplt.p)
 
 # ------------------------------------------------------------
 
