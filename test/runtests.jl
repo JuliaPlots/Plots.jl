@@ -26,7 +26,7 @@ try
 
     # plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
-    @fact_throws plot!(rand(10,3), rand(10,2))
+    # @fact_throws plot!(rand(10,3), rand(10,2))
 
 
     # plot(x::AVec, y::AVec{AVec}; kw...)        # multiple lines, will assert length(x) == length(y[i])

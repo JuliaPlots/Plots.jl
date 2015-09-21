@@ -204,16 +204,16 @@ function getBackgroundRGBColor(c, d::Dict)
   d[:background_color] = bgcolor
   palette = distinguishable_colors(20, bgcolor)[2:end]
 
-  # try to adjust lightness away from background color
-  bg_lab = Lab(bgcolor)
-  palette = RGB{Float64}[begin
-    lab = Lab(rgb)
-    Lab(
-        adjustAway(lab.l, bg_lab.l, 25, 75),
-        lab.a,
-        lab.b
-      )
-  end for rgb in palette]
+  # # try to adjust lightness away from background color
+  # bg_lab = Lab(bgcolor)
+  # palette = RGB{Float64}[begin
+  #   lab = Lab(rgb)
+  #   Lab(
+  #       adjustAway(lab.l, bg_lab.l, 25, 75),
+  #       lab.a,
+  #       lab.b
+  #     )
+  # end for rgb in palette]
   d[:color_palette] = palette
 
   # set the foreground color (text, ticks, gridlines) to be white or black depending
