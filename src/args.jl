@@ -149,7 +149,8 @@ function aliasesAndAutopick(d::Dict, sym::Symbol, aliases::Dict, options::AVec, 
 end
 
 function aliases(aliasMap::Dict, val)
-  sort(vcat(val, collect(keys(filter((k,v)-> v==val, aliasMap)))))
+  # sort(vcat(val, collect(keys(filter((k,v)-> v==val, aliasMap)))))
+  sort(collect(keys(filter((k,v)-> v==val, aliasMap))))
 end
 
 # -----------------------------------------------------------------------------

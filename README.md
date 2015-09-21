@@ -157,36 +157,36 @@ ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
 Some keyword arguments you can set:
 
-Keyword | Default Value | Aliases | Applies To
+Keyword | Default | Type | Aliases 
 ---- | ---- | ---- | ----
-args | Any[] | [:args,:argss] | Series 
-axis | left | [:axis,:axiss] | Series 
-color | auto | [:c,:color,:colors] | Series 
-fillto | nothing | [:area,:fill,:fillto,:filltos] | Series 
-group | nothing | [:g,:group,:groups] | Series 
-heatmap_c | (0.15,0.5) | [:heatmap_c,:heatmap_cs] | Series 
-kwargs | Any[] | [:kwargs,:kwargss] | Series 
-label | AUTO | [:lab,:label,:labels] | Series 
-linestyle | solid | [:linestyle,:linestyles,:ls,:s,:style] | Series 
-linetype | path | [:linetype,:linetypes,:lt,:t,:type] | Series 
-marker | none | [:m,:marker,:markers] | Series 
-markercolor | match | [:markercolor,:markercolors,:mc,:mcolor] | Series 
-markersize | 6 | [:markersize,:markersizes,:ms,:msize] | Series 
-nbins | 100 | [:nb,:nbin,:nbins,:nbinss] | Series 
-reg | false | [:reg,:regs] | Series 
-ribbon | nothing | [:r,:ribbon,:ribbons] | Series 
-width | 1 | [:linewidth,:w,:width,:widths] | Series 
-background_color | RGB{Float64}(0.1,0.1,0.1) | [:background,:background_color,:bg,:bg_color,:bgcolor] | Plot 
-legend | true | [:leg,:legend] | Plot 
-show | false | [:display,:show] | Plot 
-size | (800,600) | [:size,:windowsize,:wsize] | Plot 
-title |  | [:title] | Plot 
-windowtitle | Plots.jl | [:windowtitle,:wtitle] | Plot 
-xlabel |  | [:xlab,:xlabel] | Plot 
-xticks | true | [:xticks] | Plot 
-ylabel |  | [:ylab,:ylabel] | Plot 
-yrightlabel |  | [:y2lab,:y2label,:ylab2,:ylabel2,:ylabelright,:ylabr,:yrightlabel,:yrlab] | Plot 
-yticks | true | [:yticks] | Plot 
+args | Any[] | Series | `:args`, `:argss`  
+axis | left | Series | `:axis`, `:axiss`  
+color | auto | Series | `:c`, `:color`, `:colors`  
+fillto | nothing | Series | `:area`, `:fill`, `:fillto`, `:filltos`  
+group | nothing | Series | `:g`, `:group`, `:groups`  
+heatmap_c | (0.15,0.5) | Series | `:heatmap_c`, `:heatmap_cs`  
+kwargs | Any[] | Series | `:kwargs`, `:kwargss`  
+label | AUTO | Series | `:lab`, `:label`, `:labels`  
+linestyle | solid | Series | `:linestyle`, `:linestyles`, `:ls`, `:s`, `:style`  
+linetype | path | Series | `:linetype`, `:linetypes`, `:lt`, `:t`, `:type`  
+marker | none | Series | `:m`, `:marker`, `:markers`  
+markercolor | match | Series | `:markercolor`, `:markercolors`, `:mc`, `:mcolor`  
+markersize | 6 | Series | `:markersize`, `:markersizes`, `:ms`, `:msize`  
+nbins | 100 | Series | `:nb`, `:nbin`, `:nbins`, `:nbinss`  
+reg | false | Series | `:reg`, `:regs`  
+ribbon | nothing | Series | `:r`, `:ribbon`, `:ribbons`  
+width | 1 | Series | `:linewidth`, `:w`, `:width`, `:widths`  
+background_color | RGB{Float64}(0.1,0.1,0.1) | Plot | `:background`, `:background_color`, `:bg`, `:bg_color`, `:bgcolor`  
+legend | true | Plot | `:leg`, `:legend`  
+show | false | Plot | `:display`, `:show`  
+size | (800,600) | Plot | `:size`, `:windowsize`, `:wsize`  
+title |  | Plot | `:title`  
+windowtitle | Plots.jl | Plot | `:windowtitle`, `:wtitle`  
+xlabel |  | Plot | `:xlab`, `:xlabel`  
+xticks | true | Plot | `:xticks`  
+ylabel |  | Plot | `:ylab`, `:ylabel`  
+yrightlabel |  | Plot | `:y2lab`, `:y2label`, `:ylab2`, `:ylabel2`, `:ylabelright`, `:ylabr`, `:yrightlabel`, `:yrlab`  
+yticks | true | Plot | `:yticks`  
 
 
 
