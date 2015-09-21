@@ -211,21 +211,61 @@ end
 # windowtitle     # string or symbol, set the title of the enclosing windowtitle
 # screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
 
-const kwNotes = Dict(
+
+
+const _ltdesc = Dict(
+    :none => "No line",
+    :line => "Lines with sorted x-axis",
+    :path => "Lines",
+    :steppre => "Step plot (vertical then horizontal)",
+    :steppost => "Step plot (horizontal then vertical)",
+    :sticks => "Vertical lines",
+    :scatter => "Points, no lines",
+    :heatmap => "Colored regions by density",
+    :hexbin => "Similar to heatmap",
+    :hist => "Histogram (doesn't use x)",
+    :bar => "Bar plot (centered on x values)",
+    :hline => "Horizontal line (doesn't use x)",
+    :vline => "Vertical line (doesn't use x)",
+    :ohlc => "Open/High/Low/Close chart (expects y is vector of 4-tuples)",
   )
 
 function buildReadme()
   readme = readall("$DOCDIR/readme_template.md")
 
   # build keyword arg table
-  kwtable = "Keyword | Default | Type | Aliases \n---- | ---- | ---- | ----\n"
+  table = "Keyword | Default | Type | Aliases \n---- | ---- | ---- | ----\n"
   for d in (Plots._seriesDefaults, Plots._plotDefaults)
     for k in sort(collect(keys(d)))
       aliasstr = createStringOfMarkDownSymbols(aliases(Plots._keyAliases, k))
-      kwtable = string(kwtable, "$k | $(d[k]) | $(d==Plots._seriesDefaults ? "Series" : "Plot") | $aliasstr  \n")
+      table = string(table, "`:$k` | `$(d[k])` | $(d==Plots._seriesDefaults ? "Series" : "Plot") | $aliasstr  \n")
     end
   end
-  readme = replace(readme, "[[KEYWORD_ARGS_TABLE]]", kwtable)
+  readme = replace(readme, "[[KEYWORD_ARGS_TABLE]]", table)
+
+  # build linetypes table
+  table = "Type | Desc | Aliases\n---- | ---- | ----\n"
+  for lt in Plots._allTypes
+    aliasstr = createStringOfMarkDownSymbols(aliases(Plots._typeAliases, lt))
+    table = string(table, "`:$lt` | $(_ltdesc[lt]) | $aliasstr  \n")
+  end
+  readme = replace(readme, "[[LINETYPES_TABLE]]", table)
+
+  # build linestyles table
+  table = "Type | Aliases\n---- | ----\n"
+  for s in Plots._allStyles
+    aliasstr = createStringOfMarkDownSymbols(aliases(Plots._styleAliases, s))
+    table = string(table, "`:$s` | $aliasstr  \n")
+  end
+  readme = replace(readme, "[[LINESTYLES_TABLE]]", table)
+
+  # build markers table
+  table = "Type | Aliases\n---- | ----\n"
+  for s in Plots._allMarkers
+    aliasstr = createStringOfMarkDownSymbols(aliases(Plots._markerAliases, s))
+    table = string(table, "`:$s` | $aliasstr  \n")
+  end
+  readme = replace(readme, "[[MARKERS_TABLE]]", table)
 
   readme_fn = Pkg.dir("Plots") * "/README.md"
   f = open(readme_fn, "w")

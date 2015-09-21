@@ -159,6 +159,18 @@ Some keyword arguments you can set:
 
 [[KEYWORD_ARGS_TABLE]]
 
+Plot types:
+
+[[LINETYPES_TABLE]]
+
+Line styles:
+
+[[LINESTYLES_TABLE]]
+
+Markers:
+
+[[MARKERS_TABLE]]
+
 
 __Tip__: You can see the default value for a given argument with `plotDefault(arg::Symbol)`, and set the default value with `plotDefault!(arg::Symbol, value)`
 

@@ -159,34 +159,85 @@ Some keyword arguments you can set:
 
 Keyword | Default | Type | Aliases 
 ---- | ---- | ---- | ----
-args | Any[] | Series | `:args`, `:argss`  
-axis | left | Series | `:axis`, `:axiss`  
-color | auto | Series | `:c`, `:color`, `:colors`  
-fillto | nothing | Series | `:area`, `:fill`, `:fillto`, `:filltos`  
-group | nothing | Series | `:g`, `:group`, `:groups`  
-heatmap_c | (0.15,0.5) | Series | `:heatmap_c`, `:heatmap_cs`  
-kwargs | Any[] | Series | `:kwargs`, `:kwargss`  
-label | AUTO | Series | `:lab`, `:label`, `:labels`  
-linestyle | solid | Series | `:linestyle`, `:linestyles`, `:ls`, `:s`, `:style`  
-linetype | path | Series | `:linetype`, `:linetypes`, `:lt`, `:t`, `:type`  
-marker | none | Series | `:m`, `:marker`, `:markers`  
-markercolor | match | Series | `:markercolor`, `:markercolors`, `:mc`, `:mcolor`  
-markersize | 6 | Series | `:markersize`, `:markersizes`, `:ms`, `:msize`  
-nbins | 100 | Series | `:nb`, `:nbin`, `:nbins`, `:nbinss`  
-reg | false | Series | `:reg`, `:regs`  
-ribbon | nothing | Series | `:r`, `:ribbon`, `:ribbons`  
-width | 1 | Series | `:linewidth`, `:w`, `:width`, `:widths`  
-background_color | RGB{Float64}(0.1,0.1,0.1) | Plot | `:background`, `:background_color`, `:bg`, `:bg_color`, `:bgcolor`  
-legend | true | Plot | `:leg`, `:legend`  
-show | false | Plot | `:display`, `:show`  
-size | (800,600) | Plot | `:size`, `:windowsize`, `:wsize`  
-title |  | Plot | `:title`  
-windowtitle | Plots.jl | Plot | `:windowtitle`, `:wtitle`  
-xlabel |  | Plot | `:xlab`, `:xlabel`  
-xticks | true | Plot | `:xticks`  
-ylabel |  | Plot | `:ylab`, `:ylabel`  
-yrightlabel |  | Plot | `:y2lab`, `:y2label`, `:ylab2`, `:ylabel2`, `:ylabelright`, `:ylabr`, `:yrightlabel`, `:yrlab`  
-yticks | true | Plot | `:yticks`  
+`:args` | `Any[]` | Series | `:argss`  
+`:axis` | `left` | Series | `:axiss`  
+`:color` | `auto` | Series | `:c`, `:colors`  
+`:fillto` | `nothing` | Series | `:area`, `:fill`, `:filltos`  
+`:group` | `nothing` | Series | `:g`, `:groups`  
+`:heatmap_c` | `(0.15,0.5)` | Series | `:heatmap_cs`  
+`:kwargs` | `Any[]` | Series | `:kwargss`  
+`:label` | `AUTO` | Series | `:lab`, `:labels`  
+`:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
+`:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
+`:marker` | `none` | Series | `:m`, `:markers`  
+`:markercolor` | `match` | Series | `:markercolors`, `:mc`, `:mcolor`  
+`:markersize` | `6` | Series | `:markersizes`, `:ms`, `:msize`  
+`:nbins` | `100` | Series | `:nb`, `:nbin`, `:nbinss`  
+`:reg` | `false` | Series | `:regs`  
+`:ribbon` | `nothing` | Series | `:r`, `:ribbons`  
+`:width` | `1` | Series | `:linewidth`, `:w`, `:widths`  
+`:background_color` | `RGB{U8}(1.0,1.0,1.0)` | Plot | `:background`, `:bg`, `:bg_color`, `:bgcolor`  
+`:legend` | `true` | Plot | `:leg`  
+`:show` | `false` | Plot | `:display`  
+`:size` | `(800,600)` | Plot | `:windowsize`, `:wsize`  
+`:title` | `` | Plot | `:`  
+`:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
+`:xlabel` | `` | Plot | `:xlab`  
+`:xticks` | `true` | Plot | `:`  
+`:ylabel` | `` | Plot | `:ylab`  
+`:yrightlabel` | `` | Plot | `:y2lab`, `:y2label`, `:ylab2`, `:ylabel2`, `:ylabelright`, `:ylabr`, `:yrlab`  
+`:yticks` | `true` | Plot | `:`  
+
+
+Plot types:
+
+Type | Desc | Aliases
+---- | ---- | ----
+`:none` | No line | `:n`, `:no`  
+`:line` | Lines with sorted x-axis | `:l`  
+`:path` | Lines | `:p`  
+`:steppre` | Step plot (vertical then horizontal) | `:stepinv`, `:stepinverted`  
+`:steppost` | Step plot (horizontal then vertical) | `:stair`, `:stairs`, `:step`  
+`:sticks` | Vertical lines | `:stem`  
+`:scatter` | Points, no lines | `:dots`  
+`:heatmap` | Colored regions by density | `:`  
+`:hexbin` | Similar to heatmap | `:`  
+`:hist` | Histogram (doesn't use x) | `:histogram`  
+`:bar` | Bar plot (centered on x values) | `:`  
+`:hline` | Horizontal line (doesn't use x) | `:`  
+`:vline` | Vertical line (doesn't use x) | `:`  
+`:ohlc` | Open/High/Low/Close chart (expects y is vector of 4-tuples) | `:`  
+
+
+Line styles:
+
+Type | Aliases
+---- | ----
+`:auto` | `:a`  
+`:solid` | `:s`  
+`:dash` | `:d`  
+`:dot` | `:`  
+`:dashdot` | `:dd`  
+`:dashdotdot` | `:ddd`  
+
+
+Markers:
+
+Type | Aliases
+---- | ----
+`:none` | `:n`, `:no`  
+`:auto` | `:a`  
+`:ellipse` | `:c`, `:circle`  
+`:rect` | `:r`, `:sq`, `:square`  
+`:diamond` | `:d`  
+`:utriangle` | `:^`, `:uptri`, `:uptriangle`, `:ut`, `:utri`  
+`:dtriangle` | `:V`, `:downtri`, `:downtriangle`, `:dt`, `:dtri`, `:v`  
+`:cross` | `:+`, `:plus`  
+`:xcross` | `:X`, `:x`  
+`:star1` | `:s`, `:star`  
+`:star2` | `:s2`  
+`:hexagon` | `:h`, `:hex`  
+`:octagon` | `:o`, `:oct`  
 
 
 
