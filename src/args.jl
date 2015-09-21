@@ -1,35 +1,15 @@
 
 
-# const COLORS = [:black, :blue, :green, :red, :darkGray, :darkCyan, :darkYellow, :darkMagenta,
-#                 :darkBlue, :darkGreen, :darkRed, :gray, :cyan, :yellow, :magenta]
+const _allAxes    = [:auto, :left, :right]
+const _allTypes   = [:none, :line, :step, :stepinverted, :sticks, :scatter,
+                     :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
+const _allStyles  = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
 
-# const COLORS = distinguishable_colors(20)
-const AXES = [:left, :right]
-const TYPES = [:line,
-               :step,
-               :stepinverted,
-               :sticks,
-               :scatter,
-               :heatmap,
-               :hexbin,
-               :hist,
-               :bar,
-               :hline,
-               :vline,
-               :ohlc,
-              ]
-const STYLES = [:solid, :dash, :dot, :dashdot, :dashdotdot]
-const MARKERS = [:ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
-
-const ALL_AXES = vcat(:auto, AXES)
-const ALL_TYPES = vcat(:none, TYPES)
-const ALL_STYLES = vcat(:auto, STYLES)
-const ALL_MARKERS = vcat(:none, :auto, MARKERS)
-
-supportedAxes(::PlottingPackage) = ALL_AXES
-supportedTypes(::PlottingPackage) = ALL_TYPES
-supportedStyles(::PlottingPackage) = ALL_STYLES
-supportedMarkers(::PlottingPackage) = ALL_MARKERS
+supportedAxes(::PlottingPackage) = _allAxes
+supportedTypes(::PlottingPackage) = _allTypes
+supportedStyles(::PlottingPackage) = _allStyles
+supportedMarkers(::PlottingPackage) = _allMarkers
 subplotSupported(::PlottingPackage) = true
 
 supportedAxes() = supportedAxes(plotter())
@@ -43,47 +23,47 @@ subplotSupported() = subplotSupported(plotter())
 const _seriesDefaults = Dict{Symbol, Any}()
 
 # series-specific
-_seriesDefaults[:axis] = :left
-_seriesDefaults[:color] = :auto
-_seriesDefaults[:label] = "AUTO"
-_seriesDefaults[:width] = 1
-_seriesDefaults[:linetype] = :line
-_seriesDefaults[:linestyle] = :solid
-_seriesDefaults[:marker] = :none
+_seriesDefaults[:axis]        = :left
+_seriesDefaults[:color]       = :auto
+_seriesDefaults[:label]       = "AUTO"
+_seriesDefaults[:width]       = 1
+_seriesDefaults[:linetype]    = :line
+_seriesDefaults[:linestyle]   = :solid
+_seriesDefaults[:marker]      = :none
 _seriesDefaults[:markercolor] = :match
-_seriesDefaults[:markersize] = 6
-_seriesDefaults[:nbins] = 100               # number of bins for heatmaps and hists
-_seriesDefaults[:heatmap_c] = (0.15, 0.5)
-_seriesDefaults[:fillto] = nothing          # fills in the area
-_seriesDefaults[:reg] = false               # regression line?
-_seriesDefaults[:group] = nothing
-_seriesDefaults[:ribbon] = nothing
-_seriesDefaults[:args] = []     # additional args to pass to the backend
-_seriesDefaults[:kwargs] = []   # additional keyword args to pass to the backend
+_seriesDefaults[:markersize]  = 6
+_seriesDefaults[:nbins]       = 100               # number of bins for heatmaps and hists
+_seriesDefaults[:heatmap_c]   = (0.15, 0.5)
+_seriesDefaults[:fillto]      = nothing          # fills in the area
+_seriesDefaults[:reg]         = false               # regression line?
+_seriesDefaults[:group]       = nothing
+_seriesDefaults[:ribbon]      = nothing
+_seriesDefaults[:args]        = []     # additional args to pass to the backend
+_seriesDefaults[:kwargs]      = []   # additional keyword args to pass to the backend
                               # note: can be Vector{Dict} or Vector{Tuple} 
 
 
 const _plotDefaults = Dict{Symbol, Any}()
 
 # plot globals
-_plotDefaults[:title] = ""
-_plotDefaults[:xlabel] = ""
-_plotDefaults[:ylabel] = ""
-_plotDefaults[:yrightlabel] = ""
-_plotDefaults[:legend] = true
-_plotDefaults[:background_color] = colorant"white"
-_plotDefaults[:xticks] = true
-_plotDefaults[:yticks] = true
-_plotDefaults[:size] = (800,600)
-_plotDefaults[:windowtitle] = "Plots.jl"
-_plotDefaults[:show] = false
+_plotDefaults[:title]             = ""
+_plotDefaults[:xlabel]            = ""
+_plotDefaults[:ylabel]            = ""
+_plotDefaults[:yrightlabel]       = ""
+_plotDefaults[:legend]            = true
+_plotDefaults[:background_color]  = colorant"white"
+_plotDefaults[:xticks]            = true
+_plotDefaults[:yticks]            = true
+_plotDefaults[:size]              = (800,600)
+_plotDefaults[:windowtitle]       = "Plots.jl"
+_plotDefaults[:show]              = false
 
 
 
 # TODO: x/y scales
 
-const ARGS = sort(collect(intersect(keys(_seriesDefaults), keys(_plotDefaults))))
-supportedArgs(::PlottingPackage) = ARGS
+const _allArgs = sort(collect(intersect(keys(_seriesDefaults), keys(_plotDefaults))))
+supportedArgs(::PlottingPackage) = _allArgs
 supportedArgs() = supportedArgs(plotter())
 
 
@@ -101,7 +81,7 @@ autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
 # Alternate args
 
-const keyAliases = Dict(
+const _keyAliases = Dict(
     :c => :color,
     :l => :label,
     :w => :width,
@@ -144,16 +124,16 @@ const keyAliases = Dict(
     :display => :show,
   )
 
-# add all pluralized forms to the keyAliases dict
+# add all pluralized forms to the _keyAliases dict
 for arg in keys(_seriesDefaults)
-  keyAliases[makeplural(arg)] = arg
+  _keyAliases[makeplural(arg)] = arg
 end
 
 
 function replaceAliases!(d::Dict)
   for (k,v) in d
-    if haskey(keyAliases, k)
-      d[keyAliases[k]] = v
+    if haskey(_keyAliases, k)
+      d[_keyAliases[k]] = v
       delete!(d, k)
     end
   end

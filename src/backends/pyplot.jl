@@ -8,8 +8,8 @@ pyplot!() = plotter!(:pyplot)
 
 # -------------------------------
 
-supportedArgs(::PyPlotPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
-supportedAxes(::PyPlotPackage) = ALL_AXES
+supportedArgs(::PyPlotPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fillto, :pos])
+supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :hexagon]

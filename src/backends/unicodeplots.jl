@@ -8,7 +8,7 @@ unicodeplots!() = plotter!(:unicodeplots)
 
 # -------------------------------
 
-supportedArgs(::UnicodePlotsPackage) = setdiff(ARGS, [:reg, :heatmap_c, :fillto, :pos])
+supportedArgs(::UnicodePlotsPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fillto, :pos])
 supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
 supportedTypes(::UnicodePlotsPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]

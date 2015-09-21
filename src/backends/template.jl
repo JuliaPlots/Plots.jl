@@ -10,11 +10,11 @@ export [pkgname]!
 
 # ---------------------------------------------------------------------------
 
-supportedArgs(::[PkgName]Package) = ARGS
-supportedAxes(::[PkgName]Package) = ALL_AXES
-supportedTypes(::[PkgName]Package) = ALL_TYPES
-supportedStyles(::[PkgName]Package) = ALL_STYLES
-supportedMarkers(::[PkgName]Package) = ALL_MARKERS
+supportedArgs(::[PkgName]Package) = _allArgs
+supportedAxes(::[PkgName]Package) = _allAxes
+supportedTypes(::[PkgName]Package) = _allTypes
+supportedStyles(::[PkgName]Package) = _allStyles
+supportedMarkers(::[PkgName]Package) = _allMarkers
 subplotSupported(::[PkgName]Package) = false
 
 # ---------------------------------------------------------------------------

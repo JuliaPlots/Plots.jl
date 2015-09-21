@@ -7,8 +7,8 @@ export gadfly!
 gadfly!() = plotter!(:gadfly)
 
 
-supportedArgs(::GadflyPackage) = setdiff(ARGS, [:heatmap_c, :pos])
-supportedAxes(::GadflyPackage) = setdiff(ALL_AXES, [:right])
+supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos])
+supportedAxes(::GadflyPackage) = setdiff(_allAxes, [:right])
 supportedTypes(::GadflyPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]

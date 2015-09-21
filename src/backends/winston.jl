@@ -30,11 +30,11 @@ const winston_marker = Dict(:none=>".",
                            )
 
 
-supportedArgs(::WinstonPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos, :markercolor, :background_color])
+supportedArgs(::WinstonPackage) = setdiff(_allArgs, [:heatmap_c, :fillto, :pos, :markercolor, :background_color])
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :sticks, :scatter, :hist, :bar]
-supportedStyles(::WinstonPackage) = intersect(ALL_STYLES, collect(keys(winston_linestyle))) # [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::WinstonPackage) = intersect(ALL_MARKERS, collect(keys(winston_marker))) # [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1]
+supportedStyles(::WinstonPackage) = intersect(_allStyles, collect(keys(winston_linestyle))) # [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::WinstonPackage) = intersect(_allMarkers, collect(keys(winston_marker))) # [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1]
 subplotSupported(::WinstonPackage) = false
 
 # ---------------------------------------------------------------------------
