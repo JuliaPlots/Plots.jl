@@ -88,7 +88,9 @@ function adjustAway(val, bgval, vmin=0., vmax=100.)
   end
 end
 
+# borrowed from http://stackoverflow.com/a/1855903:
 lightnessLevel(c::Colorant) = 0.299 * red(c) + 0.587 * green(c) + 0.114 * blue(c)
+
 isdark(c::Colorant) = lightnessLevel(c) < 0.5
 islight(c::Colorant) = !isdark(c)
 
@@ -128,8 +130,6 @@ end
 function getPaletteUsingColorDiffFromBackground(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
   colordiffs = [colordiff(c, bgcolor) for c in _allColors]
   mindiff = colordiffs[reverse(sortperm(colordiffs))[numcolors]]
-  @show bgcolor numcolors mindiff colordiffs
-  # filter(c -> colordiff(c, bgcolor) > 0.5, _allColors)
   filter(c -> colordiff(c, bgcolor) >= mindiff, _allColors)
 end
 
@@ -143,11 +143,9 @@ function getBackgroundRGBColor(c, d::Dict)
   # d[:color_palette] = getPaletteUsingDistinguishableColors(bgcolor)
   # d[:color_palette] = getPaletteUsingFixedColorList(bgcolor)
   d[:color_palette] = getPaletteUsingColorDiffFromBackground(bgcolor)
-  @show d[:color_palette]
 
   # set the foreground color (text, ticks, gridlines) to be white or black depending
-  # on how dark the background is.  borrowed from http://stackoverflow.com/a/1855903
-  # a = 0.299 * red(bgcolor) + 0.587 * green(bgcolor) + 0.114 * blue(bgcolor)
+  # on how dark the background is.  
   if !haskey(d, :foreground_color) || d[:foreground_color] == :auto
     d[:foreground_color] = isdark(bgcolor) ? colorant"white" : colorant"black"
   end
@@ -165,7 +163,6 @@ function getSeriesRGBColor(c, d::Dict, n::Int)
   end
 
   # should be a RGB now... either it was passed in, generated automatically, or created from a string
-  # @assert isa(c, RGB)
   @assert isa(c, Colorant)
 
   # return the RGB

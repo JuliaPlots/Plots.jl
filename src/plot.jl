@@ -264,8 +264,11 @@ end
 function createKWargsList(plt::PlottingObject; kw...)
   d = Dict(kw)
   if !haskey(d, :y)
-    error("Called plot/subplot without args... must set y in the keyword args.  Example: plot(; y=rand(10))")
+    # assume we just want to create an empty plot object which can be added to later
+    return []
+    # error("Called plot/subplot without args... must set y in the keyword args.  Example: plot(; y=rand(10))")
   end
+  
   if haskey(d, :x)
     return createKWargsList(plt, d[:x], d[:y]; kw...)
   else

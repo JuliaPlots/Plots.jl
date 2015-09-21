@@ -114,7 +114,7 @@ function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
   end
 
   # destructor... clean up plots
-  Gtk.on_signal_destroy((x...) -> [Immerse.dropfig(_display,i) for i in figindices], win)
+  Gtk.on_signal_destroy((x...) -> [Immerse.dropfig(Immerse._display,i) for i in figindices], win)
 
   subplt.o = win
 end
