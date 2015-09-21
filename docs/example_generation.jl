@@ -126,6 +126,9 @@ function generate_markdown(pkgname::Symbol)
 
     try
 
+      # we want to always produce consistent results
+      srand(1234)
+
       # run the code
       map(eval, example.exprs)
 

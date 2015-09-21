@@ -5,7 +5,7 @@ using FactCheck
 
 # don't actually show the plots
 plotDefault!(:show, false)
-
+srand(1234)
 
 # note: we wrap in a try block so that the tests only run if we have the backend installed
 try
