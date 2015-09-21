@@ -7,7 +7,7 @@ export gadfly!
 gadfly!() = plotter!(:gadfly)
 
 
-supportedArgs(::GadflyPackage) = setdiff(ARGS, [:heatmap_c, :fillto, :pos])
+supportedArgs(::GadflyPackage) = setdiff(ARGS, [:heatmap_c, :pos])
 supportedAxes(::GadflyPackage) = setdiff(ALL_AXES, [:right])
 supportedTypes(::GadflyPackage) = [:none, :line, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -108,13 +108,17 @@ function addGadflySeries!(gplt, d::Dict)
 
   gfargs = []
 
+  # if my PR isn't present, don't set the line_style
+  extra_theme_args = Gadfly.isdefined(:getStrokeVector) ? [(:line_style, getGadflyStrokeVector(d[:linestyle]))] : []
+  # line_style = getGadflyStrokeVector(d[:linestyle])
+  
   # set theme: color, line width, and point size
   line_width = d[:width] * (d[:linetype] == :none ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
-  line_style = getGadflyStrokeVector(d[:linestyle])
   theme = Gadfly.Theme(default_color = d[:color],
                        line_width = line_width,
                        default_point_size = 0.5 * d[:markersize] * Gadfly.px,
-                       line_style = line_style)
+                       extra_theme_args...)
+                       # line_style = line_style)
   push!(gfargs, theme)
 
   # first things first... lets so the sticks hack
@@ -193,16 +197,20 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
   plt
 end
 
+function setGadflyDisplaySize(w,h)
+  Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
+end
 
 function Base.display(::GadflyPackage, plt::Plot)
+  setGadflyDisplaySize(plt.initargs[:size]...)
   display(plt.o)
 end
 
 # -------------------------------
 
 function savepng(::GadflyPackage, plt::PlottingObject, fn::AbstractString;
-                                    w = 6 * Gadfly.inch,
-                                    h = 4 * Gadfly.inch)
+                                    w = plt.initargs[:size][1] * Gadfly.px, # 6 * Gadfly.inch,
+                                    h = plt.initargs[:size][2] * Gadfly.px) # 4 * Gadfly.inch)
   o = getGadflyContext(plt.plotter, plt)
   Gadfly.draw(Gadfly.PNG(fn, w, h), o)
 end
@@ -231,5 +239,6 @@ end
 
 
 function Base.display(::GadflyPackage, subplt::Subplot)
+  setGadflyDisplaySize(plt.initargs[:size]...)
   display(buildGadflySubplotContext(subplt))
 end

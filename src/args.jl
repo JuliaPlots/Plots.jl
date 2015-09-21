@@ -74,7 +74,7 @@ _plotDefaults[:legend] = true
 _plotDefaults[:background_color] = colorant"white"
 _plotDefaults[:xticks] = true
 _plotDefaults[:yticks] = true
-_plotDefaults[:size] = (600,400)
+_plotDefaults[:size] = (800,600)
 _plotDefaults[:windowtitle] = "Plots.jl"
 _plotDefaults[:show] = false
 
