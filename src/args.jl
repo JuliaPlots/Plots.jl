@@ -114,7 +114,7 @@ _plotDefaults[:xlabel]            = ""
 _plotDefaults[:ylabel]            = ""
 _plotDefaults[:yrightlabel]       = ""
 _plotDefaults[:legend]            = true
-_plotDefaults[:background_color]  = colorant"white"
+_plotDefaults[:background_color]  = RGB(0.1,0.1,0.1) # colorant"white"
 _plotDefaults[:xticks]            = true
 _plotDefaults[:yticks]            = true
 _plotDefaults[:size]              = (800,600)
@@ -297,6 +297,10 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
     else
       d[k] = _seriesDefaults[k]
     end
+  end
+  
+  if haskey(_typeAliases, d[:linetype])
+    d[:linetype] = _typeAliases[d[:linetype]]
   end
 
   aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)

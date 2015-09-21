@@ -16,9 +16,16 @@ const _qwtAliases = Dict(
     :path => :line,
   )
 
+function replaceLinetypeAlias(d)
+  if haskey(_qwtAliases, d[:linetype])
+    d[:linetype] = _qwtAliases[d[:linetype]]
+  end
+end
+
 function adjustQwtKeywords(iscreating::Bool; kw...)
   d = Dict(kw)
-  replaceAliases!(d, _qwtAliases)
+  # replaceAliases!(d, _qwtAliases)
+  replaceLinetypeAlias(d)
   # if !iscreating
   #   d[:heatmap_n] = d[:nbins]
   # end
@@ -41,7 +48,8 @@ end
 
 function plot(pkg::QwtPackage; kw...)
   d = Dict(kw)
-  replaceAliases!(d, _qwtAliases)
+  # replaceAliases!(d, _qwtAliases)
+  replaceLinetypeAlias(d)
   # d = adjustQwtKeywords(true; kw...)
   o = Qwt.plot(zeros(0,0); d..., show=false)
   plt = Plot(o, pkg, 0, d, Dict[])
