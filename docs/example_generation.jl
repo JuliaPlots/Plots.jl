@@ -218,7 +218,7 @@ function buildReadme()
   readme = readall("$DOCDIR/readme_template.md")
 
   # build keyword arg table
-  kwtable = "Keyword | Default Value | Aliases | Applies To\n-- | -- | -- | --\n"
+  kwtable = "Keyword | Default Value | Aliases | Applies To\n---- | ---- | ---- | ----\n"
   for d in (Plots._seriesDefaults, Plots._plotDefaults)
     for k in sort(collect(keys(d)))
       kwtable = string(kwtable, "$k | $(d[k]) | $(aliases(Plots._keyAliases, k)) | $(d==Plots._seriesDefaults ? "Series" : "Plot") \n")

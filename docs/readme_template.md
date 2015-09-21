@@ -107,17 +107,17 @@ the relevant column(s) and also automatically set the associated legend label.
 Here are some example usages... remember you can always use `plot!` to update an existing plot, and that, unless specified, you will update the `currentPlot()`.
 
 ```julia
-plot()                      # empty plot object
-plot(4)                     # initialize with 4 empty series
-plot(rand(10))              # plot 1 series... x = 1:10
-plot(rand(10,5))            # plot 5 series... x = 1:10
-plot(rand(10), rand(10))    # plot 1 series
-plot(rand(10,5), rand(10))  # plot 5 series... y is the same for all
-plot(sin, rand(10))         # y = sin(x)
-plot(rand(10), sin)         # same... y = sin(x)
-plot([sin,cos], 0:0.1:π)    # plot 2 series, sin(x) and cos(x)
-plot([sin,cos], 0, π)       # plot sin and cos on the range [0, π]
-plot(1:10, [rand(10), sin]) # plot 2 series, y = rand(10) for the first, y = sin(x) for the second... x = 1:10 for both
+plot()                          # empty plot object
+plot(4)                         # initialize with 4 empty series
+plot(rand(10))                  # plot 1 series... x = 1:10
+plot(rand(10,5))                # plot 5 series... x = 1:10
+plot(rand(10), rand(10))        # plot 1 series
+plot(rand(10,5), rand(10))      # plot 5 series... y is the same for all
+plot(sin, rand(10))             # y = sin(x)
+plot(rand(10), sin)             # same... y = sin(x)
+plot([sin,cos], 0:0.1:π)        # plot 2 series, sin(x) and cos(x)
+plot([sin,cos], 0, π)           # plot sin and cos on the range [0, π]
+plot(1:10, Any[rand(10), sin])  # plot 2 series, y = rand(10) for the first, y = sin(x) for the second... x = 1:10 for both
 ```
 
 With `subplot`, create multiple plots at once, with flexible layout options:
