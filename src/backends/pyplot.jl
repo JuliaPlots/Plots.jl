@@ -94,6 +94,20 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
   # return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : (linetype in (:heatmap,:hexbin) ? PyPlot.hexbin : PyPlot.plot))
 end
 
+function updateAxisColors(o, fgcolor)
+  ax = o[:axes][1]
+  for loc in ("bottom", "top", "left", "right")
+    ax[:spines][loc][:set_color](fgcolor)
+  end
+  for axis in ("x", "y")
+    ax[:tick_params](axis=axis, colors=fgcolor, which="both")
+  end
+  for axis in (:yaxis, :xaxis)
+    ax[axis][:label][:set_color](fgcolor)
+  end
+  ax[:title][:set_color](fgcolor)
+end
+
 # ------------------------------------------------------------------
 
 # TODO:
@@ -217,6 +231,7 @@ end
 
 function Base.display(::PyPlotPackage, plt::Plot)
   addPyPlotLegend(plt)
+  updateAxisColors(plt.o.o, getPyPlotColor(plt.initargs[:foreground_color]))
   display(plt.o)
 end
 

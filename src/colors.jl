@@ -137,7 +137,14 @@ end
 # TODO: allow the setting of the algorithm, either by passing a symbol (:colordiff, :fixed, etc) or a function? 
 
 function getBackgroundRGBColor(c, d::Dict)
-  bgcolor = convertColor(d[:background_color])
+  if :background_color in supportedArgs()
+    bgcolor = convertColor(d[:background_color])
+  else
+    bgcolor = _plotDefaults[:background_color]
+    if d[:background_color] != _plotDefaults[:background_color]
+      warn("Cannot set background_color with backend $(plotter())")
+    end
+  end
   d[:background_color] = bgcolor
 
   # d[:color_palette] = getPaletteUsingDistinguishableColors(bgcolor)
@@ -148,6 +155,8 @@ function getBackgroundRGBColor(c, d::Dict)
   # on how dark the background is.  
   if !haskey(d, :foreground_color) || d[:foreground_color] == :auto
     d[:foreground_color] = isdark(bgcolor) ? colorant"white" : colorant"black"
+  else
+    d[:foreground_color] = convertColor(d[:foreground_color])
   end
 
   bgcolor

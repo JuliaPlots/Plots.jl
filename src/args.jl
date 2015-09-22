@@ -115,6 +115,7 @@ _plotDefaults[:ylabel]            = ""
 _plotDefaults[:yrightlabel]       = ""
 _plotDefaults[:legend]            = true
 _plotDefaults[:background_color]  = colorant"white"
+_plotDefaults[:foreground_color]  = :auto
 _plotDefaults[:xticks]            = true
 _plotDefaults[:yticks]            = true
 _plotDefaults[:size]              = (800,600)
@@ -125,7 +126,7 @@ _plotDefaults[:show]              = false
 
 # TODO: x/y scales
 
-const _allArgs = sort(collect(intersect(keys(_seriesDefaults), keys(_plotDefaults))))
+const _allArgs = sort(collect(union(keys(_seriesDefaults), keys(_plotDefaults))))
 supportedArgs(::PlottingPackage) = _allArgs
 supportedArgs() = supportedArgs(plotter())
 
@@ -246,6 +247,7 @@ function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
 end
 
 
+# build the argument dictionary for the plot
 function getPlotArgs(pkg::PlottingPackage, kw, idx::Int)
   d = Dict(kw)
 
@@ -274,8 +276,7 @@ end
 
 
 
-
-# note: idx is the index of this series within this call, n is the index of the series from all calls to plot/subplot
+# build the argument dictionary for a series
 function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in initargs, not plt
   d = Dict(kw)
 
@@ -299,17 +300,6 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
   aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
   aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
   aliasesAndAutopick(d, :marker, _markerAliases, supportedMarkers(pkg), plotIndex)
-
-  # # auto-pick
-  # if d[:axis] == :auto
-  #   d[:axis] = autopick_ignore_none_auto(supportedAxes(pkg), plotIndex)
-  # end
-  # if d[:linestyle] == :auto
-  #   d[:linestyle] = autopick_ignore_none_auto(supportedStyles(pkg), plotIndex)
-  # end
-  # if d[:marker] == :auto
-  #   d[:marker] = autopick_ignore_none_auto(supportedMarkers(pkg), plotIndex)
-  # end
 
   # update color
   d[:color] = getSeriesRGBColor(d[:color], initargs, plotIndex)
