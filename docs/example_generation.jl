@@ -21,7 +21,7 @@ end
 const examples = PlotExample[
   PlotExample("Lines",
               "A simple line plot of the 3 columns.",
-              [:(plot(rand(100,3)))]),
+              [:(plot(rand(50,5), w=3))]),
   PlotExample("Functions",
               "Plot multiple functions.  You can also put the function first.",
               [:(plot(0:0.01:4π, [sin,cos]))]),
@@ -30,13 +30,13 @@ const examples = PlotExample[
               [:(plot([sin,cos], 0, 4π))]),
   PlotExample("",
               "Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).",
-              [:(plot(sin, x->sin(2x), 0, 2π, legend=false))]),
+              [:(plot(sin, x->sin(2x), 0, 2π, legend=false, fillto=0))]),
   PlotExample("Global",
               "Change the guides/background without a separate call.",
               [:(plot(rand(10); title="TITLE", xlabel="XLABEL", ylabel="YLABEL", background_color = RGB(0.2,0.2,0.2)))]),
   PlotExample("Two-axis",
               "Use the `axis` or `axiss` arguments.\n\nNote: Currently only supported with Qwt and PyPlot",
-              [:(plot(Vector[randn(100), randn(100)*100]; axiss = [:left,:right], ylabel="LEFT", yrightlabel="RIGHT"))]),
+              [:(plot(Vector[randn(100), randn(100)*100]; axis = [:l,:r], ylabel="LEFT", yrightlabel="RIGHT"))]),
   PlotExample("Vectors w/ pluralized args",
               "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (singular... see `marker`) with arguments unique to each series (pluralized... see `colors`).",
               [:(plot(Vector[rand(10), rand(20)]; marker=:ellipse, markersize=8, colors=[:red,:blue]))]),
@@ -45,7 +45,7 @@ const examples = PlotExample[
               [:(plot(rand(100)/3; reg=true, fillto=0))]),
   PlotExample("",
               "and add to it later.",
-              [:(scatter!(rand(100); markersize=6, color=:blue))]),
+              [:(scatter!(rand(100); markersize=6, c=:blue))]),
   PlotExample("Heatmaps",
               "",
               [:(heatmap(randn(10000),randn(10000); nbins=100))]),
@@ -55,19 +55,19 @@ const examples = PlotExample[
                   :(n = length(types)),
                   :(x = Vector[sort(rand(20)) for i in 1:n]),
                   :(y = rand(20,n)),
-                  :(plot(x, y; linetypes=types, labels=map(string,types)))]),
+                  :(plot(x, y; t=types, lab=map(string,types)))]),
   PlotExample("Line styles",
               "",
-              [:(styles = setdiff(supportedStyles(), [:auto])), :(plot(cumsum(randn(20,length(styles)),1); linestyle=:auto, labels=map(string,styles), width=5))]),
+              [:(styles = setdiff(supportedStyles(), [:auto])), :(plot(cumsum(randn(20,length(styles)),1); style=:auto, label=map(string,styles), w=5))]),
   PlotExample("Marker types",
               "",
-              [:(markers = setdiff(supportedMarkers(), [:none,:auto])), :(scatter(0.5:9.5, [fill(i-0.5,10) for i=length(markers):-1:1]; marker=:auto, labels=map(string,markers), markersize=10))]),
+              [:(markers = setdiff(supportedMarkers(), [:none,:auto])), :(scatter(0.5:9.5, [fill(i-0.5,10) for i=length(markers):-1:1]; marker=:auto, label=map(string,markers), markersize=10))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
               [:(bar(randn(1000)))]),
   PlotExample("Histogram",
-              "note: fillto isn't supported on all backends",
-              [:(histogram(randn(1000); nbins=50, fillto=20))]),
+              "",
+              [:(histogram(randn(1000); nbins=50))]),
   PlotExample("Subplots",
               """
                 subplot and subplot! are distinct commands which create many plots and add series to them in a circular fashion.
@@ -85,7 +85,7 @@ const examples = PlotExample[
               [:(subplot!(randn(100,3)))]),
   PlotExample("Open/High/Low/Close",
               "Create an OHLC chart.  Pass in a vector of 4-tuples as your `y` argument.  Adjust the tick width with arg `markersize`.",
-              [:(n=20), :(hgt=rand(n)+1), :(bot=randn(n)), :(openpct=rand(n)), :(closepct=rand(n)), :(y = [(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n]), :(ohlc(y; markersize=8))]),
+              [:(n=20), :(hgt=rand(n)+1), :(bot=randn(n)), :(openpct=rand(n)), :(closepct=rand(n)), :(y = [OHLC(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n]), :(ohlc(y; markersize=8))]),
 
   
 ]
@@ -136,7 +136,7 @@ function generate_markdown(pkgname::Symbol)
       imgname = "$(pkgname)_example_$i.png"
 
       # NOTE: uncomment this to overwrite the images as well
-      # savepng("$IMGDIR/$pkgname/$imgname")
+      savepng("$IMGDIR/$pkgname/$imgname")
 
       # write out the header, description, code block, and image link
       write(md, "### $(example.header)\n\n")

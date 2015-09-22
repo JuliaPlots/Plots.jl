@@ -9,7 +9,7 @@ gadfly!() = plotter!(:gadfly)
 
 supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos])
 supportedAxes(::GadflyPackage) = setdiff(_allAxes, [:right])
-supportedTypes(::GadflyPackage) = [:none, :line, :path, :step, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
+supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
 
@@ -49,7 +49,7 @@ function getLineGeoms(d::Dict)
   lt == :path && return [Gadfly.Geom.path]
   lt == :scatter && return [Gadfly.Geom.point]
   lt == :bar && return [Gadfly.Geom.bar]
-  lt == :step && return [Gadfly.Geom.step]
+  lt == :steppost && return [Gadfly.Geom.step]
 
   # NOTE: we won't actually show this (we'll set width to 0 later), but we need a geom so that Gadfly doesn't complain
   if lt in (:none, :ohlc)
@@ -120,7 +120,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # line_style = getGadflyStrokeVector(d[:linestyle])
   
   # set theme: color, line width, and point size
-  line_width = d[:width] * (d[:linetype] == :none ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
+  line_width = d[:width] * (d[:linetype] in (:none, :ohlc) ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
   # fg = initargs[:foreground_color]
   theme = Gadfly.Theme(; default_color = d[:color],
                        line_width = line_width,
@@ -188,7 +188,8 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
 
   # add the layer to the Gadfly.Plot
-  prepend!(gplt.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
+  # prepend!(gplt.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
+  prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
   nothing
 end
 
@@ -259,7 +260,7 @@ function setGadflyDisplaySize(w,h)
   Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
 end
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{GadflyPackage})
+function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{GadflyPackage})
   gplt = getGadflyContext(plt.plotter, plt)
   setGadflyDisplaySize(plt.initargs[:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
@@ -271,7 +272,50 @@ function Base.display(::PlotsDisplay, plt::Plot{GadflyPackage})
   display(plt.o)
 end
 
+
+
+function Base.writemime(io::IO, ::MIME"image/png", plt::Subplot{GadflyPackage})
+  gplt = getGadflyContext(plt.plotter, plt)
+  setGadflyDisplaySize(plt.initargs[1][:size]...)
+  Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
+end
+
 function Base.display(::PlotsDisplay, subplt::Subplot{GadflyPackage})
-  setGadflyDisplaySize(plt.initargs[:size]...)
-  display(buildGadflySubplotContext(subplt))
+  setGadflyDisplaySize(subplt.initargs[1][:size]...)
+  ctx = buildGadflySubplotContext(subplt)
+
+
+  # taken from Gadfly since I couldn't figure out how to do it directly
+
+  filename = string(Gadfly.tempname(), ".html")
+  output = open(filename, "w")
+
+  plot_output = IOBuffer()
+  Gadfly.draw(Gadfly.SVGJS(plot_output, Compose.default_graphic_width,
+             Compose.default_graphic_height, false), ctx)
+  plotsvg = takebuf_string(plot_output)
+
+  write(output,
+      """
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Gadfly Plot</title>
+          <meta charset="utf-8">
+        </head>
+          <body>
+          <script charset="utf-8">
+              $(readall(Compose.snapsvgjs))
+          </script>
+          <script charset="utf-8">
+              $(readall(Gadfly.gadflyjs))
+          </script>
+          $(plotsvg)
+        </body>
+      </html>
+      """)
+  close(output)
+  Gadfly.open_file(filename)
+
+  # display(buildGadflySubplotContext(subplt))
 end

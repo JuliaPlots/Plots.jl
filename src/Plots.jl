@@ -46,6 +46,7 @@ export
   backends,
   aliases,
   dataframes!,
+  OHLC,
 
   supportedArgs,
   supportedAxes,

@@ -98,7 +98,7 @@ There are many ways to pass in data to the plot functions... some examples:
 - Vectors of Vectors
 - Functions
 - Vectors of Functions
-- (TODO) DataFrames with column symbols
+- DataFrames with column symbols (initialize with `dataframes!()`)
 
 In general, you can pass in a `y` only, or an `x` and `y`, both of whatever type(s) you want, and Plots will slice up the data as needed.
 For matrices, data is split by columns.  For functions, data is mapped.  For DataFrames (TODO), a Symbol/Symbols in place of x/y will map to
@@ -118,6 +118,7 @@ plot(rand(10), sin)             # same... y = sin(x)
 plot([sin,cos], 0:0.1:π)        # plot 2 series, sin(x) and cos(x)
 plot([sin,cos], 0, π)           # plot sin and cos on the range [0, π]
 plot(1:10, Any[rand(10), sin])  # plot 2 series, y = rand(10) for the first, y = sin(x) for the second... x = 1:10 for both
+plot(dataset("Ecdat", "Airline"), :Cost)  # plot from a DataFrame
 ```
 
 With `subplot`, create multiple plots at once, with flexible layout options:
@@ -177,6 +178,7 @@ Keyword | Default | Type | Aliases
 `:ribbon` | `nothing` | Series | `:r`, `:ribbons`  
 `:width` | `1` | Series | `:linewidth`, `:w`, `:widths`  
 `:background_color` | `RGB{U8}(1.0,1.0,1.0)` | Plot | `:background`, `:bg`, `:bg_color`, `:bgcolor`  
+`:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
 `:legend` | `true` | Plot | `:leg`  
 `:show` | `false` | Plot | `:display`  
 `:size` | `(800,600)` | Plot | `:windowsize`, `:wsize`  
@@ -252,6 +254,8 @@ plot(rand(100,4); color = [:red, RGB(0,0,1)],    # lines 1 and 3 are red, lines 
 ```
 
 __Tip__: Not all features are supported for each backend, but you can see what's supported by calling the functions: `supportedAxes()`, `supportedTypes()`, `supportedStyles()`, `supportedMarkers()`, `subplotSupported()`
+
+__Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on backend.  Showing at the REPL implicitly calls this.
 
 ## TODO features:
 

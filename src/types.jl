@@ -34,3 +34,12 @@ type Subplot{T<:PlottingPackage} <: PlottingObject{T}
   initargs::Vector{Dict}
   initialized::Bool
 end
+
+
+
+type OHLC{T<:Real}
+  open::T
+  high::T
+  low::T
+  close::T
+end

@@ -135,6 +135,9 @@ convertToAnyVector{T<:Real}(v::AMat{T}; kw...) = Any[v[:,i] for i in 1:size(v,2)
 # function
 convertToAnyVector(f::Function; kw...) = Any[f]
 
+# vector of OHLC
+convertToAnyVector(v::AVec{OHLC}; kw...) = Any[v]
+
 # list of things (maybe other vectors, functions, or something else)
 convertToAnyVector(v::AVec; kw...) = Any[vi for vi in v]
 

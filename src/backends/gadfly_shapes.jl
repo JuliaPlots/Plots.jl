@@ -12,7 +12,7 @@ function createGadflyAnnotation(d::Dict)
 
   if d[:linetype] == :ohlc
     shape = ohlcshape(x, y, d[:markersize])
-    d[:y] = Float64[z[1] for z in y]
+    d[:y] = Float64[z.open for z in y]
     d[:linetype] = :none
     return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), shape, Gadfly.fill(nothing), Gadfly.stroke(d[:color])))  
 
@@ -253,14 +253,18 @@ end
 
 # ---------------------------
 
-function ohlcshape{T}(xs::AVec, ys::AVec{Tuple{T,T,T,T}}, tickwidth::Real)
+function ohlcshape(xs::AVec, ys::AVec{OHLC}, tickwidth::Real)
   @assert length(xs) == length(ys)
   n = length(xs)
   u = tickwidth * Compose.px
   polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
   for i in 1:n
     x = Compose.x_measure(xs[i])
-    o,h,l,c = map(Compose.y_measure, ys[i])
+    o = Compose.y_measure(ys[i].open)
+    h = Compose.y_measure(ys[i].high)
+    l = Compose.y_measure(ys[i].low)
+    c = Compose.y_measure(ys[i].close)
+    # o,h,l,c = map(Compose.y_measure, ys[i])
     polys[i] = Tuple{Compose.Measure, Compose.Measure}[
       (x, o), (x - u, o), (x, o),   # open tick
       (x, l), (x, h), (x, c),       # high/low bar
