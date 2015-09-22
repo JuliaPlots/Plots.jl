@@ -71,9 +71,9 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool)
     func = UnicodePlots.lineplot!
   elseif lt == :scatter || d[:marker] != :none
     func = UnicodePlots.scatterplot!
-  elseif lt == :step
+  elseif lt == :steppost
     func = UnicodePlots.stairs!
-  elseif lt == :stepinverted
+  elseif lt == :steppre
     func = UnicodePlots.stairs!
     stepstyle = :pre
   else
@@ -94,6 +94,7 @@ end
 
 function handlePlotColors(::UnicodePlotsPackage, d::Dict)
   # TODO: something special for unicodeplots, since it doesn't take kindly to people messing with its color palette
+  d[:color_palette] = [RGB(0,0,0)]
 end
 
 # -------------------------------
