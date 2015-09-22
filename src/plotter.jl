@@ -13,11 +13,12 @@ include("backends/winston.jl")
 
 plot(pkg::PlottingPackage; kw...) = error("plot($pkg; kw...) is not implemented")
 plot!(pkg::PlottingPackage, plt::Plot; kw...) = error("plot!($pkg, plt; kw...) is not implemented")
-Base.display(pkg::PlottingPackage, plt::Plot) = error("display($pkg, plt) is not implemented")
+updatePlotItems(pkg::PlottingPackage, plt::Plot, d::Dict) = error("updatePlotItems($pkg, plt, d) is not implemented")
+# Base.display(pkg::PlottingPackage, plt::Plot) = error("display($pkg, plt) is not implemented")
 
 subplot(pkg::PlottingPackage; kw...) = error("subplot($pkg; kw...) is not implemented")
 subplot!(pkg::PlottingPackage, subplt::Subplot; kw...) = error("subplot!($pkg, subplt; kw...) is not implemented")
-Base.display(pkg::PlottingPackage, subplt::Subplot) = error("display($pkg, subplt) is not implemented")
+# Base.display(pkg::PlottingPackage, subplt::Subplot) = error("display($pkg, subplt) is not implemented")
 
 # ---------------------------------------------------------
 

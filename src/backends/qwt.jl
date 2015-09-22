@@ -57,6 +57,12 @@ function plot!(::QwtPackage, plt::Plot; kw...)
   plt
 end
 
+function updatePlotItems(::QwtPackage, plt::Plot, d::Dict)
+  haskey(d, :title) && Qwt.title(plt.o, d[:title])
+  haskey(d, :xlabel) && Qwt.xlabel(plt.o, d[:xlabel])
+  haskey(d, :ylabel) && Qwt.ylabel(plt.o, d[:ylabel])
+end
+
 function Base.display(::QwtPackage, plt::Plot)
   Qwt.refresh(plt.o)
   Qwt.showwidget(plt.o)
@@ -69,7 +75,7 @@ savepng(::QwtPackage, plt::PlottingObject, fn::AbstractString, args...) = Qwt.sa
 # -------------------------------
 
 # create the underlying object (each backend will do this differently)
-function buildSubplotObject!(::QwtPackage, subplt::Subplot)
+function buildSubplotObject!(subplt::Subplot{QwtPackage})
   i = 0
   rows = []
   for rowcnt in subplt.layout.rowcounts

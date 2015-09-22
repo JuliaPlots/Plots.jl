@@ -75,7 +75,7 @@ end
 # -------------------------------
 
 
-function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
+function buildSubplotObject!(subplt::Subplot{ImmersePackage})
 
   # create the Gtk window with vertical box vsep
   d = subplt.initargs[1]
@@ -118,12 +118,6 @@ function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
 
   subplt.o = win
 end
-
-
-# # create the underlying object
-# function buildSubplotObject!(::ImmersePackage, subplt::Subplot)
-#   subplt.o = (nothing, nothing)
-# end
 
 
 function Base.display(::ImmersePackage, subplt::Subplot)

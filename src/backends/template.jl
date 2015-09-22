@@ -35,24 +35,42 @@ function plot!(::[PkgName]Package, plt::Plot; kw...)
 end
 
 
-function Base.display(::[PkgName]Package, plt::Plot)
+# TODO: override this to update plot items (title, xlabel, etc) after creation
+function updatePlotItems(plt::Plot{[PkgName]Package}, d::Dict)
+end
+
+
+# function Base.display(::[PkgName]Package, plt::Plot)
+#   # TODO: display/show the plot
+# end
+
+function Base.display(::PlotsDisplay, plt::Plot{[PkgName]Package})
   # TODO: display/show the plot
 end
 
+
 # -------------------------------
 
-function savepng(::[PkgName]Package, plt::PlottingObject, fn::AbstractString; kw...)
-  # TODO: save a PNG of the underlying plot/subplot object
+# function savepng(::[PkgName]Package, plt::PlottingObject, fn::AbstractString; kw...)
+#   # TODO: save a PNG of the underlying plot/subplot object
+# end
+
+
+function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{[PkgName]Package})
+  # TODO: write a png to io
 end
 
-
 # -------------------------------
 
-function buildSubplotObject!(::[PkgName]Package, subplt::Subplot)
+function buildSubplotObject!(subplt::Subplot{[PkgName]Package})
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
 end
 
 
-function Base.display(::[PkgName]Package, subplt::Subplot)
-  # TODO: display/show the Subplot object
+# function Base.display(::[PkgName]Package, subplt::Subplot)
+#   # TODO: display/show the Subplot object
+# end
+
+function Base.display(::PlotsDisplay, plt::Subplot{[PkgName]Package})
+  # TODO: display/show the subplot
 end

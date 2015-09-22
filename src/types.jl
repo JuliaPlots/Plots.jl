@@ -2,12 +2,14 @@
 typealias AVec AbstractVector
 typealias AMat AbstractMatrix
 
-abstract PlottingObject
+immutable PlotsDisplay <: Display end
+  
 abstract PlottingPackage
+abstract PlottingObject{T<:PlottingPackage}
 
-type Plot <: PlottingObject
+type Plot{T<:PlottingPackage} <: PlottingObject{T}
   o  # the underlying object
-  plotter::PlottingPackage
+  plotter::T
   n::Int  # number of series
 
   # store these just in case
@@ -22,10 +24,10 @@ type SubplotLayout
 end
 
 
-type Subplot <: PlottingObject
+type Subplot{T<:PlottingPackage} <: PlottingObject{T}
   o                           # the underlying object
   plts::Vector{Plot}          # the individual plots
-  plotter::PlottingPackage
+  plotter::T
   p::Int                      # number of plots
   n::Int                      # number of series
   layout::SubplotLayout

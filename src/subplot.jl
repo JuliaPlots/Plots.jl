@@ -132,7 +132,7 @@ function subplot!(subplt::Subplot, args...; kw...)
 
   # create the underlying object (each backend will do this differently)
   if !subplt.initialized
-    buildSubplotObject!(subplt.plotter, subplt)
+    buildSubplotObject!(subplt)
     subplt.initialized = true
   end
 

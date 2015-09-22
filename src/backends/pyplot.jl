@@ -94,8 +94,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
   # return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : (linetype in (:heatmap,:hexbin) ? PyPlot.hexbin : PyPlot.plot))
 end
 
-function updateAxisColors(o, fgcolor)
-  ax = o[:axes][1]
+function updateAxisColors(ax, fgcolor)
   for loc in ("bottom", "top", "left", "right")
     ax[:spines][loc][:set_color](fgcolor)
   end
@@ -107,6 +106,8 @@ function updateAxisColors(o, fgcolor)
   end
   ax[:title][:set_color](fgcolor)
 end
+
+makePlotCurrent(plt::Plot) = PyPlot.figure(plt.o[1].o[:number])
 
 # ------------------------------------------------------------------
 
@@ -125,19 +126,20 @@ function plot(pkg::PyPlotPackage; kw...)
   d = Dict(kw)
   w,h = map(px2inch, d[:size])
   bgcolor = getPyPlotColor(d[:background_color])
-  o = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96)
+  fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96)
 
-  PyPlot.title(d[:title])
-  PyPlot.xlabel(d[:xlabel])
-  PyPlot.ylabel(d[:ylabel])
-
-  plt = Plot(o, pkg, 0, d, Dict[])
+  num = fig.o[:number]
+  plt = Plot((fig, num), pkg, 0, d, Dict[])
   plt
 end
 
 
 function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
+
+  fig, num = plt.o
+  # PyPlot.figure(num)  # makes this current
+  makePlotCurrent(plt)
 
   if !(d[:linetype] in supportedTypes(pkg))
     error("linetype $(d[:linetype]) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
@@ -207,11 +209,19 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     d[:serieshandle] = plotfunc(d[:x], d[:y]; extraargs...)[1]
   end
 
-  # this sets the bg color inside the grid (plt.o.o == matplotlib.Figure)
-  plt.o.o[:axes][1][:set_axis_bgcolor](getPyPlotColor(plt.initargs[:background_color]))
+  # this sets the bg color inside the grid
+  fig.o[:axes][1][:set_axis_bgcolor](getPyPlotColor(plt.initargs[:background_color]))
 
   push!(plt.seriesargs, d)
   plt
+end
+
+
+function updatePlotItems(::PyPlotPackage, plt::Plot, d::Dict)
+  makePlotCurrent(plt)
+  haskey(d, :title) && PyPlot.title(d[:title])
+  haskey(d, :xlabel) && PyPlot.xlabel(d[:xlabel])
+  haskey(d, :ylabel) && PyPlot.ylabel(d[:ylabel])
 end
 
 function addPyPlotLegend(plt::Plot)
@@ -230,40 +240,34 @@ function addPyPlotLegend(plt::Plot)
 end
 
 function Base.display(::PyPlotPackage, plt::Plot)
+  fig, num = plt.o
+  # PyPlot.figure(num)  # makes this current
+  makePlotCurrent(plt)
   addPyPlotLegend(plt)
-  updateAxisColors(plt.o.o, getPyPlotColor(plt.initargs[:foreground_color]))
-  display(plt.o)
+  ax = fig.o[:axes][1]
+  updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
+  display(fig)
 end
 
 # -------------------------------
 
 function savepng(::PyPlotPackage, plt::PlottingObject, fn::AbstractString, args...)
+  fig, num = plt.o
   addPyPlotLegend(plt)
   f = open(fn, "w")
-  writemime(f, "image/png", plt.o)
+  writemime(f, "image/png", fig)
   close(f)
 end
 
 # -------------------------------
 
 # create the underlying object (each backend will do this differently)
-function buildSubplotObject!(::PyPlotPackage, subplt::Subplot)
-  # i = 0
-  # rows = []
-  # for rowcnt in subplt.layout.rowcounts
-  #   push!(rows, Qwt.hsplitter([plt.o for plt in subplt.plts[(1:rowcnt) + i]]...))
-  #   i += rowcnt
-  # end
-  # subplt.o = Qwt.vsplitter(rows...)
+function buildSubplotObject!(subplt::Subplot{PyPlotPackage})
   error("unsupported")
 end
 
 
 function Base.display(::PyPlotPackage, subplt::Subplot)
-  # for plt in subplt.plts
-  #   Qwt.refresh(plt.o)
-  # end
-  # Qwt.showwidget(subplt.o)
   display(subplt.o)
 end
 
