@@ -25,19 +25,11 @@ getplot(plt::Plot) = plt
 getinitargs(plt::Plot, idx::Int = 1) = plt.initargs
 convertSeriesIndex(plt::Plot, n::Int) = n
 
+# ---------------------------------------------------------
+
 
 doc"""
-The main plot command.  Call `plotter!(:module)` to set the current plotting backend.
-Commands are converted into the relevant plotting commands for that package:
-
-```
-  plotter!(:gadfly)
-  plot(1:10)    # this effectively calls `y = 1:10; Gadfly.plot(x=1:length(y), y=y)`
-  plotter!(:qwt)
-  plot(1:10)    # this effectively calls `Qwt.plot(1:10)`
-```
-
-Use `plot` to create a new plot object, and `plot!` to add to an existing one:
+The main plot command.  Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 
 ```
   plot(args...; kw...)                  # creates a new plot window, and sets it to be the currentPlot
@@ -45,47 +37,9 @@ Use `plot` to create a new plot object, and `plot!` to add to an existing one:
   plot!(plotobj, args...; kw...)        # adds to the plot `plotobj`
 ```
 
-There are lots of ways to pass in data... just try it and it will likely work as expected.
+There are lots of ways to pass in data, and lots of keyword arguments... just try it and it will likely work as expected.
 When you pass in matrices, it splits by columns.  See the documentation for more info.
-
-Some keyword arguments you can set:
-
-```
-  axis            # :left or :right
-  color           # can be a string ("red") or a symbol (:red) or a ColorsTypes.jl Colorant (RGB(1,0,0)) or :auto (which lets the package pick)
-  label           # string or symbol, applies to that line, may go in a legend
-  width           # width of a line
-  linetype        # :line, :step, :stepinverted, :sticks, :scatter, :none, :heatmap
-  linestyle       # :solid, :dash, :dot, :dashdot, :dashdotdot
-  marker          # :none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon
-  markercolor     # same choices as `color`
-  markersize      # size of the marker
-  nbins           # number of bins for heatmap/hexbin and histograms
-  heatmap_c       # color cutoffs for Qwt heatmaps
-  fillto          # fillto value for area plots
-  title           # string or symbol, title of the plot
-  xlabel          # string or symbol, label on the bottom (x) axis
-  ylabel          # string or symbol, label on the left (y) axis
-  yrightlabel     # string or symbol, label on the right (y) axis
-  reg             # true or false, add a regression line for each line
-  size            # (Int,Int), resize the enclosing window
-  pos             # (Int,Int), move the enclosing window to this position
-  windowtitle     # string or symbol, set the title of the enclosing windowtitle
-  screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
-  show            # true or false, show the plot (in case you don't want the window to pop up right away)
-```
-
-When plotting multiple lines, you can give every line the same trait by using the singular, or add an "s" to pluralize.
-  (yes I know it's not gramatically correct, but it's easy to use and implement)
-
-```
-  plot(rand(100,2); colors = [:red, RGB(.5,.5,0)], axiss = [:left, :right], width = 5)  # note the width=5 is applied to both lines
-```
-
 """
-
-
-# -------------------------
 
 # this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
@@ -158,30 +112,30 @@ end
 # --------------------------------------------------------------------
 
 
-# TODO: create a new "createKWargsList" which converts all inputs into xs = Any[xitems], ys = Any[yitems].
-# Special handling for: no args, xmin/xmax
+# create a new "createKWargsList" which converts all inputs into xs = Any[xitems], ys = Any[yitems].
+# Special handling for: no args, xmin/xmax, parametric, dataframes
 # Then once inputs have been converted, build the series args, map functions, etc.
 # This should cut down on boilerplate code and allow more focused dispatch on type
 
 typealias FuncOrFuncs Union(Function, AVec{Function})
 
 # missing
-convertToAnyVector(v::Void) = Any[nothing]
+convertToAnyVector(v::Void; kw...) = Any[nothing]
 
 # fixed number of blank series
-convertToAnyVector(n::Integer) = Any[zero(0) for i in 1:n]
+convertToAnyVector(n::Integer; kw...) = Any[zero(0) for i in 1:n]
 
 # numeric vector
-convertToAnyVector{T<:Real}(v::AVec{T}) = Any[v]
+convertToAnyVector{T<:Real}(v::AVec{T}; kw...) = Any[v]
 
 # numeric matrix
-convertToAnyVector{T<:Real}(v::AMat{T}) = Any[v[:,i] for i in 1:size(v,2)]
+convertToAnyVector{T<:Real}(v::AMat{T}; kw...) = Any[v[:,i] for i in 1:size(v,2)]
 
 # function
-convertToAnyVector(f::Function) = Any[f]
+convertToAnyVector(f::Function; kw...) = Any[f]
 
 # list of things (maybe other vectors, functions, or something else)
-convertToAnyVector(v::AVec) = Any[vi for vi in v]
+convertToAnyVector(v::AVec; kw...) = Any[vi for vi in v]
 
 
 # --------------------------------------------------------------------
@@ -198,25 +152,14 @@ function computeXandY(x, y)
   x, y
 end
 
-# function computeXandY(x, y)
-#   # TODO
-#   # x is likely an abstract vector... maybe assert on that?
-#   # y could also be a function
-#   x = x == nothing ? 1:length(y) : x
-#   if isa(y, Function)
-#     return x, map(y, x)
-#   else
-#     return x, y
-#   end
-# end
 
 # --------------------------------------------------------------------
 
 # create n=max(mx,my) series arguments. the shorter list is cycled through
 # note: everything should flow through this
 function createKWargsList(plt::PlottingObject, x, y; kw...)
-  xs = convertToAnyVector(x)
-  ys = convertToAnyVector(y)
+  xs = convertToAnyVector(x; kw...)
+  ys = convertToAnyVector(y; kw...)
   mx = length(xs)
   my = length(ys)
   ret = []
@@ -283,6 +226,30 @@ function createKWargsList(plt::PlottingObject; kw...)
   else
     return createKWargsList(plt, d[:y]; kw...)
   end
+end
+
+# --------------------------------------------------------------------
+
+"For DataFrame support.  Imports DataFrames and defines the necessary methods which support them."
+function dataframes!()
+  @eval import DataFrames
+
+  @eval function createKWargsList(plt::PlottingObject, df::DataFrames.DataFrame, args...; kw...)
+    createKWargsList(plt, args...; kw..., dataframe = df)
+  end
+
+  @eval function getDataFrameFromKW(; kw...)
+    for (k,v) in kw
+      if k == :dataframe
+        return v
+      end
+    end
+    error("Missing dataframe argument in arguments!")
+  end
+
+  # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
+  @eval convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]]
+  @eval convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v])
 end
 
 

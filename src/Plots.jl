@@ -39,6 +39,7 @@ export
 
   backends,
   aliases,
+  dataframes!,
 
   supportedArgs,
   supportedAxes,
