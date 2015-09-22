@@ -39,7 +39,6 @@ function adjustQwtKeywords(iscreating::Bool; kw...)
   end
 
   replaceLinetypeAlias(d)
-  show(d)
   d
 end
 
