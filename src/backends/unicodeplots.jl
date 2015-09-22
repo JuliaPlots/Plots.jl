@@ -92,6 +92,10 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool)
 end
 
 
+function handlePlotColors(::UnicodePlotsPackage, d::Dict)
+  # TODO: something special for unicodeplots, since it doesn't take kindly to people messing with its color palette
+end
+
 # -------------------------------
 
 
@@ -117,18 +121,24 @@ function plot!(::UnicodePlotsPackage, plt::Plot; kw...)
   plt
 end
 
-function Base.display(::UnicodePlotsPackage, plt::Plot)
-  rebuildUnicodePlot!(plt)
-  show(plt.o)
+
+function updatePlotItems(plt::Plot{UnicodePlotsPackage}, d::Dict)
+  for k in (:title, :xlabel, :ylabel)
+    if haskey(d, k)
+      plt.initargs[k] = d[k]
+    end
+  end
 end
+
 
 # -------------------------------
 
-function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::AbstractString, args...)
+# function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::AbstractString, args...)
+function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{UnicodePlotsPackage})
 
   # make some whitespace and show the plot
   println("\n\n\n\n\n\n")
-  display(plt)
+  gui(plt)
 
   @osx_only begin
     # BEGIN HACK
@@ -156,14 +166,21 @@ end
 
 # we don't do very much for subplots... just stack them vertically
 
-function buildSubplotObject!(::UnicodePlotsPackage, subplt::Subplot)
+function buildSubplotObject!(subplt::Subplot{UnicodePlotsPackage})
   nothing
 end
 
 
-function Base.display(::UnicodePlotsPackage, subplt::Subplot)
+function Base.display(::PlotsDisplay, plt::Plot{UnicodePlotsPackage})
+  rebuildUnicodePlot!(plt)
+  show(plt.o)
+end
+
+
+
+function Base.display(::PlotsDisplay, subplt::Subplot{UnicodePlotsPackage})
   for plt in subplt.plts
-    display(UnicodePlotsPackage(), plt)
+    gui(plt)
   end
 end
 

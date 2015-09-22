@@ -185,6 +185,8 @@ plot(rand(100,4); color = [:red, RGB(0,0,1)],    # lines 1 and 3 are red, lines 
 
 __Tip__: Not all features are supported for each backend, but you can see what's supported by calling the functions: `supportedAxes()`, `supportedTypes()`, `supportedStyles()`, `supportedMarkers()`, `subplotSupported()`
 
+__Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on backend.  Showing at the REPL implicitly calls this.
+
 ## TODO features:
 
 - [x] Plot vectors/matrices/functions

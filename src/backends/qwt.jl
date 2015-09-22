@@ -57,20 +57,15 @@ function plot!(::QwtPackage, plt::Plot; kw...)
   plt
 end
 
-function updatePlotItems(::QwtPackage, plt::Plot, d::Dict)
+function updatePlotItems(plt::Plot{QwtPackage}, d::Dict)
   haskey(d, :title) && Qwt.title(plt.o, d[:title])
   haskey(d, :xlabel) && Qwt.xlabel(plt.o, d[:xlabel])
   haskey(d, :ylabel) && Qwt.ylabel(plt.o, d[:ylabel])
 end
 
-function Base.display(::QwtPackage, plt::Plot)
-  Qwt.refresh(plt.o)
-  Qwt.showwidget(plt.o)
-end
-
 # -------------------------------
 
-savepng(::QwtPackage, plt::PlottingObject, fn::AbstractString, args...) = Qwt.savepng(plt.o, fn)
+# savepng(::QwtPackage, plt::PlottingObject, fn::AbstractString, args...) = Qwt.savepng(plt.o, fn)
 
 # -------------------------------
 
@@ -87,8 +82,20 @@ function buildSubplotObject!(subplt::Subplot{QwtPackage})
   Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
 end
 
+# ----------------------------------------------------------------
 
-function Base.display(::QwtPackage, subplt::Subplot)
+function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{QwtPackage})
+  Qwt.savepng(plt.o, "/tmp/dfskjdhfkh.png")
+  write(io, readall("/tmp/dfskjdhfkh.png"))
+end
+
+
+function Base.display(::PlotsDisplay, plt::Plot{QwtPackage})
+  Qwt.refresh(plt.o)
+  Qwt.showwidget(plt.o)
+end
+
+function Base.display(::PlotsDisplay, subplt::Subplot{QwtPackage})
   for plt in subplt.plts
     Qwt.refresh(plt.o)
   end

@@ -33,8 +33,8 @@ const winston_marker = Dict(:none=>".",
 supportedArgs(::WinstonPackage) = setdiff(_allArgs, [:heatmap_c, :fillto, :pos, :markercolor, :background_color])
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
-supportedStyles(::WinstonPackage) = intersect(_allStyles, collect(keys(winston_linestyle))) # [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::WinstonPackage) = intersect(_allMarkers, collect(keys(winston_marker))) # [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1]
+supportedStyles(::WinstonPackage) = intersect(_allStyles, collect(keys(winston_linestyle)))
+supportedMarkers(::WinstonPackage) = intersect(_allMarkers, collect(keys(winston_marker)))
 subplotSupported(::WinstonPackage) = false
 
 # ---------------------------------------------------------------------------
@@ -51,42 +51,9 @@ subplotSupported(::WinstonPackage) = false
 
 function plot(pkg::WinstonPackage; kw...)
   d = Dict(kw)
-
-  # bgcolor
-
-  # create a new window
-  # the call to figure does a few things here:
-  #   get a new unique id
-  #   create a new GtkWindow (or Tk?)
-
-  # w,h = d[:size]
-  # canvas = Gtk.GtkCanvasLeaf()
-  # window = Gtk.GtkWindowLeaf(canvas, d[:windowtitle], w, h)
-
-  # figidx = Winston.figure(; name = d[:windowtitle], width = w, height = h)
-
-  # # skip the current fig stuff... just grab the fig directly
-  # fig = Winston._display.figs[figidx]
-
-  # overwrite the placeholder FramedPlot with our own
-  # fig.plot = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
   wplt = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
-
-  # # using the figure index returned from Winston.figure, make this plot current and get the 
-  # # Figure object (fields: window::GtkWindow and plot::FramedPlot)
-  # Winston.switchfig(Winston._display, figidx)
-  # fig = Winston.curfig(Winston._display)
-  # Winston._pwinston = fig.plot
-
-
-
-  # Winston.setattr(fig.plot, "xlabel", d[:xlabel])
-  # Winston.setattr(fig.plot, "ylabel", d[:ylabel])
-  # Winston.setattr(fig.plot, "title",  d[:title])
   
   Plot(wplt, pkg, 0, d, Dict[])
-  # Plot((window, canvas, wplt), pkg, 0, d, Dict[])
-  # Plot((fig, figidx), pkg, 0, d, Dict[])
 end
 
 copy_remove(d::Dict, s::Symbol) = delete!(copy(d), s)
@@ -203,14 +170,48 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 end
 
 
+function updatePlotItems(plt::Plot{WinstonPackage}, d::Dict)
+  window, canvas, wplt = getWinstonItems(plt)
+  for k in (:xlabel, :ylabel, :title)
+    if haskey(d, k)
+      Winston.setattr(wplt, string(k), d[k])
+    end
+  end
+end
+
+
+
+# -------------------------------
+
+# function savepng(::WinstonPackage, plt::PlottingObject, fn::AbstractString; kw...)
+#   f = open(fn, "w")
+#   window, canvas, wplt = getWinstonItems(plt)
+#   addWinstonLegend(plt, wplt)
+#   writemime(f, "image/png", wplt)
+#   close(f)
+# end
+
+
+# -------------------------------
+
+function buildSubplotObject!(subplt::Subplot{WinstonPackage})
+  # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+end
+
+# ----------------------------------------------------------------
+
 function addWinstonLegend(plt::Plot, wplt)
   Winston.legend(wplt, [sd[:label] for sd in plt.seriesargs])
 end
 
+function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{WinstonPackage})
+  window, canvas, wplt = getWinstonItems(plt)
+  addWinstonLegend(plt, wplt)
+  writemime(io, "image/png", wplt)
+end
 
-function Base.display(::WinstonPackage, plt::Plot)
-  # recreate the legend
-  # fig, figidx = plt.o
+
+function Base.display(::PlotsDisplay, plt::Plot{WinstonPackage})
 
   window, canvas, wplt = getWinstonItems(plt)
 
@@ -219,45 +220,16 @@ function Base.display(::WinstonPackage, plt::Plot)
     w,h = plt.initargs[:size]
     canvas = Gtk.GtkCanvasLeaf()
     window = Gtk.GtkWindowLeaf(canvas, plt.initargs[:windowtitle], w, h)
-    # wplt = plt.o
     plt.o = (window, canvas, wplt)
-  # else
-  #   window, canvas, wplt = plt.o
   end
 
   addWinstonLegend(plt, wplt)
 
   Winston.display(canvas, wplt)
   Gtk.showall(window)
-
-
-  # # display the Figure
-  # display(fig)
-
-  # display(plt.o.window)
-
-  # # show it
-  # Winston.display(plt.o.plot)
-end
-
-# -------------------------------
-
-function savepng(::WinstonPackage, plt::PlottingObject, fn::AbstractString; kw...)
-  f = open(fn, "w")
-  window, canvas, wplt = getWinstonItems(plt)
-  addWinstonLegend(plt, wplt)
-  writemime(f, "image/png", wplt)
-  close(f)
 end
 
 
-# -------------------------------
-
-function buildSubplotObject!(::WinstonPackage, subplt::Subplot)
-  # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-end
-
-
-function Base.display(::WinstonPackage, subplt::Subplot)
+function Base.display(::PlotsDisplay, subplt::Subplot{WinstonPackage})
   # TODO: display/show the Subplot object
 end

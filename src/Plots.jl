@@ -41,6 +41,7 @@ export
   ylabel!,
 
   savepng,
+  gui,
 
   backends,
   aliases,
@@ -103,22 +104,17 @@ ylabel!(plt::Plot, s::AbstractString) = plot!(plt; ylabel = s)
 
 
 savepng(args...; kw...) = savepng(currentPlot(), args...; kw...)
-savepng(plt::PlottingObject, fn::AbstractString; kw...) = (io = open(fn); writemime(io, MIME"image/png", plt); close(io))
+savepng(plt::PlottingObject, fn::AbstractString; kw...) = (io = open(fn, "w"); writemime(io, MIME("image/png"), plt); close(io))
 # savepng(plt::PlottingObject, args...; kw...) = savepng(plt.plotter, plt, args...; kw...)
 # savepng(::PlottingPackage, plt::PlottingObject, fn::AbstractString, args...) = error("unsupported")  # fallback so multiple dispatch doesn't get confused if it's missing
 
-# function Base.writemime(io::IO, ::MIME"image/png", plt::Plot)
+
+gui(plt::PlottingObject = currentPlot()) = display(PlotsDisplay(), plt)
 
 
-# function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
-#   # print(io, "<p>")
-#   png = MIME("image/png")
-#   print(io, "<img src=\"data:image/png; base64,", base64encode(writemime, png), "\" />")
-# end
+# override the REPL display to open a gui window
+Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::PlottingObject) = gui(plt)
 
-
-# override the REPL display
-Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::PlottingObject) = display(PlotsDisplay(), plt)
 
 
 function __init__()

@@ -43,36 +43,13 @@ function plot!(::ImmersePackage, plt::Plot; kw...)
   plt
 end
 
-function Base.display(::ImmersePackage, plt::Plot)
 
-  fig, gplt = plt.o
-  if fig == nothing
-    fig = createImmerseFigure(plt.initargs)
-    plt.o = (fig, gplt)
-  end
-
-  # # display a new Figure object to force a redraw
-  # display(Immerse.Figure(fig.canvas, gplt))
-
-  Immerse.figure(fig.figno; displayfig = false)
-  display(gplt)
-end
-
-# -------------------------------
-
-getGadflyContext(::ImmersePackage, plt::Plot) = plt.o[2]
-getGadflyContext(::ImmersePackage, subplt::Subplot) = buildGadflySubplotContext(subplt)
-
-function savepng(::ImmersePackage, plt::PlottingObject, fn::AbstractString;
-                                    w = 6 * Immerse.inch,
-                                    h = 4 * Immerse.inch)
-  gctx = getGadflyContext(plt.plotter, plt)
-  Gadfly.draw(Gadfly.PNG(fn, w, h), gctx)
-  nothing
+function updatePlotItems(plt::Plot{ImmersePackage}, d::Dict)
+  updateGadflyGuides(plt.o[2], d)
 end
 
 
-# -------------------------------
+# ----------------------------------------------------------------
 
 
 function buildSubplotObject!(subplt::Subplot{ImmersePackage})
@@ -119,15 +96,37 @@ function buildSubplotObject!(subplt::Subplot{ImmersePackage})
   subplt.o = win
 end
 
+# ----------------------------------------------------------------
 
-function Base.display(::ImmersePackage, subplt::Subplot)
+getGadflyContext(::ImmersePackage, plt::Plot) = plt.o[2]
+getGadflyContext(::ImmersePackage, subplt::Subplot) = buildGadflySubplotContext(subplt)
+
+function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{ImmersePackage})
+  gplt = getGadflyContext(plt.plotter, plt)
+  setGadflyDisplaySize(plt.initargs[:size]...)
+  Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
+end
+
+
+function Base.display(::PlotsDisplay, plt::Plot{ImmersePackage})
+
+  fig, gplt = plt.o
+  if fig == nothing
+    fig = createImmerseFigure(plt.initargs)
+    plt.o = (fig, gplt)
+  end
+
+  Immerse.figure(fig.figno; displayfig = false)
+  display(gplt)
+end
+
+function Base.display(::PlotsDisplay, subplt::Subplot{ImmersePackage})
 
   # display the plots by creating a fresh Immerse.Figure object from the GtkCanvas and Gadfly.Plot
   for plt in subplt.plts
     fig, gplt = plt.o
     Immerse.figure(fig.figno; displayfig = false)
     display(gplt)
-    # display(Immerse.Figure(fig.canvas, gplt))
   end
 
   # o is the window... show it

@@ -136,7 +136,8 @@ end
 # TODO: try to use the algorithms from https://github.com/timothyrenner/ColorBrewer.jl
 # TODO: allow the setting of the algorithm, either by passing a symbol (:colordiff, :fixed, etc) or a function? 
 
-function getBackgroundRGBColor(c, d::Dict)
+# function getBackgroundRGBColor(c, d::Dict)
+function handlePlotColors(::PlottingPackage, d::Dict)
   if :background_color in supportedArgs()
     bgcolor = convertColor(d[:background_color])
   else
@@ -159,7 +160,8 @@ function getBackgroundRGBColor(c, d::Dict)
     d[:foreground_color] = convertColor(d[:foreground_color])
   end
 
-  bgcolor
+  # bgcolor
+  d[:background_color] = bgcolor
 end
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
@@ -171,8 +173,8 @@ function getSeriesRGBColor(c, d::Dict, n::Int)
     c = convertColor(c)
   end
 
-  # should be a RGB now... either it was passed in, generated automatically, or created from a string
-  @assert isa(c, Colorant)
+  # # should be a RGB now... either it was passed in, generated automatically, or created from a string
+  # @assert isa(c, Colorant)
 
   # return the RGB
   c

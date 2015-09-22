@@ -107,7 +107,7 @@ function updateAxisColors(ax, fgcolor)
   ax[:title][:set_color](fgcolor)
 end
 
-makePlotCurrent(plt::Plot) = PyPlot.figure(plt.o[1].o[:number])
+makePyPlotCurrent(plt::Plot) = PyPlot.figure(plt.o[1].o[:number])
 
 # ------------------------------------------------------------------
 
@@ -139,7 +139,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
 
   fig, num = plt.o
   # PyPlot.figure(num)  # makes this current
-  makePlotCurrent(plt)
+  makePyPlotCurrent(plt)
 
   if !(d[:linetype] in supportedTypes(pkg))
     error("linetype $(d[:linetype]) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
@@ -217,57 +217,64 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
 end
 
 
-function updatePlotItems(::PyPlotPackage, plt::Plot, d::Dict)
-  makePlotCurrent(plt)
+function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
+  makePyPlotCurrent(plt)
   haskey(d, :title) && PyPlot.title(d[:title])
   haskey(d, :xlabel) && PyPlot.xlabel(d[:xlabel])
   haskey(d, :ylabel) && PyPlot.ylabel(d[:ylabel])
 end
 
-function addPyPlotLegend(plt::Plot)
-  # add a legend?
-  # try
-    if plt.initargs[:legend]
-      # gotta do this to ensure both axes are included
-      args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap)), plt.seriesargs)
-      if length(args) > 0
-        PyPlot.legend([d[:serieshandle] for d in args], [d[:label] for d in args], loc="best")
-      end
-    end
-  # catch ex
-  #   warn("Error adding PyPlot legend: ", ex)
-  # end
-end
 
-function Base.display(::PyPlotPackage, plt::Plot)
-  fig, num = plt.o
-  # PyPlot.figure(num)  # makes this current
-  makePlotCurrent(plt)
-  addPyPlotLegend(plt)
-  ax = fig.o[:axes][1]
-  updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
-  display(fig)
-end
 
 # -------------------------------
 
-function savepng(::PyPlotPackage, plt::PlottingObject, fn::AbstractString, args...)
-  fig, num = plt.o
-  addPyPlotLegend(plt)
-  f = open(fn, "w")
-  writemime(f, "image/png", fig)
-  close(f)
-end
+# function savepng(::PyPlotPackage, plt::PlottingObject, fn::AbstractString, args...)
+#   fig, num = plt.o
+#   addPyPlotLegend(plt)
+#   f = open(fn, "w")
+#   writemime(f, "image/png", fig)
+#   close(f)
+# end
 
-# -------------------------------
+
+# -----------------------------------------------------------------
 
 # create the underlying object (each backend will do this differently)
 function buildSubplotObject!(subplt::Subplot{PyPlotPackage})
   error("unsupported")
 end
 
+# -----------------------------------------------------------------
 
-function Base.display(::PyPlotPackage, subplt::Subplot)
+function addPyPlotLegend(plt::Plot)
+  if plt.initargs[:legend]
+    # gotta do this to ensure both axes are included
+    args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap)), plt.seriesargs)
+    if length(args) > 0
+      PyPlot.legend([d[:serieshandle] for d in args], [d[:label] for d in args], loc="best")
+    end
+  end
+end
+
+
+function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{PyPlotPackage})
+  fig, num = plt.o
+  addPyPlotLegend(plt)
+  writemime(io, m, fig)
+end
+
+
+function Base.display(::PlotsDisplay, plt::Plot{PyPlotPackage})
+  fig, num = plt.o
+  # PyPlot.figure(num)  # makes this current
+  makePyPlotCurrent(plt)
+  addPyPlotLegend(plt)
+  ax = fig.o[:axes][1]
+  updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
+  display(fig)
+end
+
+function Base.display(::PlotsDisplay, subplt::Subplot{PyPlotPackage})
   display(subplt.o)
 end
 

@@ -265,7 +265,8 @@ function getPlotArgs(pkg::PlottingPackage, kw, idx::Int)
   end
 
   # convert color
-  d[:background_color] = getBackgroundRGBColor(d[:background_color], d)
+  handlePlotColors(pkg, d)
+  # d[:background_color] = getBackgroundRGBColor(d[:background_color], d)
 
   # no need for these
   delete!(d, :x)

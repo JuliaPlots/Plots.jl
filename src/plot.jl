@@ -93,7 +93,7 @@ function plot!(plt::Plot, args...; kw...)
     plot!(plt.plotter, plt; d...)
   end
 
-  updatePlotItems(plt.plotter, plt, d)
+  updatePlotItems(plt, d)
   currentPlot!(plt)
 
   # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement

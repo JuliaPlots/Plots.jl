@@ -211,53 +211,35 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
 end
 
 
-function findGuideAndSet(plt::Plot, t::DataType, s::AbstractString)
-  for guide in plt.o.guides
+function findGuideAndSet(gplt, t::DataType, s::AbstractString)
+  for (i,guide) in enumerate(gplt.guides)
     if isa(guide, t)
-      guide.label = s
+      gplt.guides[i] = t(s)
+      # guide.label = s
     end
   end
 end
 
-function updatePlotItems(::GadflyPackage, plt::Plot, d::Dict)
-  haskey(d, :title) && findGuideAndSet(plt, Gadfly.Guide.title, d[:title])
-  haskey(d, :xlabel) && findGuideAndSet(plt, Gadfly.Guide.xlabel, d[:xlabel])
-  haskey(d, :ylabel) && findGuideAndSet(plt, Gadfly.Guide.ylabel, d[:ylabel])
+function updateGadflyGuides(gplt, d::Dict)
+  haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, d[:title])
+  haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, d[:xlabel])
+  haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, d[:ylabel])
 end
 
-function setGadflyDisplaySize(w,h)
-  Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
+function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
+  updateGadflyGuides(plt.o, d)
 end
 
-# function Base.display(::GadflyPackage, plt::Plot)
-# # function Base.writemime(io::IO, ::MIME")
-#   setGadflyDisplaySize(plt.initargs[:size]...)
-#   display(plt.o)
-# end
+# ----------------------------------------------------------------
 
-function Base.display(::PlotsDisplay, plt::Plot{GadflyPackage})
-  setGadflyDisplaySize(plt.initargs[:size]...)
-  display(plt.o)
+
+# create the underlying object (each backend will do this differently)
+function buildSubplotObject!(subplt::Subplot{GadflyPackage})
+  subplt.o = nothing
 end
 
-# -------------------------------
+# ----------------------------------------------------------------
 
-# function savepng(::GadflyPackage, plt::PlottingObject, fn::AbstractString;
-#                                     w = plt.initargs[:size][1] * Gadfly.px, # 6 * Gadfly.inch,
-#                                     h = plt.initargs[:size][2] * Gadfly.px) # 4 * Gadfly.inch)
-#   o = getGadflyContext(plt.plotter, plt)
-#   Gadfly.draw(Gadfly.PNG(fn, w, h), o)
-# end
-
-function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{GadflyPackage})
-                                    # w = plt.initargs[:size][1] * Gadfly.px, # 6 * Gadfly.inch,
-                                    # h = plt.initargs[:size][2] * Gadfly.px) # 4 * Gadfly.inch)
-  gplt = getGadflyContext(plt.plotter, plt)
-  setGadflyDisplaySize(plt.initargs[:size]...)
-  Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
-end
-
-# -------------------------------
 
 getGadflyContext(::GadflyPackage, plt::Plot) = plt.o
 getGadflyContext(::GadflyPackage, subplt::Subplot) = buildGadflySubplotContext(subplt)
@@ -273,11 +255,21 @@ function buildGadflySubplotContext(subplt::Subplot)
   Gadfly.vstack(rows...)
 end
 
-# create the underlying object (each backend will do this differently)
-function buildSubplotObject!(subplt::Subplot{GadflyPackage})
-  subplt.o = nothing
+function setGadflyDisplaySize(w,h)
+  Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
 end
 
+function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{GadflyPackage})
+  gplt = getGadflyContext(plt.plotter, plt)
+  setGadflyDisplaySize(plt.initargs[:size]...)
+  Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
+end
+
+
+function Base.display(::PlotsDisplay, plt::Plot{GadflyPackage})
+  setGadflyDisplaySize(plt.initargs[:size]...)
+  display(plt.o)
+end
 
 function Base.display(::PlotsDisplay, subplt::Subplot{GadflyPackage})
   setGadflyDisplaySize(plt.initargs[:size]...)
