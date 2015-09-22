@@ -101,7 +101,7 @@ end
 getGadflyContext(::ImmersePackage, plt::Plot) = plt.o[2]
 getGadflyContext(::ImmersePackage, subplt::Subplot) = buildGadflySubplotContext(subplt)
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{ImmersePackage})
+function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{ImmersePackage})
   gplt = getGadflyContext(plt.plotter, plt)
   setGadflyDisplaySize(plt.initargs[:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
@@ -118,6 +118,13 @@ function Base.display(::PlotsDisplay, plt::Plot{ImmersePackage})
 
   Immerse.figure(fig.figno; displayfig = false)
   display(gplt)
+end
+
+
+function Base.writemime(io::IO, ::MIME"image/png", plt::Subplot{ImmersePackage})
+  gplt = getGadflyContext(plt.plotter, plt)
+  setGadflyDisplaySize(plt.initargs[1][:size]...)
+  Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end
 
 function Base.display(::PlotsDisplay, subplt::Subplot{ImmersePackage})

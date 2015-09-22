@@ -153,11 +153,17 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   append!(gfargs, getLineGeoms(d))
 
   # fillto
-  if d[:fillto] != nothing
+  if d[:fillto] == nothing
+    yminmax = []
+  else
     fillto = makevec(d[:fillto])
     n = length(fillto)
-    push!(d[:kwargs], (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
-    push!(d[:kwargs], (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
+    yminmax = [
+      (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]),
+      (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])])
+    ]
+    # push!(d[:kwargs], (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
+    # push!(d[:kwargs], (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
     # push!(d[:kwargs], (:ymax, Float64[max(y, fillto) for y in d[:y]]))
     push!(gfargs, Gadfly.Geom.ribbon)
   end
@@ -188,8 +194,10 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
 
   # add the layer to the Gadfly.Plot
+  # @show d[:kwargs]
   # prepend!(gplt.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
-  prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
+  prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y], yminmax...))
+  # prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
   nothing
 end
 
