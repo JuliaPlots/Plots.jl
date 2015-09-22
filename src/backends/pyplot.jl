@@ -67,7 +67,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
 
   # in the 2-axis case we need to get: <rightaxis>[:<func>]
   if axis == :right
-    ax = getRightAxis(plt.o)  
+    ax = getRightAxis(plt.o[1])  
     ax[:set_ylabel](plt.initargs[:yrightlabel])
     fmap = Dict(
         :hist => :hist,
@@ -221,7 +221,14 @@ function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
   makePyPlotCurrent(plt)
   haskey(d, :title) && PyPlot.title(d[:title])
   haskey(d, :xlabel) && PyPlot.xlabel(d[:xlabel])
-  haskey(d, :ylabel) && PyPlot.ylabel(d[:ylabel])
+  if haskey(d, :ylabel)
+    ax = getLeftAxis(plt.o[1])  
+    ax[:set_ylabel](d[:ylabel])
+  end
+  if haskey(d, :yrightlabel)
+    ax = getRightAxis(plt.o[1])  
+    ax[:set_ylabel](d[:yrightlabel])
+  end
 end
 
 

@@ -1,8 +1,8 @@
 # Examples for backend: pyplot
 
-- Supported arguments: `args`, `axis`, `color`, `kwargs`, `label`, `legend`, `linestyle`, `linetype`, `marker`, `markercolor`, `markersize`, `nbins`, `size`, `title`, `width`, `windowtitle`, `xlabel`, `ylabel`, `yrightlabel`
+- Supported arguments: `args`, `axis`, `background_color`, `color`, `foreground_color`, `group`, `kwargs`, `label`, `legend`, `linestyle`, `linetype`, `marker`, `markercolor`, `markersize`, `nbins`, `ribbon`, `show`, `size`, `title`, `width`, `windowtitle`, `xlabel`, `xticks`, `ylabel`, `yrightlabel`, `yticks`
 - Supported values for axis: `:auto`, `:left`, `:right`
-- Supported values for linetype: `:none`, `:line`, `:step`, `:stepinverted`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`
+- Supported values for linetype: `:none`, `:line`, `:path`, `:step`, `:stepinverted`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`
 - Supported values for linestyle: `:auto`, `:solid`, `:dash`, `:dot`, `:dashdot`
 - Supported values for marker: `:none`, `:auto`, `:rect`, `:ellipse`, `:diamond`, `:utriangle`, `:dtriangle`, `:cross`, `:xcross`, `:star1`, `:hexagon`
 - Is `subplot`/`subplot!` supported? No
@@ -19,7 +19,7 @@ pyplot!()
 A simple line plot of the 3 columns.
 
 ```julia
-plot(rand(100,3))
+plot(rand(50,5),w=3)
 ```
 
 ![](../img/pyplot/pyplot_example_1.png)
@@ -51,7 +51,7 @@ Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, um
 ```julia
 plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
             sin(2x)
-        end),0,2π,legend=false)
+        end),0,2π,legend=false,fillto=0)
 ```
 
 ![](../img/pyplot/pyplot_example_4.png)
@@ -61,7 +61,7 @@ plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, li
 Change the guides/background without a separate call.
 
 ```julia
-plot(rand(10); title="TITLE",xlabel="XLABEL",ylabel="YLABEL",background_color=RGB(0.5,0.5,0.5))
+plot(rand(10); title="TITLE",xlabel="XLABEL",ylabel="YLABEL",background_color=RGB(0.2,0.2,0.2))
 ```
 
 ![](../img/pyplot/pyplot_example_5.png)
@@ -73,7 +73,7 @@ Use the `axis` or `axiss` arguments.
 Note: Currently only supported with Qwt and PyPlot
 
 ```julia
-plot(Vector[randn(100),randn(100) * 100]; axiss=[:left,:right],ylabel="LEFT",yrightlabel="RIGHT")
+plot(Vector[randn(100),randn(100) * 100]; axis=[:l,:r],ylabel="LEFT",yrightlabel="RIGHT")
 ```
 
 ![](../img/pyplot/pyplot_example_6.png)
@@ -103,7 +103,7 @@ plot(rand(100) / 3; reg=true,fillto=0)
 and add to it later.
 
 ```julia
-scatter!(rand(100); markersize=6,color=:blue)
+scatter!(rand(100); markersize=6,c=:blue)
 ```
 
 ![](../img/pyplot/pyplot_example_9.png)
@@ -123,11 +123,11 @@ heatmap(randn(10000),randn(10000); nbins=100)
 
 
 ```julia
-types = intersect(supportedTypes(),[:line,:step,:stepinverted,:sticks,:scatter])
+types = intersect(supportedTypes(),[:line,:path,:steppre,:steppost,:sticks,:scatter])
 n = length(types)
 x = Vector[sort(rand(20)) for i = 1:n]
 y = rand(20,n)
-plot(x,y; linetypes=types,labels=map(string,types))
+plot(x,y; t=types,lab=map(string,types))
 ```
 
 ![](../img/pyplot/pyplot_example_11.png)
@@ -138,7 +138,7 @@ plot(x,y; linetypes=types,labels=map(string,types))
 
 ```julia
 styles = setdiff(supportedStyles(),[:auto])
-plot(rand(20,length(styles)); linestyle=:auto,labels=map(string,styles))
+plot(cumsum(randn(20,length(styles)),1); style=:auto,label=map(string,styles),w=5)
 ```
 
 ![](../img/pyplot/pyplot_example_12.png)
@@ -149,7 +149,7 @@ plot(rand(20,length(styles)); linestyle=:auto,labels=map(string,styles))
 
 ```julia
 markers = setdiff(supportedMarkers(),[:none,:auto])
-scatter(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,labels=map(string,markers),markersize=10)
+scatter(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,label=map(string,markers),markersize=10)
 ```
 
 ![](../img/pyplot/pyplot_example_13.png)
@@ -166,10 +166,10 @@ bar(randn(1000))
 
 ### Histogram
 
-note: fillto isn't supported on all backends
+
 
 ```julia
-histogram(randn(1000); nbins=50,fillto=20)
+histogram(randn(1000); nbins=50)
 ```
 
 ![](../img/pyplot/pyplot_example_15.png)
