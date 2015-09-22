@@ -7,6 +7,7 @@ export qwt!
 qwt!() = plotter!(:qwt)
 
 supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
+supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
 
 # -------------------------------
 
@@ -26,33 +27,24 @@ end
 
 function adjustQwtKeywords(iscreating::Bool; kw...)
   d = Dict(kw)
-  # replaceAliases!(d, _qwtAliases)
-  replaceLinetypeAlias(d)
-  # if !iscreating
-  #   d[:heatmap_n] = d[:nbins]
-  # end
-
-  # if d[:linetype] == :hexbin
-  #   d[:linetype] = :heatmap
-  # elseif d[:linetype] == :scatter
   if d[:linetype] == :scatter
     d[:linetype] = :none
     if d[:marker] == :none
       d[:marker] = :ellipse
     end
   elseif !iscreating && d[:linetype] == :bar
-    return barHack(; kw...)
+    d = barHack(; kw...)
   elseif !iscreating && d[:linetype] == :hist
-    return barHack(; histogramHack(; kw...)...)
+    d = barHack(; histogramHack(; kw...)...)
   end
+
+  replaceLinetypeAlias(d)
+  show(d)
   d
 end
 
 function plot(pkg::QwtPackage; kw...)
   d = Dict(kw)
-  # replaceAliases!(d, _qwtAliases)
-  replaceLinetypeAlias(d)
-  # d = adjustQwtKeywords(true; kw...)
   o = Qwt.plot(zeros(0,0); d..., show=false)
   plt = Plot(o, pkg, 0, d, Dict[])
   plt
@@ -60,7 +52,6 @@ end
 
 function plot!(::QwtPackage, plt::Plot; kw...)
   d = adjustQwtKeywords(false; kw...)
-  # @show d
   Qwt.oplot(plt.o; d...)
   push!(plt.seriesargs, d)
   plt
