@@ -104,7 +104,7 @@ end
 
 
 
-function addGadflySeries!(gplt, d::Dict)
+function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
   gfargs = []
 
@@ -121,9 +121,15 @@ function addGadflySeries!(gplt, d::Dict)
   
   # set theme: color, line width, and point size
   line_width = d[:width] * (d[:linetype] == :none ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
+  # fg = initargs[:foreground_color]
   theme = Gadfly.Theme(; default_color = d[:color],
                        line_width = line_width,
                        default_point_size = 0.5 * d[:markersize] * Gadfly.px,
+                       # grid_color = fg,
+                       # minor_label_color = fg,
+                       # major_label_color = fg,
+                       # key_title_color = fg,
+                       # key_label_color = fg,
                        extra_theme_args...)
                        # line_style = line_style)
   push!(gfargs, theme)
@@ -199,7 +205,7 @@ end
 # plot one data series
 function plot!(::GadflyPackage, plt::Plot; kw...)
   d = Dict(kw)
-  addGadflySeries!(plt.o, d)
+  addGadflySeries!(plt.o, d, plt.initargs)
   push!(plt.seriesargs, d)
   plt
 end

@@ -33,7 +33,7 @@ const examples = PlotExample[
               [:(plot(sin, x->sin(2x), 0, 2π, legend=false))]),
   PlotExample("Global",
               "Change the guides/background without a separate call.",
-              [:(plot(rand(10); title="TITLE", xlabel="XLABEL", ylabel="YLABEL", background_color = RGB(0.5,0.5,0.5)))]),
+              [:(plot(rand(10); title="TITLE", xlabel="XLABEL", ylabel="YLABEL", background_color = RGB(0.2,0.2,0.2)))]),
   PlotExample("Two-axis",
               "Use the `axis` or `axiss` arguments.\n\nNote: Currently only supported with Qwt and PyPlot",
               [:(plot(Vector[randn(100), randn(100)*100]; axiss = [:left,:right], ylabel="LEFT", yrightlabel="RIGHT"))]),

@@ -38,7 +38,7 @@ end
 function plot!(::ImmersePackage, plt::Plot; kw...)
   d = Dict(kw)
   gplt = plt.o[2]
-  addGadflySeries!(gplt, d)
+  addGadflySeries!(gplt, d, plt.initargs)
   push!(plt.seriesargs, d)
   plt
 end
