@@ -117,7 +117,7 @@ end
 # Then once inputs have been converted, build the series args, map functions, etc.
 # This should cut down on boilerplate code and allow more focused dispatch on type
 
-typealias FuncOrFuncs Union(Function, AVec{Function})
+typealias FuncOrFuncs Union{Function, AVec{Function}}
 
 # missing
 convertToAnyVector(v::Void; kw...) = Any[nothing]

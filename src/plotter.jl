@@ -48,34 +48,40 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, backend(sym))
 
 function pickDefaultBackend()
   try
-    Pkg.installed("Immerse")
-    return CurrentBackend(:immerse)
+    if Pkg.installed("Immerse") != nothing
+      return CurrentBackend(:immerse)
+    end
   end
   try
-    Pkg.installed("Qwt")
-    return CurrentBackend(:qwt)
+    if Pkg.installed("Qwt") != nothing
+      return CurrentBackend(:qwt)
+    end
   end
   try
-    Pkg.installed("PyPlot")
-    return CurrentBackend(:pyplot)
+    if Pkg.installed("PyPlot") != nothing
+      return CurrentBackend(:pyplot)
+    end
   end
   try
-    Pkg.installed("Gadfly")
-    return CurrentBackend(:gadfly)
+    if Pkg.installed("Gadfly") != nothing
+      return CurrentBackend(:gadfly)
+    end
   end
   try
-    Pkg.installed("UnicodePlots")
-    return CurrentBackend(:unicodeplots)
+    if Pkg.installed("UnicodePlots") != nothing
+      return CurrentBackend(:unicodeplots)
+    end
   end
   try
-    Pkg.installed("Winston")
-    return CurrentBackend(:winston)
+    if Pkg.installed("Winston") != nothing
+      return CurrentBackend(:winston)
+    end
   end
   warn("You don't have any of the supported backends installed!  Chose from ", backends())
   return CurrentBackend(:gadfly)
 end
-const CURRENT_BACKEND = pickDefaultBackend()
-println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
+# const CURRENT_BACKEND = pickDefaultBackend()
+# println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
 
 
 # ---------------------------------------------------------

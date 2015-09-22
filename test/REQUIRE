@@ -1,6 +1,7 @@
 julia 0.4-
 
 Colors
+Reexport
 FactCheck
 PyPlot
 UnicodePlots
