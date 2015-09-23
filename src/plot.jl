@@ -88,16 +88,27 @@ function plot!(plt::Plot, args...; kw...)
   # index partitions/filters to be passed through to the next step.
   # Ideally we don't change the insides ot createKWargsList too much to 
   # save from code repetition.  We could consider adding a throw
+  groupargs = haskey(d, :group) ? extractGroupArgs(d[:group]) : []
+  @show groupargs
 
   # just in case the backend needs to set up the plot (make it current or something)
   preparePlotUpdate(plt)
 
-  kwList = createKWargsList(plt, args...; d...)
-  for (i,d) in enumerate(kwList)
+  # get the list of dictionaries, one per series
+  kwList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
+  @show xmeta ymeta typeof(xmeta) typeof(ymeta)
+
+  # if we were able to extract guide information from the series inputs, then update the plot
+  updateDictWithMeta(d, plt.initargs, xmeta, true)
+  updateDictWithMeta(d, plt.initargs, ymeta, false)
+
+  # now we can plot the series
+  for (i,di) in enumerate(kwList)
     plt.n += 1
-    plot!(plt.plotter, plt; d...)
+    plot!(plt.plotter, plt; di...)
   end
 
+  # 
   updatePlotItems(plt, d)
   currentPlot!(plt)
 
@@ -112,10 +123,16 @@ end
 
 preparePlotUpdate(plt::Plot) = nothing
 
-# # show/update the plot
-# function Base.display(plt::PlottingObject)
-#   display(plt.plotter, plt)
-# end
+
+# should we update the x/y label given the meta info during input slicing?
+function updateDictWithMeta(d::Dict, initargs::Dict, meta::Symbol, isx::Bool)
+  lsym = isx ? :xlabel : :ylabel
+  if initargs[lsym] == plotDefault(lsym)
+    d[lsym] = string(meta)
+  end
+end
+updateDictWithMeta(d::Dict, initargs::Dict, meta, isx::Bool) = nothing
+
 
 # --------------------------------------------------------------------
 
@@ -124,29 +141,30 @@ preparePlotUpdate(plt::Plot) = nothing
 # Special handling for: no args, xmin/xmax, parametric, dataframes
 # Then once inputs have been converted, build the series args, map functions, etc.
 # This should cut down on boilerplate code and allow more focused dispatch on type
+# note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
 typealias FuncOrFuncs Union{Function, AVec{Function}}
 
 # missing
-convertToAnyVector(v::Void; kw...) = Any[nothing]
+convertToAnyVector(v::Void; kw...) = Any[nothing], nothing
 
 # fixed number of blank series
-convertToAnyVector(n::Integer; kw...) = Any[zero(0) for i in 1:n]
+convertToAnyVector(n::Integer; kw...) = Any[zero(0) for i in 1:n], nothing
 
 # numeric vector
-convertToAnyVector{T<:Real}(v::AVec{T}; kw...) = Any[v]
+convertToAnyVector{T<:Real}(v::AVec{T}; kw...) = Any[v], nothing
 
 # numeric matrix
-convertToAnyVector{T<:Real}(v::AMat{T}; kw...) = Any[v[:,i] for i in 1:size(v,2)]
+convertToAnyVector{T<:Real}(v::AMat{T}; kw...) = Any[v[:,i] for i in 1:size(v,2)], nothing
 
 # function
-convertToAnyVector(f::Function; kw...) = Any[f]
+convertToAnyVector(f::Function; kw...) = Any[f], nothing
 
 # vector of OHLC
-convertToAnyVector(v::AVec{OHLC}; kw...) = Any[v]
+convertToAnyVector(v::AVec{OHLC}; kw...) = Any[v], nothing
 
 # list of things (maybe other vectors, functions, or something else)
-convertToAnyVector(v::AVec; kw...) = Any[vi for vi in v]
+convertToAnyVector(v::AVec; kw...) = Any[vi for vi in v], nothing
 
 
 # --------------------------------------------------------------------
@@ -169,16 +187,29 @@ end
 # create n=max(mx,my) series arguments. the shorter list is cycled through
 # note: everything should flow through this
 function createKWargsList(plt::PlottingObject, x, y; kw...)
-  xs = convertToAnyVector(x; kw...)
-  ys = convertToAnyVector(y; kw...)
+  xs, xmeta = convertToAnyVector(x; kw...)
+  ys, ymeta = convertToAnyVector(y; kw...)
   mx = length(xs)
   my = length(ys)
   ret = []
   for i in 1:max(mx, my)
+
+    # try to set labels using ymeta
+    d = Dict(kw)
+    if !haskey(d, :label) && ymeta != nothing
+      if isa(ymeta, Symbol)
+        d[:label] = string(ymeta)
+      elseif isa(ymeta, AVec{Symbol})
+        d[:label] = string(ymeta[mod1(i,length(ymeta))])
+      end
+    end
+
+    # build the series arg dict
     n = plt.n + i
-    d = getSeriesArgs(plt.plotter, getinitargs(plt, n), kw, i, convertSeriesIndex(plt, n), n)
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, n), d, i, convertSeriesIndex(plt, n), n)
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
+    # for linetype `line`, need to sort by x values
     if d[:linetype] == :line
       # order by x
       indices = sortperm(d[:x])
@@ -187,9 +218,11 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
       d[:linetype] = :path
     end
 
+    # add it to our series list
     push!(ret, d)
   end
-  ret
+
+  ret, xmeta, ymeta
 end
 
 # pass it off to the x/y version
@@ -259,8 +292,8 @@ function dataframes!()
   end
 
   # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
-  @eval convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]]
-  @eval convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v])
+  @eval convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]], s
+  @eval convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v]), v
 end
 
 

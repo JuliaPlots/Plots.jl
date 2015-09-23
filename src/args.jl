@@ -249,6 +249,24 @@ function plotDefault!(k::Symbol, v)
   end
 end
 
+
+# -----------------------------------------------------------------------------
+
+"A special type that will break up incoming data into groups, and allow for easier creation of grouped plots"
+type GroupBy
+  numGroups::Int
+  numPoints::Int
+  groupLabels::Vector{UTF8String}   # length == numGroups
+  groupIds::Vector{Int}             # length == numPoints
+end
+
+
+function extractGroupArgs(d::Dict)
+  # expecting a mapping of "group label" to "group indices"
+  
+end
+
+
 # -----------------------------------------------------------------------------
 
 function warnOnUnsupportedArgs(pkg::PlottingPackage, d::Dict)
