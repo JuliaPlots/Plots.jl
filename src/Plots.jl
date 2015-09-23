@@ -39,6 +39,10 @@ export
   title!,
   xlabel!,
   ylabel!,
+  xlims!,
+  ylims!,
+  xticks!,
+  yticks!,
 
   savepng,
   gui,
@@ -95,10 +99,18 @@ ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 title!(s::AbstractString) = plot!(title = s)
 xlabel!(s::AbstractString) = plot!(xlabel = s)
 ylabel!(s::AbstractString) = plot!(ylabel = s)
+xlims!{T<:Real,S<:Real}(s::Tuple{T,S}) = plot!(xlims = s)
+ylims!{T<:Real,S<:Real}(s::Tuple{T,S}) = plot!(ylims = s)
+xticks!{T<:Real}(s::AVec{T}) = plot!(xticks = s)
+yticks!{T<:Real}(s::AVec{T}) = plot!(yticks = s)
 
 title!(plt::Plot, s::AbstractString) = plot!(plt; title = s)
 xlabel!(plt::Plot, s::AbstractString) = plot!(plt; xlabel = s)
 ylabel!(plt::Plot, s::AbstractString) = plot!(plt; ylabel = s)
+xlims!{T<:Real,S<:Real}(plt::Plot, s::Tuple{T,S}) = plot!(plt; xlims = s)
+ylims!{T<:Real,S<:Real}(plt::Plot, s::Tuple{T,S}) = plot!(plt; ylims = s)
+xticks!{T<:Real}(plt::Plot, s::AVec{T}) = plot!(plt; xticks = s)
+yticks!{T<:Real}(plt::Plot, s::AVec{T}) = plot!(plt; yticks = s)
 
 
 # ---------------------------------------------------------

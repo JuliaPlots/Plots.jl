@@ -7,7 +7,7 @@ export gadfly!
 gadfly!() = plotter!(:gadfly)
 
 
-supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos])
+supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos, :screen, :yrightlabel])
 supportedAxes(::GadflyPackage) = setdiff(_allAxes, [:right])
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -162,9 +162,6 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
       (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]),
       (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])])
     ]
-    # push!(d[:kwargs], (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
-    # push!(d[:kwargs], (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
-    # push!(d[:kwargs], (:ymax, Float64[max(y, fillto) for y in d[:y]]))
     push!(gfargs, Gadfly.Geom.ribbon)
   end
   
@@ -193,38 +190,11 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
 
   # add the layer to the Gadfly.Plot
-  # @show d[:kwargs]
   # prepend!(gplt.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
   prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y], yminmax...))
-  # prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
   nothing
 end
 
-# function addTicksGuideOrScale(gplt, ticks, isx::Bool)
-#   ticks == :auto && return
-#   ttype = ticksType(ticks)
-#   if ttype == :limits
-#     minvalue = min(ticks...)
-#     maxvalue = max(ticks...)
-#     scale = (isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous)(minvalue=minvalue, maxvalue=maxvalue)
-#     push!(gplt.scales, scale)
-#   elseif ttype == :ticks
-#     # if isx
-#     #   ticks = map(Compose.x_measure, sort(collect(ticks)))
-#     #   push!(gplt.statistics, Gadfly.Stat.xticks(ticks=ticks))
-#     # else
-#     #   ticks = map(Compose.y_measure, sort(collect(ticks)))
-#     #   push!(gplt.statistics, Gadfly.Stat.yticks(ticks=ticks))
-#     # end
-#     ticks = sort(ticks)
-#     guide = (isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks)(ticks=ticks)
-#     push!(gplt.guides, guide)
-#     # stat = (isx ? Gadfly.Stat.xticks : Gadfly.Stat.yticks)(ticks=ticks)
-#     # push!(gplt.statistics, stat)
-#   else
-#     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
-#   end
-# end
 
 function addTicksGuide(gplt, ticks, isx::Bool)
   ticks == :auto && return
@@ -238,13 +208,16 @@ function addTicksGuide(gplt, ticks, isx::Bool)
   end
 end
 
+isContinuousScale(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScale) && scale.vars[1] == (isx ? :x : :y)
+
 function addLimitsScale(gplt, lims, isx::Bool)
   lims == :auto && return
   ltype = limsType(lims)
   if ltype == :limits
-    gtype = isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous
-    filter!(x -> !isa(x, gtype), gplt.scales)
-    push!(gplt.scales, gtype(minvalue = min(lims...), maxvalue = max(lims...)))
+    # remove any existing scales, then add a new one
+    gfunc = isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous
+    filter!(scale -> !isContinuousScale(scale,isx), gplt.scales)
+    push!(gplt.scales, gfunc(minvalue = min(lims...), maxvalue = max(lims...)))
   else
     error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
   end
