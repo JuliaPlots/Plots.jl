@@ -200,31 +200,56 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   nothing
 end
 
-function addTicksGuideOrScale(gplt, ticks, isx::Bool)
+# function addTicksGuideOrScale(gplt, ticks, isx::Bool)
+#   ticks == :auto && return
+#   ttype = ticksType(ticks)
+#   if ttype == :limits
+#     minvalue = min(ticks...)
+#     maxvalue = max(ticks...)
+#     scale = (isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous)(minvalue=minvalue, maxvalue=maxvalue)
+#     push!(gplt.scales, scale)
+#   elseif ttype == :ticks
+#     # if isx
+#     #   ticks = map(Compose.x_measure, sort(collect(ticks)))
+#     #   push!(gplt.statistics, Gadfly.Stat.xticks(ticks=ticks))
+#     # else
+#     #   ticks = map(Compose.y_measure, sort(collect(ticks)))
+#     #   push!(gplt.statistics, Gadfly.Stat.yticks(ticks=ticks))
+#     # end
+#     ticks = sort(ticks)
+#     guide = (isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks)(ticks=ticks)
+#     push!(gplt.guides, guide)
+#     # stat = (isx ? Gadfly.Stat.xticks : Gadfly.Stat.yticks)(ticks=ticks)
+#     # push!(gplt.statistics, stat)
+#   else
+#     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
+#   end
+# end
+
+function addTicksGuide(gplt, ticks, isx::Bool)
   ticks == :auto && return
   ttype = ticksType(ticks)
-  if ttype == :limits
-    minvalue = min(ticks...)
-    maxvalue = max(ticks...)
-    scale = (isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous)(minvalue=minvalue, maxvalue=maxvalue)
-    push!(gplt.scales, scale)
-  elseif ttype == :ticks
-    if isx
-      ticks = map(Compose.x_measure, sort(collect(ticks)))
-      push!(gplt.statistics, Gadfly.Stat.xticks(ticks=ticks))
-    else
-      ticks = map(Compose.y_measure, sort(collect(ticks)))
-      push!(gplt.statistics, Gadfly.Stat.yticks(ticks=ticks))
-    end
-    # ticks = map(Composesort(ticks)
-    # # guide = (isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks)(ticks=ticks)
-    # # push!(gplt.guides, guide)
-    # stat = (isx ? Gadfly.Stat.xticks : Gadfly.Stat.yticks)(ticks=ticks)
-    # push!(gplt.statistics, stat)
+  if ttype == :ticks
+    gtype = isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks
+    filter!(x -> !isa(x, gtype), gplt.guides)
+    push!(gplt.guides, gtype(ticks = sort(collect(ticks))))
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
   end
 end
+
+function addLimitsScale(gplt, lims, isx::Bool)
+  lims == :auto && return
+  ltype = limsType(lims)
+  if ltype == :limits
+    gtype = isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous
+    filter!(x -> !isa(x, gtype), gplt.scales)
+    push!(gplt.scales, gtype(minvalue = min(lims...), maxvalue = max(lims...)))
+  else
+    error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
+  end
+end
+
 
 # ---------------------------------------------------------------------------
 
@@ -258,8 +283,10 @@ function updateGadflyGuides(gplt, d::Dict)
   haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, d[:title])
   haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, d[:xlabel])
   haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, d[:ylabel])
-  haskey(d, :xticks) && addTicksGuideOrScale(gplt, d[:xticks], true)
-  haskey(d, :yticks) && addTicksGuideOrScale(gplt, d[:yticks], true)
+  haskey(d, :xlims) && addLimitsScale(gplt, d[:xlims], true)
+  haskey(d, :ylims) && addLimitsScale(gplt, d[:ylims], false)
+  haskey(d, :xticks) && addTicksGuide(gplt, d[:xticks], true)
+  haskey(d, :yticks) && addTicksGuide(gplt, d[:yticks], false)
 end
 
 function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)

@@ -128,9 +128,12 @@ function regressionXY(x, y)
   regx, regy
 end
 
-ticksType{T<:Real,S<:Real}(ticks::Tuple{T,S}) = :limits
+# ticksType{T<:Real,S<:Real}(ticks::Tuple{T,S}) = :limits
 ticksType{T<:Real}(ticks::AVec{T}) = :ticks
 ticksType(ticks) = :invalid
+
+limsType{T<:Real,S<:Real}(lims::Tuple{T,S}) = :limits
+limsType(lims) = :invalid
 
 
 # Some conversion functions
