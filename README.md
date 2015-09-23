@@ -101,8 +101,8 @@ There are many ways to pass in data to the plot functions... some examples:
 - DataFrames with column symbols (initialize with `dataframes!()`)
 
 In general, you can pass in a `y` only, or an `x` and `y`, both of whatever type(s) you want, and Plots will slice up the data as needed.
-For matrices, data is split by columns.  For functions, data is mapped.  For DataFrames (TODO), a Symbol/Symbols in place of x/y will map to
-the relevant column(s) and also automatically set the associated legend label.
+For matrices, data is split by columns.  For functions, data is mapped.  For DataFrames, a Symbol/Symbols in place of x/y will map to
+the relevant column(s).
 
 Here are some example usages... remember you can always use `plot!` to update an existing plot, and that, unless specified, you will update the `currentPlot()`.
 
