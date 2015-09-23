@@ -128,6 +128,10 @@ function regressionXY(x, y)
   regx, regy
 end
 
+ticksType{T<:Real,S<:Real}(ticks::Tuple{T,S}) = :limits
+ticksType{T<:Real}(ticks::AVec{T}) = :ticks
+ticksType(ticks) = :invalid
+
 
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure

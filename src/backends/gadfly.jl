@@ -184,7 +184,6 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     push!(gplt.guides[1].colors, d[:marker] == :none ? d[:color] : d[:markercolor])
   end
 
-
   # for histograms, set x=y
   x = d[d[:linetype] == :hist ? :y : :x]
 
@@ -199,6 +198,32 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y], yminmax...))
   # prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y]))
   nothing
+end
+
+function addTicksGuideOrScale(gplt, ticks, isx::Bool)
+  ticks == :auto && return
+  ttype = ticksType(ticks)
+  if ttype == :limits
+    minvalue = min(ticks...)
+    maxvalue = max(ticks...)
+    scale = (isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous)(minvalue=minvalue, maxvalue=maxvalue)
+    push!(gplt.scales, scale)
+  elseif ttype == :ticks
+    if isx
+      ticks = map(Compose.x_measure, sort(collect(ticks)))
+      push!(gplt.statistics, Gadfly.Stat.xticks(ticks=ticks))
+    else
+      ticks = map(Compose.y_measure, sort(collect(ticks)))
+      push!(gplt.statistics, Gadfly.Stat.yticks(ticks=ticks))
+    end
+    # ticks = map(Composesort(ticks)
+    # # guide = (isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks)(ticks=ticks)
+    # # push!(gplt.guides, guide)
+    # stat = (isx ? Gadfly.Stat.xticks : Gadfly.Stat.yticks)(ticks=ticks)
+    # push!(gplt.statistics, stat)
+  else
+    error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
+  end
 end
 
 # ---------------------------------------------------------------------------
@@ -233,6 +258,8 @@ function updateGadflyGuides(gplt, d::Dict)
   haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, d[:title])
   haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, d[:xlabel])
   haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, d[:ylabel])
+  haskey(d, :xticks) && addTicksGuideOrScale(gplt, d[:xticks], true)
+  haskey(d, :yticks) && addTicksGuideOrScale(gplt, d[:yticks], true)
 end
 
 function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
