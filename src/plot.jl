@@ -225,6 +225,17 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
   ret, xmeta, ymeta
 end
 
+# handle grouping
+function createKWargsList(plt::PlottingObject, groupby::GroupBy, args...; kw...)
+  ret = []
+  for (i,glab) in enumerate(groupby.groupLabels)
+    # TODO: don't automatically overwrite labels
+    kwlist = createKWargsList(plt, args...; kw..., idxfilter = groupby.groupIds[i], label = glab)
+    append!(ret, kwlist)
+  end
+  ret, nothing, nothing # TODO: handle passing meta through
+end
+
 # pass it off to the x/y version
 function createKWargsList(plt::PlottingObject, y; kw...)
   createKWargsList(plt, nothing, y; kw...)

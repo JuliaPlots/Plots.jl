@@ -255,18 +255,27 @@ end
 
 "A special type that will break up incoming data into groups, and allow for easier creation of grouped plots"
 type GroupBy
-  numGroups::Int
   groupLabels::Vector{UTF8String}   # length == numGroups
   groupIds::Vector{Vector{Int}}     # list of indices for each group
 end
 
 
+function extractGroupArgs(v::AVec)
+  groupLabels = sort(collect(unique(v)))
+  n = length(groupLabels)
+  if n > 20
+    error("Too many group labels. n=$n  Is that intended?")
+  end
+  groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
+  GroupBy(groupLabels, groupIds)
+end
+
+
 # expecting a mapping of "group label" to "group indices"
-function extractGroupArgs{V<:AVec{Int}}(d::Dict{T,V})
-  numGroups = length(d)
+function extractGroupArgs{T, V<:AVec{Int}}(d::Dict{T,V})
   groupLabels = sortedkeys(d)
   groupIds = VecI[collect(d[k]) for k in groupLabels]
-  GroupBy(numGroups, groupLabels, groupIds)
+  GroupBy(groupLabels, groupIds)
 end
 
 
