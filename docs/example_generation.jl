@@ -227,7 +227,7 @@ const _ltdesc = Dict(
     :bar => "Bar plot (centered on x values)",
     :hline => "Horizontal line (doesn't use x)",
     :vline => "Vertical line (doesn't use x)",
-    :ohlc => "Open/High/Low/Close chart (expects y is vector of 4-tuples)",
+    :ohlc => "Open/High/Low/Close chart (expects y is AbstractVector{Plots.OHLC})",
   )
 
 function buildReadme()
@@ -236,7 +236,7 @@ function buildReadme()
   # build keyword arg table
   table = "Keyword | Default | Type | Aliases \n---- | ---- | ---- | ----\n"
   for d in (Plots._seriesDefaults, Plots._plotDefaults)
-    for k in sortedkeys(d)
+    for k in Plots.sortedkeys(d)
       aliasstr = createStringOfMarkDownSymbols(aliases(Plots._keyAliases, k))
       table = string(table, "`:$k` | `$(d[k])` | $(d==Plots._seriesDefaults ? "Series" : "Plot") | $aliasstr  \n")
     end

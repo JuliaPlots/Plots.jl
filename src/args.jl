@@ -1,32 +1,35 @@
 
 
-const _allAxes        = [:auto, :left, :right]
-const _axesAliases    = Dict(
+const _allAxes = [:auto, :left, :right]
+const _axesAliases = Dict(
     :a => :auto, 
     :l => :left, 
     :r => :right
   )
 
-const _allTypes       = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-                         :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
-const _typeAliases    = Dict(
-    :n            => :none,
-    :no           => :none,
-    :l            => :line,
-    :p            => :path,
-    :stepinv      => :steppre,
-    :stepinverted => :steppre,
-    :step         => :steppost,
-    :step         => :steppost,
-    :stair        => :steppost,
-    :stairs       => :steppost,
-    :stem         => :sticks,
-    :dots         => :scatter,
-    :histogram    => :hist,
+const _allTypes = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter,
+                   :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
+const _typeAliases = Dict(
+    :n             => :none,
+    :no            => :none,
+    :l             => :line,
+    :p             => :path,
+    :stepinv       => :steppre,
+    :stepsinv      => :steppre,
+    :stepinverted  => :steppre,
+    :stepsinverted => :steppre,
+    :step          => :steppost,
+    :steps         => :steppost,
+    :stair         => :steppost,
+    :stairs        => :steppost,
+    :stem          => :sticks,
+    :stems         => :sticks,
+    :dots          => :scatter,
+    :histogram     => :hist,
   )
 
-const _allStyles      = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _styleAliases   = Dict(
+const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+const _styleAliases = Dict(
     :a    => :auto,
     :s    => :solid,
     :d    => :dash,
@@ -34,7 +37,8 @@ const _styleAliases   = Dict(
     :ddd  => :dashdotdot,
   )
 
-const _allMarkers     = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
+const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
+                     :cross, :xcross, :star1, :star2, :hexagon, :octagon]
 const _markerAliases = Dict(
     :n            => :none,
     :no           => :none,

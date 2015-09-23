@@ -107,18 +107,25 @@ the relevant column(s) and also automatically set the associated legend label.
 Here are some example usages... remember you can always use `plot!` to update an existing plot, and that, unless specified, you will update the `currentPlot()`.
 
 ```julia
-plot()                          # empty plot object
-plot(4)                         # initialize with 4 empty series
-plot(rand(10))                  # plot 1 series... x = 1:10
-plot(rand(10,5))                # plot 5 series... x = 1:10
-plot(rand(10), rand(10))        # plot 1 series
-plot(rand(10,5), rand(10))      # plot 5 series... y is the same for all
-plot(sin, rand(10))             # y = sin(x)
-plot(rand(10), sin)             # same... y = sin(x)
-plot([sin,cos], 0:0.1:π)        # plot 2 series, sin(x) and cos(x)
-plot([sin,cos], 0, π)           # plot sin and cos on the range [0, π]
-plot(1:10, Any[rand(10), sin])  # plot 2 series, y = rand(10) for the first, y = sin(x) for the second... x = 1:10 for both
-plot(dataset("Ecdat", "Airline"), :Cost)  # plot from a DataFrame
+plot()                                    # empty plot object
+plot(4)                                   # initialize with 4 empty series
+plot(rand(10))                            # plot 1 series... x = 1:10
+plot(rand(10,5))                          # plot 5 series... x = 1:10
+plot(rand(10), rand(10))                  # plot 1 series
+plot(rand(10,5), rand(10))                # plot 5 series... y is the same for all
+plot(sin, rand(10))                       # y = sin(x)
+plot(rand(10), sin)                       # same... y = sin(x)
+plot([sin,cos], 0:0.1:π)                  # plot 2 series, sin(x) and cos(x)
+plot([sin,cos], 0, π)                     # plot sin and cos on the range [0, π]
+plot(1:10, Any[rand(10), sin])            # plot 2 series, y = rand(10) for the first, y = sin(x) for the second... x = 1:10 for both
+plot(dataset("Ecdat", "Airline"), :Cost)  # plot from a DataFrame (call `dataframes!()` first to import DataFrames and initialize)
+```
+
+You can update certain plot settings after plot creation (not supported on all backends):
+
+```julia
+plot!(title = "New Title", xlabel = "New xlabel", ylabel = "New ylabel")
+plot!(xlims = (0, 5.5), ylims = (-2.2, 6), xticks = 0:0.5:10, yticks = [0,1,5,10])
 ```
 
 With `subplot`, create multiple plots at once, with flexible layout options:
@@ -154,6 +161,14 @@ vline(args...; kw...)      = plot(args...; kw...,  linetype = :vline)
 vline!(args...; kw...)     = plot!(args...; kw..., linetype = :vline)
 ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
 ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
+
+title!(s::AbstractString)                 = plot!(title = s)
+xlabel!(s::AbstractString)                = plot!(xlabel = s)
+ylabel!(s::AbstractString)                = plot!(ylabel = s)
+xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(xlims = lims)
+ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(ylims = lims)
+xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
+yticks!{T<:Real}(v::AVec{T})              = plot!(yticks = v)
 ```
 
 Some keyword arguments you can set:
@@ -185,10 +200,12 @@ Keyword | Default | Type | Aliases
 `:title` | `` | Plot |   
 `:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
 `:xlabel` | `` | Plot | `:xlab`  
-`:xticks` | `true` | Plot |   
+`:xlims` | `auto` | Plot | `:xlim`, `:xlimit`, `:xlimits`  
+`:xticks` | `auto` | Plot | `:xtick`  
 `:ylabel` | `` | Plot | `:ylab`  
+`:ylims` | `auto` | Plot | `:ylim`, `:ylimit`, `:ylimits`  
 `:yrightlabel` | `` | Plot | `:y2lab`, `:y2label`, `:ylab2`, `:ylabel2`, `:ylabelright`, `:ylabr`, `:yrlab`  
-`:yticks` | `true` | Plot |   
+`:yticks` | `auto` | Plot | `:ytick`  
 
 
 Plot types:
@@ -198,9 +215,9 @@ Type | Desc | Aliases
 `:none` | No line | `:n`, `:no`  
 `:line` | Lines with sorted x-axis | `:l`  
 `:path` | Lines | `:p`  
-`:steppre` | Step plot (vertical then horizontal) | `:stepinv`, `:stepinverted`  
-`:steppost` | Step plot (horizontal then vertical) | `:stair`, `:stairs`, `:step`  
-`:sticks` | Vertical lines | `:stem`  
+`:steppre` | Step plot (vertical then horizontal) | `:stepinv`, `:stepinverted`, `:stepsinv`, `:stepsinverted`  
+`:steppost` | Step plot (horizontal then vertical) | `:stair`, `:stairs`, `:step`, `:steps`  
+`:sticks` | Vertical lines | `:stem`, `:stems`  
 `:scatter` | Points, no lines | `:dots`  
 `:heatmap` | Colored regions by density |   
 `:hexbin` | Similar to heatmap |   
@@ -208,7 +225,7 @@ Type | Desc | Aliases
 `:bar` | Bar plot (centered on x values) |   
 `:hline` | Horizontal line (doesn't use x) |   
 `:vline` | Vertical line (doesn't use x) |   
-`:ohlc` | Open/High/Low/Close chart (expects y is vector of 4-tuples) |   
+`:ohlc` | Open/High/Low/Close chart (expects y is AbstractVector{Plots.OHLC}) |   
 
 
 Line styles:
@@ -253,14 +270,14 @@ plot(rand(100,4); color = [:red, RGB(0,0,1)],    # lines 1 and 3 are red, lines 
                   width = 5)                     # all lines have a width of 5
 ```
 
-__Tip__: Not all features are supported for each backend, but you can see what's supported by calling the functions: `supportedAxes()`, `supportedTypes()`, `supportedStyles()`, `supportedMarkers()`, `subplotSupported()`
+__Tip__: Not all features are supported for each backend, but you can see what's supported by calling the functions: `supportedArgs()`, `supportedAxes()`, `supportedTypes()`, `supportedStyles()`, `supportedMarkers()`, `subplotSupported()`
 
-__Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on backend.  Showing at the REPL implicitly calls this.
+__Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on backend.  Plotting at the REPL (without semicolon) implicitly calls `gui()`.
 
 ## TODO features:
 
 - [x] Plot vectors/matrices/functions
-- [ ] Plot DataFrames
+- [x] Plot DataFrames
 - [ ] Scales
 - [ ] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
 - [ ] Custom markers
