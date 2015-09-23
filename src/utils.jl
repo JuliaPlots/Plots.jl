@@ -118,6 +118,9 @@ function replaceAliases!(d::Dict, aliases::Dict)
 end
 
 
+sortedkeys(d::Dict) = sort(collect(keys(d)))
+
+
 function regressionXY(x, y)
   # regress
   β, α = [x ones(length(x))] \ y

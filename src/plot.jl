@@ -81,6 +81,8 @@ function plot!(plt::Plot, args...; kw...)
   d = Dict(kw)
   replaceAliases!(d, _keyAliases)
 
+  warnOnUnsupportedArgs(plt.plotter, d)
+
   # TODO: handle a "group by" mechanism.
   # will probably want to check for the :group kw param, and split into
   # index partitions/filters to be passed through to the next step.

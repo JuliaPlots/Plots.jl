@@ -236,7 +236,7 @@ function buildReadme()
   # build keyword arg table
   table = "Keyword | Default | Type | Aliases \n---- | ---- | ---- | ----\n"
   for d in (Plots._seriesDefaults, Plots._plotDefaults)
-    for k in sort(collect(keys(d)))
+    for k in sortedkeys(d)
       aliasstr = createStringOfMarkDownSymbols(aliases(Plots._keyAliases, k))
       table = string(table, "`:$k` | `$(d[k])` | $(d==Plots._seriesDefaults ? "Series" : "Plot") | $aliasstr  \n")
     end

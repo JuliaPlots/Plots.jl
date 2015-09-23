@@ -13,7 +13,7 @@ try
   facts("Gadfly") do
     @fact plotter!(:gadfly) --> Plots.GadflyPackage()
     @fact plotter() --> Plots.GadflyPackage()
-    @fact typeof(plot(1:10)) --> Plots.Plot
+    @fact typeof(plot(1:10)) --> Plots.Plot{Plots.GadflyPackage}
 
 
     # plot(x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
@@ -43,7 +43,7 @@ try
   facts("Qwt") do
     @fact plotter!(:qwt) --> Plots.QwtPackage()
     @fact plotter() --> Plots.QwtPackage()
-    @fact typeof(plot(1:10)) --> Plots.Plot
+    @fact typeof(plot(1:10)) --> Plots.Plot{Plots.QwtPackage}
 
     # plot(y::AVec; kw...)                       # one line... x = 1:length(y)
     @fact plot(1:10) --> not(nothing)

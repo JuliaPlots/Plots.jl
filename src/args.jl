@@ -153,7 +153,7 @@ end
 
 function aliases(aliasMap::Dict, val)
   # sort(vcat(val, collect(keys(filter((k,v)-> v==val, aliasMap)))))
-  sort(collect(keys(filter((k,v)-> v==val, aliasMap))))
+  sortedkeys(filter((k,v)-> v==val, aliasMap))
 end
 
 # -----------------------------------------------------------------------------
@@ -247,6 +247,13 @@ end
 
 # -----------------------------------------------------------------------------
 
+function warnOnUnsupportedArgs(pkg::PlottingPackage, d::Dict)
+  for k in sortedkeys(d)
+    if !(k in supportedArgs(pkg))
+      warn("Keyword argument $k not supported with $pkg.  Choose from: $(supportedArgs(pkg))")
+    end
+  end
+end
 
 
 function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
