@@ -215,6 +215,7 @@ const _keyAliases = Dict(
     :windowsize   => :size,
     :wsize        => :size,
     :wtitle       => :windowtitle,
+    :gui          => :show,
     :display      => :show,
   )
 
@@ -255,15 +256,17 @@ end
 "A special type that will break up incoming data into groups, and allow for easier creation of grouped plots"
 type GroupBy
   numGroups::Int
-  numPoints::Int
   groupLabels::Vector{UTF8String}   # length == numGroups
-  groupIds::Vector{Int}             # length == numPoints
+  groupIds::Vector{Vector{Int}}     # list of indices for each group
 end
 
 
-function extractGroupArgs(d::Dict)
-  # expecting a mapping of "group label" to "group indices"
-  
+# expecting a mapping of "group label" to "group indices"
+function extractGroupArgs{V<:AVec{Int}}(d::Dict{T,V})
+  numGroups = length(d)
+  groupLabels = sortedkeys(d)
+  groupIds = VecI[collect(d[k]) for k in groupLabels]
+  GroupBy(numGroups, groupLabels, groupIds)
 end
 
 

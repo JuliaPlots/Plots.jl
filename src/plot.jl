@@ -96,7 +96,7 @@ function plot!(plt::Plot, args...; kw...)
 
   # get the list of dictionaries, one per series
   kwList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
-  @show xmeta ymeta typeof(xmeta) typeof(ymeta)
+  # @show xmeta ymeta typeof(xmeta) typeof(ymeta)
 
   # if we were able to extract guide information from the series inputs, then update the plot
   updateDictWithMeta(d, plt.initargs, xmeta, true)
@@ -114,9 +114,9 @@ function plot!(plt::Plot, args...; kw...)
 
   # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
   # # do we want to show it?
-  # if haskey(d, :show) && d[:show]
-  #   display(plt)
-  # end
+  if haskey(d, :show) && d[:show]
+    gui()
+  end
 
   plt
 end
@@ -261,7 +261,7 @@ function createKWargsList(plt::PlottingObject; kw...)
   d = Dict(kw)
   if !haskey(d, :y)
     # assume we just want to create an empty plot object which can be added to later
-    return []
+    return [], nothing, nothing
     # error("Called plot/subplot without args... must set y in the keyword args.  Example: plot(; y=rand(10))")
   end
   
