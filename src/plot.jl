@@ -88,7 +88,7 @@ function plot!(plt::Plot, args...; kw...)
   # index partitions/filters to be passed through to the next step.
   # Ideally we don't change the insides ot createKWargsList too much to 
   # save from code repetition.  We could consider adding a throw
-  groupargs = haskey(d, :group) ? extractGroupArgs(d[:group]) : []
+  groupargs = haskey(d, :group) ? [extractGroupArgs(d[:group])] : []
   @show groupargs
 
   # just in case the backend needs to set up the plot (make it current or something)
