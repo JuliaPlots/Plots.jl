@@ -107,7 +107,15 @@ function updateAxisColors(ax, fgcolor)
   ax[:title][:set_color](fgcolor)
 end
 
+nop() = nothing
+# makePyPlotCurrent(plt::Plot) = PyPlot.withfig(nop, plt.o[1])
 makePyPlotCurrent(plt::Plot) = PyPlot.figure(plt.o[1].o[:number])
+# makePyPlotCurrent(plt::Plot) = PyPlot.orig_figure(num = plt.o[1].o[:number])
+
+
+function preparePlotUpdate(plt::Plot{PyPlotPackage})
+  makePyPlotCurrent(plt)
+end
 
 # ------------------------------------------------------------------
 
@@ -139,7 +147,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
 
   fig, num = plt.o
   # PyPlot.figure(num)  # makes this current
-  makePyPlotCurrent(plt)
+  # makePyPlotCurrent(plt)
 
   if !(d[:linetype] in supportedTypes(pkg))
     error("linetype $(d[:linetype]) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
@@ -218,7 +226,7 @@ end
 
 
 function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
-  makePyPlotCurrent(plt)
+  # makePyPlotCurrent(plt)
   haskey(d, :title) && PyPlot.title(d[:title])
   haskey(d, :xlabel) && PyPlot.xlabel(d[:xlabel])
   if haskey(d, :ylabel)
@@ -266,7 +274,10 @@ end
 
 function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{PyPlotPackage})
   fig, num = plt.o
+  # makePyPlotCurrent(plt)
   addPyPlotLegend(plt)
+  ax = fig.o[:axes][1]
+  updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
   writemime(io, m, fig)
 end
 
@@ -274,7 +285,7 @@ end
 function Base.display(::PlotsDisplay, plt::Plot{PyPlotPackage})
   fig, num = plt.o
   # PyPlot.figure(num)  # makes this current
-  makePyPlotCurrent(plt)
+  # makePyPlotCurrent(plt)
   addPyPlotLegend(plt)
   ax = fig.o[:axes][1]
   updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))

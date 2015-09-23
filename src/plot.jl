@@ -87,6 +87,9 @@ function plot!(plt::Plot, args...; kw...)
   # Ideally we don't change the insides ot createKWargsList too much to 
   # save from code repetition.  We could consider adding a throw
 
+  # just in case the backend needs to set up the plot (make it current or something)
+  preparePlotUpdate(plt)
+
   kwList = createKWargsList(plt, args...; d...)
   for (i,d) in enumerate(kwList)
     plt.n += 1
@@ -104,6 +107,8 @@ function plot!(plt::Plot, args...; kw...)
 
   plt
 end
+
+preparePlotUpdate(plt::Plot) = nothing
 
 # # show/update the plot
 # function Base.display(plt::PlottingObject)
@@ -195,7 +200,7 @@ function createKWargsList(plt::PlottingObject, f::FuncOrFuncs; kw...)
 end
 
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs, x; kw...)
-  @assert !(x <: FuncOrFuncs)  # otherwise we'd hit infinite recursion here
+  @assert !(typeof(x) <: FuncOrFuncs)  # otherwise we'd hit infinite recursion here
   createKWargsList(plt, x, f; kw...)
 end
 
