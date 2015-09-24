@@ -88,8 +88,8 @@ function plot!(plt::Plot, args...; kw...)
   # index partitions/filters to be passed through to the next step.
   # Ideally we don't change the insides ot createKWargsList too much to 
   # save from code repetition.  We could consider adding a throw
-  groupargs = haskey(d, :group) ? [extractGroupArgs(d[:group])] : []
-  @show groupargs
+  groupargs = haskey(d, :group) ? [extractGroupArgs(d[:group], d)] : []
+  # @show groupargs
 
   # just in case the backend needs to set up the plot (make it current or something)
   preparePlotUpdate(plt)
@@ -105,10 +105,11 @@ function plot!(plt::Plot, args...; kw...)
   # now we can plot the series
   for (i,di) in enumerate(kwList)
     plt.n += 1
+    # println("Plotting: ", di)
     plot!(plt.plotter, plt; di...)
   end
 
-  # 
+  # add title, axis labels, ticks, etc
   updatePlotItems(plt, d)
   currentPlot!(plt)
 
@@ -205,9 +206,15 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     end
 
     # build the series arg dict
-    n = plt.n + i
+    n = plt.n + i + get(d, :numUncounted, 0)
     d = getSeriesArgs(plt.plotter, getinitargs(plt, n), d, i, convertSeriesIndex(plt, n), n)
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
+
+    if haskey(d, :idxfilter)
+      # @show d[:idxfilter] d[:x] d[:y]
+      d[:x] = d[:x][d[:idxfilter]]
+      d[:y] = d[:y][d[:idxfilter]]
+    end
 
     # for linetype `line`, need to sort by x values
     if d[:linetype] == :line
@@ -230,7 +237,10 @@ function createKWargsList(plt::PlottingObject, groupby::GroupBy, args...; kw...)
   ret = []
   for (i,glab) in enumerate(groupby.groupLabels)
     # TODO: don't automatically overwrite labels
-    kwlist = createKWargsList(plt, args...; kw..., idxfilter = groupby.groupIds[i], label = glab)
+    kwlist, xmeta, ymeta = createKWargsList(plt, args...; kw...,
+                                            idxfilter = groupby.groupIds[i],
+                                            label = string(glab),
+                                            numUncounted = length(ret))  # we count the idx from plt.n + numUncounted + i
     append!(ret, kwlist)
   end
   ret, nothing, nothing # TODO: handle passing meta through

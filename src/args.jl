@@ -260,7 +260,8 @@ type GroupBy
 end
 
 
-function extractGroupArgs(v::AVec)
+# this is when given a vector-type of values to group by
+function extractGroupArgs(v::AVec, d::Dict)
   groupLabels = sort(collect(unique(v)))
   n = length(groupLabels)
   if n > 20
@@ -272,10 +273,20 @@ end
 
 
 # expecting a mapping of "group label" to "group indices"
-function extractGroupArgs{T, V<:AVec{Int}}(d::Dict{T,V})
-  groupLabels = sortedkeys(d)
-  groupIds = VecI[collect(d[k]) for k in groupLabels]
+function extractGroupArgs{T, V<:AVec{Int}}(idxmap::Dict{T,V}, d::Dict)
+  groupLabels = sortedkeys(idxmap)
+  groupIds = VecI[collect(idxmap[k]) for k in groupLabels]
   GroupBy(groupLabels, groupIds)
+end
+
+
+# expecting the column name of a dataframe that was passed in... anything else should error
+function extractGroupArgs(s::Symbol, d::Dict)
+  if haskey(d, :dataframe) && haskey(d[:dataframe], s)
+    return extractGroupArgs(d[:dataframe][s])
+  else
+    error("Got a symbol, and expected that to be a key in d[:dataframe]. s=$s d=$d")
+  end
 end
 
 

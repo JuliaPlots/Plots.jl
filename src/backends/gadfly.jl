@@ -134,7 +134,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
                        # line_style = line_style)
   push!(gfargs, theme)
 
-  # first things first... lets so the sticks hack
+  # first things first... lets do the sticks hack
   if d[:linetype] == :sticks
     d, dScatter = sticksHack(;d...)
 
@@ -177,8 +177,14 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
   # add to the legend
   if length(gplt.guides) > 0 && isa(gplt.guides[1], Gadfly.Guide.ManualColorKey)
+
+    # TODO: there's a BUG in gadfly if you pass in the same color more than once,
+    # since gadfly will call unique(colors), but doesn't also merge the rows that match
+    # Should ensure from this side that colors which are the same are merged together
+
     push!(gplt.guides[1].labels, d[:label])
     push!(gplt.guides[1].colors, d[:marker] == :none ? d[:color] : d[:markercolor])
+    # println("updated legend: ", gplt.guides)
   end
 
   # for histograms, set x=y
