@@ -88,7 +88,7 @@ function plot!(plt::Plot, args...; kw...)
   # index partitions/filters to be passed through to the next step.
   # Ideally we don't change the insides ot createKWargsList too much to 
   # save from code repetition.  We could consider adding a throw
-  groupargs = haskey(d, :group) ? [extractGroupArgs(d[:group], d)] : []
+  groupargs = haskey(d, :group) ? [extractGroupArgs(d[:group], args...)] : []
   # @show groupargs
 
   # just in case the backend needs to set up the plot (make it current or something)
@@ -301,6 +301,15 @@ function dataframes!()
 
   @eval function createKWargsList(plt::PlottingObject, df::DataFrames.DataFrame, args...; kw...)
     createKWargsList(plt, args...; kw..., dataframe = df)
+  end
+
+  # expecting the column name of a dataframe that was passed in... anything else should error
+  @eval function extractGroupArgs(s::Symbol, df::DataFrames.DataFrame, args...)
+    if haskey(df, s)
+      return extractGroupArgs(df[s])
+    else
+      error("Got a symbol, and expected that to be a key in d[:dataframe]. s=$s d=$d")
+    end
   end
 
   @eval function getDataFrameFromKW(; kw...)
