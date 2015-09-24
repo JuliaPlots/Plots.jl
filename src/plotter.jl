@@ -125,6 +125,7 @@ function plotter()
       try
         @eval import PyPlot
         @eval export PyPlot
+        PyPlot.ioff()
       catch
         error("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\")")
       end

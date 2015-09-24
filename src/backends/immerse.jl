@@ -49,6 +49,28 @@ function updatePlotItems(plt::Plot{ImmersePackage}, d::Dict)
 end
 
 
+# add a new x/y data point to series i
+function Base.push!(plt::Plot{ImmersePackage}, i::Int, x::Real, y::Real)
+  gplt = plt.o[2]
+  data = gplt.layers[end-i+1].mapping
+  data[:x] = extendSeriesData(data[:x], x)
+  data[:y] = extendSeriesData(data[:y], y)
+  plt
+end
+
+# add a new y, and extend x "naturally"
+function Base.push!(plt::Plot{ImmersePackage}, i::Int, y::Real)
+  gplt = plt.o[2]
+  data = gplt.layers[end-i+1].mapping
+  data[:x] = extendSeriesData(data[:x])  # this will only work with a UnitRange{Int}!!!
+  data[:y] = extendSeriesData(data[:y], y)
+  plt
+end
+
+extendSeriesData(v::UnitRange{Int}) = minimum(v):maximum(v)+1
+extendSeriesData{T<:Real}(v::AVec{T}, z::Real) = (push!(v, convert(T, z)); v)
+
+
 # ----------------------------------------------------------------
 
 

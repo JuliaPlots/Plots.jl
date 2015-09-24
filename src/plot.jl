@@ -173,10 +173,13 @@ convertToAnyVector(v::AVec; kw...) = Any[vi for vi in v], nothing
 # in computeXandY, we take in any of the possible items, convert into proper x/y vectors, then return.
 # this is also where all the "set x to 1:length(y)" happens, and also where we assert on lengths.
 computeX(x::Void, y) = 1:length(y)
-computeX(x, y) = x
+computeX(x, y) = copy(x)
 computeY(x, y::Function) = map(y, x)
-computeY(x, y) = y
+computeY(x, y) = copy(y)
 function computeXandY(x, y)
+  if x == nothing && isa(y, Function)
+    error("If you want to plot the function `$y`, you need to define the x values somehow!")
+  end
   x, y = computeX(x,y), computeY(x,y)
   @assert length(x) == length(y)
   x, y
