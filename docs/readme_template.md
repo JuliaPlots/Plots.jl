@@ -51,20 +51,19 @@ Plots will try to figure out a good default backend for you automatically based 
 using Plots
 ```
 
-Do a plot in Gadfly, then save a png:
+Do a plot in Gadfly (inspired by [this example](http://gadflyjl.org/geom_point.html)), then save a png:
 
 ```julia
-# switch to Gadfly as a backend
-gadfly!()
+gadfly!()        # switch to Gadfly as a backend
+dataframes!()    # turn on support for DataFrames inputs
+
+# load some data
+using RDatasets
+iris = dataset("datasets", "iris");
 
 # This will bring up a browser window with the plot. Add a semicolon at the end to skip display. 
-plot(rand(10,2); marker = :rect, markersize = [10,30], style = :auto)
-
-# save it as a PNG
-savepng(Plots.IMG_DIR * "gadfly1.png")
+scatter(iris, :SepalLength, :SepalWidth, group=:Species, ms=12, m=[:+,:d,:s])
 ```
-
-which saves:
 
 ![gadfly_plt](img/gadfly1.png)
 
@@ -206,6 +205,7 @@ __Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on
 
 - [x] Plot vectors/matrices/functions
 - [x] Plot DataFrames
+- [x] Grouping
 - [ ] Scales
 - [ ] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
 - [ ] Custom markers

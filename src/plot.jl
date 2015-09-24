@@ -206,8 +206,9 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     end
 
     # build the series arg dict
-    n = plt.n + i + get(d, :numUncounted, 0)
-    d = getSeriesArgs(plt.plotter, getinitargs(plt, n), d, i, convertSeriesIndex(plt, n), n)
+    numUncounted = get(d, :numUncounted, 0)
+    n = plt.n + i + numUncounted
+    d = getSeriesArgs(plt.plotter, getinitargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
     if haskey(d, :idxfilter)

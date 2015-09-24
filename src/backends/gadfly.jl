@@ -47,12 +47,12 @@ function getLineGeoms(d::Dict)
   lt == :hist && return [Gadfly.Geom.histogram(bincount = d[:nbins])]
   # lt == :none && return [Gadfly.Geom.path]
   lt == :path && return [Gadfly.Geom.path]
-  lt == :scatter && return [Gadfly.Geom.point]
+  # lt == :scatter && return [Gadfly.Geom.point]
   lt == :bar && return [Gadfly.Geom.bar]
   lt == :steppost && return [Gadfly.Geom.step]
 
   # NOTE: we won't actually show this (we'll set width to 0 later), but we need a geom so that Gadfly doesn't complain
-  if lt in (:none, :ohlc)
+  if lt in (:none, :ohlc, :scatter)
     return [Gadfly.Geom.path]
   end
 
@@ -120,7 +120,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # line_style = getGadflyStrokeVector(d[:linestyle])
   
   # set theme: color, line width, and point size
-  line_width = d[:width] * (d[:linetype] in (:none, :ohlc) ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
+  line_width = d[:width] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
   # fg = initargs[:foreground_color]
   theme = Gadfly.Theme(; default_color = d[:color],
                        line_width = line_width,
@@ -147,6 +147,13 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     addGadflyFixedLines!(gplt, d, theme)
     return
 
+  end
+
+  if d[:linetype] == :scatter
+    d[:linetype] = :none
+    if d[:marker] == :none
+      d[:marker] = :ellipse
+    end
   end
 
   # add the Geoms

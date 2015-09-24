@@ -54,7 +54,7 @@ function createGadflyAnnotation(d::Dict)
     shape = Gadfly.circle(xs,ys,[sz])
   end
 
-  Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), shape, Gadfly.fill(d[:markercolor]), Gadfly.stroke(nothing)))  
+  Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), shape, Gadfly.fill(d[:markercolor]), Gadfly.stroke(colorant"white")))  
 end
 
 
@@ -165,19 +165,24 @@ function star1(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar =
   polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
   
   # some magic scalars
-  sx = 0.7
-  sy1, sy2 = 1.2, 0.4
+  sx1, sx2, sx3 = 0.7, 0.4, 0.2
+  sy1, sy2, sy3 = 1.2, 0.45, 0.1
 
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
     polys[i] = Tuple{Compose.Measure, Compose.Measure}[
-      (x-sx*r, y+r),      # BL
-      (x,      y-sy1*r),  # T
-      (x+sx*r, y+r),      # BR
-      (x-r,    y-sy2*r),  # L
-      (x+r,    y-sy2*r)   # R
+      (x-sx1*r, y+    r),  # BL
+      (x,       y+sy2*r),
+      (x+sx1*r, y+    r),  # BR
+      (x+sx2*r, y+sy3*r),
+      (x+    r, y-sy2*r),  # R
+      (x+sx3*r, y-sy2*r),
+      (x,       y-sy1*r),  # T
+      (x-sx3*r, y-sy2*r),
+      (x-    r, y-sy2*r),  # L
+      (x-sx2*r, y+sy3*r)
     ]
   end
 
