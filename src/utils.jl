@@ -139,6 +139,11 @@ limsType{T<:Real,S<:Real}(lims::Tuple{T,S}) = :limits
 limsType(lims) = :invalid
 
 
+# used in updating an existing series
+extendSeriesData(v::UnitRange{Int}) = minimum(v):maximum(v)+1
+extendSeriesData{T<:Real}(v::AVec{T}, z::Real) = (push!(v, convert(T, z)); v)
+
+
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
 const INCH_SCALAR = 25.4

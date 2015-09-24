@@ -190,7 +190,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     # Should ensure from this side that colors which are the same are merged together
 
     push!(gplt.guides[1].labels, d[:label])
-    push!(gplt.guides[1].colors, d[:marker] == :none ? d[:color] : d[:markercolor])
+    push!(gplt.guides[1].colors, first(d[:marker] == :none ? d[:color] : d[:markercolor]))
     # println("updated legend: ", gplt.guides)
   end
 

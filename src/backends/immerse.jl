@@ -49,26 +49,38 @@ function updatePlotItems(plt::Plot{ImmersePackage}, d::Dict)
 end
 
 
+
+# ----------------------------------------------------------------
+
+# real time updates
+# TODO: generalize this and move as much as possible out of here
+
+function getImmerseData(plt::Plot{ImmersePackage}, i::Int)
+  gplt = plt.o[2]
+  gplt.layers[end-i+1].mapping
+end
+
 # add a new x/y data point to series i
 function Base.push!(plt::Plot{ImmersePackage}, i::Int, x::Real, y::Real)
-  gplt = plt.o[2]
-  data = gplt.layers[end-i+1].mapping
+  data = getImmerseData(plt, i)
   data[:x] = extendSeriesData(data[:x], x)
   data[:y] = extendSeriesData(data[:y], y)
   plt
 end
 
-# add a new y, and extend x "naturally"
+# add a new y, and extend x "naturally" for series i
 function Base.push!(plt::Plot{ImmersePackage}, i::Int, y::Real)
-  gplt = plt.o[2]
-  data = gplt.layers[end-i+1].mapping
+  xdata, ydata = xy(plt, i)
   data[:x] = extendSeriesData(data[:x])  # this will only work with a UnitRange{Int}!!!
   data[:y] = extendSeriesData(data[:y], y)
   plt
 end
 
-extendSeriesData(v::UnitRange{Int}) = minimum(v):maximum(v)+1
-extendSeriesData{T<:Real}(v::AVec{T}, z::Real) = (push!(v, convert(T, z)); v)
+function xy(plt::Plot{ImmersePackage}, i::Int)
+  data = getImmerseData(plt, i)
+  data[:x], data[:y]
+end
+
 
 
 # ----------------------------------------------------------------
@@ -139,6 +151,7 @@ function Base.display(::PlotsDisplay, plt::Plot{ImmersePackage})
   end
 
   Immerse.figure(fig.figno; displayfig = false)
+  println("about to display")
   display(gplt)
 end
 
