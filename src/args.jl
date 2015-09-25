@@ -231,6 +231,7 @@ end
 # update the defaults globally
 
 function plotDefault(k::Symbol)
+  k = get(_keyAliases, k, k)
   if haskey(_seriesDefaults, k)
     return _seriesDefaults[k]
   elseif haskey(_plotDefaults, k)
@@ -241,12 +242,19 @@ function plotDefault(k::Symbol)
 end
 
 function plotDefault!(k::Symbol, v)
+  k = get(_keyAliases, k, k)
   if haskey(_seriesDefaults, k)
     _seriesDefaults[k] = v
   elseif haskey(_plotDefaults, k)
     _plotDefaults[k] = v
   else
     error("Unknown key: ", k)
+  end
+end
+
+function plotDefault!(; kw...)
+  for (k,v) in kw
+    plotDefault!(k, v)
   end
 end
 

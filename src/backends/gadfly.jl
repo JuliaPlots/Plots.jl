@@ -171,8 +171,9 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     # then the vector passed to the "color" keyword should be a vector: [1,1,2,2,3,3,4,4, ..., i,i, ... , n,n]
     csindices = Int[mod1(i,length(d[:color])) for i in 1:length(d[:y])]
     cs = collect(repmat(csindices', 2, 1))[1:end-1]
+    grp = collect(repmat((1:length(d[:y]))', 2, 1))[1:end-1]
     d[:x], d[:y] = map(createSegments, (d[:x], d[:y]))
-    colorgroup = [(:color, cs)]
+    colorgroup = [(:color, cs), (:group, grp)]
   else
     colorgroup = []
   end
