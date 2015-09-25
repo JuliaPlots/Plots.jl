@@ -90,17 +90,17 @@ function addGadflyFixedLines!(gplt, d::Dict, theme)
 end
 
 
-function getGadflyStrokeVector(linestyle::Symbol)
-  dash = 12 * Compose.mm
-  dot = 3 * Compose.mm
-  gap = 2 * Compose.mm
-  linestyle == :solid && return nothing
-  linestyle == :dash && return [dash, gap]
-  linestyle == :dot && return [dot, gap]
-  linestyle == :dashdot && return [dash, gap, dot, gap]
-  linestyle == :dashdotdot && return [dash, gap, dot, gap, dot, gap]
-  error("unsupported linestyle: ", linestyle)
-end
+# function getGadflyStrokeVector(linestyle::Symbol)
+#   dash = 12 * Compose.mm
+#   dot = 3 * Compose.mm
+#   gap = 2 * Compose.mm
+#   linestyle == :solid && return nothing
+#   linestyle == :dash && return [dash, gap]
+#   linestyle == :dot && return [dot, gap]
+#   linestyle == :dashdot && return [dash, gap, dot, gap]
+#   linestyle == :dashdotdot && return [dash, gap, dot, gap, dot, gap]
+#   error("unsupported linestyle: ", linestyle)
+# end
 
 
 
@@ -111,8 +111,8 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # if my PR isn't present, don't set the line_style
   local extra_theme_args
   try
-    Gadfly.getStrokeVector(:solid)
-    extra_theme_args = [(:line_style, getGadflyStrokeVector(d[:linestyle]))]
+    extra_theme_args = [(:line_style, Gadfly.get_stroke_vector(d[:linestyle]))]
+    # extra_theme_args = [(:line_style, getGadflyStrokeVector(d[:linestyle]))]
   catch
     extra_theme_args = []
   end

@@ -63,6 +63,24 @@ function updatePlotItems(plt::Plot{QwtPackage}, d::Dict)
   haskey(d, :ylabel) && Qwt.ylabel(plt.o, d[:ylabel])
 end
 
+
+
+# ----------------------------------------------------------------
+
+# accessors for x/y data
+
+function Base.getindex(plt::Plot{QwtPackage}, i::Int)
+  series = plt.o.lines[i]
+  series.x, series.y
+end
+
+function Base.setindex!(plt::Plot{QwtPackage}, xy::Tuple, i::Integer)
+  series = plt.o.lines[i]
+  series.x, series.y = xy
+  plt
+end
+
+
 # -------------------------------
 
 # savepng(::QwtPackage, plt::PlottingObject, fn::AbstractString, args...) = Qwt.savepng(plt.o, fn)
