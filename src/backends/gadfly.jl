@@ -102,7 +102,8 @@ end
 #   error("unsupported linestyle: ", linestyle)
 # end
 
-
+createSegments(z) = collect(repmat(z',2,1))[2:end]
+Base.first(c::Colorant) = c
 
 function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
@@ -121,8 +122,9 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   
   # set theme: color, line width, and point size
   line_width = d[:width] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
+  line_color = isa(d[:color], AbstractVector) ? colorant"black" : d[:color]
   # fg = initargs[:foreground_color]
-  theme = Gadfly.Theme(; default_color = d[:color],
+  theme = Gadfly.Theme(; default_color = line_color,
                        line_width = line_width,
                        default_point_size = 0.5 * d[:markersize] * Gadfly.px,
                        # grid_color = fg,
@@ -159,6 +161,22 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # add the Geoms
   append!(gfargs, getLineGeoms(d))
 
+  # colorgroup
+  if isa(d[:color], AbstractVector)
+    # create a color scale, and set the color group to the index of the color
+    push!(gplt.scales, Gadfly.Scale.color_discrete_manual(d[:color]...))
+
+    # this is super weird, but... oh well... for some reason this creates n separate line segments...
+    # create a list of vertices that go: [x1,x2,x2,x3,x3, ... ,xi,xi, ... xn,xn] (same for y)
+    # then the vector passed to the "color" keyword should be a vector: [1,1,2,2,3,3,4,4, ..., i,i, ... , n,n]
+    csindices = Int[mod1(i,length(d[:color])) for i in 1:length(d[:y])]
+    cs = collect(repmat(csindices', 2, 1))[1:end-1]
+    d[:x], d[:y] = map(createSegments, (d[:x], d[:y]))
+    colorgroup = [(:color, cs)]
+  else
+    colorgroup = []
+  end
+
   # fillto
   if d[:fillto] == nothing
     yminmax = []
@@ -190,7 +208,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     # Should ensure from this side that colors which are the same are merged together
 
     push!(gplt.guides[1].labels, d[:label])
-    push!(gplt.guides[1].colors, d[:marker] == :none ? d[:color] : d[:markercolor])
+    push!(gplt.guides[1].colors, d[:marker] == :none ? first(d[:color]) : d[:markercolor])
     # println("updated legend: ", gplt.guides)
   end
 
@@ -204,7 +222,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
   # add the layer to the Gadfly.Plot
   # prepend!(gplt.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
-  prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y], yminmax...))
+  prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y], colorgroup..., yminmax...))
   nothing
 end
 
