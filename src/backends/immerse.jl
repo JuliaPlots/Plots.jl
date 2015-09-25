@@ -52,33 +52,17 @@ end
 
 # ----------------------------------------------------------------
 
-# real time updates
-# TODO: generalize this and move as much as possible out of here
+# accessors for x/y data
 
-function getImmerseData(plt::Plot{ImmersePackage}, i::Int)
-  gplt = plt.o[2]
-  gplt.layers[end-i+1].mapping
-end
-
-# add a new x/y data point to series i
-function Base.push!(plt::Plot{ImmersePackage}, i::Int, x::Real, y::Real)
-  data = getImmerseData(plt, i)
-  data[:x] = extendSeriesData(data[:x], x)
-  data[:y] = extendSeriesData(data[:y], y)
-  plt
-end
-
-# add a new y, and extend x "naturally" for series i
-function Base.push!(plt::Plot{ImmersePackage}, i::Int, y::Real)
-  xdata, ydata = xy(plt, i)
-  data[:x] = extendSeriesData(data[:x])  # this will only work with a UnitRange{Int}!!!
-  data[:y] = extendSeriesData(data[:y], y)
-  plt
-end
-
-function xy(plt::Plot{ImmersePackage}, i::Int)
-  data = getImmerseData(plt, i)
+function Base.getindex(plt::Plot{ImmersePackage}, i::Int)
+  data = plt.o[2].layers[end-i+1].mapping
   data[:x], data[:y]
+end
+
+function Base.setindex!(plt::Plot{ImmersePackage}, xy::Tuple, i::Integer)
+  data = plt.o[2].layers[end-i+1].mapping
+  data[:x], data[:y] = xy
+  plt
 end
 
 
@@ -151,7 +135,6 @@ function Base.display(::PlotsDisplay, plt::Plot{ImmersePackage})
   end
 
   Immerse.figure(fig.figno; displayfig = false)
-  println("about to display")
   display(gplt)
 end
 

@@ -138,10 +138,77 @@ ticksType(ticks) = :invalid
 limsType{T<:Real,S<:Real}(lims::Tuple{T,S}) = :limits
 limsType(lims) = :invalid
 
+# ---------------------------------------------------------------
+
+# push/append/clear/set the underlying plot data
+# NOTE: backends should implement the getindex and setindex! methods to get/set the x/y data objects
+
+
+# index versions
+function Base.push!(plt::Plot, i::Integer, x, y)
+  xdata, ydata = plt[i]
+  plt[i] = (extendSeriesData(xdata, x), extendSeriesData(ydata, y))
+  plt
+end
+function Base.push!(plt::Plot, i::Integer, y)
+  xdata, ydata = plt[i]
+  if !isa(xdata, UnitRange)
+    error("Expected x is a UnitRange since you're trying to push a y value only")
+  end
+  plt[i] = (extendUnitRange(xdata), extendSeriesData(ydata, y))
+  plt
+end
+
+
+# update all at once
+function Base.push!(plt::Plot, x::AVec, y::AVec)
+  nx = length(x)
+  ny = length(y)
+  for i in 1:plt.n
+    push!(plt, i, x[mod1(i,nx)], y[mod1(i,ny)])
+  end
+  plt
+end
+
+function Base.push!(plt::Plot, x, y::AVec)
+  push!(plt, [x], y)
+end
+
+function Base.push!(plt::Plot, y::AVec)
+  ny = length(y)
+  for i in 1:plt.n
+    push!(plt, i, y[mod1(i,ny)])
+  end
+  plt
+end
+
+
+# append to index
+function Base.append!(plt::Plot, i::Integer, x::AVec, y::AVec)
+  @assert length(x) == length(y)
+  xdata, ydata = plt[i]
+  plt[i] = (extendSeriesData(xdata, x), extendSeriesData(ydata, y))
+  plt
+end
+
+function Base.append!(plt::Plot, i::Integer, y::AVec)
+  xdata, ydata = plt[i]
+  if !isa(xdata, UnitRange{Int})
+    error("Expected x is a UnitRange since you're trying to push a y value only")
+  end
+  plt[i] = (extendUnitRange(xdata, length(y)), extendSeriesData(ydata, y))
+  plt
+end
+
 
 # used in updating an existing series
-extendSeriesData(v::UnitRange{Int}) = minimum(v):maximum(v)+1
-extendSeriesData{T<:Real}(v::AVec{T}, z::Real) = (push!(v, convert(T, z)); v)
+
+extendUnitRange(v::UnitRange{Int}, n::Int = 1) = minimum(v):maximum(v)+n
+extendSeriesData(v::AVec, z) = (push!(v, z); v)
+extendSeriesData(v::AVec, z::AVec) = (append!(v, z); v)
+
+
+# ---------------------------------------------------------------
 
 
 # Some conversion functions
