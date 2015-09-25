@@ -145,12 +145,12 @@ limsType(lims) = :invalid
 
 
 # index versions
-function Base.push!(plt::Plot, i::Integer, x, y)
+function Base.push!(plt::Plot, i::Integer, x::Real, y::Real)
   xdata, ydata = plt[i]
   plt[i] = (extendSeriesData(xdata, x), extendSeriesData(ydata, y))
   plt
 end
-function Base.push!(plt::Plot, i::Integer, y)
+function Base.push!(plt::Plot, i::Integer, y::Real)
   xdata, ydata = plt[i]
   if !isa(xdata, UnitRange)
     error("Expected x is a UnitRange since you're trying to push a y value only")
@@ -170,7 +170,7 @@ function Base.push!(plt::Plot, x::AVec, y::AVec)
   plt
 end
 
-function Base.push!(plt::Plot, x, y::AVec)
+function Base.push!(plt::Plot, x::Real, y::AVec)
   push!(plt, [x], y)
 end
 
