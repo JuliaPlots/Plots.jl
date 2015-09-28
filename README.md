@@ -267,7 +267,7 @@ Type | Aliases
 
 
 
-__Tip__: You can see the default value for a given argument with `default(arg::Symbol)`, and set the default value with `default(arg::Symbol, value)`
+__Tip__: You can see the default value for a given argument with `default(arg::Symbol)`, and set the default value with `default(arg::Symbol, value)` or `default(; kw...)`.  For example set the default window size and whether we should show a legend with `default(size=(600,400), leg=false)`.
 
 __Tip__: When plotting multiple lines, you can set all series to use the same value, or pass in an array to cycle through values.  Example:
 
@@ -286,6 +286,7 @@ __Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on
 - [x] Plot vectors/matrices/functions
 - [x] Plot DataFrames
 - [x] Grouping
+- [ ] Annotations
 - [ ] Scales
 - [ ] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
 - [ ] Custom markers

@@ -38,7 +38,7 @@ const examples = PlotExample[
               "Use the `axis` arguments.\n\nNote: Currently only supported with Qwt and PyPlot",
               [:(plot(Vector[randn(100), randn(100)*100]; axis = [:l,:r], ylabel="LEFT", yrightlabel="RIGHT"))]),
   PlotExample("Vectors w/ pluralized args",
-              "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (singular... see `marker`) with arguments unique to each series (pluralized... see `colors`).",
+              "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).",
               [:(plot(Vector[rand(10), rand(20)]; marker=:ellipse, markersize=8, c=[:red,:blue]))]),
   PlotExample("Build plot in pieces",
               "Start with a base plot...",
