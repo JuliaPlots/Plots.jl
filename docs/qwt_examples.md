@@ -80,7 +80,7 @@ plot(Vector[randn(100),randn(100) * 100]; axis=[:l,:r],ylabel="LEFT",yrightlabel
 
 ### Vectors w/ pluralized args
 
-Plot multiple series with different numbers of points.  Mix arguments that apply to all series (singular... see `marker`) with arguments unique to each series (pluralized... see `colors`).
+Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).
 
 ```julia
 plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8,c=[:red,:blue])
@@ -206,4 +206,16 @@ subplot!(randn(100,3))
 ```
 
 ![](../img/qwt/qwt_example_18.png)
+
+### Annotations
+
+Currently only text annotations are supported.  Pass in a tuple or vector-of-tuples: (x,y,text).  `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`
+
+```julia
+y = rand(10)
+plot(y,ann=(3,y[3],"this is #3"))
+annotate!([(5,y[5],"this is #5"),(9,y[10],"this is #10")])
+```
+
+![](../img/qwt/qwt_example_20.png)
 

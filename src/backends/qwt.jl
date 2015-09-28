@@ -9,7 +9,7 @@ qwt() = backend(:qwt)
 # supportedArgs(::QwtPackage) = setdiff(_allArgs, [:xlims, :ylims, :xticks, :yticks])
 supportedArgs(::QwtPackage) = [
     :annotation,
-    :args,
+    # :args,
     :axis,
     :background_color,
     :color,
@@ -17,7 +17,7 @@ supportedArgs(::QwtPackage) = [
     :foreground_color,
     :group,
     :heatmap_c,
-    :kwargs,
+    # :kwargs,
     :label,
     :layout,
     :legend,
@@ -105,6 +105,21 @@ function updatePlotItems(plt::Plot{QwtPackage}, d::Dict)
 end
 
 
+# ----------------------------------------------------------------
+
+
+function createQwtAnnotation(plt::Plot, x, y, val::AbstractString)
+  marker = Qwt.QWT.QwtPlotMarker()
+  marker[:setValue](x, y)
+  marker[:setLabel](Qwt.QWT.QwtText(val))
+  marker[:attach](plt.o.widget)
+end
+
+function addAnnotations{X,Y,V}(plt::Plot{QwtPackage}, anns::AVec{Tuple{X,Y,V}})
+  for ann in anns
+    createQwtAnnotation(plt, ann...)
+  end
+end
 
 # ----------------------------------------------------------------
 
