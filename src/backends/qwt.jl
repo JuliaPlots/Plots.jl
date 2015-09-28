@@ -48,7 +48,7 @@ supportedArgs(::QwtPackage) = [
     :yrightlabel,
     # :yticks,
   ]
-supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
+supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
 
 # -------------------------------
@@ -67,16 +67,27 @@ function replaceLinetypeAlias(d)
   end
 end
 
-function adjustQwtKeywords(iscreating::Bool; kw...)
+function adjustQwtKeywords(plt::Plot{QwtPackage}, iscreating::Bool; kw...)
   d = Dict(kw)
-  if d[:linetype] == :scatter
+  lt = d[:linetype]
+  if lt == :scatter
     d[:linetype] = :none
     if d[:marker] == :none
       d[:marker] = :ellipse
     end
-  elseif !iscreating && d[:linetype] == :bar
+
+  elseif lt in (:hline, :vline)
+    addLineMarker(plt, d)
+    d[:linetype] = :none
+    d[:marker] = :ellipse
+    d[:markersize] = 1
+    if lt == :vline
+      d[:x], d[:y] = d[:y], d[:x]
+    end
+    
+  elseif !iscreating && lt == :bar
     d = barHack(; kw...)
-  elseif !iscreating && d[:linetype] == :hist
+  elseif !iscreating && lt == :hist
     d = barHack(; histogramHack(; kw...)...)
   end
 
@@ -92,7 +103,7 @@ function plot(pkg::QwtPackage; kw...)
 end
 
 function plot!(::QwtPackage, plt::Plot; kw...)
-  d = adjustQwtKeywords(false; kw...)
+  d = adjustQwtKeywords(plt, false; kw...)
   Qwt.oplot(plt.o; d...)
   push!(plt.seriesargs, d)
   plt
@@ -107,6 +118,23 @@ end
 
 # ----------------------------------------------------------------
 
+        # curve.setPen(Qt.QPen(Qt.QColor(color), width, self.getLineStyle(linestyle)))
+function addLineMarker(plt::Plot{QwtPackage}, d::Dict)
+  for yi in d[:y]
+    marker = Qwt.QWT.QwtPlotMarker()
+    ishorizontal = (d[:linetype] == :hline)
+    marker[:setLineStyle](ishorizontal ? 1 : 2)
+    marker[ishorizontal ? :setYValue : :setXValue](yi)
+    qcolor = Qwt.convertRGBToQColor(d[:color])
+    linestyle = plt.o.widget[:getLineStyle](string(d[:linestyle]))
+    marker[:setLinePen](Qwt.QT.QPen(qcolor, d[:width], linestyle))
+    marker[:attach](plt.o.widget)
+  end
+
+  # marker[:setValue](x, y)
+  # marker[:setLabel](Qwt.QWT.QwtText(val))
+  # marker[:attach](plt.o.widget)
+end
 
 function createQwtAnnotation(plt::Plot, x, y, val::AbstractString)
   marker = Qwt.QWT.QwtPlotMarker()

@@ -59,11 +59,6 @@ function plot(args...; kw...)
 end
 
 
-# function plot_display(args...; kw...)
-#   plt = plot(args...; kw...)
-#   display(plt)
-#   plt
-# end
 
 # this adds to the current plot
 function  plot!(args...; kw...)
@@ -109,12 +104,16 @@ function plot!(plt::Plot, args...; kw...)
     setTicksFromStringVector(d, di, :x, :xticks)
     setTicksFromStringVector(d, di, :y, :yticks)
 
+    @show di[:x] di[:y]
+
     # println("Plotting: ", di)
     plot!(plt.backend, plt; di...)
 
   end
 
   addAnnotations(plt, d)
+
+  # @show d[:xticks] d[:yticks]
 
   # add title, axis labels, ticks, etc
   updatePlotItems(plt, d)
@@ -135,11 +134,26 @@ function setTicksFromStringVector(d::Dict, di::Dict, sym::Symbol, ticksym::Symbo
   # if the x or y values are strings, set ticks to the unique values, and x/y to the indices of the ticks
   # @show get(d,ticksym,:auto) == :auto isa(di[sym], AbstractArray) isa(eltype(di[sym]), AbstractString)
   # @show get(d,ticksym,:auto) eltype(di[sym])
-  if get(d,ticksym,:auto) == :auto && isa(di[sym], AbstractArray) && issubtype(eltype(di[sym]), AbstractString)
+
+  haskey(d, ticksym) || return
+  d[ticksym] == :auto || return
+
+  v = di[sym]
+  @show v
+  isa(v, AbstractArray) || return
+
+  T = eltype(v)
+  @show T
+  if T <: AbstractString || all(x -> x <: AbstractString, T.types)
+
+  # if get(d,ticksym,:auto) == :auto && isa(di[sym], AbstractArray) &&
+  #         (issubtype(eltype(di[sym]), AbstractString) || all(x->x<:AbstractString, eltype(di[sym]).types))
+    @show sym ticksym di[sym] d[ticksym]
+
     ticks = unique(di[sym])
     @show ticks
     di[sym] = Int[findnext(ticks, v, 1) for v in di[sym]]
-    d[ticksym] = ticks
+    d[ticksym] = UTF8String[t for t in ticks]
   end
   # @show sym ticksym di[sym] d[ticksym]
 end
