@@ -55,7 +55,7 @@ Do a plot in Gadfly (inspired by [this example](http://gadflyjl.org/geom_point.h
 
 ```julia
 gadfly()        # switch to Gadfly as a backend
-dataframes!()    # turn on support for DataFrames inputs
+dataframes()    # turn on support for DataFrames inputs
 
 # load some data
 using RDatasets
@@ -98,7 +98,7 @@ There are many ways to pass in data to the plot functions... some examples:
 - Vectors of Vectors
 - Functions
 - Vectors of Functions
-- DataFrames with column symbols (initialize with `dataframes!()`)
+- DataFrames with column symbols (initialize with `dataframes()`)
 
 In general, you can pass in a `y` only, or an `x` and `y`, both of whatever type(s) you want, and Plots will slice up the data as needed.
 For matrices, data is split by columns.  For functions, data is mapped.  For DataFrames, a Symbol/Symbols in place of x/y will map to
@@ -118,7 +118,7 @@ plot(rand(10), sin)                       # same... y = sin(x)
 plot([sin,cos], 0:0.1:π)                  # plot 2 series, sin(x) and cos(x)
 plot([sin,cos], 0, π)                     # plot sin and cos on the range [0, π]
 plot(1:10, Any[rand(10), sin])            # plot 2 series, y = rand(10) for the first, y = sin(x) for the second... x = 1:10 for both
-plot(dataset("Ecdat", "Airline"), :Cost)  # plot from a DataFrame (call `dataframes!()` first to import DataFrames and initialize)
+plot(dataset("Ecdat", "Airline"), :Cost)  # plot from a DataFrame (call `dataframes()` first to import DataFrames and initialize)
 ```
 
 You can update certain plot settings after plot creation (not supported on all backends):
@@ -162,14 +162,14 @@ vline!(args...; kw...)     = plot!(args...; kw..., linetype = :vline)
 ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
 ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
-title(s::AbstractString)                 = plot!(title = s)
-xlabel(s::AbstractString)                = plot!(xlabel = s)
-ylabel(s::AbstractString)                = plot!(ylabel = s)
+title!(s::AbstractString)                 = plot!(title = s)
+xlabel!(s::AbstractString)                = plot!(xlabel = s)
+ylabel!(s::AbstractString)                = plot!(ylabel = s)
 xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(xlims = lims)
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(ylims = lims)
 xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
 yticks!{T<:Real}(v::AVec{T})              = plot!(yticks = v)
-annotate!(annotations)                    = plot!(annotation = annotations)
+annotate!(anns)                           = plot!(annotation = anns)
 ```
 
 Some keyword arguments you can set:
@@ -187,16 +187,21 @@ Keyword | Default | Type | Aliases
 `:label` | `AUTO` | Series | `:lab`, `:labels`  
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
 `:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
-`:marker` | `none` | Series | `:m`, `:markers`  
+`:marker` | `none` | Series | `:m`, `:markers`, `:shape`  
 `:markercolor` | `match` | Series | `:markercolors`, `:mc`, `:mcolor`  
 `:markersize` | `6` | Series | `:markersizes`, `:ms`, `:msize`  
 `:nbins` | `100` | Series | `:nb`, `:nbin`, `:nbinss`  
-`:reg` | `false` | Series | `:regs`  
+`:reg` | `false` | Series | `:regression`, `:regs`  
 `:ribbon` | `nothing` | Series | `:r`, `:ribbons`  
 `:width` | `1` | Series | `:linewidth`, `:w`, `:widths`  
 `:background_color` | `RGB{U8}(1.0,1.0,1.0)` | Plot | `:background`, `:bg`, `:bg_color`, `:bgcolor`  
 `:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
+`:layout` | `nothing` | Plot |   
 `:legend` | `true` | Plot | `:leg`  
+`:n` | `-1` | Plot |   
+`:nc` | `-1` | Plot |   
+`:nr` | `-1` | Plot |   
+`:pos` | `(0,0)` | Plot |   
 `:show` | `false` | Plot | `:display`, `:gui`  
 `:size` | `(800,600)` | Plot | `:windowsize`, `:wsize`  
 `:title` | `` | Plot |   
