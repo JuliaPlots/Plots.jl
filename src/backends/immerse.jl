@@ -52,6 +52,14 @@ end
 
 # ----------------------------------------------------------------
 
+function addAnnotations{X,Y,V}(plt::Plot{ImmersePackage}, anns::AVec{Tuple{X,Y,V}})
+  for ann in anns
+    push!(plt.o[2].guides, createGadflyAnnotationObject(ann...))
+  end
+end
+
+# ----------------------------------------------------------------
+
 # accessors for x/y data
 
 function Base.getindex(plt::Plot{ImmersePackage}, i::Int)

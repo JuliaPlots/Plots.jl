@@ -301,18 +301,16 @@ end
 # ----------------------------------------------------------------
 
 
-function createAnnotationObject(x, y, val::AbstractString)
+function createGadflyAnnotationObject(x, y, val::AbstractString)
   Gadfly.Guide.annotation(Compose.compose(
                               Compose.context(), 
                               Compose.text(x, y, val)
-                              # Compose.fill(colorant"black"),
-                              # Compose.stroke(colorant"black")
                             ))
 end
 
 function addAnnotations{X,Y,V}(plt::Plot{GadflyPackage}, anns::AVec{Tuple{X,Y,V}})
   for ann in anns
-    push!(plt.o.guides, createAnnotationObject(ann...))
+    push!(plt.o.guides, createGadflyAnnotationObject(ann...))
   end
 end
 

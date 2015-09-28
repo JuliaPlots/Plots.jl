@@ -125,7 +125,9 @@ function plotter()
       try
         @eval import PyPlot
         @eval export PyPlot
-        PyPlot.ioff()
+        if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
+          PyPlot.ioff()
+        end
       catch
         error("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\")")
       end

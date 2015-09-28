@@ -243,14 +243,16 @@ end
 
 # -------------------------------
 
-# function savepng(::PyPlotPackage, plt::PlottingObject, fn::AbstractString, args...)
-#   fig, num = plt.o
-#   addPyPlotLegend(plt)
-#   f = open(fn, "w")
-#   writemime(f, "image/png", fig)
-#   close(f)
-# end
+function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::AbstractString)
+  ax = getLeftAxis(plt.o[1])
+  ax[:annotate](val, xy = (x,y))
+end
 
+function addAnnotations{X,Y,V}(plt::Plot{PyPlotPackage}, anns::AVec{Tuple{X,Y,V}})
+  for ann in anns
+    createPyPlotAnnotationObject(plt, ann...)
+  end
+end
 
 # -----------------------------------------------------------------
 
@@ -274,7 +276,6 @@ end
 
 function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{PyPlotPackage})
   fig, num = plt.o
-  # makePyPlotCurrent(plt)
   addPyPlotLegend(plt)
   ax = fig.o[:axes][1]
   updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
@@ -284,8 +285,6 @@ end
 
 function Base.display(::PlotsDisplay, plt::Plot{PyPlotPackage})
   fig, num = plt.o
-  # PyPlot.figure(num)  # makes this current
-  # makePyPlotCurrent(plt)
   addPyPlotLegend(plt)
   ax = fig.o[:axes][1]
   updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))

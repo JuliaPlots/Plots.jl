@@ -86,7 +86,13 @@ const examples = PlotExample[
   PlotExample("Open/High/Low/Close",
               "Create an OHLC chart.  Pass in a vector of 4-tuples as your `y` argument.  Adjust the tick width with arg `markersize`.",
               [:(n=20), :(hgt=rand(n)+1), :(bot=randn(n)), :(openpct=rand(n)), :(closepct=rand(n)), :(y = [OHLC(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n]), :(ohlc(y; markersize=8))]),
-
+  PlotExample("Annotations",
+              "Currently only text annotations are supported.  Pass in a tuple or vector-of-tuples: (x,y,text).  `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`",
+              [
+                :(y = rand(10)),
+                :(plot(y, ann=(3,y[3],"this is #3"))),
+                :(annotate!([(5,y[5],"this is #5"),(8.4,y[10],"this is #10")]))
+              ]),
   
 ]
 
@@ -164,7 +170,7 @@ function test_example(pkgname::Symbol, idx::Int)
   plotter()
   map(eval, examples[idx].exprs)
   plt = currentPlot()
-  display(plt)
+  gui(plt)
   plt
 end
 
@@ -172,9 +178,9 @@ end
 function test_all_examples(pkgname::Symbol)
   plts = Dict()
   for i in 1:length(examples)
-    if examples[i].header == "Subplots" && !subplotSupported()
-      break
-    end
+    # if examples[i].header == "Subplots" && !subplotSupported()
+    #   break
+    # end
 
     try
       plt = test_example(pkgname, i)

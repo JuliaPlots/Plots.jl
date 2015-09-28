@@ -67,7 +67,8 @@ scatter(iris, :SepalLength, :SepalWidth, group=:Species, ms=12, m=[:+,:d,:s])
 
 ![gadfly_plt](img/gadfly1.png)
 
-See the examples pages for lots of examples of plots, and what those commands produce for each supported backend.
+See the examples pages for lots of examples of plots, and what those commands produce for each supported backend.  
+Also check out the [IJulia notebooks](examples) and see how it works interactively.
 
 ## API
 

@@ -67,7 +67,8 @@ scatter(iris, :SepalLength, :SepalWidth, group=:Species, ms=12, m=[:+,:d,:s])
 
 ![gadfly_plt](img/gadfly1.png)
 
-See the examples pages for lots of examples of plots, and what those commands produce for each supported backend.
+See the examples pages for lots of examples of plots, and what those commands produce for each supported backend.  
+Also check out the [IJulia notebooks](examples) and see how it works interactively.
 
 ## API
 
@@ -168,12 +169,14 @@ xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(xlims = lims)
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(ylims = lims)
 xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
 yticks!{T<:Real}(v::AVec{T})              = plot!(yticks = v)
+annotate!(annotations)                    = plot!(annotation = annotations)
 ```
 
 Some keyword arguments you can set:
 
 Keyword | Default | Type | Aliases 
 ---- | ---- | ---- | ----
+`:annotation` | `nothing` | Series | `:ann`, `:annotate`, `:annotations`, `:anns`  
 `:args` | `Any[]` | Series | `:argss`  
 `:axis` | `left` | Series | `:axiss`  
 `:color` | `auto` | Series | `:c`, `:colors`  
