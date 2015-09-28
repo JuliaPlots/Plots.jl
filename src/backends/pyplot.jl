@@ -8,7 +8,48 @@ pyplot() = backend(:pyplot)
 
 # -------------------------------
 
-supportedArgs(::PyPlotPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fillto, :pos, :xlims, :ylims, :xticks, :yticks])
+# supportedArgs(::PyPlotPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fillto, :pos, :xlims, :ylims, :xticks, :yticks])
+supportedArgs(::PyPlotPackage) = [
+    :annotation,
+    :args,
+    :axis,
+    :background_color,
+    :color,
+    # :fillto,
+    :foreground_color,
+    :group,
+    # :heatmap_c,
+    :kwargs,
+    :label,
+    :layout,
+    :legend,
+    :linestyle,
+    :linetype,
+    :marker,
+    :markercolor,
+    :markersize,
+    :n,
+    :nbins,
+    :nc,
+    :nr,
+    # :pos,
+    # :reg,
+    # :ribbon,
+    :show,
+    :size,
+    :title,
+    :width,
+    :windowtitle,
+    :x,
+    :xlabel,
+    # :xlims,
+    # :xticks,
+    :y,
+    :ylabel,
+    # :ylims,
+    :yrightlabel,
+    # :yticks,
+  ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]

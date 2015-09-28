@@ -11,11 +11,11 @@ gadfly() = backend(:gadfly)
 supportedArgs(::GadflyPackage) = [
     :annotation,
     :args,
-    :axis,
+    # :axis,
     :background_color,
     :color,
     :fillto,
-    :foreground_color,
+    # :foreground_color,
     :group,
     # :heatmap_c,
     :kwargs,

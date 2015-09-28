@@ -30,7 +30,48 @@ const winston_marker = Dict(:none=>".",
                            )
 
 
-supportedArgs(::WinstonPackage) = setdiff(_allArgs, [:heatmap_c, :fillto, :pos, :markercolor, :background_color, :xlims, :ylims, :xticks, :yticks])
+# supportedArgs(::WinstonPackage) = setdiff(_allArgs, [:heatmap_c, :fillto, :pos, :markercolor, :background_color, :xlims, :ylims, :xticks, :yticks])
+supportedArgs(::WinstonPackage) = [
+    :annotation,
+    # :args,
+    # :axis,
+    # :background_color,
+    :color,
+    :fillto,
+    # :foreground_color,
+    :group,
+    # :heatmap_c,
+    # :kwargs,
+    :label,
+    # :layout,
+    :legend,
+    :linestyle,
+    :linetype,
+    :marker,
+    :markercolor,
+    :markersize,
+    # :n,
+    :nbins,
+    # :nc,
+    # :nr,
+    # :pos,
+    :reg,
+    # :ribbon,
+    :show,
+    :size,
+    :title,
+    :width,
+    :windowtitle,
+    :x,
+    :xlabel,
+    # :xlims,
+    # :xticks,
+    :y,
+    :ylabel,
+    # :ylims,
+    # :yrightlabel,
+    # :yticks,
+  ]
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
 supportedStyles(::WinstonPackage) = intersect(_allStyles, collect(keys(winston_linestyle)))

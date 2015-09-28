@@ -10,7 +10,48 @@ export [pkgname]
 
 # ---------------------------------------------------------------------------
 
-supportedArgs(::[PkgName]Package) = _allArgs
+# supportedArgs(::[PkgName]Package) = _allArgs
+supportedArgs(::[PkgName]Package) = [
+    :annotation,
+    :args,
+    :axis,
+    :background_color,
+    :color,
+    :fillto,
+    :foreground_color,
+    :group,
+    # :heatmap_c,
+    :kwargs,
+    :label,
+    :layout,
+    :legend,
+    :linestyle,
+    :linetype,
+    :marker,
+    :markercolor,
+    :markersize,
+    :n,
+    :nbins,
+    :nc,
+    :nr,
+    # :pos,
+    :reg,
+    # :ribbon,
+    :show,
+    :size,
+    :title,
+    :width,
+    :windowtitle,
+    :x,
+    :xlabel,
+    :xlims,
+    :xticks,
+    :y,
+    :ylabel,
+    :ylims,
+    # :yrightlabel,
+    :yticks,
+  ]
 supportedAxes(::[PkgName]Package) = _allAxes
 supportedTypes(::[PkgName]Package) = _allTypes
 supportedStyles(::[PkgName]Package) = _allStyles

@@ -6,7 +6,48 @@ immutable QwtPackage <: PlottingPackage end
 export qwt
 qwt() = backend(:qwt)
 
-supportedArgs(::QwtPackage) = setdiff(_allArgs, [:xlims, :ylims, :xticks, :yticks])
+# supportedArgs(::QwtPackage) = setdiff(_allArgs, [:xlims, :ylims, :xticks, :yticks])
+supportedArgs(::QwtPackage) = [
+    :annotation,
+    :args,
+    :axis,
+    :background_color,
+    :color,
+    :fillto,
+    :foreground_color,
+    :group,
+    :heatmap_c,
+    :kwargs,
+    :label,
+    :layout,
+    :legend,
+    :linestyle,
+    :linetype,
+    :marker,
+    :markercolor,
+    :markersize,
+    :n,
+    :nbins,
+    :nc,
+    :nr,
+    :pos,
+    :reg,
+    # :ribbon,
+    :show,
+    :size,
+    :title,
+    :width,
+    :windowtitle,
+    :x,
+    :xlabel,
+    # :xlims,
+    # :xticks,
+    :y,
+    :ylabel,
+    # :ylims,
+    :yrightlabel,
+    # :yticks,
+  ]
 supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
 supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
 

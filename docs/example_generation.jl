@@ -91,7 +91,7 @@ const examples = PlotExample[
               [
                 :(y = rand(10)),
                 :(plot(y, ann=(3,y[3],"this is #3"))),
-                :(annotate!([(5,y[5],"this is #5"),(8.4,y[10],"this is #10")]))
+                :(annotate!([(5,y[5],"this is #5"),(9,y[10],"this is #10")]))
               ]),
   
 ]
