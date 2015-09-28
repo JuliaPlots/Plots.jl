@@ -42,7 +42,8 @@ export
   yticks!,
   annotate!,
 
-  savepng,
+  savefig,
+  png,
   gui,
 
   backend,
@@ -116,12 +117,58 @@ annotate!(plt::Plot, anns)                            = plot!(plt; annotation = 
 
 # ---------------------------------------------------------
 
+function getExtension(fn::AbstractString)
+  pieces = split(fn, ".")
+  if length(pieces) < 2
+    error("Can't extract file extension: ", fn)
+  end
+  pieces[end]
+end
 
-savepng(args...; kw...) = savepng(current(), args...; kw...)
-savepng(plt::PlottingObject, fn::AbstractString; kw...) = (io = open(fn, "w"); writemime(io, MIME("image/png"), plt); close(io))
-# savepng(plt::PlottingObject, args...; kw...) = savepng(plt.backend, plt, args...; kw...)
-# savepng(::PlottingPackage, plt::PlottingObject, fn::AbstractString, args...) = error("unsupported")  # fallback so multiple dispatch doesn't get confused if it's missing
+function addExtension(fn::AbstractString, ext::AbstractString)
+  try
+    oldext = getExtension(fn)
+    if oldext == ext
+      return fn
+    else
+      return "$fn.$ext"
+    end
+  catch
+    return "$fn.$ext"
+  end
+end
 
+
+function png(plt::PlottingObject, fn::AbstractString)
+  fn = addExtension(fn, "png")
+  io = open(fn, "w")
+  writemime(io, MIME("image/png"), plt)
+  close(io)
+end
+png(fn::AbstractString) = png(current(), fn)
+
+
+const _savemap = Dict(
+    "png" => png,
+  )
+
+function savefig(plt::PlottingObject, fn::AbstractString)
+  ext = getExtension(fn)
+  func = get(_savemap, ext) do
+    error("Unsupported extension $ext with filename ", fn)
+  end
+  func(plt, fn)
+end
+savefig(fn::AbstractString) = savefig(current(), fn)
+
+
+# savepng(args...; kw...) = savepng(current(), args...; kw...)
+# savepng(plt::PlottingObject, fn::AbstractString; kw...) = (io = open(fn, "w"); writemime(io, MIME("image/png"), plt); close(io))
+
+
+
+
+# ---------------------------------------------------------
 
 gui(plt::PlottingObject = current()) = display(PlotsDisplay(), plt)
 
@@ -129,6 +176,7 @@ gui(plt::PlottingObject = current()) = display(PlotsDisplay(), plt)
 # override the REPL display to open a gui window
 Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::PlottingObject) = gui(plt)
 
+# ---------------------------------------------------------
 
 
 function __init__()
