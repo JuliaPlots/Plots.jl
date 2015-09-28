@@ -79,11 +79,11 @@ supportedStyles(::PlottingPackage) = _allStyles
 supportedMarkers(::PlottingPackage) = _allMarkers
 subplotSupported(::PlottingPackage) = true
 
-supportedAxes() = supportedAxes(plotter())
-supportedTypes() = supportedTypes(plotter())
-supportedStyles() = supportedStyles(plotter())
-supportedMarkers() = supportedMarkers(plotter())
-subplotSupported() = subplotSupported(plotter())
+supportedAxes() = supportedAxes(backend())
+supportedTypes() = supportedTypes(backend())
+supportedStyles() = supportedStyles(backend())
+supportedMarkers() = supportedMarkers(backend())
+subplotSupported() = subplotSupported(backend())
 
 # -----------------------------------------------------------------------------
 
@@ -126,8 +126,13 @@ _plotDefaults[:ylims]             = :auto
 _plotDefaults[:xticks]            = :auto
 _plotDefaults[:yticks]            = :auto
 _plotDefaults[:size]              = (800,600)
+_plotDefaults[:pos]               = (0,0)
 _plotDefaults[:windowtitle]       = "Plots.jl"
 _plotDefaults[:show]              = false
+_plotDefaults[:layout]            = nothing
+_plotDefaults[:n]                 = -1
+_plotDefaults[:nr]                = -1
+_plotDefaults[:nc]                = -1
 
 
 
@@ -135,7 +140,7 @@ _plotDefaults[:show]              = false
 
 const _allArgs = sort(collect(union(keys(_seriesDefaults), keys(_plotDefaults))))
 supportedArgs(::PlottingPackage) = _allArgs
-supportedArgs() = supportedArgs(plotter())
+supportedArgs() = supportedArgs(backend())
 
 
 # -----------------------------------------------------------------------------
@@ -235,7 +240,13 @@ end
 
 # update the defaults globally
 
-function plotDefault(k::Symbol)
+"""
+`default(key)` returns the current default value for that key
+`default(key, value)` sets the current default value for that key
+`default(; kw...)` will set the current default value for each key/value pair
+"""
+
+function default(k::Symbol)
   k = get(_keyAliases, k, k)
   if haskey(_seriesDefaults, k)
     return _seriesDefaults[k]
@@ -246,7 +257,7 @@ function plotDefault(k::Symbol)
   end
 end
 
-function plotDefault!(k::Symbol, v)
+function default(k::Symbol, v)
   k = get(_keyAliases, k, k)
   if haskey(_seriesDefaults, k)
     _seriesDefaults[k] = v
@@ -257,9 +268,9 @@ function plotDefault!(k::Symbol, v)
   end
 end
 
-function plotDefault!(; kw...)
+function default(; kw...)
   for (k,v) in kw
-    plotDefault!(k, v)
+    default(k, v)
   end
 end
 
@@ -297,7 +308,7 @@ end
 
 function warnOnUnsupportedArgs(pkg::PlottingPackage, d::Dict)
   for k in sortedkeys(d)
-    if !(k in supportedArgs(pkg))
+    if !(k in supportedArgs(pkg)) && d[k] != default(k)
       warn("Keyword argument $k not supported with $pkg.  Choose from: $(supportedArgs(pkg))")
     end
   end

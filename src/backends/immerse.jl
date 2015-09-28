@@ -3,8 +3,8 @@
 
 immutable ImmersePackage <: PlottingPackage end
 
-export immerse!
-immerse!() = plotter!(:immerse)
+export immerse
+immerse() = backend(:immerse)
 
 
 supportedArgs(::ImmersePackage) = supportedArgs(GadflyPackage())
@@ -128,7 +128,7 @@ getGadflyContext(::ImmersePackage, plt::Plot) = plt.o[2]
 getGadflyContext(::ImmersePackage, subplt::Subplot) = buildGadflySubplotContext(subplt)
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{ImmersePackage})
-  gplt = getGadflyContext(plt.plotter, plt)
+  gplt = getGadflyContext(plt.backend, plt)
   setGadflyDisplaySize(plt.initargs[:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end
@@ -148,7 +148,7 @@ end
 
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Subplot{ImmersePackage})
-  gplt = getGadflyContext(plt.plotter, plt)
+  gplt = getGadflyContext(plt.backend, plt)
   setGadflyDisplaySize(plt.initargs[1][:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end

@@ -43,7 +43,7 @@ Pkg.add("Winston")
 
 ## Use
 
-Load it in.  The underlying plotting backends are not imported until `plotter()` is called (which happens
+Load it in.  The underlying plotting backends are not imported until `backend()` is called (which happens
 on your first call to `plot` or `subplot`).  This means that you don't need any backends to be installed when you call `using Plots`.
 Plots will try to figure out a good default backend for you automatically based on what backends are installed.
 
@@ -54,7 +54,7 @@ using Plots
 Do a plot in Gadfly (inspired by [this example](http://gadflyjl.org/geom_point.html)), then save a png:
 
 ```julia
-gadfly!()        # switch to Gadfly as a backend
+gadfly()        # switch to Gadfly as a backend
 dataframes!()    # turn on support for DataFrames inputs
 
 # load some data
@@ -72,21 +72,21 @@ Also check out the [IJulia notebooks](examples) and see how it works interactive
 
 ## API
 
-Call `plotter!(backend::Symbol)` or the shorthands (`gadfly!()`, `qwt!()`, `unicodeplots!()`, etc) to set the current plotting backend.
+Call `backend(backend::Symbol)` or the shorthands (`gadfly()`, `qwt()`, `unicodeplots()`, etc) to set the current plotting backend.
 Subsequent commands are converted into the relevant plotting commands for that package:
 
 ```julia
-gadfly!()
+gadfly()
 plot(1:10)    # this effectively calls `y = 1:10; Gadfly.plot(x=1:length(y), y=y)`
-qwt!()
+qwt()
 plot(1:10)    # this effectively calls `Qwt.plot(1:10)`
 ```
 
 Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 
 ```julia
-plot(args...; kw...)                  # creates a new plot window, and sets it to be the `currentPlot`
-plot!(args...; kw...)                 # adds to the `currentPlot`
+plot(args...; kw...)                  # creates a new plot window, and sets it to be the `current`
+plot!(args...; kw...)                 # adds to the `current`
 plot!(plotobj, args...; kw...)        # adds to the plot `plotobj`
 ```
 
@@ -104,7 +104,7 @@ In general, you can pass in a `y` only, or an `x` and `y`, both of whatever type
 For matrices, data is split by columns.  For functions, data is mapped.  For DataFrames, a Symbol/Symbols in place of x/y will map to
 the relevant column(s).
 
-Here are some example usages... remember you can always use `plot!` to update an existing plot, and that, unless specified, you will update the `currentPlot()`.
+Here are some example usages... remember you can always use `plot!` to update an existing plot, and that, unless specified, you will update the `current()`.
 
 ```julia
 plot()                                    # empty plot object
@@ -162,9 +162,9 @@ vline!(args...; kw...)     = plot!(args...; kw..., linetype = :vline)
 ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
 ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
-title!(s::AbstractString)                 = plot!(title = s)
-xlabel!(s::AbstractString)                = plot!(xlabel = s)
-ylabel!(s::AbstractString)                = plot!(ylabel = s)
+title(s::AbstractString)                 = plot!(title = s)
+xlabel(s::AbstractString)                = plot!(xlabel = s)
+ylabel(s::AbstractString)                = plot!(ylabel = s)
 xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(xlims = lims)
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(ylims = lims)
 xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
@@ -262,7 +262,7 @@ Type | Aliases
 
 
 
-__Tip__: You can see the default value for a given argument with `plotDefault(arg::Symbol)`, and set the default value with `plotDefault!(arg::Symbol, value)`
+__Tip__: You can see the default value for a given argument with `default(arg::Symbol)`, and set the default value with `default(arg::Symbol, value)`
 
 __Tip__: When plotting multiple lines, you can set all series to use the same value, or pass in an array to cycle through values.  Example:
 

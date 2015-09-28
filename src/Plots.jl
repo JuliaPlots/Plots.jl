@@ -6,19 +6,16 @@ using Reexport
 @reexport using Colors
 
 export
-  plotter,
-  plotter!,
   plot,
   plot!,
-  plot_display,
-  plot_display!,
+  # plot_display,
+  # plot_display!,
   subplot,
   subplot!,
 
-  currentPlot,
-  currentPlot!,
-  plotDefault,
-  plotDefault!,
+  current,
+  default,
+  
   scatter,
   scatter!,
   bar,
@@ -48,9 +45,10 @@ export
   savepng,
   gui,
 
+  backend,
   backends,
   aliases,
-  dataframes!,
+  dataframes,
   OHLC,
 
   supportedArgs,
@@ -119,13 +117,13 @@ annotate!(plt::Plot, anns)                            = plot!(plt; annotation = 
 # ---------------------------------------------------------
 
 
-savepng(args...; kw...) = savepng(currentPlot(), args...; kw...)
+savepng(args...; kw...) = savepng(current(), args...; kw...)
 savepng(plt::PlottingObject, fn::AbstractString; kw...) = (io = open(fn, "w"); writemime(io, MIME("image/png"), plt); close(io))
-# savepng(plt::PlottingObject, args...; kw...) = savepng(plt.plotter, plt, args...; kw...)
+# savepng(plt::PlottingObject, args...; kw...) = savepng(plt.backend, plt, args...; kw...)
 # savepng(::PlottingPackage, plt::PlottingObject, fn::AbstractString, args...) = error("unsupported")  # fallback so multiple dispatch doesn't get confused if it's missing
 
 
-gui(plt::PlottingObject = currentPlot()) = display(PlotsDisplay(), plt)
+gui(plt::PlottingObject = current()) = display(PlotsDisplay(), plt)
 
 
 # override the REPL display to open a gui window

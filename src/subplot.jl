@@ -37,7 +37,7 @@ Base.length(layout::SubplotLayout) = layout.numplts
 # ------------------------------------------------------------
 
 
-Base.string(subplt::Subplot) = "Subplot{$(subplt.plotter) p=$(subplt.p) n=$(subplt.n)}"
+Base.string(subplt::Subplot) = "Subplot{$(subplt.backend) p=$(subplt.p) n=$(subplt.n)}"
 Base.print(io::IO, subplt::Subplot) = print(io, string(subplt))
 Base.show(io::IO, subplt::Subplot) = print(io, string(subplt))
 
@@ -63,17 +63,19 @@ function subplot(args...; kw...)
   replaceAliases!(d, _keyAliases)
 
   # figure out the layout
-  if haskey(d, :layout)
-    layout = SubplotLayout(d[:layout])
+  layoutarg = get(d, :layout, nothing)
+  # if haskey(d, :layout)
+  if layoutarg != nothing
+    layout = SubplotLayout(layoutarg)
   else
-    if !haskey(d, :n)
+    if !haskey(d, :n) || d[:n] < 0
       error("You must specify either layout or n when creating a subplot: ", d)
     end
     layout = SubplotLayout(d[:n], get(d, :nr, -1), get(d, :nc, -1))
   end
 
   # initialize the individual plots
-  pkg = plotter()
+  pkg = backend()
   plts = Plot[]
   ds = Dict[]
   for i in 1:length(layout)
@@ -100,7 +102,7 @@ Adds to a subplot.
 
 # current subplot
 function subplot!(args...; kw...)
-  subplot!(currentPlot(), args...; kw...)
+  subplot!(current(), args...; kw...)
 end
 
 
@@ -113,7 +115,7 @@ end
 # # this adds to a specific subplot... most plot commands will flow through here
 function subplot!(subplt::Subplot, args...; kw...)
   if !subplotSupported()
-    error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(backend(pkg)), backends()),", "))
+    error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(backendInstance(pkg)), backends()),", "))
   end
 
   d = Dict(kw)
@@ -122,12 +124,15 @@ function subplot!(subplt::Subplot, args...; kw...)
     delete!(d, k)
   end
 
-  kwList = createKWargsList(subplt, args...; d...)
-  for (i,d) in enumerate(kwList)
+  kwList, xmeta, ymeta = createKWargsList(subplt, args...; d...)
+
+  # TODO: something useful with meta info?
+
+  for (i,di) in enumerate(kwList)
     subplt.n += 1
     plt = getplot(subplt)  # get the Plot object where this series will be drawn
-    d[:show] = false
-    plot!(plt; d...)
+    di[:show] = false
+    plot!(plt; di...)
   end
 
   # create the underlying object (each backend will do this differently)
@@ -137,16 +142,12 @@ function subplot!(subplt::Subplot, args...; kw...)
   end
 
   # set this to be current
-  currentPlot!(subplt)
+  current(subplt)
 
-  # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
-  # # do we want to show it?
-  # d = Dict(kw)
-  # @show d
-  # if haskey(d, :show) && d[:show]
-  #   println("here...why?")
-  #   display(subplt)
-  # end
+  # show it automatically?
+  if haskey(d, :show) && d[:show]
+    gui()
+  end
 
   subplt
 end

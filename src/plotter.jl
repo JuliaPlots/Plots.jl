@@ -28,7 +28,7 @@ const INITIALIZED_BACKENDS = Set{Symbol}()
 backends() = BACKENDS
 
 
-function backend(sym::Symbol)
+function backendInstance(sym::Symbol)
   sym == :qwt && return QwtPackage()
   sym == :gadfly && return GadflyPackage()
   sym == :unicodeplots && return UnicodePlotsPackage()
@@ -43,7 +43,7 @@ type CurrentBackend
   sym::Symbol
   pkg::PlottingPackage
 end
-CurrentBackend(sym::Symbol) = CurrentBackend(sym, backend(sym))
+CurrentBackend(sym::Symbol) = CurrentBackend(sym, backendInstance(sym))
 
 # ---------------------------------------------------------
 
@@ -90,7 +90,7 @@ end
 doc"""
 Returns the current plotting package name.  Initializes package on first call.
 """
-function plotter()
+function backend()
 
   currentBackendSymbol = CURRENT_BACKEND.sym
   if !(currentBackendSymbol in INITIALIZED_BACKENDS)
@@ -149,7 +149,7 @@ function plotter()
       end
 
     else
-      error("Unknown plotter $currentBackendSymbol.  Choose from: $BACKENDS")
+      error("Unknown backend $currentBackendSymbol.  Choose from: $BACKENDS")
     end
     push!(INITIALIZED_BACKENDS, currentBackendSymbol)
     # println("[Plots.jl] done.")
@@ -161,7 +161,7 @@ end
 doc"""
 Set the plot backend.  Choose from:  :qwt, :gadfly, :unicodeplots
 """
-function plotter!(modname)
+function backend(modname)
   
   # set the PlottingPackage
   if modname == :qwt
@@ -177,7 +177,7 @@ function plotter!(modname)
   elseif modname == :winston
     CURRENT_BACKEND.pkg = WinstonPackage()
   else
-    error("Unknown plotter $modname.  Choose from: $BACKENDS")
+    error("Unknown backend $modname.  Choose from: $BACKENDS")
   end
 
   # update the symbol

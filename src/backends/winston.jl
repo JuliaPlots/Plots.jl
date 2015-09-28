@@ -5,8 +5,8 @@
 
 immutable WinstonPackage <: PlottingPackage end
 
-export winston!
-winston!() = plotter!(:winston)
+export winston
+winston() = backend(:winston)
 
 # ---------------------------------------------------------------------------
 

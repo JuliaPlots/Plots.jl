@@ -3,11 +3,52 @@
 
 immutable GadflyPackage <: PlottingPackage end
 
-export gadfly!
-gadfly!() = plotter!(:gadfly)
+export gadfly
+gadfly() = backend(:gadfly)
 
 
-supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos, :screen, :yrightlabel])
+# supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos, :screen, :yrightlabel])
+supportedArgs(::GadflyPackage) = [
+    :annotation,
+    :args,
+    :axis,
+    :background_color,
+    :color,
+    :fillto,
+    :foreground_color,
+    :group,
+    # :heatmap_c,
+    :kwargs,
+    :label,
+    :layout,
+    :legend,
+    :linestyle,
+    :linetype,
+    :marker,
+    :markercolor,
+    :markersize,
+    :n,
+    :nbins,
+    :nc,
+    :nr,
+    # :pos,
+    :reg,
+    # :ribbon,
+    :show,
+    :size,
+    :title,
+    :width,
+    :windowtitle,
+    :x,
+    :xlabel,
+    :xlims,
+    :xticks,
+    :y,
+    :ylabel,
+    :ylims,
+    # :yrightlabel,
+    :yticks,
+  ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -336,7 +377,7 @@ function buildGadflySubplotContext(subplt::Subplot)
   i = 0
   rows = []
   for rowcnt in subplt.layout.rowcounts
-    push!(rows, Gadfly.hstack([getGadflyContext(plt.plotter, plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
+    push!(rows, Gadfly.hstack([getGadflyContext(plt.backend, plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
     i += rowcnt
   end
   Gadfly.vstack(rows...)
@@ -347,7 +388,7 @@ function setGadflyDisplaySize(w,h)
 end
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{GadflyPackage})
-  gplt = getGadflyContext(plt.plotter, plt)
+  gplt = getGadflyContext(plt.backend, plt)
   setGadflyDisplaySize(plt.initargs[:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end
@@ -361,7 +402,7 @@ end
 
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Subplot{GadflyPackage})
-  gplt = getGadflyContext(plt.plotter, plt)
+  gplt = getGadflyContext(plt.backend, plt)
   setGadflyDisplaySize(plt.initargs[1][:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end

@@ -11,7 +11,7 @@
 
 ```julia
 using Plots
-pyplot!()
+pyplot()
 ```
 
 ### Lines

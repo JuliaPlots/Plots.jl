@@ -6,18 +6,18 @@ const CURRENT_PLOT = CurrentPlot(Nullable{PlottingObject}())
 
 isplotnull() = isnull(CURRENT_PLOT.nullableplot)
 
-function currentPlot()
+function current()
   if isplotnull()
     error("No current plot/subplot")
   end
   get(CURRENT_PLOT.nullableplot)
 end
-currentPlot!(plot::PlottingObject) = (CURRENT_PLOT.nullableplot = Nullable(plot))
+current(plot::PlottingObject) = (CURRENT_PLOT.nullableplot = Nullable(plot))
 
 # ---------------------------------------------------------
 
 
-Base.string(plt::Plot) = "Plot{$(plt.plotter) n=$(plt.n)}"
+Base.string(plt::Plot) = "Plot{$(plt.backend) n=$(plt.n)}"
 Base.print(io::IO, plt::Plot) = print(io, string(plt))
 Base.show(io::IO, plt::Plot) = print(io, string(plt))
 
@@ -32,8 +32,8 @@ doc"""
 The main plot command.  Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 
 ```
-  plot(args...; kw...)                  # creates a new plot window, and sets it to be the currentPlot
-  plot!(args...; kw...)                 # adds to the `currentPlot`
+  plot(args...; kw...)                  # creates a new plot window, and sets it to be the current
+  plot!(args...; kw...)                 # adds to the `current`
   plot!(plotobj, args...; kw...)        # adds to the plot `plotobj`
 ```
 
@@ -43,7 +43,7 @@ When you pass in matrices, it splits by columns.  See the documentation for more
 
 # this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
-  pkg = plotter()
+  pkg = backend()
   d = Dict(kw)
   replaceAliases!(d, _keyAliases)
 
@@ -59,15 +59,15 @@ function plot(args...; kw...)
 end
 
 
-function plot_display(args...; kw...)
-  plt = plot(args...; kw...)
-  display(plt)
-  plt
-end
+# function plot_display(args...; kw...)
+#   plt = plot(args...; kw...)
+#   display(plt)
+#   plt
+# end
 
 # this adds to the current plot
 function  plot!(args...; kw...)
-  plot!(currentPlot(), args...; kw...)
+  plot!(current(), args...; kw...)
 end
 
 # not allowed:
@@ -81,14 +81,14 @@ function plot!(plt::Plot, args...; kw...)
   d = Dict(kw)
   replaceAliases!(d, _keyAliases)
 
-  warnOnUnsupportedArgs(plt.plotter, d)
+  warnOnUnsupportedArgs(plt.backend, d)
 
   # TODO: handle a "group by" mechanism.
   # will probably want to check for the :group kw param, and split into
   # index partitions/filters to be passed through to the next step.
   # Ideally we don't change the insides ot createKWargsList too much to 
   # save from code repetition.  We could consider adding a throw
-  groupargs = haskey(d, :group) ? [extractGroupArgs(d[:group], args...)] : []
+  groupargs = get(d, :group, nothing) == nothing ? [] : [extractGroupArgs(d[:group], args...)]
   # @show groupargs
 
   # just in case the backend needs to set up the plot (make it current or something)
@@ -110,7 +110,7 @@ function plot!(plt::Plot, args...; kw...)
     setTicksFromStringVector(d, di, :y, :yticks)
 
     # println("Plotting: ", di)
-    plot!(plt.plotter, plt; di...)
+    plot!(plt.backend, plt; di...)
 
   end
 
@@ -118,7 +118,7 @@ function plot!(plt::Plot, args...; kw...)
 
   # add title, axis labels, ticks, etc
   updatePlotItems(plt, d)
-  currentPlot!(plt)
+  current(plt)
 
   # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
   # # do we want to show it?
@@ -153,7 +153,7 @@ preparePlotUpdate(plt::Plot) = nothing
 # should we update the x/y label given the meta info during input slicing?
 function updateDictWithMeta(d::Dict, initargs::Dict, meta::Symbol, isx::Bool)
   lsym = isx ? :xlabel : :ylabel
-  if initargs[lsym] == plotDefault(lsym)
+  if initargs[lsym] == default(lsym)
     d[lsym] = string(meta)
   end
 end
@@ -254,7 +254,7 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     # build the series arg dict
     numUncounted = get(d, :numUncounted, 0)
     n = plt.n + i + numUncounted
-    d = getSeriesArgs(plt.plotter, getinitargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
+    d = getSeriesArgs(plt.backend, getinitargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
     if haskey(d, :idxfilter)
@@ -343,7 +343,7 @@ end
 # --------------------------------------------------------------------
 
 "For DataFrame support.  Imports DataFrames and defines the necessary methods which support them."
-function dataframes!()
+function dataframes()
   @eval import DataFrames
 
   @eval function createKWargsList(plt::PlottingObject, df::DataFrames.DataFrame, args...; kw...)

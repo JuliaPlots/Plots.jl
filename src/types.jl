@@ -9,7 +9,7 @@ abstract PlottingObject{T<:PlottingPackage}
 
 type Plot{T<:PlottingPackage} <: PlottingObject{T}
   o  # the underlying object
-  plotter::T
+  backend::T
   n::Int  # number of series
 
   # store these just in case
@@ -27,7 +27,7 @@ end
 type Subplot{T<:PlottingPackage} <: PlottingObject{T}
   o                           # the underlying object
   plts::Vector{Plot}          # the individual plots
-  plotter::T
+  backend::T
   p::Int                      # number of plots
   n::Int                      # number of series
   layout::SubplotLayout

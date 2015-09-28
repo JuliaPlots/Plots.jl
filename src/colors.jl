@@ -143,7 +143,7 @@ function handlePlotColors(::PlottingPackage, d::Dict)
   else
     bgcolor = _plotDefaults[:background_color]
     if d[:background_color] != _plotDefaults[:background_color]
-      warn("Cannot set background_color with backend $(plotter())")
+      warn("Cannot set background_color with backend $(backend())")
     end
   end
   d[:background_color] = bgcolor

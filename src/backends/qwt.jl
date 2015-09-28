@@ -3,8 +3,8 @@
 
 immutable QwtPackage <: PlottingPackage end
 
-export qwt!
-qwt!() = plotter!(:qwt)
+export qwt
+qwt() = backend(:qwt)
 
 supportedArgs(::QwtPackage) = setdiff(_allArgs, [:xlims, :ylims, :xticks, :yticks])
 supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]

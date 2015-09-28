@@ -105,9 +105,9 @@ createStringOfMarkDownSymbols(arr) = isempty(arr) ? "" : createStringOfMarkDownC
 
 function generate_markdown(pkgname::Symbol)
 
-  # set up the plotter, and don't show the plots by default
-  pkg = plotter!(pkgname)
-  # plotDefault!(:show, false)
+  # set up the backend, and don't show the plots by default
+  pkg = backend(pkgname)
+  # default(:show, false)
 
   # mkdir if necessary
   try
@@ -166,10 +166,10 @@ end
 # make and display one plot
 function test_example(pkgname::Symbol, idx::Int)
   println("Testing plot: $pkgname:$idx:$(examples[idx].header)")
-  plotter!(pkgname)
-  plotter()
+  backend(pkgname)
+  backend()
   map(eval, examples[idx].exprs)
-  plt = currentPlot()
+  plt = current()
   gui(plt)
   plt
 end
