@@ -43,6 +43,7 @@ export
   ylims!,
   xticks!,
   yticks!,
+  annotate!,
 
   savepng,
   gui,
@@ -96,21 +97,23 @@ ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
 ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
 
-title!(s::AbstractString) = plot!(title = s)
-xlabel!(s::AbstractString) = plot!(xlabel = s)
-ylabel!(s::AbstractString) = plot!(ylabel = s)
+title!(s::AbstractString)                 = plot!(title = s)
+xlabel!(s::AbstractString)                = plot!(xlabel = s)
+ylabel!(s::AbstractString)                = plot!(ylabel = s)
 xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(xlims = lims)
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(ylims = lims)
-xticks!{T<:Real}(v::AVec{T}) = plot!(xticks = v)
-yticks!{T<:Real}(v::AVec{T}) = plot!(yticks = v)
+xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
+yticks!{T<:Real}(v::AVec{T})              = plot!(yticks = v)
+annotate!(anns)                           = plot!(annotation = anns)
 
-title!(plt::Plot, s::AbstractString) = plot!(plt; title = s)
-xlabel!(plt::Plot, s::AbstractString) = plot!(plt; xlabel = s)
-ylabel!(plt::Plot, s::AbstractString) = plot!(plt; ylabel = s)
-xlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}) = plot!(plt; xlims = lims)
-ylims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}) = plot!(plt; ylims = lims)
-xticks!{T<:Real}(plt::Plot, v::AVec{T}) = plot!(plt; xticks = v)
-yticks!{T<:Real}(plt::Plot, v::AVec{T}) = plot!(plt; yticks = v)
+title!(plt::Plot, s::AbstractString)                  = plot!(plt; title = s)
+xlabel!(plt::Plot, s::AbstractString)                 = plot!(plt; xlabel = s)
+ylabel!(plt::Plot, s::AbstractString)                 = plot!(plt; ylabel = s)
+xlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S})  = plot!(plt; xlims = lims)
+ylims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S})  = plot!(plt; ylims = lims)
+xticks!{T<:Real}(plt::Plot, v::AVec{T})               = plot!(plt; xticks = v)
+yticks!{T<:Real}(plt::Plot, v::AVec{T})               = plot!(plt; yticks = v)
+annotate!(plt::Plot, anns)                            = plot!(plt; annotation = anns)
 
 
 # ---------------------------------------------------------

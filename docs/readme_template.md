@@ -168,6 +168,7 @@ xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(xlims = lims)
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(ylims = lims)
 xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
 yticks!{T<:Real}(v::AVec{T})              = plot!(yticks = v)
+annotate!(annotations)                    = plot!(annotation = annotations)
 ```
 
 Some keyword arguments you can set:

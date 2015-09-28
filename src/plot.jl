@@ -129,6 +129,8 @@ function plot!(plt::Plot, args...; kw...)
   plt
 end
 
+# --------------------------------------------------------------------
+
 function setTicksFromStringVector(d::Dict, di::Dict, sym::Symbol, ticksym::Symbol)
   # if the x or y values are strings, set ticks to the unique values, and x/y to the indices of the ticks
   # @show get(d,ticksym,:auto) == :auto isa(di[sym], AbstractArray) isa(eltype(di[sym]), AbstractString)
@@ -142,8 +144,11 @@ function setTicksFromStringVector(d::Dict, di::Dict, sym::Symbol, ticksym::Symbo
   # @show sym ticksym di[sym] d[ticksym]
 end
 
+# --------------------------------------------------------------------
+
 preparePlotUpdate(plt::Plot) = nothing
 
+# --------------------------------------------------------------------
 
 # should we update the x/y label given the meta info during input slicing?
 function updateDictWithMeta(d::Dict, initargs::Dict, meta::Symbol, isx::Bool)
@@ -153,6 +158,21 @@ function updateDictWithMeta(d::Dict, initargs::Dict, meta::Symbol, isx::Bool)
   end
 end
 updateDictWithMeta(d::Dict, initargs::Dict, meta, isx::Bool) = nothing
+
+# --------------------------------------------------------------------
+
+annotations(::Void) = []
+annotations{X<:Real, Y<:Real, V}(v::AVec{Tuple{X,Y,V}}) = v
+annotations{X<:Real, Y<:Real, V}(t::Tuple{X,Y,V}) = [t]
+annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
+                       "(x, y, annotation)\n    got: $(typeof(anns))")
+
+function addAnnotations(plt::Plot, d::Dict)
+  anns = annotations(get(d, :annotation, nothing))
+  if !isempty(anns)
+    addAnnotations(plt, anns)
+  end
+end
 
 
 # --------------------------------------------------------------------

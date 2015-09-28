@@ -310,17 +310,9 @@ function createAnnotationObject(x, y, val::AbstractString)
                             ))
 end
 
-function addAnnotations(plt::Plot{GadflyPackage}, d::Dict)
-  if haskey(d, :annotation)
-    anns = d[:annotation]
-    if !(isa(anns, AbstractVector) && issubtype(eltype(anns), Tuple))
-      error("Expecting a vector of tuples for annotations: (x, y, annotation)\n    got: $(typeof(anns))")
-    end
-
-    for ann in anns
-      x, y, val = ann
-      push!(plt.o.guides, createAnnotationObject(x, y, val))
-    end
+function addAnnotations{X,Y,V}(plt::Plot{GadflyPackage}, anns::AVec{Tuple{X,Y,V}})
+  for ann in anns
+    push!(plt.o.guides, createAnnotationObject(ann...))
   end
 end
 
