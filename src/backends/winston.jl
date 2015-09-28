@@ -37,6 +37,11 @@ supportedStyles(::WinstonPackage) = intersect(_allStyles, collect(keys(winston_l
 supportedMarkers(::WinstonPackage) = intersect(_allMarkers, collect(keys(winston_marker)))
 subplotSupported(::WinstonPackage) = false
 
+
+function preparePlotUpdate(plt::Plot{WinstonPackage})
+  Winston.ghf(plt.o)
+end
+
 # ---------------------------------------------------------------------------
 
 
@@ -183,13 +188,15 @@ end
 
 # -------------------------------
 
-# function savepng(::WinstonPackage, plt::PlottingObject, fn::AbstractString; kw...)
-#   f = open(fn, "w")
-#   window, canvas, wplt = getWinstonItems(plt)
-#   addWinstonLegend(plt, wplt)
-#   writemime(f, "image/png", wplt)
-#   close(f)
-# end
+function createWinstonAnnotationObject(plt::Plot{WinstonPackage}, x, y, val::AbstractString)
+  Winston.text(x, y, val)
+end
+
+function addAnnotations{X,Y,V}(plt::Plot{WinstonPackage}, anns::AVec{Tuple{X,Y,V}})
+  for ann in anns
+    createWinstonAnnotationObject(plt, ann...)
+  end
+end
 
 
 # -------------------------------
@@ -201,7 +208,9 @@ end
 # ----------------------------------------------------------------
 
 function addWinstonLegend(plt::Plot, wplt)
-  Winston.legend(wplt, [sd[:label] for sd in plt.seriesargs])
+  if plt.initargs[:legend]
+    Winston.legend(wplt, [sd[:label] for sd in plt.seriesargs])
+  end
 end
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{WinstonPackage})

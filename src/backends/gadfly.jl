@@ -8,7 +8,7 @@ gadfly!() = plotter!(:gadfly)
 
 
 supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos, :screen, :yrightlabel])
-supportedAxes(::GadflyPackage) = setdiff(_allAxes, [:right])
+supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
@@ -227,14 +227,17 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   nothing
 end
 
+function replaceType(vec, val)
+  filter!(x -> !isa(x, typeof(val)), vec)
+  push!(vec, val)
+end
 
 function addTicksGuide(gplt, ticks, isx::Bool)
   ticks == :auto && return
   ttype = ticksType(ticks)
   if ttype == :ticks
     gtype = isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks
-    filter!(x -> !isa(x, gtype), gplt.guides)
-    push!(gplt.guides, gtype(ticks = sort(collect(ticks))))
+    replaceType(gplt.guides, gtype(ticks = collect(ticks)))
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
   end
