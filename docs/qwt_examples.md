@@ -11,7 +11,7 @@
 
 ```julia
 using Plots
-qwt!()
+qwt()
 ```
 
 ### Lines

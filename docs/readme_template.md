@@ -208,6 +208,7 @@ __Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on
 - [x] Plot vectors/matrices/functions
 - [x] Plot DataFrames
 - [x] Grouping
+- [ ] Annotations
 - [ ] Scales
 - [ ] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
 - [ ] Custom markers

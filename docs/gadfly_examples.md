@@ -11,7 +11,7 @@
 
 ```julia
 using Plots
-gadfly!()
+gadfly()
 ```
 
 ### Lines

@@ -123,7 +123,7 @@ function generate_markdown(pkgname::Symbol)
   write(md, "- Supported values for marker: $(createStringOfMarkDownSymbols(supportedMarkers(pkg)))\n")
   write(md, "- Is `subplot`/`subplot!` supported? $(subplotSupported(pkg) ? "Yes" : "No")\n\n")
 
-  write(md, "### Initialize\n\n```julia\nusing Plots\n$(pkgname)!()\n```\n\n")
+  write(md, "### Initialize\n\n```julia\nusing Plots\n$(pkgname)()\n```\n\n")
 
 
   for (i,example) in enumerate(examples)
