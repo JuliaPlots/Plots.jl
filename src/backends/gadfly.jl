@@ -301,6 +301,32 @@ end
 # ----------------------------------------------------------------
 
 
+function createAnnotationObject(x, y, val::AbstractString)
+  Gadfly.Guide.annotation(Compose.compose(
+                              Compose.context(), 
+                              Compose.text(x, y, val)
+                              # Compose.fill(colorant"black"),
+                              # Compose.stroke(colorant"black")
+                            ))
+end
+
+function addAnnotations(plt::Plot{GadflyPackage}, d::Dict)
+  if haskey(d, :annotation)
+    anns = d[:annotation]
+    if !(isa(anns, AbstractVector) && issubtype(eltype(anns), Tuple))
+      error("Expecting a vector of tuples for annotations: (x, y, annotation)\n    got: $(typeof(anns))")
+    end
+
+    for ann in anns
+      x, y, val = ann
+      push!(plt.o.guides, createAnnotationObject(x, y, val))
+    end
+  end
+end
+
+# ----------------------------------------------------------------
+
+
 # create the underlying object (each backend will do this differently)
 function buildSubplotObject!(subplt::Subplot{GadflyPackage})
   subplt.o = nothing

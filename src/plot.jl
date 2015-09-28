@@ -114,6 +114,8 @@ function plot!(plt::Plot, args...; kw...)
 
   end
 
+  addAnnotations(plt, d)
+
   # add title, axis labels, ticks, etc
   updatePlotItems(plt, d)
   currentPlot!(plt)
