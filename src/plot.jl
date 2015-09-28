@@ -105,8 +105,13 @@ function plot!(plt::Plot, args...; kw...)
   # now we can plot the series
   for (i,di) in enumerate(kwList)
     plt.n += 1
+
+    setTicksFromStringVector(d, di, :x, :xticks)
+    setTicksFromStringVector(d, di, :y, :yticks)
+
     # println("Plotting: ", di)
     plot!(plt.plotter, plt; di...)
+
   end
 
   # add title, axis labels, ticks, etc
@@ -120,6 +125,19 @@ function plot!(plt::Plot, args...; kw...)
   end
 
   plt
+end
+
+function setTicksFromStringVector(d::Dict, di::Dict, sym::Symbol, ticksym::Symbol)
+  # if the x or y values are strings, set ticks to the unique values, and x/y to the indices of the ticks
+  # @show get(d,ticksym,:auto) == :auto isa(di[sym], AbstractArray) isa(eltype(di[sym]), AbstractString)
+  # @show get(d,ticksym,:auto) eltype(di[sym])
+  if get(d,ticksym,:auto) == :auto && isa(di[sym], AbstractArray) && issubtype(eltype(di[sym]), AbstractString)
+    ticks = unique(di[sym])
+    @show ticks
+    di[sym] = Int[findnext(ticks, v, 1) for v in di[sym]]
+    d[ticksym] = ticks
+  end
+  # @show sym ticksym di[sym] d[ticksym]
 end
 
 preparePlotUpdate(plt::Plot) = nothing
@@ -154,6 +172,9 @@ convertToAnyVector(n::Integer; kw...) = Any[zero(0) for i in 1:n], nothing
 
 # numeric vector
 convertToAnyVector{T<:Real}(v::AVec{T}; kw...) = Any[v], nothing
+
+# string vector
+convertToAnyVector{T<:AbstractString}(v::AVec{T}; kw...) = Any[v], nothing
 
 # numeric matrix
 convertToAnyVector{T<:Real}(v::AMat{T}; kw...) = Any[v[:,i] for i in 1:size(v,2)], nothing
