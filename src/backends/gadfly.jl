@@ -273,7 +273,7 @@ function replaceType(vec, val)
   push!(vec, val)
 end
 
-function addTicksGuide(gplt, ticks, isx::Bool)
+function addGadflyTicksGuide(gplt, ticks, isx::Bool)
   ticks == :auto && return
   ttype = ticksType(ticks)
   if ttype == :ticks
@@ -283,22 +283,29 @@ function addTicksGuide(gplt, ticks, isx::Bool)
     gtype = isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks
     replaceType(gplt.guides, gtype(ticks = collect(ticks[1])))
 
-    # TODO add xtick_label function (given tick, return label??) to gplt.ascetics
-    # probably want to add to gplt.mapping!
+    # TODO add xtick_label function (given tick, return label??) 
+    # Scale.x_discrete(; labels=nothing, levels=nothing, order=nothing)
+    filterGadflyScale(gplt, isx)
+    gfunc = isx ? Gadfly.Scale.x_discrete : Gadfly.Scale.y_discrete
+    labelmap = Dict(zip(ticks...))
+    labelfunc = val -> labelmap[val]
+    push!(gplt.scales, gfunc(levels = tickvals, labels = labelfunc))
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
   end
 end
 
-isContinuousScale(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScale) && scale.vars[1] == (isx ? :x : :y)
+# isContinuousScale(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScale) && scale.vars[1] == (isx ? :x : :y)
+filterGadflyScale(gplt, isx::Bool) = filter!(scale -> scale.vars[1] == (isx ? :x : :y), gplt.scales)
 
-function addLimitsScale(gplt, lims, isx::Bool)
+function addGadflyLimitsScale(gplt, lims, isx::Bool)
   lims == :auto && return
   ltype = limsType(lims)
   if ltype == :limits
     # remove any existing scales, then add a new one
+    filterGadflyScale(gplt, isx)
     gfunc = isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous
-    filter!(scale -> !isContinuousScale(scale,isx), gplt.scales)
+    # filter!(scale -> !isContinuousScale(scale,isx), gplt.scales)
     push!(gplt.scales, gfunc(minvalue = min(lims...), maxvalue = max(lims...)))
   else
     error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
@@ -338,10 +345,10 @@ function updateGadflyGuides(gplt, d::Dict)
   haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, d[:title])
   haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, d[:xlabel])
   haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, d[:ylabel])
-  haskey(d, :xlims) && addLimitsScale(gplt, d[:xlims], true)
-  haskey(d, :ylims) && addLimitsScale(gplt, d[:ylims], false)
-  haskey(d, :xticks) && addTicksGuide(gplt, d[:xticks], true)
-  haskey(d, :yticks) && addTicksGuide(gplt, d[:yticks], false)
+  haskey(d, :xlims) && addGadflyLimitsScale(gplt, d[:xlims], true)
+  haskey(d, :ylims) && addGadflyLimitsScale(gplt, d[:ylims], false)
+  haskey(d, :xticks) && addGadflyTicksGuide(gplt, d[:xticks], true)
+  haskey(d, :yticks) && addGadflyTicksGuide(gplt, d[:yticks], false)
 end
 
 function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)

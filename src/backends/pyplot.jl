@@ -266,8 +266,9 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
 end
 
 
+# -----------------------------------------------------------------
 
-function addLimitsScale(gplt, lims, isx::Bool)
+function addPyPlotLims(lims, isx::Bool)
   lims == :auto && return
   ltype = limsType(lims)
   if ltype == :limits
@@ -277,7 +278,7 @@ function addLimitsScale(gplt, lims, isx::Bool)
   end
 end
 
-function addTicksGuide(gplt, ticks, isx::Bool)
+function addPyPlotTicks(ticks, isx::Bool)
   ticks == :auto && return
   ttype = ticksType(ticks)
   if ttype == :ticks
@@ -305,16 +306,16 @@ function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
   end
 
   # limits and ticks
-  haskey(d, :xlims) && addLimitsScale(fig, d[:xlims], true)
-  haskey(d, :ylims) && addLimitsScale(fig, d[:ylims], false)
-  haskey(d, :xticks) && addTicksGuide(fig, d[:xticks], true)
-  haskey(d, :yticks) && addTicksGuide(fig, d[:yticks], false)
+  haskey(d, :xlims) && addPyPlotLims(d[:xlims], true)
+  haskey(d, :ylims) && addPyPlotLims(d[:ylims], false)
+  haskey(d, :xticks) && addPyPlotTicks(d[:xticks], true)
+  haskey(d, :yticks) && addPyPlotTicks(d[:yticks], false)
 
 end
 
 
 
-# -------------------------------
+# -----------------------------------------------------------------
 
 function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::AbstractString)
   ax = getLeftAxis(plt.o[1])

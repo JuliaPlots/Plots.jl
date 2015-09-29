@@ -104,7 +104,7 @@ function plot!(plt::Plot, args...; kw...)
     setTicksFromStringVector(d, di, :x, :xticks)
     setTicksFromStringVector(d, di, :y, :yticks)
 
-    @show di[:x] di[:y]
+    # @show di[:x] di[:y]
 
     # println("Plotting: ", di)
     plot!(plt.backend, plt; di...)
@@ -130,21 +130,23 @@ end
 
 # --------------------------------------------------------------------
 
+# if x or y are a vector of strings, we should create a list of unique strings,
+# and map x/y to be the index of the string... then set the x/y tick labels
 function setTicksFromStringVector(d::Dict, di::Dict, sym::Symbol, ticksym::Symbol)
   # if the x or y values are strings, set ticks to the unique values, and x/y to the indices of the ticks
 
-  @show sym di
+  # @show sym di
   v = di[sym]
-  @show v
+  # @show v
   isa(v, AbstractArray) || return
 
   T = eltype(v)
-  @show T
+  # @show T
   if T <: AbstractString || (!isempty(T.types) && all(x -> x <: AbstractString, T.types))
-    @show sym ticksym di[sym]
+    # @show sym ticksym di[sym]
 
     ticks = unique(di[sym])
-    @show ticks
+    # @show ticks
     di[sym] = Int[findnext(ticks, v, 1) for v in di[sym]]
 
     if !haskey(d, ticksym) || d[ticksym] == :auto
