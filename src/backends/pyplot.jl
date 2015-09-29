@@ -11,7 +11,7 @@ pyplot() = backend(:pyplot)
 # supportedArgs(::PyPlotPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fillto, :pos, :xlims, :ylims, :xticks, :yticks])
 supportedArgs(::PyPlotPackage) = [
     :annotation,
-    :args,
+    # :args,
     :axis,
     :background_color,
     :color,
@@ -19,7 +19,7 @@ supportedArgs(::PyPlotPackage) = [
     :foreground_color,
     :group,
     # :heatmap_c,
-    :kwargs,
+    # :kwargs,
     :label,
     :layout,
     :legend,

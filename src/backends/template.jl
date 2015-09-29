@@ -13,7 +13,7 @@ export [pkgname]
 # supportedArgs(::[PkgName]Package) = _allArgs
 supportedArgs(::[PkgName]Package) = [
     :annotation,
-    :args,
+    # :args,
     :axis,
     :background_color,
     :color,
@@ -21,7 +21,7 @@ supportedArgs(::[PkgName]Package) = [
     :foreground_color,
     :group,
     # :heatmap_c,
-    :kwargs,
+    # :kwargs,
     :label,
     :layout,
     :legend,

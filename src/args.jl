@@ -106,9 +106,9 @@ _seriesDefaults[:reg]         = false               # regression line?
 _seriesDefaults[:group]       = nothing
 _seriesDefaults[:ribbon]      = nothing
 _seriesDefaults[:annotation]  = nothing
-_seriesDefaults[:args]        = []     # additional args to pass to the backend
-_seriesDefaults[:kwargs]      = []   # additional keyword args to pass to the backend
-                              # note: can be Vector{Dict} or Vector{Tuple} 
+# _seriesDefaults[:args]        = []     # additional args to pass to the backend
+# _seriesDefaults[:kwargs]      = []   # additional keyword args to pass to the backend
+#                               # note: can be Vector{Dict} or Vector{Tuple} 
 
 
 const _plotDefaults = Dict{Symbol, Any}()

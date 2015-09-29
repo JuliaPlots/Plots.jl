@@ -10,7 +10,7 @@ gadfly() = backend(:gadfly)
 # supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos, :screen, :yrightlabel])
 supportedArgs(::GadflyPackage) = [
     :annotation,
-    :args,
+    # :args,
     # :axis,
     :background_color,
     :color,
@@ -18,7 +18,7 @@ supportedArgs(::GadflyPackage) = [
     # :foreground_color,
     :group,
     # :heatmap_c,
-    :kwargs,
+    # :kwargs,
     :label,
     :layout,
     :legend,

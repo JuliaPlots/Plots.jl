@@ -212,12 +212,12 @@ extendSeriesData(v::AVec, z::AVec) = (append!(v, z); v)
 # ---------------------------------------------------------------
 
 function supportGraph(allvals, func)
-    vals = reverse(allvals)
+    vals = reverse(sort(allvals))
     x = ASCIIString[]
     y = ASCIIString[]
-    for b in backends()
-        supported = func(Plots.backendInstance(b))
-        for val in vals
+    for val in vals
+      for b in sort(backends())
+          supported = func(Plots.backendInstance(b))
             if val in supported
                 push!(x, string(b))
                 push!(y, string(val))
@@ -232,6 +232,13 @@ supportGraphTypes() = supportGraph(_allTypes, supportedTypes)
 supportGraphStyles() = supportGraph(_allStyles, supportedStyles)
 supportGraphMarkers() = supportGraph(_allMarkers, supportedMarkers)
 supportGraphAxes() = supportGraph(_allAxes, supportedAxes)
+
+function dumpSupportGraphs()
+  for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles, supportGraphMarkers, supportGraphAxes)
+    plt = func()
+    png(IMG_DIR * "/supported/$(string(func))")
+  end
+end
 
 # ---------------------------------------------------------------
 

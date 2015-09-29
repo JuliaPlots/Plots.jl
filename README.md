@@ -180,13 +180,11 @@ Some keyword arguments you can set:
 Keyword | Default | Type | Aliases 
 ---- | ---- | ---- | ----
 `:annotation` | `nothing` | Series | `:ann`, `:annotate`, `:annotations`, `:anns`  
-`:args` | `Any[]` | Series | `:argss`  
 `:axis` | `left` | Series | `:axiss`  
 `:color` | `auto` | Series | `:c`, `:colors`  
 `:fillto` | `nothing` | Series | `:area`, `:fill`, `:filltos`  
 `:group` | `nothing` | Series | `:g`, `:groups`  
 `:heatmap_c` | `(0.15,0.5)` | Series | `:heatmap_cs`  
-`:kwargs` | `Any[]` | Series | `:kwargss`  
 `:label` | `AUTO` | Series | `:lab`, `:labels`  
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
 `:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
