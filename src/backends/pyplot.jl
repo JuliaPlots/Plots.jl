@@ -51,7 +51,7 @@ supportedArgs(::PyPlotPackage) = [
     :yticks,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
-supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
+supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :hexagon]
 subplotSupported(::PyPlotPackage) = false
@@ -190,17 +190,29 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   # PyPlot.figure(num)  # makes this current
   # makePyPlotCurrent(plt)
 
-  if !(d[:linetype] in supportedTypes(pkg))
-    error("linetype $(d[:linetype]) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
+  lt = d[:linetype]
+  if !(lt in supportedTypes(pkg))
+    error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
   end
 
-  if d[:linetype] == :sticks
+  if lt == :sticks
     d,_ = sticksHack(;d...)
-  elseif d[:linetype] == :scatter
+  
+  elseif lt == :scatter
     d[:linetype] = :none
     if d[:marker] == :none
       d[:marker] = :ellipse
     end
+
+  elseif lt in (:hline,:vline)
+    linewidth = d[:width]
+    linecolor = getPyPlotColor(d[:color])
+    linestyle = getPyPlotLineStyle(lt, d[:linestyle])
+    for yi in d[:y]
+      func = (lt == :hline ? PyPlot.axhline : PyPlot.axvline)
+      func(yi, linewidth=d[:width], color=linecolor, linestyle=linestyle)
+    end
+
   end
 
   lt = d[:linetype]
@@ -340,7 +352,7 @@ end
 function addPyPlotLegend(plt::Plot)
   if plt.initargs[:legend]
     # gotta do this to ensure both axes are included
-    args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap)), plt.seriesargs)
+    args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline)), plt.seriesargs)
     if length(args) > 0
       PyPlot.legend([d[:serieshandle] for d in args], [d[:label] for d in args], loc="best")
     end
