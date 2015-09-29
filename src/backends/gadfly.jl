@@ -296,7 +296,7 @@ function addGadflyTicksGuide(gplt, ticks, isx::Bool)
 end
 
 # isContinuousScale(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScale) && scale.vars[1] == (isx ? :x : :y)
-filterGadflyScale(gplt, isx::Bool) = filter!(scale -> scale.vars[1] == (isx ? :x : :y), gplt.scales)
+filterGadflyScale(gplt, isx::Bool) = filter!(scale -> scale.vars[1] != (isx ? :x : :y), gplt.scales)
 
 function addGadflyLimitsScale(gplt, lims, isx::Bool)
   lims == :auto && return
@@ -345,6 +345,7 @@ function updateGadflyGuides(gplt, d::Dict)
   haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, d[:title])
   haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, d[:xlabel])
   haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, d[:ylabel])
+
   haskey(d, :xlims) && addGadflyLimitsScale(gplt, d[:xlims], true)
   haskey(d, :ylims) && addGadflyLimitsScale(gplt, d[:ylims], false)
   haskey(d, :xticks) && addGadflyTicksGuide(gplt, d[:xticks], true)

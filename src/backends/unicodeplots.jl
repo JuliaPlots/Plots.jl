@@ -51,7 +51,7 @@ supportedArgs(::UnicodePlotsPackage) = [
     # :yticks,
   ]
 supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
-supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
+supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
 supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
 
@@ -112,7 +112,7 @@ function rebuildUnicodePlot!(plt::Plot)
 
   # now use the ! functions to add to the plot
   for d in sargs
-    addUnicodeSeries!(o, d, iargs[:legend])
+    addUnicodeSeries!(o, d, iargs[:legend], xlim, ylim)
   end
 
   # save the object
@@ -121,10 +121,23 @@ end
 
 
 # add a single series
-function addUnicodeSeries!(o, d::Dict, addlegend::Bool)
+function addUnicodeSeries!(o, d::Dict, addlegend::Bool, xlim, ylim)
 
   # get the function, or special handling for step/bar/hist
   lt = d[:linetype]
+
+  # handle hline/vline separately
+  if lt in (:hline,:vline)
+    for yi in d[:y]
+      if lt == :hline
+        UnicodePlots.lineplot!(o, xlim, [yi,yi])
+      else
+        UnicodePlots.lineplot!(o, [yi,yi], ylim)
+      end
+    end
+    return
+  end
+
   stepstyle = :post
   if lt == :path
     func = UnicodePlots.lineplot!

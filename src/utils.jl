@@ -211,6 +211,30 @@ extendSeriesData(v::AVec, z::AVec) = (append!(v, z); v)
 
 # ---------------------------------------------------------------
 
+function supportGraph(allvals, func)
+    vals = reverse(allvals)
+    x = ASCIIString[]
+    y = ASCIIString[]
+    for b in backends()
+        supported = func(Plots.backendInstance(b))
+        for val in vals
+            if val in supported
+                push!(x, string(b))
+                push!(y, string(val))
+            end
+        end 
+    end
+    scatter(x,y, m=:rect, ms=10, size=(300,100+18*length(vals)), leg=false)
+end
+
+supportGraphArgs() = supportGraph(_allArgs, supportedArgs)
+supportGraphTypes() = supportGraph(_allTypes, supportedTypes)
+supportGraphStyles() = supportGraph(_allStyles, supportedStyles)
+supportGraphMarkers() = supportGraph(_allMarkers, supportedMarkers)
+supportGraphAxes() = supportGraph(_allAxes, supportedAxes)
+
+# ---------------------------------------------------------------
+
 
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
