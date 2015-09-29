@@ -42,11 +42,11 @@ supportedArgs(::UnicodePlotsPackage) = [
     :windowtitle,
     :x,
     :xlabel,
-    # :xlims,
+    :xlims,
     # :xticks,
     :y,
     :ylabel,
-    # :ylims,
+    :ylims,
     # :yrightlabel,
     # :yticks,
   ]
@@ -69,17 +69,35 @@ function rebuildUnicodePlot!(plt::Plot)
 
   # figure out the plotting area xlim = [xmin, xmax] and ylim = [ymin, ymax]
   sargs = plt.seriesargs
-  xlim = [Inf, -Inf]
-  ylim = [Inf, -Inf]
-  for d in sargs
-    expandLimits!(xlim, d[:x])
-    expandLimits!(ylim, d[:y])
+  iargs = plt.initargs
+
+  # get the x/y limits
+  if get(iargs, :xlims, :auto) == :auto
+    xlim = [Inf, -Inf]
+    for d in sargs
+      expandLimits!(xlim, d[:x])
+    end
+  else
+    xmin, xmax = iargs[:xlims]
+    xlim = [xmin, xmax]
   end
+
+  if get(iargs, :ylims, :auto) == :auto
+    ylim = [Inf, -Inf]
+    for d in sargs
+      expandLimits!(ylim, d[:y])
+    end
+  else
+    ymin, ymax = iargs[:ylims]
+    ylim = [ymin, ymax]
+  end
+
+  # we set x/y to have a single point, since we need to create the plot with some data.
+  # since this point is at the bottom left corner of the plot, it shouldn't actually be shown
   x = Float64[xlim[1]]
   y = Float64[ylim[1]]
 
   # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
-  iargs = plt.initargs
   width, height = iargs[:size]
   o = UnicodePlots.createPlotWindow(x, y; width = width,
                                 height = height,
@@ -165,7 +183,7 @@ end
 
 
 function updatePlotItems(plt::Plot{UnicodePlotsPackage}, d::Dict)
-  for k in (:title, :xlabel, :ylabel)
+  for k in (:title, :xlabel, :ylabel, :xlims, :ylims)
     if haskey(d, k)
       plt.initargs[k] = d[k]
     end
