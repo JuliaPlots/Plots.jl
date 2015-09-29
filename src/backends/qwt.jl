@@ -40,13 +40,13 @@ supportedArgs(::QwtPackage) = [
     :windowtitle,
     :x,
     :xlabel,
-    # :xlims,
-    # :xticks,
+    :xlims,
+    :xticks,
     :y,
     :ylabel,
-    # :ylims,
+    :ylims,
     :yrightlabel,
-    # :yticks,
+    :yticks,
   ]
 supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
@@ -84,7 +84,7 @@ function adjustQwtKeywords(plt::Plot{QwtPackage}, iscreating::Bool; kw...)
     if lt == :vline
       d[:x], d[:y] = d[:y], d[:x]
     end
-    
+
   elseif !iscreating && lt == :bar
     d = barHack(; kw...)
   elseif !iscreating && lt == :hist
@@ -109,10 +109,43 @@ function plot!(::QwtPackage, plt::Plot; kw...)
   plt
 end
 
+
+# ----------------------------------------------------------------
+
+function updateLimsAndTicks(plt::Plot{QwtPackage}, d::Dict, isx::Bool)
+  lims = get(d, isx ? :xlims : :ylims, nothing)
+  ticks = get(d, isx ? :xticks : :yticks, nothing)
+  w = plt.o.widget
+  axisid = Qwt.QWT.QwtPlot[isx ? :xBottom : :yLeft] 
+  
+  if typeof(lims) <: Tuple
+    if isx
+      plt.o.autoscale_x = false
+    else
+      plt.o.autoscale_y = false
+    end
+    w[:setAxisScale](axisid, lims...)
+  end
+
+  if typeof(ticks) <: Range
+    if isx
+      plt.o.autoscale_x = false
+    else
+      plt.o.autoscale_y = false
+    end
+    w[:setAxisScale](axisid, float(minimum(ticks)), float(maximum(ticks)), float(step(ticks)))
+  elseif ticks != nothing
+    warn("Only Range types are supported for Qwt xticks/yticks. typeof(ticks)=$(typeof(ticks))")
+  end
+end
+
+
 function updatePlotItems(plt::Plot{QwtPackage}, d::Dict)
   haskey(d, :title) && Qwt.title(plt.o, d[:title])
   haskey(d, :xlabel) && Qwt.xlabel(plt.o, d[:xlabel])
   haskey(d, :ylabel) && Qwt.ylabel(plt.o, d[:ylabel])
+  updateLimsAndTicks(plt, d, true)
+  updateLimsAndTicks(plt, d, false)
 end
 
 
