@@ -275,6 +275,9 @@ function buildReadme()
   f = open(readme_fn, "w")
   write(f, readme)
   close(f)
+
+  gadfly()
+  Plots.dumpSupportGraphs()
 end
 
 # run it!
