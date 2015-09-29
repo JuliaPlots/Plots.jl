@@ -212,19 +212,28 @@ extendSeriesData(v::AVec, z::AVec) = (append!(v, z); v)
 # ---------------------------------------------------------------
 
 function supportGraph(allvals, func)
-    vals = reverse(sort(allvals))
-    x = ASCIIString[]
-    y = ASCIIString[]
-    for val in vals
-      for b in sort(backends())
-          supported = func(Plots.backendInstance(b))
-            if val in supported
-                push!(x, string(b))
-                push!(y, string(val))
-            end
-        end 
-    end
-    scatter(x,y, m=:rect, ms=10, size=(300,100+18*length(vals)), leg=false)
+  vals = reverse(sort(allvals))
+  bs = sort(backends())
+  x = ASCIIString[]
+  y = ASCIIString[]
+  for val in vals
+    for b in bs
+        supported = func(Plots.backendInstance(b))
+          if val in supported
+              push!(x, string(b))
+              push!(y, string(val))
+          end
+      end 
+  end
+  n = length(vals)
+  
+  scatter(x,y,
+          m=:rect,
+          ms=10,
+          size=(300,100+18*n),
+          # xticks=(collect(1:length(bs)), bs),
+          leg=false
+         )
 end
 
 supportGraphArgs() = supportGraph(_allArgs, supportedArgs)
