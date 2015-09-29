@@ -42,13 +42,13 @@ supportedArgs(::PyPlotPackage) = [
     :windowtitle,
     :x,
     :xlabel,
-    # :xlims,
-    # :xticks,
+    :xlims,
+    :xticks,
     :y,
     :ylabel,
-    # :ylims,
+    :ylims,
     :yrightlabel,
-    # :yticks,
+    :yticks,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar]
@@ -266,18 +266,50 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
 end
 
 
+
+function addLimitsScale(gplt, lims, isx::Bool)
+  lims == :auto && return
+  ltype = limsType(lims)
+  if ltype == :limits
+    (isx ? PyPlot.xlim : PyPlot.ylim)(lims...)
+  else
+    error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
+  end
+end
+
+function addTicksGuide(gplt, ticks, isx::Bool)
+  ticks == :auto && return
+  ttype = ticksType(ticks)
+  if ttype == :ticks
+    (isx ? PyPlot.xticks : PyPlot.yticks)(ticks)
+  elseif ttype == :ticklabels
+    (isx ? PyPlot.xticks : PyPlot.yticks)(collect(1:length(ticks)), ticks)
+  else
+    error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
+  end
+end
+
 function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
-  # makePyPlotCurrent(plt)
+  fig = plt.o[1]
+
+  # title and axis labels
   haskey(d, :title) && PyPlot.title(d[:title])
   haskey(d, :xlabel) && PyPlot.xlabel(d[:xlabel])
   if haskey(d, :ylabel)
-    ax = getLeftAxis(plt.o[1])  
+    ax = getLeftAxis(fig)
     ax[:set_ylabel](d[:ylabel])
   end
   if haskey(d, :yrightlabel)
-    ax = getRightAxis(plt.o[1])  
+    ax = getRightAxis(fig)  
     ax[:set_ylabel](d[:yrightlabel])
   end
+
+  # limits and ticks
+  haskey(d, :xlims) && addLimitsScale(fig, d[:xlims], true)
+  haskey(d, :ylims) && addLimitsScale(fig, d[:ylims], false)
+  haskey(d, :xticks) && addTicksGuide(fig, d[:xticks], true)
+  haskey(d, :yticks) && addTicksGuide(fig, d[:yticks], false)
+
 end
 
 
