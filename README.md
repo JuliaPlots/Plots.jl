@@ -13,6 +13,8 @@ Plots is a plotting interface and wrapper for several plotting packages.  My goa
 
 Please add wishlist items, bugs, or any other comments/questions to the issues list.
 
+Check out the [summary graphs](img/supported/supported.md) for the features that each backend supports.
+
 ## Examples for each implemented backend:
 
 - [Qwt.jl](docs/qwt_examples.md)
