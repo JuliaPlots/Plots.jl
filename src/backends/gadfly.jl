@@ -279,6 +279,12 @@ function addTicksGuide(gplt, ticks, isx::Bool)
   if ttype == :ticks
     gtype = isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks
     replaceType(gplt.guides, gtype(ticks = collect(ticks)))
+  elseif ttype == :ticks_and_labels
+    gtype = isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks
+    replaceType(gplt.guides, gtype(ticks = collect(ticks[1])))
+
+    # TODO add xtick_label function (given tick, return label??) to gplt.ascetics
+    # probably want to add to gplt.mapping!
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
   end

@@ -132,28 +132,24 @@ end
 
 function setTicksFromStringVector(d::Dict, di::Dict, sym::Symbol, ticksym::Symbol)
   # if the x or y values are strings, set ticks to the unique values, and x/y to the indices of the ticks
-  # @show get(d,ticksym,:auto) == :auto isa(di[sym], AbstractArray) isa(eltype(di[sym]), AbstractString)
-  # @show get(d,ticksym,:auto) eltype(di[sym])
 
-  haskey(d, ticksym) || return
-  d[ticksym] == :auto || return
-
+  @show sym di
   v = di[sym]
   @show v
   isa(v, AbstractArray) || return
 
   T = eltype(v)
   @show T
-  if T <: AbstractString || all(x -> x <: AbstractString, T.types)
-
-  # if get(d,ticksym,:auto) == :auto && isa(di[sym], AbstractArray) &&
-  #         (issubtype(eltype(di[sym]), AbstractString) || all(x->x<:AbstractString, eltype(di[sym]).types))
-    @show sym ticksym di[sym] d[ticksym]
+  if T <: AbstractString || (!isempty(T.types) && all(x -> x <: AbstractString, T.types))
+    @show sym ticksym di[sym]
 
     ticks = unique(di[sym])
     @show ticks
     di[sym] = Int[findnext(ticks, v, 1) for v in di[sym]]
-    d[ticksym] = UTF8String[t for t in ticks]
+
+    if !haskey(d, ticksym) || d[ticksym] == :auto
+      d[ticksym] = (collect(1:length(ticks)), UTF8String[t for t in ticks])
+    end
   end
   # @show sym ticksym di[sym] d[ticksym]
 end

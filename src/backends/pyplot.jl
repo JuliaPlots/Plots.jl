@@ -282,8 +282,8 @@ function addTicksGuide(gplt, ticks, isx::Bool)
   ttype = ticksType(ticks)
   if ttype == :ticks
     (isx ? PyPlot.xticks : PyPlot.yticks)(ticks)
-  elseif ttype == :ticklabels
-    (isx ? PyPlot.xticks : PyPlot.yticks)(collect(1:length(ticks)), ticks)
+  elseif ttype == :ticks_and_labels
+    (isx ? PyPlot.xticks : PyPlot.yticks)(ticks...)
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
   end
