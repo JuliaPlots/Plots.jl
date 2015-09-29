@@ -64,11 +64,11 @@ supportedArgs(::WinstonPackage) = [
     :windowtitle,
     :x,
     :xlabel,
-    # :xlims,
+    :xlims,
     # :xticks,
     :y,
     :ylabel,
-    # :ylims,
+    :ylims,
     # :yrightlabel,
     # :yticks,
   ]
@@ -216,18 +216,22 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 end
 
 
+# ----------------------------------------------------------------
+
+const _winstonNames = Dict(:xlims => :xrange, :ylims => :yrange)
+
 function updatePlotItems(plt::Plot{WinstonPackage}, d::Dict)
   window, canvas, wplt = getWinstonItems(plt)
-  for k in (:xlabel, :ylabel, :title)
+  for k in (:xlabel, :ylabel, :title, :xlims, :ylims)
     if haskey(d, k)
-      Winston.setattr(wplt, string(k), d[k])
+      Winston.setattr(wplt, string(get(_winstonNames, k, k)), d[k])
     end
   end
 end
 
 
 
-# -------------------------------
+# ----------------------------------------------------------------
 
 function createWinstonAnnotationObject(plt::Plot{WinstonPackage}, x, y, val::AbstractString)
   Winston.text(x, y, val)
@@ -240,7 +244,7 @@ function addAnnotations{X,Y,V}(plt::Plot{WinstonPackage}, anns::AVec{Tuple{X,Y,V
 end
 
 
-# -------------------------------
+# ----------------------------------------------------------------
 
 function buildSubplotObject!(subplt::Subplot{WinstonPackage})
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
