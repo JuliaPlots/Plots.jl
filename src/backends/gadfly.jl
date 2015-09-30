@@ -33,7 +33,7 @@ supportedArgs(::GadflyPackage) = [
     :nr,
     # :pos,
     :reg,
-    # :ribbon,
+    :ribbon,
     :show,
     :size,
     :title,
@@ -253,17 +253,28 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     colorgroup = []
   end
 
-  # fillto
-  if d[:fillto] == nothing
-    yminmax = []
-  else
-    fillto = makevec(d[:fillto])
+  # fillto and ribbon
+  yminmax = []
+  fillto, ribbon = d[:fillto], d[:ribbon]
+  
+  if fillto != nothing
+    if ribbon != nothing
+      warn("Ignoring ribbon arg since fillto is set!")
+    end
+    fillto = makevec(fillto)
     n = length(fillto)
-    yminmax = [
-      (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]),
-      (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])])
-    ]
+    push!(yminmax, (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
+    push!(yminmax, (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
     push!(gfargs, Gadfly.Geom.ribbon)
+  
+  elseif ribbon != nothing
+    ribbon = makevec(ribbon)
+    n = length(ribbon)
+    @show ribbon
+    push!(yminmax, (:ymin, Float64[y - ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
+    push!(yminmax, (:ymax, Float64[y + ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
+    push!(gfargs, Gadfly.Geom.ribbon)
+
   end
   
   # handle markers

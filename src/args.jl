@@ -202,7 +202,7 @@ const _keyAliases = Dict(
     :fill         => :fillto,
     :area         => :fillto,
     :g            => :group,
-    :r            => :ribbon,
+    :rib          => :ribbon,
     :ann          => :annotation,
     :anns         => :annotation,
     :annotate     => :annotation,
@@ -351,7 +351,7 @@ function getPlotArgs(pkg::PlottingPackage, kw, idx::Int)
       d[k] = _plotDefaults[k]
     end
   end
-  
+
   for k in (:xscale, :yscale)
     if haskey(_scaleAliases, d[k])
       d[k] = _scaleAliases[d[k]]
