@@ -125,12 +125,28 @@ annotate!(plt::Plot, anns)                            = plot!(plt; annotation = 
 
 # ---------------------------------------------------------
 
+
+defaultOutputFormat(plt::PlottingObject) = "png"
+
+function png(plt::PlottingObject, fn::AbstractString)
+  fn = addExtension(fn, "png")
+  io = open(fn, "w")
+  writemime(io, MIME("image/png"), plt)
+  close(io)
+end
+png(fn::AbstractString) = png(current(), fn)
+
+
+const _savemap = Dict(
+    "png" => png,
+  )
+
 function getExtension(fn::AbstractString)
   pieces = split(fn, ".")
-  if length(pieces) < 2
-    error("Can't extract file extension: ", fn)
-  end
-  pieces[end]
+  length(pieces) > 1 || error("Can't extract file extension: ", fn)
+  ext = pieces[end]
+  haskey(_savemap, ext) || error("Invalid file extension: ", fn)
+  ext
 end
 
 function addExtension(fn::AbstractString, ext::AbstractString)
@@ -146,22 +162,19 @@ function addExtension(fn::AbstractString, ext::AbstractString)
   end
 end
 
-
-function png(plt::PlottingObject, fn::AbstractString)
-  fn = addExtension(fn, "png")
-  io = open(fn, "w")
-  writemime(io, MIME("image/png"), plt)
-  close(io)
-end
-png(fn::AbstractString) = png(current(), fn)
-
-
-const _savemap = Dict(
-    "png" => png,
-  )
-
 function savefig(plt::PlottingObject, fn::AbstractString)
-  ext = getExtension(fn)
+  
+  # get the extension
+  local ext
+  try
+    ext = getExtension(fn)
+  catch
+    # if we couldn't extract the extension, add the default
+    ext = defaultOutputFormat(plt)
+    fn = addExtension(fn, ext)
+  end
+
+  # save it
   func = get(_savemap, ext) do
     error("Unsupported extension $ext with filename ", fn)
   end

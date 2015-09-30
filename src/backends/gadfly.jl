@@ -355,7 +355,7 @@ function addGadflyLimitsScale(gplt, d::Dict, isx::Bool)
 
   # get the correct scale function
   gfunc, hasScaleKey = getGadflyScaleFunction(d, isx)
-  @show d gfunc hasScaleKey
+  # @show d gfunc hasScaleKey
 
   # do we want to add min/max limits for the axis?
   limsym = isx ? :xlims : :ylims
@@ -375,14 +375,14 @@ function addGadflyLimitsScale(gplt, d::Dict, isx::Bool)
       error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
     end
   end
-  @show limargs
+  # @show limargs
 
   # replace any current scales with this one
   if hasScaleKey || !isempty(limargs)
     filterGadflyScale(gplt, isx)
     push!(gplt.scales, gfunc(; limargs...))
   end
-  @show gplt.scales
+  # @show gplt.scales
   return
 end
 

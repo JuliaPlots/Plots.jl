@@ -60,8 +60,14 @@ end
 
 
 
-# this adds to the current plot
+# this adds to the current plot, or creates a new plot if none are current
 function  plot!(args...; kw...)
+  local plt
+  try
+    plt = current()
+  catch
+    return plot(args...; kw...)
+  end
   plot!(current(), args...; kw...)
 end
 

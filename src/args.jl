@@ -351,6 +351,12 @@ function getPlotArgs(pkg::PlottingPackage, kw, idx::Int)
       d[k] = _plotDefaults[k]
     end
   end
+  
+  for k in (:xscale, :yscale)
+    if haskey(_scaleAliases, d[k])
+      d[k] = _scaleAliases[d[k]]
+    end
+  end
 
   # convert color
   handlePlotColors(pkg, d)
@@ -384,12 +390,6 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
   
   if haskey(_typeAliases, d[:linetype])
     d[:linetype] = _typeAliases[d[:linetype]]
-  end
-
-  for k in (:xscale, :yscale)
-    if haskey(_scaleAliases, d[k])
-      d[k] = _scaleAliases[d[k]]
-    end
   end
 
   aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
