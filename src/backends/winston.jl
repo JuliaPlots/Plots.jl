@@ -71,11 +71,14 @@ supportedArgs(::WinstonPackage) = [
     :ylims,
     # :yrightlabel,
     # :yticks,
+    # :xscale,
+    # :yscale,
   ]
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
-supportedStyles(::WinstonPackage) = [:auto, :solid, :dash, :dot, :dashdot] # intersect(_allStyles, collect(keys(winston_linestyle)))
-supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1] # intersect(_allMarkers, collect(keys(winston_marker)))
+supportedStyles(::WinstonPackage) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1]
+supportedScales(::WinstonPackage) = [:identity]
 subplotSupported(::WinstonPackage) = false
 
 

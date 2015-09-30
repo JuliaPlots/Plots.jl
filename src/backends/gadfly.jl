@@ -48,11 +48,14 @@ supportedArgs(::GadflyPackage) = [
     :ylims,
     # :yrightlabel,
     :yticks,
+    :xscale,
+    :yscale,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
+supportedScales(::GadflyPackage) = [:identity, :log, :log2, :log10, :asinh, :sqrt]
 
 
 include("gadfly_shapes.jl")
@@ -129,6 +132,37 @@ function addGadflyFixedLines!(gplt, d::Dict, theme)
   
   prepend!(gplt.layers, layer)
 end
+
+
+# # const x_continuous = continuous_scale_partial(x_vars, identity_transform)
+# # const y_continuous = continuous_scale_partial(y_vars, identity_transform)
+# # const x_log10      = continuous_scale_partial(x_vars, log10_transform)
+# # const y_log10      = continuous_scale_partial(y_vars, log10_transform)
+# # const x_log2       = continuous_scale_partial(x_vars, log2_transform)
+# # const y_log2       = continuous_scale_partial(y_vars, log2_transform)
+# # const x_log        = continuous_scale_partial(x_vars, ln_transform)
+# # const y_log        = continuous_scale_partial(y_vars, ln_transform)
+# # const x_asinh      = continuous_scale_partial(x_vars, asinh_transform)
+# # const y_asinh      = continuous_scale_partial(y_vars, asinh_transform)
+# # const x_sqrt       = continuous_scale_partial(x_vars, sqrt_transform)
+# # const y_sqrt       = continuous_scale_partial(y_vars, sqrt_transform)
+# function addGadflyScales(gplt, d::Dict)
+#   for k in (:xscale, :yscale)
+#     isx = k == :xscale
+#     scale = d[k]
+#     if scale == :log
+#       push!(gplt.scales, isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log)
+#     elseif scale == :log2
+#       push!(gplt.scales, isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2)
+#     elseif scale == :log10
+#       push!(gplt.scales, isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log10)
+#     elseif scale == :asinh
+#       push!(gplt.scales, isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh)
+#     elseif scale == :sqrt
+#       push!(gplt.scales, isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt)
+#     end
+#   end
+# end
 
 
 # function getGadflyStrokeVector(linestyle::Symbol)
@@ -237,6 +271,9 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   append!(gfargs, geoms)
   append!(gplt.guides, guides)
 
+  # # add scales
+  # addGadflyScales(gplt, d)
+
   # add a regression line?
   if d[:reg]
     push!(gfargs, Gadfly.Geom.smooth(method=:lm))
@@ -298,18 +335,55 @@ end
 # isContinuousScale(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScale) && scale.vars[1] == (isx ? :x : :y)
 filterGadflyScale(gplt, isx::Bool) = filter!(scale -> scale.vars[1] != (isx ? :x : :y), gplt.scales)
 
-function addGadflyLimitsScale(gplt, lims, isx::Bool)
-  lims == :auto && return
-  ltype = limsType(lims)
-  if ltype == :limits
-    # remove any existing scales, then add a new one
-    filterGadflyScale(gplt, isx)
-    gfunc = isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous
-    # filter!(scale -> !isContinuousScale(scale,isx), gplt.scales)
-    push!(gplt.scales, gfunc(minvalue = min(lims...), maxvalue = max(lims...)))
-  else
-    error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
+
+function getGadflyScaleFunction(d::Dict, isx::Bool)
+  scalekey = isx ? :xscale : :yscale
+  hasScaleKey = haskey(d, scalekey)
+  if hasScaleKey
+    scale = d[scalekey]
+    scale == :log && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey
+    scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey
+    scale == :log10 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log10, hasScaleKey
+    scale == :asinh && return isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh, hasScaleKey
+    scale == :sqrt && return isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt, hasScaleKey
   end
+  isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous, hasScaleKey
+end
+
+
+function addGadflyLimitsScale(gplt, d::Dict, isx::Bool)
+
+  # get the correct scale function
+  gfunc, hasScaleKey = getGadflyScaleFunction(d, isx)
+  @show d gfunc hasScaleKey
+
+  # do we want to add min/max limits for the axis?
+  limsym = isx ? :xlims : :ylims
+  limargs = []
+  if haskey(d, limsym)
+    lims = d[limsym]
+    lims == :auto && return
+    if limsType(lims) == :limits
+      # remove any existing scales, then add a new one
+      # filterGadflyScale(gplt, isx)
+      # gfunc = isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous
+      # filter!(scale -> !isContinuousScale(scale,isx), gplt.scales)
+      # push!(gplt.scales, gfunc(minvalue = min(lims...), maxvalue = max(lims...)))
+      push!(limargs, (:minvalue, min(lims...)))
+      push!(limargs, (:maxvalue, max(lims...)))
+    else
+      error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
+    end
+  end
+  @show limargs
+
+  # replace any current scales with this one
+  if hasScaleKey || !isempty(limargs)
+    filterGadflyScale(gplt, isx)
+    push!(gplt.scales, gfunc(; limargs...))
+  end
+  @show gplt.scales
+  return
 end
 
 
@@ -346,8 +420,8 @@ function updateGadflyGuides(gplt, d::Dict)
   haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, d[:xlabel])
   haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, d[:ylabel])
 
-  haskey(d, :xlims) && addGadflyLimitsScale(gplt, d[:xlims], true)
-  haskey(d, :ylims) && addGadflyLimitsScale(gplt, d[:ylims], false)
+  addGadflyLimitsScale(gplt, d, true)
+  addGadflyLimitsScale(gplt, d, false)
   haskey(d, :xticks) && addGadflyTicksGuide(gplt, d[:xticks], true)
   haskey(d, :yticks) && addGadflyTicksGuide(gplt, d[:yticks], false)
 end

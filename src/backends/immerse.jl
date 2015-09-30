@@ -12,6 +12,7 @@ supportedAxes(::ImmersePackage) = supportedAxes(GadflyPackage())
 supportedTypes(::ImmersePackage) = supportedTypes(GadflyPackage())
 supportedStyles(::ImmersePackage) = supportedStyles(GadflyPackage())
 supportedMarkers(::ImmersePackage) = supportedMarkers(GadflyPackage())
+supportedScales(::ImmersePackage) = supportedScales(GadflyPackage())
 
 
 function createImmerseFigure(d::Dict)

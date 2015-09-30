@@ -49,11 +49,14 @@ supportedArgs(::UnicodePlotsPackage) = [
     :ylims,
     # :yrightlabel,
     # :yticks,
+    # :xscale,
+    # :yscale,
   ]
 supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
 supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
 supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
+supportedScales(::UnicodePlotsPackage) = [:identity]
 
 
 function expandLimits!(lims, x)

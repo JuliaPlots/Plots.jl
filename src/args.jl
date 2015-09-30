@@ -73,16 +73,24 @@ const _markerAliases = Dict(
     :oct          => :octagon,
   )
 
+const _allScales = [:identity, :log, :log2, :log10, :asinh, :sqrt]
+const _scaleAliases = Dict(
+    :none => :identity,
+    :ln   => :log,
+  )
+
 supportedAxes(::PlottingPackage) = _allAxes
 supportedTypes(::PlottingPackage) = _allTypes
 supportedStyles(::PlottingPackage) = _allStyles
 supportedMarkers(::PlottingPackage) = _allMarkers
+supportedScales(::PlottingPackage) = _allScales
 subplotSupported(::PlottingPackage) = true
 
 supportedAxes() = supportedAxes(backend())
 supportedTypes() = supportedTypes(backend())
 supportedStyles() = supportedStyles(backend())
 supportedMarkers() = supportedMarkers(backend())
+supportedScales() = supportedScales(backend())
 subplotSupported() = subplotSupported(backend())
 
 # -----------------------------------------------------------------------------
@@ -125,6 +133,8 @@ _plotDefaults[:xlims]             = :auto
 _plotDefaults[:ylims]             = :auto
 _plotDefaults[:xticks]            = :auto
 _plotDefaults[:yticks]            = :auto
+_plotDefaults[:xscale]            = :identity
+_plotDefaults[:yscale]            = :identity
 _plotDefaults[:size]              = (800,600)
 _plotDefaults[:pos]               = (0,0)
 _plotDefaults[:windowtitle]       = "Plots.jl"
@@ -374,6 +384,12 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
   
   if haskey(_typeAliases, d[:linetype])
     d[:linetype] = _typeAliases[d[:linetype]]
+  end
+
+  for k in (:xscale, :yscale)
+    if haskey(_scaleAliases, d[k])
+      d[k] = _scaleAliases[d[k]]
+    end
   end
 
   aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)

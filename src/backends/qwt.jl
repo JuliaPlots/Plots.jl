@@ -47,9 +47,12 @@ supportedArgs(::QwtPackage) = [
     :ylims,
     :yrightlabel,
     :yticks,
+    # :xscale,
+    # :yscale,
   ]
 supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
+supportedScales(::QwtPackage) = [:identity]
 
 # -------------------------------
 

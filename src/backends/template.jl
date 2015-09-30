@@ -51,11 +51,14 @@ supportedArgs(::[PkgName]Package) = [
     :ylims,
     # :yrightlabel,
     :yticks,
+    # :xscale,
+    # :yscale,
   ]
 supportedAxes(::[PkgName]Package) = _allAxes
 supportedTypes(::[PkgName]Package) = _allTypes
 supportedStyles(::[PkgName]Package) = _allStyles
 supportedMarkers(::[PkgName]Package) = _allMarkers
+supportedScales(::[PkgName]Package) = _allScales
 subplotSupported(::[PkgName]Package) = false
 
 # ---------------------------------------------------------------------------

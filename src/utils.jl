@@ -240,10 +240,12 @@ supportGraphArgs() = supportGraph(_allArgs, supportedArgs)
 supportGraphTypes() = supportGraph(_allTypes, supportedTypes)
 supportGraphStyles() = supportGraph(_allStyles, supportedStyles)
 supportGraphMarkers() = supportGraph(_allMarkers, supportedMarkers)
+supportGraphScales() = supportGraph(_allScales, supportedScales)
 supportGraphAxes() = supportGraph(_allAxes, supportedAxes)
 
 function dumpSupportGraphs()
-  for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles, supportGraphMarkers, supportGraphAxes)
+  for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles,
+               supportGraphMarkers, supportGraphScales, supportGraphAxes)
     plt = func()
     png(IMG_DIR * "/supported/$(string(func))")
   end
