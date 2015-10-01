@@ -87,7 +87,8 @@ end
 # function getGeoms(linetype::Symbol, marker::Symbol, markercolor::Colorant, nbins::Int)
 function getLineGeoms(d::Dict)
   lt = d[:linetype]
-  lt in (:heatmap,:hexbin) && return [Gadfly.Geom.hexbin(xbincount = d[:nbins], ybincount = d[:nbins])]
+  lt == :hexbin && return [Gadfly.Geom.hexbin(xbincount = d[:nbins], ybincount = d[:nbins])]
+  lt == :heatmap && return [Gadfly.Geom.histogram2d(xbincount = d[:nbins], ybincount = d[:nbins])]
   lt == :hist && return [Gadfly.Geom.histogram(bincount = d[:nbins])]
   # lt == :none && return [Gadfly.Geom.path]
   lt == :path && return [Gadfly.Geom.path]
