@@ -71,14 +71,14 @@ supportedArgs(::WinstonPackage) = [
     :ylims,
     # :yrightlabel,
     # :yticks,
-    # :xscale,
-    # :yscale,
+    :xscale,
+    :yscale,
   ]
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
 supportedStyles(::WinstonPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1]
-supportedScales(::WinstonPackage) = [:identity]
+supportedScales(::WinstonPackage) = [:identity, :log10]
 subplotSupported(::WinstonPackage) = false
 
 
@@ -221,7 +221,12 @@ end
 
 # ----------------------------------------------------------------
 
-const _winstonNames = Dict(:xlims => :xrange, :ylims => :yrange)
+const _winstonNames = Dict(
+    :xlims => :xrange,
+    :ylims => :yrange,
+    :xscale => :xlog,
+    :yscale => :ylog,
+  )
 
 function updatePlotItems(plt::Plot{WinstonPackage}, d::Dict)
   window, canvas, wplt = getWinstonItems(plt)
@@ -230,6 +235,14 @@ function updatePlotItems(plt::Plot{WinstonPackage}, d::Dict)
       Winston.setattr(wplt, string(get(_winstonNames, k, k)), d[k])
     end
   end
+
+  for k in (:xscale, :yscale)
+    if haskey(d, k)
+      islogscale = d[k] == :log10
+      Winston.setattr(wplt, (k == :xscale ? :xlog : :ylog), islogscale)
+    end
+  end
+
 end
 
 
