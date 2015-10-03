@@ -47,12 +47,12 @@ supportedArgs(::QwtPackage) = [
     :ylims,
     :yrightlabel,
     :yticks,
-    # :xscale,
-    # :yscale,
+    :xscale,
+    :yscale,
   ]
 supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
-supportedScales(::QwtPackage) = [:identity]
+supportedScales(::QwtPackage) = [:identity, :log10]
 
 # -------------------------------
 
@@ -140,6 +140,18 @@ function updateLimsAndTicks(plt::Plot{QwtPackage}, d::Dict, isx::Bool)
   elseif ticks != nothing
     warn("Only Range types are supported for Qwt xticks/yticks. typeof(ticks)=$(typeof(ticks))")
   end
+
+  # change the scale
+  scalesym = isx ? :xscale : :yscale
+  if haskey(d, scalesym)
+    scaletype = d[scalesym]
+    scaletype == :identity  && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLinearScaleEngine())
+    # scaletype == :log       && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLogScaleEngine(e))
+    # scaletype == :log2      && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLogScaleEngine(2))
+    scaletype == :log10     && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLog10ScaleEngine())
+    scaletype in supportedScales() || warn("Unsupported scale type: ", scaletype)
+  end
+
 end
 
 
