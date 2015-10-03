@@ -195,7 +195,7 @@ Keyword | Default | Type | Aliases
 `:markersize` | `6` | Series | `:markersizes`, `:ms`, `:msize`  
 `:nbins` | `100` | Series | `:nb`, `:nbin`, `:nbinss`  
 `:reg` | `false` | Series | `:regression`, `:regs`  
-`:ribbon` | `nothing` | Series | `:r`, `:ribbons`  
+`:ribbon` | `nothing` | Series | `:rib`, `:ribbons`  
 `:width` | `1` | Series | `:linewidth`, `:w`, `:widths`  
 `:background_color` | `RGB{U8}(1.0,1.0,1.0)` | Plot | `:background`, `:bg`, `:bg_color`, `:bgcolor`  
 `:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
@@ -211,10 +211,12 @@ Keyword | Default | Type | Aliases
 `:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
 `:xlabel` | `` | Plot | `:xlab`  
 `:xlims` | `auto` | Plot | `:xlim`, `:xlimit`, `:xlimits`  
+`:xscale` | `identity` | Plot |   
 `:xticks` | `auto` | Plot | `:xtick`  
 `:ylabel` | `` | Plot | `:ylab`  
 `:ylims` | `auto` | Plot | `:ylim`, `:ylimit`, `:ylimits`  
 `:yrightlabel` | `` | Plot | `:y2lab`, `:y2label`, `:ylab2`, `:ylabel2`, `:ylabelright`, `:ylabr`, `:yrlab`  
+`:yscale` | `identity` | Plot |   
 `:yticks` | `auto` | Plot | `:ytick`  
 
 

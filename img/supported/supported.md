@@ -14,6 +14,10 @@
 
 ![styles](Plots.supportGraphStyles.png)
 
+## Supported scales
+
+![scales](Plots.supportGraphScales.png)
+
 ## Supported axes
 
 ![axes](Plots.supportGraphAxes.png)

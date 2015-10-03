@@ -49,14 +49,14 @@ supportedArgs(::PyPlotPackage) = [
     :ylims,
     :yrightlabel,
     :yticks,
-    # :xscale,
-    # :yscale,
+    :xscale,
+    :yscale,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :hexagon]
-supportedScales(::PyPlotPackage) = [:identity]
+supportedScales(::PyPlotPackage) = [:identity, :log, :log2, :log10]
 subplotSupported(::PyPlotPackage) = false
 
 # convert colorant to 4-tuple RGBA
@@ -326,9 +326,21 @@ function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
   haskey(d, :xticks) && addPyPlotTicks(d[:xticks], true)
   haskey(d, :yticks) && addPyPlotTicks(d[:yticks], false)
 
+  # scales
+  ax = getLeftAxis(fig)
+  haskey(d, :xscale) && applyPyPlotScale(ax, d[:xscale], true)
+  haskey(d, :yscale) && applyPyPlotScale(ax, d[:yscale], false)
+
 end
 
-
+function applyPyPlotScale(ax, scaleType::Symbol, isx::Bool)
+  func = ax[isx ? :set_xscale : :set_yscale]
+  scaleType == :identity && return func("linear")
+  scaleType == :log && return func("log", basex = e, basey = e)
+  scaleType == :log2 && return func("log", basex = 2, basey = 2)
+  scaleType == :log10 && return func("log", basex = 10, basey = 10)
+  warn("Unhandled scaleType: ", scaleType)
+end
 
 # -----------------------------------------------------------------
 
