@@ -84,21 +84,15 @@ function plot!(plt::Plot, args...; kw...)
 
   warnOnUnsupportedArgs(plt.backend, d)
 
-  # TODO: handle a "group by" mechanism.
-  # will probably want to check for the :group kw param, and split into
-  # index partitions/filters to be passed through to the next step.
-  # Ideally we don't change the insides ot createKWargsList too much to 
-  # save from code repetition.  We could consider adding a throw
+  # handle a "group by" mechanism.
   groupargs = get(d, :group, nothing) == nothing ? [] : [extractGroupArgs(d[:group], args...)]
-  # @show groupargs
 
   # just in case the backend needs to set up the plot (make it current or something)
   preparePlotUpdate(plt)
 
   # get the list of dictionaries, one per series
   kwList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
-  # @show xmeta ymeta typeof(xmeta) typeof(ymeta)
-
+  
   # if we were able to extract guide information from the series inputs, then update the plot
   updateDictWithMeta(d, plt.initargs, xmeta, true)
   updateDictWithMeta(d, plt.initargs, ymeta, false)
@@ -110,16 +104,12 @@ function plot!(plt::Plot, args...; kw...)
     setTicksFromStringVector(d, di, :x, :xticks)
     setTicksFromStringVector(d, di, :y, :yticks)
 
-    # @show di[:x] di[:y]
-
-    # println("Plotting: ", di)
     plot!(plt.backend, plt; di...)
-
   end
 
   addAnnotations(plt, d)
 
-  # @show d[:xticks] d[:yticks]
+  warnOnUnsupportedScales(plt.backend, d)
 
   # add title, axis labels, ticks, etc
   updatePlotItems(plt, d)

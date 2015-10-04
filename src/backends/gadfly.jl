@@ -50,6 +50,7 @@ supportedArgs(::GadflyPackage) = [
     :yticks,
     :xscale,
     :yscale,
+    :z,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
@@ -135,49 +136,6 @@ function addGadflyFixedLines!(gplt, d::Dict, theme)
 end
 
 
-# # const x_continuous = continuous_scale_partial(x_vars, identity_transform)
-# # const y_continuous = continuous_scale_partial(y_vars, identity_transform)
-# # const x_log10      = continuous_scale_partial(x_vars, log10_transform)
-# # const y_log10      = continuous_scale_partial(y_vars, log10_transform)
-# # const x_log2       = continuous_scale_partial(x_vars, log2_transform)
-# # const y_log2       = continuous_scale_partial(y_vars, log2_transform)
-# # const x_log        = continuous_scale_partial(x_vars, ln_transform)
-# # const y_log        = continuous_scale_partial(y_vars, ln_transform)
-# # const x_asinh      = continuous_scale_partial(x_vars, asinh_transform)
-# # const y_asinh      = continuous_scale_partial(y_vars, asinh_transform)
-# # const x_sqrt       = continuous_scale_partial(x_vars, sqrt_transform)
-# # const y_sqrt       = continuous_scale_partial(y_vars, sqrt_transform)
-# function addGadflyScales(gplt, d::Dict)
-#   for k in (:xscale, :yscale)
-#     isx = k == :xscale
-#     scale = d[k]
-#     if scale == :log
-#       push!(gplt.scales, isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log)
-#     elseif scale == :log2
-#       push!(gplt.scales, isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2)
-#     elseif scale == :log10
-#       push!(gplt.scales, isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log10)
-#     elseif scale == :asinh
-#       push!(gplt.scales, isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh)
-#     elseif scale == :sqrt
-#       push!(gplt.scales, isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt)
-#     end
-#   end
-# end
-
-
-# function getGadflyStrokeVector(linestyle::Symbol)
-#   dash = 12 * Compose.mm
-#   dot = 3 * Compose.mm
-#   gap = 2 * Compose.mm
-#   linestyle == :solid && return nothing
-#   linestyle == :dash && return [dash, gap]
-#   linestyle == :dot && return [dot, gap]
-#   linestyle == :dashdot && return [dash, gap, dot, gap]
-#   linestyle == :dashdotdot && return [dash, gap, dot, gap, dot, gap]
-#   error("unsupported linestyle: ", linestyle)
-# end
-
 createSegments(z) = collect(repmat(z',2,1))[2:end]
 Base.first(c::Colorant) = c
 
@@ -189,12 +147,9 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   local extra_theme_args
   try
     extra_theme_args = [(:line_style, Gadfly.get_stroke_vector(d[:linestyle]))]
-    # extra_theme_args = [(:line_style, getGadflyStrokeVector(d[:linestyle]))]
   catch
     extra_theme_args = []
   end
-  # extra_theme_args = Gadfly.isdefined(:getStrokeVector) ? [(:line_style, getGadflyStrokeVector(d[:linestyle]))] : []
-  # line_style = getGadflyStrokeVector(d[:linestyle])
   
   # set theme: color, line width, and point size
   line_width = d[:width] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
@@ -209,7 +164,6 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
                        # key_title_color = fg,
                        # key_label_color = fg,
                        extra_theme_args...)
-                       # line_style = line_style)
   push!(gfargs, theme)
 
   # first things first... lets do the sticks hack
@@ -229,8 +183,11 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
   if d[:linetype] == :scatter
     d[:linetype] = :none
-    if d[:marker] == :none
-      d[:marker] = :ellipse
+    if d[:marker] in (:none,:ellipse)
+      push!(gfargs, Gadfly.Geom.point)
+      d[:marker] = :none
+    # if d[:marker] == :none
+    #   d[:marker] = :ellipse
     end
   end
 
@@ -250,6 +207,11 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     grp = collect(repmat((1:length(d[:y]))', 2, 1))[1:end-1]
     d[:x], d[:y] = map(createSegments, (d[:x], d[:y]))
     colorgroup = [(:color, cs), (:group, grp)]
+
+  elseif d[:z] != nothing
+    # colorgroup = [(:color, d[:z]), (:color_key_title, d[:label])]
+    colorgroup = [(:color, d[:z])]
+
   else
     colorgroup = []
   end
@@ -283,24 +245,23 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   append!(gfargs, geoms)
   append!(gplt.guides, guides)
 
-  # # add scales
-  # addGadflyScales(gplt, d)
-
   # add a regression line?
   if d[:reg]
     push!(gfargs, Gadfly.Geom.smooth(method=:lm))
   end
 
-  # add to the legend
-  if length(gplt.guides) > 0 && isa(gplt.guides[1], Gadfly.Guide.ManualColorKey)
+  # add to the legend, but only without the continuous scale
+  # if d[:z] == nothing
+    for guide in gplt.guides
+      if isa(guide, Gadfly.Guide.ManualColorKey)
+        # TODO: there's a BUG in gadfly if you pass in the same color more than once,
+        # since gadfly will call unique(colors), but doesn't also merge the rows that match
+        # Should ensure from this side that colors which are the same are merged together
 
-    # TODO: there's a BUG in gadfly if you pass in the same color more than once,
-    # since gadfly will call unique(colors), but doesn't also merge the rows that match
-    # Should ensure from this side that colors which are the same are merged together
-
-    push!(gplt.guides[1].labels, d[:label])
-    push!(gplt.guides[1].colors, d[:marker] == :none ? first(d[:color]) : d[:markercolor])
-    # println("updated legend: ", gplt.guides)
+        push!(guide.labels, d[:label])
+        push!(guide.colors, d[:marker] == :none ? first(d[:color]) : d[:markercolor])
+      end
+    # end
   end
 
   # for histograms, set x=y
@@ -312,7 +273,6 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
 
   # add the layer to the Gadfly.Plot
-  # prepend!(gplt.layers, Gadfly.layer(unique(gfargs)..., d[:args]...; x = x, y = d[:y], d[:kwargs]...))
   prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y], colorgroup..., yminmax...))
   nothing
 end

@@ -114,6 +114,7 @@ _seriesDefaults[:reg]         = false               # regression line?
 _seriesDefaults[:group]       = nothing
 _seriesDefaults[:ribbon]      = nothing
 _seriesDefaults[:annotation]  = nothing
+_seriesDefaults[:z]           = nothing
 # _seriesDefaults[:args]        = []     # additional args to pass to the backend
 # _seriesDefaults[:kwargs]      = []   # additional keyword args to pass to the backend
 #                               # note: can be Vector{Dict} or Vector{Tuple} 
@@ -332,6 +333,14 @@ function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
   d[:linetype] == :none || d[:linetype] in supportedTypes(pkg) || warn("linetype $(d[:linetype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))")
   d[:linestyle] in supportedStyles(pkg) || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))")
   d[:marker] == :none || d[:marker] in supportedMarkers(pkg) || warn("marker $(d[:marker]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))")
+end
+
+function warnOnUnsupportedScales(pkg::PlottingPackage, d::Dict)
+  for k in (:xscale, :yscale)
+    if haskey(d, k)
+      d[k] in supportedScales(pkg) || warn("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supportedScales(pkg))")
+    end
+  end
 end
 
 
