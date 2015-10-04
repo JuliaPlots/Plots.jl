@@ -286,6 +286,9 @@ function Base.display(::PlotsDisplay, plt::Plot{WinstonPackage})
   window, canvas, wplt = getWinstonItems(plt)
 
   if window == nothing
+    if Winston.output_surface != :gtk
+      error("Gtk is the only supported display for Winston in Plots.  Set `output_surface = gtk` in src/Winston.ini")
+    end
     # initialize window
     w,h = plt.initargs[:size]
     canvas = Gtk.GtkCanvasLeaf()
