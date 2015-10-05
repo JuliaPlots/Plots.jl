@@ -107,6 +107,10 @@ end
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]
 
+"duplicate a single value, or pass the 2-tuple through"
+maketuple(x::Real) = (x,x)
+maketuple{T,S}(x::Tuple{T,S}) = x
+
 
 function replaceAliases!(d::Dict, aliases::Dict)
   for (k,v) in d

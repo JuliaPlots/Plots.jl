@@ -85,12 +85,12 @@ function createGadflyPlotObject(d::Dict)
 end
 
 
-# function getGeoms(linetype::Symbol, marker::Symbol, markercolor::Colorant, nbins::Int)
 function getLineGeoms(d::Dict)
   lt = d[:linetype]
-  lt == :hexbin && return [Gadfly.Geom.hexbin(xbincount = d[:nbins], ybincount = d[:nbins])]
-  lt == :heatmap && return [Gadfly.Geom.histogram2d(xbincount = d[:nbins], ybincount = d[:nbins])]
-  lt == :hist && return [Gadfly.Geom.histogram(bincount = d[:nbins])]
+  xbins, ybins = maketuple(d[:nbins])
+  lt == :hexbin && return [Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)]
+  lt == :heatmap && return [Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)]
+  lt == :hist && return [Gadfly.Geom.histogram(bincount = xbins)]
   # lt == :none && return [Gadfly.Geom.path]
   lt == :path && return [Gadfly.Geom.path]
   # lt == :scatter && return [Gadfly.Geom.point]

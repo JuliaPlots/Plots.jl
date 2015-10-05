@@ -95,6 +95,13 @@ function adjustQwtKeywords(plt::Plot{QwtPackage}, iscreating::Bool; kw...)
   end
 
   replaceLinetypeAlias(d)
+
+  for k in keys(d)
+    if haskey(_qwtAliases, k)
+      d[_qwtAliases[k]] = d[k]
+    end
+  end
+  
   d
 end
 

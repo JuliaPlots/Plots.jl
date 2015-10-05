@@ -33,6 +33,8 @@ export
   ohlc,
   ohlc!,
 
+  spy,
+
   title!,
   xlabel!,
   ylabel!,
@@ -95,6 +97,11 @@ vline!(args...; kw...)     = plot!(args...; kw..., linetype = :vline)
 ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
 ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
+"Sparsity plot... heatmap of non-zero values of a matrix"
+function spy{T<:Real}(y::AMat{T}; kw...)
+  I,J,V = findnz(y)
+  heatmap(J, I; leg=false, kw...)
+end
 
 title!(s::AbstractString)                 = plot!(title = s)
 xlabel!(s::AbstractString)                = plot!(xlabel = s)
@@ -121,7 +128,6 @@ yticks!{T<:Real}(plt::Plot, ticks::AVec{T})           = plot!(plt; yticks = tick
 xticks!{T<:Real,S<:AbstractString}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; xticks = (ticks,labels))
 yticks!{T<:Real,S<:AbstractString}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; yticks = (ticks,labels))
 annotate!(plt::Plot, anns)                            = plot!(plt; annotation = anns)
-
 
 # ---------------------------------------------------------
 
