@@ -80,12 +80,37 @@ convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 
 abstract ColorScheme
 
+getColor(scheme::ColorScheme, idx::Integer) = getColor(scheme, 0.0, idx)
+getColor(scheme::ColorScheme, z::AbstractFloat) = getColor(scheme, z, 0)
+
+const _gradients = Dict(
+    :blues        => [colorant"lightblue", colorant"darkblue"],
+    :reds         => [colorant"lightpink", colorant"darkred"],
+    :greens       => [colorant"lightgreen", colorant"darkgreen"],
+    :redsblues    => [colorant"darkred", RGB(0.9,0.9,0.9), colorant"darkblue"]
+    :bluesreds    => [colorant"darkblue", RGB(0.9,0.9,0.9), colorant"darkred"]
+  )
+
 # --------------------------------------------------------------
 
 "Continuous gradient between values.  Wraps a list of bounding colors and the values they represent."
 type ColorGradient <: ColorScheme
   colors::Vector{Colorant}
   values::Vector{Float64}
+end
+
+# create a gradient from a symbol (blues, reds, etc) and vector of boundary values
+function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:1)
+  haskey(_gradients, s) || error("Invalid gradient symbol.  Choose from: ", sort(collect(keys(_gradients))))
+
+  # if we passed in the right number of values, create the gradient directly
+  cs = _gradients[s]
+  length(cs) == length(vals) && return ColorGradient(cs, collect(vals))
+  
+  # otherwise interpolate evenly between the minval and maxval
+  minval, maxval = minimum(vals), maximum(vals)
+  vs = Float64[interpolate(minval, maxval, w) for w in linspace(0, 1, length(cs))]
+  ColorGradient(cs, vs)
 end
 
 function getColor(gradient::ColorGradient, z::Real, idx::Int)
@@ -102,7 +127,7 @@ function getColor(gradient::ColorGradient, z::Real, idx::Int)
   # find the bounding colors and interpolate
   for i in 2:n
     if z <= vs[i]
-      return interpolateColor(cs[i-1], cs[i], (z - vs[i-1]) / (vs[i] - vs[i-1]))
+      return interpolate(cs[i-1], cs[i], (z - vs[i-1]) / (vs[i] - vs[i-1]))
     end
   end
 
@@ -110,13 +135,17 @@ function getColor(gradient::ColorGradient, z::Real, idx::Int)
   cs[end]
 end
 
-function interpolateColor(c1::Colorant, c2::Colorant, w::Real)
+function interpolate(c1::Colorant, c2::Colorant, w::Real)
   lab1 = Lab(c1)
   lab2 = Lab(c2)
-  l = (1-w) * lab1.l + w * lab2.l
-  a = (1-w) * lab1.a + w * lab2.a
-  b = (1-w) * lab1.b + w * lab2.b
+  l = interpolate(lab1.l, lab2.l, w)
+  a = interpolate(lab1.a, lab2.a, w)
+  b = interpolate(lab1.b, lab2.b, w)
   RGB(Lab(l, a, b))
+end
+
+function interpolate(v1::Real, v2::Real, w::Real)
+  (1-w) * v1 + w * v2
 end
 
 # --------------------------------------------------------------
