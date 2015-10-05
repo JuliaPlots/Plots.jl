@@ -69,11 +69,80 @@ const _masterColorList = [
 ]
 
 
+# --------------------------------------------------------------
 
 
 convertColor(c::Union{AbstractString, Symbol}) = parse(Colorant, string(c))
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
+
+# --------------------------------------------------------------
+
+abstract ColorScheme
+
+# --------------------------------------------------------------
+
+"Continuous gradient between values.  Wraps a list of bounding colors and the values they represent."
+type ColorGradient <: ColorScheme
+  colors::Vector{Colorant}
+  values::Vector{Float64}
+end
+
+function getColor(gradient::ColorGradient, z::Real, idx::Int)
+  cs = gradient.colors
+  vs = gradient.values
+  n = length(cs)
+  @assert n > 0 && n == length(vs)
+
+  # can we just return the first color?
+  if z <= vs[1] || n == 1
+    return cs[1]
+  end
+
+  # find the bounding colors and interpolate
+  for i in 2:n
+    if z <= vs[i]
+      return interpolateColor(cs[i-1], cs[i], (z - vs[i-1]) / (vs[i] - vs[i-1]))
+    end
+  end
+
+  # if we get here, return the last color
+  cs[end]
+end
+
+function interpolateColor(c1::Colorant, c2::Colorant, w::Real)
+  lab1 = Lab(c1)
+  lab2 = Lab(c2)
+  l = (1-w) * lab1.l + w * lab2.l
+  a = (1-w) * lab1.a + w * lab2.a
+  b = (1-w) * lab1.b + w * lab2.b
+  RGB(Lab(l, a, b))
+end
+
+# --------------------------------------------------------------
+
+"Wraps a function, taking a z-value and index and returning a Colorant"
+type ColorFunction <: ColorScheme
+  f::Function
+end
+
+typealias CFun ColorFunction
+
+getColor(grad::ColorFunction, z::Real, idx::Int) = grad.f(z, idx)
+
+# --------------------------------------------------------------
+
+"Wraps a vector of colors... may be Symbol/String or a Colorant"
+type ColorVector{V<:AbstractVector} <: ColorScheme
+  v::V
+end
+
+typealias CVec ColorVector
+
+getColor(grad::ColorVector, z::Real, idx::Int) = convertColor(grad.v[mod1(idx, length(grad.v))])
+
+# --------------------------------------------------------------
+
 
 isbackgrounddark(bgcolor::Color) = Lab(bgcolor).l < 0.5
 
