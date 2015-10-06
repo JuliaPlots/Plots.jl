@@ -14,7 +14,7 @@ supportedArgs(::GadflyPackage) = [
     # :axis,
     :background_color,
     :color,
-    :fillto,
+    :fill,
     # :foreground_color,
     :group,
     # :heatmap_c,
@@ -153,7 +153,8 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   
   # set theme: color, line linewidth, and point size
   line_width = d[:linewidth] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 linewidth when we don't show a line
-  line_color = isa(d[:color], AbstractVector) ? colorant"black" : d[:color]
+  # line_color = isa(d[:color], AbstractVector) ? colorant"black" : d[:color]
+  line_color = getColor(d[:color], 1)
   # fg = initargs[:foreground_color]
   theme = Gadfly.Theme(; default_color = line_color,
                        line_width = line_width,
@@ -195,50 +196,67 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   append!(gfargs, getLineGeoms(d))
 
   # colorgroup
-  if isa(d[:color], AbstractVector)
+  z = d[:z]
+
+  # handle line segments of different colors
+  cscheme = d[:color]
+  if isa(cscheme, ColorVector)
     # create a color scale, and set the color group to the index of the color
-    push!(gplt.scales, Gadfly.Scale.color_discrete_manual(d[:color]...))
+    push!(gplt.scales, Gadfly.Scale.color_discrete_manual(cscheme.v...))
 
     # this is super weird, but... oh well... for some reason this creates n separate line segments...
     # create a list of vertices that go: [x1,x2,x2,x3,x3, ... ,xi,xi, ... xn,xn] (same for y)
     # then the vector passed to the "color" keyword should be a vector: [1,1,2,2,3,3,4,4, ..., i,i, ... , n,n]
-    csindices = Int[mod1(i,length(d[:color])) for i in 1:length(d[:y])]
+    csindices = Int[mod1(i,length(cscheme.v)) for i in 1:length(d[:y])]
     cs = collect(repmat(csindices', 2, 1))[1:end-1]
     grp = collect(repmat((1:length(d[:y]))', 2, 1))[1:end-1]
     d[:x], d[:y] = map(createSegments, (d[:x], d[:y]))
     colorgroup = [(:color, cs), (:group, grp)]
 
-  elseif d[:z] != nothing
-    # colorgroup = [(:color, d[:z]), (:color_key_title, d[:label])]
-    colorgroup = [(:color, d[:z])]
+  # handle continuous color scales for the markers
+  elseif z != nothing && typeof(z) <: AVec
+    colorgroup = [(:color, z)]
+    minz, maxz = minimum(z), maximum(z)
+    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> getColor(d[:markercolor], minz + p * (maxz - minz))))
 
+  # nothing special...
   else
     colorgroup = []
   end
 
-  # fillto and ribbon
+  # fills/ribbons
   yminmax = []
-  fillto, ribbon = d[:fillto], d[:ribbon]
-  
-  if fillto != nothing
-    if ribbon != nothing
-      warn("Ignoring ribbon arg since fillto is set!")
-    end
-    fillto = makevec(fillto)
-    n = length(fillto)
-    push!(yminmax, (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
-    push!(yminmax, (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
+  if d[:fill] != nothing
+    fillmin, fillmax = map(makevec, maketuple(d[:fill]))
+    nmin, nmax = length(fillmin), length(fillmax)
+    push!(yminmax, (:ymin, Float64[min(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]))
+    push!(yminmax, (:ymax, Float64[max(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]))
     push!(gfargs, Gadfly.Geom.ribbon)
-  
-  elseif ribbon != nothing
-    ribbon = makevec(ribbon)
-    n = length(ribbon)
-    @show ribbon
-    push!(yminmax, (:ymin, Float64[y - ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
-    push!(yminmax, (:ymax, Float64[y + ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
-    push!(gfargs, Gadfly.Geom.ribbon)
-
   end
+
+  # # fillto and ribbon
+  # yminmax = []
+  # fillto, ribbon = d[:fill], d[:ribbon]
+  
+  # if fillto != nothing
+  #   if ribbon != nothing
+  #     warn("Ignoring ribbon arg since fillto is set!")
+  #   end
+  #   fillto = makevec(fillto)
+  #   n = length(fillto)
+  #   push!(yminmax, (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
+  #   push!(yminmax, (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
+  #   push!(gfargs, Gadfly.Geom.ribbon)
+  
+  # elseif ribbon != nothing
+  #   ribbon = makevec(ribbon)
+  #   n = length(ribbon)
+  #   @show ribbon
+  #   push!(yminmax, (:ymin, Float64[y - ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
+  #   push!(yminmax, (:ymax, Float64[y + ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
+  #   push!(gfargs, Gadfly.Geom.ribbon)
+
+  # end
   
   # handle markers
   geoms, guides = getMarkerGeomsAndGuides(d)

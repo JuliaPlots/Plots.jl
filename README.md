@@ -184,7 +184,7 @@ Keyword | Default | Type | Aliases
 `:annotation` | `nothing` | Series | `:ann`, `:annotate`, `:annotations`, `:anns`  
 `:axis` | `left` | Series | `:axiss`  
 `:color` | `auto` | Series | `:c`, `:colors`  
-`:fillto` | `nothing` | Series | `:area`, `:fill`, `:filltos`  
+`:fill` | `nothing` | Series | `:area`, `:fill`, `:fills`  
 `:group` | `nothing` | Series | `:g`, `:groups`  
 `:heatmap_c` | `(0.15,0.5)` | Series | `:heatmap_cs`  
 `:label` | `AUTO` | Series | `:lab`, `:labels`  

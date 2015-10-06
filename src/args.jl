@@ -113,7 +113,7 @@ _seriesDefaults[:fillcolor]   = :match
 # _seriesDefaults[:ribboncolor] = :match
 _seriesDefaults[:nbins]       = 100               # number of bins for heatmaps and hists
 _seriesDefaults[:heatmap_c]   = (0.15, 0.5)   # TODO: this should be replaced with a ColorGradient
-# _seriesDefaults[:fillto]      = nothing          # fills in the area
+# _seriesDefaults[:fill]      = nothing          # fills in the area
 _seriesDefaults[:reg]         = false               # regression line?
 _seriesDefaults[:group]       = nothing           # groupby vector
 _seriesDefaults[:annotation]  = nothing           # annotation tuple(s)... (x,y,annotation)
@@ -206,8 +206,8 @@ const _keyAliases = Dict(
     :msize        => :markersize,
     :nb           => :nbins,
     :nbin         => :nbins,
-    :fill         => :fillto,
-    :area         => :fillto,
+    :fill         => :fill,
+    :area         => :fill,
     :g            => :group,
     :rib          => :ribbon,
     :ann          => :annotation,
@@ -305,16 +305,11 @@ function processAxisArg(d::Dict, axisletter::AbstractString, arg)
 
   if T <: Symbol
 
-    # xscale/yscale
-    if haskey(_scaleAliases, arg)
-      arg = _scaleAliases[arg]
-    end
+    arg = get(_scaleAliases, arg, arg)
+
     if arg in _allScales
       d[symbol(axisletter * "scale")] = arg
-    end
-
-    # xflip/yflip
-    if arg in (:flip, :invert, :inverted)
+    elseif arg in (:flip, :invert, :inverted)
       d[symbol(axisletter * "flip")] = true
     end
 
@@ -332,6 +327,15 @@ function processAxisArg(d::Dict, axisletter::AbstractString, arg)
   end
 end
 
+function handleColors!(d::Dict, arg, csym::Symbol)
+  try
+    c = colorscheme(arg)
+    d[csym] = c
+    return true
+  end
+  false
+end
+
 function processLineArg(d::Dict, arg)
   T = typeof(arg)
   delete!(d, :line)
@@ -346,7 +350,7 @@ function processLineArg(d::Dict, arg)
       d[:linetype] = arg
     elseif arg in _allStyles
       d[:linestyle] = arg
-    else
+    elseif !handleColors!(d, arg, :color)
       warn("Skipped line arg $arg.  Unknown symbol.")
     end
 
@@ -354,14 +358,8 @@ function processLineArg(d::Dict, arg)
   elseif T <: Real
     d[:linewidth] = arg
 
-  else
-
-    try
-      c = colorscheme(arg)
-      d[:color] = c
-    catch
-      warn("Skipped line arg $arg.  Unhandled type $T.")
-    end
+  elseif !handleColors!(d, arg, :color)
+    warn("Skipped line arg $arg.  Unhandled type $T.")
 
   end
 end
@@ -377,7 +375,7 @@ function processMarkerArg(d::Dict, arg)
 
     if arg in _allMarkers
       d[:marker] = arg
-    elseif arg != :match
+    elseif arg != :match && !handleColors!(d, arg, :markercolor)
       warn("Skipped marker arg $arg.  Unknown symbol.")
     end
 
@@ -385,15 +383,9 @@ function processMarkerArg(d::Dict, arg)
   elseif T <: Real
     d[:markersize] = arg
 
-  else
-
-    try
-      c = colorscheme(arg)
-      d[:markercolor] = c
-    catch
-      warn("Skipped marker arg $arg.  Unhandled type $T.")
-    end
-
+  elseif !handleColors!(d, arg, :markercolor)
+    warn("Skipped marker arg $arg.  Unhandled type $T.")
+    
   end
 end
 

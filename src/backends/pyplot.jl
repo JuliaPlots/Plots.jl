@@ -8,14 +8,14 @@ pyplot() = backend(:pyplot)
 
 # -------------------------------
 
-# supportedArgs(::PyPlotPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fillto, :pos, :xlims, :ylims, :xticks, :yticks])
+# supportedArgs(::PyPlotPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fill, :pos, :xlims, :ylims, :xticks, :yticks])
 supportedArgs(::PyPlotPackage) = [
     :annotation,
     # :args,
     :axis,
     :background_color,
     :color,
-    # :fillto,
+    # :fill,
     :foreground_color,
     :group,
     # :heatmap_c,
@@ -227,7 +227,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   if lt in (:hist, :sticks, :bar)
 
     # NOTE: this is unsupported because it does the wrong thing... it shifts the whole axis
-    # extraargs[:bottom] = d[:fillto]
+    # extraargs[:bottom] = d[:fill]
 
     if lt == :hist
       extraargs[:bins] = d[:nbins]

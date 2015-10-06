@@ -30,14 +30,14 @@ const winston_marker = Dict(:none=>".",
                            )
 
 
-# supportedArgs(::WinstonPackage) = setdiff(_allArgs, [:heatmap_c, :fillto, :pos, :markercolor, :background_color, :xlims, :ylims, :xticks, :yticks])
+# supportedArgs(::WinstonPackage) = setdiff(_allArgs, [:heatmap_c, :fill, :pos, :markercolor, :background_color, :xlims, :ylims, :xticks, :yticks])
 supportedArgs(::WinstonPackage) = [
     :annotation,
     # :args,
     # :axis,
     # :background_color,
     :color,
-    :fillto,
+    :fill,
     # :foreground_color,
     :group,
     # :heatmap_c,
@@ -150,7 +150,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
     x, y = d[:x], d[:y]
     Winston.add(wplt, Winston.Curve(x, y; e...))
 
-    fillto = d[:fillto]
+    fillto = d[:fill]
     if fillto != nothing
       if isa(fillto, AbstractVector)
         y2 = fillto

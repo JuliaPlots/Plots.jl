@@ -83,6 +83,7 @@ abstract ColorScheme
 getColor(scheme::ColorScheme, idx::Integer) = getColor(scheme, 0.0, idx)
 getColor(scheme::ColorScheme, z::AbstractFloat) = getColor(scheme, z, 0)
 
+colorscheme(scheme::ColorScheme) = scheme
 colorscheme(s::Symbol) = haskey(_gradients, s) ? ColorGradient(s) : ColorWrapper(convertColor(s))
 colorscheme{T<:Real}(s::Symbol, vals::AVec{T}) = ColorGradient(s, vals)
 colorscheme(cs::AVec, vs::AVec) = ColorGradient(cs, vs)
@@ -288,13 +289,11 @@ function getSeriesRGBColor(c, d::Dict, n::Int)
 
   if c == :auto
     c = autopick(d[:color_palette], n)
-  else
-    c = convertColor(c)
+  # else
+  #   # c = convertColor(c)
+  #   c = colorscheme(c)
   end
 
-  # # should be a RGB now... either it was passed in, generated automatically, or created from a string
-  # @assert isa(c, Colorant)
-
-  # return the RGB
-  c
+  # c should now be a subtype of ColorScheme
+  colorscheme(c)
 end

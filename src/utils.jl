@@ -26,7 +26,7 @@ function histogramHack(; kw...)
   d[:x] = midpoints
   d[:y] = float(counts)
   d[:linetype] = :bar
-  d[:fillto] = d[:fillto] == nothing ? 0.0 : d[:fillto]
+  d[:fill] = d[:fill] == nothing ? 0.0 : d[:fill]
   d
 end
 
@@ -38,7 +38,7 @@ function barHack(; kw...)
   d = Dict(kw)
   midpoints = d[:x]
   heights = d[:y]
-  fillto = d[:fillto] == nothing ? 0.0 : d[:fillto]
+  fillto = d[:fill] == nothing ? 0.0 : d[:fill]
 
   # estimate the edges
   dists = diff(midpoints) * 0.5
@@ -65,7 +65,7 @@ function barHack(; kw...)
   d[:x] = x
   d[:y] = y
   d[:linetype] = :path
-  d[:fillto] = fillto
+  d[:fill] = fillto
   d
 end
 
@@ -81,7 +81,7 @@ function sticksHack(; kw...)
   # these are the line vertices
   x = Float64[]
   y = Float64[]
-  fillto = dLine[:fillto] == nothing ? 0.0 : dLine[:fillto]
+  fillto = dLine[:fill] == nothing ? 0.0 : dLine[:fill]
 
   # calculate the vertices
   yScatter = dScatter[:y]
@@ -96,7 +96,7 @@ function sticksHack(; kw...)
   dLine[:y] = y
   dLine[:linetype] = :path
   dLine[:marker] = :none
-  dLine[:fillto] = nothing
+  dLine[:fill] = nothing
 
   # change the scatter args
   dScatter[:linetype] = :none

@@ -15,6 +15,7 @@ export
 
   current,
   default,
+  colorscheme,
   
   scatter,
   scatter!,

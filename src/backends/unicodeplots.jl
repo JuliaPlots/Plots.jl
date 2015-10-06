@@ -8,14 +8,14 @@ unicodeplots() = backend(:unicodeplots)
 
 # -------------------------------
 
-# supportedArgs(::UnicodePlotsPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fillto, :pos, :xlims, :ylims, :xticks, :yticks])
+# supportedArgs(::UnicodePlotsPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fill, :pos, :xlims, :ylims, :xticks, :yticks])
 supportedArgs(::UnicodePlotsPackage) = [
     # :annotation,
     # :args,
     # :axis,
     # :background_color,
     # :color,
-    # :fillto,
+    # :fill,
     # :foreground_color,
     :group,
     # :heatmap_c,

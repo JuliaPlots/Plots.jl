@@ -17,7 +17,7 @@ supportedArgs(::[PkgName]Package) = [
     :axis,
     :background_color,
     :color,
-    :fillto,
+    :fill,
     :foreground_color,
     :group,
     # :heatmap_c,
