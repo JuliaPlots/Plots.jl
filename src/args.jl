@@ -300,7 +300,10 @@ wraptuple(x) = (x,)
 
 # given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
 function processAxisArg(d::Dict, axisletter::AbstractString, arg)
-  if isa(arg, Symbol)
+  T = typeof(arg)
+  delete!(d, symbol(axisletter * "axis"))
+
+  if T <: Symbol
 
     # xscale/yscale
     if haskey(_scaleAliases, arg)
@@ -316,40 +319,39 @@ function processAxisArg(d::Dict, axisletter::AbstractString, arg)
     end
 
   # xlims/ylims
-  elseif (arg <: Tuple || arg <: AVec) && length(arg) == 2
+  elseif (T <: Tuple || T <: AVec) && length(arg) == 2
     d[symbol(axisletter * "lims")] = arg
 
   # xticks/yticks
-  elseif arg <: AVec
+  elseif T <: AVec
     d[symbol(axisletter * "ticks")] = arg
 
   else
-    warn("Skipped $(axisletter)axis arg $arg.  Unhandled type $(typeof(arg))")
+    warn("Skipped $(axisletter)axis arg $arg.  Unhandled type $T")
 
   end
 end
 
 function processLineArg(d::Dict, arg)
-  if isa(arg, Symbol)
+  T = typeof(arg)
+  delete!(d, :line)
+
+  if T <: Symbol
+
+    arg = get(_typeAliases, arg, arg)
+    arg = get(_styleAliases, arg, arg)
 
     # linetype
-    if haskey(_typeAliases, arg)
-      arg = _typeAliases[arg]
-    end
     if arg in _allTypes
       d[:linetype] = arg
-    end
-
-    # linestyle
-    if haskey(_styleAliases, arg)
-      arg = _styleAliases[arg]
-    end
-    if arg in _allStyles
+    elseif arg in _allStyles
       d[:linestyle] = arg
+    else
+      warn("Skipped line arg $arg.  Unknown symbol.")
     end
 
   # linewidth
-  elseif arg <: Real
+  elseif T <: Real
     d[:linewidth] = arg
 
   else
@@ -358,7 +360,7 @@ function processLineArg(d::Dict, arg)
       c = colorscheme(arg)
       d[:color] = c
     catch
-      warn("Skipped line arg $arg.  Unhandled type $(typeof(arg))")
+      warn("Skipped line arg $arg.  Unhandled type $T.")
     end
 
   end
@@ -366,30 +368,31 @@ end
 
 
 function processMarkerArg(d::Dict, arg)
-  if isa(arg, Symbol)
+  T = typeof(arg)
+  delete!(d, :marker)
+  
+  if T <: Symbol
 
-    # shape
-    if haskey(_markerAliases, arg)
-      arg = _markerAliases[arg]
-    end
+    arg = get(_markerAliases, arg, arg)
+
     if arg in _allMarkers
       d[:marker] = arg
-    end
-
-    # linestyle
-    if haskey(_styleAliases, arg)
-      arg = _styleAliases[arg]
-    end
-    if arg in _allStyles
-      d[:linestyle] = arg
+    elseif arg != :match
+      warn("Skipped marker arg $arg.  Unknown symbol.")
     end
 
   # markersize
-  elseif arg <: Real
+  elseif T <: Real
     d[:markersize] = arg
 
   else
-    warn("Skipped line arg $arg.  Unhandled type $(typeof(arg))")
+
+    try
+      c = colorscheme(arg)
+      d[:markercolor] = c
+    catch
+      warn("Skipped marker arg $arg.  Unhandled type $T.")
+    end
 
   end
 end

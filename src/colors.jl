@@ -95,8 +95,8 @@ const _gradients = Dict(
     :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
     :greens       => [colorant"lightgreen", colorant"darkgreen"],
-    :redsblues    => [colorant"darkred", RGB(0.9,0.9,0.9), colorant"darkblue"]
-    :bluesreds    => [colorant"darkblue", RGB(0.9,0.9,0.9), colorant"darkred"]
+    :redsblues    => [colorant"darkred", RGB(0.9,0.9,0.9), colorant"darkblue"],
+    :bluesreds    => [colorant"darkblue", RGB(0.9,0.9,0.9), colorant"darkred"],
   )
 
 # --------------------------------------------------------------
@@ -169,9 +169,10 @@ getColor(scheme::ColorFunction, z::Real, idx::Int) = scheme.f(z, idx)
 
 # --------------------------------------------------------------
 
-"Wraps a vector of colors... may be Symbol/String or a Colorant"
-immutable ColorVector{V<:AbstractVector} <: ColorScheme
-  v::V
+"Wraps a vector of colors... may be vector of Symbol/String/Colorant"
+immutable ColorVector <: ColorScheme
+  v::Vector{Colorant}
+  ColorVector(v::AVec) = convertColor(v)
 end
 
 typealias CVec ColorVector

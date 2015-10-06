@@ -46,6 +46,7 @@ function plot(args...; kw...)
   pkg = backend()
   d = Dict(kw)
   preprocessArgs!(d)
+  for k in sort(collect(keys(d))); println(); @printf("%14s: ", k); println(d[k], "\n"); end
 
   # # ensure we're passing in an RGB
   # if haskey(d, :background_color)
