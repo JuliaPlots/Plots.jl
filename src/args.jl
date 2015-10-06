@@ -189,6 +189,7 @@ end
 const _keyAliases = Dict(
     :c            => :color,
     :lab          => :label,
+    :l            => :line,
     :w            => :linewidth,
     :width        => :linewidth,
     :lw           => :linewidth,
@@ -366,10 +367,10 @@ function processMarkerArg(d::Dict, arg)
   if T <: Symbol
 
     arg = get(_markerAliases, arg, arg)
-    println(arg)
+    # println(arg)
 
     if arg in _allMarkers
-      println("HERE ", arg)
+      # println("HERE ", arg)
       d[:marker] = arg
     elseif arg != :match && !handleColors!(d, arg, :markercolor)
       warn("Skipped marker arg $arg.  Unknown symbol.")

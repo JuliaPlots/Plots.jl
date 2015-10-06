@@ -145,7 +145,7 @@ function getColor(gradient::ColorGradient, z::Real, idx::Int)
   cs[end]
 end
 
-getColorVector(gradient::ColorGradient) = [gradient.cs[1]]
+getColorVector(gradient::ColorGradient) = [gradient.colors[1]]
 
 function interpolate(c1::Colorant, c2::Colorant, w::Real)
   lab1 = Lab(c1)
