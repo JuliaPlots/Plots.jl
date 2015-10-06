@@ -26,19 +26,19 @@ function histogramHack(; kw...)
   d[:x] = midpoints
   d[:y] = float(counts)
   d[:linetype] = :bar
-  d[:fill] = d[:fill] == nothing ? 0.0 : d[:fill]
+  d[:fillrange] = d[:fillrange] == nothing ? 0.0 : d[:fillrange]
   d
 end
 
 doc"""
 A hacky replacement for a bar graph when the backend doesn't support bars directly.
-Convert it into a line chart with fillto set.
+Convert it into a line chart with fillrange set.
 """
 function barHack(; kw...)
   d = Dict(kw)
   midpoints = d[:x]
   heights = d[:y]
-  fillto = d[:fill] == nothing ? 0.0 : d[:fill]
+  fillrange = d[:fillrange] == nothing ? 0.0 : d[:fillrange]
 
   # estimate the edges
   dists = diff(midpoints) * 0.5
@@ -59,13 +59,13 @@ function barHack(; kw...)
   for i in 1:length(heights)
     e1, e2 = edges[i:i+1]
     append!(x, [e1, e1, e2, e2])
-    append!(y, [fillto, heights[i], heights[i], fillto])
+    append!(y, [fillrange, heights[i], heights[i], fillrange])
   end
 
   d[:x] = x
   d[:y] = y
   d[:linetype] = :path
-  d[:fill] = fillto
+  d[:fillrange] = fillrange
   d
 end
 
@@ -81,14 +81,14 @@ function sticksHack(; kw...)
   # these are the line vertices
   x = Float64[]
   y = Float64[]
-  fillto = dLine[:fill] == nothing ? 0.0 : dLine[:fill]
+  fillrange = dLine[:fillrange] == nothing ? 0.0 : dLine[:fillrange]
 
   # calculate the vertices
   yScatter = dScatter[:y]
   for (i,xi) in enumerate(dScatter[:x])
     yi = yScatter[i]
     for j in 1:3 push!(x, xi) end
-    append!(y, [fillto, yScatter[i], fillto])
+    append!(y, [fillrange, yScatter[i], fillrange])
   end
 
   # change the line args
@@ -96,7 +96,7 @@ function sticksHack(; kw...)
   dLine[:y] = y
   dLine[:linetype] = :path
   dLine[:markershape] = :none
-  dLine[:fill] = nothing
+  dLine[:fillrange] = nothing
 
   # change the scatter args
   dScatter[:linetype] = :none

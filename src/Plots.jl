@@ -44,6 +44,10 @@ export
   xticks!,
   yticks!,
   annotate!,
+  xflip!,
+  yflip!,
+  xaxis!,
+  yaxis!,
 
   savefig,
   png,
@@ -116,6 +120,10 @@ yticks!{T<:Real}(v::AVec{T})              = plot!(yticks = v)
 xticks!{T<:Real,S<:AbstractString}(ticks::AVec{T}, labels::AVec{S})  = plot!(xticks = (ticks,labels))
 yticks!{T<:Real,S<:AbstractString}(ticks::AVec{T}, labels::AVec{S})  = plot!(yticks = (ticks,labels))
 annotate!(anns)                           = plot!(annotation = anns)
+xflip!(flip::Bool = true)                 = plot!(xflip = flip)
+yflip!(flip::Bool = true)                 = plot!(yflip = flip)
+xaxis!(args...)                           = plot!(xaxis = args)
+yaxis!(args...)                           = plot!(yaxis = args)
 
 title!(plt::Plot, s::AbstractString)                  = plot!(plt; title = s)
 xlabel!(plt::Plot, s::AbstractString)                 = plot!(plt; xlabel = s)
@@ -129,6 +137,11 @@ yticks!{T<:Real}(plt::Plot, ticks::AVec{T})           = plot!(plt; yticks = tick
 xticks!{T<:Real,S<:AbstractString}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; xticks = (ticks,labels))
 yticks!{T<:Real,S<:AbstractString}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; yticks = (ticks,labels))
 annotate!(plt::Plot, anns)                            = plot!(plt; annotation = anns)
+xflip!(plt::Plot, flip::Bool = true)                  = plot!(plt; xflip = flip)
+yflip!(plt::Plot, flip::Bool = true)                  = plot!(plt; yflip = flip)
+xaxis!(plt::Plot, args...)                            = plot!(plt; xaxis = args)
+yaxis!(plt::Plot, args...)                            = plot!(plt; yaxis = args)
+
 
 # ---------------------------------------------------------
 

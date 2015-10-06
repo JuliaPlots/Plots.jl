@@ -327,8 +327,9 @@ function addGadflyTicksGuide(gplt, ticks, isx::Bool)
   end
 end
 
-# isContinuousScale(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScale) && scale.vars[1] == (isx ? :x : :y)
-filterGadflyScale(gplt, isx::Bool) = filter!(scale -> scale.vars[1] != (isx ? :x : :y), gplt.scales)
+continuousAndSameAxis(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScale) && scale.vars[1] == (isx ? :x : :y)
+# filterGadflyScale(gplt, isx::Bool) = filter!(scale -> scale.vars[1] != (isx ? :x : :y), gplt.scales)
+filterGadflyScale(gplt, isx::Bool) = filter!(scale -> !continuousAndSameAxis(scale, isx), gplt.scales)
 
 
 function getGadflyScaleFunction(d::Dict, isx::Bool)

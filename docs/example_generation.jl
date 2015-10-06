@@ -30,7 +30,7 @@ const examples = PlotExample[
               [:(plot([sin,cos], 0, 4π))]),
   PlotExample("",
               "Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).",
-              [:(plot(sin, x->sin(2x), 0, 2π, legend=false, fillto=0))]),
+              [:(plot(sin, x->sin(2x), 0, 2π, legend=false, fill=0))]),
   PlotExample("Global",
               "Change the guides/background/limits/ticks.  You can also use shorthand functions: `title!`, `xlabel!`, `ylabel!`, `xlims!`, `ylims!`, `xticks!`, `yticks!`",
               [:(plot(rand(10), title="TITLE", xlabel="XLABEL", ylabel="YLABEL", background_color = RGB(0.2,0.2,0.2), xlim=(-3,13), yticks=0:0.1:1))]),
@@ -42,7 +42,7 @@ const examples = PlotExample[
               [:(plot(Vector[rand(10), rand(20)]; marker=:ellipse, markersize=8, c=[:red,:blue]))]),
   PlotExample("Build plot in pieces",
               "Start with a base plot...",
-              [:(plot(rand(100)/3, reg=true, fillto=0))]),
+              [:(plot(rand(100)/3, reg=true, fill=0))]),
   PlotExample("",
               "and add to it later.",
               [:(scatter!(rand(100), markersize=6, c=:blue))]),
@@ -204,7 +204,7 @@ end
 # markersize      # size of the marker
 # nbins           # number of bins for heatmap/hexbin and histograms
 # heatmap_c       # color cutoffs for Qwt heatmaps
-# fillto          # fillto value for area plots
+# fill          # fill value for area plots
 # title           # string or symbol, title of the plot
 # xlabel          # string or symbol, label on the bottom (x) axis
 # ylabel          # string or symbol, label on the left (y) axis
