@@ -45,7 +45,7 @@ When you pass in matrices, it splits by columns.  See the documentation for more
 function plot(args...; kw...)
   pkg = backend()
   d = Dict(kw)
-  replaceAliases!(d, _keyAliases)
+  preprocessArgs!(d)
 
   # # ensure we're passing in an RGB
   # if haskey(d, :background_color)
@@ -80,7 +80,7 @@ end
 function plot!(plt::Plot, args...; kw...)
 
   d = Dict(kw)
-  replaceAliases!(d, _keyAliases)
+  preprocessArgs!(d)
 
   warnOnUnsupportedArgs(plt.backend, d)
 

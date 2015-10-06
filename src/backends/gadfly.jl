@@ -24,6 +24,7 @@ supportedArgs(::GadflyPackage) = [
     :legend,
     :linestyle,
     :linetype,
+    :linewidth,
     :marker,
     :markercolor,
     :markersize,
@@ -37,7 +38,6 @@ supportedArgs(::GadflyPackage) = [
     :show,
     :size,
     :title,
-    :width,
     :windowtitle,
     :x,
     :xlabel,
@@ -97,7 +97,7 @@ function getLineGeoms(d::Dict)
   lt == :bar && return [Gadfly.Geom.bar]
   lt == :steppost && return [Gadfly.Geom.step]
 
-  # NOTE: we won't actually show this (we'll set width to 0 later), but we need a geom so that Gadfly doesn't complain
+  # NOTE: we won't actually show this (we'll set linewidth to 0 later), but we need a geom so that Gadfly doesn't complain
   if lt in (:none, :ohlc, :scatter)
     return [Gadfly.Geom.path]
   end
@@ -121,7 +121,7 @@ end
 
 function addGadflyFixedLines!(gplt, d::Dict, theme)
   
-  sz = d[:width] * Gadfly.px
+  sz = d[:linewidth] * Gadfly.px
   c = d[:color]
 
   if d[:linetype] == :hline
@@ -151,8 +151,8 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     extra_theme_args = []
   end
   
-  # set theme: color, line width, and point size
-  line_width = d[:width] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 width when we don't show a line
+  # set theme: color, line linewidth, and point size
+  line_width = d[:linewidth] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 linewidth when we don't show a line
   line_color = isa(d[:color], AbstractVector) ? colorant"black" : d[:color]
   # fg = initargs[:foreground_color]
   theme = Gadfly.Theme(; default_color = line_color,

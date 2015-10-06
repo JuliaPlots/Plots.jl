@@ -25,6 +25,7 @@ supportedArgs(::PyPlotPackage) = [
     :legend,
     :linestyle,
     :linetype,
+    :linewidth,
     :marker,
     :markercolor,
     :markersize,
@@ -38,7 +39,6 @@ supportedArgs(::PyPlotPackage) = [
     :show,
     :size,
     :title,
-    :width,
     :windowtitle,
     :x,
     :xlabel,
@@ -208,12 +208,12 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     end
 
   elseif lt in (:hline,:vline)
-    linewidth = d[:width]
+    linewidth = d[:linewidth]
     linecolor = getPyPlotColor(d[:color])
     linestyle = getPyPlotLineStyle(lt, d[:linestyle])
     for yi in d[:y]
       func = (lt == :hline ? PyPlot.axhline : PyPlot.axvline)
-      func(yi, linewidth=d[:width], color=linecolor, linestyle=linestyle)
+      func(yi, linewidth=d[:linewidth], color=linecolor, linestyle=linestyle)
     end
 
   end
@@ -232,7 +232,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     if lt == :hist
       extraargs[:bins] = d[:nbins]
     else
-      extraargs[:width] = (lt == :sticks ? 0.1 : 0.9)
+      extraargs[:linewidth] = (lt == :sticks ? 0.1 : 0.9)
     end
 
   elseif lt in (:heatmap, :hexbin)
@@ -247,7 +247,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     if lt == :scatter
       extraargs[:s] = d[:markersize]
       extraargs[:c] = getPyPlotColor(d[:markercolor])
-      extraargs[:linewidths] = d[:width]
+      extraargs[:linewidths] = d[:linewidth]
       if haskey(d, :colorscheme)
         extraargs[:cmap] = d[:colorscheme]
       end
@@ -261,7 +261,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   # set these for all types
   extraargs[:figure] = plt.o
   extraargs[:color] = getPyPlotColor(d[:color])
-  extraargs[:linewidth] = d[:width]
+  extraargs[:linewidth] = d[:linewidth]
   extraargs[:label] = d[:label]
 
   # do the plot

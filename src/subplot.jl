@@ -60,7 +60,7 @@ Create a series of plots:
 """
 function subplot(args...; kw...)
   d = Dict(kw)
-  replaceAliases!(d, _keyAliases)
+  preprocessArgs!(d)
 
   # figure out the layout
   layoutarg = get(d, :layout, nothing)
@@ -119,7 +119,7 @@ function subplot!(subplt::Subplot, args...; kw...)
   end
 
   d = Dict(kw)
-  replaceAliases!(d, _keyAliases)
+  preprocessArgs!(d)
   for k in keys(_plotDefaults)
     delete!(d, k)
   end

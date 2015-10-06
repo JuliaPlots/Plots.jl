@@ -83,6 +83,14 @@ abstract ColorScheme
 getColor(scheme::ColorScheme, idx::Integer) = getColor(scheme, 0.0, idx)
 getColor(scheme::ColorScheme, z::AbstractFloat) = getColor(scheme, z, 0)
 
+colorscheme(s::Symbol) = haskey(_gradients, s) ? ColorGradient(s) : ColorWrapper(convertColor(s))
+colorscheme{T<:Real}(s::Symbol, vals::AVec{T}) = ColorGradient(s, vals)
+colorscheme(cs::AVec, vs::AVec) = ColorGradient(cs, vs)
+colorscheme(f::Function) = ColorFunction(f)
+colorscheme(v::AVec) = ColorVector(v)
+colorscheme(c::Colorant) = ColorWrapper(c)
+
+
 const _gradients = Dict(
     :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
@@ -94,7 +102,7 @@ const _gradients = Dict(
 # --------------------------------------------------------------
 
 "Continuous gradient between values.  Wraps a list of bounding colors and the values they represent."
-type ColorGradient <: ColorScheme
+immutable ColorGradient <: ColorScheme
   colors::Vector{Colorant}
   values::Vector{Float64}
 end
@@ -151,24 +159,36 @@ end
 # --------------------------------------------------------------
 
 "Wraps a function, taking a z-value and index and returning a Colorant"
-type ColorFunction <: ColorScheme
+immutable ColorFunction <: ColorScheme
   f::Function
 end
 
 typealias CFun ColorFunction
 
-getColor(grad::ColorFunction, z::Real, idx::Int) = grad.f(z, idx)
+getColor(scheme::ColorFunction, z::Real, idx::Int) = scheme.f(z, idx)
 
 # --------------------------------------------------------------
 
 "Wraps a vector of colors... may be Symbol/String or a Colorant"
-type ColorVector{V<:AbstractVector} <: ColorScheme
+immutable ColorVector{V<:AbstractVector} <: ColorScheme
   v::V
 end
 
 typealias CVec ColorVector
 
-getColor(grad::ColorVector, z::Real, idx::Int) = convertColor(grad.v[mod1(idx, length(grad.v))])
+getColor(scheme::ColorVector, z::Real, idx::Int) = convertColor(scheme.v[mod1(idx, length(scheme.v))])
+
+
+# --------------------------------------------------------------
+
+"Wraps a single color"
+immutable ColorWrapper{C<:Colorant} <: ColorScheme
+  c::C
+end
+
+typealias CWrap ColorWrapper
+
+getColor(scheme::ColorWrapper, z::Real, idx::Int) = scheme.c
 
 # --------------------------------------------------------------
 

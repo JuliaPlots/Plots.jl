@@ -101,20 +101,23 @@ const _seriesDefaults = Dict{Symbol, Any}()
 _seriesDefaults[:axis]        = :left
 _seriesDefaults[:color]       = :auto
 _seriesDefaults[:label]       = "AUTO"
-_seriesDefaults[:width]       = 1
 _seriesDefaults[:linetype]    = :path
 _seriesDefaults[:linestyle]   = :solid
+_seriesDefaults[:linewidth]   = 1
 _seriesDefaults[:marker]      = :none
 _seriesDefaults[:markercolor] = :match
 _seriesDefaults[:markersize]  = 6
+_seriesDefaults[:fill]        = nothing   # ribbons, areas, etc
+_seriesDefaults[:fillcolor]   = :match
+# _seriesDefaults[:ribbon]      = nothing
+# _seriesDefaults[:ribboncolor] = :match
 _seriesDefaults[:nbins]       = 100               # number of bins for heatmaps and hists
-_seriesDefaults[:heatmap_c]   = (0.15, 0.5)
-_seriesDefaults[:fillto]      = nothing          # fills in the area
+_seriesDefaults[:heatmap_c]   = (0.15, 0.5)   # TODO: this should be replaced with a ColorGradient
+# _seriesDefaults[:fillto]      = nothing          # fills in the area
 _seriesDefaults[:reg]         = false               # regression line?
-_seriesDefaults[:group]       = nothing
-_seriesDefaults[:ribbon]      = nothing
-_seriesDefaults[:annotation]  = nothing
-_seriesDefaults[:z]           = nothing
+_seriesDefaults[:group]       = nothing           # groupby vector
+_seriesDefaults[:annotation]  = nothing           # annotation tuple(s)... (x,y,annotation)
+_seriesDefaults[:z]           = nothing           # depth for contour, color scale, etc
 # _seriesDefaults[:args]        = []     # additional args to pass to the backend
 # _seriesDefaults[:kwargs]      = []   # additional keyword args to pass to the backend
 #                               # note: can be Vector{Dict} or Vector{Tuple} 
@@ -136,6 +139,8 @@ _plotDefaults[:xticks]            = :auto
 _plotDefaults[:yticks]            = :auto
 _plotDefaults[:xscale]            = :identity
 _plotDefaults[:yscale]            = :identity
+_plotDefaults[:xflip]             = false
+_plotDefaults[:yflip]             = true
 _plotDefaults[:size]              = (800,600)
 _plotDefaults[:pos]               = (0,0)
 _plotDefaults[:windowtitle]       = "Plots.jl"
@@ -184,8 +189,9 @@ end
 const _keyAliases = Dict(
     :c            => :color,
     :lab          => :label,
-    :w            => :width,
-    :linewidth    => :width,
+    :w            => :linewidth,
+    :width        => :linewidth,
+    :lw           => :linewidth,
     :type         => :linetype,
     :lt           => :linetype,
     :t            => :linetype,
@@ -287,6 +293,125 @@ function default(; kw...)
   end
 end
 
+# -----------------------------------------------------------------------------
+
+wraptuple(x::Tuple) = x
+wraptuple(x) = (x,)
+
+# given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
+function processAxisArg(d::Dict, axisletter::AbstractString, arg)
+  if isa(arg, Symbol)
+
+    # xscale/yscale
+    if haskey(_scaleAliases, arg)
+      arg = _scaleAliases[arg]
+    end
+    if arg in _allScales
+      d[symbol(axisletter * "scale")] = arg
+    end
+
+    # xflip/yflip
+    if arg in (:flip, :invert, :inverted)
+      d[symbol(axisletter * "flip")] = true
+    end
+
+  # xlims/ylims
+  elseif (arg <: Tuple || arg <: AVec) && length(arg) == 2
+    d[symbol(axisletter * "lims")] = arg
+
+  # xticks/yticks
+  elseif arg <: AVec
+    d[symbol(axisletter * "ticks")] = arg
+
+  else
+    warn("Skipped $(axisletter)axis arg $arg.  Unhandled type $(typeof(arg))")
+
+  end
+end
+
+function processLineArg(d::Dict, arg)
+  if isa(arg, Symbol)
+
+    # linetype
+    if haskey(_typeAliases, arg)
+      arg = _typeAliases[arg]
+    end
+    if arg in _allTypes
+      d[:linetype] = arg
+    end
+
+    # linestyle
+    if haskey(_styleAliases, arg)
+      arg = _styleAliases[arg]
+    end
+    if arg in _allStyles
+      d[:linestyle] = arg
+    end
+
+  # linewidth
+  elseif arg <: Real
+    d[:linewidth] = arg
+
+  else
+
+    try
+      c = colorscheme(arg)
+      d[:color] = c
+    catch
+      warn("Skipped line arg $arg.  Unhandled type $(typeof(arg))")
+    end
+
+  end
+end
+
+
+function processMarkerArg(d::Dict, arg)
+  if isa(arg, Symbol)
+
+    # shape
+    if haskey(_markerAliases, arg)
+      arg = _markerAliases[arg]
+    end
+    if arg in _allMarkers
+      d[:marker] = arg
+    end
+
+    # linestyle
+    if haskey(_styleAliases, arg)
+      arg = _styleAliases[arg]
+    end
+    if arg in _allStyles
+      d[:linestyle] = arg
+    end
+
+  # markersize
+  elseif arg <: Real
+    d[:markersize] = arg
+
+  else
+    warn("Skipped line arg $arg.  Unhandled type $(typeof(arg))")
+
+  end
+end
+
+"Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
+function preprocessArgs!(d::Dict)
+  replaceAliases!(d, _keyAliases)
+  
+  for axisletter in ("x", "y")
+    for arg in wraptuple(get(d, symbol(axisletter * "axis"), ()))
+      processAxisArg(d, axisletter, arg)
+    end
+  end
+
+  for arg in wraptuple(get(d, :line, ()))
+    processLineArg(d, arg)
+  end
+
+  for arg in wraptuple(get(d, :marker, ()))
+    processMarkerArg(d, arg)
+  end
+end
 
 # -----------------------------------------------------------------------------
 

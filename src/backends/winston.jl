@@ -47,6 +47,7 @@ supportedArgs(::WinstonPackage) = [
     :legend,
     :linestyle,
     :linetype,
+    :linewidth,
     :marker,
     :markercolor,
     :markersize,
@@ -60,7 +61,6 @@ supportedArgs(::WinstonPackage) = [
     :show,
     :size,
     :title,
-    :width,
     :windowtitle,
     :x,
     :xlabel,
@@ -87,15 +87,6 @@ function preparePlotUpdate(plt::Plot{WinstonPackage})
 end
 
 # ---------------------------------------------------------------------------
-
-
-# function createWinstonFigure(d::Dict)
-#   # println("Creating immerse figure: ", d)
-#   w,h = d[:size]
-#   figidx = Winston.figure(; name = d[:windowtitle], width = w, height = h)
-#   Winston.Figure(figidx)
-# end
-
 
 
 function plot(pkg::WinstonPackage; kw...)
@@ -139,7 +130,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
   e = Dict()
   e[:color] = d[:color]
-  e[:linewidth] = d[:width]
+  e[:linewidth] = d[:linewidth]
   e[:kind] = winston_linestyle[d[:linestyle]]
   e[:symbolkind] = winston_marker[d[:marker]]
   # markercolor     # same choices as `color`, or :match will set the color to be the same as `color`

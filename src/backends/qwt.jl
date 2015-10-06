@@ -23,6 +23,7 @@ supportedArgs(::QwtPackage) = [
     :legend,
     :linestyle,
     :linetype,
+    :linewidth,
     :marker,
     :markercolor,
     :markersize,
@@ -36,7 +37,6 @@ supportedArgs(::QwtPackage) = [
     :show,
     :size,
     :title,
-    :width,
     :windowtitle,
     :x,
     :xlabel,
@@ -173,7 +173,7 @@ end
 
 # ----------------------------------------------------------------
 
-        # curve.setPen(Qt.QPen(Qt.QColor(color), width, self.getLineStyle(linestyle)))
+        # curve.setPen(Qt.QPen(Qt.QColor(color), linewidth, self.getLineStyle(linestyle)))
 function addLineMarker(plt::Plot{QwtPackage}, d::Dict)
   for yi in d[:y]
     marker = Qwt.QWT.QwtPlotMarker()
@@ -182,7 +182,7 @@ function addLineMarker(plt::Plot{QwtPackage}, d::Dict)
     marker[ishorizontal ? :setYValue : :setXValue](yi)
     qcolor = Qwt.convertRGBToQColor(d[:color])
     linestyle = plt.o.widget[:getLineStyle](string(d[:linestyle]))
-    marker[:setLinePen](Qwt.QT.QPen(qcolor, d[:width], linestyle))
+    marker[:setLinePen](Qwt.QT.QPen(qcolor, d[:linewidth], linestyle))
     marker[:attach](plt.o.widget)
   end
 
