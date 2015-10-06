@@ -277,7 +277,8 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
         # Should ensure from this side that colors which are the same are merged together
 
         push!(guide.labels, d[:label])
-        push!(guide.colors, d[:marker] == :none ? first(d[:color]) : d[:markercolor])
+        # push!(guide.colors, d[:marker] == :none ? first(d[:color]) : d[:markercolor])
+        push!(guide.colors, getColor(d[d[:marker] == :none ? :color : :markercolor], 1))
       end
     # end
   end

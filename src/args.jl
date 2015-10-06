@@ -301,8 +301,6 @@ wraptuple(x) = (x,)
 # given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
 function processAxisArg(d::Dict, axisletter::AbstractString, arg)
   T = typeof(arg)
-  delete!(d, symbol(axisletter * "axis"))
-
   if T <: Symbol
 
     arg = get(_scaleAliases, arg, arg)
@@ -338,8 +336,6 @@ end
 
 function processLineArg(d::Dict, arg)
   T = typeof(arg)
-  delete!(d, :line)
-
   if T <: Symbol
 
     arg = get(_typeAliases, arg, arg)
@@ -367,13 +363,13 @@ end
 
 function processMarkerArg(d::Dict, arg)
   T = typeof(arg)
-  delete!(d, :marker)
-  
   if T <: Symbol
 
     arg = get(_markerAliases, arg, arg)
+    println(arg)
 
     if arg in _allMarkers
+      println("HERE ", arg)
       d[:marker] = arg
     elseif arg != :match && !handleColors!(d, arg, :markercolor)
       warn("Skipped marker arg $arg.  Unknown symbol.")
@@ -393,18 +389,27 @@ end
 function preprocessArgs!(d::Dict)
   replaceAliases!(d, _keyAliases)
   
+  # handle axis args
   for axisletter in ("x", "y")
-    for arg in wraptuple(get(d, symbol(axisletter * "axis"), ()))
+    asym = symbol(axisletter * "axis")
+    for arg in wraptuple(get(d, asym, ()))
       processAxisArg(d, axisletter, arg)
     end
+    delete!(d, asym)
   end
 
+  # handle line args
   for arg in wraptuple(get(d, :line, ()))
     processLineArg(d, arg)
   end
+  delete!(d, :line)
 
+  # handle marker args... default to ellipse if shape not set
   for arg in wraptuple(get(d, :marker, ()))
     processMarkerArg(d, arg)
+  end
+  if haskey(d, :marker) && typeof(d[:marker]) <: Tuple
+    d[:marker] = :ellipse
   end
 end
 

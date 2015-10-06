@@ -82,6 +82,7 @@ abstract ColorScheme
 
 getColor(scheme::ColorScheme, idx::Integer) = getColor(scheme, 0.0, idx)
 getColor(scheme::ColorScheme, z::AbstractFloat) = getColor(scheme, z, 0)
+getColorVector(scheme::ColorScheme) = [getColor(scheme, 0.0, 1)]
 
 colorscheme(scheme::ColorScheme) = scheme
 colorscheme(s::Symbol) = haskey(_gradients, s) ? ColorGradient(s) : ColorWrapper(convertColor(s))
@@ -144,6 +145,8 @@ function getColor(gradient::ColorGradient, z::Real, idx::Int)
   cs[end]
 end
 
+getColorVector(gradient::ColorGradient) = [gradient.cs[1]]
+
 function interpolate(c1::Colorant, c2::Colorant, w::Real)
   lab1 = Lab(c1)
   lab2 = Lab(c2)
@@ -179,6 +182,7 @@ end
 typealias CVec ColorVector
 
 getColor(scheme::ColorVector, z::Real, idx::Int) = convertColor(scheme.v[mod1(idx, length(scheme.v))])
+getColorVector(scheme::ColorVector) = scheme.v
 
 
 # --------------------------------------------------------------

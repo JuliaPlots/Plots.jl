@@ -14,7 +14,7 @@ function createGadflyAnnotation(d::Dict)
     shape = ohlcshape(x, y, d[:markersize])
     d[:y] = Float64[z.open for z in y]
     d[:linetype] = :none
-    return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), shape, Gadfly.fill(nothing), Gadfly.stroke(d[:color])))  
+    return Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), shape, Gadfly.fill(nothing), Gadfly.stroke(getColor(d[:color],1)))  
 
   elseif marker == :rect
     shape = square(x, y, sz)
@@ -54,7 +54,7 @@ function createGadflyAnnotation(d::Dict)
     shape = Gadfly.circle(xs,ys,[sz])
   end
 
-  Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), shape, Gadfly.fill(d[:markercolor]), Gadfly.stroke(colorant"white")))  
+  Gadfly.Guide.annotation(Gadfly.compose(Gadfly.context(), shape, Gadfly.fill(getColorVector(d[:markercolor])), Gadfly.stroke(colorant"white")))  
 end
 
 
