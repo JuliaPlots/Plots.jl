@@ -8,7 +8,7 @@ function createGadflyAnnotation(d::Dict)
   sz = [d[:markersize] * Gadfly.px]
 
   x, y = d[:x], d[:y]
-  marker = d[:marker]
+  marker = d[:markershape]
 
   if d[:linetype] == :ohlc
     shape = ohlcshape(x, y, d[:markersize])

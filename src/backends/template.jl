@@ -17,7 +17,8 @@ supportedArgs(::[PkgName]Package) = [
     :axis,
     :background_color,
     :color,
-    :fill,
+    :fillrange,
+    :fillcolor,
     :foreground_color,
     :group,
     # :heatmap_c,
@@ -28,7 +29,7 @@ supportedArgs(::[PkgName]Package) = [
     :linestyle,
     :linetype,
     :linewidth,
-    :marker,
+    :markershape,
     :markercolor,
     :markersize,
     :n,
@@ -53,6 +54,9 @@ supportedArgs(::[PkgName]Package) = [
     :yticks,
     # :xscale,
     # :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
   ]
 supportedAxes(::[PkgName]Package) = _allAxes
 supportedTypes(::[PkgName]Package) = _allTypes

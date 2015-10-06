@@ -30,14 +30,13 @@ const winston_marker = Dict(:none=>".",
                            )
 
 
-# supportedArgs(::WinstonPackage) = setdiff(_allArgs, [:heatmap_c, :fill, :pos, :markercolor, :background_color, :xlims, :ylims, :xticks, :yticks])
 supportedArgs(::WinstonPackage) = [
     :annotation,
     # :args,
     # :axis,
     # :background_color,
     :color,
-    :fill,
+    # :fill,
     # :foreground_color,
     :group,
     # :heatmap_c,
@@ -48,7 +47,7 @@ supportedArgs(::WinstonPackage) = [
     :linestyle,
     :linetype,
     :linewidth,
-    :marker,
+    :markershape,
     :markercolor,
     :markersize,
     # :n,
@@ -73,6 +72,9 @@ supportedArgs(::WinstonPackage) = [
     # :yticks,
     :xscale,
     :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
   ]
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
@@ -132,7 +134,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
   e[:color] = d[:color]
   e[:linewidth] = d[:linewidth]
   e[:kind] = winston_linestyle[d[:linestyle]]
-  e[:symbolkind] = winston_marker[d[:marker]]
+  e[:symbolkind] = winston_marker[d[:markershape]]
   # markercolor     # same choices as `color`, or :match will set the color to be the same as `color`
   e[:symbolsize] = d[:markersize] / 5
   # fillto          # fillto value for area plots
@@ -161,8 +163,8 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
     end
 
   elseif d[:linetype] == :scatter
-    if d[:marker] == :none
-      d[:marker] = :ellipse
+    if d[:markershape] == :none
+      d[:markershape] = :ellipse
     end
 
   # elseif d[:linetype] == :step
@@ -196,8 +198,8 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
   end
 
 
-  # marker
-  if d[:marker] != :none
+  # markershape
+  if d[:markershape] != :none
     Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
   end
 

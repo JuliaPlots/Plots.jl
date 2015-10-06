@@ -26,7 +26,7 @@ supportedArgs(::PyPlotPackage) = [
     :linestyle,
     :linetype,
     :linewidth,
-    :marker,
+    :markershape,
     :markercolor,
     :markersize,
     :n,
@@ -51,6 +51,9 @@ supportedArgs(::PyPlotPackage) = [
     :yticks,
     :xscale,
     :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
@@ -203,8 +206,8 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   
   elseif lt == :scatter
     d[:linetype] = :none
-    if d[:marker] == :none
-      d[:marker] = :ellipse
+    if d[:markershape] == :none
+      d[:markershape] = :ellipse
     end
 
   elseif lt in (:hline,:vline)
@@ -242,7 +245,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   else
 
     extraargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
-    extraargs[:marker] = getPyPlotMarker(d[:marker])
+    extraargs[:marker] = getPyPlotMarker(d[:markershape])
 
     if lt == :scatter
       extraargs[:s] = d[:markersize]

@@ -88,8 +88,10 @@ colorscheme(scheme::ColorScheme) = scheme
 colorscheme(s::Symbol) = haskey(_gradients, s) ? ColorGradient(s) : ColorWrapper(convertColor(s))
 colorscheme{T<:Real}(s::Symbol, vals::AVec{T}) = ColorGradient(s, vals)
 colorscheme(cs::AVec, vs::AVec) = ColorGradient(cs, vs)
+colorscheme{T<:Colorant}(cs::AVec{T}) = ColorGradient(cs)
 colorscheme(f::Function) = ColorFunction(f)
 colorscheme(v::AVec) = ColorVector(v)
+colorscheme(m::AMat) = Any[ColorVector(m[:,i]) for i in 1:size(m,2)]
 colorscheme(c::Colorant) = ColorWrapper(c)
 
 
@@ -97,8 +99,10 @@ const _gradients = Dict(
     :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
     :greens       => [colorant"lightgreen", colorant"darkgreen"],
-    :redsblues    => [colorant"darkred", RGB(0.9,0.9,0.9), colorant"darkblue"],
-    :bluesreds    => [colorant"darkblue", RGB(0.9,0.9,0.9), colorant"darkred"],
+    :redsblues    => [colorant"darkred", RGB(0.8,0.85,0.8), colorant"darkblue"],
+    :bluesreds    => [colorant"darkblue", RGB(0.8,0.85,0.8), colorant"darkred"],
+    :heat         => [colorant"lightyellow", colorant"orange", colorant"darkred"],
+    :grays        => [RGB(.95,.95,.95),RGB(.05,.05,.05)],
   )
 
 # --------------------------------------------------------------
@@ -107,6 +111,15 @@ const _gradients = Dict(
 immutable ColorGradient <: ColorScheme
   colors::Vector{Colorant}
   values::Vector{Float64}
+
+  function ColorGradient{T<:Colorant,S<:Real}(cs::AVec{T}, vals::AVec{S} = 0:1)
+    length(cs) == length(vals) && return new(cs, collect(vals))
+    
+    # otherwise interpolate evenly between the minval and maxval
+    minval, maxval = minimum(vals), maximum(vals)
+    vs = Float64[interpolate(minval, maxval, w) for w in linspace(0, 1, length(cs))]
+    new(cs, vs)
+  end
 end
 
 # create a gradient from a symbol (blues, reds, etc) and vector of boundary values
@@ -115,13 +128,9 @@ function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:1)
 
   # if we passed in the right number of values, create the gradient directly
   cs = _gradients[s]
-  length(cs) == length(vals) && return ColorGradient(cs, collect(vals))
-  
-  # otherwise interpolate evenly between the minval and maxval
-  minval, maxval = minimum(vals), maximum(vals)
-  vs = Float64[interpolate(minval, maxval, w) for w in linspace(0, 1, length(cs))]
-  ColorGradient(cs, vs)
+  ColorGradient(cs, vals)
 end
+
 
 function getColor(gradient::ColorGradient, z::Real, idx::Int)
   cs = gradient.colors
@@ -137,7 +146,7 @@ function getColor(gradient::ColorGradient, z::Real, idx::Int)
   # find the bounding colors and interpolate
   for i in 2:n
     if z <= vs[i]
-      return interpolate(cs[i-1], cs[i], (z - vs[i-1]) / (vs[i] - vs[i-1]))
+      return interpolate_rgb(cs[i-1], cs[i], (z - vs[i-1]) / (vs[i] - vs[i-1]))
     end
   end
 
@@ -147,7 +156,7 @@ end
 
 getColorVector(gradient::ColorGradient) = [gradient.colors[1]]
 
-function interpolate(c1::Colorant, c2::Colorant, w::Real)
+function interpolate_lab(c1::Colorant, c2::Colorant, w::Real)
   lab1 = Lab(c1)
   lab2 = Lab(c2)
   l = interpolate(lab1.l, lab2.l, w)
@@ -155,6 +164,16 @@ function interpolate(c1::Colorant, c2::Colorant, w::Real)
   b = interpolate(lab1.b, lab2.b, w)
   RGB(Lab(l, a, b))
 end
+
+function interpolate_rgb(c1::Colorant, c2::Colorant, w::Real)
+  rgb1 = RGB(c1)
+  rgb2 = RGB(c2)
+  r = interpolate(rgb1.r, rgb2.r, w)
+  g = interpolate(rgb1.g, rgb2.g, w)
+  b = interpolate(rgb1.b, rgb2.b, w)
+  RGB(r, g, b)
+end
+
 
 function interpolate(v1::Real, v2::Real, w::Real)
   (1-w) * v1 + w * v2

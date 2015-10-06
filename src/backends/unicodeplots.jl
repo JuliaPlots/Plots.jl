@@ -26,7 +26,7 @@ supportedArgs(::UnicodePlotsPackage) = [
     :linestyle,
     :linetype,
     # :linewidth,
-    :marker,
+    :markershape,
     # :markercolor,
     # :markersize,
     # :n,
@@ -51,6 +51,9 @@ supportedArgs(::UnicodePlotsPackage) = [
     # :yticks,
     # :xscale,
     # :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
   ]
 supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
 supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
@@ -144,7 +147,7 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool, xlim, ylim)
   stepstyle = :post
   if lt == :path
     func = UnicodePlots.lineplot!
-  elseif lt == :scatter || d[:marker] != :none
+  elseif lt == :scatter || d[:markershape] != :none
     func = UnicodePlots.scatterplot!
   elseif lt == :steppost
     func = UnicodePlots.stairs!

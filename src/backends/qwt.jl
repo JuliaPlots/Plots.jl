@@ -24,7 +24,7 @@ supportedArgs(::QwtPackage) = [
     :linestyle,
     :linetype,
     :linewidth,
-    :marker,
+    :markershape,
     :markercolor,
     :markersize,
     :n,
@@ -49,6 +49,9 @@ supportedArgs(::QwtPackage) = [
     :yticks,
     :xscale,
     :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
   ]
 supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
@@ -75,14 +78,14 @@ function adjustQwtKeywords(plt::Plot{QwtPackage}, iscreating::Bool; kw...)
   lt = d[:linetype]
   if lt == :scatter
     d[:linetype] = :none
-    if d[:marker] == :none
-      d[:marker] = :ellipse
+    if d[:markershape] == :none
+      d[:markershape] = :ellipse
     end
 
   elseif lt in (:hline, :vline)
     addLineMarker(plt, d)
     d[:linetype] = :none
-    d[:marker] = :ellipse
+    d[:markershape] = :ellipse
     d[:markersize] = 1
     if lt == :vline
       d[:x], d[:y] = d[:y], d[:x]

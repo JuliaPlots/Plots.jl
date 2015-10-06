@@ -101,7 +101,7 @@ ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 "Sparsity plot... heatmap of non-zero values of a matrix"
 function spy{T<:Real}(y::AMat{T}; kw...)
   I,J,V = findnz(y)
-  heatmap(J, I; leg=false, kw...)
+  heatmap(J, I; leg=false, yflip=true, kw...)
 end
 
 title!(s::AbstractString)                 = plot!(title = s)

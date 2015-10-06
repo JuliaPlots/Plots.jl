@@ -95,7 +95,7 @@ function sticksHack(; kw...)
   dLine[:x] = x
   dLine[:y] = y
   dLine[:linetype] = :path
-  dLine[:marker] = :none
+  dLine[:markershape] = :none
   dLine[:fill] = nothing
 
   # change the scatter args

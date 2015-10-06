@@ -104,10 +104,10 @@ _seriesDefaults[:label]       = "AUTO"
 _seriesDefaults[:linetype]    = :path
 _seriesDefaults[:linestyle]   = :solid
 _seriesDefaults[:linewidth]   = 1
-_seriesDefaults[:marker]      = :none
+_seriesDefaults[:markershape] = :none
 _seriesDefaults[:markercolor] = :match
 _seriesDefaults[:markersize]  = 6
-_seriesDefaults[:fill]        = nothing   # ribbons, areas, etc
+_seriesDefaults[:fillrange]   = nothing   # ribbons, areas, etc
 _seriesDefaults[:fillcolor]   = :match
 # _seriesDefaults[:ribbon]      = nothing
 # _seriesDefaults[:ribboncolor] = :match
@@ -159,6 +159,13 @@ supportedArgs(::PlottingPackage) = _allArgs
 supportedArgs() = supportedArgs(backend())
 
 
+const _argNotes = Dict(
+    :color => "Series color.  To have different marker and/or fill colors, optionally set the markercolor and fillcolor args.",
+    :z => "Determines the depth.  For color gradients, we expect 0 ≤ z ≤ 1.",
+    :heatmap_c => "For Qwt heatmaps only... will be deprecated eventually.",
+  )
+
+
 # -----------------------------------------------------------------------------
 
 makeplural(s::Symbol) = Symbol(string(s,"s"))
@@ -200,16 +207,19 @@ const _keyAliases = Dict(
     :s            => :linestyle,
     :ls           => :linestyle,
     :m            => :marker,
-    :shape        => :marker,
+    :mark         => :marker,
+    :shape        => :markershape,
     :mc           => :markercolor,
     :mcolor       => :markercolor,
     :ms           => :markersize,
     :msize        => :markersize,
+    :area         => :fill,
+    :fillrng      => :fillrange,
+    :fc           => :fillcolor,
+    :fcolor       => :fillcolor,
+    :g            => :group,
     :nb           => :nbins,
     :nbin         => :nbins,
-    :fill         => :fill,
-    :area         => :fill,
-    :g            => :group,
     :rib          => :ribbon,
     :ann          => :annotation,
     :anns         => :annotation,
@@ -299,32 +309,8 @@ end
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
 
-# given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
-function processAxisArg(d::Dict, axisletter::AbstractString, arg)
-  T = typeof(arg)
-  if T <: Symbol
-
-    arg = get(_scaleAliases, arg, arg)
-
-    if arg in _allScales
-      d[symbol(axisletter * "scale")] = arg
-    elseif arg in (:flip, :invert, :inverted)
-      d[symbol(axisletter * "flip")] = true
-    end
-
-  # xlims/ylims
-  elseif (T <: Tuple || T <: AVec) && length(arg) == 2
-    d[symbol(axisletter * "lims")] = arg
-
-  # xticks/yticks
-  elseif T <: AVec
-    d[symbol(axisletter * "ticks")] = arg
-
-  else
-    warn("Skipped $(axisletter)axis arg $arg.  Unhandled type $T")
-
-  end
-end
+trueOrAllTrue(f::Function, x::AVec) = all(f, x)
+trueOrAllTrue(f::Function, x) = f(x)
 
 function handleColors!(d::Dict, arg, csym::Symbol)
   try
@@ -335,54 +321,79 @@ function handleColors!(d::Dict, arg, csym::Symbol)
   false
 end
 
-function processLineArg(d::Dict, arg)
+# given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
+# TODO: use trueOrAllTrue for subplots which can pass vectors for these
+function processAxisArg(d::Dict, axisletter::AbstractString, arg)
   T = typeof(arg)
-  if T <: Symbol
+  # if T <: Symbol
 
-    arg = get(_typeAliases, arg, arg)
-    arg = get(_styleAliases, arg, arg)
+  arg = get(_scaleAliases, arg, arg)
 
-    # linetype
-    if arg in _allTypes
-      d[:linetype] = arg
-    elseif arg in _allStyles
-      d[:linestyle] = arg
-    elseif !handleColors!(d, arg, :color)
-      warn("Skipped line arg $arg.  Unknown symbol.")
-    end
+  if arg in _allScales
+    d[symbol(axisletter * "scale")] = arg
+
+  elseif arg in (:flip, :invert, :inverted)
+    d[symbol(axisletter * "flip")] = true
+    # end
+
+  # xlims/ylims
+  elseif (T <: Tuple || T <: AVec) && length(arg) == 2
+    d[symbol(axisletter * "lims")] = arg
+
+  # xticks/yticks
+  elseif T <: AVec
+    d[symbol(axisletter * "ticks")] = arg
+
+  else
+    warn("Skipped $(axisletter)axis arg $arg")
+
+  end
+end
+
+
+function processLineArg(d::Dict, arg)
+
+  # linetype
+  if trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+    d[:linetype] = arg
+  
+  # linestyle
+  elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+    d[:linestyle] = arg
 
   # linewidth
-  elseif T <: Real
+  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
     d[:linewidth] = arg
 
+  # color
   elseif !handleColors!(d, arg, :color)
-    warn("Skipped line arg $arg.  Unhandled type $T.")
+    warn("Skipped line arg $arg.")
 
   end
 end
 
 
 function processMarkerArg(d::Dict, arg)
-  T = typeof(arg)
-  if T <: Symbol
 
-    arg = get(_markerAliases, arg, arg)
-    # println(arg)
-
-    if arg in _allMarkers
-      # println("HERE ", arg)
-      d[:marker] = arg
-    elseif arg != :match && !handleColors!(d, arg, :markercolor)
-      warn("Skipped marker arg $arg.  Unknown symbol.")
-    end
+  # markershape
+  if trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg)
+    d[:markershape] = arg
 
   # markersize
-  elseif T <: Real
+  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
     d[:markersize] = arg
 
+  # markercolor
   elseif !handleColors!(d, arg, :markercolor)
-    warn("Skipped marker arg $arg.  Unhandled type $T.")
+    warn("Skipped marker arg $arg.")
     
+  end
+end
+
+
+function processFillArg(d::Dict, arg)
+  if !handleColors!(d, arg, :fillcolor)
+    d[:fillrange] = arg
   end
 end
 
@@ -406,12 +417,23 @@ function preprocessArgs!(d::Dict)
   delete!(d, :line)
 
   # handle marker args... default to ellipse if shape not set
+  anymarker = false
   for arg in wraptuple(get(d, :marker, ()))
     processMarkerArg(d, arg)
+    anymarker = true
   end
-  if haskey(d, :marker) && typeof(d[:marker]) <: Tuple
-    d[:marker] = :ellipse
+  delete!(d, :marker)
+  if anymarker && !haskey(d, :markershape)
+    d[:markershape] = :ellipse
   end
+
+  # handle fill
+  for arg in wraptuple(get(d, :fill, ()))
+    processFillArg(d, arg)
+  end
+  delete!(d, :fill)
+
+  return
 end
 
 # -----------------------------------------------------------------------------
@@ -458,7 +480,7 @@ function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
   d[:axis] in supportedAxes(pkg) || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))")
   d[:linetype] == :none || d[:linetype] in supportedTypes(pkg) || warn("linetype $(d[:linetype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))")
   d[:linestyle] in supportedStyles(pkg) || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))")
-  d[:marker] == :none || d[:marker] in supportedMarkers(pkg) || warn("marker $(d[:marker]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))")
+  d[:markershape] == :none || d[:markershape] in supportedMarkers(pkg) || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))")
 end
 
 function warnOnUnsupportedScales(pkg::PlottingPackage, d::Dict)
@@ -529,7 +551,7 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
 
   aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
   aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
-  aliasesAndAutopick(d, :marker, _markerAliases, supportedMarkers(pkg), plotIndex)
+  aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
 
   # update color
   d[:color] = getSeriesRGBColor(d[:color], initargs, plotIndex)

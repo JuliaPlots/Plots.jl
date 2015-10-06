@@ -14,7 +14,8 @@ supportedArgs(::GadflyPackage) = [
     # :axis,
     :background_color,
     :color,
-    :fill,
+    :fillrange,
+    # :fillcolor,
     # :foreground_color,
     :group,
     # :heatmap_c,
@@ -25,7 +26,7 @@ supportedArgs(::GadflyPackage) = [
     :linestyle,
     :linetype,
     :linewidth,
-    :marker,
+    :markershape,
     :markercolor,
     :markersize,
     :n,
@@ -34,7 +35,6 @@ supportedArgs(::GadflyPackage) = [
     :nr,
     # :pos,
     :reg,
-    :ribbon,
     :show,
     :size,
     :title,
@@ -50,6 +50,8 @@ supportedArgs(::GadflyPackage) = [
     :yticks,
     :xscale,
     :yscale,
+    :xflip,
+    :yflip,
     :z,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
@@ -110,7 +112,7 @@ end
 
 # serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...
 function getMarkerGeomsAndGuides(d::Dict)
-  marker = d[:marker]
+  marker = d[:markershape]
   if marker == :none && d[:linetype] != :ohlc
     return [],[]
   end
@@ -172,7 +174,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     d, dScatter = sticksHack(;d...)
 
     # add the annotation
-    if dScatter[:marker] != :none
+    if dScatter[:markershape] != :none
       push!(gplt.guides, createGadflyAnnotation(dScatter))
     end
 
@@ -184,11 +186,11 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
   if d[:linetype] == :scatter
     d[:linetype] = :none
-    if d[:marker] in (:none,:ellipse)
+    if d[:markershape] in (:none,:ellipse)
       push!(gfargs, Gadfly.Geom.point)
-      d[:marker] = :none
-    # if d[:marker] == :none
-    #   d[:marker] = :ellipse
+      d[:markershape] = :none
+    # if d[:markershape] == :none
+    #   d[:markershape] = :ellipse
     end
   end
 
@@ -216,9 +218,12 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # handle continuous color scales for the markers
   elseif z != nothing && typeof(z) <: AVec
     colorgroup = [(:color, z)]
-    minz, maxz = minimum(z), maximum(z)
-    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> getColor(d[:markercolor], minz + p * (maxz - minz))))
-
+    # minz, maxz = minimum(z), maximum(z)
+    if !isa(d[:markercolor], ColorGradient)
+      d[:markercolor] = colorscheme(:bluesreds)
+    end
+    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> getColor(d[:markercolor], p, 1))) # minz + p * (maxz - minz))))
+    
   # nothing special...
   else
     colorgroup = []
@@ -226,8 +231,8 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
   # fills/ribbons
   yminmax = []
-  if d[:fill] != nothing
-    fillmin, fillmax = map(makevec, maketuple(d[:fill]))
+  if d[:fillrange] != nothing
+    fillmin, fillmax = map(makevec, maketuple(d[:fillrange]))
     nmin, nmax = length(fillmin), length(fillmax)
     push!(yminmax, (:ymin, Float64[min(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]))
     push!(yminmax, (:ymax, Float64[max(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]))
@@ -277,8 +282,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
         # Should ensure from this side that colors which are the same are merged together
 
         push!(guide.labels, d[:label])
-        # push!(guide.colors, d[:marker] == :none ? first(d[:color]) : d[:markercolor])
-        push!(guide.colors, getColor(d[d[:marker] == :none ? :color : :markercolor], 1))
+        push!(guide.colors, getColor(d[d[:markershape] == :none ? :color : :markercolor], 1))
       end
     # end
   end
@@ -287,7 +291,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   x = d[d[:linetype] == :hist ? :y : :x]
 
   if d[:axis] != :left
-    warn("Gadly only supports one y axis")
+    warn("Gadfly only supports one y axis")
   end
 
 
@@ -377,6 +381,29 @@ function addGadflyLimitsScale(gplt, d::Dict, isx::Bool)
   return
 end
 
+function updateGadflyAxisFlips(gplt, d::Dict)
+  if isa(gplt.coord, Gadfly.Coord.Cartesian)
+    gplt.coord = Gadfly.Coord.cartesian(
+        gplt.coord.xvars,
+        gplt.coord.yvars;
+        xmin = gplt.coord.xmin,
+        xmax = gplt.coord.xmax,
+        ymin = gplt.coord.ymin,
+        ymax = gplt.coord.ymax,
+        xflip = get(d, :xflip, gplt.coord.xflip),
+        yflip = get(d, :yflip, gplt.coord.yflip),
+        fixed = gplt.coord.fixed,
+        aspect_ratio = gplt.coord.aspect_ratio,
+        raster = gplt.coord.raster
+      )
+  else
+    gplt.coord = Gadfly.Coord.Cartesian(
+        xflip = get(d, :xflip, false),
+        yflip = get(d, :yflip, false)
+      )
+  end
+end
+
 
 # ---------------------------------------------------------------------------
 
@@ -413,8 +440,11 @@ function updateGadflyGuides(gplt, d::Dict)
 
   addGadflyLimitsScale(gplt, d, true)
   addGadflyLimitsScale(gplt, d, false)
+
   haskey(d, :xticks) && addGadflyTicksGuide(gplt, d[:xticks], true)
   haskey(d, :yticks) && addGadflyTicksGuide(gplt, d[:yticks], false)
+
+  updateGadflyAxisFlips(gplt, d)
 end
 
 function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
