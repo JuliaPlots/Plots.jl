@@ -149,6 +149,7 @@ _plotDefaults[:layout]            = nothing
 _plotDefaults[:n]                 = -1
 _plotDefaults[:nr]                = -1
 _plotDefaults[:nc]                = -1
+_plotDefaults[:color_palette]     = :auto
 
 
 
@@ -257,6 +258,7 @@ const _keyAliases = Dict(
     :wtitle       => :windowtitle,
     :gui          => :show,
     :display      => :show,
+    :palette      => :color_palette,
   )
 
 # add all pluralized forms to the _keyAliases dict
@@ -314,9 +316,16 @@ trueOrAllTrue(f::Function, x) = f(x)
 
 function handleColors!(d::Dict, arg, csym::Symbol)
   try
-    c = colorscheme(arg)
-    d[csym] = c
+    # @show arg typeof(arg)
+    if arg == :auto
+      d[csym] = :auto
+    else
+      c = colorscheme(arg)
+      d[csym] = c
+    end
     return true
+  # catch err
+  #   dump(err)
   end
   false
 end

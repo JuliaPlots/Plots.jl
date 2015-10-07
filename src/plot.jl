@@ -117,7 +117,7 @@ function plot!(plt::Plot, args...; kw...)
 
   warnOnUnsupportedScales(plt.backend, d)
 
-  dumpdict(d, "Updating plot items:")
+  dumpdict(d, "Updating plot items")
 
   # add title, axis labels, ticks, etc
   updatePlotItems(plt, d)

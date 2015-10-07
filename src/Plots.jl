@@ -15,7 +15,6 @@ export
 
   current,
   default,
-  colorscheme,
   
   scatter,
   scatter!,
@@ -58,6 +57,16 @@ export
   aliases,
   dataframes,
   OHLC,
+
+  colorscheme,
+  ColorScheme,
+  ColorGradient,
+  ColorVector,
+  ColorWrapper,
+  ColorFunction,
+  ColorZFunction,
+  getColor,
+  getColorZ,
 
   supportedArgs,
   supportedAxes,

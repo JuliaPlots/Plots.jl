@@ -70,11 +70,11 @@ const _masterColorList = [
 
 
 function darken(c, v=0.1)
-    rgb = RGB(c)
-    r = max(0, min(rgb.r - v, 1))
-    g = max(0, min(rgb.g - v, 1))
-    b = max(0, min(rgb.b - v, 1))
-    RGB(r,g,b)
+    rgba = RGBA(c)
+    r = max(0, min(rgba.r - v, 1))
+    g = max(0, min(rgba.g - v, 1))
+    b = max(0, min(rgba.b - v, 1))
+    RGBA(r,g,b,rgba.alpha)
 end
 function lighten(c, v=0.3)
     darken(c, -v)
@@ -103,7 +103,7 @@ colorscheme(cs::AVec, vs::AVec) = ColorGradient(cs, vs)
 colorscheme{T<:Colorant}(cs::AVec{T}) = ColorGradient(cs)
 colorscheme(f::Function) = ColorFunction(f)
 colorscheme(v::AVec) = ColorVector(v)
-colorscheme(m::AMat) = Any[ColorVector(m[:,i]) for i in 1:size(m,2)]
+colorscheme(m::AMat) = size(m,1) == 1 ? map(colorscheme, m) : [colorscheme(m[:,i]) for i in 1:size(m,2)]'
 colorscheme(c::Colorant) = ColorWrapper(c)
 
 const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", colorant"orange", colorant"red"]
@@ -147,7 +147,7 @@ function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:1)
   ColorGradient(cs, vals)
 end
 
-getColor(gradient::ColorGradient, idx::Int) = gradient.cs[mod1(idx, length(gradient.cs))]
+getColor(gradient::ColorGradient, idx::Int) = gradient.colors[mod1(idx, length(gradient.colors))]
 
 function getColorZ(gradient::ColorGradient, z::Real)
   cs = gradient.colors
@@ -173,22 +173,23 @@ end
 
 getColorVector(gradient::ColorGradient) = gradient.colors
 
-function interpolate_lab(c1::Colorant, c2::Colorant, w::Real)
-  lab1 = Lab(c1)
-  lab2 = Lab(c2)
-  l = interpolate(lab1.l, lab2.l, w)
-  a = interpolate(lab1.a, lab2.a, w)
-  b = interpolate(lab1.b, lab2.b, w)
-  RGB(Lab(l, a, b))
-end
+# function interpolate_lab(c1::Colorant, c2::Colorant, w::Real)
+#   lab1 = Lab(c1)
+#   lab2 = Lab(c2)
+#   l = interpolate(lab1.l, lab2.l, w)
+#   a = interpolate(lab1.a, lab2.a, w)
+#   b = interpolate(lab1.b, lab2.b, w)
+#   RGB(Lab(l, a, b))
+# end
 
 function interpolate_rgb(c1::Colorant, c2::Colorant, w::Real)
-  rgb1 = RGB(c1)
-  rgb2 = RGB(c2)
+  rgb1 = RGBA(c1)
+  rgb2 = RGBA(c2)
   r = interpolate(rgb1.r, rgb2.r, w)
   g = interpolate(rgb1.g, rgb2.g, w)
   b = interpolate(rgb1.b, rgb2.b, w)
-  RGB(r, g, b)
+  a = interpolate(rgb1.alpha, rgb2.alpha, w)
+  RGBA(r, g, b, a)
 end
 
 
@@ -232,6 +233,8 @@ getColorVector(scheme::ColorVector) = scheme.v
 immutable ColorWrapper{C<:Colorant} <: ColorScheme
   c::C
 end
+
+ColorWrapper(s::Symbol) = ColorWrapper(parse(Colorant, s))
 
 getColor(scheme::ColorWrapper, idx::Int) = scheme.c
 getColorZ(scheme::ColorWrapper, z::Real) = scheme.c
@@ -297,10 +300,15 @@ function getPaletteUsingColorDiffFromBackground(bgcolor::Colorant, numcolors::In
   filter(c -> colordiff(c, bgcolor) >= mindiff, _allColors)
 end
 
-function getPaletteUsingRainbow(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
-  grad = ColorGradient(_gradients[isdark(bgcolor) ? :lightrainbow : :darkrainbow])
+function getPaletteUsingGradientSymbol(bgcolor::Colorant, numcolors::Int = _defaultNumColors; gradientsym::Symbol = :auto)
+  # @show gradientsym
+  if gradientsym == :auto
+    grad = ColorGradient(_gradients[isdark(bgcolor) ? :lightrainbow : :darkrainbow])
+  else
+    grad = ColorGradient(gradientsym)
+  end
   zrng = getpctrange(numcolors)
-  RGB[getColorZ(grad, z) for z in zrng]
+  RGBA[getColorZ(grad, z) for z in zrng]
 end
 
 # ----------------------------------------------------------------------------------
@@ -345,7 +353,7 @@ function handlePlotColors(::PlottingPackage, d::Dict)
   # d[:color_palette] = getPaletteUsingDistinguishableColors(bgcolor)
   # d[:color_palette] = getPaletteUsingFixedColorList(bgcolor)
   # d[:color_palette] = getPaletteUsingColorDiffFromBackground(bgcolor)
-  d[:color_palette] = getPaletteUsingRainbow(bgcolor)
+  d[:color_palette] = getPaletteUsingGradientSymbol(bgcolor; gradientsym = get(d, :color_palette, :auto))
 
   # set the foreground color (text, ticks, gridlines) to be white or black depending
   # on how dark the background is.  

@@ -17,26 +17,38 @@ type PlotExample
 end
 
 
+function fakedata(sz...)
+  y = Array(Float64, sz...)
+  for r in 2:size(y,1)
+    y[r,:] = 0.9 * y[r-1,:] + randn(size(y,2))'
+  end
+  y
+end
+
+
 # the examples we'll run for each
 const examples = PlotExample[
   PlotExample("Lines",
               "A simple line plot of the columns.",
-              [:(plot(cumsum(randn(50,10),1), w=3))]),
+              [:(plot(fakedata(50,5), w=3))]),
   PlotExample("Functions",
               "Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.",
               [:(plot(0:0.01:4π, [sin,cos]))]),
   PlotExample("",
               "Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).",
               [:(plot(sin, x->sin(2x), 0, 2π, leg=false, fill=(0,:orange)))]),
+  PlotExample("Colors",
+              "Access predefined palettes (or build your own with the `colorscheme` method).  Line/marker colors are auto-generated from the plot's palette, unless overridden.  Set the `z` argument to turn on series gradients.",
+              [:(y = rand(100)), :(plot(0:10:100,rand(11,4),lab="lines",w=3, palette=:grays, fill=(0.5,:auto))), :(scatter!(y, z=abs(y-.5), m=(10,:heat), lab="grad"))]),
   PlotExample("Global",
               "Change the guides/background/limits/ticks.  Convenience args `xaxis` and `yaxis` allow you to pass a tuple or value which will be mapped to the relevant args automatically.  The `xaxis` below will be replaced with `xlabel` and `xlims` args automatically during the preprocessing step. You can also use shorthand functions: `title!`, `xaxis!`, `yaxis!`, `xlabel!`, `ylabel!`, `xlims!`, `ylims!`, `xticks!`, `yticks!`",
               [:(plot(rand(20,3), title="TITLE", xaxis=("XLABEL",(-5,30),0:2:20,:flip), yaxis=("YLABEL",:log10), background_color = RGB(0.2,0.2,0.2), leg=false))]),
   PlotExample("Two-axis",
               "Use the `axis` arguments.\n\nNote: Currently only supported with Qwt and PyPlot",
               [:(plot(Vector[randn(100), randn(100)*100]; axis = [:l :r], ylabel="LEFT", yrightlabel="RIGHT"))]),
-  PlotExample("Vectors w/ pluralized args",
-              "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).",
-              [:(plot(Vector[rand(10), rand(20)]; marker=:ellipse, markersize=8, c=(:red, :blue)))]),
+  PlotExample("Arguments",
+              "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).  Special arguments `line`, `marker`, and `fill` will automatically figure out what arguments to set (for example, we are setting the `linestyle`, `linewidth`, and `color` arguments with `line`.)  Note that we pass a matrix of colors, and this applies the colors to each series.",
+              [:(plot(Vector[rand(10), rand(20)]; marker=(:ellipse,8), line=(:dot,3,[:black :orange])))]),
   PlotExample("Build plot in pieces",
               "Start with a base plot...",
               [:(plot(rand(100)/3, reg=true, fill=(0,:green)))]),

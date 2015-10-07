@@ -14,8 +14,9 @@ supportedArgs(::GadflyPackage) = [
     # :axis,
     :background_color,
     :color,
+    :color_palette,
     :fillrange,
-    # :fillcolor,
+    :fillcolor,
     # :foreground_color,
     :group,
     # :heatmap_c,
@@ -157,15 +158,20 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   line_width = d[:linewidth] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 linewidth when we don't show a line
   # line_color = isa(d[:color], AbstractVector) ? colorant"black" : d[:color]
   line_color = getColor(d[:color])
+  fillcolor = getColor(d[:fillcolor])
+  @show fillcolor
   # fg = initargs[:foreground_color]
   theme = Gadfly.Theme(; default_color = line_color,
                        line_width = line_width,
-                       default_point_size = 0.5 * d[:markersize] * Gadfly.px,
+                       default_point_size = d[:markersize] * Gadfly.px,
                        # grid_color = fg,
                        # minor_label_color = fg,
                        # major_label_color = fg,
                        # key_title_color = fg,
                        # key_label_color = fg,
+                       lowlight_color = x->RGB(fillcolor),
+                       lowlight_opacity = alpha(fillcolor),
+                       bar_highlight = RGB(line_color),
                        extra_theme_args...)
   push!(gfargs, theme)
 
@@ -222,7 +228,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     if !isa(d[:markercolor], ColorGradient)
       d[:markercolor] = colorscheme(:bluesreds)
     end
-    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> getColorZ(d[:markercolor], p))) # minz + p * (maxz - minz))))
+    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p)))) # minz + p * (maxz - minz))))
     
   # nothing special...
   else
