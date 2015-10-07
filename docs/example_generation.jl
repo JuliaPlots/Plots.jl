@@ -36,7 +36,7 @@ const examples = PlotExample[
               [:(plot(0:0.01:4π, [sin,cos]))]),
   PlotExample("",
               "Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).",
-              [:(plot(sin, x->sin(2x), 0, 2π, leg=false, fill=(0,:orange)))]),
+              [:(plot(sin, x->sin(2x), 0, 2π, line=4, leg=false, fill=(0,:orange)))]),
   PlotExample("Colors",
               "Access predefined palettes (or build your own with the `colorscheme` method).  Line/marker colors are auto-generated from the plot's palette, unless overridden.  Set the `z` argument to turn on series gradients.",
               [:(y = rand(100)), :(plot(0:10:100,rand(11,4),lab="lines",w=3, palette=:grays, fill=(0.5,:auto))), :(scatter!(y, z=abs(y-.5), m=(10,:heat), lab="grad"))]),

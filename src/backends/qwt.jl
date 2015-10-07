@@ -13,7 +13,9 @@ supportedArgs(::QwtPackage) = [
     :axis,
     :background_color,
     :color,
-    :fill,
+    :color_palette,
+    :fillrange,
+    :fillcolor,
     :foreground_color,
     :group,
     :heatmap_c,
@@ -61,11 +63,23 @@ supportedScales(::QwtPackage) = [:identity, :log10]
 
 const _qwtAliases = Dict(
     :nbins => :heatmap_n,
+    :fillrange => :fillto,
+    :linewidth => :width,
+    :markershape => :marker,
     :hexbin => :heatmap,
     :path => :line,
     :steppost => :step,
     :steppre => :stepinverted,
   )
+
+
+function fixcolors(d::Dict)
+  for (k,v) in d
+    if typeof(v) <: ColorScheme
+      d[k] = getColor(v)
+    end
+  end
+end
 
 function replaceLinetypeAlias(d)
   if haskey(_qwtAliases, d[:linetype])
@@ -110,6 +124,7 @@ end
 
 function plot(pkg::QwtPackage; kw...)
   d = Dict(kw)
+  fixcolors(d)
   o = Qwt.plot(zeros(0,0); d..., show=false)
   plt = Plot(o, pkg, 0, d, Dict[])
   plt
@@ -117,6 +132,7 @@ end
 
 function plot!(::QwtPackage, plt::Plot; kw...)
   d = adjustQwtKeywords(plt, false; kw...)
+  fixcolors(d)
   Qwt.oplot(plt.o; d...)
   push!(plt.seriesargs, d)
   plt
@@ -183,7 +199,7 @@ function addLineMarker(plt::Plot{QwtPackage}, d::Dict)
     ishorizontal = (d[:linetype] == :hline)
     marker[:setLineStyle](ishorizontal ? 1 : 2)
     marker[ishorizontal ? :setYValue : :setXValue](yi)
-    qcolor = Qwt.convertRGBToQColor(d[:color])
+    qcolor = Qwt.convertRGBToQColor(getColor(d[:color]))
     linestyle = plt.o.widget[:getLineStyle](string(d[:linestyle]))
     marker[:setLinePen](Qwt.QT.QPen(qcolor, d[:linewidth], linestyle))
     marker[:attach](plt.o.widget)
