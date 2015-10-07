@@ -15,6 +15,7 @@ supportedArgs(::PyPlotPackage) = [
     :axis,
     :background_color,
     :color,
+    :color_palette,
     :fillrange,
     :fillcolor,
     :foreground_color,
