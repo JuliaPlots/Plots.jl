@@ -18,7 +18,7 @@ end
 
 
 function fakedata(sz...)
-  y = Array(Float64, sz...)
+  y = zeros(sz...)
   for r in 2:size(y,1)
     y[r,:] = 0.9 * y[r-1,:] + randn(size(y,2))'
   end
@@ -57,7 +57,7 @@ const examples = PlotExample[
               [:(scatter!(rand(100), markersize=6, c=:orange))]),
   PlotExample("Heatmaps",
               "",
-              [:(heatmap(randn(10000),randn(10000), nbins=(100,20)))]),
+              [:(heatmap(randn(10000),randn(10000), nbins=100))]),
   PlotExample("Line types",
               "",
               [:(types = intersect(supportedTypes(), [:line, :path, :steppre, :steppost, :sticks, :scatter])'),
@@ -73,7 +73,7 @@ const examples = PlotExample[
               [:(markers = setdiff(supportedMarkers(), [:none,:auto])'), :(scatter(0.5:9.5, [fill(i-0.5,10) for i=length(markers):-1:1]; marker=:auto, label=map(string,markers), ms=12))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
-              [:(bar(randn(1000)))]),
+              [:(bar(randn(999)))]),
   PlotExample("Histogram",
               "",
               [:(histogram(randn(1000), nbins=50))]),
@@ -86,10 +86,10 @@ const examples = PlotExample[
               [:(subplot(randn(100,5), layout=[1,1,3], t=[:line :hist :scatter :step :bar], nbins=10, leg=false))]),
   PlotExample("Adding to subplots",
               "Note here the automatic grid layout, as well as the order in which new series are added to the plots.",
-              [:(subplot(randn(100,5), n=4))]),
+              [:(subplot(fakedata(100,10), n=4, palette=[:grays :blues :heat :lightrainbow], bg=[:orange :pink :darkblue :black]))]),
   PlotExample("",
               "",
-              [:(subplot!(randn(100,3)))]),
+              [:(subplot!(fakedata(100,10)))]),
   PlotExample("Open/High/Low/Close",
               "Create an OHLC chart.  Pass in a vector of OHLC objects as your `y` argument.  Adjust the tick width with arg `markersize`.",
               [:(n=20), :(hgt=rand(n)+1), :(bot=randn(n)), :(openpct=rand(n)), :(closepct=rand(n)), :(y = [OHLC(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n]), :(ohlc(y; markersize=8))]),
