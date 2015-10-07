@@ -71,12 +71,12 @@ const _masterColorList = [
 
 function darken(c, v=0.1)
     rgb = RGB(c)
-    r = max(0, rgb.r - v)
-    g = max(0, rgb.g - v)
-    b = max(0, rgb.b - v)
+    r = max(0, min(rgb.r - v, 1))
+    g = max(0, min(rgb.g - v, 1))
+    b = max(0, min(rgb.b - v, 1))
     RGB(r,g,b)
 end
-function lighten(c, v=0.1)
+function lighten(c, v=0.3)
     darken(c, -v)
 end
 

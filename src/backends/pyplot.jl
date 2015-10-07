@@ -15,7 +15,8 @@ supportedArgs(::PyPlotPackage) = [
     :axis,
     :background_color,
     :color,
-    # :fill,
+    :fillrange,
+    :fillcolor,
     :foreground_color,
     :group,
     # :heatmap_c,
@@ -64,6 +65,7 @@ subplotSupported(::PyPlotPackage) = false
 
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
+getPyPlotColor(scheme::ColorScheme) = getPyPlotColor(getColor(scheme))
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
@@ -277,7 +279,18 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   end
 
   # this sets the bg color inside the grid
-  fig.o[:axes][1][:set_axis_bgcolor](getPyPlotColor(plt.initargs[:background_color]))
+  ax = getLeftAxis(fig)
+  ax[:set_axis_bgcolor](getPyPlotColor(plt.initargs[:background_color]))
+
+  fillrange = d[:fillrange]
+  if fillrange != nothing
+    fillcolor = getPyPlotColor(d[:fillcolor])
+    if typeof(fillrange) <: Union{Real, AVec}
+      ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor)
+    else
+      ax[:fill_between](d[:x], fillrange..., facecolor = fillcolor)
+    end
+  end
 
   push!(plt.seriesargs, d)
   plt
@@ -323,16 +336,23 @@ function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
     ax[:set_ylabel](d[:yrightlabel])
   end
 
+  # scales
+  ax = getLeftAxis(fig)
+  haskey(d, :xscale) && applyPyPlotScale(ax, d[:xscale], true)
+  haskey(d, :yscale) && applyPyPlotScale(ax, d[:yscale], false)
+
   # limits and ticks
   haskey(d, :xlims) && addPyPlotLims(d[:xlims], true)
   haskey(d, :ylims) && addPyPlotLims(d[:ylims], false)
   haskey(d, :xticks) && addPyPlotTicks(d[:xticks], true)
   haskey(d, :yticks) && addPyPlotTicks(d[:yticks], false)
 
-  # scales
-  ax = getLeftAxis(fig)
-  haskey(d, :xscale) && applyPyPlotScale(ax, d[:xscale], true)
-  haskey(d, :yscale) && applyPyPlotScale(ax, d[:yscale], false)
+  if get(d, :xflip, false)
+    ax[:invert_xaxis]()
+  end
+  if get(d, :yflip, false)
+    ax[:invert_yaxis]()
+  end
 
 end
 

@@ -47,6 +47,11 @@ convertSeriesIndex(subplt::Subplot, n::Int) = ceil(Int, n / subplt.p)
 
 # ------------------------------------------------------------
 
+function validateSubplotSupported()
+  if !subplotSupported()
+    error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(backendInstance(pkg)), backends()),", "))
+  end
+end
 
 doc"""
 Create a series of plots:
@@ -59,6 +64,7 @@ Create a series of plots:
 ```
 """
 function subplot(args...; kw...)
+  validateSubplotSupported()
   d = Dict(kw)
   preprocessArgs!(d)
 
@@ -102,6 +108,7 @@ Adds to a subplot.
 
 # current subplot
 function subplot!(args...; kw...)
+  validateSubplotSupported()
   subplot!(current(), args...; kw...)
 end
 
@@ -114,9 +121,10 @@ end
 
 # # this adds to a specific subplot... most plot commands will flow through here
 function subplot!(subplt::Subplot, args...; kw...)
-  if !subplotSupported()
-    error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(backendInstance(pkg)), backends()),", "))
-  end
+  validateSubplotSupported()
+  # if !subplotSupported()
+  #   error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(backendInstance(pkg)), backends()),", "))
+  # end
 
   d = Dict(kw)
   preprocessArgs!(d)
