@@ -47,9 +47,7 @@ function plot(args...; kw...)
   d = Dict(kw)
   preprocessArgs!(d)
 
-  println()
-  for k in sort(collect(keys(d))); @printf("%14s: ", k); println(d[k]); end
-  println()
+  dumpdict(d, "After plot preprocessing")
 
   # # ensure we're passing in an RGB
   # if haskey(d, :background_color)
@@ -86,6 +84,8 @@ function plot!(plt::Plot, args...; kw...)
   d = Dict(kw)
   preprocessArgs!(d)
 
+  dumpdict(d, "After plot! preprocessing")
+
   warnOnUnsupportedArgs(plt.backend, d)
 
   # handle a "group by" mechanism.
@@ -108,12 +108,16 @@ function plot!(plt::Plot, args...; kw...)
     setTicksFromStringVector(d, di, :x, :xticks)
     setTicksFromStringVector(d, di, :y, :yticks)
 
+    dumpdict(di, "Series $i")
+
     plot!(plt.backend, plt; di...)
   end
 
   addAnnotations(plt, d)
 
   warnOnUnsupportedScales(plt.backend, d)
+
+  dumpdict(d, "Updating plot items:")
 
   # add title, axis labels, ticks, etc
   updatePlotItems(plt, d)

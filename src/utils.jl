@@ -104,6 +104,8 @@ function sticksHack(; kw...)
   dLine, dScatter
 end
 
+get_mod(v, idx::Int) = v[mod1(idx, length(v))]
+
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]
 
@@ -143,7 +145,30 @@ ticksType(ticks) = :invalid
 limsType{T<:Real,S<:Real}(lims::Tuple{T,S}) = :limits
 limsType(lims) = :invalid
 
+
 # ---------------------------------------------------------------
+
+type DebugMode
+  on::Bool
+end
+const _debugMode = DebugMode(false)
+
+
+function dumpdict(d::Dict, prefix = "")
+  _debugMode.on || return
+  println()
+  if prefix != ""
+    println(prefix, ":")
+  end
+  for k in sort(collect(keys(d)))
+    @printf("%14s: ", k)
+    println(d[k])
+  end
+  println()
+end
+
+# ---------------------------------------------------------------
+
 
 # push/append/clear/set the underlying plot data
 # NOTE: backends should implement the getindex and setindex! methods to get/set the x/y data objects

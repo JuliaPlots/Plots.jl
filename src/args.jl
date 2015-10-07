@@ -309,7 +309,7 @@ end
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
 
-trueOrAllTrue(f::Function, x::AVec) = all(f, x)
+trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
 trueOrAllTrue(f::Function, x) = f(x)
 
 function handleColors!(d::Dict, arg, csym::Symbol)
@@ -335,6 +335,9 @@ function processAxisArg(d::Dict, axisletter::AbstractString, arg)
   elseif arg in (:flip, :invert, :inverted)
     d[symbol(axisletter * "flip")] = true
     # end
+
+  elseif T <: AbstractString
+    d[symbol(axisletter * "label")] = arg
 
   # xlims/ylims
   elseif (T <: Tuple || T <: AVec) && length(arg) == 2
@@ -492,21 +495,38 @@ function warnOnUnsupportedScales(pkg::PlottingPackage, d::Dict)
 end
 
 
+# -----------------------------------------------------------------------------
+
+# Tuples and 1-row matrices will give an element
+# multi-row matrices will give a column
+# anything else is returned as-is
+getArgValue(v::Tuple, idx::Int) = v[mod1(idx, length(v))]
+function getArgValue(v::AMat, idx::Int)
+  c = mod1(idx, size(v,2))
+  size(v,1) == 1 ? v[1,c] : v[:,c]
+end
+getArgValue(v, idx) = v
+
+
+# given an argument key (k), we want to extract the argument value for this index.
+# if nothing is set (or container is empty), return the default.
+function setDictValue(d::Dict, k::Symbol, idx::Int, defaults::Dict)
+  if haskey(d, k) && !(typeof(d[k]) <: Union{AbstractArray, Tuple} && isempty(d[k]))
+    d[k] = getArgValue(d[k], idx)
+  else
+    d[k] = defaults[k]
+  end
+end
+
+# -----------------------------------------------------------------------------
+
 # build the argument dictionary for the plot
 function getPlotArgs(pkg::PlottingPackage, kw, idx::Int)
   d = Dict(kw)
 
   # add defaults?
   for k in keys(_plotDefaults)
-    if haskey(d, k)
-      v = d[k]
-      if isa(v, AbstractVector) && !isempty(v)
-        # we got a vector, cycling through
-        d[k] = autopick(v, idx)
-      end
-    else
-      d[k] = _plotDefaults[k]
-    end
+    setDictValue(d, k, idx, _plotDefaults)
   end
 
   for k in (:xscale, :yscale)
@@ -517,7 +537,6 @@ function getPlotArgs(pkg::PlottingPackage, kw, idx::Int)
 
   # convert color
   handlePlotColors(pkg, d)
-  # d[:background_color] = getBackgroundRGBColor(d[:background_color], d)
 
   # no need for these
   delete!(d, :x)
@@ -534,15 +553,7 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
 
   # add defaults?
   for k in keys(_seriesDefaults)
-    if haskey(d, k)
-      v = d[k]
-      if isa(v, AbstractVector) && !isempty(v)
-        # we got a vector, cycling through
-        d[k] = autopick(v, commandIndex)
-      end
-    else
-      d[k] = _seriesDefaults[k]
-    end
+    setDictValue(d, k, commandIndex, _seriesDefaults)
   end
   
   if haskey(_typeAliases, d[:linetype])
@@ -560,6 +571,11 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
   mc = d[:markercolor]
   mc = (mc == :match ? d[:color] : getSeriesRGBColor(mc, initargs, plotIndex))
   d[:markercolor] = mc
+
+  # update fillcolor
+  mc = d[:fillcolor]
+  mc = (mc == :match ? d[:color] : getSeriesRGBColor(mc, initargs, plotIndex))
+  d[:fillcolor] = mc
 
   # set label
   label = d[:label]

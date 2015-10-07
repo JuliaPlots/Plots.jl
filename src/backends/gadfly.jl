@@ -82,7 +82,7 @@ function createGadflyPlotObject(d::Dict)
     unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
   end
 
-  gplt.theme = Gadfly.Theme(background_color = d[:background_color])
+  gplt.theme = Gadfly.Theme(background_color = getColor(d[:background_color]))
   gplt
 end
 
@@ -111,12 +111,12 @@ end
 
 
 # serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...
-function getMarkerGeomsAndGuides(d::Dict)
+function getMarkerGeomsAndGuides(d::Dict, initargs::Dict)
   marker = d[:markershape]
   if marker == :none && d[:linetype] != :ohlc
     return [],[]
   end
-  return [], [createGadflyAnnotation(d)]
+  return [], [createGadflyAnnotation(d, initargs)]
 end
 
 
@@ -156,7 +156,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # set theme: color, line linewidth, and point size
   line_width = d[:linewidth] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 linewidth when we don't show a line
   # line_color = isa(d[:color], AbstractVector) ? colorant"black" : d[:color]
-  line_color = getColor(d[:color], 1)
+  line_color = getColor(d[:color])
   # fg = initargs[:foreground_color]
   theme = Gadfly.Theme(; default_color = line_color,
                        line_width = line_width,
@@ -175,7 +175,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
     # add the annotation
     if dScatter[:markershape] != :none
-      push!(gplt.guides, createGadflyAnnotation(dScatter))
+      push!(gplt.guides, createGadflyAnnotation(dScatter, initargs))
     end
 
   elseif d[:linetype] in (:hline, :vline)
@@ -222,7 +222,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     if !isa(d[:markercolor], ColorGradient)
       d[:markercolor] = colorscheme(:bluesreds)
     end
-    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> getColor(d[:markercolor], p, 1))) # minz + p * (maxz - minz))))
+    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> getColorZ(d[:markercolor], p))) # minz + p * (maxz - minz))))
     
   # nothing special...
   else
@@ -264,7 +264,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # end
   
   # handle markers
-  geoms, guides = getMarkerGeomsAndGuides(d)
+  geoms, guides = getMarkerGeomsAndGuides(d, initargs)
   append!(gfargs, geoms)
   append!(gplt.guides, guides)
 
@@ -282,7 +282,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
         # Should ensure from this side that colors which are the same are merged together
 
         push!(guide.labels, d[:label])
-        push!(guide.colors, getColor(d[d[:markershape] == :none ? :color : :markercolor], 1))
+        push!(guide.colors, getColor(d[d[:markershape] == :none ? :color : :markercolor]))
       end
     # end
   end
@@ -339,7 +339,7 @@ function getGadflyScaleFunction(d::Dict, isx::Bool)
     scale = d[scalekey]
     scale == :log && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey
     scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey
-    scale == :log10 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log10, hasScaleKey
+    scale == :log10 && return isx ? Gadfly.Scale.x_log10 : Gadfly.Scale.y_log10, hasScaleKey
     scale == :asinh && return isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh, hasScaleKey
     scale == :sqrt && return isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt, hasScaleKey
   end

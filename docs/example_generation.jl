@@ -21,7 +21,7 @@ end
 const examples = PlotExample[
   PlotExample("Lines",
               "A simple line plot of the columns.",
-              [:(plot(rand(50,5), w=3))]),
+              [:(plot(cumsum(randn(50,10),1), w=3))]),
   PlotExample("Functions",
               "Plot multiple functions.  You can also put the function first.",
               [:(plot(0:0.01:4π, [sin,cos]))]),
@@ -36,10 +36,10 @@ const examples = PlotExample[
               [:(plot(rand(10), title="TITLE", xlabel="XLABEL", ylabel="YLABEL", background_color = RGB(0.2,0.2,0.2), xlim=(-3,13), yticks=0:0.1:1))]),
   PlotExample("Two-axis",
               "Use the `axis` arguments.\n\nNote: Currently only supported with Qwt and PyPlot",
-              [:(plot(Vector[randn(100), randn(100)*100]; axis = [:l,:r], ylabel="LEFT", yrightlabel="RIGHT"))]),
+              [:(plot(Vector[randn(100), randn(100)*100]; axis = [:l :r], ylabel="LEFT", yrightlabel="RIGHT"))]),
   PlotExample("Vectors w/ pluralized args",
               "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).",
-              [:(plot(Vector[rand(10), rand(20)]; marker=:ellipse, markersize=8, c=[:red,:blue]))]),
+              [:(plot(Vector[rand(10), rand(20)]; marker=:ellipse, markersize=8, c=(:red, :blue)))]),
   PlotExample("Build plot in pieces",
               "Start with a base plot...",
               [:(plot(rand(100)/3, reg=true, fill=0))]),
@@ -51,17 +51,17 @@ const examples = PlotExample[
               [:(heatmap(randn(10000),randn(10000), nbins=100))]),
   PlotExample("Line types",
               "",
-              [:(types = intersect(supportedTypes(), [:line, :path, :steppre, :steppost, :sticks, :scatter])),
+              [:(types = intersect(supportedTypes(), [:line, :path, :steppre, :steppost, :sticks, :scatter])'),
                   :(n = length(types)),
                   :(x = Vector[sort(rand(20)) for i in 1:n]),
                   :(y = rand(20,n)),
-                  :(plot(x, y, t=types, lab=map(string,types)))]),
+                  :(plot(x, y, line=(types,3), lab=map(string,types), ms=15))]),
   PlotExample("Line styles",
               "",
-              [:(styles = setdiff(supportedStyles(), [:auto])), :(plot(cumsum(randn(20,length(styles)),1); style=:auto, label=map(string,styles), w=5))]),
+              [:(styles = setdiff(supportedStyles(), [:auto])'), :(plot(cumsum(randn(20,length(styles)),1); style=:auto, label=map(string,styles), w=5))]),
   PlotExample("Marker types",
               "",
-              [:(markers = setdiff(supportedMarkers(), [:none,:auto])), :(scatter(0.5:9.5, [fill(i-0.5,10) for i=length(markers):-1:1]; marker=:auto, label=map(string,markers), ms=10))]),
+              [:(markers = setdiff(supportedMarkers(), [:none,:auto])'), :(scatter(0.5:9.5, [fill(i-0.5,10) for i=length(markers):-1:1]; marker=:auto, label=map(string,markers), ms=12))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
               [:(bar(randn(1000)))]),
@@ -74,7 +74,7 @@ const examples = PlotExample[
                 You can define the layout with keyword params... either set the number of plots `n` (and optionally number of rows `nr` or 
                 number of columns `nc`), or you can set the layout directly with `layout`.
               """,
-              [:(subplot(randn(100,5), layout=[1,1,3], t=[:line,:hist,:scatter,:step,:bar], nbins=10, leg=false))]),
+              [:(subplot(randn(100,5), layout=[1,1,3], t=[:line :hist :scatter :step :bar], nbins=10, leg=false))]),
   PlotExample("Adding to subplots",
               "Note here the automatic grid layout, as well as the order in which new series are added to the plots.",
               [:(subplot(randn(100,5), n=4))]),
@@ -162,7 +162,8 @@ end
 
 
 # make and display one plot
-function test_example(pkgname::Symbol, idx::Int)
+function test_example(pkgname::Symbol, idx::Int, debug = true)
+  Plots._debugMode.on = debug
   println("Testing plot: $pkgname:$idx:$(examples[idx].header)")
   backend(pkgname)
   backend()
@@ -173,7 +174,7 @@ function test_example(pkgname::Symbol, idx::Int)
 end
 
 # generate all plots and create a dict mapping idx --> plt
-function test_all_examples(pkgname::Symbol)
+function test_all_examples(pkgname::Symbol, debug = false)
   plts = Dict()
   for i in 1:length(examples)
     # if examples[i].header == "Subplots" && !subplotSupported()
@@ -181,7 +182,7 @@ function test_all_examples(pkgname::Symbol)
     # end
 
     try
-      plt = test_example(pkgname, i)
+      plt = test_example(pkgname, i, debug)
       plts[i] = plt
     catch ex
       # TODO: put error info into markdown?
@@ -279,6 +280,8 @@ function buildReadme()
   gadfly()
   Plots.dumpSupportGraphs()
 end
+
+default(size=(600,400))
 
 # run it!
 # note: generate separately so it's easy to comment out

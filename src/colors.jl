@@ -69,6 +69,17 @@ const _masterColorList = [
 ]
 
 
+function darken(c, v=0.1)
+    rgb = RGB(c)
+    r = max(0, rgb.r - v)
+    g = max(0, rgb.g - v)
+    b = max(0, rgb.b - v)
+    RGB(r,g,b)
+end
+function lighten(c, v=0.1)
+    darken(c, -v)
+end
+
 # --------------------------------------------------------------
 
 
@@ -80,9 +91,10 @@ convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 
 abstract ColorScheme
 
-getColor(scheme::ColorScheme, idx::Integer) = getColor(scheme, 0.0, idx)
-getColor(scheme::ColorScheme, z::AbstractFloat) = getColor(scheme, z, 0)
-getColorVector(scheme::ColorScheme) = [getColor(scheme, 0.0, 1)]
+getColor(scheme::ColorScheme) = getColor(scheme, 1)
+# getColor(scheme::ColorScheme, idx::Integer) = getColor(scheme, 0.0, idx)
+# getColorZ(scheme::ColorScheme, z::AbstractFloat) = getColor(scheme, z, 0)
+getColorVector(scheme::ColorScheme) = [getColor(scheme)]
 
 colorscheme(scheme::ColorScheme) = scheme
 colorscheme(s::Symbol) = haskey(_gradients, s) ? ColorGradient(s) : ColorWrapper(convertColor(s))
@@ -94,6 +106,7 @@ colorscheme(v::AVec) = ColorVector(v)
 colorscheme(m::AMat) = Any[ColorVector(m[:,i]) for i in 1:size(m,2)]
 colorscheme(c::Colorant) = ColorWrapper(c)
 
+const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", colorant"orange", colorant"red"]
 
 const _gradients = Dict(
     :blues        => [colorant"lightblue", colorant"darkblue"],
@@ -103,6 +116,9 @@ const _gradients = Dict(
     :bluesreds    => [colorant"darkblue", RGB(0.8,0.85,0.8), colorant"darkred"],
     :heat         => [colorant"lightyellow", colorant"orange", colorant"darkred"],
     :grays        => [RGB(.95,.95,.95),RGB(.05,.05,.05)],
+    :rainbow      => _rainbowColors,
+    :lightrainbow => map(lighten, _rainbowColors),
+    :darkrainbow  => map(darken, _rainbowColors),
   )
 
 # --------------------------------------------------------------
@@ -131,8 +147,9 @@ function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:1)
   ColorGradient(cs, vals)
 end
 
+getColor(gradient::ColorGradient, idx::Int) = gradient.cs[mod1(idx, length(gradient.cs))]
 
-function getColor(gradient::ColorGradient, z::Real, idx::Int)
+function getColorZ(gradient::ColorGradient, z::Real)
   cs = gradient.colors
   vs = gradient.values
   n = length(cs)
@@ -154,7 +171,7 @@ function getColor(gradient::ColorGradient, z::Real, idx::Int)
   cs[end]
 end
 
-getColorVector(gradient::ColorGradient) = [gradient.colors[1]]
+getColorVector(gradient::ColorGradient) = gradient.colors
 
 function interpolate_lab(c1::Colorant, c2::Colorant, w::Real)
   lab1 = Lab(c1)
@@ -181,26 +198,31 @@ end
 
 # --------------------------------------------------------------
 
-"Wraps a function, taking a z-value and index and returning a Colorant"
+"Wraps a function, taking an index and returning a Colorant"
 immutable ColorFunction <: ColorScheme
   f::Function
 end
 
-typealias CFun ColorFunction
+getColor(scheme::ColorFunction, idx::Int) = scheme.f(idx)
 
-getColor(scheme::ColorFunction, z::Real, idx::Int) = scheme.f(z, idx)
+# --------------------------------------------------------------
+
+"Wraps a function, taking an z-value and returning a Colorant"
+immutable ColorZFunction <: ColorScheme
+  f::Function
+end
+
+getColorZ(scheme::ColorFunction, z::Real) = scheme.f(z)
 
 # --------------------------------------------------------------
 
 "Wraps a vector of colors... may be vector of Symbol/String/Colorant"
 immutable ColorVector <: ColorScheme
   v::Vector{Colorant}
-  ColorVector(v::AVec) = convertColor(v)
+  ColorVector(v::AVec) = new(convertColor(v))
 end
 
-typealias CVec ColorVector
-
-getColor(scheme::ColorVector, z::Real, idx::Int) = convertColor(scheme.v[mod1(idx, length(scheme.v))])
+getColor(scheme::ColorVector, idx::Int) = convertColor(scheme.v[mod1(idx, length(scheme.v))])
 getColorVector(scheme::ColorVector) = scheme.v
 
 
@@ -211,9 +233,8 @@ immutable ColorWrapper{C<:Colorant} <: ColorScheme
   c::C
 end
 
-typealias CWrap ColorWrapper
-
-getColor(scheme::ColorWrapper, z::Real, idx::Int) = scheme.c
+getColor(scheme::ColorWrapper, idx::Int) = scheme.c
+getColorZ(scheme::ColorWrapper, z::Real) = scheme.c
 
 # --------------------------------------------------------------
 
@@ -276,6 +297,37 @@ function getPaletteUsingColorDiffFromBackground(bgcolor::Colorant, numcolors::In
   filter(c -> colordiff(c, bgcolor) >= mindiff, _allColors)
 end
 
+function getPaletteUsingRainbow(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
+  grad = ColorGradient(_gradients[isdark(bgcolor) ? :lightrainbow : :darkrainbow])
+  zrng = getpctrange(numcolors)
+  RGB[getColorZ(grad, z) for z in zrng]
+end
+
+# ----------------------------------------------------------------------------------
+
+
+function getpctrange(n::Int)
+    n > 0 || error()
+    n == 1 && return zeros(1)
+    zs = [0.0, 1.0]
+    for i in 3:n
+        sorted = sort(zs)
+        diffs = diff(sorted)
+        widestj = 0
+        widest = 0.0
+        for (j,d) in enumerate(diffs)
+            if d > widest
+                widest = d
+                widestj = j
+            end
+        end
+        push!(zs, sorted[widestj] + 0.5 * diffs[widestj])
+    end
+    zs
+end
+
+# ----------------------------------------------------------------------------------
+
 # TODO: try to use the algorithms from https://github.com/timothyrenner/ColorBrewer.jl
 # TODO: allow the setting of the algorithm, either by passing a symbol (:colordiff, :fixed, etc) or a function? 
 
@@ -289,22 +341,29 @@ function handlePlotColors(::PlottingPackage, d::Dict)
       warn("Cannot set background_color with backend $(backend())")
     end
   end
-  d[:background_color] = bgcolor
 
   # d[:color_palette] = getPaletteUsingDistinguishableColors(bgcolor)
   # d[:color_palette] = getPaletteUsingFixedColorList(bgcolor)
-  d[:color_palette] = getPaletteUsingColorDiffFromBackground(bgcolor)
+  # d[:color_palette] = getPaletteUsingColorDiffFromBackground(bgcolor)
+  d[:color_palette] = getPaletteUsingRainbow(bgcolor)
 
   # set the foreground color (text, ticks, gridlines) to be white or black depending
   # on how dark the background is.  
-  if !haskey(d, :foreground_color) || d[:foreground_color] == :auto
-    d[:foreground_color] = isdark(bgcolor) ? colorant"white" : colorant"black"
+  fgcolor = get(d, :foreground_color, :auto)
+  if fgcolor == :auto
+    fgcolor = isdark(bgcolor) ? colorant"white" : colorant"black"
   else
-    d[:foreground_color] = convertColor(d[:foreground_color])
+    fgcolor = convertColor(fgcolor)
   end
+  # if !haskey(d, :foreground_color) || d[:foreground_color] == :auto
+  #   d[:foreground_color] = isdark(bgcolor) ? colorant"white" : colorant"black"
+  # else
+  #   d[:foreground_color] = convertColor(d[:foreground_color])
+  # end
 
   # bgcolor
-  d[:background_color] = bgcolor
+  d[:background_color] = colorscheme(bgcolor)
+  d[:foreground_color] = colorscheme(fgcolor)
 end
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
@@ -312,9 +371,6 @@ function getSeriesRGBColor(c, d::Dict, n::Int)
 
   if c == :auto
     c = autopick(d[:color_palette], n)
-  # else
-  #   # c = convertColor(c)
-  #   c = colorscheme(c)
   end
 
   # c should now be a subtype of ColorScheme

@@ -36,7 +36,8 @@ supportedArgs(::WinstonPackage) = [
     # :axis,
     # :background_color,
     :color,
-    # :fill,
+    :fillrange,
+    :fillcolor,
     # :foreground_color,
     :group,
     # :heatmap_c,
@@ -152,12 +153,12 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
     x, y = d[:x], d[:y]
     Winston.add(wplt, Winston.Curve(x, y; e...))
 
-    fillto = d[:fill]
-    if fillto != nothing
-      if isa(fillto, AbstractVector)
-        y2 = fillto
+    fillrange = d[:fillrange]
+    if fillrange != nothing
+      if isa(fillrange, AbstractVector)
+        y2 = fillrange
       else
-        y2 = Float64[fillto for yi in y]
+        y2 = Float64[fillrange for yi in y]
       end
       Winston.add(wplt, Winston.FillBetween(x, y, x, y2, fillcolor=d[:color]))
     end
