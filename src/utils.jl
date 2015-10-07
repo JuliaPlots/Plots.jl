@@ -248,10 +248,10 @@ function supportGraph(allvals, func)
   for val in vals
     for b in bs
         supported = func(Plots.backendInstance(b))
-          if val in supported
-              push!(x, string(b))
-              push!(y, string(val))
-          end
+        if val in supported
+            push!(x, string(b))
+            push!(y, string(val))
+        end
       end 
   end
   n = length(vals)

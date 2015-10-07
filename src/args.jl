@@ -506,10 +506,10 @@ end
 
 # -----------------------------------------------------------------------------
 
-# Tuples and 1-row matrices will give an element
+# 1-row matrices will give an element
 # multi-row matrices will give a column
 # anything else is returned as-is
-getArgValue(v::Tuple, idx::Int) = v[mod1(idx, length(v))]
+# getArgValue(v::Tuple, idx::Int) = v[mod1(idx, length(v))]
 function getArgValue(v::AMat, idx::Int)
   c = mod1(idx, size(v,2))
   size(v,1) == 1 ? v[1,c] : v[:,c]

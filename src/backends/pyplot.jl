@@ -52,8 +52,8 @@ supportedArgs(::PyPlotPackage) = [
     :yticks,
     :xscale,
     :yscale,
-    # :xflip,
-    # :yflip,
+    :xflip,
+    :yflip,
     # :z,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes

@@ -159,7 +159,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # line_color = isa(d[:color], AbstractVector) ? colorant"black" : d[:color]
   line_color = getColor(d[:color])
   fillcolor = getColor(d[:fillcolor])
-  @show fillcolor
+  # @show fillcolor
   # fg = initargs[:foreground_color]
   theme = Gadfly.Theme(; default_color = line_color,
                        line_width = line_width,
@@ -505,6 +505,7 @@ end
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{GadflyPackage})
   gplt = getGadflyContext(plt.backend, plt)
+  @show plt.initargs
   setGadflyDisplaySize(plt.initargs[:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end

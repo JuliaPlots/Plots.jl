@@ -184,20 +184,22 @@ Keyword | Default | Type | Aliases
 `:annotation` | `nothing` | Series | `:ann`, `:annotate`, `:annotations`, `:anns`  
 `:axis` | `left` | Series | `:axiss`  
 `:color` | `auto` | Series | `:c`, `:colors`  
-`:fill` | `nothing` | Series | `:area`, `:fill`, `:fills`  
+`:fillcolor` | `match` | Series | `:fc`, `:fcolor`, `:fillcolors`  
+`:fillrange` | `nothing` | Series | `:fillranges`, `:fillrng`  
 `:group` | `nothing` | Series | `:g`, `:groups`  
 `:heatmap_c` | `(0.15,0.5)` | Series | `:heatmap_cs`  
 `:label` | `AUTO` | Series | `:lab`, `:labels`  
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
 `:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
-`:marker` | `none` | Series | `:m`, `:markers`, `:shape`  
+`:linewidth` | `1` | Series | `:linewidths`, `:lw`, `:w`, `:width`  
 `:markercolor` | `match` | Series | `:markercolors`, `:mc`, `:mcolor`  
+`:markershape` | `none` | Series | `:markershapes`, `:shape`  
 `:markersize` | `6` | Series | `:markersizes`, `:ms`, `:msize`  
 `:nbins` | `100` | Series | `:nb`, `:nbin`, `:nbinss`  
 `:reg` | `false` | Series | `:regression`, `:regs`  
-`:ribbon` | `nothing` | Series | `:rib`, `:ribbons`  
-`:width` | `1` | Series | `:linewidth`, `:w`, `:widths`  
+`:z` | `nothing` | Series | `:zs`  
 `:background_color` | `RGB{U8}(1.0,1.0,1.0)` | Plot | `:background`, `:bg`, `:bg_color`, `:bgcolor`  
+`:color_palette` | `auto` | Plot | `:palette`  
 `:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
 `:layout` | `nothing` | Plot |   
 `:legend` | `true` | Plot | `:leg`  
@@ -206,13 +208,15 @@ Keyword | Default | Type | Aliases
 `:nr` | `-1` | Plot |   
 `:pos` | `(0,0)` | Plot |   
 `:show` | `false` | Plot | `:display`, `:gui`  
-`:size` | `(800,600)` | Plot | `:windowsize`, `:wsize`  
+`:size` | `(600,400)` | Plot | `:windowsize`, `:wsize`  
 `:title` | `` | Plot |   
 `:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
+`:xflip` | `false` | Plot |   
 `:xlabel` | `` | Plot | `:xlab`  
 `:xlims` | `auto` | Plot | `:xlim`, `:xlimit`, `:xlimits`  
 `:xscale` | `identity` | Plot |   
 `:xticks` | `auto` | Plot | `:xtick`  
+`:yflip` | `true` | Plot |   
 `:ylabel` | `` | Plot | `:ylab`  
 `:ylims` | `auto` | Plot | `:ylim`, `:ylimit`, `:ylimits`  
 `:yrightlabel` | `` | Plot | `:y2lab`, `:y2label`, `:ylab2`, `:ylabel2`, `:ylabelright`, `:ylabr`, `:yrlab`  

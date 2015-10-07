@@ -57,7 +57,7 @@ const examples = PlotExample[
               [:(scatter!(rand(100), markersize=6, c=:orange))]),
   PlotExample("Heatmaps",
               "",
-              [:(heatmap(randn(10000),randn(10000), nbins=100))]),
+              [:(heatmap(randn(10000),randn(10000), nbins=(100,20)))]),
   PlotExample("Line types",
               "",
               [:(types = intersect(supportedTypes(), [:line, :path, :steppre, :steppost, :sticks, :scatter])'),
