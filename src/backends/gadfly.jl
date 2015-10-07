@@ -505,7 +505,6 @@ end
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{GadflyPackage})
   gplt = getGadflyContext(plt.backend, plt)
-  @show plt.initargs
   setGadflyDisplaySize(plt.initargs[:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end

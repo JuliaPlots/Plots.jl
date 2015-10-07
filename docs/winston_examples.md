@@ -1,10 +1,10 @@
 # Examples for backend: winston
 
-- Supported arguments: `annotation`, `color`, `fillto`, `group`, `label`, `legend`, `linestyle`, `linetype`, `marker`, `markercolor`, `markersize`, `nbins`, `reg`, `show`, `size`, `title`, `width`, `windowtitle`, `x`, `xlabel`, `y`, `ylabel`
+- Supported arguments: `annotation`, `color`, `color_palette`, `fillrange`, `fillcolor`, `group`, `label`, `legend`, `linestyle`, `linetype`, `linewidth`, `markershape`, `markercolor`, `markersize`, `nbins`, `reg`, `show`, `size`, `title`, `windowtitle`, `x`, `xlabel`, `xlims`, `y`, `ylabel`, `ylims`, `xscale`, `yscale`
 - Supported values for axis: `:auto`, `:left`
 - Supported values for linetype: `:none`, `:line`, `:path`, `:sticks`, `:scatter`, `:hist`, `:bar`
-- Supported values for linestyle: `:solid`, `:dash`, `:dot`, `:dashdot`
-- Supported values for marker: `:none`, `:ellipse`, `:rect`, `:diamond`, `:utriangle`, `:dtriangle`, `:cross`, `:xcross`, `:star1`
+- Supported values for linestyle: `:auto`, `:solid`, `:dash`, `:dot`, `:dashdot`
+- Supported values for marker: `:none`, `:auto`, `:rect`, `:ellipse`, `:diamond`, `:utriangle`, `:dtriangle`, `:cross`, `:xcross`, `:star1`
 - Is `subplot`/`subplot!` supported? No
 
 ### Initialize
@@ -19,14 +19,14 @@ winston()
 A simple line plot of the columns.
 
 ```julia
-plot(rand(50,5),w=3)
+plot(fakedata(50,5),w=3)
 ```
 
 ![](../img/winston/winston_example_1.png)
 
 ### Functions
 
-Plot multiple functions.  You can also put the function first.
+Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.
 
 ```julia
 plot(0:0.01:4π,[sin,cos])
@@ -36,32 +36,34 @@ plot(0:0.01:4π,[sin,cos])
 
 ### 
 
-You can also call it with plot(f, xmin, xmax).
+Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).
 
 ```julia
-plot([sin,cos],0,4π)
+plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 39:
+            sin(2x)
+        end),0,2π,line=4,leg=false,fill=(0,:orange))
 ```
 
 ![](../img/winston/winston_example_3.png)
 
-### 
+### Colors
 
-Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).
+Access predefined palettes (or build your own with the `colorscheme` method).  Line/marker colors are auto-generated from the plot's palette, unless overridden.  Set the `z` argument to turn on series gradients.
 
 ```julia
-plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 33:
-            sin(2x)
-        end),0,2π,legend=false,fillto=0)
+y = rand(100)
+plot(0:10:100,rand(11,4),lab="lines",w=3,palette=:grays,fill=(0.5,:auto))
+scatter!(y,z=abs(y - 0.5),m=(10,:heat),lab="grad")
 ```
 
 ![](../img/winston/winston_example_4.png)
 
 ### Global
 
-Change the guides/background/limits/ticks.  You can also use shorthand functions: `title!`, `xlabel!`, `ylabel!`, `xlims!`, `ylims!`, `xticks!`, `yticks!`
+Change the guides/background/limits/ticks.  Convenience args `xaxis` and `yaxis` allow you to pass a tuple or value which will be mapped to the relevant args automatically.  The `xaxis` below will be replaced with `xlabel` and `xlims` args automatically during the preprocessing step. You can also use shorthand functions: `title!`, `xaxis!`, `yaxis!`, `xlabel!`, `ylabel!`, `xlims!`, `ylims!`, `xticks!`, `yticks!`
 
 ```julia
-plot(rand(10),title="TITLE",xlabel="XLABEL",ylabel="YLABEL",background_color=RGB(0.2,0.2,0.2),xlim=(-3,13),yticks=0:0.1:1)
+plot(rand(20,3),title="TITLE",xaxis=("XLABEL",(-5,30),0:2:20,:flip),yaxis=("YLABEL",:log10),background_color=RGB(0.2,0.2,0.2),leg=false)
 ```
 
 ![](../img/winston/winston_example_5.png)
@@ -73,17 +75,17 @@ Use the `axis` arguments.
 Note: Currently only supported with Qwt and PyPlot
 
 ```julia
-plot(Vector[randn(100),randn(100) * 100]; axis=[:l,:r],ylabel="LEFT",yrightlabel="RIGHT")
+plot(Vector[randn(100),randn(100) * 100]; axis=[:l :r],ylabel="LEFT",yrightlabel="RIGHT")
 ```
 
 ![](../img/winston/winston_example_6.png)
 
-### Vectors w/ pluralized args
+### Arguments
 
-Plot multiple series with different numbers of points.  Mix arguments that apply to all series (singular... see `marker`) with arguments unique to each series (pluralized... see `colors`).
+Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).  Special arguments `line`, `marker`, and `fill` will automatically figure out what arguments to set (for example, we are setting the `linestyle`, `linewidth`, and `color` arguments with `line`.)  Note that we pass a matrix of colors, and this applies the colors to each series.
 
 ```julia
-plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8,c=[:red,:blue])
+plot(Vector[rand(10),rand(20)]; marker=(:ellipse,8),line=(:dot,3,[:black :orange]))
 ```
 
 ![](../img/winston/winston_example_7.png)
@@ -93,7 +95,7 @@ plot(Vector[rand(10),rand(20)]; marker=:ellipse,markersize=8,c=[:red,:blue])
 Start with a base plot...
 
 ```julia
-plot(rand(100) / 3,reg=true,fillto=0)
+plot(rand(100) / 3,reg=true,fill=(0,:green))
 ```
 
 ![](../img/winston/winston_example_8.png)
@@ -103,7 +105,7 @@ plot(rand(100) / 3,reg=true,fillto=0)
 and add to it later.
 
 ```julia
-scatter!(rand(100),markersize=6,c=:blue)
+scatter!(rand(100),markersize=6,c=:orange)
 ```
 
 ![](../img/winston/winston_example_9.png)
@@ -113,11 +115,11 @@ scatter!(rand(100),markersize=6,c=:blue)
 
 
 ```julia
-types = intersect(supportedTypes(),[:line,:path,:steppre,:steppost,:sticks,:scatter])
+types = intersect(supportedTypes(),[:line,:path,:steppre,:steppost,:sticks,:scatter])'
 n = length(types)
 x = Vector[sort(rand(20)) for i = 1:n]
 y = rand(20,n)
-plot(x,y,t=types,lab=map(string,types))
+plot(x,y,line=(types,3),lab=map(string,types),ms=15)
 ```
 
 ![](../img/winston/winston_example_11.png)
@@ -127,7 +129,7 @@ plot(x,y,t=types,lab=map(string,types))
 
 
 ```julia
-styles = setdiff(supportedStyles(),[:auto])
+styles = setdiff(supportedStyles(),[:auto])'
 plot(cumsum(randn(20,length(styles)),1); style=:auto,label=map(string,styles),w=5)
 ```
 
@@ -138,8 +140,8 @@ plot(cumsum(randn(20,length(styles)),1); style=:auto,label=map(string,styles),w=
 
 
 ```julia
-markers = setdiff(supportedMarkers(),[:none,:auto])
-scatter(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,label=map(string,markers),ms=10)
+markers = setdiff(supportedMarkers(),[:none,:auto])'
+scatter(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,label=map(string,markers),ms=12)
 ```
 
 ![](../img/winston/winston_example_13.png)
@@ -149,7 +151,7 @@ scatter(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,la
 x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)
 
 ```julia
-bar(randn(1000))
+bar(randn(999))
 ```
 
 ![](../img/winston/winston_example_14.png)

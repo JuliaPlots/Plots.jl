@@ -174,6 +174,10 @@ xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(xlims = lims)
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(ylims = lims)
 xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
 yticks!{T<:Real}(v::AVec{T})              = plot!(yticks = v)
+xflip!(flip::Bool = true)                 = plot!(xflip = flip)
+yflip!(flip::Bool = true)                 = plot!(yflip = flip)
+xaxis!(args...)                           = plot!(xaxis = args)
+yaxis!(args...)                           = plot!(yaxis = args)
 annotate!(anns)                           = plot!(annotation = anns)
 ```
 
@@ -196,11 +200,25 @@ Markers:
 
 __Tip__: You can see the default value for a given argument with `default(arg::Symbol)`, and set the default value with `default(arg::Symbol, value)` or `default(; kw...)`.  For example set the default window size and whether we should show a legend with `default(size=(600,400), leg=false)`.
 
-__Tip__: When plotting multiple lines, you can set all series to use the same value, or pass in an array to cycle through values.  Example:
+__Tip__: There are some helper arguments you can set:  `xaxis`, `yaxis`, `line`, `marker`, `fill`.  These go through special preprocessing to extract values into individual arguments.  The order doesn't matter, and if you pass a single value it's equivalent to wrapping it in a Tuple.  Examples:
+
+```
+plot(y, xaxis = ("mylabel", :log, :flip, (-1,1)))   # this sets the `xlabel`, `xscale`, `xflip`, and `xlims` arguments automatically
+plot(y, line = (:bar, :blue, :dot, 10))             # this sets the `linetype`, `color`, `linestyle`, and `linewidth` arguments automatically
+plot(y, marker = (:rect, :red, 10))                 # this sets the `markershape`, `markercolor`, and `markersize` arguments automatically
+plot(y, fill = (:green, 10))                        # this sets the `fillcolor` and `fillrange` arguments automatically
+                                                    # Note: `fillrange` can be:
+                                                              a number (fill to horizontal line)
+                                                              a vector of numbers (different for each data point)
+                                                              a tuple of vectors (fill a band)
+```
+
+__Tip__: When plotting multiple lines, you can set all series to use the same value, or pass in a matrix to cycle through values.  Example:
 
 ```julia
-plot(rand(100,4); color = [:red, RGB(0,0,1)],    # lines 1 and 3 are red, lines 2 and 4 are blue
+plot(rand(100,4); color = [:red RGB(0,0,1)],     # (Matrix) lines 1 and 3 are red, lines 2 and 4 are blue
                   axis = :auto,                  # lines 1 and 3 are on the left axis, lines 2 and 4 are on the right
+                  markershape = [:rect, :star1]  # (Vector) ALL lines are passed the vector [:rect, :star1]
                   width = 5)                     # all lines have a width of 5
 ```
 

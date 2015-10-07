@@ -36,6 +36,7 @@ supportedArgs(::WinstonPackage) = [
     # :axis,
     # :background_color,
     :color,
+    :color_palette,
     :fillrange,
     :fillcolor,
     # :foreground_color,
@@ -132,13 +133,12 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
 
   e = Dict()
-  e[:color] = d[:color]
+  e[:color] = getColor(d[:color])
   e[:linewidth] = d[:linewidth]
   e[:kind] = winston_linestyle[d[:linestyle]]
   e[:symbolkind] = winston_marker[d[:markershape]]
   # markercolor     # same choices as `color`, or :match will set the color to be the same as `color`
   e[:symbolsize] = d[:markersize] / 5
-  # fillto          # fillto value for area plots
 
   # pos             # (Int,Int), move the enclosing window to this position
   # screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
@@ -147,7 +147,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
   ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
   if d[:linetype] == :none
-    Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
+    Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)..., color=getColor(d[:markercolor])))
 
   elseif d[:linetype] == :path
     x, y = d[:x], d[:y]
@@ -160,7 +160,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
       else
         y2 = Float64[fillrange for yi in y]
       end
-      Winston.add(wplt, Winston.FillBetween(x, y, x, y2, fillcolor=d[:color]))
+      Winston.add(wplt, Winston.FillBetween(x, y, x, y2, fillcolor=getColor(d[:fillcolor])))
     end
 
   elseif d[:linetype] == :scatter
@@ -201,7 +201,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
   # markershape
   if d[:markershape] != :none
-    Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)...))
+    Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)..., color=getColor(d[:markercolor])))
   end
 
 
