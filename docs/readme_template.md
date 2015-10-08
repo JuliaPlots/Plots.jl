@@ -1,6 +1,9 @@
 # Plots
 
 [![Build Status](https://travis-ci.org/tbreloff/Plots.jl.svg?branch=master)](https://travis-ci.org/tbreloff/Plots.jl)
+[![Plots](http://pkg.julialang.org/badges/Plots_0.3.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.3)
+[![Plots](http://pkg.julialang.org/badges/Plots_0.4.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.4)
+[![Plots](http://pkg.julialang.org/badges/Plots_0.5.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.5)
 
 #### Author: Thomas Breloff (@tbreloff)
 

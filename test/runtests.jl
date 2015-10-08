@@ -4,7 +4,6 @@ using Plots
 using FactCheck
 
 # don't actually show the plots
-default(show=false)
 srand(1234)
 
 # note: we wrap in a try block so that the tests only run if we have the backend installed
@@ -12,6 +11,7 @@ try
   Pkg.installed("Gadfly")
   facts("Gadfly") do
     @fact backend(:gadfly) --> Plots.GadflyPackage()
+    default(show=false)
     @fact backend() --> Plots.GadflyPackage()
     @fact typeof(plot(1:10)) --> Plots.Plot{Plots.GadflyPackage}
 
