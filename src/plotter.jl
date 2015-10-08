@@ -143,8 +143,10 @@ function backend()
 
     elseif currentBackendSymbol == :winston
       try
+        @eval ENV["WINSTON_OUTPUT"] = "gtk"
         @eval import Winston, Gtk
         @eval export Winston, Gtk
+        #@eval Winston._winston_config.defaults["output_surface"] = "gtk"
       catch err
         error("Couldn't import Winston.  Install it with: Pkg.add(\"Winston\").\n   Error: ", err)
       end
