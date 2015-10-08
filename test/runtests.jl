@@ -9,6 +9,8 @@ srand(1234)
 # note: we wrap in a try block so that the tests only run if we have the backend installed
 try
   Pkg.installed("Gadfly")
+  gadfly()
+  backend()
   facts("Gadfly") do
     @fact backend(:gadfly) --> Plots.GadflyPackage()
     default(show=false)
@@ -35,11 +37,15 @@ try
     # plot(x::AVec{AVec}, y::AVec{AVec}; kw...)  # multiple lines, will assert length(x[i]) == length(y[i])
     # plot(n::Integer; kw...)                    # n lines, all empty (for updating plots)
   end
+catch err
+    warn("Skipped Gadfly due to: ", string(err))
 end
 
 # note: we wrap in a try block so that the tests only run if we have the backend installed
 try
   Pkg.installed("Qwt")
+  qwt()
+  backend()
   facts("Qwt") do
     @fact backend(:qwt) --> Plots.QwtPackage()
     @fact backend() --> Plots.QwtPackage()
@@ -71,6 +77,49 @@ try
     @fact current().o.lines[1].x[4] --> 4
     @fact current().o.lines[1].y[4] --> 14
   end
+catch err
+    warn("Skipped Qwt due to: ", string(err))
+end
+
+try
+    Pkg.installed("PyPlot")
+    pyplot()
+    backend()
+    facts("PyPlot") do
+        @fact backend(:pyplot) --> Plots.PyPlotPackage()
+        @fact backend() --> Plots.PyPlotPackage()
+        @fact typeof(plot(1:10)) --> Plots.Plot{Plots.PyPlotPackage}
+    end
+catch err
+    warn("Skipped PyPlot due to: ", string(err))
+end
+
+
+try
+    Pkg.installed("UnicodePlots")
+    unicodeplots()
+    backend()
+    facts("UnicodePlots") do
+        @fact backend(:unicodeplots) --> Plots.UnicodePlotsPackage()
+        @fact backend() --> Plots.UnicodePlotsPackage()
+        @fact typeof(plot(1:10)) --> Plots.Plot{Plots.UnicodePlotsPackage}
+    end
+catch err
+    warn("Skipped UnicodePlots due to: ", string(err))
+end
+
+
+try
+    Pkg.installed("Winston")
+    winston()
+    backend()
+    facts("Winston") do
+        @fact backend(:winston) --> Plots.WinstonPackage()
+        @fact backend() --> Plots.WinstonPackage()
+        @fact typeof(plot(1:10)) --> Plots.Plot{Plots.WinstonPackage}
+    end
+catch err
+    warn("Skipped Winston due to: ", string(err))
 end
 
 
