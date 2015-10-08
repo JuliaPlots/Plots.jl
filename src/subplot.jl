@@ -1,10 +1,16 @@
 
+function subplotlayout(sz::@compat(Tuple{Int,Int}))
+  # create a GridLayout
+  GridLayout(sz...)
+end
 
-# create a layout directly
-SubplotLayout(rowcounts::AbstractVector{Int}) = SubplotLayout(sum(rowcounts), rowcounts)
+function subplotlayout(rowcounts::AVec{Int})
+  # create a FlexLayout
+  FlexLayout(sum(rowcounts), rowcounts)
+end
 
-# create a layout given counts... nr/nc == -1 implies we figure out a good number automatically
-function SubplotLayout(numplts::Int, nr::Int, nc::Int)
+function subplotlayout(numplts::Int, nr::Int, nc::Int)
+
 
   # figure out how many rows/columns we need
   if nr == -1
@@ -16,6 +22,11 @@ function SubplotLayout(numplts::Int, nr::Int, nc::Int)
     end
   else
     nc = ceil(Int, numplts / nr)
+  end
+
+  # if it's a perfect rectangle, just create a grid
+  if numplts == nr * nc
+    return GridLayout(nr, nc)
   end
 
   # create the rowcounts vector
@@ -30,8 +41,68 @@ function SubplotLayout(numplts::Int, nr::Int, nc::Int)
   SubplotLayout(numplts, rowcounts)
 end
 
+# # create a layout directly
+# SubplotLayout(rowcounts::AbstractVector{Int}) = SubplotLayout(sum(rowcounts), rowcounts)
 
-Base.length(layout::SubplotLayout) = layout.numplts
+# # create a layout given counts... nr/nc == -1 implies we figure out a good number automatically
+# function SubplotLayout(numplts::Int, nr::Int, nc::Int)
+
+#   # figure out how many rows/columns we need
+#   if nr == -1
+#     if nc == -1
+#       nr = round(Int, sqrt(numplts))
+#       nc = ceil(Int, numplts / nr)
+#     else
+#       nr = ceil(Int, numplts / nc)
+#     end
+#   else
+#     nc = ceil(Int, numplts / nr)
+#   end
+
+#   # create the rowcounts vector
+#   i = 0
+#   rowcounts = Int[]
+#   for r in 1:nr
+#     cnt = min(nc, numplts - i)
+#     push!(rowcounts, cnt)
+#     i += cnt
+#   end
+
+#   SubplotLayout(numplts, rowcounts)
+# end
+
+
+Base.length(layout::FlexLayout) = layout.numplts
+Base.start(layout::FlexLayout) = 1
+Base.done(layout::FlexLayout, state) = state > length(layout)
+function Base.next(layout::FlexLayout, state)
+  r = 1
+  c = 0
+  for i = 1:state
+    c += 1
+    if c > layout.rowcounts[r]
+      r += 1
+      c = 1
+    end
+  end
+  (r,c), state + 1
+end
+
+nrows(layout::FlexLayout) = length(layout.rowcounts)
+ncols(layout::FlexLayout, row::Int) = row < 1 ? 0 : (row > nrows(layout) ? 0 : layout.rowcounts[row])
+
+Base.length(layout::GridLayout) = layout.nr * layout.nc
+Base.start(layout::GridLayout) = 1
+Base.done(layout::GridLayout, state) = state > length(layout)
+function Base.next(layout::GridLayout, state)
+  r = div(state, layout.nc)
+  c = mod1(state, layout.nc)
+  (r,c), state + 1
+end
+
+nrows(layout::GridLayout) = layout.nr
+ncols(layout::GridLayout) = layout.nc
+
 
 
 # ------------------------------------------------------------
@@ -70,14 +141,14 @@ function subplot(args...; kw...)
 
   # figure out the layout
   layoutarg = get(d, :layout, nothing)
-  # if haskey(d, :layout)
   if layoutarg != nothing
-    layout = SubplotLayout(layoutarg)
+    layout = subplotlayout(layoutarg)
   else
-    if !haskey(d, :n) || d[:n] < 0
+    n = get(d, :n, -1)
+    if n < 0
       error("You must specify either layout or n when creating a subplot: ", d)
     end
-    layout = SubplotLayout(d[:n], get(d, :nr, -1), get(d, :nc, -1))
+    layout = subplotlayout(n, get(d, :nr, -1), get(d, :nc, -1))
   end
 
   # initialize the individual plots
@@ -128,9 +199,10 @@ function subplot!(subplt::Subplot, args...; kw...)
 
   d = Dict(kw)
   preprocessArgs!(d)
-  for k in keys(_plotDefaults)
-    delete!(d, k)
-  end
+  # for k in keys(_plotDefaults)
+  #   delete!(d, k)
+  # end
+  dumpdict(d, "After subplot! preprocessing")
 
   kwList, xmeta, ymeta = createKWargsList(subplt, args...; d...)
 
@@ -140,6 +212,7 @@ function subplot!(subplt::Subplot, args...; kw...)
     subplt.n += 1
     plt = getplot(subplt)  # get the Plot object where this series will be drawn
     di[:show] = false
+    dumpdict(di, "subplot! kwList $i")
     plot!(plt; di...)
   end
 
@@ -147,6 +220,19 @@ function subplot!(subplt::Subplot, args...; kw...)
   if !subplt.initialized
     buildSubplotObject!(subplt)
     subplt.initialized = true
+  end
+
+
+  # add title, axis labels, ticks, etc
+  for (i,plt) in enumerate(subplt.plts)
+    di = copy(d)
+    for (k,v) in di
+      if typeof(v) <: AVec
+        di[k] = v[mod1(i, length(v))]
+      end
+    end
+    dumpdict(di, "Updating sp $i")
+    updatePlotItems(plt, di)
   end
 
   # set this to be current

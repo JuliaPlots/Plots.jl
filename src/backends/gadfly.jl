@@ -431,14 +431,16 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
 end
 
 
-function findGuideAndSet(gplt, t::DataType, s::@compat(AbstractString))
+
+function findGuideAndSet(gplt, t::DataType, args...; kw...) #s::@compat(AbstractString))
   for (i,guide) in enumerate(gplt.guides)
     if isa(guide, t)
-      gplt.guides[i] = t(s)
-      # guide.label = s
+      gplt.guides[i] = t(args...; kw...)
     end
   end
 end
+
+
 
 function updateGadflyGuides(gplt, d::Dict)
   haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, d[:title])

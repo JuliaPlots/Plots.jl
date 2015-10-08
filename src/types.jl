@@ -18,7 +18,14 @@ type Plot{T<:PlottingPackage} <: PlottingObject{T}
 end
 
 
-type SubplotLayout
+abstract SubplotLayout
+
+immutable GridLayout <: SubplotLayout
+  nr::Int
+  nc::Int
+end
+
+immutable FlexLayout <: SubplotLayout
   numplts::Int
   rowcounts::AbstractVector{Int}
 end
