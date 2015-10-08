@@ -60,9 +60,9 @@ end
 
 function square(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
-  rect_xs = Vector{Compose.Measure}(n)
-  rect_ys = Vector{Compose.Measure}(n)
-  rect_ws = Vector{Compose.Measure}(n)
+  rect_xs = Array(Compose.Measure, n)
+  rect_ys = Array(Compose.Measure, n)
+  rect_ws = Array(Compose.Measure, n)
   s = 1/sqrt(2)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
@@ -80,12 +80,12 @@ end
 
 function diamond(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
-  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
-    polys[i] = Tuple{Compose.Measure, Compose.Measure}[(x, y - r), (x + r, y), (x, y + r), (x - r, y)]
+    polys[i] = [(x, y - r), (x + r, y), (x, y + r), (x - r, y)]
   end
 
   return Gadfly.polygon(polys)
@@ -95,7 +95,7 @@ end
 
 function cross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
-  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
@@ -103,7 +103,7 @@ function cross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
     u = 0.4r
 
     # make a "plus sign"
-    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+    polys[i] = [
       (x-r, y-u), (x-r, y+u), # L edge
       (x-u, y+u),             # BL inside
       (x-u, y+r), (x+u, y+r), # B edge
@@ -120,14 +120,14 @@ end
 
 function xcross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
-  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
   s = 1/sqrt(5)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
     u = s*r
-    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+    polys[i] = [
       (x, y - u), (x + u, y - 2u), (x + 2u, y - u),
       (x + u, y), (x + 2u, y + u), (x + u, y + 2u),
       (x, y + u), (x - u, y + 2u), (x - 2u, y + u),
@@ -141,14 +141,14 @@ end
 
 function utriangle(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar = 1)
   n = max(length(xs), length(ys), length(rs))
-  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
   s = 0.8
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
     u = 0.8 * scalar * r
-    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+    polys[i] = [
       (x - r, y + u),
       (x + r, y + u),
       (x, y - u)
@@ -162,7 +162,7 @@ end
 
 function star1(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar = 1)
   n = max(length(xs), length(ys), length(rs))
-  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
   
   # some magic scalars
   sx1, sx2, sx3 = 0.7, 0.4, 0.2
@@ -172,7 +172,7 @@ function star1(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar =
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
-    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+    polys[i] = [
       (x-sx1*r, y+    r),  # BL
       (x,       y+sy2*r),
       (x+sx1*r, y+    r),  # BR
@@ -193,13 +193,13 @@ end
 
 function star2(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar = 1)
   n = max(length(xs), length(ys), length(rs))
-  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
     u = 0.4r
-    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+    polys[i] = [
       (x-u, y),   (x-r, y-r), # TL
       (x,   y-u), (x+r, y-r), # TR
       (x+u, y),   (x+r, y+r), # BR
@@ -215,14 +215,14 @@ end
 function hexagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
 
-  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
     u = 0.6r
 
-    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+    polys[i] = [
       (x-r, y-u), (x-r, y+u), # L edge
       (x, y+r),               # B
       (x+r, y+u), (x+r, y-u), # R edge
@@ -237,14 +237,14 @@ end
 function octagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
 
-  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
     u = 0.4r
 
-    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+    polys[i] = [
       (x-r, y-u), (x-r, y+u), # L edge
       (x-u, y+r), (x+u, y+r), # B edge
       (x+r, y+u), (x+r, y-u), # R edge
@@ -262,7 +262,7 @@ function ohlcshape(xs::AVec, ys::AVec{OHLC}, tickwidth::Real)
   @assert length(xs) == length(ys)
   n = length(xs)
   u = tickwidth * Compose.px
-  polys = Vector{Vector{Tuple{Compose.Measure, Compose.Measure}}}(n)
+  polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
   for i in 1:n
     x = Compose.x_measure(xs[i])
     o = Compose.y_measure(ys[i].open)
@@ -270,7 +270,7 @@ function ohlcshape(xs::AVec, ys::AVec{OHLC}, tickwidth::Real)
     l = Compose.y_measure(ys[i].low)
     c = Compose.y_measure(ys[i].close)
     # o,h,l,c = map(Compose.y_measure, ys[i])
-    polys[i] = Tuple{Compose.Measure, Compose.Measure}[
+    polys[i] = [
       (x, o), (x - u, o), (x, o),   # open tick
       (x, l), (x, h), (x, c),       # high/low bar
       (x + u, c), (x, c)            # close tick
