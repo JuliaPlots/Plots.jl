@@ -251,11 +251,15 @@ function buildReadme()
 
   # build keyword arg table
   table = "Keyword | Default | Type | Aliases \n---- | ---- | ---- | ----\n"
-  for d in (Plots._seriesDefaults, Plots._plotDefaults)
-    for k in Plots.sortedkeys(d)
-      aliasstr = createStringOfMarkDownSymbols(aliases(Plots._keyAliases, k))
-      table = string(table, "`:$k` | `$(d[k])` | $(d==Plots._seriesDefaults ? "Series" : "Plot") | $aliasstr  \n")
-    end
+  allseries = merge(Plots._seriesDefaults, @compat(Dict(:line=>nothing, :marker=>nothing, :fill=>nothing)))
+  allplots = merge(Plots._plotDefaults, @compat(Dict(:xaxis=>nothing, :yaxis=>nothing)))
+  alldefs = merge(allseries, allplots)
+  for k in Plots.sortedkeys(alldefs)
+  # for d in (Plots._seriesDefaults, Plots._plotDefaults)
+  #   for k in Plots.sortedkeys(d)
+    aliasstr = createStringOfMarkDownSymbols(aliases(Plots._keyAliases, k))
+    table = string(table, "`:$k` | `$(alldefs[k])` | $(haskey(allseries,k) ? "Series" : "Plot") | $aliasstr  \n")
+    # end
   end
   readme = replace(readme, "[[KEYWORD_ARGS_TABLE]]", table)
 

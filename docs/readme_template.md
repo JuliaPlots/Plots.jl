@@ -33,6 +33,12 @@ First, add the package
 
 ```julia
 Pkg.add("Plots")
+
+# if you want the latest features:
+Pkg.checkout("Plots")
+
+# or for the bleeding edge:
+Pkg.checkout("Plots", "dev")
 ```
 
 then get any plotting packages you need (obviously, you should get at least one backend):
@@ -129,11 +135,20 @@ plot(1:10, Any[rand(10), sin])            # plot 2 series, y = rand(10) for the 
 plot(dataset("Ecdat", "Airline"), :Cost)  # plot from a DataFrame (call `dataframes()` first to import DataFrames and initialize)
 ```
 
+All plot methods accept a number of keyword arguments (see the tables below), which follow some rules:
+- Many arguments have aliases which are replaced during preprocessing.  `c` is the same as `color`, `m` is the same as `marker`, etc.  You can choose how verbose you'd like to be.  (see the tables below)
+- There are some special arguments (`xaxis`, `yaxis`, `line`, `marker`, `fill` and the aliases `l`, `m`, `f`) which magically set many related things at once.  (see the __Tip__ below)
+- If the argument is a "matrix-type", then each column will map to a series, cycling through columns if there are fewer columns than series.  Anything else will apply the argument value to every series.
+- Many arguments accept many different types... for example the `color` (also `markercolor`, `fillcolor`, etc) argument will accept strings or symbols with a color name, or any `Colors.Colorant`, or a `ColorScheme`, or a symbol representing a `ColorGradient`, or an AbstractVector of colors/symbols/etc...
+
 You can update certain plot settings after plot creation (not supported on all backends):
 
 ```julia
 plot!(title = "New Title", xlabel = "New xlabel", ylabel = "New ylabel")
 plot!(xlims = (0, 5.5), ylims = (-2.2, 6), xticks = 0:0.5:10, yticks = [0,1,5,10])
+
+# using shorthands:
+xaxis!("mylabel", :log10, :flip)
 ```
 
 With `subplot`, create multiple plots at once, with flexible layout options:
@@ -234,9 +249,9 @@ __Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on
 - [x] Plot vectors/matrices/functions
 - [x] Plot DataFrames
 - [x] Grouping
-- [ ] Annotations
-- [ ] Scales
-- [ ] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
+- [x] Annotations
+- [x] Scales
+- [x] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
 - [ ] Custom markers
 - [ ] Special plots (boxplot, ohlc?)
 - [x] Subplots

@@ -214,6 +214,7 @@ end
     :mcolor       => :markercolor,
     :ms           => :markersize,
     :msize        => :markersize,
+    :f            => :fill,
     :area         => :fill,
     :fillrng      => :fillrange,
     :fc           => :fillcolor,

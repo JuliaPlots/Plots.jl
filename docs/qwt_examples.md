@@ -1,6 +1,6 @@
 # Examples for backend: qwt
 
-- Supported arguments: `annotation`, `axis`, `background_color`, `color`, `fillrange`, `fillcolor`, `foreground_color`, `group`, `heatmap_c`, `label`, `layout`, `legend`, `linestyle`, `linetype`, `linewidth`, `markershape`, `markercolor`, `markersize`, `n`, `nbins`, `nc`, `nr`, `pos`, `reg`, `show`, `size`, `title`, `windowtitle`, `x`, `xlabel`, `xlims`, `xticks`, `y`, `ylabel`, `ylims`, `yrightlabel`, `yticks`, `xscale`, `yscale`
+- Supported arguments: `annotation`, `axis`, `background_color`, `color`, `color_palette`, `fillrange`, `fillcolor`, `foreground_color`, `group`, `heatmap_c`, `label`, `layout`, `legend`, `linestyle`, `linetype`, `linewidth`, `markershape`, `markercolor`, `markersize`, `n`, `nbins`, `nc`, `nr`, `pos`, `reg`, `show`, `size`, `title`, `windowtitle`, `x`, `xlabel`, `xlims`, `xticks`, `y`, `ylabel`, `ylims`, `yrightlabel`, `yticks`, `xscale`, `yscale`
 - Supported values for axis: `:auto`, `:left`, `:right`
 - Supported values for linetype: `:none`, `:line`, `:path`, `:steppre`, `:steppost`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`, `:hline`, `:vline`
 - Supported values for linestyle: `:auto`, `:solid`, `:dash`, `:dot`, `:dashdot`, `:dashdotdot`
@@ -39,7 +39,7 @@ plot(0:0.01:4π,[sin,cos])
 Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).
 
 ```julia
-plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 39:
+plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 40:
             sin(2x)
         end),0,2π,line=4,leg=false,fill=(0,:orange))
 ```

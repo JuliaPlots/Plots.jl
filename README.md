@@ -33,6 +33,12 @@ First, add the package
 
 ```julia
 Pkg.add("Plots")
+
+# if you want the latest features:
+Pkg.checkout("Plots")
+
+# or for the bleeding edge:
+Pkg.checkout("Plots", "dev")
 ```
 
 then get any plotting packages you need (obviously, you should get at least one backend):
@@ -129,11 +135,20 @@ plot(1:10, Any[rand(10), sin])            # plot 2 series, y = rand(10) for the 
 plot(dataset("Ecdat", "Airline"), :Cost)  # plot from a DataFrame (call `dataframes()` first to import DataFrames and initialize)
 ```
 
+All plot methods accept a number of keyword arguments (see the tables below), which follow some rules:
+- Many arguments have aliases which are replaced during preprocessing.  `c` is the same as `color`, `m` is the same as `marker`, etc.  You can choose how verbose you'd like to be.  (see the tables below)
+- There are some special arguments (`xaxis`, `yaxis`, `line`, `marker`, `fill` and the aliases `l`, `m`, `f`) which magically set many related things at once.  (see the __Tip__ below)
+- If the argument is a "matrix-type", then each column will map to a series, cycling through columns if there are fewer columns than series.  Anything else will apply the argument value to every series.
+- Many arguments accept many different types... for example the `color` (also `markercolor`, `fillcolor`, etc) argument will accept strings or symbols with a color name, or any `Colors.Colorant`, or a `ColorScheme`, or a symbol representing a `ColorGradient`, or an AbstractVector of colors/symbols/etc...
+
 You can update certain plot settings after plot creation (not supported on all backends):
 
 ```julia
 plot!(title = "New Title", xlabel = "New xlabel", ylabel = "New ylabel")
 plot!(xlims = (0, 5.5), ylims = (-2.2, 6), xticks = 0:0.5:10, yticks = [0,1,5,10])
+
+# using shorthands:
+xaxis!("mylabel", :log10, :flip)
 ```
 
 With `subplot`, create multiple plots at once, with flexible layout options:
@@ -170,9 +185,9 @@ vline!(args...; kw...)     = plot!(args...; kw..., linetype = :vline)
 ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
 ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
-title!(s::@compat(AbstractString))                 = plot!(title = s)
-xlabel!(s::@compat(AbstractString))                = plot!(xlabel = s)
-ylabel!(s::@compat(AbstractString))                = plot!(ylabel = s)
+title!(s::AbstractString)                 = plot!(title = s)
+xlabel!(s::AbstractString)                = plot!(xlabel = s)
+ylabel!(s::AbstractString)                = plot!(ylabel = s)
 xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(xlims = lims)
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(ylims = lims)
 xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
@@ -190,45 +205,50 @@ Keyword | Default | Type | Aliases
 ---- | ---- | ---- | ----
 `:annotation` | `nothing` | Series | `:ann`, `:annotate`, `:annotations`, `:anns`  
 `:axis` | `left` | Series | `:axiss`  
+`:background_color` | `RGB{U8}(1.0,1.0,1.0)` | Plot | `:background`, `:bg`, `:bg_color`, `:bgcolor`  
 `:color` | `auto` | Series | `:c`, `:colors`  
+`:color_palette` | `auto` | Plot | `:palette`  
+`:fill` | `nothing` | Series | `:area`, `:f`  
 `:fillcolor` | `match` | Series | `:fc`, `:fcolor`, `:fillcolors`  
 `:fillrange` | `nothing` | Series | `:fillranges`, `:fillrng`  
+`:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
 `:group` | `nothing` | Series | `:g`, `:groups`  
 `:heatmap_c` | `(0.15,0.5)` | Series | `:heatmap_cs`  
 `:label` | `AUTO` | Series | `:lab`, `:labels`  
+`:layout` | `nothing` | Plot |   
+`:legend` | `true` | Plot | `:leg`  
+`:line` | `nothing` | Series | `:l`  
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
 `:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
 `:linewidth` | `1` | Series | `:linewidths`, `:lw`, `:w`, `:width`  
+`:marker` | `nothing` | Series | `:m`, `:mark`  
 `:markercolor` | `match` | Series | `:markercolors`, `:mc`, `:mcolor`  
 `:markershape` | `none` | Series | `:markershapes`, `:shape`  
 `:markersize` | `6` | Series | `:markersizes`, `:ms`, `:msize`  
-`:nbins` | `100` | Series | `:nb`, `:nbin`, `:nbinss`  
-`:reg` | `false` | Series | `:regression`, `:regs`  
-`:z` | `nothing` | Series | `:zs`  
-`:background_color` | `RGB{U8}(1.0,1.0,1.0)` | Plot | `:background`, `:bg`, `:bg_color`, `:bgcolor`  
-`:color_palette` | `auto` | Plot | `:palette`  
-`:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
-`:layout` | `nothing` | Plot |   
-`:legend` | `true` | Plot | `:leg`  
 `:n` | `-1` | Plot |   
+`:nbins` | `100` | Series | `:nb`, `:nbin`, `:nbinss`  
 `:nc` | `-1` | Plot |   
 `:nr` | `-1` | Plot |   
 `:pos` | `(0,0)` | Plot |   
+`:reg` | `false` | Series | `:regression`, `:regs`  
 `:show` | `false` | Plot | `:display`, `:gui`  
 `:size` | `(600,400)` | Plot | `:windowsize`, `:wsize`  
 `:title` | `` | Plot |   
 `:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
+`:xaxis` | `nothing` | Plot |   
 `:xflip` | `false` | Plot |   
 `:xlabel` | `` | Plot | `:xlab`  
 `:xlims` | `auto` | Plot | `:xlim`, `:xlimit`, `:xlimits`  
 `:xscale` | `identity` | Plot |   
 `:xticks` | `auto` | Plot | `:xtick`  
+`:yaxis` | `nothing` | Plot |   
 `:yflip` | `true` | Plot |   
 `:ylabel` | `` | Plot | `:ylab`  
 `:ylims` | `auto` | Plot | `:ylim`, `:ylimit`, `:ylimits`  
 `:yrightlabel` | `` | Plot | `:y2lab`, `:y2label`, `:ylab2`, `:ylabel2`, `:ylabelright`, `:ylabr`, `:yrlab`  
 `:yscale` | `identity` | Plot |   
 `:yticks` | `auto` | Plot | `:ytick`  
+`:z` | `nothing` | Series | `:zs`  
 
 
 Plot types:
@@ -316,9 +336,9 @@ __Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on
 - [x] Plot vectors/matrices/functions
 - [x] Plot DataFrames
 - [x] Grouping
-- [ ] Annotations
-- [ ] Scales
-- [ ] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
+- [x] Annotations
+- [x] Scales
+- [x] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
 - [ ] Custom markers
 - [ ] Special plots (boxplot, ohlc?)
 - [x] Subplots
