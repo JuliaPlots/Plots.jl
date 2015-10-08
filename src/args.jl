@@ -1,7 +1,7 @@
 
 
 const _allAxes = [:auto, :left, :right]
-const _axesAliases = Dict(
+@compat const _axesAliases = Dict(
     :a => :auto, 
     :l => :left, 
     :r => :right
@@ -9,7 +9,7 @@ const _axesAliases = Dict(
 
 const _allTypes = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                    :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
-const _typeAliases = Dict(
+@compat const _typeAliases = Dict(
     :n             => :none,
     :no            => :none,
     :l             => :line,
@@ -29,7 +29,7 @@ const _typeAliases = Dict(
   )
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _styleAliases = Dict(
+@compat const _styleAliases = Dict(
     :a    => :auto,
     :s    => :solid,
     :d    => :dash,
@@ -39,7 +39,7 @@ const _styleAliases = Dict(
 
 const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
                      :cross, :xcross, :star1, :star2, :hexagon, :octagon]
-const _markerAliases = Dict(
+@compat const _markerAliases = Dict(
     :n            => :none,
     :no           => :none,
     :a            => :auto,
@@ -74,7 +74,7 @@ const _markerAliases = Dict(
   )
 
 const _allScales = [:identity, :log, :log2, :log10, :asinh, :sqrt]
-const _scaleAliases = Dict(
+@compat const _scaleAliases = Dict(
     :none => :identity,
     :ln   => :log,
   )
@@ -160,7 +160,7 @@ supportedArgs(::PlottingPackage) = _allArgs
 supportedArgs() = supportedArgs(backend())
 
 
-const _argNotes = Dict(
+@compat const _argNotes = Dict(
     :color => "Series color.  To have different marker and/or fill colors, optionally set the markercolor and fillcolor args.",
     :z => "Determines the depth.  For color gradients, we expect 0 ≤ z ≤ 1.",
     :heatmap_c => "For Qwt heatmaps only... will be deprecated eventually.",
@@ -169,7 +169,7 @@ const _argNotes = Dict(
 
 # -----------------------------------------------------------------------------
 
-makeplural(s::Symbol) = Symbol(string(s,"s"))
+makeplural(s::Symbol) = symbol(string(s,"s"))
 
 autopick(arr::AVec, idx::Integer) = arr[mod1(idx,length(arr))]
 autopick(notarr, idx::Integer) = notarr
@@ -194,7 +194,7 @@ end
 
 # Alternate args
 
-const _keyAliases = Dict(
+@compat const _keyAliases = Dict(
     :c            => :color,
     :lab          => :label,
     :l            => :line,
@@ -308,7 +308,7 @@ end
 
 # -----------------------------------------------------------------------------
 
-wraptuple(x::Tuple) = x
+wraptuple(x::@compat(Tuple)) = x
 wraptuple(x) = (x,)
 
 trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
@@ -332,7 +332,7 @@ end
 
 # given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
 # TODO: use trueOrAllTrue for subplots which can pass vectors for these
-function processAxisArg(d::Dict, axisletter::AbstractString, arg)
+function processAxisArg(d::Dict, axisletter::@compat(AbstractString), arg)
   T = typeof(arg)
   # if T <: Symbol
 
@@ -345,7 +345,7 @@ function processAxisArg(d::Dict, axisletter::AbstractString, arg)
     d[symbol(axisletter * "flip")] = true
     # end
 
-  elseif T <: AbstractString
+  elseif T <: @compat(AbstractString)
     d[symbol(axisletter * "label")] = arg
 
   # xlims/ylims
@@ -520,7 +520,7 @@ getArgValue(v, idx) = v
 # given an argument key (k), we want to extract the argument value for this index.
 # if nothing is set (or container is empty), return the default.
 function setDictValue(d::Dict, k::Symbol, idx::Int, defaults::Dict)
-  if haskey(d, k) && !(typeof(d[k]) <: Union{AbstractArray, Tuple} && isempty(d[k]))
+  if haskey(d, k) && !(typeof(d[k]) <: @compat(Union{AbstractArray, Tuple}) && isempty(d[k]))
     d[k] = getArgValue(d[k], idx)
   else
     d[k] = defaults[k]

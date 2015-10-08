@@ -61,7 +61,7 @@ supportedScales(::QwtPackage) = [:identity, :log10]
 
 # -------------------------------
 
-const _qwtAliases = Dict(
+@compat const _qwtAliases = Dict(
     :nbins => :heatmap_n,
     :fillrange => :fillto,
     :linewidth => :width,
@@ -210,14 +210,14 @@ function addLineMarker(plt::Plot{QwtPackage}, d::Dict)
   # marker[:attach](plt.o.widget)
 end
 
-function createQwtAnnotation(plt::Plot, x, y, val::AbstractString)
+function createQwtAnnotation(plt::Plot, x, y, val::@compat(AbstractString))
   marker = Qwt.QWT.QwtPlotMarker()
   marker[:setValue](x, y)
   marker[:setLabel](Qwt.QWT.QwtText(val))
   marker[:attach](plt.o.widget)
 end
 
-function addAnnotations{X,Y,V}(plt::Plot{QwtPackage}, anns::AVec{Tuple{X,Y,V}})
+function addAnnotations{X,Y,V}(plt::Plot{QwtPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     createQwtAnnotation(plt, ann...)
   end
@@ -241,7 +241,7 @@ end
 
 # -------------------------------
 
-# savepng(::QwtPackage, plt::PlottingObject, fn::AbstractString, args...) = Qwt.savepng(plt.o, fn)
+# savepng(::QwtPackage, plt::PlottingObject, fn::@compat(AbstractString), args...) = Qwt.savepng(plt.o, fn)
 
 # -------------------------------
 

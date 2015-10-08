@@ -53,7 +53,7 @@ end
 
 # ----------------------------------------------------------------
 
-function addAnnotations{X,Y,V}(plt::Plot{ImmersePackage}, anns::AVec{Tuple{X,Y,V}})
+function addAnnotations{X,Y,V}(plt::Plot{ImmersePackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     push!(plt.o[2].guides, createGadflyAnnotationObject(ann...))
   end

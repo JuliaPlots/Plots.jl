@@ -28,7 +28,7 @@ convertSeriesIndex(plt::Plot, n::Int) = n
 # ---------------------------------------------------------
 
 
-doc"""
+"""
 The main plot command.  Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 
 ```
@@ -146,7 +146,7 @@ function setTicksFromStringVector(d::Dict, di::Dict, sym::Symbol, ticksym::Symbo
 
   T = eltype(v)
   # @show T
-  if T <: AbstractString || (!isempty(T.types) && all(x -> x <: AbstractString, T.types))
+  if T <: @compat(AbstractString) || (!isempty(T.types) && all(x -> x <: @compat(AbstractString), T.types))
     # @show sym ticksym di[sym]
 
     ticks = unique(di[sym])
@@ -177,9 +177,9 @@ updateDictWithMeta(d::Dict, initargs::Dict, meta, isx::Bool) = nothing
 
 # --------------------------------------------------------------------
 
-annotations(::Void) = []
-annotations{X<:Real, Y<:Real, V}(v::AVec{Tuple{X,Y,V}}) = v
-annotations{X<:Real, Y<:Real, V}(t::Tuple{X,Y,V}) = [t]
+annotations(::@compat(Void)) = []
+annotations{X<:Real, Y<:Real, V}(v::AVec{@compat(Tuple{X,Y,V})}) = v
+annotations{X<:Real, Y<:Real, V}(t::@compat(Tuple{X,Y,V})) = [t]
 annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
                        "(x, y, annotation)\n    got: $(typeof(anns))")
 
@@ -200,10 +200,10 @@ end
 # This should cut down on boilerplate code and allow more focused dispatch on type
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
-typealias FuncOrFuncs Union{Function, AVec{Function}}
+typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
 
 # missing
-convertToAnyVector(v::Void; kw...) = Any[nothing], nothing
+convertToAnyVector(v::@compat(Void); kw...) = Any[nothing], nothing
 
 # fixed number of blank series
 convertToAnyVector(n::Integer; kw...) = Any[zero(0) for i in 1:n], nothing
@@ -212,7 +212,7 @@ convertToAnyVector(n::Integer; kw...) = Any[zero(0) for i in 1:n], nothing
 convertToAnyVector{T<:Real}(v::AVec{T}; kw...) = Any[v], nothing
 
 # string vector
-convertToAnyVector{T<:AbstractString}(v::AVec{T}; kw...) = Any[v], nothing
+convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}; kw...) = Any[v], nothing
 
 # numeric matrix
 convertToAnyVector{T<:Real}(v::AMat{T}; kw...) = Any[v[:,i] for i in 1:size(v,2)], nothing
@@ -231,7 +231,7 @@ convertToAnyVector(v::AVec; kw...) = Any[vi for vi in v], nothing
 
 # in computeXandY, we take in any of the possible items, convert into proper x/y vectors, then return.
 # this is also where all the "set x to 1:length(y)" happens, and also where we assert on lengths.
-computeX(x::Void, y) = 1:length(y)
+computeX(x::@compat(Void), y) = 1:length(y)
 computeX(x, y) = copy(x)
 computeY(x, y::Function) = map(y, x)
 computeY(x, y) = copy(y)
@@ -254,7 +254,7 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
   ys, ymeta = convertToAnyVector(y; kw...)
   mx = length(xs)
   my = length(ys)
-  ret = []
+  ret = Any[]
   for i in 1:max(mx, my)
 
     # try to set labels using ymeta
@@ -297,7 +297,7 @@ end
 
 # handle grouping
 function createKWargsList(plt::PlottingObject, groupby::GroupBy, args...; kw...)
-  ret = []
+  ret = Any[]
   for (i,glab) in enumerate(groupby.groupLabels)
     # TODO: don't automatically overwrite labels
     kwlist, xmeta, ymeta = createKWargsList(plt, args...; kw...,

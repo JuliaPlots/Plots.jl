@@ -83,7 +83,7 @@ end
 # --------------------------------------------------------------
 
 
-convertColor(c::Union{AbstractString, Symbol}) = parse(Colorant, string(c))
+convertColor(c::@compat(Union{AbstractString, Symbol})) = parse(Colorant, string(c))
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 
@@ -92,8 +92,6 @@ convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 abstract ColorScheme
 
 getColor(scheme::ColorScheme) = getColor(scheme, 1)
-# getColor(scheme::ColorScheme, idx::Integer) = getColor(scheme, 0.0, idx)
-# getColorZ(scheme::ColorScheme, z::AbstractFloat) = getColor(scheme, z, 0)
 getColorVector(scheme::ColorScheme) = [getColor(scheme)]
 
 colorscheme(scheme::ColorScheme) = scheme
@@ -108,7 +106,7 @@ colorscheme(c::Colorant) = ColorWrapper(c)
 
 const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", colorant"orange", colorant"red"]
 
-const _gradients = Dict(
+@compat const _gradients = Dict(
     :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
     :greens       => [colorant"lightgreen", colorant"darkgreen"],
@@ -181,6 +179,10 @@ getColorVector(gradient::ColorGradient) = gradient.colors
 #   b = interpolate(lab1.b, lab2.b, w)
 #   RGB(Lab(l, a, b))
 # end
+
+# for 0.3
+Colors.RGBA(c::Colorant) = RGBA(red(c), green(c), blue(c), alpha(c))
+Colors.RGB(c::Colorant) = RGB(red(c), green(c), blue(c))
 
 function interpolate_rgb(c1::Colorant, c2::Colorant, w::Real)
   rgb1 = RGBA(c1)

@@ -55,7 +55,7 @@ supportedArgs(::PyPlotPackage) = [
     :yscale,
     :xflip,
     :yflip,
-    # :z,
+    :z,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
@@ -67,6 +67,11 @@ subplotSupported(::PyPlotPackage) = false
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
 getPyPlotColor(scheme::ColorScheme) = getPyPlotColor(getColor(scheme))
+
+# getPyPlotColorMap(c::ColorGradient) = PyPlot.matplotlib[:colors][:ListedColormap](map(getPyPlotColor, getColorVector(c)))
+function getPyPlotColorMap(c::ColorGradient)
+  pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", map(getPyPlotColor, getColorVector(c)))
+end
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
@@ -97,7 +102,7 @@ function getPyPlotMarker(marker::Symbol)
 end
 
 # pass through
-function getPyPlotMarker(marker::AbstractString)
+function getPyPlotMarker(marker::@compat(AbstractString))
   @assert length(marker) == 1
   marker
 end
@@ -119,26 +124,26 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
   if axis == :right
     ax = getRightAxis(plt.o[1])  
     ax[:set_ylabel](plt.initargs[:yrightlabel])
-    fmap = Dict(
+    fmap = @compat Dict(
         :hist => :hist,
         :sticks => :bar,
         :bar => :bar,
         :heatmap => :hexbin,
         :hexbin => :hexbin,
-        # :scatter => :scatter
+        :scatter => :scatter
       )
     return ax[get(fmap, linetype, :plot)]
     # return ax[linetype == :hist ? :hist : (linetype in (:sticks,:bar) ? :bar : (linetype in (:heatmap,:hexbin) ? :hexbin : :plot))]
   end
 
   # get the function
-  fmap = Dict(
+  fmap = @compat Dict(
       :hist => PyPlot.plt[:hist],
       :sticks => PyPlot.bar,
       :bar => PyPlot.bar,
       :heatmap => PyPlot.hexbin,
       :hexbin => PyPlot.hexbin,
-      # :scatter => PyPlot.scatter
+      :scatter => PyPlot.scatter
     )
   return get(fmap, linetype, PyPlot.plot)
   # return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : (linetype in (:heatmap,:hexbin) ? PyPlot.hexbin : PyPlot.plot))
@@ -208,7 +213,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     d,_ = sticksHack(;d...)
   
   elseif lt == :scatter
-    d[:linetype] = :none
+    # d[:linetype] = :none
     if d[:markershape] == :none
       d[:markershape] = :ellipse
     end
@@ -251,11 +256,14 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     extraargs[:marker] = getPyPlotMarker(d[:markershape])
 
     if lt == :scatter
-      extraargs[:s] = d[:markersize]
-      extraargs[:c] = getPyPlotColor(d[:markercolor])
-      extraargs[:linewidths] = d[:linewidth]
-      if haskey(d, :colorscheme)
-        extraargs[:cmap] = d[:colorscheme]
+      extraargs[:s] = d[:markersize]^2
+      #extraargs[:linewidths] = d[:linewidth]
+      c = d[:markercolor]
+      if isa(c, ColorGradient) && d[:z] != nothing
+        extraargs[:c] = convert(Vector{Float64}, d[:z])
+        extraargs[:cmap] = getPyPlotColorMap(c)
+      else
+        extraargs[:c] = getPyPlotColor(c)
       end
     else
       extraargs[:markersize] = d[:markersize]
@@ -286,7 +294,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   fillrange = d[:fillrange]
   if fillrange != nothing
     fillcolor = getPyPlotColor(d[:fillcolor])
-    if typeof(fillrange) <: Union{Real, AVec}
+    if typeof(fillrange) <: @compat(Union{Real, AVec})
       ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor)
     else
       ax[:fill_between](d[:x], fillrange..., facecolor = fillcolor)
@@ -368,12 +376,12 @@ end
 
 # -----------------------------------------------------------------
 
-function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::AbstractString)
+function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::@compat(AbstractString))
   ax = getLeftAxis(plt.o[1])
   ax[:annotate](val, xy = (x,y))
 end
 
-function addAnnotations{X,Y,V}(plt::Plot{PyPlotPackage}, anns::AVec{Tuple{X,Y,V}})
+function addAnnotations{X,Y,V}(plt::Plot{PyPlotPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     createPyPlotAnnotationObject(plt, ann...)
   end

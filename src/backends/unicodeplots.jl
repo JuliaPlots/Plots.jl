@@ -212,7 +212,7 @@ end
 
 # -------------------------------
 
-# function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::AbstractString, args...)
+# function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::@compat(AbstractString), args...)
 function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{UnicodePlotsPackage})
 
   # make some whitespace and show the plot

@@ -1,7 +1,11 @@
-__precompile__()
+
+if VERSION >= v"0.4-"
+  __precompile__()
+end
 
 module Plots
 
+using Compat
 using Reexport
 @reexport using Colors
 
@@ -117,34 +121,34 @@ function spy{T<:Real}(y::AMat{T}; kw...)
   heatmap(J, I; leg=false, yflip=true, kw...)
 end
 
-title!(s::AbstractString)                 = plot!(title = s)
-xlabel!(s::AbstractString)                = plot!(xlabel = s)
-ylabel!(s::AbstractString)                = plot!(ylabel = s)
-xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(xlims = lims)
-ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}) = plot!(ylims = lims)
+title!(s::@compat(AbstractString))                 = plot!(title = s)
+xlabel!(s::@compat(AbstractString))                = plot!(xlabel = s)
+ylabel!(s::@compat(AbstractString))                = plot!(ylabel = s)
+xlims!{T<:Real,S<:Real}(lims::@compat(Tuple{T,S})) = plot!(xlims = lims)
+ylims!{T<:Real,S<:Real}(lims::@compat(Tuple{T,S})) = plot!(ylims = lims)
 xlims!(xmin::Real, xmax::Real)            = plot!(xlims = (xmin,xmax))
 ylims!(ymin::Real, ymax::Real)            = plot!(ylims = (ymin,ymax))
 xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
 yticks!{T<:Real}(v::AVec{T})              = plot!(yticks = v)
-xticks!{T<:Real,S<:AbstractString}(ticks::AVec{T}, labels::AVec{S})  = plot!(xticks = (ticks,labels))
-yticks!{T<:Real,S<:AbstractString}(ticks::AVec{T}, labels::AVec{S})  = plot!(yticks = (ticks,labels))
+xticks!{T<:Real,S<:@compat(AbstractString)}(ticks::AVec{T}, labels::AVec{S})  = plot!(xticks = (ticks,labels))
+yticks!{T<:Real,S<:@compat(AbstractString)}(ticks::AVec{T}, labels::AVec{S})  = plot!(yticks = (ticks,labels))
 annotate!(anns)                           = plot!(annotation = anns)
 xflip!(flip::Bool = true)                 = plot!(xflip = flip)
 yflip!(flip::Bool = true)                 = plot!(yflip = flip)
 xaxis!(args...)                           = plot!(xaxis = args)
 yaxis!(args...)                           = plot!(yaxis = args)
 
-title!(plt::Plot, s::AbstractString)                  = plot!(plt; title = s)
-xlabel!(plt::Plot, s::AbstractString)                 = plot!(plt; xlabel = s)
-ylabel!(plt::Plot, s::AbstractString)                 = plot!(plt; ylabel = s)
-xlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S})  = plot!(plt; xlims = lims)
-ylims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S})  = plot!(plt; ylims = lims)
+title!(plt::Plot, s::@compat(AbstractString))                  = plot!(plt; title = s)
+xlabel!(plt::Plot, s::@compat(AbstractString))                 = plot!(plt; xlabel = s)
+ylabel!(plt::Plot, s::@compat(AbstractString))                 = plot!(plt; ylabel = s)
+xlims!{T<:Real,S<:Real}(plt::Plot, lims::@compat(Tuple{T,S}))  = plot!(plt; xlims = lims)
+ylims!{T<:Real,S<:Real}(plt::Plot, lims::@compat(Tuple{T,S}))  = plot!(plt; ylims = lims)
 xlims!(plt::Plot, xmin::Real, xmax::Real)             = plot!(plt; xlims = (xmin,xmax))
 ylims!(plt::Plot, ymin::Real, ymax::Real)             = plot!(plt; ylims = (ymin,ymax))
 xticks!{T<:Real}(plt::Plot, ticks::AVec{T})           = plot!(plt; xticks = ticks)
 yticks!{T<:Real}(plt::Plot, ticks::AVec{T})           = plot!(plt; yticks = ticks)
-xticks!{T<:Real,S<:AbstractString}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; xticks = (ticks,labels))
-yticks!{T<:Real,S<:AbstractString}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; yticks = (ticks,labels))
+xticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; xticks = (ticks,labels))
+yticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; yticks = (ticks,labels))
 annotate!(plt::Plot, anns)                            = plot!(plt; annotation = anns)
 xflip!(plt::Plot, flip::Bool = true)                  = plot!(plt; xflip = flip)
 yflip!(plt::Plot, flip::Bool = true)                  = plot!(plt; yflip = flip)
@@ -157,20 +161,20 @@ yaxis!(plt::Plot, args...)                            = plot!(plt; yaxis = args)
 
 defaultOutputFormat(plt::PlottingObject) = "png"
 
-function png(plt::PlottingObject, fn::AbstractString)
+function png(plt::PlottingObject, fn::@compat(AbstractString))
   fn = addExtension(fn, "png")
   io = open(fn, "w")
   writemime(io, MIME("image/png"), plt)
   close(io)
 end
-png(fn::AbstractString) = png(current(), fn)
+png(fn::@compat(AbstractString)) = png(current(), fn)
 
 
-const _savemap = Dict(
+@compat const _savemap = Dict(
     "png" => png,
   )
 
-function getExtension(fn::AbstractString)
+function getExtension(fn::@compat(AbstractString))
   pieces = split(fn, ".")
   length(pieces) > 1 || error("Can't extract file extension: ", fn)
   ext = pieces[end]
@@ -178,7 +182,7 @@ function getExtension(fn::AbstractString)
   ext
 end
 
-function addExtension(fn::AbstractString, ext::AbstractString)
+function addExtension(fn::@compat(AbstractString), ext::@compat(AbstractString))
   try
     oldext = getExtension(fn)
     if oldext == ext
@@ -191,7 +195,7 @@ function addExtension(fn::AbstractString, ext::AbstractString)
   end
 end
 
-function savefig(plt::PlottingObject, fn::AbstractString)
+function savefig(plt::PlottingObject, fn::@compat(AbstractString))
   
   # get the extension
   local ext
@@ -209,11 +213,11 @@ function savefig(plt::PlottingObject, fn::AbstractString)
   end
   func(plt, fn)
 end
-savefig(fn::AbstractString) = savefig(current(), fn)
+savefig(fn::@compat(AbstractString)) = savefig(current(), fn)
 
 
 # savepng(args...; kw...) = savepng(current(), args...; kw...)
-# savepng(plt::PlottingObject, fn::AbstractString; kw...) = (io = open(fn, "w"); writemime(io, MIME("image/png"), plt); close(io))
+# savepng(plt::PlottingObject, fn::@compat(AbstractString); kw...) = (io = open(fn, "w"); writemime(io, MIME("image/png"), plt); close(io))
 
 
 

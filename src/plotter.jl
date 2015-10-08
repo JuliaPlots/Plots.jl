@@ -87,7 +87,7 @@ end
 
 # ---------------------------------------------------------
 
-doc"""
+"""
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
@@ -101,51 +101,52 @@ function backend()
       try
         @eval import Qwt
         @eval export Qwt
-      catch
-        error("Couldn't import Qwt.  Install it with: Pkg.clone(\"https://github.com/tbreloff/Qwt.jl.git\")\n  (Note: also requires pyqt and pyqwt)")
+      catch err
+        error("Couldn't import Qwt.  Install it with: Pkg.clone(\"https://github.com/tbreloff/Qwt.jl.git\")\n  (Note: also requires pyqt and pyqwt).\n   Error: ", err)
       end
 
     elseif currentBackendSymbol == :gadfly
       try
         @eval import Gadfly, Compose
         @eval export Gadfly, Compose
-      catch
-        error("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\")")
+      catch err
+        error("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\").\n   Error: ", err)
       end
 
     elseif currentBackendSymbol == :unicodeplots
       try
         @eval import UnicodePlots
         @eval export UnicodePlots
-      catch
-        error("Couldn't import UnicodePlots.  Install it with: Pkg.add(\"UnicodePlots\")")
+      catch err
+        error("Couldn't import UnicodePlots.  Install it with: Pkg.add(\"UnicodePlots\").\n   Error: ", err)
       end
 
     elseif currentBackendSymbol == :pyplot
       try
         @eval import PyPlot
         @eval export PyPlot
+        @eval const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
         if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
           PyPlot.ioff()
         end
-      catch
-        error("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\")")
+      catch err
+        error("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\").\n   Error: ", err)
       end
 
     elseif currentBackendSymbol == :immerse
       try
         @eval import Immerse, Gadfly, Compose, Gtk
         @eval export Immerse, Gadfly, Compose, Gtk
-      catch
-        error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\")")
+      catch err
+        error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\").\n   Error: ", err)
       end
 
     elseif currentBackendSymbol == :winston
       try
         @eval import Winston, Gtk
         @eval export Winston, Gtk
-      catch
-        error("Couldn't import Winston.  Install it with: Pkg.add(\"Winston\")")
+      catch err
+        error("Couldn't import Winston.  Install it with: Pkg.add(\"Winston\").\n   Error: ", err)
       end
 
     else
@@ -158,7 +159,7 @@ function backend()
   CURRENT_BACKEND.pkg
 end
 
-doc"""
+"""
 Set the plot backend.  Choose from:  :qwt, :gadfly, :unicodeplots
 """
 function backend(modname)

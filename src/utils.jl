@@ -1,7 +1,7 @@
 
 calcMidpoints(edges::AbstractVector) = Float64[0.5 * (edges[i] + edges[i+1]) for i in 1:length(edges)-1]
 
-doc"Make histogram-like bins of data"
+"Make histogram-like bins of data"
 function binData(data, nbins)
   lo, hi = extrema(data)
   edges = collect(linspace(lo, hi, nbins+1))
@@ -14,7 +14,7 @@ function binData(data, nbins)
   edges, midpoints, buckets, counts
 end
 
-doc"""
+"""
 A hacky replacement for a histogram when the backend doesn't support histograms directly.
 Convert it into a bar chart with the appropriate x/y values.
 """
@@ -30,7 +30,7 @@ function histogramHack(; kw...)
   d
 end
 
-doc"""
+"""
 A hacky replacement for a bar graph when the backend doesn't support bars directly.
 Convert it into a line chart with fillrange set.
 """
@@ -70,7 +70,7 @@ function barHack(; kw...)
 end
 
 
-doc"""
+"""
 A hacky replacement for a sticks graph when the backend doesn't support sticks directly.
 Convert it into a line chart that traces the sticks, and a scatter that sets markers at the points.
 """
@@ -111,7 +111,7 @@ makevec{T}(v::T) = T[v]
 
 "duplicate a single value, or pass the 2-tuple through"
 maketuple(x::Real) = (x,x)
-maketuple{T,S}(x::Tuple{T,S}) = x
+maketuple{T,S}(x::@compat(Tuple{T,S})) = x
 
 
 function replaceAliases!(d::Dict, aliases::Dict)
@@ -137,12 +137,12 @@ function regressionXY(x, y)
   regx, regy
 end
 
-# ticksType{T<:Real,S<:Real}(ticks::Tuple{T,S}) = :limits
+# ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
 ticksType{T<:Real}(ticks::AVec{T}) = :ticks
-ticksType{T<:AVec,S<:AVec}(ticks::Tuple{T,S}) = :ticks_and_labels
+ticksType{T<:AVec,S<:AVec}(ticks::@compat(Tuple{T,S})) = :ticks_and_labels
 ticksType(ticks) = :invalid
 
-limsType{T<:Real,S<:Real}(lims::Tuple{T,S}) = :limits
+limsType{T<:Real,S<:Real}(lims::@compat(Tuple{T,S})) = :limits
 limsType(lims) = :invalid
 
 

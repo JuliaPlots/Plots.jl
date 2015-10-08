@@ -80,7 +80,7 @@ function createGadflyPlotObject(d::Dict)
 
   # add the legend?
   if d[:legend]
-    unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
+    unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", @compat(AbstractString)[], Color[]))
   end
 
   gplt.theme = Gadfly.Theme(background_color = getColor(d[:background_color]))
@@ -115,9 +115,9 @@ end
 function getMarkerGeomsAndGuides(d::Dict, initargs::Dict)
   marker = d[:markershape]
   if marker == :none && d[:linetype] != :ohlc
-    return [],[]
+    return Any[], Any[]
   end
-  return [], [createGadflyAnnotation(d, initargs)]
+  return Any[], [createGadflyAnnotation(d, initargs)]
 end
 
 
@@ -144,14 +144,14 @@ Base.first(c::Colorant) = c
 
 function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
-  gfargs = []
+  gfargs = Any[]
 
   # if my PR isn't present, don't set the line_style
   local extra_theme_args
   try
     extra_theme_args = [(:line_style, Gadfly.get_stroke_vector(d[:linestyle]))]
   catch
-    extra_theme_args = []
+    extra_theme_args = Any[]
   end
   
   # set theme: color, line linewidth, and point size
@@ -232,11 +232,11 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     
   # nothing special...
   else
-    colorgroup = []
+    colorgroup = Any[]
   end
 
   # fills/ribbons
-  yminmax = []
+  yminmax = Any[]
   if d[:fillrange] != nothing
     fillmin, fillmax = map(makevec, maketuple(d[:fillrange]))
     nmin, nmax = length(fillmin), length(fillmax)
@@ -246,7 +246,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   end
 
   # # fillto and ribbon
-  # yminmax = []
+  # yminmax = Any[]
   # fillto, ribbon = d[:fill], d[:ribbon]
   
   # if fillto != nothing
@@ -361,7 +361,7 @@ function addGadflyLimitsScale(gplt, d::Dict, isx::Bool)
 
   # do we want to add min/max limits for the axis?
   limsym = isx ? :xlims : :ylims
-  limargs = []
+  limargs = Any[]
   if haskey(d, limsym)
     lims = d[limsym]
     lims == :auto && return
@@ -431,7 +431,7 @@ function plot!(::GadflyPackage, plt::Plot; kw...)
 end
 
 
-function findGuideAndSet(gplt, t::DataType, s::AbstractString)
+function findGuideAndSet(gplt, t::DataType, s::@compat(AbstractString))
   for (i,guide) in enumerate(gplt.guides)
     if isa(guide, t)
       gplt.guides[i] = t(s)
@@ -461,14 +461,14 @@ end
 # ----------------------------------------------------------------
 
 
-function createGadflyAnnotationObject(x, y, val::AbstractString)
+function createGadflyAnnotationObject(x, y, val::@compat(AbstractString))
   Gadfly.Guide.annotation(Compose.compose(
                               Compose.context(), 
                               Compose.text(x, y, val)
                             ))
 end
 
-function addAnnotations{X,Y,V}(plt::Plot{GadflyPackage}, anns::AVec{Tuple{X,Y,V}})
+function addAnnotations{X,Y,V}(plt::Plot{GadflyPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     push!(plt.o.guides, createGadflyAnnotationObject(ann...))
   end
@@ -491,7 +491,7 @@ getGadflyContext(::GadflyPackage, subplt::Subplot) = buildGadflySubplotContext(s
 # create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
 function buildGadflySubplotContext(subplt::Subplot)
   i = 0
-  rows = []
+  rows = Any[]
   for rowcnt in subplt.layout.rowcounts
     push!(rows, Gadfly.hstack([getGadflyContext(plt.backend, plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
     i += rowcnt

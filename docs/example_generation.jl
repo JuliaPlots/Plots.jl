@@ -3,16 +3,17 @@ module PlotExamples
 
 using Plots
 using Colors
+using Compat
 
 const DOCDIR = Pkg.dir("Plots") * "/docs"
 const IMGDIR = Pkg.dir("Plots") * "/img"
 
-doc"""
+"""
 Holds all data needed for a documentation example... header, description, and plotting expression (Expr)
 """
 type PlotExample
-  header::AbstractString
-  desc::AbstractString
+  header::@compat(AbstractString)
+  desc::@compat(AbstractString)
   exprs::Vector{Expr}
 end
 
@@ -171,7 +172,7 @@ end
 
 
 # make and display one plot
-function test_example(pkgname::Symbol, idx::Int, debug = true)
+function test_examples(pkgname::Symbol, idx::Int; debug = true)
   Plots._debugMode.on = debug
   println("Testing plot: $pkgname:$idx:$(examples[idx].header)")
   backend(pkgname)
@@ -183,7 +184,8 @@ function test_example(pkgname::Symbol, idx::Int, debug = true)
 end
 
 # generate all plots and create a dict mapping idx --> plt
-function test_all_examples(pkgname::Symbol, debug = false)
+function test_examples(pkgname::Symbol; debug = false)
+  Plots._debugMode.on = debug
   plts = Dict()
   for i in 1:length(examples)
     # if examples[i].header == "Subplots" && !subplotSupported()
@@ -191,7 +193,7 @@ function test_all_examples(pkgname::Symbol, debug = false)
     # end
 
     try
-      plt = test_example(pkgname, i, debug)
+      plt = test_examples(pkgname, i, debug=debug)
       plts[i] = plt
     catch ex
       # TODO: put error info into markdown?
@@ -227,7 +229,7 @@ end
 
 
 
-const _ltdesc = Dict(
+@compat const _ltdesc = Dict(
     :none => "No line",
     :line => "Lines with sorted x-axis",
     :path => "Lines",

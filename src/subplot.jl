@@ -53,7 +53,7 @@ function validateSubplotSupported()
   end
 end
 
-doc"""
+"""
 Create a series of plots:
 ```
   y = rand(100,3)
@@ -102,7 +102,7 @@ function subplot(args...; kw...)
   subplt
 end
 
-doc"""
+"""
 Adds to a subplot.
 """
 
