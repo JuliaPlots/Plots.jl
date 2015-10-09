@@ -31,15 +31,17 @@ immutable FlexLayout <: SubplotLayout
 end
 
 
-type Subplot{T<:PlottingPackage} <: PlottingObject{T}
+type Subplot{T<:PlottingPackage, L<:SubplotLayout} <: PlottingObject{T}
   o                           # the underlying object
   plts::Vector{Plot}          # the individual plots
   backend::T
   p::Int                      # number of plots
   n::Int                      # number of series
-  layout::SubplotLayout
+  layout::L
   initargs::Vector{Dict}
   initialized::Bool
+  linkx::Bool
+  linky::Bool
 end
 
 

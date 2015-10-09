@@ -72,6 +72,11 @@ export
   getColor,
   getColorZ,
 
+  PlotRecipe,
+  EllipseRecipe,
+
+  debugplots,
+
   supportedArgs,
   supportedAxes,
   supportedTypes,
@@ -94,6 +99,7 @@ include("plotter.jl")
 include("args.jl")
 include("plot.jl")
 include("subplot.jl")
+include("recipes.jl")
 
 
 # ---------------------------------------------------------

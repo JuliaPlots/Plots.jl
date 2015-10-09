@@ -95,13 +95,14 @@ Base.length(layout::GridLayout) = layout.nr * layout.nc
 Base.start(layout::GridLayout) = 1
 Base.done(layout::GridLayout, state) = state > length(layout)
 function Base.next(layout::GridLayout, state)
-  r = div(state, layout.nc)
+  r = div(state-1, layout.nc) + 1
   c = mod1(state, layout.nc)
   (r,c), state + 1
 end
 
 nrows(layout::GridLayout) = layout.nr
 ncols(layout::GridLayout) = layout.nc
+ncols(layout::GridLayout, row::Int) = layout.nc
 
 
 
@@ -167,7 +168,7 @@ function subplot(args...; kw...)
   # # tmpd[:show] = shouldShow
 
   # create the object and do the plotting
-  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, ds, false)
+  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, ds, false, get(d, :linkx, false), get(d, :linky, false))
   subplot!(subplt, args...; kw...)
 
   subplt
@@ -233,6 +234,13 @@ function subplot!(subplt::Subplot, args...; kw...)
     end
     dumpdict(di, "Updating sp $i")
     updatePlotItems(plt, di)
+  end
+
+  if subplt.linkx
+    linkXAxis(subplt)
+  end
+  if subplt.linky
+    linkYAxis(subplt)
   end
 
   # set this to be current

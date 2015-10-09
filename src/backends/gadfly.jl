@@ -54,6 +54,8 @@ supportedArgs(::GadflyPackage) = [
     :xflip,
     :yflip,
     :z,
+    :linkx,
+    :linky,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
@@ -487,17 +489,32 @@ end
 # ----------------------------------------------------------------
 
 
-getGadflyContext(::GadflyPackage, plt::Plot) = plt.o
-getGadflyContext(::GadflyPackage, subplt::Subplot) = buildGadflySubplotContext(subplt)
+getGadflyContext(plt::Plot{GadflyPackage}) = plt.o
+getGadflyContext(subplt::Subplot{GadflyPackage}) = buildGadflySubplotContext(subplt)
 
 # create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
 function buildGadflySubplotContext(subplt::Subplot)
-  i = 0
+  # i = 0
+  # rows = Any[]
+  # for rowcnt in subplt.layout.rowcounts
+  #   push!(rows, Gadfly.hstack([getGadflyContext(plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
+  #   i += rowcnt
+  # end
   rows = Any[]
-  for rowcnt in subplt.layout.rowcounts
-    push!(rows, Gadfly.hstack([getGadflyContext(plt.backend, plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
-    i += rowcnt
+  row = Any[]
+  for (i,(r,c)) in enumerate(subplt.layout)
+
+    # add the Plot object to the row
+    push!(row, getGadflyContext(subplt.plts[i]))
+
+    # add the row
+    if c == ncols(subplt.layout, r)
+      push!(rows, Gadfly.hstack(row...))
+      row = Any[]
+    end
   end
+
+  # stack the rows
   Gadfly.vstack(rows...)
 end
 
@@ -506,7 +523,7 @@ function setGadflyDisplaySize(w,h)
 end
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{GadflyPackage})
-  gplt = getGadflyContext(plt.backend, plt)
+  gplt = getGadflyContext(plt)
   setGadflyDisplaySize(plt.initargs[:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end
@@ -520,7 +537,7 @@ end
 
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Subplot{GadflyPackage})
-  gplt = getGadflyContext(plt.backend, plt)
+  gplt = getGadflyContext(plt)
   setGadflyDisplaySize(plt.initargs[1][:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end

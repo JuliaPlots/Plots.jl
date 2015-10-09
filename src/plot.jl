@@ -334,10 +334,10 @@ mapFuncOrFuncs(f::Function, u::AVec) = map(f, u)
 mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
 
 # special handling... xmin/xmax with parametric function(s)
-function createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...)
-  u = collect(linspace(umin, umax, numPoints))
-  createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
-end
+createKWargsList{T<:Real}(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T}; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
+createKWargsList{T<:Real}(plt::PlottingObject, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
+createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, linspace(umin, umax, numPoints))
+
 
 
 # special handling... no args... 1 series

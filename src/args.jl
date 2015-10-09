@@ -150,6 +150,9 @@ _plotDefaults[:n]                 = -1
 _plotDefaults[:nr]                = -1
 _plotDefaults[:nc]                = -1
 _plotDefaults[:color_palette]     = :auto
+_plotDefaults[:link]              = false
+_plotDefaults[:linkx]             = false
+_plotDefaults[:linky]             = false
 
 
 
@@ -260,6 +263,8 @@ end
     :gui          => :show,
     :display      => :show,
     :palette      => :color_palette,
+    :xlink        => :linkx,
+    :ylink        => :linky,
   )
 
 # add all pluralized forms to the _keyAliases dict
@@ -445,6 +450,14 @@ function preprocessArgs!(d::Dict)
     processFillArg(d, arg)
   end
   delete!(d, :fill)
+
+  # handle subplot links
+  if haskey(d, :link)
+    l = d[:link]
+    d[:linkx] = l
+    d[:linky] = l
+    delete!(d, :link)
+  end
 
   return
 end

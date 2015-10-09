@@ -114,6 +114,9 @@ maketuple(x::Real) = (x,x)
 maketuple{T,S}(x::@compat(Tuple{T,S})) = x
 
 
+unzip{T,S}(v::AVec{@compat(Tuple{T,S})}) = [vi[1] for vi in v], [vi[2] for vi in v]
+
+
 function replaceAliases!(d::Dict, aliases::Dict)
   for (k,v) in d
     if haskey(aliases, k)
@@ -153,6 +156,9 @@ type DebugMode
 end
 const _debugMode = DebugMode(false)
 
+function debugplots(on = true)
+  _debugMode.on = on
+end
 
 function dumpdict(d::Dict, prefix = "")
   _debugMode.on || return
