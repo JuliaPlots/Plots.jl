@@ -68,7 +68,7 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
 
   # create a subplot grid, and a gradient from -1 to 1
   p = subplot(zeros(1,m^2), n=m^2, link=true)
-  cgrad = ColorGradient(:redsblues,[-1,1])
+  cgrad = ColorGradient(colors, [-1,1])
 
   # make all the plots
   for i in 1:m
