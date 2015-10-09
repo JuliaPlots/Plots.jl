@@ -51,8 +51,6 @@ function getRecipeXY(ep::EllipseRecipe)
 end
 
 function getRecipeArgs(ep::EllipseRecipe)
-    d = Dict()
-    d[:line] = (3, [:dot :solid], [:red :blue], :path)
-    d
+    [(:line, (3, [:dot :solid], [:red :blue], :path))]
 end
 

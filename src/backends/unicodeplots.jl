@@ -62,13 +62,6 @@ supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
 supportedScales(::UnicodePlotsPackage) = [:identity]
 
 
-function expandLimits!(lims, x)
-  e1, e2 = extrema(x)
-  lims[1] = min(lims[1], e1)
-  lims[2] = max(lims[2], e2)
-  nothing
-end
-
 
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
 function rebuildUnicodePlot!(plt::Plot)

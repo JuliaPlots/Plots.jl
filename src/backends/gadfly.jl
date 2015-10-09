@@ -486,6 +486,53 @@ function buildSubplotObject!(subplt::Subplot{GadflyPackage})
   subplt.o = nothing
 end
 
+
+# link the subplots together to share axes... useful for facet plots, cross-scatters, etc
+function linkXAxis(subplt::Subplot{GadflyPackage})
+    
+    for (i,(r,c)) in enumerate(subplt.layout)
+        gplt = subplt.plts[i].o
+        if r < nrows(subplt.layout)
+            #addOrReplace(gplt.guides, Gadfly.Guide.xticks; label=false)
+            addOrReplace(gplt.guides, Gadfly.Guide.xlabel, "")
+        end
+    end
+    
+    lims = [Inf,-Inf]     
+    for plt in subplt.plts
+        for l in plt.o.layers
+            expandLimits!(lims, l.mapping[:x])
+        end
+    end
+    for plt in subplt.plts
+        xlims!(plt, lims...)
+    end
+        
+end
+
+# link the subplots together to share axes... useful for facet plots, cross-scatters, etc
+function linkYAxis(subplt::Subplot{GadflyPackage})
+    
+    for (i,(r,c)) in enumerate(subplt.layout)
+        gplt = subplt.plts[i].o
+        if c > 1
+            #addOrReplace(gplt.guides, Gadfly.Guide.yticks; label=false)
+            addOrReplace(gplt.guides, Gadfly.Guide.ylabel, "")
+        end
+    end
+    
+    lims = [Inf,-Inf]
+    for plt in subplt.plts
+        for l in plt.o.layers
+            expandLimits!(lims, l.mapping[:y])
+        end
+    end
+    for plt in subplt.plts
+        ylims!(plt, lims...)
+    end
+        
+end
+
 # ----------------------------------------------------------------
 
 

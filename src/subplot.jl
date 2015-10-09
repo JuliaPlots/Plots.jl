@@ -91,6 +91,9 @@ end
 nrows(layout::FlexLayout) = length(layout.rowcounts)
 ncols(layout::FlexLayout, row::Int) = row < 1 ? 0 : (row > nrows(layout) ? 0 : layout.rowcounts[row])
 
+# get the plot index given row and column
+Base.getindex(layout::FlexLayout, r::Int, c::Int) = sum(layout.rowcounts[1:r-1]) + c
+
 Base.length(layout::GridLayout) = layout.nr * layout.nc
 Base.start(layout::GridLayout) = 1
 Base.done(layout::GridLayout, state) = state > length(layout)
@@ -103,6 +106,9 @@ end
 nrows(layout::GridLayout) = layout.nr
 ncols(layout::GridLayout) = layout.nc
 ncols(layout::GridLayout, row::Int) = layout.nc
+
+# get the plot index given row and column
+Base.getindex(layout::GridLayout, r::Int, c::Int) = (r-1) * layout.nc + c
 
 
 

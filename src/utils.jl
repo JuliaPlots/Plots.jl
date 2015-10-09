@@ -116,6 +116,27 @@ maketuple{T,S}(x::@compat(Tuple{T,S})) = x
 
 unzip{T,S}(v::AVec{@compat(Tuple{T,S})}) = [vi[1] for vi in v], [vi[2] for vi in v]
 
+# given 2-element lims and a vector of data x, widen lims to account for the extrema of x
+function expandLimits!(lims, x)
+  e1, e2 = extrema(x)
+  lims[1] = min(lims[1], e1)
+  lims[2] = max(lims[2], e2)
+  nothing
+end
+
+
+# if the type exists in a list, replace the first occurence.  otherwise add it to the end
+function addOrReplace(v::AbstractVector, t::DataType, args...; kw...)
+    for (i,vi) in enumerate(v)
+        if isa(vi, t)
+            v[i] = t(args...; kw...)
+            return
+        end
+    end
+    push!(v, t(args...; kw...))
+    return
+end
+
 
 function replaceAliases!(d::Dict, aliases::Dict)
   for (k,v) in d
