@@ -72,9 +72,6 @@ export
   getColor,
   getColorZ,
 
-  PlotRecipe,
-  EllipseRecipe,
-
   debugplots,
 
   supportedArgs,
@@ -82,7 +79,12 @@ export
   supportedTypes,
   supportedStyles,
   supportedMarkers,
-  subplotSupported
+  subplotSupported,
+
+  # recipes
+  PlotRecipe,
+  EllipseRecipe,
+  corrplot
 
 # ---------------------------------------------------------
 

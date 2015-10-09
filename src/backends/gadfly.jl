@@ -85,7 +85,10 @@ function createGadflyPlotObject(d::Dict)
     unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", @compat(AbstractString)[], Color[]))
   end
 
-  gplt.theme = Gadfly.Theme(background_color = getColor(d[:background_color]))
+  gplt.theme = Gadfly.Theme(
+          background_color = getColor(d[:background_color]),
+          plot_padding = 1 * Gadfly.mm,
+        )
   gplt
 end
 
@@ -493,7 +496,7 @@ function linkXAxis(subplt::Subplot{GadflyPackage})
     for (i,(r,c)) in enumerate(subplt.layout)
         gplt = subplt.plts[i].o
         if r < nrows(subplt.layout)
-            #addOrReplace(gplt.guides, Gadfly.Guide.xticks; label=false)
+            addOrReplace(gplt.guides, Gadfly.Guide.xticks; label=false)
             addOrReplace(gplt.guides, Gadfly.Guide.xlabel, "")
         end
     end
@@ -516,7 +519,7 @@ function linkYAxis(subplt::Subplot{GadflyPackage})
     for (i,(r,c)) in enumerate(subplt.layout)
         gplt = subplt.plts[i].o
         if c > 1
-            #addOrReplace(gplt.guides, Gadfly.Guide.yticks; label=false)
+            addOrReplace(gplt.guides, Gadfly.Guide.yticks; label=false)
             addOrReplace(gplt.guides, Gadfly.Guide.ylabel, "")
         end
     end
