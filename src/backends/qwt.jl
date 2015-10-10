@@ -147,7 +147,7 @@ function updateLimsAndTicks(plt::Plot{QwtPackage}, d::Dict, isx::Bool)
   w = plt.o.widget
   axisid = Qwt.QWT.QwtPlot[isx ? :xBottom : :yLeft] 
   
-  if typeof(lims) <: Tuple
+  if typeof(lims) <: @compat(Union{Tuple,AVec}) && length(lims) == 2
     if isx
       plt.o.autoscale_x = false
     else
@@ -249,14 +249,34 @@ end
 function buildSubplotObject!(subplt::Subplot{QwtPackage})
   i = 0
   rows = []
-  for rowcnt in subplt.layout.rowcounts
-    push!(rows, Qwt.hsplitter([plt.o for plt in subplt.plts[(1:rowcnt) + i]]...))
-    i += rowcnt
+  row = []
+  for (i,(r,c)) in enumerate(subplt.layout)
+    push!(row, subplt.plts[i].o)
+    if c == ncols(subplt.layout, r)
+      push!(rows, Qwt.hsplitter(row...))
+      row = []
+    end
   end
+  # for rowcnt in subplt.layout.rowcounts
+  #   push!(rows, Qwt.hsplitter([plt.o for plt in subplt.plts[(1:rowcnt) + i]]...))
+  #   i += rowcnt
+  # end
   subplt.o = Qwt.vsplitter(rows...)
   Qwt.resizewidget(subplt.o, subplt.initargs[1][:size]...)
   Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
 end
+
+function handleLinkInner(plt::Plot{QwtPackage}, isx::Bool)
+  warn("handleLinkInner isn't implemented for qwt")
+end
+
+function expandLimits!(lims, plt::Plot{QwtPackage}, isx::Bool)
+  for series in plt.o.lines
+    expandLimits!(lims, isx ? series.x : series.y)
+  end
+end
+
+
 
 # ----------------------------------------------------------------
 

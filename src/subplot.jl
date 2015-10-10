@@ -122,6 +122,7 @@ function linkAxis(subplt::Subplot, isx::Bool)
     expandLimits!(lims, plt, isx)
   end
 
+  @show lims
   for plt in subplt.plts
     (isx ? xlims! : ylims!)(plt, lims...)
   end
