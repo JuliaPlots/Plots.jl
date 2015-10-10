@@ -56,13 +56,15 @@ supportedArgs(::PyPlotPackage) = [
     :xflip,
     :yflip,
     :z,
+    :linkx,
+    :linky,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :hexagon]
 supportedScales(::PyPlotPackage) = [:identity, :log, :log2, :log10]
-subplotSupported(::PyPlotPackage) = false
+subplotSupported(::PyPlotPackage) = true
 
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
@@ -122,7 +124,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
 
   # in the 2-axis case we need to get: <rightaxis>[:<func>]
   if axis == :right
-    ax = getRightAxis(plt.o[1])  
+    ax = getRightAxis(plt.o)  
     ax[:set_ylabel](plt.initargs[:yrightlabel])
     fmap = @compat Dict(
         :hist => :hist,
@@ -163,14 +165,24 @@ function updateAxisColors(ax, fgcolor)
 end
 
 nop() = nothing
-# makePyPlotCurrent(plt::Plot) = PyPlot.withfig(nop, plt.o[1])
-makePyPlotCurrent(plt::Plot) = PyPlot.figure(plt.o[1].o[:number])
-# makePyPlotCurrent(plt::Plot) = PyPlot.orig_figure(num = plt.o[1].o[:number])
+
+makePyPlotCurrent(plt::Plot) = PyPlot.figure(plt.o.o[:number])
 
 
 function preparePlotUpdate(plt::Plot{PyPlotPackage})
   makePyPlotCurrent(plt)
 end
+
+
+# ------------------------------------------------------------------
+
+# type PyPlotSubplotFigure
+#   fig
+#   axes
+# end
+
+# type PyPlotFigure
+#   fig
 
 # ------------------------------------------------------------------
 
@@ -191,8 +203,8 @@ function plot(pkg::PyPlotPackage; kw...)
   bgcolor = getPyPlotColor(d[:background_color])
   fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96)
 
-  num = fig.o[:number]
-  plt = Plot((fig, num), pkg, 0, d, Dict[])
+  # num = fig.o[:number]
+  plt = Plot(fig, pkg, 0, d, Dict[])
   plt
 end
 
@@ -200,7 +212,7 @@ end
 function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
-  fig, num = plt.o
+  fig = plt.o
   # PyPlot.figure(num)  # makes this current
   # makePyPlotCurrent(plt)
 
@@ -331,7 +343,7 @@ function addPyPlotTicks(ticks, isx::Bool)
 end
 
 function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
-  fig = plt.o[1]
+  fig = plt.o
 
   # title and axis labels
   haskey(d, :title) && PyPlot.title(d[:title])
@@ -377,7 +389,7 @@ end
 # -----------------------------------------------------------------
 
 function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::@compat(AbstractString))
-  ax = getLeftAxis(plt.o[1])
+  ax = getLeftAxis(plt.o)
   ax[:annotate](val, xy = (x,y))
 end
 
@@ -391,7 +403,26 @@ end
 
 # create the underlying object (each backend will do this differently)
 function buildSubplotObject!(subplt::Subplot{PyPlotPackage})
-  error("unsupported")
+  l = subplt.layout
+  isa(l, GridLayout) || error("Unsupported layout ", l)
+
+  iargs = subplt.initargs[1]
+  w,h = map(px2inch, iargs[:size])
+  bgcolor = getPyPlotColor(iargs[:background_color])
+  fig, axes = PyPlot.subplots(nrows(l), ncols(l),
+                              sharex = get(iargs,:linkx,false),
+                              sharey = get(iargs,:linky,false),
+                              figsize = (w,h),
+                              facecolor = bgcolor,
+                              dpi = 96)
+  @show fig axes
+  subplt.o = fig
+end
+
+function handleLinkInner(plt::Plot{PyPlotPackage}, isx::Bool)
+end
+
+function expandLimits!(lims, plt::Plot{PyPlotPackage}, isx::Bool)
 end
 
 # -----------------------------------------------------------------
@@ -408,7 +439,7 @@ end
 
 
 function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{PyPlotPackage})
-  fig, num = plt.o
+  fig = plt.o
   addPyPlotLegend(plt)
   ax = fig.o[:axes][1]
   updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
@@ -417,7 +448,7 @@ end
 
 
 function Base.display(::PlotsDisplay, plt::Plot{PyPlotPackage})
-  fig, num = plt.o
+  fig = plt.o
   addPyPlotLegend(plt)
   ax = fig.o[:axes][1]
   updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
