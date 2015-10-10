@@ -250,20 +250,6 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     push!(gfargs, Gadfly.Geom.ribbon)
   end
 
-  # # fillto and ribbon
-  # yminmax = Any[]
-  # fillto, ribbon = d[:fill], d[:ribbon]
-  
-  # if fillto != nothing
-  #   if ribbon != nothing
-  #     warn("Ignoring ribbon arg since fillto is set!")
-  #   end
-  #   fillto = makevec(fillto)
-  #   n = length(fillto)
-  #   push!(yminmax, (:ymin, Float64[min(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
-  #   push!(yminmax, (:ymax, Float64[max(y, fillto[mod1(i,n)]) for (i,y) in enumerate(d[:y])]))
-  #   push!(gfargs, Gadfly.Geom.ribbon)
-  
   # elseif ribbon != nothing
   #   ribbon = makevec(ribbon)
   #   n = length(ribbon)
@@ -490,51 +476,67 @@ function buildSubplotObject!(subplt::Subplot{GadflyPackage})
 end
 
 
-# link the subplots together to share axes... useful for facet plots, cross-scatters, etc
-function linkXAxis(subplt::Subplot{GadflyPackage})
-    
-    for (i,(r,c)) in enumerate(subplt.layout)
-        gplt = subplt.plts[i].o
-        if r < nrows(subplt.layout)
-            addOrReplace(gplt.guides, Gadfly.Guide.xticks; label=false)
-            addOrReplace(gplt.guides, Gadfly.Guide.xlabel, "")
-        end
-    end
-    
-    lims = [Inf,-Inf]     
-    for plt in subplt.plts
-        for l in plt.o.layers
-            expandLimits!(lims, l.mapping[:x])
-        end
-    end
-    for plt in subplt.plts
-        xlims!(plt, lims...)
-    end
-        
+function handleLinkInner(plt::Plot{GadflyPackage}, isx::Bool)
+  gplt = getGadflyContext(plt)
+  # addOrReplace(gplt.guides, Gadfly.Guide.xticks; label=false)
+  # addOrReplace(gplt.guides, Gadfly.Guide.xlabel, "")
+  addOrReplace(gplt.guides, isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks; label=false)
+  addOrReplace(gplt.guides, isx ? Gadfly.Guide.xlabel : Gadfly.Guide.ylabel, "")
 end
 
-# link the subplots together to share axes... useful for facet plots, cross-scatters, etc
-function linkYAxis(subplt::Subplot{GadflyPackage})
-    
-    for (i,(r,c)) in enumerate(subplt.layout)
-        gplt = subplt.plts[i].o
-        if c > 1
-            addOrReplace(gplt.guides, Gadfly.Guide.yticks; label=false)
-            addOrReplace(gplt.guides, Gadfly.Guide.ylabel, "")
-        end
-    end
-    
-    lims = [Inf,-Inf]
-    for plt in subplt.plts
-        for l in plt.o.layers
-            expandLimits!(lims, l.mapping[:y])
-        end
-    end
-    for plt in subplt.plts
-        ylims!(plt, lims...)
-    end
-        
+function expandLimits!(lims, plt::Plot{GadflyPackage}, isx::Bool)
+  for l in getGadflyContext(plt).layers
+    expandLimits!(lims, l.mapping[isx ? :x : :y])
+  end
 end
+
+
+# # link the subplots together to share axes... useful for facet plots, cross-scatters, etc
+# function linkXAxis{T<:@compat(Union{GadflyPackage,ImmersePackage})}(subplt::Subplot{T})
+
+    
+#     for (i,(r,c)) in enumerate(subplt.layout)
+#         gplt = getGadflyContext(subplt.plts[i])
+#         if r < nrows(subplt.layout)
+#             addOrReplace(gplt.guides, Gadfly.Guide.xticks; label=false)
+#             addOrReplace(gplt.guides, Gadfly.Guide.xlabel, "")
+#         end
+#     end
+    
+#     lims = [Inf,-Inf]     
+#     for plt in subplt.plts
+#         for l in getGadflyContext(plt).layers
+#             expandLimits!(lims, l.mapping[:x])
+#         end
+#     end
+#     for plt in subplt.plts
+#         xlims!(plt, lims...)
+#     end
+        
+# end
+
+# # link the subplots together to share axes... useful for facet plots, cross-scatters, etc
+# function linkYAxis{T<:@compat(Union{GadflyPackage,ImmersePackage})}(subplt::Subplot{T})
+    
+#     for (i,(r,c)) in enumerate(subplt.layout)
+#         gplt = getGadflyContext(subplt.plts[i])
+#         if c > 1
+#             addOrReplace(gplt.guides, Gadfly.Guide.yticks; label=false)
+#             addOrReplace(gplt.guides, Gadfly.Guide.ylabel, "")
+#         end
+#     end
+    
+#     lims = [Inf,-Inf]
+#     for plt in subplt.plts
+#         for l in getGadflyContext(plt).layers
+#             expandLimits!(lims, l.mapping[:y])
+#         end
+#     end
+#     for plt in subplt.plts
+#         ylims!(plt, lims...)
+#     end
+        
+# end
 
 # ----------------------------------------------------------------
 

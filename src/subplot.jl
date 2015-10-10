@@ -38,7 +38,7 @@ function subplotlayout(numplts::Int, nr::Int, nc::Int)
     i += cnt
   end
 
-  SubplotLayout(numplts, rowcounts)
+  FlexLayout(numplts, rowcounts)
 end
 
 # # create a layout directly
@@ -110,7 +110,23 @@ ncols(layout::GridLayout, row::Int) = layout.nc
 # get the plot index given row and column
 Base.getindex(layout::GridLayout, r::Int, c::Int) = (r-1) * layout.nc + c
 
+# handle "linking" the subplot axes together
+# each backend should implement the handleLinkInner and expandLimits! methods
+function linkAxis(subplt::Subplot, isx::Bool)
+  lims = [Inf, -Inf]
+  for (i,(r,c)) in enumerate(subplt.layout)
+    plt = subplt.plts[i]
+    if (isx && r < nrows(subplt.layout)) || (!isx && c > 1)
+      handleLinkInner(plt, isx)
+    end
+    expandLimits!(lims, plt, isx)
+  end
 
+  for plt in subplt.plts
+    (isx ? xlims! : ylims!)(plt, lims...)
+  end
+end
+    
 
 # ------------------------------------------------------------
 
@@ -174,7 +190,7 @@ function subplot(args...; kw...)
   # # tmpd[:show] = shouldShow
 
   # create the object and do the plotting
-  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, ds, false, get(d, :linkx, false), get(d, :linky, false))
+  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, ds, false, false, false)
   subplot!(subplt, args...; kw...)
 
   subplt
@@ -206,10 +222,10 @@ function subplot!(subplt::Subplot, args...; kw...)
 
   d = Dict(kw)
   preprocessArgs!(d)
-  # for k in keys(_plotDefaults)
-  #   delete!(d, k)
-  # end
   dumpdict(d, "After subplot! preprocessing")
+
+  haskey(d, :linkx) && (subplt.linkx = d[:linkx])
+  haskey(d, :linky) && (subplt.linky = d[:linky])
 
   kwList, xmeta, ymeta = createKWargsList(subplt, args...; d...)
 
@@ -242,12 +258,8 @@ function subplot!(subplt::Subplot, args...; kw...)
     updatePlotItems(plt, di)
   end
 
-  if subplt.linkx
-    linkXAxis(subplt)
-  end
-  if subplt.linky
-    linkYAxis(subplt)
-  end
+  subplt.linkx && linkAxis(subplt, true)
+  subplt.linky && linkAxis(subplt, false)
 
   # set this to be current
   current(subplt)

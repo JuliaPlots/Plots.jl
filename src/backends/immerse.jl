@@ -87,41 +87,81 @@ function buildSubplotObject!(subplt::Subplot{ImmersePackage})
   vsep = Gtk.GtkBoxLeaf(:v)
   win = Gtk.GtkWindowLeaf(vsep, d[:windowtitle], w, h)
 
-  # add the plot boxes
-  i = 0
-  rows = []
   figindices = []
-  for rowcnt in subplt.layout.rowcounts
+  row = Gtk.GtkBoxLeaf(:h)
+  push!(vsep, row)
+  for (i,(r,c)) in enumerate(subplt.layout)
+    plt = subplt.plts[i]
 
-    # create a new row and add it to the main Box vsep
-    row = Gtk.GtkBoxLeaf(:h)
-    push!(vsep, row)
+    # get the components... box is the main plot GtkBox, and canvas is the GtkCanvas where it's plotted
+    box, toolbar, canvas = Immerse.createPlotGuiComponents()
 
-    # now add the plot components to the row
-    for plt in subplt.plts[(1:rowcnt) + i]
+    # add the plot's box to the row
+    push!(row, box)
 
-      # get the components... box is the main plot GtkBox, and canvas is the GtkCanvas where it's plotted
-      box, toolbar, canvas = Immerse.createPlotGuiComponents()
+    # create the figure and store the index returned for destruction later
+    figidx = Immerse.figure(canvas)
+    push!(figindices, figidx)
 
-      # add the plot's box to the row
-      push!(row, box)
+    fig = Immerse.figure(figidx)
+    plt.o = (fig, plt.o[2])
 
-      # create the figure and store the index returned for destruction later
-      figidx = Immerse.figure(canvas)
-      push!(figindices, figidx)
-
-      fig = Immerse.figure(figidx)
-      plt.o = (fig, plt.o[2])
+    # add the row
+    if c == ncols(subplt.layout, r)
+      row = Gtk.GtkBoxLeaf(:h)
+      push!(vsep, row)
     end
 
-    i += rowcnt
   end
+
+  # # add the plot boxes
+  # i = 0
+  # figindices = []
+  # for rowcnt in subplt.layout.rowcounts
+
+  #   # create a new row and add it to the main Box vsep
+  #   row = Gtk.GtkBoxLeaf(:h)
+  #   push!(vsep, row)
+
+  #   # now add the plot components to the row
+  #   for plt in subplt.plts[(1:rowcnt) + i]
+
+  #     # get the components... box is the main plot GtkBox, and canvas is the GtkCanvas where it's plotted
+  #     box, toolbar, canvas = Immerse.createPlotGuiComponents()
+
+  #     # add the plot's box to the row
+  #     push!(row, box)
+
+  #     # create the figure and store the index returned for destruction later
+  #     figidx = Immerse.figure(canvas)
+  #     push!(figindices, figidx)
+
+  #     fig = Immerse.figure(figidx)
+  #     plt.o = (fig, plt.o[2])
+  #   end
+
+  #   i += rowcnt
+  # end
 
   # destructor... clean up plots
   Gtk.on_signal_destroy((x...) -> [Immerse.dropfig(Immerse._display,i) for i in figindices], win)
 
   subplt.o = win
 end
+
+
+function handleLinkInner(plt::Plot{ImmersePackage}, isx::Bool)
+  gplt = getGadflyContext(plt)
+  addOrReplace(gplt.guides, isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks; label=false)
+  addOrReplace(gplt.guides, isx ? Gadfly.Guide.xlabel : Gadfly.Guide.ylabel, "")
+end
+
+function expandLimits!(lims, plt::Plot{ImmersePackage}, isx::Bool)
+  for l in getGadflyContext(plt).layers
+    expandLimits!(lims, l.mapping[isx ? :x : :y])
+  end
+end
+
 
 # ----------------------------------------------------------------
 
