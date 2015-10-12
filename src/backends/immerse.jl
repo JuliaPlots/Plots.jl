@@ -169,7 +169,7 @@ getGadflyContext(plt::Plot{ImmersePackage}) = plt.o[2]
 getGadflyContext(subplt::Subplot{ImmersePackage}) = buildGadflySubplotContext(subplt)
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{ImmersePackage})
-  gplt = getGadflyContext(plt.backend, plt)
+  gplt = getGadflyContext(plt)
   setGadflyDisplaySize(plt.initargs[:size]...)
   Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end
