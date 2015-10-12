@@ -77,6 +77,7 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
       if i==j
         # histogram on diagonal
         plt = histogram(mat[:,i], c=:black)
+        i > 1 && plot!(yticks = :none)
       else
         # scatter plots off-diagonal, color determined by correlation
         c = RGBA(RGB(getColorZ(cgrad, corrmat[i,j])), 0.3)

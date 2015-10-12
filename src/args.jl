@@ -458,11 +458,10 @@ function preprocessArgs!(d::Dict)
     if isa(l, Bool)
       d[:linkx] = l
       d[:linky] = l
-      d[:linkfunc] = nothing
     elseif isa(l, Function)
       d[:linkx] = true
       d[:linky] = true
-      d[:linkfunc] = d[:link]
+      d[:linkfunc] = l
     else
       warn("Unhandled/invalid link $l.  Should be a Bool or a function mapping (row,column) -> (linkx, linky), where linkx/y can be Bool or Void (nothing)")
     end
@@ -505,7 +504,9 @@ end
 
 function warnOnUnsupportedArgs(pkg::PlottingPackage, d::Dict)
   for k in sortedkeys(d)
-    if !(k in supportedArgs(pkg)) && d[k] != default(k)
+    if (!(k in supportedArgs(pkg))
+        && k != :subplot
+        && d[k] != default(k))
       warn("Keyword argument $k not supported with $pkg.  Choose from: $(supportedArgs(pkg))")
     end
   end

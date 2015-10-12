@@ -116,26 +116,35 @@ function linkAxis(subplt::Subplot, isx::Bool)
 
   # collect the list of plots and the expanded limits for those plots that should be linked on this axis
   includedPlots = Any[]
-  lims = [Inf, -Inf]
+  # lims = [Inf, -Inf]
+  lims = Dict{Int,Any}()  # maps column to xlim
   for (i,(r,c)) in enumerate(subplt.layout)
 
     # shouldlink will be a bool or nothing.  if nothing, then use linkx/y (which is true if we get to this code)
     shouldlink = subplt.linkfunc(r,c)[isx ? 1 : 2]
     if shouldlink == nothing || shouldlink
       plt = subplt.plts[i]
-      isinner = (isx && r < nrows(subplt.layout)) || (!isx && c > 1)
-      push!(includedPlots, (plt, isinner))
-      expandLimits!(lims, plt, isx)
+
+      # if we don't have this
+      k = isx ? c : r
+      if (firstone = !haskey(lims, k))
+        lims[k] = [Inf, -Inf]
+      end
+
+      isinner = (isx && r < nrows(subplt.layout)) || (!isx && !firstone)
+      push!(includedPlots, (plt, isinner, k))
+
+      expandLimits!(lims[k], plt, isx)
     end
 
   end
 
   # do the axis adjustments
-  for (plt, isinner) in includedPlots
+  for (plt, isinner, k) in includedPlots
     if isinner
       handleLinkInner(plt, isx)
     end
-    (isx ? xlims! : ylims!)(plt, lims...)
+    (isx ? xlims! : ylims!)(plt, lims[k]...)
   end
 end
 
@@ -237,11 +246,17 @@ function subplot!(subplt::Subplot, args...; kw...)
   preprocessArgs!(d)
   dumpdict(d, "After subplot! preprocessing")
 
-  haskey(d, :linkx) && (subplt.linkx = d[:linkx])
-  haskey(d, :linky) && (subplt.linky = d[:linky])
-  if get(d, :linkfunc, nothing) != nothing
-    subplt.linkfunc = d[:linkfunc]
+  for s in (:linkx, :linky, :linkfunc)
+    if haskey(d, s)
+      setfield!(subplt, s, d[s])
+      delete!(d, s)
+    end
   end
+  # haskey(d, :linkx) && (subplt.linkx = d[:linkx]; delete!(d, :linkx))
+  # haskey(d, :linky) && (subplt.linky = d[:linky])
+  # if haskey(d, :linkfunc)
+  #   subplt.linkfunc = d[:linkfunc]
+  # end
 
   kwList, xmeta, ymeta = createKWargsList(subplt, args...; d...)
 
@@ -251,6 +266,7 @@ function subplot!(subplt::Subplot, args...; kw...)
     subplt.n += 1
     plt = getplot(subplt)  # get the Plot object where this series will be drawn
     di[:show] = false
+    di[:subplot] = true
     dumpdict(di, "subplot! kwList $i")
     plot!(plt; di...)
   end

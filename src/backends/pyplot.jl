@@ -56,8 +56,9 @@ supportedArgs(::PyPlotPackage) = [
     :xflip,
     :yflip,
     :z,
-    :linkx,
-    :linky,
+    # :linkx,
+    # :linky,
+    # :linkfunc,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]

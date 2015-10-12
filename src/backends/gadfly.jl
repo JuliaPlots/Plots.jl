@@ -54,8 +54,8 @@ supportedArgs(::GadflyPackage) = [
     :xflip,
     :yflip,
     :z,
-    :linkx,
-    :linky,
+    # :linkx,
+    # :linky,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
@@ -421,7 +421,8 @@ end
 
 
 
-function updateGadflyGuides(gplt, d::Dict)
+function updateGadflyGuides(plt::Plot, d::Dict)
+  gplt = getGadflyContext(plt)
   haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, d[:title])
   haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, d[:xlabel])
   haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, d[:ylabel])
@@ -429,14 +430,25 @@ function updateGadflyGuides(gplt, d::Dict)
   xlims = addGadflyLimitsScale(gplt, d, true)
   ylims = addGadflyLimitsScale(gplt, d, false)
 
-  haskey(d, :xticks) && addGadflyTicksGuide(gplt, d[:xticks], true)
-  haskey(d, :yticks) && addGadflyTicksGuide(gplt, d[:yticks], false)
+  ticks = get(d, :xticks, :auto)
+  if ticks == :none
+    handleLinkInner(plt, true)
+  else
+    addGadflyTicksGuide(gplt, ticks, true)
+  end
+  ticks = get(d, :yticks, :auto)
+  if ticks == :none
+    handleLinkInner(plt, false)
+  else
+    addGadflyTicksGuide(gplt, ticks, false)
+  end
+  # haskey(d, :yticks) && addGadflyTicksGuide(gplt, d[:yticks], false)
 
   updateGadflyAxisFlips(gplt, d, xlims, ylims)
 end
 
 function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
-  updateGadflyGuides(plt.o, d)
+  updateGadflyGuides(plt, d)
 end
 
 # ----------------------------------------------------------------
