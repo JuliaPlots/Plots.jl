@@ -42,6 +42,7 @@ type Subplot{T<:PlottingPackage, L<:SubplotLayout} <: PlottingObject{T}
   initialized::Bool
   linkx::Bool
   linky::Bool
+  linkfunc::Function # maps (row,column) -> (BoolOrNothing, BoolOrNothing)... if xlink/ylink are nothing, then use subplt.linkx/y
 end
 
 

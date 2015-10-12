@@ -79,7 +79,8 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
         plt = histogram(mat[:,i], c=:black)
       else
         # scatter plots off-diagonal, color determined by correlation
-        plt = scatter(mat[:,j], mat[:,i], ms=4, c=getColorZ(cgrad, corrmat[i,j]))
+        c = RGBA(RGB(getColorZ(cgrad, corrmat[i,j])), 0.3)
+        plt = scatter(mat[:,j], mat[:,i], w=0, ms=3, c=c)
       end
       # replace the plt
       p.plts[idx] = plt
@@ -87,6 +88,6 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
   end
 
   # link the axes
-  subplot!(p, link=true)
+  subplot!(p, link = (r,c) -> (true, r!=c))
 end
 

@@ -167,6 +167,7 @@ ticksType{T<:AVec,S<:AVec}(ticks::@compat(Tuple{T,S})) = :ticks_and_labels
 ticksType(ticks) = :invalid
 
 limsType{T<:Real,S<:Real}(lims::@compat(Tuple{T,S})) = :limits
+limsType(lims::Symbol) = lims == :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
 

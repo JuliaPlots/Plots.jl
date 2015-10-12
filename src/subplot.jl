@@ -113,20 +113,33 @@ Base.getindex(layout::GridLayout, r::Int, c::Int) = (r-1) * layout.nc + c
 # handle "linking" the subplot axes together
 # each backend should implement the handleLinkInner and expandLimits! methods
 function linkAxis(subplt::Subplot, isx::Bool)
+
+  # collect the list of plots and the expanded limits for those plots that should be linked on this axis
+  includedPlots = Any[]
   lims = [Inf, -Inf]
   for (i,(r,c)) in enumerate(subplt.layout)
-    plt = subplt.plts[i]
-    if (isx && r < nrows(subplt.layout)) || (!isx && c > 1)
-      handleLinkInner(plt, isx)
+
+    # shouldlink will be a bool or nothing.  if nothing, then use linkx/y (which is true if we get to this code)
+    shouldlink = subplt.linkfunc(r,c)[isx ? 1 : 2]
+    if shouldlink == nothing || shouldlink
+      plt = subplt.plts[i]
+      isinner = (isx && r < nrows(subplt.layout)) || (!isx && c > 1)
+      push!(includedPlots, (plt, isinner))
+      expandLimits!(lims, plt, isx)
     end
-    expandLimits!(lims, plt, isx)
+
   end
 
-  for plt in subplt.plts
+  # do the axis adjustments
+  for (plt, isinner) in includedPlots
+    if isinner
+      handleLinkInner(plt, isx)
+    end
     (isx ? xlims! : ylims!)(plt, lims...)
   end
 end
-    
+
+
 
 # ------------------------------------------------------------
 
@@ -190,7 +203,7 @@ function subplot(args...; kw...)
   # # tmpd[:show] = shouldShow
 
   # create the object and do the plotting
-  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, ds, false, false, false)
+  subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, ds, false, false, false, (r,c) -> (nothing,nothing))
   subplot!(subplt, args...; kw...)
 
   subplt
@@ -226,6 +239,9 @@ function subplot!(subplt::Subplot, args...; kw...)
 
   haskey(d, :linkx) && (subplt.linkx = d[:linkx])
   haskey(d, :linky) && (subplt.linky = d[:linky])
+  if get(d, :linkfunc, nothing) != nothing
+    subplt.linkfunc = d[:linkfunc]
+  end
 
   kwList, xmeta, ymeta = createKWargsList(subplt, args...; d...)
 

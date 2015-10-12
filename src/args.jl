@@ -153,6 +153,7 @@ _plotDefaults[:color_palette]     = :auto
 _plotDefaults[:link]              = false
 _plotDefaults[:linkx]             = false
 _plotDefaults[:linky]             = false
+_plotDefaults[:linkfunc]          = nothing
 
 
 
@@ -454,8 +455,17 @@ function preprocessArgs!(d::Dict)
   # handle subplot links
   if haskey(d, :link)
     l = d[:link]
-    d[:linkx] = l
-    d[:linky] = l
+    if isa(l, Bool)
+      d[:linkx] = l
+      d[:linky] = l
+      d[:linkfunc] = nothing
+    elseif isa(l, Function)
+      d[:linkx] = true
+      d[:linky] = true
+      d[:linkfunc] = d[:link]
+    else
+      warn("Unhandled/invalid link $l.  Should be a Bool or a function mapping (row,column) -> (linkx, linky), where linkx/y can be Bool or Void (nothing)")
+    end
     delete!(d, :link)
   end
 

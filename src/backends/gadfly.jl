@@ -161,10 +161,9 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   
   # set theme: color, line linewidth, and point size
   line_width = d[:linewidth] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 linewidth when we don't show a line
-  # line_color = isa(d[:color], AbstractVector) ? colorant"black" : d[:color]
   line_color = getColor(d[:color])
   fillcolor = getColor(d[:fillcolor])
-  # @show fillcolor
+  # marker_stroke_color = d[:linewidth] == 0 ? RGBA(0,0,0,0) : line_color
   # fg = initargs[:foreground_color]
   theme = Gadfly.Theme(; default_color = line_color,
                        line_width = line_width,
@@ -174,9 +173,11 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
                        # major_label_color = fg,
                        # key_title_color = fg,
                        # key_label_color = fg,
-                       lowlight_color = x->RGB(fillcolor),
-                       lowlight_opacity = alpha(fillcolor),
-                       bar_highlight = RGB(line_color),
+                       # discrete_highlight_color = marker_stroke_color,  # border of markers
+                       highlight_width = d[:linewidth] * Gadfly.px,  # width of marker border
+                       lowlight_color = x->RGB(fillcolor), # fill/ribbon
+                       lowlight_opacity = alpha(fillcolor), # fill/ribbon
+                       bar_highlight = RGB(line_color),  # bars
                        extra_theme_args...)
   push!(gfargs, theme)
 
@@ -229,7 +230,6 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # handle continuous color scales for the markers
   elseif z != nothing && typeof(z) <: AVec
     colorgroup = [(:color, z)]
-    # minz, maxz = minimum(z), maximum(z)
     if !isa(d[:markercolor], ColorGradient)
       d[:markercolor] = colorscheme(:bluesreds)
     end
@@ -257,7 +257,6 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   #   push!(yminmax, (:ymin, Float64[y - ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
   #   push!(yminmax, (:ymax, Float64[y + ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
   #   push!(gfargs, Gadfly.Geom.ribbon)
-
   # end
   
   # handle markers
@@ -271,17 +270,15 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   end
 
   # add to the legend, but only without the continuous scale
-  # if d[:z] == nothing
-    for guide in gplt.guides
-      if isa(guide, Gadfly.Guide.ManualColorKey)
-        # TODO: there's a BUG in gadfly if you pass in the same color more than once,
-        # since gadfly will call unique(colors), but doesn't also merge the rows that match
-        # Should ensure from this side that colors which are the same are merged together
+  for guide in gplt.guides
+    if isa(guide, Gadfly.Guide.ManualColorKey)
+      # TODO: there's a BUG in gadfly if you pass in the same color more than once,
+      # since gadfly will call unique(colors), but doesn't also merge the rows that match
+      # Should ensure from this side that colors which are the same are merged together
 
-        push!(guide.labels, d[:label])
-        push!(guide.colors, getColor(d[d[:markershape] == :none ? :color : :markercolor]))
-      end
-    # end
+      push!(guide.labels, d[:label])
+      push!(guide.colors, getColor(d[d[:markershape] == :none ? :color : :markercolor]))
+    end
   end
 
   # for histograms, set x=y
@@ -325,7 +322,6 @@ function addGadflyTicksGuide(gplt, ticks, isx::Bool)
 end
 
 continuousAndSameAxis(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScale) && scale.vars[1] == (isx ? :x : :y)
-# filterGadflyScale(gplt, isx::Bool) = filter!(scale -> scale.vars[1] != (isx ? :x : :y), gplt.scales)
 filterGadflyScale(gplt, isx::Bool) = filter!(scale -> !continuousAndSameAxis(scale, isx), gplt.scales)
 
 
@@ -348,46 +344,38 @@ function addGadflyLimitsScale(gplt, d::Dict, isx::Bool)
 
   # get the correct scale function
   gfunc, hasScaleKey = getGadflyScaleFunction(d, isx)
-  # @show d gfunc hasScaleKey
-
+  
   # do we want to add min/max limits for the axis?
   limsym = isx ? :xlims : :ylims
   limargs = Any[]
-  if haskey(d, limsym)
-    lims = d[limsym]
-    lims == :auto && return
-    if limsType(lims) == :limits
-      # remove any existing scales, then add a new one
-      # filterGadflyScale(gplt, isx)
-      # gfunc = isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous
-      # filter!(scale -> !isContinuousScale(scale,isx), gplt.scales)
-      # push!(gplt.scales, gfunc(minvalue = min(lims...), maxvalue = max(lims...)))
-      push!(limargs, (:minvalue, min(lims...)))
-      push!(limargs, (:maxvalue, max(lims...)))
-    else
-      error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
-    end
+  lims = get(d, limsym, :auto)
+  lims == :auto && return
+
+  if limsType(lims) == :limits
+    push!(limargs, (:minvalue, min(lims...)))
+    push!(limargs, (:maxvalue, max(lims...)))
+  else
+    error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
   end
-  # @show limargs
 
   # replace any current scales with this one
   if hasScaleKey || !isempty(limargs)
     filterGadflyScale(gplt, isx)
     push!(gplt.scales, gfunc(; limargs...))
   end
-  # @show gplt.scales
-  return
+
+  lims
 end
 
-function updateGadflyAxisFlips(gplt, d::Dict)
+function updateGadflyAxisFlips(gplt, d::Dict, xlims, ylims)
   if isa(gplt.coord, Gadfly.Coord.Cartesian)
     gplt.coord = Gadfly.Coord.cartesian(
         gplt.coord.xvars,
         gplt.coord.yvars;
-        xmin = gplt.coord.xmin,
-        xmax = gplt.coord.xmax,
-        ymin = gplt.coord.ymin,
-        ymax = gplt.coord.ymax,
+        xmin = xlims == nothing ? gplt.coord.xmin : minimum(xlims),
+        xmax = xlims == nothing ? gplt.coord.xmax : maximum(xlims),
+        ymin = ylims == nothing ? gplt.coord.ymin : minimum(ylims),
+        ymax = ylims == nothing ? gplt.coord.ymax : maximum(ylims),
         xflip = get(d, :xflip, gplt.coord.xflip),
         yflip = get(d, :yflip, gplt.coord.yflip),
         fixed = gplt.coord.fixed,
@@ -438,13 +426,13 @@ function updateGadflyGuides(gplt, d::Dict)
   haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, d[:xlabel])
   haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, d[:ylabel])
 
-  addGadflyLimitsScale(gplt, d, true)
-  addGadflyLimitsScale(gplt, d, false)
+  xlims = addGadflyLimitsScale(gplt, d, true)
+  ylims = addGadflyLimitsScale(gplt, d, false)
 
   haskey(d, :xticks) && addGadflyTicksGuide(gplt, d[:xticks], true)
   haskey(d, :yticks) && addGadflyTicksGuide(gplt, d[:yticks], false)
 
-  updateGadflyAxisFlips(gplt, d)
+  updateGadflyAxisFlips(gplt, d, xlims, ylims)
 end
 
 function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
@@ -478,8 +466,6 @@ end
 
 function handleLinkInner(plt::Plot{GadflyPackage}, isx::Bool)
   gplt = getGadflyContext(plt)
-  # addOrReplace(gplt.guides, Gadfly.Guide.xticks; label=false)
-  # addOrReplace(gplt.guides, Gadfly.Guide.xlabel, "")
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks; label=false)
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xlabel : Gadfly.Guide.ylabel, "")
 end
@@ -491,53 +477,6 @@ function expandLimits!(lims, plt::Plot{GadflyPackage}, isx::Bool)
 end
 
 
-# # link the subplots together to share axes... useful for facet plots, cross-scatters, etc
-# function linkXAxis{T<:@compat(Union{GadflyPackage,ImmersePackage})}(subplt::Subplot{T})
-
-    
-#     for (i,(r,c)) in enumerate(subplt.layout)
-#         gplt = getGadflyContext(subplt.plts[i])
-#         if r < nrows(subplt.layout)
-#             addOrReplace(gplt.guides, Gadfly.Guide.xticks; label=false)
-#             addOrReplace(gplt.guides, Gadfly.Guide.xlabel, "")
-#         end
-#     end
-    
-#     lims = [Inf,-Inf]     
-#     for plt in subplt.plts
-#         for l in getGadflyContext(plt).layers
-#             expandLimits!(lims, l.mapping[:x])
-#         end
-#     end
-#     for plt in subplt.plts
-#         xlims!(plt, lims...)
-#     end
-        
-# end
-
-# # link the subplots together to share axes... useful for facet plots, cross-scatters, etc
-# function linkYAxis{T<:@compat(Union{GadflyPackage,ImmersePackage})}(subplt::Subplot{T})
-    
-#     for (i,(r,c)) in enumerate(subplt.layout)
-#         gplt = getGadflyContext(subplt.plts[i])
-#         if c > 1
-#             addOrReplace(gplt.guides, Gadfly.Guide.yticks; label=false)
-#             addOrReplace(gplt.guides, Gadfly.Guide.ylabel, "")
-#         end
-#     end
-    
-#     lims = [Inf,-Inf]
-#     for plt in subplt.plts
-#         for l in getGadflyContext(plt).layers
-#             expandLimits!(lims, l.mapping[:y])
-#         end
-#     end
-#     for plt in subplt.plts
-#         ylims!(plt, lims...)
-#     end
-        
-# end
-
 # ----------------------------------------------------------------
 
 
@@ -546,12 +485,6 @@ getGadflyContext(subplt::Subplot{GadflyPackage}) = buildGadflySubplotContext(sub
 
 # create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
 function buildGadflySubplotContext(subplt::Subplot)
-  # i = 0
-  # rows = Any[]
-  # for rowcnt in subplt.layout.rowcounts
-  #   push!(rows, Gadfly.hstack([getGadflyContext(plt) for plt in subplt.plts[(1:rowcnt) + i]]...))
-  #   i += rowcnt
-  # end
   rows = Any[]
   row = Any[]
   for (i,(r,c)) in enumerate(subplt.layout)
@@ -630,6 +563,4 @@ function Base.display(::PlotsDisplay, subplt::Subplot{GadflyPackage})
       """)
   close(output)
   Gadfly.open_file(filename)
-
-  # display(buildGadflySubplotContext(subplt))
 end
