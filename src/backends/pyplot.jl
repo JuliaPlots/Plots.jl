@@ -116,16 +116,32 @@ function getPyPlotDrawStyle(linetype::Symbol)
   return "default"
 end
 
-# get a reference to the right axis
-getLeftAxis(o) = o.o[:axes][1]
-getRightAxis(o) = getLeftAxis(o)[:twinx]()
+
+type PyPlotFigWrapper
+  fig
+end
+
+type PyPlotAxisWrapper
+  ax
+end
+
+
+
+# get a reference to the correct axis
+getLeftAxis(fig::PyPlotFigWrapper) = fig.o[:axes][1]
+getLeftAxis(ax::PyPlotAxisWrapper) = ax
+getLeftAxis(plt::Plot{PyPlotPackage}) = getLeftAxis(plt.o)
+getRightAxis(x) = getLeftAxis(x)[:twinx]()
+getAxis(plt::Plot{PyPlotPackage}, axis::Symbol) = (axis == :right ? getRightAxis : getLeftAxis)(plt)
 
 # left axis is PyPlot.<func>, right axis is "f.axes[0].twinx().<func>"
 function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
 
   # in the 2-axis case we need to get: <rightaxis>[:<func>]
-  if axis == :right
-    ax = getRightAxis(plt.o)  
+  ax = getAxis(plt, axis)
+
+  # if axis == :right
+    # ax = getRightAxis(plt.o)  
     ax[:set_ylabel](plt.initargs[:yrightlabel])
     fmap = @compat Dict(
         :hist => :hist,
@@ -137,19 +153,19 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
       )
     return ax[get(fmap, linetype, :plot)]
     # return ax[linetype == :hist ? :hist : (linetype in (:sticks,:bar) ? :bar : (linetype in (:heatmap,:hexbin) ? :hexbin : :plot))]
-  end
+  # end
 
-  # get the function
-  fmap = @compat Dict(
-      :hist => PyPlot.plt[:hist],
-      :sticks => PyPlot.bar,
-      :bar => PyPlot.bar,
-      :heatmap => PyPlot.hexbin,
-      :hexbin => PyPlot.hexbin,
-      :scatter => PyPlot.scatter
-    )
-  return get(fmap, linetype, PyPlot.plot)
-  # return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : (linetype in (:heatmap,:hexbin) ? PyPlot.hexbin : PyPlot.plot))
+  # # get the function
+  # fmap = @compat Dict(
+  #     :hist => PyPlot.plt[:hist],
+  #     :sticks => PyPlot.bar,
+  #     :bar => PyPlot.bar,
+  #     :heatmap => PyPlot.hexbin,
+  #     :hexbin => PyPlot.hexbin,
+  #     :scatter => PyPlot.scatter
+  #   )
+  # return get(fmap, linetype, PyPlot.plot)
+  # # return linetype == :hist ? PyPlot.plt[:hist] : (linetype in (:sticks,:bar) ? PyPlot.bar : (linetype in (:heatmap,:hexbin) ? PyPlot.hexbin : PyPlot.plot))
 end
 
 function updateAxisColors(ax, fgcolor)
@@ -167,11 +183,11 @@ end
 
 nop() = nothing
 
-makePyPlotCurrent(plt::Plot) = PyPlot.figure(plt.o.o[:number])
+# makePyPlotCurrent(plt::Plot) = PyPlot.figure(plt.o.o[:number])
 
 
 function preparePlotUpdate(plt::Plot{PyPlotPackage})
-  makePyPlotCurrent(plt)
+  # makePyPlotCurrent(plt)
 end
 
 
@@ -202,7 +218,13 @@ function plot(pkg::PyPlotPackage; kw...)
   d = Dict(kw)
   w,h = map(px2inch, d[:size])
   bgcolor = getPyPlotColor(d[:background_color])
-  fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96)
+
+  # standalone plots will create a figure, but not if part of a subplot (do it later)
+  if haskey(d, :subplot)
+    fig = nothing
+  else
+    fig = PyPlotFigWrapper(PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96))
+  end
 
   # num = fig.o[:number]
   plt = Plot(fig, pkg, 0, d, Dict[])
@@ -213,10 +235,8 @@ end
 function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
-  fig = plt.o
-  # PyPlot.figure(num)  # makes this current
-  # makePyPlotCurrent(plt)
-
+  # fig = plt.o
+  ax = getAxis(plt, d[:axis])
   lt = d[:linetype]
   if !(lt in supportedTypes(pkg))
     error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
@@ -236,7 +256,8 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     linecolor = getPyPlotColor(d[:color])
     linestyle = getPyPlotLineStyle(lt, d[:linestyle])
     for yi in d[:y]
-      func = (lt == :hline ? PyPlot.axhline : PyPlot.axvline)
+      # func = (lt == :hline ? PyPlot.axhline : PyPlot.axvline)
+      func = ax[lt == :hline ? :axhline : axvline]
       func(yi, linewidth=d[:linewidth], color=linecolor, linestyle=linestyle)
     end
 
@@ -301,7 +322,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   end
 
   # this sets the bg color inside the grid
-  ax = getLeftAxis(fig)
+  # ax = getLeftAxis(plt)
   ax[:set_axis_bgcolor](getPyPlotColor(plt.initargs[:background_color]))
 
   fillrange = d[:fillrange]
