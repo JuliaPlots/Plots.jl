@@ -238,8 +238,9 @@ end
 
 # we don't do very much for subplots... just stack them vertically
 
-function buildSubplotObject!(subplt::Subplot{UnicodePlotsPackage})
-  nothing
+function buildSubplotObject!(subplt::Subplot{UnicodePlotsPackage}, isbefore::Bool)
+  isbefore && return false
+  true
 end
 
 

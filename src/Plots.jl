@@ -241,15 +241,33 @@ Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::PlottingObject) =
 # ---------------------------------------------------------
 
 
+try
+  import DataFrames
+  dataframes()
+end
+
+# const CURRENT_BACKEND = pickDefaultBackend()
+
+# for be in backends()
+#   try
+#     backend(be)
+#     backend()
+#   catch err
+#     @show err
+#   end
+# end
+
+
 function __init__()
   global const CURRENT_BACKEND = pickDefaultBackend()
+  # global CURRENT_BACKEND
   println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
 
-  # auto init dataframes if the import statement doesn't error out
-  try
-    @eval import DataFrames
-    dataframes()
-  end
+  # # auto init dataframes if the import statement doesn't error out
+  # try
+  #   @eval import DataFrames
+  #   dataframes()
+  # end
 end
 
 # ---------------------------------------------------------

@@ -117,19 +117,31 @@ function getPyPlotDrawStyle(linetype::Symbol)
 end
 
 
-type PyPlotFigWrapper
+immutable PyPlotFigWrapper
   fig
 end
 
-type PyPlotAxisWrapper
+immutable PyPlotAxisWrapper
   ax
 end
 
+# addPyPlotAxis(fig, layout) = error("Only GridLayouts are supported with PyPlot")
+
+# function addPyPlotAxis(fig, layout::GridLayout, idx::Int)
+
+# end
 
 
 # get a reference to the correct axis
-getLeftAxis(fig::PyPlotFigWrapper) = fig.o[:axes][1]
-getLeftAxis(ax::PyPlotAxisWrapper) = ax
+function getLeftAxis(wrap::PyPlotFigWrapper)
+  # @show wrap.fig.o[:axes]
+  axes = wrap.fig.o[:axes]
+  if isempty(axes)
+    return wrap.fig.o[:add_subplot](111)
+  end
+  axes[1]
+end
+getLeftAxis(wrap::PyPlotAxisWrapper) = wrap.ax
 getLeftAxis(plt::Plot{PyPlotPackage}) = getLeftAxis(plt.o)
 getRightAxis(x) = getLeftAxis(x)[:twinx]()
 getAxis(plt::Plot{PyPlotPackage}, axis::Symbol) = (axis == :right ? getRightAxis : getLeftAxis)(plt)
@@ -183,23 +195,17 @@ end
 
 nop() = nothing
 
+
+makePyPlotCurrent(wrap::PyPlotFigWrapper) = PyPlot.figure(wrap.fig.o[:number])
+makePyPlotCurrent(wrap::PyPlotAxisWrapper) = PyPlot.sca(wrap.ax.o)
+makePyPlotCurrent(plt::Plot{PyPlotPackage}) = makePyPlotCurrent(plt.o)
 # makePyPlotCurrent(plt::Plot) = PyPlot.figure(plt.o.o[:number])
 
 
 function preparePlotUpdate(plt::Plot{PyPlotPackage})
-  # makePyPlotCurrent(plt)
+  makePyPlotCurrent(plt)
 end
 
-
-# ------------------------------------------------------------------
-
-# type PyPlotSubplotFigure
-#   fig
-#   axes
-# end
-
-# type PyPlotFigure
-#   fig
 
 # ------------------------------------------------------------------
 
@@ -221,13 +227,15 @@ function plot(pkg::PyPlotPackage; kw...)
 
   # standalone plots will create a figure, but not if part of a subplot (do it later)
   if haskey(d, :subplot)
-    fig = nothing
+    println("no wrap")
+    wrap = nothing
   else
-    fig = PyPlotFigWrapper(PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96))
+    println("yes wrap")
+    wrap = PyPlotFigWrapper(PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96))
   end
 
-  # num = fig.o[:number]
-  plt = Plot(fig, pkg, 0, d, Dict[])
+  # num = wrap.o[:number]
+  plt = Plot(wrap, pkg, 0, d, Dict[])
   plt
 end
 
@@ -307,7 +315,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   end
 
   # set these for all types
-  extraargs[:figure] = plt.o
+  # extraargs[:figure] = plt.o
   extraargs[:color] = getPyPlotColor(d[:color])
   extraargs[:linewidth] = d[:linewidth]
   extraargs[:label] = d[:label]
@@ -342,23 +350,31 @@ end
 
 # -----------------------------------------------------------------
 
-function addPyPlotLims(lims, isx::Bool)
+function addPyPlotLims(ax, lims, isx::Bool)
   lims == :auto && return
   ltype = limsType(lims)
   if ltype == :limits
-    (isx ? PyPlot.xlim : PyPlot.ylim)(lims...)
+    # (isx ? PyPlot.xlim : PyPlot.ylim)(lims...)
+    # @show isx, lims, ax
+    ax[isx ? :set_xlim : :set_ylim](lims...)
   else
     error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
   end
 end
 
-function addPyPlotTicks(ticks, isx::Bool)
+function addPyPlotTicks(ax, ticks, isx::Bool)
   ticks == :auto && return
+  if ticks == :none
+    ticks = zeros(0)
+  end
+
   ttype = ticksType(ticks)
   if ttype == :ticks
-    (isx ? PyPlot.xticks : PyPlot.yticks)(ticks)
+    # (isx ? PyPlot.xticks : PyPlot.yticks)(ticks)
+    ax[isx ? :set_xticks : :set_yticks](ticks)
   elseif ttype == :ticks_and_labels
-    (isx ? PyPlot.xticks : PyPlot.yticks)(ticks...)
+    # (isx ? PyPlot.xticks : PyPlot.yticks)(ticks...)
+    ax[isx ? :set_xticks : :set_yticks](ticks...)
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
   end
@@ -366,29 +382,31 @@ end
 
 function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
   figorax = plt.o
+  ax = getLeftAxis(figorax)
+  # PyPlot.sca(ax)
 
   # title and axis labels
   haskey(d, :title) && PyPlot.title(d[:title])
-  haskey(d, :xlabel) && PyPlot.xlabel(d[:xlabel])
+  # haskey(d, :xlabel) && PyPlot.xlabel(d[:xlabel])
+  haskey(d, :xlabel) && ax[:set_xlabel](d[:xlabel])
   if haskey(d, :ylabel)
-    ax = getLeftAxis(figorax)
+    # ax = getLeftAxis(figorax)
     ax[:set_ylabel](d[:ylabel])
   end
   if haskey(d, :yrightlabel)
-    ax = getRightAxis(figorax)  
-    ax[:set_ylabel](d[:yrightlabel])
+    rightax = getRightAxis(figorax)  
+    rightax[:set_ylabel](d[:yrightlabel])
   end
 
   # scales
-  ax = getLeftAxis(figorax)
   haskey(d, :xscale) && applyPyPlotScale(ax, d[:xscale], true)
   haskey(d, :yscale) && applyPyPlotScale(ax, d[:yscale], false)
 
   # limits and ticks
-  haskey(d, :xlims) && addPyPlotLims(d[:xlims], true)
-  haskey(d, :ylims) && addPyPlotLims(d[:ylims], false)
-  haskey(d, :xticks) && addPyPlotTicks(d[:xticks], true)
-  haskey(d, :yticks) && addPyPlotTicks(d[:yticks], false)
+  haskey(d, :xlims) && addPyPlotLims(ax, d[:xlims], true)
+  haskey(d, :ylims) && addPyPlotLims(ax, d[:ylims], false)
+  haskey(d, :xticks) && addPyPlotTicks(ax, d[:xticks], true)
+  haskey(d, :yticks) && addPyPlotTicks(ax, d[:yticks], false)
 
   if get(d, :xflip, false)
     ax[:invert_xaxis]()
@@ -411,7 +429,7 @@ end
 # -----------------------------------------------------------------
 
 function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::@compat(AbstractString))
-  ax = getLeftAxis(plt.o)
+  ax = getLeftAxis(plt)
   ax[:annotate](val, xy = (x,y))
 end
 
@@ -424,60 +442,130 @@ end
 # -----------------------------------------------------------------
 
 # create the underlying object (each backend will do this differently)
-function buildSubplotObject!(subplt::Subplot{PyPlotPackage})
+function buildSubplotObject!(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   l = subplt.layout
   isa(l, GridLayout) || error("Unsupported layout ", l)
 
   iargs = subplt.initargs[1]
   w,h = map(px2inch, iargs[:size])
   bgcolor = getPyPlotColor(iargs[:background_color])
-  fig, axes = PyPlot.subplots(nrows(l), ncols(l),
+  n, m = nrows(l), ncols(l)
+  fig, axes = PyPlot.subplots(n, m,
                               sharex = get(iargs,:linkx,false),
                               sharey = get(iargs,:linky,false),
                               figsize = (w,h),
                               facecolor = bgcolor,
                               dpi = 96)
-  @show fig axes
-  subplt.o = fig
+
+  # @show axes
+  @assert length(axes) == length(subplt.plts)
+
+  axes = vec(reshape(axes, n, m)')
+
+  for (i,plt) in enumerate(subplt.plts)
+    plt.o = PyPlotAxisWrapper(axes[i])
+  end
+
+  # @show fig axes
+  subplt.o = PyPlotFigWrapper(fig)
+  true
+
+
+  # # TODO: set plt.o = PyPlotAxisWrapper(ax) for each plot
+  # for (i,(r,c)) in enumerate(subplt.layout)
+  #   plt = subplt.plts[i]
+  #   plt.o = PyPlotAxisWrapper(subplt.o.fig.o[:add_subplot]())
+  #   # return wrap.fig.o[:add_subplot](111)
 end
 
 function handleLinkInner(plt::Plot{PyPlotPackage}, isx::Bool)
+  if isx
+    plot!(plt, xticks=zeros(0), xlabel="")
+  else
+    plot!(plt, yticks=zeros(0), ylabel="")
+  end
 end
 
 function expandLimits!(lims, plt::Plot{PyPlotPackage}, isx::Bool)
+  pltlims = plt.o.ax[isx ? :get_xbound : :get_ybound]()
+  expandLimits!(lims, pltlims)
 end
 
 # -----------------------------------------------------------------
 
-function addPyPlotLegend(plt::Plot)
+# function addPyPlotLegend(plt::Plot)
+function addPyPlotLegend(plt::Plot, ax)
   if plt.initargs[:legend]
     # gotta do this to ensure both axes are included
     args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline)), plt.seriesargs)
     if length(args) > 0
-      PyPlot.legend([d[:serieshandle] for d in args], [d[:label] for d in args], loc="best")
+      # PyPlot.legend([d[:serieshandle] for d in args], [d[:label] for d in args], loc="best")
+      ax[:legend]([d[:serieshandle] for d in args], [d[:label] for d in args], loc="best")
     end
   end
 end
 
-
-function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{PyPlotPackage})
-  fig = plt.o
-  addPyPlotLegend(plt)
-  ax = fig.o[:axes][1]
+function finalizePlot(plt::Plot{PyPlotPackage})
+  wrap = plt.o
+  ax = getLeftAxis(plt)
+  addPyPlotLegend(plt, ax)
   updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
-  writemime(io, m, fig)
+  PyPlot.draw()
+end
+
+function Base.writemime(io::IO, m::MIME"image/png", plt::Plot{PyPlotPackage})
+  # wrap = plt.o
+  # # addPyPlotLegend(plt)
+  # # ax = fig.o[:axes][1]
+  # ax = getLeftAxis(plt)
+  # addPyPlotLegend(plt, ax)
+  # updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
+  finalizePlot(plt)
+  writemime(io, m, plt.o.fig)
 end
 
 
 function Base.display(::PlotsDisplay, plt::Plot{PyPlotPackage})
-  fig = plt.o
-  addPyPlotLegend(plt)
-  ax = fig.o[:axes][1]
-  updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
-  display(fig)
+  # wrap = plt.o
+  # # addPyPlotLegend(plt)
+  # # ax = fig.o[:axes][1]
+  # ax = getLeftAxis(plt)
+  # addPyPlotLegend(plt, ax)
+  # updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
+  # # wrap.fig.o[:show]()
+  # PyPlot.draw()
+  # display(wrap.fig)
+  finalizePlot(plt)
+end
+
+
+function finalizePlot(subplt::Subplot{PyPlotPackage})
+  fig = subplt.o.fig
+  for (i,plt) in enumerate(subplt.plts)
+    # fig.o[:axes][i] = getLeftAxis(plt)
+    finalizePlot(plt)
+  end
 end
 
 function Base.display(::PlotsDisplay, subplt::Subplot{PyPlotPackage})
-  display(subplt.o)
+  # for plt in subplt.plts
+  #   finalizePlot(plt)
+  # end
+  finalizePlot(subplt)
+  display(subplt.o.fig)
 end
 
+
+function Base.writemime(io::IO, m::MIME"image/png", subplt::Subplot{PyPlotPackage})
+  # wrap = plt.o
+  # # addPyPlotLegend(plt)
+  # # ax = fig.o[:axes][1]
+  # ax = getLeftAxis(plt)
+  # addPyPlotLegend(plt, ax)
+  # updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
+  # for plt in subplt.plts
+  #   finalizePlot(plt)
+  # end
+  finalizePlot(subplt)
+  writemime(io, m, subplt.o.fig)
+end

@@ -256,7 +256,7 @@ end
 
 # ----------------------------------------------------------------
 
-function buildSubplotObject!(subplt::Subplot{WinstonPackage})
+function buildSubplotObject!(subplt::Subplot{WinstonPackage}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
 end
 

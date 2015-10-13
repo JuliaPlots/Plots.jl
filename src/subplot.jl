@@ -202,6 +202,7 @@ function subplot(args...; kw...)
   ds = Dict[]
   for i in 1:length(layout)
     push!(ds, getPlotArgs(pkg, d, i))
+    ds[i][:subplot] = true
     push!(plts, plot(pkg; ds[i]...))
   end
 
@@ -258,6 +259,14 @@ function subplot!(subplt::Subplot, args...; kw...)
   #   subplt.linkfunc = d[:linkfunc]
   # end
 
+  # create the underlying object (each backend will do this differently)
+  # note: we call it once before doing the individual plots, and once after
+  #       this is because some backends need to set up the subplots and then plot, 
+  #       and others need to do it the other way around
+  if !subplt.initialized
+    subplt.initialized = buildSubplotObject!(subplt, true)
+  end
+
   kwList, xmeta, ymeta = createKWargsList(subplt, args...; d...)
 
   # TODO: something useful with meta info?
@@ -266,15 +275,14 @@ function subplot!(subplt::Subplot, args...; kw...)
     subplt.n += 1
     plt = getplot(subplt)  # get the Plot object where this series will be drawn
     di[:show] = false
-    di[:subplot] = true
     dumpdict(di, "subplot! kwList $i")
     plot!(plt; di...)
   end
 
   # create the underlying object (each backend will do this differently)
   if !subplt.initialized
-    buildSubplotObject!(subplt)
-    subplt.initialized = true
+    subplt.initialized = buildSubplotObject!(subplt, false)
+    # subplt.initialized = true
   end
 
 

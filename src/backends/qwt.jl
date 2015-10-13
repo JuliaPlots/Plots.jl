@@ -246,7 +246,8 @@ end
 # -------------------------------
 
 # create the underlying object (each backend will do this differently)
-function buildSubplotObject!(subplt::Subplot{QwtPackage})
+function buildSubplotObject!(subplt::Subplot{QwtPackage}, isbefore::Bool)
+  isbefore && return false
   i = 0
   rows = []
   row = []
@@ -264,6 +265,7 @@ function buildSubplotObject!(subplt::Subplot{QwtPackage})
   subplt.o = Qwt.vsplitter(rows...)
   Qwt.resizewidget(subplt.o, subplt.initargs[1][:size]...)
   Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
+  true
 end
 
 function handleLinkInner(plt::Plot{QwtPackage}, isx::Bool)

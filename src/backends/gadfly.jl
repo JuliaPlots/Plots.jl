@@ -471,8 +471,10 @@ end
 
 
 # create the underlying object (each backend will do this differently)
-function buildSubplotObject!(subplt::Subplot{GadflyPackage})
+function buildSubplotObject!(subplt::Subplot{GadflyPackage}, isbefore::Bool)
+  isbefore && return false
   subplt.o = nothing
+  true
 end
 
 

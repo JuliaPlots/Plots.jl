@@ -68,21 +68,22 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
   @assert size(corrmat) == (m,m)
 
   # create a subplot grid, and a gradient from -1 to 1
-  p = subplot(zeros(1,m^2); n=m^2, link=true, kw...)
+  p = subplot(rand(0,m^2); n=m^2, kw...)
   cgrad = ColorGradient(colors, [-1,1])
 
   # make all the plots
   for i in 1:m
     for j in 1:m
       idx = p.layout[i,j]
+      plt = p.plts[idx]
       if i==j
         # histogram on diagonal
-        plt = histogram(mat[:,i], c=:black, leg=false)
+        histogram!(plt, mat[:,i], c=:black, leg=false)
         i > 1 && plot!(yticks = :none)
       else
         # scatter plots off-diagonal, color determined by correlation
         c = RGBA(RGB(getColorZ(cgrad, corrmat[i,j])), 0.3)
-        plt = scatter(mat[:,j], mat[:,i], w=0, ms=3, c=c, leg=false)
+        scatter!(plt, mat[:,j], mat[:,i], w=0, ms=3, c=c, leg=false)
       end
 
       if labels != nothing && length(labels) >= m
@@ -90,8 +91,8 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
         j == 1 && ylabel!(string(labels[i]))
       end
 
-      # replace the plt
-      p.plts[idx] = plt
+      # # replace the plt
+      # p.plts[idx] = plt
     end
   end
 

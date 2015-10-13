@@ -16,7 +16,6 @@ supportedScales(::ImmersePackage) = supportedScales(GadflyPackage())
 
 
 function createImmerseFigure(d::Dict)
-  # println("Creating immerse figure: ", d)
   w,h = d[:size]
   figidx = Immerse.figure(; name = d[:windowtitle], width = w, height = h)
   Immerse.Figure(figidx)
@@ -79,7 +78,8 @@ end
 # ----------------------------------------------------------------
 
 
-function buildSubplotObject!(subplt::Subplot{ImmersePackage})
+function buildSubplotObject!(subplt::Subplot{ImmersePackage}, isbefore::Bool)
+  isbefore && return false
 
   # create the Gtk window with vertical box vsep
   d = subplt.initargs[1]
@@ -114,39 +114,11 @@ function buildSubplotObject!(subplt::Subplot{ImmersePackage})
 
   end
 
-  # # add the plot boxes
-  # i = 0
-  # figindices = []
-  # for rowcnt in subplt.layout.rowcounts
-
-  #   # create a new row and add it to the main Box vsep
-  #   row = Gtk.GtkBoxLeaf(:h)
-  #   push!(vsep, row)
-
-  #   # now add the plot components to the row
-  #   for plt in subplt.plts[(1:rowcnt) + i]
-
-  #     # get the components... box is the main plot GtkBox, and canvas is the GtkCanvas where it's plotted
-  #     box, toolbar, canvas = Immerse.createPlotGuiComponents()
-
-  #     # add the plot's box to the row
-  #     push!(row, box)
-
-  #     # create the figure and store the index returned for destruction later
-  #     figidx = Immerse.figure(canvas)
-  #     push!(figindices, figidx)
-
-  #     fig = Immerse.figure(figidx)
-  #     plt.o = (fig, plt.o[2])
-  #   end
-
-  #   i += rowcnt
-  # end
-
   # destructor... clean up plots
   Gtk.on_signal_destroy((x...) -> [Immerse.dropfig(Immerse._display,i) for i in figindices], win)
 
   subplt.o = win
+  true
 end
 
 
