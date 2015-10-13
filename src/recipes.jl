@@ -59,7 +59,8 @@ end
 
 "Do a correlation plot"
 function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
-                                   colors = :redsblues, kw...)
+                                   colors = :redsblues,
+                                   labels = nothing, kw...)
   m = size(mat,2)
 
   # might be a mistake? 
@@ -76,13 +77,19 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
       idx = p.layout[i,j]
       if i==j
         # histogram on diagonal
-        plt = histogram(mat[:,i], c=:black)
+        plt = histogram(mat[:,i], c=:black, leg=false)
         i > 1 && plot!(yticks = :none)
       else
         # scatter plots off-diagonal, color determined by correlation
         c = RGBA(RGB(getColorZ(cgrad, corrmat[i,j])), 0.3)
-        plt = scatter(mat[:,j], mat[:,i], w=0, ms=3, c=c)
+        plt = scatter(mat[:,j], mat[:,i], w=0, ms=3, c=c, leg=false)
       end
+
+      if labels != nothing && length(labels) >= m
+        i == m && xlabel!(string(labels[j]))
+        j == 1 && ylabel!(string(labels[i]))
+      end
+
       # replace the plt
       p.plts[idx] = plt
     end

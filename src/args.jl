@@ -488,7 +488,7 @@ function extractGroupArgs(v::AVec, args...)
     error("Too many group labels. n=$n  Is that intended?")
   end
   groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
-  GroupBy(groupLabels, groupIds)
+  GroupBy(map(string, groupLabels), groupIds)
 end
 
 

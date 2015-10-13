@@ -365,22 +365,22 @@ function addPyPlotTicks(ticks, isx::Bool)
 end
 
 function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
-  fig = plt.o
+  figorax = plt.o
 
   # title and axis labels
   haskey(d, :title) && PyPlot.title(d[:title])
   haskey(d, :xlabel) && PyPlot.xlabel(d[:xlabel])
   if haskey(d, :ylabel)
-    ax = getLeftAxis(fig)
+    ax = getLeftAxis(figorax)
     ax[:set_ylabel](d[:ylabel])
   end
   if haskey(d, :yrightlabel)
-    ax = getRightAxis(fig)  
+    ax = getRightAxis(figorax)  
     ax[:set_ylabel](d[:yrightlabel])
   end
 
   # scales
-  ax = getLeftAxis(fig)
+  ax = getLeftAxis(figorax)
   haskey(d, :xscale) && applyPyPlotScale(ax, d[:xscale], true)
   haskey(d, :yscale) && applyPyPlotScale(ax, d[:yscale], false)
 
