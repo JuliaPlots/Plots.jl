@@ -58,17 +58,17 @@ end
 
 
 "Do a correlation plot"
-function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
+function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
                                    colors = :redsblues,
                                    labels = nothing, kw...)
   m = size(mat,2)
 
   # might be a mistake? 
-  @assert m <= 10
+  @assert m <= 20
   @assert size(corrmat) == (m,m)
 
   # create a subplot grid, and a gradient from -1 to 1
-  p = subplot(rand(0,m^2); n=m^2, kw...)
+  p = subplot(rand(0,m^2); n=m^2, leg=false, kw...)
   cgrad = ColorGradient(colors, [-1,1])
 
   # make all the plots

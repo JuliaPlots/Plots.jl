@@ -1,16 +1,13 @@
 
 function subplotlayout(sz::@compat(Tuple{Int,Int}))
-  # create a GridLayout
   GridLayout(sz...)
 end
 
 function subplotlayout(rowcounts::AVec{Int})
-  # create a FlexLayout
   FlexLayout(sum(rowcounts), rowcounts)
 end
 
 function subplotlayout(numplts::Int, nr::Int, nc::Int)
-
 
   # figure out how many rows/columns we need
   if nr == -1
@@ -41,35 +38,6 @@ function subplotlayout(numplts::Int, nr::Int, nc::Int)
   FlexLayout(numplts, rowcounts)
 end
 
-# # create a layout directly
-# SubplotLayout(rowcounts::AbstractVector{Int}) = SubplotLayout(sum(rowcounts), rowcounts)
-
-# # create a layout given counts... nr/nc == -1 implies we figure out a good number automatically
-# function SubplotLayout(numplts::Int, nr::Int, nc::Int)
-
-#   # figure out how many rows/columns we need
-#   if nr == -1
-#     if nc == -1
-#       nr = round(Int, sqrt(numplts))
-#       nc = ceil(Int, numplts / nr)
-#     else
-#       nr = ceil(Int, numplts / nc)
-#     end
-#   else
-#     nc = ceil(Int, numplts / nr)
-#   end
-
-#   # create the rowcounts vector
-#   i = 0
-#   rowcounts = Int[]
-#   for r in 1:nr
-#     cnt = min(nc, numplts - i)
-#     push!(rowcounts, cnt)
-#     i += cnt
-#   end
-
-#   SubplotLayout(numplts, rowcounts)
-# end
 
 
 Base.length(layout::FlexLayout) = layout.numplts
@@ -253,11 +221,6 @@ function subplot!(subplt::Subplot, args...; kw...)
       delete!(d, s)
     end
   end
-  # haskey(d, :linkx) && (subplt.linkx = d[:linkx]; delete!(d, :linkx))
-  # haskey(d, :linky) && (subplt.linky = d[:linky])
-  # if haskey(d, :linkfunc)
-  #   subplt.linkfunc = d[:linkfunc]
-  # end
 
   # create the underlying object (each backend will do this differently)
   # note: we call it once before doing the individual plots, and once after
@@ -272,10 +235,13 @@ function subplot!(subplt::Subplot, args...; kw...)
   # TODO: something useful with meta info?
 
   for (i,di) in enumerate(kwList)
+    
     subplt.n += 1
     plt = getplot(subplt)  # get the Plot object where this series will be drawn
     di[:show] = false
+    haskey(d, :dataframe) && delete!(d, :dataframe)
     dumpdict(di, "subplot! kwList $i")
+    
     plot!(plt; di...)
   end
 
