@@ -227,10 +227,8 @@ function plot(pkg::PyPlotPackage; kw...)
 
   # standalone plots will create a figure, but not if part of a subplot (do it later)
   if haskey(d, :subplot)
-    println("no wrap")
     wrap = nothing
   else
-    println("yes wrap")
     wrap = PyPlotFigWrapper(PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96))
   end
 
@@ -444,27 +442,43 @@ end
 # create the underlying object (each backend will do this differently)
 function buildSubplotObject!(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   l = subplt.layout
-  isa(l, GridLayout) || error("Unsupported layout ", l)
 
-  iargs = subplt.initargs[1]
-  w,h = map(px2inch, iargs[:size])
-  bgcolor = getPyPlotColor(iargs[:background_color])
-  n, m = nrows(l), ncols(l)
-  fig, axes = PyPlot.subplots(n, m,
-                              sharex = get(iargs,:linkx,false),
-                              sharey = get(iargs,:linky,false),
-                              figsize = (w,h),
-                              facecolor = bgcolor,
-                              dpi = 96)
+  w,h = map(px2inch, subplt.initargs[1][:size])
+  bgcolor = getPyPlotColor(subplt.initargs[1][:background_color])
+  fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96)
 
-  # @show axes
-  @assert length(axes) == length(subplt.plts)
+  nr = nrows(l)
+  for (i,(r,c)) in enumerate(l)
 
-  axes = vec(reshape(axes, n, m)')
+    # add the plot to the figure
+    nc = ncols(l, r)
+    fakeidx = (r-1) * nc + c
+    ax = fig[:add_subplot](nr, nc, fakeidx)
 
-  for (i,plt) in enumerate(subplt.plts)
-    plt.o = PyPlotAxisWrapper(axes[i])
+    subplt.plts[i].o = PyPlotAxisWrapper(ax)
   end
+
+  # isa(l, GridLayout) || error("Unsupported layout ", l)
+
+  # iargs = subplt.initargs[1]
+  # w,h = map(px2inch, iargs[:size])
+  # bgcolor = getPyPlotColor(iargs[:background_color])
+  # n, m = nrows(l), ncols(l)
+  # fig, axes = PyPlot.subplots(n, m,
+  #                             sharex = get(iargs,:linkx,false),
+  #                             sharey = get(iargs,:linky,false),
+  #                             figsize = (w,h),
+  #                             facecolor = bgcolor,
+  #                             dpi = 96)
+
+  # # @show axes
+  # @assert length(axes) == length(subplt.plts)
+
+  # axes = vec(reshape(axes, n, m)')
+
+  # for (i,plt) in enumerate(subplt.plts)
+  #   plt.o = PyPlotAxisWrapper(axes[i])
+  # end
 
   # @show fig axes
   subplt.o = PyPlotFigWrapper(fig)
@@ -477,6 +491,45 @@ function buildSubplotObject!(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   #   plt.o = PyPlotAxisWrapper(subplt.o.fig.o[:add_subplot]())
   #   # return wrap.fig.o[:add_subplot](111)
 end
+
+
+
+# # create the underlying object (each backend will do this differently)
+# function buildSubplotObject!(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
+#   l = subplt.layout
+#   isa(l, GridLayout) || error("Unsupported layout ", l)
+
+#   iargs = subplt.initargs[1]
+#   w,h = map(px2inch, iargs[:size])
+#   bgcolor = getPyPlotColor(iargs[:background_color])
+#   n, m = nrows(l), ncols(l)
+#   fig, axes = PyPlot.subplots(n, m,
+#                               sharex = get(iargs,:linkx,false),
+#                               sharey = get(iargs,:linky,false),
+#                               figsize = (w,h),
+#                               facecolor = bgcolor,
+#                               dpi = 96)
+
+#   # @show axes
+#   @assert length(axes) == length(subplt.plts)
+
+#   axes = vec(reshape(axes, n, m)')
+
+#   for (i,plt) in enumerate(subplt.plts)
+#     plt.o = PyPlotAxisWrapper(axes[i])
+#   end
+
+#   # @show fig axes
+#   subplt.o = PyPlotFigWrapper(fig)
+#   true
+
+
+#   # # TODO: set plt.o = PyPlotAxisWrapper(ax) for each plot
+#   # for (i,(r,c)) in enumerate(subplt.layout)
+#   #   plt = subplt.plts[i]
+#   #   plt.o = PyPlotAxisWrapper(subplt.o.fig.o[:add_subplot]())
+#   #   # return wrap.fig.o[:add_subplot](111)
+# end
 
 function handleLinkInner(plt::Plot{PyPlotPackage}, isx::Bool)
   if isx
