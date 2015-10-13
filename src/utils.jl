@@ -122,6 +122,8 @@ function expandLimits!(lims, x)
     e1, e2 = extrema(x)
     lims[1] = min(lims[1], e1)
     lims[2] = max(lims[2], e2)
+  catch err
+    warn(err)
   end
   nothing
 end

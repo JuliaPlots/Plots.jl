@@ -79,16 +79,16 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S};
       if i==j
         # histogram on diagonal
         histogram!(plt, mat[:,i], c=:black, leg=false)
-        i > 1 && plot!(yticks = :none)
+        i > 1 && plot!(plt, yticks = :none)
       else
         # scatter plots off-diagonal, color determined by correlation
         c = RGBA(RGB(getColorZ(cgrad, corrmat[i,j])), 0.3)
-        scatter!(plt, mat[:,j], mat[:,i], w=0, ms=3, c=c, leg=false)
+        scatter!(plt, mat[:,j], mat[:,i], w=1, ms=3, c=c, leg=false)
       end
 
       if labels != nothing && length(labels) >= m
-        i == m && xlabel!(string(labels[j]))
-        j == 1 && ylabel!(string(labels[i]))
+        i == m && xlabel!(plt, string(labels[j]))
+        j == 1 && ylabel!(plt, string(labels[i]))
       end
 
       # # replace the plt

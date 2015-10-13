@@ -249,13 +249,13 @@ end
 function buildSubplotObject!(subplt::Subplot{QwtPackage}, isbefore::Bool)
   isbefore && return false
   i = 0
-  rows = []
-  row = []
+  rows = Any[]
+  row = Any[]
   for (i,(r,c)) in enumerate(subplt.layout)
     push!(row, subplt.plts[i].o)
     if c == ncols(subplt.layout, r)
       push!(rows, Qwt.hsplitter(row...))
-      row = []
+      row = Any[]
     end
   end
   # for rowcnt in subplt.layout.rowcounts
