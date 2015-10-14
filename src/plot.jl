@@ -89,6 +89,13 @@ function plot!(plt::Plot, args...; kw...)
   warnOnUnsupportedArgs(plt.backend, d)
 
   # handle a "group by" mechanism.
+  # group = get(d, :group, nothing)
+  # if group == nothing
+  #   groupargs = []
+  # else
+  #   if haskey(d, :subplot)
+  #     groupargs = extractGroupArgs(group, d[:dataframe])
+  # end
   groupargs = get(d, :group, nothing) == nothing ? [] : [extractGroupArgs(d[:group], args...)]
 
   # just in case the backend needs to set up the plot (make it current or something)
@@ -274,7 +281,6 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
     if haskey(d, :idxfilter)
-      # @show d[:idxfilter] d[:x] d[:y]
       d[:x] = d[:x][d[:idxfilter]]
       d[:y] = d[:y][d[:idxfilter]]
     end
@@ -286,6 +292,11 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
       d[:x] = d[:x][indices]
       d[:y] = d[:y][indices]
       d[:linetype] = :path
+    end
+
+    # cleanup those fields that were used only for generating kw args
+    for k in (:idxfilter, :numUncounted, :dataframe)
+      delete!(d, k)
     end
 
     # add it to our series list

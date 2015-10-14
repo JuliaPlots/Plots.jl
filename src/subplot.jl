@@ -230,16 +230,32 @@ function subplot!(subplt::Subplot, args...; kw...)
     subplt.initialized = buildSubplotObject!(subplt, true)
   end
 
-  kwList, xmeta, ymeta = createKWargsList(subplt, args...; d...)
+  # handle grouping
+  group = get(d, :group, nothing)
+  if group == nothing
+    groupargs = []
+  else
+    groupargs = [extractGroupArgs(d[:group], args...)]
+    delete!(d, :group)
+  end
+
+
+  kwList, xmeta, ymeta = createKWargsList(subplt, groupargs..., args...; d...)
 
   # TODO: something useful with meta info?
 
   for (i,di) in enumerate(kwList)
-    
+
     subplt.n += 1
-    plt = getplot(subplt)  # get the Plot object where this series will be drawn
+    plt = getplot(subplt)
+
+    # cleanup the dictionary that we pass into the plot! command
     di[:show] = false
-    haskey(d, :dataframe) && delete!(d, :dataframe)
+    di[:subplot] = true
+    for k in (:title, :xlabel, :xticks, :xlims, :xscale, :xflip,
+                      :ylabel, :yticks, :ylims, :yscale, :yflip)
+      delete!(di, k)
+    end
     dumpdict(di, "subplot! kwList $i")
     
     plot!(plt; di...)
@@ -258,6 +274,9 @@ function subplot!(subplt::Subplot, args...; kw...)
     for (k,v) in di
       if typeof(v) <: AVec
         di[k] = v[mod1(i, length(v))]
+      elseif typeof(v) <: AMat
+        m = size(v,2)
+        di[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
       end
     end
     dumpdict(di, "Updating sp $i")

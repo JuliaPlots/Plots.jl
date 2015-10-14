@@ -62,6 +62,7 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
                                    colors = :redsblues,
                                    labels = nothing, kw...)
   m = size(mat,2)
+  means = mean(mat, 1)
 
   # might be a mistake? 
   @assert m <= 20
@@ -80,6 +81,10 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
         # histogram on diagonal
         histogram!(plt, mat[:,i], c=:black, leg=false)
         i > 1 && plot!(plt, yticks = :none)
+      elseif i < j
+        # plot!(plt, mat[:,j], mat[:,i], l=:hexbin, leg=false)
+        # plot!(plt, [0], [0], ann=(0, 0, "Corr:\n$(corrmat[i,j])"), leg=false)
+        plot!(plt, [means[j]], [means[i]], title = @sprintf("Corr:\n%0.3f", corrmat[i,j]), yticks=:none)
       else
         # scatter plots off-diagonal, color determined by correlation
         c = RGBA(RGB(getColorZ(cgrad, corrmat[i,j])), 0.3)

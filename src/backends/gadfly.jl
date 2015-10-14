@@ -85,9 +85,17 @@ function createGadflyPlotObject(d::Dict)
     unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", @compat(AbstractString)[], Color[]))
   end
 
-  gplt.theme = Gadfly.Theme(
+  # hide the legend
+  if get(d, :legend, true)
+    extra_theme_args = Any[]
+  else
+    extra_theme_args = Any[(:key_position, :none)]
+  end
+
+  gplt.theme = Gadfly.Theme(;
           background_color = getColor(d[:background_color]),
           plot_padding = 1 * Gadfly.mm,
+          extra_theme_args...
         )
   gplt
 end
@@ -154,7 +162,7 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
   # if my PR isn't present, don't set the line_style
   local extra_theme_args
   try
-    extra_theme_args = [(:line_style, Gadfly.get_stroke_vector(d[:linestyle]))]
+    extra_theme_args = Any[(:line_style, Gadfly.get_stroke_vector(d[:linestyle]))]
   catch
     extra_theme_args = Any[]
   end
