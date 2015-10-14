@@ -1,10 +1,10 @@
 
 # https://github.com/JuliaGraphics/Immerse.jl
 
-immutable ImmersePackage <: PlottingPackage end
+# immutable ImmersePackage <: PlottingPackage end
 
-export immerse
-immerse() = backend(:immerse)
+# export immerse
+# immerse() = backend(:immerse)
 
 
 supportedArgs(::ImmersePackage) = supportedArgs(GadflyPackage())

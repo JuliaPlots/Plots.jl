@@ -1,10 +1,10 @@
 
 # https://github.com/tbreloff/Qwt.jl
 
-immutable QwtPackage <: PlottingPackage end
+# immutable QwtPackage <: PlottingPackage end
 
-export qwt
-qwt() = backend(:qwt)
+# export qwt
+# qwt() = backend(:qwt)
 
 # supportedArgs(::QwtPackage) = setdiff(_allArgs, [:xlims, :ylims, :xticks, :yticks])
 supportedArgs(::QwtPackage) = [

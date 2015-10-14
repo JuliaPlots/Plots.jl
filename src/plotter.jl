@@ -1,5 +1,28 @@
 
 
+immutable GadflyPackage <: PlottingPackage end
+immutable ImmersePackage <: PlottingPackage end
+immutable PyPlotPackage <: PlottingPackage end
+immutable QwtPackage <: PlottingPackage end
+immutable UnicodePlotsPackage <: PlottingPackage end
+immutable WinstonPackage <: PlottingPackage end
+
+export
+  gadfly,
+  immerse,
+  pyplot,
+  qwt,
+  unicodeplots,
+  winston
+
+gadfly() = backend(:gadfly)
+immerse() = backend(:immerse)
+pyplot() = backend(:pyplot)
+qwt() = backend(:qwt)
+unicodeplots() = backend(:unicodeplots)
+winston() = backend(:winston)
+
+
 include("backends/qwt.jl")
 include("backends/gadfly.jl")
 include("backends/unicodeplots.jl")
@@ -109,6 +132,7 @@ function backend()
       try
         @eval import Gadfly, Compose
         @eval export Gadfly, Compose
+        @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
       catch err
         error("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\").\n   Error: ", err)
       end
@@ -137,6 +161,7 @@ function backend()
       try
         @eval import Immerse, Gadfly, Compose, Gtk
         @eval export Immerse, Gadfly, Compose, Gtk
+        @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
       catch err
         error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\").\n   Error: ", err)
       end

@@ -37,8 +37,6 @@ export
   ohlc,
   ohlc!,
 
-  spy,
-
   title!,
   xlabel!,
   ylabel!,
@@ -60,6 +58,8 @@ export
   backends,
   aliases,
   dataframes,
+
+  Shape,
   OHLC,
 
   colorscheme,
@@ -84,6 +84,7 @@ export
   # recipes
   PlotRecipe,
   EllipseRecipe,
+  spy,
   corrplot
 
 # ---------------------------------------------------------
@@ -123,11 +124,6 @@ vline!(args...; kw...)     = plot!(args...; kw..., linetype = :vline)
 ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
 ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
-"Sparsity plot... heatmap of non-zero values of a matrix"
-function spy{T<:Real}(y::AMat{T}; kw...)
-  I,J,V = findnz(y)
-  heatmap(J, I; leg=false, yflip=true, kw...)
-end
 
 title!(s::@compat(AbstractString))                 = plot!(title = s)
 xlabel!(s::@compat(AbstractString))                = plot!(xlabel = s)

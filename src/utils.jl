@@ -175,6 +175,7 @@ limsType(lims::Symbol) = lims == :auto ? :auto : :invalid
 limsType(lims) = :invalid
 
 
+
 # ---------------------------------------------------------------
 
 type DebugMode

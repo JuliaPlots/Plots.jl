@@ -38,7 +38,7 @@ const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
   )
 
 const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
-                     :cross, :xcross, :star1, :star2, :hexagon, :octagon]
+                     :cross, :xcross, :star1, :star2, :hexagon, :octagon, Shape]
 @compat const _markerAliases = Dict(
     :n            => :none,
     :no           => :none,
@@ -515,10 +515,17 @@ end
 
 
 function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
-  d[:axis] in supportedAxes(pkg) || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))")
-  d[:linetype] == :none || d[:linetype] in supportedTypes(pkg) || warn("linetype $(d[:linetype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))")
-  d[:linestyle] in supportedStyles(pkg) || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))")
-  d[:markershape] == :none || d[:markershape] in supportedMarkers(pkg) || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))")
+  (d[:axis] in supportedAxes(pkg) 
+    || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
+  (d[:linetype] == :none
+    || d[:linetype] in supportedTypes(pkg)
+    || warn("linetype $(d[:linetype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))"))
+  (d[:linestyle] in supportedStyles(pkg)
+    || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))"))
+  (d[:markershape] == :none
+    || d[:markershape] in supportedMarkers(pkg)
+    || typeof(d[:markershape]) in supportedMarkers(pkg)
+    || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))"))
 end
 
 function warnOnUnsupportedScales(pkg::PlottingPackage, d::Dict)

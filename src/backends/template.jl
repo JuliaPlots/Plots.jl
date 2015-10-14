@@ -3,11 +3,6 @@
 
 # [WEBSITE]
 
-immutable [PkgName]Package <: PlottingPackage end
-
-export [pkgname]
-[pkgname]() = backend(:[pkgname])
-
 # ---------------------------------------------------------------------------
 
 # supportedArgs(::[PkgName]Package) = _allArgs

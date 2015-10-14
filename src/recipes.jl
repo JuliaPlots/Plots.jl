@@ -57,7 +57,7 @@ end
 # -------------------------------------------------
 
 
-"Do a correlation plot"
+"Correlation scatter matrix"
 function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
                                    colors = :redsblues,
                                    labels = nothing, kw...)
@@ -103,5 +103,12 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
 
   # link the axes
   subplot!(p, link = (r,c) -> (true, r!=c))
+end
+
+
+"Sparsity plot... heatmap of non-zero values of a matrix"
+function spy{T<:Real}(y::AMat{T}; kw...)
+  I,J,V = findnz(y)
+  heatmap(J, I; leg=false, yflip=true, kw...)
 end
 

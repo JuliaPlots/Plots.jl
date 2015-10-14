@@ -1,10 +1,10 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
-immutable UnicodePlotsPackage <: PlottingPackage end
+# immutable UnicodePlotsPackage <: PlottingPackage end
 
-export unicodeplots
-unicodeplots() = backend(:unicodeplots)
+# export unicodeplots
+# unicodeplots() = backend(:unicodeplots)
 
 # -------------------------------
 

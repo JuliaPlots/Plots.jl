@@ -1,10 +1,10 @@
 
 # https://github.com/stevengj/PyPlot.jl
 
-immutable PyPlotPackage <: PlottingPackage end
+# immutable PyPlotPackage <: PlottingPackage end
 
-export pyplot
-pyplot() = backend(:pyplot)
+# export pyplot
+# pyplot() = backend(:pyplot)
 
 # -------------------------------
 

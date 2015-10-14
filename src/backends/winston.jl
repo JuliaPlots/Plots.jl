@@ -3,10 +3,10 @@
 
 # credit goes to https://github.com/jverzani for contributing to the first draft of this backend implementation
 
-immutable WinstonPackage <: PlottingPackage end
+# immutable WinstonPackage <: PlottingPackage end
 
-export winston
-winston() = backend(:winston)
+# export winston
+# winston() = backend(:winston)
 
 # ---------------------------------------------------------------------------
 

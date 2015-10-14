@@ -1,10 +1,10 @@
 
 # https://github.com/dcjones/Gadfly.jl
 
-immutable GadflyPackage <: PlottingPackage end
+# immutable GadflyPackage <: PlottingPackage end
 
-export gadfly
-gadfly() = backend(:gadfly)
+# export gadfly
+# gadfly() = backend(:gadfly)
 
 
 # supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos, :screen, :yrightlabel])
@@ -60,11 +60,11 @@ supportedArgs(::GadflyPackage) = [
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon]
+supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon, Shape]
 supportedScales(::GadflyPackage) = [:identity, :log, :log2, :log10, :asinh, :sqrt]
 
 
-include("gadfly_shapes.jl")
+# include("gadfly_shapes.jl")
 
 function createGadflyPlotObject(d::Dict)
   @eval import DataFrames
@@ -115,7 +115,8 @@ function getLineGeoms(d::Dict)
 
   # NOTE: we won't actually show this (we'll set linewidth to 0 later), but we need a geom so that Gadfly doesn't complain
   if lt in (:none, :ohlc, :scatter)
-    return [Gadfly.Geom.path]
+    # return [Gadfly.Geom.path]
+    return Any[]
   end
 
   # lt == :sticks && return [Gadfly.Geom.bar]
@@ -126,13 +127,32 @@ end
 
 # serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...
 function getMarkerGeomsAndGuides(d::Dict, initargs::Dict)
-  marker = d[:markershape]
-  if marker == :none && d[:linetype] != :ohlc
-    return Any[], Any[]
-  end
-  return Any[], [createGadflyAnnotation(d, initargs)]
+  return Any[], Any[]  # don't do this step anymore
+  # marker = d[:markershape]
+
+  # if marker == :none && d[:linetype] != :ohlc
+  #   return Any[], Any[]
+
+  # elseif marker == :diamond
+  #   geom = DIAMOND
+  #   @show geom
+  #   return Any[geom], Any[]
+
+  # else
+  #   return Any[], [createGadflyAnnotation(d, initargs)]
+  # end
 end
 
+function getMarkerGeoms(d::Dict)
+  shape = d[:markershape]
+  isa(shape, Shape)   && return [gadflyshape(shape)]
+  shape == :none      && return Any[]
+  shape == :ellipse   && return [Gadfly.Geom.point]
+  shape == :rect      && return [gadflyshape(_square)]
+  shape == :diamond   && return [gadflyshape(_diamond)]
+  shape == :cross     && return [gadflyshape(_cross)]
+  error("unhandled marker: ", shape)
+end
 
 
 function addGadflyFixedLines!(gplt, d::Dict, theme)
@@ -206,16 +226,18 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
   if d[:linetype] == :scatter
     d[:linetype] = :none
-    if d[:markershape] in (:none,:ellipse)
-      push!(gfargs, Gadfly.Geom.point)
-      d[:markershape] = :none
-    # if d[:markershape] == :none
-    #   d[:markershape] = :ellipse
-    end
+
+    # if d[:markershape] in (:none,:ellipse)
+    #   push!(gfargs, Gadfly.Geom.point)
+    #   d[:markershape] = :none
+    # # if d[:markershape] == :none
+    # #   d[:markershape] = :ellipse
+    # end
   end
 
   # add the Geoms
   append!(gfargs, getLineGeoms(d))
+  append!(gfargs, getMarkerGeoms(d))
 
   # colorgroup
   z = d[:z]
@@ -274,7 +296,9 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
 
   # add a regression line?
   if d[:reg]
+    # TODO: make more flexible
     push!(gfargs, Gadfly.Geom.smooth(method=:lm))
+    # push!(gfargs, Gadfly.Geom.smooth(method=:loess, smoothing=0.95))
   end
 
   # add to the legend, but only without the continuous scale
