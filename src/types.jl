@@ -188,7 +188,7 @@ const _shapes = Dict(
     :dtriangle => makeshape(3, offset=0.5),
     :pentagon => makeshape(5),
     :hexagon => makeshape(6),
-    :septagon => makeshape(7),
+    :heptagon => makeshape(7),
     :octagon => makeshape(8),
     :cross => makecross(offset=-0.25),
     :xcross => makecross(),

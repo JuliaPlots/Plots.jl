@@ -71,7 +71,7 @@ const examples = PlotExample[
               [:(styles = setdiff(supportedStyles(), [:auto])'), :(plot(cumsum(randn(20,length(styles)),1); style=:auto, label=map(string,styles), w=5))]),
   PlotExample("Marker types",
               "",
-              [:(markers = setdiff(supportedMarkers(), [:none,:auto])'), :(scatter(0.5:9.5, [fill(i-0.5,10) for i=length(markers):-1:1]; marker=:auto, label=map(string,markers), ms=12))]),
+              [:(markers = setdiff(supportedMarkers(), [:none,:auto])'), :(scatter(0.5:9.5, [fill(i-0.5,10) for i=length(markers):-1:1]; marker=:auto, label=map(string,markers), ms=12, ylim=(0,length(markers)+1)))]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
               [:(bar(randn(999)))]),
