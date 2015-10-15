@@ -60,6 +60,8 @@ export
   dataframes,
 
   Shape,
+  PlotText,
+  text,
   OHLC,
 
   colorscheme,
@@ -125,39 +127,43 @@ ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
 ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
 
 
-title!(s::@compat(AbstractString))                 = plot!(title = s)
-xlabel!(s::@compat(AbstractString))                = plot!(xlabel = s)
-ylabel!(s::@compat(AbstractString))                = plot!(ylabel = s)
-xlims!{T<:Real,S<:Real}(lims::@compat(Tuple{T,S})) = plot!(xlims = lims)
-ylims!{T<:Real,S<:Real}(lims::@compat(Tuple{T,S})) = plot!(ylims = lims)
-xlims!(xmin::Real, xmax::Real)            = plot!(xlims = (xmin,xmax))
-ylims!(ymin::Real, ymax::Real)            = plot!(ylims = (ymin,ymax))
-xticks!{T<:Real}(v::AVec{T})              = plot!(xticks = v)
-yticks!{T<:Real}(v::AVec{T})              = plot!(yticks = v)
-xticks!{T<:Real,S<:@compat(AbstractString)}(ticks::AVec{T}, labels::AVec{S})  = plot!(xticks = (ticks,labels))
-yticks!{T<:Real,S<:@compat(AbstractString)}(ticks::AVec{T}, labels::AVec{S})  = plot!(yticks = (ticks,labels))
-annotate!(anns)                           = plot!(annotation = anns)
-xflip!(flip::Bool = true)                 = plot!(xflip = flip)
-yflip!(flip::Bool = true)                 = plot!(yflip = flip)
-xaxis!(args...)                           = plot!(xaxis = args)
-yaxis!(args...)                           = plot!(yaxis = args)
+title!(s::@compat(AbstractString); kw...)                 = plot!(; title = s, kw...)
+xlabel!(s::@compat(AbstractString); kw...)                = plot!(; xlabel = s, kw...)
+ylabel!(s::@compat(AbstractString); kw...)                = plot!(; ylabel = s, kw...)
+xlims!{T<:Real,S<:Real}(lims::@compat(Tuple{T,S}); kw...) = plot!(; xlims = lims, kw...)
+ylims!{T<:Real,S<:Real}(lims::@compat(Tuple{T,S}); kw...) = plot!(; ylims = lims, kw...)
+xlims!(xmin::Real, xmax::Real; kw...)                     = plot!(; xlims = (xmin,xmax), kw...)
+ylims!(ymin::Real, ymax::Real; kw...)                     = plot!(; ylims = (ymin,ymax), kw...)
+xticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; xticks = v, kw...)
+yticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; yticks = v, kw...)
+xticks!{T<:Real,S<:@compat(AbstractString)}(
+              ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(; xticks = (ticks,labels), kw...)
+yticks!{T<:Real,S<:@compat(AbstractString)}(
+              ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(; yticks = (ticks,labels), kw...)
+annotate!(anns...; kw...)                                 = plot!(; annotation = anns, kw...)
+xflip!(flip::Bool = true; kw...)                          = plot!(; xflip = flip, kw...)
+yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip, kw...)
+xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
+yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
 
-title!(plt::Plot, s::@compat(AbstractString))                  = plot!(plt; title = s)
-xlabel!(plt::Plot, s::@compat(AbstractString))                 = plot!(plt; xlabel = s)
-ylabel!(plt::Plot, s::@compat(AbstractString))                 = plot!(plt; ylabel = s)
-xlims!{T<:Real,S<:Real}(plt::Plot, lims::@compat(Tuple{T,S}))  = plot!(plt; xlims = lims)
-ylims!{T<:Real,S<:Real}(plt::Plot, lims::@compat(Tuple{T,S}))  = plot!(plt; ylims = lims)
-xlims!(plt::Plot, xmin::Real, xmax::Real)             = plot!(plt; xlims = (xmin,xmax))
-ylims!(plt::Plot, ymin::Real, ymax::Real)             = plot!(plt; ylims = (ymin,ymax))
-xticks!{T<:Real}(plt::Plot, ticks::AVec{T})           = plot!(plt; xticks = ticks)
-yticks!{T<:Real}(plt::Plot, ticks::AVec{T})           = plot!(plt; yticks = ticks)
-xticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; xticks = (ticks,labels))
-yticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot, ticks::AVec{T}, labels::AVec{S})  = plot!(plt; yticks = (ticks,labels))
-annotate!(plt::Plot, anns)                            = plot!(plt; annotation = anns)
-xflip!(plt::Plot, flip::Bool = true)                  = plot!(plt; xflip = flip)
-yflip!(plt::Plot, flip::Bool = true)                  = plot!(plt; yflip = flip)
-xaxis!(plt::Plot, args...)                            = plot!(plt; xaxis = args)
-yaxis!(plt::Plot, args...)                            = plot!(plt; yaxis = args)
+title!(plt::Plot, s::@compat(AbstractString); kw...)                  = plot!(plt; title = s, kw...)
+xlabel!(plt::Plot, s::@compat(AbstractString); kw...)                 = plot!(plt; xlabel = s, kw...)
+ylabel!(plt::Plot, s::@compat(AbstractString); kw...)                 = plot!(plt; ylabel = s, kw...)
+xlims!{T<:Real,S<:Real}(plt::Plot, lims::@compat(Tuple{T,S}); kw...)  = plot!(plt; xlims = lims, kw...)
+ylims!{T<:Real,S<:Real}(plt::Plot, lims::@compat(Tuple{T,S}); kw...)  = plot!(plt; ylims = lims, kw...)
+xlims!(plt::Plot, xmin::Real, xmax::Real; kw...)                      = plot!(plt; xlims = (xmin,xmax), kw...)
+ylims!(plt::Plot, ymin::Real, ymax::Real; kw...)                      = plot!(plt; ylims = (ymin,ymax), kw...)
+xticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; xticks = ticks, kw...)
+yticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; yticks = ticks, kw...)
+xticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot,
+                          ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; xticks = (ticks,labels), kw...)
+yticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot,
+                          ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; yticks = (ticks,labels), kw...)
+annotate!(plt::Plot, anns...; kw...)                                  = plot!(plt; annotation = anns, kw...)
+xflip!(plt::Plot, flip::Bool = true; kw...)                           = plot!(plt; xflip = flip, kw...)
+yflip!(plt::Plot, flip::Bool = true; kw...)                           = plot!(plt; yflip = flip, kw...)
+xaxis!(plt::Plot, args...; kw...)                                     = plot!(plt; xaxis = args, kw...)
+yaxis!(plt::Plot, args...; kw...)                                     = plot!(plt; yaxis = args, kw...)
 
 
 # ---------------------------------------------------------

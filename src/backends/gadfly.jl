@@ -497,6 +497,20 @@ function createGadflyAnnotationObject(x, y, val::@compat(AbstractString))
                             ))
 end
 
+function createGadflyAnnotationObject(x, y, txt::PlotText)
+  halign = (txt.halign == :hcenter ? Compose.hcenter : (txt.halign == :left ? Compose.hleft : Compose.hright))
+  valign = (txt.valign == :vcenter ? Compose.vcenter : (txt.valign == :top ? Compose.vtop : Compose.vbottom))
+  rotations = (txt.rotation == 0.0 ? [] : [Compose.Rotation(txt.rotation, Compose.Point(Compose.x_measure(x), Compose.y_measure(y)))])
+  Gadfly.Guide.annotation(Compose.compose(
+                              Compose.context(), 
+                              Compose.text(x, y, txt.str, halign, valign, rotations...),
+                              Compose.font(string(txt.family)),
+                              Compose.fontsize(txt.pointsize * Gadfly.pt),
+                              Compose.stroke(txt.color),
+                              Compose.fill(txt.color)
+                            ))
+end
+
 function addAnnotations{X,Y,V}(plt::Plot{GadflyPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     push!(plt.o.guides, createGadflyAnnotationObject(ann...))

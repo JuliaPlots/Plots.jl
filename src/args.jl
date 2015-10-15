@@ -615,7 +615,9 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
   aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
 
   # update color
+  dumpdict(d, "before color")
   d[:color] = getSeriesRGBColor(d[:color], initargs, plotIndex)
+  dumpdict(d, "after color")
 
   # update markercolor
   mc = d[:markercolor]

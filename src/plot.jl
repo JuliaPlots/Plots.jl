@@ -102,6 +102,7 @@ function plot!(plt::Plot, args...; kw...)
   preparePlotUpdate(plt)
 
   # get the list of dictionaries, one per series
+  dumpdict(d, "before createKWargsList")
   kwList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
   
   # if we were able to extract guide information from the series inputs, then update the plot
@@ -185,8 +186,8 @@ updateDictWithMeta(d::Dict, initargs::Dict, meta, isx::Bool) = nothing
 # --------------------------------------------------------------------
 
 annotations(::@compat(Void)) = []
-annotations{X<:Real, Y<:Real, V}(v::AVec{@compat(Tuple{X,Y,V})}) = v
-annotations{X<:Real, Y<:Real, V}(t::@compat(Tuple{X,Y,V})) = [t]
+annotations{X,Y,V}(v::AVec{@compat(Tuple{X,Y,V})}) = v
+annotations{X,Y,V}(t::@compat(Tuple{X,Y,V})) = [t]
 annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
                        "(x, y, annotation)\n    got: $(typeof(anns))")
 
@@ -259,6 +260,9 @@ end
 function createKWargsList(plt::PlottingObject, x, y; kw...)
   xs, xmeta = convertToAnyVector(x; kw...)
   ys, ymeta = convertToAnyVector(y; kw...)
+
+  # _debugMode.on && dumpcallstack()
+
   mx = length(xs)
   my = length(ys)
   ret = Any[]
@@ -277,7 +281,9 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     # build the series arg dict
     numUncounted = get(d, :numUncounted, 0)
     n = plt.n + i + numUncounted
+    dumpdict(d, "before getSeriesArgs")
     d = getSeriesArgs(plt.backend, getinitargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
+    dumpdict(d, "after getSeriesArgs")
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
     if haskey(d, :idxfilter)
@@ -325,6 +331,16 @@ function createKWargsList(plt::PlottingObject, y; kw...)
   createKWargsList(plt, nothing, y; kw...)
 end
 
+function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, z::AVec; kw...)
+  error("TODO: contours or surfaces... irregular data")
+end
+function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, z::Function; kw...)
+  error("TODO: contours or surfaces... function grid")
+end
+function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, z::AMat; kw...)
+  error("TODO: contours or surfaces... grid")
+end
+
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs; kw...)
   error("Can't pass a Function or Vector{Function} for y without also passing x")
 end
@@ -347,7 +363,7 @@ mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
 # special handling... xmin/xmax with parametric function(s)
 createKWargsList{T<:Real}(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T}; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
 createKWargsList{T<:Real}(plt::PlottingObject, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
-createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, linspace(umin, umax, numPoints))
+createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, linspace(umin, umax, numPoints); kw...)
 
 
 

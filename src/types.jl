@@ -51,85 +51,6 @@ immutable Shape
   vertices::AVec
 end
 
-# const _square = Shape(@compat(Tuple{Float64,Float64})[
-#     ( 1.0, -1.0),
-#     ( 1.0,  1.0),
-#     (-1.0,  1.0),
-#     (-1.0, -1.0)
-#   ])
-
-# const _diamond = Shape(@compat(Tuple{Float64,Float64})[
-#     ( 0.0, -1.0),
-#     ( 1.0,  0.0),
-#     ( 0.0,  1.0),
-#     (-1.0,  0.0)
-#   ])
-
-# const _cross = Shape(@compat(Tuple{Float64,Float64})[
-#     (-1.0, -0.4), (-1.0,  0.4), # L edge
-#     (-0.4,  0.4),               # BL inside
-#     (-0.4,  1.0), ( 0.4,  1.0), # B edge
-#     ( 0.4,  0.4),               # BR inside
-#     ( 1.0,  0.4), ( 1.0, -0.4), # R edge
-#     ( 0.4, -0.4),               # TR inside
-#     ( 0.4, -1.0), (-0.4, -1.0), # T edge
-#     (-0.4, -0.4)                # TL inside
-#   ])
-
-# const _xcross = Shape(@compat(Tuple{Float64,Float64})[
-#     (x, y - u), (x + u, y - 2u), (x + 2u, y - u),
-#     (x + u, y), (x + 2u, y + u), (x + u, y + 2u),
-#     (x, y + u), (x - u, y + 2u), (x - 2u, y + u),
-#     (x - u, y), (x - 2u, y - u), (x - u, y - 2u)
-#   ]
-
-
-# function xcross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
-#   n = max(length(xs), length(ys), length(rs))
-#   polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
-#   s = 1/sqrt(5)
-#   for i in 1:n
-#     x = Compose.x_measure(xs[mod1(i, length(xs))])
-#     y = Compose.y_measure(ys[mod1(i, length(ys))])
-#     r = rs[mod1(i, length(rs))]
-#     u = s*r
-#     polys[i] = [
-#       (x, y - u), (x + u, y - 2u), (x + 2u, y - u),
-#       (x + u, y), (x + 2u, y + u), (x + u, y + 2u),
-#       (x, y + u), (x - u, y + 2u), (x - 2u, y + u),
-#       (x - u, y), (x - 2u, y - u), (x - u, y - 2u)
-#     ]
-#   end
-
-#   return Gadfly.polygon(polys)
-# end
-
-
-# const _utriangle = Shape(@compat(Tuple{Float64,Float64})[
-#     (x - r, y + u),
-#     (x + r, y + u),
-#     (x, y - u)
-#   ]
-
-# function utriangle(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar = 1)
-#   n = max(length(xs), length(ys), length(rs))
-#   polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
-#   s = 0.8
-#   for i in 1:n
-#     x = Compose.x_measure(xs[mod1(i, length(xs))])
-#     y = Compose.y_measure(ys[mod1(i, length(ys))])
-#     r = rs[mod1(i, length(rs))]
-#     u = 0.8 * scalar * r
-#     polys[i] = [
-#       (x - r, y + u),
-#       (x + r, y + u),
-#       (x, y - u)
-#     ]
-#   end
-
-#   return Gadfly.polygon(polys)
-# end
-
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r=1)
   @compat(Tuple{Float64,Float64})[(r*cos(u),r*sin(u)) for u in linspace(start_θ, end_θ, n)]
@@ -198,62 +119,57 @@ for n in [4,5,6,7,8]
   _shapes[symbol("star$n")] = makestar(n)
 end
 
+# -----------------------------------------------------------------------
 
-# :ellipse, :rect, :diamond, :utriangle, :dtriangle,
-#                      :cross, :xcross, :star1, :star2, :hexagon, :octagon
-
-
-
-
-# const _xcross = Shape(@compat(Tuple{Float64,Float64})[
-#   ]
-
-# # function hexagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
-# #   n = max(length(xs), length(ys), length(rs))
-
-# #   polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
-# #   for i in 1:n
-# #     x = Compose.x_measure(xs[mod1(i, length(xs))])
-# #     y = Compose.y_measure(ys[mod1(i, length(ys))])
-# #     r = rs[mod1(i, length(rs))]
-# #     u = 0.6r
-
-# #     polys[i] = [
-# #       (x-r, y-u), (x-r, y+u), # L edge
-# #       (x, y+r),               # B
-# #       (x+r, y+u), (x+r, y-u), # R edge
-# #       (x, y-r)                # T
-# #     ]
-# #   end
-
-# #   return Gadfly.polygon(polys)
-# # end
+"Wrap a string with font info"
+immutable PlotText
+  str::@compat(AbstractString)
+  family::Symbol
+  pointsize::Int
+  halign::Symbol
+  valign::Symbol
+  rotation::Float64
+  color::Colorant
+end
 
 
+function text(str, args...)
+  
+  # defaults
+  family = :courier
+  pointsize = 12
+  halign = :hcenter
+  valign = :vcenter
+  rotation = 0.0
+  color = colorant"black"
 
-# const _xcross = Shape(@compat(Tuple{Float64,Float64})[
-#   ]
+  for arg in args
+    if arg == :center
+      halign = :hcenter
+      valign = :vcenter
+    elseif arg in (:hcenter, :left, :right)
+      halign = arg
+    elseif arg in (:vcenter, :top, :bottom)
+      valign = arg
+    elseif typeof(arg) <: Colorant
+      color = arg
+    elseif isa(arg, Symbol)
+      try
+        color = parse(Colorant, string(arg))
+      catch
+        family = arg
+      end
+    elseif typeof(arg) <: Integer
+      pointsize = arg
+    elseif typeof(arg) <: Real
+      rotation = convert(Float64, arg)
+    else
+      warn("Unused font arg: $arg ($(typeof(arg)))")
+    end
+  end
 
-# function octagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
-#   n = max(length(xs), length(ys), length(rs))
-
-#   polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
-#   for i in 1:n
-#     x = Compose.x_measure(xs[mod1(i, length(xs))])
-#     y = Compose.y_measure(ys[mod1(i, length(ys))])
-#     r = rs[mod1(i, length(rs))]
-#     u = 0.4r
-
-#     polys[i] = [
-#       (x-r, y-u), (x-r, y+u), # L edge
-#       (x-u, y+r), (x+u, y+r), # B edge
-#       (x+r, y+u), (x+r, y-u), # R edge
-#       (x+u, y-r), (x-u, y-r), # T edge
-#     ]
-#   end
-
-#   return Gadfly.polygon(polys)
-# end
+  PlotText(string(str), family, pointsize, halign, valign, rotation, color)
+end
 
 # -----------------------------------------------------------------------
 

@@ -215,6 +215,7 @@ Markers:
 
 [[MARKERS_TABLE]]
 
+__Tip__: With supported backends, you can pass a `Plots.Shape` object for the `marker`/`markershape` arguments.  `Shape` takes a vector of 2-tuples in the constructor, defining the points of the polygon's shape in a unit-scaled coordinate space.  To make a square, for example, you could do `Shape([(1,1),(1,-1),(-1,-1),(-1,1)])`
 
 __Tip__: You can see the default value for a given argument with `default(arg::Symbol)`, and set the default value with `default(arg::Symbol, value)` or `default(; kw...)`.  For example set the default window size and whether we should show a legend with `default(size=(600,400), leg=false)`.
 
@@ -252,8 +253,9 @@ __Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on
 - [x] Annotations
 - [x] Scales
 - [x] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
-- [ ] Custom markers
-- [ ] Special plots (boxplot, ohlc?)
+- [x] Custom markers
+- [ ] Contours
+- [ ] Boxplots
 - [x] Subplots
 - [x] Histograms
 - [ ] 3D plotting

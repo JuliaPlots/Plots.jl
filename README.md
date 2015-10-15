@@ -221,6 +221,10 @@ Keyword | Default | Type | Aliases
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
 `:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
 `:linewidth` | `1` | Series | `:linewidths`, `:lw`, `:w`, `:width`  
+`:link` | `false` | Plot |   
+`:linkfunc` | `nothing` | Plot |   
+`:linkx` | `false` | Plot | `:xlink`  
+`:linky` | `false` | Plot | `:ylink`  
 `:marker` | `nothing` | Series | `:m`, `:mark`  
 `:markercolor` | `match` | Series | `:markercolors`, `:mc`, `:mcolor`  
 `:markershape` | `none` | Series | `:markershapes`, `:shape`  
@@ -289,19 +293,25 @@ Type | Aliases
 ---- | ----
 `:none` | `:n`, `:no`  
 `:auto` | `:a`  
-`:ellipse` | `:c`, `:circle`  
-`:rect` | `:r`, `:sq`, `:square`  
-`:diamond` | `:d`  
-`:utriangle` | `:^`, `:uptri`, `:uptriangle`, `:ut`, `:utri`  
-`:dtriangle` | `:V`, `:downtri`, `:downtriangle`, `:dt`, `:dtri`, `:v`  
 `:cross` | `:+`, `:plus`  
-`:xcross` | `:X`, `:x`  
-`:star1` | `:s`, `:star`  
-`:star2` | `:s2`  
+`:diamond` | `:d`  
+`:dtriangle` | `:V`, `:downtri`, `:downtriangle`, `:dt`, `:dtri`, `:v`  
+`:ellipse` | `:c`, `:circle`  
+`:heptagon` | `:hep`  
 `:hexagon` | `:h`, `:hex`  
 `:octagon` | `:o`, `:oct`  
+`:pentagon` | `:p`, `:pent`  
+`:rect` | `:r`, `:sq`, `:square`  
+`:star4` |   
+`:star5` | `:s`, `:star`, `:star1`  
+`:star6` |   
+`:star7` |   
+`:star8` | `:s2`, `:star2`  
+`:utriangle` | `:^`, `:uptri`, `:uptriangle`, `:ut`, `:utri`  
+`:xcross` | `:X`, `:x`  
 
 
+__Tip__: With supported backends, you can pass a `Plots.Shape` object for the `marker`/`markershape` arguments.  `Shape` takes a vector of 2-tuples in the constructor, defining the points of the polygon's shape in a unit-scaled coordinate space.  To make a square, for example, you could do `Shape([(1,1),(1,-1),(-1,-1),(-1,1)])`
 
 __Tip__: You can see the default value for a given argument with `default(arg::Symbol)`, and set the default value with `default(arg::Symbol, value)` or `default(; kw...)`.  For example set the default window size and whether we should show a legend with `default(size=(600,400), leg=false)`.
 
@@ -323,7 +333,7 @@ __Tip__: When plotting multiple lines, you can set all series to use the same va
 ```julia
 plot(rand(100,4); color = [:red RGB(0,0,1)],     # (Matrix) lines 1 and 3 are red, lines 2 and 4 are blue
                   axis = :auto,                  # lines 1 and 3 are on the left axis, lines 2 and 4 are on the right
-                  markershape = [:rect, :star1]  # (Vector) ALL lines are passed the vector [:rect, :star1]
+                  markershape = [:rect, :star]   # (Vector) ALL lines are passed the vector [:rect, :star1]
                   width = 5)                     # all lines have a width of 5
 ```
 
@@ -339,8 +349,9 @@ __Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on
 - [x] Annotations
 - [x] Scales
 - [x] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
-- [ ] Custom markers
-- [ ] Special plots (boxplot, ohlc?)
+- [x] Custom markers
+- [ ] Contours
+- [ ] Boxplots
 - [x] Subplots
 - [x] Histograms
 - [ ] 3D plotting

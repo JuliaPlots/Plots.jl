@@ -200,6 +200,11 @@ function dumpdict(d::Dict, prefix = "")
   println()
 end
 
+
+function dumpcallstack()
+  error()  # well... you wanted the stacktrace, didn't you?!?
+end
+
 # ---------------------------------------------------------------
 
 
