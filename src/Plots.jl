@@ -257,7 +257,7 @@ end
 function __init__()
   global const CURRENT_BACKEND = pickDefaultBackend()
   # global CURRENT_BACKEND
-  println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
+  # println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
 
   # # auto init dataframes if the import statement doesn't error out
   # try

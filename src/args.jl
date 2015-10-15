@@ -404,6 +404,8 @@ function processMarkerArg(d::Dict, arg)
   # markershape
   if trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg)
     d[:markershape] = arg
+  elseif trueOrAllTrue(a -> isa(a, Shape), arg)
+    d[:markershape] = arg
 
   # markersize
   elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
@@ -530,7 +532,7 @@ function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
     || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))"))
   (d[:markershape] == :none
     || d[:markershape] in supportedMarkers(pkg)
-    || typeof(d[:markershape]) in supportedMarkers(pkg)
+    || (Shape in supportedMarkers(pkg) && typeof(d[:markershape]) <: Shape)
     || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))"))
 end
 

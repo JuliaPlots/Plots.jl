@@ -210,7 +210,7 @@ function backend(modname)
 
   # update the symbol
   CURRENT_BACKEND.sym = modname
-  println("[Plots.jl] Switched to backend: ", modname)
+  # println("[Plots.jl] Switched to backend: ", modname)
 
   # return the package
   CURRENT_BACKEND.pkg
