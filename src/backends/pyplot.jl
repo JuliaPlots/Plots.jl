@@ -62,7 +62,7 @@ supportedArgs(::PyPlotPackage) = [
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :hexagon]
+supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
 supportedScales(::PyPlotPackage) = [:identity, :log, :log2, :log10]
 subplotSupported(::PyPlotPackage) = true
 
@@ -96,7 +96,7 @@ function getPyPlotMarker(marker::Symbol)
   marker == :dtriangle && return "v"
   marker == :cross && return "+"
   marker == :xcross && return "x"
-  marker == :star1 && return "*"
+  marker == :star5 && return "*"
   marker == :hexagon && return "h"
   warn("Unknown marker $marker")
   return "o"

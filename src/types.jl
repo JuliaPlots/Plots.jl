@@ -51,37 +51,37 @@ immutable Shape
   vertices::AVec
 end
 
-const _square = Shape(@compat(Tuple{Float64,Float64})[
-    ( 1.0, -1.0),
-    ( 1.0,  1.0),
-    (-1.0,  1.0),
-    (-1.0, -1.0)
-  ])
+# const _square = Shape(@compat(Tuple{Float64,Float64})[
+#     ( 1.0, -1.0),
+#     ( 1.0,  1.0),
+#     (-1.0,  1.0),
+#     (-1.0, -1.0)
+#   ])
 
-const _diamond = Shape(@compat(Tuple{Float64,Float64})[
-    ( 0.0, -1.0),
-    ( 1.0,  0.0),
-    ( 0.0,  1.0),
-    (-1.0,  0.0)
-  ])
+# const _diamond = Shape(@compat(Tuple{Float64,Float64})[
+#     ( 0.0, -1.0),
+#     ( 1.0,  0.0),
+#     ( 0.0,  1.0),
+#     (-1.0,  0.0)
+#   ])
 
-const _cross = Shape(@compat(Tuple{Float64,Float64})[
-    (-1.0, -0.4), (-1.0,  0.4), # L edge
-    (-0.4,  0.4),               # BL inside
-    (-0.4,  1.0), ( 0.4,  1.0), # B edge
-    ( 0.4,  0.4),               # BR inside
-    ( 1.0,  0.4), ( 1.0, -0.4), # R edge
-    ( 0.4, -0.4),               # TR inside
-    ( 0.4, -1.0), (-0.4, -1.0), # T edge
-    (-0.4, -0.4)                # TL inside
-  ])
+# const _cross = Shape(@compat(Tuple{Float64,Float64})[
+#     (-1.0, -0.4), (-1.0,  0.4), # L edge
+#     (-0.4,  0.4),               # BL inside
+#     (-0.4,  1.0), ( 0.4,  1.0), # B edge
+#     ( 0.4,  0.4),               # BR inside
+#     ( 1.0,  0.4), ( 1.0, -0.4), # R edge
+#     ( 0.4, -0.4),               # TR inside
+#     ( 0.4, -1.0), (-0.4, -1.0), # T edge
+#     (-0.4, -0.4)                # TL inside
+#   ])
 
-const _xcross = Shape(@compat(Tuple{Float64,Float64})[
-    (x, y - u), (x + u, y - 2u), (x + 2u, y - u),
-    (x + u, y), (x + 2u, y + u), (x + u, y + 2u),
-    (x, y + u), (x - u, y + 2u), (x - 2u, y + u),
-    (x - u, y), (x - 2u, y - u), (x - u, y - 2u)
-  ]
+# const _xcross = Shape(@compat(Tuple{Float64,Float64})[
+#     (x, y - u), (x + u, y - 2u), (x + 2u, y - u),
+#     (x + u, y), (x + 2u, y + u), (x + u, y + 2u),
+#     (x, y + u), (x - u, y + 2u), (x - 2u, y + u),
+#     (x - u, y), (x - 2u, y - u), (x - u, y - 2u)
+#   ]
 
 
 # function xcross(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
@@ -105,11 +105,11 @@ const _xcross = Shape(@compat(Tuple{Float64,Float64})[
 # end
 
 
-const _utriangle = Shape(@compat(Tuple{Float64,Float64})[
-    (x - r, y + u),
-    (x + r, y + u),
-    (x, y - u)
-  ]
+# const _utriangle = Shape(@compat(Tuple{Float64,Float64})[
+#     (x - r, y + u),
+#     (x + r, y + u),
+#     (x, y - u)
+#   ]
 
 # function utriangle(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray, scalar = 1)
 #   n = max(length(xs), length(ys), length(rs))
@@ -136,7 +136,7 @@ function partialcircle(start_θ, end_θ, n = 20, r=1)
 end
 
 "interleave 2 vectors into each other (like a zipper's teeth)"
-function weave(x,y; ordering = [x,y])
+function weave(x,y; ordering = Vector[x,y])
   ret = eltype(x)[]
   done = false
   while !done
@@ -166,16 +166,17 @@ end
 "create a shape by picking points around the unit circle.  `n` is the number of point/sides, `offset` is the starting angle"
 function makeshape(n; offset = -0.5, radius = 1.0)
     z = offset * π
-    Shape(Plots.partialcircle(z, z + 2π, n+1, radius)[1:end-1])
+    Shape(partialcircle(z, z + 2π, n+1, radius)[1:end-1])
 end
 
 
 function makecross(; offset = -0.5, radius = 1.0)
-    z1 = offset * π + π/8
-    z2 = z1 + π/8
+    z2 = offset * π
+    z1 = z2 - π/8
     outercircle = partialcircle(z1, z1 + 2π, 9, radius)
-    innercircle = partialcircle(z2, z2 + 2π, 5, 0.4radius)
-    Shape(weave(outercircle, innercircle)[1:end-2])
+    innercircle = partialcircle(z2, z2 + 2π, 5, 0.5radius)
+    Shape(weave(outercircle, innercircle, 
+                ordering=Vector[outercircle,innercircle,outercircle])[1:end-2])
 end
 
 
@@ -189,7 +190,8 @@ const _shapes = Dict(
     :hexagon => makeshape(6),
     :septagon => makeshape(7),
     :octagon => makeshape(8),
-
+    :cross => makecross(offset=-0.25),
+    :xcross => makecross(),
   )
 
 for n in [4,5,6,7,8]
@@ -203,34 +205,34 @@ end
 
 
 
-const _xcross = Shape(@compat(Tuple{Float64,Float64})[
-  ]
+# const _xcross = Shape(@compat(Tuple{Float64,Float64})[
+#   ]
 
-# function hexagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
-#   n = max(length(xs), length(ys), length(rs))
+# # function hexagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
+# #   n = max(length(xs), length(ys), length(rs))
 
-#   polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
-#   for i in 1:n
-#     x = Compose.x_measure(xs[mod1(i, length(xs))])
-#     y = Compose.y_measure(ys[mod1(i, length(ys))])
-#     r = rs[mod1(i, length(rs))]
-#     u = 0.6r
+# #   polys = Array(Vector{@compat(Tuple{Compose.Measure, Compose.Measure})}, n)
+# #   for i in 1:n
+# #     x = Compose.x_measure(xs[mod1(i, length(xs))])
+# #     y = Compose.y_measure(ys[mod1(i, length(ys))])
+# #     r = rs[mod1(i, length(rs))]
+# #     u = 0.6r
 
-#     polys[i] = [
-#       (x-r, y-u), (x-r, y+u), # L edge
-#       (x, y+r),               # B
-#       (x+r, y+u), (x+r, y-u), # R edge
-#       (x, y-r)                # T
-#     ]
-#   end
+# #     polys[i] = [
+# #       (x-r, y-u), (x-r, y+u), # L edge
+# #       (x, y+r),               # B
+# #       (x+r, y+u), (x+r, y-u), # R edge
+# #       (x, y-r)                # T
+# #     ]
+# #   end
 
-#   return Gadfly.polygon(polys)
-# end
+# #   return Gadfly.polygon(polys)
+# # end
 
 
 
-const _xcross = Shape(@compat(Tuple{Float64,Float64})[
-  ]
+# const _xcross = Shape(@compat(Tuple{Float64,Float64})[
+#   ]
 
 # function octagon(xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
 #   n = max(length(xs), length(ys), length(rs))

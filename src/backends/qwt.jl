@@ -56,7 +56,7 @@ supportedArgs(::QwtPackage) = [
     # :z,
   ]
 supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
-supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon]
+supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
 supportedScales(::QwtPackage) = [:identity, :log10]
 
 # -------------------------------
@@ -70,8 +70,9 @@ supportedScales(::QwtPackage) = [:identity, :log10]
     :path => :line,
     :steppost => :step,
     :steppre => :stepinverted,
+    :star5 => :star1,
+    :star8 => :star2,
   )
-
 
 function fixcolors(d::Dict)
   for (k,v) in d
@@ -81,9 +82,9 @@ function fixcolors(d::Dict)
   end
 end
 
-function replaceLinetypeAlias(d)
-  if haskey(_qwtAliases, d[:linetype])
-    d[:linetype] = _qwtAliases[d[:linetype]]
+function replaceQwtAliases(d, s)
+  if haskey(_qwtAliases, d[s])
+    d[s] = _qwtAliases[d[s]]
   end
 end
 
@@ -111,7 +112,8 @@ function adjustQwtKeywords(plt::Plot{QwtPackage}, iscreating::Bool; kw...)
     d = barHack(; histogramHack(; kw...)...)
   end
 
-  replaceLinetypeAlias(d)
+  replaceQwtAliases(d, :linetype)
+  replaceQwtAliases(d, :markershape)
 
   for k in keys(d)
     if haskey(_qwtAliases, k)

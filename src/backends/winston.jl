@@ -26,7 +26,7 @@
                             :dtriangle=>"down-triangle",
                             :cross => "plus",
                             :xcross => "cross",
-                            :star1 => "asterisk"
+                            :star5 => "asterisk"
                            )
 
 
@@ -81,7 +81,7 @@ supportedArgs(::WinstonPackage) = [
 supportedAxes(::WinstonPackage) = [:auto, :left]
 supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
 supportedStyles(::WinstonPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1]
+supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
 supportedScales(::WinstonPackage) = [:identity, :log10]
 subplotSupported(::WinstonPackage) = false
 

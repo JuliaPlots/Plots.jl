@@ -37,8 +37,9 @@ const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
     :ddd  => :dashdotdot,
   )
 
-const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
-                     :cross, :xcross, :star1, :star2, :hexagon, :octagon, Shape]
+# const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
+#                      :cross, :xcross, :star5, :star8, :hexagon, :octagon, Shape]
+const _allMarkers = hcat(:none, :auto, sortedKeys(_shapes))                     
 @compat const _markerAliases = Dict(
     :n            => :none,
     :no           => :none,
@@ -64,9 +65,13 @@ const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtria
     :plus         => :cross,
     :x            => :xcross,
     :X            => :xcross,
-    :star         => :star1,
-    :s            => :star1,
-    :s2           => :star2,
+    :star         => :star5,
+    :s            => :star5,
+    :star1        => :star5,
+    :s2           => :star8,
+    :star2        => :star8,
+    :p            => :pentagon,
+    :pent         => :pentagon,
     :h            => :hexagon,
     :hex          => :hexagon,
     :o            => :octagon,

@@ -60,7 +60,8 @@ supportedArgs(::GadflyPackage) = [
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon, Shape]
+# supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon, Shape]
+supportedMarkers(::GadflyPackage) = hcat(:none, :auto, sortedKeys(_shapes))
 supportedScales(::GadflyPackage) = [:identity, :log, :log2, :log10, :asinh, :sqrt]
 
 
@@ -147,11 +148,14 @@ function getMarkerGeoms(d::Dict)
   shape = d[:markershape]
   isa(shape, Shape)   && return [gadflyshape(shape)]
   shape == :none      && return Any[]
-  shape == :ellipse   && return [Gadfly.Geom.point]
-  shape == :rect      && return [gadflyshape(_square)]
-  shape == :diamond   && return [gadflyshape(_diamond)]
-  shape == :cross     && return [gadflyshape(_cross)]
-  error("unhandled marker: ", shape)
+  if !haskey(_shapes, shape)
+    error("unhandled marker: ", shape)
+  end
+  [gadflyshape(_shapes[shape])]
+  # shape == :ellipse   && return [Gadfly.Geom.point]
+  # shape == :rect      && return [gadflyshape(_square)]
+  # shape == :diamond   && return [gadflyshape(_diamond)]
+  # shape == :cross     && return [gadflyshape(_cross)]
 end
 
 

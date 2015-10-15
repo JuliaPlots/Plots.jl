@@ -236,7 +236,7 @@ __Tip__: When plotting multiple lines, you can set all series to use the same va
 ```julia
 plot(rand(100,4); color = [:red RGB(0,0,1)],     # (Matrix) lines 1 and 3 are red, lines 2 and 4 are blue
                   axis = :auto,                  # lines 1 and 3 are on the left axis, lines 2 and 4 are on the right
-                  markershape = [:rect, :star1]  # (Vector) ALL lines are passed the vector [:rect, :star1]
+                  markershape = [:rect, :star]   # (Vector) ALL lines are passed the vector [:rect, :star1]
                   width = 5)                     # all lines have a width of 5
 ```
 
