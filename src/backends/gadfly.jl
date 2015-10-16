@@ -56,6 +56,9 @@ supportedArgs(::GadflyPackage) = [
     :z,
     # :linkx,
     # :linky,
+    :tickfont,
+    :guidefont,
+    :legendfont,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
@@ -83,24 +86,33 @@ function createGadflyPlotObject(d::Dict)
                                    Gadfly.Guide.ylabel(d[:ylabel]),
                                    Gadfly.Guide.title(d[:title])]
 
+  kwargs = Dict()
 
-  # hide the legend
-  if get(d, :legend, true)
-    extra_theme_args = Any[]
-  else
-    extra_theme_args = Any[(:key_position, :none)]
+  # hide the legend?
+  if !get(d, :legend, true)
+    kwargs[:key_position] = :none
   end
+
+  # fonts
+  tfont, gfont, lfont = d[:tickfont], d[:guidefont], d[:legendfont]
 
   fg = getColor(d[:foreground_color])
   gplt.theme = Gadfly.Theme(;
           background_color = getColor(d[:background_color]),
-          # grid_color = fg,
           minor_label_color = fg,
+          minor_label_font = tfont.family,
+          minor_label_font_size = tfont.pointsize * Gadfly.pt,
           major_label_color = fg,
+          major_label_font = gfont.family,
+          major_label_font_size = gfont.pointsize * Gadfly.pt,
           key_title_color = fg,
+          key_title_font = gfont.family,
+          key_title_font_size = gfont.pointsize * Gadfly.pt,
           key_label_color = fg,
+          key_label_font = lfont.family,
+          key_label_font_size = lfont.pointsize * Gadfly.pt,
           plot_padding = 1 * Gadfly.mm,
-          extra_theme_args...
+          kwargs...
         )
   gplt
 end
@@ -661,16 +673,16 @@ function createGadflyAnnotationObject(x, y, val::@compat(AbstractString))
 end
 
 function createGadflyAnnotationObject(x, y, txt::PlotText)
-  halign = (txt.halign == :hcenter ? Compose.hcenter : (txt.halign == :left ? Compose.hleft : Compose.hright))
-  valign = (txt.valign == :vcenter ? Compose.vcenter : (txt.valign == :top ? Compose.vtop : Compose.vbottom))
-  rotations = (txt.rotation == 0.0 ? [] : [Compose.Rotation(txt.rotation, Compose.Point(Compose.x_measure(x), Compose.y_measure(y)))])
+  halign = (txt.font.halign == :hcenter ? Compose.hcenter : (txt.font.halign == :left ? Compose.hleft : Compose.hright))
+  valign = (txt.font.valign == :vcenter ? Compose.vcenter : (txt.font.valign == :top ? Compose.vtop : Compose.vbottom))
+  rotations = (txt.font.rotation == 0.0 ? [] : [Compose.Rotation(txt.font.rotation, Compose.Point(Compose.x_measure(x), Compose.y_measure(y)))])
   Gadfly.Guide.annotation(Compose.compose(
                               Compose.context(), 
                               Compose.text(x, y, txt.str, halign, valign, rotations...),
-                              Compose.font(string(txt.family)),
-                              Compose.fontsize(txt.pointsize * Gadfly.pt),
-                              Compose.stroke(txt.color),
-                              Compose.fill(txt.color)
+                              Compose.font(string(txt.font.family)),
+                              Compose.fontsize(txt.font.pointsize * Gadfly.pt),
+                              Compose.stroke(txt.font.color),
+                              Compose.fill(txt.font.color)
                             ))
 end
 

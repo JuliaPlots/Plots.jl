@@ -121,10 +121,9 @@ end
 
 # -----------------------------------------------------------------------
 
-"Wrap a string with font info"
-immutable PlotText
-  str::@compat(AbstractString)
-  family::Symbol
+
+immutable Font
+  family::AbstractString
   pointsize::Int
   halign::Symbol
   valign::Symbol
@@ -132,18 +131,20 @@ immutable PlotText
   color::Colorant
 end
 
-
-function text(str, args...)
+"Create a Font from a list of unordered features"
+function font(args...)
   
   # defaults
-  family = :courier
-  pointsize = 12
+  family = "Helvetica"
+  pointsize = 14
   halign = :hcenter
   valign = :vcenter
   rotation = 0.0
   color = colorant"black"
 
   for arg in args
+    T = typeof(arg)
+
     if arg == :center
       halign = :hcenter
       valign = :vcenter
@@ -151,13 +152,13 @@ function text(str, args...)
       halign = arg
     elseif arg in (:vcenter, :top, :bottom)
       valign = arg
-    elseif typeof(arg) <: Colorant
+    elseif T <: Colorant
       color = arg
-    elseif isa(arg, Symbol)
+    elseif T <: @compat Union{Symbol,AbstractString}
       try
         color = parse(Colorant, string(arg))
       catch
-        family = arg
+        family = string(arg)
       end
     elseif typeof(arg) <: Integer
       pointsize = arg
@@ -168,8 +169,19 @@ function text(str, args...)
     end
   end
 
-  PlotText(string(str), family, pointsize, halign, valign, rotation, color)
+  Font(family, pointsize, halign, valign, rotation, color)
 end
+
+"Wrap a string with font info"
+immutable PlotText
+  str::@compat(AbstractString)
+  font::Font
+end
+
+function text(str, args...)
+  PlotText(string(str), font(args...))
+end
+  
 
 # -----------------------------------------------------------------------
 

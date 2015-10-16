@@ -160,7 +160,9 @@ _plotDefaults[:link]              = false
 _plotDefaults[:linkx]             = false
 _plotDefaults[:linky]             = false
 _plotDefaults[:linkfunc]          = nothing
-# _plotDefaults[:dataframe]         = nothing
+_plotDefaults[:tickfont]          = font(13)
+_plotDefaults[:guidefont]         = font(16)
+_plotDefaults[:legendfont]        = font(10)
 
 
 
