@@ -141,6 +141,7 @@ xticks!{T<:Real,S<:@compat(AbstractString)}(
 yticks!{T<:Real,S<:@compat(AbstractString)}(
               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(; yticks = (ticks,labels), kw...)
 annotate!(anns...; kw...)                                 = plot!(; annotation = anns, kw...)
+annotate!{T<:Tuple}(anns::AVec{T}; kw...)                 = plot!(; annotation = anns, kw...)
 xflip!(flip::Bool = true; kw...)                          = plot!(; xflip = flip, kw...)
 yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip, kw...)
 xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
@@ -160,6 +161,7 @@ xticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot,
 yticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot,
                           ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; yticks = (ticks,labels), kw...)
 annotate!(plt::Plot, anns...; kw...)                                  = plot!(plt; annotation = anns, kw...)
+annotate!{T<:Tuple}(plt::Plot, anns::AVec{T}; kw...)                  = plot!(plt; annotation = anns, kw...)
 xflip!(plt::Plot, flip::Bool = true; kw...)                           = plot!(plt; xflip = flip, kw...)
 yflip!(plt::Plot, flip::Bool = true; kw...)                           = plot!(plt; yflip = flip, kw...)
 xaxis!(plt::Plot, args...; kw...)                                     = plot!(plt; xaxis = args, kw...)

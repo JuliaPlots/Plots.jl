@@ -83,10 +83,6 @@ function createGadflyPlotObject(d::Dict)
                                    Gadfly.Guide.ylabel(d[:ylabel]),
                                    Gadfly.Guide.title(d[:title])]
 
-  # add the legend?
-  if d[:legend]
-    unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", @compat(AbstractString)[], Color[]))
-  end
 
   # hide the legend
   if get(d, :legend, true)
@@ -98,7 +94,7 @@ function createGadflyPlotObject(d::Dict)
   fg = getColor(d[:foreground_color])
   gplt.theme = Gadfly.Theme(;
           background_color = getColor(d[:background_color]),
-          grid_color = fg,
+          # grid_color = fg,
           minor_label_color = fg,
           major_label_color = fg,
           key_title_color = fg,
@@ -199,7 +195,6 @@ function getLineGeom(d::Dict)
   elseif lt == :steppost
     Gadfly.Geom.step
   elseif lt == :steppre
-    # direction: Either :hv for horizontal then vertical, or :vh for
     Gadfly.Geom.step(direction = :vh)
   elseif lt == :hline
     Gadfly.Geom.hline(color = getColor(d[:color]), size = d[:linewidth] * Gadfly.px)
@@ -215,7 +210,7 @@ function getGadflyLineTheme(d::Dict)
   fc = getColor(d[:fillcolor])
   Gadfly.Theme(;
       default_color = lc,
-      line_width = d[:linewidth] * Gadfly.px,
+      line_width = (d[:linetype] == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
       line_style = Gadfly.get_stroke_vector(d[:linestyle]),
       lowlight_color = x->RGB(fc),  # fill/ribbon
       lowlight_opacity = alpha(fc), # fill/ribbon
@@ -224,7 +219,8 @@ function getGadflyLineTheme(d::Dict)
 end
 
 # add a line as a new layer
-function addGadflyLine!(gplt, d::Dict, geoms...)
+function addGadflyLine!(plt::Plot, d::Dict, geoms...)
+  gplt = getGadflyContext(plt)
   gfargs = vcat(geoms...,
                 getGadflyLineTheme(d))
   kwargs = Dict()
@@ -245,7 +241,7 @@ function addGadflyLine!(gplt, d::Dict, geoms...)
   elseif lt == :vline
     kwargs[:xintercept] = d[:y]
   elseif lt == :sticks
-    w = 0.1 * mean(diff(d[:x]))
+    w = 0.01 * mean(diff(d[:x]))
     kwargs[:xmin] = d[:x] - w
     kwargs[:xmax] = d[:x] + w
   end
@@ -274,7 +270,8 @@ function getGadflyMarkerTheme(d::Dict)
     )
 end
 
-function addGadflyMarker!(gplt, d::Dict, geoms...)
+function addGadflyMarker!(plt::Plot, d::Dict, geoms...)
+  gplt = getGadflyContext(plt)
   gfargs = vcat(geoms...,
                 getGadflyMarkerTheme(d),
                 getMarkerGeom(d))
@@ -296,9 +293,49 @@ end
 
 # ---------------------------------------------------------------------------
 
+function addToGadflyLegend(plt::Plot, d::Dict)
+
+  # add the legend?
+  if plt.initargs[:legend]
+    gplt = getGadflyContext(plt)
+
+    # add the legend if needed
+    if all(g -> !isa(g, Gadfly.Guide.ManualColorKey), gplt.guides)
+      unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", @compat(AbstractString)[], Color[]))
+    end
+
+    # now add the series to the legend
+    for guide in gplt.guides
+      if isa(guide, Gadfly.Guide.ManualColorKey)
+        # TODO: there's a BUG in gadfly if you pass in the same color more than once,
+        # since gadfly will call unique(colors), but doesn't also merge the rows that match
+        # Should ensure from this side that colors which are the same are merged together
+
+        c = getColor(d[d[:markershape] == :none ? :color : :markercolor])
+        foundit = false
+        
+        # extend the label if we found this color
+        for i in 1:length(guide.colors)
+          if c == guide.colors[i]
+            guide.labels[i] *= ", " * d[:label]
+            foundit = true
+          end
+        end
+
+        # didn't find the color, so add a new entry into the legend
+        if !foundit
+          push!(guide.labels, d[:label])
+          push!(guide.colors, c)
+        end
+      end
+    end
+
+  end
+
+end
 
 
-function addGadflySeries!(gplt, d::Dict)
+function addGadflySeries!(plt::Plot, d::Dict)
 
   # add a regression line?
   # TODO: make more flexible
@@ -307,7 +344,7 @@ function addGadflySeries!(gplt, d::Dict)
   # lines
   geom = getLineGeom(d)
   if geom != nothing
-    addGadflyLine!(gplt, d, geom, smooth...)
+    addGadflyLine!(plt, d, geom, smooth...)
 
     # don't add a regression for markers too
     smooth = Any[]
@@ -323,21 +360,10 @@ function addGadflySeries!(gplt, d::Dict)
 
   # markers
   if d[:markershape] != :none
-    addGadflyMarker!(gplt, d, smooth...)
+    addGadflyMarker!(plt, d, smooth...)
   end
 
-  # add to the legend
-  for guide in gplt.guides
-    if isa(guide, Gadfly.Guide.ManualColorKey)
-      # TODO: there's a BUG in gadfly if you pass in the same color more than once,
-      # since gadfly will call unique(colors), but doesn't also merge the rows that match
-      # Should ensure from this side that colors which are the same are merged together
-
-      push!(guide.labels, d[:label])
-      push!(guide.colors, getColor(d[d[:markershape] == :none ? :color : :markercolor]))
-    end
-  end
-
+  lt in (:hist, :heatmap, :hexbin) || addToGadflyLegend(plt, d)
 end
 
 

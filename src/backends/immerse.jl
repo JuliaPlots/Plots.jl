@@ -37,7 +37,7 @@ end
 # plot one data series
 function plot!(::ImmersePackage, plt::Plot; kw...)
   d = Dict(kw)
-  addGadflySeries!(getGadflyContext(plt), d)
+  addGadflySeries!(plt, d)
   push!(plt.seriesargs, d)
   plt
 end

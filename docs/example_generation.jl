@@ -99,8 +99,8 @@ const examples = PlotExample[
               "Currently only text annotations are supported.  Pass in a tuple or vector-of-tuples: (x,y,text).  `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`",
               [
                 :(y = rand(10)),
-                :(plot(y, ann=(3,y[3],"this is #3"))),
-                :(annotate!([(5,y[5],"this is #5"),(9,y[10],"this is #10")]))
+                :(plot(y, ann=(3,y[3],text("this is #3",:left)))),
+                :(annotate!([(5,y[5],text("this is #5",16,:red,:center)),(10,y[10],text("this is #10",:right,20,:Helvitica))]))
               ]),
   
 ]
