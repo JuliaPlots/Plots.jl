@@ -73,7 +73,7 @@ using RDatasets
 iris = dataset("datasets", "iris");
 
 # This will bring up a browser window with the plot. Add a semicolon at the end to skip display. 
-scatter(iris, :SepalLength, :SepalWidth, group=:Species, m=([:+ :d :s], 12))
+scatter(iris, :SepalLength, :SepalWidth, group=:Species, m=([:+ :d :s], 12), smooth=0.98, bg=RGB(0.3,0.3,0.3))
 
 # save a png (equivalent to png("gadfly1.png") and savefig("gadfly1.png"))
 png("gadfly1")
