@@ -213,10 +213,12 @@ Keyword | Default | Type | Aliases
 `:fillrange` | `nothing` | Series | `:fillranges`, `:fillrng`  
 `:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
 `:group` | `nothing` | Series | `:g`, `:groups`  
+`:guidefont` | `Plots.Font("Helvetica",16,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:heatmap_c` | `(0.15,0.5)` | Series | `:heatmap_cs`  
 `:label` | `AUTO` | Series | `:lab`, `:labels`  
 `:layout` | `nothing` | Plot |   
 `:legend` | `true` | Plot | `:leg`  
+`:legendfont` | `Plots.Font("Helvetica",10,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:line` | `nothing` | Series | `:l`  
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
 `:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
@@ -234,9 +236,10 @@ Keyword | Default | Type | Aliases
 `:nc` | `-1` | Plot |   
 `:nr` | `-1` | Plot |   
 `:pos` | `(0,0)` | Plot |   
-`:reg` | `false` | Series | `:regression`, `:regs`  
 `:show` | `false` | Plot | `:display`, `:gui`  
 `:size` | `(600,400)` | Plot | `:windowsize`, `:wsize`  
+`:smooth` | `false` | Series | `:reg`, `:regression`, `:smooths`  
+`:tickfont` | `Plots.Font("Helvetica",13,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:title` | `` | Plot |   
 `:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
 `:xaxis` | `nothing` | Plot |   

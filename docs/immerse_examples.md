@@ -1,10 +1,10 @@
 # Examples for backend: immerse
 
-- Supported arguments: `annotation`, `background_color`, `color`, `color_palette`, `fillrange`, `fillcolor`, `group`, `label`, `layout`, `legend`, `linestyle`, `linetype`, `linewidth`, `markershape`, `markercolor`, `markersize`, `n`, `nbins`, `nc`, `nr`, `reg`, `show`, `size`, `title`, `windowtitle`, `x`, `xlabel`, `xlims`, `xticks`, `y`, `ylabel`, `ylims`, `yticks`, `xscale`, `yscale`, `xflip`, `yflip`, `z`
+- Supported arguments: `annotation`, `background_color`, `color`, `color_palette`, `fillrange`, `fillcolor`, `foreground_color`, `group`, `label`, `layout`, `legend`, `linestyle`, `linetype`, `linewidth`, `markershape`, `markercolor`, `markersize`, `n`, `nbins`, `nc`, `nr`, `smooth`, `show`, `size`, `title`, `windowtitle`, `x`, `xlabel`, `xlims`, `xticks`, `y`, `ylabel`, `ylims`, `yticks`, `xscale`, `yscale`, `xflip`, `yflip`, `z`, `tickfont`, `guidefont`, `legendfont`
 - Supported values for axis: `:auto`, `:left`
-- Supported values for linetype: `:none`, `:line`, `:path`, `:steppost`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`, `:hline`, `:vline`, `:ohlc`
+- Supported values for linetype: `:none`, `:line`, `:path`, `:steppre`, `:steppost`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`, `:hline`, `:vline`, `:ohlc`
 - Supported values for linestyle: `:auto`, `:solid`, `:dash`, `:dot`, `:dashdot`, `:dashdotdot`
-- Supported values for marker: `:none`, `:auto`, `:rect`, `:ellipse`, `:diamond`, `:utriangle`, `:dtriangle`, `:cross`, `:xcross`, `:star1`, `:star2`, `:hexagon`, `:octagon`
+- Supported values for marker: `:none`, `:auto`, `:cross`, `:diamond`, `:dtriangle`, `:ellipse`, `:heptagon`, `:hexagon`, `:octagon`, `:pentagon`, `:rect`, `:star4`, `:star5`, `:star6`, `:star7`, `:star8`, `:utriangle`, `:xcross`, `:Plots.Shape`
 - Is `subplot`/`subplot!` supported? Yes
 
 ### Initialize
@@ -150,8 +150,11 @@ plot(cumsum(randn(20,length(styles)),1); style=:auto,label=map(string,styles),w=
 
 
 ```julia
-markers = setdiff(supportedMarkers(),[:none,:auto])'
-scatter(0.5:9.5,[fill(i - 0.5,10) for i = length(markers):-1:1]; marker=:auto,label=map(string,markers),ms=12)
+markers = setdiff(supportedMarkers(),[:none,:auto,Shape])'
+n = length(markers)
+x = (linspace(0,10,n + 2))[2:end - 1]
+y = repmat(reverse(x)',n,1)
+scatter(x,y,m=(12,:auto),lab=map(string,markers),bg=:linen)
 ```
 
 ![](../img/immerse/immerse_example_13.png)
@@ -209,30 +212,14 @@ subplot!(fakedata(100,10))
 
 ![](../img/immerse/immerse_example_18.png)
 
-### Open/High/Low/Close
-
-Create an OHLC chart.  Pass in a vector of OHLC objects as your `y` argument.  Adjust the tick width with arg `markersize`.
-
-```julia
-n = 20
-hgt = rand(n) + 1
-bot = randn(n)
-openpct = rand(n)
-closepct = rand(n)
-y = [OHLC(openpct[i] * hgt[i] + bot[i],bot[i] + hgt[i],bot[i],closepct[i] * hgt[i] + bot[i]) for i = 1:n]
-ohlc(y; markersize=8)
-```
-
-![](../img/immerse/immerse_example_19.png)
-
 ### Annotations
 
 Currently only text annotations are supported.  Pass in a tuple or vector-of-tuples: (x,y,text).  `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`
 
 ```julia
 y = rand(10)
-plot(y,ann=(3,y[3],"this is #3"))
-annotate!([(5,y[5],"this is #5"),(9,y[10],"this is #10")])
+plot(y,ann=(3,y[3],text("this is #3",:left)))
+annotate!([(5,y[5],text("this is #5",16,:red,:center)),(10,y[10],text("this is #10",:right,20,"courier"))])
 ```
 
 ![](../img/immerse/immerse_example_20.png)
