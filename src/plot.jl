@@ -102,7 +102,7 @@ function plot!(plt::Plot, args...; kw...)
   preparePlotUpdate(plt)
 
   # get the list of dictionaries, one per series
-  dumpdict(d, "before createKWargsList")
+  # dumpdict(d, "before createKWargsList")
   kwList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
   
   # if we were able to extract guide information from the series inputs, then update the plot

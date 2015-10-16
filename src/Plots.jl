@@ -83,6 +83,10 @@ export
   supportedMarkers,
   subplotSupported,
 
+  Animation,
+  frame,
+  gif,
+
   # recipes
   PlotRecipe,
   EllipseRecipe,
@@ -105,6 +109,7 @@ include("args.jl")
 include("plot.jl")
 include("subplot.jl")
 include("recipes.jl")
+include("animation.jl")
 
 
 # ---------------------------------------------------------
