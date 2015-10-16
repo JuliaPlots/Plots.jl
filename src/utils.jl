@@ -141,6 +141,10 @@ function addOrReplace(v::AbstractVector, t::DataType, args...; kw...)
     return
 end
 
+function replaceType(vec, val)
+  filter!(x -> !isa(x, typeof(val)), vec)
+  push!(vec, val)
+end
 
 function replaceAliases!(d::Dict, aliases::Dict)
   for (k,v) in d
@@ -150,6 +154,9 @@ function replaceAliases!(d::Dict, aliases::Dict)
     end
   end
 end
+
+createSegments(z) = collect(repmat(z',2,1))[2:end]
+Base.first(c::Colorant) = c
 
 
 sortedkeys(d::Dict) = sort(collect(keys(d)))

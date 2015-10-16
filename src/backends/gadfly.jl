@@ -58,12 +58,14 @@ supportedArgs(::GadflyPackage) = [
     # :linky,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
-supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
+supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 # supportedMarkers(::GadflyPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star1, :star2, :hexagon, :octagon, Shape]
 supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
 supportedScales(::GadflyPackage) = [:identity, :log, :log2, :log10, :asinh, :sqrt]
 
+
+# ---------------------------------------------------------------------------
 
 # include("gadfly_shapes.jl")
 
@@ -93,8 +95,14 @@ function createGadflyPlotObject(d::Dict)
     extra_theme_args = Any[(:key_position, :none)]
   end
 
+  fg = getColor(d[:foreground_color])
   gplt.theme = Gadfly.Theme(;
           background_color = getColor(d[:background_color]),
+          grid_color = fg,
+          minor_label_color = fg,
+          major_label_color = fg,
+          key_title_color = fg,
+          key_label_color = fg,
           plot_padding = 1 * Gadfly.mm,
           extra_theme_args...
         )
@@ -102,210 +110,223 @@ function createGadflyPlotObject(d::Dict)
 end
 
 
-function getLineGeoms(d::Dict)
+# ---------------------------------------------------------------------------
+
+# function getLineGeoms_old(d::Dict)
+#   lt = d[:linetype]
+#   xbins, ybins = maketuple(d[:nbins])
+#   lt == :hexbin && return [Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)]
+#   lt == :heatmap && return [Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)]
+#   lt == :hist && return [Gadfly.Geom.histogram(bincount = xbins)]
+#   lt == :path && return [Gadfly.Geom.path]
+#   lt == :bar && return [Gadfly.Geom.bar]
+#   lt == :steppost && return [Gadfly.Geom.step]
+
+#   # NOTE: we won't actually show this (we'll set linewidth to 0 later), but we need a geom so that Gadfly doesn't complain
+#   if lt in (:none, :ohlc, :scatter)
+#     # return [Gadfly.Geom.path]
+#     return Any[]
+#   end
+
+#   # lt == :sticks && return [Gadfly.Geom.bar]
+#   error("linetype $lt not currently supported with Gadfly")
+# end
+
+
+
+# # serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...
+# function getMarkerGeomsAndGuides(d::Dict, initargs::Dict)
+#   return Any[], Any[]  # don't do this step anymore
+#   # marker = d[:markershape]
+
+#   # if marker == :none && d[:linetype] != :ohlc
+#   #   return Any[], Any[]
+
+#   # elseif marker == :diamond
+#   #   geom = DIAMOND
+#   #   @show geom
+#   #   return Any[geom], Any[]
+
+#   # else
+#   #   return Any[], [createGadflyAnnotation(d, initargs)]
+#   # end
+# end
+
+# function getMarkerGeoms(d::Dict)
+#   shape = d[:markershape]
+#   isa(shape, Shape)   && return [gadflyshape(shape)]
+#   shape == :none      && return Any[]
+#   if !haskey(_shapes, shape)
+#     error("unhandled marker: ", shape)
+#   end
+#   [gadflyshape(_shapes[shape])]
+# end
+
+
+# function addGadflyFixedLines!(gplt, d::Dict, theme)
+  
+#   sz = d[:linewidth] * Gadfly.px
+#   c = d[:color]
+
+#   if d[:linetype] == :hline
+#     geom = Gadfly.Geom.hline(color=c, size=sz)
+#     layer = Gadfly.layer(yintercept = d[:y], geom, theme)
+#   else
+#     geom = Gadfly.Geom.vline(color=c, size=sz)
+#     layer = Gadfly.layer(xintercept = d[:y], geom, theme)
+#   end
+  
+#   prepend!(gplt.layers, layer)
+# end
+
+
+# ---------------------------------------------------------------------------
+
+
+function getLineGeom(d::Dict)
   lt = d[:linetype]
   xbins, ybins = maketuple(d[:nbins])
-  lt == :hexbin && return [Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)]
-  lt == :heatmap && return [Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)]
-  lt == :hist && return [Gadfly.Geom.histogram(bincount = xbins)]
-  # lt == :none && return [Gadfly.Geom.path]
-  lt == :path && return [Gadfly.Geom.path]
-  # lt == :scatter && return [Gadfly.Geom.point]
-  lt == :bar && return [Gadfly.Geom.bar]
-  lt == :steppost && return [Gadfly.Geom.step]
-
-  # NOTE: we won't actually show this (we'll set linewidth to 0 later), but we need a geom so that Gadfly doesn't complain
-  if lt in (:none, :ohlc, :scatter)
-    # return [Gadfly.Geom.path]
-    return Any[]
-  end
-
-  # lt == :sticks && return [Gadfly.Geom.bar]
-  error("linetype $lt not currently supported with Gadfly")
-end
-
-
-
-# serious hack (I think?) to draw my own shapes as annotations... will it work? who knows...
-function getMarkerGeomsAndGuides(d::Dict, initargs::Dict)
-  return Any[], Any[]  # don't do this step anymore
-  # marker = d[:markershape]
-
-  # if marker == :none && d[:linetype] != :ohlc
-  #   return Any[], Any[]
-
-  # elseif marker == :diamond
-  #   geom = DIAMOND
-  #   @show geom
-  #   return Any[geom], Any[]
-
-  # else
-  #   return Any[], [createGadflyAnnotation(d, initargs)]
-  # end
-end
-
-function getMarkerGeoms(d::Dict)
-  shape = d[:markershape]
-  isa(shape, Shape)   && return [gadflyshape(shape)]
-  shape == :none      && return Any[]
-  if !haskey(_shapes, shape)
-    error("unhandled marker: ", shape)
-  end
-  [gadflyshape(_shapes[shape])]
-  # shape == :ellipse   && return [Gadfly.Geom.point]
-  # shape == :rect      && return [gadflyshape(_square)]
-  # shape == :diamond   && return [gadflyshape(_diamond)]
-  # shape == :cross     && return [gadflyshape(_cross)]
-end
-
-
-function addGadflyFixedLines!(gplt, d::Dict, theme)
-  
-  sz = d[:linewidth] * Gadfly.px
-  c = d[:color]
-
-  if d[:linetype] == :hline
-    geom = Gadfly.Geom.hline(color=c, size=sz)
-    layer = Gadfly.layer(yintercept = d[:y], geom, theme)
+  if lt == :hexbin
+    Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)
+  elseif lt == :heatmap
+    Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)
+  elseif lt == :hist
+    Gadfly.Geom.histogram(bincount = xbins)
+  elseif lt == :path
+    Gadfly.Geom.path
+  elseif lt in (:bar, :sticks)
+    Gadfly.Geom.bar
+  elseif lt == :steppost
+    Gadfly.Geom.step
+  elseif lt == :steppre
+    # direction: Either :hv for horizontal then vertical, or :vh for
+    Gadfly.Geom.step(direction = :vh)
+  elseif lt == :hline
+    Gadfly.Geom.hline(color = getColor(d[:color]), size = d[:linewidth] * Gadfly.px)
+  elseif lt == :vline
+    Gadfly.Geom.vline(color = getColor(d[:color]), size = d[:linewidth] * Gadfly.px)
   else
-    geom = Gadfly.Geom.vline(color=c, size=sz)
-    layer = Gadfly.layer(xintercept = d[:y], geom, theme)
+    nothing
   end
-  
-  prepend!(gplt.layers, layer)
 end
 
+function getGadflyLineTheme(d::Dict)
+  lc = getColor(d[:color])
+  fc = getColor(d[:fillcolor])
+  Gadfly.Theme(;
+      default_color = lc,
+      line_width = d[:linewidth] * Gadfly.px,
+      line_style = Gadfly.get_stroke_vector(d[:linestyle]),
+      lowlight_color = x->RGB(fc),  # fill/ribbon
+      lowlight_opacity = alpha(fc), # fill/ribbon
+      bar_highlight = RGB(lc),      # bars
+    )
+end
 
-createSegments(z) = collect(repmat(z',2,1))[2:end]
-Base.first(c::Colorant) = c
+# add a line as a new layer
+function addGadflyLine!(gplt, d::Dict, geoms...)
+  gfargs = vcat(geoms...,
+                getGadflyLineTheme(d))
+  kwargs = Dict()
 
-function addGadflySeries!(gplt, d::Dict, initargs::Dict)
-
-  gfargs = Any[]
-
-  # if my PR isn't present, don't set the line_style
-  local extra_theme_args
-  try
-    extra_theme_args = Any[(:line_style, Gadfly.get_stroke_vector(d[:linestyle]))]
-  catch
-    extra_theme_args = Any[]
-  end
-  
-  # set theme: color, line linewidth, and point size
-  line_width = d[:linewidth] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 linewidth when we don't show a line
-  line_color = getColor(d[:color])
-  fillcolor = getColor(d[:fillcolor])
-  # marker_stroke_color = d[:linewidth] == 0 ? RGBA(0,0,0,0) : line_color
-  # fg = initargs[:foreground_color]
-  theme = Gadfly.Theme(; default_color = line_color,
-                       line_width = line_width,
-                       default_point_size = d[:markersize] * Gadfly.px,
-                       # grid_color = fg,
-                       # minor_label_color = fg,
-                       # major_label_color = fg,
-                       # key_title_color = fg,
-                       # key_label_color = fg,
-                       # discrete_highlight_color = marker_stroke_color,  # border of markers
-                       highlight_width = d[:linewidth] * Gadfly.px,  # width of marker border
-                       lowlight_color = x->RGB(fillcolor), # fill/ribbon
-                       lowlight_opacity = alpha(fillcolor), # fill/ribbon
-                       bar_highlight = RGB(line_color),  # bars
-                       extra_theme_args...)
-  push!(gfargs, theme)
-
-  # first things first... lets do the sticks hack
-  if d[:linetype] == :sticks
-    d, dScatter = sticksHack(;d...)
-
-    # add the annotation
-    if dScatter[:markershape] != :none
-      push!(gplt.guides, createGadflyAnnotation(dScatter, initargs))
-    end
-
-  elseif d[:linetype] in (:hline, :vline)
-    addGadflyFixedLines!(gplt, d, theme)
-    return
-
-  end
-
-  if d[:linetype] == :scatter
-    d[:linetype] = :none
-
-    # if d[:markershape] in (:none,:ellipse)
-    #   push!(gfargs, Gadfly.Geom.point)
-    #   d[:markershape] = :none
-    # # if d[:markershape] == :none
-    # #   d[:markershape] = :ellipse
-    # end
-  end
-
-  # add the Geoms
-  append!(gfargs, getLineGeoms(d))
-  append!(gfargs, getMarkerGeoms(d))
-
-  # colorgroup
-  z = d[:z]
-
-  # handle line segments of different colors
-  cscheme = d[:color]
-  if isa(cscheme, ColorVector)
-    # create a color scale, and set the color group to the index of the color
-    push!(gplt.scales, Gadfly.Scale.color_discrete_manual(cscheme.v...))
-
-    # this is super weird, but... oh well... for some reason this creates n separate line segments...
-    # create a list of vertices that go: [x1,x2,x2,x3,x3, ... ,xi,xi, ... xn,xn] (same for y)
-    # then the vector passed to the "color" keyword should be a vector: [1,1,2,2,3,3,4,4, ..., i,i, ... , n,n]
-    csindices = Int[mod1(i,length(cscheme.v)) for i in 1:length(d[:y])]
-    cs = collect(repmat(csindices', 2, 1))[1:end-1]
-    grp = collect(repmat((1:length(d[:y]))', 2, 1))[1:end-1]
-    d[:x], d[:y] = map(createSegments, (d[:x], d[:y]))
-    colorgroup = [(:color, cs), (:group, grp)]
-
-  # handle continuous color scales for the markers
-  elseif z != nothing && typeof(z) <: AVec
-    colorgroup = [(:color, z)]
-    if !isa(d[:markercolor], ColorGradient)
-      d[:markercolor] = colorscheme(:bluesreds)
-    end
-    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p)))) # minz + p * (maxz - minz))))
-    
-  # nothing special...
-  else
-    colorgroup = Any[]
-  end
-
-  # fills/ribbons
-  yminmax = Any[]
+  # add a fill?
   if d[:fillrange] != nothing
     fillmin, fillmax = map(makevec, maketuple(d[:fillrange]))
     nmin, nmax = length(fillmin), length(fillmax)
-    push!(yminmax, (:ymin, Float64[min(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]))
-    push!(yminmax, (:ymax, Float64[max(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]))
+    kwargs[:ymin] = Float64[min(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]
+    kwargs[:ymax] = Float64[max(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]
     push!(gfargs, Gadfly.Geom.ribbon)
   end
 
-  # elseif ribbon != nothing
-  #   ribbon = makevec(ribbon)
-  #   n = length(ribbon)
-  #   @show ribbon
-  #   push!(yminmax, (:ymin, Float64[y - ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
-  #   push!(yminmax, (:ymax, Float64[y + ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
-  #   push!(gfargs, Gadfly.Geom.ribbon)
-  # end
+  # h/vlines
+  lt = d[:linetype]
+  if lt == :hline
+    kwargs[:yintercept] = d[:y]
+  elseif lt == :vline
+    kwargs[:xintercept] = d[:y]
+  elseif lt == :sticks
+    w = 0.1 * mean(diff(d[:x]))
+    kwargs[:xmin] = d[:x] - w
+    kwargs[:xmax] = d[:x] + w
+  end
   
-  # handle markers
-  geoms, guides = getMarkerGeomsAndGuides(d, initargs)
-  append!(gfargs, geoms)
-  append!(gplt.guides, guides)
+  # add the layer
+  x = d[d[:linetype] == :hist ? :y : :x]
+  prepend!(gplt.layers, Gadfly.layer(gfargs...; x = x, y = d[:y], kwargs...))
+end
 
-  # add a regression line?
-  if d[:reg]
-    # TODO: make more flexible
-    push!(gfargs, Gadfly.Geom.smooth(method=:lm))
-    # push!(gfargs, Gadfly.Geom.smooth(method=:loess, smoothing=0.95))
+
+# ---------------------------------------------------------------------------
+
+
+function getMarkerGeom(d::Dict)
+  shape = d[:markershape]
+  gadflyshape(isa(shape, Shape) ? shape : _shapes[shape])
+end
+
+
+function getGadflyMarkerTheme(d::Dict)
+  Gadfly.Theme(
+      default_color = getColor(d[:markercolor]),
+      default_point_size = d[:markersize] * Gadfly.px,
+      # highlight_color = getColor(initargs[:foreground_color]),
+      highlight_width = d[:linewidth] * Gadfly.px,
+    )
+end
+
+function addGadflyMarker!(gplt, d::Dict, geoms...)
+  gfargs = vcat(geoms...,
+                getGadflyMarkerTheme(d),
+                getMarkerGeom(d))
+  kwargs = Dict()
+
+  # handle continuous color scales for the markers
+  z = d[:z]
+  if z != nothing && typeof(z) <: AVec
+    kwargs[:color] = z
+    if !isa(d[:markercolor], ColorGradient)
+      d[:markercolor] = colorscheme(:bluesreds)
+    end
+    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p))))
   end
 
-  # add to the legend, but only without the continuous scale
+  prepend!(gplt.layers, Gadfly.layer(gfargs...; x = d[:x], y = d[:y], kwargs...))
+end
+
+
+# ---------------------------------------------------------------------------
+
+
+
+function addGadflySeries!(gplt, d::Dict)
+
+  # add a regression line?
+  # TODO: make more flexible
+  smooth = d[:reg] ? [Gadfly.Geom.smooth(method=:lm)] : Any[]
+
+  # lines
+  geom = getLineGeom(d)
+  if geom != nothing
+    addGadflyLine!(gplt, d, geom, smooth...)
+
+    # don't add a regression for markers too
+    smooth = Any[]
+  end
+
+  # special handling for ohlc and scatter
+  lt = d[:linetype]
+  if lt == :ohlc
+    error("Haven't re-implemented after refactoring")
+  elseif lt == :scatter && d[:markershape] == :none
+    d[:markershape] = :ellipse
+  end
+
+  # markers
+  if d[:markershape] != :none
+    addGadflyMarker!(gplt, d, smooth...)
+  end
+
+  # add to the legend
   for guide in gplt.guides
     if isa(guide, Gadfly.Guide.ManualColorKey)
       # TODO: there's a BUG in gadfly if you pass in the same color more than once,
@@ -317,23 +338,160 @@ function addGadflySeries!(gplt, d::Dict, initargs::Dict)
     end
   end
 
-  # for histograms, set x=y
-  x = d[d[:linetype] == :hist ? :y : :x]
-
-  if d[:axis] != :left
-    warn("Gadfly only supports one y axis")
-  end
-
-
-  # add the layer to the Gadfly.Plot
-  prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y], colorgroup..., yminmax...))
-  nothing
 end
 
-function replaceType(vec, val)
-  filter!(x -> !isa(x, typeof(val)), vec)
-  push!(vec, val)
-end
+
+# ---------------------------------------------------------------------------
+
+
+
+# function addGadflySeries_old!(gplt, d::Dict, initargs::Dict)
+
+#   gfargs = Any[]
+
+#   # if my PR isn't present, don't set the line_style
+#   local extra_theme_args
+#   try
+#     extra_theme_args = Any[(:line_style, Gadfly.get_stroke_vector(d[:linestyle]))]
+#   catch
+#     extra_theme_args = Any[]
+#   end
+  
+#   # set theme: color, line linewidth, and point size
+#   line_width = d[:linewidth] * (d[:linetype] in (:none, :ohlc, :scatter) ? 0 : 1) * Gadfly.px  # 0 linewidth when we don't show a line
+#   line_color = getColor(d[:color])
+#   fillcolor = getColor(d[:fillcolor])
+#   # marker_stroke_color = d[:linewidth] == 0 ? RGBA(0,0,0,0) : line_color
+#   # fg = initargs[:foreground_color]
+#   theme = Gadfly.Theme(; default_color = line_color,
+#                        line_width = line_width,
+#                        default_point_size = d[:markersize] * Gadfly.px,
+#                        # grid_color = fg,
+#                        # minor_label_color = fg,
+#                        # major_label_color = fg,
+#                        # key_title_color = fg,
+#                        # key_label_color = fg,
+#                        # discrete_highlight_color = marker_stroke_color,  # border of markers
+#                        highlight_width = d[:linewidth] * Gadfly.px,  # width of marker border
+#                        lowlight_color = x->RGB(fillcolor), # fill/ribbon
+#                        lowlight_opacity = alpha(fillcolor), # fill/ribbon
+#                        bar_highlight = RGB(line_color),  # bars
+#                        extra_theme_args...)
+#   push!(gfargs, theme)
+
+#   # first things first... lets do the sticks hack
+#   if d[:linetype] == :sticks
+#     d, dScatter = sticksHack(;d...)
+
+#     # add the annotation
+#     if dScatter[:markershape] != :none
+#       push!(gplt.guides, createGadflyAnnotation(dScatter, initargs))
+#     end
+
+#   elseif d[:linetype] in (:hline, :vline)
+#     addGadflyFixedLines!(gplt, d, theme)
+#     return
+
+#   end
+
+#   if d[:linetype] == :scatter
+#     d[:linetype] = :none
+#   end
+
+#   # add the Geoms
+#   append!(gfargs, getLineGeoms_old(d))
+#   append!(gfargs, getMarkerGeoms(d))
+
+#   # colorgroup
+#   z = d[:z]
+
+#   # handle line segments of different colors
+#   cscheme = d[:color]
+#   if isa(cscheme, ColorVector)
+#     # create a color scale, and set the color group to the index of the color
+#     push!(gplt.scales, Gadfly.Scale.color_discrete_manual(cscheme.v...))
+
+#     # this is super weird, but... oh well... for some reason this creates n separate line segments...
+#     # create a list of vertices that go: [x1,x2,x2,x3,x3, ... ,xi,xi, ... xn,xn] (same for y)
+#     # then the vector passed to the "color" keyword should be a vector: [1,1,2,2,3,3,4,4, ..., i,i, ... , n,n]
+#     csindices = Int[mod1(i,length(cscheme.v)) for i in 1:length(d[:y])]
+#     cs = collect(repmat(csindices', 2, 1))[1:end-1]
+#     grp = collect(repmat((1:length(d[:y]))', 2, 1))[1:end-1]
+#     d[:x], d[:y] = map(createSegments, (d[:x], d[:y]))
+#     colorgroup = [(:color, cs), (:group, grp)]
+
+#   # handle continuous color scales for the markers
+#   elseif z != nothing && typeof(z) <: AVec
+#     colorgroup = [(:color, z)]
+#     if !isa(d[:markercolor], ColorGradient)
+#       d[:markercolor] = colorscheme(:bluesreds)
+#     end
+#     push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p)))) # minz + p * (maxz - minz))))
+    
+#   # nothing special...
+#   else
+#     colorgroup = Any[]
+#   end
+
+#   # fills/ribbons
+#   yminmax = Any[]
+#   if d[:fillrange] != nothing
+#     fillmin, fillmax = map(makevec, maketuple(d[:fillrange]))
+#     nmin, nmax = length(fillmin), length(fillmax)
+#     push!(yminmax, (:ymin, Float64[min(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]))
+#     push!(yminmax, (:ymax, Float64[max(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]))
+#     push!(gfargs, Gadfly.Geom.ribbon)
+#   end
+
+#   # elseif ribbon != nothing
+#   #   ribbon = makevec(ribbon)
+#   #   n = length(ribbon)
+#   #   @show ribbon
+#   #   push!(yminmax, (:ymin, Float64[y - ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
+#   #   push!(yminmax, (:ymax, Float64[y + ribbon[mod1(i,n)] for (i,y) in enumerate(d[:y])]))
+#   #   push!(gfargs, Gadfly.Geom.ribbon)
+#   # end
+  
+#   # handle markers
+#   geoms, guides = getMarkerGeomsAndGuides(d, initargs)
+#   append!(gfargs, geoms)
+#   append!(gplt.guides, guides)
+
+#   # add a regression line?
+#   if d[:reg]
+#     # TODO: make more flexible
+#     push!(gfargs, Gadfly.Geom.smooth(method=:lm))
+#     # push!(gfargs, Gadfly.Geom.smooth(method=:loess, smoothing=0.95))
+#   end
+
+#   # add to the legend, but only without the continuous scale
+#   for guide in gplt.guides
+#     if isa(guide, Gadfly.Guide.ManualColorKey)
+#       # TODO: there's a BUG in gadfly if you pass in the same color more than once,
+#       # since gadfly will call unique(colors), but doesn't also merge the rows that match
+#       # Should ensure from this side that colors which are the same are merged together
+
+#       push!(guide.labels, d[:label])
+#       push!(guide.colors, getColor(d[d[:markershape] == :none ? :color : :markercolor]))
+#     end
+#   end
+
+#   # for histograms, set x=y
+#   x = d[d[:linetype] == :hist ? :y : :x]
+
+#   if d[:axis] != :left
+#     warn("Gadfly only supports one y axis")
+#   end
+
+
+#   # add the layer to the Gadfly.Plot
+#   prepend!(gplt.layers, Gadfly.layer(unique(gfargs)...; x = x, y = d[:y], colorgroup..., yminmax...))
+#   nothing
+# end
+
+
+# ---------------------------------------------------------------------------
+
 
 function addGadflyTicksGuide(gplt, ticks, isx::Bool)
   ticks == :auto && return
@@ -427,26 +585,6 @@ function updateGadflyAxisFlips(gplt, d::Dict, xlims, ylims)
 end
 
 
-# ---------------------------------------------------------------------------
-
-# create a blank Gadfly.Plot object
-function plot(pkg::GadflyPackage; kw...)
-  d = Dict(kw)
-  gplt = createGadflyPlotObject(d)
-  Plot(gplt, pkg, 0, d, Dict[])
-end
-
-
-# plot one data series
-function plot!(::GadflyPackage, plt::Plot; kw...)
-  d = Dict(kw)
-  addGadflySeries!(plt.o, d, plt.initargs)
-  push!(plt.seriesargs, d)
-  plt
-end
-
-
-
 function findGuideAndSet(gplt, t::DataType, args...; kw...) #s::@compat(AbstractString))
   for (i,guide) in enumerate(gplt.guides)
     if isa(guide, t)
@@ -454,8 +592,6 @@ function findGuideAndSet(gplt, t::DataType, args...; kw...) #s::@compat(Abstract
     end
   end
 end
-
-
 
 function updateGadflyGuides(plt::Plot, d::Dict)
   gplt = getGadflyContext(plt)
@@ -483,9 +619,6 @@ function updateGadflyGuides(plt::Plot, d::Dict)
   updateGadflyAxisFlips(gplt, d, xlims, ylims)
 end
 
-function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
-  updateGadflyGuides(plt, d)
-end
 
 # ----------------------------------------------------------------
 
@@ -516,6 +649,32 @@ function addAnnotations{X,Y,V}(plt::Plot{GadflyPackage}, anns::AVec{@compat(Tupl
     push!(plt.o.guides, createGadflyAnnotationObject(ann...))
   end
 end
+
+
+# ---------------------------------------------------------------------------
+
+# create a blank Gadfly.Plot object
+function plot(pkg::GadflyPackage; kw...)
+  d = Dict(kw)
+  gplt = createGadflyPlotObject(d)
+  Plot(gplt, pkg, 0, d, Dict[])
+end
+
+
+# plot one data series
+function plot!(::GadflyPackage, plt::Plot; kw...)
+  d = Dict(kw)
+  addGadflySeries!(plt.o, d)
+  push!(plt.seriesargs, d)
+  plt
+end
+
+
+
+function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
+  updateGadflyGuides(plt, d)
+end
+
 
 # ----------------------------------------------------------------
 
