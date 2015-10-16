@@ -57,7 +57,7 @@ supportedArgs(::WinstonPackage) = [
     # :nc,
     # :nr,
     # :pos,
-    :reg,
+    :smooth,
     # :ribbon,
     :show,
     :size,
@@ -206,7 +206,7 @@ function plot!(::WinstonPackage, plt::Plot; kw...)
 
 
   # optionally add a regression line
-  d[:reg] && d[:linetype] != :hist && addRegressionLineWinston(d, wplt)
+  d[:smooth] && d[:linetype] != :hist && addRegressionLineWinston(d, wplt)
 
   push!(plt.seriesargs, d)
   plt

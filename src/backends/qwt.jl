@@ -34,7 +34,7 @@ supportedArgs(::QwtPackage) = [
     :nc,
     :nr,
     :pos,
-    :reg,
+    :smooth,
     # :ribbon,
     :show,
     :size,

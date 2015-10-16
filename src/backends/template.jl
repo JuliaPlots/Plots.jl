@@ -32,7 +32,7 @@ supportedArgs(::[PkgName]Package) = [
     :nc,
     :nr,
     # :pos,
-    :reg,
+    :smooth,
     # :ribbon,
     :show,
     :size,

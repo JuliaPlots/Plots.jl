@@ -35,7 +35,7 @@ supportedArgs(::GadflyPackage) = [
     :nc,
     :nr,
     # :pos,
-    :reg,
+    :smooth,
     :show,
     :size,
     :title,
@@ -334,12 +334,16 @@ function addToGadflyLegend(plt::Plot, d::Dict)
 
 end
 
+getGadflySmoothing(smooth::Bool) = smooth ? [Gadfly.Geom.smooth(method=:lm)] : Any[]
+getGadflySmoothing(smooth::Real) = [Gadfly.Geom.smooth(method=:loess, smoothing=float(smooth))]
+
 
 function addGadflySeries!(plt::Plot, d::Dict)
 
   # add a regression line?
   # TODO: make more flexible
-  smooth = d[:reg] ? [Gadfly.Geom.smooth(method=:lm)] : Any[]
+  # smooth = d[:smooth] ? [Gadfly.Geom.smooth(method=:lm)] : Any[]
+  smooth = getGadflySmoothing(d[:smooth])
 
   # lines
   geom = getLineGeom(d)
@@ -484,7 +488,7 @@ end
 #   append!(gplt.guides, guides)
 
 #   # add a regression line?
-#   if d[:reg]
+#   if d[:smooth]
 #     # TODO: make more flexible
 #     push!(gfargs, Gadfly.Geom.smooth(method=:lm))
 #     # push!(gfargs, Gadfly.Geom.smooth(method=:loess, smoothing=0.95))
@@ -690,7 +694,7 @@ end
 # plot one data series
 function plot!(::GadflyPackage, plt::Plot; kw...)
   d = Dict(kw)
-  addGadflySeries!(plt.o, d)
+  addGadflySeries!(plt, d)
   push!(plt.seriesargs, d)
   plt
 end
