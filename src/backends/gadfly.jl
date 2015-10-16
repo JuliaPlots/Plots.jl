@@ -534,15 +534,11 @@ function getGadflyMappings(plt::Plot, i::Integer)
 end
 
 function Base.getindex(plt::Plot{GadflyPackage}, i::Integer)
-  # data = getGadflyContext(plt).layers[end-i+1].mapping
-  # data[:x], data[:y]
   mapping = getGadflyMappings(plt, i)[1]
   mapping[:x], mapping[:y]
 end
 
 function Base.setindex!(plt::Plot{GadflyPackage}, xy::Tuple, i::Integer)
-  # data = getGadflyContext(plt).layers[end-i+1].mapping
-  # data[:x], data[:y] = xy
   for mapping in getGadflyMappings(plt, i)
     mapping[:x], mapping[:y] = xy
   end

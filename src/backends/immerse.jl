@@ -61,17 +61,28 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{ImmersePackage}, i::Int)
-  data = plt.o[2].layers[end-i+1].mapping
-  data[:x], data[:y]
+# function Base.getindex(plt::Plot{ImmersePackage}, i::Int)
+#   data = plt.o[2].layers[end-i+1].mapping
+#   data[:x], data[:y]
+# end
+
+# function Base.setindex!(plt::Plot{ImmersePackage}, xy::Tuple, i::Integer)
+#   data = plt.o[2].layers[end-i+1].mapping
+#   data[:x], data[:y] = xy
+#   plt
+# end
+
+function Base.getindex(plt::Plot{ImmersePackage}, i::Integer)
+  mapping = getGadflyMappings(plt, i)[1]
+  mapping[:x], mapping[:y]
 end
 
 function Base.setindex!(plt::Plot{ImmersePackage}, xy::Tuple, i::Integer)
-  data = plt.o[2].layers[end-i+1].mapping
-  data[:x], data[:y] = xy
+  for mapping in getGadflyMappings(plt, i)
+    mapping[:x], mapping[:y] = xy
+  end
   plt
 end
-
 
 
 # ----------------------------------------------------------------
