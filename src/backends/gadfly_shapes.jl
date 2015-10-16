@@ -48,8 +48,7 @@ function Gadfly.render(geom::ShapeGeometry, theme::Gadfly.Theme, aes::Gadfly.Aes
 
     ctx = Compose.compose!(
         Compose.context(),
-        # circle(aes.x, aes.y, aes.size, geom.tag),
-        makeGadflyShapeContext(geom, aes.x, aes.y, aes.size),
+        make_polygon(geom, aes.x, aes.y, aes.size),
         Compose.fill(aes.color),
         Compose.linewidth(theme.highlight_width))
 
@@ -72,7 +71,7 @@ end
 
 
 # create a Compose context given a ShapeGeometry and the xs/ys/sizes
-function makeGadflyShapeContext(geom::ShapeGeometry, xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
+function make_polygon(geom::ShapeGeometry, xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
   T = @compat(Tuple{Compose.Measure, Compose.Measure})
   polys = Array(Vector{T}, n)
@@ -80,7 +79,6 @@ function makeGadflyShapeContext(geom::ShapeGeometry, xs::AbstractArray, ys::Abst
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
-    # polys[i] = [(x, y - r), (x + r, y), (x, y + r), (x - r, y)]
     polys[i] = T[(x + r * sx, y + r * sy) for (sx,sy) in geom.vertices]
   end
   Gadfly.polygon(polys, geom.tag)
