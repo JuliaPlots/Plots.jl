@@ -279,8 +279,8 @@ end
 # used in updating an existing series
 
 extendUnitRange(v::UnitRange{Int}, n::Int = 1) = minimum(v):maximum(v)+n
-extendSeriesData(v::AVec, z) = (push!(v, z); v)
-extendSeriesData(v::AVec, z::AVec) = (append!(v, z); v)
+extendSeriesData{T}(v::AVec{T}, z::Real) = (push!(v, convert(T, z)); v)
+extendSeriesData{T}(v::AVec{T}, z::AVec) = (append!(v, convert(Vector{T}, z)); v)
 
 
 # ---------------------------------------------------------------

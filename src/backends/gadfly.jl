@@ -184,7 +184,8 @@ function addGadflyLine!(plt::Plot, d::Dict, geoms...)
   
   # add the layer
   x = d[d[:linetype] == :hist ? :y : :x]
-  prepend!(gplt.layers, Gadfly.layer(gfargs...; x = x, y = d[:y], kwargs...))
+  Gadfly.layer(gfargs...; x = x, y = d[:y], kwargs...)
+  # prepend!(gplt.layers, )
 end
 
 
@@ -207,7 +208,6 @@ function getGadflyMarkerTheme(d::Dict)
 end
 
 function addGadflyMarker!(plt::Plot, d::Dict, geoms...)
-  gplt = getGadflyContext(plt)
   gfargs = vcat(geoms...,
                 getGadflyMarkerTheme(d),
                 getMarkerGeom(d))
@@ -220,10 +220,11 @@ function addGadflyMarker!(plt::Plot, d::Dict, geoms...)
     if !isa(d[:markercolor], ColorGradient)
       d[:markercolor] = colorscheme(:bluesreds)
     end
-    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p))))
+    push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p))))
   end
 
-  prepend!(gplt.layers, Gadfly.layer(gfargs...; x = d[:x], y = d[:y], kwargs...))
+  Gadfly.layer(gfargs...; x = d[:x], y = d[:y], kwargs...)
+  # prepend!(gplt.layers, )
 end
 
 
@@ -276,6 +277,8 @@ getGadflySmoothing(smooth::Real) = [Gadfly.Geom.smooth(method=:loess, smoothing=
 
 function addGadflySeries!(plt::Plot, d::Dict)
 
+  layers = Gadfly.Layer[]
+
   # add a regression line?
   # TODO: make more flexible
   # smooth = d[:smooth] ? [Gadfly.Geom.smooth(method=:lm)] : Any[]
@@ -284,7 +287,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
   # lines
   geom = getLineGeom(d)
   if geom != nothing
-    addGadflyLine!(plt, d, geom, smooth...)
+    prepend!(layers, addGadflyLine!(plt, d, geom, smooth...))
 
     # don't add a regression for markers too
     smooth = Any[]
@@ -300,10 +303,14 @@ function addGadflySeries!(plt::Plot, d::Dict)
 
   # markers
   if d[:markershape] != :none
-    addGadflyMarker!(plt, d, smooth...)
+    prepend!(layers, addGadflyMarker!(plt, d, smooth...))
   end
 
   lt in (:hist, :heatmap, :hexbin) || addToGadflyLegend(plt, d)
+
+  # now save the layers that apply to this series
+  d[:gadflylayers] = layers
+  prepend!(getGadflyContext(plt).layers, layers)
 end
 
 
@@ -515,6 +522,32 @@ function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
   updateGadflyGuides(plt, d)
 end
 
+
+# ----------------------------------------------------------------
+
+# accessors for x/y data
+
+# TODO: need to save all the layer indices which apply to this series
+function getGadflyMappings(plt::Plot, i::Integer)
+  @assert i > 0 && i <= plt.n
+  mappings = [l.mapping for l in plt.seriesargs[i][:gadflylayers]]
+end
+
+function Base.getindex(plt::Plot{GadflyPackage}, i::Integer)
+  # data = getGadflyContext(plt).layers[end-i+1].mapping
+  # data[:x], data[:y]
+  mapping = getGadflyMappings(plt, i)[1]
+  mapping[:x], mapping[:y]
+end
+
+function Base.setindex!(plt::Plot{GadflyPackage}, xy::Tuple, i::Integer)
+  # data = getGadflyContext(plt).layers[end-i+1].mapping
+  # data[:x], data[:y] = xy
+  for mapping in getGadflyMappings(plt, i)
+    mapping[:x], mapping[:y] = xy
+  end
+  plt
+end
 
 # ----------------------------------------------------------------
 
