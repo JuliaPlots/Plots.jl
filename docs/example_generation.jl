@@ -31,70 +31,127 @@ end
 const examples = PlotExample[
   PlotExample("Lines",
               "A simple line plot of the columns.",
-              [:(plot(fakedata(50,5), w=3))]),
-  PlotExample("Functions",
-              "Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.",
-              [:(plot(0:0.01:4π, [sin,cos]))]),
+              [
+                :(plot(fakedata(50,5), w=3))
+              ]),
+  PlotExample("Functions, adding data, and animations",
+              "Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.  Set, get, and push/append to series data, and easily build animations.\n\nNote: ImageMagick's `convert` or `ffmpeg` must be runnable from pwd to generate the animation.",
+              [
+                :(p = plot([sin,cos], zeros(0))),
+                :(anim = Animation()),
+                :(for x in linspace(0, 10π, 200)
+                    push!(p, x, Float64[sin(x), cos(x)])
+                    frame(anim)
+                  end)
+              ]),
   PlotExample("",
               "Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).",
-              [:(plot(sin, x->sin(2x), 0, 2π, line=4, leg=false, fill=(0,:orange)))]),
+              [
+                :(plot(sin, x->sin(2x), 0, 2π, line=4, leg=false, fill=(0,:orange)))
+              ]),
   PlotExample("Colors",
               "Access predefined palettes (or build your own with the `colorscheme` method).  Line/marker colors are auto-generated from the plot's palette, unless overridden.  Set the `z` argument to turn on series gradients.",
-              [:(y = rand(100)), :(plot(0:10:100,rand(11,4),lab="lines",w=3, palette=:grays, fill=(0.5,:auto))), :(scatter!(y, z=abs(y-.5), m=(10,:heat), lab="grad"))]),
+              [
+                :(y = rand(100)),
+                :(plot(0:10:100,rand(11,4),lab="lines",w=3, palette=:grays, fill=(0.5,:auto))),
+                :(scatter!(y, z=abs(y-.5), m=(10,:heat), lab="grad"))
+              ]),
   PlotExample("Global",
               "Change the guides/background/limits/ticks.  Convenience args `xaxis` and `yaxis` allow you to pass a tuple or value which will be mapped to the relevant args automatically.  The `xaxis` below will be replaced with `xlabel` and `xlims` args automatically during the preprocessing step. You can also use shorthand functions: `title!`, `xaxis!`, `yaxis!`, `xlabel!`, `ylabel!`, `xlims!`, `ylims!`, `xticks!`, `yticks!`",
-              [:(plot(rand(20,3), title="TITLE", xaxis=("XLABEL",(-5,30),0:2:20,:flip), yaxis=("YLABEL",:log10), background_color = RGB(0.2,0.2,0.2), leg=false))]),
+              [
+                :(plot(rand(20,3), xaxis=("XLABEL",(-5,30),0:2:20,:flip), background_color = RGB(0.2,0.2,0.2), leg=false)),
+                :(title!("TITLE")),
+                :(yaxis!("YLABEL", :log10))
+              ]),
   PlotExample("Two-axis",
               "Use the `axis` arguments.\n\nNote: Currently only supported with Qwt and PyPlot",
-              [:(plot(Vector[randn(100), randn(100)*100]; axis = [:l :r], ylabel="LEFT", yrightlabel="RIGHT"))]),
+              [
+                :(plot(Vector[randn(100), randn(100)*100], axis = [:l :r], ylabel="LEFT", yrightlabel="RIGHT"))
+              ]),
   PlotExample("Arguments",
               "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).  Special arguments `line`, `marker`, and `fill` will automatically figure out what arguments to set (for example, we are setting the `linestyle`, `linewidth`, and `color` arguments with `line`.)  Note that we pass a matrix of colors, and this applies the colors to each series.",
-              [:(plot(Vector[rand(10), rand(20)]; marker=(:ellipse,8), line=(:dot,3,[:black :orange])))]),
+              [
+                :(plot(Vector[rand(10), rand(20)], marker=(:ellipse,8), line=(:dot,3,[:black :orange])))
+              ]),
   PlotExample("Build plot in pieces",
               "Start with a base plot...",
-              [:(plot(rand(100)/3, reg=true, fill=(0,:green)))]),
+              [
+                :(plot(rand(100)/3, reg=true, fill=(0,:green)))
+              ]),
   PlotExample("",
               "and add to it later.",
-              [:(scatter!(rand(100), markersize=6, c=:orange))]),
+              [
+                :(scatter!(rand(100), markersize=6, c=:orange))
+              ]),
   PlotExample("Heatmaps",
               "",
-              [:(heatmap(randn(10000),randn(10000), nbins=100))]),
+              [
+                :(heatmap(randn(10000),randn(10000), nbins=100))
+              ]),
   PlotExample("Line types",
               "",
-              [:(types = intersect(supportedTypes(), [:line, :path, :steppre, :steppost, :sticks, :scatter])'),
-                  :(n = length(types)),
-                  :(x = Vector[sort(rand(20)) for i in 1:n]),
-                  :(y = rand(20,n)),
-                  :(plot(x, y, line=(types,3), lab=map(string,types), ms=15))]),
+              [
+                :(types = intersect(supportedTypes(), [:line, :path, :steppre, :steppost, :sticks, :scatter])'),
+                :(n = length(types)),
+                :(x = Vector[sort(rand(20)) for i in 1:n]),
+                :(y = rand(20,n)),
+                :(plot(x, y, line=(types,3), lab=map(string,types), ms=15))
+              ]),
   PlotExample("Line styles",
               "",
-              [:(styles = setdiff(supportedStyles(), [:auto])'), :(plot(cumsum(randn(20,length(styles)),1); style=:auto, label=map(string,styles), w=5))]),
+              [
+                :(styles = setdiff(supportedStyles(), [:auto])'),
+                :(plot(cumsum(randn(20,length(styles)),1), style=:auto, label=map(string,styles), w=5))
+              ]),
   PlotExample("Marker types",
               "",
-              # [:(markers = setdiff(supportedMarkers(), [:none,:auto,Shape])'), :(n = length(markers)), :(scatter(0.5:9.5, [fill(i-0.5,10) for i=n:-1:1]; marker=(12,:auto), lab=map(string,markers), ms=12, ylim=(0,n), bg=RGB(0.2,0.2,0.2)))]),
-              [:(markers = setdiff(supportedMarkers(), [:none,:auto,Shape])'), :(n = length(markers)), :(x = linspace(0,10,n+2)[2:end-1]), :(y = repmat(reverse(x)', n, 1)), :(scatter(x, y, m=(12,:auto), lab=map(string,markers), bg=:linen))]),
+              [
+                :(markers = setdiff(supportedMarkers(), [:none,:auto,Shape])'),
+                :(n = length(markers)),
+                :(x = linspace(0,10,n+2)[2:end-1]),
+                :(y = repmat(reverse(x)', n, 1)),
+                :(scatter(x, y, m=(12,:auto), lab=map(string,markers), bg=:linen))
+              ]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
-              [:(bar(randn(999)))]),
+              [
+                :(bar(randn(999)))
+              ]),
   PlotExample("Histogram",
               "",
-              [:(histogram(randn(1000), nbins=50))]),
+              [
+                :(histogram(randn(1000), nbins=50))
+              ]),
   PlotExample("Subplots",
               """
                 subplot and subplot! are distinct commands which create many plots and add series to them in a circular fashion.
                 You can define the layout with keyword params... either set the number of plots `n` (and optionally number of rows `nr` or 
                 number of columns `nc`), or you can set the layout directly with `layout`.
               """,
-              [:(subplot(randn(100,5), layout=[1,1,3], t=[:line :hist :scatter :step :bar], nbins=10, leg=false))]),
+              [
+                :(subplot(randn(100,5), layout=[1,1,3], t=[:line :hist :scatter :step :bar], nbins=10, leg=false))
+              ]),
   PlotExample("Adding to subplots",
               "Note here the automatic grid layout, as well as the order in which new series are added to the plots.",
-              [:(subplot(fakedata(100,10), n=4, palette=[:grays :blues :heat :lightrainbow], bg=[:orange :pink :darkblue :black]))]),
+              [
+                :(subplot(fakedata(100,10), n=4, palette=[:grays :blues :heat :lightrainbow], bg=[:orange :pink :darkblue :black]))
+              ]),
   PlotExample("",
               "",
-              [:(subplot!(fakedata(100,10)))]),
+              [
+                :(subplot!(fakedata(100,10)))
+              ]),
   PlotExample("Open/High/Low/Close",
               "Create an OHLC chart.  Pass in a vector of OHLC objects as your `y` argument.  Adjust the tick width with arg `markersize`.",
-              [:(n=20), :(hgt=rand(n)+1), :(bot=randn(n)), :(openpct=rand(n)), :(closepct=rand(n)), :(y = [OHLC(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n]), :(ohlc(y; markersize=8))]),
+              [
+                :(n=20),
+                :(hgt=rand(n)+1),
+                :(bot=randn(n)),
+                :(openpct=rand(n)),
+                :(closepct=rand(n)),
+                :(y = [OHLC(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n]),
+                :(ohlc(y; markersize=8))
+              ]),
   PlotExample("Annotations",
               "Currently only text annotations are supported.  Pass in a tuple or vector-of-tuples: (x,y,text).  `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`",
               [
@@ -147,11 +204,17 @@ function generate_markdown(pkgname::Symbol)
       # run the code
       map(eval, example.exprs)
 
-      # save the png
-      imgname = "$(pkgname)_example_$i.png"
+      # # save the png
+      # imgname = "$(pkgname)_example_$i.png"
 
       # NOTE: uncomment this to overwrite the images as well
-      png("$IMGDIR/$pkgname/$imgname")
+      if i == 2
+        imgname = "$(pkgname)_example_$i.gif"
+        gif(anim, "$IMGDIR/$pkgname/$imgname", fps=15)
+      else
+        imgname = "$(pkgname)_example_$i.png"
+        png("$IMGDIR/$pkgname/$imgname")
+      end
 
       # write out the header, description, code block, and image link
       write(md, "### $(example.header)\n\n")
@@ -297,7 +360,7 @@ function buildReadme()
   Plots.dumpSupportGraphs()
 end
 
-default(size=(600,400))
+default(size=(500,300))
 
 # run it!
 # note: generate separately so it's easy to comment out

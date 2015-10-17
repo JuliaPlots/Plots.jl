@@ -14,6 +14,7 @@ Plots is a plotting interface and wrapper for several plotting packages.  My goa
 - **Smart**.  Defaults for the most common functionality, and high-level ways to override complex functionality.
 - **Flexible**.  Produce your favorite plots from your favorite package, but quicker and simpler.
 - **Consistent**.  Don't commit to one graphics package.  Use the same code and access the strengths of all backends.
+- **Lightweight**.  There are very few dependencies.  Backends are loaded and initialized dynamically.
 
 Use the preprocessing pipeline in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added simply and with minimal required functionality.
 
