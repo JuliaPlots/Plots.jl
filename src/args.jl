@@ -121,7 +121,7 @@ _seriesDefaults[:fillopacity] = nothing
 # _seriesDefaults[:ribbon]      = nothing
 # _seriesDefaults[:ribboncolor] = :match
 _seriesDefaults[:nbins]       = 100               # number of bins for heatmaps and hists
-_seriesDefaults[:heatmap_c]   = (0.15, 0.5)   # TODO: this should be replaced with a ColorGradient
+# _seriesDefaults[:heatmap_c]   = (0.15, 0.5)   # TODO: this should be replaced with a ColorGradient
 # _seriesDefaults[:fill]      = nothing          # fills in the area
 _seriesDefaults[:smooth]      = false               # regression line?
 _seriesDefaults[:group]       = nothing           # groupby vector
@@ -163,9 +163,9 @@ _plotDefaults[:link]              = false
 _plotDefaults[:linkx]             = false
 _plotDefaults[:linky]             = false
 _plotDefaults[:linkfunc]          = nothing
-_plotDefaults[:tickfont]          = font(11)
-_plotDefaults[:guidefont]         = font(14)
-_plotDefaults[:legendfont]        = font(9)
+_plotDefaults[:tickfont]          = font(8)
+_plotDefaults[:guidefont]         = font(11)
+_plotDefaults[:legendfont]        = font(8)
 _plotDefaults[:grid]              = true
 
 
@@ -180,7 +180,7 @@ supportedArgs() = supportedArgs(backend())
 @compat const _argNotes = Dict(
     :color => "Series color.  To have different marker and/or fill colors, optionally set the markercolor and fillcolor args.",
     :z => "Determines the depth.  For color gradients, we expect 0 ≤ z ≤ 1.",
-    :heatmap_c => "For Qwt heatmaps only... will be deprecated eventually.",
+    # :heatmap_c => "For Qwt heatmaps only... will be deprecated eventually.",
   )
 
 

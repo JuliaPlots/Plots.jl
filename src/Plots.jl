@@ -60,8 +60,8 @@ export
   dataframes,
 
   Shape,
-  PlotText,
   text,
+  font,
   OHLC,
 
   colorscheme,

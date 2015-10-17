@@ -55,9 +55,9 @@ supportedArgs(::PyPlotPackage) = [
     :xflip,
     :yflip,
     :z,
-    # :tickfont,
-    # :guidefont,
-    # :legendfont,
+    :tickfont,
+    :guidefont,
+    :legendfont,
     # :grid,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
@@ -376,6 +376,8 @@ function addPyPlotTicks(ax, ticks, isx::Bool)
   end
 end
 
+usingRightAxis(plt::Plot{PyPlotPackage}) = any(args -> args[:axis] in (:right,:auto), plt.seriesargs)
+
 function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
   figorax = plt.o
   ax = getLeftAxis(figorax)
@@ -387,7 +389,7 @@ function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
   if haskey(d, :ylabel)
     ax[:set_ylabel](d[:ylabel])
   end
-  if haskey(d, :yrightlabel)
+  if usingRightAxis(plt) && get(d, :yrightlabel, "") != ""
     rightax = getRightAxis(figorax)  
     rightax[:set_ylabel](d[:yrightlabel])
   end
@@ -407,6 +409,31 @@ function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
   end
   if get(d, :yflip, false)
     ax[:invert_yaxis]()
+  end
+
+  axes = [getLeftAxis(figorax)]
+  if usingRightAxis(plt)
+    push!(axes, getRightAxis(figorax))
+  end
+
+  # font sizes
+  for ax in axes
+    # haskey(d, :yrightlabel) || continue
+    
+
+    # guides
+    sz = get(d, :guidefont, plt.initargs[:guidefont]).pointsize
+    ax[:title][:set_fontsize](sz)
+    ax[:xaxis][:label][:set_fontsize](sz)
+    ax[:yaxis][:label][:set_fontsize](sz)
+
+    # ticks
+    sz = get(d, :tickfont, plt.initargs[:tickfont]).pointsize
+    for sym in (:get_xticklabels, :get_yticklabels)
+      for lab in ax[sym]()
+        lab[:set_fontsize](sz)
+      end
+    end
   end
 
 end

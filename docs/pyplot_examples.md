@@ -1,6 +1,6 @@
 # Examples for backend: pyplot
 
-- Supported arguments: `annotation`, `axis`, `background_color`, `color`, `color_palette`, `fillrange`, `fillcolor`, `foreground_color`, `group`, `label`, `layout`, `legend`, `linestyle`, `linetype`, `linewidth`, `markershape`, `markercolor`, `markersize`, `n`, `nbins`, `nc`, `nr`, `show`, `size`, `title`, `windowtitle`, `x`, `xlabel`, `xlims`, `xticks`, `y`, `ylabel`, `ylims`, `yrightlabel`, `yticks`, `xscale`, `yscale`, `xflip`, `yflip`, `z`
+- Supported arguments: `annotation`, `axis`, `background_color`, `color`, `color_palette`, `fillrange`, `fillcolor`, `foreground_color`, `group`, `label`, `layout`, `legend`, `linestyle`, `linetype`, `linewidth`, `markershape`, `markercolor`, `markersize`, `n`, `nbins`, `nc`, `nr`, `show`, `size`, `title`, `windowtitle`, `x`, `xlabel`, `xlims`, `xticks`, `y`, `ylabel`, `ylims`, `yrightlabel`, `yticks`, `xscale`, `yscale`, `xflip`, `yflip`, `z`, `tickfont`, `guidefont`, `legendfont`
 - Supported values for axis: `:auto`, `:left`, `:right`
 - Supported values for linetype: `:none`, `:line`, `:path`, `:steppre`, `:steppost`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`, `:hline`, `:vline`
 - Supported values for linestyle: `:auto`, `:solid`, `:dash`, `:dot`, `:dashdot`

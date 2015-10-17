@@ -18,7 +18,7 @@ supportedArgs(::QwtPackage) = [
     :fillcolor,
     :foreground_color,
     :group,
-    :heatmap_c,
+    # :heatmap_c,
     # :kwargs,
     :label,
     :layout,
