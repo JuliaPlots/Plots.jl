@@ -9,10 +9,13 @@
 
 Plots is a plotting interface and wrapper for several plotting packages.  My goals with the package are:
 
-- Simple.  The interface should be intuitive enough that someone coming from Matlab, Python, etc can immediately start generating complex plots without reading volumes of documentation.
-- Automatic (if you want).  There should be smart defaults for the most common functionality, and simple, high-level ways to override complex functionality.
-- Flexible.  You should be able to produce your favorite plot in your favorite package, but quicker and simpler.
-- Consistent.  Don't commit to one graphics package.  One command will switch your backend, and the exact same plotting commands will work with a very different underlying backend.
+- **Simple**.  Intuitive enough that someone coming from Matlab, Python, etc can immediately start generating complex plots without reading volumes of documentation.
+- **Concise**.  Less code means fewer mistakes and more efficient development and analysis.
+- **Smart**.  Defaults for the most common functionality, and high-level ways to override complex functionality.
+- **Flexible**.  Produce your favorite plots from your favorite package, but quicker and simpler.
+- **Consistent**.  Don't commit to one graphics package.  Use the same code and access the strengths of all backends.
+
+Use the preprocessing pipeline in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added simply and with minimal required functionality.
 
 Please add wishlist items, bugs, or any other comments/questions to the issues list.
 
@@ -210,16 +213,19 @@ Keyword | Default | Type | Aliases
 `:color_palette` | `auto` | Plot | `:palette`  
 `:fill` | `nothing` | Series | `:area`, `:f`  
 `:fillcolor` | `match` | Series | `:fc`, `:fcolor`, `:fillcolors`  
+`:fillopacity` | `nothing` | Series | `:fillopacitys`, `:fo`  
 `:fillrange` | `nothing` | Series | `:fillranges`, `:fillrng`  
 `:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
+`:grid` | `true` | Plot |   
 `:group` | `nothing` | Series | `:g`, `:groups`  
-`:guidefont` | `Plots.Font("Helvetica",16,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
+`:guidefont` | `Plots.Font("Helvetica",14,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:heatmap_c` | `(0.15,0.5)` | Series | `:heatmap_cs`  
 `:label` | `AUTO` | Series | `:lab`, `:labels`  
 `:layout` | `nothing` | Plot |   
 `:legend` | `true` | Plot | `:leg`  
-`:legendfont` | `Plots.Font("Helvetica",10,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
+`:legendfont` | `Plots.Font("Helvetica",9,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:line` | `nothing` | Series | `:l`  
+`:lineopacity` | `nothing` | Series | `:lineopacitys`, `:lo`  
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
 `:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
 `:linewidth` | `1` | Series | `:linewidths`, `:lw`, `:w`, `:width`  
@@ -229,6 +235,7 @@ Keyword | Default | Type | Aliases
 `:linky` | `false` | Plot | `:ylink`  
 `:marker` | `nothing` | Series | `:m`, `:mark`  
 `:markercolor` | `match` | Series | `:markercolors`, `:mc`, `:mcolor`  
+`:markeropacity` | `nothing` | Series | `:alpha`, `:markeropacitys`, `:mo`, `:opacity`  
 `:markershape` | `none` | Series | `:markershapes`, `:shape`  
 `:markersize` | `6` | Series | `:markersizes`, `:ms`, `:msize`  
 `:n` | `-1` | Plot |   
@@ -239,7 +246,7 @@ Keyword | Default | Type | Aliases
 `:show` | `false` | Plot | `:display`, `:gui`  
 `:size` | `(600,400)` | Plot | `:windowsize`, `:wsize`  
 `:smooth` | `false` | Series | `:reg`, `:regression`, `:smooths`  
-`:tickfont` | `Plots.Font("Helvetica",13,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
+`:tickfont` | `Plots.Font("Helvetica",11,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:title` | `` | Plot |   
 `:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
 `:xaxis` | `nothing` | Plot |   
