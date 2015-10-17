@@ -110,11 +110,14 @@ _seriesDefaults[:label]       = "AUTO"
 _seriesDefaults[:linetype]    = :path
 _seriesDefaults[:linestyle]   = :solid
 _seriesDefaults[:linewidth]   = 1
+_seriesDefaults[:lineopacity] = nothing
 _seriesDefaults[:markershape] = :none
 _seriesDefaults[:markercolor] = :match
+_seriesDefaults[:markeropacity] = nothing
 _seriesDefaults[:markersize]  = 6
 _seriesDefaults[:fillrange]   = nothing   # ribbons, areas, etc
 _seriesDefaults[:fillcolor]   = :match
+_seriesDefaults[:fillopacity] = nothing
 # _seriesDefaults[:ribbon]      = nothing
 # _seriesDefaults[:ribboncolor] = :match
 _seriesDefaults[:nbins]       = 100               # number of bins for heatmaps and hists
@@ -160,9 +163,10 @@ _plotDefaults[:link]              = false
 _plotDefaults[:linkx]             = false
 _plotDefaults[:linky]             = false
 _plotDefaults[:linkfunc]          = nothing
-_plotDefaults[:tickfont]          = font(13)
-_plotDefaults[:guidefont]         = font(16)
-_plotDefaults[:legendfont]        = font(10)
+_plotDefaults[:tickfont]          = font(11)
+_plotDefaults[:guidefont]         = font(14)
+_plotDefaults[:legendfont]        = font(9)
+_plotDefaults[:grid]              = true
 
 
 
@@ -214,6 +218,7 @@ end
     :w            => :linewidth,
     :width        => :linewidth,
     :lw           => :linewidth,
+    :lo           => :lineopacity,
     :type         => :linetype,
     :lt           => :linetype,
     :t            => :linetype,
@@ -227,11 +232,15 @@ end
     :mcolor       => :markercolor,
     :ms           => :markersize,
     :msize        => :markersize,
+    :mo           => :markeropacity,
+    :opacity      => :markeropacity,
+    :alpha        => :markeropacity,
     :f            => :fill,
     :area         => :fill,
     :fillrng      => :fillrange,
     :fc           => :fillcolor,
     :fcolor       => :fillcolor,
+    :fo           => :fillopacity,
     :g            => :group,
     :nb           => :nbins,
     :nbin         => :nbins,
@@ -391,8 +400,12 @@ function processLineArg(d::Dict, arg)
     d[:linestyle] = arg
 
   # linewidth
-  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  elseif trueOrAllTrue(a -> typeof(a) <: Integer, arg)
     d[:linewidth] = arg
+
+  # lineopacity
+  elseif trueOrAllTrue(a -> typeof(a) <: Real && a >= 0 && a <= 1, arg)
+    d[:lineopacity] = arg
 
   # color
   elseif !handleColors!(d, arg, :color)
@@ -411,8 +424,12 @@ function processMarkerArg(d::Dict, arg)
     d[:markershape] = arg
 
   # markersize
-  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  elseif trueOrAllTrue(a -> typeof(a) <: Integer, arg)
     d[:markersize] = arg
+
+  # lineopacity
+  elseif trueOrAllTrue(a -> typeof(a) <: Real && a >= 0 && a <= 1, arg)
+    d[:markeropacity] = arg
 
   # markercolor
   elseif !handleColors!(d, arg, :markercolor)

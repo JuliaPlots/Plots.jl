@@ -16,6 +16,7 @@ supportedArgs(::GadflyPackage) = [
     :color_palette,
     :fillrange,
     :fillcolor,
+    :fillopacity,
     :foreground_color,
     :group,
     :label,
@@ -24,9 +25,11 @@ supportedArgs(::GadflyPackage) = [
     :linestyle,
     :linetype,
     :linewidth,
+    :lineopacity,
     :markershape,
     :markercolor,
     :markersize,
+    :markeropacity,
     :n,
     :nbins,
     :nc,
@@ -54,6 +57,7 @@ supportedArgs(::GadflyPackage) = [
     :tickfont,
     :guidefont,
     :legendfont,
+    :grid,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
@@ -84,6 +88,10 @@ function createGadflyPlotObject(d::Dict)
   # hide the legend?
   if !get(d, :legend, true)
     kwargs[:key_position] = :none
+  end
+
+  if !get(d, :grid, true)
+    kwargs[:grid_color] = getColor(d[:background_color])
   end
 
   # fonts
@@ -142,8 +150,19 @@ function getLineGeom(d::Dict)
 end
 
 function getGadflyLineTheme(d::Dict)
+  
   lc = getColor(d[:color])
+  α = d[:lineopacity]
+  if α != nothing
+    lc = RGBA(lc, α)
+  end
+
   fc = getColor(d[:fillcolor])
+  α = d[:fillopacity]
+  if α != nothing
+    fc = RGBA(fc, α)
+  end
+
   Gadfly.Theme(;
       default_color = lc,
       line_width = (d[:linetype] == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
@@ -199,8 +218,14 @@ end
 
 
 function getGadflyMarkerTheme(d::Dict)
+  c = getColor(d[:markercolor])
+  α = d[:markeropacity]
+  if α != nothing
+    c = RGBA(RGB(c), α)
+  end
+
   Gadfly.Theme(
-      default_color = getColor(d[:markercolor]),
+      default_color = c,
       default_point_size = d[:markersize] * Gadfly.px,
       # highlight_color = getColor(initargs[:foreground_color]),
       highlight_width = d[:linewidth] * Gadfly.px,

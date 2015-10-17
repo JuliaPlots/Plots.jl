@@ -35,7 +35,7 @@ supportedArgs(::PyPlotPackage) = [
     :nc,
     :nr,
     # :pos,
-    # :reg,
+    # :smooth,
     # :ribbon,
     :show,
     :size,
@@ -55,12 +55,13 @@ supportedArgs(::PyPlotPackage) = [
     :xflip,
     :yflip,
     :z,
-    # :linkx,
-    # :linky,
-    # :linkfunc,
+    # :tickfont,
+    # :guidefont,
+    # :legendfont,
+    # :grid,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
-supportedTypes(::PyPlotPackage) = [:none, :line, :path, :step, :stepinverted, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
+supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
 supportedScales(::PyPlotPackage) = [:identity, :log, :log2, :log10]
@@ -109,8 +110,8 @@ function getPyPlotMarker(marker::@compat(AbstractString))
 end
 
 function getPyPlotDrawStyle(linetype::Symbol)
-  linetype == :step && return "steps-post"
-  linetype == :stepinverted && return "steps-pre"
+  linetype == :steppost && return "steps-post"
+  linetype == :steppre && return "steps-pre"
   return "default"
 end
 
@@ -394,6 +395,20 @@ function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::@comp
   ax[:annotate](val, xy = (x,y))
 end
 
+
+function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::PlotText)
+  ax = getLeftAxis(plt)
+  ax[:annotate](val.str,
+    xy = (x,y),
+    family = val.font.family,
+    color = getPyPlotColor(val.font.color),
+    horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
+    verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
+    rotation = val.font.rotation * 180 / π,
+    size = val.font.pointsize
+  )
+end
+
 function addAnnotations{X,Y,V}(plt::Plot{PyPlotPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     createPyPlotAnnotationObject(plt, ann...)
@@ -447,7 +462,12 @@ function addPyPlotLegend(plt::Plot, ax)
     # gotta do this to ensure both axes are included
     args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline)), plt.seriesargs)
     if length(args) > 0
-      ax[:legend]([d[:serieshandle] for d in args], [d[:label] for d in args], loc="best")
+      ax[:legend]([d[:serieshandle] for d in args],
+                  [d[:label] for d in args],
+                  loc="best",
+                  fontsize = plt.initargs[:legendfont].pointsize,
+                  framealpha = 0.6
+                 )
     end
   end
 end

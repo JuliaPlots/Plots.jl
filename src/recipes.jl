@@ -62,7 +62,7 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
                                    colors = :redsblues,
                                    labels = nothing, kw...)
   m = size(mat,2)
-  means = mean(mat, 1)
+  centers = Float64[mean(extrema(mat[:,i])) for i in 1:m]
 
   # might be a mistake? 
   @assert m <= 20
@@ -84,7 +84,10 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
       elseif i < j
         # plot!(plt, mat[:,j], mat[:,i], l=:hexbin, leg=false)
         # plot!(plt, [0], [0], ann=(0, 0, "Corr:\n$(corrmat[i,j])"), leg=false)
-        plot!(plt, [means[j]], [means[i]], title = @sprintf("Corr:\n%0.3f", corrmat[i,j]), yticks=:none)
+        mi, mj = centers[i], centers[j]
+        plot!(plt, [mj], [mi],
+                   ann = (mj, mi, text(@sprintf("Corr:\n%0.3f", corrmat[i,j]), 15)),
+                   yticks=:none, grid=false)
       else
         # scatter plots off-diagonal, color determined by correlation
         c = RGBA(RGB(getColorZ(cgrad, corrmat[i,j])), 0.3)
