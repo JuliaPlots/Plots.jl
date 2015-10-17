@@ -315,6 +315,38 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   plt
 end
 
+# -----------------------------------------------------------------
+
+
+function Base.getindex(plt::Plot{PyPlotPackage}, i::Integer)
+  series = plt.seriesargs[i][:serieshandle]
+  series[:get_data]()
+  # series[:relim]()
+  # mapping = getGadflyMappings(plt, i)[1]
+  # mapping[:x], mapping[:y]
+end
+
+function Base.setindex!(plt::Plot{PyPlotPackage}, xy::Tuple, i::Integer)
+  series = plt.seriesargs[i][:serieshandle]
+  series[:set_data](xy...)
+
+  ax = series[:axes]
+  if plt.initargs[:xlims] == :auto
+    xmin, xmax = ax[:get_xlim]()
+    ax[:set_xlim](min(xmin, minimum(xy[1])), max(xmax, maximum(xy[1])))
+  end
+  if plt.initargs[:ylims] == :auto
+    ymin, ymax = ax[:get_ylim]()
+    ax[:set_ylim](min(ymin, minimum(xy[2])), max(ymax, maximum(xy[2])))
+  end
+
+  # getLeftAxis(plt)[:relim]()
+  # getRightAxis(plt)[:relim]()
+  # for mapping in getGadflyMappings(plt, i)
+  #   mapping[:x], mapping[:y] = xy
+  # end
+  plt
+end
 
 # -----------------------------------------------------------------
 
@@ -465,8 +497,8 @@ function addPyPlotLegend(plt::Plot, ax)
       ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],
                   loc="best",
-                  fontsize = plt.initargs[:legendfont].pointsize,
-                  framealpha = 0.6
+                  fontsize = plt.initargs[:legendfont].pointsize
+                  # framealpha = 0.6
                  )
     end
   end

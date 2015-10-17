@@ -35,9 +35,9 @@ const examples = PlotExample[
                 :(plot(fakedata(50,5), w=3))
               ]),
   PlotExample("Functions, adding data, and animations",
-              "Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.  Set, get, and push/append to series data, and easily build animations.\n\nNote: ImageMagick's `convert` or `ffmpeg` must be runnable from pwd to generate the animation.",
+              "Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.  Set, get, and push/append to series data, and easily build animations.\n\nNote: ImageMagick's `convert` or `ffmpeg` must be runnable from pwd to generate the animation.  Use command `gif(anim, filename, fps=15)` to save the animation.",
               [
-                :(p = plot([sin,cos], zeros(0))),
+                :(p = plot([sin,cos], zeros(0), leg=false)),
                 :(anim = Animation()),
                 :(for x in linspace(0, 10π, 200)
                     push!(p, x, Float64[sin(x), cos(x)])
