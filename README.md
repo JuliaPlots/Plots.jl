@@ -7,27 +7,26 @@
 
 #### Author: Thomas Breloff (@tbreloff)
 
-Plots is a plotting interface and wrapper for several plotting packages.  My goals with the package are:
+Plots is a plotting API and toolset.  My goals with the package are:
 
-- **Simple**.  Intuitive enough that someone coming from Matlab, Python, etc can immediately start generating complex plots without reading volumes of documentation.
-- **Concise**.  Less code means fewer mistakes and more efficient development and analysis.
-- **Smart**.  Defaults for the most common functionality, and high-level ways to override complex functionality.
+- **Intuitive**  Start generating complex plots without reading volumes of documentation.  Commands should "just work".
+- **Concise**.  Less code means fewer mistakes and more efficient development/analysis.
 - **Flexible**.  Produce your favorite plots from your favorite package, but quicker and simpler.
 - **Consistent**.  Don't commit to one graphics package.  Use the same code and access the strengths of all backends.
+- **Lightweight**.  Very few dependencies, since backends are loaded and initialized dynamically.
 
-Use the preprocessing pipeline in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added simply and with minimal required functionality.
-
-Please add wishlist items, bugs, or any other comments/questions to the issues list.
+Use the preprocessing pipeline in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added with minimal effort.
 
 Check out the [summary graphs](img/supported/supported.md) for the features that each backend supports.
 
+Please add wishlist items, bugs, or any other comments/questions to the issues list.
+
 ## Examples for each implemented backend:
 
-- [Qwt.jl](docs/qwt_examples.md)
-- [Gadfly.jl](docs/gadfly_examples.md)
-- [UnicodePlots.jl](docs/unicodeplots_examples.md)
+- [Gadfly.jl/Immerse.jl](docs/gadfly_examples.md)
 - [PyPlot.jl](docs/pyplot_examples.md)
-- [Immerse.jl](docs/immerse_examples.md)
+- [UnicodePlots.jl](docs/unicodeplots_examples.md)
+- [Qwt.jl](docs/qwt_examples.md)
 - [Winston.jl](docs/winston_examples.md)
 
 ## Installation
@@ -44,14 +43,14 @@ Pkg.checkout("Plots")
 Pkg.checkout("Plots", "dev")
 ```
 
-then get any plotting packages you need (obviously, you should get at least one backend):
+then get any plotting packages you need (obviously, you should get at least one backend).
 
 ```julia
 Pkg.add("Gadfly")
 Pkg.add("Immerse")
+Pkg.add("PyPlot")
 Pkg.add("UnicodePlots")
-Pkg.add("PyPlot")                                    # requires python and matplotlib
-Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")  # requires pyqt and pyqwt
+Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")
 Pkg.add("Winston")
 ```
 
@@ -59,6 +58,7 @@ Pkg.add("Winston")
 
 Load it in.  The underlying plotting backends are not imported until `backend()` is called (which happens
 on your first call to `plot` or `subplot`).  This means that you don't need any backends to be installed when you call `using Plots`.
+
 Plots will try to figure out a good default backend for you automatically based on what backends are installed.
 
 ```julia
@@ -202,7 +202,7 @@ yaxis!(args...)                           = plot!(yaxis = args)
 annotate!(anns)                           = plot!(annotation = anns)
 ```
 
-Some keyword arguments you can set:
+### Keyword arguments:
 
 Keyword | Default | Type | Aliases 
 ---- | ---- | ---- | ----
@@ -218,12 +218,11 @@ Keyword | Default | Type | Aliases
 `:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
 `:grid` | `true` | Plot |   
 `:group` | `nothing` | Series | `:g`, `:groups`  
-`:guidefont` | `Plots.Font("Helvetica",14,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
-`:heatmap_c` | `(0.15,0.5)` | Series | `:heatmap_cs`  
+`:guidefont` | `Plots.Font("Helvetica",11,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:label` | `AUTO` | Series | `:lab`, `:labels`  
 `:layout` | `nothing` | Plot |   
 `:legend` | `true` | Plot | `:leg`  
-`:legendfont` | `Plots.Font("Helvetica",9,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
+`:legendfont` | `Plots.Font("Helvetica",8,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:line` | `nothing` | Series | `:l`  
 `:lineopacity` | `nothing` | Series | `:lineopacitys`, `:lo`  
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
@@ -244,9 +243,9 @@ Keyword | Default | Type | Aliases
 `:nr` | `-1` | Plot |   
 `:pos` | `(0,0)` | Plot |   
 `:show` | `false` | Plot | `:display`, `:gui`  
-`:size` | `(600,400)` | Plot | `:windowsize`, `:wsize`  
+`:size` | `(500,300)` | Plot | `:windowsize`, `:wsize`  
 `:smooth` | `false` | Series | `:reg`, `:regression`, `:smooths`  
-`:tickfont` | `Plots.Font("Helvetica",11,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
+`:tickfont` | `Plots.Font("Helvetica",8,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:title` | `` | Plot |   
 `:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
 `:xaxis` | `nothing` | Plot |   
@@ -265,7 +264,7 @@ Keyword | Default | Type | Aliases
 `:z` | `nothing` | Series | `:zs`  
 
 
-Plot types:
+### Plot types:
 
 Type | Desc | Aliases
 ---- | ---- | ----
@@ -285,7 +284,7 @@ Type | Desc | Aliases
 `:ohlc` | Open/High/Low/Close chart (expects y is AbstractVector{Plots.OHLC}) |   
 
 
-Line styles:
+### Line styles:
 
 Type | Aliases
 ---- | ----
@@ -297,7 +296,7 @@ Type | Aliases
 `:dashdotdot` | `:ddd`  
 
 
-Markers:
+### Markers:
 
 Type | Aliases
 ---- | ----
@@ -351,19 +350,28 @@ __Tip__: Not all features are supported for each backend, but you can see what's
 
 __Tip__: Call `gui()` to display the plot in a window.  Interactivity depends on backend.  Plotting at the REPL (without semicolon) implicitly calls `gui()`.
 
+### Animations
+
+Animations are created in 3 steps (see example #2):
+- Initialize an `Animation` object.
+- Save each frame of the animation with `frame(anim)`.
+- Convert the frames to an animated gif with `gif(anim, filename, fps=15)`
+
+
 ## TODO features:
 
 - [x] Plot vectors/matrices/functions
 - [x] Plot DataFrames
+- [x] Histograms
 - [x] Grouping
 - [x] Annotations
 - [x] Scales
 - [x] Categorical Inputs (strings, etc... for hist, bar? or can split one series into multiple?)
 - [x] Custom markers
+- [x] Animations
+- [x] Subplots
 - [ ] Contours
 - [ ] Boxplots
-- [x] Subplots
-- [x] Histograms
 - [ ] 3D plotting
 - [ ] Scenes/Drawing
 - [ ] Graphs
