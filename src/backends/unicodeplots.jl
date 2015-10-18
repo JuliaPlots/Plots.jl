@@ -206,7 +206,11 @@ end
 # -------------------------------
 
 # function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::@compat(AbstractString), args...)
-function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{UnicodePlotsPackage})
+# function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{UnicodePlotsPackage})
+
+# since this is such a hack, it's only callable using `png`... should error during normal `writemime`
+function png(plt::PlottingObject{UnicodePlotsPackage}, fn::@compat(AbstractString))
+  fn = addExtension(fn, "png")
 
   # make some whitespace and show the plot
   println("\n\n\n\n\n\n")
