@@ -196,7 +196,7 @@ function generate_markdown(pkgname::Symbol)
   # open the markdown file
   md = open("$DOCDIR/$(pkgname)_examples.md", "w")
 
-  write(md, "## Examples for backend: $pkgname\n(generated $(now()))\n\n")
+  write(md, "## Examples for backend: $pkgname\n\n")
 
   write(md, "### Initialize\n\n```julia\nusing Plots\n$(pkgname)()\n```\n\n")
 
@@ -244,6 +244,7 @@ function generate_markdown(pkgname::Symbol)
   write(md, "- Supported values for marker: $(createStringOfMarkDownSymbols(supportedMarkers(pkg)))\n")
   write(md, "- Is `subplot`/`subplot!` supported? $(subplotSupported(pkg) ? "Yes" : "No")\n\n")
 
+  write(md, "(Automatically generated: $(now()))")
   close(md)
 
 end
