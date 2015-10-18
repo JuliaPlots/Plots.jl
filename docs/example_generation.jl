@@ -35,7 +35,7 @@ const examples = PlotExample[
                 :(plot(fakedata(50,5), w=3))
               ]),
   PlotExample("Functions, adding data, and animations",
-              "Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.  Set, get, and push/append to series data, and easily build animations.\n\nNote: ImageMagick's `convert` or `ffmpeg` must be runnable from pwd to generate the animation.  Use command `gif(anim, filename, fps=15)` to save the animation.",
+              "Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.\n\nGet series data: `x, y = plt[i]`.  Set series data: `plt[i] = (x,y)`. Add to the series with `push!`/`append!`.\n\nEasily build animations.  (`convert` or `ffmpeg` must be available to generate the animation.)  Use command `gif(anim, filename, fps=15)` to save the animation.",
               [
                 :(p = plot([sin,cos], zeros(0), leg=false)),
                 :(anim = Animation()),
@@ -44,8 +44,8 @@ const examples = PlotExample[
                     frame(anim)
                   end)
               ]),
-  PlotExample("",
-              "Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).",
+  PlotExample("Parametric plots",
+              "Plot function pair (x(u), y(u)).",
               [
                 :(plot(sin, x->sin(2x), 0, 2π, line=4, leg=false, fill=(0,:orange)))
               ]),
@@ -177,7 +177,7 @@ const examples = PlotExample[
 
 
 function createStringOfMarkDownCodeValues(arr, prefix = "")
-  string("`", prefix, join(arr, "`, `$prefix"), "`")
+  string("`", prefix, join(sort(map(string, arr)), "`, `$prefix"), "`")
 end
 createStringOfMarkDownSymbols(arr) = isempty(arr) ? "" : createStringOfMarkDownCodeValues(arr, ":")
 
@@ -196,13 +196,7 @@ function generate_markdown(pkgname::Symbol)
   # open the markdown file
   md = open("$DOCDIR/$(pkgname)_examples.md", "w")
 
-  write(md, "# Examples for backend: $pkgname (generated $(now()))\n\n")
-  write(md, "- Supported arguments: $(createStringOfMarkDownCodeValues(supportedArgs(pkg)))\n")
-  write(md, "- Supported values for axis: $(createStringOfMarkDownSymbols(supportedAxes(pkg)))\n")
-  write(md, "- Supported values for linetype: $(createStringOfMarkDownSymbols(supportedTypes(pkg)))\n")
-  write(md, "- Supported values for linestyle: $(createStringOfMarkDownSymbols(supportedStyles(pkg)))\n")
-  write(md, "- Supported values for marker: $(createStringOfMarkDownSymbols(supportedMarkers(pkg)))\n")
-  write(md, "- Is `subplot`/`subplot!` supported? $(subplotSupported(pkg) ? "Yes" : "No")\n\n")
+  write(md, "## Examples for backend: $pkgname\n(generated $(now()))\n\n")
 
   write(md, "### Initialize\n\n```julia\nusing Plots\n$(pkgname)()\n```\n\n")
 
@@ -242,6 +236,13 @@ function generate_markdown(pkgname::Symbol)
 
     #
   end
+
+  write(md, "- Supported arguments: $(createStringOfMarkDownCodeValues(supportedArgs(pkg)))\n")
+  write(md, "- Supported values for axis: $(createStringOfMarkDownSymbols(supportedAxes(pkg)))\n")
+  write(md, "- Supported values for linetype: $(createStringOfMarkDownSymbols(supportedTypes(pkg)))\n")
+  write(md, "- Supported values for linestyle: $(createStringOfMarkDownSymbols(supportedStyles(pkg)))\n")
+  write(md, "- Supported values for marker: $(createStringOfMarkDownSymbols(supportedMarkers(pkg)))\n")
+  write(md, "- Is `subplot`/`subplot!` supported? $(subplotSupported(pkg) ? "Yes" : "No")\n\n")
 
   close(md)
 

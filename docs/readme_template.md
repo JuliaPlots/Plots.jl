@@ -9,7 +9,7 @@
 
 Plots is a plotting API and toolset.  My goals with the package are:
 
-- **Intuitive**  Start generating complex plots without reading volumes of documentation.  Commands should "just work".
+- **Intuitive**.  Start generating complex plots without reading volumes of documentation.  Commands should "just work".
 - **Concise**.  Less code means fewer mistakes and more efficient development/analysis.
 - **Flexible**.  Produce your favorite plots from your favorite package, but quicker and simpler.
 - **Consistent**.  Don't commit to one graphics package.  Use the same code and access the strengths of all backends.

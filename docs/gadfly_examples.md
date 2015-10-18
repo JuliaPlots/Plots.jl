@@ -1,11 +1,5 @@
-# Examples for backend: gadfly (generated 2015-10-17T23:09:16)
-
-- Supported arguments: `annotation`, `background_color`, `color`, `color_palette`, `fillrange`, `fillcolor`, `fillopacity`, `foreground_color`, `group`, `label`, `layout`, `legend`, `linestyle`, `linetype`, `linewidth`, `lineopacity`, `markershape`, `markercolor`, `markersize`, `markeropacity`, `n`, `nbins`, `nc`, `nr`, `smooth`, `show`, `size`, `title`, `windowtitle`, `x`, `xlabel`, `xlims`, `xticks`, `y`, `ylabel`, `ylims`, `yticks`, `xscale`, `yscale`, `xflip`, `yflip`, `z`, `tickfont`, `guidefont`, `legendfont`, `grid`
-- Supported values for axis: `:auto`, `:left`
-- Supported values for linetype: `:none`, `:line`, `:path`, `:steppre`, `:steppost`, `:sticks`, `:scatter`, `:heatmap`, `:hexbin`, `:hist`, `:bar`, `:hline`, `:vline`, `:ohlc`
-- Supported values for linestyle: `:auto`, `:solid`, `:dash`, `:dot`, `:dashdot`, `:dashdotdot`
-- Supported values for marker: `:none`, `:auto`, `:cross`, `:diamond`, `:dtriangle`, `:ellipse`, `:heptagon`, `:hexagon`, `:octagon`, `:pentagon`, `:rect`, `:star4`, `:star5`, `:star6`, `:star7`, `:star8`, `:utriangle`, `:xcross`, `:Plots.Shape`
-- Is `subplot`/`subplot!` supported? Yes
+## Examples for backend: gadfly
+(generated 2015-10-17T23:27:21)
 
 ### Initialize
 
@@ -26,9 +20,11 @@ plot(fakedata(50,5),w=3)
 
 ### Functions, adding data, and animations
 
-Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.  Set, get, and push/append to series data, and easily build animations.
+Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.
 
-Note: ImageMagick's `convert` or `ffmpeg` must be runnable from pwd to generate the animation.  Use command `gif(anim, filename, fps=15)` to save the animation.
+Get series data: `x, y = plt[i]`.  Set series data: `plt[i] = (x,y)`. Add to the series with `push!`/`append!`.
+
+Easily build animations.  (`convert` or `ffmpeg` must be available to generate the animation.)  Use command `gif(anim, filename, fps=15)` to save the animation.
 
 ```julia
 p = plot([sin,cos],zeros(0),leg=false)
@@ -41,9 +37,9 @@ end
 
 ![](../img/gadfly/gadfly_example_2.gif)
 
-### 
+### Parametric plots
 
-Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).
+Plot function pair (x(u), y(u)).
 
 ```julia
 plot(sin,(x->begin  # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 50:
@@ -243,4 +239,11 @@ plot(0.1:0.2:0.9,0.7 * rand(5) + 0.15,l=(3,:dash,:lightblue),m=(Shape(verts),30,
 ```
 
 ![](../img/gadfly/gadfly_example_21.png)
+
+- Supported arguments: `annotation`, `background_color`, `color`, `color_palette`, `fillcolor`, `fillopacity`, `fillrange`, `foreground_color`, `grid`, `group`, `guidefont`, `label`, `layout`, `legend`, `legendfont`, `lineopacity`, `linestyle`, `linetype`, `linewidth`, `markercolor`, `markeropacity`, `markershape`, `markersize`, `n`, `nbins`, `nc`, `nr`, `show`, `size`, `smooth`, `tickfont`, `title`, `windowtitle`, `x`, `xflip`, `xlabel`, `xlims`, `xscale`, `xticks`, `y`, `yflip`, `ylabel`, `ylims`, `yscale`, `yticks`, `z`
+- Supported values for axis: `:auto`, `:left`
+- Supported values for linetype: `:bar`, `:heatmap`, `:hexbin`, `:hist`, `:hline`, `:line`, `:none`, `:ohlc`, `:path`, `:scatter`, `:steppost`, `:steppre`, `:sticks`, `:vline`
+- Supported values for linestyle: `:auto`, `:dash`, `:dashdot`, `:dashdotdot`, `:dot`, `:solid`
+- Supported values for marker: `:Plots.Shape`, `:auto`, `:cross`, `:diamond`, `:dtriangle`, `:ellipse`, `:heptagon`, `:hexagon`, `:none`, `:octagon`, `:pentagon`, `:rect`, `:star4`, `:star5`, `:star6`, `:star7`, `:star8`, `:utriangle`, `:xcross`
+- Is `subplot`/`subplot!` supported? Yes
 
