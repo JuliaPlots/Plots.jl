@@ -382,6 +382,9 @@ function processAxisArg(d::Dict, axisletter::@compat(AbstractString), arg)
   elseif T <: AVec
     d[symbol(axisletter * "ticks")] = arg
 
+  elseif arg == nothing
+    d[symbol(axisletter * "ticks")] = []
+
   else
     warn("Skipped $(axisletter)axis arg $arg")
 

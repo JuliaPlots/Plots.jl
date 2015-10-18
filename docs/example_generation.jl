@@ -157,8 +157,21 @@ const examples = PlotExample[
               [
                 :(y = rand(10)),
                 :(plot(y, ann=(3,y[3],text("this is #3",:left)))),
-                :(annotate!([(5,y[5],text("this is #5",16,:red,:center)),(10,y[10],text("this is #10",:right,20,"courier"))]))
+                :(annotate!([(5,y[5],text("this is #5",16,:red,:center)),
+                             (10,y[10],text("this is #10",:right,20,"courier"))]))
               ]),
+  PlotExample("Custom Markers",
+              "A `Plots.Shape` is a light wrapper around vertices of a polygon.  For supported backends, pass arbitrary polygons as the marker shapes.  Note: The center is (0,0) and the size is expected to be rougly the area of the unit circle.",
+              [
+                :(verts = [(-1.0,1.0),(-1.28,0.6),(-0.2,-1.4),(0.2,-1.4),(1.28,0.6),(1.0,1.0),
+                           (-1.0,1.0),(-0.2,-0.6),(0.0,-0.2),(-0.4,0.6),(1.28,0.6),(0.2,-1.4),
+                           (-0.2,-1.4),(0.6,0.2),(-0.2,0.2),(0.0,-0.2),(0.2,0.2),(-0.2,-0.6)])
+                :(plot(0.1:0.2:0.9, 0.7rand(5)+0.15,
+                       l=(3,:dash,:lightblue), 
+                       m=(Shape(verts),30,RGBA(0,0,0,0)),
+                       bg=:pink, fg=:darkblue,
+                       ylim=(0,1), leg=false))
+              ])
   
 ]
 

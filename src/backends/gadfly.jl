@@ -217,24 +217,26 @@ function getMarkerGeom(d::Dict)
 end
 
 
-function getGadflyMarkerTheme(d::Dict)
+function getGadflyMarkerTheme(d::Dict, initargs::Dict)
   c = getColor(d[:markercolor])
   α = d[:markeropacity]
   if α != nothing
     c = RGBA(RGB(c), α)
   end
 
+  fg = getColor(initargs[:foreground_color])
   Gadfly.Theme(
       default_color = c,
       default_point_size = d[:markersize] * Gadfly.px,
       # highlight_color = getColor(initargs[:foreground_color]),
+      discrete_highlight_color = c -> fg,
       highlight_width = d[:linewidth] * Gadfly.px,
     )
 end
 
-function addGadflyMarker!(plt::Plot, d::Dict, geoms...)
+function addGadflyMarker!(plt::Plot, d::Dict, initargs::Dict, geoms...)
   gfargs = vcat(geoms...,
-                getGadflyMarkerTheme(d),
+                getGadflyMarkerTheme(d, initargs),
                 getMarkerGeom(d))
   kwargs = Dict()
 
@@ -328,7 +330,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
 
   # markers
   if d[:markershape] != :none
-    prepend!(layers, addGadflyMarker!(plt, d, smooth...))
+    prepend!(layers, addGadflyMarker!(plt, d, plt.initargs, smooth...))
   end
 
   lt in (:hist, :heatmap, :hexbin) || addToGadflyLegend(plt, d)
@@ -367,10 +369,20 @@ end
 
 function addGadflyTicksGuide(gplt, ticks, isx::Bool)
   ticks == :auto && return
+
+  # remove the ticks?
+  if ticks in (:none, false, nothing)
+    return addOrReplace(gplt.guides, isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks; label=false)
+  end
+
   ttype = ticksType(ticks)
+
+  # just the values... put ticks here, but use standard labels
   if ttype == :ticks
     gtype = isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks
     replaceType(gplt.guides, gtype(ticks = collect(ticks)))
+
+  # set the ticks and the labels
   elseif ttype == :ticks_and_labels
     gtype = isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks
     replaceType(gplt.guides, gtype(ticks = collect(ticks[1])))
@@ -382,6 +394,7 @@ function addGadflyTicksGuide(gplt, ticks, isx::Bool)
     labelmap = Dict(zip(ticks...))
     labelfunc = val -> labelmap[val]
     push!(gplt.scales, gfunc(levels = ticks[1], labels = labelfunc))
+
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
   end

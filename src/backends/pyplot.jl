@@ -63,7 +63,8 @@ supportedArgs(::PyPlotPackage) = [
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
+# supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
+supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
 supportedScales(::PyPlotPackage) = [:identity, :log, :log2, :log10]
 subplotSupported(::PyPlotPackage) = true
 
@@ -87,6 +88,16 @@ function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
   return "-"
 end
 
+
+# function getMarkerGeom(d::Dict)
+#   shape = d[:markershape]
+#   gadflyshape(isa(shape, Shape) ? shape : _shapes[shape])
+# end
+
+function getPyPlotMarker(marker::Shape)
+  marker.vertices
+end
+
 # get the marker shape
 function getPyPlotMarker(marker::Symbol)
   marker == :none && return " "
@@ -98,7 +109,11 @@ function getPyPlotMarker(marker::Symbol)
   marker == :cross && return "+"
   marker == :xcross && return "x"
   marker == :star5 && return "*"
+  marker == :pentagon && return "p"
   marker == :hexagon && return "h"
+  marker == :octagon && return "8"
+  haskey(_shapes, marker) && return _shapes[marker].vertices
+
   warn("Unknown marker $marker")
   return "o"
 end
