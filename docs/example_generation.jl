@@ -110,7 +110,7 @@ const examples = PlotExample[
                 :(n = length(markers)),
                 :(x = linspace(0,10,n+2)[2:end-1]),
                 :(y = repmat(reverse(x)', n, 1)),
-                :(scatter(x, y, m=(12,:auto), lab=map(string,markers), bg=:linen))
+                :(scatter(x, y, m=(8,:auto), lab=map(string,markers), bg=:linen))
               ]),
   PlotExample("Bar",
               "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
