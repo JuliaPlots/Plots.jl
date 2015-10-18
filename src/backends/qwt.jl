@@ -120,6 +120,9 @@ function adjustQwtKeywords(plt::Plot{QwtPackage}, iscreating::Bool; kw...)
       d[_qwtAliases[k]] = d[k]
     end
   end
+
+  d[:x] = collect(d[:x])
+  d[:y] = collect(d[:y])
   
   d
 end
@@ -210,6 +213,16 @@ function addLineMarker(plt::Plot{QwtPackage}, d::Dict)
   # marker[:setValue](x, y)
   # marker[:setLabel](Qwt.QWT.QwtText(val))
   # marker[:attach](plt.o.widget)
+end
+
+function createQwtAnnotation(plt::Plot, x, y, val::PlotText)
+  marker = Qwt.QWT.QwtPlotMarker()
+  marker[:setValue](x, y)
+  qwttext = Qwt.QWT.QwtText(val.str)
+  qwttext[:setFont](Qwt.QT.QFont(val.font.family, val.font.pointsize))
+  qwttext[:setColor](Qwt.convertRGBToQColor(getColor(val.font.color)))
+  marker[:setLabel](qwttext)
+  marker[:attach](plt.o.widget)
 end
 
 function createQwtAnnotation(plt::Plot, x, y, val::@compat(AbstractString))

@@ -116,6 +116,11 @@ function plot!(plt::Plot, args...; kw...)
     setTicksFromStringVector(d, di, :x, :xticks)
     setTicksFromStringVector(d, di, :y, :yticks)
 
+    # remove plot args
+    for k in keys(_plotDefaults)
+      delete!(di, k)
+    end
+
     dumpdict(di, "Series $i")
 
     plot!(plt.backend, plt; di...)
@@ -281,9 +286,9 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     # build the series arg dict
     numUncounted = get(d, :numUncounted, 0)
     n = plt.n + i + numUncounted
-    dumpdict(d, "before getSeriesArgs")
+    # dumpdict(d, "before getSeriesArgs")
     d = getSeriesArgs(plt.backend, getinitargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
-    dumpdict(d, "after getSeriesArgs")
+    # dumpdict(d, "after getSeriesArgs")
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
     if haskey(d, :idxfilter)
