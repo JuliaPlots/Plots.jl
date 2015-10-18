@@ -168,9 +168,9 @@ const examples = PlotExample[
                            (-0.2,-1.4),(0.6,0.2),(-0.2,0.2),(0.0,-0.2),(0.2,0.2),(-0.2,-0.6)])
                 :(plot(0.1:0.2:0.9, 0.7rand(5)+0.15,
                        l=(3,:dash,:lightblue), 
-                       m=(Shape(verts),30,RGBA(0,0,0,0)),
+                       m=(Shape(verts),30,RGBA(0,0,0,0.2)),
                        bg=:pink, fg=:darkblue,
-                       ylim=(0,1), leg=false))
+                       xlim = (0,1), ylim=(0,1), leg=false))
               ])
   
 ]
@@ -196,7 +196,7 @@ function generate_markdown(pkgname::Symbol)
   # open the markdown file
   md = open("$DOCDIR/$(pkgname)_examples.md", "w")
 
-  write(md, "# Examples for backend: $pkgname\n\n")
+  write(md, "# Examples for backend: $pkgname (generated $(now()))\n\n")
   write(md, "- Supported arguments: $(createStringOfMarkDownCodeValues(supportedArgs(pkg)))\n")
   write(md, "- Supported values for axis: $(createStringOfMarkDownSymbols(supportedAxes(pkg)))\n")
   write(md, "- Supported values for linetype: $(createStringOfMarkDownSymbols(supportedTypes(pkg)))\n")

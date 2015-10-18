@@ -64,7 +64,7 @@ supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 # supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
-supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
+supportedMarkers(::PyPlotPackage) = vcat(_allMarkers, Shape)
 supportedScales(::PyPlotPackage) = [:identity, :log, :log2, :log10]
 subplotSupported(::PyPlotPackage) = true
 
@@ -295,6 +295,8 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     else
       extraargs[:markersize] = d[:markersize]
       extraargs[:markerfacecolor] = getPyPlotColor(d[:markercolor])
+      extraargs[:markeredgecolor] = getPyPlotColor(plt.initargs[:foreground_color])
+      extraargs[:markeredgewidth] = d[:linewidth]
       extraargs[:drawstyle] = getPyPlotDrawStyle(lt)
     end
   end

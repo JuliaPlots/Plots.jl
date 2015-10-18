@@ -1,4 +1,4 @@
-# Examples for backend: gadfly
+# Examples for backend: gadfly (generated 2015-10-17T22:39:35)
 
 - Supported arguments: `annotation`, `background_color`, `color`, `color_palette`, `fillrange`, `fillcolor`, `fillopacity`, `foreground_color`, `group`, `label`, `layout`, `legend`, `linestyle`, `linetype`, `linewidth`, `lineopacity`, `markershape`, `markercolor`, `markersize`, `markeropacity`, `n`, `nbins`, `nc`, `nr`, `smooth`, `show`, `size`, `title`, `windowtitle`, `x`, `xlabel`, `xlims`, `xticks`, `y`, `ylabel`, `ylims`, `yticks`, `xscale`, `yscale`, `xflip`, `yflip`, `z`, `tickfont`, `guidefont`, `legendfont`, `grid`
 - Supported values for axis: `:auto`, `:left`
@@ -28,13 +28,13 @@ plot(fakedata(50,5),w=3)
 
 Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.  Set, get, and push/append to series data, and easily build animations.
 
-Note: ImageMagick's `convert` or `ffmpeg` must be runnable from pwd to generate the animation.
+Note: ImageMagick's `convert` or `ffmpeg` must be runnable from pwd to generate the animation.  Use command `gif(anim, filename, fps=15)` to save the animation.
 
 ```julia
-p = plot([sin,cos],zeros(0))
+p = plot([sin,cos],zeros(0),leg=false)
 anim = Animation()
-for x = linspace(0,10π,200) # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 43:
-    push!(p,x,Float64[sin(x),cos(x)]) # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 44:
+for x = linspace(0,10π,200) # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 43:
+    push!(p,x,Float64[sin(x),cos(x)]) # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 44:
     frame(anim)
 end
 ```
@@ -46,7 +46,7 @@ end
 Or make a parametric plot (i.e. plot: (fx(u), fy(u))) with plot(fx, fy, umin, umax).
 
 ```julia
-plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 50:
+plot(sin,(x->begin  # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 50:
             sin(2x)
         end),0,2π,line=4,leg=false,fill=(0,:orange))
 ```
@@ -232,4 +232,15 @@ annotate!([(5,y[5],text("this is #5",16,:red,:center)),(10,y[10],text("this is #
 ```
 
 ![](../img/gadfly/gadfly_example_20.png)
+
+### Custom Markers
+
+A `Plots.Shape` is a light wrapper around vertices of a polygon.  For supported backends, pass arbitrary polygons as the marker shapes.  Note: The center is (0,0) and the size is expected to be rougly the area of the unit circle.
+
+```julia
+verts = [(-1.0,1.0),(-1.28,0.6),(-0.2,-1.4),(0.2,-1.4),(1.28,0.6),(1.0,1.0),(-1.0,1.0),(-0.2,-0.6),(0.0,-0.2),(-0.4,0.6),(1.28,0.6),(0.2,-1.4),(-0.2,-1.4),(0.6,0.2),(-0.2,0.2),(0.0,-0.2),(0.2,0.2),(-0.2,-0.6)]
+plot(0.1:0.2:0.9,0.7 * rand(5) + 0.15,l=(3,:dash,:lightblue),m=(Shape(verts),30,RGBA(0,0,0,0.2)),bg=:pink,fg=:darkblue,xlim=(0,1),ylim=(0,1),leg=false)
+```
+
+![](../img/gadfly/gadfly_example_21.png)
 
