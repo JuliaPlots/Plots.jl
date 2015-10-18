@@ -1,5 +1,4 @@
 ## Examples for backend: gadfly
-(generated 2015-10-17T23:25:52)
 
 ### Initialize
 
@@ -159,7 +158,7 @@ markers = setdiff(supportedMarkers(),[:none,:auto,Shape])'
 n = length(markers)
 x = (linspace(0,10,n + 2))[2:end - 1]
 y = repmat(reverse(x)',n,1)
-scatter(x,y,m=(12,:auto),lab=map(string,markers),bg=:linen)
+scatter(x,y,m=(8,:auto),lab=map(string,markers),bg=:linen)
 ```
 
 ![](../img/gadfly/gadfly_example_13.png)
@@ -244,7 +243,7 @@ plot(0.1:0.2:0.9,0.7 * rand(5) + 0.15,l=(3,:dash,:lightblue),m=(Shape(verts),30,
 - Supported values for axis: `:auto`, `:left`
 - Supported values for linetype: `:bar`, `:heatmap`, `:hexbin`, `:hist`, `:hline`, `:line`, `:none`, `:ohlc`, `:path`, `:scatter`, `:steppost`, `:steppre`, `:sticks`, `:vline`
 - Supported values for linestyle: `:auto`, `:dash`, `:dashdot`, `:dashdotdot`, `:dot`, `:solid`
-:Plots.Shape`, `:auto`, `:cross`, `:diamond`, `:dtriangle`, `:ellipse`, `:heptagon`, `:hexagon`, `:none`, `:octagon`, `:pentagon`, `:rect`, `:star4`, `:star5`, `:star6`, `:star7`, `:star8`, `:utriangle`, `:xcross`
+- Supported values for marker: `:Plots.Shape`, `:auto`, `:cross`, `:diamond`, `:dtriangle`, `:ellipse`, `:heptagon`, `:hexagon`, `:none`, `:octagon`, `:pentagon`, `:rect`, `:star4`, `:star5`, `:star6`, `:star7`, `:star8`, `:utriangle`, `:xcross`
 - Is `subplot`/`subplot!` supported? Yes
 
-(Automatically generated: 2015-10-17T23:31:37)
+(Automatically generated: 2015-10-18T00:56:22)
