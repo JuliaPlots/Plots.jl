@@ -16,48 +16,75 @@ include("../docs/example_generation.jl")
 #   plt
 # end
 
-using Plots, Gtk.ShortNames
+using Plots
+import Images, Gtk, ImageMagick
 
 function makeImageWidget(fn)
-  img = @Image(fn)
-  vbox = @Box(:v)
+  img = Gtk.GtkImageLeaf(fn)
+  vbox = Gtk.GtkBoxLeaf(:v)
+  push!(vbox, Gtk.GtkLabelLeaf(fn))
   push!(vbox, img)
   show(img)
   vbox
 end
 
+function replaceReferenceImage(tmpfn, reffn)
+  println("cp $tmpfn $reffn")
+end
+
 "Show a Gtk popup with both images and a confirmation whether we should replace the new image with the old one"
-function isTempImageCorrect(tmpfn, reffn)
+function compareToReferenceImage(tmpfn, reffn)
 
   # add the images
-  imgbox = @Box(:h)
+  imgbox = Gtk.GtkBoxLeaf(:h)
   push!(imgbox, makeImageWidget(tmpfn))
   push!(imgbox, makeImageWidget(reffn))
 
   # add the buttons
-  keepbtn = @Button("KEEP")
-  overwritebtn = @Button("OVERWRITE")
-  btnbox = @Box(:h)
-  push!(btnbox, keepbtn)
-  push!(btnbox, overwritebtn)
+  doNothingButton = Gtk.GtkButtonLeaf("Skip")
+  replaceReferenceButton = Gtk.GtkButtonLeaf("Replace reference image")
+  btnbox = Gtk.GtkButtonBoxLeaf(:h)
+  push!(btnbox, doNothingButton)
+  push!(btnbox, replaceReferenceButton)
 
   # create the window
-  box = @Box(:v)
+  box = Gtk.GtkBoxLeaf(:v)
   push!(box, imgbox)
   push!(box, btnbox)
-  w = @Window(@Frame(box))
-  showall(w)
-  w
+  win = Gtk.GtkWindowLeaf(Gtk.GtkFrameLeaf(box))
+
+  # we'll wait on this condition
+  c = Condition()
+  Gtk.on_signal_destroy((x...) -> notify(c), win)
+
+  Gtk.signal_connect(replaceReferenceButton, "clicked") do widget
+    replaceReferenceImage(tmpfn, reffn)
+    notify(c)
+  end
+
+  Gtk.signal_connect(doNothingButton, "clicked") do widget
+    notify(c)
+  end
+
+  # wait until a button is clicked, then close the window
+  Gtk.showall(win)
+  wait(c)
+  Gtk.destroy(win)
 end
 
+
+# TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that 
+#       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = true, sigma = [0,0], eps = 1e-3)
   
   # first 
   Plots._debugMode.on = debug
-  info("Testing plot: $pkg:$idx:$(examples[idx].header)")
+  info("Testing plot: $pkg:$idx:$(PlotExamples.examples[idx].header)")
   backend(pkg)
   backend()
+
+  info("here: ", PlotExamples.examples[idx].exprs)
   map(eval, PlotExamples.examples[idx].exprs)
 
   # save the png
@@ -65,31 +92,42 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = true, sigma = [0,
   png(tmpfn)
 
   # load the saved png
-  tmpimg = imread(tmpfn)
+  tmpimg = Images.load(tmpfn)
 
-  # load the reference image
-  reffn = joinpath(Pkg.dir("Plots"), "test", "refimg", pkg, "$idx.png")
-  refimg = imread(reffn)
+  # reference image location
+  refdir = joinpath(Pkg.dir("Plots"), "test", "refimg", "v$(VERSION.major).$(VERSION.minor)", string(pkg))
+  try
+    mkdir(refdir)
+  catch err
+    display(err)
+  end
+  reffn = joinpath(refdir, "ref$idx.png")
 
-  # run the test
-  # NOTE: sigma is a 2-length vector with x/y values for the number of pixels
-  #       to blur together when comparing images
   try
 
+    info("Comparing $tmpfn to reference $reffn")
+  
+    # load the reference image
+    refimg = Images.load(reffn)
+
     # run the comparison test... a difference will throw an error
-    @test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
+    # NOTE: sigma is a 2-length vector with x/y values for the number of pixels
+    #       to blur together when comparing images
+    Images.@test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
 
   catch ex
     if isinteractive()
 
       # if we're in interactive mode, open a popup and give us a chance to examine the images
-      if isTempImageCorrect(tmpfn, reffn)
-        return
-      end
+      compareToReferenceImage(tmpfn, reffn)
+      return
+      
+    else
+
+      # if we rejected the image, or if we're in automated tests, throw the error
+      rethrow(ex)
     end
 
-    # if we rejected the image, or if we're in automated tests, throw the error
-    throw(ex)
   end
 end
 

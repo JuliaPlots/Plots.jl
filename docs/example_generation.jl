@@ -18,21 +18,13 @@ type PlotExample
 end
 
 
-function fakedata(sz...)
-  y = zeros(sz...)
-  for r in 2:size(y,1)
-    y[r,:] = 0.9 * y[r-1,:] + randn(size(y,2))'
-  end
-  y
-end
-
 
 # the examples we'll run for each
 const examples = PlotExample[
   PlotExample("Lines",
               "A simple line plot of the columns.",
               [
-                :(plot(fakedata(50,5), w=3))
+                :(plot(Plots.fakedata(50,5), w=3))
               ]),
   PlotExample("Functions, adding data, and animations",
               "Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.\n\nGet series data: `x, y = plt[i]`.  Set series data: `plt[i] = (x,y)`. Add to the series with `push!`/`append!`.\n\nEasily build animations.  (`convert` or `ffmpeg` must be available to generate the animation.)  Use command `gif(anim, filename, fps=15)` to save the animation.",
@@ -134,12 +126,12 @@ const examples = PlotExample[
   PlotExample("Adding to subplots",
               "Note here the automatic grid layout, as well as the order in which new series are added to the plots.",
               [
-                :(subplot(fakedata(100,10), n=4, palette=[:grays :blues :heat :lightrainbow], bg=[:orange :pink :darkblue :black]))
+                :(subplot(Plots.fakedata(100,10), n=4, palette=[:grays :blues :heat :lightrainbow], bg=[:orange :pink :darkblue :black]))
               ]),
   PlotExample("",
               "",
               [
-                :(subplot!(fakedata(100,10)))
+                :(subplot!(Plots.fakedata(100,10)))
               ]),
   PlotExample("Open/High/Low/Close",
               "Create an OHLC chart.  Pass in a vector of OHLC objects as your `y` argument.  Adjust the tick width with arg `markersize`.",

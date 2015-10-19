@@ -104,6 +104,18 @@ function sticksHack(; kw...)
   dLine, dScatter
 end
 
+function regressionXY(x, y)
+  # regress
+  β, α = [x ones(length(x))] \ y
+
+  # make a line segment
+  regx = [minimum(x), maximum(x)]
+  regy = β * regx + α
+  regx, regy
+end
+
+# ------------------------------------------------------------------------------------
+
 get_mod(v, idx::Int) = v[mod1(idx, length(v))]
 
 makevec(v::AVec) = v
@@ -162,15 +174,15 @@ Base.first(c::Colorant) = c
 sortedkeys(d::Dict) = sort(collect(keys(d)))
 
 
-function regressionXY(x, y)
-  # regress
-  β, α = [x ones(length(x))] \ y
-
-  # make a line segment
-  regx = [minimum(x), maximum(x)]
-  regy = β * regx + α
-  regx, regy
+function fakedata(sz...)
+  y = zeros(sz...)
+  for r in 2:size(y,1)
+    y[r,:] = 0.9 * y[r-1,:] + randn(size(y,2))'
+  end
+  y
 end
+
+
 
 # ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
 ticksType{T<:Real}(ticks::AVec{T}) = :ticks
