@@ -8,65 +8,65 @@
 
 # -------------------------------
 
-supportedArgs(::PyPlotPackage) = [
-    :annotation,
-    # :args,
-    :axis,
-    :background_color,
-    :color,
-    :color_palette,
-    :fillrange,
-    :fillcolor,
-    :foreground_color,
-    :group,
-    # :heatmap_c,
-    # :kwargs,
-    :label,
-    :layout,
-    :legend,
-    :linestyle,
-    :linetype,
-    :linewidth,
-    :markershape,
-    :markercolor,
-    :markersize,
-    :n,
-    :nbins,
-    :nc,
-    :nr,
-    # :pos,
-    # :smooth,
-    # :ribbon,
-    :show,
-    :size,
-    :title,
-    :windowtitle,
-    :x,
-    :xlabel,
-    :xlims,
-    :xticks,
-    :y,
-    :ylabel,
-    :ylims,
-    :yrightlabel,
-    :yticks,
-    :xscale,
-    :yscale,
-    :xflip,
-    :yflip,
-    :z,
-    :tickfont,
-    :guidefont,
-    :legendfont,
-    # :grid,
-  ]
-supportedAxes(::PyPlotPackage) = _allAxes
-supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
-supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-# supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
-supportedMarkers(::PyPlotPackage) = vcat(_allMarkers, Shape)
-supportedScales(::PyPlotPackage) = [:identity, :log, :log2, :log10]
-subplotSupported(::PyPlotPackage) = true
+# supportedArgs(::PyPlotPackage) = [
+#     :annotation,
+#     # :args,
+#     :axis,
+#     :background_color,
+#     :color,
+#     :color_palette,
+#     :fillrange,
+#     :fillcolor,
+#     :foreground_color,
+#     :group,
+#     # :heatmap_c,
+#     # :kwargs,
+#     :label,
+#     :layout,
+#     :legend,
+#     :linestyle,
+#     :linetype,
+#     :linewidth,
+#     :markershape,
+#     :markercolor,
+#     :markersize,
+#     :n,
+#     :nbins,
+#     :nc,
+#     :nr,
+#     # :pos,
+#     # :smooth,
+#     # :ribbon,
+#     :show,
+#     :size,
+#     :title,
+#     :windowtitle,
+#     :x,
+#     :xlabel,
+#     :xlims,
+#     :xticks,
+#     :y,
+#     :ylabel,
+#     :ylims,
+#     :yrightlabel,
+#     :yticks,
+#     :xscale,
+#     :yscale,
+#     :xflip,
+#     :yflip,
+#     :z,
+#     :tickfont,
+#     :guidefont,
+#     :legendfont,
+#     # :grid,
+#   ]
+# supportedAxes(::PyPlotPackage) = _allAxes
+# supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
+# supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
+# # supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
+# supportedMarkers(::PyPlotPackage) = vcat(_allMarkers, Shape)
+# supportedScales(::PyPlotPackage) = [:identity, :log, :log2, :log10]
+# subplotSupported(::PyPlotPackage) = true
 
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
@@ -556,10 +556,18 @@ function finalizePlot(plt::Plot{PyPlotPackage})
   PyPlot.draw()
 end
 
-function Base.writemime(io::IO, m::MIME"image/png", plt::Plot{PyPlotPackage})
-  finalizePlot(plt)
-  writemime(io, m, getfig(plt.o))
-end
+# # allow for writing any supported mime
+# for mime in keys(PyPlot.aggformats)
+#   @eval function Base.writemime(io::IO, m::MIME{symbol{$mime}}, plt::Plot{PyPlotPackage})
+#     finalizePlot(plt)
+#     writemime(io, m, getfig(plt.o))
+#   end
+# end
+
+# function Base.writemime(io::IO, m::@compat(Union{MIME"image/svg+xml", MIME"image/png"}, plt::Plot{PyPlotPackage})
+#   finalizePlot(plt)
+#   writemime(io, m, getfig(plt.o))
+# end
 
 
 function Base.display(::PlotsDisplay, plt::Plot{PyPlotPackage})
@@ -580,8 +588,16 @@ function Base.display(::PlotsDisplay, subplt::Subplot{PyPlotPackage})
   display(getfig(subplt.o))
 end
 
-
-function Base.writemime(io::IO, m::MIME"image/png", subplt::Subplot{PyPlotPackage})
-  finalizePlot(subplt)
-  writemime(io, m, getfig(subplt.o))
+# allow for writing any supported mime
+for mime in (MIME"image/png", MIME"image/svg+xml", MIME"text/html", MIME"application/pdf", MIME"application/postscript")
+  @eval function Base.writemime(io::IO, ::$mime, plt::PlottingObject{PyPlotPackage})
+    finalizePlot(plt)
+    writemime(io, $mime(), getfig(plt.o))
+  end
 end
+
+
+# function Base.writemime(io::IO, m::MIME"image/png", subplt::Subplot{PyPlotPackage})
+#   finalizePlot(subplt)
+#   writemime(io, m, getfig(subplt.o))
+# end

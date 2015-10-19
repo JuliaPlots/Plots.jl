@@ -7,70 +7,70 @@
 # gadfly() = backend(:gadfly)
 
 
-# supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos, :screen, :yrightlabel])
-supportedArgs(::GadflyPackage) = [
-    :annotation,
-    # :axis,
-    :background_color,
-    :color,
-    :color_palette,
-    :fillrange,
-    :fillcolor,
-    :fillopacity,
-    :foreground_color,
-    :group,
-    :label,
-    :layout,
-    :legend,
-    :linestyle,
-    :linetype,
-    :linewidth,
-    :lineopacity,
-    :markershape,
-    :markercolor,
-    :markersize,
-    :markeropacity,
-    :n,
-    :nbins,
-    :nc,
-    :nr,
-    # :pos,
-    :smooth,
-    :show,
-    :size,
-    :title,
-    :windowtitle,
-    :x,
-    :xlabel,
-    :xlims,
-    :xticks,
-    :y,
-    :ylabel,
-    :ylims,
-    # :yrightlabel,
-    :yticks,
-    :xscale,
-    :yscale,
-    :xflip,
-    :yflip,
-    :z,
-    :tickfont,
-    :guidefont,
-    :legendfont,
-    :grid,
-  ]
-supportedAxes(::GadflyPackage) = [:auto, :left]
-supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
-supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
-supportedScales(::GadflyPackage) = [:identity, :log, :log2, :log10, :asinh, :sqrt]
+# # supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos, :screen, :yrightlabel])
+# supportedArgs(::GadflyPackage) = [
+#     :annotation,
+#     # :axis,
+#     :background_color,
+#     :color,
+#     :color_palette,
+#     :fillrange,
+#     :fillcolor,
+#     :fillopacity,
+#     :foreground_color,
+#     :group,
+#     :label,
+#     :layout,
+#     :legend,
+#     :linestyle,
+#     :linetype,
+#     :linewidth,
+#     :lineopacity,
+#     :markershape,
+#     :markercolor,
+#     :markersize,
+#     :markeropacity,
+#     :n,
+#     :nbins,
+#     :nc,
+#     :nr,
+#     # :pos,
+#     :smooth,
+#     :show,
+#     :size,
+#     :title,
+#     :windowtitle,
+#     :x,
+#     :xlabel,
+#     :xlims,
+#     :xticks,
+#     :y,
+#     :ylabel,
+#     :ylims,
+#     # :yrightlabel,
+#     :yticks,
+#     :xscale,
+#     :yscale,
+#     :xflip,
+#     :yflip,
+#     :z,
+#     :tickfont,
+#     :guidefont,
+#     :legendfont,
+#     :grid,
+#   ]
+# supportedAxes(::GadflyPackage) = [:auto, :left]
+# supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
+# supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+# supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
+# supportedScales(::GadflyPackage) = [:identity, :log, :log2, :log10, :asinh, :sqrt]
 
 
 # ---------------------------------------------------------------------------
 
 
 function createGadflyPlotObject(d::Dict)
-  @eval import DataFrames
+  # @eval import DataFrames
 
   gplt = Gadfly.Plot()
   gplt.mapping = Dict()
@@ -588,7 +588,7 @@ end
 
 # create the underlying object (each backend will do this differently)
 function buildSubplotObject!(subplt::Subplot{GadflyPackage}, isbefore::Bool)
-  isbefore && return false
+  isbefore && return false # wait until after plotting to create the subplots
   subplt.o = nothing
   true
 end
@@ -637,11 +637,29 @@ function setGadflyDisplaySize(w,h)
   Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
 end
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{GadflyPackage})
+# -------------------------------------------------------------------------
+
+
+function dowritemime{P<:GadflyOrImmerse}(io::IO, func, plt::PlottingObject{P})
   gplt = getGadflyContext(plt)
   setGadflyDisplaySize(plt.initargs[:size]...)
-  Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
+  Gadfly.draw(func(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end
+
+getGadflyWriteFunc(::MIME"image/png") = Gadfly.PNG
+getGadflyWriteFunc(::MIME"image/svg+xml") = Gadfly.SVG
+getGadflyWriteFunc(::MIME"text/html") = Gadfly.SVGJS
+getGadflyWriteFunc(::MIME"application/pdf") = Gadfly.PDF
+getGadflyWriteFunc(::MIME"application/postscript") = Gadfly.PS
+getGadflyWriteFunc(m::MIME) = error("Unsupported in Gadfly/Immerse: ", m)
+
+for mime in (MIME"image/png", MIME"image/svg+xml", MIME"text/html", MIME"application/pdf", MIME"application/postscript")
+  @eval function Base.writemime{P<:GadflyOrImmerse}(io::IO, ::$mime, plt::PlottingObject{P})
+    func = getGadflyWriteFunc($mime())
+    dowritemime(io, func, plt)
+  end
+end
+
 
 
 function Base.display(::PlotsDisplay, plt::Plot{GadflyPackage})
@@ -650,12 +668,6 @@ function Base.display(::PlotsDisplay, plt::Plot{GadflyPackage})
 end
 
 
-
-function Base.writemime(io::IO, ::MIME"image/png", plt::Subplot{GadflyPackage})
-  gplt = getGadflyContext(plt)
-  setGadflyDisplaySize(plt.initargs[1][:size]...)
-  Gadfly.draw(Gadfly.PNG(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
-end
 
 function Base.display(::PlotsDisplay, subplt::Subplot{GadflyPackage})
   setGadflyDisplaySize(subplt.initargs[1][:size]...)

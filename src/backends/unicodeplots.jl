@@ -8,58 +8,58 @@
 
 # -------------------------------
 
-# supportedArgs(::UnicodePlotsPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fill, :pos, :xlims, :ylims, :xticks, :yticks])
-supportedArgs(::UnicodePlotsPackage) = [
-    # :annotation,
-    # :args,
-    # :axis,
-    # :background_color,
-    # :color,
-    # :fill,
-    # :foreground_color,
-    :group,
-    # :heatmap_c,
-    # :kwargs,
-    :label,
-    # :layout,
-    :legend,
-    :linestyle,
-    :linetype,
-    # :linewidth,
-    :markershape,
-    # :markercolor,
-    # :markersize,
-    # :n,
-    :nbins,
-    # :nc,
-    # :nr,
-    # :pos,
-    # :reg,
-    # :ribbon,
-    :show,
-    :size,
-    :title,
-    :windowtitle,
-    :x,
-    :xlabel,
-    :xlims,
-    # :xticks,
-    :y,
-    :ylabel,
-    :ylims,
-    # :yrightlabel,
-    # :yticks,
-    # :xscale,
-    # :yscale,
-    # :xflip,
-    # :yflip,
-    # :z,
-  ]
-supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
-supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
-supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
-supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
-supportedScales(::UnicodePlotsPackage) = [:identity]
+# # supportedArgs(::UnicodePlotsPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fill, :pos, :xlims, :ylims, :xticks, :yticks])
+# supportedArgs(::UnicodePlotsPackage) = [
+#     # :annotation,
+#     # :args,
+#     # :axis,
+#     # :background_color,
+#     # :color,
+#     # :fill,
+#     # :foreground_color,
+#     :group,
+#     # :heatmap_c,
+#     # :kwargs,
+#     :label,
+#     # :layout,
+#     :legend,
+#     :linestyle,
+#     :linetype,
+#     # :linewidth,
+#     :markershape,
+#     # :markercolor,
+#     # :markersize,
+#     # :n,
+#     :nbins,
+#     # :nc,
+#     # :nr,
+#     # :pos,
+#     # :reg,
+#     # :ribbon,
+#     :show,
+#     :size,
+#     :title,
+#     :windowtitle,
+#     :x,
+#     :xlabel,
+#     :xlims,
+#     # :xticks,
+#     :y,
+#     :ylabel,
+#     :ylims,
+#     # :yrightlabel,
+#     # :yticks,
+#     # :xscale,
+#     # :yscale,
+#     # :xflip,
+#     # :yflip,
+#     # :z,
+#   ]
+# supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
+# supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
+# supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
+# supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
+# supportedScales(::UnicodePlotsPackage) = [:identity]
 
 
 

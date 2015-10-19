@@ -51,7 +51,7 @@ function isTempImageCorrect(tmpfn, reffn)
 end
 
 
-function image_comparison_tests(pkg::Symbol, idx::Int; debug = true)
+function image_comparison_tests(pkg::Symbol, idx::Int; debug = true, sigma = [0,0], eps = 1e-3)
   
   # first 
   Plots._debugMode.on = debug
@@ -72,7 +72,25 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = true)
   refimg = imread(reffn)
 
   # run the test
-  @test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
+  # NOTE: sigma is a 2-length vector with x/y values for the number of pixels
+  #       to blur together when comparing images
+  try
+
+    # run the comparison test... a difference will throw an error
+    @test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
+
+  catch ex
+    if isinteractive()
+
+      # if we're in interactive mode, open a popup and give us a chance to examine the images
+      if isTempImageCorrect(tmpfn, reffn)
+        return
+      end
+    end
+
+    # if we rejected the image, or if we're in automated tests, throw the error
+    throw(ex)
+  end
 end
 
 function image_comparison_tests(pkg::Symbol; debug = false)

@@ -7,6 +7,8 @@ immutable QwtPackage <: PlottingPackage end
 immutable UnicodePlotsPackage <: PlottingPackage end
 immutable WinstonPackage <: PlottingPackage end
 
+typealias GadflyOrImmerse @compat(Union{GadflyPackage, ImmersePackage})
+
 export
   gadfly,
   immerse,
@@ -22,6 +24,7 @@ qwt() = backend(:qwt)
 unicodeplots() = backend(:unicodeplots)
 winston() = backend(:winston)
 
+include("backends/supported.jl")
 
 include("backends/qwt.jl")
 include("backends/gadfly.jl")
@@ -114,6 +117,7 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
+  # error()
 
   currentBackendSymbol = CURRENT_BACKEND.sym
   if !(currentBackendSymbol in INITIALIZED_BACKENDS)
@@ -125,16 +129,18 @@ function backend()
         @eval import Qwt
         @eval export Qwt
       catch err
-        error("Couldn't import Qwt.  Install it with: Pkg.clone(\"https://github.com/tbreloff/Qwt.jl.git\")\n  (Note: also requires pyqt and pyqwt).\n   Error: ", err)
+        warn("Couldn't import Qwt.  Install it with: Pkg.clone(\"https://github.com/tbreloff/Qwt.jl.git\")\n  (Note: also requires pyqt and pyqwt).")
+        rethrow(err)
       end
 
     elseif currentBackendSymbol == :gadfly
       try
-        @eval import Gadfly, Compose
-        @eval export Gadfly, Compose
+        @eval import Gadfly, Compose, DataFrames
+        @eval export Gadfly, Compose, DataFrames
         @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
       catch err
-        error("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\").\n   Error: ", err)
+        warn("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\").")
+        rethrow(err)
       end
 
     elseif currentBackendSymbol == :unicodeplots
@@ -142,7 +148,8 @@ function backend()
         @eval import UnicodePlots
         @eval export UnicodePlots
       catch err
-        error("Couldn't import UnicodePlots.  Install it with: Pkg.add(\"UnicodePlots\").\n   Error: ", err)
+        warn("Couldn't import UnicodePlots.  Install it with: Pkg.add(\"UnicodePlots\").")
+        rethrow(err)
       end
 
     elseif currentBackendSymbol == :pyplot
@@ -154,7 +161,8 @@ function backend()
           PyPlot.ioff()
         end
       catch err
-        error("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\").\n   Error: ", err)
+        warn("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\").")
+        rethrow(err)
       end
 
     elseif currentBackendSymbol == :immerse
@@ -163,7 +171,9 @@ function backend()
         @eval export Immerse, Gadfly, Compose, Gtk
         @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
       catch err
-        error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\").\n   Error: ", err)
+        # error("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\").\n   Error: ", err)
+        warn("Couldn't import Immerse.  Install it with: Pkg.add(\"Immerse\").")
+        rethrow(err)
       end
 
     elseif currentBackendSymbol == :winston
@@ -171,16 +181,15 @@ function backend()
         @eval ENV["WINSTON_OUTPUT"] = "gtk"
         @eval import Winston, Gtk
         @eval export Winston, Gtk
-        #@eval Winston._winston_config.defaults["output_surface"] = "gtk"
       catch err
-        error("Couldn't import Winston.  Install it with: Pkg.add(\"Winston\").\n   Error: ", err)
+        warn("Couldn't import Winston.  Install it with: Pkg.add(\"Winston\").")
+        rethrow(err)
       end
 
     else
       error("Unknown backend $currentBackendSymbol.  Choose from: $BACKENDS")
     end
     push!(INITIALIZED_BACKENDS, currentBackendSymbol)
-    # println("[Plots.jl] done.")
 
   end
   CURRENT_BACKEND.pkg

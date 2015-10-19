@@ -57,6 +57,8 @@ function plot(args...; kw...)
   plt = plot(pkg; getPlotArgs(pkg, d, 1)...)  # create a new, blank plot
 
   delete!(d, :background_color)
+  # print(d)
+  # return plt
   plot!(plt, args...; d...)  # add to it
 end
 
@@ -80,6 +82,9 @@ end
 
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
+  # println(plt)
+  # println(args)
+  # println(kw)
 
   d = Dict(kw)
   preprocessArgs!(d)

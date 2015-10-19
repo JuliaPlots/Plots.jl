@@ -30,60 +30,60 @@
                            )
 
 
-supportedArgs(::WinstonPackage) = [
-    :annotation,
-    # :args,
-    # :axis,
-    # :background_color,
-    :color,
-    :color_palette,
-    :fillrange,
-    :fillcolor,
-    # :foreground_color,
-    :group,
-    # :heatmap_c,
-    # :kwargs,
-    :label,
-    # :layout,
-    :legend,
-    :linestyle,
-    :linetype,
-    :linewidth,
-    :markershape,
-    :markercolor,
-    :markersize,
-    # :n,
-    :nbins,
-    # :nc,
-    # :nr,
-    # :pos,
-    :smooth,
-    # :ribbon,
-    :show,
-    :size,
-    :title,
-    :windowtitle,
-    :x,
-    :xlabel,
-    :xlims,
-    # :xticks,
-    :y,
-    :ylabel,
-    :ylims,
-    # :yrightlabel,
-    # :yticks,
-    :xscale,
-    :yscale,
-    # :xflip,
-    # :yflip,
-    # :z,
-  ]
-supportedAxes(::WinstonPackage) = [:auto, :left]
-supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
-supportedStyles(::WinstonPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
-supportedScales(::WinstonPackage) = [:identity, :log10]
-subplotSupported(::WinstonPackage) = false
+# supportedArgs(::WinstonPackage) = [
+#     :annotation,
+#     # :args,
+#     # :axis,
+#     # :background_color,
+#     :color,
+#     :color_palette,
+#     :fillrange,
+#     :fillcolor,
+#     # :foreground_color,
+#     :group,
+#     # :heatmap_c,
+#     # :kwargs,
+#     :label,
+#     # :layout,
+#     :legend,
+#     :linestyle,
+#     :linetype,
+#     :linewidth,
+#     :markershape,
+#     :markercolor,
+#     :markersize,
+#     # :n,
+#     :nbins,
+#     # :nc,
+#     # :nr,
+#     # :pos,
+#     :smooth,
+#     # :ribbon,
+#     :show,
+#     :size,
+#     :title,
+#     :windowtitle,
+#     :x,
+#     :xlabel,
+#     :xlims,
+#     # :xticks,
+#     :y,
+#     :ylabel,
+#     :ylims,
+#     # :yrightlabel,
+#     # :yticks,
+#     :xscale,
+#     :yscale,
+#     # :xflip,
+#     # :yflip,
+#     # :z,
+#   ]
+# supportedAxes(::WinstonPackage) = [:auto, :left]
+# supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
+# supportedStyles(::WinstonPackage) = [:auto, :solid, :dash, :dot, :dashdot]
+# supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
+# supportedScales(::WinstonPackage) = [:identity, :log10]
+# subplotSupported(::WinstonPackage) = false
 
 
 function preparePlotUpdate(plt::Plot{WinstonPackage})

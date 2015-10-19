@@ -29,6 +29,8 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 - [Qwt.jl](docs/qwt_examples.md)
 - [Winston.jl](docs/winston_examples.md)
 
+Also check out the many [IJulia notebooks](http://nbviewer.ipython.org/github/tbreloff/Plots.jl/tree/master/examples/) with many examples.
+
 ## Installation
 
 First, add the package
@@ -83,9 +85,6 @@ png("gadfly1")
 ```
 
 ![gadfly_plt](img/gadfly1.png)
-
-See the examples pages for lots of examples of plots, and what those commands produce for each supported backend.  
-Also check out the [IJulia notebooks](examples) and see how it works interactively.
 
 ## API
 
