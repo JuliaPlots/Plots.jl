@@ -46,6 +46,8 @@ function isTempImageCorrect(tmpfn, reffn)
   push!(box, imgbox)
   push!(box, btnbox)
   w = @Window(@Frame(box))
+  showall(w)
+  w
 end
 
 
