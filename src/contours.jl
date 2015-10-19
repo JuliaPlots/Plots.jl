@@ -1,5 +1,20 @@
 
 
+# TODO:
+"""
+- load Contours.jl similar to DataFrames
+- method to build grid from x/y/z vectors
+- method to wrap contours creation
+- method to plot contours as custom shapes (TODO: create Stroke and Fill types and add markerstroke/markerfill args)
+
+"""
+
+
+
+# # ----------------------------------------------------------
+# # ----------------------------------------------------------
+
+
 # immutable Vertex
 #   x::Float64
 #   y::Float64
