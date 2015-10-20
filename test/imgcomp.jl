@@ -16,8 +16,8 @@ include("../docs/example_generation.jl")
 #   plt
 # end
 
-using Plots
-import Images, Gtk, ImageMagick
+using Plots, FactCheck
+import Images, ImageMagick
 
 function makeImageWidget(fn)
   img = Gtk.GtkImageLeaf(fn)
@@ -29,11 +29,14 @@ function makeImageWidget(fn)
 end
 
 function replaceReferenceImage(tmpfn, reffn)
-  println("cp $tmpfn $reffn")
+  cmd = `cp $tmpfn $reffn`
+  run(cmd)
+  info("Replaced reference image with: $cmd")
 end
 
 "Show a Gtk popup with both images and a confirmation whether we should replace the new image with the old one"
 function compareToReferenceImage(tmpfn, reffn)
+  @eval import Gtk
 
   # add the images
   imgbox = Gtk.GtkBoxLeaf(:h)
@@ -51,7 +54,8 @@ function compareToReferenceImage(tmpfn, reffn)
   box = Gtk.GtkBoxLeaf(:v)
   push!(box, imgbox)
   push!(box, btnbox)
-  win = Gtk.GtkWindowLeaf(Gtk.GtkFrameLeaf(box))
+  win = Gtk.GtkWindowLeaf("Should we make this the new reference image?")
+  push!(win, Gtk.GtkFrameLeaf(box))
 
   # we'll wait on this condition
   c = Condition()
@@ -76,7 +80,7 @@ end
 # TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that 
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
-function image_comparison_tests(pkg::Symbol, idx::Int; debug = true, sigma = [0,0], eps = 1e-3)
+function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1,1], eps = 1e-3)
   
   # first 
   Plots._debugMode.on = debug
@@ -84,7 +88,10 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = true, sigma = [0,
   backend(pkg)
   backend()
 
-  info("here: ", PlotExamples.examples[idx].exprs)
+  # ensure consistent results
+  srand(1234)
+
+  # run the example
   map(eval, PlotExamples.examples[idx].exprs)
 
   # save the png
@@ -97,7 +104,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = true, sigma = [0,
   # reference image location
   refdir = joinpath(Pkg.dir("Plots"), "test", "refimg", "v$(VERSION.major).$(VERSION.minor)", string(pkg))
   try
-    mkdir(refdir)
+    run(`mkdir -p $refdir`)
   catch err
     display(err)
   end
@@ -105,7 +112,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = true, sigma = [0,
 
   try
 
-    info("Comparing $tmpfn to reference $reffn")
+    # info("Comparing $tmpfn to reference $reffn")
   
     # load the reference image
     refimg = Images.load(reffn)
@@ -115,10 +122,16 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = true, sigma = [0,
     #       to blur together when comparing images
     Images.@test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
 
+    # we passed!
+    info("Reference image $reffn matches")
+    return true
+
   catch ex
+    warn("Image did not match reference image $reffn")
     if isinteractive()
 
       # if we're in interactive mode, open a popup and give us a chance to examine the images
+      warn("Should we make this the new reference image?")
       compareToReferenceImage(tmpfn, reffn)
       return
       
@@ -131,13 +144,9 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = true, sigma = [0,
   end
 end
 
-function image_comparison_tests(pkg::Symbol; debug = false)
+function image_comparison_tests(pkg::Symbol; skip = [], debug = false, sigma = [1,1], eps = 1e-3)
   for i in 1:length(PlotExamples.examples)
-    # try
-    image_comparison_tests(pkgname, i, debug=debug)
-    # catch ex
-    #   # TODO: put error info into markdown?
-    #   warn("Example $pkgname:$i:$(examples[i].header) failed with: $ex")
-    # end
+    i in skip && continue
+    @fact image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) --> true
   end
 end

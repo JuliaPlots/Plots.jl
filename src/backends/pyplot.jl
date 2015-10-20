@@ -497,8 +497,8 @@ end
 function buildSubplotObject!(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   l = subplt.layout
 
-  w,h = map(px2inch, subplt.initargs[1][:size])
-  bgcolor = getPyPlotColor(subplt.initargs[1][:background_color])
+  w,h = map(px2inch, getinitargs(subplt,1)[:size])
+  bgcolor = getPyPlotColor(getinitargs(subplt,1)[:background_color])
   fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96)
 
   nr = nrows(l)

@@ -105,6 +105,8 @@ colorscheme(m::AMat) = size(m,1) == 1 ? map(colorscheme, m) : [colorscheme(m[:,i
 colorscheme(c::Colorant) = ColorWrapper(c)
 
 const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", colorant"orange", colorant"red"]
+const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
+                     darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
 
 @compat const _gradients = Dict(
     :blues        => [colorant"lightblue", colorant"darkblue"],
@@ -117,6 +119,8 @@ const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", color
     :rainbow      => _rainbowColors,
     :lightrainbow => map(lighten, _rainbowColors),
     :darkrainbow  => map(darken, _rainbowColors),
+    :darktest     => _testColors,
+    :lighttest    => map(c -> lighten(c, 0.3), _testColors),
   )
 
 # --------------------------------------------------------------
@@ -305,7 +309,8 @@ end
 function getPaletteUsingGradientSymbol(palette, bgcolor::Colorant, numcolors::Int = _defaultNumColors) #; gradientsym::Symbol = :auto)
   # @show gradientsym
   if palette == :auto
-    grad = ColorGradient(_gradients[isdark(bgcolor) ? :lightrainbow : :darkrainbow])
+    # grad = ColorGradient(_gradients[isdark(bgcolor) ? :lightrainbow : :darkrainbow])
+    grad = ColorGradient(_gradients[isdark(bgcolor) ? :lighttest : :darktest])
   # elseif typeof(palette) <: AVec || typeof(palette) <: ColorGradient
   #   grad = ColorGradient(palette)
   else

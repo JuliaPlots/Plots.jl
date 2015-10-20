@@ -38,7 +38,8 @@ type Subplot{T<:PlottingPackage, L<:SubplotLayout} <: PlottingObject{T}
   p::Int                      # number of plots
   n::Int                      # number of series
   layout::L
-  initargs::Vector{Dict}
+  # initargs::Vector{Dict}
+  initargs::Dict
   initialized::Bool
   linkx::Bool
   linky::Bool

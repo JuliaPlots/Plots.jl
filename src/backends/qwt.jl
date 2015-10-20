@@ -278,7 +278,7 @@ function buildSubplotObject!(subplt::Subplot{QwtPackage}, isbefore::Bool)
   #   i += rowcnt
   # end
   subplt.o = Qwt.vsplitter(rows...)
-  Qwt.resizewidget(subplt.o, subplt.initargs[1][:size]...)
+  Qwt.resizewidget(subplt.o, getinitargs(subplt,1)[:size]...)
   Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
   true
 end

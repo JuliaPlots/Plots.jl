@@ -633,16 +633,16 @@ function buildGadflySubplotContext(subplt::Subplot)
   Gadfly.vstack(rows...)
 end
 
-function setGadflyDisplaySize(w,h)
-  Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
-end
-
+setGadflyDisplaySize(w,h) = Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
+setGadflyDisplaySize(plt::Plot) = setGadflyDisplaySize(plt.initargs[:size]...)
+setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getinitargs(subplt, 1)[:size]...)
 # -------------------------------------------------------------------------
 
 
 function dowritemime{P<:GadflyOrImmerse}(io::IO, func, plt::PlottingObject{P})
   gplt = getGadflyContext(plt)
-  setGadflyDisplaySize(plt.initargs[:size]...)
+  # setGadflyDisplaySize(plt.initargs[:size]...)
+  setGadflyDisplaySize(plt)
   Gadfly.draw(func(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end
 
@@ -670,7 +670,7 @@ end
 
 
 function Base.display(::PlotsDisplay, subplt::Subplot{GadflyPackage})
-  setGadflyDisplaySize(subplt.initargs[1][:size]...)
+  setGadflyDisplaySize(getinitargs(subplt,1)[:size]...)
   ctx = buildGadflySubplotContext(subplt)
 
 
