@@ -302,12 +302,14 @@ function getPaletteUsingColorDiffFromBackground(bgcolor::Colorant, numcolors::In
   filter(c -> colordiff(c, bgcolor) >= mindiff, _allColors)
 end
 
-function getPaletteUsingGradientSymbol(bgcolor::Colorant, numcolors::Int = _defaultNumColors; gradientsym::Symbol = :auto)
+function getPaletteUsingGradientSymbol(palette, bgcolor::Colorant, numcolors::Int = _defaultNumColors) #; gradientsym::Symbol = :auto)
   # @show gradientsym
-  if gradientsym == :auto
+  if palette == :auto
     grad = ColorGradient(_gradients[isdark(bgcolor) ? :lightrainbow : :darkrainbow])
+  # elseif typeof(palette) <: AVec || typeof(palette) <: ColorGradient
+  #   grad = ColorGradient(palette)
   else
-    grad = ColorGradient(gradientsym)
+    grad = ColorGradient(palette)
   end
   zrng = getpctrange(numcolors)
   RGBA[getColorZ(grad, z) for z in zrng]
@@ -355,7 +357,7 @@ function handlePlotColors(::PlottingPackage, d::Dict)
   # d[:color_palette] = getPaletteUsingDistinguishableColors(bgcolor)
   # d[:color_palette] = getPaletteUsingFixedColorList(bgcolor)
   # d[:color_palette] = getPaletteUsingColorDiffFromBackground(bgcolor)
-  d[:color_palette] = getPaletteUsingGradientSymbol(bgcolor; gradientsym = get(d, :color_palette, :auto))
+  d[:color_palette] = getPaletteUsingGradientSymbol(get(d, :color_palette, :auto), bgcolor)
 
   # set the foreground color (text, ticks, gridlines) to be white or black depending
   # on how dark the background is.  
