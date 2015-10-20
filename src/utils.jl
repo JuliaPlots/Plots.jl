@@ -177,7 +177,7 @@ sortedkeys(d::Dict) = sort(collect(keys(d)))
 function fakedata(sz...)
   y = zeros(sz...)
   for r in 2:size(y,1)
-    y[r,:] = 0.9 * y[r-1,:] + randn(size(y,2))'
+    y[r,:] = 0.95 * y[r-1,:] + randn(size(y,2))'
   end
   y
 end

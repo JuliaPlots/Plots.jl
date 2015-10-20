@@ -589,7 +589,7 @@ function Base.display(::PlotsDisplay, subplt::Subplot{PyPlotPackage})
 end
 
 # allow for writing any supported mime
-for mime in (MIME"image/png", MIME"image/svg+xml", MIME"text/html", MIME"application/pdf", MIME"application/postscript")
+for mime in (MIME"image/png", MIME"application/pdf", MIME"application/postscript")
   @eval function Base.writemime(io::IO, ::$mime, plt::PlottingObject{PyPlotPackage})
     finalizePlot(plt)
     writemime(io, $mime(), getfig(plt.o))
