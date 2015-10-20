@@ -648,12 +648,12 @@ end
 
 getGadflyWriteFunc(::MIME"image/png") = Gadfly.PNG
 getGadflyWriteFunc(::MIME"image/svg+xml") = Gadfly.SVG
-getGadflyWriteFunc(::MIME"text/html") = Gadfly.SVGJS
+# getGadflyWriteFunc(::MIME"text/html") = Gadfly.SVGJS
 getGadflyWriteFunc(::MIME"application/pdf") = Gadfly.PDF
 getGadflyWriteFunc(::MIME"application/postscript") = Gadfly.PS
 getGadflyWriteFunc(m::MIME) = error("Unsupported in Gadfly/Immerse: ", m)
 
-for mime in (MIME"image/png", MIME"image/svg+xml", MIME"text/html", MIME"application/pdf", MIME"application/postscript")
+for mime in (MIME"image/png", MIME"image/svg+xml", MIME"application/pdf", MIME"application/postscript")
   @eval function Base.writemime{P<:GadflyOrImmerse}(io::IO, ::$mime, plt::PlottingObject{P})
     func = getGadflyWriteFunc($mime())
     dowritemime(io, func, plt)

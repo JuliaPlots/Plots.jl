@@ -311,7 +311,7 @@ function getPaletteUsingGradientSymbol(palette, bgcolor::Colorant, numcolors::In
   else
     grad = ColorGradient(palette)
   end
-  zrng = getpctrange(numcolors)
+  zrng = get_zvalues(numcolors)
   RGBA[getColorZ(grad, z) for z in zrng]
 end
 
@@ -336,6 +336,16 @@ function getpctrange(n::Int)
         push!(zs, sorted[widestj] + 0.5 * diffs[widestj])
     end
     zs
+end
+
+function get_zvalues(n::Int)
+    offsets = getpctrange(ceil(Int,n/4)+1)/4
+    offsets = vcat(offsets[1], offsets[3:end])
+    zvalues = Float64[]
+    for offset in offsets
+        append!(zvalues, offset + [0.0, 0.5, 0.25, 0.75])
+    end
+    vcat(zvalues[1], 1.0, zvalues[2:n-1])
 end
 
 # ----------------------------------------------------------------------------------
