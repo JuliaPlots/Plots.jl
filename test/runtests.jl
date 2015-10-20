@@ -91,7 +91,7 @@ srand(1234)
         @fact backend() --> Plots.PyPlotPackage()
         @fact typeof(plot(1:10)) --> Plots.Plot{Plots.PyPlotPackage}
 
-        image_comparison_tests(:pyplot, skip=[19])
+        # image_comparison_tests(:pyplot, skip=[19])
     end
 # catch err
 #     warn("Skipped PyPlot due to: ", string(err))

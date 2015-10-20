@@ -121,7 +121,27 @@ const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcya
     :darkrainbow  => map(darken, _rainbowColors),
     :darktest     => _testColors,
     :lighttest    => map(c -> lighten(c, 0.3), _testColors),
+    :mlab         => [RGB(0, 0.4470, 0.7410),RGB(0.4940, 0.1840, 0.5560),RGB(0.9290, 0.6940, 0.1250),
+                      RGB(0.4660, 0.6740, 0.1880),RGB(0.3010, 0.7450, 0.9330),RGB(0.6350, 0.0780, 0.1840),
+                      RGB(0.8500, 0.3250, 0.0980)],
   )
+
+# # TODO: maybe try to include:
+
+# SEABORN_PALETTES = dict(
+#     deep=["#4C72B0", "#55A868", "#C44E52",
+#           "#8172B2", "#CCB974", "#64B5CD"],
+#     muted=["#4878CF", "#6ACC65", "#D65F5F",
+#            "#B47CC7", "#C4AD66", "#77BEDB"],
+#     pastel=["#92C6FF", "#97F0AA", "#FF9F9A",
+#             "#D0BBFF", "#FFFEA3", "#B0E0E6"],
+#     bright=["#003FFF", "#03ED3A", "#E8000B",
+#             "#8A2BE2", "#FFC400", "#00D7FF"],
+#     dark=["#001C7F", "#017517", "#8C0900",
+#           "#7600A1", "#B8860B", "#006374"],
+#     colorblind=["#0072B2", "#009E73", "#D55E00",
+#                 "#CC79A7", "#F0E442", "#56B4E9"]
+#     )
 
 # --------------------------------------------------------------
 
@@ -310,7 +330,8 @@ function getPaletteUsingGradientSymbol(palette, bgcolor::Colorant, numcolors::In
   # @show gradientsym
   if palette == :auto
     # grad = ColorGradient(_gradients[isdark(bgcolor) ? :lightrainbow : :darkrainbow])
-    grad = ColorGradient(_gradients[isdark(bgcolor) ? :lighttest : :darktest])
+    # grad = ColorGradient(_gradients[isdark(bgcolor) ? :lighttest : :darktest])
+    grad = ColorGradient(:mlab)
   # elseif typeof(palette) <: AVec || typeof(palette) <: ColorGradient
   #   grad = ColorGradient(palette)
   else
