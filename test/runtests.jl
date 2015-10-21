@@ -35,7 +35,7 @@ srand(1234)
     # plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
 
-    image_comparison_tests(:gadfly, skip=[19])
+    image_comparison_tests(:gadfly, skip=[19], eps=1e-2)
 
   end
 # catch err
@@ -83,16 +83,16 @@ srand(1234)
 # end
 
 # try
-    Pkg.installed("PyPlot")
-    pyplot()
-    backend()
-    facts("PyPlot") do
-        @fact backend(:pyplot) --> Plots.PyPlotPackage()
-        @fact backend() --> Plots.PyPlotPackage()
-        @fact typeof(plot(1:10)) --> Plots.Plot{Plots.PyPlotPackage}
+    # Pkg.installed("PyPlot")
+    # pyplot()
+    # backend()
+    # facts("PyPlot") do
+    #     @fact backend(:pyplot) --> Plots.PyPlotPackage()
+    #     @fact backend() --> Plots.PyPlotPackage()
+    #     @fact typeof(plot(1:10)) --> Plots.Plot{Plots.PyPlotPackage}
 
-        # image_comparison_tests(:pyplot, skip=[19])
-    end
+    #     # image_comparison_tests(:pyplot, skip=[19])
+    # end
 # catch err
 #     warn("Skipped PyPlot due to: ", string(err))
 # end

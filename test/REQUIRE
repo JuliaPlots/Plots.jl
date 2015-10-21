@@ -3,8 +3,6 @@ julia 0.3
 Colors
 Reexport
 FactCheck
-PyPlot
-UnicodePlots
 Gadfly
 Images
 ImageMagick
