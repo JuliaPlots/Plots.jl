@@ -159,6 +159,7 @@ function replaceType(vec, val)
 end
 
 function replaceAliases!(d::Dict, aliases::Dict)
+  @show d aliases
   for (k,v) in d
     if haskey(aliases, k)
       d[aliases[k]] = v

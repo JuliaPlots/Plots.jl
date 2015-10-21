@@ -13,6 +13,6 @@ notifications:
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
  - julia -e 'Pkg.clone("Images"); Pkg.clone("ImageMagick")'
- - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")`
- - julia -e `Pkg.test("Plots"; coverage=true)'
- - julia -e 'cd(Pkg.dir("ImageMagick")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+ - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")'
+ - julia -e 'Pkg.test("Plots"; coverage=true)'
+ - julia -e 'cd(Pkg.dir("Plots")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
