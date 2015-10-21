@@ -45,6 +45,7 @@ end
 
 function updatePlotItems(plt::Plot{ImmersePackage}, d::Dict)
   updateGadflyGuides(plt, d)
+  updateGadflyPlotTheme(plt, d)
 end
 
 

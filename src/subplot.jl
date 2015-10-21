@@ -78,6 +78,8 @@ ncols(layout::GridLayout, row::Int) = layout.nc
 # get the plot index given row and column
 Base.getindex(layout::GridLayout, r::Int, c::Int) = (r-1) * layout.nc + c
 
+Base.getindex(subplt::Subplot, args...) = subplt.layout[args...]
+
 # handle "linking" the subplot axes together
 # each backend should implement the handleLinkInner and expandLimits! methods
 function linkAxis(subplt::Subplot, isx::Bool)
@@ -217,14 +219,68 @@ function subplot{P<:PlottingPackage}(plts::AVec{Plot{P}}, layout::SubplotLayout,
   n = sum([plt.n for plt in plts])
   subplt = Subplot(nothing, collect(plts), P(), p, n, layout, Dict(), false, false, false, (r,c) -> (nothing,nothing))
 
-  # update links
+  # # update links
+  # for s in (:linkx, :linky, :linkfunc)
+  #   if haskey(d, s)
+  #     setfield!(subplt, s, d[s])
+  #     delete!(d, s)
+  #   end
+  # end
+
+  preprocessSubplot(subplt, d)
+
+  # # init (after plot creation)
+  # if !subplt.initialized
+  #   subplt.initialized = buildSubplotObject!(subplt, false)
+  # end
+
+  # # add title, axis labels, ticks, etc
+  # for (i,plt) in enumerate(subplt.plts)
+  #   di = copy(d)
+  #   for (k,v) in di
+  #     if typeof(v) <: AVec
+  #       di[k] = v[mod1(i, length(v))]
+  #     elseif typeof(v) <: AMat
+  #       m = size(v,2)
+  #       di[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
+  #     end
+  #   end
+  #   dumpdict(di, "Updating sp $i")
+  #   updatePlotItems(plt, di)
+  # end
+
+  # # handle links
+  # subplt.linkx && linkAxis(subplt, true)
+  # subplt.linky && linkAxis(subplt, false)
+
+  # # set this to be current
+  # current(subplt)
+
+  postprocessSubplot(subplt, d)
+
+  subplt
+end
+
+# TODO: hcat/vcat subplots and plots together arbitrarily
+
+# ------------------------------------------------------------------------------------------------
+
+
+function preprocessSubplot(subplt::Subplot, d::Dict)
+  validateSubplotSupported()
+  preprocessArgs!(d)
+  dumpdict(d, "After subplot! preprocessing")
+
+  # process links.  TODO: extract to separate function
   for s in (:linkx, :linky, :linkfunc)
     if haskey(d, s)
       setfield!(subplt, s, d[s])
       delete!(d, s)
     end
   end
+end
 
+function postprocessSubplot(subplt::Subplot, d::Dict)
   # init (after plot creation)
   if !subplt.initialized
     subplt.initialized = buildSubplotObject!(subplt, false)
@@ -251,10 +307,7 @@ function subplot{P<:PlottingPackage}(plts::AVec{Plot{P}}, layout::SubplotLayout,
 
   # set this to be current
   current(subplt)
-  subplt
 end
-
-# TODO: hcat/vcat subplots and plots together arbitrarily
 
 # ------------------------------------------------------------------------------------------------
 
@@ -277,22 +330,20 @@ end
 
 # # this adds to a specific subplot... most plot commands will flow through here
 function subplot!(subplt::Subplot, args...; kw...)
-  validateSubplotSupported()
-  # if !subplotSupported()
-  #   error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(backendInstance(pkg)), backends()),", "))
-  # end
+  # validateSubplotSupported()
 
   d = Dict(kw)
-  preprocessArgs!(d)
-  dumpdict(d, "After subplot! preprocessing")
+  preprocessSubplot(subplt, d)
+  # preprocessArgs!(d)
+  # dumpdict(d, "After subplot! preprocessing")
 
-  # process links.  TODO: extract to separate function
-  for s in (:linkx, :linky, :linkfunc)
-    if haskey(d, s)
-      setfield!(subplt, s, d[s])
-      delete!(d, s)
-    end
-  end
+  # # process links.  TODO: extract to separate function
+  # for s in (:linkx, :linky, :linkfunc)
+  #   if haskey(d, s)
+  #     setfield!(subplt, s, d[s])
+  #     delete!(d, s)
+  #   end
+  # end
 
   # create the underlying object (each backend will do this differently)
   # note: we call it once before doing the individual plots, and once after
@@ -333,36 +384,37 @@ function subplot!(subplt::Subplot, args...; kw...)
     plot!(plt; di...)
   end
 
-  # -- TODO: extract this section into a separate function... duplicates the other subplot ---------
+  postprocessSubplot(subplt, d)
+  # # -- TODO: extract this section into a separate function... duplicates the other subplot ---------
 
-  # create the underlying object (each backend will do this differently)
-  if !subplt.initialized
-    subplt.initialized = buildSubplotObject!(subplt, false)
-    # subplt.initialized = true
-  end
+  # # create the underlying object (each backend will do this differently)
+  # if !subplt.initialized
+  #   subplt.initialized = buildSubplotObject!(subplt, false)
+  #   # subplt.initialized = true
+  # end
 
 
-  # add title, axis labels, ticks, etc
-  for (i,plt) in enumerate(subplt.plts)
-    di = copy(d)
-    for (k,v) in di
-      if typeof(v) <: AVec
-        di[k] = v[mod1(i, length(v))]
-      elseif typeof(v) <: AMat
-        m = size(v,2)
-        di[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
-      end
-    end
-    dumpdict(di, "Updating sp $i")
-    updatePlotItems(plt, di)
-  end
+  # # add title, axis labels, ticks, etc
+  # for (i,plt) in enumerate(subplt.plts)
+  #   di = copy(d)
+  #   for (k,v) in di
+  #     if typeof(v) <: AVec
+  #       di[k] = v[mod1(i, length(v))]
+  #     elseif typeof(v) <: AMat
+  #       m = size(v,2)
+  #       di[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
+  #     end
+  #   end
+  #   dumpdict(di, "Updating sp $i")
+  #   updatePlotItems(plt, di)
+  # end
 
-  subplt.linkx && linkAxis(subplt, true)
-  subplt.linky && linkAxis(subplt, false)
+  # subplt.linkx && linkAxis(subplt, true)
+  # subplt.linky && linkAxis(subplt, false)
 
-  # set this to be current
-  current(subplt)
-  # --- end extract ----
+  # # set this to be current
+  # current(subplt)
+  # # --- end extract ----
 
   # show it automatically?
   if haskey(d, :show) && d[:show]

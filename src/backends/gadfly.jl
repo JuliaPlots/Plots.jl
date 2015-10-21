@@ -83,38 +83,38 @@ function createGadflyPlotObject(d::Dict)
                                    Gadfly.Guide.ylabel(d[:ylabel]),
                                    Gadfly.Guide.title(d[:title])]
 
-  kwargs = Dict()
+  # kwargs = Dict()
 
-  # hide the legend?
-  if !get(d, :legend, true)
-    kwargs[:key_position] = :none
-  end
+  # # hide the legend?
+  # if !get(d, :legend, true)
+  #   kwargs[:key_position] = :none
+  # end
 
-  if !get(d, :grid, true)
-    kwargs[:grid_color] = getColor(d[:background_color])
-  end
+  # if !get(d, :grid, true)
+  #   kwargs[:grid_color] = getColor(d[:background_color])
+  # end
 
-  # fonts
-  tfont, gfont, lfont = d[:tickfont], d[:guidefont], d[:legendfont]
+  # # fonts
+  # tfont, gfont, lfont = d[:tickfont], d[:guidefont], d[:legendfont]
 
-  fg = getColor(d[:foreground_color])
-  gplt.theme = Gadfly.Theme(;
-          background_color = getColor(d[:background_color]),
-          minor_label_color = fg,
-          minor_label_font = tfont.family,
-          minor_label_font_size = tfont.pointsize * Gadfly.pt,
-          major_label_color = fg,
-          major_label_font = gfont.family,
-          major_label_font_size = gfont.pointsize * Gadfly.pt,
-          key_title_color = fg,
-          key_title_font = gfont.family,
-          key_title_font_size = gfont.pointsize * Gadfly.pt,
-          key_label_color = fg,
-          key_label_font = lfont.family,
-          key_label_font_size = lfont.pointsize * Gadfly.pt,
-          plot_padding = 1 * Gadfly.mm,
-          kwargs...
-        )
+  # fg = getColor(d[:foreground_color])
+  # gplt.theme = Gadfly.Theme(;
+  #         background_color = getColor(d[:background_color]),
+  #         minor_label_color = fg,
+  #         minor_label_font = tfont.family,
+  #         minor_label_font_size = tfont.pointsize * Gadfly.pt,
+  #         major_label_color = fg,
+  #         major_label_font = gfont.family,
+  #         major_label_font_size = gfont.pointsize * Gadfly.pt,
+  #         key_title_color = fg,
+  #         key_title_font = gfont.family,
+  #         key_title_font_size = gfont.pointsize * Gadfly.pt,
+  #         key_label_color = fg,
+  #         key_label_font = lfont.family,
+  #         key_label_font_size = lfont.pointsize * Gadfly.pt,
+  #         plot_padding = 1 * Gadfly.mm,
+  #         kwargs...
+  #       )
   gplt
 end
 
@@ -504,6 +504,44 @@ function updateGadflyGuides(plt::Plot, d::Dict)
   updateGadflyAxisFlips(gplt, d, xlims, ylims)
 end
 
+function updateGadflyPlotTheme(plt::Plot, d::Dict)
+  kwargs = Dict()
+
+  # get the full initargs, overriding any new settings
+  # TODO: should this be part of the main `plot` command in plot.jl???
+  d = merge!(plt.initargs, d)
+
+  # hide the legend?
+  if !get(d, :legend, true)
+    kwargs[:key_position] = :none
+  end
+
+  if !get(d, :grid, true)
+    kwargs[:grid_color] = getColor(d[:background_color])
+  end
+
+  # fonts
+  tfont, gfont, lfont = d[:tickfont], d[:guidefont], d[:legendfont]
+
+  fg = getColor(d[:foreground_color])
+  getGadflyContext(plt).theme = Gadfly.Theme(;
+          background_color = getColor(d[:background_color]),
+          minor_label_color = fg,
+          minor_label_font = tfont.family,
+          minor_label_font_size = tfont.pointsize * Gadfly.pt,
+          major_label_color = fg,
+          major_label_font = gfont.family,
+          major_label_font_size = gfont.pointsize * Gadfly.pt,
+          key_title_color = fg,
+          key_title_font = gfont.family,
+          key_title_font_size = gfont.pointsize * Gadfly.pt,
+          key_label_color = fg,
+          key_label_font = lfont.family,
+          key_label_font_size = lfont.pointsize * Gadfly.pt,
+          plot_padding = 1 * Gadfly.mm,
+          kwargs...
+        )
+end
 
 # ----------------------------------------------------------------
 
@@ -558,6 +596,7 @@ end
 
 function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
   updateGadflyGuides(plt, d)
+  updateGadflyPlotTheme(plt, d)
 end
 
 
