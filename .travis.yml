@@ -6,12 +6,13 @@ os:
 julia:
   - 0.3
   - 0.4
-  - nightly
+  #- nightly
 notifications:
   email: true
 # uncomment the following lines to override the default test script
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+ - julia -e 'Pkg.clone("Images"); Pkg.clone("ImageMagick")'
  - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")`
- - julia -e 'Pkg.checkout("Images"); Pkg.checkout("ImageMagick")'
  - julia -e `Pkg.test("Plots"; coverage=true)'
+ - julia -e 'cd(Pkg.dir("ImageMagick")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'

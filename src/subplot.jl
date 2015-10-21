@@ -150,6 +150,7 @@ Create a series of plots:
 function subplot(args...; kw...)
   validateSubplotSupported()
   d = Dict(kw)
+  println(d)
   preprocessArgs!(d)
 
   # figure out the layout
