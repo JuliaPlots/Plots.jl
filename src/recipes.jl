@@ -91,7 +91,7 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
       else
         # scatter plots off-diagonal, color determined by correlation
         c = RGBA(RGB(getColorZ(cgrad, corrmat[i,j])), 0.3)
-        scatter!(plt, mat[:,j], mat[:,i], w=1, ms=3, c=c, leg=false)
+        scatter!(plt, mat[:,j], mat[:,i], w=0, ms=3, c=c, leg=false)
       end
 
       if labels != nothing && length(labels) >= m
