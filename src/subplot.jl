@@ -145,6 +145,8 @@ Create a series of plots:
   subplot(y; n = 3, nr = 1)     # create an automatic grid, but fix the number of rows to 1 (so there are n columns)
   subplot(y; n = 3, nc = 1)     # create an automatic grid, but fix the number of columns to 1 (so there are n rows)
   subplot(y; layout = [1, 2])   # explicit layout by row... plot #1 goes by itself in the first row, plots 2 and 3 split the 2nd row (note the n kw is unnecessary)
+  subplot(plts, n; nr = -1, nc = -1)  # build a layout from existing plots
+  subplot(plts, layout)               # build a layout from existing plots
 ```
 """
 function subplot(args...; kw...)
@@ -191,6 +193,71 @@ function subplot(args...; kw...)
   subplt
 end
 
+# ------------------------------------------------------------------------------------------------
+
+# NOTE: for the subplot calls building from existing plots, we need the first plot to be separate to ensure dispatch calls this instead of the more general subplot(args...; kw...)
+
+# grid layout
+# function subplot{P}(plt1::Plot{P}, plts::Plot{P}...; nr::Integer = -1, nc::Integer = -1, link = false, linkx = false, linky = false)
+function subplot{P}(plt1::Plot{P}, plts::Plot{P}...; kw...)
+  d = Dict(kw)
+  layout = subplotlayout(length(plts)+1, get(d, :nr, -1), get(d, :nc, -1))
+  subplot(vcat(plt1, plts...), layout, d) #, link || linkx, link || linky)
+end
+
+# explicit layout
+function subplot{P,I<:Integer}(pltsPerRow::AVec{I}, plt1::Plot{P}, plts::Plot{P}...; kw...) #link = false, linkx = false, linky = false)
+  layout = subplotlayout(pltsPerRow)
+  subplot(vcat(plt1, plts...), layout, Dict(kw)) #, link || linkx, link || linky)
+end
+
+# this will be called internally
+function subplot{P<:PlottingPackage}(plts::AVec{Plot{P}}, layout::SubplotLayout, d::Dict) #, linkx::Bool, linky::Bool)
+  p = length(layout)
+  n = sum([plt.n for plt in plts])
+  subplt = Subplot(nothing, collect(plts), P(), p, n, layout, Dict(), false, false, false, (r,c) -> (nothing,nothing))
+
+  # update links
+  for s in (:linkx, :linky, :linkfunc)
+    if haskey(d, s)
+      setfield!(subplt, s, d[s])
+      delete!(d, s)
+    end
+  end
+
+  # init (after plot creation)
+  if !subplt.initialized
+    subplt.initialized = buildSubplotObject!(subplt, false)
+  end
+
+  # add title, axis labels, ticks, etc
+  for (i,plt) in enumerate(subplt.plts)
+    di = copy(d)
+    for (k,v) in di
+      if typeof(v) <: AVec
+        di[k] = v[mod1(i, length(v))]
+      elseif typeof(v) <: AMat
+        m = size(v,2)
+        di[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
+      end
+    end
+    dumpdict(di, "Updating sp $i")
+    updatePlotItems(plt, di)
+  end
+
+  # handle links
+  subplt.linkx && linkAxis(subplt, true)
+  subplt.linky && linkAxis(subplt, false)
+
+  # set this to be current
+  current(subplt)
+  subplt
+end
+
+# TODO: hcat/vcat subplots and plots together arbitrarily
+
+# ------------------------------------------------------------------------------------------------
+
 """
 Adds to a subplot.
 """
@@ -219,6 +286,7 @@ function subplot!(subplt::Subplot, args...; kw...)
   preprocessArgs!(d)
   dumpdict(d, "After subplot! preprocessing")
 
+  # process links.  TODO: extract to separate function
   for s in (:linkx, :linky, :linkfunc)
     if haskey(d, s)
       setfield!(subplt, s, d[s])
@@ -265,6 +333,8 @@ function subplot!(subplt::Subplot, args...; kw...)
     plot!(plt; di...)
   end
 
+  # -- TODO: extract this section into a separate function... duplicates the other subplot ---------
+
   # create the underlying object (each backend will do this differently)
   if !subplt.initialized
     subplt.initialized = buildSubplotObject!(subplt, false)
@@ -292,6 +362,7 @@ function subplot!(subplt::Subplot, args...; kw...)
 
   # set this to be current
   current(subplt)
+  # --- end extract ----
 
   # show it automatically?
   if haskey(d, :show) && d[:show]

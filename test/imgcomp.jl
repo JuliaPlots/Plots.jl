@@ -19,6 +19,12 @@ include("../docs/example_generation.jl")
 using Plots, FactCheck
 import Images, ImageMagick
 
+# if !isdefined(ImageMagick, :init_deps)
+#   function ImageMagick.init_deps()
+#     ccall((:MagickWandGenesis,libwand), Void, ())
+#   end
+# end
+
 function makeImageWidget(fn)
   img = Gtk.GtkImageLeaf(fn)
   vbox = Gtk.GtkBoxLeaf(:v)

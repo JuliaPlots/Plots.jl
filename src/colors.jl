@@ -70,7 +70,7 @@ const _masterColorList = [
 
 
 function darken(c, v=0.1)
-    rgba = RGBA(c)
+    rgba = convert(RGBA, c)
     r = max(0, min(rgba.r - v, 1))
     g = max(0, min(rgba.g - v, 1))
     b = max(0, min(rgba.b - v, 1))
@@ -124,6 +124,12 @@ const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcya
     :mlab         => [RGB(0, 0.4470, 0.7410),RGB(0.4940, 0.1840, 0.5560),RGB(0.9290, 0.6940, 0.1250),
                       RGB(0.4660, 0.6740, 0.1880),RGB(0.3010, 0.7450, 0.9330),RGB(0.6350, 0.0780, 0.1840),
                       RGB(0.8500, 0.3250, 0.0980)],
+    :sb_deep      => map(c->parse(Colorant,c), ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974", "#64B5CD"]),
+    :sb_muted     => map(c->parse(Colorant,c), ["#4878CF", "#6ACC65", "#D65F5F", "#B47CC7", "#C4AD66", "#77BEDB"]),
+    :sb_pastl     => map(c->parse(Colorant,c), ["#92C6FF", "#97F0AA", "#FF9F9A", "#D0BBFF", "#FFFEA3", "#B0E0E6"]),
+    :sb_bright    => map(c->parse(Colorant,c), ["#003FFF", "#03ED3A", "#E8000B", "#8A2BE2", "#FFC400", "#00D7FF"]),
+    :sb_dark      => map(c->parse(Colorant,c), ["#001C7F", "#017517", "#8C0900", "#7600A1", "#B8860B", "#006374"]),
+    :sb_colorblind=> map(c->parse(Colorant,c), ["#0072B2", "#009E73", "#D55E00", "#CC79A7", "#F0E442", "#56B4E9"]),
   )
 
 # # TODO: maybe try to include:

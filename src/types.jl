@@ -33,7 +33,7 @@ end
 
 type Subplot{T<:PlottingPackage, L<:SubplotLayout} <: PlottingObject{T}
   o                           # the underlying object
-  plts::Vector{Plot}          # the individual plots
+  plts::Vector{Plot{T}}          # the individual plots
   backend::T
   p::Int                      # number of plots
   n::Int                      # number of series
