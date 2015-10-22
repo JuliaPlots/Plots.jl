@@ -78,7 +78,7 @@ ncols(layout::GridLayout, row::Int) = layout.nc
 # get the plot index given row and column
 Base.getindex(layout::GridLayout, r::Int, c::Int) = (r-1) * layout.nc + c
 
-Base.getindex(subplt::Subplot, args...) = subplt.layout[args...]
+Base.getindex(subplt::Subplot, args...) = subplt.plts[subplt.layout[args...]]
 
 # handle "linking" the subplot axes together
 # each backend should implement the handleLinkInner and expandLimits! methods
