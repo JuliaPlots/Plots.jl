@@ -80,7 +80,9 @@ end
 
 function Base.setindex!(plt::Plot{ImmersePackage}, xy::Tuple, i::Integer)
   for mapping in getGadflyMappings(plt, i)
+    # @show "before",i xy mapping[:x] mapping[:y]
     mapping[:x], mapping[:y] = xy
+    # @show "after",i xy mapping[:x] mapping[:y]
   end
   plt
 end

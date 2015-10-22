@@ -290,7 +290,9 @@ end
 
 # used in updating an existing series
 
-extendUnitRange(v::UnitRange{Int}, n::Int = 1) = minimum(v):maximum(v)+n
+extendUnitRange(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
+extendSeriesData{T}(v::Range{T}, z::Real) = extendSeriesData(float(collect(v)), z)
+extendSeriesData{T}(v::Range{T}, z::AVec) = extendSeriesData(float(collect(v)), z)
 extendSeriesData{T}(v::AVec{T}, z::Real) = (push!(v, convert(T, z)); v)
 extendSeriesData{T}(v::AVec{T}, z::AVec) = (append!(v, convert(Vector{T}, z)); v)
 

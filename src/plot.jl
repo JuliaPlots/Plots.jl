@@ -111,7 +111,7 @@ function plot!(plt::Plot, args...; kw...)
   kwList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
   
   # if we were able to extract guide information from the series inputs, then update the plot
-  @show xmeta, ymeta
+  # @show xmeta, ymeta
   updateDictWithMeta(d, plt.initargs, xmeta, true)
   updateDictWithMeta(d, plt.initargs, ymeta, false)
 
@@ -225,7 +225,7 @@ typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
 convertToAnyVector(v::@compat(Void); kw...) = Any[nothing], nothing
 
 # fixed number of blank series
-convertToAnyVector(n::Integer; kw...) = Any[zero(0) for i in 1:n], nothing
+convertToAnyVector(n::Integer; kw...) = Any[zeros(0) for i in 1:n], nothing
 
 # numeric vector
 convertToAnyVector{T<:Real}(v::AVec{T}; kw...) = Any[v], nothing
