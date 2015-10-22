@@ -133,7 +133,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1
     return true
 
   catch ex
-    warn("Image did not match reference image $reffn")
+    warn("Image did not match reference image $reffn. err: $ex")
     if isinteractive()
 
       # if we're in interactive mode, open a popup and give us a chance to examine the images
