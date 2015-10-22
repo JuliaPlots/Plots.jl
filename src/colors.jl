@@ -104,6 +104,10 @@ colorscheme(v::AVec) = ColorVector(v)
 colorscheme(m::AMat) = size(m,1) == 1 ? map(colorscheme, m) : [colorscheme(m[:,i]) for i in 1:size(m,2)]'
 colorscheme(c::Colorant) = ColorWrapper(c)
 
+
+# --------------------------------------------------------------
+
+
 const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", colorant"orange", colorant"red"]
 const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
                      darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
@@ -121,33 +125,8 @@ const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcya
     :darkrainbow  => map(darken, _rainbowColors),
     :darktest     => _testColors,
     :lighttest    => map(c -> lighten(c, 0.3), _testColors),
-    :mlab         => [RGB(0, 0.4470, 0.7410),RGB(0.4940, 0.1840, 0.5560),RGB(0.9290, 0.6940, 0.1250),
-                      RGB(0.4660, 0.6740, 0.1880),RGB(0.3010, 0.7450, 0.9330),RGB(0.6350, 0.0780, 0.1840),
-                      RGB(0.8500, 0.3250, 0.0980)],
-    :sb_deep      => map(c->parse(Colorant,c), ["#4C72B0", "#55A868", "#C44E52", "#8172B2", "#CCB974", "#64B5CD"]),
-    :sb_muted     => map(c->parse(Colorant,c), ["#4878CF", "#6ACC65", "#D65F5F", "#B47CC7", "#C4AD66", "#77BEDB"]),
-    :sb_pastl     => map(c->parse(Colorant,c), ["#92C6FF", "#97F0AA", "#FF9F9A", "#D0BBFF", "#FFFEA3", "#B0E0E6"]),
-    :sb_bright    => map(c->parse(Colorant,c), ["#003FFF", "#03ED3A", "#E8000B", "#8A2BE2", "#FFC400", "#00D7FF"]),
-    :sb_dark      => map(c->parse(Colorant,c), ["#001C7F", "#017517", "#8C0900", "#7600A1", "#B8860B", "#006374"]),
-    :sb_colorblind=> map(c->parse(Colorant,c), ["#0072B2", "#009E73", "#D55E00", "#CC79A7", "#F0E442", "#56B4E9"]),
   )
 
-# # TODO: maybe try to include:
-
-# SEABORN_PALETTES = dict(
-#     deep=["#4C72B0", "#55A868", "#C44E52",
-#           "#8172B2", "#CCB974", "#64B5CD"],
-#     muted=["#4878CF", "#6ACC65", "#D65F5F",
-#            "#B47CC7", "#C4AD66", "#77BEDB"],
-#     pastel=["#92C6FF", "#97F0AA", "#FF9F9A",
-#             "#D0BBFF", "#FFFEA3", "#B0E0E6"],
-#     bright=["#003FFF", "#03ED3A", "#E8000B",
-#             "#8A2BE2", "#FFC400", "#00D7FF"],
-#     dark=["#001C7F", "#017517", "#8C0900",
-#           "#7600A1", "#B8860B", "#006374"],
-#     colorblind=["#0072B2", "#009E73", "#D55E00",
-#                 "#CC79A7", "#F0E442", "#56B4E9"]
-#     )
 
 # --------------------------------------------------------------
 
@@ -229,6 +208,44 @@ function interpolate(v1::Real, v2::Real, w::Real)
   (1-w) * v1 + w * v2
 end
 
+
+# --------------------------------------------------------------
+
+# Methods to automatically generate gradients for color selection based on
+# background color and a short list of seed colors
+
+function adjust_lch(color, l, c)
+    lch = LCHab(color)
+    convert(RGB, LCHab(l, c, lch.h))
+end
+
+function lightness_from_background(bgcolor)
+  bglight = LCHab(bgcolor).l
+  0.45bglight + 55.0 * (bglight < 50.0)
+end
+
+function gradient_from_list(cs)
+    zvalues = Plots.get_zvalues(length(cs))
+    indices = sortperm(zvalues)
+    sorted_colors = map(RGB, cs[indices])
+    sorted_zvalues = zvalues[indices]
+    ColorGradient(sorted_colors, sorted_zvalues)
+end
+
+function generate_colorgradient(bgcolor = colorant"white";
+                         color_bases = [colorant"steelblue", colorant"indianred"],
+                         lightness = lightness_from_background(bgcolor),
+                         n = 9)
+  seed_colors = map(c -> adjust_lch(c,lightness,50), vcat(bgcolor, color_bases))
+  colors = distinguishable_colors(n,
+      seed_colors,
+      lchoices=Float64[lightness],
+      cchoices=Float64[50],
+      hchoices=linspace(0, 340, 20)
+    )[2:end]
+  gradient_from_list(colors)
+end
+
 # --------------------------------------------------------------
 
 "Wraps a function, taking an index and returning a Colorant"
@@ -304,44 +321,80 @@ const _lightColors = filter(islight, _allColors)
 const _sortedColorsForDarkBackground = vcat(_lightColors, reverse(_darkColors[2:end]))
 const _sortedColorsForLightBackground = vcat(_darkColors, reverse(_lightColors[2:end]))
 
-const _defaultNumColors = 20
+const _defaultNumColors = 17
 
-function getPaletteUsingDistinguishableColors(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
-  palette = distinguishable_colors(numcolors, bgcolor)[2:end]
+# function getPaletteUsingDistinguishableColors(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
+#   palette = distinguishable_colors(numcolors, bgcolor)[2:end]
 
-  # try to adjust lightness away from background color
-  bg_lab = Lab(bgcolor)
-  palette = RGB{Float64}[begin
-    lab = Lab(rgb)
-    Lab(
-        adjustAway(lab.l, bg_lab.l, 25, 75),
-        lab.a,
-        lab.b
-      )
-  end for rgb in palette]
+#   # try to adjust lightness away from background color
+#   bg_lab = Lab(bgcolor)
+#   palette = RGB{Float64}[begin
+#     lab = Lab(rgb)
+#     Lab(
+#         adjustAway(lab.l, bg_lab.l, 25, 75),
+#         lab.a,
+#         lab.b
+#       )
+#   end for rgb in palette]
+# end
+
+# function getPaletteUsingFixedColorList(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
+#   palette = isdark(bgcolor) ? _sortedColorsForDarkBackground : _sortedColorsForLightBackground
+#   palette[1:min(numcolors,length(palette))]
+# end
+
+# function getPaletteUsingColorDiffFromBackground(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
+#   colordiffs = [colordiff(c, bgcolor) for c in _allColors]
+#   mindiff = colordiffs[reverse(sortperm(colordiffs))[numcolors]]
+#   filter(c -> colordiff(c, bgcolor) >= mindiff, _allColors)
+# end
+
+# --------------------------------------------------------------
+
+# Methods to automatically generate gradients for color selection based on
+# background color and a short list of seed colors
+
+# here are some magic constants that could be changed if you really want
+const _bgratio = [0.4]
+const _lch_c_const = [50]
+
+function adjust_lch(color, l, c)
+    lch = LCHab(color)
+    convert(RGB, LCHab(l, c, lch.h))
 end
 
-function getPaletteUsingFixedColorList(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
-  palette = isdark(bgcolor) ? _sortedColorsForDarkBackground : _sortedColorsForLightBackground
-  palette[1:min(numcolors,length(palette))]
+function lightness_from_background(bgcolor)
+  bglight = LCHab(bgcolor).l
+  _bgratio[1] * bglight + 100.0 * (1 - _bgratio[1]) * (bglight < 50.0)
 end
 
-function getPaletteUsingColorDiffFromBackground(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
-  colordiffs = [colordiff(c, bgcolor) for c in _allColors]
-  mindiff = colordiffs[reverse(sortperm(colordiffs))[numcolors]]
-  filter(c -> colordiff(c, bgcolor) >= mindiff, _allColors)
+function gradient_from_list(cs)
+    zvalues = Plots.get_zvalues(length(cs))
+    indices = sortperm(zvalues)
+    sorted_colors = map(RGB, cs[indices])
+    sorted_zvalues = zvalues[indices]
+    ColorGradient(sorted_colors, sorted_zvalues)
 end
 
-function getPaletteUsingGradientSymbol(palette, bgcolor::Colorant, numcolors::Int = _defaultNumColors) #; gradientsym::Symbol = :auto)
-  # @show gradientsym
-  if palette == :auto
-    # grad = ColorGradient(_gradients[isdark(bgcolor) ? :lightrainbow : :darkrainbow])
-    # grad = ColorGradient(_gradients[isdark(bgcolor) ? :lighttest : :darktest])
-    grad = ColorGradient(:mlab)
-  # elseif typeof(palette) <: AVec || typeof(palette) <: ColorGradient
-  #   grad = ColorGradient(palette)
+function generate_colorgradient(bgcolor = colorant"white";
+                         color_bases = [colorant"steelblue", colorant"indianred"],
+                         lightness = lightness_from_background(bgcolor),
+                         n = _defaultNumColors)
+  seed_colors = map(c -> adjust_lch(c,lightness, _lch_c_const[1]), vcat(bgcolor, color_bases))
+  colors = distinguishable_colors(n,
+      seed_colors,
+      lchoices=Float64[lightness],
+      cchoices=Float64[_lch_c_const[1]],
+      hchoices=linspace(0, 340, 20)
+    )[2:end]
+  gradient_from_list(colors)
+end
+
+function get_color_palette(palette, bgcolor::Colorant, numcolors::Integer)
+  grad = if palette == :auto
+    generate_colorgradient(bgcolor)
   else
-    grad = ColorGradient(palette)
+    ColorGradient(palette)
   end
   zrng = get_zvalues(numcolors)
   RGBA[getColorZ(grad, z) for z in zrng]
@@ -396,24 +449,18 @@ function handlePlotColors(::PlottingPackage, d::Dict)
     end
   end
 
-  # d[:color_palette] = getPaletteUsingDistinguishableColors(bgcolor)
-  # d[:color_palette] = getPaletteUsingFixedColorList(bgcolor)
-  # d[:color_palette] = getPaletteUsingColorDiffFromBackground(bgcolor)
-  d[:color_palette] = getPaletteUsingGradientSymbol(get(d, :color_palette, :auto), bgcolor)
+
+  d[:color_palette] = get_color_palette(get(d, :color_palette, :auto), bgcolor, 100)
+
 
   # set the foreground color (text, ticks, gridlines) to be white or black depending
   # on how dark the background is.  
   fgcolor = get(d, :foreground_color, :auto)
-  if fgcolor == :auto
-    fgcolor = isdark(bgcolor) ? colorant"white" : colorant"black"
+  fgcolor = if fgcolor == :auto
+    isdark(bgcolor) ? colorant"white" : colorant"black"
   else
-    fgcolor = convertColor(fgcolor)
+    convertColor(fgcolor)
   end
-  # if !haskey(d, :foreground_color) || d[:foreground_color] == :auto
-  #   d[:foreground_color] = isdark(bgcolor) ? colorant"white" : colorant"black"
-  # else
-  #   d[:foreground_color] = convertColor(d[:foreground_color])
-  # end
 
   # bgcolor
   d[:background_color] = colorscheme(bgcolor)
