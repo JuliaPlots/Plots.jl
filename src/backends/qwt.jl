@@ -1,63 +1,6 @@
 
 # https://github.com/tbreloff/Qwt.jl
 
-# immutable QwtPackage <: PlottingPackage end
-
-# export qwt
-# qwt() = backend(:qwt)
-
-# # supportedArgs(::QwtPackage) = setdiff(_allArgs, [:xlims, :ylims, :xticks, :yticks])
-# supportedArgs(::QwtPackage) = [
-#     :annotation,
-#     # :args,
-#     :axis,
-#     :background_color,
-#     :color,
-#     :color_palette,
-#     :fillrange,
-#     :fillcolor,
-#     :foreground_color,
-#     :group,
-#     # :heatmap_c,
-#     # :kwargs,
-#     :label,
-#     :layout,
-#     :legend,
-#     :linestyle,
-#     :linetype,
-#     :linewidth,
-#     :markershape,
-#     :markercolor,
-#     :markersize,
-#     :n,
-#     :nbins,
-#     :nc,
-#     :nr,
-#     :pos,
-#     :smooth,
-#     # :ribbon,
-#     :show,
-#     :size,
-#     :title,
-#     :windowtitle,
-#     :x,
-#     :xlabel,
-#     :xlims,
-#     :xticks,
-#     :y,
-#     :ylabel,
-#     :ylims,
-#     :yrightlabel,
-#     :yticks,
-#     :xscale,
-#     :yscale,
-#     # :xflip,
-#     # :yflip,
-#     # :z,
-#   ]
-# supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
-# supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
-# supportedScales(::QwtPackage) = [:identity, :log10]
 
 # -------------------------------
 
@@ -297,8 +240,16 @@ end
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{QwtPackage})
+function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{QwtPackage})
   Qwt.savepng(plt.o, "/tmp/dfskjdhfkh.png")
+  write(io, readall("/tmp/dfskjdhfkh.png"))
+end
+
+function Base.writemime(io::IO, ::MIME"image/png", subplt::Subplot{QwtPackage})
+  for plt in subplt.plts
+    Qwt.refresh(plt.o)
+  end
+  Qwt.savepng(subplt.o, "/tmp/dfskjdhfkh.png")
   write(io, readall("/tmp/dfskjdhfkh.png"))
 end
 
