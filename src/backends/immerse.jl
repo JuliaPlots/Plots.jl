@@ -54,24 +54,13 @@ end
 
 function addAnnotations{X,Y,V}(plt::Plot{ImmersePackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
-    push!(plt.o[2].guides, createGadflyAnnotationObject(ann...))
+    push!(getGadflyContext(plt).guides, createGadflyAnnotationObject(ann...))
   end
 end
 
 # ----------------------------------------------------------------
 
 # accessors for x/y data
-
-# function Base.getindex(plt::Plot{ImmersePackage}, i::Int)
-#   data = plt.o[2].layers[end-i+1].mapping
-#   data[:x], data[:y]
-# end
-
-# function Base.setindex!(plt::Plot{ImmersePackage}, xy::Tuple, i::Integer)
-#   data = plt.o[2].layers[end-i+1].mapping
-#   data[:x], data[:y] = xy
-#   plt
-# end
 
 function Base.getindex(plt::Plot{ImmersePackage}, i::Integer)
   mapping = getGadflyMappings(plt, i)[1]
@@ -80,9 +69,7 @@ end
 
 function Base.setindex!(plt::Plot{ImmersePackage}, xy::Tuple, i::Integer)
   for mapping in getGadflyMappings(plt, i)
-    # @show "before",i xy mapping[:x] mapping[:y]
     mapping[:x], mapping[:y] = xy
-    # @show "after",i xy mapping[:x] mapping[:y]
   end
   plt
 end
@@ -92,8 +79,11 @@ end
 
 
 function buildSubplotObject!(subplt::Subplot{ImmersePackage}, isbefore::Bool)
-  isbefore && return false
+  return false
+  # isbefore && return false
+end
 
+function showSubplotObject(subplt::Subplot{ImmersePackage})
   # create the Gtk window with vertical box vsep
   d = getinitargs(subplt,1)
   w,h = d[:size]
@@ -128,7 +118,7 @@ function buildSubplotObject!(subplt::Subplot{ImmersePackage}, isbefore::Bool)
   end
 
   # destructor... clean up plots
-  Gtk.on_signal_destroy((x...) -> [Immerse.dropfig(Immerse._display,i) for i in figindices], win)
+  Gtk.on_signal_destroy((x...) -> ([Immerse.dropfig(Immerse._display,i) for i in figindices]; subplt.o = nothing), win)
 
   subplt.o = win
   true
@@ -193,6 +183,11 @@ end
 # end
 
 function Base.display(::PlotsDisplay, subplt::Subplot{ImmersePackage})
+
+  # if we haven't created the window yet, do it
+  if subplt.o == nothing
+    showSubplotObject(subplt)
+  end
 
   # display the plots by creating a fresh Immerse.Figure object from the GtkCanvas and Gadfly.Plot
   for plt in subplt.plts

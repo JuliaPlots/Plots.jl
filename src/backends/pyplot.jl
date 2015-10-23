@@ -1,72 +1,7 @@
 
 # https://github.com/stevengj/PyPlot.jl
 
-# immutable PyPlotPackage <: PlottingPackage end
-
-# export pyplot
-# pyplot() = backend(:pyplot)
-
 # -------------------------------
-
-# supportedArgs(::PyPlotPackage) = [
-#     :annotation,
-#     # :args,
-#     :axis,
-#     :background_color,
-#     :color,
-#     :color_palette,
-#     :fillrange,
-#     :fillcolor,
-#     :foreground_color,
-#     :group,
-#     # :heatmap_c,
-#     # :kwargs,
-#     :label,
-#     :layout,
-#     :legend,
-#     :linestyle,
-#     :linetype,
-#     :linewidth,
-#     :markershape,
-#     :markercolor,
-#     :markersize,
-#     :n,
-#     :nbins,
-#     :nc,
-#     :nr,
-#     # :pos,
-#     # :smooth,
-#     # :ribbon,
-#     :show,
-#     :size,
-#     :title,
-#     :windowtitle,
-#     :x,
-#     :xlabel,
-#     :xlims,
-#     :xticks,
-#     :y,
-#     :ylabel,
-#     :ylims,
-#     :yrightlabel,
-#     :yticks,
-#     :xscale,
-#     :yscale,
-#     :xflip,
-#     :yflip,
-#     :z,
-#     :tickfont,
-#     :guidefont,
-#     :legendfont,
-#     # :grid,
-#   ]
-# supportedAxes(::PyPlotPackage) = _allAxes
-# supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
-# supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-# # supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
-# supportedMarkers(::PyPlotPackage) = vcat(_allMarkers, Shape)
-# supportedScales(::PyPlotPackage) = [:identity, :log, :log2, :log10]
-# subplotSupported(::PyPlotPackage) = true
 
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
@@ -87,12 +22,6 @@ function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
   warn("Unknown linestyle $linestyle")
   return "-"
 end
-
-
-# function getMarkerGeom(d::Dict)
-#   shape = d[:markershape]
-#   gadflyshape(isa(shape, Shape) ? shape : _shapes[shape])
-# end
 
 function getPyPlotMarker(marker::Shape)
   marker.vertices
@@ -277,6 +206,12 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   elseif lt in (:heatmap, :hexbin)
 
     extraargs[:gridsize] = d[:nbins]
+    c = d[:color]
+    if !isa(c, ColorGradient)
+      c = ColorGradient(:redsblues)
+    end
+    # c = ColorGradient(d[:color])
+    extraargs[:cmap] = getPyPlotColorMap(c)
 
   else
 
@@ -307,12 +242,17 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   extraargs[:label] = d[:label]
 
   # do the plot
-  if lt == :hist
-    d[:serieshandle] = plotfunc(d[:y]; extraargs...)[1]
+  d[:serieshandle] = if lt == :hist
+    plotfunc(d[:y]; extraargs...)[1]
   elseif lt in (:scatter, :heatmap, :hexbin)
-    d[:serieshandle] = plotfunc(d[:x], d[:y]; extraargs...)
+    plotfunc(d[:x], d[:y]; extraargs...)
   else
-    d[:serieshandle] = plotfunc(d[:x], d[:y]; extraargs...)[1]
+    plotfunc(d[:x], d[:y]; extraargs...)[1]
+  end
+
+  # add the colorbar legend
+  if plt.initargs[:legend] && haskey(extraargs, :cmap)
+    PyPlot.colorbar(d[:serieshandle])
   end
 
   # this sets the bg color inside the grid

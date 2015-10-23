@@ -170,7 +170,7 @@ function subplot(args...; kw...)
 
   # initialize the individual plots
   pkg = backend()
-  plts = Plot[]
+  plts = Plot{typeof(pkg)}[]
   # ds = Dict[]
   for i in 1:length(layout)
     di = getPlotArgs(pkg, d, i)
