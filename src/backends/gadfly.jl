@@ -1,124 +1,19 @@
 
 # https://github.com/dcjones/Gadfly.jl
 
-# immutable GadflyPackage <: PlottingPackage end
-
-# export gadfly
-# gadfly() = backend(:gadfly)
-
-
-# # supportedArgs(::GadflyPackage) = setdiff(_allArgs, [:heatmap_c, :pos, :screen, :yrightlabel])
-# supportedArgs(::GadflyPackage) = [
-#     :annotation,
-#     # :axis,
-#     :background_color,
-#     :color,
-#     :color_palette,
-#     :fillrange,
-#     :fillcolor,
-#     :fillopacity,
-#     :foreground_color,
-#     :group,
-#     :label,
-#     :layout,
-#     :legend,
-#     :linestyle,
-#     :linetype,
-#     :linewidth,
-#     :lineopacity,
-#     :markershape,
-#     :markercolor,
-#     :markersize,
-#     :markeropacity,
-#     :n,
-#     :nbins,
-#     :nc,
-#     :nr,
-#     # :pos,
-#     :smooth,
-#     :show,
-#     :size,
-#     :title,
-#     :windowtitle,
-#     :x,
-#     :xlabel,
-#     :xlims,
-#     :xticks,
-#     :y,
-#     :ylabel,
-#     :ylims,
-#     # :yrightlabel,
-#     :yticks,
-#     :xscale,
-#     :yscale,
-#     :xflip,
-#     :yflip,
-#     :z,
-#     :tickfont,
-#     :guidefont,
-#     :legendfont,
-#     :grid,
-#   ]
-# supportedAxes(::GadflyPackage) = [:auto, :left]
-# supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
-# supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-# supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
-# supportedScales(::GadflyPackage) = [:identity, :log, :log2, :log10, :asinh, :sqrt]
-
-
 # ---------------------------------------------------------------------------
 
 
 function createGadflyPlotObject(d::Dict)
-  # @eval import DataFrames
-
   gplt = Gadfly.Plot()
   gplt.mapping = Dict()
   gplt.data_source = DataFrames.DataFrame()
   gplt.layers = gplt.layers[1:0]
-  
-  # add the title, axis labels, and theme
-
   gplt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]),
                                    Gadfly.Guide.ylabel(d[:ylabel]),
                                    Gadfly.Guide.title(d[:title])]
-
-  # kwargs = Dict()
-
-  # # hide the legend?
-  # if !get(d, :legend, true)
-  #   kwargs[:key_position] = :none
-  # end
-
-  # if !get(d, :grid, true)
-  #   kwargs[:grid_color] = getColor(d[:background_color])
-  # end
-
-  # # fonts
-  # tfont, gfont, lfont = d[:tickfont], d[:guidefont], d[:legendfont]
-
-  # fg = getColor(d[:foreground_color])
-  # gplt.theme = Gadfly.Theme(;
-  #         background_color = getColor(d[:background_color]),
-  #         minor_label_color = fg,
-  #         minor_label_font = tfont.family,
-  #         minor_label_font_size = tfont.pointsize * Gadfly.pt,
-  #         major_label_color = fg,
-  #         major_label_font = gfont.family,
-  #         major_label_font_size = gfont.pointsize * Gadfly.pt,
-  #         key_title_color = fg,
-  #         key_title_font = gfont.family,
-  #         key_title_font_size = gfont.pointsize * Gadfly.pt,
-  #         key_label_color = fg,
-  #         key_label_font = lfont.family,
-  #         key_label_font_size = lfont.pointsize * Gadfly.pt,
-  #         plot_padding = 1 * Gadfly.mm,
-  #         kwargs...
-  #       )
   gplt
 end
-
-
 
 # ---------------------------------------------------------------------------
 
@@ -204,7 +99,6 @@ function addGadflyLine!(plt::Plot, d::Dict, geoms...)
   # add the layer
   x = d[d[:linetype] == :hist ? :y : :x]
   Gadfly.layer(gfargs...; x = x, y = d[:y], kwargs...)
-  # prepend!(gplt.layers, )
 end
 
 
@@ -228,7 +122,6 @@ function getGadflyMarkerTheme(d::Dict, initargs::Dict)
   Gadfly.Theme(
       default_color = c,
       default_point_size = d[:markersize] * Gadfly.px,
-      # highlight_color = getColor(initargs[:foreground_color]),
       discrete_highlight_color = c -> fg,
       highlight_width = d[:linewidth] * Gadfly.px,
     )
@@ -251,7 +144,6 @@ function addGadflyMarker!(plt::Plot, d::Dict, initargs::Dict, geoms...)
   end
 
   Gadfly.layer(gfargs...; x = d[:x], y = d[:y], kwargs...)
-  # prepend!(gplt.layers, )
 end
 
 
@@ -308,7 +200,6 @@ function addGadflySeries!(plt::Plot, d::Dict)
 
   # add a regression line?
   # TODO: make more flexible
-  # smooth = d[:smooth] ? [Gadfly.Geom.smooth(method=:lm)] : Any[]
   smooth = getGadflySmoothing(d[:smooth])
 
   # lines
@@ -680,7 +571,6 @@ setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getinitargs(subplt,
 
 function dowritemime{P<:GadflyOrImmerse}(io::IO, func, plt::PlottingObject{P})
   gplt = getGadflyContext(plt)
-  # setGadflyDisplaySize(plt.initargs[:size]...)
   setGadflyDisplaySize(plt)
   Gadfly.draw(func(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
 end

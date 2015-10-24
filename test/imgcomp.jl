@@ -126,7 +126,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1
     # run the comparison test... a difference will throw an error
     # NOTE: sigma is a 2-length vector with x/y values for the number of pixels
     #       to blur together when comparing images
-    Images.@test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
+    Images.test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
 
     # we passed!
     info("Reference image $reffn matches")
