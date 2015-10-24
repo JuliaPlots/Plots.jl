@@ -239,13 +239,14 @@ function Base.push!(plt::Plot, i::Integer, x::Real, y::Real)
 end
 function Base.push!(plt::Plot, i::Integer, y::Real)
   xdata, ydata = plt[i]
-  if !isa(xdata, UnitRange)
-    error("Expected x is a UnitRange since you're trying to push a y value only")
-  end
-  plt[i] = (extendUnitRange(xdata), extendSeriesData(ydata, y))
+  # if !isa(xdata, UnitRange)
+  #   error("Expected x is a UnitRange since you're trying to push a y value only. typeof(x) = $(typeof(xdata))")
+  # end
+  plt[i] = (extendSeriesByOne(xdata), extendSeriesData(ydata, y))
   plt
 end
 
+Base.push!(plt::Plot, y::Real) = push!(plt, 1, y)
 
 # update all at once
 function Base.push!(plt::Plot, x::AVec, y::AVec)
@@ -283,14 +284,15 @@ function Base.append!(plt::Plot, i::Integer, y::AVec)
   if !isa(xdata, UnitRange{Int})
     error("Expected x is a UnitRange since you're trying to push a y value only")
   end
-  plt[i] = (extendUnitRange(xdata, length(y)), extendSeriesData(ydata, y))
+  plt[i] = (extendSeriesByOne(xdata, length(y)), extendSeriesData(ydata, y))
   plt
 end
 
 
 # used in updating an existing series
 
-extendUnitRange(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
+extendSeriesByOne(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
+extendSeriesByOne(v::AVec, n::Integer = 1) = isempty(v) ? (1:n) : vcat(v, (1:n) + maximum(v))
 extendSeriesData{T}(v::Range{T}, z::Real) = extendSeriesData(float(collect(v)), z)
 extendSeriesData{T}(v::Range{T}, z::AVec) = extendSeriesData(float(collect(v)), z)
 extendSeriesData{T}(v::AVec{T}, z::Real) = (push!(v, convert(T, z)); v)
