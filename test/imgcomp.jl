@@ -126,14 +126,16 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1
     # run the comparison test... a difference will throw an error
     # NOTE: sigma is a 2-length vector with x/y values for the number of pixels
     #       to blur together when comparing images
-    Images.test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
+    diffpct = Images.test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
 
     # we passed!
-    info("Reference image $reffn matches")
+    info("Reference image $reffn matches.  Difference: $diffpct")
     return true
 
-  catch ex
-    warn("Image did not match reference image $reffn. err: $ex")
+  catch err
+    warn("Image did not match reference image $reffn. err: $err")
+    showerror(Base.STDERR, err)
+    
     if isinteractive()
 
       # if we're in interactive mode, open a popup and give us a chance to examine the images
@@ -144,7 +146,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1
     else
 
       # if we rejected the image, or if we're in automated tests, throw the error
-      rethrow(ex)
+      rethrow(err)
     end
 
   end

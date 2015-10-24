@@ -35,7 +35,7 @@ srand(1234)
     # plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
 
-    image_comparison_tests(:gadfly, skip=[19], eps=1e-2)
+    image_comparison_tests(:gadfly, skip=[4,19], eps=1e-2)
 
   end
 # catch err

@@ -87,6 +87,9 @@ convertColor(c::@compat(Union{AbstractString, Symbol})) = parse(Colorant, string
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 
+# backup... try to convert
+getColor(c) = convertColor(c)
+
 # --------------------------------------------------------------
 
 abstract ColorScheme

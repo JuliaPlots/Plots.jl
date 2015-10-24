@@ -398,9 +398,9 @@ end
 function updateGadflyPlotTheme(plt::Plot, d::Dict)
   kwargs = Dict()
 
-  # get the full initargs, overriding any new settings
-  # TODO: should this be part of the main `plot` command in plot.jl???
-  d = merge!(plt.initargs, d)
+  # # get the full initargs, overriding any new settings
+  # # TODO: should this be part of the main `plot` command in plot.jl???
+  # d = merge!(plt.initargs, d)
 
   # hide the legend?
   if !get(d, :legend, true)

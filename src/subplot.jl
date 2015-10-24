@@ -288,7 +288,12 @@ function postprocessSubplot(subplt::Subplot, d::Dict)
 
   # add title, axis labels, ticks, etc
   for (i,plt) in enumerate(subplt.plts)
-    di = copy(d)
+    # di = copy(d)
+
+    # get the full initargs, overriding any new settings
+    # TODO: should this be part of the main `plot` command in plot.jl???
+    di = merge!(plt.initargs, copy(d))
+
     for (k,v) in di
       if typeof(v) <: AVec
         di[k] = v[mod1(i, length(v))]
