@@ -175,6 +175,7 @@ function subplot(args...; kw...)
   for i in 1:length(layout)
     di = getPlotArgs(pkg, d, i)
     di[:subplot] = true
+    dumpdict(di, "Plot args (subplot $i)")
     push!(plts, plot(pkg; di...))
     # push!(ds, getPlotArgs(pkg, d, i))
     # ds[i][:subplot] = true
@@ -234,6 +235,21 @@ function preprocessSubplot(subplt::Subplot, d::Dict)
   preprocessArgs!(d)
   dumpdict(d, "After subplot! preprocessing")
 
+  # get the full initargs, overriding any new settings
+  # TODO: subplt.initargs should probably be merged sooner and actually used
+  #       for color selection, etc.  (i.e. if we overwrite the subplot palettes to [:heat :rainbow])
+  #       then we need to overwrite plt[1].initargs[:color_palette] to :heat before it's actually used
+  #       for color selection!
+
+  # first merge the new args into the subplot's initargs. then process the plot args and merge
+  # those into the plot's initargs.  (example... `palette = [:blues :reds]` goes into subplt.initargs,
+  # then the ColorGradient for :blues/:reds is merged into plot 1/2 initargs, which is then used for color selection)
+  merge!(subplt.initargs, d)
+  for i in 1:length(subplt.layout)
+    di = getPlotArgs(backend(), subplt.initargs, i)
+    merge!(subplt.plts[i].initargs, di)
+  end
+
   # process links.  TODO: extract to separate function
   for s in (:linkx, :linky, :linkfunc)
     if haskey(d, s)
@@ -252,17 +268,23 @@ function postprocessSubplot(subplt::Subplot, d::Dict)
   # add title, axis labels, ticks, etc
   for (i,plt) in enumerate(subplt.plts)
 
-    # get the full initargs, overriding any new settings
-    di = copy(merge!(plt.initargs, d))
+    # # # get the full initargs, overriding any new settings
+    # # di = copy(merge(plt.initargs, d))
+    # di = copy(d)
 
-    for (k,v) in di
-      if typeof(v) <: AVec
-        di[k] = v[mod1(i, length(v))]
-      elseif typeof(v) <: AMat
-        m = size(v,2)
-        di[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
-      end
-    end
+    # for (k,v) in di
+    #   if typeof(v) <: AVec
+    #     di[k] = v[mod1(i, length(v))]
+    #   elseif typeof(v) <: AMat
+    #     m = size(v,2)
+    #     di[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
+    #   end
+    # end
+
+    # di = merge!(plt.initargs, di)
+
+    di = plt.initargs
+
     dumpdict(di, "Updating sp $i")
     updatePlotItems(plt, di)
   end
@@ -328,6 +350,17 @@ function subplot!(subplt::Subplot, args...; kw...)
     subplt.n += 1
     plt = getplot(subplt)
 
+    # # update the plot's initargs for things such as palettes, etc
+    # for (k,v) in subplt.initargs
+    #   haskey(_plotDefaults, k) || continue
+    #   if typeof(v) <: AVec
+    #     plt.initargs[k] = v[mod1(i, length(v))]
+    #   elseif typeof(v) <: AMat
+    #     m = size(v,2)
+    #     plt.initargs[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
+    #   end
+    # end
+
     # cleanup the dictionary that we pass into the plot! command
     di[:show] = false
     di[:subplot] = true
@@ -336,6 +369,7 @@ function subplot!(subplt::Subplot, args...; kw...)
       delete!(di, k)
     end
     dumpdict(di, "subplot! kwList $i")
+    dumpdict(plt.initargs, "plt.initargs before plotting")
     
     _plot_from_subplot!(plt; di...)
   end
@@ -358,7 +392,7 @@ function _plot_from_subplot!(plt::Plot, args...; kw...)
   setTicksFromStringVector(d, d, :x, :xticks)
   setTicksFromStringVector(d, d, :y, :yticks)
 
-  dumpdict(d, "Plot from subplot")
+  # dumpdict(d, "Plot from subplot")
   plot!(plt.backend, plt; d...)
   
   addAnnotations(plt, d)

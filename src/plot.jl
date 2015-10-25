@@ -48,7 +48,9 @@ function plot(args...; kw...)
   preprocessArgs!(d)
   dumpdict(d, "After plot preprocessing")
 
-  plt = plot(pkg; getPlotArgs(pkg, d, 1)...)  # create a new, blank plot
+  plotargs = getPlotArgs(pkg, d, 1)
+  dumpdict(plotargs, "Plot args")
+  plt = plot(pkg; plotargs...)  # create a new, blank plot
 
   delete!(d, :background_color)
   plot!(plt, args...; d...)  # add to it
@@ -269,9 +271,9 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     # build the series arg dict
     numUncounted = get(d, :numUncounted, 0)
     n = plt.n + i + numUncounted
-    # dumpdict(d, "before getSeriesArgs")
+    dumpdict(d, "before getSeriesArgs")
     d = getSeriesArgs(plt.backend, getinitargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
-    # dumpdict(d, "after getSeriesArgs")
+    dumpdict(d, "after getSeriesArgs")
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
     if haskey(d, :idxfilter)
