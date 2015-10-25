@@ -319,7 +319,7 @@ end
 
 function addPyPlotTicks(ax, ticks, isx::Bool)
   ticks == :auto && return
-  if ticks == :none
+  if ticks == :none || ticks == nothing
     ticks = zeros(0)
   end
 
