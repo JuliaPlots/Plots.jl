@@ -160,6 +160,7 @@ function backend()
         # @eval const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
         if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
           PyPlot.ioff()
+          PyPlot.pygui(true)
         end
       catch err
         warn("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\").")

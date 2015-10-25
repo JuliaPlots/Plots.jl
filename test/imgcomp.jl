@@ -1,4 +1,7 @@
 
+# include this first to help with crashing??
+using Gtk
+
 # macro test_approx_eq_sigma_eps(A, B, sigma, eps)
 
 include("../docs/example_generation.jl")

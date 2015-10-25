@@ -511,9 +511,17 @@ end
 # end
 
 
-function Base.display(::PlotsDisplay, plt::Plot{PyPlotPackage})
+# NOTE: to bring up a GUI window in IJulia, need some extra steps
+function Base.display(::PlotsDisplay, plt::PlottingObject{PyPlotPackage})
   finalizePlot(plt)
-  display(getfig(plt.o))
+  if isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
+    display(getfig(plt.o))
+  else
+    PyPlot.ion()
+    PyPlot.figure(getfig(plt.o).o[:number])
+    PyPlot.draw_if_interactive()
+    PyPlot.ioff()
+  end
 end
 
 
@@ -524,19 +532,46 @@ function finalizePlot(subplt::Subplot{PyPlotPackage})
   end
 end
 
-function Base.display(::PlotsDisplay, subplt::Subplot{PyPlotPackage})
-  finalizePlot(subplt)
-  display(getfig(subplt.o))
-end
+# function Base.display(::PlotsDisplay, subplt::Subplot{PyPlotPackage})
+#   finalizePlot(subplt)
+#   PyPlot.ion()
+#   PyPlot.figure(getfig(subplt.o).o[:number])
+#   PyPlot.draw_if_interactive()
+#   PyPlot.ioff()
+#   # display(getfig(subplt.o))
+# end
 
-# allow for writing any supported mime
-for mime in (MIME"image/png", MIME"application/pdf", MIME"application/postscript")
-  @eval function Base.writemime(io::IO, ::$mime, plt::PlottingObject{PyPlotPackage})
+# # allow for writing any supported mime
+# for mime in (MIME"image/png", MIME"application/pdf", MIME"application/postscript")
+#   @eval function Base.writemime(io::IO, ::$mime, plt::PlottingObject{PyPlotPackage})
+#     finalizePlot(plt)
+#     writemime(io, $mime(), getfig(plt.o))
+#   end
+# end
+
+const _pyplot_mimeformats = @compat Dict(
+    "application/eps"         => "eps",
+    "image/eps"               => "eps",
+    "application/pdf"         => "pdf",
+    "image/png"               => "png",
+    "application/postscript"  => "ps",
+    # "image/svg+xml"           => "svg"
+  )
+
+
+for (mime, fmt) in _pyplot_mimeformats
+  @eval function Base.writemime(io::IO, ::MIME{symbol($mime)}, plt::PlottingObject{PyPlotPackage})
     finalizePlot(plt)
-    writemime(io, $mime(), getfig(plt.o))
+    fig = getfig(plt.o)
+    fig.o["canvas"][:print_figure](io,
+                                   format=$fmt,
+                                   bbox_inches="tight",
+                                   facecolor = fig.o["get_facecolor"](),
+                                   edgecolor = "none"
+                                   # edgecolor = fig.o["get_edgecolor"]()
+                                  )
   end
 end
-
 
 # function Base.writemime(io::IO, m::MIME"image/png", subplt::Subplot{PyPlotPackage})
 #   finalizePlot(subplt)
