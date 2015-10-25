@@ -121,7 +121,7 @@ nop() = nothing
 
 
 makePyPlotCurrent(wrap::PyPlotFigWrapper) = PyPlot.figure(wrap.fig.o[:number])
-makePyPlotCurrent(wrap::PyPlotAxisWrapper) = PyPlot.sca(wrap.ax.o)
+makePyPlotCurrent(wrap::PyPlotAxisWrapper) = nothing #PyPlot.sca(wrap.ax.o)
 makePyPlotCurrent(plt::Plot{PyPlotPackage}) = makePyPlotCurrent(plt.o)
 
 
@@ -341,7 +341,8 @@ function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
   # PyPlot.sca(ax)
 
   # title and axis labels
-  haskey(d, :title) && PyPlot.title(d[:title])
+  # haskey(d, :title) && PyPlot.title(d[:title])
+  haskey(d, :title) && ax[:set_title](d[:title])
   haskey(d, :xlabel) && ax[:set_xlabel](d[:xlabel])
   if haskey(d, :ylabel)
     ax[:set_ylabel](d[:ylabel])

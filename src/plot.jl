@@ -46,19 +46,11 @@ function plot(args...; kw...)
   pkg = backend()
   d = Dict(kw)
   preprocessArgs!(d)
-
   dumpdict(d, "After plot preprocessing")
-
-  # # ensure we're passing in an RGB
-  # if haskey(d, :background_color)
-  #   d[:background_color] = convertColor(d[:background_color])
-  # end
 
   plt = plot(pkg; getPlotArgs(pkg, d, 1)...)  # create a new, blank plot
 
   delete!(d, :background_color)
-  # print(d)
-  # return plt
   plot!(plt, args...; d...)  # add to it
 end
 
@@ -82,10 +74,6 @@ end
 
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
-  # println(plt)
-  # println(args)
-  # println(kw)
-
   d = Dict(kw)
   preprocessArgs!(d)
 
@@ -93,21 +81,13 @@ function plot!(plt::Plot, args...; kw...)
 
   warnOnUnsupportedArgs(plt.backend, d)
 
-  # handle a "group by" mechanism.
-  # group = get(d, :group, nothing)
-  # if group == nothing
-  #   groupargs = []
-  # else
-  #   if haskey(d, :subplot)
-  #     groupargs = extractGroupArgs(group, d[:dataframe])
-  # end
+  # grouping
   groupargs = get(d, :group, nothing) == nothing ? [] : [extractGroupArgs(d[:group], args...)]
 
   # just in case the backend needs to set up the plot (make it current or something)
   preparePlotUpdate(plt)
 
   # get the list of dictionaries, one per series
-  # dumpdict(d, "before createKWargsList")
   kwList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
   
   # if we were able to extract guide information from the series inputs, then update the plot
@@ -136,11 +116,11 @@ function plot!(plt::Plot, args...; kw...)
 
   warnOnUnsupportedScales(plt.backend, d)
 
-  dumpdict(d, "Updating plot items")
 
   # add title, axis labels, ticks, etc
   if !haskey(d, :subplot)
     d = merge!(plt.initargs, d)
+    dumpdict(d, "Updating plot items")
     updatePlotItems(plt, d)
   end
   current(plt)
@@ -161,25 +141,19 @@ end
 function setTicksFromStringVector(d::Dict, di::Dict, sym::Symbol, ticksym::Symbol)
   # if the x or y values are strings, set ticks to the unique values, and x/y to the indices of the ticks
 
-  # @show sym di
   v = di[sym]
-  # @show v
   isa(v, AbstractArray) || return
 
   T = eltype(v)
-  # @show T
   if T <: @compat(AbstractString) || (!isempty(T.types) && all(x -> x <: @compat(AbstractString), T.types))
-    # @show sym ticksym di[sym]
 
     ticks = unique(di[sym])
-    # @show ticks
     di[sym] = Int[findnext(ticks, v, 1) for v in di[sym]]
 
     if !haskey(d, ticksym) || d[ticksym] == :auto
       d[ticksym] = (collect(1:length(ticks)), UTF8String[t for t in ticks])
     end
   end
-  # @show sym ticksym di[sym] d[ticksym]
 end
 
 # --------------------------------------------------------------------
