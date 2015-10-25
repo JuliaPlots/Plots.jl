@@ -277,7 +277,12 @@ end
 
 function Base.getindex(plt::Plot{PyPlotPackage}, i::Integer)
   series = plt.seriesargs[i][:serieshandle]
-  series[:get_data]()
+  try
+    return series[:get_data]()
+  catch
+    xy = series[:get_offsets]()
+    return vec(xy[:,1]), vec(xy[:,2])
+  end
   # series[:relim]()
   # mapping = getGadflyMappings(plt, i)[1]
   # mapping[:x], mapping[:y]
@@ -285,7 +290,11 @@ end
 
 function Base.setindex!(plt::Plot{PyPlotPackage}, xy::Tuple, i::Integer)
   series = plt.seriesargs[i][:serieshandle]
-  series[:set_data](xy...)
+  try
+    series[:set_data](xy...)
+  catch
+    series[:set_offsets](hcat(xy...))
+  end
 
   ax = series[:axes]
   if plt.initargs[:xlims] == :auto

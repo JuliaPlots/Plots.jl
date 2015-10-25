@@ -111,7 +111,7 @@ function updateLimsAndTicks(plt::Plot{QwtPackage}, d::Dict, isx::Bool)
       plt.o.autoscale_y = false
     end
     w[:setAxisScale](axisid, float(minimum(ticks)), float(maximum(ticks)), float(step(ticks)))
-  elseif ticks != nothing
+  elseif !(ticks in (nothing, :none, :auto))
     warn("Only Range types are supported for Qwt xticks/yticks. typeof(ticks)=$(typeof(ticks))")
   end
 
@@ -241,6 +241,7 @@ end
 # ----------------------------------------------------------------
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{QwtPackage})
+  Qwt.refresh(plt.o)
   Qwt.savepng(plt.o, "/tmp/dfskjdhfkh.png")
   write(io, readall("/tmp/dfskjdhfkh.png"))
 end

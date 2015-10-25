@@ -160,6 +160,10 @@ function backend()
         # @eval const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
         if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
           PyPlot.ioff()
+          # "pyqt4"=>:qt_pyqt4
+          # PyPlot.backend[1] = "pyqt4"
+          # PyPlot.gui[1] = :qt_pyqt4
+          # PyPlot.switch_backend("Qt4Agg")
           PyPlot.pygui(true)
         end
       catch err
