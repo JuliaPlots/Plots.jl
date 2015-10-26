@@ -83,7 +83,7 @@ scatter(iris, :SepalLength, :SepalWidth, group=:Species, m=([:+ :d :s], 12), smo
 png("gadfly1")
 ```
 
-![gadfly_plt](https://github.com/tbreloff/ExamplePlots.jl/tree/master/img/gadfly1.png)
+![gadfly_plt](img/gadfly1.png)
 
 ## API
 
