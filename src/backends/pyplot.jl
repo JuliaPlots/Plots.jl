@@ -25,7 +25,15 @@ function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
 end
 
 function getPyPlotMarker(marker::Shape)
-  marker.vertices
+  n = length(marker.vertices)
+  mat = zeros(n+1,2)
+  for (i,vert) in enumerate(marker.vertices)
+    mat[i,1] = vert[1]
+    mat[i,2] = vert[2]
+  end
+  mat[n+1,:] = mat[1,:]
+  pypath.pymember("Path")(mat)
+  # marker.vertices
 end
 
 # get the marker shape
@@ -42,7 +50,7 @@ function getPyPlotMarker(marker::Symbol)
   marker == :pentagon && return "p"
   marker == :hexagon && return "h"
   marker == :octagon && return "8"
-  haskey(_shapes, marker) && return _shapes[marker].vertices
+  haskey(_shapes, marker) && return getPyPlotMarker(_shapes[marker])
 
   warn("Unknown marker $marker")
   return "o"
@@ -218,6 +226,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
 
     extraargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
     extraargs[:marker] = getPyPlotMarker(d[:markershape])
+    dump(extraargs[:marker])
 
     if lt == :scatter
       extraargs[:s] = d[:markersize]^2

@@ -157,6 +157,7 @@ function backend()
         @eval import PyPlot
         @eval export PyPlot
         @eval const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
+        @eval const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
         # @eval const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
         if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
           PyPlot.ioff()
