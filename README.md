@@ -3,7 +3,8 @@
 [![Build Status](https://travis-ci.org/tbreloff/Plots.jl.svg?branch=master)](https://travis-ci.org/tbreloff/Plots.jl)
 [![Plots](http://pkg.julialang.org/badges/Plots_0.3.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.3)
 [![Plots](http://pkg.julialang.org/badges/Plots_0.4.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.4)
-[![Plots](http://pkg.julialang.org/badges/Plots_0.5.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.5)
+[![Coverage Status](https://coveralls.io/repos/tbreloff/Plots.jl/badge.svg?branch=master)](https://coveralls.io/r/tbreloff/Plots.jl?branch=master)
+[![codecov.io](http://codecov.io/github/tbreloff/Plots.jl/coverage.svg?branch=master)](http://codecov.io/github/tbreloff/Plots.jl?branch=master)
 
 #### Author: Thomas Breloff (@tbreloff)
 
@@ -28,6 +29,8 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 - [UnicodePlots.jl](docs/unicodeplots_examples.md)
 - [Qwt.jl](docs/qwt_examples.md)
 - [Winston.jl](docs/winston_examples.md)
+
+Also check out the many [IJulia notebooks](http://nbviewer.ipython.org/github/tbreloff/Plots.jl/tree/master/examples/) with many examples.
 
 ## Installation
 
@@ -83,9 +86,6 @@ png("gadfly1")
 ```
 
 ![gadfly_plt](img/gadfly1.png)
-
-See the examples pages for lots of examples of plots, and what those commands produce for each supported backend.  
-Also check out the [IJulia notebooks](examples) and see how it works interactively.
 
 ## API
 
@@ -255,7 +255,7 @@ Keyword | Default | Type | Aliases
 `:xscale` | `identity` | Plot |   
 `:xticks` | `auto` | Plot | `:xtick`  
 `:yaxis` | `nothing` | Plot |   
-`:yflip` | `true` | Plot |   
+`:yflip` | `false` | Plot |   
 `:ylabel` | `` | Plot | `:ylab`  
 `:ylims` | `auto` | Plot | `:ylim`, `:ylimit`, `:ylimits`  
 `:yrightlabel` | `` | Plot | `:y2lab`, `:y2label`, `:ylab2`, `:ylabel2`, `:ylabelright`, `:ylabr`, `:yrlab`  
