@@ -321,20 +321,38 @@ function createKWargsList(plt::PlottingObject, y; kw...)
   createKWargsList(plt, nothing, y; kw...)
 end
 
-function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, z::AVec; kw...)
+# contours or surfaces... irregular data
+function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zvec::AVec; kw...)
   error("TODO: contours or surfaces... irregular data")
 end
-function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, z::Function; kw...)
-  error("TODO: contours or surfaces... function grid")
+
+# contours or surfaces... function grid
+function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zf::Function; kw...)
+  # only allow sorted x/y for now
+  # TODO: auto sort x/y/z properly
+  @assert x == sort(x)
+  @assert y == sort(y)
+  surface = Float64[zf(xi, yi) for xi in x, yi in y]
+  createKWargsList(plt, x, y, surface; kw...)  # passes it to the zmat version
 end
-function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, z::AMat; kw...)
-  error("TODO: contours or surfaces... grid")
+
+# contours or surfaces... matrix grid
+function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::AMat{T}; kw...)
+  # only allow sorted x/y for now
+  # TODO: auto sort x/y/z properly
+  @assert x == sort(x)
+  @assert y == sort(y)
+  @assert size(zmat) == (length(x), length(y))
+  surf = Array(Any,1,1)
+  surf[1,1] = convert(Matrix{Float64}, zmat)
+  createKWargsList(plt, x, y; kw..., surface = surf, linetype = :contour)
 end
 
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs; kw...)
   error("Can't pass a Function or Vector{Function} for y without also passing x")
 end
 
+# list of functions
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs, x; kw...)
   @assert !(typeof(x) <: FuncOrFuncs)  # otherwise we'd hit infinite recursion here
   createKWargsList(plt, x, f; kw...)

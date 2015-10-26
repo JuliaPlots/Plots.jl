@@ -8,7 +8,7 @@ const _allAxes = [:auto, :left, :right]
   )
 
 const _allTypes = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-                   :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
+                   :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc, :contour]
 @compat const _typeAliases = Dict(
     :n             => :none,
     :no            => :none,
@@ -26,6 +26,7 @@ const _allTypes = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter,
     :stems         => :sticks,
     :dots          => :scatter,
     :histogram     => :hist,
+    :contours      => :contours,
   )
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -130,6 +131,8 @@ _seriesDefaults[:z]           = nothing           # depth for contour, color sca
 # _seriesDefaults[:args]        = []     # additional args to pass to the backend
 # _seriesDefaults[:kwargs]      = []   # additional keyword args to pass to the backend
 #                               # note: can be Vector{Dict} or Vector{Tuple} 
+_seriesDefaults[:surface]     = nothing
+_seriesDefaults[:nlevels]     = 15
 
 
 const _plotDefaults = Dict{Symbol, Any}()

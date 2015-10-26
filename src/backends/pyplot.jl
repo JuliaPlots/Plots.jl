@@ -8,10 +8,10 @@ getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
 getPyPlotColor(scheme::ColorScheme) = getPyPlotColor(getColor(scheme))
 getPyPlotColor(c) = getPyPlotColor(convertColor(c))
 
-# getPyPlotColorMap(c::ColorGradient) = PyPlot.matplotlib[:colors][:ListedColormap](map(getPyPlotColor, getColorVector(c)))
 function getPyPlotColorMap(c::ColorGradient)
   pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", map(getPyPlotColor, getColorVector(c)))
 end
+getPyPlotColorMap(c) = getPyPlotColorMap(ColorGradient(:redsblues))
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
@@ -107,7 +107,8 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
       :bar => :bar,
       :heatmap => :hexbin,
       :hexbin => :hexbin,
-      :scatter => :scatter
+      :scatter => :scatter,
+      :contour => :contour,
     )
   return ax[get(fmap, linetype, :plot)]
 end
@@ -124,6 +125,7 @@ function updateAxisColors(ax, fgcolor)
   end
   ax[:title][:set_color](fgcolor)
 end
+
 
 nop() = nothing
 
@@ -195,7 +197,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   end
 
   lt = d[:linetype]
-  extraargs = Dict()
+  extra_kwargs = Dict()
 
   plotfunc = getPyPlotFunction(plt, d[:axis], lt)
 
@@ -203,63 +205,71 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   if lt in (:hist, :sticks, :bar)
 
     # NOTE: this is unsupported because it does the wrong thing... it shifts the whole axis
-    # extraargs[:bottom] = d[:fill]
+    # extra_kwargs[:bottom] = d[:fill]
 
     if lt == :hist
-      extraargs[:bins] = d[:nbins]
+      extra_kwargs[:bins] = d[:nbins]
     else
-      extraargs[:linewidth] = (lt == :sticks ? 0.1 : 0.9)
+      extra_kwargs[:linewidth] = (lt == :sticks ? 0.1 : 0.9)
     end
 
   elseif lt in (:heatmap, :hexbin)
+    extra_kwargs[:gridsize] = d[:nbins]
+    extra_kwargs[:cmap] = getPyPlotColorMap(d[:color])
 
-    extraargs[:gridsize] = d[:nbins]
-    c = d[:color]
-    if !isa(c, ColorGradient)
-      c = ColorGradient(:redsblues)
-    end
-    # c = ColorGradient(d[:color])
-    extraargs[:cmap] = getPyPlotColorMap(c)
+  elseif lt == :contour
+    extra_kwargs[:cmap] = getPyPlotColorMap(d[:color])
+    extra_kwargs[:linewidths] = d[:linewidth]
+    extra_kwargs[:linestyles] = getPyPlotLineStyle(lt, d[:linestyle])
+    # TODO: will need to call contourf to fill in the contours
 
   else
 
-    extraargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
-    extraargs[:marker] = getPyPlotMarker(d[:markershape])
+    extra_kwargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
+    extra_kwargs[:marker] = getPyPlotMarker(d[:markershape])
 
     if lt == :scatter
-      extraargs[:s] = d[:markersize]^2
+      extra_kwargs[:s] = d[:markersize]^2
       c = d[:markercolor]
       if isa(c, ColorGradient) && d[:z] != nothing
-        extraargs[:c] = convert(Vector{Float64}, d[:z])
-        extraargs[:cmap] = getPyPlotColorMap(c)
+        extra_kwargs[:c] = convert(Vector{Float64}, d[:z])
+        extra_kwargs[:cmap] = getPyPlotColorMap(c)
       else
-        extraargs[:c] = getPyPlotColor(c)
+        extra_kwargs[:c] = getPyPlotColor(c)
       end
     else
-      extraargs[:markersize] = d[:markersize]
-      extraargs[:markerfacecolor] = getPyPlotColor(d[:markercolor])
-      extraargs[:markeredgecolor] = getPyPlotColor(plt.initargs[:foreground_color])
-      extraargs[:markeredgewidth] = d[:linewidth]
-      extraargs[:drawstyle] = getPyPlotDrawStyle(lt)
+      extra_kwargs[:markersize] = d[:markersize]
+      extra_kwargs[:markerfacecolor] = getPyPlotColor(d[:markercolor])
+      extra_kwargs[:markeredgecolor] = getPyPlotColor(plt.initargs[:foreground_color])
+      extra_kwargs[:markeredgewidth] = d[:linewidth]
+      extra_kwargs[:drawstyle] = getPyPlotDrawStyle(lt)
     end
   end
 
   # set these for all types
-  extraargs[:color] = getPyPlotColor(d[:color])
-  extraargs[:linewidth] = d[:linewidth]
-  extraargs[:label] = d[:label]
+  if lt != :contour
+    extra_kwargs[:color] = getPyPlotColor(d[:color])
+    extra_kwargs[:linewidth] = d[:linewidth]
+    extra_kwargs[:label] = d[:label]
+  end
 
   # do the plot
   d[:serieshandle] = if lt == :hist
-    plotfunc(d[:y]; extraargs...)[1]
+    plotfunc(d[:y]; extra_kwargs...)[1]
+  elseif lt == :contour
+    handle = plotfunc(d[:x], d[:y], d[:surface], d[:nlevels]; extra_kwargs...)
+    if d[:fillrange] != nothing
+      handle = ax[:contourf](d[:x], d[:y], d[:surface], d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor]))
+    end
+    handle
   elseif lt in (:scatter, :heatmap, :hexbin)
-    plotfunc(d[:x], d[:y]; extraargs...)
+    plotfunc(d[:x], d[:y]; extra_kwargs...)
   else
-    plotfunc(d[:x], d[:y]; extraargs...)[1]
+    plotfunc(d[:x], d[:y]; extra_kwargs...)[1]
   end
 
   # add the colorbar legend
-  if plt.initargs[:legend] && haskey(extraargs, :cmap)
+  if plt.initargs[:legend] && haskey(extra_kwargs, :cmap)
     PyPlot.colorbar(d[:serieshandle])
   end
 
@@ -267,7 +277,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   ax[:set_axis_bgcolor](getPyPlotColor(plt.initargs[:background_color]))
 
   fillrange = d[:fillrange]
-  if fillrange != nothing
+  if fillrange != nothing && lt != :contour
     fillcolor = getPyPlotColor(d[:fillcolor])
     if typeof(fillrange) <: @compat(Union{Real, AVec})
       ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor)
@@ -494,7 +504,7 @@ end
 function addPyPlotLegend(plt::Plot, ax)
   if plt.initargs[:legend]
     # gotta do this to ensure both axes are included
-    args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline)), plt.seriesargs)
+    args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline,:contour)), plt.seriesargs)
     if length(args) > 0
       ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],

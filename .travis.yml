@@ -4,7 +4,6 @@ os:
   - linux
   - osx
 julia:
-  - 0.3
   - 0.4
   #- nightly
 notifications:
@@ -17,5 +16,5 @@ script:
  - julia -e 'Pkg.clone("Cairo"); Pkg.build("Cairo")'
  - julia -e 'ENV["PYTHON"] = ""; Pkg.clone("PyPlot"); Pkg.build("PyPlot")'
  - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")'
- - julia -e 'Pkg.test("Plots"; coverage=true)'
+ - julia -e 'Pkg.test("Plots"; coverage=false)'
  # - julia -e 'cd(Pkg.dir("Plots")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'

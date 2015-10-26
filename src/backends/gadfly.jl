@@ -39,6 +39,8 @@ function getLineGeom(d::Dict)
     Gadfly.Geom.hline(color = getColor(d[:color]), size = d[:linewidth] * Gadfly.px)
   elseif lt == :vline
     Gadfly.Geom.vline(color = getColor(d[:color]), size = d[:linewidth] * Gadfly.px)
+  elseif lt == :contour
+    Gadfly.Geom.contour(levels = d[:nlevels])
   else
     nothing
   end
@@ -94,6 +96,8 @@ function addGadflyLine!(plt::Plot, d::Dict, geoms...)
     w = 0.01 * mean(diff(d[:x]))
     kwargs[:xmin] = d[:x] - w
     kwargs[:xmax] = d[:x] + w
+  elseif lt == :contour
+    kwargs[:z] = d[:surface]
   end
   
   # add the layer
@@ -224,7 +228,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
     prepend!(layers, addGadflyMarker!(plt, d, plt.initargs, smooth...))
   end
 
-  lt in (:hist, :heatmap, :hexbin) || addToGadflyLegend(plt, d)
+  lt in (:hist, :heatmap, :hexbin, :contour) || addToGadflyLegend(plt, d)
 
   # now save the layers that apply to this series
   d[:gadflylayers] = layers

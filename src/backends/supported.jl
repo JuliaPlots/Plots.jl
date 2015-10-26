@@ -49,9 +49,11 @@ supportedArgs(::GadflyPackage) = [
     :guidefont,
     :legendfont,
     :grid,
+    :surface,
+    :nlevels,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
-supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc]
+supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
 supportedScales(::GadflyPackage) = [:identity, :log, :log2, :log10, :asinh, :sqrt]
@@ -122,9 +124,11 @@ supportedArgs(::PyPlotPackage) = [
     :guidefont,
     :legendfont,
     # :grid,
+    :surface,
+    :nlevels,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
-supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
+supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 # supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
 supportedMarkers(::PyPlotPackage) = vcat(_allMarkers, Shape)
