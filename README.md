@@ -18,18 +18,18 @@ Plots is a plotting API and toolset.  My goals with the package are:
 
 Use the preprocessing pipeline in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added with minimal effort.
 
-Check out the [summary graphs](img/supported/supported.md) for the features that each backend supports.
+Check out the [summary graphs](https://github.com/tbreloff/ExamplePlots.jl/tree/master/img/supported/supported.md) for the features that each backend supports.
 
 Please add wishlist items, bugs, or any other comments/questions to the issues list.
 
 ## Examples for each implemented backend:
 
-- [Gadfly.jl/Immerse.jl](docs/gadfly_examples.md)
-- [PyPlot.jl](docs/pyplot_examples.md)
-- [UnicodePlots.jl](docs/unicodeplots_examples.md)
-- [Qwt.jl](docs/qwt_examples.md)
+- [Gadfly.jl/Immerse.jl](https://github.com/tbreloff/ExamplePlots.jl/tree/master/docs/gadfly_examples.md)
+- [PyPlot.jl](https://github.com/tbreloff/ExamplePlots.jl/tree/master/docs/pyplot_examples.md)
+- [UnicodePlots.jl](https://github.com/tbreloff/ExamplePlots.jl/tree/master/docs/unicodeplots_examples.md)
+- [Qwt.jl](https://github.com/tbreloff/ExamplePlots.jl/tree/master/docs/qwt_examples.md)
 
-Also check out the many [IJulia notebooks](http://nbviewer.ipython.org/github/tbreloff/Plots.jl/tree/master/examples/) with many examples.
+Also check out the many [IJulia notebooks](http://nbviewer.ipython.org/github/tbreloff/ExamplePlots.jl/tree/master/examples/) with many examples.
 
 ## Installation
 
@@ -83,7 +83,7 @@ scatter(iris, :SepalLength, :SepalWidth, group=:Species, m=([:+ :d :s], 12), smo
 png("gadfly1")
 ```
 
-![gadfly_plt](img/gadfly1.png)
+![gadfly_plt](https://github.com/tbreloff/ExamplePlots.jl/tree/master/img/gadfly1.png)
 
 ## API
 
