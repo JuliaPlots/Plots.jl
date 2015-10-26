@@ -12,7 +12,7 @@ notifications:
 # uncomment the following lines to override the default test script
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'Pkg.clone("Images"); Pkg.clone("ImageMagick"); Pkg.build("ImageMagick")'
+ - julia -e 'Pkg.clone("Images"); Pkg.checkout("50872b3045600d6811b1ffba343bf75467d681c5"); Pkg.clone("ImageMagick"); Pkg.build("ImageMagick")'
  - julia -e 'Pkg.clone("Cairo"); Pkg.build("Cairo")'
  - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")'
  - julia -e 'Pkg.test("Plots"; coverage=true)'

@@ -53,43 +53,52 @@ function compareToReferenceImage(tmpfn, reffn)
   push!(imgbox, makeImageWidget(reffn))
 
   # add the buttons
-  doNothingButton = Gtk.GtkButtonLeaf("Skip")
-  replaceReferenceButton = Gtk.GtkButtonLeaf("Replace reference image")
-  btnbox = Gtk.GtkButtonBoxLeaf(:h)
-  push!(btnbox, doNothingButton)
-  push!(btnbox, replaceReferenceButton)
+  # doNothingButton = Gtk.GtkButtonLeaf("Skip")
+  # replaceReferenceButton = Gtk.GtkButtonLeaf("Replace reference image")
+  # btnbox = Gtk.GtkButtonBoxLeaf(:h)
+  # push!(btnbox, doNothingButton)
+  # push!(btnbox, replaceReferenceButton)
 
-  # create the window
-  box = Gtk.GtkBoxLeaf(:v)
-  push!(box, imgbox)
-  push!(box, btnbox)
+  # # create the window
+  # box = Gtk.GtkBoxLeaf(:v)
+  # push!(box, imgbox)
+  # push!(box, btnbox)
   win = Gtk.GtkWindowLeaf("Should we make this the new reference image?")
-  push!(win, Gtk.GtkFrameLeaf(box))
+  push!(win, Gtk.GtkFrameLeaf(imgbox))
 
-  # we'll wait on this condition
-  c = Condition()
-  Gtk.on_signal_destroy((x...) -> notify(c), win)
+  showall(win)
 
-  Gtk.signal_connect(replaceReferenceButton, "clicked") do widget
+  # now ask the question
+  if Gtk.ask_dialog("Should we make this the new reference image?", "No", "Yes")
     replaceReferenceImage(tmpfn, reffn)
-    notify(c)
   end
 
-  Gtk.signal_connect(doNothingButton, "clicked") do widget
-    notify(c)
-  end
+  destroy(win)
 
-  # wait until a button is clicked, then close the window
-  Gtk.showall(win)
-  wait(c)
-  Gtk.destroy(win)
+  # # we'll wait on this condition
+  # c = Condition()
+  # Gtk.on_signal_destroy((x...) -> notify(c), win)
+
+  # Gtk.signal_connect(replaceReferenceButton, "clicked") do widget
+  #   replaceReferenceImage(tmpfn, reffn)
+  #   notify(c)
+  # end
+
+  # Gtk.signal_connect(doNothingButton, "clicked") do widget
+  #   notify(c)
+  # end
+
+  # # wait until a button is clicked, then close the window
+  # Gtk.showall(win)
+  # wait(c)
+  # Gtk.destroy(win)
 end
 
 
 # TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that 
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
-function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1,1], eps = 1e-3)
+function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1,1], eps = 1e-2)
   
   # first 
   Plots._debugMode.on = debug
@@ -155,7 +164,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1
   end
 end
 
-function image_comparison_tests(pkg::Symbol; skip = [], debug = false, sigma = [1,1], eps = 1e-3)
+function image_comparison_tests(pkg::Symbol; skip = [], debug = false, sigma = [1,1], eps = 1e-2)
   for i in 1:length(PlotExamples.examples)
     i in skip && continue
     @fact image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) --> true
