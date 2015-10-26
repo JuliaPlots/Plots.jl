@@ -127,7 +127,8 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1
   tmpimg = Images.load(tmpfn)
 
   # reference image location
-  refdir = joinpath(Pkg.dir("Plots"), "test", "refimg", "v$(VERSION.major).$(VERSION.minor)", string(pkg))
+  # refdir = joinpath(Pkg.dir("Plots"), "test", "refimg", "v$(VERSION.major).$(VERSION.minor)", string(pkg))
+  refdir = joinpath(Pkg.dir("Plots"), "test", "refimg", string(pkg))
   try
     run(`mkdir -p $refdir`)
   catch err
