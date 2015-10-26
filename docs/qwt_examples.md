@@ -12,7 +12,7 @@ qwt()
 A simple line plot of the columns.
 
 ```julia
-plot(fakedata(50,5),w=3)
+plot(Plots.fakedata(50,5),w=3)
 ```
 
 ![](../img/qwt/qwt_example_1.png)
@@ -28,8 +28,8 @@ Easily build animations.  (`convert` or `ffmpeg` must be available to generate t
 ```julia
 p = plot([sin,cos],zeros(0),leg=false)
 anim = Animation()
-for x = linspace(0,10π,200) # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 43:
-    push!(p,x,Float64[sin(x),cos(x)]) # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 44:
+for x = linspace(0,10π,200) # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 35:
+    push!(p,x,Float64[sin(x),cos(x)]) # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 36:
     frame(anim)
 end
 ```
@@ -41,7 +41,7 @@ end
 Plot function pair (x(u), y(u)).
 
 ```julia
-plot(sin,(x->begin  # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 50:
+plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 42:
             sin(2x)
         end),0,2π,line=4,leg=false,fill=(0,:orange))
 ```
@@ -201,7 +201,7 @@ subplot(randn(100,5),layout=[1,1,3],t=[:line :hist :scatter :step :bar],nbins=10
 Note here the automatic grid layout, as well as the order in which new series are added to the plots.
 
 ```julia
-subplot(fakedata(100,10),n=4,palette=[:grays :blues :heat :lightrainbow],bg=[:orange :pink :darkblue :black])
+subplot(Plots.fakedata(100,10),n=4,palette=[:grays :blues :heat :lightrainbow],bg=[:orange :pink :darkblue :black])
 ```
 
 ![](../img/qwt/qwt_example_17.png)
@@ -211,7 +211,7 @@ subplot(fakedata(100,10),n=4,palette=[:grays :blues :heat :lightrainbow],bg=[:or
 
 
 ```julia
-subplot!(fakedata(100,10))
+subplot!(Plots.fakedata(100,10))
 ```
 
 ![](../img/qwt/qwt_example_18.png)
@@ -235,4 +235,4 @@ annotate!([(5,y[5],text("this is #5",16,:red,:center)),(10,y[10],text("this is #
 - Supported values for marker: `:auto`, `:cross`, `:diamond`, `:dtriangle`, `:ellipse`, `:hexagon`, `:none`, `:rect`, `:star5`, `:star8`, `:utriangle`, `:xcross`
 - Is `subplot`/`subplot!` supported? Yes
 
-(Automatically generated: 2015-10-18T00:40:24)
+(Automatically generated: 2015-10-26T14:02:19)

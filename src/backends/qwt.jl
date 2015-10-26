@@ -73,6 +73,7 @@ end
 function plot(pkg::QwtPackage; kw...)
   d = Dict(kw)
   fixcolors(d)
+  dumpdict(d,"\n\n!!! plot")
   o = Qwt.plot(zeros(0,0); d..., show=false)
   plt = Plot(o, pkg, 0, d, Dict[])
   plt
@@ -81,6 +82,7 @@ end
 function plot!(::QwtPackage, plt::Plot; kw...)
   d = adjustQwtKeywords(plt, false; kw...)
   fixcolors(d)
+  dumpdict(d,"\n\n!!! plot!")
   Qwt.oplot(plt.o; d...)
   push!(plt.seriesargs, d)
   plt

@@ -84,7 +84,6 @@ getfig(wrap::@compat(Union{PyPlotAxisWrapper,PyPlotFigWrapper})) = wrap.fig
 
 # get a reference to the correct axis
 function getLeftAxis(wrap::PyPlotFigWrapper)
-  # @show wrap.fig.o[:axes]
   axes = wrap.fig.o[:axes]
   if isempty(axes)
     return wrap.fig.o[:add_subplot](111)
@@ -226,7 +225,6 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
 
     extraargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
     extraargs[:marker] = getPyPlotMarker(d[:markershape])
-    dump(extraargs[:marker])
 
     if lt == :scatter
       extraargs[:s] = d[:markersize]^2

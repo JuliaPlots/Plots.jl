@@ -12,7 +12,7 @@ pyplot()
 A simple line plot of the columns.
 
 ```julia
-plot(fakedata(50,5),w=3)
+plot(Plots.fakedata(50,5),w=3)
 ```
 
 ![](../img/pyplot/pyplot_example_1.png)
@@ -28,8 +28,8 @@ Easily build animations.  (`convert` or `ffmpeg` must be available to generate t
 ```julia
 p = plot([sin,cos],zeros(0),leg=false)
 anim = Animation()
-for x = linspace(0,10π,200) # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 43:
-    push!(p,x,Float64[sin(x),cos(x)]) # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 44:
+for x = linspace(0,10π,200) # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 35:
+    push!(p,x,Float64[sin(x),cos(x)]) # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 36:
     frame(anim)
 end
 ```
@@ -41,7 +41,7 @@ end
 Plot function pair (x(u), y(u)).
 
 ```julia
-plot(sin,(x->begin  # /Users/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 50:
+plot(sin,(x->begin  # /home/tom/.julia/v0.4/Plots/docs/example_generation.jl, line 42:
             sin(2x)
         end),0,2π,line=4,leg=false,fill=(0,:orange))
 ```
@@ -201,7 +201,7 @@ subplot(randn(100,5),layout=[1,1,3],t=[:line :hist :scatter :step :bar],nbins=10
 Note here the automatic grid layout, as well as the order in which new series are added to the plots.
 
 ```julia
-subplot(fakedata(100,10),n=4,palette=[:grays :blues :heat :lightrainbow],bg=[:orange :pink :darkblue :black])
+subplot(Plots.fakedata(100,10),n=4,palette=[:grays :blues :heat :lightrainbow],bg=[:orange :pink :darkblue :black])
 ```
 
 ![](../img/pyplot/pyplot_example_17.png)
@@ -211,7 +211,7 @@ subplot(fakedata(100,10),n=4,palette=[:grays :blues :heat :lightrainbow],bg=[:or
 
 
 ```julia
-subplot!(fakedata(100,10))
+subplot!(Plots.fakedata(100,10))
 ```
 
 ![](../img/pyplot/pyplot_example_18.png)
@@ -246,4 +246,4 @@ plot(0.1:0.2:0.9,0.7 * rand(5) + 0.15,l=(3,:dash,:lightblue),m=(Shape(verts),30,
 - Supported values for marker: `:Plots.Shape`, `:auto`, `:cross`, `:diamond`, `:dtriangle`, `:ellipse`, `:heptagon`, `:hexagon`, `:none`, `:octagon`, `:pentagon`, `:rect`, `:star4`, `:star5`, `:star6`, `:star7`, `:star8`, `:utriangle`, `:xcross`
 - Is `subplot`/`subplot!` supported? Yes
 
-(Automatically generated: 2015-10-17T23:43:13)
+(Automatically generated: 2015-10-26T14:00:57)

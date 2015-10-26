@@ -49,7 +49,7 @@ subplot!(pkg::PlottingPackage, subplt::Subplot; kw...) = error("subplot!($pkg, s
 # ---------------------------------------------------------
 
 
-const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse, :winston]
+const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse]
 const INITIALIZED_BACKENDS = Set{Symbol}()
 backends() = BACKENDS
 
@@ -184,6 +184,7 @@ function backend()
       end
 
     elseif currentBackendSymbol == :winston
+      warn("Winston support is deprecated and broken.  Try another backend: $BACKENDS")
       try
         @eval ENV["WINSTON_OUTPUT"] = "gtk"
         @eval import Winston, Gtk

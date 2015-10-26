@@ -583,11 +583,11 @@ getArgValue(v, idx) = v
 
 # given an argument key (k), we want to extract the argument value for this index.
 # if nothing is set (or container is empty), return the default.
-function setDictValue(d::Dict, k::Symbol, idx::Int, defaults::Dict)
-  if haskey(d, k) && !(typeof(d[k]) <: @compat(Union{AbstractArray, Tuple}) && isempty(d[k]))
-    d[k] = getArgValue(d[k], idx)
+function setDictValue(d_in::Dict, d_out::Dict, k::Symbol, idx::Int, defaults::Dict)
+  if haskey(d_in, k) && !(typeof(d_in[k]) <: @compat(Union{AbstractArray, Tuple}) && isempty(d_in[k]))
+    d_out[k] = getArgValue(d_in[k], idx)
   else
-    d[k] = defaults[k]
+    d_out[k] = defaults[k]
   end
 end
 
@@ -595,11 +595,12 @@ end
 
 # build the argument dictionary for the plot
 function getPlotArgs(pkg::PlottingPackage, kw, idx::Int)
-  d = Dict(kw)
+  kwdict = Dict(kw)
+  d = Dict()
 
   # add defaults?
   for k in keys(_plotDefaults)
-    setDictValue(d, k, idx, _plotDefaults)
+    setDictValue(kwdict, d, k, idx, _plotDefaults)
   end
 
   for k in (:xscale, :yscale)
@@ -622,11 +623,12 @@ end
 
 # build the argument dictionary for a series
 function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in initargs, not plt
-  d = Dict(kw)
+  kwdict = Dict(kw)
+  d = Dict()
 
   # add defaults?
   for k in keys(_seriesDefaults)
-    setDictValue(d, k, commandIndex, _seriesDefaults)
+    setDictValue(kwdict, d, k, commandIndex, _seriesDefaults)
   end
   
   if haskey(_typeAliases, d[:linetype])
