@@ -183,15 +183,6 @@ end
 
 getColorVector(gradient::ColorGradient) = gradient.colors
 
-# function interpolate_lab(c1::Colorant, c2::Colorant, w::Real)
-#   lab1 = Lab(c1)
-#   lab2 = Lab(c2)
-#   l = interpolate(lab1.l, lab2.l, w)
-#   a = interpolate(lab1.a, lab2.a, w)
-#   b = interpolate(lab1.b, lab2.b, w)
-#   RGB(Lab(l, a, b))
-# end
-
 # for 0.3
 Colors.RGBA(c::Colorant) = RGBA(red(c), green(c), blue(c), alpha(c))
 Colors.RGB(c::Colorant) = RGB(red(c), green(c), blue(c))
@@ -210,45 +201,6 @@ end
 function interpolate(v1::Real, v2::Real, w::Real)
   (1-w) * v1 + w * v2
 end
-
-
-# --------------------------------------------------------------
-
-# # Methods to automatically generate gradients for color selection based on
-# # background color and a short list of seed colors
-
-# function adjust_lch(color, l, c)
-#     lch = LCHab(color)
-#     convert(RGB, LCHab(l, c, lch.h))
-# end
-
-# function lightness_from_background(bgcolor)
-#   bglight = LCHab(bgcolor).l
-#   0.5bglight + 0.5 * 100.0 * (bglight < 50.0)
-# end
-
-# function gradient_from_list(cs)
-#     zvalues = Plots.get_zvalues(length(cs))
-#     indices = sortperm(zvalues)
-#     sorted_colors = map(RGB, cs[indices])
-#     sorted_zvalues = zvalues[indices]
-#     ColorGradient(sorted_colors, sorted_zvalues)
-# end
-
-# function generate_colorgradient(bgcolor = colorant"white";
-#                          color_bases = [colorant"steelblue", colorant"indianred"],
-#                          lightness = lightness_from_background(bgcolor),
-#                          chroma = 50,
-#                          n = 9)
-#   seed_colors = map(c -> adjust_lch(c,lightness,chroma), vcat(bgcolor, color_bases))
-#   colors = distinguishable_colors(n,
-#       seed_colors,
-#       lchoices=Float64[lightness],
-#       cchoices=Float64[chroma],
-#       hchoices=linspace(0, 340, 20)
-#     )[2:end]
-#   gradient_from_list(colors)
-# end
 
 # --------------------------------------------------------------
 
@@ -327,32 +279,6 @@ const _sortedColorsForLightBackground = vcat(_darkColors, reverse(_lightColors[2
 
 const _defaultNumColors = 17
 
-# function getPaletteUsingDistinguishableColors(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
-#   palette = distinguishable_colors(numcolors, bgcolor)[2:end]
-
-#   # try to adjust lightness away from background color
-#   bg_lab = Lab(bgcolor)
-#   palette = RGB{Float64}[begin
-#     lab = Lab(rgb)
-#     Lab(
-#         adjustAway(lab.l, bg_lab.l, 25, 75),
-#         lab.a,
-#         lab.b
-#       )
-#   end for rgb in palette]
-# end
-
-# function getPaletteUsingFixedColorList(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
-#   palette = isdark(bgcolor) ? _sortedColorsForDarkBackground : _sortedColorsForLightBackground
-#   palette[1:min(numcolors,length(palette))]
-# end
-
-# function getPaletteUsingColorDiffFromBackground(bgcolor::Colorant, numcolors::Int = _defaultNumColors)
-#   colordiffs = [colordiff(c, bgcolor) for c in _allColors]
-#   mindiff = colordiffs[reverse(sortperm(colordiffs))[numcolors]]
-#   filter(c -> colordiff(c, bgcolor) >= mindiff, _allColors)
-# end
-
 # --------------------------------------------------------------
 
 # Methods to automatically generate gradients for color selection based on
@@ -364,13 +290,12 @@ const _lightness_lightbg = [60.0]
 const _lch_c_const = [60]
 
 function adjust_lch(color, l, c)
-    lch = LCHab(color)
+    lch = convert(LCHab,color)
     convert(RGB, LCHab(l, c, lch.h))
 end
 
 function lightness_from_background(bgcolor)
-  bglight = LCHab(bgcolor).l
-  # _bgratio[1] * bglight + 100.0 * (1 - _bgratio[1]) * (bglight < 50.0)
+  bglight = convert(LCHab,bgcolor).l
   bglight < 50.0 ? _lightness_darkbg[1] : _lightness_lightbg[1]
 end
 
