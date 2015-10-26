@@ -3,11 +3,11 @@ module PlotsTests
 
 # don't let pyplot use a gui... it'll crash
 # note: Agg will set gui -> :none in PyPlot
+ENV["MPLBACKEND"] = "Agg"
 try
-    ENV["MPLBACKEND"] = "Agg"
-    import PyPlot
+    @eval import PyPlot
 catch err
-    warn("Couldn't import PyPlot: ", err)
+    warn("Couldn't import PyPlot: $err")
 end
 
 
@@ -30,6 +30,8 @@ default(show=false)
   # gadfly()
   # backend()
 
+img_eps = 1e-2
+
 facts("Gadfly") do
     @fact gadfly() --> Plots.GadflyPackage()
     @fact backend() --> Plots.GadflyPackage()
@@ -47,14 +49,14 @@ facts("Gadfly") do
     # plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
 
-    image_comparison_tests(:gadfly, skip=[4,19], eps=1e-2)
+    image_comparison_tests(:gadfly, skip=[4,19], eps=img_eps)
 
 end
 
 facts("PyPlot") do
     @fact pyplot() --> Plots.PyPlotPackage()
     @fact backend() --> Plots.PyPlotPackage()
-    image_comparison_tests(:pyplot)
+    image_comparison_tests(:pyplot, skip=[19], eps=img_eps)
 end
 
 

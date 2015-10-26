@@ -6,6 +6,7 @@
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
 getPyPlotColor(scheme::ColorScheme) = getPyPlotColor(getColor(scheme))
+getPyPlotColor(c) = getPyPlotColor(convertColor(c))
 
 # getPyPlotColorMap(c::ColorGradient) = PyPlot.matplotlib[:colors][:ListedColormap](map(getPyPlotColor, getColorVector(c)))
 function getPyPlotColorMap(c::ColorGradient)
