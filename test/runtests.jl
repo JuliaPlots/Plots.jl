@@ -1,5 +1,16 @@
 module PlotsTests
 
+
+# don't let pyplot use a gui... it'll crash
+# note: Agg will set gui -> :none in PyPlot
+try
+    ENV["MPLBACKEND"] = "Agg"
+    import PyPlot
+catch err
+    warn("Couldn't import PyPlot: ", err)
+end
+
+
 using Plots
 using FactCheck
 
@@ -11,18 +22,19 @@ include("imgcomp.jl")
 
 # don't actually show the plots
 srand(1234)
+default(show=false)
 
 # note: we wrap in a try block so that the tests only run if we have the backend installed
 # try
-  Pkg.installed("Gadfly")
-  gadfly()
-  backend()
-  facts("Gadfly") do
-    @fact backend(:gadfly) --> Plots.GadflyPackage()
-    default(show=false)
-    @fact backend() --> Plots.GadflyPackage()
-    @fact typeof(plot(1:10)) --> Plots.Plot{Plots.GadflyPackage}
+  # Pkg.installed("Gadfly")
+  # gadfly()
+  # backend()
 
+facts("Gadfly") do
+    @fact gadfly() --> Plots.GadflyPackage()
+    @fact backend() --> Plots.GadflyPackage()
+
+    @fact typeof(plot(1:10)) --> Plots.Plot{Plots.GadflyPackage}
 
     # plot(x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
     @fact plot(Int[1,2,3], rand(3)) --> not(nothing)
@@ -37,7 +49,16 @@ srand(1234)
 
     image_comparison_tests(:gadfly, skip=[4,19], eps=1e-2)
 
-  end
+end
+
+facts("PyPlot") do
+    @fact pyplot() --> Plots.PyPlotPackage()
+    @fact backend() --> Plots.PyPlotPackage()
+    image_comparison_tests(:pyplot)
+end
+
+
+
 # catch err
 #     warn("Skipped Gadfly due to: ", string(err))
 # end

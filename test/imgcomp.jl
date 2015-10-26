@@ -2,6 +2,11 @@
 # include this first to help with crashing??
 using Gtk
 
+# don't let pyplot use a gui... it'll crash
+# note: Agg will set gui -> :none in PyPlot
+ENV["MPLBACKEND"] = "Agg"
+import PyPlot
+
 # macro test_approx_eq_sigma_eps(A, B, sigma, eps)
 
 include("../docs/example_generation.jl")
