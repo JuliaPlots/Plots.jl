@@ -53,12 +53,14 @@ facts("Gadfly") do
 
 end
 
-facts("PyPlot") do
-    @fact pyplot() --> Plots.PyPlotPackage()
-    @fact backend() --> Plots.PyPlotPackage()
-    image_comparison_tests(:pyplot, skip=[19], eps=img_eps)
-end
 
+if VERSION >= v"0.4-"
+    facts("PyPlot") do
+        @fact pyplot() --> Plots.PyPlotPackage()
+        @fact backend() --> Plots.PyPlotPackage()
+        image_comparison_tests(:pyplot, skip=[19], eps=img_eps)
+    end
+end
 
 
 # catch err
