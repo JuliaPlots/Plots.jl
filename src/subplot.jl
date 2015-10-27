@@ -289,6 +289,8 @@ function postprocessSubplot(subplt::Subplot, d::Dict)
     updatePlotItems(plt, di)
   end
 
+  updatePositionAndSize(subplt, d)
+
   # handle links
   subplt.linkx && linkAxis(subplt, true)
   subplt.linky && linkAxis(subplt, false)

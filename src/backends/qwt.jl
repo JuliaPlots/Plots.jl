@@ -139,6 +139,11 @@ function updatePlotItems(plt::Plot{QwtPackage}, d::Dict)
   updateLimsAndTicks(plt, d, false)
 end
 
+function updatePositionAndSize(plt::PlottingObject{QwtPackage}, d::Dict)
+  haskey(d, :size) && Qwt.resizewidget(plt.o, d[:size]...)
+  haskey(d, :pos) && Qwt.movewidget(plt.o, d[:pos]...)
+end
+
 
 # ----------------------------------------------------------------
 
@@ -266,10 +271,10 @@ function Base.display(::PlotsDisplay, subplt::Subplot{QwtPackage})
   for plt in subplt.plts
     Qwt.refresh(plt.o)
   end
-  iargs = getinitargs(subplt,1)
-  # iargs = subplt.initargs
-  Qwt.resizewidget(subplt.o, iargs[:size]...)
-  Qwt.movewidget(subplt.o, iargs[:pos]...)
+  # iargs = getinitargs(subplt,1)
+  # # iargs = subplt.initargs
+  # Qwt.resizewidget(subplt.o, iargs[:size]...)
+  # Qwt.movewidget(subplt.o, iargs[:pos]...)
   Qwt.showwidget(subplt.o)
 end
 

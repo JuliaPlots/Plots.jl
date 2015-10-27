@@ -76,9 +76,10 @@ function addGadflyLine!(plt::Plot, d::Dict, geoms...)
   gfargs = vcat(geoms...,
                 getGadflyLineTheme(d))
   kwargs = Dict()
+  lt = d[:linetype]
 
   # add a fill?
-  if d[:fillrange] != nothing
+  if d[:fillrange] != nothing && lt != :contour
     fillmin, fillmax = map(makevec, maketuple(d[:fillrange]))
     nmin, nmax = length(fillmin), length(fillmax)
     kwargs[:ymin] = Float64[min(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]
@@ -87,7 +88,6 @@ function addGadflyLine!(plt::Plot, d::Dict, geoms...)
   end
 
   # h/vlines
-  lt = d[:linetype]
   if lt == :hline
     kwargs[:yintercept] = d[:y]
   elseif lt == :vline
@@ -97,6 +97,7 @@ function addGadflyLine!(plt::Plot, d::Dict, geoms...)
     kwargs[:xmin] = d[:x] - w
     kwargs[:xmax] = d[:x] + w
   elseif lt == :contour
+    d[:y] = reverse(d[:y])
     kwargs[:z] = d[:surface]
   end
   
@@ -176,7 +177,7 @@ function addToGadflyLegend(plt::Plot, d::Dict)
         
         # extend the label if we found this color
         for i in 1:length(guide.colors)
-          if c == guide.colors[i]
+          if RGB(c) == guide.colors[i]
             guide.labels[i] *= ", " * d[:label]
             foundit = true
           end

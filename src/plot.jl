@@ -121,10 +121,13 @@ function plot!(plt::Plot, args...; kw...)
 
   # add title, axis labels, ticks, etc
   if !haskey(d, :subplot)
-    d = merge!(plt.initargs, d)
-    dumpdict(d, "Updating plot items")
-    updatePlotItems(plt, d)
+    merge!(plt.initargs, d)
+    dumpdict(plt.initargs, "Updating plot items")
+    updatePlotItems(plt, plt.initargs)
   end
+
+  updatePositionAndSize(plt, d)
+
   current(plt)
 
   # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
