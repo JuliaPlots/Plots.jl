@@ -87,6 +87,13 @@ convertColor(c::@compat(Union{AbstractString, Symbol})) = parse(Colorant, string
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 
+function convertColor(c, α::Real)
+  c = convertColor(c)
+  RGBA(c, α)
+end
+convertColor(cs::AVec, α::Real) = map(c -> convertColor(c, α), cs)
+convertColor(c, α::Void) = convertColor(c)
+
 # backup... try to convert
 getColor(c) = convertColor(c)
 
@@ -98,14 +105,14 @@ getColor(scheme::ColorScheme) = getColor(scheme, 1)
 getColorVector(scheme::ColorScheme) = [getColor(scheme)]
 
 colorscheme(scheme::ColorScheme) = scheme
-colorscheme(s::Symbol) = haskey(_gradients, s) ? ColorGradient(s) : ColorWrapper(convertColor(s))
-colorscheme{T<:Real}(s::Symbol, vals::AVec{T}) = ColorGradient(s, vals)
-colorscheme(cs::AVec, vs::AVec) = ColorGradient(cs, vs)
-colorscheme{T<:Colorant}(cs::AVec{T}) = ColorGradient(cs)
-colorscheme(f::Function) = ColorFunction(f)
-colorscheme(v::AVec) = ColorVector(v)
-colorscheme(m::AMat) = size(m,1) == 1 ? map(colorscheme, m) : [colorscheme(m[:,i]) for i in 1:size(m,2)]'
-colorscheme(c::Colorant) = ColorWrapper(c)
+colorscheme(s::Symbol; kw...) = haskey(_gradients, s) ? ColorGradient(s; kw...) : ColorWrapper(convertColor(s); kw...)
+colorscheme{T<:Real}(s::Symbol, vals::AVec{T}; kw...) = ColorGradient(s, vals; kw...)
+colorscheme(cs::AVec, vs::AVec; kw...) = ColorGradient(cs, vs; kw...)
+colorscheme{T<:Colorant}(cs::AVec{T}; kw...) = ColorGradient(cs; kw...)
+colorscheme(f::Function; kw...) = ColorFunction(f; kw...)
+colorscheme(v::AVec; kw...) = ColorVector(v; kw...)
+colorscheme(m::AMat; kw...) = size(m,1) == 1 ? map(c->colorscheme(c; kw...), m) : [colorscheme(m[:,i]; kw...) for i in 1:size(m,2)]'
+colorscheme(c::Colorant; kw...) = ColorWrapper(c; kw...)
 
 
 # --------------------------------------------------------------
@@ -138,23 +145,29 @@ immutable ColorGradient <: ColorScheme
   colors::Vector{Colorant}
   values::Vector{Float64}
 
-  function ColorGradient{T<:Colorant,S<:Real}(cs::AVec{T}, vals::AVec{S} = 0:1)
-    length(cs) == length(vals) && return new(cs, collect(vals))
+  function ColorGradient{T<:Colorant,S<:Real}(cs::AVec{T}, vals::AVec{S} = 0:1; alpha = nothing)
+    if length(cs) == length(vals)
+      return new(convertColor(cs,alpha), collect(vals))
+    end
     
     # otherwise interpolate evenly between the minval and maxval
     minval, maxval = minimum(vals), maximum(vals)
     vs = Float64[interpolate(minval, maxval, w) for w in linspace(0, 1, length(cs))]
-    new(cs, vs)
+    new(convertColor(cs,alpha), vs)
   end
 end
 
 # create a gradient from a symbol (blues, reds, etc) and vector of boundary values
-function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:1)
+function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:1; kw...)
   haskey(_gradients, s) || error("Invalid gradient symbol.  Choose from: ", sort(collect(keys(_gradients))))
 
   # if we passed in the right number of values, create the gradient directly
   cs = _gradients[s]
-  ColorGradient(cs, vals)
+  ColorGradient(cs, vals; kw...)
+end
+
+function ColorGradient{T<:Real}(cs::AVec{Symbol}, vals::AVec{T} = 0:1; kw...)
+  ColorGradient(map(convertColor, cs), vals; kw...)
 end
 
 getColor(gradient::ColorGradient, idx::Int) = gradient.colors[mod1(idx, length(gradient.colors))]
@@ -225,7 +238,7 @@ getColorZ(scheme::ColorFunction, z::Real) = scheme.f(z)
 "Wraps a vector of colors... may be vector of Symbol/String/Colorant"
 immutable ColorVector <: ColorScheme
   v::Vector{Colorant}
-  ColorVector(v::AVec) = new(convertColor(v))
+  ColorVector(v::AVec; alpha = nothing) = new(convertColor(v,alpha))
 end
 
 getColor(scheme::ColorVector, idx::Int) = convertColor(scheme.v[mod1(idx, length(scheme.v))])
@@ -235,11 +248,12 @@ getColorVector(scheme::ColorVector) = scheme.v
 # --------------------------------------------------------------
 
 "Wraps a single color"
-immutable ColorWrapper{C<:Colorant} <: ColorScheme
-  c::C
+immutable ColorWrapper <: ColorScheme
+  c::RGBA
+  ColorWrapper(c::Colorant; alpha = nothing) = new(convertColor(c, alpha))
 end
 
-ColorWrapper(s::Symbol) = ColorWrapper(parse(Colorant, s))
+ColorWrapper(s::Symbol; alpha = nothing) = ColorWrapper(convertColor(parse(Colorant, s), alpha))
 
 getColor(scheme::ColorWrapper, idx::Int) = scheme.c
 getColorZ(scheme::ColorWrapper, z::Real) = scheme.c
@@ -290,19 +304,19 @@ const _lightness_lightbg = [60.0]
 const _lch_c_const = [60]
 
 function adjust_lch(color, l, c)
-    lch = convert(LCHab,color)
+    lch = convert(LCHab, color)
     convert(RGB, LCHab(l, c, lch.h))
 end
 
 function lightness_from_background(bgcolor)
-  bglight = convert(LCHab,bgcolor).l
+  bglight = convert(LCHab, bgcolor).l
   bglight < 50.0 ? _lightness_darkbg[1] : _lightness_lightbg[1]
 end
 
 function gradient_from_list(cs)
     zvalues = Plots.get_zvalues(length(cs))
     indices = sortperm(zvalues)
-    sorted_colors = map(RGB, cs[indices])
+    sorted_colors = map(RGBA, cs[indices])
     sorted_zvalues = zvalues[indices]
     ColorGradient(sorted_colors, sorted_zvalues)
 end

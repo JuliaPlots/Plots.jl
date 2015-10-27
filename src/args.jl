@@ -345,7 +345,6 @@ trueOrAllTrue(f::Function, x) = f(x)
 
 function handleColors!(d::Dict, arg, csym::Symbol)
   try
-    # @show arg typeof(arg)
     if arg == :auto
       d[csym] = :auto
     else
@@ -353,8 +352,6 @@ function handleColors!(d::Dict, arg, csym::Symbol)
       d[csym] = c
     end
     return true
-  # catch err
-  #   dump(err)
   end
   false
 end
@@ -372,7 +369,6 @@ function processAxisArg(d::Dict, axisletter::@compat(AbstractString), arg)
 
   elseif arg in (:flip, :invert, :inverted)
     d[symbol(axisletter * "flip")] = true
-    # end
 
   elseif T <: @compat(AbstractString)
     d[symbol(axisletter * "label")] = arg

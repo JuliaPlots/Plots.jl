@@ -144,7 +144,7 @@ function addGadflyMarker!(plt::Plot, d::Dict, initargs::Dict, geoms...)
     if !isa(d[:markercolor], ColorGradient)
       d[:markercolor] = colorscheme(:bluesreds)
     end
-    push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p))))
+    push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGBA(getColorZ(d[:markercolor], p))))
   end
 
   Gadfly.layer(gfargs...; x = d[:x], y = d[:y], kwargs...)

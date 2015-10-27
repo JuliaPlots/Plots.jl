@@ -206,6 +206,9 @@ function debugplots(on = true)
   _debugMode.on = on
 end
 
+debugshow(x) = show(x)
+debugshow(x::AbstractArray) = print(summary(x))
+
 function dumpdict(d::Dict, prefix = "")
   _debugMode.on || return
   println()
@@ -214,7 +217,8 @@ function dumpdict(d::Dict, prefix = "")
   end
   for k in sort(collect(keys(d)))
     @printf("%14s: ", k)
-    println(d[k])
+    debugshow(d[k])
+    println()
   end
   println()
 end

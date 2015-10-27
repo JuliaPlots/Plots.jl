@@ -160,12 +160,19 @@ function backend()
         @eval const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
         # @eval const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
         if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
-          PyPlot.ioff()
+          PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
+          
+          # # TODO: how the hell can I use PyQt4??
           # "pyqt4"=>:qt_pyqt4
           # PyPlot.backend[1] = "pyqt4"
           # PyPlot.gui[1] = :qt_pyqt4
           # PyPlot.switch_backend("Qt4Agg")
-          PyPlot.pygui(true)
+
+          # only turn on the gui if we want it
+          if PyPlot.gui != :none
+            PyPlot.pygui(true)
+          end
+
         end
       catch err
         warn("Couldn't import PyPlot.  Install it with: Pkg.add(\"PyPlot\").")

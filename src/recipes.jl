@@ -118,6 +118,6 @@ end
 "Sparsity plot... heatmap of non-zero values of a matrix"
 function spy{T<:Real}(y::AMat{T}; kw...)
   I,J,V = findnz(y)
-  heatmap(J, I; leg=false, yflip=true, kw...)
+  heatmap(J, I; leg=false, yflip=true, nbins=size(y), kw...)
 end
 
