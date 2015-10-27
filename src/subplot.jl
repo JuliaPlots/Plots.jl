@@ -349,6 +349,7 @@ function subplot!(subplt::Subplot, args...; kw...)
 
     subplt.n += 1
     plt = getplot(subplt)
+    plt.n += 1
 
     # # update the plot's initargs for things such as palettes, etc
     # for (k,v) in subplt.initargs

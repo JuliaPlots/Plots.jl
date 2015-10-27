@@ -153,13 +153,13 @@ end
 function plot(pkg::PyPlotPackage; kw...)
   # create the figure
   d = Dict(kw)
-  w,h = map(px2inch, d[:size])
-  bgcolor = getPyPlotColor(d[:background_color])
 
   # standalone plots will create a figure, but not if part of a subplot (do it later)
   if haskey(d, :subplot)
     wrap = nothing
   else
+    w,h = map(px2inch, d[:size])
+    bgcolor = getPyPlotColor(d[:background_color])
     wrap = PyPlotFigWrapper(PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96))
   end
 
@@ -257,9 +257,13 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   d[:serieshandle] = if lt == :hist
     plotfunc(d[:y]; extra_kwargs...)[1]
   elseif lt == :contour
-    handle = plotfunc(d[:x], d[:y], d[:surface], d[:nlevels]; extra_kwargs...)
+    # NOTE: x/y are backwards in pyplot, so we switch the x and y args, 
+    #       and take the transpose of the surface matrix
+    x, y = d[:y], d[:x]
+    surf = d[:surface]'
+    handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
     if d[:fillrange] != nothing
-      handle = ax[:contourf](d[:x], d[:y], d[:surface], d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor]))
+      handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor]))
     end
     handle
   elseif lt in (:scatter, :heatmap, :hexbin)
@@ -461,7 +465,7 @@ end
 
 # -----------------------------------------------------------------
 
-# create the underlying object (each backend will do this differently)
+# NOTE: pyplot needs to build before
 function buildSubplotObject!(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   l = subplt.layout
 
@@ -482,6 +486,33 @@ function buildSubplotObject!(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
 
   subplt.o = PyPlotFigWrapper(fig)
   true
+end
+
+# this will be called internally, when creating a subplot from existing plots
+# NOTE: if I ever need to "Rebuild a "ubplot from individual Plot's"... this is what I should use!
+function subplot(plts::AVec{Plot{PyPlotPackage}}, layout::SubplotLayout, d::Dict)
+  validateSubplotSupported()
+
+  p = length(layout)
+  n = sum([plt.n for plt in plts])
+
+  pkg = PyPlotPackage()
+  newplts = Plot{PyPlotPackage}[plot(pkg; subplot=true, plt.initargs...) for plt in plts]
+
+  subplt = Subplot(nothing, newplts, PyPlotPackage(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
+
+  preprocessSubplot(subplt, d)
+  buildSubplotObject!(subplt, true)
+
+  for (i,plt) in enumerate(plts)
+    for seriesargs in plt.seriesargs
+      _plot_from_subplot!(newplts[i]; seriesargs...)
+    end
+  end
+
+  postprocessSubplot(subplt, d)
+
+  subplt
 end
 
 
@@ -517,10 +548,19 @@ function addPyPlotLegend(plt::Plot, ax)
 end
 
 function finalizePlot(plt::Plot{PyPlotPackage})
-  wrap = plt.o
   ax = getLeftAxis(plt)
   addPyPlotLegend(plt, ax)
   updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
+  PyPlot.draw()
+end
+
+function finalizePlot(subplt::Subplot{PyPlotPackage})
+  fig = subplt.o.fig
+  for (i,plt) in enumerate(subplt.plts)
+    ax = getLeftAxis(plt)
+    addPyPlotLegend(plt, ax)
+    updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
+  end
   PyPlot.draw()
 end
 
@@ -544,20 +584,15 @@ function Base.display(::PlotsDisplay, plt::PlottingObject{PyPlotPackage})
   if isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
     display(getfig(plt.o))
   else
-    PyPlot.ion()
-    PyPlot.figure(getfig(plt.o).o[:number])
-    PyPlot.draw_if_interactive()
-    PyPlot.ioff()
+    # # PyPlot.ion()
+    # PyPlot.figure(getfig(plt.o).o[:number])
+    # PyPlot.draw_if_interactive()
+    # # PyPlot.ioff()
   end
+  # PyPlot.plt[:show](block=false)
+  getfig(plt.o)[:show]()
 end
 
-
-function finalizePlot(subplt::Subplot{PyPlotPackage})
-  fig = subplt.o.fig
-  for (i,plt) in enumerate(subplt.plts)
-    finalizePlot(plt)
-  end
-end
 
 # function Base.display(::PlotsDisplay, subplt::Subplot{PyPlotPackage})
 #   finalizePlot(subplt)

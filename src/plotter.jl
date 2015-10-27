@@ -14,15 +14,23 @@ export
   immerse,
   pyplot,
   qwt,
-  unicodeplots,
-  winston
+  unicodeplots
+  # winston
 
 gadfly() = backend(:gadfly)
 immerse() = backend(:immerse)
 pyplot() = backend(:pyplot)
 qwt() = backend(:qwt)
 unicodeplots() = backend(:unicodeplots)
-winston() = backend(:winston)
+# winston() = backend(:winston)
+
+const _backendNames = Dict(
+    GadflyPackage() => :gadfly,
+    ImmersePackage() => :immerse,
+    PyPlotPackage() => :pyplot,
+    QwtPackage() =>   :qwt,
+    UnicodePlotsPackage() => :unicodeplots,
+  )
 
 include("backends/supported.jl")
 
@@ -211,8 +219,13 @@ function backend()
 end
 
 """
-Set the plot backend.  Choose from:  :qwt, :gadfly, :unicodeplots
+Set the plot backend.  Choose from:  :qwt, :gadfly, :unicodeplots, :immerse, :pyplot
 """
+function backend(pkg::PlottingPackage)
+  CURRENT_BACKEND.sym = _backendNames(pkg)
+  CURRENT_BACKEND.pkg = pkg
+end
+
 function backend(modname)
   
   # set the PlottingPackage
