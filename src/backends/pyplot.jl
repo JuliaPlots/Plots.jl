@@ -259,7 +259,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   elseif lt == :contour
     # NOTE: x/y are backwards in pyplot, so we switch the x and y args (also y is reversed), 
     #       and take the transpose of the surface matrix
-    x, y = reverse(d[:y]), d[:x]
+    x, y = d[:y], d[:x]
     surf = d[:surface]'
     handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
     if d[:fillrange] != nothing

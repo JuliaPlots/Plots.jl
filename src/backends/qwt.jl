@@ -244,6 +244,9 @@ function expandLimits!(lims, plt::Plot{QwtPackage}, isx::Bool)
 end
 
 
+function handleLinkInner(plt::Plot{QwtPackage}, isx::Bool)
+end
+
 
 # ----------------------------------------------------------------
 
