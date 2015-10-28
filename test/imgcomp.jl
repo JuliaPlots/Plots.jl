@@ -1,6 +1,6 @@
 
-# # include this first to help with crashing??
-# using Gtk
+# include this first to help with crashing??
+using Gtk
 
 # don't let pyplot use a gui... it'll crash
 # note: Agg will set gui -> :none in PyPlot

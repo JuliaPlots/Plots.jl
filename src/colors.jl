@@ -83,22 +83,6 @@ end
 # --------------------------------------------------------------
 
 
-convertColor(c::@compat(Union{AbstractString, Symbol})) = parse(Colorant, string(c))
-convertColor(c::Colorant) = c
-convertColor(cvec::AbstractVector) = map(convertColor, cvec)
-
-function convertColor(c, α::Real)
-  c = convertColor(c)
-  RGBA(c, α)
-end
-convertColor(cs::AVec, α::Real) = map(c -> convertColor(c, α), cs)
-convertColor(c, α::Void) = convertColor(c)
-
-# backup... try to convert
-getColor(c) = convertColor(c)
-
-# --------------------------------------------------------------
-
 abstract ColorScheme
 
 getColor(scheme::ColorScheme) = getColor(scheme, 1)
@@ -117,6 +101,23 @@ colorscheme(c::Colorant; kw...) = ColorWrapper(c; kw...)
 
 # --------------------------------------------------------------
 
+
+convertColor(c::@compat(Union{AbstractString, Symbol})) = parse(Colorant, string(c))
+convertColor(c::Colorant) = c
+convertColor(cvec::AbstractVector) = map(convertColor, cvec)
+convertColor(c::ColorScheme) = c
+
+function convertColor(c, α::Real)
+  c = convertColor(c)
+  RGBA(c, α)
+end
+convertColor(cs::AVec, α::Real) = map(c -> convertColor(c, α), cs)
+convertColor(c, α::Void) = convertColor(c)
+
+# backup... try to convert
+getColor(c) = convertColor(c)
+
+# --------------------------------------------------------------
 
 const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", colorant"orange", colorant"red"]
 const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
@@ -336,7 +337,7 @@ function generate_colorgradient(bgcolor = colorant"white";
   gradient_from_list(colors)
 end
 
-function get_color_palette(palette, bgcolor::Colorant, numcolors::Integer)
+function get_color_palette(palette, bgcolor::Union{Colorant,ColorWrapper}, numcolors::Integer)
   grad = if palette == :auto
     generate_colorgradient(bgcolor)
   else
