@@ -376,9 +376,9 @@ end
 
 function updateGadflyGuides(plt::Plot, d::Dict)
   gplt = getGadflyContext(plt)
-  haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, d[:title])
-  haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, d[:xlabel])
-  haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, d[:ylabel])
+  haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, string(d[:title]))
+  haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, string(d[:xlabel]))
+  haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, string(d[:ylabel]))
 
   xlims = addGadflyLimitsScale(gplt, d, true)
   ylims = addGadflyLimitsScale(gplt, d, false)

@@ -631,6 +631,13 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
   for k in keys(_seriesDefaults)
     setDictValue(kwdict, d, k, commandIndex, _seriesDefaults)
   end
+
+  # groupby args?
+  for k in (:idxfilter, :numUncounted, :dataframe)
+    if haskey(kwdict, k)
+      d[k] = kwdict[k]
+    end
+  end
   
   if haskey(_typeAliases, d[:linetype])
     d[:linetype] = _typeAliases[d[:linetype]]
