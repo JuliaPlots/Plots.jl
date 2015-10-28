@@ -171,25 +171,14 @@ function subplot(args...; kw...)
   # initialize the individual plots
   pkg = backend()
   plts = Plot{typeof(pkg)}[]
-  # ds = Dict[]
   for i in 1:length(layout)
     di = getPlotArgs(pkg, d, i)
     di[:subplot] = true
     dumpdict(di, "Plot args (subplot $i)")
     push!(plts, plot(pkg; di...))
-    # push!(ds, getPlotArgs(pkg, d, i))
-    # ds[i][:subplot] = true
-    # push!(plts, plot(pkg; ds[i]...))
   end
 
-  # tmpd = getPlotKeywordArgs(pkg, kw, 1, 0)   # TODO: this should happen in the plot creation loop... think... what if we want to set a title per subplot??
-  # # shouldShow = tmpd[:show]
-  # # tmpd[:show] = false
-  # plts = Plot[plot(pkg; tmpd...) for i in 1:length(layout)]
-  # # tmpd[:show] = shouldShow
-
   # create the object and do the plotting
-  # subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, ds, false, false, false, (r,c) -> (nothing,nothing))
   subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, d, false, false, false, (r,c) -> (nothing,nothing))
   subplot!(subplt, args...; kw...)
 
@@ -215,9 +204,31 @@ end
 
 # this will be called internally
 function subplot{P<:PlottingPackage}(plts::AVec{Plot{P}}, layout::SubplotLayout, d::Dict)
+  validateSubplotSupported()
   p = length(layout)
   n = sum([plt.n for plt in plts])
   subplt = Subplot(nothing, collect(plts), P(), p, n, layout, Dict(), false, false, false, (r,c) -> (nothing,nothing))
+
+  # preprocessArgs!(d)
+
+  # # 
+  # for (i,plt) in enumerate(plts)
+  #   di = copy(plt.initargs)
+
+  #   for ck in (:background_color, :foreground_color, :color_palette)
+  #     # if we have a value to override, do it
+  #     if haskey(d, ck)
+  #       di[ck] = get_mod(d[ck], i)
+  #     end
+    
+
+
+  # # build a new dict from the initargs of the plots
+  # iargs = Dict()
+  # for k in keys(_plotDefaults)
+  #   iargs[k] = Any[plt.initargs[k] for plt in plts]'
+  # end
+  # merge!(iargs, d)
 
   preprocessSubplot(subplt, d)
   postprocessSubplot(subplt, d)
@@ -244,11 +255,12 @@ function preprocessSubplot(subplt::Subplot, d::Dict)
   # first merge the new args into the subplot's initargs. then process the plot args and merge
   # those into the plot's initargs.  (example... `palette = [:blues :reds]` goes into subplt.initargs,
   # then the ColorGradient for :blues/:reds is merged into plot 1/2 initargs, which is then used for color selection)
-  merge!(subplt.initargs, d)
   for i in 1:length(subplt.layout)
-    di = getPlotArgs(backend(), subplt.initargs, i)
-    merge!(subplt.plts[i].initargs, di)
+    # di = getPlotArgs(backend(), subplt.initargs, i)
+    # merge!(subplt.plts[i].initargs, di)
+    subplt.plts[i].initargs = getPlotArgs(backend(), merge(subplt.plts[i].initargs, d), i)
   end
+  merge!(subplt.initargs, d)
 
   # process links.  TODO: extract to separate function
   for s in (:linkx, :linky, :linkfunc)

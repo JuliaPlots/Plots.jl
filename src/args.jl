@@ -593,13 +593,15 @@ end
 # -----------------------------------------------------------------------------
 
 # build the argument dictionary for the plot
-function getPlotArgs(pkg::PlottingPackage, kw, idx::Int)
+function getPlotArgs(pkg::PlottingPackage, kw, idx::Int; set_defaults = true)
   kwdict = Dict(kw)
   d = Dict()
 
   # add defaults?
-  for k in keys(_plotDefaults)
-    setDictValue(kwdict, d, k, idx, _plotDefaults)
+  if set_defaults
+    for k in keys(_plotDefaults)
+      setDictValue(kwdict, d, k, idx, _plotDefaults)
+    end
   end
 
   for k in (:xscale, :yscale)
