@@ -423,6 +423,13 @@ function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
         lab[:set_fontsize](sz)
       end
     end
+  
+    # grid
+    if get(d, :grid, false)
+      ax[:xaxis][:grid](true)
+      ax[:yaxis][:grid](true)
+      ax[:set_axisbelow](true)
+    end
   end
 
 end

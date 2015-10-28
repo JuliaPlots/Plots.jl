@@ -123,7 +123,7 @@ supportedArgs(::PyPlotPackage) = [
     :tickfont,
     :guidefont,
     :legendfont,
-    # :grid,
+    :grid,
     :surface,
     :nlevels,
   ]

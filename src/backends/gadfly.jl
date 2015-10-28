@@ -127,7 +127,7 @@ function getGadflyMarkerTheme(d::Dict, initargs::Dict)
   Gadfly.Theme(
       default_color = c,
       default_point_size = d[:markersize] * Gadfly.px,
-      discrete_highlight_color = c -> fg,
+      discrete_highlight_color = c -> RGB(fg),
       highlight_width = d[:linewidth] * Gadfly.px,
     )
 end
@@ -145,7 +145,7 @@ function addGadflyMarker!(plt::Plot, d::Dict, initargs::Dict, geoms...)
     if !isa(d[:markercolor], ColorGradient)
       d[:markercolor] = colorscheme(:bluesreds)
     end
-    push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGBA(getColorZ(d[:markercolor], p))))
+    push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p))))
   end
 
   Gadfly.layer(gfargs...; x = d[:x], y = d[:y], kwargs...)
