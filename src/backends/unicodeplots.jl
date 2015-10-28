@@ -1,66 +1,7 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
-# immutable UnicodePlotsPackage <: PlottingPackage end
-
-# export unicodeplots
-# unicodeplots() = backend(:unicodeplots)
-
 # -------------------------------
-
-# # supportedArgs(::UnicodePlotsPackage) = setdiff(_allArgs, [:reg, :heatmap_c, :fill, :pos, :xlims, :ylims, :xticks, :yticks])
-# supportedArgs(::UnicodePlotsPackage) = [
-#     # :annotation,
-#     # :args,
-#     # :axis,
-#     # :background_color,
-#     # :color,
-#     # :fill,
-#     # :foreground_color,
-#     :group,
-#     # :heatmap_c,
-#     # :kwargs,
-#     :label,
-#     # :layout,
-#     :legend,
-#     :linestyle,
-#     :linetype,
-#     # :linewidth,
-#     :markershape,
-#     # :markercolor,
-#     # :markersize,
-#     # :n,
-#     :nbins,
-#     # :nc,
-#     # :nr,
-#     # :pos,
-#     # :reg,
-#     # :ribbon,
-#     :show,
-#     :size,
-#     :title,
-#     :windowtitle,
-#     :x,
-#     :xlabel,
-#     :xlims,
-#     # :xticks,
-#     :y,
-#     :ylabel,
-#     :ylims,
-#     # :yrightlabel,
-#     # :yticks,
-#     # :xscale,
-#     # :yscale,
-#     # :xflip,
-#     # :yflip,
-#     # :z,
-#   ]
-# supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
-# supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
-# supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
-# supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
-# supportedScales(::UnicodePlotsPackage) = [:identity]
-
 
 
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
@@ -205,9 +146,6 @@ end
 
 # -------------------------------
 
-# function savepng(::UnicodePlotsPackage, plt::PlottingObject, fn::@compat(AbstractString), args...)
-# function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{UnicodePlotsPackage})
-
 # since this is such a hack, it's only callable using `png`... should error during normal `writemime`
 function png(plt::PlottingObject{UnicodePlotsPackage}, fn::@compat(AbstractString))
   fn = addExtension(fn, "png")
@@ -225,11 +163,6 @@ function png(plt::PlottingObject{UnicodePlotsPackage}, fn::@compat(AbstractStrin
     # use osx screen capture when my terminal is maximized and cursor starts at the bottom (I know, right?)
     # TODO: compute size of plot to adjust these numbers (or maybe implement something good??)
     run(`screencapture -R50,600,700,420 $fn`)
-
-    # # some other attempts:
-    # run(`screencapture -w $fn`)
-    # using PyCall
-    # @pyimport pyscreenshot as pss
 
     # END HACK (phew)
     return

@@ -75,7 +75,7 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
   @assert size(corrmat) == (m,m)
 
   # create a subplot grid, and a gradient from -1 to 1
-  p = subplot(rand(0,m^2); n=m^2, leg=false, kw...)
+  p = subplot(rand(0,m^2); n=m^2, leg=false, grid=false, kw...)
   cgrad = ColorGradient(colors, [-1,1])
 
   # make all the plots
@@ -85,28 +85,24 @@ function corrplot{T<:Real,S<:Real}(mat::AMat{T}, corrmat::AMat{S} = cor(mat);
       plt = p.plts[idx]
       if i==j
         # histogram on diagonal
-        histogram!(plt, mat[:,i], c=:black, leg=false)
+        histogram!(plt, mat[:,i], c=:black)
         i > 1 && plot!(plt, yticks = :none)
       elseif i < j
-        # plot!(plt, mat[:,j], mat[:,i], l=:hexbin, leg=false)
-        # plot!(plt, [0], [0], ann=(0, 0, "Corr:\n$(corrmat[i,j])"), leg=false)
+        # annotate correlation value in upper triangle
         mi, mj = centers[i], centers[j]
         plot!(plt, [mj], [mi],
                    ann = (mj, mi, text(@sprintf("Corr:\n%0.3f", corrmat[i,j]), 15)),
-                   yticks=:none, grid=false)
+                   yticks=:none)
       else
-        # scatter plots off-diagonal, color determined by correlation
+        # scatter plots in lower triangle; color determined by correlation
         c = RGBA(RGB(getColorZ(cgrad, corrmat[i,j])), 0.3)
-        scatter!(plt, mat[:,j], mat[:,i], w=0, ms=3, c=c, leg=false)
+        scatter!(plt, mat[:,j], mat[:,i], w=0, ms=3, c=c, smooth=true)
       end
 
       if labels != nothing && length(labels) >= m
         i == m && xlabel!(plt, string(labels[j]))
         j == 1 && ylabel!(plt, string(labels[i]))
       end
-
-      # # replace the plt
-      # p.plts[idx] = plt
     end
   end
 

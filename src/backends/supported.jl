@@ -75,7 +75,6 @@ supportedScales(::ImmersePackage) = supportedScales(GadflyPackage())
 
 supportedArgs(::PyPlotPackage) = [
     :annotation,
-    # :args,
     :axis,
     :background_color,
     :color,
@@ -84,8 +83,6 @@ supportedArgs(::PyPlotPackage) = [
     :fillcolor,
     :foreground_color,
     :group,
-    # :heatmap_c,
-    # :kwargs,
     :label,
     :layout,
     :legend,
@@ -100,7 +97,7 @@ supportedArgs(::PyPlotPackage) = [
     :nc,
     :nr,
     # :pos,
-    # :smooth,
+    :smooth,
     # :ribbon,
     :show,
     :size,
@@ -126,6 +123,9 @@ supportedArgs(::PyPlotPackage) = [
     :grid,
     :surface,
     :nlevels,
+    :fillopacity,
+    :lineopacity,
+    :markeropacity,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]

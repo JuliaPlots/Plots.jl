@@ -106,7 +106,7 @@ end
 
 function regressionXY(x, y)
   # regress
-  β, α = [x ones(length(x))] \ y
+  β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
 
   # make a line segment
   regx = [minimum(x), maximum(x)]
@@ -161,9 +161,11 @@ function replaceType(vec, val)
 end
 
 function replaceAliases!(d::Dict, aliases::Dict)
-  for (k,v) in d
+  ks = collect(keys(d))
+  # for (k,v) in d
+  for k in ks
     if haskey(aliases, k)
-      d[aliases[k]] = v
+      d[aliases[k]] = d[k]
       delete!(d, k)
     end
   end

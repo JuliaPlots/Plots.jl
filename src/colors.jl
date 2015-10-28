@@ -109,7 +109,7 @@ convertColor(c::ColorScheme) = c
 
 function convertColor(c, α::Real)
   c = convertColor(c)
-  RGBA(c, α)
+  RGBA(RGB(c), α)
 end
 convertColor(cs::AVec, α::Real) = map(c -> convertColor(c, α), cs)
 convertColor(c, α::Void) = convertColor(c)

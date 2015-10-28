@@ -4,14 +4,20 @@
 # -------------------------------
 
 # convert colorant to 4-tuple RGBA
-getPyPlotColor(c::Colorant) = map(f->float(f(c)), (red, green, blue, alpha))
-getPyPlotColor(scheme::ColorScheme) = getPyPlotColor(getColor(scheme))
-getPyPlotColor(c) = getPyPlotColor(convertColor(c))
+getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
+getPyPlotColor(scheme::ColorScheme, α=nothing) = getPyPlotColor(convertColor(getColor(scheme), α))
+getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
+# getPyPlotColor(c, alpha) = getPyPlotColor(colorscheme(c, alpha))
 
-function getPyPlotColorMap(c::ColorGradient)
-  pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", map(getPyPlotColor, getColorVector(c)))
+function getPyPlotColorMap(c::ColorGradient, α=nothing)
+  # c = ColorGradient(c.colors, c.values, alpha=α)
+  # pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", map(getPyPlotColor, getColorVector(c)))
+  pyvals = [(c.values[i], getPyPlotColor(c.colors[i], α)) for i in 1:length(c.colors)]
+  pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
 end
-getPyPlotColorMap(c) = getPyPlotColorMap(ColorGradient(:redsblues))
+
+# anything else just gets a redsblue gradient
+getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(ColorGradient(:redsblues), α)
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
@@ -62,7 +68,7 @@ function getPyPlotMarker(marker::@compat(AbstractString))
   marker
 end
 
-function getPyPlotDrawStyle(linetype::Symbol)
+function getPyPlotStepStyle(linetype::Symbol)
   linetype == :steppost && return "steps-post"
   linetype == :steppre && return "steps-pre"
   return "default"
@@ -127,6 +133,19 @@ function updateAxisColors(ax, fgcolor)
 end
 
 
+function handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Bool)
+  if smooth
+    xs, ys = regressionXY(d[:x], d[:y])
+    ax[:plot](xs, ys,
+              # linestyle = getPyPlotLineStyle(:path, :dashdot),
+              color = getPyPlotColor(d[:color]),
+              linewidth = 2
+             )
+  end
+end
+handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Real) = handleSmooth(plt, ax, d, true)
+
+
 nop() = nothing
 
 
@@ -177,6 +196,9 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
   end
 
+  color = getPyPlotColor(d[:color], d[:lineopacity])
+
+
   if lt == :sticks
     d,_ = sticksHack(;d...)
   
@@ -187,7 +209,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
 
   elseif lt in (:hline,:vline)
     linewidth = d[:linewidth]
-    linecolor = getPyPlotColor(d[:color])
+    linecolor = color
     linestyle = getPyPlotLineStyle(lt, d[:linestyle])
     for yi in d[:y]
       func = ax[lt == :hline ? :axhline : axvline]
@@ -233,22 +255,22 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
       c = d[:markercolor]
       if isa(c, ColorGradient) && d[:z] != nothing
         extra_kwargs[:c] = convert(Vector{Float64}, d[:z])
-        extra_kwargs[:cmap] = getPyPlotColorMap(c)
+        extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeropacity])
       else
-        extra_kwargs[:c] = getPyPlotColor(c)
+        extra_kwargs[:c] = getPyPlotColor(c, d[:markeropacity])
       end
     else
       extra_kwargs[:markersize] = d[:markersize]
-      extra_kwargs[:markerfacecolor] = getPyPlotColor(d[:markercolor])
+      extra_kwargs[:markerfacecolor] = getPyPlotColor(d[:markercolor], d[:markeropacity])
       extra_kwargs[:markeredgecolor] = getPyPlotColor(plt.initargs[:foreground_color])
       extra_kwargs[:markeredgewidth] = d[:linewidth]
-      extra_kwargs[:drawstyle] = getPyPlotDrawStyle(lt)
+      extra_kwargs[:drawstyle] = getPyPlotStepStyle(lt)
     end
   end
 
   # set these for all types
   if lt != :contour
-    extra_kwargs[:color] = getPyPlotColor(d[:color])
+    extra_kwargs[:color] = color
     extra_kwargs[:linewidth] = d[:linewidth]
     extra_kwargs[:label] = d[:label]
   end
@@ -263,7 +285,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     surf = d[:surface]'
     handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
     if d[:fillrange] != nothing
-      handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor]))
+      handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillopacity]))
     end
     handle
   elseif lt in (:scatter, :heatmap, :hexbin)
@@ -271,6 +293,8 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   else
     plotfunc(d[:x], d[:y]; extra_kwargs...)[1]
   end
+
+  handleSmooth(plt, ax, d, d[:smooth])
 
   # add the colorbar legend
   if plt.initargs[:legend] && haskey(extra_kwargs, :cmap)
@@ -282,7 +306,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
 
   fillrange = d[:fillrange]
   if fillrange != nothing && lt != :contour
-    fillcolor = getPyPlotColor(d[:fillcolor])
+    fillcolor = getPyPlotColor(d[:fillcolor], d[:fillopacity])
     if typeof(fillrange) <: @compat(Union{Real, AVec})
       ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor)
     else
