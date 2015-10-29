@@ -337,7 +337,7 @@ function generate_colorgradient(bgcolor = colorant"white";
   gradient_from_list(colors)
 end
 
-function get_color_palette(palette, bgcolor::Union{Colorant,ColorWrapper}, numcolors::Integer)
+function get_color_palette(palette, bgcolor::@compat(Union{Colorant,ColorWrapper}), numcolors::Integer)
   grad = if palette == :auto
     generate_colorgradient(bgcolor)
   else
