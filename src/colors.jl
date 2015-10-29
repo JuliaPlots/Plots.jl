@@ -112,7 +112,7 @@ function convertColor(c, α::Real)
   RGBA(RGB(c), α)
 end
 convertColor(cs::AVec, α::Real) = map(c -> convertColor(c, α), cs)
-convertColor(c, α::Void) = convertColor(c)
+convertColor(c, α::@compat(Void)) = convertColor(c)
 
 # backup... try to convert
 getColor(c) = convertColor(c)
