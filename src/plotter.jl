@@ -166,6 +166,7 @@ function backend()
         @eval export PyPlot
         @eval const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
         @eval const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
+        @eval const mplot3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d"))
         # @eval const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
         if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
           PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia

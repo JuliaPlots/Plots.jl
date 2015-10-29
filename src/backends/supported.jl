@@ -128,7 +128,7 @@ supportedArgs(::PyPlotPackage) = [
     :markeropacity,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
-supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour, :path3d, :scatter3d]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 # supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
 supportedMarkers(::PyPlotPackage) = vcat(_allMarkers, Shape)

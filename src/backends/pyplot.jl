@@ -77,6 +77,7 @@ end
 
 immutable PyPlotFigWrapper
   fig
+  kwargs  # for add_subplot
 end
 
 immutable PyPlotAxisWrapper
@@ -92,7 +93,7 @@ getfig(wrap::@compat(Union{PyPlotAxisWrapper,PyPlotFigWrapper})) = wrap.fig
 function getLeftAxis(wrap::PyPlotFigWrapper)
   axes = wrap.fig.o[:axes]
   if isempty(axes)
-    return wrap.fig.o[:add_subplot](111)
+    return wrap.fig.o[:add_subplot](111; wrap.kwargs...)
   end
   axes[1]
 end
@@ -108,13 +109,14 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
   ax = getAxis(plt, axis)
   ax[:set_ylabel](plt.initargs[:yrightlabel])
   fmap = @compat Dict(
-      :hist => :hist,
-      :sticks => :bar,
-      :bar => :bar,
-      :heatmap => :hexbin,
-      :hexbin => :hexbin,
-      :scatter => :scatter,
-      :contour => :contour,
+      :hist       => :hist,
+      :sticks     => :bar,
+      :bar        => :bar,
+      :heatmap    => :hexbin,
+      :hexbin     => :hexbin,
+      :scatter    => :scatter,
+      :contour    => :contour,
+      :scatter3d  => :scatter,
     )
   return ax[get(fmap, linetype, :plot)]
 end
@@ -179,7 +181,7 @@ function plot(pkg::PyPlotPackage; kw...)
   else
     w,h = map(px2inch, d[:size])
     bgcolor = getPyPlotColor(d[:background_color])
-    wrap = PyPlotFigWrapper(PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96))
+    wrap = PyPlotFigWrapper(PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96), [])
   end
 
   plt = Plot(wrap, pkg, 0, d, Dict[])
@@ -190,8 +192,12 @@ end
 function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
-  ax = getAxis(plt, d[:axis])
   lt = d[:linetype]
+  if lt in _3dTypes && isa(plt.o, PyPlotFigWrapper)
+    push!(plt.o.kwargs, (:projection, "3d"))
+  end
+
+  ax = getAxis(plt, d[:axis])
   if !(lt in supportedTypes(pkg))
     error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
   end
@@ -202,7 +208,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
   if lt == :sticks
     d,_ = sticksHack(;d...)
   
-  elseif lt == :scatter
+  elseif lt in (:scatter, :scatter3d)
     if d[:markershape] == :none
       d[:markershape] = :ellipse
     end
@@ -250,7 +256,7 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
     extra_kwargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
     extra_kwargs[:marker] = getPyPlotMarker(d[:markershape])
 
-    if lt == :scatter
+    if lt in (:scatter, :scatter3d)
       extra_kwargs[:s] = d[:markersize]^2
       c = d[:markercolor]
       if isa(c, ColorGradient) && d[:z] != nothing
@@ -288,6 +294,8 @@ function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
       handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillopacity]))
     end
     handle
+  elseif lt in _3dTypes
+    plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)
   elseif lt in (:scatter, :heatmap, :hexbin)
     plotfunc(d[:x], d[:y]; extra_kwargs...)
   else
@@ -515,7 +523,7 @@ function buildSubplotObject!(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
     subplt.plts[i].o = PyPlotAxisWrapper(ax, fig)
   end
 
-  subplt.o = PyPlotFigWrapper(fig)
+  subplt.o = PyPlotFigWrapper(fig, [])
   true
 end
 
@@ -566,7 +574,7 @@ end
 function addPyPlotLegend(plt::Plot, ax)
   if plt.initargs[:legend]
     # gotta do this to ensure both axes are included
-    args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline,:contour)), plt.seriesargs)
+    args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline,:contour, :path3d, :scatter3d)), plt.seriesargs)
     if length(args) > 0
       ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],

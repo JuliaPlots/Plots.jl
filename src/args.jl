@@ -7,8 +7,11 @@ const _allAxes = [:auto, :left, :right]
     :r => :right
   )
 
-const _allTypes = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-                   :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc, :contour]
+const _3dTypes = [:path3d, :scatter3d]
+const _allTypes = vcat([
+                        :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
+                        :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc, :contour
+                       ], _3dTypes)
 @compat const _typeAliases = Dict(
     :n             => :none,
     :no            => :none,
@@ -27,7 +30,9 @@ const _allTypes = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter,
     :dots          => :scatter,
     :histogram     => :hist,
     :contours      => :contours,
+    :line3d        => :path3d,
   )
+
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 @compat const _styleAliases = Dict(
