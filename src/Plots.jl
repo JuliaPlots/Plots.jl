@@ -19,6 +19,7 @@ export
 
   current,
   default,
+  with,
   
   scatter,
   scatter!,

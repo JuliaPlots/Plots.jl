@@ -162,7 +162,6 @@ end
 
 function replaceAliases!(d::Dict, aliases::Dict)
   ks = collect(keys(d))
-  # for (k,v) in d
   for k in ks
     if haskey(aliases, k)
       d[aliases[k]] = d[k]
@@ -200,6 +199,74 @@ limsType(lims) = :invalid
 
 Base.convert{T<:Real}(::Type{Vector{T}}, rng::Range{T}) = T[x for x in rng]
 Base.convert{T<:Real,S<:Real}(::Type{Vector{T}}, rng::Range{S}) = T[x for x in rng]
+
+
+# ---------------------------------------------------------------
+
+function with(f::Function, args...; kw...)
+
+  # dict to store old and new keyword args for anything that changes
+  newdefs = Dict(kw)
+  olddefs = Dict()
+  for k in keys(newdefs)
+    olddefs[k] = default(k)
+  end
+
+  # save the backend
+  oldbackend = CURRENT_BACKEND.sym
+
+  for arg in args
+    
+    # change backend?
+    if arg in backends()
+      backend(arg)
+    end
+
+    # # TODO: generalize this strategy to allow args as much as possible
+    # #       as in:  with(:gadfly, :scatter, :legend, :grid) do; ...; end
+    # # TODO: can we generalize this enough to also do something similar in the plot commands??
+
+    # k = :linetype
+    # if arg in _allTypes
+    #   olddefs[k] = default(k)
+    #   newdefs[k] = arg
+    # elseif haskey(_typeAliases, arg)
+    #   olddefs[k] = default(k)
+    #   newdefs[k] = _typeAliases[arg]
+    # end
+
+    k = :legend
+    if arg in (k, :leg)
+      olddefs[k] = default(k)
+      newdefs[k] = true
+    end
+
+    k = :grid
+    if arg == k
+      olddefs[k] = default(k)
+      newdefs[k] = true
+    end
+  end
+
+  display(olddefs)
+  display(newdefs)
+
+  # now set all those defaults
+  default(; newdefs...)
+
+  # call the function
+  f()
+
+  # put the defaults back
+  default(; olddefs...)
+
+  # revert the backend
+  if CURRENT_BACKEND.sym != oldbackend
+    backend(oldbackend)
+  end
+
+  return
+end
 
 # ---------------------------------------------------------------
 
