@@ -60,13 +60,26 @@ function getGadflyLineTheme(d::Dict)
     fc = RGBA(fc, α)
   end
 
+  # gracefully handles old Gadfly versions
+  extra_theme_args = Dict()
+  try
+    extra_theme_args[:line_style] = Gadfly.get_stroke_vector(d[:linestyle])
+  catch err
+    if string(err) == "UndefVarError(:get_stroke_vector)"
+      Base.warn_once("Gadfly.get_stroke_vector failed... do you have an old version of Gadfly?")
+    else
+      rethrow()
+    end
+  end
+
   Gadfly.Theme(;
       default_color = lc,
       line_width = (d[:linetype] == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
-      line_style = Gadfly.get_stroke_vector(d[:linestyle]),
+      # line_style = Gadfly.get_stroke_vector(d[:linestyle]),
       lowlight_color = x->RGB(fc),  # fill/ribbon
       lowlight_opacity = alpha(fc), # fill/ribbon
       bar_highlight = RGB(lc),      # bars
+      extra_theme_args...
     )
 end
 
