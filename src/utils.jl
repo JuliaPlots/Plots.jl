@@ -248,14 +248,14 @@ function with(f::Function, args...; kw...)
     end
   end
 
-  display(olddefs)
-  display(newdefs)
+  # display(olddefs)
+  # display(newdefs)
 
   # now set all those defaults
   default(; newdefs...)
 
   # call the function
-  f()
+  ret = f()
 
   # put the defaults back
   default(; olddefs...)
@@ -265,7 +265,8 @@ function with(f::Function, args...; kw...)
     backend(oldbackend)
   end
 
-  return
+  # return the result of the function
+  ret
 end
 
 # ---------------------------------------------------------------
