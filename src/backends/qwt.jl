@@ -233,10 +233,6 @@ function buildSubplotObject!(subplt::Subplot{QwtPackage}, isbefore::Bool)
   true
 end
 
-function handleLinkInner(plt::Plot{QwtPackage}, isx::Bool)
-  warn("handleLinkInner isn't implemented for qwt")
-end
-
 function expandLimits!(lims, plt::Plot{QwtPackage}, isx::Bool)
   for series in plt.o.lines
     expandLimits!(lims, isx ? series.x : series.y)

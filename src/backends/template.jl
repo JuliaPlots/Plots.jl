@@ -83,10 +83,44 @@ end
 function updatePlotItems(plt::Plot{[PkgName]Package}, d::Dict)
 end
 
+function updatePositionAndSize(plt::PlottingObject{[PkgName]Package}, d::Dict)
+end
+
+# ----------------------------------------------------------------
+
+# accessors for x/y data
+
+function Base.getindex(plt::Plot{[PkgName]Package}, i::Int)
+  series = plt.o.lines[i]
+  series.x, series.y
+end
+
+function Base.setindex!(plt::Plot{[PkgName]Package}, xy::Tuple, i::Integer)
+  series = plt.o.lines[i]
+  series.x, series.y = xy
+  plt
+end
+
+# ----------------------------------------------------------------
+
+function addAnnotations{X,Y,V}(plt::Plot{[PkgName]Package}, anns::AVec{@compat(Tuple{X,Y,V})})
+  for ann in anns
+    # TODO: add the annotation to the plot
+  end
+end
+
 # ----------------------------------------------------------------
 
 function buildSubplotObject!(subplt::Subplot{[PkgName]Package})
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+end
+
+function expandLimits!(lims, plt::Plot{[PkgName]Package}, isx::Bool)
+  # TODO: call expand limits for each plot data
+end
+
+function handleLinkInner(plt::Plot{[PkgName]Package}, isx::Bool)
+  # TODO: if plot is inner subplot, might need to remove ticks or axis labels
 end
 
 # ----------------------------------------------------------------

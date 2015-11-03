@@ -311,3 +311,66 @@ subplotSupported(::WinstonPackage) = false
 
 
 # --------------------------------------------------------------------------------------
+
+
+
+supportedArgs(::BokehPackage) = [
+    # :annotation,
+    # :axis,
+    # :background_color,
+    # :color,
+    # :color_palette,
+    # :fillrange,
+    # :fillcolor,
+    # :fillopacity,
+    # :foreground_color,
+    # :group,
+    # :label,
+    # :layout,
+    # :legend,
+    # :linestyle,
+    # :linetype,
+    # :linewidth,
+    # :lineopacity,
+    # :markershape,
+    # :markercolor,
+    # :markersize,
+    # :markeropacity,
+    # :n,
+    # :nbins,
+    # :nc,
+    # :nr,
+    # :pos,
+    # :smooth,
+    # :show,
+    # :size,
+    # :title,
+    # :windowtitle,
+    # :x,
+    # :xlabel,
+    # :xlims,
+    # :xticks,
+    # :y,
+    # :ylabel,
+    # :ylims,
+    # :yrightlabel,
+    # :yticks,
+    # :xscale,
+    # :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
+    # :tickfont,
+    # :guidefont,
+    # :legendfont,
+    # :grid,
+    # :surface,
+    # :nlevels,
+  ]
+supportedAxes(::BokehPackage) = [:auto, :left]
+supportedTypes(::BokehPackage) = [:none] #, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::BokehPackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::BokehPackage) = [:none, :auto] #vcat(_allMarkers, Shape)
+supportedScales(::BokehPackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
+
+

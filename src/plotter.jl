@@ -6,6 +6,7 @@ immutable PyPlotPackage <: PlottingPackage end
 immutable QwtPackage <: PlottingPackage end
 immutable UnicodePlotsPackage <: PlottingPackage end
 immutable WinstonPackage <: PlottingPackage end
+immutable BokehPackage <: PlottingPackage end
 
 typealias GadflyOrImmerse @compat(Union{GadflyPackage, ImmersePackage})
 
@@ -14,7 +15,8 @@ export
   immerse,
   pyplot,
   qwt,
-  unicodeplots
+  unicodeplots,
+  bokeh
   # winston
 
 gadfly() = backend(:gadfly)
@@ -22,6 +24,7 @@ immerse() = backend(:immerse)
 pyplot() = backend(:pyplot)
 qwt() = backend(:qwt)
 unicodeplots() = backend(:unicodeplots)
+bokeh() = backend(:bokeh)
 # winston() = backend(:winston)
 
 backend_name(::GadflyPackage)       = :gadfly
@@ -29,6 +32,7 @@ backend_name(::ImmersePackage)      = :immerse
 backend_name(::PyPlotPackage)       = :pyplot
 backend_name(::UnicodePlotsPackage) = :unicodeplots
 backend_name(::QwtPackage)          = :qwt
+backend_name(::BokehPackage)        = :bokeh
 
 include("backends/supported.jl")
 
@@ -38,6 +42,7 @@ include("backends/unicodeplots.jl")
 include("backends/pyplot.jl")
 include("backends/immerse.jl")
 include("backends/winston.jl")
+include("backends/bokeh.jl")
 
 
 # ---------------------------------------------------------
@@ -57,7 +62,7 @@ subplot!(pkg::PlottingPackage, subplt::Subplot; kw...) = error("subplot!($pkg, s
 # ---------------------------------------------------------
 
 
-const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse]
+const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse, :bokeh]
 const INITIALIZED_BACKENDS = Set{Symbol}()
 backends() = BACKENDS
 
@@ -69,6 +74,7 @@ function backendInstance(sym::Symbol)
   sym == :pyplot && return PyPlotPackage()
   sym == :immerse && return ImmersePackage()
   sym == :winston && return WinstonPackage()
+  sym == :bokeh && return BokehPackage()
   error("Unsupported backend $sym")
 end 
 
@@ -108,6 +114,11 @@ function pickDefaultBackend()
     end
   end
   try
+    if Pkg.installed("Bokeh") != nothing
+      return CurrentBackend(:bokeh)
+    end
+  end
+  try
     if Pkg.installed("Winston") != nothing
       return CurrentBackend(:winston)
     end
@@ -115,8 +126,6 @@ function pickDefaultBackend()
   warn("You don't have any of the supported backends installed!  Chose from ", backends())
   return CurrentBackend(:gadfly)
 end
-# const CURRENT_BACKEND = pickDefaultBackend()
-# println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
 
 
 # ---------------------------------------------------------
@@ -125,7 +134,6 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
-  # error()
 
   currentBackendSymbol = CURRENT_BACKEND.sym
   if !(currentBackendSymbol in INITIALIZED_BACKENDS)
@@ -199,6 +207,15 @@ function backend()
         rethrow(err)
       end
 
+    elseif currentBackendSymbol == :bokeh
+      try
+        @eval import Bokeh
+        @eval export Bokeh
+      catch err
+        warn("Couldn't import Bokeh.  Install it with: Pkg.add(\"Bokeh\").")
+        rethrow(err)
+      end
+
     elseif currentBackendSymbol == :winston
       warn("Winston support is deprecated and broken.  Try another backend: $BACKENDS")
       try
@@ -243,6 +260,8 @@ function backend(modname)
     CURRENT_BACKEND.pkg = ImmersePackage()
   elseif modname == :winston
     CURRENT_BACKEND.pkg = WinstonPackage()
+  elseif modname == :bokeh
+    CURRENT_BACKEND.pkg = BokehPackage()
   else
     error("Unknown backend $modname.  Choose from: $BACKENDS")
   end

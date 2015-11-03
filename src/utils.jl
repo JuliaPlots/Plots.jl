@@ -283,8 +283,8 @@ end
 debugshow(x) = show(x)
 debugshow(x::AbstractArray) = print(summary(x))
 
-function dumpdict(d::Dict, prefix = "")
-  _debugMode.on || return
+function dumpdict(d::Dict, prefix = "", alwaysshow = false)
+  _debugMode.on || alwaysshow || return
   println()
   if prefix != ""
     println(prefix, ":")
