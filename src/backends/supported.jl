@@ -318,23 +318,23 @@ supportedArgs(::BokehPackage) = [
     # :annotation,
     # :axis,
     # :background_color,
-    # :color,
+    :color,
     # :color_palette,
     # :fillrange,
     # :fillcolor,
     # :fillopacity,
     # :foreground_color,
-    # :group,
+    :group,
     # :label,
     # :layout,
     # :legend,
-    # :linestyle,
-    # :linetype,
-    # :linewidth,
+    :linestyle,
+    :linetype,
+    :linewidth,
     # :lineopacity,
-    # :markershape,
-    # :markercolor,
-    # :markersize,
+    :markershape,
+    :markercolor,
+    :markersize,
     # :markeropacity,
     # :n,
     # :nbins,
@@ -343,14 +343,14 @@ supportedArgs(::BokehPackage) = [
     # :pos,
     # :smooth,
     # :show,
-    # :size,
-    # :title,
+    :size,
+    :title,
     # :windowtitle,
-    # :x,
+    :x,
     # :xlabel,
     # :xlims,
     # :xticks,
-    # :y,
+    :y,
     # :ylabel,
     # :ylims,
     # :yrightlabel,
@@ -368,9 +368,9 @@ supportedArgs(::BokehPackage) = [
     # :nlevels,
   ]
 supportedAxes(::BokehPackage) = [:auto, :left]
-supportedTypes(::BokehPackage) = [:none] #, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
-supportedStyles(::BokehPackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::BokehPackage) = [:none, :auto] #vcat(_allMarkers, Shape)
-supportedScales(::BokehPackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
+supportedTypes(::BokehPackage) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::BokehPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::BokehPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedScales(::BokehPackage) = [:identity, :log] #, :log, :log2, :log10, :asinh, :sqrt]
 
 

@@ -1,12 +1,64 @@
 
 # https://github.com/bokeh/Bokeh.jl
 
+make255(x) = round(Int, 255 * x)
+
+function bokehcolor(c::Colorant)
+  @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
+end
+bokehcolor(cs::ColorScheme) = bokehcolor(getColor(cs))
+
+
+const _glyphtypes = Dict(
+    :ellipse    => :Circle,
+    :rect       => :Square,
+    :diamond    => :Diamond,
+    :utriangle  => :Triangle,
+    :dtriangle  => :InvertedTriangle,
+    # :pentagon   => 
+    # :hexagon    => 
+    # :heptagon   => 
+    # :octagon    => 
+    :cross      => :Cross,
+    :xcross     => :X,
+    :star5      => :Asterisk,
+  )
+
+
+function bokeh_glyph_type(d::Dict)
+  lt = d[:linetype]
+  mt = d[:markershape]
+  if lt == :scatter && mt == :none
+    mt = :ellipse
+  end
+
+  # if we have a marker, use that
+  if lt == :scatter || mt != :none
+    return _glyphtypes[mt]
+  end
+
+  # otherwise return a line
+  return :Line
+end
+
+function get_stroke_vector(linestyle::Symbol)
+  dash = 12
+  dot = 3
+  gap = 2
+  linestyle == :solid && return Int[]
+  linestyle == :dash && return Int[dash, gap]
+  linestyle == :dot && return Int[dot, gap]
+  linestyle == :dashdot && return Int[dash, gap, dot, gap]
+  linestyle == :dashdotdot && return Int[dash, gap, dot, gap, dot, gap]
+  error("unsupported linestyle: ", linestyle)
+end
+
 # ---------------------------------------------------------------------------
 
 function plot(pkg::BokehPackage; kw...)
   d = Dict(kw)
 
-  dumpdict(d, "plot", true)
+  # dumpdict(d, "plot", true)
 
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
@@ -16,11 +68,12 @@ function plot(pkg::BokehPackage; kw...)
   filename = tempname() * ".html"
   title = d[:title]
   w, h = d[:size]
-  xaxis_type = :auto
-  yaxis_type = :auto
+  xaxis_type = d[:xscale] == :log ? :log : :auto
+  yaxis_type = d[:yscale] == :log ? :log : :auto
   # legend = d[:legend] ? xxxx : nothing
   legend = nothing
-  bplt = Bokeh.Plot(datacolumns, tools, filename, title, w, h, xaxis_type, yaxis_type, legend)
+  extra_args = Dict()  # TODO: we'll put extra settings (xlim, etc) here
+  bplt = Bokeh.Plot(datacolumns, tools, filename, title, w, h, xaxis_type, yaxis_type, legend) #, extra_args)
 
   Plot(bplt, pkg, 0, d, Dict[])
 end
@@ -29,10 +82,21 @@ end
 function plot!(::BokehPackage, plt::Plot; kw...)
   d = Dict(kw)
 
-  dumpdict(d, "plot!", true)
+  # dumpdict(d, "plot!", true)
 
-  # TODO: add one series to the underlying package
+  bdata = Dict{Symbol, Vector}(:x => collect(d[:x]), :y => collect(d[:y]))
+  
+  glyph = Bokeh.Bokehjs.Glyph(
+      glyphtype = bokeh_glyph_type(d),
+      linecolor = bokehcolor(d[:color]),  # shape's stroke or line color
+      linewidth = d[:linewidth],          # shape's stroke width or line width
+      fillcolor = bokehcolor(d[:markercolor]),
+      size      = ceil(Int, d[:markersize] * 2.5),  # magic number 2.5 to keep in same scale as other backends
+      dash      = get_stroke_vector(d[:linestyle])
+    )
 
+  legend = nothing  # TODO
+  push!(plt.o.datacolumns, Bokeh.BokehDataSet(bdata, glyph, legend))
 
   push!(plt.seriesargs, d)
   plt
@@ -52,15 +116,13 @@ end
 # accessors for x/y data
 
 function Base.getindex(plt::Plot{BokehPackage}, i::Int)
-  # TODO
-  # series = plt.o.lines[i]
-  # series.x, series.y
+  series = plt.o.datacolumns[i].data
+  series[:x], series[:y]
 end
 
 function Base.setindex!(plt::Plot{BokehPackage}, xy::Tuple, i::Integer)
-  # TODO
-  # series = plt.o.lines[i]
-  # series.x, series.y = xy
+  series = plt.o.datacolumns[i].data
+  series[:x], series[:y] = xy
   plt
 end
 
@@ -77,6 +139,7 @@ end
 
 function buildSubplotObject!(subplt::Subplot{BokehPackage})
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+
 end
 
 
@@ -92,10 +155,11 @@ end
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{BokehPackage})
   # TODO: write a png to io
+  warn("mime png not implemented")
 end
 
 function Base.display(::PlotsDisplay, plt::Plot{BokehPackage})
-  # TODO: display/show the plot
+  Bokeh.showplot(plt.o)
 end
 
 function Base.display(::PlotsDisplay, plt::Subplot{BokehPackage})
