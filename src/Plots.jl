@@ -105,6 +105,7 @@ const IMG_DIR = Pkg.dir("Plots") * "/img/"
 include("types.jl")
 include("utils.jl")
 include("colors.jl")
+include("components.jl")
 include("plotter.jl")
 include("args.jl")
 include("plot.jl")

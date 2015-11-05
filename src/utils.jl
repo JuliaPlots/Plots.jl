@@ -203,6 +203,15 @@ Base.convert{T<:Real,S<:Real}(::Type{Vector{T}}, rng::Range{S}) = T[x for x in r
 
 # ---------------------------------------------------------------
 
+"""
+Allows temporary setting of backend and defaults for Plots. Settings apply only for the `do` block.  Example:
+```
+with(:gadfly, size=(400,400), type=:hist) do
+  plot(rand(10))
+  plot(rand(10))
+end
+```
+"""
 function with(f::Function, args...; kw...)
 
   # dict to store old and new keyword args for anything that changes
