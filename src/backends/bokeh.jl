@@ -55,7 +55,7 @@ end
 
 # ---------------------------------------------------------------------------
 
-function plot(pkg::BokehPackage; kw...)
+function _create_plot(pkg::BokehPackage; kw...)
   d = Dict(kw)
 
   # dumpdict(d, "plot", true)
@@ -79,7 +79,7 @@ function plot(pkg::BokehPackage; kw...)
 end
 
 
-function plot!(::BokehPackage, plt::Plot; kw...)
+function _add_series(::BokehPackage, plt::Plot; kw...)
   d = Dict(kw)
 
   # dumpdict(d, "plot!", true)
@@ -105,10 +105,10 @@ end
 # ----------------------------------------------------------------
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function updatePlotItems(plt::Plot{BokehPackage}, d::Dict)
+function _update_plot(plt::Plot{BokehPackage}, d::Dict)
 end
 
-function updatePositionAndSize(plt::PlottingObject{BokehPackage}, d::Dict)
+function _update_plot_pos_size(plt::PlottingObject{BokehPackage}, d::Dict)
 end
 
 # ----------------------------------------------------------------
@@ -129,7 +129,7 @@ end
 
 # ----------------------------------------------------------------
 
-function addAnnotations{X,Y,V}(plt::Plot{BokehPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{BokehPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     # TODO: add the annotation to the plot
   end
@@ -137,17 +137,17 @@ end
 
 # ----------------------------------------------------------------
 
-function buildSubplotObject!(subplt::Subplot{BokehPackage})
+function _create_subplot(subplt::Subplot{BokehPackage})
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
 
 end
 
 
-function expandLimits!(lims, plt::Plot{BokehPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{BokehPackage}, isx::Bool)
   # TODO: call expand limits for each plot data
 end
 
-function handleLinkInner(plt::Plot{BokehPackage}, isx::Bool)
+function _remove_axis(plt::Plot{BokehPackage}, isx::Bool)
   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
 end
 

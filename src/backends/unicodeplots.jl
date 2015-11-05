@@ -15,7 +15,7 @@ function rebuildUnicodePlot!(plt::Plot)
   if get(iargs, :xlims, :auto) == :auto
     xlim = [Inf, -Inf]
     for d in sargs
-      expandLimits!(xlim, d[:x])
+      _expand_limits(xlim, d[:x])
     end
   else
     xmin, xmax = iargs[:xlims]
@@ -25,7 +25,7 @@ function rebuildUnicodePlot!(plt::Plot)
   if get(iargs, :ylims, :auto) == :auto
     ylim = [Inf, -Inf]
     for d in sargs
-      expandLimits!(ylim, d[:y])
+      _expand_limits(ylim, d[:y])
     end
   else
     ymin, ymax = iargs[:ylims]
@@ -135,7 +135,7 @@ function plot!(::UnicodePlotsPackage, plt::Plot; kw...)
 end
 
 
-function updatePlotItems(plt::Plot{UnicodePlotsPackage}, d::Dict)
+function _update_plot(plt::Plot{UnicodePlotsPackage}, d::Dict)
   for k in (:title, :xlabel, :ylabel, :xlims, :ylims)
     if haskey(d, k)
       plt.initargs[k] = d[k]
@@ -175,7 +175,7 @@ end
 
 # we don't do very much for subplots... just stack them vertically
 
-function buildSubplotObject!(subplt::Subplot{UnicodePlotsPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{UnicodePlotsPackage}, isbefore::Bool)
   isbefore && return false
   true
 end

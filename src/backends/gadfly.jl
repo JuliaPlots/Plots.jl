@@ -398,13 +398,13 @@ function updateGadflyGuides(plt::Plot, d::Dict)
 
   ticks = get(d, :xticks, :auto)
   if ticks == :none
-    handleLinkInner(plt, true)
+    _remove_axis(plt, true)
   else
     addGadflyTicksGuide(gplt, ticks, true)
   end
   ticks = get(d, :yticks, :auto)
   if ticks == :none
-    handleLinkInner(plt, false)
+    _remove_axis(plt, false)
   else
     addGadflyTicksGuide(gplt, ticks, false)
   end
@@ -476,7 +476,7 @@ function createGadflyAnnotationObject(x, y, txt::PlotText)
                             ))
 end
 
-function addAnnotations{X,Y,V}(plt::Plot{GadflyPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{GadflyPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     push!(plt.o.guides, createGadflyAnnotationObject(ann...))
   end
@@ -486,7 +486,7 @@ end
 # ---------------------------------------------------------------------------
 
 # create a blank Gadfly.Plot object
-function plot(pkg::GadflyPackage; kw...)
+function _create_plot(pkg::GadflyPackage; kw...)
   d = Dict(kw)
   gplt = createGadflyPlotObject(d)
   Plot(gplt, pkg, 0, d, Dict[])
@@ -494,7 +494,7 @@ end
 
 
 # plot one data series
-function plot!(::GadflyPackage, plt::Plot; kw...)
+function _add_series(::GadflyPackage, plt::Plot; kw...)
   d = Dict(kw)
   addGadflySeries!(plt, d)
   push!(plt.seriesargs, d)
@@ -503,7 +503,7 @@ end
 
 
 
-function updatePlotItems(plt::Plot{GadflyPackage}, d::Dict)
+function _update_plot(plt::Plot{GadflyPackage}, d::Dict)
   updateGadflyGuides(plt, d)
   updateGadflyPlotTheme(plt, d)
 end
@@ -535,22 +535,22 @@ end
 
 
 # create the underlying object (each backend will do this differently)
-function buildSubplotObject!(subplt::Subplot{GadflyPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{GadflyPackage}, isbefore::Bool)
   isbefore && return false # wait until after plotting to create the subplots
   subplt.o = nothing
   true
 end
 
 
-function handleLinkInner(plt::Plot{GadflyPackage}, isx::Bool)
+function _remove_axis(plt::Plot{GadflyPackage}, isx::Bool)
   gplt = getGadflyContext(plt)
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks; label=false)
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xlabel : Gadfly.Guide.ylabel, "")
 end
 
-function expandLimits!(lims, plt::Plot{GadflyPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{GadflyPackage}, isx::Bool)
   for l in getGadflyContext(plt).layers
-    expandLimits!(lims, l.mapping[isx ? :x : :y])
+    _expand_limits(lims, l.mapping[isx ? :x : :y])
   end
 end
 

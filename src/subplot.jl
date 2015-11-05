@@ -81,7 +81,7 @@ Base.getindex(layout::GridLayout, r::Int, c::Int) = (r-1) * layout.nc + c
 Base.getindex(subplt::Subplot, args...) = subplt.plts[subplt.layout[args...]]
 
 # handle "linking" the subplot axes together
-# each backend should implement the handleLinkInner and expandLimits! methods
+# each backend should implement the _remove_axis and _expand_limits methods
 function linkAxis(subplt::Subplot, isx::Bool)
 
   # collect the list of plots and the expanded limits for those plots that should be linked on this axis
@@ -104,7 +104,7 @@ function linkAxis(subplt::Subplot, isx::Bool)
       isinner = (isx && r < nrows(subplt.layout)) || (!isx && !firstone)
       push!(includedPlots, (plt, isinner, k))
 
-      expandLimits!(lims[k], plt, isx)
+      _expand_limits(lims[k], plt, isx)
     end
 
   end
@@ -112,7 +112,7 @@ function linkAxis(subplt::Subplot, isx::Bool)
   # do the axis adjustments
   for (plt, isinner, k) in includedPlots
     if isinner
-      handleLinkInner(plt, isx)
+      _remove_axis(plt, isx)
     end
     (isx ? xlims! : ylims!)(plt, lims[k]...)
   end
@@ -209,29 +209,8 @@ function subplot{P<:PlottingPackage}(plts::AVec{Plot{P}}, layout::SubplotLayout,
   n = sum([plt.n for plt in plts])
   subplt = Subplot(nothing, collect(plts), P(), p, n, layout, Dict(), false, false, false, (r,c) -> (nothing,nothing))
 
-  # preprocessArgs!(d)
-
-  # # 
-  # for (i,plt) in enumerate(plts)
-  #   di = copy(plt.initargs)
-
-  #   for ck in (:background_color, :foreground_color, :color_palette)
-  #     # if we have a value to override, do it
-  #     if haskey(d, ck)
-  #       di[ck] = get_mod(d[ck], i)
-  #     end
-    
-
-
-  # # build a new dict from the initargs of the plots
-  # iargs = Dict()
-  # for k in keys(_plotDefaults)
-  #   iargs[k] = Any[plt.initargs[k] for plt in plts]'
-  # end
-  # merge!(iargs, d)
-
-  preprocessSubplot(subplt, d)
-  postprocessSubplot(subplt, d)
+  _preprocess_subplot(subplt, d)
+  _postprocess_subplot(subplt, d)
 
   subplt
 end
@@ -241,7 +220,7 @@ end
 # ------------------------------------------------------------------------------------------------
 
 
-function preprocessSubplot(subplt::Subplot, d::Dict)
+function _preprocess_subplot(subplt::Subplot, d::Dict)
   validateSubplotSupported()
   preprocessArgs!(d)
   dumpdict(d, "After subplot! preprocessing")
@@ -256,8 +235,6 @@ function preprocessSubplot(subplt::Subplot, d::Dict)
   # those into the plot's initargs.  (example... `palette = [:blues :reds]` goes into subplt.initargs,
   # then the ColorGradient for :blues/:reds is merged into plot 1/2 initargs, which is then used for color selection)
   for i in 1:length(subplt.layout)
-    # di = getPlotArgs(backend(), subplt.initargs, i)
-    # merge!(subplt.plts[i].initargs, di)
     subplt.plts[i].initargs = getPlotArgs(backend(), merge(subplt.plts[i].initargs, d), i)
   end
   merge!(subplt.initargs, d)
@@ -271,37 +248,20 @@ function preprocessSubplot(subplt::Subplot, d::Dict)
   end
 end
 
-function postprocessSubplot(subplt::Subplot, d::Dict)
+function _postprocess_subplot(subplt::Subplot, d::Dict)
   # init (after plot creation)
   if !subplt.initialized
-    subplt.initialized = buildSubplotObject!(subplt, false)
+    subplt.initialized = _create_subplot(subplt, false)
   end
 
   # add title, axis labels, ticks, etc
   for (i,plt) in enumerate(subplt.plts)
-
-    # # # get the full initargs, overriding any new settings
-    # # di = copy(merge(plt.initargs, d))
-    # di = copy(d)
-
-    # for (k,v) in di
-    #   if typeof(v) <: AVec
-    #     di[k] = v[mod1(i, length(v))]
-    #   elseif typeof(v) <: AMat
-    #     m = size(v,2)
-    #     di[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
-    #   end
-    # end
-
-    # di = merge!(plt.initargs, di)
-
     di = plt.initargs
-
     dumpdict(di, "Updating sp $i")
-    updatePlotItems(plt, di)
+    _update_plot(plt, di)
   end
 
-  updatePositionAndSize(subplt, d)
+  _update_plot_pos_size(subplt, d)
 
   # handle links
   subplt.linkx && linkAxis(subplt, true)
@@ -335,14 +295,14 @@ function subplot!(subplt::Subplot, args...; kw...)
   # validateSubplotSupported()
 
   d = Dict(kw)
-  preprocessSubplot(subplt, d)
+  _preprocess_subplot(subplt, d)
 
   # create the underlying object (each backend will do this differently)
   # note: we call it once before doing the individual plots, and once after
   #       this is because some backends need to set up the subplots and then plot, 
   #       and others need to do it the other way around
   if !subplt.initialized
-    subplt.initialized = buildSubplotObject!(subplt, true)
+    subplt.initialized = _create_subplot(subplt, true)
   end
 
   # handle grouping
@@ -365,17 +325,6 @@ function subplot!(subplt::Subplot, args...; kw...)
     plt = getplot(subplt)
     plt.n += 1
 
-    # # update the plot's initargs for things such as palettes, etc
-    # for (k,v) in subplt.initargs
-    #   haskey(_plotDefaults, k) || continue
-    #   if typeof(v) <: AVec
-    #     plt.initargs[k] = v[mod1(i, length(v))]
-    #   elseif typeof(v) <: AMat
-    #     m = size(v,2)
-    #     plt.initargs[k] = (size(v,1) == 1 ? v[1, mod1(i, m)] : v[:, mod1(i, m)])
-    #   end
-    # end
-
     # cleanup the dictionary that we pass into the plot! command
     di[:show] = false
     di[:subplot] = true
@@ -389,7 +338,7 @@ function subplot!(subplt::Subplot, args...; kw...)
     _plot_from_subplot!(plt; di...)
   end
 
-  postprocessSubplot(subplt, d)
+  _postprocess_subplot(subplt, d)
 
   # show it automatically?
   if haskey(d, :show) && d[:show]
@@ -407,10 +356,9 @@ function _plot_from_subplot!(plt::Plot, args...; kw...)
   setTicksFromStringVector(d, d, :x, :xticks)
   setTicksFromStringVector(d, d, :y, :yticks)
 
-  # dumpdict(d, "Plot from subplot")
-  plot!(plt.backend, plt; d...)
+  _add_series(plt.backend, plt; d...)
   
-  addAnnotations(plt, d)
+  _add_annotations(plt, d)
   warnOnUnsupportedScales(plt.backend, d)
 end
 

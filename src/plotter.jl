@@ -50,10 +50,10 @@ include("backends/bokeh.jl")
 
 plot(pkg::PlottingPackage; kw...) = error("plot($pkg; kw...) is not implemented")
 plot!(pkg::PlottingPackage, plt::Plot; kw...) = error("plot!($pkg, plt; kw...) is not implemented")
-updatePlotItems(pkg::PlottingPackage, plt::Plot, d::Dict) = error("updatePlotItems($pkg, plt, d) is not implemented")
+_update_plot(pkg::PlottingPackage, plt::Plot, d::Dict) = error("_update_plot($pkg, plt, d) is not implemented")
 # Base.display(pkg::PlottingPackage, plt::Plot) = error("display($pkg, plt) is not implemented")
 
-updatePositionAndSize{P<:PlottingPackage}(plt::PlottingObject{P}, d::Dict) = nothing #error("updatePositionAndSize(plt,d) is not implemented for $P")
+_update_plot_pos_size{P<:PlottingPackage}(plt::PlottingObject{P}, d::Dict) = nothing #error("_update_plot_pos_size(plt,d) is not implemented for $P")
 
 subplot(pkg::PlottingPackage; kw...) = error("subplot($pkg; kw...) is not implemented")
 subplot!(pkg::PlottingPackage, subplt::Subplot; kw...) = error("subplot!($pkg, subplt; kw...) is not implemented")

@@ -398,7 +398,7 @@ end
 
 usingRightAxis(plt::Plot{PyPlotPackage}) = any(args -> args[:axis] in (:right,:auto), plt.seriesargs)
 
-function updatePlotItems(plt::Plot{PyPlotPackage}, d::Dict)
+function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
   figorax = plt.o
   ax = getLeftAxis(figorax)
   # PyPlot.sca(ax)
@@ -496,7 +496,7 @@ function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::PlotT
   )
 end
 
-function addAnnotations{X,Y,V}(plt::Plot{PyPlotPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{PyPlotPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     createPyPlotAnnotationObject(plt, ann...)
   end
@@ -505,7 +505,7 @@ end
 # -----------------------------------------------------------------
 
 # NOTE: pyplot needs to build before
-function buildSubplotObject!(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   l = subplt.layout
 
   w,h = map(px2inch, getinitargs(subplt,1)[:size])
@@ -540,8 +540,8 @@ function subplot(plts::AVec{Plot{PyPlotPackage}}, layout::SubplotLayout, d::Dict
 
   subplt = Subplot(nothing, newplts, PyPlotPackage(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
 
-  preprocessSubplot(subplt, d)
-  buildSubplotObject!(subplt, true)
+  _preprocess_subplot(subplt, d)
+  _create_subplot(subplt, true)
 
   for (i,plt) in enumerate(plts)
     for seriesargs in plt.seriesargs
@@ -549,13 +549,13 @@ function subplot(plts::AVec{Plot{PyPlotPackage}}, layout::SubplotLayout, d::Dict
     end
   end
 
-  postprocessSubplot(subplt, d)
+  _postprocess_subplot(subplt, d)
 
   subplt
 end
 
 
-function handleLinkInner(plt::Plot{PyPlotPackage}, isx::Bool)
+function _remove_axis(plt::Plot{PyPlotPackage}, isx::Bool)
   if isx
     plot!(plt, xticks=zeros(0), xlabel="")
   else
@@ -563,9 +563,9 @@ function handleLinkInner(plt::Plot{PyPlotPackage}, isx::Bool)
   end
 end
 
-function expandLimits!(lims, plt::Plot{PyPlotPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{PyPlotPackage}, isx::Bool)
   pltlims = plt.o.ax[isx ? :get_xbound : :get_ybound]()
-  expandLimits!(lims, pltlims)
+  _expand_limits(lims, pltlims)
 end
 
 # -----------------------------------------------------------------

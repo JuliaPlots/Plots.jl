@@ -131,7 +131,7 @@ maketuple{T,S}(x::@compat(Tuple{T,S})) = x
 unzip{T,S}(v::AVec{@compat(Tuple{T,S})}) = [vi[1] for vi in v], [vi[2] for vi in v]
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
-function expandLimits!(lims, x)
+function _expand_limits(lims, x)
   try
     e1, e2 = extrema(x)
     lims[1] = min(lims[1], e1)

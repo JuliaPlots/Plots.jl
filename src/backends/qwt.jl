@@ -131,7 +131,7 @@ function updateLimsAndTicks(plt::Plot{QwtPackage}, d::Dict, isx::Bool)
 end
 
 
-function updatePlotItems(plt::Plot{QwtPackage}, d::Dict)
+function _update_plot(plt::Plot{QwtPackage}, d::Dict)
   haskey(d, :title) && Qwt.title(plt.o, d[:title])
   haskey(d, :xlabel) && Qwt.xlabel(plt.o, d[:xlabel])
   haskey(d, :ylabel) && Qwt.ylabel(plt.o, d[:ylabel])
@@ -139,7 +139,7 @@ function updatePlotItems(plt::Plot{QwtPackage}, d::Dict)
   updateLimsAndTicks(plt, d, false)
 end
 
-function updatePositionAndSize(plt::PlottingObject{QwtPackage}, d::Dict)
+function _update_plot_pos_size(plt::PlottingObject{QwtPackage}, d::Dict)
   haskey(d, :size) && Qwt.resizewidget(plt.o, d[:size]...)
   haskey(d, :pos) && Qwt.movewidget(plt.o, d[:pos]...)
 end
@@ -182,7 +182,7 @@ function createQwtAnnotation(plt::Plot, x, y, val::@compat(AbstractString))
   marker[:attach](plt.o.widget)
 end
 
-function addAnnotations{X,Y,V}(plt::Plot{QwtPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{QwtPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     createQwtAnnotation(plt, ann...)
   end
@@ -211,7 +211,7 @@ end
 # -------------------------------
 
 # create the underlying object (each backend will do this differently)
-function buildSubplotObject!(subplt::Subplot{QwtPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{QwtPackage}, isbefore::Bool)
   isbefore && return false
   i = 0
   rows = Any[]
@@ -233,14 +233,14 @@ function buildSubplotObject!(subplt::Subplot{QwtPackage}, isbefore::Bool)
   true
 end
 
-function expandLimits!(lims, plt::Plot{QwtPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{QwtPackage}, isx::Bool)
   for series in plt.o.lines
-    expandLimits!(lims, isx ? series.x : series.y)
+    _expand_limits(lims, isx ? series.x : series.y)
   end
 end
 
 
-function handleLinkInner(plt::Plot{QwtPackage}, isx::Bool)
+function _remove_axis(plt::Plot{QwtPackage}, isx::Bool)
 end
 
 

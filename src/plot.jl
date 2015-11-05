@@ -90,7 +90,7 @@ function plot!(plt::Plot, args...; kw...)
   preparePlotUpdate(plt)
 
   # get the list of dictionaries, one per series
-  kwList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
+  seriesArgList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
   
   # if we were able to extract guide information from the series inputs, then update the plot
   # @show xmeta, ymeta
@@ -98,7 +98,7 @@ function plot!(plt::Plot, args...; kw...)
   updateDictWithMeta(d, plt.initargs, ymeta, false)
 
   # now we can plot the series
-  for (i,di) in enumerate(kwList)
+  for (i,di) in enumerate(seriesArgList)
     plt.n += 1
 
     setTicksFromStringVector(d, di, :x, :xticks)
@@ -114,7 +114,7 @@ function plot!(plt::Plot, args...; kw...)
     plot!(plt.backend, plt; di...)
   end
 
-  addAnnotations(plt, d)
+  _add_annotations(plt, d)
 
   warnOnUnsupportedScales(plt.backend, d)
 
@@ -123,10 +123,10 @@ function plot!(plt::Plot, args...; kw...)
   if !haskey(d, :subplot)
     merge!(plt.initargs, d)
     dumpdict(plt.initargs, "Updating plot items")
-    updatePlotItems(plt, plt.initargs)
+    _update_plot(plt, plt.initargs)
   end
 
-  updatePositionAndSize(plt, d)
+  _update_plot_pos_size(plt, d)
 
   current(plt)
 
@@ -184,10 +184,10 @@ annotations{X,Y,V}(t::@compat(Tuple{X,Y,V})) = [t]
 annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
                        "(x, y, annotation)\n    got: $(typeof(anns))")
 
-function addAnnotations(plt::Plot, d::Dict)
+function _add_annotations(plt::Plot, d::Dict)
   anns = annotations(get(d, :annotation, nothing))
   if !isempty(anns)
-    addAnnotations(plt, anns)
+    _add_annotations(plt, anns)
   end
 end
 

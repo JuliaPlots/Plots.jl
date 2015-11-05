@@ -1,19 +1,6 @@
 
 # https://github.com/JuliaGraphics/Immerse.jl
 
-# immutable ImmersePackage <: PlottingPackage end
-
-# export immerse
-# immerse() = backend(:immerse)
-
-
-# supportedArgs(::ImmersePackage) = supportedArgs(GadflyPackage())
-# supportedAxes(::ImmersePackage) = supportedAxes(GadflyPackage())
-# supportedTypes(::ImmersePackage) = supportedTypes(GadflyPackage())
-# supportedStyles(::ImmersePackage) = supportedStyles(GadflyPackage())
-# supportedMarkers(::ImmersePackage) = supportedMarkers(GadflyPackage())
-# supportedScales(::ImmersePackage) = supportedScales(GadflyPackage())
-
 
 function createImmerseFigure(d::Dict)
   w,h = d[:size]
@@ -23,7 +10,7 @@ end
 
 
 # create a blank Gadfly.Plot object
-function plot(pkg::ImmersePackage; kw...)
+function _create_plot(pkg::ImmersePackage; kw...)
   d = Dict(kw)
 
   # create the underlying Gadfly.Plot object
@@ -35,7 +22,7 @@ end
 
 
 # plot one data series
-function plot!(::ImmersePackage, plt::Plot; kw...)
+function _add_series(::ImmersePackage, plt::Plot; kw...)
   d = Dict(kw)
   addGadflySeries!(plt, d)
   push!(plt.seriesargs, d)
@@ -43,7 +30,7 @@ function plot!(::ImmersePackage, plt::Plot; kw...)
 end
 
 
-function updatePlotItems(plt::Plot{ImmersePackage}, d::Dict)
+function _update_plot(plt::Plot{ImmersePackage}, d::Dict)
   updateGadflyGuides(plt, d)
   updateGadflyPlotTheme(plt, d)
 end
@@ -52,7 +39,7 @@ end
 
 # ----------------------------------------------------------------
 
-function addAnnotations{X,Y,V}(plt::Plot{ImmersePackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{ImmersePackage}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     push!(getGadflyContext(plt).guides, createGadflyAnnotationObject(ann...))
   end
@@ -78,7 +65,7 @@ end
 # ----------------------------------------------------------------
 
 
-function buildSubplotObject!(subplt::Subplot{ImmersePackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{ImmersePackage}, isbefore::Bool)
   return false
   # isbefore && return false
 end
@@ -125,15 +112,15 @@ function showSubplotObject(subplt::Subplot{ImmersePackage})
 end
 
 
-function handleLinkInner(plt::Plot{ImmersePackage}, isx::Bool)
+function _remove_axis(plt::Plot{ImmersePackage}, isx::Bool)
   gplt = getGadflyContext(plt)
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks; label=false)
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xlabel : Gadfly.Guide.ylabel, "")
 end
 
-function expandLimits!(lims, plt::Plot{ImmersePackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{ImmersePackage}, isx::Bool)
   for l in getGadflyContext(plt).layers
-    expandLimits!(lims, l.mapping[isx ? :x : :y])
+    _expand_limits(lims, l.mapping[isx ? :x : :y])
   end
 end
 

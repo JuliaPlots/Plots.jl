@@ -151,7 +151,19 @@ function stroke(args...; α::Real = -1.0)
   for arg in args
     T = typeof(arg)
 
-    # if arg in 
+    if arg in _allStyles
+      style = arg
+    elseif T <: Colorant
+      color = arg
+    elseif T <: @compat Union{Symbol,AbstractString}
+      try
+        color = parse(Colorant, string(arg))
+      end
+    elseif typeof(arg) <: Real
+      width = arg
+    else
+      warn("Unused stroke arg: $arg ($(typeof(arg)))")
+    end
   end
 
   Stroke(width, color, style)

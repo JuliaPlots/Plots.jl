@@ -5,64 +5,7 @@
 
 # ---------------------------------------------------------------------------
 
-# supportedArgs(::[PkgName]Package) = _allArgs
-supportedArgs(::[PkgName]Package) = [
-    :annotation,
-    # :args,
-    :axis,
-    :background_color,
-    :color,
-    :fillrange,
-    :fillcolor,
-    :foreground_color,
-    :group,
-    # :heatmap_c,
-    # :kwargs,
-    :label,
-    :layout,
-    :legend,
-    :linestyle,
-    :linetype,
-    :linewidth,
-    :markershape,
-    :markercolor,
-    :markersize,
-    :n,
-    :nbins,
-    :nc,
-    :nr,
-    # :pos,
-    :smooth,
-    # :ribbon,
-    :show,
-    :size,
-    :title,
-    :windowtitle,
-    :x,
-    :xlabel,
-    :xlims,
-    :xticks,
-    :y,
-    :ylabel,
-    :ylims,
-    # :yrightlabel,
-    :yticks,
-    # :xscale,
-    # :yscale,
-    # :xflip,
-    # :yflip,
-    # :z,
-  ]
-supportedAxes(::[PkgName]Package) = _allAxes
-supportedTypes(::[PkgName]Package) = _allTypes
-supportedStyles(::[PkgName]Package) = _allStyles
-supportedMarkers(::[PkgName]Package) = _allMarkers
-supportedScales(::[PkgName]Package) = _allScales
-subplotSupported(::[PkgName]Package) = false
-
-# ---------------------------------------------------------------------------
-
-function plot(pkg::[PkgName]Package; kw...)
+function _create_plot(pkg::[PkgName]Package; kw...)
   d = Dict(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
@@ -70,20 +13,29 @@ function plot(pkg::[PkgName]Package; kw...)
 end
 
 
-function plot!(::[PkgName]Package, plt::Plot; kw...)
+function _add_series(::[PkgName]Package, plt::Plot; kw...)
   d = Dict(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
   plt
 end
 
-# ----------------------------------------------------------------
-
-# TODO: override this to update plot items (title, xlabel, etc) after creation
-function updatePlotItems(plt::Plot{[PkgName]Package}, d::Dict)
+function _add_annotations{X,Y,V}(plt::Plot{[PkgName]Package}, anns::AVec{@compat(Tuple{X,Y,V})})
+  for ann in anns
+    # TODO: add the annotation to the plot
+  end
 end
 
-function updatePositionAndSize(plt::PlottingObject{[PkgName]Package}, d::Dict)
+# ----------------------------------------------------------------
+
+function _before_update_plot(plt::Plot{[PkgName]Package})
+end
+
+# TODO: override this to update plot items (title, xlabel, etc) after creation
+function _update_plot(plt::Plot{[PkgName]Package}, d::Dict)
+end
+
+function _update_plot_pos_size(plt::PlottingObject{[PkgName]Package}, d::Dict)
 end
 
 # ----------------------------------------------------------------
@@ -103,23 +55,15 @@ end
 
 # ----------------------------------------------------------------
 
-function addAnnotations{X,Y,V}(plt::Plot{[PkgName]Package}, anns::AVec{@compat(Tuple{X,Y,V})})
-  for ann in anns
-    # TODO: add the annotation to the plot
-  end
-end
-
-# ----------------------------------------------------------------
-
-function buildSubplotObject!(subplt::Subplot{[PkgName]Package})
+function _create_subplot(subplt::Subplot{[PkgName]Package})
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
 end
 
-function expandLimits!(lims, plt::Plot{[PkgName]Package}, isx::Bool)
+function _expand_limits(lims, plt::Plot{[PkgName]Package}, isx::Bool)
   # TODO: call expand limits for each plot data
 end
 
-function handleLinkInner(plt::Plot{[PkgName]Package}, isx::Bool)
+function _remove_axis(plt::Plot{[PkgName]Package}, isx::Bool)
   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
 end
 
