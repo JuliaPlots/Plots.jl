@@ -424,13 +424,13 @@ function processLineArg(d::Dict, arg)
     arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
     arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
-  # linewidth
-  elseif trueOrAllTrue(a -> typeof(a) <: Integer, arg)
-    d[:linewidth] = arg
-
   # linealpha
-  elseif trueOrAllTrue(a -> typeof(a) <: Real && a >= 0 && a <= 1, arg)
+  elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
     d[:linealpha] = arg
+
+  # linewidth
+  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+    d[:linewidth] = arg
 
   # color
   elseif !handleColors!(d, arg, :linecolor)
@@ -463,13 +463,13 @@ function processMarkerArg(d::Dict, arg)
     arg.color == nothing || (d[:markercolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
     arg.alpha == nothing || (d[:markeralpha] = arg.alpha)
 
-  # markersize
-  elseif trueOrAllTrue(a -> typeof(a) <: Integer, arg)
-    d[:markersize] = arg
-
   # linealpha
-  elseif trueOrAllTrue(a -> typeof(a) <: Real && a >= 0 && a <= 1, arg)
+  elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
     d[:markeralpha] = arg
+
+  # markersize
+  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+    d[:markersize] = arg
 
   # markercolor
   elseif !handleColors!(d, arg, :markercolor)
