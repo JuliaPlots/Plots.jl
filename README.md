@@ -211,7 +211,7 @@ Keyword | Default | Type | Aliases
 `:color_palette` | `auto` | Plot | `:palette`  
 `:fill` | `nothing` | Series | `:area`, `:f`  
 `:fillcolor` | `match` | Series | `:fc`, `:fcolor`, `:fillcolors`  
-`:fillopacity` | `nothing` | Series | `:fillopacitys`, `:fo`  
+`:fillalpha` | `nothing` | Series | `:fillalphas`, `:fo`  
 `:fillrange` | `nothing` | Series | `:fillranges`, `:fillrng`  
 `:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
 `:grid` | `true` | Plot |   
@@ -222,7 +222,7 @@ Keyword | Default | Type | Aliases
 `:legend` | `true` | Plot | `:leg`  
 `:legendfont` | `Plots.Font("Helvetica",8,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:line` | `nothing` | Series | `:l`  
-`:lineopacity` | `nothing` | Series | `:lineopacitys`, `:lo`  
+`:linealpha` | `nothing` | Series | `:linealphas`, `:lo`  
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
 `:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
 `:linewidth` | `1` | Series | `:linewidths`, `:lw`, `:w`, `:width`  
@@ -232,7 +232,7 @@ Keyword | Default | Type | Aliases
 `:linky` | `false` | Plot | `:ylink`  
 `:marker` | `nothing` | Series | `:m`, `:mark`  
 `:markercolor` | `match` | Series | `:markercolors`, `:mc`, `:mcolor`  
-`:markeropacity` | `nothing` | Series | `:alpha`, `:markeropacitys`, `:mo`, `:opacity`  
+`:markeralpha` | `nothing` | Series | `:alpha`, `:markeralphas`, `:mo`, `:alpha`  
 `:markershape` | `none` | Series | `:markershapes`, `:shape`  
 `:markersize` | `6` | Series | `:markersizes`, `:ms`, `:msize`  
 `:n` | `-1` | Plot |   

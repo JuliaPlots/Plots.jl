@@ -88,7 +88,7 @@ function _add_series(::BokehPackage, plt::Plot; kw...)
   
   glyph = Bokeh.Bokehjs.Glyph(
       glyphtype = bokeh_glyph_type(d),
-      linecolor = bokehcolor(d[:color]),  # shape's stroke or line color
+      linecolor = bokehcolor(d[:linecolor]),  # shape's stroke or line color
       linewidth = d[:linewidth],          # shape's stroke width or line width
       fillcolor = bokehcolor(d[:markercolor]),
       size      = ceil(Int, d[:markersize] * 2.5),  # magic number 2.5 to keep in same scale as other backends

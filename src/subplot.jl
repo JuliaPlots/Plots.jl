@@ -128,7 +128,7 @@ Base.print(io::IO, subplt::Subplot) = print(io, string(subplt))
 Base.show(io::IO, subplt::Subplot) = print(io, string(subplt))
 
 getplot(subplt::Subplot, idx::Int = subplt.n) = subplt.plts[mod1(idx, subplt.p)]
-getinitargs(subplt::Subplot, idx::Int) = getplot(subplt, idx).initargs
+getplotargs(subplt::Subplot, idx::Int) = getplot(subplt, idx).plotargs
 convertSeriesIndex(subplt::Subplot, n::Int) = ceil(Int, n / subplt.p)
 
 # ------------------------------------------------------------
@@ -225,19 +225,19 @@ function _preprocess_subplot(subplt::Subplot, d::Dict)
   preprocessArgs!(d)
   dumpdict(d, "After subplot! preprocessing")
 
-  # get the full initargs, overriding any new settings
-  # TODO: subplt.initargs should probably be merged sooner and actually used
+  # get the full plotargs, overriding any new settings
+  # TODO: subplt.plotargs should probably be merged sooner and actually used
   #       for color selection, etc.  (i.e. if we overwrite the subplot palettes to [:heat :rainbow])
-  #       then we need to overwrite plt[1].initargs[:color_palette] to :heat before it's actually used
+  #       then we need to overwrite plt[1].plotargs[:color_palette] to :heat before it's actually used
   #       for color selection!
 
-  # first merge the new args into the subplot's initargs. then process the plot args and merge
-  # those into the plot's initargs.  (example... `palette = [:blues :reds]` goes into subplt.initargs,
-  # then the ColorGradient for :blues/:reds is merged into plot 1/2 initargs, which is then used for color selection)
+  # first merge the new args into the subplot's plotargs. then process the plot args and merge
+  # those into the plot's plotargs.  (example... `palette = [:blues :reds]` goes into subplt.plotargs,
+  # then the ColorGradient for :blues/:reds is merged into plot 1/2 plotargs, which is then used for color selection)
   for i in 1:length(subplt.layout)
-    subplt.plts[i].initargs = getPlotArgs(backend(), merge(subplt.plts[i].initargs, d), i)
+    subplt.plts[i].plotargs = getPlotArgs(backend(), merge(subplt.plts[i].plotargs, d), i)
   end
-  merge!(subplt.initargs, d)
+  merge!(subplt.plotargs, d)
 
   # process links.  TODO: extract to separate function
   for s in (:linkx, :linky, :linkfunc)
@@ -256,7 +256,7 @@ function _postprocess_subplot(subplt::Subplot, d::Dict)
 
   # add title, axis labels, ticks, etc
   for (i,plt) in enumerate(subplt.plts)
-    di = plt.initargs
+    di = plt.plotargs
     dumpdict(di, "Updating sp $i")
     _update_plot(plt, di)
   end
@@ -333,7 +333,7 @@ function subplot!(subplt::Subplot, args...; kw...)
       delete!(di, k)
     end
     dumpdict(di, "subplot! kwList $i")
-    dumpdict(plt.initargs, "plt.initargs before plotting")
+    dumpdict(plt.plotargs, "plt.plotargs before plotting")
     
     _add_series_subplot(plt; di...)
   end

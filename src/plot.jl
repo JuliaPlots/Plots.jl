@@ -22,7 +22,7 @@ Base.print(io::IO, plt::Plot) = print(io, string(plt))
 Base.show(io::IO, plt::Plot) = print(io, string(plt))
 
 getplot(plt::Plot) = plt
-getinitargs(plt::Plot, idx::Int = 1) = plt.initargs
+getplotargs(plt::Plot, idx::Int = 1) = plt.plotargs
 convertSeriesIndex(plt::Plot, n::Int) = n
 
 # ---------------------------------------------------------
@@ -94,8 +94,8 @@ function plot!(plt::Plot, args...; kw...)
   
   # if we were able to extract guide information from the series inputs, then update the plot
   # @show xmeta, ymeta
-  updateDictWithMeta(d, plt.initargs, xmeta, true)
-  updateDictWithMeta(d, plt.initargs, ymeta, false)
+  updateDictWithMeta(d, plt.plotargs, xmeta, true)
+  updateDictWithMeta(d, plt.plotargs, ymeta, false)
 
   # now we can plot the series
   for (i,di) in enumerate(seriesArgList)
@@ -121,9 +121,9 @@ function plot!(plt::Plot, args...; kw...)
 
   # add title, axis labels, ticks, etc
   if !haskey(d, :subplot)
-    merge!(plt.initargs, d)
-    dumpdict(plt.initargs, "Updating plot items")
-    _update_plot(plt, plt.initargs)
+    merge!(plt.plotargs, d)
+    dumpdict(plt.plotargs, "Updating plot items")
+    _update_plot(plt, plt.plotargs)
   end
 
   _update_plot_pos_size(plt, d)
@@ -168,13 +168,13 @@ _before_add_series(plt::Plot) = nothing
 # --------------------------------------------------------------------
 
 # should we update the x/y label given the meta info during input slicing?
-function updateDictWithMeta(d::Dict, initargs::Dict, meta::Symbol, isx::Bool)
+function updateDictWithMeta(d::Dict, plotargs::Dict, meta::Symbol, isx::Bool)
   lsym = isx ? :xlabel : :ylabel
-  if initargs[lsym] == default(lsym)
+  if plotargs[lsym] == default(lsym)
     d[lsym] = string(meta)
   end
 end
-updateDictWithMeta(d::Dict, initargs::Dict, meta, isx::Bool) = nothing
+updateDictWithMeta(d::Dict, plotargs::Dict, meta, isx::Bool) = nothing
 
 # --------------------------------------------------------------------
 
@@ -275,7 +275,7 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     numUncounted = get(d, :numUncounted, 0)
     n = plt.n + i + numUncounted
     dumpdict(d, "before getSeriesArgs")
-    d = getSeriesArgs(plt.backend, getinitargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
+    d = getSeriesArgs(plt.backend, getplotargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
     dumpdict(d, "after getSeriesArgs")
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
@@ -363,7 +363,7 @@ end
 
 # special handling... xmin/xmax with function(s)
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs, xmin::Real, xmax::Real; kw...)
-  width = plt.initargs[:size][1]
+  width = plt.plotargs[:size][1]
   x = collect(linspace(xmin, xmax, width))  # we don't need more than the width
   createKWargsList(plt, x, f; kw...)
 end

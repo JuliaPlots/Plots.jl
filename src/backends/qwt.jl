@@ -154,7 +154,7 @@ function addLineMarker(plt::Plot{QwtPackage}, d::Dict)
     ishorizontal = (d[:linetype] == :hline)
     marker[:setLineStyle](ishorizontal ? 1 : 2)
     marker[ishorizontal ? :setYValue : :setXValue](yi)
-    qcolor = Qwt.convertRGBToQColor(getColor(d[:color]))
+    qcolor = Qwt.convertRGBToQColor(getColor(d[:linecolor]))
     linestyle = plt.o.widget[:getLineStyle](string(d[:linestyle]))
     marker[:setLinePen](Qwt.QT.QPen(qcolor, d[:linewidth], linestyle))
     marker[:attach](plt.o.widget)
@@ -228,7 +228,7 @@ function _create_subplot(subplt::Subplot{QwtPackage}, isbefore::Bool)
   #   i += rowcnt
   # end
   subplt.o = Qwt.vsplitter(rows...)
-  # Qwt.resizewidget(subplt.o, getinitargs(subplt,1)[:size]...)
+  # Qwt.resizewidget(subplt.o, getplotargs(subplt,1)[:size]...)
   # Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
   true
 end

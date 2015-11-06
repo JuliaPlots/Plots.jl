@@ -9,7 +9,7 @@ function rebuildUnicodePlot!(plt::Plot)
 
   # figure out the plotting area xlim = [xmin, xmax] and ylim = [ymin, ymax]
   sargs = plt.seriesargs
-  iargs = plt.initargs
+  iargs = plt.plotargs
 
   # get the x/y limits
   if get(iargs, :xlims, :auto) == :auto
@@ -97,7 +97,7 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool, xlim, ylim)
   label = addlegend ? d[:label] : ""
 
   # if we happen to pass in allowed color symbols, great... otherwise let UnicodePlots decide
-  color = d[:color] in UnicodePlots.autoColors ? d[:color] : :auto
+  color = d[:linecolor] in UnicodePlots.autoColors ? d[:linecolor] : :auto
 
   # add the series
   func(o, x, y; color = color, name = label, style = stepstyle)
@@ -116,8 +116,8 @@ function _create_plot(pkg::UnicodePlotsPackage; kw...)
   plt = Plot(nothing, pkg, 0, Dict(kw), Dict[])
 
   # do we want to give a new default size?
-  if !haskey(plt.initargs, :size) || plt.initargs[:size] == _plotDefaults[:size]
-    plt.initargs[:size] = (60,20)
+  if !haskey(plt.plotargs, :size) || plt.plotargs[:size] == _plotDefaults[:size]
+    plt.plotargs[:size] = (60,20)
   end
 
   plt
@@ -138,7 +138,7 @@ end
 function _update_plot(plt::Plot{UnicodePlotsPackage}, d::Dict)
   for k in (:title, :xlabel, :ylabel, :xlims, :ylims)
     if haskey(d, k)
-      plt.initargs[k] = d[k]
+      plt.plotargs[k] = d[k]
     end
   end
 end

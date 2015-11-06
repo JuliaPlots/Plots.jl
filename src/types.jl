@@ -13,7 +13,7 @@ type Plot{T<:PlottingPackage} <: PlottingObject{T}
   n::Int  # number of series
 
   # store these just in case
-  initargs::Dict
+  plotargs::Dict
   seriesargs::Vector{Dict} # args for each series
 end
 
@@ -38,8 +38,8 @@ type Subplot{T<:PlottingPackage, L<:SubplotLayout} <: PlottingObject{T}
   p::Int                      # number of plots
   n::Int                      # number of series
   layout::L
-  # initargs::Vector{Dict}
-  initargs::Dict
+  # plotargs::Vector{Dict}
+  plotargs::Dict
   initialized::Bool
   linkx::Bool
   linky::Bool

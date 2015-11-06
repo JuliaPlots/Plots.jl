@@ -107,7 +107,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
 
   # in the 2-axis case we need to get: <rightaxis>[:<func>]
   ax = getAxis(plt, axis)
-  ax[:set_ylabel](plt.initargs[:yrightlabel])
+  ax[:set_ylabel](plt.plotargs[:yrightlabel])
   fmap = @compat Dict(
       :hist       => :hist,
       :sticks     => :bar,
@@ -140,7 +140,7 @@ function handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Bool)
     xs, ys = regressionXY(d[:x], d[:y])
     ax[:plot](xs, ys,
               # linestyle = getPyPlotLineStyle(:path, :dashdot),
-              color = getPyPlotColor(d[:color]),
+              color = getPyPlotColor(d[:linecolor]),
               linewidth = 2
              )
   end
@@ -202,7 +202,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
   end
 
-  color = getPyPlotColor(d[:color], d[:lineopacity])
+  color = getPyPlotColor(d[:linecolor], d[:linealpha])
 
 
   if lt == :sticks
@@ -243,10 +243,10 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   elseif lt in (:heatmap, :hexbin)
     extra_kwargs[:gridsize] = d[:nbins]
-    extra_kwargs[:cmap] = getPyPlotColorMap(d[:color])
+    extra_kwargs[:cmap] = getPyPlotColorMap(d[:linecolor])
 
   elseif lt == :contour
-    extra_kwargs[:cmap] = getPyPlotColorMap(d[:color])
+    extra_kwargs[:cmap] = getPyPlotColorMap(d[:linecolor])
     extra_kwargs[:linewidths] = d[:linewidth]
     extra_kwargs[:linestyles] = getPyPlotLineStyle(lt, d[:linestyle])
     # TODO: will need to call contourf to fill in the contours
@@ -261,14 +261,14 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
       c = d[:markercolor]
       if isa(c, ColorGradient) && d[:z] != nothing
         extra_kwargs[:c] = convert(Vector{Float64}, d[:z])
-        extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeropacity])
+        extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
       else
-        extra_kwargs[:c] = getPyPlotColor(c, d[:markeropacity])
+        extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])
       end
     else
       extra_kwargs[:markersize] = d[:markersize]
-      extra_kwargs[:markerfacecolor] = getPyPlotColor(d[:markercolor], d[:markeropacity])
-      extra_kwargs[:markeredgecolor] = getPyPlotColor(plt.initargs[:foreground_color])
+      extra_kwargs[:markerfacecolor] = getPyPlotColor(d[:markercolor], d[:markeralpha])
+      extra_kwargs[:markeredgecolor] = getPyPlotColor(plt.plotargs[:foreground_color])
       extra_kwargs[:markeredgewidth] = d[:linewidth]
       extra_kwargs[:drawstyle] = getPyPlotStepStyle(lt)
     end
@@ -276,7 +276,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   # set these for all types
   if lt != :contour
-    extra_kwargs[:color] = color
+    extra_kwargs[:linecolor] = color
     extra_kwargs[:linewidth] = d[:linewidth]
     extra_kwargs[:label] = d[:label]
   end
@@ -291,7 +291,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     surf = d[:surface]'
     handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
     if d[:fillrange] != nothing
-      handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillopacity]))
+      handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))
     end
     handle
   elseif lt in _3dTypes
@@ -305,16 +305,16 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   handleSmooth(plt, ax, d, d[:smooth])
 
   # add the colorbar legend
-  if plt.initargs[:legend] && haskey(extra_kwargs, :cmap)
+  if plt.plotargs[:legend] && haskey(extra_kwargs, :cmap)
     PyPlot.colorbar(d[:serieshandle])
   end
 
   # this sets the bg color inside the grid
-  ax[:set_axis_bgcolor](getPyPlotColor(plt.initargs[:background_color]))
+  ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color]))
 
   fillrange = d[:fillrange]
   if fillrange != nothing && lt != :contour
-    fillcolor = getPyPlotColor(d[:fillcolor], d[:fillopacity])
+    fillcolor = getPyPlotColor(d[:fillcolor], d[:fillalpha])
     if typeof(fillrange) <: @compat(Union{Real, AVec})
       ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor)
     else
@@ -351,11 +351,11 @@ function Base.setindex!(plt::Plot{PyPlotPackage}, xy::Tuple, i::Integer)
   end
 
   ax = series[:axes]
-  if plt.initargs[:xlims] == :auto
+  if plt.plotargs[:xlims] == :auto
     xmin, xmax = ax[:get_xlim]()
     ax[:set_xlim](min(xmin, minimum(xy[1])), max(xmax, maximum(xy[1])))
   end
-  if plt.initargs[:ylims] == :auto
+  if plt.plotargs[:ylims] == :auto
     ymin, ymax = ax[:get_ylim]()
     ax[:set_ylim](min(ymin, minimum(xy[2])), max(ymax, maximum(xy[2])))
   end
@@ -443,13 +443,13 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
     
 
     # guides
-    sz = get(d, :guidefont, plt.initargs[:guidefont]).pointsize
+    sz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
     ax[:title][:set_fontsize](sz)
     ax[:xaxis][:label][:set_fontsize](sz)
     ax[:yaxis][:label][:set_fontsize](sz)
 
     # ticks
-    sz = get(d, :tickfont, plt.initargs[:tickfont]).pointsize
+    sz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
     for sym in (:get_xticklabels, :get_yticklabels)
       for lab in ax[sym]()
         lab[:set_fontsize](sz)
@@ -508,8 +508,8 @@ end
 function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   l = subplt.layout
 
-  w,h = map(px2inch, getinitargs(subplt,1)[:size])
-  bgcolor = getPyPlotColor(getinitargs(subplt,1)[:background_color])
+  w,h = map(px2inch, getplotargs(subplt,1)[:size])
+  bgcolor = getPyPlotColor(getplotargs(subplt,1)[:background_color])
   fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96)
 
   nr = nrows(l)
@@ -536,7 +536,7 @@ function subplot(plts::AVec{Plot{PyPlotPackage}}, layout::SubplotLayout, d::Dict
   n = sum([plt.n for plt in plts])
 
   pkg = PyPlotPackage()
-  newplts = Plot{PyPlotPackage}[plot(pkg; subplot=true, plt.initargs...) for plt in plts]
+  newplts = Plot{PyPlotPackage}[plot(pkg; subplot=true, plt.plotargs...) for plt in plts]
 
   subplt = Subplot(nothing, newplts, PyPlotPackage(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
 
@@ -572,14 +572,14 @@ end
 
 # function addPyPlotLegend(plt::Plot)
 function addPyPlotLegend(plt::Plot, ax)
-  if plt.initargs[:legend]
+  if plt.plotargs[:legend]
     # gotta do this to ensure both axes are included
     args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline,:contour, :path3d, :scatter3d)), plt.seriesargs)
     if length(args) > 0
       ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],
                   loc="best",
-                  fontsize = plt.initargs[:legendfont].pointsize
+                  fontsize = plt.plotargs[:legendfont].pointsize
                   # framealpha = 0.6
                  )
     end
@@ -589,7 +589,7 @@ end
 function finalizePlot(plt::Plot{PyPlotPackage})
   ax = getLeftAxis(plt)
   addPyPlotLegend(plt, ax)
-  updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
+  updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color]))
   PyPlot.draw()
 end
 
@@ -598,7 +598,7 @@ function finalizePlot(subplt::Subplot{PyPlotPackage})
   for (i,plt) in enumerate(subplt.plts)
     ax = getLeftAxis(plt)
     addPyPlotLegend(plt, ax)
-    updateAxisColors(ax, getPyPlotColor(plt.initargs[:foreground_color]))
+    updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color]))
   end
   PyPlot.draw()
 end

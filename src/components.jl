@@ -136,17 +136,21 @@ end
 
 # -----------------------------------------------------------------------
 
-immutable Stroke{T<:Real, C<:ColorScheme}
-  width::T
-  color::C
-  style::Symbol
+immutable Stroke
+  width
+  color
+  alpha
+  style
 end
 
-function stroke(args...; α::Real = -1.0)
+function stroke(args...; alpha = nothing)
   # defaults
-  width = 1
-  color = colorant"black"
-  style = :solid
+  # width = 1
+  # color = colorant"black"
+  # style = :solid
+  width = nothing
+  color = nothing
+  style = nothing
 
   for arg in args
     T = typeof(arg)
@@ -166,9 +170,53 @@ function stroke(args...; α::Real = -1.0)
     end
   end
 
-  Stroke(width, color, style)
+  Stroke(width, color, alpha, style)
 end
 
+
+immutable Brush
+  size  # fillrange, markersize, or any other sizey attribute
+  color
+  alpha
+end
+
+function brush(args...; alpha = nothing)
+  # defaults
+  # sz = 1
+  # color = colorant"black"
+  size = nothing
+  color = nothing
+
+  for arg in args
+    T = typeof(arg)
+
+    if T <: Colorant
+      color = arg
+    elseif T <: @compat Union{Symbol,AbstractString}
+      try
+        color = parse(Colorant, string(arg))
+      end
+    elseif typeof(arg) <: Real
+      size = arg
+    else
+      warn("Unused brush arg: $arg ($(typeof(arg)))")
+    end
+  end
+
+  Brush(size, color, alpha)
+end
+
+# -----------------------------------------------------------------------
+
+"type which represents z-values for colors and sizes (and anything else that might come up)"
+immutable ZValues
+  values::Vector{Float64}
+  zrange::Tuple{Float64,Float64}
+end
+
+function zvalues{T<:Real}(values::AVec{T}, zrange::Tuple{T,T} = (minimum(values), maximum(values)))
+  ZValues(collect(float(values)), map(Float64, zrange))
+end
 
 # -----------------------------------------------------------------------
 

@@ -36,9 +36,9 @@ function getLineGeom(d::Dict)
   elseif lt == :steppre
     Gadfly.Geom.step(direction = :vh)
   elseif lt == :hline
-    Gadfly.Geom.hline(color = getColor(d[:color]), size = d[:linewidth] * Gadfly.px)
+    Gadfly.Geom.hline(color = getColor(d[:linecolor]), size = d[:linewidth] * Gadfly.px)
   elseif lt == :vline
-    Gadfly.Geom.vline(color = getColor(d[:color]), size = d[:linewidth] * Gadfly.px)
+    Gadfly.Geom.vline(color = getColor(d[:linecolor]), size = d[:linewidth] * Gadfly.px)
   elseif lt == :contour
     Gadfly.Geom.contour(levels = d[:nlevels])
   else
@@ -46,24 +46,11 @@ function getLineGeom(d::Dict)
   end
 end
 
-function getGadflyLineTheme(d::Dict)
-  
-  lc = getColor(d[:color])
-  α = d[:lineopacity]
-  if α != nothing
-    lc = RGBA(lc, α)
-  end
-
-  fc = getColor(d[:fillcolor])
-  α = d[:fillopacity]
-  if α != nothing
-    fc = RGBA(fc, α)
-  end
-
+function get_extra_theme_args(d::Dict, k::Symbol)
   # gracefully handles old Gadfly versions
   extra_theme_args = Dict()
   try
-    extra_theme_args[:line_style] = Gadfly.get_stroke_vector(d[:linestyle])
+    extra_theme_args[:line_style] = Gadfly.get_stroke_vector(d[k])
   catch err
     if string(err) == "UndefVarError(:get_stroke_vector)"
       Base.warn_once("Gadfly.get_stroke_vector failed... do you have an old version of Gadfly?")
@@ -71,6 +58,23 @@ function getGadflyLineTheme(d::Dict)
       rethrow()
     end
   end
+  extra_theme_args
+end
+
+function getGadflyLineTheme(d::Dict)
+  
+  lc = getColor(d[:linecolor])
+  α = d[:linealpha]
+  if α != nothing
+    lc = RGBA(lc, α)
+  end
+
+  fc = getColor(d[:fillcolor])
+  α = d[:fillalpha]
+  if α != nothing
+    fc = RGBA(fc, α)
+  end
+
 
   Gadfly.Theme(;
       default_color = lc,
@@ -79,7 +83,7 @@ function getGadflyLineTheme(d::Dict)
       lowlight_color = x->RGB(fc),  # fill/ribbon
       lowlight_opacity = alpha(fc), # fill/ribbon
       bar_highlight = RGB(lc),      # bars
-      extra_theme_args...
+      get_extra_theme_args(d, :linestyle)...
     )
 end
 
@@ -129,32 +133,33 @@ function getMarkerGeom(d::Dict)
 end
 
 
-function getGadflyMarkerTheme(d::Dict, initargs::Dict)
+function getGadflyMarkerTheme(d::Dict, plotargs::Dict)
   c = getColor(d[:markercolor])
-  α = d[:markeropacity]
+  α = d[:markeralpha]
   if α != nothing
     c = RGBA(RGB(c), α)
   end
 
-  fg = getColor(initargs[:foreground_color])
-  Gadfly.Theme(
+  # fg = getColor(plotargs[:foreground_color])
+  Gadfly.Theme(;
       default_color = c,
       default_point_size = d[:markersize] * Gadfly.px,
-      discrete_highlight_color = c -> RGB(fg),
-      highlight_width = d[:linewidth] * Gadfly.px,
+      discrete_highlight_color = c -> RGB(getColor(d[:markerstrokecolor])),
+      highlight_width = d[:markerstrokewidth] * Gadfly.px,
+      # get_extra_theme_args(d, :markerstrokestyle)...
     )
 end
 
-function addGadflyMarker!(plt::Plot, d::Dict, initargs::Dict, geoms...)
+function addGadflyMarker!(plt::Plot, d::Dict, plotargs::Dict, geoms...)
   gfargs = vcat(geoms...,
-                getGadflyMarkerTheme(d, initargs),
+                getGadflyMarkerTheme(d, plotargs),
                 getMarkerGeom(d))
   kwargs = Dict()
 
   # handle continuous color scales for the markers
   z = d[:z]
   if z != nothing && typeof(z) <: AVec
-    kwargs[:color] = z
+    kwargs[:linecolor] = z
     if !isa(d[:markercolor], ColorGradient)
       d[:markercolor] = colorscheme(:bluesreds)
     end
@@ -170,7 +175,7 @@ end
 function addToGadflyLegend(plt::Plot, d::Dict)
 
   # add the legend?
-  if plt.initargs[:legend]
+  if plt.plotargs[:legend]
     gplt = getGadflyContext(plt)
 
     # add the legend if needed
@@ -185,7 +190,7 @@ function addToGadflyLegend(plt::Plot, d::Dict)
         # since gadfly will call unique(colors), but doesn't also merge the rows that match
         # Should ensure from this side that colors which are the same are merged together
 
-        c = getColor(d[d[:markershape] == :none ? :color : :markercolor])
+        c = getColor(d[d[:markershape] == :none ? :linecolor : :markercolor])
         foundit = false
         
         # extend the label if we found this color
@@ -239,7 +244,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
 
   # markers
   if d[:markershape] != :none
-    prepend!(layers, addGadflyMarker!(plt, d, plt.initargs, smooth...))
+    prepend!(layers, addGadflyMarker!(plt, d, plt.plotargs, smooth...))
   end
 
   lt in (:hist, :heatmap, :hexbin, :contour) || addToGadflyLegend(plt, d)
@@ -258,7 +263,7 @@ end
 #   z = d[:z]
 
 #   # handle line segments of different colors
-#   cscheme = d[:color]
+#   cscheme = d[:linecolor]
 #   if isa(cscheme, ColorVector)
 #     # create a color scale, and set the color group to the index of the color
 #     push!(gplt.scales, Gadfly.Scale.color_discrete_manual(cscheme.v...))
@@ -270,7 +275,7 @@ end
 #     cs = collect(repmat(csindices', 2, 1))[1:end-1]
 #     grp = collect(repmat((1:length(d[:y]))', 2, 1))[1:end-1]
 #     d[:x], d[:y] = map(createSegments, (d[:x], d[:y]))
-#     colorgroup = [(:color, cs), (:group, grp)]
+#     colorgroup = [(:linecolor, cs), (:group, grp)]
 
 
 # ---------------------------------------------------------------------------
@@ -416,9 +421,9 @@ end
 function updateGadflyPlotTheme(plt::Plot, d::Dict)
   kwargs = Dict()
 
-  # # get the full initargs, overriding any new settings
+  # # get the full plotargs, overriding any new settings
   # # TODO: should this be part of the main `plot` command in plot.jl???
-  # d = merge!(plt.initargs, d)
+  # d = merge!(plt.plotargs, d)
 
   # hide the legend?
   if !get(d, :legend, true)
@@ -582,8 +587,8 @@ function buildGadflySubplotContext(subplt::Subplot)
 end
 
 setGadflyDisplaySize(w,h) = Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
-setGadflyDisplaySize(plt::Plot) = setGadflyDisplaySize(plt.initargs[:size]...)
-setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getinitargs(subplt, 1)[:size]...)
+setGadflyDisplaySize(plt::Plot) = setGadflyDisplaySize(plt.plotargs[:size]...)
+setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getplotargs(subplt, 1)[:size]...)
 # -------------------------------------------------------------------------
 
 
@@ -610,14 +615,14 @@ end
 
 
 function Base.display(::PlotsDisplay, plt::Plot{GadflyPackage})
-  setGadflyDisplaySize(plt.initargs[:size]...)
+  setGadflyDisplaySize(plt.plotargs[:size]...)
   display(plt.o)
 end
 
 
 
 function Base.display(::PlotsDisplay, subplt::Subplot{GadflyPackage})
-  setGadflyDisplaySize(getinitargs(subplt,1)[:size]...)
+  setGadflyDisplaySize(getplotargs(subplt,1)[:size]...)
   ctx = buildGadflySubplotContext(subplt)
 
 

@@ -68,7 +68,7 @@ function _add_series(::WinstonPackage, plt::Plot; kw...)
 
 
   e = Dict()
-  e[:color] = getColor(d[:color])
+  e[:color] = getColor(d[:linecolor])
   e[:linewidth] = d[:linewidth]
   e[:kind] = winston_linestyle[d[:linestyle]]
   e[:symbolkind] = winston_marker[d[:markershape]]
@@ -198,7 +198,7 @@ end
 # ----------------------------------------------------------------
 
 function addWinstonLegend(plt::Plot, wplt)
-  if plt.initargs[:legend]
+  if plt.plotargs[:legend]
     Winston.legend(wplt, [sd[:label] for sd in plt.seriesargs])
   end
 end
@@ -219,9 +219,9 @@ function Base.display(::PlotsDisplay, plt::Plot{WinstonPackage})
       error("Gtk is the only supported display for Winston in Plots.  Set `output_surface = gtk` in src/Winston.ini")
     end
     # initialize window
-    w,h = plt.initargs[:size]
+    w,h = plt.plotargs[:size]
     canvas = Gtk.GtkCanvasLeaf()
-    window = Gtk.GtkWindowLeaf(canvas, plt.initargs[:windowtitle], w, h)
+    window = Gtk.GtkWindowLeaf(canvas, plt.plotargs[:windowtitle], w, h)
     plt.o = (window, canvas, wplt)
   end
 

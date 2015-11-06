@@ -110,34 +110,38 @@ subplotSupported() = subplotSupported(backend())
 const _seriesDefaults = Dict{Symbol, Any}()
 
 # series-specific
-_seriesDefaults[:axis]        = :left
-_seriesDefaults[:color]       = :auto
-_seriesDefaults[:label]       = "AUTO"
-_seriesDefaults[:linetype]    = :path
-_seriesDefaults[:linestyle]   = :solid
-_seriesDefaults[:linewidth]   = 1
-_seriesDefaults[:lineopacity] = nothing
-_seriesDefaults[:markershape] = :none
-_seriesDefaults[:markercolor] = :match
-_seriesDefaults[:markeropacity] = nothing
-_seriesDefaults[:markersize]  = 6
-_seriesDefaults[:fillrange]   = nothing   # ribbons, areas, etc
-_seriesDefaults[:fillcolor]   = :match
-_seriesDefaults[:fillopacity] = nothing
-# _seriesDefaults[:ribbon]      = nothing
-# _seriesDefaults[:ribboncolor] = :match
-_seriesDefaults[:nbins]       = 30               # number of bins for heatmaps and hists
-# _seriesDefaults[:heatmap_c]   = (0.15, 0.5)   # TODO: this should be replaced with a ColorGradient
-# _seriesDefaults[:fill]      = nothing          # fills in the area
-_seriesDefaults[:smooth]      = false               # regression line?
-_seriesDefaults[:group]       = nothing           # groupby vector
-_seriesDefaults[:annotation]  = nothing           # annotation tuple(s)... (x,y,annotation)
-_seriesDefaults[:z]           = nothing           # depth for contour, color scale, etc
-# _seriesDefaults[:args]        = []     # additional args to pass to the backend
-# _seriesDefaults[:kwargs]      = []   # additional keyword args to pass to the backend
-#                               # note: can be Vector{Dict} or Vector{Tuple} 
-_seriesDefaults[:surface]     = nothing
-_seriesDefaults[:nlevels]     = 15
+_seriesDefaults[:axis]            = :left
+_seriesDefaults[:label]           = "AUTO"
+_seriesDefaults[:linetype]        = :path
+_seriesDefaults[:linestyle]       = :solid
+_seriesDefaults[:linewidth]       = 1
+_seriesDefaults[:linecolor]       = :auto
+_seriesDefaults[:linealpha]       = nothing
+# _seriesDefaults[:linestroke]      = Stroke(1, :auto, nothing, :solid)  # linewidth, linecolor, linealpha, linestyle
+# _seriesDefaults[:fillbrush]       = Brush(nothing, :match, nothing)  # fillrange, fillcolor, fillalpha
+_seriesDefaults[:fillrange]       = nothing   # ribbons, areas, etc
+_seriesDefaults[:fillcolor]       = :match
+_seriesDefaults[:fillalpha]       = nothing
+_seriesDefaults[:markershape]     = :none
+# _seriesDefaults[:markerstroke]    = Stroke(1, :match_foreground, nothing, :solid)
+# _seriesDefaults[:markerbrush]     = Brush(6, :match, nothing)
+_seriesDefaults[:markercolor]     = :match
+_seriesDefaults[:markeralpha]     = nothing
+_seriesDefaults[:markersize]      = 6
+_seriesDefaults[:markerstrokestyle] = :solid
+_seriesDefaults[:markerstrokewidth] = 1
+_seriesDefaults[:markerstrokecolor] = :match
+_seriesDefaults[:markerstrokealpha] = nothing
+# _seriesDefaults[:ribbon]          = nothing
+# _seriesDefaults[:ribboncolor]     = :match
+_seriesDefaults[:nbins]           = 30               # number of bins for heatmaps and hists
+_seriesDefaults[:smooth]          = false               # regression line?
+_seriesDefaults[:group]           = nothing           # groupby vector
+_seriesDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
+_seriesDefaults[:z]               = nothing           # depth for contour, color scale, etc
+_seriesDefaults[:z]
+_seriesDefaults[:surface]         = nothing
+_seriesDefaults[:nlevels]         = 15
 
 
 const _plotDefaults = Dict{Symbol, Any}()
@@ -185,12 +189,6 @@ supportedArgs(::PlottingPackage) = _allArgs
 supportedArgs() = supportedArgs(backend())
 
 
-@compat const _argNotes = Dict(
-    :color => "Series color.  To have different marker and/or fill colors, optionally set the markercolor and fillcolor args.",
-    :z => "Determines the depth.  For color gradients, we expect 0 ≤ z ≤ 1.",
-    # :heatmap_c => "For Qwt heatmaps only... will be deprecated eventually.",
-  )
-
 
 # -----------------------------------------------------------------------------
 
@@ -220,79 +218,88 @@ end
 # Alternate args
 
 @compat const _keyAliases = Dict(
-    :c            => :color,
-    :lab          => :label,
-    :l            => :line,
-    :w            => :linewidth,
-    :width        => :linewidth,
-    :lw           => :linewidth,
-    :lo           => :lineopacity,
-    :type         => :linetype,
-    :lt           => :linetype,
-    :t            => :linetype,
-    :style        => :linestyle,
-    :s            => :linestyle,
-    :ls           => :linestyle,
-    :m            => :marker,
-    :mark         => :marker,
-    :shape        => :markershape,
-    :mc           => :markercolor,
-    :mcolor       => :markercolor,
-    :ms           => :markersize,
-    :msize        => :markersize,
-    :mo           => :markeropacity,
-    :opacity      => :markeropacity,
-    :alpha        => :markeropacity,
-    :f            => :fill,
-    :area         => :fill,
-    :fillrng      => :fillrange,
-    :fc           => :fillcolor,
-    :fcolor       => :fillcolor,
-    :fo           => :fillopacity,
-    :g            => :group,
-    :nb           => :nbins,
-    :nbin         => :nbins,
-    :rib          => :ribbon,
-    :ann          => :annotation,
-    :anns         => :annotation,
-    :annotate     => :annotation,
-    :annotations  => :annotation,
-    :xlab         => :xlabel,
-    :ylab         => :ylabel,
-    :yrlab        => :yrightlabel,
-    :ylabr        => :yrightlabel,
-    :y2lab        => :yrightlabel,
-    :ylab2        => :yrightlabel,
-    :ylabelright  => :yrightlabel,
-    :ylabel2      => :yrightlabel,
-    :y2label      => :yrightlabel,
-    :leg          => :legend,
-    :bg           => :background_color,
-    :bgcolor      => :background_color,
-    :bg_color     => :background_color,
-    :background   => :background_color,
-    :fg           => :foreground_color,
-    :fgcolor      => :foreground_color,
-    :fg_color     => :foreground_color,
-    :foreground   => :foreground_color,
-    :regression   => :smooth,
-    :reg          => :smooth,
-    :xlim         => :xlims,
-    :xlimit       => :xlims,
-    :xlimits      => :xlims,
-    :ylim         => :ylims,
-    :ylimit       => :ylims,
-    :ylimits      => :ylims,
-    :xtick        => :xticks,
-    :ytick        => :yticks,
-    :windowsize   => :size,
-    :wsize        => :size,
-    :wtitle       => :windowtitle,
-    :gui          => :show,
-    :display      => :show,
-    :palette      => :color_palette,
-    :xlink        => :linkx,
-    :ylink        => :linky,
+    :c                  => :linecolor,
+    :color              => :linecolor,
+    :colour             => :linecolor,
+    :lab                => :label,
+    :l                  => :line,
+    :w                  => :linewidth,
+    :width              => :linewidth,
+    :lw                 => :linewidth,
+    :la                 => :linealpha,
+    :lineopacity        => :linealpha,
+    :type               => :linetype,
+    :lt                 => :linetype,
+    :t                  => :linetype,
+    :style              => :linestyle,
+    :s                  => :linestyle,
+    :ls                 => :linestyle,
+    :m                  => :marker,
+    :mark               => :marker,
+    :shape              => :markershape,
+    :mc                 => :markercolor,
+    :mcolor             => :markercolor,
+    :markercolour       => :markercolor,
+    :ms                 => :markersize,
+    :msize              => :markersize,
+    :ma                 => :markeralpha,
+    :alpha              => :markeralpha,
+    :opacity            => :markeralpha,
+    :markeropacity      => :markeralpha,
+    :f                  => :fill,
+    :area               => :fill,
+    :fillrng            => :fillrange,
+    :fc                 => :fillcolor,
+    :fcolor             => :fillcolor,
+    :fillcolour         => :fillcolor,
+    :fa                 => :fillalpha,
+    :fillopacity        => :fillalpha,
+    :g                  => :group,
+    :nb                 => :nbins,
+    :nbin               => :nbins,
+    :rib                => :ribbon,
+    :ann                => :annotation,
+    :anns               => :annotation,
+    :annotate           => :annotation,
+    :annotations        => :annotation,
+    :xlab               => :xlabel,
+    :ylab               => :ylabel,
+    :yrlab              => :yrightlabel,
+    :ylabr              => :yrightlabel,
+    :y2lab              => :yrightlabel,
+    :ylab2              => :yrightlabel,
+    :ylabelright        => :yrightlabel,
+    :ylabel2            => :yrightlabel,
+    :y2label            => :yrightlabel,
+    :leg                => :legend,
+    :bg                 => :background_color,
+    :bgcolor            => :background_color,
+    :bg_color           => :background_color,
+    :background         => :background_color,
+    :background_colour  => :background_color,
+    :fg                 => :foreground_color,
+    :fgcolor            => :foreground_color,
+    :fg_color           => :foreground_color,
+    :foreground         => :foreground_color,
+    :foreground_colour  => :foreground_color,
+    :regression         => :smooth,
+    :reg                => :smooth,
+    :xlim               => :xlims,
+    :xlimit             => :xlims,
+    :xlimits            => :xlims,
+    :ylim               => :ylims,
+    :ylimit             => :ylims,
+    :ylimits            => :ylims,
+    :xtick              => :xticks,
+    :ytick              => :yticks,
+    :windowsize         => :size,
+    :wsize              => :size,
+    :wtitle             => :windowtitle,
+    :gui                => :show,
+    :display            => :show,
+    :palette            => :color_palette,
+    :xlink              => :linkx,
+    :ylink              => :linky,
   )
 
 # add all pluralized forms to the _keyAliases dict
@@ -406,16 +413,27 @@ function processLineArg(d::Dict, arg)
   elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
     d[:linestyle] = arg
 
+  elseif typeof(arg) <: Stroke
+    arg.width == nothing || (d[:linewidth] = arg.width)
+    arg.color == nothing || (d[:linecolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+    arg.alpha == nothing || (d[:linealpha] = arg.alpha)
+    arg.style == nothing || (d[:linestyle] = arg.style)
+
+  elseif typeof(arg) <: Brush
+    arg.size  == nothing || (d[:fillrange] = arg.size)
+    arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+    arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
+
   # linewidth
   elseif trueOrAllTrue(a -> typeof(a) <: Integer, arg)
     d[:linewidth] = arg
 
-  # lineopacity
+  # linealpha
   elseif trueOrAllTrue(a -> typeof(a) <: Real && a >= 0 && a <= 1, arg)
-    d[:lineopacity] = arg
+    d[:linealpha] = arg
 
   # color
-  elseif !handleColors!(d, arg, :color)
+  elseif !handleColors!(d, arg, :linecolor)
     warn("Skipped line arg $arg.")
 
   end
@@ -429,14 +447,29 @@ function processMarkerArg(d::Dict, arg)
     d[:markershape] = arg
   elseif trueOrAllTrue(a -> isa(a, Shape), arg)
     d[:markershape] = arg
+  
+  # stroke style
+  elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+    d[:markerstrokestyle] = arg
+
+  elseif typeof(arg) <: Stroke
+    arg.width == nothing || (d[:markerstrokewidth] = arg.width)
+    arg.color == nothing || (d[:markerstrokecolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+    arg.alpha == nothing || (d[:markerstrokealpha] = arg.alpha)
+    arg.style == nothing || (d[:markerstrokestyle] = arg.style)
+
+  elseif typeof(arg) <: Brush
+    arg.size  == nothing || (d[:markersize]  = arg.size)
+    arg.color == nothing || (d[:markercolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+    arg.alpha == nothing || (d[:markeralpha] = arg.alpha)
 
   # markersize
   elseif trueOrAllTrue(a -> typeof(a) <: Integer, arg)
     d[:markersize] = arg
 
-  # lineopacity
+  # linealpha
   elseif trueOrAllTrue(a -> typeof(a) <: Real && a >= 0 && a <= 1, arg)
-    d[:markeropacity] = arg
+    d[:markeralpha] = arg
 
   # markercolor
   elseif !handleColors!(d, arg, :markercolor)
@@ -447,7 +480,13 @@ end
 
 
 function processFillArg(d::Dict, arg)
-  if !handleColors!(d, arg, :fillcolor)
+
+  if typeof(arg) <: Brush
+    arg.size  == nothing || (d[:fillrange] = arg.size)
+    arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+    arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
+
+  elseif !handleColors!(d, arg, :fillcolor)
     d[:fillrange] = arg
   end
 end
@@ -487,6 +526,8 @@ function preprocessArgs!(d::Dict)
     processFillArg(d, arg)
   end
   delete!(d, :fill)
+
+  # convert into strokes and brushes
 
   # handle subplot links
   if haskey(d, :link)
@@ -628,7 +669,7 @@ end
 
 
 # build the argument dictionary for a series
-function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in initargs, not plt
+function getSeriesArgs(pkg::PlottingPackage, plotargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
   kwdict = Dict(kw)
   d = Dict()
 
@@ -653,17 +694,24 @@ function getSeriesArgs(pkg::PlottingPackage, initargs::Dict, kw, commandIndex::I
   aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
 
   # update color
-  d[:color] = getSeriesRGBColor(d[:color], initargs, plotIndex)
+  d[:linecolor] = getSeriesRGBColor(d[:linecolor], plotargs, plotIndex)
 
   # update markercolor
-  mc = d[:markercolor]
-  mc = (mc == :match ? d[:color] : getSeriesRGBColor(mc, initargs, plotIndex))
-  d[:markercolor] = mc
+  c = d[:markercolor]
+  c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+  d[:markercolor] = c
+
+  # update markerstrokecolor
+  c = d[:markerstrokecolor]
+  c = (c == :match ? plotargs[:foreground_color] : getSeriesRGBColor(c, plotargs, plotIndex))
+  d[:markerstrokecolor] = c
 
   # update fillcolor
-  mc = d[:fillcolor]
-  mc = (mc == :match ? d[:color] : getSeriesRGBColor(mc, initargs, plotIndex))
-  d[:fillcolor] = mc
+  c = d[:fillcolor]
+  c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+  d[:fillcolor] = c
+
+  # TODO: rebuild
 
   # set label
   label = d[:label]

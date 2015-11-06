@@ -63,6 +63,8 @@ export
   Shape,
   text,
   font,
+  stroke,
+  brush,
   OHLC,
 
   colorscheme,

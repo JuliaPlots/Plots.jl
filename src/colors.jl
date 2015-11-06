@@ -353,10 +353,10 @@ function handlePlotColors(::PlottingPackage, d::Dict)
 end
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
-function getSeriesRGBColor(c, initargs::Dict, n::Int)
+function getSeriesRGBColor(c, plotargs::Dict, n::Int)
 
   if c == :auto
-    c = autopick(initargs[:color_palette], n)
+    c = autopick(plotargs[:color_palette], n)
   end
 
   # c should now be a subtype of ColorScheme
