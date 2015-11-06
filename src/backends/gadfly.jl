@@ -7,7 +7,7 @@
 function createGadflyPlotObject(d::Dict)
   gplt = Gadfly.Plot()
   gplt.mapping = Dict()
-  gplt.data_source = DataFrames.DataFrame()
+  gplt.data_source = Gadfly.DataFrames.DataFrame()
   gplt.layers = gplt.layers[1:0]
   gplt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]),
                                    Gadfly.Guide.ylabel(d[:ylabel]),

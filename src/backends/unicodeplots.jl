@@ -112,7 +112,7 @@ end
 # -------------------------------
 
 
-function plot(pkg::UnicodePlotsPackage; kw...)
+function _create_plot(pkg::UnicodePlotsPackage; kw...)
   plt = Plot(nothing, pkg, 0, Dict(kw), Dict[])
 
   # do we want to give a new default size?
@@ -123,7 +123,7 @@ function plot(pkg::UnicodePlotsPackage; kw...)
   plt
 end
 
-function plot!(::UnicodePlotsPackage, plt::Plot; kw...)
+function _add_series(::UnicodePlotsPackage, plt::Plot; kw...)
   d = Dict(kw)
   if d[:linetype] in (:sticks, :bar)
     d = barHack(; d...)

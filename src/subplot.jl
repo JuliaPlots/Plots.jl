@@ -82,7 +82,7 @@ Base.getindex(subplt::Subplot, args...) = subplt.plts[subplt.layout[args...]]
 
 # handle "linking" the subplot axes together
 # each backend should implement the _remove_axis and _expand_limits methods
-function linkAxis(subplt::Subplot, isx::Bool)
+function link_axis(subplt::Subplot, isx::Bool)
 
   # collect the list of plots and the expanded limits for those plots that should be linked on this axis
   includedPlots = Any[]
@@ -175,7 +175,7 @@ function subplot(args...; kw...)
     di = getPlotArgs(pkg, d, i)
     di[:subplot] = true
     dumpdict(di, "Plot args (subplot $i)")
-    push!(plts, plot(pkg; di...))
+    push!(plts, _create_plot(pkg; di...))
   end
 
   # create the object and do the plotting
@@ -264,8 +264,8 @@ function _postprocess_subplot(subplt::Subplot, d::Dict)
   _update_plot_pos_size(subplt, d)
 
   # handle links
-  subplt.linkx && linkAxis(subplt, true)
-  subplt.linky && linkAxis(subplt, false)
+  subplt.linkx && link_axis(subplt, true)
+  subplt.linky && link_axis(subplt, false)
 
   # set this to be current
   current(subplt)
@@ -335,7 +335,7 @@ function subplot!(subplt::Subplot, args...; kw...)
     dumpdict(di, "subplot! kwList $i")
     dumpdict(plt.initargs, "plt.initargs before plotting")
     
-    _plot_from_subplot!(plt; di...)
+    _add_series_subplot(plt; di...)
   end
 
   _postprocess_subplot(subplt, d)
@@ -350,7 +350,7 @@ end
 
 
 
-function _plot_from_subplot!(plt::Plot, args...; kw...)
+function _add_series_subplot(plt::Plot, args...; kw...)
   d = Dict(kw)
 
   setTicksFromStringVector(d, d, :x, :xticks)

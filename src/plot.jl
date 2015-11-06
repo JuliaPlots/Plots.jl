@@ -50,7 +50,7 @@ function plot(args...; kw...)
 
   plotargs = getPlotArgs(pkg, d, 1)
   dumpdict(plotargs, "Plot args")
-  plt = plot(pkg; plotargs...)  # create a new, blank plot
+  plt = _create_plot(pkg; plotargs...)  # create a new, blank plot
 
   delete!(d, :background_color)
   plot!(plt, args...; d...)  # add to it
@@ -87,7 +87,7 @@ function plot!(plt::Plot, args...; kw...)
   groupargs = get(d, :group, nothing) == nothing ? [] : [extractGroupArgs(d[:group], args...)]
 
   # just in case the backend needs to set up the plot (make it current or something)
-  preparePlotUpdate(plt)
+  _before_add_series(plt)
 
   # get the list of dictionaries, one per series
   seriesArgList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
@@ -111,7 +111,7 @@ function plot!(plt::Plot, args...; kw...)
 
     dumpdict(di, "Series $i")
 
-    plot!(plt.backend, plt; di...)
+    _add_series(plt.backend, plt; di...)
   end
 
   _add_annotations(plt, d)
@@ -163,7 +163,7 @@ end
 
 # --------------------------------------------------------------------
 
-preparePlotUpdate(plt::Plot) = nothing
+_before_add_series(plt::Plot) = nothing
 
 # --------------------------------------------------------------------
 

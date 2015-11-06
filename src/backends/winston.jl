@@ -25,14 +25,14 @@
                             :star5 => "asterisk"
                            )
 
-function preparePlotUpdate(plt::Plot{WinstonPackage})
+function _before_add_series(plt::Plot{WinstonPackage})
   Winston.ghf(plt.o)
 end
 
 # ---------------------------------------------------------------------------
 
 
-function plot(pkg::WinstonPackage; kw...)
+function _create_plot(pkg::WinstonPackage; kw...)
   d = Dict(kw)
   wplt = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
   
@@ -56,7 +56,7 @@ function getWinstonItems(plt::Plot)
   window, canvas, wplt
 end
 
-function plot!(::WinstonPackage, plt::Plot; kw...)
+function _add_series(::WinstonPackage, plt::Plot; kw...)
   d = Dict(kw)
 
   window, canvas, wplt = getWinstonItems(plt)

@@ -8,6 +8,8 @@ function createImmerseFigure(d::Dict)
   Immerse.Figure(figidx)
 end
 
+# ----------------------------------------------------------------
+
 
 # create a blank Gadfly.Plot object
 function _create_plot(pkg::ImmersePackage; kw...)

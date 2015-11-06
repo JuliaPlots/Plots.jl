@@ -70,7 +70,7 @@ function adjustQwtKeywords(plt::Plot{QwtPackage}, iscreating::Bool; kw...)
   d
 end
 
-function plot(pkg::QwtPackage; kw...)
+function _create_plot(pkg::QwtPackage; kw...)
   d = Dict(kw)
   fixcolors(d)
   dumpdict(d,"\n\n!!! plot")
@@ -79,7 +79,7 @@ function plot(pkg::QwtPackage; kw...)
   plt
 end
 
-function plot!(::QwtPackage, plt::Plot; kw...)
+function _add_series(::QwtPackage, plt::Plot; kw...)
   d = adjustQwtKeywords(plt, false; kw...)
   fixcolors(d)
   dumpdict(d,"\n\n!!! plot!")
@@ -270,10 +270,6 @@ function Base.display(::PlotsDisplay, subplt::Subplot{QwtPackage})
   for plt in subplt.plts
     Qwt.refresh(plt.o)
   end
-  # iargs = getinitargs(subplt,1)
-  # # iargs = subplt.initargs
-  # Qwt.resizewidget(subplt.o, iargs[:size]...)
-  # Qwt.movewidget(subplt.o, iargs[:pos]...)
   Qwt.showwidget(subplt.o)
 end
 

@@ -156,7 +156,7 @@ makePyPlotCurrent(wrap::PyPlotAxisWrapper) = nothing #PyPlot.sca(wrap.ax.o)
 makePyPlotCurrent(plt::Plot{PyPlotPackage}) = makePyPlotCurrent(plt.o)
 
 
-function preparePlotUpdate(plt::Plot{PyPlotPackage})
+function _before_add_series(plt::Plot{PyPlotPackage})
   makePyPlotCurrent(plt)
 end
 
@@ -171,7 +171,7 @@ end
 # screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
 # show            # true or false, show the plot (in case you don't want the window to pop up right away)
 
-function plot(pkg::PyPlotPackage; kw...)
+function _create_plot(pkg::PyPlotPackage; kw...)
   # create the figure
   d = Dict(kw)
 
@@ -189,7 +189,7 @@ function plot(pkg::PyPlotPackage; kw...)
 end
 
 
-function plot!(pkg::PyPlotPackage, plt::Plot; kw...)
+function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
   lt = d[:linetype]
@@ -545,7 +545,7 @@ function subplot(plts::AVec{Plot{PyPlotPackage}}, layout::SubplotLayout, d::Dict
 
   for (i,plt) in enumerate(plts)
     for seriesargs in plt.seriesargs
-      _plot_from_subplot!(newplts[i]; seriesargs...)
+      _add_series_subplot(newplts[i]; seriesargs...)
     end
   end
 

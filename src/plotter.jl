@@ -151,8 +151,8 @@ function backend()
 
     elseif currentBackendSymbol == :gadfly
       try
-        @eval import Gadfly, Compose, DataFrames
-        @eval export Gadfly, Compose, DataFrames
+        @eval import Gadfly, Compose
+        @eval export Gadfly, Compose
         @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
       catch err
         warn("Couldn't import Gadfly.  Install it with: Pkg.add(\"Gadfly\").")
