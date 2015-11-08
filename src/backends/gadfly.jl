@@ -88,7 +88,7 @@ function getGadflyLineTheme(d::Dict)
 end
 
 # add a line as a new layer
-function addGadflyLine!(plt::Plot, d::Dict, geoms...)
+function addGadflyLine!(plt::Plot, numlayers::Int, d::Dict, geoms...)
   gplt = getGadflyContext(plt)
   gfargs = vcat(geoms...,
                 getGadflyLineTheme(d))
@@ -120,7 +120,7 @@ function addGadflyLine!(plt::Plot, d::Dict, geoms...)
   
   # add the layer
   x = d[d[:linetype] == :hist ? :y : :x]
-  Gadfly.layer(gfargs...; x = x, y = d[:y], kwargs...)
+  Gadfly.layer(gfargs...; x = x, y = d[:y], order=numlayers, kwargs...)
 end
 
 
@@ -150,7 +150,7 @@ function getGadflyMarkerTheme(d::Dict, plotargs::Dict)
     )
 end
 
-function addGadflyMarker!(plt::Plot, d::Dict, plotargs::Dict, geoms...)
+function addGadflyMarker!(plt::Plot, numlayers::Int, d::Dict, plotargs::Dict, geoms...)
   gfargs = vcat(geoms...,
                 getGadflyMarkerTheme(d, plotargs),
                 getMarkerGeom(d))
@@ -166,7 +166,7 @@ function addGadflyMarker!(plt::Plot, d::Dict, plotargs::Dict, geoms...)
     push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p))))
   end
 
-  Gadfly.layer(gfargs...; x = d[:x], y = d[:y], kwargs...)
+  Gadfly.layer(gfargs...; x = d[:x], y = d[:y], order=numlayers, kwargs...)
 end
 
 
@@ -220,6 +220,7 @@ getGadflySmoothing(smooth::Real) = [Gadfly.Geom.smooth(method=:loess, smoothing=
 function addGadflySeries!(plt::Plot, d::Dict)
 
   layers = Gadfly.Layer[]
+  gplt = getGadflyContext(plt)
 
   # add a regression line?
   # TODO: make more flexible
@@ -228,7 +229,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
   # lines
   geom = getLineGeom(d)
   if geom != nothing
-    prepend!(layers, addGadflyLine!(plt, d, geom, smooth...))
+    prepend!(layers, addGadflyLine!(plt, length(gplt.layers), d, geom, smooth...))
 
     # don't add a regression for markers too
     smooth = Any[]
@@ -244,14 +245,14 @@ function addGadflySeries!(plt::Plot, d::Dict)
 
   # markers
   if d[:markershape] != :none
-    prepend!(layers, addGadflyMarker!(plt, d, plt.plotargs, smooth...))
+    prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), d, plt.plotargs, smooth...))
   end
 
   lt in (:hist, :heatmap, :hexbin, :contour) || addToGadflyLegend(plt, d)
 
   # now save the layers that apply to this series
   d[:gadflylayers] = layers
-  prepend!(getGadflyContext(plt).layers, layers)
+  prepend!(gplt.layers, layers)
 end
 
 
