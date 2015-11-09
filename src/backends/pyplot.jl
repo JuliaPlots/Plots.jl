@@ -276,7 +276,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   # set these for all types
   if lt != :contour
-    extra_kwargs[:linecolor] = color
+    extra_kwargs[:color] = color
     extra_kwargs[:linewidth] = d[:linewidth]
     extra_kwargs[:label] = d[:label]
   end
