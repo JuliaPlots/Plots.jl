@@ -18,7 +18,7 @@ Plots is a plotting API and toolset.  My goals with the package are:
 
 Use the preprocessing pipeline in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added with minimal effort.
 
-Check out the [summary graphs](https://github.com/tbreloff/ExamplePlots.jl/tree/master/img/supported/supported.md) for the features that each backend supports.
+Check out the [summary graphs](img/supported/supported.md) for the features that each backend supports.
 
 Please add wishlist items, bugs, or any other comments/questions to the issues list.
 
