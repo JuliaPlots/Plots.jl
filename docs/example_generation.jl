@@ -301,20 +301,23 @@ end
 
 
 @compat const _ltdesc = Dict(
-    :none => "No line",
-    :line => "Lines with sorted x-axis",
-    :path => "Lines",
-    :steppre => "Step plot (vertical then horizontal)",
-    :steppost => "Step plot (horizontal then vertical)",
-    :sticks => "Vertical lines",
-    :scatter => "Points, no lines",
-    :heatmap => "Colored regions by density",
-    :hexbin => "Similar to heatmap",
-    :hist => "Histogram (doesn't use x)",
-    :bar => "Bar plot (centered on x values)",
-    :hline => "Horizontal line (doesn't use x)",
-    :vline => "Vertical line (doesn't use x)",
-    :ohlc => "Open/High/Low/Close chart (expects y is AbstractVector{Plots.OHLC})",
+    :none       => "No line",
+    :line       => "Lines with sorted x-axis",
+    :path       => "Lines",
+    :steppre    => "Step plot (vertical then horizontal)",
+    :steppost   => "Step plot (horizontal then vertical)",
+    :sticks     => "Vertical lines",
+    :scatter    => "Points, no lines",
+    :heatmap    => "Colored regions by density",
+    :hexbin     => "Similar to heatmap",
+    :hist       => "Histogram (doesn't use x)",
+    :bar        => "Bar plot (centered on x values)",
+    :hline      => "Horizontal line (doesn't use x)",
+    :vline      => "Vertical line (doesn't use x)",
+    :ohlc       => "Open/High/Low/Close chart (expects y is AbstractVector{Plots.OHLC})",
+    :contour    => "Contour lines (uses z)",
+    :path3d     => "3D path (uses z)",
+    :scatter3d  => "3D scatter plot (uses z)",
   )
 
 function buildReadme()

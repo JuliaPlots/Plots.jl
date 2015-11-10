@@ -137,7 +137,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{BokehPackage})
+function _create_subplot(subplt::Subplot{BokehPackage}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
 
 end

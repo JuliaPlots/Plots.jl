@@ -52,7 +52,8 @@ Pkg.add("Gadfly")
 Pkg.add("Immerse")
 Pkg.add("PyPlot")
 Pkg.add("UnicodePlots")
-Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")
+Pkg.add("Qwt")
+Pkg.add("Bokeh")
 ```
 
 ## Use
@@ -206,14 +207,13 @@ Keyword | Default | Type | Aliases
 ---- | ---- | ---- | ----
 `:annotation` | `nothing` | Series | `:ann`, `:annotate`, `:annotations`, `:anns`  
 `:axis` | `left` | Series | `:axiss`  
-`:background_color` | `RGB{U8}(1.0,1.0,1.0)` | Plot | `:background`, `:bg`, `:bg_color`, `:bgcolor`  
-`:color` | `auto` | Series | `:c`, `:colors`  
+`:background_color` | `RGB{U8}(1.0,1.0,1.0)` | Plot | `:background`, `:background_colour`, `:bg`, `:bg_color`, `:bgcolor`  
 `:color_palette` | `auto` | Plot | `:palette`  
 `:fill` | `nothing` | Series | `:area`, `:f`  
-`:fillcolor` | `match` | Series | `:fc`, `:fcolor`, `:fillcolors`  
-`:fillalpha` | `nothing` | Series | `:fillalphas`, `:fo`  
+`:fillalpha` | `nothing` | Series | `:fa`, `:fillalphas`, `:fillopacity`  
+`:fillcolor` | `match` | Series | `:fc`, `:fcolor`, `:fillcolors`, `:fillcolour`  
 `:fillrange` | `nothing` | Series | `:fillranges`, `:fillrng`  
-`:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`  
+`:foreground_color` | `auto` | Plot | `:fg`, `:fg_color`, `:fgcolor`, `:foreground`, `:foreground_colour`  
 `:grid` | `true` | Plot |   
 `:group` | `nothing` | Series | `:g`, `:groups`  
 `:guidefont` | `Plots.Font("Helvetica",11,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
@@ -222,7 +222,8 @@ Keyword | Default | Type | Aliases
 `:legend` | `true` | Plot | `:leg`  
 `:legendfont` | `Plots.Font("Helvetica",8,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:line` | `nothing` | Series | `:l`  
-`:linealpha` | `nothing` | Series | `:linealphas`, `:lo`  
+`:linealpha` | `nothing` | Series | `:la`, `:linealphas`, `:lineopacity`  
+`:linecolor` | `auto` | Series | `:c`, `:color`, `:colour`, `:linecolors`  
 `:linestyle` | `solid` | Series | `:linestyles`, `:ls`, `:s`, `:style`  
 `:linetype` | `path` | Series | `:linetypes`, `:lt`, `:t`, `:type`  
 `:linewidth` | `1` | Series | `:linewidths`, `:lw`, `:w`, `:width`  
@@ -231,18 +232,24 @@ Keyword | Default | Type | Aliases
 `:linkx` | `false` | Plot | `:xlink`  
 `:linky` | `false` | Plot | `:ylink`  
 `:marker` | `nothing` | Series | `:m`, `:mark`  
-`:markercolor` | `match` | Series | `:markercolors`, `:mc`, `:mcolor`  
-`:markeralpha` | `nothing` | Series | `:alpha`, `:markeralphas`, `:mo`, `:alpha`  
+`:markeralpha` | `nothing` | Series | `:alpha`, `:ma`, `:markeralphas`, `:markeropacity`, `:opacity`  
+`:markercolor` | `match` | Series | `:markercolors`, `:markercolour`, `:mc`, `:mcolor`  
 `:markershape` | `none` | Series | `:markershapes`, `:shape`  
 `:markersize` | `6` | Series | `:markersizes`, `:ms`, `:msize`  
+`:markerstrokealpha` | `nothing` | Series | `:markerstrokealphas`  
+`:markerstrokecolor` | `match` | Series | `:markerstrokecolors`  
+`:markerstrokestyle` | `solid` | Series | `:markerstrokestyles`  
+`:markerstrokewidth` | `1` | Series | `:markerstrokewidths`  
 `:n` | `-1` | Plot |   
-`:nbins` | `100` | Series | `:nb`, `:nbin`, `:nbinss`  
+`:nbins` | `30` | Series | `:nb`, `:nbin`, `:nbinss`  
 `:nc` | `-1` | Plot |   
+`:nlevels` | `15` | Series | `:nlevelss`  
 `:nr` | `-1` | Plot |   
 `:pos` | `(0,0)` | Plot |   
 `:show` | `false` | Plot | `:display`, `:gui`  
 `:size` | `(500,300)` | Plot | `:windowsize`, `:wsize`  
 `:smooth` | `false` | Series | `:reg`, `:regression`, `:smooths`  
+`:surface` | `nothing` | Series | `:surfaces`  
 `:tickfont` | `Plots.Font("Helvetica",8,:hcenter,:vcenter,0.0,RGB{U8}(0.0,0.0,0.0))` | Plot |   
 `:title` | `` | Plot |   
 `:windowtitle` | `Plots.jl` | Plot | `:wtitle`  
@@ -280,6 +287,9 @@ Type | Desc | Aliases
 `:hline` | Horizontal line (doesn't use x) |   
 `:vline` | Vertical line (doesn't use x) |   
 `:ohlc` | Open/High/Low/Close chart (expects y is AbstractVector{Plots.OHLC}) |   
+`:contour` | Contour lines (uses z) |   
+`:path3d` | 3D path (uses z) | `:line3d`  
+`:scatter3d` | 3D scatter plot (uses z) |   
 
 
 ### Line styles:

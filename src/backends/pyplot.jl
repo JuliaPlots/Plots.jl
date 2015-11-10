@@ -148,7 +148,6 @@ end
 handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Real) = handleSmooth(plt, ax, d, true)
 
 
-nop() = nothing
 
 
 makePyPlotCurrent(wrap::PyPlotFigWrapper) = PyPlot.figure(wrap.fig.o[:number])

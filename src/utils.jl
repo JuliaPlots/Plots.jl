@@ -116,6 +116,9 @@ end
 
 # ------------------------------------------------------------------------------------
 
+
+nop() = nothing
+
 get_mod(v::AVec, idx::Int) = v[mod1(idx, length(v))]
 get_mod(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
 get_mod(v, idx::Int) = v

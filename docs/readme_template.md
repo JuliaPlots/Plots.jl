@@ -52,7 +52,8 @@ Pkg.add("Gadfly")
 Pkg.add("Immerse")
 Pkg.add("PyPlot")
 Pkg.add("UnicodePlots")
-Pkg.clone("https://github.com/tbreloff/Qwt.jl.git")
+Pkg.add("Qwt")
+Pkg.add("Bokeh")
 ```
 
 ## Use

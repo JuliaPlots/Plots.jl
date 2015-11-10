@@ -225,7 +225,15 @@ convertToAnyVector(f::Function; kw...) = Any[f], nothing
 convertToAnyVector(v::AVec{OHLC}; kw...) = Any[v], nothing
 
 # list of things (maybe other vectors, functions, or something else)
-convertToAnyVector(v::AVec; kw...) = Any[vi for vi in v], nothing
+function convertToAnyVector(v::AVec; kw...)
+  if all(x -> typeof(x) <: Real, v)
+    # all real numbers wrap the whole vector as one item
+    Any[convert(Vector{Float64}, v)], nothing
+  else
+    # something else... treat each element as an item
+    Any[vi for vi in v], nothing
+  end
+end
 
 
 # --------------------------------------------------------------------
@@ -253,8 +261,6 @@ end
 function createKWargsList(plt::PlottingObject, x, y; kw...)
   xs, xmeta = convertToAnyVector(x; kw...)
   ys, ymeta = convertToAnyVector(y; kw...)
-
-  # _debugMode.on && dumpcallstack()
 
   mx = length(xs)
   my = length(ys)
