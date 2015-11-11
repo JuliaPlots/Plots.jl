@@ -157,9 +157,9 @@ function addGadflyMarker!(plt::Plot, numlayers::Int, d::Dict, plotargs::Dict, ge
   kwargs = Dict()
 
   # handle continuous color scales for the markers
-  z = d[:z]
-  if z != nothing && typeof(z) <: AVec
-    kwargs[:color] = z
+  zcolor = d[:zcolor]
+  if zcolor != nothing && typeof(zcolor) <: AVec
+    kwargs[:color] = zcolor
     if !isa(d[:markercolor], ColorGradient)
       d[:markercolor] = colorscheme(:bluesreds)
     end

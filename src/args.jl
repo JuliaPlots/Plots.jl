@@ -138,8 +138,8 @@ _seriesDefaults[:nbins]           = 30               # number of bins for heatma
 _seriesDefaults[:smooth]          = false               # regression line?
 _seriesDefaults[:group]           = nothing           # groupby vector
 _seriesDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
-_seriesDefaults[:z]               = nothing           # depth for contour, color scale, etc
-_seriesDefaults[:z]
+_seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
+_seriesDefaults[:zcolor]          = nothing           # value for color scale
 _seriesDefaults[:surface]         = nothing
 _seriesDefaults[:nlevels]         = 15
 

@@ -48,6 +48,7 @@ supportedArgs(::GadflyPackage) = [
     :xflip,
     :yflip,
     :z,
+    :zcolor,
     :tickfont,
     :guidefont,
     :legendfont,
@@ -123,6 +124,7 @@ supportedArgs(::PyPlotPackage) = [
     :xflip,
     :yflip,
     :z,
+    :zcolor,  # only supported for scatter/scatter3d
     :tickfont,
     :guidefont,
     :legendfont,

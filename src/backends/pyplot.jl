@@ -256,10 +256,10 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     extra_kwargs[:marker] = getPyPlotMarker(d[:markershape])
 
     if lt in (:scatter, :scatter3d)
-      extra_kwargs[:s] = d[:markersize]^2
+      extra_kwargs[:s] = d[:markersize].^2
       c = d[:markercolor]
-      if isa(c, ColorGradient) && d[:z] != nothing
-        extra_kwargs[:c] = convert(Vector{Float64}, d[:z])
+      if isa(c, ColorGradient) && d[:zcolor] != nothing
+        extra_kwargs[:c] = convert(Vector{Float64}, d[:zcolor])
         extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
       else
         extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])
@@ -290,6 +290,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
       extra_kwargs[:linewidth] = d[:linewidth]
     end
     extra_kwargs[:label] = d[:label]
+    extra_kwargs[:zorder] = plt.n
   end
 
   # do the plot
@@ -329,9 +330,9 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   if fillrange != nothing && lt != :contour
     fillcolor = getPyPlotColor(d[:fillcolor], d[:fillalpha])
     if typeof(fillrange) <: @compat(Union{Real, AVec})
-      ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor)
+      ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor, zorder = plt.n)
     else
-      ax[:fill_between](d[:x], fillrange..., facecolor = fillcolor)
+      ax[:fill_between](d[:x], fillrange..., facecolor = fillcolor, zorder = plt.n)
     end
   end
 

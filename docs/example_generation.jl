@@ -46,7 +46,7 @@ const examples = PlotExample[
               [
                 :(y = rand(100)),
                 :(plot(0:10:100,rand(11,4),lab="lines",w=3, palette=:grays, fill=(0.5,:auto))),
-                :(scatter!(y, z=abs(y-.5), m=(10,:heat), lab="grad"))
+                :(scatter!(y, zcolor=abs(y-.5), m=(:heat,0.8,stroke(3,:green)), ms=10*abs(y-0.5)+3, lab="grad"))
               ]),
   PlotExample("Global",
               "Change the guides/background/limits/ticks.  Convenience args `xaxis` and `yaxis` allow you to pass a tuple or value which will be mapped to the relevant args automatically.  The `xaxis` below will be replaced with `xlabel` and `xlims` args automatically during the preprocessing step. You can also use shorthand functions: `title!`, `xaxis!`, `yaxis!`, `xlabel!`, `ylabel!`, `xlims!`, `ylims!`, `xticks!`, `yticks!`",
@@ -78,7 +78,7 @@ const examples = PlotExample[
   PlotExample("Heatmaps",
               "",
               [
-                :(heatmap(randn(10000),randn(10000), nbins=100))
+                :(heatmap(randn(10000),randn(10000), nbins=20))
               ]),
   PlotExample("Line types",
               "",
@@ -112,7 +112,7 @@ const examples = PlotExample[
   PlotExample("Histogram",
               "",
               [
-                :(histogram(randn(1000), nbins=50))
+                :(histogram(randn(1000), nbins=20))
               ]),
   PlotExample("Subplots",
               """
