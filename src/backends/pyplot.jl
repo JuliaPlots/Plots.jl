@@ -264,19 +264,31 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
       else
         extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])
       end
+      if d[:markeralpha] != nothing
+        extra_kwargs[:alpha] = d[:markeralpha]
+      end
+      extra_kwargs[:edgecolors] = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
     else
       extra_kwargs[:markersize] = d[:markersize]
       extra_kwargs[:markerfacecolor] = getPyPlotColor(d[:markercolor], d[:markeralpha])
-      extra_kwargs[:markeredgecolor] = getPyPlotColor(plt.plotargs[:foreground_color])
-      extra_kwargs[:markeredgewidth] = d[:linewidth]
+      extra_kwargs[:markeredgecolor] = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
+      extra_kwargs[:markeredgewidth] = d[:markerstrokewidth]
       extra_kwargs[:drawstyle] = getPyPlotStepStyle(lt)
     end
   end
 
+  # if d[:markeralpha] != nothing
+  #   extra_kwargs[:alpha] = d[:markeralpha]
+  # elseif d[:linealpha] != nothing
+  #   extra_kwargs[:alpha] = d[:linealpha]
+  # end
+
   # set these for all types
   if lt != :contour
-    extra_kwargs[:color] = color
-    extra_kwargs[:linewidth] = d[:linewidth]
+    if !(lt in (:scatter, :scatter3d))
+      extra_kwargs[:color] = color
+      extra_kwargs[:linewidth] = d[:linewidth]
+    end
     extra_kwargs[:label] = d[:label]
   end
 
@@ -307,6 +319,8 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   if plt.plotargs[:legend] && haskey(extra_kwargs, :cmap)
     PyPlot.colorbar(d[:serieshandle])
   end
+
+  # @show extra_kwargs
 
   # this sets the bg color inside the grid
   ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color]))
