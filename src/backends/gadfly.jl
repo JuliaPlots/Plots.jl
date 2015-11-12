@@ -140,10 +140,18 @@ function getGadflyMarkerTheme(d::Dict, plotargs::Dict)
     c = RGBA(RGB(c), α)
   end
 
+  ms = d[:markersize]
+  ms = if typeof(ms) <: AVec
+    warn("Gadfly doesn't support variable marker sizes... using the average: $(mean(ms))")
+    mean(ms) * Gadfly.px
+  else
+    ms * Gadfly.px
+  end
+
   # fg = getColor(plotargs[:foreground_color])
   Gadfly.Theme(;
       default_color = c,
-      default_point_size = d[:markersize] * Gadfly.px,
+      default_point_size = ms,
       discrete_highlight_color = c -> RGB(getColor(d[:markerstrokecolor])),
       highlight_width = d[:markerstrokewidth] * Gadfly.px,
       # get_extra_theme_args(d, :markerstrokestyle)...

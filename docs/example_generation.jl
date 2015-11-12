@@ -31,7 +31,7 @@ const examples = PlotExample[
               [
                 :(p = plot([sin,cos], zeros(0), leg=false)),
                 :(anim = Animation()),
-                :(for x in linspace(0, 10π, 200)
+                :(for x in linspace(0, 10π, 100)
                     push!(p, x, Float64[sin(x), cos(x)])
                     frame(anim)
                   end)
@@ -63,7 +63,8 @@ const examples = PlotExample[
   PlotExample("Arguments",
               "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).  Special arguments `line`, `marker`, and `fill` will automatically figure out what arguments to set (for example, we are setting the `linestyle`, `linewidth`, and `color` arguments with `line`.)  Note that we pass a matrix of colors, and this applies the colors to each series.",
               [
-                :(plot(Vector[rand(10), rand(20)], marker=(:ellipse,8), line=(:dot,3,[:black :orange])))
+                :(ys = Vector[rand(10), rand(20)]),
+                :(plot(ys, line=(:dot,4,[:black :orange]), marker=([:hex :d],12,0.8,stroke(3,:gray))))
               ]),
   PlotExample("Build plot in pieces",
               "Start with a base plot...",

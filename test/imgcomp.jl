@@ -56,9 +56,9 @@ end
 function compareToReferenceImage(tmpfn, reffn)
   println("here000")
   # @eval import Gtk
-  Gtk.gtk_main()
+  # Gtk.gtk_main()
   println("huh0")
-  sleep(2)
+  # sleep(2)
 
   # add the images
   imgbox = Gtk.GtkBoxLeaf(:h)
@@ -85,12 +85,12 @@ function compareToReferenceImage(tmpfn, reffn)
 
   println("here01")
 
-  ################
-  # TODO: remove this when it's fixed in Gtk... see http://stackoverflow.com/questions/33549485/julia-gtk-windows-do-not-display-outside-repl
-  signal_connect(win, :destroy) do widget
-      Gtk.gtk_quit()
-  end
-  ################
+  # ################
+  # # TODO: remove this when it's fixed in Gtk... see http://stackoverflow.com/questions/33549485/julia-gtk-windows-do-not-display-outside-repl
+  # signal_connect(win, :destroy) do widget
+  #     Gtk.gtk_quit()
+  # end
+  # ################
 
   println("here02")
   showall(win)
