@@ -63,17 +63,19 @@ end
 
 function getGadflyLineTheme(d::Dict)
   
-  lc = getColor(d[:linecolor])
-  α = d[:linealpha]
-  if α != nothing
-    lc = RGBA(lc, α)
-  end
+  lc = convertColor(getColor(d[:linecolor]), d[:linealpha])
+  # lc = getColor(d[:linecolor])
+  # α = d[:linealpha]
+  # if α != nothing
+  #   lc = RGBA(lc, α)
+  # end
 
-  fc = getColor(d[:fillcolor])
-  α = d[:fillalpha]
-  if α != nothing
-    fc = RGBA(fc, α)
-  end
+  fc = convertColor(getColor(d[:fillcolor]), d[:fillalpha])
+  # fc = getColor(d[:fillcolor])
+  # α = d[:fillalpha]
+  # if α != nothing
+  #   fc = RGBA(fc, α)
+  # end
 
 
   Gadfly.Theme(;
@@ -104,23 +106,49 @@ function addGadflyLine!(plt::Plot, numlayers::Int, d::Dict, geoms...)
     push!(gfargs, Gadfly.Geom.ribbon)
   end
 
-  # h/vlines
-  if lt == :hline
-    kwargs[:yintercept] = d[:y]
-  elseif lt == :vline
-    kwargs[:xintercept] = d[:y]
-  elseif lt == :sticks
-    w = 0.01 * mean(diff(d[:x]))
-    kwargs[:xmin] = d[:x] - w
-    kwargs[:xmax] = d[:x] + w
-  elseif lt == :contour
-    d[:y] = reverse(d[:y])
-    kwargs[:z] = d[:surface]
+  if lt in (:hline, :vline)
+    kwargs[lt == :hline ? :yintercept : :xintercept] = d[:y]
+    
+  else
+    if lt == :sticks
+      w = 0.01 * mean(diff(d[:x]))
+      kwargs[:xmin] = d[:x] - w
+      kwargs[:xmax] = d[:x] + w
+    elseif lt == :contour
+      d[:y] = reverse(d[:y])
+      kwargs[:z] = d[:surface]
+    end
+
+    kwargs[:x] = d[lt == :hist ? :y : :x]
+    kwargs[:y] = d[:y]
+
   end
+
+  # # h/vlines
+  # if lt == :hline
+  #   kwargs[:yintercept] = d[:y]
+  # elseif lt == :vline
+  #   kwargs[:xintercept] = d[:y]
+  # elseif lt == :sticks
+  #   w = 0.01 * mean(diff(d[:x]))
+  #   kwargs[:xmin] = d[:x] - w
+  #   kwargs[:xmax] = d[:x] + w
+  # elseif lt == :contour
+  #   d[:y] = reverse(d[:y])
+  #   kwargs[:z] = d[:surface]
+  # end
+
+  # if lt == :hist
+  #   kwargs[:x] = kwargs[:y] = d[:y]
+  # elseif lt != :hline && lt != :vline
+  #   kwargs[:x] = d[:x]
+  #   kwargs[:y] = d[:y]
+  # end
   
-  # add the layer
-  x = d[d[:linetype] == :hist ? :y : :x]
-  Gadfly.layer(gfargs...; x = x, y = d[:y], order=numlayers, kwargs...)
+  # # add the layer
+  # x = d[d[:linetype] == :hist ? :y : :x]
+  # Gadfly.layer(gfargs...; x = x, y = d[:y], order=numlayers, kwargs...)
+  Gadfly.layer(gfargs...; order=numlayers, kwargs...)
 end
 
 

@@ -217,7 +217,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     linecolor = color
     linestyle = getPyPlotLineStyle(lt, d[:linestyle])
     for yi in d[:y]
-      func = ax[lt == :hline ? :axhline : axvline]
+      func = ax[lt == :hline ? :axhline : :axvline]
       func(yi, linewidth=d[:linewidth], color=linecolor, linestyle=linestyle)
     end
 
