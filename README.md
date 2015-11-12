@@ -24,7 +24,8 @@ Please add wishlist items, bugs, or any other comments/questions to the issues l
 
 ## Examples for each implemented backend:
 
-- [Gadfly.jl/Immerse.jl](https://github.com/tbreloff/ExamplePlots.jl/tree/master/docs/gadfly_examples.md)
+- [Gadfly.jl](https://github.com/tbreloff/ExamplePlots.jl/tree/master/docs/gadfly_examples.md)
+- [Immerse.jl](https://github.com/tbreloff/ExamplePlots.jl/blob/master/docs/immerse_examples.md)
 - [PyPlot.jl](https://github.com/tbreloff/ExamplePlots.jl/tree/master/docs/pyplot_examples.md)
 - [UnicodePlots.jl](https://github.com/tbreloff/ExamplePlots.jl/tree/master/docs/unicodeplots_examples.md)
 - [Qwt.jl](https://github.com/tbreloff/ExamplePlots.jl/tree/master/docs/qwt_examples.md)
