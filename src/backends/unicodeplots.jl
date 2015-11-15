@@ -39,7 +39,8 @@ function rebuildUnicodePlot!(plt::Plot)
 
   # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
   width, height = iargs[:size]
-  o = UnicodePlots.createPlotWindow(x, y; width = width,
+    o = UnicodePlots.Plot(x, y, UnicodePlots.BrailleCanvas;
+                          width = width,
                                 height = height,
                                 title = iargs[:title],
                                 # labels = iargs[:legend],
