@@ -36,9 +36,9 @@ function getLineGeom(d::Dict)
   elseif lt == :steppre
     Gadfly.Geom.step(direction = :vh)
   elseif lt == :hline
-    Gadfly.Geom.hline(color = getColor(d[:linecolor]), size = d[:linewidth] * Gadfly.px)
+    Gadfly.Geom.hline
   elseif lt == :vline
-    Gadfly.Geom.vline(color = getColor(d[:linecolor]), size = d[:linewidth] * Gadfly.px)
+    Gadfly.Geom.vline
   elseif lt == :contour
     Gadfly.Geom.contour(levels = d[:nlevels])
   else

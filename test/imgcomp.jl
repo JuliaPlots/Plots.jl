@@ -54,20 +54,20 @@ end
 
 "Show a Gtk popup with both images and a confirmation whether we should replace the new image with the old one"
 function compareToReferenceImage(tmpfn, reffn)
-  println("here000")
+  # println("here000")
   # @eval import Gtk
   # Gtk.gtk_main()
-  println("huh0")
+  # println("huh0")
   # sleep(2)
 
   # add the images
   imgbox = Gtk.GtkBoxLeaf(:h)
-  println("huh")
+  # println("huh")
   push!(imgbox, makeImageWidget(tmpfn))
-  println("huh2")
+  # println("huh2")
   push!(imgbox, makeImageWidget(reffn))
 
-  println("here00")
+  # println("here00")
 
   # add the buttons
   # doNothingButton = Gtk.GtkButtonLeaf("Skip")
@@ -83,7 +83,7 @@ function compareToReferenceImage(tmpfn, reffn)
   win = Gtk.GtkWindowLeaf("Should we make this the new reference image?")
   push!(win, Gtk.GtkFrameLeaf(imgbox))
 
-  println("here01")
+  # println("here01")
 
   # ################
   # # TODO: remove this when it's fixed in Gtk... see http://stackoverflow.com/questions/33549485/julia-gtk-windows-do-not-display-outside-repl
@@ -92,19 +92,19 @@ function compareToReferenceImage(tmpfn, reffn)
   # end
   # ################
 
-  println("here02")
+  # println("here02")
   showall(win)
 
-  println("here1")
+  # println("here1")
 
   # now ask the question
   if Gtk.ask_dialog("Should we make this the new reference image?", "No", "Yes")
     replaceReferenceImage(tmpfn, reffn)
   end
 
-  println("here2")
+  # println("here2")
   destroy(win)
-  println("here3")
+  # println("here3")
 
   # # we'll wait on this condition
   # c = Condition()
