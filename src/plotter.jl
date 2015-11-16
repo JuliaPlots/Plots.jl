@@ -89,6 +89,11 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, backendInstance(sym))
 
 function pickDefaultBackend()
   try
+    if Pkg.installed("PyPlot") != nothing
+      return CurrentBackend(:pyplot)
+    end
+  end
+  try
     if Pkg.installed("Immerse") != nothing
       return CurrentBackend(:immerse)
     end
@@ -96,11 +101,6 @@ function pickDefaultBackend()
   try
     if Pkg.installed("Qwt") != nothing
       return CurrentBackend(:qwt)
-    end
-  end
-  try
-    if Pkg.installed("PyPlot") != nothing
-      return CurrentBackend(:pyplot)
     end
   end
   try
