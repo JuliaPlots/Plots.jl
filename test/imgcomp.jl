@@ -2,6 +2,8 @@
 # include this first to help with crashing??
 try
   @eval using Gtk
+catch err
+  warn("Gtk not loaded. err: $err")
 end
 
 # don't let pyplot use a gui... it'll crash
@@ -11,22 +13,8 @@ try
   @eval import PyPlot
 end
 
-# macro test_approx_eq_sigma_eps(A, B, sigma, eps)
-
 include("../docs/example_generation.jl")
 
-
-# # make and display one plot
-# function test_examples(pkg::Symbol, idx::Int; debug = true)
-#   Plots._debugMode.on = debug
-#   println("Testing plot: $pkg:$idx:$(examples[idx].header)")
-#   backend(pkg)
-#   backend()
-#   map(eval, examples[idx].exprs)
-#   plt = current()
-#   gui(plt)
-#   plt
-# end
 
 using Plots, FactCheck
 import Images, ImageMagick
@@ -54,75 +42,23 @@ end
 
 "Show a Gtk popup with both images and a confirmation whether we should replace the new image with the old one"
 function compareToReferenceImage(tmpfn, reffn)
-  # println("here000")
-  # @eval import Gtk
-  # Gtk.gtk_main()
-  # println("huh0")
-  # sleep(2)
 
   # add the images
   imgbox = Gtk.GtkBoxLeaf(:h)
-  # println("huh")
   push!(imgbox, makeImageWidget(tmpfn))
-  # println("huh2")
   push!(imgbox, makeImageWidget(reffn))
 
-  # println("here00")
-
-  # add the buttons
-  # doNothingButton = Gtk.GtkButtonLeaf("Skip")
-  # replaceReferenceButton = Gtk.GtkButtonLeaf("Replace reference image")
-  # btnbox = Gtk.GtkButtonBoxLeaf(:h)
-  # push!(btnbox, doNothingButton)
-  # push!(btnbox, replaceReferenceButton)
-
-  # # create the window
-  # box = Gtk.GtkBoxLeaf(:v)
-  # push!(box, imgbox)
-  # push!(box, btnbox)
   win = Gtk.GtkWindowLeaf("Should we make this the new reference image?")
   push!(win, Gtk.GtkFrameLeaf(imgbox))
 
-  # println("here01")
-
-  # ################
-  # # TODO: remove this when it's fixed in Gtk... see http://stackoverflow.com/questions/33549485/julia-gtk-windows-do-not-display-outside-repl
-  # signal_connect(win, :destroy) do widget
-  #     Gtk.gtk_quit()
-  # end
-  # ################
-
-  # println("here02")
   showall(win)
-
-  # println("here1")
 
   # now ask the question
   if Gtk.ask_dialog("Should we make this the new reference image?", "No", "Yes")
     replaceReferenceImage(tmpfn, reffn)
   end
 
-  # println("here2")
   destroy(win)
-  # println("here3")
-
-  # # we'll wait on this condition
-  # c = Condition()
-  # Gtk.on_signal_destroy((x...) -> notify(c), win)
-
-  # Gtk.signal_connect(replaceReferenceButton, "clicked") do widget
-  #   replaceReferenceImage(tmpfn, reffn)
-  #   notify(c)
-  # end
-
-  # Gtk.signal_connect(doNothingButton, "clicked") do widget
-  #   notify(c)
-  # end
-
-  # # wait until a button is clicked, then close the window
-  # Gtk.showall(win)
-  # wait(c)
-  # Gtk.destroy(win)
 end
 
 
@@ -151,7 +87,6 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1
   tmpimg = Images.load(tmpfn)
 
   # reference image location
-  # refdir = joinpath(Pkg.dir("Plots"), "test", "refimg", "v$(VERSION.major).$(VERSION.minor)", string(pkg))
   refdir = joinpath(Pkg.dir("Plots"), "test", "refimg", string(pkg))
   try
     run(`mkdir -p $refdir`)
@@ -185,7 +120,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1
       # if we're in interactive mode, open a popup and give us a chance to examine the images
       warn("Should we make this the new reference image?")
       compareToReferenceImage(tmpfn, reffn)
-      println("exited")
+      # println("exited")
       return
       
     else

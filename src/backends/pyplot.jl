@@ -680,10 +680,10 @@ for (mime, fmt) in _pyplot_mimeformats
     fig = getfig(plt.o)
     fig.o["canvas"][:print_figure](io,
                                    format=$fmt,
-                                   bbox_inches="tight",
+                                   # bbox_inches="tight",
                                    facecolor = fig.o["get_facecolor"](),
-                                   edgecolor = "none"
-                                   # edgecolor = fig.o["get_edgecolor"]()
+                                   edgecolor = "none",
+                                   dpi = 96
                                   )
   end
 end
