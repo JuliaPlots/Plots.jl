@@ -436,12 +436,14 @@ end
 
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
-const INCH_SCALAR = 25.4
-const PX_SCALAR = 1 / 3.78 
-inch2px(inches::Real) = float(inches * INCH_SCALAR / PX_SCALAR)
-px2inch(px::Real) = float(px * PX_SCALAR / INCH_SCALAR)
-inch2mm(inches::Real) = float(inches * INCH_SCALAR)
-mm2inch(mm::Real) = float(mm / INCH_SCALAR)
-px2mm(px::Real) = float(px * PX_SCALAR)
-mm2px(mm::Real) = float(px / PX_SCALAR)
+const PX_PER_INCH = 100
+const DPI = PX_PER_INCH
+const MM_PER_INCH = 25.4
+const MM_PER_PX = MM_PER_INCH / PX_PER_INCH
+inch2px(inches::Real) = float(inches * PX_PER_INCH)
+px2inch(px::Real) = float(px / PX_PER_INCH)
+inch2mm(inches::Real) = float(inches * MM_PER_INCH)
+mm2inch(mm::Real) = float(mm / MM_PER_INCH)
+px2mm(px::Real) = float(px * MM_PER_PX)
+mm2px(mm::Real) = float(px / MM_PER_PX)
 

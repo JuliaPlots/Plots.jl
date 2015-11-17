@@ -75,31 +75,47 @@ function getPyPlotStepStyle(linetype::Symbol)
 end
 
 
-immutable PyPlotFigWrapper
+# immutable PyPlotFigWrapper
+#   fig
+#   kwargs  # for add_subplot
+# end
+
+type PyPlotAxisWrapper
+  ax
+  rightax
   fig
   kwargs  # for add_subplot
 end
 
-immutable PyPlotAxisWrapper
-  ax
-  fig
-end
-
-getfig(wrap::@compat(Union{PyPlotAxisWrapper,PyPlotFigWrapper})) = wrap.fig
+# getfig(wrap::@compat(Union{PyPlotAxisWrapper,PyPlotFigWrapper})) = wrap.fig
+getfig(wrap::PyPlotAxisWrapper) = wrap.fig
 
 
 
 # get a reference to the correct axis
-function getLeftAxis(wrap::PyPlotFigWrapper)
-  axes = wrap.fig.o[:axes]
-  if isempty(axes)
-    return wrap.fig.o[:add_subplot](111; wrap.kwargs...)
+function getLeftAxis(wrap::PyPlotAxisWrapper)
+  if wrap.ax == nothing
+    axes = wrap.fig.o[:axes]
+    if isempty(axes)
+      return wrap.fig.o[:add_subplot](111; wrap.kwargs...)
+    end
+    axes[1]
+  else
+    wrap.ax
   end
-  axes[1]
 end
-getLeftAxis(wrap::PyPlotAxisWrapper) = wrap.ax
+# getLeftAxis(wrap::PyPlotAxisWrapper) = wrap.ax
+# getRightAxis(x) = getLeftAxis(x)[:twinx]()
+
+function getRightAxis(wrap::PyPlotAxisWrapper)
+  if wrap.rightax == nothing
+    wrap.rightax = getLeftAxis(wrap)[:twinx]()
+  end
+  wrap.rightax
+end
+
 getLeftAxis(plt::Plot{PyPlotPackage}) = getLeftAxis(plt.o)
-getRightAxis(x) = getLeftAxis(x)[:twinx]()
+getRightAxis(plt::Plot{PyPlotPackage}) = getRightAxis(plt.o)
 getAxis(plt::Plot{PyPlotPackage}, axis::Symbol) = (axis == :right ? getRightAxis : getLeftAxis)(plt)
 
 # left axis is PyPlot.<func>, right axis is "f.axes[0].twinx().<func>"
@@ -107,7 +123,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
 
   # in the 2-axis case we need to get: <rightaxis>[:<func>]
   ax = getAxis(plt, axis)
-  ax[:set_ylabel](plt.plotargs[:yrightlabel])
+  # ax[:set_ylabel](plt.plotargs[:yrightlabel])
   fmap = @compat Dict(
       :hist       => :hist,
       :sticks     => :bar,
@@ -150,8 +166,9 @@ handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Real) = handleSmooth
 
 
 
-makePyPlotCurrent(wrap::PyPlotFigWrapper) = PyPlot.figure(wrap.fig.o[:number])
-makePyPlotCurrent(wrap::PyPlotAxisWrapper) = nothing #PyPlot.sca(wrap.ax.o)
+# makePyPlotCurrent(wrap::PyPlotFigWrapper) = PyPlot.figure(wrap.fig.o[:number])
+# makePyPlotCurrent(wrap::PyPlotAxisWrapper) = nothing #PyPlot.sca(wrap.ax.o)
+makePyPlotCurrent(wrap::PyPlotAxisWrapper) = wrap.ax == nothing ? PyPlot.figure(wrap.fig.o[:number]) : nothing
 makePyPlotCurrent(plt::Plot{PyPlotPackage}) = makePyPlotCurrent(plt.o)
 
 
@@ -180,7 +197,7 @@ function _create_plot(pkg::PyPlotPackage; kw...)
   else
     w,h = map(px2inch, d[:size])
     bgcolor = getPyPlotColor(d[:background_color])
-    wrap = PyPlotFigWrapper(PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96), [])
+    wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
   end
 
   plt = Plot(wrap, pkg, 0, d, Dict[])
@@ -192,7 +209,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
   lt = d[:linetype]
-  if lt in _3dTypes && isa(plt.o, PyPlotFigWrapper)
+  if lt in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
     push!(plt.o.kwargs, (:projection, "3d"))
   end
 
@@ -524,7 +541,7 @@ function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
 
   w,h = map(px2inch, getplotargs(subplt,1)[:size])
   bgcolor = getPyPlotColor(getplotargs(subplt,1)[:background_color])
-  fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = 96)
+  fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true)
 
   nr = nrows(l)
   for (i,(r,c)) in enumerate(l)
@@ -534,10 +551,11 @@ function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
     fakeidx = (r-1) * nc + c
     ax = fig[:add_subplot](nr, nc, fakeidx)
 
-    subplt.plts[i].o = PyPlotAxisWrapper(ax, fig)
+    subplt.plts[i].o = PyPlotAxisWrapper(ax, nothing, fig, [])
   end
 
-  subplt.o = PyPlotFigWrapper(fig, [])
+  # subplt.o = PyPlotFigWrapper(fig, [])
+  subplt.o = PyPlotAxisWrapper(nothing, nothing, fig, [])
   true
 end
 
@@ -590,12 +608,13 @@ function addPyPlotLegend(plt::Plot, ax)
     # gotta do this to ensure both axes are included
     args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline,:contour, :path3d, :scatter3d)), plt.seriesargs)
     if length(args) > 0
-      ax[:legend]([d[:serieshandle] for d in args],
+      leg = ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],
                   loc="best",
                   fontsize = plt.plotargs[:legendfont].pointsize
                   # framealpha = 0.6
                  )
+      leg[:set_zorder](1000)
     end
   end
 end
@@ -614,6 +633,7 @@ function finalizePlot(subplt::Subplot{PyPlotPackage})
     addPyPlotLegend(plt, ax)
     updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color]))
   end
+  # fig[:tight_layout]()
   PyPlot.draw()
 end
 
@@ -680,10 +700,11 @@ for (mime, fmt) in _pyplot_mimeformats
     fig = getfig(plt.o)
     fig.o["canvas"][:print_figure](io,
                                    format=$fmt,
-                                   # bbox_inches="tight",
+                                   # bbox_inches = "tight",
+                                   # figsize = map(px2inch, plt.plotargs[:size]),
                                    facecolor = fig.o["get_facecolor"](),
                                    edgecolor = "none",
-                                   dpi = 96
+                                   dpi = DPI
                                   )
   end
 end

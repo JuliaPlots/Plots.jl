@@ -275,6 +275,8 @@ function addGadflySeries!(plt::Plot, d::Dict)
   lt = d[:linetype]
   if lt == :ohlc
     error("Haven't re-implemented after refactoring")
+  elseif lt in (:heatmap, :hexbin) && (isa(d[:linecolor], ColorGradient) || isa(d[:linecolor], ColorFunction))
+    push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:linecolor], p))))
   elseif lt == :scatter && d[:markershape] == :none
     d[:markershape] = :ellipse
   end

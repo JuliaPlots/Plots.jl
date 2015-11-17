@@ -61,7 +61,7 @@ const examples = PlotExample[
   PlotExample("Two-axis",
               "Use the `axis` arguments.\n\nNote: Currently only supported with Qwt and PyPlot",
               [
-                :(plot(Vector[randn(100), randn(100)*100], axis = [:l :r], ylabel="LEFT", yrightlabel="RIGHT"))
+                :(plot(Vector[randn(100), randn(100)*100], axis = [:l :r], ylabel="LEFT", yrightlabel="RIGHT", xlabel="X", title="TITLE"))
               ]),
   PlotExample("Arguments",
               "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).  Special arguments `line`, `marker`, and `fill` will automatically figure out what arguments to set (for example, we are setting the `linestyle`, `linewidth`, and `color` arguments with `line`.)  Note that we pass a matrix of colors, and this applies the colors to each series.",

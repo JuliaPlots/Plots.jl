@@ -29,6 +29,8 @@ export
   histogram!,
   heatmap,
   heatmap!,
+  hexbin,
+  hexbin!,
   sticks,
   sticks!,
   hline,
@@ -127,6 +129,8 @@ histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)
 histogram!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
 heatmap(args...; kw...)    = plot(args...; kw...,  linetype = :heatmap)
 heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
+hexbin(args...; kw...)    = plot(args...; kw...,  linetype = :hexbin)
+hexbin!(args...; kw...)   = plot!(args...; kw..., linetype = :hexbin)
 sticks(args...; kw...)     = plot(args...; kw...,  linetype = :sticks, marker = :ellipse)
 sticks!(args...; kw...)    = plot!(args...; kw..., linetype = :sticks, marker = :ellipse)
 hline(args...; kw...)      = plot(args...; kw...,  linetype = :hline)
