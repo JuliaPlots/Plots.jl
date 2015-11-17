@@ -11,6 +11,7 @@ end
 ENV["MPLBACKEND"] = "Agg"
 try
   @eval import PyPlot
+  info("Matplotlib version: $(PyPlot.matplotlib[:__version__])")
 end
 
 include("../docs/example_generation.jl")
