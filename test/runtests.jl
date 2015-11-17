@@ -30,7 +30,7 @@ default(show=false)
   # gadfly()
   # backend()
 
-img_eps = 1e-2
+img_eps = 2e-2
 
 facts("Gadfly") do
     @fact gadfly() --> Plots.GadflyPackage()
