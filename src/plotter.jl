@@ -1,12 +1,13 @@
 
 
-immutable GadflyPackage <: PlottingPackage end
-immutable ImmersePackage <: PlottingPackage end
-immutable PyPlotPackage <: PlottingPackage end
-immutable QwtPackage <: PlottingPackage end
+immutable GadflyPackage       <: PlottingPackage end
+immutable ImmersePackage      <: PlottingPackage end
+immutable PyPlotPackage       <: PlottingPackage end
+immutable QwtPackage          <: PlottingPackage end
 immutable UnicodePlotsPackage <: PlottingPackage end
-immutable WinstonPackage <: PlottingPackage end
-immutable BokehPackage <: PlottingPackage end
+immutable WinstonPackage      <: PlottingPackage end
+immutable BokehPackage        <: PlottingPackage end
+immutable PlotlyPackage       <: PlottingPackage end
 
 typealias GadflyOrImmerse @compat(Union{GadflyPackage, ImmersePackage})
 
@@ -16,16 +17,18 @@ export
   pyplot,
   qwt,
   unicodeplots,
-  bokeh
+  bokeh,
+  plotly
   # winston
 
-gadfly() = backend(:gadfly)
-immerse() = backend(:immerse)
-pyplot() = backend(:pyplot)
-qwt() = backend(:qwt)
-unicodeplots() = backend(:unicodeplots)
-bokeh() = backend(:bokeh)
-# winston() = backend(:winston)
+gadfly()        = backend(:gadfly)
+immerse()       = backend(:immerse)
+pyplot()        = backend(:pyplot)
+qwt()           = backend(:qwt)
+unicodeplots()  = backend(:unicodeplots)
+bokeh()         = backend(:bokeh)
+plotly()        = backend(:plotly)
+# winston()       = backend(:winston)
 
 backend_name(::GadflyPackage)       = :gadfly
 backend_name(::ImmersePackage)      = :immerse
@@ -33,6 +36,7 @@ backend_name(::PyPlotPackage)       = :pyplot
 backend_name(::UnicodePlotsPackage) = :unicodeplots
 backend_name(::QwtPackage)          = :qwt
 backend_name(::BokehPackage)        = :bokeh
+backend_name(::PlotlyPackage)       = :plotly
 
 include("backends/supported.jl")
 
@@ -43,6 +47,7 @@ include("backends/pyplot.jl")
 include("backends/immerse.jl")
 include("backends/winston.jl")
 include("backends/bokeh.jl")
+include("backends/plotly.jl")
 
 
 # ---------------------------------------------------------
@@ -62,7 +67,7 @@ subplot!(pkg::PlottingPackage, subplt::Subplot; kw...) = error("subplot!($pkg, s
 # ---------------------------------------------------------
 
 
-const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse, :bokeh]
+const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse, :bokeh, :plotly]
 const INITIALIZED_BACKENDS = Set{Symbol}()
 backends() = BACKENDS
 
@@ -75,6 +80,7 @@ function backendInstance(sym::Symbol)
   sym == :immerse && return ImmersePackage()
   sym == :winston && return WinstonPackage()
   sym == :bokeh && return BokehPackage()
+  sym == :plotly && return PlotlyPackage()
   error("Unsupported backend $sym")
 end 
 
@@ -118,13 +124,8 @@ function pickDefaultBackend()
       return CurrentBackend(:bokeh)
     end
   end
-  try
-    if Pkg.installed("Winston") != nothing
-      return CurrentBackend(:winston)
-    end
-  end
-  warn("You don't have any of the supported backends installed!  Chose from ", backends())
-  return CurrentBackend(:gadfly)
+  # warn("You don't have any of the supported backends installed!  Chose from ", backends())
+  return CurrentBackend(:plotly)
 end
 
 
@@ -216,6 +217,14 @@ function backend()
         rethrow(err)
       end
 
+    elseif currentBackendSymbol == :plotly
+      try
+        # TODO: any setup
+      catch err
+        warn("Couldn't setup Plotly")
+        rethrow(err)
+      end
+
     elseif currentBackendSymbol == :winston
       warn("Winston support is deprecated and broken.  Try another backend: $BACKENDS")
       try
@@ -262,6 +271,8 @@ function backend(modname)
     CURRENT_BACKEND.pkg = WinstonPackage()
   elseif modname == :bokeh
     CURRENT_BACKEND.pkg = BokehPackage()
+  elseif modname == :plotly
+    CURRENT_BACKEND.pkg = PlotlyPackage()
   else
     error("Unknown backend $modname.  Choose from: $BACKENDS")
   end

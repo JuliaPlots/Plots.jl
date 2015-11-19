@@ -9,7 +9,7 @@ function _create_plot(pkg::[PkgName]Package; kw...)
   d = Dict(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
-  Plot(o, pkg, 0, d, Dict[])
+  Plot(nothing, pkg, 0, d, Dict[])
 end
 
 
