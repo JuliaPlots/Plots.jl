@@ -49,7 +49,7 @@ include("backends/pyplot.jl")
 include("backends/immerse.jl")
 include("backends/winston.jl")
 include("backends/bokeh.jl")
-include("backends/plotly.jl")
+# include("backends/plotly.jl")
 
 
 # ---------------------------------------------------------
@@ -236,7 +236,8 @@ function backend()
 
     elseif currentBackendSymbol == :plotly
       try
-        # TODO: any setup
+        @eval include("src/backends/web.jl")
+        @eval include("src/backends/plotly.jl")
       catch err
         warn("Couldn't setup Plotly")
         rethrow(err)

@@ -71,52 +71,79 @@ function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{PlotlyPac
   # TODO: write a png to io
 end
 
-function open_browser_window(filename::AbstractString)
-  @osx_only   return run(`open $(filename)`)
-  @linux_only return run(`xdg-open $(filename)`)
-  @windows_only return run(`$(ENV["COMSPEC"]) /c start $(filename)`)
-  warn("Unknown OS... cannot open browser window.")
+
+# function build_plotly_json()
+# end
+
+const _pyplot_head_template = mt"""
+  <script src="{{:src}}"></script>
+"""
+
+const _pyplot_body_template = mt"""
+  <div id="myplot" style="width:{{:width}}px;height:{{:height}}px;"></div>
+  <script charset="utf-8">
+    PLOT = document.getElementById('myplot');
+    Plotly.plot(PLOT, {{:seriesargs}}, {{:plotargs}});
+  </script>
+"""
+
+
+function html_head(plt::Plot{PlotlyPackage})
+  render(_pyplot_head_template, src = Pkg.dir("Plots","deps","plotly-latest.min.js"))
 end
 
-function build_plotly_json()
+function html_body(plt::Plot{PlotlyPackage})
+  w, h = plt.plotargs[:size]
+
+  # TODO: get the real ones
+  seriesargs = [Dict(:x => collect(1:5), :y => rand(5))]
+  plotargs = Dict(:margin => 0)
+
+  render(_pyplot_body_template,
+         width=w,
+         height=h,
+         seriesargs = JSON.json(seriesargs),
+         plotargs = JSON.json(plotargs)
+        )
 end
 
 function Base.display(::PlotsDisplay, plt::Plot{PlotlyPackage})
+  standalone_html_window(plt)
 
-  filename = string(tempname(), ".html")
-  output = open(filename, "w")
-  w, h = plt.plotargs[:size]
+  # filename = string(tempname(), ".html")
+  # output = open(filename, "w")
+  # w, h = plt.plotargs[:size]
 
-  write(output,
-      """
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Plots.jl (Plotly)</title>
-          <meta charset="utf-8">
-          <script src="$(Pkg.dir("Plots"))/src/backends/plotly-latest.min.js"></script>
-        </head>
-          <div id="myplot" style="width:$(w)px;height:$(h)px;"></div>
-          <script charset="utf-8">
-            PLOT = document.getElementById('myplot');
-            Plotly.plot(PLOT, [{
-                  x: [1, 2, 3, 4, 5],
-                  y: [1, 2, 4, 8, 16]
-                }], 
-              {margin: { t: 0 }});
-          """)
+  # write(output,
+  #     """
+  #     <!DOCTYPE html>
+  #     <html>
+  #       <head>
+  #         <title>Plots.jl (Plotly)</title>
+  #         <meta charset="utf-8">
+  #         <script src="$(Pkg.dir("Plots"))/src/backends/plotly-latest.min.js"></script>
+  #       </head>
+  #         <div id="myplot" style="width:$(w)px;height:$(h)px;"></div>
+  #         <script charset="utf-8">
+  #           PLOT = document.getElementById('myplot');
+  #           Plotly.plot(PLOT, [{
+  #                 x: [1, 2, 3, 4, 5],
+  #                 y: [1, 2, 4, 8, 16]
+  #               }], 
+  #             {margin: { t: 0 }});
+  #         """)
 
-  # build_plotly_json(plt)
-  # print(output, json)
+  # # build_plotly_json(plt)
+  # # print(output, json)
 
-  write(output,
-          """
-          </script>
-      </html>
-      """)
-  close(output)
+  # write(output,
+  #         """
+  #         </script>
+  #     </html>
+  #     """)
+  # close(output)
 
-  open_browser_window(filename)
+  # open_browser_window(filename)
 end
 
 function Base.display(::PlotsDisplay, plt::Subplot{PlotlyPackage})
