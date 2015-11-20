@@ -236,8 +236,8 @@ function backend()
 
     elseif currentBackendSymbol == :plotly
       try
-        @eval include("src/backends/web.jl")
-        @eval include("src/backends/plotly.jl")
+        @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "web.jl"))
+        @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl"))
       catch err
         warn("Couldn't setup Plotly")
         rethrow(err)
