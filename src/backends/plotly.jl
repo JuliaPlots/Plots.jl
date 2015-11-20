@@ -96,7 +96,6 @@ function Base.display(::PlotsDisplay, plt::Plot{PlotlyPackage})
           <meta charset="utf-8">
           <script src="$(Pkg.dir("Plots"))/src/backends/plotly-latest.min.js"></script>
         </head>
-          <body>
           <div id="myplot" style="width:$(w)px;height:$(h)px;"></div>
           <script charset="utf-8">
             PLOT = document.getElementById('myplot');
@@ -113,7 +112,6 @@ function Base.display(::PlotsDisplay, plt::Plot{PlotlyPackage})
   write(output,
           """
           </script>
-        </body>
       </html>
       """)
   close(output)

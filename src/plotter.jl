@@ -266,7 +266,6 @@ end
 Set the plot backend.  Choose from:  :qwt, :gadfly, :unicodeplots, :immerse, :pyplot
 """
 function backend(pkg::PlottingPackage)
-
   CURRENT_BACKEND.sym = backend_name(pkg)
   CURRENT_BACKEND.pkg = pkg
 end

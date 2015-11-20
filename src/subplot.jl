@@ -364,3 +364,8 @@ end
 
 
 
+# --------------------------------------------------------------------
+
+function Base.copy(subplt::Subplot)
+  subplot(subplt.plts, subplt.layout, subplt.plotargs)
+end

@@ -286,6 +286,10 @@ function get_color_palette(palette, bgcolor::@compat(Union{Colorant,ColorWrapper
   RGBA[getColorZ(grad, z) for z in zrng]
 end
 
+function get_color_palette(palette::Vector{RGBA}, bgcolor::@compat(Union{Colorant,ColorWrapper}), numcolors::Integer)
+  palette
+end
+
 # ----------------------------------------------------------------------------------
 
 

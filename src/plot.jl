@@ -194,6 +194,17 @@ end
 
 # --------------------------------------------------------------------
 
+function Base.copy(plt::Plot)
+  backend(plt.backend)
+  plt2 = plot(; plt.plotargs...)
+  for sargs in plt.seriesargs
+    sargs = filter((k,v) -> haskey(_seriesDefaults,k), sargs)
+    plot!(plt2; sargs...)
+  end
+  plt2
+end
+
+# --------------------------------------------------------------------
 
 # create a new "createKWargsList" which converts all inputs into xs = Any[xitems], ys = Any[yitems].
 # Special handling for: no args, xmin/xmax, parametric, dataframes

@@ -169,7 +169,7 @@ handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Real) = handleSmooth
 # makePyPlotCurrent(wrap::PyPlotFigWrapper) = PyPlot.figure(wrap.fig.o[:number])
 # makePyPlotCurrent(wrap::PyPlotAxisWrapper) = nothing #PyPlot.sca(wrap.ax.o)
 makePyPlotCurrent(wrap::PyPlotAxisWrapper) = wrap.ax == nothing ? PyPlot.figure(wrap.fig.o[:number]) : nothing
-makePyPlotCurrent(plt::Plot{PyPlotPackage}) = makePyPlotCurrent(plt.o)
+makePyPlotCurrent(plt::Plot{PyPlotPackage}) = plt.o == nothing ? nothing : makePyPlotCurrent(plt.o)
 
 
 function _before_add_series(plt::Plot{PyPlotPackage})
