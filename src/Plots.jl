@@ -10,6 +10,14 @@ using Reexport
 @reexport using Colors
 
 export
+  Plot,
+  Subplot,
+  SubplotLayout,
+  GridLayout,
+  FlexLayout,
+  AVec,
+  AMat,
+
   plot,
   plot!,
   # plot_display,
@@ -94,8 +102,8 @@ export
 
   # recipes
   PlotRecipe,
-  EllipseRecipe,
-  spy,
+  # EllipseRecipe,
+  # spy,
   corrplot
 
 # ---------------------------------------------------------

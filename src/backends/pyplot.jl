@@ -285,6 +285,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
         extra_kwargs[:alpha] = d[:markeralpha]
       end
       extra_kwargs[:edgecolors] = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
+      extra_kwargs[:linewidths] = d[:markerstrokewidth]
     else
       extra_kwargs[:markersize] = d[:markersize]
       extra_kwargs[:markerfacecolor] = getPyPlotColor(d[:markercolor], d[:markeralpha])
