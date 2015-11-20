@@ -3,12 +3,16 @@
 
 # ---------------------------------------------------------------------------
 
+# immutable MissingVec <: AbstractVector{Float64} end
+# Base.size(v::MissingVec) = (1,)
+# Base.getindex(v::MissingVec, i::Integer) = 0.0
 
 function createGadflyPlotObject(d::Dict)
   gplt = Gadfly.Plot()
   gplt.mapping = Dict()
   gplt.data_source = Gadfly.DataFrames.DataFrame()
-  gplt.layers = gplt.layers[1:0]
+  # gplt.layers = gplt.layers[1:0]
+  gplt.layers = [Gadfly.layer(Gadfly.Geom.point(tag=:remove), x=zeros(1), y=zeros(1));] # x=MissingVec(), y=MissingVec());]
   gplt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]),
                                    Gadfly.Guide.ylabel(d[:ylabel]),
                                    Gadfly.Guide.title(d[:title])]
@@ -544,6 +548,13 @@ end
 
 # plot one data series
 function _add_series(::GadflyPackage, plt::Plot; kw...)
+  
+  # first clear out the temporary layer
+  gplt = getGadflyContext(plt)
+  if gplt.layers[1].geom.tag == :remove
+    gplt.layers = gplt.layers[2:end]
+  end
+
   d = Dict(kw)
   addGadflySeries!(plt, d)
   push!(plt.seriesargs, d)
