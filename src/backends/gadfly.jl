@@ -380,14 +380,19 @@ function addGadflyLimitsScale(gplt, d::Dict, isx::Bool)
   # do we want to add min/max limits for the axis?
   limsym = isx ? :xlims : :ylims
   limargs = Any[]
-  lims = get(d, limsym, :auto)
-  lims == :auto && return
 
-  if limsType(lims) == :limits
-    push!(limargs, (:minvalue, min(lims...)))
-    push!(limargs, (:maxvalue, max(lims...)))
+  # map :auto to nothing, otherwise add to limargs
+  lims = get(d, limsym, :auto)
+  # lims == :auto && return
+  if lims == :auto
+    lims = nothing
   else
-    error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
+    if limsType(lims) == :limits
+      push!(limargs, (:minvalue, min(lims...)))
+      push!(limargs, (:maxvalue, max(lims...)))
+    else
+      error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
+    end
   end
 
   # replace any current scales with this one
