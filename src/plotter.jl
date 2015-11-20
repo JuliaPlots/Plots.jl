@@ -8,6 +8,7 @@ immutable UnicodePlotsPackage <: PlottingPackage end
 immutable WinstonPackage      <: PlottingPackage end
 immutable BokehPackage        <: PlottingPackage end
 immutable PlotlyPackage       <: PlottingPackage end
+immutable NoPackage           <: PlottingPackage end
 
 typealias GadflyOrImmerse @compat(Union{GadflyPackage, ImmersePackage})
 
@@ -37,6 +38,7 @@ backend_name(::UnicodePlotsPackage) = :unicodeplots
 backend_name(::QwtPackage)          = :qwt
 backend_name(::BokehPackage)        = :bokeh
 backend_name(::PlotlyPackage)       = :plotly
+backend_name(::NoPackage)           = :none
 
 include("backends/supported.jl")
 
@@ -81,6 +83,7 @@ function backendInstance(sym::Symbol)
   sym == :winston && return WinstonPackage()
   sym == :bokeh && return BokehPackage()
   sym == :plotly && return PlotlyPackage()
+  sym == :none && return NoPackage()
   error("Unsupported backend $sym")
 end 
 
@@ -93,39 +96,48 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, backendInstance(sym))
 
 # ---------------------------------------------------------
 
+# function pickDefaultBackend()
+#   try
+#     if Pkg.installed("PyPlot") != nothing
+#       return CurrentBackend(:pyplot)
+#     end
+#   end
+#   try
+#     if Pkg.installed("Immerse") != nothing
+#       return CurrentBackend(:immerse)
+#     end
+#   end
+#   try
+#     if Pkg.installed("Qwt") != nothing
+#       return CurrentBackend(:qwt)
+#     end
+#   end
+#   try
+#     if Pkg.installed("Gadfly") != nothing
+#       return CurrentBackend(:gadfly)
+#     end
+#   end
+#   try
+#     if Pkg.installed("UnicodePlots") != nothing
+#       return CurrentBackend(:unicodeplots)
+#     end
+#   end
+#   try
+#     if Pkg.installed("Bokeh") != nothing
+#       return CurrentBackend(:bokeh)
+#     end
+#   end
+#   # warn("You don't have any of the supported backends installed!  Chose from ", backends())
+#   return CurrentBackend(:plotly)
+# end
+
 function pickDefaultBackend()
-  try
-    if Pkg.installed("PyPlot") != nothing
-      return CurrentBackend(:pyplot)
+  for pkgstr in ("PyPlot", "Immerse", "Qwt", "Gadfly", "UnicodePlots", "Bokeh")
+    if Pkg.installed(pkgstr) != nothing
+      return backend(symbol(lowercase(pkgstr)))
     end
   end
-  try
-    if Pkg.installed("Immerse") != nothing
-      return CurrentBackend(:immerse)
-    end
-  end
-  try
-    if Pkg.installed("Qwt") != nothing
-      return CurrentBackend(:qwt)
-    end
-  end
-  try
-    if Pkg.installed("Gadfly") != nothing
-      return CurrentBackend(:gadfly)
-    end
-  end
-  try
-    if Pkg.installed("UnicodePlots") != nothing
-      return CurrentBackend(:unicodeplots)
-    end
-  end
-  try
-    if Pkg.installed("Bokeh") != nothing
-      return CurrentBackend(:bokeh)
-    end
-  end
-  # warn("You don't have any of the supported backends installed!  Chose from ", backends())
-  return CurrentBackend(:plotly)
+  backend(:plotly)
 end
 
 
@@ -135,6 +147,11 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
+
+  global CURRENT_BACKEND
+  if CURRENT_BACKEND.sym == :none
+    pickDefaultBackend()
+  end
 
   currentBackendSymbol = CURRENT_BACKEND.sym
   if !(currentBackendSymbol in INITIALIZED_BACKENDS)

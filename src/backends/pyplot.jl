@@ -568,7 +568,7 @@ function subplot(plts::AVec{Plot{PyPlotPackage}}, layout::SubplotLayout, d::Dict
   n = sum([plt.n for plt in plts])
 
   pkg = PyPlotPackage()
-  newplts = Plot{PyPlotPackage}[plot(pkg; subplot=true, plt.plotargs...) for plt in plts]
+  newplts = Plot{PyPlotPackage}[_create_plot(pkg; subplot=true, plt.plotargs...) for plt in plts]
 
   subplt = Subplot(nothing, newplts, PyPlotPackage(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
 

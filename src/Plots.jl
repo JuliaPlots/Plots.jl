@@ -186,10 +186,10 @@ yaxis!(plt::Plot, args...; kw...)                                     = plot!(pl
 # ---------------------------------------------------------
 
 
-try
-  import DataFrames
-  dataframes()
-end
+# try
+#   import DataFrames
+#   dataframes()
+# end
 
 # const CURRENT_BACKEND = pickDefaultBackend()
 
@@ -202,18 +202,21 @@ end
 #   end
 # end
 
+const CURRENT_BACKEND = CurrentBackend(:none)
 
-function __init__()
-  global const CURRENT_BACKEND = pickDefaultBackend()
-  # global CURRENT_BACKEND
-  # println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
+# function __init__()
+#   # global const CURRENT_BACKEND = pickDefaultBackend()
+#   # global const CURRENT_BACKEND = CurrentBackend(:none)
 
-  # # auto init dataframes if the import statement doesn't error out
-  # try
-  #   @eval import DataFrames
-  #   dataframes()
-  # end
-end
+#   # global CURRENT_BACKEND
+#   # println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
+
+#   # # auto init dataframes if the import statement doesn't error out
+#   # try
+#   #   @eval import DataFrames
+#   #   dataframes()
+#   # end
+# end
 
 # ---------------------------------------------------------
 
