@@ -19,8 +19,7 @@ using JSON
 # """
 
 
-function standalone_html(plt::PlottingObject; title::AbstractString = "Plots.jl ($(backend_name(plt.backend)))")
-    # render(_html_template, title = title, body = html_body(plt), head = html_head(plt))
+function standalone_html(plt::PlottingObject; title::AbstractString = get(plt.plotargs, :window_title, "Plots.jl"))
     """
     <!DOCTYPE html>
     <html>

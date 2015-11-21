@@ -68,13 +68,7 @@ end
 # ----------------------------------------------------------------
 
 
-# _plotDefaults[:title]             = ""
-# _plotDefaults[:xlabel]            = ""
-# _plotDefaults[:ylabel]            = ""
 # _plotDefaults[:yrightlabel]       = ""
-# _plotDefaults[:legend]            = true
-# _plotDefaults[:background_color]  = colorant"white"
-# _plotDefaults[:foreground_color]  = :auto
 # _plotDefaults[:xlims]             = :auto
 # _plotDefaults[:ylims]             = :auto
 # _plotDefaults[:xticks]            = :auto
@@ -83,36 +77,71 @@ end
 # _plotDefaults[:yscale]            = :identity
 # _plotDefaults[:xflip]             = false
 # _plotDefaults[:yflip]             = false
-# _plotDefaults[:size]              = (600,400)
-# _plotDefaults[:pos]               = (0,0)
-# _plotDefaults[:windowtitle]       = "Plots.jl"
-# _plotDefaults[:show]              = false
-# _plotDefaults[:layout]            = nothing
-# _plotDefaults[:n]                 = -1
-# _plotDefaults[:nr]                = -1
-# _plotDefaults[:nc]                = -1
-# _plotDefaults[:color_palette]     = :auto
-# _plotDefaults[:link]              = false
-# _plotDefaults[:linkx]             = false
-# _plotDefaults[:linky]             = false
-# _plotDefaults[:linkfunc]          = nothing
-# _plotDefaults[:tickfont]          = font(8)
-# _plotDefaults[:guidefont]         = font(11)
-# _plotDefaults[:legendfont]        = font(8)
-# _plotDefaults[:grid]              = true
 
+function plotlyfont(font::Font)
+  Dict(
+      :family => font.family,
+      :size   => font.pointsize,
+      :color  => font.color,
+    )
+end
+
+function plotlyscale(scale::Symbol)
+  if scale == :log
+    "log"
+  else
+    "-"
+  end
+end
 
 function get_plot_html(plt::Plot{PlotlyPackage})
   d = plt.plotargs
   d_out = Dict()
 
+  bgcolor = webcolor(d[:background_color])
+  fgcolor = webcolor(d[:foreground_color])
+
   # TODO: set the fields for the plot
   d_out[:title] = d[:title]
-  d_out[:width], d_out[:height] = d[:size]
-  # d_out[:margin] = 0
-  d_out[:showlegend] = d[:legend]
-  d_out[:paper_bgcolor] = d_out[:plot_bgcolor] = plotlycolor(d[:background_color])
   d_out[:titlefont] = plotlyfont(d[:guidefont])
+  d_out[:width], d_out[:height] = d[:size]
+  d_out[:margin] = Dict(:l=>20, :b=>20, :r=>10, :t=>10)
+  d_out[:paper_bgcolor] = bgcolor
+  d_out[:plot_bgcolor] = bgcolor
+  
+  # TODO: x/y axis tick values/labels
+  # TODO: x/y axis range
+
+  d_out[:xaxis] = Dict(
+      :title      => d[:xlabel],
+      :titlefont  => plotlyfont(d[:guidefont]),
+      :type       => plotlyscale(d[:xscale]),
+      :tickfont   => plotlyfont(d[:tickfont]),
+      :tickcolor  => fgcolor,
+      :linecolor  => fgcolor,
+      :showgrid   => d[:grid],
+    )
+  d_out[:yaxis] = Dict(
+      :title      => d[:ylabel],
+      :titlefont  => plotlyfont(d[:guidefont]),
+      :type       => plotlyscale(d[:yscale]),
+      :tickfont   => plotlyfont(d[:tickfont]),
+      :tickcolor  => fgcolor,
+      :linecolor  => fgcolor,
+      :showgrid   => d[:grid],
+    )
+
+  d_out[:showlegend] = d[:legend]
+  if d[:legend]
+    d_out[:legend] = Dict(
+        :bgcolor  => bgcolor,
+        :bordercolor => fgcolor,
+        :font     => plotlyfont(d[:legendfont]),
+        :yanchor  => "middle",
+      )
+  end
+
+  # TODO: d_out[:annotations]
 
   JSON.json(d_out)
 end
@@ -167,14 +196,6 @@ end
 
 function html_body(plt::Plot{PlotlyPackage})
   w, h = plt.plotargs[:size]
-
-  # # TODO: get the real ones
-  # seriesargs = [Dict(:x => collect(1:5), :y => rand(5))]
-  # plotargs = Dict(:margin => 0)
-
-  # series_html = JSON.json(seriesargs)
-  # plot_html = JSON.json(plotargs)
-
   """
     <div id=\"myplot\" style=\"width:$(w)px;height:$(h)px;\"></div>
     <script>

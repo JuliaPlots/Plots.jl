@@ -325,6 +325,16 @@ end
 
 # ----------------------------------------------------------------------------------
 
+
+make255(x) = round(Int, 255 * x)
+
+function webcolor(c::Colorant)
+  @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
+end
+webcolor(cs::ColorScheme) = webcolor(getColor(cs))
+
+# ----------------------------------------------------------------------------------
+
 # TODO: allow the setting of the algorithm, either by passing a symbol (:colordiff, :fixed, etc) or a function? 
 
 # function getBackgroundRGBColor(c, d::Dict)

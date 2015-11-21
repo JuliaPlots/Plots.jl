@@ -1,12 +1,12 @@
 
 # https://github.com/bokeh/Bokeh.jl
 
-make255(x) = round(Int, 255 * x)
+# make255(x) = round(Int, 255 * x)
 
-function bokehcolor(c::Colorant)
-  @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
-end
-bokehcolor(cs::ColorScheme) = bokehcolor(getColor(cs))
+# function bokehcolor(c::Colorant)
+#   @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
+# end
+# bokehcolor(cs::ColorScheme) = bokehcolor(getColor(cs))
 
 
 const _glyphtypes = Dict(
@@ -88,9 +88,9 @@ function _add_series(::BokehPackage, plt::Plot; kw...)
   
   glyph = Bokeh.Bokehjs.Glyph(
       glyphtype = bokeh_glyph_type(d),
-      linecolor = bokehcolor(d[:linecolor]),  # shape's stroke or line color
+      linecolor = webcolor(d[:linecolor]),  # shape's stroke or line color
       linewidth = d[:linewidth],          # shape's stroke width or line width
-      fillcolor = bokehcolor(d[:markercolor]),
+      fillcolor = webcolor(d[:markercolor]),
       size      = ceil(Int, d[:markersize] * 2.5),  # magic number 2.5 to keep in same scale as other backends
       dash      = get_stroke_vector(d[:linestyle])
     )
