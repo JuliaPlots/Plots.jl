@@ -96,20 +96,6 @@ const _allScales = [:identity, :log, :log2, :log10, :asinh, :sqrt]
     :ln   => :log,
   )
 
-supportedAxes(::PlottingPackage) = [:left]
-supportedTypes(::PlottingPackage) = []
-supportedStyles(::PlottingPackage) = [:solid]
-supportedMarkers(::PlottingPackage) = [:none]
-supportedScales(::PlottingPackage) = [:identity]
-subplotSupported(::PlottingPackage) = false
-
-supportedAxes() = supportedAxes(backend())
-supportedTypes() = supportedTypes(backend())
-supportedStyles() = supportedStyles(backend())
-supportedMarkers() = supportedMarkers(backend())
-supportedScales() = supportedScales(backend())
-subplotSupported() = subplotSupported(backend())
-
 # -----------------------------------------------------------------------------
 
 const _seriesDefaults = Dict{Symbol, Any}()

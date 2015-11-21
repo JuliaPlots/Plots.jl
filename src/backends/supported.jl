@@ -1,4 +1,22 @@
 
+supportedAxes(::PlottingPackage) = [:left]
+supportedTypes(::PlottingPackage) = []
+supportedStyles(::PlottingPackage) = [:solid]
+supportedMarkers(::PlottingPackage) = [:none]
+supportedScales(::PlottingPackage) = [:identity]
+subplotSupported(::PlottingPackage) = false
+
+supportedAxes() = supportedAxes(backend())
+supportedTypes() = supportedTypes(backend())
+supportedStyles() = supportedStyles(backend())
+supportedMarkers() = supportedMarkers(backend())
+supportedScales() = supportedScales(backend())
+subplotSupported() = subplotSupported(backend())
+
+
+# --------------------------------------------------------------------------------------
+
+
 supportedArgs(::GadflyPackage) = [
     :annotation,
     # :axis,
@@ -63,6 +81,7 @@ supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :st
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
 supportedScales(::GadflyPackage) = [:identity, :log, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::GadflyPackage) = true
 
 
 # --------------------------------------------------------------------------------------
@@ -74,6 +93,7 @@ supportedTypes(::ImmersePackage) = supportedTypes(GadflyPackage())
 supportedStyles(::ImmersePackage) = supportedStyles(GadflyPackage())
 supportedMarkers(::ImmersePackage) = supportedMarkers(GadflyPackage())
 supportedScales(::ImmersePackage) = supportedScales(GadflyPackage())
+subplotSupported(::ImmersePackage) = true
 
 # --------------------------------------------------------------------------------------
 
@@ -206,6 +226,7 @@ supportedArgs(::QwtPackage) = [
 supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
 supportedScales(::QwtPackage) = [:identity, :log10]
+subplotSupported(::QwtPackage) = true
 
 
 # --------------------------------------------------------------------------------------
@@ -265,6 +286,7 @@ supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppost, :sticks
 supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
 supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
 supportedScales(::UnicodePlotsPackage) = [:identity]
+subplotSupported(::UnicodePlotsPackage) = true
 
 
 
@@ -396,5 +418,72 @@ supportedTypes(::BokehPackage) = [:none, :path, :scatter] #,:steppre, :steppost,
 supportedStyles(::BokehPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::BokehPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
 supportedScales(::BokehPackage) = [:identity, :log] #, :log, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::BokehPackage) = false
+
+
+# --------------------------------------------------------------------------------------
+
+supportedArgs(::PlotlyPackage) = [
+    # :annotation,
+    # :axis,
+    :background_color,
+    :color_palette,
+    # :fillrange,
+    # :fillcolor,
+    # :fillalpha,
+    :foreground_color,
+    :group,
+    :label,
+    # :layout,
+    :legend,
+    :linecolor,
+    :linestyle,
+    :linetype,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokestyle,
+    # :n,
+    # :nbins,
+    # :nc,
+    # :nr,
+    # :pos,
+    # :smooth,
+    # :show,
+    :size,
+    :title,
+    :windowtitle,
+    :x,
+    :xlabel,
+    # :xlims,
+    # :xticks,
+    :y,
+    :ylabel,
+    # :ylims,
+    # :yrightlabel,
+    # :yticks,
+    :xscale,
+    :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    # :surface,
+    # :nlevels,
+  ]
+supportedAxes(::PlotlyPackage) = [:auto, :left]
+supportedTypes(::PlotlyPackage) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::PlotlyPackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedScales(::PlotlyPackage) = [:identity, :log] #, :log, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::PlotlyPackage) = false
 
 
