@@ -119,8 +119,9 @@ function addGadflyLine!(plt::Plot, numlayers::Int, d::Dict, geoms...)
       kwargs[:xmin] = d[:x] - w
       kwargs[:xmax] = d[:x] + w
     elseif lt == :contour
-      d[:y] = reverse(d[:y])
+      # d[:y] = reverse(d[:y])
       kwargs[:z] = d[:surface]
+      addGadflyContColorScale(plt, d[:linecolor])
     end
 
     kwargs[:x] = d[lt == :hist ? :y : :x]
@@ -190,6 +191,13 @@ function getGadflyMarkerTheme(d::Dict, plotargs::Dict)
     )
 end
 
+function addGadflyContColorScale(plt::Plot{GadflyPackage}, c)
+  if !isa(c, ColorGradient)
+    c = colorscheme(:bluesreds)
+  end
+  push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(c, p))))
+end
+
 function addGadflyMarker!(plt::Plot, numlayers::Int, d::Dict, plotargs::Dict, geoms...)
   gfargs = vcat(geoms...,
                 getGadflyMarkerTheme(d, plotargs),
@@ -200,10 +208,11 @@ function addGadflyMarker!(plt::Plot, numlayers::Int, d::Dict, plotargs::Dict, ge
   zcolor = d[:zcolor]
   if zcolor != nothing && typeof(zcolor) <: AVec
     kwargs[:color] = zcolor
-    if !isa(d[:markercolor], ColorGradient)
-      d[:markercolor] = colorscheme(:bluesreds)
-    end
-    push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p))))
+    addGadflyContColorScale(plt, d[:markercolor])
+    # if !isa(d[:markercolor], ColorGradient)
+    #   d[:markercolor] = colorscheme(:bluesreds)
+    # end
+    # push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:markercolor], p))))
   end
 
   Gadfly.layer(gfargs...; x = d[:x], y = d[:y], order=numlayers, kwargs...)
