@@ -332,6 +332,7 @@ function webcolor(c::Colorant)
   @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
 end
 webcolor(cs::ColorScheme) = webcolor(getColor(cs))
+webcolor(c, α) = webcolor(convertColor(getColor(c), α))
 
 # ----------------------------------------------------------------------------------
 

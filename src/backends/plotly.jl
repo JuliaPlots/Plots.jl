@@ -180,8 +180,46 @@ function get_series_html(plt::Plot{PlotlyPackage})
     d_out = Dict()
 
     # TODO: set the fields for each series
-    for k in (:x, :y)
-      d_out[k] = collect(d[k])
+    d_out[:x] = collect(d[:x])
+    d_out[:y] = collect(d[:y])
+    d_out[:name] = d[:label]
+
+    lt = d[:linetype]
+    if lt in (:line, :path, :scatter, :steppre, :steppost)
+      d_out[:type] = "scatter"
+    end
+
+    hasmarker = lt == :scatter || d[:markershape] != :none
+    hasline = lt != :scatter
+    d_out[:mode] = if hasmarker
+      hasline ? "lines+markers" : "markers"
+    else
+      hasline ? "lines" : "none"
+    end
+
+    if hasmarker
+      d_out[:marker] = Dict(
+          # :symbol => "circle",
+          # :opacity => d[:markeropacity],
+          :size => d[:markersize],
+          :color => webcolor(d[:markercolor], d[:markeralpha]),
+          :line => Dict(
+              :color => webcolor(d[:markerstrokecolor], d[:markerstrokealpha]),
+              :width => d[:markerstrokewidth],
+            ),
+        )
+      if d[:zcolor] != nothing
+        d_out[:marker][:color] = d[:zcolor]
+        d_out[:marker][:colorscale] = :RdBu # TODO: use the markercolor gradient
+      end
+    end
+
+    if hasline
+      d_out[:line] = Dict(
+          :color => webcolor(d[:linecolor], d[:linealpha]),
+          :width => d[:linewidth],
+          # :dash => "solid",
+        )
     end
     
     d_out
