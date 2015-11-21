@@ -10,7 +10,7 @@ const _allAxes = [:auto, :left, :right]
 const _3dTypes = [:path3d, :scatter3d]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-                        :heatmap, :hexbin, :hist, :bar, :hline, :vline, :ohlc, :contour
+                        :heatmap, :hexbin, :hist, :density, :bar, :hline, :vline, :ohlc, :contour
                        ], _3dTypes)
 @compat const _typeAliases = Dict(
     :n             => :none,
@@ -29,9 +29,14 @@ const _allTypes = vcat([
     :stems         => :sticks,
     :dots          => :scatter,
     :histogram     => :hist,
+    :pdf           => :density,
     :contours      => :contours,
     :line3d        => :path3d,
   )
+
+ishistlike(lt::Symbol) = lt in (:hist, :density)
+islinelike(lt::Symbol) = lt in (:line, :path, :steppre, :steppost)
+isheatmaplike(lt::Symbol) = lt in (:heatmap, :hexbin)
 
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -91,12 +96,12 @@ const _allScales = [:identity, :log, :log2, :log10, :asinh, :sqrt]
     :ln   => :log,
   )
 
-supportedAxes(::PlottingPackage) = _allAxes
-supportedTypes(::PlottingPackage) = _allTypes
-supportedStyles(::PlottingPackage) = _allStyles
-supportedMarkers(::PlottingPackage) = _allMarkers
-supportedScales(::PlottingPackage) = _allScales
-subplotSupported(::PlottingPackage) = true
+supportedAxes(::PlottingPackage) = [:left]
+supportedTypes(::PlottingPackage) = []
+supportedStyles(::PlottingPackage) = [:solid]
+supportedMarkers(::PlottingPackage) = [:none]
+supportedScales(::PlottingPackage) = [:identity]
+subplotSupported(::PlottingPackage) = false
 
 supportedAxes() = supportedAxes(backend())
 supportedTypes() = supportedTypes(backend())

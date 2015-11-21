@@ -126,6 +126,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
   # ax[:set_ylabel](plt.plotargs[:yrightlabel])
   fmap = @compat Dict(
       :hist       => :hist,
+      :density    => :hist,
       :sticks     => :bar,
       :bar        => :bar,
       :heatmap    => :hexbin,
@@ -246,13 +247,14 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   plotfunc = getPyPlotFunction(plt, d[:axis], lt)
 
   # we have different args depending on plot type
-  if lt in (:hist, :sticks, :bar)
+  if lt in (:hist, :density, :sticks, :bar)
 
     # NOTE: this is unsupported because it does the wrong thing... it shifts the whole axis
     # extra_kwargs[:bottom] = d[:fill]
 
-    if lt == :hist
+    if ishistlike(lt)
       extra_kwargs[:bins] = d[:nbins]
+      extra_kwargs[:normed] = lt == :density
     else
       extra_kwargs[:linewidth] = (lt == :sticks ? 0.1 : 0.9)
     end
@@ -312,7 +314,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   end
 
   # do the plot
-  d[:serieshandle] = if lt == :hist
+  d[:serieshandle] = if ishistlike(lt)
     plotfunc(d[:y]; extra_kwargs...)[1]
   elseif lt == :contour
     # NOTE: x/y are backwards in pyplot, so we switch the x and y args (also y is reversed), 
@@ -607,7 +609,7 @@ end
 function addPyPlotLegend(plt::Plot, ax)
   if plt.plotargs[:legend]
     # gotta do this to ensure both axes are included
-    args = filter(x -> !(x[:linetype] in (:hist,:hexbin,:heatmap,:hline,:vline,:contour, :path3d, :scatter3d)), plt.seriesargs)
+    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:heatmap,:hline,:vline,:contour, :path3d, :scatter3d)), plt.seriesargs)
     if length(args) > 0
       leg = ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],

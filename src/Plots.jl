@@ -35,6 +35,8 @@ export
   bar!,
   histogram,
   histogram!,
+  density,
+  density!,
   heatmap,
   heatmap!,
   hexbin,
@@ -135,10 +137,12 @@ bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
 bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
 histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)
 histogram!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
+density(args...; kw...)    = plot(args...; kw...,  linetype = :density)
+density!(args...; kw...)   = plot!(args...; kw..., linetype = :density)
 heatmap(args...; kw...)    = plot(args...; kw...,  linetype = :heatmap)
 heatmap!(args...; kw...)   = plot!(args...; kw..., linetype = :heatmap)
-hexbin(args...; kw...)    = plot(args...; kw...,  linetype = :hexbin)
-hexbin!(args...; kw...)   = plot!(args...; kw..., linetype = :hexbin)
+hexbin(args...; kw...)     = plot(args...; kw...,  linetype = :hexbin)
+hexbin!(args...; kw...)    = plot!(args...; kw..., linetype = :hexbin)
 sticks(args...; kw...)     = plot(args...; kw...,  linetype = :sticks, marker = :ellipse)
 sticks!(args...; kw...)    = plot!(args...; kw..., linetype = :sticks, marker = :ellipse)
 hline(args...; kw...)      = plot(args...; kw...,  linetype = :hline)
