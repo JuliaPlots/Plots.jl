@@ -77,6 +77,7 @@ export
   font,
   stroke,
   brush,
+  Surface,
   OHLC,
 
   colorscheme,

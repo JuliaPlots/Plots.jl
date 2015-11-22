@@ -220,6 +220,15 @@ end
 
 # -----------------------------------------------------------------------
 
+"represents a contour or surface mesh"
+immutable Surface{M<:AMat}
+  # x::AVec
+  # y::AVec
+  surf::M
+end
+
+# -----------------------------------------------------------------------
+
 type OHLC{T<:Real}
   open::T
   high::T

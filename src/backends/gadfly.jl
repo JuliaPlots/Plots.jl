@@ -120,7 +120,7 @@ function addGadflyLine!(plt::Plot, numlayers::Int, d::Dict, geoms...)
       kwargs[:xmax] = d[:x] + w
     elseif lt == :contour
       # d[:y] = reverse(d[:y])
-      kwargs[:z] = d[:surface]
+      kwargs[:z] = d[:surface].surf
       addGadflyContColorScale(plt, d[:linecolor])
     end
 

@@ -320,7 +320,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     # NOTE: x/y are backwards in pyplot, so we switch the x and y args (also y is reversed), 
     #       and take the transpose of the surface matrix
     x, y = d[:x], d[:y]
-    surf = d[:surface]'
+    surf = d[:surface].surf'
     handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
     if d[:fillrange] != nothing
       handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))

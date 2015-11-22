@@ -232,6 +232,9 @@ convertToAnyVector{T<:Real}(v::AMat{T}; kw...) = Any[v[:,i] for i in 1:size(v,2)
 # function
 convertToAnyVector(f::Function; kw...) = Any[f], nothing
 
+# surface
+convertToAnyVector(s::Surface; kw...) = Any[s], nothing
+
 # vector of OHLC
 convertToAnyVector(v::AVec{OHLC}; kw...) = Any[v], nothing
 
@@ -260,7 +263,7 @@ function computeXandY(x, y)
     error("If you want to plot the function `$y`, you need to define the x values somehow!")
   end
   x, y = computeX(x,y), computeY(x,y)
-  @assert length(x) == length(y)
+  # @assert length(x) == length(y)
   x, y
 end
 
@@ -363,9 +366,14 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::
   @assert x == sort(x)
   @assert y == sort(y)
   @assert size(zmat) == (length(x), length(y))
-  surf = Array(Any,1,1)
-  surf[1,1] = convert(Matrix{Float64}, zmat)
+  surf = Surface(convert(Matrix{Float64}, zmat))
+  # surf = Array(Any,1,1)
+  # surf[1,1] = convert(Matrix{Float64}, zmat)
   createKWargsList(plt, x, y; kw..., surface = surf, linetype = :contour)
+end
+
+function createKWargsList(plt::PlottingObject, surf::Surface; kw...)
+  createKWargsList(plt, 1:size(surf.surf,1), 1:size(surf.surf,2), convert(Matrix{Float64}, surf.surf); kw...)
 end
 
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs; kw...)
