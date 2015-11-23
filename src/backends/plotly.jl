@@ -175,55 +175,87 @@ end
 # _seriesDefaults[:surface]         = nothing
 # _seriesDefaults[:nlevels]         = 15
 
-function get_series_html(plt::Plot{PlotlyPackage})
-  JSON.json([begin
-    d_out = Dict()
+# supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
+#                                    :scatter, :heatmap, :hexbin, :hist, :density, :bar,
+#                                    :hline, :vline, :contour, :path3d, :scatter3d]
 
-    # TODO: set the fields for each series
-    d_out[:x] = collect(d[:x])
-    d_out[:y] = collect(d[:y])
-    d_out[:name] = d[:label]
+# get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
+function get_series_html(d::Dict)
+  d_out = Dict()
 
-    lt = d[:linetype]
-    if lt in (:line, :path, :scatter, :steppre, :steppost)
-      d_out[:type] = "scatter"
-    end
+  x, y = collect(d[:x]), collect(d[:y])
+  # d_out[:x] = collect(d[:x])
+  # d_out[:y] = collect(d[:y])
+  d_out[:name] = d[:label]
 
-    hasmarker = lt == :scatter || d[:markershape] != :none
-    hasline = lt != :scatter
+  lt = d[:linetype]
+  hasmarker = lt == :scatter || d[:markershape] != :none
+  hasline = lt != :scatter
+
+  # set the "type"
+  if lt in (:line, :path, :scatter, :steppre, :steppost)
+    d_out[:type] = "scatter"
     d_out[:mode] = if hasmarker
       hasline ? "lines+markers" : "markers"
     else
       hasline ? "lines" : "none"
     end
+    d_out[:x], d_out[:y] = x, y
+  elseif lt == :bar
+    d_out[:type] = "bar"
+    d_out[:x], d_out[:y] = x, y
+  elseif lt == :heatmap
+    d_out[:type] = "heatmap"
+    d_out[:x], d_out[:y] = x, y
+  elseif lt == :hist
+    d_out[:type] = "histogram"
+    isvert = d[:orientation] in (:vertical, :v, :vert)
+    d_out[isvert ? :x : :y] = y
+  elseif lt == :contour
+    d_out[:type] = "contour"
+    d_out[:x], d_out[:y] = x, y
+    d_out[:z] = d[:z].surf
+    # d_out[:showscale] = d[:legend]
+    d_out[:ncontours] = d[:nlevels]
+    d_out[:contours] = Dict(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
+    # TODO: colorscale: [[0, 'rgb(166,206,227)'], [0.25, 'rgb(31,120,180)'], [0.45, 'rgb(178,223,138)'], [0.65, 'rgb(51,160,44)'], [0.85, 'rgb(251,154,153)'], [1, 'rgb(227,26,28)']]
+  else
+    error("Plotly: linetype $lt isn't supported.")
+  end
 
-    if hasmarker
-      d_out[:marker] = Dict(
-          # :symbol => "circle",
-          # :opacity => d[:markeropacity],
-          :size => d[:markersize],
-          :color => webcolor(d[:markercolor], d[:markeralpha]),
-          :line => Dict(
-              :color => webcolor(d[:markerstrokecolor], d[:markerstrokealpha]),
-              :width => d[:markerstrokewidth],
-            ),
-        )
-      if d[:zcolor] != nothing
-        d_out[:marker][:color] = d[:zcolor]
-        d_out[:marker][:colorscale] = :RdBu # TODO: use the markercolor gradient
-      end
+  # add "marker"
+  if hasmarker
+    d_out[:marker] = Dict(
+        # :symbol => "circle",
+        # :opacity => d[:markeropacity],
+        :size => d[:markersize],
+        :color => webcolor(d[:markercolor], d[:markeralpha]),
+        :line => Dict(
+            :color => webcolor(d[:markerstrokecolor], d[:markerstrokealpha]),
+            :width => d[:markerstrokewidth],
+          ),
+      )
+    if d[:zcolor] != nothing
+      d_out[:marker][:color] = d[:zcolor]
+      d_out[:marker][:colorscale] = :RdBu # TODO: use the markercolor gradient
     end
+  end
 
-    if hasline
-      d_out[:line] = Dict(
-          :color => webcolor(d[:linecolor], d[:linealpha]),
-          :width => d[:linewidth],
-          # :dash => "solid",
-        )
-    end
-    
-    d_out
-  end for d in plt.seriesargs])
+  # add "line"
+  if hasline
+    d_out[:line] = Dict(
+        :color => webcolor(d[:linecolor], d[:linealpha]),
+        :width => d[:linewidth],
+        # :dash => "solid",
+      )
+  end
+
+  d_out
+end
+
+# get a list of dictionaries, each representing the series params
+function get_series_html(plt::Plot{PlotlyPackage})
+  JSON.json(map(get_series_html, plt.seriesargs))
 end
 
 # ----------------------------------------------------------------
@@ -249,6 +281,12 @@ end
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{PlotlyPackage})
   # TODO: write a png to io
+  println("png")
+end
+
+function Base.writemime(io::IO, ::MIME"text/html", plt::PlottingObject{PlotlyPackage})
+  println("html")
+  html_head(plt) * html_body(plt)
 end
 
 function Base.display(::PlotsDisplay, plt::Plot{PlotlyPackage})

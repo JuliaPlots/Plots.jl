@@ -3,21 +3,6 @@
 
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
 
-using JSON
-
-# const _html_template = mt"""
-# <!DOCTYPE html>
-# <html>
-#     <head>
-#         <title>{{:title}}</title>
-#         {{:head}}
-#     </head>
-#     <body>
-#         {{:body}}
-#     </body>
-# </html>
-# """
-
 
 function standalone_html(plt::PlottingObject; title::AbstractString = get(plt.plotargs, :window_title, "Plots.jl"))
     """

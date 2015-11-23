@@ -133,8 +133,9 @@ _seriesDefaults[:x]               = nothing
 _seriesDefaults[:y]               = nothing
 _seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
 _seriesDefaults[:zcolor]          = nothing           # value for color scale
-_seriesDefaults[:surface]         = nothing
+# _seriesDefaults[:surface]         = nothing
 _seriesDefaults[:nlevels]         = 15
+_seriesDefaults[:orientation]     = :vertical
 
 
 const _plotDefaults = Dict{Symbol, Any}()

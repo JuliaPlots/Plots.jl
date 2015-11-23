@@ -71,7 +71,7 @@ supportedArgs(::GadflyPackage) = [
     :guidefont,
     :legendfont,
     :grid,
-    :surface,
+    # :surface,
     :nlevels,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
@@ -151,7 +151,7 @@ supportedArgs(::PyPlotPackage) = [
     :guidefont,
     :legendfont,
     :grid,
-    :surface,
+    # :surface,
     :nlevels,
     :fillalpha,
     :linealpha,

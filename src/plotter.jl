@@ -48,8 +48,10 @@ include("backends/unicodeplots.jl")
 include("backends/pyplot.jl")
 include("backends/immerse.jl")
 include("backends/winston.jl")
+
+include("backends/web.jl")
 include("backends/bokeh.jl")
-# include("backends/plotly.jl")
+include("backends/plotly.jl")
 
 
 # ---------------------------------------------------------
@@ -236,8 +238,9 @@ function backend()
 
     elseif currentBackendSymbol == :plotly
       try
-        @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "web.jl"))
-        @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl"))
+        # @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "web.jl"))
+        # @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl"))
+        @eval import JSON
       catch err
         warn("Couldn't setup Plotly")
         rethrow(err)
