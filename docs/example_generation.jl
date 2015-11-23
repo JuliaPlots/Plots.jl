@@ -167,6 +167,23 @@ const examples = PlotExample[
                        m=(Shape(verts),30,RGBA(0,0,0,0.2)),
                        bg=:pink, fg=:darkblue,
                        xlim = (0,1), ylim=(0,1), leg=false))
+              ]),
+
+  PlotExample("Contours",
+              "",
+              [
+                :(x = 1:0.3:20),
+                :(y = x),
+                :(f(x,y) = sin(x)+cos(y)),
+                :(contour(x, y, f, fill=true))
+              ]),
+
+  PlotExample("Pie",
+              "",
+              [
+                :(x = ["Nerds", "Hackers", "Scientists"]),
+                :(y = [0.4, 0.35, 0.25]),
+                :(pie(x, y, title="The Julia Community", l=0.5))
               ])
   
 ]

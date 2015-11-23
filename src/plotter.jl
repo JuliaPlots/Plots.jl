@@ -240,7 +240,12 @@ function backend()
       try
         # @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "web.jl"))
         # @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl"))
-        @eval import JSON
+        @eval begin
+          import JSON
+          JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
+          # JSON.json(dt::Union{Date,DateTime}) = string(dt)
+          # JSON.json{D<:Union{Date,DateTime}}(dts::AVec{D}) = map(string, dts)
+        end
       catch err
         warn("Couldn't setup Plotly")
         rethrow(err)

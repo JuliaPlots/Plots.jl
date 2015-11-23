@@ -28,7 +28,7 @@ end
 
 function standalone_html_window(plt::PlottingObject; kw...)
     html = standalone_html(plt; kw...)
-    println(html)
+    # println(html)
     filename = string(tempname(), ".html")
     output = open(filename, "w")
     write(output, html)

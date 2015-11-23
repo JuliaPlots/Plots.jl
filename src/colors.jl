@@ -328,7 +328,10 @@ end
 
 make255(x) = round(Int, 255 * x)
 
-function webcolor(c::Colorant)
+function webcolor(c::Color)
+  @sprintf("rgb(%d, %d, %d)", [make255(f(c)) for f in [red,green,blue]]...)
+end
+function webcolor(c::TransparentColor)
   @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
 end
 webcolor(cs::ColorScheme) = webcolor(getColor(cs))

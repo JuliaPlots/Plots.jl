@@ -82,7 +82,7 @@ function plotlyfont(font::Font)
   Dict(
       :family => font.family,
       :size   => font.pointsize,
-      :color  => font.color,
+      :color  => webcolor(font.color),
     )
 end
 
@@ -105,7 +105,8 @@ function get_plot_html(plt::Plot{PlotlyPackage})
   d_out[:title] = d[:title]
   d_out[:titlefont] = plotlyfont(d[:guidefont])
   d_out[:width], d_out[:height] = d[:size]
-  d_out[:margin] = Dict(:l=>20, :b=>20, :r=>10, :t=>10)
+  # d_out[:margin] = Dict(:l=>20, :b=>20, :r=>10, :t=>10)
+  d_out[:margin] = Dict(:t=>20)
   d_out[:paper_bgcolor] = bgcolor
   d_out[:plot_bgcolor] = bgcolor
   
@@ -179,6 +180,11 @@ end
 #                                    :scatter, :heatmap, :hexbin, :hist, :density, :bar,
 #                                    :hline, :vline, :contour, :path3d, :scatter3d]
 
+function plotly_colorscale(grad::ColorGradient)
+  [[grad.values[i], webcolor(grad.colors[i])] for i in 1:length(grad.colors)]
+end
+plotly_colorscale(c) = plotly_colorscale(ColorGradient(:bluesreds))
+
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function get_series_html(d::Dict)
   d_out = Dict()
@@ -219,6 +225,12 @@ function get_series_html(d::Dict)
     d_out[:ncontours] = d[:nlevels]
     d_out[:contours] = Dict(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
     # TODO: colorscale: [[0, 'rgb(166,206,227)'], [0.25, 'rgb(31,120,180)'], [0.45, 'rgb(178,223,138)'], [0.65, 'rgb(51,160,44)'], [0.85, 'rgb(251,154,153)'], [1, 'rgb(227,26,28)']]
+    d_out[:colorscale] = plotly_colorscale(d[:linecolor])
+  elseif lt == :pie
+    d_out[:type] = "pie"
+    d_out[:labels] = x
+    d_out[:values] = y
+    d_out[:hoverinfo] = "label+percent+name"
   else
     error("Plotly: linetype $lt isn't supported.")
   end

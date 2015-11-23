@@ -101,8 +101,10 @@ function plot!(plt::Plot, args...; kw...)
   for (i,di) in enumerate(seriesArgList)
     plt.n += 1
 
-    setTicksFromStringVector(d, di, :x, :xticks)
-    setTicksFromStringVector(d, di, :y, :yticks)
+    if !stringsSupported()
+      setTicksFromStringVector(d, di, :x, :xticks)
+      setTicksFromStringVector(d, di, :y, :yticks)
+    end
 
     # remove plot args
     for k in keys(_plotDefaults)
@@ -237,6 +239,9 @@ convertToAnyVector(s::Surface; kw...) = Any[s], nothing
 
 # vector of OHLC
 convertToAnyVector(v::AVec{OHLC}; kw...) = Any[v], nothing
+
+# dates
+convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}; kw...) = Any[dts], nothing
 
 # list of things (maybe other vectors, functions, or something else)
 function convertToAnyVector(v::AVec; kw...)

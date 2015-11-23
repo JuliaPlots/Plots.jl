@@ -376,29 +376,30 @@ function Base.getindex(plt::Plot{PyPlotPackage}, i::Integer)
   # mapping[:x], mapping[:y]
 end
 
-function Base.setindex!(plt::Plot{PyPlotPackage}, xy::Tuple, i::Integer)
+function Base.setindex!{X,Y}(plt::Plot{PyPlotPackage}, xy::Tuple{X,Y}, i::Integer)
   series = plt.seriesargs[i][:serieshandle]
+  x, y = xy
   try
-    series[:set_data](xy...)
+    series[:set_data](x, y)
   catch
-    series[:set_offsets](hcat(xy...))
+    series[:set_offsets](hcat(x, y))
   end
 
   ax = series[:axes]
   if plt.plotargs[:xlims] == :auto
     xmin, xmax = ax[:get_xlim]()
-    ax[:set_xlim](min(xmin, minimum(xy[1])), max(xmax, maximum(xy[1])))
+    ax[:set_xlim](min(xmin, minimum(x)), max(xmax, maximum(x)))
   end
   if plt.plotargs[:ylims] == :auto
     ymin, ymax = ax[:get_ylim]()
-    ax[:set_ylim](min(ymin, minimum(xy[2])), max(ymax, maximum(xy[2])))
+    ax[:set_ylim](min(ymin, minimum(y)), max(ymax, maximum(y)))
   end
 
-  # getLeftAxis(plt)[:relim]()
-  # getRightAxis(plt)[:relim]()
-  # for mapping in getGadflyMappings(plt, i)
-  #   mapping[:x], mapping[:y] = xy
-  # end
+  plt
+end
+
+function Base.setindex!{X,Y,Z}(plt::Plot{PyPlotPackage}, xyz::Tuple{X,Y,Z}, i::Integer)
+  warn("setindex not implemented for xyz")
   plt
 end
 

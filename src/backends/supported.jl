@@ -5,6 +5,7 @@ supportedStyles(::PlottingPackage) = [:solid]
 supportedMarkers(::PlottingPackage) = [:none]
 supportedScales(::PlottingPackage) = [:identity]
 subplotSupported(::PlottingPackage) = false
+stringsSupported(::PlottingPackage) = false
 
 supportedAxes() = supportedAxes(backend())
 supportedTypes() = supportedTypes(backend())
@@ -12,6 +13,7 @@ supportedStyles() = supportedStyles(backend())
 supportedMarkers() = supportedMarkers(backend())
 supportedScales() = supportedScales(backend())
 subplotSupported() = subplotSupported(backend())
+stringsSupported() = stringsSupported(backend())
 
 
 # --------------------------------------------------------------------------------------
@@ -428,7 +430,7 @@ supportedArgs(::PlotlyPackage) = [
     # :axis,
     :background_color,
     :color_palette,
-    # :fillrange,
+    :fillrange,
     # :fillcolor,
     # :fillalpha,
     :foreground_color,
@@ -471,19 +473,18 @@ supportedArgs(::PlotlyPackage) = [
     :yscale,
     # :xflip,
     # :yflip,
-    # :z,
+    :z,
     :tickfont,
     :guidefont,
     :legendfont,
     :grid,
-    # :surface,
-    # :nlevels,
+    :nlevels,
   ]
 supportedAxes(::PlotlyPackage) = [:auto, :left]
-supportedTypes(::PlotlyPackage) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedTypes(::PlotlyPackage) = [:none, :path, :scatter, :heatmap, :hist, :bar, :contour, :pie] #,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
 supportedStyles(::PlotlyPackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
 supportedScales(::PlotlyPackage) = [:identity, :log] #, :log, :log2, :log10, :asinh, :sqrt]
 subplotSupported(::PlotlyPackage) = false
-
+stringsSupported(::PlotlyPackage) = true
 

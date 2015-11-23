@@ -49,6 +49,12 @@ export
   vline!,
   ohlc,
   ohlc!,
+  pie,
+  pie!,
+  contour,
+  contour!,
+  surface,
+  surface!,
 
   title!,
   xlabel!,
@@ -152,6 +158,12 @@ vline(args...; kw...)      = plot(args...; kw...,  linetype = :vline)
 vline!(args...; kw...)     = plot!(args...; kw..., linetype = :vline)
 ohlc(args...; kw...)       = plot(args...; kw...,  linetype = :ohlc)
 ohlc!(args...; kw...)      = plot!(args...; kw..., linetype = :ohlc)
+pie(args...; kw...)        = plot(args...; kw...,  linetype = :pie)
+pie!(args...; kw...)       = plot!(args...; kw..., linetype = :pie)
+contour(args...; kw...)    = plot(args...; kw...,  linetype = :contour)
+contour!(args...; kw...)   = plot!(args...; kw..., linetype = :contour)
+surface(args...; kw...)    = plot(args...; kw...,  linetype = :surface)
+surface!(args...; kw...)   = plot!(args...; kw..., linetype = :surface)
 
 
 title!(s::@compat(AbstractString); kw...)                 = plot!(; title = s, kw...)
