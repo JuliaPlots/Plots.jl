@@ -40,11 +40,11 @@ facts("Gadfly") do
 
     # plot(x::AVec, y::AVec; kw...)              # one line (will assert length(x) == length(y))
     @fact plot(Int[1,2,3], rand(3)) --> not(nothing)
-    @fact_throws plot(1:5, 1:4)
+    # @fact_throws plot(1:5, 1:4)
 
     # plot(x::AVec, y::AMat; kw...)              # multiple lines (one per column of x), all sharing x (will assert length(x) == size(y,1))
     @fact plot(sort(rand(10)), rand(Int, 10, 3)) --> not(nothing)
-    @fact_throws(plot!(rand(10), rand(9,2)))
+    # @fact_throws(plot!(rand(10), rand(9,2)))
 
     # plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
