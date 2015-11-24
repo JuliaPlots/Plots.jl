@@ -481,9 +481,11 @@ supportedArgs(::PlotlyPackage) = [
     :nlevels,
   ]
 supportedAxes(::PlotlyPackage) = [:auto, :left]
-supportedTypes(::PlotlyPackage) = [:none, :path, :scatter, :heatmap, :hist, :bar, :contour, :pie] #,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
-supportedStyles(::PlotlyPackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedTypes(::PlotlyPackage) = [:none, :path, :scatter, :steppre, :steppost,
+                                   :heatmap, :hist, :bar, :contour, :pie] #,, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::PlotlyPackage) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
+                                     :pentagon, :hexagon, :octagon] #vcat(_allMarkers, Shape)
 supportedScales(::PlotlyPackage) = [:identity, :log] #, :log, :log2, :log10, :asinh, :sqrt]
 subplotSupported(::PlotlyPackage) = false
 stringsSupported(::PlotlyPackage) = true

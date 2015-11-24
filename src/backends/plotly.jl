@@ -105,8 +105,8 @@ function get_plot_html(plt::Plot{PlotlyPackage})
   d_out[:title] = d[:title]
   d_out[:titlefont] = plotlyfont(d[:guidefont])
   d_out[:width], d_out[:height] = d[:size]
-  # d_out[:margin] = Dict(:l=>20, :b=>20, :r=>10, :t=>10)
-  d_out[:margin] = Dict(:t=>20)
+  d_out[:margin] = Dict(:l=>30, :b=>30, :r=>15, :t=>15)
+  # d_out[:margin] = Dict(:t=>20)
   d_out[:paper_bgcolor] = bgcolor
   d_out[:plot_bgcolor] = bgcolor
   
@@ -138,7 +138,7 @@ function get_plot_html(plt::Plot{PlotlyPackage})
         :bgcolor  => bgcolor,
         :bordercolor => fgcolor,
         :font     => plotlyfont(d[:legendfont]),
-        :yanchor  => "middle",
+        # :yanchor  => "middle",
       )
   end
 
@@ -185,6 +185,14 @@ function plotly_colorscale(grad::ColorGradient)
 end
 plotly_colorscale(c) = plotly_colorscale(ColorGradient(:bluesreds))
 
+const _plotly_markers = Dict(
+    :rect => "square",
+    :xcross => "x",
+    :utriangle => "triangle-up",
+    :dtriangle => "triangle-down",
+    :star5 => "star-triangle-up",
+  )
+
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function get_series_html(d::Dict)
   d_out = Dict()
@@ -207,16 +215,20 @@ function get_series_html(d::Dict)
       hasline ? "lines" : "none"
     end
     d_out[:x], d_out[:y] = x, y
+
   elseif lt == :bar
     d_out[:type] = "bar"
     d_out[:x], d_out[:y] = x, y
+
   elseif lt == :heatmap
     d_out[:type] = "heatmap"
     d_out[:x], d_out[:y] = x, y
+
   elseif lt == :hist
     d_out[:type] = "histogram"
     isvert = d[:orientation] in (:vertical, :v, :vert)
     d_out[isvert ? :x : :y] = y
+
   elseif lt == :contour
     d_out[:type] = "contour"
     d_out[:x], d_out[:y] = x, y
@@ -226,11 +238,13 @@ function get_series_html(d::Dict)
     d_out[:contours] = Dict(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
     # TODO: colorscale: [[0, 'rgb(166,206,227)'], [0.25, 'rgb(31,120,180)'], [0.45, 'rgb(178,223,138)'], [0.65, 'rgb(51,160,44)'], [0.85, 'rgb(251,154,153)'], [1, 'rgb(227,26,28)']]
     d_out[:colorscale] = plotly_colorscale(d[:linecolor])
+
   elseif lt == :pie
     d_out[:type] = "pie"
     d_out[:labels] = x
     d_out[:values] = y
     d_out[:hoverinfo] = "label+percent+name"
+
   else
     error("Plotly: linetype $lt isn't supported.")
   end
@@ -238,8 +252,8 @@ function get_series_html(d::Dict)
   # add "marker"
   if hasmarker
     d_out[:marker] = Dict(
-        # :symbol => "circle",
-        # :opacity => d[:markeropacity],
+        :symbol => get(_plotly_markers, d[:markershape], string(d[:markershape])),
+        :opacity => d[:markeralpha],
         :size => d[:markersize],
         :color => webcolor(d[:markercolor], d[:markeralpha]),
         :line => Dict(
@@ -249,7 +263,7 @@ function get_series_html(d::Dict)
       )
     if d[:zcolor] != nothing
       d_out[:marker][:color] = d[:zcolor]
-      d_out[:marker][:colorscale] = :RdBu # TODO: use the markercolor gradient
+      d_out[:marker][:colorscale] = plotly_colorscale(d[:markercolor])
     end
   end
 
@@ -258,6 +272,14 @@ function get_series_html(d::Dict)
     d_out[:line] = Dict(
         :color => webcolor(d[:linecolor], d[:linealpha]),
         :width => d[:linewidth],
+        :shape => if lt == :steppre
+          "vh"
+        elseif lt == :steppost
+          "hv"
+        else
+          "linear"
+        end,
+        :dash => string(d[:linestyle]),
         # :dash => "solid",
       )
   end
