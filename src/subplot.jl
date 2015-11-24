@@ -156,6 +156,9 @@ function subplot(args...; kw...)
   d = Dict(kw)
   preprocessArgs!(d)
 
+  # for plotting recipes, swap out the args and update the parameter dictionary
+  args = _apply_recipe(d, args...; kw..., issubplot=true)
+
   # figure out the layout
   layoutarg = get(d, :layout, nothing)
   if layoutarg != nothing
@@ -225,7 +228,7 @@ function _preprocess_subplot(subplt::Subplot, d::Dict, args = ())
   preprocessArgs!(d)
 
   # for plotting recipes, swap out the args and update the parameter dictionary
-  args = _apply_recipe(d, args...; d...)
+  args = _apply_recipe(d, args...; d..., issubplot=true)
 
   dumpdict(d, "After subplot! preprocessing")
 
