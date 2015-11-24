@@ -79,6 +79,9 @@ function plot!(plt::Plot, args...; kw...)
   d = Dict(kw)
   preprocessArgs!(d)
 
+  # for plotting recipes, swap out the args and update the parameter dictionary
+  args = _apply_recipe(d, args...; kw...)
+
   dumpdict(d, "After plot! preprocessing")
 
   warnOnUnsupportedArgs(plt.backend, d)
@@ -393,7 +396,7 @@ end
 
 # special handling... xmin/xmax with function(s)
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs, xmin::Real, xmax::Real; kw...)
-  width = plt.plotargs[:size][1]
+  width = get(plt.plotargs, :size, (100,))[1]
   x = collect(linspace(xmin, xmax, width))  # we don't need more than the width
   createKWargsList(plt, x, f; kw...)
 end

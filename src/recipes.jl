@@ -14,6 +14,8 @@ plot(recipe::PlotRecipe, args...; kw...) = plot(getRecipeXY(recipe)..., args...;
 plot!(recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
 plot!(plt::Plot, recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
 
+# if it's not a recipe, just do nothing and return the args
+_apply_recipe(d::Dict, args...; kw...) = args
 
 # # -------------------------------------------------
 

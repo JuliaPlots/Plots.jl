@@ -220,9 +220,13 @@ end
 # ------------------------------------------------------------------------------------------------
 
 
-function _preprocess_subplot(subplt::Subplot, d::Dict)
+function _preprocess_subplot(subplt::Subplot, d::Dict, args = ())
   validateSubplotSupported()
   preprocessArgs!(d)
+
+  # for plotting recipes, swap out the args and update the parameter dictionary
+  args = _apply_recipe(d, args...; d...)
+
   dumpdict(d, "After subplot! preprocessing")
 
   # get the full plotargs, overriding any new settings
@@ -246,6 +250,8 @@ function _preprocess_subplot(subplt::Subplot, d::Dict)
       delete!(d, s)
     end
   end
+
+  args
 end
 
 function _postprocess_subplot(subplt::Subplot, d::Dict)
@@ -295,7 +301,7 @@ function subplot!(subplt::Subplot, args...; kw...)
   # validateSubplotSupported()
 
   d = Dict(kw)
-  _preprocess_subplot(subplt, d)
+  args = _preprocess_subplot(subplt, d, args)
 
   # create the underlying object (each backend will do this differently)
   # note: we call it once before doing the individual plots, and once after
