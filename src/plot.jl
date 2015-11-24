@@ -352,9 +352,13 @@ function createKWargsList(plt::PlottingObject, y; kw...)
   createKWargsList(plt, nothing, y; kw...)
 end
 
-# contours or surfaces... irregular data
+# 3d line or scatter
 function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zvec::AVec; kw...)
-  error("TODO: contours or surfaces... irregular data")
+  d = Dict(kw)
+  if !(get(d, :linetype, :none) in _3dTypes)
+    d[:linetype] = :path3d
+  end
+  createKWargsList(plt, x, y; z=zvec, d...)
 end
 
 # contours or surfaces... function grid
@@ -377,7 +381,11 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::
   surf = Surface(convert(Matrix{Float64}, zmat))
   # surf = Array(Any,1,1)
   # surf[1,1] = convert(Matrix{Float64}, zmat)
-  createKWargsList(plt, x, y; kw..., z = surf, linetype = :contour)
+  d = Dict(kw)
+  if !(get(d, :linetype, :none) in (:contour, :surface))
+    d[:linetype] = :contour
+  end
+  createKWargsList(plt, x, y; d..., z = surf)
 end
 
 function createKWargsList(plt::PlottingObject, surf::Surface; kw...)

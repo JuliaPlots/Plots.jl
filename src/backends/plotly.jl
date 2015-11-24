@@ -203,8 +203,9 @@ function get_series_html(d::Dict)
   d_out[:name] = d[:label]
 
   lt = d[:linetype]
-  hasmarker = lt == :scatter || d[:markershape] != :none
-  hasline = lt != :scatter
+  isscatter = lt in (:scatter, :scatter3d)
+  hasmarker = isscatter || d[:markershape] != :none
+  hasline = !isscatter
 
   # set the "type"
   if lt in (:line, :path, :scatter, :steppre, :steppost)
@@ -246,14 +247,15 @@ function get_series_html(d::Dict)
       d_out[:histnorm] = "probability density"
     end
 
-  elseif lt == :contour
-    d_out[:type] = "contour"
+  elseif lt in (:contour, :surface)
+    d_out[:type] = string(lt)
     d_out[:x], d_out[:y] = x, y
     d_out[:z] = d[:z].surf
     # d_out[:showscale] = d[:legend]
-    d_out[:ncontours] = d[:nlevels]
-    d_out[:contours] = Dict(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
-    # TODO: colorscale: [[0, 'rgb(166,206,227)'], [0.25, 'rgb(31,120,180)'], [0.45, 'rgb(178,223,138)'], [0.65, 'rgb(51,160,44)'], [0.85, 'rgb(251,154,153)'], [1, 'rgb(227,26,28)']]
+    if lt == :contour
+      d_out[:ncontours] = d[:nlevels]
+      d_out[:contours] = Dict(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
+    end
     d_out[:colorscale] = plotly_colorscale(d[:linecolor])
 
   elseif lt == :pie
@@ -261,6 +263,16 @@ function get_series_html(d::Dict)
     d_out[:labels] = x
     d_out[:values] = y
     d_out[:hoverinfo] = "label+percent+name"
+
+  elseif lt in (:path3d, :scatter3d)
+    d_out[:type] = "scatter3d"
+    d_out[:mode] = if hasmarker
+      hasline ? "lines+markers" : "markers"
+    else
+      hasline ? "lines" : "none"
+    end
+    d_out[:x], d_out[:y] = x, y
+    d_out[:z] = collect(d[:z])
 
   else
     error("Plotly: linetype $lt isn't supported.")

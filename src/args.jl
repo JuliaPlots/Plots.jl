@@ -11,7 +11,7 @@ const _3dTypes = [:path3d, :scatter3d]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                         :heatmap, :hexbin, :hist, :density, :bar, :hline, :vline, :ohlc,
-                        :contour, :pie
+                        :contour, :surface, :pie
                        ], _3dTypes)
 @compat const _typeAliases = Dict(
     :n             => :none,
@@ -31,8 +31,9 @@ const _allTypes = vcat([
     :dots          => :scatter,
     :histogram     => :hist,
     :pdf           => :density,
-    :contours      => :contours,
+    :contours      => :contour,
     :line3d        => :path3d,
+    :surf          => :surface,
   )
 
 ishistlike(lt::Symbol) = lt in (:hist, :density)

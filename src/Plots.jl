@@ -55,6 +55,10 @@ export
   contour!,
   surface,
   surface!,
+  path3d,
+  path3d!,
+  scatter3d,
+  scatter3d!,
 
   title!,
   xlabel!,
@@ -164,6 +168,10 @@ contour(args...; kw...)    = plot(args...; kw...,  linetype = :contour)
 contour!(args...; kw...)   = plot!(args...; kw..., linetype = :contour)
 surface(args...; kw...)    = plot(args...; kw...,  linetype = :surface)
 surface!(args...; kw...)   = plot!(args...; kw..., linetype = :surface)
+path3d(args...; kw...)     = plot(args...; kw...,  linetype = :path3d)
+path3d!(args...; kw...)    = plot!(args...; kw..., linetype = :path3d)
+scatter3d(args...; kw...)  = plot(args...; kw...,  linetype = :scatter3d)
+scatter3d!(args...; kw...) = plot!(args...; kw..., linetype = :scatter3d)
 
 
 title!(s::@compat(AbstractString); kw...)                 = plot!(; title = s, kw...)

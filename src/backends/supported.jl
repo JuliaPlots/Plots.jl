@@ -483,7 +483,8 @@ supportedArgs(::PlotlyPackage) = [
   ]
 supportedAxes(::PlotlyPackage) = [:auto, :left]
 supportedTypes(::PlotlyPackage) = [:none, :path, :scatter, :steppre, :steppost,
-                                   :heatmap, :hist, :density, :bar, :contour, :pie] #,, :sticks, :hexbin, :hline, :vline]
+                                   :heatmap, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
+                                   :pie] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
                                      :pentagon, :hexagon, :octagon] #vcat(_allMarkers, Shape)
