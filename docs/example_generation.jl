@@ -184,8 +184,20 @@ const examples = PlotExample[
                 :(x = ["Nerds", "Hackers", "Scientists"]),
                 :(y = [0.4, 0.35, 0.25]),
                 :(pie(x, y, title="The Julia Community", l=0.5))
+              ]),
+
+  PlotExample("3D",
+              "",
+              [
+                :(n = 100),
+                :(ts = linspace(0,8π,n)),
+                :(x = ts .* map(cos,ts)),
+                :(y = 0.1ts .* map(sin,ts)),
+                :(z = 1:n),
+                :(plot(x, y, z, zcolor=reverse(z), m=(10,0.8,:blues,stroke(0)), leg=false, w=5)),
+                :(plot!(zeros(n),zeros(n),1:n, w=10))
               ])
-  
+        
 ]
 
 
