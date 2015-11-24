@@ -431,8 +431,8 @@ supportedArgs(::PlotlyPackage) = [
     :background_color,
     :color_palette,
     :fillrange,
-    # :fillcolor,
-    # :fillalpha,
+    :fillcolor,
+    :fillalpha,
     :foreground_color,
     :group,
     :label,
@@ -451,7 +451,7 @@ supportedArgs(::PlotlyPackage) = [
     :markerstrokecolor,
     :markerstrokestyle,
     # :n,
-    # :nbins,
+    :nbins,
     # :nc,
     # :nr,
     # :pos,
@@ -474,6 +474,7 @@ supportedArgs(::PlotlyPackage) = [
     # :xflip,
     # :yflip,
     :z,
+    :zcolor,
     :tickfont,
     :guidefont,
     :legendfont,
@@ -482,7 +483,7 @@ supportedArgs(::PlotlyPackage) = [
   ]
 supportedAxes(::PlotlyPackage) = [:auto, :left]
 supportedTypes(::PlotlyPackage) = [:none, :path, :scatter, :steppre, :steppost,
-                                   :heatmap, :hist, :bar, :contour, :pie] #,, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+                                   :heatmap, :hist, :density, :bar, :contour, :pie] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
                                      :pentagon, :hexagon, :octagon] #vcat(_allMarkers, Shape)

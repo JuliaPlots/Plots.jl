@@ -214,6 +214,12 @@ function get_series_html(d::Dict)
     else
       hasline ? "lines" : "none"
     end
+    if d[:fillrange] == true || d[:fillrange] == 0
+      d_out[:fill] = "tozeroy"
+      d_out[:fillcolor] = webcolor(d[:fillcolor], d[:fillalpha])
+    elseif !(d[:fillrange] in (false, nothing))
+      warn("fillrange ignored... plotly only supports filling to zero. fillrange: $(d[:fillrange])")
+    end
     d_out[:x], d_out[:y] = x, y
 
   elseif lt == :bar
@@ -221,13 +227,24 @@ function get_series_html(d::Dict)
     d_out[:x], d_out[:y] = x, y
 
   elseif lt == :heatmap
-    d_out[:type] = "heatmap"
+    d_out[:type] = "histogram2d"
     d_out[:x], d_out[:y] = x, y
+    if isa(d[:nbins], Tuple)
+      xbins, ybins = d[:nbins]
+    else
+      xbins = ybins = d[:nbins]
+    end
+    d_out[:nbinsx] = xbins
+    d_out[:nbinsy] = ybins
 
-  elseif lt == :hist
+  elseif lt in (:hist, :density)
     d_out[:type] = "histogram"
     isvert = d[:orientation] in (:vertical, :v, :vert)
     d_out[isvert ? :x : :y] = y
+    d_out[isvert ? :nbinsx : :nbinsy] = d[:nbins]
+    if lt == :density
+      d_out[:histnorm] = "probability density"
+    end
 
   elseif lt == :contour
     d_out[:type] = "contour"
@@ -254,7 +271,7 @@ function get_series_html(d::Dict)
     d_out[:marker] = Dict(
         :symbol => get(_plotly_markers, d[:markershape], string(d[:markershape])),
         :opacity => d[:markeralpha],
-        :size => d[:markersize],
+        :size => 2 * d[:markersize],
         :color => webcolor(d[:markercolor], d[:markeralpha]),
         :line => Dict(
             :color => webcolor(d[:markerstrokecolor], d[:markerstrokealpha]),
