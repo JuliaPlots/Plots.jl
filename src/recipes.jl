@@ -14,8 +14,17 @@ plot(recipe::PlotRecipe, args...; kw...) = plot(getRecipeXY(recipe)..., args...;
 plot!(recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
 plot!(plt::Plot, recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
 
+num_series(x::AMat) = size(x,2)
+num_series(x) = 1
+
 # if it's not a recipe, just do nothing and return the args
-_apply_recipe(d::Dict, args...; kw...) = args
+function _apply_recipe(d::Dict, args...; issubplot=false, kw...)
+    if issubplot && !haskey(d, :n) && !haskey(d, :layout)
+        # put in a sensible default
+        d[:n] = maximum(map(num_series, args))
+    end
+    args
+end
 
 # # -------------------------------------------------
 

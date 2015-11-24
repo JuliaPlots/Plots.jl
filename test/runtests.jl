@@ -1,23 +1,23 @@
 module PlotsTests
 
 
-# don't let pyplot use a gui... it'll crash
-# note: Agg will set gui -> :none in PyPlot
-ENV["MPLBACKEND"] = "Agg"
-try
-    @eval import PyPlot
-catch err
-    warn("Couldn't import PyPlot: $err")
-end
+# # don't let pyplot use a gui... it'll crash
+# # note: Agg will set gui -> :none in PyPlot
+# ENV["MPLBACKEND"] = "Agg"
+# try
+#     @eval import PyPlot
+# catch err
+#     warn("Couldn't import PyPlot: $err")
+# end
 
 
-using Plots
-using FactCheck
+# using Plots
+# using FactCheck
 
-# note: wrap first include in a try block because of the ImageMagick init_deps bug
-try
-    include("imgcomp.jl")
-end
+# # note: wrap first include in a try block because of the ImageMagick init_deps bug
+# try
+#     include("imgcomp.jl")
+# end
 include("imgcomp.jl")
 
 # don't actually show the plots
@@ -49,18 +49,14 @@ facts("Gadfly") do
     # plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
 
-    if VERSION >= v"0.4-"
-        image_comparison_tests(:gadfly, skip=[4,19], eps=img_eps)
-    end
+    image_comparison_facts(:gadfly, skip=[4,19,23,24], eps=img_eps)
 end
 
 
-if VERSION >= v"0.4-"
-    facts("PyPlot") do
-        @fact pyplot() --> Plots.PyPlotPackage()
-        @fact backend() --> Plots.PyPlotPackage()
-        image_comparison_tests(:pyplot, skip=[19,21], eps=img_eps)
-    end
+facts("PyPlot") do
+    @fact pyplot() --> Plots.PyPlotPackage()
+    @fact backend() --> Plots.PyPlotPackage()
+    image_comparison_facts(:pyplot, skip=[19,21,23], eps=img_eps)
 end
 
 
@@ -117,7 +113,7 @@ end
     #     @fact backend() --> Plots.PyPlotPackage()
     #     @fact typeof(plot(1:10)) --> Plots.Plot{Plots.PyPlotPackage}
 
-    #     # image_comparison_tests(:pyplot, skip=[19])
+    #     # image_comparison_facts(:pyplot, skip=[19])
     # end
 # catch err
 #     warn("Skipped PyPlot due to: ", string(err))

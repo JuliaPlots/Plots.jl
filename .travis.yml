@@ -11,8 +11,10 @@ notifications:
 # uncomment the following lines to override the default test script
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'Pkg.clone("https://github.com/tbreloff/Images.jl.git"); Pkg.checkout("Images","tom_imgcompare");'
+ # - julia -e 'Pkg.clone("https://github.com/tbreloff/Images.jl.git"); Pkg.checkout("Images","tom_imgcompare");'
  - julia -e 'Pkg.clone("ImageMagick"); Pkg.build("ImageMagick")'
+ - julia -e 'Pkg.clone("https://github.com/tbreloff/VisualRegressionTests.jl.git");'
+ - julia -e 'Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");'
  - julia -e 'Pkg.clone("Cairo"); Pkg.build("Cairo")'
  - julia -e 'ENV["PYTHON"] = ""; Pkg.clone("PyPlot"); Pkg.build("PyPlot")'
  - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")'

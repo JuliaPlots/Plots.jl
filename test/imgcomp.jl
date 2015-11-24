@@ -1,10 +1,13 @@
 
-# include this first to help with crashing??
-try
-  @eval using Gtk
-catch err
-  warn("Gtk not loaded. err: $err")
-end
+# # include this first to help with crashing??
+# try
+#   @eval using Gtk
+# catch err
+#   warn("Gtk not loaded. err: $err")
+# end
+
+using VisualRegressionTests
+using ExamplePlots
 
 # don't let pyplot use a gui... it'll crash
 # note: Agg will set gui -> :none in PyPlot
@@ -14,11 +17,11 @@ try
   info("Matplotlib version: $(PyPlot.matplotlib[:__version__])")
 end
 
-include("../docs/example_generation.jl")
+# include("../docs/example_generation.jl")
 
 
 using Plots, FactCheck
-import Images, ImageMagick
+# import Images, ImageMagick
 
 # if !isdefined(ImageMagick, :init_deps)
 #   function ImageMagick.init_deps()
@@ -26,68 +29,75 @@ import Images, ImageMagick
 #   end
 # end
 
-function makeImageWidget(fn)
-  img = Gtk.GtkImageLeaf(fn)
-  vbox = Gtk.GtkBoxLeaf(:v)
-  push!(vbox, Gtk.GtkLabelLeaf(fn))
-  push!(vbox, img)
-  show(img)
-  vbox
-end
+# function makeImageWidget(fn)
+#   img = Gtk.GtkImageLeaf(fn)
+#   vbox = Gtk.GtkBoxLeaf(:v)
+#   push!(vbox, Gtk.GtkLabelLeaf(fn))
+#   push!(vbox, img)
+#   show(img)
+#   vbox
+# end
 
-function replaceReferenceImage(tmpfn, reffn)
-  cmd = `cp $tmpfn $reffn`
-  run(cmd)
-  info("Replaced reference image with: $cmd")
-end
+# function replaceReferenceImage(tmpfn, reffn)
+#   cmd = `cp $tmpfn $reffn`
+#   run(cmd)
+#   info("Replaced reference image with: $cmd")
+# end
 
-"Show a Gtk popup with both images and a confirmation whether we should replace the new image with the old one"
-function compareToReferenceImage(tmpfn, reffn)
+# "Show a Gtk popup with both images and a confirmation whether we should replace the new image with the old one"
+# function compareToReferenceImage(tmpfn, reffn)
 
-  # add the images
-  imgbox = Gtk.GtkBoxLeaf(:h)
-  push!(imgbox, makeImageWidget(tmpfn))
-  push!(imgbox, makeImageWidget(reffn))
+#   # add the images
+#   imgbox = Gtk.GtkBoxLeaf(:h)
+#   push!(imgbox, makeImageWidget(tmpfn))
+#   push!(imgbox, makeImageWidget(reffn))
 
-  win = Gtk.GtkWindowLeaf("Should we make this the new reference image?")
-  push!(win, Gtk.GtkFrameLeaf(imgbox))
+#   win = Gtk.GtkWindowLeaf("Should we make this the new reference image?")
+#   push!(win, Gtk.GtkFrameLeaf(imgbox))
 
-  showall(win)
+#   showall(win)
 
-  # now ask the question
-  if Gtk.ask_dialog("Should we make this the new reference image?", "No", "Yes")
-    replaceReferenceImage(tmpfn, reffn)
-  end
+#   # now ask the question
+#   if Gtk.ask_dialog("Should we make this the new reference image?", "No", "Yes")
+#     replaceReferenceImage(tmpfn, reffn)
+#   end
 
-  destroy(win)
-end
+#   destroy(win)
+# end
 
 
 # TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that 
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
-function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1,1], eps = 1e-2)
+function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], eps = 1e-2)
   
   # first 
   Plots._debugMode.on = debug
-  info("Testing plot: $pkg:$idx:$(PlotExamples.examples[idx].header)")
+  example = ExamplePlots.examples[idx]
+  info("Testing plot: $pkg:$idx:$(example.header)")
   backend(pkg)
   backend()
 
   # ensure consistent results
   srand(1234)
 
+  # test function
+  func = (fn, idx) -> begin
+    map(eval, example.exprs)
+    png(fn)
+  end
+
   # run the example
-  map(eval, PlotExamples.examples[idx].exprs)
+  # map(eval, PlotExamples.examples[idx].exprs)
 
-  # save the png
-  tmpfn = tempname() * ".png"
-  png(tmpfn)
+  # # save the png
+  # tmpfn = tempname() * ".png"
+  # png(tmpfn)
 
-  # load the saved png
-  tmpimg = Images.load(tmpfn)
+  # # load the saved png
+  # tmpimg = Images.load(tmpfn)
 
-  # reference image location
+  # reference image directory setup
   refdir = joinpath(Pkg.dir("Plots"), "test", "refimg", string(pkg))
   try
     run(`mkdir -p $refdir`)
@@ -96,46 +106,50 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, sigma = [1
   end
   reffn = joinpath(refdir, "ref$idx.png")
 
-  try
+  # the test
+  vtest = VisualTest(func, reffn, idx)
+  test_images(vtest, popup=popup, sigma=sigma, eps=eps)
 
-    # info("Comparing $tmpfn to reference $reffn")
+  # try
+
+  #   # info("Comparing $tmpfn to reference $reffn")
   
-    # load the reference image
-    refimg = Images.load(reffn)
+  #   # load the reference image
+  #   refimg = Images.load(reffn)
 
-    # run the comparison test... a difference will throw an error
-    # NOTE: sigma is a 2-length vector with x/y values for the number of pixels
-    #       to blur together when comparing images
-    diffpct = Images.test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
+  #   # run the comparison test... a difference will throw an error
+  #   # NOTE: sigma is a 2-length vector with x/y values for the number of pixels
+  #   #       to blur together when comparing images
+  #   diffpct = Images.test_approx_eq_sigma_eps(tmpimg, refimg, sigma, eps)
 
-    # we passed!
-    info("Reference image $reffn matches.  Difference: $diffpct")
-    return true
+  #   # we passed!
+  #   info("Reference image $reffn matches.  Difference: $diffpct")
+  #   return true
 
-  catch err
-    warn("Image did not match reference image $reffn. err: $err")
-    # showerror(Base.STDERR, err)
+  # catch err
+  #   warn("Image did not match reference image $reffn. err: $err")
+  #   # showerror(Base.STDERR, err)
     
-    if isinteractive()
+  #   if isinteractive()
 
-      # if we're in interactive mode, open a popup and give us a chance to examine the images
-      warn("Should we make this the new reference image?")
-      compareToReferenceImage(tmpfn, reffn)
-      # println("exited")
-      return
+  #     # if we're in interactive mode, open a popup and give us a chance to examine the images
+  #     warn("Should we make this the new reference image?")
+  #     compareToReferenceImage(tmpfn, reffn)
+  #     # println("exited")
+  #     return
       
-    else
+  #   else
 
-      # if we rejected the image, or if we're in automated tests, throw the error
-      rethrow(err)
-    end
+  #     # if we rejected the image, or if we're in automated tests, throw the error
+  #     rethrow(err)
+  #   end
 
-  end
+  # end
 end
 
-function image_comparison_tests(pkg::Symbol; skip = [], debug = false, sigma = [1,1], eps = 1e-2)
-  for i in 1:length(PlotExamples.examples)
+function image_comparison_facts(pkg::Symbol; skip = [], debug = false, sigma = [1,1], eps = 1e-2)
+  for i in 1:length(ExamplePlots.examples)
     i in skip && continue
-    @fact image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) --> true
+    @fact image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) |> success --> true
   end
 end
