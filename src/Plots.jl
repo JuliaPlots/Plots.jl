@@ -1,7 +1,5 @@
 
-if VERSION >= v"0.4-"
-  __precompile__()
-end
+ __precompile__()
 
 module Plots
 
