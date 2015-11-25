@@ -8,6 +8,7 @@ immutable UnicodePlotsPackage <: PlottingPackage end
 immutable WinstonPackage      <: PlottingPackage end
 immutable BokehPackage        <: PlottingPackage end
 immutable PlotlyPackage       <: PlottingPackage end
+immutable GLVisualizePackage  <: PlottingPackage end
 immutable NoPackage           <: PlottingPackage end
 
 typealias GadflyOrImmerse @compat(Union{GadflyPackage, ImmersePackage})
@@ -19,7 +20,8 @@ export
   qwt,
   unicodeplots,
   bokeh,
-  plotly
+  plotly,
+  glvisualize
   # winston
 
 gadfly()        = backend(:gadfly)
@@ -29,6 +31,7 @@ qwt()           = backend(:qwt)
 unicodeplots()  = backend(:unicodeplots)
 bokeh()         = backend(:bokeh)
 plotly()        = backend(:plotly)
+glvisualize()   = backend(:glvisualize)
 # winston()       = backend(:winston)
 
 backend_name(::GadflyPackage)       = :gadfly
@@ -38,6 +41,7 @@ backend_name(::UnicodePlotsPackage) = :unicodeplots
 backend_name(::QwtPackage)          = :qwt
 backend_name(::BokehPackage)        = :bokeh
 backend_name(::PlotlyPackage)       = :plotly
+backend_name(::GLVisualizePackage)  = :plotly
 backend_name(::NoPackage)           = :none
 
 include("backends/supported.jl")
@@ -52,6 +56,8 @@ include("backends/winston.jl")
 include("backends/web.jl")
 include("backends/bokeh.jl")
 include("backends/plotly.jl")
+
+include("backends/glvisualize.jl")
 
 
 # ---------------------------------------------------------
@@ -85,9 +91,10 @@ function backendInstance(sym::Symbol)
   sym == :winston && return WinstonPackage()
   sym == :bokeh && return BokehPackage()
   sym == :plotly && return PlotlyPackage()
+  sym == :glvisualize && return GLVisualizePackage()
   sym == :none && return NoPackage()
   error("Unsupported backend $sym")
-end 
+end
 
 
 type CurrentBackend
@@ -134,7 +141,7 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, backendInstance(sym))
 # end
 
 function pickDefaultBackend()
-  for pkgstr in ("PyPlot", "Immerse", "Qwt", "Gadfly", "UnicodePlots", "Bokeh")
+  for pkgstr in ("PyPlot", "Immerse", "Qwt", "Gadfly", "UnicodePlots", "Bokeh", "GLVisualize")
     if Pkg.installed(pkgstr) != nothing
       return backend(symbol(lowercase(pkgstr)))
     end
@@ -198,7 +205,7 @@ function backend()
         # @eval const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
         if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
           PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
-          
+
           # # TODO: how the hell can I use PyQt4??
           # "pyqt4"=>:qt_pyqt4
           # PyPlot.backend[1] = "pyqt4"
@@ -269,6 +276,15 @@ function backend()
         rethrow(err)
       end
 
+  elseif currentBackendSymbol == :glvisualize
+      try
+        @eval import GLVisualize
+        @eval export GLVisualize
+      catch err
+        warn("Couldn't setup GLVisualize")
+        rethrow(err)
+      end
+
     elseif currentBackendSymbol == :winston
       warn("Winston support is deprecated and broken.  Try another backend: $BACKENDS")
       try
@@ -298,7 +314,7 @@ function backend(pkg::PlottingPackage)
 end
 
 function backend(modname)
-  
+
   # set the PlottingPackage
   if modname == :qwt
     CURRENT_BACKEND.pkg = QwtPackage()
@@ -316,6 +332,8 @@ function backend(modname)
     CURRENT_BACKEND.pkg = BokehPackage()
   elseif modname == :plotly
     CURRENT_BACKEND.pkg = PlotlyPackage()
+elseif modname == :glvisualize
+    CURRENT_BACKEND.pkg = GLVisualizePackage()
   else
     error("Unknown backend $modname.  Choose from: $BACKENDS")
   end

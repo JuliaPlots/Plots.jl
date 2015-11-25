@@ -94,7 +94,7 @@ function plot!(plt::Plot, args...; kw...)
 
   # get the list of dictionaries, one per series
   seriesArgList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
-  
+
   # if we were able to extract guide information from the series inputs, then update the plot
   # @show xmeta, ymeta
   updateDictWithMeta(d, plt.plotargs, xmeta, true)
@@ -388,6 +388,16 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::
   createKWargsList(plt, x, y; d..., z = surf)
 end
 
+# contours or surfaces... general x, y grid
+function createKWargsList{T<:Real}(plt::PlottingObject, x::AMat{T}, y::AMat{T}, zmat::AMat{T}; kw...)
+  @assert size(zmat) == size(x) == size(y)
+  surf = Surface(convert(Matrix{Float64}, zmat))
+  # surf = Array(Any,1,1)
+  # surf[1,1] = convert(Matrix{Float64}, zmat)
+  createKWargsList(plt, x, y; kw..., surface = surf, linetype = :contour)
+end
+
+
 function createKWargsList(plt::PlottingObject, surf::Surface; kw...)
   createKWargsList(plt, 1:size(surf.surf,1), 1:size(surf.surf,2), convert(Matrix{Float64}, surf.surf); kw...)
 end
@@ -427,7 +437,7 @@ function createKWargsList(plt::PlottingObject; kw...)
     return [], nothing, nothing
     # error("Called plot/subplot without args... must set y in the keyword args.  Example: plot(; y=rand(10))")
   end
-  
+
   if haskey(d, :x)
     return createKWargsList(plt, d[:x], d[:y]; kw...)
   else
@@ -470,4 +480,3 @@ end
 
 
 # --------------------------------------------------------------------
-
