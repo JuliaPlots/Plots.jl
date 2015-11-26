@@ -41,7 +41,7 @@ backend_name(::UnicodePlotsPackage) = :unicodeplots
 backend_name(::QwtPackage)          = :qwt
 backend_name(::BokehPackage)        = :bokeh
 backend_name(::PlotlyPackage)       = :plotly
-backend_name(::GLVisualizePackage)  = :plotly
+backend_name(::GLVisualizePackage)  = :glvisualize
 backend_name(::NoPackage)           = :none
 
 include("backends/supported.jl")
