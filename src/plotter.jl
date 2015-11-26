@@ -41,7 +41,7 @@ backend_name(::UnicodePlotsPackage) = :unicodeplots
 backend_name(::QwtPackage)          = :qwt
 backend_name(::BokehPackage)        = :bokeh
 backend_name(::PlotlyPackage)       = :plotly
-backend_name(::GLVisualizePackage)  = :plotly
+backend_name(::GLVisualizePackage)  = :glvisualize
 backend_name(::NoPackage)           = :none
 
 include("backends/supported.jl")
@@ -306,7 +306,7 @@ function backend(modname)
   elseif modname == :plotly
     CURRENT_BACKEND.pkg = PlotlyPackage()
 elseif modname == :glvisualize
-    CURRENT_BACKEND.pkg = GLVisualizePackage()    
+    CURRENT_BACKEND.pkg = GLVisualizePackage()
   else
     error("Unknown backend $modname.  Choose from: $BACKENDS")
   end
