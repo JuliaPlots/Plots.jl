@@ -489,6 +489,6 @@ supportedStyles(::PlotlyPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
                                      :pentagon, :hexagon, :octagon] #vcat(_allMarkers, Shape)
 supportedScales(::PlotlyPackage) = [:identity, :log] #, :log, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::PlotlyPackage) = false
+subplotSupported(::PlotlyPackage) = true
 stringsSupported(::PlotlyPackage) = true
 

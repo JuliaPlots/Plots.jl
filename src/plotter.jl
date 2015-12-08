@@ -238,13 +238,31 @@ function backend()
 
     elseif currentBackendSymbol == :plotly
       try
-        # @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "web.jl"))
-        # @eval include(joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl"))
         @eval begin
           import JSON
           JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
-          # JSON.json(dt::Union{Date,DateTime}) = string(dt)
-          # JSON.json{D<:Union{Date,DateTime}}(dts::AVec{D}) = map(string, dts)
+
+          ############################
+          # borrowed from https://github.com/spencerlyon2/Plotlyjs.jl/blob/master/src/display.jl
+          _js_path = joinpath(Pkg.dir("Plots"), "deps", "plotly-latest.min.js")
+
+          # if we're in IJulia call setupnotebook to load js and css
+          if isijulia()
+              # the first script is some hack I needed to do in order for the notebook
+              # to not complain about Plotly being undefined
+              display("text/html", """
+                  <script type="text/javascript">
+                      require=requirejs=define=undefined;
+                  </script>
+                  <script type="text/javascript">
+                      $(open(readall, _js_path, "r"))
+                  </script>
+               """)
+              # display("text/html", "<p>Plotly javascript loaded.</p>")
+          end
+          # end borrowing (thanks :)
+          ###########################
+
         end
       catch err
         warn("Couldn't setup Plotly")

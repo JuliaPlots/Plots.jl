@@ -53,8 +53,9 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{PlotlyPackage})
+function _create_subplot(subplt::Subplot{PlotlyPackage}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+  true
 end
 
 function _expand_limits(lims, plt::Plot{PlotlyPackage}, isx::Bool)
@@ -94,7 +95,7 @@ function plotlyscale(scale::Symbol)
   end
 end
 
-function get_plot_html(plt::Plot{PlotlyPackage})
+function get_plot_json(plt::Plot{PlotlyPackage})
   d = plt.plotargs
   d_out = Dict()
 
@@ -104,7 +105,7 @@ function get_plot_html(plt::Plot{PlotlyPackage})
   # TODO: set the fields for the plot
   d_out[:title] = d[:title]
   d_out[:titlefont] = plotlyfont(d[:guidefont])
-  d_out[:width], d_out[:height] = d[:size]
+  # d_out[:width], d_out[:height] = d[:size]
   d_out[:margin] = Dict(:l=>30, :b=>30, :r=>15, :t=>15)
   # d_out[:margin] = Dict(:t=>20)
   d_out[:paper_bgcolor] = bgcolor
@@ -194,7 +195,7 @@ const _plotly_markers = Dict(
   )
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
-function get_series_html(d::Dict)
+function get_series_json(d::Dict; plot_index = nothing)
   d_out = Dict()
 
   x, y = collect(d[:x]), collect(d[:y])
@@ -313,29 +314,75 @@ function get_series_html(d::Dict)
       )
   end
 
+  # # for subplots, we need to add the xaxis/yaxis fields
+  # if plot_index != nothing
+  #   d_out[:xaxis] = "x$(plot_index)"
+  #   d_out[:yaxis] = "y$(plot_index)"
+  # end
+
   d_out
 end
 
 # get a list of dictionaries, each representing the series params
-function get_series_html(plt::Plot{PlotlyPackage})
-  JSON.json(map(get_series_html, plt.seriesargs))
+function get_series_json(plt::Plot{PlotlyPackage})
+  JSON.json(map(get_series_json, plt.seriesargs))
+end
+
+function get_series_json(subplt::Subplot{PlotlyPackage})
+  ds = Dict[]
+  for (i,plt) in enumerate(subplt.plts)
+    for d in plt.seriesargs
+      push!(ds, get_series_json(d, plot_index = i))
+    end
+  end
+  JSON.json(ds)
 end
 
 # ----------------------------------------------------------------
 
-function html_head(plt::Plot{PlotlyPackage})
+function html_head(plt::PlottingObject{PlotlyPackage})
   "<script src=\"$(Pkg.dir("Plots","deps","plotly-latest.min.js"))\"></script>"
 end
 
-function html_body(plt::Plot{PlotlyPackage})
-  w, h = plt.plotargs[:size]
+function html_body(plt::Plot{PlotlyPackage}, style = nothing)
+  if style == nothing
+    w, h = plt.plotargs[:size]
+    style = "width:$(w)px;height:$(h)px;"
+  end
+  uuid = Base.Random.uuid4()
   """
-    <div id=\"myplot\" style=\"width:$(w)px;height:$(h)px;\"></div>
+    <div id=\"$(uuid)\" style=\"$(style)\"></div>
     <script>
-      PLOT = document.getElementById('myplot');
-      Plotly.plot(PLOT, $(get_series_html(plt)), $(get_plot_html(plt)));
+      PLOT = document.getElementById('$(uuid)');
+      Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
     </script>
   """
+end
+
+
+
+function html_body(subplt::Subplot{PlotlyPackage})
+  w, h = subplt.plts[1].plotargs[:size]
+  html = ["<div style=\"width:$(w)px;height:$(h)px;\">"]
+  nr = nrows(subplt.layout)
+  ph = h / nr
+  
+  for r in 1:nr
+    push!(html, "<div style=\"clear:both;\">")
+  
+    nc = ncols(subplt.layout, r)
+    pw = w / nc
+
+    for c in 1:nc
+      plt = subplt[r,c]
+      push!(html, html_body(plt, "float:left; width:$(pw)px; height:$(ph)px;"))
+    end
+    
+    push!(html, "</div>")
+  end
+  push!(html, "</div>")
+
+  join(html)
 end
 
 
@@ -343,19 +390,19 @@ end
 
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{PlotlyPackage})
+  isijulia() && return
   # TODO: write a png to io
-  println("png")
+  println("todo: png")
 end
 
 function Base.writemime(io::IO, ::MIME"text/html", plt::PlottingObject{PlotlyPackage})
-  println("html")
-  html_head(plt) * html_body(plt)
+  write(io, html_head(plt) * html_body(plt))
 end
 
-function Base.display(::PlotsDisplay, plt::Plot{PlotlyPackage})
+function Base.display(::PlotsDisplay, plt::PlottingObject{PlotlyPackage})
   standalone_html_window(plt)
 end
 
-function Base.display(::PlotsDisplay, plt::Subplot{PlotlyPackage})
-  # TODO: display/show the subplot
-end
+# function Base.display(::PlotsDisplay, plt::Subplot{PlotlyPackage})
+#   # TODO: display/show the subplot
+# end
