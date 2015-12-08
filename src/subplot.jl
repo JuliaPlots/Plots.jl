@@ -183,7 +183,7 @@ function subplot(args...; kw...)
 
   # create the object and do the plotting
   subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, d, false, false, false, (r,c) -> (nothing,nothing))
-  subplot!(subplt, args...; kw...)
+  subplot!(subplt, args...; d...)
 
   subplt
 end
