@@ -482,7 +482,7 @@ supportedArgs(::PlotlyPackage) = [
     :nlevels,
   ]
 supportedAxes(::PlotlyPackage) = [:auto, :left]
-supportedTypes(::PlotlyPackage) = [:none, :path, :scatter, :steppre, :steppost,
+supportedTypes(::PlotlyPackage) = [:none, :line, :path, :scatter, :steppre, :steppost,
                                    :heatmap, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
                                    :pie] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyPackage) = [:auto, :solid, :dash, :dot, :dashdot]
