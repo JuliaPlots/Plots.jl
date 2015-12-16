@@ -90,6 +90,7 @@ const _allMarkers = vcat(:none, :auto, sort(collect(keys(_shapes))))
     :hep          => :heptagon,
     :o            => :octagon,
     :oct          => :octagon,
+    :spike        => :vline,
   )
 
 const _allScales = [:identity, :log, :log2, :log10, :asinh, :sqrt]

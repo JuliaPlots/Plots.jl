@@ -54,17 +54,19 @@ end
 
 
 const _shapes = @compat Dict(
-    :ellipse => makeshape(20),
-    :rect => makeshape(4, offset=-0.25),
-    :diamond => makeshape(4),
-    :utriangle => makeshape(3),
-    :dtriangle => makeshape(3, offset=0.5),
-    :pentagon => makeshape(5),
-    :hexagon => makeshape(6),
-    :heptagon => makeshape(7),
-    :octagon => makeshape(8),
-    :cross => makecross(offset=-0.25),
-    :xcross => makecross(),
+    :ellipse    => makeshape(20),
+    :rect       => makeshape(4, offset=-0.25),
+    :diamond    => makeshape(4),
+    :utriangle  => makeshape(3),
+    :dtriangle  => makeshape(3, offset=0.5),
+    :pentagon   => makeshape(5),
+    :hexagon    => makeshape(6),
+    :heptagon   => makeshape(7),
+    :octagon    => makeshape(8),
+    :cross      => makecross(offset=-0.25),
+    :xcross     => makecross(),
+    :vline      => Shape([(0,1),(0,-1)]),
+    :hline      => Shape([(1,0),(-1,0)]),
   )
 
 for n in [4,5,6,7,8]

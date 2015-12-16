@@ -41,13 +41,13 @@ end
 # accessors for x/y data
 
 function Base.getindex(plt::Plot{PlotlyPackage}, i::Int)
-  series = plt.o.lines[i]
-  series.x, series.y
+  d = plt.seriesargs[i]
+  d[:x], d[:y]
 end
 
 function Base.setindex!(plt::Plot{PlotlyPackage}, xy::Tuple, i::Integer)
-  series = plt.o.lines[i]
-  series.x, series.y = xy
+  d = plt.seriesargs[i]
+  d[:x], d[:y] = xy
   plt
 end
 
@@ -68,7 +68,7 @@ end
 
 # ----------------------------------------------------------------
 
-
+# TODO:
 # _plotDefaults[:yrightlabel]       = ""
 # _plotDefaults[:xlims]             = :auto
 # _plotDefaults[:ylims]             = :auto
@@ -95,6 +95,8 @@ function plotlyscale(scale::Symbol)
   end
 end
 
+use_axis_field(ticks) = !(ticks in (nothing, :none))
+
 function get_plot_json(plt::Plot{PlotlyPackage})
   d = plt.plotargs
   d_out = Dict()
@@ -116,26 +118,43 @@ function get_plot_json(plt::Plot{PlotlyPackage})
   # TODO: x/y axis tick values/labels
   # TODO: x/y axis range
 
-  d_out[:xaxis] = Dict(
-      :title      => d[:xlabel],
-      :titlefont  => plotlyfont(d[:guidefont]),
-      :type       => plotlyscale(d[:xscale]),
-      :tickfont   => plotlyfont(d[:tickfont]),
-      :tickcolor  => fgcolor,
-      :linecolor  => fgcolor,
-      :showgrid   => d[:grid],
-      :zeroline   => false,
-    )
+  d_out[:xaxis] = if use_axis_field(d[:xticks])
+    Dict(
+        :title      => d[:xlabel],
+        :titlefont  => plotlyfont(d[:guidefont]),
+        :type       => plotlyscale(d[:xscale]),
+        :tickfont   => plotlyfont(d[:tickfont]),
+        :tickcolor  => fgcolor,
+        :linecolor  => fgcolor,
+        :showgrid   => d[:grid],
+        :zeroline   => false,
+      )
+  else
+    Dict(:showticklabels => false)
+  end
+
   d_out[:yaxis] = Dict(
       :title      => d[:ylabel],
-      :titlefont  => plotlyfont(d[:guidefont]),
-      :type       => plotlyscale(d[:yscale]),
-      :tickfont   => plotlyfont(d[:tickfont]),
-      :tickcolor  => fgcolor,
-      :linecolor  => fgcolor,
       :showgrid   => d[:grid],
       :zeroline   => false,
     )
+  merge!(d_out[:yaxis], if use_axis_field(d[:yticks])
+    Dict(
+        # :title      => d[:ylabel],
+        :titlefont  => plotlyfont(d[:guidefont]),
+        :type       => plotlyscale(d[:yscale]),
+        :tickfont   => plotlyfont(d[:tickfont]),
+        :tickcolor  => fgcolor,
+        :linecolor  => fgcolor,
+        # :showgrid   => d[:grid],
+        # :zeroline   => false,
+      )
+  else
+    Dict(
+        :showticklabels => false,
+        :showgrid       => false,
+      )
+  end)
 
   d_out[:showlegend] = d[:legend]
   if d[:legend]
@@ -191,11 +210,13 @@ end
 plotly_colorscale(c) = plotly_colorscale(ColorGradient(:bluesreds))
 
 const _plotly_markers = Dict(
-    :rect => "square",
-    :xcross => "x",
-    :utriangle => "triangle-up",
-    :dtriangle => "triangle-down",
-    :star5 => "star-triangle-up",
+    :rect       => "square",
+    :xcross     => "x",
+    :utriangle  => "triangle-up",
+    :dtriangle  => "triangle-down",
+    :star5      => "star-triangle-up",
+    :vline      => "line-ns",
+    :hline      => "line-ew",
   )
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)

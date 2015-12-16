@@ -463,12 +463,12 @@ supportedArgs(::PlotlyPackage) = [
     :x,
     :xlabel,
     # :xlims,
-    # :xticks,
+    :xticks,
     :y,
     :ylabel,
     # :ylims,
     # :yrightlabel,
-    # :yticks,
+    :yticks,
     :xscale,
     :yscale,
     # :xflip,
@@ -487,7 +487,7 @@ supportedTypes(::PlotlyPackage) = [:none, :line, :path, :scatter, :steppre, :ste
                                    :pie] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
-                                     :pentagon, :hexagon, :octagon] #vcat(_allMarkers, Shape)
+                                     :pentagon, :hexagon, :octagon, :vline, :hline] #vcat(_allMarkers, Shape)
 supportedScales(::PlotlyPackage) = [:identity, :log] #, :log, :log2, :log10, :asinh, :sqrt]
 subplotSupported(::PlotlyPackage) = true
 stringsSupported(::PlotlyPackage) = true
