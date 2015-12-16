@@ -17,7 +17,7 @@ plot!(plt::Plot, recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-_apply_recipe(d::Dict; kw...) = nothing
+_apply_recipe(d::Dict; kw...) = ()
 
 # if it's not a recipe, just do nothing and return the args
 function _apply_recipe(d::Dict, args...; issubplot=false, kw...)

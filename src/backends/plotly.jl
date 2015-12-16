@@ -82,7 +82,7 @@ end
 function plotlyfont(font::Font)
   Dict(
       :family => font.family,
-      :size   => font.pointsize,
+      :size   => round(Int, font.pointsize*1.4),
       :color  => webcolor(font.color),
     )
 end
@@ -106,7 +106,9 @@ function get_plot_json(plt::Plot{PlotlyPackage})
   d_out[:title] = d[:title]
   d_out[:titlefont] = plotlyfont(d[:guidefont])
   # d_out[:width], d_out[:height] = d[:size]
-  d_out[:margin] = Dict(:l=>30, :b=>30, :r=>15, :t=>15)
+  d_out[:margin] = Dict(:l=>35, :b=>30, :r=>8, :t=>20)
+  # d_out[:margin] = Dict(:l=>1, :b=>1, :r=>1, :t=>1)
+  # d_out[:margin] = Dict(:autoexpand=>true)
   # d_out[:margin] = Dict(:t=>20)
   d_out[:paper_bgcolor] = bgcolor
   d_out[:plot_bgcolor] = bgcolor
@@ -122,6 +124,7 @@ function get_plot_json(plt::Plot{PlotlyPackage})
       :tickcolor  => fgcolor,
       :linecolor  => fgcolor,
       :showgrid   => d[:grid],
+      :zeroline   => false,
     )
   d_out[:yaxis] = Dict(
       :title      => d[:ylabel],
@@ -131,6 +134,7 @@ function get_plot_json(plt::Plot{PlotlyPackage})
       :tickcolor  => fgcolor,
       :linecolor  => fgcolor,
       :showgrid   => d[:grid],
+      :zeroline   => false,
     )
 
   d_out[:showlegend] = d[:legend]
