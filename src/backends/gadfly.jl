@@ -375,7 +375,7 @@ function getGadflyScaleFunction(d::Dict, isx::Bool)
   hasScaleKey = haskey(d, scalekey)
   if hasScaleKey
     scale = d[scalekey]
-    scale == :log && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey
+    scale == :ln && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey
     scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey
     scale == :log10 && return isx ? Gadfly.Scale.x_log10 : Gadfly.Scale.y_log10, hasScaleKey
     scale == :asinh && return isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh, hasScaleKey

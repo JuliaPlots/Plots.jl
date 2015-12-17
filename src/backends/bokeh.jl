@@ -68,8 +68,8 @@ function _create_plot(pkg::BokehPackage; kw...)
   filename = tempname() * ".html"
   title = d[:title]
   w, h = d[:size]
-  xaxis_type = d[:xscale] == :log ? :log : :auto
-  yaxis_type = d[:yscale] == :log ? :log : :auto
+  xaxis_type = d[:xscale] == :log10 ? :log : :auto
+  yaxis_type = d[:yscale] == :log10 ? :log : :auto
   # legend = d[:legend] ? xxxx : nothing
   legend = nothing
   extra_args = Dict()  # TODO: we'll put extra settings (xlim, etc) here

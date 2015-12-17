@@ -82,11 +82,11 @@ end
 # _plotDefaults[:xflip]             = false
 # _plotDefaults[:yflip]             = false
 
-function plotlyfont(font::Font)
+function plotlyfont(font::Font, color = font.color)
   Dict(
       :family => font.family,
       :size   => round(Int, font.pointsize*1.4),
-      :color  => webcolor(font.color),
+      :color  => webcolor(color),
     )
 end
 
@@ -111,7 +111,7 @@ function get_annotation_dict(x, y, ptxt::PlotText)
 end
 
 function plotlyscale(scale::Symbol)
-  if scale == :log
+  if scale == :log10
     "log"
   else
     "-"
@@ -119,6 +119,62 @@ function plotlyscale(scale::Symbol)
 end
 
 use_axis_field(ticks) = !(ticks in (nothing, :none))
+
+tickssym(isx::Bool) = symbol((isx ? "x" : "y") * "ticks")
+limssym(isx::Bool) = symbol((isx ? "x" : "y") * "lims")
+flipsym(isx::Bool) = symbol((isx ? "x" : "y") * "flip")
+scalesym(isx::Bool) = symbol((isx ? "x" : "y") * "scale")
+labelsym(isx::Bool) = symbol((isx ? "x" : "y") * "label")
+
+function plotlyaxis(d::Dict, isx::Bool)
+  ax = Dict(
+      :title      => d[labelsym(isx)],
+      :showgrid   => d[:grid],
+      :zeroline   => false,
+    )
+
+  fgcolor = webcolor(d[:foreground_color])
+  tsym = tickssym(isx)
+
+  if use_axis_field(d[tsym])
+    ax[:titlefont] = plotlyfont(d[:guidefont], fgcolor)
+    ax[:type] = plotlyscale(d[scalesym(isx)])
+    ax[:tickfont] = plotlyfont(d[:tickfont], fgcolor)
+    ax[:tickcolor] = fgcolor
+    ax[:linecolor] = fgcolor
+
+    # xlims
+    lims = d[limssym(isx)]
+    if lims != :auto && limsType(lims) == :limits
+      ax[:range] = lims
+    end
+
+    # xflip
+    if d[flipsym(isx)]
+      ax[:autorange] = "reversed"
+    end
+
+    # xticks
+    ticks = d[tsym]
+    if ticks != :auto
+      ttype = ticksType(ticks)
+      if ttype == :ticks
+        ax[:tickmode] = "array"
+        ax[:tickvals] = ticks
+      elseif ttype == :ticks_and_labels
+        ax[:tickmode] = "array"
+        ax[:tickvals], ax[:ticktext] = ticks
+      end
+    end
+
+    ax
+  else
+    ax[:showticklabels] = false
+    ax[:showgrid] = false
+  end
+
+  ax
+end
 
 function get_plot_json(plt::Plot{PlotlyPackage})
   d = plt.plotargs
@@ -129,64 +185,92 @@ function get_plot_json(plt::Plot{PlotlyPackage})
 
   # set the fields for the plot
   d_out[:title] = d[:title]
-  d_out[:titlefont] = plotlyfont(d[:guidefont])
+  d_out[:titlefont] = plotlyfont(d[:guidefont], fgcolor)
   d_out[:margin] = Dict(:l=>35, :b=>30, :r=>8, :t=>20)
   d_out[:plot_bgcolor] = bgcolor
+  d_out[:paper_bgcolor] = bgcolor
   
   # TODO: x/y axis tick values/labels
-  # TODO: x/y axis range
+  d_out[:xaxis] = plotlyaxis(d, true)
+  d_out[:yaxis] = plotlyaxis(d, false)
 
-  # x-axis
-  d_out[:xaxis] = Dict(
-      :title      => d[:xlabel],
-      :showgrid   => d[:grid],
-      :zeroline   => false,
-    )
-  merge!(d_out[:xaxis], if use_axis_field(d[:xticks])
-    Dict(
-        :titlefont  => plotlyfont(d[:guidefont]),
-        :type       => plotlyscale(d[:xscale]),
-        :tickfont   => plotlyfont(d[:tickfont]),
-        :tickcolor  => fgcolor,
-        :linecolor  => fgcolor,
-      )
-  else
-    Dict(
-        :showticklabels => false,
-        :showgrid       => false,
-      )
-  end)
+  # # x-axis
+  # d_out[:xaxis] = Dict(
+  #     :title      => d[:xlabel],
+  #     :showgrid   => d[:grid],
+  #     :zeroline   => false,
+  #   )
+  # merge!(d_out[:xaxis], if use_axis_field(d[:xticks])
+  #   ax = Dict(
+  #       :titlefont  => plotlyfont(d[:guidefont]),
+  #       :type       => plotlyscale(d[:xscale]),
+  #       :tickfont   => plotlyfont(d[:tickfont]),
+  #       :tickcolor  => fgcolor,
+  #       :linecolor  => fgcolor,
+  #     )
 
-  lims = d[:xlims]
-  if lims != :auto && limsType(lims) == :limits
-    d_out[:xaxis][:range] = lims
-  end
+  #   # xlims
+  #   lims = d[:xlims]
+  #   if lims != :auto && limsType(lims) == :limits
+  #     ax[:range] = lims
+  #   end
 
-  # y-axis
-  d_out[:yaxis] = Dict(
-      :title      => d[:ylabel],
-      :showgrid   => d[:grid],
-      :zeroline   => false,
-    )
-  merge!(d_out[:yaxis], if use_axis_field(d[:yticks])
-    Dict(
-        :titlefont  => plotlyfont(d[:guidefont]),
-        :type       => plotlyscale(d[:yscale]),
-        :tickfont   => plotlyfont(d[:tickfont]),
-        :tickcolor  => fgcolor,
-        :linecolor  => fgcolor,
-      )
-  else
-    Dict(
-        :showticklabels => false,
-        :showgrid       => false,
-      )
-  end)
+  #   # xflip
+  #   if d[:xflip]
+  #     ax[:autorange] = "reversed"
+  #   end
 
-  lims = d[:ylims]
-  if lims != :auto && limsType(lims) == :limits
-    d_out[:yaxis][:range] = lims
-  end
+  #   # xticks
+  #   ticks = d[:xticks]
+  #   if ticks != :auto
+  #     ttype = ticksType(ticks)
+  #     if ttype == :ticks
+  #       ax[:tickmode] = "array"
+  #       ax[:tickvals] = ticks
+  #     elseif ttype == :ticks_and_labels
+  #       ax[:tickmode] = "array"
+  #       ax[:tickvals], ax[:ticktext] = ticks
+  #     end
+  #   end
+
+  #   ax
+  # else
+  #   Dict(
+  #       :showticklabels => false,
+  #       :showgrid       => false,
+  #     )
+  # end)
+
+
+  # # y-axis
+  # d_out[:yaxis] = Dict(
+  #     :title      => d[:ylabel],
+  #     :showgrid   => d[:grid],
+  #     :zeroline   => false,
+  #   )
+  # merge!(d_out[:yaxis], if use_axis_field(d[:yticks])
+  #   Dict(
+  #       :titlefont  => plotlyfont(d[:guidefont]),
+  #       :type       => plotlyscale(d[:yscale]),
+  #       :tickfont   => plotlyfont(d[:tickfont]),
+  #       :tickcolor  => fgcolor,
+  #       :linecolor  => fgcolor,
+  #     )
+  # else
+  #   Dict(
+  #       :showticklabels => false,
+  #       :showgrid       => false,
+  #     )
+  # end)
+
+  # lims = d[:ylims]
+  # if lims != :auto && limsType(lims) == :limits
+  #   d_out[:yaxis][:range] = lims
+  # end
+
+  # if d[:yflip]
+  #   d_out[:yaxis][:autorange] = "reversed"
+  # end
 
   # legend
   d_out[:showlegend] = d[:legend]
@@ -304,7 +388,8 @@ function get_series_json(d::Dict; plot_index = nothing)
     d_out[:z] = collect(d[:z])
 
   else
-    error("Plotly: linetype $lt isn't supported.")
+    warn("Plotly: linetype $lt isn't supported.")
+    return Dict()
   end
 
   # add "marker"

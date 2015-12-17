@@ -94,10 +94,10 @@ const _allMarkers = vcat(:none, :auto, sort(collect(keys(_shapes))))
     :spike        => :vline,
   )
 
-const _allScales = [:identity, :log, :log2, :log10, :asinh, :sqrt]
+const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 @compat const _scaleAliases = Dict(
     :none => :identity,
-    :ln   => :log,
+    :log  => :log10,
   )
 
 # -----------------------------------------------------------------------------

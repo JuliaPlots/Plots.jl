@@ -523,7 +523,7 @@ end
 function applyPyPlotScale(ax, scaleType::Symbol, isx::Bool)
   func = ax[isx ? :set_xscale : :set_yscale]
   scaleType == :identity && return func("linear")
-  scaleType == :log && return func("log", basex = e, basey = e)
+  scaleType == :ln && return func("log", basex = e, basey = e)
   scaleType == :log2 && return func("log", basex = 2, basey = 2)
   scaleType == :log10 && return func("log", basex = 10, basey = 10)
   warn("Unhandled scaleType: ", scaleType)
