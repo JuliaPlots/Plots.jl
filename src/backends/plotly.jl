@@ -19,8 +19,11 @@ function _add_series(::PlotlyPackage, plt::Plot; kw...)
 end
 
 function _add_annotations{X,Y,V}(plt::Plot{PlotlyPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
-  for ann in anns
-    # TODO: add the annotation to the plot
+  # set or add to the annotation_list
+  if haskey(plt.plotargs, :annotation_list)
+    append!(plt.plotargs[:annotation_list], anns)
+  else
+    plt.plotargs[:annotation_list] = anns
   end
 end
 
@@ -87,6 +90,26 @@ function plotlyfont(font::Font)
     )
 end
 
+function get_annotation_dict(x, y, val::Union{AbstractString,Symbol})
+  Dict(
+      :text => val,
+      :xref => "x",
+      :x => x,
+      :yref => "y",
+      :y => y,
+      :showarrow => false,
+    )
+end
+
+function get_annotation_dict(x, y, ptxt::PlotText)
+  merge(get_annotation_dict(x, y, ptxt.str), Dict(
+      :font => plotlyfont(ptxt.font),
+      :xanchor => ptxt.font.halign == :hcenter ? :center : ptxt.font.halign,
+      :yanchor => ptxt.font.valign == :vcenter ? :middle : ptxt.font.valign,
+      :rotation => ptxt.font.rotation,
+    ))
+end
+
 function plotlyscale(scale::Symbol)
   if scale == :log
     "log"
@@ -104,50 +127,28 @@ function get_plot_json(plt::Plot{PlotlyPackage})
   bgcolor = webcolor(d[:background_color])
   fgcolor = webcolor(d[:foreground_color])
 
-  # TODO: set the fields for the plot
+  # set the fields for the plot
   d_out[:title] = d[:title]
   d_out[:titlefont] = plotlyfont(d[:guidefont])
-  # d_out[:width], d_out[:height] = d[:size]
   d_out[:margin] = Dict(:l=>35, :b=>30, :r=>8, :t=>20)
-  # d_out[:margin] = Dict(:l=>1, :b=>1, :r=>1, :t=>1)
-  # d_out[:margin] = Dict(:autoexpand=>true)
-  # d_out[:margin] = Dict(:t=>20)
-  d_out[:paper_bgcolor] = bgcolor
   d_out[:plot_bgcolor] = bgcolor
   
   # TODO: x/y axis tick values/labels
   # TODO: x/y axis range
 
-  d_out[:xaxis] = if use_axis_field(d[:xticks])
+  # x-axis
+  d_out[:xaxis] = Dict(
+      :title      => d[:xlabel],
+      :showgrid   => d[:grid],
+      :zeroline   => false,
+    )
+  merge!(d_out[:xaxis], if use_axis_field(d[:xticks])
     Dict(
-        :title      => d[:xlabel],
         :titlefont  => plotlyfont(d[:guidefont]),
         :type       => plotlyscale(d[:xscale]),
         :tickfont   => plotlyfont(d[:tickfont]),
         :tickcolor  => fgcolor,
         :linecolor  => fgcolor,
-        :showgrid   => d[:grid],
-        :zeroline   => false,
-      )
-  else
-    Dict(:showticklabels => false)
-  end
-
-  d_out[:yaxis] = Dict(
-      :title      => d[:ylabel],
-      :showgrid   => d[:grid],
-      :zeroline   => false,
-    )
-  merge!(d_out[:yaxis], if use_axis_field(d[:yticks])
-    Dict(
-        # :title      => d[:ylabel],
-        :titlefont  => plotlyfont(d[:guidefont]),
-        :type       => plotlyscale(d[:yscale]),
-        :tickfont   => plotlyfont(d[:tickfont]),
-        :tickcolor  => fgcolor,
-        :linecolor  => fgcolor,
-        # :showgrid   => d[:grid],
-        # :zeroline   => false,
       )
   else
     Dict(
@@ -156,53 +157,47 @@ function get_plot_json(plt::Plot{PlotlyPackage})
       )
   end)
 
+  # y-axis
+  d_out[:yaxis] = Dict(
+      :title      => d[:ylabel],
+      :showgrid   => d[:grid],
+      :zeroline   => false,
+    )
+  merge!(d_out[:yaxis], if use_axis_field(d[:yticks])
+    Dict(
+        :titlefont  => plotlyfont(d[:guidefont]),
+        :type       => plotlyscale(d[:yscale]),
+        :tickfont   => plotlyfont(d[:tickfont]),
+        :tickcolor  => fgcolor,
+        :linecolor  => fgcolor,
+      )
+  else
+    Dict(
+        :showticklabels => false,
+        :showgrid       => false,
+      )
+  end)
+
+  # legend
   d_out[:showlegend] = d[:legend]
   if d[:legend]
     d_out[:legend] = Dict(
         :bgcolor  => bgcolor,
         :bordercolor => fgcolor,
         :font     => plotlyfont(d[:legendfont]),
-        # :yanchor  => "middle",
       )
   end
 
-  # TODO: d_out[:annotations]
+  # annotations
+  anns = d[:annotation_list]
+  if !isempty(anns)
+    d_out[:annotations] = [get_annotation_dict(ann...) for ann in anns]
+  end
 
+  # finally build and return the json
   JSON.json(d_out)
 end
 
-# _seriesDefaults[:axis]            = :left
-# _seriesDefaults[:label]           = "AUTO"
-# _seriesDefaults[:linetype]        = :path
-# _seriesDefaults[:linestyle]       = :solid
-# _seriesDefaults[:linewidth]       = 1
-# _seriesDefaults[:linecolor]       = :auto
-# _seriesDefaults[:linealpha]       = nothing
-# _seriesDefaults[:fillrange]       = nothing   # ribbons, areas, etc
-# _seriesDefaults[:fillcolor]       = :match
-# _seriesDefaults[:fillalpha]       = nothing
-# _seriesDefaults[:markershape]     = :none
-# _seriesDefaults[:markercolor]     = :match
-# _seriesDefaults[:markeralpha]     = nothing
-# _seriesDefaults[:markersize]      = 6
-# _seriesDefaults[:markerstrokestyle] = :solid
-# _seriesDefaults[:markerstrokewidth] = 1
-# _seriesDefaults[:markerstrokecolor] = :match
-# _seriesDefaults[:markerstrokealpha] = nothing
-# _seriesDefaults[:nbins]           = 30               # number of bins for heatmaps and hists
-# _seriesDefaults[:smooth]          = false               # regression line?
-# _seriesDefaults[:group]           = nothing           # groupby vector
-# _seriesDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
-# _seriesDefaults[:x]               = nothing
-# _seriesDefaults[:y]               = nothing
-# _seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
-# _seriesDefaults[:zcolor]          = nothing           # value for color scale
-# _seriesDefaults[:surface]         = nothing
-# _seriesDefaults[:nlevels]         = 15
-
-# supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
-#                                    :scatter, :heatmap, :hexbin, :hist, :density, :bar,
-#                                    :hline, :vline, :contour, :path3d, :scatter3d]
 
 function plotly_colorscale(grad::ColorGradient)
   [[grad.values[i], webcolor(grad.colors[i])] for i in 1:length(grad.colors)]
@@ -224,8 +219,6 @@ function get_series_json(d::Dict; plot_index = nothing)
   d_out = Dict()
 
   x, y = collect(d[:x]), collect(d[:y])
-  # d_out[:x] = collect(d[:x])
-  # d_out[:y] = collect(d[:y])
   d_out[:name] = d[:label]
 
   lt = d[:linetype]
