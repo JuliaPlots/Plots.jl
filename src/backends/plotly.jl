@@ -157,6 +157,11 @@ function get_plot_json(plt::Plot{PlotlyPackage})
       )
   end)
 
+  lims = d[:xlims]
+  if lims != :auto && limsType(lims) == :limits
+    d_out[:xaxis][:range] = lims
+  end
+
   # y-axis
   d_out[:yaxis] = Dict(
       :title      => d[:ylabel],
@@ -178,6 +183,11 @@ function get_plot_json(plt::Plot{PlotlyPackage})
       )
   end)
 
+  lims = d[:ylims]
+  if lims != :auto && limsType(lims) == :limits
+    d_out[:yaxis][:range] = lims
+  end
+
   # legend
   d_out[:showlegend] = d[:legend]
   if d[:legend]
@@ -189,7 +199,7 @@ function get_plot_json(plt::Plot{PlotlyPackage})
   end
 
   # annotations
-  anns = d[:annotation_list]
+  anns = get(d, :annotation_list, [])
   if !isempty(anns)
     d_out[:annotations] = [get_annotation_dict(ann...) for ann in anns]
   end
