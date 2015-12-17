@@ -276,8 +276,8 @@ function get_series_json(d::Dict; plot_index = nothing)
       d_out[:histnorm] = "probability density"
     end
 
-  elseif lt in (:contour, :surface)
-    d_out[:type] = string(lt)
+  elseif lt in (:contour, :surface, :wireframe)
+    d_out[:type] = lt == :wireframe ? :surface : string(lt)
     d_out[:x], d_out[:y] = x, y
     d_out[:z] = d[:z].surf
     # d_out[:showscale] = d[:legend]
@@ -285,7 +285,7 @@ function get_series_json(d::Dict; plot_index = nothing)
       d_out[:ncontours] = d[:nlevels]
       d_out[:contours] = Dict(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
     end
-    d_out[:colorscale] = plotly_colorscale(d[:linecolor])
+    d_out[:colorscale] = plotly_colorscale(d[lt == :contour ? :linecolor : :fillcolor])
 
   elseif lt == :pie
     d_out[:type] = "pie"

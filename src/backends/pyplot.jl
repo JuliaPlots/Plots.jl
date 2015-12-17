@@ -121,6 +121,11 @@ getAxis(plt::Plot{PyPlotPackage}, axis::Symbol) = (axis == :right ? getRightAxis
 # left axis is PyPlot.<func>, right axis is "f.axes[0].twinx().<func>"
 function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
 
+  # # need to access mplot3d functions differently
+  # if linetype == :surface
+  #   return mplot3d.pymember("Axes3D")[:plot_surface]
+  # end
+
   # in the 2-axis case we need to get: <rightaxis>[:<func>]
   ax = getAxis(plt, axis)
   # ax[:set_ylabel](plt.plotargs[:yrightlabel])
@@ -134,6 +139,9 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
       :scatter    => :scatter,
       :contour    => :contour,
       :scatter3d  => :scatter,
+      :surface    => :plot_surface,
+      :wireframe  => :plot_wireframe,
+      # :surface    => pycolors.pymember("LinearSegmentedColormap")[:from_list]
     )
   return ax[get(fmap, linetype, :plot)]
 end
@@ -269,6 +277,15 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     extra_kwargs[:linestyles] = getPyPlotLineStyle(lt, d[:linestyle])
     # TODO: will need to call contourf to fill in the contours
 
+  elseif lt in (:surface, :wireframe)
+    if lt == :surface
+      extra_kwargs[:cmap] = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+    end
+    extra_kwargs[:rstride] = 1
+    extra_kwargs[:cstride] = 1
+    extra_kwargs[:linewidth] = d[:linewidth]
+    extra_kwargs[:edgecolor] = getPyPlotColor(d[:linecolor], d[:linealpha])
+
   else
 
     extra_kwargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
@@ -304,7 +321,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   # end
 
   # set these for all types
-  if lt != :contour
+  if !(lt in (:contour,:surface,:wireframe))
     if !(lt in (:scatter, :scatter3d))
       extra_kwargs[:color] = color
       extra_kwargs[:linewidth] = d[:linewidth]
@@ -326,6 +343,8 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
       handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))
     end
     handle
+  elseif lt in (:surface,:wireframe)
+    plotfunc(repmat(d[:x]',length(d[:y]),1), repmat(d[:y],1,length(d[:x])), d[:z].surf'; extra_kwargs...)
   elseif lt in _3dTypes
     plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)
   elseif lt in (:scatter, :heatmap, :hexbin)

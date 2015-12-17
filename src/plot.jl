@@ -382,7 +382,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::
   # surf = Array(Any,1,1)
   # surf[1,1] = convert(Matrix{Float64}, zmat)
   d = Dict(kw)
-  if !(get(d, :linetype, :none) in (:contour, :surface))
+  if !(get(d, :linetype, :none) in (:contour, :surface, :wireframe))
     d[:linetype] = :contour
   end
   createKWargsList(plt, x, y; d..., z = surf)
@@ -390,6 +390,10 @@ end
 
 function createKWargsList(plt::PlottingObject, surf::Surface; kw...)
   createKWargsList(plt, 1:size(surf.surf,1), 1:size(surf.surf,2), convert(Matrix{Float64}, surf.surf); kw...)
+end
+
+function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, surf::Surface; kw...)
+  createKWargsList(plt, x, y, convert(Matrix{Float64}, surf.surf); kw...)
 end
 
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs; kw...)

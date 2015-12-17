@@ -98,41 +98,6 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, backendInstance(sym))
 
 # ---------------------------------------------------------
 
-# function pickDefaultBackend()
-#   try
-#     if Pkg.installed("PyPlot") != nothing
-#       return CurrentBackend(:pyplot)
-#     end
-#   end
-#   try
-#     if Pkg.installed("Immerse") != nothing
-#       return CurrentBackend(:immerse)
-#     end
-#   end
-#   try
-#     if Pkg.installed("Qwt") != nothing
-#       return CurrentBackend(:qwt)
-#     end
-#   end
-#   try
-#     if Pkg.installed("Gadfly") != nothing
-#       return CurrentBackend(:gadfly)
-#     end
-#   end
-#   try
-#     if Pkg.installed("UnicodePlots") != nothing
-#       return CurrentBackend(:unicodeplots)
-#     end
-#   end
-#   try
-#     if Pkg.installed("Bokeh") != nothing
-#       return CurrentBackend(:bokeh)
-#     end
-#   end
-#   # warn("You don't have any of the supported backends installed!  Chose from ", backends())
-#   return CurrentBackend(:plotly)
-# end
-
 function pickDefaultBackend()
   for pkgstr in ("PyPlot", "Immerse", "Qwt", "Gadfly", "UnicodePlots", "Bokeh")
     if Pkg.installed(pkgstr) != nothing

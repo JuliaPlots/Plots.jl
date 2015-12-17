@@ -7,11 +7,11 @@ const _allAxes = [:auto, :left, :right]
     :r => :right
   )
 
-const _3dTypes = [:path3d, :scatter3d]
+const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                         :heatmap, :hexbin, :hist, :density, :bar, :hline, :vline, :ohlc,
-                        :contour, :surface, :pie
+                        :contour, :pie
                        ], _3dTypes)
 @compat const _typeAliases = Dict(
     :n             => :none,
@@ -34,6 +34,7 @@ const _allTypes = vcat([
     :contours      => :contour,
     :line3d        => :path3d,
     :surf          => :surface,
+    :wire          => :wireframe,
   )
 
 ishistlike(lt::Symbol) = lt in (:hist, :density)
