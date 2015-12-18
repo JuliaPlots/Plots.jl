@@ -77,7 +77,7 @@ supportedArgs(::GadflyPackage) = [
     :nlevels,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
-supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, 
+supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
                                    :scatter, :heatmap, :hexbin, :hist, :bar,
                                    :hline, :vline, :contour]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -492,3 +492,68 @@ supportedScales(::PlotlyPackage) = [:identity, :log10] #, :ln, :log2, :log10, :a
 subplotSupported(::PlotlyPackage) = true
 stringsSupported(::PlotlyPackage) = true
 
+
+# --------------------------------------------------------------------------------------
+
+supportedArgs(::GLVisualizePackage) = [
+    # :annotation,
+    # :axis,
+    # :background_color,
+    # :color_palette,
+    # :fillrange,
+    # :fillcolor,
+    # :fillalpha,
+    # :foreground_color,
+    # :group,
+    # :label,
+    # :layout,
+    # :legend,
+    # :linecolor,
+    # :linestyle,
+    # :linetype,
+    # :linewidth,
+    # :linealpha,
+    # :markershape,
+    # :markercolor,
+    # :markersize,
+    # :markeralpha,
+    # :markerstrokewidth,
+    # :markerstrokecolor,
+    # :markerstrokestyle,
+    # :n,
+    # :nbins,
+    # :nc,
+    # :nr,
+    # :pos,
+    # :smooth,
+    # :show,
+    # :size,
+    # :title,
+    # :windowtitle,
+    # :x,
+    # :xlabel,
+    # :xlims,
+    # :xticks,
+    # :y,
+    # :ylabel,
+    # :ylims,
+    # :yrightlabel,
+    # :yticks,
+    # :xscale,
+    # :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
+    # :tickfont,
+    # :guidefont,
+    # :legendfont,
+    # :grid,
+    # :surface
+    # :nlevels,
+  ]
+supportedAxes(::GLVisualizePackage) = [:auto, :left]
+supportedTypes(::GLVisualizePackage) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::GLVisualizePackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::GLVisualizePackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedScales(::GLVisualizePackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::GLVisualizePackage) = false
