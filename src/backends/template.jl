@@ -55,7 +55,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{[PkgName]Package})
+function _create_subplot(subplt::Subplot{[PkgName]Package}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
 end
 

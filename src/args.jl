@@ -7,11 +7,11 @@ const _allAxes = [:auto, :left, :right]
     :r => :right
   )
 
-const _3dTypes = [:path3d, :scatter3d]
+const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                         :heatmap, :hexbin, :hist, :density, :bar, :hline, :vline, :ohlc,
-                        :contour, :surface, :pie
+                        :contour, :pie
                        ], _3dTypes)
 @compat const _typeAliases = Dict(
     :n             => :none,
@@ -34,6 +34,7 @@ const _allTypes = vcat([
     :contours      => :contour,
     :line3d        => :path3d,
     :surf          => :surface,
+    :wire          => :wireframe,
   )
 
 ishistlike(lt::Symbol) = lt in (:hist, :density)
@@ -90,12 +91,13 @@ const _allMarkers = vcat(:none, :auto, sort(collect(keys(_shapes))))
     :hep          => :heptagon,
     :o            => :octagon,
     :oct          => :octagon,
+    :spike        => :vline,
   )
 
-const _allScales = [:identity, :log, :log2, :log10, :asinh, :sqrt]
+const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 @compat const _scaleAliases = Dict(
     :none => :identity,
-    :ln   => :log,
+    :log  => :log10,
   )
 
 # -----------------------------------------------------------------------------
@@ -130,7 +132,7 @@ _seriesDefaults[:markerstrokealpha] = nothing
 _seriesDefaults[:nbins]           = 30               # number of bins for heatmaps and hists
 _seriesDefaults[:smooth]          = false               # regression line?
 _seriesDefaults[:group]           = nothing           # groupby vector
-_seriesDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
+# _seriesDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
 _seriesDefaults[:x]               = nothing
 _seriesDefaults[:y]               = nothing
 _seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
@@ -175,6 +177,7 @@ _plotDefaults[:tickfont]          = font(8)
 _plotDefaults[:guidefont]         = font(11)
 _plotDefaults[:legendfont]        = font(8)
 _plotDefaults[:grid]              = true
+_plotDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
 
 
 

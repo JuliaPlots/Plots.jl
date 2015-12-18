@@ -188,6 +188,7 @@ function fakedata(sz...)
   y
 end
 
+isijulia() = isdefined(Main, :IJulia) && Main.IJulia.inited
 
 
 # ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
