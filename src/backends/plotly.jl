@@ -176,8 +176,9 @@ function plotlyaxis(d::Dict, isx::Bool)
   ax
 end
 
-function get_plot_json(plt::Plot{PlotlyPackage})
-  d = plt.plotargs
+# function get_plot_json(plt::Plot{PlotlyPackage})
+#   d = plt.plotargs
+function plotly_layout(d::Dict)
   d_out = Dict()
 
   bgcolor = webcolor(d[:background_color])
@@ -210,8 +211,11 @@ function get_plot_json(plt::Plot{PlotlyPackage})
     d_out[:annotations] = [get_annotation_dict(ann...) for ann in anns]
   end
 
-  # finally build and return the json
-  JSON.json(d_out)
+  d_out
+end
+
+function get_plot_json(plt::Plot{PlotlyPackage})
+  JSON.json(plotly_layout(plt.plotargs))
 end
 
 
@@ -231,7 +235,7 @@ const _plotly_markers = Dict(
   )
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
-function get_series_json(d::Dict; plot_index = nothing)
+function plotly_series(d::Dict; plot_index = nothing)
   d_out = Dict()
 
   x, y = collect(d[:x]), collect(d[:y])
@@ -360,14 +364,14 @@ end
 
 # get a list of dictionaries, each representing the series params
 function get_series_json(plt::Plot{PlotlyPackage})
-  JSON.json(map(get_series_json, plt.seriesargs))
+  JSON.json(map(plotly_series, plt.seriesargs))
 end
 
 function get_series_json(subplt::Subplot{PlotlyPackage})
   ds = Dict[]
   for (i,plt) in enumerate(subplt.plts)
     for d in plt.seriesargs
-      push!(ds, get_series_json(d, plot_index = i))
+      push!(ds, plotly_series(d, plot_index = i))
     end
   end
   JSON.json(ds)

@@ -235,6 +235,12 @@ function backend()
           # end borrowing (thanks :)
           ###########################
 
+          try
+            include(joinpath(Pkg.dir("Plots"), "src", "backends", "plotly_blink.jl"))
+          catch err
+            warn("Error including Plotlyjs: $err\n  Note: Will fall back to built-in display.")
+          end
+
         end
       catch err
         warn("Couldn't setup Plotly")
