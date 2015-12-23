@@ -378,14 +378,15 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::
   @assert x == sort(x)
   @assert y == sort(y)
   @assert size(zmat) == (length(x), length(y))
-  surf = Surface(convert(Matrix{Float64}, zmat))
+  # surf = Surface(convert(Matrix{Float64}, zmat))
   # surf = Array(Any,1,1)
   # surf[1,1] = convert(Matrix{Float64}, zmat)
   d = Dict(kw)
+  d[:z] = Surface(convert(Matrix{Float64}, zmat))
   if !(get(d, :linetype, :none) in (:contour, :surface, :wireframe))
     d[:linetype] = :contour
   end
-  createKWargsList(plt, x, y; d..., z = surf)
+  createKWargsList(plt, x, y; d...) #, z = surf)
 end
 
 # contours or surfaces... general x, y grid
@@ -394,7 +395,12 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AMat{T}, y::AMat{T}, 
   surf = Surface(convert(Matrix{Float64}, zmat))
   # surf = Array(Any,1,1)
   # surf[1,1] = convert(Matrix{Float64}, zmat)
-  createKWargsList(plt, x, y; kw..., surface = surf, linetype = :contour)
+  d = Dict(kw)
+  d[:z] = Surface(convert(Matrix{Float64}, zmat))
+  if !(get(d, :linetype, :none) in (:contour, :surface, :wireframe))
+    d[:linetype] = :contour
+  end
+  createKWargsList(plt, Any[x], Any[y]; d...) #kw..., z = surf, linetype = :contour)
 end
 
 
