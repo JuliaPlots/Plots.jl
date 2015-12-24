@@ -226,6 +226,9 @@ function with(f::Function, args...; kw...)
   end
 
   # save the backend
+  if CURRENT_BACKEND.sym == :none
+    pickDefaultBackend()
+  end
   oldbackend = CURRENT_BACKEND.sym
 
   for arg in args

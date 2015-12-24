@@ -344,7 +344,15 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     end
     handle
   elseif lt in (:surface,:wireframe)
-    plotfunc(repmat(d[:x]',length(d[:y]),1), repmat(d[:y],1,length(d[:x])), d[:z].surf'; extra_kwargs...)
+    x, y, z = if isa(d[:x], AMat) && isa(d[:y], AMat)
+      d[:x], d[:y], d[:z].surf
+    else
+      repmat(d[:x]',length(d[:y]),1), repmat(d[:y],1,length(d[:x])), d[:z].surf'
+    end
+    # x =  isa(d[:x], AMat) ? d[:x] : repmat(d[:x]',length(d[:y]),1)
+    # y = isa(d[:y], AMat) ? d[:y] : repmat(d[:y],1,length(d[:x]))
+    # z = isa(d[:x], AMat) ? d[:z].surf : d[:z].surf'
+    plotfunc(x, y, z; extra_kwargs...)
   elseif lt in _3dTypes
     plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)
   elseif lt in (:scatter, :heatmap, :hexbin)
@@ -629,7 +637,7 @@ end
 function addPyPlotLegend(plt::Plot, ax)
   if plt.plotargs[:legend]
     # gotta do this to ensure both axes are included
-    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:heatmap,:hline,:vline,:contour, :path3d, :scatter3d)), plt.seriesargs)
+    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:heatmap,:hline,:vline,:contour, :surface, :wireframe, :path3d, :scatter3d)), plt.seriesargs)
     if length(args) > 0
       leg = ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],
