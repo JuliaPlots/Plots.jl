@@ -8,6 +8,7 @@ immutable UnicodePlotsPackage <: PlottingPackage end
 immutable WinstonPackage      <: PlottingPackage end
 immutable BokehPackage        <: PlottingPackage end
 immutable PlotlyPackage       <: PlottingPackage end
+immutable GRPackage           <: PlottingPackage end
 immutable NoPackage           <: PlottingPackage end
 
 typealias GadflyOrImmerse @compat(Union{GadflyPackage, ImmersePackage})
@@ -19,7 +20,8 @@ export
   qwt,
   unicodeplots,
   bokeh,
-  plotly
+  plotly,
+  gr
   # winston
 
 gadfly()        = backend(:gadfly)
@@ -29,6 +31,7 @@ qwt()           = backend(:qwt)
 unicodeplots()  = backend(:unicodeplots)
 bokeh()         = backend(:bokeh)
 plotly()        = backend(:plotly)
+gr()            = backend(:gr)
 # winston()       = backend(:winston)
 
 backend_name(::GadflyPackage)       = :gadfly
@@ -38,6 +41,7 @@ backend_name(::UnicodePlotsPackage) = :unicodeplots
 backend_name(::QwtPackage)          = :qwt
 backend_name(::BokehPackage)        = :bokeh
 backend_name(::PlotlyPackage)       = :plotly
+backend_name(::GRPackage)           = :gr
 backend_name(::NoPackage)           = :none
 
 include("backends/supported.jl")
@@ -52,6 +56,7 @@ include("backends/winston.jl")
 include("backends/web.jl")
 include("backends/bokeh.jl")
 include("backends/plotly.jl")
+include("backends/gr.jl")
 
 
 # ---------------------------------------------------------
@@ -71,7 +76,7 @@ subplot!(pkg::PlottingPackage, subplt::Subplot; kw...) = error("subplot!($pkg, s
 # ---------------------------------------------------------
 
 
-const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse, :bokeh, :plotly]
+const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse, :bokeh, :plotly, :gr]
 const INITIALIZED_BACKENDS = Set{Symbol}()
 backends() = BACKENDS
 
@@ -85,6 +90,7 @@ function backendInstance(sym::Symbol)
   sym == :winston && return WinstonPackage()
   sym == :bokeh && return BokehPackage()
   sym == :plotly && return PlotlyPackage()
+  sym == :gr && return GRPackage()
   sym == :none && return NoPackage()
   error("Unsupported backend $sym")
 end 
@@ -99,7 +105,7 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, backendInstance(sym))
 # ---------------------------------------------------------
 
 function pickDefaultBackend()
-  for pkgstr in ("PyPlot", "Immerse", "Qwt", "Gadfly", "UnicodePlots", "Bokeh")
+  for pkgstr in ("Gr", "PyPlot", "Immerse", "Qwt", "Gadfly", "UnicodePlots", "Bokeh")
     if Pkg.installed(pkgstr) != nothing
       return backend(symbol(lowercase(pkgstr)))
     end
@@ -234,6 +240,14 @@ function backend()
         rethrow(err)
       end
 
+    elseif currentBackendSymbol == :gr
+      try
+        @eval import GR
+      catch err
+        warn("Couldn't import GR.  Install it with: Pkg.add(\"GR\").")
+        rethrow(err)
+      end
+
     elseif currentBackendSymbol == :winston
       warn("Winston support is deprecated and broken.  Try another backend: $BACKENDS")
       try
@@ -281,6 +295,8 @@ function backend(modname)
     CURRENT_BACKEND.pkg = BokehPackage()
   elseif modname == :plotly
     CURRENT_BACKEND.pkg = PlotlyPackage()
+  elseif modname == :gr
+    CURRENT_BACKEND.pkg = GRPackage()
   else
     error("Unknown backend $modname.  Choose from: $BACKENDS")
   end
