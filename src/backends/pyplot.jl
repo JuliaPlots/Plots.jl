@@ -232,7 +232,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   if lt == :sticks
     d,_ = sticksHack(;d...)
-  
+
   elseif lt in (:scatter, :scatter3d)
     if d[:markershape] == :none
       d[:markershape] = :ellipse
@@ -334,13 +334,20 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   d[:serieshandle] = if ishistlike(lt)
     plotfunc(d[:y]; extra_kwargs...)[1]
   elseif lt == :contour
-    # NOTE: x/y are backwards in pyplot, so we switch the x and y args (also y is reversed), 
+    # NOTE: x/y are backwards in pyplot, so we switch the x and y args (also y is reversed),
     #       and take the transpose of the surface matrix
     x, y = d[:x], d[:y]
     surf = d[:z].surf'
-    handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
-    if d[:fillrange] != nothing
-      handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))
+    if d[:levels] != nothing
+        handle = plotfunc(x, y, surf; levels=d[:levels], extra_kwargs...)
+        if d[:fillrange] != nothing
+          handle = ax[:contourf](x, y, surf; levels=d[:levels], cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))
+        end
+    else
+        handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
+        if d[:fillrange] != nothing
+          handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))
+        end
     end
     handle
   elseif lt in (:surface,:wireframe)
@@ -473,7 +480,7 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
     ax[:set_ylabel](d[:ylabel])
   end
   if usingRightAxis(plt) && get(d, :yrightlabel, "") != ""
-    rightax = getRightAxis(figorax)  
+    rightax = getRightAxis(figorax)
     rightax[:set_ylabel](d[:yrightlabel])
   end
 
@@ -502,7 +509,7 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
   # font sizes
   for ax in axes
     # haskey(d, :yrightlabel) || continue
-    
+
 
     # guides
     sz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
@@ -517,7 +524,7 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
         lab[:set_fontsize](sz)
       end
     end
-  
+
     # grid
     if get(d, :grid, false)
       ax[:xaxis][:grid](true)
