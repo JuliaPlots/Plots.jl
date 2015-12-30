@@ -222,9 +222,9 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
   lt = d[:linetype]
-  # if lt in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
-  #   push!(plt.o.kwargs, (:projection, "3d"))
-  # end
+  if lt in _3dTypes && isempty(plt.o.kwargs)
+    push!(plt.o.kwargs, (:projection, "3d"))
+  end
 
   ax = getAxis(plt, d[:axis])
   if !(lt in supportedTypes(pkg))

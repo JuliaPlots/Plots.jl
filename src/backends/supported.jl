@@ -160,7 +160,7 @@ supportedArgs(::PyPlotPackage) = [
     :markeralpha,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
-supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
+supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, #:sticks,
                                    :scatter, :heatmap, :hexbin, :hist, :density, :bar,
                                    :hline, :vline, :contour, :path3d, :scatter3d, :surface, :wireframe]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]

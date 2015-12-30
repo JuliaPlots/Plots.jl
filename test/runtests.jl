@@ -49,7 +49,7 @@ facts("Gadfly") do
     # plot(x::AMat, y::AMat; kw...)              # multiple lines (one per column of x/y... will assert size(x) == size(y))
     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
 
-    image_comparison_facts(:gadfly, skip=[4,19,23,24], eps=img_eps)
+    image_comparison_facts(:gadfly, skip=[4,6,19,23,24], eps=img_eps)
 end
 
 
