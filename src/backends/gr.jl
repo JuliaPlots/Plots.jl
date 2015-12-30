@@ -22,7 +22,6 @@ function _create_plot(pkg::GRPackage; kw...)
 end
 
 function _add_series(::GRPackage, plt::Plot; kw...)
-  global fig
   d = Dict(kw)
   push!(plt.seriesargs, d)
   plt
@@ -70,22 +69,47 @@ function _update_plot(plt::Plot{GRPackage}, d::Dict)
     ymax = max(maximum(y), ymax)
   end
 
-  xmin, xmax = GR.adjustlimits(xmin, xmax)
-  ymin, ymax = GR.adjustlimits(ymin, ymax)
-  majorx = 5
-  xtick = GR.tick(xmin, xmax) / majorx
-  majory = 5
-  ytick = GR.tick(ymin, ymax) / majory
+  scale = 0
+  d[:xscale] == :log10 && (scale |= GR.OPTION_X_LOG)
+  d[:yscale] == :log10 && (scale |= GR.OPTION_Y_LOG)
+  get(d, :xflip, false) && (scale |= GR.OPTION_FLIP_X)
+  get(d, :yflip, false) && (scale |= GR.OPTION_FLIP_Y)
+
+  if scale & GR.OPTION_X_LOG == 0
+    xmin, xmax = GR.adjustlimits(xmin, xmax)
+    majorx = 5
+    xtick = GR.tick(xmin, xmax) / majorx
+  else
+    xtick = majorx = 1
+  end
+  if scale & GR.OPTION_Y_LOG == 0
+    ymin, ymax = GR.adjustlimits(ymin, ymax)
+    majory = 5
+    ytick = GR.tick(ymin, ymax) / majory
+  else
+    ytick = majory = 1
+  end
+  if scale & GR.OPTION_FLIP_X == 0
+    xorg = (xmin, xmax)
+  else
+    xorg = (xmax, xmin)
+  end
+  if scale & GR.OPTION_FLIP_Y == 0
+    yorg = (ymin, ymax)
+  else
+    yorg = (ymax, ymin)
+  end
 
   GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
   GR.setwindow(xmin, xmax, ymin, ymax)
+  GR.setscale(scale)
 
   charheight = 0.03 * (viewport[4] - viewport[3])
   GR.setcharheight(charheight)
   GR.grid(xtick, ytick, 0, 0, majorx, majory)
   ticksize = 0.0125 * (viewport[2] - viewport[1])
-  GR.axes(xtick, ytick, xmin, ymin, majorx, majory, ticksize)
-  GR.axes(xtick, ytick, xmax, ymax, -majorx, -majory, -ticksize)
+  GR.axes(xtick, ytick, xorg[1], yorg[1], majorx, majory, ticksize)
+  GR.axes(xtick, ytick, xorg[2], yorg[2], -majorx, -majory, -ticksize)
 
   if haskey(d, :title)
     GR.savestate()
@@ -126,6 +150,7 @@ function _update_plot(plt::Plot{GRPackage}, d::Dict)
   px = viewport[2] - 0.15
   py = viewport[4] - 0.15
   GR.selntran(0)
+  GR.setscale(0)
   for p in plt.seriesargs
     GR.uselinespec("")
     if p[:linetype] == :path
