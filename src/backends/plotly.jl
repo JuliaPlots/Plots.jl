@@ -292,7 +292,7 @@ function plotly_series(d::Dict; plot_index = nothing)
     d_out[:z] = d[:z].surf
     # d_out[:showscale] = d[:legend]
     if lt == :contour
-      d_out[:ncontours] = d[:nlevels]
+      d_out[:ncontours] = d[:levels]
       d_out[:contours] = Dict(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
     end
     d_out[:colorscale] = plotly_colorscale(d[lt == :contour ? :linecolor : :fillcolor])

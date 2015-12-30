@@ -333,32 +333,33 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   # do the plot
   d[:serieshandle] = if ishistlike(lt)
     plotfunc(d[:y]; extra_kwargs...)[1]
+
   elseif lt == :contour
-    # NOTE: x/y are backwards in pyplot, so we switch the x and y args (also y is reversed),
-    #       and take the transpose of the surface matrix
     x, y = d[:x], d[:y]
     surf = d[:z].surf'
-    if d[:levels] != nothing
-        handle = plotfunc(x, y, surf; levels=d[:levels], extra_kwargs...)
-        if d[:fillrange] != nothing
-          handle = ax[:contourf](x, y, surf; levels=d[:levels], cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))
-        end
+    levels = d[:levels]
+    if isscalar(levels)
+      extra_args = (levels)
+    elseif isvector(levels)
+      extra_args = ()
+      extra_kwargs[:levels] = levels
     else
-        handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
-        if d[:fillrange] != nothing
-          handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))
-        end
+      error("Only numbers and vectors are supported with levels keyword")
+    end
+    handle = plotfunc(x, y, surf, extra_args...; extra_kwargs...)
+    if d[:fillrange] != nothing
+      extra_kwargs[:cmap] = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+      handle = ax[:contourf](x, y, surf, extra_args...; extra_kwargs...)
     end
     handle
+
   elseif lt in (:surface,:wireframe)
-    x, y, z = if isa(d[:x], AMat) && isa(d[:y], AMat)
-      d[:x], d[:y], d[:z].surf
-    else
-      repmat(d[:x]',length(d[:y]),1), repmat(d[:y],1,length(d[:x])), d[:z].surf'
+    x, y, z = d[:x], d[:y], d[:z].surf
+    if !ismatrix(x) || !ismatrix(y)
+      x = repmat(x', length(y), 1)
+      y = repmat(y, 1, length(x))
+      z = z'
     end
-    # x =  isa(d[:x], AMat) ? d[:x] : repmat(d[:x]',length(d[:y]),1)
-    # y = isa(d[:y], AMat) ? d[:y] : repmat(d[:y],1,length(d[:x]))
-    # z = isa(d[:x], AMat) ? d[:z].surf : d[:z].surf'
     plotfunc(x, y, z; extra_kwargs...)
   elseif lt in _3dTypes
     plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)

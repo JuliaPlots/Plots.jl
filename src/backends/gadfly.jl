@@ -44,7 +44,7 @@ function getLineGeom(d::Dict)
   elseif lt == :vline
     Gadfly.Geom.vline
   elseif lt == :contour
-    Gadfly.Geom.contour(levels = d[:nlevels])
+    Gadfly.Geom.contour(levels = d[:levels])
   else
     nothing
   end

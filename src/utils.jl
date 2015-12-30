@@ -190,6 +190,16 @@ end
 
 isijulia() = isdefined(Main, :IJulia) && Main.IJulia.inited
 
+istuple(::Tuple) = true
+istuple(::Any) = false
+isvector(::AVec) = true
+isvector(::Any) = false
+ismatrix(::AMat) = true
+ismatrix(::Any) = false
+isscalar(::Real) = true
+isscalar(::Any) = false
+
+
 
 # ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
 ticksType{T<:Real}(ticks::AVec{T}) = :ticks

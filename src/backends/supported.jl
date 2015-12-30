@@ -74,7 +74,7 @@ supportedArgs(::GadflyPackage) = [
     :legendfont,
     :grid,
     # :surface,
-    :nlevels,
+    :levels,
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
@@ -154,7 +154,6 @@ supportedArgs(::PyPlotPackage) = [
     :legendfont,
     :grid,
     # :surface,
-    :nlevels,
     :levels,
     :fillalpha,
     :linealpha,
@@ -414,7 +413,7 @@ supportedArgs(::BokehPackage) = [
     # :legendfont,
     # :grid,
     # :surface,
-    # :nlevels,
+    # :levels,
   ]
 supportedAxes(::BokehPackage) = [:auto, :left]
 supportedTypes(::BokehPackage) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
@@ -480,7 +479,7 @@ supportedArgs(::PlotlyPackage) = [
     :guidefont,
     :legendfont,
     :grid,
-    :nlevels,
+    :levels,
   ]
 supportedAxes(::PlotlyPackage) = [:auto, :left]
 supportedTypes(::PlotlyPackage) = [:none, :line, :path, :scatter, :steppre, :steppost,
@@ -550,7 +549,7 @@ supportedArgs(::GLVisualizePackage) = [
     # :legendfont,
     # :grid,
     # :surface
-    # :nlevels,
+    # :levels,
   ]
 supportedAxes(::GLVisualizePackage) = [:auto, :left]
 supportedTypes(::GLVisualizePackage) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]

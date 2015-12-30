@@ -138,8 +138,8 @@ _seriesDefaults[:y]               = nothing
 _seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
 _seriesDefaults[:zcolor]          = nothing           # value for color scale
 # _seriesDefaults[:surface]         = nothing
-_seriesDefaults[:nlevels]         = 15
-_seriesDefaults[:levels]          = nothing
+# _seriesDefaults[:nlevels]         = 15
+_seriesDefaults[:levels]          = 15
 _seriesDefaults[:orientation]     = :vertical
 
 
@@ -284,6 +284,9 @@ end
     :foreground_colour  => :foreground_color,
     :regression         => :smooth,
     :reg                => :smooth,
+    :nlevels            => :levels,
+    :nlev               => :levels,
+    :levs               => :levels,
     :xlim               => :xlims,
     :xlimit             => :xlims,
     :xlimits            => :xlims,
