@@ -30,7 +30,7 @@ default(show=false)
   # gadfly()
   # backend()
 
-img_eps = 2e-2
+img_eps = 5e-2
 
 facts("Gadfly") do
     @fact gadfly() --> Plots.GadflyPackage()
@@ -56,7 +56,7 @@ end
 facts("PyPlot") do
     @fact pyplot() --> Plots.PyPlotPackage()
     @fact backend() --> Plots.PyPlotPackage()
-    image_comparison_facts(:pyplot, skip=[19,21,23], eps=img_eps)
+    image_comparison_facts(:pyplot, skip=[10,19,21,23], eps=img_eps)
 end
 
 
