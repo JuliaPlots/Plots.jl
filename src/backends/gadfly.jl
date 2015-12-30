@@ -44,7 +44,7 @@ function getLineGeom(d::Dict)
   elseif lt == :vline
     Gadfly.Geom.vline
   elseif lt == :contour
-    Gadfly.Geom.contour(levels = d[:nlevels])
+    Gadfly.Geom.contour(levels = d[:levels])
   else
     nothing
   end
@@ -667,9 +667,10 @@ getGadflyWriteFunc(::MIME"image/svg+xml") = Gadfly.SVG
 # getGadflyWriteFunc(::MIME"text/html") = Gadfly.SVGJS
 getGadflyWriteFunc(::MIME"application/pdf") = Gadfly.PDF
 getGadflyWriteFunc(::MIME"application/postscript") = Gadfly.PS
+getGadflyWriteFunc(::MIME"application/x-tex") = Gadfly.PGF
 getGadflyWriteFunc(m::MIME) = error("Unsupported in Gadfly/Immerse: ", m)
 
-for mime in (MIME"image/png", MIME"image/svg+xml", MIME"application/pdf", MIME"application/postscript")
+for mime in (MIME"image/png", MIME"image/svg+xml", MIME"application/pdf", MIME"application/postscript", MIME"application/x-tex")
   @eval function Base.writemime{P<:GadflyOrImmerse}(io::IO, ::$mime, plt::PlottingObject{P})
     func = getGadflyWriteFunc($mime())
     dowritemime(io, func, plt)

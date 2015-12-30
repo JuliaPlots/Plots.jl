@@ -207,6 +207,10 @@ function _create_plot(pkg::PyPlotPackage; kw...)
     w,h = map(px2inch, d[:size])
     bgcolor = getPyPlotColor(d[:background_color])
     wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
+
+    if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+      push!(wrap.kwargs, (:projection, "3d"))
+    end
   end
 
   plt = Plot(wrap, pkg, 0, d, Dict[])
@@ -218,7 +222,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
   lt = d[:linetype]
-  if lt in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+  if lt in _3dTypes && isempty(plt.o.kwargs)
     push!(plt.o.kwargs, (:projection, "3d"))
   end
 
@@ -232,7 +236,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   if lt == :sticks
     d,_ = sticksHack(;d...)
-  
+
   elseif lt in (:scatter, :scatter3d)
     if d[:markershape] == :none
       d[:markershape] = :ellipse
@@ -249,7 +253,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   end
 
-  lt = d[:linetype]
+  # lt = d[:linetype]
   extra_kwargs = Dict()
 
   plotfunc = getPyPlotFunction(plt, d[:axis], lt)
@@ -333,18 +337,35 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   # do the plot
   d[:serieshandle] = if ishistlike(lt)
     plotfunc(d[:y]; extra_kwargs...)[1]
+
   elseif lt == :contour
-    # NOTE: x/y are backwards in pyplot, so we switch the x and y args (also y is reversed), 
-    #       and take the transpose of the surface matrix
     x, y = d[:x], d[:y]
     surf = d[:z].surf'
-    handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
+    levels = d[:levels]
+    if isscalar(levels)
+      extra_args = (levels)
+    elseif isvector(levels)
+      extra_args = ()
+      extra_kwargs[:levels] = levels
+    else
+      error("Only numbers and vectors are supported with levels keyword")
+    end
+    handle = plotfunc(x, y, surf, extra_args...; extra_kwargs...)
     if d[:fillrange] != nothing
-      handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))
+      extra_kwargs[:cmap] = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+      delete!(extra_kwargs, :linewidths)
+      handle = ax[:contourf](x, y, surf, extra_args...; extra_kwargs...)
     end
     handle
+
   elseif lt in (:surface,:wireframe)
-    plotfunc(repmat(d[:x]',length(d[:y]),1), repmat(d[:y],1,length(d[:x])), d[:z].surf'; extra_kwargs...)
+    x, y, z = d[:x], d[:y], Array(d[:z])
+    if !ismatrix(x) || !ismatrix(y)
+      x = repmat(x', length(y), 1)
+      y = repmat(y, 1, length(d[:x]))
+      z = z'
+    end
+    plotfunc(x, y, z; extra_kwargs...)
   elseif lt in _3dTypes
     plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)
   elseif lt in (:scatter, :heatmap, :hexbin)
@@ -465,7 +486,7 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
     ax[:set_ylabel](d[:ylabel])
   end
   if usingRightAxis(plt) && get(d, :yrightlabel, "") != ""
-    rightax = getRightAxis(figorax)  
+    rightax = getRightAxis(figorax)
     rightax[:set_ylabel](d[:yrightlabel])
   end
 
@@ -494,7 +515,7 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
   # font sizes
   for ax in axes
     # haskey(d, :yrightlabel) || continue
-    
+
 
     # guides
     sz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
@@ -509,7 +530,7 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
         lab[:set_fontsize](sz)
       end
     end
-  
+
     # grid
     if get(d, :grid, false)
       ax[:xaxis][:grid](true)
@@ -629,7 +650,7 @@ end
 function addPyPlotLegend(plt::Plot, ax)
   if plt.plotargs[:legend]
     # gotta do this to ensure both axes are included
-    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:heatmap,:hline,:vline,:contour, :path3d, :scatter3d)), plt.seriesargs)
+    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:heatmap,:hline,:vline,:contour, :surface, :wireframe, :path3d, :scatter3d)), plt.seriesargs)
     if length(args) > 0
       leg = ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],

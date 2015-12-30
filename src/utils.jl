@@ -174,7 +174,9 @@ function replaceAliases!(d::Dict, aliases::Dict)
 end
 
 createSegments(z) = collect(repmat(z',2,1))[2:end]
+
 Base.first(c::Colorant) = c
+Base.first(x::Symbol) = x
 
 
 sortedkeys(d::Dict) = sort(collect(keys(d)))
@@ -189,6 +191,17 @@ function fakedata(sz...)
 end
 
 isijulia() = isdefined(Main, :IJulia) && Main.IJulia.inited
+
+istuple(::Tuple) = true
+istuple(::Any) = false
+isvector(::AVec) = true
+isvector(::Any) = false
+ismatrix(::AMat) = true
+ismatrix(::Any) = false
+isscalar(::Real) = true
+isscalar(::Any) = false
+
+
 
 
 # ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
@@ -226,6 +239,9 @@ function with(f::Function, args...; kw...)
   end
 
   # save the backend
+  if CURRENT_BACKEND.sym == :none
+    pickDefaultBackend()
+  end
   oldbackend = CURRENT_BACKEND.sym
 
   for arg in args

@@ -2,8 +2,8 @@
 
 const _allAxes = [:auto, :left, :right]
 @compat const _axesAliases = Dict(
-    :a => :auto, 
-    :l => :left, 
+    :a => :auto,
+    :l => :left,
     :r => :right
   )
 
@@ -138,7 +138,8 @@ _seriesDefaults[:y]               = nothing
 _seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
 _seriesDefaults[:zcolor]          = nothing           # value for color scale
 # _seriesDefaults[:surface]         = nothing
-_seriesDefaults[:nlevels]         = 15
+# _seriesDefaults[:nlevels]         = 15
+_seriesDefaults[:levels]          = 15
 _seriesDefaults[:orientation]     = :vertical
 
 
@@ -283,6 +284,9 @@ end
     :foreground_colour  => :foreground_color,
     :regression         => :smooth,
     :reg                => :smooth,
+    :nlevels            => :levels,
+    :nlev               => :levels,
+    :levs               => :levels,
     :xlim               => :xlims,
     :xlimit             => :xlims,
     :xlimits            => :xlims,
@@ -407,7 +411,7 @@ function processLineArg(d::Dict, arg)
   # linetype
   if trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
     d[:linetype] = arg
-  
+
   # linestyle
   elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
     d[:linestyle] = arg
@@ -446,7 +450,7 @@ function processMarkerArg(d::Dict, arg)
     d[:markershape] = arg
   elseif trueOrAllTrue(a -> isa(a, Shape), arg)
     d[:markershape] = arg
-  
+
   # stroke style
   elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
     d[:markerstrokestyle] = arg
@@ -473,7 +477,7 @@ function processMarkerArg(d::Dict, arg)
   # markercolor
   elseif !handleColors!(d, arg, :markercolor)
     warn("Skipped marker arg $arg.")
-    
+
   end
 end
 
@@ -493,7 +497,7 @@ end
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
 function preprocessArgs!(d::Dict)
   replaceAliases!(d, _keyAliases)
-  
+
   # handle axis args
   for axisletter in ("x", "y")
     asym = symbol(axisletter * "axis")
@@ -590,7 +594,7 @@ end
 
 
 function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
-  (d[:axis] in supportedAxes(pkg) 
+  (d[:axis] in supportedAxes(pkg)
     || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
   (d[:linetype] == :none
     || d[:linetype] in supportedTypes(pkg)
@@ -683,7 +687,7 @@ function getSeriesArgs(pkg::PlottingPackage, plotargs::Dict, kw, commandIndex::I
       d[k] = kwdict[k]
     end
   end
-  
+
   if haskey(_typeAliases, d[:linetype])
     d[:linetype] = _typeAliases[d[:linetype]]
   end

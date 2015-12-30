@@ -37,6 +37,15 @@ end
 ps(fn::@compat(AbstractString)) = ps(current(), fn)
 
 
+function tex(plt::PlottingObject, fn::@compat(AbstractString))
+  fn = addExtension(fn, "tex")
+  io = open(fn, "w")
+  writemime(io, MIME("application/x-tex"), plt)
+  close(io)
+end
+tex(fn::@compat(AbstractString)) = tex(current(), fn)
+
+
 # ----------------------------------------------------------------
 
 
@@ -45,6 +54,7 @@ ps(fn::@compat(AbstractString)) = ps(current(), fn)
     "svg" => svg,
     "pdf" => pdf,
     "ps"  => ps,
+    "tex" => tex,
   )
 
 function getExtension(fn::@compat(AbstractString))

@@ -48,7 +48,7 @@ function plot(args...; kw...)
   preprocessArgs!(d)
   dumpdict(d, "After plot preprocessing")
 
-  plotargs = getPlotArgs(pkg, d, 1)
+  plotargs = merge(d, getPlotArgs(pkg, d, 1))
   dumpdict(plotargs, "Plot args")
   plt = _create_plot(pkg; plotargs...)  # create a new, blank plot
 
@@ -94,7 +94,7 @@ function plot!(plt::Plot, args...; kw...)
 
   # get the list of dictionaries, one per series
   seriesArgList, xmeta, ymeta = createKWargsList(plt, groupargs..., args...; d...)
-  
+
   # if we were able to extract guide information from the series inputs, then update the plot
   # @show xmeta, ymeta
   updateDictWithMeta(d, plt.plotargs, xmeta, true)
@@ -378,15 +378,31 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::
   @assert x == sort(x)
   @assert y == sort(y)
   @assert size(zmat) == (length(x), length(y))
+  # surf = Surface(convert(Matrix{Float64}, zmat))
+  # surf = Array(Any,1,1)
+  # surf[1,1] = convert(Matrix{Float64}, zmat)
+  d = Dict(kw)
+  d[:z] = Surface(convert(Matrix{Float64}, zmat))
+  if !(get(d, :linetype, :none) in (:contour, :surface, :wireframe))
+    d[:linetype] = :contour
+  end
+  createKWargsList(plt, x, y; d...) #, z = surf)
+end
+
+# contours or surfaces... general x, y grid
+function createKWargsList{T<:Real}(plt::PlottingObject, x::AMat{T}, y::AMat{T}, zmat::AMat{T}; kw...)
+  @assert size(zmat) == size(x) == size(y)
   surf = Surface(convert(Matrix{Float64}, zmat))
   # surf = Array(Any,1,1)
   # surf[1,1] = convert(Matrix{Float64}, zmat)
   d = Dict(kw)
+  d[:z] = Surface(convert(Matrix{Float64}, zmat))
   if !(get(d, :linetype, :none) in (:contour, :surface, :wireframe))
     d[:linetype] = :contour
   end
-  createKWargsList(plt, x, y; d..., z = surf)
+  createKWargsList(plt, Any[x], Any[y]; d...) #kw..., z = surf, linetype = :contour)
 end
+
 
 function createKWargsList(plt::PlottingObject, surf::Surface; kw...)
   createKWargsList(plt, 1:size(surf.surf,1), 1:size(surf.surf,2), convert(Matrix{Float64}, surf.surf); kw...)
@@ -431,7 +447,7 @@ function createKWargsList(plt::PlottingObject; kw...)
     return [], nothing, nothing
     # error("Called plot/subplot without args... must set y in the keyword args.  Example: plot(; y=rand(10))")
   end
-  
+
   if haskey(d, :x)
     return createKWargsList(plt, d[:x], d[:y]; kw...)
   else
@@ -474,4 +490,3 @@ end
 
 
 # --------------------------------------------------------------------
-
