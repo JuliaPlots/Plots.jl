@@ -48,7 +48,7 @@ function plot(args...; kw...)
   preprocessArgs!(d)
   dumpdict(d, "After plot preprocessing")
 
-  plotargs = getPlotArgs(pkg, d, 1)
+  plotargs = merge(d, getPlotArgs(pkg, d, 1))
   dumpdict(plotargs, "Plot args")
   plt = _create_plot(pkg; plotargs...)  # create a new, blank plot
 

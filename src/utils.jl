@@ -174,7 +174,9 @@ function replaceAliases!(d::Dict, aliases::Dict)
 end
 
 createSegments(z) = collect(repmat(z',2,1))[2:end]
+
 Base.first(c::Colorant) = c
+Base.first(x::Symbol) = x
 
 
 sortedkeys(d::Dict) = sort(collect(keys(d)))
@@ -198,6 +200,7 @@ ismatrix(::AMat) = true
 ismatrix(::Any) = false
 isscalar(::Real) = true
 isscalar(::Any) = false
+
 
 
 

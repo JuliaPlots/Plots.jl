@@ -207,6 +207,10 @@ function _create_plot(pkg::PyPlotPackage; kw...)
     w,h = map(px2inch, d[:size])
     bgcolor = getPyPlotColor(d[:background_color])
     wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
+
+    if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+      push!(wrap.kwargs, (:projection, "3d"))
+    end
   end
 
   plt = Plot(wrap, pkg, 0, d, Dict[])
@@ -218,9 +222,9 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
   lt = d[:linetype]
-  if lt in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
-    push!(plt.o.kwargs, (:projection, "3d"))
-  end
+  # if lt in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+  #   push!(plt.o.kwargs, (:projection, "3d"))
+  # end
 
   ax = getAxis(plt, d[:axis])
   if !(lt in supportedTypes(pkg))
@@ -249,7 +253,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   end
 
-  lt = d[:linetype]
+  # lt = d[:linetype]
   extra_kwargs = Dict()
 
   plotfunc = getPyPlotFunction(plt, d[:axis], lt)
@@ -349,15 +353,16 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     handle = plotfunc(x, y, surf, extra_args...; extra_kwargs...)
     if d[:fillrange] != nothing
       extra_kwargs[:cmap] = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+      delete!(extra_kwargs, :linewidths)
       handle = ax[:contourf](x, y, surf, extra_args...; extra_kwargs...)
     end
     handle
 
   elseif lt in (:surface,:wireframe)
-    x, y, z = d[:x], d[:y], d[:z].surf
+    x, y, z = d[:x], d[:y], Array(d[:z])
     if !ismatrix(x) || !ismatrix(y)
       x = repmat(x', length(y), 1)
-      y = repmat(y, 1, length(x))
+      y = repmat(y, 1, length(d[:x]))
       z = z'
     end
     plotfunc(x, y, z; extra_kwargs...)
