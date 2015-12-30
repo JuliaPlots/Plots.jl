@@ -155,6 +155,7 @@ supportedArgs(::PyPlotPackage) = [
     :grid,
     # :surface,
     :nlevels,
+    :levels,
     :fillalpha,
     :linealpha,
     :markeralpha,
