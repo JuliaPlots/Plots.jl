@@ -147,24 +147,37 @@ function _update_plot(plt::Plot{GRPackage}, d::Dict)
     end
   end
 
-  px = viewport[2] - 0.15
-  py = viewport[4] - 0.15
-  GR.selntran(0)
-  GR.setscale(0)
-  for p in plt.seriesargs
-    GR.uselinespec("")
-    if p[:linetype] == :path
-      GR.polyline([px, px + 0.04], [py, py])
-    elseif p[:linetype] == :scatter
-      GR.polymarker([px, px + 0.02], [py, py])
+  if plt.plotargs[:legend]
+    GR.selntran(0)
+    GR.setscale(0)
+    w = 0
+    for p in plt.seriesargs
+      tbx, tby = GR.inqtext(0, 0, p[:label])
+      w = max(w, tbx[3])
     end
-    GR.text(px + 0.05, py, p[:label])
-    py -= 0.03
+    px = viewport[2] - 0.05 - w
+    py = viewport[4] - 0.06
+    GR.setfillintstyle(GR.INTSTYLE_SOLID)
+    GR.setfillcolorind(0)
+    GR.fillrect(px - 0.06, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
+    GR.setlinecolorind(1)
+    GR.setlinewidth(1)
+    GR.drawrect(px - 0.06, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
+    haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
+    for p in plt.seriesargs
+      GR.uselinespec("")
+      if p[:linetype] == :path
+        GR.polyline([px - 0.05, px - 0.01], [py, py])
+      elseif p[:linetype] == :scatter
+        GR.polymarker([px - 0.05, px - 0.01], [py, py])
+      end
+      GR.text(px, py, p[:label])
+      py -= 0.03
+    end
+    GR.selntran(1)
   end
-  GR.selntran(1)
 
   GR.restorestate()
-
   GR.updatews()
 end
 
