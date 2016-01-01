@@ -176,8 +176,9 @@ function plotlyaxis(d::Dict, isx::Bool)
   ax
 end
 
-function get_plot_json(plt::Plot{PlotlyPackage})
-  d = plt.plotargs
+# function get_plot_json(plt::Plot{PlotlyPackage})
+#   d = plt.plotargs
+function plotly_layout(d::Dict)
   d_out = Dict()
 
   bgcolor = webcolor(d[:background_color])
@@ -193,84 +194,6 @@ function get_plot_json(plt::Plot{PlotlyPackage})
   # TODO: x/y axis tick values/labels
   d_out[:xaxis] = plotlyaxis(d, true)
   d_out[:yaxis] = plotlyaxis(d, false)
-
-  # # x-axis
-  # d_out[:xaxis] = Dict(
-  #     :title      => d[:xlabel],
-  #     :showgrid   => d[:grid],
-  #     :zeroline   => false,
-  #   )
-  # merge!(d_out[:xaxis], if use_axis_field(d[:xticks])
-  #   ax = Dict(
-  #       :titlefont  => plotlyfont(d[:guidefont]),
-  #       :type       => plotlyscale(d[:xscale]),
-  #       :tickfont   => plotlyfont(d[:tickfont]),
-  #       :tickcolor  => fgcolor,
-  #       :linecolor  => fgcolor,
-  #     )
-
-  #   # xlims
-  #   lims = d[:xlims]
-  #   if lims != :auto && limsType(lims) == :limits
-  #     ax[:range] = lims
-  #   end
-
-  #   # xflip
-  #   if d[:xflip]
-  #     ax[:autorange] = "reversed"
-  #   end
-
-  #   # xticks
-  #   ticks = d[:xticks]
-  #   if ticks != :auto
-  #     ttype = ticksType(ticks)
-  #     if ttype == :ticks
-  #       ax[:tickmode] = "array"
-  #       ax[:tickvals] = ticks
-  #     elseif ttype == :ticks_and_labels
-  #       ax[:tickmode] = "array"
-  #       ax[:tickvals], ax[:ticktext] = ticks
-  #     end
-  #   end
-
-  #   ax
-  # else
-  #   Dict(
-  #       :showticklabels => false,
-  #       :showgrid       => false,
-  #     )
-  # end)
-
-
-  # # y-axis
-  # d_out[:yaxis] = Dict(
-  #     :title      => d[:ylabel],
-  #     :showgrid   => d[:grid],
-  #     :zeroline   => false,
-  #   )
-  # merge!(d_out[:yaxis], if use_axis_field(d[:yticks])
-  #   Dict(
-  #       :titlefont  => plotlyfont(d[:guidefont]),
-  #       :type       => plotlyscale(d[:yscale]),
-  #       :tickfont   => plotlyfont(d[:tickfont]),
-  #       :tickcolor  => fgcolor,
-  #       :linecolor  => fgcolor,
-  #     )
-  # else
-  #   Dict(
-  #       :showticklabels => false,
-  #       :showgrid       => false,
-  #     )
-  # end)
-
-  # lims = d[:ylims]
-  # if lims != :auto && limsType(lims) == :limits
-  #   d_out[:yaxis][:range] = lims
-  # end
-
-  # if d[:yflip]
-  #   d_out[:yaxis][:autorange] = "reversed"
-  # end
 
   # legend
   d_out[:showlegend] = d[:legend]
@@ -288,8 +211,11 @@ function get_plot_json(plt::Plot{PlotlyPackage})
     d_out[:annotations] = [get_annotation_dict(ann...) for ann in anns]
   end
 
-  # finally build and return the json
-  JSON.json(d_out)
+  d_out
+end
+
+function get_plot_json(plt::Plot{PlotlyPackage})
+  JSON.json(plotly_layout(plt.plotargs))
 end
 
 
@@ -309,7 +235,7 @@ const _plotly_markers = Dict(
   )
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
-function get_series_json(d::Dict; plot_index = nothing)
+function plotly_series(d::Dict; plot_index = nothing)
   d_out = Dict()
 
   x, y = collect(d[:x]), collect(d[:y])
@@ -366,7 +292,7 @@ function get_series_json(d::Dict; plot_index = nothing)
     d_out[:z] = d[:z].surf
     # d_out[:showscale] = d[:legend]
     if lt == :contour
-      d_out[:ncontours] = d[:nlevels]
+      d_out[:ncontours] = d[:levels]
       d_out[:contours] = Dict(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
     end
     d_out[:colorscale] = plotly_colorscale(d[lt == :contour ? :linecolor : :fillcolor])
@@ -438,14 +364,14 @@ end
 
 # get a list of dictionaries, each representing the series params
 function get_series_json(plt::Plot{PlotlyPackage})
-  JSON.json(map(get_series_json, plt.seriesargs))
+  JSON.json(map(plotly_series, plt.seriesargs))
 end
 
 function get_series_json(subplt::Subplot{PlotlyPackage})
   ds = Dict[]
   for (i,plt) in enumerate(subplt.plts)
     for d in plt.seriesargs
-      push!(ds, get_series_json(d, plot_index = i))
+      push!(ds, plotly_series(d, plot_index = i))
     end
   end
   JSON.json(ds)

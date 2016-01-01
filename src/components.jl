@@ -231,6 +231,8 @@ end
 
 Surface(f::Function, x, y) = Surface(Float64[f(xi,yi) for xi in x, yi in y])
 
+Base.Array(surf::Surface) = surf.surf
+
 # -----------------------------------------------------------------------
 
 type OHLC{T<:Real}

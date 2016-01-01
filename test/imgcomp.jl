@@ -73,7 +73,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
   
   # first 
   Plots._debugMode.on = debug
-  example = ExamplePlots.examples[idx]
+  example = ExamplePlots._examples[idx]
   info("Testing plot: $pkg:$idx:$(example.header)")
   backend(pkg)
   backend()
@@ -88,7 +88,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
   end
 
   # run the example
-  # map(eval, PlotExamples.examples[idx].exprs)
+  # map(eval, PlotExamples._examples[idx].exprs)
 
   # # save the png
   # tmpfn = tempname() * ".png"
@@ -148,7 +148,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
 end
 
 function image_comparison_facts(pkg::Symbol; skip = [], debug = false, sigma = [1,1], eps = 1e-2)
-  for i in 1:length(ExamplePlots.examples)
+  for i in 1:length(ExamplePlots._examples)
     i in skip && continue
     @fact image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) |> success --> true
   end
