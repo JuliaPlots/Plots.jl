@@ -5,11 +5,11 @@ fig = Dict()
 
 fig[:size] = [500, 500]
 
-@compat const gr_linetype = Dict(
+const gr_linetype = Dict(
   :auto => 0, :solid => 1, :dash => 2, :dot => 3, :dashdot => 4,
   :dashdotdot => -1 )
 
-@compat const gr_markertype = Dict(
+const gr_markertype = Dict(
   :none => 1, :ellipse => -1, :rect => -7, :diamond => -13,
   :utriangle => -3, :dtriangle => -5, :pentagon => -14,
   :cross => 2, :xcross => 5, :star5 => 3 )
