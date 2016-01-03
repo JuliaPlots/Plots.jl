@@ -1,10 +1,6 @@
 
 # https://github.com/jheinen/GR.jl
 
-fig = Dict()
-
-fig[:size] = [500, 500]
-
 const gr_linetype = Dict(
   :auto => 0, :solid => 1, :dash => 2, :dot => 3, :dashdot => 4,
   :dashdotdot => -1 )
@@ -15,10 +11,10 @@ const gr_markertype = Dict(
   :cross => 2, :xcross => 5, :star5 => 3 )
 
 function _create_plot(pkg::GRPackage; kw...)
-  global fig
   d = Dict(kw)
+  fig = Dict()
   fig[:size] = d[:size]
-  Plot(nothing, pkg, 0, d, Dict[])
+  Plot(fig, pkg, 0, d, Dict[])
 end
 
 function _add_series(::GRPackage, plt::Plot; kw...)
@@ -39,12 +35,10 @@ function _before_update_plot(plt::Plot{GRPackage})
 end
 
 function _update_plot(plt::Plot{GRPackage}, d::Dict)
-  global fig
-
   GR.clearws()
 
   mwidth, mheight, width, height = GR.inqdspsize()
-  w, h = fig[:size]
+  w, h = plt.o[:size]
   if w > h
     ratio = float(h) / w
     size = mwidth * w / width
@@ -182,9 +176,8 @@ function _update_plot(plt::Plot{GRPackage}, d::Dict)
 end
 
 function _update_plot_pos_size(plt::PlottingObject{GRPackage}, d::Dict)
-  global fig
   if haskey(d, :size)
-    fig[:size] = d[:size]
+    plt.o[:size] = d[:size]
   end
 end
 
