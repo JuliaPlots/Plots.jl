@@ -461,12 +461,12 @@ end
 function dataframes()
   @eval import DataFrames
 
-  @eval function createKWargsList(plt::PlottingObject, df::DataFrames.DataFrame, args...; kw...)
+  @eval function createKWargsList(plt::PlottingObject, df::DataFrames.AbstractDataFrame, args...; kw...)
     createKWargsList(plt, args...; kw..., dataframe = df)
   end
 
   # expecting the column name of a dataframe that was passed in... anything else should error
-  @eval function extractGroupArgs(s::Symbol, df::DataFrames.DataFrame, args...)
+  @eval function extractGroupArgs(s::Symbol, df::DataFrames.AbstractDataFrame, args...)
     if haskey(df, s)
       return extractGroupArgs(df[s])
     else

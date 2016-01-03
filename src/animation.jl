@@ -1,19 +1,18 @@
 
-immutable Animation{P<:PlottingObject}
-  plt::P
+immutable Animation
   dir::ASCIIString
   frames::Vector{ASCIIString}
 end
 
-function Animation(plt::PlottingObject)
-  Animation(plt, mktempdir(), ASCIIString[])
+function Animation()
+  tmpdir = convert(ASCIIString, mktempdir())
+  Animation(tmpdir, ASCIIString[])
 end
-Animation() = Animation(current())
 
-function frame(anim::Animation)
+function frame{P<:PlottingObject}(anim::Animation, plt::P=current())
   i = length(anim.frames) + 1
   filename = @sprintf("%06d.png", i)
-  png(anim.plt, joinpath(anim.dir, filename))
+  png(plt, joinpath(anim.dir, filename))
   push!(anim.frames, filename)
 end
 
@@ -29,11 +28,11 @@ function gif(anim::Animation, fn::@compat(AbstractString) = "tmp.gif"; fps::Inte
   fn = abspath(fn)
 
   try
-    
+
     # high quality
     speed = round(Int, 100 / fps)
     run(`convert -delay $speed -loop 0 $(anim.dir)/*.png $fn`)
-  
+
   catch err
     warn("Tried to create gif using convert (ImageMagick), but got error: $err\nWill try ffmpeg, but it's lower quality...)")
 
