@@ -10,35 +10,13 @@ const gr_markertype = Dict(
   :utriangle => -3, :dtriangle => -5, :pentagon => -14,
   :cross => 2, :xcross => 5, :star5 => 3 )
 
-function _create_plot(pkg::GRPackage; kw...)
-  d = Dict(kw)
-  fig = Dict()
-  fig[:size] = d[:size]
-  Plot(fig, pkg, 0, d, Dict[])
-end
+function gr_display(plt::Plot{GRPackage})
+  d = plt.plotargs
 
-function _add_series(::GRPackage, plt::Plot; kw...)
-  d = Dict(kw)
-  push!(plt.seriesargs, d)
-  plt
-end
-
-function _add_annotations{X,Y,V}(plt::Plot{GRPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
-  for ann in anns
-    # TODO: add the annotation to the plot
-  end
-end
-
-# ----------------------------------------------------------------
-
-function _before_update_plot(plt::Plot{GRPackage})
-end
-
-function _update_plot(plt::Plot{GRPackage}, d::Dict)
   GR.clearws()
 
   mwidth, mheight, width, height = GR.inqdspsize()
-  w, h = plt.o[:size]
+  w, h = d[:size]
   if w > h
     ratio = float(h) / w
     size = mwidth * w / width
@@ -63,12 +41,7 @@ function _update_plot(plt::Plot{GRPackage}, d::Dict)
     ymax = max(maximum(y), ymax)
   end
 
-  scale = 0
-  d[:xscale] == :log10 && (scale |= GR.OPTION_X_LOG)
-  d[:yscale] == :log10 && (scale |= GR.OPTION_Y_LOG)
-  get(d, :xflip, false) && (scale |= GR.OPTION_FLIP_X)
-  get(d, :yflip, false) && (scale |= GR.OPTION_FLIP_Y)
-
+  scale = d[:scale]
   if scale & GR.OPTION_X_LOG == 0
     xmin, xmax = GR.adjustlimits(xmin, xmax)
     majorx = 5
@@ -141,7 +114,7 @@ function _update_plot(plt::Plot{GRPackage}, d::Dict)
     end
   end
 
-  if plt.plotargs[:legend]
+  if d[:legend]
     GR.selntran(0)
     GR.setscale(0)
     w = 0
@@ -175,10 +148,42 @@ function _update_plot(plt::Plot{GRPackage}, d::Dict)
   GR.updatews()
 end
 
-function _update_plot_pos_size(plt::PlottingObject{GRPackage}, d::Dict)
-  if haskey(d, :size)
-    plt.o[:size] = d[:size]
+function _create_plot(pkg::GRPackage; kw...)
+  d = Dict(kw)
+  Plot(nothing, pkg, 0, d, Dict[])
+end
+
+function _add_series(::GRPackage, plt::Plot; kw...)
+  d = Dict(kw)
+  push!(plt.seriesargs, d)
+  plt
+end
+
+function _add_annotations{X,Y,V}(plt::Plot{GRPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+  for ann in anns
+    # TODO: add the annotation to the plot
   end
+end
+
+# ----------------------------------------------------------------
+
+function _before_update_plot(plt::Plot{GRPackage})
+end
+
+function _update_plot(plt::Plot{GRPackage}, d::Dict)
+  scale = 0
+  d[:xscale] == :log10 && (scale |= GR.OPTION_X_LOG)
+  d[:yscale] == :log10 && (scale |= GR.OPTION_Y_LOG)
+  get(d, :xflip, false) && (scale |= GR.OPTION_FLIP_X)
+  get(d, :yflip, false) && (scale |= GR.OPTION_FLIP_Y)
+  plt.plotargs[:scale] = scale
+
+  for k in (:title, :xlabel, :ylabel, :linewidth, :linestyle, :markersize, :markershape)
+    haskey(d, k) && (plt.plotargs[k] = d[k])
+  end
+end
+
+function _update_plot_pos_size(plt::PlottingObject{GRPackage}, d::Dict)
 end
 
 # ----------------------------------------------------------------
@@ -217,7 +222,7 @@ function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{GRPackage
 end
 
 function Base.display(::PlotsDisplay, plt::Plot{GRPackage})
-  # TODO: display/show the plot
+  gr_display(plt)
 end
 
 function Base.display(::PlotsDisplay, plt::Subplot{GRPackage})
