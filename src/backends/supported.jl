@@ -174,6 +174,78 @@ subplotSupported(::PyPlotPackage) = true
 
 
 
+supportedArgs(::GRPackage) = [
+    :annotation,
+    :axis,
+    :background_color,
+    :linecolor,
+    :color_palette,
+    :fillrange,
+    :fillcolor,
+    :foreground_color,
+    :group,
+    :label,
+    :layout,
+    :legend,
+    :linestyle,
+    :linetype,
+    :linewidth,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    # :markerstrokestyle,
+    :n,
+    :nbins,
+    :nc,
+    :nr,
+    # :pos,
+    :smooth,
+    # :ribbon,
+    :show,
+    :size,
+    :title,
+    :windowtitle,
+    :x,
+    :xlabel,
+    :xlims,
+    :xticks,
+    :y,
+    :ylabel,
+    :ylims,
+    :yrightlabel,
+    :yticks,
+    :xscale,
+    :yscale,
+    :xflip,
+    :yflip,
+    :z,
+    :zcolor,  # only supported for scatter/scatter3d
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    # :surface,
+    :nlevels,
+    :fillalpha,
+    :linealpha,
+    :markeralpha,
+  ]
+supportedAxes(::GRPackage) = _allAxes
+supportedTypes(::GRPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
+                                   :scatter, :heatmap, :hexbin, :hist, :density, :bar,
+                                   :hline, :vline, :contour, :path3d, :scatter3d, :surface, :wireframe]
+supportedStyles(::GRPackage) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::GRPackage) = [:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :pentagon, :cross, :xcross, :star5]
+supportedScales(::GRPackage) = [:identity, :log10]
+subplotSupported(::GRPackage) = true
+
+
+# --------------------------------------------------------------------------------------
+
+
+
 supportedArgs(::QwtPackage) = [
     :annotation,
     # :args,
