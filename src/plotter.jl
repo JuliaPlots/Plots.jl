@@ -112,7 +112,7 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, backendInstance(sym))
 # ---------------------------------------------------------
 
 function pickDefaultBackend()
-  for pkgstr in ("PyPlot", "Gr", "Immerse", "Qwt", "Gadfly", "UnicodePlots", "Bokeh", "GLVisualize")
+  for pkgstr in ("PyPlot", "Immerse", "Qwt", "Gadfly", "GR", "UnicodePlots", "Bokeh", "GLVisualize")
     if Pkg.installed(pkgstr) != nothing
       return backend(symbol(lowercase(pkgstr)))
     end
