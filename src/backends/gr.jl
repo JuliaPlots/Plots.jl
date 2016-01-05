@@ -2,12 +2,12 @@
 # https://github.com/jheinen/GR.jl
 
 const gr_linetype = Dict(
-  :auto => 0, :solid => 1, :dash => 2, :dot => 3, :dashdot => 4,
+  :auto => 1, :solid => 1, :dash => 2, :dot => 3, :dashdot => 4,
   :dashdotdot => -1 )
 
 const gr_markertype = Dict(
-  :none => 1, :ellipse => -1, :rect => -7, :diamond => -13,
-  :utriangle => -3, :dtriangle => -5, :pentagon => -14,
+  :auto => 1, :ellipse => -1, :rect => -7, :diamond => -13,
+  :utriangle => -3, :dtriangle => -5, :pentagon => -14, :hexagon => 3,
   :cross => 2, :xcross => 5, :star5 => 3 )
 
 function gr_display(plt::Plot{GRPackage})
@@ -37,8 +37,13 @@ function gr_display(plt::Plot{GRPackage})
     x, y = p[:x], p[:y]
     xmin = min(minimum(x), xmin)
     xmax = max(maximum(x), xmax)
-    ymin = min(minimum(y), ymin)
-    ymax = max(maximum(y), ymax)
+    # catch exception for OHLC vectors
+    try
+      ymin = min(minimum(y), ymin)
+      ymax = max(maximum(y), ymax)
+    catch MethodError
+      ymin, ymax = 0, 1
+    end
   end
 
   scale = d[:scale]
@@ -101,16 +106,27 @@ function gr_display(plt::Plot{GRPackage})
   GR.savestate()
   haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
   haskey(d, :linestyle) && GR.setlinetype(gr_linetype[d[:linestyle]])
-  haskey(d, :markersize) && GR.setmarkersize(d[:markersize])
-  haskey(d, :markershape) && GR.setmarkertype(gr_markertype[d[:markershape]])
+  if haskey(d, :markersize)
+    typeof(d[:markersize]) <: Number && GR.setmarkersize(d[:markersize] / 4.0)
+  else
+    println("TODO: multiple marker sizes")
+  end
+  if haskey(d, :markershape)
+    typeof(d[:markershape]) == Symbol && GR.setmarkertype(gr_markertype[d[:markershape]])
+  else
+    println("TODO: user-defined marker shapes")
+  end
   GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
 
+  GR.uselinespec(" ")
   for p in plt.seriesargs
     GR.uselinespec("")
     if p[:linetype] == :path
       GR.polyline(p[:x], p[:y])
     elseif p[:linetype] == :scatter
       GR.polymarker(p[:x], p[:y])
+    else
+      println("TODO: add support for linetype $(p[:linetype])")
     end
   end
 
@@ -131,6 +147,7 @@ function gr_display(plt::Plot{GRPackage})
     GR.setlinewidth(1)
     GR.drawrect(px - 0.06, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
     haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
+    GR.uselinespec(" ")
     for p in plt.seriesargs
       GR.uselinespec("")
       if p[:linetype] == :path
@@ -155,6 +172,9 @@ end
 
 function _add_series(::GRPackage, plt::Plot; kw...)
   d = Dict(kw)
+  if d[:markershape] == :none
+    d[:markershape] = :ellipse
+  end
   push!(plt.seriesargs, d)
   plt
 end
@@ -188,16 +208,14 @@ end
 
 # ----------------------------------------------------------------
 
-# accessors for x/y data
-
 function Base.getindex(plt::Plot{GRPackage}, i::Int)
-  series = plt.o.lines[i]
-  series.x, series.y
+  d = plt.seriesargs[i]
+  d[:x], d[:y]
 end
- 
+
 function Base.setindex!(plt::Plot{GRPackage}, xy::Tuple, i::Integer)
-  series = plt.o.lines[i]
-  series.x, series.y = xy
+  d = plt.seriesargs[i]
+  d[:x], d[:y] = xy
   plt
 end
 
@@ -205,6 +223,7 @@ end
 
 function _create_subplot(subplt::Subplot{GRPackage}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+  true
 end
 
 function _expand_limits(lims, plt::Plot{GRPackage}, isx::Bool)
@@ -218,7 +237,8 @@ end
 # ----------------------------------------------------------------
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{GRPackage})
-  # TODO: write a png to io
+  isijulia() && return
+  println("TODO: write a png to io")
 end
 
 function Base.display(::PlotsDisplay, plt::Plot{GRPackage})
