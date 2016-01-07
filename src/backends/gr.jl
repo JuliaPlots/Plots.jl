@@ -166,6 +166,7 @@ function gr_display(plt::Plot{GRPackage})
 end
 
 function _create_plot(pkg::GRPackage; kw...)
+  isijulia() && GR.inline("png")
   d = Dict(kw)
   Plot(nothing, pkg, 0, d, Dict[])
 end
@@ -236,9 +237,10 @@ end
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{GRPackage})
-  isijulia() && return
-  println("TODO: write a png to io")
+function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{GRPackage})
+  gr_display(plt)
+  GR.emergencyclosegks()
+  write(io, readall("gks.png"))
 end
 
 function Base.display(::PlotsDisplay, plt::Plot{GRPackage})
