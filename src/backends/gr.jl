@@ -83,19 +83,19 @@ function gr_display(plt::Plot{GRPackage})
   GR.axes(xtick, ytick, xorg[1], yorg[1], majorx, majory, ticksize)
   GR.axes(xtick, ytick, xorg[2], yorg[2], -majorx, -majory, -ticksize)
 
-  if haskey(d, :title)
+  if get(d, :title, "") != ""
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.text(0.5, min(ratio, 1), d[:title])
     GR.restorestate()
   end
-  if haskey(d, :xlabel)
+  if get(d, :xlabel, "") != ""
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
     GR.text(0.5, 0, d[:xlabel])
     GR.restorestate()
   end
-  if haskey(d, :ylabel)
+  if get(d, :ylabel, "") != ""
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
