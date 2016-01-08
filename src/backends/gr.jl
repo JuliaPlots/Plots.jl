@@ -10,6 +10,13 @@ const gr_markertype = Dict(
   :utriangle => -3, :dtriangle => -5, :pentagon => -14, :hexagon => 3,
   :cross => 2, :xcross => 5, :star5 => 3 )
 
+const gr_halign = Dict(:left => 1, :hcenter => 2, :right => 3)
+const gr_valign = Dict(:top => 1, :vcenter => 3, :bottom => 5)
+
+const gr_font_family = Dict(
+  "times" => 1, "helvetica" => 5, "courier" => 9, "bookman" => 14,
+  "newcenturyschlbk" => 18, "avantgarde" => 22, "palatino" => 26)
+
 function gr_getcolorind(v)
   c = getColor(v)
   return convert(Int, GR.inqcolorfromrgb(c.r, c.g, c.b))
@@ -177,8 +184,27 @@ function gr_display(plt::Plot{GRPackage})
     end
     GR.selntran(1)
   end
-
   GR.restorestate()
+
+  if haskey(d, :anns)
+    GR.savestate()
+    for ann in d[:anns]
+      x, y, val = ann
+      x, y = GR.wctondc(x, y)
+      alpha = val.font.rotation
+      family = lowercase(val.font.family)
+      GR.setcharheight(0.7 * val.font.pointsize / d[:size][2])
+      GR.setcharup(sin(val.font.rotation), cos(val.font.rotation))
+      if haskey(gr_font_family, family)
+        GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
+      end
+      GR.settextcolorind(gr_getcolorind(val.font.color))
+      GR.settextalign(gr_halign[val.font.halign], gr_valign[val.font.valign])
+      GR.text(x, y, val.str)
+    end
+    GR.restorestate()
+  end
+
   GR.updatews()
 end
 
@@ -198,8 +224,10 @@ function _add_series(::GRPackage, plt::Plot; kw...)
 end
 
 function _add_annotations{X,Y,V}(plt::Plot{GRPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
-  for ann in anns
-    # TODO: add the annotation to the plot
+  if haskey(plt.plotargs, :anns)
+    append!(plt.plotargs[:anns], anns)
+  else
+    plt.plotargs[:anns] = anns
   end
 end
 
