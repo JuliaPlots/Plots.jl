@@ -10,6 +10,11 @@ const gr_markertype = Dict(
   :utriangle => -3, :dtriangle => -5, :pentagon => -14, :hexagon => 3,
   :cross => 2, :xcross => 5, :star5 => 3 )
 
+function gr_getcolorind(v)
+  c = getColor(v)
+  return convert(Int, GR.inqcolorfromrgb(c.r, c.g, c.b))
+end
+
 function gr_display(plt::Plot{GRPackage})
   d = plt.plotargs
 
@@ -105,25 +110,21 @@ function gr_display(plt::Plot{GRPackage})
 
   GR.savestate()
   haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
-  haskey(d, :linestyle) && GR.setlinetype(gr_linetype[d[:linestyle]])
   if haskey(d, :markersize)
     typeof(d[:markersize]) <: Number && GR.setmarkersize(d[:markersize] / 4.0)
   else
     println("TODO: multiple marker sizes")
   end
-  if haskey(d, :markershape)
-    typeof(d[:markershape]) == Symbol && GR.setmarkertype(gr_markertype[d[:markershape]])
-  else
-    println("TODO: user-defined marker shapes")
-  end
   GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
 
-  GR.uselinespec(" ")
   for p in plt.seriesargs
-    GR.uselinespec("")
     if p[:linetype] == :path
+      haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
+      haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
       GR.polyline(p[:x], p[:y])
     elseif p[:linetype] == :scatter
+      haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
+      haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
       GR.polymarker(p[:x], p[:y])
     else
       println("TODO: add support for linetype $(p[:linetype])")
@@ -134,8 +135,15 @@ function gr_display(plt::Plot{GRPackage})
     GR.selntran(0)
     GR.setscale(0)
     w = 0
+    i = 0
     for p in plt.seriesargs
-      tbx, tby = GR.inqtext(0, 0, p[:label])
+      if typeof(p[:label]) <: Array
+        i += 1
+        lab = p[:label][i]
+      else
+        lab = p[:label]
+      end
+      tbx, tby = GR.inqtext(0, 0, lab)
       w = max(w, tbx[3])
     end
     px = viewport[2] - 0.05 - w
@@ -147,15 +155,24 @@ function gr_display(plt::Plot{GRPackage})
     GR.setlinewidth(1)
     GR.drawrect(px - 0.06, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
     haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
-    GR.uselinespec(" ")
+    i = 0
     for p in plt.seriesargs
-      GR.uselinespec("")
       if p[:linetype] == :path
+        haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
+        haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
         GR.polyline([px - 0.05, px - 0.01], [py, py])
       elseif p[:linetype] == :scatter
-        GR.polymarker([px - 0.05, px - 0.01], [py, py])
+        haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
+        haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
+        GR.polymarker([px - 0.04, px - 0.02], [py, py])
       end
-      GR.text(px, py, p[:label])
+      if typeof(p[:label]) <: Array
+        i += 1
+        lab = p[:label][i]
+      else
+        lab = p[:label]
+      end
+      GR.text(px, py, lab)
       py -= 0.03
     end
     GR.selntran(1)
@@ -199,7 +216,7 @@ function _update_plot(plt::Plot{GRPackage}, d::Dict)
   get(d, :yflip, false) && (scale |= GR.OPTION_FLIP_Y)
   plt.plotargs[:scale] = scale
 
-  for k in (:title, :xlabel, :ylabel, :linewidth, :linestyle, :markersize, :markershape)
+  for k in (:title, :xlabel, :ylabel)
     haskey(d, k) && (plt.plotargs[k] = d[k])
   end
 end
@@ -238,6 +255,7 @@ end
 # ----------------------------------------------------------------
 
 function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{GRPackage})
+  isijulia() || return
   gr_display(plt)
   GR.emergencyclosegks()
   write(io, readall("gks.png"))
