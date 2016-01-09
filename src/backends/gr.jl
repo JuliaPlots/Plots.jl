@@ -86,6 +86,13 @@ function gr_display(plt::Plot{GRPackage})
 
   GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
   GR.setwindow(xmin, xmax, ymin, ymax)
+  if haskey(d, :background_color)
+    GR.savestate()
+    GR.setfillintstyle(GR.INTSTYLE_SOLID)
+    GR.setfillcolorind(gr_getcolorind(d[:background_color]))
+    GR.fillrect(xmin, xmax, ymin, ymax)
+    GR.restorestate()
+  end
   GR.setscale(scale)
 
   charheight = 0.03 * (viewport[4] - viewport[3])
@@ -125,6 +132,7 @@ function gr_display(plt::Plot{GRPackage})
   GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
 
   for p in plt.seriesargs
+    #haskey(p, :fillrange) && println("TODO: fill between")
     if p[:linetype] == :path
       haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
       haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
