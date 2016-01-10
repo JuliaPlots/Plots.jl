@@ -124,23 +124,42 @@ function gr_display(plt::Plot{GRPackage})
 
   GR.savestate()
   haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
-  if haskey(d, :markersize)
-    typeof(d[:markersize]) <: Number && GR.setmarkersize(d[:markersize] / 4.0)
-  else
-    println("TODO: multiple marker sizes")
-  end
   GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
 
   for p in plt.seriesargs
-    #haskey(p, :fillrange) && println("TODO: fill between")
     if p[:linetype] == :path
+      if haskey(p, :fillcolor)
+        GR.setfillcolorind(gr_getcolorind(p[:fillcolor]))
+        GR.setfillintstyle(GR.INTSTYLE_SOLID)
+      end
       haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
       haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
+      if p[:fillrange] != nothing
+        GR.fillarea([p[:x][1]; p[:x]; p[:x][length(p[:x])]], [p[:fillrange]; p[:y]; p[:fillrange]])
+      end
       GR.polyline(p[:x], p[:y])
     elseif p[:linetype] == :scatter
       haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
       haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
-      GR.polymarker(p[:x], p[:y])
+      if haskey(d, :markersize)
+        if typeof(d[:markersize]) <: Number
+          GR.setmarkersize(d[:markersize] / 4.0)
+          GR.polymarker(p[:x], p[:y])
+        else
+          c = p[:markercolor]
+          GR.setcolormap(GR.COLORMAP_COOLWARM)
+          for i = 1:length(p[:x])
+            if isa(c, ColorGradient) && p[:zcolor] != nothing
+              ci = round(Int, 1000 + p[:zcolor][i] * 255)
+              GR.setmarkercolorind(ci)
+            end
+            GR.setmarkersize(d[:markersize][i] / 4.0)
+            GR.polymarker([p[:x][i]], [p[:y][i]])
+          end
+        end
+      else
+        GR.polymarker(p[:x], p[:y])
+      end
     else
       println("TODO: add support for linetype $(p[:linetype])")
     end
