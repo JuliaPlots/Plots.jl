@@ -44,5 +44,10 @@ function Base.display(::PlotsDisplay, plt::Plot{PlotlyPackage})
 end
 
 function Base.display(::PlotsDisplay, plt::Subplot{PlotlyPackage})
-    error()    
+    error()
+end
+
+for (mime, fmt) in PlotlyJS._mimeformats
+    @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyPackage}) =
+        writemime(io, m, p.o)
 end
