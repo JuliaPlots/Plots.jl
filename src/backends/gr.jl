@@ -147,7 +147,7 @@ function gr_display(plt::Plot{GRPackage})
           GR.polymarker(p[:x], p[:y])
         else
           c = p[:markercolor]
-          GR.setcolormap(GR.COLORMAP_COOLWARM)
+          GR.setcolormap(-GR.COLORMAP_GLOWING)
           for i = 1:length(p[:x])
             if isa(c, ColorGradient) && p[:zcolor] != nothing
               ci = round(Int, 1000 + p[:zcolor][i] * 255)
