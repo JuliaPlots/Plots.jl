@@ -46,7 +46,11 @@ function gr_display(plt::Plot{GRPackage})
   xmin = ymin = typemax(Float64)
   xmax = ymax = typemin(Float64)
   for p in plt.seriesargs
-    x, y = p[:x], p[:y]
+    if p[:linetype] == :hist
+      x, y = Base.hist(p[:y])
+    else
+      x, y = p[:x], p[:y]
+    end
     xmin = min(minimum(x), xmin)
     xmax = max(maximum(x), xmax)
     # catch exception for OHLC vectors
@@ -126,6 +130,8 @@ function gr_display(plt::Plot{GRPackage})
   haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
   GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
 
+  legend = false
+
   for p in plt.seriesargs
     if p[:linetype] == :path
       if haskey(p, :fillcolor)
@@ -138,6 +144,7 @@ function gr_display(plt::Plot{GRPackage})
         GR.fillarea([p[:x][1]; p[:x]; p[:x][length(p[:x])]], [p[:fillrange]; p[:y]; p[:fillrange]])
       end
       GR.polyline(p[:x], p[:y])
+      legend = true
     elseif p[:linetype] == :scatter
       haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
       haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
@@ -160,12 +167,24 @@ function gr_display(plt::Plot{GRPackage})
       else
         GR.polymarker(p[:x], p[:y])
       end
+      legend = true
+    elseif p[:linetype] == :hist
+      h = Base.hist(p[:y])
+      x, y = float(collect(h[1])), float(h[2])
+      for i = 2:length(y)
+        GR.setfillcolorind(gr_getcolorind(p[:fillcolor]))
+        GR.setfillintstyle(GR.INTSTYLE_SOLID)
+        GR.fillrect(x[i-1], x[i], ymin, y[i])
+        GR.setfillcolorind(1)
+        GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
+        GR.fillrect(x[i-1], x[i], ymin, y[i])
+      end
     else
       println("TODO: add support for linetype $(p[:linetype])")
     end
   end
 
-  if d[:legend]
+  if d[:legend] && legend
     GR.selntran(0)
     GR.setscale(0)
     w = 0
