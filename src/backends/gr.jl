@@ -6,7 +6,7 @@ const gr_linetype = Dict(
   :dashdotdot => -1 )
 
 const gr_markertype = Dict(
-  :auto => 1, :ellipse => -1, :rect => -7, :diamond => -13,
+  :auto => 1, :none => 1, :ellipse => -1, :rect => -7, :diamond => -13,
   :utriangle => -3, :dtriangle => -5, :pentagon => -14, :hexagon => 3,
   :cross => 2, :xcross => 5, :star5 => 3 )
 
@@ -145,7 +145,8 @@ function gr_display(plt::Plot{GRPackage})
       end
       GR.polyline(p[:x], p[:y])
       legend = true
-    elseif p[:linetype] == :scatter
+    end
+    if p[:linetype] == :scatter || p[:markershape] != :none
       haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
       haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
       if haskey(d, :markersize)
@@ -179,7 +180,10 @@ function gr_display(plt::Plot{GRPackage})
         GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
         GR.fillrect(x[i-1], x[i], ymin, y[i])
       end
-    else
+    elseif p[:linetype] in [:line, :steppre, :steppost, :sticks,
+                            :heatmap, :hexbin, :density, :bar, :hline, :vline,
+                            :contour, :path3d, :scatter3d, :surface,
+                            :wireframe, :ohlc, :pie]
       println("TODO: add support for linetype $(p[:linetype])")
     end
   end
@@ -204,6 +208,7 @@ function gr_display(plt::Plot{GRPackage})
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     GR.setfillcolorind(0)
     GR.fillrect(px - 0.06, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
+    GR.setlinetype(1)
     GR.setlinecolorind(1)
     GR.setlinewidth(1)
     GR.drawrect(px - 0.06, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
@@ -214,7 +219,8 @@ function gr_display(plt::Plot{GRPackage})
         haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
         haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
         GR.polyline([px - 0.05, px - 0.01], [py, py])
-      elseif p[:linetype] == :scatter
+      end
+      if p[:linetype] == :scatter || p[:markershape] != :none
         haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
         haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
         GR.polymarker([px - 0.04, px - 0.02], [py, py])
@@ -262,9 +268,6 @@ end
 
 function _add_series(::GRPackage, plt::Plot; kw...)
   d = Dict(kw)
-  if d[:markershape] == :none
-    d[:markershape] = :ellipse
-  end
   push!(plt.seriesargs, d)
   plt
 end
