@@ -180,8 +180,18 @@ function gr_display(plt::Plot{GRPackage})
         GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
         GR.fillrect(x[i-1], x[i], ymin, y[i])
       end
+    elseif p[:linetype] in [:hline, :vline]
+      haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
+      haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
+      for xy in p[:y]
+        if p[:linetype] == :hline
+          GR.polyline([xmin, xmax], [xy, xy])
+        else
+          GR.polyline([xy, xy], [ymin, ymax])
+        end
+      end
     elseif p[:linetype] in [:line, :steppre, :steppost, :sticks,
-                            :heatmap, :hexbin, :density, :bar, :hline, :vline,
+                            :heatmap, :hexbin, :density, :bar,
                             :contour, :path3d, :scatter3d, :surface,
                             :wireframe, :ohlc, :pie]
       println("TODO: add support for linetype $(p[:linetype])")
