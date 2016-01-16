@@ -46,7 +46,9 @@ function gr_display(plt::Plot{GRPackage})
   xmin = ymin = typemax(Float64)
   xmax = ymax = typemin(Float64)
   for p in plt.seriesargs
-    if p[:linetype] == :hist
+    if p[:linetype] == :bar
+      x, y = 1:length(p[:y]), p[:y]
+    elseif p[:linetype] == :hist
       x, y = Base.hist(p[:y])
     else
       x, y = p[:x], p[:y]
@@ -169,6 +171,16 @@ function gr_display(plt::Plot{GRPackage})
         GR.polymarker(p[:x], p[:y])
       end
       legend = true
+    elseif p[:linetype] == :bar
+      y = p[:y]
+      for i = 1:length(y)
+        GR.setfillcolorind(gr_getcolorind(p[:fillcolor]))
+        GR.setfillintstyle(GR.INTSTYLE_SOLID)
+        GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
+        GR.setfillcolorind(1)
+        GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
+        GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
+      end
     elseif p[:linetype] == :hist
       h = Base.hist(p[:y])
       x, y = float(collect(h[1])), float(h[2])
@@ -191,7 +203,7 @@ function gr_display(plt::Plot{GRPackage})
         end
       end
     elseif p[:linetype] in [:line, :steppre, :steppost, :sticks,
-                            :heatmap, :hexbin, :density, :bar,
+                            :heatmap, :hexbin, :density,
                             :contour, :path3d, :scatter3d, :surface,
                             :wireframe, :ohlc, :pie]
       println("TODO: add support for linetype $(p[:linetype])")
