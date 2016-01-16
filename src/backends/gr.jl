@@ -135,20 +135,46 @@ function gr_display(plt::Plot{GRPackage})
   legend = false
 
   for p in plt.seriesargs
+    if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline]
+      haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
+      haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
+    end
     if p[:linetype] == :path
       if haskey(p, :fillcolor)
         GR.setfillcolorind(gr_getcolorind(p[:fillcolor]))
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
       end
-      haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
-      haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
       if p[:fillrange] != nothing
         GR.fillarea([p[:x][1]; p[:x]; p[:x][length(p[:x])]], [p[:fillrange]; p[:y]; p[:fillrange]])
       end
       GR.polyline(p[:x], p[:y])
       legend = true
     end
-    if p[:linetype] == :scatter || p[:markershape] != :none
+    if p[:linetype] == :line
+      GR.polyline(p[:x], p[:y])
+      legend = true
+    elseif p[:linetype] in [:steppre, :steppost]
+      x = [p[:x][1]]
+      y = [p[:y][1]]
+      n = length(p[:x])
+      for i = 2:n
+        if p[:linetype] == :steppre
+          x = [x; p[:x][i-1]; p[:x][i]]
+          y = [y; p[:y][i];   p[:y][i]]
+        else
+          x = [x; p[:x][i];   p[:x][i]]
+          y = [y; p[:y][i-1]; p[:y][i]]
+        end
+      end
+      GR.polyline(x, y)
+      legend = true
+    elseif p[:linetype] == :sticks
+      x, y = p[:x], p[:y]
+      for i = 1:length(y)
+        GR.polyline([x[i], x[i]], [ymin, y[i]])
+      end
+      legend = true
+    elseif p[:linetype] == :scatter || p[:markershape] != :none
       haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
       haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
       if haskey(d, :markersize)
@@ -193,8 +219,6 @@ function gr_display(plt::Plot{GRPackage})
         GR.fillrect(x[i-1], x[i], ymin, y[i])
       end
     elseif p[:linetype] in [:hline, :vline]
-      haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
-      haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
       for xy in p[:y]
         if p[:linetype] == :hline
           GR.polyline([xmin, xmax], [xy, xy])
@@ -202,8 +226,7 @@ function gr_display(plt::Plot{GRPackage})
           GR.polyline([xy, xy], [ymin, ymax])
         end
       end
-    elseif p[:linetype] in [:line, :steppre, :steppost, :sticks,
-                            :heatmap, :hexbin, :density,
+    elseif p[:linetype] in [:heatmap, :hexbin, :density,
                             :contour, :path3d, :scatter3d, :surface,
                             :wireframe, :ohlc, :pie]
       println("TODO: add support for linetype $(p[:linetype])")
@@ -237,7 +260,7 @@ function gr_display(plt::Plot{GRPackage})
     haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
     i = 0
     for p in plt.seriesargs
-      if p[:linetype] == :path
+      if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks]
         haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
         haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
         GR.polyline([px - 0.05, px - 0.01], [py, py])
