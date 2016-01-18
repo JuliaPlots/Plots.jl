@@ -6,7 +6,7 @@ const gr_linetype = Dict(
   :dashdotdot => -1 )
 
 const gr_markertype = Dict(
-  :auto => 1, :none => 1, :ellipse => -1, :rect => -7, :diamond => -13,
+  :auto => 1, :none => -1, :ellipse => -1, :rect => -7, :diamond => -13,
   :utriangle => -3, :dtriangle => -5, :pentagon => -14, :hexagon => 3,
   :cross => 2, :xcross => 5, :star5 => 3 )
 
@@ -20,6 +20,15 @@ const gr_font_family = Dict(
 function gr_getcolorind(v)
   c = getColor(v)
   return convert(Int, GR.inqcolorfromrgb(c.r, c.g, c.b))
+end
+
+function gr_getaxisind(p)
+  axis = get(p, :axis, :none)
+  if axis in [:none, :left]
+    return 1
+  else
+    return 2
+  end
 end
 
 function gr_display(plt::Plot{GRPackage})
@@ -43,70 +52,94 @@ function gr_display(plt::Plot{GRPackage})
     viewport = [0.1 * ratio, 0.95 * ratio, 0.1, 0.95]
   end
 
-  xmin = ymin = typemax(Float64)
-  xmax = ymax = typemin(Float64)
-  for p in plt.seriesargs
-    if p[:linetype] == :bar
-      x, y = 1:length(p[:y]), p[:y]
-    elseif p[:linetype] == :hist
-      x, y = Base.hist(p[:y])
-    else
-      x, y = p[:x], p[:y]
+  extrema = zeros(2, 4)
+  num_axes = 1
+
+  for axis = 1:2
+    xmin = ymin = typemax(Float64)
+    xmax = ymax = typemin(Float64)
+    for p in plt.seriesargs
+      if axis == gr_getaxisind(p)
+        if axis == 2
+          num_axes = 2
+        end
+        if p[:linetype] == :bar
+          x, y = 1:length(p[:y]), p[:y]
+        elseif p[:linetype] == :hist
+          x, y = Base.hist(p[:y])
+        else
+          x, y = p[:x], p[:y]
+        end
+        xmin = min(minimum(x), xmin)
+        xmax = max(maximum(x), xmax)
+        # catch exception for OHLC vectors
+        try
+          ymin = min(minimum(y), ymin)
+          ymax = max(maximum(y), ymax)
+        catch MethodError
+          ymin, ymax = 0, 1
+        end
+      end
     end
-    xmin = min(minimum(x), xmin)
-    xmax = max(maximum(x), xmax)
-    # catch exception for OHLC vectors
-    try
-      ymin = min(minimum(y), ymin)
-      ymax = max(maximum(y), ymax)
-    catch MethodError
-      ymin, ymax = 0, 1
-    end
+    extrema[axis,:] = [xmin, xmax, ymin, ymax]
   end
+
+  if num_axes == 2
+    viewport[2] -= 0.05
+  end
+  GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
 
   scale = d[:scale]
-  if scale & GR.OPTION_X_LOG == 0
-    xmin, xmax = GR.adjustlimits(xmin, xmax)
-    majorx = 5
-    xtick = GR.tick(xmin, xmax) / majorx
-  else
-    xtick = majorx = 1
-  end
-  if scale & GR.OPTION_Y_LOG == 0
-    ymin, ymax = GR.adjustlimits(ymin, ymax)
-    majory = 5
-    ytick = GR.tick(ymin, ymax) / majory
-  else
-    ytick = majory = 1
-  end
-  if scale & GR.OPTION_FLIP_X == 0
-    xorg = (xmin, xmax)
-  else
-    xorg = (xmax, xmin)
-  end
-  if scale & GR.OPTION_FLIP_Y == 0
-    yorg = (ymin, ymax)
-  else
-    yorg = (ymax, ymin)
-  end
+  for axis = 1:num_axes
+    xmin, xmax, ymin, ymax = extrema[axis,:]
+    if scale & GR.OPTION_X_LOG == 0
+      xmin, xmax = GR.adjustlimits(xmin, xmax)
+      majorx = 5
+      xtick = GR.tick(xmin, xmax) / majorx
+    else
+      xtick = majorx = 1
+    end
+    if scale & GR.OPTION_Y_LOG == 0
+      ymin, ymax = GR.adjustlimits(ymin, ymax)
+      majory = 5
+      ytick = GR.tick(ymin, ymax) / majory
+    else
+      ytick = majory = 1
+    end
+    if scale & GR.OPTION_FLIP_X == 0
+      xorg = (xmin, xmax)
+    else
+      xorg = (xmax, xmin)
+    end
+    if scale & GR.OPTION_FLIP_Y == 0
+      yorg = (ymin, ymax)
+    else
+      yorg = (ymax, ymin)
+    end
 
-  GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
-  GR.setwindow(xmin, xmax, ymin, ymax)
-  if haskey(d, :background_color)
-    GR.savestate()
-    GR.setfillintstyle(GR.INTSTYLE_SOLID)
-    GR.setfillcolorind(gr_getcolorind(d[:background_color]))
-    GR.fillrect(xmin, xmax, ymin, ymax)
-    GR.restorestate()
-  end
-  GR.setscale(scale)
+    GR.setwindow(xmin, xmax, ymin, ymax)
+    if axis == 1 && haskey(d, :background_color)
+      GR.savestate()
+      GR.setfillintstyle(GR.INTSTYLE_SOLID)
+      GR.setfillcolorind(gr_getcolorind(d[:background_color]))
+      GR.fillrect(xmin, xmax, ymin, ymax)
+      GR.restorestate()
+    end
+    GR.setscale(scale)
 
-  charheight = 0.03 * (viewport[4] - viewport[3])
-  GR.setcharheight(charheight)
-  GR.grid(xtick, ytick, 0, 0, majorx, majory)
-  ticksize = 0.0125 * (viewport[2] - viewport[1])
-  GR.axes(xtick, ytick, xorg[1], yorg[1], majorx, majory, ticksize)
-  GR.axes(xtick, ytick, xorg[2], yorg[2], -majorx, -majory, -ticksize)
+    charheight = 0.03 * (viewport[4] - viewport[3])
+    GR.setcharheight(charheight)
+    GR.grid(xtick, ytick, 0, 0, majorx, majory)
+    ticksize = 0.0125 * (viewport[2] - viewport[1])
+    if num_axes == 1
+      GR.axes(xtick, ytick, xorg[1], yorg[1], majorx, majory, ticksize)
+      GR.axes(xtick, ytick, xorg[2], yorg[2], -majorx, -majory, -ticksize)
+    elseif axis == 1
+      GR.axes(xtick, ytick, xorg[1], yorg[1], majorx, majory, ticksize)
+    else
+      GR.axes(xtick, ytick, xorg[2], yorg[2], -majorx, majory, -ticksize)
+    end
+  end
 
   if get(d, :title, "") != ""
     GR.savestate()
@@ -127,6 +160,13 @@ function gr_display(plt::Plot{GRPackage})
     GR.text(0, 0.5 * (viewport[3] + viewport[4]), d[:ylabel])
     GR.restorestate()
   end
+  if get(d, :yrightlabel, "") != ""
+    GR.savestate()
+    GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+    GR.setcharup(1, 0)
+    GR.text(1, 0.5 * (viewport[3] + viewport[4]), d[:yrightlabel])
+    GR.restorestate()
+  end
 
   GR.savestate()
   haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
@@ -135,6 +175,8 @@ function gr_display(plt::Plot{GRPackage})
   legend = false
 
   for p in plt.seriesargs
+    xmin, xmax, ymin, ymax = extrema[gr_getaxisind(p),:]
+    GR.setwindow(xmin, xmax, ymin, ymax)
     if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline]
       haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
       haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
@@ -154,17 +196,20 @@ function gr_display(plt::Plot{GRPackage})
       GR.polyline(p[:x], p[:y])
       legend = true
     elseif p[:linetype] in [:steppre, :steppost]
-      x = [p[:x][1]]
-      y = [p[:y][1]]
       n = length(p[:x])
+      x = zeros(2*n + 1)
+      y = zeros(2*n + 1)
+      x[1], y[1] = p[:x][1], p[:y][1]
+      j = 2
       for i = 2:n
         if p[:linetype] == :steppre
-          x = [x; p[:x][i-1]; p[:x][i]]
-          y = [y; p[:y][i];   p[:y][i]]
+          x[j], x[j+1] = p[:x][i-1], p[:x][i]
+          y[j], y[j+1] = p[:y][i],   p[:y][i]
         else
-          x = [x; p[:x][i];   p[:x][i]]
-          y = [y; p[:y][i-1]; p[:y][i]]
+          x[j], x[j+1] = p[:x][i],   p[:x][i]
+          y[j], y[j+1] = p[:y][i-1], p[:y][i]
         end
+        j += 2
       end
       GR.polyline(x, y)
       legend = true
