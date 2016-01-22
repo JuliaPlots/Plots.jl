@@ -297,23 +297,27 @@ function gr_display(plt::Plot{GRPackage})
     py = viewport[4] - 0.06
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     GR.setfillcolorind(0)
-    GR.fillrect(px - 0.06, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
+    GR.fillrect(px - 0.08, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
     GR.setlinetype(1)
     GR.setlinecolorind(1)
     GR.setlinewidth(1)
-    GR.drawrect(px - 0.06, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
+    GR.drawrect(px - 0.08, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
     haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
     i = 0
     for p in plt.seriesargs
       if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks]
         haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
         haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
-        GR.polyline([px - 0.05, px - 0.01], [py, py])
+        GR.polyline([px - 0.07, px - 0.01], [py, py])
       end
       if p[:linetype] == :scatter || p[:markershape] != :none
         haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
         haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
-        GR.polymarker([px - 0.04, px - 0.02], [py, py])
+        if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks]
+          GR.polymarker([px - 0.06, px - 0.02], [py, py])
+        else
+          GR.polymarker([px - 0.06, px - 0.04, px - 0.02], [py, py, py])
+        end
       end
       if typeof(p[:label]) <: Array
         i += 1
