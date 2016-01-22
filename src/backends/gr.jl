@@ -351,7 +351,7 @@ function gr_display(plt::Plot{GRPackage})
 end
 
 function _create_plot(pkg::GRPackage; kw...)
-  isijulia() && GR.inline("png")
+  isijulia() && GR.inline("svg")
   d = Dict(kw)
   Plot(nothing, pkg, 0, d, Dict[])
 end
@@ -422,10 +422,18 @@ end
 # ----------------------------------------------------------------
 
 function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{GRPackage})
-  isijulia() || return
+  ENV["GKS_WSTYPE"] = "png"
   gr_display(plt)
   GR.emergencyclosegks()
   write(io, readall("gks.png"))
+end
+
+function Base.writemime(io::IO, m::MIME"image/svg+xml", plt::PlottingObject{GRPackage})
+  isijulia() || return
+  ENV["GKS_WSTYPE"] = "svg"
+  gr_display(plt)
+  GR.emergencyclosegks()
+  write(io, readall("gks.svg"))
 end
 
 function Base.display(::PlotsDisplay, plt::Plot{GRPackage})
