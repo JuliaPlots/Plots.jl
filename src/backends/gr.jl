@@ -31,25 +31,33 @@ function gr_getaxisind(p)
   end
 end
 
-function gr_display(plt::Plot{GRPackage})
+function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
+                    subplot=[0, 1, 0, 1])
   d = plt.plotargs
 
-  GR.clearws()
+  clear && GR.clearws()
 
   mwidth, mheight, width, height = GR.inqdspsize()
   w, h = d[:size]
+  viewport = zeros(4)
   if w > h
     ratio = float(h) / w
-    size = mwidth * w / width
-    GR.setwsviewport(0, size, 0, size * ratio)
+    msize = mwidth * w / width
+    GR.setwsviewport(0, msize, 0, msize * ratio)
     GR.setwswindow(0, 1, 0, ratio)
-    viewport = [0.1, 0.95, 0.1 * ratio, 0.95 * ratio]
+    viewport[1] = subplot[1] + 0.1  * (subplot[2] - subplot[1])
+    viewport[2] = subplot[1] + 0.95 * (subplot[2] - subplot[1])
+    viewport[3] = ratio * (subplot[3] + 0.1  * (subplot[4] - subplot[3]))
+    viewport[4] = ratio * (subplot[3] + 0.95 * (subplot[4] - subplot[3]))
   else
     ratio = float(w) / h
-    size = mheight * h / height
-    GR.setwsviewport(0, size * ratio, 0, size)
+    msize = mheight * h / height
+    GR.setwsviewport(0, msize * ratio, 0, msize)
     GR.setwswindow(0, ratio, 0, 1)
-    viewport = [0.1 * ratio, 0.95 * ratio, 0.1, 0.95]
+    viewport[1] = ratio * (subplot[1] + 0.1  * (subplot[2] - subplot[1]))
+    viewport[2] = ratio * (subplot[1] + 0.95 * (subplot[2] - subplot[1]))
+    viewport[3] = subplot[3] + 0.1  * (subplot[4] - subplot[3])
+    viewport[4] = subplot[3] + 0.95 * (subplot[4] - subplot[3])
   end
 
   extrema = zeros(2, 4)
@@ -65,8 +73,18 @@ function gr_display(plt::Plot{GRPackage})
         end
         if p[:linetype] == :bar
           x, y = 1:length(p[:y]), p[:y]
-        elseif p[:linetype] == :hist
+        elseif p[:linetype] in [:hist, :density]
           x, y = Base.hist(p[:y])
+        elseif p[:linetype] in [:heatmap, :hexbin]
+          E = zeros(length(p[:x]),2)
+          E[:,1] = p[:x]
+          E[:,2] = p[:y]
+          if isa(p[:nbins], Tuple)
+            xbins, ybins = p[:nbins]
+          else
+            xbins = ybins = p[:nbins]
+          end
+          x, y, H = Base.hist2d(E, xbins, ybins)
         else
           x, y = p[:x], p[:y]
         end
@@ -127,10 +145,11 @@ function gr_display(plt::Plot{GRPackage})
     end
     GR.setscale(scale)
 
-    charheight = 0.03 * (viewport[4] - viewport[3])
+    diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
+    charheight = max(0.018 * diag, 0.01)
     GR.setcharheight(charheight)
+    ticksize = 0.0075 * diag
     GR.grid(xtick, ytick, 0, 0, majorx, majory)
-    ticksize = 0.0125 * (viewport[2] - viewport[1])
     if num_axes == 1
       GR.axes(xtick, ytick, xorg[1], yorg[1], majorx, majory, ticksize)
       GR.axes(xtick, ytick, xorg[2], yorg[2], -majorx, -majory, -ticksize)
@@ -252,7 +271,7 @@ function gr_display(plt::Plot{GRPackage})
         GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
         GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
       end
-    elseif p[:linetype] == :hist
+    elseif p[:linetype] in [:hist, :density]
       h = Base.hist(p[:y])
       x, y = float(collect(h[1])), float(h[2])
       for i = 2:length(y)
@@ -271,8 +290,31 @@ function gr_display(plt::Plot{GRPackage})
           GR.polyline([xy, xy], [ymin, ymax])
         end
       end
-    elseif p[:linetype] in [:heatmap, :hexbin, :density,
-                            :contour, :path3d, :scatter3d, :surface,
+    elseif p[:linetype] in [:heatmap, :hexbin]
+      E = zeros(length(p[:x]),2)
+      E[:,1] = p[:x]
+      E[:,2] = p[:y]
+      if isa(p[:nbins], Tuple)
+        xbins, ybins = p[:nbins]
+      else
+        xbins = ybins = p[:nbins]
+      end
+      x, y, H = Base.hist2d(E, xbins, ybins)
+      counts = round(Int32, 1000 + 255 * H / maximum(H))
+      n, m = size(counts)
+      GR.setcolormap(GR.COLORMAP_COOLWARM)
+      GR.cellarray(xmin, xmax, ymin, ymax, n, m, counts)
+    elseif p[:linetype] == :contour
+      x, y, z = p[:x], p[:y], p[:z].surf
+      zmin, zmax = minimum(z), maximum(z)
+      if typeof(p[:levels]) <: Array
+        h = p[:levels]
+      else
+        h = linspace(zmin, zmax, p[:levels])
+      end
+      GR.setspace(zmin, zmax, 0, 90)
+      GR.contour(x, y, h, reshape(z, length(x) * length(y)), 0)
+    elseif p[:linetype] in [:path3d, :scatter3d, :surface,
                             :wireframe, :ohlc, :pie]
       println("TODO: add support for linetype $(p[:linetype])")
     end
@@ -351,7 +393,23 @@ function gr_display(plt::Plot{GRPackage})
     GR.restorestate()
   end
 
-  GR.updatews()
+  update && GR.updatews()
+end
+
+function gr_display(subplt::Subplot{GRPackage})
+  clear = true
+  update = false
+  l = enumerate(subplt.layout)
+  nr = nrows(subplt.layout)
+  for (i, (r, c)) in l
+    nc = ncols(subplt.layout, r)
+    if i == length(l)
+      update = true
+    end
+    subplot = [(c-1)/nc, c/nc, 1-r/nr, 1-(r-1)/nr]
+    gr_display(subplt.plts[i], clear, update, subplot)
+    clear = false
+  end
 end
 
 function _create_plot(pkg::GRPackage; kw...)
@@ -411,7 +469,6 @@ end
 # ----------------------------------------------------------------
 
 function _create_subplot(subplt::Subplot{GRPackage}, isbefore::Bool)
-  # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
   true
 end
 
@@ -445,5 +502,5 @@ function Base.display(::PlotsDisplay, plt::Plot{GRPackage})
 end
 
 function Base.display(::PlotsDisplay, plt::Subplot{GRPackage})
-  # TODO: display/show the subplot
+  true
 end
