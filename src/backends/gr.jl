@@ -89,7 +89,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
           cmap = true
           x, y, H = Base.hist2d(E, xbins, ybins)
         else
-          if p[:linetype] in [:contour]
+          if p[:linetype] in [:contour, :surface]
             cmap = true
           end
           if p[:linetype] in [:surface, :wireframe]
@@ -111,14 +111,10 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     extrema[axis,:] = [xmin, xmax, ymin, ymax]
   end
 
-  if num_axes == 2
+  if num_axes == 2 || !axes_2d
     viewport[2] -= 0.05
   end
   if cmap
-    viewport[2] -= 0.1
-  end
-  if !axes_2d
-    viewport[1] += 0.1
     viewport[2] -= 0.1
   end
   GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
@@ -352,23 +348,29 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
     elseif p[:linetype] in [:surface, :wrireframe]
       x, y, z = p[:x], p[:y], p[:z].surf
-      zmin, zmax = minimum(z), maximum(z)
+      zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
       GR.setspace(zmin, zmax, 40, 70)
-      xtick = GR.tick(xmin, xmax)
-      ytick = GR.tick(ymin, ymax)
-      ztick = GR.tick(zmin, zmax)
+      xtick = GR.tick(xmin, xmax) / 2
+      ytick = GR.tick(ymin, ymax) / 2
+      ztick = GR.tick(zmin, zmax) / 2
       diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
       charheight = max(0.018 * diag, 0.01)
       ticksize = 0.01 * (viewport[2] - viewport[1])
       GR.setcharheight(charheight)
-      if p[:linetype] == wireframe
-        option = GR.OPTION_MESH
+      GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
+      GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
+      GR.setcolormap(GR.COLORMAP_COOLWARM)
+      z = reshape(z, length(x) * length(y))
+      if p[:linetype] == :surface
+        GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
       else
-        option = GR.OPTION_COLORED_MESH
+        GR.surface(x, y, z, GR.OPTION_MESH)
       end
-      GR.gr3.surface(x, y, reshape(z, length(x) * length(y)), option)
-      GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 1, 0, 1, -ticksize)
-      GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 1, 0, ticksize)
+      GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
+      GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
+      GR.setviewport(viewport[2] + 0.07, viewport[2] + 0.1,
+                     viewport[3], viewport[4])
+      GR.colormap()
     elseif p[:linetype] in [:path3d, :scatter3d, :ohlc, :pie]
       println("TODO: add support for linetype $(p[:linetype])")
     end
