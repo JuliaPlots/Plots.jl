@@ -92,7 +92,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
           if p[:linetype] in [:contour, :surface]
             cmap = true
           end
-          if p[:linetype] in [:surface, :wireframe]
+          if p[:linetype] in [:surface, :wireframe, :path3d, :scatter3d]
             axes_2d = false
           end
           x, y = p[:x], p[:y]
@@ -252,7 +252,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         GR.polyline([x[i], x[i]], [ymin, y[i]])
       end
       legend = true
-    elseif p[:linetype] == :scatter || p[:markershape] != :none
+    elseif p[:linetype] == :scatter || (p[:markershape] != :none && axes_2d)
       haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
       haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
       if haskey(d, :markersize)
@@ -346,7 +346,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       charheight = max(0.016 * diag, 0.01)
       GR.setcharheight(charheight)
       GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
-    elseif p[:linetype] in [:surface, :wrireframe]
+    elseif p[:linetype] in [:surface, :wireframe]
       x, y, z = p[:x], p[:y], p[:z].surf
       zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
       GR.setspace(zmin, zmax, 40, 70)
@@ -359,19 +359,47 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       GR.setcharheight(charheight)
       GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
       GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
-      GR.setcolormap(GR.COLORMAP_COOLWARM)
       z = reshape(z, length(x) * length(y))
       if p[:linetype] == :surface
+        GR.setcolormap(GR.COLORMAP_COOLWARM)
         GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
       else
-        GR.surface(x, y, z, GR.OPTION_MESH)
+        GR.setfillcolorind(0)
+        GR.surface(x, y, z, GR.OPTION_FILLED_MESH)
       end
       GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
       GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
-      GR.setviewport(viewport[2] + 0.07, viewport[2] + 0.1,
-                     viewport[3], viewport[4])
-      GR.colormap()
-    elseif p[:linetype] in [:path3d, :scatter3d, :ohlc, :pie]
+      if cmap
+        GR.setviewport(viewport[2] + 0.07, viewport[2] + 0.1,
+                       viewport[3], viewport[4])
+        GR.colormap()
+      end
+    elseif p[:linetype] in [:path3d, :scatter3d]
+      x, y, z = p[:x], p[:y], p[:z]
+      zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
+      GR.setspace(zmin, zmax, 40, 70)
+      xtick = GR.tick(xmin, xmax) / 2
+      ytick = GR.tick(ymin, ymax) / 2
+      ztick = GR.tick(zmin, zmax) / 2
+      diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
+      charheight = max(0.018 * diag, 0.01)
+      ticksize = 0.01 * (viewport[2] - viewport[1])
+      GR.setcharheight(charheight)
+      GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
+      GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
+      if p[:linetype] == :scatter3d
+        haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
+        haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
+        for i = 1:length(z)
+          px, py = GR.wc3towc(x[i], y[i], z[i])
+          GR.polymarker([px], [py])
+        end
+      else
+        GR.polyline3d(x, y, z)
+      end
+      GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
+      GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
+    elseif p[:linetype] in [:ohlc, :pie]
       println("TODO: add support for linetype $(p[:linetype])")
     end
   end
