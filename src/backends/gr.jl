@@ -75,6 +75,8 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         end
         if p[:linetype] == :bar
           x, y = 1:length(p[:y]), p[:y]
+        elseif p[:linetype] == :ohlc
+          x, y = 1:size(p[:y], 1), p[:y]
         elseif p[:linetype] in [:hist, :density]
           x, y = Base.hist(p[:y])
         elseif p[:linetype] in [:heatmap, :hexbin]
@@ -99,12 +101,14 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         end
         xmin = min(minimum(x), xmin)
         xmax = max(maximum(x), xmax)
-        # catch exception for OHLC vectors
-        try
+        if p[:linetype] == :ohlc
+          for val in y
+            ymin = min(val.open, val.high, val.low, val.close, ymin)
+            ymax = max(val.open, val.high, val.low, val.close, ymax)
+          end
+        else
           ymin = min(minimum(y), ymin)
           ymax = max(maximum(y), ymax)
-        catch MethodError
-          ymin, ymax = 0, 1
         end
       end
     end
@@ -210,7 +214,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
   for p in plt.seriesargs
     xmin, xmax, ymin, ymax = extrema[gr_getaxisind(p),:]
     GR.setwindow(xmin, xmax, ymin, ymax)
-    if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline]
+    if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline, :ohlc]
       haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
       haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
     end
@@ -399,7 +403,16 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       end
       GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
       GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
-    elseif p[:linetype] in [:ohlc, :pie]
+    elseif p[:linetype] == :ohlc
+      y = p[:y]
+      n = size(y, 1)
+      ticksize = 0.5 * (xmax - xmin) / n
+      for i in 1:n
+        GR.polyline([i-ticksize, i], [y[i].open, y[i].open])
+        GR.polyline([i, i], [y[i].low, y[i].high])
+        GR.polyline([i, i+ticksize], [y[i].close, y[i].close])
+      end
+    elseif p[:linetype] in [:pie]
       println("TODO: add support for linetype $(p[:linetype])")
     end
   end
