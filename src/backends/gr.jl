@@ -163,6 +163,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
 
     if axes_2d
       diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
+      GR.setlinewidth(1)
       charheight = max(0.018 * diag, 0.01)
       GR.setcharheight(charheight)
       ticksize = 0.0075 * diag
@@ -205,18 +206,16 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     GR.restorestate()
   end
 
-  GR.savestate()
-  haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
-  GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-
   legend = false
 
   for p in plt.seriesargs
+    GR.savestate()
     xmin, xmax, ymin, ymax = extrema[gr_getaxisind(p),:]
     GR.setwindow(xmin, xmax, ymin, ymax)
     if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline, :ohlc]
-      haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
       haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])
+      haskey(p, :linewidth) && GR.setlinewidth(p[:linewidth])
+      haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
     end
     if p[:linetype] == :path
       if haskey(p, :fillcolor)
@@ -360,9 +359,11 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
       charheight = max(0.018 * diag, 0.01)
       ticksize = 0.01 * (viewport[2] - viewport[1])
-      GR.setcharheight(charheight)
+      GR.savestate()
+      GR.setlinewidth(1)
       GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
       GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
+      GR.restorestate()
       z = reshape(z, length(x) * length(y))
       if p[:linetype] == :surface
         GR.setcolormap(GR.COLORMAP_COOLWARM)
@@ -371,6 +372,8 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         GR.setfillcolorind(0)
         GR.surface(x, y, z, GR.OPTION_FILLED_MESH)
       end
+      GR.setlinewidth(1)
+      GR.setcharheight(charheight)
       GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
       GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
       if cmap
@@ -388,9 +391,11 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
       charheight = max(0.018 * diag, 0.01)
       ticksize = 0.01 * (viewport[2] - viewport[1])
-      GR.setcharheight(charheight)
+      GR.savestate()
+      GR.setlinewidth(1)
       GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
       GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
+      GR.restorestate()
       if p[:linetype] == :scatter3d
         haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
         haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
@@ -399,8 +404,11 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
           GR.polymarker([px], [py])
         end
       else
+        haskey(p, :linewidth) && GR.setlinewidth(p[:linewidth])
         GR.polyline3d(x, y, z)
       end
+      GR.setlinewidth(1)
+      GR.setcharheight(charheight)
       GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
       GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
     elseif p[:linetype] == :ohlc
@@ -415,9 +423,11 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     elseif p[:linetype] in [:pie]
       println("TODO: add support for linetype $(p[:linetype])")
     end
+    GR.restorestate()
   end
 
   if d[:legend] && legend
+    GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
     w = 0
@@ -464,12 +474,13 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       else
         lab = p[:label]
       end
+      GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
       GR.text(px, py, lab)
       py -= 0.03
     end
     GR.selntran(1)
+    GR.restorestate()
   end
-  GR.restorestate()
 
   if haskey(d, :anns)
     GR.savestate()
