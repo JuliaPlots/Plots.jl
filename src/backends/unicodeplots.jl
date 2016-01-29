@@ -91,13 +91,13 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool, xlim, ylim)
   else
     error("Linestyle $lt not supported by UnicodePlots")
   end
-  
+
   # get the series data and label
   x, y = [collect(float(d[s])) for s in (:x, :y)]
   label = addlegend ? d[:label] : ""
 
   # if we happen to pass in allowed color symbols, great... otherwise let UnicodePlots decide
-  color = d[:linecolor] in UnicodePlots.autoColors ? d[:linecolor] : :auto
+  color = d[:linecolor] in UnicodePlots.color_cycle ? d[:linecolor] : :auto
 
   # add the series
   func(o, x, y; color = color, name = label, style = stepstyle)
