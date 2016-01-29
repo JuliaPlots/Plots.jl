@@ -26,16 +26,16 @@ export
   glvisualize
   # winston
 
-gadfly()        = backend(:gadfly)
-immerse()       = backend(:immerse)
-pyplot()        = backend(:pyplot)
-qwt()           = backend(:qwt)
-unicodeplots()  = backend(:unicodeplots)
-bokeh()         = backend(:bokeh)
-plotly()        = backend(:plotly)
-gr()            = backend(:gr)
-glvisualize()   = backend(:glvisualize)
-# winston()       = backend(:winston)
+gadfly(; kw...)        = (default(; kw...); backend(:gadfly))
+immerse(; kw...)       = (default(; kw...); backend(:immerse))
+pyplot(; kw...)        = (default(; kw...); backend(:pyplot))
+qwt(; kw...)           = (default(; kw...); backend(:qwt))
+unicodeplots(; kw...)  = (default(; kw...); backend(:unicodeplots))
+bokeh(; kw...)         = (default(; kw...); backend(:bokeh))
+plotly(; kw...)        = (default(; kw...); backend(:plotly))
+gr(; kw...)            = (default(; kw...); backend(:gr))
+glvisualize(; kw...)   = (default(; kw...); backend(:glvisualize))
+# winston(; kw...)       = (default(; kw...); backend(:winston))
 
 backend_name(::GadflyPackage)       = :gadfly
 backend_name(::ImmersePackage)      = :immerse

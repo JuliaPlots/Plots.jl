@@ -12,7 +12,9 @@ getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
 function getPyPlotColorMap(c::ColorGradient, α=nothing)
   # c = ColorGradient(c.colors, c.values, alpha=α)
   # pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", map(getPyPlotColor, getColorVector(c)))
-  pyvals = [(c.values[i], getPyPlotColor(c.colors[i], α)) for i in 1:length(c.colors)]
+  # pyvals = [(c.values[i], getPyPlotColor(c.colors[i], α)) for i in 1:length(c.colors)]
+  pyvals = [(v, getPyPlotColor(getColorZ(c, v), α)) for v in c.values]
+  # @show c α pyvals
   pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
 end
 

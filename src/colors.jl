@@ -75,28 +75,34 @@ immutable ColorGradient <: ColorScheme
   colors::Vector{Colorant}
   values::Vector{Float64}
 
-  function ColorGradient{T<:Colorant,S<:Real}(cs::AVec{T}, vals::AVec{S} = 0:1; alpha = nothing)
+  function ColorGradient{T<:Colorant,S<:Real}(cs::AVec{T}, vals::AVec{S} = linspace(0, 1, length(cs)); alpha = nothing)
     if length(cs) == length(vals)
       return new(convertColor(cs,alpha), collect(vals))
     end
     
-    # otherwise interpolate evenly between the minval and maxval
-    minval, maxval = minimum(vals), maximum(vals)
-    vs = Float64[interpolate(minval, maxval, w) for w in linspace(0, 1, length(cs))]
-    new(convertColor(cs,alpha), vs)
+    # # otherwise interpolate evenly between the minval and maxval
+    # minval, maxval = minimum(vals), maximum(vals)
+    # vs = Float64[interpolate(minval, maxval, w) for w in linspace(0, 1, length(cs))]
+    # new(convertColor(cs,alpha), vs)
+
+    # interpolate the colors for each value
+    grad = ColorGradient(cs)
+    cs = [getColorZ(grad, z) for z in linspace(0, 1, length(vals))]
+    new(convertColor(cs, alpha), collect(vals)) #collect(linspace(0, 1, length(cs))))
   end
 end
 
 # create a gradient from a symbol (blues, reds, etc) and vector of boundary values
-function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:1; kw...)
+function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:0; kw...)
   haskey(_gradients, s) || error("Invalid gradient symbol.  Choose from: ", sort(collect(keys(_gradients))))
-
-  # if we passed in the right number of values, create the gradient directly
   cs = _gradients[s]
+  if vals == 0:0
+    vals = linspace(0, 1, length(cs))
+  end
   ColorGradient(cs, vals; kw...)
 end
 
-function ColorGradient{T<:Real}(cs::AVec{Symbol}, vals::AVec{T} = 0:1; kw...)
+function ColorGradient{T<:Real}(cs::AVec{Symbol}, vals::AVec{T} = linspace(0, 1, length(cs)); kw...)
   ColorGradient(map(convertColor, cs), vals; kw...)
 end
 
