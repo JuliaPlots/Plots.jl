@@ -217,6 +217,7 @@ limsType(lims) = :invalid
 Base.convert{T<:Real}(::Type{Vector{T}}, rng::Range{T}) = T[x for x in rng]
 Base.convert{T<:Real,S<:Real}(::Type{Vector{T}}, rng::Range{S}) = T[x for x in rng]
 
+Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 
 # ---------------------------------------------------------------
 

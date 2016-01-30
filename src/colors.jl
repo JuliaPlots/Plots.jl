@@ -86,9 +86,10 @@ immutable ColorGradient <: ColorScheme
     # new(convertColor(cs,alpha), vs)
 
     # interpolate the colors for each value
+    vals = merge(linspace(0, 1, length(cs)), vals)
     grad = ColorGradient(cs)
     cs = [getColorZ(grad, z) for z in linspace(0, 1, length(vals))]
-    new(convertColor(cs, alpha), collect(vals)) #collect(linspace(0, 1, length(cs))))
+    new(convertColor(cs, alpha), vals)
   end
 end
 
