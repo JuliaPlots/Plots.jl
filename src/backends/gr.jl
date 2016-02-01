@@ -132,7 +132,12 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
   end
   GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
 
-  scale = d[:scale]
+  scale = 0
+  d[:xscale] == :log10 && (scale |= GR.OPTION_X_LOG)
+  d[:yscale] == :log10 && (scale |= GR.OPTION_Y_LOG)
+  get(d, :xflip, false) && (scale |= GR.OPTION_FLIP_X)
+  get(d, :yflip, false) && (scale |= GR.OPTION_FLIP_Y)
+
   for axis = 1:num_axes
     xmin, xmax, ymin, ymax = extrema[axis,:]
     if scale & GR.OPTION_X_LOG == 0
@@ -555,13 +560,6 @@ function _before_update_plot(plt::Plot{GRPackage})
 end
 
 function _update_plot(plt::Plot{GRPackage}, d::Dict)
-  scale = 0
-  d[:xscale] == :log10 && (scale |= GR.OPTION_X_LOG)
-  d[:yscale] == :log10 && (scale |= GR.OPTION_Y_LOG)
-  get(d, :xflip, false) && (scale |= GR.OPTION_FLIP_X)
-  get(d, :yflip, false) && (scale |= GR.OPTION_FLIP_Y)
-  plt.plotargs[:scale] = scale
-
   for k in (:title, :xlabel, :ylabel)
     haskey(d, k) && (plt.plotargs[k] = d[k])
   end
