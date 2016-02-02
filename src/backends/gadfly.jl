@@ -299,7 +299,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
     prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), d, plt.plotargs, smooth...))
   end
 
-  lt in (:hist, :heatmap, :hexbin, :contour) || addToGadflyLegend(plt, d)
+  lt in (:heatmap, :hexbin, :contour) || addToGadflyLegend(plt, d)
 
   # now save the layers that apply to this series
   d[:gadflylayers] = layers
