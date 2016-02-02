@@ -130,3 +130,9 @@ function spy{T<:Real}(y::AMat{T}; kw...)
   heatmap(J, I; leg=false, yflip=true, nbins=size(y), kw...)
 end
 
+"Adds a+bx... straight line over the current plot"
+function abline!(plt::Plot, a, b; kw...)
+    plot!(plt, [xmin(plt), xmax(plt)], x -> b + a*x; kw...)
+end
+
+abline!(args...; kw...) = abline!(current(), args...; kw...)

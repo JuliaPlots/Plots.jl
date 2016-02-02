@@ -465,3 +465,9 @@ mm2inch(mm::Real) = float(mm / MM_PER_INCH)
 px2mm(px::Real) = float(px * MM_PER_PX)
 mm2px(mm::Real) = float(px / MM_PER_PX)
 
+
+"Smallest x in plot"
+xmin(plt::Plot) = minimum([minimum(d[:x]) for d in plt.seriesargs])
+"Largest x in plot"
+xmax(plt::Plot) = maximum([maximum(d[:x]) for d in plt.seriesargs])
+
