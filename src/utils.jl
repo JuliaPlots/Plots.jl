@@ -246,7 +246,7 @@ function with(f::Function, args...; kw...)
   oldbackend = CURRENT_BACKEND.sym
 
   for arg in args
-    
+
     # change backend?
     if arg in backends()
       backend(arg)
@@ -421,10 +421,10 @@ function supportGraph(allvals, func)
             push!(x, string(b))
             push!(y, string(val))
         end
-      end 
+      end
   end
   n = length(vals)
-  
+
   scatter(x,y,
           m=:rect,
           ms=10,
