@@ -7,7 +7,8 @@ function _create_plot(pkg::PlotlyPackage; kw...)
     d = Dict(kw)
     # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
     # TODO: initialize the plot... title, xlabel, bgcolor, etc
-    o = PlotlyJS.Plot()
+    o = PlotlyJS.Plot(PlotlyJS.GenericTrace[], PlotlyJS.Layout(),
+                      Base.Random.uuid4(), PlotlyJS.ElectronDisplay())
 
     Plot(o, pkg, 0, d, Dict[])
 end
@@ -21,7 +22,7 @@ function _add_series(::PlotlyPackage, plt::Plot; kw...)
     typ = pop!(pdict, :type)
     gt = PlotlyJS.GenericTrace(typ; pdict...)
     push!(plt.o.data, gt)
-    if !isnull(plt.o.window)
+    if PlotlyJS.isactive(plt.o._display)
         PlotlyJS.addtraces!(plt.o, gt)
     end
 
@@ -33,7 +34,7 @@ end
 function _update_plot(plt::Plot{PlotlyPackage}, d::Dict)
     pdict = plotly_layout(d)
     plt.o.layout = PlotlyJS.Layout(pdict)
-    if !isnull(plt.o.window)
+    if PlotlyJS.isactive(plt.o._display)
         PlotlyJS.relayout!(plt.o; pdict...)
     end
 end
