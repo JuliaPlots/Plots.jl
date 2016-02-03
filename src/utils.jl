@@ -246,7 +246,7 @@ function with(f::Function, args...; kw...)
   oldbackend = CURRENT_BACKEND.sym
 
   for arg in args
-    
+
     # change backend?
     if arg in backends()
       backend(arg)
@@ -421,10 +421,10 @@ function supportGraph(allvals, func)
             push!(x, string(b))
             push!(y, string(val))
         end
-      end 
+      end
   end
   n = length(vals)
-  
+
   scatter(x,y,
           m=:rect,
           ms=10,
@@ -465,3 +465,11 @@ mm2inch(mm::Real) = float(mm / MM_PER_INCH)
 px2mm(px::Real) = float(px * MM_PER_PX)
 mm2px(mm::Real) = float(px / MM_PER_PX)
 
+
+"Smallest x in plot"
+xmin(plt::Plot) = minimum([minimum(d[:x]) for d in plt.seriesargs])
+"Largest x in plot"
+xmax(plt::Plot) = maximum([maximum(d[:x]) for d in plt.seriesargs])
+
+"Extrema of x-values in plot"
+Base.extrema(plt::Plot) = (xmin(plt), xmax(plt))
