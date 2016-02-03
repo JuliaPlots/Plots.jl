@@ -59,6 +59,7 @@ export
   path3d!,
   scatter3d,
   scatter3d!,
+  abline!,
 
   title!,
   xlabel!,

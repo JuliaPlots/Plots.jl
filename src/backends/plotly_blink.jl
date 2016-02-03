@@ -1,13 +1,13 @@
 
-# override some methods to use Plotlyjs/Blink
+# override some methods to use PlotlyJS/Blink
 
-import Plotlyjs
+import PlotlyJS
 
 function _create_plot(pkg::PlotlyPackage; kw...)
     d = Dict(kw)
     # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
     # TODO: initialize the plot... title, xlabel, bgcolor, etc
-    o = Plotlyjs.Plot()
+    o = PlotlyJS.Plot()
 
     Plot(o, pkg, 0, d, Dict[])
 end
@@ -18,10 +18,11 @@ function _add_series(::PlotlyPackage, plt::Plot; kw...)
 
     # add to the data array
     pdict = plotly_series(d)
-    gt = Plotlyjs.GenericTrace(pdict[:type], pdict)
+    typ = pop!(pdict, :type)
+    gt = PlotlyJS.GenericTrace(typ; pdict...)
     push!(plt.o.data, gt)
     if !isnull(plt.o.window)
-        Plotlyjs.addtraces!(plt.o, gt)
+        PlotlyJS.addtraces!(plt.o, gt)
     end
 
     push!(plt.seriesargs, d)
@@ -31,18 +32,23 @@ end
 # TODO: override this to update plot items (title, xlabel, etc) after creation
 function _update_plot(plt::Plot{PlotlyPackage}, d::Dict)
     pdict = plotly_layout(d)
-    plt.o.layout = Plotlyjs.Layout(pdict)
+    plt.o.layout = PlotlyJS.Layout(pdict)
     if !isnull(plt.o.window)
-        Plotlyjs.relayout!(plt.o, pdict...)
+        PlotlyJS.relayout!(plt.o; pdict...)
     end
 end
 
 
 function Base.display(::PlotsDisplay, plt::Plot{PlotlyPackage})
     dump(plt.o)
-    show(plt.o)
+    display(plt.o)
 end
 
 function Base.display(::PlotsDisplay, plt::Subplot{PlotlyPackage})
-    error()    
+    error()
+end
+
+for (mime, fmt) in PlotlyJS._mimeformats
+    @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyPackage}) =
+        writemime(io, m, p.o)
 end
