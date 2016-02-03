@@ -132,7 +132,7 @@ end
 
 "Adds a+bx... straight line over the current plot"
 function abline!(plt::Plot, a, b; kw...)
-    plot!(plt, [xmin(plt), xmax(plt)], x -> b + a*x; kw...)
+    plot!(plt, [extrema(plt)...], x -> b + a*x; kw...)
 end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)

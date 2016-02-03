@@ -471,3 +471,5 @@ xmin(plt::Plot) = minimum([minimum(d[:x]) for d in plt.seriesargs])
 "Largest x in plot"
 xmax(plt::Plot) = maximum([maximum(d[:x]) for d in plt.seriesargs])
 
+"Extrema of x-values in plot"
+Base.extrema(plt::Plot) = (xmin(plt), xmax(plt))
