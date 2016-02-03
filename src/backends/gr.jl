@@ -598,6 +598,8 @@ end
 # ----------------------------------------------------------------
 
 function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{GRPackage})
+  isijulia() && return
+  GR.emergencyclosegks()
   ENV["GKS_WSTYPE"] = "png"
   gr_display(plt)
   GR.emergencyclosegks()
@@ -606,6 +608,7 @@ end
 
 function Base.writemime(io::IO, m::MIME"image/svg+xml", plt::PlottingObject{GRPackage})
   isijulia() || return
+  GR.emergencyclosegks()
   ENV["GKS_WSTYPE"] = "svg"
   gr_display(plt)
   GR.emergencyclosegks()
