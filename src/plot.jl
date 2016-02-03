@@ -413,7 +413,7 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, surf::Surface; 
 end
 
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs; kw...)
-  error("Can't pass a Function or Vector{Function} for y without also passing x")
+  createKWargsList(plt, f, xmin(plt), xmax(plt); kw...)
 end
 
 # list of functions
