@@ -18,4 +18,4 @@ Plots is a plotting API and toolset.  My goals with the package are:
 
 Use the preprocessing pipeline in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added with minimal effort.
 
-View the full documentation at [plots.readthedocs.org].
+View the full documentation at [plots.readthedocs.org](plots.readthedocs.org).
