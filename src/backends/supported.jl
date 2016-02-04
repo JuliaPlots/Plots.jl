@@ -630,3 +630,69 @@ supportedStyles(::GLVisualizePackage) = [:auto, :solid] #, :dash, :dot, :dashdot
 supportedMarkers(::GLVisualizePackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
 supportedScales(::GLVisualizePackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
 subplotSupported(::GLVisualizePackage) = false
+
+# --------------------------------------------------------------------------------------
+
+supportedArgs(::PGFPlotsPackage) = [
+    # :annotation,
+    # :axis,
+    # :background_color,
+    # :color_palette,
+    # :fillrange,
+    # :fillcolor,
+    # :fillalpha,
+    # :foreground_color,
+    # :group,
+    # :label,
+    # :layout,
+    # :legend,
+    # :linecolor,
+    # :linestyle,
+    # :linetype,
+    # :linewidth,
+    # :linealpha,
+    # :markershape,
+    # :markercolor,
+    # :markersize,
+    # :markeralpha,
+    # :markerstrokewidth,
+    # :markerstrokecolor,
+    # :markerstrokestyle,
+    # :n,
+    # :nbins,
+    # :nc,
+    # :nr,
+    # :pos,
+    # :smooth,
+    # :show,
+    # :size,
+    # :title,
+    # :windowtitle,
+    # :x,
+    # :xlabel,
+    # :xlims,
+    # :xticks,
+    # :y,
+    # :ylabel,
+    # :ylims,
+    # :yrightlabel,
+    # :yticks,
+    # :xscale,
+    # :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
+    # :tickfont,
+    # :guidefont,
+    # :legendfont,
+    # :grid,
+    # :surface
+    # :levels,
+  ]
+supportedAxes(::PGFPlotsPackage) = [:auto, :left]
+supportedTypes(::PGFPlotsPackage) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::PGFPlotsPackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::PGFPlotsPackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedScales(::PGFPlotsPackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::PGFPlotsPackage) = false
+
