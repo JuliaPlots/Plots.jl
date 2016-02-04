@@ -3,6 +3,13 @@
 
 # credit goes to https://github.com/jverzani for contributing to the first draft of this backend implementation
 
+function _initialize_backend(::WinstonPackage; kw...)
+  @eval begin
+    ENV["WINSTON_OUTPUT"] = "gtk"
+    import Winston, Gtk
+    export Winston, Gtk
+  end
+end
 
 # ---------------------------------------------------------------------------
 

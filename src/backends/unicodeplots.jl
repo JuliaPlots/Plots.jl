@@ -1,6 +1,13 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
+function _initialize_backend(::UnicodePlotsPackage; kw...)
+  @eval begin
+    import UnicodePlots
+    export UnicodePlots
+  end
+end
+
 # -------------------------------
 
 

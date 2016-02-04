@@ -416,7 +416,7 @@ function supportGraph(allvals, func)
   y = ASCIIString[]
   for val in vals
     for b in bs
-        supported = func(Plots.backendInstance(b))
+        supported = func(Plots._backend_instance(b))
         if val in supported
             push!(x, string(b))
             push!(y, string(val))

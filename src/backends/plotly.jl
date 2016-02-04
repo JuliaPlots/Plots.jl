@@ -1,6 +1,41 @@
 
 # https://plot.ly/javascript/getting-started
 
+function _initialize_backend(::PlotlyPackage; kw...)
+  @eval begin
+    import JSON
+    JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
+
+    ############################
+    # borrowed from https://github.com/spencerlyon2/Plotlyjs.jl/blob/master/src/display.jl
+    _js_path = joinpath(Pkg.dir("Plots"), "deps", "plotly-latest.min.js")
+
+    # if we're in IJulia call setupnotebook to load js and css
+    if isijulia()
+        # the first script is some hack I needed to do in order for the notebook
+        # to not complain about Plotly being undefined
+        display("text/html", """
+            <script type="text/javascript">
+                require=requirejs=define=undefined;
+            </script>
+            <script type="text/javascript">
+                $(open(readall, _js_path, "r"))
+            </script>
+         """)
+        # display("text/html", "<p>Plotly javascript loaded.</p>")
+    end
+    # end borrowing (thanks :)
+    ###########################
+
+    try
+      include(joinpath(Pkg.dir("Plots"), "src", "backends", "plotly_blink.jl"))
+    catch err
+      warn("Error including PlotlyJS: $err\n  Note: Will fall back to built-in display.")
+    end
+  end
+  # TODO: other initialization
+end
+
 # ---------------------------------------------------------------------------
 
 function _create_plot(pkg::PlotlyPackage; kw...)

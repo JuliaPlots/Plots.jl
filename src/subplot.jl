@@ -135,7 +135,7 @@ convertSeriesIndex(subplt::Subplot, n::Int) = ceil(Int, n / subplt.p)
 
 function validateSubplotSupported()
   if !subplotSupported()
-    error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(backendInstance(pkg)), backends()),", "))
+    error(CURRENT_BACKEND.sym, " does not support the subplot/subplot! commands at this time.  Try one of: ", join(filter(pkg->subplotSupported(_backend_instance(pkg)), backends()),", "))
   end
 end
 

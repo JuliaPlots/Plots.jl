@@ -18,8 +18,6 @@ export
 
   plot,
   plot!,
-  # plot_display,
-  # plot_display!,
   subplot,
   subplot!,
 
@@ -57,6 +55,8 @@ export
   wireframe!,
   path3d,
   path3d!,
+  plot3d,
+  plot3d!,
   scatter3d,
   scatter3d!,
   abline!,
@@ -80,6 +80,7 @@ export
 
   backend,
   backends,
+  backend_name,
   aliases,
   dataframes,
 
@@ -132,7 +133,7 @@ include("types.jl")
 include("utils.jl")
 include("colors.jl")
 include("components.jl")
-include("plotter.jl")
+include("plotter2.jl")
 include("args.jl")
 include("plot.jl")
 include("subplot.jl")
@@ -173,6 +174,8 @@ wireframe(args...; kw...)  = plot(args...; kw...,  linetype = :wireframe)
 wireframe!(args...; kw...) = plot!(args...; kw..., linetype = :wireframe)
 path3d(args...; kw...)     = plot(args...; kw...,  linetype = :path3d)
 path3d!(args...; kw...)    = plot!(args...; kw..., linetype = :path3d)
+plot3d(args...; kw...)     = plot(args...; kw...,  linetype = :path3d)
+plot3d!(args...; kw...)    = plot!(args...; kw..., linetype = :path3d)
 scatter3d(args...; kw...)  = plot(args...; kw...,  linetype = :scatter3d)
 scatter3d!(args...; kw...) = plot!(args...; kw..., linetype = :scatter3d)
 

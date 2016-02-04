@@ -2,6 +2,13 @@
 
 # [WEBSITE]
 
+function _initialize_backend(::GLVisualizePackage; kw...)
+  @eval begin
+    import GLVisualize
+    export GLVisualize
+  end
+end
+
 # ---------------------------------------------------------------------------
 
 immutable GLScreenWrapper

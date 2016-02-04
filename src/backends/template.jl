@@ -3,6 +3,15 @@
 
 # [WEBSITE]
 
+function _initialize_backend(::[PkgName]Package; kw...)
+  @eval begin
+    import [PkgName]
+    export [PkgName]
+    # TODO: other initialization that needs to be eval-ed
+  end
+  # TODO: other initialization
+end
+
 # ---------------------------------------------------------------------------
 
 function _create_plot(pkg::[PkgName]Package; kw...)
@@ -43,13 +52,11 @@ end
 # accessors for x/y data
 
 function Base.getindex(plt::Plot{[PkgName]Package}, i::Int)
-  series = plt.o.lines[i]
-  series.x, series.y
+  # TODO: return a tuple of (x, y) vectors
 end
 
 function Base.setindex!(plt::Plot{[PkgName]Package}, xy::Tuple, i::Integer)
-  series = plt.o.lines[i]
-  series.x, series.y = xy
+  # TODO: set the plot data from the (x,y) tuple
   plt
 end
 

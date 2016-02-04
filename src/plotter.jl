@@ -83,11 +83,11 @@ subplot!(pkg::PlottingPackage, subplt::Subplot; kw...) = error("subplot!($pkg, s
 
 
 const BACKENDS = [:qwt, :gadfly, :unicodeplots, :pyplot, :immerse, :bokeh, :plotly, :gr]
-const INITIALIZED_BACKENDS = Set{Symbol}()
+const _initialized_backends = Set{Symbol}()
 backends() = BACKENDS
 
 
-function backendInstance(sym::Symbol)
+function _backend_instance(sym::Symbol)
   sym == :qwt && return QwtPackage()
   sym == :gadfly && return GadflyPackage()
   sym == :unicodeplots && return UnicodePlotsPackage()
@@ -107,7 +107,7 @@ type CurrentBackend
   sym::Symbol
   pkg::PlottingPackage
 end
-CurrentBackend(sym::Symbol) = CurrentBackend(sym, backendInstance(sym))
+CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
 
@@ -134,7 +134,7 @@ function backend()
   end
 
   currentBackendSymbol = CURRENT_BACKEND.sym
-  if !(currentBackendSymbol in INITIALIZED_BACKENDS)
+  if !(currentBackendSymbol in _initialized_backends)
 
     # initialize
     println("[Plots.jl] Initializing backend: ", CURRENT_BACKEND.sym)
@@ -283,7 +283,7 @@ function backend()
     else
       error("Unknown backend $currentBackendSymbol.  Choose from: $BACKENDS")
     end
-    push!(INITIALIZED_BACKENDS, currentBackendSymbol)
+    push!(_initialized_backends, currentBackendSymbol)
 
   end
   CURRENT_BACKEND.pkg

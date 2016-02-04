@@ -1,6 +1,32 @@
 
 # https://github.com/stevengj/PyPlot.jl
 
+function _initialize_backend(::PyPlotPackage)
+  @eval begin
+    import PyPlot
+    export PyPlot
+    const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
+    const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
+    const mplot3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d"))
+    # const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
+  end
+
+  if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
+    PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
+
+    # # TODO: how the hell can I use PyQt4??
+    # "pyqt4"=>:qt_pyqt4
+    # PyPlot.backend[1] = "pyqt4"
+    # PyPlot.gui[1] = :qt_pyqt4
+    # PyPlot.switch_backend("Qt4Agg")
+
+    # only turn on the gui if we want it
+    if PyPlot.gui != :none
+      PyPlot.pygui(true)
+    end
+  end
+end
+
 # -------------------------------
 
 # convert colorant to 4-tuple RGBA
@@ -413,9 +439,6 @@ function Base.getindex(plt::Plot{PyPlotPackage}, i::Integer)
     xy = series[:get_offsets]()
     return vec(xy[:,1]), vec(xy[:,2])
   end
-  # series[:relim]()
-  # mapping = getGadflyMappings(plt, i)[1]
-  # mapping[:x], mapping[:y]
 end
 
 function Base.setindex!{X,Y}(plt::Plot{PyPlotPackage}, xy::Tuple{X,Y}, i::Integer)

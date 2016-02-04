@@ -1,6 +1,15 @@
 
 # https://github.com/jheinen/GR.jl
 
+
+function _initialize_backend(::GRPackage; kw...)
+  @eval begin
+    import GR
+    export GR
+  end
+end
+
+
 const gr_linetype = Dict(
   :auto => 1, :solid => 1, :dash => 2, :dot => 3, :dashdot => 4,
   :dashdotdot => -1 )

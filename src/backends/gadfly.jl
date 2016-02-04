@@ -1,6 +1,15 @@
 
 # https://github.com/dcjones/Gadfly.jl
 
+
+function _initialize_backend(::GadflyPackage; kw...)
+  @eval begin
+    import Gadfly, Compose
+    export Gadfly, Compose
+    include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
+  end
+end
+
 # ---------------------------------------------------------------------------
 
 # immutable MissingVec <: AbstractVector{Float64} end
@@ -656,7 +665,7 @@ setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getplotargs(subplt,
 # -------------------------------------------------------------------------
 
 
-function dowritemime{P<:GadflyOrImmerse}(io::IO, func, plt::PlottingObject{P})
+function dowritemime{P<:Union{GadflyPackage,ImmersePackage}}(io::IO, func, plt::PlottingObject{P})
   gplt = getGadflyContext(plt)
   setGadflyDisplaySize(plt)
   Gadfly.draw(func(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
@@ -671,7 +680,7 @@ getGadflyWriteFunc(::MIME"application/x-tex") = Gadfly.PGF
 getGadflyWriteFunc(m::MIME) = error("Unsupported in Gadfly/Immerse: ", m)
 
 for mime in (MIME"image/png", MIME"image/svg+xml", MIME"application/pdf", MIME"application/postscript", MIME"application/x-tex")
-  @eval function Base.writemime{P<:GadflyOrImmerse}(io::IO, ::$mime, plt::PlottingObject{P})
+  @eval function Base.writemime{P<:Union{GadflyPackage,ImmersePackage}}(io::IO, ::$mime, plt::PlottingObject{P})
     func = getGadflyWriteFunc($mime())
     dowritemime(io, func, plt)
   end

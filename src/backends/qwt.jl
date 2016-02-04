@@ -1,6 +1,12 @@
 
 # https://github.com/tbreloff/Qwt.jl
 
+function _initialize_backend(::QwtPackage; kw...)
+  @eval begin
+    import Qwt
+    export Qwt
+  end
+end
 
 # -------------------------------
 
