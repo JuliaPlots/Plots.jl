@@ -393,6 +393,7 @@ Animations are created in 3 steps (see example #2):
 - [x] UnicodePlots.jl
 - [x] Qwt.jl
 - [x] Winston.jl (deprecated)
+- [ ] PGFPlots.jl
 - [ ] GLPlot.jl
 - [ ] Bokeh.jl
 - [ ] Vega.jl
