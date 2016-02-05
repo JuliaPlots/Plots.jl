@@ -205,7 +205,7 @@ end
 # ----------------------------------------------------------------
 
 function addWinstonLegend(plt::Plot, wplt)
-  if plt.plotargs[:legend]
+  if plt.plotargs[:legend] != :none
     Winston.legend(wplt, [sd[:label] for sd in plt.seriesargs])
   end
 end

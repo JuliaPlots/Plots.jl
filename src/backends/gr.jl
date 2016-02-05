@@ -435,7 +435,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     GR.restorestate()
   end
 
-  if d[:legend] && legend
+  if d[:legend] != :none && legend
     GR.savestate()
     GR.selntran(0)
     GR.setscale(0)

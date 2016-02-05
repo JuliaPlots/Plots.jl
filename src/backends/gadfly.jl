@@ -201,6 +201,7 @@ function getGadflyMarkerTheme(d::Dict, plotargs::Dict)
 end
 
 function addGadflyContColorScale(plt::Plot{GadflyPackage}, c)
+  plt.plotargs[:colorbar] == :none && return
   if !isa(c, ColorGradient)
     c = colorscheme(:bluesreds)
   end
@@ -233,7 +234,7 @@ end
 function addToGadflyLegend(plt::Plot, d::Dict)
 
   # add the legend?
-  if plt.plotargs[:legend]
+  if plt.plotargs[:legend] != :none
     gplt = getGadflyContext(plt)
 
     # add the legend if needed
@@ -491,9 +492,13 @@ function updateGadflyPlotTheme(plt::Plot, d::Dict)
   # # TODO: should this be part of the main `plot` command in plot.jl???
   # d = merge!(plt.plotargs, d)
 
-  # hide the legend?
-  if !get(d, :legend, true)
-    kwargs[:key_position] = :none
+  # # hide the legend?
+  # if !get(d, :legend, true)
+  #   kwargs[:key_position] = :none
+  # end
+  leg = d[d[:legend] == :none ? :colorbar : :legend]
+  if leg != :best
+    kwargs[:key_position] = leg == :inside ? :right : leg
   end
 
   if !get(d, :grid, true)

@@ -326,7 +326,10 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     if lt in (:scatter, :scatter3d)
       extra_kwargs[:s] = d[:markersize].^2
       c = d[:markercolor]
-      if isa(c, ColorGradient) && d[:zcolor] != nothing
+      if d[:zcolor] != nothing
+        if !isa(c, ColorGradient)
+          c = colorscheme(:bluesreds)
+        end
         extra_kwargs[:c] = convert(Vector{Float64}, d[:zcolor])
         extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
       else
@@ -405,8 +408,8 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   handleSmooth(plt, ax, d, d[:smooth])
 
   # add the colorbar legend
-  if plt.plotargs[:legend] && haskey(extra_kwargs, :cmap)
-    PyPlot.colorbar(d[:serieshandle])
+  if plt.plotargs[:colorbar] != :none && haskey(extra_kwargs, :cmap)
+    PyPlot.colorbar(d[:serieshandle], ax=ax)
   end
 
   # @show extra_kwargs
@@ -671,15 +674,23 @@ end
 
 # -----------------------------------------------------------------
 
+const _pyplot_legend_pos = Dict(
+    :right => "right",
+    :left => "center left",
+    :top => "upper center",
+    :bottom => "lower center"
+  )
+
 # function addPyPlotLegend(plt::Plot)
 function addPyPlotLegend(plt::Plot, ax)
-  if plt.plotargs[:legend]
+  leg = plt.plotargs[:legend]
+  if leg != :none
     # gotta do this to ensure both axes are included
     args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:heatmap,:hline,:vline,:contour, :surface, :wireframe, :path3d, :scatter3d)), plt.seriesargs)
     if length(args) > 0
       leg = ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],
-                  loc="best",
+                  loc = get(_pyplot_legend_pos, leg, "best"),
                   fontsize = plt.plotargs[:legendfont].pointsize
                   # framealpha = 0.6
                  )

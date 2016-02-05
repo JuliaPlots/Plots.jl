@@ -59,7 +59,7 @@ function rebuildUnicodePlot!(plt::Plot)
 
   # now use the ! functions to add to the plot
   for d in sargs
-    addUnicodeSeries!(o, d, iargs[:legend], xlim, ylim)
+    addUnicodeSeries!(o, d, iargs[:legend] != :none, xlim, ylim)
   end
 
   # save the object

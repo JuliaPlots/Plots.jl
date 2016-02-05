@@ -150,7 +150,8 @@ _plotDefaults[:title]             = ""
 _plotDefaults[:xlabel]            = ""
 _plotDefaults[:ylabel]            = ""
 _plotDefaults[:yrightlabel]       = ""
-_plotDefaults[:legend]            = true
+_plotDefaults[:legend]            = :best
+_plotDefaults[:colorbar]          = :legend
 _plotDefaults[:background_color]  = colorant"white"
 _plotDefaults[:foreground_color]  = :auto
 _plotDefaults[:xlims]             = :auto
@@ -272,6 +273,9 @@ end
     :ylabel2            => :yrightlabel,
     :y2label            => :yrightlabel,
     :leg                => :legend,
+    :key                => :legend,
+    :cbar               => :colorbar,
+    :cb                 => :colorbar,
     :bg                 => :background_color,
     :bgcolor            => :background_color,
     :bg_color           => :background_color,
@@ -532,6 +536,14 @@ function preprocessArgs!(d::Dict)
 
   # convert into strokes and brushes
 
+  # legends
+  if haskey(d, :legend)
+    d[:legend] = convertLegendValue(d[:legend])
+  end
+  if haskey(d, :colorbar)
+    d[:colorbar] = convertLegendValue(d[:colorbar])
+  end
+
   # handle subplot links
   if haskey(d, :link)
     l = d[:link]
@@ -639,6 +651,19 @@ function setDictValue(d_in::Dict, d_out::Dict, k::Symbol, idx::Int, defaults::Di
   end
 end
 
+function convertLegendValue(val::Symbol)
+  if val in (:both, :all, :yes)
+    :best
+  elseif val in (:no, :none)
+    :none
+  elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend)
+    val
+  else
+    error("Invalid symbol for legend: $val")
+  end
+end
+convertLegendValue(val::Bool) = val ? :best : :none
+
 # -----------------------------------------------------------------------------
 
 # build the argument dictionary for the plot
@@ -657,6 +682,13 @@ function getPlotArgs(pkg::PlottingPackage, kw, idx::Int; set_defaults = true)
     if haskey(_scaleAliases, d[k])
       d[k] = _scaleAliases[d[k]]
     end
+  end
+
+  # handle legend/colorbar
+  d[:legend] = convertLegendValue(d[:legend])
+  d[:colorbar] = convertLegendValue(d[:colorbar])
+  if d[:colorbar] == :legend
+    d[:colorbar] = d[:legend]
   end
 
   # convert color

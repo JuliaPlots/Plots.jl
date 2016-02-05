@@ -231,8 +231,8 @@ function plotly_layout(d::Dict)
   d_out[:yaxis] = plotlyaxis(d, false)
 
   # legend
-  d_out[:showlegend] = d[:legend]
-  if d[:legend]
+  d_out[:showlegend] = d[:legend] != :none
+  if d[:legend] != :none
     d_out[:legend] = Dict{Symbol,Any}(
         :bgcolor  => bgcolor,
         :bordercolor => fgcolor,
