@@ -34,10 +34,12 @@ end
 @init_plotting_pkg Winston
 @init_plotting_pkg Bokeh
 @init_plotting_pkg Plotly
+@init_plotting_pkg PlotlyJS
 @init_plotting_pkg GR
 @init_plotting_pkg GLVisualize
 @init_plotting_pkg PGFPlots
 
+include("backends/web.jl")
 include("backends/supported.jl")
 
 # ---------------------------------------------------------

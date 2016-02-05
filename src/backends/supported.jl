@@ -570,6 +570,75 @@ stringsSupported(::PlotlyPackage) = true
 
 # --------------------------------------------------------------------------------------
 
+supportedArgs(::PlotlyJSPackage) = [
+    :annotation,
+    # :axis,
+    :background_color,
+    :color_palette,
+    :fillrange,
+    :fillcolor,
+    :fillalpha,
+    :foreground_color,
+    :group,
+    :label,
+    :layout,
+    :legend,
+    :linecolor,
+    :linestyle,
+    :linetype,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokestyle,
+    :n,
+    :nbins,
+    :nc,
+    :nr,
+    # :pos,
+    # :smooth,
+    :show,
+    :size,
+    :title,
+    :windowtitle,
+    :x,
+    :xlabel,
+    :xlims,
+    :xticks,
+    :y,
+    :ylabel,
+    :ylims,
+    # :yrightlabel,
+    :yticks,
+    :xscale,
+    :yscale,
+    :xflip,
+    :yflip,
+    :z,
+    :zcolor,
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    :levels,
+  ]
+supportedAxes(::PlotlyJSPackage) = [:auto, :left]
+supportedTypes(::PlotlyJSPackage) = [:none, :line, :path, :scatter, :steppre, :steppost,
+                                   :heatmap, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
+                                   :pie] #,, :sticks, :hexbin, :hline, :vline]
+supportedStyles(::PlotlyJSPackage) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::PlotlyJSPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
+                                     :pentagon, :hexagon, :octagon, :vline, :hline] #vcat(_allMarkers, Shape)
+supportedScales(::PlotlyJSPackage) = [:identity, :log10] #, :ln, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::PlotlyJSPackage) = true
+stringsSupported(::PlotlyJSPackage) = true
+
+# --------------------------------------------------------------------------------------
+
 supportedArgs(::GLVisualizePackage) = [
     # :annotation,
     # :axis,
