@@ -445,17 +445,6 @@ function createKWargsList{R1<:Real,R2<:Real}(plt::PlottingObject, xy::Tuple{R1,R
   createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
 end
 
-@require FixedSizeArrays begin
-  unzip{T}(x::AVec{FixedSizeArrays.Vec{2,T}}) = T[xi[1] for xi in x], T[xi[2] for xi in x]
-  unzip{T}(x::FixedSizeArrays.Vec{2,T}) = T[x[1]], T[x[2]]
-
-  function createKWargsList{T<:Real}(plt::PlottingObject, xy::AVec{FixedSizeArrays.Vec{2,T}}; kw...)
-    createKWargsList(plt, unzip(xy)...; kw...)
-  end
-  function createKWargsList{T<:Real}(plt::PlottingObject, xy::FixedSizeArrays.Vec{2,T}; kw...)
-    createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
-  end
-end
 
 
 # special handling... no args... 1 series
@@ -476,16 +465,34 @@ end
 
 # --------------------------------------------------------------------
 
-"For DataFrame support.  Imports DataFrames and defines the necessary methods which support them."
-function dataframes()
-  @eval import DataFrames
 
-  @eval function createKWargsList(plt::PlottingObject, df::DataFrames.AbstractDataFrame, args...; kw...)
+@require FixedSizeArrays begin
+
+  unzip{T}(x::AVec{FixedSizeArrays.Vec{2,T}}) = T[xi[1] for xi in x], T[xi[2] for xi in x]
+  unzip{T}(x::FixedSizeArrays.Vec{2,T}) = T[x[1]], T[x[2]]
+
+  function createKWargsList{T<:Real}(plt::PlottingObject, xy::AVec{FixedSizeArrays.Vec{2,T}}; kw...)
+    createKWargsList(plt, unzip(xy)...; kw...)
+  end
+
+  function createKWargsList{T<:Real}(plt::PlottingObject, xy::FixedSizeArrays.Vec{2,T}; kw...)
+    createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
+  end
+
+end
+
+# --------------------------------------------------------------------
+
+# For DataFrame support.  Imports DataFrames and defines the necessary methods which support them.
+
+@require DataFrames begin
+
+  function createKWargsList(plt::PlottingObject, df::DataFrames.AbstractDataFrame, args...; kw...)
     createKWargsList(plt, args...; kw..., dataframe = df)
   end
 
   # expecting the column name of a dataframe that was passed in... anything else should error
-  @eval function extractGroupArgs(s::Symbol, df::DataFrames.AbstractDataFrame, args...)
+  function extractGroupArgs(s::Symbol, df::DataFrames.AbstractDataFrame, args...)
     if haskey(df, s)
       return extractGroupArgs(df[s])
     else
@@ -493,7 +500,7 @@ function dataframes()
     end
   end
 
-  @eval function getDataFrameFromKW(; kw...)
+  function getDataFrameFromKW(; kw...)
     for (k,v) in kw
       if k == :dataframe
         return v
@@ -503,8 +510,9 @@ function dataframes()
   end
 
   # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
-  @eval convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]], s
-  @eval convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v]), v
+  convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]], s
+  convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v]), v
+
 end
 
 
