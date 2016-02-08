@@ -437,6 +437,25 @@ createKWargsList{T<:Real}(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs,
 createKWargsList{T<:Real}(plt::PlottingObject, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
 createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, linspace(umin, umax, numPoints); kw...)
 
+# (x,y) tuples
+function createKWargsList{R1<:Real,R2<:Real}(plt::PlottingObject, xy::AVec{Tuple{R1,R2}}; kw...)
+  createKWargsList(plt, unzip(xy)...; kw...)
+end
+function createKWargsList{R1<:Real,R2<:Real}(plt::PlottingObject, xy::Tuple{R1,R2}; kw...)
+  createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
+end
+
+@require FixedSizeArrays begin
+  unzip{T}(x::AVec{FixedSizeArrays.Vec{2,T}}) = T[xi[1] for xi in x], T[xi[2] for xi in x]
+  unzip{T}(x::FixedSizeArrays.Vec{2,T}) = T[x[1]], T[x[2]]
+
+  function createKWargsList{T<:Real}(plt::PlottingObject, xy::AVec{FixedSizeArrays.Vec{2,T}}; kw...)
+    createKWargsList(plt, unzip(xy)...; kw...)
+  end
+  function createKWargsList{T<:Real}(plt::PlottingObject, xy::FixedSizeArrays.Vec{2,T}; kw...)
+    createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
+  end
+end
 
 
 # special handling... no args... 1 series

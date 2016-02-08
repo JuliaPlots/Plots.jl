@@ -687,6 +687,7 @@ function addPyPlotLegend(plt::Plot, ax)
   if leg != :none
     # gotta do this to ensure both axes are included
     args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:heatmap,:hline,:vline,:contour, :surface, :wireframe, :path3d, :scatter3d)), plt.seriesargs)
+    args = filter(x -> x[:label] != "", args)
     if length(args) > 0
       leg = ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],

@@ -234,7 +234,7 @@ end
 function addToGadflyLegend(plt::Plot, d::Dict)
 
   # add the legend?
-  if plt.plotargs[:legend] != :none
+  if plt.plotargs[:legend] != :none && d[:label] != ""
     gplt = getGadflyContext(plt)
 
     # add the legend if needed

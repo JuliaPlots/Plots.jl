@@ -6,6 +6,7 @@ module Plots
 using Compat
 using Reexport
 @reexport using Colors
+using Requires
 
 export
   Plot,
@@ -114,6 +115,7 @@ export
   Animation,
   frame,
   gif,
+  @animate,
 
   # recipes
   PlotRecipe,

@@ -51,3 +51,36 @@ end
 function Base.writemime(io::IO, ::MIME"text/html", agif::AnimatedGif)
   write(io, "<img src=\"$(relpath(agif.filename))?$(rand())>\" />")
 end
+
+
+# -----------------------------------------------
+
+"""
+Collect one frame per for-block iteration and return an `Animation` object.
+
+Example:
+
+```
+  p = plot(1)
+  anim = @animate for x=0:0.1:5
+    push!(p, 1, sin(x))
+  end
+```
+"""
+macro animate(forloop::Expr)
+  if forloop.head != :for
+    error("@animate macro expects a for-block. got: $(forloop.head)")
+  end
+
+  # add the call to frame to the end of each iteration
+  animsym = gensym("anim")
+  block = forloop.args[2]
+  push!(block.args, :(frame($animsym)))
+
+  # full expression:
+  esc(quote
+    $animsym = Animation()  # init animation object
+    $forloop                   # for loop, saving a frame after each iteration
+    $animsym                # return the animation object
+  end)
+end
