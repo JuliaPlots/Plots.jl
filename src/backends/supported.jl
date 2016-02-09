@@ -189,6 +189,7 @@ supportedArgs(::GRPackage) = [
     :label,
     :layout,
     :legend,
+    :colorbar,
     :linestyle,
     :linetype,
     :linewidth,

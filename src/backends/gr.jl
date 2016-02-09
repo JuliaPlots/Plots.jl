@@ -121,6 +121,12 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         end
       end
     end
+    if xmax <= xmin
+      xmax = xmin + 1
+    end
+    if ymax <= ymin
+      ymax = ymin + 1
+    end
     extrema[axis,:] = [xmin, xmax, ymin, ymax]
   end
 
@@ -236,14 +242,18 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         GR.setfillcolorind(gr_getcolorind(p[:fillcolor]))
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
       end
-      if p[:fillrange] != nothing
-        GR.fillarea([p[:x][1]; p[:x]; p[:x][length(p[:x])]], [p[:fillrange]; p[:y]; p[:fillrange]])
+      if length(p[:x]) > 1
+        if p[:fillrange] != nothing
+          GR.fillarea([p[:x][1]; p[:x]; p[:x][length(p[:x])]], [p[:fillrange]; p[:y]; p[:fillrange]])
+        end
+        GR.polyline(p[:x], p[:y])
       end
-      GR.polyline(p[:x], p[:y])
       legend = true
     end
     if p[:linetype] == :line
-      GR.polyline(p[:x], p[:y])
+      if length(p[:x]) > 1
+        GR.polyline(p[:x], p[:y])
+      end
       legend = true
     elseif p[:linetype] in [:steppre, :steppost]
       n = length(p[:x])
@@ -261,7 +271,9 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         end
         j += 2
       end
-      GR.polyline(x, y)
+      if n > 1
+        GR.polyline(x, y)
+      end
       legend = true
     elseif p[:linetype] == :sticks
       x, y = p[:x], p[:y]
@@ -275,7 +287,9 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       if haskey(d, :markersize)
         if typeof(d[:markersize]) <: Number
           GR.setmarkersize(d[:markersize] / 4.0)
-          GR.polymarker(p[:x], p[:y])
+          if length(p[:x]) > 0
+            GR.polymarker(p[:x], p[:y])
+          end
         else
           c = p[:markercolor]
           GR.setcolormap(-GR.COLORMAP_GLOWING)
@@ -289,7 +303,9 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
           end
         end
       else
-        GR.polymarker(p[:x], p[:y])
+        if length(p[:x]) > 0
+          GR.polymarker(p[:x], p[:y])
+        end
       end
       legend = true
     elseif p[:linetype] == :bar
@@ -419,7 +435,9 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         end
       else
         haskey(p, :linewidth) && GR.setlinewidth(p[:linewidth])
-        GR.polyline3d(x, y, z)
+        if length(x) > 0
+          GR.polyline3d(x, y, z)
+        end
       end
       GR.setlinewidth(1)
       GR.setcharheight(charheight)
