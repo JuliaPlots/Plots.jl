@@ -321,6 +321,14 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
       d[:linetype] = :path
     end
 
+    # map functions to vectors
+    if isa(d[:zcolor], Function)
+      d[:zcolor] = map(d[:zcolor], d[:x])
+    end
+    if isa(d[:fillrange], Function)
+      d[:fillrange] = map(d[:fillrange], d[:x])
+    end
+
     # cleanup those fields that were used only for generating kw args
     for k in (:idxfilter, :numUncounted, :dataframe)
       delete!(d, k)

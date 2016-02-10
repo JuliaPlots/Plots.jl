@@ -493,7 +493,16 @@ function processFillArg(d::Dict, arg)
     arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
     arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
+  # fillrange function
+  elseif trueOrAllTrue(a -> isa(a, Function), arg)
+    d[:fillrange] = arg
+
+  # fillalpha
+  elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+    d[:fillalpha] = arg
+
   elseif !handleColors!(d, arg, :fillcolor)
+    
     d[:fillrange] = arg
   end
 end
@@ -745,8 +754,6 @@ function getSeriesArgs(pkg::PlottingPackage, plotargs::Dict, kw, commandIndex::I
   c = d[:fillcolor]
   c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
   d[:fillcolor] = c
-
-  # TODO: rebuild
 
   # set label
   label = d[:label]
