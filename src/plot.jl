@@ -186,12 +186,20 @@ updateDictWithMeta(d::Dict, plotargs::Dict, meta, isx::Bool) = nothing
 annotations(::@compat(Void)) = []
 annotations{X,Y,V}(v::AVec{@compat(Tuple{X,Y,V})}) = v
 annotations{X,Y,V}(t::@compat(Tuple{X,Y,V})) = [t]
+annotations(v::AVec{PlotText}) = v
 annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
                        "(x, y, annotation)\n    got: $(typeof(anns))")
 
 function _add_annotations(plt::Plot, d::Dict)
   anns = annotations(get(d, :annotation, nothing))
   if !isempty(anns)
+
+    # if we just have a list of PlotText objects, then create (x,y,text) tuples
+    if typeof(anns) <: AVec{PlotText}
+      x, y = plt[plt.n]
+      anns = Tuple{Float64,Float64,PlotText}[(x[i], y[i], t) for (i,t) in enumerate(anns)]
+    end
+
     _add_annotations(plt, anns)
   end
 end
