@@ -23,7 +23,7 @@ facts("PyPlot") do
     @fact pyplot() --> Plots.PyPlotPackage()
     @fact backend() --> Plots.PyPlotPackage()
 
-    image_comparison_facts(:pyplot, skip=[10,19,21,23], eps=img_eps)
+    image_comparison_facts(:pyplot, skip=[10,13,19,21,23], eps=img_eps)
 end
 
 FactCheck.exitstatus()
