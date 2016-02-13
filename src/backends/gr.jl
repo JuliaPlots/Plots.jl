@@ -69,6 +69,16 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     viewport[4] = subplot[3] + 0.95 * (subplot[4] - subplot[3])
   end
 
+  if haskey(d, :background_color)
+    GR.savestate()
+    GR.selntran(0)
+    GR.setfillintstyle(GR.INTSTYLE_SOLID)
+    GR.setfillcolorind(gr_getcolorind(d[:background_color]))
+    GR.fillrect(0, 1, 0, 1)
+    GR.selntran(1)
+    GR.restorestate()
+  end
+
   extrema = zeros(2, 4)
   num_axes = 1
   cmap = false
@@ -172,13 +182,6 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     end
 
     GR.setwindow(xmin, xmax, ymin, ymax)
-    if axis == 1 && haskey(d, :background_color)
-      GR.savestate()
-      GR.setfillintstyle(GR.INTSTYLE_SOLID)
-      GR.setfillcolorind(gr_getcolorind(d[:background_color]))
-      GR.fillrect(xmin, xmax, ymin, ymax)
-      GR.restorestate()
-    end
     GR.setscale(scale)
 
     if axes_2d
