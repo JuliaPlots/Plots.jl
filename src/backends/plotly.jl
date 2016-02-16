@@ -27,11 +27,6 @@ function _initialize_backend(::PlotlyPackage; kw...)
     # end borrowing (thanks :)
     ###########################
 
-    # try
-    #   include(joinpath(Pkg.dir("Plots"), "src", "backends", "plotly_blink.jl"))
-    # catch err
-    #   warn("Error including PlotlyJS: $err\n  Note: Will fall back to built-in display.")
-    # end
   end
   # TODO: other initialization
 end

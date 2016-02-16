@@ -206,6 +206,7 @@ isscalar(::Any) = false
 
 # ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
 ticksType{T<:Real}(ticks::AVec{T}) = :ticks
+ticksType{T<:AbstractString}(ticks::AVec{T}) = :labels
 ticksType{T<:AVec,S<:AVec}(ticks::@compat(Tuple{T,S})) = :ticks_and_labels
 ticksType(ticks) = :invalid
 

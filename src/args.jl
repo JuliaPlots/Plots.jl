@@ -518,6 +518,12 @@ function preprocessArgs!(d::Dict)
       processAxisArg(d, axisletter, arg)
     end
     delete!(d, asym)
+
+    # turn :labels into :ticks_and_labels
+    tsym = symbol(axisletter * "ticks")
+    if haskey(d, tsym) && ticksType(d[tsym]) == :labels
+      d[tsym] = (1:length(d[tsym]), d[tsym])
+    end
   end
 
   # handle line args

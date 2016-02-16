@@ -493,7 +493,8 @@ function addPyPlotTicks(ax, ticks, isx::Bool)
   if ttype == :ticks
     ax[isx ? :set_xticks : :set_yticks](ticks)
   elseif ttype == :ticks_and_labels
-    ax[isx ? :set_xticks : :set_yticks](ticks...)
+    ax[isx ? :set_xticks : :set_yticks](ticks[1])
+    ax[isx ? :set_xticklabels : :set_yticklabels](ticks[2])
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
   end

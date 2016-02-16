@@ -369,7 +369,7 @@ function addGadflyTicksGuide(gplt, ticks, isx::Bool)
     gfunc = isx ? Gadfly.Scale.x_discrete : Gadfly.Scale.y_discrete
     labelmap = Dict(zip(ticks...))
     labelfunc = val -> labelmap[val]
-    push!(gplt.scales, gfunc(levels = ticks[1], labels = labelfunc))
+    push!(gplt.scales, gfunc(levels = collect(ticks[1]), labels = labelfunc))
 
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
