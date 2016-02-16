@@ -81,6 +81,14 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     end
     GR.selntran(1)
     GR.restorestate()
+    c = getColor(d[:background_color])
+    if 0.21 * c.r + 0.72 * c.g + 0.07 * c.b < 0.5
+      fg = convert(Int, GR.inqcolorfromrgb(1-c.r, 1-c.g, 1-c.b))
+    else
+      fg = 1
+    end
+  else
+    fg = 1
   end
 
   extrema = zeros(2, 4)
@@ -191,8 +199,10 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     if axes_2d
       diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
       GR.setlinewidth(1)
+      GR.setlinecolorind(fg)
       charheight = max(0.018 * diag, 0.01)
       GR.setcharheight(charheight)
+      GR.settextcolorind(fg)
       ticksize = 0.0075 * diag
       GR.grid(xtick, ytick, 0, 0, majorx, majory)
       if num_axes == 1
@@ -209,12 +219,14 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
   if get(d, :title, "") != ""
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+    GR.settextcolorind(fg)
     GR.text(0.5 * (viewport[1] + viewport[2]), min(ratio, 1), d[:title])
     GR.restorestate()
   end
   if get(d, :xlabel, "") != ""
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
+    GR.settextcolorind(fg)
     GR.text(0.5 * (viewport[1] + viewport[2]), 0, d[:xlabel])
     GR.restorestate()
   end
@@ -222,6 +234,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
+    GR.settextcolorind(fg)
     GR.text(0, 0.5 * (viewport[3] + viewport[4]), d[:ylabel])
     GR.restorestate()
   end
@@ -229,6 +242,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(1, 0)
+    GR.settextcolorind(fg)
     GR.text(1, 0.5 * (viewport[3] + viewport[4]), d[:yrightlabel])
     GR.restorestate()
   end
@@ -483,13 +497,13 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     end
     px = viewport[2] - 0.05 - w
     py = viewport[4] - 0.06
+    dy = 0.03 * sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     GR.setfillcolorind(0)
-    GR.fillrect(px - 0.08, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
+    GR.fillrect(px - 0.08, px + w + 0.02, py + dy, py - dy * length(plt.seriesargs))
     GR.setlinetype(1)
-    GR.setlinecolorind(1)
     GR.setlinewidth(1)
-    GR.drawrect(px - 0.08, px + w + 0.02, py + 0.03, py - 0.03 * length(plt.seriesargs))
+    GR.drawrect(px - 0.08, px + w + 0.02, py + dy, py - dy * length(plt.seriesargs))
     haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
     i = 0
     for p in plt.seriesargs
@@ -514,8 +528,9 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         lab = p[:label]
       end
       GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
+      GR.settextcolorind(1)
       GR.text(px, py, lab)
-      py -= 0.03
+      py -= dy
     end
     GR.selntran(1)
     GR.restorestate()
