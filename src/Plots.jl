@@ -116,6 +116,7 @@ export
   frame,
   gif,
   @animate,
+  @gif,
 
   # recipes
   PlotRecipe,

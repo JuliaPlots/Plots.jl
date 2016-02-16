@@ -55,6 +55,69 @@ end
 
 # -----------------------------------------------
 
+function _animate(forloop::Expr, args...; callgif = false)
+  if forloop.head != :for
+    error("@animate macro expects a for-block. got: $(forloop.head)")
+  end
+
+  # add the call to frame to the end of each iteration
+  animsym = gensym("anim")
+  countersym = gensym("counter")
+  block = forloop.args[2]
+
+  # create filter
+  n = length(args)
+  filterexpr = if n == 0
+    # no filter... every iteration gets a frame
+    true
+
+  elseif args[1] == :every
+    # filter every `freq` frames (starting with the first frame)
+    @assert n == 2
+    freq = args[2]
+    @assert isa(freq, Integer) && freq > 0
+    :(mod1($countersym, $freq) == 1)
+
+  elseif args[1] == :when
+    # filter on custom expression
+    @assert n == 2
+    args[2]
+
+  else
+    error("Unsupported animate filter: $args")
+  end
+
+  push!(block.args, :(if $filterexpr; frame($animsym); end))
+  push!(block.args, :($countersym += 1))
+
+  # add a final call to `gif(anim)`?
+  retval = callgif ? :(gif($animsym)) : animsym
+
+  # full expression:
+  esc(quote
+    $animsym = Animation()  # init animation object
+    $countersym = 1         # init iteration counter
+    $forloop                # for loop, saving a frame after each iteration
+    $retval                 # return the animation object, or the gif
+  end)
+end
+
+"""
+Builds an `Animation` using one frame per loop iteration, then create an animated GIF.
+
+Example:
+
+```
+  p = plot(1)
+  @gif for x=0:0.1:5
+    push!(p, 1, sin(x))
+  end
+```
+"""
+macro gif(forloop::Expr, args...)
+  _animate(forloop, args...; callgif = true)
+end
+
 """
 Collect one frame per for-block iteration and return an `Animation` object.
 
@@ -65,22 +128,9 @@ Example:
   anim = @animate for x=0:0.1:5
     push!(p, 1, sin(x))
   end
+  gif(anim)
 ```
 """
-macro animate(forloop::Expr)
-  if forloop.head != :for
-    error("@animate macro expects a for-block. got: $(forloop.head)")
-  end
-
-  # add the call to frame to the end of each iteration
-  animsym = gensym("anim")
-  block = forloop.args[2]
-  push!(block.args, :(frame($animsym)))
-
-  # full expression:
-  esc(quote
-    $animsym = Animation()  # init animation object
-    $forloop                   # for loop, saving a frame after each iteration
-    $animsym                # return the animation object
-  end)
+macro animate(forloop::Expr, args...)
+  _animate(forloop, args...)
 end
