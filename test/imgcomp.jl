@@ -16,9 +16,6 @@ using Plots, FactCheck
 default(size=(500,300))
 
 
-# reference image directory setup
-_refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))
-
 # TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that 
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
@@ -34,6 +31,9 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
   # ensure consistent results
   srand(1234)
 
+  # reference image directory setup
+  refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))
+
   # test function
   func = (fn, idx) -> begin
     map(eval, example.exprs)
@@ -41,11 +41,11 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
   end
 
   try
-    run(`mkdir -p $(_refdir)`)
+    run(`mkdir -p $refdir`)
   catch err
     display(err)
   end
-  reffn = joinpath(_refdir, "ref$idx.png")
+  reffn = joinpath(refdir, "ref$idx.png")
 
   # the test
   vtest = VisualTest(func, reffn, idx)
