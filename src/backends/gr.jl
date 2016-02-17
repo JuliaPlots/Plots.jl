@@ -82,7 +82,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     GR.selntran(1)
     GR.restorestate()
     c = getColor(d[:background_color])
-    if 0.21 * c.r + 0.72 * c.g + 0.07 * c.b < 0.5
+    if 0.21 * c.r + 0.72 * c.g + 0.07 * c.b < 0.9
       fg = convert(Int, GR.inqcolorfromrgb(1-c.r, 1-c.g, 1-c.b))
     else
       fg = 1
@@ -204,7 +204,9 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       GR.setcharheight(charheight)
       GR.settextcolorind(fg)
       ticksize = 0.0075 * diag
-      GR.grid(xtick, ytick, 0, 0, majorx, majory)
+      if fg == 1
+        GR.grid(xtick, ytick, 0, 0, majorx, majory)
+      end
       if num_axes == 1
         GR.axes(xtick, ytick, xorg[1], yorg[1], majorx, majory, ticksize)
         GR.axes(xtick, ytick, xorg[2], yorg[2], -majorx, -majory, -ticksize)
@@ -410,11 +412,9 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
       charheight = max(0.018 * diag, 0.01)
       ticksize = 0.01 * (viewport[2] - viewport[1])
-      # GR.savestate()
       GR.setlinewidth(1)
       GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
       GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
-      # GR.restorestate()
       z = reshape(z, length(x) * length(y))
       if p[:linetype] == :surface
         GR.setcolormap(GR.COLORMAP_COOLWARM)
@@ -442,11 +442,11 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
       charheight = max(0.018 * diag, 0.01)
       ticksize = 0.01 * (viewport[2] - viewport[1])
-      # GR.savestate()
       GR.setlinewidth(1)
-      GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
-      GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
-      # GR.restorestate()
+      if p[:linetype] == :path3d
+        GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
+        GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
+      end
       if p[:linetype] == :scatter3d
         haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
         haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
