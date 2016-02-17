@@ -31,6 +31,7 @@ end
 
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
+getPyPlotColor(cvec::ColorVector, α=nothing) = map(getPyPlotColor, convertColor(cvec, α).v)
 getPyPlotColor(scheme::ColorScheme, α=nothing) = getPyPlotColor(convertColor(getColor(scheme), α))
 getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
 # getPyPlotColor(c, alpha) = getPyPlotColor(colorscheme(c, alpha))
@@ -90,8 +91,14 @@ function getPyPlotMarker(marker::Symbol)
   return "o"
 end
 
+# getPyPlotMarker(markers::AVec) = map(getPyPlotMarker, markers)
+function getPyPlotMarker(markers::AVec)
+  warn("Vectors of markers are currently unsupported in PyPlot: $markers")
+  getPyPlotMarker(markers[1])
+end
+
 # pass through
-function getPyPlotMarker(marker::@compat(AbstractString))
+function getPyPlotMarker(marker::AbstractString)
   @assert length(marker) == 1
   marker
 end
@@ -249,9 +256,19 @@ end
 function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
+  # 3D plots have a different underlying Axes object in PyPlot
   lt = d[:linetype]
   if lt in _3dTypes && isempty(plt.o.kwargs)
     push!(plt.o.kwargs, (:projection, "3d"))
+  end
+
+  # handle mismatched x/y sizes, as PyPlot doesn't like that
+  x, y = d[:x], d[:y]
+  nx, ny = map(length, (x,y))
+  if nx < ny
+    d[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
+  else
+    d[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
   end
 
   ax = getAxis(plt, d[:axis])

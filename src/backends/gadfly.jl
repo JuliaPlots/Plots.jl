@@ -168,11 +168,16 @@ end
 
 # ---------------------------------------------------------------------------
 
+# extract the underlying ShapeGeometry object(s)
+getMarkerGeom(shape::Shape) = gadflyshape(shape)
+getMarkerGeom(shape::Symbol) = gadflyshape(_shapes[shape])
+getMarkerGeom(shapes::AVec) = map(getMarkerGeom, shapes)
+getMarkerGeom(d::Dict) = getMarkerGeom(d[:markershape])
 
-function getMarkerGeom(d::Dict)
-  shape = d[:markershape]
-  gadflyshape(isa(shape, Shape) ? shape : _shapes[shape])
-end
+# function getMarkerGeom(d::Dict)
+#   shape = d[:markershape]
+#   gadflyshape(isa(shape, Shape) ? shape : _shapes[shape])
+# end
 
 
 function getGadflyMarkerTheme(d::Dict, plotargs::Dict)

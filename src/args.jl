@@ -507,6 +507,11 @@ function processFillArg(d::Dict, arg)
   end
 end
 
+_replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
+_replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
+_replace_markershape(shape) = shape
+
+
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
 function preprocessArgs!(d::Dict)
   replaceAliases!(d, _keyAliases)
@@ -539,7 +544,12 @@ function preprocessArgs!(d::Dict)
     anymarker = true
   end
   delete!(d, :marker)
-  if anymarker && !haskey(d, :markershape)
+  # if anymarker && !haskey(d, :markershape)
+  #   d[:markershape] = :ellipse
+  # end
+  if haskey(d, :markershape)
+    d[:markershape] = _replace_markershape(d[:markershape])
+  elseif anymarker
     d[:markershape] = :ellipse
   end
 
@@ -619,6 +629,9 @@ function warnOnUnsupportedArgs(pkg::PlottingPackage, d::Dict)
   end
 end
 
+_markershape_supported(pkg::PlottingPackage, shape::Symbol) = shape in supportedMarkers(pkg)
+_markershape_supported(pkg::PlottingPackage, shape::Shape) = Shape in supportedMarkers(pkg)
+_markershape_supported(pkg::PlottingPackage, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
   (d[:axis] in supportedAxes(pkg)
@@ -629,8 +642,9 @@ function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
   (d[:linestyle] in supportedStyles(pkg)
     || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))"))
   (d[:markershape] == :none
-    || d[:markershape] in supportedMarkers(pkg)
-    || (Shape in supportedMarkers(pkg) && typeof(d[:markershape]) <: Shape)
+    || _markershape_supported(pkg, d[:markershape])
+    # || d[:markershape] in supportedMarkers(pkg)
+    # || (Shape in supportedMarkers(pkg) && typeof(d[:markershape]) <: Shape)
     || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))"))
 end
 
