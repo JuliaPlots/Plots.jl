@@ -241,3 +241,58 @@ type OHLC{T<:Real}
   low::T
   close::T
 end
+
+
+@require FixedSizeArrays begin
+
+  export
+    P2,
+    P3,
+    points,
+    BezierCurve
+  
+  typealias P2 FixedSizeArrays.Vec{2,Float64}
+  typealias P3 FixedSizeArrays.Vec{3,Float64}
+
+  type BezierCurve{T <: FixedSizeArrays.Vec}
+      points::Vector{T}
+  end
+
+  function Base.call(bc::BezierCurve, t::Real)
+      p = zero(P2)
+      n = length(bc.points)-1
+      for i in 0:n
+          p += bc.points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
+      end
+      p
+  end
+
+  Base.mean(x::Real, y::Real) = 0.5*(x+y)
+  Base.mean{N,T<:Real}(p::FixedSizeArrays.Vec{N,T}, q::FixedSizeArrays.Vec{N,T}) = 0.5 * (p + q)
+
+  points(curve::BezierCurve, n::Integer = 50) = map(curve, linspace(0,1,n))
+
+  function BezierCurve(p::P2, q::P2)
+    mn = mean(p,q)
+    yoffset = max(0.2, min(1.0, abs(mn[2]-p[2])))
+    firstoffset = P2(0, yoffset)
+
+    uppery = p + firstoffset
+    lowery = q - firstoffset
+    insideoffset = P2(0.2,0)
+    inside = []
+    if abs(p[1]-q[1]) <= 0.1 && p[2] >= q[2]
+      inside = [uppery+insideoffset, lowery+insideoffset]
+    end
+    # inside = if abs(p[1]-q[1]) <= 0
+    #     [uppery+insideoffset, lowery+insideoffset]
+    # else
+    #     []
+    # end
+
+    # if p[2] < q[2] + 0.5
+        
+    BezierCurve([p, uppery, inside..., lowery, q])
+  end
+
+end
