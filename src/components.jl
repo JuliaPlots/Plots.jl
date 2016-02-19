@@ -131,6 +131,7 @@ immutable PlotText
   str::@compat(AbstractString)
   font::Font
 end
+PlotText(str) = PlotText(string(str), font())
 
 function text(str, args...)
   PlotText(string(str), font(args...))
@@ -268,7 +269,7 @@ end
   end
 
   Base.mean(x::Real, y::Real) = 0.5*(x+y)
-  Base.mean{N,T<:Real}(p::FixedSizeArrays.Vec{N,T}, q::FixedSizeArrays.Vec{N,T}) = 0.5 * (p + q)
+  Base.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps)
 
   points(curve::BezierCurve, n::Integer = 50) = map(curve, linspace(0,1,n))
 

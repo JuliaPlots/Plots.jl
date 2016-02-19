@@ -187,6 +187,7 @@ annotations(::@compat(Void)) = []
 annotations{X,Y,V}(v::AVec{@compat(Tuple{X,Y,V})}) = v
 annotations{X,Y,V}(t::@compat(Tuple{X,Y,V})) = [t]
 annotations(v::AVec{PlotText}) = v
+annotations(v::AVec) = map(PlotText, v)
 annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
                        "(x, y, annotation)\n    got: $(typeof(anns))")
 
