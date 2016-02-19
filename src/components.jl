@@ -250,7 +250,8 @@ end
     P2,
     P3,
     points,
-    BezierCurve
+    BezierCurve,
+    directed_curve
   
   typealias P2 FixedSizeArrays.Vec{2,Float64}
   typealias P3 FixedSizeArrays.Vec{3,Float64}
@@ -273,25 +274,24 @@ end
 
   points(curve::BezierCurve, n::Integer = 50) = map(curve, linspace(0,1,n))
 
-  function BezierCurve(p::P2, q::P2)
+  # build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
+  # may create a loop if necessary
+  function directed_curve(p::P2, q::P2)
     mn = mean(p,q)
-    yoffset = max(0.2, min(1.0, abs(mn[2]-p[2])))
+    
+    # these points give the initial/final "rise"
+    yoffset = max(0.3, min(1.0, abs(mn[2]-p[2])))
     firstoffset = P2(0, yoffset)
-
     uppery = p + firstoffset
     lowery = q - firstoffset
+
+    # try to figure out when to loop around vs just connecting straight
+    # TODO: choose loop direction based on sign of p[1]??
     insideoffset = P2(0.2,0)
     inside = []
     if abs(p[1]-q[1]) <= 0.1 && p[2] >= q[2]
       inside = [uppery+insideoffset, lowery+insideoffset]
     end
-    # inside = if abs(p[1]-q[1]) <= 0
-    #     [uppery+insideoffset, lowery+insideoffset]
-    # else
-    #     []
-    # end
-
-    # if p[2] < q[2] + 0.5
         
     BezierCurve([p, uppery, inside..., lowery, q])
   end

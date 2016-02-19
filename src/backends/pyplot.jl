@@ -30,7 +30,7 @@ end
 # -------------------------------
 
 # convert colorant to 4-tuple RGBA
-getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
+getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), [red, green, blue, alpha])
 getPyPlotColor(cvec::ColorVector, α=nothing) = map(getPyPlotColor, convertColor(cvec, α).v)
 getPyPlotColor(scheme::ColorScheme, α=nothing) = getPyPlotColor(convertColor(getColor(scheme), α))
 getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
@@ -350,7 +350,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
         extra_kwargs[:c] = convert(Vector{Float64}, d[:zcolor])
         extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
       else
-        extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])
+        extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])'
       end
       if d[:markeralpha] != nothing
         extra_kwargs[:alpha] = d[:markeralpha]
@@ -358,13 +358,14 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
       extra_kwargs[:edgecolors] = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
       extra_kwargs[:linewidths] = d[:markerstrokewidth]
     else
-      extra_kwargs[:markersize] = d[:markersize]
-      extra_kwargs[:markerfacecolor] = getPyPlotColor(d[:markercolor], d[:markeralpha])
+      extra_kwargs[:markersize] = d[:markersize].^2
+      extra_kwargs[:markerfacecolor] = getPyPlotColor(d[:markercolor], d[:markeralpha])'
       extra_kwargs[:markeredgecolor] = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
       extra_kwargs[:markeredgewidth] = d[:markerstrokewidth]
       extra_kwargs[:drawstyle] = getPyPlotStepStyle(lt)
     end
   end
+  dumpdict(extra_kwargs, "",true)
 
   # if d[:markeralpha] != nothing
   #   extra_kwargs[:alpha] = d[:markeralpha]
