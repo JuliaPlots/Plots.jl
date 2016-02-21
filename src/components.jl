@@ -280,17 +280,21 @@ end
     mn = mean(p,q)
     
     # these points give the initial/final "rise"
-    yoffset = max(0.3, min(1.0, abs(mn[2]-p[2])))
+    yoffset = max(0.4, min(1.0, abs(mn[2]-p[2])))
     firstoffset = P2(0, yoffset)
     uppery = p + firstoffset
     lowery = q - firstoffset
 
     # try to figure out when to loop around vs just connecting straight
     # TODO: choose loop direction based on sign of p[1]??
-    insideoffset = P2(0.2,0)
+    insideoffset = P2(0.5, 0)
     inside = []
-    if abs(p[1]-q[1]) <= 0.1 && p[2] >= q[2]
-      inside = [uppery+insideoffset, lowery+insideoffset]
+    x_close_together = abs(p[1] - q[1]) <= 0.1
+    p_is_higher = p[2] >= q[2]
+    if x_close_together && p_is_higher
+      # add curve points which will create a loop
+      sgn = p[1] < 0 ? -1 : 1
+      inside = [uppery + sgn * insideoffset, lowery + sgn * insideoffset]
     end
         
     BezierCurve([p, uppery, inside..., lowery, q])
