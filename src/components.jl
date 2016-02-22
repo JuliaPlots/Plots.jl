@@ -249,22 +249,22 @@ end
   export
     P2,
     P3,
-    points,
     BezierCurve,
+    curve_points,
     directed_curve
   
   typealias P2 FixedSizeArrays.Vec{2,Float64}
   typealias P3 FixedSizeArrays.Vec{3,Float64}
 
   type BezierCurve{T <: FixedSizeArrays.Vec}
-      points::Vector{T}
+      control_points::Vector{T}
   end
 
   function Base.call(bc::BezierCurve, t::Real)
       p = zero(P2)
-      n = length(bc.points)-1
+      n = length(bc.control_points)-1
       for i in 0:n
-          p += bc.points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
+          p += bc.control_points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
       end
       p
   end
@@ -272,32 +272,38 @@ end
   Base.mean(x::Real, y::Real) = 0.5*(x+y)
   Base.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps)
 
-  points(curve::BezierCurve, n::Integer = 50) = map(curve, linspace(0,1,n))
+  curve_points(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, linspace(range..., n))
 
   # build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
-  # may create a loop if necessary
-  function directed_curve(p::P2, q::P2)
-    mn = mean(p,q)
+  # may create a loop if necessary.  Assumes the view is [0,1]
+  function directed_curve(p::P2, q::P2; xview = 0:1, yview = 0:1)
+    mn = mean(p, q)
+    diff = q - p
+
+    minx, maxx = minimum(xview), maximum(xview)
+    miny, maxy = minimum(yview), maximum(yview)
+    diffpct = P2(diff[1] / (maxx - minx),
+                 diff[2] / (maxy - miny))
     
     # these points give the initial/final "rise"
-    yoffset = max(0.4, min(1.0, abs(mn[2]-p[2])))
-    firstoffset = P2(0, yoffset)
-    uppery = p + firstoffset
-    lowery = q - firstoffset
+    vertical_offset = P2(0, (maxy - miny) * max(0.03, min(abs(0.5diffpct[2]), 1.0)))
+    upper_control = p + vertical_offset
+    lower_control = q - vertical_offset
 
     # try to figure out when to loop around vs just connecting straight
     # TODO: choose loop direction based on sign of p[1]??
-    insideoffset = P2(0.5, 0)
-    inside = []
-    x_close_together = abs(p[1] - q[1]) <= 0.1
-    p_is_higher = p[2] >= q[2]
-    if x_close_together && p_is_higher
+    x_close_together = abs(diffpct[1]) <= 0.05
+    p_is_higher = diff[2] <= 0
+    inside_control_points = if x_close_together && p_is_higher
       # add curve points which will create a loop
-      sgn = p[1] < 0 ? -1 : 1
-      inside = [uppery + sgn * insideoffset, lowery + sgn * insideoffset]
+      sgn = p[1] < 0.5 * (maxx + minx) ? -1 : 1
+      inside_offset = P2(0.3 * (maxx - minx), 0)
+      [upper_control + sgn * inside_offset, lower_control + sgn * inside_offset]
+    else
+      []
     end
         
-    BezierCurve([p, uppery, inside..., lowery, q])
+    BezierCurve([p, upper_control, inside_control_points..., lower_control, q])
   end
 
 end
