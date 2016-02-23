@@ -286,19 +286,22 @@ end
                  diff[2] / (maxy - miny))
     
     # these points give the initial/final "rise"
-    vertical_offset = P2(0, (maxy - miny) * max(0.03, min(abs(0.5diffpct[2]), 1.0)))
+    # vertical_offset = P2(0, (maxy - miny) * max(0.03, min(abs(0.5diffpct[2]), 1.0)))
+    vertical_offset = P2(0, max(0.15, 0.5norm(diff)))
     upper_control = p + vertical_offset
     lower_control = q - vertical_offset
 
     # try to figure out when to loop around vs just connecting straight
     # TODO: choose loop direction based on sign of p[1]??
-    x_close_together = abs(diffpct[1]) <= 0.05
+    # x_close_together = abs(diffpct[1]) <= 0.05
     p_is_higher = diff[2] <= 0
-    inside_control_points = if x_close_together && p_is_higher
+    inside_control_points = if p_is_higher
       # add curve points which will create a loop
-      sgn = p[1] < 0.5 * (maxx + minx) ? -1 : 1
+      sgn = mn[1] < 0.5 * (maxx + minx) ? -1 : 1
       inside_offset = P2(0.3 * (maxx - minx), 0)
-      [upper_control + sgn * inside_offset, lower_control + sgn * inside_offset]
+      additional_offset = P2(sgn * diff[1], 0)  # make it even loopier
+      [upper_control + sgn * (inside_offset + max(0,  additional_offset)),
+       lower_control + sgn * (inside_offset + max(0, -additional_offset))]
     else
       []
     end
