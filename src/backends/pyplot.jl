@@ -471,14 +471,19 @@ function Base.setindex!{X,Y}(plt::Plot{PyPlotPackage}, xy::Tuple{X,Y}, i::Intege
   end
 
   ax = series[:axes]
-  if plt.plotargs[:xlims] == :auto
-    xmin, xmax = ax[:get_xlim]()
-    ax[:set_xlim](min(xmin, minimum(x)), max(xmax, maximum(x)))
+  ax[:relim]()
+  ax[:autoscale]()
+  if plt.plotargs[:xlims] != :auto
+    # xmin, xmax = ax[:get_xlim]()
+    # ax[:set_xlim](min(xmin, minimum(x)), max(xmax, maximum(x)))
+    addPyPlotLims(ax, plt.plotargs[:xlims], true)
   end
-  if plt.plotargs[:ylims] == :auto
-    ymin, ymax = ax[:get_ylim]()
-    ax[:set_ylim](min(ymin, minimum(y)), max(ymax, maximum(y)))
+  if plt.plotargs[:ylims] != :auto
+    # ymin, ymax = ax[:get_ylim]()
+    # ax[:set_ylim](min(ymin, minimum(y)), max(ymax, maximum(y)))
+    addPyPlotLims(ax, plt.plotargs[:ylims], false)
   end
+  PyPlot.draw()
 
   plt
 end
