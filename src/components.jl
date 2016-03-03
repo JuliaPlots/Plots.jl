@@ -244,7 +244,7 @@ type OHLC{T<:Real}
 end
 
 
-@require FixedSizeArrays begin
+# @require FixedSizeArrays begin
 
   export
     P2,
@@ -309,4 +309,4 @@ end
     BezierCurve([p, upper_control, inside_control_points..., lower_control, q])
   end
 
-end
+# end

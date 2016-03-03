@@ -7,6 +7,7 @@ using Compat
 using Reexport
 @reexport using Colors
 using Requires
+using FixedSizeArrays
 
 export
   Plot,
