@@ -472,6 +472,13 @@ function minmaxseries(ds, vec, axis)
       hi = max(hi, vhi)
     end
   end
+  if lo == hi
+    hi = if lo == 0
+      1e-6
+    else
+      hi + min(abs(1e-2hi), 1e-6)
+    end
+  end
   lo, hi
 end
 

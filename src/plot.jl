@@ -262,7 +262,8 @@ function convertToAnyVector(v::AVec; kw...)
     Any[convert(Vector{Float64}, v)], nothing
   else
     # something else... treat each element as an item
-    Any[vi for vi in v], nothing
+    vcat(Any[convertToAnyVector(vi)[1] for vi in v]...), nothing
+    # Any[vi for vi in v], nothing
   end
 end
 
