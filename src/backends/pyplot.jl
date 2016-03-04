@@ -461,30 +461,42 @@ function Base.getindex(plt::Plot{PyPlotPackage}, i::Integer)
   end
 end
 
+function minmaxseries(ds, vec, axis)
+  lo, hi = Inf, -Inf
+  for d in ds
+    d[:axis] == axis || continue
+    v = d[vec]
+    if length(v) > 0
+      vlo, vhi = extrema(v)
+      lo = min(lo, vlo)
+      hi = max(hi, vhi)
+    end
+  end
+  lo, hi
+end
+
+function set_lims!(plt::Plot{PyPlotPackage}, axis::Symbol)
+  ax = getAxis(plt, axis)
+  if plt.plotargs[:xlims] == :auto
+    ax[:set_xlim](minmaxseries(plt.seriesargs, :x, axis)...)
+  end
+  if plt.plotargs[:ylims] == :auto
+    ax[:set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
+  end
+end
+
 function Base.setindex!{X,Y}(plt::Plot{PyPlotPackage}, xy::Tuple{X,Y}, i::Integer)
-  series = plt.seriesargs[i][:serieshandle]
+  d = plt.seriesargs[i]
+  series = d[:serieshandle]
   x, y = xy
+  d[:x], d[:y] = x, y
   try
     series[:set_data](x, y)
   catch
     series[:set_offsets](hcat(x, y))
   end
 
-  ax = series[:axes]
-  ax[:relim]()
-  ax[:autoscale]()
-  if plt.plotargs[:xlims] != :auto
-    # xmin, xmax = ax[:get_xlim]()
-    # ax[:set_xlim](min(xmin, minimum(x)), max(xmax, maximum(x)))
-    addPyPlotLims(ax, plt.plotargs[:xlims], true)
-  end
-  if plt.plotargs[:ylims] != :auto
-    # ymin, ymax = ax[:get_ylim]()
-    # ax[:set_ylim](min(ymin, minimum(y)), max(ymax, maximum(y)))
-    addPyPlotLims(ax, plt.plotargs[:ylims], false)
-  end
-  PyPlot.draw()
-
+  set_lims!(plt, d[:axis])
   plt
 end
 
