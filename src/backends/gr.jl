@@ -18,7 +18,6 @@ const gr_markertype = Dict(
   :auto => 1, :none => -1, :ellipse => -1, :rect => -7, :diamond => -13,
   :utriangle => -3, :dtriangle => -5, :pentagon => -21, :hexagon => -22,
   :heptagon => -23, :octagon => -24, :cross => 2, :xcross => 5,
-  :hline => -1, :vline => -1,
   :star4 => -25, :star5 => -26, :star6 => -27, :star7 => -28, :star8 => -29 )
 
 const gr_halign = Dict(:left => 1, :hcenter => 2, :right => 3)
