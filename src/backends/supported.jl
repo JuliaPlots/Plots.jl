@@ -241,7 +241,7 @@ supportedTypes(::GRPackage) = [:none, :line, :path, :steppre, :steppost, :sticks
                                :hline, :vline, :contour, :path3d, :scatter3d, :surface,
                                :wireframe, :ohlc, :pie]
 supportedStyles(::GRPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::GRPackage) = vcat([:none, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :pentagon, :hexagon, :cross, :xcross, :star5], Shape)
+supportedMarkers(::GRPackage) = vcat(_allMarkers, Shape)
 supportedScales(::GRPackage) = [:identity, :log10]
 subplotSupported(::GRPackage) = true
 
