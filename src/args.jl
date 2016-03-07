@@ -179,14 +179,14 @@ _plotDefaults[:tickfont]          = font(8)
 _plotDefaults[:guidefont]         = font(11)
 _plotDefaults[:legendfont]        = font(8)
 _plotDefaults[:grid]              = true
-_plotDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
-
+_plotDefaults[:annotation]        = nothing           # annotation tuple(s)... (x,y,annotation)
+_plotDefaults[:overwrite_figure]  = false
 
 
 # TODO: x/y scales
 
 const _allArgs = sort(collect(union(keys(_seriesDefaults), keys(_plotDefaults))))
-supportedArgs(::PlottingPackage) = _allArgs
+supportedArgs(::PlottingPackage) = error("supportedArgs not defined") #_allArgs
 supportedArgs() = supportedArgs(backend())
 
 
@@ -307,6 +307,10 @@ end
     :palette            => :color_palette,
     :xlink              => :linkx,
     :ylink              => :linky,
+    :clf                => :overwrite_figure,
+    :clearfig           => :overwrite_figure,
+    :overwrite          => :overwrite_figure,
+    :reuse              => :overwrite_figure,
   )
 
 # add all pluralized forms to the _keyAliases dict

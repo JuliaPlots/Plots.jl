@@ -160,6 +160,7 @@ supportedArgs(::PyPlotPackage) = [
     :fillalpha,
     :linealpha,
     :markeralpha,
+    :overwrite_figure,
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, #:sticks,
@@ -360,7 +361,7 @@ supportedArgs(::UnicodePlotsPackage) = [
     # :z,
   ]
 supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
-supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
+supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
 supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
 supportedScales(::UnicodePlotsPackage) = [:identity]

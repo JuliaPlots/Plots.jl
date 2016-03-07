@@ -26,5 +26,12 @@ facts("PyPlot") do
     image_comparison_facts(:pyplot, skip=[4,10,13,19,21,23], eps=img_eps)
 end
 
+facts("GR") do
+    @fact gr() --> Plots.GRPackage()
+    @fact backend() --> Plots.GRPackage()
+
+    image_comparison_facts(:gr, only=[1], eps=img_eps)
+end
+
 FactCheck.exitstatus()
 end # module

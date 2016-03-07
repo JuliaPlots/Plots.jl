@@ -223,6 +223,24 @@ end
 
 # ------------------------------------------------------------------
 
+function pyplot_figure(plotargs::Dict)
+  w,h = map(px2inch, plotargs[:size])
+  bgcolor = getPyPlotColor(plotargs[:background_color])
+  fig = if plotargs[:overwrite_figure]
+    PyPlot.gcf()
+  else
+    PyPlot.figure()
+  end
+  fig[:set_size_inches](w,h,true)
+  fig[:set_facecolor](bgcolor)
+  fig[:set_dpi](DPI)
+  fig[:set_tight_layout](true)
+  PyPlot.clf()
+  PyPlot.plt[:get_current_fig_manager]()[:resize](plotargs[:size]...)
+  fig
+end
+
+
 # TODO:
 # fillto   # might have to use barHack/histogramHack??
 # reg             # true or false, add a regression line for each line
@@ -239,9 +257,8 @@ function _create_plot(pkg::PyPlotPackage; kw...)
   if haskey(d, :subplot)
     wrap = nothing
   else
-    w,h = map(px2inch, d[:size])
-    bgcolor = getPyPlotColor(d[:background_color])
-    wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
+    wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(d), [])
+    # wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
 
     if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
       push!(wrap.kwargs, (:projection, "3d"))
@@ -663,9 +680,10 @@ end
 function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   l = subplt.layout
 
-  w,h = map(px2inch, getplotargs(subplt,1)[:size])
-  bgcolor = getPyPlotColor(getplotargs(subplt,1)[:background_color])
-  fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true)
+  # w,h = map(px2inch, getplotargs(subplt,1)[:size])
+  # bgcolor = getPyPlotColor(getplotargs(subplt,1)[:background_color])
+  # fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true)
+  fig = pyplot_figure(getplotargs(subplt, 1))
 
   nr = nrows(l)
   for (i,(r,c)) in enumerate(l)
