@@ -262,7 +262,8 @@ function convertToAnyVector(v::AVec; kw...)
     Any[convert(Vector{Float64}, v)], nothing
   else
     # something else... treat each element as an item
-    Any[vi for vi in v], nothing
+    vcat(Any[convertToAnyVector(vi)[1] for vi in v]...), nothing
+    # Any[vi for vi in v], nothing
   end
 end
 
@@ -483,7 +484,7 @@ end
 # --------------------------------------------------------------------
 
 
-@require FixedSizeArrays begin
+# @require FixedSizeArrays begin
 
   unzip{T}(x::AVec{FixedSizeArrays.Vec{2,T}}) = T[xi[1] for xi in x], T[xi[2] for xi in x]
   unzip{T}(x::FixedSizeArrays.Vec{2,T}) = T[x[1]], T[x[2]]
@@ -496,7 +497,7 @@ end
     createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
   end
 
-end
+# end
 
 # --------------------------------------------------------------------
 

@@ -45,8 +45,8 @@ function getPyPlotColorMap(c::ColorGradient, α=nothing)
   pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
 end
 
-# anything else just gets a redsblue gradient
-getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(ColorGradient(:redsblues), α)
+# anything else just gets a bluesred gradient
+getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(ColorGradient(:bluesreds), α)
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
@@ -461,25 +461,49 @@ function Base.getindex(plt::Plot{PyPlotPackage}, i::Integer)
   end
 end
 
+function minmaxseries(ds, vec, axis)
+  lo, hi = Inf, -Inf
+  for d in ds
+    d[:axis] == axis || continue
+    v = d[vec]
+    if length(v) > 0
+      vlo, vhi = extrema(v)
+      lo = min(lo, vlo)
+      hi = max(hi, vhi)
+    end
+  end
+  if lo == hi
+    hi = if lo == 0
+      1e-6
+    else
+      hi + min(abs(1e-2hi), 1e-6)
+    end
+  end
+  lo, hi
+end
+
+function set_lims!(plt::Plot{PyPlotPackage}, axis::Symbol)
+  ax = getAxis(plt, axis)
+  if plt.plotargs[:xlims] == :auto
+    ax[:set_xlim](minmaxseries(plt.seriesargs, :x, axis)...)
+  end
+  if plt.plotargs[:ylims] == :auto
+    ax[:set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
+  end
+end
+
 function Base.setindex!{X,Y}(plt::Plot{PyPlotPackage}, xy::Tuple{X,Y}, i::Integer)
-  series = plt.seriesargs[i][:serieshandle]
+  d = plt.seriesargs[i]
+  series = d[:serieshandle]
   x, y = xy
+  d[:x], d[:y] = x, y
   try
     series[:set_data](x, y)
   catch
     series[:set_offsets](hcat(x, y))
   end
 
-  ax = series[:axes]
-  if plt.plotargs[:xlims] == :auto
-    xmin, xmax = ax[:get_xlim]()
-    ax[:set_xlim](min(xmin, minimum(x)), max(xmax, maximum(x)))
-  end
-  if plt.plotargs[:ylims] == :auto
-    ymin, ymax = ax[:get_ylim]()
-    ax[:set_ylim](min(ymin, minimum(y)), max(ymax, maximum(y)))
-  end
-
+  set_lims!(plt, d[:axis])
   plt
 end
 

@@ -4,3 +4,4 @@ Colors
 Reexport
 Compat
 Requires
+FixedSizeArrays

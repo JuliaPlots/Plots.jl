@@ -31,7 +31,7 @@ function gif(anim::Animation, fn::@compat(AbstractString) = "tmp.gif"; fps::Inte
 
     # high quality
     speed = round(Int, 100 / fps)
-    run(`convert -delay $speed -loop 0 $(anim.dir)/*.png $fn`)
+    run(`convert -delay $speed -loop 0 $(anim.dir)/*.png -alpha off $fn`)
 
   catch err
     warn("Tried to create gif using convert (ImageMagick), but got error: $err\nWill try ffmpeg, but it's lower quality...)")
