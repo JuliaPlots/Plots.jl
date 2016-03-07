@@ -1,14 +1,12 @@
 
 # https://github.com/jheinen/GR.jl
 
-
 function _initialize_backend(::GRPackage; kw...)
   @eval begin
     import GR
     export GR
   end
 end
-
 
 const gr_linetype = Dict(
   :auto => 1, :solid => 1, :dash => 2, :dot => 3, :dashdot => 4,
@@ -18,7 +16,8 @@ const gr_markertype = Dict(
   :auto => 1, :none => -1, :ellipse => -1, :rect => -7, :diamond => -13,
   :utriangle => -3, :dtriangle => -5, :pentagon => -21, :hexagon => -22,
   :heptagon => -23, :octagon => -24, :cross => 2, :xcross => 5,
-  :star4 => -25, :star5 => -26, :star6 => -27, :star7 => -28, :star8 => -29 )
+  :star4 => -25, :star5 => -26, :star6 => -27, :star7 => -28, :star8 => -29,
+  :vline => -30, :hline => -31 )
 
 const gr_halign = Dict(:left => 1, :hcenter => 2, :right => 3)
 const gr_valign = Dict(:top => 1, :vcenter => 3, :bottom => 5)
@@ -122,6 +121,10 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
           end
           cmap = true
           x, y, H = Base.hist2d(E, xbins, ybins)
+        elseif p[:linetype] == :pie
+          axes_2d = false
+          xmin, xmax, ymin, ymax = 0, 1, 0, 1
+          x, y = p[:x], p[:y]
         else
           if p[:linetype] in [:contour, :surface]
             cmap = true
@@ -131,16 +134,18 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
           end
           x, y = p[:x], p[:y]
         end
-        xmin = min(minimum(x), xmin)
-        xmax = max(maximum(x), xmax)
-        if p[:linetype] == :ohlc
-          for val in y
-            ymin = min(val.open, val.high, val.low, val.close, ymin)
-            ymax = max(val.open, val.high, val.low, val.close, ymax)
+        if p[:linetype] != :pie
+          xmin = min(minimum(x), xmin)
+          xmax = max(maximum(x), xmax)
+          if p[:linetype] == :ohlc
+            for val in y
+              ymin = min(val.open, val.high, val.low, val.close, ymin)
+              ymax = max(val.open, val.high, val.low, val.close, ymax)
+            end
+          else
+            ymin = min(minimum(y), ymin)
+            ymax = max(maximum(y), ymax)
           end
-        else
-          ymin = min(minimum(y), ymin)
-          ymax = max(maximum(y), ymax)
         end
       end
     end
@@ -197,13 +202,14 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     GR.setwindow(xmin, xmax, ymin, ymax)
     GR.setscale(scale)
 
+    diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
+    charheight = max(0.018 * diag, 0.01)
+    GR.setcharheight(charheight)
+    GR.settextcolorind(fg)
+
     if axes_2d
-      diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
       GR.setlinewidth(1)
       GR.setlinecolorind(fg)
-      charheight = max(0.018 * diag, 0.01)
-      GR.setcharheight(charheight)
-      GR.settextcolorind(fg)
       ticksize = 0.0075 * diag
       if fg == 1
         GR.grid(xtick, ytick, 0, 0, majorx, majory)
@@ -474,8 +480,33 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         GR.polyline([i, i], [y[i].low, y[i].high])
         GR.polyline([i, i+ticksize], [y[i].close, y[i].close])
       end
-    elseif p[:linetype] in [:pie]
-      println("TODO: add support for linetype $(p[:linetype])")
+    elseif p[:linetype] == :pie
+      GR.selntran(0)
+      GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
+      GR.setfillintstyle(GR.INTSTYLE_SOLID)
+      xmin, xmax, ymin, ymax = viewport
+      ymax -= 0.05 * (xmax - xmin)
+      xcenter = 0.5 * (xmin + xmax)
+      ycenter = 0.5 * (ymin + ymax)
+      if xmax - xmin > ymax - ymin
+        r = 0.5 * (ymax - ymin)
+        xmin, xmax = xcenter - r, xcenter + r
+      else
+        r = 0.5 * (xmax - xmin)
+        ymin, ymax = ycenter - r, ycenter + r
+      end
+      x, y = p[:x], p[:y]
+      total = sum(y)
+      a1 = 0
+      for i in 1:length(y)
+        a2 = round(Int, a1 + (y[i] / total) * 360.0)
+        GR.setfillcolorind(980 + (i-1) % 20)
+        GR.fillarc(xmin, xmax, ymin, ymax, a1, a2)
+        GR.text(xcenter + 0.5 * r * cos(0.5 * (a1 + a2) * pi / 180),
+                ycenter + 0.5 * r * sin(0.5 * (a1 + a2) * pi / 180),  string(x[i]))
+        a1 = a2
+      end
+      GR.selntran(1)
     end
     GR.restorestate()
   end
@@ -576,7 +607,6 @@ function gr_display(subplt::Subplot{GRPackage})
 end
 
 function _create_plot(pkg::GRPackage; kw...)
-  isijulia() && GR.inline("svg")
   d = Dict(kw)
   Plot(nothing, pkg, 0, d, Dict[])
 end
@@ -639,7 +669,6 @@ end
 # ----------------------------------------------------------------
 
 function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{GRPackage})
-  #isijulia() && return
   GR.emergencyclosegks()
   ENV["GKS_WSTYPE"] = "png"
   gr_display(plt)
@@ -648,12 +677,27 @@ function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{GRPackag
 end
 
 function Base.writemime(io::IO, m::MIME"image/svg+xml", plt::PlottingObject{GRPackage})
-  isijulia() || return
   GR.emergencyclosegks()
   ENV["GKS_WSTYPE"] = "svg"
   gr_display(plt)
   GR.emergencyclosegks()
   write(io, readall("gks.svg"))
+end
+
+function Base.writemime(io::IO, m::MIME"application/pdf", plt::PlottingObject{GRPackage})
+  GR.emergencyclosegks()
+  ENV["GKS_WSTYPE"] = "pdf"
+  gr_display(plt)
+  GR.emergencyclosegks()
+  write(io, readall("gks.pdf"))
+end
+
+function Base.writemime(io::IO, m::MIME"application/postscript", plt::PlottingObject{GRPackage})
+  GR.emergencyclosegks()
+  ENV["GKS_WSTYPE"] = "ps"
+  gr_display(plt)
+  GR.emergencyclosegks()
+  write(io, readall("gks.ps"))
 end
 
 function Base.display(::PlotsDisplay, plt::Plot{GRPackage})
