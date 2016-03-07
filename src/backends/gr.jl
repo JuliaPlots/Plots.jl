@@ -26,6 +26,19 @@ const gr_font_family = Dict(
   "times" => 1, "helvetica" => 5, "courier" => 9, "bookman" => 14,
   "newcenturyschlbk" => 18, "avantgarde" => 22, "palatino" => 26)
 
+macro gr_state(expr::Expr)
+  esc(quote
+    GR.savestate()
+    try
+      $expr
+    catch
+      GR.restorestate()
+      rethrow()
+    end
+    GR.restorestate()
+  end)
+end
+
 function gr_getcolorind(v)
   c = getColor(v)
   return convert(Int, GR.inqcolorfromrgb(c.r, c.g, c.b))
@@ -70,7 +83,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
   end
 
   if haskey(d, :background_color)
-    GR.savestate()
+    @gr_state begin #GR.savestate()
     GR.selntran(0)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     GR.setfillcolorind(gr_getcolorind(d[:background_color]))
@@ -80,7 +93,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       GR.fillrect(ratio*subplot[1], ratio*subplot[2], subplot[3], subplot[4])
     end
     GR.selntran(1)
-    GR.restorestate()
+    end # GR.restorestate()
     c = getColor(d[:background_color])
     if 0.21 * c.r + 0.72 * c.g + 0.07 * c.b < 0.9
       fg = convert(Int, GR.inqcolorfromrgb(1-c.r, 1-c.g, 1-c.b))
@@ -226,40 +239,40 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
   end
 
   if get(d, :title, "") != ""
-    GR.savestate()
+    @gr_state begin #GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.settextcolorind(fg)
     GR.text(0.5 * (viewport[1] + viewport[2]), min(ratio, 1), d[:title])
-    GR.restorestate()
+    end # GR.restorestate()
   end
   if get(d, :xlabel, "") != ""
-    GR.savestate()
+    @gr_state begin #GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
     GR.settextcolorind(fg)
     GR.text(0.5 * (viewport[1] + viewport[2]), 0, d[:xlabel])
-    GR.restorestate()
+    end # GR.restorestate()
   end
   if get(d, :ylabel, "") != ""
-    GR.savestate()
+    @gr_state begin #GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
     GR.settextcolorind(fg)
     GR.text(0, 0.5 * (viewport[3] + viewport[4]), d[:ylabel])
-    GR.restorestate()
+    end # GR.restorestate()
   end
   if get(d, :yrightlabel, "") != ""
-    GR.savestate()
+    @gr_state begin #GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(1, 0)
     GR.settextcolorind(fg)
     GR.text(1, 0.5 * (viewport[3] + viewport[4]), d[:yrightlabel])
-    GR.restorestate()
+    end # GR.restorestate()
   end
 
   legend = false
 
   for p in plt.seriesargs
-    GR.savestate()
+    @gr_state begin ## GR.savestate()
     xmin, xmax, ymin, ymax = extrema[gr_getaxisind(p),:]
     GR.setwindow(xmin, xmax, ymin, ymax)
     if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline, :ohlc]
@@ -508,11 +521,11 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       end
       GR.selntran(1)
     end
-    GR.restorestate()
+    end # GR.restorestate()
   end
 
   if d[:legend] != :none && legend
-    GR.savestate()
+    @gr_state begin #GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
     w = 0
@@ -565,11 +578,11 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       py -= dy
     end
     GR.selntran(1)
-    GR.restorestate()
+    end # GR.restorestate()
   end
 
   if haskey(d, :anns)
-    GR.savestate()
+    @gr_state begin #GR.savestate()
     for ann in d[:anns]
       x, y, val = ann
       x, y = GR.wctondc(x, y)
@@ -584,7 +597,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       GR.settextalign(gr_halign[val.font.halign], gr_valign[val.font.valign])
       GR.text(x, y, val.str)
     end
-    GR.restorestate()
+    end # GR.restorestate()
   end
 
   update && GR.updatews()
