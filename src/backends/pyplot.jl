@@ -226,18 +226,34 @@ end
 function pyplot_figure(plotargs::Dict)
   w,h = map(px2inch, plotargs[:size])
   bgcolor = getPyPlotColor(plotargs[:background_color])
+
+  # reuse the current figure?
   fig = if plotargs[:overwrite_figure]
     PyPlot.gcf()
   else
     PyPlot.figure()
   end
+
+  # update the specs
   fig[:set_size_inches](w,h,true)
   fig[:set_facecolor](bgcolor)
   fig[:set_dpi](DPI)
   fig[:set_tight_layout](true)
+
+  # clear the figure
   PyPlot.clf()
+
+  # resize the window
   PyPlot.plt[:get_current_fig_manager]()[:resize](plotargs[:size]...)
   fig
+end
+
+function pyplot_3d_setup!(wrap, d)
+  # 3D?
+  # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+  if trueOrAllTrue(lt -> lt in _3dTypes, get(d, :linetype, :none))
+    push!(wrap.kwargs, (:projection, "3d"))
+  end
 end
 
 
@@ -260,9 +276,10 @@ function _create_plot(pkg::PyPlotPackage; kw...)
     wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(d), [])
     # wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
 
-    if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
-      push!(wrap.kwargs, (:projection, "3d"))
-    end
+    # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+    #   push!(wrap.kwargs, (:projection, "3d"))
+    # end
+    pyplot_3d_setup!(wrap, d)
   end
 
   plt = Plot(wrap, pkg, 0, d, Dict[])
@@ -683,7 +700,8 @@ function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   # w,h = map(px2inch, getplotargs(subplt,1)[:size])
   # bgcolor = getPyPlotColor(getplotargs(subplt,1)[:background_color])
   # fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true)
-  fig = pyplot_figure(getplotargs(subplt, 1))
+  plotargs = getplotargs(subplt, 1)
+  fig = pyplot_figure(plotargs)
 
   nr = nrows(l)
   for (i,(r,c)) in enumerate(l)
@@ -694,10 +712,12 @@ function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
     ax = fig[:add_subplot](nr, nc, fakeidx)
 
     subplt.plts[i].o = PyPlotAxisWrapper(ax, nothing, fig, [])
+    pyplot_3d_setup!(subplt.plts[i].o, plotargs)
   end
 
   # subplt.o = PyPlotFigWrapper(fig, [])
   subplt.o = PyPlotAxisWrapper(nothing, nothing, fig, [])
+  pyplot_3d_setup!(subplt.o, plotargs)
   true
 end
 

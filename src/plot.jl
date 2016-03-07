@@ -228,41 +228,49 @@ end
 
 typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
 
+all3D(d::Dict) = trueOrAllTrue(lt -> lt in (:contour, :surface, :wireframe, :image), get(d, :linetype, :none))
+
 # missing
-convertToAnyVector(v::@compat(Void); kw...) = Any[nothing], nothing
+convertToAnyVector(v::@compat(Void), d::Dict) = Any[nothing], nothing
 
 # fixed number of blank series
-convertToAnyVector(n::Integer; kw...) = Any[zeros(0) for i in 1:n], nothing
+convertToAnyVector(n::Integer, d::Dict) = Any[zeros(0) for i in 1:n], nothing
 
 # numeric vector
-convertToAnyVector{T<:Real}(v::AVec{T}; kw...) = Any[v], nothing
+convertToAnyVector{T<:Real}(v::AVec{T}, d::Dict) = Any[v], nothing
 
 # string vector
-convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}; kw...) = Any[v], nothing
+convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}, d::Dict) = Any[v], nothing
 
 # numeric matrix
-convertToAnyVector{T<:Real}(v::AMat{T}; kw...) = Any[v[:,i] for i in 1:size(v,2)], nothing
+function convertToAnyVector{T<:Real}(v::AMat{T}, d::Dict)
+  if all3D(d)
+    Any[Surface(v)]
+  else  
+    Any[v[:,i] for i in 1:size(v,2)]
+  end, nothing
+end
 
 # function
-convertToAnyVector(f::Function; kw...) = Any[f], nothing
+convertToAnyVector(f::Function, d::Dict) = Any[f], nothing
 
 # surface
-convertToAnyVector(s::Surface; kw...) = Any[s], nothing
+convertToAnyVector(s::Surface, d::Dict) = Any[s], nothing
 
 # vector of OHLC
-convertToAnyVector(v::AVec{OHLC}; kw...) = Any[v], nothing
+convertToAnyVector(v::AVec{OHLC}, d::Dict) = Any[v], nothing
 
 # dates
-convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}; kw...) = Any[dts], nothing
+convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}, d::Dict) = Any[dts], nothing
 
 # list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec; kw...)
+function convertToAnyVector(v::AVec, d::Dict)
   if all(x -> typeof(x) <: Real, v)
     # all real numbers wrap the whole vector as one item
     Any[convert(Vector{Float64}, v)], nothing
   else
     # something else... treat each element as an item
-    vcat(Any[convertToAnyVector(vi)[1] for vi in v]...), nothing
+    vcat(Any[convertToAnyVector(vi, d)[1] for vi in v]...), nothing
     # Any[vi for vi in v], nothing
   end
 end
@@ -272,7 +280,7 @@ end
 
 # in computeXandY, we take in any of the possible items, convert into proper x/y vectors, then return.
 # this is also where all the "set x to 1:length(y)" happens, and also where we assert on lengths.
-computeX(x::@compat(Void), y) = 1:length(y)
+computeX(x::@compat(Void), y) = 1:size(y,1)
 computeX(x, y) = copy(x)
 computeY(x, y::Function) = map(y, x)
 computeY(x, y) = copy(y)
@@ -291,8 +299,9 @@ end
 # create n=max(mx,my) series arguments. the shorter list is cycled through
 # note: everything should flow through this
 function createKWargsList(plt::PlottingObject, x, y; kw...)
-  xs, xmeta = convertToAnyVector(x; kw...)
-  ys, ymeta = convertToAnyVector(y; kw...)
+  kwdict = Dict(kw)
+  xs, xmeta = convertToAnyVector(x, kwdict)
+  ys, ymeta = convertToAnyVector(y, kwdict)
 
   mx = length(xs)
   my = length(ys)
@@ -300,7 +309,7 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
   for i in 1:max(mx, my)
 
     # try to set labels using ymeta
-    d = Dict(kw)
+    d = copy(kwdict)
     if !haskey(d, :label) && ymeta != nothing
       if isa(ymeta, Symbol)
         d[:label] = string(ymeta)
@@ -317,13 +326,22 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     dumpdict(d, "after getSeriesArgs")
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
+    lt = d[:linetype]
+    if isa(d[:y], Surface)
+      if lt in (:contour, :surface, :wireframe, :image)
+        z = d[:y]
+        d[:y] = 1:size(z,2)
+        d[lt == :image ? :zcolor : :z] = z
+      end
+    end
+
     if haskey(d, :idxfilter)
       d[:x] = d[:x][d[:idxfilter]]
       d[:y] = d[:y][d[:idxfilter]]
     end
 
     # for linetype `line`, need to sort by x values
-    if d[:linetype] == :line
+    if lt == :line
       # order by x
       indices = sortperm(d[:x])
       d[:x] = d[:x][indices]
@@ -377,6 +395,16 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zvec::AVec; kw.
     d[:linetype] = :path3d
   end
   createKWargsList(plt, x, y; z=zvec, d...)
+end
+
+function createKWargsList{T<:Real}(plt::PlottingObject, z::AMat{T}; kw...)
+  d = Dict(kw)
+  if all3D(d)
+    n,m = size(z)
+    createKWargsList(plt, 1:n, 1:m, z; kw...)
+  else
+    createKWargsList(plt, nothing, z; kw...)
+  end
 end
 
 # contours or surfaces... function grid
@@ -518,18 +546,22 @@ end
     end
   end
 
-  function getDataFrameFromKW(; kw...)
-    for (k,v) in kw
-      if k == :dataframe
-        return v
-      end
+  function getDataFrameFromKW(d::Dict)
+    # for (k,v) in kw
+    #   if k == :dataframe
+    #     return v
+    #   end
+    # end
+    get(d, :dataframe) do
+      error("Missing dataframe argument!")
     end
-    error("Missing dataframe argument in arguments!")
   end
 
   # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
-  convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]], s
-  convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v]), v
+  # convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]], s
+  # convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v]), v
+  convertToAnyVector(s::Symbol, d::Dict) = Any[getDataFrameFromKW(d)[s]], s
+  convertToAnyVector(v::AVec{Symbol}, d::Dict) = (df = getDataFrameFromKW(d); Any[df[s] for s in v]), v
 
 end
 
