@@ -45,8 +45,8 @@ function getPyPlotColorMap(c::ColorGradient, α=nothing)
   pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
 end
 
-# anything else just gets a redsblue gradient
-getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(ColorGradient(:redsblues), α)
+# anything else just gets a bluesred gradient
+getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(ColorGradient(:bluesreds), α)
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
