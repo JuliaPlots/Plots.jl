@@ -350,7 +350,17 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
         extra_kwargs[:c] = convert(Vector{Float64}, d[:zcolor])
         extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
       else
-        extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])
+        # extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])
+        ppc = getPyPlotColor(c, d[:markeralpha])
+
+        # total hack due to PyPlot bug (see issue #145).
+        # hack: duplicate the color vector when the total rgba fields is the same as the series length
+        if (typeof(ppc) <: AbstractArray && length(ppc)*4 == length(x)) ||
+                (typeof(ppc) <: Tuple && length(x) == 4)
+          ppc = vcat(ppc, ppc)
+        end
+        extra_kwargs[:c] = ppc
+
       end
       if d[:markeralpha] != nothing
         extra_kwargs[:alpha] = d[:markeralpha]

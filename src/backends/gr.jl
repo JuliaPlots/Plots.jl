@@ -19,6 +19,10 @@ const gr_markertype = Dict(
   :star4 => -25, :star5 => -26, :star6 => -27, :star7 => -28, :star8 => -29,
   :vline => -30, :hline => -31 )
 
+set_gr_markertype(shape::Shape) = set_gr_markertype(:ellipse)
+set_gr_markertype(shape) = GR.setmarkertype(gr_markertype[shape])
+
+
 const gr_halign = Dict(:left => 1, :hcenter => 2, :right => 3)
 const gr_valign = Dict(:top => 1, :vcenter => 3, :bottom => 5)
 
@@ -326,7 +330,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       legend = true
     elseif p[:linetype] == :scatter || (p[:markershape] != :none && axes_2d)
       haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
-      haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
+      haskey(p, :markershape) && set_gr_markertype(p[:markershape])
       if haskey(d, :markersize)
         if typeof(d[:markersize]) <: Number
           GR.setmarkersize(d[:markersize] / 4.0)
@@ -469,7 +473,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       end
       if p[:linetype] == :scatter3d
         haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
-        haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
+        haskey(p, :markershape) && set_gr_markertype(p[:markershape])
         for i = 1:length(z)
           px, py = GR.wc3towc(x[i], y[i], z[i])
           GR.polymarker([px], [py])
@@ -559,7 +563,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       end
       if p[:linetype] == :scatter || p[:markershape] != :none
         haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
-        haskey(p, :markershape) && GR.setmarkertype(gr_markertype[p[:markershape]])
+        haskey(p, :markershape) && set_gr_markertype(p[:markershape])
         if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks]
           GR.polymarker([px - 0.06, px - 0.02], [py, py])
         else
