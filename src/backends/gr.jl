@@ -701,6 +701,10 @@ function Base.writemime(io::IO, m::MIME"image/svg+xml", plt::PlottingObject{GRPa
   write(io, readall("gks.svg"))
 end
 
+function Base.writemime(io::IO, m::MIME"text/html", plt::PlottingObject{GRPackage})
+  writemime(io, MIME("image/svg+xml"), plt)
+end
+
 function Base.writemime(io::IO, m::MIME"application/pdf", plt::PlottingObject{GRPackage})
   GR.emergencyclosegks()
   ENV["GKS_WSTYPE"] = "pdf"
@@ -722,5 +726,6 @@ function Base.display(::PlotsDisplay, plt::Plot{GRPackage})
 end
 
 function Base.display(::PlotsDisplay, plt::Subplot{GRPackage})
+  gr_display(plt)
   true
 end

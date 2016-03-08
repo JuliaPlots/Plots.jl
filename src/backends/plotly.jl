@@ -457,11 +457,8 @@ end
 
 # ----------------------------------------------------------------
 
-
 function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{PlotlyPackage})
-  isijulia() && return
-  # TODO: write a png to io
-  println("todo: png")
+  warn("todo: png")
 end
 
 function Base.writemime(io::IO, ::MIME"text/html", plt::PlottingObject{PlotlyPackage})

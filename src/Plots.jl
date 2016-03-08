@@ -223,38 +223,16 @@ yaxis!(plt::Plot, args...; kw...)                                     = plot!(pl
 
 # ---------------------------------------------------------
 
-
-# try
-#   import DataFrames
-#   dataframes()
-# end
-
-# const CURRENT_BACKEND = pickDefaultBackend()
-
-# for be in backends()
-#   try
-#     backend(be)
-#     backend()
-#   catch err
-#     @show err
-#   end
-# end
-
 const CURRENT_BACKEND = CurrentBackend(:none)
 
-# function __init__()
-#   # global const CURRENT_BACKEND = pickDefaultBackend()
-#   # global const CURRENT_BACKEND = CurrentBackend(:none)
+function __init__()
 
-#   # global CURRENT_BACKEND
-#   # println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
-
-#   # # auto init dataframes if the import statement doesn't error out
-#   # try
-#   #   @eval import DataFrames
-#   #   dataframes()
-#   # end
-# end
+  # override IJulia inline display
+  if isijulia()
+    @eval import IJulia
+    IJulia.display_dict(plt::PlottingObject) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
+  end
+end
 
 # ---------------------------------------------------------
 
