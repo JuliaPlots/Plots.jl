@@ -30,7 +30,7 @@ facts("GR") do
     @fact gr() --> Plots.GRPackage()
     @fact backend() --> Plots.GRPackage()
 
-    image_comparison_facts(:gr, only=[1], eps=img_eps)
+    # image_comparison_facts(:gr, only=[1], eps=img_eps)
 end
 
 FactCheck.exitstatus()

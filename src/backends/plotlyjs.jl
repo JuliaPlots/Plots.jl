@@ -8,8 +8,7 @@ function _initialize_backend(::PlotlyJSPackage; kw...)
     end
 
     for (mime, fmt) in PlotlyJS._mimeformats
-        @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyJSPackage}) =
-            writemime(io, m, p.o)
+        @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyJSPackage}) = writemime(io, m, p.o.plot)
     end
 end
 
@@ -19,8 +18,11 @@ function _create_plot(pkg::PlotlyJSPackage; kw...)
     d = Dict(kw)
     # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
     # TODO: initialize the plot... title, xlabel, bgcolor, etc
-    o = PlotlyJS.Plot(PlotlyJS.GenericTrace[], PlotlyJS.Layout(),
-                      Base.Random.uuid4(), PlotlyJS.ElectronDisplay())
+    # o = PlotlyJS.Plot(PlotlyJS.GenericTrace[], PlotlyJS.Layout(),
+    #                   Base.Random.uuid4(), PlotlyJS.ElectronDisplay())
+    # T = isijulia() ? PlotlyJS.JupyterPlot : PlotlyJS.ElectronPlot
+    # o = T(PlotlyJS.Plot())
+    o = PlotlyJS.plot()
 
     Plot(o, pkg, 0, d, Dict[])
 end
@@ -28,15 +30,15 @@ end
 
 function _add_series(::PlotlyJSPackage, plt::Plot; kw...)
     d = Dict(kw)
+    syncplot = plt.o
+
+    dumpdict(d, "addseries", true)
 
     # add to the data array
     pdict = plotly_series(d)
     typ = pop!(pdict, :type)
     gt = PlotlyJS.GenericTrace(typ; pdict...)
-    push!(plt.o.data, gt)
-    if PlotlyJS.isactive(plt.o._display)
-        PlotlyJS.addtraces!(plt.o, gt)
-    end
+    PlotlyJS.addtraces!(syncplot, gt)
 
     push!(plt.seriesargs, d)
     plt
@@ -63,10 +65,10 @@ end
 # TODO: override this to update plot items (title, xlabel, etc) after creation
 function _update_plot(plt::Plot{PlotlyJSPackage}, d::Dict)
     pdict = plotly_layout(d)
-    plt.o.layout = PlotlyJS.Layout(pdict)
-    if PlotlyJS.isactive(plt.o._display)
-        PlotlyJS.relayout!(plt.o; pdict...)
-    end
+    dumpdict(pdict, "pdict updateplot", true)
+    syncplot = plt.o
+    w,h = d[:size]
+    PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)
 end
 
 
@@ -105,8 +107,11 @@ end
 
 # ----------------------------------------------------------------
 
+function Base.writemime(io::IO, m::MIME"text/html", plt::PlottingObject{PlotlyJSPackage})
+    Base.writemime(io, m, plt.o)
+end
+
 function Base.display(::PlotsDisplay, plt::Plot{PlotlyJSPackage})
-    dump(plt.o)
     display(plt.o)
 end
 
