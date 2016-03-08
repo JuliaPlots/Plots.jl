@@ -5,7 +5,8 @@
 
 function _initialize_backend(::WinstonPackage; kw...)
   @eval begin
-    ENV["WINSTON_OUTPUT"] = "gtk"
+    # ENV["WINSTON_OUTPUT"] = "gtk"
+    warn("Winston is no longer supported... many features will likely be broken.")
     import Winston, Gtk
     export Winston, Gtk
   end
