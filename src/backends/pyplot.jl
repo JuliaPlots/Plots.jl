@@ -527,6 +527,7 @@ function minmaxseries(ds, vec, axis)
   lo, hi
 end
 
+# TODO: this needs to handle one-sided fixed limits
 function set_lims!(plt::Plot{PyPlotPackage}, axis::Symbol)
   ax = getAxis(plt, axis)
   if plt.plotargs[:xlims] == :auto
@@ -563,7 +564,13 @@ function addPyPlotLims(ax, lims, isx::Bool)
   lims == :auto && return
   ltype = limsType(lims)
   if ltype == :limits
-    ax[isx ? :set_xlim : :set_ylim](lims...)
+    if isx
+      isfinite(lims[1]) && ax[:set_xlim](left = lims[1])
+      isfinite(lims[2]) && ax[:set_xlim](right = lims[2])
+    else
+      isfinite(lims[1]) && ax[:set_ylim](bottom = lims[1])
+      isfinite(lims[2]) && ax[:set_ylim](top = lims[2])
+    end
   else
     error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
   end
