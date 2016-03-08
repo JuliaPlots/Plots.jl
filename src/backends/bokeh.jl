@@ -4,6 +4,7 @@
 
 function _initialize_backend(::BokehPackage; kw...)
   @eval begin
+    warn("Bokeh is no longer supported... many features will likely be broken.")
     import Bokeh
     export Bokeh
   end
