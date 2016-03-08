@@ -158,7 +158,8 @@ function stroke(args...; alpha = nothing)
   for arg in args
     T = typeof(arg)
 
-    if arg in _allStyles
+    # if arg in _allStyles
+    if allStyles(arg)
       style = arg
     elseif T <: Colorant
       color = arg
@@ -166,7 +167,11 @@ function stroke(args...; alpha = nothing)
       try
         color = parse(Colorant, string(arg))
       end
-    elseif typeof(arg) <: Real
+    # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+    elseif allAlphas(arg)
+      alpha = arg
+    # elseif typeof(arg) <: Real
+    elseif allReals(arg)
       width = arg
     else
       warn("Unused stroke arg: $arg ($(typeof(arg)))")
@@ -199,7 +204,11 @@ function brush(args...; alpha = nothing)
       try
         color = parse(Colorant, string(arg))
       end
-    elseif typeof(arg) <: Real
+    # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+    elseif allAlphas(arg)
+      alpha = arg
+    # elseif typeof(arg) <: Real
+    elseif allReals(arg)
       size = arg
     else
       warn("Unused brush arg: $arg ($(typeof(arg)))")

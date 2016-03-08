@@ -235,7 +235,8 @@ function pyplot_figure(plotargs::Dict)
   end
 
   # update the specs
-  fig[:set_size_inches](w,h,true)
+  # fig[:set_size_inches](w,h, (isijulia() ? [] : [true])...)
+  fig[:set_size_inches](w, h, forward = true)
   fig[:set_facecolor](bgcolor)
   fig[:set_dpi](DPI)
   fig[:set_tight_layout](true)
@@ -396,9 +397,9 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
         extra_kwargs[:c] = ppc
 
       end
-      if d[:markeralpha] != nothing
-        extra_kwargs[:alpha] = d[:markeralpha]
-      end
+      # if d[:markeralpha] != nothing
+      #   extra_kwargs[:alpha] = d[:markeralpha]
+      # end
       extra_kwargs[:edgecolors] = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
       extra_kwargs[:linewidths] = d[:markerstrokewidth]
     else

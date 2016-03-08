@@ -222,6 +222,24 @@ Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 
 # ---------------------------------------------------------------
 
+wraptuple(x::@compat(Tuple)) = x
+wraptuple(x) = (x,)
+
+trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
+trueOrAllTrue(f::Function, x) = f(x)
+
+allLineTypes(arg) = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+allStyles(arg) = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+allShapes(arg) = trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg) ||
+                  trueOrAllTrue(a -> isa(a, Shape), arg)
+allAlphas(arg) = trueOrAllTrue(a -> (typeof(a) <: Real && a > 0 && a < 1) ||
+                                    (typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))), arg)
+allReals(arg)   = trueOrAllTrue(a -> typeof(a) <: Real, arg)
+allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
+
+# ---------------------------------------------------------------
+
+
 """
 Allows temporary setting of backend and defaults for Plots. Settings apply only for the `do` block.  Example:
 ```

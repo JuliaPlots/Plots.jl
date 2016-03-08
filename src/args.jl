@@ -360,12 +360,6 @@ end
 
 # -----------------------------------------------------------------------------
 
-wraptuple(x::@compat(Tuple)) = x
-wraptuple(x) = (x,)
-
-trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
-trueOrAllTrue(f::Function, x) = f(x)
-
 function handleColors!(d::Dict, arg, csym::Symbol)
   try
     if arg == :auto
@@ -417,11 +411,13 @@ end
 function processLineArg(d::Dict, arg)
 
   # linetype
-  if trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+  # if trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+  if allLineTypes(arg)
     d[:linetype] = arg
 
   # linestyle
-  elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+  # elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+  elseif allStyles(arg)
     d[:linestyle] = arg
 
   elseif typeof(arg) <: Stroke
@@ -436,11 +432,13 @@ function processLineArg(d::Dict, arg)
     arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
   # linealpha
-  elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  elseif allAlphas(arg)
     d[:linealpha] = arg
 
   # linewidth
-  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  elseif allReals(arg)
     d[:linewidth] = arg
 
   # color
@@ -454,13 +452,16 @@ end
 function processMarkerArg(d::Dict, arg)
 
   # markershape
-  if trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg)
-    d[:markershape] = arg
-  elseif trueOrAllTrue(a -> isa(a, Shape), arg)
+  # if trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg)
+  #   d[:markershape] = arg
+
+  # elseif trueOrAllTrue(a -> isa(a, Shape), arg)
+  if allShapes(arg)
     d[:markershape] = arg
 
   # stroke style
-  elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+  # elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+  elseif allStyles(arg)
     d[:markerstrokestyle] = arg
 
   elseif typeof(arg) <: Stroke
@@ -475,11 +476,13 @@ function processMarkerArg(d::Dict, arg)
     arg.alpha == nothing || (d[:markeralpha] = arg.alpha)
 
   # linealpha
-  elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  elseif allAlphas(arg)
     d[:markeralpha] = arg
 
   # markersize
-  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  elseif allReals(arg)
     d[:markersize] = arg
 
   # markercolor
@@ -498,11 +501,13 @@ function processFillArg(d::Dict, arg)
     arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
   # fillrange function
-  elseif trueOrAllTrue(a -> isa(a, Function), arg)
+  # elseif trueOrAllTrue(a -> isa(a, Function), arg)
+  elseif allFunctions(arg)
     d[:fillrange] = arg
 
   # fillalpha
-  elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  elseif allAlphas(arg)
     d[:fillalpha] = arg
 
   elseif !handleColors!(d, arg, :fillcolor)
