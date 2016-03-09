@@ -869,7 +869,7 @@ const _pyplot_mimeformats = @compat Dict(
     "application/pdf"         => "pdf",
     "image/png"               => "png",
     "application/postscript"  => "ps",
-    # "image/svg+xml"           => "svg"
+    "image/svg+xml"           => "svg"
   )
 
 
@@ -887,6 +887,7 @@ for (mime, fmt) in _pyplot_mimeformats
                                   )
   end
 end
+
 
 # function Base.writemime(io::IO, m::MIME"image/png", subplt::Subplot{PyPlotPackage})
 #   finalizePlot(subplt)

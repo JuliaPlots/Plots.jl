@@ -112,3 +112,8 @@ gui(plt::PlottingObject = current()) = display(PlotsDisplay(), plt)
 
 # override the REPL display to open a gui window
 Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::PlottingObject) = gui(plt)
+
+# a backup for html... passes to svg
+function Base.writemime(io::IO, ::MIME"text/html", plt::PlottingObject)
+  writemime(io, MIME("image/svg+xml"), plt)
+end

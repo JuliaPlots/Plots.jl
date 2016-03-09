@@ -3,6 +3,7 @@
 
 function _initialize_backend(::QwtPackage; kw...)
   @eval begin
+    warn("Qwt is no longer supported... many features will likely be broken.")
     import Qwt
     export Qwt
   end
