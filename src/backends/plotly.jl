@@ -296,7 +296,7 @@ function plotly_series(d::Dict; plot_index = nothing)
     d_out[:type] = "bar"
     d_out[:x], d_out[:y] = x, y
 
-  elseif lt == :heatmap
+  elseif lt == :hist2d
     d_out[:type] = "histogram2d"
     d_out[:x], d_out[:y] = x, y
     if isa(d[:nbins], Tuple)

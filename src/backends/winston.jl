@@ -88,7 +88,7 @@ function _add_series(::WinstonPackage, plt::Plot; kw...)
 
 
 
-  ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
+  ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :hist2d, :hexbin, :hist, :bar
   if d[:linetype] == :none
     Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)..., color=getColor(d[:markercolor])))
 
@@ -123,7 +123,7 @@ function _add_series(::WinstonPackage, plt::Plot; kw...)
   # elseif d[:linetype] == :dots
   #     fn = Winston.XXX
 
-  # elseif d[:linetype] == :heatmap
+  # elseif d[:linetype] == :hist2d
   #     fn = Winston.XXX
 
   # elseif d[:linetype] == :hexbin

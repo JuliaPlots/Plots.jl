@@ -160,7 +160,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
           x, y = 1:size(p[:y], 1), p[:y]
         elseif p[:linetype] in [:hist, :density]
           x, y = Base.hist(p[:y])
-        elseif p[:linetype] in [:heatmap, :hexbin]
+        elseif p[:linetype] in [:hist2d, :hexbin]
           E = zeros(length(p[:x]),2)
           E[:,1] = p[:x]
           E[:,2] = p[:y]
@@ -423,7 +423,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
           GR.polyline([xy, xy], [ymin, ymax])
         end
       end
-    elseif p[:linetype] in [:heatmap, :hexbin]
+    elseif p[:linetype] in [:hist2d, :hexbin]
       E = zeros(length(p[:x]),2)
       E[:,1] = p[:x]
       E[:,2] = p[:y]

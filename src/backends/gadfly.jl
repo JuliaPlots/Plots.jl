@@ -36,7 +36,7 @@ function getLineGeom(d::Dict)
   xbins, ybins = maketuple(d[:nbins])
   if lt == :hexbin
     Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)
-  elseif lt == :heatmap
+  elseif lt == :hist2d
     Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)
   elseif lt == :hist
     Gadfly.Geom.histogram(bincount = xbins)
@@ -303,7 +303,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
   lt = d[:linetype]
   if lt == :ohlc
     error("Haven't re-implemented after refactoring")
-  elseif lt in (:heatmap, :hexbin) && (isa(d[:linecolor], ColorGradient) || isa(d[:linecolor], ColorFunction))
+  elseif lt in (:hist2d, :hexbin) && (isa(d[:linecolor], ColorGradient) || isa(d[:linecolor], ColorFunction))
     push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:linecolor], p))))
   elseif lt == :scatter && d[:markershape] == :none
     d[:markershape] = :ellipse
@@ -314,7 +314,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
     prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), d, plt.plotargs, smooth...))
   end
 
-  lt in (:heatmap, :hexbin, :contour) || addToGadflyLegend(plt, d)
+  lt in (:hist2d, :hexbin, :contour) || addToGadflyLegend(plt, d)
 
   # now save the layers that apply to this series
   d[:gadflylayers] = layers

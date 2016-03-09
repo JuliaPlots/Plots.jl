@@ -33,6 +33,8 @@ export
   bar!,
   histogram,
   histogram!,
+  histogram2d,
+  histogram2d!,
   density,
   density!,
   heatmap,
@@ -149,6 +151,8 @@ bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
 bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
 histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)
 histogram!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
+histogram2d(args...; kw...)  = plot(args...; kw...,  linetype = :hist2d)
+histogram2d!(args...; kw...) = plot!(args...; kw..., linetype = :hist2d)
 density(args...; kw...)    = plot(args...; kw...,  linetype = :density)
 density!(args...; kw...)   = plot!(args...; kw..., linetype = :density)
 heatmap(args...; kw...)    = plot(args...; kw...,  linetype = :heatmap)

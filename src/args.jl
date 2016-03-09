@@ -10,7 +10,7 @@ const _allAxes = [:auto, :left, :right]
 const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-                        :heatmap, :hexbin, :hist, :density, :bar, :hline, :vline, :ohlc,
+                        :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, :ohlc,
                         :contour, :pie
                        ], _3dTypes)
 @compat const _typeAliases = Dict(
@@ -39,7 +39,6 @@ const _allTypes = vcat([
 
 ishistlike(lt::Symbol) = lt in (:hist, :density)
 islinelike(lt::Symbol) = lt in (:line, :path, :steppre, :steppost)
-isheatmaplike(lt::Symbol) = lt in (:heatmap, :hexbin)
 
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -129,7 +128,7 @@ _seriesDefaults[:markerstrokecolor] = :match
 _seriesDefaults[:markerstrokealpha] = nothing
 # _seriesDefaults[:ribbon]          = nothing
 # _seriesDefaults[:ribboncolor]     = :match
-_seriesDefaults[:nbins]           = 30               # number of bins for heatmaps and hists
+_seriesDefaults[:nbins]           = 30               # number of bins for hists
 _seriesDefaults[:smooth]          = false               # regression line?
 _seriesDefaults[:group]           = nothing           # groupby vector
 # _seriesDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)

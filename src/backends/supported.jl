@@ -80,7 +80,7 @@ supportedArgs(::GadflyPackage) = [
   ]
 supportedAxes(::GadflyPackage) = [:auto, :left]
 supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
-                                   :scatter, :heatmap, :hexbin, :hist, :bar,
+                                   :scatter, :hist2d, :hexbin, :hist, :bar,
                                    :hline, :vline, :contour]
 supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
@@ -166,7 +166,7 @@ supportedArgs(::PyPlotPackage) = [
   ]
 supportedAxes(::PyPlotPackage) = _allAxes
 supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, #:sticks,
-                                   :scatter, :heatmap, :hexbin, :hist, :density, :bar,
+                                   :scatter, :hist2d, :hexbin, :hist, :density, :bar,
                                    :hline, :vline, :contour, :path3d, :scatter3d, :surface, :wireframe]
 supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 # supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
@@ -240,7 +240,7 @@ supportedArgs(::GRPackage) = [
   ]
 supportedAxes(::GRPackage) = _allAxes
 supportedTypes(::GRPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
-                               :scatter, :heatmap, :hexbin, :hist, :density, :bar,
+                               :scatter, :hist2d, :hexbin, :hist, :density, :bar,
                                :hline, :vline, :contour, :path3d, :scatter3d, :surface,
                                :wireframe, :ohlc, :pie]
 supportedStyles(::GRPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -304,7 +304,7 @@ supportedArgs(::QwtPackage) = [
     # :yflip,
     # :z,
   ]
-supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
+supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
 supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
 supportedScales(::QwtPackage) = [:identity, :log10]
 subplotSupported(::QwtPackage) = true
@@ -363,7 +363,7 @@ supportedArgs(::UnicodePlotsPackage) = [
     # :z,
   ]
 supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
-supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :heatmap, :hexbin, :hist, :bar, :hline, :vline]
+supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
 supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
 supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
 supportedScales(::UnicodePlotsPackage) = [:identity]
@@ -495,7 +495,7 @@ supportedArgs(::BokehPackage) = [
     # :levels,
   ]
 supportedAxes(::BokehPackage) = [:auto, :left]
-supportedTypes(::BokehPackage) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedTypes(::BokehPackage) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :hist2d, :hexbin, :hist, :bar, :hline, :vline, :contour]
 supportedStyles(::BokehPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::BokehPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
 supportedScales(::BokehPackage) = [:identity, :ln] #, :ln, :log2, :log10, :asinh, :sqrt]
@@ -562,7 +562,7 @@ supportedArgs(::PlotlyPackage) = [
   ]
 supportedAxes(::PlotlyPackage) = [:auto, :left]
 supportedTypes(::PlotlyPackage) = [:none, :line, :path, :scatter, :steppre, :steppost,
-                                   :heatmap, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
+                                   :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
                                    :pie] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
@@ -632,7 +632,7 @@ supportedArgs(::PlotlyJSPackage) = [
   ]
 supportedAxes(::PlotlyJSPackage) = [:auto, :left]
 supportedTypes(::PlotlyJSPackage) = [:none, :line, :path, :scatter, :steppre, :steppost,
-                                   :heatmap, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
+                                   :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
                                    :pie] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyJSPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyJSPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
@@ -700,7 +700,7 @@ supportedArgs(::GLVisualizePackage) = [
     # :levels,
   ]
 supportedAxes(::GLVisualizePackage) = [:auto, :left]
-supportedTypes(::GLVisualizePackage) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedTypes(::GLVisualizePackage) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :hist2d, :hexbin, :hist, :bar, :hline, :vline, :contour]
 supportedStyles(::GLVisualizePackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GLVisualizePackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
 supportedScales(::GLVisualizePackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
@@ -765,7 +765,7 @@ supportedArgs(::PGFPlotsPackage) = [
     # :levels,
   ]
 supportedAxes(::PGFPlotsPackage) = [:auto, :left]
-supportedTypes(::PGFPlotsPackage) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedTypes(::PGFPlotsPackage) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :hist2d, :hexbin, :hist, :bar, :hline, :vline, :contour]
 supportedStyles(::PGFPlotsPackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::PGFPlotsPackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
 supportedScales(::PGFPlotsPackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]

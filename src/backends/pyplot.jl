@@ -169,7 +169,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
       :density    => :hist,
       :sticks     => :bar,
       :bar        => :bar,
-      :heatmap    => :hexbin,
+      :hist2d     => :hexbin,
       :hexbin     => :hexbin,
       :scatter    => :scatter,
       :contour    => :contour,
@@ -351,7 +351,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
       extra_kwargs[:linewidth] = (lt == :sticks ? 0.1 : 0.9)
     end
 
-  elseif lt in (:heatmap, :hexbin)
+  elseif lt in (:hist2d, :hexbin)
     extra_kwargs[:gridsize] = d[:nbins]
     extra_kwargs[:cmap] = getPyPlotColorMap(d[:linecolor])
 
@@ -461,7 +461,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     plotfunc(x, y, z; extra_kwargs...)
   elseif lt in _3dTypes
     plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)
-  elseif lt in (:scatter, :heatmap, :hexbin)
+  elseif lt in (:scatter, :hist2d, :hexbin)
     plotfunc(d[:x], d[:y]; extra_kwargs...)
   else
     plotfunc(d[:x], d[:y]; extra_kwargs...)[1]
@@ -784,7 +784,7 @@ function addPyPlotLegend(plt::Plot, ax)
   leg = plt.plotargs[:legend]
   if leg != :none
     # gotta do this to ensure both axes are included
-    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:heatmap,:hline,:vline,:contour, :surface, :wireframe, :path3d, :scatter3d)), plt.seriesargs)
+    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:hist2d,:hline,:vline,:contour, :surface, :wireframe, :path3d, :scatter3d)), plt.seriesargs)
     args = filter(x -> x[:label] != "", args)
     if length(args) > 0
       leg = ax[:legend]([d[:serieshandle] for d in args],
