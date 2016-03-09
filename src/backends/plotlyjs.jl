@@ -8,7 +8,12 @@ function _initialize_backend(::PlotlyJSPackage; kw...)
     end
 
     for (mime, fmt) in PlotlyJS._mimeformats
-        @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyJSPackage}) = writemime(io, m, p.o.plot)
+        @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyJSPackage}) = writemime(io, m, p.o)
+    end
+
+    # override IJulia inline display
+    if isijulia()
+        IJulia.display_dict(plt::PlottingObject{PlotlyJSPackage}) = IJulia.display_dict(plt.o)
     end
 end
 
@@ -32,7 +37,7 @@ function _add_series(::PlotlyJSPackage, plt::Plot; kw...)
     d = Dict(kw)
     syncplot = plt.o
 
-    dumpdict(d, "addseries", true)
+    # dumpdict(d, "addseries", true)
 
     # add to the data array
     pdict = plotly_series(d)
@@ -65,7 +70,7 @@ end
 # TODO: override this to update plot items (title, xlabel, etc) after creation
 function _update_plot(plt::Plot{PlotlyJSPackage}, d::Dict)
     pdict = plotly_layout(d)
-    dumpdict(pdict, "pdict updateplot", true)
+    # dumpdict(pdict, "pdict updateplot", true)
     syncplot = plt.o
     w,h = d[:size]
     PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)
@@ -87,6 +92,9 @@ end
 function Base.setindex!(plt::Plot{PlotlyJSPackage}, xy::Tuple, i::Integer)
   d = plt.seriesargs[i]
   d[:x], d[:y] = xy
+  # TODO: this is likely ineffecient... we should make a call that ONLY changes the plot data
+  # PlotlyJS.restyle!(plt.o, i, plotly_series(d))
+  PlotlyJS.restyle!(plt.o, i, Dict(:x=>d[:x], :y=>d[:y]))
   plt
 end
 
