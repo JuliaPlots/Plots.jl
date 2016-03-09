@@ -19,29 +19,12 @@ const gr_markertype = Dict(
   :star4 => -25, :star5 => -26, :star6 => -27, :star7 => -28, :star8 => -29,
   :vline => -30, :hline => -31 )
 
-set_gr_markertype(shape::Shape) = set_gr_markertype(:ellipse)
-set_gr_markertype(shape) = GR.setmarkertype(gr_markertype[shape])
-
-
 const gr_halign = Dict(:left => 1, :hcenter => 2, :right => 3)
 const gr_valign = Dict(:top => 1, :vcenter => 3, :bottom => 5)
 
 const gr_font_family = Dict(
   "times" => 1, "helvetica" => 5, "courier" => 9, "bookman" => 14,
   "newcenturyschlbk" => 18, "avantgarde" => 22, "palatino" => 26)
-
-macro gr_state(expr::Expr)
-  esc(quote
-    GR.savestate()
-    try
-      $expr
-    catch
-      GR.restorestate()
-      rethrow()
-    end
-    GR.restorestate()
-  end)
-end
 
 function gr_getcolorind(v)
   c = getColor(v)
@@ -54,6 +37,55 @@ function gr_getaxisind(p)
     return 1
   else
     return 2
+  end
+end
+
+function gr_setmarkershape(p)
+  if haskey(p, :markershape)
+    shape = p[:markershape]
+    if isa(shape, Shape)
+      p[:vertices] = shape.vertices
+    else
+      GR.setmarkertype(gr_markertype[shape])
+      p[:vertices] = :none
+    end
+  end
+end
+
+function gr_polymarker(p, x, y)
+  if p[:vertices] != :none
+    vertices= p[:vertices]
+    dx = Float64[el[1] for el in vertices] * 0.01
+    dy = Float64[el[2] for el in vertices] * 0.01
+    GR.selntran(0)
+    GR.setfillcolorind(gr_getcolorind(p[:markercolor]))
+    GR.setfillintstyle(GR.INTSTYLE_SOLID)
+    for i = 1:length(x)
+      xn, yn = GR.wctondc(x[i], y[i])
+      GR.fillarea(xn + dx, yn + dy)
+    end
+    GR.selntran(1)
+  else
+    GR.polymarker(x, y)
+  end
+end
+
+function gr_polyline(x, y)
+  if NaN in x || NaN in y
+    i = 1
+    j = 1
+    n = length(x)
+    while i < n
+      while j < n && x[j] != Nan && y[j] != NaN
+        j += 1
+      end
+      if i < j
+        GR.polyline(x[i:j], y[i:j])
+      end
+      i = j + 1
+    end
+  else
+    GR.polyline(x, y)
   end
 end
 
@@ -87,7 +119,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
   end
 
   if haskey(d, :background_color)
-    @gr_state begin #GR.savestate()
+    GR.savestate()
     GR.selntran(0)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     GR.setfillcolorind(gr_getcolorind(d[:background_color]))
@@ -97,7 +129,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       GR.fillrect(ratio*subplot[1], ratio*subplot[2], subplot[3], subplot[4])
     end
     GR.selntran(1)
-    end # GR.restorestate()
+    GR.restorestate()
     c = getColor(d[:background_color])
     if 0.21 * c.r + 0.72 * c.g + 0.07 * c.b < 0.9
       fg = convert(Int, GR.inqcolorfromrgb(1-c.r, 1-c.g, 1-c.b))
@@ -112,6 +144,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
   num_axes = 1
   cmap = false
   axes_2d = true
+  grid_flag = get(d, :grid, true)
 
   for axis = 1:2
     xmin = ymin = typemax(Float64)
@@ -165,6 +198,12 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
           end
         end
       end
+    end
+    if d[:xlims] != :auto
+      xmin, xmax = d[:xlims]
+    end
+    if d[:ylims] != :auto
+      ymin, ymax = d[:ylims]
     end
     if xmax <= xmin
       xmax = xmin + 1
@@ -228,7 +267,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       GR.setlinewidth(1)
       GR.setlinecolorind(fg)
       ticksize = 0.0075 * diag
-      if fg == 1
+      if grid_flag && fg == 1
         GR.grid(xtick, ytick, 0, 0, majorx, majory)
       end
       if num_axes == 1
@@ -243,40 +282,40 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
   end
 
   if get(d, :title, "") != ""
-    @gr_state begin #GR.savestate()
+    GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.settextcolorind(fg)
     GR.text(0.5 * (viewport[1] + viewport[2]), min(ratio, 1), d[:title])
-    end # GR.restorestate()
+    GR.restorestate()
   end
   if get(d, :xlabel, "") != ""
-    @gr_state begin #GR.savestate()
+    GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
     GR.settextcolorind(fg)
     GR.text(0.5 * (viewport[1] + viewport[2]), 0, d[:xlabel])
-    end # GR.restorestate()
+    GR.restorestate()
   end
   if get(d, :ylabel, "") != ""
-    @gr_state begin #GR.savestate()
+    GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
     GR.settextcolorind(fg)
     GR.text(0, 0.5 * (viewport[3] + viewport[4]), d[:ylabel])
-    end # GR.restorestate()
+    GR.restorestate()
   end
   if get(d, :yrightlabel, "") != ""
-    @gr_state begin #GR.savestate()
+    GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(1, 0)
     GR.settextcolorind(fg)
     GR.text(1, 0.5 * (viewport[3] + viewport[4]), d[:yrightlabel])
-    end # GR.restorestate()
+    GR.restorestate()
   end
 
   legend = false
 
   for p in plt.seriesargs
-    @gr_state begin ## GR.savestate()
+    GR.savestate()
     xmin, xmax, ymin, ymax = extrema[gr_getaxisind(p),:]
     GR.setwindow(xmin, xmax, ymin, ymax)
     if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline, :ohlc]
@@ -299,7 +338,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
     end
     if p[:linetype] == :line
       if length(p[:x]) > 1
-        GR.polyline(p[:x], p[:y])
+        gr_polyline(p[:x], p[:y])
       end
       legend = true
     elseif p[:linetype] in [:steppre, :steppost]
@@ -330,12 +369,12 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       legend = true
     elseif p[:linetype] == :scatter || (p[:markershape] != :none && axes_2d)
       haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
-      haskey(p, :markershape) && set_gr_markertype(p[:markershape])
+      gr_setmarkershape(p)
       if haskey(d, :markersize)
         if typeof(d[:markersize]) <: Number
           GR.setmarkersize(d[:markersize] / 4.0)
           if length(p[:x]) > 0
-            GR.polymarker(p[:x], p[:y])
+            gr_polymarker(p, p[:x], p[:y])
           end
         else
           c = p[:markercolor]
@@ -346,12 +385,12 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
               GR.setmarkercolorind(ci)
             end
             GR.setmarkersize(d[:markersize][i] / 4.0)
-            GR.polymarker([p[:x][i]], [p[:y][i]])
+            gr_polymarker(p, [p[:x][i]], [p[:y][i]])
           end
         end
       else
         if length(p[:x]) > 0
-          GR.polymarker(p[:x], p[:y])
+          gr_polymarker(p, p[:x], p[:y])
         end
       end
       legend = true
@@ -437,8 +476,10 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       charheight = max(0.018 * diag, 0.01)
       ticksize = 0.01 * (viewport[2] - viewport[1])
       GR.setlinewidth(1)
-      GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
-      GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
+      if grid_flag
+        GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
+        GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
+      end
       z = reshape(z, length(x) * length(y))
       if p[:linetype] == :surface
         GR.setcolormap(GR.COLORMAP_COOLWARM)
@@ -467,16 +508,16 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       charheight = max(0.018 * diag, 0.01)
       ticksize = 0.01 * (viewport[2] - viewport[1])
       GR.setlinewidth(1)
-      if p[:linetype] == :path3d
+      if grid_flag && p[:linetype] == :path3d
         GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
         GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
       end
       if p[:linetype] == :scatter3d
         haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
-        haskey(p, :markershape) && set_gr_markertype(p[:markershape])
+        gr_setmarkershape(p)
         for i = 1:length(z)
           px, py = GR.wc3towc(x[i], y[i], z[i])
-          GR.polymarker([px], [py])
+          gr_polymarker(p, [px], [py])
         end
       else
         haskey(p, :linewidth) && GR.setlinewidth(p[:linewidth])
@@ -499,7 +540,6 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       end
     elseif p[:linetype] == :pie
       GR.selntran(0)
-      GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
       GR.setfillintstyle(GR.INTSTYLE_SOLID)
       xmin, xmax, ymin, ymax = viewport
       ymax -= 0.05 * (xmax - xmin)
@@ -512,24 +552,43 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
         r = 0.5 * (xmax - xmin)
         ymin, ymax = ycenter - r, ycenter + r
       end
-      x, y = p[:x], p[:y]
-      total = sum(y)
+      labels, slices = p[:x], p[:y]
+      numslices = length(slices)
+      total = sum(slices)
       a1 = 0
-      for i in 1:length(y)
-        a2 = round(Int, a1 + (y[i] / total) * 360.0)
+      x = zeros(3)
+      y = zeros(3)
+      for i in 1:numslices
+        a2 = round(Int, a1 + (slices[i] / total) * 360.0)
         GR.setfillcolorind(980 + (i-1) % 20)
         GR.fillarc(xmin, xmax, ymin, ymax, a1, a2)
-        GR.text(xcenter + 0.5 * r * cos(0.5 * (a1 + a2) * pi / 180),
-                ycenter + 0.5 * r * sin(0.5 * (a1 + a2) * pi / 180),  string(x[i]))
+        alpha = 0.5 * (a1 + a2)
+        cosf = r * cos(alpha * pi / 180)
+        sinf = r * sin(alpha * pi / 180)
+        x[1] = xcenter + cosf
+        y[1] = ycenter + sinf
+        x[2] = x[1] + 0.1 * cosf
+        y[2] = y[1] + 0.1 * sinf
+        y[3] = y[2]
+        if 90 <= alpha < 270
+          x[3] = x[2] - 0.05
+          GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
+          GR.text(x[3] - 0.01, y[3], string(labels[i]))
+        else
+          x[3] = x[2] + 0.05
+          GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
+          GR.text(x[3] + 0.01, y[3], string(labels[i]))
+        end
+        GR.polyline(x, y)
         a1 = a2
       end
       GR.selntran(1)
     end
-    end # GR.restorestate()
+    GR.restorestate()
   end
 
   if d[:legend] != :none && legend
-    @gr_state begin #GR.savestate()
+    GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
     w = 0
@@ -563,11 +622,11 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       end
       if p[:linetype] == :scatter || p[:markershape] != :none
         haskey(p, :markercolor) && GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
-        haskey(p, :markershape) && set_gr_markertype(p[:markershape])
+        gr_setmarkershape(p)
         if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks]
-          GR.polymarker([px - 0.06, px - 0.02], [py, py])
+          gr_polymarker(p, [px - 0.06, px - 0.02], [py, py])
         else
-          GR.polymarker([px - 0.06, px - 0.04, px - 0.02], [py, py, py])
+          gr_polymarker(p, [px - 0.06, px - 0.04, px - 0.02], [py, py, py])
         end
       end
       if typeof(p[:label]) <: Array
@@ -582,11 +641,11 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       py -= dy
     end
     GR.selntran(1)
-    end # GR.restorestate()
+    GR.restorestate()
   end
 
   if haskey(d, :anns)
-    @gr_state begin #GR.savestate()
+    GR.savestate()
     for ann in d[:anns]
       x, y, val = ann
       x, y = GR.wctondc(x, y)
@@ -601,7 +660,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
       GR.settextalign(gr_halign[val.font.halign], gr_valign[val.font.valign])
       GR.text(x, y, val.str)
     end
-    end # GR.restorestate()
+    GR.restorestate()
   end
 
   update && GR.updatews()
