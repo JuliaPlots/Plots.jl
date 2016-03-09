@@ -94,7 +94,7 @@ function Base.setindex!(plt::Plot{PlotlyJSPackage}, xy::Tuple, i::Integer)
   d[:x], d[:y] = xy
   # TODO: this is likely ineffecient... we should make a call that ONLY changes the plot data
   # PlotlyJS.restyle!(plt.o, i, plotly_series(d))
-  PlotlyJS.restyle!(plt.o, i, Dict(:x=>d[:x], :y=>d[:y]))
+  PlotlyJS.restyle!(plt.o, i, Dict(:x=>(d[:x],), :y=>(d[:y],)))
   plt
 end
 
