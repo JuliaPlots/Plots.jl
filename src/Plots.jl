@@ -124,8 +124,8 @@ export
   # recipes
   PlotRecipe,
   # EllipseRecipe,
-  # spy,
-  corrplot
+  spy
+  # corrplot
 
 
 # ---------------------------------------------------------

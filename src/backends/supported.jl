@@ -563,7 +563,7 @@ supportedArgs(::PlotlyPackage) = [
 supportedAxes(::PlotlyPackage) = [:auto, :left]
 supportedTypes(::PlotlyPackage) = [:none, :line, :path, :scatter, :steppre, :steppost,
                                    :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
-                                   :pie] #,, :sticks, :hexbin, :hline, :vline]
+                                   :pie, :heatmap] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
                                      :pentagon, :hexagon, :octagon, :vline, :hline] #vcat(_allMarkers, Shape)
@@ -633,7 +633,7 @@ supportedArgs(::PlotlyJSPackage) = [
 supportedAxes(::PlotlyJSPackage) = [:auto, :left]
 supportedTypes(::PlotlyJSPackage) = [:none, :line, :path, :scatter, :steppre, :steppost,
                                    :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
-                                   :pie] #,, :sticks, :hexbin, :hline, :vline]
+                                   :pie, :heatmap] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyJSPackage) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyJSPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
                                      :pentagon, :hexagon, :octagon, :vline, :hline] #vcat(_allMarkers, Shape)

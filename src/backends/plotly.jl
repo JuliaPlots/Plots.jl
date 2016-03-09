@@ -249,10 +249,10 @@ function get_plot_json(plt::Plot{PlotlyPackage})
 end
 
 
-function plotly_colorscale(grad::ColorGradient)
-  [[grad.values[i], webcolor(grad.colors[i])] for i in 1:length(grad.colors)]
+function plotly_colorscale(grad::ColorGradient, alpha = nothing)
+  [[grad.values[i], webcolor(grad.colors[i], alpha)] for i in 1:length(grad.colors)]
 end
-plotly_colorscale(c) = plotly_colorscale(ColorGradient(:bluesreds))
+plotly_colorscale(c, alpha = nothing) = plotly_colorscale(ColorGradient(:bluesreds), alpha)
 
 const _plotly_markers = Dict{Symbol,Any}(
     :rect       => "square",
@@ -316,16 +316,26 @@ function plotly_series(d::Dict; plot_index = nothing)
       d_out[:histnorm] = "probability density"
     end
 
-  elseif lt in (:contour, :surface, :wireframe)
-    d_out[:type] = lt == :wireframe ? :surface : string(lt)
+  elseif lt == :heatmap
+    d_out[:type] = "heatmap"
     d_out[:x], d_out[:y] = x, y
     d_out[:z] = d[:z].surf
-    # d_out[:showscale] = d[:legend]
-    if lt == :contour
-      d_out[:ncontours] = d[:levels]
-      d_out[:contours] = Dict{Symbol,Any}(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
-    end
-    d_out[:colorscale] = plotly_colorscale(d[lt == :contour ? :linecolor : :fillcolor])
+    d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
+
+  elseif lt == :contour
+    d_out[:type] = "contour"
+    d_out[:x], d_out[:y] = x, y
+    d_out[:z] = d[:z].surf
+    # d_out[:showscale] = d[:colorbar] != :none
+    d_out[:ncontours] = d[:levels]
+    d_out[:contours] = Dict{Symbol,Any}(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
+    d_out[:colorscale] = plotly_colorscale(d[:linecolor], d[:linealpha])
+
+  elseif lt in (:surface, :wireframe)
+    d_out[:type] = "surface"
+    d_out[:x], d_out[:y] = x, y
+    d_out[:z] = d[:z].surf
+    d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
   elseif lt == :pie
     d_out[:type] = "pie"
@@ -360,11 +370,19 @@ function plotly_series(d::Dict; plot_index = nothing)
             :width => d[:markerstrokewidth],
           ),
       )
+
+    # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
     if d[:zcolor] != nothing
-      d_out[:marker][:color] = d[:zcolor]
-      d_out[:marker][:colorscale] = plotly_colorscale(d[:markercolor])
+      # d_out[:marker][:color] = d[:zcolor]
+      # d_out[:marker][:colorscale] = plotly_colorscale(d[:markercolor], d[:markeralpha])
+      # d_out[:showscale] = true
+      grad = ColorGradient(d[:markercolor], alpha=d[:markeralpha])
+      zmin, zmax = extrema(d[:zcolor])
+      d_out[:marker][:color] = [webcolor(getColorZ(grad, (zi - zmin) / (zmax - zmin))) for zi in d[:zcolor]]
     end
+
   end
+  dumpdict(d_out, "", true)
 
   # add "line"
   if hasline

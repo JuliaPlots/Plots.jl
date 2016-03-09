@@ -107,6 +107,10 @@ function ColorGradient{T<:Real}(cs::AVec{Symbol}, vals::AVec{T} = linspace(0, 1,
   ColorGradient(map(convertColor, cs), vals; kw...)
 end
 
+function ColorGradient(grad::ColorGradient; alpha = nothing)
+  ColorGradient(convertColor(grad.colors, alpha), grad.values)
+end
+
 getColor(gradient::ColorGradient, idx::Int) = gradient.colors[mod1(idx, length(gradient.colors))]
 
 function getColorZ(gradient::ColorGradient, z::Real)

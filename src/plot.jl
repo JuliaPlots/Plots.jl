@@ -228,7 +228,7 @@ end
 
 typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
 
-all3D(d::Dict) = trueOrAllTrue(lt -> lt in (:contour, :surface, :wireframe, :image), get(d, :linetype, :none))
+all3D(d::Dict) = trueOrAllTrue(lt -> lt in (:contour, :heatmap, :surface, :wireframe), get(d, :linetype, :none))
 
 # missing
 convertToAnyVector(v::@compat(Void), d::Dict) = Any[nothing], nothing
@@ -328,10 +328,10 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
 
     lt = d[:linetype]
     if isa(d[:y], Surface)
-      if lt in (:contour, :surface, :wireframe, :image)
+      if lt in (:contour, :heatmap, :surface, :wireframe)
         z = d[:y]
         d[:y] = 1:size(z,2)
-        d[lt == :image ? :zcolor : :z] = z
+        d[:z] = z
       end
     end
 
@@ -429,7 +429,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::
   # surf[1,1] = convert(Matrix{Float64}, zmat)
   d = Dict(kw)
   d[:z] = Surface(convert(Matrix{Float64}, zmat))
-  if !(get(d, :linetype, :none) in (:contour, :surface, :wireframe))
+  if !(get(d, :linetype, :none) in (:contour, :heatmap, :surface, :wireframe))
     d[:linetype] = :contour
   end
   createKWargsList(plt, x, y; d...) #, z = surf)
@@ -443,7 +443,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AMat{T}, y::AMat{T}, 
   # surf[1,1] = convert(Matrix{Float64}, zmat)
   d = Dict(kw)
   d[:z] = Surface(convert(Matrix{Float64}, zmat))
-  if !(get(d, :linetype, :none) in (:contour, :surface, :wireframe))
+  if !(get(d, :linetype, :none) in (:contour, :heatmap, :surface, :wireframe))
     d[:linetype] = :contour
   end
   createKWargsList(plt, Any[x], Any[y]; d...) #kw..., z = surf, linetype = :contour)
