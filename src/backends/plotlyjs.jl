@@ -54,12 +54,15 @@ end
 
 
 function _add_annotations{X,Y,V}(plt::Plot{PlotlyJSPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
-  # set or add to the annotation_list
-  if haskey(plt.plotargs, :annotation_list)
+    # set or add to the annotation_list
+    @show typeof(anns), typeof(get(plt.plotargs, :annotation_list, nothing))
+    if !haskey(plt.plotargs, :annotation_list)
+        plt.plotargs[:annotation_list] = Any[]
+    end
     append!(plt.plotargs[:annotation_list], anns)
-  else
-    plt.plotargs[:annotation_list] = anns
-  end
+    # else
+    #   plt.plotargs[:annotation_list] = anns
+    # end
 end
 
 # ----------------------------------------------------------------
