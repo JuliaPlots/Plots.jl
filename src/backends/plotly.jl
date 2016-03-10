@@ -382,7 +382,6 @@ function plotly_series(d::Dict; plot_index = nothing)
     end
 
   end
-  dumpdict(d_out, "", true)
 
   # add "line"
   if hasline
