@@ -103,7 +103,7 @@ function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:0; kw...)
   ColorGradient(cs, vals; kw...)
 end
 
-function ColorGradient{T<:Real}(cs::AVec{Symbol}, vals::AVec{T} = linspace(0, 1, length(cs)); kw...)
+function ColorGradient{T<:Real}(cs::AVec, vals::AVec{T} = linspace(0, 1, length(cs)); kw...)
   ColorGradient(map(convertColor, cs), vals; kw...)
 end
 
