@@ -72,10 +72,10 @@ const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcya
 
 "Continuous gradient between values.  Wraps a list of bounding colors and the values they represent."
 immutable ColorGradient <: ColorScheme
-  colors::Vector{Colorant}
-  values::Vector{Float64}
+  colors::Vector
+  values::Vector
 
-  function ColorGradient{T<:Colorant,S<:Real}(cs::AVec{T}, vals::AVec{S} = linspace(0, 1, length(cs)); alpha = nothing)
+  function ColorGradient{S<:Real}(cs::AVec, vals::AVec{S} = linspace(0, 1, length(cs)); alpha = nothing)
     if length(cs) == length(vals)
       return new(convertColor(cs,alpha), collect(vals))
     end
@@ -103,13 +103,13 @@ function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:0; kw...)
   ColorGradient(cs, vals; kw...)
 end
 
-function ColorGradient{T<:Real}(cs::AVec, vals::AVec{T} = linspace(0, 1, length(cs)); kw...)
-  ColorGradient(map(convertColor, cs), vals; kw...)
-end
+# function ColorGradient{T<:Real}(cs::AVec, vals::AVec{T} = linspace(0, 1, length(cs)); kw...)
+#   ColorGradient(map(convertColor, cs), vals; kw...)
+# end
 
-function ColorGradient(grad::ColorGradient; alpha = nothing)
-  ColorGradient(convertColor(grad.colors, alpha), grad.values)
-end
+# function ColorGradient(grad::ColorGradient; alpha = nothing)
+#   ColorGradient(convertColor(grad.colors, alpha), grad.values)
+# end
 
 getColor(gradient::ColorGradient, idx::Int) = gradient.colors[mod1(idx, length(gradient.colors))]
 

@@ -176,7 +176,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
       :scatter3d  => :scatter,
       :surface    => :plot_surface,
       :wireframe  => :plot_wireframe,
-      :heatmap    => :imshow,
+      :heatmap    => :pcolor,
       # :surface    => pycolors.pymember("LinearSegmentedColormap")[:from_list]
     )
   return ax[get(fmap, linetype, :plot)]
@@ -373,9 +373,6 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   elseif lt == :heatmap
     extra_kwargs[:cmap] = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
-    left, right = extrema(d[:x])
-    bottom, top = extrema(d[:y])
-    extra_kwargs[:extent] = left, right, bottom, top
 
   else
 
@@ -425,7 +422,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   # end
 
   # set these for all types
-  if !(lt in (:contour,:surface,:wireframe))
+  if !(lt in (:contour,:surface,:wireframe,:heatmap))
     if !(lt in (:scatter, :scatter3d))
       extra_kwargs[:color] = color
       extra_kwargs[:linewidth] = d[:linewidth]
@@ -474,7 +471,8 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     plotfunc(d[:x], d[:y]; extra_kwargs...)
 
   elseif lt == :heatmap
-    plotfunc(d[:z]; extra_kwargs...)
+    x, y, z = d[:x], d[:y], d[:z].surf'
+    plotfunc(heatmap_edges(x), heatmap_edges(y), z; extra_kwargs...)
 
   else # plot
     plotfunc(d[:x], d[:y]; extra_kwargs...)[1]
@@ -798,7 +796,7 @@ function addPyPlotLegend(plt::Plot, ax)
   leg = plt.plotargs[:legend]
   if leg != :none
     # gotta do this to ensure both axes are included
-    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:hist2d,:hline,:vline,:contour, :surface, :wireframe, :path3d, :scatter3d)), plt.seriesargs)
+    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:hist2d,:hline,:vline,:contour,:surface,:wireframe,:heatmap,:path3d,:scatter3d)), plt.seriesargs)
     args = filter(x -> x[:label] != "", args)
     if length(args) > 0
       leg = ax[:legend]([d[:serieshandle] for d in args],

@@ -181,6 +181,13 @@ Base.first(x::Symbol) = x
 
 sortedkeys(d::Dict) = sort(collect(keys(d)))
 
+"create an (n+1) list of the outsides of heatmap rectangles"
+function heatmap_edges(v::AVec)
+  vmin, vmax = extrema(v)
+  extra = 0.5 * (vmax-vmin) / (length(v)-1)
+  vcat(vmin-extra, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra)
+end
+
 
 function fakedata(sz...)
   y = zeros(sz...)
