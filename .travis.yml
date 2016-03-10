@@ -13,8 +13,8 @@ script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
  - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")'
  # - julia -e 'Pkg.clone("https://github.com/tbreloff/Images.jl.git"); Pkg.checkout("Images","tom_imgcompare");'
- - julia -e 'Pkg.clone("Images"); Pkg.build("Images")'
- - julia -e 'Pkg.clone("ImageMagick"); Pkg.build("ImageMagick")'
+ # - julia -e 'Pkg.clone("Images"); Pkg.build("Images")'
+ # - julia -e 'Pkg.clone("ImageMagick"); Pkg.build("ImageMagick")'
  - julia -e 'Pkg.clone("https://github.com/tbreloff/VisualRegressionTests.jl.git");'
  - julia -e 'Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");'
  - julia -e 'Pkg.clone("Cairo"); Pkg.build("Cairo")'

@@ -48,7 +48,7 @@ function plot(args...; kw...)
   preprocessArgs!(d)
   dumpdict(d, "After plot preprocessing")
 
-  plotargs = getPlotArgs(pkg, d, 1)
+  plotargs = merge(d, getPlotArgs(pkg, d, 1))
   dumpdict(plotargs, "Plot args")
   plt = _create_plot(pkg; plotargs...)  # create a new, blank plot
 
@@ -186,12 +186,21 @@ updateDictWithMeta(d::Dict, plotargs::Dict, meta, isx::Bool) = nothing
 annotations(::@compat(Void)) = []
 annotations{X,Y,V}(v::AVec{@compat(Tuple{X,Y,V})}) = v
 annotations{X,Y,V}(t::@compat(Tuple{X,Y,V})) = [t]
+annotations(v::AVec{PlotText}) = v
+annotations(v::AVec) = map(PlotText, v)
 annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
                        "(x, y, annotation)\n    got: $(typeof(anns))")
 
 function _add_annotations(plt::Plot, d::Dict)
   anns = annotations(get(d, :annotation, nothing))
   if !isempty(anns)
+
+    # if we just have a list of PlotText objects, then create (x,y,text) tuples
+    if typeof(anns) <: AVec{PlotText}
+      x, y = plt[plt.n]
+      anns = Tuple{Float64,Float64,PlotText}[(x[i], y[i], t) for (i,t) in enumerate(anns)]
+    end
+
     _add_annotations(plt, anns)
   end
 end
@@ -219,41 +228,50 @@ end
 
 typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
 
+all3D(d::Dict) = trueOrAllTrue(lt -> lt in (:contour, :heatmap, :surface, :wireframe), get(d, :linetype, :none))
+
 # missing
-convertToAnyVector(v::@compat(Void); kw...) = Any[nothing], nothing
+convertToAnyVector(v::@compat(Void), d::Dict) = Any[nothing], nothing
 
 # fixed number of blank series
-convertToAnyVector(n::Integer; kw...) = Any[zeros(0) for i in 1:n], nothing
+convertToAnyVector(n::Integer, d::Dict) = Any[zeros(0) for i in 1:n], nothing
 
 # numeric vector
-convertToAnyVector{T<:Real}(v::AVec{T}; kw...) = Any[v], nothing
+convertToAnyVector{T<:Real}(v::AVec{T}, d::Dict) = Any[v], nothing
 
 # string vector
-convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}; kw...) = Any[v], nothing
+convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}, d::Dict) = Any[v], nothing
 
 # numeric matrix
-convertToAnyVector{T<:Real}(v::AMat{T}; kw...) = Any[v[:,i] for i in 1:size(v,2)], nothing
+function convertToAnyVector{T<:Real}(v::AMat{T}, d::Dict)
+  if all3D(d)
+    Any[Surface(v)]
+  else  
+    Any[v[:,i] for i in 1:size(v,2)]
+  end, nothing
+end
 
 # function
-convertToAnyVector(f::Function; kw...) = Any[f], nothing
+convertToAnyVector(f::Function, d::Dict) = Any[f], nothing
 
 # surface
-convertToAnyVector(s::Surface; kw...) = Any[s], nothing
+convertToAnyVector(s::Surface, d::Dict) = Any[s], nothing
 
 # vector of OHLC
-convertToAnyVector(v::AVec{OHLC}; kw...) = Any[v], nothing
+convertToAnyVector(v::AVec{OHLC}, d::Dict) = Any[v], nothing
 
 # dates
-convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}; kw...) = Any[dts], nothing
+convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}, d::Dict) = Any[dts], nothing
 
 # list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec; kw...)
+function convertToAnyVector(v::AVec, d::Dict)
   if all(x -> typeof(x) <: Real, v)
     # all real numbers wrap the whole vector as one item
     Any[convert(Vector{Float64}, v)], nothing
   else
     # something else... treat each element as an item
-    Any[vi for vi in v], nothing
+    vcat(Any[convertToAnyVector(vi, d)[1] for vi in v]...), nothing
+    # Any[vi for vi in v], nothing
   end
 end
 
@@ -262,7 +280,7 @@ end
 
 # in computeXandY, we take in any of the possible items, convert into proper x/y vectors, then return.
 # this is also where all the "set x to 1:length(y)" happens, and also where we assert on lengths.
-computeX(x::@compat(Void), y) = 1:length(y)
+computeX(x::@compat(Void), y) = 1:size(y,1)
 computeX(x, y) = copy(x)
 computeY(x, y::Function) = map(y, x)
 computeY(x, y) = copy(y)
@@ -281,8 +299,9 @@ end
 # create n=max(mx,my) series arguments. the shorter list is cycled through
 # note: everything should flow through this
 function createKWargsList(plt::PlottingObject, x, y; kw...)
-  xs, xmeta = convertToAnyVector(x; kw...)
-  ys, ymeta = convertToAnyVector(y; kw...)
+  kwdict = Dict(kw)
+  xs, xmeta = convertToAnyVector(x, kwdict)
+  ys, ymeta = convertToAnyVector(y, kwdict)
 
   mx = length(xs)
   my = length(ys)
@@ -290,7 +309,7 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
   for i in 1:max(mx, my)
 
     # try to set labels using ymeta
-    d = Dict(kw)
+    d = copy(kwdict)
     if !haskey(d, :label) && ymeta != nothing
       if isa(ymeta, Symbol)
         d[:label] = string(ymeta)
@@ -307,18 +326,35 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
     dumpdict(d, "after getSeriesArgs")
     d[:x], d[:y] = computeXandY(xs[mod1(i,mx)], ys[mod1(i,my)])
 
+    lt = d[:linetype]
+    if isa(d[:y], Surface)
+      if lt in (:contour, :heatmap, :surface, :wireframe)
+        z = d[:y]
+        d[:y] = 1:size(z,2)
+        d[:z] = z
+      end
+    end
+
     if haskey(d, :idxfilter)
       d[:x] = d[:x][d[:idxfilter]]
       d[:y] = d[:y][d[:idxfilter]]
     end
 
     # for linetype `line`, need to sort by x values
-    if d[:linetype] == :line
+    if lt == :line
       # order by x
       indices = sortperm(d[:x])
       d[:x] = d[:x][indices]
       d[:y] = d[:y][indices]
       d[:linetype] = :path
+    end
+
+    # map functions to vectors
+    if isa(d[:zcolor], Function)
+      d[:zcolor] = map(d[:zcolor], d[:x])
+    end
+    if isa(d[:fillrange], Function)
+      d[:fillrange] = map(d[:fillrange], d[:x])
     end
 
     # cleanup those fields that were used only for generating kw args
@@ -361,6 +397,16 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zvec::AVec; kw.
   createKWargsList(plt, x, y; z=zvec, d...)
 end
 
+function createKWargsList{T<:Real}(plt::PlottingObject, z::AMat{T}; kw...)
+  d = Dict(kw)
+  if all3D(d)
+    n,m = size(z)
+    createKWargsList(plt, 1:n, 1:m, z; kw...)
+  else
+    createKWargsList(plt, nothing, z; kw...)
+  end
+end
+
 # contours or surfaces... function grid
 function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zf::Function; kw...)
   # only allow sorted x/y for now
@@ -378,14 +424,15 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::
   @assert x == sort(x)
   @assert y == sort(y)
   @assert size(zmat) == (length(x), length(y))
-  surf = Surface(convert(Matrix{Float64}, zmat))
+  # surf = Surface(convert(Matrix{Float64}, zmat))
   # surf = Array(Any,1,1)
   # surf[1,1] = convert(Matrix{Float64}, zmat)
   d = Dict(kw)
-  if !(get(d, :linetype, :none) in (:contour, :surface, :wireframe))
+  d[:z] = Surface(convert(Matrix{Float64}, zmat))
+  if !(get(d, :linetype, :none) in (:contour, :heatmap, :surface, :wireframe))
     d[:linetype] = :contour
   end
-  createKWargsList(plt, x, y; d..., z = surf)
+  createKWargsList(plt, x, y; d...) #, z = surf)
 end
 
 # contours or surfaces... general x, y grid
@@ -394,7 +441,12 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AMat{T}, y::AMat{T}, 
   surf = Surface(convert(Matrix{Float64}, zmat))
   # surf = Array(Any,1,1)
   # surf[1,1] = convert(Matrix{Float64}, zmat)
-  createKWargsList(plt, x, y; kw..., surface = surf, linetype = :contour)
+  d = Dict(kw)
+  d[:z] = Surface(convert(Matrix{Float64}, zmat))
+  if !(get(d, :linetype, :none) in (:contour, :heatmap, :surface, :wireframe))
+    d[:linetype] = :contour
+  end
+  createKWargsList(plt, Any[x], Any[y]; d...) #kw..., z = surf, linetype = :contour)
 end
 
 
@@ -407,7 +459,7 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, surf::Surface; 
 end
 
 function createKWargsList(plt::PlottingObject, f::FuncOrFuncs; kw...)
-  error("Can't pass a Function or Vector{Function} for y without also passing x")
+  createKWargsList(plt, f, xmin(plt), xmax(plt); kw...)
 end
 
 # list of functions
@@ -431,6 +483,19 @@ createKWargsList{T<:Real}(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs,
 createKWargsList{T<:Real}(plt::PlottingObject, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
 createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, linspace(umin, umax, numPoints); kw...)
 
+# special handling... 3D parametric function(s)
+createKWargsList{T<:Real}(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec{T}; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u); kw...)
+createKWargsList{T<:Real}(plt::PlottingObject, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u); kw...)
+createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, fz, linspace(umin, umax, numPoints); kw...)
+
+# (x,y) tuples
+function createKWargsList{R1<:Real,R2<:Real}(plt::PlottingObject, xy::AVec{Tuple{R1,R2}}; kw...)
+  createKWargsList(plt, unzip(xy)...; kw...)
+end
+function createKWargsList{R1<:Real,R2<:Real}(plt::PlottingObject, xy::Tuple{R1,R2}; kw...)
+  createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
+end
+
 
 
 # special handling... no args... 1 series
@@ -451,16 +516,34 @@ end
 
 # --------------------------------------------------------------------
 
-"For DataFrame support.  Imports DataFrames and defines the necessary methods which support them."
-function dataframes()
-  @eval import DataFrames
 
-  @eval function createKWargsList(plt::PlottingObject, df::DataFrames.DataFrame, args...; kw...)
+# @require FixedSizeArrays begin
+
+  unzip{T}(x::AVec{FixedSizeArrays.Vec{2,T}}) = T[xi[1] for xi in x], T[xi[2] for xi in x]
+  unzip{T}(x::FixedSizeArrays.Vec{2,T}) = T[x[1]], T[x[2]]
+
+  function createKWargsList{T<:Real}(plt::PlottingObject, xy::AVec{FixedSizeArrays.Vec{2,T}}; kw...)
+    createKWargsList(plt, unzip(xy)...; kw...)
+  end
+
+  function createKWargsList{T<:Real}(plt::PlottingObject, xy::FixedSizeArrays.Vec{2,T}; kw...)
+    createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
+  end
+
+# end
+
+# --------------------------------------------------------------------
+
+# For DataFrame support.  Imports DataFrames and defines the necessary methods which support them.
+
+@require DataFrames begin
+
+  function createKWargsList(plt::PlottingObject, df::DataFrames.AbstractDataFrame, args...; kw...)
     createKWargsList(plt, args...; kw..., dataframe = df)
   end
 
   # expecting the column name of a dataframe that was passed in... anything else should error
-  @eval function extractGroupArgs(s::Symbol, df::DataFrames.DataFrame, args...)
+  function extractGroupArgs(s::Symbol, df::DataFrames.AbstractDataFrame, args...)
     if haskey(df, s)
       return extractGroupArgs(df[s])
     else
@@ -468,18 +551,23 @@ function dataframes()
     end
   end
 
-  @eval function getDataFrameFromKW(; kw...)
-    for (k,v) in kw
-      if k == :dataframe
-        return v
-      end
+  function getDataFrameFromKW(d::Dict)
+    # for (k,v) in kw
+    #   if k == :dataframe
+    #     return v
+    #   end
+    # end
+    get(d, :dataframe) do
+      error("Missing dataframe argument!")
     end
-    error("Missing dataframe argument in arguments!")
   end
 
   # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
-  @eval convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]], s
-  @eval convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v]), v
+  # convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]], s
+  # convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v]), v
+  convertToAnyVector(s::Symbol, d::Dict) = Any[getDataFrameFromKW(d)[s]], s
+  convertToAnyVector(v::AVec{Symbol}, d::Dict) = (df = getDataFrameFromKW(d); Any[df[s] for s in v]), v
+
 end
 
 

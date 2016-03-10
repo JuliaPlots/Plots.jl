@@ -1,10 +1,37 @@
 
 # https://github.com/stevengj/PyPlot.jl
 
+function _initialize_backend(::PyPlotPackage)
+  @eval begin
+    import PyPlot
+    export PyPlot
+    const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
+    const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
+    const mplot3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d"))
+    # const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
+  end
+
+  if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
+    PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
+
+    # # TODO: how the hell can I use PyQt4??
+    # "pyqt4"=>:qt_pyqt4
+    # PyPlot.backend[1] = "pyqt4"
+    # PyPlot.gui[1] = :qt_pyqt4
+    # PyPlot.switch_backend("Qt4Agg")
+
+    # only turn on the gui if we want it
+    if PyPlot.gui != :none
+      PyPlot.pygui(true)
+    end
+  end
+end
+
 # -------------------------------
 
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
+getPyPlotColor(cvec::ColorVector, α=nothing) = map(getPyPlotColor, convertColor(cvec, α).v)
 getPyPlotColor(scheme::ColorScheme, α=nothing) = getPyPlotColor(convertColor(getColor(scheme), α))
 getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
 # getPyPlotColor(c, alpha) = getPyPlotColor(colorscheme(c, alpha))
@@ -12,12 +39,14 @@ getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
 function getPyPlotColorMap(c::ColorGradient, α=nothing)
   # c = ColorGradient(c.colors, c.values, alpha=α)
   # pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", map(getPyPlotColor, getColorVector(c)))
-  pyvals = [(c.values[i], getPyPlotColor(c.colors[i], α)) for i in 1:length(c.colors)]
+  # pyvals = [(c.values[i], getPyPlotColor(c.colors[i], α)) for i in 1:length(c.colors)]
+  pyvals = [(v, getPyPlotColor(getColorZ(c, v), α)) for v in c.values]
+  # @show c α pyvals
   pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
 end
 
-# anything else just gets a redsblue gradient
-getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(ColorGradient(:redsblues), α)
+# anything else just gets a bluesred gradient
+getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(ColorGradient(:bluesreds), α)
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
@@ -62,8 +91,14 @@ function getPyPlotMarker(marker::Symbol)
   return "o"
 end
 
+# getPyPlotMarker(markers::AVec) = map(getPyPlotMarker, markers)
+function getPyPlotMarker(markers::AVec)
+  warn("Vectors of markers are currently unsupported in PyPlot: $markers")
+  getPyPlotMarker(markers[1])
+end
+
 # pass through
-function getPyPlotMarker(marker::@compat(AbstractString))
+function getPyPlotMarker(marker::AbstractString)
   @assert length(marker) == 1
   marker
 end
@@ -134,13 +169,14 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
       :density    => :hist,
       :sticks     => :bar,
       :bar        => :bar,
-      :heatmap    => :hexbin,
+      :hist2d     => :hexbin,
       :hexbin     => :hexbin,
       :scatter    => :scatter,
       :contour    => :contour,
       :scatter3d  => :scatter,
       :surface    => :plot_surface,
       :wireframe  => :plot_wireframe,
+      :heatmap    => :pcolor,
       # :surface    => pycolors.pymember("LinearSegmentedColormap")[:from_list]
     )
   return ax[get(fmap, linetype, :plot)]
@@ -188,6 +224,41 @@ end
 
 # ------------------------------------------------------------------
 
+function pyplot_figure(plotargs::Dict)
+  w,h = map(px2inch, plotargs[:size])
+  bgcolor = getPyPlotColor(plotargs[:background_color])
+
+  # reuse the current figure?
+  fig = if plotargs[:overwrite_figure]
+    PyPlot.gcf()
+  else
+    PyPlot.figure()
+  end
+
+  # update the specs
+  # fig[:set_size_inches](w,h, (isijulia() ? [] : [true])...)
+  fig[:set_size_inches](w, h, forward = true)
+  fig[:set_facecolor](bgcolor)
+  fig[:set_dpi](DPI)
+  fig[:set_tight_layout](true)
+
+  # clear the figure
+  PyPlot.clf()
+
+  # resize the window
+  PyPlot.plt[:get_current_fig_manager]()[:resize](plotargs[:size]...)
+  fig
+end
+
+function pyplot_3d_setup!(wrap, d)
+  # 3D?
+  # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+  if trueOrAllTrue(lt -> lt in _3dTypes, get(d, :linetype, :none))
+    push!(wrap.kwargs, (:projection, "3d"))
+  end
+end
+
+
 # TODO:
 # fillto   # might have to use barHack/histogramHack??
 # reg             # true or false, add a regression line for each line
@@ -204,9 +275,13 @@ function _create_plot(pkg::PyPlotPackage; kw...)
   if haskey(d, :subplot)
     wrap = nothing
   else
-    w,h = map(px2inch, d[:size])
-    bgcolor = getPyPlotColor(d[:background_color])
-    wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
+    wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(d), [])
+    # wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
+
+    # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+    #   push!(wrap.kwargs, (:projection, "3d"))
+    # end
+    pyplot_3d_setup!(wrap, d)
   end
 
   plt = Plot(wrap, pkg, 0, d, Dict[])
@@ -217,9 +292,19 @@ end
 function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   d = Dict(kw)
 
+  # 3D plots have a different underlying Axes object in PyPlot
   lt = d[:linetype]
-  if lt in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+  if lt in _3dTypes && isempty(plt.o.kwargs)
     push!(plt.o.kwargs, (:projection, "3d"))
+  end
+
+  # handle mismatched x/y sizes, as PyPlot doesn't like that
+  x, y = d[:x], d[:y]
+  nx, ny = map(length, (x,y))
+  if nx < ny
+    d[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
+  else
+    d[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
   end
 
   ax = getAxis(plt, d[:axis])
@@ -232,7 +317,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   if lt == :sticks
     d,_ = sticksHack(;d...)
-  
+
   elseif lt in (:scatter, :scatter3d)
     if d[:markershape] == :none
       d[:markershape] = :ellipse
@@ -249,7 +334,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
 
   end
 
-  lt = d[:linetype]
+  # lt = d[:linetype]
   extra_kwargs = Dict()
 
   plotfunc = getPyPlotFunction(plt, d[:axis], lt)
@@ -267,7 +352,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
       extra_kwargs[:linewidth] = (lt == :sticks ? 0.1 : 0.9)
     end
 
-  elseif lt in (:heatmap, :hexbin)
+  elseif lt in (:hist2d, :hexbin)
     extra_kwargs[:gridsize] = d[:nbins]
     extra_kwargs[:cmap] = getPyPlotColorMap(d[:linecolor])
 
@@ -286,6 +371,9 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     extra_kwargs[:linewidth] = d[:linewidth]
     extra_kwargs[:edgecolor] = getPyPlotColor(d[:linecolor], d[:linealpha])
 
+  elseif lt == :heatmap
+    extra_kwargs[:cmap] = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+
   else
 
     extra_kwargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
@@ -294,15 +382,28 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     if lt in (:scatter, :scatter3d)
       extra_kwargs[:s] = d[:markersize].^2
       c = d[:markercolor]
-      if isa(c, ColorGradient) && d[:zcolor] != nothing
+      if d[:zcolor] != nothing
+        if !isa(c, ColorGradient)
+          c = colorscheme(:bluesreds)
+        end
         extra_kwargs[:c] = convert(Vector{Float64}, d[:zcolor])
         extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
       else
-        extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])
+        # extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])
+        ppc = getPyPlotColor(c, d[:markeralpha])
+
+        # total hack due to PyPlot bug (see issue #145).
+        # hack: duplicate the color vector when the total rgba fields is the same as the series length
+        if (typeof(ppc) <: AbstractArray && length(ppc)*4 == length(x)) ||
+                (typeof(ppc) <: Tuple && length(x) == 4)
+          ppc = vcat(ppc, ppc)
+        end
+        extra_kwargs[:c] = ppc
+
       end
-      if d[:markeralpha] != nothing
-        extra_kwargs[:alpha] = d[:markeralpha]
-      end
+      # if d[:markeralpha] != nothing
+      #   extra_kwargs[:alpha] = d[:markeralpha]
+      # end
       extra_kwargs[:edgecolors] = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
       extra_kwargs[:linewidths] = d[:markerstrokewidth]
     else
@@ -321,7 +422,7 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   # end
 
   # set these for all types
-  if !(lt in (:contour,:surface,:wireframe))
+  if !(lt in (:contour,:surface,:wireframe,:heatmap))
     if !(lt in (:scatter, :scatter3d))
       extra_kwargs[:color] = color
       extra_kwargs[:linewidth] = d[:linewidth]
@@ -333,31 +434,56 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
   # do the plot
   d[:serieshandle] = if ishistlike(lt)
     plotfunc(d[:y]; extra_kwargs...)[1]
+
   elseif lt == :contour
-    # NOTE: x/y are backwards in pyplot, so we switch the x and y args (also y is reversed), 
-    #       and take the transpose of the surface matrix
     x, y = d[:x], d[:y]
     surf = d[:z].surf'
-    handle = plotfunc(x, y, surf, d[:nlevels]; extra_kwargs...)
+    levels = d[:levels]
+    if isscalar(levels)
+      extra_args = (levels)
+    elseif isvector(levels)
+      extra_args = ()
+      extra_kwargs[:levels] = levels
+    else
+      error("Only numbers and vectors are supported with levels keyword")
+    end
+    handle = plotfunc(x, y, surf, extra_args...; extra_kwargs...)
     if d[:fillrange] != nothing
-      handle = ax[:contourf](x, y, surf, d[:nlevels]; cmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha]))
+      extra_kwargs[:cmap] = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+      delete!(extra_kwargs, :linewidths)
+      handle = ax[:contourf](x, y, surf, extra_args...; extra_kwargs...)
     end
     handle
+
   elseif lt in (:surface,:wireframe)
-    plotfunc(repmat(d[:x]',length(d[:y]),1), repmat(d[:y],1,length(d[:x])), d[:z].surf'; extra_kwargs...)
+    x, y, z = d[:x], d[:y], Array(d[:z])
+    if !ismatrix(x) || !ismatrix(y)
+      x = repmat(x', length(y), 1)
+      y = repmat(y, 1, length(d[:x]))
+      z = z'
+    end
+    plotfunc(x, y, z; extra_kwargs...)
+
   elseif lt in _3dTypes
     plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)
-  elseif lt in (:scatter, :heatmap, :hexbin)
+
+  elseif lt in (:scatter, :hist2d, :hexbin)
     plotfunc(d[:x], d[:y]; extra_kwargs...)
-  else
+
+  elseif lt == :heatmap
+    x, y, z = d[:x], d[:y], d[:z].surf'
+    plotfunc(heatmap_edges(x), heatmap_edges(y), z; extra_kwargs...)
+
+  else # plot
     plotfunc(d[:x], d[:y]; extra_kwargs...)[1]
   end
 
+  # smoothing
   handleSmooth(plt, ax, d, d[:smooth])
 
   # add the colorbar legend
-  if plt.plotargs[:legend] && haskey(extra_kwargs, :cmap)
-    PyPlot.colorbar(d[:serieshandle])
+  if plt.plotargs[:colorbar] != :none && haskey(extra_kwargs, :cmap)
+    PyPlot.colorbar(d[:serieshandle], ax=ax)
   end
 
   # @show extra_kwargs
@@ -390,30 +516,52 @@ function Base.getindex(plt::Plot{PyPlotPackage}, i::Integer)
     xy = series[:get_offsets]()
     return vec(xy[:,1]), vec(xy[:,2])
   end
-  # series[:relim]()
-  # mapping = getGadflyMappings(plt, i)[1]
-  # mapping[:x], mapping[:y]
+end
+
+function minmaxseries(ds, vec, axis)
+  lo, hi = Inf, -Inf
+  for d in ds
+    d[:axis] == axis || continue
+    v = d[vec]
+    if length(v) > 0
+      vlo, vhi = extrema(v)
+      lo = min(lo, vlo)
+      hi = max(hi, vhi)
+    end
+  end
+  if lo == hi
+    hi = if lo == 0
+      1e-6
+    else
+      hi + min(abs(1e-2hi), 1e-6)
+    end
+  end
+  lo, hi
+end
+
+# TODO: this needs to handle one-sided fixed limits
+function set_lims!(plt::Plot{PyPlotPackage}, axis::Symbol)
+  ax = getAxis(plt, axis)
+  if plt.plotargs[:xlims] == :auto
+    ax[:set_xlim](minmaxseries(plt.seriesargs, :x, axis)...)
+  end
+  if plt.plotargs[:ylims] == :auto
+    ax[:set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
+  end
 end
 
 function Base.setindex!{X,Y}(plt::Plot{PyPlotPackage}, xy::Tuple{X,Y}, i::Integer)
-  series = plt.seriesargs[i][:serieshandle]
+  d = plt.seriesargs[i]
+  series = d[:serieshandle]
   x, y = xy
+  d[:x], d[:y] = x, y
   try
     series[:set_data](x, y)
   catch
     series[:set_offsets](hcat(x, y))
   end
 
-  ax = series[:axes]
-  if plt.plotargs[:xlims] == :auto
-    xmin, xmax = ax[:get_xlim]()
-    ax[:set_xlim](min(xmin, minimum(x)), max(xmax, maximum(x)))
-  end
-  if plt.plotargs[:ylims] == :auto
-    ymin, ymax = ax[:get_ylim]()
-    ax[:set_ylim](min(ymin, minimum(y)), max(ymax, maximum(y)))
-  end
-
+  set_lims!(plt, d[:axis])
   plt
 end
 
@@ -428,7 +576,13 @@ function addPyPlotLims(ax, lims, isx::Bool)
   lims == :auto && return
   ltype = limsType(lims)
   if ltype == :limits
-    ax[isx ? :set_xlim : :set_ylim](lims...)
+    if isx
+      isfinite(lims[1]) && ax[:set_xlim](left = lims[1])
+      isfinite(lims[2]) && ax[:set_xlim](right = lims[2])
+    else
+      isfinite(lims[1]) && ax[:set_ylim](bottom = lims[1])
+      isfinite(lims[2]) && ax[:set_ylim](top = lims[2])
+    end
   else
     error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
   end
@@ -444,7 +598,8 @@ function addPyPlotTicks(ax, ticks, isx::Bool)
   if ttype == :ticks
     ax[isx ? :set_xticks : :set_yticks](ticks)
   elseif ttype == :ticks_and_labels
-    ax[isx ? :set_xticks : :set_yticks](ticks...)
+    ax[isx ? :set_xticks : :set_yticks](ticks[1])
+    ax[isx ? :set_xticklabels : :set_yticklabels](ticks[2])
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
   end
@@ -465,7 +620,7 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
     ax[:set_ylabel](d[:ylabel])
   end
   if usingRightAxis(plt) && get(d, :yrightlabel, "") != ""
-    rightax = getRightAxis(figorax)  
+    rightax = getRightAxis(figorax)
     rightax[:set_ylabel](d[:yrightlabel])
   end
 
@@ -494,7 +649,7 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
   # font sizes
   for ax in axes
     # haskey(d, :yrightlabel) || continue
-    
+
 
     # guides
     sz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
@@ -509,7 +664,7 @@ function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
         lab[:set_fontsize](sz)
       end
     end
-  
+
     # grid
     if get(d, :grid, false)
       ax[:xaxis][:grid](true)
@@ -562,9 +717,11 @@ end
 function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
   l = subplt.layout
 
-  w,h = map(px2inch, getplotargs(subplt,1)[:size])
-  bgcolor = getPyPlotColor(getplotargs(subplt,1)[:background_color])
-  fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true)
+  # w,h = map(px2inch, getplotargs(subplt,1)[:size])
+  # bgcolor = getPyPlotColor(getplotargs(subplt,1)[:background_color])
+  # fig = PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true)
+  plotargs = getplotargs(subplt, 1)
+  fig = pyplot_figure(plotargs)
 
   nr = nrows(l)
   for (i,(r,c)) in enumerate(l)
@@ -575,10 +732,12 @@ function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
     ax = fig[:add_subplot](nr, nc, fakeidx)
 
     subplt.plts[i].o = PyPlotAxisWrapper(ax, nothing, fig, [])
+    pyplot_3d_setup!(subplt.plts[i].o, plotargs)
   end
 
   # subplt.o = PyPlotFigWrapper(fig, [])
   subplt.o = PyPlotAxisWrapper(nothing, nothing, fig, [])
+  pyplot_3d_setup!(subplt.o, plotargs)
   true
 end
 
@@ -625,15 +784,24 @@ end
 
 # -----------------------------------------------------------------
 
+const _pyplot_legend_pos = Dict(
+    :right => "right",
+    :left => "center left",
+    :top => "upper center",
+    :bottom => "lower center"
+  )
+
 # function addPyPlotLegend(plt::Plot)
 function addPyPlotLegend(plt::Plot, ax)
-  if plt.plotargs[:legend]
+  leg = plt.plotargs[:legend]
+  if leg != :none
     # gotta do this to ensure both axes are included
-    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:heatmap,:hline,:vline,:contour, :path3d, :scatter3d)), plt.seriesargs)
+    args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:hist2d,:hline,:vline,:contour,:surface,:wireframe,:heatmap,:path3d,:scatter3d)), plt.seriesargs)
+    args = filter(x -> x[:label] != "", args)
     if length(args) > 0
       leg = ax[:legend]([d[:serieshandle] for d in args],
                   [d[:label] for d in args],
-                  loc="best",
+                  loc = get(_pyplot_legend_pos, leg, "best"),
                   fontsize = plt.plotargs[:legendfont].pointsize
                   # framealpha = 0.6
                  )
@@ -713,7 +881,7 @@ const _pyplot_mimeformats = @compat Dict(
     "application/pdf"         => "pdf",
     "image/png"               => "png",
     "application/postscript"  => "ps",
-    # "image/svg+xml"           => "svg"
+    "image/svg+xml"           => "svg"
   )
 
 
@@ -731,6 +899,7 @@ for (mime, fmt) in _pyplot_mimeformats
                                   )
   end
 end
+
 
 # function Base.writemime(io::IO, m::MIME"image/png", subplt::Subplot{PyPlotPackage})
 #   finalizePlot(subplt)

@@ -1,6 +1,15 @@
 
 # https://github.com/bokeh/Bokeh.jl
 
+
+function _initialize_backend(::BokehPackage; kw...)
+  @eval begin
+    warn("Bokeh is no longer supported... many features will likely be broken.")
+    import Bokeh
+    export Bokeh
+  end
+end
+
 # make255(x) = round(Int, 255 * x)
 
 # function bokehcolor(c::Colorant)

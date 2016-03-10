@@ -2,15 +2,15 @@
 
 const _allAxes = [:auto, :left, :right]
 @compat const _axesAliases = Dict(
-    :a => :auto, 
-    :l => :left, 
+    :a => :auto,
+    :l => :left,
     :r => :right
   )
 
 const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-                        :heatmap, :hexbin, :hist, :density, :bar, :hline, :vline, :ohlc,
+                        :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, :ohlc,
                         :contour, :pie
                        ], _3dTypes)
 @compat const _typeAliases = Dict(
@@ -39,7 +39,6 @@ const _allTypes = vcat([
 
 ishistlike(lt::Symbol) = lt in (:hist, :density)
 islinelike(lt::Symbol) = lt in (:line, :path, :steppre, :steppost)
-isheatmaplike(lt::Symbol) = lt in (:heatmap, :hexbin)
 
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -129,7 +128,7 @@ _seriesDefaults[:markerstrokecolor] = :match
 _seriesDefaults[:markerstrokealpha] = nothing
 # _seriesDefaults[:ribbon]          = nothing
 # _seriesDefaults[:ribboncolor]     = :match
-_seriesDefaults[:nbins]           = 30               # number of bins for heatmaps and hists
+_seriesDefaults[:nbins]           = 30               # number of bins for hists
 _seriesDefaults[:smooth]          = false               # regression line?
 _seriesDefaults[:group]           = nothing           # groupby vector
 # _seriesDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
@@ -138,7 +137,8 @@ _seriesDefaults[:y]               = nothing
 _seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
 _seriesDefaults[:zcolor]          = nothing           # value for color scale
 # _seriesDefaults[:surface]         = nothing
-_seriesDefaults[:nlevels]         = 15
+# _seriesDefaults[:nlevels]         = 15
+_seriesDefaults[:levels]          = 15
 _seriesDefaults[:orientation]     = :vertical
 
 
@@ -149,7 +149,8 @@ _plotDefaults[:title]             = ""
 _plotDefaults[:xlabel]            = ""
 _plotDefaults[:ylabel]            = ""
 _plotDefaults[:yrightlabel]       = ""
-_plotDefaults[:legend]            = true
+_plotDefaults[:legend]            = :best
+_plotDefaults[:colorbar]          = :legend
 _plotDefaults[:background_color]  = colorant"white"
 _plotDefaults[:foreground_color]  = :auto
 _plotDefaults[:xlims]             = :auto
@@ -177,14 +178,14 @@ _plotDefaults[:tickfont]          = font(8)
 _plotDefaults[:guidefont]         = font(11)
 _plotDefaults[:legendfont]        = font(8)
 _plotDefaults[:grid]              = true
-_plotDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
-
+_plotDefaults[:annotation]        = nothing           # annotation tuple(s)... (x,y,annotation)
+_plotDefaults[:overwrite_figure]  = false
 
 
 # TODO: x/y scales
 
 const _allArgs = sort(collect(union(keys(_seriesDefaults), keys(_plotDefaults))))
-supportedArgs(::PlottingPackage) = _allArgs
+supportedArgs(::PlottingPackage) = error("supportedArgs not defined") #_allArgs
 supportedArgs() = supportedArgs(backend())
 
 
@@ -230,6 +231,7 @@ end
     :type               => :linetype,
     :lt                 => :linetype,
     :t                  => :linetype,
+    :seriestype         => :linetype,
     :style              => :linestyle,
     :s                  => :linestyle,
     :ls                 => :linestyle,
@@ -271,6 +273,9 @@ end
     :ylabel2            => :yrightlabel,
     :y2label            => :yrightlabel,
     :leg                => :legend,
+    :key                => :legend,
+    :cbar               => :colorbar,
+    :cb                 => :colorbar,
     :bg                 => :background_color,
     :bgcolor            => :background_color,
     :bg_color           => :background_color,
@@ -283,6 +288,9 @@ end
     :foreground_colour  => :foreground_color,
     :regression         => :smooth,
     :reg                => :smooth,
+    :nlevels            => :levels,
+    :nlev               => :levels,
+    :levs               => :levels,
     :xlim               => :xlims,
     :xlimit             => :xlims,
     :xlimits            => :xlims,
@@ -299,6 +307,14 @@ end
     :palette            => :color_palette,
     :xlink              => :linkx,
     :ylink              => :linky,
+    :nrow               => :nr,
+    :nrows              => :nr,
+    :ncol               => :nc,
+    :ncols              => :nc,
+    :clf                => :overwrite_figure,
+    :clearfig           => :overwrite_figure,
+    :overwrite          => :overwrite_figure,
+    :reuse              => :overwrite_figure,
   )
 
 # add all pluralized forms to the _keyAliases dict
@@ -347,12 +363,6 @@ function default(; kw...)
 end
 
 # -----------------------------------------------------------------------------
-
-wraptuple(x::@compat(Tuple)) = x
-wraptuple(x) = (x,)
-
-trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
-trueOrAllTrue(f::Function, x) = f(x)
 
 function handleColors!(d::Dict, arg, csym::Symbol)
   try
@@ -405,11 +415,13 @@ end
 function processLineArg(d::Dict, arg)
 
   # linetype
-  if trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+  # if trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+  if allLineTypes(arg)
     d[:linetype] = arg
-  
+
   # linestyle
-  elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+  # elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+  elseif allStyles(arg)
     d[:linestyle] = arg
 
   elseif typeof(arg) <: Stroke
@@ -424,11 +436,13 @@ function processLineArg(d::Dict, arg)
     arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
   # linealpha
-  elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  elseif allAlphas(arg)
     d[:linealpha] = arg
 
   # linewidth
-  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  elseif allReals(arg)
     d[:linewidth] = arg
 
   # color
@@ -442,13 +456,16 @@ end
 function processMarkerArg(d::Dict, arg)
 
   # markershape
-  if trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg)
+  # if trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg)
+  #   d[:markershape] = arg
+
+  # elseif trueOrAllTrue(a -> isa(a, Shape), arg)
+  if allShapes(arg)
     d[:markershape] = arg
-  elseif trueOrAllTrue(a -> isa(a, Shape), arg)
-    d[:markershape] = arg
-  
+
   # stroke style
-  elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+  # elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+  elseif allStyles(arg)
     d[:markerstrokestyle] = arg
 
   elseif typeof(arg) <: Stroke
@@ -463,17 +480,19 @@ function processMarkerArg(d::Dict, arg)
     arg.alpha == nothing || (d[:markeralpha] = arg.alpha)
 
   # linealpha
-  elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  elseif allAlphas(arg)
     d[:markeralpha] = arg
 
   # markersize
-  elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
+  elseif allReals(arg)
     d[:markersize] = arg
 
   # markercolor
   elseif !handleColors!(d, arg, :markercolor)
     warn("Skipped marker arg $arg.")
-    
+
   end
 end
 
@@ -485,15 +504,31 @@ function processFillArg(d::Dict, arg)
     arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
     arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
+  # fillrange function
+  # elseif trueOrAllTrue(a -> isa(a, Function), arg)
+  elseif allFunctions(arg)
+    d[:fillrange] = arg
+
+  # fillalpha
+  # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
+  elseif allAlphas(arg)
+    d[:fillalpha] = arg
+
   elseif !handleColors!(d, arg, :fillcolor)
+    
     d[:fillrange] = arg
   end
 end
 
+_replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
+_replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
+_replace_markershape(shape) = shape
+
+
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
 function preprocessArgs!(d::Dict)
   replaceAliases!(d, _keyAliases)
-  
+
   # handle axis args
   for axisletter in ("x", "y")
     asym = symbol(axisletter * "axis")
@@ -501,6 +536,12 @@ function preprocessArgs!(d::Dict)
       processAxisArg(d, axisletter, arg)
     end
     delete!(d, asym)
+
+    # turn :labels into :ticks_and_labels
+    tsym = symbol(axisletter * "ticks")
+    if haskey(d, tsym) && ticksType(d[tsym]) == :labels
+      d[tsym] = (1:length(d[tsym]), d[tsym])
+    end
   end
 
   # handle line args
@@ -516,7 +557,12 @@ function preprocessArgs!(d::Dict)
     anymarker = true
   end
   delete!(d, :marker)
-  if anymarker && !haskey(d, :markershape)
+  # if anymarker && !haskey(d, :markershape)
+  #   d[:markershape] = :ellipse
+  # end
+  if haskey(d, :markershape)
+    d[:markershape] = _replace_markershape(d[:markershape])
+  elseif anymarker
     d[:markershape] = :ellipse
   end
 
@@ -527,6 +573,14 @@ function preprocessArgs!(d::Dict)
   delete!(d, :fill)
 
   # convert into strokes and brushes
+
+  # legends
+  if haskey(d, :legend)
+    d[:legend] = convertLegendValue(d[:legend])
+  end
+  if haskey(d, :colorbar)
+    d[:colorbar] = convertLegendValue(d[:colorbar])
+  end
 
   # handle subplot links
   if haskey(d, :link)
@@ -588,9 +642,12 @@ function warnOnUnsupportedArgs(pkg::PlottingPackage, d::Dict)
   end
 end
 
+_markershape_supported(pkg::PlottingPackage, shape::Symbol) = shape in supportedMarkers(pkg)
+_markershape_supported(pkg::PlottingPackage, shape::Shape) = Shape in supportedMarkers(pkg)
+_markershape_supported(pkg::PlottingPackage, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
-  (d[:axis] in supportedAxes(pkg) 
+  (d[:axis] in supportedAxes(pkg)
     || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
   (d[:linetype] == :none
     || d[:linetype] in supportedTypes(pkg)
@@ -598,8 +655,9 @@ function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
   (d[:linestyle] in supportedStyles(pkg)
     || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))"))
   (d[:markershape] == :none
-    || d[:markershape] in supportedMarkers(pkg)
-    || (Shape in supportedMarkers(pkg) && typeof(d[:markershape]) <: Shape)
+    || _markershape_supported(pkg, d[:markershape])
+    # || d[:markershape] in supportedMarkers(pkg)
+    # || (Shape in supportedMarkers(pkg) && typeof(d[:markershape]) <: Shape)
     || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))"))
 end
 
@@ -635,6 +693,19 @@ function setDictValue(d_in::Dict, d_out::Dict, k::Symbol, idx::Int, defaults::Di
   end
 end
 
+function convertLegendValue(val::Symbol)
+  if val in (:both, :all, :yes)
+    :best
+  elseif val in (:no, :none)
+    :none
+  elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend)
+    val
+  else
+    error("Invalid symbol for legend: $val")
+  end
+end
+convertLegendValue(val::Bool) = val ? :best : :none
+
 # -----------------------------------------------------------------------------
 
 # build the argument dictionary for the plot
@@ -653,6 +724,13 @@ function getPlotArgs(pkg::PlottingPackage, kw, idx::Int; set_defaults = true)
     if haskey(_scaleAliases, d[k])
       d[k] = _scaleAliases[d[k]]
     end
+  end
+
+  # handle legend/colorbar
+  d[:legend] = convertLegendValue(d[:legend])
+  d[:colorbar] = convertLegendValue(d[:colorbar])
+  if d[:colorbar] == :legend
+    d[:colorbar] = d[:legend]
   end
 
   # convert color
@@ -683,7 +761,7 @@ function getSeriesArgs(pkg::PlottingPackage, plotargs::Dict, kw, commandIndex::I
       d[k] = kwdict[k]
     end
   end
-  
+
   if haskey(_typeAliases, d[:linetype])
     d[:linetype] = _typeAliases[d[:linetype]]
   end
@@ -709,8 +787,6 @@ function getSeriesArgs(pkg::PlottingPackage, plotargs::Dict, kw, commandIndex::I
   c = d[:fillcolor]
   c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
   d[:fillcolor] = c
-
-  # TODO: rebuild
 
   # set label
   label = d[:label]

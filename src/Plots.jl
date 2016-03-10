@@ -6,6 +6,8 @@ module Plots
 using Compat
 using Reexport
 @reexport using Colors
+using Requires
+using FixedSizeArrays
 
 export
   Plot,
@@ -18,8 +20,6 @@ export
 
   plot,
   plot!,
-  # plot_display,
-  # plot_display!,
   subplot,
   subplot!,
 
@@ -33,6 +33,8 @@ export
   bar!,
   histogram,
   histogram!,
+  histogram2d,
+  histogram2d!,
   density,
   density!,
   heatmap,
@@ -57,8 +59,11 @@ export
   wireframe!,
   path3d,
   path3d!,
+  plot3d,
+  plot3d!,
   scatter3d,
   scatter3d!,
+  abline!,
 
   title!,
   xlabel!,
@@ -79,6 +84,7 @@ export
 
   backend,
   backends,
+  backend_name,
   aliases,
   dataframes,
 
@@ -112,17 +118,14 @@ export
   Animation,
   frame,
   gif,
+  @animate,
+  @gif,
 
   # recipes
   PlotRecipe,
   # EllipseRecipe,
-  # spy,
-  corrplot
-
-# ---------------------------------------------------------
-
-
-const IMG_DIR = Pkg.dir("Plots") * "/img/"
+  spy
+  # corrplot
 
 
 # ---------------------------------------------------------
@@ -131,7 +134,7 @@ include("types.jl")
 include("utils.jl")
 include("colors.jl")
 include("components.jl")
-include("plotter.jl")
+include("plotter2.jl")
 include("args.jl")
 include("plot.jl")
 include("subplot.jl")
@@ -148,6 +151,8 @@ bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
 bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
 histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)
 histogram!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
+histogram2d(args...; kw...)  = plot(args...; kw...,  linetype = :hist2d)
+histogram2d!(args...; kw...) = plot!(args...; kw..., linetype = :hist2d)
 density(args...; kw...)    = plot(args...; kw...,  linetype = :density)
 density!(args...; kw...)   = plot!(args...; kw..., linetype = :density)
 heatmap(args...; kw...)    = plot(args...; kw...,  linetype = :heatmap)
@@ -172,6 +177,8 @@ wireframe(args...; kw...)  = plot(args...; kw...,  linetype = :wireframe)
 wireframe!(args...; kw...) = plot!(args...; kw..., linetype = :wireframe)
 path3d(args...; kw...)     = plot(args...; kw...,  linetype = :path3d)
 path3d!(args...; kw...)    = plot!(args...; kw..., linetype = :path3d)
+plot3d(args...; kw...)     = plot(args...; kw...,  linetype = :path3d)
+plot3d!(args...; kw...)    = plot!(args...; kw..., linetype = :path3d)
 scatter3d(args...; kw...)  = plot(args...; kw...,  linetype = :scatter3d)
 scatter3d!(args...; kw...) = plot!(args...; kw..., linetype = :scatter3d)
 
@@ -220,38 +227,16 @@ yaxis!(plt::Plot, args...; kw...)                                     = plot!(pl
 
 # ---------------------------------------------------------
 
-
-# try
-#   import DataFrames
-#   dataframes()
-# end
-
-# const CURRENT_BACKEND = pickDefaultBackend()
-
-# for be in backends()
-#   try
-#     backend(be)
-#     backend()
-#   catch err
-#     @show err
-#   end
-# end
-
 const CURRENT_BACKEND = CurrentBackend(:none)
 
-# function __init__()
-#   # global const CURRENT_BACKEND = pickDefaultBackend()
-#   # global const CURRENT_BACKEND = CurrentBackend(:none)
+function __init__()
 
-#   # global CURRENT_BACKEND
-#   # println("[Plots.jl] Default backend: ", CURRENT_BACKEND.sym)
-
-#   # # auto init dataframes if the import statement doesn't error out
-#   # try
-#   #   @eval import DataFrames
-#   #   dataframes()
-#   # end
-# end
+  # override IJulia inline display
+  if isijulia()
+    @eval import IJulia
+    IJulia.display_dict(plt::PlottingObject) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
+  end
+end
 
 # ---------------------------------------------------------
 

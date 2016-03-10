@@ -1,6 +1,13 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
+function _initialize_backend(::UnicodePlotsPackage; kw...)
+  @eval begin
+    import UnicodePlots
+    export UnicodePlots
+  end
+end
+
 # -------------------------------
 
 
@@ -52,7 +59,7 @@ function rebuildUnicodePlot!(plt::Plot)
 
   # now use the ! functions to add to the plot
   for d in sargs
-    addUnicodeSeries!(o, d, iargs[:legend], xlim, ylim)
+    addUnicodeSeries!(o, d, iargs[:legend] != :none, xlim, ylim)
   end
 
   # save the object
@@ -91,13 +98,13 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool, xlim, ylim)
   else
     error("Linestyle $lt not supported by UnicodePlots")
   end
-  
+
   # get the series data and label
   x, y = [collect(float(d[s])) for s in (:x, :y)]
   label = addlegend ? d[:label] : ""
 
   # if we happen to pass in allowed color symbols, great... otherwise let UnicodePlots decide
-  color = d[:linecolor] in UnicodePlots.autoColors ? d[:linecolor] : :auto
+  color = d[:linecolor] in UnicodePlots.color_cycle ? d[:linecolor] : :auto
 
   # add the series
   func(o, x, y; color = color, name = label, style = stepstyle)

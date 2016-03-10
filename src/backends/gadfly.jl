@@ -1,6 +1,15 @@
 
 # https://github.com/dcjones/Gadfly.jl
 
+
+function _initialize_backend(::GadflyPackage; kw...)
+  @eval begin
+    import Gadfly, Compose
+    export Gadfly, Compose
+    include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
+  end
+end
+
 # ---------------------------------------------------------------------------
 
 # immutable MissingVec <: AbstractVector{Float64} end
@@ -27,7 +36,7 @@ function getLineGeom(d::Dict)
   xbins, ybins = maketuple(d[:nbins])
   if lt == :hexbin
     Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)
-  elseif lt == :heatmap
+  elseif lt == :hist2d
     Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)
   elseif lt == :hist
     Gadfly.Geom.histogram(bincount = xbins)
@@ -44,7 +53,7 @@ function getLineGeom(d::Dict)
   elseif lt == :vline
     Gadfly.Geom.vline
   elseif lt == :contour
-    Gadfly.Geom.contour(levels = d[:nlevels])
+    Gadfly.Geom.contour(levels = d[:levels])
   else
     nothing
   end
@@ -159,11 +168,16 @@ end
 
 # ---------------------------------------------------------------------------
 
+# extract the underlying ShapeGeometry object(s)
+getMarkerGeom(shape::Shape) = gadflyshape(shape)
+getMarkerGeom(shape::Symbol) = gadflyshape(_shapes[shape])
+getMarkerGeom(shapes::AVec) = map(getMarkerGeom, shapes)
+getMarkerGeom(d::Dict) = getMarkerGeom(d[:markershape])
 
-function getMarkerGeom(d::Dict)
-  shape = d[:markershape]
-  gadflyshape(isa(shape, Shape) ? shape : _shapes[shape])
-end
+# function getMarkerGeom(d::Dict)
+#   shape = d[:markershape]
+#   gadflyshape(isa(shape, Shape) ? shape : _shapes[shape])
+# end
 
 
 function getGadflyMarkerTheme(d::Dict, plotargs::Dict)
@@ -192,6 +206,7 @@ function getGadflyMarkerTheme(d::Dict, plotargs::Dict)
 end
 
 function addGadflyContColorScale(plt::Plot{GadflyPackage}, c)
+  plt.plotargs[:colorbar] == :none && return
   if !isa(c, ColorGradient)
     c = colorscheme(:bluesreds)
   end
@@ -224,7 +239,7 @@ end
 function addToGadflyLegend(plt::Plot, d::Dict)
 
   # add the legend?
-  if plt.plotargs[:legend]
+  if plt.plotargs[:legend] != :none && d[:label] != ""
     gplt = getGadflyContext(plt)
 
     # add the legend if needed
@@ -288,7 +303,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
   lt = d[:linetype]
   if lt == :ohlc
     error("Haven't re-implemented after refactoring")
-  elseif lt in (:heatmap, :hexbin) && (isa(d[:linecolor], ColorGradient) || isa(d[:linecolor], ColorFunction))
+  elseif lt in (:hist2d, :hexbin) && (isa(d[:linecolor], ColorGradient) || isa(d[:linecolor], ColorFunction))
     push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:linecolor], p))))
   elseif lt == :scatter && d[:markershape] == :none
     d[:markershape] = :ellipse
@@ -299,7 +314,7 @@ function addGadflySeries!(plt::Plot, d::Dict)
     prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), d, plt.plotargs, smooth...))
   end
 
-  lt in (:hist, :heatmap, :hexbin, :contour) || addToGadflyLegend(plt, d)
+  lt in (:hist2d, :hexbin, :contour) || addToGadflyLegend(plt, d)
 
   # now save the layers that apply to this series
   d[:gadflylayers] = layers
@@ -359,7 +374,7 @@ function addGadflyTicksGuide(gplt, ticks, isx::Bool)
     gfunc = isx ? Gadfly.Scale.x_discrete : Gadfly.Scale.y_discrete
     labelmap = Dict(zip(ticks...))
     labelfunc = val -> labelmap[val]
-    push!(gplt.scales, gfunc(levels = ticks[1], labels = labelfunc))
+    push!(gplt.scales, gfunc(levels = collect(ticks[1]), labels = labelfunc))
 
   else
     error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
@@ -482,9 +497,13 @@ function updateGadflyPlotTheme(plt::Plot, d::Dict)
   # # TODO: should this be part of the main `plot` command in plot.jl???
   # d = merge!(plt.plotargs, d)
 
-  # hide the legend?
-  if !get(d, :legend, true)
-    kwargs[:key_position] = :none
+  # # hide the legend?
+  # if !get(d, :legend, true)
+  #   kwargs[:key_position] = :none
+  # end
+  leg = d[d[:legend] == :none ? :colorbar : :legend]
+  if leg != :best
+    kwargs[:key_position] = leg == :inside ? :right : leg
   end
 
   if !get(d, :grid, true)
@@ -656,7 +675,7 @@ setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getplotargs(subplt,
 # -------------------------------------------------------------------------
 
 
-function dowritemime{P<:GadflyOrImmerse}(io::IO, func, plt::PlottingObject{P})
+function dowritemime{P<:Union{GadflyPackage,ImmersePackage}}(io::IO, func, plt::PlottingObject{P})
   gplt = getGadflyContext(plt)
   setGadflyDisplaySize(plt)
   Gadfly.draw(func(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
@@ -667,10 +686,11 @@ getGadflyWriteFunc(::MIME"image/svg+xml") = Gadfly.SVG
 # getGadflyWriteFunc(::MIME"text/html") = Gadfly.SVGJS
 getGadflyWriteFunc(::MIME"application/pdf") = Gadfly.PDF
 getGadflyWriteFunc(::MIME"application/postscript") = Gadfly.PS
+getGadflyWriteFunc(::MIME"application/x-tex") = Gadfly.PGF
 getGadflyWriteFunc(m::MIME) = error("Unsupported in Gadfly/Immerse: ", m)
 
-for mime in (MIME"image/png", MIME"image/svg+xml", MIME"application/pdf", MIME"application/postscript")
-  @eval function Base.writemime{P<:GadflyOrImmerse}(io::IO, ::$mime, plt::PlottingObject{P})
+for mime in (MIME"image/png", MIME"image/svg+xml", MIME"application/pdf", MIME"application/postscript", MIME"application/x-tex")
+  @eval function Base.writemime{P<:Union{GadflyPackage,ImmersePackage}}(io::IO, ::$mime, plt::PlottingObject{P})
     func = getGadflyWriteFunc($mime())
     dowritemime(io, func, plt)
   end

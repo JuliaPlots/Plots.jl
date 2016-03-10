@@ -1,10 +1,40 @@
 
 # https://plot.ly/javascript/getting-started
 
+function _initialize_backend(::PlotlyPackage; kw...)
+  @eval begin
+    import JSON
+    JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
+
+    ############################
+    # borrowed from https://github.com/spencerlyon2/Plotlyjs.jl/blob/master/src/display.jl
+    _js_path = joinpath(Pkg.dir("Plots"), "deps", "plotly-latest.min.js")
+
+    # if we're in IJulia call setupnotebook to load js and css
+    if isijulia()
+        # the first script is some hack I needed to do in order for the notebook
+        # to not complain about Plotly being undefined
+        display("text/html", """
+            <script type="text/javascript">
+                require=requirejs=define=undefined;
+            </script>
+            <script type="text/javascript">
+                $(open(readall, _js_path, "r"))
+            </script>
+         """)
+        # display("text/html", "<p>Plotly javascript loaded.</p>")
+    end
+    # end borrowing (thanks :)
+    ###########################
+
+  end
+  # TODO: other initialization
+end
+
 # ---------------------------------------------------------------------------
 
 function _create_plot(pkg::PlotlyPackage; kw...)
-  d = Dict(kw)
+  d = Dict{Symbol,Any}(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
   Plot(nothing, pkg, 0, d, Dict[])
@@ -12,7 +42,7 @@ end
 
 
 function _add_series(::PlotlyPackage, plt::Plot; kw...)
-  d = Dict(kw)
+  d = Dict{Symbol,Any}(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
   plt
@@ -83,7 +113,7 @@ end
 # _plotDefaults[:yflip]             = false
 
 function plotlyfont(font::Font, color = font.color)
-  Dict(
+  Dict{Symbol,Any}(
       :family => font.family,
       :size   => round(Int, font.pointsize*1.4),
       :color  => webcolor(color),
@@ -91,7 +121,7 @@ function plotlyfont(font::Font, color = font.color)
 end
 
 function get_annotation_dict(x, y, val::Union{AbstractString,Symbol})
-  Dict(
+  Dict{Symbol,Any}(
       :text => val,
       :xref => "x",
       :x => x,
@@ -102,7 +132,7 @@ function get_annotation_dict(x, y, val::Union{AbstractString,Symbol})
 end
 
 function get_annotation_dict(x, y, ptxt::PlotText)
-  merge(get_annotation_dict(x, y, ptxt.str), Dict(
+  merge(get_annotation_dict(x, y, ptxt.str), Dict{Symbol,Any}(
       :font => plotlyfont(ptxt.font),
       :xanchor => ptxt.font.halign == :hcenter ? :center : ptxt.font.halign,
       :yanchor => ptxt.font.valign == :vcenter ? :middle : ptxt.font.valign,
@@ -127,7 +157,7 @@ scalesym(isx::Bool) = symbol((isx ? "x" : "y") * "scale")
 labelsym(isx::Bool) = symbol((isx ? "x" : "y") * "label")
 
 function plotlyaxis(d::Dict, isx::Bool)
-  ax = Dict(
+  ax = Dict{Symbol,Any}(
       :title      => d[labelsym(isx)],
       :showgrid   => d[:grid],
       :zeroline   => false,
@@ -176,9 +206,10 @@ function plotlyaxis(d::Dict, isx::Bool)
   ax
 end
 
-function get_plot_json(plt::Plot{PlotlyPackage})
-  d = plt.plotargs
-  d_out = Dict()
+# function get_plot_json(plt::Plot{PlotlyPackage})
+#   d = plt.plotargs
+function plotly_layout(d::Dict)
+  d_out = Dict{Symbol,Any}()
 
   bgcolor = webcolor(d[:background_color])
   fgcolor = webcolor(d[:foreground_color])
@@ -186,96 +217,18 @@ function get_plot_json(plt::Plot{PlotlyPackage})
   # set the fields for the plot
   d_out[:title] = d[:title]
   d_out[:titlefont] = plotlyfont(d[:guidefont], fgcolor)
-  d_out[:margin] = Dict(:l=>35, :b=>30, :r=>8, :t=>20)
+  d_out[:margin] = Dict{Symbol,Any}(:l=>35, :b=>30, :r=>8, :t=>20)
   d_out[:plot_bgcolor] = bgcolor
   d_out[:paper_bgcolor] = bgcolor
-  
+
   # TODO: x/y axis tick values/labels
   d_out[:xaxis] = plotlyaxis(d, true)
   d_out[:yaxis] = plotlyaxis(d, false)
 
-  # # x-axis
-  # d_out[:xaxis] = Dict(
-  #     :title      => d[:xlabel],
-  #     :showgrid   => d[:grid],
-  #     :zeroline   => false,
-  #   )
-  # merge!(d_out[:xaxis], if use_axis_field(d[:xticks])
-  #   ax = Dict(
-  #       :titlefont  => plotlyfont(d[:guidefont]),
-  #       :type       => plotlyscale(d[:xscale]),
-  #       :tickfont   => plotlyfont(d[:tickfont]),
-  #       :tickcolor  => fgcolor,
-  #       :linecolor  => fgcolor,
-  #     )
-
-  #   # xlims
-  #   lims = d[:xlims]
-  #   if lims != :auto && limsType(lims) == :limits
-  #     ax[:range] = lims
-  #   end
-
-  #   # xflip
-  #   if d[:xflip]
-  #     ax[:autorange] = "reversed"
-  #   end
-
-  #   # xticks
-  #   ticks = d[:xticks]
-  #   if ticks != :auto
-  #     ttype = ticksType(ticks)
-  #     if ttype == :ticks
-  #       ax[:tickmode] = "array"
-  #       ax[:tickvals] = ticks
-  #     elseif ttype == :ticks_and_labels
-  #       ax[:tickmode] = "array"
-  #       ax[:tickvals], ax[:ticktext] = ticks
-  #     end
-  #   end
-
-  #   ax
-  # else
-  #   Dict(
-  #       :showticklabels => false,
-  #       :showgrid       => false,
-  #     )
-  # end)
-
-
-  # # y-axis
-  # d_out[:yaxis] = Dict(
-  #     :title      => d[:ylabel],
-  #     :showgrid   => d[:grid],
-  #     :zeroline   => false,
-  #   )
-  # merge!(d_out[:yaxis], if use_axis_field(d[:yticks])
-  #   Dict(
-  #       :titlefont  => plotlyfont(d[:guidefont]),
-  #       :type       => plotlyscale(d[:yscale]),
-  #       :tickfont   => plotlyfont(d[:tickfont]),
-  #       :tickcolor  => fgcolor,
-  #       :linecolor  => fgcolor,
-  #     )
-  # else
-  #   Dict(
-  #       :showticklabels => false,
-  #       :showgrid       => false,
-  #     )
-  # end)
-
-  # lims = d[:ylims]
-  # if lims != :auto && limsType(lims) == :limits
-  #   d_out[:yaxis][:range] = lims
-  # end
-
-  # if d[:yflip]
-  #   d_out[:yaxis][:autorange] = "reversed"
-  # end
-
   # legend
-  d_out[:showlegend] = d[:legend]
-  if d[:legend]
-    d_out[:legend] = Dict(
+  d_out[:showlegend] = d[:legend] != :none
+  if d[:legend] != :none
+    d_out[:legend] = Dict{Symbol,Any}(
         :bgcolor  => bgcolor,
         :bordercolor => fgcolor,
         :font     => plotlyfont(d[:legendfont]),
@@ -288,17 +241,20 @@ function get_plot_json(plt::Plot{PlotlyPackage})
     d_out[:annotations] = [get_annotation_dict(ann...) for ann in anns]
   end
 
-  # finally build and return the json
-  JSON.json(d_out)
+  d_out
+end
+
+function get_plot_json(plt::Plot{PlotlyPackage})
+  JSON.json(plotly_layout(plt.plotargs))
 end
 
 
-function plotly_colorscale(grad::ColorGradient)
-  [[grad.values[i], webcolor(grad.colors[i])] for i in 1:length(grad.colors)]
+function plotly_colorscale(grad::ColorGradient, alpha = nothing)
+  [[grad.values[i], webcolor(grad.colors[i], alpha)] for i in 1:length(grad.colors)]
 end
-plotly_colorscale(c) = plotly_colorscale(ColorGradient(:bluesreds))
+plotly_colorscale(c, alpha = nothing) = plotly_colorscale(ColorGradient(:bluesreds), alpha)
 
-const _plotly_markers = Dict(
+const _plotly_markers = Dict{Symbol,Any}(
     :rect       => "square",
     :xcross     => "x",
     :utriangle  => "triangle-up",
@@ -309,8 +265,8 @@ const _plotly_markers = Dict(
   )
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
-function get_series_json(d::Dict; plot_index = nothing)
-  d_out = Dict()
+function plotly_series(d::Dict; plot_index = nothing)
+  d_out = Dict{Symbol,Any}()
 
   x, y = collect(d[:x]), collect(d[:y])
   d_out[:name] = d[:label]
@@ -340,7 +296,7 @@ function get_series_json(d::Dict; plot_index = nothing)
     d_out[:type] = "bar"
     d_out[:x], d_out[:y] = x, y
 
-  elseif lt == :heatmap
+  elseif lt == :hist2d
     d_out[:type] = "histogram2d"
     d_out[:x], d_out[:y] = x, y
     if isa(d[:nbins], Tuple)
@@ -360,16 +316,26 @@ function get_series_json(d::Dict; plot_index = nothing)
       d_out[:histnorm] = "probability density"
     end
 
-  elseif lt in (:contour, :surface, :wireframe)
-    d_out[:type] = lt == :wireframe ? :surface : string(lt)
+  elseif lt == :heatmap
+    d_out[:type] = "heatmap"
     d_out[:x], d_out[:y] = x, y
     d_out[:z] = d[:z].surf
-    # d_out[:showscale] = d[:legend]
-    if lt == :contour
-      d_out[:ncontours] = d[:nlevels]
-      d_out[:contours] = Dict(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
-    end
-    d_out[:colorscale] = plotly_colorscale(d[lt == :contour ? :linecolor : :fillcolor])
+    d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
+
+  elseif lt == :contour
+    d_out[:type] = "contour"
+    d_out[:x], d_out[:y] = x, y
+    d_out[:z] = d[:z].surf
+    # d_out[:showscale] = d[:colorbar] != :none
+    d_out[:ncontours] = d[:levels]
+    d_out[:contours] = Dict{Symbol,Any}(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
+    d_out[:colorscale] = plotly_colorscale(d[:linecolor], d[:linealpha])
+
+  elseif lt in (:surface, :wireframe)
+    d_out[:type] = "surface"
+    d_out[:x], d_out[:y] = x, y
+    d_out[:z] = d[:z].surf
+    d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
   elseif lt == :pie
     d_out[:type] = "pie"
@@ -389,30 +355,37 @@ function get_series_json(d::Dict; plot_index = nothing)
 
   else
     warn("Plotly: linetype $lt isn't supported.")
-    return Dict()
+    return Dict{Symbol,Any}()
   end
 
   # add "marker"
   if hasmarker
-    d_out[:marker] = Dict(
+    d_out[:marker] = Dict{Symbol,Any}(
         :symbol => get(_plotly_markers, d[:markershape], string(d[:markershape])),
         :opacity => d[:markeralpha],
         :size => 2 * d[:markersize],
         :color => webcolor(d[:markercolor], d[:markeralpha]),
-        :line => Dict(
+        :line => Dict{Symbol,Any}(
             :color => webcolor(d[:markerstrokecolor], d[:markerstrokealpha]),
             :width => d[:markerstrokewidth],
           ),
       )
+
+    # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
     if d[:zcolor] != nothing
-      d_out[:marker][:color] = d[:zcolor]
-      d_out[:marker][:colorscale] = plotly_colorscale(d[:markercolor])
+      # d_out[:marker][:color] = d[:zcolor]
+      # d_out[:marker][:colorscale] = plotly_colorscale(d[:markercolor], d[:markeralpha])
+      # d_out[:showscale] = true
+      grad = ColorGradient(d[:markercolor], alpha=d[:markeralpha])
+      zmin, zmax = extrema(d[:zcolor])
+      d_out[:marker][:color] = [webcolor(getColorZ(grad, (zi - zmin) / (zmax - zmin))) for zi in d[:zcolor]]
     end
+
   end
 
   # add "line"
   if hasline
-    d_out[:line] = Dict(
+    d_out[:line] = Dict{Symbol,Any}(
         :color => webcolor(d[:linecolor], d[:linealpha]),
         :width => d[:linewidth],
         :shape => if lt == :steppre
@@ -438,14 +411,14 @@ end
 
 # get a list of dictionaries, each representing the series params
 function get_series_json(plt::Plot{PlotlyPackage})
-  JSON.json(map(get_series_json, plt.seriesargs))
+  JSON.json(map(plotly_series, plt.seriesargs))
 end
 
 function get_series_json(subplt::Subplot{PlotlyPackage})
   ds = Dict[]
   for (i,plt) in enumerate(subplt.plts)
     for d in plt.seriesargs
-      push!(ds, get_series_json(d, plot_index = i))
+      push!(ds, plotly_series(d, plot_index = i))
     end
   end
   JSON.json(ds)
@@ -479,10 +452,10 @@ function html_body(subplt::Subplot{PlotlyPackage})
   html = ["<div style=\"width:$(w)px;height:$(h)px;\">"]
   nr = nrows(subplt.layout)
   ph = h / nr
-  
+
   for r in 1:nr
     push!(html, "<div style=\"clear:both;\">")
-  
+
     nc = ncols(subplt.layout, r)
     pw = w / nc
 
@@ -490,7 +463,7 @@ function html_body(subplt::Subplot{PlotlyPackage})
       plt = subplt[r,c]
       push!(html, html_body(plt, "float:left; width:$(pw)px; height:$(ph)px;"))
     end
-    
+
     push!(html, "</div>")
   end
   push!(html, "</div>")
@@ -501,11 +474,8 @@ end
 
 # ----------------------------------------------------------------
 
-
 function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{PlotlyPackage})
-  isijulia() && return
-  # TODO: write a png to io
-  println("todo: png")
+  warn("todo: png")
 end
 
 function Base.writemime(io::IO, ::MIME"text/html", plt::PlottingObject{PlotlyPackage})

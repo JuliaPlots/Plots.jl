@@ -3,6 +3,14 @@
 
 # credit goes to https://github.com/jverzani for contributing to the first draft of this backend implementation
 
+function _initialize_backend(::WinstonPackage; kw...)
+  @eval begin
+    # ENV["WINSTON_OUTPUT"] = "gtk"
+    warn("Winston is no longer supported... many features will likely be broken.")
+    import Winston, Gtk
+    export Winston, Gtk
+  end
+end
 
 # ---------------------------------------------------------------------------
 
@@ -80,7 +88,7 @@ function _add_series(::WinstonPackage, plt::Plot; kw...)
 
 
 
-  ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :heatmap, :hexbin, :hist, :bar
+  ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :hist2d, :hexbin, :hist, :bar
   if d[:linetype] == :none
     Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)..., color=getColor(d[:markercolor])))
 
@@ -115,7 +123,7 @@ function _add_series(::WinstonPackage, plt::Plot; kw...)
   # elseif d[:linetype] == :dots
   #     fn = Winston.XXX
 
-  # elseif d[:linetype] == :heatmap
+  # elseif d[:linetype] == :hist2d
   #     fn = Winston.XXX
 
   # elseif d[:linetype] == :hexbin
@@ -198,7 +206,7 @@ end
 # ----------------------------------------------------------------
 
 function addWinstonLegend(plt::Plot, wplt)
-  if plt.plotargs[:legend]
+  if plt.plotargs[:legend] != :none
     Winston.legend(wplt, [sd[:label] for sd in plt.seriesargs])
   end
 end

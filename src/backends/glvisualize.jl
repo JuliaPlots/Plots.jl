@@ -2,6 +2,13 @@
 
 # [WEBSITE]
 
+function _initialize_backend(::GLVisualizePackage; kw...)
+  @eval begin
+    import GLVisualize
+    export GLVisualize
+  end
+end
+
 # ---------------------------------------------------------------------------
 
 immutable GLScreenWrapper
@@ -12,6 +19,8 @@ function _create_plot(pkg::GLVisualizePackage; kw...)
   d = Dict(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
+
+  # TODO: this should be moved to the display method?
   w=GLVisualize.glscreen()
   @async GLVisualize.renderloop(w)
   Plot(GLScreenWrapper(w), pkg, 0, d, Dict[])
@@ -22,6 +31,7 @@ function _add_series(::GLVisualizePackage, plt::Plot; kw...)
   d = Dict(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
+  # TODO: this should be moved to the display method?
   x,y,z=map(Float32,d[:x]), map(Float32,d[:y]), map(Float32,d[:z].surf)
   GLVisualize.view(GLVisualize.visualize((x*ones(y)', ones(x)*y', z), :surface),plt.o.window)
   plt
@@ -50,13 +60,16 @@ end
 # accessors for x/y data
 
 function Base.getindex(plt::Plot{GLVisualizePackage}, i::Int)
-  series = plt.o.lines[i]
-  series.x, series.y
+  # TODO:
+  # series = plt.o.lines[i]
+  # series.x, series.y
+  nothing, nothing
 end
 
 function Base.setindex!(plt::Plot{GLVisualizePackage}, xy::Tuple, i::Integer)
-  series = plt.o.lines[i]
-  series.x, series.y = xy
+  # TODO:
+  # series = plt.o.lines[i]
+  # series.x, series.y = xy
   plt
 end
 
@@ -82,6 +95,10 @@ end
 
 function Base.display(::PlotsDisplay, plt::Plot{GLVisualizePackage})
   # TODO: display/show the plot
+
+  # NOTE: I think maybe this should be empty?  We can start with the assumption that creating
+  #       and adding to a plot will automatically open a window and draw to it, then the display
+  #       wouldn't actually need to do anything
 end
 
 function Base.display(::PlotsDisplay, plt::Subplot{GLVisualizePackage})

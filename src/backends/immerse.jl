@@ -1,6 +1,13 @@
 
 # https://github.com/JuliaGraphics/Immerse.jl
 
+function _initialize_backend(::ImmersePackage; kw...)
+  @eval begin
+    import Immerse, Gadfly, Compose, Gtk
+    export Immerse, Gadfly, Compose, Gtk
+    include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
+  end
+end
 
 function createImmerseFigure(d::Dict)
   w,h = d[:size]

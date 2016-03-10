@@ -174,10 +174,19 @@ function replaceAliases!(d::Dict, aliases::Dict)
 end
 
 createSegments(z) = collect(repmat(z',2,1))[2:end]
+
 Base.first(c::Colorant) = c
+Base.first(x::Symbol) = x
 
 
 sortedkeys(d::Dict) = sort(collect(keys(d)))
+
+"create an (n+1) list of the outsides of heatmap rectangles"
+function heatmap_edges(v::AVec)
+  vmin, vmax = extrema(v)
+  extra = 0.5 * (vmax-vmin) / (length(v)-1)
+  vcat(vmin-extra, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra)
+end
 
 
 function fakedata(sz...)
@@ -190,9 +199,21 @@ end
 
 isijulia() = isdefined(Main, :IJulia) && Main.IJulia.inited
 
+istuple(::Tuple) = true
+istuple(::Any) = false
+isvector(::AVec) = true
+isvector(::Any) = false
+ismatrix(::AMat) = true
+ismatrix(::Any) = false
+isscalar(::Real) = true
+isscalar(::Any) = false
+
+
+
 
 # ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
 ticksType{T<:Real}(ticks::AVec{T}) = :ticks
+ticksType{T<:AbstractString}(ticks::AVec{T}) = :labels
 ticksType{T<:AVec,S<:AVec}(ticks::@compat(Tuple{T,S})) = :ticks_and_labels
 ticksType(ticks) = :invalid
 
@@ -204,8 +225,27 @@ limsType(lims) = :invalid
 Base.convert{T<:Real}(::Type{Vector{T}}, rng::Range{T}) = T[x for x in rng]
 Base.convert{T<:Real,S<:Real}(::Type{Vector{T}}, rng::Range{S}) = T[x for x in rng]
 
+Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 
 # ---------------------------------------------------------------
+
+wraptuple(x::@compat(Tuple)) = x
+wraptuple(x) = (x,)
+
+trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
+trueOrAllTrue(f::Function, x) = f(x)
+
+allLineTypes(arg) = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+allStyles(arg) = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+allShapes(arg) = trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg) ||
+                  trueOrAllTrue(a -> isa(a, Shape), arg)
+allAlphas(arg) = trueOrAllTrue(a -> (typeof(a) <: Real && a > 0 && a < 1) ||
+                                    (typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))), arg)
+allReals(arg)   = trueOrAllTrue(a -> typeof(a) <: Real, arg)
+allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
+
+# ---------------------------------------------------------------
+
 
 """
 Allows temporary setting of backend and defaults for Plots. Settings apply only for the `do` block.  Example:
@@ -226,10 +266,13 @@ function with(f::Function, args...; kw...)
   end
 
   # save the backend
+  if CURRENT_BACKEND.sym == :none
+    pickDefaultBackend()
+  end
   oldbackend = CURRENT_BACKEND.sym
 
   for arg in args
-    
+
     # change backend?
     if arg in backends()
       backend(arg)
@@ -399,15 +442,15 @@ function supportGraph(allvals, func)
   y = ASCIIString[]
   for val in vals
     for b in bs
-        supported = func(Plots.backendInstance(b))
+        supported = func(Plots._backend_instance(b))
         if val in supported
             push!(x, string(b))
             push!(y, string(val))
         end
-      end 
+      end
   end
   n = length(vals)
-  
+
   scatter(x,y,
           m=:rect,
           ms=10,
@@ -428,7 +471,7 @@ function dumpSupportGraphs()
   for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles,
                supportGraphMarkers, supportGraphScales, supportGraphAxes)
     plt = func()
-    png(IMG_DIR * "/supported/$(string(func))")
+    png(joinpath(Pkg.dir("ExamplePlots"), "docs", "examples", "img", "supported", "$(string(func))"))
   end
 end
 
@@ -448,3 +491,11 @@ mm2inch(mm::Real) = float(mm / MM_PER_INCH)
 px2mm(px::Real) = float(px * MM_PER_PX)
 mm2px(mm::Real) = float(px / MM_PER_PX)
 
+
+"Smallest x in plot"
+xmin(plt::Plot) = minimum([minimum(d[:x]) for d in plt.seriesargs])
+"Largest x in plot"
+xmax(plt::Plot) = maximum([maximum(d[:x]) for d in plt.seriesargs])
+
+"Extrema of x-values in plot"
+Base.extrema(plt::Plot) = (xmin(plt), xmax(plt))

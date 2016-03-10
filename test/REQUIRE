@@ -2,9 +2,11 @@ julia 0.4
 
 Colors
 Reexport
+Requires
 FactCheck
 Gadfly
 Images
 ImageMagick
 PyPlot
 @osx QuartzImageIO
+GR

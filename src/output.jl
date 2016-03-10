@@ -37,6 +37,15 @@ end
 ps(fn::@compat(AbstractString)) = ps(current(), fn)
 
 
+function tex(plt::PlottingObject, fn::@compat(AbstractString))
+  fn = addExtension(fn, "tex")
+  io = open(fn, "w")
+  writemime(io, MIME("application/x-tex"), plt)
+  close(io)
+end
+tex(fn::@compat(AbstractString)) = tex(current(), fn)
+
+
 # ----------------------------------------------------------------
 
 
@@ -45,6 +54,7 @@ ps(fn::@compat(AbstractString)) = ps(current(), fn)
     "svg" => svg,
     "pdf" => pdf,
     "ps"  => ps,
+    "tex" => tex,
   )
 
 function getExtension(fn::@compat(AbstractString))
@@ -102,3 +112,8 @@ gui(plt::PlottingObject = current()) = display(PlotsDisplay(), plt)
 
 # override the REPL display to open a gui window
 Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::PlottingObject) = gui(plt)
+
+# a backup for html... passes to svg
+function Base.writemime(io::IO, ::MIME"text/html", plt::PlottingObject)
+  writemime(io, MIME("image/svg+xml"), plt)
+end
