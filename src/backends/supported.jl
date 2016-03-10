@@ -510,7 +510,7 @@ supportedArgs(::GLVisualizePackage) = [
     # :legend,
     # :linecolor,
     # :linestyle,
-    # :linetype,
+     :linetype
     # :linewidth,
     # :linealpha,
     # :markershape,
@@ -552,7 +552,7 @@ supportedArgs(::GLVisualizePackage) = [
     # :nlevels,
   ]
 supportedAxes(::GLVisualizePackage) = [:auto, :left]
-supportedTypes(::GLVisualizePackage) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedTypes(::GLVisualizePackage) = [:surface] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
 supportedStyles(::GLVisualizePackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GLVisualizePackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
 supportedScales(::GLVisualizePackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]

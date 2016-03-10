@@ -6,16 +6,15 @@
 
 immutable GLScreenWrapper
     window
-    render
 end
 
 function _create_plot(pkg::GLVisualizePackage; kw...)
   d = Dict(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
-  w,r=GLVisualize.glscreen()
-  @async r()
-  Plot(GLScreenWrapper(w,r), pkg, 0, d, Dict[])
+  w=GLVisualize.glscreen()
+  @async GLVisualize.renderloop(w)
+  Plot(GLScreenWrapper(w), pkg, 0, d, Dict[])
 end
 
 
@@ -23,8 +22,8 @@ function _add_series(::GLVisualizePackage, plt::Plot; kw...)
   d = Dict(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
-  x,y,z=map(Float32,d[:x]), map(Float32,d[:y]), map(Float32,d[:surface].surf)
-  GLVisualize.view(GLVisualize.visualize(x*ones(y)', ones(x)*y', z, :surface))
+  x,y,z=map(Float32,d[:x]), map(Float32,d[:y]), map(Float32,d[:z].surf)
+  GLVisualize.view(GLVisualize.visualize((x*ones(y)', ones(x)*y', z), :surface),plt.o.window)
   plt
 end
 
