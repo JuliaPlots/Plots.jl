@@ -176,6 +176,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
       :scatter3d  => :scatter,
       :surface    => :plot_surface,
       :wireframe  => :plot_wireframe,
+      :heatmap    => :imshow,
       # :surface    => pycolors.pymember("LinearSegmentedColormap")[:from_list]
     )
   return ax[get(fmap, linetype, :plot)]
@@ -370,6 +371,12 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
     extra_kwargs[:linewidth] = d[:linewidth]
     extra_kwargs[:edgecolor] = getPyPlotColor(d[:linecolor], d[:linealpha])
 
+  elseif lt == :heatmap
+    extra_kwargs[:cmap] = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+    left, right = extrema(d[:x])
+    bottom, top = extrema(d[:y])
+    extra_kwargs[:extent] = left, right, bottom, top
+
   else
 
     extra_kwargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
@@ -459,14 +466,21 @@ function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
       z = z'
     end
     plotfunc(x, y, z; extra_kwargs...)
+
   elseif lt in _3dTypes
     plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)
+
   elseif lt in (:scatter, :hist2d, :hexbin)
     plotfunc(d[:x], d[:y]; extra_kwargs...)
-  else
+
+  elseif lt == :heatmap
+    plotfunc(d[:z]; extra_kwargs...)
+
+  else # plot
     plotfunc(d[:x], d[:y]; extra_kwargs...)[1]
   end
 
+  # smoothing
   handleSmooth(plt, ax, d, d[:smooth])
 
   # add the colorbar legend
