@@ -531,39 +531,33 @@ end
 
 # For DataFrame support.  Imports DataFrames and defines the necessary methods which support them.
 
-@require DataFrames begin
+function setup_dataframes()
+    @require DataFrames begin
 
-  function createKWargsList(plt::AbstractPlot, df::DataFrames.AbstractDataFrame, args...; kw...)
-    createKWargsList(plt, args...; kw..., dataframe = df)
-  end
+        function createKWargsList(plt::AbstractPlot, df::DataFrames.AbstractDataFrame, args...; kw...)
+            createKWargsList(plt, args...; kw..., dataframe = df)
+        end
 
-  # expecting the column name of a dataframe that was passed in... anything else should error
-  function extractGroupArgs(s::Symbol, df::DataFrames.AbstractDataFrame, args...)
-    if haskey(df, s)
-      return extractGroupArgs(df[s])
-    else
-      error("Got a symbol, and expected that to be a key in d[:dataframe]. s=$s d=$d")
+        # expecting the column name of a dataframe that was passed in... anything else should error
+        function extractGroupArgs(s::Symbol, df::DataFrames.AbstractDataFrame, args...)
+            if haskey(df, s)
+                return extractGroupArgs(df[s])
+            else
+                error("Got a symbol, and expected that to be a key in d[:dataframe]. s=$s d=$d")
+            end
+        end
+
+        function getDataFrameFromKW(d::Dict)
+            get(d, :dataframe) do
+                error("Missing dataframe argument!")
+            end
+        end
+
+        # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
+        convertToAnyVector(s::Symbol, d::Dict) = Any[getDataFrameFromKW(d)[s]], s
+        convertToAnyVector(v::AVec{Symbol}, d::Dict) = (df = getDataFrameFromKW(d); Any[df[s] for s in v]), v
+
     end
-  end
-
-  function getDataFrameFromKW(d::Dict)
-    # for (k,v) in kw
-    #   if k == :dataframe
-    #     return v
-    #   end
-    # end
-    get(d, :dataframe) do
-      error("Missing dataframe argument!")
-    end
-  end
-
-  # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
-  # convertToAnyVector(s::Symbol; kw...) = Any[getDataFrameFromKW(;kw...)[s]], s
-  # convertToAnyVector(v::AVec{Symbol}; kw...) = (df = getDataFrameFromKW(;kw...); Any[df[s] for s in v]), v
-  convertToAnyVector(s::Symbol, d::Dict) = Any[getDataFrameFromKW(d)[s]], s
-  convertToAnyVector(v::AVec{Symbol}, d::Dict) = (df = getDataFrameFromKW(d); Any[df[s] for s in v]), v
-
 end
-
 
 # --------------------------------------------------------------------

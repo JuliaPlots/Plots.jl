@@ -2,6 +2,8 @@
 using VisualRegressionTests
 using ExamplePlots
 
+import DataFrames, RDatasets
+
 # don't let pyplot use a gui... it'll crash
 # note: Agg will set gui -> :none in PyPlot
 ENV["MPLBACKEND"] = "Agg"
@@ -16,12 +18,12 @@ using Plots, FactCheck
 default(size=(500,300))
 
 
-# TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that 
+# TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], eps = 1e-2)
-  
-  # first 
+
+  # first
   Plots._debugMode.on = debug
   example = ExamplePlots._examples[idx]
   info("Testing plot: $pkg:$idx:$(example.header)")

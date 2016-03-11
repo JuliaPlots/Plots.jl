@@ -239,6 +239,9 @@ function __init__()
     @eval import IJulia
     IJulia.display_dict(plt::AbstractPlot) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
   end
+
+  setup_dataframes()
+  setup_atom()
 end
 
 # ---------------------------------------------------------

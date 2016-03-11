@@ -10,3 +10,5 @@ ImageMagick
 PyPlot
 @osx QuartzImageIO
 GR
+DataFrames
+RDatasets

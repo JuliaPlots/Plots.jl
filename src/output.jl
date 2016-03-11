@@ -79,7 +79,7 @@ function addExtension(fn::@compat(AbstractString), ext::@compat(AbstractString))
 end
 
 function savefig(plt::AbstractPlot, fn::@compat(AbstractString))
-  
+
   # get the extension
   local ext
   try
@@ -116,4 +116,26 @@ Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::AbstractPlot) = g
 # a backup for html... passes to svg
 function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot)
   writemime(io, MIME("image/svg+xml"), plt)
+end
+
+
+# ---------------------------------------------------------
+# Atom PlotPane
+# ---------------------------------------------------------
+
+function setup_atom()
+    # @require Atom begin
+    #     @eval begin
+    #         import Atom
+    #
+    #         Atom.displaysize(::AbstractPlot) = (535, 379)
+    #         Atom.displaytitle(::AbstractPlot) = "Plots.jl"
+    #
+    #         Atom.@render Atom.PlotPane p::Plot begin
+    #             x, y = Atom.@rpc Atom.plotsize()
+    #             plot!(p, size=(x,y))  # changes the size of the Plots.Plot
+    #             Atom.div(Dict(:style=>"background: white"), Atom.HTML(stringmime("text/html", p)))
+    #         end
+    #     end
+    # end
 end
