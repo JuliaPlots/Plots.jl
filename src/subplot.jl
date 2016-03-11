@@ -1,52 +1,17 @@
 
-Base.getindex(subplt::Subplot, args...) = subplt.plts[subplt.layout[args...]]
-
-# handle "linking" the subplot axes together
-# each backend should implement the _remove_axis and _expand_limits methods
-function link_axis(subplt::Subplot, isx::Bool)
-
-  # collect the list of plots and the expanded limits for those plots that should be linked on this axis
-  includedPlots = Any[]
-  # lims = [Inf, -Inf]
-  lims = Dict{Int,Any}()  # maps column to xlim
-  for (i,(r,c)) in enumerate(subplt.layout)
-
-    # shouldlink will be a bool or nothing.  if nothing, then use linkx/y (which is true if we get to this code)
-    shouldlink = subplt.linkfunc(r,c)[isx ? 1 : 2]
-    if shouldlink == nothing || shouldlink
-      plt = subplt.plts[i]
-
-      # if we don't have this
-      k = isx ? c : r
-      if (firstone = !haskey(lims, k))
-        lims[k] = [Inf, -Inf]
-      end
-
-      isinner = (isx && r < nrows(subplt.layout)) || (!isx && !firstone)
-      push!(includedPlots, (plt, isinner, k))
-
-      _expand_limits(lims[k], plt, isx)
-    end
-
-  end
-
-  # do the axis adjustments
-  for (plt, isinner, k) in includedPlots
-    if isinner
-      _remove_axis(plt, isx)
-    end
-    (isx ? xlims! : ylims!)(plt, lims[k]...)
-  end
-end
-
-
-
 # ------------------------------------------------------------
-
 
 Base.string(subplt::Subplot) = "Subplot{$(subplt.backend) p=$(subplt.p) n=$(subplt.n)}"
 Base.print(io::IO, subplt::Subplot) = print(io, string(subplt))
 Base.show(io::IO, subplt::Subplot) = print(io, string(subplt))
+
+function Base.copy(subplt::Subplot)
+  subplot(subplt.plts, subplt.layout, subplt.plotargs)
+end
+
+Base.getindex(subplt::Subplot, args...) = subplt.plts[subplt.layout[args...]]
+
+# --------------------------------------------------------------------
 
 getplot(subplt::Subplot, idx::Int = subplt.n) = subplt.plts[mod1(idx, subplt.p)]
 getplotargs(subplt::Subplot, idx::Int) = getplot(subplt, idx).plotargs
@@ -297,10 +262,42 @@ function _add_series_subplot(plt::Plot, args...; kw...)
   warnOnUnsupportedScales(plt.backend, d)
 end
 
-
-
 # --------------------------------------------------------------------
 
-function Base.copy(subplt::Subplot)
-  subplot(subplt.plts, subplt.layout, subplt.plotargs)
+# handle "linking" the subplot axes together
+# each backend should implement the _remove_axis and _expand_limits methods
+function link_axis(subplt::Subplot, isx::Bool)
+
+  # collect the list of plots and the expanded limits for those plots that should be linked on this axis
+  includedPlots = Any[]
+  # lims = [Inf, -Inf]
+  lims = Dict{Int,Any}()  # maps column to xlim
+  for (i,(r,c)) in enumerate(subplt.layout)
+
+    # shouldlink will be a bool or nothing.  if nothing, then use linkx/y (which is true if we get to this code)
+    shouldlink = subplt.linkfunc(r,c)[isx ? 1 : 2]
+    if shouldlink == nothing || shouldlink
+      plt = subplt.plts[i]
+
+      # if we don't have this
+      k = isx ? c : r
+      if (firstone = !haskey(lims, k))
+        lims[k] = [Inf, -Inf]
+      end
+
+      isinner = (isx && r < nrows(subplt.layout)) || (!isx && !firstone)
+      push!(includedPlots, (plt, isinner, k))
+
+      _expand_limits(lims[k], plt, isx)
+    end
+
+  end
+
+  # do the axis adjustments
+  for (plt, isinner, k) in includedPlots
+    if isinner
+      _remove_axis(plt, isx)
+    end
+    (isx ? xlims! : ylims!)(plt, lims[k]...)
+  end
 end

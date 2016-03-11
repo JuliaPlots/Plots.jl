@@ -20,39 +20,10 @@ type Plot{T<:AbstractBackend} <: AbstractPlot{T}
 end
 
 # -----------------------------------------------------------
-# Layouts
+# Layout
 # -----------------------------------------------------------
 
 abstract SubplotLayout
-
-# -----------------------------------------------------------
-
-"Simple grid, indices are row-major."
-immutable GridLayout <: SubplotLayout
-    nr::Int
-    nc::Int
-end
-
-# -----------------------------------------------------------
-
-"Number of plots per row"
-immutable RowsLayout <: SubplotLayout
-    numplts::Int
-    rowcounts::AbstractVector{Int}
-end
-
-# -----------------------------------------------------------
-
-"Flexible, nested layout with optional size percentages."
-immutable FlexLayout <: SubplotLayout
-    n::Int
-    grid::Matrix # Nested layouts. Each position
-                 # can be a plot index or another FlexLayout
-    widths::Vector{Float64}
-    heights::Vector{Float64}
-end
-
-typealias IntOrFlex Union{Int,FlexLayout}
 
 # -----------------------------------------------------------
 # Subplot
