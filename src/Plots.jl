@@ -14,6 +14,7 @@ export
   Subplot,
   SubplotLayout,
   GridLayout,
+  RowsLayout,
   FlexLayout,
   AVec,
   AMat,
@@ -26,7 +27,7 @@ export
   current,
   default,
   with,
-  
+
   scatter,
   scatter!,
   bar,
@@ -138,6 +139,7 @@ include("plotter2.jl")
 include("args.jl")
 include("plot.jl")
 include("subplot.jl")
+include("layouts.jl")
 include("recipes.jl")
 include("animation.jl")
 include("output.jl")

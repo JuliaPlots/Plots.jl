@@ -1,83 +1,4 @@
 
-function subplotlayout(sz::@compat(Tuple{Int,Int}))
-  GridLayout(sz...)
-end
-
-function subplotlayout(rowcounts::AVec{Int})
-  FlexLayout(sum(rowcounts), rowcounts)
-end
-
-function subplotlayout(numplts::Int, nr::Int, nc::Int)
-
-  # figure out how many rows/columns we need
-  if nr == -1
-    if nc == -1
-      nr = round(Int, sqrt(numplts))
-      nc = ceil(Int, numplts / nr)
-    else
-      nr = ceil(Int, numplts / nc)
-    end
-  else
-    nc = ceil(Int, numplts / nr)
-  end
-
-  # if it's a perfect rectangle, just create a grid
-  if numplts == nr * nc
-    return GridLayout(nr, nc)
-  end
-
-  # create the rowcounts vector
-  i = 0
-  rowcounts = Int[]
-  for r in 1:nr
-    cnt = min(nc, numplts - i)
-    push!(rowcounts, cnt)
-    i += cnt
-  end
-
-  FlexLayout(numplts, rowcounts)
-end
-
-
-
-Base.length(layout::FlexLayout) = layout.numplts
-Base.start(layout::FlexLayout) = 1
-Base.done(layout::FlexLayout, state) = state > length(layout)
-function Base.next(layout::FlexLayout, state)
-  r = 1
-  c = 0
-  for i = 1:state
-    c += 1
-    if c > layout.rowcounts[r]
-      r += 1
-      c = 1
-    end
-  end
-  (r,c), state + 1
-end
-
-nrows(layout::FlexLayout) = length(layout.rowcounts)
-ncols(layout::FlexLayout, row::Int) = row < 1 ? 0 : (row > nrows(layout) ? 0 : layout.rowcounts[row])
-
-# get the plot index given row and column
-Base.getindex(layout::FlexLayout, r::Int, c::Int) = sum(layout.rowcounts[1:r-1]) + c
-
-Base.length(layout::GridLayout) = layout.nr * layout.nc
-Base.start(layout::GridLayout) = 1
-Base.done(layout::GridLayout, state) = state > length(layout)
-function Base.next(layout::GridLayout, state)
-  r = div(state-1, layout.nc) + 1
-  c = mod1(state, layout.nc)
-  (r,c), state + 1
-end
-
-nrows(layout::GridLayout) = layout.nr
-ncols(layout::GridLayout) = layout.nc
-ncols(layout::GridLayout, row::Int) = layout.nc
-
-# get the plot index given row and column
-Base.getindex(layout::GridLayout, r::Int, c::Int) = (r-1) * layout.nc + c
-
 Base.getindex(subplt::Subplot, args...) = subplt.plts[subplt.layout[args...]]
 
 # handle "linking" the subplot axes together
@@ -308,7 +229,7 @@ function subplot!(subplt::Subplot, args...; kw...)
 
   # create the underlying object (each backend will do this differently)
   # note: we call it once before doing the individual plots, and once after
-  #       this is because some backends need to set up the subplots and then plot, 
+  #       this is because some backends need to set up the subplots and then plot,
   #       and others need to do it the other way around
   if !subplt.initialized
     subplt.initialized = _create_subplot(subplt, true)
@@ -343,7 +264,7 @@ function subplot!(subplt::Subplot, args...; kw...)
     end
     dumpdict(di, "subplot! kwList $i")
     dumpdict(plt.plotargs, "plt.plotargs before plotting")
-    
+
     _add_series_subplot(plt; di...)
   end
 
@@ -366,7 +287,7 @@ function _add_series_subplot(plt::Plot, args...; kw...)
   setTicksFromStringVector(d, d, :y, :yticks)
 
   _add_series(plt.backend, plt; d...)
-  
+
   _add_annotations(plt, d)
   warnOnUnsupportedScales(plt.backend, d)
 end
