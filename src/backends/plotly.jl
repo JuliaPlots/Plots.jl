@@ -436,13 +436,15 @@ function html_body(plt::Plot{PlotlyBackend}, style = nothing)
     style = "width:$(w)px;height:$(h)px;"
   end
   uuid = Base.Random.uuid4()
-  """
+  html = """
     <div id=\"$(uuid)\" style=\"$(style)\"></div>
     <script>
       PLOT = document.getElementById('$(uuid)');
       Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
     </script>
   """
+  # @show html
+  html
 end
 
 
@@ -479,7 +481,8 @@ function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{PlotlyBacke
 end
 
 function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot{PlotlyBackend})
-  write(io, html_head(plt) * html_body(plt))
+    write(io, html_head(plt) * html_body(plt))
+    # write(io, html_body(plt))
 end
 
 function Base.display(::PlotsDisplay, plt::AbstractPlot{PlotlyBackend})

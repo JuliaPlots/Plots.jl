@@ -124,18 +124,18 @@ end
 # ---------------------------------------------------------
 
 function setup_atom()
-    # @require Atom begin
-    #     @eval begin
-    #         import Atom
-    #
-    #         Atom.displaysize(::AbstractPlot) = (535, 379)
-    #         Atom.displaytitle(::AbstractPlot) = "Plots.jl"
-    #
-    #         Atom.@render Atom.PlotPane p::Plot begin
-    #             x, y = Atom.@rpc Atom.plotsize()
-    #             plot!(p, size=(x,y))  # changes the size of the Plots.Plot
-    #             Atom.div(Dict(:style=>"background: white"), Atom.HTML(stringmime("text/html", p)))
-    #         end
-    #     end
-    # end
+    @require Atom begin
+        import Atom, Media
+
+        # connects the render function
+        Media.media(Plot, Media.Plot)
+
+        # Atom.displaysize(::AbstractPlot) = (535, 379)
+        # Atom.displaytitle(plt::AbstractPlot) = "Plots.jl (backend: $(backend(plt)))"
+
+        # this is like "display"... sends an html div with the plot to the PlotPane
+        function Media.render(pane::Atom.PlotPane, plt::Plot)
+            Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
+        end
+    end
 end
