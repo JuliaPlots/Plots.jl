@@ -1,7 +1,7 @@
 
 # https://github.com/JuliaGraphics/Immerse.jl
 
-function _initialize_backend(::ImmersePackage; kw...)
+function _initialize_backend(::ImmerseBackend; kw...)
   @eval begin
     import Immerse, Gadfly, Compose, Gtk
     export Immerse, Gadfly, Compose, Gtk
@@ -19,7 +19,7 @@ end
 
 
 # create a blank Gadfly.Plot object
-function _create_plot(pkg::ImmersePackage; kw...)
+function _create_plot(pkg::ImmerseBackend; kw...)
   d = Dict(kw)
 
   # create the underlying Gadfly.Plot object
@@ -31,7 +31,7 @@ end
 
 
 # plot one data series
-function _add_series(::ImmersePackage, plt::Plot; kw...)
+function _add_series(::ImmerseBackend, plt::Plot; kw...)
   d = Dict(kw)
   addGadflySeries!(plt, d)
   push!(plt.seriesargs, d)
@@ -39,7 +39,7 @@ function _add_series(::ImmersePackage, plt::Plot; kw...)
 end
 
 
-function _update_plot(plt::Plot{ImmersePackage}, d::Dict)
+function _update_plot(plt::Plot{ImmerseBackend}, d::Dict)
   updateGadflyGuides(plt, d)
   updateGadflyPlotTheme(plt, d)
 end
@@ -48,7 +48,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _add_annotations{X,Y,V}(plt::Plot{ImmersePackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{ImmerseBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     push!(getGadflyContext(plt).guides, createGadflyAnnotationObject(ann...))
   end
@@ -58,12 +58,12 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{ImmersePackage}, i::Integer)
+function Base.getindex(plt::Plot{ImmerseBackend}, i::Integer)
   mapping = getGadflyMappings(plt, i)[1]
   mapping[:x], mapping[:y]
 end
 
-function Base.setindex!(plt::Plot{ImmersePackage}, xy::Tuple, i::Integer)
+function Base.setindex!(plt::Plot{ImmerseBackend}, xy::Tuple, i::Integer)
   for mapping in getGadflyMappings(plt, i)
     mapping[:x], mapping[:y] = xy
   end
@@ -74,12 +74,12 @@ end
 # ----------------------------------------------------------------
 
 
-function _create_subplot(subplt::Subplot{ImmersePackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{ImmerseBackend}, isbefore::Bool)
   return false
   # isbefore && return false
 end
 
-function showSubplotObject(subplt::Subplot{ImmersePackage})
+function showSubplotObject(subplt::Subplot{ImmerseBackend})
   # create the Gtk window with vertical box vsep
   d = getplotargs(subplt,1)
   w,h = d[:size]
@@ -121,13 +121,13 @@ function showSubplotObject(subplt::Subplot{ImmersePackage})
 end
 
 
-function _remove_axis(plt::Plot{ImmersePackage}, isx::Bool)
+function _remove_axis(plt::Plot{ImmerseBackend}, isx::Bool)
   gplt = getGadflyContext(plt)
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks; label=false)
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xlabel : Gadfly.Guide.ylabel, "")
 end
 
-function _expand_limits(lims, plt::Plot{ImmersePackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{ImmerseBackend}, isx::Bool)
   for l in getGadflyContext(plt).layers
     _expand_limits(lims, l.mapping[isx ? :x : :y])
   end
@@ -136,11 +136,11 @@ end
 
 # ----------------------------------------------------------------
 
-getGadflyContext(plt::Plot{ImmersePackage}) = plt.o[2]
-getGadflyContext(subplt::Subplot{ImmersePackage}) = buildGadflySubplotContext(subplt)
+getGadflyContext(plt::Plot{ImmerseBackend}) = plt.o[2]
+getGadflyContext(subplt::Subplot{ImmerseBackend}) = buildGadflySubplotContext(subplt)
 
 
-function Base.display(::PlotsDisplay, plt::Plot{ImmersePackage})
+function Base.display(::PlotsDisplay, plt::Plot{ImmerseBackend})
 
   fig, gplt = plt.o
   if fig == nothing
@@ -154,7 +154,7 @@ function Base.display(::PlotsDisplay, plt::Plot{ImmersePackage})
 end
 
 
-function Base.display(::PlotsDisplay, subplt::Subplot{ImmersePackage})
+function Base.display(::PlotsDisplay, subplt::Subplot{ImmerseBackend})
 
   # if we haven't created the window yet, do it
   if subplt.o == nothing

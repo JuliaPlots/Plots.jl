@@ -1,8 +1,8 @@
 
 
-defaultOutputFormat(plt::PlottingObject) = "png"
+defaultOutputFormat(plt::AbstractPlot) = "png"
 
-function png(plt::PlottingObject, fn::@compat(AbstractString))
+function png(plt::AbstractPlot, fn::@compat(AbstractString))
   fn = addExtension(fn, "png")
   io = open(fn, "w")
   writemime(io, MIME("image/png"), plt)
@@ -10,7 +10,7 @@ function png(plt::PlottingObject, fn::@compat(AbstractString))
 end
 png(fn::@compat(AbstractString)) = png(current(), fn)
 
-function svg(plt::PlottingObject, fn::@compat(AbstractString))
+function svg(plt::AbstractPlot, fn::@compat(AbstractString))
   fn = addExtension(fn, "svg")
   io = open(fn, "w")
   writemime(io, MIME("image/svg+xml"), plt)
@@ -19,7 +19,7 @@ end
 svg(fn::@compat(AbstractString)) = svg(current(), fn)
 
 
-function pdf(plt::PlottingObject, fn::@compat(AbstractString))
+function pdf(plt::AbstractPlot, fn::@compat(AbstractString))
   fn = addExtension(fn, "pdf")
   io = open(fn, "w")
   writemime(io, MIME("application/pdf"), plt)
@@ -28,7 +28,7 @@ end
 pdf(fn::@compat(AbstractString)) = pdf(current(), fn)
 
 
-function ps(plt::PlottingObject, fn::@compat(AbstractString))
+function ps(plt::AbstractPlot, fn::@compat(AbstractString))
   fn = addExtension(fn, "ps")
   io = open(fn, "w")
   writemime(io, MIME("application/postscript"), plt)
@@ -37,7 +37,7 @@ end
 ps(fn::@compat(AbstractString)) = ps(current(), fn)
 
 
-function tex(plt::PlottingObject, fn::@compat(AbstractString))
+function tex(plt::AbstractPlot, fn::@compat(AbstractString))
   fn = addExtension(fn, "tex")
   io = open(fn, "w")
   writemime(io, MIME("application/x-tex"), plt)
@@ -78,7 +78,7 @@ function addExtension(fn::@compat(AbstractString), ext::@compat(AbstractString))
   end
 end
 
-function savefig(plt::PlottingObject, fn::@compat(AbstractString))
+function savefig(plt::AbstractPlot, fn::@compat(AbstractString))
   
   # get the extension
   local ext
@@ -100,20 +100,20 @@ savefig(fn::@compat(AbstractString)) = savefig(current(), fn)
 
 
 # savepng(args...; kw...) = savepng(current(), args...; kw...)
-# savepng(plt::PlottingObject, fn::@compat(AbstractString); kw...) = (io = open(fn, "w"); writemime(io, MIME("image/png"), plt); close(io))
+# savepng(plt::AbstractPlot, fn::@compat(AbstractString); kw...) = (io = open(fn, "w"); writemime(io, MIME("image/png"), plt); close(io))
 
 
 
 
 # ---------------------------------------------------------
 
-gui(plt::PlottingObject = current()) = display(PlotsDisplay(), plt)
+gui(plt::AbstractPlot = current()) = display(PlotsDisplay(), plt)
 
 
 # override the REPL display to open a gui window
-Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::PlottingObject) = gui(plt)
+Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::AbstractPlot) = gui(plt)
 
 # a backup for html... passes to svg
-function Base.writemime(io::IO, ::MIME"text/html", plt::PlottingObject)
+function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot)
   writemime(io, MIME("image/svg+xml"), plt)
 end

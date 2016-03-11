@@ -2,7 +2,7 @@
 # https://github.com/bokeh/Bokeh.jl
 
 
-function _initialize_backend(::BokehPackage; kw...)
+function _initialize_backend(::BokehBackend; kw...)
   @eval begin
     warn("Bokeh is no longer supported... many features will likely be broken.")
     import Bokeh
@@ -64,7 +64,7 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::BokehPackage; kw...)
+function _create_plot(pkg::BokehBackend; kw...)
   d = Dict(kw)
 
   # dumpdict(d, "plot", true)
@@ -88,7 +88,7 @@ function _create_plot(pkg::BokehPackage; kw...)
 end
 
 
-function _add_series(::BokehPackage, plt::Plot; kw...)
+function _add_series(::BokehBackend, plt::Plot; kw...)
   d = Dict(kw)
 
   # dumpdict(d, "plot!", true)
@@ -114,22 +114,22 @@ end
 # ----------------------------------------------------------------
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{BokehPackage}, d::Dict)
+function _update_plot(plt::Plot{BokehBackend}, d::Dict)
 end
 
-function _update_plot_pos_size(plt::PlottingObject{BokehPackage}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{BokehBackend}, d::Dict)
 end
 
 # ----------------------------------------------------------------
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{BokehPackage}, i::Int)
+function Base.getindex(plt::Plot{BokehBackend}, i::Int)
   series = plt.o.datacolumns[i].data
   series[:x], series[:y]
 end
 
-function Base.setindex!(plt::Plot{BokehPackage}, xy::Tuple, i::Integer)
+function Base.setindex!(plt::Plot{BokehBackend}, xy::Tuple, i::Integer)
   series = plt.o.datacolumns[i].data
   series[:x], series[:y] = xy
   plt
@@ -138,7 +138,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _add_annotations{X,Y,V}(plt::Plot{BokehPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{BokehBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     # TODO: add the annotation to the plot
   end
@@ -146,31 +146,31 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{BokehPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{BokehBackend}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
 
 end
 
 
-function _expand_limits(lims, plt::Plot{BokehPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{BokehBackend}, isx::Bool)
   # TODO: call expand limits for each plot data
 end
 
-function _remove_axis(plt::Plot{BokehPackage}, isx::Bool)
+function _remove_axis(plt::Plot{BokehBackend}, isx::Bool)
   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
 end
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{BokehPackage})
+function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{BokehBackend})
   # TODO: write a png to io
   warn("mime png not implemented")
 end
 
-function Base.display(::PlotsDisplay, plt::Plot{BokehPackage})
+function Base.display(::PlotsDisplay, plt::Plot{BokehBackend})
   Bokeh.showplot(plt.o)
 end
 
-function Base.display(::PlotsDisplay, plt::Subplot{BokehPackage})
+function Base.display(::PlotsDisplay, plt::Subplot{BokehBackend})
   # TODO: display/show the subplot
 end

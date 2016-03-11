@@ -1,25 +1,25 @@
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 
-function _initialize_backend(::PlotlyJSPackage; kw...)
+function _initialize_backend(::PlotlyJSBackend; kw...)
     @eval begin
         import PlotlyJS
         export PlotlyJS
     end
 
     for (mime, fmt) in PlotlyJS._mimeformats
-        @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyJSPackage}) = writemime(io, m, p.o)
+        @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyJSBackend}) = writemime(io, m, p.o)
     end
 
     # override IJulia inline display
     if isijulia()
-        IJulia.display_dict(plt::PlottingObject{PlotlyJSPackage}) = IJulia.display_dict(plt.o)
+        IJulia.display_dict(plt::AbstractPlot{PlotlyJSBackend}) = IJulia.display_dict(plt.o)
     end
 end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::PlotlyJSPackage; kw...)
+function _create_plot(pkg::PlotlyJSBackend; kw...)
     d = Dict(kw)
     # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
     # TODO: initialize the plot... title, xlabel, bgcolor, etc
@@ -33,7 +33,7 @@ function _create_plot(pkg::PlotlyJSPackage; kw...)
 end
 
 
-function _add_series(::PlotlyJSPackage, plt::Plot; kw...)
+function _add_series(::PlotlyJSBackend, plt::Plot; kw...)
     d = Dict(kw)
     syncplot = plt.o
 
@@ -53,7 +53,7 @@ end
 # ---------------------------------------------------------------------------
 
 
-function _add_annotations{X,Y,V}(plt::Plot{PlotlyJSPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{PlotlyJSBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
     # set or add to the annotation_list
     if !haskey(plt.plotargs, :annotation_list)
         plt.plotargs[:annotation_list] = Any[]
@@ -63,11 +63,11 @@ end
 
 # ----------------------------------------------------------------
 
-function _before_update_plot(plt::Plot{PlotlyJSPackage})
+function _before_update_plot(plt::Plot{PlotlyJSBackend})
 end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{PlotlyJSPackage}, d::Dict)
+function _update_plot(plt::Plot{PlotlyJSBackend}, d::Dict)
     pdict = plotly_layout(d)
     # dumpdict(pdict, "pdict updateplot", true)
     syncplot = plt.o
@@ -76,19 +76,19 @@ function _update_plot(plt::Plot{PlotlyJSPackage}, d::Dict)
 end
 
 
-function _update_plot_pos_size(plt::PlottingObject{PlotlyJSPackage}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{PlotlyJSBackend}, d::Dict)
 end
 
 # ----------------------------------------------------------------
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{PlotlyJSPackage}, i::Int)
+function Base.getindex(plt::Plot{PlotlyJSBackend}, i::Int)
   d = plt.seriesargs[i]
   d[:x], d[:y]
 end
 
-function Base.setindex!(plt::Plot{PlotlyJSPackage}, xy::Tuple, i::Integer)
+function Base.setindex!(plt::Plot{PlotlyJSBackend}, xy::Tuple, i::Integer)
   d = plt.seriesargs[i]
   d[:x], d[:y] = xy
   # TODO: this is likely ineffecient... we should make a call that ONLY changes the plot data
@@ -99,30 +99,30 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{PlotlyJSPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{PlotlyJSBackend}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
   true
 end
 
-function _expand_limits(lims, plt::Plot{PlotlyJSPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{PlotlyJSBackend}, isx::Bool)
   # TODO: call expand limits for each plot data
 end
 
-function _remove_axis(plt::Plot{PlotlyJSPackage}, isx::Bool)
+function _remove_axis(plt::Plot{PlotlyJSBackend}, isx::Bool)
   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
 end
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, m::MIME"text/html", plt::PlottingObject{PlotlyJSPackage})
+function Base.writemime(io::IO, m::MIME"text/html", plt::AbstractPlot{PlotlyJSBackend})
     Base.writemime(io, m, plt.o)
 end
 
-function Base.display(::PlotsDisplay, plt::Plot{PlotlyJSPackage})
+function Base.display(::PlotsDisplay, plt::Plot{PlotlyJSBackend})
     display(plt.o)
 end
 
-function Base.display(::PlotsDisplay, plt::Subplot{PlotlyJSPackage})
+function Base.display(::PlotsDisplay, plt::Subplot{PlotlyJSBackend})
     error()
 end
 

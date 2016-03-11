@@ -185,7 +185,7 @@ _plotDefaults[:overwrite_figure]  = false
 # TODO: x/y scales
 
 const _allArgs = sort(collect(union(keys(_seriesDefaults), keys(_plotDefaults))))
-supportedArgs(::PlottingPackage) = error("supportedArgs not defined") #_allArgs
+supportedArgs(::AbstractBackend) = error("supportedArgs not defined") #_allArgs
 supportedArgs() = supportedArgs(backend())
 
 
@@ -632,7 +632,7 @@ end
 
 # -----------------------------------------------------------------------------
 
-function warnOnUnsupportedArgs(pkg::PlottingPackage, d::Dict)
+function warnOnUnsupportedArgs(pkg::AbstractBackend, d::Dict)
   for k in sortedkeys(d)
     if (!(k in supportedArgs(pkg))
         && k != :subplot
@@ -642,11 +642,11 @@ function warnOnUnsupportedArgs(pkg::PlottingPackage, d::Dict)
   end
 end
 
-_markershape_supported(pkg::PlottingPackage, shape::Symbol) = shape in supportedMarkers(pkg)
-_markershape_supported(pkg::PlottingPackage, shape::Shape) = Shape in supportedMarkers(pkg)
-_markershape_supported(pkg::PlottingPackage, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
+_markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supportedMarkers(pkg)
+_markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supportedMarkers(pkg)
+_markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
-function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
+function warnOnUnsupported(pkg::AbstractBackend, d::Dict)
   (d[:axis] in supportedAxes(pkg)
     || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
   (d[:linetype] == :none
@@ -661,7 +661,7 @@ function warnOnUnsupported(pkg::PlottingPackage, d::Dict)
     || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))"))
 end
 
-function warnOnUnsupportedScales(pkg::PlottingPackage, d::Dict)
+function warnOnUnsupportedScales(pkg::AbstractBackend, d::Dict)
   for k in (:xscale, :yscale)
     if haskey(d, k)
       d[k] in supportedScales(pkg) || warn("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supportedScales(pkg))")
@@ -709,7 +709,7 @@ convertLegendValue(val::Bool) = val ? :best : :none
 # -----------------------------------------------------------------------------
 
 # build the argument dictionary for the plot
-function getPlotArgs(pkg::PlottingPackage, kw, idx::Int; set_defaults = true)
+function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
   kwdict = Dict(kw)
   d = Dict()
 
@@ -746,7 +746,7 @@ end
 
 
 # build the argument dictionary for a series
-function getSeriesArgs(pkg::PlottingPackage, plotargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
+function getSeriesArgs(pkg::AbstractBackend, plotargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
   kwdict = Dict(kw)
   d = Dict()
 

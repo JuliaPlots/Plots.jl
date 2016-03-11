@@ -1,7 +1,7 @@
 
 # https://github.com/sisl/PGFPlots.jl
 
-function _initialize_backend(::PGFPlotsPackage; kw...)
+function _initialize_backend(::PGFPlotsBackend; kw...)
   @eval begin
     import PGFPlots
     export PGFPlots
@@ -12,7 +12,7 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::PGFPlotsPackage; kw...)
+function _create_plot(pkg::PGFPlotsBackend; kw...)
   d = Dict{Symbol,Any}(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
@@ -20,14 +20,14 @@ function _create_plot(pkg::PGFPlotsPackage; kw...)
 end
 
 
-function _add_series(::PGFPlotsPackage, plt::Plot; kw...)
+function _add_series(::PGFPlotsBackend, plt::Plot; kw...)
   d = Dict{Symbol,Any}(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
   plt
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{PGFPlotsPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{PGFPlotsBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   # set or add to the annotation_list
   if haskey(plt.plotargs, :annotation_list)
     append!(plt.plotargs[:annotation_list], anns)
@@ -38,26 +38,26 @@ end
 
 # ----------------------------------------------------------------
 
-function _before_update_plot(plt::Plot{PGFPlotsPackage})
+function _before_update_plot(plt::Plot{PGFPlotsBackend})
 end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{PGFPlotsPackage}, d::Dict)
+function _update_plot(plt::Plot{PGFPlotsBackend}, d::Dict)
 end
 
-function _update_plot_pos_size(plt::PlottingObject{PGFPlotsPackage}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{PGFPlotsBackend}, d::Dict)
 end
 
 # ----------------------------------------------------------------
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{PGFPlotsPackage}, i::Int)
+function Base.getindex(plt::Plot{PGFPlotsBackend}, i::Int)
   d = plt.seriesargs[i]
   d[:x], d[:y]
 end
 
-function Base.setindex!(plt::Plot{PGFPlotsPackage}, xy::Tuple, i::Integer)
+function Base.setindex!(plt::Plot{PGFPlotsBackend}, xy::Tuple, i::Integer)
   d = plt.seriesargs[i]
   d[:x], d[:y] = xy
   plt
@@ -65,16 +65,16 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{PGFPlotsPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{PGFPlotsBackend}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
   true
 end
 
-function _expand_limits(lims, plt::Plot{PGFPlotsPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{PGFPlotsBackend}, isx::Bool)
   # TODO: call expand limits for each plot data
 end
 
-function _remove_axis(plt::Plot{PGFPlotsPackage}, isx::Bool)
+function _remove_axis(plt::Plot{PGFPlotsBackend}, isx::Bool)
   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
 end
 
@@ -84,24 +84,24 @@ end
 # ----------------------------------------------------------------
 
 #################  This is the important method to implement!!! #################
-function _make_pgf_plot(plt::Plot{PGFPlotsPackage})
+function _make_pgf_plot(plt::Plot{PGFPlotsBackend})
   # TODO: convert plt.plotargs and plt.seriesargs into PGFPlots calls
   # TODO: return the PGFPlots object
 end
 
-function Base.writemime(io::IO, mime::MIME"image/png", plt::PlottingObject{PGFPlotsPackage})
+function Base.writemime(io::IO, mime::MIME"image/png", plt::AbstractPlot{PGFPlotsBackend})
   plt.o = _make_pgf_plot(plt)
   writemime(io, mime, plt.o)
 end
 
-# function Base.writemime(io::IO, ::MIME"text/html", plt::PlottingObject{PGFPlotsPackage})
+# function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot{PGFPlotsBackend})
 # end
 
-function Base.display(::PlotsDisplay, plt::PlottingObject{PGFPlotsPackage})
+function Base.display(::PlotsDisplay, plt::AbstractPlot{PGFPlotsBackend})
   plt.o = _make_pgf_plot(plt)
   display(plt.o)
 end
 
-# function Base.display(::PlotsDisplay, plt::Subplot{PGFPlotsPackage})
+# function Base.display(::PlotsDisplay, plt::Subplot{PGFPlotsBackend})
 #   # TODO: display/show the subplot
 # end

@@ -3,7 +3,7 @@
 
 # credit goes to https://github.com/jverzani for contributing to the first draft of this backend implementation
 
-function _initialize_backend(::WinstonPackage; kw...)
+function _initialize_backend(::WinstonBackend; kw...)
   @eval begin
     # ENV["WINSTON_OUTPUT"] = "gtk"
     warn("Winston is no longer supported... many features will likely be broken.")
@@ -33,14 +33,14 @@ end
                             :star5 => "asterisk"
                            )
 
-function _before_add_series(plt::Plot{WinstonPackage})
+function _before_add_series(plt::Plot{WinstonBackend})
   Winston.ghf(plt.o)
 end
 
 # ---------------------------------------------------------------------------
 
 
-function _create_plot(pkg::WinstonPackage; kw...)
+function _create_plot(pkg::WinstonBackend; kw...)
   d = Dict(kw)
   wplt = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
   
@@ -64,7 +64,7 @@ function getWinstonItems(plt::Plot)
   window, canvas, wplt
 end
 
-function _add_series(::WinstonPackage, plt::Plot; kw...)
+function _add_series(::WinstonBackend, plt::Plot; kw...)
   d = Dict(kw)
 
   window, canvas, wplt = getWinstonItems(plt)
@@ -165,7 +165,7 @@ end
     :yscale => :ylog,
   )
 
-function _update_plot(plt::Plot{WinstonPackage}, d::Dict)
+function _update_plot(plt::Plot{WinstonBackend}, d::Dict)
   window, canvas, wplt = getWinstonItems(plt)
   for k in (:xlabel, :ylabel, :title, :xlims, :ylims)
     if haskey(d, k)
@@ -186,11 +186,11 @@ end
 
 # ----------------------------------------------------------------
 
-function createWinstonAnnotationObject(plt::Plot{WinstonPackage}, x, y, val::@compat(AbstractString))
+function createWinstonAnnotationObject(plt::Plot{WinstonBackend}, x, y, val::@compat(AbstractString))
   Winston.text(x, y, val)
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{WinstonPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{WinstonBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     createWinstonAnnotationObject(plt, ann...)
   end
@@ -199,7 +199,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{WinstonPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{WinstonBackend}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
 end
 
@@ -211,14 +211,14 @@ function addWinstonLegend(plt::Plot, wplt)
   end
 end
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{WinstonPackage})
+function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{WinstonBackend})
   window, canvas, wplt = getWinstonItems(plt)
   addWinstonLegend(plt, wplt)
   writemime(io, "image/png", wplt)
 end
 
 
-function Base.display(::PlotsDisplay, plt::Plot{WinstonPackage})
+function Base.display(::PlotsDisplay, plt::Plot{WinstonBackend})
 
   window, canvas, wplt = getWinstonItems(plt)
 
@@ -240,6 +240,6 @@ function Base.display(::PlotsDisplay, plt::Plot{WinstonPackage})
 end
 
 
-function Base.display(::PlotsDisplay, subplt::Subplot{WinstonPackage})
+function Base.display(::PlotsDisplay, subplt::Subplot{WinstonBackend})
   # TODO: display/show the Subplot object
 end

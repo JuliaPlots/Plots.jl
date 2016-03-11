@@ -10,123 +10,124 @@ using Requires
 using FixedSizeArrays
 
 export
-  Plot,
-  Subplot,
-  SubplotLayout,
-  GridLayout,
-  RowsLayout,
-  FlexLayout,
-  AVec,
-  AMat,
+    AbstractPlot,
+    Plot,
+    Subplot,
+    SubplotLayout,
+    GridLayout,
+    RowsLayout,
+    FlexLayout,
+    AVec,
+    AMat,
 
-  plot,
-  plot!,
-  subplot,
-  subplot!,
+    plot,
+    plot!,
+    subplot,
+    subplot!,
 
-  current,
-  default,
-  with,
+    current,
+    default,
+    with,
 
-  scatter,
-  scatter!,
-  bar,
-  bar!,
-  histogram,
-  histogram!,
-  histogram2d,
-  histogram2d!,
-  density,
-  density!,
-  heatmap,
-  heatmap!,
-  hexbin,
-  hexbin!,
-  sticks,
-  sticks!,
-  hline,
-  hline!,
-  vline,
-  vline!,
-  ohlc,
-  ohlc!,
-  pie,
-  pie!,
-  contour,
-  contour!,
-  surface,
-  surface!,
-  wireframe,
-  wireframe!,
-  path3d,
-  path3d!,
-  plot3d,
-  plot3d!,
-  scatter3d,
-  scatter3d!,
-  abline!,
+    scatter,
+    scatter!,
+    bar,
+    bar!,
+    histogram,
+    histogram!,
+    histogram2d,
+    histogram2d!,
+    density,
+    density!,
+    heatmap,
+    heatmap!,
+    hexbin,
+    hexbin!,
+    sticks,
+    sticks!,
+    hline,
+    hline!,
+    vline,
+    vline!,
+    ohlc,
+    ohlc!,
+    pie,
+    pie!,
+    contour,
+    contour!,
+    surface,
+    surface!,
+    wireframe,
+    wireframe!,
+    path3d,
+    path3d!,
+    plot3d,
+    plot3d!,
+    scatter3d,
+    scatter3d!,
+    abline!,
 
-  title!,
-  xlabel!,
-  ylabel!,
-  xlims!,
-  ylims!,
-  xticks!,
-  yticks!,
-  annotate!,
-  xflip!,
-  yflip!,
-  xaxis!,
-  yaxis!,
+    title!,
+    xlabel!,
+    ylabel!,
+    xlims!,
+    ylims!,
+    xticks!,
+    yticks!,
+    annotate!,
+    xflip!,
+    yflip!,
+    xaxis!,
+    yaxis!,
 
-  savefig,
-  png,
-  gui,
+    savefig,
+    png,
+    gui,
 
-  backend,
-  backends,
-  backend_name,
-  aliases,
-  dataframes,
+    backend,
+    backends,
+    backend_name,
+    aliases,
+    dataframes,
 
-  Shape,
-  text,
-  font,
-  stroke,
-  brush,
-  Surface,
-  OHLC,
+    Shape,
+    text,
+    font,
+    stroke,
+    brush,
+    Surface,
+    OHLC,
 
-  colorscheme,
-  ColorScheme,
-  ColorGradient,
-  ColorVector,
-  ColorWrapper,
-  ColorFunction,
-  ColorZFunction,
-  getColor,
-  getColorZ,
+    colorscheme,
+    ColorScheme,
+    ColorGradient,
+    ColorVector,
+    ColorWrapper,
+    ColorFunction,
+    ColorZFunction,
+    getColor,
+    getColorZ,
 
-  debugplots,
+    debugplots,
 
-  supportedArgs,
-  supportedAxes,
-  supportedTypes,
-  supportedStyles,
-  supportedMarkers,
-  subplotSupported,
+    supportedArgs,
+    supportedAxes,
+    supportedTypes,
+    supportedStyles,
+    supportedMarkers,
+    subplotSupported,
 
-  Animation,
-  frame,
-  gif,
-  @animate,
-  @gif,
+    Animation,
+    frame,
+    gif,
+    @animate,
+    @gif,
 
-  # recipes
-  PlotRecipe,
-  # EllipseRecipe,
-  spy
-  # corrplot
+    # recipes
+    PlotRecipe,
+    # EllipseRecipe,
+    spy
+    # corrplot
 
 
 # ---------------------------------------------------------
@@ -185,18 +186,18 @@ scatter3d(args...; kw...)  = plot(args...; kw...,  linetype = :scatter3d)
 scatter3d!(args...; kw...) = plot!(args...; kw..., linetype = :scatter3d)
 
 
-title!(s::@compat(AbstractString); kw...)                 = plot!(; title = s, kw...)
-xlabel!(s::@compat(AbstractString); kw...)                = plot!(; xlabel = s, kw...)
-ylabel!(s::@compat(AbstractString); kw...)                = plot!(; ylabel = s, kw...)
-xlims!{T<:Real,S<:Real}(lims::@compat(Tuple{T,S}); kw...) = plot!(; xlims = lims, kw...)
-ylims!{T<:Real,S<:Real}(lims::@compat(Tuple{T,S}); kw...) = plot!(; ylims = lims, kw...)
+title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)
+xlabel!(s::AbstractString; kw...)                = plot!(; xlabel = s, kw...)
+ylabel!(s::AbstractString; kw...)                = plot!(; ylabel = s, kw...)
+xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; xlims = lims, kw...)
+ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; ylims = lims, kw...)
 xlims!(xmin::Real, xmax::Real; kw...)                     = plot!(; xlims = (xmin,xmax), kw...)
 ylims!(ymin::Real, ymax::Real; kw...)                     = plot!(; ylims = (ymin,ymax), kw...)
 xticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; xticks = v, kw...)
 yticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; yticks = v, kw...)
-xticks!{T<:Real,S<:@compat(AbstractString)}(
+xticks!{T<:Real,S<:AbstractString}(
               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(; xticks = (ticks,labels), kw...)
-yticks!{T<:Real,S<:@compat(AbstractString)}(
+yticks!{T<:Real,S<:AbstractString}(
               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(; yticks = (ticks,labels), kw...)
 annotate!(anns...; kw...)                                 = plot!(; annotation = anns, kw...)
 annotate!{T<:Tuple}(anns::AVec{T}; kw...)                 = plot!(; annotation = anns, kw...)
@@ -205,18 +206,18 @@ yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip
 xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
 
-title!(plt::Plot, s::@compat(AbstractString); kw...)                  = plot!(plt; title = s, kw...)
-xlabel!(plt::Plot, s::@compat(AbstractString); kw...)                 = plot!(plt; xlabel = s, kw...)
-ylabel!(plt::Plot, s::@compat(AbstractString); kw...)                 = plot!(plt; ylabel = s, kw...)
-xlims!{T<:Real,S<:Real}(plt::Plot, lims::@compat(Tuple{T,S}); kw...)  = plot!(plt; xlims = lims, kw...)
-ylims!{T<:Real,S<:Real}(plt::Plot, lims::@compat(Tuple{T,S}); kw...)  = plot!(plt; ylims = lims, kw...)
+title!(plt::Plot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)
+xlabel!(plt::Plot, s::AbstractString; kw...)                 = plot!(plt; xlabel = s, kw...)
+ylabel!(plt::Plot, s::AbstractString; kw...)                 = plot!(plt; ylabel = s, kw...)
+xlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; xlims = lims, kw...)
+ylims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; ylims = lims, kw...)
 xlims!(plt::Plot, xmin::Real, xmax::Real; kw...)                      = plot!(plt; xlims = (xmin,xmax), kw...)
 ylims!(plt::Plot, ymin::Real, ymax::Real; kw...)                      = plot!(plt; ylims = (ymin,ymax), kw...)
 xticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; xticks = ticks, kw...)
 yticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; yticks = ticks, kw...)
-xticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot,
+xticks!{T<:Real,S<:AbstractString}(plt::Plot,
                           ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; xticks = (ticks,labels), kw...)
-yticks!{T<:Real,S<:@compat(AbstractString)}(plt::Plot,
+yticks!{T<:Real,S<:AbstractString}(plt::Plot,
                           ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; yticks = (ticks,labels), kw...)
 annotate!(plt::Plot, anns...; kw...)                                  = plot!(plt; annotation = anns, kw...)
 annotate!{T<:Tuple}(plt::Plot, anns::AVec{T}; kw...)                  = plot!(plt; annotation = anns, kw...)
@@ -236,7 +237,7 @@ function __init__()
   # override IJulia inline display
   if isijulia()
     @eval import IJulia
-    IJulia.display_dict(plt::PlottingObject) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
+    IJulia.display_dict(plt::AbstractPlot) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
   end
 end
 

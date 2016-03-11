@@ -1,7 +1,7 @@
 
 # https://github.com/stevengj/PyPlot.jl
 
-function _initialize_backend(::PyPlotPackage)
+function _initialize_backend(::PyPlotBackend)
   @eval begin
     import PyPlot
     export PyPlot
@@ -149,9 +149,9 @@ function getRightAxis(wrap::PyPlotAxisWrapper)
   wrap.rightax
 end
 
-getLeftAxis(plt::Plot{PyPlotPackage}) = getLeftAxis(plt.o)
-getRightAxis(plt::Plot{PyPlotPackage}) = getRightAxis(plt.o)
-getAxis(plt::Plot{PyPlotPackage}, axis::Symbol) = (axis == :right ? getRightAxis : getLeftAxis)(plt)
+getLeftAxis(plt::Plot{PyPlotBackend}) = getLeftAxis(plt.o)
+getRightAxis(plt::Plot{PyPlotBackend}) = getRightAxis(plt.o)
+getAxis(plt::Plot{PyPlotBackend}, axis::Symbol) = (axis == :right ? getRightAxis : getLeftAxis)(plt)
 
 # left axis is PyPlot.<func>, right axis is "f.axes[0].twinx().<func>"
 function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
@@ -196,7 +196,7 @@ function updateAxisColors(ax, fgcolor)
 end
 
 
-function handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Bool)
+function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::Dict, smooth::Bool)
   if smooth
     xs, ys = regressionXY(d[:x], d[:y])
     ax[:plot](xs, ys,
@@ -206,7 +206,7 @@ function handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Bool)
              )
   end
 end
-handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Real) = handleSmooth(plt, ax, d, true)
+handleSmooth(plt::Plot{PyPlotBackend}, ax, d::Dict, smooth::Real) = handleSmooth(plt, ax, d, true)
 
 
 
@@ -214,10 +214,10 @@ handleSmooth(plt::Plot{PyPlotPackage}, ax, d::Dict, smooth::Real) = handleSmooth
 # makePyPlotCurrent(wrap::PyPlotFigWrapper) = PyPlot.figure(wrap.fig.o[:number])
 # makePyPlotCurrent(wrap::PyPlotAxisWrapper) = nothing #PyPlot.sca(wrap.ax.o)
 makePyPlotCurrent(wrap::PyPlotAxisWrapper) = wrap.ax == nothing ? PyPlot.figure(wrap.fig.o[:number]) : nothing
-makePyPlotCurrent(plt::Plot{PyPlotPackage}) = plt.o == nothing ? nothing : makePyPlotCurrent(plt.o)
+makePyPlotCurrent(plt::Plot{PyPlotBackend}) = plt.o == nothing ? nothing : makePyPlotCurrent(plt.o)
 
 
-function _before_add_series(plt::Plot{PyPlotPackage})
+function _before_add_series(plt::Plot{PyPlotBackend})
   makePyPlotCurrent(plt)
 end
 
@@ -267,7 +267,7 @@ end
 # screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
 # show            # true or false, show the plot (in case you don't want the window to pop up right away)
 
-function _create_plot(pkg::PyPlotPackage; kw...)
+function _create_plot(pkg::PyPlotBackend; kw...)
   # create the figure
   d = Dict(kw)
 
@@ -289,7 +289,7 @@ function _create_plot(pkg::PyPlotPackage; kw...)
 end
 
 
-function _add_series(pkg::PyPlotPackage, plt::Plot; kw...)
+function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
   d = Dict(kw)
 
   # 3D plots have a different underlying Axes object in PyPlot
@@ -508,7 +508,7 @@ end
 # -----------------------------------------------------------------
 
 
-function Base.getindex(plt::Plot{PyPlotPackage}, i::Integer)
+function Base.getindex(plt::Plot{PyPlotBackend}, i::Integer)
   series = plt.seriesargs[i][:serieshandle]
   try
     return series[:get_data]()
@@ -540,7 +540,7 @@ function minmaxseries(ds, vec, axis)
 end
 
 # TODO: this needs to handle one-sided fixed limits
-function set_lims!(plt::Plot{PyPlotPackage}, axis::Symbol)
+function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
   ax = getAxis(plt, axis)
   if plt.plotargs[:xlims] == :auto
     ax[:set_xlim](minmaxseries(plt.seriesargs, :x, axis)...)
@@ -550,7 +550,7 @@ function set_lims!(plt::Plot{PyPlotPackage}, axis::Symbol)
   end
 end
 
-function Base.setindex!{X,Y}(plt::Plot{PyPlotPackage}, xy::Tuple{X,Y}, i::Integer)
+function Base.setindex!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
   d = plt.seriesargs[i]
   series = d[:serieshandle]
   x, y = xy
@@ -565,7 +565,7 @@ function Base.setindex!{X,Y}(plt::Plot{PyPlotPackage}, xy::Tuple{X,Y}, i::Intege
   plt
 end
 
-function Base.setindex!{X,Y,Z}(plt::Plot{PyPlotPackage}, xyz::Tuple{X,Y,Z}, i::Integer)
+function Base.setindex!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
   warn("setindex not implemented for xyz")
   plt
 end
@@ -605,9 +605,9 @@ function addPyPlotTicks(ax, ticks, isx::Bool)
   end
 end
 
-usingRightAxis(plt::Plot{PyPlotPackage}) = any(args -> args[:axis] in (:right,:auto), plt.seriesargs)
+usingRightAxis(plt::Plot{PyPlotBackend}) = any(args -> args[:axis] in (:right,:auto), plt.seriesargs)
 
-function _update_plot(plt::Plot{PyPlotPackage}, d::Dict)
+function _update_plot(plt::Plot{PyPlotBackend}, d::Dict)
   figorax = plt.o
   ax = getLeftAxis(figorax)
   # PyPlot.sca(ax)
@@ -686,13 +686,13 @@ end
 
 # -----------------------------------------------------------------
 
-function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::@compat(AbstractString))
+function createPyPlotAnnotationObject(plt::Plot{PyPlotBackend}, x, y, val::@compat(AbstractString))
   ax = getLeftAxis(plt)
   ax[:annotate](val, xy = (x,y))
 end
 
 
-function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::PlotText)
+function createPyPlotAnnotationObject(plt::Plot{PyPlotBackend}, x, y, val::PlotText)
   ax = getLeftAxis(plt)
   ax[:annotate](val.str,
     xy = (x,y),
@@ -705,7 +705,7 @@ function createPyPlotAnnotationObject(plt::Plot{PyPlotPackage}, x, y, val::PlotT
   )
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{PyPlotPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{PyPlotBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     createPyPlotAnnotationObject(plt, ann...)
   end
@@ -714,7 +714,7 @@ end
 # -----------------------------------------------------------------
 
 # NOTE: pyplot needs to build before
-function _create_subplot(subplt::Subplot{PyPlotPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{PyPlotBackend}, isbefore::Bool)
   l = subplt.layout
 
   # w,h = map(px2inch, getplotargs(subplt,1)[:size])
@@ -743,16 +743,16 @@ end
 
 # this will be called internally, when creating a subplot from existing plots
 # NOTE: if I ever need to "Rebuild a "ubplot from individual Plot's"... this is what I should use!
-function subplot(plts::AVec{Plot{PyPlotPackage}}, layout::SubplotLayout, d::Dict)
+function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::SubplotLayout, d::Dict)
   validateSubplotSupported()
 
   p = length(layout)
   n = sum([plt.n for plt in plts])
 
-  pkg = PyPlotPackage()
-  newplts = Plot{PyPlotPackage}[_create_plot(pkg; subplot=true, plt.plotargs...) for plt in plts]
+  pkg = PyPlotBackend()
+  newplts = Plot{PyPlotBackend}[_create_plot(pkg; subplot=true, plt.plotargs...) for plt in plts]
 
-  subplt = Subplot(nothing, newplts, PyPlotPackage(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
+  subplt = Subplot(nothing, newplts, PyPlotBackend(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
 
   _preprocess_subplot(subplt, d)
   _create_subplot(subplt, true)
@@ -769,7 +769,7 @@ function subplot(plts::AVec{Plot{PyPlotPackage}}, layout::SubplotLayout, d::Dict
 end
 
 
-function _remove_axis(plt::Plot{PyPlotPackage}, isx::Bool)
+function _remove_axis(plt::Plot{PyPlotBackend}, isx::Bool)
   if isx
     plot!(plt, xticks=zeros(0), xlabel="")
   else
@@ -777,7 +777,7 @@ function _remove_axis(plt::Plot{PyPlotPackage}, isx::Bool)
   end
 end
 
-function _expand_limits(lims, plt::Plot{PyPlotPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{PyPlotBackend}, isx::Bool)
   pltlims = plt.o.ax[isx ? :get_xbound : :get_ybound]()
   _expand_limits(lims, pltlims)
 end
@@ -810,14 +810,14 @@ function addPyPlotLegend(plt::Plot, ax)
   end
 end
 
-function finalizePlot(plt::Plot{PyPlotPackage})
+function finalizePlot(plt::Plot{PyPlotBackend})
   ax = getLeftAxis(plt)
   addPyPlotLegend(plt, ax)
   updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color]))
   PyPlot.draw()
 end
 
-function finalizePlot(subplt::Subplot{PyPlotPackage})
+function finalizePlot(subplt::Subplot{PyPlotBackend})
   fig = subplt.o.fig
   for (i,plt) in enumerate(subplt.plts)
     ax = getLeftAxis(plt)
@@ -830,20 +830,20 @@ end
 
 # # allow for writing any supported mime
 # for mime in keys(PyPlot.aggformats)
-#   @eval function Base.writemime(io::IO, m::MIME{symbol{$mime}}, plt::Plot{PyPlotPackage})
+#   @eval function Base.writemime(io::IO, m::MIME{symbol{$mime}}, plt::Plot{PyPlotBackend})
 #     finalizePlot(plt)
 #     writemime(io, m, getfig(plt.o))
 #   end
 # end
 
-# function Base.writemime(io::IO, m::@compat(Union{MIME"image/svg+xml", MIME"image/png"}, plt::Plot{PyPlotPackage})
+# function Base.writemime(io::IO, m::@compat(Union{MIME"image/svg+xml", MIME"image/png"}, plt::Plot{PyPlotBackend})
 #   finalizePlot(plt)
 #   writemime(io, m, getfig(plt.o))
 # end
 
 
 # NOTE: to bring up a GUI window in IJulia, need some extra steps
-function Base.display(::PlotsDisplay, plt::PlottingObject{PyPlotPackage})
+function Base.display(::PlotsDisplay, plt::AbstractPlot{PyPlotBackend})
   finalizePlot(plt)
   if isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
     display(getfig(plt.o))
@@ -858,7 +858,7 @@ function Base.display(::PlotsDisplay, plt::PlottingObject{PyPlotPackage})
 end
 
 
-# function Base.display(::PlotsDisplay, subplt::Subplot{PyPlotPackage})
+# function Base.display(::PlotsDisplay, subplt::Subplot{PyPlotBackend})
 #   finalizePlot(subplt)
 #   PyPlot.ion()
 #   PyPlot.figure(getfig(subplt.o).o[:number])
@@ -869,7 +869,7 @@ end
 
 # # allow for writing any supported mime
 # for mime in (MIME"image/png", MIME"application/pdf", MIME"application/postscript")
-#   @eval function Base.writemime(io::IO, ::$mime, plt::PlottingObject{PyPlotPackage})
+#   @eval function Base.writemime(io::IO, ::$mime, plt::AbstractPlot{PyPlotBackend})
 #     finalizePlot(plt)
 #     writemime(io, $mime(), getfig(plt.o))
 #   end
@@ -886,7 +886,7 @@ const _pyplot_mimeformats = @compat Dict(
 
 
 for (mime, fmt) in _pyplot_mimeformats
-  @eval function Base.writemime(io::IO, ::MIME{symbol($mime)}, plt::PlottingObject{PyPlotPackage})
+  @eval function Base.writemime(io::IO, ::MIME{symbol($mime)}, plt::AbstractPlot{PyPlotBackend})
     finalizePlot(plt)
     fig = getfig(plt.o)
     fig.o["canvas"][:print_figure](io,
@@ -901,7 +901,7 @@ for (mime, fmt) in _pyplot_mimeformats
 end
 
 
-# function Base.writemime(io::IO, m::MIME"image/png", subplt::Subplot{PyPlotPackage})
+# function Base.writemime(io::IO, m::MIME"image/png", subplt::Subplot{PyPlotBackend})
 #   finalizePlot(subplt)
 #   writemime(io, m, getfig(subplt.o))
 # end

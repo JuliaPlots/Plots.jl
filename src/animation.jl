@@ -9,7 +9,7 @@ function Animation()
   Animation(tmpdir, ASCIIString[])
 end
 
-function frame{P<:PlottingObject}(anim::Animation, plt::P=current())
+function frame{P<:AbstractPlot}(anim::Animation, plt::P=current())
   i = length(anim.frames) + 1
   filename = @sprintf("%06d.png", i)
   png(plt, joinpath(anim.dir, filename))

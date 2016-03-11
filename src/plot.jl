@@ -1,8 +1,8 @@
 
 type CurrentPlot
-  nullableplot::Nullable{PlottingObject}
+  nullableplot::Nullable{AbstractPlot}
 end
-const CURRENT_PLOT = CurrentPlot(Nullable{PlottingObject}())
+const CURRENT_PLOT = CurrentPlot(Nullable{AbstractPlot}())
 
 isplotnull() = isnull(CURRENT_PLOT.nullableplot)
 
@@ -12,7 +12,7 @@ function current()
   end
   get(CURRENT_PLOT.nullableplot)
 end
-current(plot::PlottingObject) = (CURRENT_PLOT.nullableplot = Nullable(plot))
+current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = Nullable(plot))
 
 # ---------------------------------------------------------
 
@@ -67,11 +67,6 @@ function  plot!(args...; kw...)
     return plot(args...; kw...)
   end
   plot!(current(), args...; kw...)
-end
-
-# not allowed:
-function plot!(subplt::Subplot, args...; kw...)
-  error("Can't call plot! on a Subplot!")
 end
 
 # this adds to a specific plot... most plot commands will flow through here
@@ -246,7 +241,7 @@ convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}, d::Dict) = Any[v], no
 function convertToAnyVector{T<:Real}(v::AMat{T}, d::Dict)
   if all3D(d)
     Any[Surface(v)]
-  else  
+  else
     Any[v[:,i] for i in 1:size(v,2)]
   end, nothing
 end
@@ -298,7 +293,7 @@ end
 
 # create n=max(mx,my) series arguments. the shorter list is cycled through
 # note: everything should flow through this
-function createKWargsList(plt::PlottingObject, x, y; kw...)
+function createKWargsList(plt::AbstractPlot, x, y; kw...)
   kwdict = Dict(kw)
   xs, xmeta = convertToAnyVector(x, kwdict)
   ys, ymeta = convertToAnyVector(y, kwdict)
@@ -370,7 +365,7 @@ function createKWargsList(plt::PlottingObject, x, y; kw...)
 end
 
 # handle grouping
-function createKWargsList(plt::PlottingObject, groupby::GroupBy, args...; kw...)
+function createKWargsList(plt::AbstractPlot, groupby::GroupBy, args...; kw...)
   ret = Any[]
   for (i,glab) in enumerate(groupby.groupLabels)
     # TODO: don't automatically overwrite labels
@@ -384,12 +379,12 @@ function createKWargsList(plt::PlottingObject, groupby::GroupBy, args...; kw...)
 end
 
 # pass it off to the x/y version
-function createKWargsList(plt::PlottingObject, y; kw...)
+function createKWargsList(plt::AbstractPlot, y; kw...)
   createKWargsList(plt, nothing, y; kw...)
 end
 
 # 3d line or scatter
-function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zvec::AVec; kw...)
+function createKWargsList(plt::AbstractPlot, x::AVec, y::AVec, zvec::AVec; kw...)
   d = Dict(kw)
   if !(get(d, :linetype, :none) in _3dTypes)
     d[:linetype] = :path3d
@@ -397,7 +392,7 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zvec::AVec; kw.
   createKWargsList(plt, x, y; z=zvec, d...)
 end
 
-function createKWargsList{T<:Real}(plt::PlottingObject, z::AMat{T}; kw...)
+function createKWargsList{T<:Real}(plt::AbstractPlot, z::AMat{T}; kw...)
   d = Dict(kw)
   if all3D(d)
     n,m = size(z)
@@ -408,7 +403,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, z::AMat{T}; kw...)
 end
 
 # contours or surfaces... function grid
-function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zf::Function; kw...)
+function createKWargsList(plt::AbstractPlot, x::AVec, y::AVec, zf::Function; kw...)
   # only allow sorted x/y for now
   # TODO: auto sort x/y/z properly
   @assert x == sort(x)
@@ -418,7 +413,7 @@ function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, zf::Function; k
 end
 
 # contours or surfaces... matrix grid
-function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::AMat{T}; kw...)
+function createKWargsList{T<:Real}(plt::AbstractPlot, x::AVec, y::AVec, zmat::AMat{T}; kw...)
   # only allow sorted x/y for now
   # TODO: auto sort x/y/z properly
   @assert x == sort(x)
@@ -436,7 +431,7 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AVec, y::AVec, zmat::
 end
 
 # contours or surfaces... general x, y grid
-function createKWargsList{T<:Real}(plt::PlottingObject, x::AMat{T}, y::AMat{T}, zmat::AMat{T}; kw...)
+function createKWargsList{T<:Real}(plt::AbstractPlot, x::AMat{T}, y::AMat{T}, zmat::AMat{T}; kw...)
   @assert size(zmat) == size(x) == size(y)
   surf = Surface(convert(Matrix{Float64}, zmat))
   # surf = Array(Any,1,1)
@@ -450,26 +445,26 @@ function createKWargsList{T<:Real}(plt::PlottingObject, x::AMat{T}, y::AMat{T}, 
 end
 
 
-function createKWargsList(plt::PlottingObject, surf::Surface; kw...)
+function createKWargsList(plt::AbstractPlot, surf::Surface; kw...)
   createKWargsList(plt, 1:size(surf.surf,1), 1:size(surf.surf,2), convert(Matrix{Float64}, surf.surf); kw...)
 end
 
-function createKWargsList(plt::PlottingObject, x::AVec, y::AVec, surf::Surface; kw...)
+function createKWargsList(plt::AbstractPlot, x::AVec, y::AVec, surf::Surface; kw...)
   createKWargsList(plt, x, y, convert(Matrix{Float64}, surf.surf); kw...)
 end
 
-function createKWargsList(plt::PlottingObject, f::FuncOrFuncs; kw...)
+function createKWargsList(plt::AbstractPlot, f::FuncOrFuncs; kw...)
   createKWargsList(plt, f, xmin(plt), xmax(plt); kw...)
 end
 
 # list of functions
-function createKWargsList(plt::PlottingObject, f::FuncOrFuncs, x; kw...)
+function createKWargsList(plt::AbstractPlot, f::FuncOrFuncs, x; kw...)
   @assert !(typeof(x) <: FuncOrFuncs)  # otherwise we'd hit infinite recursion here
   createKWargsList(plt, x, f; kw...)
 end
 
 # special handling... xmin/xmax with function(s)
-function createKWargsList(plt::PlottingObject, f::FuncOrFuncs, xmin::Real, xmax::Real; kw...)
+function createKWargsList(plt::AbstractPlot, f::FuncOrFuncs, xmin::Real, xmax::Real; kw...)
   width = get(plt.plotargs, :size, (100,))[1]
   x = collect(linspace(xmin, xmax, width))  # we don't need more than the width
   createKWargsList(plt, x, f; kw...)
@@ -479,27 +474,27 @@ mapFuncOrFuncs(f::Function, u::AVec) = map(f, u)
 mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
 
 # special handling... xmin/xmax with parametric function(s)
-createKWargsList{T<:Real}(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T}; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
-createKWargsList{T<:Real}(plt::PlottingObject, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
-createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, linspace(umin, umax, numPoints); kw...)
+createKWargsList{T<:Real}(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T}; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
+createKWargsList{T<:Real}(plt::AbstractPlot, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u); kw...)
+createKWargsList(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, linspace(umin, umax, numPoints); kw...)
 
 # special handling... 3D parametric function(s)
-createKWargsList{T<:Real}(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec{T}; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u); kw...)
-createKWargsList{T<:Real}(plt::PlottingObject, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u); kw...)
-createKWargsList(plt::PlottingObject, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, fz, linspace(umin, umax, numPoints); kw...)
+createKWargsList{T<:Real}(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec{T}; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u); kw...)
+createKWargsList{T<:Real}(plt::AbstractPlot, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs; kw...) = createKWargsList(plt, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u); kw...)
+createKWargsList(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Real, umax::Real, numPoints::Int = 1000; kw...) = createKWargsList(plt, fx, fy, fz, linspace(umin, umax, numPoints); kw...)
 
 # (x,y) tuples
-function createKWargsList{R1<:Real,R2<:Real}(plt::PlottingObject, xy::AVec{Tuple{R1,R2}}; kw...)
+function createKWargsList{R1<:Real,R2<:Real}(plt::AbstractPlot, xy::AVec{Tuple{R1,R2}}; kw...)
   createKWargsList(plt, unzip(xy)...; kw...)
 end
-function createKWargsList{R1<:Real,R2<:Real}(plt::PlottingObject, xy::Tuple{R1,R2}; kw...)
+function createKWargsList{R1<:Real,R2<:Real}(plt::AbstractPlot, xy::Tuple{R1,R2}; kw...)
   createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
 end
 
 
 
 # special handling... no args... 1 series
-function createKWargsList(plt::PlottingObject; kw...)
+function createKWargsList(plt::AbstractPlot; kw...)
   d = Dict(kw)
   if !haskey(d, :y)
     # assume we just want to create an empty plot object which can be added to later
@@ -522,11 +517,11 @@ end
   unzip{T}(x::AVec{FixedSizeArrays.Vec{2,T}}) = T[xi[1] for xi in x], T[xi[2] for xi in x]
   unzip{T}(x::FixedSizeArrays.Vec{2,T}) = T[x[1]], T[x[2]]
 
-  function createKWargsList{T<:Real}(plt::PlottingObject, xy::AVec{FixedSizeArrays.Vec{2,T}}; kw...)
+  function createKWargsList{T<:Real}(plt::AbstractPlot, xy::AVec{FixedSizeArrays.Vec{2,T}}; kw...)
     createKWargsList(plt, unzip(xy)...; kw...)
   end
 
-  function createKWargsList{T<:Real}(plt::PlottingObject, xy::FixedSizeArrays.Vec{2,T}; kw...)
+  function createKWargsList{T<:Real}(plt::AbstractPlot, xy::FixedSizeArrays.Vec{2,T}; kw...)
     createKWargsList(plt, [xy[1]], [xy[2]]; kw...)
   end
 
@@ -538,7 +533,7 @@ end
 
 @require DataFrames begin
 
-  function createKWargsList(plt::PlottingObject, df::DataFrames.AbstractDataFrame, args...; kw...)
+  function createKWargsList(plt::AbstractPlot, df::DataFrames.AbstractDataFrame, args...; kw...)
     createKWargsList(plt, args...; kw..., dataframe = df)
   end
 

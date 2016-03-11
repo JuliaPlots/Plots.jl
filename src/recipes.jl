@@ -3,7 +3,7 @@
 # TODO: there should be a distinction between an object that will manage a full plot, vs a component of a plot.
 # the PlotRecipe as currently implemented is more of a "custom component"
 # a recipe should fully describe the plotting command(s) and call them, likewise for updating. 
-#   actually... maybe those should explicitly derive from PlottingObject???
+#   actually... maybe those should explicitly derive from AbstractPlot???
 
 abstract PlotRecipe
 

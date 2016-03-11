@@ -1,7 +1,7 @@
 
 # https://plot.ly/javascript/getting-started
 
-function _initialize_backend(::PlotlyPackage; kw...)
+function _initialize_backend(::PlotlyBackend; kw...)
   @eval begin
     import JSON
     JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
@@ -33,7 +33,7 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::PlotlyPackage; kw...)
+function _create_plot(pkg::PlotlyBackend; kw...)
   d = Dict{Symbol,Any}(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
@@ -41,14 +41,14 @@ function _create_plot(pkg::PlotlyPackage; kw...)
 end
 
 
-function _add_series(::PlotlyPackage, plt::Plot; kw...)
+function _add_series(::PlotlyBackend, plt::Plot; kw...)
   d = Dict{Symbol,Any}(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
   plt
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{PlotlyPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{PlotlyBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   # set or add to the annotation_list
   if haskey(plt.plotargs, :annotation_list)
     append!(plt.plotargs[:annotation_list], anns)
@@ -59,26 +59,26 @@ end
 
 # ----------------------------------------------------------------
 
-function _before_update_plot(plt::Plot{PlotlyPackage})
+function _before_update_plot(plt::Plot{PlotlyBackend})
 end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{PlotlyPackage}, d::Dict)
+function _update_plot(plt::Plot{PlotlyBackend}, d::Dict)
 end
 
-function _update_plot_pos_size(plt::PlottingObject{PlotlyPackage}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{PlotlyBackend}, d::Dict)
 end
 
 # ----------------------------------------------------------------
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{PlotlyPackage}, i::Int)
+function Base.getindex(plt::Plot{PlotlyBackend}, i::Int)
   d = plt.seriesargs[i]
   d[:x], d[:y]
 end
 
-function Base.setindex!(plt::Plot{PlotlyPackage}, xy::Tuple, i::Integer)
+function Base.setindex!(plt::Plot{PlotlyBackend}, xy::Tuple, i::Integer)
   d = plt.seriesargs[i]
   d[:x], d[:y] = xy
   plt
@@ -86,16 +86,16 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{PlotlyPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{PlotlyBackend}, isbefore::Bool)
   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
   true
 end
 
-function _expand_limits(lims, plt::Plot{PlotlyPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{PlotlyBackend}, isx::Bool)
   # TODO: call expand limits for each plot data
 end
 
-function _remove_axis(plt::Plot{PlotlyPackage}, isx::Bool)
+function _remove_axis(plt::Plot{PlotlyBackend}, isx::Bool)
   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
 end
 
@@ -206,7 +206,7 @@ function plotlyaxis(d::Dict, isx::Bool)
   ax
 end
 
-# function get_plot_json(plt::Plot{PlotlyPackage})
+# function get_plot_json(plt::Plot{PlotlyBackend})
 #   d = plt.plotargs
 function plotly_layout(d::Dict)
   d_out = Dict{Symbol,Any}()
@@ -244,7 +244,7 @@ function plotly_layout(d::Dict)
   d_out
 end
 
-function get_plot_json(plt::Plot{PlotlyPackage})
+function get_plot_json(plt::Plot{PlotlyBackend})
   JSON.json(plotly_layout(plt.plotargs))
 end
 
@@ -410,11 +410,11 @@ function plotly_series(d::Dict; plot_index = nothing)
 end
 
 # get a list of dictionaries, each representing the series params
-function get_series_json(plt::Plot{PlotlyPackage})
+function get_series_json(plt::Plot{PlotlyBackend})
   JSON.json(map(plotly_series, plt.seriesargs))
 end
 
-function get_series_json(subplt::Subplot{PlotlyPackage})
+function get_series_json(subplt::Subplot{PlotlyBackend})
   ds = Dict[]
   for (i,plt) in enumerate(subplt.plts)
     for d in plt.seriesargs
@@ -426,11 +426,11 @@ end
 
 # ----------------------------------------------------------------
 
-function html_head(plt::PlottingObject{PlotlyPackage})
+function html_head(plt::AbstractPlot{PlotlyBackend})
   "<script src=\"$(Pkg.dir("Plots","deps","plotly-latest.min.js"))\"></script>"
 end
 
-function html_body(plt::Plot{PlotlyPackage}, style = nothing)
+function html_body(plt::Plot{PlotlyBackend}, style = nothing)
   if style == nothing
     w, h = plt.plotargs[:size]
     style = "width:$(w)px;height:$(h)px;"
@@ -447,7 +447,7 @@ end
 
 
 
-function html_body(subplt::Subplot{PlotlyPackage})
+function html_body(subplt::Subplot{PlotlyBackend})
   w, h = subplt.plts[1].plotargs[:size]
   html = ["<div style=\"width:$(w)px;height:$(h)px;\">"]
   nr = nrows(subplt.layout)
@@ -474,18 +474,18 @@ end
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::PlottingObject{PlotlyPackage})
+function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{PlotlyBackend})
   warn("todo: png")
 end
 
-function Base.writemime(io::IO, ::MIME"text/html", plt::PlottingObject{PlotlyPackage})
+function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot{PlotlyBackend})
   write(io, html_head(plt) * html_body(plt))
 end
 
-function Base.display(::PlotsDisplay, plt::PlottingObject{PlotlyPackage})
+function Base.display(::PlotsDisplay, plt::AbstractPlot{PlotlyBackend})
   standalone_html_window(plt)
 end
 
-# function Base.display(::PlotsDisplay, plt::Subplot{PlotlyPackage})
+# function Base.display(::PlotsDisplay, plt::Subplot{PlotlyBackend})
 #   # TODO: display/show the subplot
 # end

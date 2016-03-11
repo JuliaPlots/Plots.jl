@@ -1,7 +1,7 @@
 
 # https://github.com/tbreloff/Qwt.jl
 
-function _initialize_backend(::QwtPackage; kw...)
+function _initialize_backend(::QwtBackend; kw...)
   @eval begin
     warn("Qwt is no longer supported... many features will likely be broken.")
     import Qwt
@@ -38,7 +38,7 @@ function replaceQwtAliases(d, s)
   end
 end
 
-function adjustQwtKeywords(plt::Plot{QwtPackage}, iscreating::Bool; kw...)
+function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
   d = Dict(kw)
   lt = d[:linetype]
   if lt == :scatter
@@ -77,7 +77,7 @@ function adjustQwtKeywords(plt::Plot{QwtPackage}, iscreating::Bool; kw...)
   d
 end
 
-function _create_plot(pkg::QwtPackage; kw...)
+function _create_plot(pkg::QwtBackend; kw...)
   d = Dict(kw)
   fixcolors(d)
   dumpdict(d,"\n\n!!! plot")
@@ -86,7 +86,7 @@ function _create_plot(pkg::QwtPackage; kw...)
   plt
 end
 
-function _add_series(::QwtPackage, plt::Plot; kw...)
+function _add_series(::QwtBackend, plt::Plot; kw...)
   d = adjustQwtKeywords(plt, false; kw...)
   fixcolors(d)
   dumpdict(d,"\n\n!!! plot!")
@@ -98,7 +98,7 @@ end
 
 # ----------------------------------------------------------------
 
-function updateLimsAndTicks(plt::Plot{QwtPackage}, d::Dict, isx::Bool)
+function updateLimsAndTicks(plt::Plot{QwtBackend}, d::Dict, isx::Bool)
   lims = get(d, isx ? :xlims : :ylims, nothing)
   ticks = get(d, isx ? :xticks : :yticks, nothing)
   w = plt.o.widget
@@ -138,7 +138,7 @@ function updateLimsAndTicks(plt::Plot{QwtPackage}, d::Dict, isx::Bool)
 end
 
 
-function _update_plot(plt::Plot{QwtPackage}, d::Dict)
+function _update_plot(plt::Plot{QwtBackend}, d::Dict)
   haskey(d, :title) && Qwt.title(plt.o, d[:title])
   haskey(d, :xlabel) && Qwt.xlabel(plt.o, d[:xlabel])
   haskey(d, :ylabel) && Qwt.ylabel(plt.o, d[:ylabel])
@@ -146,7 +146,7 @@ function _update_plot(plt::Plot{QwtPackage}, d::Dict)
   updateLimsAndTicks(plt, d, false)
 end
 
-function _update_plot_pos_size(plt::PlottingObject{QwtPackage}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{QwtBackend}, d::Dict)
   haskey(d, :size) && Qwt.resizewidget(plt.o, d[:size]...)
   haskey(d, :pos) && Qwt.movewidget(plt.o, d[:pos]...)
 end
@@ -155,7 +155,7 @@ end
 # ----------------------------------------------------------------
 
         # curve.setPen(Qt.QPen(Qt.QColor(color), linewidth, self.getLineStyle(linestyle)))
-function addLineMarker(plt::Plot{QwtPackage}, d::Dict)
+function addLineMarker(plt::Plot{QwtBackend}, d::Dict)
   for yi in d[:y]
     marker = Qwt.QWT.QwtPlotMarker()
     ishorizontal = (d[:linetype] == :hline)
@@ -189,7 +189,7 @@ function createQwtAnnotation(plt::Plot, x, y, val::@compat(AbstractString))
   marker[:attach](plt.o.widget)
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{QwtPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{QwtBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     createQwtAnnotation(plt, ann...)
   end
@@ -199,12 +199,12 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{QwtPackage}, i::Int)
+function Base.getindex(plt::Plot{QwtBackend}, i::Int)
   series = plt.o.lines[i]
   series.x, series.y
 end
 
-function Base.setindex!(plt::Plot{QwtPackage}, xy::Tuple, i::Integer)
+function Base.setindex!(plt::Plot{QwtBackend}, xy::Tuple, i::Integer)
   series = plt.o.lines[i]
   series.x, series.y = xy
   plt
@@ -213,12 +213,12 @@ end
 
 # -------------------------------
 
-# savepng(::QwtPackage, plt::PlottingObject, fn::@compat(AbstractString), args...) = Qwt.savepng(plt.o, fn)
+# savepng(::QwtBackend, plt::AbstractPlot, fn::@compat(AbstractString), args...) = Qwt.savepng(plt.o, fn)
 
 # -------------------------------
 
 # create the underlying object (each backend will do this differently)
-function _create_subplot(subplt::Subplot{QwtPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{QwtBackend}, isbefore::Bool)
   isbefore && return false
   i = 0
   rows = Any[]
@@ -240,26 +240,26 @@ function _create_subplot(subplt::Subplot{QwtPackage}, isbefore::Bool)
   true
 end
 
-function _expand_limits(lims, plt::Plot{QwtPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{QwtBackend}, isx::Bool)
   for series in plt.o.lines
     _expand_limits(lims, isx ? series.x : series.y)
   end
 end
 
 
-function _remove_axis(plt::Plot{QwtPackage}, isx::Bool)
+function _remove_axis(plt::Plot{QwtBackend}, isx::Bool)
 end
 
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{QwtPackage})
+function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{QwtBackend})
   Qwt.refresh(plt.o)
   Qwt.savepng(plt.o, "/tmp/dfskjdhfkh.png")
   write(io, readall("/tmp/dfskjdhfkh.png"))
 end
 
-function Base.writemime(io::IO, ::MIME"image/png", subplt::Subplot{QwtPackage})
+function Base.writemime(io::IO, ::MIME"image/png", subplt::Subplot{QwtBackend})
   for plt in subplt.plts
     Qwt.refresh(plt.o)
   end
@@ -268,12 +268,12 @@ function Base.writemime(io::IO, ::MIME"image/png", subplt::Subplot{QwtPackage})
 end
 
 
-function Base.display(::PlotsDisplay, plt::Plot{QwtPackage})
+function Base.display(::PlotsDisplay, plt::Plot{QwtBackend})
   Qwt.refresh(plt.o)
   Qwt.showwidget(plt.o)
 end
 
-function Base.display(::PlotsDisplay, subplt::Subplot{QwtPackage})
+function Base.display(::PlotsDisplay, subplt::Subplot{QwtBackend})
   for plt in subplt.plts
     Qwt.refresh(plt.o)
   end

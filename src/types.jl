@@ -4,14 +4,14 @@ typealias AMat AbstractMatrix
 
 immutable PlotsDisplay <: Display end
 
-abstract PlottingPackage
-abstract PlottingObject{T<:PlottingPackage}
+abstract AbstractBackend
+abstract AbstractPlot{T<:AbstractBackend}
 
 # -----------------------------------------------------------
 # Plot
 # -----------------------------------------------------------
 
-type Plot{T<:PlottingPackage} <: PlottingObject{T}
+type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     o                        # the backend's plot object
     backend::T               # the backend type
     n::Int                   # number of series
@@ -58,7 +58,7 @@ typealias IntOrFlex Union{Int,FlexLayout}
 # Subplot
 # -----------------------------------------------------------
 
-type Subplot{T<:PlottingPackage, L<:SubplotLayout} <: PlottingObject{T}
+type Subplot{T<:AbstractBackend, L<:SubplotLayout} <: AbstractPlot{T}
     o                           # the underlying object
     plts::Vector{Plot{T}}          # the individual plots
     backend::T

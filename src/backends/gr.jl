@@ -1,7 +1,7 @@
 
 # https://github.com/jheinen/GR.jl
 
-function _initialize_backend(::GRPackage; kw...)
+function _initialize_backend(::GRBackend; kw...)
   @eval begin
     import GR
     export GR
@@ -89,7 +89,7 @@ function gr_polyline(x, y)
   end
 end
 
-function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
+function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
                     subplot=[0, 1, 0, 1])
   d = plt.plotargs
 
@@ -666,7 +666,7 @@ function gr_display(plt::Plot{GRPackage}, clear=true, update=true,
   update && GR.updatews()
 end
 
-function gr_display(subplt::Subplot{GRPackage})
+function gr_display(subplt::Subplot{GRBackend})
   clear = true
   update = false
   l = enumerate(subplt.layout)
@@ -682,18 +682,18 @@ function gr_display(subplt::Subplot{GRPackage})
   end
 end
 
-function _create_plot(pkg::GRPackage; kw...)
+function _create_plot(pkg::GRBackend; kw...)
   d = Dict(kw)
   Plot(nothing, pkg, 0, d, Dict[])
 end
 
-function _add_series(::GRPackage, plt::Plot; kw...)
+function _add_series(::GRBackend, plt::Plot; kw...)
   d = Dict(kw)
   push!(plt.seriesargs, d)
   plt
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{GRPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{GRBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   if haskey(plt.plotargs, :anns)
     append!(plt.plotargs[:anns], anns)
   else
@@ -703,26 +703,26 @@ end
 
 # ----------------------------------------------------------------
 
-function _before_update_plot(plt::Plot{GRPackage})
+function _before_update_plot(plt::Plot{GRBackend})
 end
 
-function _update_plot(plt::Plot{GRPackage}, d::Dict)
+function _update_plot(plt::Plot{GRBackend}, d::Dict)
   for k in (:title, :xlabel, :ylabel)
     haskey(d, k) && (plt.plotargs[k] = d[k])
   end
 end
 
-function _update_plot_pos_size(plt::PlottingObject{GRPackage}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{GRBackend}, d::Dict)
 end
 
 # ----------------------------------------------------------------
 
-function Base.getindex(plt::Plot{GRPackage}, i::Int)
+function Base.getindex(plt::Plot{GRBackend}, i::Int)
   d = plt.seriesargs[i]
   d[:x], d[:y]
 end
 
-function Base.setindex!(plt::Plot{GRPackage}, xy::Tuple, i::Integer)
+function Base.setindex!(plt::Plot{GRBackend}, xy::Tuple, i::Integer)
   d = plt.seriesargs[i]
   d[:x], d[:y] = xy
   plt
@@ -730,21 +730,21 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{GRPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{GRBackend}, isbefore::Bool)
   true
 end
 
-function _expand_limits(lims, plt::Plot{GRPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{GRBackend}, isx::Bool)
   # TODO: call expand limits for each plot data
 end
 
-function _remove_axis(plt::Plot{GRPackage}, isx::Bool)
+function _remove_axis(plt::Plot{GRBackend}, isx::Bool)
   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
 end
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{GRPackage})
+function Base.writemime(io::IO, m::MIME"image/png", plt::AbstractPlot{GRBackend})
   GR.emergencyclosegks()
   ENV["GKS_WSTYPE"] = "png"
   gr_display(plt)
@@ -752,7 +752,7 @@ function Base.writemime(io::IO, m::MIME"image/png", plt::PlottingObject{GRPackag
   write(io, readall("gks.png"))
 end
 
-function Base.writemime(io::IO, m::MIME"image/svg+xml", plt::PlottingObject{GRPackage})
+function Base.writemime(io::IO, m::MIME"image/svg+xml", plt::AbstractPlot{GRBackend})
   GR.emergencyclosegks()
   ENV["GKS_WSTYPE"] = "svg"
   gr_display(plt)
@@ -760,11 +760,11 @@ function Base.writemime(io::IO, m::MIME"image/svg+xml", plt::PlottingObject{GRPa
   write(io, readall("gks.svg"))
 end
 
-function Base.writemime(io::IO, m::MIME"text/html", plt::PlottingObject{GRPackage})
+function Base.writemime(io::IO, m::MIME"text/html", plt::AbstractPlot{GRBackend})
   writemime(io, MIME("image/svg+xml"), plt)
 end
 
-function Base.writemime(io::IO, m::MIME"application/pdf", plt::PlottingObject{GRPackage})
+function Base.writemime(io::IO, m::MIME"application/pdf", plt::AbstractPlot{GRBackend})
   GR.emergencyclosegks()
   ENV["GKS_WSTYPE"] = "pdf"
   gr_display(plt)
@@ -772,7 +772,7 @@ function Base.writemime(io::IO, m::MIME"application/pdf", plt::PlottingObject{GR
   write(io, readall("gks.pdf"))
 end
 
-function Base.writemime(io::IO, m::MIME"application/postscript", plt::PlottingObject{GRPackage})
+function Base.writemime(io::IO, m::MIME"application/postscript", plt::AbstractPlot{GRBackend})
   GR.emergencyclosegks()
   ENV["GKS_WSTYPE"] = "ps"
   gr_display(plt)
@@ -780,11 +780,11 @@ function Base.writemime(io::IO, m::MIME"application/postscript", plt::PlottingOb
   write(io, readall("gks.ps"))
 end
 
-function Base.display(::PlotsDisplay, plt::Plot{GRPackage})
+function Base.display(::PlotsDisplay, plt::Plot{GRBackend})
   gr_display(plt)
 end
 
-function Base.display(::PlotsDisplay, plt::Subplot{GRPackage})
+function Base.display(::PlotsDisplay, plt::Subplot{GRBackend})
   gr_display(plt)
   true
 end

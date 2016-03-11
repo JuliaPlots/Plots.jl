@@ -1,7 +1,7 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
-function _initialize_backend(::UnicodePlotsPackage; kw...)
+function _initialize_backend(::UnicodePlotsBackend; kw...)
   @eval begin
     import UnicodePlots
     export UnicodePlots
@@ -111,7 +111,7 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool, xlim, ylim)
 end
 
 
-function handlePlotColors(::UnicodePlotsPackage, d::Dict)
+function handlePlotColors(::UnicodePlotsBackend, d::Dict)
   # TODO: something special for unicodeplots, since it doesn't take kindly to people messing with its color palette
   d[:color_palette] = [RGB(0,0,0)]
 end
@@ -119,7 +119,7 @@ end
 # -------------------------------
 
 
-function _create_plot(pkg::UnicodePlotsPackage; kw...)
+function _create_plot(pkg::UnicodePlotsBackend; kw...)
   plt = Plot(nothing, pkg, 0, Dict(kw), Dict[])
 
   # do we want to give a new default size?
@@ -130,7 +130,7 @@ function _create_plot(pkg::UnicodePlotsPackage; kw...)
   plt
 end
 
-function _add_series(::UnicodePlotsPackage, plt::Plot; kw...)
+function _add_series(::UnicodePlotsBackend, plt::Plot; kw...)
   d = Dict(kw)
   if d[:linetype] in (:sticks, :bar)
     d = barHack(; d...)
@@ -142,7 +142,7 @@ function _add_series(::UnicodePlotsPackage, plt::Plot; kw...)
 end
 
 
-function _update_plot(plt::Plot{UnicodePlotsPackage}, d::Dict)
+function _update_plot(plt::Plot{UnicodePlotsBackend}, d::Dict)
   for k in (:title, :xlabel, :ylabel, :xlims, :ylims)
     if haskey(d, k)
       plt.plotargs[k] = d[k]
@@ -154,7 +154,7 @@ end
 # -------------------------------
 
 # since this is such a hack, it's only callable using `png`... should error during normal `writemime`
-function png(plt::PlottingObject{UnicodePlotsPackage}, fn::@compat(AbstractString))
+function png(plt::AbstractPlot{UnicodePlotsBackend}, fn::@compat(AbstractString))
   fn = addExtension(fn, "png")
 
   # make some whitespace and show the plot
@@ -182,20 +182,20 @@ end
 
 # we don't do very much for subplots... just stack them vertically
 
-function _create_subplot(subplt::Subplot{UnicodePlotsPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{UnicodePlotsBackend}, isbefore::Bool)
   isbefore && return false
   true
 end
 
 
-function Base.display(::PlotsDisplay, plt::Plot{UnicodePlotsPackage})
+function Base.display(::PlotsDisplay, plt::Plot{UnicodePlotsBackend})
   rebuildUnicodePlot!(plt)
   show(plt.o)
 end
 
 
 
-function Base.display(::PlotsDisplay, subplt::Subplot{UnicodePlotsPackage})
+function Base.display(::PlotsDisplay, subplt::Subplot{UnicodePlotsBackend})
   for plt in subplt.plts
     gui(plt)
   end

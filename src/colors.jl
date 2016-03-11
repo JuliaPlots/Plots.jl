@@ -354,7 +354,7 @@ webcolor(c, α) = webcolor(convertColor(getColor(c), α))
 # TODO: allow the setting of the algorithm, either by passing a symbol (:colordiff, :fixed, etc) or a function? 
 
 # function getBackgroundRGBColor(c, d::Dict)
-function handlePlotColors(::PlottingPackage, d::Dict)
+function handlePlotColors(::AbstractBackend, d::Dict)
   if :background_color in supportedArgs()
     bgcolor = convertColor(d[:background_color])
   else

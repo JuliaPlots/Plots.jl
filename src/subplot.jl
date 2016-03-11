@@ -127,7 +127,7 @@ function subplot{P,I<:Integer}(pltsPerRow::AVec{I}, plt1::Plot{P}, plts::Plot{P}
 end
 
 # this will be called internally
-function subplot{P<:PlottingPackage}(plts::AVec{Plot{P}}, layout::SubplotLayout, d::Dict)
+function subplot{P<:AbstractBackend}(plts::AVec{Plot{P}}, layout::SubplotLayout, d::Dict)
   validateSubplotSupported()
   p = length(layout)
   n = sum([plt.n for plt in plts])
@@ -278,6 +278,11 @@ function subplot!(subplt::Subplot, args...; kw...)
   subplt
 end
 
+
+# not allowed:
+function plot!(subplt::Subplot, args...; kw...)
+  error("Can't call plot! on a Subplot!")
+end
 
 
 function _add_series_subplot(plt::Plot, args...; kw...)

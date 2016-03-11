@@ -1,11 +1,11 @@
 
-supportedAxes(::PlottingPackage) = [:left]
-supportedTypes(::PlottingPackage) = []
-supportedStyles(::PlottingPackage) = [:solid]
-supportedMarkers(::PlottingPackage) = [:none]
-supportedScales(::PlottingPackage) = [:identity]
-subplotSupported(::PlottingPackage) = false
-stringsSupported(::PlottingPackage) = false
+supportedAxes(::AbstractBackend) = [:left]
+supportedTypes(::AbstractBackend) = []
+supportedStyles(::AbstractBackend) = [:solid]
+supportedMarkers(::AbstractBackend) = [:none]
+supportedScales(::AbstractBackend) = [:identity]
+subplotSupported(::AbstractBackend) = false
+stringsSupported(::AbstractBackend) = false
 
 supportedAxes() = supportedAxes(backend())
 supportedTypes() = supportedTypes(backend())
@@ -19,7 +19,7 @@ stringsSupported() = stringsSupported(backend())
 # --------------------------------------------------------------------------------------
 
 
-supportedArgs(::GadflyPackage) = [
+supportedArgs(::GadflyBackend) = [
     :annotation,
     # :axis,
     :background_color,
@@ -78,32 +78,32 @@ supportedArgs(::GadflyPackage) = [
     # :surface,
     :levels,
   ]
-supportedAxes(::GadflyPackage) = [:auto, :left]
-supportedTypes(::GadflyPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
+supportedAxes(::GadflyBackend) = [:auto, :left]
+supportedTypes(::GadflyBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
                                    :scatter, :hist2d, :hexbin, :hist, :bar,
                                    :hline, :vline, :contour]
-supportedStyles(::GadflyPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::GadflyPackage) = vcat(_allMarkers, Shape)
-supportedScales(::GadflyPackage) = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::GadflyPackage) = true
+supportedStyles(::GadflyBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::GadflyBackend) = vcat(_allMarkers, Shape)
+supportedScales(::GadflyBackend) = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::GadflyBackend) = true
 
 
 # --------------------------------------------------------------------------------------
 
 
-supportedArgs(::ImmersePackage) = supportedArgs(GadflyPackage())
-supportedAxes(::ImmersePackage) = supportedAxes(GadflyPackage())
-supportedTypes(::ImmersePackage) = supportedTypes(GadflyPackage())
-supportedStyles(::ImmersePackage) = supportedStyles(GadflyPackage())
-supportedMarkers(::ImmersePackage) = supportedMarkers(GadflyPackage())
-supportedScales(::ImmersePackage) = supportedScales(GadflyPackage())
-subplotSupported(::ImmersePackage) = true
+supportedArgs(::ImmerseBackend) = supportedArgs(GadflyBackend())
+supportedAxes(::ImmerseBackend) = supportedAxes(GadflyBackend())
+supportedTypes(::ImmerseBackend) = supportedTypes(GadflyBackend())
+supportedStyles(::ImmerseBackend) = supportedStyles(GadflyBackend())
+supportedMarkers(::ImmerseBackend) = supportedMarkers(GadflyBackend())
+supportedScales(::ImmerseBackend) = supportedScales(GadflyBackend())
+subplotSupported(::ImmerseBackend) = true
 
 # --------------------------------------------------------------------------------------
 
 
 
-supportedArgs(::PyPlotPackage) = [
+supportedArgs(::PyPlotBackend) = [
     :annotation,
     :axis,
     :background_color,
@@ -164,22 +164,22 @@ supportedArgs(::PyPlotPackage) = [
     :markeralpha,
     :overwrite_figure,
   ]
-supportedAxes(::PyPlotPackage) = _allAxes
-supportedTypes(::PyPlotPackage) = [:none, :line, :path, :steppre, :steppost, #:sticks,
+supportedAxes(::PyPlotBackend) = _allAxes
+supportedTypes(::PyPlotBackend) = [:none, :line, :path, :steppre, :steppost, #:sticks,
                                    :scatter, :hist2d, :hexbin, :hist, :density, :bar,
                                    :hline, :vline, :contour, :path3d, :scatter3d, :surface, :wireframe, :heatmap]
-supportedStyles(::PyPlotPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-# supportedMarkers(::PyPlotPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
-supportedMarkers(::PyPlotPackage) = vcat(_allMarkers, Shape)
-supportedScales(::PyPlotPackage) = [:identity, :ln, :log2, :log10]
-subplotSupported(::PyPlotPackage) = true
+supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+# supportedMarkers(::PyPlotBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
+supportedMarkers(::PyPlotBackend) = vcat(_allMarkers, Shape)
+supportedScales(::PyPlotBackend) = [:identity, :ln, :log2, :log10]
+subplotSupported(::PyPlotBackend) = true
 
 
 # --------------------------------------------------------------------------------------
 
 
 
-supportedArgs(::GRPackage) = [
+supportedArgs(::GRBackend) = [
     :annotation,
     :axis,
     :background_color,
@@ -238,22 +238,22 @@ supportedArgs(::GRPackage) = [
     :linealpha,
     :markeralpha,
   ]
-supportedAxes(::GRPackage) = _allAxes
-supportedTypes(::GRPackage) = [:none, :line, :path, :steppre, :steppost, :sticks,
+supportedAxes(::GRBackend) = _allAxes
+supportedTypes(::GRBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
                                :scatter, :hist2d, :hexbin, :hist, :density, :bar,
                                :hline, :vline, :contour, :path3d, :scatter3d, :surface,
                                :wireframe, :ohlc, :pie]
-supportedStyles(::GRPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::GRPackage) = vcat(_allMarkers, Shape)
-supportedScales(::GRPackage) = [:identity, :log10]
-subplotSupported(::GRPackage) = true
+supportedStyles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::GRBackend) = vcat(_allMarkers, Shape)
+supportedScales(::GRBackend) = [:identity, :log10]
+subplotSupported(::GRBackend) = true
 
 
 # --------------------------------------------------------------------------------------
 
 
 
-supportedArgs(::QwtPackage) = [
+supportedArgs(::QwtBackend) = [
     :annotation,
     # :args,
     :axis,
@@ -304,16 +304,16 @@ supportedArgs(::QwtPackage) = [
     # :yflip,
     # :z,
   ]
-supportedTypes(::QwtPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
-supportedMarkers(::QwtPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
-supportedScales(::QwtPackage) = [:identity, :log10]
-subplotSupported(::QwtPackage) = true
+supportedTypes(::QwtBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
+supportedMarkers(::QwtBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
+supportedScales(::QwtBackend) = [:identity, :log10]
+subplotSupported(::QwtBackend) = true
 
 
 # --------------------------------------------------------------------------------------
 
 
-supportedArgs(::UnicodePlotsPackage) = [
+supportedArgs(::UnicodePlotsBackend) = [
     # :annotation,
     # :args,
     # :axis,
@@ -362,12 +362,12 @@ supportedArgs(::UnicodePlotsPackage) = [
     # :yflip,
     # :z,
   ]
-supportedAxes(::UnicodePlotsPackage) = [:auto, :left]
-supportedTypes(::UnicodePlotsPackage) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
-supportedStyles(::UnicodePlotsPackage) = [:auto, :solid]
-supportedMarkers(::UnicodePlotsPackage) = [:none, :auto, :ellipse]
-supportedScales(::UnicodePlotsPackage) = [:identity]
-subplotSupported(::UnicodePlotsPackage) = true
+supportedAxes(::UnicodePlotsBackend) = [:auto, :left]
+supportedTypes(::UnicodePlotsBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
+supportedStyles(::UnicodePlotsBackend) = [:auto, :solid]
+supportedMarkers(::UnicodePlotsBackend) = [:none, :auto, :ellipse]
+supportedScales(::UnicodePlotsBackend) = [:identity]
+subplotSupported(::UnicodePlotsBackend) = true
 
 
 
@@ -375,7 +375,7 @@ subplotSupported(::UnicodePlotsPackage) = true
 # --------------------------------------------------------------------------------------
 
 
-supportedArgs(::WinstonPackage) = [
+supportedArgs(::WinstonBackend) = [
     :annotation,
     # :args,
     # :axis,
@@ -426,19 +426,19 @@ supportedArgs(::WinstonPackage) = [
     # :yflip,
     # :z,
   ]
-supportedAxes(::WinstonPackage) = [:auto, :left]
-supportedTypes(::WinstonPackage) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
-supportedStyles(::WinstonPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::WinstonPackage) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
-supportedScales(::WinstonPackage) = [:identity, :log10]
-subplotSupported(::WinstonPackage) = false
+supportedAxes(::WinstonBackend) = [:auto, :left]
+supportedTypes(::WinstonBackend) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
+supportedStyles(::WinstonBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::WinstonBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
+supportedScales(::WinstonBackend) = [:identity, :log10]
+subplotSupported(::WinstonBackend) = false
 
 
 # --------------------------------------------------------------------------------------
 
 
 
-supportedArgs(::BokehPackage) = [
+supportedArgs(::BokehBackend) = [
     # :annotation,
     # :axis,
     # :background_color,
@@ -494,17 +494,17 @@ supportedArgs(::BokehPackage) = [
     # :surface,
     # :levels,
   ]
-supportedAxes(::BokehPackage) = [:auto, :left]
-supportedTypes(::BokehPackage) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :hist2d, :hexbin, :hist, :bar, :hline, :vline, :contour]
-supportedStyles(::BokehPackage) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::BokehPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
-supportedScales(::BokehPackage) = [:identity, :ln] #, :ln, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::BokehPackage) = false
+supportedAxes(::BokehBackend) = [:auto, :left]
+supportedTypes(::BokehBackend) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :hist2d, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::BokehBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::BokehBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedScales(::BokehBackend) = [:identity, :ln] #, :ln, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::BokehBackend) = false
 
 
 # --------------------------------------------------------------------------------------
 
-supportedArgs(::PlotlyPackage) = [
+supportedArgs(::PlotlyBackend) = [
     :annotation,
     # :axis,
     :background_color,
@@ -560,21 +560,21 @@ supportedArgs(::PlotlyPackage) = [
     :grid,
     :levels,
   ]
-supportedAxes(::PlotlyPackage) = [:auto, :left]
-supportedTypes(::PlotlyPackage) = [:none, :line, :path, :scatter, :steppre, :steppost,
+supportedAxes(::PlotlyBackend) = [:auto, :left]
+supportedTypes(::PlotlyBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
                                    :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
                                    :pie, :heatmap] #,, :sticks, :hexbin, :hline, :vline]
-supportedStyles(::PlotlyPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::PlotlyPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
+supportedStyles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::PlotlyBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
                                      :pentagon, :hexagon, :octagon, :vline, :hline] #vcat(_allMarkers, Shape)
-supportedScales(::PlotlyPackage) = [:identity, :log10] #, :ln, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::PlotlyPackage) = true
-stringsSupported(::PlotlyPackage) = true
+supportedScales(::PlotlyBackend) = [:identity, :log10] #, :ln, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::PlotlyBackend) = true
+stringsSupported(::PlotlyBackend) = true
 
 
 # --------------------------------------------------------------------------------------
 
-supportedArgs(::PlotlyJSPackage) = [
+supportedArgs(::PlotlyJSBackend) = [
     :annotation,
     # :axis,
     :background_color,
@@ -630,20 +630,20 @@ supportedArgs(::PlotlyJSPackage) = [
     :grid,
     :levels,
   ]
-supportedAxes(::PlotlyJSPackage) = [:auto, :left]
-supportedTypes(::PlotlyJSPackage) = [:none, :line, :path, :scatter, :steppre, :steppost,
+supportedAxes(::PlotlyJSBackend) = [:auto, :left]
+supportedTypes(::PlotlyJSBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
                                    :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
                                    :pie, :heatmap] #,, :sticks, :hexbin, :hline, :vline]
-supportedStyles(::PlotlyJSPackage) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::PlotlyJSPackage) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
+supportedStyles(::PlotlyJSBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::PlotlyJSBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
                                      :pentagon, :hexagon, :octagon, :vline, :hline] #vcat(_allMarkers, Shape)
-supportedScales(::PlotlyJSPackage) = [:identity, :log10] #, :ln, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::PlotlyJSPackage) = true
-stringsSupported(::PlotlyJSPackage) = true
+supportedScales(::PlotlyJSBackend) = [:identity, :log10] #, :ln, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::PlotlyJSBackend) = true
+stringsSupported(::PlotlyJSBackend) = true
 
 # --------------------------------------------------------------------------------------
 
-supportedArgs(::GLVisualizePackage) = [
+supportedArgs(::GLVisualizeBackend) = [
     # :annotation,
     # :axis,
     # :background_color,
@@ -699,16 +699,16 @@ supportedArgs(::GLVisualizePackage) = [
     # :surface
     # :levels,
   ]
-supportedAxes(::GLVisualizePackage) = [:auto, :left]
-supportedTypes(::GLVisualizePackage) = [:surface] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
-supportedStyles(::GLVisualizePackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::GLVisualizePackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
-supportedScales(::GLVisualizePackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::GLVisualizePackage) = false
+supportedAxes(::GLVisualizeBackend) = [:auto, :left]
+supportedTypes(::GLVisualizeBackend) = [:surface] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::GLVisualizeBackend) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::GLVisualizeBackend) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedScales(::GLVisualizeBackend) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::GLVisualizeBackend) = false
 
 # --------------------------------------------------------------------------------------
 
-supportedArgs(::PGFPlotsPackage) = [
+supportedArgs(::PGFPlotsBackend) = [
     # :annotation,
     # :axis,
     # :background_color,
@@ -764,10 +764,10 @@ supportedArgs(::PGFPlotsPackage) = [
     # :surface
     # :levels,
   ]
-supportedAxes(::PGFPlotsPackage) = [:auto, :left]
-supportedTypes(::PGFPlotsPackage) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :hist2d, :hexbin, :hist, :bar, :hline, :vline, :contour]
-supportedStyles(::PGFPlotsPackage) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::PGFPlotsPackage) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
-supportedScales(::PGFPlotsPackage) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::PGFPlotsPackage) = false
+supportedAxes(::PGFPlotsBackend) = [:auto, :left]
+supportedTypes(::PGFPlotsBackend) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :hist2d, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::PGFPlotsBackend) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::PGFPlotsBackend) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedScales(::PGFPlotsBackend) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::PGFPlotsBackend) = false
 

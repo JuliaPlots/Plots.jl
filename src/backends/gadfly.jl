@@ -2,7 +2,7 @@
 # https://github.com/dcjones/Gadfly.jl
 
 
-function _initialize_backend(::GadflyPackage; kw...)
+function _initialize_backend(::GadflyBackend; kw...)
   @eval begin
     import Gadfly, Compose
     export Gadfly, Compose
@@ -205,7 +205,7 @@ function getGadflyMarkerTheme(d::Dict, plotargs::Dict)
     )
 end
 
-function addGadflyContColorScale(plt::Plot{GadflyPackage}, c)
+function addGadflyContColorScale(plt::Plot{GadflyBackend}, c)
   plt.plotargs[:colorbar] == :none && return
   if !isa(c, ColorGradient)
     c = colorscheme(:bluesreds)
@@ -557,7 +557,7 @@ function createGadflyAnnotationObject(x, y, txt::PlotText)
                             ))
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{GadflyPackage}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{GadflyBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   for ann in anns
     push!(plt.o.guides, createGadflyAnnotationObject(ann...))
   end
@@ -567,7 +567,7 @@ end
 # ---------------------------------------------------------------------------
 
 # create a blank Gadfly.Plot object
-function _create_plot(pkg::GadflyPackage; kw...)
+function _create_plot(pkg::GadflyBackend; kw...)
   d = Dict(kw)
   gplt = createGadflyPlotObject(d)
   Plot(gplt, pkg, 0, d, Dict[])
@@ -575,7 +575,7 @@ end
 
 
 # plot one data series
-function _add_series(::GadflyPackage, plt::Plot; kw...)
+function _add_series(::GadflyBackend, plt::Plot; kw...)
   
   # first clear out the temporary layer
   gplt = getGadflyContext(plt)
@@ -591,7 +591,7 @@ end
 
 
 
-function _update_plot(plt::Plot{GadflyPackage}, d::Dict)
+function _update_plot(plt::Plot{GadflyBackend}, d::Dict)
   updateGadflyGuides(plt, d)
   updateGadflyPlotTheme(plt, d)
 end
@@ -607,12 +607,12 @@ function getGadflyMappings(plt::Plot, i::Integer)
   mappings = [l.mapping for l in plt.seriesargs[i][:gadflylayers]]
 end
 
-function Base.getindex(plt::Plot{GadflyPackage}, i::Integer)
+function Base.getindex(plt::Plot{GadflyBackend}, i::Integer)
   mapping = getGadflyMappings(plt, i)[1]
   mapping[:x], mapping[:y]
 end
 
-function Base.setindex!(plt::Plot{GadflyPackage}, xy::Tuple, i::Integer)
+function Base.setindex!(plt::Plot{GadflyBackend}, xy::Tuple, i::Integer)
   for mapping in getGadflyMappings(plt, i)
     mapping[:x], mapping[:y] = xy
   end
@@ -623,20 +623,20 @@ end
 
 
 # create the underlying object (each backend will do this differently)
-function _create_subplot(subplt::Subplot{GadflyPackage}, isbefore::Bool)
+function _create_subplot(subplt::Subplot{GadflyBackend}, isbefore::Bool)
   isbefore && return false # wait until after plotting to create the subplots
   subplt.o = nothing
   true
 end
 
 
-function _remove_axis(plt::Plot{GadflyPackage}, isx::Bool)
+function _remove_axis(plt::Plot{GadflyBackend}, isx::Bool)
   gplt = getGadflyContext(plt)
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks; label=false)
   addOrReplace(gplt.guides, isx ? Gadfly.Guide.xlabel : Gadfly.Guide.ylabel, "")
 end
 
-function _expand_limits(lims, plt::Plot{GadflyPackage}, isx::Bool)
+function _expand_limits(lims, plt::Plot{GadflyBackend}, isx::Bool)
   for l in getGadflyContext(plt).layers
     _expand_limits(lims, l.mapping[isx ? :x : :y])
   end
@@ -646,8 +646,8 @@ end
 # ----------------------------------------------------------------
 
 
-getGadflyContext(plt::Plot{GadflyPackage}) = plt.o
-getGadflyContext(subplt::Subplot{GadflyPackage}) = buildGadflySubplotContext(subplt)
+getGadflyContext(plt::Plot{GadflyBackend}) = plt.o
+getGadflyContext(subplt::Subplot{GadflyBackend}) = buildGadflySubplotContext(subplt)
 
 # create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
 function buildGadflySubplotContext(subplt::Subplot)
@@ -675,7 +675,7 @@ setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getplotargs(subplt,
 # -------------------------------------------------------------------------
 
 
-function dowritemime{P<:Union{GadflyPackage,ImmersePackage}}(io::IO, func, plt::PlottingObject{P})
+function dowritemime{P<:Union{GadflyBackend,ImmerseBackend}}(io::IO, func, plt::AbstractPlot{P})
   gplt = getGadflyContext(plt)
   setGadflyDisplaySize(plt)
   Gadfly.draw(func(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
@@ -690,7 +690,7 @@ getGadflyWriteFunc(::MIME"application/x-tex") = Gadfly.PGF
 getGadflyWriteFunc(m::MIME) = error("Unsupported in Gadfly/Immerse: ", m)
 
 for mime in (MIME"image/png", MIME"image/svg+xml", MIME"application/pdf", MIME"application/postscript", MIME"application/x-tex")
-  @eval function Base.writemime{P<:Union{GadflyPackage,ImmersePackage}}(io::IO, ::$mime, plt::PlottingObject{P})
+  @eval function Base.writemime{P<:Union{GadflyBackend,ImmerseBackend}}(io::IO, ::$mime, plt::AbstractPlot{P})
     func = getGadflyWriteFunc($mime())
     dowritemime(io, func, plt)
   end
@@ -698,14 +698,14 @@ end
 
 
 
-function Base.display(::PlotsDisplay, plt::Plot{GadflyPackage})
+function Base.display(::PlotsDisplay, plt::Plot{GadflyBackend})
   setGadflyDisplaySize(plt.plotargs[:size]...)
   display(plt.o)
 end
 
 
 
-function Base.display(::PlotsDisplay, subplt::Subplot{GadflyPackage})
+function Base.display(::PlotsDisplay, subplt::Subplot{GadflyBackend})
   setGadflyDisplaySize(getplotargs(subplt,1)[:size]...)
   ctx = buildGadflySubplotContext(subplt)
 

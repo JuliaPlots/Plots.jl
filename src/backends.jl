@@ -1,8 +1,8 @@
 
-immutable NoPackage <: PlottingPackage end
+immutable NoBackend <: AbstractBackend end
 
-const _backendType = Dict{Symbol, DataType}(:none => NoPackage)
-const _backendSymbol = Dict{DataType, Symbol}(NoPackage => :none)
+const _backendType = Dict{Symbol, DataType}(:none => NoBackend)
+const _backendSymbol = Dict{DataType, Symbol}(NoBackend => :none)
 const _backends = Symbol[]
 const _initialized_backends = Set{Symbol}()
 
@@ -10,12 +10,12 @@ backends() = _backends
 backend_name() = CURRENT_BACKEND.sym
 _backend_instance(sym::Symbol) = haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
 
-macro init_plotting_pkg(s)
+macro init_backend(s)
     str = lowercase(string(s))
     sym = symbol(str)
-    T = symbol(string(s) * "Package")
+    T = symbol(string(s) * "Backend")
     esc(quote
-        immutable $T <: PlottingPackage end
+        immutable $T <: AbstractBackend end
         export $sym
         $sym(; kw...) = (default(; kw...); backend(symbol($str)))
         backend_name(::$T) = symbol($str)
@@ -26,18 +26,18 @@ macro init_plotting_pkg(s)
     end)
 end
 
-@init_plotting_pkg Immerse
-@init_plotting_pkg Gadfly
-@init_plotting_pkg PyPlot
-@init_plotting_pkg Qwt
-@init_plotting_pkg UnicodePlots
-@init_plotting_pkg Winston
-@init_plotting_pkg Bokeh
-@init_plotting_pkg Plotly
-@init_plotting_pkg PlotlyJS
-@init_plotting_pkg GR
-@init_plotting_pkg GLVisualize
-@init_plotting_pkg PGFPlots
+@init_backend Immerse
+@init_backend Gadfly
+@init_backend PyPlot
+@init_backend Qwt
+@init_backend UnicodePlots
+@init_backend Winston
+@init_backend Bokeh
+@init_backend Plotly
+@init_backend PlotlyJS
+@init_backend GR
+@init_backend GLVisualize
+@init_backend PGFPlots
 
 include("backends/web.jl")
 include("backends/supported.jl")
@@ -45,19 +45,19 @@ include("backends/supported.jl")
 # ---------------------------------------------------------
 
 
-plot(pkg::PlottingPackage; kw...)                       = error("plot($pkg; kw...) is not implemented")
-plot!(pkg::PlottingPackage, plt::Plot; kw...)           = error("plot!($pkg, plt; kw...) is not implemented")
-_update_plot(pkg::PlottingPackage, plt::Plot, d::Dict)  = error("_update_plot($pkg, plt, d) is not implemented")
-_update_plot_pos_size{P<:PlottingPackage}(plt::PlottingObject{P}, d::Dict) = nothing
-subplot(pkg::PlottingPackage; kw...)                    = error("subplot($pkg; kw...) is not implemented")
-subplot!(pkg::PlottingPackage, subplt::Subplot; kw...)  = error("subplot!($pkg, subplt; kw...) is not implemented")
+plot(pkg::AbstractBackend; kw...)                       = error("plot($pkg; kw...) is not implemented")
+plot!(pkg::AbstractBackend, plt::Plot; kw...)           = error("plot!($pkg, plt; kw...) is not implemented")
+_update_plot(pkg::AbstractBackend, plt::Plot, d::Dict)  = error("_update_plot($pkg, plt, d) is not implemented")
+_update_plot_pos_size{P<:AbstractBackend}(plt::AbstractPlot{P}, d::Dict) = nothing
+subplot(pkg::AbstractBackend; kw...)                    = error("subplot($pkg; kw...) is not implemented")
+subplot!(pkg::AbstractBackend, subplt::Subplot; kw...)  = error("subplot!($pkg, subplt; kw...) is not implemented")
 
 # ---------------------------------------------------------
 
 
 type CurrentBackend
   sym::Symbol
-  pkg::PlottingPackage
+  pkg::AbstractBackend
 end
 CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
@@ -92,7 +92,7 @@ function backend()
 
     # initialize
     println("[Plots.jl] Initializing backend: ", sym)
-    
+
     inst = _backend_instance(sym)
     try
       _initialize_backend(inst)
@@ -110,7 +110,7 @@ end
 """
 Set the plot backend.
 """
-function backend(pkg::PlottingPackage)
+function backend(pkg::AbstractBackend)
   CURRENT_BACKEND.sym = backend_name(pkg)
   CURRENT_BACKEND.pkg = pkg
 end

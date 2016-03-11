@@ -4,7 +4,7 @@
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
 
 
-function standalone_html(plt::PlottingObject; title::AbstractString = get(plt.plotargs, :window_title, "Plots.jl"))
+function standalone_html(plt::AbstractPlot; title::AbstractString = get(plt.plotargs, :window_title, "Plots.jl"))
     """
     <!DOCTYPE html>
     <html>
@@ -26,7 +26,7 @@ function open_browser_window(filename::AbstractString)
     warn("Unknown OS... cannot open browser window.")
 end
 
-function standalone_html_window(plt::PlottingObject; kw...)
+function standalone_html_window(plt::AbstractPlot; kw...)
     html = standalone_html(plt; kw...)
     # println(html)
     filename = string(tempname(), ".html")
