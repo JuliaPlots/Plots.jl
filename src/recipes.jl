@@ -2,7 +2,7 @@
 
 # TODO: there should be a distinction between an object that will manage a full plot, vs a component of a plot.
 # the PlotRecipe as currently implemented is more of a "custom component"
-# a recipe should fully describe the plotting command(s) and call them, likewise for updating. 
+# a recipe should fully describe the plotting command(s) and call them, likewise for updating.
 #   actually... maybe those should explicitly derive from AbstractPlot???
 
 abstract PlotRecipe
@@ -83,7 +83,7 @@ end
 #   m = size(mat,2)
 #   centers = Float64[mean(extrema(mat[:,i])) for i in 1:m]
 
-#   # might be a mistake? 
+#   # might be a mistake?
 #   @assert m <= 20
 #   @assert size(corrmat) == (m,m)
 
@@ -137,3 +137,92 @@ function abline!(plt::Plot, a, b; kw...)
 end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
+
+# -------------------------------------------------
+# Arc Diagram
+
+curvecolor(value, min, max, grad) = getColorZ(grad, (value-min)/(max-min))
+
+"Plots a clockwise arc, from source to destiny, colored by weight"
+function arc!(source, destiny, weight, min, max, grad)
+    radius = (destiny - source) / 2
+    arc = Plots.partialcircle(0, π, 30, radius)
+    x, y = Plots.unzip(arc)
+    plot!(x .+ radius .+ source,  y, line = (curvecolor(weight, min, max, grad), 0.5, 2))
+end
+
+"""
+`arcdiagram(source, destiny, weight[, grad])`
+
+Plots an arc diagram, form `source` to `destiny` (clockwise), using `weight` to determine the colors.
+"""
+function arcdiagram(source, destiny, weight, grad=ColorGradient(:bluesreds))
+
+    if length(source) == length(destiny) == length(weight)
+
+        vertices = vcat(source, destiny)
+
+        xmin, xmax = extrema(vertices)
+        plot(xlim=(xmin - 0.5, xmax + 0.5))
+
+        wmin,wmax = extrema(weight)
+
+        for (i, j, value) in zip(source,destiny,weight)
+            arc!(i, j, value, wmin, wmax, grad)
+        end
+
+        scatter!(vertices, zeros(length(vertices)), leg=false)
+
+        else
+
+        throw(ArgumentError("source, destiny and weight should have the same length"))
+
+    end
+end
+
+"""
+`arcdiagram(mat[, grad])`
+
+Plots an arc diagram of a matrix, form rows to columns (clockwise),
+using the values on the matrix as weights to determine the colors.
+Doesn't show edges with value zero if the input is sparse.
+For simmetric matrices, only the upper triangular values are used.
+"""
+function arcdiagram{T}(mat::AbstractArray{T,2}, grad=ColorGradient(:bluesreds))
+    nrow, ncol = size(mat) # rows are sources and columns are destinies
+
+    nosymmetric = !issym(mat) # plots only triu for symmetric matrices
+    nosparse = !issparse(mat) # doesn't plot zeros from a sparse matrix
+
+    L = length(mat)
+
+    source  = Array(Int, L)
+    destiny = Array(Int, L)
+    weight  = Array(T, L)
+
+    idx = 1
+    for i in 1:nrow, j in 1:ncol
+        value = mat[i, j]
+        if !isnan(value) && ( nosparse || value != zero(T) ) # TODO: deal with Nullable
+
+            if i < j
+                source[idx]  = i
+                destiny[idx] = j
+                weight[idx]  = value
+                idx += 1
+            elseif nosymmetric && (i > j)
+                source[idx]  = i
+                destiny[idx] = j
+                weight[idx]  = value
+                idx += 1
+            end
+
+        end
+    end
+
+    resize!(source, idx-1)
+    resize!(destiny, idx-1)
+    resize!(weight, idx-1)
+
+    arcdiagram(source, destiny, weight, grad)
+end
