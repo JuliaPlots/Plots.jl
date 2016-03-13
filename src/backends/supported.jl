@@ -241,7 +241,7 @@ supportedArgs(::GRBackend) = [
 supportedAxes(::GRBackend) = _allAxes
 supportedTypes(::GRBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
                                :scatter, :hist2d, :hexbin, :hist, :density, :bar,
-                               :hline, :vline, :contour, :path3d, :scatter3d, :surface,
+                               :hline, :vline, :contour, :heatmap, :path3d, :scatter3d, :surface,
                                :wireframe, :ohlc, :pie]
 supportedStyles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GRBackend) = vcat(_allMarkers, Shape)

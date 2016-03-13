@@ -98,36 +98,36 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
   mwidth, mheight, width, height = GR.inqdspsize()
   w, h = d[:size]
   viewport = zeros(4)
+  vp = float(subplot)
   if w > h
     ratio = float(h) / w
     msize = mwidth * w / width
     GR.setwsviewport(0, msize, 0, msize * ratio)
     GR.setwswindow(0, 1, 0, ratio)
-    viewport[1] = subplot[1] + 0.125 * (subplot[2] - subplot[1])
-    viewport[2] = subplot[1] + 0.95  * (subplot[2] - subplot[1])
-    viewport[3] = ratio * (subplot[3] + 0.125  * (subplot[4] - subplot[3]))
-    viewport[4] = ratio * (subplot[3] + 0.95  * (subplot[4] - subplot[3]))
+    vp[3] *= ratio
+    vp[4] *= ratio
   else
     ratio = float(w) / h
     msize = mheight * h / height
     GR.setwsviewport(0, msize * ratio, 0, msize)
     GR.setwswindow(0, ratio, 0, 1)
-    viewport[1] = ratio * (subplot[1] + 0.125 * (subplot[2] - subplot[1]))
-    viewport[2] = ratio * (subplot[1] + 0.95  * (subplot[2] - subplot[1]))
-    viewport[3] = subplot[3] + 0.125 * (subplot[4] - subplot[3])
-    viewport[4] = subplot[3] + 0.95  * (subplot[4] - subplot[3])
+    vp[1] *= ratio
+    vp[2] *= ratio
   end
+  viewport[1] = vp[1] + 0.125 * (vp[2] - vp[1])
+  viewport[2] = vp[1] + 0.95  * (vp[2] - vp[1])
+  viewport[3] = vp[3] + 0.125 * (vp[4] - vp[3])
+  if w > h
+    viewport[3] += (1 - (subplot[4] - subplot[3])^2) * 0.02
+  end
+  viewport[4] = vp[3] + 0.95  * (vp[4] - vp[3])
 
   if haskey(d, :background_color)
     GR.savestate()
     GR.selntran(0)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     GR.setfillcolorind(gr_getcolorind(d[:background_color]))
-    if w > h
-      GR.fillrect(subplot[1], subplot[2], ratio*subplot[3], ratio*subplot[4])
-    else
-      GR.fillrect(ratio*subplot[1], ratio*subplot[2], subplot[3], subplot[4])
-    end
+    GR.fillrect(vp[1], vp[2], vp[3], vp[4])
     GR.selntran(1)
     GR.restorestate()
     c = getColor(d[:background_color])
@@ -160,7 +160,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           x, y = 1:size(p[:y], 1), p[:y]
         elseif p[:linetype] in [:hist, :density]
           x, y = Base.hist(p[:y])
-        elseif p[:linetype] in [:hist2d, :hexbin]
+        elseif p[:linetype] in [:heatmap, :hexbin]
           E = zeros(length(p[:x]),2)
           E[:,1] = p[:x]
           E[:,2] = p[:y]
@@ -285,14 +285,14 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.settextcolorind(fg)
-    GR.text(0.5 * (viewport[1] + viewport[2]), min(ratio, 1), d[:title])
+    GR.text(0.5 * (viewport[1] + viewport[2]), vp[4], d[:title])
     GR.restorestate()
   end
   if get(d, :xlabel, "") != ""
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
     GR.settextcolorind(fg)
-    GR.text(0.5 * (viewport[1] + viewport[2]), 0, d[:xlabel])
+    GR.text(0.5 * (viewport[1] + viewport[2]), vp[3], d[:xlabel])
     GR.restorestate()
   end
   if get(d, :ylabel, "") != ""
@@ -300,7 +300,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
     GR.settextcolorind(fg)
-    GR.text(0, 0.5 * (viewport[3] + viewport[4]), d[:ylabel])
+    GR.text(vp[1], 0.5 * (viewport[3] + viewport[4]), d[:ylabel])
     GR.restorestate()
   end
   if get(d, :yrightlabel, "") != ""
@@ -308,7 +308,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(1, 0)
     GR.settextcolorind(fg)
-    GR.text(1, 0.5 * (viewport[3] + viewport[4]), d[:yrightlabel])
+    GR.text(vp[2], 0.5 * (viewport[3] + viewport[4]), d[:yrightlabel])
     GR.restorestate()
   end
 
@@ -423,7 +423,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           GR.polyline([xy, xy], [ymin, ymax])
         end
       end
-    elseif p[:linetype] in [:hist2d, :hexbin]
+    elseif p[:linetype] in [:heatmap, :hexbin]
       E = zeros(length(p[:x]),2)
       E[:,1] = p[:x]
       E[:,2] = p[:y]
