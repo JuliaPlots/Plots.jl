@@ -128,7 +128,7 @@ function setup_atom()
         import Atom, Media
 
         # connects the render function
-        Media.media(Plot, Media.Plot)
+        Media.media{T <: Union{GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend}}(Plot{T}, Media.Plot)
 
         # Atom.displaysize(::AbstractPlot) = (535, 379)
         # Atom.displaytitle(plt::AbstractPlot) = "Plots.jl (backend: $(backend(plt)))"
@@ -137,5 +137,10 @@ function setup_atom()
         function Media.render(pane::Atom.PlotPane, plt::Plot)
             Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
         end
+
+
+        # function Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
+        #     html = Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
+        # end
     end
 end
