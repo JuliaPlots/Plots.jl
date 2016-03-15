@@ -198,6 +198,7 @@ function fakedata(sz...)
 end
 
 isijulia() = isdefined(Main, :IJulia) && Main.IJulia.inited
+isatom() = isdefined(Main, :Atom) && Atom.isconnected()
 
 istuple(::Tuple) = true
 istuple(::Any) = false

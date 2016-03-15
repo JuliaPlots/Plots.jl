@@ -723,7 +723,7 @@ supportedArgs(::PGFPlotsBackend) = [
     # :legend,
     # :linecolor,
     # :linestyle,
-    # :linetype,
+     :linetype,
     # :linewidth,
     # :linealpha,
     # :markershape,
@@ -743,11 +743,11 @@ supportedArgs(::PGFPlotsBackend) = [
     # :size,
     # :title,
     # :windowtitle,
-    # :x,
+     :x,
     # :xlabel,
     # :xlims,
     # :xticks,
-    # :y,
+     :y,
     # :ylabel,
     # :ylims,
     # :yrightlabel,
@@ -765,9 +765,8 @@ supportedArgs(::PGFPlotsBackend) = [
     # :levels,
   ]
 supportedAxes(::PGFPlotsBackend) = [:auto, :left]
-supportedTypes(::PGFPlotsBackend) = [:contour] #, :path, :scatter ,:steppre, :steppost, :sticks, :hist2d, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedTypes(::PGFPlotsBackend) = [:path, :scatter, :line, :steppost, :hist, :bar] #, :steppre, :sticks, :hist2d, :hexbin, :bar, :hline, :vline, :contour]
 supportedStyles(::PGFPlotsBackend) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::PGFPlotsBackend) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
 supportedScales(::PGFPlotsBackend) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
 subplotSupported(::PGFPlotsBackend) = false
-

@@ -8,24 +8,33 @@ function _initialize_backend(::PlotlyBackend; kw...)
 
     ############################
     # borrowed from https://github.com/spencerlyon2/Plotlyjs.jl/blob/master/src/display.jl
-    _js_path = joinpath(Pkg.dir("Plots"), "deps", "plotly-latest.min.js")
+    _js_path = Pkg.dir("Plots", "deps", "plotly-latest.min.js")
+
+    _js_code = open(readall, _js_path, "r")
+
+    _js_script = """
+        <script type="text/javascript">
+            require=requirejs=define=undefined;
+        </script>
+        <script type="text/javascript">
+            $(_js_code)
+        </script>
+     """
 
     # if we're in IJulia call setupnotebook to load js and css
     if isijulia()
         # the first script is some hack I needed to do in order for the notebook
         # to not complain about Plotly being undefined
-        display("text/html", """
-            <script type="text/javascript">
-                require=requirejs=define=undefined;
-            </script>
-            <script type="text/javascript">
-                $(open(readall, _js_path, "r"))
-            </script>
-         """)
+        display("text/html", _js_script)
         # display("text/html", "<p>Plotly javascript loaded.</p>")
     end
     # end borrowing (thanks :)
     ###########################
+
+    # if isatom()
+    #     import Atom
+    #     Atom.@msg evaljs(_js_code)
+    # end
 
   end
   # TODO: other initialization
@@ -436,15 +445,23 @@ function html_body(plt::Plot{PlotlyBackend}, style = nothing)
     style = "width:$(w)px;height:$(h)px;"
   end
   uuid = Base.Random.uuid4()
-  """
+  html = """
     <div id=\"$(uuid)\" style=\"$(style)\"></div>
     <script>
       PLOT = document.getElementById('$(uuid)');
       Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
     </script>
   """
+  # @show html
+  html
 end
 
+function js_body(plt::Plot{PlotlyBackend}, uuid)
+    js = """
+          PLOT = document.getElementById('$(uuid)');
+          Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
+    """
+end
 
 
 function html_body(subplt::Subplot{PlotlyBackend})
@@ -479,7 +496,8 @@ function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{PlotlyBacke
 end
 
 function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot{PlotlyBackend})
-  write(io, html_head(plt) * html_body(plt))
+    write(io, html_head(plt) * html_body(plt))
+    # write(io, html_body(plt))
 end
 
 function Base.display(::PlotsDisplay, plt::AbstractPlot{PlotlyBackend})
