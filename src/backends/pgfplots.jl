@@ -85,11 +85,24 @@ end
 
 #################  This is the important method to implement!!! #################
 function _make_pgf_plot(plt::Plot{PGFPlotsBackend})
+    line_type = plt.seriesargs[1][:linetype]
+    if line_type == :path
+        plt.o = PGFPlots.Linear(plt.seriesargs[1][:x], plt.seriesargs[1][:y])
+    elseif line_type == :scatter
+        plt.o = PGFPlots.Scatter(plt.seriesargs[1][:x], plt.seriesargs[1][:y])
+    elseif line_type == :steppost
+        plt.o = PGFPlots.Linear(plt.seriesargs[1][:x], plt.seriesargs[1][:y], style="const plot")
+    elseif line_type == :hist
+        plt_hist = hist(plt.seriesargs[1][:y])
+        plt.o = PGFPlots.Linear(plt_hist[1][1:end-1], plt_hist[2], style="ybar,fill=green", mark="none")
+    elseif line_type == :bar
+        plt.o = PGFPlots.Linear(plt.seriesargs[1][:x], plt.seriesargs[1][:y], style="ybar,fill=green", mark="none")
+    end
   # TODO: convert plt.plotargs and plt.seriesargs into PGFPlots calls
   # TODO: return the PGFPlots object
 end
 
-function Base.writemime(io::IO, mime::MIME"image/png", plt::AbstractPlot{PGFPlotsBackend})
+function Base.writemime(io::IO, mime::MIME"image/svg+xml", plt::AbstractPlot{PGFPlotsBackend})
   plt.o = _make_pgf_plot(plt)
   writemime(io, mime, plt.o)
 end
