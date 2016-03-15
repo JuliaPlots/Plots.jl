@@ -126,7 +126,8 @@ export
     # recipes
     PlotRecipe,
     # EllipseRecipe,
-    spy
+    spy,
+    arcdiagram
     # corrplot
 
 
