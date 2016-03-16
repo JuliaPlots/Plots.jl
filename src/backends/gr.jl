@@ -145,6 +145,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
   cmap = false
   axes_2d = true
   grid_flag = get(d, :grid, true)
+  outside_ticks = false
 
   for axis = 1:2
     xmin = ymin = typemax(Float64)
@@ -160,7 +161,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           x, y = 1:size(p[:y], 1), p[:y]
         elseif p[:linetype] in [:hist, :density]
           x, y = Base.hist(p[:y])
-        elseif p[:linetype] in [:heatmap, :hexbin]
+        elseif p[:linetype] in [:hist2d, :hexbin]
           E = zeros(length(p[:x]),2)
           E[:,1] = p[:x]
           E[:,2] = p[:y]
@@ -176,11 +177,14 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           xmin, xmax, ymin, ymax = 0, 1, 0, 1
           x, y = p[:x], p[:y]
         else
-          if p[:linetype] in [:contour, :surface]
+          if p[:linetype] in [:contour, :surface, :heatmap]
             cmap = true
           end
           if p[:linetype] in [:surface, :wireframe, :path3d, :scatter3d]
             axes_2d = false
+          end
+          if p[:linetype] == :heatmap
+            outside_ticks = true
           end
           x, y = p[:x], p[:y]
         end
@@ -267,6 +271,9 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.setlinewidth(1)
       GR.setlinecolorind(fg)
       ticksize = 0.0075 * diag
+      if outside_ticks
+        ticksize = -ticksize
+      end
       if grid_flag && fg == 1
         GR.grid(xtick, ytick, 0, 0, majorx, majory)
       end
@@ -423,7 +430,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           GR.polyline([xy, xy], [ymin, ymax])
         end
       end
-    elseif p[:linetype] in [:heatmap, :hexbin]
+    elseif p[:linetype] in [:hist2d, :hexbin]
       E = zeros(length(p[:x]),2)
       E[:,1] = p[:x]
       E[:,2] = p[:y]
@@ -494,6 +501,18 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
       if cmap
         GR.setviewport(viewport[2] + 0.07, viewport[2] + 0.1,
+                       viewport[3], viewport[4])
+        GR.colormap()
+      end
+    elseif p[:linetype] == :heatmap
+      x, y, z = p[:x], p[:y], p[:z].surf
+      zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
+      GR.setspace(zmin, zmax, 0, 90)
+      GR.setcolormap(GR.COLORMAP_COOLWARM)
+      z = reshape(z, length(x) * length(y))
+      GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
+      if cmap
+        GR.setviewport(viewport[2] + 0.02, viewport[2] + 0.05,
                        viewport[3], viewport[4])
         GR.colormap()
       end
