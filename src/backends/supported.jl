@@ -81,7 +81,7 @@ supportedArgs(::GadflyBackend) = [
 supportedAxes(::GadflyBackend) = [:auto, :left]
 supportedTypes(::GadflyBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
                                    :scatter, :hist2d, :hexbin, :hist, :bar,
-                                   :hline, :vline, :contour]
+                                   :hline, :vline, :contour, :shape]
 supportedStyles(::GadflyBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyBackend) = vcat(_allMarkers, Shape)
 supportedScales(::GadflyBackend) = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
@@ -770,4 +770,3 @@ supportedStyles(::PGFPlotsBackend) = [:auto, :solid] #, :dash, :dot, :dashdot, :
 supportedMarkers(::PGFPlotsBackend) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
 supportedScales(::PGFPlotsBackend) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
 subplotSupported(::PGFPlotsBackend) = false
-

@@ -444,6 +444,37 @@ function createKWargsList{T<:Real}(plt::AbstractPlot, x::AMat{T}, y::AMat{T}, zm
   createKWargsList(plt, Any[x], Any[y]; d...) #kw..., z = surf, linetype = :contour)
 end
 
+# plotting arbitrary shapes/polygons
+function createKWargsList(plt::AbstractPlot, shape::Shape; kw...)
+    x, y = unzip(shape.vertices)
+    createKWargsList(plt, x, y; linetype = :shape, kw...)
+end
+
+function shape_coords(shapes::AVec{Shape})
+    xs = map(get_xs, shapes)
+    ys = map(get_ys, shapes)
+    x, y = unzip(shapes[1].vertices)
+    for shape in shapes[2:end]
+        tmpx, tmpy = unzip(shape.vertices)
+        x = vcat(x, NaN, tmpx)
+        y = vcat(y, NaN, tmpy)
+    end
+    x, y
+end
+
+function createKWargsList(plt::AbstractPlot, shapes::AVec{Shape}; kw...)
+    x, y = shape_coords(shapes)
+    createKWargsList(plt, x, y; linetype = :shape, kw...)
+end
+function createKWargsList(plt::AbstractPlot, shapes::AMat{Shape}; kw...)
+    x, y = [], []
+    for j in 1:size(shapes, 2)
+        tmpx, tmpy = shape_coords(vec(shapes[:,j]))
+        push!(x, tmpx)
+        push!(y, tmpy)
+    end
+    createKWargsList(plt, x, y; linetype = :shape, kw...)
+end
 
 function createKWargsList(plt::AbstractPlot, surf::Surface; kw...)
   createKWargsList(plt, 1:size(surf.surf,1), 1:size(surf.surf,2), convert(Matrix{Float64}, surf.surf); kw...)
