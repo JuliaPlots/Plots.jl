@@ -6,20 +6,8 @@ function _initialize_backend(::PlotlyBackend; kw...)
     import JSON
     JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
 
-    ############################
-    # borrowed from https://github.com/spencerlyon2/Plotlyjs.jl/blob/master/src/display.jl
     _js_path = Pkg.dir("Plots", "deps", "plotly-latest.min.js")
-
     _js_code = open(readall, _js_path, "r")
-
-    # _js_script = """
-    #     <script type="text/javascript">
-    #         require=requirejs=define=undefined;
-    #     </script>
-    #     <script type="text/javascript">
-    #         $(_js_code)
-    #     </script>
-    #  """
 
     # borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
     _js_script = """
@@ -35,13 +23,8 @@ function _initialize_backend(::PlotlyBackend; kw...)
 
     # if we're in IJulia call setupnotebook to load js and css
     if isijulia()
-        # the first script is some hack I needed to do in order for the notebook
-        # to not complain about Plotly being undefined
         display("text/html", _js_script)
-        # display("text/html", "<p>Plotly javascript loaded.</p>")
     end
-    # end borrowing (thanks :)
-    ###########################
 
     # if isatom()
     #     import Atom
