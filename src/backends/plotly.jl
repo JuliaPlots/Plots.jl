@@ -6,26 +6,30 @@ function _initialize_backend(::PlotlyBackend; kw...)
     import JSON
     JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
 
-    ############################
-    # borrowed from https://github.com/spencerlyon2/Plotlyjs.jl/blob/master/src/display.jl
-    _js_path = joinpath(Pkg.dir("Plots"), "deps", "plotly-latest.min.js")
+    _js_path = Pkg.dir("Plots", "deps", "plotly-latest.min.js")
+    _js_code = open(readall, _js_path, "r")
+
+    # borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
+    _js_script = """
+        <script type='text/javascript'>
+            define('plotly', function(require, exports, module) {
+                $(_js_code)
+            });
+            require(['plotly'], function(Plotly) {
+                window.Plotly = Plotly;
+            });
+        </script>
+    """
 
     # if we're in IJulia call setupnotebook to load js and css
     if isijulia()
-        # the first script is some hack I needed to do in order for the notebook
-        # to not complain about Plotly being undefined
-        display("text/html", """
-            <script type="text/javascript">
-                require=requirejs=define=undefined;
-            </script>
-            <script type="text/javascript">
-                $(open(readall, _js_path, "r"))
-            </script>
-         """)
-        # display("text/html", "<p>Plotly javascript loaded.</p>")
+        display("text/html", _js_script)
     end
-    # end borrowing (thanks :)
-    ###########################
+
+    # if isatom()
+    #     import Atom
+    #     Atom.@msg evaljs(_js_code)
+    # end
 
   end
   # TODO: other initialization
@@ -436,15 +440,23 @@ function html_body(plt::Plot{PlotlyBackend}, style = nothing)
     style = "width:$(w)px;height:$(h)px;"
   end
   uuid = Base.Random.uuid4()
-  """
+  html = """
     <div id=\"$(uuid)\" style=\"$(style)\"></div>
     <script>
       PLOT = document.getElementById('$(uuid)');
       Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
     </script>
   """
+  # @show html
+  html
 end
 
+function js_body(plt::Plot{PlotlyBackend}, uuid)
+    js = """
+          PLOT = document.getElementById('$(uuid)');
+          Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
+    """
+end
 
 
 function html_body(subplt::Subplot{PlotlyBackend})
@@ -479,7 +491,8 @@ function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{PlotlyBacke
 end
 
 function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot{PlotlyBackend})
-  write(io, html_head(plt) * html_body(plt))
+    write(io, html_head(plt) * html_body(plt))
+    # write(io, html_body(plt))
 end
 
 function Base.display(::PlotsDisplay, plt::AbstractPlot{PlotlyBackend})

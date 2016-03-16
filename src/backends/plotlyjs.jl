@@ -44,6 +44,7 @@ function _add_series(::PlotlyJSBackend, plt::Plot; kw...)
     typ = pop!(pdict, :type)
     gt = PlotlyJS.GenericTrace(typ; pdict...)
     PlotlyJS.addtraces!(syncplot, gt)
+    # PlotlyJS.addtraces!(syncplot.plot, gt)
 
     push!(plt.seriesargs, d)
     plt
@@ -73,6 +74,7 @@ function _update_plot(plt::Plot{PlotlyJSBackend}, d::Dict)
     syncplot = plt.o
     w,h = d[:size]
     PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)
+    # PlotlyJS.relayout!(syncplot.plot, pdict, width = w, height = h)
 end
 
 
@@ -125,4 +127,3 @@ end
 function Base.display(::PlotsDisplay, plt::Subplot{PlotlyJSBackend})
     error()
 end
-

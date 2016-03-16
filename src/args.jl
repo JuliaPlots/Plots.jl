@@ -11,7 +11,7 @@ const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                         :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, :ohlc,
-                        :contour, :pie
+                        :contour, :pie, :shape
                        ], _3dTypes)
 @compat const _typeAliases = Dict(
     :n             => :none,
@@ -35,6 +35,9 @@ const _allTypes = vcat([
     :line3d        => :path3d,
     :surf          => :surface,
     :wire          => :wireframe,
+    :shapes        => :shape,
+    :poly          => :shape,
+    :polygon       => :shape,
   )
 
 ishistlike(lt::Symbol) = lt in (:hist, :density)
@@ -515,7 +518,7 @@ function processFillArg(d::Dict, arg)
     d[:fillalpha] = arg
 
   elseif !handleColors!(d, arg, :fillcolor)
-    
+
     d[:fillrange] = arg
   end
 end
@@ -801,5 +804,3 @@ function getSeriesArgs(pkg::AbstractBackend, plotargs::Dict, kw, commandIndex::I
 
   d
 end
-
-

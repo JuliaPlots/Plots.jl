@@ -3,6 +3,9 @@ immutable Shape
   vertices::AVec
 end
 
+get_xs(shape::Shape) = Float64[v[1] for v in shape.vertices]
+get_ys(shape::Shape) = Float64[v[2] for v in shape.vertices]
+
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r=1)
   @compat(Tuple{Float64,Float64})[(r*cos(u),r*sin(u)) for u in linspace(start_θ, end_θ, n)]
@@ -48,7 +51,7 @@ function makecross(; offset = -0.5, radius = 1.0)
     z1 = z2 - π/8
     outercircle = partialcircle(z1, z1 + 2π, 9, radius)
     innercircle = partialcircle(z2, z2 + 2π, 5, 0.5radius)
-    Shape(weave(outercircle, innercircle, 
+    Shape(weave(outercircle, innercircle,
                 ordering=Vector[outercircle,innercircle,outercircle])[1:end-2])
 end
 
@@ -87,7 +90,7 @@ end
 
 "Create a Font from a list of unordered features"
 function font(args...)
-  
+
   # defaults
   family = "Helvetica"
   pointsize = 14
@@ -266,7 +269,7 @@ end
     BezierCurve,
     curve_points,
     directed_curve
-  
+
   typealias P2 FixedSizeArrays.Vec{2,Float64}
   typealias P3 FixedSizeArrays.Vec{3,Float64}
 
@@ -298,7 +301,7 @@ end
     miny, maxy = minimum(yview), maximum(yview)
     diffpct = P2(diff[1] / (maxx - minx),
                  diff[2] / (maxy - miny))
-    
+
     # these points give the initial/final "rise"
     # vertical_offset = P2(0, (maxy - miny) * max(0.03, min(abs(0.5diffpct[2]), 1.0)))
     vertical_offset = P2(0, max(0.15, 0.5norm(diff)))
@@ -319,7 +322,7 @@ end
     else
       []
     end
-        
+
     BezierCurve([p, upper_control, inside_control_points..., lower_control, q])
   end
 
