@@ -121,19 +121,24 @@ nop() = nothing
 
 get_mod(v::AVec, idx::Int) = v[mod1(idx, length(v))]
 get_mod(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
-get_mod(v, idx::Int) = v
+get_mod(v, idx::Int)       = v
 
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]
 
 "duplicate a single value, or pass the 2-tuple through"
-maketuple(x::Real) = (x,x)
+maketuple(x::Real)                     = (x,x)
 maketuple{T,S}(x::@compat(Tuple{T,S})) = x
 
-mapFuncOrFuncs(f::Function, u::AVec) = map(f, u)
+mapFuncOrFuncs(f::Function, u::AVec)        = map(f, u)
 mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
 
-unzip{T,S}(v::AVec{@compat(Tuple{T,S})}) = [vi[1] for vi in v], [vi[2] for vi in v]
+unzip{T,S}(xy::AVec{Tuple{T,S}})              = [x[1] for x in xy], [y[2] for y in xy]
+unzip{T,S,R}(xyz::AVec{Tuple{T,S,R}})         = [x[1] for x in xyz], [y[2] for y in xyz], [z[3] for z in xyz]
+unzip{T}(xy::AVec{FixedSizeArrays.Vec{2,T}})  = T[x[1] for x in xy], T[y[2] for y in xy]
+unzip{T}(xy::FixedSizeArrays.Vec{2,T})        = T[xy[1]], T[xy[2]]
+unzip{T}(xyz::AVec{FixedSizeArrays.Vec{3,T}}) = T[x[1] for x in xyz], T[y[2] for y in xyz], T[z[3] for z in xyz]
+unzip{T}(xyz::FixedSizeArrays.Vec{3,T})       = T[xyz[1]], T[xyz[2]], T[xyz[3]]
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
@@ -203,29 +208,29 @@ isijulia() = isdefined(Main, :IJulia) && Main.IJulia.inited
 isatom() = isdefined(Main, :Atom) && Atom.isconnected()
 
 istuple(::Tuple) = true
-istuple(::Any) = false
+istuple(::Any)   = false
 isvector(::AVec) = true
-isvector(::Any) = false
+isvector(::Any)  = false
 ismatrix(::AMat) = true
-ismatrix(::Any) = false
+ismatrix(::Any)  = false
 isscalar(::Real) = true
-isscalar(::Any) = false
+isscalar(::Any)  = false
 
 
 
 
 # ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
-ticksType{T<:Real}(ticks::AVec{T}) = :ticks
-ticksType{T<:AbstractString}(ticks::AVec{T}) = :labels
-ticksType{T<:AVec,S<:AVec}(ticks::@compat(Tuple{T,S})) = :ticks_and_labels
-ticksType(ticks) = :invalid
+ticksType{T<:Real}(ticks::AVec{T})                      = :ticks
+ticksType{T<:AbstractString}(ticks::AVec{T})            = :labels
+ticksType{T<:AVec,S<:AVec}(ticks::@compat(Tuple{T,S}))  = :ticks_and_labels
+ticksType(ticks)                                        = :invalid
 
-limsType{T<:Real,S<:Real}(lims::@compat(Tuple{T,S})) = :limits
-limsType(lims::Symbol) = lims == :auto ? :auto : :invalid
-limsType(lims) = :invalid
+limsType{T<:Real,S<:Real}(lims::@compat(Tuple{T,S}))    = :limits
+limsType(lims::Symbol)                                  = lims == :auto ? :auto : :invalid
+limsType(lims)                                          = :invalid
 
 
-Base.convert{T<:Real}(::Type{Vector{T}}, rng::Range{T}) = T[x for x in rng]
+Base.convert{T<:Real}(::Type{Vector{T}}, rng::Range{T})         = T[x for x in rng]
 Base.convert{T<:Real,S<:Real}(::Type{Vector{T}}, rng::Range{S}) = T[x for x in rng]
 
 Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
@@ -238,14 +243,14 @@ wraptuple(x) = (x,)
 trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
 trueOrAllTrue(f::Function, x) = f(x)
 
-allLineTypes(arg) = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
-allStyles(arg) = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
-allShapes(arg) = trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg) ||
-                  trueOrAllTrue(a -> isa(a, Shape), arg)
-allAlphas(arg) = trueOrAllTrue(a -> (typeof(a) <: Real && a > 0 && a < 1) ||
-                                    (typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))), arg)
-allReals(arg)   = trueOrAllTrue(a -> typeof(a) <: Real, arg)
-allFunctions(arg) = trueOrAllTrue(a -> isa(a, Function), arg)
+allLineTypes(arg)   = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
+allStyles(arg)      = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
+allShapes(arg)      = trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg) ||
+                        trueOrAllTrue(a -> isa(a, Shape), arg)
+allAlphas(arg)      = trueOrAllTrue(a -> (typeof(a) <: Real && a > 0 && a < 1) ||
+                        (typeof(a) <: AbstractFloat && (a == zero(typeof(a)) || a == one(typeof(a)))), arg)
+allReals(arg)       = trueOrAllTrue(a -> typeof(a) <: Real, arg)
+allFunctions(arg)   = trueOrAllTrue(a -> isa(a, Function), arg)
 
 # ---------------------------------------------------------------
 
@@ -429,11 +434,11 @@ end
 # used in updating an existing series
 
 extendSeriesByOne(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
-extendSeriesByOne(v::AVec, n::Integer = 1) = isempty(v) ? (1:n) : vcat(v, (1:n) + maximum(v))
-extendSeriesData{T}(v::Range{T}, z::Real) = extendSeriesData(float(collect(v)), z)
-extendSeriesData{T}(v::Range{T}, z::AVec) = extendSeriesData(float(collect(v)), z)
-extendSeriesData{T}(v::AVec{T}, z::Real) = (push!(v, convert(T, z)); v)
-extendSeriesData{T}(v::AVec{T}, z::AVec) = (append!(v, convert(Vector{T}, z)); v)
+extendSeriesByOne(v::AVec, n::Integer = 1)       = isempty(v) ? (1:n) : vcat(v, (1:n) + maximum(v))
+extendSeriesData{T}(v::Range{T}, z::Real)        = extendSeriesData(float(collect(v)), z)
+extendSeriesData{T}(v::Range{T}, z::AVec)        = extendSeriesData(float(collect(v)), z)
+extendSeriesData{T}(v::AVec{T}, z::Real)         = (push!(v, convert(T, z)); v)
+extendSeriesData{T}(v::AVec{T}, z::AVec)         = (append!(v, convert(Vector{T}, z)); v)
 
 
 # ---------------------------------------------------------------
@@ -453,22 +458,15 @@ function supportGraph(allvals, func)
       end
   end
   n = length(vals)
-
-  scatter(x,y,
-          m=:rect,
-          ms=10,
-          size=(300,100+18*n),
-          # xticks=(collect(1:length(bs)), bs),
-          leg=false
-         )
+  scatter(x, y, m=:rect, ms=10, size=(300,100+18*n), leg=false)
 end
 
-supportGraphArgs() = supportGraph(_allArgs, supportedArgs)
-supportGraphTypes() = supportGraph(_allTypes, supportedTypes)
-supportGraphStyles() = supportGraph(_allStyles, supportedStyles)
+supportGraphArgs()    = supportGraph(_allArgs, supportedArgs)
+supportGraphTypes()   = supportGraph(_allTypes, supportedTypes)
+supportGraphStyles()  = supportGraph(_allStyles, supportedStyles)
 supportGraphMarkers() = supportGraph(_allMarkers, supportedMarkers)
-supportGraphScales() = supportGraph(_allScales, supportedScales)
-supportGraphAxes() = supportGraph(_allAxes, supportedAxes)
+supportGraphScales()  = supportGraph(_allScales, supportedScales)
+supportGraphAxes()    = supportGraph(_allAxes, supportedAxes)
 
 function dumpSupportGraphs()
   for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles,
@@ -483,16 +481,18 @@ end
 
 # Some conversion functions
 # note: I borrowed these conversion constants from Compose.jl's Measure
-const PX_PER_INCH = 100
-const DPI = PX_PER_INCH
-const MM_PER_INCH = 25.4
-const MM_PER_PX = MM_PER_INCH / PX_PER_INCH
-inch2px(inches::Real) = float(inches * PX_PER_INCH)
-px2inch(px::Real) = float(px / PX_PER_INCH)
-inch2mm(inches::Real) = float(inches * MM_PER_INCH)
-mm2inch(mm::Real) = float(mm / MM_PER_INCH)
-px2mm(px::Real) = float(px * MM_PER_PX)
-mm2px(mm::Real) = float(px / MM_PER_PX)
+
+const PX_PER_INCH   = 100
+const DPI           = PX_PER_INCH
+const MM_PER_INCH   = 25.4
+const MM_PER_PX     = MM_PER_INCH / PX_PER_INCH
+
+inch2px(inches::Real)   = float(inches * PX_PER_INCH)
+px2inch(px::Real)       = float(px / PX_PER_INCH)
+inch2mm(inches::Real)   = float(inches * MM_PER_INCH)
+mm2inch(mm::Real)       = float(mm / MM_PER_INCH)
+px2mm(px::Real)         = float(px * MM_PER_PX)
+mm2px(mm::Real)         = float(px / MM_PER_PX)
 
 
 "Smallest x in plot"

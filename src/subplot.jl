@@ -209,8 +209,9 @@ function subplot!(subplt::Subplot, args...; kw...)
     delete!(d, :group)
   end
 
-
-  kwList, xmeta, ymeta = build_series_args(subplt, groupargs..., args...; d...)
+  process_inputs(subplt, d, groupargs..., args...)
+  kwList, xmeta, ymeta = build_series_args(subplt, d)
+  # kwList, xmeta, ymeta = build_series_args(subplt, groupargs..., args...; d...)
 
   # TODO: something useful with meta info?
 

@@ -6,6 +6,23 @@ end
 get_xs(shape::Shape) = Float64[v[1] for v in shape.vertices]
 get_ys(shape::Shape) = Float64[v[2] for v in shape.vertices]
 
+function shape_coords(shape::Shape)
+    unzip(shape.vertices)
+end
+
+function shape_coords(shapes::AVec{Shape})
+    length(shapes) == 0 && return zeros(0), zeros(0)
+    xs = map(get_xs, shapes)
+    ys = map(get_ys, shapes)
+    x, y = unzip(shapes[1].vertices)
+    for shape in shapes[2:end]
+        tmpx, tmpy = unzip(shape.vertices)
+        x = vcat(x, NaN, tmpx)
+        y = vcat(y, NaN, tmpy)
+    end
+    x, y
+end
+
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r=1)
   @compat(Tuple{Float64,Float64})[(r*cos(u),r*sin(u)) for u in linspace(start_θ, end_θ, n)]
@@ -235,8 +252,10 @@ end
 
 # -----------------------------------------------------------------------
 
+abstract AbstractSurface
+
 "represents a contour or surface mesh"
-immutable Surface{M<:AMat}
+immutable Surface{M<:AMat} <: AbstractSurface
   # x::AVec
   # y::AVec
   surf::M
@@ -250,6 +269,12 @@ for f in (:length, :size)
   @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
 end
 Base.copy(surf::Surface) = Surface(copy(surf.surf))
+
+
+"For the case of representing a surface as a function of x/y... can possibly avoid allocations."
+immutable SurfaceFunction <: AbstractSurface
+    f::Function
+end
 
 # -----------------------------------------------------------------------
 

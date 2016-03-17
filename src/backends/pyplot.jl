@@ -347,7 +347,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
     # NOTE: this is unsupported because it does the wrong thing... it shifts the whole axis
     # extra_kwargs[:bottom] = d[:fill]
 
-    if ishistlike(lt)
+    if like_histogram(lt)
       extra_kwargs[:bins] = d[:nbins]
       extra_kwargs[:normed] = lt == :density
     else
@@ -434,7 +434,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
   end
 
   # do the plot
-  d[:serieshandle] = if ishistlike(lt)
+  d[:serieshandle] = if like_histogram(lt)
     plotfunc(d[:y]; extra_kwargs...)[1]
 
   elseif lt == :contour

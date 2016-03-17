@@ -88,7 +88,12 @@ function plot!(plt::Plot, args...; kw...)
   _before_add_series(plt)
 
   # get the list of dictionaries, one per series
-  seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)
+  @show groupargs args
+  dumpdict(d, "before process_inputs")
+  process_inputs(plt, d, groupargs..., args...)
+  dumpdict(d, "after process_inputs")
+  seriesArgList, xmeta, ymeta = build_series_args(plt, d)
+  # seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)
 
   # if we were able to extract guide information from the series inputs, then update the plot
   # @show xmeta, ymeta

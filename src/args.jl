@@ -40,8 +40,9 @@ const _allTypes = vcat([
     :polygon       => :shape,
   )
 
-ishistlike(lt::Symbol) = lt in (:hist, :density)
-islinelike(lt::Symbol) = lt in (:line, :path, :steppre, :steppost)
+like_histogram(linetype::Symbol) = linetype in (:hist, :density)
+like_line(linetype::Symbol)      = linetype in (:line, :path, :steppre, :steppost)
+like_surface(linetype::Symbol)   = linetype in (:contour, :heatmap, :surface, :wireframe)
 
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]

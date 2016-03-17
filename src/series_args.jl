@@ -77,8 +77,9 @@ compute_x(x::Void, y, z) = 1:size(y,1)
 compute_x(x::Function, y, z) = map(x, y)
 compute_x(x, y, z) = x
 
+compute_y(x::Void, y::Function, z) = error()
 compute_y(x::Void, y::Void, z) = 1:size(z,2)
-compute_y(x::Void, y, z) = 1:size(x,1)
+# compute_y(x::Void, y, z) = 1:size(z,2)
 compute_y(x, y::Function, z) = map(y, x)
 compute_y(x, y, z) = y
 
@@ -120,10 +121,14 @@ function build_series_args(plt::AbstractPlot, kw::KW)
         # build the series arg dict
         numUncounted = pop!(d, :numUncounted, 0)
         n = plt.n + i + numUncounted
+
         dumpdict(d, "before getSeriesArgs")
         d = getSeriesArgs(plt.backend, getplotargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
         dumpdict(d, "after getSeriesArgs")
+
+        @show xs[mod1(i,mx)] ys[mod1(i,my)] zs[mod1(i,mz)]
         d[:x], d[:y], d[:z] = compute_xyz(xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)])
+        @show d[:x] d[:y] d[:z]
 
         # # NOTE: this should be handled by the time it gets here
         # lt = d[:linetype]
@@ -173,8 +178,19 @@ end
 
 
 # --------------------------------------------------------------------
+# process_inputs
+# --------------------------------------------------------------------
+
+# These methods take a plot and the keyword arguments, and processes the input
+# arguments (x/y/z, group, etc), populating the KW dict with appropriate values.
+
+# --------------------------------------------------------------------
 # 0 arguments
 # --------------------------------------------------------------------
+
+# don't do anything
+function process_inputs(plt::AbstractPlot, d::KW)
+end
 
 # # TODO: all methods should probably do this... check for (and pop!) x/y/z values if they exist
 #
@@ -205,118 +221,109 @@ end
 # --------------------------------------------------------------------
 
 # no special handling... assume x and z are nothing
-function build_series_args(plt::AbstractPlot, d::KW, y)
-    build_series_args(plt, d, nothing, y, nothing)
+function process_inputs(plt::AbstractPlot, d::KW, y)
+    d[:y] = y
 end
 
 # matrix... is it z or y?
-function build_series_args{T<:Number}(plt::AbstractPlot, d::KW, mat::AMat{T})
+function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, mat::AMat{T})
     if all3D(d)
         n,m = size(mat)
-        build_series_args(plt, d, 1:n, 1:m, mat)
+        d[:x], d[:y], d[:z] = 1:n, 1:m, mat
     else
-        build_series_args(plt, d, nothing, mat, nothing)
+        d[:y] = mat
     end
 end
+
 
 # plotting arbitrary shapes/polygons
-function build_series_args(plt::AbstractPlot, d::KW, shape::Shape)
-    x, y = unzip(shape.vertices)
-    build_series_args(plt, d, x, y; linetype = :shape)
+function process_inputs(plt::AbstractPlot, d::KW, shape::Shape)
+    d[:x], d[:y] = shape_coords(shape)
+    d[:linetype] = :shape
 end
-
-function shape_coords(shapes::AVec{Shape})
-    xs = map(get_xs, shapes)
-    ys = map(get_ys, shapes)
-    x, y = unzip(shapes[1].vertices)
-    for shape in shapes[2:end]
-        tmpx, tmpy = unzip(shape.vertices)
-        x = vcat(x, NaN, tmpx)
-        y = vcat(y, NaN, tmpy)
-    end
-    x, y
+function process_inputs(plt::AbstractPlot, d::KW, shapes::AVec{Shape})
+    d[:x], d[:y] = shape_coords(shapes)
+    d[:linetype] = :shape
 end
-
-function build_series_args(plt::AbstractPlot, d::KW, shapes::AVec{Shape})
-    x, y = shape_coords(shapes)
-    build_series_args(plt, d, x, y; linetype = :shape)
-end
-function build_series_args(plt::AbstractPlot, d::KW, shapes::AMat{Shape})
+function process_inputs(plt::AbstractPlot, d::KW, shapes::AMat{Shape})
     x, y = [], []
     for j in 1:size(shapes, 2)
         tmpx, tmpy = shape_coords(vec(shapes[:,j]))
         push!(x, tmpx)
         push!(y, tmpy)
     end
-    build_series_args(plt, d, x, y; linetype = :shape)
+    d[:x], d[:y] = x, y
+    d[:linetype] = :shape
 end
 
-function build_series_args(plt::AbstractPlot, d::KW, f::FuncOrFuncs)
-    build_series_args(plt, d, f, xmin(plt), xmax(plt))
+
+# function without range... use the current range of the x-axis
+function process_inputs(plt::AbstractPlot, d::KW, f::FuncOrFuncs)
+    process_inputs(plt, d, f, xmin(plt), xmax(plt))
 end
 
 # --------------------------------------------------------------------
 # 2 arguments
 # --------------------------------------------------------------------
 
-function build_series_args(plt::AbstractPlot, d::KW, x, y)
-    build_series_args(plt, d, x, y, nothing)
+function process_inputs(plt::AbstractPlot, d::KW, x, y)
+    d[:x], d[:y] = x, y
 end
 
-# list of functions
-function build_series_args(plt::AbstractPlot, d::KW, f::FuncOrFuncs, x)
+# if functions come first, just swap the order (not to be confused with parametric functions...
+# as there would be more than one function passed in)
+function process_inputs(plt::AbstractPlot, d::KW, f::FuncOrFuncs, x)
     @assert !(typeof(x) <: FuncOrFuncs)  # otherwise we'd hit infinite recursion here
-    build_series_args(plt, d, x, f)
+    process_inputs(plt, d, x, f)
 end
 
 # --------------------------------------------------------------------
 # 3 arguments
 # --------------------------------------------------------------------
 
+# no special handling... just pass them through
+function process_inputs(plt::AbstractPlot, d::KW, x, y, z)
+    d[:x], d[:y], d[:z] = x, y, z
+end
+
 # 3d line or scatter
-function build_series_args(plt::AbstractPlot, d::KW, x::AVec, y::AVec, zvec::AVec)
-    d = KW(kw)
+function process_inputs(plt::AbstractPlot, d::KW, x::AVec, y::AVec, zvec::AVec)
+    # default to path3d if we haven't set a 3d linetype
     if !(get(d, :linetype, :none) in _3dTypes)
         d[:linetype] = :path3d
     end
-    build_series_args(plt, d, x, y; z=zvec, d...)
+    d[:x], d[:y], d[:z] = x, y, z
 end
 
-# contours or surfaces... function grid
-function build_series_args(plt::AbstractPlot, d::KW, x::AVec, y::AVec, zf::Function)
-    # only allow sorted x/y for now
-    # TODO: auto sort x/y/z properly
-    @assert x == sort(x)
-    @assert y == sort(y)
-    surface = Float64[zf(xi, yi) for xi in x, yi in y]
-    build_series_args(plt, d, x, y, surface)  # passes it to the zmat version
+# surface-like... function
+function process_inputs(plt::AbstractPlot, d::KW, x::AVec, y::AVec, zf::Function)
+    x, y = sort(x), sort(y)
+    d[:z] = Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
+    d[:x], d[:y] = x, y
 end
 
-# contours or surfaces... matrix grid
-function build_series_args{T<:Number}(plt::AbstractPlot, x::AVec, y::AVec, zmat::AMat{T})
-    # only allow sorted x/y for now
-    # TODO: auto sort x/y/z properly
-    @assert x == sort(x)
-    @assert y == sort(y)
+# surface-like... matrix grid
+function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, x::AVec, y::AVec, zmat::AMat{T})
     @assert size(zmat) == (length(x), length(y))
-    d = KW(kw)
-    d[:z] = Surface(convert(Matrix{Float64}, zmat))
-    if !(get(d, :linetype, :none) in (:contour, :heatmap, :surface, :wireframe))
+    if !issorted(x) || !issorted(y)
+        x_idx = sortperm(x)
+        y_idx = sortperm(y)
+        x, y = x[x_idx], y[y_idx]
+        zmat = z[x_idx, y_idx]
+    end
+    d[:x], d[:y], d[:z] = x, y, Surface{Matrix{Float64}}(zmat)
+    if !like_surface(get(d, :linetype, :none))
         d[:linetype] = :contour
     end
-    build_series_args(plt, d, x, y; d...) #, z = surf)
 end
 
-# contours or surfaces... general x, y grid
-function build_series_args{T<:Number}(plt::AbstractPlot, x::AMat{T}, y::AMat{T}, zmat::AMat{T})
+# surfaces-like... general x, y grid
+function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, x::AMat{T}, y::AMat{T}, zmat::AMat{T})
     @assert size(zmat) == size(x) == size(y)
-    surf = Surface(convert(Matrix{Float64}, zmat))
-    d = KW(kw)
-    d[:z] = Surface(convert(Matrix{Float64}, zmat))
-    if !(get(d, :linetype, :none) in (:contour, :heatmap, :surface, :wireframe))
+    d[:x], d[:y], d[:z] = Any[x], Any[y], Surface{Matrix{Float64}}(zmat)
+    if !like_surface(get(d, :linetype, :none))
         d[:linetype] = :contour
     end
-    build_series_args(plt, d, Any[x], Any[y]; d...) #kw..., z = surf, linetype = :contour)
 end
 
 
@@ -325,57 +332,74 @@ end
 # --------------------------------------------------------------------
 
 # special handling... xmin/xmax with function(s)
-function build_series_args(plt::AbstractPlot, d::KW, f::FuncOrFuncs, xmin::Number, xmax::Number)
+function process_inputs(plt::AbstractPlot, d::KW, f::FuncOrFuncs, xmin::Number, xmax::Number)
     width = get(plt.plotargs, :size, (100,))[1]
-    x = collect(linspace(xmin, xmax, width))  # we don't need more than the width
-    build_series_args(plt, d, x, f)
+    x = linspace(xmin, xmax, width)
+    process_inputs(plt, d, x, f)
 end
 
-
 # special handling... xmin/xmax with parametric function(s)
-build_series_args{T<:Number}(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T}) = build_series_args(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
-build_series_args{T<:Number}(plt::AbstractPlot, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs) = build_series_args(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
-build_series_args(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = build_series_args(plt, d, fx, fy, linspace(umin, umax, numPoints))
+process_inputs{T<:Number}(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T}) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
+process_inputs{T<:Number}(plt::AbstractPlot, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
+process_inputs(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = process_inputs(plt, d, fx, fy, linspace(umin, umax, numPoints))
 
 # special handling... 3D parametric function(s)
-build_series_args{T<:Number}(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec{T}) = build_series_args(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
-build_series_args{T<:Number}(plt::AbstractPlot, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs) = build_series_args(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
-build_series_args(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = build_series_args(plt, d, fx, fy, fz, linspace(umin, umax, numPoints))
+process_inputs{T<:Number}(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec{T}) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
+process_inputs{T<:Number}(plt::AbstractPlot, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
+process_inputs(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = process_inputs(plt, d, fx, fy, fz, linspace(umin, umax, numPoints))
 
 
 # --------------------------------------------------------------------
 # Lists of tuples and FixedSizeArrays
 # --------------------------------------------------------------------
 
+# if we get an unhandled tuple, just splat it in
+function process_inputs(plt::AbstractPlot, d::KW, tup::Tuple)
+    process_inputs(plt, d, tup...)
+end
+
 # (x,y) tuples
-function build_series_args{R1<:Number,R2<:Number}(plt::AbstractPlot, xy::AVec{Tuple{R1,R2}})
-    build_series_args(plt, d, unzip(xy)...)
+function process_inputs{R1<:Number,R2<:Number}(plt::AbstractPlot, d::KW, xy::AVec{Tuple{R1,R2}})
+    process_inputs(plt, d, unzip(xy)...)
 end
-function build_series_args{R1<:Number,R2<:Number}(plt::AbstractPlot, xy::Tuple{R1,R2})
-    build_series_args(plt, d, [xy[1]], [xy[2]])
-end
-
-
-unzip{T}(x::AVec{FixedSizeArrays.Vec{2,T}}) = T[xi[1] for xi in x], T[xi[2] for xi in x]
-unzip{T}(x::FixedSizeArrays.Vec{2,T}) = T[x[1]], T[x[2]]
-
-function build_series_args{T<:Number}(plt::AbstractPlot, xy::AVec{FixedSizeArrays.Vec{2,T}})
-    build_series_args(plt, d, unzip(xy)...)
+function process_inputs{R1<:Number,R2<:Number}(plt::AbstractPlot, d::KW, xy::Tuple{R1,R2})
+    process_inputs(plt, d, [xy[1]], [xy[2]])
 end
 
-function build_series_args{T<:Number}(plt::AbstractPlot, xy::FixedSizeArrays.Vec{2,T})
-    build_series_args(plt, d, [xy[1]], [xy[2]])
+# (x,y,z) tuples
+function process_inputs{R1<:Number,R2<:Number,R3<:Number}(plt::AbstractPlot, d::KW, xyz::AVec{Tuple{R1,R2,R3}})
+    process_inputs(plt, d, unzip(xyz)...)
+end
+function process_inputs{R1<:Number,R2<:Number,R3<:Number}(plt::AbstractPlot, d::KW, xyz::Tuple{R1,R2,R3})
+    process_inputs(plt, d, [xyz[1]], [xyz[2]], [xyz[3]])
+end
+
+# 2D FixedSizeArrays
+function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, xy::AVec{FixedSizeArrays.Vec{2,T}})
+    process_inputs(plt, d, unzip(xy)...)
+end
+function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, xy::FixedSizeArrays.Vec{2,T})
+    process_inputs(plt, d, [xy[1]], [xy[2]])
+end
+
+# 3D FixedSizeArrays
+function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, xyz::AVec{FixedSizeArrays.Vec{3,T}})
+    process_inputs(plt, d, unzip(xyz)...)
+end
+function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, xyz::FixedSizeArrays.Vec{3,T})
+    process_inputs(plt, d, [xyz[1]], [xyz[2]], [xyz[3]])
 end
 
 # --------------------------------------------------------------------
 # handle grouping
 # --------------------------------------------------------------------
 
-function build_series_args(plt::AbstractPlot, d::KW, groupby::GroupBy, args...)
+function process_inputs(plt::AbstractPlot, d::KW, groupby::GroupBy, args...)
     ret = Any[]
+    error("unfinished after series reorg")
     for (i,glab) in enumerate(groupby.groupLabels)
         # TODO: don't automatically overwrite labels
-        kwlist, xmeta, ymeta = build_series_args(plt, d, args...,
+        kwlist, xmeta, ymeta = process_inputs(plt, d, args...,
                                             idxfilter = groupby.groupIds[i],
                                             label = string(glab),
                                             numUncounted = length(ret))  # we count the idx from plt.n + numUncounted + i
@@ -391,8 +415,13 @@ end
 function setup_dataframes()
     @require DataFrames begin
 
-        function build_series_args(plt::AbstractPlot, d::KW, df::DataFrames.AbstractDataFrame, args...)
-            build_series_args(plt, d, args..., dataframe = df)
+        # function process_inputs(plt::AbstractPlot, d::KW, df::DataFrames.AbstractDataFrame, args...)
+        #     process_inputs(plt, d, args..., dataframe = df)
+        # end
+
+        function process_inputs(plt::AbstractPlot, d::KW, df::DataFrames.AbstractDataFrame, args...)
+            d[:dataframe] = df
+            process_inputs(plt, d, args...)
         end
 
         # expecting the column name of a dataframe that was passed in... anything else should error
