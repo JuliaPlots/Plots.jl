@@ -5,7 +5,6 @@ Reexport
 Requires
 FactCheck
 Cairo
-Fontconfig
 Gadfly
 Images
 ImageMagick
