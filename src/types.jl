@@ -7,6 +7,7 @@ immutable PlotsDisplay <: Display end
 abstract AbstractBackend
 abstract AbstractPlot{T<:AbstractBackend}
 
+typealias KW Dict{Symbol,Any}
 # -----------------------------------------------------------
 # Plot
 # -----------------------------------------------------------

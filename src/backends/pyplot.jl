@@ -269,7 +269,7 @@ end
 
 function _create_plot(pkg::PyPlotBackend; kw...)
   # create the figure
-  d = Dict(kw)
+  d = KW(kw)
 
   # standalone plots will create a figure, but not if part of a subplot (do it later)
   if haskey(d, :subplot)
@@ -290,7 +290,7 @@ end
 
 
 function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
-  d = Dict(kw)
+  d = KW(kw)
 
   # 3D plots have a different underlying Axes object in PyPlot
   lt = d[:linetype]

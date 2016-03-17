@@ -713,7 +713,7 @@ convertLegendValue(val::Bool) = val ? :best : :none
 
 # build the argument dictionary for the plot
 function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
-  kwdict = Dict(kw)
+  kwdict = KW(kw)
   d = Dict()
 
   # add defaults?
@@ -750,7 +750,7 @@ end
 
 # build the argument dictionary for a series
 function getSeriesArgs(pkg::AbstractBackend, plotargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
-  kwdict = Dict(kw)
+  kwdict = KW(kw)
   d = Dict()
 
   # add defaults?

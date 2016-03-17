@@ -16,7 +16,7 @@ immutable GLScreenWrapper
 end
 
 function _create_plot(pkg::GLVisualizeBackend; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
 
@@ -28,7 +28,7 @@ end
 
 
 function _add_series(::GLVisualizeBackend, plt::Plot; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
   # TODO: this should be moved to the display method?

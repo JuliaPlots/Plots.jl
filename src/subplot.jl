@@ -39,7 +39,7 @@ Create a series of plots:
 """
 function subplot(args...; kw...)
   validateSubplotSupported()
-  d = Dict(kw)
+  d = KW(kw)
   preprocessArgs!(d)
 
   # for plotting recipes, swap out the args and update the parameter dictionary
@@ -80,7 +80,7 @@ end
 
 # grid layout
 function subplot{P}(plt1::Plot{P}, plts::Plot{P}...; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   layout = subplotlayout(length(plts)+1, get(d, :nr, -1), get(d, :nc, -1))
   subplot(vcat(plt1, plts...), layout, d)
 end
@@ -88,7 +88,7 @@ end
 # explicit layout
 function subplot{P,I<:Integer}(pltsPerRow::AVec{I}, plt1::Plot{P}, plts::Plot{P}...; kw...)
   layout = subplotlayout(pltsPerRow)
-  subplot(vcat(plt1, plts...), layout, Dict(kw))
+  subplot(vcat(plt1, plts...), layout, KW(kw))
 end
 
 # this will be called internally
@@ -189,7 +189,7 @@ end
 function subplot!(subplt::Subplot, args...; kw...)
   # validateSubplotSupported()
 
-  d = Dict(kw)
+  d = KW(kw)
   args = _preprocess_subplot(subplt, d, args)
 
   # create the underlying object (each backend will do this differently)
@@ -251,7 +251,7 @@ end
 
 
 function _add_series_subplot(plt::Plot, args...; kw...)
-  d = Dict(kw)
+  d = KW(kw)
 
   setTicksFromStringVector(d, d, :x, :xticks)
   setTicksFromStringVector(d, d, :y, :yticks)

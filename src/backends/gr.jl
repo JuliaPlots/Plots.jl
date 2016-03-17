@@ -702,12 +702,12 @@ function gr_display(subplt::Subplot{GRBackend})
 end
 
 function _create_plot(pkg::GRBackend; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   Plot(nothing, pkg, 0, d, Dict[])
 end
 
 function _add_series(::GRBackend, plt::Plot; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   push!(plt.seriesargs, d)
   plt
 end

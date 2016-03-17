@@ -20,7 +20,7 @@ end
 # ---------------------------------------------------------------------------
 
 function _create_plot(pkg::PlotlyJSBackend; kw...)
-    d = Dict(kw)
+    d = KW(kw)
     # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
     # TODO: initialize the plot... title, xlabel, bgcolor, etc
     # o = PlotlyJS.Plot(PlotlyJS.GenericTrace[], PlotlyJS.Layout(),
@@ -34,7 +34,7 @@ end
 
 
 function _add_series(::PlotlyJSBackend, plt::Plot; kw...)
-    d = Dict(kw)
+    d = KW(kw)
     syncplot = plt.o
 
     # dumpdict(d, "addseries", true)

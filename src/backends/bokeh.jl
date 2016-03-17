@@ -65,7 +65,7 @@ end
 # ---------------------------------------------------------------------------
 
 function _create_plot(pkg::BokehBackend; kw...)
-  d = Dict(kw)
+  d = KW(kw)
 
   # dumpdict(d, "plot", true)
 
@@ -89,7 +89,7 @@ end
 
 
 function _add_series(::BokehBackend, plt::Plot; kw...)
-  d = Dict(kw)
+  d = KW(kw)
 
   # dumpdict(d, "plot!", true)
 

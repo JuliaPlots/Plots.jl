@@ -508,7 +508,7 @@ end
 
 # create a blank Gadfly.Plot object
 function _create_plot(pkg::GadflyBackend; kw...)
-    d = Dict(kw)
+    d = KW(kw)
     gplt = createGadflyPlotObject(d)
     Plot(gplt, pkg, 0, d, Dict[])
 end
@@ -522,7 +522,7 @@ function _add_series(::GadflyBackend, plt::Plot; kw...)
         gplt.layers = gplt.layers[2:end]
     end
 
-    d = Dict(kw)
+    d = KW(kw)
     addGadflySeries!(plt, d)
     push!(plt.seriesargs, d)
     plt

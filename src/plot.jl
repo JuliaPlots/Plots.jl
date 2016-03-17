@@ -44,7 +44,7 @@ When you pass in matrices, it splits by columns.  See the documentation for more
 # this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
   pkg = backend()
-  d = Dict(kw)
+  d = KW(kw)
   preprocessArgs!(d)
   dumpdict(d, "After plot preprocessing")
 
@@ -71,7 +71,7 @@ end
 
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   preprocessArgs!(d)
 
   # for plotting recipes, swap out the args and update the parameter dictionary

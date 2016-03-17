@@ -15,7 +15,7 @@ end
 # ---------------------------------------------------------------------------
 
 function _create_plot(pkg::[PkgName]AbstractBackend; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
   Plot(nothing, pkg, 0, d, Dict[])
@@ -23,7 +23,7 @@ end
 
 
 function _add_series(::[PkgName]AbstractBackend, plt::Plot; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
   plt

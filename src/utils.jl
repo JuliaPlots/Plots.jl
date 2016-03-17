@@ -19,7 +19,7 @@ A hacky replacement for a histogram when the backend doesn't support histograms 
 Convert it into a bar chart with the appropriate x/y values.
 """
 function histogramHack(; kw...)
-  d = Dict(kw)
+  d = KW(kw)
 
   # we assume that the y kwarg is set with the data to be binned, and nbins is also defined
   edges, midpoints, buckets, counts = binData(d[:y], d[:nbins])
@@ -35,7 +35,7 @@ A hacky replacement for a bar graph when the backend doesn't support bars direct
 Convert it into a line chart with fillrange set.
 """
 function barHack(; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   midpoints = d[:x]
   heights = d[:y]
   fillrange = d[:fillrange] == nothing ? 0.0 : d[:fillrange]
@@ -75,7 +75,7 @@ A hacky replacement for a sticks graph when the backend doesn't support sticks d
 Convert it into a line chart that traces the sticks, and a scatter that sets markers at the points.
 """
 function sticksHack(; kw...)
-  dLine = Dict(kw)
+  dLine = KW(kw)
   dScatter = copy(dLine)
 
   # these are the line vertices
@@ -130,6 +130,8 @@ makevec{T}(v::T) = T[v]
 maketuple(x::Real) = (x,x)
 maketuple{T,S}(x::@compat(Tuple{T,S})) = x
 
+mapFuncOrFuncs(f::Function, u::AVec) = map(f, u)
+mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
 
 unzip{T,S}(v::AVec{@compat(Tuple{T,S})}) = [vi[1] for vi in v], [vi[2] for vi in v]
 
@@ -260,7 +262,7 @@ end
 function with(f::Function, args...; kw...)
 
   # dict to store old and new keyword args for anything that changes
-  newdefs = Dict(kw)
+  newdefs = KW(kw)
   olddefs = Dict()
   for k in keys(newdefs)
     olddefs[k] = default(k)

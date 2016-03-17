@@ -39,7 +39,7 @@ function replaceQwtAliases(d, s)
 end
 
 function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   lt = d[:linetype]
   if lt == :scatter
     d[:linetype] = :none
@@ -78,7 +78,7 @@ function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
 end
 
 function _create_plot(pkg::QwtBackend; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   fixcolors(d)
   dumpdict(d,"\n\n!!! plot")
   o = Qwt.plot(zeros(0,0); d..., show=false)

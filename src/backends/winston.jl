@@ -41,7 +41,7 @@ end
 
 
 function _create_plot(pkg::WinstonBackend; kw...)
-  d = Dict(kw)
+  d = KW(kw)
   wplt = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
   
   Plot(wplt, pkg, 0, d, Dict[])
@@ -65,7 +65,7 @@ function getWinstonItems(plt::Plot)
 end
 
 function _add_series(::WinstonBackend, plt::Plot; kw...)
-  d = Dict(kw)
+  d = KW(kw)
 
   window, canvas, wplt = getWinstonItems(plt)
 
