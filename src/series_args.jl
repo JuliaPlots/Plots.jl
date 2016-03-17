@@ -57,50 +57,49 @@ end
 
 # --------------------------------------------------------------------
 
-# # in computeXandY, we take in any of the possible items, convert into proper x/y vectors, then return.
-# # this is also where all the "set x to 1:length(y)" happens, and also where we assert on lengths.
-# computeX(x::@compat(Void), y) = 1:size(y,1)
-# computeX(x, y) = copy(x)
-# computeY(x, y::Function) = map(y, x)
-# computeY(x, y) = copy(y)
-# function computeXandY(x, y)
-#     if x == nothing && isa(y, Function)
-#         error("If you want to plot the function `$y`, you need to define the x values somehow!")
-#     end
-#     x, y = computeX(x,y), computeY(x,y)
-#     # @assert length(x) == length(y)
-#     x, y
-# end
+# TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array
+#       result in that array being shared.  push!, etc will add too many items to that array
 
-compute_x(x::Void, y::Void, z) = 1:size(z,1)
-compute_x(x::Void, y, z) = 1:size(y,1)
-compute_x(x::Function, y, z) = map(x, y)
-compute_x(x, y, z) = x
+compute_x(x::Void, y::Void, z)      = 1:size(z,1)
+compute_x(x::Void, y, z)            = 1:size(y,1)
+compute_x(x::Function, y, z)        = map(x, y)
+compute_x(x, y, z)                  = copy(x)
 
-compute_y(x::Void, y::Function, z) = error()
-compute_y(x::Void, y::Void, z) = 1:size(z,2)
-# compute_y(x::Void, y, z) = 1:size(z,2)
-compute_y(x, y::Function, z) = map(y, x)
-compute_y(x, y, z) = y
+# compute_y(x::Void, y::Function, z)  = error()
+compute_y(x::Void, y::Void, z)      = 1:size(z,2)
+compute_y(x, y::Function, z)        = map(y, x)
+compute_y(x, y, z)                  = copy(y)
 
-compute_z(x, y, z::Function) = map(z, x, y)
-compute_z(x, y, z) = Surface(z)
+compute_z(x, y, z::Function)        = map(z, x, y)
+compute_z(x, y, z::AbstractMatrix)  = Surface(z)
+compute_z(x, y, z::Void)            = nothing
+compute_z(x, y, z)                  = copy(z)
 
-compute_xyz(x, y, z) = compute_x(x,y,z), compute_y(x,y,z), compute_z(x,y,z)
+@noinline function compute_xyz(x, y, z)
+    x = compute_x(x,y,z)
+    y = compute_y(x,y,z)
+    z = compute_z(x,y,z)
+    x, y, z
+end
 
 # not allowed
-compute_xyz(x::Void, y::FuncOrFuncs, z) = error("If you want to plot the function `$y`, you need to define the x values!")
+compute_xyz(x::Void, y::FuncOrFuncs, z)       = error("If you want to plot the function `$y`, you need to define the x values!")
 compute_xyz(x::Void, y::Void, z::FuncOrFuncs) = error("If you want to plot the function `$z`, you need to define x and y values!")
-compute_xyz(x::Void, y::Void, z::Void) = error("x/y/z are all nothing!")
+compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 
 # --------------------------------------------------------------------
 
 # create n=max(mx,my) series arguments. the shorter list is cycled through
 # note: everything should flow through this
 function build_series_args(plt::AbstractPlot, kw::KW)
-    xs, xmeta = convertToAnyVector(pop!(kw, :x, nothing), kw)
-    ys, ymeta = convertToAnyVector(pop!(kw, :y, nothing), kw)
-    zs, zmeta = convertToAnyVector(pop!(kw, :z, nothing), kw)
+    x, y, z = map(a -> pop!(kw, a, nothing), (:x, :y, :z))
+    if nothing == x == y == z
+        return [], nothing, nothing
+    end
+
+    xs, xmeta = convertToAnyVector(x, kw)
+    ys, ymeta = convertToAnyVector(y, kw)
+    zs, zmeta = convertToAnyVector(z, kw)
 
     mx = length(xs)
     my = length(ys)
@@ -126,12 +125,13 @@ function build_series_args(plt::AbstractPlot, kw::KW)
         d = getSeriesArgs(plt.backend, getplotargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
         dumpdict(d, "after getSeriesArgs")
 
-        @show xs[mod1(i,mx)] ys[mod1(i,my)] zs[mod1(i,mz)]
+        @show map(typeof, (xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]))
         d[:x], d[:y], d[:z] = compute_xyz(xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)])
-        @show d[:x] d[:y] d[:z]
+        @show map(typeof, (d[:x], d[:y], d[:z]))
+
 
         # # NOTE: this should be handled by the time it gets here
-        # lt = d[:linetype]
+        lt = d[:linetype]
         # if isa(d[:y], Surface)
         #     if lt in (:contour, :heatmap, :surface, :wireframe)
         #         z = d[:y]
@@ -191,30 +191,6 @@ end
 # don't do anything
 function process_inputs(plt::AbstractPlot, d::KW)
 end
-
-# # TODO: all methods should probably do this... check for (and pop!) x/y/z values if they exist
-#
-# function build_series_args(plt::AbstractPlot, d::KW)
-#
-#     build_series_args(plt, d, pop!(d, :x, nothing),
-#                            pop!(d, :y, nothing),
-#                            pop!(d, :z, nothing); d...)
-# end
-
-
-#     d = KW(kw)
-#     if !haskey(d, :y)
-#         # assume we just want to create an empty plot object which can be added to later
-#         return [], nothing, nothing
-#         # error("Called plot/subplot without args... must set y in the keyword args.  Example: plot(; y=rand(10))")
-#     end
-#
-#     if haskey(d, :x)
-#         return build_series_args(plt, d, d[:x], d[:y])
-#     else
-#         return build_series_args(plt, d, d[:y])
-#     end
-# end
 
 # --------------------------------------------------------------------
 # 1 argument
@@ -292,7 +268,7 @@ function process_inputs(plt::AbstractPlot, d::KW, x::AVec, y::AVec, zvec::AVec)
     if !(get(d, :linetype, :none) in _3dTypes)
         d[:linetype] = :path3d
     end
-    d[:x], d[:y], d[:z] = x, y, z
+    d[:x], d[:y], d[:z] = x, y, zvec
 end
 
 # surface-like... function
@@ -309,7 +285,7 @@ function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, x::AVec, y::AVec, z
         x_idx = sortperm(x)
         y_idx = sortperm(y)
         x, y = x[x_idx], y[y_idx]
-        zmat = z[x_idx, y_idx]
+        zmat = zmat[x_idx, y_idx]
     end
     d[:x], d[:y], d[:z] = x, y, Surface{Matrix{Float64}}(zmat)
     if !like_surface(get(d, :linetype, :none))
@@ -339,13 +315,13 @@ function process_inputs(plt::AbstractPlot, d::KW, f::FuncOrFuncs, xmin::Number, 
 end
 
 # special handling... xmin/xmax with parametric function(s)
-process_inputs{T<:Number}(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T}) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
-process_inputs{T<:Number}(plt::AbstractPlot, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
+process_inputs{T<:Number}(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T}) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
+process_inputs{T<:Number}(plt::AbstractPlot, d::KW, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
 process_inputs(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = process_inputs(plt, d, fx, fy, linspace(umin, umax, numPoints))
 
 # special handling... 3D parametric function(s)
-process_inputs{T<:Number}(plt::AbstractPlot, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec{T}) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
-process_inputs{T<:Number}(plt::AbstractPlot, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
+process_inputs{T<:Number}(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec{T}) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
+process_inputs{T<:Number}(plt::AbstractPlot, d::KW, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
 process_inputs(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = process_inputs(plt, d, fx, fy, fz, linspace(umin, umax, numPoints))
 
 
@@ -414,10 +390,6 @@ end
 
 function setup_dataframes()
     @require DataFrames begin
-
-        # function process_inputs(plt::AbstractPlot, d::KW, df::DataFrames.AbstractDataFrame, args...)
-        #     process_inputs(plt, d, args..., dataframe = df)
-        # end
 
         function process_inputs(plt::AbstractPlot, d::KW, df::DataFrames.AbstractDataFrame, args...)
             d[:dataframe] = df
