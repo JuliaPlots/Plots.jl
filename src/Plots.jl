@@ -127,7 +127,8 @@ export
     PlotRecipe,
     # EllipseRecipe,
     spy,
-    arcdiagram
+    arcdiagram,
+    chorddiagram
     # corrplot
 
 
