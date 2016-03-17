@@ -210,7 +210,7 @@ function subplot!(subplt::Subplot, args...; kw...)
   end
 
 
-  kwList, xmeta, ymeta = createKWargsList(subplt, groupargs..., args...; d...)
+  kwList, xmeta, ymeta = build_series_args(subplt, groupargs..., args...; d...)
 
   # TODO: something useful with meta info?
 
