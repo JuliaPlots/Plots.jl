@@ -300,11 +300,13 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
 
   # handle mismatched x/y sizes, as PyPlot doesn't like that
   x, y = d[:x], d[:y]
-  nx, ny = map(length, (x,y))
-  if nx < ny
-    d[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
-  else
-    d[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
+  if !isa(get(d, :z, nothing), Surface)
+      nx, ny = map(length, (x,y))
+      if nx < ny
+        d[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
+      else
+        d[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
+      end
   end
 
   ax = getAxis(plt, d[:axis])
