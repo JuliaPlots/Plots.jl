@@ -138,10 +138,6 @@ end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
 # =================================================
 # Arc and chord diagrams
 
@@ -181,11 +177,6 @@ function mat2list{T}(mat::AbstractArray{T,2})
     resize!(source, idx-1), resize!(destiny, idx-1), resize!(weight, idx-1)
 end
 
-<<<<<<< HEAD
-=======
->>>>>>> c7c10e769d7142c870765ad36ecb1ea305101ec4
-=======
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
 # -------------------------------------------------
 # Arc Diagram
 
@@ -196,15 +187,7 @@ function arc!(source, destiny, weight, min, max, grad)
     radius = (destiny - source) / 2
     arc = Plots.partialcircle(0, π, 30, radius)
     x, y = Plots.unzip(arc)
-<<<<<<< HEAD
-<<<<<<< HEAD
     plot!(x .+ radius .+ source,  y, line = (curvecolor(weight, min, max, grad), 0.5, 2), legend=false)
-=======
-    plot!(x .+ radius .+ source,  y, line = (curvecolor(weight, min, max, grad), 0.5, 2))
->>>>>>> c7c10e769d7142c870765ad36ecb1ea305101ec4
-=======
-    plot!(x .+ radius .+ source,  y, line = (curvecolor(weight, min, max, grad), 0.5, 2), legend=false)
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
 end
 
 """
@@ -212,15 +195,10 @@ end
 
 Plots an arc diagram, form `source` to `destiny` (clockwise), using `weight` to determine the colors.
 """
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
 function arcdiagram(source, destiny, weight; kargs...)
 
     args = Dict(kargs)
     grad = pop!(args, :grad,   ColorGradient([colorant"darkred", colorant"darkblue"]))
-<<<<<<< HEAD
 
     if length(source) == length(destiny) == length(weight)
 
@@ -229,23 +207,6 @@ function arcdiagram(source, destiny, weight; kargs...)
 
         xmin, xmax = extrema(vertices)
         plot(xlim=(xmin - 0.5, xmax + 0.5), legend=false)
-=======
-function arcdiagram(source, destiny, weight, grad=ColorGradient(:bluesreds))
-=======
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
-
-    if length(source) == length(destiny) == length(weight)
-
-        vertices = unique(vcat(source, destiny))
-        sort!(vertices)
-
-        xmin, xmax = extrema(vertices)
-<<<<<<< HEAD
-        plot(xlim=(xmin - 0.5, xmax + 0.5))
->>>>>>> c7c10e769d7142c870765ad36ecb1ea305101ec4
-=======
-        plot(xlim=(xmin - 0.5, xmax + 0.5), legend=false)
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
 
         wmin,wmax = extrema(weight)
 
@@ -253,49 +214,23 @@ function arcdiagram(source, destiny, weight, grad=ColorGradient(:bluesreds))
             arc!(i, j, value, wmin, wmax, grad)
         end
 
-<<<<<<< HEAD
-<<<<<<< HEAD
         scatter!(vertices, zeros(length(vertices)); legend=false, args...)
-=======
-        scatter!(vertices, zeros(length(vertices)), leg=false)
->>>>>>> c7c10e769d7142c870765ad36ecb1ea305101ec4
-=======
-        scatter!(vertices, zeros(length(vertices)); legend=false, args...)
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
 
-        else
+    else
 
         throw(ArgumentError("source, destiny and weight should have the same length"))
 
     end
 end
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
 """
 `arcdiagram(mat[, grad])`
 
 Plots an arc diagram from an adjacency matrix, form rows to columns (clockwise),
-=======
-"""
-`arcdiagram(mat[, grad])`
-
-Plots an arc diagram of a matrix, form rows to columns (clockwise),
->>>>>>> c7c10e769d7142c870765ad36ecb1ea305101ec4
-=======
-
-"""
-`arcdiagram(mat[, grad])`
-
-Plots an arc diagram from an adjacency matrix, form rows to columns (clockwise),
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
 using the values on the matrix as weights to determine the colors.
 Doesn't show edges with value zero if the input is sparse.
 For simmetric matrices, only the upper triangular values are used.
 """
-<<<<<<< HEAD
-<<<<<<< HEAD
 arcdiagram{T}(mat::AbstractArray{T,2}; kargs...) = arcdiagram(mat2list(mat)...; kargs...)
 
 # -------------------------------------------------
@@ -388,104 +323,3 @@ For simmetric matrices, only the upper triangular values are used.
 `zcolor` or `group` can be used to determine the node colors.
 """
 chorddiagram(mat::AbstractMatrix; kargs...) = chorddiagram(mat2list(mat)...; kargs...)
-=======
-function arcdiagram{T}(mat::AbstractArray{T,2}, grad=ColorGradient(:bluesreds))
-    nrow, ncol = size(mat) # rows are sources and columns are destinies
-=======
-arcdiagram{T}(mat::AbstractArray{T,2}; kargs...) = arcdiagram(mat2list(mat)...; kargs...)
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
-
-# -------------------------------------------------
-# Chord diagram
-
-arcshape(θ1, θ2) = Shape(vcat(Plots.partialcircle(θ1, θ2, 15, 1.1),
-                            reverse(Plots.partialcircle(θ1, θ2, 15, 0.9))))
-
-colorlist(grad, ::Void) = :darkgray
-
-function colorlist(grad, z)
-    zmin, zmax = extrema(z)
-    RGBA{Float64}[getColorZ(grad, (zi-zmin)/(zmax-zmin)) for zi in z]'
-end
-
-"""
-`chorddiagram(source, destiny, weight[, grad, zcolor, group])`
-
-Plots a chord diagram, form `source` to `destiny`,
-using `weight` to determine the edge colors using `grad`.
-`zcolor` or `group` can be used to determine the node colors.
-"""
-function chorddiagram(source, destiny, weight; kargs...)
-
-    args=Dict(kargs)
-    grad  = pop!(args, :grad,   ColorGradient([colorant"darkred", colorant"darkblue"]))
-    zcolor= pop!(args, :zcolor, nothing)
-    group = pop!(args, :group,  nothing)
-
-    if zcolor !== nothing && group !== nothing
-        throw(ErrorException("group and zcolor can not be used together."))
-    end
-
-    if length(source) == length(destiny) == length(weight)
-
-        plt = plot(xlim=(-2,2), ylim=(-2,2), legend=false, grid=false,
-        xticks=nothing, yticks=nothing,
-        xlim=(-1.2,1.2), ylim=(-1.2,1.2))
-
-        nodemin, nodemax = extrema(vcat(source, destiny))
-
-        weightmin, weightmax = extrema(weight)
-
-        A  = 1.5π # Filled space
-        B  = 0.5π # White space (empirical)
-
-        Δα = A / nodemax
-        Δβ = B / nodemax
-
-        δ = Δα  + Δβ
-
-        for i in 1:length(source)
-            curve = BezierCurve(P2[ (cos((source[i ]-1)*δ + 0.5Δα), sin((source[i ]-1)*δ + 0.5Δα)), (0,0),
-                                    (cos((destiny[i]-1)*δ + 0.5Δα), sin((destiny[i]-1)*δ + 0.5Δα)) ])
-            plot!(curve_points(curve), line = (Plots.curvecolor(weight[i], weightmin, weightmax, grad), 1, 1))
-        end
-
-        if group === nothing
-            c =  colorlist(grad, zcolor)
-        elseif length(group) == nodemax
-
-            idx = collect(0:(nodemax-1))
-
-            for g in group
-                plot!([arcshape(n*δ, n*δ + Δα) for n in idx[group .== g]]; args...)
-            end
-
-            return plt
-
-        else
-            throw(ErrorException("group should the ", nodemax, " elements."))
-        end
-
-        plot!([arcshape(n*δ, n*δ + Δα) for n in 0:(nodemax-1)]; mc=c, args...)
-
-        return plt
-
-    else
-        throw(ArgumentError("source, destiny and weight should have the same length"))
-    end
-end
-<<<<<<< HEAD
->>>>>>> c7c10e769d7142c870765ad36ecb1ea305101ec4
-=======
-
-"""
-`chorddiagram(mat[, grad, zcolor, group])`
-
-Plots a chord diagram from an adjacency matrix,
-using the values on the matrix as weights to determine edge colors.
-Doesn't show edges with value zero if the input is sparse.
-For simmetric matrices, only the upper triangular values are used.
-`zcolor` or `group` can be used to determine the node colors.
-"""
-chorddiagram(mat::AbstractMatrix; kargs...) = chorddiagram(mat2list(mat)...; kargs...)
->>>>>>> 57d7543c0701b85094cd4148133d4a5a78a195ad
