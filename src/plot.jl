@@ -78,25 +78,140 @@ function plot!(plt::Plot, args...; kw...)
     args = _apply_recipe(d, args...; kw...)
 
     dumpdict(d, "After plot! preprocessing")
+    # @show groupargs map(typeof, args)
 
     warnOnUnsupportedArgs(plt.backend, d)
 
     # just in case the backend needs to set up the plot (make it current or something)
     _before_add_series(plt)
 
-    # grouping
-    groupargs = get(d, :group, nothing) == nothing ? [nothing] : [extractGroupArgs(d[:group], args...)]
-    # @show groupargs
+    # # grouping
+    # groupargs = get(d, :group, nothing) == nothing ? [nothing] : [extractGroupArgs(d[:group], args...)]
+    # # @show groupargs
 
     # TODO: get the GroupBy object (or nothing), and loop through the groups, doing the following section many times
+    # dumpdict(d, "before", true)
+    groupby = if haskey(d, :group)
+        extractGroupArgs(d[:group], args...)
+    else
+        nothing
+    end
+    # dumpdict(d, "after", true)
+    # @show groupby map(typeof, args)
 
+    _add_series(plt, d, groupby, args...)
+
+    #
+    # # get the list of dictionaries, one per series
+    # @show groupargs map(typeof, args)
+    # dumpdict(d, "before process_inputs")
+    # process_inputs(plt, d, groupargs..., args...)
+    # dumpdict(d, "after process_inputs", true)
+    # seriesArgList, xmeta, ymeta = build_series_args(plt, d)
+    # # seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)
+    #
+    # # if we were able to extract guide information from the series inputs, then update the plot
+    # # @show xmeta, ymeta
+    # updateDictWithMeta(d, plt.plotargs, xmeta, true)
+    # updateDictWithMeta(d, plt.plotargs, ymeta, false)
+    #
+    # # now we can plot the series
+    # for (i,di) in enumerate(seriesArgList)
+    #     plt.n += 1
+    #
+    #     if !stringsSupported()
+    #         setTicksFromStringVector(d, di, :x, :xticks)
+    #         setTicksFromStringVector(d, di, :y, :yticks)
+    #     end
+    #
+    #     # remove plot args
+    #     for k in keys(_plotDefaults)
+    #         delete!(di, k)
+    #     end
+    #
+    #     dumpdict(di, "Series $i")
+    #
+    #     _add_series(plt.backend, plt; di...)
+    # end
+
+    _add_annotations(plt, d)
+
+    warnOnUnsupportedScales(plt.backend, d)
+
+
+    # add title, axis labels, ticks, etc
+    if !haskey(d, :subplot)
+        merge!(plt.plotargs, d)
+        dumpdict(plt.plotargs, "Updating plot items")
+        _update_plot(plt, plt.plotargs)
+    end
+
+    _update_plot_pos_size(plt, d)
+
+    current(plt)
+
+    # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
+    # # do we want to show it?
+    if haskey(d, :show) && d[:show]
+        gui()
+    end
+
+    plt
+end
+
+# handle the grouping
+function _add_series(plt::Plot, d::KW, groupby::GroupBy, args...)
+    # error("ERRORRRRRRRR")
+
+    starting_n = plt.n
+    for (i, glab) in enumerate(groupby.groupLabels)
+        tmpd = copy(d)
+        # d[:numUncounted] = i - 1
+        tmpd[:numUncounted] = plt.n - starting_n
+        _add_series(plt, tmpd, nothing, args...;
+                    idxfilter = groupby.groupIds[i],
+                    grouplabel = string(glab))
+    end
+
+    # ret = Any[]
+    # # error("unfinished after series reorg")
+    # for (i,glab) in enumerate(groupby.groupLabels)
+    #     # TODO: don't automatically overwrite labels
+    #     kwlist, xmeta, ymeta = process_inputs(plt, d, args...,
+    #                                         idxfilter = groupby.groupIds[i],
+    #                                         label = string(glab),
+    #                                         numUncounted = length(ret))  # we count the idx from plt.n + numUncounted + i
+    #     append!(ret, kwlist)
+    # end
+    # ret, nothing, nothing # TODO: handle passing meta through
+end
+
+filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
+filter_data(v, idxfilter) = v
+
+# no grouping
+function _add_series(plt::Plot, d::KW, ::Void, args...;
+                     idxfilter = nothing,
+                     grouplabel = "")
 
     # get the list of dictionaries, one per series
-    @show groupargs map(typeof, args)
     dumpdict(d, "before process_inputs")
-    process_inputs(plt, d, groupargs..., args...)
-    dumpdict(d, "after process_inputs", true)
-    seriesArgList, xmeta, ymeta = build_series_args(plt, d)
+    process_inputs(plt, d, args...)
+    dumpdict(d, "after process_inputs")
+
+    if idxfilter != nothing
+        # add the group name as the label if there isn't one passed in
+        get!(d, :label, grouplabel)
+
+        # filter the data
+        for sym in (:x, :y, :z)
+            # @show "before" sym, d[sym], idxfilter
+            d[sym] = filter_data(get(d, sym, nothing), idxfilter)
+            # @show "after" sym, d[sym], idxfilter
+        end
+    end
+
+    seriesArgList, xmeta, ymeta = build_series_args(plt, d) #, idxfilter)
     # seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)
 
     # if we were able to extract guide information from the series inputs, then update the plot
@@ -122,32 +237,6 @@ function plot!(plt::Plot, args...; kw...)
 
         _add_series(plt.backend, plt; di...)
     end
-
-    # TODO: this is the end of the groupby loop
-
-    _add_annotations(plt, d)
-
-    warnOnUnsupportedScales(plt.backend, d)
-
-
-    # add title, axis labels, ticks, etc
-    if !haskey(d, :subplot)
-        merge!(plt.plotargs, d)
-        dumpdict(plt.plotargs, "Updating plot items")
-        _update_plot(plt, plt.plotargs)
-    end
-
-    _update_plot_pos_size(plt, d)
-
-    current(plt)
-
-    # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
-    # # do we want to show it?
-    if haskey(d, :show) && d[:show]
-        gui()
-    end
-
-    plt
 end
 
 # --------------------------------------------------------------------

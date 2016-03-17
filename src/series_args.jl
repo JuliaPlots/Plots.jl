@@ -91,7 +91,7 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 
 # create n=max(mx,my) series arguments. the shorter list is cycled through
 # note: everything should flow through this
-function build_series_args(plt::AbstractPlot, kw::KW)
+function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
     x, y, z = map(a -> pop!(kw, a, nothing), (:x, :y, :z))
     if nothing == x == y == z
         return [], nothing, nothing
@@ -100,6 +100,18 @@ function build_series_args(plt::AbstractPlot, kw::KW)
     xs, xmeta = convertToAnyVector(x, kw)
     ys, ymeta = convertToAnyVector(y, kw)
     zs, zmeta = convertToAnyVector(z, kw)
+
+    # if idxfilter != nothing
+    #     xs = filter_data(xs, idxfilter)
+    #     ys = filter_data(ys, idxfilter)
+    #     zs = filter_data(zs, idxfilter)
+    #     # # filter the data
+    #     # for sym in (:x, :y, :z)
+    #     #     @show "before" sym, d[sym], idxfilter
+    #     #     d[sym] = filter_data(get(d, sym, nothing), idxfilter)
+    #     #     @show "after" sym, d[sym], idxfilter
+    #     # end
+    # end
 
     mx = length(xs)
     my = length(ys)
@@ -119,15 +131,17 @@ function build_series_args(plt::AbstractPlot, kw::KW)
 
         # build the series arg dict
         numUncounted = pop!(d, :numUncounted, 0)
-        n = plt.n + i + numUncounted
+        commandIndex = i + numUncounted
+        n = plt.n + i
 
         dumpdict(d, "before getSeriesArgs")
-        d = getSeriesArgs(plt.backend, getplotargs(plt, n), d, i + numUncounted, convertSeriesIndex(plt, n), n)
+        # @show numUncounted i n commandIndex convertSeriesIndex(plt, n)
+        d = getSeriesArgs(plt.backend, getplotargs(plt, n), d, commandIndex, convertSeriesIndex(plt, n), n)
         dumpdict(d, "after getSeriesArgs")
 
-        @show map(typeof, (xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]))
+        # @show map(typeof, (xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]))
         d[:x], d[:y], d[:z] = compute_xyz(xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)])
-        @show map(typeof, (d[:x], d[:y], d[:z]))
+        # @show map(typeof, (d[:x], d[:y], d[:z]))
 
 
         # # NOTE: this should be handled by the time it gets here
@@ -140,11 +154,11 @@ function build_series_args(plt::AbstractPlot, kw::KW)
         #     end
         # end
 
-        if haskey(d, :idxfilter)
-            idxfilter = pop!(d, :idxfilter)
-            d[:x] = d[:x][idxfilter]
-            d[:y] = d[:y][idxfilter]
-        end
+        # if haskey(d, :idxfilter)
+        #     idxfilter = pop!(d, :idxfilter)
+        #     d[:x] = d[:x][idxfilter]
+        #     d[:y] = d[:y][idxfilter]
+        # end
 
         # for linetype `line`, need to sort by x values
         if lt == :line
@@ -164,7 +178,7 @@ function build_series_args(plt::AbstractPlot, kw::KW)
         end
 
         # cleanup those fields that were used only for generating kw args
-        delete!(d, :dataframe)
+        # delete!(d, :dataframe)
         # for k in (:idxfilter, :numUncounted, :dataframe)
         #     delete!(d, k)
         # end
@@ -370,19 +384,19 @@ end
 # handle grouping
 # --------------------------------------------------------------------
 
-function process_inputs(plt::AbstractPlot, d::KW, groupby::GroupBy, args...)
-    ret = Any[]
-    error("unfinished after series reorg")
-    for (i,glab) in enumerate(groupby.groupLabels)
-        # TODO: don't automatically overwrite labels
-        kwlist, xmeta, ymeta = process_inputs(plt, d, args...,
-                                            idxfilter = groupby.groupIds[i],
-                                            label = string(glab),
-                                            numUncounted = length(ret))  # we count the idx from plt.n + numUncounted + i
-        append!(ret, kwlist)
-    end
-    ret, nothing, nothing # TODO: handle passing meta through
-end
+# function process_inputs(plt::AbstractPlot, d::KW, groupby::GroupBy, args...)
+#     ret = Any[]
+#     error("unfinished after series reorg")
+#     for (i,glab) in enumerate(groupby.groupLabels)
+#         # TODO: don't automatically overwrite labels
+#         kwlist, xmeta, ymeta = process_inputs(plt, d, args...,
+#                                             idxfilter = groupby.groupIds[i],
+#                                             label = string(glab),
+#                                             numUncounted = length(ret))  # we count the idx from plt.n + numUncounted + i
+#         append!(ret, kwlist)
+#     end
+#     ret, nothing, nothing # TODO: handle passing meta through
+# end
 
 # --------------------------------------------------------------------
 # For DataFrame support.  Imports DataFrames and defines the necessary methods which support them.
@@ -391,9 +405,12 @@ end
 function setup_dataframes()
     @require DataFrames begin
 
+        get_data(df::DataFrames.AbstractDataFrame, arg::Symbol) = df[arg]
+        get_data(df::DataFrames.AbstractDataFrame, arg) = arg
+
         function process_inputs(plt::AbstractPlot, d::KW, df::DataFrames.AbstractDataFrame, args...)
-            d[:dataframe] = df
-            process_inputs(plt, d, args...)
+            # d[:dataframe] = df
+            process_inputs(plt, d, map(arg -> get_data(df, arg), args)...)
         end
 
         # expecting the column name of a dataframe that was passed in... anything else should error
@@ -405,15 +422,15 @@ function setup_dataframes()
             end
         end
 
-        function getDataFrameFromKW(d::Dict)
-            get(d, :dataframe) do
-                error("Missing dataframe argument!")
-            end
-        end
+        # function getDataFrameFromKW(d::Dict)
+        #     get(d, :dataframe) do
+        #         error("Missing dataframe argument!")
+        #     end
+        # end
 
-        # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
-        convertToAnyVector(s::Symbol, d::Dict) = Any[getDataFrameFromKW(d)[s]], s
-        convertToAnyVector(v::AVec{Symbol}, d::Dict) = (df = getDataFrameFromKW(d); Any[df[s] for s in v]), v
+        # # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
+        # convertToAnyVector(s::Symbol, d::Dict) = Any[getDataFrameFromKW(d)[s]], s
+        # convertToAnyVector(v::AVec{Symbol}, d::Dict) = (df = getDataFrameFromKW(d); Any[df[s] for s in v]), v
 
     end
 end
