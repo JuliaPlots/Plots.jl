@@ -161,33 +161,24 @@ end
 
 # handle the grouping
 function _add_series(plt::Plot, d::KW, groupby::GroupBy, args...)
-    # error("ERRORRRRRRRR")
-
     starting_n = plt.n
     for (i, glab) in enumerate(groupby.groupLabels)
         tmpd = copy(d)
-        # d[:numUncounted] = i - 1
         tmpd[:numUncounted] = plt.n - starting_n
         _add_series(plt, tmpd, nothing, args...;
                     idxfilter = groupby.groupIds[i],
                     grouplabel = string(glab))
     end
-
-    # ret = Any[]
-    # # error("unfinished after series reorg")
-    # for (i,glab) in enumerate(groupby.groupLabels)
-    #     # TODO: don't automatically overwrite labels
-    #     kwlist, xmeta, ymeta = process_inputs(plt, d, args...,
-    #                                         idxfilter = groupby.groupIds[i],
-    #                                         label = string(glab),
-    #                                         numUncounted = length(ret))  # we count the idx from plt.n + numUncounted + i
-    #     append!(ret, kwlist)
-    # end
-    # ret, nothing, nothing # TODO: handle passing meta through
 end
 
 filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
 filter_data(v, idxfilter) = v
+
+function filter_data!(d::KW, idxfilter)
+    for s in (:x, :y, :z)
+        d[s] = filter_data(get(d, s, nothing), idxfilter)
+    end
+end
 
 # no grouping
 function _add_series(plt::Plot, d::KW, ::Void, args...;
@@ -202,13 +193,8 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
     if idxfilter != nothing
         # add the group name as the label if there isn't one passed in
         get!(d, :label, grouplabel)
-
         # filter the data
-        for sym in (:x, :y, :z)
-            # @show "before" sym, d[sym], idxfilter
-            d[sym] = filter_data(get(d, sym, nothing), idxfilter)
-            # @show "after" sym, d[sym], idxfilter
-        end
+        filter_data!(d, idxfilter)
     end
 
     seriesArgList, xmeta, ymeta = build_series_args(plt, d) #, idxfilter)
@@ -243,7 +229,7 @@ end
 
 # if x or y are a vector of strings, we should create a list of unique strings,
 # and map x/y to be the index of the string... then set the x/y tick labels
-function setTicksFromStringVector(d::Dict, di::Dict, sym::Symbol, ticksym::Symbol)
+function setTicksFromStringVector(d::KW, di::KW, sym::Symbol, ticksym::Symbol)
     # if the x or y values are strings, set ticks to the unique values, and x/y to the indices of the ticks
 
     v = di[sym]
@@ -267,13 +253,13 @@ _before_add_series(plt::Plot) = nothing
 # --------------------------------------------------------------------
 
 # should we update the x/y label given the meta info during input slicing?
-function updateDictWithMeta(d::Dict, plotargs::Dict, meta::Symbol, isx::Bool)
+function updateDictWithMeta(d::KW, plotargs::KW, meta::Symbol, isx::Bool)
     lsym = isx ? :xlabel : :ylabel
     if plotargs[lsym] == default(lsym)
         d[lsym] = string(meta)
     end
 end
-updateDictWithMeta(d::Dict, plotargs::Dict, meta, isx::Bool) = nothing
+updateDictWithMeta(d::KW, plotargs::KW, meta, isx::Bool) = nothing
 
 # --------------------------------------------------------------------
 
@@ -285,7 +271,7 @@ annotations(v::AVec) = map(PlotText, v)
 annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
                        "(x, y, annotation)\n    got: $(typeof(anns))")
 
-function _add_annotations(plt::Plot, d::Dict)
+function _add_annotations(plt::Plot, d::KW)
     anns = annotations(get(d, :annotation, nothing))
     if !isempty(anns)
 

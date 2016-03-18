@@ -52,7 +52,7 @@ const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", color
 const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
                      darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
 
-@compat const _gradients = Dict(
+@compat const _gradients = KW(
     :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
     :greens       => [colorant"lightgreen", colorant"darkgreen"],
@@ -79,7 +79,7 @@ immutable ColorGradient <: ColorScheme
     if length(cs) == length(vals)
       return new(convertColor(cs,alpha), collect(vals))
     end
-    
+
     # # otherwise interpolate evenly between the minval and maxval
     # minval, maxval = minimum(vals), maximum(vals)
     # vs = Float64[interpolate(minval, maxval, w) for w in linspace(0, 1, length(cs))]
@@ -351,10 +351,9 @@ webcolor(c, α) = webcolor(convertColor(getColor(c), α))
 
 # ----------------------------------------------------------------------------------
 
-# TODO: allow the setting of the algorithm, either by passing a symbol (:colordiff, :fixed, etc) or a function? 
+# TODO: allow the setting of the algorithm, either by passing a symbol (:colordiff, :fixed, etc) or a function?
 
-# function getBackgroundRGBColor(c, d::Dict)
-function handlePlotColors(::AbstractBackend, d::Dict)
+function handlePlotColors(::AbstractBackend, d::KW)
   if :background_color in supportedArgs()
     bgcolor = convertColor(d[:background_color])
   else
@@ -369,7 +368,7 @@ function handlePlotColors(::AbstractBackend, d::Dict)
 
 
   # set the foreground color (text, ticks, gridlines) to be white or black depending
-  # on how dark the background is.  
+  # on how dark the background is.
   fgcolor = get(d, :foreground_color, :auto)
   fgcolor = if fgcolor == :auto
     isdark(bgcolor) ? colorant"white" : colorant"black"
@@ -383,7 +382,7 @@ function handlePlotColors(::AbstractBackend, d::Dict)
 end
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
-function getSeriesRGBColor(c, plotargs::Dict, n::Int)
+function getSeriesRGBColor(c, plotargs::KW, n::Int)
 
   if c == :auto
     c = autopick(plotargs[:color_palette], n)

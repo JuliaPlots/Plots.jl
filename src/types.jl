@@ -16,8 +16,8 @@ type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     o                        # the backend's plot object
     backend::T               # the backend type
     n::Int                   # number of series
-    plotargs::Dict           # arguments for the whole plot
-    seriesargs::Vector{Dict} # arguments for each series
+    plotargs::KW             # arguments for the whole plot
+    seriesargs::Vector{KW}   # arguments for each series
 end
 
 # -----------------------------------------------------------
@@ -32,13 +32,12 @@ abstract SubplotLayout
 
 type Subplot{T<:AbstractBackend, L<:SubplotLayout} <: AbstractPlot{T}
     o                           # the underlying object
-    plts::Vector{Plot{T}}          # the individual plots
+    plts::Vector{Plot{T}}       # the individual plots
     backend::T
     p::Int                      # number of plots
     n::Int                      # number of series
     layout::L
-    # plotargs::Vector{Dict}
-    plotargs::Dict
+    plotargs::KW
     initialized::Bool
     linkx::Bool
     linky::Bool

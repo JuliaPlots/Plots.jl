@@ -8,19 +8,19 @@ function _initialize_backend(::GRBackend; kw...)
   end
 end
 
-const gr_linetype = Dict(
+const gr_linetype = KW(
   :auto => 1, :solid => 1, :dash => 2, :dot => 3, :dashdot => 4,
   :dashdotdot => -1 )
 
-const gr_markertype = Dict(
+const gr_markertype = KW(
   :auto => 1, :none => -1, :ellipse => -1, :rect => -7, :diamond => -13,
   :utriangle => -3, :dtriangle => -5, :pentagon => -21, :hexagon => -22,
   :heptagon => -23, :octagon => -24, :cross => 2, :xcross => 5,
   :star4 => -25, :star5 => -26, :star6 => -27, :star7 => -28, :star8 => -29,
   :vline => -30, :hline => -31 )
 
-const gr_halign = Dict(:left => 1, :hcenter => 2, :right => 3)
-const gr_valign = Dict(:top => 1, :vcenter => 3, :bottom => 5)
+const gr_halign = KW(:left => 1, :hcenter => 2, :right => 3)
+const gr_valign = KW(:top => 1, :vcenter => 3, :bottom => 5)
 
 const gr_font_family = Dict(
   "times" => 1, "helvetica" => 5, "courier" => 9, "bookman" => 14,
@@ -703,7 +703,7 @@ end
 
 function _create_plot(pkg::GRBackend; kw...)
   d = KW(kw)
-  Plot(nothing, pkg, 0, d, Dict[])
+  Plot(nothing, pkg, 0, d, KW[])
 end
 
 function _add_series(::GRBackend, plt::Plot; kw...)
@@ -725,13 +725,13 @@ end
 function _before_update_plot(plt::Plot{GRBackend})
 end
 
-function _update_plot(plt::Plot{GRBackend}, d::Dict)
+function _update_plot(plt::Plot{GRBackend}, d::KW)
   for k in (:title, :xlabel, :ylabel)
     haskey(d, k) && (plt.plotargs[k] = d[k])
   end
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{GRBackend}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{GRBackend}, d::KW)
 end
 
 # ----------------------------------------------------------------

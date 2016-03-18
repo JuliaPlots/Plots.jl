@@ -92,11 +92,11 @@ function subplot{P,I<:Integer}(pltsPerRow::AVec{I}, plt1::Plot{P}, plts::Plot{P}
 end
 
 # this will be called internally
-function subplot{P<:AbstractBackend}(plts::AVec{Plot{P}}, layout::SubplotLayout, d::Dict)
+function subplot{P<:AbstractBackend}(plts::AVec{Plot{P}}, layout::SubplotLayout, d::KW)
   validateSubplotSupported()
   p = length(layout)
   n = sum([plt.n for plt in plts])
-  subplt = Subplot(nothing, collect(plts), P(), p, n, layout, Dict(), false, false, false, (r,c) -> (nothing,nothing))
+  subplt = Subplot(nothing, collect(plts), P(), p, n, layout, KW(), false, false, false, (r,c) -> (nothing,nothing))
 
   _preprocess_subplot(subplt, d)
   _postprocess_subplot(subplt, d)
@@ -109,7 +109,7 @@ end
 # ------------------------------------------------------------------------------------------------
 
 
-function _preprocess_subplot(subplt::Subplot, d::Dict, args = ())
+function _preprocess_subplot(subplt::Subplot, d::KW, args = ())
   validateSubplotSupported()
   preprocessArgs!(d)
 
@@ -143,7 +143,7 @@ function _preprocess_subplot(subplt::Subplot, d::Dict, args = ())
   args
 end
 
-function _postprocess_subplot(subplt::Subplot, d::Dict)
+function _postprocess_subplot(subplt::Subplot, d::KW)
   # init (after plot creation)
   if !subplt.initialized
     subplt.initialized = _create_subplot(subplt, false)
@@ -200,39 +200,52 @@ function subplot!(subplt::Subplot, args...; kw...)
     subplt.initialized = _create_subplot(subplt, true)
   end
 
-  # handle grouping
-  group = get(d, :group, nothing)
-  if group == nothing
-    groupargs = []
+  # # handle grouping
+  # group = get(d, :group, nothing)
+  # if group == nothing
+  #   groupargs = []
+  # else
+  #   groupargs = [extractGroupArgs(d[:group], args...)]
+  #   delete!(d, :group)
+  # end
+
+  groupby = if haskey(d, :group)
+      extractGroupArgs(d[:group], args...)
   else
-    groupargs = [extractGroupArgs(d[:group], args...)]
-    delete!(d, :group)
+      nothing
   end
+  # dumpdict(d, "after", true)
+  # @show groupby map(typeof, args)
 
-  process_inputs(subplt, d, groupargs..., args...)
-  kwList, xmeta, ymeta = build_series_args(subplt, d)
-  # kwList, xmeta, ymeta = build_series_args(subplt, groupargs..., args...; d...)
+  _add_series_subplot(subplt, d, groupby, args...)
 
-  # TODO: something useful with meta info?
-
-  for (i,di) in enumerate(kwList)
-
-    subplt.n += 1
-    plt = getplot(subplt)
-    plt.n += 1
-
-    # cleanup the dictionary that we pass into the plot! command
-    di[:show] = false
-    di[:subplot] = true
-    for k in (:title, :xlabel, :xticks, :xlims, :xscale, :xflip,
-                      :ylabel, :yticks, :ylims, :yscale, :yflip)
-      delete!(di, k)
-    end
-    dumpdict(di, "subplot! kwList $i")
-    dumpdict(plt.plotargs, "plt.plotargs before plotting")
-
-    _add_series_subplot(plt; di...)
-  end
+  # process_inputs(subplt, d, groupargs..., args...)
+  #
+  # # TODO: filter the data
+  #
+  # kwList, xmeta, ymeta = build_series_args(subplt, d)
+  # # kwList, xmeta, ymeta = build_series_args(subplt, groupargs..., args...; d...)
+  #
+  # # TODO: something useful with meta info?
+  #
+  # for (i,di) in enumerate(kwList)
+  #
+  #   subplt.n += 1
+  #   plt = getplot(subplt)
+  #   plt.n += 1
+  #
+  #   # cleanup the dictionary that we pass into the plot! command
+  #   di[:show] = false
+  #   di[:subplot] = true
+  #   for k in (:title, :xlabel, :xticks, :xlims, :xscale, :xflip,
+  #                     :ylabel, :yticks, :ylims, :yscale, :yflip)
+  #     delete!(di, k)
+  #   end
+  #   dumpdict(di, "subplot! kwList $i")
+  #   dumpdict(plt.plotargs, "plt.plotargs before plotting")
+  #
+  #   _add_series_subplot(plt; di...)
+  # end
 
   _postprocess_subplot(subplt, d)
 
@@ -250,17 +263,66 @@ function plot!(subplt::Subplot, args...; kw...)
   error("Can't call plot! on a Subplot!")
 end
 
-
-function _add_series_subplot(plt::Plot, args...; kw...)
-  d = KW(kw)
-
+# given a fully processed KW, add the series to the Plot
+function _add_series_subplot(plt::Plot, d::KW)
   setTicksFromStringVector(d, d, :x, :xticks)
   setTicksFromStringVector(d, d, :y, :yticks)
 
+  # this is the actual call to the backend
   _add_series(plt.backend, plt; d...)
 
   _add_annotations(plt, d)
   warnOnUnsupportedScales(plt.backend, d)
+end
+
+
+# handle the grouping... add a series for each group
+function _add_series_subplot(subplt::Subplot, d::KW, groupby::GroupBy, args...)
+    starting_n = subplt.n
+    for (i, glab) in enumerate(groupby.groupLabels)
+        tmpd = copy(d)
+        tmpd[:numUncounted] = subplt.n - starting_n
+        _add_series_subplot(subplt, tmpd, nothing, args...;
+                    idxfilter = groupby.groupIds[i],
+                    grouplabel = string(glab))
+    end
+end
+
+# process, filter, and add to the correct plot
+function _add_series_subplot(subplt::Subplot, d::KW, ::Void, args...;
+                             idxfilter = nothing,
+                             grouplabel = "")
+    process_inputs(subplt, d, args...)
+
+    if idxfilter != nothing
+        # add the group name as the label if there isn't one passed in
+        get!(d, :label, grouplabel)
+        # filter the data
+        filter_data!(d, idxfilter)
+    end
+
+    kwList, xmeta, ymeta = build_series_args(subplt, d)
+
+    # TODO: something useful with meta info?
+
+    for (i,di) in enumerate(kwList)
+
+      subplt.n += 1
+      plt = getplot(subplt)
+      plt.n += 1
+
+      # cleanup the dictionary that we pass into the plot! command
+      di[:show] = false
+      di[:subplot] = true
+      for k in (:title, :xlabel, :xticks, :xlims, :xscale, :xflip,
+                        :ylabel, :yticks, :ylims, :yscale, :yflip)
+        delete!(di, k)
+      end
+      dumpdict(di, "subplot! kwList $i")
+      dumpdict(plt.plotargs, "plt.plotargs before plotting")
+
+      _add_series_subplot(plt, di)
+    end
 end
 
 # --------------------------------------------------------------------

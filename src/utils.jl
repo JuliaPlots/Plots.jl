@@ -170,7 +170,7 @@ function replaceType(vec, val)
   push!(vec, val)
 end
 
-function replaceAliases!(d::Dict, aliases::Dict)
+function replaceAliases!(d::KW, aliases::KW)
   ks = collect(keys(d))
   for k in ks
     if haskey(aliases, k)
@@ -268,7 +268,7 @@ function with(f::Function, args...; kw...)
 
   # dict to store old and new keyword args for anything that changes
   newdefs = KW(kw)
-  olddefs = Dict()
+  olddefs = KW()
   for k in keys(newdefs)
     olddefs[k] = default(k)
   end
@@ -347,7 +347,7 @@ end
 debugshow(x) = show(x)
 debugshow(x::AbstractArray) = print(summary(x))
 
-function dumpdict(d::Dict, prefix = "", alwaysshow = false)
+function dumpdict(d::KW, prefix = "", alwaysshow = false)
   _debugMode.on || alwaysshow || return
   println()
   if prefix != ""

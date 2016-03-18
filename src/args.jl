@@ -1,7 +1,7 @@
 
 
 const _allAxes = [:auto, :left, :right]
-@compat const _axesAliases = Dict(
+@compat const _axesAliases = KW(
     :a => :auto,
     :l => :left,
     :r => :right
@@ -13,7 +13,7 @@ const _allTypes = vcat([
                         :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, :ohlc,
                         :contour, :pie, :shape
                        ], _3dTypes)
-@compat const _typeAliases = Dict(
+@compat const _typeAliases = KW(
     :n             => :none,
     :no            => :none,
     :l             => :line,
@@ -46,7 +46,7 @@ like_surface(linetype::Symbol)   = linetype in (:contour, :heatmap, :surface, :w
 
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-@compat const _styleAliases = Dict(
+@compat const _styleAliases = KW(
     :a    => :auto,
     :s    => :solid,
     :d    => :dash,
@@ -57,7 +57,7 @@ const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 # const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
 #                      :cross, :xcross, :star5, :star8, :hexagon, :octagon, Shape]
 const _allMarkers = vcat(:none, :auto, sort(collect(keys(_shapes))))
-@compat const _markerAliases = Dict(
+@compat const _markerAliases = KW(
     :n            => :none,
     :no           => :none,
     :a            => :auto,
@@ -98,14 +98,14 @@ const _allMarkers = vcat(:none, :auto, sort(collect(keys(_shapes))))
   )
 
 const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
-@compat const _scaleAliases = Dict(
+@compat const _scaleAliases = KW(
     :none => :identity,
     :log  => :log10,
   )
 
 # -----------------------------------------------------------------------------
 
-const _seriesDefaults = Dict{Symbol, Any}()
+const _seriesDefaults = KW()
 
 # series-specific
 _seriesDefaults[:axis]            = :left
@@ -146,7 +146,7 @@ _seriesDefaults[:levels]          = 15
 _seriesDefaults[:orientation]     = :vertical
 
 
-const _plotDefaults = Dict{Symbol, Any}()
+const _plotDefaults = KW()
 
 # plot globals
 _plotDefaults[:title]             = ""
@@ -204,7 +204,7 @@ autopick(notarr, idx::Integer) = notarr
 autopick_ignore_none_auto(arr::AVec, idx::Integer) = autopick(setdiff(arr, [:none, :auto]), idx)
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
-function aliasesAndAutopick(d::Dict, sym::Symbol, aliases::Dict, options::AVec, plotIndex::Int)
+function aliasesAndAutopick(d::KW, sym::Symbol, aliases::KW, options::AVec, plotIndex::Int)
   if d[sym] == :auto
     d[sym] = autopick_ignore_none_auto(options, plotIndex)
   elseif haskey(aliases, d[sym])
@@ -212,7 +212,7 @@ function aliasesAndAutopick(d::Dict, sym::Symbol, aliases::Dict, options::AVec, 
   end
 end
 
-function aliases(aliasMap::Dict, val)
+function aliases(aliasMap::KW, val)
   # sort(vcat(val, collect(keys(filter((k,v)-> v==val, aliasMap)))))
   sortedkeys(filter((k,v)-> v==val, aliasMap))
 end
@@ -221,7 +221,7 @@ end
 
 # Alternate args
 
-@compat const _keyAliases = Dict(
+@compat const _keyAliases = KW(
     :c                  => :linecolor,
     :color              => :linecolor,
     :colour             => :linecolor,
@@ -368,7 +368,7 @@ end
 
 # -----------------------------------------------------------------------------
 
-function handleColors!(d::Dict, arg, csym::Symbol)
+function handleColors!(d::KW, arg, csym::Symbol)
   try
     if arg == :auto
       d[csym] = :auto
@@ -383,7 +383,7 @@ end
 
 # given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
 # TODO: use trueOrAllTrue for subplots which can pass vectors for these
-function processAxisArg(d::Dict, axisletter::@compat(AbstractString), arg)
+function processAxisArg(d::KW, axisletter::@compat(AbstractString), arg)
   T = typeof(arg)
   # if T <: Symbol
 
@@ -416,7 +416,7 @@ function processAxisArg(d::Dict, axisletter::@compat(AbstractString), arg)
 end
 
 
-function processLineArg(d::Dict, arg)
+function processLineArg(d::KW, arg)
 
   # linetype
   # if trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
@@ -457,7 +457,7 @@ function processLineArg(d::Dict, arg)
 end
 
 
-function processMarkerArg(d::Dict, arg)
+function processMarkerArg(d::KW, arg)
 
   # markershape
   # if trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg)
@@ -501,7 +501,7 @@ function processMarkerArg(d::Dict, arg)
 end
 
 
-function processFillArg(d::Dict, arg)
+function processFillArg(d::KW, arg)
 
   if typeof(arg) <: Brush
     arg.size  == nothing || (d[:fillrange] = arg.size)
@@ -530,7 +530,7 @@ _replace_markershape(shape) = shape
 
 
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
-function preprocessArgs!(d::Dict)
+function preprocessArgs!(d::KW)
   replaceAliases!(d, _keyAliases)
 
   # handle axis args
@@ -636,7 +636,7 @@ end
 
 # -----------------------------------------------------------------------------
 
-function warnOnUnsupportedArgs(pkg::AbstractBackend, d::Dict)
+function warnOnUnsupportedArgs(pkg::AbstractBackend, d::KW)
   for k in sortedkeys(d)
     if (!(k in supportedArgs(pkg))
         && k != :subplot
@@ -650,7 +650,7 @@ _markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supported
 _markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supportedMarkers(pkg)
 _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
-function warnOnUnsupported(pkg::AbstractBackend, d::Dict)
+function warnOnUnsupported(pkg::AbstractBackend, d::KW)
   (d[:axis] in supportedAxes(pkg)
     || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
   (d[:linetype] == :none
@@ -665,7 +665,7 @@ function warnOnUnsupported(pkg::AbstractBackend, d::Dict)
     || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))"))
 end
 
-function warnOnUnsupportedScales(pkg::AbstractBackend, d::Dict)
+function warnOnUnsupportedScales(pkg::AbstractBackend, d::KW)
   for k in (:xscale, :yscale)
     if haskey(d, k)
       d[k] in supportedScales(pkg) || warn("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supportedScales(pkg))")
@@ -689,7 +689,7 @@ getArgValue(v, idx) = v
 
 # given an argument key (k), we want to extract the argument value for this index.
 # if nothing is set (or container is empty), return the default.
-function setDictValue(d_in::Dict, d_out::Dict, k::Symbol, idx::Int, defaults::Dict)
+function setDictValue(d_in::KW, d_out::KW, k::Symbol, idx::Int, defaults::KW)
   if haskey(d_in, k) && !(typeof(d_in[k]) <: @compat(Union{AbstractArray, Tuple}) && isempty(d_in[k]))
     d_out[k] = getArgValue(d_in[k], idx)
   else
@@ -715,7 +715,7 @@ convertLegendValue(val::Bool) = val ? :best : :none
 # build the argument dictionary for the plot
 function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
   kwdict = KW(kw)
-  d = Dict()
+  d = KW()
 
   # add defaults?
   if set_defaults
@@ -750,9 +750,9 @@ end
 
 
 # build the argument dictionary for a series
-function getSeriesArgs(pkg::AbstractBackend, plotargs::Dict, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
+function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
   kwdict = KW(kw)
-  d = Dict()
+  d = KW()
 
   # add defaults?
   for k in keys(_seriesDefaults)

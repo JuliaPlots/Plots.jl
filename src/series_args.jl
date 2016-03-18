@@ -7,22 +7,22 @@
 
 typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
 
-all3D(d::Dict) = trueOrAllTrue(lt -> lt in (:contour, :heatmap, :surface, :wireframe), get(d, :linetype, :none))
+all3D(d::KW) = trueOrAllTrue(lt -> lt in (:contour, :heatmap, :surface, :wireframe), get(d, :linetype, :none))
 
 # missing
-convertToAnyVector(v::@compat(Void), d::Dict) = Any[nothing], nothing
+convertToAnyVector(v::@compat(Void), d::KW) = Any[nothing], nothing
 
 # fixed number of blank series
-convertToAnyVector(n::Integer, d::Dict) = Any[zeros(0) for i in 1:n], nothing
+convertToAnyVector(n::Integer, d::KW) = Any[zeros(0) for i in 1:n], nothing
 
 # numeric vector
-convertToAnyVector{T<:Number}(v::AVec{T}, d::Dict) = Any[v], nothing
+convertToAnyVector{T<:Number}(v::AVec{T}, d::KW) = Any[v], nothing
 
 # string vector
-convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}, d::Dict) = Any[v], nothing
+convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}, d::KW) = Any[v], nothing
 
 # numeric matrix
-function convertToAnyVector{T<:Number}(v::AMat{T}, d::Dict)
+function convertToAnyVector{T<:Number}(v::AMat{T}, d::KW)
     if all3D(d)
         Any[Surface(v)]
     else
@@ -31,19 +31,19 @@ function convertToAnyVector{T<:Number}(v::AMat{T}, d::Dict)
 end
 
 # function
-convertToAnyVector(f::Function, d::Dict) = Any[f], nothing
+convertToAnyVector(f::Function, d::KW) = Any[f], nothing
 
 # surface
-convertToAnyVector(s::Surface, d::Dict) = Any[s], nothing
+convertToAnyVector(s::Surface, d::KW) = Any[s], nothing
 
 # vector of OHLC
-convertToAnyVector(v::AVec{OHLC}, d::Dict) = Any[v], nothing
+convertToAnyVector(v::AVec{OHLC}, d::KW) = Any[v], nothing
 
 # dates
-convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}, d::Dict) = Any[dts], nothing
+convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}, d::KW) = Any[dts], nothing
 
 # list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec, d::Dict)
+function convertToAnyVector(v::AVec, d::KW)
     if all(x -> typeof(x) <: Number, v)
         # all real numbers wrap the whole vector as one item
         Any[convert(Vector{Float64}, v)], nothing
@@ -422,15 +422,15 @@ function setup_dataframes()
             end
         end
 
-        # function getDataFrameFromKW(d::Dict)
+        # function getDataFrameFromKW(d::KW)
         #     get(d, :dataframe) do
         #         error("Missing dataframe argument!")
         #     end
         # end
 
         # # the conversion functions for when we pass symbols or vectors of symbols to reference dataframes
-        # convertToAnyVector(s::Symbol, d::Dict) = Any[getDataFrameFromKW(d)[s]], s
-        # convertToAnyVector(v::AVec{Symbol}, d::Dict) = (df = getDataFrameFromKW(d); Any[df[s] for s in v]), v
+        # convertToAnyVector(s::Symbol, d::KW) = Any[getDataFrameFromKW(d)[s]], s
+        # convertToAnyVector(v::AVec{Symbol}, d::KW) = (df = getDataFrameFromKW(d); Any[df[s] for s in v]), v
 
     end
 end
