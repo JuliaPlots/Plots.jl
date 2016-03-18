@@ -265,9 +265,16 @@ end
 ```
 """
 function with(f::Function, args...; kw...)
+    newdefs = KW(kw)
+
+    if :canvas in args
+        newdefs[:xticks] = nothing
+        newdefs[:yticks] = nothing
+        newdefs[:grid] = false
+        newdefs[:legend] = false
+    end
 
   # dict to store old and new keyword args for anything that changes
-  newdefs = KW(kw)
   olddefs = KW()
   for k in keys(newdefs)
     olddefs[k] = default(k)

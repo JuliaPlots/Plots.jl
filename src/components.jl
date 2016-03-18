@@ -1,10 +1,33 @@
 
+export
+    P2,
+    P3,
+    BezierCurve,
+    curve_points,
+    directed_curve
+
+typealias P2 FixedSizeArrays.Vec{2,Float64}
+typealias P3 FixedSizeArrays.Vec{3,Float64}
+
+
 immutable Shape
   vertices::AVec
 end
 
+Shape(x, y) = Shape(collect(zip(x, y)))
+
 get_xs(shape::Shape) = Float64[v[1] for v in shape.vertices]
 get_ys(shape::Shape) = Float64[v[2] for v in shape.vertices]
+
+function scale(shape::Shape, x, y=x)
+    sx, sy = shape_coords(shape)
+    Shape(sx .* x, sy .* y)
+end
+
+function translate(shape::Shape, x, y=x)
+    sx, sy = shape_coords(shape)
+    Shape(sx .+ x, sy .+ y)
+end
 
 function shape_coords(shape::Shape)
     unzip(shape.vertices)
@@ -287,16 +310,6 @@ end
 
 
 # @require FixedSizeArrays begin
-
-  export
-    P2,
-    P3,
-    BezierCurve,
-    curve_points,
-    directed_curve
-
-  typealias P2 FixedSizeArrays.Vec{2,Float64}
-  typealias P3 FixedSizeArrays.Vec{3,Float64}
 
   type BezierCurve{T <: FixedSizeArrays.Vec}
       control_points::Vector{T}
