@@ -164,7 +164,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
   # in the 2-axis case we need to get: <rightaxis>[:<func>]
   ax = getAxis(plt, axis)
   # ax[:set_ylabel](plt.plotargs[:yrightlabel])
-  fmap = @compat Dict(
+  fmap = KW(
       :hist       => :hist,
       :density    => :hist,
       :sticks     => :bar,
@@ -196,7 +196,7 @@ function updateAxisColors(ax, fgcolor)
 end
 
 
-function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::Dict, smooth::Bool)
+function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Bool)
   if smooth
     xs, ys = regressionXY(d[:x], d[:y])
     ax[:plot](xs, ys,
@@ -206,7 +206,7 @@ function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::Dict, smooth::Bool)
              )
   end
 end
-handleSmooth(plt::Plot{PyPlotBackend}, ax, d::Dict, smooth::Real) = handleSmooth(plt, ax, d, true)
+handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Real) = handleSmooth(plt, ax, d, true)
 
 
 
@@ -224,7 +224,7 @@ end
 
 # ------------------------------------------------------------------
 
-function pyplot_figure(plotargs::Dict)
+function pyplot_figure(plotargs::KW)
   w,h = map(px2inch, plotargs[:size])
   bgcolor = getPyPlotColor(plotargs[:background_color])
 
@@ -284,7 +284,7 @@ function _create_plot(pkg::PyPlotBackend; kw...)
     pyplot_3d_setup!(wrap, d)
   end
 
-  plt = Plot(wrap, pkg, 0, d, Dict[])
+  plt = Plot(wrap, pkg, 0, d, KW[])
   plt
 end
 
@@ -337,7 +337,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
   end
 
   # lt = d[:linetype]
-  extra_kwargs = Dict()
+  extra_kwargs = KW()
 
   plotfunc = getPyPlotFunction(plt, d[:axis], lt)
 
@@ -609,7 +609,7 @@ end
 
 usingRightAxis(plt::Plot{PyPlotBackend}) = any(args -> args[:axis] in (:right,:auto), plt.seriesargs)
 
-function _update_plot(plt::Plot{PyPlotBackend}, d::Dict)
+function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
   figorax = plt.o
   ax = getLeftAxis(figorax)
   # PyPlot.sca(ax)
@@ -745,7 +745,7 @@ end
 
 # this will be called internally, when creating a subplot from existing plots
 # NOTE: if I ever need to "Rebuild a "ubplot from individual Plot's"... this is what I should use!
-function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::SubplotLayout, d::Dict)
+function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::SubplotLayout, d::KW)
   validateSubplotSupported()
 
   p = length(layout)
@@ -786,7 +786,7 @@ end
 
 # -----------------------------------------------------------------
 
-const _pyplot_legend_pos = Dict(
+const _pyplot_legend_pos = KW(
     :right => "right",
     :left => "center left",
     :top => "upper center",
@@ -877,7 +877,7 @@ end
 #   end
 # end
 
-const _pyplot_mimeformats = @compat Dict(
+const _pyplot_mimeformats = Dict(
     "application/eps"         => "eps",
     "image/eps"               => "eps",
     "application/pdf"         => "pdf",

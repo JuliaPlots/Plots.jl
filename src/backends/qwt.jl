@@ -11,7 +11,7 @@ end
 
 # -------------------------------
 
-@compat const _qwtAliases = Dict(
+@compat const _qwtAliases = KW(
     :nbins => :heatmap_n,
     :fillrange => :fillto,
     :linewidth => :width,
@@ -24,7 +24,7 @@ end
     :star8 => :star2,
   )
 
-function fixcolors(d::Dict)
+function fixcolors(d::KW)
   for (k,v) in d
     if typeof(v) <: ColorScheme
       d[k] = getColor(v)
@@ -73,7 +73,7 @@ function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
 
   d[:x] = collect(d[:x])
   d[:y] = collect(d[:y])
-  
+
   d
 end
 
@@ -82,7 +82,7 @@ function _create_plot(pkg::QwtBackend; kw...)
   fixcolors(d)
   dumpdict(d,"\n\n!!! plot")
   o = Qwt.plot(zeros(0,0); d..., show=false)
-  plt = Plot(o, pkg, 0, d, Dict[])
+  plt = Plot(o, pkg, 0, d, KW[])
   plt
 end
 
@@ -98,12 +98,12 @@ end
 
 # ----------------------------------------------------------------
 
-function updateLimsAndTicks(plt::Plot{QwtBackend}, d::Dict, isx::Bool)
+function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
   lims = get(d, isx ? :xlims : :ylims, nothing)
   ticks = get(d, isx ? :xticks : :yticks, nothing)
   w = plt.o.widget
-  axisid = Qwt.QWT.QwtPlot[isx ? :xBottom : :yLeft] 
-  
+  axisid = Qwt.QWT.QwtPlot[isx ? :xBottom : :yLeft]
+
   if typeof(lims) <: @compat(Union{Tuple,AVec}) && length(lims) == 2
     if isx
       plt.o.autoscale_x = false
@@ -138,7 +138,7 @@ function updateLimsAndTicks(plt::Plot{QwtBackend}, d::Dict, isx::Bool)
 end
 
 
-function _update_plot(plt::Plot{QwtBackend}, d::Dict)
+function _update_plot(plt::Plot{QwtBackend}, d::KW)
   haskey(d, :title) && Qwt.title(plt.o, d[:title])
   haskey(d, :xlabel) && Qwt.xlabel(plt.o, d[:xlabel])
   haskey(d, :ylabel) && Qwt.ylabel(plt.o, d[:ylabel])
@@ -146,7 +146,7 @@ function _update_plot(plt::Plot{QwtBackend}, d::Dict)
   updateLimsAndTicks(plt, d, false)
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{QwtBackend}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{QwtBackend}, d::KW)
   haskey(d, :size) && Qwt.resizewidget(plt.o, d[:size]...)
   haskey(d, :pos) && Qwt.movewidget(plt.o, d[:pos]...)
 end
@@ -155,7 +155,7 @@ end
 # ----------------------------------------------------------------
 
         # curve.setPen(Qt.QPen(Qt.QColor(color), linewidth, self.getLineStyle(linestyle)))
-function addLineMarker(plt::Plot{QwtBackend}, d::Dict)
+function addLineMarker(plt::Plot{QwtBackend}, d::KW)
   for yi in d[:y]
     marker = Qwt.QWT.QwtPlotMarker()
     ishorizontal = (d[:linetype] == :hline)
@@ -279,4 +279,3 @@ function Base.display(::PlotsDisplay, subplt::Subplot{QwtBackend})
   end
   Qwt.showwidget(subplt.o)
 end
-

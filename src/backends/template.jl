@@ -18,7 +18,7 @@ function _create_plot(pkg::[PkgName]AbstractBackend; kw...)
   d = KW(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
-  Plot(nothing, pkg, 0, d, Dict[])
+  Plot(nothing, pkg, 0, d, KW[])
 end
 
 
@@ -41,10 +41,10 @@ function _before_update_plot(plt::Plot{[PkgName]AbstractBackend})
 end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{[PkgName]AbstractBackend}, d::Dict)
+function _update_plot(plt::Plot{[PkgName]AbstractBackend}, d::KW)
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{[PkgName]AbstractBackend}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{[PkgName]AbstractBackend}, d::KW)
 end
 
 # ----------------------------------------------------------------

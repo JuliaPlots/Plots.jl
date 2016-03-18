@@ -18,23 +18,23 @@ end
 # bokehcolor(cs::ColorScheme) = bokehcolor(getColor(cs))
 
 
-const _glyphtypes = Dict(
+const _glyphtypes = KW(
     :ellipse    => :Circle,
     :rect       => :Square,
     :diamond    => :Diamond,
     :utriangle  => :Triangle,
     :dtriangle  => :InvertedTriangle,
-    # :pentagon   => 
-    # :hexagon    => 
-    # :heptagon   => 
-    # :octagon    => 
+    # :pentagon   =>
+    # :hexagon    =>
+    # :heptagon   =>
+    # :octagon    =>
     :cross      => :Cross,
     :xcross     => :X,
     :star5      => :Asterisk,
   )
 
 
-function bokeh_glyph_type(d::Dict)
+function bokeh_glyph_type(d::KW)
   lt = d[:linetype]
   mt = d[:markershape]
   if lt == :scatter && mt == :none
@@ -81,10 +81,10 @@ function _create_plot(pkg::BokehBackend; kw...)
   yaxis_type = d[:yscale] == :log10 ? :log : :auto
   # legend = d[:legend] ? xxxx : nothing
   legend = nothing
-  extra_args = Dict()  # TODO: we'll put extra settings (xlim, etc) here
+  extra_args = KW()  # TODO: we'll put extra settings (xlim, etc) here
   bplt = Bokeh.Plot(datacolumns, tools, filename, title, w, h, xaxis_type, yaxis_type, legend) #, extra_args)
 
-  Plot(bplt, pkg, 0, d, Dict[])
+  Plot(bplt, pkg, 0, d, KW[])
 end
 
 
@@ -94,7 +94,7 @@ function _add_series(::BokehBackend, plt::Plot; kw...)
   # dumpdict(d, "plot!", true)
 
   bdata = Dict{Symbol, Vector}(:x => collect(d[:x]), :y => collect(d[:y]))
-  
+
   glyph = Bokeh.Bokehjs.Glyph(
       glyphtype = bokeh_glyph_type(d),
       linecolor = webcolor(d[:linecolor]),  # shape's stroke or line color
@@ -114,10 +114,10 @@ end
 # ----------------------------------------------------------------
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{BokehBackend}, d::Dict)
+function _update_plot(plt::Plot{BokehBackend}, d::KW)
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{BokehBackend}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{BokehBackend}, d::KW)
 end
 
 # ----------------------------------------------------------------

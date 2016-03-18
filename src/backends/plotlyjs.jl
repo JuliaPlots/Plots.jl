@@ -29,7 +29,7 @@ function _create_plot(pkg::PlotlyJSBackend; kw...)
     # o = T(PlotlyJS.Plot())
     o = PlotlyJS.plot()
 
-    Plot(o, pkg, 0, d, Dict[])
+    Plot(o, pkg, 0, d, KW[])
 end
 
 
@@ -68,7 +68,7 @@ function _before_update_plot(plt::Plot{PlotlyJSBackend})
 end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{PlotlyJSBackend}, d::Dict)
+function _update_plot(plt::Plot{PlotlyJSBackend}, d::KW)
     pdict = plotly_layout(d)
     # dumpdict(pdict, "pdict updateplot", true)
     syncplot = plt.o
@@ -78,7 +78,7 @@ function _update_plot(plt::Plot{PlotlyJSBackend}, d::Dict)
 end
 
 
-function _update_plot_pos_size(plt::AbstractPlot{PlotlyJSBackend}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{PlotlyJSBackend}, d::KW)
 end
 
 # ----------------------------------------------------------------
@@ -95,7 +95,7 @@ function Base.setindex!(plt::Plot{PlotlyJSBackend}, xy::Tuple, i::Integer)
   d[:x], d[:y] = xy
   # TODO: this is likely ineffecient... we should make a call that ONLY changes the plot data
   # PlotlyJS.restyle!(plt.o, i, plotly_series(d))
-  PlotlyJS.restyle!(plt.o, i, Dict(:x=>(d[:x],), :y=>(d[:y],)))
+  PlotlyJS.restyle!(plt.o, i, KW(:x=>(d[:x],), :y=>(d[:y],)))
   plt
 end
 

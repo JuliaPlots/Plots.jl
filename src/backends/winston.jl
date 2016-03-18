@@ -16,13 +16,13 @@ end
 
 
 ## dictionaries for conversion of Plots.jl names to Winston ones.
-@compat const winston_linestyle =  Dict(:solid=>"solid",
+@compat const winston_linestyle =  KW(:solid=>"solid",
                                 :dash=>"dash",
                                 :dot=>"dotted",
                                 :dashdot=>"dotdashed"
                                )
 
-@compat const winston_marker = Dict(:none=>".",
+@compat const winston_marker = KW(:none=>".",
                             :rect => "square",
                             :ellipse=>"circle",
                             :diamond=>"diamond",
@@ -43,13 +43,13 @@ end
 function _create_plot(pkg::WinstonBackend; kw...)
   d = KW(kw)
   wplt = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
-  
-  Plot(wplt, pkg, 0, d, Dict[])
+
+  Plot(wplt, pkg, 0, d, KW[])
 end
 
-copy_remove(d::Dict, s::Symbol) = delete!(copy(d), s)
+copy_remove(d::KW, s::Symbol) = delete!(copy(d), s)
 
-function addRegressionLineWinston(d::Dict, wplt)
+function addRegressionLineWinston(d::KW, wplt)
   xs, ys = regressionXY(d[:x], d[:y])
   Winston.add(wplt, Winston.Curve(xs, ys, kind="dotted"))
 end
@@ -75,7 +75,7 @@ function _add_series(::WinstonBackend, plt::Plot; kw...)
   end
 
 
-  e = Dict()
+  e = KW()
   e[:color] = getColor(d[:linecolor])
   e[:linewidth] = d[:linewidth]
   e[:kind] = winston_linestyle[d[:linestyle]]
@@ -158,14 +158,14 @@ end
 
 # ----------------------------------------------------------------
 
-@compat const _winstonNames = Dict(
+@compat const _winstonNames = KW(
     :xlims => :xrange,
     :ylims => :yrange,
     :xscale => :xlog,
     :yscale => :ylog,
   )
 
-function _update_plot(plt::Plot{WinstonBackend}, d::Dict)
+function _update_plot(plt::Plot{WinstonBackend}, d::KW)
   window, canvas, wplt = getWinstonItems(plt)
   for k in (:xlabel, :ylabel, :title, :xlims, :ylims)
     if haskey(d, k)

@@ -38,15 +38,15 @@ end
 # ---------------------------------------------------------------------------
 
 function _create_plot(pkg::PlotlyBackend; kw...)
-  d = Dict{Symbol,Any}(kw)
+  d = KW(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
-  Plot(nothing, pkg, 0, d, Dict[])
+  Plot(nothing, pkg, 0, d, KW[])
 end
 
 
 function _add_series(::PlotlyBackend, plt::Plot; kw...)
-  d = Dict{Symbol,Any}(kw)
+  d = KW(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
   plt
@@ -67,10 +67,10 @@ function _before_update_plot(plt::Plot{PlotlyBackend})
 end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{PlotlyBackend}, d::Dict)
+function _update_plot(plt::Plot{PlotlyBackend}, d::KW)
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{PlotlyBackend}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{PlotlyBackend}, d::KW)
 end
 
 # ----------------------------------------------------------------
@@ -117,7 +117,7 @@ end
 # _plotDefaults[:yflip]             = false
 
 function plotlyfont(font::Font, color = font.color)
-  Dict{Symbol,Any}(
+  KW(
       :family => font.family,
       :size   => round(Int, font.pointsize*1.4),
       :color  => webcolor(color),
@@ -125,7 +125,7 @@ function plotlyfont(font::Font, color = font.color)
 end
 
 function get_annotation_dict(x, y, val::Union{AbstractString,Symbol})
-  Dict{Symbol,Any}(
+  KW(
       :text => val,
       :xref => "x",
       :x => x,
@@ -136,7 +136,7 @@ function get_annotation_dict(x, y, val::Union{AbstractString,Symbol})
 end
 
 function get_annotation_dict(x, y, ptxt::PlotText)
-  merge(get_annotation_dict(x, y, ptxt.str), Dict{Symbol,Any}(
+  merge(get_annotation_dict(x, y, ptxt.str), KW(
       :font => plotlyfont(ptxt.font),
       :xanchor => ptxt.font.halign == :hcenter ? :center : ptxt.font.halign,
       :yanchor => ptxt.font.valign == :vcenter ? :middle : ptxt.font.valign,
@@ -160,8 +160,8 @@ flipsym(isx::Bool) = symbol((isx ? "x" : "y") * "flip")
 scalesym(isx::Bool) = symbol((isx ? "x" : "y") * "scale")
 labelsym(isx::Bool) = symbol((isx ? "x" : "y") * "label")
 
-function plotlyaxis(d::Dict, isx::Bool)
-  ax = Dict{Symbol,Any}(
+function plotlyaxis(d::KW, isx::Bool)
+  ax = KW(
       :title      => d[labelsym(isx)],
       :showgrid   => d[:grid],
       :zeroline   => false,
@@ -212,8 +212,8 @@ end
 
 # function get_plot_json(plt::Plot{PlotlyBackend})
 #   d = plt.plotargs
-function plotly_layout(d::Dict)
-  d_out = Dict{Symbol,Any}()
+function plotly_layout(d::KW)
+  d_out = KW()
 
   bgcolor = webcolor(d[:background_color])
   fgcolor = webcolor(d[:foreground_color])
@@ -221,7 +221,7 @@ function plotly_layout(d::Dict)
   # set the fields for the plot
   d_out[:title] = d[:title]
   d_out[:titlefont] = plotlyfont(d[:guidefont], fgcolor)
-  d_out[:margin] = Dict{Symbol,Any}(:l=>35, :b=>30, :r=>8, :t=>20)
+  d_out[:margin] = KW(:l=>35, :b=>30, :r=>8, :t=>20)
   d_out[:plot_bgcolor] = bgcolor
   d_out[:paper_bgcolor] = bgcolor
 
@@ -232,7 +232,7 @@ function plotly_layout(d::Dict)
   # legend
   d_out[:showlegend] = d[:legend] != :none
   if d[:legend] != :none
-    d_out[:legend] = Dict{Symbol,Any}(
+    d_out[:legend] = KW(
         :bgcolor  => bgcolor,
         :bordercolor => fgcolor,
         :font     => plotlyfont(d[:legendfont]),
@@ -258,7 +258,7 @@ function plotly_colorscale(grad::ColorGradient, alpha = nothing)
 end
 plotly_colorscale(c, alpha = nothing) = plotly_colorscale(ColorGradient(:bluesreds), alpha)
 
-const _plotly_markers = Dict{Symbol,Any}(
+const _plotly_markers = KW(
     :rect       => "square",
     :xcross     => "x",
     :utriangle  => "triangle-up",
@@ -269,8 +269,8 @@ const _plotly_markers = Dict{Symbol,Any}(
   )
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
-function plotly_series(d::Dict; plot_index = nothing)
-  d_out = Dict{Symbol,Any}()
+function plotly_series(d::KW; plot_index = nothing)
+  d_out = KW()
 
   x, y = collect(d[:x]), collect(d[:y])
   d_out[:name] = d[:label]
@@ -332,7 +332,7 @@ function plotly_series(d::Dict; plot_index = nothing)
     d_out[:z] = d[:z].surf
     # d_out[:showscale] = d[:colorbar] != :none
     d_out[:ncontours] = d[:levels]
-    d_out[:contours] = Dict{Symbol,Any}(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
+    d_out[:contours] = KW(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
     d_out[:colorscale] = plotly_colorscale(d[:linecolor], d[:linealpha])
 
   elseif lt in (:surface, :wireframe)
@@ -359,17 +359,17 @@ function plotly_series(d::Dict; plot_index = nothing)
 
   else
     warn("Plotly: linetype $lt isn't supported.")
-    return Dict{Symbol,Any}()
+    return KW()
   end
 
   # add "marker"
   if hasmarker
-    d_out[:marker] = Dict{Symbol,Any}(
+    d_out[:marker] = KW(
         :symbol => get(_plotly_markers, d[:markershape], string(d[:markershape])),
         :opacity => d[:markeralpha],
         :size => 2 * d[:markersize],
         :color => webcolor(d[:markercolor], d[:markeralpha]),
-        :line => Dict{Symbol,Any}(
+        :line => KW(
             :color => webcolor(d[:markerstrokecolor], d[:markerstrokealpha]),
             :width => d[:markerstrokewidth],
           ),
@@ -389,7 +389,7 @@ function plotly_series(d::Dict; plot_index = nothing)
 
   # add "line"
   if hasline
-    d_out[:line] = Dict{Symbol,Any}(
+    d_out[:line] = KW(
         :color => webcolor(d[:linecolor], d[:linealpha]),
         :width => d[:linewidth],
         :shape => if lt == :steppre
@@ -419,7 +419,7 @@ function get_series_json(plt::Plot{PlotlyBackend})
 end
 
 function get_series_json(subplt::Subplot{PlotlyBackend})
-  ds = Dict[]
+  ds = KW[]
   for (i,plt) in enumerate(subplt.plts)
     for d in plt.seriesargs
       push!(ds, plotly_series(d, plot_index = i))

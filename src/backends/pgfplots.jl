@@ -13,15 +13,15 @@ end
 # ---------------------------------------------------------------------------
 
 function _create_plot(pkg::PGFPlotsBackend; kw...)
-  d = Dict{Symbol,Any}(kw)
+  d = KW(kw)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
-  Plot(nothing, pkg, 0, d, Dict[])
+  Plot(nothing, pkg, 0, d, KW[])
 end
 
 
 function _add_series(::PGFPlotsBackend, plt::Plot; kw...)
-  d = Dict{Symbol,Any}(kw)
+  d = KW(kw)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
   plt
@@ -42,10 +42,10 @@ function _before_update_plot(plt::Plot{PGFPlotsBackend})
 end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{PGFPlotsBackend}, d::Dict)
+function _update_plot(plt::Plot{PGFPlotsBackend}, d::KW)
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{PGFPlotsBackend}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{PGFPlotsBackend}, d::KW)
 end
 
 # ----------------------------------------------------------------

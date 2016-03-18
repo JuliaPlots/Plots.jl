@@ -16,7 +16,7 @@ end
 # Base.size(v::MissingVec) = (1,)
 # Base.getindex(v::MissingVec, i::Integer) = 0.0
 
-function createGadflyPlotObject(d::Dict)
+function createGadflyPlotObject(d::KW)
     gplt = Gadfly.Plot()
     gplt.mapping = Dict()
     gplt.data_source = Gadfly.DataFrames.DataFrame()
@@ -31,7 +31,7 @@ end
 # ---------------------------------------------------------------------------
 
 
-function getLineGeom(d::Dict)
+function getLineGeom(d::KW)
     lt = d[:linetype]
     xbins, ybins = maketuple(d[:nbins])
     if lt == :hexb
@@ -61,9 +61,9 @@ function getLineGeom(d::Dict)
     end
 end
 
-function get_extra_theme_args(d::Dict, k::Symbol)
+function get_extra_theme_args(d::KW, k::Symbol)
     # gracefully handles old Gadfly versions
-    extra_theme_args = Dict()
+    extra_theme_args = KW()
     try
         extra_theme_args[:line_style] = Gadfly.get_stroke_vector(d[k])
     catch err
@@ -76,7 +76,7 @@ function get_extra_theme_args(d::Dict, k::Symbol)
     extra_theme_args
 end
 
-function getGadflyLineTheme(d::Dict)
+function getGadflyLineTheme(d::KW)
     lc = convertColor(getColor(d[:linecolor]), d[:linealpha])
     fc = convertColor(getColor(d[:fillcolor]), d[:fillalpha])
 
@@ -92,10 +92,10 @@ function getGadflyLineTheme(d::Dict)
 end
 
 # add a line as a new layer
-function addGadflyLine!(plt::Plot, numlayers::Int, d::Dict, geoms...)
+function addGadflyLine!(plt::Plot, numlayers::Int, d::KW, geoms...)
     gplt = getGadflyContext(plt)
     gfargs = vcat(geoms..., getGadflyLineTheme(d))
-    kwargs = Dict()
+    kwargs = KW()
     lt = d[:linetype]
 
     # add a fill?
@@ -136,7 +136,7 @@ end
 getMarkerGeom(shape::Shape) = gadflyshape(shape)
 getMarkerGeom(shape::Symbol) = gadflyshape(_shapes[shape])
 getMarkerGeom(shapes::AVec) = map(getMarkerGeom, shapes)
-function getMarkerGeom(d::Dict)
+function getMarkerGeom(d::KW)
     if d[:linetype] == :shape
         Gadfly.Geom.polygon(fill = true, preserve_order = true)
     else
@@ -144,7 +144,7 @@ function getMarkerGeom(d::Dict)
     end
 end
 
-function getGadflyMarkerTheme(d::Dict, plotargs::Dict)
+function getGadflyMarkerTheme(d::KW, plotargs::KW)
     c = getColor(d[:markercolor])
     α = d[:markeralpha]
     if α != nothing
@@ -177,9 +177,9 @@ function addGadflyContColorScale(plt::Plot{GadflyBackend}, c)
     push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(c, p))))
 end
 
-function addGadflyMarker!(plt::Plot, numlayers::Int, d::Dict, plotargs::Dict, geoms...)
+function addGadflyMarker!(plt::Plot, numlayers::Int, d::KW, plotargs::KW, geoms...)
     gfargs = vcat(geoms..., getGadflyMarkerTheme(d, plotargs), getMarkerGeom(d))
-    kwargs = Dict()
+    kwargs = KW()
 
     # handle continuous color scales for the markers
     zcolor = d[:zcolor]
@@ -194,7 +194,7 @@ end
 
 # ---------------------------------------------------------------------------
 
-function addToGadflyLegend(plt::Plot, d::Dict)
+function addToGadflyLegend(plt::Plot, d::KW)
     if plt.plotargs[:legend] != :none && d[:label] != ""
         gplt = getGadflyContext(plt)
 
@@ -235,7 +235,7 @@ getGadflySmoothing(smooth::Bool) = smooth ? [Gadfly.Geom.smooth(method=:lm)] : A
 getGadflySmoothing(smooth::Real) = [Gadfly.Geom.smooth(method=:loess, smoothing=float(smooth))]
 
 
-function addGadflySeries!(plt::Plot, d::Dict)
+function addGadflySeries!(plt::Plot, d::KW)
     layers = Gadfly.Layer[]
     gplt = getGadflyContext(plt)
 
@@ -336,7 +336,7 @@ continuousAndSameAxis(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScal
 filterGadflyScale(gplt, isx::Bool) = filter!(scale -> !continuousAndSameAxis(scale, isx), gplt.scales)
 
 
-function getGadflyScaleFunction(d::Dict, isx::Bool)
+function getGadflyScaleFunction(d::KW, isx::Bool)
     scalekey = isx ? :xscale : :yscale
     hasScaleKey = haskey(d, scalekey)
     if hasScaleKey
@@ -351,7 +351,7 @@ function getGadflyScaleFunction(d::Dict, isx::Bool)
 end
 
 
-function addGadflyLimitsScale(gplt, d::Dict, isx::Bool)
+function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
     gfunc, hasScaleKey = getGadflyScaleFunction(d, isx)
 
     # do we want to add min/max limits for the axis?
@@ -380,7 +380,7 @@ function addGadflyLimitsScale(gplt, d::Dict, isx::Bool)
     lims
 end
 
-function updateGadflyAxisFlips(gplt, d::Dict, xlims, ylims)
+function updateGadflyAxisFlips(gplt, d::KW, xlims, ylims)
     if isa(gplt.coord, Gadfly.Coord.Cartesian)
         gplt.coord = Gadfly.Coord.cartesian(
             gplt.coord.xvars,
@@ -412,7 +412,7 @@ function findGuideAndSet(gplt, t::DataType, args...; kw...) #s::@compat(Abstract
     end
 end
 
-function updateGadflyGuides(plt::Plot, d::Dict)
+function updateGadflyGuides(plt::Plot, d::KW)
     gplt = getGadflyContext(plt)
     haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, string(d[:title]))
     haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, string(d[:xlabel]))
@@ -437,8 +437,8 @@ function updateGadflyGuides(plt::Plot, d::Dict)
     updateGadflyAxisFlips(gplt, d, xlims, ylims)
 end
 
-function updateGadflyPlotTheme(plt::Plot, d::Dict)
-    kwargs = Dict()
+function updateGadflyPlotTheme(plt::Plot, d::KW)
+    kwargs = KW()
 
     # # hide the legend?
     leg = d[d[:legend] == :none ? :colorbar : :legend]
@@ -510,7 +510,7 @@ end
 function _create_plot(pkg::GadflyBackend; kw...)
     d = KW(kw)
     gplt = createGadflyPlotObject(d)
-    Plot(gplt, pkg, 0, d, Dict[])
+    Plot(gplt, pkg, 0, d, KW[])
 end
 
 
@@ -530,7 +530,7 @@ end
 
 
 
-function _update_plot(plt::Plot{GadflyBackend}, d::Dict)
+function _update_plot(plt::Plot{GadflyBackend}, d::KW)
     updateGadflyGuides(plt, d)
     updateGadflyPlotTheme(plt, d)
 end

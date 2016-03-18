@@ -23,7 +23,7 @@ function _create_plot(pkg::GLVisualizeBackend; kw...)
   # TODO: this should be moved to the display method?
   w=GLVisualize.glscreen()
   @async GLVisualize.renderloop(w)
-  Plot(GLScreenWrapper(w), pkg, 0, d, Dict[])
+  Plot(GLScreenWrapper(w), pkg, 0, d, KW[])
 end
 
 
@@ -49,10 +49,10 @@ function _before_update_plot(plt::Plot{GLVisualizeBackend})
 end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{GLVisualizeBackend}, d::Dict)
+function _update_plot(plt::Plot{GLVisualizeBackend}, d::KW)
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{GLVisualizeBackend}, d::Dict)
+function _update_plot_pos_size(plt::AbstractPlot{GLVisualizeBackend}, d::KW)
 end
 
 # ----------------------------------------------------------------

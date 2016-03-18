@@ -9,7 +9,7 @@ function _initialize_backend(::ImmerseBackend; kw...)
   end
 end
 
-function createImmerseFigure(d::Dict)
+function createImmerseFigure(d::KW)
   w,h = d[:size]
   figidx = Immerse.figure(; name = d[:windowtitle], width = w, height = h)
   Immerse.Figure(figidx)
@@ -26,7 +26,7 @@ function _create_plot(pkg::ImmerseBackend; kw...)
   gplt = createGadflyPlotObject(d)
 
   # save both the Immerse.Figure and the Gadfly.Plot
-  Plot((nothing,gplt), pkg, 0, d, Dict[])
+  Plot((nothing,gplt), pkg, 0, d, KW[])
 end
 
 
@@ -39,7 +39,7 @@ function _add_series(::ImmerseBackend, plt::Plot; kw...)
 end
 
 
-function _update_plot(plt::Plot{ImmerseBackend}, d::Dict)
+function _update_plot(plt::Plot{ImmerseBackend}, d::KW)
   updateGadflyGuides(plt, d)
   updateGadflyPlotTheme(plt, d)
 end

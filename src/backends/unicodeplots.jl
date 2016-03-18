@@ -68,7 +68,7 @@ end
 
 
 # add a single series
-function addUnicodeSeries!(o, d::Dict, addlegend::Bool, xlim, ylim)
+function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
 
   # get the function, or special handling for step/bar/hist
   lt = d[:linetype]
@@ -111,7 +111,7 @@ function addUnicodeSeries!(o, d::Dict, addlegend::Bool, xlim, ylim)
 end
 
 
-function handlePlotColors(::UnicodePlotsBackend, d::Dict)
+function handlePlotColors(::UnicodePlotsBackend, d::KW)
   # TODO: something special for unicodeplots, since it doesn't take kindly to people messing with its color palette
   d[:color_palette] = [RGB(0,0,0)]
 end
@@ -120,7 +120,7 @@ end
 
 
 function _create_plot(pkg::UnicodePlotsBackend; kw...)
-  plt = Plot(nothing, pkg, 0, KW(kw), Dict[])
+  plt = Plot(nothing, pkg, 0, KW(kw), KW[])
 
   # do we want to give a new default size?
   if !haskey(plt.plotargs, :size) || plt.plotargs[:size] == _plotDefaults[:size]
@@ -142,7 +142,7 @@ function _add_series(::UnicodePlotsBackend, plt::Plot; kw...)
 end
 
 
-function _update_plot(plt::Plot{UnicodePlotsBackend}, d::Dict)
+function _update_plot(plt::Plot{UnicodePlotsBackend}, d::KW)
   for k in (:title, :xlabel, :ylabel, :xlims, :ylims)
     if haskey(d, k)
       plt.plotargs[k] = d[k]
@@ -200,4 +200,3 @@ function Base.display(::PlotsDisplay, subplt::Subplot{UnicodePlotsBackend})
     gui(plt)
   end
 end
-

@@ -73,7 +73,7 @@ function makecross(; offset = -0.5, radius = 1.0)
 end
 
 
-const _shapes = @compat Dict(
+const _shapes = KW(
     :ellipse    => makeshape(20),
     :rect       => makeshape(4, offset=-0.25),
     :diamond    => makeshape(4),
