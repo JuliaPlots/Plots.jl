@@ -458,7 +458,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
     handle
 
   elseif lt in (:surface,:wireframe)
-    x, y, z = d[:x], d[:y], Array(d[:z])
+    x, y, z = Array(d[:x]), Array(d[:y]), Array(d[:z])
     if !ismatrix(x) || !ismatrix(y)
       x = repmat(x', length(y), 1)
       y = repmat(y, 1, length(d[:x]))

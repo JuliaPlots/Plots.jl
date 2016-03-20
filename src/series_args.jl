@@ -310,7 +310,8 @@ end
 # surfaces-like... general x, y grid
 function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, x::AMat{T}, y::AMat{T}, zmat::AMat{T})
     @assert size(zmat) == size(x) == size(y)
-    d[:x], d[:y], d[:z] = Any[x], Any[y], Surface{Matrix{Float64}}(zmat)
+    # d[:x], d[:y], d[:z] = Any[x], Any[y], Surface{Matrix{Float64}}(zmat)
+    d[:x], d[:y], d[:z] = map(Surface{Matrix{Float64}}, (x, y, zmat))
     if !like_surface(get(d, :linetype, :none))
         d[:linetype] = :contour
     end
