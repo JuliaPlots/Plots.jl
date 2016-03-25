@@ -124,22 +124,27 @@ end
 # ---------------------------------------------------------
 
 function setup_atom()
-    @require Atom begin
-        import Atom, Media
+    # @require Atom begin
+    if isatom()
+        # @eval import Atom, Media
+        @eval import Atom
 
         # connects the render function
-        Media.media{T <: Union{GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend}}(Plot{T}, Media.Plot)
+        for T in (GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend)
+            Atom.Media.media(Plot{T}, Atom.Media.Plot)
+        end
+        # Atom.Media.media{T <: Union{GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend}}(Plot{T}, Atom.Media.Plot)
 
         # Atom.displaysize(::AbstractPlot) = (535, 379)
         # Atom.displaytitle(plt::AbstractPlot) = "Plots.jl (backend: $(backend(plt)))"
 
         # this is like "display"... sends an html div with the plot to the PlotPane
-        function Media.render(pane::Atom.PlotPane, plt::Plot)
-            Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
+        function Atom.Media.render(pane::Atom.PlotPane, plt::Plot)
+            Atom.Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
         end
 
 
-        # function Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
+        # function Atom.Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
         #     html = Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
         # end
     end
