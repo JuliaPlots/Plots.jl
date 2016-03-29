@@ -159,6 +159,7 @@ _plotDefaults[:background_color]  = colorant"white"
 _plotDefaults[:foreground_color]  = :auto
 _plotDefaults[:xlims]             = :auto
 _plotDefaults[:ylims]             = :auto
+_plotDefaults[:zlims]             = :auto
 _plotDefaults[:xticks]            = :auto
 _plotDefaults[:yticks]            = :auto
 _plotDefaults[:xscale]            = :identity
@@ -301,6 +302,9 @@ end
     :ylim               => :ylims,
     :ylimit             => :ylims,
     :ylimits            => :ylims,
+    :zlim               => :zlims,
+    :zlimit             => :zlims,
+    :zlimits            => :zlims,
     :xtick              => :xticks,
     :ytick              => :yticks,
     :windowsize         => :size,
