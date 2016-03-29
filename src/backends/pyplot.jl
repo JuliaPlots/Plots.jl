@@ -550,7 +550,7 @@ function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
   if plt.plotargs[:ylims] == :auto
     ax[:set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
   end
-  if plt.plotargs[:zlims] == :auto
+  if plt.plotargs[:zlims] == :auto && haskey(ax, :set_zlim)
     ax[:set_zlim](minmaxseries(plt.seriesargs, :z, axis)...)
   end
 end
@@ -577,25 +577,25 @@ end
 
 # -----------------------------------------------------------------
 
-function addPyPlotLims(ax, lims, what)
-  lims == :auto && return
-  ltype = limsType(lims)
-  if ltype == :limits
-    if what == :xlim
-      isfinite(lims[1]) && ax[:set_xlim](left = lims[1])
-      isfinite(lims[2]) && ax[:set_xlim](right = lims[2])
-    elseif what == :ylim
-      isfinite(lims[1]) && ax[:set_ylim](bottom = lims[1])
-      isfinite(lims[2]) && ax[:set_ylim](top = lims[2])
-    elseif what == :zlim
-      isfinite(lims[1]) && ax[:set_zlim](bottom = lims[1])
-      isfinite(lims[2]) && ax[:set_zlim](top = lims[2])
+function addPyPlotLims(ax, lims, dimension)
+    lims == :auto && return
+    ltype = limsType(lims)
+    if ltype == :limits
+        if dimension == :xlim
+            isfinite(lims[1]) && ax[:set_xlim](left = lims[1])
+            isfinite(lims[2]) && ax[:set_xlim](right = lims[2])
+        elseif dimension == :ylim
+            isfinite(lims[1]) && ax[:set_ylim](bottom = lims[1])
+            isfinite(lims[2]) && ax[:set_ylim](top = lims[2])
+        elseif dimension == :zlim && haskey(ax, :set_zlim)
+            isfinite(lims[1]) && ax[:set_zlim](bottom = lims[1])
+            isfinite(lims[2]) && ax[:set_zlim](top = lims[2])
+        else
+            error("Invalid argument at position 3: $dimension")
+        end
     else
-      error("Invalid argument at position 3: $what")
+    error("Invalid input for $dimension: ", lims)
     end
-  else
-    error("Invalid input for $what: ", lims)
-  end
 end
 
 function addPyPlotTicks(ax, ticks, isx::Bool)
@@ -621,6 +621,7 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
   figorax = plt.o
   ax = getLeftAxis(figorax)
   # PyPlot.sca(ax)
+
 
   # title and axis labels
   # haskey(d, :title) && PyPlot.title(d[:title])
