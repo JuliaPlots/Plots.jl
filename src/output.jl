@@ -131,7 +131,7 @@ function setup_atom()
 
         # connects the render function
         for T in (GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend)
-            Atom.Media.media(Plot{T}, Atom.Media.Plot)
+            Atom.Media.media(AbstractPlot{T}, Atom.Media.Plot)
         end
         # Atom.Media.media{T <: Union{GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend}}(Plot{T}, Atom.Media.Plot)
 
@@ -139,7 +139,7 @@ function setup_atom()
         # Atom.displaytitle(plt::AbstractPlot) = "Plots.jl (backend: $(backend(plt)))"
 
         # this is like "display"... sends an html div with the plot to the PlotPane
-        function Atom.Media.render(pane::Atom.PlotPane, plt::Plot)
+        function Atom.Media.render(pane::Atom.PlotPane, plt::AbstractPlot)
             Atom.Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
         end
 
