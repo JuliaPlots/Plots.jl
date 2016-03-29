@@ -145,6 +145,7 @@ supportedArgs(::PyPlotBackend) = [
     :y,
     :ylabel,
     :ylims,
+    :zlims,
     :yrightlabel,
     :yticks,
     :xscale,

@@ -72,6 +72,7 @@ export
     ylabel!,
     xlims!,
     ylims!,
+    zlims!,
     xticks!,
     yticks!,
     annotate!,
@@ -194,8 +195,10 @@ xlabel!(s::AbstractString; kw...)                = plot!(; xlabel = s, kw...)
 ylabel!(s::AbstractString; kw...)                = plot!(; ylabel = s, kw...)
 xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; xlims = lims, kw...)
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; ylims = lims, kw...)
+zlims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; zlims = lims, kw...)
 xlims!(xmin::Real, xmax::Real; kw...)                     = plot!(; xlims = (xmin,xmax), kw...)
 ylims!(ymin::Real, ymax::Real; kw...)                     = plot!(; ylims = (ymin,ymax), kw...)
+zlims!(zmin::Real, zmax::Real; kw...)                     = plot!(; zlims = (zmin,zmax), kw...)
 xticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; xticks = v, kw...)
 yticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; yticks = v, kw...)
 xticks!{T<:Real,S<:AbstractString}(
@@ -214,8 +217,10 @@ xlabel!(plt::Plot, s::AbstractString; kw...)                 = plot!(plt; xlabel
 ylabel!(plt::Plot, s::AbstractString; kw...)                 = plot!(plt; ylabel = s, kw...)
 xlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; xlims = lims, kw...)
 ylims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; ylims = lims, kw...)
+zlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; zlims = lims, kw...)
 xlims!(plt::Plot, xmin::Real, xmax::Real; kw...)                      = plot!(plt; xlims = (xmin,xmax), kw...)
 ylims!(plt::Plot, ymin::Real, ymax::Real; kw...)                      = plot!(plt; ylims = (ymin,ymax), kw...)
+zlims!(plt::Plot, zmin::Real, zmax::Real; kw...)                      = plot!(plt; zlims = (zmin,zmax), kw...)
 xticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; xticks = ticks, kw...)
 yticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; yticks = ticks, kw...)
 xticks!{T<:Real,S<:AbstractString}(plt::Plot,

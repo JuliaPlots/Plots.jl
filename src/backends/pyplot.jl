@@ -550,6 +550,9 @@ function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
   if plt.plotargs[:ylims] == :auto
     ax[:set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
   end
+  if plt.plotargs[:zlims] == :auto
+    ax[:set_zlim](minmaxseries(plt.seriesargs, :z, axis)...)
+  end
 end
 
 function Base.setindex!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
@@ -574,19 +577,24 @@ end
 
 # -----------------------------------------------------------------
 
-function addPyPlotLims(ax, lims, isx::Bool)
+function addPyPlotLims(ax, lims, what)
   lims == :auto && return
   ltype = limsType(lims)
   if ltype == :limits
-    if isx
+    if what == :xlim
       isfinite(lims[1]) && ax[:set_xlim](left = lims[1])
       isfinite(lims[2]) && ax[:set_xlim](right = lims[2])
-    else
+    elseif what == :ylim
       isfinite(lims[1]) && ax[:set_ylim](bottom = lims[1])
       isfinite(lims[2]) && ax[:set_ylim](top = lims[2])
+    elseif what == :zlim
+      isfinite(lims[1]) && ax[:set_zlim](bottom = lims[1])
+      isfinite(lims[2]) && ax[:set_zlim](top = lims[2])
+    else
+      error("Invalid argument at position 3: $what")
     end
   else
-    error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
+    error("Invalid input for $what: ", lims)
   end
 end
 
@@ -631,8 +639,9 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
   haskey(d, :yscale) && applyPyPlotScale(ax, d[:yscale], false)
 
   # limits and ticks
-  haskey(d, :xlims) && addPyPlotLims(ax, d[:xlims], true)
-  haskey(d, :ylims) && addPyPlotLims(ax, d[:ylims], false)
+  haskey(d, :xlims) && addPyPlotLims(ax, d[:xlims], :xlim)
+  haskey(d, :ylims) && addPyPlotLims(ax, d[:ylims], :ylim)
+  haskey(d, :zlims) && addPyPlotLims(ax, d[:zlims], :zlim)
   haskey(d, :xticks) && addPyPlotTicks(ax, d[:xticks], true)
   haskey(d, :yticks) && addPyPlotTicks(ax, d[:yticks], false)
 
