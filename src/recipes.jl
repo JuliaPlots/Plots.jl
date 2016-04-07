@@ -43,6 +43,8 @@ apply_series_recipe(d::KW, lt) = KW[d]
 # -------------------------------------------------
 # Box Plot
 
+const _box_halfwidth = 0.4
+
 function apply_series_recipe(d::KW, ::Type{Val{:box}})
     # dumpdict(d, "box before", true)
     # TODO: add scatter series with outliers
@@ -58,7 +60,7 @@ function apply_series_recipe(d::KW, ::Type{Val{:box}})
         q1,q2,q3,q4,q5 = quantile(d[:y][groupby.groupIds[i]], linspace(0,1,5))
 
         # make the shape
-        l, m, r = i - 0.3, i, i + 0.3
+        l, m, r = i - _box_halfwidth, i, i + _box_halfwidth
         xcoords = [
             m, l, r, m, m, NaN,         # lower T
             l, l, r, r, l, NaN,         # lower box
@@ -80,6 +82,58 @@ function apply_series_recipe(d::KW, ::Type{Val{:box}})
     KW[d]
 end
 
+# -------------------------------------------------
+# Violin Plot
+
+try
+    Pkg.installed("KernelDensity")
+    import KernelDensity
+
+    warn("using KD for violin")
+    function violin_coords(y)
+        kd = KernelDensity.kde(y, npoints = 30)
+        kd.density, kd.x
+    end
+catch
+    warn("using hist for violin")
+    function violin_coords(y)
+        edges, widths = hist(y, 20)
+        centers = 0.5 * (edges[1:end-1] + edges[2:end])
+        ymin, ymax = extrema(y)
+        vcat(0.0, widths, 0.0), vcat(ymin, centers, ymax)
+    end
+end
+
+
+function apply_series_recipe(d::KW, ::Type{Val{:violin}})
+    # dumpdict(d, "box before", true)
+    # TODO: add scatter series with outliers
+
+    # create a list of shapes, where each shape is a single boxplot
+    shapes = Shape[]
+    d[:linetype] = :shape
+    groupby = extractGroupArgs(d[:x])
+
+    for (i, glabel) in enumerate(groupby.groupLabels)
+
+        # get the edges and widths
+        y = d[:y][groupby.groupIds[i]]
+        widths, centers = violin_coords(y)
+
+        # normalize
+        widths = _box_halfwidth * widths / maximum(widths)
+
+        # make the violin
+        xcoords = vcat(widths, -reverse(widths)) + i
+        ycoords = vcat(centers, reverse(centers))
+        push!(shapes, Shape(xcoords, ycoords))
+    end
+
+    d[:x], d[:y] = shape_coords(shapes)
+    d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
+
+    KW[d]
+end
 
 # -------------------------------------------------
 

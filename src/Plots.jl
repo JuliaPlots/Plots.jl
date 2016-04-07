@@ -68,6 +68,8 @@ export
     abline!,
     boxplot,
     boxplot!,
+    violin,
+    violin!,
 
     title!,
     xlabel!,
@@ -192,6 +194,8 @@ scatter3d(args...; kw...)  = plot(args...; kw...,  linetype = :scatter3d)
 scatter3d!(args...; kw...) = plot!(args...; kw..., linetype = :scatter3d)
 boxplot(args...; kw...)    = plot(args...; kw...,  linetype = :box)
 boxplot!(args...; kw...)   = plot!(args...; kw..., linetype = :box)
+violin(args...; kw...)     = plot(args...; kw...,  linetype = :violin)
+violin!(args...; kw...)    = plot!(args...; kw..., linetype = :violin)
 
 
 title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)
