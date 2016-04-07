@@ -92,7 +92,7 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 # create n=max(mx,my) series arguments. the shorter list is cycled through
 # note: everything should flow through this
 function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
-    x, y, z = map(a -> pop!(kw, a, nothing), (:x, :y, :z))
+    x, y, z = map(sym -> pop!(kw, sym, nothing), (:x, :y, :z))
     if nothing == x == y == z
         return [], nothing, nothing
     end
@@ -100,18 +100,6 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
     xs, xmeta = convertToAnyVector(x, kw)
     ys, ymeta = convertToAnyVector(y, kw)
     zs, zmeta = convertToAnyVector(z, kw)
-
-    # if idxfilter != nothing
-    #     xs = filter_data(xs, idxfilter)
-    #     ys = filter_data(ys, idxfilter)
-    #     zs = filter_data(zs, idxfilter)
-    #     # # filter the data
-    #     # for sym in (:x, :y, :z)
-    #     #     @show "before" sym, d[sym], idxfilter
-    #     #     d[sym] = filter_data(get(d, sym, nothing), idxfilter)
-    #     #     @show "after" sym, d[sym], idxfilter
-    #     # end
-    # end
 
     mx = length(xs)
     my = length(ys)
@@ -135,30 +123,11 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
         n = plt.n + i
 
         dumpdict(d, "before getSeriesArgs")
-        # @show numUncounted i n commandIndex convertSeriesIndex(plt, n)
         d = getSeriesArgs(plt.backend, getplotargs(plt, n), d, commandIndex, convertSeriesIndex(plt, n), n)
         dumpdict(d, "after getSeriesArgs")
 
-        # @show map(typeof, (xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]))
         d[:x], d[:y], d[:z] = compute_xyz(xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)])
-        # @show map(typeof, (d[:x], d[:y], d[:z]))
-
-
-        # # NOTE: this should be handled by the time it gets here
         lt = d[:linetype]
-        # if isa(d[:y], Surface)
-        #     if lt in (:contour, :heatmap, :surface, :wireframe)
-        #         z = d[:y]
-        #         d[:y] = 1:size(z,2)
-        #         d[:z] = z
-        #     end
-        # end
-
-        # if haskey(d, :idxfilter)
-        #     idxfilter = pop!(d, :idxfilter)
-        #     d[:x] = d[:x][idxfilter]
-        #     d[:y] = d[:y][idxfilter]
-        # end
 
         # for linetype `line`, need to sort by x values
         if lt == :line
@@ -169,6 +138,11 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
             d[:linetype] = :path
         end
 
+        # special handling for missing x in box plot... all the same category
+        if lt == :box && xs[mod1(i,mx)] == nothing
+            d[:x] = ones(Int, length(d[:y]))
+        end
+
         # map functions to vectors
         if isa(d[:zcolor], Function)
             d[:zcolor] = map(d[:zcolor], d[:x])
@@ -177,14 +151,15 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
             d[:fillrange] = map(d[:fillrange], d[:x])
         end
 
-        # cleanup those fields that were used only for generating kw args
-        # delete!(d, :dataframe)
-        # for k in (:idxfilter, :numUncounted, :dataframe)
-        #     delete!(d, k)
-        # end
+        # now that we've processed a given series... optionally split into
+        # multiple dicts through a recipe (for example, a box plot is split into component
+        # parts... polygons, lines, and scatters)
+        # note: we pass in a Val type (i.e. Val{:box}) so that we can dispatch on the linetype
+        kwlist = apply_series_recipe(d, Val{lt})
+        append!(ret, kwlist)
 
-        # add it to our series list
-        push!(ret, d)
+        # # add it to our series list
+        # push!(ret, d)
     end
 
     ret, xmeta, ymeta

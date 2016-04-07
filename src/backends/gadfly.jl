@@ -315,17 +315,25 @@ function addGadflyTicksGuide(gplt, ticks, isx::Bool)
         replaceType(gplt.guides, gtype(ticks = collect(ticks)))
 
     # set the ticks and the labels
+    # Note: this is pretty convoluted, but I think it works.  We set the ticks using Gadfly.Guide,
+    #   and then set the label function (wraps a dict lookup) through a continuous Gadfly.Scale.
     elseif ttype == :ticks_and_labels
         gtype = isx ? Gadfly.Guide.xticks : Gadfly.Guide.yticks
         replaceType(gplt.guides, gtype(ticks = collect(ticks[1])))
 
-        # TODO add xtick_label function (given tick, return label??)
-        # Scale.x_discrete(; labels=nothing, levels=nothing, order=nothing)
+        # # TODO add xtick_label function (given tick, return label??)
+        # # Scale.x_discrete(; labels=nothing, levels=nothing, order=nothing)
+        # filterGadflyScale(gplt, isx)
+        # gfunc = isx ? Gadfly.Scale.x_discrete : Gadfly.Scale.y_discrete
+        # labelmap = Dict(zip(ticks...))
+        # labelfunc = val -> labelmap[val]
+        # push!(gplt.scales, gfunc(levels = collect(ticks[1]), labels = labelfunc))
+
         filterGadflyScale(gplt, isx)
-        gfunc = isx ? Gadfly.Scale.x_discrete : Gadfly.Scale.y_discrete
+        gfunc = isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous
         labelmap = Dict(zip(ticks...))
         labelfunc = val -> labelmap[val]
-        push!(gplt.scales, gfunc(levels = collect(ticks[1]), labels = labelfunc))
+        push!(gplt.scales, gfunc(labels = labelfunc))
 
     else
         error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)

@@ -66,6 +66,8 @@ export
     scatter3d,
     scatter3d!,
     abline!,
+    boxplot,
+    boxplot!,
 
     title!,
     xlabel!,
@@ -188,6 +190,8 @@ plot3d(args...; kw...)     = plot(args...; kw...,  linetype = :path3d)
 plot3d!(args...; kw...)    = plot!(args...; kw..., linetype = :path3d)
 scatter3d(args...; kw...)  = plot(args...; kw...,  linetype = :scatter3d)
 scatter3d!(args...; kw...) = plot!(args...; kw..., linetype = :scatter3d)
+boxplot(args...; kw...)    = plot(args...; kw...,  linetype = :box)
+boxplot!(args...; kw...)   = plot!(args...; kw..., linetype = :box)
 
 
 title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)

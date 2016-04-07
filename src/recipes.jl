@@ -28,6 +28,59 @@ function _apply_recipe(d::KW, args...; issubplot=false, kw...)
     args
 end
 
+
+# -------------------------------------------------
+
+"""
+`apply_series_recipe` should take a processed series KW dict and break it up
+into component parts.  For example, a box plot is made up of `shape` for the
+boxes, `path` for the lines, and `scatter` for the outliers.
+
+Returns a Vector{KW}.
+"""
+apply_series_recipe(d::KW, lt) = KW[d]
+
+# -------------------------------------------------
+# Box Plot
+
+function apply_series_recipe(d::KW, ::Type{Val{:box}})
+    # dumpdict(d, "box before", true)
+    # TODO: add scatter series with outliers
+
+    # create a list of shapes, where each shape is a single boxplot
+    shapes = Shape[]
+    d[:linetype] = :shape
+    groupby = extractGroupArgs(d[:x])
+
+    for (i, glabel) in enumerate(groupby.groupLabels)
+
+        # filter y values, then compute quantiles
+        q1,q2,q3,q4,q5 = quantile(d[:y][groupby.groupIds[i]], linspace(0,1,5))
+
+        # make the shape
+        l, m, r = i - 0.3, i, i + 0.3
+        xcoords = [
+            m, l, r, m, m, NaN,         # lower T
+            l, l, r, r, l, NaN,         # lower box
+            l, l, r, r, l, NaN,         # upper box
+            m, l, r, m, m               # upper T
+        ]
+        ycoords = [
+            q1, q1, q1, q1, q2, NaN,    # lower T
+            q2, q3, q3, q2, q2, NaN,    # lower box
+            q4, q3, q3, q4, q4, NaN,    # upper box
+            q5, q5, q5, q5, q4, NaN,    # upper T
+        ]
+        push!(shapes, Shape(xcoords, ycoords))
+    end
+
+    d[:x], d[:y] = shape_coords(shapes)
+    d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
+
+    KW[d]
+end
+
+
 # -------------------------------------------------
 
 function rotate(x::Real, y::Real, θ::Real; center = (0,0))

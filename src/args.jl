@@ -11,7 +11,7 @@ const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                         :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, :ohlc,
-                        :contour, :pie, :shape
+                        :contour, :pie, :shape, :box
                        ], _3dTypes)
 @compat const _typeAliases = KW(
     :n             => :none,
@@ -38,6 +38,7 @@ const _allTypes = vcat([
     :shapes        => :shape,
     :poly          => :shape,
     :polygon       => :shape,
+    :boxplot       => :box,
   )
 
 like_histogram(linetype::Symbol) = linetype in (:hist, :density)

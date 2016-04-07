@@ -80,7 +80,7 @@ supportedArgs(::GadflyBackend) = [
   ]
 supportedAxes(::GadflyBackend) = [:auto, :left]
 supportedTypes(::GadflyBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
-                                   :scatter, :hist2d, :hexbin, :hist, :bar,
+                                   :scatter, :hist2d, :hexbin, :hist, :bar, :box,
                                    :hline, :vline, :contour, :shape]
 supportedStyles(::GadflyBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyBackend) = vcat(_allMarkers, Shape)
@@ -167,7 +167,7 @@ supportedArgs(::PyPlotBackend) = [
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [:none, :line, :path, :steppre, :steppost, #:sticks,
-                                   :scatter, :hist2d, :hexbin, :hist, :density, :bar,
+                                   :scatter, :hist2d, :hexbin, :hist, :density, :bar, :box,
                                    :hline, :vline, :contour, :path3d, :scatter3d, :surface, :wireframe, :heatmap]
 supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 # supportedMarkers(::PyPlotBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]

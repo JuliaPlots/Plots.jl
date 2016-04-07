@@ -219,6 +219,13 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
             delete!(di, k)
         end
 
+        # merge in plotarg_overrides
+        plotarg_overrides = pop!(di, :plotarg_overrides, nothing)
+        if plotarg_overrides != nothing
+            merge!(plt.plotargs, plotarg_overrides)
+        end
+        # dumpdict(plt.plotargs, "pargs", true)
+
         dumpdict(di, "Series $i")
 
         _add_series(plt.backend, plt; di...)
