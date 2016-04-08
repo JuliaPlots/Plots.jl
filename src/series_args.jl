@@ -151,10 +151,19 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
             d[:fillrange] = map(d[:fillrange], d[:x])
         end
 
-        # handle error bars and ribbons
-        if get(d, :errorbar, nothing) != nothing
-            # we make a copy of the KW and apply an errorbar recipe
-            append!(ret, apply_series_recipe(copy(d), Val{:errorbar}))
+        # handle error bars
+        for esym in (:xerror, :yerror)
+            if get(d, esym, nothing) != nothing
+                # we make a copy of the KW and apply an errorbar recipe
+                append!(ret, apply_series_recipe(copy(d), Val{esym}))
+            end
+        end
+
+        # handle ribbons
+        if get(d, :ribbon, nothing) != nothing
+            # append!(ret, apply_series_recipe(copy(d), Val{:ribbon}))
+            rib = d[:ribbon]
+            d[:fillrange] = (d[:y] - rib, d[:y] + rib)
         end
 
 

@@ -77,7 +77,9 @@ supportedArgs(::GadflyBackend) = [
     :grid,
     # :surface,
     :levels,
-    :errorbar,
+    :xerror,
+    :yerror,
+    :ribbon,
     :orientation,
   ]
 supportedAxes(::GadflyBackend) = [:auto, :left]
@@ -166,7 +168,9 @@ supportedArgs(::PyPlotBackend) = [
     :linealpha,
     :markeralpha,
     :overwrite_figure,
-    :errorbar,
+    :xerror,
+    :yerror,
+    :ribbon,
     :orientation,
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
@@ -242,7 +246,9 @@ supportedArgs(::GRBackend) = [
     :fillalpha,
     :linealpha,
     :markeralpha,
-    :errorbar,
+    :xerror,
+    :yerror,
+    :ribbon,
     :orientation,
   ]
 supportedAxes(::GRBackend) = _allAxes
@@ -566,7 +572,9 @@ supportedArgs(::PlotlyBackend) = [
     :legendfont,
     :grid,
     :levels,
-    :errorbar,
+    :xerror,
+    :yerror,
+    :ribbon,
     :orientation,
   ]
 supportedAxes(::PlotlyBackend) = [:auto, :left]
@@ -638,7 +646,9 @@ supportedArgs(::PlotlyJSBackend) = [
     :legendfont,
     :grid,
     :levels,
-    :errorbar,
+    :xerror,
+    :yerror,
+    :ribbon,
     :orientation,
   ]
 supportedAxes(::PlotlyJSBackend) = [:auto, :left]

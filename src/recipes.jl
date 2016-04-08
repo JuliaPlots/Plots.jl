@@ -140,28 +140,15 @@ end
 # ---------------------------------------------------------------------------
 # Error Bars
 
-
-# we will create a series of path segments, where each point represents one
-# side of an errorbar
-function apply_series_recipe(d::KW, ::Type{Val{:errorbar}})
+function error_style!(d::KW)
     d[:linetype] = :path
-    d[:markershape] = isvertical(d) ? :hline : :vline
     d[:linecolor] = d[:markerstrokecolor]
     d[:linewidth] = d[:markerstrokewidth]
     d[:label] = ""
+end
 
-    # to simplify: when orientation is horizontal, x/y are swapped
-    ebar = pop!(d, :errorbar)
-    xorig, yorig = d[:x], d[:y]
-    if !isvertical(d)
-        xorig, yorig = yorig, xorig
-    end
-    # dumpdict(d, "err", true)
-    # @show isvertical(d) xorig yorig ebar
-
-    # now assume vertical orientation
+function error_coords(xorig, yorig, ebar)
     x, y = zeros(0), zeros(0)
-    w = 0.3 * mean(diff(x))
     for i = 1:max(length(xorig), length(yorig))
         # create a line segment from the bottom to the top of the errorbar
         xi = get_mod(xorig, i)
@@ -170,8 +157,22 @@ function apply_series_recipe(d::KW, ::Type{Val{:errorbar}})
         nanappend!(x, [xi, xi])
         nanappend!(y, [yi - ebi, yi + ebi])
     end
+    x, y
+end
 
-    d[:x], d[:y] = isvertical(d) ? (x, y) : (y, x)
+# we will create a series of path segments, where each point represents one
+# side of an errorbar
+function apply_series_recipe(d::KW, ::Type{Val{:yerror}})
+    error_style!(d)
+    d[:markershape] = :hline
+    d[:x], d[:y] = error_coords(d[:x], d[:y], d[:yerror])
+    KW[d]
+end
+
+function apply_series_recipe(d::KW, ::Type{Val{:xerror}})
+    error_style!(d)
+    d[:markershape] = :vline
+    d[:y], d[:x] = error_coords(d[:y], d[:x], d[:xerror])
     KW[d]
 end
 
