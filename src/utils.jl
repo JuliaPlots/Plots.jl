@@ -240,6 +240,7 @@ Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b))
 nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
 
+
 # ---------------------------------------------------------------
 
 wraptuple(x::@compat(Tuple)) = x

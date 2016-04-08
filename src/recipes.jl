@@ -147,12 +147,18 @@ function error_style!(d::KW)
     d[:label] = ""
 end
 
+# if we're passed a tuple of vectors, convert to a vector of tuples
+function error_zipit(ebar)
+    if istuple(ebar)
+        collect(zip(ebar...))
+    else
+        ebar
+    end
+end
+
 function error_coords(xorig, yorig, ebar)
     # init empty x/y, and zip errors if passed Tuple{Vector,Vector}
     x, y = zeros(0), zeros(0)
-    if istuple(ebar)
-        ebar = collect(zip(ebar...))
-    end
 
     # for each point, create a line segment from the bottom to the top of the errorbar
     for i = 1:max(length(xorig), length(yorig))
@@ -177,19 +183,131 @@ end
 function apply_series_recipe(d::KW, ::Type{Val{:yerror}})
     error_style!(d)
     d[:markershape] = :hline
-    d[:x], d[:y] = error_coords(d[:x], d[:y], d[:yerror])
+    d[:x], d[:y] = error_coords(d[:x], d[:y], error_zipit(d[:yerror]))
     KW[d]
 end
 
 function apply_series_recipe(d::KW, ::Type{Val{:xerror}})
     error_style!(d)
     d[:markershape] = :vline
-    d[:y], d[:x] = error_coords(d[:y], d[:x], d[:xerror])
+    d[:y], d[:x] = error_coords(d[:y], d[:x], error_zipit(d[:xerror]))
     KW[d]
 end
 
 
 # ---------------------------------------------------------------------------
+# quiver
+
+# function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
+#     d[:label] = ""
+#     d[:linetype] = :scatter
+#
+#     # create a second series to draw the arrow shaft
+#     dpath = copy(d)
+#     error_style!(dpath)
+#     dpath[:markershape] = :none
+#
+#     velocity = error_zipit(d[:quiver])
+#     xorig, yorig = d[:x], d[:y]
+#
+#     # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
+#     # x, y = zeros(0), zeros(0)
+#     paths = P2[]
+#     arrows = P2[]
+#     arrowshapes = Shape[]
+#     for i = 1:max(length(xorig), length(yorig))
+#
+#         # get the starting position
+#         xi = get_mod(xorig, i)
+#         yi = get_mod(yorig, i)
+#         p = P2(xi, yi)
+#
+#         # get the velocity
+#         vi = get_mod(velocity, i)
+#         vx, vy = if istuple(vi)
+#             first(vi), last(vi)
+#         elseif isscalar(vi)
+#             vi, vi
+#         else
+#             error("unexpected vi type $(typeof(vi)) for quiver: $vi")
+#         end
+#         v = P2(vx, vy)
+#
+#         nanappend!(paths, [p, p+v])
+#         push!(arrows, p+v)
+#         push!(arrowshapes, makearrowhead(compute_angle(v)))
+#
+#         # # dist = sqrt(vx^2 + vy^2)
+#         # dist = norm(v)
+#         # arrow_h = 0.1dist          # height of arrowhead
+#         # arrow_w = 0.5arrow_h       # halfwidth of arrowhead
+#         # U1 = v ./ dist             # vector of arrowhead height
+#         # U2 = P2(-U1[2], U1[1])     # vector of arrowhead halfwidth
+#         # U1 *= arrow_h
+#         # U2 *= arrow_w
+#         #
+#         # append!(pts, P2(xi, yi) .+ P2[(0,0), v-U1, v-U1+U2, v, v-U1-U2, v-U1, (NaN,NaN)])
+#         # # a1 = v - arrow_h * U1 + arrow_w * U2
+#         # # a2 = v - arrow_h * U1 - arrow_w * U2
+#         # # nanappend!(x, xi + [0.0, vx, a1[1], a2[1], vx])
+#         # # nanappend!(y, yi + [0.0, vy, a1[2], a2[2], vy])
+#     end
+#
+#     # d[:x], d[:y] = Plots.unzip(pts)
+#     dpath[:x], dpath[:y] = Plots.unzip(paths)
+#     d[:x], d[:y] = Plots.unzip(arrows)
+#     d[:markershape] = arrowshapes
+#
+#     KW[dpath, d]
+# end
+
+function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
+    d[:label] = ""
+    d[:linetype] = :shape
+
+    velocity = error_zipit(d[:quiver])
+    xorig, yorig = d[:x], d[:y]
+
+    # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
+    pts = P2[]
+    for i = 1:max(length(xorig), length(yorig))
+
+        # get the starting position
+        xi = get_mod(xorig, i)
+        yi = get_mod(yorig, i)
+        p = P2(xi, yi)
+
+        # get the velocity
+        vi = get_mod(velocity, i)
+        vx, vy = if istuple(vi)
+            first(vi), last(vi)
+        elseif isscalar(vi)
+            vi, vi
+        elseif isa(vi,Function)
+            vi(xi, yi)
+        else
+            error("unexpected vi type $(typeof(vi)) for quiver: $vi")
+        end
+        v = P2(vx, vy)
+
+        dist = norm(v)
+        arrow_h = 0.1dist          # height of arrowhead
+        arrow_w = 0.5arrow_h       # halfwidth of arrowhead
+        U1 = v ./ dist             # vector of arrowhead height
+        U2 = P2(-U1[2], U1[1])     # vector of arrowhead halfwidth
+        U1 *= arrow_h
+        U2 *= arrow_w
+
+        ppv = p+v
+        nanappend!(pts, P2[p, ppv-U1, ppv-U1+U2, ppv, ppv-U1-U2, ppv-U1])
+    end
+
+    d[:x], d[:y] = Plots.unzip(pts)
+    KW[d]
+end
+
+
+
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------

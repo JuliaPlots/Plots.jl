@@ -1,8 +1,9 @@
 
 
 # Geometry which displays arbitrary shapes at given (x, y) positions.
+# note: vertices is a list of shapes
 immutable ShapeGeometry <: Gadfly.GeometryElement
-    vertices::AbstractVector{@compat(Tuple{Float64,Float64})}
+    vertices::AbstractVector #{Tuple{Float64,Float64}}
     tag::Symbol
 
     function ShapeGeometry(shape; tag::Symbol=Gadfly.Geom.empty_tag)
@@ -66,24 +67,27 @@ function Gadfly.render(geom::ShapeGeometry, theme::Gadfly.Theme, aes::Gadfly.Aes
 end
 
 function gadflyshape(sv::Shape)
-  ShapeGeometry(sv.vertices)
+  ShapeGeometry(Any[sv.vertices])
+end
+
+function gadflyshape(sv::AVec{Shape})
+    ShapeGeometry(Any[s.vertices for s in sv])
 end
 
 
 # create a Compose context given a ShapeGeometry and the xs/ys/sizes
 function make_polygon(geom::ShapeGeometry, xs::AbstractArray, ys::AbstractArray, rs::AbstractArray)
   n = max(length(xs), length(ys), length(rs))
-  T = @compat(Tuple{Compose.Measure, Compose.Measure})
+  T = Tuple{Compose.Measure, Compose.Measure}
   polys = Array(Vector{T}, n)
   for i in 1:n
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
-    polys[i] = T[(x + r * sx, y + r * sy) for (sx,sy) in geom.vertices]
+    polys[i] = T[(x + r * sx, y + r * sy) for (sx,sy) in get_mod(geom.vertices, i)]
   end
   Gadfly.polygon(polys, geom.tag)
 end
 
 
 # ---------------------------------------------------------------------------------------------
-

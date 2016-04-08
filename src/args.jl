@@ -11,7 +11,7 @@ const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                         :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, :ohlc,
-                        :contour, :pie, :shape, :box, :violin
+                        :contour, :pie, :shape, :box, :violin, :quiver
                        ], _3dTypes)
 @compat const _typeAliases = KW(
     :n             => :none,
@@ -39,6 +39,8 @@ const _allTypes = vcat([
     :poly          => :shape,
     :polygon       => :shape,
     :boxplot       => :box,
+    :velocity      => :quiver,
+    :gradient      => :quiver,
   )
 
 like_histogram(linetype::Symbol) = linetype in (:hist, :density)
@@ -148,6 +150,7 @@ _seriesDefaults[:orientation]     = :vertical
 _seriesDefaults[:xerror]          = nothing
 _seriesDefaults[:yerror]          = nothing
 _seriesDefaults[:ribbon]          = nothing
+_seriesDefaults[:quiver]          = nothing
 
 
 const _plotDefaults = KW()
@@ -333,6 +336,9 @@ end
     :xerrorbar          => :xerror,
     :yerr               => :yerror,
     :yerrorbar          => :yerror,
+    :velocity           => :quiver,
+    :quiver2d           => :quiver,
+    :gradient           => :quiver,
   )
 
 # add all pluralized forms to the _keyAliases dict

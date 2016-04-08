@@ -9,6 +9,13 @@ export
 typealias P2 FixedSizeArrays.Vec{2,Float64}
 typealias P3 FixedSizeArrays.Vec{3,Float64}
 
+nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
+nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
+nanpush!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN,NaN,NaN)); push!(a, b))
+nanappend!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN,NaN,NaN)); append!(a, b))
+compute_angle(v::P2) = (angle = atan2(v[2], v[1]); angle < 0 ? 2π - angle : angle)
+
+# -------------------------------------------------------------
 
 immutable Shape
   vertices::AVec
@@ -97,6 +104,14 @@ function makecross(; offset = -0.5, radius = 1.0)
                 ordering=Vector[outercircle,innercircle,outercircle])[1:end-2])
 end
 
+
+from_polar(angle, dist) = P2(dist*cos(angle), dist*sin(angle))
+
+function makearrowhead(angle; h = 2.0, w = 0.4)
+    tip = from_polar(angle, h)
+    Shape(P2[(0,0), from_polar(angle - 0.5π, w) - tip,
+        from_polar(angle + 0.5π, w) - tip, (0,0)])
+end
 
 const _shapes = KW(
     :ellipse    => makeshape(20),

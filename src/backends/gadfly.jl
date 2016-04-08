@@ -132,10 +132,16 @@ end
 
 # ---------------------------------------------------------------------------
 
+get_shape(sym::Symbol) = _shapes[sym]
+get_shape(shape::Shape) = shape
+
 # extract the underlying ShapeGeometry object(s)
-getMarkerGeom(shape::Shape) = gadflyshape(shape)
-getMarkerGeom(shape::Symbol) = gadflyshape(_shapes[shape])
-getMarkerGeom(shapes::AVec) = map(getMarkerGeom, shapes)
+getMarkerGeom(shapes::AVec) = gadflyshape(map(get_shape, shapes))
+getMarkerGeom(other) = gadflyshape(get_shape(other))
+
+# getMarkerGeom(shape::Shape) = gadflyshape(shape)
+# getMarkerGeom(shape::Symbol) = gadflyshape(_shapes[shape])
+# getMarkerGeom(shapes::AVec) = gadflyshape(map(gadflyshape, shapes)) # map(getMarkerGeom, shapes)
 function getMarkerGeom(d::KW)
     if d[:linetype] == :shape
         Gadfly.Geom.polygon(fill = true, preserve_order = true)

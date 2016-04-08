@@ -161,10 +161,19 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
 
         # handle ribbons
         if get(d, :ribbon, nothing) != nothing
-            # append!(ret, apply_series_recipe(copy(d), Val{:ribbon}))
             rib = d[:ribbon]
             d[:fillrange] = (d[:y] - rib, d[:y] + rib)
         end
+
+        # handle quiver plots
+        if lt == :quiver
+            d[:linetype] = lt = :path
+            d[:linewidth] = 0
+        end
+        if get(d, :quiver, nothing) != nothing
+            append!(ret, apply_series_recipe(copy(d), Val{:quiver}))
+        end
+
 
 
         # now that we've processed a given series... optionally split into

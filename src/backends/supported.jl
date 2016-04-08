@@ -80,11 +80,12 @@ supportedArgs(::GadflyBackend) = [
     :xerror,
     :yerror,
     :ribbon,
+    :quiver,
     :orientation,
   ]
 supportedAxes(::GadflyBackend) = [:auto, :left]
 supportedTypes(::GadflyBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
-                                   :scatter, :hist2d, :hexbin, :hist, :bar, :box, :violin,
+                                   :scatter, :hist2d, :hexbin, :hist, :bar, :box, :violin, :quiver,
                                    :hline, :vline, :contour, :shape]
 supportedStyles(::GadflyBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GadflyBackend) = vcat(_allMarkers, Shape)
@@ -171,11 +172,12 @@ supportedArgs(::PyPlotBackend) = [
     :xerror,
     :yerror,
     :ribbon,
+    :quiver,
     :orientation,
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [:none, :line, :path, :steppre, :steppost, #:sticks,
-                                   :scatter, :hist2d, :hexbin, :hist, :density, :bar, :box, :violin,
+                                   :scatter, :hist2d, :hexbin, :hist, :density, :bar, :box, :violin, :quiver,
                                    :hline, :vline, :contour, :path3d, :scatter3d, :surface, :wireframe, :heatmap]
 supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 # supportedMarkers(::PyPlotBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :hexagon]
@@ -249,6 +251,7 @@ supportedArgs(::GRBackend) = [
     :xerror,
     :yerror,
     :ribbon,
+    :quiver,
     :orientation,
   ]
 supportedAxes(::GRBackend) = _allAxes
@@ -575,6 +578,7 @@ supportedArgs(::PlotlyBackend) = [
     :xerror,
     :yerror,
     :ribbon,
+    :quiver,
     :orientation,
   ]
 supportedAxes(::PlotlyBackend) = [:auto, :left]
@@ -649,6 +653,7 @@ supportedArgs(::PlotlyJSBackend) = [
     :xerror,
     :yerror,
     :ribbon,
+    :quiver,
     :orientation,
   ]
 supportedAxes(::PlotlyJSBackend) = [:auto, :left]

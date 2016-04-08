@@ -70,6 +70,8 @@ export
     boxplot!,
     violin,
     violin!,
+    quiver,
+    quiver!,
 
     title!,
     xlabel!,
@@ -196,6 +198,8 @@ boxplot(args...; kw...)    = plot(args...; kw...,  linetype = :box)
 boxplot!(args...; kw...)   = plot!(args...; kw..., linetype = :box)
 violin(args...; kw...)     = plot(args...; kw...,  linetype = :violin)
 violin!(args...; kw...)    = plot!(args...; kw..., linetype = :violin)
+quiver(args...; kw...)     = plot(args...; kw...,  linetype = :quiver)
+quiver!(args...; kw...)    = plot!(args...; kw..., linetype = :quiver)
 
 
 title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)
