@@ -8,6 +8,7 @@ function _initialize_backend(::PyPlotBackend)
     const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
     const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
     const mplot3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d"))
+    const pypatches = PyPlot.pywrap(PyPlot.pyimport("matplotlib.patches"))
     # const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
   end
 
@@ -69,6 +70,31 @@ function getPyPlotMarker(marker::Shape)
   mat[n+1,:] = mat[1,:]
   pypath.pymember("Path")(mat)
   # marker.vertices
+end
+
+const _path_MOVETO = UInt8(1)
+const _path_LINETO = UInt8(2)
+const _path_CLOSEPOLY = UInt8(79)
+
+# see http://matplotlib.org/users/path_tutorial.html
+# and http://matplotlib.org/api/path_api.html#matplotlib.path.Path
+function buildPyPlotPath(x, y)
+    n = length(x)
+    mat = zeros(n, 2)
+    codes = zeros(UInt8, n)
+    lastnan = true
+    for i=1:n
+        mat[i,1] = x[i]
+        mat[i,2] = y[i]
+        nan = !isfinite(x[i]) || !isfinite(y[i])
+        codes[i] = if nan
+            _path_CLOSEPOLY
+        else
+            lastnan ? _path_MOVETO : _path_LINETO
+        end
+        lastnan = nan
+    end
+    pypath.pymember("Path")(mat, codes)
 end
 
 # get the marker shape
@@ -177,6 +203,7 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
       :surface    => :plot_surface,
       :wireframe  => :plot_wireframe,
       :heatmap    => :pcolor,
+      :shape      => :add_patch,
       # :surface    => pycolors.pymember("LinearSegmentedColormap")[:from_list]
     )
   return ax[get(fmap, linetype, :plot)]
@@ -376,6 +403,12 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
   elseif lt == :heatmap
     extra_kwargs[:cmap] = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
 
+    elseif lt == :shape
+        extra_kwargs[:edgecolor] = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
+        extra_kwargs[:facecolor] = getPyPlotColor(d[:markercolor], d[:markeralpha])
+        extra_kwargs[:linewidth] = d[:markerstrokewidth]
+        extra_kwargs[:fill] = true
+
   else
 
     extra_kwargs[:linestyle] = getPyPlotLineStyle(lt, d[:linestyle])
@@ -425,7 +458,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
 
   # set these for all types
   if !(lt in (:contour,:surface,:wireframe,:heatmap))
-    if !(lt in (:scatter, :scatter3d))
+    if !(lt in (:scatter, :scatter3d, :shape))
       extra_kwargs[:color] = color
       extra_kwargs[:linewidth] = d[:linewidth]
     end
@@ -475,6 +508,11 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
   elseif lt == :heatmap
     x, y, z = d[:x], d[:y], d[:z].surf'
     plotfunc(heatmap_edges(x), heatmap_edges(y), z; extra_kwargs...)
+
+  elseif lt == :shape
+    path = buildPyPlotPath(d[:x], d[:y])
+    patches = pypatches.pymember("PathPatch")(path; extra_kwargs...)
+    plotfunc(patches)
 
   else # plot
     plotfunc(d[:x], d[:y]; extra_kwargs...)[1]

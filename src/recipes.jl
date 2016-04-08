@@ -302,7 +302,7 @@ function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
         nanappend!(pts, P2[p, ppv-U1, ppv-U1+U2, ppv, ppv-U1-U2, ppv-U1])
     end
 
-    d[:x], d[:y] = Plots.unzip(pts)
+    d[:x], d[:y] = Plots.unzip(pts[2:end])
     KW[d]
 end
 

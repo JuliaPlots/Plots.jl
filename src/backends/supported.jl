@@ -176,7 +176,7 @@ supportedArgs(::PyPlotBackend) = [
     :orientation,
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
-supportedTypes(::PyPlotBackend) = [:none, :line, :path, :steppre, :steppost, #:sticks,
+supportedTypes(::PyPlotBackend) = [:none, :line, :path, :steppre, :steppost, :shape,
                                    :scatter, :hist2d, :hexbin, :hist, :density, :bar, :box, :violin, :quiver,
                                    :hline, :vline, :contour, :path3d, :scatter3d, :surface, :wireframe, :heatmap]
 supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
