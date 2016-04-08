@@ -148,14 +148,26 @@ function error_style!(d::KW)
 end
 
 function error_coords(xorig, yorig, ebar)
+    # init empty x/y, and zip errors if passed Tuple{Vector,Vector}
     x, y = zeros(0), zeros(0)
+    if istuple(ebar)
+        ebar = collect(zip(ebar...))
+    end
+
+    # for each point, create a line segment from the bottom to the top of the errorbar
     for i = 1:max(length(xorig), length(yorig))
-        # create a line segment from the bottom to the top of the errorbar
         xi = get_mod(xorig, i)
         yi = get_mod(yorig, i)
         ebi = get_mod(ebar, i)
         nanappend!(x, [xi, xi])
-        nanappend!(y, [yi - ebi, yi + ebi])
+        e1, e2 = if istuple(ebi)
+            first(ebi), last(ebi)
+        elseif isscalar(ebi)
+            ebi, ebi
+        else
+            error("unexpected ebi type $(typeof(ebi)) for errorbar: $ebi")
+        end
+        nanappend!(y, [yi - e1, yi + e2])
     end
     x, y
 end
