@@ -29,7 +29,7 @@ function _apply_recipe(d::KW, args...; issubplot=false, kw...)
 end
 
 
-# -------------------------------------------------
+# ---------------------------------------------------------------------------
 
 """
 `apply_series_recipe` should take a processed series KW dict and break it up
@@ -40,7 +40,7 @@ Returns a Vector{KW}.
 """
 apply_series_recipe(d::KW, lt) = KW[d]
 
-# -------------------------------------------------
+# ---------------------------------------------------------------------------
 # Box Plot
 
 const _box_halfwidth = 0.4
@@ -82,21 +82,23 @@ function apply_series_recipe(d::KW, ::Type{Val{:box}})
     KW[d]
 end
 
-# -------------------------------------------------
+# ---------------------------------------------------------------------------
 # Violin Plot
 
+# if the user has KernelDensity installed, use this for violin plots.
+# otherwise, just use a histogram
 try
     Pkg.installed("KernelDensity")
     import KernelDensity
 
-    warn("using KD for violin")
-    function violin_coords(y)
+    # warn("using KD for violin")
+    @eval function violin_coords(y)
         kd = KernelDensity.kde(y, npoints = 30)
         kd.density, kd.x
     end
 catch
-    warn("using hist for violin")
-    function violin_coords(y)
+    # warn("using hist for violin")
+    @eval function violin_coords(y)
         edges, widths = hist(y, 20)
         centers = 0.5 * (edges[1:end-1] + edges[2:end])
         ymin, ymax = extrema(y)
@@ -135,7 +137,49 @@ function apply_series_recipe(d::KW, ::Type{Val{:violin}})
     KW[d]
 end
 
-# -------------------------------------------------
+# ---------------------------------------------------------------------------
+# Error Bars
+
+
+# we will create a series of path segments, where each point represents one
+# side of an errorbar
+function apply_series_recipe(d::KW, ::Type{Val{:errorbar}})
+    d[:linetype] = :path
+    d[:markershape] = isvertical(d) ? :hline : :vline
+    d[:linecolor] = d[:markerstrokecolor]
+    d[:linewidth] = d[:markerstrokewidth]
+    d[:label] = ""
+
+    # to simplify: when orientation is horizontal, x/y are swapped
+    ebar = pop!(d, :errorbar)
+    xorig, yorig = d[:x], d[:y]
+    if !isvertical(d)
+        xorig, yorig = yorig, xorig
+    end
+    # dumpdict(d, "err", true)
+    # @show isvertical(d) xorig yorig ebar
+
+    # now assume vertical orientation
+    x, y = zeros(0), zeros(0)
+    w = 0.3 * mean(diff(x))
+    for i = 1:max(length(xorig), length(yorig))
+        # create a line segment from the bottom to the top of the errorbar
+        xi = get_mod(xorig, i)
+        yi = get_mod(yorig, i)
+        ebi = get_mod(ebar, i)
+        nanappend!(x, [xi, xi])
+        nanappend!(y, [yi - ebi, yi + ebi])
+    end
+
+    d[:x], d[:y] = isvertical(d) ? (x, y) : (y, x)
+    KW[d]
+end
+
+
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 function rotate(x::Real, y::Real, θ::Real; center = (0,0))
   cx = x - center[1]
@@ -145,7 +189,7 @@ function rotate(x::Real, y::Real, θ::Real; center = (0,0))
   xrot + center[1], yrot + center[2]
 end
 
-# -------------------------------------------------
+# ---------------------------------------------------------------------------
 
 type EllipseRecipe <: PlotRecipe
   w::Float64
@@ -236,7 +280,7 @@ function mat2list{T}(mat::AbstractArray{T,2})
     resize!(source, idx-1), resize!(destiny, idx-1), resize!(weight, idx-1)
 end
 
-# -------------------------------------------------
+# ---------------------------------------------------------------------------
 # Arc Diagram
 
 curvecolor(value, min, max, grad) = getColorZ(grad, (value-min)/(max-min))
@@ -292,7 +336,7 @@ For simmetric matrices, only the upper triangular values are used.
 """
 arcdiagram{T}(mat::AbstractArray{T,2}; kargs...) = arcdiagram(mat2list(mat)...; kargs...)
 
-# -------------------------------------------------
+# ---------------------------------------------------------------------------
 # Chord diagram
 
 arcshape(θ1, θ2) = Shape(vcat(Plots.partialcircle(θ1, θ2, 15, 1.1),

@@ -145,6 +145,7 @@ _seriesDefaults[:zcolor]          = nothing           # value for color scale
 # _seriesDefaults[:nlevels]         = 15
 _seriesDefaults[:levels]          = 15
 _seriesDefaults[:orientation]     = :vertical
+_seriesDefaults[:errorbar]        = nothing
 
 
 const _plotDefaults = KW()
@@ -324,6 +325,8 @@ end
     :clearfig           => :overwrite_figure,
     :overwrite          => :overwrite_figure,
     :reuse              => :overwrite_figure,
+    :err                => :errorbar,
+    :error              => :errorbar,
   )
 
 # add all pluralized forms to the _keyAliases dict

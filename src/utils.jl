@@ -218,6 +218,7 @@ isscalar(::Real) = true
 isscalar(::Any)  = false
 
 
+isvertical(d::KW) = get(d, :orientation, :vertical) in (:vertical, :v, :vert)
 
 
 # ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
@@ -235,6 +236,9 @@ Base.convert{T<:Real}(::Type{Vector{T}}, rng::Range{T})         = T[x for x in r
 Base.convert{T<:Real,S<:Real}(::Type{Vector{T}}, rng::Range{S}) = T[x for x in rng]
 
 Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
+
+nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b))
+nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
 
 # ---------------------------------------------------------------
 

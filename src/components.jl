@@ -40,8 +40,10 @@ function shape_coords(shapes::AVec{Shape})
     x, y = unzip(shapes[1].vertices)
     for shape in shapes[2:end]
         tmpx, tmpy = unzip(shape.vertices)
-        x = vcat(x, NaN, tmpx)
-        y = vcat(y, NaN, tmpy)
+        nanappend!(x, tmpx)
+        nanappend!(y, tmpy)
+        # x = vcat(x, NaN, tmpx)
+        # y = vcat(y, NaN, tmpy)
     end
     x, y
 end

@@ -313,7 +313,7 @@ function plotly_series(d::KW; plot_index = nothing)
 
   elseif lt in (:hist, :density)
     d_out[:type] = "histogram"
-    isvert = d[:orientation] in (:vertical, :v, :vert)
+    isvert = isvertical(d)
     d_out[isvert ? :x : :y] = y
     d_out[isvert ? :nbinsx : :nbinsy] = d[:nbins]
     if lt == :density

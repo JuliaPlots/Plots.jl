@@ -151,6 +151,13 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
             d[:fillrange] = map(d[:fillrange], d[:x])
         end
 
+        # handle error bars and ribbons
+        if get(d, :errorbar, nothing) != nothing
+            # we make a copy of the KW and apply an errorbar recipe
+            append!(ret, apply_series_recipe(copy(d), Val{:errorbar}))
+        end
+
+
         # now that we've processed a given series... optionally split into
         # multiple dicts through a recipe (for example, a box plot is split into component
         # parts... polygons, lines, and scatters)

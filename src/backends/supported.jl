@@ -77,6 +77,8 @@ supportedArgs(::GadflyBackend) = [
     :grid,
     # :surface,
     :levels,
+    :errorbar,
+    :orientation,
   ]
 supportedAxes(::GadflyBackend) = [:auto, :left]
 supportedTypes(::GadflyBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
@@ -164,6 +166,8 @@ supportedArgs(::PyPlotBackend) = [
     :linealpha,
     :markeralpha,
     :overwrite_figure,
+    :errorbar,
+    :orientation,
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [:none, :line, :path, :steppre, :steppost, #:sticks,
@@ -238,6 +242,8 @@ supportedArgs(::GRBackend) = [
     :fillalpha,
     :linealpha,
     :markeralpha,
+    :errorbar,
+    :orientation,
   ]
 supportedAxes(::GRBackend) = _allAxes
 supportedTypes(::GRBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
@@ -560,6 +566,8 @@ supportedArgs(::PlotlyBackend) = [
     :legendfont,
     :grid,
     :levels,
+    :errorbar,
+    :orientation,
   ]
 supportedAxes(::PlotlyBackend) = [:auto, :left]
 supportedTypes(::PlotlyBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
@@ -630,6 +638,8 @@ supportedArgs(::PlotlyJSBackend) = [
     :legendfont,
     :grid,
     :levels,
+    :errorbar,
+    :orientation,
   ]
 supportedAxes(::PlotlyJSBackend) = [:auto, :left]
 supportedTypes(::PlotlyJSBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
