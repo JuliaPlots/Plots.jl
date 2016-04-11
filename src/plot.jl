@@ -78,62 +78,19 @@ function plot!(plt::Plot, args...; kw...)
     args = _apply_recipe(d, args...; kw...)
 
     dumpdict(d, "After plot! preprocessing")
-    # @show groupargs map(typeof, args)
-
     warnOnUnsupportedArgs(plt.backend, d)
 
     # just in case the backend needs to set up the plot (make it current or something)
     _before_add_series(plt)
 
     # # grouping
-    # groupargs = get(d, :group, nothing) == nothing ? [nothing] : [extractGroupArgs(d[:group], args...)]
-    # # @show groupargs
-
-    # TODO: get the GroupBy object (or nothing), and loop through the groups, doing the following section many times
-    # dumpdict(d, "before", true)
     groupby = if haskey(d, :group)
         extractGroupArgs(d[:group], args...)
     else
         nothing
     end
-    # dumpdict(d, "after", true)
-    # @show groupby map(typeof, args)
 
     _add_series(plt, d, groupby, args...)
-
-    #
-    # # get the list of dictionaries, one per series
-    # @show groupargs map(typeof, args)
-    # dumpdict(d, "before process_inputs")
-    # process_inputs(plt, d, groupargs..., args...)
-    # dumpdict(d, "after process_inputs", true)
-    # seriesArgList, xmeta, ymeta = build_series_args(plt, d)
-    # # seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)
-    #
-    # # if we were able to extract guide information from the series inputs, then update the plot
-    # # @show xmeta, ymeta
-    # updateDictWithMeta(d, plt.plotargs, xmeta, true)
-    # updateDictWithMeta(d, plt.plotargs, ymeta, false)
-    #
-    # # now we can plot the series
-    # for (i,di) in enumerate(seriesArgList)
-    #     plt.n += 1
-    #
-    #     if !stringsSupported()
-    #         setTicksFromStringVector(d, di, :x, :xticks)
-    #         setTicksFromStringVector(d, di, :y, :yticks)
-    #     end
-    #
-    #     # remove plot args
-    #     for k in keys(_plotDefaults)
-    #         delete!(di, k)
-    #     end
-    #
-    #     dumpdict(di, "Series $i")
-    #
-    #     _add_series(plt.backend, plt; di...)
-    # end
-
     _add_annotations(plt, d)
 
     warnOnUnsupportedScales(plt.backend, d)
@@ -150,7 +107,7 @@ function plot!(plt::Plot, args...; kw...)
 
     current(plt)
 
-    # NOTE: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
+    # note: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
     # # do we want to show it?
     if haskey(d, :show) && d[:show]
         gui()
@@ -212,6 +169,7 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
         if !stringsSupported()
             setTicksFromStringVector(d, di, :x, :xticks)
             setTicksFromStringVector(d, di, :y, :yticks)
+            setTicksFromStringVector(d, di, :z, :zticks)
         end
 
         # remove plot args

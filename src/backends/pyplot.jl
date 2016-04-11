@@ -2,30 +2,30 @@
 # https://github.com/stevengj/PyPlot.jl
 
 function _initialize_backend(::PyPlotBackend)
-  @eval begin
-    import PyPlot
-    export PyPlot
-    const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
-    const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
-    const mplot3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d"))
-    const pypatches = PyPlot.pywrap(PyPlot.pyimport("matplotlib.patches"))
-    # const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
-  end
-
-  if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
-    PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
-
-    # # TODO: how the hell can I use PyQt4??
-    # "pyqt4"=>:qt_pyqt4
-    # PyPlot.backend[1] = "pyqt4"
-    # PyPlot.gui[1] = :qt_pyqt4
-    # PyPlot.switch_backend("Qt4Agg")
-
-    # only turn on the gui if we want it
-    if PyPlot.gui != :none
-      PyPlot.pygui(true)
+    @eval begin
+        import PyPlot
+        export PyPlot
+        const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
+        const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
+        const mplot3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d"))
+        const pypatches = PyPlot.pywrap(PyPlot.pyimport("matplotlib.patches"))
+        # const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
     end
-  end
+
+    if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
+        PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
+
+        # # TODO: how the hell can I use PyQt4??
+        # "pyqt4"=>:qt_pyqt4
+        # PyPlot.backend[1] = "pyqt4"
+        # PyPlot.gui[1] = :qt_pyqt4
+        # PyPlot.switch_backend("Qt4Agg")
+
+        # only turn on the gui if we want it
+        if PyPlot.gui != :none
+            PyPlot.pygui(true)
+        end
+    end
 end
 
 # -------------------------------
@@ -35,15 +35,10 @@ getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (
 getPyPlotColor(cvec::ColorVector, α=nothing) = map(getPyPlotColor, convertColor(cvec, α).v)
 getPyPlotColor(scheme::ColorScheme, α=nothing) = getPyPlotColor(convertColor(getColor(scheme), α))
 getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
-# getPyPlotColor(c, alpha) = getPyPlotColor(colorscheme(c, alpha))
 
 function getPyPlotColorMap(c::ColorGradient, α=nothing)
-  # c = ColorGradient(c.colors, c.values, alpha=α)
-  # pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", map(getPyPlotColor, getColorVector(c)))
-  # pyvals = [(c.values[i], getPyPlotColor(c.colors[i], α)) for i in 1:length(c.colors)]
-  pyvals = [(v, getPyPlotColor(getColorZ(c, v), α)) for v in c.values]
-  # @show c α pyvals
-  pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
+    pyvals = [(v, getPyPlotColor(getColorZ(c, v), α)) for v in c.values]
+    pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
 end
 
 # anything else just gets a bluesred gradient
@@ -51,25 +46,24 @@ getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(ColorGradient(:bluesreds), 
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
-  linetype == :none && return " "
-  linestyle == :solid && return "-"
-  linestyle == :dash && return "--"
-  linestyle == :dot && return ":"
-  linestyle == :dashdot && return "-."
-  warn("Unknown linestyle $linestyle")
-  return "-"
+    linetype == :none && return " "
+    linestyle == :solid && return "-"
+    linestyle == :dash && return "--"
+    linestyle == :dot && return ":"
+    linestyle == :dashdot && return "-."
+    warn("Unknown linestyle $linestyle")
+    return "-"
 end
 
 function getPyPlotMarker(marker::Shape)
-  n = length(marker.vertices)
-  mat = zeros(n+1,2)
-  for (i,vert) in enumerate(marker.vertices)
-    mat[i,1] = vert[1]
-    mat[i,2] = vert[2]
-  end
-  mat[n+1,:] = mat[1,:]
-  pypath.pymember("Path")(mat)
-  # marker.vertices
+    n = length(marker.vertices)
+    mat = zeros(n+1,2)
+    for (i,vert) in enumerate(marker.vertices)
+        mat[i,1] = vert[1]
+        mat[i,2] = vert[2]
+    end
+    mat[n+1,:] = mat[1,:]
+    pypath.pymember("Path")(mat)
 end
 
 const _path_MOVETO = UInt8(1)
@@ -99,56 +93,51 @@ end
 
 # get the marker shape
 function getPyPlotMarker(marker::Symbol)
-  marker == :none && return " "
-  marker == :ellipse && return "o"
-  marker == :rect && return "s"
-  marker == :diamond && return "D"
-  marker == :utriangle && return "^"
-  marker == :dtriangle && return "v"
-  marker == :cross && return "+"
-  marker == :xcross && return "x"
-  marker == :star5 && return "*"
-  marker == :pentagon && return "p"
-  marker == :hexagon && return "h"
-  marker == :octagon && return "8"
-  haskey(_shapes, marker) && return getPyPlotMarker(_shapes[marker])
+    marker == :none && return " "
+    marker == :ellipse && return "o"
+    marker == :rect && return "s"
+    marker == :diamond && return "D"
+    marker == :utriangle && return "^"
+    marker == :dtriangle && return "v"
+    marker == :cross && return "+"
+    marker == :xcross && return "x"
+    marker == :star5 && return "*"
+    marker == :pentagon && return "p"
+    marker == :hexagon && return "h"
+    marker == :octagon && return "8"
+    haskey(_shapes, marker) && return getPyPlotMarker(_shapes[marker])
 
-  warn("Unknown marker $marker")
-  return "o"
+    warn("Unknown marker $marker")
+    return "o"
 end
 
 # getPyPlotMarker(markers::AVec) = map(getPyPlotMarker, markers)
 function getPyPlotMarker(markers::AVec)
-  warn("Vectors of markers are currently unsupported in PyPlot: $markers")
-  getPyPlotMarker(markers[1])
+    warn("Vectors of markers are currently unsupported in PyPlot: $markers")
+    getPyPlotMarker(markers[1])
 end
 
 # pass through
 function getPyPlotMarker(marker::AbstractString)
-  @assert length(marker) == 1
-  marker
+    @assert length(marker) == 1
+    marker
 end
 
 function getPyPlotStepStyle(linetype::Symbol)
-  linetype == :steppost && return "steps-post"
-  linetype == :steppre && return "steps-pre"
-  return "default"
+    linetype == :steppost && return "steps-post"
+    linetype == :steppre && return "steps-pre"
+    return "default"
 end
 
-
-# immutable PyPlotFigWrapper
-#   fig
-#   kwargs  # for add_subplot
-# end
+# ---------------------------------------------------------------------------
 
 type PyPlotAxisWrapper
-  ax
-  rightax
-  fig
-  kwargs  # for add_subplot
+    ax
+    rightax
+    fig
+    kwargs  # for add_subplot
 end
 
-# getfig(wrap::@compat(Union{PyPlotAxisWrapper,PyPlotFigWrapper})) = wrap.fig
 getfig(wrap::PyPlotAxisWrapper) = wrap.fig
 
 
@@ -165,14 +154,12 @@ function getLeftAxis(wrap::PyPlotAxisWrapper)
     wrap.ax
   end
 end
-# getLeftAxis(wrap::PyPlotAxisWrapper) = wrap.ax
-# getRightAxis(x) = getLeftAxis(x)[:twinx]()
 
 function getRightAxis(wrap::PyPlotAxisWrapper)
-  if wrap.rightax == nothing
-    wrap.rightax = getLeftAxis(wrap)[:twinx]()
-  end
-  wrap.rightax
+    if wrap.rightax == nothing
+        wrap.rightax = getLeftAxis(wrap)[:twinx]()
+    end
+    wrap.rightax
 end
 
 getLeftAxis(plt::Plot{PyPlotBackend}) = getLeftAxis(plt.o)
@@ -209,118 +196,94 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
   return ax[get(fmap, linetype, :plot)]
 end
 
-function updateAxisColors(ax, fgcolor)
-  # for loc in ("bottom", "top", "left", "right")
-  for (loc, spine) in ax[:spines]
-    # ax[:spines][loc][:set_color](fgcolor)
-      spine[:set_color](fgcolor)
-  end
-  for axis in ("x", "y")
-    ax[:tick_params](axis=axis, colors=fgcolor, which="both")
-  end
-  for axis in (:yaxis, :xaxis)
-    ax[axis][:label][:set_color](fgcolor)
-  end
-  ax[:title][:set_color](fgcolor)
-end
-
 
 function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Bool)
-  if smooth
-    xs, ys = regressionXY(d[:x], d[:y])
-    ax[:plot](xs, ys,
-              # linestyle = getPyPlotLineStyle(:path, :dashdot),
-              color = getPyPlotColor(d[:linecolor]),
-              linewidth = 2
-             )
-  end
+    if smooth
+        xs, ys = regressionXY(d[:x], d[:y])
+        ax[:plot](xs, ys,
+                  # linestyle = getPyPlotLineStyle(:path, :dashdot),
+                  color = getPyPlotColor(d[:linecolor]),
+                  linewidth = 2
+                 )
+    end
 end
 handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Real) = handleSmooth(plt, ax, d, true)
 
+# ---------------------------------------------------------------------------
 
-
-
-# makePyPlotCurrent(wrap::PyPlotFigWrapper) = PyPlot.figure(wrap.fig.o[:number])
-# makePyPlotCurrent(wrap::PyPlotAxisWrapper) = nothing #PyPlot.sca(wrap.ax.o)
 makePyPlotCurrent(wrap::PyPlotAxisWrapper) = wrap.ax == nothing ? PyPlot.figure(wrap.fig.o[:number]) : nothing
 makePyPlotCurrent(plt::Plot{PyPlotBackend}) = plt.o == nothing ? nothing : makePyPlotCurrent(plt.o)
 
 
 function _before_add_series(plt::Plot{PyPlotBackend})
-  makePyPlotCurrent(plt)
+    makePyPlotCurrent(plt)
 end
 
 
 # ------------------------------------------------------------------
 
 function pyplot_figure(plotargs::KW)
-  w,h = map(px2inch, plotargs[:size])
-  bgcolor = getPyPlotColor(plotargs[:background_color])
+    w,h = map(px2inch, plotargs[:size])
+    bgcolor = getPyPlotColor(plotargs[:background_color])
 
-  # reuse the current figure?
-  fig = if plotargs[:overwrite_figure]
-    PyPlot.gcf()
-  else
-    PyPlot.figure()
-  end
+    # reuse the current figure?
+    fig = if plotargs[:overwrite_figure]
+        PyPlot.gcf()
+    else
+        PyPlot.figure()
+    end
 
-  # update the specs
-  # fig[:set_size_inches](w,h, (isijulia() ? [] : [true])...)
-  fig[:set_size_inches](w, h, forward = true)
-  fig[:set_facecolor](bgcolor)
-  fig[:set_dpi](DPI)
-  fig[:set_tight_layout](true)
+    # update the specs
+    # fig[:set_size_inches](w,h, (isijulia() ? [] : [true])...)
+    fig[:set_size_inches](w, h, forward = true)
+    fig[:set_facecolor](bgcolor)
+    fig[:set_dpi](DPI)
+    fig[:set_tight_layout](true)
 
-  # clear the figure
-  PyPlot.clf()
+    # clear the figure
+    PyPlot.clf()
 
-  # resize the window
-  PyPlot.plt[:get_current_fig_manager]()[:resize](plotargs[:size]...)
-  fig
+    # resize the window
+    PyPlot.plt[:get_current_fig_manager]()[:resize](plotargs[:size]...)
+    fig
 end
 
 function pyplot_3d_setup!(wrap, d)
-  # 3D?
-  # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
-  if trueOrAllTrue(lt -> lt in _3dTypes, get(d, :linetype, :none))
-    push!(wrap.kwargs, (:projection, "3d"))
-  end
+    # 3D?
+    # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+    if trueOrAllTrue(lt -> lt in _3dTypes, get(d, :linetype, :none))
+        push!(wrap.kwargs, (:projection, "3d"))
+    end
 end
 
-
-# TODO:
-# fillto   # might have to use barHack/histogramHack??
-# reg             # true or false, add a regression line for each line
-# pos             # (Int,Int), move the enclosing window to this position
-# windowtitle     # string or symbol, set the title of the enclosing windowtitle
-# screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
-# show            # true or false, show the plot (in case you don't want the window to pop up right away)
+# ---------------------------------------------------------------------------
 
 function _create_plot(pkg::PyPlotBackend; kw...)
-  # create the figure
-  d = KW(kw)
+    # create the figure
+    d = KW(kw)
 
-  # standalone plots will create a figure, but not if part of a subplot (do it later)
-  if haskey(d, :subplot)
-    wrap = nothing
-  else
-    wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(d), [])
-    # wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
+    # standalone plots will create a figure, but not if part of a subplot (do it later)
+    if haskey(d, :subplot)
+        wrap = nothing
+    else
+        wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(d), [])
+        # wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
 
-    # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
-    #   push!(wrap.kwargs, (:projection, "3d"))
-    # end
-    pyplot_3d_setup!(wrap, d)
+        # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
+        #   push!(wrap.kwargs, (:projection, "3d"))
+        # end
+        pyplot_3d_setup!(wrap, d)
 
-    if get(d, :polar, false)
-        push!(wrap.kwargs, (:polar, true))
+        if get(d, :polar, false)
+            push!(wrap.kwargs, (:polar, true))
+        end
     end
-  end
 
-  plt = Plot(wrap, pkg, 0, d, KW[])
-  plt
+    plt = Plot(wrap, pkg, 0, d, KW[])
+    plt
 end
 
+# ---------------------------------------------------------------------------
 
 function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
   d = KW(kw)
@@ -430,7 +393,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
         extra_kwargs[:c] = convert(Vector{Float64}, d[:zcolor])
         extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
       else
-        # extra_kwargs[:c] = getPyPlotColor(c, d[:markeralpha])
         ppc = getPyPlotColor(c, d[:markeralpha])
 
         # total hack due to PyPlot bug (see issue #145).
@@ -442,9 +404,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
         extra_kwargs[:c] = ppc
 
       end
-      # if d[:markeralpha] != nothing
-      #   extra_kwargs[:alpha] = d[:markeralpha]
-      # end
       extra_kwargs[:edgecolors] = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
       extra_kwargs[:linewidths] = d[:markerstrokewidth]
     else
@@ -455,12 +414,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
       extra_kwargs[:drawstyle] = getPyPlotStepStyle(lt)
     end
   end
-
-  # if d[:markeralpha] != nothing
-  #   extra_kwargs[:alpha] = d[:markeralpha]
-  # elseif d[:linealpha] != nothing
-  #   extra_kwargs[:alpha] = d[:linealpha]
-  # end
 
   # set these for all types
   if !(lt in (:contour,:surface,:wireframe,:heatmap))
@@ -555,190 +508,185 @@ end
 
 
 function Base.getindex(plt::Plot{PyPlotBackend}, i::Integer)
-  series = plt.seriesargs[i][:serieshandle]
-  try
-    return series[:get_data]()
-  catch
-    xy = series[:get_offsets]()
-    return vec(xy[:,1]), vec(xy[:,2])
-  end
+    series = plt.seriesargs[i][:serieshandle]
+    try
+        return series[:get_data]()
+    catch
+        xy = series[:get_offsets]()
+        return vec(xy[:,1]), vec(xy[:,2])
+    end
 end
 
 function minmaxseries(ds, vec, axis)
-  lo, hi = Inf, -Inf
-  for d in ds
-    d[:axis] == axis || continue
-    v = d[vec]
-    if length(v) > 0
-      vlo, vhi = extrema(v)
-      lo = min(lo, vlo)
-      hi = max(hi, vhi)
+    lo, hi = Inf, -Inf
+    for d in ds
+        d[:axis] == axis || continue
+        v = d[vec]
+        if length(v) > 0
+            vlo, vhi = extrema(v)
+            lo = min(lo, vlo)
+            hi = max(hi, vhi)
+        end
     end
-  end
-  if lo == hi
-    hi = if lo == 0
-      1e-6
-    else
-      hi + min(abs(1e-2hi), 1e-6)
+    if lo == hi
+        hi = if lo == 0
+            1e-6
+        else
+            hi + min(abs(1e-2hi), 1e-6)
+        end
     end
-  end
-  lo, hi
+    lo, hi
 end
 
 # TODO: this needs to handle one-sided fixed limits
 function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
-  ax = getAxis(plt, axis)
-  if plt.plotargs[:xlims] == :auto
-    ax[:set_xlim](minmaxseries(plt.seriesargs, :x, axis)...)
-  end
-  if plt.plotargs[:ylims] == :auto
-    ax[:set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
-  end
-  if plt.plotargs[:zlims] == :auto && haskey(ax, :set_zlim)
-    ax[:set_zlim](minmaxseries(plt.seriesargs, :z, axis)...)
-  end
+    ax = getAxis(plt, axis)
+    if plt.plotargs[:xlims] == :auto
+        ax[:set_xlim](minmaxseries(plt.seriesargs, :x, axis)...)
+    end
+    if plt.plotargs[:ylims] == :auto
+        ax[:set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
+    end
+    if plt.plotargs[:zlims] == :auto && haskey(ax, :set_zlim)
+        ax[:set_zlim](minmaxseries(plt.seriesargs, :z, axis)...)
+    end
 end
 
 function Base.setindex!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
-  d = plt.seriesargs[i]
-  series = d[:serieshandle]
-  x, y = xy
-  d[:x], d[:y] = x, y
-  try
-    series[:set_data](x, y)
-  catch
-    series[:set_offsets](hcat(x, y))
-  end
+    d = plt.seriesargs[i]
+    series = d[:serieshandle]
+    x, y = xy
+    d[:x], d[:y] = x, y
+    try
+        series[:set_data](x, y)
+    catch
+        series[:set_offsets](hcat(x, y))
+    end
 
-  set_lims!(plt, d[:axis])
-  plt
+    set_lims!(plt, d[:axis])
+    plt
 end
 
 function Base.setindex!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
-  warn("setindex not implemented for xyz")
-  plt
+    warn("setindex not implemented for xyz")
+    plt
 end
 
-# -----------------------------------------------------------------
+# --------------------------------------------------------------------------
 
-function addPyPlotLims(ax, lims, dimension)
+function addPyPlotLims(ax, lims, letter)
     lims == :auto && return
     ltype = limsType(lims)
     if ltype == :limits
-        if dimension == :xlim
-            isfinite(lims[1]) && ax[:set_xlim](left = lims[1])
-            isfinite(lims[2]) && ax[:set_xlim](right = lims[2])
-        elseif dimension == :ylim
-            isfinite(lims[1]) && ax[:set_ylim](bottom = lims[1])
-            isfinite(lims[2]) && ax[:set_ylim](top = lims[2])
-        elseif dimension == :zlim && haskey(ax, :set_zlim)
-            isfinite(lims[1]) && ax[:set_zlim](bottom = lims[1])
-            isfinite(lims[2]) && ax[:set_zlim](top = lims[2])
-        else
-            error("Invalid argument at position 3: $dimension")
+        setf = ax[symbol("set_", letter, "lim")]
+        l1, l2 = lims
+        if isfinite(l1)
+            letter == "x" ? setf(left = l1) : setf(bottom = l1)
+        end
+        if isfinite(l2)
+            letter == "x" ? setf(right = l2) : setf(top = l2)
         end
     else
-    error("Invalid input for $dimension: ", lims)
+        error("Invalid input for $letter: ", lims)
     end
 end
 
-function addPyPlotTicks(ax, ticks, isx::Bool)
-  ticks == :auto && return
-  if ticks == :none || ticks == nothing
-    ticks = zeros(0)
-  end
+function addPyPlotTicks(ax, ticks, letter)
+    ticks == :auto && return
+    if ticks == :none || ticks == nothing
+        ticks = zeros(0)
+    end
 
-  ttype = ticksType(ticks)
-  if ttype == :ticks
-    ax[isx ? :set_xticks : :set_yticks](ticks)
-  elseif ttype == :ticks_and_labels
-    ax[isx ? :set_xticks : :set_yticks](ticks[1])
-    ax[isx ? :set_xticklabels : :set_yticklabels](ticks[2])
-  else
-    error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
-  end
+    ttype = ticksType(ticks)
+    tickfunc = symbol("set_", letter, "ticks")
+    labfunc = symbol("set_", letter, "ticklabels")
+    if ttype == :ticks
+        ax[tickfunc](ticks)
+    elseif ttype == :ticks_and_labels
+        ax[tickfunc](ticks[1])
+        ax[labfunc](ticks[2])
+    else
+        error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
+    end
 end
 
-usingRightAxis(plt::Plot{PyPlotBackend}) = any(args -> args[:axis] in (:right,:auto), plt.seriesargs)
+function applyPyPlotScale(ax, scaleType::Symbol, letter)
+    func = ax[symbol("set_", letter, "scale")]
+    scaleType == :identity && return func("linear")
+    scaleType == :ln && return func("log", basex = e, basey = e)
+    scaleType == :log2 && return func("log", basex = 2, basey = 2)
+    scaleType == :log10 && return func("log", basex = 10, basey = 10)
+    warn("Unhandled scaleType: ", scaleType)
+end
+
+
+function updateAxisColors(ax, fgcolor)
+    for (loc, spine) in ax[:spines]
+        spine[:set_color](fgcolor)
+    end
+    for letter in ("x", "y", "z")
+        axis = axis_symbol(letter, "axis")
+        if haskey(ax, axis)
+            ax[:tick_params](axis=letter, colors=fgcolor, which="both")
+            ax[axis][:label][:set_color](fgcolor)
+        end
+    end
+    ax[:title][:set_color](fgcolor)
+end
+
+function usingRightAxis(plt::Plot{PyPlotBackend})
+    any(args -> args[:axis] in (:right,:auto), plt.seriesargs)
+end
+
+
+# --------------------------------------------------------------------------
+
 
 function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
-  figorax = plt.o
-  ax = getLeftAxis(figorax)
-  # PyPlot.sca(ax)
+    figorax = plt.o
+    ax = getLeftAxis(figorax)
+    ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
+    guidesz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
 
+    # title
+    haskey(d, :title) && ax[:set_title](d[:title])
+    ax[:title][:set_fontsize](guidesz)
 
-  # title and axis labels
-  # haskey(d, :title) && PyPlot.title(d[:title])
-  haskey(d, :title) && ax[:set_title](d[:title])
-  haskey(d, :xlabel) && ax[:set_xlabel](d[:xlabel])
-  if haskey(d, :ylabel)
-    ax[:set_ylabel](d[:ylabel])
-  end
-  if usingRightAxis(plt) && get(d, :yrightlabel, "") != ""
-    rightax = getRightAxis(figorax)
-    rightax[:set_ylabel](d[:yrightlabel])
-  end
-
-  # scales
-  haskey(d, :xscale) && applyPyPlotScale(ax, d[:xscale], true)
-  haskey(d, :yscale) && applyPyPlotScale(ax, d[:yscale], false)
-
-  # limits and ticks
-  haskey(d, :xlims) && addPyPlotLims(ax, d[:xlims], :xlim)
-  haskey(d, :ylims) && addPyPlotLims(ax, d[:ylims], :ylim)
-  haskey(d, :zlims) && addPyPlotLims(ax, d[:zlims], :zlim)
-  haskey(d, :xticks) && addPyPlotTicks(ax, d[:xticks], true)
-  haskey(d, :yticks) && addPyPlotTicks(ax, d[:yticks], false)
-
-  if get(d, :xflip, false)
-    ax[:invert_xaxis]()
-  end
-  if get(d, :yflip, false)
-    ax[:invert_yaxis]()
-  end
-
-  axes = [getLeftAxis(figorax)]
-  if usingRightAxis(plt)
-    push!(axes, getRightAxis(figorax))
-  end
-
-  # font sizes
-  for ax in axes
-    # haskey(d, :yrightlabel) || continue
-
-
-    # guides
-    sz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
-    ax[:title][:set_fontsize](sz)
-    ax[:xaxis][:label][:set_fontsize](sz)
-    ax[:yaxis][:label][:set_fontsize](sz)
-
-    # ticks
-    sz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
-    for sym in (:get_xticklabels, :get_yticklabels)
-      for lab in ax[sym]()
-        lab[:set_fontsize](sz)
-      end
+    # handle right y axis
+    axes = [getLeftAxis(figorax)]
+    if usingRightAxis(plt)
+        push!(axes, getRightAxis(figorax))
+        if get(d, :yrightlabel, "") != ""
+            rightax = getRightAxis(figorax)
+            rightax[:set_ylabel](d[:yrightlabel])
+        end
     end
 
-    # grid
-    if get(d, :grid, false)
-      ax[:xaxis][:grid](true)
-      ax[:yaxis][:grid](true)
-      ax[:set_axisbelow](true)
+    # handle each axis in turn
+    for letter in ("x", "y", "z")
+        axis, scale, lims, ticks, flip, lab = axis_symbols(letter, "axis", "scale", "lims", "ticks", "flip", "label")
+        haskey(ax, axis) || continue
+        haskey(d, scale) && applyPyPlotScale(ax, d[scale], letter)
+        haskey(d, lims)  && addPyPlotLims(ax, d[lims], letter)
+        haskey(d, ticks) && addPyPlotTicks(ax, d[ticks], letter)
+        haskey(d, lab)   && ax[symbol("set_", letter, "label")](d[lab])
+        if get(d, flip, false)
+            ax[symbol("invert_", letter, "axis")]()
+        end
+        for tmpax in axes
+            tmpax[axis][:label][:set_fontsize](guidesz)
+            for lab in tmpax[symbol("get_", letter, "ticklabels")]()
+                lab[:set_fontsize](ticksz)
+            end
+            if get(d, :grid, false)
+                fgcolor = getPyPlotColor(plt.plotargs[:foreground_color])
+                tmpax[axis][:grid](true, color = fgcolor)
+                tmpax[:set_axisbelow](true)
+            end
+        end
     end
-  end
-
 end
 
-function applyPyPlotScale(ax, scaleType::Symbol, isx::Bool)
-  func = ax[isx ? :set_xscale : :set_yscale]
-  scaleType == :identity && return func("linear")
-  scaleType == :ln && return func("log", basex = e, basey = e)
-  scaleType == :log2 && return func("log", basex = 2, basey = 2)
-  scaleType == :log10 && return func("log", basex = 10, basey = 10)
-  warn("Unhandled scaleType: ", scaleType)
-end
 
 # -----------------------------------------------------------------
 

@@ -159,6 +159,7 @@ const _plotDefaults = KW()
 _plotDefaults[:title]             = ""
 _plotDefaults[:xlabel]            = ""
 _plotDefaults[:ylabel]            = ""
+_plotDefaults[:zlabel]            = ""
 _plotDefaults[:yrightlabel]       = ""
 _plotDefaults[:legend]            = :best
 _plotDefaults[:colorbar]          = :legend
@@ -169,10 +170,13 @@ _plotDefaults[:ylims]             = :auto
 _plotDefaults[:zlims]             = :auto
 _plotDefaults[:xticks]            = :auto
 _plotDefaults[:yticks]            = :auto
+_plotDefaults[:zticks]            = :auto
 _plotDefaults[:xscale]            = :identity
 _plotDefaults[:yscale]            = :identity
+_plotDefaults[:zscale]            = :identity
 _plotDefaults[:xflip]             = false
 _plotDefaults[:yflip]             = false
+_plotDefaults[:zflip]             = false
 _plotDefaults[:size]              = (600,400)
 _plotDefaults[:pos]               = (0,0)
 _plotDefaults[:windowtitle]       = "Plots.jl"
@@ -214,16 +218,15 @@ autopick_ignore_none_auto(arr::AVec, idx::Integer) = autopick(setdiff(arr, [:non
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
 function aliasesAndAutopick(d::KW, sym::Symbol, aliases::KW, options::AVec, plotIndex::Int)
-  if d[sym] == :auto
-    d[sym] = autopick_ignore_none_auto(options, plotIndex)
-  elseif haskey(aliases, d[sym])
-    d[sym] = aliases[d[sym]]
-  end
+    if d[sym] == :auto
+        d[sym] = autopick_ignore_none_auto(options, plotIndex)
+    elseif haskey(aliases, d[sym])
+        d[sym] = aliases[d[sym]]
+    end
 end
 
 function aliases(aliasMap::KW, val)
-  # sort(vcat(val, collect(keys(filter((k,v)-> v==val, aliasMap)))))
-  sortedkeys(filter((k,v)-> v==val, aliasMap))
+    sortedkeys(filter((k,v)-> v==val, aliasMap))
 end
 
 # -----------------------------------------------------------------------------
@@ -278,6 +281,7 @@ end
     :annotations        => :annotation,
     :xlab               => :xlabel,
     :ylab               => :ylabel,
+    :zlab               => :zlabel,
     :yrlab              => :yrightlabel,
     :ylabr              => :yrightlabel,
     :y2lab              => :yrightlabel,
@@ -344,7 +348,7 @@ end
 
 # add all pluralized forms to the _keyAliases dict
 for arg in keys(_seriesDefaults)
-  _keyAliases[makeplural(arg)] = arg
+    _keyAliases[makeplural(arg)] = arg
 end
 
 
@@ -360,189 +364,175 @@ end
 """
 
 function default(k::Symbol)
-  k = get(_keyAliases, k, k)
-  if haskey(_seriesDefaults, k)
-    return _seriesDefaults[k]
-  elseif haskey(_plotDefaults, k)
-    return _plotDefaults[k]
-  else
-    error("Unknown key: ", k)
-  end
+    k = get(_keyAliases, k, k)
+    if haskey(_seriesDefaults, k)
+        return _seriesDefaults[k]
+    elseif haskey(_plotDefaults, k)
+        return _plotDefaults[k]
+    else
+        error("Unknown key: ", k)
+    end
 end
 
 function default(k::Symbol, v)
-  k = get(_keyAliases, k, k)
-  if haskey(_seriesDefaults, k)
-    _seriesDefaults[k] = v
-  elseif haskey(_plotDefaults, k)
-    _plotDefaults[k] = v
-  else
-    error("Unknown key: ", k)
-  end
+    k = get(_keyAliases, k, k)
+    if haskey(_seriesDefaults, k)
+        _seriesDefaults[k] = v
+    elseif haskey(_plotDefaults, k)
+        _plotDefaults[k] = v
+    else
+        error("Unknown key: ", k)
+    end
 end
 
 function default(; kw...)
-  for (k,v) in kw
-    default(k, v)
-  end
+    for (k,v) in kw
+        default(k, v)
+    end
 end
 
 # -----------------------------------------------------------------------------
 
 function handleColors!(d::KW, arg, csym::Symbol)
-  try
-    if arg == :auto
-      d[csym] = :auto
-    else
-      c = colorscheme(arg)
-      d[csym] = c
+    try
+        if arg == :auto
+            d[csym] = :auto
+        else
+            c = colorscheme(arg)
+            d[csym] = c
+        end
+        return true
     end
-    return true
-  end
-  false
+    false
 end
 
 # given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
 # TODO: use trueOrAllTrue for subplots which can pass vectors for these
-function processAxisArg(d::KW, axisletter::@compat(AbstractString), arg)
-  T = typeof(arg)
-  # if T <: Symbol
+function processAxisArg(d::KW, letter::AbstractString, arg)
+    T = typeof(arg)
+    arg = get(_scaleAliases, arg, arg)
+    scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
 
-  arg = get(_scaleAliases, arg, arg)
+    if typeof(arg) <: Font
+        d[:tickfont] = arg
 
-  if arg in _allScales
-    d[symbol(axisletter * "scale")] = arg
+    elseif arg in _allScales
+        d[scale] = arg
 
-  elseif arg in (:flip, :invert, :inverted)
-    d[symbol(axisletter * "flip")] = true
+    elseif arg in (:flip, :invert, :inverted)
+        d[flip] = true
 
-  elseif T <: @compat(AbstractString)
-    d[symbol(axisletter * "label")] = arg
+    elseif T <: @compat(AbstractString)
+        d[label] = arg
 
-  # xlims/ylims
-  elseif (T <: Tuple || T <: AVec) && length(arg) == 2
-    d[symbol(axisletter * "lims")] = arg
+    # xlims/ylims
+    elseif (T <: Tuple || T <: AVec) && length(arg) == 2
+        d[typeof(arg[1]) <: Number ? lim : tick] = arg
 
-  # xticks/yticks
-  elseif T <: AVec
-    d[symbol(axisletter * "ticks")] = arg
+    # xticks/yticks
+    elseif T <: AVec
+        d[tick] = arg
 
-  elseif arg == nothing
-    d[symbol(axisletter * "ticks")] = []
+    elseif arg == nothing
+        d[tick] = []
 
-  else
-    warn("Skipped $(axisletter)axis arg $arg")
+    else
+        warn("Skipped $(letter)axis arg $arg")
 
-  end
+    end
 end
 
 
 function processLineArg(d::KW, arg)
+    # linetype
+    if allLineTypes(arg)
+        d[:linetype] = arg
 
-  # linetype
-  # if trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
-  if allLineTypes(arg)
-    d[:linetype] = arg
+    # linestyle
+    elseif allStyles(arg)
+        d[:linestyle] = arg
 
-  # linestyle
-  # elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
-  elseif allStyles(arg)
-    d[:linestyle] = arg
+    elseif typeof(arg) <: Stroke
+        arg.width == nothing || (d[:linewidth] = arg.width)
+        arg.color == nothing || (d[:linecolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.alpha == nothing || (d[:linealpha] = arg.alpha)
+        arg.style == nothing || (d[:linestyle] = arg.style)
 
-  elseif typeof(arg) <: Stroke
-    arg.width == nothing || (d[:linewidth] = arg.width)
-    arg.color == nothing || (d[:linecolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
-    arg.alpha == nothing || (d[:linealpha] = arg.alpha)
-    arg.style == nothing || (d[:linestyle] = arg.style)
+    elseif typeof(arg) <: Brush
+        arg.size  == nothing || (d[:fillrange] = arg.size)
+        arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
-  elseif typeof(arg) <: Brush
-    arg.size  == nothing || (d[:fillrange] = arg.size)
-    arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
-    arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
+    # linealpha
+    elseif allAlphas(arg)
+        d[:linealpha] = arg
 
-  # linealpha
-  # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
-  elseif allAlphas(arg)
-    d[:linealpha] = arg
+    # linewidth
+    elseif allReals(arg)
+        d[:linewidth] = arg
 
-  # linewidth
-  # elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
-  elseif allReals(arg)
-    d[:linewidth] = arg
+    # color
+    elseif !handleColors!(d, arg, :linecolor)
+        warn("Skipped line arg $arg.")
 
-  # color
-  elseif !handleColors!(d, arg, :linecolor)
-    warn("Skipped line arg $arg.")
-
-  end
+    end
 end
 
 
 function processMarkerArg(d::KW, arg)
+    # markershape
+    if allShapes(arg)
+        d[:markershape] = arg
 
-  # markershape
-  # if trueOrAllTrue(a -> get(_markerAliases, a, a) in _allMarkers, arg)
-  #   d[:markershape] = arg
+    # stroke style
+    elseif allStyles(arg)
+        d[:markerstrokestyle] = arg
 
-  # elseif trueOrAllTrue(a -> isa(a, Shape), arg)
-  if allShapes(arg)
-    d[:markershape] = arg
+    elseif typeof(arg) <: Stroke
+        arg.width == nothing || (d[:markerstrokewidth] = arg.width)
+        arg.color == nothing || (d[:markerstrokecolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.alpha == nothing || (d[:markerstrokealpha] = arg.alpha)
+        arg.style == nothing || (d[:markerstrokestyle] = arg.style)
 
-  # stroke style
-  # elseif trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
-  elseif allStyles(arg)
-    d[:markerstrokestyle] = arg
+    elseif typeof(arg) <: Brush
+        arg.size  == nothing || (d[:markersize]  = arg.size)
+        arg.color == nothing || (d[:markercolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.alpha == nothing || (d[:markeralpha] = arg.alpha)
 
-  elseif typeof(arg) <: Stroke
-    arg.width == nothing || (d[:markerstrokewidth] = arg.width)
-    arg.color == nothing || (d[:markerstrokecolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
-    arg.alpha == nothing || (d[:markerstrokealpha] = arg.alpha)
-    arg.style == nothing || (d[:markerstrokestyle] = arg.style)
+    # linealpha
+    elseif allAlphas(arg)
+        d[:markeralpha] = arg
 
-  elseif typeof(arg) <: Brush
-    arg.size  == nothing || (d[:markersize]  = arg.size)
-    arg.color == nothing || (d[:markercolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
-    arg.alpha == nothing || (d[:markeralpha] = arg.alpha)
+    # markersize
+    elseif allReals(arg)
+        d[:markersize] = arg
 
-  # linealpha
-  # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
-  elseif allAlphas(arg)
-    d[:markeralpha] = arg
+    # markercolor
+    elseif !handleColors!(d, arg, :markercolor)
+        warn("Skipped marker arg $arg.")
 
-  # markersize
-  # elseif trueOrAllTrue(a -> typeof(a) <: Real, arg)
-  elseif allReals(arg)
-    d[:markersize] = arg
-
-  # markercolor
-  elseif !handleColors!(d, arg, :markercolor)
-    warn("Skipped marker arg $arg.")
-
-  end
+    end
 end
 
 
 function processFillArg(d::KW, arg)
+    if typeof(arg) <: Brush
+        arg.size  == nothing || (d[:fillrange] = arg.size)
+        arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
-  if typeof(arg) <: Brush
-    arg.size  == nothing || (d[:fillrange] = arg.size)
-    arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
-    arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
+    # fillrange function
+    elseif allFunctions(arg)
+        d[:fillrange] = arg
 
-  # fillrange function
-  # elseif trueOrAllTrue(a -> isa(a, Function), arg)
-  elseif allFunctions(arg)
-    d[:fillrange] = arg
+    # fillalpha
+    elseif allAlphas(arg)
+        d[:fillalpha] = arg
 
-  # fillalpha
-  # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
-  elseif allAlphas(arg)
-    d[:fillalpha] = arg
+    elseif !handleColors!(d, arg, :fillcolor)
 
-  elseif !handleColors!(d, arg, :fillcolor)
-
-    d[:fillrange] = arg
-  end
+        d[:fillrange] = arg
+    end
 end
 
 _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
@@ -552,119 +542,116 @@ _replace_markershape(shape) = shape
 
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
 function preprocessArgs!(d::KW)
-  replaceAliases!(d, _keyAliases)
+    replaceAliases!(d, _keyAliases)
 
-  # handle axis args
-  for axisletter in ("x", "y")
-    asym = symbol(axisletter * "axis")
-    for arg in wraptuple(get(d, asym, ()))
-      processAxisArg(d, axisletter, arg)
+    # handle axis args
+    for letter in ("x", "y", "z")
+        asym = symbol(letter * "axis")
+        for arg in wraptuple(get(d, asym, ()))
+            processAxisArg(d, letter, arg)
+        end
+        delete!(d, asym)
+
+        # turn :labels into :ticks_and_labels
+        tsym = symbol(letter * "ticks")
+        if haskey(d, tsym) && ticksType(d[tsym]) == :labels
+            d[tsym] = (1:length(d[tsym]), d[tsym])
+        end
     end
-    delete!(d, asym)
 
-    # turn :labels into :ticks_and_labels
-    tsym = symbol(axisletter * "ticks")
-    if haskey(d, tsym) && ticksType(d[tsym]) == :labels
-      d[tsym] = (1:length(d[tsym]), d[tsym])
+    # handle line args
+    for arg in wraptuple(get(d, :line, ()))
+        processLineArg(d, arg)
     end
-  end
+    delete!(d, :line)
 
-  # handle line args
-  for arg in wraptuple(get(d, :line, ()))
-    processLineArg(d, arg)
-  end
-  delete!(d, :line)
+    # handle marker args... default to ellipse if shape not set
+    anymarker = false
+    for arg in wraptuple(get(d, :marker, ()))
+        processMarkerArg(d, arg)
+        anymarker = true
+    end
+    delete!(d, :marker)
+    if haskey(d, :markershape)
+        d[:markershape] = _replace_markershape(d[:markershape])
+    elseif anymarker
+        d[:markershape] = :ellipse
+    end
 
-  # handle marker args... default to ellipse if shape not set
-  anymarker = false
-  for arg in wraptuple(get(d, :marker, ()))
-    processMarkerArg(d, arg)
-    anymarker = true
-  end
-  delete!(d, :marker)
-  # if anymarker && !haskey(d, :markershape)
-  #   d[:markershape] = :ellipse
-  # end
-  if haskey(d, :markershape)
-    d[:markershape] = _replace_markershape(d[:markershape])
-  elseif anymarker
-    d[:markershape] = :ellipse
-  end
-
-  # handle fill
-  for arg in wraptuple(get(d, :fill, ()))
-    processFillArg(d, arg)
-  end
-  delete!(d, :fill)
+    # handle fill
+    for arg in wraptuple(get(d, :fill, ()))
+        processFillArg(d, arg)
+    end
+    delete!(d, :fill)
 
   # convert into strokes and brushes
 
-  # legends
-  if haskey(d, :legend)
-    d[:legend] = convertLegendValue(d[:legend])
-  end
-  if haskey(d, :colorbar)
-    d[:colorbar] = convertLegendValue(d[:colorbar])
-  end
-
-  # handle subplot links
-  if haskey(d, :link)
-    l = d[:link]
-    if isa(l, Bool)
-      d[:linkx] = l
-      d[:linky] = l
-    elseif isa(l, Function)
-      d[:linkx] = true
-      d[:linky] = true
-      d[:linkfunc] = l
-    else
-      warn("Unhandled/invalid link $l.  Should be a Bool or a function mapping (row,column) -> (linkx, linky), where linkx/y can be Bool or Void (nothing)")
+    # legends
+    if haskey(d, :legend)
+        d[:legend] = convertLegendValue(d[:legend])
     end
-    delete!(d, :link)
-  end
+    if haskey(d, :colorbar)
+        d[:colorbar] = convertLegendValue(d[:colorbar])
+    end
 
-  return
+    # handle subplot links
+    if haskey(d, :link)
+        l = d[:link]
+        if isa(l, Bool)
+            d[:linkx] = l
+            d[:linky] = l
+        elseif isa(l, Function)
+            d[:linkx] = true
+            d[:linky] = true
+            d[:linkfunc] = l
+        else
+            warn("Unhandled/invalid link $l.  Should be a Bool or a function mapping (row,column) -> (linkx, linky), where linkx/y can be Bool or Void (nothing)")
+        end
+        delete!(d, :link)
+    end
+
+    return
 end
 
 # -----------------------------------------------------------------------------
 
 "A special type that will break up incoming data into groups, and allow for easier creation of grouped plots"
 type GroupBy
-  groupLabels::Vector{UTF8String}   # length == numGroups
-  groupIds::Vector{Vector{Int}}     # list of indices for each group
+    groupLabels::Vector{UTF8String}   # length == numGroups
+    groupIds::Vector{Vector{Int}}     # list of indices for each group
 end
 
 
 # this is when given a vector-type of values to group by
 function extractGroupArgs(v::AVec, args...)
-  groupLabels = sort(collect(unique(v)))
-  n = length(groupLabels)
-  if n > 20
-    error("Too many group labels. n=$n  Is that intended?")
-  end
-  groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
-  GroupBy(map(string, groupLabels), groupIds)
+    groupLabels = sort(collect(unique(v)))
+    n = length(groupLabels)
+    if n > 20
+        error("Too many group labels. n=$n  Is that intended?")
+    end
+    groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
+    GroupBy(map(string, groupLabels), groupIds)
 end
 
 
 # expecting a mapping of "group label" to "group indices"
 function extractGroupArgs{T, V<:AVec{Int}}(idxmap::Dict{T,V}, args...)
-  groupLabels = sortedkeys(idxmap)
-  groupIds = VecI[collect(idxmap[k]) for k in groupLabels]
-  GroupBy(groupLabels, groupIds)
+    groupLabels = sortedkeys(idxmap)
+    groupIds = VecI[collect(idxmap[k]) for k in groupLabels]
+    GroupBy(groupLabels, groupIds)
 end
 
 
 # -----------------------------------------------------------------------------
 
 function warnOnUnsupportedArgs(pkg::AbstractBackend, d::KW)
-  for k in sortedkeys(d)
-    if (!(k in supportedArgs(pkg))
-        && k != :subplot
-        && d[k] != default(k))
-      warn("Keyword argument $k not supported with $pkg.  Choose from: $(supportedArgs(pkg))")
+    for k in sortedkeys(d)
+        if (!(k in supportedArgs(pkg))
+                && k != :subplot
+                && d[k] != default(k))
+            warn("Keyword argument $k not supported with $pkg.  Choose from: $(supportedArgs(pkg))")
+        end
     end
-  end
 end
 
 _markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supportedMarkers(pkg)
@@ -672,18 +659,16 @@ _markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supportedM
 _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warnOnUnsupported(pkg::AbstractBackend, d::KW)
-  (d[:axis] in supportedAxes(pkg)
-    || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
-  (d[:linetype] == :none
-    || d[:linetype] in supportedTypes(pkg)
-    || warn("linetype $(d[:linetype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))"))
-  (d[:linestyle] in supportedStyles(pkg)
-    || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))"))
-  (d[:markershape] == :none
-    || _markershape_supported(pkg, d[:markershape])
-    # || d[:markershape] in supportedMarkers(pkg)
-    # || (Shape in supportedMarkers(pkg) && typeof(d[:markershape]) <: Shape)
-    || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))"))
+    (d[:axis] in supportedAxes(pkg)
+        || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
+    (d[:linetype] == :none
+        || d[:linetype] in supportedTypes(pkg)
+        || warn("linetype $(d[:linetype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))"))
+    (d[:linestyle] in supportedStyles(pkg)
+        || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))"))
+    (d[:markershape] == :none
+        || _markershape_supported(pkg, d[:markershape])
+        || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supportedMarkers(pkg))"))
 end
 
 function warnOnUnsupportedScales(pkg::AbstractBackend, d::KW)
@@ -702,8 +687,8 @@ end
 # anything else is returned as-is
 # getArgValue(v::Tuple, idx::Int) = v[mod1(idx, length(v))]
 function getArgValue(v::AMat, idx::Int)
-  c = mod1(idx, size(v,2))
-  size(v,1) == 1 ? v[1,c] : v[:,c]
+    c = mod1(idx, size(v,2))
+    size(v,1) == 1 ? v[1,c] : v[:,c]
 end
 getArgValue(v, idx) = v
 
@@ -711,23 +696,23 @@ getArgValue(v, idx) = v
 # given an argument key (k), we want to extract the argument value for this index.
 # if nothing is set (or container is empty), return the default.
 function setDictValue(d_in::KW, d_out::KW, k::Symbol, idx::Int, defaults::KW)
-  if haskey(d_in, k) && !(typeof(d_in[k]) <: @compat(Union{AbstractArray, Tuple}) && isempty(d_in[k]))
-    d_out[k] = getArgValue(d_in[k], idx)
-  else
-    d_out[k] = defaults[k]
-  end
+    if haskey(d_in, k) && !(typeof(d_in[k]) <: @compat(Union{AbstractArray, Tuple}) && isempty(d_in[k]))
+        d_out[k] = getArgValue(d_in[k], idx)
+    else
+        d_out[k] = defaults[k]
+    end
 end
 
 function convertLegendValue(val::Symbol)
-  if val in (:both, :all, :yes)
-    :best
-  elseif val in (:no, :none)
-    :none
-  elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend)
-    val
-  else
-    error("Invalid symbol for legend: $val")
-  end
+    if val in (:both, :all, :yes)
+        :best
+    elseif val in (:no, :none)
+        :none
+    elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend)
+        val
+    else
+        error("Invalid symbol for legend: $val")
+    end
 end
 convertLegendValue(val::Bool) = val ? :best : :none
 
@@ -735,94 +720,93 @@ convertLegendValue(val::Bool) = val ? :best : :none
 
 # build the argument dictionary for the plot
 function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
-  kwdict = KW(kw)
-  d = KW()
+    kwdict = KW(kw)
+    d = KW()
 
-  # add defaults?
-  if set_defaults
-    for k in keys(_plotDefaults)
-      setDictValue(kwdict, d, k, idx, _plotDefaults)
+    # add defaults?
+    if set_defaults
+        for k in keys(_plotDefaults)
+            setDictValue(kwdict, d, k, idx, _plotDefaults)
+        end
     end
-  end
 
-  for k in (:xscale, :yscale)
-    if haskey(_scaleAliases, d[k])
-      d[k] = _scaleAliases[d[k]]
+    for k in (:xscale, :yscale)
+        if haskey(_scaleAliases, d[k])
+            d[k] = _scaleAliases[d[k]]
+        end
     end
-  end
 
-  # handle legend/colorbar
-  d[:legend] = convertLegendValue(d[:legend])
-  d[:colorbar] = convertLegendValue(d[:colorbar])
-  if d[:colorbar] == :legend
-    d[:colorbar] = d[:legend]
-  end
+    # handle legend/colorbar
+    d[:legend] = convertLegendValue(d[:legend])
+    d[:colorbar] = convertLegendValue(d[:colorbar])
+    if d[:colorbar] == :legend
+        d[:colorbar] = d[:legend]
+    end
 
-  # convert color
-  handlePlotColors(pkg, d)
+    # convert color
+    handlePlotColors(pkg, d)
 
-  # no need for these
-  delete!(d, :x)
-  delete!(d, :y)
+    # no need for these
+    delete!(d, :x)
+    delete!(d, :y)
 
-  d
+    d
 end
 
 
 
 # build the argument dictionary for a series
 function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
-  kwdict = KW(kw)
-  d = KW()
+    kwdict = KW(kw)
+    d = KW()
 
-  # add defaults?
-  for k in keys(_seriesDefaults)
-    setDictValue(kwdict, d, k, commandIndex, _seriesDefaults)
-  end
-
-  # groupby args?
-  for k in (:idxfilter, :numUncounted, :dataframe)
-    if haskey(kwdict, k)
-      d[k] = kwdict[k]
+    # add defaults?
+    for k in keys(_seriesDefaults)
+        setDictValue(kwdict, d, k, commandIndex, _seriesDefaults)
     end
-  end
 
-  if haskey(_typeAliases, d[:linetype])
-    d[:linetype] = _typeAliases[d[:linetype]]
-  end
+    # groupby args?
+    for k in (:idxfilter, :numUncounted, :dataframe)
+        if haskey(kwdict, k)
+            d[k] = kwdict[k]
+        end
+    end
 
-  aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
-  aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
-  aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
+    if haskey(_typeAliases, d[:linetype])
+        d[:linetype] = _typeAliases[d[:linetype]]
+    end
 
-  # update color
-  d[:linecolor] = getSeriesRGBColor(d[:linecolor], plotargs, plotIndex)
+    aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
+    aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
+    aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
 
-  # update markercolor
-  c = d[:markercolor]
-  c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
-  d[:markercolor] = c
+    # update color
+    d[:linecolor] = getSeriesRGBColor(d[:linecolor], plotargs, plotIndex)
 
-  # update markerstrokecolor
-  c = d[:markerstrokecolor]
-  c = (c == :match ? plotargs[:foreground_color] : getSeriesRGBColor(c, plotargs, plotIndex))
-  d[:markerstrokecolor] = c
+    # update markercolor
+    c = d[:markercolor]
+    c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+    d[:markercolor] = c
 
-  # update fillcolor
-  c = d[:fillcolor]
-  c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
-  d[:fillcolor] = c
+    # update markerstrokecolor
+    c = d[:markerstrokecolor]
+    c = (c == :match ? plotargs[:foreground_color] : getSeriesRGBColor(c, plotargs, plotIndex))
+    d[:markerstrokecolor] = c
 
-  # set label
-  label = d[:label]
-  label = (label == "AUTO" ? "y$globalIndex" : label)
-  if d[:axis] == :right && !(length(label) >= 4 && label[end-3:end] != " (R)")
-    label = string(label, " (R)")
-  end
-  d[:label] = label
+    # update fillcolor
+    c = d[:fillcolor]
+    c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+    d[:fillcolor] = c
 
-  warnOnUnsupported(pkg, d)
+    # set label
+    label = d[:label]
+    label = (label == "AUTO" ? "y$globalIndex" : label)
+    if d[:axis] == :right && !(length(label) >= 4 && label[end-3:end] != " (R)")
+        label = string(label, " (R)")
+    end
+    d[:label] = label
 
+    warnOnUnsupported(pkg, d)
 
-  d
+    d
 end
