@@ -114,6 +114,7 @@ function regressionXY(x, y)
   regx, regy
 end
 
+# ---------------------------------------------------------------
 # ------------------------------------------------------------------------------------
 
 
@@ -261,6 +262,7 @@ allReals(arg)       = trueOrAllTrue(a -> typeof(a) <: Real, arg)
 allFunctions(arg)   = trueOrAllTrue(a -> isa(a, Function), arg)
 
 # ---------------------------------------------------------------
+# ---------------------------------------------------------------
 
 
 """
@@ -349,6 +351,7 @@ function with(f::Function, args...; kw...)
 end
 
 # ---------------------------------------------------------------
+# ---------------------------------------------------------------
 
 type DebugMode
   on::Bool
@@ -382,70 +385,7 @@ function dumpcallstack()
 end
 
 # ---------------------------------------------------------------
-
-
-# push/append/clear/set the underlying plot data
-# NOTE: backends should implement the getindex and setindex! methods to get/set the x/y data objects
-
-
-# index versions
-function Base.push!(plt::Plot, i::Integer, x::Real, y::Real)
-  xdata, ydata = plt[i]
-  plt[i] = (extendSeriesData(xdata, x), extendSeriesData(ydata, y))
-  plt
-end
-function Base.push!(plt::Plot, i::Integer, y::Real)
-  xdata, ydata = plt[i]
-  # if !isa(xdata, UnitRange)
-  #   error("Expected x is a UnitRange since you're trying to push a y value only. typeof(x) = $(typeof(xdata))")
-  # end
-  plt[i] = (extendSeriesByOne(xdata), extendSeriesData(ydata, y))
-  plt
-end
-
-Base.push!(plt::Plot, y::Real) = push!(plt, 1, y)
-
-# update all at once
-function Base.push!(plt::Plot, x::AVec, y::AVec)
-  nx = length(x)
-  ny = length(y)
-  for i in 1:plt.n
-    push!(plt, i, x[mod1(i,nx)], y[mod1(i,ny)])
-  end
-  plt
-end
-
-function Base.push!(plt::Plot, x::Real, y::AVec)
-  push!(plt, [x], y)
-end
-
-function Base.push!(plt::Plot, y::AVec)
-  ny = length(y)
-  for i in 1:plt.n
-    push!(plt, i, y[mod1(i,ny)])
-  end
-  plt
-end
-
-
-# append to index
-function Base.append!(plt::Plot, i::Integer, x::AVec, y::AVec)
-  @assert length(x) == length(y)
-  xdata, ydata = plt[i]
-  plt[i] = (extendSeriesData(xdata, x), extendSeriesData(ydata, y))
-  plt
-end
-
-function Base.append!(plt::Plot, i::Integer, y::AVec)
-  xdata, ydata = plt[i]
-  if !isa(xdata, UnitRange{Int})
-    error("Expected x is a UnitRange since you're trying to push a y value only")
-  end
-  plt[i] = (extendSeriesByOne(xdata, length(y)), extendSeriesData(ydata, y))
-  plt
-end
-
-
+# ---------------------------------------------------------------
 # used in updating an existing series
 
 extendSeriesByOne(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
@@ -456,24 +396,157 @@ extendSeriesData{T}(v::AVec{T}, z::Real)         = (push!(v, convert(T, z)); v)
 extendSeriesData{T}(v::AVec{T}, z::AVec)         = (append!(v, convert(Vector{T}, z)); v)
 
 
+# -------------------------------------------------------
+# NOTE: backends should implement the following methods to get/set the x/y/z data objects
+
+tovec(v::AbstractVector) = v
+tovec(v::Void) = zeros(0)
+
+function getxy(plt::Plot, i::Integer)
+    d = plt.seriesargs[i]
+    tovec(d[:x]), tovec(d[:y])
+end
+function getxyz(plt::Plot, i::Integer)
+    d = plt.seriesargs[i]
+    tovec(d[:x]), tovec(d[:y]), tovec(d[:z])
+end
+
+function setxy!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer)
+    d = plt.seriesargs[i]
+    d[:x], d[:y] = xy
+end
+function setxyz!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
+    d = plt.seriesargs[i]
+    d[:x], d[:y], d[:z] = xyz
+end
+
+
+# -------------------------------------------------------
+# indexing notation
+
+Base.getindex(plt::Plot, i::Integer) = getxy(plt, i)
+Base.setindex!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer) = setxy!(plt, xy, i)
+Base.setindex!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) = setxyz!(plt, xyz, i)
+
+# -------------------------------------------------------
+# push/append for one series
+
+# push value to first series
+Base.push!(plt::Plot, y::Real) = push!(plt, 1, y)
+Base.push!(plt::Plot, x::Real, y::Real) = push!(plt, 1, x, y)
+Base.push!(plt::Plot, x::Real, y::Real, z::Real) = push!(plt, 1, x, y, z)
+
+# y only
+function Base.push!(plt::Plot, i::Integer, y::Real)
+    xdata, ydata = getxy(plt, i)
+    setxy!(plt, (extendSeriesByOne(xdata), extendSeriesData(ydata, y)), i)
+    plt
+end
+function Base.append!(plt::Plot, i::Integer, y::AVec)
+    xdata, ydata = plt[i]
+    if !isa(xdata, UnitRange{Int})
+        error("Expected x is a UnitRange since you're trying to push a y value only")
+    end
+    plt[i] = (extendSeriesByOne(xdata, length(y)), extendSeriesData(ydata, y))
+    plt
+end
+
+# x and y
+function Base.push!(plt::Plot, i::Integer, x::Real, y::Real)
+    xdata, ydata = getxy(plt, i)
+    setxy!(plt, (extendSeriesData(xdata, x), extendSeriesData(ydata, y)), i)
+    plt
+end
+function Base.append!(plt::Plot, i::Integer, x::AVec, y::AVec)
+    @assert length(x) == length(y)
+    xdata, ydata = getxy(plt, i)
+    setxy!(plt, (extendSeriesData(xdata, x), extendSeriesData(ydata, y)), i)
+    plt
+end
+
+# x, y, and z
+function Base.push!(plt::Plot, i::Integer, x::Real, y::Real, z::Real)
+    # @show i, x, y, z
+    xdata, ydata, zdata = getxyz(plt, i)
+    # @show xdata, ydata, zdata
+    setxyz!(plt, (extendSeriesData(xdata, x), extendSeriesData(ydata, y), extendSeriesData(zdata, z)), i)
+    plt
+end
+function Base.append!(plt::Plot, i::Integer, x::AVec, y::AVec, z::AVec)
+    @assert length(x) == length(y) == length(z)
+    xdata, ydata, zdata = getxyz(plt, i)
+    setxyz!(plt, (extendSeriesData(xdata, x), extendSeriesData(ydata, y), extendSeriesData(zdata, z)), i)
+    plt
+end
+
+# tuples
+Base.push!{X,Y}(plt::Plot, xy::Tuple{X,Y})                  = push!(plt, 1, xy...)
+Base.push!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z})             = push!(plt, 1, xyz...)
+Base.push!{X,Y}(plt::Plot, i::Integer, xy::Tuple{X,Y})      = push!(plt, i, xy...)
+Base.push!{X,Y,Z}(plt::Plot, i::Integer, xyz::Tuple{X,Y,Z}) = push!(plt, i, xyz...)
+
+# -------------------------------------------------------
+# push/append for all series
+
+# push y[i] to the ith series
+function Base.push!(plt::Plot, y::AVec)
+    ny = length(y)
+    for i in 1:plt.n
+        push!(plt, i, y[mod1(i,ny)])
+    end
+    plt
+end
+
+# push y[i] to the ith series
+# same x for each series
+function Base.push!(plt::Plot, x::Real, y::AVec)
+    push!(plt, [x], y)
+end
+
+# push (x[i], y[i]) to the ith series
+function Base.push!(plt::Plot, x::AVec, y::AVec)
+    nx = length(x)
+    ny = length(y)
+    for i in 1:plt.n
+        push!(plt, i, x[mod1(i,nx)], y[mod1(i,ny)])
+    end
+    plt
+end
+
+# push (x[i], y[i], z[i]) to the ith series
+function Base.push!(plt::Plot, x::AVec, y::AVec, z::AVec)
+    nx = length(x)
+    ny = length(y)
+    nz = length(z)
+    for i in 1:plt.n
+        push!(plt, i, x[mod1(i,nx)], y[mod1(i,ny)], z[mod1(i,nz)])
+    end
+    plt
+end
+
+
+
+
 # ---------------------------------------------------------------
+# ---------------------------------------------------------------
+# graphs detailing the features that each backend supports
 
 function supportGraph(allvals, func)
-  vals = reverse(sort(allvals))
-  bs = sort(backends())
-  x = ASCIIString[]
-  y = ASCIIString[]
-  for val in vals
-    for b in bs
-        supported = func(Plots._backend_instance(b))
-        if val in supported
-            push!(x, string(b))
-            push!(y, string(val))
+    vals = reverse(sort(allvals))
+    bs = sort(backends())
+    x = ASCIIString[]
+    y = ASCIIString[]
+    for val in vals
+        for b in bs
+            supported = func(Plots._backend_instance(b))
+            if val in supported
+                push!(x, string(b))
+                push!(y, string(val))
+            end
         end
-      end
-  end
-  n = length(vals)
-  scatter(x, y, m=:rect, ms=10, size=(300,100+18*n), leg=false)
+    end
+    n = length(vals)
+    scatter(x, y, m=:rect, ms=10, size=(300,100+18*n), leg=false)
 end
 
 supportGraphArgs()    = supportGraph(_allArgs, supportedArgs)
@@ -484,13 +557,14 @@ supportGraphScales()  = supportGraph(_allScales, supportedScales)
 supportGraphAxes()    = supportGraph(_allAxes, supportedAxes)
 
 function dumpSupportGraphs()
-  for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles,
+    for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles,
                supportGraphMarkers, supportGraphScales, supportGraphAxes)
-    plt = func()
-    png(joinpath(Pkg.dir("ExamplePlots"), "docs", "examples", "img", "supported", "$(string(func))"))
-  end
+        plt = func()
+        png(joinpath(Pkg.dir("ExamplePlots"), "docs", "examples", "img", "supported", "$(string(func))"))
+    end
 end
 
+# ---------------------------------------------------------------
 # ---------------------------------------------------------------
 
 

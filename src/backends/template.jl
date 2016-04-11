@@ -51,14 +51,14 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{[PkgName]AbstractBackend}, i::Int)
-  # TODO: return a tuple of (x, y) vectors
-end
-
-function Base.setindex!(plt::Plot{[PkgName]AbstractBackend}, xy::Tuple, i::Integer)
-  # TODO: set the plot data from the (x,y) tuple
-  plt
-end
+# function getxy(plt::Plot{[PkgName]AbstractBackend}, i::Int)
+#   # TODO: return a tuple of (x, y) vectors
+# end
+#
+# function setxy!{X,Y}(plt::Plot{[PkgName]AbstractBackend}, xy::Tuple{X,Y}, i::Integer)
+#   # TODO: set the plot data from the (x,y) tuple
+#   plt
+# end
 
 # ----------------------------------------------------------------
 

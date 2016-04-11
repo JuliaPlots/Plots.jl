@@ -52,16 +52,16 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{PGFPlotsBackend}, i::Int)
-  d = plt.seriesargs[i]
-  d[:x], d[:y]
-end
-
-function Base.setindex!(plt::Plot{PGFPlotsBackend}, xy::Tuple, i::Integer)
-  d = plt.seriesargs[i]
-  d[:x], d[:y] = xy
-  plt
-end
+# function getxy(plt::Plot{PGFPlotsBackend}, i::Int)
+#   d = plt.seriesargs[i]
+#   d[:x], d[:y]
+# end
+#
+# function setxy!{X,Y}(plt::Plot{PGFPlotsBackend}, xy::Tuple{X,Y}, i::Integer)
+#   d = plt.seriesargs[i]
+#   d[:x], d[:y] = xy
+#   plt
+# end
 
 # ----------------------------------------------------------------
 

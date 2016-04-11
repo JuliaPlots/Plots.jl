@@ -459,7 +459,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
     plotfunc(x, y, z; extra_kwargs...)
 
   elseif lt in _3dTypes
-    plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)
+    plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)[1]
 
   elseif lt in (:scatter, :hist2d, :hexbin)
     plotfunc(d[:x], d[:y]; extra_kwargs...)
@@ -507,15 +507,6 @@ end
 # -----------------------------------------------------------------
 
 
-function Base.getindex(plt::Plot{PyPlotBackend}, i::Integer)
-    series = plt.seriesargs[i][:serieshandle]
-    try
-        return series[:get_data]()
-    catch
-        xy = series[:get_offsets]()
-        return vec(xy[:,1]), vec(xy[:,2])
-    end
-end
 
 function minmaxseries(ds, vec, axis)
     lo, hi = Inf, -Inf
@@ -552,23 +543,46 @@ function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
     end
 end
 
-function Base.setindex!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
-    d = plt.seriesargs[i]
-    series = d[:serieshandle]
-    x, y = xy
-    d[:x], d[:y] = x, y
-    try
-        series[:set_data](x, y)
-    catch
-        series[:set_offsets](hcat(x, y))
-    end
+# --------------------------------------------------------------------------
 
+# function getxy(plt::Plot{PyPlotBackend}, i::Integer)
+#     series = plt.seriesargs[i][:serieshandle]
+#     try
+#         return series[:get_data]()
+#     catch
+#         xy = series[:get_offsets]()
+#         return vec(xy[:,1]), vec(xy[:,2])
+#     end
+# end
+
+function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
+    d = plt.seriesargs[i]
+    d[:x], d[:y] = xy
+    series = d[:serieshandle]
+    try
+        series[:set_data](d[:x], d[:y])
+    catch
+        series[:set_offsets](hcat(d[:x], d[:y]))
+    end
     set_lims!(plt, d[:axis])
     plt
 end
 
-function Base.setindex!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
-    warn("setindex not implemented for xyz")
+
+function setxyz!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
+    d = plt.seriesargs[i]
+    # @show typeof(d), typeof(xyz)
+    d[:x], d[:y], d[:z] = xyz
+    series = d[:serieshandle]
+    # @show keys(series)
+    # try
+        series[:set_data](d[:x], d[:y])
+        series[:set_3d_properties](d[:z])
+    # catch
+    #     series[:set_offsets](hcat(d[:x], d[:y], d[:z]))
+    # end
+    set_lims!(plt, d[:axis])
+    # dumpdict(d, "H",true)
     plt
 end
 

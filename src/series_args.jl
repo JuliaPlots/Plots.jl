@@ -279,7 +279,10 @@ end
 # 3d line or scatter
 function process_inputs(plt::AbstractPlot, d::KW, x::AVec, y::AVec, zvec::AVec)
     # default to path3d if we haven't set a 3d linetype
-    if !(get(d, :linetype, :none) in _3dTypes)
+    lt = get(d, :linetype, :none)
+    if lt == :scatter
+        d[:linetype] = :scatter3d
+    elseif !(lt in _3dTypes)
         d[:linetype] = :path3d
     end
     d[:x], d[:y], d[:z] = x, y, zvec

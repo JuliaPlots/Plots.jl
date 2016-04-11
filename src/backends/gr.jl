@@ -736,12 +736,12 @@ end
 
 # ----------------------------------------------------------------
 
-function Base.getindex(plt::Plot{GRBackend}, i::Int)
+function getxy(plt::Plot{GRBackend}, i::Int)
   d = plt.seriesargs[i]
   d[:x], d[:y]
 end
 
-function Base.setindex!(plt::Plot{GRBackend}, xy::Tuple, i::Integer)
+function setxy!{X,Y}(plt::Plot{GRBackend}, xy::Tuple{X,Y}, i::Integer)
   d = plt.seriesargs[i]
   d[:x], d[:y] = xy
   plt

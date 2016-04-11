@@ -85,12 +85,12 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{PlotlyJSBackend}, i::Int)
-  d = plt.seriesargs[i]
-  d[:x], d[:y]
-end
+# function getxy(plt::Plot{PlotlyJSBackend}, i::Int)
+#   d = plt.seriesargs[i]
+#   d[:x], d[:y]
+# end
 
-function Base.setindex!(plt::Plot{PlotlyJSBackend}, xy::Tuple, i::Integer)
+function setxy!{X,Y}(plt::Plot{PlotlyJSBackend}, xy::Tuple{X,Y}, i::Integer)
   d = plt.seriesargs[i]
   d[:x], d[:y] = xy
   # TODO: this is likely ineffecient... we should make a call that ONLY changes the plot data

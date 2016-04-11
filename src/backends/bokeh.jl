@@ -124,16 +124,16 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{BokehBackend}, i::Int)
-  series = plt.o.datacolumns[i].data
-  series[:x], series[:y]
-end
-
-function Base.setindex!(plt::Plot{BokehBackend}, xy::Tuple, i::Integer)
-  series = plt.o.datacolumns[i].data
-  series[:x], series[:y] = xy
-  plt
-end
+# function getxy(plt::Plot{BokehBackend}, i::Int)
+#   series = plt.o.datacolumns[i].data
+#   series[:x], series[:y]
+# end
+#
+# function setxy!(plt::Plot{BokehBackend}, xy::Tuple{X,Y}, i::Integer)
+#   series = plt.o.datacolumns[i].data
+#   series[:x], series[:y] = xy
+#   plt
+# end
 
 
 # ----------------------------------------------------------------

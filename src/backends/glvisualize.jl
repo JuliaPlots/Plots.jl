@@ -59,14 +59,14 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{GLVisualizeBackend}, i::Int)
+function getxy(plt::Plot{GLVisualizeBackend}, i::Int)
   # TODO:
   # series = plt.o.lines[i]
   # series.x, series.y
   nothing, nothing
 end
 
-function Base.setindex!(plt::Plot{GLVisualizeBackend}, xy::Tuple, i::Integer)
+function setxy!{X,Y}(plt::Plot{GLVisualizeBackend}, xy::Tuple{X,Y}, i::Integer)
   # TODO:
   # series = plt.o.lines[i]
   # series.x, series.y = xy

@@ -58,12 +58,12 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{ImmerseBackend}, i::Integer)
+function getxy(plt::Plot{ImmerseBackend}, i::Integer)
   mapping = getGadflyMappings(plt, i)[1]
   mapping[:x], mapping[:y]
 end
 
-function Base.setindex!(plt::Plot{ImmerseBackend}, xy::Tuple, i::Integer)
+function setxy!{X,Y}(plt::Plot{ImmerseBackend}, xy::Tuple{X,Y}, i::Integer)
   for mapping in getGadflyMappings(plt, i)
     mapping[:x], mapping[:y] = xy
   end

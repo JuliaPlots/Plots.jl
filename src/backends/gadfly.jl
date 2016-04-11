@@ -560,12 +560,12 @@ function getGadflyMappings(plt::Plot, i::Integer)
     mappings = [l.mapping for l in plt.seriesargs[i][:gadflylayers]]
 end
 
-function Base.getindex(plt::Plot{GadflyBackend}, i::Integer)
+function getxy(plt::Plot{GadflyBackend}, i::Integer)
     mapping = getGadflyMappings(plt, i)[1]
     mapping[:x], mapping[:y]
 end
 
-function Base.setindex!(plt::Plot{GadflyBackend}, xy::Tuple, i::Integer)
+function setxy!{X,Y}(plt::Plot{GadflyBackend}, xy::Tuple{X,Y}, i::Integer)
     for mapping in getGadflyMappings(plt, i)
         mapping[:x], mapping[:y] = xy
     end

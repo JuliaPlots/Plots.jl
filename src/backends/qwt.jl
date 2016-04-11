@@ -199,12 +199,12 @@ end
 
 # accessors for x/y data
 
-function Base.getindex(plt::Plot{QwtBackend}, i::Int)
+function getxy(plt::Plot{QwtBackend}, i::Int)
   series = plt.o.lines[i]
   series.x, series.y
 end
 
-function Base.setindex!(plt::Plot{QwtBackend}, xy::Tuple, i::Integer)
+function setxy!{X,Y}(plt::Plot{QwtBackend}, xy::Tuple{X,Y}, i::Integer)
   series = plt.o.lines[i]
   series.x, series.y = xy
   plt
