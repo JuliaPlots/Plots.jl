@@ -210,8 +210,10 @@ function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
 end
 
 function updateAxisColors(ax, fgcolor)
-  for loc in ("bottom", "top", "left", "right")
-    ax[:spines][loc][:set_color](fgcolor)
+  # for loc in ("bottom", "top", "left", "right")
+  for (loc, spine) in ax[:spines]
+    # ax[:spines][loc][:set_color](fgcolor)
+      spine[:set_color](fgcolor)
   end
   for axis in ("x", "y")
     ax[:tick_params](axis=axis, colors=fgcolor, which="both")
@@ -309,6 +311,10 @@ function _create_plot(pkg::PyPlotBackend; kw...)
     #   push!(wrap.kwargs, (:projection, "3d"))
     # end
     pyplot_3d_setup!(wrap, d)
+
+    if get(d, :polar, false)
+        push!(wrap.kwargs, (:polar, true))
+    end
   end
 
   plt = Plot(wrap, pkg, 0, d, KW[])

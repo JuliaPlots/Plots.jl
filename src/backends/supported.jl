@@ -174,6 +174,7 @@ supportedArgs(::PyPlotBackend) = [
     :ribbon,
     :quiver,
     :orientation,
+    :polar,
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [:none, :line, :path, :steppre, :steppost, :shape,

@@ -192,6 +192,7 @@ _plotDefaults[:legendfont]        = font(8)
 _plotDefaults[:grid]              = true
 _plotDefaults[:annotation]        = nothing           # annotation tuple(s)... (x,y,annotation)
 _plotDefaults[:overwrite_figure]  = false
+_plotDefaults[:polar]             = false
 
 
 # TODO: x/y scales
