@@ -178,7 +178,7 @@ end
 function addGadflyContColorScale(plt::Plot{GadflyBackend}, c)
     plt.plotargs[:colorbar] == :none && return
     if !isa(c, ColorGradient)
-        c = colorscheme(:bluesreds)
+        c = default_gradient()
     end
     push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(c, p))))
 end

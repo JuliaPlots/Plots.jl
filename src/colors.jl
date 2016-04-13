@@ -52,7 +52,7 @@ const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", color
 const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
                      darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
 
-@compat const _gradients = KW(
+const _gradients = KW(
     :blues        => [colorant"lightblue", colorant"darkblue"],
     :reds         => [colorant"lightpink", colorant"darkred"],
     :greens       => [colorant"lightgreen", colorant"darkgreen"],
@@ -67,6 +67,13 @@ const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcya
     :lighttest    => map(c -> lighten(c, 0.3), _testColors),
   )
 
+function register_gradient_colors{C<:Colorant}(name::Symbol, colors::AVec{C})
+    _gradients[name] = colors
+end
+
+include("color_gradients.jl")
+
+default_gradient() = ColorGradient(:inferno)
 
 # --------------------------------------------------------------
 

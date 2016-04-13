@@ -42,7 +42,7 @@ function getPyPlotColorMap(c::ColorGradient, α=nothing)
 end
 
 # anything else just gets a bluesred gradient
-getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(ColorGradient(:bluesreds), α)
+getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(default_gradient(), α)
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
@@ -388,7 +388,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
       c = d[:markercolor]
       if d[:zcolor] != nothing
         if !isa(c, ColorGradient)
-          c = colorscheme(:bluesreds)
+          c = default_gradient()
         end
         extra_kwargs[:c] = convert(Vector{Float64}, d[:zcolor])
         extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
@@ -777,7 +777,8 @@ function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::SubplotLayout, d::KW)
 
   for (i,plt) in enumerate(plts)
     for seriesargs in plt.seriesargs
-      _add_series_subplot(newplts[i]; seriesargs...)
+    #   _add_series_subplot(newplts[i]; seriesargs...)
+      _add_series_subplot(newplts[i], seriesargs)
     end
   end
 

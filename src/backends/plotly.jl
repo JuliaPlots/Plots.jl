@@ -256,7 +256,7 @@ end
 function plotly_colorscale(grad::ColorGradient, alpha = nothing)
   [[grad.values[i], webcolor(grad.colors[i], alpha)] for i in 1:length(grad.colors)]
 end
-plotly_colorscale(c, alpha = nothing) = plotly_colorscale(ColorGradient(:bluesreds), alpha)
+plotly_colorscale(c, alpha = nothing) = plotly_colorscale(default_gradient(), alpha)
 
 const _plotly_markers = KW(
     :rect       => "square",
