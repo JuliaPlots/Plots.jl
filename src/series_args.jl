@@ -210,6 +210,10 @@ end
 # 1 argument
 # --------------------------------------------------------------------
 
+function process_inputs(plt::AbstractPlot, d::KW, n::Integer)
+    d[:x], d[:y], d[:z] = zeros(0), zeros(0), zeros(0)
+end
+
 # no special handling... assume x and z are nothing
 function process_inputs(plt::AbstractPlot, d::KW, y)
     d[:y] = y

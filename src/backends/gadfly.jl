@@ -39,7 +39,9 @@ function getLineGeom(d::KW)
     elseif lt == :hist2d
         Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)
     elseif lt == :hist
-        Gadfly.Geom.histogram(bincount = xbins)
+        Gadfly.Geom.histogram(bincount = xbins,
+                              orientation = isvertical(d) ? :vertical : :horizontal,
+                              position = d[:bar_position] == :stack ? :stack : :dodge)
     elseif lt == :path
         Gadfly.Geom.path
     elseif lt in (:bar, :sticks)

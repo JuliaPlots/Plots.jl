@@ -147,6 +147,7 @@ _seriesDefaults[:zcolor]          = nothing           # value for color scale
 # _seriesDefaults[:nlevels]         = 15
 _seriesDefaults[:levels]          = 15
 _seriesDefaults[:orientation]     = :vertical
+_seriesDefaults[:bar_position]    = :overlay  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
 _seriesDefaults[:xerror]          = nothing
 _seriesDefaults[:yerror]          = nothing
 _seriesDefaults[:ribbon]          = nothing
