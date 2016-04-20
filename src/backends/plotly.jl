@@ -245,6 +245,10 @@ function plotly_layout(d::KW)
     d_out[:annotations] = [get_annotation_dict(ann...) for ann in anns]
   end
 
+  if get(d, :polar, false)
+      d_out[:direction] = "counterclockwise"
+  end
+
   d_out
 end
 
@@ -269,7 +273,7 @@ const _plotly_markers = KW(
   )
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
-function plotly_series(d::KW; plot_index = nothing)
+function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
     # dumpdict(d,"series",true)
   d_out = KW()
 
@@ -406,8 +410,8 @@ function plotly_series(d::KW; plot_index = nothing)
   end
 
   # convert polar plots x/y to theta/radius
-  if get(d, :polar, false)
-      d_out[:t] = pop!(d_out, :x)
+  if get(plotargs, :polar, false)
+      d_out[:t] = rad2deg(pop!(d_out, :x))
       d_out[:r] = pop!(d_out, :y)
   end
 
@@ -422,14 +426,14 @@ end
 
 # get a list of dictionaries, each representing the series params
 function get_series_json(plt::Plot{PlotlyBackend})
-  JSON.json(map(plotly_series, plt.seriesargs))
+  JSON.json(map(d -> plotly_series(d, plt.plotargs), plt.seriesargs))
 end
 
 function get_series_json(subplt::Subplot{PlotlyBackend})
   ds = KW[]
   for (i,plt) in enumerate(subplt.plts)
     for d in plt.seriesargs
-      push!(ds, plotly_series(d, plot_index = i))
+      push!(ds, plotly_series(d, plt.plotargs, plot_index = i))
     end
   end
   JSON.json(ds)
@@ -454,7 +458,7 @@ function html_body(plt::Plot{PlotlyBackend}, style = nothing)
       Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
     </script>
   """
-  # @show html
+  @show html
   html
 end
 

@@ -1,11 +1,22 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
-os:
-  - linux
-  - osx
-julia:
-  - 0.4
-  #- nightly
+# os:
+#   - linux
+#   - osx
+# julia:
+#   - 0.4
+#   #- nightly
+
+# borrowed from Blink.jl's travis file
+matrix:
+  include:
+    - os: linux
+      julia: 0.4
+      env: TESTCMD="xvfb-run julia"
+    - os: osx
+      julia: 0.4
+      env: TESTCMD="julia"
+      
 notifications:
   email: true
 # uncomment the following lines to override the default test script

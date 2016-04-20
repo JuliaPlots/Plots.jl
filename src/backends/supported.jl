@@ -508,6 +508,7 @@ supportedArgs(::PlotlyBackend) = [
     :ribbon,
     :quiver,
     :orientation,
+    :polar,
   ]
 supportedAxes(::PlotlyBackend) = [:auto, :left]
 supportedTypes(::PlotlyBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
@@ -583,6 +584,7 @@ supportedArgs(::PlotlyJSBackend) = [
     :ribbon,
     :quiver,
     :orientation,
+    :polar,
   ]
 supportedAxes(::PlotlyJSBackend) = [:auto, :left]
 supportedTypes(::PlotlyJSBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,

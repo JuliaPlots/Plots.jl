@@ -37,14 +37,11 @@ function _add_series(::PlotlyJSBackend, plt::Plot; kw...)
     d = KW(kw)
     syncplot = plt.o
 
-    # dumpdict(d, "addseries", true)
-
     # add to the data array
-    pdict = plotly_series(d)
+    pdict = plotly_series(d, plt.plotargs)
     typ = pop!(pdict, :type)
     gt = PlotlyJS.GenericTrace(typ; pdict...)
     PlotlyJS.addtraces!(syncplot, gt)
-    # PlotlyJS.addtraces!(syncplot.plot, gt)
 
     push!(plt.seriesargs, d)
     plt
@@ -70,11 +67,9 @@ end
 # TODO: override this to update plot items (title, xlabel, etc) after creation
 function _update_plot(plt::Plot{PlotlyJSBackend}, d::KW)
     pdict = plotly_layout(d)
-    # dumpdict(pdict, "pdict updateplot", true)
     syncplot = plt.o
     w,h = d[:size]
     PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)
-    # PlotlyJS.relayout!(syncplot.plot, pdict, width = w, height = h)
 end
 
 
@@ -92,10 +87,12 @@ end
 
 function setxy!{X,Y}(plt::Plot{PlotlyJSBackend}, xy::Tuple{X,Y}, i::Integer)
   d = plt.seriesargs[i]
-  d[:x], d[:y] = xy
+  ispolar = get(plt.plotargs, :polar, false)
+  xsym = ispolar ? :t : :x
+  ysym = ispolar ? :r : :y
+  d[xsym], d[ysym] = xy
   # TODO: this is likely ineffecient... we should make a call that ONLY changes the plot data
-  # PlotlyJS.restyle!(plt.o, i, plotly_series(d))
-  PlotlyJS.restyle!(plt.o, i, KW(:x=>(d[:x],), :y=>(d[:y],)))
+  PlotlyJS.restyle!(plt.o, i, KW(xsym=>(d[xsym],), ysym=>(d[ysym],)))
   plt
 end
 

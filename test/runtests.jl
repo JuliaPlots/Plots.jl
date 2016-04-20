@@ -16,14 +16,14 @@ facts("Gadfly") do
     @fact plot(sort(rand(10)), rand(Int, 10, 3)) --> not(nothing)
     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
 
-    image_comparison_facts(:gadfly, skip=[4,6,19,23,24], eps=img_eps)
+    image_comparison_facts(:gadfly, skip=[4,6,19,23,24,27], eps=img_eps)
 end
 
 facts("PyPlot") do
     @fact pyplot() --> Plots.PyPlotBackend()
     @fact backend() --> Plots.PyPlotBackend()
 
-    image_comparison_facts(:pyplot, skip=[4,10,13,19,21,23], eps=img_eps)
+    image_comparison_facts(:pyplot, skip=[4,10,13,19,21,23,27], eps=img_eps)
 end
 
 facts("GR") do
@@ -37,7 +37,7 @@ facts("PlotlyJS") do
     @fact plotlyjs() --> Plots.PlotlyJSBackend()
     @fact backend() --> Plots.PlotlyJSBackend()
 
-    image_comparison_facts(:plotlyjs, only=[1,2,3,4,7,8,9,10,11,12,14,15,20,22,23,24], eps=img_eps)
+    image_comparison_facts(:plotlyjs, only=[1,2,3,4,7,8,9,10,11,12,14,15,20,22,23,24,27], eps=img_eps)
 end
 
 FactCheck.exitstatus()
