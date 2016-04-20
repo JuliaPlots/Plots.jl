@@ -270,6 +270,7 @@ const _plotly_markers = KW(
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(d::KW; plot_index = nothing)
+    # dumpdict(d,"series",true)
   d_out = KW()
 
   x, y = collect(d[:x]), collect(d[:y])
@@ -404,10 +405,10 @@ function plotly_series(d::KW; plot_index = nothing)
       )
   end
 
-  # convert polar plots x/y to r/t
+  # convert polar plots x/y to theta/radius
   if get(d, :polar, false)
-      d_out[:r] = pop!(d_out, :x)
-      d_out[:t] = pop!(d_out, :y)
+      d_out[:t] = pop!(d_out, :x)
+      d_out[:r] = pop!(d_out, :y)
   end
 
   # # for subplots, we need to add the xaxis/yaxis fields
