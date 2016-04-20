@@ -404,6 +404,12 @@ function plotly_series(d::KW; plot_index = nothing)
       )
   end
 
+  # convert polar plots x/y to r/t
+  if get(d, :polar, false)
+      d_out[:r] = pop!(d_out, :x)
+      d_out[:t] = pop!(d_out, :y)
+  end
+
   # # for subplots, we need to add the xaxis/yaxis fields
   # if plot_index != nothing
   #   d_out[:xaxis] = "x$(plot_index)"
