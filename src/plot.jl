@@ -202,7 +202,7 @@ function setTicksFromStringVector(d::KW, di::KW, sym::Symbol, ticksym::Symbol)
 
     T = eltype(v)
     if T <: @compat(AbstractString) || (!isempty(T.types) && all(x -> x <: @compat(AbstractString), T.types))
-        ticks = sort(unique(di[sym]))
+        ticks = unique(di[sym])
         di[sym] = Int[findnext(ticks, v, 1) for v in di[sym]]
 
         if !haskey(d, ticksym) || d[ticksym] == :auto
