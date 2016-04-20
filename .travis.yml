@@ -1,21 +1,37 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
-# os:
-#   - linux
-#   - osx
-# julia:
-#   - 0.4
-#   #- nightly
+os:
+  - linux
+  - osx
+julia:
+  - 0.4
+  #- nightly
 
-# borrowed from Blink.jl's travis file
-matrix:
-  include:
-    - os: linux
-      julia: 0.4
-      env: TESTCMD="xvfb-run julia"
-    - os: osx
-      julia: 0.4
-      env: TESTCMD="julia"
+
+addons:
+  apt:
+    packages:
+      - wkhtmltopdf
+
+before install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install wkhtmltopdf; fi
+
+
+# sudo: required
+# before_install:
+#   - sudo apt-get -qq update
+#   - sudo apt-get install wkhtmltopdf-dbg -y
+
+# # borrowed from Blink.jl's travis file
+# matrix:
+#   include:
+#     - os: linux
+#       julia: 0.4
+#       env: TESTCMD="xvfb-run julia"
+#     - os: osx
+#       julia: 0.4
+#       env: TESTCMD="julia"
 
 notifications:
   email: true
@@ -33,5 +49,7 @@ script:
  - julia -e 'Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")'
  # - julia -e 'Pkg.add("Cairo"); Pkg.build("Cairo")'
  - julia -e 'ENV["PYTHON"] = ""; Pkg.add("PyPlot"); Pkg.build("PyPlot")'
- - $TESTCMD -e 'Pkg.test("Plots"; coverage=false)'
+
+ # - $TESTCMD -e 'Pkg.test("Plots"; coverage=false)'
+ - julia -e 'Pkg.test("Plots"; coverage=false)'
  # - julia -e 'cd(Pkg.dir("Plots")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'

@@ -8,6 +8,7 @@ function _initialize_backend(::PlotlyJSBackend; kw...)
     end
 
     for (mime, fmt) in PlotlyJS._mimeformats
+        # mime == "image/png" && continue  # don't use plotlyjs's writemime for png
         @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyJSBackend}) = writemime(io, m, p.o)
     end
 
@@ -113,9 +114,14 @@ end
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, m::MIME"text/html", plt::AbstractPlot{PlotlyJSBackend})
-    Base.writemime(io, m, plt.o)
-end
+# function Base.writemime(io::IO, m::MIME"text/html", plt::AbstractPlot{PlotlyJSBackend})
+#     Base.writemime(io, m, plt.o)
+# end
+
+# function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{PlotlyJSBackend})
+#     println("here!")
+#     writemime_png_from_html(io, plt)
+# end
 
 function Base.display(::PlotsDisplay, plt::Plot{PlotlyJSBackend})
     display(plt.o)

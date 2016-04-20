@@ -215,6 +215,8 @@ end
 function plotly_layout(d::KW)
   d_out = KW()
 
+  d_out[:width], d_out[:height] = d[:size]
+
   bgcolor = webcolor(d[:background_color])
   fgcolor = webcolor(d[:foreground_color])
 
@@ -458,7 +460,7 @@ function html_body(plt::Plot{PlotlyBackend}, style = nothing)
       Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
     </script>
   """
-  @show html
+  # @show html
   html
 end
 
@@ -498,7 +500,7 @@ end
 # ----------------------------------------------------------------
 
 function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{PlotlyBackend})
-  warn("todo: png")
+    writemime_png_from_html(io, plt)
 end
 
 function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot{PlotlyBackend})

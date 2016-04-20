@@ -33,11 +33,11 @@ facts("GR") do
     # image_comparison_facts(:gr, only=[1], eps=img_eps)
 end
 
-facts("PlotlyJS") do
-    @fact plotlyjs() --> Plots.PlotlyJSBackend()
-    @fact backend() --> Plots.PlotlyJSBackend()
+facts("Plotly") do
+    @fact plotly() --> Plots.PlotlyBackend()
+    @fact backend() --> Plots.PlotlyBackend()
 
-    image_comparison_facts(:plotlyjs, only=[1,2,3,4,7,8,9,10,11,12,14,15,20,22,23,24,27], eps=img_eps)
+    image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
 end
 
 FactCheck.exitstatus()
