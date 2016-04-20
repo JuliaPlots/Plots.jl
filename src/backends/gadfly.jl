@@ -432,8 +432,8 @@ function updateGadflyGuides(plt::Plot, d::KW)
     haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, string(d[:xlabel]))
     haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, string(d[:ylabel]))
 
-    xlims = addGadflyLimitsScale(gplt, d, true)
-    ylims = addGadflyLimitsScale(gplt, d, false)
+    xlims, xfunc = addGadflyLimitsScale(gplt, d, true)
+    ylims, yfunc = addGadflyLimitsScale(gplt, d, false)
 
     ticks = get(d, :xticks, :auto)
     if ticks == :none
@@ -448,7 +448,7 @@ function updateGadflyGuides(plt::Plot, d::KW)
         addGadflyTicksGuide(gplt, ticks, false)
     end
 
-    updateGadflyAxisFlips(gplt, d, xlims, ylims)
+    updateGadflyAxisFlips(gplt, d, xlims, ylims, xfunc, yfunc)
 end
 
 function updateGadflyPlotTheme(plt::Plot, d::KW)
