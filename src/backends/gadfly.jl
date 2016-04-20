@@ -355,18 +355,18 @@ function getGadflyScaleFunction(d::KW, isx::Bool)
     hasScaleKey = haskey(d, scalekey)
     if hasScaleKey
         scale = d[scalekey]
-        scale == :ln && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey, exp
-        scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey, exp2
-        scale == :log10 && return isx ? Gadfly.Scale.x_log10 : Gadfly.Scale.y_log10, hasScaleKey, exp10
-        scale == :asinh && return isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh, hasScaleKey, sinh
-        scale == :sqrt && return isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt, hasScaleKey, x -> x*x
+        scale == :ln && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey, log
+        scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey, log2
+        scale == :log10 && return isx ? Gadfly.Scale.x_log10 : Gadfly.Scale.y_log10, hasScaleKey, log10
+        scale == :asinh && return isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh, hasScaleKey, asinh
+        scale == :sqrt && return isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt, hasScaleKey, sqrt
     end
     isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous, hasScaleKey, identity
 end
 
 
 function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
-    gfunc, hasScaleKey, inverse = getGadflyScaleFunction(d, isx)
+    gfunc, hasScaleKey, func = getGadflyScaleFunction(d, isx)
 
     # do we want to add min/max limits for the axis?
     limsym = isx ? :xlims : :ylims
@@ -378,8 +378,8 @@ function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
         lims = nothing
     else
         if limsType(lims) == :limits
-            push!(limargs, (:minvalue, inverse(min(lims...))))
-            push!(limargs, (:maxvalue, inverse(max(lims...))))
+            push!(limargs, (:minvalue, min(lims...)))
+            push!(limargs, (:maxvalue, max(lims...)))
         else
             error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
         end
@@ -391,18 +391,18 @@ function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
         push!(gplt.scales, gfunc(; limargs...))
     end
 
-    lims
+    lims, func
 end
 
-function updateGadflyAxisFlips(gplt, d::KW, xlims, ylims)
+function updateGadflyAxisFlips(gplt, d::KW, xlims, ylims, xfunc, yfunc)
     if isa(gplt.coord, Gadfly.Coord.Cartesian)
         gplt.coord = Gadfly.Coord.cartesian(
             gplt.coord.xvars,
             gplt.coord.yvars;
-            xmin = xlims == nothing ? gplt.coord.xmin : minimum(xlims),
-            xmax = xlims == nothing ? gplt.coord.xmax : maximum(xlims),
-            ymin = ylims == nothing ? gplt.coord.ymin : minimum(ylims),
-            ymax = ylims == nothing ? gplt.coord.ymax : maximum(ylims),
+            xmin = xlims == nothing ? gplt.coord.xmin : xfunc(minimum(xlims)),
+            xmax = xlims == nothing ? gplt.coord.xmax : xfunc(maximum(xlims)),
+            ymin = ylims == nothing ? gplt.coord.ymin : yfunc(minimum(ylims)),
+            ymax = ylims == nothing ? gplt.coord.ymax : yfunc(maximum(ylims)),
             xflip = get(d, :xflip, gplt.coord.xflip),
             yflip = get(d, :yflip, gplt.coord.yflip),
             fixed = gplt.coord.fixed,
