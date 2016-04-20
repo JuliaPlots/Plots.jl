@@ -357,18 +357,18 @@ function getGadflyScaleFunction(d::KW, isx::Bool)
     hasScaleKey = haskey(d, scalekey)
     if hasScaleKey
         scale = d[scalekey]
-        scale == :ln && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey
-        scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey
-        scale == :log10 && return isx ? Gadfly.Scale.x_log10 : Gadfly.Scale.y_log10, hasScaleKey
-        scale == :asinh && return isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh, hasScaleKey
-        scale == :sqrt && return isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt, hasScaleKey
+        scale == :ln && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey, log
+        scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey, log2
+        scale == :log10 && return isx ? Gadfly.Scale.x_log10 : Gadfly.Scale.y_log10, hasScaleKey, log10
+        scale == :asinh && return isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh, hasScaleKey, asinh
+        scale == :sqrt && return isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt, hasScaleKey, sqrt
     end
-    isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous, hasScaleKey
+    isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous, hasScaleKey, identity
 end
 
 
 function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
-    gfunc, hasScaleKey = getGadflyScaleFunction(d, isx)
+    gfunc, hasScaleKey, func = getGadflyScaleFunction(d, isx)
 
     # do we want to add min/max limits for the axis?
     limsym = isx ? :xlims : :ylims
@@ -393,18 +393,18 @@ function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
         push!(gplt.scales, gfunc(; limargs...))
     end
 
-    lims
+    lims, func
 end
 
-function updateGadflyAxisFlips(gplt, d::KW, xlims, ylims)
+function updateGadflyAxisFlips(gplt, d::KW, xlims, ylims, xfunc, yfunc)
     if isa(gplt.coord, Gadfly.Coord.Cartesian)
         gplt.coord = Gadfly.Coord.cartesian(
             gplt.coord.xvars,
             gplt.coord.yvars;
-            xmin = xlims == nothing ? gplt.coord.xmin : minimum(xlims),
-            xmax = xlims == nothing ? gplt.coord.xmax : maximum(xlims),
-            ymin = ylims == nothing ? gplt.coord.ymin : minimum(ylims),
-            ymax = ylims == nothing ? gplt.coord.ymax : maximum(ylims),
+            xmin = xlims == nothing ? gplt.coord.xmin : xfunc(minimum(xlims)),
+            xmax = xlims == nothing ? gplt.coord.xmax : xfunc(maximum(xlims)),
+            ymin = ylims == nothing ? gplt.coord.ymin : yfunc(minimum(ylims)),
+            ymax = ylims == nothing ? gplt.coord.ymax : yfunc(maximum(ylims)),
             xflip = get(d, :xflip, gplt.coord.xflip),
             yflip = get(d, :yflip, gplt.coord.yflip),
             fixed = gplt.coord.fixed,
@@ -434,8 +434,8 @@ function updateGadflyGuides(plt::Plot, d::KW)
     haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, string(d[:xlabel]))
     haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, string(d[:ylabel]))
 
-    xlims = addGadflyLimitsScale(gplt, d, true)
-    ylims = addGadflyLimitsScale(gplt, d, false)
+    xlims, xfunc = addGadflyLimitsScale(gplt, d, true)
+    ylims, yfunc = addGadflyLimitsScale(gplt, d, false)
 
     ticks = get(d, :xticks, :auto)
     if ticks == :none
@@ -450,7 +450,7 @@ function updateGadflyGuides(plt::Plot, d::KW)
         addGadflyTicksGuide(gplt, ticks, false)
     end
 
-    updateGadflyAxisFlips(gplt, d, xlims, ylims)
+    updateGadflyAxisFlips(gplt, d, xlims, ylims, xfunc, yfunc)
 end
 
 function updateGadflyPlotTheme(plt::Plot, d::KW)
