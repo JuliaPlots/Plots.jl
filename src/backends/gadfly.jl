@@ -355,18 +355,18 @@ function getGadflyScaleFunction(d::KW, isx::Bool)
     hasScaleKey = haskey(d, scalekey)
     if hasScaleKey
         scale = d[scalekey]
-        scale == :ln && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey
-        scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey
-        scale == :log10 && return isx ? Gadfly.Scale.x_log10 : Gadfly.Scale.y_log10, hasScaleKey
-        scale == :asinh && return isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh, hasScaleKey
-        scale == :sqrt && return isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt, hasScaleKey
+        scale == :ln && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey, exp
+        scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey, exp2
+        scale == :log10 && return isx ? Gadfly.Scale.x_log10 : Gadfly.Scale.y_log10, hasScaleKey, exp10
+        scale == :asinh && return isx ? Gadfly.Scale.x_asinh : Gadfly.Scale.y_asinh, hasScaleKey, sinh
+        scale == :sqrt && return isx ? Gadfly.Scale.x_sqrt : Gadfly.Scale.y_sqrt, hasScaleKey, x -> x*x
     end
-    isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous, hasScaleKey
+    isx ? Gadfly.Scale.x_continuous : Gadfly.Scale.y_continuous, hasScaleKey, identity
 end
 
 
 function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
-    gfunc, hasScaleKey = getGadflyScaleFunction(d, isx)
+    gfunc, hasScaleKey, inverse = getGadflyScaleFunction(d, isx)
 
     # do we want to add min/max limits for the axis?
     limsym = isx ? :xlims : :ylims
@@ -378,8 +378,8 @@ function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
         lims = nothing
     else
         if limsType(lims) == :limits
-            push!(limargs, (:minvalue, min(lims...)))
-            push!(limargs, (:maxvalue, max(lims...)))
+            push!(limargs, (:minvalue, inverse(min(lims...))))
+            push!(limargs, (:maxvalue, inverse(max(lims...))))
         else
             error("Invalid input for $(isx ? "xlims" : "ylims"): ", lims)
         end
