@@ -18,6 +18,8 @@ script:
  - julia -e 'Pkg.clone("https://github.com/tbreloff/ImageMagick.jl.git"); Pkg.checkout("ImageMagick","tb_write"); Pkg.build("ImageMagick")'
  - julia -e 'Pkg.clone("https://github.com/tbreloff/VisualRegressionTests.jl.git");'
  - julia -e 'Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");'
+ - julia -e 'Pkg.checkout("Blink"); Pkg.build("Blink")'
+ - julia -e 'Pkg.checkout("PlotlyJS")'
  # - julia -e 'Pkg.add("Cairo"); Pkg.build("Cairo")'
  - julia -e 'ENV["PYTHON"] = ""; Pkg.add("PyPlot"); Pkg.build("PyPlot")'
  - julia -e 'Pkg.test("Plots"; coverage=false)'

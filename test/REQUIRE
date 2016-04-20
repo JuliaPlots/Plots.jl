@@ -7,6 +7,7 @@ FactCheck
 Cairo
 Gadfly
 Images
+PlotlyJS
 PyPlot
 @osx QuartzImageIO
 GR
