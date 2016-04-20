@@ -16,7 +16,7 @@ matrix:
     - os: osx
       julia: 0.4
       env: TESTCMD="julia"
-      
+
 notifications:
   email: true
 # uncomment the following lines to override the default test script
@@ -33,5 +33,5 @@ script:
  - julia -e 'Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")'
  # - julia -e 'Pkg.add("Cairo"); Pkg.build("Cairo")'
  - julia -e 'ENV["PYTHON"] = ""; Pkg.add("PyPlot"); Pkg.build("PyPlot")'
- - julia -e 'Pkg.test("Plots"; coverage=false)'
+ - $TESTCMD -e 'Pkg.test("Plots"; coverage=false)'
  # - julia -e 'cd(Pkg.dir("Plots")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
