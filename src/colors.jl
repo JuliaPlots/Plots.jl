@@ -114,9 +114,9 @@ end
 #   ColorGradient(map(convertColor, cs), vals; kw...)
 # end
 
-# function ColorGradient(grad::ColorGradient; alpha = nothing)
-#   ColorGradient(convertColor(grad.colors, alpha), grad.values)
-# end
+function ColorGradient(grad::ColorGradient; alpha = nothing)
+  ColorGradient(convertColor(grad.colors, alpha), grad.values)
+end
 
 getColor(gradient::ColorGradient, idx::Int) = gradient.colors[mod1(idx, length(gradient.colors))]
 

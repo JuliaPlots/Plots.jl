@@ -7,7 +7,6 @@ FactCheck
 Cairo
 Gadfly
 Images
-ImageMagick
 PyPlot
 @osx QuartzImageIO
 GR
