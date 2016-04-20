@@ -19,6 +19,7 @@ export
     FlexLayout,
     AVec,
     AMat,
+    KW,
 
     plot,
     plot!,
