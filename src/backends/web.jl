@@ -42,7 +42,7 @@ end
 
 # uses wkhtmltopdf/wkhtmltoimage: http://wkhtmltopdf.org/downloads.html
 function html_to_png(html_fn, png_fn, w, h)
-    run(`wkhtmltoimage --width $w --height $h --disable-smart-width $html_fn $png_fn`)
+    run(`wkhtmltoimage -q --width $w --height $h --disable-smart-width $html_fn $png_fn`)
 end
 
 function writemime_png_from_html(io::IO, plt::AbstractPlot)
