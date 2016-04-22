@@ -814,7 +814,11 @@ function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int
     # update colors
     for csym in (:linecolor, :markercolor, :fillcolor)
         d[csym] = if d[csym] == :match
-            d[:seriescolor]
+            if like_histogram(d[:linetype]) && csym == :linecolor
+                :black
+            else
+                d[:seriescolor]
+            end
         else
             getSeriesRGBColor(d[csym], plotargs, plotIndex)
         end

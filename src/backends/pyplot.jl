@@ -377,6 +377,12 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     # extra_kw = get_extra_kw(plt, d)
     extrakw = KW()
 
+            # :shape,
+            # :hist2d, :hexbin,
+            # :bar,
+            # :hline, :vline, :heatmap,
+            # :contour, :surface, :wireframe
+
     # :hist       => :hist,
     # :density    => :hist,
     # :sticks     => :bar,
@@ -393,21 +399,27 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     #
     # do the plotting
 
+    # holds references to any python object representing the matplotlib series
+    handles = []
+
     # path/line/scatter should all do UP TO 2 series... a line, and a scatter
-    if lt in (:path, :line, :scatter, :path3d, :scatter3d)
+    if lt in (:path, :line, :scatter, :path3d, :scatter3d, :steppre, :steppost)
         xyargs = (lt in _3dTypes ? (x,y,z) : (x,y))
 
+        # line plot (path, line, steppre, steppost, path3d)
         if d[:linewidth] > 0
-            d[:serieshandle] = ax[:plot](xyargs...;
+            handle = ax[:plot](xyargs...;
+                label = d[:label],
+                zorder = plt.n,
                 color = pylinecolor(d),
                 linewidth = d[:linewidth],
                 linestyle = getPyPlotLineStyle(lt, d[:linestyle]),
-                drawstyle = getPyPlotStepStyle(lt),
-                label = d[:label],
-                zorder = plt.n
-            )
+                drawstyle = getPyPlotStepStyle(lt)
+            )[1]
+            push!(handles, handle)
         end
 
+        # scatter plot (scatter, scatter3d, and line plots that have markers)
         if d[:markershape] != :none
             if d[:marker_z] == nothing
                 extrakw[:c] = color_fix(pymarkercolor(d), x)
@@ -415,24 +427,63 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
                 extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
                 extrakw[:cmap] = pymarkercolormap(d)
             end
-            d[:serieshandle] = ax[:scatter](xyargs...;
+            handle = ax[:scatter](xyargs...;
+                label = d[:label],
+                zorder = plt.n + 0.5,
                 marker = getPyPlotMarker(d[:markershape]),
                 s = d[:markersize] .^ 2,
                 edgecolors = pymarkerstrokecolor(d),
                 linewidths = d[:markerstrokewidth],
-                label = d[:label],
-                zorder = plt.n + 0.5,
                 extrakw...
             )
+            push!(handles, handle)
         end
     end
+
+    # histograms
+    if lt in (:hist, :density)
+        handle = ax[:hist](y;
+            label = d[:label],
+            zorder = plt.n + 0.5,
+            color = pyfillcolor(d),
+            edgecolor = pylinecolor(d),
+            linewidth = d[:linewidth],
+            bins = d[:nbins],
+            normed = (lt == :density),
+            orientation = (isvertical(d) ? "vertical" : "horizontal"),
+            histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
+        )[1]
+        push!(handles, handle)
+    end
+
+    # bars
+    if lt in (:bar, :sticks)
+        barx, bary = if isvertical(d)
+            x, y
+        else
+            y, x
+        end
+        handle = ax[:bar](barx, bary;
+            label = d[:label],
+            zorder = plt.n + 0.5,
+            width = (lt == :sticks ? 0.1 : 0.9),
+            color = pyfillcolor(d),
+            edgecolor = pylinecolor(d),
+            linewidth = d[:linewidth],
+            align = "center",
+            orientation = (isvertical(d) ? "vertical" : "horizontal")
+        )[1]
+        push!(handles, handle)
+    end
+
+    d[:serieshandle] = handles
 
     # smoothing
     handleSmooth(plt, ax, d, d[:smooth])
 
     # add the colorbar legend
     if plt.plotargs[:colorbar] != :none && haskey(extrakw, :cmap)
-        PyPlot.colorbar(d[:serieshandle], ax=ax)
+        PyPlot.colorbar(handles[1], ax=ax)
     end
 
     # this sets the bg color inside the grid
@@ -716,12 +767,19 @@ end
 function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
     d = plt.seriesargs[i]
     d[:x], d[:y] = xy
-    series = d[:serieshandle]
-    try
-        series[:set_data](d[:x], d[:y])
-    catch
-        series[:set_offsets](hcat(d[:x], d[:y]))
+    for handle in d[:serieshandle]
+        try
+            handle[:set_data](xy...)
+        catch
+            handle[:set_offsets](hcat(xy...))
+        end
     end
+    # series = d[:serieshandle]
+    # try
+    #     series[:set_data](d[:x], d[:y])
+    # catch
+    #     series[:set_offsets](hcat(d[:x], d[:y]))
+    # end
     set_lims!(plt, d[:axis])
     plt
 end
@@ -730,9 +788,13 @@ end
 function setxyz!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
     d = plt.seriesargs[i]
     d[:x], d[:y], d[:z] = xyz
-    series = d[:serieshandle]
-    series[:set_data](d[:x], d[:y])
-    series[:set_3d_properties](d[:z])
+    for handle in d[:serieshandle]
+        handle[:set_data](d[:x], d[:y])
+        handle[:set_3d_properties](d[:z])
+    end
+    # series = d[:serieshandle]
+    # series[:set_data](d[:x], d[:y])
+    # series[:set_3d_properties](d[:z])
     set_lims!(plt, d[:axis])
     plt
 end
@@ -962,7 +1024,7 @@ function addPyPlotLegend(plt::Plot, ax)
         args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:hist2d,:hline,:vline,:contour,:surface,:wireframe,:heatmap,:path3d,:scatter3d)), plt.seriesargs)
         args = filter(x -> x[:label] != "", args)
         if length(args) > 0
-            leg = ax[:legend]([d[:serieshandle] for d in args],
+            leg = ax[:legend]([d[:serieshandle][1] for d in args],
                 [d[:label] for d in args],
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 fontsize = plt.plotargs[:legendfont].pointsize
