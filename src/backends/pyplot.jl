@@ -294,37 +294,53 @@ function fix_xy_lengths!(plt::Plot{PyPlotBackend}, d::KW)
     end
 end
 
-# figure out the extra kw from zcolor in scatter and scatter3d
-function get_extra_kw(plt::Plot{PyPlotBackend}, d::KW)
-    extra_kw = KW()
-    if d[:linetype] in (:scatter, :scatter3d)
-        c = getPyPlotColor(d[:markercolor])
-        if d[:marker_z] == nothing
-            c = getPyPlotColor(c, d[:markeralpha])
+# # figure out the extra kw from zcolor in scatter and scatter3d
+# function get_extra_kw(plt::Plot{PyPlotBackend}, d::KW)
+#     extra_kw = KW()
+#     if d[:linetype] in (:scatter, :scatter3d)
+#         c = getPyPlotColor(d[:markercolor])
+#         if d[:marker_z] == nothing
+#             c = getPyPlotColor(c, d[:markeralpha])
+#
+#             # total hack due to PyPlot bug (see issue #145).
+#             # hack: duplicate the color vector when the total rgba fields is the same as the series length
+#             if (typeof(c) <: AbstractArray && length(c)*4 == length(x)) || (typeof(c) <: Tuple && length(x) == 4)
+#                 c = vcat(c, c)
+#             end
+#             extra_kw[:c] = c
+#         else
+#             if !isa(c, ColorGradient)
+#                 c = default_gradient()
+#             end
+#             extra_kw[:c] = convert(Vector{Float64}, d[:marker_z])
+#             extra_kw[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
+#         end
+#     end
+#     extra_kw
+# end
+#
+# function get_cmap(plt::Plot{PyPlotBackend}, d::KW)
+#
+# end
 
-            # total hack due to PyPlot bug (see issue #145).
-            # hack: duplicate the color vector when the total rgba fields is the same as the series length
-            if (typeof(c) <: AbstractArray && length(c)*4 == length(x)) || (typeof(c) <: Tuple && length(x) == 4)
-                c = vcat(c, c)
-            end
-            extra_kw[:c] = c
-        else
-            if !isa(c, ColorGradient)
-                c = default_gradient()
-            end
-            extra_kw[:c] = convert(Vector{Float64}, d[:marker_z])
-            extra_kw[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
-        end
+# total hack due to PyPlot bug (see issue #145).
+# hack: duplicate the color vector when the total rgba fields is the same as the series length
+function color_fix(c)
+    if (typeof(c) <: AbstractArray && length(c)*4 == length(x)) ||
+                    (typeof(c) <: Tuple && length(x) == 4)
+        vcat(c, c)
+    else
+        c
     end
-    extra_kw
 end
 
-function get_cmap(plt::Plot{PyPlotBackend}, d::KW)
+pylinecolor(d::KW) = getPyPlotColor(d[:linecolor], d[:linealpha])
+pymarkercolor(d::KW) = getPyPlotColor(d[:markercolor], d[:markeralpha])
+pymarkercolormap(d::KW) = getPyPlotColorMap(d[:markercolor], d[:markeralpha])
+pymarkerstrokecolor(d::KW) = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
+pyfillcolor(d::KW) = getPyPlotColor(d[:fillcolor], d[:fillalpha])
 
-end
-
-
-function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
+function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     lt = d[:linetype]
     if !(lt in supportedTypes(pkg))
         error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
@@ -339,24 +355,27 @@ function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
     fix_xy_lengths!(plt, d)
 
     ax = getAxis(plt, d[:axis])
-    linecolor = getPyPlotColor(d[:linecolor], d[:linealpha])
-    markercolor = if d[:marker_z] == nothing
-        getPyPlotColor(d[:markercolor], d[:markeralpha])
-    else
-        getPyPlotColorMap(d[:markercolor], d[:markeralpha])
-    end
-    fillcolor = getPyPlotColor(d[:fillcolor], d[:fillalpha])
-    strokecolor = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
+    # linecolor = getPyPlotColor(d[:linecolor], d[:linealpha])
+    # markercolor = if d[:marker_z] == nothing
+    #     getPyPlotColor(d[:markercolor], d[:markeralpha])
+    # else
+    #     getPyPlotColorMap(d[:markercolor], d[:markeralpha])
+    # end
+    # fillcolor = getPyPlotColor(d[:fillcolor], d[:fillalpha])
+    # strokecolor = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
     # linecmap = getPyPlotColorMap(d[:linecolor], d[:linealpha])
     # fillcmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
-    linestyle = getPyPlotLineStyle(lt, d[:linestyle])
-    markershape = getPyPlotMarker(d[:markershape])
+    # linestyle = getPyPlotLineStyle(lt, d[:linestyle])
+    # markershape = getPyPlotMarker(d[:markershape])
     x, y, z = d[:x], d[:y], d[:z]
 
-    cmap = get_cmap(plt, d)
+    # cmap = get_cmap(plt, d)
+
+    dumpdict(d, "",true)
 
     # handle zcolor and get c/cmap
-    extra_kw = get_extra_kw(plt, d)
+    # extra_kw = get_extra_kw(plt, d)
+    extrakw = KW()
 
     # :hist       => :hist,
     # :density    => :hist,
@@ -373,39 +392,48 @@ function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
     # :shape      => :add_patch,
     #
     # do the plotting
-    if lt in (:path, :line)
-        ax[:plot](x, y;
-            color = linecolor,
-            linewidth = linewidth,
-            linestyle = linestyle,
-            drawstyle = getPyPlotStepStyle(lt),
-            marker = markershape,
-            markersize = d[:markersize],
-            markerfacecolor = markercolor,
-            markeredgecolor = strokecolor,
-            markeredgewidth = d[:markerstrokewidth],
-            label = d[:label],
-            zorder = plt.n
-        )
-    elseif lt == :scatter
-        ax[:plot](x, y;
-            linewidth = 0,
-            marker = markershape,
-            markersize = d[:markersize],
-            markerfacecolor = markercolor,
-            markeredgecolor = strokecolor,
-            markeredgewidth = d[:markerstrokewidth],
-            label = d[:label],
-            zorder = plt.n,
-            extra_kw...
-        )
+    if lt in (:path, :line, :scatter)
+        if d[:linewidth] > 0
+            d[:serieshandle] = ax[:plot](x, y;
+                color = pylinecolor(d),
+                linewidth = d[:linewidth],
+                linestyle = getPyPlotLineStyle(lt, d[:linestyle]),
+                drawstyle = getPyPlotStepStyle(lt),
+                # marker = markershape,
+                # markersize = d[:markersize],
+                # markerfacecolor = markercolor,
+                # markeredgecolor = strokecolor,
+                # markeredgewidth = d[:markerstrokewidth],
+                label = d[:label],
+                zorder = plt.n
+            )
+        end
+
+        if d[:markershape] != :none
+            if d[:marker_z] == nothing
+                extrakw[:c] = color_fix(pymarkercolor(d))
+            else
+                extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
+                extrakw[:cmap] = pymarkercolormap(d)
+            end
+            d[:serieshandle] = ax[:scatter](x, y;
+                marker = getPyPlotMarker(d[:markershape]),
+                s = d[:markersize] .^ 2,
+                edgecolors = pymarkerstrokecolor(d),
+                linewidths = d[:markerstrokewidth],
+                label = d[:label],
+                zorder = plt.n + 0.5,
+                extrakw...
+            )
+        end
+
     end
 
     # smoothing
     handleSmooth(plt, ax, d, d[:smooth])
 
     # add the colorbar legend
-    if plt.plotargs[:colorbar] != :none && haskey(extra_kw, :cmap)
+    if plt.plotargs[:colorbar] != :none && haskey(extrakw, :cmap)
         PyPlot.colorbar(d[:serieshandle], ax=ax)
     end
 
@@ -426,7 +454,7 @@ function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
     plt
 end
 
-function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
+function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
     # 3D plots have a different underlying Axes object in PyPlot
     lt = d[:linetype]
     if lt in _3dTypes && isempty(plt.o.kwargs)

@@ -252,6 +252,7 @@ end
     :width              => :linewidth,
     :lw                 => :linewidth,
     :la                 => :linealpha,
+    :lalpha             => :linealpha,
     :lineopacity        => :linealpha,
     :type               => :linetype,
     :lt                 => :linetype,
@@ -280,6 +281,7 @@ end
     :fcolor             => :fillcolor,
     :fillcolour         => :fillcolor,
     :fa                 => :fillalpha,
+    :falpha             => :fillalpha,
     :fillopacity        => :fillalpha,
     :g                  => :group,
     :nb                 => :nbins,
@@ -794,25 +796,49 @@ function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int
     # update color
     d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], plotargs, plotIndex)
 
-    # update linecolor
-    c = d[:linecolor]
-    c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
-    d[:linecolor] = c
+    # # update linecolor
+    # c = d[:linecolor]
+    # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+    # d[:linecolor] = c
 
-    # update markercolor
-    c = d[:markercolor]
-    c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
-    d[:markercolor] = c
+    # # update markercolor
+    # c = d[:markercolor]
+    # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+    # d[:markercolor] = c
+
+    # # update fillcolor
+    # c = d[:fillcolor]
+    # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+    # d[:fillcolor] = c
+
+    # update colors
+    for csym in (:linecolor, :markercolor, :fillcolor)
+        d[csym] = if d[csym] == :match
+            d[:seriescolor]
+        else
+            getSeriesRGBColor(d[csym], plotargs, plotIndex)
+        end
+    end
 
     # update markerstrokecolor
     c = d[:markerstrokecolor]
     c = (c == :match ? plotargs[:foreground_color] : getSeriesRGBColor(c, plotargs, plotIndex))
     d[:markerstrokecolor] = c
 
-    # update fillcolor
-    c = d[:fillcolor]
-    c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
-    d[:fillcolor] = c
+    # update alphas
+    for asym in (:linealpha, :markeralpha, :fillalpha)
+        if d[asym] == nothing
+            d[asym] = d[:seriesalpha]
+        end
+    end
+
+    # scatter plots don't have a line, but must have a shape
+    if d[:linetype] in (:scatter, :scatter3d)
+        d[:linewidth] = 0
+        if d[:markershape] == :none
+            d[:markershape] = :ellipse
+        end
+    end
 
     # set label
     label = d[:label]
