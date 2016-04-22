@@ -64,7 +64,7 @@ function subplot(args...; kw...)
     di = getPlotArgs(pkg, d, i)
     di[:subplot] = true
     dumpdict(di, "Plot args (subplot $i)")
-    push!(plts, _create_plot(pkg; di...))
+    push!(plts, _create_plot(pkg, di))
   end
 
   # create the object and do the plotting
@@ -200,53 +200,13 @@ function subplot!(subplt::Subplot, args...; kw...)
     subplt.initialized = _create_subplot(subplt, true)
   end
 
-  # # handle grouping
-  # group = get(d, :group, nothing)
-  # if group == nothing
-  #   groupargs = []
-  # else
-  #   groupargs = [extractGroupArgs(d[:group], args...)]
-  #   delete!(d, :group)
-  # end
-
   groupby = if haskey(d, :group)
       extractGroupArgs(d[:group], args...)
   else
       nothing
   end
-  # dumpdict(d, "after", true)
-  # @show groupby map(typeof, args)
 
   _add_series_subplot(subplt, d, groupby, args...)
-
-  # process_inputs(subplt, d, groupargs..., args...)
-  #
-  # # TODO: filter the data
-  #
-  # kwList, xmeta, ymeta = build_series_args(subplt, d)
-  # # kwList, xmeta, ymeta = build_series_args(subplt, groupargs..., args...; d...)
-  #
-  # # TODO: something useful with meta info?
-  #
-  # for (i,di) in enumerate(kwList)
-  #
-  #   subplt.n += 1
-  #   plt = getplot(subplt)
-  #   plt.n += 1
-  #
-  #   # cleanup the dictionary that we pass into the plot! command
-  #   di[:show] = false
-  #   di[:subplot] = true
-  #   for k in (:title, :xlabel, :xticks, :xlims, :xscale, :xflip,
-  #                     :ylabel, :yticks, :ylims, :yscale, :yflip)
-  #     delete!(di, k)
-  #   end
-  #   dumpdict(di, "subplot! kwList $i")
-  #   dumpdict(plt.plotargs, "plt.plotargs before plotting")
-  #
-  #   _add_series_subplot(plt; di...)
-  # end
-
   _postprocess_subplot(subplt, d)
 
   # show it automatically?
@@ -269,7 +229,7 @@ function _add_series_subplot(plt::Plot, d::KW)
   setTicksFromStringVector(d, d, :y, :yticks)
 
   # this is the actual call to the backend
-  _add_series(plt.backend, plt; d...)
+  _add_series(plt.backend, plt, d)
 
   _add_annotations(plt, d)
   warnOnUnsupportedScales(plt.backend, d)

@@ -119,8 +119,8 @@ end
 # -------------------------------
 
 
-function _create_plot(pkg::UnicodePlotsBackend; kw...)
-  plt = Plot(nothing, pkg, 0, KW(kw), KW[])
+function _create_plot(pkg::UnicodePlotsBackend, d::KW)
+  plt = Plot(nothing, pkg, 0, d, KW[])
 
   # do we want to give a new default size?
   if !haskey(plt.plotargs, :size) || plt.plotargs[:size] == _plotDefaults[:size]
@@ -130,8 +130,7 @@ function _create_plot(pkg::UnicodePlotsBackend; kw...)
   plt
 end
 
-function _add_series(::UnicodePlotsBackend, plt::Plot; kw...)
-  d = KW(kw)
+function _add_series(::UnicodePlotsBackend, plt::Plot, d::KW)
   if d[:linetype] in (:sticks, :bar)
     d = barHack(; d...)
   elseif d[:linetype] == :hist

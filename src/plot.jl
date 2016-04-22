@@ -50,7 +50,7 @@ function plot(args...; kw...)
 
     plotargs = merge(d, getPlotArgs(pkg, d, 1))
     dumpdict(plotargs, "Plot args")
-    plt = _create_plot(pkg; plotargs...)  # create a new, blank plot
+    plt = _create_plot(pkg, plotargs)  # create a new, blank plot
 
     delete!(d, :background_color)
     plot!(plt, args...; d...)  # add to it
@@ -186,7 +186,7 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
 
         dumpdict(di, "Series $i")
 
-        _add_series(plt.backend, plt; di...)
+        _add_series(plt.backend, plt, di)
     end
 end
 

@@ -19,9 +19,7 @@ end
 
 
 # create a blank Gadfly.Plot object
-function _create_plot(pkg::ImmerseBackend; kw...)
-  d = KW(kw)
-
+function _create_plot(pkg::ImmerseBackend, d::KW)
   # create the underlying Gadfly.Plot object
   gplt = createGadflyPlotObject(d)
 
@@ -31,8 +29,7 @@ end
 
 
 # plot one data series
-function _add_series(::ImmerseBackend, plt::Plot; kw...)
-  d = KW(kw)
+function _add_series(::ImmerseBackend, plt::Plot, d::KW)
   addGadflySeries!(plt, d)
   push!(plt.seriesargs, d)
   plt

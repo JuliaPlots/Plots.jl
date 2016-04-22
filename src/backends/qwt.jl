@@ -77,8 +77,7 @@ function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
   d
 end
 
-function _create_plot(pkg::QwtBackend; kw...)
-  d = KW(kw)
+function _create_plot(pkg::QwtBackend, d::KW)
   fixcolors(d)
   dumpdict(d,"\n\n!!! plot")
   o = Qwt.plot(zeros(0,0); d..., show=false)
@@ -86,8 +85,8 @@ function _create_plot(pkg::QwtBackend; kw...)
   plt
 end
 
-function _add_series(::QwtBackend, plt::Plot; kw...)
-  d = adjustQwtKeywords(plt, false; kw...)
+function _add_series(::QwtBackend, plt::Plot, d::KW)
+  d = adjustQwtKeywords(plt, false; d...)
   fixcolors(d)
   dumpdict(d,"\n\n!!! plot!")
   Qwt.oplot(plt.o; d...)

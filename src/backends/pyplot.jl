@@ -257,10 +257,8 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::PyPlotBackend; kw...)
+function _create_plot(pkg::PyPlotBackend, d::KW)
     # create the figure
-    d = KW(kw)
-
     # standalone plots will create a figure, but not if part of a subplot (do it later)
     if haskey(d, :subplot)
         wrap = nothing
@@ -284,9 +282,8 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _add_series(pkg::PyPlotBackend, plt::Plot; kw...)
-    d = KW(kw)
 
+function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     # 3D plots have a different underlying Axes object in PyPlot
     lt = d[:linetype]
     if lt in _3dTypes && isempty(plt.o.kwargs)
@@ -743,7 +740,8 @@ function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::SubplotLayout, d::KW)
     n = sum([plt.n for plt in plts])
 
     pkg = PyPlotBackend()
-    newplts = Plot{PyPlotBackend}[_create_plot(pkg; subplot=true, plt.plotargs...) for plt in plts]
+    plt.plotargs[:subplot] = true
+    newplts = Plot{PyPlotBackend}[_create_plot(pkg, plt.plotargs) for plt in plts]
 
     subplt = Subplot(nothing, newplts, PyPlotBackend(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
 

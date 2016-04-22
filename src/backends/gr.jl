@@ -701,13 +701,11 @@ function gr_display(subplt::Subplot{GRBackend})
   end
 end
 
-function _create_plot(pkg::GRBackend; kw...)
-  d = KW(kw)
+function _create_plot(pkg::GRBackend, d::KW)
   Plot(nothing, pkg, 0, d, KW[])
 end
 
-function _add_series(::GRBackend, plt::Plot; kw...)
-  d = KW(kw)
+function _add_series(::GRBackend, plt::Plot, d::KW)
   push!(plt.seriesargs, d)
   plt
 end

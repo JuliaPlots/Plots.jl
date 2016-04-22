@@ -37,7 +37,8 @@ facts("Plotly") do
     @fact plotly() --> Plots.PlotlyBackend()
     @fact backend() --> Plots.PlotlyBackend()
 
-    image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
+    # # until png generation is reliable on OSX, just test on linux
+    # @linux_only image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
 end
 
 FactCheck.exitstatus()

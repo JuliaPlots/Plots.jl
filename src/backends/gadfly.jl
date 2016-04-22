@@ -523,22 +523,20 @@ end
 # ---------------------------------------------------------------------------
 
 # create a blank Gadfly.Plot object
-function _create_plot(pkg::GadflyBackend; kw...)
-    d = KW(kw)
+function _create_plot(pkg::GadflyBackend, d::KW)
     gplt = createGadflyPlotObject(d)
     Plot(gplt, pkg, 0, d, KW[])
 end
 
 
 # plot one data series
-function _add_series(::GadflyBackend, plt::Plot; kw...)
+function _add_series(::GadflyBackend, plt::Plot, d::KW)
     # first clear out the temporary layer
     gplt = getGadflyContext(plt)
     if gplt.layers[1].geom.tag == :remove
         gplt.layers = gplt.layers[2:end]
     end
 
-    d = KW(kw)
     addGadflySeries!(plt, d)
     push!(plt.seriesargs, d)
     plt

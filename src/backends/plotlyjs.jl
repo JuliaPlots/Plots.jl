@@ -20,8 +20,7 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::PlotlyJSBackend; kw...)
-    d = KW(kw)
+function _create_plot(pkg::PlotlyJSBackend, d::KW)
     # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
     # TODO: initialize the plot... title, xlabel, bgcolor, etc
     # o = PlotlyJS.Plot(PlotlyJS.GenericTrace[], PlotlyJS.Layout(),
@@ -34,8 +33,7 @@ function _create_plot(pkg::PlotlyJSBackend; kw...)
 end
 
 
-function _add_series(::PlotlyJSBackend, plt::Plot; kw...)
-    d = KW(kw)
+function _add_series(::PlotlyJSBackend, plt::Plot, d::KW)
     syncplot = plt.o
 
     # add to the data array

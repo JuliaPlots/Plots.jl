@@ -64,11 +64,7 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::BokehBackend; kw...)
-  d = KW(kw)
-
-  # dumpdict(d, "plot", true)
-
+function _create_plot(pkg::BokehBackend, d::KW)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
 
@@ -88,11 +84,7 @@ function _create_plot(pkg::BokehBackend; kw...)
 end
 
 
-function _add_series(::BokehBackend, plt::Plot; kw...)
-  d = KW(kw)
-
-  # dumpdict(d, "plot!", true)
-
+function _add_series(::BokehBackend, plt::Plot, d::KW)
   bdata = Dict{Symbol, Vector}(:x => collect(d[:x]), :y => collect(d[:y]))
 
   glyph = Bokeh.Bokehjs.Glyph(

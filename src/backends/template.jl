@@ -14,16 +14,14 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::[PkgName]AbstractBackend; kw...)
-  d = KW(kw)
+function _create_plot(pkg::[PkgName]AbstractBackend, d::KW)
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
   Plot(nothing, pkg, 0, d, KW[])
 end
 
 
-function _add_series(::[PkgName]AbstractBackend, plt::Plot; kw...)
-  d = KW(kw)
+function _add_series(::[PkgName]AbstractBackend, plt::Plot, d::KW)
   # TODO: add one series to the underlying package
   push!(plt.seriesargs, d)
   plt

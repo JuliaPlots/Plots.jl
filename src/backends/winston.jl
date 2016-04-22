@@ -40,8 +40,7 @@ end
 # ---------------------------------------------------------------------------
 
 
-function _create_plot(pkg::WinstonBackend; kw...)
-  d = KW(kw)
+function _create_plot(pkg::WinstonBackend, d::KW)
   wplt = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
 
   Plot(wplt, pkg, 0, d, KW[])
@@ -64,9 +63,7 @@ function getWinstonItems(plt::Plot)
   window, canvas, wplt
 end
 
-function _add_series(::WinstonBackend, plt::Plot; kw...)
-  d = KW(kw)
-
+function _add_series(::WinstonBackend, plt::Plot, d::KW)
   window, canvas, wplt = getWinstonItems(plt)
 
   # until we call it normally, do the hack
