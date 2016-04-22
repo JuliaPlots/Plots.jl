@@ -113,10 +113,12 @@ const _seriesDefaults = KW()
 # series-specific
 _seriesDefaults[:axis]            = :left
 _seriesDefaults[:label]           = "AUTO"
+_seriesDefaults[:seriescolor]     = :auto
+_seriesDefaults[:seriesalpha]     = nothing
 _seriesDefaults[:linetype]        = :path
 _seriesDefaults[:linestyle]       = :solid
 _seriesDefaults[:linewidth]       = 1
-_seriesDefaults[:linecolor]       = :auto
+_seriesDefaults[:linecolor]       = :match
 _seriesDefaults[:linealpha]       = nothing
 # _seriesDefaults[:linestroke]      = Stroke(1, :auto, nothing, :solid)  # linewidth, linecolor, linealpha, linestyle
 # _seriesDefaults[:fillbrush]       = Brush(nothing, :match, nothing)  # fillrange, fillcolor, fillalpha
@@ -142,7 +144,7 @@ _seriesDefaults[:group]           = nothing           # groupby vector
 _seriesDefaults[:x]               = nothing
 _seriesDefaults[:y]               = nothing
 _seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
-_seriesDefaults[:zcolor]          = nothing           # value for color scale
+_seriesDefaults[:marker_z]        = nothing           # value for color scale
 # _seriesDefaults[:surface]         = nothing
 # _seriesDefaults[:nlevels]         = 15
 _seriesDefaults[:levels]          = 15
@@ -235,9 +237,15 @@ end
 # Alternate args
 
 @compat const _keyAliases = KW(
-    :c                  => :linecolor,
-    :color              => :linecolor,
-    :colour             => :linecolor,
+    :c                  => :seriescolor,
+    :color              => :seriescolor,
+    :colour             => :seriescolor,
+    :alpha              => :seriesalpha,
+    :α                  => :seriesalpha,
+    :opacity            => :seriesalpha,
+    :lc                 => :linecolor,
+    :lcolor             => :linecolor,
+    :lcolour            => :linecolor,
     :lab                => :label,
     :l                  => :line,
     :w                  => :linewidth,
@@ -261,9 +269,10 @@ end
     :ms                 => :markersize,
     :msize              => :markersize,
     :ma                 => :markeralpha,
-    :alpha              => :markeralpha,
-    :opacity            => :markeralpha,
+    :malpha             => :markeralpha,
+    :mopacity           => :markeralpha,
     :markeropacity      => :markeralpha,
+    :zcolor             => :marker_z,
     :f                  => :fill,
     :area               => :fill,
     :fillrng            => :fillrange,
@@ -394,6 +403,7 @@ end
 
 # -----------------------------------------------------------------------------
 
+# if arg is a valid color value, then set d[csym] and return true
 function handleColors!(d::KW, arg, csym::Symbol)
     try
         if arg == :auto
@@ -782,11 +792,16 @@ function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int
     aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
 
     # update color
-    d[:linecolor] = getSeriesRGBColor(d[:linecolor], plotargs, plotIndex)
+    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], plotargs, plotIndex)
+
+    # update linecolor
+    c = d[:linecolor]
+    c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+    d[:linecolor] = c
 
     # update markercolor
     c = d[:markercolor]
-    c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+    c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
     d[:markercolor] = c
 
     # update markerstrokecolor
@@ -796,7 +811,7 @@ function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int
 
     # update fillcolor
     c = d[:fillcolor]
-    c = (c == :match ? d[:linecolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+    c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
     d[:fillcolor] = c
 
     # set label

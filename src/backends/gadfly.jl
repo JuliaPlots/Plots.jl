@@ -190,7 +190,7 @@ function addGadflyMarker!(plt::Plot, numlayers::Int, d::KW, plotargs::KW, geoms.
     kwargs = KW()
 
     # handle continuous color scales for the markers
-    zcolor = d[:zcolor]
+    zcolor = d[:marker_z]
     if zcolor != nothing && typeof(zcolor) <: AVec
         kwargs[:color] = zcolor
         addGadflyContColorScale(plt, d[:markercolor])

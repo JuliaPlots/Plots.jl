@@ -144,8 +144,8 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
         end
 
         # map functions to vectors
-        if isa(d[:zcolor], Function)
-            d[:zcolor] = map(d[:zcolor], d[:x])
+        if isa(d[:marker_z], Function)
+            d[:marker_z] = map(d[:marker_z], d[:x])
         end
         if isa(d[:fillrange], Function)
             d[:fillrange] = map(d[:fillrange], d[:x])

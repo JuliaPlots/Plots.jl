@@ -381,13 +381,13 @@ function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
       )
 
     # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
-    if d[:zcolor] != nothing
-      # d_out[:marker][:color] = d[:zcolor]
+    if d[:marker_z] != nothing
+      # d_out[:marker][:color] = d[:marker_z]
       # d_out[:marker][:colorscale] = plotly_colorscale(d[:markercolor], d[:markeralpha])
       # d_out[:showscale] = true
       grad = ColorGradient(d[:markercolor], alpha=d[:markeralpha])
-      zmin, zmax = extrema(d[:zcolor])
-      d_out[:marker][:color] = [webcolor(getColorZ(grad, (zi - zmin) / (zmax - zmin))) for zi in d[:zcolor]]
+      zmin, zmax = extrema(d[:marker_z])
+      d_out[:marker][:color] = [webcolor(getColorZ(grad, (zi - zmin) / (zmax - zmin))) for zi in d[:marker_z]]
     end
 
   end
