@@ -826,7 +826,7 @@ function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int
     d[:markerstrokecolor] = c
 
     # update alphas
-    for asym in (:linealpha, :markeralpha, :fillalpha)
+    for asym in (:linealpha, :markeralpha, :markerstrokealpha, :fillalpha)
         if d[asym] == nothing
             d[asym] = d[:seriesalpha]
         end

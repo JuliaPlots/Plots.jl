@@ -325,7 +325,7 @@ end
 
 # total hack due to PyPlot bug (see issue #145).
 # hack: duplicate the color vector when the total rgba fields is the same as the series length
-function color_fix(c)
+function color_fix(c, x)
     if (typeof(c) <: AbstractArray && length(c)*4 == length(x)) ||
                     (typeof(c) <: Tuple && length(x) == 4)
         vcat(c, c)
@@ -392,18 +392,17 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     # :shape      => :add_patch,
     #
     # do the plotting
-    if lt in (:path, :line, :scatter)
+
+    # path/line/scatter should all do UP TO 2 series... a line, and a scatter
+    if lt in (:path, :line, :scatter, :path3d, :scatter3d)
+        xyargs = (lt in _3dTypes ? (x,y,z) : (x,y))
+
         if d[:linewidth] > 0
-            d[:serieshandle] = ax[:plot](x, y;
+            d[:serieshandle] = ax[:plot](xyargs...;
                 color = pylinecolor(d),
                 linewidth = d[:linewidth],
                 linestyle = getPyPlotLineStyle(lt, d[:linestyle]),
                 drawstyle = getPyPlotStepStyle(lt),
-                # marker = markershape,
-                # markersize = d[:markersize],
-                # markerfacecolor = markercolor,
-                # markeredgecolor = strokecolor,
-                # markeredgewidth = d[:markerstrokewidth],
                 label = d[:label],
                 zorder = plt.n
             )
@@ -411,12 +410,12 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
         if d[:markershape] != :none
             if d[:marker_z] == nothing
-                extrakw[:c] = color_fix(pymarkercolor(d))
+                extrakw[:c] = color_fix(pymarkercolor(d), x)
             else
                 extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
                 extrakw[:cmap] = pymarkercolormap(d)
             end
-            d[:serieshandle] = ax[:scatter](x, y;
+            d[:serieshandle] = ax[:scatter](xyargs...;
                 marker = getPyPlotMarker(d[:markershape]),
                 s = d[:markersize] .^ 2,
                 edgecolors = pymarkerstrokecolor(d),
@@ -426,7 +425,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
                 extrakw...
             )
         end
-
     end
 
     # smoothing
@@ -711,6 +709,9 @@ function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
 end
 
 # --------------------------------------------------------------------------
+
+# TODO: d[:serieshandle] should really be a list of handles... then we should set
+# the x/y data for each handle (for example, plot and scatter)
 
 function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
     d = plt.seriesargs[i]
