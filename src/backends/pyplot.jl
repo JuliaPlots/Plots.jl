@@ -371,7 +371,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     # cmap = get_cmap(plt, d)
 
-    dumpdict(d, "",true)
+    # dumpdict(d, "",true)
 
     # handle zcolor and get c/cmap
     # extra_kw = get_extra_kw(plt, d)

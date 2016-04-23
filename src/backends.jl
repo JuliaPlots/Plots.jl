@@ -64,14 +64,30 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 # ---------------------------------------------------------
 
 function pickDefaultBackend()
-  for pkgstr in ("PyPlot", "Immerse", "Qwt", "Gadfly", "GR", "UnicodePlots", "Bokeh", "GLVisualize")
-    if Pkg.installed(pkgstr) != nothing
-      return backend(symbol(lowercase(pkgstr)))
+    env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
+    if env_default != ""
+        try
+            Pkg.installed(env_default)  # this will error if not installed
+            sym = symbol(lowercase(env_default))
+            if haskey(_backendType, sym)
+                return backend(sym)
+            else
+                warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t",
+                     join(sort(_backends), "\n\t"))
+            end
+        catch
+            warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not installed.")
+        end
     end
-  end
 
-  # the default if nothing else is installed
-  backend(:plotly)
+    for pkgstr in ("PyPlot", "Immerse", "Qwt", "Gadfly", "GR", "UnicodePlots", "Bokeh", "GLVisualize")
+        if Pkg.installed(pkgstr) != nothing
+            return backend(symbol(lowercase(pkgstr)))
+        end
+    end
+
+    # the default if nothing else is installed
+    backend(:plotly)
 end
 
 
