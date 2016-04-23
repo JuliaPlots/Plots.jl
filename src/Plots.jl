@@ -34,6 +34,8 @@ export
     scatter!,
     bar,
     bar!,
+    barh,
+    barh!,
     histogram,
     histogram!,
     histogram2d,
@@ -163,6 +165,8 @@ scatter(args...; kw...)    = plot(args...; kw...,  linetype = :scatter)
 scatter!(args...; kw...)   = plot!(args...; kw..., linetype = :scatter)
 bar(args...; kw...)        = plot(args...; kw...,  linetype = :bar)
 bar!(args...; kw...)       = plot!(args...; kw..., linetype = :bar)
+barh(args...; kw...)        = plot(args...; kw...,  linetype = :barh, orientation = :h)
+barh!(args...; kw...)       = plot!(args...; kw..., linetype = :barh, orientation = :h)
 histogram(args...; kw...)  = plot(args...; kw...,  linetype = :hist)
 histogram!(args...; kw...) = plot!(args...; kw..., linetype = :hist)
 histogram2d(args...; kw...)  = plot(args...; kw...,  linetype = :hist2d)

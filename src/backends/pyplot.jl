@@ -458,20 +458,15 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     # bars
     if lt in (:bar, :sticks)
-        barx, bary = if isvertical(d)
-            x, y
-        else
-            y, x
-        end
-        handle = ax[:bar](barx, bary;
+        extrakw[isvertical(d) ? :width : :height] = (lt == :sticks ? 0.1 : 0.9)
+        handle = ax[isvertical(d) ? :bar : :barh](x, y;
             label = d[:label],
             zorder = plt.n + 0.5,
-            width = (lt == :sticks ? 0.1 : 0.9),
             color = pyfillcolor(d),
             edgecolor = pylinecolor(d),
             linewidth = d[:linewidth],
             align = "center",
-            orientation = (isvertical(d) ? "vertical" : "horizontal")
+            extrakw...
         )[1]
         push!(handles, handle)
     end
@@ -483,7 +478,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     # add the colorbar legend
     if plt.plotargs[:colorbar] != :none && haskey(extrakw, :cmap)
-        PyPlot.colorbar(handles[1], ax=ax)
+        PyPlot.colorbar(handles[end], ax=ax)
     end
 
     # this sets the bg color inside the grid
