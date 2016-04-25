@@ -334,11 +334,13 @@ function color_fix(c, x)
     end
 end
 
-pylinecolor(d::KW) = getPyPlotColor(d[:linecolor], d[:linealpha])
-pymarkercolor(d::KW) = getPyPlotColor(d[:markercolor], d[:markeralpha])
-pymarkercolormap(d::KW) = getPyPlotColorMap(d[:markercolor], d[:markeralpha])
-pymarkerstrokecolor(d::KW) = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
-pyfillcolor(d::KW) = getPyPlotColor(d[:fillcolor], d[:fillalpha])
+pylinecolor(d::KW)          = getPyPlotColor(d[:linecolor], d[:linealpha])
+pymarkercolor(d::KW)        = getPyPlotColor(d[:markercolor], d[:markeralpha])
+pymarkerstrokecolor(d::KW)  = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
+pyfillcolor(d::KW)          = getPyPlotColor(d[:fillcolor], d[:fillalpha])
+
+pymarkercolormap(d::KW)     = getPyPlotColorMap(d[:markercolor], d[:markeralpha])
+pyfillcolormap(d::KW)          = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
 
 function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     lt = d[:linetype]
@@ -355,31 +357,15 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     fix_xy_lengths!(plt, d)
 
     ax = getAxis(plt, d[:axis])
-    # linecolor = getPyPlotColor(d[:linecolor], d[:linealpha])
-    # markercolor = if d[:marker_z] == nothing
-    #     getPyPlotColor(d[:markercolor], d[:markeralpha])
-    # else
-    #     getPyPlotColorMap(d[:markercolor], d[:markeralpha])
-    # end
-    # fillcolor = getPyPlotColor(d[:fillcolor], d[:fillalpha])
-    # strokecolor = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
-    # linecmap = getPyPlotColorMap(d[:linecolor], d[:linealpha])
-    # fillcmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
-    # linestyle = getPyPlotLineStyle(lt, d[:linestyle])
-    # markershape = getPyPlotMarker(d[:markershape])
     x, y, z = d[:x], d[:y], d[:z]
-
-    # cmap = get_cmap(plt, d)
 
     # dumpdict(d, "",true)
 
     # handle zcolor and get c/cmap
-    # extra_kw = get_extra_kw(plt, d)
     extrakw = KW()
 
             # :shape,
             # :hist2d, :hexbin,
-            # :bar,
             # :hline, :vline, :heatmap,
             # :contour, :surface, :wireframe
 
@@ -401,6 +387,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     # holds references to any python object representing the matplotlib series
     handles = []
+    needs_colorbar = false
 
     # path/line/scatter should all do UP TO 2 series... a line, and a scatter
     if lt in (:path, :line, :scatter, :path3d, :scatter3d, :steppre, :steppost)
@@ -426,6 +413,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             else
                 extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
                 extrakw[:cmap] = pymarkercolormap(d)
+                needs_colorbar = true
             end
             handle = ax[:scatter](xyargs...;
                 label = d[:label],
@@ -438,22 +426,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             )
             push!(handles, handle)
         end
-    end
-
-    # histograms
-    if lt in (:hist, :density)
-        handle = ax[:hist](y;
-            label = d[:label],
-            zorder = plt.n + 0.5,
-            color = pyfillcolor(d),
-            edgecolor = pylinecolor(d),
-            linewidth = d[:linewidth],
-            bins = d[:nbins],
-            normed = d[:normalize],
-            orientation = (isvertical(d) ? "vertical" : "horizontal"),
-            histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
-        )[1]
-        push!(handles, handle)
     end
 
     # bars
@@ -471,13 +443,57 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
+    # histograms
+    if lt == :hist
+        handle = ax[:hist](y;
+            label = d[:label],
+            zorder = plt.n + 0.5,
+            color = pyfillcolor(d),
+            edgecolor = pylinecolor(d),
+            linewidth = d[:linewidth],
+            bins = d[:nbins],
+            normed = d[:normalize],
+            weights = d[:weights],
+            orientation = (isvertical(d) ? "vertical" : "horizontal"),
+            histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
+        )[1]
+        push!(handles, handle)
+    end
+
+    # 2d histograms
+    if lt == :hist2d
+        handle = ax[:hist2d](x, y;
+            label = d[:label],
+            zorder = plt.n + 0.5,
+            bins = d[:nbins],
+            normed = d[:normalize],
+            weights = d[:weights],
+            cmap = pyfillcolormap(d)  # applies to the pcolorfast object
+        )[4]
+        push!(handles, handle)
+    end
+
+    # hexbins
+    if lt == :hexbin
+        handle = ax[:hexbin](x, y;
+            label = d[:label],
+            zorder = plt.n + 0.5,
+            gridsize = d[:nbins],
+            linewidths = d[:linewidth],
+            edgecolors = pylinecolor(d),
+            cmap = pyfillcolormap(d)  # applies to the pcolorfast object
+        )
+        push!(handles, handle)
+        needs_colorbar = true
+    end
+
     d[:serieshandle] = handles
 
     # smoothing
     handleSmooth(plt, ax, d, d[:smooth])
 
     # add the colorbar legend
-    if plt.plotargs[:colorbar] != :none && haskey(extrakw, :cmap)
+    if needs_colorbar && plt.plotargs[:colorbar] != :none
         PyPlot.colorbar(handles[end], ax=ax)
     end
 

@@ -155,6 +155,7 @@ _seriesDefaults[:yerror]          = nothing
 _seriesDefaults[:ribbon]          = nothing
 _seriesDefaults[:quiver]          = nothing
 _seriesDefaults[:normalize]       = false     # do we want a normalized histogram?
+_seriesDefaults[:weights]         = nothing   # optional weights for histograms (1D and 2D)
 
 
 const _plotDefaults = KW()
@@ -770,7 +771,9 @@ function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
     d
 end
 
-
+function has_black_border_for_default(lt::Symbol)
+    like_histogram(lt) || lt == :hexbin
+end
 
 # build the argument dictionary for a series
 function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
@@ -818,7 +821,7 @@ function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int
     # update colors
     for csym in (:linecolor, :markercolor, :fillcolor)
         d[csym] = if d[csym] == :match
-            if like_histogram(d[:linetype]) && csym == :linecolor
+            if has_black_border_for_default(d[:linetype]) && csym == :linecolor
                 :black
             else
                 d[:seriescolor]
