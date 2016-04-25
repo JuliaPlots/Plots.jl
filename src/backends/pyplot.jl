@@ -449,7 +449,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             edgecolor = pylinecolor(d),
             linewidth = d[:linewidth],
             bins = d[:nbins],
-            normed = (lt == :density),
+            normed = d[:normalize],
             orientation = (isvertical(d) ? "vertical" : "horizontal"),
             histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
         )[1]

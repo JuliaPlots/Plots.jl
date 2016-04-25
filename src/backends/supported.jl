@@ -101,12 +101,13 @@ supportedArgs(::PyPlotBackend) = [
     :orientation,
     :overwrite_figure,
     :polar,
+    :normalize,
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [
         :none, :line, :path, :steppre, :steppost, :shape,
         :scatter, :hist2d, :hexbin, :hist, :density,
-        :bar, :box, :violin, :quiver,
+        :bar, :sticks, :box, :violin, :quiver,
         :hline, :vline, :heatmap,
         :contour, :path3d, :scatter3d, :surface, :wireframe
     ]

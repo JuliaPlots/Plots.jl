@@ -154,6 +154,7 @@ _seriesDefaults[:xerror]          = nothing
 _seriesDefaults[:yerror]          = nothing
 _seriesDefaults[:ribbon]          = nothing
 _seriesDefaults[:quiver]          = nothing
+_seriesDefaults[:normalize]       = false     # do we want a normalized histogram?
 
 
 const _plotDefaults = KW()
@@ -356,6 +357,9 @@ end
     :velocity           => :quiver,
     :quiver2d           => :quiver,
     :gradient           => :quiver,
+    :norm               => :normalize,
+    :normed             => :normalize,
+    :normalized         => :normalize,
   )
 
 # add all pluralized forms to the _keyAliases dict
