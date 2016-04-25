@@ -365,11 +365,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     # handle zcolor and get c/cmap
     extrakw = KW()
 
-    # TODO
-    # :density    => :hist,
-    # :shape      => :add_patch,
-
-
     # holds references to any python object representing the matplotlib series
     handles = []
     needs_colorbar = false
@@ -550,6 +545,20 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
+    if lt == :shape
+        path = buildPyPlotPath(x, y)
+        patches = pypatches.pymember("PathPatch")(path;
+            label = d[:label],
+            zorder = plt.n,
+            edgecolor = pymarkerstrokecolor(d),
+            facecolor = pymarkercolor(d),
+            linewidth = d[:markerstrokewidth],
+            fill = true
+        )
+        handle = ax[:add_patch](patches)
+        push!(handles, handle)
+    end
+
     d[:serieshandle] = handles
 
     # smoothing
@@ -578,222 +587,222 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     plt
 end
 
-function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
-    # 3D plots have a different underlying Axes object in PyPlot
-    lt = d[:linetype]
-    if lt in _3dTypes && isempty(plt.o.kwargs)
-        push!(plt.o.kwargs, (:projection, "3d"))
-    end
-
-    # handle mismatched x/y sizes, as PyPlot doesn't like that
-    x, y = d[:x], d[:y]
-    nx, ny = length(x), length(y)
-    if !isa(get(d, :z, nothing), Surface) && nx != ny
-        if nx < ny
-            d[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
-        else
-            d[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
-        end
-    end
-
-    ax = getAxis(plt, d[:axis])
-    if !(lt in supportedTypes(pkg))
-        error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
-    end
-
-    linecolor = getPyPlotColor(d[:linecolor], d[:linealpha])
-    markercolor = getPyPlotColor(d[:markercolor], d[:markeralpha])
-    fillcolor = getPyPlotColor(d[:fillcolor], d[:fillalpha])
-    strokecolor = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
-    linecmap = getPyPlotColorMap(d[:linecolor], d[:linealpha])
-    fillcmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
-    linestyle = getPyPlotLineStyle(lt, d[:linestyle])
-
-    if lt == :sticks
-        d,_ = sticksHack(;d...)
-
-    elseif lt in (:scatter, :scatter3d)
-        if d[:markershape] == :none
-            d[:markershape] = :ellipse
-        end
-
-    elseif lt in (:hline,:vline)
-        for yi in d[:y]
-            func = ax[lt == :hline ? :axhline : :axvline]
-            func(yi, linewidth=d[:linewidth], color=linecolor, linestyle=linestyle)
-        end
-
-    end
-
-    extra_kwargs = KW()
-    plotfunc = getPyPlotFunction(plt, d[:axis], lt)
-
-    # we have different args depending on plot type
-    if lt in (:hist, :density, :sticks, :bar)
-
-        # NOTE: this is unsupported because it does the wrong thing... it shifts the whole axis
-        # extra_kwargs[:bottom] = d[:fill]
-
-        if like_histogram(lt)
-            extra_kwargs[:bins] = d[:bins]
-            extra_kwargs[:normed] = lt == :density
-            extra_kwargs[:orientation] = isvertical(d) ? "vertical" : "horizontal"
-            extra_kwargs[:histtype] = d[:bar_position] == :stack ? "barstacked" : "bar"
-        else
-            extra_kwargs[:linewidth] = (lt == :sticks ? 0.1 : 0.9)
-        end
-
-    elseif lt in (:hist2d, :hexbin)
-        extra_kwargs[:gridsize] = d[:bins]
-        extra_kwargs[:cmap] = linecmap
-
-    elseif lt == :contour
-        extra_kwargs[:cmap] = linecmap
-        extra_kwargs[:linewidths] = d[:linewidth]
-        extra_kwargs[:linestyles] = linestyle
-        # TODO: will need to call contourf to fill in the contours
-
-    elseif lt in (:surface, :wireframe)
-        if lt == :surface
-            extra_kwargs[:cmap] = fillcmap
-        end
-        extra_kwargs[:rstride] = 1
-        extra_kwargs[:cstride] = 1
-        extra_kwargs[:linewidth] = d[:linewidth]
-        extra_kwargs[:edgecolor] = linecolor
-
-    elseif lt == :heatmap
-        extra_kwargs[:cmap] = fillcmap
-
-    elseif lt == :shape
-        extra_kwargs[:edgecolor] = strokecolor
-        extra_kwargs[:facecolor] = markercolor
-        extra_kwargs[:linewidth] = d[:markerstrokewidth]
-        extra_kwargs[:fill] = true
-
-    else
-
-        extra_kwargs[:linestyle] = linestyle
-        extra_kwargs[:marker] = getPyPlotMarker(d[:markershape])
-
-        if lt in (:scatter, :scatter3d)
-            extra_kwargs[:s] = d[:markersize].^2
-            c = d[:markercolor]
-            if d[:marker_z] != nothing
-                if !isa(c, ColorGradient)
-                    c = default_gradient()
-                end
-                extra_kwargs[:c] = convert(Vector{Float64}, d[:marker_z])
-                extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
-            else
-                ppc = getPyPlotColor(c, d[:markeralpha])
-
-                # total hack due to PyPlot bug (see issue #145).
-                # hack: duplicate the color vector when the total rgba fields is the same as the series length
-                if (typeof(ppc) <: AbstractArray && length(ppc)*4 == length(x)) || (typeof(ppc) <: Tuple && length(x) == 4)
-                    ppc = vcat(ppc, ppc)
-                end
-                extra_kwargs[:c] = ppc
-
-            end
-            extra_kwargs[:edgecolors] = strokecolor
-            extra_kwargs[:linewidths] = d[:markerstrokewidth]
-        else
-            extra_kwargs[:markersize] = d[:markersize]
-            extra_kwargs[:markerfacecolor] = markercolor
-            extra_kwargs[:markeredgecolor] = strokecolor
-            extra_kwargs[:markeredgewidth] = d[:markerstrokewidth]
-            extra_kwargs[:drawstyle] = getPyPlotStepStyle(lt)
-        end
-    end
-
-    # set these for all types
-    if !(lt in (:contour,:surface,:wireframe,:heatmap))
-        if !(lt in (:scatter, :scatter3d, :shape))
-            extra_kwargs[:color] = linecolor
-            extra_kwargs[:linewidth] = d[:linewidth]
-        end
-        extra_kwargs[:label] = d[:label]
-        extra_kwargs[:zorder] = plt.n
-    end
-
-    # do the plot
-    d[:serieshandle] = if like_histogram(lt)
-        extra_kwargs[:color] = fillcolor
-        extra_kwargs[:edgecolor] = linecolor
-        plotfunc(d[:y]; extra_kwargs...)[1]
-
-    elseif lt == :contour
-        x, y = d[:x], d[:y]
-        surf = d[:z].surf'
-        levels = d[:levels]
-        if isscalar(levels)
-            extra_args = (levels)
-        elseif isvector(levels)
-            extra_args = ()
-            extra_kwargs[:levels] = levels
-        else
-            error("Only numbers and vectors are supported with levels keyword")
-        end
-        handle = plotfunc(x, y, surf, extra_args...; extra_kwargs...)
-        if d[:fillrange] != nothing
-            extra_kwargs[:cmap] = fillcmap
-            delete!(extra_kwargs, :linewidths)
-            handle = ax[:contourf](x, y, surf, extra_args...; extra_kwargs...)
-        end
-        handle
-
-    elseif lt in (:surface,:wireframe)
-        x, y, z = Array(d[:x]), Array(d[:y]), Array(d[:z])
-        if !ismatrix(x) || !ismatrix(y)
-            x = repmat(x', length(y), 1)
-            y = repmat(y, 1, length(d[:x]))
-            z = z'
-        end
-        plotfunc(x, y, z; extra_kwargs...)
-
-    elseif lt in _3dTypes
-        plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)[1]
-
-    elseif lt in (:scatter, :hist2d, :hexbin)
-        plotfunc(d[:x], d[:y]; extra_kwargs...)
-
-    elseif lt == :heatmap
-        x, y, z = d[:x], d[:y], d[:z].surf'
-        plotfunc(heatmap_edges(x), heatmap_edges(y), z; extra_kwargs...)
-
-    elseif lt == :shape
-        path = buildPyPlotPath(d[:x], d[:y])
-        patches = pypatches.pymember("PathPatch")(path; extra_kwargs...)
-        plotfunc(patches)
-
-    else # plot
-        plotfunc(d[:x], d[:y]; extra_kwargs...)[1]
-    end
-
-    # smoothing
-    handleSmooth(plt, ax, d, d[:smooth])
-
-    # add the colorbar legend
-    if plt.plotargs[:colorbar] != :none && haskey(extra_kwargs, :cmap)
-        PyPlot.colorbar(d[:serieshandle], ax=ax)
-    end
-
-    # this sets the bg color inside the grid
-    ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color]))
-
-    fillrange = d[:fillrange]
-    if fillrange != nothing && lt != :contour
-        if typeof(fillrange) <: @compat(Union{Real, AVec})
-            ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor, zorder = plt.n)
-        else
-            ax[:fill_between](d[:x], fillrange..., facecolor = fillcolor, zorder = plt.n)
-        end
-    end
-
-    push!(plt.seriesargs, d)
-    plt
-end
+# function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
+#     # 3D plots have a different underlying Axes object in PyPlot
+#     lt = d[:linetype]
+#     if lt in _3dTypes && isempty(plt.o.kwargs)
+#         push!(plt.o.kwargs, (:projection, "3d"))
+#     end
+#
+#     # handle mismatched x/y sizes, as PyPlot doesn't like that
+#     x, y = d[:x], d[:y]
+#     nx, ny = length(x), length(y)
+#     if !isa(get(d, :z, nothing), Surface) && nx != ny
+#         if nx < ny
+#             d[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
+#         else
+#             d[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
+#         end
+#     end
+#
+#     ax = getAxis(plt, d[:axis])
+#     if !(lt in supportedTypes(pkg))
+#         error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
+#     end
+#
+#     linecolor = getPyPlotColor(d[:linecolor], d[:linealpha])
+#     markercolor = getPyPlotColor(d[:markercolor], d[:markeralpha])
+#     fillcolor = getPyPlotColor(d[:fillcolor], d[:fillalpha])
+#     strokecolor = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
+#     linecmap = getPyPlotColorMap(d[:linecolor], d[:linealpha])
+#     fillcmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+#     linestyle = getPyPlotLineStyle(lt, d[:linestyle])
+#
+#     if lt == :sticks
+#         d,_ = sticksHack(;d...)
+#
+#     elseif lt in (:scatter, :scatter3d)
+#         if d[:markershape] == :none
+#             d[:markershape] = :ellipse
+#         end
+#
+#     elseif lt in (:hline,:vline)
+#         for yi in d[:y]
+#             func = ax[lt == :hline ? :axhline : :axvline]
+#             func(yi, linewidth=d[:linewidth], color=linecolor, linestyle=linestyle)
+#         end
+#
+#     end
+#
+#     extra_kwargs = KW()
+#     plotfunc = getPyPlotFunction(plt, d[:axis], lt)
+#
+#     # we have different args depending on plot type
+#     if lt in (:hist, :density, :sticks, :bar)
+#
+#         # NOTE: this is unsupported because it does the wrong thing... it shifts the whole axis
+#         # extra_kwargs[:bottom] = d[:fill]
+#
+#         if like_histogram(lt)
+#             extra_kwargs[:bins] = d[:bins]
+#             extra_kwargs[:normed] = lt == :density
+#             extra_kwargs[:orientation] = isvertical(d) ? "vertical" : "horizontal"
+#             extra_kwargs[:histtype] = d[:bar_position] == :stack ? "barstacked" : "bar"
+#         else
+#             extra_kwargs[:linewidth] = (lt == :sticks ? 0.1 : 0.9)
+#         end
+#
+#     elseif lt in (:hist2d, :hexbin)
+#         extra_kwargs[:gridsize] = d[:bins]
+#         extra_kwargs[:cmap] = linecmap
+#
+#     elseif lt == :contour
+#         extra_kwargs[:cmap] = linecmap
+#         extra_kwargs[:linewidths] = d[:linewidth]
+#         extra_kwargs[:linestyles] = linestyle
+#         # TODO: will need to call contourf to fill in the contours
+#
+#     elseif lt in (:surface, :wireframe)
+#         if lt == :surface
+#             extra_kwargs[:cmap] = fillcmap
+#         end
+#         extra_kwargs[:rstride] = 1
+#         extra_kwargs[:cstride] = 1
+#         extra_kwargs[:linewidth] = d[:linewidth]
+#         extra_kwargs[:edgecolor] = linecolor
+#
+#     elseif lt == :heatmap
+#         extra_kwargs[:cmap] = fillcmap
+#
+#     elseif lt == :shape
+#         extra_kwargs[:edgecolor] = strokecolor
+#         extra_kwargs[:facecolor] = markercolor
+#         extra_kwargs[:linewidth] = d[:markerstrokewidth]
+#         extra_kwargs[:fill] = true
+#
+#     else
+#
+#         extra_kwargs[:linestyle] = linestyle
+#         extra_kwargs[:marker] = getPyPlotMarker(d[:markershape])
+#
+#         if lt in (:scatter, :scatter3d)
+#             extra_kwargs[:s] = d[:markersize].^2
+#             c = d[:markercolor]
+#             if d[:marker_z] != nothing
+#                 if !isa(c, ColorGradient)
+#                     c = default_gradient()
+#                 end
+#                 extra_kwargs[:c] = convert(Vector{Float64}, d[:marker_z])
+#                 extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
+#             else
+#                 ppc = getPyPlotColor(c, d[:markeralpha])
+#
+#                 # total hack due to PyPlot bug (see issue #145).
+#                 # hack: duplicate the color vector when the total rgba fields is the same as the series length
+#                 if (typeof(ppc) <: AbstractArray && length(ppc)*4 == length(x)) || (typeof(ppc) <: Tuple && length(x) == 4)
+#                     ppc = vcat(ppc, ppc)
+#                 end
+#                 extra_kwargs[:c] = ppc
+#
+#             end
+#             extra_kwargs[:edgecolors] = strokecolor
+#             extra_kwargs[:linewidths] = d[:markerstrokewidth]
+#         else
+#             extra_kwargs[:markersize] = d[:markersize]
+#             extra_kwargs[:markerfacecolor] = markercolor
+#             extra_kwargs[:markeredgecolor] = strokecolor
+#             extra_kwargs[:markeredgewidth] = d[:markerstrokewidth]
+#             extra_kwargs[:drawstyle] = getPyPlotStepStyle(lt)
+#         end
+#     end
+#
+#     # set these for all types
+#     if !(lt in (:contour,:surface,:wireframe,:heatmap))
+#         if !(lt in (:scatter, :scatter3d, :shape))
+#             extra_kwargs[:color] = linecolor
+#             extra_kwargs[:linewidth] = d[:linewidth]
+#         end
+#         extra_kwargs[:label] = d[:label]
+#         extra_kwargs[:zorder] = plt.n
+#     end
+#
+#     # do the plot
+#     d[:serieshandle] = if like_histogram(lt)
+#         extra_kwargs[:color] = fillcolor
+#         extra_kwargs[:edgecolor] = linecolor
+#         plotfunc(d[:y]; extra_kwargs...)[1]
+#
+#     elseif lt == :contour
+#         x, y = d[:x], d[:y]
+#         surf = d[:z].surf'
+#         levels = d[:levels]
+#         if isscalar(levels)
+#             extra_args = (levels)
+#         elseif isvector(levels)
+#             extra_args = ()
+#             extra_kwargs[:levels] = levels
+#         else
+#             error("Only numbers and vectors are supported with levels keyword")
+#         end
+#         handle = plotfunc(x, y, surf, extra_args...; extra_kwargs...)
+#         if d[:fillrange] != nothing
+#             extra_kwargs[:cmap] = fillcmap
+#             delete!(extra_kwargs, :linewidths)
+#             handle = ax[:contourf](x, y, surf, extra_args...; extra_kwargs...)
+#         end
+#         handle
+#
+#     elseif lt in (:surface,:wireframe)
+#         x, y, z = Array(d[:x]), Array(d[:y]), Array(d[:z])
+#         if !ismatrix(x) || !ismatrix(y)
+#             x = repmat(x', length(y), 1)
+#             y = repmat(y, 1, length(d[:x]))
+#             z = z'
+#         end
+#         plotfunc(x, y, z; extra_kwargs...)
+#
+#     elseif lt in _3dTypes
+#         plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)[1]
+#
+#     elseif lt in (:scatter, :hist2d, :hexbin)
+#         plotfunc(d[:x], d[:y]; extra_kwargs...)
+#
+#     elseif lt == :heatmap
+#         x, y, z = d[:x], d[:y], d[:z].surf'
+#         plotfunc(heatmap_edges(x), heatmap_edges(y), z; extra_kwargs...)
+#
+#     elseif lt == :shape
+#         path = buildPyPlotPath(d[:x], d[:y])
+#         patches = pypatches.pymember("PathPatch")(path; extra_kwargs...)
+#         plotfunc(patches)
+#
+#     else # plot
+#         plotfunc(d[:x], d[:y]; extra_kwargs...)[1]
+#     end
+#
+#     # smoothing
+#     handleSmooth(plt, ax, d, d[:smooth])
+#
+#     # add the colorbar legend
+#     if plt.plotargs[:colorbar] != :none && haskey(extra_kwargs, :cmap)
+#         PyPlot.colorbar(d[:serieshandle], ax=ax)
+#     end
+#
+#     # this sets the bg color inside the grid
+#     ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color]))
+#
+#     fillrange = d[:fillrange]
+#     if fillrange != nothing && lt != :contour
+#         if typeof(fillrange) <: @compat(Union{Real, AVec})
+#             ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor, zorder = plt.n)
+#         else
+#             ax[:fill_between](d[:x], fillrange..., facecolor = fillcolor, zorder = plt.n)
+#         end
+#     end
+#
+#     push!(plt.seriesargs, d)
+#     plt
+# end
 
 # -----------------------------------------------------------------
 
