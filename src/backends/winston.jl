@@ -127,8 +127,8 @@ function _add_series(::WinstonBackend, plt::Plot, d::KW)
   #     fn = Winston.XXX
 
   elseif d[:linetype] == :hist
-      hst = hist(d[:y], d[:nbins])
-      Winston.add(wplt, Winston.Histogram(hst...; copy_remove(e, :nbins)...))
+      hst = hist(d[:y], d[:bins])
+      Winston.add(wplt, Winston.Histogram(hst...; copy_remove(e, :bins)...))
 
   # elseif d[:linetype] == :bar
   #     # fn = Winston.XXX

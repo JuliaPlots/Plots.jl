@@ -120,14 +120,10 @@ _seriesDefaults[:linestyle]       = :solid
 _seriesDefaults[:linewidth]       = 1
 _seriesDefaults[:linecolor]       = :match
 _seriesDefaults[:linealpha]       = nothing
-# _seriesDefaults[:linestroke]      = Stroke(1, :auto, nothing, :solid)  # linewidth, linecolor, linealpha, linestyle
-# _seriesDefaults[:fillbrush]       = Brush(nothing, :match, nothing)  # fillrange, fillcolor, fillalpha
 _seriesDefaults[:fillrange]       = nothing   # ribbons, areas, etc
 _seriesDefaults[:fillcolor]       = :match
 _seriesDefaults[:fillalpha]       = nothing
 _seriesDefaults[:markershape]     = :none
-# _seriesDefaults[:markerstroke]    = Stroke(1, :match_foreground, nothing, :solid)
-# _seriesDefaults[:markerbrush]     = Brush(6, :match, nothing)
 _seriesDefaults[:markercolor]     = :match
 _seriesDefaults[:markeralpha]     = nothing
 _seriesDefaults[:markersize]      = 6
@@ -135,18 +131,13 @@ _seriesDefaults[:markerstrokestyle] = :solid
 _seriesDefaults[:markerstrokewidth] = 1
 _seriesDefaults[:markerstrokecolor] = :match
 _seriesDefaults[:markerstrokealpha] = nothing
-# _seriesDefaults[:ribbon]          = nothing
-# _seriesDefaults[:ribboncolor]     = :match
-_seriesDefaults[:nbins]           = 30               # number of bins for hists
+_seriesDefaults[:bins]            = 30               # number of bins for hists
 _seriesDefaults[:smooth]          = false               # regression line?
 _seriesDefaults[:group]           = nothing           # groupby vector
-# _seriesDefaults[:annotation]      = nothing           # annotation tuple(s)... (x,y,annotation)
 _seriesDefaults[:x]               = nothing
 _seriesDefaults[:y]               = nothing
 _seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
 _seriesDefaults[:marker_z]        = nothing           # value for color scale
-# _seriesDefaults[:surface]         = nothing
-# _seriesDefaults[:nlevels]         = 15
 _seriesDefaults[:levels]          = 15
 _seriesDefaults[:orientation]     = :vertical
 _seriesDefaults[:bar_position]    = :overlay  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
@@ -168,8 +159,16 @@ _plotDefaults[:zlabel]            = ""
 _plotDefaults[:yrightlabel]       = ""
 _plotDefaults[:legend]            = :best
 _plotDefaults[:colorbar]          = :legend
-_plotDefaults[:background_color]  = colorant"white"
-_plotDefaults[:foreground_color]  = :auto
+_plotDefaults[:background_color]            = colorant"white"   # default for all backgrounds
+_plotDefaults[:background_color_legend]     = :match            # background of legend
+_plotDefaults[:background_color_inside]     = :match            # background inside grid
+_plotDefaults[:background_color_outside]    = :match            # background outside grid
+_plotDefaults[:foreground_color]            = :auto             # default for all foregrounds
+_plotDefaults[:foreground_color_legend]     = :match            # foreground of legend
+_plotDefaults[:foreground_color_grid]       = :match            # grid color
+_plotDefaults[:foreground_color_axis]       = :match            # axis border/tick colors
+_plotDefaults[:foreground_color_text]       = :match            # tick/guide text color
+_plotDefaults[:foreground_color_border]     = :match            # plot area border/spines
 _plotDefaults[:xlims]             = :auto
 _plotDefaults[:ylims]             = :auto
 _plotDefaults[:zlims]             = :auto
@@ -236,132 +235,230 @@ end
 
 # -----------------------------------------------------------------------------
 
+const _keyAliases = KW()
+
+function add_aliases(sym::Symbol, aliases::Symbol...)
+    for alias in aliases
+        if haskey(_keyAliases, alias)
+            error("Already an alias $alias => $(_keyAliases[alias])... can't also alias $sym")
+        end
+        _keyAliases[alias] = sym
+    end
+end
+
+# colors
+add_aliases(:seriescolor, :c, :color, :colour)
+add_aliases(:linecolor, :lc, :lcolor, :lcolour, :linecolour)
+add_aliases(:markercolor, :mc, :mcolor, :mcolour, :markercolour)
+add_aliases(:markerstokecolor, :msc, :mscolor, :mscolour, :markerstokecolour)
+add_aliases(:fillcolor, :fc, :fcolor, :fcolour, :fillcolour)
+
+add_aliases(:background_color, :bg, :bgcolor, :bg_color, :background,
+                              :background_colour, :bgcolour, :bg_colour)
+add_aliases(:background_color_legend, :bg_legend, :bglegend, :bgcolor_legend, :bg_color_legend, :background_legend,
+                              :background_colour_legend, :bgcolour_legend, :bg_colour_legend)
+add_aliases(:background_color_inside, :bg_inside, :bginside, :bgcolor_inside, :bg_color_inside, :background_inside,
+                              :background_colour_inside, :bgcolour_inside, :bg_colour_inside)
+add_aliases(:background_color_outside, :bg_outside, :bgoutside, :bgcolor_outside, :bg_color_outside, :background_outside,
+                              :background_colour_outside, :bgcolour_outside, :bg_colour_outside)
+add_aliases(:foreground_color, :fg, :fgcolor, :fg_color, :foreground,
+                            :foreground_colour, :fgcolour, :fg_colour)
+add_aliases(:foreground_color_legend, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
+                            :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend)
+add_aliases(:foreground_color_grid, :fg_grid, :fggrid, :fgcolor_grid, :fg_color_grid, :foreground_grid,
+                            :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid)
+add_aliases(:foreground_color_axis, :fg_axis, :fgaxis, :fgcolor_axis, :fg_color_axis, :foreground_axis,
+                            :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis)
+add_aliases(:foreground_color_text, :fg_text, :fgtext, :fgcolor_text, :fg_color_text, :foreground_text,
+                            :foreground_colour_text, :fgcolour_text, :fg_colour_text)
+add_aliases(:foreground_color_border, :fg_border, :fgborder, :fgcolor_border, :fg_color_border, :foreground_border,
+                            :foreground_colour_border, :fgcolour_border, :fg_colour_border)
+
+# alphas
+add_aliases(:seriesalpha, :alpha, :α, :opacity)
+add_aliases(:linealpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
+add_aliases(:makeralpha, :ma, :malpha, :mα, :makeropacity, :mopacity)
+add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
+add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
+
+add_aliases(:label, :lab)
+add_aliases(:line, :l)
+add_aliases(:linewidth, :w, :width, :lw)
+add_aliases(:linetype, :lt, :t, :seriestype)
+add_aliases(:linestyle, :style, :s, :ls)
+add_aliases(:marker, :m, :mark)
+add_aliases(:markershape, :shape)
+add_aliases(:markersize, :ms, :msize)
+add_aliases(:marker_z, :markerz, :zcolor)
+add_aliases(:fill, :f, :area)
+add_aliases(:fillrange, :fillrng, :frange, :fillto, :fill_between)
+add_aliases(:group, :g, :grouping)
+add_aliases(:bins, :bin, :nbin, :nbins, :nb)
+add_aliases(:ribbon, :rib)
+add_aliases(:annotation, :ann, :anns, :annotate, :annotations)
+add_aliases(:xlabel, :xlab, :xl)
+add_aliases(:xlims, :xlim, :xlimit, :xlimits)
+add_aliases(:xticks, :xtick)
+add_aliases(:ylabel, :ylab, :yl)
+add_aliases(:ylims, :ylim, :ylimit, :ylimits)
+add_aliases(:yticks, :ytick)
+add_aliases(:yrightlabel, :yrlab, :yrl, :ylabel2, :y2label, :ylab2, :y2lab, :ylabr, :ylabelright)
+add_aliases(:yrightlims, :yrlim, :yrlimit, :yrlimits)
+add_aliases(:yrightticks, :yrtick)
+add_aliases(:zlabel, :zlab, :zl)
+add_aliases(:zlims, :zlim, :zlimit, :zlimits)
+add_aliases(:zticks, :ztick)
+add_aliases(:legend, :leg, :key)
+add_aliases(:colorbar, :cb, :cbar, :colorkey)
+add_aliases(:smooth, :regression, :reg)
+add_aliases(:levels, :nlevels, :nlev, :levs)
+add_aliases(:size, :windowsize, :wsize)
+add_aliases(:windowtitle, :wtitle)
+add_aliases(:show, :gui, :display)
+add_aliases(:color_palette, :palette)
+add_aliases(:linkx, :xlink)
+add_aliases(:linky, :ylink)
+add_aliases(:nr, :nrow, :nrows, :rows)
+add_aliases(:nc, :ncol, :ncols, :cols, :ncolumns, :columns)
+add_aliases(:overwrite_figure, :clf, :clearfig, :overwrite, :reuse)
+add_aliases(:xerror, :xerr, :xerrorbar)
+add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
+add_aliases(:quiver, :velocity, :quiver2d, :gradient)
+add_aliases(:normalize, :norm, :normed, :normalized)
+
+
+
 # Alternate args
 
-@compat const _keyAliases = KW(
-    :c                  => :seriescolor,
-    :color              => :seriescolor,
-    :colour             => :seriescolor,
-    :alpha              => :seriesalpha,
-    :α                  => :seriesalpha,
-    :opacity            => :seriesalpha,
-    :lc                 => :linecolor,
-    :lcolor             => :linecolor,
-    :lcolour            => :linecolor,
-    :lab                => :label,
-    :l                  => :line,
-    :w                  => :linewidth,
-    :width              => :linewidth,
-    :lw                 => :linewidth,
-    :la                 => :linealpha,
-    :lalpha             => :linealpha,
-    :lineopacity        => :linealpha,
-    :type               => :linetype,
-    :lt                 => :linetype,
-    :t                  => :linetype,
-    :seriestype         => :linetype,
-    :style              => :linestyle,
-    :s                  => :linestyle,
-    :ls                 => :linestyle,
-    :m                  => :marker,
-    :mark               => :marker,
-    :shape              => :markershape,
-    :mc                 => :markercolor,
-    :mcolor             => :markercolor,
-    :markercolour       => :markercolor,
-    :ms                 => :markersize,
-    :msize              => :markersize,
-    :ma                 => :markeralpha,
-    :malpha             => :markeralpha,
-    :mopacity           => :markeralpha,
-    :markeropacity      => :markeralpha,
-    :zcolor             => :marker_z,
-    :f                  => :fill,
-    :area               => :fill,
-    :fillrng            => :fillrange,
-    :fc                 => :fillcolor,
-    :fcolor             => :fillcolor,
-    :fillcolour         => :fillcolor,
-    :fa                 => :fillalpha,
-    :falpha             => :fillalpha,
-    :fillopacity        => :fillalpha,
-    :g                  => :group,
-    :nb                 => :nbins,
-    :nbin               => :nbins,
-    :rib                => :ribbon,
-    :ann                => :annotation,
-    :anns               => :annotation,
-    :annotate           => :annotation,
-    :annotations        => :annotation,
-    :xlab               => :xlabel,
-    :ylab               => :ylabel,
-    :zlab               => :zlabel,
-    :yrlab              => :yrightlabel,
-    :ylabr              => :yrightlabel,
-    :y2lab              => :yrightlabel,
-    :ylab2              => :yrightlabel,
-    :ylabelright        => :yrightlabel,
-    :ylabel2            => :yrightlabel,
-    :y2label            => :yrightlabel,
-    :leg                => :legend,
-    :key                => :legend,
-    :cbar               => :colorbar,
-    :cb                 => :colorbar,
-    :bg                 => :background_color,
-    :bgcolor            => :background_color,
-    :bg_color           => :background_color,
-    :background         => :background_color,
-    :background_colour  => :background_color,
-    :fg                 => :foreground_color,
-    :fgcolor            => :foreground_color,
-    :fg_color           => :foreground_color,
-    :foreground         => :foreground_color,
-    :foreground_colour  => :foreground_color,
-    :regression         => :smooth,
-    :reg                => :smooth,
-    :nlevels            => :levels,
-    :nlev               => :levels,
-    :levs               => :levels,
-    :xlim               => :xlims,
-    :xlimit             => :xlims,
-    :xlimits            => :xlims,
-    :ylim               => :ylims,
-    :ylimit             => :ylims,
-    :ylimits            => :ylims,
-    :zlim               => :zlims,
-    :zlimit             => :zlims,
-    :zlimits            => :zlims,
-    :xtick              => :xticks,
-    :ytick              => :yticks,
-    :windowsize         => :size,
-    :wsize              => :size,
-    :wtitle             => :windowtitle,
-    :gui                => :show,
-    :display            => :show,
-    :palette            => :color_palette,
-    :xlink              => :linkx,
-    :ylink              => :linky,
-    :nrow               => :nr,
-    :nrows              => :nr,
-    :ncol               => :nc,
-    :ncols              => :nc,
-    :clf                => :overwrite_figure,
-    :clearfig           => :overwrite_figure,
-    :overwrite          => :overwrite_figure,
-    :reuse              => :overwrite_figure,
-    :err                => :yerror,
-    :errorbar           => :yerror,
-    :xerr               => :xerror,
-    :xerrorbar          => :xerror,
-    :yerr               => :yerror,
-    :yerrorbar          => :yerror,
-    :velocity           => :quiver,
-    :quiver2d           => :quiver,
-    :gradient           => :quiver,
-    :norm               => :normalize,
-    :normed             => :normalize,
-    :normalized         => :normalize,
-  )
+# @compat const _keyAliases = KW(
+    # :c                  => :seriescolor,
+    # :color              => :seriescolor,
+    # :colour             => :seriescolor,
+    # :alpha              => :seriesalpha,
+    # :α                  => :seriesalpha,
+    # :opacity            => :seriesalpha,
+    # :lc                 => :linecolor,
+    # :lcolor             => :linecolor,
+    # :lcolour            => :linecolor,
+    # :lab                => :label,
+    # :l                  => :line,
+    # :w                  => :linewidth,
+    # :width              => :linewidth,
+    # :lw                 => :linewidth,
+    # :la                 => :linealpha,
+    # :lalpha             => :linealpha,
+    # :lineopacity        => :linealpha,
+    # :type               => :linetype,
+    # :lt                 => :linetype,
+    # :t                  => :linetype,
+    # :seriestype         => :linetype,
+    # :style              => :linestyle,
+    # :s                  => :linestyle,
+    # :ls                 => :linestyle,
+    # :m                  => :marker,
+    # :mark               => :marker,
+    # :shape              => :markershape,
+    # :mc                 => :markercolor,
+    # :mcolor             => :markercolor,
+    # :markercolour       => :markercolor,
+    # :ms                 => :markersize,
+    # :msize              => :markersize,
+    # :ma                 => :markeralpha,
+    # :malpha             => :markeralpha,
+    # :mopacity           => :markeralpha,
+    # :markeropacity      => :markeralpha,
+    # :zcolor             => :marker_z,
+    # :f                  => :fill,
+    # :area               => :fill,
+    # :fillrng            => :fillrange,
+    # :fc                 => :fillcolor,
+    # :fcolor             => :fillcolor,
+    # :fillcolour         => :fillcolor,
+    # :fa                 => :fillalpha,
+    # :falpha             => :fillalpha,
+    # :fillopacity        => :fillalpha,
+    # :g                  => :group,
+    # :nb                 => :nbins,
+    # :nbin               => :nbins,
+    # :rib                => :ribbon,
+    # :ann                => :annotation,
+    # :anns               => :annotation,
+    # :annotate           => :annotation,
+    # :annotations        => :annotation,
+    # :xlab               => :xlabel,
+    # :ylab               => :ylabel,
+    # :zlab               => :zlabel,
+    # :yrlab              => :yrightlabel,
+    # :ylabr              => :yrightlabel,
+    # :y2lab              => :yrightlabel,
+    # :ylab2              => :yrightlabel,
+    # :ylabelright        => :yrightlabel,
+    # :ylabel2            => :yrightlabel,
+    # :y2label            => :yrightlabel,
+    # :leg                => :legend,
+    # :key                => :legend,
+    # :cbar               => :colorbar,
+    # :cb                 => :colorbar,
+    # :bg                 => :background_color,
+    # :bgcolor            => :background_color,
+    # :bg_color           => :background_color,
+    # :background         => :background_color,
+    # :background_colour  => :background_color,
+    # :fg                 => :foreground_color,
+    # :fgcolor            => :foreground_color,
+    # :fg_color           => :foreground_color,
+    # :foreground         => :foreground_color,
+    # :foreground_colour  => :foreground_color,
+    # :bglegend           => :background_color_legend,
+    # :bg_legend          => :background_color_legend,
+    # :bgcolor_legend     => :background_color_legend,
+    # :background_legend  => :background_color_legend,
+    # :bglegend           => :background_color_legend,
+    # :regression         => :smooth,
+    # :reg                => :smooth,
+    # :nlevels            => :levels,
+    # :nlev               => :levels,
+    # :levs               => :levels,
+    # :xlim               => :xlims,
+    # :xlimit             => :xlims,
+    # :xlimits            => :xlims,
+    # :ylim               => :ylims,
+    # :ylimit             => :ylims,
+    # :ylimits            => :ylims,
+    # :zlim               => :zlims,
+    # :zlimit             => :zlims,
+    # :zlimits            => :zlims,
+    # :xtick              => :xticks,
+    # :ytick              => :yticks,
+    # :windowsize         => :size,
+    # :wsize              => :size,
+    # :wtitle             => :windowtitle,
+    # :gui                => :show,
+    # :display            => :show,
+    # :palette            => :color_palette,
+    # :xlink              => :linkx,
+    # :ylink              => :linky,
+    # :nrow               => :nr,
+    # :nrows              => :nr,
+    # :ncol               => :nc,
+    # :ncols              => :nc,
+    # :clf                => :overwrite_figure,
+    # :clearfig           => :overwrite_figure,
+    # :overwrite          => :overwrite_figure,
+    # # :reuse              => :overwrite_figure,
+    # :err                => :yerror,
+    # :errorbar           => :yerror,
+    # :xerr               => :xerror,
+    # :xerrorbar          => :xerror,
+    # :yerr               => :yerror,
+    # :yerrorbar          => :yerror,
+    # :velocity           => :quiver,
+    # :quiver2d           => :quiver,
+    # :gradient           => :quiver,
+    # :norm               => :normalize,
+    # :normed             => :normalize,
+    # :normalized         => :normalize,
+  # )
 
 # add all pluralized forms to the _keyAliases dict
 for arg in keys(_seriesDefaults)
@@ -406,6 +503,72 @@ function default(; kw...)
     for (k,v) in kw
         default(k, v)
     end
+end
+
+# -----------------------------------------------------------------------------
+
+const _invisible = RGBA(0,0,0,0)
+
+const _themes = KW(
+    :default => KW(
+        :bg         => :white,
+        :bglegend   => :match,
+        :bginside   => :match,
+        :bgoutside  => :match,
+        :fg         => :auto,
+        :fglegend   => :match,
+        :fggrid     => :match,
+        :fgaxis     => :match,
+        :fgtext     => :match,
+        :fgborder   => :match,
+    ),
+    :ggplot2 => KW(
+        :bg         => :white,
+        :bglegend   => _invisible,
+        :bginside   => :lightgray,
+        :bgoutside  => :match,
+        :fg         => :white,
+        :fglegend   => _invisible,
+        :fggrid     => :match,
+        :fgaxis     => :match,
+        :fgtext     => :gray,
+        :fgborder   => :match,
+    ),
+)
+
+function add_theme(sym::Symbol, theme::KW)
+    _themes[sym] = theme
+end
+
+# add a new theme, using an existing theme as the base
+function add_theme(sym::Symbol;
+                   base      = :default,  # start with this theme
+                   bg        = _themes[base][:bg],
+                   bglegend  = _themes[base][:bglegend],
+                   bginside  = _themes[base][:bginside],
+                   bgoutside = _themes[base][:bgoutside],
+                   fg        = _themes[base][:fg],
+                   fglegend  = _themes[base][:fglegend],
+                   fggrid    = _themes[base][:fggrid],
+                   fgaxis    = _themes[base][:fgaxis],
+                   fgtext    = _themes[base][:fgtext],
+                   fgborder  = _themes[base][:fgborder])
+    _themes[sym] = KW(
+        :bg => bg,
+        :bglegend  => bglegend,
+        :bginside  => bginside,
+        :bgoutside => bgoutside,
+        :fg        => fg,
+        :fglegend  => fglegend,
+        :fggrid    => fggrid,
+        :fgaxis    => fgaxis,
+        :fgtext    => fgtext,
+        :fgborder  => fgborder,
+    )
+end
+
+function set_theme(sym::Symbol)
+    default(; _themes[sym]...)
 end
 
 # -----------------------------------------------------------------------------

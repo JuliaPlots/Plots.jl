@@ -20,6 +20,8 @@ export
     AVec,
     AMat,
     KW,
+    set_theme,
+    add_theme,
 
     plot,
     plot!,

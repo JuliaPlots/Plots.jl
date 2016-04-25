@@ -33,7 +33,7 @@ end
 
 function getLineGeom(d::KW)
     lt = d[:linetype]
-    xbins, ybins = maketuple(d[:nbins])
+    xbins, ybins = maketuple(d[:bins])
     if lt == :hexb
         Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)
     elseif lt == :hist2d

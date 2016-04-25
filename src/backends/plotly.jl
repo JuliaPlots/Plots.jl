@@ -308,10 +308,10 @@ function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
   elseif lt == :hist2d
     d_out[:type] = "histogram2d"
     d_out[:x], d_out[:y] = x, y
-    if isa(d[:nbins], Tuple)
-      xbins, ybins = d[:nbins]
+    if isa(d[:bins], Tuple)
+      xbins, ybins = d[:bins]
     else
-      xbins = ybins = d[:nbins]
+      xbins = ybins = d[:bins]
     end
     d_out[:nbinsx] = xbins
     d_out[:nbinsy] = ybins
@@ -320,7 +320,7 @@ function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
     d_out[:type] = "histogram"
     isvert = isvertical(d)
     d_out[isvert ? :x : :y] = y
-    d_out[isvert ? :nbinsx : :nbinsy] = d[:nbins]
+    d_out[isvert ? :nbinsx : :nbinsy] = d[:bins]
     if lt == :density
       d_out[:histnorm] = "probability density"
     end

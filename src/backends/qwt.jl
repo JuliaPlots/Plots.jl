@@ -12,7 +12,7 @@ end
 # -------------------------------
 
 @compat const _qwtAliases = KW(
-    :nbins => :heatmap_n,
+    :bins => :heatmap_n,
     :fillrange => :fillto,
     :linewidth => :width,
     :markershape => :marker,

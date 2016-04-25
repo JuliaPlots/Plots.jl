@@ -223,7 +223,8 @@ end
 
 function pyplot_figure(plotargs::KW)
     w,h = map(px2inch, plotargs[:size])
-    bgcolor = getPyPlotColor(plotargs[:background_color])
+    # bgcolor = getPyPlotColor(plotargs[:background_color])
+
 
     # reuse the current figure?
     fig = if plotargs[:overwrite_figure]
@@ -235,7 +236,8 @@ function pyplot_figure(plotargs::KW)
     # update the specs
     # fig[:set_size_inches](w,h, (isijulia() ? [] : [true])...)
     fig[:set_size_inches](w, h, forward = true)
-    fig[:set_facecolor](bgcolor)
+    # fig[:set_facecolor](bgcolor)
+    fig[:set_facecolor](getPyPlotColor(plotargs[:background_color_outside]))
     fig[:set_dpi](DPI)
     fig[:set_tight_layout](true)
 
@@ -451,7 +453,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             color = pyfillcolor(d),
             edgecolor = pylinecolor(d),
             linewidth = d[:linewidth],
-            bins = d[:nbins],
+            bins = d[:bins],
             normed = d[:normalize],
             weights = d[:weights],
             orientation = (isvertical(d) ? "vertical" : "horizontal"),
@@ -465,7 +467,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         handle = ax[:hist2d](x, y;
             label = d[:label],
             zorder = plt.n + 0.5,
-            bins = d[:nbins],
+            bins = d[:bins],
             normed = d[:normalize],
             weights = d[:weights],
             cmap = pyfillcolormap(d)  # applies to the pcolorfast object
@@ -478,7 +480,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         handle = ax[:hexbin](x, y;
             label = d[:label],
             zorder = plt.n + 0.5,
-            gridsize = d[:nbins],
+            gridsize = d[:bins],
             linewidths = d[:linewidth],
             edgecolors = pylinecolor(d),
             cmap = pyfillcolormap(d)  # applies to the pcolorfast object
@@ -498,7 +500,8 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     end
 
     # this sets the bg color inside the grid
-    ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color]))
+    # ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color]))
+    ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color_inside]))
 
     # handle area filling
     fillrange = d[:fillrange]
@@ -571,7 +574,7 @@ function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
         # extra_kwargs[:bottom] = d[:fill]
 
         if like_histogram(lt)
-            extra_kwargs[:bins] = d[:nbins]
+            extra_kwargs[:bins] = d[:bins]
             extra_kwargs[:normed] = lt == :density
             extra_kwargs[:orientation] = isvertical(d) ? "vertical" : "horizontal"
             extra_kwargs[:histtype] = d[:bar_position] == :stack ? "barstacked" : "bar"
@@ -580,7 +583,7 @@ function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
         end
 
     elseif lt in (:hist2d, :hexbin)
-        extra_kwargs[:gridsize] = d[:nbins]
+        extra_kwargs[:gridsize] = d[:bins]
         extra_kwargs[:cmap] = linecmap
 
     elseif lt == :contour
@@ -858,18 +861,21 @@ function applyPyPlotScale(ax, scaleType::Symbol, letter)
 end
 
 
-function updateAxisColors(ax, fgcolor)
+function updateAxisColors(ax, d::KW)
+    guidecolor = getPyPlotColor(d[:guidefont].color)
     for (loc, spine) in ax[:spines]
-        spine[:set_color](fgcolor)
+        spine[:set_color](getPyPlotColor(d[:foreground_color_border]))
     end
     for letter in ("x", "y", "z")
         axis = axis_symbol(letter, "axis")
         if haskey(ax, axis)
-            ax[:tick_params](axis=letter, colors=fgcolor, which="both")
-            ax[axis][:label][:set_color](fgcolor)
+            ax[:tick_params](axis=letter, which="both",
+                             colors=getPyPlotColor(d[:foreground_color_axis]),
+                             labelcolor=getPyPlotColor(d[:foreground_color_text]))
+            ax[axis][:label][:set_color](guidecolor)
         end
     end
-    ax[:title][:set_color](fgcolor)
+    ax[:title][:set_color](guidecolor)
 end
 
 function usingRightAxis(plt::Plot{PyPlotBackend})
@@ -917,7 +923,8 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
                 lab[:set_fontsize](ticksz)
             end
             if get(d, :grid, false)
-                fgcolor = getPyPlotColor(plt.plotargs[:foreground_color])
+                # fgcolor = getPyPlotColor(plt.plotargs[:foreground_color])
+                fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
                 tmpax[axis][:grid](true, color = fgcolor)
                 tmpax[:set_axisbelow](true)
             end
@@ -1038,10 +1045,16 @@ function addPyPlotLegend(plt::Plot, ax)
             leg = ax[:legend]([d[:serieshandle][1] for d in args],
                 [d[:label] for d in args],
                 loc = get(_pyplot_legend_pos, leg, "best"),
+                scatterpoints = 1,
                 fontsize = plt.plotargs[:legendfont].pointsize
                 # framealpha = 0.6
             )
             leg[:set_zorder](1000)
+
+            # set some legend properties
+            frame = leg[:get_frame]()
+            frame[:set_facecolor](getPyPlotColor(plt.plotargs[:background_color_legend]))
+            frame[:set_edgecolor](getPyPlotColor(plt.plotargs[:foreground_color_legend]))
         end
     end
 end
@@ -1051,7 +1064,9 @@ end
 function finalizePlot(plt::Plot{PyPlotBackend})
     ax = getLeftAxis(plt)
     addPyPlotLegend(plt, ax)
-    updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color]))
+    updateAxisColors(ax, plt.plotargs)
+    # updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color_axis]),
+    #                      getPyPlotColor(plt.plotargs[:foreground_color_text]))
     PyPlot.draw()
 end
 
@@ -1060,7 +1075,9 @@ function finalizePlot(subplt::Subplot{PyPlotBackend})
     for (i,plt) in enumerate(subplt.plts)
         ax = getLeftAxis(plt)
         addPyPlotLegend(plt, ax)
-        updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color]))
+        updateAxisColors(ax, plt.plotargs)
+        # updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color_axis]),
+        #                      getPyPlotColor(plt.plotargs[:foreground_color_text]))
     end
     # fig[:tight_layout]()
     PyPlot.draw()

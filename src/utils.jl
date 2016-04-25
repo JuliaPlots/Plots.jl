@@ -22,7 +22,7 @@ function histogramHack(; kw...)
   d = KW(kw)
 
   # we assume that the y kwarg is set with the data to be binned, and nbins is also defined
-  edges, midpoints, buckets, counts = binData(d[:y], d[:nbins])
+  edges, midpoints, buckets, counts = binData(d[:y], d[:bins])
   d[:x] = midpoints
   d[:y] = float(counts)
   d[:linetype] = :bar
