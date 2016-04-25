@@ -398,7 +398,7 @@ function handlePlotColors(::AbstractBackend, d::KW)
     end
 
     # update sub-foreground colors
-    for fgtype in ("legend", "grid", "axis", "text", "border")
+    for fgtype in ("legend", "grid", "axis", "text", "border", "guide")
         fgsym = symbol("foreground_color_" * fgtype)
         if d[fgsym] == :match
             d[fgsym] = d[:foreground_color]

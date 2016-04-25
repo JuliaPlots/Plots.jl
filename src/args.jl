@@ -167,8 +167,9 @@ _plotDefaults[:foreground_color]            = :auto             # default for al
 _plotDefaults[:foreground_color_legend]     = :match            # foreground of legend
 _plotDefaults[:foreground_color_grid]       = :match            # grid color
 _plotDefaults[:foreground_color_axis]       = :match            # axis border/tick colors
-_plotDefaults[:foreground_color_text]       = :match            # tick/guide text color
 _plotDefaults[:foreground_color_border]     = :match            # plot area border/spines
+_plotDefaults[:foreground_color_text]       = :match            # tick text color
+_plotDefaults[:foreground_color_guide]      = :match            # guide text color
 _plotDefaults[:xlims]             = :auto
 _plotDefaults[:ylims]             = :auto
 _plotDefaults[:zlims]             = :auto
@@ -269,10 +270,12 @@ add_aliases(:foreground_color_grid, :fg_grid, :fggrid, :fgcolor_grid, :fg_color_
                             :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid, :gridcolor)
 add_aliases(:foreground_color_axis, :fg_axis, :fgaxis, :fgcolor_axis, :fg_color_axis, :foreground_axis,
                             :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis, :axiscolor)
-add_aliases(:foreground_color_text, :fg_text, :fgtext, :fgcolor_text, :fg_color_text, :foreground_text,
-                            :foreground_colour_text, :fgcolour_text, :fg_colour_text, :textcolor)
 add_aliases(:foreground_color_border, :fg_border, :fgborder, :fgcolor_border, :fg_color_border, :foreground_border,
                             :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor, :border)
+add_aliases(:foreground_color_text, :fg_text, :fgtext, :fgcolor_text, :fg_color_text, :foreground_text,
+                            :foreground_colour_text, :fgcolour_text, :fg_colour_text, :textcolor)
+add_aliases(:foreground_color_guide, :fg_guide, :fgguide, :fgcolor_guide, :fg_color_guide, :foreground_guide,
+                            :foreground_colour_guide, :fgcolour_guide, :fg_colour_guide, :guidecolor)
 
 # alphas
 add_aliases(:seriesalpha, :alpha, :α, :opacity)
@@ -388,19 +391,21 @@ const _themes = KW(
         :fgaxis     => :match,
         :fgtext     => :match,
         :fgborder   => :match,
+        :fgguide    => :match,
     ),
-    :ggplot2 => KW(
-        :bg         => :white,
-        :bglegend   => _invisible,
-        :bginside   => :lightgray,
-        :bgoutside  => :match,
-        :fg         => :white,
-        :fglegend   => _invisible,
-        :fggrid     => :match,
-        :fgaxis     => :match,
-        :fgtext     => :gray,
-        :fgborder   => :match,
-    ),
+    # :ggplot2 => KW(
+    #     :bg         => :white,
+    #     :bglegend   => _invisible,
+    #     :bginside   => :lightgray,
+    #     :bgoutside  => :match,
+    #     :fg         => :white,
+    #     :fglegend   => _invisible,
+    #     :fggrid     => :match,
+    #     :fgaxis     => :match,
+    #     :fgtext     => :gray,
+    #     :fgborder   => :match,
+    #     :fgguide    => :black,
+    # ),
 )
 
 function add_theme(sym::Symbol, theme::KW)
@@ -419,7 +424,8 @@ function add_theme(sym::Symbol;
                    fggrid    = _themes[base][:fggrid],
                    fgaxis    = _themes[base][:fgaxis],
                    fgtext    = _themes[base][:fgtext],
-                   fgborder  = _themes[base][:fgborder])
+                   fgborder  = _themes[base][:fgborder],
+                   fgguide   = _themes[base][:fgguide])
     _themes[sym] = KW(
         :bg => bg,
         :bglegend  => bglegend,
@@ -431,8 +437,18 @@ function add_theme(sym::Symbol;
         :fgaxis    => fgaxis,
         :fgtext    => fgtext,
         :fgborder  => fgborder,
+        :fgguide   => fgguide,
     )
 end
+
+add_theme(:ggplot2,
+    bglegend = _invisible,
+    bginside = :lightgray,
+    fg       = :white,
+    fglegend = _invisible,
+    fgtext   = :gray,
+    fgguide  = :black
+)
 
 function set_theme(sym::Symbol)
     default(; _themes[sym]...)
@@ -805,7 +821,7 @@ function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
 end
 
 function has_black_border_for_default(lt::Symbol)
-    like_histogram(lt) || lt == :hexbin
+    like_histogram(lt) || lt in (:hexbin, :bar)
 end
 
 # build the argument dictionary for a series

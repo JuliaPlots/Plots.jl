@@ -9,6 +9,7 @@ function _initialize_backend(::PyPlotBackend)
         const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
         const mplot3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d"))
         const pypatches = PyPlot.pywrap(PyPlot.pyimport("matplotlib.patches"))
+        const pyfont = PyPlot.pywrap(PyPlot.pyimport("matplotlib.font_manager"))
         # const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
     end
 
@@ -129,6 +130,14 @@ function getPyPlotStepStyle(linetype::Symbol)
     return "default"
 end
 
+# untested... return a FontProperties object from a Plots.Font
+function getPyPlotFont(font::Font)
+    pyfont.pymember("FontProperties")(
+        family = font.family,
+        size = font.size
+    )
+end
+
 # ---------------------------------------------------------------------------
 
 type PyPlotAxisWrapper
@@ -166,34 +175,34 @@ getLeftAxis(plt::Plot{PyPlotBackend}) = getLeftAxis(plt.o)
 getRightAxis(plt::Plot{PyPlotBackend}) = getRightAxis(plt.o)
 getAxis(plt::Plot{PyPlotBackend}, axis::Symbol) = (axis == :right ? getRightAxis : getLeftAxis)(plt)
 
-# left axis is PyPlot.<func>, right axis is "f.axes[0].twinx().<func>"
-function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
-    # # need to access mplot3d functions differently
-    # if linetype == :surface
-    #   return mplot3d.pymember("Axes3D")[:plot_surface]
-    # end
-
-    # in the 2-axis case we need to get: <rightaxis>[:<func>]
-    ax = getAxis(plt, axis)
-    # ax[:set_ylabel](plt.plotargs[:yrightlabel])
-    fmap = KW(
-        :hist       => :hist,
-        :density    => :hist,
-        :sticks     => :bar,
-        :bar        => :bar,
-        :hist2d     => :hexbin,
-        :hexbin     => :hexbin,
-        :scatter    => :scatter,
-        :contour    => :contour,
-        :scatter3d  => :scatter,
-        :surface    => :plot_surface,
-        :wireframe  => :plot_wireframe,
-        :heatmap    => :pcolor,
-        :shape      => :add_patch,
-        # :surface    => pycolors.pymember("LinearSegmentedColormap")[:from_list]
-    )
-    return ax[get(fmap, linetype, :plot)]
-end
+# # left axis is PyPlot.<func>, right axis is "f.axes[0].twinx().<func>"
+# function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
+#     # # need to access mplot3d functions differently
+#     # if linetype == :surface
+#     #   return mplot3d.pymember("Axes3D")[:plot_surface]
+#     # end
+#
+#     # in the 2-axis case we need to get: <rightaxis>[:<func>]
+#     ax = getAxis(plt, axis)
+#     # ax[:set_ylabel](plt.plotargs[:yrightlabel])
+#     fmap = KW(
+#         :hist       => :hist,
+#         :density    => :hist,
+#         :sticks     => :bar,
+#         :bar        => :bar,
+#         :hist2d     => :hexbin,
+#         :hexbin     => :hexbin,
+#         :scatter    => :scatter,
+#         :contour    => :contour,
+#         :scatter3d  => :scatter,
+#         :surface    => :plot_surface,
+#         :wireframe  => :plot_wireframe,
+#         :heatmap    => :pcolor,
+#         :shape      => :add_patch,
+#         # :surface    => pycolors.pymember("LinearSegmentedColormap")[:from_list]
+#     )
+#     return ax[get(fmap, linetype, :plot)]
+# end
 
 
 function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Bool)
@@ -361,6 +370,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     ax = getAxis(plt, d[:axis])
     x, y, z = d[:x], d[:y], d[:z]
+    xyargs = (lt in _3dTypes ? (x,y,z) : (x,y))
 
     # handle zcolor and get c/cmap
     extrakw = KW()
@@ -371,8 +381,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     # path/line/scatter should all do UP TO 2 series... a line, and a scatter
     if lt in (:path, :line, :scatter, :path3d, :scatter3d, :steppre, :steppost)
-        xyargs = (lt in _3dTypes ? (x,y,z) : (x,y))
-
         # line plot (path, line, steppre, steppost, path3d)
         if d[:linewidth] > 0
             handle = ax[:plot](xyargs...;
@@ -386,30 +394,30 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             push!(handles, handle)
         end
 
-        # scatter plot (scatter, scatter3d, and line plots that have markers)
-        if d[:markershape] != :none
-            if d[:marker_z] == nothing
-                extrakw[:c] = color_fix(pymarkercolor(d), x)
-            else
-                extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
-                extrakw[:cmap] = pymarkercolormap(d)
-                needs_colorbar = true
-            end
-            handle = ax[:scatter](xyargs...;
-                label = d[:label],
-                zorder = plt.n + 0.5,
-                marker = getPyPlotMarker(d[:markershape]),
-                s = d[:markersize] .^ 2,
-                edgecolors = pymarkerstrokecolor(d),
-                linewidths = d[:markerstrokewidth],
-                extrakw...
-            )
-            push!(handles, handle)
-        end
+        # # scatter plot (scatter, scatter3d, and line plots that have markers)
+        # if d[:markershape] != :none
+        #     if d[:marker_z] == nothing
+        #         extrakw[:c] = color_fix(pymarkercolor(d), x)
+        #     else
+        #         extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
+        #         extrakw[:cmap] = pymarkercolormap(d)
+        #         needs_colorbar = true
+        #     end
+        #     handle = ax[:scatter](xyargs...;
+        #         label = d[:label],
+        #         zorder = plt.n + 0.5,
+        #         marker = getPyPlotMarker(d[:markershape]),
+        #         s = d[:markersize] .^ 2,
+        #         edgecolors = pymarkerstrokecolor(d),
+        #         linewidths = d[:markerstrokewidth],
+        #         extrakw...
+        #     )
+        #     push!(handles, handle)
+        # end
     end
 
-    if lt in (:bar, :sticks)
-        extrakw[isvertical(d) ? :width : :height] = (lt == :sticks ? 0.1 : 0.9)
+    if lt == :bar
+        extrakw[isvertical(d) ? :width : :height] = 0.9
         handle = ax[isvertical(d) ? :bar : :barh](x, y;
             label = d[:label],
             zorder = plt.n,
@@ -419,6 +427,84 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             align = "center",
             extrakw...
         )[1]
+        push!(handles, handle)
+    end
+
+    if lt == :sticks
+        extrakw[isvertical(d) ? :width : :height] = 0.0
+        handle = ax[isvertical(d) ? :bar : :barh](x, y;
+            label = d[:label],
+            zorder = plt.n,
+            color = pylinecolor(d),
+            edgecolor = pylinecolor(d),
+            linewidth = d[:linewidth],
+            align = "center",
+            extrakw...
+        )[1]
+        push!(handles, handle)
+    end
+
+    # if lt in (:bar, :sticks)
+    #     extrakw[isvertical(d) ? :width : :height] = (lt == :sticks ? 0.0 : 0.9)
+    #     handle = ax[isvertical(d) ? :bar : :barh](x, y;
+    #         label = d[:label],
+    #         zorder = plt.n,
+    #         color = pyfillcolor(d),
+    #         edgecolor = lt == :sticks ? py pylinecolor(d),
+    #         linewidth = d[:linewidth],
+    #         align = "center",
+    #         extrakw...
+    #     )[1]
+    #     push!(handles, handle)
+    #
+    #     # if d[:markershape] != :none
+    #     #     extrakw = KW()
+    #     #     if d[:marker_z] == nothing
+    #     #         extrakw[:c] = color_fix(pymarkercolor(d), x)
+    #     #     else
+    #     #         extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
+    #     #         extrakw[:cmap] = pymarkercolormap(d)
+    #     #         needs_colorbar = true
+    #     #     end
+    #     #     handle = ax[:scatter](x, y;
+    #     #         label = d[:label],
+    #     #         zorder = plt.n + 0.5,
+    #     #         marker = getPyPlotMarker(d[:markershape]),
+    #     #         s = d[:markersize] .^ 2,
+    #     #         edgecolors = pymarkerstrokecolor(d),
+    #     #         linewidths = d[:markerstrokewidth],
+    #     #         extrakw...
+    #     #     )
+    #     #     push!(handles, handle)
+    #     # end
+    # end
+
+    # add markers?
+    if d[:markershape] != :none && lt in (:path, :line, :scatter, :path3d,
+                                          :scatter3d, :steppre, :steppost,
+                                          :bar, :sticks)
+        extrakw = KW()
+        if d[:marker_z] == nothing
+            extrakw[:c] = color_fix(pymarkercolor(d), x)
+        else
+            extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
+            extrakw[:cmap] = pymarkercolormap(d)
+            needs_colorbar = true
+        end
+        xyargs = if lt in (:bar, :sticks) && !isvertical(d)
+            (y, x)
+        else
+            xyargs
+        end
+        handle = ax[:scatter](xyargs...;
+            label = d[:label],
+            zorder = plt.n + 0.5,
+            marker = getPyPlotMarker(d[:markershape]),
+            s = d[:markersize] .^ 2,
+            edgecolors = pymarkerstrokecolor(d),
+            linewidths = d[:markerstrokewidth],
+            extrakw...
+        )
         push!(handles, handle)
     end
 
@@ -926,7 +1012,8 @@ end
 
 
 function updateAxisColors(ax, d::KW)
-    guidecolor = getPyPlotColor(d[:guidefont].color)
+    # guidecolor = getPyPlotColor(d[:guidefont].color)
+    guidecolor = getPyPlotColor(d[:foreground_color_guide])
     for (loc, spine) in ax[:spines]
         spine[:set_color](getPyPlotColor(d[:foreground_color_border]))
     end
@@ -1117,10 +1204,15 @@ function addPyPlotLegend(plt::Plot, ax)
             )
             leg[:set_zorder](1000)
 
+            fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_legend])
+            for txt in leg[:get_texts]()
+                PyPlot.plt[:setp](txt, color = fgcolor)
+            end
+
             # set some legend properties
             frame = leg[:get_frame]()
             frame[:set_facecolor](getPyPlotColor(plt.plotargs[:background_color_legend]))
-            frame[:set_edgecolor](getPyPlotColor(plt.plotargs[:foreground_color_legend]))
+            frame[:set_edgecolor](fgcolor)
         end
     end
 end
