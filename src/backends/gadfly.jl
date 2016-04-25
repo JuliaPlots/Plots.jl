@@ -79,12 +79,13 @@ function get_extra_theme_args(d::KW, k::Symbol)
 end
 
 function getGadflyLineTheme(d::KW)
+    lt = d[:linetype]
     lc = convertColor(getColor(d[:linecolor]), d[:linealpha])
     fc = convertColor(getColor(d[:fillcolor]), d[:fillalpha])
 
     Gadfly.Theme(;
-        default_color = lc,
-        line_width = (d[:linetype] == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
+        default_color = (lt in (:hist,:hist2d,:hexbin) ? fc : lc),
+        line_width = (lt == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
         # line_style = Gadfly.get_stroke_vector(d[:linestyle]),
         lowlight_color = x->RGB(fc),  # fill/ribbon
         lowlight_opacity = alpha(fc), # fill/ribbon
@@ -262,8 +263,8 @@ function addGadflySeries!(plt::Plot, d::KW)
     lt = d[:linetype]
     if lt == :ohlc
         error("Haven't re-implemented after refactoring")
-    elseif lt in (:hist2d, :hexbin) && (isa(d[:linecolor], ColorGradient) || isa(d[:linecolor], ColorFunction))
-        push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:linecolor], p))))
+    elseif lt in (:hist2d, :hexbin) && (isa(d[:fillcolor], ColorGradient) || isa(d[:fillcolor], ColorFunction))
+        push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:fillcolor], p))))
     elseif lt == :scatter && d[:markershape] == :none
         d[:markershape] = :ellipse
     end
@@ -463,25 +464,24 @@ function updateGadflyPlotTheme(plt::Plot, d::KW)
     end
 
     if !get(d, :grid, true)
-        kwargs[:grid_color] = getColor(d[:background_color])
+        kwargs[:grid_color] = getColor(d[:background_color_grid])
     end
 
     # fonts
     tfont, gfont, lfont = d[:tickfont], d[:guidefont], d[:legendfont]
 
-    fg = getColor(d[:foreground_color])
     getGadflyContext(plt).theme = Gadfly.Theme(;
-        background_color = getColor(d[:background_color]),
-        minor_label_color = fg,
+        background_color = getColor(d[:background_color_inside]),
+        minor_label_color = getColor(d[:foreground_color_text]),
         minor_label_font = tfont.family,
         minor_label_font_size = tfont.pointsize * Gadfly.pt,
-        major_label_color = fg,
+        major_label_color = gfont.color,
         major_label_font = gfont.family,
         major_label_font_size = gfont.pointsize * Gadfly.pt,
-        key_title_color = fg,
+        key_title_color = gfont.color,
         key_title_font = gfont.family,
         key_title_font_size = gfont.pointsize * Gadfly.pt,
-        key_label_color = fg,
+        key_label_color = lfont.color,
         key_label_font = lfont.family,
         key_label_font_size = lfont.pointsize * Gadfly.pt,
         plot_padding = 1 * Gadfly.mm,

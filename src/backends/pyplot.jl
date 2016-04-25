@@ -367,7 +367,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     extrakw = KW()
 
             # :shape,
-            # :hist2d, :hexbin,
             # :hline, :vline, :heatmap,
             # :contour, :surface, :wireframe
 
@@ -489,6 +488,18 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         needs_colorbar = true
     end
 
+    if lt in (:hline,:vline)
+        for yi in d[:y]
+            func = ax[lt == :hline ? :axhline : :axvline]
+            handle = func(yi;
+                linewidth=d[:linewidth],
+                color=pylinecolor(d),
+                linestyle=getPyPlotLineStyle(lt, d[:linestyle])
+            )
+            push!(handles, handle)
+        end
+    end
+
     d[:serieshandle] = handles
 
     # smoothing
@@ -507,9 +518,9 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     fillrange = d[:fillrange]
     if fillrange != nothing && lt != :contour
         if typeof(fillrange) <: @compat(Union{Real, AVec})
-            ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor, zorder = plt.n)
+            ax[:fill_between](d[:x], fillrange, d[:y], facecolor = pyfillcolor(d), zorder = plt.n)
         else
-            ax[:fill_between](d[:x], fillrange..., facecolor = fillcolor, zorder = plt.n)
+            ax[:fill_between](d[:x], fillrange..., facecolor = pyfillcolor(d), zorder = plt.n)
         end
     end
 
@@ -788,12 +799,6 @@ function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
             handle[:set_offsets](hcat(xy...))
         end
     end
-    # series = d[:serieshandle]
-    # try
-    #     series[:set_data](d[:x], d[:y])
-    # catch
-    #     series[:set_offsets](hcat(d[:x], d[:y]))
-    # end
     set_lims!(plt, d[:axis])
     plt
 end
