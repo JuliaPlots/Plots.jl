@@ -99,6 +99,7 @@ function plot!(plt::Plot, args...; kw...)
     # add title, axis labels, ticks, etc
     if !haskey(d, :subplot)
         merge!(plt.plotargs, d)
+        handlePlotColors(plt.backend, plt.plotargs)
         dumpdict(plt.plotargs, "Updating plot items")
         _update_plot(plt, plt.plotargs)
     end

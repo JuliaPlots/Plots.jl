@@ -117,7 +117,7 @@ _seriesDefaults[:seriescolor]     = :auto
 _seriesDefaults[:seriesalpha]     = nothing
 _seriesDefaults[:linetype]        = :path
 _seriesDefaults[:linestyle]       = :solid
-_seriesDefaults[:linewidth]       = 1
+_seriesDefaults[:linewidth]       = :auto
 _seriesDefaults[:linecolor]       = :match
 _seriesDefaults[:linealpha]       = nothing
 _seriesDefaults[:fillrange]       = nothing   # ribbons, areas, etc
@@ -266,13 +266,13 @@ add_aliases(:foreground_color, :fg, :fgcolor, :fg_color, :foreground,
 add_aliases(:foreground_color_legend, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
                             :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend)
 add_aliases(:foreground_color_grid, :fg_grid, :fggrid, :fgcolor_grid, :fg_color_grid, :foreground_grid,
-                            :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid)
+                            :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid, :gridcolor)
 add_aliases(:foreground_color_axis, :fg_axis, :fgaxis, :fgcolor_axis, :fg_color_axis, :foreground_axis,
-                            :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis)
+                            :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis, :axiscolor)
 add_aliases(:foreground_color_text, :fg_text, :fgtext, :fgcolor_text, :fg_color_text, :foreground_text,
-                            :foreground_colour_text, :fgcolour_text, :fg_colour_text)
+                            :foreground_colour_text, :fgcolour_text, :fg_colour_text, :textcolor)
 add_aliases(:foreground_color_border, :fg_border, :fgborder, :fgcolor_border, :fg_color_border, :foreground_border,
-                            :foreground_colour_border, :fgcolour_border, :fg_colour_border)
+                            :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor, :border)
 
 # alphas
 add_aliases(:seriesalpha, :alpha, :α, :opacity)
@@ -608,10 +608,13 @@ function preprocessArgs!(d::KW)
     end
 
     # handle line args
-    for arg in wraptuple(get(d, :line, ()))
+    for arg in wraptuple(pop!(d, :line, ()))
         processLineArg(d, arg)
     end
-    delete!(d, :line)
+    # delete!(d, :line)
+    if get(d, :linewidth, :auto) == :auto
+        d[:linewidth] = (get(d, :linetype, :path) in (:surface,:heatmap) ? 0 : 1)
+    end
 
     # handle marker args... default to ellipse if shape not set
     anymarker = false

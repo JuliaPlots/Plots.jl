@@ -367,10 +367,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     # TODO
     # :density    => :hist,
-    # :contour    => :contour,
-    # :surface    => :plot_surface,
-    # :wireframe  => :plot_wireframe,
-    # :heatmap    => :pcolor,
     # :shape      => :add_patch,
 
 
@@ -417,7 +413,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         end
     end
 
-    # bars
     if lt in (:bar, :sticks)
         extrakw[isvertical(d) ? :width : :height] = (lt == :sticks ? 0.1 : 0.9)
         handle = ax[isvertical(d) ? :bar : :barh](x, y;
@@ -432,7 +427,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
-    # histograms
     if lt == :hist
         handle = ax[:hist](y;
             label = d[:label],
@@ -449,7 +443,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
-    # 2d histograms
     if lt == :hist2d
         handle = ax[:hist2d](x, y;
             label = d[:label],
@@ -462,7 +455,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
-    # hexbins
     if lt == :hexbin
         handle = ax[:hexbin](x, y;
             label = d[:label],
@@ -476,7 +468,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         needs_colorbar = true
     end
 
-    # horizontal and vertical lines
     if lt in (:hline,:vline)
         for yi in d[:y]
             func = ax[lt == :hline ? :axhline : :axvline]
@@ -489,7 +480,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         end
     end
 
-    # contours
     if lt == :contour
         z = z.surf'
         needs_colorbar = true
@@ -522,6 +512,40 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             zorder = plt.n + 0.5,
             cmap = pyfillcolormap(d),
             extrakw...
+        )
+        push!(handles, handle)
+    end
+
+    if lt in (:surface, :wireframe)
+        x, y, z = map(Array, (x,y,z))
+        if !ismatrix(x) || !ismatrix(y)
+            x = repmat(x', length(y), 1)
+            y = repmat(y, 1, length(d[:x]))
+            z = z'
+        end
+        if lt == :surface
+            extrakw[:cmap] = pyfillcolormap(d)
+            needs_colorbar = true
+        end
+        handle = ax[lt == :surface ? :plot_surface : :plot_wireframe](x, y, z;
+            label = d[:label],
+            zorder = plt.n,
+            rstride = 1,
+            cstride = 1,
+            linewidth = d[:linewidth],
+            edgecolor = pylinecolor(d),
+            extrakw...
+        )
+        push!(handles, handle)
+    end
+
+    if lt == :heatmap
+        x, y, z = heatmap_edges(x), heatmap_edges(y), z.surf'
+        handle = ax[:pcolormesh](x, y, z;
+            label = d[:label],
+            zorder = plt.n,
+            cmap = pyfillcolormap(d),
+            edgecolors = (d[:linewidth] > 0 ? pylinecolor(d) : "face")
         )
         push!(handles, handle)
     end
@@ -1098,8 +1122,6 @@ function finalizePlot(plt::Plot{PyPlotBackend})
     ax = getLeftAxis(plt)
     addPyPlotLegend(plt, ax)
     updateAxisColors(ax, plt.plotargs)
-    # updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color_axis]),
-    #                      getPyPlotColor(plt.plotargs[:foreground_color_text]))
     PyPlot.draw()
 end
 
@@ -1109,8 +1131,6 @@ function finalizePlot(subplt::Subplot{PyPlotBackend})
         ax = getLeftAxis(plt)
         addPyPlotLegend(plt, ax)
         updateAxisColors(ax, plt.plotargs)
-        # updateAxisColors(ax, getPyPlotColor(plt.plotargs[:foreground_color_axis]),
-        #                      getPyPlotColor(plt.plotargs[:foreground_color_text]))
     end
     # fig[:tight_layout]()
     PyPlot.draw()

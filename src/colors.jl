@@ -392,6 +392,8 @@ function handlePlotColors(::AbstractBackend, d::KW)
         bgsym = symbol("background_color_" * bgtype)
         if d[bgsym] == :match
             d[bgsym] = d[:background_color]
+        elseif d[bgsym] == nothing
+            d[bgsym] = colorscheme(RGBA(0,0,0,0))
         end
     end
 
@@ -400,6 +402,8 @@ function handlePlotColors(::AbstractBackend, d::KW)
         fgsym = symbol("foreground_color_" * fgtype)
         if d[fgsym] == :match
             d[fgsym] = d[:foreground_color]
+        elseif d[fgsym] == nothing
+            d[fgsym] = colorscheme(RGBA(0,0,0,0))
         end
     end
 
