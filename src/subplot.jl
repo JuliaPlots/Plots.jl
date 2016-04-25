@@ -81,7 +81,12 @@ end
 # grid layout
 function subplot{P}(plt1::Plot{P}, plts::Plot{P}...; kw...)
   d = KW(kw)
-  layout = subplotlayout(length(plts)+1, get(d, :nr, -1), get(d, :nc, -1))
+  layout = if haskey(d, :layout)
+      subplotlayout(d[:layout])
+  else
+      subplotlayout(length(plts)+1, get(d, :nr, -1), get(d, :nc, -1))
+  end
+  # layout = subplotlayout(length(plts)+1, get(d, :nr, -1), get(d, :nc, -1))
   subplot(vcat(plt1, plts...), layout, d)
 end
 

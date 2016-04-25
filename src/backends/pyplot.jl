@@ -992,8 +992,10 @@ function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::SubplotLayout, d::KW)
     n = sum([plt.n for plt in plts])
 
     pkg = PyPlotBackend()
-    plt.plotargs[:subplot] = true
-    newplts = Plot{PyPlotBackend}[_create_plot(pkg, plt.plotargs) for plt in plts]
+    newplts = Plot{PyPlotBackend}[begin
+        plt.plotargs[:subplot] = true
+        _create_plot(pkg, plt.plotargs)
+    end for plt in plts]
 
     subplt = Subplot(nothing, newplts, PyPlotBackend(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
 
