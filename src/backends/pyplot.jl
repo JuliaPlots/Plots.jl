@@ -341,8 +341,9 @@ pymarkercolor(d::KW)        = getPyPlotColor(d[:markercolor], d[:markeralpha])
 pymarkerstrokecolor(d::KW)  = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
 pyfillcolor(d::KW)          = getPyPlotColor(d[:fillcolor], d[:fillalpha])
 
+pylinecolormap(d::KW)       = getPyPlotColorMap(d[:linecolor], d[:linealpha])
 pymarkercolormap(d::KW)     = getPyPlotColorMap(d[:markercolor], d[:markeralpha])
-pyfillcolormap(d::KW)          = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+pyfillcolormap(d::KW)       = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
 
 function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     lt = d[:linetype]
@@ -361,30 +362,17 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     ax = getAxis(plt, d[:axis])
     x, y, z = d[:x], d[:y], d[:z]
 
-    # dumpdict(d, "",true)
-
     # handle zcolor and get c/cmap
     extrakw = KW()
 
-            # :shape,
-            # :hline, :vline, :heatmap,
-            # :contour, :surface, :wireframe
-
-    # :hist       => :hist,
+    # TODO
     # :density    => :hist,
-    # :sticks     => :bar,
-    # :bar        => :bar,
-    # :hist2d     => :hexbin,
-    # :hexbin     => :hexbin,
-    # :scatter    => :scatter,
     # :contour    => :contour,
-    # :scatter3d  => :scatter,
     # :surface    => :plot_surface,
     # :wireframe  => :plot_wireframe,
     # :heatmap    => :pcolor,
     # :shape      => :add_patch,
-    #
-    # do the plotting
+
 
     # holds references to any python object representing the matplotlib series
     handles = []
@@ -434,7 +422,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         extrakw[isvertical(d) ? :width : :height] = (lt == :sticks ? 0.1 : 0.9)
         handle = ax[isvertical(d) ? :bar : :barh](x, y;
             label = d[:label],
-            zorder = plt.n + 0.5,
+            zorder = plt.n,
             color = pyfillcolor(d),
             edgecolor = pylinecolor(d),
             linewidth = d[:linewidth],
@@ -448,7 +436,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     if lt == :hist
         handle = ax[:hist](y;
             label = d[:label],
-            zorder = plt.n + 0.5,
+            zorder = plt.n,
             color = pyfillcolor(d),
             edgecolor = pylinecolor(d),
             linewidth = d[:linewidth],
@@ -465,7 +453,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     if lt == :hist2d
         handle = ax[:hist2d](x, y;
             label = d[:label],
-            zorder = plt.n + 0.5,
+            zorder = plt.n,
             bins = d[:bins],
             normed = d[:normalize],
             weights = d[:weights],
@@ -478,7 +466,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     if lt == :hexbin
         handle = ax[:hexbin](x, y;
             label = d[:label],
-            zorder = plt.n + 0.5,
+            zorder = plt.n,
             gridsize = d[:bins],
             linewidths = d[:linewidth],
             edgecolors = pylinecolor(d),
@@ -488,6 +476,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         needs_colorbar = true
     end
 
+    # horizontal and vertical lines
     if lt in (:hline,:vline)
         for yi in d[:y]
             func = ax[lt == :hline ? :axhline : :axvline]
@@ -498,6 +487,43 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             )
             push!(handles, handle)
         end
+    end
+
+    # contours
+    if lt == :contour
+        z = z.surf'
+        needs_colorbar = true
+
+        # pass in an integer value as an arg, but a levels list as a keyword arg
+        levels = d[:levels]
+        args = if isscalar(levels)
+            (levels)
+        elseif isvector(levels)
+            extrakw[:levels] = levels
+            ()
+        else
+            error("Only numbers and vectors are supported with levels keyword")
+        end
+
+        # contour lines
+        handle = ax[:contour](x, y, z, args...;
+            label = d[:label],
+            zorder = plt.n,
+            linewidths = d[:linewidth],
+            linestyles = getPyPlotLineStyle(lt, d[:linestyle]),
+            cmap = pylinecolormap(d),
+            extrakw...
+        )
+        push!(handles, handle)
+
+        # contour fills
+        handle = ax[:contourf](x, y, z, args...;
+            label = d[:label],
+            zorder = plt.n + 0.5,
+            cmap = pyfillcolormap(d),
+            extrakw...
+        )
+        push!(handles, handle)
     end
 
     d[:serieshandle] = handles
