@@ -10,6 +10,7 @@ function _initialize_backend(::PyPlotBackend)
         const mplot3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d"))
         const pypatches = PyPlot.pywrap(PyPlot.pyimport("matplotlib.patches"))
         const pyfont = PyPlot.pywrap(PyPlot.pyimport("matplotlib.font_manager"))
+        const pyticker = PyPlot.pywrap(PyPlot.pyimport("matplotlib.ticker"))
         # const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
     end
 
@@ -41,6 +42,11 @@ function getPyPlotColorMap(c::ColorGradient, α=nothing)
     pyvals = [(v, getPyPlotColor(getColorZ(c, v), α)) for v in c.values]
     pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
 end
+
+# convert vectors and ColorVectors to standard ColorGradients
+# TODO: move this logic to colors.jl and keep a barebones wrapper for pyplot
+getPyPlotColorMap(cv::ColorVector, α=nothing) = getPyPlotColorMap(ColorGradient(cv.v), α)
+getPyPlotColorMap(v::AVec, α=nothing) = getPyPlotColorMap(ColorGradient(v), α)
 
 # anything else just gets a bluesred gradient
 getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(default_gradient(), α)
@@ -136,6 +142,15 @@ function getPyPlotFont(font::Font)
         family = font.family,
         size = font.size
     )
+end
+
+function get_locator_and_formatter(vals::AVec)
+    pyticker.pymember("FixedLocator")(1:length(vals)), pyticker.pymember("FixedFormatter")(vals)
+end
+
+function add_pyfixedformatter(cbar, vals::AVec)
+    cbar[:locator], cbar[:formatter] = get_locator_and_formatter(vals)
+    cbar[:update_ticks]()
 end
 
 # ---------------------------------------------------------------------------
@@ -310,6 +325,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     # holds references to any python object representing the matplotlib series
     handles = []
     needs_colorbar = false
+    discrete_colorbar_values = nothing
 
     # for each plotting command, optionally build and add a series handle to the list
 
@@ -500,6 +516,9 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     if lt == :heatmap
         x, y, z = heatmap_edges(x), heatmap_edges(y), z.surf'
+        if !(eltype(z) <: Number)
+            z, discrete_colorbar_values = indices_and_unique_values(z)
+        end
         handle = ax[:pcolormesh](x, y, z;
             label = d[:label],
             zorder = plt.n,
@@ -531,7 +550,23 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     # add the colorbar legend
     if needs_colorbar && plt.plotargs[:colorbar] != :none
-        PyPlot.colorbar(handles[end], ax=ax)
+        # cbar = PyPlot.colorbar(handles[end], ax=ax)
+
+        # do we need a discrete colorbar?
+        if discrete_colorbar_values == nothing
+            PyPlot.colorbar(handles[end], ax=ax)
+        else
+            # add_pyfixedformatter(cbar, discrete_colorbar_values)
+            locator, formatter = get_locator_and_formatter(discrete_colorbar_values)
+            vals = 1:length(discrete_colorbar_values)
+            PyPlot.colorbar(handles[end],
+                ax = ax,
+                ticks = locator,
+                format = formatter,
+                boundaries = vcat(0, vals + 0.5),
+                values = vals
+            )
+        end
     end
 
     # this sets the bg color inside the grid

@@ -243,6 +243,14 @@ Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b))
 nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
 
+# given an array of discrete values, turn it into an array of indices of the unique values
+# returns the array of indices (znew) and a vector of unique values (vals)
+function indices_and_unique_values(z::AbstractArray)
+    vals = sort(unique(z))
+    vmap = Dict([(v,i) for (i,v) in enumerate(vals)])
+    newz = map(zi -> vmap[zi], z)
+    newz, vals
+end
 
 # ---------------------------------------------------------------
 

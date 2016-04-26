@@ -302,7 +302,7 @@ function process_inputs{TX,TY}(plt::AbstractPlot, d::KW, x::AVec{TX}, y::AVec{TY
 end
 
 # surface-like... matrix grid
-function process_inputs{TX,TY,TZ<:Number}(plt::AbstractPlot, d::KW, x::AVec{TX}, y::AVec{TY}, zmat::AMat{TZ})
+function process_inputs{TX,TY,TZ}(plt::AbstractPlot, d::KW, x::AVec{TX}, y::AVec{TY}, zmat::AMat{TZ})
     @assert size(zmat) == (length(x), length(y))
     if TX <: Number && !issorted(x)
         idx = sortperm(x)
@@ -312,13 +312,7 @@ function process_inputs{TX,TY,TZ<:Number}(plt::AbstractPlot, d::KW, x::AVec{TX},
         idx = sortperm(y)
         y, zmat = y[idx], zmat[:, idx]
     end
-    #
-    #     !issorted(y)
-    #     y_idx = sortperm(y)
-    #     x, y = x[x_idx], y[y_idx]
-    #     zmat = zmat[x_idx, y_idx]
-    # end
-    d[:x], d[:y], d[:z] = x, y, Surface{Matrix{Float64}}(zmat)
+    d[:x], d[:y], d[:z] = x, y, Surface{Matrix{TZ}}(zmat)
     if !like_surface(get(d, :linetype, :none))
         d[:linetype] = :contour
     end
