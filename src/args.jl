@@ -147,6 +147,7 @@ _seriesDefaults[:ribbon]          = nothing
 _seriesDefaults[:quiver]          = nothing
 _seriesDefaults[:normalize]       = false     # do we want a normalized histogram?
 _seriesDefaults[:weights]         = nothing   # optional weights for histograms (1D and 2D)
+_seriesDefaults[:contours]        = false     # add contours to 3d surface and wireframe plots
 
 
 const _plotDefaults = KW()

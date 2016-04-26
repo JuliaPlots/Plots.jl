@@ -327,6 +327,18 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     needs_colorbar = false
     discrete_colorbar_values = nothing
 
+
+    # pass in an integer value as an arg, but a levels list as a keyword arg
+    levels = d[:levels]
+    levelargs = if isscalar(levels)
+        (levels)
+    elseif isvector(levels)
+        extrakw[:levels] = levels
+        ()
+    else
+        error("Only numbers and vectors are supported with levels keyword")
+    end
+
     # for each plotting command, optionally build and add a series handle to the list
 
     # line plot
@@ -459,23 +471,13 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         z = z.surf'
         needs_colorbar = true
 
-        # pass in an integer value as an arg, but a levels list as a keyword arg
-        levels = d[:levels]
-        args = if isscalar(levels)
-            (levels)
-        elseif isvector(levels)
-            extrakw[:levels] = levels
-            ()
-        else
-            error("Only numbers and vectors are supported with levels keyword")
-        end
 
         if lt == :contour3d
             extrakw[:extend3d] = true
         end
 
         # contour lines
-        handle = ax[:contour](x, y, z, args...;
+        handle = ax[:contour](x, y, z, levelargs...;
             label = d[:label],
             zorder = plt.n,
             linewidths = d[:linewidth],
@@ -486,19 +488,19 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
 
         # contour fills
-        if lt == :contour
-            handle = ax[:contourf](x, y, z, args...;
-                label = d[:label],
-                zorder = plt.n + 0.5,
-                cmap = pyfillcolormap(d),
-                extrakw...
-            )
-            push!(handles, handle)
-        end
+        # if lt == :contour
+        handle = ax[:contourf](x, y, z, levelargs...;
+            label = d[:label],
+            zorder = plt.n + 0.5,
+            cmap = pyfillcolormap(d),
+            extrakw...
+        )
+        push!(handles, handle)
+        # end
     end
 
     if lt in (:surface, :wireframe)
-        if typeof(z) <: AbstractMatrix
+        if typeof(z) <: AbstractMatrix || typeof(z) <: Surface
             x, y, z = map(Array, (x,y,z))
             if !ismatrix(x) || !ismatrix(y)
                 x = repmat(x', length(y), 1)
@@ -520,6 +522,20 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             )
             push!(handles, handle)
 
+            # contours on the axis planes
+            if d[:contours]
+                for (zdir,mat) in (("x",x), ("y",y), ("z",z))
+                    offset = (zdir == "y" ? maximum : minimum)(mat)
+                    handle = ax[:contourf](x, y, z, levelargs...;
+                        zdir = zdir,
+                        cmap = pyfillcolormap(d),
+                        offset = (zdir == "y" ? maximum : minimum)(mat)  # where to draw the contour plane
+                    )
+                    push!(handles, handle)
+                    needs_colorbar = true
+                end
+            end
+
         elseif typeof(z) <: AbstractVector
             # tri-surface plot (http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
             handle = ax[:plot_trisurf](x, y, z;
@@ -534,7 +550,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         else
             error("Unsupported z type $(typeof(z)) for linetype=$lt")
         end
-
     end
 
     if lt == :heatmap
