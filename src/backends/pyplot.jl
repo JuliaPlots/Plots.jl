@@ -492,26 +492,43 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     end
 
     if lt in (:surface, :wireframe)
-        x, y, z = map(Array, (x,y,z))
-        if !ismatrix(x) || !ismatrix(y)
-            x = repmat(x', length(y), 1)
-            y = repmat(y, 1, length(d[:x]))
-            z = z'
-        end
-        if lt == :surface
-            extrakw[:cmap] = pyfillcolormap(d)
+        if typeof(z) <: AbstractMatrix
+            x, y, z = map(Array, (x,y,z))
+            if !ismatrix(x) || !ismatrix(y)
+                x = repmat(x', length(y), 1)
+                y = repmat(y, 1, length(d[:x]))
+                z = z'
+            end
+            if lt == :surface
+                extrakw[:cmap] = pyfillcolormap(d)
+                needs_colorbar = true
+            end
+            handle = ax[lt == :surface ? :plot_surface : :plot_wireframe](x, y, z;
+                label = d[:label],
+                zorder = plt.n,
+                rstride = 1,
+                cstride = 1,
+                linewidth = d[:linewidth],
+                edgecolor = pylinecolor(d),
+                extrakw...
+            )
+            push!(handles, handle)
+
+        elseif typeof(z) <: AbstractVector
+            # tri-surface plot (http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
+            handle = ax[:plot_trisurf](x, y, z;
+                label = d[:label],
+                zorder = plt.n,
+                cmap = pyfillcolormap(d),
+                linewidth = d[:linewidth],
+                edgecolor = pylinecolor(d)
+            )
+            push!(handles, handle)
             needs_colorbar = true
+        else
+            error("Unsupported z type $(typeof(z)) for linetype=$lt")
         end
-        handle = ax[lt == :surface ? :plot_surface : :plot_wireframe](x, y, z;
-            label = d[:label],
-            zorder = plt.n,
-            rstride = 1,
-            cstride = 1,
-            linewidth = d[:linewidth],
-            edgecolor = pylinecolor(d),
-            extrakw...
-        )
-        push!(handles, handle)
+
     end
 
     if lt == :heatmap
