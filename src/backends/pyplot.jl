@@ -175,35 +175,6 @@ getLeftAxis(plt::Plot{PyPlotBackend}) = getLeftAxis(plt.o)
 getRightAxis(plt::Plot{PyPlotBackend}) = getRightAxis(plt.o)
 getAxis(plt::Plot{PyPlotBackend}, axis::Symbol) = (axis == :right ? getRightAxis : getLeftAxis)(plt)
 
-# # left axis is PyPlot.<func>, right axis is "f.axes[0].twinx().<func>"
-# function getPyPlotFunction(plt::Plot, axis::Symbol, linetype::Symbol)
-#     # # need to access mplot3d functions differently
-#     # if linetype == :surface
-#     #   return mplot3d.pymember("Axes3D")[:plot_surface]
-#     # end
-#
-#     # in the 2-axis case we need to get: <rightaxis>[:<func>]
-#     ax = getAxis(plt, axis)
-#     # ax[:set_ylabel](plt.plotargs[:yrightlabel])
-#     fmap = KW(
-#         :hist       => :hist,
-#         :density    => :hist,
-#         :sticks     => :bar,
-#         :bar        => :bar,
-#         :hist2d     => :hexbin,
-#         :hexbin     => :hexbin,
-#         :scatter    => :scatter,
-#         :contour    => :contour,
-#         :scatter3d  => :scatter,
-#         :surface    => :plot_surface,
-#         :wireframe  => :plot_wireframe,
-#         :heatmap    => :pcolor,
-#         :shape      => :add_patch,
-#         # :surface    => pycolors.pymember("LinearSegmentedColormap")[:from_list]
-#     )
-#     return ax[get(fmap, linetype, :plot)]
-# end
-
 
 function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Bool)
     if smooth
@@ -232,8 +203,6 @@ end
 
 function pyplot_figure(plotargs::KW)
     w,h = map(px2inch, plotargs[:size])
-    # bgcolor = getPyPlotColor(plotargs[:background_color])
-
 
     # reuse the current figure?
     fig = if plotargs[:overwrite_figure]
@@ -243,9 +212,7 @@ function pyplot_figure(plotargs::KW)
     end
 
     # update the specs
-    # fig[:set_size_inches](w,h, (isijulia() ? [] : [true])...)
     fig[:set_size_inches](w, h, forward = true)
-    # fig[:set_facecolor](bgcolor)
     fig[:set_facecolor](getPyPlotColor(plotargs[:background_color_outside]))
     fig[:set_dpi](DPI)
     fig[:set_tight_layout](true)
@@ -259,8 +226,6 @@ function pyplot_figure(plotargs::KW)
 end
 
 function pyplot_3d_setup!(wrap, d)
-    # 3D?
-    # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
     if trueOrAllTrue(lt -> lt in _3dTypes, get(d, :linetype, :none))
         push!(wrap.kwargs, (:projection, "3d"))
     end
@@ -275,11 +240,7 @@ function _create_plot(pkg::PyPlotBackend, d::KW)
         wrap = nothing
     else
         wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(d), [])
-        # wrap = PyPlotAxisWrapper(nothing, nothing, PyPlot.figure(; figsize = (w,h), facecolor = bgcolor, dpi = DPI, tight_layout = true), [])
 
-        # if haskey(d, :linetype) && first(d[:linetype]) in _3dTypes # && isa(plt.o, PyPlotFigWrapper)
-        #   push!(wrap.kwargs, (:projection, "3d"))
-        # end
         pyplot_3d_setup!(wrap, d)
 
         if get(d, :polar, false)
@@ -304,35 +265,6 @@ function fix_xy_lengths!(plt::Plot{PyPlotBackend}, d::KW)
         end
     end
 end
-
-# # figure out the extra kw from zcolor in scatter and scatter3d
-# function get_extra_kw(plt::Plot{PyPlotBackend}, d::KW)
-#     extra_kw = KW()
-#     if d[:linetype] in (:scatter, :scatter3d)
-#         c = getPyPlotColor(d[:markercolor])
-#         if d[:marker_z] == nothing
-#             c = getPyPlotColor(c, d[:markeralpha])
-#
-#             # total hack due to PyPlot bug (see issue #145).
-#             # hack: duplicate the color vector when the total rgba fields is the same as the series length
-#             if (typeof(c) <: AbstractArray && length(c)*4 == length(x)) || (typeof(c) <: Tuple && length(x) == 4)
-#                 c = vcat(c, c)
-#             end
-#             extra_kw[:c] = c
-#         else
-#             if !isa(c, ColorGradient)
-#                 c = default_gradient()
-#             end
-#             extra_kw[:c] = convert(Vector{Float64}, d[:marker_z])
-#             extra_kw[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
-#         end
-#     end
-#     extra_kw
-# end
-#
-# function get_cmap(plt::Plot{PyPlotBackend}, d::KW)
-#
-# end
 
 # total hack due to PyPlot bug (see issue #145).
 # hack: duplicate the color vector when the total rgba fields is the same as the series length
@@ -379,9 +311,10 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     handles = []
     needs_colorbar = false
 
-    # path/line/scatter should all do UP TO 2 series... a line, and a scatter
+    # for each plotting command, optionally build and add a series handle to the list
+
+    # line plot
     if lt in (:path, :line, :scatter, :path3d, :scatter3d, :steppre, :steppost)
-        # line plot (path, line, steppre, steppost, path3d)
         if d[:linewidth] > 0
             handle = ax[:plot](xyargs...;
                 label = d[:label],
@@ -393,27 +326,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             )[1]
             push!(handles, handle)
         end
-
-        # # scatter plot (scatter, scatter3d, and line plots that have markers)
-        # if d[:markershape] != :none
-        #     if d[:marker_z] == nothing
-        #         extrakw[:c] = color_fix(pymarkercolor(d), x)
-        #     else
-        #         extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
-        #         extrakw[:cmap] = pymarkercolormap(d)
-        #         needs_colorbar = true
-        #     end
-        #     handle = ax[:scatter](xyargs...;
-        #         label = d[:label],
-        #         zorder = plt.n + 0.5,
-        #         marker = getPyPlotMarker(d[:markershape]),
-        #         s = d[:markersize] .^ 2,
-        #         edgecolors = pymarkerstrokecolor(d),
-        #         linewidths = d[:markerstrokewidth],
-        #         extrakw...
-        #     )
-        #     push!(handles, handle)
-        # end
     end
 
     if lt == :bar
@@ -443,41 +355,6 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         )[1]
         push!(handles, handle)
     end
-
-    # if lt in (:bar, :sticks)
-    #     extrakw[isvertical(d) ? :width : :height] = (lt == :sticks ? 0.0 : 0.9)
-    #     handle = ax[isvertical(d) ? :bar : :barh](x, y;
-    #         label = d[:label],
-    #         zorder = plt.n,
-    #         color = pyfillcolor(d),
-    #         edgecolor = lt == :sticks ? py pylinecolor(d),
-    #         linewidth = d[:linewidth],
-    #         align = "center",
-    #         extrakw...
-    #     )[1]
-    #     push!(handles, handle)
-    #
-    #     # if d[:markershape] != :none
-    #     #     extrakw = KW()
-    #     #     if d[:marker_z] == nothing
-    #     #         extrakw[:c] = color_fix(pymarkercolor(d), x)
-    #     #     else
-    #     #         extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
-    #     #         extrakw[:cmap] = pymarkercolormap(d)
-    #     #         needs_colorbar = true
-    #     #     end
-    #     #     handle = ax[:scatter](x, y;
-    #     #         label = d[:label],
-    #     #         zorder = plt.n + 0.5,
-    #     #         marker = getPyPlotMarker(d[:markershape]),
-    #     #         s = d[:markersize] .^ 2,
-    #     #         edgecolors = pymarkerstrokecolor(d),
-    #     #         linewidths = d[:markerstrokewidth],
-    #     #         extrakw...
-    #     #     )
-    #     #     push!(handles, handle)
-    #     # end
-    # end
 
     # add markers?
     if d[:markershape] != :none && lt in (:path, :line, :scatter, :path3d,
@@ -534,6 +411,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             cmap = pyfillcolormap(d)  # applies to the pcolorfast object
         )[4]
         push!(handles, handle)
+        needs_colorbar = true
     end
 
     if lt == :hexbin
@@ -629,6 +507,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             edgecolors = (d[:linewidth] > 0 ? pylinecolor(d) : "face")
         )
         push!(handles, handle)
+        needs_colorbar = true
     end
 
     if lt == :shape
@@ -656,239 +535,34 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     end
 
     # this sets the bg color inside the grid
-    # ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color]))
     ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color_inside]))
 
     # handle area filling
     fillrange = d[:fillrange]
     if fillrange != nothing && lt != :contour
-        if typeof(fillrange) <: @compat(Union{Real, AVec})
-            ax[:fill_between](d[:x], fillrange, d[:y], facecolor = pyfillcolor(d), zorder = plt.n)
+        f, dim1, dim2 = if isvertical(d)
+            :fill_between, x, y
         else
-            ax[:fill_between](d[:x], fillrange..., facecolor = pyfillcolor(d), zorder = plt.n)
+            :fill_betweenx, y, x
         end
+        args = if typeof(fillrange) <: Union{Real, AVec}
+            dim1, fillrange, dim2
+        else
+            dim1, fillrange...
+        end
+
+        handle = ax[f](args...;
+            zorder = plt.n,
+            facecolor = pyfillcolor(d),
+            linewidths = 0
+        )
+        push!(handles, handle)
     end
 
     push!(plt.seriesargs, d)
     plt
 end
 
-# function _add_series2(pkg::PyPlotBackend, plt::Plot, d::KW)
-#     # 3D plots have a different underlying Axes object in PyPlot
-#     lt = d[:linetype]
-#     if lt in _3dTypes && isempty(plt.o.kwargs)
-#         push!(plt.o.kwargs, (:projection, "3d"))
-#     end
-#
-#     # handle mismatched x/y sizes, as PyPlot doesn't like that
-#     x, y = d[:x], d[:y]
-#     nx, ny = length(x), length(y)
-#     if !isa(get(d, :z, nothing), Surface) && nx != ny
-#         if nx < ny
-#             d[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
-#         else
-#             d[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
-#         end
-#     end
-#
-#     ax = getAxis(plt, d[:axis])
-#     if !(lt in supportedTypes(pkg))
-#         error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
-#     end
-#
-#     linecolor = getPyPlotColor(d[:linecolor], d[:linealpha])
-#     markercolor = getPyPlotColor(d[:markercolor], d[:markeralpha])
-#     fillcolor = getPyPlotColor(d[:fillcolor], d[:fillalpha])
-#     strokecolor = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
-#     linecmap = getPyPlotColorMap(d[:linecolor], d[:linealpha])
-#     fillcmap = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
-#     linestyle = getPyPlotLineStyle(lt, d[:linestyle])
-#
-#     if lt == :sticks
-#         d,_ = sticksHack(;d...)
-#
-#     elseif lt in (:scatter, :scatter3d)
-#         if d[:markershape] == :none
-#             d[:markershape] = :ellipse
-#         end
-#
-#     elseif lt in (:hline,:vline)
-#         for yi in d[:y]
-#             func = ax[lt == :hline ? :axhline : :axvline]
-#             func(yi, linewidth=d[:linewidth], color=linecolor, linestyle=linestyle)
-#         end
-#
-#     end
-#
-#     extra_kwargs = KW()
-#     plotfunc = getPyPlotFunction(plt, d[:axis], lt)
-#
-#     # we have different args depending on plot type
-#     if lt in (:hist, :density, :sticks, :bar)
-#
-#         # NOTE: this is unsupported because it does the wrong thing... it shifts the whole axis
-#         # extra_kwargs[:bottom] = d[:fill]
-#
-#         if like_histogram(lt)
-#             extra_kwargs[:bins] = d[:bins]
-#             extra_kwargs[:normed] = lt == :density
-#             extra_kwargs[:orientation] = isvertical(d) ? "vertical" : "horizontal"
-#             extra_kwargs[:histtype] = d[:bar_position] == :stack ? "barstacked" : "bar"
-#         else
-#             extra_kwargs[:linewidth] = (lt == :sticks ? 0.1 : 0.9)
-#         end
-#
-#     elseif lt in (:hist2d, :hexbin)
-#         extra_kwargs[:gridsize] = d[:bins]
-#         extra_kwargs[:cmap] = linecmap
-#
-#     elseif lt == :contour
-#         extra_kwargs[:cmap] = linecmap
-#         extra_kwargs[:linewidths] = d[:linewidth]
-#         extra_kwargs[:linestyles] = linestyle
-#         # TODO: will need to call contourf to fill in the contours
-#
-#     elseif lt in (:surface, :wireframe)
-#         if lt == :surface
-#             extra_kwargs[:cmap] = fillcmap
-#         end
-#         extra_kwargs[:rstride] = 1
-#         extra_kwargs[:cstride] = 1
-#         extra_kwargs[:linewidth] = d[:linewidth]
-#         extra_kwargs[:edgecolor] = linecolor
-#
-#     elseif lt == :heatmap
-#         extra_kwargs[:cmap] = fillcmap
-#
-#     elseif lt == :shape
-#         extra_kwargs[:edgecolor] = strokecolor
-#         extra_kwargs[:facecolor] = markercolor
-#         extra_kwargs[:linewidth] = d[:markerstrokewidth]
-#         extra_kwargs[:fill] = true
-#
-#     else
-#
-#         extra_kwargs[:linestyle] = linestyle
-#         extra_kwargs[:marker] = getPyPlotMarker(d[:markershape])
-#
-#         if lt in (:scatter, :scatter3d)
-#             extra_kwargs[:s] = d[:markersize].^2
-#             c = d[:markercolor]
-#             if d[:marker_z] != nothing
-#                 if !isa(c, ColorGradient)
-#                     c = default_gradient()
-#                 end
-#                 extra_kwargs[:c] = convert(Vector{Float64}, d[:marker_z])
-#                 extra_kwargs[:cmap] = getPyPlotColorMap(c, d[:markeralpha])
-#             else
-#                 ppc = getPyPlotColor(c, d[:markeralpha])
-#
-#                 # total hack due to PyPlot bug (see issue #145).
-#                 # hack: duplicate the color vector when the total rgba fields is the same as the series length
-#                 if (typeof(ppc) <: AbstractArray && length(ppc)*4 == length(x)) || (typeof(ppc) <: Tuple && length(x) == 4)
-#                     ppc = vcat(ppc, ppc)
-#                 end
-#                 extra_kwargs[:c] = ppc
-#
-#             end
-#             extra_kwargs[:edgecolors] = strokecolor
-#             extra_kwargs[:linewidths] = d[:markerstrokewidth]
-#         else
-#             extra_kwargs[:markersize] = d[:markersize]
-#             extra_kwargs[:markerfacecolor] = markercolor
-#             extra_kwargs[:markeredgecolor] = strokecolor
-#             extra_kwargs[:markeredgewidth] = d[:markerstrokewidth]
-#             extra_kwargs[:drawstyle] = getPyPlotStepStyle(lt)
-#         end
-#     end
-#
-#     # set these for all types
-#     if !(lt in (:contour,:surface,:wireframe,:heatmap))
-#         if !(lt in (:scatter, :scatter3d, :shape))
-#             extra_kwargs[:color] = linecolor
-#             extra_kwargs[:linewidth] = d[:linewidth]
-#         end
-#         extra_kwargs[:label] = d[:label]
-#         extra_kwargs[:zorder] = plt.n
-#     end
-#
-#     # do the plot
-#     d[:serieshandle] = if like_histogram(lt)
-#         extra_kwargs[:color] = fillcolor
-#         extra_kwargs[:edgecolor] = linecolor
-#         plotfunc(d[:y]; extra_kwargs...)[1]
-#
-#     elseif lt == :contour
-#         x, y = d[:x], d[:y]
-#         surf = d[:z].surf'
-#         levels = d[:levels]
-#         if isscalar(levels)
-#             extra_args = (levels)
-#         elseif isvector(levels)
-#             extra_args = ()
-#             extra_kwargs[:levels] = levels
-#         else
-#             error("Only numbers and vectors are supported with levels keyword")
-#         end
-#         handle = plotfunc(x, y, surf, extra_args...; extra_kwargs...)
-#         if d[:fillrange] != nothing
-#             extra_kwargs[:cmap] = fillcmap
-#             delete!(extra_kwargs, :linewidths)
-#             handle = ax[:contourf](x, y, surf, extra_args...; extra_kwargs...)
-#         end
-#         handle
-#
-#     elseif lt in (:surface,:wireframe)
-#         x, y, z = Array(d[:x]), Array(d[:y]), Array(d[:z])
-#         if !ismatrix(x) || !ismatrix(y)
-#             x = repmat(x', length(y), 1)
-#             y = repmat(y, 1, length(d[:x]))
-#             z = z'
-#         end
-#         plotfunc(x, y, z; extra_kwargs...)
-#
-#     elseif lt in _3dTypes
-#         plotfunc(d[:x], d[:y], d[:z]; extra_kwargs...)[1]
-#
-#     elseif lt in (:scatter, :hist2d, :hexbin)
-#         plotfunc(d[:x], d[:y]; extra_kwargs...)
-#
-#     elseif lt == :heatmap
-#         x, y, z = d[:x], d[:y], d[:z].surf'
-#         plotfunc(heatmap_edges(x), heatmap_edges(y), z; extra_kwargs...)
-#
-#     elseif lt == :shape
-#         path = buildPyPlotPath(d[:x], d[:y])
-#         patches = pypatches.pymember("PathPatch")(path; extra_kwargs...)
-#         plotfunc(patches)
-#
-#     else # plot
-#         plotfunc(d[:x], d[:y]; extra_kwargs...)[1]
-#     end
-#
-#     # smoothing
-#     handleSmooth(plt, ax, d, d[:smooth])
-#
-#     # add the colorbar legend
-#     if plt.plotargs[:colorbar] != :none && haskey(extra_kwargs, :cmap)
-#         PyPlot.colorbar(d[:serieshandle], ax=ax)
-#     end
-#
-#     # this sets the bg color inside the grid
-#     ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color]))
-#
-#     fillrange = d[:fillrange]
-#     if fillrange != nothing && lt != :contour
-#         if typeof(fillrange) <: @compat(Union{Real, AVec})
-#             ax[:fill_between](d[:x], fillrange, d[:y], facecolor = fillcolor, zorder = plt.n)
-#         else
-#             ax[:fill_between](d[:x], fillrange..., facecolor = fillcolor, zorder = plt.n)
-#         end
-#     end
-#
-#     push!(plt.seriesargs, d)
-#     plt
-# end
 
 # -----------------------------------------------------------------
 
@@ -918,13 +592,14 @@ end
 # TODO: this needs to handle one-sided fixed limits
 function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
     ax = getAxis(plt, axis)
-    if plt.plotargs[:xlims] == :auto
-        ax[:set_xlim](minmaxseries(plt.seriesargs, :x, axis)...)
+    pargs = plt.plotargs
+    if pargs[:xlims] == :auto
+        ax[pargs[:polar] ? :set_tlim : :set_xlim](minmaxseries(plt.seriesargs, :x, axis)...)
     end
-    if plt.plotargs[:ylims] == :auto
-        ax[:set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
+    if pargs[:ylims] == :auto
+        ax[pargs[:polar] ? :set_rlim : :set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
     end
-    if plt.plotargs[:zlims] == :auto && haskey(ax, :set_zlim)
+    if pargs[:zlims] == :auto && haskey(ax, :set_zlim)
         ax[:set_zlim](minmaxseries(plt.seriesargs, :z, axis)...)
     end
 end
@@ -956,9 +631,6 @@ function setxyz!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
         handle[:set_data](d[:x], d[:y])
         handle[:set_3d_properties](d[:z])
     end
-    # series = d[:serieshandle]
-    # series[:set_data](d[:x], d[:y])
-    # series[:set_3d_properties](d[:z])
     set_lims!(plt, d[:axis])
     plt
 end
@@ -1012,7 +684,6 @@ end
 
 
 function updateAxisColors(ax, d::KW)
-    # guidecolor = getPyPlotColor(d[:guidefont].color)
     guidecolor = getPyPlotColor(d[:foreground_color_guide])
     for (loc, spine) in ax[:spines]
         spine[:set_color](getPyPlotColor(d[:foreground_color_border]))
@@ -1074,7 +745,6 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
                 lab[:set_fontsize](ticksz)
             end
             if get(d, :grid, false)
-                # fgcolor = getPyPlotColor(plt.plotargs[:foreground_color])
                 fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
                 tmpax[axis][:grid](true, color = fgcolor)
                 tmpax[:set_axisbelow](true)

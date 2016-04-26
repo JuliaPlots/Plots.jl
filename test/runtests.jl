@@ -23,14 +23,14 @@ facts("PyPlot") do
     @fact pyplot() --> Plots.PyPlotBackend()
     @fact backend() --> Plots.PyPlotBackend()
 
-    image_comparison_facts(:pyplot, skip=[4,10,13,19,21,23,27], eps=img_eps)
+    image_comparison_facts(:pyplot, skip=[19,23], eps=img_eps)
 end
 
 facts("GR") do
     @fact gr() --> Plots.GRBackend()
     @fact backend() --> Plots.GRBackend()
 
-    # image_comparison_facts(:gr, only=[1], eps=img_eps)
+    image_comparison_facts(:gr, only=[1], eps=img_eps)
 end
 
 facts("Plotly") do

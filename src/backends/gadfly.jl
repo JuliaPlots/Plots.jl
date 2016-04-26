@@ -84,7 +84,7 @@ function getGadflyLineTheme(d::KW)
     fc = convertColor(getColor(d[:fillcolor]), d[:fillalpha])
 
     Gadfly.Theme(;
-        default_color = (lt in (:hist,:hist2d,:hexbin) ? fc : lc),
+        default_color = (lt in (:hist,:hist2d,:hexbin,:bar,:sticks) ? fc : lc),
         line_width = (lt == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
         # line_style = Gadfly.get_stroke_vector(d[:linestyle]),
         lowlight_color = x->RGB(fc),  # fill/ribbon
@@ -457,6 +457,16 @@ end
 function updateGadflyPlotTheme(plt::Plot, d::KW)
     kwargs = KW()
 
+    # colors
+    insidecolor, gridcolor, textcolor, guidecolor, legendcolor =
+        map(s -> getColor(d[s]), (
+            :background_color_inside,
+            :foreground_color_grid,
+            :foreground_color_text,
+            :foreground_color_guide,
+            :foreground_color_legend
+        ))
+
     # # hide the legend?
     leg = d[d[:legend] == :none ? :colorbar : :legend]
     if leg != :best
@@ -464,24 +474,24 @@ function updateGadflyPlotTheme(plt::Plot, d::KW)
     end
 
     if !get(d, :grid, true)
-        kwargs[:grid_color] = getColor(d[:background_color_grid])
+        kwargs[:grid_color] = gridcolor
     end
 
     # fonts
     tfont, gfont, lfont = d[:tickfont], d[:guidefont], d[:legendfont]
 
     getGadflyContext(plt).theme = Gadfly.Theme(;
-        background_color = getColor(d[:background_color_inside]),
-        minor_label_color = getColor(d[:foreground_color_text]),
+        background_color = insidecolor,
+        minor_label_color = textcolor,
         minor_label_font = tfont.family,
         minor_label_font_size = tfont.pointsize * Gadfly.pt,
-        major_label_color = gfont.color,
+        major_label_color = guidecolor,
         major_label_font = gfont.family,
         major_label_font_size = gfont.pointsize * Gadfly.pt,
-        key_title_color = gfont.color,
+        key_title_color = guidecolor,
         key_title_font = gfont.family,
         key_title_font_size = gfont.pointsize * Gadfly.pt,
-        key_label_color = lfont.color,
+        key_label_color = legendcolor,
         key_label_font = lfont.family,
         key_label_font_size = lfont.pointsize * Gadfly.pt,
         plot_padding = 1 * Gadfly.mm,
