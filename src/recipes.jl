@@ -360,9 +360,11 @@ end
 
 "Sparsity plot... heatmap of non-zero values of a matrix"
 function spy{T<:Real}(z::AMat{T}; kw...)
-  # I,J,V = findnz(z)
-  # heatmap(J, I; leg=false, yflip=true, kw...)
-  heatmap(map(zi->float(zi!=0), z); leg=false, yflip=true, kw...)
+    mat = map(zi->float(zi!=0), z)'
+    xn, yn = size(mat)
+    heatmap(mat; leg=false, yflip=true, aspect_ratio=:equal,
+        xlim=(0.5, xn+0.5), ylim=(0.5, yn+0.5),
+        kw...)
 end
 
 "Adds a+bx... straight line over the current plot"
