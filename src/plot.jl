@@ -167,7 +167,7 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
     for (i,di) in enumerate(seriesArgList)
         plt.n += 1
 
-        if !stringsSupported()
+        if !stringsSupported() && di[:linetype] != :pie
             setTicksFromStringVector(d, di, :x, :xticks)
             setTicksFromStringVector(d, di, :y, :yticks)
             setTicksFromStringVector(d, di, :z, :zticks)

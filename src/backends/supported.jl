@@ -111,7 +111,7 @@ supportedTypes(::PyPlotBackend) = [
         :none, :line, :path, :steppre, :steppost, :shape,
         :scatter, :hist2d, :hexbin, :hist, :density,
         :bar, :sticks, :box, :violin, :quiver,
-        :hline, :vline, :heatmap,
+        :hline, :vline, :heatmap, :pie,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
     ]
 supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]

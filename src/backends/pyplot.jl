@@ -581,6 +581,15 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
+    if lt == :pie
+        handle = ax[:pie](y;
+            # label = d[:label],
+            # colors = # a vector of colors?
+            labels = x
+        )
+        push!(handles, handle)
+    end
+
     d[:serieshandle] = handles
 
     # smoothing
@@ -944,7 +953,7 @@ function addPyPlotLegend(plt::Plot, ax)
         args = filter(x -> !(x[:linetype] in (
             :hist,:density,:hexbin,:hist2d,:hline,:vline,
             :contour,:contour3d,:surface,:wireframe,
-            :heatmap,:path3d,:scatter3d
+            :heatmap,:path3d,:scatter3d, :pie
         )), plt.seriesargs)
         args = filter(x -> x[:label] != "", args)
         if length(args) > 0
