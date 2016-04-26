@@ -455,7 +455,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         end
     end
 
-    if lt == :contour
+    if lt in (:contour, :contour3d)
         z = z.surf'
         needs_colorbar = true
 
@@ -470,6 +470,10 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             error("Only numbers and vectors are supported with levels keyword")
         end
 
+        if lt == :contour3d
+            extrakw[:extend3d] = true
+        end
+
         # contour lines
         handle = ax[:contour](x, y, z, args...;
             label = d[:label],
@@ -482,13 +486,15 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
 
         # contour fills
-        handle = ax[:contourf](x, y, z, args...;
-            label = d[:label],
-            zorder = plt.n + 0.5,
-            cmap = pyfillcolormap(d),
-            extrakw...
-        )
-        push!(handles, handle)
+        if lt == :contour
+            handle = ax[:contourf](x, y, z, args...;
+                label = d[:label],
+                zorder = plt.n + 0.5,
+                cmap = pyfillcolormap(d),
+                extrakw...
+            )
+            push!(handles, handle)
+        end
     end
 
     if lt in (:surface, :wireframe)
@@ -914,7 +920,11 @@ function addPyPlotLegend(plt::Plot, ax)
     leg = plt.plotargs[:legend]
     if leg != :none
         # gotta do this to ensure both axes are included
-        args = filter(x -> !(x[:linetype] in (:hist,:density,:hexbin,:hist2d,:hline,:vline,:contour,:surface,:wireframe,:heatmap,:path3d,:scatter3d)), plt.seriesargs)
+        args = filter(x -> !(x[:linetype] in (
+            :hist,:density,:hexbin,:hist2d,:hline,:vline,
+            :contour,:contour3d,:surface,:wireframe,
+            :heatmap,:path3d,:scatter3d
+        )), plt.seriesargs)
         args = filter(x -> x[:label] != "", args)
         if length(args) > 0
             leg = ax[:legend]([d[:serieshandle][1] for d in args],

@@ -112,7 +112,7 @@ supportedTypes(::PyPlotBackend) = [
         :scatter, :hist2d, :hexbin, :hist, :density,
         :bar, :sticks, :box, :violin, :quiver,
         :hline, :vline, :heatmap,
-        :contour, :path3d, :scatter3d, :surface, :wireframe
+        :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
     ]
 supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PyPlotBackend) = vcat(_allMarkers, Shape)

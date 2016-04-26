@@ -60,6 +60,8 @@ export
     pie!,
     contour,
     contour!,
+    contour3d,
+    contour3d!,
     surface,
     surface!,
     wireframe,
@@ -191,6 +193,8 @@ pie(args...; kw...)        = plot(args...; kw...,  linetype = :pie)
 pie!(args...; kw...)       = plot!(args...; kw..., linetype = :pie)
 contour(args...; kw...)    = plot(args...; kw...,  linetype = :contour)
 contour!(args...; kw...)   = plot!(args...; kw..., linetype = :contour)
+contour3d(args...; kw...)  = plot(args...; kw...,  linetype = :contour3d)
+contour3d!(args...; kw...) = plot!(args...; kw..., linetype = :contour3d)
 surface(args...; kw...)    = plot(args...; kw...,  linetype = :surface)
 surface!(args...; kw...)   = plot!(args...; kw..., linetype = :surface)
 wireframe(args...; kw...)  = plot(args...; kw...,  linetype = :wireframe)

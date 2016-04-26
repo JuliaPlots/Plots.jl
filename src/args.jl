@@ -7,11 +7,11 @@ const _allAxes = [:auto, :left, :right]
     :r => :right
   )
 
-const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe]
+const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe, :contour3d]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                         :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, :ohlc,
-                        :contour, :pie, :shape, :box, :violin, :quiver
+                        :contour, :contour3d, :pie, :shape, :box, :violin, :quiver
                        ], _3dTypes)
 @compat const _typeAliases = KW(
     :n             => :none,
@@ -45,7 +45,7 @@ const _allTypes = vcat([
 
 like_histogram(linetype::Symbol) = linetype in (:hist, :density)
 like_line(linetype::Symbol)      = linetype in (:line, :path, :steppre, :steppost)
-like_surface(linetype::Symbol)   = linetype in (:contour, :heatmap, :surface, :wireframe)
+like_surface(linetype::Symbol)   = linetype in (:contour, :contour3d, :heatmap, :surface, :wireframe)
 
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
