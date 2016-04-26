@@ -104,7 +104,7 @@ supportedArgs(::PyPlotBackend) = [
     :orientation,
     :overwrite_figure,
     :polar,
-    :normalize, :weights, :contours
+    :normalize, :weights, :contours, :aspect_ratio
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [

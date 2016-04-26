@@ -203,6 +203,7 @@ _plotDefaults[:grid]              = true
 _plotDefaults[:annotation]        = nothing           # annotation tuple(s)... (x,y,annotation)
 _plotDefaults[:overwrite_figure]  = false
 _plotDefaults[:polar]             = false
+_plotDefaults[:aspect_ratio]        = :none             # choose from :none or :equal
 
 
 # TODO: x/y scales
@@ -329,6 +330,7 @@ add_aliases(:xerror, :xerr, :xerrorbar)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
 add_aliases(:quiver, :velocity, :quiver2d, :gradient)
 add_aliases(:normalize, :norm, :normed, :normalized)
+add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 
 
 # add all pluralized forms to the _keyAliases dict

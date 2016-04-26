@@ -824,6 +824,12 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
             end
         end
     end
+
+    # do we want to change the aspect ratio?
+    aratio = get(d, :aspect_ratio, :none)
+    if aratio != :none
+        ax[:set_aspect](isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
+    end
 end
 
 
