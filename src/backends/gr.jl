@@ -387,8 +387,8 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           c = p[:markercolor]
           GR.setcolormap(-GR.COLORMAP_GLOWING)
           for i = 1:length(p[:x])
-            if isa(c, ColorGradient) && p[:zcolor] != nothing
-              ci = round(Int, 1000 + p[:zcolor][i] * 255)
+            if isa(c, ColorGradient) && p[:marker_z] != nothing
+              ci = round(Int, 1000 + p[:marker_z][i] * 255)
               GR.setmarkercolorind(ci)
             end
             GR.setmarkersize(d[:markersize][i] / 4.0)
