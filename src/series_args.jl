@@ -30,6 +30,14 @@ function convertToAnyVector{T<:Number}(v::AMat{T}, d::KW)
     end, nothing
 end
 
+# other matrix... vector of columns
+function convertToAnyVector(m::AMat, d::KW)
+    Any[begin
+        v = vec(m[:,i])
+        length(v) == 1 ? v[1] : v
+    end for i=1:size(m,2)], nothing
+end
+
 # function
 convertToAnyVector(f::Function, d::KW) = Any[f], nothing
 
@@ -101,6 +109,13 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
     ys, ymeta = convertToAnyVector(y, kw)
     zs, zmeta = convertToAnyVector(z, kw)
 
+    fr = pop!(kw, :fillrange, nothing)
+    fillranges, _ = if typeof(fr) <: Number
+        ([fr],nothing)
+    else
+        convertToAnyVector(fr, kw)
+    end
+
     mx = length(xs)
     my = length(ys)
     mz = length(zs)
@@ -147,6 +162,9 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
         if isa(d[:marker_z], Function)
             d[:marker_z] = map(d[:marker_z], d[:x])
         end
+
+        # @show fillranges
+        d[:fillrange] = fillranges[mod1(i,length(fillranges))]
         if isa(d[:fillrange], Function)
             d[:fillrange] = map(d[:fillrange], d[:x])
         end

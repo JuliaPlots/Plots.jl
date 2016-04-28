@@ -13,3 +13,4 @@ PyPlot
 GR
 DataFrames
 RDatasets
+VisualRegressionTests

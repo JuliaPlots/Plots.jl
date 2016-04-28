@@ -200,10 +200,10 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           E = zeros(length(p[:x]),2)
           E[:,1] = p[:x]
           E[:,2] = p[:y]
-          if isa(p[:nbins], Tuple)
-            xbins, ybins = p[:nbins]
+          if isa(p[:bins], Tuple)
+            xbins, ybins = p[:bins]
           else
-            xbins = ybins = p[:nbins]
+            xbins = ybins = p[:bins]
           end
           cmap = true
           x, y, H = Base.hist2d(E, xbins, ybins)
@@ -473,10 +473,10 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       E = zeros(length(p[:x]),2)
       E[:,1] = p[:x]
       E[:,2] = p[:y]
-      if isa(p[:nbins], Tuple)
-        xbins, ybins = p[:nbins]
+      if isa(p[:bins], Tuple)
+        xbins, ybins = p[:bins]
       else
-        xbins = ybins = p[:nbins]
+        xbins = ybins = p[:bins]
       end
       x, y, H = Base.hist2d(E, xbins, ybins)
       counts = round(Int32, 1000 + 255 * H / maximum(H))
