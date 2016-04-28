@@ -8,84 +8,80 @@ function _initialize_backend(::PGFPlotsBackend; kw...)
   end
   # TODO: other initialization
 end
+const _pgfplots_linestyles = KW(
+    :solid => "solid",
+    :dash => "dashed",
+    :dot => "dotted",
+    :dashdot => "dashdotted",
+    :dashdotdot => "dashdotdotted"
+)
 
-_pgfplots_get_color(c) = "{rgb,1:red,$(float(c.r));green,$(float(c.g));blue,$(float(c.b))}"
+const _pgfplots_markers = KW(
+    :none => "mark = none,",
+    :cross => "mark = +,",
+    :xcross => "mark = x,",
+    :utriangle => "mark = triangle*,",
+    :dtriangle => "mark = triangle*,",
+    :ellipse => "mark = o*,",
+    :rect => "mark = square*,",
+    :star5 => "mark = star,",
+    :star6 => "mark = asterisk,",
+    :diamond => "mark = diamond*,",
+    :pentagon => "mark = pentagon*,"
+)
+
+function _pgfplots_get_color(kwargs, symb)
+    c = typeof(kwargs[symb]) == Symbol ? convertColor(kwargs[symb]) : kwargs[symb].c
+    "{rgb,1:red,$(float(c.r));green,$(float(c.g));blue,$(float(c.b))}"
+end
 
 function _pgfplots_get_linestyle!(kwargs, plt)
-    linestyle = plt[:linestyle]
-    if linestyle == :dash
-        kwargs[:style] *= "dashed,"
-    elseif linestyle == :dot
-        kwargs[:style] *= "dotted,"
-    elseif linestyle == :dashdot
-        kwargs[:style] *= "dashdotted,"
-    elseif linestyle == :dashdotdot
-        kwargs[:style] *= "dashdotdotted,"
+    ls = plt[:linestyle]
+    if haskey(_pgfplots_linestyles, ls)
+        kwargs[:style] *= _pgfplots_linestyles[ls]*","
     end
 
-    kwargs[:style] *= (haskey(plt, :linewidth) && plt[:linewidth] != :auto) ? "line width = $(plt[:linewidth]) pt," : "line width = 1 pt,"
+    kwargs[:style] *= "line width = $(plt[:linewidth]) pt"*","
 end
 
 
 function _pgfplots_get_marker!(kwargs, plt)
     # Control marker shape
     mark = plt[:markershape]
-    if mark in (:none,:n, :no)
-        kwargs[:style] *= "mark = none,"
-    elseif mark in (:auto, :a)
-        kwargs[:style] *= "mark = *,"
-    elseif mark in (:cross, :+, :plus)
-        kwargs[:style] *= "mark = +,"
-    elseif mark in (:xcross ,:X, :x)
-        kwargs[:style] *= "mark = x,"
-    elseif mark in (:utriangle, :^, :uptri, :uptriangle, :ut, :utri,
-                    :dtriangle, :V, :downtri, :downtriangle, :dt ,:dtri, :v)
-        kwargs[:style] *= "mark = triangle*,"
-    elseif mark in (:ellipse, :c, :circle)
-        kwargs[:style] *= "mark = o*,"
-    elseif mark in  (:rect 	,:r, :sq, :square)
-        kwargs[:style] *= "mark = square*,"
-    elseif mark in (:star5 	,:s, :star, :star1)
-        kwargs[:style] *= "mark = star,"
-    elseif mark in (:star6,)
-        kwargs[:style] *= "mark = asterisk,"
-    elseif mark in (:diamond, :d)
-        kwargs[:style] *= "mark = diamond*,"
-    elseif mark in (:pentagon ,:p, :pent)
-        kwargs[:style] *= "mark = pentagon*,"
-    end
+    kwargs[:style] *= _pgfplots_markers[mark]
 
     # Control marker size
     kwargs[:style] *= "mark size = $(plt[:markersize]/2),"
 
     # Control marker colors and alphas
-    marker_fill = plt[:markercolor].c
     α = plt[:markeralpha] == nothing ? 1.0 : plt[:markeralpha]
-    marker_stroke = plt[:markerstrokecolor].c
-    kwargs[:style] *= "mark options = {color="*_pgfplots_get_color(marker_stroke)*","
-    kwargs[:style] *= mark in (:dtriangle, :V, :downtri, :downtriangle, :dt ,:dtri, :v) ? "rotate=180," : ""
-    kwargs[:style] *= "fill="*_pgfplots_get_color(marker_fill)*","
+    kwargs[:style] *= "mark options = {color=$(_pgfplots_get_color(plt, :markerstrokecolor)),"
+    kwargs[:style] *= mark == :dtriangle ? "rotate=180," : ""
+    kwargs[:style] *= "fill=$(_pgfplots_get_color(plt, :markercolor)),"
     kwargs[:style] *= "fill opacity = $α,"
-    markerstrokestyle = plt[:markerstrokestyle]
-    if markerstrokestyle == :solid
-        kwargs[:style] *= "solid,"
-    elseif markerstrokestyle == :dash
-        kwargs[:style] *= "dashed,"
-    elseif markerstrokestyle == :dot
-        kwargs[:style] *= "dotted,"
-    elseif markerstrokestyle == :dashdot
-        kwargs[:style] *= "dashdotted,"
-    elseif markerstrokestyle == :dashdotdot
-        kwargs[:style] *= "dashdotdotted,"
+    markstrokestyle = plt[:markerstrokestyle]
+    if haskey(_pgfplots_linestyles, markstrokestyle)
+        kwargs[:style] *= _pgfplots_linestyles[markstrokestyle]
     end
     kwargs[:style] *= "},"
 end
 
 function _pgfplots_get_series_color!(kwargs, plt)
-    color = plt[:seriescolor].c
     α = plt[:seriesalpha] == nothing ? 1.0 : plt[:seriesalpha]
-    kwargs[:style] *= "color="*_pgfplots_get_color(color)*","
+    kwargs[:style] *= "color=$(_pgfplots_get_color(plt, :seriescolor)),"
     kwargs[:style] *= "draw opacity = $α,"
+end
+
+function _pgfplots_get_line_color!(kwargs, plt)
+    α = plt[:linealpha] == nothing ? 1.0 : plt[:linealpha]
+    kwargs[:style] *= "color=$(_pgfplots_get_color(plt, :linecolor)),"
+    kwargs[:style] *= "draw opacity = $α,"
+end
+
+function _pgfplots_get_fill_color!(kwargs, plt)
+    α = plt[:fillalpha] == nothing ? 1.0 : plt[:fillalpha]
+    kwargs[:style] *= "fill=$(_pgfplots_get_color(plt, :fillcolor)),"
+    kwargs[:style] *= "fill opacity = $α,"
 end
 
 function _pgfplots_get_plot_kwargs(plt)
@@ -119,12 +115,16 @@ function _pgfplots_axis(plt_series)
         #TODO patch this in PGFPlots.jl instead; the problem is that PGFPlots will
         # save _all_ data points in the figure which can be quite heavy
         plt_hist = hist(plt_series[:y])
-        plt_kwargs[:style] *= "ybar interval, mark = none"
+        plt_kwargs[:style] *= "ybar interval,"
+        _pgfplots_get_line_color!(plt_kwargs, plt_series)
+        _pgfplots_get_fill_color!(plt_kwargs, plt_series)
         PGFPlots.Linear(plt_hist[1][1:end-1]+plt_hist[1].step/2, plt_hist[2]; plt_kwargs...)
     elseif line_type == :hist2d
         PGFPlots.Histogram2(plt_series[:x], plt_series[:y])
     elseif line_type == :bar
-        plt_kwargs[:style] *= "ybar, mark = none"
+        plt_kwargs[:style] *= "ybar,"
+        _pgfplots_get_line_color!(plt_kwargs, plt_series)
+        _pgfplots_get_fill_color!(plt_kwargs, plt_series)
         PGFPlots.Linear(plt_series[:x], plt_series[:y]; plt_kwargs...)
     elseif line_type == :sticks || line_type == :ysticks
         plt_kwargs[:style] *= "ycomb"
@@ -207,10 +207,10 @@ end
 
 function _pgfplots_get_axis_kwargs(d)
     axisargs = KW()
-    axisargs[:style] = "{"
     for arg in (:xlabel, :ylabel, :zlabel, :title)
         axisargs[arg] = d[arg]
     end
+    axisargs[:style] = ""
     axisargs[:style] *= d[:xflip] == true ? "x dir=reverse," : ""
     axisargs[:style] *= d[:yflip] == true ? "y dir=reverse," : ""
     if d[:xscale] in (:log, :log2, :ln, :log10)
@@ -237,12 +237,9 @@ function _pgfplots_get_axis_kwargs(d)
             axisargs[:style] *= "log basis x=10,"
         end
     end
-    axisargs[:style] *= "},"
 
     # Control background color
-    bg_color = d[:background_color].c
-    axisargs[:style] *= "axis background/.style={fill={rgb,1:red,$(float(bg_color.r));green,$(float(bg_color.g));blue,$(float(bg_color.b))},}"
-
+    axisargs[:style] *= "axis background/.style={fill=$(_pgfplots_get_color(d, :background_color))},"
     # Control x/y-limits
     if d[:xlims] !== :auto
         axisargs[:xmin] = d[:xlims][1]
@@ -253,10 +250,11 @@ function _pgfplots_get_axis_kwargs(d)
         axisargs[:ymax] = d[:ylims][2]
     end
     if d[:grid] == true
-        axisargs[:style] = "grid = major"
+        axisargs[:style] *= "grid = major"
     elseif d[:grid] == false
 
     end
+
     axisargs
 end
 
