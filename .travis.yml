@@ -1,27 +1,27 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
-os:
-  - linux
-  - osx
+# os:
+#   - linux
+#   - osx
 julia:
   - 0.4
   #- nightly
-
-
-addons:
-  apt:
-    packages:
-      - wkhtmltopdf
-
-before install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install wkhtmltopdf; fi
-
-
+#
+#
+# # addons:
+# #   apt:
+# #     packages:
+# #       - wkhtmltopdf
+# #
+# # before install:
+# #   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+# #   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install wkhtmltopdf; fi
+#
+#
 # sudo: required
 # before_install:
 #   - sudo apt-get -qq update
-#   - sudo apt-get install wkhtmltopdf-dbg -y
+#   - sudo apt-get install -y wkhtmltopdf
 
 # # borrowed from Blink.jl's travis file
 # matrix:
@@ -32,6 +32,16 @@ before install:
 #     - os: osx
 #       julia: 0.4
 #       env: TESTCMD="julia"
+
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      before_install:
+        - sudo apt-get -qq update
+        - sudo apt-get install -y wkhtmltopdf
+    - os: osx
+
 
 notifications:
   email: true
@@ -46,8 +56,8 @@ script:
  # - julia -e 'Pkg.clone("https://github.com/tbreloff/ImageMagick.jl.git"); Pkg.checkout("ImageMagick","tb_write"); Pkg.build("ImageMagick")'
  # - julia -e 'Pkg.clone("https://github.com/tbreloff/VisualRegressionTests.jl.git");'
  - julia -e 'Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");'
- - julia -e 'Pkg.clone("https://github.com/JunoLab/Blink.jl.git"); Pkg.build("Blink"); import Blink; Blink.AtomShell.install()'
- - julia -e 'Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")'
+ # - julia -e 'Pkg.clone("https://github.com/JunoLab/Blink.jl.git"); Pkg.build("Blink"); import Blink; Blink.AtomShell.install()'
+ # - julia -e 'Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")'
  # - julia -e 'Pkg.add("Cairo"); Pkg.build("Cairo")'
  - julia -e 'ENV["PYTHON"] = ""; Pkg.add("PyPlot"); Pkg.build("PyPlot")'
 

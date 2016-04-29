@@ -37,27 +37,27 @@ facts("Plotly") do
     @fact plotly() --> Plots.PlotlyBackend()
     @fact backend() --> Plots.PlotlyBackend()
 
-    # # until png generation is reliable on OSX, just test on linux
-    # @linux_only image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
+    # until png generation is reliable on OSX, just test on linux
+    @linux_only image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
 end
 
 
-facts("Immerse") do
-    @fact immerse() --> Plots.ImmerseBackend()
-    @fact backend() --> Plots.ImmerseBackend()
+# facts("Immerse") do
+#     @fact immerse() --> Plots.ImmerseBackend()
+#     @fact backend() --> Plots.ImmerseBackend()
+#
+#     # as long as we can plot anything without error, it should be the same as Gadfly
+#     image_comparison_facts(:immerse, only=[1], eps=img_eps)
+# end
 
-    # as long as we can plot anything without error, it should be the same as Gadfly
-    image_comparison_facts(:immerse, only=[1], eps=img_eps)
-end
 
-
-facts("PlotlyJS") do
-    @fact plotlyjs() --> Plots.PlotlyJSBackend()
-    @fact backend() --> Plots.PlotlyJSBackend()
-
-    # as long as we can plot anything without error, it should be the same as Plotly
-    image_comparison_facts(:plotlyjs, only=[1], eps=img_eps)
-end
+# facts("PlotlyJS") do
+#     @fact plotlyjs() --> Plots.PlotlyJSBackend()
+#     @fact backend() --> Plots.PlotlyJSBackend()
+#
+#     # as long as we can plot anything without error, it should be the same as Plotly
+#     image_comparison_facts(:plotlyjs, only=[1], eps=img_eps)
+# end
 
 
 facts("UnicodePlots") do
