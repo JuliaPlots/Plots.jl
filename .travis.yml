@@ -1,8 +1,8 @@
 # Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
-# os:
-#   - linux
-#   - osx
+os:
+  - linux
+  - osx
 julia:
   - 0.4
   #- nightly
@@ -18,10 +18,10 @@ julia:
 # #   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install wkhtmltopdf; fi
 #
 #
-# sudo: required
-# before_install:
-#   - sudo apt-get -qq update
-#   - sudo apt-get install -y wkhtmltopdf
+sudo: required
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  sudo apt-get -qq update             ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  sudo apt-get install -y wkhtmltopdf ; fi
 
 # # borrowed from Blink.jl's travis file
 # matrix:
@@ -33,14 +33,14 @@ julia:
 #       julia: 0.4
 #       env: TESTCMD="julia"
 
-matrix:
-  include:
-    - os: linux
-      sudo: required
-      before_install:
-        - sudo apt-get -qq update
-        - sudo apt-get install -y wkhtmltopdf
-    - os: osx
+# matrix:
+#   include:
+#     - os: linux
+#       sudo: required
+#       before_install:
+#         - sudo apt-get -qq update
+#         - sudo apt-get install -y wkhtmltopdf
+#     - os: osx
 
 
 notifications:
