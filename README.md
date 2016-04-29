@@ -20,4 +20,16 @@ Plots is a plotting API and toolset.  My goals with the package are:
 
 Use the preprocessing pipeline in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added with minimal effort.
 
+```julia
+using Plots
+pyplot(reuse=true)
+
+@gif for i in linspace(0,2π,100)
+    X = Y = linspace(-5,5,40)
+    surface(X, Y, (x,y) -> sin(x+10sin(i))+cos(y))
+end
+```
+
+![waves](http://plots.readthedocs.io/en/latest/examples/img/waves.gif)
+
 View the [full documentation](http://plots.readthedocs.org).
