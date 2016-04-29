@@ -20,6 +20,8 @@ export
     AVec,
     AMat,
     KW,
+
+    wrap,
     set_theme,
     add_theme,
 

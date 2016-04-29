@@ -8,6 +8,14 @@ abstract AbstractBackend
 abstract AbstractPlot{T<:AbstractBackend}
 
 typealias KW Dict{Symbol,Any}
+
+immutable InputWrapper{T}
+    obj::T
+end
+
+wrap{T}(obj::T) = InputWrapper{T}(obj)
+Base.isempty(wrapper::InputWrapper) = false
+
 # -----------------------------------------------------------
 # Plot
 # -----------------------------------------------------------

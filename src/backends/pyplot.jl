@@ -11,7 +11,8 @@ function _initialize_backend(::PyPlotBackend)
         const pypatches = PyPlot.pywrap(PyPlot.pyimport("matplotlib.patches"))
         const pyfont = PyPlot.pywrap(PyPlot.pyimport("matplotlib.font_manager"))
         const pyticker = PyPlot.pywrap(PyPlot.pyimport("matplotlib.ticker"))
-        # const pycolorbar = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colorbar"))
+        const pycmap = PyPlot.pywrap(PyPlot.pyimport("matplotlib.cm"))
+        const pynp = PyPlot.pywrap(PyPlot.pyimport("numpy"))
     end
 
     if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
@@ -50,6 +51,15 @@ getPyPlotColorMap(v::AVec, α=nothing) = getPyPlotColorMap(ColorGradient(v), α)
 
 # anything else just gets a bluesred gradient
 getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(default_gradient(), α)
+
+function getPyPlotCustomShading(c, z, α=nothing)
+    cmap = getPyPlotColorMap(c, α)
+    # sm = pycmap.pymember("ScalarMappable")(cmap = cmap)
+    # sm[:set_array](z)
+    # sm
+    ls = pycolors.pymember("LightSource")(270,45)
+    ls[:shade](z, cmap, vert_exag=0.1, blend_mode="soft")
+end
 
 # get the style (solid, dashed, etc)
 function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
@@ -508,8 +518,13 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
                 z = z'
             end
             if lt == :surface
-                extrakw[:cmap] = pyfillcolormap(d)
-                needs_colorbar = true
+                if d[:marker_z] != nothing
+                    extrakw[:facecolors] = getPyPlotCustomShading(d[:fillcolor], d[:marker_z], d[:fillalpha])
+                    extrakw[:shade] = false
+                else
+                    extrakw[:cmap] = pyfillcolormap(d)
+                    needs_colorbar = true
+                end
             end
             handle = ax[lt == :surface ? :plot_surface : :plot_wireframe](x, y, z;
                 label = d[:label],
@@ -534,6 +549,11 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
                     push!(handles, handle)
                     needs_colorbar = true
                 end
+            end
+
+            # no colorbar if we are creating a surface LightSource
+            if haskey(extrakw, :facecolors)
+                needs_colorbar = false
             end
 
         elseif typeof(z) <: AbstractVector

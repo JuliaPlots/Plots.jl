@@ -754,19 +754,21 @@ end
 
 # 1-row matrices will give an element
 # multi-row matrices will give a column
+# InputWrapper just gives the contents
 # anything else is returned as-is
 # getArgValue(v::Tuple, idx::Int) = v[mod1(idx, length(v))]
 function getArgValue(v::AMat, idx::Int)
     c = mod1(idx, size(v,2))
     size(v,1) == 1 ? v[1,c] : v[:,c]
 end
+getArgValue(wrapper::InputWrapper, idx) = wrapper.obj
 getArgValue(v, idx) = v
 
 
 # given an argument key (k), we want to extract the argument value for this index.
 # if nothing is set (or container is empty), return the default.
 function setDictValue(d_in::KW, d_out::KW, k::Symbol, idx::Int, defaults::KW)
-    if haskey(d_in, k) && !(typeof(d_in[k]) <: @compat(Union{AbstractArray, Tuple}) && isempty(d_in[k]))
+    if haskey(d_in, k) && !(typeof(d_in[k]) <: Union{AbstractArray, Tuple} && isempty(d_in[k]))
         d_out[k] = getArgValue(d_in[k], idx)
     else
         d_out[k] = defaults[k]
