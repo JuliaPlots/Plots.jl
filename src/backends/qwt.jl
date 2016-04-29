@@ -1,6 +1,57 @@
 
 # https://github.com/tbreloff/Qwt.jl
 
+
+supportedArgs(::QwtBackend) = [
+    :annotation,
+    :axis,
+    :background_color,
+    :linecolor,
+    :color_palette,
+    :fillrange,
+    :fillcolor,
+    :foreground_color,
+    :group,
+    :label,
+    :layout,
+    :legend,
+    :seriescolor, :seriesalpha,
+    :linestyle,
+    :linetype,
+    :linewidth,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :n,
+    :bins,
+    :nc,
+    :nr,
+    :pos,
+    :smooth,
+    :show,
+    :size,
+    :title,
+    :windowtitle,
+    :x,
+    :xlabel,
+    :xlims,
+    :xticks,
+    :y,
+    :ylabel,
+    :ylims,
+    :yrightlabel,
+    :yticks,
+    :xscale,
+    :yscale,
+  ]
+supportedTypes(::QwtBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
+supportedMarkers(::QwtBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
+supportedScales(::QwtBackend) = [:identity, :log10]
+subplotSupported(::QwtBackend) = true
+
+
+# --------------------------------------------------------------------------------------
+
 function _initialize_backend(::QwtBackend; kw...)
   @eval begin
     warn("Qwt is no longer supported... many features will likely be broken.")

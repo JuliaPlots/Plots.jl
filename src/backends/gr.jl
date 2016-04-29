@@ -1,6 +1,50 @@
 
 # https://github.com/jheinen/GR.jl
 
+
+supportedArgs(::GRBackend) = [
+    :annotation,
+    :background_color, :foreground_color, :color_palette,
+    :group,
+    :label,
+    :linetype,
+    :seriescolor, :seriesalpha,
+    :linecolor, :linestyle, :linewidth, :linealpha,
+    :markershape, :markercolor, :markersize, :markeralpha,
+    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
+    :fillrange, :fillcolor, :fillalpha,
+    :bins,
+    :n, :nc, :nr, :layout,
+    :smooth,
+    :title, :windowtitle, :show, :size,
+    :x, :xlabel, :xlims, :xticks, :xscale, :xflip,
+    :y, :ylabel, :ylims, :yticks, :yscale, :yflip,
+    :axis, :yrightlabel,
+    :z, :zlabel, :zlims, :zticks, :zscale, :zflip,
+    :z,
+    :tickfont, :guidefont, :legendfont,
+    :grid, :legend, :colorbar,
+    :marker_z, :levels,
+    :xerror, :yerror,
+    :ribbon, :quiver,
+    :orientation,
+    :overwrite_figure,
+    :polar,
+  ]
+supportedAxes(::GRBackend) = _allAxes
+supportedTypes(::GRBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
+                               :scatter, :hist2d, :hexbin, :hist, :density, :bar,
+                               :hline, :vline, :contour, :heatmap, :path3d, :scatter3d, :surface,
+                               :wireframe, :ohlc, :pie]
+supportedStyles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::GRBackend) = vcat(_allMarkers, Shape)
+supportedScales(::GRBackend) = [:identity, :log10]
+subplotSupported(::GRBackend) = true
+
+
+# --------------------------------------------------------------------------------------
+
+
 function _initialize_backend(::GRBackend; kw...)
   @eval begin
     import GR

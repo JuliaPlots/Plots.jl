@@ -3,6 +3,69 @@
 
 # credit goes to https://github.com/jverzani for contributing to the first draft of this backend implementation
 
+supportedArgs(::WinstonBackend) = [
+    :annotation,
+    # :args,
+    # :axis,
+    # :background_color,
+    :linecolor,
+    :color_palette,
+    :fillrange,
+    :fillcolor,
+    # :foreground_color,
+    :group,
+    # :heatmap_c,
+    # :kwargs,
+    :label,
+    # :layout,
+    :legend,
+    :seriescolor, :seriesalpha,
+    :linestyle,
+    :linetype,
+    :linewidth,
+    :markershape,
+    :markercolor,
+    :markersize,
+    # :markerstrokewidth,
+    # :markerstrokecolor,
+    # :markerstrokestyle,
+    # :n,
+    :bins,
+    # :nc,
+    # :nr,
+    # :pos,
+    :smooth,
+    # :ribbon,
+    :show,
+    :size,
+    :title,
+    :windowtitle,
+    :x,
+    :xlabel,
+    :xlims,
+    # :xticks,
+    :y,
+    :ylabel,
+    :ylims,
+    # :yrightlabel,
+    # :yticks,
+    :xscale,
+    :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
+  ]
+supportedAxes(::WinstonBackend) = [:auto, :left]
+supportedTypes(::WinstonBackend) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
+supportedStyles(::WinstonBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::WinstonBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
+supportedScales(::WinstonBackend) = [:identity, :log10]
+subplotSupported(::WinstonBackend) = false
+
+
+# --------------------------------------------------------------------------------------
+
+
 function _initialize_backend(::WinstonBackend; kw...)
   @eval begin
     # ENV["WINSTON_OUTPUT"] = "gtk"

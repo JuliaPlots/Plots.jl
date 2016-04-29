@@ -6,6 +6,7 @@ Requires
 FactCheck
 Cairo
 Gadfly
+Immerse
 Images
 PlotlyJS
 PyPlot
@@ -14,3 +15,4 @@ GR
 DataFrames
 RDatasets
 VisualRegressionTests
+UnicodePlots

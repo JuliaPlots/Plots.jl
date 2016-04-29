@@ -2,6 +2,73 @@
 
 # [WEBSITE]
 
+supportedArgs(::GLVisualizeBackend) = [
+    # :annotation,
+    # :axis,
+    # :background_color,
+    # :color_palette,
+    # :fillrange,
+    # :fillcolor,
+    # :fillalpha,
+    # :foreground_color,
+    # :group,
+    # :label,
+    # :layout,
+    # :legend,
+    # :linecolor,
+    # :linestyle,
+     :linetype
+    #  :seriescolor, :seriesalpha,
+    # :linewidth,
+    # :linealpha,
+    # :markershape,
+    # :markercolor,
+    # :markersize,
+    # :markeralpha,
+    # :markerstrokewidth,
+    # :markerstrokecolor,
+    # :markerstrokestyle,
+    # :n,
+    # :bins,
+    # :nc,
+    # :nr,
+    # :pos,
+    # :smooth,
+    # :show,
+    # :size,
+    # :title,
+    # :windowtitle,
+    # :x,
+    # :xlabel,
+    # :xlims,
+    # :xticks,
+    # :y,
+    # :ylabel,
+    # :ylims,
+    # :yrightlabel,
+    # :yticks,
+    # :xscale,
+    # :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
+    # :tickfont,
+    # :guidefont,
+    # :legendfont,
+    # :grid,
+    # :surface
+    # :levels,
+  ]
+supportedAxes(::GLVisualizeBackend) = [:auto, :left]
+supportedTypes(::GLVisualizeBackend) = [:surface] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::GLVisualizeBackend) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::GLVisualizeBackend) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedScales(::GLVisualizeBackend) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::GLVisualizeBackend) = false
+
+# --------------------------------------------------------------------------------------
+
+
 function _initialize_backend(::GLVisualizeBackend; kw...)
   @eval begin
     import GLVisualize

@@ -1,5 +1,74 @@
 # https://github.com/sisl/PGFPlots.jl
 
+supportedArgs(::PGFPlotsBackend) = [
+    # :annotation,
+    # :axis,
+     :background_color,
+    # :color_palette,
+    # :fillrange,
+     :fillcolor,
+     :fillalpha,
+    # :foreground_color,
+    # :group,
+    # :label,
+    # :layout,
+    # :legend,
+     :seriescolor, :seriesalpha,
+     :linecolor,
+     :linestyle,
+     :linetype,
+     :linewidth,
+     :linealpha,
+     :markershape,
+     :markercolor,
+     :markersize,
+     :markeralpha,
+    # :markerstrokewidth,
+     :markerstrokecolor,
+     :markerstrokestyle,
+    # :n,
+    # :bins,
+    # :nc,
+    # :nr,
+    # :pos,
+    # :smooth,
+    # :show,
+    # :size,
+     :title,
+    # :windowtitle,
+     :x,
+     :xlabel,
+     :xlims,
+    # :xticks,
+     :y,
+     :ylabel,
+     :ylims,
+    # :yrightlabel,
+    # :yticks,
+     :xscale,
+     :yscale,
+     :xflip,
+     :yflip,
+     :z,
+     :zscale,
+    # :tickfont,
+    # :guidefont,
+    # :legendfont,
+     :grid,
+    # :surface
+    # :levels,
+  ]
+supportedAxes(::PGFPlotsBackend) = [:auto, :left]
+supportedTypes(::PGFPlotsBackend) = [:path, :path3d, :scatter, :line, :steppre, :stepmid, :steppost, :hist, :bar, :hist2d, :sticks, :ysticks, :xsticks, :contour] #  :hexbin, :hline, :vline,]
+supportedStyles(::PGFPlotsBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::PGFPlotsBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
+supportedScales(::PGFPlotsBackend) = [:identity, :log, :ln, :log2, :log10] # :asinh, :sqrt]
+subplotSupported(::PGFPlotsBackend) = false
+
+
+# --------------------------------------------------------------------------------------
+
+
 function _initialize_backend(::PGFPlotsBackend; kw...)
   @eval begin
     import PGFPlots

@@ -40,7 +40,7 @@ end
 @init_backend PGFPlots
 
 include("backends/web.jl")
-include("backends/supported.jl")
+# include("backends/supported.jl")
 
 # ---------------------------------------------------------
 
@@ -80,7 +80,10 @@ function pickDefaultBackend()
         end
     end
 
-    for pkgstr in ("PyPlot", "Immerse", "Qwt", "Gadfly", "GR", "UnicodePlots", "Bokeh", "GLVisualize")
+    # the ordering/inclusion of this package list is my semi-arbitrary guess at
+    # which one someone will want to use if they have the package installed...accounting for
+    # features, speed, and robustness
+    for pkgstr in ("PyPlot", "GR", "PlotlyJS", "Immerse", "Gadfly", "UnicodePlots")
         if Pkg.installed(pkgstr) != nothing
             return backend(symbol(lowercase(pkgstr)))
         end
@@ -135,3 +138,23 @@ function backend(modname::Symbol)
   CURRENT_BACKEND.sym = modname
   CURRENT_BACKEND.pkg = _backend_instance(modname)
 end
+
+# ---------------------------------------------------------
+
+supportedAxes(::AbstractBackend) = [:left]
+supportedTypes(::AbstractBackend) = []
+supportedStyles(::AbstractBackend) = [:solid]
+supportedMarkers(::AbstractBackend) = [:none]
+supportedScales(::AbstractBackend) = [:identity]
+subplotSupported(::AbstractBackend) = false
+stringsSupported(::AbstractBackend) = false
+
+supportedAxes() = supportedAxes(backend())
+supportedTypes() = supportedTypes(backend())
+supportedStyles() = supportedStyles(backend())
+supportedMarkers() = supportedMarkers(backend())
+supportedScales() = supportedScales(backend())
+subplotSupported() = subplotSupported(backend())
+stringsSupported() = stringsSupported(backend())
+
+# ---------------------------------------------------------

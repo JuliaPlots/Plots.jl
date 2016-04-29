@@ -1,6 +1,57 @@
 
 # https://github.com/stevengj/PyPlot.jl
 
+
+supportedArgs(::PyPlotBackend) = [
+    :annotation,
+    :background_color, :foreground_color, :color_palette,
+    :background_color_legend, :background_color_inside, :background_color_outside,
+    :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
+        :foreground_color_text, :foreground_color_border,
+    :group,
+    :label,
+    :linetype,
+    :seriescolor, :seriesalpha,
+    :linecolor, :linestyle, :linewidth, :linealpha,
+    :markershape, :markercolor, :markersize, :markeralpha,
+    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
+    :fillrange, :fillcolor, :fillalpha,
+    :bins,
+    :n, :nc, :nr, :layout,
+    :smooth,
+    :title, :windowtitle, :show, :size,
+    :x, :xlabel, :xlims, :xticks, :xscale, :xflip,
+    :y, :ylabel, :ylims, :yticks, :yscale, :yflip,
+    :axis, :yrightlabel,
+    :z, :zlabel, :zlims, :zticks, :zscale, :zflip,
+    :z,
+    :tickfont, :guidefont, :legendfont,
+    :grid, :legend, :colorbar,
+    :marker_z, :levels,
+    :xerror, :yerror,
+    :ribbon, :quiver,
+    :orientation,
+    :overwrite_figure,
+    :polar,
+    :normalize, :weights, :contours, :aspect_ratio
+  ]
+supportedAxes(::PyPlotBackend) = _allAxes
+supportedTypes(::PyPlotBackend) = [
+        :none, :line, :path, :steppre, :steppost, :shape,
+        :scatter, :hist2d, :hexbin, :hist, :density,
+        :bar, :sticks, :box, :violin, :quiver,
+        :hline, :vline, :heatmap, :pie,
+        :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
+    ]
+supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::PyPlotBackend) = vcat(_allMarkers, Shape)
+supportedScales(::PyPlotBackend) = [:identity, :ln, :log2, :log10]
+subplotSupported(::PyPlotBackend) = true
+
+
+# --------------------------------------------------------------------------------------
+
+
 function _initialize_backend(::PyPlotBackend)
     @eval begin
         import PyPlot

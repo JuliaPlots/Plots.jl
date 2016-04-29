@@ -1,6 +1,16 @@
 
 # https://github.com/JuliaGraphics/Immerse.jl
 
+supportedArgs(::ImmerseBackend) = supportedArgs(GadflyBackend())
+supportedAxes(::ImmerseBackend) = supportedAxes(GadflyBackend())
+supportedTypes(::ImmerseBackend) = supportedTypes(GadflyBackend())
+supportedStyles(::ImmerseBackend) = supportedStyles(GadflyBackend())
+supportedMarkers(::ImmerseBackend) = supportedMarkers(GadflyBackend())
+supportedScales(::ImmerseBackend) = supportedScales(GadflyBackend())
+subplotSupported(::ImmerseBackend) = true
+
+# --------------------------------------------------------------------------------------
+
 function _initialize_backend(::ImmerseBackend; kw...)
   @eval begin
     import Immerse, Gadfly, Compose, Gtk

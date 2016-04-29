@@ -2,6 +2,75 @@
 # https://github.com/bokeh/Bokeh.jl
 
 
+supportedArgs(::BokehBackend) = [
+    # :annotation,
+    # :axis,
+    # :background_color,
+    :linecolor,
+    # :color_palette,
+    # :fillrange,
+    # :fillcolor,
+    # :fillalpha,
+    # :foreground_color,
+    :group,
+    # :label,
+    # :layout,
+    # :legend,
+    :seriescolor, :seriesalpha,
+    :linestyle,
+    :linetype,
+    :linewidth,
+    # :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    # :markeralpha,
+    # :markerstrokewidth,
+    # :markerstrokecolor,
+    # :markerstrokestyle,
+    # :n,
+    # :bins,
+    # :nc,
+    # :nr,
+    # :pos,
+    # :smooth,
+    # :show,
+    :size,
+    :title,
+    # :windowtitle,
+    :x,
+    # :xlabel,
+    # :xlims,
+    # :xticks,
+    :y,
+    # :ylabel,
+    # :ylims,
+    # :yrightlabel,
+    # :yticks,
+    # :xscale,
+    # :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
+    # :tickfont,
+    # :guidefont,
+    # :legendfont,
+    # :grid,
+    # :surface,
+    # :levels,
+  ]
+supportedAxes(::BokehBackend) = [:auto, :left]
+supportedTypes(::BokehBackend) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :hist2d, :hexbin, :hist, :bar, :hline, :vline, :contour]
+supportedStyles(::BokehBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::BokehBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
+supportedScales(::BokehBackend) = [:identity, :ln] #, :ln, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::BokehBackend) = false
+
+
+# --------------------------------------------------------------------------------------
+
+
+
 function _initialize_backend(::BokehBackend; kw...)
   @eval begin
     warn("Bokeh is no longer supported... many features will likely be broken.")

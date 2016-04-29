@@ -2,6 +2,43 @@
 # https://github.com/dcjones/Gadfly.jl
 
 
+supportedArgs(::GadflyBackend) = [
+    :annotation,
+    :background_color, :foreground_color, :color_palette,
+    :group, :label, :linetype,
+    :seriescolor, :seriesalpha,
+    :linecolor, :linestyle, :linewidth, :linealpha,
+    :markershape, :markercolor, :markersize, :markeralpha,
+    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
+    :fillrange, :fillcolor, :fillalpha,
+    :bins, :n, :nc, :nr, :layout, :smooth,
+    :title, :windowtitle, :show, :size,
+    :x, :xlabel, :xlims, :xticks, :xscale, :xflip,
+    :y, :ylabel, :ylims, :yticks, :yscale, :yflip,
+    # :z, :zlabel, :zlims, :zticks, :zscale, :zflip,
+    :z,
+    :tickfont, :guidefont, :legendfont,
+    :grid, :legend, :colorbar,
+    :marker_z, :levels,
+    :xerror, :yerror,
+    :ribbon, :quiver,
+    :orientation,
+  ]
+supportedAxes(::GadflyBackend) = [:auto, :left]
+supportedTypes(::GadflyBackend) = [
+        :none, :line, :path, :steppre, :steppost, :sticks,
+        :scatter, :hist2d, :hexbin, :hist,
+        :bar, :box, :violin, :quiver,
+        :hline, :vline, :contour, :shape
+    ]
+supportedStyles(::GadflyBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supportedMarkers(::GadflyBackend) = vcat(_allMarkers, Shape)
+supportedScales(::GadflyBackend) = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::GadflyBackend) = true
+
+
+# --------------------------------------------------------------------------------------
+
 function _initialize_backend(::GadflyBackend; kw...)
     @eval begin
         import Gadfly, Compose

@@ -1,6 +1,83 @@
 
 # https://plot.ly/javascript/getting-started
 
+supportedArgs(::PlotlyBackend) = [
+    :annotation,
+    # :axis,
+    :background_color,
+    :color_palette,
+    :fillrange,
+    :fillcolor,
+    :fillalpha,
+    :foreground_color,
+    :group,
+    :label,
+    :layout,
+    :legend,
+    :seriescolor, :seriesalpha,
+    :linecolor,
+    :linestyle,
+    :linetype,
+    :linewidth,
+    :linealpha,
+    :markershape,
+    :markercolor,
+    :markersize,
+    :markeralpha,
+    :markerstrokewidth,
+    :markerstrokecolor,
+    :markerstrokestyle,
+    :n,
+    :bins,
+    :nc,
+    :nr,
+    # :pos,
+    # :smooth,
+    :show,
+    :size,
+    :title,
+    :windowtitle,
+    :x,
+    :xlabel,
+    :xlims,
+    :xticks,
+    :y,
+    :ylabel,
+    :ylims,
+    # :yrightlabel,
+    :yticks,
+    :xscale,
+    :yscale,
+    :xflip,
+    :yflip,
+    :z,
+    :marker_z,
+    :tickfont,
+    :guidefont,
+    :legendfont,
+    :grid,
+    :levels,
+    :xerror,
+    :yerror,
+    :ribbon,
+    :quiver,
+    :orientation,
+    :polar,
+  ]
+supportedAxes(::PlotlyBackend) = [:auto, :left]
+supportedTypes(::PlotlyBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
+                                   :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
+                                   :pie, :heatmap] #,, :sticks, :hexbin, :hline, :vline]
+supportedStyles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supportedMarkers(::PlotlyBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
+                                     :pentagon, :hexagon, :octagon, :vline, :hline] #vcat(_allMarkers, Shape)
+supportedScales(::PlotlyBackend) = [:identity, :log10] #, :ln, :log2, :log10, :asinh, :sqrt]
+subplotSupported(::PlotlyBackend) = true
+stringsSupported(::PlotlyBackend) = true
+
+
+# --------------------------------------------------------------------------------------
+
 function _initialize_backend(::PlotlyBackend; kw...)
   @eval begin
     import JSON

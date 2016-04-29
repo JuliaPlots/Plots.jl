@@ -1,6 +1,68 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
+supportedArgs(::UnicodePlotsBackend) = [
+    # :annotation,
+    # :args,
+    # :axis,
+    # :background_color,
+    # :linecolor,
+    # :fill,
+    # :foreground_color,
+    :group,
+    # :heatmap_c,
+    # :kwargs,
+    :label,
+    # :layout,
+    :legend,
+    :seriescolor, :seriesalpha,
+    :linestyle,
+    :linetype,
+    # :linewidth,
+    :markershape,
+    # :markercolor,
+    # :markersize,
+    # :markerstrokewidth,
+    # :markerstrokecolor,
+    # :markerstrokestyle,
+    # :n,
+    :bins,
+    # :nc,
+    # :nr,
+    # :pos,
+    # :reg,
+    # :ribbon,
+    :show,
+    :size,
+    :title,
+    :windowtitle,
+    :x,
+    :xlabel,
+    :xlims,
+    # :xticks,
+    :y,
+    :ylabel,
+    :ylims,
+    # :yrightlabel,
+    # :yticks,
+    # :xscale,
+    # :yscale,
+    # :xflip,
+    # :yflip,
+    # :z,
+  ]
+supportedAxes(::UnicodePlotsBackend) = [:auto, :left]
+supportedTypes(::UnicodePlotsBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
+supportedStyles(::UnicodePlotsBackend) = [:auto, :solid]
+supportedMarkers(::UnicodePlotsBackend) = [:none, :auto, :ellipse]
+supportedScales(::UnicodePlotsBackend) = [:identity]
+subplotSupported(::UnicodePlotsBackend) = true
+
+
+
+
+# --------------------------------------------------------------------------------------
+
 function _initialize_backend(::UnicodePlotsBackend; kw...)
   @eval begin
     import UnicodePlots
