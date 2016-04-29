@@ -15,10 +15,10 @@ Plots is a plotting API and toolset.  My goals with the package are:
 - **Intuitive**.  Start generating plots without reading volumes of documentation.  Commands should "just work".
 - **Concise**.  Less code means fewer mistakes and more efficient development/analysis.
 - **Flexible**.  Produce your favorite plots from your favorite package, but quicker and simpler.
-- **Consistent**.  Don't commit to one graphics package.  Use the same code and access the strengths of all backends.
+- **Consistent**.  Don't commit to one graphics package.  Use the same code and access the strengths of all [backends](http://plots.readthedocs.io/en/latest/backends/).
 - **Lightweight**.  Very few dependencies, since backends are loaded and initialized dynamically.
 
-Use the preprocessing pipeline in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added with minimal effort.
+Use the [preprocessing pipeline](http://plots.readthedocs.io/en/latest/pipeline/) in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added with minimal effort.
 
 ```julia
 using Plots
@@ -32,4 +32,4 @@ end
 
 ![waves](http://plots.readthedocs.io/en/latest/examples/img/waves.gif)
 
-View the [full documentation](http://plots.readthedocs.org).
+View the [full documentation](http://plots.readthedocs.io).
