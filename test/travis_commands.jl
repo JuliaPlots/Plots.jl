@@ -1,5 +1,5 @@
-Pkg.clone(pwd())
-Pkg.build("Plots")
+# Pkg.clone(pwd())
+# Pkg.build("Plots")
 
 Pkg.clone("ImageMagick")
 Pkg.build("ImageMagick")
