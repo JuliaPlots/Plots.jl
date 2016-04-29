@@ -17,7 +17,7 @@ julia:
 sudo: required
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pwd ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo ./test/install_wkhtmltoimage.sh ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./test/install_wkhtmltoimage.sh ; fi
 #   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  sudo add-apt-repository -y ppa:pov/wkhtmltopdf  ; fi
 #   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  sudo apt-get -qq update                      ; fi
 #   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  sudo apt-get install -y wkhtmltopdf          ; fi

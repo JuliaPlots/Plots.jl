@@ -1,4 +1,5 @@
-set -e
+#!/bin/sh
+set -ex
 sudo add-apt-repository -y ppa:pov/wkhtmltopdf
 sudo apt-get -qq update
 sudo apt-get install -y wkhtmltopdf
