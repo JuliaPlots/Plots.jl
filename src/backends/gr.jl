@@ -135,6 +135,7 @@ end
 
 function gr_polaraxes(rmin, rmax)
   GR.savestate()
+  GR.setlinetype(GR.LINETYPE_SOLID)
   GR.setlinecolorind(88)
   tick = 0.5 * GR.tick(rmin, rmax)
   n = round(Int, (rmax - rmin) / tick + 0.5)
@@ -147,9 +148,10 @@ function gr_polaraxes(rmin, rmax)
       end
       GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
       x, y = GR.wctondc(0.05, r)
-      GR.text(x, y, @sprintf("%g", rmin + i * tick))
+      GR.text(x, y, string(signif(rmin + i * tick, 12)))
     else
       GR.setlinecolorind(90)
+      GR.drawarc(-r, r, -r, r, 0, 359)
     end
   end
   for alpha in 0:45:315
@@ -695,7 +697,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.setwindow(-1, 1, -1, 1)
       rmin, rmax = GR.adjustrange(minimum(r), maximum(r))
       gr_polaraxes(rmin, rmax)
-      phi, r, = p[:x], p[:y]
+      phi, r = p[:x], p[:y]
       r = 0.5 * (r - rmin) / (rmax - rmin)
       n = length(r)
       x = zeros(n)
