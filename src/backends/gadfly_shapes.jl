@@ -67,11 +67,11 @@ function Gadfly.render(geom::ShapeGeometry, theme::Gadfly.Theme, aes::Gadfly.Aes
 end
 
 function gadflyshape(sv::Shape)
-  ShapeGeometry(Any[sv.vertices])
+  ShapeGeometry(Any[vertices(sv)])
 end
 
 function gadflyshape(sv::AVec{Shape})
-    ShapeGeometry(Any[s.vertices for s in sv])
+    ShapeGeometry(Any[vertices(s) for s in sv])
 end
 
 

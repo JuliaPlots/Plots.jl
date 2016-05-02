@@ -1,10 +1,4 @@
 
-export
-    P2,
-    P3,
-    BezierCurve,
-    curve_points,
-    directed_curve
 
 typealias P2 FixedSizeArrays.Vec{2,Float64}
 typealias P3 FixedSizeArrays.Vec{3,Float64}
@@ -18,37 +12,36 @@ compute_angle(v::P2) = (angle = atan2(v[2], v[1]); angle < 0 ? 2π - angle : ang
 # -------------------------------------------------------------
 
 immutable Shape
-  vertices::AVec
+  # vertices::AVec
+  x::AVec
+  y::AVec
 end
 
-Shape(x, y) = Shape(collect(zip(x, y)))
+# Shape(x, y) = Shape(collect(zip(x, y)))
+Shape(verts::AVec) = Shape(unzip(verts)...)
 
-get_xs(shape::Shape) = Float64[v[1] for v in shape.vertices]
-get_ys(shape::Shape) = Float64[v[2] for v in shape.vertices]
+# get_xs(shape::Shape) = Float64[v[1] for v in shape.vertices]
+# get_ys(shape::Shape) = Float64[v[2] for v in shape.vertices]
+get_xs(shape::Shape) = shape.x
+get_ys(shape::Shape) = shape.y
+vertices(shape::Shape) = collect(zip(shape.x, shape.y))
 
-function scale(shape::Shape, x, y=x)
-    sx, sy = shape_coords(shape)
-    Shape(sx .* x, sy .* y)
-end
-
-function translate(shape::Shape, x, y=x)
-    sx, sy = shape_coords(shape)
-    Shape(sx .+ x, sy .+ y)
-end
 
 function shape_coords(shape::Shape)
-    unzip(shape.vertices)
+    # unzip(shape.vertices)
+    shape.x, shape.y
 end
 
 function shape_coords(shapes::AVec{Shape})
     length(shapes) == 0 && return zeros(0), zeros(0)
     xs = map(get_xs, shapes)
     ys = map(get_ys, shapes)
-    x, y = unzip(shapes[1].vertices)
+    # x, y = shapes[1].x, shapes[1].y #unzip(shapes[1].vertices)
+    x, y = map(copy, shape_coords(shapes[1]))
     for shape in shapes[2:end]
-        tmpx, tmpy = unzip(shape.vertices)
-        nanappend!(x, tmpx)
-        nanappend!(y, tmpy)
+        # tmpx, tmpy = unzip(shape.vertices)
+        nanappend!(x, shape.x)
+        nanappend!(y, shape.y)
         # x = vcat(x, NaN, tmpx)
         # y = vcat(y, NaN, tmpy)
     end
@@ -131,6 +124,67 @@ const _shapes = KW(
 
 for n in [4,5,6,7,8]
   _shapes[symbol("star$n")] = makestar(n)
+end
+
+# -----------------------------------------------------------------------
+
+center(shape::Shape) = (mean(shape.x), mean(shape.y))
+
+function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
+    sx, sy = shape_coords(shape)
+    cx, cy = c
+    for i=1:length(sx)
+        sx[i] = (sx[i] - cx) * x + cx
+        sy[i] = (sy[i] - cy) * y + cy
+    end
+    shape
+end
+
+function Base.scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
+    shapecopy = deepcopy(shape)
+    scale!(shape, x, y, c)
+end
+
+function translate!(shape::Shape, x::Real, y::Real = x)
+    sx, sy = shape_coords(shape)
+    for i=1:length(sx)
+        sx[i] += x
+        sy[i] += y
+    end
+    shape
+end
+
+function translate(shape::Shape, x::Real, y::Real = x)
+    shapecopy = deepcopy(shape)
+    translate!(shape, x, y)
+end
+
+function rotate_x(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real)
+    (x - centerx) * cos(Θ) - (y - centery) * sin(Θ) + centerx
+end
+
+function rotate_y(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real)
+    (y - centery) * cos(Θ) + (x - centerx) * sin(Θ) + centery
+end
+
+function rotate(x::Real, y::Real, θ::Real, c = center(shape))
+    cx, cy = c
+    rotate_x(x, y, Θ, cx, cy), rotate_y(x, y, Θ, cx, cy)
+end
+
+function rotate!(shape::Shape, Θ::Real, c = center(shape))
+    x, y = shape_coords(shape)
+    cx, cy = c
+    for i=1:length(x)
+        x[i] = rotate_x(x[i], y[i], Θ, cx, cy)
+        y[i] = rotate_y(x[i], y[i], Θ, cx, cy)
+    end
+    shape
+end
+
+function rotate(shape::Shape, Θ::Real, c = center(shape))
+    shapecopy = deepcopy(shape)
+    rotate!(shapecopy, Θ, c)
 end
 
 # -----------------------------------------------------------------------

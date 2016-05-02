@@ -124,11 +124,12 @@ function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
 end
 
 function getPyPlotMarker(marker::Shape)
-    n = length(marker.vertices)
+    x, y = shape_coords(marker)
+    n = length(x)
     mat = zeros(n+1,2)
-    for (i,vert) in enumerate(marker.vertices)
-        mat[i,1] = vert[1]
-        mat[i,2] = vert[2]
+    for i=1:n
+        mat[i,1] = x[i]
+        mat[i,2] = y[i]
     end
     mat[n+1,:] = mat[1,:]
     pypath.pymember("Path")(mat)
@@ -142,8 +143,8 @@ const _path_CLOSEPOLY = UInt8(79)
 # and http://matplotlib.org/api/path_api.html#matplotlib.path.Path
 function buildPyPlotPath(x, y)
     n = length(x)
-    mat = zeros(n, 2)
-    codes = zeros(UInt8, n)
+    mat = zeros(n+1, 2)
+    codes = zeros(UInt8, n+1)
     lastnan = true
     for i=1:n
         mat[i,1] = x[i]
@@ -156,6 +157,7 @@ function buildPyPlotPath(x, y)
         end
         lastnan = nan
     end
+    codes[n+1] = _path_CLOSEPOLY
     pypath.pymember("Path")(mat, codes)
 end
 

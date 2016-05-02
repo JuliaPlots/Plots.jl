@@ -88,7 +88,7 @@ function gr_setmarkershape(p)
   if haskey(p, :markershape)
     shape = p[:markershape]
     if isa(shape, Shape)
-      p[:vertices] = shape.vertices
+      p[:vertices] = vertices(shape)
     else
       GR.setmarkertype(gr_markertype[shape])
       p[:vertices] = :none

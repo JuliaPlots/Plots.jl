@@ -624,6 +624,11 @@ function preprocessArgs!(d::KW)
         if haskey(d, tsym) && ticksType(d[tsym]) == :labels
             d[tsym] = (1:length(d[tsym]), d[tsym])
         end
+
+        ssym = symbol(letter * "scale")
+        if haskey(d, ssym) && haskey(_scaleAliases, d[ssym])
+            d[ssym] = _scaleAliases[d[ssym]]
+        end
     end
 
     # handle line args
@@ -801,12 +806,12 @@ function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
             setDictValue(kwdict, d, k, idx, _plotDefaults)
         end
     end
-
-    for k in (:xscale, :yscale)
-        if haskey(_scaleAliases, d[k])
-            d[k] = _scaleAliases[d[k]]
-        end
-    end
+    #
+    # for k in (:xscale, :yscale)
+    #     if haskey(_scaleAliases, d[k])
+    #         d[k] = _scaleAliases[d[k]]
+    #     end
+    # end
 
     # handle legend/colorbar
     d[:legend] = convertLegendValue(d[:legend])
