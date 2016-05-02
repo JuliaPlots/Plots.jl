@@ -90,6 +90,17 @@ function plot!(plt::Plot, args...; kw...)
         nothing
     end
 
+    # merge plot args
+    if !haskey(d, :subplot)
+        for k in keys(_plotDefaults)
+            if haskey(d, k)
+                plt.plotargs[k] = d[k]
+            end
+        end
+        # merge!(plt.plotargs, d)
+        handlePlotColors(plt.backend, plt.plotargs)
+    end
+
     _add_series(plt, d, groupby, args...)
     _add_annotations(plt, d)
 
@@ -98,8 +109,8 @@ function plot!(plt::Plot, args...; kw...)
 
     # add title, axis labels, ticks, etc
     if !haskey(d, :subplot)
-        merge!(plt.plotargs, d)
-        handlePlotColors(plt.backend, plt.plotargs)
+        # merge!(plt.plotargs, d)
+        # handlePlotColors(plt.backend, plt.plotargs)
         dumpdict(plt.plotargs, "Updating plot items")
         _update_plot(plt, plt.plotargs)
     end
