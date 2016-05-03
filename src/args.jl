@@ -180,6 +180,9 @@ _plotDefaults[:zticks]            = :auto
 _plotDefaults[:xscale]            = :identity
 _plotDefaults[:yscale]            = :identity
 _plotDefaults[:zscale]            = :identity
+_plotDefaults[:xrotation]         = 0
+_plotDefaults[:yrotation]         = 0
+_plotDefaults[:zrotation]         = 0
 _plotDefaults[:xflip]             = false
 _plotDefaults[:yflip]             = false
 _plotDefaults[:zflip]             = false
@@ -304,15 +307,18 @@ add_aliases(:annotation, :ann, :anns, :annotate, :annotations)
 add_aliases(:xlabel, :xlab, :xl)
 add_aliases(:xlims, :xlim, :xlimit, :xlimits)
 add_aliases(:xticks, :xtick)
+add_aliases(:xrotation, :xrot, :xr)
 add_aliases(:ylabel, :ylab, :yl)
 add_aliases(:ylims, :ylim, :ylimit, :ylimits)
 add_aliases(:yticks, :ytick)
 add_aliases(:yrightlabel, :yrlab, :yrl, :ylabel2, :y2label, :ylab2, :y2lab, :ylabr, :ylabelright)
 add_aliases(:yrightlims, :yrlim, :yrlimit, :yrlimits)
 add_aliases(:yrightticks, :yrtick)
+add_aliases(:yrotation, :yrot, :yr)
 add_aliases(:zlabel, :zlab, :zl)
 add_aliases(:zlims, :zlim, :zlimit, :zlimits)
 add_aliases(:zticks, :ztick)
+add_aliases(:zrotation, :zrot, :zr)
 add_aliases(:legend, :leg, :key)
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
 add_aliases(:smooth, :regression, :reg)

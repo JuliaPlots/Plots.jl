@@ -542,19 +542,22 @@ end
 function supportGraph(allvals, func)
     vals = reverse(sort(allvals))
     bs = sort(backends())
-    x = ASCIIString[]
-    y = ASCIIString[]
-    for val in vals
-        for b in bs
-            supported = func(Plots._backend_instance(b))
-            if val in supported
-                push!(x, string(b))
-                push!(y, string(val))
-            end
-        end
+    x, y = map(string, bs), map(string, vals)
+    nx, ny = map(length, (x,y))
+    z = zeros(nx, ny)
+    for i=1:nx, j=1:ny
+        supported = func(Plots._backend_instance(bs[i]))
+        z[i,j] = float(vals[j] in supported) * (0.4i/nx+0.6)
     end
-    n = length(vals)
-    scatter(x, y, m=:rect, ms=10, size=(300,100+18*n), leg=false)
+    heatmap(x, y, z,
+            color = ColorGradient([:white, :darkblue]),
+            line = (1, :black),
+            leg = false,
+            size = (50nx+50, 35ny+100),
+            xlim = (0.5, nx+0.5),
+            ylim = (0.5, ny+0.5),
+            xrotation = 60,
+            aspect_ratio = :equal)
 end
 
 supportGraphArgs()    = supportGraph(_allArgs, supportedArgs)
@@ -568,7 +571,7 @@ function dumpSupportGraphs()
     for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles,
                supportGraphMarkers, supportGraphScales, supportGraphAxes)
         plt = func()
-        png(joinpath(Pkg.dir("ExamplePlots"), "docs", "examples", "img", "supported", "$(string(func))"))
+        png(Pkg.dir("ExamplePlots", "docs", "examples", "img", "supported", "$(string(func))"))
     end
 end
 

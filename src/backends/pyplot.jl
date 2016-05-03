@@ -20,10 +20,10 @@ supportedArgs(::PyPlotBackend) = [
     :n, :nc, :nr, :layout,
     :smooth,
     :title, :windowtitle, :show, :size,
-    :x, :xlabel, :xlims, :xticks, :xscale, :xflip,
-    :y, :ylabel, :ylims, :yticks, :yscale, :yflip,
+    :x, :xlabel, :xlims, :xticks, :xscale, :xflip, :xrotation,
+    :y, :ylabel, :ylims, :yticks, :yscale, :yflip, :yrotation,
     :axis, :yrightlabel,
-    :z, :zlabel, :zlims, :zticks, :zscale, :zflip,
+    :z, :zlabel, :zlims, :zticks, :zscale, :zflip, :zrotation,
     :z,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
@@ -885,7 +885,8 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
 
     # handle each axis in turn
     for letter in ("x", "y", "z")
-        axis, scale, lims, ticks, flip, lab = axis_symbols(letter, "axis", "scale", "lims", "ticks", "flip", "label")
+        axis, scale, lims, ticks, flip, lab, rotation =
+            axis_symbols(letter, "axis", "scale", "lims", "ticks", "flip", "label", "rotation")
         haskey(ax, axis) || continue
         haskey(d, scale) && applyPyPlotScale(ax, d[scale], letter)
         haskey(d, lims)  && addPyPlotLims(ax, d[lims], letter)
@@ -898,6 +899,7 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
             tmpax[axis][:label][:set_fontsize](guidesz)
             for lab in tmpax[symbol("get_", letter, "ticklabels")]()
                 lab[:set_fontsize](ticksz)
+                haskey(d, rotation) && lab[:set_rotation](d[rotation])
             end
             if get(d, :grid, false)
                 fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
