@@ -229,7 +229,8 @@ end
 # --------------------------------------------------------------------
 
 function process_inputs(plt::AbstractPlot, d::KW, n::Integer)
-    d[:x], d[:y], d[:z] = zeros(0), zeros(0), zeros(0)
+    # d[:x], d[:y], d[:z] = zeros(0), zeros(0), zeros(0)
+    d[:x] = d[:y] = d[:z] = n
 end
 
 # no special handling... assume x and z are nothing
