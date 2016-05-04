@@ -642,9 +642,9 @@ function preprocessArgs!(d::KW)
         processLineArg(d, arg)
     end
     # delete!(d, :line)
-    if get(d, :linewidth, :auto) == :auto
-        d[:linewidth] = (get(d, :linetype, :path) in (:surface,:heatmap) ? 0 : 1)
-    end
+    # if get(d, :linewidth, :auto) == :auto
+    #     d[:linewidth] = (get(d, :linetype, :path) in (:surface,:heatmap) ? 0 : 1)
+    # end
 
     # handle marker args... default to ellipse if shape not set
     anymarker = false
