@@ -149,6 +149,13 @@ function filter_data!(d::KW, idxfilter)
     end
 end
 
+function _replace_linewidth(d::KW)
+    # get a good default linewidth... 0 for surface and heatmaps
+    if get(d, :linewidth, :auto) == :auto
+        d[:linewidth] = (get(d, :linetype, :path) in (:surface,:heatmap,:image) ? 0 : 1)
+    end
+end
+
 # no grouping
 function _add_series(plt::Plot, d::KW, ::Void, args...;
                      idxfilter = nothing,
@@ -189,11 +196,6 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
             delete!(di, k)
         end
 
-        # get a good default linewidth... 0 for surface and heatmaps
-        if get(di, :linewidth, :auto) == :auto
-            di[:linewidth] = (get(di, :linetype, :path) in (:surface,:heatmap,:image) ? 0 : 1)
-        end
-
         # merge in plotarg_overrides
         plotarg_overrides = pop!(di, :plotarg_overrides, nothing)
         if plotarg_overrides != nothing
@@ -202,6 +204,8 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
         # dumpdict(plt.plotargs, "pargs", true)
 
         dumpdict(di, "Series $i")
+
+        _replace_linewidth(di)
 
         _add_series(plt.backend, plt, di)
     end

@@ -734,9 +734,9 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.setlinetype(1)
     GR.setlinewidth(1)
     GR.drawrect(px - 0.08, px + w + 0.02, py + dy, py - dy * length(plt.seriesargs))
-    haskey(d, :linewidth) && GR.setlinewidth(d[:linewidth])
     i = 0
     for p in plt.seriesargs
+      haskey(p, :linewidth) && GR.setlinewidth(p[:linewidth])
       if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks]
         haskey(p, :linecolor) && GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
         haskey(p, :linestyle) && GR.setlinetype(gr_linetype[p[:linestyle]])

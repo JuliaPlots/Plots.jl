@@ -28,13 +28,13 @@ function _apply_recipe(d::KW, args...; issubplot=false, kw...)
     args
 end
 
-macro default_kw(k, v)
+macro kw(k, v)
     esc(:(get!(d, $k, $v)))
 end
 
-macro force_kw(k, v)
-    esc(:(d[$k] = $v))
-end
+# macro force_kw(k, v)
+#     esc(:(d[$k] = $v))
+# end
 
 # ---------------------------------------------------------------------------
 

@@ -286,6 +286,7 @@ function _add_series_subplot(subplt::Subplot, d::KW, ::Void, args...;
       dumpdict(di, "subplot! kwList $i")
       dumpdict(plt.plotargs, "plt.plotargs before plotting")
 
+      _replace_linewidth(di)
       _add_series_subplot(plt, di)
     end
 end

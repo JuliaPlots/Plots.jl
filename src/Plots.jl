@@ -144,8 +144,7 @@ export
     arcdiagram,
     chorddiagram,
 
-    @default_kw,
-    @force_kw,
+    @kw,
 
     translate,
     translate!,
