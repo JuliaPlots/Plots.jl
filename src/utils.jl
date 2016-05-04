@@ -172,13 +172,20 @@ function replaceType(vec, val)
   push!(vec, val)
 end
 
+function replaceAlias!(d::KW, k::Symbol, aliases::KW)
+  if haskey(aliases, k)
+    d[aliases[k]] = pop!(d, k)
+  end
+end
+
 function replaceAliases!(d::KW, aliases::KW)
   ks = collect(keys(d))
   for k in ks
-    if haskey(aliases, k)
-      d[aliases[k]] = d[k]
-      delete!(d, k)
-    end
+      replaceAlias!(d, k, aliases)
+    # if haskey(aliases, k)
+    #   d[aliases[k]] = d[k]
+    #   delete!(d, k)
+    # end
   end
 end
 

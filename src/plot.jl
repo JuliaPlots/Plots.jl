@@ -76,6 +76,7 @@ function plot!(plt::Plot, args...; kw...)
 
     # for plotting recipes, swap out the args and update the parameter dictionary
     args = _apply_recipe(d, args...; kw...)
+    _add_markershape(d)
 
     dumpdict(d, "After plot! preprocessing")
     warnOnUnsupportedArgs(plt.backend, d)

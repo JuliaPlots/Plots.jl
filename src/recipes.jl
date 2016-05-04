@@ -32,6 +32,25 @@ macro kw(k, v)
     esc(:(get!(d, $k, $v)))
 end
 
+macro recipe(args...)
+    expr = args[end]
+    for (i,e) in enumerate(expr.args)
+        if isa(e,Expr) && e.head == :(=>)
+            k, v = e.args[1:2]
+            expr.args[i] = :(get!(d, get(Plots._keyAliases, $k, $k), $v))
+        end
+    end
+
+    e = esc(quote
+        function Plots._apply_recipe(d::KW, $(args[1:end-1]...); kw...)
+            $expr
+        end
+    end)
+    # @show e
+    # dump(e,10)
+    e
+end
+
 # macro force_kw(k, v)
 #     esc(:(d[$k] = $v))
 # end

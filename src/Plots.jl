@@ -145,6 +145,7 @@ export
     chorddiagram,
 
     @kw,
+    @recipe,
 
     translate,
     translate!,
@@ -165,6 +166,7 @@ include("colors.jl")
 include("components.jl")
 include("backends.jl")
 include("args.jl")
+include("themes.jl")
 include("plot.jl")
 include("series_args.jl")
 include("subplot.jl")
