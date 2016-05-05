@@ -32,6 +32,36 @@ macro kw(k, v)
     esc(:(get!(d, $k, $v)))
 end
 
+# TODO: when this is moved out of Plots, also move the replacement of key aliases to just after the _apply_recipe calls
+function replace_recipe_arrows!(expr::Expr)
+    for (i,e) in enumerate(expr.args)
+        if isa(e,Expr)
+            if e.head == :(=>)
+                # swap out this arrow expression with a call to get!(d, ...)
+                k, v = e.args[1:2]
+                expr.args[i] = :(get!(d, get(Plots._keyAliases, $k, $k), $v))
+            elseif e.head != :call
+                # we want to recursively replace the arrows, but not inside function calls
+                # as this might include things like Dict(1=>2)
+                replace_recipe_arrows!(e)
+            end
+        end
+    end
+end
+
+# inject this for optional params:
+    # 2: Expr
+    #   head: Symbol parameters
+    #   args: Array(Any,(1,))
+    #     1: Expr
+    #       head: Symbol kw
+    #       args: Array(Any,(2,))
+    #         1: Symbol c
+    #         2: Int64 5
+    #       typ: Any
+    #   typ: Any
+
+
 macro plotrecipe(args, expr)
     if !isa(args, Expr)
         error("The first argument to `@plotrecipe` should be a valid argument list for dispatch.")
@@ -43,17 +73,11 @@ macro plotrecipe(args, expr)
     end
 
     # replace all the key => value lines with argument setting logic
-    # TODO: when this is moved out of Plots, also move the replacement of key aliases to just after the _apply_recipe calls
-    for (i,e) in enumerate(expr.args)
-        if isa(e,Expr) && e.head == :(=>)
-            k, v = e.args[1:2]
-            expr.args[i] = :(get!(d, get(Plots._keyAliases, $k, $k), $v))
-        end
-    end
+    replace_recipe_arrows!(expr)
 
     # now build a function definition for _apply_recipe, wrapping the return value in a tuple if needed
     esc(quote
-        function Plots._apply_recipe(d::KW, $(args.args...); kw...)
+        function Plots._apply_recipe(d::KW, $(args.args...); issubplot=false, kw...)
             ret = $expr
             if typeof(ret) <: Tuple
                 ret
