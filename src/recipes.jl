@@ -32,14 +32,60 @@ macro kw(k, v)
     esc(:(get!(d, $k, $v)))
 end
 
+function _is_arrow_tuple(expr::Expr)
+    expr.head == :tuple &&
+        isa(expr.args[1], Expr) &&
+        expr.args[1].head == :(-->)
+end
+
+function _equals_symbol(arg::Symbol, sym::Symbol)
+    arg == sym
+end
+function _equals_symbol(arg::Expr, sym::Symbol)
+    arg.head == :quote && arg.args[1] == sym
+end
+
 # TODO: when this is moved out of Plots, also move the replacement of key aliases to just after the _apply_recipe calls
 function replace_recipe_arrows!(expr::Expr)
     for (i,e) in enumerate(expr.args)
         if isa(e,Expr)
-            if e.head == :(=>)
-                # swap out this arrow expression with a call to get!(d, ...)
-                k, v = e.args[1:2]
-                expr.args[i] = :(get!(d, get(Plots._keyAliases, $k, $k), $v))
+
+            # process trailing flags, like:
+            #   a --> b, :quiet, :force
+            quiet, force = false, false
+            if _is_arrow_tuple(e)
+                for flag in e.args
+                    if _equals_symbol(flag, :quiet)
+                        quiet = true
+                    elseif _equals_symbol(flag, :force)
+                        force = true
+                    end
+                end
+                e = e.args[1]
+            end
+
+            # we are going to recursively swap out `a --> b, flags...` commands
+            if e.head == :(-->)
+                k, v = e.args
+                keyexpr = :(get(Plots._keyAliases, $k, $k))
+
+                set_expr = if force
+                    # forced override user settings
+                    :(d[$keyexpr] = $v)
+                else
+                    # if the user has set this keyword, use theirs
+                    :(get!(d, $keyexpr, $v))
+                end
+
+                expr.args[i] = if quiet
+                    # quietly ignore keywords which are not supported
+                    :($keyexpr in supportedArgs() ? $set_expr : nothing)
+                else
+                    set_expr
+                end
+
+                @show quiet, force, expr.args[i]
+
             elseif e.head != :call
                 # we want to recursively replace the arrows, but not inside function calls
                 # as this might include things like Dict(1=>2)
@@ -49,36 +95,25 @@ function replace_recipe_arrows!(expr::Expr)
     end
 end
 
-# inject this for optional params:
-    # 2: Expr
-    #   head: Symbol parameters
-    #   args: Array(Any,(1,))
-    #     1: Expr
-    #       head: Symbol kw
-    #       args: Array(Any,(2,))
-    #         1: Symbol c
-    #         2: Int64 5
-    #       typ: Any
-    #   typ: Any
 
+macro recipe(funcexpr::Expr)
+    lhs, body = funcexpr.args
 
-macro plotrecipe(args, expr)
-    if !isa(args, Expr)
-        error("The first argument to `@plotrecipe` should be a valid argument list for dispatch.")
+    if !(funcexpr.head in (:(=), :function))
+        error("Must wrap a valid function call!")
     end
-
-    # wrap the args in a tuple
-    if args.head != :tuple
-        args = Expr(:tuple, args)
+    if !(isa(lhs, Expr) && lhs.head == :call)
+        error("Expected `lhs = ...` with lhs as a call Expr... got: $lhs")
     end
+    args = lhs.args[2:end]
 
     # replace all the key => value lines with argument setting logic
-    replace_recipe_arrows!(expr)
+    replace_recipe_arrows!(body)
 
     # now build a function definition for _apply_recipe, wrapping the return value in a tuple if needed
     esc(quote
-        function Plots._apply_recipe(d::KW, $(args.args...); issubplot=false, kw...)
-            ret = $expr
+        function Plots._apply_recipe(d::KW, $(args...); issubplot=false, kw...)
+            ret = $body
             if typeof(ret) <: Tuple
                 ret
             else
@@ -87,6 +122,38 @@ macro plotrecipe(args, expr)
         end
     end)
 end
+
+# macro plotrecipe(args, expr)
+#     if !isa(args, Expr)
+#         error("The first argument to `@plotrecipe` should be a valid argument list for dispatch.")
+#     end
+#
+#     # wrap the args in a tuple
+#     if args.head != :tuple
+#         args = Expr(:tuple, args)
+#     end
+#
+#     # # handle positional args
+#     # fixed_args = []
+#     # positional_exprs = []
+#     # for arg in args
+#     #     if
+#
+#     # replace all the key => value lines with argument setting logic
+#     replace_recipe_arrows!(expr)
+#
+#     # now build a function definition for _apply_recipe, wrapping the return value in a tuple if needed
+#     esc(quote
+#         function Plots._apply_recipe(d::KW, $(args.args...); issubplot=false, kw...)
+#             ret = $expr
+#             if typeof(ret) <: Tuple
+#                 ret
+#             else
+#                 (ret,)
+#             end
+#         end
+#     end)
+# end
 
 
 # ---------------------------------------------------------------------------

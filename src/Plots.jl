@@ -145,7 +145,8 @@ export
     chorddiagram,
 
     # @kw,
-    @plotrecipe,
+    @recipe,
+    # @plotrecipe,
 
     translate,
     translate!,
