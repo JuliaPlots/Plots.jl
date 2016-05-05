@@ -144,8 +144,8 @@ export
     arcdiagram,
     chorddiagram,
 
-    @kw,
-    @recipe,
+    # @kw,
+    @plotrecipe,
 
     translate,
     translate!,
