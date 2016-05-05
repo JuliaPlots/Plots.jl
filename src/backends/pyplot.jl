@@ -531,7 +531,8 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     end
 
     if lt in (:contour, :contour3d)
-        z = z.surf'
+        # z = z.surf'
+        z = transpose_z(d, z.surf)
         needs_colorbar = true
 
 
@@ -568,8 +569,9 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             if !ismatrix(x) || !ismatrix(y)
                 x = repmat(x', length(y), 1)
                 y = repmat(y, 1, length(d[:x]))
-                z = z'
             end
+            # z = z'
+            z = transpose_z(d, z)
             if lt == :surface
                 if d[:marker_z] != nothing
                     extrakw[:facecolors] = getPyPlotCustomShading(d[:fillcolor], d[:marker_z], d[:fillalpha])
@@ -626,7 +628,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     end
 
     if lt == :heatmap
-        x, y, z = heatmap_edges(x), heatmap_edges(y), z.surf'
+        x, y, z = heatmap_edges(x), heatmap_edges(y), transpose_z(d, z.surf)
         if !(eltype(z) <: Number)
             z, discrete_colorbar_values = indices_and_unique_values(z)
         end

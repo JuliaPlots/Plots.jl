@@ -535,7 +535,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.setcharheight(charheight)
       GR.colormap()
     elseif lt == :contour
-      x, y, z = p[:x], p[:y], p[:z].surf
+      x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = minimum(z), maximum(z)
       if typeof(p[:levels]) <: Array
         h = p[:levels]
@@ -556,7 +556,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.setcharheight(charheight)
       GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
     elseif lt in [:surface, :wireframe]
-      x, y, z = p[:x], p[:y], p[:z].surf
+      x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
       GR.setspace(zmin, zmax, 40, 70)
       xtick = GR.tick(xmin, xmax) / 2
@@ -588,7 +588,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         GR.colormap()
       end
     elseif lt == :heatmap
-      x, y, z = p[:x], p[:y], p[:z].surf
+      x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
       GR.setspace(zmin, zmax, 0, 90)
       GR.setcolormap(GR.COLORMAP_COOLWARM)

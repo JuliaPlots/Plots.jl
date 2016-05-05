@@ -114,6 +114,27 @@ function regressionXY(x, y)
   regx, regy
 end
 
+function replace_image_with_heatmap{T<:Colorant}(z::Array{T})
+    @show T, size(z)
+    n, m = size(z)
+    # idx = 0
+    colors = ColorGradient(vec(z))
+    newz = reshape(linspace(0, 1, n*m), n, m)
+    newz, colors
+    # newz = zeros(n, m)
+    # for i=1:n, j=1:m
+    #     push!(colors, T(z[i,j]...))
+    #     newz[i,j] = idx / (n*m-1)
+    #     idx += 1
+    # end
+    # newz, ColorGradient(colors)
+end
+
+function imageHack(d::KW)
+    :heatmap in supportedTypes() || error("Neither :image or :heatmap are supported!")
+    d[:linetype] = :heatmap
+    d[:z], d[:fillcolor] = replace_image_with_heatmap(d[:z])
+end
 # ---------------------------------------------------------------
 # ------------------------------------------------------------------------------------
 
@@ -258,6 +279,19 @@ function indices_and_unique_values(z::AbstractArray)
     newz = map(zi -> vmap[zi], z)
     newz, vals
 end
+
+# this is a helper function to determine whether we need to transpose a surface matrix.
+# it depends on whether the backend matches rows to x (transpose_on_match == true) or vice versa
+# for example: PyPlot sends rows to y, so transpose_on_match should be true
+function transpose_z(d::KW, z, transpose_on_match::Bool = true)
+    if d[:match_dimensions] == transpose_on_match
+        z'
+    else
+        z
+    end
+end
+
+
 
 # ---------------------------------------------------------------
 

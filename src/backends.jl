@@ -148,6 +148,7 @@ supportedMarkers(::AbstractBackend) = [:none]
 supportedScales(::AbstractBackend) = [:identity]
 subplotSupported(::AbstractBackend) = false
 stringsSupported(::AbstractBackend) = false
+nativeImagesSupported(::AbstractBackend) = false
 
 supportedAxes() = supportedAxes(backend())
 supportedTypes() = supportedTypes(backend())
@@ -156,5 +157,6 @@ supportedMarkers() = supportedMarkers(backend())
 supportedScales() = supportedScales(backend())
 subplotSupported() = subplotSupported(backend())
 stringsSupported() = stringsSupported(backend())
+nativeImagesSupported() = nativeImagesSupported(backend())
 
 # ---------------------------------------------------------

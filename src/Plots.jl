@@ -276,16 +276,11 @@ yaxis!(plt::Plot, args...; kw...)                                     = plot!(pl
 
 const CURRENT_BACKEND = CurrentBackend(:none)
 
+
 function __init__()
-
-  # override IJulia inline display
-  if isijulia()
-    @eval import IJulia
-    IJulia.display_dict(plt::AbstractPlot) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
-  end
-
-  setup_dataframes()
-  setup_atom()
+    setup_ijulia()
+    setup_dataframes()
+    setup_atom()
 end
 
 # ---------------------------------------------------------

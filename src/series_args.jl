@@ -192,8 +192,6 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
             append!(ret, apply_series_recipe(copy(d), Val{:quiver}))
         end
 
-
-
         # now that we've processed a given series... optionally split into
         # multiple dicts through a recipe (for example, a box plot is split into component
         # parts... polygons, lines, and scatters)
@@ -245,6 +243,32 @@ function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, mat::AMat{T})
         d[:x], d[:y], d[:z] = 1:n, 1:m, mat
     else
         d[:y] = mat
+    end
+end
+
+# images - grays
+function process_inputs{T<:Gray}(plt::AbstractPlot, d::KW, mat::AMat{T})
+    d[:linetype] = :image
+    d[:yflip] = true
+    n,m = size(mat)
+    d[:x], d[:y], d[:z] = 1:n, 1:m, mat
+    # handle images... when not supported natively, do a hack to use heatmap machinery
+    if !nativeImagesSupported()
+        d[:linetype] = :heatmap
+        d[:z] = convert(Matrix{Float64}, mat)
+        d[:fillcolor] = ColorGradient([:black, :white])
+    end
+end
+
+# images - colors
+function process_inputs{T<:Colorant}(plt::AbstractPlot, d::KW, mat::AMat{T})
+    d[:linetype] = :image
+    d[:yflip] = true
+    n,m = size(mat)
+    d[:x], d[:y], d[:z] = 1:n, 1:m, mat
+    # handle images... when not supported natively, do a hack to use heatmap machinery
+    if !nativeImagesSupported()
+        imageHack(d)
     end
 end
 

@@ -99,12 +99,6 @@ end
 savefig(fn::@compat(AbstractString)) = savefig(current(), fn)
 
 
-# savepng(args...; kw...) = savepng(current(), args...; kw...)
-# savepng(plt::AbstractPlot, fn::@compat(AbstractString); kw...) = (io = open(fn, "w"); writemime(io, MIME("image/png"), plt); close(io))
-
-
-
-
 # ---------------------------------------------------------
 
 gui(plt::AbstractPlot = current()) = display(PlotsDisplay(), plt)
@@ -115,9 +109,36 @@ Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::AbstractPlot) = g
 
 # a backup for html... passes to svg
 function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot)
-  writemime(io, MIME("image/svg+xml"), plt)
+    writemime(io, MIME("image/svg+xml"), plt)
 end
 
+# ---------------------------------------------------------
+# IJulia
+# ---------------------------------------------------------
+
+const _ijulia_output = ASCIIString["text/html"]
+
+function setup_ijulia()
+    # override IJulia inline display
+    if isijulia()
+        @eval begin
+            import IJulia
+            export set_ijulia_output
+            function set_ijulia_output(mimestr::ASCIIString)
+                info("Setting IJulia output format to $mimestr")
+                global _ijulia_output
+                _ijulia_output[1] = mimestr
+            end
+            function IJulia.display_dict(plt::AbstractPlot)
+                global _ijulia_output
+                Dict{ASCIIString, ByteString}(_ijulia_output[1] => sprint(writemime, _ijulia_output[1], plt))
+            end
+        end
+
+        # IJulia.display_dict(plt::AbstractPlot) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
+        set_ijulia_output("text/html")
+    end
+end
 
 # ---------------------------------------------------------
 # Atom PlotPane
