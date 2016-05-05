@@ -165,7 +165,7 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
     # get the list of dictionaries, one per series
     dumpdict(d, "before process_inputs")
     process_inputs(plt, d, args...)
-    dumpdict(d, "after process_inputs", true)
+    dumpdict(d, "after process_inputs")
 
     if idxfilter != nothing
         # add the group name as the label if there isn't one passed in

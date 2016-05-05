@@ -125,7 +125,7 @@ function setup_ijulia()
             import IJulia
             export set_ijulia_output
             function set_ijulia_output(mimestr::ASCIIString)
-                info("Setting IJulia output format to $mimestr")
+                # info("Setting IJulia output format to $mimestr")
                 global _ijulia_output
                 _ijulia_output[1] = mimestr
             end
