@@ -84,7 +84,7 @@ function replace_recipe_arrows!(expr::Expr)
                     set_expr
                 end
 
-                @show quiet, force, expr.args[i]
+                # @show quiet, force, expr.args[i]
 
             elseif e.head != :call
                 # we want to recursively replace the arrows, but not inside function calls
@@ -107,12 +107,20 @@ macro recipe(funcexpr::Expr)
     end
     args = lhs.args[2:end]
 
+    # for parametric definitions, take the "curly" expression and add the func
+    front = lhs.args[1]
+    func = :(Plots._apply_recipe)
+    if isa(front, Expr) && front.head == :curly
+        front.args[1] = func
+        func = front
+    end
+
     # replace all the key => value lines with argument setting logic
     replace_recipe_arrows!(body)
 
     # now build a function definition for _apply_recipe, wrapping the return value in a tuple if needed
     esc(quote
-        function Plots._apply_recipe(d::KW, $(args...); issubplot=false, kw...)
+        function $func(d::KW, $(args...); issubplot=false, kw...)
             ret = $body
             if typeof(ret) <: Tuple
                 ret
