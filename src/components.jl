@@ -128,7 +128,26 @@ end
 
 # -----------------------------------------------------------------------
 
-center(shape::Shape) = (mean(shape.x), mean(shape.y))
+# center(shape::Shape) = (mean(shape.x), mean(shape.y))
+
+# uses the centroid calculation from https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
+function center(shape::Shape)
+    x, y = shape_coords(shape)
+    n = length(x)
+    A, Cx, Cy = 0.0, 0.0, 0.0
+    for i=1:n
+        ip1 = i==n ? 1 : i+1
+        A += x[i] * y[ip1] - x[ip1] * y[i]
+    end
+    A *= 0.5
+    for i=1:n
+        ip1 = i==n ? 1 : i+1
+        m = (x[i] * y[ip1] - x[ip1] * y[i])
+        Cx += (x[i] + x[ip1]) * m
+        Cy += (y[i] + y[ip1]) * m
+    end
+    Cx / 6A, Cy / 6A
+end
 
 function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     sx, sy = shape_coords(shape)
