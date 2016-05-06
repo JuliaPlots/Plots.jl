@@ -27,7 +27,7 @@ The `is_key_supported` method should likely be overridden... by default everythi
 
 ```julia
 # Plots will be the ultimate consumer of our recipe in this example
-using Plot
+using Plots
 gr()
 
 type T end

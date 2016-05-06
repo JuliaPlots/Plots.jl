@@ -11,14 +11,7 @@ is_key_supported(k::Symbol) = true
 # this holds the recipe definitions to be dispatched on
 apply_recipe(d::Dict{Symbol,Any}, kw::Dict{Symbol,Any}) = ()
 
-# if it's not a recipe, just do nothing and return the args
-function apply_recipe(d::Dict{Symbol,Any}, kw::Dict{Symbol,Any}, args...; issubplot=false)
-    if issubplot && !isempty(args) && !haskey(d, :n) && !haskey(d, :layout)
-        # put in a sensible default
-        d[:n] = maximum(map(num_series, args))
-    end
-    args
-end
+# --------------------------------------------------------------------------
 
 function _is_arrow_tuple(expr::Expr)
     expr.head == :tuple &&
@@ -86,6 +79,7 @@ function replace_recipe_arrows!(expr::Expr)
     end
 end
 
+# --------------------------------------------------------------------------
 
 """
 This handy macro will process a function definition, replace `-->` commands, and
@@ -177,5 +171,7 @@ macro recipe(funcexpr::Expr)
         end
     end)
 end
+
+# --------------------------------------------------------------------------
 
 end # module
