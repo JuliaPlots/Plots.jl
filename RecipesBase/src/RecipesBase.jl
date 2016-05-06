@@ -1,9 +1,9 @@
 module RecipesBase
 
 export
-    @recipe,
-    apply_recipe,
-    is_key_supported
+    @recipe
+    # apply_recipe,
+    # is_key_supported
 
 # a placeholder... this should be overridden by the package which uses the recipe (Plots.jl for example)
 is_key_supported(k::Symbol) = true
@@ -60,10 +60,10 @@ function replace_recipe_arrows!(expr::Expr)
 
                 expr.args[i] = if quiet
                     # quietly ignore keywords which are not supported
-                    :(is_key_supported($k) ? $set_expr : nothing)
+                    :(RecipesBase.is_key_supported($k) ? $set_expr : nothing)
                 elseif require
                     # error when not supported by the backend
-                    :(is_key_supported($k) ? $set_expr : error("In recipe: required keyword ", $k, " is not supported by backend $(backend_name())"))
+                    :(RecipesBase.is_key_supported($k) ? $set_expr : error("In recipe: required keyword ", $k, " is not supported by backend $(backend_name())"))
                 else
                     set_expr
                 end
