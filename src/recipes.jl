@@ -52,11 +52,13 @@ function replace_recipe_arrows!(expr::Expr)
 
             # process trailing flags, like:
             #   a --> b, :quiet, :force
-            quiet, force = false, false
+            quiet, require, force = false, false, false
             if _is_arrow_tuple(e)
                 for flag in e.args
                     if _equals_symbol(flag, :quiet)
                         quiet = true
+                    elseif _equals_symbol(flag, :require)
+                        require = true
                     elseif _equals_symbol(flag, :force)
                         force = true
                     end
@@ -80,6 +82,9 @@ function replace_recipe_arrows!(expr::Expr)
                 expr.args[i] = if quiet
                     # quietly ignore keywords which are not supported
                     :($keyexpr in supportedArgs() ? $set_expr : nothing)
+                elseif require
+                    # error when not supported by the backend
+                    :($keyexpr in supportedArgs() ? $set_expr : error("In recipe: required keyword ", $k, " is not supported by backend $(backend_name())"))
                 else
                     set_expr
                 end

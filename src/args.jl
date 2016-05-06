@@ -625,7 +625,8 @@ function preprocessArgs!(d::KW)
     kw = KW()
     for k in keys(d)
         try
-            default(k)
+            # this should error for invalid keywords (assume they are user-defined)
+            k == :markershape_to_add || default(k)
         catch
             # not a valid key... pop and add to user list
             kw[k] = pop!(d, k)
