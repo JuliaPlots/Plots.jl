@@ -8,6 +8,7 @@ using Reexport
 @reexport using Colors
 using Requires
 using FixedSizeArrays
+@reexport using RecipesBase
 
 export
     AbstractPlot,

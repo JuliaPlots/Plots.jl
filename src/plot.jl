@@ -75,7 +75,7 @@ function plot!(plt::Plot, args...; kw...)
     userkw = preprocessArgs!(d)
 
     # for plotting recipes, swap out the args and update the parameter dictionary
-    args = _apply_recipe(d, userkw, args...)
+    args = RecipesBase.apply_recipe(d, userkw, args...)
     _add_markershape(d)
 
     dumpdict(d, "After plot! preprocessing")

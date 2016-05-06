@@ -3,6 +3,7 @@ julia 0.4
 Colors
 Reexport
 Requires
+RecipesBase
 FactCheck
 Cairo
 Gadfly
