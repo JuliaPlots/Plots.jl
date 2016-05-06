@@ -23,27 +23,27 @@ The `is_key_supported` method should likely be overridden... by default everythi
 
 ## An example:
 
-```
-    # Plots will be the ultimate consumer of our recipe in this example
-    using Plot
-    gr()
+```julia
+# Plots will be the ultimate consumer of our recipe in this example
+using Plot
+gr()
 
-    type T end
+type T end
 
-    @recipe function plot{N<:Integer}(t::T, n::N = 1; customcolor = :green)
-        :markershape --> :auto, :require
-        :markercolor --> customcolor, :force
-        :xrotation --> 5
-        :zrotation --> 6, :quiet
-        rand(10,n)
-    end
+@recipe function plot{N<:Integer}(t::T, n::N = 1; customcolor = :green)
+    :markershape --> :auto, :require
+    :markercolor --> customcolor, :force
+    :xrotation   --> 45
+    :zrotation   --> 90, :quiet
+    rand(10,n)
+end
 
-    # This call will implicitly call `RecipesBase.apply_recipe` as part of the Plots
-    # processing pipeline (see the Pipeline section of the Plots documentation).
-    # It will plot 5 line plots, all with black circles for markers.
-    # The markershape argument must be supported, and the zrotation argument's warning
-    # will be suppressed.  The user can override all arguments except markercolor.
-    plot(T(), 5; customcolor = :black, shape=:c)
+# This call will implicitly call `RecipesBase.apply_recipe` as part of the Plots
+# processing pipeline (see the Pipeline section of the Plots documentation).
+# It will plot 5 line plots, all with black circles for markers.
+# The markershape argument must be supported, and the zrotation argument's warning
+# will be suppressed.  The user can override all arguments except markercolor.
+plot(T(), 5; customcolor = :black, shape=:c)
 ```
 
 In this example, we see lots of the machinery in action.  We create a new type `T` which
