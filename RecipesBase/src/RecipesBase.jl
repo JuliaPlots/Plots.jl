@@ -20,10 +20,6 @@ function apply_recipe(d::Dict{Symbol,Any}, kw::Dict{Symbol,Any}, args...; issubp
     args
 end
 
-macro kw(k, v)
-    esc(:(get!(d, $k, $v)))
-end
-
 function _is_arrow_tuple(expr::Expr)
     expr.head == :tuple &&
         isa(expr.args[1], Expr) &&
