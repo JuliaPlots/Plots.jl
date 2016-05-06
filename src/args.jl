@@ -219,7 +219,7 @@ const _allArgs = sort(collect(union(keys(_seriesDefaults), keys(_plotDefaults)))
 supportedArgs(::AbstractBackend) = error("supportedArgs not defined") #_allArgs
 supportedArgs() = supportedArgs(backend())
 
-
+RecipesBase.is_key_supported(k::Symbol) = (k in supportedArgs())
 
 # -----------------------------------------------------------------------------
 
