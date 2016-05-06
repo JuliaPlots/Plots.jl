@@ -21,7 +21,7 @@ _apply_recipe(d::KW, kw::KW) = ()
 
 # if it's not a recipe, just do nothing and return the args
 function _apply_recipe(d::KW, kw::KW, args...; issubplot=false)
-    if issubplot && !haskey(d, :n) && !haskey(d, :layout)
+    if issubplot && !isempty(args) && !haskey(d, :n) && !haskey(d, :layout)
         # put in a sensible default
         d[:n] = maximum(map(num_series, args))
     end
