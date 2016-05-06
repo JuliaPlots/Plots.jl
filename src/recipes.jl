@@ -17,10 +17,10 @@ plot!(plt::Plot, recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-_apply_recipe(d::KW; kw...) = ()
+_apply_recipe(d::KW, kw::KW) = ()
 
 # if it's not a recipe, just do nothing and return the args
-function _apply_recipe(d::KW, args...; issubplot=false, kw...)
+function _apply_recipe(d::KW, kw::KW, args...; issubplot=false)
     if issubplot && !haskey(d, :n) && !haskey(d, :layout)
         # put in a sensible default
         d[:n] = maximum(map(num_series, args))
@@ -105,7 +105,6 @@ macro recipe(funcexpr::Expr)
     if !(isa(lhs, Expr) && lhs.head == :call)
         error("Expected `lhs = ...` with lhs as a call Expr... got: $lhs")
     end
-    args = lhs.args[2:end]
 
     # for parametric definitions, take the "curly" expression and add the func
     front = lhs.args[1]
@@ -115,12 +114,25 @@ macro recipe(funcexpr::Expr)
         func = front
     end
 
+    # get the arg list, stripping out any keyword parameters into a
+    # bunch of get!(kw, key, value) lines
+    args = lhs.args[2:end]
+    kw_body = Expr(:block)
+    if isa(args[1], Expr) && args[1].head == :parameters
+        for kwpair in args[1].args
+            k, v = kwpair.args
+            push!(kw_body.args, :(get!(kw, $(QuoteNode(k)), $v)))
+        end
+        args = args[2:end]
+    end
+
     # replace all the key => value lines with argument setting logic
     replace_recipe_arrows!(body)
 
     # now build a function definition for _apply_recipe, wrapping the return value in a tuple if needed
     esc(quote
-        function $func(d::KW, $(args...); issubplot=false, kw...)
+        function $func(d::KW, kw::KW, $(args...); issubplot=false)
+            $kw_body
             ret = $body
             if typeof(ret) <: Tuple
                 ret
@@ -131,37 +143,6 @@ macro recipe(funcexpr::Expr)
     end)
 end
 
-# macro plotrecipe(args, expr)
-#     if !isa(args, Expr)
-#         error("The first argument to `@plotrecipe` should be a valid argument list for dispatch.")
-#     end
-#
-#     # wrap the args in a tuple
-#     if args.head != :tuple
-#         args = Expr(:tuple, args)
-#     end
-#
-#     # # handle positional args
-#     # fixed_args = []
-#     # positional_exprs = []
-#     # for arg in args
-#     #     if
-#
-#     # replace all the key => value lines with argument setting logic
-#     replace_recipe_arrows!(expr)
-#
-#     # now build a function definition for _apply_recipe, wrapping the return value in a tuple if needed
-#     esc(quote
-#         function Plots._apply_recipe(d::KW, $(args.args...); issubplot=false, kw...)
-#             ret = $expr
-#             if typeof(ret) <: Tuple
-#                 ret
-#             else
-#                 (ret,)
-#             end
-#         end
-#     end)
-# end
 
 
 # ---------------------------------------------------------------------------

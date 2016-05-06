@@ -53,7 +53,7 @@ function plot(args...; kw...)
     plt = _create_plot(pkg, plotargs)  # create a new, blank plot
 
     delete!(d, :background_color)
-    plot!(plt, args...; d...)  # add to it
+    plot!(plt, args...; kw...)  # add to it
 end
 
 
@@ -72,10 +72,10 @@ end
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
     d = KW(kw)
-    preprocessArgs!(d)
+    userkw = preprocessArgs!(d)
 
     # for plotting recipes, swap out the args and update the parameter dictionary
-    args = _apply_recipe(d, args...; kw...)
+    args = _apply_recipe(d, userkw, args...)
     _add_markershape(d)
 
     dumpdict(d, "After plot! preprocessing")

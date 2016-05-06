@@ -621,7 +621,17 @@ function preprocessArgs!(d::KW)
         delete!(d, :link)
     end
 
-    return
+    # pull out invalid keywords into their own KW dict... these are likely user-defined through recipes
+    kw = KW()
+    for k in keys(d)
+        try
+            default(k)
+        catch
+            # not a valid key... pop and add to user list
+            kw[k] = pop!(d, k)
+        end
+    end
+    kw
 end
 
 # -----------------------------------------------------------------------------

@@ -43,7 +43,7 @@ function subplot(args...; kw...)
   preprocessArgs!(d)
 
   # for plotting recipes, swap out the args and update the parameter dictionary
-  args = _apply_recipe(d, args...; kw..., issubplot=true)
+  args = _apply_recipe(d, KW(kw), args...; issubplot=true)
   _add_markershape(d)
 
   # figure out the layout
@@ -70,7 +70,7 @@ function subplot(args...; kw...)
 
   # create the object and do the plotting
   subplt = Subplot(nothing, plts, pkg, length(layout), 0, layout, d, false, false, false, (r,c) -> (nothing,nothing))
-  subplot!(subplt, args...; d...)
+  subplot!(subplt, args...; kw...)
 
   subplt
 end
@@ -117,10 +117,10 @@ end
 
 function _preprocess_subplot(subplt::Subplot, d::KW, args = ())
   validateSubplotSupported()
-  preprocessArgs!(d)
+  userkw = preprocessArgs!(d)
 
   # for plotting recipes, swap out the args and update the parameter dictionary
-  args = _apply_recipe(d, args...; d..., issubplot=true)
+  args = _apply_recipe(d, userkw, args...; issubplot=true)
   _add_markershape(d)
 
   dumpdict(d, "After subplot! preprocessing")
