@@ -2,6 +2,7 @@ using RecipesBase
 using Base.Test
 
 srand(1)
+RecipesBase.is_key_supported(k::Symbol) = true
 
 type T end
 
