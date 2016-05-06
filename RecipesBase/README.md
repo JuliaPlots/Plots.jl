@@ -1,5 +1,7 @@
 # RecipesBase
 
+[![Build Status](https://travis-ci.org/JuliaPlots/RecipesBase.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/RecipesBase.jl)
+
 ### Author: Thomas Breloff (@tbreloff)
 
 This package implements a handy macro `@recipe` which will define a custom transformation
@@ -51,6 +53,6 @@ we will use for dispatch, and an optional argument `n`, which will be used to de
 number of series to display.  User-defined keyword arguments are passed through, and the
 `-->` command can be trailed by flags:
 
-- quiet:   Suppress unsupported keyword warnings
-- require: Error if keyword is unsupported
-- force:   Don't allow user override for this keyword
+- `quiet`:   Suppress unsupported keyword warnings
+- `require`: Error if keyword is unsupported
+- `force`:   Don't allow user override for this keyword
