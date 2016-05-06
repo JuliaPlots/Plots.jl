@@ -48,6 +48,8 @@ end
 plot(T(), 5; customcolor = :black, shape=:c)
 ```
 
+![](https://cloud.githubusercontent.com/assets/933338/15083906/02a06810-139e-11e6-98a0-dd81c3fb1ad8.png)
+
 In this example, we see lots of the machinery in action.  We create a new type `T` which
 we will use for dispatch, and an optional argument `n`, which will be used to determine the
 number of series to display.  User-defined keyword arguments are passed through, and the
