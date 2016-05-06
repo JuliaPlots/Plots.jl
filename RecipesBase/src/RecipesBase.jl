@@ -5,8 +5,10 @@ export
     # apply_recipe,
     # is_key_supported
 
-# a placeholder... this should be overridden by the package which uses the recipe (Plots.jl for example)
-is_key_supported(k::Symbol) = true
+# a placeholder... this method should never be called... it's just to establish the
+# name so that other packages (Plots.jl for example) can add their own definition
+# of RecipesBase.is_key_supported(k::Symbol)
+is_key_supported() = true
 
 # this holds the recipe definitions to be dispatched on
 apply_recipe(d::Dict{Symbol,Any}, kw::Dict{Symbol,Any}) = ()
