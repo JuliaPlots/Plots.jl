@@ -5,15 +5,15 @@
 ### Author: Thomas Breloff (@tbreloff)
 
 This package implements a handy macro `@recipe` which will define a custom transformation
-and attach attributes for user types.  It's design is an attempt to simplify and generalize
+and attach attributes for user types.  Its design is an attempt to simplify and generalize
 the summary and display of types and data from external packages.  With no extra dependencies
 and minimal code, package authors can describe visualization routines that can be used
 as components in more complex visualizations.
 
 This functionality is primarily geared to turning user types and settings into the
-data and attributes that describe a [Plots](https://github.com/tbreloff/Plots.jl) visualization, though it could be used for
-other purposes as well.  Plots has extensive machinery to uniquely take advantage of the simplified
-recipe description you define.
+data and attributes that describe a [Plots](https://github.com/tbreloff/Plots.jl) visualization,
+though it could be used for other purposes as well.
+Plots has extensive machinery to uniquely take advantage of the simplified recipe description you define.
 
 The `@recipe` macro will process a function definition, use `-->` commands to define attributes, and
 pass the return value through for further processing (likely by Plots.jl).
@@ -38,8 +38,8 @@ using custom combinations of data types.  Some examples of applications:
 - Graphs: flexible, interactive graphs with easily customizable colors, etc.
 - Symbolic frameworks: sample from complex symbolic distributions.
 
-Really there's very little that *couldn't* be mapped to a useful visualization.  I challenge you to
-create the pictures that are worth a thousand words.
+Really there's very little that *couldn't* be mapped to a useful visualization.
+I challenge you to create the pictures that are worth a thousand words.
 
 For more information about Plots, see [the docs](http://plots.readthedocs.io/), and be sure to reference
 the [supported keywords](http://plots.readthedocs.io/en/latest/supported/#keyword-arguments).
@@ -86,13 +86,14 @@ end
 #       - user override for markershape: :c == :circle
 #       - customcolor overridden to :black, and markercolor is forced to be customcolor
 #   If markershape is an unsupported keyword, the call will error.
-#   By default, a warning will be shown for an unsupported keyword.  This will be suppressed for zrotation (:quiet flag).
+#   By default, a warning will be shown for an unsupported keyword.
+#   This will be suppressed for zrotation (:quiet flag).
 plot(T(), 5; customcolor = :black, shape=:c)
 ```
 
 ![](https://cloud.githubusercontent.com/assets/933338/15083906/02a06810-139e-11e6-98a0-dd81c3fb1ad8.png)
 
-In this example, we see lots of the machinery in action.  We create a new type `T` which
+In this example, we see a lot of the machinery in action.  We create a new type `T`, which
 we will use for dispatch, and an optional argument `n`, which will be used to determine the
 number of series to display.  User-defined keyword arguments are passed through, and the
 `-->` command can be trailed by flags:
