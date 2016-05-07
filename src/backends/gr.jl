@@ -166,6 +166,25 @@ function gr_polaraxes(rmin, rmax)
   GR.restorestate()
 end
 
+function gr_getzlims(d, zmin, zmax, adjust)
+  if haskey(d, :zlims)
+    if d[:zlims] != :auto
+      zlims = d[:zlims]
+      if zlims[1] != NaN
+        zmin = zlims[1]
+      end
+      if zlims[2] != NaN
+        zmax = zlims[2]
+      end
+      adjust = false
+    end
+  end
+  if adjust
+    zmin, zmax = GR.adjustrange(zmin, zmax)
+  end
+  zmin, zmax
+end
+
 function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
                     subplot=[0, 1, 0, 1])
   d = plt.plotargs
@@ -531,20 +550,21 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.cellarray(xmin, xmax, ymin, ymax, n, m, counts)
       GR.setviewport(viewport[2] + 0.02, viewport[2] + 0.05,
                      viewport[3], viewport[4])
-      GR.setspace(0, maximum(counts), 0, 90)
+      zmin, zmax = gr_getzlims(d, 0, maximum(counts), false)
+      GR.setspace(zmin, zmax, 0, 90)
       diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
       charheight = max(0.016 * diag, 0.01)
       GR.setcharheight(charheight)
       GR.colormap()
     elseif lt == :contour
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
-      zmin, zmax = minimum(z), maximum(z)
+      zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), false)
+      GR.setspace(zmin, zmax, 0, 90)
       if typeof(p[:levels]) <: Array
         h = p[:levels]
       else
         h = linspace(zmin, zmax, p[:levels])
       end
-      GR.setspace(zmin, zmax, 0, 90)
       GR.setcolormap(GR.COLORMAP_COOLWARM)
       GR.contour(x, y, h, reshape(z, length(x) * length(y)), 1000)
       GR.setviewport(viewport[2] + 0.02, viewport[2] + 0.05,
@@ -559,7 +579,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
     elseif lt in [:surface, :wireframe]
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
-      zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
+      zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 40, 70)
       xtick = GR.tick(xmin, xmax) / 2
       ytick = GR.tick(ymin, ymax) / 2
@@ -591,7 +611,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       end
     elseif lt == :heatmap
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
-      zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
+      zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 0, 90)
       GR.setcolormap(GR.COLORMAP_COOLWARM)
       z = reshape(z, length(x) * length(y))
@@ -603,7 +623,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       end
     elseif lt in [:path3d, :scatter3d]
       x, y, z = p[:x], p[:y], p[:z]
-      zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
+      zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 40, 70)
       xtick = GR.tick(xmin, xmax) / 2
       ytick = GR.tick(ymin, ymax) / 2
