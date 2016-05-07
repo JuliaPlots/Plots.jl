@@ -15,24 +15,63 @@ data and attributes that describe a [Plots](https://github.com/tbreloff/Plots.jl
 other purposes as well.  Plots has extensive machinery to uniquely take advantage of the simplified
 recipe description you define.
 
-The `@recipe` macro will process a function definition, replace `-->` commands, and
-then add a new version of `apply_recipe` for dispatching on the arguments.
+The `@recipe` macro will process a function definition, use `-->` commands to define attributes, and
+pass the return value through for further processing (likely by Plots.jl).
 
-Set attributes using the `-->` command, and return a comma separated list of arguments that
-should replace the current arguments.
+## Why should I care about this package?
 
-The `is_key_supported` method should likely be overridden... by default everything is considered supported.
+Many packages have custom types and custom data.  There is usually specialized structure, and useful
+methods of visualizing that structure and data.  This package solves the difficult problem of how to
+build generic visualizations of user-defined data types, without adding bulky dependencies on complex
+graphics packages.
 
-## An example:
+This package is as lightweight as possible.  It **exports one macro**, and defines only a few internal methods.
+It has **zero dependencies**.
+
+However, although it is lightweight, it enables a lot.  The entirety of the Plots framework becomes available
+to any package implementing a recipe.  This means that complex plots and subplots can be built with uber-flexibility
+using custom combinations of data types.  Some examples of applications:
+
+- Distributions: overlayed density plots for non-normal fitted distributions.
+- DataFrames: "Grammar of Graphics"-style inputs using symbols.
+- Deep Learning: frameworks for visualization of neural network states and tracking of internal calculations.
+- Graphs: flexible, interactive graphs with easily customizable colors, etc.
+- Symbolic frameworks: Show sample from complex symbolic distributions
+
+Really there's very little that *couldn't* be mapped to a useful visualization.  I challenge you to
+create the pictures that are worth a thousand words.
+
+For more information about Plots, see [the docs](http://plots.readthedocs.io/), and be sure to reference
+the [supported keywords](http://plots.readthedocs.io/en/latest/supported/#keyword-arguments).
+For additional examples of recipes in the wild, see [MLPlots](https://github.com/JuliaML/MLPlots.jl).
+Ask questions on [gitter](https://gitter.im/tbreloff/Plots.jl) or in the issues.
+
+## Hello world
+
+This will build a spiky surface:
+
+```julia
+using Plots; gr()
+type T end
+@recipe f(::T) = rand(10,10)
+surface(T())
+```
+
+![](https://cloud.githubusercontent.com/assets/933338/15089193/7a453ec6-13cc-11e6-9ae8-959e98b615dc.png)
+
+## A real example
 
 ```julia
 # Plots will be the ultimate consumer of our recipe in this example
 using Plots
 gr()
 
+# Our user-defined data type
 type T end
 
-@recipe function plot{N<:Integer}(t::T, n::N = 1; customcolor = :green)
+# This is all we define.  It uses a familiar signature, but strips it apart
+# in order to add a custom definition to the internal method `RecipesBase.apply_recipe`
+@recipe function plot(::T, n = 1; customcolor = :green)
     :markershape --> :auto, :require
     :markercolor --> customcolor, :force
     :xrotation   --> 45
@@ -42,9 +81,12 @@ end
 
 # This call will implicitly call `RecipesBase.apply_recipe` as part of the Plots
 # processing pipeline (see the Pipeline section of the Plots documentation).
-# It will plot 5 line plots, all with black circles for markers.
-# The markershape argument must be supported, and the zrotation argument's warning
-# will be suppressed.  The user can override all arguments except markercolor.
+#   It will plot 5 line plots (a 5-column matrix is returned from the recipe).
+#   All will have black circles:
+#       - user override for markershape: :c == :circle
+#       - customcolor overridden to :black, and markercolor is forced to be customcolor
+#   If markershape is an unsupported keyword, the call will error.
+#   By default, a warning will be shown for an unsupported keyword.  This will be suppressed for zrotation (:quiet flag).
 plot(T(), 5; customcolor = :black, shape=:c)
 ```
 
