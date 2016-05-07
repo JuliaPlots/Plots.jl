@@ -36,7 +36,7 @@ using custom combinations of data types.  Some examples of applications:
 - DataFrames: "Grammar of Graphics"-style inputs using symbols.
 - Deep Learning: frameworks for visualization of neural network states and tracking of internal calculations.
 - Graphs: flexible, interactive graphs with easily customizable colors, etc.
-- Symbolic frameworks: Show sample from complex symbolic distributions
+- Symbolic frameworks: sample from complex symbolic distributions.
 
 Really there's very little that *couldn't* be mapped to a useful visualization.  I challenge you to
 create the pictures that are worth a thousand words.
