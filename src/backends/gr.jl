@@ -260,7 +260,11 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         elseif lt == :ohlc
           x, y = 1:size(p[:y], 1), p[:y]
         elseif lt in [:hist, :density]
-          x, y = Base.hist(p[:y])
+          if haskey(p, :bins)
+            x, y = Base.hist(p[:y], p[:bins])
+          else
+            x, y = Base.hist(p[:y])
+          end
         elseif lt in [:hist2d, :hexbin]
           E = zeros(length(p[:x]),2)
           E[:,1] = p[:x]
@@ -516,7 +520,11 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
       end
     elseif lt in [:hist, :density]
-      h = Base.hist(p[:y])
+      if haskey(p, :bins)
+        h = Base.hist(p[:y], p[:bins])
+      else
+        h = Base.hist(p[:y])
+      end
       x, y = float(collect(h[1])), float(h[2])
       for i = 2:length(y)
         GR.setfillcolorind(gr_getcolorind(p[:fillcolor]))
