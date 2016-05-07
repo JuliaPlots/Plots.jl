@@ -100,3 +100,8 @@ number of series to display.  User-defined keyword arguments are passed through,
 - `quiet`:   Suppress unsupported keyword warnings
 - `require`: Error if keyword is unsupported
 - `force`:   Don't allow user override for this keyword
+
+### A humble request
+
+If you build a recipe for your package, please let me know!  I'd love to compile both a gallery and
+a listing of user-defined recipes, as well as the packages that are available for Plots visualizations.
