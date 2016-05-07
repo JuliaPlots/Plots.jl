@@ -53,7 +53,7 @@ This will build a spiky surface:
 ```julia
 using Plots; gr()
 type T end
-@recipe f(::T) = rand(10,10)
+@recipe f(::T) = rand(100,100)
 surface(T())
 ```
 
