@@ -135,6 +135,7 @@ end
 
 function gr_polaraxes(rmin, rmax)
   GR.savestate()
+  GR.setlinetype(GR.LINETYPE_SOLID)
   GR.setlinecolorind(88)
   tick = 0.5 * GR.tick(rmin, rmax)
   n = round(Int, (rmax - rmin) / tick + 0.5)
@@ -147,9 +148,10 @@ function gr_polaraxes(rmin, rmax)
       end
       GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
       x, y = GR.wctondc(0.05, r)
-      GR.text(x, y, @sprintf("%g", rmin + i * tick))
+      GR.text(x, y, string(signif(rmin + i * tick, 12)))
     else
       GR.setlinecolorind(90)
+      GR.drawarc(-r, r, -r, r, 0, 359)
     end
   end
   for alpha in 0:45:315
@@ -162,6 +164,25 @@ function gr_polaraxes(rmin, rmax)
     GR.textext(x, y, string(alpha, "^o"))
   end
   GR.restorestate()
+end
+
+function gr_getzlims(d, zmin, zmax, adjust)
+  if haskey(d, :zlims)
+    if d[:zlims] != :auto
+      zlims = d[:zlims]
+      if zlims[1] != NaN
+        zmin = zlims[1]
+      end
+      if zlims[2] != NaN
+        zmax = zlims[2]
+      end
+      adjust = false
+    end
+  end
+  if adjust
+    zmin, zmax = GR.adjustrange(zmin, zmax)
+  end
+  zmin, zmax
 end
 
 function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
@@ -239,7 +260,11 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         elseif lt == :ohlc
           x, y = 1:size(p[:y], 1), p[:y]
         elseif lt in [:hist, :density]
-          x, y = Base.hist(p[:y])
+          if haskey(p, :bins)
+            x, y = Base.hist(p[:y], p[:bins])
+          else
+            x, y = Base.hist(p[:y])
+          end
         elseif lt in [:hist2d, :hexbin]
           E = zeros(length(p[:x]),2)
           E[:,1] = p[:x]
@@ -402,6 +427,17 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
 
   for p in plt.seriesargs
     lt = p[:linetype]
+    if lt in (:hist2d, :hexbin, :contour, :surface, :wireframe, :heatmap)
+      if haskey(d, :color_palette)
+        ci = 1000
+        for cv in d[:color_palette]
+          GR.setcolorrep(ci, cv.r, cv.g, cv.b)
+          ci += 1
+        end
+      else
+        GR.setcolormap(GR.COLORMAP_COOLWARM)
+      end
+    end
     if get(d, :polar, false)
       lt = :polar
     end
@@ -495,7 +531,11 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
       end
     elseif lt in [:hist, :density]
-      h = Base.hist(p[:y])
+      if haskey(p, :bins)
+        h = Base.hist(p[:y], p[:bins])
+      else
+        h = Base.hist(p[:y])
+      end
       x, y = float(collect(h[1])), float(h[2])
       for i = 2:length(y)
         GR.setfillcolorind(gr_getcolorind(p[:fillcolor]))
@@ -525,25 +565,24 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       x, y, H = Base.hist2d(E, xbins, ybins)
       counts = round(Int32, 1000 + 255 * H / maximum(H))
       n, m = size(counts)
-      GR.setcolormap(GR.COLORMAP_COOLWARM)
       GR.cellarray(xmin, xmax, ymin, ymax, n, m, counts)
       GR.setviewport(viewport[2] + 0.02, viewport[2] + 0.05,
                      viewport[3], viewport[4])
-      GR.setspace(0, maximum(counts), 0, 90)
+      zmin, zmax = gr_getzlims(d, 0, maximum(counts), false)
+      GR.setspace(zmin, zmax, 0, 90)
       diag = sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
       charheight = max(0.016 * diag, 0.01)
       GR.setcharheight(charheight)
       GR.colormap()
     elseif lt == :contour
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
-      zmin, zmax = minimum(z), maximum(z)
+      zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), false)
+      GR.setspace(zmin, zmax, 0, 90)
       if typeof(p[:levels]) <: Array
         h = p[:levels]
       else
         h = linspace(zmin, zmax, p[:levels])
       end
-      GR.setspace(zmin, zmax, 0, 90)
-      GR.setcolormap(GR.COLORMAP_COOLWARM)
       GR.contour(x, y, h, reshape(z, length(x) * length(y)), 1000)
       GR.setviewport(viewport[2] + 0.02, viewport[2] + 0.05,
                      viewport[3], viewport[4])
@@ -557,7 +596,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
     elseif lt in [:surface, :wireframe]
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
-      zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
+      zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 40, 70)
       xtick = GR.tick(xmin, xmax) / 2
       ytick = GR.tick(ymin, ymax) / 2
@@ -572,7 +611,6 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       end
       z = reshape(z, length(x) * length(y))
       if lt == :surface
-        GR.setcolormap(GR.COLORMAP_COOLWARM)
         GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
       else
         GR.setfillcolorind(0)
@@ -589,9 +627,8 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       end
     elseif lt == :heatmap
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
-      zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
+      zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 0, 90)
-      GR.setcolormap(GR.COLORMAP_COOLWARM)
       z = reshape(z, length(x) * length(y))
       GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
       if cmap
@@ -601,7 +638,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       end
     elseif lt in [:path3d, :scatter3d]
       x, y, z = p[:x], p[:y], p[:z]
-      zmin, zmax = GR.adjustrange(minimum(z), maximum(z))
+      zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 40, 70)
       xtick = GR.tick(xmin, xmax) / 2
       ytick = GR.tick(ymin, ymax) / 2
@@ -695,7 +732,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.setwindow(-1, 1, -1, 1)
       rmin, rmax = GR.adjustrange(minimum(r), maximum(r))
       gr_polaraxes(rmin, rmax)
-      phi, r, = p[:x], p[:y]
+      phi, r = p[:x], p[:y]
       r = 0.5 * (r - rmin) / (rmax - rmin)
       n = length(r)
       x = zeros(n)
