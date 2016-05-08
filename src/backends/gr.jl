@@ -428,12 +428,20 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
   for p in plt.seriesargs
     lt = p[:linetype]
     if lt in (:hist2d, :hexbin, :contour, :surface, :wireframe, :heatmap)
-      if haskey(d, :color_palette)
-        ci = 1000
-        for cv in d[:color_palette]
-          GR.setcolorrep(ci, cv.r, cv.g, cv.b)
-          ci += 1
-        end
+        if isa(p[:fillcolor], ColorGradient)
+            # TODO: this still isn't right... need to do something like in PyPlot for skewed gradients
+            # cv = p[:fillcolor].colors
+            for (i,cz) in enumerate(linspace(0,1,256))
+                # c = cv[mod1(i,length(cv))]
+                c = getColorZ(p[:fillcolor], cz)
+                GR.setcolorrep(999+i, red(c), green(c), blue(c))
+            end
+    #   if haskey(d, :color_palette)
+    #     ci = 1000
+    #     for cv in d[:color_palette]
+    #       GR.setcolorrep(ci, cv.r, cv.g, cv.b)
+    #       ci += 1
+    #     end
       else
         GR.setcolormap(GR.COLORMAP_COOLWARM)
       end
