@@ -427,6 +427,17 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
 
   for p in plt.seriesargs
     lt = p[:linetype]
+    if lt in (:hist2d, :hexbin, :contour, :surface, :wireframe, :heatmap)
+      if haskey(d, :color_palette)
+        ci = 1000
+        for cv in d[:color_palette]
+          GR.setcolorrep(ci, cv.r, cv.g, cv.b)
+          ci += 1
+        end
+      else
+        GR.setcolormap(GR.COLORMAP_COOLWARM)
+      end
+    end
     if get(d, :polar, false)
       lt = :polar
     end
@@ -554,7 +565,6 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       x, y, H = Base.hist2d(E, xbins, ybins)
       counts = round(Int32, 1000 + 255 * H / maximum(H))
       n, m = size(counts)
-      GR.setcolormap(GR.COLORMAP_COOLWARM)
       GR.cellarray(xmin, xmax, ymin, ymax, n, m, counts)
       GR.setviewport(viewport[2] + 0.02, viewport[2] + 0.05,
                      viewport[3], viewport[4])
@@ -573,7 +583,6 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       else
         h = linspace(zmin, zmax, p[:levels])
       end
-      GR.setcolormap(GR.COLORMAP_COOLWARM)
       GR.contour(x, y, h, reshape(z, length(x) * length(y)), 1000)
       GR.setviewport(viewport[2] + 0.02, viewport[2] + 0.05,
                      viewport[3], viewport[4])
@@ -602,7 +611,6 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       end
       z = reshape(z, length(x) * length(y))
       if lt == :surface
-        GR.setcolormap(GR.COLORMAP_COOLWARM)
         GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
       else
         GR.setfillcolorind(0)
@@ -621,7 +629,6 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 0, 90)
-      GR.setcolormap(GR.COLORMAP_COOLWARM)
       z = reshape(z, length(x) * length(y))
       GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
       if cmap
