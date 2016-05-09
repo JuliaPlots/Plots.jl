@@ -50,6 +50,8 @@ like_histogram(linetype::Symbol) = linetype in (:hist, :density)
 like_line(linetype::Symbol)      = linetype in (:line, :path, :steppre, :steppost)
 like_surface(linetype::Symbol)   = linetype in (:contour, :contour3d, :heatmap, :surface, :wireframe, :image)
 
+is3d(linetype::Symbol) = linetype in _3dTypes
+is3d(d::KW) = trueOrAllTrue(is3d, d[:linetype])
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 @compat const _styleAliases = KW(
@@ -649,7 +651,7 @@ function extractGroupArgs(v::AVec, args...)
     groupLabels = sort(collect(unique(v)))
     n = length(groupLabels)
     if n > 20
-        error("Too many group labels. n=$n  Is that intended?")
+        warn("You created n=$n groups... Is that intended?")
     end
     groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
     GroupBy(map(string, groupLabels), groupIds)

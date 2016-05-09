@@ -3,67 +3,37 @@
 
 supportedArgs(::PlotlyBackend) = [
     :annotation,
-    # :axis,
-    :background_color,
-    :color_palette,
-    :fillrange,
-    :fillcolor,
-    :fillalpha,
-    :foreground_color,
+    :background_color, :foreground_color, :color_palette,
+    # :background_color_legend, :background_color_inside, :background_color_outside,
+    # :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
+    #     :foreground_color_text, :foreground_color_border,
     :group,
     :label,
-    :layout,
-    :legend,
-    :seriescolor, :seriesalpha,
-    :linecolor,
-    :linestyle,
     :linetype,
-    :linewidth,
-    :linealpha,
-    :markershape,
-    :markercolor,
-    :markersize,
-    :markeralpha,
-    :markerstrokewidth,
-    :markerstrokecolor,
-    :markerstrokestyle,
-    :n,
+    :seriescolor, :seriesalpha,
+    :linecolor, :linestyle, :linewidth, :linealpha,
+    :markershape, :markercolor, :markersize, :markeralpha,
+    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
+    :fillrange, :fillcolor, :fillalpha,
     :bins,
-    :nc,
-    :nr,
-    # :pos,
+    :n, :nc, :nr, :layout,
     # :smooth,
-    :show,
-    :size,
-    :title,
-    :windowtitle,
-    :x,
-    :xlabel,
-    :xlims,
-    :xticks,
-    :y,
-    :ylabel,
-    :ylims,
-    # :yrightlabel,
-    :yticks,
-    :xscale,
-    :yscale,
-    :xflip,
-    :yflip,
+    :title, :windowtitle, :show, :size,
+    :x, :xlabel, :xlims, :xticks, :xscale, :xflip, :xrotation,
+    :y, :ylabel, :ylims, :yticks, :yscale, :yflip, :yrotation,
+    :z, :zlabel, :zlims, :zticks, :zscale, :zflip, :zrotation,
     :z,
-    :marker_z,
-    :tickfont,
-    :guidefont,
-    :legendfont,
-    :grid,
-    :levels,
-    :xerror,
-    :yerror,
-    :ribbon,
-    :quiver,
+    :tickfont, :guidefont, :legendfont,
+    :grid, :legend, :colorbar,
+    :marker_z, :levels,
+    :xerror, :yerror,
+    :ribbon, :quiver,
     :orientation,
+    # :overwrite_figure,
     :polar,
+    # :normalize, :weights, :contours, :aspect_ratio
   ]
+
 supportedAxes(::PlotlyBackend) = [:auto, :left]
 supportedTypes(::PlotlyBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
                                    :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
@@ -229,37 +199,43 @@ end
 
 use_axis_field(ticks) = !(ticks in (nothing, :none))
 
-tickssym(isx::Bool) = symbol((isx ? "x" : "y") * "ticks")
-limssym(isx::Bool) = symbol((isx ? "x" : "y") * "lims")
-flipsym(isx::Bool) = symbol((isx ? "x" : "y") * "flip")
-scalesym(isx::Bool) = symbol((isx ? "x" : "y") * "scale")
-labelsym(isx::Bool) = symbol((isx ? "x" : "y") * "label")
+tickssym(letter) = symbol(letter * "ticks")
+limssym(letter) = symbol(letter * "lims")
+flipsym(letter) = symbol(letter * "flip")
+scalesym(letter) = symbol(letter * "scale")
+labelsym(letter) = symbol(letter * "label")
+rotationsym(letter) = symbol(letter * "rotation")
 
-function plotlyaxis(d::KW, isx::Bool)
+function plotlyaxis(d::KW, letter)
   ax = KW(
-      :title      => d[labelsym(isx)],
+      :title      => d[labelsym(letter)],
       :showgrid   => d[:grid],
       :zeroline   => false,
     )
 
   fgcolor = webcolor(d[:foreground_color])
-  tsym = tickssym(isx)
+  tsym = tickssym(letter)
+
+  rot = d[rotationsym(letter)]
+  if rot != 0
+      ax[:tickangle] = rot
+  end
 
   if use_axis_field(d[tsym])
     ax[:titlefont] = plotlyfont(d[:guidefont], fgcolor)
-    ax[:type] = plotlyscale(d[scalesym(isx)])
+    ax[:type] = plotlyscale(d[scalesym(letter)])
     ax[:tickfont] = plotlyfont(d[:tickfont], fgcolor)
     ax[:tickcolor] = fgcolor
     ax[:linecolor] = fgcolor
 
     # xlims
-    lims = d[limssym(isx)]
+    lims = d[limssym(letter)]
     if lims != :auto && limsType(lims) == :limits
       ax[:range] = lims
     end
 
     # xflip
-    if d[flipsym(isx)]
+    if d[flipsym(letter)]
       ax[:autorange] = "reversed"
     end
 
@@ -303,8 +279,16 @@ function plotly_layout(d::KW)
   d_out[:paper_bgcolor] = bgcolor
 
   # TODO: x/y axis tick values/labels
-  d_out[:xaxis] = plotlyaxis(d, true)
-  d_out[:yaxis] = plotlyaxis(d, false)
+  if is3d(d)
+      d_out[:scene] = KW(
+          :xaxis => plotlyaxis(d, "x"),
+          :yaxis => plotlyaxis(d, "y"),
+          :xzxis => plotlyaxis(d, "z"),
+      )
+  else
+      d_out[:xaxis] = plotlyaxis(d, "x")
+      d_out[:yaxis] = plotlyaxis(d, "y")
+  end
 
   # legend
   d_out[:showlegend] = d[:legend] != :none

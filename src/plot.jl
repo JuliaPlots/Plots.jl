@@ -173,6 +173,7 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
         # filter the data
         filter_data!(d, idxfilter)
     end
+    # dumpdict(d,"",true)
 
     seriesArgList, xmeta, ymeta = build_series_args(plt, d) #, idxfilter)
     # seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)

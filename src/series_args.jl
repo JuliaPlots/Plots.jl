@@ -462,7 +462,7 @@ function setup_dataframes()
     # @eval begin
         # import DataFrames
 
-        DFS = Union{Symbol, AbstractVector{Symbol}}
+        DFS = Union{Symbol, AbstractArray{Symbol}}
 
         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, dfs::DFS)
             if isa(dfs, Symbol)
@@ -493,6 +493,14 @@ function setup_dataframes()
             x = handle_dfs(df, d, "x", sx)
             y = handle_dfs(df, d, "y", sy)
             x, y
+        end
+
+        @recipe function plot(df::DataFrames.AbstractDataFrame, sx::DFS, sy::DFS, sz::DFS)
+            handle_group(df, d)
+            x = handle_dfs(df, d, "x", sx)
+            y = handle_dfs(df, d, "y", sy)
+            z = handle_dfs(df, d, "z", sz)
+            x, y, z
         end
 
         # get_data(df::DataFrames.AbstractDataFrame, arg::Symbol) = df[arg]
