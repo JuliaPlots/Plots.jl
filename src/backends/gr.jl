@@ -228,6 +228,8 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
   GR.setfillintstyle(GR.INTSTYLE_SOLID)
   GR.setfillcolorind(gr_getcolorind(d[:background_color_outside]))
   GR.fillrect(vp[1], vp[2], vp[3], vp[4])
+  c = getColor(d[:background_color_inside])
+  dark_bg = 0.21 * c.r + 0.72 * c.g + 0.07 * c.b < 0.9
   GR.setfillcolorind(gr_getcolorind(d[:background_color_inside]))
   GR.fillrect(viewport[1], viewport[2], viewport[3], viewport[4])
   GR.selntran(1)
@@ -356,6 +358,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       yorg = (ymax, ymin)
     end
 
+    extrema[axis,:] = [xmin, xmax, ymin, ymax]
     GR.setwindow(xmin, xmax, ymin, ymax)
     GR.setscale(scale)
 
@@ -371,8 +374,12 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       if outside_ticks
         ticksize = -ticksize
       end
-      if grid_flag && fg == 1
-        GR.grid(xtick, ytick, 0, 0, majorx, majory)
+      if grid_flag
+        if dark_bg
+          GR.grid(xtick * majorx, ytick * majory, 0, 0, 1, 1)
+        else
+          GR.grid(xtick, ytick, 0, 0, majorx, majory)
+        end
       end
       GR.setlinecolorind(gr_getcolorind(d[:foreground_color_axis]))
       if num_axes == 1
