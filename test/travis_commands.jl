@@ -7,7 +7,7 @@ Pkg.build("ImageMagick")
 Pkg.clone("GR")
 Pkg.build("GR")
 
-Pkg.clone("https://github.com/JuliaPlots/RecipesBase.jl.git")
+# Pkg.clone("https://github.com/JuliaPlots/RecipesBase.jl.git")
 Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");
 
 # Pkg.clone("https://github.com/JunoLab/Blink.jl.git")

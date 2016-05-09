@@ -227,6 +227,7 @@ function setTicksFromStringVector(plt::Plot, d::KW, di::KW, letter)
 
     # do we really want to do this?
     typeof(v) <: AbstractArray || return
+    isempty(v) && return
     trueOrAllTrue(_ -> typeof(_) <: AbstractString, v) || return
 
     # compute the ticks and labels
@@ -234,7 +235,12 @@ function setTicksFromStringVector(plt::Plot, d::KW, di::KW, letter)
         # extend the existing ticks and labels. only add to labels if they're new!
         ticks, labels = pargs[ticksym]
         newlabels = filter(_ -> !(_ in labels), unique(v))
-        ticks = vcat(ticks, maximum(ticks) + (1:length(newlabels)))
+        newticks = if isempty(ticks)
+            collect(1:length(newlabels))
+        else
+            maximum(ticks) + collect(1:length(newlabels))
+        end
+        ticks = vcat(ticks, newticks)
         labels = vcat(labels, newlabels)
         ticks, labels
     else

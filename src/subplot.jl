@@ -232,8 +232,11 @@ end
 
 # given a fully processed KW, add the series to the Plot
 function _add_series_subplot(plt::Plot, d::KW)
-  setTicksFromStringVector(d, d, :x, :xticks)
-  setTicksFromStringVector(d, d, :y, :yticks)
+  # setTicksFromStringVector(d, d, :x, :xticks)
+  # setTicksFromStringVector(d, d, :y, :yticks)
+  setTicksFromStringVector(plt, d, d, "x")
+  setTicksFromStringVector(plt, d, d, "y")
+  setTicksFromStringVector(plt, d, d, "z")
 
   # this is the actual call to the backend
   _add_series(plt.backend, plt, d)
