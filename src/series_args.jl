@@ -469,7 +469,7 @@ function setup_dataframes()
                 get!(d, symbol(letter * "label"), string(dfs))
                 collect(df[dfs])
             else
-                get!(d, :label, dfs')
+                get!(d, :label, reshape(dfs, 1, length(dfs)))
                 Any[collect(df[s]) for s in dfs]
             end
         end

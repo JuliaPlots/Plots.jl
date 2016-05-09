@@ -188,9 +188,9 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
         plt.n += 1
 
         if !stringsSupported() && di[:linetype] != :pie
-            setTicksFromStringVector(d, di, :x, :xticks)
-            setTicksFromStringVector(d, di, :y, :yticks)
-            setTicksFromStringVector(d, di, :z, :zticks)
+            setTicksFromStringVector(plt, d, di, "x")
+            setTicksFromStringVector(plt, d, di, "y")
+            setTicksFromStringVector(plt, d, di, "z")
         end
 
         # remove plot args
@@ -215,21 +215,47 @@ end
 
 # --------------------------------------------------------------------
 
-# if x or y are a vector of strings, we should create a list of unique strings,
-# and map x/y to be the index of the string... then set the x/y tick labels
-function setTicksFromStringVector(d::KW, di::KW, sym::Symbol, ticksym::Symbol)
-    # if the x or y values are strings, set ticks to the unique values, and x/y to the indices of the ticks
+function get_indices(orig, labels)
+    Int[findnext(labels, l, 1) for l in orig]
+end
 
+function setTicksFromStringVector(plt::Plot, d::KW, di::KW, letter)
+    sym = symbol(letter)
+    ticksym = symbol(letter * "ticks")
+    pargs = plt.plotargs
     v = di[sym]
-    isa(v, AbstractArray) || return
 
-    T = eltype(v)
-    if T <: @compat(AbstractString) || (!isempty(T.types) && all(x -> x <: @compat(AbstractString), T.types))
-        ticks = unique(di[sym])
-        di[sym] = Int[findnext(ticks, v, 1) for v in di[sym]]
+    # do we really want to do this?
+    typeof(v) <: AbstractArray || return
+    trueOrAllTrue(_ -> typeof(_) <: AbstractString, v) || return
 
-        if !haskey(d, ticksym) || d[ticksym] == :auto
-            d[ticksym] = (collect(1:length(ticks)), UTF8String[t for t in ticks])
+    # compute the ticks and labels
+    ticks, labels = if ticksType(pargs[ticksym]) == :ticks_and_labels
+        # extend the existing ticks and labels. only add to labels if they're new!
+        ticks, labels = pargs[ticksym]
+        newlabels = filter(_ -> !(_ in labels), unique(v))
+        ticks = vcat(ticks, maximum(ticks) + (1:length(newlabels)))
+        labels = vcat(labels, newlabels)
+        ticks, labels
+    else
+        # create new ticks and labels
+        newlabels = unique(v)
+        collect(1:length(newlabels)), newlabels
+    end
+
+    d[ticksym] = ticks, labels
+    plt.plotargs[ticksym] = ticks, labels
+
+    # add an origsym field so that later on we can re-compute the x vector if ticks change
+    origsym = symbol(letter * "orig")
+    di[origsym] = v
+    di[sym] = get_indices(v, labels)
+
+    # loop through existing plt.seriesargs and adjust indices if there is an origsym key
+    for sargs in plt.seriesargs
+        if haskey(sargs, origsym)
+            # TODO: might need to call the setindex function instead to trigger a plot update for some backends??
+            sargs[sym] = get_indices(sargs[origsym], labels)
         end
     end
 end
