@@ -249,13 +249,13 @@ end
 # images - grays
 function process_inputs{T<:Gray}(plt::AbstractPlot, d::KW, mat::AMat{T})
     d[:linetype] = :image
-    d[:yflip] = true
     n,m = size(mat)
-    d[:x], d[:y], d[:z] = 1:n, 1:m, mat
+    d[:x], d[:y], d[:z] = 1:n, 1:m, Surface(mat)
     # handle images... when not supported natively, do a hack to use heatmap machinery
     if !nativeImagesSupported()
         d[:linetype] = :heatmap
-        d[:z] = convert(Matrix{Float64}, mat)
+        d[:yflip] = true
+        d[:z] = Surface(convert(Matrix{Float64}, mat.surf))
         d[:fillcolor] = ColorGradient([:black, :white])
     end
 end
@@ -263,11 +263,11 @@ end
 # images - colors
 function process_inputs{T<:Colorant}(plt::AbstractPlot, d::KW, mat::AMat{T})
     d[:linetype] = :image
-    d[:yflip] = true
     n,m = size(mat)
-    d[:x], d[:y], d[:z] = 1:n, 1:m, mat
+    d[:x], d[:y], d[:z] = 1:n, 1:m, Surface(mat)
     # handle images... when not supported natively, do a hack to use heatmap machinery
     if !nativeImagesSupported()
+        d[:yflip] = true
         imageHack(d)
     end
 end

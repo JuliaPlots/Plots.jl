@@ -133,7 +133,7 @@ end
 function imageHack(d::KW)
     :heatmap in supportedTypes() || error("Neither :image or :heatmap are supported!")
     d[:linetype] = :heatmap
-    d[:z], d[:fillcolor] = replace_image_with_heatmap(d[:z])
+    d[:z], d[:fillcolor] = replace_image_with_heatmap(d[:z].surf)
 end
 # ---------------------------------------------------------------
 # ------------------------------------------------------------------------------------

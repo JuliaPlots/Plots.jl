@@ -40,13 +40,14 @@ supportedTypes(::PyPlotBackend) = [
         :none, :line, :path, :steppre, :steppost, :shape,
         :scatter, :hist2d, :hexbin, :hist, :density,
         :bar, :sticks, :box, :violin, :quiver,
-        :hline, :vline, :heatmap, :pie,
+        :hline, :vline, :heatmap, :pie, :image,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
     ]
 supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PyPlotBackend) = vcat(_allMarkers, Shape)
 supportedScales(::PyPlotBackend) = [:identity, :ln, :log2, :log10]
 subplotSupported(::PyPlotBackend) = true
+nativeImagesSupported(::PyPlotBackend) = true
 
 
 # --------------------------------------------------------------------------------------
@@ -627,6 +628,21 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         end
     end
 
+    if lt == :image
+        img = Array(transpose_z(d, z.surf))
+        z = if eltype(img) <: Colors.AbstractGray
+            float(img)
+        elseif eltype(img) <: Colorant
+            map(c -> Float64[red(c),green(c),blue(c)], img)
+        else
+            z  # hopefully it's in a data format that will "just work" with imshow
+        end
+        handle = ax[:imshow](z;
+            zorder = plt.n
+        )
+        push!(handles, handle)
+    end
+
     if lt == :heatmap
         x, y, z = heatmap_edges(x), heatmap_edges(y), transpose_z(d, z.surf)
         if !(eltype(z) <: Number)
@@ -1030,7 +1046,7 @@ function addPyPlotLegend(plt::Plot, ax)
         args = filter(x -> !(x[:linetype] in (
             :hist,:density,:hexbin,:hist2d,:hline,:vline,
             :contour,:contour3d,:surface,:wireframe,
-            :heatmap,:path3d,:scatter3d, :pie
+            :heatmap,:path3d,:scatter3d, :pie, :image
         )), plt.seriesargs)
         args = filter(x -> x[:label] != "", args)
         if length(args) > 0
