@@ -459,23 +459,58 @@ end
 
 function setup_dataframes()
     @require DataFrames begin
+    # @eval begin
+        # import DataFrames
 
-        get_data(df::DataFrames.AbstractDataFrame, arg::Symbol) = df[arg]
-        get_data(df::DataFrames.AbstractDataFrame, arg) = arg
+        DFS = Union{Symbol, AbstractVector{Symbol}}
 
-        function process_inputs(plt::AbstractPlot, d::KW, df::DataFrames.AbstractDataFrame, args...)
-            # d[:dataframe] = df
-            process_inputs(plt, d, map(arg -> get_data(df, arg), args)...)
-        end
-
-        # expecting the column name of a dataframe that was passed in... anything else should error
-        function extractGroupArgs(s::Symbol, df::DataFrames.AbstractDataFrame, args...)
-            if haskey(df, s)
-                return extractGroupArgs(df[s])
+        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, dfs::DFS)
+            if isa(dfs, Symbol)
+                get!(d, symbol(letter * "label"), string(dfs))
+                collect(df[dfs])
             else
-                error("Got a symbol, and expected that to be a key in d[:dataframe]. s=$s d=$d")
+                get!(d, :label, dfs')
+                Any[collect(df[s]) for s in dfs]
             end
         end
+
+        function handle_group(df::DataFrames.AbstractDataFrame, d::KW)
+            if haskey(d, :group)
+                g = d[:group]
+                if isa(g, Symbol)
+                    d[:group] = collect(df[g])
+                end
+            end
+        end
+
+        @recipe function plot(df::DataFrames.AbstractDataFrame, sy::DFS)
+            handle_group(df, d)
+            handle_dfs(df, d, "y", sy)
+        end
+
+        @recipe function plot(df::DataFrames.AbstractDataFrame, sx::DFS, sy::DFS)
+            handle_group(df, d)
+            x = handle_dfs(df, d, "x", sx)
+            y = handle_dfs(df, d, "y", sy)
+            x, y
+        end
+
+        # get_data(df::DataFrames.AbstractDataFrame, arg::Symbol) = df[arg]
+        # get_data(df::DataFrames.AbstractDataFrame, arg) = arg
+        #
+        # function process_inputs(plt::AbstractPlot, d::KW, df::DataFrames.AbstractDataFrame, args...)
+        #     # d[:dataframe] = df
+        #     process_inputs(plt, d, map(arg -> get_data(df, arg), args)...)
+        # end
+        #
+        # # expecting the column name of a dataframe that was passed in... anything else should error
+        # function extractGroupArgs(s::Symbol, df::DataFrames.AbstractDataFrame, args...)
+        #     if haskey(df, s)
+        #         return extractGroupArgs(df[s])
+        #     else
+        #         error("Got a symbol, and expected that to be a key in d[:dataframe]. s=$s d=$d")
+        #     end
+        # end
 
         # function getDataFrameFromKW(d::KW)
         #     get(d, :dataframe) do
