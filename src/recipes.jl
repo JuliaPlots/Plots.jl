@@ -186,7 +186,7 @@ function apply_series_recipe(d::KW, ::Type{Val{:box}})
             m, l, r, m, m, NaN,         # lower T
             l, l, r, r, l, NaN,         # lower box
             l, l, r, r, l, NaN,         # upper box
-            m, l, r, m, m               # upper T
+            m, l, r, m, m, NaN,         # upper T
         ]
         ycoords = [
             q1, q1, q1, q1, q2, NaN,    # lower T

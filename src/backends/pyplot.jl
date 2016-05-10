@@ -33,7 +33,8 @@ supportedArgs(::PyPlotBackend) = [
     :orientation,
     :overwrite_figure,
     :polar,
-    :normalize, :weights, :contours, :aspect_ratio
+    :normalize, :weights, :contours, :aspect_ratio,
+    :match_dimensions,
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [
