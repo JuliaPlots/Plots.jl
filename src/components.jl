@@ -398,6 +398,38 @@ type OHLC{T<:Real}
   close::T
 end
 
+# -----------------------------------------------------------------------
+
+# style is :open or :closed (for now)
+immutable Arrow
+    style::Symbol
+    headlength::Float64
+    headwidth::Float64
+end
+
+function arrow(args...)
+    style = :simple
+    headlength = 0.3
+    headwidth = 0.2
+    for arg in args
+        T = typeof(arg)
+        if T == Symbol
+            style = arg
+        elseif T <: Number
+            headlength = headwidth = Float64(arg)
+        elseif T <: Tuple && length(arg) == 2
+            headlength, headwidth = Float64(arg[1]), Float64(arg[2])
+        else
+            warn("Skipped arrow arg $arg")
+        end
+    end
+    Arrow(style, headlength, headwidth)
+end
+
+
+
+
+# -----------------------------------------------------------------------
 
 # @require FixedSizeArrays begin
 

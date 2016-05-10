@@ -291,6 +291,11 @@ function transpose_z(d::KW, z, transpose_on_match::Bool = true)
     end
 end
 
+function ok(x::Number, y::Number, z::Number = 0)
+    isfinite(x) && isfinite(y) && isfinite(z)
+end
+ok(tup::Tuple) = ok(tup...)
+
 
 
 # ---------------------------------------------------------------

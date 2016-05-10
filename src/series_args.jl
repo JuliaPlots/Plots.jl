@@ -184,12 +184,18 @@ function build_series_args(plt::AbstractPlot, kw::KW) #, idxfilter)
         end
 
         # handle quiver plots
-        if lt == :quiver
-            d[:linetype] = lt = :path
-            d[:linewidth] = 0
-        end
+        # either a series of velocity vectors are passed in (`:quiver` keyword),
+        # or we just add arrows to the path
+
+        # if lt == :quiver
+        #     d[:linetype] = lt = :path
+        #     d[:linewidth] = 0
+        # end
         if get(d, :quiver, nothing) != nothing
             append!(ret, apply_series_recipe(copy(d), Val{:quiver}))
+        elseif lt == :quiver
+            d[:linetype] = lt = :path
+            d[:arrow] = arrow()
         end
 
         # now that we've processed a given series... optionally split into

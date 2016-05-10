@@ -150,10 +150,12 @@ _seriesDefaults[:xerror]          = nothing
 _seriesDefaults[:yerror]          = nothing
 _seriesDefaults[:ribbon]          = nothing
 _seriesDefaults[:quiver]          = nothing
+_seriesDefaults[:arrow]           = nothing   # allows for adding arrows to line/path... call `arrow(args...)`
 _seriesDefaults[:normalize]       = false     # do we want a normalized histogram?
 _seriesDefaults[:weights]         = nothing   # optional weights for histograms (1D and 2D)
 _seriesDefaults[:contours]        = false     # add contours to 3d surface and wireframe plots
 _seriesDefaults[:match_dimensions] = false   # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
+                                             # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
 
 
 const _plotDefaults = KW()
@@ -343,6 +345,7 @@ add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
 add_aliases(:quiver, :velocity, :quiver2d, :gradient)
 add_aliases(:normalize, :norm, :normed, :normalized)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
+add_aliases(:match_dimensions, :transpose, :transpose_z)
 
 
 # add all pluralized forms to the _keyAliases dict
@@ -463,6 +466,9 @@ function processLineArg(d::KW, arg)
         arg.size  == nothing || (d[:fillrange] = arg.size)
         arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
         arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
+
+    elseif typeof(arg) <: Arrow || arg in (:arrow, :arrows)
+        d[:arrow] = arg
 
     # linealpha
     elseif allAlphas(arg)

@@ -320,69 +320,46 @@ end
 # quiver
 
 # function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
-#     d[:label] = ""
-#     d[:linetype] = :scatter
-#
-#     # create a second series to draw the arrow shaft
-#     dpath = copy(d)
-#     error_style!(dpath)
-#     dpath[:markershape] = :none
-#
-#     velocity = error_zipit(d[:quiver])
-#     xorig, yorig = d[:x], d[:y]
-#
-#     # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
-#     # x, y = zeros(0), zeros(0)
-#     paths = P2[]
-#     arrows = P2[]
-#     arrowshapes = Shape[]
-#     for i = 1:max(length(xorig), length(yorig))
-#
-#         # get the starting position
-#         xi = get_mod(xorig, i)
-#         yi = get_mod(yorig, i)
-#         p = P2(xi, yi)
-#
-#         # get the velocity
-#         vi = get_mod(velocity, i)
-#         vx, vy = if istuple(vi)
-#             first(vi), last(vi)
-#         elseif isscalar(vi)
-#             vi, vi
-#         else
-#             error("unexpected vi type $(typeof(vi)) for quiver: $vi")
-#         end
-#         v = P2(vx, vy)
-#
-#         nanappend!(paths, [p, p+v])
-#         push!(arrows, p+v)
-#         push!(arrowshapes, makearrowhead(compute_angle(v)))
-#
-#         # # dist = sqrt(vx^2 + vy^2)
-#         # dist = norm(v)
-#         # arrow_h = 0.1dist          # height of arrowhead
-#         # arrow_w = 0.5arrow_h       # halfwidth of arrowhead
-#         # U1 = v ./ dist             # vector of arrowhead height
-#         # U2 = P2(-U1[2], U1[1])     # vector of arrowhead halfwidth
-#         # U1 *= arrow_h
-#         # U2 *= arrow_w
-#         #
-#         # append!(pts, P2(xi, yi) .+ P2[(0,0), v-U1, v-U1+U2, v, v-U1-U2, v-U1, (NaN,NaN)])
-#         # # a1 = v - arrow_h * U1 + arrow_w * U2
-#         # # a2 = v - arrow_h * U1 - arrow_w * U2
-#         # # nanappend!(x, xi + [0.0, vx, a1[1], a2[1], vx])
-#         # # nanappend!(y, yi + [0.0, vy, a1[2], a2[2], vy])
-#     end
-#
-#     # d[:x], d[:y] = Plots.unzip(pts)
-#     dpath[:x], dpath[:y] = Plots.unzip(paths)
-#     d[:x], d[:y] = Plots.unzip(arrows)
-#     d[:markershape] = arrowshapes
-#
-#     KW[dpath, d]
-# end
+function quiver_using_arrows(d::KW)
+    d[:label] = ""
+    d[:linetype] = :path
+    if !isa(d[:arrow], Arrow)
+        d[:arrow] = arrow()
+    end
 
-function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
+    velocity = error_zipit(d[:quiver])
+    xorig, yorig = d[:x], d[:y]
+
+    # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
+    x, y = zeros(0), zeros(0)
+    for i = 1:max(length(xorig), length(yorig))
+        # get the starting position
+        xi = get_mod(xorig, i)
+        yi = get_mod(yorig, i)
+
+        # get the velocity
+        vi = get_mod(velocity, i)
+        vx, vy = if istuple(vi)
+            first(vi), last(vi)
+        elseif isscalar(vi)
+            vi, vi
+        elseif isa(vi,Function)
+            vi(xi, yi)
+        else
+            error("unexpected vi type $(typeof(vi)) for quiver: $vi")
+        end
+
+        # add the points
+        nanappend!(x, [xi, xi+vx, NaN])
+        nanappend!(y, [yi, yi+vy, NaN])
+    end
+
+    d[:x], d[:y] = x, y
+    KW[d]
+end
+
+# function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
+function quiver_using_hack(d::KW)
     d[:label] = ""
     d[:linetype] = :shape
 
@@ -427,6 +404,13 @@ function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
     KW[d]
 end
 
+function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
+    if :arrow in supportedArgs()
+        quiver_using_arrows(d)
+    else
+        quiver_using_hack(d)
+    end
+end
 
 
 # ---------------------------------------------------------------------------

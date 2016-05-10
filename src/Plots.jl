@@ -114,6 +114,7 @@ export
     brush,
     Surface,
     OHLC,
+    arrow,
 
     colorscheme,
     ColorScheme,
