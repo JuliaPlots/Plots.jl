@@ -416,7 +416,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
                 linewidth = d[:linewidth],
                 linestyle = getPyPlotLineStyle(lt, d[:linestyle]),
                 solid_capstyle = "round",
-                dash_capstyle = "round",
+                # dash_capstyle = "round",
                 drawstyle = getPyPlotStepStyle(lt)
             )[1]
             push!(handles, handle)
