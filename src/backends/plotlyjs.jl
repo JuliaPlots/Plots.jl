@@ -141,7 +141,7 @@ end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
 function _update_plot(plt::Plot{PlotlyJSBackend}, d::KW)
-    pdict = plotly_layout(d)
+    pdict = plotly_layout(plt.plotargs, plt.seriesargs)
     syncplot = plt.o
     w,h = d[:size]
     PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)

@@ -150,17 +150,6 @@ end
 
 # ----------------------------------------------------------------
 
-# TODO:
-# _plotDefaults[:yrightlabel]       = ""
-# _plotDefaults[:xlims]             = :auto
-# _plotDefaults[:ylims]             = :auto
-# _plotDefaults[:xticks]            = :auto
-# _plotDefaults[:yticks]            = :auto
-# _plotDefaults[:xscale]            = :identity
-# _plotDefaults[:yscale]            = :identity
-# _plotDefaults[:xflip]             = false
-# _plotDefaults[:yflip]             = false
-
 function plotlyfont(font::Font, color = font.color)
   KW(
       :family => font.family,
@@ -188,6 +177,29 @@ function get_annotation_dict(x, y, ptxt::PlotText)
       :rotation => ptxt.font.rotation,
     ))
 end
+
+# function get_annotation_dict_for_arrow(d::KW, xyprev::Tuple, xy::Tuple, a::Arrow)
+#     xdiff = xyprev[1] - xy[1]
+#     ydiff = xyprev[2] - xy[2]
+#     dist = sqrt(xdiff^2 + ydiff^2)
+#     KW(
+#         :showarrow => true,
+#         :x => xy[1],
+#         :y => xy[2],
+#         # :ax => xyprev[1] - xy[1],
+#         # :ay => xy[2] - xyprev[2],
+#         # :ax => 0,
+#         # :ay => -40,
+#         :ax => 10xdiff / dist,
+#         :ay => -10ydiff / dist,
+#         :arrowcolor => webcolor(d[:linecolor], d[:linealpha]),
+#         :xref => "x",
+#         :yref => "y",
+#         :arrowsize => 10a.headwidth,
+#         # :arrowwidth => a.headlength,
+#         :arrowwidth => 0.1,
+#     )
+# end
 
 function plotlyscale(scale::Symbol)
   if scale == :log10
@@ -263,58 +275,72 @@ end
 
 # function get_plot_json(plt::Plot{PlotlyBackend})
 #   d = plt.plotargs
-function plotly_layout(d::KW)
-  d_out = KW()
+function plotly_layout(d::KW, seriesargs::AVec{KW})
+    d_out = KW()
 
-  d_out[:width], d_out[:height] = d[:size]
+    d_out[:width], d_out[:height] = d[:size]
 
-  bgcolor = webcolor(d[:background_color])
-  fgcolor = webcolor(d[:foreground_color])
+    bgcolor = webcolor(d[:background_color])
+    fgcolor = webcolor(d[:foreground_color])
 
-  # set the fields for the plot
-  d_out[:title] = d[:title]
-  d_out[:titlefont] = plotlyfont(d[:guidefont], fgcolor)
-  d_out[:margin] = KW(:l=>35, :b=>30, :r=>8, :t=>20)
-  d_out[:plot_bgcolor] = bgcolor
-  d_out[:paper_bgcolor] = bgcolor
+    # set the fields for the plot
+    d_out[:title] = d[:title]
+    d_out[:titlefont] = plotlyfont(d[:guidefont], fgcolor)
+    d_out[:margin] = KW(:l=>35, :b=>30, :r=>8, :t=>20)
+    d_out[:plot_bgcolor] = bgcolor
+    d_out[:paper_bgcolor] = bgcolor
 
-  # TODO: x/y axis tick values/labels
-  if is3d(d)
-      d_out[:scene] = KW(
-          :xaxis => plotlyaxis(d, "x"),
-          :yaxis => plotlyaxis(d, "y"),
-          :xzxis => plotlyaxis(d, "z"),
-      )
-  else
-      d_out[:xaxis] = plotlyaxis(d, "x")
-      d_out[:yaxis] = plotlyaxis(d, "y")
-  end
+    # TODO: x/y axis tick values/labels
+    if any(is3d, seriesargs)
+        d_out[:scene] = KW(
+            :xaxis => plotlyaxis(d, "x"),
+            :yaxis => plotlyaxis(d, "y"),
+            :xzxis => plotlyaxis(d, "z"),
+        )
+    else
+        d_out[:xaxis] = plotlyaxis(d, "x")
+        d_out[:yaxis] = plotlyaxis(d, "y")
+    end
 
-  # legend
-  d_out[:showlegend] = d[:legend] != :none
-  if d[:legend] != :none
-    d_out[:legend] = KW(
-        :bgcolor  => bgcolor,
-        :bordercolor => fgcolor,
-        :font     => plotlyfont(d[:legendfont]),
-      )
-  end
+    # legend
+    d_out[:showlegend] = d[:legend] != :none
+    if d[:legend] != :none
+        d_out[:legend] = KW(
+            :bgcolor  => bgcolor,
+            :bordercolor => fgcolor,
+            :font     => plotlyfont(d[:legendfont]),
+        )
+    end
 
-  # annotations
-  anns = get(d, :annotation_list, [])
-  if !isempty(anns)
-    d_out[:annotations] = [get_annotation_dict(ann...) for ann in anns]
-  end
+    # annotations
+    anns = get(d, :annotation_list, [])
+    d_out[:annotations] = if isempty(anns)
+        KW[]
+    else
+        KW[get_annotation_dict(ann...) for ann in anns]
+    end
 
-  if get(d, :polar, false)
-      d_out[:direction] = "counterclockwise"
-  end
+    # # arrows
+    # for sargs in seriesargs
+    #     a = sargs[:arrow]
+    #     if sargs[:linetype] in (:path, :line) && typeof(a) <: Arrow
+    #         add_arrows(sargs[:x], sargs[:y]) do xyprev, xy
+    #             push!(d_out[:annotations], get_annotation_dict_for_arrow(sargs, xyprev, xy, a))
+    #         end
+    #     end
+    # end
+    # dumpdict(d_out,"",true)
+    # @show d_out[:annotations]
 
-  d_out
+    if get(d, :polar, false)
+        d_out[:direction] = "counterclockwise"
+    end
+
+    d_out
 end
 
 function get_plot_json(plt::Plot{PlotlyBackend})
-  JSON.json(plotly_layout(plt.plotargs))
+  JSON.json(plotly_layout(plt.plotargs, plt.seriesargs))
 end
 
 

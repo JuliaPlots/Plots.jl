@@ -433,6 +433,20 @@ function arrow(args...)
 end
 
 
+# allow for do-block notation which gets called on every valid start/end pair which
+# we need to draw an arrow
+function add_arrows(func::Function, x::AVec, y::AVec)
+    for i=2:length(x)
+        xyprev = (x[i-1], y[i-1])
+        xy = (x[i], y[i])
+        if ok(xyprev) && ok(xy)
+            if i==length(x) || !ok(x[i+1], y[i+1])
+                # add the arrow from xyprev to xy
+                func(xyprev, xy)
+            end
+        end
+    end
+end
 
 
 # -----------------------------------------------------------------------

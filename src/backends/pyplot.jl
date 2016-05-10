@@ -421,37 +421,26 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             )[1]
             push!(handles, handle)
 
-            if d[:arrow] != nothing
-                if !is3d(d)  # TODO: handle 3d later
-                    n = length(x)
-                    a = d[:arrow]
-                    @assert typeof(a) == Arrow
+            a = d[:arrow]
+            if a != nothing && !is3d(d)  # TODO: handle 3d later
+                if typeof(a) != Arrow
+                    warn("Unexpected type for arrow: $(typeof(a))")
+                else
                     arrowprops = KW(
-                        # :arrowstyle => (a.style == :open ? "->" : (a.style == :closed ? "-|>" : string(a.style))),
                         :arrowstyle => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
-                        # :arrowstyle => "simple",
                         :shrinkA => 0,
                         :shrinkB => 0,
                         :edgecolor => pylinecolor(d),
                         :facecolor => pylinecolor(d),
                         :linewidth => d[:linewidth],
                         :linestyle => getPyPlotLineStyle(lt, d[:linestyle]),
-                        # :head_length => a.headlength,
-                        # :head_width => a.headwidth,
                     )
-                    for i=2:n
-                        xystart = (x[i-1], y[i-1])
-                        xyend = (x[i], y[i])
-                        if ok(xystart) && ok(xyend)
-                            if i==n || !ok(x[i+1], y[i+1])
-                                # add the arrow from xystart to xyend
-                                ax[:annotate]("",
-                                    xytext = (0.001xystart[1] + 0.999xyend[1], 0.001xystart[2] + 0.999xyend[2]),
-                                    xy = xyend,
-                                    arrowprops = arrowprops
-                                )
-                            end
-                        end
+                    add_arrows(x, y) do xyprev, xy
+                        ax[:annotate]("",
+                            xytext = (0.001xyprev[1] + 0.999xy[1], 0.001xyprev[2] + 0.999xy[2]),
+                            xy = xy,
+                            arrowprops = arrowprops
+                        )
                     end
                 end
             end
