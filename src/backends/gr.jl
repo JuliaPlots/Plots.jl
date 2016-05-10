@@ -299,6 +299,14 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
             ymin = min(minimum(y), ymin)
             ymax = max(maximum(y), ymax)
           end
+          if p[:xerror] != nothing || p[:yerror] != nothing
+            dx = xmax - xmin
+            xmin -= 0.02 * dx
+            xmax += 0.02 * dx
+            dy = ymax - ymin
+            ymin -= 0.02 * dy
+            ymax += 0.02 * dy
+          end
         end
       end
     end
@@ -743,7 +751,12 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.setscale(0)
     w = 0
     i = 0
+    n = 0
     for p in plt.seriesargs
+      if p[:label] == ""
+        continue
+      end
+      n += 1
       if typeof(p[:label]) <: Array
         i += 1
         lab = p[:label][i]
@@ -758,12 +771,15 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     dy = 0.03 * sqrt((viewport[2] - viewport[1])^2 + (viewport[4] - viewport[3])^2)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     GR.setfillcolorind(gr_getcolorind(d[:background_color_legend]))
-    GR.fillrect(px - 0.08, px + w + 0.02, py + dy, py - dy * length(plt.seriesargs))
+    GR.fillrect(px - 0.08, px + w + 0.02, py + dy, py - dy * n)
     GR.setlinetype(1)
     GR.setlinewidth(1)
-    GR.drawrect(px - 0.08, px + w + 0.02, py + dy, py - dy * length(plt.seriesargs))
+    GR.drawrect(px - 0.08, px + w + 0.02, py + dy, py - dy * n)
     i = 0
     for p in plt.seriesargs
+      if p[:label] == ""
+        continue
+      end
       GR.setlinewidth(p[:linewidth])
       if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks]
         GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
