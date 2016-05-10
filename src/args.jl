@@ -605,6 +605,24 @@ function preprocessArgs!(d::KW)
 
   # convert into strokes and brushes
 
+    if haskey(d, :arrow)
+        a = d[:arrow]
+        d[:arrow] = if a == true
+            arrow()
+        elseif a == false
+            nothing
+        elseif !(typeof(a) <: Arrow)
+            arrow(wraptuple(a)...)
+        else
+            a
+        end
+    end
+
+
+    if get(d, :arrow, false) == true
+        d[:arrow] = arrow()
+    end
+
     # legends
     if haskey(d, :legend)
         d[:legend] = convertLegendValue(d[:legend])
