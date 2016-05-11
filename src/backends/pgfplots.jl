@@ -10,9 +10,9 @@ supportedArgs(::PGFPlotsBackend) = [
      :fillalpha,
     # :foreground_color,
     # :group,
-    # :label,
+     :label,
     # :layout,
-    # :legend,
+     :legend,
      :seriescolor, :seriesalpha,
      :linecolor,
      :linestyle,
@@ -99,6 +99,13 @@ const _pgfplots_markers = KW(
     :pentagon => "mark = pentagon*,"
 )
 
+const _pgfplots_legend_pos = KW(
+    :bottomleft => "south west",
+    :bottomright => "south east",
+    :topright => "north east",
+    :topleft => "north west"
+)
+
 function _pgfplots_get_color(kwargs, symb)
     c = typeof(kwargs[symb]) == Symbol ? convertColor(kwargs[symb]) : kwargs[symb].c
     "{rgb,1:red,$(float(c.r));green,$(float(c.g));blue,$(float(c.b))}"
@@ -153,12 +160,20 @@ function _pgfplots_get_fill_color!(kwargs, plt)
     kwargs[:style] *= "fill opacity = $α,"
 end
 
+function _pgfplots_get_label!(kwargs, plt)
+    if plt[:label] != nothing && plt[:legend] != :none
+        kwargs[:legendentry] = plt[:label]
+    end
+end
+
+
 function _pgfplots_get_plot_kwargs(plt)
     kwargs = KW()
     kwargs[:style] = ""
     _pgfplots_get_linestyle!(kwargs, plt)
     _pgfplots_get_marker!(kwargs, plt)
     _pgfplots_get_series_color!(kwargs, plt)
+    _pgfplots_get_label!(kwargs, plt)
     kwargs
 end
 
@@ -324,6 +339,9 @@ function _pgfplots_get_axis_kwargs(d)
 
     end
 
+    if ((d[:legend] != :none) || (d[:legend] != :best)) && (d[:legend] in keys(_pgfplots_legend_pos))
+        axisargs[:legendPos] = _pgfplots_legend_pos[d[:legend]]
+    end
     axisargs
 end
 
@@ -331,7 +349,12 @@ end
 
 #################  This is the important method to implement!!! #################
 function _make_pgf_plot(plt::Plot{PGFPlotsBackend})
-    os = [_pgfplots_axis(plt_series) for plt_series in plt.seriesargs]
+    os = Any[]
+    # We need to send the :legend KW to the axis
+    for plt_series in plt.seriesargs
+        plt_series[:legend] = plt.plotargs[:legend]
+        push!(os, _pgfplots_axis(plt_series))
+    end
     axisargs  =_pgfplots_get_axis_kwargs(plt.plotargs)
     plt.o = PGFPlots.Axis([os...]; axisargs...)
 end
