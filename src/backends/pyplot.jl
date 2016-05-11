@@ -1013,7 +1013,11 @@ const _pyplot_legend_pos = KW(
     :right => "right",
     :left => "center left",
     :top => "upper center",
-    :bottom => "lower center"
+    :bottom => "lower center",
+    :bottomleft => "lower left",
+    :bottomright => "lower right",
+    :topright => "upper right",
+    :topleft => "upper left"
   )
 
 # function addPyPlotLegend(plt::Plot)
