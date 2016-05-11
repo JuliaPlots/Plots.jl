@@ -24,7 +24,7 @@ supportedArgs(::PGFPlotsBackend) = [
      :markercolor,
      :markersize,
      :markeralpha,
-    # :markerstrokewidth,
+     :markerstrokewidth,
      :markerstrokecolor,
      :markerstrokestyle,
     # :n,
@@ -138,6 +138,7 @@ function _pgfplots_get_marker!(kwargs, plt)
     # Control marker colors and alphas
     α = plt[:markeralpha] == nothing ? 1.0 : plt[:markeralpha]
     push!(kwargs[:style], "mark options = {color=$(_pgfplots_get_color(plt, :markerstrokecolor))")
+    push!(kwargs[:style], "line width=$(plt[:markerstrokewidth])")
     mark == :dtriangle && push!(kwargs[:style], "rotate=180")
     push!(kwargs[:style], "fill=$(_pgfplots_get_color(plt, :markercolor)), fill opacity = $α")
     markstrokestyle = plt[:markerstrokestyle]
