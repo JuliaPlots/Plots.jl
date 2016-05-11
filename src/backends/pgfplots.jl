@@ -108,7 +108,12 @@ const _pgfplots_legend_pos = KW(
 
 function _pgfplots_get_color(kwargs, symb)
     c = typeof(kwargs[symb]) == Symbol ? convertColor(kwargs[symb]) : kwargs[symb].c
-    "{rgb,1:red,$(float(c.r));green,$(float(c.g));blue,$(float(c.b))}"
+    # We need to convert to decimals here because pgfplot will error
+    # for colors in engineering notation
+    r_str =  @sprintf("%.8f", float(c.r))
+    g_str =  @sprintf("%.8f", float(c.g))
+    b_str =  @sprintf("%.8f", float(c.b))
+    "{rgb,1:red,$(r_str);green,$(g_str);blue,$(b_str)}"
 end
 
 function _pgfplots_get_linestyle!(kwargs, plt)
