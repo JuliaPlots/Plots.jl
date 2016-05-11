@@ -45,15 +45,16 @@ When you pass in matrices, it splits by columns.  See the documentation for more
 function plot(args...; kw...)
     pkg = backend()
     d = KW(kw)
-    preprocessArgs!(d)
+    userargs = preprocessArgs!(d)
     dumpdict(d, "After plot preprocessing")
 
     plotargs = merge(d, getPlotArgs(pkg, d, 1))
     dumpdict(plotargs, "Plot args")
     plt = _create_plot(pkg, plotargs)  # create a new, blank plot
 
-    delete!(d, :background_color)
-    plot!(plt, args...; kw...)  # add to it
+    # now update the plot
+    _plot!(plt, d, userargs, args...)
+    # plot!(plt, args...; kw...)  # add to it
 end
 
 
@@ -72,24 +73,42 @@ end
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
     d = KW(kw)
-    userkw = preprocessArgs!(d)
+    userargs = preprocessArgs!(d)
+    _plot!(plt, d, userargs, args...)
+end
 
-    # for plotting recipes, swap out the args and update the parameter dictionary
-    args = RecipesBase.apply_recipe(d, userkw, args...)
-    _add_markershape(d)
 
-    dumpdict(d, "After plot! preprocessing")
-    warnOnUnsupportedArgs(plt.backend, d)
-
+# this is the core plotting function.  recursively apply recipes to build
+# a list of series KW dicts.
+# note: at entry, we only have those preprocessed args which were passed in... no default values yet
+function _plot!(plt::Plot, d::KW, userargs::KW, args...)
     # just in case the backend needs to set up the plot (make it current or something)
     _before_add_series(plt)
 
-    # # grouping
-    groupby = if haskey(d, :group)
-        extractGroupArgs(d[:group], args...)
-    else
-        nothing
+    # TODO: the grouping mechanism will be a recipe on a GroupBy object
+    # we simply add the GroupBy object to the front of the args list to allow
+    # the recipe to be applied
+    if haskey(d, :group)
+        args = vcat(extractGroupArgs(d[:group], args...), args)
     end
+
+    # for plotting recipes, swap out the args and update the parameter dictionary
+    args = RecipesBase.apply_recipe(d, userargs, args...)
+
+    # dumpdict(d, "After plot! preprocessing")
+
+    # apply markershape_to_add and then warn if there's anything left unsupported
+    _add_markershape(d)
+    warnOnUnsupportedArgs(plt.backend, d)
+    warnOnUnsupportedScales(plt.backend, d)
+
+
+    # # # grouping
+    # groupby = if haskey(d, :group)
+    #     extractGroupArgs(d[:group], args...)
+    # else
+    #     nothing
+    # end
 
     # merge plot args
     if !haskey(d, :subplot)
@@ -102,10 +121,9 @@ function plot!(plt::Plot, args...; kw...)
         handlePlotColors(plt.backend, plt.plotargs)
     end
 
-    _add_series(plt, d, groupby, args...)
+    _add_series(plt, d, args...)
     _add_annotations(plt, d)
 
-    warnOnUnsupportedScales(plt.backend, d)
 
 
     # add title, axis labels, ticks, etc
@@ -129,17 +147,17 @@ function plot!(plt::Plot, args...; kw...)
     plt
 end
 
-# handle the grouping
-function _add_series(plt::Plot, d::KW, groupby::GroupBy, args...)
-    starting_n = plt.n
-    for (i, glab) in enumerate(groupby.groupLabels)
-        tmpd = copy(d)
-        tmpd[:numUncounted] = plt.n - starting_n
-        _add_series(plt, tmpd, nothing, args...;
-                    idxfilter = groupby.groupIds[i],
-                    grouplabel = string(glab))
-    end
-end
+# # handle the grouping
+# function _add_series(plt::Plot, d::KW, groupby::GroupBy, args...)
+#     starting_n = plt.n
+#     for (i, glab) in enumerate(groupby.groupLabels)
+#         tmpd = copy(d)
+#         tmpd[:numUncounted] = plt.n - starting_n
+#         _add_series(plt, tmpd, nothing, args...;
+#                     idxfilter = groupby.groupIds[i],
+#                     grouplabel = string(glab))
+#     end
+# end
 
 filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
 filter_data(v, idxfilter) = v
@@ -158,7 +176,7 @@ function _replace_linewidth(d::KW)
 end
 
 # no grouping
-function _add_series(plt::Plot, d::KW, ::Void, args...;
+function _add_series(plt::Plot, d::KW, args...;
                      idxfilter = nothing,
                      grouplabel = "")
 
@@ -178,11 +196,13 @@ function _add_series(plt::Plot, d::KW, ::Void, args...;
     seriesArgList, xmeta, ymeta = build_series_args(plt, d) #, idxfilter)
     # seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)
 
-    # if we were able to extract guide information from the series inputs, then update the plot
-    # @show xmeta, ymeta
-    updateDictWithMeta(d, plt.plotargs, xmeta, true)
-    updateDictWithMeta(d, plt.plotargs, ymeta, false)
+    # # if we were able to extract guide information from the series inputs, then update the plot
+    # # @show xmeta, ymeta
+    # updateDictWithMeta(d, plt.plotargs, xmeta, true)
+    # updateDictWithMeta(d, plt.plotargs, ymeta, false)
 
+
+# function _add_series(plt::Plot, ds::)
     # now we can plot the series
     for (i,di) in enumerate(seriesArgList)
         plt.n += 1
@@ -272,14 +292,14 @@ _before_add_series(plt::Plot) = nothing
 
 # --------------------------------------------------------------------
 
-# should we update the x/y label given the meta info during input slicing?
-function updateDictWithMeta(d::KW, plotargs::KW, meta::Symbol, isx::Bool)
-    lsym = isx ? :xlabel : :ylabel
-    if plotargs[lsym] == default(lsym)
-        d[lsym] = string(meta)
-    end
-end
-updateDictWithMeta(d::KW, plotargs::KW, meta, isx::Bool) = nothing
+# # should we update the x/y label given the meta info during input slicing?
+# function updateDictWithMeta(d::KW, plotargs::KW, meta::Symbol, isx::Bool)
+#     lsym = isx ? :xlabel : :ylabel
+#     if plotargs[lsym] == default(lsym)
+#         d[lsym] = string(meta)
+#     end
+# end
+# updateDictWithMeta(d::KW, plotargs::KW, meta, isx::Bool) = nothing
 
 # --------------------------------------------------------------------
 
