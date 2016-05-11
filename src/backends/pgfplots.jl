@@ -2,6 +2,7 @@
 
 supportedArgs(::PGFPlotsBackend) = [
     # :annotation,
+    :aspect_ratio,
     # :axis,
      :background_color,
     # :color_palette,
@@ -339,9 +340,13 @@ function _pgfplots_get_axis_kwargs(d)
         axisargs[:ymax] = d[:ylims][2]
     end
     if d[:grid] == true
-        axisargs[:style] *= "grid = major"
+        axisargs[:style] *= "grid = major,"
     elseif d[:grid] == false
 
+    end
+
+    if d[:aspect_ratio] == :equal || d[:aspect_ratio] == 1
+        axisargs[:axisEqual] = "true"
     end
 
     if ((d[:legend] != :none) || (d[:legend] != :best)) && (d[:legend] in keys(_pgfplots_legend_pos))
