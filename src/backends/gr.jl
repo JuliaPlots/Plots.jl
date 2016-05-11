@@ -36,14 +36,18 @@ supportedArgs(::GRBackend) = [
     :aspect_ratio
   ]
 supportedAxes(::GRBackend) = _allAxes
-supportedTypes(::GRBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
-                               :scatter, :hist2d, :hexbin, :hist, :density, :bar,
-                               :hline, :vline, :contour, :heatmap, :path3d, :scatter3d, :surface,
-                               :wireframe, :ohlc, :pie]
+supportedTypes(::GRBackend) = [
+    :none, :line, :path, :steppre, :steppost,
+    :scatter, :hist2d, :hexbin, :hist, :density,
+    :bar, :sticks,
+    :hline, :vline, :heatmap, :pie, :image, :ohlc,
+    :contour, :path3d, :scatter3d, :surface, :wireframe
+  ]
 supportedStyles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GRBackend) = vcat(_allMarkers, Shape)
 supportedScales(::GRBackend) = [:identity, :log10]
 subplotSupported(::GRBackend) = true
+nativeImagesSupported(::GRBackend) = true
 
 
 # --------------------------------------------------------------------------------------
@@ -721,6 +725,19 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         a1 = a2
       end
       GR.selntran(1)
+    elseif lt == :image
+      img = p[:z].surf
+      w, h = size(img)
+      if eltype(img) <: Colors.AbstractGray
+        grey = round(UInt8, float(img) * 255)
+        rgba = map(c -> UInt32( 0xff000000 + Int(c)<<16 + Int(c)<<8 + Int(c) ), grey)
+      else
+        rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
+                                round(Int,  blue(c) * 255) << 16 +
+                                round(Int, green(c) * 255) << 8  +
+                                round(Int,   red(c) * 255) ), img)
+      end
+      GR.drawimage(xmin, xmax, ymin, ymax, w, h, rgba)
     elseif lt == :polar
       xmin, xmax, ymin, ymax = viewport
       ymax -= 0.05 * (xmax - xmin)
