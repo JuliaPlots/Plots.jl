@@ -62,9 +62,7 @@ surface(T())
 ## A real example
 
 ```julia
-# Plots will be the ultimate consumer of our recipe in this example
-using Plots
-gr()
+using RecipesBase
 
 # Our user-defined data type
 type T end
@@ -72,12 +70,18 @@ type T end
 # This is all we define.  It uses a familiar signature, but strips it apart
 # in order to add a custom definition to the internal method `RecipesBase.apply_recipe`
 @recipe function plot(::T, n = 1; customcolor = :green)
-    :markershape --> :auto, :require
-    :markercolor --> customcolor, :force
-    :xrotation   --> 45
-    :zrotation   --> 90, :quiet
+    markershape --> :auto, :require
+    markercolor --> customcolor, :force
+    xrotation   --> 45
+    zrotation   --> 90, :quiet
     rand(10,n)
 end
+
+# ----------------------------
+
+# Plots will be the ultimate consumer of our recipe in this example
+using Plots
+gr()
 
 # This call will implicitly call `RecipesBase.apply_recipe` as part of the Plots
 # processing pipeline (see the Pipeline section of the Plots documentation).

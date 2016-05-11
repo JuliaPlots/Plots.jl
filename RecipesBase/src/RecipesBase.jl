@@ -6,17 +6,64 @@ module RecipesBase
 export
     @recipe
     # apply_recipe,
+    # KW
+    # PlotData
     # is_key_supported
 
-# a placeholder... this method should never be called... it's just to establish the
-# name so that other packages (Plots.jl for example) can add their own definition
-# of RecipesBase.is_key_supported(k::Symbol)
-is_key_supported() = true
+# a placeholder to establish the name so that other packages (Plots.jl for example)
+# can add their own definition of RecipesBase.is_key_supported(k::Symbol)
+function is_key_supported end
 
 # this holds the recipe definitions to be dispatched on
-apply_recipe(d::Dict{Symbol,Any}, kw::Dict{Symbol,Any}) = ()
+# the function takes in an attribute dict `d`, a user attributes dict `userkw`,
+# and a list of args.
+# Our goal is to
+apply_recipe(d::Dict{Symbol,Any}, userkw::Dict{Symbol,Any}) = ()
 
 # --------------------------------------------------------------------------
+
+# typealias KW Dict{Symbol, Any}
+
+# immutable PlotData{X,Y,Z} <: Associative{Symbol,Any}
+#     x::X
+#     y::Y
+#     z::Z
+#     kw::KW
+# end
+# PlotData(y::)
+# # PlotData(data, kw::KW) = PlotData(wrap_tuple(data), kw)
+#
+# function Base.getindex(d::PlotData, k::Symbol)
+#     if k == :x
+#         d.x
+#     elseif k == :y
+#         d.y
+#     elseif k == :z
+#         d.z
+#     else
+#         d.kw[k]
+#     end
+# end
+#
+# function Base.setindex!(d::PlotData, val, k::Symbol)
+#     if k == :x
+#         d.x = val
+#     elseif k == :y
+#         d.y = val
+#     elseif k == :z
+#         d.z = val
+#     else
+#         d.kw[k] = val
+#     end
+# end
+
+# --------------------------------------------------------------------------
+
+@inline to_symbol(s::Symbol) = s
+@inline to_symbol(qn::QuoteNode) = qn.value
+
+# @inline wrap_tuple(tup::Tuple) = tup
+# @inline wrap_tuple(v) = (v,)
 
 function _is_arrow_tuple(expr::Expr)
     expr.head == :tuple &&
@@ -54,6 +101,9 @@ function replace_recipe_arrows!(expr::Expr)
             # we are going to recursively swap out `a --> b, flags...` commands
             if e.head == :(-->)
                 k, v = e.args
+                if isa(k, Symbol)
+                    k = QuoteNode(k)
+                end
 
                 set_expr = if force
                     # forced override user settings
@@ -99,26 +149,30 @@ should replace the current arguments.
 An example:
 
 ```
-    # Plots will be the ultimate consumer of our recipe in this example
-    using Plot
-    gr()
+using RecipesBase
 
-    type T end
+# Our custom type that we want to display
+type T end
 
-    @recipe function plot{N<:Integer}(t::T, n::N = 1; customcolor = :green)
-        :markershape --> :auto, :require
-        :markercolor --> customcolor, :force
-        :xrotation --> 5
-        :zrotation --> 6, :quiet
-        rand(10,n)
-    end
+@recipe function plot{N<:Integer}(t::T, n::N = 1; customcolor = :green)
+    markershape --> :auto, :require
+    markercolor --> customcolor, :force
+    xrotation --> 5
+    zrotation --> 6, :quiet
+    rand(10,n)
+end
 
-    # This call will implicitly call `RecipesBase.apply_recipe` as part of the Plots
-    # processing pipeline (see the Pipeline section of the Plots documentation).
-    # It will plot 5 line plots, all with black circles for markers.
-    # The markershape argument must be supported, and the zrotation argument's warning
-    # will be suppressed.  The user can override all arguments except markercolor.
-    plot(T(), 5; customcolor = :black, shape=:c)
+# ---------------------
+
+# Plots will be the ultimate consumer of our recipe in this example
+using Plot; gr()
+
+# This call will implicitly call `RecipesBase.apply_recipe` as part of the Plots
+# processing pipeline (see the Pipeline section of the Plots documentation).
+# It will plot 5 line plots, all with black circles for markers.
+# The markershape argument must be supported, and the zrotation argument's warning
+# will be suppressed.  The user can override all arguments except markercolor.
+plot(T(), 5; customcolor = :black, shape=:c)
 ```
 
 In this example, we see lots of the machinery in action.  We create a new type `T` which
@@ -138,6 +192,9 @@ macro recipe(funcexpr::Expr)
     end
     if !(isa(lhs, Expr) && lhs.head == :call)
         error("Expected `lhs = ...` with lhs as a call Expr... got: $lhs")
+    end
+    if length(lhs.args) < 2
+        error("Missing function arguments... need something to dispatch on!")
     end
 
     # for parametric definitions, take the "curly" expression and add the func
