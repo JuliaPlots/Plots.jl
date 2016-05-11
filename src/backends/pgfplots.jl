@@ -34,7 +34,7 @@ supportedArgs(::PGFPlotsBackend) = [
     # :pos,
     # :smooth,
     # :show,
-    # :size,
+     :size,
      :title,
     # :windowtitle,
      :x,
@@ -366,7 +366,8 @@ function _make_pgf_plot(plt::Plot{PGFPlotsBackend})
         push!(os, _pgfplots_axis(plt_series))
     end
     axisargs  =_pgfplots_get_axis_kwargs(plt.plotargs)
-    plt.o = PGFPlots.Axis([os...]; axisargs...)
+    w, h = map(px2mm, plt.plotargs[:size])
+    plt.o = PGFPlots.Axis([os...]; width = "$w mm", height = "$h mm", axisargs...)
 end
 
 function Base.writemime(io::IO, mime::MIME"image/svg+xml", plt::AbstractPlot{PGFPlotsBackend})
