@@ -128,42 +128,44 @@ end
 
 
 function _pgfplots_get_marker!(kwargs, plt)
-    # Control marker shape
+    # Control marker shape, size, colors, alphas, and stroke width
     mark = plt[:markershape]
-    push!(kwargs[:style], "mark = " * _pgfplots_markers[mark])
-
-    # Control marker size
-    push!(kwargs[:style], "mark size = $(plt[:markersize]/2)")
-
-    # Control marker colors and alphas
     α = plt[:markeralpha] == nothing ? 1.0 : plt[:markeralpha]
-    push!(kwargs[:style], "mark options = {color=$(_pgfplots_get_color(plt, :markerstrokecolor))")
-    push!(kwargs[:style], "line width=$(plt[:markerstrokewidth])")
+    push!(kwargs[:style], "mark = " * _pgfplots_markers[mark],
+                          "mark size = $(plt[:markersize]/2)",
+                          "mark options = {color=$(_pgfplots_get_color(plt, :markerstrokecolor))",
+                          "fill=$(_pgfplots_get_color(plt, :markercolor))",
+                          "fill opacity = $α",
+                          "line width=$(plt[:markerstrokewidth])")
+
+    # Rotate the marker if :dtriangle was chosen
     mark == :dtriangle && push!(kwargs[:style], "rotate=180")
-    push!(kwargs[:style], "fill=$(_pgfplots_get_color(plt, :markercolor)), fill opacity = $α")
-    markstrokestyle = plt[:markerstrokestyle]
-    if haskey(_pgfplots_linestyles, markstrokestyle)
-        push!(kwargs[:style], _pgfplots_linestyles[markstrokestyle])
+
+    # Apply marker stroke style if it is a valid PGFPlots stroke style
+    if haskey(_pgfplots_linestyles, plt[:markerstrokestyle])
+        push!(kwargs[:style], _pgfplots_linestyles[plt[:markerstrokestyle]])
     end
+
+    # End the open mark options bracker
     push!(kwargs[:style], "}")
 end
 
 function _pgfplots_get_series_color!(kwargs, plt)
     α = plt[:seriesalpha] == nothing ? 1.0 : plt[:seriesalpha]
-    push!(kwargs[:style], "color=$(_pgfplots_get_color(plt, :seriescolor))")
-    push!(kwargs[:style], "draw opacity = $α")
+    push!(kwargs[:style], "color=$(_pgfplots_get_color(plt, :seriescolor))",
+                          "draw opacity = $α")
 end
 
 function _pgfplots_get_line_color!(kwargs, plt)
     α = plt[:linealpha] == nothing ? 1.0 : plt[:linealpha]
-    kwargs[:style] *= ", color=$(_pgfplots_get_color(plt, :linecolor))"
-    kwargs[:style] *= ", draw opacity = $α"
+    kwargs[:style] *= ", color=$(_pgfplots_get_color(plt, :linecolor))" *
+                      ", draw opacity = $α"
 end
 
 function _pgfplots_get_fill_color!(kwargs, plt)
     α = plt[:fillalpha] == nothing ? 1.0 : plt[:fillalpha]
-    kwargs[:style] *= ", fill=$(_pgfplots_get_color(plt, :fillcolor))"
-    kwargs[:style] *= ", fill opacity = $α"
+    kwargs[:style] *= ", fill=$(_pgfplots_get_color(plt, :fillcolor))" *
+                      ", fill opacity = $α"
 end
 
 function _pgfplots_get_label!(kwargs, plt)
