@@ -68,6 +68,8 @@ function _initialize_backend(::PyPlotBackend)
         const pynp = PyPlot.pywrap(PyPlot.pyimport("numpy"))
     end
 
+    PyPlot.ioff()
+
     if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
         PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
 
