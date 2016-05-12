@@ -87,17 +87,47 @@ end
 
 # instead of process_inputs:
 
+# the catch-all recipes
+@recipe function f(x, y, z)
+    @show "HERE", typeof((x,y,z))
+    xs, _ = convertToAnyVector(x, d)
+    ys, _ = convertToAnyVector(y, d)
+    zs, _ = convertToAnyVector(z, d)
 
-@recipe function f{Y<:Number}(y::AVec{Y})
-    x --> 1:length(y)
-    y --> y
-    dumpdict(d,"y",true)
-    ()
+    fr = pop!(d, :fillrange, nothing)
+    fillranges, _ = if typeof(fr) <: Number
+        ([fr],nothing)
+    else
+        convertToAnyVector(fr, d)
+    end
+
+    mx = length(xs)
+    my = length(ys)
+    mz = length(zs)
+    # ret = Any[]
+    for i in 1:max(mx, my, mz)
+        # add a new series
+        di = copy(d)
+        di[:x], di[:y], di[:z] = compute_xyz(xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)])
+        @show i, di[:x], di[:y], di[:z]
+        push!(series_list, RecipeData(di, ()))
+    end
+    nothing  # don't add a series for the main block
 end
 
-@recipe function f{X<:Number,Y<:Number}(x::AVec{X}, y::AVec{Y})
-    x --> x
-    y --> y
-    dumpdict(d,"xy",true)
-    ()
-end
+@recipe f(x, y) = x, y, nothing
+@recipe f(y) = nothing, y, nothing
+
+# @recipe function f{Y<:Number}(y::AVec{Y})
+#     x --> 1:length(y)
+#     y --> y
+#     dumpdict(d,"y",true)
+#     ()
+# end
+#
+# @recipe function f{X<:Number,Y<:Number}(x::AVec{X}, y::AVec{Y})
+#     x --> x
+#     y --> y
+#     dumpdict(d,"xy",true)
+#     ()
+# end
