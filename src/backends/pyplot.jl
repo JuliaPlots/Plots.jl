@@ -338,6 +338,7 @@ end
 
 function fix_xy_lengths!(plt::Plot{PyPlotBackend}, d::KW)
     x, y = d[:x], d[:y]
+    @show x, y
     nx, ny = length(x), length(y)
     if !isa(get(d, :z, nothing), Surface) && nx != ny
         if nx < ny

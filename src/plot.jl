@@ -96,7 +96,7 @@ function _plot!(plt::Plot, d::KW, args...)
     # finished (no more args) get added to the kw_list, and the rest go into the queue
     # for processing.
     kw_list = KW[]
-    still_to_process = [RecipeData(copy(d), args)]
+    still_to_process = isempty(args) ? [] : [RecipeData(copy(d), args)]
     while !isempty(still_to_process)
         next_series = pop!(still_to_process)
         series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
@@ -167,7 +167,9 @@ function _plot!(plt::Plot, d::KW, args...)
         #     merge!(plt.plotargs, plotarg_overrides)
         # end
 
+        dumpdict(kw, "before add defaults", true)
         _add_defaults!(kw, plt, i)
+        dumpdict(kw, "after add defaults", true)
         # getSeriesArgs(plt.backend, getplotargs(plt, n), d, commandIndex, convertSeriesIndex(plt, n), n)
 
         _replace_linewidth(kw)
