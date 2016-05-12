@@ -109,7 +109,9 @@ end
     for i in 1:max(mx, my, mz)
         # add a new series
         di = copy(d)
-        di[:x], di[:y], di[:z] = compute_xyz(xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)])
+        xi, yi, zi = xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]
+        @show i, typeof((xi, yi, zi))
+        di[:x], di[:y], di[:z] = compute_xyz(xi, yi, zi)
 
         # handle fillrange
         fr = fillranges[mod1(i,mf)]
@@ -153,7 +155,7 @@ end
         n,m = size(mat)
         1:n, 1:m, Surface(mat)
     else
-        nothing, nothing, mat
+        nothing, mat, nothing
     end
 end
 

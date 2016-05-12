@@ -74,6 +74,13 @@ function plot!(plt::Plot, args...; kw...)
     _plot!(plt, d, args...)
 end
 
+function _add_plotargs!(plt::Plot, d::KW)
+    for k in keys(_plotDefaults)
+        if haskey(d, k)
+            plt.plotargs[k] = pop!(d, k)
+        end
+    end
+end
 
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
@@ -102,6 +109,10 @@ function _plot!(plt::Plot, d::KW, args...)
         series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
         for series in series_list
             if isempty(series.args)
+                # apply markershape_to_add and then warn if there's anything left unsupported
+                _add_markershape(series.d)
+                warnOnUnsupportedArgs(plt.backend, series.d)
+                warnOnUnsupportedScales(plt.backend, series.d)
                 push!(kw_list, series.d)
             else
                 push!(still_to_process, series)
@@ -109,12 +120,7 @@ function _plot!(plt::Plot, d::KW, args...)
         end
     end
 
-    # dumpdict(d, "After plot! preprocessing")
-
-    # apply markershape_to_add and then warn if there's anything left unsupported
-    _add_markershape(d)
-    warnOnUnsupportedArgs(plt.backend, d)
-    warnOnUnsupportedScales(plt.backend, d)
+    # !!! note: at this point, kw_list is fully decomposed into individual series... one KW per series !!!
 
 
     # # # grouping
@@ -129,13 +135,16 @@ function _plot!(plt::Plot, d::KW, args...)
     # merge plot args
     if !haskey(d, :subplot)
         # merge the plot args from the recipes, then update the plot colors
-        for k in keys(_plotDefaults)
-            for kw in kw_list
-                if haskey(kw, k)
-                    plt.plotargs[k] = kw[k]
-                end
-            end
+        for kw in vcat(kw_list, d)
+            _add_plotargs!(plt, kw)
         end
+        # for k in keys(_plotDefaults)
+        #     for kw in kw_list
+        #         if haskey(kw, k)
+        #             plt.plotargs[k] = pop!(kw, k)
+        #         end
+        #     end
+        # end
         # merge!(plt.plotargs, d)
         handlePlotColors(plt.backend, plt.plotargs)
     end
@@ -187,6 +196,7 @@ function _plot!(plt::Plot, d::KW, args...)
     end
 
     # _update_plot_pos_size(plt, d)  # this is only used for Qwt... can we remove?
+
     current(plt)
 
     # note: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
@@ -226,63 +236,63 @@ function _replace_linewidth(d::KW)
     end
 end
 
-# no grouping
-function _add_series(plt::Plot, d::KW, args...;
-                     idxfilter = nothing,
-                     grouplabel = "")
-
-    # get the list of dictionaries, one per series
-    dumpdict(d, "before process_inputs")
-    process_inputs(plt, d, args...)
-    dumpdict(d, "after process_inputs")
-
-    if idxfilter != nothing
-        # add the group name as the label if there isn't one passed in
-        get!(d, :label, grouplabel)
-        # filter the data
-        filter_data!(d, idxfilter)
-    end
-    # dumpdict(d,"",true)
-
-    seriesArgList, xmeta, ymeta = build_series_args(plt, d) #, idxfilter)
-    # seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)
-
-    # # if we were able to extract guide information from the series inputs, then update the plot
-    # # @show xmeta, ymeta
-    # updateDictWithMeta(d, plt.plotargs, xmeta, true)
-    # updateDictWithMeta(d, plt.plotargs, ymeta, false)
-
-
-# function _add_series(plt::Plot, ds::)
-    # now we can plot the series
-    for (i,di) in enumerate(seriesArgList)
-        plt.n += 1
-
-        if !stringsSupported() && di[:linetype] != :pie
-            setTicksFromStringVector(plt, d, di, "x")
-            setTicksFromStringVector(plt, d, di, "y")
-            setTicksFromStringVector(plt, d, di, "z")
-        end
-
-        # remove plot args
-        for k in keys(_plotDefaults)
-            delete!(di, k)
-        end
-
-        # merge in plotarg_overrides
-        plotarg_overrides = pop!(di, :plotarg_overrides, nothing)
-        if plotarg_overrides != nothing
-            merge!(plt.plotargs, plotarg_overrides)
-        end
-        # dumpdict(plt.plotargs, "pargs", true)
-
-        dumpdict(di, "Series $i")
-
-        _replace_linewidth(di)
-
-        _add_series(plt.backend, plt, di)
-    end
-end
+# # no grouping
+# function _add_series(plt::Plot, d::KW, args...;
+#                      idxfilter = nothing,
+#                      grouplabel = "")
+#
+#     # get the list of dictionaries, one per series
+#     dumpdict(d, "before process_inputs")
+#     process_inputs(plt, d, args...)
+#     dumpdict(d, "after process_inputs")
+#
+#     if idxfilter != nothing
+#         # add the group name as the label if there isn't one passed in
+#         get!(d, :label, grouplabel)
+#         # filter the data
+#         filter_data!(d, idxfilter)
+#     end
+#     # dumpdict(d,"",true)
+#
+#     seriesArgList, xmeta, ymeta = build_series_args(plt, d) #, idxfilter)
+#     # seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)
+#
+#     # # if we were able to extract guide information from the series inputs, then update the plot
+#     # # @show xmeta, ymeta
+#     # updateDictWithMeta(d, plt.plotargs, xmeta, true)
+#     # updateDictWithMeta(d, plt.plotargs, ymeta, false)
+#
+#
+# # function _add_series(plt::Plot, ds::)
+#     # now we can plot the series
+#     for (i,di) in enumerate(seriesArgList)
+#         plt.n += 1
+#
+#         if !stringsSupported() && di[:linetype] != :pie
+#             setTicksFromStringVector(plt, d, di, "x")
+#             setTicksFromStringVector(plt, d, di, "y")
+#             setTicksFromStringVector(plt, d, di, "z")
+#         end
+#
+#         # remove plot args
+#         for k in keys(_plotDefaults)
+#             delete!(di, k)
+#         end
+#
+#         # merge in plotarg_overrides
+#         plotarg_overrides = pop!(di, :plotarg_overrides, nothing)
+#         if plotarg_overrides != nothing
+#             merge!(plt.plotargs, plotarg_overrides)
+#         end
+#         # dumpdict(plt.plotargs, "pargs", true)
+#
+#         dumpdict(di, "Series $i")
+#
+#         _replace_linewidth(di)
+#
+#         _add_series(plt.backend, plt, di)
+#     end
+# end
 
 # --------------------------------------------------------------------
 
