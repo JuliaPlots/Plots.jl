@@ -438,9 +438,9 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
 
   GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
 
-  legend = false
+  legend = falses(length(plt.seriesargs))
 
-  for p in plt.seriesargs
+  for (ind, p) in enumerate(plt.seriesargs)
     lt = p[:linetype]
     if lt in (:hist2d, :hexbin, :contour, :surface, :wireframe, :heatmap)
       if isa(p[:fillcolor], ColorGradient)
@@ -473,13 +473,13 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         end
         GR.polyline(p[:x], p[:y])
       end
-      legend = true
+      legend[ind] = true
     end
     if lt == :line
       if length(p[:x]) > 1
         gr_polyline(p[:x], p[:y])
       end
-      legend = true
+      legend[ind] = true
     elseif lt in [:steppre, :steppost]
       n = length(p[:x])
       x = zeros(2*n + 1)
@@ -499,13 +499,13 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       if n > 1
         GR.polyline(x, y)
       end
-      legend = true
+      legend[ind] = true
     elseif lt == :sticks
       x, y = p[:x], p[:y]
       for i = 1:length(y)
         GR.polyline([x[i], x[i]], [ymin, y[i]])
       end
-      legend = true
+      legend[ind] = true
     elseif lt == :scatter || (p[:markershape] != :none && axes_2d)
       GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
       gr_setmarkershape(p)
@@ -526,7 +526,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           gr_polymarker(p, [p[:x][i]], [p[:y][i]])
         end
       end
-      legend = true
+      legend[ind] = true
     elseif lt == :bar
       y = p[:y]
       for i = 1:length(y)
@@ -577,6 +577,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       charheight = max(0.016 * diag, 0.01)
       GR.setcharheight(charheight)
       GR.colormap()
+      GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
     elseif lt == :contour
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), false)
@@ -597,6 +598,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       charheight = max(0.016 * diag, 0.01)
       GR.setcharheight(charheight)
       GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
+      GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
     elseif lt in [:surface, :wireframe]
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
@@ -633,11 +635,12 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 0, 90)
       z = reshape(z, length(x) * length(y))
-      GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
+      GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
       if cmap
         GR.setviewport(viewport[2] + 0.02, viewport[2] + 0.05,
                        viewport[3], viewport[4])
         GR.colormap()
+        GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
       end
     elseif lt in [:path3d, :scatter3d]
       x, y, z = p[:x], p[:y], p[:z]
@@ -762,15 +765,15 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.restorestate()
   end
 
-  if d[:legend] != :none && legend
+  if d[:legend] != :none && any(legend) == true
     GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
     w = 0
     i = 0
     n = 0
-    for p in plt.seriesargs
-      if p[:label] == ""
+    for (ind, p) in enumerate(plt.seriesargs)
+      if !legend[ind] || p[:label] == ""
         continue
       end
       n += 1
@@ -793,8 +796,8 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.setlinewidth(1)
     GR.drawrect(px - 0.08, px + w + 0.02, py + dy, py - dy * n)
     i = 0
-    for p in plt.seriesargs
-      if p[:label] == ""
+    for (ind, p) in enumerate(plt.seriesargs)
+      if !legend[ind] || p[:label] == ""
         continue
       end
       GR.setlinewidth(p[:linewidth])
