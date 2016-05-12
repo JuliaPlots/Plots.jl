@@ -96,7 +96,7 @@ function _plot!(plt::Plot, d::KW, args...)
     # finished (no more args) get added to the kw_list, and the rest go into the queue
     # for processing.
     kw_list = KW[]
-    still_to_process = [RecipesBase.Series(copy(d), args)]
+    still_to_process = [RecipeData(copy(d), args)]
     while !isempty(still_to_process)
         next_series = pop!(still_to_process)
         series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
@@ -143,7 +143,8 @@ function _plot!(plt::Plot, d::KW, args...)
     # _add_series(plt, d, args...)
 
     # this is it folks!
-    for kw in kw_list
+    # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
+    for (i,kw) in enumerate(kw_list)
         plt.n += 1
 
         # TODO: can this be handled as a recipe??
@@ -165,6 +166,9 @@ function _plot!(plt::Plot, d::KW, args...)
         # if plotarg_overrides != nothing
         #     merge!(plt.plotargs, plotarg_overrides)
         # end
+
+        _add_defaults!(kw, plt, i)
+        # getSeriesArgs(plt.backend, getplotargs(plt, n), d, commandIndex, convertSeriesIndex(plt, n), n)
 
         _replace_linewidth(kw)
         _add_series(plt.backend, plt, kw)

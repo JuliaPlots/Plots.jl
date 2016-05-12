@@ -280,7 +280,7 @@ yaxis!(plt::Plot, args...; kw...)                                     = plot!(pl
 
 const CURRENT_BACKEND = CurrentBackend(:none)
 
-setup_dataframes()
+# setup_dataframes()
 
 function __init__()
     setup_ijulia()

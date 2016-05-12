@@ -806,92 +806,92 @@ end
 function has_black_border_for_default(lt::Symbol)
     like_histogram(lt) || lt in (:hexbin, :bar)
 end
-
-# build the argument dictionary for a series
-function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
-    kwdict = KW(kw)
-    d = KW()
-
-    # add defaults?
-    for k in keys(_seriesDefaults)
-        setDictValue(kwdict, d, k, commandIndex, _seriesDefaults)
-    end
-
-    # groupby args?
-    for k in (:idxfilter, :numUncounted, :dataframe)
-        if haskey(kwdict, k)
-            d[k] = kwdict[k]
-        end
-    end
-
-    if haskey(_typeAliases, d[:linetype])
-        d[:linetype] = _typeAliases[d[:linetype]]
-    end
-
-    aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
-    aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
-    aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
-
-    # update color
-    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], plotargs, plotIndex)
-
-    # # update linecolor
-    # c = d[:linecolor]
-    # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
-    # d[:linecolor] = c
-
-    # # update markercolor
-    # c = d[:markercolor]
-    # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
-    # d[:markercolor] = c
-
-    # # update fillcolor
-    # c = d[:fillcolor]
-    # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
-    # d[:fillcolor] = c
-
-    # update colors
-    for csym in (:linecolor, :markercolor, :fillcolor)
-        d[csym] = if d[csym] == :match
-            if has_black_border_for_default(d[:linetype]) && csym == :linecolor
-                :black
-            else
-                d[:seriescolor]
-            end
-        else
-            getSeriesRGBColor(d[csym], plotargs, plotIndex)
-        end
-    end
-
-    # update markerstrokecolor
-    c = d[:markerstrokecolor]
-    c = (c == :match ? plotargs[:foreground_color] : getSeriesRGBColor(c, plotargs, plotIndex))
-    d[:markerstrokecolor] = c
-
-    # update alphas
-    for asym in (:linealpha, :markeralpha, :markerstrokealpha, :fillalpha)
-        if d[asym] == nothing
-            d[asym] = d[:seriesalpha]
-        end
-    end
-
-    # scatter plots don't have a line, but must have a shape
-    if d[:linetype] in (:scatter, :scatter3d)
-        d[:linewidth] = 0
-        if d[:markershape] == :none
-            d[:markershape] = :ellipse
-        end
-    end
-
-    # set label
-    label = d[:label]
-    label = (label == "AUTO" ? "y$globalIndex" : label)
-    if d[:axis] == :right && !(length(label) >= 4 && label[end-3:end] != " (R)")
-        label = string(label, " (R)")
-    end
-    d[:label] = label
-
-    warnOnUnsupported(pkg, d)
-
-    d
-end
+#
+# # build the argument dictionary for a series
+# function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
+#     kwdict = KW(kw)
+#     d = KW()
+#
+#     # add defaults?
+#     for k in keys(_seriesDefaults)
+#         setDictValue(kwdict, d, k, commandIndex, _seriesDefaults)
+#     end
+#
+#     # groupby args?
+#     for k in (:idxfilter, :numUncounted, :dataframe)
+#         if haskey(kwdict, k)
+#             d[k] = kwdict[k]
+#         end
+#     end
+#
+#     if haskey(_typeAliases, d[:linetype])
+#         d[:linetype] = _typeAliases[d[:linetype]]
+#     end
+#
+#     aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
+#     aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
+#     aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
+#
+#     # update color
+#     d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], plotargs, plotIndex)
+#
+#     # # update linecolor
+#     # c = d[:linecolor]
+#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+#     # d[:linecolor] = c
+#
+#     # # update markercolor
+#     # c = d[:markercolor]
+#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+#     # d[:markercolor] = c
+#
+#     # # update fillcolor
+#     # c = d[:fillcolor]
+#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+#     # d[:fillcolor] = c
+#
+#     # update colors
+#     for csym in (:linecolor, :markercolor, :fillcolor)
+#         d[csym] = if d[csym] == :match
+#             if has_black_border_for_default(d[:linetype]) && csym == :linecolor
+#                 :black
+#             else
+#                 d[:seriescolor]
+#             end
+#         else
+#             getSeriesRGBColor(d[csym], plotargs, plotIndex)
+#         end
+#     end
+#
+#     # update markerstrokecolor
+#     c = d[:markerstrokecolor]
+#     c = (c == :match ? plotargs[:foreground_color] : getSeriesRGBColor(c, plotargs, plotIndex))
+#     d[:markerstrokecolor] = c
+#
+#     # update alphas
+#     for asym in (:linealpha, :markeralpha, :markerstrokealpha, :fillalpha)
+#         if d[asym] == nothing
+#             d[asym] = d[:seriesalpha]
+#         end
+#     end
+#
+#     # scatter plots don't have a line, but must have a shape
+#     if d[:linetype] in (:scatter, :scatter3d)
+#         d[:linewidth] = 0
+#         if d[:markershape] == :none
+#             d[:markershape] = :ellipse
+#         end
+#     end
+#
+#     # set label
+#     label = d[:label]
+#     label = (label == "AUTO" ? "y$globalIndex" : label)
+#     if d[:axis] == :right && !(length(label) >= 4 && label[end-3:end] != " (R)")
+#         label = string(label, " (R)")
+#     end
+#     d[:label] = label
+#
+#     warnOnUnsupported(pkg, d)
+#
+#     d
+# end
