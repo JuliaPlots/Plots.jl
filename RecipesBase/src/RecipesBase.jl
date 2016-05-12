@@ -22,6 +22,12 @@ apply_recipe(d::Dict{Symbol,Any}, userkw::Dict{Symbol,Any}) = ()
 
 # --------------------------------------------------------------------------
 
+# this holds the data and attributes of one series, and is returned from apply_recipe
+immutable Series
+    d::Dict{Symbol,Any}
+    args::Tuple
+end
+
 # typealias KW Dict{Symbol, Any}
 
 # immutable PlotData{X,Y,Z} <: Associative{Symbol,Any}
@@ -78,7 +84,42 @@ function _equals_symbol(arg::Expr, sym::Symbol)
     arg.head == :quote && arg.args[1] == sym
 end
 
-function replace_recipe_arrows!(expr::Expr)
+# build an apply_recipe function header from the recipe function header
+function get_function_def(func_signature::Expr)
+    # for parametric definitions, take the "curly" expression and add the func
+    front = func_signature.args[1]
+    func = :(RecipesBase.apply_recipe)
+    if isa(front, Expr) && front.head == :curly
+        front.args[1] = func
+        func = front
+    end
+end
+
+function create_kw_body(func_signature::Expr)
+    # get the arg list, stripping out any keyword parameters into a
+    # bunch of get!(kw, key, value) lines
+    args = func_signature.args[2:end]
+    kw_body = Expr(:block)
+    if isa(args[1], Expr) && args[1].head == :parameters
+        for kwpair in args[1].args
+            k, v = kwpair.args
+            push!(kw_body.args, :($k = get!(kw, $(QuoteNode(k)), $v)))
+        end
+        args = args[2:end]
+    end
+    args, kw_body
+end
+
+# process the body of the recipe recursively.
+# when we see the series macro, we split that block off:
+    # let
+    #   d2 = copy(d)
+    #   <process_recipe_body on d2>
+    #   Series(d2, block_return)
+    # end
+# and we push this block onto the series_blocks list.
+# then at the end we push the main body onto the series list
+function process_recipe_body!(expr::Expr, series_blocks::Vector{Expr})
     for (i,e) in enumerate(expr.args)
         if isa(e,Expr)
 
@@ -128,7 +169,7 @@ function replace_recipe_arrows!(expr::Expr)
             elseif e.head != :call
                 # we want to recursively replace the arrows, but not inside function calls
                 # as this might include things like Dict(1=>2)
-                replace_recipe_arrows!(e)
+                process_recipe_body!(e)
             end
         end
     end
@@ -185,51 +226,40 @@ number of series to display.  User-defined keyword arguments are passed through,
 - force:   Don't allow user override for this keyword
 """
 macro recipe(funcexpr::Expr)
-    lhs, body = funcexpr.args
+    func_signature, func_body = funcexpr.args
 
     if !(funcexpr.head in (:(=), :function))
         error("Must wrap a valid function call!")
     end
-    if !(isa(lhs, Expr) && lhs.head == :call)
-        error("Expected `lhs = ...` with lhs as a call Expr... got: $lhs")
+    if !(isa(func_signature, Expr) && func_signature.head == :call)
+        error("Expected `func_signature = ...` with func_signature as a call Expr... got: $func_signature")
     end
-    if length(lhs.args) < 2
+    if length(func_signature.args) < 2
         error("Missing function arguments... need something to dispatch on!")
     end
 
-    # for parametric definitions, take the "curly" expression and add the func
-    front = lhs.args[1]
-    func = :(RecipesBase.apply_recipe)
-    if isa(front, Expr) && front.head == :curly
-        front.args[1] = func
-        func = front
-    end
+    func = get_function_def(func_signature)
+    args, kw_body = create_kw_body(func_signature)
 
-    # get the arg list, stripping out any keyword parameters into a
-    # bunch of get!(kw, key, value) lines
-    args = lhs.args[2:end]
-    kw_body = Expr(:block)
-    if isa(args[1], Expr) && args[1].head == :parameters
-        for kwpair in args[1].args
-            k, v = kwpair.args
-            push!(kw_body.args, :($k = get!(kw, $(QuoteNode(k)), $v)))
-        end
-        args = args[2:end]
-    end
-
+    # this is where the receipe func_body is processed
     # replace all the key => value lines with argument setting logic
-    replace_recipe_arrows!(body)
+    # and break up by series.
+    series_blocks = Expr[]
+    process_recipe_body!(func_body, series_blocks)
 
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed
     esc(quote
         function $func(d::Dict{Symbol,Any}, kw::Dict{Symbol,Any}, $(args...); issubplot=false)
             $kw_body
-            ret = $body
-            if typeof(ret) <: Tuple
-                ret
-            else
-                (ret,)
-            end
+            series = Series[]
+            $(series_blocks...)
+            series
+            # ret = $func_body
+            # Series(d, if typeof(ret) <: Tuple
+            #     ret
+            # else
+            #     (ret,)
+            # end)
         end
     end)
 end
