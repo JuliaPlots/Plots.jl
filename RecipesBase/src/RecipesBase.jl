@@ -95,6 +95,7 @@ function get_function_def(func_signature::Expr)
         front.args[1] = func
         func = front
     end
+    func
 end
 
 function create_kw_body(func_signature::Expr)
@@ -255,7 +256,7 @@ macro recipe(funcexpr::Expr)
     process_recipe_body!(func_body)
 
     # dump(func_body, 20)
-    @show func_body
+    # @show func_body
 
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
     # we are creating a vector of RecipeData objects, one per series.
@@ -263,7 +264,10 @@ macro recipe(funcexpr::Expr)
         function $func(d::Dict{Symbol,Any}, $(args...); issubplot=false)
             $kw_body
             series_list = RecipeData[]
-            push!(series_list, RecipeData(d, RecipesBase.wrap_tuple($func_body)))
+            func_return = $func_body
+            if func_return != nothing
+                push!(series_list, RecipeData(d, RecipesBase.wrap_tuple(func_return)))
+            end
             series_list
             # ret = $func_body
             # RecipeData(d, if typeof(ret) <: Tuple
@@ -273,6 +277,7 @@ macro recipe(funcexpr::Expr)
             # end)
         end
     end)
+
     @show funcdef
     funcdef
 end
