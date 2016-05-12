@@ -6,7 +6,7 @@ module Plots
 using Compat
 using Reexport
 @reexport using Colors
-using Requires
+# using Requires
 using FixedSizeArrays
 @reexport using RecipesBase
 
@@ -171,7 +171,8 @@ include("backends.jl")
 include("args.jl")
 include("themes.jl")
 include("plot.jl")
-include("series_args.jl")
+# include("series_args.jl")
+include("series_new.jl")
 include("subplot.jl")
 include("layouts.jl")
 include("recipes.jl")
@@ -279,10 +280,11 @@ yaxis!(plt::Plot, args...; kw...)                                     = plot!(pl
 
 const CURRENT_BACKEND = CurrentBackend(:none)
 
+setup_dataframes()
 
 function __init__()
     setup_ijulia()
-    setup_dataframes()
+    # setup_dataframes()
     setup_atom()
 end
 

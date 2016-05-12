@@ -237,6 +237,14 @@ end
 isijulia() = isdefined(Main, :IJulia) && Main.IJulia.inited
 isatom() = isdefined(Main, :Atom) && Main.Atom.isconnected()
 
+function is_installed(pkgstr::AbstractString)
+    try
+        Pkg.installed(pkgstr) === nothing ? false: true
+    catch
+        false
+    end
+end
+
 istuple(::Tuple) = true
 istuple(::Any)   = false
 isvector(::AVec) = true

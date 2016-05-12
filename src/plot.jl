@@ -45,16 +45,13 @@ When you pass in matrices, it splits by columns.  See the documentation for more
 function plot(args...; kw...)
     pkg = backend()
     d = KW(kw)
-    userargs = preprocessArgs!(d)
-    dumpdict(d, "After plot preprocessing")
+    preprocessArgs!(d)
 
     plotargs = merge(d, getPlotArgs(pkg, d, 1))
-    dumpdict(plotargs, "Plot args")
     plt = _create_plot(pkg, plotargs)  # create a new, blank plot
 
     # now update the plot
-    _plot!(plt, d, userargs, args...)
-    # plot!(plt, args...; kw...)  # add to it
+    _plot!(plt, d, args...)
 end
 
 
@@ -73,15 +70,15 @@ end
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
     d = KW(kw)
-    userargs = preprocessArgs!(d)
-    _plot!(plt, d, userargs, args...)
+    preprocessArgs!(d)
+    _plot!(plt, d, args...)
 end
 
 
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
-function _plot!(plt::Plot, d::KW, userargs::KW, args...)
+function _plot!(plt::Plot, d::KW, args...)
     # just in case the backend needs to set up the plot (make it current or something)
     _before_add_series(plt)
 
@@ -93,7 +90,24 @@ function _plot!(plt::Plot, d::KW, userargs::KW, args...)
     end
 
     # for plotting recipes, swap out the args and update the parameter dictionary
-    args = RecipesBase.apply_recipe(d, userargs, args...)
+    # we are keeping a queue of series that still need to be processed.
+    # each pass through the loop, we pop one off and apply the recipe.
+    # the recipe will return a list a Series objects... the ones that are
+    # finished (no more args) get added to the kw_list, and the rest go into the queue
+    # for processing.
+    kw_list = KW[]
+    still_to_process = [RecipesBase.Series(copy(d), args)]
+    while !isempty(still_to_process)
+        next_series = pop!(still_to_process)
+        series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
+        for series in series_list
+            if isempty(series.args)
+                push!(kw_list, series.d)
+            else
+                push!(still_to_process, series)
+            end
+        end
+    end
 
     # dumpdict(d, "After plot! preprocessing")
 
@@ -110,32 +124,63 @@ function _plot!(plt::Plot, d::KW, userargs::KW, args...)
     #     nothing
     # end
 
+    # TODO: why do i need to check for the subplot key?
+
     # merge plot args
     if !haskey(d, :subplot)
+        # merge the plot args from the recipes, then update the plot colors
         for k in keys(_plotDefaults)
-            if haskey(d, k)
-                plt.plotargs[k] = d[k]
+            for kw in kw_list
+                if haskey(kw, k)
+                    plt.plotargs[k] = kw[k]
+                end
             end
         end
         # merge!(plt.plotargs, d)
         handlePlotColors(plt.backend, plt.plotargs)
     end
 
-    _add_series(plt, d, args...)
-    _add_annotations(plt, d)
+    # _add_series(plt, d, args...)
 
+    # this is it folks!
+    for kw in kw_list
+        plt.n += 1
+
+        # TODO: can this be handled as a recipe??
+        # if !stringsSupported() && di[:linetype] != :pie
+        #     setTicksFromStringVector(plt, d, di, "x")
+        #     setTicksFromStringVector(plt, d, di, "y")
+        #     setTicksFromStringVector(plt, d, di, "z")
+        # end
+
+        # TODO: unnecessary??
+        # # remove plot args
+        # for k in keys(_plotDefaults)
+        #     delete!(di, k)
+        # end
+
+        # TODO: why??
+        # # merge in plotarg_overrides
+        # plotarg_overrides = pop!(di, :plotarg_overrides, nothing)
+        # if plotarg_overrides != nothing
+        #     merge!(plt.plotargs, plotarg_overrides)
+        # end
+
+        _replace_linewidth(kw)
+        _add_series(plt.backend, plt, kw)
+    end
+
+
+    # _add_annotations(plt, d)  # TODO
 
 
     # add title, axis labels, ticks, etc
     if !haskey(d, :subplot)
-        merge!(plt.plotargs, d)
-        # handlePlotColors(plt.backend, plt.plotargs)
-        dumpdict(plt.plotargs, "Updating plot items")
+        # merge!(plt.plotargs, d)  # this shouldn't be needed since we merged the keys earlier
         _update_plot(plt, plt.plotargs)
     end
 
-    _update_plot_pos_size(plt, d)
-
+    # _update_plot_pos_size(plt, d)  # this is only used for Qwt... can we remove?
     current(plt)
 
     # note: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
