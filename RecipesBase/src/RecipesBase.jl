@@ -4,7 +4,8 @@ __precompile__()
 module RecipesBase
 
 export
-    @recipe
+    @recipe,
+    RecipeData
     # apply_recipe,
     # KW
     # PlotData
@@ -23,7 +24,7 @@ apply_recipe(d::Dict{Symbol,Any}, userkw::Dict{Symbol,Any}) = ()
 # --------------------------------------------------------------------------
 
 # this holds the data and attributes of one series, and is returned from apply_recipe
-immutable Series
+immutable RecipeData
     d::Dict{Symbol,Any}
     args::Tuple
 end
@@ -68,11 +69,12 @@ end
 @inline to_symbol(s::Symbol) = s
 @inline to_symbol(qn::QuoteNode) = qn.value
 
-# @inline wrap_tuple(tup::Tuple) = tup
-# @inline wrap_tuple(v) = (v,)
+@inline wrap_tuple(tup::Tuple) = tup
+@inline wrap_tuple(v) = (v,)
 
+# check for flags as part of the `-->` expression
 function _is_arrow_tuple(expr::Expr)
-    expr.head == :tuple &&
+    expr.head == :tuple && !isempty(expr.args) &&
         isa(expr.args[1], Expr) &&
         expr.args[1].head == :(-->)
 end
@@ -103,7 +105,7 @@ function create_kw_body(func_signature::Expr)
     if isa(args[1], Expr) && args[1].head == :parameters
         for kwpair in args[1].args
             k, v = kwpair.args
-            push!(kw_body.args, :($k = get!(kw, $(QuoteNode(k)), $v)))
+            push!(kw_body.args, :($k = get!(d, $(QuoteNode(k)), $v)))
         end
         args = args[2:end]
     end
@@ -115,13 +117,15 @@ end
     # let
     #   d2 = copy(d)
     #   <process_recipe_body on d2>
-    #   Series(d2, block_return)
+    #   RecipeData(d2, block_return)
     # end
 # and we push this block onto the series_blocks list.
 # then at the end we push the main body onto the series list
-function process_recipe_body!(expr::Expr, series_blocks::Vector{Expr})
+function process_recipe_body!(expr::Expr)
+    # @show expr
     for (i,e) in enumerate(expr.args)
         if isa(e,Expr)
+            # @show e
 
             # process trailing flags, like:
             #   a --> b, :quiet, :force
@@ -136,6 +140,7 @@ function process_recipe_body!(expr::Expr, series_blocks::Vector{Expr})
                         force = true
                     end
                 end
+                # @show e
                 e = e.args[1]
             end
 
@@ -165,6 +170,8 @@ function process_recipe_body!(expr::Expr, series_blocks::Vector{Expr})
                 end
 
                 # @show quiet, force, expr.args[i]
+
+            # TODO elseif it's a @series macrocall, add a series block and push to the `series` list
 
             elseif e.head != :call
                 # we want to recursively replace the arrows, but not inside function calls
@@ -244,24 +251,30 @@ macro recipe(funcexpr::Expr)
     # this is where the receipe func_body is processed
     # replace all the key => value lines with argument setting logic
     # and break up by series.
-    series_blocks = Expr[]
-    process_recipe_body!(func_body, series_blocks)
+    # series_blocks = Expr[]
+    process_recipe_body!(func_body)
 
-    # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed
-    esc(quote
-        function $func(d::Dict{Symbol,Any}, kw::Dict{Symbol,Any}, $(args...); issubplot=false)
+    # dump(func_body, 20)
+    @show func_body
+
+    # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
+    # we are creating a vector of RecipeData objects, one per series.
+    funcdef = esc(quote
+        function $func(d::Dict{Symbol,Any}, $(args...); issubplot=false)
             $kw_body
-            series = Series[]
-            $(series_blocks...)
-            series
+            series_list = RecipeData[]
+            push!(series_list, RecipeData(d, RecipesBase.wrap_tuple($func_body)))
+            series_list
             # ret = $func_body
-            # Series(d, if typeof(ret) <: Tuple
+            # RecipeData(d, if typeof(ret) <: Tuple
             #     ret
             # else
             #     (ret,)
             # end)
         end
     end)
+    @show funcdef
+    funcdef
 end
 
 # --------------------------------------------------------------------------
