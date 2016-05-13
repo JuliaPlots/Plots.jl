@@ -68,6 +68,14 @@ facts("UnicodePlots") do
     @fact isa(plot(rand(10)), Plot) --> true
 end
 
+facts("Axes") do
+    axis = xaxis()
+    @fact typeof(axis) --> Axis
+    @fact Plots.discrete_value!(axis, "HI") --> 0.5
+    @fact Plots.discrete_value!(axis, :yo) --> 1.5
+    @fact extrema(axis) --> (0.5,1.5)
+    @fact axis[:discrete_map] --> Dict{Any,Any}(:yo  => 1.5, "HI" => 0.5)
+end
 
 
 

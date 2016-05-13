@@ -208,6 +208,108 @@ end
 
 # -----------------------------------------------------------------------
 
+# abstract AbstractAxisTicks
+# immutable DefaultAxisTicks end
+#
+# type CustomAxisTicks
+#     # TODO
+# end
+
+# simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
+type Axis
+    d::KW
+    # name::AbstractString      # "x" or "y"
+    # label::AbstractString
+    # lims::NTuple{2}
+    # ticks::AbstractAxisTicks
+    # scale::Symbol
+    # flip::Bool
+    # rotation::Number
+    # guidefont::Font
+    # tickfont::Font
+    # use_minor::Bool
+    # _plotDefaults[:foreground_color_axis]       = :match            # axis border/tick colors
+    # _plotDefaults[:foreground_color_border]     = :match            # plot area border/spines
+    # _plotDefaults[:foreground_color_text]       = :match            # tick text color
+    # _plotDefaults[:foreground_color_guide]      = :match            # guide text color
+end
+
+
+# function processAxisArg(d::KW, letter::AbstractString, arg)
+function axis(letter, args...; kw...)
+    # TODO: this should initialize with values from _plotDefaults
+    d = KW(
+        :letter => letter,
+        :label => "",
+        :lims => :auto,
+        :ticks => :auto,
+        :scale => :identity,
+        :flip => false,
+        :rotation => 0,
+        :guidefont => font(11),
+        :tickfont => font(8),
+        :use_minor => false,
+        :foreground_color_axis   => :match,
+        :foreground_color_border => :match,
+        :foreground_color_text   => :match,
+        :foreground_color_guide  => :match,
+    )
+
+    # first process args
+    for arg in args
+        T = typeof(arg)
+        arg = get(_scaleAliases, arg, arg)
+        # scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
+
+        if typeof(arg) <: Font
+            d[:tickfont] = arg
+            d[:guidefont] = arg
+
+        elseif arg in _allScales
+            d[:scale] = arg
+
+        elseif arg in (:flip, :invert, :inverted)
+            d[:flip] = true
+
+        elseif T <: @compat(AbstractString)
+            d[:label] = arg
+
+        # xlims/ylims
+        elseif (T <: Tuple || T <: AVec) && length(arg) == 2
+            sym = typeof(arg[1]) <: Number ? :lims : :ticks
+            d[sym] = arg
+
+        # xticks/yticks
+        elseif T <: AVec
+            d[:ticks] = arg
+
+        elseif arg == nothing
+            d[:ticks] = []
+
+        elseif typeof(arg) <: Number
+            d[:rotation] = arg
+
+        else
+            warn("Skipped $(letter)axis arg $arg")
+
+        end
+    end
+
+    # then override for any keywords
+    for (k,v) in kw
+        d[k] = v
+    end
+
+    Axis(d)
+end
+
+
+xaxis(args...) = axis("x", args...)
+yaxis(args...) = axis("y", args...)
+zaxis(args...) = axis("z", args...)
+
+# -----------------------------------------------------------------------
+
 
 immutable Font
   family::AbstractString
@@ -269,6 +371,136 @@ PlotText(str) = PlotText(string(str), font())
 function text(str, args...)
   PlotText(string(str), font(args...))
 end
+# -----------------------------------------------------------------------
+
+# simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
+type Axis
+    d::KW
+end
+
+function expand_extrema!(a::Axis, v::Number)
+    emin, emax = a[:extrema]
+    a[:extrema] = (min(v, emin), max(v, emax))
+end
+function expand_extrema!{MIN<:Number,MAX<:Number}(a::Axis, v::Tuple{MIN,MAX})
+    emin, emax = a[:extrema]
+    a[:extrema] = (min(v[1], emin), max(v[2], emax))
+end
+function expand_extrema!{N<:Number}(a::Axis, v::AVec{N})
+    if !isempty(v)
+        emin, emax = a[:extrema]
+        a[:extrema] = (min(minimum(v), emin), max(maximum(v), emax))
+    end
+    a[:extrema]
+end
+
+# these methods track the discrete values which correspond to axis continuous values (cv)
+# whenever we have discrete values, we automatically set the ticks to match.
+# we return the plot value
+function discrete_value!(a::Axis, v)
+    cv = get(a[:discrete_map], v, NaN)
+    if isnan(cv)
+        emin, emax = a[:extrema]
+        cv = max(0.5, emax + 1.0)
+        expand_extrema!(a, cv)
+        a[:discrete_map][v] = cv
+    end
+    cv
+end
+
+# add the discrete value for each item
+function discrete_value!(a::Axis, v::AVec)
+    Float64[discrete_value!(a, vi) for vi=v]
+end
+
+Base.getindex(a::Axis, k::Symbol) = getindex(a.d, k)
+Base.setindex!(a::Axis, v, ks::Symbol...) = setindex!(a.d, v, ks...)
+Base.extrema(a::Axis) = a[:extrema]
+
+
+# function processAxisArg(d::KW, letter::AbstractString, arg)
+function Axis(letter::AbstractString, args...; kw...)
+    # init with defaults
+    d = KW(
+        :letter => letter,
+        # :label => "",
+        # :lims => :auto,
+        # :ticks => :auto,
+        # :scale => :identity,
+        # :flip => false,
+        # :rotation => 0,
+        # :guidefont => font(11),
+        # :tickfont => font(8),
+        # :foreground_color_axis   => :match,
+        # :foreground_color_border => :match,
+        # :foreground_color_text   => :match,
+        # :foreground_color_guide  => :match,
+        :extrema => (Inf, -Inf),
+        :discrete_map => Dict(),   # map discrete values to continuous plot values
+        :use_minor => false,
+        :show => true,  # show or hide the axis? (useful for linked subplots)
+    )
+    for sym in (:label, :lims, :ticks, :scale, :flip, :rotation)
+        k = symbol(letter * string(sym))
+        d[k] = default(k)
+    end
+    for k in (:guidefont, :tickfont, :foreground_color_axis, :foreground_color_border,
+                :foreground_color_text, :foreground_color_guide)
+        d[k] = default(k)
+    end
+
+    # first process args
+    for arg in args
+        T = typeof(arg)
+        arg = get(_scaleAliases, arg, arg)
+        # scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
+
+        if typeof(arg) <: Font
+            d[:tickfont] = arg
+            d[:guidefont] = arg
+
+        elseif arg in _allScales
+            d[:scale] = arg
+
+        elseif arg in (:flip, :invert, :inverted)
+            d[:flip] = true
+
+        elseif T <: @compat(AbstractString)
+            d[:label] = arg
+
+        # xlims/ylims
+        elseif (T <: Tuple || T <: AVec) && length(arg) == 2
+            sym = typeof(arg[1]) <: Number ? :lims : :ticks
+            d[sym] = arg
+
+        # xticks/yticks
+        elseif T <: AVec
+            d[:ticks] = arg
+
+        elseif arg == nothing
+            d[:ticks] = []
+
+        elseif typeof(arg) <: Number
+            d[:rotation] = arg
+
+        else
+            warn("Skipped $(letter)axis arg $arg")
+
+        end
+    end
+
+    # then override for any keywords
+    for (k,v) in kw
+        d[k] = v
+    end
+
+    Axis(d)
+end
+
+
+xaxis(args...) = Axis("x", args...)
+yaxis(args...) = Axis("y", args...)
+zaxis(args...) = Axis("z", args...)
 
 # -----------------------------------------------------------------------
 

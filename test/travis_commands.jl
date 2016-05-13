@@ -16,6 +16,8 @@ Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");
 # Blink.AtomShell.install()
 # Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")
 
+Pkg.checkout("RecipesBase")
+
 ENV["PYTHON"] = ""
 Pkg.add("PyPlot")
 Pkg.build("PyPlot")
