@@ -28,7 +28,7 @@ supportedAxes(::GadflyBackend) = [:auto, :left]
 supportedTypes(::GadflyBackend) = [
         :none, :line, :path, :steppre, :steppost, :sticks,
         :scatter, :hist2d, :hexbin, :hist,
-        :bar, :box, :violin, :quiver,
+        :bar, #:box, :violin, :quiver,
         :hline, :vline, :contour, :shape
     ]
 supportedStyles(::GadflyBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]

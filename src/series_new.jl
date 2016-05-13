@@ -77,7 +77,7 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
     end
     d[:label] = label
 
-    warnOnUnsupported(pkg, d)
+    # warnOnUnsupported(pkg, d)
 
     d
 end
@@ -329,8 +329,8 @@ end
 # end
 
 @recipe function f{X,Y}(x::AVec{X}, y::AVec{Y}, zf::Function)
-    x = TX <: Number ? sort(x) : x
-    y = TY <: Number ? sort(y) : y
+    x = X <: Number ? sort(x) : x
+    y = Y <: Number ? sort(y) : y
     SliceIt, x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
 end
 

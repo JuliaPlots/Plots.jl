@@ -86,12 +86,15 @@ end
 # natively by the backend
 function _apply_series_recipe(plt::Plot, d::KW)
     lt = d[:linetype]
+    # dumpdict(d, "apply_series_recipe", true)
     if lt in supportedTypes()
+        # println("adding series!!")
+        warnOnUnsupported(plt.backend, d)
         _add_series(plt.backend, plt, d)
     else
         # get a sub list of series for this linetype
-        try
-            series_list = RecipesBase.apply_recipe(Val{lt}, d[:x], d[:y], d[:z])
+        series_list = try
+            RecipesBase.apply_recipe(d, Val{lt}, d[:x], d[:y], d[:z])
         catch
             warn("Exception during apply_recipe(Val{$lt}, ...) with types ($(typeof(d[:x])), $(typeof(d[:y])), $(typeof(d[:z])))")
             rethrow()
@@ -142,12 +145,25 @@ function _plot!(plt::Plot, d::KW, args...)
         next_series = pop!(still_to_process)
         series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
         for series in series_list
+            # @show series
             if isempty(series.args)
                 # finish processing and add to the kw_list
                 _add_markershape(series.d)
                 _filter_input_data!(series.d)
                 warnOnUnsupportedArgs(plt.backend, series.d)
                 warnOnUnsupportedScales(plt.backend, series.d)
+
+                # TODO:
+                #         # map functions to vectors
+                #         if isa(d[:marker_z], Function)
+                #             d[:marker_z] = map(d[:marker_z], d[:x])
+                #         end
+                #         # handle ribbons
+                #         if get(d, :ribbon, nothing) != nothing
+                #             rib = d[:ribbon]
+                #             d[:fillrange] = (d[:y] - rib, d[:y] + rib)
+                #         end
+
                 push!(kw_list, series.d)
             else
                 push!(still_to_process, series)
@@ -229,7 +245,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
         # todo: while the linetype is not supported, try to apply a recipe of f(Val{lt}, x,y,z) recursively
         # the default should throw an error because we can't handle that linetype
-        _apply_series_recipe(kw)
+        _apply_series_recipe(plt, kw)
 
 
         # _add_series(plt.backend, plt, kw)

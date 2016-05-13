@@ -40,7 +40,7 @@ supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [
         :none, :line, :path, :steppre, :steppost, :shape,
         :scatter, :hist2d, :hexbin, :hist, :density,
-        :bar, :sticks, :box, :violin, :quiver,
+        :bar, :sticks, #:box, :violin, :quiver,
         :hline, :vline, :heatmap, :pie, :image,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
     ]

@@ -11,7 +11,7 @@ const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe, :contour3d]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                         :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, :ohlc,
-                        :contour, :pie, :shape, :box, :violin, :quiver, :image
+                        :contour, :pie, :shape, :image #, :boxplot, :violin, :quiver, 
                        ], _3dTypes)
 @compat const _typeAliases = KW(
     :n             => :none,
@@ -38,7 +38,7 @@ const _allTypes = vcat([
     :shapes        => :shape,
     :poly          => :shape,
     :polygon       => :shape,
-    :boxplot       => :box,
+    :box           => :boxplot,
     :velocity      => :quiver,
     :gradient      => :quiver,
     :img           => :image,

@@ -204,28 +204,42 @@ end
 
 # ---------------------------------------------------------------------------
 
-"""
-`apply_series_recipe` should take a processed series KW dict and break it up
-into component parts.  For example, a box plot is made up of `shape` for the
-boxes, `path` for the lines, and `scatter` for the outliers.
+# """
+# `apply_series_recipe` should take a processed series KW dict and break it up
+# into component parts.  For example, a box plot is made up of `shape` for the
+# boxes, `path` for the lines, and `scatter` for the outliers.
+#
+# Returns a Vector{KW}.
+# """
+# apply_series_recipe(d::KW, lt) = KW[d]
 
-Returns a Vector{KW}.
-"""
-apply_series_recipe(d::KW, lt) = KW[d]
+
+# for linetype `line`, need to sort by x values
+@recipe function f(::Type{Val{:line}}, x, y, z)
+    # order by x
+    indices = sortperm(d[:x])
+    d[:x] = d[:x][indices]
+    d[:y] = d[:y][indices]
+    if typeof(d[:z]) <: AVec
+        d[:z] = d[:z][indices]
+    end
+    d[:linetype] = :path
+    ()
+end
 
 # ---------------------------------------------------------------------------
 # Box Plot
 
 const _box_halfwidth = 0.4
 
-function apply_series_recipe(d::KW, ::Type{Val{:box}})
+# function apply_series_recipe(d::KW, ::Type{Val{:box}})
+@recipe function f(::Type{Val{:boxplot}}, x, y, z)
     # dumpdict(d, "box before", true)
     # TODO: add scatter series with outliers
 
     # create a list of shapes, where each shape is a single boxplot
     shapes = Shape[]
-    d[:linetype] = :shape
-    groupby = extractGroupArgs(d[:x])
+    groupby = extractGroupArgs(x)
 
     for (i, glabel) in enumerate(groupby.groupLabels)
 
@@ -249,10 +263,16 @@ function apply_series_recipe(d::KW, ::Type{Val{:box}})
         push!(shapes, Shape(xcoords, ycoords))
     end
 
-    d[:x], d[:y] = shape_coords(shapes)
-    d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
+    # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
 
-    KW[d]
+    d[:linetype] = :shape
+    xticklabels --> groupby.groupLabels
+
+    # we want to set the fields directly inside series recipes... args are ignored
+    d[:x], d[:y] = shape_coords(shapes)
+    () # expects a tuple returned
+
+    # KW[d]
 end
 
 # ---------------------------------------------------------------------------
@@ -260,17 +280,13 @@ end
 
 # if the user has KernelDensity installed, use this for violin plots.
 # otherwise, just use a histogram
-try
-    Pkg.installed("KernelDensity")
-    import KernelDensity
-
-    # warn("using KD for violin")
+if is_installed("KernelDensity")
+    @eval import KernelDensity
     @eval function violin_coords(y)
         kd = KernelDensity.kde(y, npoints = 30)
         kd.density, kd.x
     end
-catch
-    # warn("using hist for violin")
+else
     @eval function violin_coords(y)
         edges, widths = hist(y, 20)
         centers = 0.5 * (edges[1:end-1] + edges[2:end])
@@ -280,13 +296,13 @@ catch
 end
 
 
-function apply_series_recipe(d::KW, ::Type{Val{:violin}})
+# function apply_series_recipe(d::KW, ::Type{Val{:violin}})
+@recipe function f(::Type{Val{:violin}}, x, y, z)
     # dumpdict(d, "box before", true)
     # TODO: add scatter series with outliers
 
     # create a list of shapes, where each shape is a single boxplot
     shapes = Shape[]
-    d[:linetype] = :shape
     groupby = extractGroupArgs(d[:x])
 
     for (i, glabel) in enumerate(groupby.groupLabels)
@@ -304,10 +320,14 @@ function apply_series_recipe(d::KW, ::Type{Val{:violin}})
         push!(shapes, Shape(xcoords, ycoords))
     end
 
-    d[:x], d[:y] = shape_coords(shapes)
-    d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
+    # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
+    d[:linetype] = :shape
+    xticklabels --> groupby.groupLabels
 
-    KW[d]
+    d[:x], d[:y] = shape_coords(shapes)
+    ()
+
+    # KW[d]
 end
 
 # ---------------------------------------------------------------------------
@@ -353,18 +373,22 @@ end
 
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
-function apply_series_recipe(d::KW, ::Type{Val{:yerror}})
+# function apply_series_recipe(d::KW, ::Type{Val{:yerror}})
+@recipe function f(::Type{Val{:yerror}}, x, y, z)
     error_style!(d)
     d[:markershape] = :hline
     d[:x], d[:y] = error_coords(d[:x], d[:y], error_zipit(d[:yerror]))
-    KW[d]
+    # KW[d]
+    ()
 end
 
-function apply_series_recipe(d::KW, ::Type{Val{:xerror}})
+# function apply_series_recipe(d::KW, ::Type{Val{:xerror}})
+@recipe function f(::Type{Val{:xerror}}, x, y, z)
     error_style!(d)
     d[:markershape] = :vline
     d[:y], d[:x] = error_coords(d[:y], d[:x], error_zipit(d[:xerror]))
-    KW[d]
+    # KW[d]
+    ()
 end
 
 
@@ -407,7 +431,7 @@ function quiver_using_arrows(d::KW)
     end
 
     d[:x], d[:y] = x, y
-    KW[d]
+    # KW[d]
 end
 
 # function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
@@ -453,15 +477,17 @@ function quiver_using_hack(d::KW)
     end
 
     d[:x], d[:y] = Plots.unzip(pts[2:end])
-    KW[d]
+    # KW[d]
 end
 
-function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
+# function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
+@recipe function f(::Type{Val{:quiver}}, x, y, z)
     if :arrow in supportedArgs()
         quiver_using_arrows(d)
     else
         quiver_using_hack(d)
     end
+    ()
 end
 
 
