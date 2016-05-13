@@ -737,7 +737,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     end
 
     # this sets the bg color inside the grid
-    ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color_inside]))
+    ax[:set_facecolor](getPyPlotColor(plt.plotargs[:background_color_inside]))
 
     # handle area filling
     fillrange = d[:fillrange]
