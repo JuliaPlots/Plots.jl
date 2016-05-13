@@ -584,6 +584,10 @@ function preprocessArgs!(d::KW)
         processLineArg(d, arg)
     end
 
+    if haskey(d, :linetype) && haskey(_typeAliases, d[:linetype])
+        d[:linetype] = _typeAliases[d[:linetype]]
+    end
+
     # handle marker args... default to ellipse if shape not set
     anymarker = false
     for arg in wraptuple(get(d, :marker, ()))
@@ -687,6 +691,22 @@ function extractGroupArgs{T, V<:AVec{Int}}(idxmap::Dict{T,V}, args...)
     groupLabels = sortedkeys(idxmap)
     groupIds = VecI[collect(idxmap[k]) for k in groupLabels]
     GroupBy(groupLabels, groupIds)
+end
+
+filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
+filter_data(v, idxfilter) = v
+
+function filter_data!(d::KW, idxfilter)
+    for s in (:x, :y, :z)
+        d[s] = filter_data(get(d, s, nothing), idxfilter)
+    end
+end
+
+function _filter_input_data!(d::KW)
+    idxfilter = pop!(d, :idxfilter, nothing)
+    if idxfilter != nothing
+        filter_data!(d, idxfilter)
+    end
 end
 
 

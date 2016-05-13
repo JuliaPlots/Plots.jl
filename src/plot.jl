@@ -93,8 +93,19 @@ function _plot!(plt::Plot, d::KW, args...)
     # we simply add the GroupBy object to the front of the args list to allow
     # the recipe to be applied
     if haskey(d, :group)
-        args = vcat(extractGroupArgs(d[:group], args...), args)
+        args = tuple(extractGroupArgs(d[:group], args...), args...)
     end
+
+    # initialize the annotations list with what was passed in
+    # TODO: there must be cleaner way to handle this!
+    anns = annotations(get(d, :annotation, NTuple{3}[]))
+    if typeof(anns)  <: AVec{PlotText}
+        anns = NTuple{3}[]
+    else
+        delete!(d, :annotation)
+    end
+    # anns = annotations(pop!(d, :annotation, [])
+
 
     # for plotting recipes, swap out the args and update the parameter dictionary
     # we are keeping a queue of series that still need to be processed.
@@ -109,8 +120,9 @@ function _plot!(plt::Plot, d::KW, args...)
         series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
         for series in series_list
             if isempty(series.args)
-                # apply markershape_to_add and then warn if there's anything left unsupported
+                # finish processing and add to the kw_list
                 _add_markershape(series.d)
+                _filter_input_data!(series.d)
                 warnOnUnsupportedArgs(plt.backend, series.d)
                 warnOnUnsupportedScales(plt.backend, series.d)
                 push!(kw_list, series.d)
@@ -130,22 +142,27 @@ function _plot!(plt::Plot, d::KW, args...)
     #     nothing
     # end
 
+
+
+
+    # now include any annotations which were added during recipes
+    # anns = NTuple{3,Any}[]
+    for kw in kw_list
+        append!(anns, annotations(pop!(kw, :annotation, [])))
+    end
+    # @show anns
+
+
     # TODO: why do i need to check for the subplot key?
 
     # merge plot args
     if !haskey(d, :subplot)
         # merge the plot args from the recipes, then update the plot colors
         for kw in vcat(kw_list, d)
+            # @show kw
+            # append!(anns, annotations(pop!(kw, :annotation, [])))
             _add_plotargs!(plt, kw)
         end
-        # for k in keys(_plotDefaults)
-        #     for kw in kw_list
-        #         if haskey(kw, k)
-        #             plt.plotargs[k] = pop!(kw, k)
-        #         end
-        #     end
-        # end
-        # merge!(plt.plotargs, d)
         handlePlotColors(plt.backend, plt.plotargs)
     end
 
@@ -176,18 +193,18 @@ function _plot!(plt::Plot, d::KW, args...)
         #     merge!(plt.plotargs, plotarg_overrides)
         # end
 
-        dumpdict(kw, "before add defaults", true)
+        # dumpdict(kw, "before add defaults", true)
         _add_defaults!(kw, plt, i)
-        dumpdict(kw, "after add defaults", true)
+        # dumpdict(kw, "after add defaults", true)
         # getSeriesArgs(plt.backend, getplotargs(plt, n), d, commandIndex, convertSeriesIndex(plt, n), n)
+
+        # TODO: apply idxfilter to x/y/z
 
         _replace_linewidth(kw)
         _add_series(plt.backend, plt, kw)
     end
 
-
-    # _add_annotations(plt, d)  # TODO
-
+    _add_annotations(plt, anns)
 
     # add title, axis labels, ticks, etc
     if !haskey(d, :subplot)
@@ -220,14 +237,6 @@ end
 #     end
 # end
 
-filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
-filter_data(v, idxfilter) = v
-
-function filter_data!(d::KW, idxfilter)
-    for s in (:x, :y, :z)
-        d[s] = filter_data(get(d, s, nothing), idxfilter)
-    end
-end
 
 function _replace_linewidth(d::KW)
     # get a good default linewidth... 0 for surface and heatmaps
@@ -371,6 +380,17 @@ annotations(v::AVec{PlotText}) = v
 annotations(v::AVec) = map(PlotText, v)
 annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
                        "(x, y, annotation)\n    got: $(typeof(anns))")
+
+function annotations(plt::Plot, anns)
+    anns = annotations(anns)
+    # if we just have a list of PlotText objects, then create (x,y,text) tuples
+    if typeof(anns) <: AVec{PlotText}
+        x, y = plt[plt.n]
+        anns = Tuple{Float64,Float64,PlotText}[(x[i], y[i], t) for (i,t) in enumerate(anns)]
+    end
+    anns
+end
+
 
 function _add_annotations(plt::Plot, d::KW)
     anns = annotations(get(d, :annotation, nothing))

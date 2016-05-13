@@ -25,9 +25,9 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
     #     end
     # end
 
-    if haskey(_typeAliases, d[:linetype])
-        d[:linetype] = _typeAliases[d[:linetype]]
-    end
+    # if haskey(_typeAliases, d[:linetype])
+    #     d[:linetype] = _typeAliases[d[:linetype]]
+    # end
 
     aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
     aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
@@ -87,10 +87,12 @@ end
 
 # instead of process_inputs:
 
+# ensure we dispatch to the slicer
+immutable SliceIt end
+
 # the catch-all recipes
-# @recipe function f(x, y, z)
-function slice_and_dice(d, x, y, z)
-    @show "HERE", typeof((x,y,z))
+@recipe function f(::Type{SliceIt}, x, y, z)
+    # @show "HERE", typeof((x,y,z))
     xs, _ = convertToAnyVector(x, d)
     ys, _ = convertToAnyVector(y, d)
     zs, _ = convertToAnyVector(z, d)
@@ -111,22 +113,23 @@ function slice_and_dice(d, x, y, z)
         # add a new series
         di = copy(d)
         xi, yi, zi = xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]
-        @show i, typeof((xi, yi, zi))
+        # @show i, typeof((xi, yi, zi))
         di[:x], di[:y], di[:z] = compute_xyz(xi, yi, zi)
 
         # handle fillrange
         fr = fillranges[mod1(i,mf)]
-        d[:fillrange] = isa(fr, Function) ? map(fr, di[:x]) : fr
+        di[:fillrange] = isa(fr, Function) ? map(fr, di[:x]) : fr
 
-        @show i, di[:x], di[:y], di[:z]
+        # @show i, di[:x], di[:y], di[:z]
         push!(series_list, RecipeData(di, ()))
     end
     nothing  # don't add a series for the main block
 end
 
-@recipe f(x, y, z) = slice_and_dice(d, x, y, z)
-@recipe f(x, y) = x, y, nothing
-@recipe f(y) = nothing, y, nothing
+# pass these through to the slicer
+@recipe f(x, y, z)  = SliceIt, x, y, z
+@recipe f(x, y)     = SliceIt, x, y, nothing
+@recipe f(y)        = SliceIt, nothing, y, nothing
 
 
 # # --------------------------------------------------------------------
@@ -312,7 +315,7 @@ end
     elseif !(lt in _3dTypes)
         d[:linetype] = :path3d
     end
-    slice_and_dice(d, x, y, z)
+    SliceIt, x, y, z
 end
 
 #
@@ -328,7 +331,7 @@ end
 @recipe function f{X,Y}(x::AVec{X}, y::AVec{Y}, zf::Function)
     x = TX <: Number ? sort(x) : x
     y = TY <: Number ? sort(y) : y
-    slice_and_dice(d, x, y, Surface(zf, x, y))  # TODO: replace with SurfaceFunction when supported
+    SliceIt, x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
 end
 
 #
@@ -353,7 +356,7 @@ end
     if !like_surface(get(d, :linetype, :none))
         d[:linetype] = :contour
     end
-    slice_and_dice(d, x, y, Surface{Matrix{Z}}(z))
+    SliceIt, x, y, Surface{Matrix{Z}}(z)
 end
 
 #
@@ -390,9 +393,9 @@ end
 # process_inputs{T<:Number}(plt::AbstractPlot, d::KW, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
 # process_inputs(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = process_inputs(plt, d, fx, fy, linspace(umin, umax, numPoints))
 
-@recipe f(f::FuncOrFuncs, xmin::Number, xmax::Number)                            = linspace(xmin, xmax, 100), f
-@recipe f{T<:Number}(fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T})               = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
-@recipe f{T<:Number}(u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs)               = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
+@recipe f(f::FuncOrFuncs, xmin::Number, xmax::Number) = linspace(xmin, xmax, 100), f
+@recipe f(fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec)  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
+# @recipe f(u::AVec, fx::FuncOrFuncs, fy::FuncOrFuncs)  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
 @recipe f(fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Number, umax::Number, n = 200) = fx, fy, linspace(umin, umax, n)
 
 #
@@ -401,12 +404,12 @@ end
 # process_inputs{T<:Number}(plt::AbstractPlot, d::KW, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
 # process_inputs(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = process_inputs(plt, d, fx, fy, fz, linspace(umin, umax, numPoints))
 
-@recipe function f{T<:Number}(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec{T})
+@recipe function f(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec)
     mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
 end
-@recipe function f{T<:Number}(u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs)
-    mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
-end
+# @recipe function f(u::AVec, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs)
+#     mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
+# end
 @recipe function f(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPointsn = 200)
     fx, fy, fz, linspace(umin, umax, numPoints)
 end
@@ -434,7 +437,7 @@ end
 # end
 
 @recipe f{R1<:Number,R2<:Number}(xy::AVec{Tuple{R1,R2}}) = unzip(xy)
-@recipe f{R1<:Number,R2<:Number}(xy::Tuple{R1,R2}) = [xy[1]], [xy[2]]
+@recipe f{R1<:Number,R2<:Number}(xy::Tuple{R1,R2})       = [xy[1]], [xy[2]]
 
 #
 # # (x,y,z) tuples
@@ -446,7 +449,7 @@ end
 # end
 
 @recipe f{R1<:Number,R2<:Number,R3<:Number}(xyz::AVec{Tuple{R1,R2,R3}}) = unzip(xyz)
-@recipe f{R1<:Number,R2<:Number,R3<:Number}(xyz::Tuple{R1,R2,R3}) = [xyz[1]], [xyz[2]], [xyz[3]]
+@recipe f{R1<:Number,R2<:Number,R3<:Number}(xyz::Tuple{R1,R2,R3})       = [xyz[1]], [xyz[2]], [xyz[3]]
 
 #
 # # 2D FixedSizeArrays
@@ -458,7 +461,7 @@ end
 # end
 
 @recipe f{T<:Number}(xy::AVec{FixedSizeArrays.Vec{2,T}}) = unzip(xy)
-@recipe f{T<:Number}(xy::FixedSizeArrays.Vec{2,T}) = [xy[1]], [xy[2]]
+@recipe f{T<:Number}(xy::FixedSizeArrays.Vec{2,T})       = [xy[1]], [xy[2]]
 
 #
 # # 3D FixedSizeArrays
@@ -470,7 +473,7 @@ end
 # end
 
 @recipe f{T<:Number}(xyz::AVec{FixedSizeArrays.Vec{3,T}}) = unzip(xyz)
-@recipe f{T<:Number}(xyz::FixedSizeArrays.Vec{3,T}) = [xyz[1]], [xyz[2]], [xyz[3]]
+@recipe f{T<:Number}(xyz::FixedSizeArrays.Vec{3,T})       = [xyz[1]], [xyz[2]], [xyz[3]]
 
 #
 # # --------------------------------------------------------------------
@@ -495,8 +498,8 @@ end
         # create a new series, with the label of the group, and an idxfilter (to be applied in slice_and_dice)
         # TODO: use @series instead
         di = copy(d)
-        label --> string(glab)
-        idxfilter --> groupby.groupIds[i]
+        get!(di, :label, string(glab))
+        get!(di, :idxfilter, groupby.groupIds[i])
         push!(series_list, RecipeData(di, args))
     end
     nothing

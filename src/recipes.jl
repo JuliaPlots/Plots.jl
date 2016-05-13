@@ -44,6 +44,11 @@ if is_installed("DataFrames")
             end
         end
 
+        function extractGroupArgs(group::Symbol, df::DataFrames.AbstractDataFrame, args...)
+            extractGroupArgs(collect(df[group]))
+        end
+
+
         function handle_group(df::DataFrames.AbstractDataFrame, d::KW)
             if haskey(d, :group)
                 g = d[:group]
