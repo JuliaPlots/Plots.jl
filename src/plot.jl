@@ -82,6 +82,29 @@ function _add_plotargs!(plt::Plot, d::KW)
     end
 end
 
+# this method recursively applies series recipes when the linetype is not supported
+# natively by the backend
+function _apply_series_recipe(plt::Plot, d::KW)
+    lt = d[:linetype]
+    if lt in supportedTypes()
+        _add_series(plt.backend, plt, d)
+    else
+        # get a sub list of series for this linetype
+        try
+            series_list = RecipesBase.apply_recipe(Val{lt}, d[:x], d[:y], d[:z])
+        catch
+            warn("Exception during apply_recipe(Val{$lt}, ...) with types ($(typeof(d[:x])), $(typeof(d[:y])), $(typeof(d[:z])))")
+            rethrow()
+        end
+
+        # assuming there was no error, recursively apply the series recipes
+        for series in series_list
+            _apply_series_recipe(plt, series.d)
+        end
+    end
+end
+
+
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
@@ -174,6 +197,8 @@ function _plot!(plt::Plot, d::KW, args...)
         plt.n += 1
 
         # TODO: can this be handled as a recipe??
+        # note: this could probably be handled using a recipe signature f{S<:Union{AbstractString,Symbol}}(v::AVec{S}, letter::AbstractString)
+        # that gets called from within the SliceIt section
         # if !stringsSupported() && di[:linetype] != :pie
         #     setTicksFromStringVector(plt, d, di, "x")
         #     setTicksFromStringVector(plt, d, di, "y")
@@ -201,7 +226,13 @@ function _plot!(plt::Plot, d::KW, args...)
         # TODO: apply idxfilter to x/y/z
 
         _replace_linewidth(kw)
-        _add_series(plt.backend, plt, kw)
+
+        # todo: while the linetype is not supported, try to apply a recipe of f(Val{lt}, x,y,z) recursively
+        # the default should throw an error because we can't handle that linetype
+        _apply_series_recipe(kw)
+
+
+        # _add_series(plt.backend, plt, kw)
     end
 
     _add_annotations(plt, anns)
