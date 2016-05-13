@@ -29,51 +29,51 @@ function RecipesBase.apply_recipe(d::KW, kw::KW, args...; issubplot=false)
 end
 
 
-# if is_installed("DataFrames")
-#     @eval begin
-#         import DataFrames
-#         DFS = Union{Symbol, AbstractArray{Symbol}}
-#
-#         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, dfs::DFS)
-#             if isa(dfs, Symbol)
-#                 get!(d, symbol(letter * "label"), string(dfs))
-#                 collect(df[dfs])
-#             else
-#                 get!(d, :label, reshape(dfs, 1, length(dfs)))
-#                 Any[collect(df[s]) for s in dfs]
-#             end
-#         end
-#
-#         function handle_group(df::DataFrames.AbstractDataFrame, d::KW)
-#             if haskey(d, :group)
-#                 g = d[:group]
-#                 if isa(g, Symbol)
-#                     d[:group] = collect(df[g])
-#                 end
-#             end
-#         end
-#
-#         @recipe function f(df::DataFrames.AbstractDataFrame, sy::DFS)
-#             handle_group(df, d)
-#             handle_dfs(df, d, "y", sy)
-#         end
-#
-#         @recipe function f(df::DataFrames.AbstractDataFrame, sx::DFS, sy::DFS)
-#             handle_group(df, d)
-#             x = handle_dfs(df, d, "x", sx)
-#             y = handle_dfs(df, d, "y", sy)
-#             x, y
-#         end
-#
-#         @recipe function f(df::DataFrames.AbstractDataFrame, sx::DFS, sy::DFS, sz::DFS)
-#             handle_group(df, d)
-#             x = handle_dfs(df, d, "x", sx)
-#             y = handle_dfs(df, d, "y", sy)
-#             z = handle_dfs(df, d, "z", sz)
-#             x, y, z
-#         end
-#     end
-# end
+if is_installed("DataFrames")
+    @eval begin
+        import DataFrames
+        DFS = Union{Symbol, AbstractArray{Symbol}}
+
+        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, dfs::DFS)
+            if isa(dfs, Symbol)
+                get!(d, symbol(letter * "label"), string(dfs))
+                collect(df[dfs])
+            else
+                get!(d, :label, reshape(dfs, 1, length(dfs)))
+                Any[collect(df[s]) for s in dfs]
+            end
+        end
+
+        function handle_group(df::DataFrames.AbstractDataFrame, d::KW)
+            if haskey(d, :group)
+                g = d[:group]
+                if isa(g, Symbol)
+                    d[:group] = collect(df[g])
+                end
+            end
+        end
+
+        @recipe function f(df::DataFrames.AbstractDataFrame, sy::DFS)
+            handle_group(df, d)
+            handle_dfs(df, d, "y", sy)
+        end
+
+        @recipe function f(df::DataFrames.AbstractDataFrame, sx::DFS, sy::DFS)
+            handle_group(df, d)
+            x = handle_dfs(df, d, "x", sx)
+            y = handle_dfs(df, d, "y", sy)
+            x, y
+        end
+
+        @recipe function f(df::DataFrames.AbstractDataFrame, sx::DFS, sy::DFS, sz::DFS)
+            handle_group(df, d)
+            x = handle_dfs(df, d, "x", sx)
+            y = handle_dfs(df, d, "y", sy)
+            z = handle_dfs(df, d, "z", sz)
+            x, y, z
+        end
+    end
+end
 
 # macro kw(k, v)
 #     esc(:(get!(d, $k, $v)))

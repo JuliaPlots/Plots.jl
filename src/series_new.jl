@@ -88,7 +88,8 @@ end
 # instead of process_inputs:
 
 # the catch-all recipes
-@recipe function f(x, y, z)
+# @recipe function f(x, y, z)
+function slice_and_dice(d, x, y, z)
     @show "HERE", typeof((x,y,z))
     xs, _ = convertToAnyVector(x, d)
     ys, _ = convertToAnyVector(y, d)
@@ -123,6 +124,7 @@ end
     nothing  # don't add a series for the main block
 end
 
+@recipe f(x, y, z) = slice_and_dice(d, x, y, z)
 @recipe f(x, y) = x, y, nothing
 @recipe f(y) = nothing, y, nothing
 
@@ -175,7 +177,18 @@ end
 #     end
 # end
 
-# TODO
+@recipe function f{T<:Gray}(mat::AMat{T})
+    if nativeImagesSupported()
+        linetype --> :image, force
+        n, m = size(mat)
+        1:n, 1:m, Surface(mat)
+    else
+        linetype --> :heatmap, force
+        yflip --> true
+        fillcolor --> ColorGradient([:black, :white])
+        1:n, 1:m, Surface(convert(Matrix{Float64}, mat))
+    end
+end
 
 #
 # # images - colors
@@ -191,7 +204,18 @@ end
 # end
 #
 
-# TODO
+@recipe function f{T<:Colorant}(mat::AMat{T})
+    if nativeImagesSupported()
+        linetype --> :image, force
+        n, m = size(mat)
+        1:n, 1:m, Surface(mat)
+    else
+        linetype --> :heatmap, force
+        yflip --> true
+        z, d[:fillcolor] = replace_image_with_heatmap(mat)
+        1:n, 1:m, Surface(z)
+    end
+end
 
 #
 # # plotting arbitrary shapes/polygons
@@ -200,14 +224,20 @@ end
 #     d[:linetype] = :shape
 # end
 
-# TODO
+@recipe function f(shape::Shape)
+    linetype --> :shape, force
+    shape_coords(shape)
+end
 
 # function process_inputs(plt::AbstractPlot, d::KW, shapes::AVec{Shape})
 #     d[:x], d[:y] = shape_coords(shapes)
 #     d[:linetype] = :shape
 # end
 
-# TODO
+@recipe function f(shapes::AVec{Shape})
+    linetype --> :shape, force
+    shape_coords(shapes)
+end
 
 # function process_inputs(plt::AbstractPlot, d::KW, shapes::AMat{Shape})
 #     x, y = [], []
@@ -220,7 +250,15 @@ end
 #     d[:linetype] = :shape
 # end
 
-# TODO
+@recipe function f(shapes::AMat{Shape})
+    for j in 1:size(shapes,2)
+        # create one series for each column
+        # @series shape_coords(vec(shapes[:,j]))
+        di = copy(d)
+        push!(series_list, RecipeData(di, shape_coords(vec(shapes[:,j]))))
+    end
+    nothing # don't create a series for the main block
+end
 
 #
 #
@@ -229,7 +267,7 @@ end
 #     process_inputs(plt, d, f, xmin(plt), xmax(plt))
 # end
 
-# TODO
+@recipe f(f::FuncOrFuncs) = f, xmin(plt), xmax(plt)
 
 #
 # # --------------------------------------------------------------------
@@ -244,7 +282,10 @@ end
 #     process_inputs(plt, d, x, f)
 # end
 
-# TODO
+@recipe function f(f::FuncOrFuncs, x)
+    @assert !(typeof(x) <: FuncOrFuncs)  # otherwise we'd hit infinite recursion here
+    x, f
+end
 
 #
 # # --------------------------------------------------------------------
@@ -264,7 +305,15 @@ end
 #     d[:x], d[:y], d[:z] = x, y, zvec
 # end
 
-# TODO
+@recipe function f(x::AVec, y::AVec, z::AVec)
+    lt = get(d, :linetype, :none)
+    if lt == :scatter
+        d[:linetype] = :scatter3d
+    elseif !(lt in _3dTypes)
+        d[:linetype] = :path3d
+    end
+    slice_and_dice(d, x, y, z)
+end
 
 #
 # # surface-like... function
@@ -276,7 +325,11 @@ end
 #     d[:x], d[:y] = x, y
 # end
 
-# TODO
+@recipe function f{X,Y}(x::AVec{X}, y::AVec{Y}, zf::Function)
+    x = TX <: Number ? sort(x) : x
+    y = TY <: Number ? sort(y) : y
+    slice_and_dice(d, x, y, Surface(zf, x, y))  # TODO: replace with SurfaceFunction when supported
+end
 
 #
 # # surface-like... matrix grid
@@ -296,7 +349,12 @@ end
 #     end
 # end
 
-# TODO
+@recipe function f{X,Y,Z}(x::AVec{X}, y::AVec{Y}, z::AMat{Z})
+    if !like_surface(get(d, :linetype, :none))
+        d[:linetype] = :contour
+    end
+    slice_and_dice(d, x, y, Surface{Matrix{Z}}(z))
+end
 
 #
 # # surfaces-like... general x, y grid
@@ -309,7 +367,8 @@ end
 #     end
 # end
 
-# TODO: maybe change this logic... we should check is3d??
+# TODO? maybe change this logic... we should check is3d??
+#       I think I can take this out out and just let it be handled by slice_and_dice
 
 #
 #
@@ -324,7 +383,6 @@ end
 #     process_inputs(plt, d, x, f)
 # end
 
-# TODO
 
 #
 # # special handling... xmin/xmax with parametric function(s)
@@ -332,7 +390,10 @@ end
 # process_inputs{T<:Number}(plt::AbstractPlot, d::KW, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u))
 # process_inputs(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = process_inputs(plt, d, fx, fy, linspace(umin, umax, numPoints))
 
-# TODO
+@recipe f(f::FuncOrFuncs, xmin::Number, xmax::Number)                            = linspace(xmin, xmax, 100), f
+@recipe f{T<:Number}(fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec{T})               = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
+@recipe f{T<:Number}(u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs)               = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
+@recipe f(fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Number, umax::Number, n = 200) = fx, fy, linspace(umin, umax, n)
 
 #
 # # special handling... 3D parametric function(s)
@@ -340,7 +401,15 @@ end
 # process_inputs{T<:Number}(plt::AbstractPlot, d::KW, u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs) = process_inputs(plt, d, mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u))
 # process_inputs(plt::AbstractPlot, d::KW, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPoints::Int = 1000) = process_inputs(plt, d, fx, fy, fz, linspace(umin, umax, numPoints))
 
-# TODO
+@recipe function f{T<:Number}(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec{T})
+    mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
+end
+@recipe function f{T<:Number}(u::AVec{T}, fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs)
+    mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
+end
+@recipe function f(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPointsn = 200)
+    fx, fy, fz, linspace(umin, umax, numPoints)
+end
 
 #
 #
@@ -353,21 +422,19 @@ end
 #     process_inputs(plt, d, tup...)
 # end
 
-# TODO
+@recipe f(tup::Tuple) = tup
 
 #
 # # (x,y) tuples
 # function process_inputs{R1<:Number,R2<:Number}(plt::AbstractPlot, d::KW, xy::AVec{Tuple{R1,R2}})
 #     process_inputs(plt, d, unzip(xy)...)
 # end
-
-# TODO
-
 # function process_inputs{R1<:Number,R2<:Number}(plt::AbstractPlot, d::KW, xy::Tuple{R1,R2})
 #     process_inputs(plt, d, [xy[1]], [xy[2]])
 # end
 
-# TODO
+@recipe f{R1<:Number,R2<:Number}(xy::AVec{Tuple{R1,R2}}) = unzip(xy)
+@recipe f{R1<:Number,R2<:Number}(xy::Tuple{R1,R2}) = [xy[1]], [xy[2]]
 
 #
 # # (x,y,z) tuples
@@ -378,35 +445,32 @@ end
 #     process_inputs(plt, d, [xyz[1]], [xyz[2]], [xyz[3]])
 # end
 
-# TODO
+@recipe f{R1<:Number,R2<:Number,R3<:Number}(xyz::AVec{Tuple{R1,R2,R3}}) = unzip(xyz)
+@recipe f{R1<:Number,R2<:Number,R3<:Number}(xyz::Tuple{R1,R2,R3}) = [xyz[1]], [xyz[2]], [xyz[3]]
 
 #
 # # 2D FixedSizeArrays
 # function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, xy::AVec{FixedSizeArrays.Vec{2,T}})
 #     process_inputs(plt, d, unzip(xy)...)
 # end
-
-# TODO
-
 # function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, xy::FixedSizeArrays.Vec{2,T})
 #     process_inputs(plt, d, [xy[1]], [xy[2]])
 # end
 
-# TODO
+@recipe f{T<:Number}(xy::AVec{FixedSizeArrays.Vec{2,T}}) = unzip(xy)
+@recipe f{T<:Number}(xy::FixedSizeArrays.Vec{2,T}) = [xy[1]], [xy[2]]
 
 #
 # # 3D FixedSizeArrays
 # function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, xyz::AVec{FixedSizeArrays.Vec{3,T}})
 #     process_inputs(plt, d, unzip(xyz)...)
 # end
-
-# TODO
-
 # function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, xyz::FixedSizeArrays.Vec{3,T})
 #     process_inputs(plt, d, [xyz[1]], [xyz[2]], [xyz[3]])
 # end
 
-# TODO
+@recipe f{T<:Number}(xyz::AVec{FixedSizeArrays.Vec{3,T}}) = unzip(xyz)
+@recipe f{T<:Number}(xyz::FixedSizeArrays.Vec{3,T}) = [xyz[1]], [xyz[2]], [xyz[3]]
 
 #
 # # --------------------------------------------------------------------
@@ -426,4 +490,14 @@ end
 # #     ret, nothing, nothing
 # # end
 
-# TODO
+@recipe function f(groupby::GroupBy, args...)
+    for (i,glab) in enumerate(groupby.groupLabels)
+        # create a new series, with the label of the group, and an idxfilter (to be applied in slice_and_dice)
+        # TODO: use @series instead
+        di = copy(d)
+        label --> string(glab)
+        idxfilter --> groupby.groupIds[i]
+        push!(series_list, RecipeData(di, args))
+    end
+    nothing
+end
