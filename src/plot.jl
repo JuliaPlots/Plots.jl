@@ -148,23 +148,34 @@ function _plot!(plt::Plot, d::KW, args...)
             # @show series
             if isempty(series.args)
                 # finish processing and add to the kw_list
-                _add_markershape(series.d)
-                _filter_input_data!(series.d)
-                warnOnUnsupportedArgs(plt.backend, series.d)
-                warnOnUnsupportedScales(plt.backend, series.d)
+                kw = series.d
+                _add_markershape(kw)
+                _filter_input_data!(kw)
 
-                # TODO:
-                #         # map functions to vectors
-                #         if isa(d[:marker_z], Function)
-                #             d[:marker_z] = map(d[:marker_z], d[:x])
-                #         end
-                #         # handle ribbons
-                #         if get(d, :ribbon, nothing) != nothing
-                #             rib = d[:ribbon]
-                #             d[:fillrange] = (d[:y] - rib, d[:y] + rib)
-                #         end
+                if isa(get(kw, :marker_z, nothing), Function)
+                    # TODO: should this take y and/or z as arguments?
+                    kw[:marker_z] = map(kw[:marker_z], kw[:x])
+                end
 
-                push!(kw_list, series.d)
+                if get(kw, :ribbon, nothing) != nothing
+                    rib = kw[:ribbon]
+                    kw[:fillrange] = (kw[:y] - rib, kw[:y] + rib)
+                end
+
+                warnOnUnsupportedArgs(plt.backend, kw)
+                warnOnUnsupportedScales(plt.backend, kw)
+                push!(kw_list, kw)
+
+                # handle error bars
+                for esym in (:xerror, :yerror)
+                    if get(d, esym, nothing) != nothing
+                        # we make a copy of the KW and apply an errorbar recipe
+                        errkw = copy(kw)
+                        errkw[:linetype] = esym
+                        push!(kw_list, errkw)
+                        # append!(ret, apply_series_recipe(copy(d), Val{esym}))
+                    end
+                end
             else
                 push!(still_to_process, series)
             end
@@ -210,7 +221,9 @@ function _plot!(plt::Plot, d::KW, args...)
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
     for (i,kw) in enumerate(kw_list)
-        plt.n += 1
+        if !(get(kw, :linetype, :none) in (:xerror, :yerror))
+            plt.n += 1
+        end
 
         # TODO: can this be handled as a recipe??
         # note: this could probably be handled using a recipe signature f{S<:Union{AbstractString,Symbol}}(v::AVec{S}, letter::AbstractString)
@@ -238,8 +251,6 @@ function _plot!(plt::Plot, d::KW, args...)
         _add_defaults!(kw, plt, i)
         # dumpdict(kw, "after add defaults", true)
         # getSeriesArgs(plt.backend, getplotargs(plt, n), d, commandIndex, convertSeriesIndex(plt, n), n)
-
-        # TODO: apply idxfilter to x/y/z
 
         _replace_linewidth(kw)
 
