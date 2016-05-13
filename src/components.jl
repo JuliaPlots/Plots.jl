@@ -207,106 +207,106 @@ function rotate(shape::Shape, Θ::Real, c = center(shape))
 end
 
 # -----------------------------------------------------------------------
-
-# abstract AbstractAxisTicks
-# immutable DefaultAxisTicks end
 #
-# type CustomAxisTicks
-#     # TODO
+# # abstract AbstractAxisTicks
+# # immutable DefaultAxisTicks end
+# #
+# # type CustomAxisTicks
+# #     # TODO
+# # end
+#
+# # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
+# type Axis
+#     d::KW
+#     # name::AbstractString      # "x" or "y"
+#     # label::AbstractString
+#     # lims::NTuple{2}
+#     # ticks::AbstractAxisTicks
+#     # scale::Symbol
+#     # flip::Bool
+#     # rotation::Number
+#     # guidefont::Font
+#     # tickfont::Font
+#     # use_minor::Bool
+#     # _plotDefaults[:foreground_color_axis]       = :match            # axis border/tick colors
+#     # _plotDefaults[:foreground_color_border]     = :match            # plot area border/spines
+#     # _plotDefaults[:foreground_color_text]       = :match            # tick text color
+#     # _plotDefaults[:foreground_color_guide]      = :match            # guide text color
 # end
-
-# simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
-type Axis
-    d::KW
-    # name::AbstractString      # "x" or "y"
-    # label::AbstractString
-    # lims::NTuple{2}
-    # ticks::AbstractAxisTicks
-    # scale::Symbol
-    # flip::Bool
-    # rotation::Number
-    # guidefont::Font
-    # tickfont::Font
-    # use_minor::Bool
-    # _plotDefaults[:foreground_color_axis]       = :match            # axis border/tick colors
-    # _plotDefaults[:foreground_color_border]     = :match            # plot area border/spines
-    # _plotDefaults[:foreground_color_text]       = :match            # tick text color
-    # _plotDefaults[:foreground_color_guide]      = :match            # guide text color
-end
-
-
-# function processAxisArg(d::KW, letter::AbstractString, arg)
-function axis(letter, args...; kw...)
-    # TODO: this should initialize with values from _plotDefaults
-    d = KW(
-        :letter => letter,
-        :label => "",
-        :lims => :auto,
-        :ticks => :auto,
-        :scale => :identity,
-        :flip => false,
-        :rotation => 0,
-        :guidefont => font(11),
-        :tickfont => font(8),
-        :use_minor => false,
-        :foreground_color_axis   => :match,
-        :foreground_color_border => :match,
-        :foreground_color_text   => :match,
-        :foreground_color_guide  => :match,
-    )
-
-    # first process args
-    for arg in args
-        T = typeof(arg)
-        arg = get(_scaleAliases, arg, arg)
-        # scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
-
-        if typeof(arg) <: Font
-            d[:tickfont] = arg
-            d[:guidefont] = arg
-
-        elseif arg in _allScales
-            d[:scale] = arg
-
-        elseif arg in (:flip, :invert, :inverted)
-            d[:flip] = true
-
-        elseif T <: @compat(AbstractString)
-            d[:label] = arg
-
-        # xlims/ylims
-        elseif (T <: Tuple || T <: AVec) && length(arg) == 2
-            sym = typeof(arg[1]) <: Number ? :lims : :ticks
-            d[sym] = arg
-
-        # xticks/yticks
-        elseif T <: AVec
-            d[:ticks] = arg
-
-        elseif arg == nothing
-            d[:ticks] = []
-
-        elseif typeof(arg) <: Number
-            d[:rotation] = arg
-
-        else
-            warn("Skipped $(letter)axis arg $arg")
-
-        end
-    end
-
-    # then override for any keywords
-    for (k,v) in kw
-        d[k] = v
-    end
-
-    Axis(d)
-end
-
-
-xaxis(args...) = axis("x", args...)
-yaxis(args...) = axis("y", args...)
-zaxis(args...) = axis("z", args...)
+#
+#
+# # function processAxisArg(d::KW, letter::AbstractString, arg)
+# function axis(letter, args...; kw...)
+#     # TODO: this should initialize with values from _plotDefaults
+#     d = KW(
+#         :letter => letter,
+#         :label => "",
+#         :lims => :auto,
+#         :ticks => :auto,
+#         :scale => :identity,
+#         :flip => false,
+#         :rotation => 0,
+#         :guidefont => font(11),
+#         :tickfont => font(8),
+#         :use_minor => false,
+#         :foreground_color_axis   => :match,
+#         :foreground_color_border => :match,
+#         :foreground_color_text   => :match,
+#         :foreground_color_guide  => :match,
+#     )
+#
+#     # first process args
+#     for arg in args
+#         T = typeof(arg)
+#         arg = get(_scaleAliases, arg, arg)
+#         # scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
+#
+#         if typeof(arg) <: Font
+#             d[:tickfont] = arg
+#             d[:guidefont] = arg
+#
+#         elseif arg in _allScales
+#             d[:scale] = arg
+#
+#         elseif arg in (:flip, :invert, :inverted)
+#             d[:flip] = true
+#
+#         elseif T <: @compat(AbstractString)
+#             d[:label] = arg
+#
+#         # xlims/ylims
+#         elseif (T <: Tuple || T <: AVec) && length(arg) == 2
+#             sym = typeof(arg[1]) <: Number ? :lims : :ticks
+#             d[sym] = arg
+#
+#         # xticks/yticks
+#         elseif T <: AVec
+#             d[:ticks] = arg
+#
+#         elseif arg == nothing
+#             d[:ticks] = []
+#
+#         elseif typeof(arg) <: Number
+#             d[:rotation] = arg
+#
+#         else
+#             warn("Skipped $(letter)axis arg $arg")
+#
+#         end
+#     end
+#
+#     # then override for any keywords
+#     for (k,v) in kw
+#         d[k] = v
+#     end
+#
+#     Axis(d)
+# end
+#
+#
+# xaxis(args...) = axis("x", args...)
+# yaxis(args...) = axis("y", args...)
+# zaxis(args...) = axis("z", args...)
 
 # -----------------------------------------------------------------------
 
@@ -374,7 +374,7 @@ end
 # -----------------------------------------------------------------------
 
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
-type Axis
+type Axis #<: Associative{Symbol,Any}
     d::KW
 end
 
@@ -414,8 +414,10 @@ function discrete_value!(a::Axis, v::AVec)
     Float64[discrete_value!(a, vi) for vi=v]
 end
 
+Base.show(io::IO, a::Axis) = dumpdict(a.d, "Axis", true)
 Base.getindex(a::Axis, k::Symbol) = getindex(a.d, k)
 Base.setindex!(a::Axis, v, ks::Symbol...) = setindex!(a.d, v, ks...)
+Base.haskey(a::Axis, k::Symbol) = haskey(a.d, k)
 Base.extrema(a::Axis) = a[:extrema]
 
 # get discrete ticks, or not
@@ -457,13 +459,13 @@ function Axis(letter::AbstractString, args...; kw...)
         # :foreground_color_guide  => :match,
         :extrema => (Inf, -Inf),
         :discrete_map => Dict(),   # map discrete values to continuous plot values
-        :discrete_values => [],
+        :discrete_values => Tuple{Float64,Any}[],
         :use_minor => false,
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
     for sym in _axis_symbols
         k = symbol(letter * string(sym))
-        d[k] = _plotDefaults[k]
+        d[sym] = _plotDefaults[k]
     end
     for k in _axis_symbols_fonts_colors
         d[k] = _plotDefaults[k]

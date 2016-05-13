@@ -81,11 +81,13 @@ end
 
 # merge the KW d into the plot args
 function _add_plotargs!(plt::Plot, d::KW)
+    # @show d
 
     # handle axis updates from a recipe
     for letter in ("x","y","z")
         # get the Axis object
         axis = plt.plotargs[symbol(letter * "axis")]
+        # @show 1,typeof(axis)
 
         # update xlabel, xscale, etc
         for k in _axis_symbols
@@ -94,6 +96,7 @@ function _add_plotargs!(plt::Plot, d::KW)
                 axis[k] = d[lk]
             end
         end
+        # @show 2,axis
 
         # update guidefont, etc
         for k in _axis_symbols_fonts_colors
@@ -101,6 +104,7 @@ function _add_plotargs!(plt::Plot, d::KW)
                 axis[k] = d[k]
             end
         end
+        # @show 3,axis
 
         # update extrema and discrete values
         datasym = symbol(letter)
@@ -112,6 +116,7 @@ function _add_plotargs!(plt::Plot, d::KW)
                 d[datasym] = discrete_value!(axis, v)
             end
         end
+        # @show 4,axis
     end
 
     for k in keys(_plotDefaults)

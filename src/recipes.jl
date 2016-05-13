@@ -247,7 +247,8 @@ const _box_halfwidth = 0.4
         q1,q2,q3,q4,q5 = quantile(d[:y][groupby.groupIds[i]], linspace(0,1,5))
 
         # make the shape
-        l, m, r = i - _box_halfwidth, i, i + _box_halfwidth
+        center = i - 0.5
+        l, m, r = center - _box_halfwidth, center, center + _box_halfwidth
         xcoords = [
             m, l, r, m, m, NaN,         # lower T
             l, l, r, r, l, NaN,         # lower box
@@ -266,7 +267,8 @@ const _box_halfwidth = 0.4
     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
 
     d[:linetype] = :shape
-    xticklabels --> groupby.groupLabels
+    n = length(groupby.groupLabels)
+    xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
     # we want to set the fields directly inside series recipes... args are ignored
     d[:x], d[:y] = shape_coords(shapes)
@@ -315,14 +317,15 @@ end
         widths = _box_halfwidth * widths / maximum(widths)
 
         # make the violin
-        xcoords = vcat(widths, -reverse(widths)) + i
+        xcoords = vcat(widths, -reverse(widths)) + (i - 0.5)
         ycoords = vcat(centers, reverse(centers))
         push!(shapes, Shape(xcoords, ycoords))
     end
 
     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
     d[:linetype] = :shape
-    xticklabels --> groupby.groupLabels
+    n = length(groupby.groupLabels)
+    xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
     d[:x], d[:y] = shape_coords(shapes)
     ()

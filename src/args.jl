@@ -772,7 +772,7 @@ function setDictValue(d_in::KW, d_out::KW, k::Symbol, idx::Int, defaults::KW)
     if haskey(d_in, k) && !(typeof(d_in[k]) <: Union{AbstractMatrix, Tuple} && isempty(d_in[k]))
         d_out[k] = getArgValue(d_in[k], idx)
     else
-        d_out[k] = defaults[k]
+        d_out[k] = deepcopy(defaults[k])
     end
 end
 

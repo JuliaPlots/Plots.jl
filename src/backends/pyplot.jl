@@ -384,6 +384,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     ax = getAxis(plt, d[:axis])
     x, y, z = d[:x], d[:y], d[:z]
+    @show typeof((x,y,z))
     xyargs = (lt in _3dTypes ? (x,y,z) : (x,y))
 
     # handle zcolor and get c/cmap
@@ -911,9 +912,10 @@ end
 
 
 function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
+    # @show d
     figorax = plt.o
     ax = getLeftAxis(figorax)
-    ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
+    # ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
     guidesz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
 
     # title
@@ -930,31 +932,59 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         end
     end
 
-    # handle each axis in turn
     for letter in ("x", "y", "z")
-        axis, scale, lims, ticks, flip, lab, rotation =
-            axis_symbols(letter, "axis", "scale", "lims", "ticks", "flip", "label", "rotation")
-        haskey(ax, axis) || continue
-        haskey(d, scale) && applyPyPlotScale(ax, d[scale], letter)
-        haskey(d, lims)  && addPyPlotLims(ax, d[lims], letter)
-        haskey(d, ticks) && addPyPlotTicks(ax, d[ticks], letter)
-        haskey(d, lab)   && ax[symbol("set_", letter, "label")](d[lab])
-        if get(d, flip, false)
+        axissym = symbol(letter*"axis")
+        axis = plt.plotargs[axissym]
+        # @show axis
+        haskey(ax, axissym) || continue
+        applyPyPlotScale(ax, axis[:scale], letter)
+        addPyPlotLims(ax, axis[:lims], letter)
+        addPyPlotTicks(ax, get_ticks(axis), letter)
+        ax[symbol("set_", letter, "label")](axis[:label])
+        if get(axis.d, :flip, false)
             ax[symbol("invert_", letter, "axis")]()
         end
         for tmpax in axes
-            tmpax[axis][:label][:set_fontsize](guidesz)
+            tmpax[axissym][:label][:set_fontsize](axis[:guidefont].pointsize)
             for lab in tmpax[symbol("get_", letter, "ticklabels")]()
-                lab[:set_fontsize](ticksz)
-                haskey(d, rotation) && lab[:set_rotation](d[rotation])
+                lab[:set_fontsize](axis[:tickfont].pointsize)
+                lab[:set_rotation](axis[:rotation])
             end
             if get(d, :grid, false)
                 fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
-                tmpax[axis][:grid](true, color = fgcolor)
+                tmpax[axissym][:grid](true, color = fgcolor)
                 tmpax[:set_axisbelow](true)
             end
         end
+        # @show ""
     end
+
+
+    # # handle each axis in turn
+    # for letter in ("x", "y", "z")
+    #     axis, scale, lims, ticks, flip, lab, rotation =
+    #         axis_symbols(letter, "axis", "scale", "lims", "ticks", "flip", "label", "rotation")
+    #     haskey(ax, axis) || continue
+    #     haskey(d, scale) && applyPyPlotScale(ax, d[scale], letter)
+    #     haskey(d, lims)  && addPyPlotLims(ax, d[lims], letter)
+    #     haskey(d, ticks) && addPyPlotTicks(ax, d[ticks], letter)
+    #     haskey(d, lab)   && ax[symbol("set_", letter, "label")](d[lab])
+    #     if get(d, flip, false)
+    #         ax[symbol("invert_", letter, "axis")]()
+    #     end
+    #     for tmpax in axes
+    #         tmpax[axis][:label][:set_fontsize](guidesz)
+    #         for lab in tmpax[symbol("get_", letter, "ticklabels")]()
+    #             lab[:set_fontsize](ticksz)
+    #             haskey(d, rotation) && lab[:set_rotation](d[rotation])
+    #         end
+    #         if get(d, :grid, false)
+    #             fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
+    #             tmpax[axis][:grid](true, color = fgcolor)
+    #             tmpax[:set_axisbelow](true)
+    #         end
+    #     end
+    # end
 
     # do we want to change the aspect ratio?
     aratio = get(d, :aspect_ratio, :none)

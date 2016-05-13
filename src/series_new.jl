@@ -105,6 +105,8 @@ immutable SliceIt end
     end
     mf = length(fillranges)
 
+    @show zs
+
     mx = length(xs)
     my = length(ys)
     mz = length(zs)
@@ -115,6 +117,7 @@ immutable SliceIt end
         xi, yi, zi = xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]
         # @show i, typeof((xi, yi, zi))
         di[:x], di[:y], di[:z] = compute_xyz(xi, yi, zi)
+        # @show i, typeof((di[:x], di[:y], di[:z]))
 
         # handle fillrange
         fr = fillranges[mod1(i,mf)]
@@ -329,8 +332,8 @@ end
 # end
 
 @recipe function f{X,Y}(x::AVec{X}, y::AVec{Y}, zf::Function)
-    x = X <: Number ? sort(x) : x
-    y = Y <: Number ? sort(y) : y
+    # x = X <: Number ? sort(x) : x
+    # y = Y <: Number ? sort(y) : y
     SliceIt, x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
 end
 
