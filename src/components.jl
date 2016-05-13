@@ -404,6 +404,7 @@ function discrete_value!(a::Axis, v)
         cv = max(0.5, emax + 1.0)
         expand_extrema!(a, cv)
         a[:discrete_map][v] = cv
+        push!(a[:discrete_values], (cv, v))
     end
     cv
 end
@@ -417,6 +418,25 @@ Base.getindex(a::Axis, k::Symbol) = getindex(a.d, k)
 Base.setindex!(a::Axis, v, ks::Symbol...) = setindex!(a.d, v, ks...)
 Base.extrema(a::Axis) = a[:extrema]
 
+# get discrete ticks, or not
+function get_ticks(a::Axis)
+    ticks = a[:ticks]
+    dvals = a[:discrete_values]
+    if !isempty(dvals) && ticks == :auto
+        vals, labels = unzip(dvals)
+    else
+        ticks
+    end
+end
+
+const _axis_symbols = (:label, :lims, :ticks, :scale, :flip, :rotation)
+const _axis_symbols_fonts_colors = (
+    :guidefont, :tickfont,
+    :foreground_color_axis,
+    :foreground_color_border,
+    :foreground_color_text,
+    :foreground_color_guide
+    )
 
 # function processAxisArg(d::KW, letter::AbstractString, arg)
 function Axis(letter::AbstractString, args...; kw...)
@@ -437,16 +457,16 @@ function Axis(letter::AbstractString, args...; kw...)
         # :foreground_color_guide  => :match,
         :extrema => (Inf, -Inf),
         :discrete_map => Dict(),   # map discrete values to continuous plot values
+        :discrete_values => [],
         :use_minor => false,
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
-    for sym in (:label, :lims, :ticks, :scale, :flip, :rotation)
+    for sym in _axis_symbols
         k = symbol(letter * string(sym))
-        d[k] = default(k)
+        d[k] = _plotDefaults[k]
     end
-    for k in (:guidefont, :tickfont, :foreground_color_axis, :foreground_color_border,
-                :foreground_color_text, :foreground_color_guide)
-        d[k] = default(k)
+    for k in _axis_symbols_fonts_colors
+        d[k] = _plotDefaults[k]
     end
 
     # first process args
@@ -489,9 +509,12 @@ function Axis(letter::AbstractString, args...; kw...)
         end
     end
 
-    # then override for any keywords
+    # then override for any keywords... only those keywords that already exists in d
     for (k,v) in kw
-        d[k] = v
+        sym = symbol(string(k)[2:end])
+        if haskey(d, sym)
+            d[sym] = v
+        end
     end
 
     Axis(d)

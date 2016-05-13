@@ -74,7 +74,46 @@ function plot!(plt::Plot, args...; kw...)
     _plot!(plt, d, args...)
 end
 
+function strip_first_letter(s::Symbol)
+    str = string(s)
+    str[1:1], symbol(str[2:end])
+end
+
+# merge the KW d into the plot args
 function _add_plotargs!(plt::Plot, d::KW)
+
+    # handle axis updates from a recipe
+    for letter in ("x","y","z")
+        # get the Axis object
+        axis = plt.plotargs[symbol(letter * "axis")]
+
+        # update xlabel, xscale, etc
+        for k in _axis_symbols
+            lk = symbol(letter * string(k))
+            if haskey(d, lk)
+                axis[k] = d[lk]
+            end
+        end
+
+        # update guidefont, etc
+        for k in _axis_symbols_fonts_colors
+            if haskey(d, k)
+                axis[k] = d[k]
+            end
+        end
+
+        # update extrema and discrete values
+        datasym = symbol(letter)
+        if haskey(d, datasym)
+            v = d[datasym]
+            if eltype(v) <: Number
+                expand_extrema!(axis, v)
+            else
+                d[datasym] = discrete_value!(axis, v)
+            end
+        end
+    end
+
     for k in keys(_plotDefaults)
         if haskey(d, k)
             plt.plotargs[k] = pop!(d, k)

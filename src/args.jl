@@ -11,7 +11,7 @@ const _3dTypes = [:path3d, :scatter3d, :surface, :wireframe, :contour3d]
 const _allTypes = vcat([
                         :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
                         :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, :ohlc,
-                        :contour, :pie, :shape, :image #, :boxplot, :violin, :quiver, 
+                        :contour, :pie, :shape, :image #, :boxplot, :violin, :quiver,
                        ], _3dTypes)
 @compat const _typeAliases = KW(
     :n             => :none,
@@ -215,6 +215,9 @@ _plotDefaults[:annotation]        = nothing           # annotation tuple(s)... (
 _plotDefaults[:overwrite_figure]  = false
 _plotDefaults[:polar]             = false
 _plotDefaults[:aspect_ratio]        = :none             # choose from :none or :equal
+_plotDefaults[:xaxis]             = xaxis()
+_plotDefaults[:yaxis]             = yaxis()
+_plotDefaults[:zaxis]             = zaxis()
 
 
 # TODO: x/y scales
