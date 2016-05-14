@@ -17,7 +17,7 @@ supportedArgs(::QwtBackend) = [
     :legend,
     :seriescolor, :seriesalpha,
     :linestyle,
-    :linetype,
+    :seriestype,
     :linewidth,
     :markershape,
     :markercolor,
@@ -91,29 +91,29 @@ end
 
 function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
   d = KW(kw)
-  lt = d[:linetype]
-  if lt == :scatter
-    d[:linetype] = :none
+  st = d[:seriestype]
+  if st == :scatter
+    d[:seriestype] = :none
     if d[:markershape] == :none
       d[:markershape] = :ellipse
     end
 
-  elseif lt in (:hline, :vline)
+  elseif st in (:hline, :vline)
     addLineMarker(plt, d)
-    d[:linetype] = :none
+    d[:seriestype] = :none
     d[:markershape] = :ellipse
     d[:markersize] = 1
-    if lt == :vline
+    if st == :vline
       d[:x], d[:y] = d[:y], d[:x]
     end
 
-  elseif !iscreating && lt == :bar
+  elseif !iscreating && st == :bar
     d = barHack(; kw...)
-  elseif !iscreating && lt == :hist
+  elseif !iscreating && st == :hist
     d = barHack(; histogramHack(; kw...)...)
   end
 
-  replaceQwtAliases(d, :linetype)
+  replaceQwtAliases(d, :seriestype)
   replaceQwtAliases(d, :markershape)
 
   for k in keys(d)
@@ -208,7 +208,7 @@ end
 function addLineMarker(plt::Plot{QwtBackend}, d::KW)
   for yi in d[:y]
     marker = Qwt.QWT.QwtPlotMarker()
-    ishorizontal = (d[:linetype] == :hline)
+    ishorizontal = (d[:seriestype] == :hline)
     marker[:setLineStyle](ishorizontal ? 1 : 2)
     marker[ishorizontal ? :setYValue : :setXValue](yi)
     qcolor = Qwt.convertRGBToQColor(getColor(d[:linecolor]))

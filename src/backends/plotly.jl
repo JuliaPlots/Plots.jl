@@ -9,7 +9,7 @@ supportedArgs(::PlotlyBackend) = [
     #     :foreground_color_text, :foreground_color_border,
     :group,
     :label,
-    :linetype,
+    :seriestype,
     :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
@@ -323,7 +323,7 @@ function plotly_layout(d::KW, seriesargs::AVec{KW})
     # # arrows
     # for sargs in seriesargs
     #     a = sargs[:arrow]
-    #     if sargs[:linetype] in (:path, :line) && typeof(a) <: Arrow
+    #     if sargs[:seriestype] in (:path, :line) && typeof(a) <: Arrow
     #         add_arrows(sargs[:x], sargs[:y]) do xyprev, xy
     #             push!(d_out[:annotations], get_annotation_dict_for_arrow(sargs, xyprev, xy, a))
     #         end
@@ -367,13 +367,13 @@ function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
   x, y = collect(d[:x]), collect(d[:y])
   d_out[:name] = d[:label]
 
-  lt = d[:linetype]
-  isscatter = lt in (:scatter, :scatter3d)
+  st = d[:seriestype]
+  isscatter = st in (:scatter, :scatter3d)
   hasmarker = isscatter || d[:markershape] != :none
   hasline = !isscatter
 
   # set the "type"
-  if lt in (:line, :path, :scatter, :steppre, :steppost)
+  if st in (:line, :path, :scatter, :steppre, :steppost)
     d_out[:type] = "scatter"
     d_out[:mode] = if hasmarker
       hasline ? "lines+markers" : "markers"
@@ -388,11 +388,11 @@ function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
     end
     d_out[:x], d_out[:y] = x, y
 
-  elseif lt == :bar
+  elseif st == :bar
     d_out[:type] = "bar"
     d_out[:x], d_out[:y] = x, y
 
-  elseif lt == :hist2d
+  elseif st == :hist2d
     d_out[:type] = "histogram2d"
     d_out[:x], d_out[:y] = x, y
     if isa(d[:bins], Tuple)
@@ -403,22 +403,22 @@ function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
     d_out[:nbinsx] = xbins
     d_out[:nbinsy] = ybins
 
-  elseif lt in (:hist, :density)
+  elseif st in (:hist, :density)
     d_out[:type] = "histogram"
     isvert = isvertical(d)
     d_out[isvert ? :x : :y] = y
     d_out[isvert ? :nbinsx : :nbinsy] = d[:bins]
-    if lt == :density
+    if st == :density
       d_out[:histnorm] = "probability density"
     end
 
-  elseif lt == :heatmap
+  elseif st == :heatmap
     d_out[:type] = "heatmap"
     d_out[:x], d_out[:y] = x, y
     d_out[:z] = d[:z].surf
     d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
-  elseif lt == :contour
+  elseif st == :contour
     d_out[:type] = "contour"
     d_out[:x], d_out[:y] = x, y
     d_out[:z] = d[:z].surf
@@ -427,19 +427,19 @@ function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
     d_out[:contours] = KW(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
     d_out[:colorscale] = plotly_colorscale(d[:linecolor], d[:linealpha])
 
-  elseif lt in (:surface, :wireframe)
+  elseif st in (:surface, :wireframe)
     d_out[:type] = "surface"
     d_out[:x], d_out[:y] = x, y
     d_out[:z] = d[:z].surf
     d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
-  elseif lt == :pie
+  elseif st == :pie
     d_out[:type] = "pie"
     d_out[:labels] = x
     d_out[:values] = y
     d_out[:hoverinfo] = "label+percent+name"
 
-  elseif lt in (:path3d, :scatter3d)
+  elseif st in (:path3d, :scatter3d)
     d_out[:type] = "scatter3d"
     d_out[:mode] = if hasmarker
       hasline ? "lines+markers" : "markers"
@@ -450,7 +450,7 @@ function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
     d_out[:z] = collect(d[:z])
 
   else
-    warn("Plotly: linetype $lt isn't supported.")
+    warn("Plotly: seriestype $st isn't supported.")
     return KW()
   end
 
@@ -484,9 +484,9 @@ function plotly_series(d::KW, plotargs::KW; plot_index = nothing)
     d_out[:line] = KW(
         :color => webcolor(d[:linecolor], d[:linealpha]),
         :width => d[:linewidth],
-        :shape => if lt == :steppre
+        :shape => if st == :steppre
           "vh"
-        elseif lt == :steppost
+        elseif st == :steppost
           "hv"
         else
           "linear"

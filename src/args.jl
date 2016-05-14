@@ -46,12 +46,12 @@ const _allTypes = vcat([
     :imagesc       => :image,
   )
 
-like_histogram(linetype::Symbol) = linetype in (:hist, :density)
-like_line(linetype::Symbol)      = linetype in (:line, :path, :steppre, :steppost)
-like_surface(linetype::Symbol)   = linetype in (:contour, :contour3d, :heatmap, :surface, :wireframe, :image)
+like_histogram(seriestype::Symbol) = seriestype in (:hist, :density)
+like_line(seriestype::Symbol)      = seriestype in (:line, :path, :steppre, :steppost)
+like_surface(seriestype::Symbol)   = seriestype in (:contour, :contour3d, :heatmap, :surface, :wireframe, :image)
 
-is3d(linetype::Symbol) = linetype in _3dTypes
-is3d(d::KW) = trueOrAllTrue(is3d, d[:linetype])
+is3d(seriestype::Symbol) = seriestype in _3dTypes
+is3d(d::KW) = trueOrAllTrue(is3d, d[:seriestype])
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 @compat const _styleAliases = KW(
@@ -120,7 +120,7 @@ _seriesDefaults[:axis]            = :left
 _seriesDefaults[:label]           = "AUTO"
 _seriesDefaults[:seriescolor]     = :auto
 _seriesDefaults[:seriesalpha]     = nothing
-_seriesDefaults[:linetype]        = :path
+_seriesDefaults[:seriestype]        = :path
 _seriesDefaults[:linestyle]       = :solid
 _seriesDefaults[:linewidth]       = :auto
 _seriesDefaults[:linecolor]       = :match
@@ -300,10 +300,11 @@ add_aliases(:makeralpha, :ma, :malpha, :mα, :makeropacity, :mopacity)
 add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
 
+# series attributes
+add_aliases(:seriestype, :st, :t, :typ, :linetype, :lt)
 add_aliases(:label, :lab)
 add_aliases(:line, :l)
 add_aliases(:linewidth, :w, :width, :lw)
-add_aliases(:linetype, :lt, :t, :seriestype)
 add_aliases(:linestyle, :style, :s, :ls)
 add_aliases(:marker, :m, :mark)
 add_aliases(:markershape, :shape)
@@ -451,9 +452,9 @@ end
 
 
 function processLineArg(d::KW, arg)
-    # linetype
+    # seriestype
     if allLineTypes(arg)
-        d[:linetype] = arg
+        d[:seriestype] = arg
 
     # linestyle
     elseif allStyles(arg)
@@ -587,8 +588,8 @@ function preprocessArgs!(d::KW)
         processLineArg(d, arg)
     end
 
-    if haskey(d, :linetype) && haskey(_typeAliases, d[:linetype])
-        d[:linetype] = _typeAliases[d[:linetype]]
+    if haskey(d, :seriestype) && haskey(_typeAliases, d[:seriestype])
+        d[:seriestype] = _typeAliases[d[:seriestype]]
     end
 
     # handle marker args... default to ellipse if shape not set
@@ -732,9 +733,9 @@ _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_s
 function warnOnUnsupported(pkg::AbstractBackend, d::KW)
     (d[:axis] in supportedAxes(pkg)
         || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
-    (d[:linetype] == :none
-        || d[:linetype] in supportedTypes(pkg)
-        || warn("linetype $(d[:linetype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))"))
+    (d[:seriestype] == :none
+        || d[:seriestype] in supportedTypes(pkg)
+        || warn("seriestype $(d[:seriestype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))"))
     (d[:linestyle] in supportedStyles(pkg)
         || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supportedStyles(pkg))"))
     (d[:markershape] == :none
@@ -826,8 +827,8 @@ function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
     d
 end
 
-function has_black_border_for_default(lt::Symbol)
-    like_histogram(lt) || lt in (:hexbin, :bar)
+function has_black_border_for_default(st::Symbol)
+    like_histogram(st) || st in (:hexbin, :bar)
 end
 #
 # # build the argument dictionary for a series
@@ -847,8 +848,8 @@ end
 #         end
 #     end
 #
-#     if haskey(_typeAliases, d[:linetype])
-#         d[:linetype] = _typeAliases[d[:linetype]]
+#     if haskey(_typeAliases, d[:seriestype])
+#         d[:seriestype] = _typeAliases[d[:seriestype]]
 #     end
 #
 #     aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
@@ -876,7 +877,7 @@ end
 #     # update colors
 #     for csym in (:linecolor, :markercolor, :fillcolor)
 #         d[csym] = if d[csym] == :match
-#             if has_black_border_for_default(d[:linetype]) && csym == :linecolor
+#             if has_black_border_for_default(d[:seriestype]) && csym == :linecolor
 #                 :black
 #             else
 #                 d[:seriescolor]
@@ -899,7 +900,7 @@ end
 #     end
 #
 #     # scatter plots don't have a line, but must have a shape
-#     if d[:linetype] in (:scatter, :scatter3d)
+#     if d[:seriestype] in (:scatter, :scatter3d)
 #         d[:linewidth] = 0
 #         if d[:markershape] == :none
 #             d[:markershape] = :ellipse

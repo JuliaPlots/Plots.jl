@@ -17,7 +17,7 @@ supportedArgs(::GLVisualizeBackend) = [
     # :legend,
     # :linecolor,
     # :linestyle,
-     :linetype
+     :seriestype
     #  :seriescolor, :seriesalpha,
     # :linewidth,
     # :linealpha,

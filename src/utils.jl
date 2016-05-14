@@ -25,7 +25,7 @@ function histogramHack(; kw...)
   edges, midpoints, buckets, counts = binData(d[:y], d[:bins])
   d[:x] = midpoints
   d[:y] = float(counts)
-  d[:linetype] = :bar
+  d[:seriestype] = :bar
   d[:fillrange] = d[:fillrange] == nothing ? 0.0 : d[:fillrange]
   d
 end
@@ -64,7 +64,7 @@ function barHack(; kw...)
 
   d[:x] = x
   d[:y] = y
-  d[:linetype] = :path
+  d[:seriestype] = :path
   d[:fillrange] = fillrange
   d
 end
@@ -94,12 +94,12 @@ function sticksHack(; kw...)
   # change the line args
   dLine[:x] = x
   dLine[:y] = y
-  dLine[:linetype] = :path
+  dLine[:seriestype] = :path
   dLine[:markershape] = :none
   dLine[:fillrange] = nothing
 
   # change the scatter args
-  dScatter[:linetype] = :none
+  dScatter[:seriestype] = :none
 
   dLine, dScatter
 end
@@ -132,7 +132,7 @@ end
 
 function imageHack(d::KW)
     :heatmap in supportedTypes() || error("Neither :image or :heatmap are supported!")
-    d[:linetype] = :heatmap
+    d[:seriestype] = :heatmap
     d[:z], d[:fillcolor] = replace_image_with_heatmap(d[:z].surf)
 end
 # ---------------------------------------------------------------
@@ -369,7 +369,7 @@ function with(f::Function, args...; kw...)
     # #       as in:  with(:gadfly, :scatter, :legend, :grid) do; ...; end
     # # TODO: can we generalize this enough to also do something similar in the plot commands??
 
-    # k = :linetype
+    # k = :seriestype
     # if arg in _allTypes
     #   olddefs[k] = default(k)
     #   newdefs[k] = arg

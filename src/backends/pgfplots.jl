@@ -17,7 +17,7 @@ supportedArgs(::PGFPlotsBackend) = [
      :seriescolor, :seriesalpha,
      :linecolor,
      :linestyle,
-     :linetype,
+     :seriestype,
      :linewidth,
      :linealpha,
      :markershape,
@@ -184,7 +184,7 @@ function _pgfplots_get_plot_kwargs(plt)
 end
 
 function _pgfplots_axis(plt_series)
-    line_type = plt_series[:linetype]
+    line_type = plt_series[:seriestype]
     plt_kwargs = _pgfplots_get_plot_kwargs(plt_series)
         if line_type == :path
         PGFPlots.Linear(plt_series[:x], plt_series[:y]; plt_kwargs...)

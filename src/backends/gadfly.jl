@@ -5,7 +5,7 @@
 supportedArgs(::GadflyBackend) = [
     :annotation,
     :background_color, :foreground_color, :color_palette,
-    :group, :label, :linetype,
+    :group, :label, :seriestype,
     :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
@@ -69,31 +69,31 @@ end
 
 
 function getLineGeom(d::KW)
-    lt = d[:linetype]
+    st = d[:seriestype]
     xbins, ybins = maketuple(d[:bins])
-    if lt == :hexb
+    if st == :hexb
         Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)
-    elseif lt == :hist2d
+    elseif st == :hist2d
         Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)
-    elseif lt == :hist
+    elseif st == :hist
         Gadfly.Geom.histogram(bincount = xbins,
                               orientation = isvertical(d) ? :vertical : :horizontal,
                               position = d[:bar_position] == :stack ? :stack : :dodge)
-    elseif lt == :path
+    elseif st == :path
         Gadfly.Geom.path
-    elseif lt in (:bar, :sticks)
+    elseif st in (:bar, :sticks)
         Gadfly.Geom.bar
-    elseif lt == :steppost
+    elseif st == :steppost
         Gadfly.Geom.step
-    elseif lt == :steppre
+    elseif st == :steppre
         Gadfly.Geom.step(direction = :vh)
-    elseif lt == :hline
+    elseif st == :hline
         Gadfly.Geom.hline
-    elseif lt == :vline
+    elseif st == :vline
         Gadfly.Geom.vline
-    elseif lt == :contour
+    elseif st == :contour
         Gadfly.Geom.contour(levels = d[:levels])
-    # elseif lt == :shape
+    # elseif st == :shape
     #     Gadfly.Geom.polygon(fill = true, preserve_order = true)
     else
         nothing
@@ -116,13 +116,13 @@ function get_extra_theme_args(d::KW, k::Symbol)
 end
 
 function getGadflyLineTheme(d::KW)
-    lt = d[:linetype]
+    st = d[:seriestype]
     lc = convertColor(getColor(d[:linecolor]), d[:linealpha])
     fc = convertColor(getColor(d[:fillcolor]), d[:fillalpha])
 
     Gadfly.Theme(;
-        default_color = (lt in (:hist,:hist2d,:hexbin,:bar,:sticks) ? fc : lc),
-        line_width = (lt == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
+        default_color = (st in (:hist,:hist2d,:hexbin,:bar,:sticks) ? fc : lc),
+        line_width = (st == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
         # line_style = Gadfly.get_stroke_vector(d[:linestyle]),
         lowlight_color = x->RGB(fc),  # fill/ribbon
         lowlight_opacity = alpha(fc), # fill/ribbon
@@ -136,10 +136,10 @@ function addGadflyLine!(plt::Plot, numlayers::Int, d::KW, geoms...)
     gplt = getGadflyContext(plt)
     gfargs = vcat(geoms..., getGadflyLineTheme(d))
     kwargs = KW()
-    lt = d[:linetype]
+    st = d[:seriestype]
 
     # add a fill?
-    if d[:fillrange] != nothing && lt != :contour
+    if d[:fillrange] != nothing && st != :contour
         fillmin, fillmax = map(makevec, maketuple(d[:fillrange]))
         nmin, nmax = length(fillmin), length(fillmax)
         kwargs[:ymin] = Float64[min(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]
@@ -147,20 +147,20 @@ function addGadflyLine!(plt::Plot, numlayers::Int, d::KW, geoms...)
         push!(gfargs, Gadfly.Geom.ribbon)
     end
 
-    if lt in (:hline, :vline)
-        kwargs[lt == :hline ? :yintercept : :xintercept] = d[:y]
+    if st in (:hline, :vline)
+        kwargs[st == :hline ? :yintercept : :xintercept] = d[:y]
 
     else
-        if lt == :sticks
+        if st == :sticks
             w = 0.01 * mean(diff(d[:x]))
             kwargs[:xmin] = d[:x] - w
             kwargs[:xmax] = d[:x] + w
-        elseif lt == :contour
+        elseif st == :contour
             kwargs[:z] = d[:z].surf
             addGadflyContColorScale(plt, d[:linecolor])
         end
 
-        kwargs[:x] = d[lt == :hist ? :y : :x]
+        kwargs[:x] = d[st == :hist ? :y : :x]
         kwargs[:y] = d[:y]
 
     end
@@ -183,7 +183,7 @@ getMarkerGeom(other) = gadflyshape(get_shape(other))
 # getMarkerGeom(shape::Symbol) = gadflyshape(_shapes[shape])
 # getMarkerGeom(shapes::AVec) = gadflyshape(map(gadflyshape, shapes)) # map(getMarkerGeom, shapes)
 function getMarkerGeom(d::KW)
-    if d[:linetype] == :shape
+    if d[:seriestype] == :shape
         Gadfly.Geom.polygon(fill = true, preserve_order = true)
     else
         getMarkerGeom(d[:markershape])
@@ -297,21 +297,21 @@ function addGadflySeries!(plt::Plot, d::KW)
     end
 
     # special handling for ohlc and scatter
-    lt = d[:linetype]
-    if lt == :ohlc
+    st = d[:seriestype]
+    if st == :ohlc
         error("Haven't re-implemented after refactoring")
-    elseif lt in (:hist2d, :hexbin) && (isa(d[:fillcolor], ColorGradient) || isa(d[:fillcolor], ColorFunction))
+    elseif st in (:hist2d, :hexbin) && (isa(d[:fillcolor], ColorGradient) || isa(d[:fillcolor], ColorFunction))
         push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:fillcolor], p))))
-    elseif lt == :scatter && d[:markershape] == :none
+    elseif st == :scatter && d[:markershape] == :none
         d[:markershape] = :ellipse
     end
 
     # markers
-    if d[:markershape] != :none || lt == :shape
+    if d[:markershape] != :none || st == :shape
         prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), d, plt.plotargs, smooth...))
     end
 
-    lt in (:hist2d, :hexbin, :contour) || addToGadflyLegend(plt, d)
+    st in (:hist2d, :hexbin, :contour) || addToGadflyLegend(plt, d)
 
     # now save the layers that apply to this series
     d[:gadflylayers] = layers

@@ -211,10 +211,10 @@ end
 #
 # Returns a Vector{KW}.
 # """
-# apply_series_recipe(d::KW, lt) = KW[d]
+# apply_series_recipe(d::KW, st) = KW[d]
 
 
-# for linetype `line`, need to sort by x values
+# for seriestype `line`, need to sort by x values
 @recipe function f(::Type{Val{:line}}, x, y, z)
     # order by x
     indices = sortperm(d[:x])
@@ -223,7 +223,7 @@ end
     if typeof(d[:z]) <: AVec
         d[:z] = d[:z][indices]
     end
-    d[:linetype] = :path
+    d[:seriestype] = :path
     ()
 end
 
@@ -266,7 +266,7 @@ const _box_halfwidth = 0.4
 
     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
 
-    d[:linetype] = :shape
+    d[:seriestype] = :shape
     n = length(groupby.groupLabels)
     xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
@@ -323,7 +323,7 @@ end
     end
 
     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
-    d[:linetype] = :shape
+    d[:seriestype] = :shape
     n = length(groupby.groupLabels)
     xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
@@ -337,7 +337,7 @@ end
 # Error Bars
 
 function error_style!(d::KW)
-    d[:linetype] = :path
+    d[:seriestype] = :path
     d[:linecolor] = d[:markerstrokecolor]
     d[:linewidth] = d[:markerstrokewidth]
     d[:label] = ""
@@ -401,7 +401,7 @@ end
 # function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
 function quiver_using_arrows(d::KW)
     d[:label] = ""
-    d[:linetype] = :path
+    d[:seriestype] = :path
     if !isa(d[:arrow], Arrow)
         d[:arrow] = arrow()
     end
@@ -440,7 +440,7 @@ end
 # function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
 function quiver_using_hack(d::KW)
     d[:label] = ""
-    d[:linetype] = :shape
+    d[:seriestype] = :shape
 
     velocity = error_zipit(d[:quiver])
     xorig, yorig = d[:x], d[:y]

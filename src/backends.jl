@@ -52,6 +52,9 @@ _update_plot_pos_size{P<:AbstractBackend}(plt::AbstractPlot{P}, d::KW) = nothing
 subplot(pkg::AbstractBackend; kw...)                    = error("subplot($pkg; kw...) is not implemented")
 subplot!(pkg::AbstractBackend, subplt::Subplot; kw...)  = error("subplot!($pkg, subplt; kw...) is not implemented")
 
+# don't do anything as a default
+_before_add_series(plt::Plot) = nothing
+
 # ---------------------------------------------------------
 
 

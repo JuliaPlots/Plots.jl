@@ -21,7 +21,7 @@ supportedArgs(::WinstonBackend) = [
     :legend,
     :seriescolor, :seriesalpha,
     :linestyle,
-    :linetype,
+    :seriestype,
     :linewidth,
     :markershape,
     :markercolor,
@@ -130,7 +130,7 @@ function _add_series(::WinstonBackend, plt::Plot, d::KW)
   window, canvas, wplt = getWinstonItems(plt)
 
   # until we call it normally, do the hack
-  if d[:linetype] == :bar
+  if d[:seriestype] == :bar
     d = barHack(;d...)
   end
 
@@ -149,10 +149,10 @@ function _add_series(::WinstonBackend, plt::Plot, d::KW)
 
 
   ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :hist2d, :hexbin, :hist, :bar
-  if d[:linetype] == :none
+  if d[:seriestype] == :none
     Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)..., color=getColor(d[:markercolor])))
 
-  elseif d[:linetype] == :path
+  elseif d[:seriestype] == :path
     x, y = d[:x], d[:y]
     Winston.add(wplt, Winston.Curve(x, y; e...))
 
@@ -166,38 +166,38 @@ function _add_series(::WinstonBackend, plt::Plot, d::KW)
       Winston.add(wplt, Winston.FillBetween(x, y, x, y2, fillcolor=getColor(d[:fillcolor])))
     end
 
-  elseif d[:linetype] == :scatter
+  elseif d[:seriestype] == :scatter
     if d[:markershape] == :none
       d[:markershape] = :ellipse
     end
 
-  # elseif d[:linetype] == :step
+  # elseif d[:seriestype] == :step
   #     fn = Winston.XXX
 
-  # elseif d[:linetype] == :stepinverted
+  # elseif d[:seriestype] == :stepinverted
   #     fn = Winston.XXX
 
-  elseif d[:linetype] == :sticks
+  elseif d[:seriestype] == :sticks
       Winston.add(wplt, Winston.Stems(d[:x], d[:y]; e...))
 
-  # elseif d[:linetype] == :dots
+  # elseif d[:seriestype] == :dots
   #     fn = Winston.XXX
 
-  # elseif d[:linetype] == :hist2d
+  # elseif d[:seriestype] == :hist2d
   #     fn = Winston.XXX
 
-  # elseif d[:linetype] == :hexbin
+  # elseif d[:seriestype] == :hexbin
   #     fn = Winston.XXX
 
-  elseif d[:linetype] == :hist
+  elseif d[:seriestype] == :hist
       hst = hist(d[:y], d[:bins])
       Winston.add(wplt, Winston.Histogram(hst...; copy_remove(e, :bins)...))
 
-  # elseif d[:linetype] == :bar
+  # elseif d[:seriestype] == :bar
   #     # fn = Winston.XXX
 
   else
-    error("linetype $(d[:linetype]) not supported by Winston.")
+    error("seriestype $(d[:seriestype]) not supported by Winston.")
 
   end
 
@@ -209,7 +209,7 @@ function _add_series(::WinstonBackend, plt::Plot, d::KW)
 
 
   # optionally add a regression line
-  d[:smooth] && d[:linetype] != :hist && addRegressionLineWinston(d, wplt)
+  d[:smooth] && d[:seriestype] != :hist && addRegressionLineWinston(d, wplt)
 
   push!(plt.seriesargs, d)
   plt

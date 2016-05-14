@@ -18,7 +18,7 @@ supportedArgs(::BokehBackend) = [
     # :legend,
     :seriescolor, :seriesalpha,
     :linestyle,
-    :linetype,
+    :seriestype,
     :linewidth,
     # :linealpha,
     :markershape,
@@ -104,14 +104,14 @@ const _glyphtypes = KW(
 
 
 function bokeh_glyph_type(d::KW)
-  lt = d[:linetype]
+  st = d[:seriestype]
   mt = d[:markershape]
-  if lt == :scatter && mt == :none
+  if st == :scatter && mt == :none
     mt = :ellipse
   end
 
   # if we have a marker, use that
-  if lt == :scatter || mt != :none
+  if st == :scatter || mt != :none
     return _glyphtypes[mt]
   end
 

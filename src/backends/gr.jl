@@ -10,7 +10,7 @@ supportedArgs(::GRBackend) = [
     :foreground_color_text, :foreground_color_border,
     :group,
     :label,
-    :linetype,
+    :seriestype,
     :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
@@ -56,7 +56,7 @@ function _initialize_backend(::GRBackend; kw...)
   end
 end
 
-const gr_linetype = KW(
+const gr_seriestype = KW(
   :auto => 1, :solid => 1, :dash => 2, :dot => 3, :dashdot => 4,
   :dashdotdot => -1 )
 
@@ -139,7 +139,7 @@ end
 
 function gr_polaraxes(rmin, rmax)
   GR.savestate()
-  GR.setlinetype(GR.LINETYPE_SOLID)
+  GR.setseriestype(GR.LINETYPE_SOLID)
   GR.setlinecolorind(88)
   tick = 0.5 * GR.tick(rmin, rmax)
   n = round(Int, (rmax - rmin) / tick + 0.5)
@@ -246,21 +246,21 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     xmin = ymin = typemax(Float64)
     xmax = ymax = typemin(Float64)
     for p in plt.seriesargs
-      lt = p[:linetype]
+      st = p[:seriestype]
       if get(d, :polar, false)
-        lt = :polar
+        st = :polar
       end
       if axis == gr_getaxisind(p)
         if axis == 2
           num_axes = 2
         end
-        if lt == :bar
+        if st == :bar
           x, y = 1:length(p[:y]), p[:y]
-        elseif lt == :ohlc
+        elseif st == :ohlc
           x, y = 1:size(p[:y], 1), p[:y]
-        elseif lt in [:hist, :density]
+        elseif st in [:hist, :density]
           x, y = Base.hist(p[:y], p[:bins])
-        elseif lt in [:hist2d, :hexbin]
+        elseif st in [:hist2d, :hexbin]
           E = zeros(length(p[:x]),2)
           E[:,1] = p[:x]
           E[:,2] = p[:y]
@@ -271,26 +271,26 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           end
           cmap = true
           x, y, H = Base.hist2d(E, xbins, ybins)
-        elseif lt in [:pie, :polar]
+        elseif st in [:pie, :polar]
           axes_2d = false
           xmin, xmax, ymin, ymax = 0, 1, 0, 1
           x, y = p[:x], p[:y]
         else
-          if lt in [:contour, :surface, :heatmap]
+          if st in [:contour, :surface, :heatmap]
             cmap = true
           end
-          if lt in [:surface, :wireframe, :path3d, :scatter3d]
+          if st in [:surface, :wireframe, :path3d, :scatter3d]
             axes_2d = false
           end
-          if lt == :heatmap
+          if st == :heatmap
             outside_ticks = true
           end
           x, y = p[:x], p[:y]
         end
-        if !(lt in [:pie, :polar])
+        if !(st in [:pie, :polar])
           xmin = min(minimum(x), xmin)
           xmax = max(maximum(x), xmax)
-          if lt == :ohlc
+          if st == :ohlc
             for val in y
               ymin = min(val.open, val.high, val.low, val.close, ymin)
               ymax = max(val.open, val.high, val.low, val.close, ymax)
@@ -437,8 +437,8 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
   legend = false
 
   for p in plt.seriesargs
-    lt = p[:linetype]
-    if lt in (:hist2d, :hexbin, :contour, :surface, :wireframe, :heatmap)
+    st = p[:seriestype]
+    if st in (:hist2d, :hexbin, :contour, :surface, :wireframe, :heatmap)
       if isa(p[:fillcolor], ColorGradient)
         grad = p[:fillcolor]
       else
@@ -450,17 +450,17 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       end
     end
     if get(d, :polar, false)
-      lt = :polar
+      st = :polar
     end
     GR.savestate()
     xmin, xmax, ymin, ymax = extrema[gr_getaxisind(p),:]
     GR.setwindow(xmin, xmax, ymin, ymax)
-    if lt in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline, :ohlc, :polar]
-      GR.setlinetype(gr_linetype[p[:linestyle]])
+    if st in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline, :ohlc, :polar]
+      GR.setseriestype(gr_seriestype[p[:linestyle]])
       GR.setlinewidth(p[:linewidth])
       GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
     end
-    if lt == :path
+    if st == :path
       if length(p[:x]) > 1
         if p[:fillrange] != nothing
           GR.setfillcolorind(gr_getcolorind(p[:fillcolor]))
@@ -471,19 +471,19 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       end
       legend = true
     end
-    if lt == :line
+    if st == :line
       if length(p[:x]) > 1
         gr_polyline(p[:x], p[:y])
       end
       legend = true
-    elseif lt in [:steppre, :steppost]
+    elseif st in [:steppre, :steppost]
       n = length(p[:x])
       x = zeros(2*n + 1)
       y = zeros(2*n + 1)
       x[1], y[1] = p[:x][1], p[:y][1]
       j = 2
       for i = 2:n
-        if lt == :steppre
+        if st == :steppre
           x[j], x[j+1] = p[:x][i-1], p[:x][i]
           y[j], y[j+1] = p[:y][i],   p[:y][i]
         else
@@ -496,13 +496,13 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         GR.polyline(x, y)
       end
       legend = true
-    elseif lt == :sticks
+    elseif st == :sticks
       x, y = p[:x], p[:y]
       for i = 1:length(y)
         GR.polyline([x[i], x[i]], [ymin, y[i]])
       end
       legend = true
-    elseif lt == :scatter || (p[:markershape] != :none && axes_2d)
+    elseif st == :scatter || (p[:markershape] != :none && axes_2d)
       GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
       gr_setmarkershape(p)
       if typeof(p[:markersize]) <: Number
@@ -523,7 +523,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         end
       end
       legend = true
-    elseif lt == :bar
+    elseif st == :bar
       y = p[:y]
       for i = 1:length(y)
         GR.setfillcolorind(gr_getcolorind(p[:fillcolor]))
@@ -533,7 +533,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
         GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
       end
-    elseif lt in [:hist, :density]
+    elseif st in [:hist, :density]
       h = Base.hist(p[:y], p[:bins])
       x, y = float(collect(h[1])), float(h[2])
       for i = 2:length(y)
@@ -544,15 +544,15 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
         GR.fillrect(x[i-1], x[i], ymin, y[i])
       end
-    elseif lt in [:hline, :vline]
+    elseif st in [:hline, :vline]
       for xy in p[:y]
-        if lt == :hline
+        if st == :hline
           GR.polyline([xmin, xmax], [xy, xy])
         else
           GR.polyline([xy, xy], [ymin, ymax])
         end
       end
-    elseif lt in [:hist2d, :hexbin]
+    elseif st in [:hist2d, :hexbin]
       E = zeros(length(p[:x]),2)
       E[:,1] = p[:x]
       E[:,2] = p[:y]
@@ -573,7 +573,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       charheight = max(0.016 * diag, 0.01)
       GR.setcharheight(charheight)
       GR.colormap()
-    elseif lt == :contour
+    elseif st == :contour
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), false)
       GR.setspace(zmin, zmax, 0, 90)
@@ -593,7 +593,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       charheight = max(0.016 * diag, 0.01)
       GR.setcharheight(charheight)
       GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
-    elseif lt in [:surface, :wireframe]
+    elseif st in [:surface, :wireframe]
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 40, 70)
@@ -609,7 +609,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
       end
       z = reshape(z, length(x) * length(y))
-      if lt == :surface
+      if st == :surface
         GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
       else
         GR.setfillcolorind(0)
@@ -624,7 +624,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
                        viewport[3], viewport[4])
         GR.colormap()
       end
-    elseif lt == :heatmap
+    elseif st == :heatmap
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 0, 90)
@@ -635,7 +635,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
                        viewport[3], viewport[4])
         GR.colormap()
       end
-    elseif lt in [:path3d, :scatter3d]
+    elseif st in [:path3d, :scatter3d]
       x, y, z = p[:x], p[:y], p[:z]
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 40, 70)
@@ -646,11 +646,11 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       charheight = max(0.018 * diag, 0.01)
       ticksize = 0.01 * (viewport[2] - viewport[1])
       GR.setlinewidth(1)
-      if grid_flag && lt == :path3d
+      if grid_flag && st == :path3d
         GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
         GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
       end
-      if lt == :scatter3d
+      if st == :scatter3d
         GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
         gr_setmarkershape(p)
         for i = 1:length(z)
@@ -667,7 +667,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.setcharheight(charheight)
       GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
       GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
-    elseif lt == :ohlc
+    elseif st == :ohlc
       y = p[:y]
       n = size(y, 1)
       ticksize = 0.5 * (xmax - xmin) / n
@@ -676,7 +676,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         GR.polyline([i, i], [y[i].low, y[i].high])
         GR.polyline([i, i+ticksize], [y[i].close, y[i].close])
       end
-    elseif lt == :pie
+    elseif st == :pie
       GR.selntran(0)
       GR.setfillintstyle(GR.INTSTYLE_SOLID)
       xmin, xmax, ymin, ymax = viewport
@@ -721,7 +721,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         a1 = a2
       end
       GR.selntran(1)
-    elseif lt == :polar
+    elseif st == :polar
       xmin, xmax, ymin, ymax = viewport
       ymax -= 0.05 * (xmax - xmin)
       xcenter = 0.5 * (xmin + xmax)
@@ -772,7 +772,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     GR.setfillcolorind(gr_getcolorind(d[:background_color_legend]))
     GR.fillrect(px - 0.08, px + w + 0.02, py + dy, py - dy * n)
-    GR.setlinetype(1)
+    GR.setseriestype(1)
     GR.setlinewidth(1)
     GR.drawrect(px - 0.08, px + w + 0.02, py + dy, py - dy * n)
     i = 0
@@ -781,15 +781,15 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         continue
       end
       GR.setlinewidth(p[:linewidth])
-      if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks]
+      if p[:seriestype] in [:path, :line, :steppre, :steppost, :sticks]
         GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
-        GR.setlinetype(gr_linetype[p[:linestyle]])
+        GR.setseriestype(gr_seriestype[p[:linestyle]])
         GR.polyline([px - 0.07, px - 0.01], [py, py])
       end
-      if p[:linetype] == :scatter || p[:markershape] != :none
+      if p[:seriestype] == :scatter || p[:markershape] != :none
         GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
         gr_setmarkershape(p)
-        if p[:linetype] in [:path, :line, :steppre, :steppost, :sticks]
+        if p[:seriestype] in [:path, :line, :steppre, :steppost, :sticks]
           gr_polymarker(p, [px - 0.06, px - 0.02], [py, py])
         else
           gr_polymarker(p, [px - 0.06, px - 0.04, px - 0.02], [py, py, py])

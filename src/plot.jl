@@ -126,21 +126,21 @@ function _add_plotargs!(plt::Plot, d::KW)
     end
 end
 
-# this method recursively applies series recipes when the linetype is not supported
+# this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
 function _apply_series_recipe(plt::Plot, d::KW)
-    lt = d[:linetype]
+    st = d[:seriestype]
     # dumpdict(d, "apply_series_recipe", true)
-    if lt in supportedTypes()
+    if st in supportedTypes()
         # println("adding series!!")
         warnOnUnsupported(plt.backend, d)
         _add_series(plt.backend, plt, d)
     else
-        # get a sub list of series for this linetype
+        # get a sub list of series for this seriestype
         series_list = try
-            RecipesBase.apply_recipe(d, Val{lt}, d[:x], d[:y], d[:z])
+            RecipesBase.apply_recipe(d, Val{st}, d[:x], d[:y], d[:z])
         catch
-            warn("Exception during apply_recipe(Val{$lt}, ...) with types ($(typeof(d[:x])), $(typeof(d[:y])), $(typeof(d[:z])))")
+            warn("Exception during apply_recipe(Val{$st}, ...) with types ($(typeof(d[:x])), $(typeof(d[:y])), $(typeof(d[:z])))")
             rethrow()
         end
 
@@ -159,7 +159,7 @@ function _plot!(plt::Plot, d::KW, args...)
     # just in case the backend needs to set up the plot (make it current or something)
     _before_add_series(plt)
 
-    # TODO: the grouping mechanism will be a recipe on a GroupBy object
+    # the grouping mechanism is a recipe on a GroupBy object
     # we simply add the GroupBy object to the front of the args list to allow
     # the recipe to be applied
     if haskey(d, :group)
@@ -174,7 +174,6 @@ function _plot!(plt::Plot, d::KW, args...)
     else
         delete!(d, :annotation)
     end
-    # anns = annotations(pop!(d, :annotation, [])
 
 
     # for plotting recipes, swap out the args and update the parameter dictionary
@@ -186,41 +185,52 @@ function _plot!(plt::Plot, d::KW, args...)
     kw_list = KW[]
     still_to_process = isempty(args) ? [] : [RecipeData(copy(d), args)]
     while !isempty(still_to_process)
+
+        # grab the first in line to be processed and pass it through apply_recipe
+        # to generate a list of RecipeData objects (data + attributes)
         next_series = pop!(still_to_process)
         series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
         for series in series_list
             # @show series
             if isempty(series.args)
-                # finish processing and add to the kw_list
+                # when the arg tuple is empty, that means there's nothing left to recursively
+                # process... finish up and add to the kw_list
                 kw = series.d
                 _add_markershape(kw)
+
+                # if there was a grouping, filter the data here
                 _filter_input_data!(kw)
 
+                # map marker_z if it's a Function
                 if isa(get(kw, :marker_z, nothing), Function)
                     # TODO: should this take y and/or z as arguments?
                     kw[:marker_z] = map(kw[:marker_z], kw[:x])
                 end
 
+                # convert a ribbon into a fillrange
                 if get(kw, :ribbon, nothing) != nothing
                     rib = kw[:ribbon]
                     kw[:fillrange] = (kw[:y] - rib, kw[:y] + rib)
                 end
 
+                # check that the backend will support the command and add it to the list
                 warnOnUnsupportedArgs(plt.backend, kw)
                 warnOnUnsupportedScales(plt.backend, kw)
                 push!(kw_list, kw)
 
-                # handle error bars
+                # handle error bars by creating new series data... these will have
+                # the same series index as the series they are copied from
                 for esym in (:xerror, :yerror)
                     if get(d, esym, nothing) != nothing
                         # we make a copy of the KW and apply an errorbar recipe
                         errkw = copy(kw)
-                        errkw[:linetype] = esym
+                        errkw[:seriestype] = esym
                         push!(kw_list, errkw)
-                        # append!(ret, apply_series_recipe(copy(d), Val{esym}))
                     end
                 end
+
             else
+                # args are non-empty, so there's still processing to do... add it back to the queue
                 push!(still_to_process, series)
             end
         end
@@ -229,92 +239,76 @@ function _plot!(plt::Plot, d::KW, args...)
     # !!! note: at this point, kw_list is fully decomposed into individual series... one KW per series !!!
 
 
-    # # # grouping
-    # groupby = if haskey(d, :group)
-    #     extractGroupArgs(d[:group], args...)
-    # else
-    #     nothing
-    # end
-
-
-
-
     # now include any annotations which were added during recipes
-    # anns = NTuple{3,Any}[]
     for kw in kw_list
         append!(anns, annotations(pop!(kw, :annotation, [])))
     end
     # @show anns
 
 
+    # merge plot args... this is where we combine all the plot args from the user and
+    # from the recipes... axis info, colors, etc
     # TODO: why do i need to check for the subplot key?
-
-    # merge plot args
     if !haskey(d, :subplot)
-        # merge the plot args from the recipes, then update the plot colors
         for kw in vcat(kw_list, d)
-            # @show kw
-            # append!(anns, annotations(pop!(kw, :annotation, [])))
             _add_plotargs!(plt, kw)
         end
         handlePlotColors(plt.backend, plt.plotargs)
     end
 
-    # _add_series(plt, d, args...)
 
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
     for (i,kw) in enumerate(kw_list)
-        if !(get(kw, :linetype, :none) in (:xerror, :yerror))
+        if !(get(kw, :seriestype, :none) in (:xerror, :yerror))
             plt.n += 1
         end
 
-        # TODO: can this be handled as a recipe??
+        # TODO: can this be handled as a recipe??  (yes... need to remove)
         # note: this could probably be handled using a recipe signature f{S<:Union{AbstractString,Symbol}}(v::AVec{S}, letter::AbstractString)
         # that gets called from within the SliceIt section
-        # if !stringsSupported() && di[:linetype] != :pie
+        # if !stringsSupported() && di[:seriestype] != :pie
         #     setTicksFromStringVector(plt, d, di, "x")
         #     setTicksFromStringVector(plt, d, di, "y")
         #     setTicksFromStringVector(plt, d, di, "z")
         # end
 
-        # TODO: unnecessary??
+        # TODO: unnecessary??  (yes... deleted as part of _add_plotargs... remove this)
         # # remove plot args
         # for k in keys(_plotDefaults)
         #     delete!(di, k)
         # end
 
-        # TODO: why??
+        # TODO: why??  (I think we can remove??)
         # # merge in plotarg_overrides
         # plotarg_overrides = pop!(di, :plotarg_overrides, nothing)
         # if plotarg_overrides != nothing
         #     merge!(plt.plotargs, plotarg_overrides)
         # end
 
-        # dumpdict(kw, "before add defaults", true)
+        # set default values, select from attribute cycles, and generally set the final attributes
         _add_defaults!(kw, plt, i)
-        # dumpdict(kw, "after add defaults", true)
-        # getSeriesArgs(plt.backend, getplotargs(plt, n), d, commandIndex, convertSeriesIndex(plt, n), n)
 
         _replace_linewidth(kw)
 
-        # todo: while the linetype is not supported, try to apply a recipe of f(Val{lt}, x,y,z) recursively
-        # the default should throw an error because we can't handle that linetype
+        # now we have a fully specified series, with colors chosen.   we must recursively handle
+        # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,
+        # we check for a recipe that will convert that series type into one made up of lower-level components.
+        # For example, a histogram is just a bar plot with binned data, a bar plot is really a filled step plot,
+        # and a step plot is really just a path.  So any backend that supports drawing a path will implicitly
+        # be able to support step, bar, and histogram plots (and any recipes that use those components).
         _apply_series_recipe(plt, kw)
-
-
-        # _add_series(plt.backend, plt, kw)
     end
 
+    # now that we're done adding all the series, add the annotations
     _add_annotations(plt, anns)
 
     # add title, axis labels, ticks, etc
+    # TODO: do we really need this subplot check?
     if !haskey(d, :subplot)
         # merge!(plt.plotargs, d)  # this shouldn't be needed since we merged the keys earlier
         _update_plot(plt, plt.plotargs)
     end
-
-    # _update_plot_pos_size(plt, d)  # this is only used for Qwt... can we remove?
 
     current(plt)
 
@@ -343,7 +337,7 @@ end
 function _replace_linewidth(d::KW)
     # get a good default linewidth... 0 for surface and heatmaps
     if get(d, :linewidth, :auto) == :auto
-        d[:linewidth] = (get(d, :linetype, :path) in (:surface,:heatmap,:image) ? 0 : 1)
+        d[:linewidth] = (get(d, :seriestype, :path) in (:surface,:heatmap,:image) ? 0 : 1)
     end
 end
 
@@ -379,7 +373,7 @@ end
 #     for (i,di) in enumerate(seriesArgList)
 #         plt.n += 1
 #
-#         if !stringsSupported() && di[:linetype] != :pie
+#         if !stringsSupported() && di[:seriestype] != :pie
 #             setTicksFromStringVector(plt, d, di, "x")
 #             setTicksFromStringVector(plt, d, di, "y")
 #             setTicksFromStringVector(plt, d, di, "z")
@@ -407,63 +401,63 @@ end
 
 # --------------------------------------------------------------------
 
-function get_indices(orig, labels)
-    Int[findnext(labels, l, 1) for l in orig]
-end
+# function get_indices(orig, labels)
+#     Int[findnext(labels, l, 1) for l in orig]
+# end
 
-function setTicksFromStringVector(plt::Plot, d::KW, di::KW, letter)
-    sym = symbol(letter)
-    ticksym = symbol(letter * "ticks")
-    pargs = plt.plotargs
-    v = di[sym]
+# # TODO: remove?? this is the old way of handling discrete data... should be
+# # replaced by the Axis type and logic
+# function setTicksFromStringVector(plt::Plot, d::KW, di::KW, letter)
+#     sym = symbol(letter)
+#     ticksym = symbol(letter * "ticks")
+#     pargs = plt.plotargs
+#     v = di[sym]
+#
+#     # do we really want to do this?
+#     typeof(v) <: AbstractArray || return
+#     isempty(v) && return
+#     trueOrAllTrue(_ -> typeof(_) <: AbstractString, v) || return
+#
+#     # compute the ticks and labels
+#     ticks, labels = if ticksType(pargs[ticksym]) == :ticks_and_labels
+#         # extend the existing ticks and labels. only add to labels if they're new!
+#         ticks, labels = pargs[ticksym]
+#         newlabels = filter(_ -> !(_ in labels), unique(v))
+#         newticks = if isempty(ticks)
+#             collect(1:length(newlabels))
+#         else
+#             maximum(ticks) + collect(1:length(newlabels))
+#         end
+#         ticks = vcat(ticks, newticks)
+#         labels = vcat(labels, newlabels)
+#         ticks, labels
+#     else
+#         # create new ticks and labels
+#         newlabels = unique(v)
+#         collect(1:length(newlabels)), newlabels
+#     end
+#
+#     d[ticksym] = ticks, labels
+#     plt.plotargs[ticksym] = ticks, labels
+#
+#     # add an origsym field so that later on we can re-compute the x vector if ticks change
+#     origsym = symbol(letter * "orig")
+#     di[origsym] = v
+#     di[sym] = get_indices(v, labels)
+#
+#     # loop through existing plt.seriesargs and adjust indices if there is an origsym key
+#     for sargs in plt.seriesargs
+#         if haskey(sargs, origsym)
+#             # TODO: might need to call the setindex function instead to trigger a plot update for some backends??
+#             sargs[sym] = get_indices(sargs[origsym], labels)
+#         end
+#     end
+# end
 
-    # do we really want to do this?
-    typeof(v) <: AbstractArray || return
-    isempty(v) && return
-    trueOrAllTrue(_ -> typeof(_) <: AbstractString, v) || return
-
-    # compute the ticks and labels
-    ticks, labels = if ticksType(pargs[ticksym]) == :ticks_and_labels
-        # extend the existing ticks and labels. only add to labels if they're new!
-        ticks, labels = pargs[ticksym]
-        newlabels = filter(_ -> !(_ in labels), unique(v))
-        newticks = if isempty(ticks)
-            collect(1:length(newlabels))
-        else
-            maximum(ticks) + collect(1:length(newlabels))
-        end
-        ticks = vcat(ticks, newticks)
-        labels = vcat(labels, newlabels)
-        ticks, labels
-    else
-        # create new ticks and labels
-        newlabels = unique(v)
-        collect(1:length(newlabels)), newlabels
-    end
-
-    d[ticksym] = ticks, labels
-    plt.plotargs[ticksym] = ticks, labels
-
-    # add an origsym field so that later on we can re-compute the x vector if ticks change
-    origsym = symbol(letter * "orig")
-    di[origsym] = v
-    di[sym] = get_indices(v, labels)
-
-    # loop through existing plt.seriesargs and adjust indices if there is an origsym key
-    for sargs in plt.seriesargs
-        if haskey(sargs, origsym)
-            # TODO: might need to call the setindex function instead to trigger a plot update for some backends??
-            sargs[sym] = get_indices(sargs[origsym], labels)
-        end
-    end
-end
 
 # --------------------------------------------------------------------
 
-_before_add_series(plt::Plot) = nothing
-
-# --------------------------------------------------------------------
-
+# TODO: remove
 # # should we update the x/y label given the meta info during input slicing?
 # function updateDictWithMeta(d::KW, plotargs::KW, meta::Symbol, isx::Bool)
 #     lsym = isx ? :xlabel : :ylabel

@@ -17,7 +17,7 @@ supportedArgs(::UnicodePlotsBackend) = [
     :legend,
     :seriescolor, :seriesalpha,
     :linestyle,
-    :linetype,
+    :seriestype,
     # :linewidth,
     :markershape,
     # :markercolor,
@@ -133,12 +133,12 @@ end
 function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
 
   # get the function, or special handling for step/bar/hist
-  lt = d[:linetype]
+  st = d[:seriestype]
 
   # handle hline/vline separately
-  if lt in (:hline,:vline)
+  if st in (:hline,:vline)
     for yi in d[:y]
-      if lt == :hline
+      if st == :hline
         UnicodePlots.lineplot!(o, xlim, [yi,yi])
       else
         UnicodePlots.lineplot!(o, [yi,yi], ylim)
@@ -148,17 +148,17 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
   end
 
   stepstyle = :post
-  if lt == :path
+  if st == :path
     func = UnicodePlots.lineplot!
-  elseif lt == :scatter || d[:markershape] != :none
+  elseif st == :scatter || d[:markershape] != :none
     func = UnicodePlots.scatterplot!
-  elseif lt == :steppost
+  elseif st == :steppost
     func = UnicodePlots.stairs!
-  elseif lt == :steppre
+  elseif st == :steppre
     func = UnicodePlots.stairs!
     stepstyle = :pre
   else
-    error("Linestyle $lt not supported by UnicodePlots")
+    error("Linestyle $st not supported by UnicodePlots")
   end
 
   # get the series data and label
@@ -193,9 +193,9 @@ function _create_plot(pkg::UnicodePlotsBackend, d::KW)
 end
 
 function _add_series(::UnicodePlotsBackend, plt::Plot, d::KW)
-  if d[:linetype] in (:sticks, :bar)
+  if d[:seriestype] in (:sticks, :bar)
     d = barHack(; d...)
-  elseif d[:linetype] == :hist
+  elseif d[:seriestype] == :hist
     d = barHack(; histogramHack(; d...)...)
   end
   push!(plt.seriesargs, d)

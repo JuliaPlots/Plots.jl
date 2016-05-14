@@ -10,7 +10,7 @@ supportedArgs(::PyPlotBackend) = [
         :foreground_color_text, :foreground_color_border,
     :group,
     :label,
-    :linetype,
+    :seriestype,
     :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
@@ -117,8 +117,8 @@ function getPyPlotCustomShading(c, z, α=nothing)
 end
 
 # get the style (solid, dashed, etc)
-function getPyPlotLineStyle(linetype::Symbol, linestyle::Symbol)
-    linetype == :none && return " "
+function getPyPlotLineStyle(seriestype::Symbol, linestyle::Symbol)
+    seriestype == :none && return " "
     linestyle == :solid && return "-"
     linestyle == :dash && return "--"
     linestyle == :dot && return ":"
@@ -197,9 +197,9 @@ function getPyPlotMarker(marker::AbstractString)
     marker
 end
 
-function getPyPlotStepStyle(linetype::Symbol)
-    linetype == :steppost && return "steps-post"
-    linetype == :steppre && return "steps-pre"
+function getPyPlotStepStyle(seriestype::Symbol)
+    seriestype == :steppost && return "steps-post"
+    seriestype == :steppre && return "steps-pre"
     return "default"
 end
 
@@ -308,7 +308,7 @@ function pyplot_figure(plotargs::KW)
 end
 
 function pyplot_3d_setup!(wrap, d)
-    if trueOrAllTrue(lt -> lt in _3dTypes, get(d, :linetype, :none))
+    if trueOrAllTrue(st -> st in _3dTypes, get(d, :seriestype, :none))
         push!(wrap.kwargs, (:projection, "3d"))
     end
 end
@@ -369,13 +369,13 @@ pymarkercolormap(d::KW)     = getPyPlotColorMap(d[:markercolor], d[:markeralpha]
 pyfillcolormap(d::KW)       = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
 
 function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
-    lt = d[:linetype]
-    if !(lt in supportedTypes(pkg))
-        error("linetype $(lt) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
+    st = d[:seriestype]
+    if !(st in supportedTypes(pkg))
+        error("seriestype $(st) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
     end
 
     # 3D plots have a different underlying Axes object in PyPlot
-    if lt in _3dTypes && isempty(plt.o.kwargs)
+    if st in _3dTypes && isempty(plt.o.kwargs)
         push!(plt.o.kwargs, (:projection, "3d"))
     end
 
@@ -385,7 +385,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     ax = getAxis(plt, d[:axis])
     x, y, z = d[:x], d[:y], d[:z]
     @show typeof((x,y,z))
-    xyargs = (lt in _3dTypes ? (x,y,z) : (x,y))
+    xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
 
     # handle zcolor and get c/cmap
     extrakw = KW()
@@ -410,17 +410,17 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     # for each plotting command, optionally build and add a series handle to the list
 
     # line plot
-    if lt in (:path, :line, :scatter, :path3d, :scatter3d, :steppre, :steppost)
+    if st in (:path, :line, :scatter, :path3d, :scatter3d, :steppre, :steppost)
         if d[:linewidth] > 0
             handle = ax[:plot](xyargs...;
                 label = d[:label],
                 zorder = plt.n,
                 color = pylinecolor(d),
                 linewidth = d[:linewidth],
-                linestyle = getPyPlotLineStyle(lt, d[:linestyle]),
+                linestyle = getPyPlotLineStyle(st, d[:linestyle]),
                 solid_capstyle = "round",
                 # dash_capstyle = "round",
-                drawstyle = getPyPlotStepStyle(lt)
+                drawstyle = getPyPlotStepStyle(st)
             )[1]
             push!(handles, handle)
 
@@ -436,7 +436,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
                         :edgecolor => pylinecolor(d),
                         :facecolor => pylinecolor(d),
                         :linewidth => d[:linewidth],
-                        :linestyle => getPyPlotLineStyle(lt, d[:linestyle]),
+                        :linestyle => getPyPlotLineStyle(st, d[:linestyle]),
                     )
                     add_arrows(x, y) do xyprev, xy
                         ax[:annotate]("",
@@ -450,7 +450,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         end
     end
 
-    if lt == :bar
+    if st == :bar
         extrakw[isvertical(d) ? :width : :height] = 0.9
         handle = ax[isvertical(d) ? :bar : :barh](x, y;
             label = d[:label],
@@ -464,7 +464,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
-    if lt == :sticks
+    if st == :sticks
         extrakw[isvertical(d) ? :width : :height] = 0.0
         handle = ax[isvertical(d) ? :bar : :barh](x, y;
             label = d[:label],
@@ -479,7 +479,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
     end
 
     # add markers?
-    if d[:markershape] != :none && lt in (:path, :line, :scatter, :path3d,
+    if d[:markershape] != :none && st in (:path, :line, :scatter, :path3d,
                                           :scatter3d, :steppre, :steppost,
                                           :bar, :sticks)
         extrakw = KW()
@@ -490,7 +490,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             extrakw[:cmap] = pymarkercolormap(d)
             needs_colorbar = true
         end
-        xyargs = if lt in (:bar, :sticks) && !isvertical(d)
+        xyargs = if st in (:bar, :sticks) && !isvertical(d)
             (y, x)
         else
             xyargs
@@ -507,7 +507,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
-    if lt == :hist
+    if st == :hist
         handle = ax[:hist](y;
             label = d[:label],
             zorder = plt.n,
@@ -523,7 +523,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
-    if lt == :hist2d
+    if st == :hist2d
         handle = ax[:hist2d](x, y;
             label = d[:label],
             zorder = plt.n,
@@ -536,7 +536,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         needs_colorbar = true
     end
 
-    if lt == :hexbin
+    if st == :hexbin
         handle = ax[:hexbin](x, y;
             label = d[:label],
             zorder = plt.n,
@@ -549,25 +549,25 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         needs_colorbar = true
     end
 
-    if lt in (:hline,:vline)
+    if st in (:hline,:vline)
         for yi in d[:y]
-            func = ax[lt == :hline ? :axhline : :axvline]
+            func = ax[st == :hline ? :axhline : :axvline]
             handle = func(yi;
                 linewidth=d[:linewidth],
                 color=pylinecolor(d),
-                linestyle=getPyPlotLineStyle(lt, d[:linestyle])
+                linestyle=getPyPlotLineStyle(st, d[:linestyle])
             )
             push!(handles, handle)
         end
     end
 
-    if lt in (:contour, :contour3d)
+    if st in (:contour, :contour3d)
         # z = z.surf'
         z = transpose_z(d, z.surf)
         needs_colorbar = true
 
 
-        if lt == :contour3d
+        if st == :contour3d
             extrakw[:extend3d] = true
         end
 
@@ -576,14 +576,14 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             label = d[:label],
             zorder = plt.n,
             linewidths = d[:linewidth],
-            linestyles = getPyPlotLineStyle(lt, d[:linestyle]),
+            linestyles = getPyPlotLineStyle(st, d[:linestyle]),
             cmap = pylinecolormap(d),
             extrakw...
         )
         push!(handles, handle)
 
         # contour fills
-        # if lt == :contour
+        # if st == :contour
         handle = ax[:contourf](x, y, z, levelargs...;
             label = d[:label],
             zorder = plt.n + 0.5,
@@ -594,7 +594,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         # end
     end
 
-    if lt in (:surface, :wireframe)
+    if st in (:surface, :wireframe)
         if typeof(z) <: AbstractMatrix || typeof(z) <: Surface
             x, y, z = map(Array, (x,y,z))
             if !ismatrix(x) || !ismatrix(y)
@@ -603,7 +603,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             end
             # z = z'
             z = transpose_z(d, z)
-            if lt == :surface
+            if st == :surface
                 if d[:marker_z] != nothing
                     extrakw[:facecolors] = getPyPlotCustomShading(d[:fillcolor], d[:marker_z], d[:fillalpha])
                     extrakw[:shade] = false
@@ -612,7 +612,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
                     needs_colorbar = true
                 end
             end
-            handle = ax[lt == :surface ? :plot_surface : :plot_wireframe](x, y, z;
+            handle = ax[st == :surface ? :plot_surface : :plot_wireframe](x, y, z;
                 label = d[:label],
                 zorder = plt.n,
                 rstride = 1,
@@ -654,11 +654,11 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
             push!(handles, handle)
             needs_colorbar = true
         else
-            error("Unsupported z type $(typeof(z)) for linetype=$lt")
+            error("Unsupported z type $(typeof(z)) for seriestype=$st")
         end
     end
 
-    if lt == :image
+    if st == :image
         img = Array(transpose_z(d, z.surf))
         z = if eltype(img) <: Colors.AbstractGray
             float(img)
@@ -673,7 +673,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
-    if lt == :heatmap
+    if st == :heatmap
         x, y, z = heatmap_edges(x), heatmap_edges(y), transpose_z(d, z.surf)
         if !(eltype(z) <: Number)
             z, discrete_colorbar_values = indices_and_unique_values(z)
@@ -688,7 +688,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         needs_colorbar = true
     end
 
-    if lt == :shape
+    if st == :shape
         path = buildPyPlotPath(x, y)
         patches = pypatches.pymember("PathPatch")(path;
             label = d[:label],
@@ -702,7 +702,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
-    if lt == :pie
+    if st == :pie
         handle = ax[:pie](y;
             # label = d[:label],
             # colors = # a vector of colors?
@@ -742,7 +742,7 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
 
     # handle area filling
     fillrange = d[:fillrange]
-    if fillrange != nothing && lt != :contour
+    if fillrange != nothing && st != :contour
         f, dim1, dim2 = if isvertical(d)
             :fill_between, x, y
         else
@@ -1106,7 +1106,7 @@ function addPyPlotLegend(plt::Plot, ax)
     leg = plt.plotargs[:legend]
     if leg != :none
         # gotta do this to ensure both axes are included
-        args = filter(x -> !(x[:linetype] in (
+        args = filter(x -> !(x[:seriestype] in (
             :hist,:density,:hexbin,:hist2d,:hline,:vline,
             :contour,:contour3d,:surface,:wireframe,
             :heatmap,:path3d,:scatter3d, :pie, :image

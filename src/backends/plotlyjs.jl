@@ -17,7 +17,7 @@ supportedArgs(::PlotlyJSBackend) = [
     :seriescolor, :seriesalpha,
     :linecolor,
     :linestyle,
-    :linetype,
+    :seriestype,
     :linewidth,
     :linealpha,
     :markershape,

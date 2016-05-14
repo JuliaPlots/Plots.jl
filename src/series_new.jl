@@ -25,8 +25,8 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
     #     end
     # end
 
-    # if haskey(_typeAliases, d[:linetype])
-    #     d[:linetype] = _typeAliases[d[:linetype]]
+    # if haskey(_typeAliases, d[:seriestype])
+    #     d[:seriestype] = _typeAliases[d[:seriestype]]
     # end
 
     aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
@@ -39,7 +39,7 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
     # update colors
     for csym in (:linecolor, :markercolor, :fillcolor)
         d[csym] = if d[csym] == :match
-            if has_black_border_for_default(d[:linetype]) && csym == :linecolor
+            if has_black_border_for_default(d[:seriestype]) && csym == :linecolor
                 :black
             else
                 d[:seriescolor]
@@ -62,7 +62,7 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
     end
 
     # scatter plots don't have a line, but must have a shape
-    if d[:linetype] in (:scatter, :scatter3d)
+    if d[:seriestype] in (:scatter, :scatter3d)
         d[:linewidth] = 0
         if d[:markershape] == :none
             d[:markershape] = :ellipse
@@ -171,12 +171,12 @@ end
 #
 # # images - grays
 # function process_inputs{T<:Gray}(plt::AbstractPlot, d::KW, mat::AMat{T})
-#     d[:linetype] = :image
+#     d[:seriestype] = :image
 #     n,m = size(mat)
 #     d[:x], d[:y], d[:z] = 1:n, 1:m, Surface(mat)
 #     # handle images... when not supported natively, do a hack to use heatmap machinery
 #     if !nativeImagesSupported()
-#         d[:linetype] = :heatmap
+#         d[:seriestype] = :heatmap
 #         d[:yflip] = true
 #         d[:z] = Surface(convert(Matrix{Float64}, mat.surf))
 #         d[:fillcolor] = ColorGradient([:black, :white])
@@ -185,11 +185,11 @@ end
 
 @recipe function f{T<:Gray}(mat::AMat{T})
     if nativeImagesSupported()
-        linetype --> :image, force
+        seriestype --> :image, force
         n, m = size(mat)
         1:n, 1:m, Surface(mat)
     else
-        linetype --> :heatmap, force
+        seriestype --> :heatmap, force
         yflip --> true
         fillcolor --> ColorGradient([:black, :white])
         1:n, 1:m, Surface(convert(Matrix{Float64}, mat))
@@ -199,7 +199,7 @@ end
 #
 # # images - colors
 # function process_inputs{T<:Colorant}(plt::AbstractPlot, d::KW, mat::AMat{T})
-#     d[:linetype] = :image
+#     d[:seriestype] = :image
 #     n,m = size(mat)
 #     d[:x], d[:y], d[:z] = 1:n, 1:m, Surface(mat)
 #     # handle images... when not supported natively, do a hack to use heatmap machinery
@@ -212,11 +212,11 @@ end
 
 @recipe function f{T<:Colorant}(mat::AMat{T})
     if nativeImagesSupported()
-        linetype --> :image, force
+        seriestype --> :image, force
         n, m = size(mat)
         1:n, 1:m, Surface(mat)
     else
-        linetype --> :heatmap, force
+        seriestype --> :heatmap, force
         yflip --> true
         z, d[:fillcolor] = replace_image_with_heatmap(mat)
         1:n, 1:m, Surface(z)
@@ -227,21 +227,21 @@ end
 # # plotting arbitrary shapes/polygons
 # function process_inputs(plt::AbstractPlot, d::KW, shape::Shape)
 #     d[:x], d[:y] = shape_coords(shape)
-#     d[:linetype] = :shape
+#     d[:seriestype] = :shape
 # end
 
 @recipe function f(shape::Shape)
-    linetype --> :shape, force
+    seriestype --> :shape, force
     shape_coords(shape)
 end
 
 # function process_inputs(plt::AbstractPlot, d::KW, shapes::AVec{Shape})
 #     d[:x], d[:y] = shape_coords(shapes)
-#     d[:linetype] = :shape
+#     d[:seriestype] = :shape
 # end
 
 @recipe function f(shapes::AVec{Shape})
-    linetype --> :shape, force
+    seriestype --> :shape, force
     shape_coords(shapes)
 end
 
@@ -253,7 +253,7 @@ end
 #         push!(y, tmpy)
 #     end
 #     d[:x], d[:y] = x, y
-#     d[:linetype] = :shape
+#     d[:seriestype] = :shape
 # end
 
 @recipe function f(shapes::AMat{Shape})
@@ -301,22 +301,22 @@ end
 #
 # # 3d line or scatter
 # function process_inputs(plt::AbstractPlot, d::KW, x::AVec, y::AVec, zvec::AVec)
-#     # default to path3d if we haven't set a 3d linetype
-#     lt = get(d, :linetype, :none)
-#     if lt == :scatter
-#         d[:linetype] = :scatter3d
-#     elseif !(lt in _3dTypes)
-#         d[:linetype] = :path3d
+#     # default to path3d if we haven't set a 3d seriestype
+#     st = get(d, :seriestype, :none)
+#     if st == :scatter
+#         d[:seriestype] = :scatter3d
+#     elseif !(st in _3dTypes)
+#         d[:seriestype] = :path3d
 #     end
 #     d[:x], d[:y], d[:z] = x, y, zvec
 # end
 
 @recipe function f(x::AVec, y::AVec, z::AVec)
-    lt = get(d, :linetype, :none)
-    if lt == :scatter
-        d[:linetype] = :scatter3d
-    elseif !(lt in _3dTypes)
-        d[:linetype] = :path3d
+    st = get(d, :seriestype, :none)
+    if st == :scatter
+        d[:seriestype] = :scatter3d
+    elseif !(st in _3dTypes)
+        d[:seriestype] = :path3d
     end
     SliceIt, x, y, z
 end
@@ -350,14 +350,14 @@ end
 #     #     y, zmat = y[idx], zmat[:, idx]
 #     # end
 #     d[:x], d[:y], d[:z] = x, y, Surface{Matrix{TZ}}(zmat)
-#     if !like_surface(get(d, :linetype, :none))
-#         d[:linetype] = :contour
+#     if !like_surface(get(d, :seriestype, :none))
+#         d[:seriestype] = :contour
 #     end
 # end
 
 @recipe function f{X,Y,Z}(x::AVec{X}, y::AVec{Y}, z::AMat{Z})
-    if !like_surface(get(d, :linetype, :none))
-        d[:linetype] = :contour
+    if !like_surface(get(d, :seriestype, :none))
+        d[:seriestype] = :contour
     end
     SliceIt, x, y, Surface{Matrix{Z}}(z)
 end
@@ -368,8 +368,8 @@ end
 #     @assert size(zmat) == size(x) == size(y)
 #     # d[:x], d[:y], d[:z] = Any[x], Any[y], Surface{Matrix{Float64}}(zmat)
 #     d[:x], d[:y], d[:z] = map(Surface{Matrix{Float64}}, (x, y, zmat))
-#     if !like_surface(get(d, :linetype, :none))
-#         d[:linetype] = :contour
+#     if !like_surface(get(d, :seriestype, :none))
+#         d[:seriestype] = :contour
 #     end
 # end
 

@@ -7,7 +7,7 @@
 
 typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
 
-all3D(d::KW) = trueOrAllTrue(lt -> lt in (:contour, :heatmap, :surface, :wireframe, :contour3d), get(d, :linetype, :none))
+all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :heatmap, :surface, :wireframe, :contour3d), get(d, :seriestype, :none))
 
 # missing
 convertToAnyVector(v::@compat(Void), d::KW) = Any[nothing], nothing
@@ -142,19 +142,19 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #         dumpdict(d, "after getSeriesArgs")
 #
 #         d[:x], d[:y], d[:z] = compute_xyz(xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)])
-#         lt = d[:linetype]
+#         st = d[:seriestype]
 #
-#         # for linetype `line`, need to sort by x values
-#         if lt == :line
+#         # for seriestype `line`, need to sort by x values
+#         if st == :line
 #             # order by x
 #             indices = sortperm(d[:x])
 #             d[:x] = d[:x][indices]
 #             d[:y] = d[:y][indices]
-#             d[:linetype] = :path
+#             d[:seriestype] = :path
 #         end
 #
 #         # special handling for missing x in box plot... all the same category
-#         if lt == :box && xs[mod1(i,mx)] == nothing
+#         if st == :box && xs[mod1(i,mx)] == nothing
 #             d[:x] = ones(Int, length(d[:y]))
 #         end
 #
@@ -187,22 +187,22 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #         # either a series of velocity vectors are passed in (`:quiver` keyword),
 #         # or we just add arrows to the path
 #
-#         # if lt == :quiver
-#         #     d[:linetype] = lt = :path
+#         # if st == :quiver
+#         #     d[:seriestype] = st = :path
 #         #     d[:linewidth] = 0
 #         # end
 #         if get(d, :quiver, nothing) != nothing
 #             append!(ret, apply_series_recipe(copy(d), Val{:quiver}))
-#         elseif lt == :quiver
-#             d[:linetype] = lt = :path
+#         elseif st == :quiver
+#             d[:seriestype] = st = :path
 #             d[:arrow] = arrow()
 #         end
 #
 #         # now that we've processed a given series... optionally split into
 #         # multiple dicts through a recipe (for example, a box plot is split into component
 #         # parts... polygons, lines, and scatters)
-#         # note: we pass in a Val type (i.e. Val{:box}) so that we can dispatch on the linetype
-#         kwlist = apply_series_recipe(d, Val{lt})
+#         # note: we pass in a Val type (i.e. Val{:box}) so that we can dispatch on the seriestype
+#         kwlist = apply_series_recipe(d, Val{st})
 #         append!(ret, kwlist)
 #
 #         # # add it to our series list
@@ -254,12 +254,12 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #
 # # images - grays
 # function process_inputs{T<:Gray}(plt::AbstractPlot, d::KW, mat::AMat{T})
-#     d[:linetype] = :image
+#     d[:seriestype] = :image
 #     n,m = size(mat)
 #     d[:x], d[:y], d[:z] = 1:n, 1:m, Surface(mat)
 #     # handle images... when not supported natively, do a hack to use heatmap machinery
 #     if !nativeImagesSupported()
-#         d[:linetype] = :heatmap
+#         d[:seriestype] = :heatmap
 #         d[:yflip] = true
 #         d[:z] = Surface(convert(Matrix{Float64}, mat.surf))
 #         d[:fillcolor] = ColorGradient([:black, :white])
@@ -268,7 +268,7 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #
 # # images - colors
 # function process_inputs{T<:Colorant}(plt::AbstractPlot, d::KW, mat::AMat{T})
-#     d[:linetype] = :image
+#     d[:seriestype] = :image
 #     n,m = size(mat)
 #     d[:x], d[:y], d[:z] = 1:n, 1:m, Surface(mat)
 #     # handle images... when not supported natively, do a hack to use heatmap machinery
@@ -282,11 +282,11 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 # # plotting arbitrary shapes/polygons
 # function process_inputs(plt::AbstractPlot, d::KW, shape::Shape)
 #     d[:x], d[:y] = shape_coords(shape)
-#     d[:linetype] = :shape
+#     d[:seriestype] = :shape
 # end
 # function process_inputs(plt::AbstractPlot, d::KW, shapes::AVec{Shape})
 #     d[:x], d[:y] = shape_coords(shapes)
-#     d[:linetype] = :shape
+#     d[:seriestype] = :shape
 # end
 # function process_inputs(plt::AbstractPlot, d::KW, shapes::AMat{Shape})
 #     x, y = [], []
@@ -296,7 +296,7 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #         push!(y, tmpy)
 #     end
 #     d[:x], d[:y] = x, y
-#     d[:linetype] = :shape
+#     d[:seriestype] = :shape
 # end
 #
 #
@@ -331,12 +331,12 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #
 # # 3d line or scatter
 # function process_inputs(plt::AbstractPlot, d::KW, x::AVec, y::AVec, zvec::AVec)
-#     # default to path3d if we haven't set a 3d linetype
-#     lt = get(d, :linetype, :none)
-#     if lt == :scatter
-#         d[:linetype] = :scatter3d
-#     elseif !(lt in _3dTypes)
-#         d[:linetype] = :path3d
+#     # default to path3d if we haven't set a 3d seriestype
+#     st = get(d, :seriestype, :none)
+#     if st == :scatter
+#         d[:seriestype] = :scatter3d
+#     elseif !(st in _3dTypes)
+#         d[:seriestype] = :path3d
 #     end
 #     d[:x], d[:y], d[:z] = x, y, zvec
 # end
@@ -362,8 +362,8 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #     #     y, zmat = y[idx], zmat[:, idx]
 #     # end
 #     d[:x], d[:y], d[:z] = x, y, Surface{Matrix{TZ}}(zmat)
-#     if !like_surface(get(d, :linetype, :none))
-#         d[:linetype] = :contour
+#     if !like_surface(get(d, :seriestype, :none))
+#         d[:seriestype] = :contour
 #     end
 # end
 #
@@ -372,8 +372,8 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #     @assert size(zmat) == size(x) == size(y)
 #     # d[:x], d[:y], d[:z] = Any[x], Any[y], Surface{Matrix{Float64}}(zmat)
 #     d[:x], d[:y], d[:z] = map(Surface{Matrix{Float64}}, (x, y, zmat))
-#     if !like_surface(get(d, :linetype, :none))
-#         d[:linetype] = :contour
+#     if !like_surface(get(d, :seriestype, :none))
+#         d[:seriestype] = :contour
 #     end
 # end
 #
