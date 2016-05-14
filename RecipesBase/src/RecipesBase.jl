@@ -21,6 +21,11 @@ function is_key_supported end
 # Our goal is to
 apply_recipe(d::Dict{Symbol,Any}, userkw::Dict{Symbol,Any}) = ()
 
+const _debug_recipes = Bool[false]
+function debug(v::Bool = true)
+    _debug_recipes[1] = v
+end
+
 # --------------------------------------------------------------------------
 
 # this holds the data and attributes of one series, and is returned from apply_recipe
@@ -262,6 +267,9 @@ macro recipe(funcexpr::Expr)
     # we are creating a vector of RecipeData objects, one per series.
     funcdef = esc(quote
         function $func(d::Dict{Symbol,Any}, $(args...); issubplot=false)
+            if RecipesBase._debug_recipes[1]
+                println("apply_recipe args: ", $args)
+            end
             $kw_body
             series_list = RecipeData[]
             func_return = $func_body
