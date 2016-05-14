@@ -86,7 +86,12 @@ function _add_plotargs!(plt::Plot, d::KW)
     # handle axis updates from a recipe
     for letter in ("x","y","z")
         # get the Axis object
-        axis = plt.plotargs[symbol(letter * "axis")]
+        asym = symbol(letter * "axis")
+        axis = plt.plotargs[asym]
+        if axis == nothing
+            # create a new one on first pass
+            axis = Axis(letter)
+        end
         # @show 1,typeof(axis)
 
         # update xlabel, xscale, etc

@@ -566,21 +566,22 @@ function preprocessArgs!(d::KW)
     # handle axis args
     for letter in ("x", "y", "z")
         asym = symbol(letter * "axis")
-        for arg in wraptuple(get(d, asym, ()))
+        for arg in wraptuple(pop!(d, asym, ()))
             processAxisArg(d, letter, arg)
         end
-        delete!(d, asym)
+        # delete!(d, asym)
 
-        # turn :labels into :ticks_and_labels
-        tsym = symbol(letter * "ticks")
-        if haskey(d, tsym) && ticksType(d[tsym]) == :labels
-            d[tsym] = (1:length(d[tsym]), d[tsym])
-        end
-
-        ssym = symbol(letter * "scale")
-        if haskey(d, ssym) && haskey(_scaleAliases, d[ssym])
-            d[ssym] = _scaleAliases[d[ssym]]
-        end
+        # # NOTE: this logic was moved to _add_plotargs...
+        # # turn :labels into :ticks_and_labels
+        # tsym = symbol(letter * "ticks")
+        # if haskey(d, tsym) && ticksType(d[tsym]) == :labels
+        #     d[tsym] = (1:length(d[tsym]), d[tsym])
+        # end
+        #
+        # ssym = symbol(letter * "scale")
+        # if haskey(d, ssym) && haskey(_scaleAliases, d[ssym])
+        #     d[ssym] = _scaleAliases[d[ssym]]
+        # end
     end
 
     # handle line args
