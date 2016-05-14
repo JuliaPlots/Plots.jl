@@ -12,16 +12,11 @@ compute_angle(v::P2) = (angle = atan2(v[2], v[1]); angle < 0 ? 2π - angle : ang
 # -------------------------------------------------------------
 
 immutable Shape
-  # vertices::AVec
   x::AVec
   y::AVec
 end
-
-# Shape(x, y) = Shape(collect(zip(x, y)))
 Shape(verts::AVec) = Shape(unzip(verts)...)
 
-# get_xs(shape::Shape) = Float64[v[1] for v in shape.vertices]
-# get_ys(shape::Shape) = Float64[v[2] for v in shape.vertices]
 get_xs(shape::Shape) = shape.x
 get_ys(shape::Shape) = shape.y
 vertices(shape::Shape) = collect(zip(shape.x, shape.y))
@@ -128,7 +123,6 @@ end
 
 # -----------------------------------------------------------------------
 
-# center(shape::Shape) = (mean(shape.x), mean(shape.y))
 
 # uses the centroid calculation from https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
 function center(shape::Shape)
@@ -207,108 +201,6 @@ function rotate(shape::Shape, Θ::Real, c = center(shape))
 end
 
 # -----------------------------------------------------------------------
-#
-# # abstract AbstractAxisTicks
-# # immutable DefaultAxisTicks end
-# #
-# # type CustomAxisTicks
-# #     # TODO
-# # end
-#
-# # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
-# type Axis
-#     d::KW
-#     # name::AbstractString      # "x" or "y"
-#     # label::AbstractString
-#     # lims::NTuple{2}
-#     # ticks::AbstractAxisTicks
-#     # scale::Symbol
-#     # flip::Bool
-#     # rotation::Number
-#     # guidefont::Font
-#     # tickfont::Font
-#     # use_minor::Bool
-#     # _plotDefaults[:foreground_color_axis]       = :match            # axis border/tick colors
-#     # _plotDefaults[:foreground_color_border]     = :match            # plot area border/spines
-#     # _plotDefaults[:foreground_color_text]       = :match            # tick text color
-#     # _plotDefaults[:foreground_color_guide]      = :match            # guide text color
-# end
-#
-#
-# # function processAxisArg(d::KW, letter::AbstractString, arg)
-# function axis(letter, args...; kw...)
-#     # TODO: this should initialize with values from _plotDefaults
-#     d = KW(
-#         :letter => letter,
-#         :label => "",
-#         :lims => :auto,
-#         :ticks => :auto,
-#         :scale => :identity,
-#         :flip => false,
-#         :rotation => 0,
-#         :guidefont => font(11),
-#         :tickfont => font(8),
-#         :use_minor => false,
-#         :foreground_color_axis   => :match,
-#         :foreground_color_border => :match,
-#         :foreground_color_text   => :match,
-#         :foreground_color_guide  => :match,
-#     )
-#
-#     # first process args
-#     for arg in args
-#         T = typeof(arg)
-#         arg = get(_scaleAliases, arg, arg)
-#         # scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
-#
-#         if typeof(arg) <: Font
-#             d[:tickfont] = arg
-#             d[:guidefont] = arg
-#
-#         elseif arg in _allScales
-#             d[:scale] = arg
-#
-#         elseif arg in (:flip, :invert, :inverted)
-#             d[:flip] = true
-#
-#         elseif T <: @compat(AbstractString)
-#             d[:label] = arg
-#
-#         # xlims/ylims
-#         elseif (T <: Tuple || T <: AVec) && length(arg) == 2
-#             sym = typeof(arg[1]) <: Number ? :lims : :ticks
-#             d[sym] = arg
-#
-#         # xticks/yticks
-#         elseif T <: AVec
-#             d[:ticks] = arg
-#
-#         elseif arg == nothing
-#             d[:ticks] = []
-#
-#         elseif typeof(arg) <: Number
-#             d[:rotation] = arg
-#
-#         else
-#             warn("Skipped $(letter)axis arg $arg")
-#
-#         end
-#     end
-#
-#     # then override for any keywords
-#     for (k,v) in kw
-#         d[k] = v
-#     end
-#
-#     Axis(d)
-# end
-#
-#
-# xaxis(args...) = axis("x", args...)
-# yaxis(args...) = axis("y", args...)
-# zaxis(args...) = axis("z", args...)
-
-# -----------------------------------------------------------------------
 
 
 immutable Font
@@ -378,58 +270,10 @@ type Axis #<: Associative{Symbol,Any}
     d::KW
 end
 
-function expand_extrema!(a::Axis, v::Number)
-    emin, emax = a[:extrema]
-    a[:extrema] = (min(v, emin), max(v, emax))
-end
-function expand_extrema!{MIN<:Number,MAX<:Number}(a::Axis, v::Tuple{MIN,MAX})
-    emin, emax = a[:extrema]
-    a[:extrema] = (min(v[1], emin), max(v[2], emax))
-end
-function expand_extrema!{N<:Number}(a::Axis, v::AVec{N})
-    if !isempty(v)
-        emin, emax = a[:extrema]
-        a[:extrema] = (min(minimum(v), emin), max(maximum(v), emax))
-    end
-    a[:extrema]
-end
+xaxis(args...) = Axis("x", args...)
+yaxis(args...) = Axis("y", args...)
+zaxis(args...) = Axis("z", args...)
 
-# these methods track the discrete values which correspond to axis continuous values (cv)
-# whenever we have discrete values, we automatically set the ticks to match.
-# we return the plot value
-function discrete_value!(a::Axis, v)
-    cv = get(a[:discrete_map], v, NaN)
-    if isnan(cv)
-        emin, emax = a[:extrema]
-        cv = max(0.5, emax + 1.0)
-        expand_extrema!(a, cv)
-        a[:discrete_map][v] = cv
-        push!(a[:discrete_values], (cv, v))
-    end
-    cv
-end
-
-# add the discrete value for each item
-function discrete_value!(a::Axis, v::AVec)
-    Float64[discrete_value!(a, vi) for vi=v]
-end
-
-Base.show(io::IO, a::Axis) = dumpdict(a.d, "Axis", true)
-Base.getindex(a::Axis, k::Symbol) = getindex(a.d, k)
-Base.setindex!(a::Axis, v, ks::Symbol...) = setindex!(a.d, v, ks...)
-Base.haskey(a::Axis, k::Symbol) = haskey(a.d, k)
-Base.extrema(a::Axis) = a[:extrema]
-
-# get discrete ticks, or not
-function get_ticks(a::Axis)
-    ticks = a[:ticks]
-    dvals = a[:discrete_values]
-    if !isempty(dvals) && ticks == :auto
-        vals, labels = unzip(dvals)
-    else
-        ticks
-    end
-end
 
 const _axis_symbols = (:label, :lims, :ticks, :scale, :flip, :rotation)
 const _axis_symbols_fonts_colors = (
@@ -440,23 +284,10 @@ const _axis_symbols_fonts_colors = (
     :foreground_color_guide
     )
 
-# function processAxisArg(d::KW, letter::AbstractString, arg)
 function Axis(letter::AbstractString, args...; kw...)
-    # init with defaults
+    # init with values from _plotDefaults
     d = KW(
         :letter => letter,
-        # :label => "",
-        # :lims => :auto,
-        # :ticks => :auto,
-        # :scale => :identity,
-        # :flip => false,
-        # :rotation => 0,
-        # :guidefont => font(11),
-        # :tickfont => font(8),
-        # :foreground_color_axis   => :match,
-        # :foreground_color_border => :match,
-        # :foreground_color_text   => :match,
-        # :foreground_color_guide  => :match,
         :extrema => (Inf, -Inf),
         :discrete_map => Dict(),   # map discrete values to continuous plot values
         :discrete_values => Tuple{Float64,Any}[],
@@ -471,7 +302,14 @@ function Axis(letter::AbstractString, args...; kw...)
         d[k] = _plotDefaults[k]
     end
 
+    # update the defaults
+    update!(Axis(d), args...; kw...)
+end
+
+# update an Axis object with magic args and keywords
+function update!(a::Axis, args..., kw...)
     # first process args
+    d = a.d
     for arg in args
         T = typeof(arg)
         arg = get(_scaleAliases, arg, arg)
@@ -518,14 +356,63 @@ function Axis(letter::AbstractString, args...; kw...)
             d[sym] = v
         end
     end
-
-    Axis(d)
+    a
 end
 
 
-xaxis(args...) = Axis("x", args...)
-yaxis(args...) = Axis("y", args...)
-zaxis(args...) = Axis("z", args...)
+Base.show(io::IO, a::Axis) = dumpdict(a.d, "Axis", true)
+Base.getindex(a::Axis, k::Symbol) = getindex(a.d, k)
+Base.setindex!(a::Axis, v, ks::Symbol...) = setindex!(a.d, v, ks...)
+Base.haskey(a::Axis, k::Symbol) = haskey(a.d, k)
+Base.extrema(a::Axis) = a[:extrema]
+
+# get discrete ticks, or not
+function get_ticks(a::Axis)
+    ticks = a[:ticks]
+    dvals = a[:discrete_values]
+    if !isempty(dvals) && ticks == :auto
+        vals, labels = unzip(dvals)
+    else
+        ticks
+    end
+end
+
+function expand_extrema!(a::Axis, v::Number)
+    emin, emax = a[:extrema]
+    a[:extrema] = (min(v, emin), max(v, emax))
+end
+function expand_extrema!{MIN<:Number,MAX<:Number}(a::Axis, v::Tuple{MIN,MAX})
+    emin, emax = a[:extrema]
+    a[:extrema] = (min(v[1], emin), max(v[2], emax))
+end
+function expand_extrema!{N<:Number}(a::Axis, v::AVec{N})
+    if !isempty(v)
+        emin, emax = a[:extrema]
+        a[:extrema] = (min(minimum(v), emin), max(maximum(v), emax))
+    end
+    a[:extrema]
+end
+
+# these methods track the discrete values which correspond to axis continuous values (cv)
+# whenever we have discrete values, we automatically set the ticks to match.
+# we return the plot value
+function discrete_value!(a::Axis, v)
+    cv = get(a[:discrete_map], v, NaN)
+    if isnan(cv)
+        emin, emax = a[:extrema]
+        cv = max(0.5, emax + 1.0)
+        expand_extrema!(a, cv)
+        a[:discrete_map][v] = cv
+        push!(a[:discrete_values], (cv, v))
+    end
+    cv
+end
+
+# add the discrete value for each item
+function discrete_value!(a::Axis, v::AVec)
+    Float64[discrete_value!(a, vi) for vi=v]
+end
+
 
 # -----------------------------------------------------------------------
 
@@ -537,10 +424,6 @@ immutable Stroke
 end
 
 function stroke(args...; alpha = nothing)
-  # defaults
-  # width = 1
-  # color = colorant"black"
-  # style = :solid
   width = nothing
   color = nothing
   style = nothing
@@ -557,10 +440,8 @@ function stroke(args...; alpha = nothing)
       try
         color = parse(Colorant, string(arg))
       end
-    # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
     elseif allAlphas(arg)
       alpha = arg
-    # elseif typeof(arg) <: Real
     elseif allReals(arg)
       width = arg
     else
@@ -579,9 +460,6 @@ immutable Brush
 end
 
 function brush(args...; alpha = nothing)
-  # defaults
-  # sz = 1
-  # color = colorant"black"
   size = nothing
   color = nothing
 
@@ -594,10 +472,8 @@ function brush(args...; alpha = nothing)
       try
         color = parse(Colorant, string(arg))
       end
-    # elseif trueOrAllTrue(a -> typeof(a) <: Real && a > 0 && a < 1, arg)
     elseif allAlphas(arg)
       alpha = arg
-    # elseif typeof(arg) <: Real
     elseif allReals(arg)
       size = arg
     else
@@ -626,8 +502,6 @@ abstract AbstractSurface
 
 "represents a contour or surface mesh"
 immutable Surface{M<:AMat} <: AbstractSurface
-  # x::AVec
-  # y::AVec
   surf::M
 end
 
@@ -717,59 +591,55 @@ end
 
 # -----------------------------------------------------------------------
 
-# @require FixedSizeArrays begin
+type BezierCurve{T <: FixedSizeArrays.Vec}
+  control_points::Vector{T}
+end
 
-  type BezierCurve{T <: FixedSizeArrays.Vec}
-      control_points::Vector{T}
+function Base.call(bc::BezierCurve, t::Real)
+  p = zero(P2)
+  n = length(bc.control_points)-1
+  for i in 0:n
+      p += bc.control_points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
   end
+  p
+end
 
-  function Base.call(bc::BezierCurve, t::Real)
-      p = zero(P2)
-      n = length(bc.control_points)-1
-      for i in 0:n
-          p += bc.control_points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
-      end
-      p
-  end
+Base.mean(x::Real, y::Real) = 0.5*(x+y)
+Base.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps)
 
-  Base.mean(x::Real, y::Real) = 0.5*(x+y)
-  Base.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps)
+curve_points(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, linspace(range..., n))
 
-  curve_points(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, linspace(range..., n))
+# build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
+# may create a loop if necessary.  Assumes the view is [0,1]
+function directed_curve(p::P2, q::P2; xview = 0:1, yview = 0:1)
+mn = mean(p, q)
+diff = q - p
 
-  # build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
-  # may create a loop if necessary.  Assumes the view is [0,1]
-  function directed_curve(p::P2, q::P2; xview = 0:1, yview = 0:1)
-    mn = mean(p, q)
-    diff = q - p
+minx, maxx = minimum(xview), maximum(xview)
+miny, maxy = minimum(yview), maximum(yview)
+diffpct = P2(diff[1] / (maxx - minx),
+             diff[2] / (maxy - miny))
 
-    minx, maxx = minimum(xview), maximum(xview)
-    miny, maxy = minimum(yview), maximum(yview)
-    diffpct = P2(diff[1] / (maxx - minx),
-                 diff[2] / (maxy - miny))
+# these points give the initial/final "rise"
+# vertical_offset = P2(0, (maxy - miny) * max(0.03, min(abs(0.5diffpct[2]), 1.0)))
+vertical_offset = P2(0, max(0.15, 0.5norm(diff)))
+upper_control = p + vertical_offset
+lower_control = q - vertical_offset
 
-    # these points give the initial/final "rise"
-    # vertical_offset = P2(0, (maxy - miny) * max(0.03, min(abs(0.5diffpct[2]), 1.0)))
-    vertical_offset = P2(0, max(0.15, 0.5norm(diff)))
-    upper_control = p + vertical_offset
-    lower_control = q - vertical_offset
+# try to figure out when to loop around vs just connecting straight
+# TODO: choose loop direction based on sign of p[1]??
+# x_close_together = abs(diffpct[1]) <= 0.05
+p_is_higher = diff[2] <= 0
+inside_control_points = if p_is_higher
+  # add curve points which will create a loop
+  sgn = mn[1] < 0.5 * (maxx + minx) ? -1 : 1
+  inside_offset = P2(0.3 * (maxx - minx), 0)
+  additional_offset = P2(sgn * diff[1], 0)  # make it even loopier
+  [upper_control + sgn * (inside_offset + max(0,  additional_offset)),
+   lower_control + sgn * (inside_offset + max(0, -additional_offset))]
+else
+  []
+end
 
-    # try to figure out when to loop around vs just connecting straight
-    # TODO: choose loop direction based on sign of p[1]??
-    # x_close_together = abs(diffpct[1]) <= 0.05
-    p_is_higher = diff[2] <= 0
-    inside_control_points = if p_is_higher
-      # add curve points which will create a loop
-      sgn = mn[1] < 0.5 * (maxx + minx) ? -1 : 1
-      inside_offset = P2(0.3 * (maxx - minx), 0)
-      additional_offset = P2(sgn * diff[1], 0)  # make it even loopier
-      [upper_control + sgn * (inside_offset + max(0,  additional_offset)),
-       lower_control + sgn * (inside_offset + max(0, -additional_offset))]
-    else
-      []
-    end
-
-    BezierCurve([p, upper_control, inside_control_points..., lower_control, q])
-  end
-
-# end
+BezierCurve([p, upper_control, inside_control_points..., lower_control, q])
+end
