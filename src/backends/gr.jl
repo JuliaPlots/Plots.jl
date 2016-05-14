@@ -56,7 +56,7 @@ function _initialize_backend(::GRBackend; kw...)
   end
 end
 
-const gr_seriestype = KW(
+const gr_linetype = KW(
   :auto => 1, :solid => 1, :dash => 2, :dot => 3, :dashdot => 4,
   :dashdotdot => -1 )
 
@@ -139,7 +139,7 @@ end
 
 function gr_polaraxes(rmin, rmax)
   GR.savestate()
-  GR.setseriestype(GR.LINETYPE_SOLID)
+  GR.setlinetype(GR.LINETYPE_SOLID)
   GR.setlinecolorind(88)
   tick = 0.5 * GR.tick(rmin, rmax)
   n = round(Int, (rmax - rmin) / tick + 0.5)
@@ -456,7 +456,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     xmin, xmax, ymin, ymax = extrema[gr_getaxisind(p),:]
     GR.setwindow(xmin, xmax, ymin, ymax)
     if st in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline, :ohlc, :polar]
-      GR.setseriestype(gr_seriestype[p[:linestyle]])
+      GR.setlinetype(gr_linetype[p[:linestyle]])
       GR.setlinewidth(p[:linewidth])
       GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
     end
@@ -772,7 +772,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     GR.setfillcolorind(gr_getcolorind(d[:background_color_legend]))
     GR.fillrect(px - 0.08, px + w + 0.02, py + dy, py - dy * n)
-    GR.setseriestype(1)
+    GR.setlinetype(1)
     GR.setlinewidth(1)
     GR.drawrect(px - 0.08, px + w + 0.02, py + dy, py - dy * n)
     i = 0
@@ -783,7 +783,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.setlinewidth(p[:linewidth])
       if p[:seriestype] in [:path, :line, :steppre, :steppost, :sticks]
         GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
-        GR.setseriestype(gr_seriestype[p[:linestyle]])
+        GR.setlinetype(gr_linetype[p[:linestyle]])
         GR.polyline([px - 0.07, px - 0.01], [py, py])
       end
       if p[:seriestype] == :scatter || p[:markershape] != :none
