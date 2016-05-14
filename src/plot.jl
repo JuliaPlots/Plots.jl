@@ -200,6 +200,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
                 # if there was a grouping, filter the data here
                 _filter_input_data!(kw)
+                @show typeof((kw[:x], kw[:y], kw[:z]))
 
                 # map marker_z if it's a Function
                 if isa(get(kw, :marker_z, nothing), Function)
@@ -246,6 +247,10 @@ function _plot!(plt::Plot, d::KW, args...)
     # @show anns
 
 
+    for kw in kw_list
+        @show typeof((kw[:x], kw[:y], kw[:z]))
+    end
+
     # merge plot args... this is where we combine all the plot args from the user and
     # from the recipes... axis info, colors, etc
     # TODO: why do i need to check for the subplot key?
@@ -256,6 +261,9 @@ function _plot!(plt::Plot, d::KW, args...)
         handlePlotColors(plt.backend, plt.plotargs)
     end
 
+    for kw in kw_list
+        @show typeof((kw[:x], kw[:y], kw[:z]))
+    end
 
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes

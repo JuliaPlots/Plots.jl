@@ -48,12 +48,13 @@ include("backends/web.jl")
 plot(pkg::AbstractBackend; kw...)                       = error("plot($pkg; kw...) is not implemented")
 plot!(pkg::AbstractBackend, plt::Plot; kw...)           = error("plot!($pkg, plt; kw...) is not implemented")
 _update_plot(pkg::AbstractBackend, plt::Plot, d::KW)  = error("_update_plot($pkg, plt, d) is not implemented")
-_update_plot_pos_size{P<:AbstractBackend}(plt::AbstractPlot{P}, d::KW) = nothing
 subplot(pkg::AbstractBackend; kw...)                    = error("subplot($pkg; kw...) is not implemented")
 subplot!(pkg::AbstractBackend, subplt::Subplot; kw...)  = error("subplot!($pkg, subplt; kw...) is not implemented")
 
 # don't do anything as a default
 _before_add_series(plt::Plot) = nothing
+_add_annotations{X,Y,V}(plt::Plot, anns::AVec{Tuple{X,Y,V}}) = nothing
+_update_plot_pos_size(plt::AbstractPlot, d::KW) = nothing
 
 # ---------------------------------------------------------
 

@@ -92,7 +92,7 @@ immutable SliceIt end
 
 # the catch-all recipes
 @recipe function f(::Type{SliceIt}, x, y, z)
-    # @show "HERE", typeof((x,y,z))
+    @show "HERE", typeof((x,y,z))
     xs, _ = convertToAnyVector(x, d)
     ys, _ = convertToAnyVector(y, d)
     zs, _ = convertToAnyVector(z, d)
@@ -105,7 +105,7 @@ immutable SliceIt end
     end
     mf = length(fillranges)
 
-    @show zs
+    # @show zs
 
     mx = length(xs)
     my = length(ys)
@@ -115,9 +115,9 @@ immutable SliceIt end
         # add a new series
         di = copy(d)
         xi, yi, zi = xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]
-        # @show i, typeof((xi, yi, zi))
+        @show i, typeof((xi, yi, zi))
         di[:x], di[:y], di[:z] = compute_xyz(xi, yi, zi)
-        # @show i, typeof((di[:x], di[:y], di[:z]))
+        @show i, typeof((di[:x], di[:y], di[:z]))
 
         # handle fillrange
         fr = fillranges[mod1(i,mf)]
@@ -331,7 +331,7 @@ end
 #     d[:x], d[:y] = x, y
 # end
 
-@recipe function f{X,Y}(x::AVec{X}, y::AVec{Y}, zf::Function)
+@recipe function f(x::AVec, y::AVec, zf::Function)
     # x = X <: Number ? sort(x) : x
     # y = Y <: Number ? sort(y) : y
     SliceIt, x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
@@ -355,11 +355,11 @@ end
 #     end
 # end
 
-@recipe function f{X,Y,Z}(x::AVec{X}, y::AVec{Y}, z::AMat{Z})
+@recipe function f(x::AVec, y::AVec, z::AMat)
     if !like_surface(get(d, :seriestype, :none))
         d[:seriestype] = :contour
     end
-    SliceIt, x, y, Surface{Matrix{Z}}(z)
+    SliceIt, x, y, Surface(z)
 end
 
 #

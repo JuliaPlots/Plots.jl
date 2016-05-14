@@ -639,7 +639,16 @@ for f in (:length, :size)
   @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
 end
 Base.copy(surf::Surface) = Surface(copy(surf.surf))
+Base.eltype(surf::Surface) = eltype(surf.surf)
 
+function expand_extrema!(a::Axis, surf::Surface)
+    v = surf.surf
+    if !isempty(v)
+        emin, emax = a[:extrema]
+        a[:extrema] = (min(minimum(v), emin), max(maximum(v), emax))
+    end
+    a[:extrema]
+end
 
 "For the case of representing a surface as a function of x/y... can possibly avoid allocations."
 immutable SurfaceFunction <: AbstractSurface
