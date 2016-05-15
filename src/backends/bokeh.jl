@@ -133,23 +133,24 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::BokehBackend, d::KW)
+# function _create_plot(pkg::BokehBackend, d::KW)
+function _create_backend_figure(plt::Plot{BokehBackend})
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
 
   datacolumns = Bokeh.BokehDataSet[]
   tools = Bokeh.tools()
   filename = tempname() * ".html"
-  title = d[:title]
-  w, h = d[:size]
-  xaxis_type = d[:xscale] == :log10 ? :log : :auto
-  yaxis_type = d[:yscale] == :log10 ? :log : :auto
-  # legend = d[:legend] ? xxxx : nothing
+  title = plt.plotargs[:title]
+  w, h = plt.plotargs[:size]
+  xaxis_type = plt.plotargs[:xscale] == :log10 ? :log : :auto
+  yaxis_type = plt.plotargs[:yscale] == :log10 ? :log : :auto
+  # legend = plt.plotargs[:legend] ? xxxx : nothing
   legend = nothing
   extra_args = KW()  # TODO: we'll put extra settings (xlim, etc) here
-  bplt = Bokeh.Plot(datacolumns, tools, filename, title, w, h, xaxis_type, yaxis_type, legend) #, extra_args)
+  Bokeh.Plot(datacolumns, tools, filename, title, w, h, xaxis_type, yaxis_type, legend) #, extra_args)
 
-  Plot(bplt, pkg, 0, d, KW[])
+  # Plot(bplt, pkg, 0, d, KW[])
 end
 
 

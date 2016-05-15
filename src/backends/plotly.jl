@@ -84,11 +84,11 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::PlotlyBackend, d::KW)
-  # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
-  # TODO: initialize the plot... title, xlabel, bgcolor, etc
-  Plot(nothing, pkg, 0, d, KW[])
-end
+# function _create_plot(pkg::PlotlyBackend, d::KW)
+#   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
+#   # TODO: initialize the plot... title, xlabel, bgcolor, etc
+#   Plot(nothing, pkg, 0, d, KW[])
+# end
 
 
 function _add_series(::PlotlyBackend, plt::Plot, d::KW)

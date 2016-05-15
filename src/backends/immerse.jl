@@ -29,12 +29,15 @@ end
 
 
 # create a blank Gadfly.Plot object
-function _create_plot(pkg::ImmerseBackend, d::KW)
-  # create the underlying Gadfly.Plot object
-  gplt = createGadflyPlotObject(d)
-
-  # save both the Immerse.Figure and the Gadfly.Plot
-  Plot((nothing,gplt), pkg, 0, d, KW[])
+# function _create_plot(pkg::ImmerseBackend, d::KW)
+#   # create the underlying Gadfly.Plot object
+#   gplt = createGadflyPlotObject(d)
+#
+#   # save both the Immerse.Figure and the Gadfly.Plot
+#   Plot((nothing,gplt), pkg, 0, d, KW[])
+# end
+function _create_backend_figure(plt::Plot{ImmerseBackend})
+    (nothing, createGadflyPlotObject(plt.plotargs))
 end
 
 

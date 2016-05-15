@@ -48,7 +48,10 @@ function plot(args...; kw...)
     preprocessArgs!(d)
 
     plotargs = merge(d, getPlotArgs(pkg, d, 1))
-    plt = _create_plot(pkg, plotargs)  # create a new, blank plot
+    # plt = _create_plot(pkg, plotargs)  # create a new, blank plot
+
+    plt = Plot(nothing, pkg, 0, plt.plotargs, KW[])
+    plt.o = _create_backend_figure(plt)
 
     # now update the plot
     _plot!(plt, d, args...)

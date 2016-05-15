@@ -52,6 +52,7 @@ subplot(pkg::AbstractBackend; kw...)                    = error("subplot($pkg; k
 subplot!(pkg::AbstractBackend, subplt::Subplot; kw...)  = error("subplot!($pkg, subplt; kw...) is not implemented")
 
 # don't do anything as a default
+_create_backend_figure(plt::Plot) = nothing
 _before_add_series(plt::Plot) = nothing
 _add_annotations{X,Y,V}(plt::Plot, anns::AVec{Tuple{X,Y,V}}) = nothing
 _update_plot_pos_size(plt::AbstractPlot, d::KW) = nothing

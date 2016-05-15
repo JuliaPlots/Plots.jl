@@ -128,12 +128,13 @@ function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
   d
 end
 
-function _create_plot(pkg::QwtBackend, d::KW)
-  fixcolors(d)
-  dumpdict(d,"\n\n!!! plot")
-  o = Qwt.plot(zeros(0,0); d..., show=false)
-  plt = Plot(o, pkg, 0, d, KW[])
-  plt
+# function _create_plot(pkg::QwtBackend, d::KW)
+function _create_backend_figure(plt::Plot{QwtBackend})
+  fixcolors(plt.plotargs)
+  dumpdict(plt.plotargs,"\n\n!!! plot")
+  o = Qwt.plot(zeros(0,0); plt.plotargs..., show=false)
+  # plt = Plot(o, pkg, 0, d, KW[])
+  # plt
 end
 
 function _add_series(::QwtBackend, plt::Plot, d::KW)

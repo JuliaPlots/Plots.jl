@@ -23,7 +23,6 @@ vertices(shape::Shape) = collect(zip(shape.x, shape.y))
 
 
 function shape_coords(shape::Shape)
-    # unzip(shape.vertices)
     shape.x, shape.y
 end
 
@@ -31,14 +30,10 @@ function shape_coords(shapes::AVec{Shape})
     length(shapes) == 0 && return zeros(0), zeros(0)
     xs = map(get_xs, shapes)
     ys = map(get_ys, shapes)
-    # x, y = shapes[1].x, shapes[1].y #unzip(shapes[1].vertices)
     x, y = map(copy, shape_coords(shapes[1]))
     for shape in shapes[2:end]
-        # tmpx, tmpy = unzip(shape.vertices)
         nanappend!(x, shape.x)
         nanappend!(y, shape.y)
-        # x = vcat(x, NaN, tmpx)
-        # y = vcat(y, NaN, tmpy)
     end
     x, y
 end
@@ -57,9 +52,6 @@ function weave(x,y; ordering = Vector[x,y])
       try
           push!(ret, shift!(o))
       end
-      # try
-      #     push!(ret, shift!(y))
-      # end
     end
     done = isempty(x) && isempty(y)
   end

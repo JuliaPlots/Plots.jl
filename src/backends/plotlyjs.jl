@@ -96,16 +96,20 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::PlotlyJSBackend, d::KW)
-    # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
-    # TODO: initialize the plot... title, xlabel, bgcolor, etc
-    # o = PlotlyJS.Plot(PlotlyJS.GenericTrace[], PlotlyJS.Layout(),
-    #                   Base.Random.uuid4(), PlotlyJS.ElectronDisplay())
-    # T = isijulia() ? PlotlyJS.JupyterPlot : PlotlyJS.ElectronPlot
-    # o = T(PlotlyJS.Plot())
-    o = PlotlyJS.plot()
+# function _create_plot(pkg::PlotlyJSBackend, d::KW)
+#     # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
+#     # TODO: initialize the plot... title, xlabel, bgcolor, etc
+#     # o = PlotlyJS.Plot(PlotlyJS.GenericTrace[], PlotlyJS.Layout(),
+#     #                   Base.Random.uuid4(), PlotlyJS.ElectronDisplay())
+#     # T = isijulia() ? PlotlyJS.JupyterPlot : PlotlyJS.ElectronPlot
+#     # o = T(PlotlyJS.Plot())
+#     o = PlotlyJS.plot()
+#
+#     Plot(o, pkg, 0, d, KW[])
+# end
 
-    Plot(o, pkg, 0, d, KW[])
+function _create_backend_figure(plt::Plot{PlotlyJSBackend})
+    PlotlyJS.plot()
 end
 
 

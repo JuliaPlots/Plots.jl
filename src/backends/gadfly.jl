@@ -570,9 +570,12 @@ end
 # ---------------------------------------------------------------------------
 
 # create a blank Gadfly.Plot object
-function _create_plot(pkg::GadflyBackend, d::KW)
-    gplt = createGadflyPlotObject(d)
-    Plot(gplt, pkg, 0, d, KW[])
+# function _create_plot(pkg::GadflyBackend, d::KW)
+#     gplt = createGadflyPlotObject(d)
+#     Plot(gplt, pkg, 0, d, KW[])
+# end
+function _create_backend_figure(plt::Plot{GadflyBackend})
+    createGadflyPlotObject(plt.plotargs)
 end
 
 

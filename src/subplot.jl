@@ -1,4 +1,6 @@
 
+### WARNING: this file is deprecated ###
+
 # ------------------------------------------------------------
 
 Base.string(subplt::Subplot) = "Subplot{$(subplt.backend) p=$(subplt.p) n=$(subplt.n)}"

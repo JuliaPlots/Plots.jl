@@ -181,15 +181,17 @@ end
 # -------------------------------
 
 
-function _create_plot(pkg::UnicodePlotsBackend, d::KW)
-  plt = Plot(nothing, pkg, 0, d, KW[])
+# function _create_plot(pkg::UnicodePlotsBackend, d::KW)
+  # plt = Plot(nothing, pkg, 0, d, KW[])
 
+function _create_backend_figure(plt::Plot{UnicodePlotsBackend})
   # do we want to give a new default size?
   if !haskey(plt.plotargs, :size) || plt.plotargs[:size] == _plotDefaults[:size]
     plt.plotargs[:size] = (60,20)
   end
+  nothing
 
-  plt
+  # plt
 end
 
 function _add_series(::UnicodePlotsBackend, plt::Plot, d::KW)

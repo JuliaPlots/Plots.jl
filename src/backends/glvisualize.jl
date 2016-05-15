@@ -82,14 +82,16 @@ immutable GLScreenWrapper
     window
 end
 
-function _create_plot(pkg::GLVisualizeBackend, d::KW)
-  # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
+# function _create_plot(pkg::GLVisualizeBackend, d::KW)
+function _create_backend_figure(plt::Plot{GLVisualizeBackend})
+  # TODO: create the window/canvas/context that is the plot within the backend
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
 
   # TODO: this should be moved to the display method?
   w=GLVisualize.glscreen()
   @async GLVisualize.renderloop(w)
-  Plot(GLScreenWrapper(w), pkg, 0, d, KW[])
+  GLScreenWrapper(w)
+  # Plot(GLScreenWrapper(w), pkg, 0, d, KW[])
 end
 
 

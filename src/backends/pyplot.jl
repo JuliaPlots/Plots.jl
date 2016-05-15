@@ -315,23 +315,19 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::PyPlotBackend, d::KW)
-    # create the figure
-    # standalone plots will create a figure, but not if part of a subplot (do it later)
-    if haskey(d, :subplot)
+function _create_backend_figure(plt::Plot)
+    if haskey(plt.plotargs, :subplot)
         wrap = nothing
     else
-        wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(d), [])
-
-        pyplot_3d_setup!(wrap, d)
-
-        if get(d, :polar, false)
+        wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(plt.plotargs), [])
+        pyplot_3d_setup!(wrap, plt.plotargs)
+        if get(plt.plotargs, :polar, false)
             push!(wrap.kwargs, (:polar, true))
         end
     end
-
-    plt = Plot(wrap, pkg, 0, d, KW[])
-    plt
+    wrap
+    # plt = Plot(wrap, pkg, 0, plt.plotargs, KW[])
+    # plt
 end
 
 # ---------------------------------------------------------------------------
@@ -1023,56 +1019,56 @@ end
 
 # -----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{PyPlotBackend}, isbefore::Bool)
-    l = subplt.layout
-    plotargs = getplotargs(subplt, 1)
-    fig = pyplot_figure(plotargs)
-
-    nr = nrows(l)
-    for (i,(r,c)) in enumerate(l)
-        # add the plot to the figure
-        nc = ncols(l, r)
-        fakeidx = (r-1) * nc + c
-        ax = fig[:add_subplot](nr, nc, fakeidx)
-
-        subplt.plts[i].o = PyPlotAxisWrapper(ax, nothing, fig, [])
-        pyplot_3d_setup!(subplt.plts[i].o, plotargs)
-    end
-
-    subplt.o = PyPlotAxisWrapper(nothing, nothing, fig, [])
-    pyplot_3d_setup!(subplt.o, plotargs)
-    true
-end
-
-# this will be called internally, when creating a subplot from existing plots
-# NOTE: if I ever need to "Rebuild a "ubplot from individual Plot's"... this is what I should use!
-function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::SubplotLayout, d::KW)
-    validateSubplotSupported()
-
-    p = length(layout)
-    n = sum([plt.n for plt in plts])
-
-    pkg = PyPlotBackend()
-    newplts = Plot{PyPlotBackend}[begin
-        plt.plotargs[:subplot] = true
-        _create_plot(pkg, plt.plotargs)
-    end for plt in plts]
-
-    subplt = Subplot(nothing, newplts, PyPlotBackend(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
-
-    _preprocess_subplot(subplt, d)
-    _create_subplot(subplt, true)
-
-    for (i,plt) in enumerate(plts)
-        for seriesargs in plt.seriesargs
-            _add_series_subplot(newplts[i], seriesargs)
-        end
-    end
-
-    _postprocess_subplot(subplt, d)
-
-    subplt
-end
+# function _create_subplot(subplt::Subplot{PyPlotBackend}, isbefore::Bool)
+#     l = subplt.layout
+#     plotargs = getplotargs(subplt, 1)
+#     fig = pyplot_figure(plotargs)
+#
+#     nr = nrows(l)
+#     for (i,(r,c)) in enumerate(l)
+#         # add the plot to the figure
+#         nc = ncols(l, r)
+#         fakeidx = (r-1) * nc + c
+#         ax = fig[:add_subplot](nr, nc, fakeidx)
+#
+#         subplt.plts[i].o = PyPlotAxisWrapper(ax, nothing, fig, [])
+#         pyplot_3d_setup!(subplt.plts[i].o, plotargs)
+#     end
+#
+#     subplt.o = PyPlotAxisWrapper(nothing, nothing, fig, [])
+#     pyplot_3d_setup!(subplt.o, plotargs)
+#     true
+# end
+#
+# # this will be called internally, when creating a subplot from existing plots
+# # NOTE: if I ever need to "Rebuild a "ubplot from individual Plot's"... this is what I should use!
+# function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::SubplotLayout, d::KW)
+#     validateSubplotSupported()
+#
+#     p = length(layout)
+#     n = sum([plt.n for plt in plts])
+#
+#     pkg = PyPlotBackend()
+#     newplts = Plot{PyPlotBackend}[begin
+#         plt.plotargs[:subplot] = true
+#         _create_plot(pkg, plt.plotargs)
+#     end for plt in plts]
+#
+#     subplt = Subplot(nothing, newplts, PyPlotBackend(), p, n, layout, d, true, false, false, (r,c) -> (nothing,nothing))
+#
+#     _preprocess_subplot(subplt, d)
+#     _create_subplot(subplt, true)
+#
+#     for (i,plt) in enumerate(plts)
+#         for seriesargs in plt.seriesargs
+#             _add_series_subplot(newplts[i], seriesargs)
+#         end
+#     end
+#
+#     _postprocess_subplot(subplt, d)
+#
+#     subplt
+# end
 
 
 function _remove_axis(plt::Plot{PyPlotBackend}, isx::Bool)
@@ -1144,16 +1140,16 @@ function finalizePlot(plt::Plot{PyPlotBackend})
     PyPlot.draw()
 end
 
-function finalizePlot(subplt::Subplot{PyPlotBackend})
-    fig = subplt.o.fig
-    for (i,plt) in enumerate(subplt.plts)
-        ax = getLeftAxis(plt)
-        addPyPlotLegend(plt, ax)
-        updateAxisColors(ax, plt.plotargs)
-    end
-    # fig[:tight_layout]()
-    PyPlot.draw()
-end
+# function finalizePlot(subplt::Subplot{PyPlotBackend})
+#     fig = subplt.o.fig
+#     for (i,plt) in enumerate(subplt.plts)
+#         ax = getLeftAxis(plt)
+#         addPyPlotLegend(plt, ax)
+#         updateAxisColors(ax, plt.plotargs)
+#     end
+#     # fig[:tight_layout]()
+#     PyPlot.draw()
+# end
 
 
 # -----------------------------------------------------------------

@@ -229,11 +229,11 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::PGFPlotsBackend, d::KW)
-  # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
-  # TODO: initialize the plot... title, xlabel, bgcolor, etc
-  Plot(nothing, pkg, 0, d, KW[])
-end
+# function _create_plot(pkg::PGFPlotsBackend, d::KW)
+#   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
+#   # TODO: initialize the plot... title, xlabel, bgcolor, etc
+#   Plot(nothing, pkg, 0, d, KW[])
+# end
 
 
 function _add_series(::PGFPlotsBackend, plt::Plot, d::KW)
@@ -253,15 +253,15 @@ end
 
 # ----------------------------------------------------------------
 
-function _before_update_plot(plt::Plot{PGFPlotsBackend})
-end
+# function _before_update_plot(plt::Plot{PGFPlotsBackend})
+# end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
 function _update_plot(plt::Plot{PGFPlotsBackend}, d::KW)
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{PGFPlotsBackend}, d::KW)
-end
+# function _update_plot_pos_size(plt::AbstractPlot{PGFPlotsBackend}, d::KW)
+# end
 
 # ----------------------------------------------------------------
 
@@ -280,10 +280,10 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{PGFPlotsBackend}, isbefore::Bool)
-  # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-  true
-end
+# function _create_subplot(subplt::Subplot{PGFPlotsBackend}, isbefore::Bool)
+#   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+#   true
+# end
 
 function _expand_limits(lims, plt::Plot{PGFPlotsBackend}, isx::Bool)
   # TODO: call expand limits for each plot data

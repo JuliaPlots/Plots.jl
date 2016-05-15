@@ -14,10 +14,9 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_plot(pkg::[PkgName]AbstractBackend, d::KW)
-  # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
-  # TODO: initialize the plot... title, xlabel, bgcolor, etc
-  Plot(nothing, pkg, 0, d, KW[])
+function _create_backend_figure(plt::Plot{[PkgName]Backend})
+    # TODO: create the window/figure for this backend
+    nothing
 end
 
 

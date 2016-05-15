@@ -102,11 +102,12 @@ end
 
 # ---------------------------------------------------------------------------
 
-
-function _create_plot(pkg::WinstonBackend, d::KW)
-  wplt = Winston.FramedPlot(title = d[:title], xlabel = d[:xlabel], ylabel = d[:ylabel])
-
-  Plot(wplt, pkg, 0, d, KW[])
+function _create_backend_figure(plt::Plot{WinstonBackend})
+    Winston.FramedPlot(
+        title = plt.plotargs[:title],
+        xlabel = plt.plotargs[:xlabel],
+        ylabel = plt.plotargs[:ylabel]
+    )
 end
 
 copy_remove(d::KW, s::Symbol) = delete!(copy(d), s)

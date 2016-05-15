@@ -28,8 +28,8 @@ export
 
     plot,
     plot!,
-    subplot,
-    subplot!,
+    # subplot,
+    # subplot!,
 
     current,
     default,
@@ -177,7 +177,7 @@ include("themes.jl")
 include("plot.jl")
 include("series_args.jl")
 include("series_new.jl")
-include("subplot.jl")
+# include("subplot.jl")
 include("layouts.jl")
 include("recipes.jl")
 include("animation.jl")
