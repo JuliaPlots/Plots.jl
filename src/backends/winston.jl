@@ -127,7 +127,8 @@ function getWinstonItems(plt::Plot)
   window, canvas, wplt
 end
 
-function _add_series(::WinstonBackend, plt::Plot, d::KW)
+function _add_series(plt::Plot{WinstonBackend}, series::Series)
+    d = series.d
   window, canvas, wplt = getWinstonItems(plt)
 
   # until we call it normally, do the hack
@@ -212,8 +213,8 @@ function _add_series(::WinstonBackend, plt::Plot, d::KW)
   # optionally add a regression line
   d[:smooth] && d[:seriestype] != :hist && addRegressionLineWinston(d, wplt)
 
-  push!(plt.seriesargs, d)
-  plt
+  # push!(plt.seriesargs, d)
+  # plt
 end
 
 

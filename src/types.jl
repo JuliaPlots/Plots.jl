@@ -21,7 +21,10 @@ type AxisView
     axis::Axis
 end
 
-type Subplot
+abstract AbstractSubplot
+immutable EmptySubplot <: AbstractSubplot end
+
+type Subplot <: AbstractSubplot
     axisviews::Vector{AxisView}
     subplotargs::KW  # args specific to this subplot
     obj  # can store backend-specific data... like a pyplot ax
@@ -29,18 +32,18 @@ end
 
 type Series
     d::KW
-    x
-    y
-    z
+    # x
+    # y
+    # z
     # subplots::Vector{Subplot}
 end
 
-function Series(d::KW)
-    x = pop!(d, :x)
-    y = pop!(d, :y)
-    z = pop!(d, :z)
-    Series(d, x, y, z)
-end
+# function Series(d::KW)
+#     x = pop!(d, :x)
+#     y = pop!(d, :y)
+#     z = pop!(d, :z)
+#     Series(d, x, y, z)
+# end
 
 # -----------------------------------------------------------
 # Plot
