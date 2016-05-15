@@ -41,11 +41,15 @@ function _create_backend_figure(plt::Plot{ImmerseBackend})
 end
 
 
-# plot one data series
-function _add_series(::ImmerseBackend, plt::Plot, d::KW)
-  addGadflySeries!(plt, d)
-  push!(plt.seriesargs, d)
-  plt
+# # plot one data series
+# function _add_series(::ImmerseBackend, plt::Plot, d::KW)
+#   addGadflySeries!(plt, d)
+#   push!(plt.seriesargs, d)
+#   plt
+# end
+
+function _add_series(plt::Plot{ImmerseBackend}, series::Series)
+    addGadflySeries!(plt, series.d)
 end
 
 

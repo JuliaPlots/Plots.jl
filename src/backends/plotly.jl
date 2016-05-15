@@ -91,11 +91,11 @@ end
 # end
 
 
-function _add_series(::PlotlyBackend, plt::Plot, d::KW)
-  # TODO: add one series to the underlying package
-  push!(plt.seriesargs, d)
-  plt
-end
+# function _add_series(::PlotlyBackend, plt::Plot, d::KW)
+#   # TODO: add one series to the underlying package
+#   push!(plt.seriesargs, d)
+#   plt
+# end
 
 function _add_annotations{X,Y,V}(plt::Plot{PlotlyBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   # set or add to the annotation_list

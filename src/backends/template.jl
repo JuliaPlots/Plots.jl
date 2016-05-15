@@ -20,10 +20,8 @@ function _create_backend_figure(plt::Plot{[PkgName]Backend})
 end
 
 
-function _add_series(::[PkgName]AbstractBackend, plt::Plot, d::KW)
+function _add_series(plt::Plot{[PkgName]Backend}, series::Series)
   # TODO: add one series to the underlying package
-  push!(plt.seriesargs, d)
-  plt
 end
 
 function _add_annotations{X,Y,V}(plt::Plot{[PkgName]AbstractBackend}, anns::AVec{@compat(Tuple{X,Y,V})})

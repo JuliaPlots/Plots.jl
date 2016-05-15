@@ -852,10 +852,10 @@ end
 #   Plot(nothing, pkg, 0, d, KW[])
 # end
 
-function _add_series(::GRBackend, plt::Plot, d::KW)
-  push!(plt.seriesargs, d)
-  plt
-end
+# function _add_series(::GRBackend, plt::Plot, d::KW)
+#   push!(plt.seriesargs, d)
+#   plt
+# end
 
 function _add_annotations{X,Y,V}(plt::Plot{GRBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   if haskey(plt.plotargs, :anns)
@@ -867,8 +867,8 @@ end
 
 # ----------------------------------------------------------------
 
-function _before_update_plot(plt::Plot{GRBackend})
-end
+# function _before_update_plot(plt::Plot{GRBackend})
+# end
 
 function _update_plot(plt::Plot{GRBackend}, d::KW)
   for k in (:title, :xlabel, :ylabel)
@@ -876,8 +876,8 @@ function _update_plot(plt::Plot{GRBackend}, d::KW)
   end
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{GRBackend}, d::KW)
-end
+# function _update_plot_pos_size(plt::AbstractPlot{GRBackend}, d::KW)
+# end
 
 # ----------------------------------------------------------------
 
@@ -894,17 +894,17 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{GRBackend}, isbefore::Bool)
-  true
-end
-
-function _expand_limits(lims, plt::Plot{GRBackend}, isx::Bool)
-  # TODO: call expand limits for each plot data
-end
-
-function _remove_axis(plt::Plot{GRBackend}, isx::Bool)
-  # TODO: if plot is inner subplot, might need to remove ticks or axis labels
-end
+# function _create_subplot(subplt::Subplot{GRBackend}, isbefore::Bool)
+#   true
+# end
+#
+# function _expand_limits(lims, plt::Plot{GRBackend}, isx::Bool)
+#   # TODO: call expand limits for each plot data
+# end
+#
+# function _remove_axis(plt::Plot{GRBackend}, isx::Bool)
+#   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
+# end
 
 # ----------------------------------------------------------------
 

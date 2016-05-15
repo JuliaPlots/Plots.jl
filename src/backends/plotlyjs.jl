@@ -113,7 +113,8 @@ function _create_backend_figure(plt::Plot{PlotlyJSBackend})
 end
 
 
-function _add_series(::PlotlyJSBackend, plt::Plot, d::KW)
+function _add_series(plt::Plot{PlotlyJSBackend}, series::Series)
+    d = series.d
     syncplot = plt.o
 
     # add to the data array
@@ -122,8 +123,8 @@ function _add_series(::PlotlyJSBackend, plt::Plot, d::KW)
     gt = PlotlyJS.GenericTrace(typ; pdict...)
     PlotlyJS.addtraces!(syncplot, gt)
 
-    push!(plt.seriesargs, d)
-    plt
+    # push!(plt.seriesargs, d)
+    # plt
 end
 
 

@@ -142,7 +142,10 @@ function _apply_series_recipe(plt::Plot, d::KW)
     if st in supportedTypes()
         # println("adding series!!")
         warnOnUnsupported(plt.backend, d)
-        _add_series(plt.backend, plt, d)
+        series = Series(d)
+        push!(plt.series_list, series)
+        # _add_series(plt.backend, plt, d)
+        _add_series(plt, series)
     else
         # get a sub list of series for this seriestype
         series_list = try
@@ -208,7 +211,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
                 # if there was a grouping, filter the data here
                 _filter_input_data!(kw)
-                @show typeof((kw[:x], kw[:y], kw[:z]))
+                # @show typeof((kw[:x], kw[:y], kw[:z]))
 
                 # map marker_z if it's a Function
                 if isa(get(kw, :marker_z, nothing), Function)
@@ -255,9 +258,9 @@ function _plot!(plt::Plot, d::KW, args...)
     # @show anns
 
 
-    for kw in kw_list
-        @show typeof((kw[:x], kw[:y], kw[:z]))
-    end
+    # for kw in kw_list
+    #     @show typeof((kw[:x], kw[:y], kw[:z]))
+    # end
 
     # merge plot args... this is where we combine all the plot args from the user and
     # from the recipes... axis info, colors, etc
@@ -269,9 +272,9 @@ function _plot!(plt::Plot, d::KW, args...)
         handlePlotColors(plt.backend, plt.plotargs)
     end
 
-    for kw in kw_list
-        @show typeof((kw[:x], kw[:y], kw[:z]))
-    end
+    # for kw in kw_list
+    #     @show typeof((kw[:x], kw[:y], kw[:z]))
+    # end
 
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes

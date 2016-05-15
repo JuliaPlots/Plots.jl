@@ -580,16 +580,17 @@ end
 
 
 # plot one data series
-function _add_series(::GadflyBackend, plt::Plot, d::KW)
+# function _add_series(::GadflyBackend, plt::Plot, d::KW)
+function _add_series(plt::Plot{GadflyBackend}, series::Series)
     # first clear out the temporary layer
     gplt = getGadflyContext(plt)
     if gplt.layers[1].geom.tag == :remove
         gplt.layers = gplt.layers[2:end]
     end
 
-    addGadflySeries!(plt, d)
-    push!(plt.seriesargs, d)
-    plt
+    addGadflySeries!(plt, series.d)
+    # push!(plt.seriesargs, d)
+    # plt
 end
 
 

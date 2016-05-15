@@ -154,8 +154,9 @@ function _create_backend_figure(plt::Plot{BokehBackend})
 end
 
 
-function _add_series(::BokehBackend, plt::Plot, d::KW)
-  bdata = Dict{Symbol, Vector}(:x => collect(d[:x]), :y => collect(d[:y]))
+# function _add_series(::BokehBackend, plt::Plot, d::KW)
+function _add_series(plt::Plot{BokehBackend}, series::Series)
+  bdata = Dict{Symbol, Vector}(:x => collect(series.d[:x]), :y => collect(series.d[:y]))
 
   glyph = Bokeh.Bokehjs.Glyph(
       glyphtype = bokeh_glyph_type(d),
@@ -169,8 +170,8 @@ function _add_series(::BokehBackend, plt::Plot, d::KW)
   legend = nothing  # TODO
   push!(plt.o.datacolumns, Bokeh.BokehDataSet(bdata, glyph, legend))
 
-  push!(plt.seriesargs, d)
-  plt
+  # push!(plt.seriesargs, d)
+  # plt
 end
 
 # ----------------------------------------------------------------

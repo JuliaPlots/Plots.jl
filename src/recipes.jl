@@ -216,12 +216,11 @@ end
 
 # for seriestype `line`, need to sort by x values
 @recipe function f(::Type{Val{:line}}, x, y, z)
-    # order by x
-    indices = sortperm(d[:x])
-    d[:x] = d[:x][indices]
-    d[:y] = d[:y][indices]
-    if typeof(d[:z]) <: AVec
-        d[:z] = d[:z][indices]
+    indices = sortperm(x)
+    d[:x] = x[indices]
+    d[:y] = y[indices]
+    if typeof(z) <: AVec
+        d[:z] = z[indices]
     end
     d[:seriestype] = :path
     ()

@@ -236,11 +236,11 @@ end
 # end
 
 
-function _add_series(::PGFPlotsBackend, plt::Plot, d::KW)
-  # TODO: add one series to the underlying package
-  push!(plt.seriesargs, d)
-  plt
-end
+# function _add_series(::PGFPlotsBackend, plt::Plot, d::KW)
+#   # TODO: add one series to the underlying package
+#   push!(plt.seriesargs, d)
+#   plt
+# end
 
 function _add_annotations{X,Y,V}(plt::Plot{PGFPlotsBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   # set or add to the annotation_list
@@ -285,13 +285,13 @@ end
 #   true
 # end
 
-function _expand_limits(lims, plt::Plot{PGFPlotsBackend}, isx::Bool)
-  # TODO: call expand limits for each plot data
-end
-
-function _remove_axis(plt::Plot{PGFPlotsBackend}, isx::Bool)
-  # TODO: if plot is inner subplot, might need to remove ticks or axis labels
-end
+# function _expand_limits(lims, plt::Plot{PGFPlotsBackend}, isx::Bool)
+#   # TODO: call expand limits for each plot data
+# end
+#
+# function _remove_axis(plt::Plot{PGFPlotsBackend}, isx::Bool)
+#   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
+# end
 
 # ----------------------------------------------------------------
 

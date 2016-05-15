@@ -364,7 +364,9 @@ pylinecolormap(d::KW)       = getPyPlotColorMap(d[:linecolor], d[:linealpha])
 pymarkercolormap(d::KW)     = getPyPlotColorMap(d[:markercolor], d[:markeralpha])
 pyfillcolormap(d::KW)       = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
 
-function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
+# function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
+function _add_series(plt::Plot{PyPlotBackend}, series::Series)
+    d = series.d
     st = d[:seriestype]
     if !(st in supportedTypes(pkg))
         error("seriestype $(st) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
@@ -758,8 +760,8 @@ function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
         push!(handles, handle)
     end
 
-    push!(plt.seriesargs, d)
-    plt
+    # push!(plt.seriesargs, d)
+    # plt
 end
 
 

@@ -95,13 +95,14 @@ function _create_backend_figure(plt::Plot{GLVisualizeBackend})
 end
 
 
-function _add_series(::GLVisualizeBackend, plt::Plot, d::KW)
+# function _add_series(::GLVisualizeBackend, plt::Plot, d::KW)
+function _add_series(plt::Plot{GLVisualizeBackend}, series::Series)
   # TODO: add one series to the underlying package
-  push!(plt.seriesargs, d)
+  # push!(plt.seriesargs, d)
   # TODO: this should be moved to the display method?
-  x,y,z=map(Float32,d[:x]), map(Float32,d[:y]), map(Float32,d[:z].surf)
-  GLVisualize.view(GLVisualize.visualize((x*ones(y)', ones(x)*y', z), :surface),plt.o.window)
-  plt
+  x, y, z = map(Float32, series.d[:x]), map(Float32, series.d[:y]), map(Float32, series.d[:z].surf)
+  GLVisualize.view(GLVisualize.visualize((x*ones(y)', ones(x)*y', z), :surface), plt.o.window)
+  # plt
 end
 
 function _add_annotations{X,Y,V}(plt::Plot{GLVisualizeBackend}, anns::AVec{@compat(Tuple{X,Y,V})})

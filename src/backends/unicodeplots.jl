@@ -194,14 +194,16 @@ function _create_backend_figure(plt::Plot{UnicodePlotsBackend})
   # plt
 end
 
-function _add_series(::UnicodePlotsBackend, plt::Plot, d::KW)
+function _add_series(plt::Plot{UnicodePlotsBackend}, series::Series)
+    d = series.d
+    # TODO don't need these once the "bar" series recipe is done
   if d[:seriestype] in (:sticks, :bar)
     d = barHack(; d...)
   elseif d[:seriestype] == :hist
     d = barHack(; histogramHack(; d...)...)
   end
-  push!(plt.seriesargs, d)
-  plt
+  # push!(plt.seriesargs, d)
+  # plt
 end
 
 
