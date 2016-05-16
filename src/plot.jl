@@ -60,7 +60,9 @@ function plot(args...; kw...)
 
     plt.layout, plt.subplots, plt.spmap = build_layout(pop!(d, :layout, :auto))
     for sp in plt.subplots
+        @show sp.o
         _initialize_subplot(plt, sp)
+        @show sp.o
     end
 
     # now update the plot
@@ -275,12 +277,12 @@ function _plot!(plt::Plot, d::KW, args...)
     # merge plot args... this is where we combine all the plot args from the user and
     # from the recipes... axis info, colors, etc
     # TODO: why do i need to check for the subplot key?
-    if !haskey(d, :subplot)
+    # if !haskey(d, :subplot)
         for kw in vcat(kw_list, d)
             _add_plotargs!(plt, kw)
         end
         handlePlotColors(plt.backend, plt.plotargs)
-    end
+    # end
 
     # for kw in kw_list
     #     @show typeof((kw[:x], kw[:y], kw[:z]))
@@ -334,10 +336,10 @@ function _plot!(plt::Plot, d::KW, args...)
 
     # add title, axis labels, ticks, etc
     # TODO: do we really need this subplot check?
-    if !haskey(d, :subplot)
+    # if !haskey(d, :subplot)
         # merge!(plt.plotargs, d)  # this shouldn't be needed since we merged the keys earlier
         _update_plot(plt, plt.plotargs)
-    end
+    # end
 
     current(plt)
 

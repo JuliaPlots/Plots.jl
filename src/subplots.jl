@@ -149,16 +149,22 @@ function update_bboxes!(layout::GridLayout) #, parent_bbox::BoundingBox = Boundi
 
     # TODO: this should really track used/free space for each row/column so that we can align plot areas properly
 
-    l, b = 0.0, 0.0
+    # l, b = 0.0, 0.0
+    rights = zeros(nc)
+    tops = zeros(nr)
     for r=1:nr, c=1:nc
         # compute the child's bounding box relative to the parent
         child = layout[r,c]
         usedw, usedh = used_size(child)
-        child_bbox = BoundingBox(
-            l, b,
-            l + usedw + freew * layout.widths[c],
-            b + usedh + freeh * layout.heights[r]
-        )
+
+        left = (c == 1 ? 0 : rights[c-1])
+        bottom = (r == 1 ? 0 : tops[r-1])
+        right = left + usedw + freew * layout.widths[c]
+        top = bottom + usedh + freeh * layout.heights[r]
+        child_bbox = BoundingBox(left, bottom, right, top)
+
+        rights[c] = right
+        tops[r] = top
 
         # then compute the bounding box relative to the canvas, and cache it in the child object
         bbox!(child, crop(bbox(layout), child_bbox))

@@ -35,6 +35,7 @@ supportedArgs(::PyPlotBackend) = [
     :polar,
     :normalize, :weights, :contours, :aspect_ratio,
     :match_dimensions,
+    :subplot,
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [
@@ -333,7 +334,8 @@ end
 # each backend should set up the subplot here
 function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
     fig = plt.o
-    ax = fig[:add_axes]([0,0,1,1])
+    # add a new axis, and force it to create a new one by setting a distinct label
+    ax = fig[:add_axes]([0,0,1,1], label = string(gensym()))
     for axis in (:xaxis, :yaxis)
         ax[axis][:_autolabelpos] = false
     end

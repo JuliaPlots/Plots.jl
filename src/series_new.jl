@@ -14,9 +14,9 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
         setDictValue(d, d, k, commandIndex, _seriesDefaults)
     end
 
-    if d[:subplot_index] == :auto
+    if d[:subplot] == :auto
         # TODO: something useful
-        d[:subplot_index] = 1
+        d[:subplot] = 1
     end
 
     aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
@@ -66,7 +66,7 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
         label = string(label, " (R)")
     end
     d[:label] = label
-    
+
     d
 end
 
