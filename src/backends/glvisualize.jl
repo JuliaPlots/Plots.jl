@@ -143,9 +143,9 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{GLVisualizeBackend})
-  # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-end
+# function _create_subplot(subplt::Subplot{GLVisualizeBackend})
+#   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+# end
 
 function _expand_limits(lims, plt::Plot{GLVisualizeBackend}, isx::Bool)
   # TODO: call expand limits for each plot data
@@ -169,6 +169,6 @@ function Base.display(::PlotsDisplay, plt::Plot{GLVisualizeBackend})
   #       wouldn't actually need to do anything
 end
 
-function Base.display(::PlotsDisplay, plt::Subplot{GLVisualizeBackend})
-  # TODO: display/show the subplot
-end
+# function Base.display(::PlotsDisplay, plt::Subplot{GLVisualizeBackend})
+#   # TODO: display/show the subplot
+# end

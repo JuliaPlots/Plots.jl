@@ -261,9 +261,9 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{WinstonBackend}, isbefore::Bool)
-  # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-end
+# function _create_subplot(subplt::Subplot{WinstonBackend}, isbefore::Bool)
+#   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+# end
 
 # ----------------------------------------------------------------
 
@@ -302,6 +302,6 @@ function Base.display(::PlotsDisplay, plt::Plot{WinstonBackend})
 end
 
 
-function Base.display(::PlotsDisplay, subplt::Subplot{WinstonBackend})
-  # TODO: display/show the Subplot object
-end
+# function Base.display(::PlotsDisplay, subplt::Subplot{WinstonBackend})
+#   # TODO: display/show the Subplot object
+# end

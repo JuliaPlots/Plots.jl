@@ -1,18 +1,24 @@
 
 
-# -----------------------------------------------------------
-# GridLayout
-# -----------------------------------------------------------
+Base.size(layout::EmptyLayout) = (0,0)
+Base.length(layout::EmptyLayout) = 0
+Base.getindex(layout::EmptyLayout, r::Int, c::Int) = nothing
 
-"nested, gridded layout with optional size percentages."
-immutable GridLayout <: SubplotLayout
-    grid::Matrix # Nested layouts. Each position is an AbstractSubplot or another GridLayout
-    widths::Vector{Float64}
-    heights::Vector{Float64}
-end
+
+Base.size(layout::RootLayout) = (1,1)
+Base.length(layout::RootLayout) = 1
+# Base.getindex(layout::RootLayout, r::Int, c::Int) = layout.child
+
+Base.size(subplot::Subplot) = (1,1)
+Base.length(subplot::Subplot) = 1
+Base.getindex(subplot::Subplot, r::Int, c::Int) = subplot
+
 
 Base.size(layout::GridLayout) = size(layout.grid)
 Base.length(layout::GridLayout) = length(layout.grid)
+Base.getindex(layout::GridLayout, r::Int, c::Int) = layout.grid[r,c]
+
+
 # Base.start(layout::GridLayout) = 1
 # Base.done(layout::GridLayout, state) = state > length(layout)
 # function Base.next(layout::GridLayout, state)
@@ -31,11 +37,10 @@ Base.length(layout::GridLayout) = length(layout.grid)
 #     (r,c), state + 1
 # end
 
-nrows(layout::GridLayout) = size(layout, 1)
-ncols(layout::GridLayout) = size(layout, 2)
+# nrows(layout::GridLayout) = size(layout, 1)
+# ncols(layout::GridLayout) = size(layout, 2)
 
 # get the plot index given row and column
-Base.getindex(layout::GridLayout, r::Int, c::Int) = layout.grid[r,c]
 
 # -----------------------------------------------------------
 

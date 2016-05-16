@@ -832,21 +832,21 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
   update && GR.updatews()
 end
 
-function gr_display(subplt::Subplot{GRBackend})
-  clear = true
-  update = false
-  l = enumerate(subplt.layout)
-  nr = nrows(subplt.layout)
-  for (i, (r, c)) in l
-    nc = ncols(subplt.layout, r)
-    if i == length(l)
-      update = true
-    end
-    subplot = [(c-1)/nc, c/nc, 1-r/nr, 1-(r-1)/nr]
-    gr_display(subplt.plts[i], clear, update, subplot)
-    clear = false
-  end
-end
+# function gr_display(subplt::Subplot{GRBackend})
+#   clear = true
+#   update = false
+#   l = enumerate(subplt.layout)
+#   nr = nrows(subplt.layout)
+#   for (i, (r, c)) in l
+#     nc = ncols(subplt.layout, r)
+#     if i == length(l)
+#       update = true
+#     end
+#     subplot = [(c-1)/nc, c/nc, 1-r/nr, 1-(r-1)/nr]
+#     gr_display(subplt.plts[i], clear, update, subplot)
+#     clear = false
+#   end
+# end
 
 # function _create_plot(pkg::GRBackend, d::KW)
 #   Plot(nothing, pkg, 0, d, KW[])
@@ -948,7 +948,7 @@ function Base.display(::PlotsDisplay, plt::Plot{GRBackend})
   gr_display(plt)
 end
 
-function Base.display(::PlotsDisplay, plt::Subplot{GRBackend})
-  gr_display(plt)
-  true
-end
+# function Base.display(::PlotsDisplay, plt::Subplot{GRBackend})
+#   gr_display(plt)
+#   true
+# end

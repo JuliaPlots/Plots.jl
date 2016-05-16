@@ -209,10 +209,10 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{BokehBackend}, isbefore::Bool)
-  # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-
-end
+# function _create_subplot(subplt::Subplot{BokehBackend}, isbefore::Bool)
+#   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+#
+# end
 
 
 function _expand_limits(lims, plt::Plot{BokehBackend}, isx::Bool)
@@ -234,6 +234,6 @@ function Base.display(::PlotsDisplay, plt::Plot{BokehBackend})
   Bokeh.showplot(plt.o)
 end
 
-function Base.display(::PlotsDisplay, plt::Subplot{BokehBackend})
-  # TODO: display/show the subplot
-end
+# function Base.display(::PlotsDisplay, plt::Subplot{BokehBackend})
+#   # TODO: display/show the subplot
+# end

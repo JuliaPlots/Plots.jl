@@ -178,10 +178,10 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{PlotlyJSBackend}, isbefore::Bool)
-  # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-  true
-end
+# function _create_subplot(subplt::Subplot{PlotlyJSBackend}, isbefore::Bool)
+#   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+#   true
+# end
 
 function _expand_limits(lims, plt::Plot{PlotlyJSBackend}, isx::Bool)
   # TODO: call expand limits for each plot data
@@ -206,6 +206,6 @@ function Base.display(::PlotsDisplay, plt::Plot{PlotlyJSBackend})
     display(plt.o)
 end
 
-function Base.display(::PlotsDisplay, plt::Subplot{PlotlyJSBackend})
-    error()
-end
+# function Base.display(::PlotsDisplay, plt::Subplot{PlotlyJSBackend})
+#     error()
+# end

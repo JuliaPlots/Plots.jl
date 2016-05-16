@@ -247,10 +247,10 @@ end
 
 # we don't do very much for subplots... just stack them vertically
 
-function _create_subplot(subplt::Subplot{UnicodePlotsBackend}, isbefore::Bool)
-  isbefore && return false
-  true
-end
+# function _create_subplot(subplt::Subplot{UnicodePlotsBackend}, isbefore::Bool)
+#   isbefore && return false
+#   true
+# end
 
 
 function Base.display(::PlotsDisplay, plt::Plot{UnicodePlotsBackend})
@@ -260,8 +260,8 @@ end
 
 
 
-function Base.display(::PlotsDisplay, subplt::Subplot{UnicodePlotsBackend})
-  for plt in subplt.plts
-    gui(plt)
-  end
-end
+# function Base.display(::PlotsDisplay, subplt::Subplot{UnicodePlotsBackend})
+#   for plt in subplt.plts
+#     gui(plt)
+#   end
+# end

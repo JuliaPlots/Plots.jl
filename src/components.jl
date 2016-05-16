@@ -257,10 +257,6 @@ function text(str, args...)
 end
 # -----------------------------------------------------------------------
 
-# simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
-type Axis #<: Associative{Symbol,Any}
-    d::KW
-end
 
 xaxis(args...) = Axis("x", args...)
 yaxis(args...) = Axis("y", args...)
@@ -299,7 +295,7 @@ function Axis(letter::AbstractString, args...; kw...)
 end
 
 # update an Axis object with magic args and keywords
-function update!(a::Axis, args..., kw...)
+function update!(a::Axis, args...; kw...)
     # first process args
     d = a.d
     for arg in args

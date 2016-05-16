@@ -222,40 +222,62 @@ end
 
 # ---------------------------------------------------------------------------
 
-type PyPlotAxisWrapper
-    ax
-    rightax
-    fig
-    kwargs  # for add_subplot
-end
-
-getfig(wrap::PyPlotAxisWrapper) = wrap.fig
-
-
-
-# get a reference to the correct axis
-function getLeftAxis(wrap::PyPlotAxisWrapper)
-    if wrap.ax == nothing
-        axes = wrap.fig.o[:axes]
-        if isempty(axes)
-            return wrap.fig.o[:add_subplot](111; wrap.kwargs...)
-        end
-        axes[1]
-    else
-        wrap.ax
+function getAxis(plt::Plot{PyPlotBackend}, subplot::Subplot = plt.subplots[1])
+    if subplot.o == nothing
+        @show subplot
+        fig = plt.o
+        @show plt
+        # if fig == nothing
+        #     fig =
+        # TODO: actual coords?
+        # NOTE: might want to use ax[:get_tightbbox](ax[:get_renderer_cache]()) to calc size of guides?
+        # NOTE: can set subplot location later with ax[:set_position]([left, bottom, width, height])
+        left, bottom, width, height = 0.3, 0.3, 0.5, 0.5
+        ax = fig[:add_axes]([left, bottom, width, height])
+        subplot.o = ax
     end
+    subplot.o
 end
 
-function getRightAxis(wrap::PyPlotAxisWrapper)
-    if wrap.rightax == nothing
-        wrap.rightax = getLeftAxis(wrap)[:twinx]()
-    end
-    wrap.rightax
-end
+getLeftAxis(plt::Plot{PyPlotBackend}, subplot::Subplot = plt.subplots[1]) = getAxis(plt, subplot)
+getfig(o) = o
 
-getLeftAxis(plt::Plot{PyPlotBackend}) = getLeftAxis(plt.o)
-getRightAxis(plt::Plot{PyPlotBackend}) = getRightAxis(plt.o)
-getAxis(plt::Plot{PyPlotBackend}, axis::Symbol) = (axis == :right ? getRightAxis : getLeftAxis)(plt)
+# ---------------------------------------------------------------------------
+
+# type PyPlotAxisWrapper
+#     ax
+#     rightax
+#     fig
+#     kwargs  # for add_subplot
+# end
+#
+# getfig(wrap::PyPlotAxisWrapper) = wrap.fig
+#
+#
+#
+# # get a reference to the correct axis
+# function getLeftAxis(wrap::PyPlotAxisWrapper)
+#     if wrap.ax == nothing
+#         axes = wrap.fig.o[:axes]
+#         if isempty(axes)
+#             return wrap.fig.o[:add_subplot](111; wrap.kwargs...)
+#         end
+#         axes[1]
+#     else
+#         wrap.ax
+#     end
+# end
+#
+# function getRightAxis(wrap::PyPlotAxisWrapper)
+#     if wrap.rightax == nothing
+#         wrap.rightax = getLeftAxis(wrap)[:twinx]()
+#     end
+#     wrap.rightax
+# end
+#
+# getLeftAxis(plt::Plot{PyPlotBackend}) = getLeftAxis(plt.o)
+# getRightAxis(plt::Plot{PyPlotBackend}) = getRightAxis(plt.o)
+# # getAxis(plt::Plot{PyPlotBackend}, axis::Symbol) = (axis == :right ? getRightAxis : getLeftAxis)(plt)
 
 
 function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Bool)
@@ -272,13 +294,13 @@ handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Real) = handleSmooth(p
 
 # ---------------------------------------------------------------------------
 
-makePyPlotCurrent(wrap::PyPlotAxisWrapper) = wrap.ax == nothing ? PyPlot.figure(wrap.fig.o[:number]) : nothing
-makePyPlotCurrent(plt::Plot{PyPlotBackend}) = plt.o == nothing ? nothing : makePyPlotCurrent(plt.o)
-
-
-function _before_add_series(plt::Plot{PyPlotBackend})
-    makePyPlotCurrent(plt)
-end
+# makePyPlotCurrent(wrap::PyPlotAxisWrapper) = wrap.ax == nothing ? PyPlot.figure(wrap.fig.o[:number]) : nothing
+# makePyPlotCurrent(plt::Plot{PyPlotBackend}) = plt.o == nothing ? nothing : makePyPlotCurrent(plt.o)
+#
+#
+# function _before_add_series(plt::Plot{PyPlotBackend})
+#     makePyPlotCurrent(plt)
+# end
 
 
 # ------------------------------------------------------------------
@@ -297,7 +319,7 @@ function pyplot_figure(plotargs::KW)
     fig[:set_size_inches](w, h, forward = true)
     fig[:set_facecolor](getPyPlotColor(plotargs[:background_color_outside]))
     fig[:set_dpi](DPI)
-    fig[:set_tight_layout](true)
+    # fig[:set_tight_layout](true)
 
     # clear the figure
     PyPlot.clf()
@@ -315,20 +337,26 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _create_backend_figure(plt::Plot)
-    if haskey(plt.plotargs, :subplot)
-        wrap = nothing
-    else
-        wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(plt.plotargs), [])
-        pyplot_3d_setup!(wrap, plt.plotargs)
-        if get(plt.plotargs, :polar, false)
-            push!(wrap.kwargs, (:polar, true))
-        end
-    end
-    wrap
-    # plt = Plot(wrap, pkg, 0, plt.plotargs, KW[])
-    # plt
+function _create_backend_figure(plt::Plot{PyPlotBackend})
+    fig = pyplot_figure(plt.plotargs)
+    # TODO: handle 3d and polar
+    fig
 end
+
+# function _create_backend_figure(plt::Plot)
+#     if haskey(plt.plotargs, :subplot)
+#         wrap = nothing
+#     else
+#         wrap = PyPlotAxisWrapper(nothing, nothing, pyplot_figure(plt.plotargs), [])
+#         pyplot_3d_setup!(wrap, plt.plotargs)
+#         if get(plt.plotargs, :polar, false)
+#             push!(wrap.kwargs, (:polar, true))
+#         end
+#     end
+#     wrap
+#     # plt = Plot(wrap, pkg, 0, plt.plotargs, KW[])
+#     # plt
+# end
 
 # ---------------------------------------------------------------------------
 
@@ -368,11 +396,12 @@ pyfillcolormap(d::KW)       = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
 function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     d = series.d
     st = d[:seriestype]
-    if !(st in supportedTypes(pkg))
-        error("seriestype $(st) is unsupported in PyPlot.  Choose from: $(supportedTypes(pkg))")
+    if !(st in supportedTypes(plt.backend))
+        error("seriestype $(st) is unsupported in PyPlot.  Choose from: $(supportedTypes(plt.backend))")
     end
 
     # 3D plots have a different underlying Axes object in PyPlot
+    # TODO: BUG: this adds to kwargs but never changes anything... source of subplot(wireframe(...)) bug?
     if st in _3dTypes && isempty(plt.o.kwargs)
         push!(plt.o.kwargs, (:projection, "3d"))
     end
@@ -380,7 +409,8 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     # PyPlot doesn't handle mismatched x/y
     fix_xy_lengths!(plt, d)
 
-    ax = getAxis(plt, d[:axis])
+    # ax = getAxis(plt, d[:axis])
+    ax = getAxis(plt, get(d, :subplot, plt.subplots[1]))
     x, y, z = d[:x], d[:y], d[:z]
     @show typeof((x,y,z))
     xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
@@ -769,11 +799,11 @@ end
 
 
 # given a dimension (:x, :y, or :z), loop over the seriesargs KWs to find the min/max of the underlying data
-function minmaxseries(ds, dimension, axis)
+function minmaxseries(series_list, dimension, axis)
     lo, hi = Inf, -Inf
-    for d in ds
-        d[:axis] == axis || continue
-        v = d[dimension]
+    for series in series_list
+        series.d[:axis] == axis || continue
+        v = series.d[dimension]
         if length(v) > 0
             vlo, vhi = extrema(v)
             lo = min(lo, vlo)
@@ -795,13 +825,13 @@ function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
     ax = getAxis(plt, axis)
     pargs = plt.plotargs
     if pargs[:xlims] == :auto
-        ax[pargs[:polar] ? :set_tlim : :set_xlim](minmaxseries(plt.seriesargs, :x, axis)...)
+        ax[pargs[:polar] ? :set_tlim : :set_xlim](minmaxseries(plt.series_list, :x, axis)...)
     end
     if pargs[:ylims] == :auto
-        ax[pargs[:polar] ? :set_rlim : :set_ylim](minmaxseries(plt.seriesargs, :y, axis)...)
+        ax[pargs[:polar] ? :set_rlim : :set_ylim](minmaxseries(plt.series_list, :y, axis)...)
     end
     if pargs[:zlims] == :auto && haskey(ax, :set_zlim)
-        ax[:set_zlim](minmaxseries(plt.seriesargs, :z, axis)...)
+        ax[:set_zlim](minmaxseries(plt.series_list, :z, axis)...)
     end
 end
 
@@ -811,7 +841,7 @@ end
 # the x/y data for each handle (for example, plot and scatter)
 
 function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
-    d = plt.seriesargs[i]
+    d = plt.series_list[i].d
     d[:x], d[:y] = xy
     for handle in d[:serieshandle]
         try
@@ -826,7 +856,7 @@ end
 
 
 function setxyz!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
-    d = plt.seriesargs[i]
+    d = plt.series_list[i].d
     d[:x], d[:y], d[:z] = xyz
     for handle in d[:serieshandle]
         handle[:set_data](d[:x], d[:y])
@@ -901,9 +931,9 @@ function updateAxisColors(ax, d::KW)
     ax[:title][:set_color](guidecolor)
 end
 
-function usingRightAxis(plt::Plot{PyPlotBackend})
-    any(args -> args[:axis] in (:right,:auto), plt.seriesargs)
-end
+# function usingRightAxis(plt::Plot{PyPlotBackend})
+#     any(args -> args[:axis] in (:right,:auto), plt.seriesargs)
+# end
 
 
 # --------------------------------------------------------------------------
@@ -912,7 +942,8 @@ end
 function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
     # @show d
     figorax = plt.o
-    ax = getLeftAxis(figorax)
+    # ax = getLeftAxis(figorax)
+    ax = getAxis(plt, plt.subplots[1])
     # ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
     guidesz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
 
@@ -920,15 +951,16 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
     haskey(d, :title) && ax[:set_title](d[:title])
     ax[:title][:set_fontsize](guidesz)
 
-    # handle right y axis
-    axes = [getLeftAxis(figorax)]
-    if usingRightAxis(plt)
-        push!(axes, getRightAxis(figorax))
-        if get(d, :yrightlabel, "") != ""
-            rightax = getRightAxis(figorax)
-            rightax[:set_ylabel](d[:yrightlabel])
-        end
-    end
+    axes = [ax]
+    # # handle right y axis
+    # axes = [getLeftAxis(figorax)]
+    # if usingRightAxis(plt)
+    #     push!(axes, getRightAxis(figorax))
+    #     if get(d, :yrightlabel, "") != ""
+    #         rightax = getRightAxis(figorax)
+    #         rightax[:set_ylabel](d[:yrightlabel])
+    #     end
+    # end
 
     for letter in ("x", "y", "z")
         axissym = symbol(letter*"axis")
@@ -1044,7 +1076,7 @@ end
 #
 # # this will be called internally, when creating a subplot from existing plots
 # # NOTE: if I ever need to "Rebuild a "ubplot from individual Plot's"... this is what I should use!
-# function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::SubplotLayout, d::KW)
+# function subplot(plts::AVec{Plot{PyPlotBackend}}, layout::AbstractLayout, d::KW)
 #     validateSubplotSupported()
 #
 #     p = length(layout)
@@ -1104,15 +1136,27 @@ function addPyPlotLegend(plt::Plot, ax)
     leg = plt.plotargs[:legend]
     if leg != :none
         # gotta do this to ensure both axes are included
-        args = filter(x -> !(x[:seriestype] in (
-            :hist,:density,:hexbin,:hist2d,:hline,:vline,
-            :contour,:contour3d,:surface,:wireframe,
-            :heatmap,:path3d,:scatter3d, :pie, :image
-        )), plt.seriesargs)
-        args = filter(x -> x[:label] != "", args)
-        if length(args) > 0
-            leg = ax[:legend]([d[:serieshandle][1] for d in args],
-                [d[:label] for d in args],
+        labels = []
+        handles = []
+        for series in plt.series_list
+            if series.d[:label] != "" && !(series.d[:seriestype] in (
+                    :hist,:density,:hexbin,:hist2d,:hline,:vline,
+                    :contour,:contour3d,:surface,:wireframe,
+                    :heatmap,:path3d,:scatter3d, :pie, :image))
+                push!(handles, series.d[:serieshandle][1])
+                push!(labels, series.d[:label])
+            end
+        end
+        # args = filter(x -> !(x.d[:seriestype] in (
+        #     :hist,:density,:hexbin,:hist2d,:hline,:vline,
+        #     :contour,:contour3d,:surface,:wireframe,
+        #     :heatmap,:path3d,:scatter3d, :pie, :image
+        # )), plt.series_list)
+        # args = filter(x -> x[:label] != "", args)
+        # if length(args) > 0
+        if !isempty(handles)
+            leg = ax[:legend](handles,  #[d[:serieshandle][1] for d in args],
+                labels, #[d[:label] for d in args],
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
                 fontsize = plt.plotargs[:legendfont].pointsize

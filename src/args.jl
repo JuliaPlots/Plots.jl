@@ -156,6 +156,7 @@ _seriesDefaults[:weights]         = nothing   # optional weights for histograms 
 _seriesDefaults[:contours]        = false     # add contours to 3d surface and wireframe plots
 _seriesDefaults[:match_dimensions] = false   # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
                                              # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
+_seriesDefaults[:subplot_index]   = :auto
 
 
 const _plotDefaults = KW()

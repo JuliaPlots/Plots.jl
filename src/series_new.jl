@@ -2,11 +2,7 @@
 # we are going to build recipes to do the processing and splitting of the args
 
 
-# build the argument dictionary for a series
-# function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, d, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
 function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
-    # kwdict = KW(d)
-    # d = KW()
     pkg = plt.backend
     n = plt.n
     plotargs = getplotargs(plt, n)
@@ -18,16 +14,10 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
         setDictValue(d, d, k, commandIndex, _seriesDefaults)
     end
 
-    # # groupby args?
-    # for k in (:idxfilter, :numUncounted, :dataframe)
-    #     if haskey(kwdict, k)
-    #         d[k] = kwdict[k]
-    #     end
-    # end
-
-    # if haskey(_typeAliases, d[:seriestype])
-    #     d[:seriestype] = _typeAliases[d[:seriestype]]
-    # end
+    if d[:subplot_index] == :auto
+        # TODO: something useful
+        d[:subplot_index] = 1
+    end
 
     aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
     aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
@@ -76,9 +66,7 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
         label = string(label, " (R)")
     end
     d[:label] = label
-
-    # warnOnUnsupported(pkg, d)
-
+    
     d
 end
 

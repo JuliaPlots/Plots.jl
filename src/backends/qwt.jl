@@ -269,28 +269,28 @@ end
 
 # -------------------------------
 
-# create the underlying object (each backend will do this differently)
-function _create_subplot(subplt::Subplot{QwtBackend}, isbefore::Bool)
-  isbefore && return false
-  i = 0
-  rows = Any[]
-  row = Any[]
-  for (i,(r,c)) in enumerate(subplt.layout)
-    push!(row, subplt.plts[i].o)
-    if c == ncols(subplt.layout, r)
-      push!(rows, Qwt.hsplitter(row...))
-      row = Any[]
-    end
-  end
-  # for rowcnt in subplt.layout.rowcounts
-  #   push!(rows, Qwt.hsplitter([plt.o for plt in subplt.plts[(1:rowcnt) + i]]...))
-  #   i += rowcnt
-  # end
-  subplt.o = Qwt.vsplitter(rows...)
-  # Qwt.resizewidget(subplt.o, getplotargs(subplt,1)[:size]...)
-  # Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
-  true
-end
+# # create the underlying object (each backend will do this differently)
+# function _create_subplot(subplt::Subplot{QwtBackend}, isbefore::Bool)
+#   isbefore && return false
+#   i = 0
+#   rows = Any[]
+#   row = Any[]
+#   for (i,(r,c)) in enumerate(subplt.layout)
+#     push!(row, subplt.plts[i].o)
+#     if c == ncols(subplt.layout, r)
+#       push!(rows, Qwt.hsplitter(row...))
+#       row = Any[]
+#     end
+#   end
+#   # for rowcnt in subplt.layout.rowcounts
+#   #   push!(rows, Qwt.hsplitter([plt.o for plt in subplt.plts[(1:rowcnt) + i]]...))
+#   #   i += rowcnt
+#   # end
+#   subplt.o = Qwt.vsplitter(rows...)
+#   # Qwt.resizewidget(subplt.o, getplotargs(subplt,1)[:size]...)
+#   # Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
+#   true
+# end
 
 function _expand_limits(lims, plt::Plot{QwtBackend}, isx::Bool)
   for series in plt.o.lines
@@ -311,13 +311,13 @@ function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{QwtBackend})
   write(io, readall("/tmp/dfskjdhfkh.png"))
 end
 
-function Base.writemime(io::IO, ::MIME"image/png", subplt::Subplot{QwtBackend})
-  for plt in subplt.plts
-    Qwt.refresh(plt.o)
-  end
-  Qwt.savepng(subplt.o, "/tmp/dfskjdhfkh.png")
-  write(io, readall("/tmp/dfskjdhfkh.png"))
-end
+# function Base.writemime(io::IO, ::MIME"image/png", subplt::Subplot{QwtBackend})
+#   for plt in subplt.plts
+#     Qwt.refresh(plt.o)
+#   end
+#   Qwt.savepng(subplt.o, "/tmp/dfskjdhfkh.png")
+#   write(io, readall("/tmp/dfskjdhfkh.png"))
+# end
 
 
 function Base.display(::PlotsDisplay, plt::Plot{QwtBackend})
@@ -325,9 +325,9 @@ function Base.display(::PlotsDisplay, plt::Plot{QwtBackend})
   Qwt.showwidget(plt.o)
 end
 
-function Base.display(::PlotsDisplay, subplt::Subplot{QwtBackend})
-  for plt in subplt.plts
-    Qwt.refresh(plt.o)
-  end
-  Qwt.showwidget(subplt.o)
-end
+# function Base.display(::PlotsDisplay, subplt::Subplot{QwtBackend})
+#   for plt in subplt.plts
+#     Qwt.refresh(plt.o)
+#   end
+#   Qwt.showwidget(subplt.o)
+# end

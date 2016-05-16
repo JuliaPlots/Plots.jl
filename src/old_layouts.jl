@@ -4,7 +4,7 @@
 # -----------------------------------------------------------
 
 "Simple grid, indices are row-major."
-immutable GridLayout <: SubplotLayout
+immutable GridLayout <: AbstractLayout
     nr::Int
     nc::Int
 end
@@ -30,7 +30,7 @@ Base.getindex(layout::GridLayout, r::Int, c::Int) = (r-1) * layout.nc + c
 # -----------------------------------------------------------
 
 "Number of plots per row"
-immutable RowsLayout <: SubplotLayout
+immutable RowsLayout <: AbstractLayout
     numplts::Int
     rowcounts::AbstractVector{Int}
 end
@@ -62,7 +62,7 @@ Base.getindex(layout::RowsLayout, r::Int, c::Int) = sum(layout.rowcounts[1:r-1])
 # -----------------------------------------------------------
 
 "Flexible, nested layout with optional size percentages."
-immutable FlexLayout <: SubplotLayout
+immutable FlexLayout <: AbstractLayout
     n::Int
     grid::Matrix # Nested layouts. Each position
                  # can be a plot index or another FlexLayout

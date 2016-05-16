@@ -626,12 +626,12 @@ end
 # ----------------------------------------------------------------
 
 
-# create the underlying object (each backend will do this differently)
-function _create_subplot(subplt::Subplot{GadflyBackend}, isbefore::Bool)
-    isbefore && return false # wait until after plotting to create the subplots
-    subplt.o = nothing
-    true
-end
+# # create the underlying object (each backend will do this differently)
+# function _create_subplot(subplt::Subplot{GadflyBackend}, isbefore::Bool)
+#     isbefore && return false # wait until after plotting to create the subplots
+#     subplt.o = nothing
+#     true
+# end
 
 
 function _remove_axis(plt::Plot{GadflyBackend}, isx::Bool)
@@ -651,31 +651,31 @@ end
 
 
 getGadflyContext(plt::Plot{GadflyBackend}) = plt.o
-getGadflyContext(subplt::Subplot{GadflyBackend}) = buildGadflySubplotContext(subplt)
+# getGadflyContext(subplt::Subplot{GadflyBackend}) = buildGadflySubplotContext(subplt)
 
-# create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
-function buildGadflySubplotContext(subplt::Subplot)
-    rows = Any[]
-    row = Any[]
-    for (i,(r,c)) in enumerate(subplt.layout)
-
-        # add the Plot object to the row
-        push!(row, getGadflyContext(subplt.plts[i]))
-
-        # add the row
-        if c == ncols(subplt.layout, r)
-            push!(rows, Gadfly.hstack(row...))
-            row = Any[]
-        end
-    end
-
-    # stack the rows
-    Gadfly.vstack(rows...)
-end
+# # create my Compose.Context grid by hstacking and vstacking the Gadfly.Plot objects
+# function buildGadflySubplotContext(subplt::Subplot)
+#     rows = Any[]
+#     row = Any[]
+#     for (i,(r,c)) in enumerate(subplt.layout)
+#
+#         # add the Plot object to the row
+#         push!(row, getGadflyContext(subplt.plts[i]))
+#
+#         # add the row
+#         if c == ncols(subplt.layout, r)
+#             push!(rows, Gadfly.hstack(row...))
+#             row = Any[]
+#         end
+#     end
+#
+#     # stack the rows
+#     Gadfly.vstack(rows...)
+# end
 
 setGadflyDisplaySize(w,h) = Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
 setGadflyDisplaySize(plt::Plot) = setGadflyDisplaySize(plt.plotargs[:size]...)
-setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getplotargs(subplt, 1)[:size]...)
+# setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getplotargs(subplt, 1)[:size]...)
 # -------------------------------------------------------------------------
 
 
@@ -708,39 +708,39 @@ function Base.display(::PlotsDisplay, plt::Plot{GadflyBackend})
 end
 
 
-function Base.display(::PlotsDisplay, subplt::Subplot{GadflyBackend})
-    setGadflyDisplaySize(getplotargs(subplt,1)[:size]...)
-    ctx = buildGadflySubplotContext(subplt)
-
-    # taken from Gadfly since I couldn't figure out how to do it directly
-
-    filename = string(Gadfly.tempname(), ".html")
-    output = open(filename, "w")
-
-    plot_output = IOBuffer()
-    Gadfly.draw(Gadfly.SVGJS(plot_output, Compose.default_graphic_width,
-             Compose.default_graphic_height, false), ctx)
-    plotsvg = takebuf_string(plot_output)
-
-    write(output,
-      """
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Gadfly Plot</title>
-          <meta charset="utf-8">
-        </head>
-          <body>
-          <script charset="utf-8">
-              $(readall(Compose.snapsvgjs))
-          </script>
-          <script charset="utf-8">
-              $(readall(Gadfly.gadflyjs))
-          </script>
-          $(plotsvg)
-        </body>
-      </html>
-      """)
-    close(output)
-    Gadfly.open_file(filename)
-end
+# function Base.display(::PlotsDisplay, subplt::Subplot{GadflyBackend})
+#     setGadflyDisplaySize(getplotargs(subplt,1)[:size]...)
+#     ctx = buildGadflySubplotContext(subplt)
+#
+#     # taken from Gadfly since I couldn't figure out how to do it directly
+#
+#     filename = string(Gadfly.tempname(), ".html")
+#     output = open(filename, "w")
+#
+#     plot_output = IOBuffer()
+#     Gadfly.draw(Gadfly.SVGJS(plot_output, Compose.default_graphic_width,
+#              Compose.default_graphic_height, false), ctx)
+#     plotsvg = takebuf_string(plot_output)
+#
+#     write(output,
+#       """
+#       <!DOCTYPE html>
+#       <html>
+#         <head>
+#           <title>Gadfly Plot</title>
+#           <meta charset="utf-8">
+#         </head>
+#           <body>
+#           <script charset="utf-8">
+#               $(readall(Compose.snapsvgjs))
+#           </script>
+#           <script charset="utf-8">
+#               $(readall(Gadfly.gadflyjs))
+#           </script>
+#           $(plotsvg)
+#         </body>
+#       </html>
+#       """)
+#     close(output)
+#     Gadfly.open_file(filename)
+# end

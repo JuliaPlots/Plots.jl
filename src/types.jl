@@ -16,38 +16,73 @@ end
 wrap{T}(obj::T) = InputWrapper{T}(obj)
 Base.isempty(wrapper::InputWrapper) = false
 
+# -----------------------------------------------------------
+# Axes
+# -----------------------------------------------------------
+
+# simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
+type Axis #<: Associative{Symbol,Any}
+    d::KW
+end
+
 type AxisView
     label::UTF8String
     axis::Axis
 end
 
-abstract AbstractSubplot
-immutable EmptySubplot <: AbstractSubplot end
 
-type Subplot <: AbstractSubplot
-    axisviews::Vector{AxisView}
-    subplotargs::KW  # args specific to this subplot
-    obj  # can store backend-specific data... like a pyplot ax
+# -----------------------------------------------------------
+# Layouts
+# -----------------------------------------------------------
+
+abstract AbstractLayout
+
+# -----------------------------------------------------------
+
+# contains blank space
+immutable EmptyLayout <: AbstractLayout end
+
+# this is the parent of the top-level layout
+immutable RootLayout <: AbstractLayout
+    # child::AbstractLayout
 end
 
-type Series
-    d::KW
-    # x
-    # y
-    # z
-    # subplots::Vector{Subplot}
+# -----------------------------------------------------------
+
+# a single subplot
+type Subplot <: AbstractLayout
+    parent::AbstractLayout
+    attr::KW  # args specific to this subplot
+    # axisviews::Vector{AxisView}
+    o  # can store backend-specific data... like a pyplot ax
+
+    # Subplot(parent = RootLayout(); attr = KW())
 end
 
-# function Series(d::KW)
-#     x = pop!(d, :x)
-#     y = pop!(d, :y)
-#     z = pop!(d, :z)
-#     Series(d, x, y, z)
-# end
+Subplot() = Subplot(RootLayout(), KW(), nothing)
+
+# -----------------------------------------------------------
+
+# nested, gridded layout with optional size percentages
+immutable GridLayout <: AbstractLayout
+    parent::AbstractLayout
+    grid::Matrix{AbstractLayout} # Nested layouts. Each position is a AbstractLayout, which allows for arbitrary recursion
+    # widths::Vector{Float64}
+    # heights::Vector{Float64}
+    attr::KW
+end
+
+# -----------------------------------------------------------
+
+typealias SubplotMap Dict{Any, Subplot}
 
 # -----------------------------------------------------------
 # Plot
 # -----------------------------------------------------------
+
+type Series
+    d::KW
+end
 
 type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     o                        # the backend's plot object
@@ -57,19 +92,15 @@ type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     # seriesargs::Vector{KW}   # arguments for each series
     series_list::Vector{Series}   # arguments for each series
     subplots::Vector{Subplot}
+    subplot_map::SubplotMap  # provide any label as a map to a subplot
+    layout::AbstractLayout
 end
-
-# -----------------------------------------------------------
-# Layout
-# -----------------------------------------------------------
-
-abstract SubplotLayout
 
 # -----------------------------------------------------------
 # Subplot
 # -----------------------------------------------------------
 
-# type Subplot{T<:AbstractBackend, L<:SubplotLayout} <: AbstractPlot{T}
+# type Subplot{T<:AbstractBackend, L<:AbstractLayout} <: AbstractPlot{T}
 #     o                           # the underlying object
 #     plts::Vector{Plot{T}}       # the individual plots
 #     backend::T

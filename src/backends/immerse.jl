@@ -88,51 +88,51 @@ end
 # ----------------------------------------------------------------
 
 
-function _create_subplot(subplt::Subplot{ImmerseBackend}, isbefore::Bool)
-  return false
-  # isbefore && return false
-end
-
-function showSubplotObject(subplt::Subplot{ImmerseBackend})
-  # create the Gtk window with vertical box vsep
-  d = getplotargs(subplt,1)
-  w,h = d[:size]
-  vsep = Gtk.GtkBoxLeaf(:v)
-  win = Gtk.GtkWindowLeaf(vsep, d[:windowtitle], w, h)
-
-  figindices = []
-  row = Gtk.GtkBoxLeaf(:h)
-  push!(vsep, row)
-  for (i,(r,c)) in enumerate(subplt.layout)
-    plt = subplt.plts[i]
-
-    # get the components... box is the main plot GtkBox, and canvas is the GtkCanvas where it's plotted
-    box, toolbar, canvas = Immerse.createPlotGuiComponents()
-
-    # add the plot's box to the row
-    push!(row, box)
-
-    # create the figure and store the index returned for destruction later
-    figidx = Immerse.figure(canvas)
-    push!(figindices, figidx)
-
-    fig = Immerse.figure(figidx)
-    plt.o = (fig, plt.o[2])
-
-    # add the row
-    if c == ncols(subplt.layout, r)
-      row = Gtk.GtkBoxLeaf(:h)
-      push!(vsep, row)
-    end
-
-  end
-
-  # destructor... clean up plots
-  Gtk.on_signal_destroy((x...) -> ([Immerse.dropfig(Immerse._display,i) for i in figindices]; subplt.o = nothing), win)
-
-  subplt.o = win
-  true
-end
+# function _create_subplot(subplt::Subplot{ImmerseBackend}, isbefore::Bool)
+#   return false
+#   # isbefore && return false
+# end
+#
+# function showSubplotObject(subplt::Subplot{ImmerseBackend})
+#   # create the Gtk window with vertical box vsep
+#   d = getplotargs(subplt,1)
+#   w,h = d[:size]
+#   vsep = Gtk.GtkBoxLeaf(:v)
+#   win = Gtk.GtkWindowLeaf(vsep, d[:windowtitle], w, h)
+#
+#   figindices = []
+#   row = Gtk.GtkBoxLeaf(:h)
+#   push!(vsep, row)
+#   for (i,(r,c)) in enumerate(subplt.layout)
+#     plt = subplt.plts[i]
+#
+#     # get the components... box is the main plot GtkBox, and canvas is the GtkCanvas where it's plotted
+#     box, toolbar, canvas = Immerse.createPlotGuiComponents()
+#
+#     # add the plot's box to the row
+#     push!(row, box)
+#
+#     # create the figure and store the index returned for destruction later
+#     figidx = Immerse.figure(canvas)
+#     push!(figindices, figidx)
+#
+#     fig = Immerse.figure(figidx)
+#     plt.o = (fig, plt.o[2])
+#
+#     # add the row
+#     if c == ncols(subplt.layout, r)
+#       row = Gtk.GtkBoxLeaf(:h)
+#       push!(vsep, row)
+#     end
+#
+#   end
+#
+#   # destructor... clean up plots
+#   Gtk.on_signal_destroy((x...) -> ([Immerse.dropfig(Immerse._display,i) for i in figindices]; subplt.o = nothing), win)
+#
+#   subplt.o = win
+#   true
+# end
 
 
 function _remove_axis(plt::Plot{ImmerseBackend}, isx::Bool)
@@ -151,7 +151,7 @@ end
 # ----------------------------------------------------------------
 
 getGadflyContext(plt::Plot{ImmerseBackend}) = plt.o[2]
-getGadflyContext(subplt::Subplot{ImmerseBackend}) = buildGadflySubplotContext(subplt)
+# getGadflyContext(subplt::Subplot{ImmerseBackend}) = buildGadflySubplotContext(subplt)
 
 
 function Base.display(::PlotsDisplay, plt::Plot{ImmerseBackend})
@@ -168,20 +168,20 @@ function Base.display(::PlotsDisplay, plt::Plot{ImmerseBackend})
 end
 
 
-function Base.display(::PlotsDisplay, subplt::Subplot{ImmerseBackend})
-
-  # if we haven't created the window yet, do it
-  if subplt.o == nothing
-    showSubplotObject(subplt)
-  end
-
-  # display the plots by creating a fresh Immerse.Figure object from the GtkCanvas and Gadfly.Plot
-  for plt in subplt.plts
-    fig, gplt = plt.o
-    Immerse.figure(fig.figno; displayfig = false)
-    display(gplt)
-  end
-
-  # o is the window... show it
-  showall(subplt.o)
-end
+# function Base.display(::PlotsDisplay, subplt::Subplot{ImmerseBackend})
+#
+#   # if we haven't created the window yet, do it
+#   if subplt.o == nothing
+#     showSubplotObject(subplt)
+#   end
+#
+#   # display the plots by creating a fresh Immerse.Figure object from the GtkCanvas and Gadfly.Plot
+#   for plt in subplt.plts
+#     fig, gplt = plt.o
+#     Immerse.figure(fig.figno; displayfig = false)
+#     display(gplt)
+#   end
+#
+#   # o is the window... show it
+#   showall(subplt.o)
+# end

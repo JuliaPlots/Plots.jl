@@ -135,10 +135,10 @@ end
 
 # ----------------------------------------------------------------
 
-function _create_subplot(subplt::Subplot{PlotlyBackend}, isbefore::Bool)
-  # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-  true
-end
+# function _create_subplot(subplt::Subplot{PlotlyBackend}, isbefore::Bool)
+#   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
+#   true
+# end
 
 function _expand_limits(lims, plt::Plot{PlotlyBackend}, isx::Bool)
   # TODO: call expand limits for each plot data
@@ -516,15 +516,15 @@ function get_series_json(plt::Plot{PlotlyBackend})
   JSON.json(map(d -> plotly_series(d, plt.plotargs), plt.seriesargs))
 end
 
-function get_series_json(subplt::Subplot{PlotlyBackend})
-  ds = KW[]
-  for (i,plt) in enumerate(subplt.plts)
-    for d in plt.seriesargs
-      push!(ds, plotly_series(d, plt.plotargs, plot_index = i))
-    end
-  end
-  JSON.json(ds)
-end
+# function get_series_json(subplt::Subplot{PlotlyBackend})
+#   ds = KW[]
+#   for (i,plt) in enumerate(subplt.plts)
+#     for d in plt.seriesargs
+#       push!(ds, plotly_series(d, plt.plotargs, plot_index = i))
+#     end
+#   end
+#   JSON.json(ds)
+# end
 
 # ----------------------------------------------------------------
 
@@ -557,29 +557,29 @@ function js_body(plt::Plot{PlotlyBackend}, uuid)
 end
 
 
-function html_body(subplt::Subplot{PlotlyBackend})
-  w, h = subplt.plts[1].plotargs[:size]
-  html = ["<div style=\"width:$(w)px;height:$(h)px;\">"]
-  nr = nrows(subplt.layout)
-  ph = h / nr
-
-  for r in 1:nr
-    push!(html, "<div style=\"clear:both;\">")
-
-    nc = ncols(subplt.layout, r)
-    pw = w / nc
-
-    for c in 1:nc
-      plt = subplt[r,c]
-      push!(html, html_body(plt, "float:left; width:$(pw)px; height:$(ph)px;"))
-    end
-
-    push!(html, "</div>")
-  end
-  push!(html, "</div>")
-
-  join(html)
-end
+# function html_body(subplt::Subplot{PlotlyBackend})
+#   w, h = subplt.plts[1].plotargs[:size]
+#   html = ["<div style=\"width:$(w)px;height:$(h)px;\">"]
+#   nr = nrows(subplt.layout)
+#   ph = h / nr
+#
+#   for r in 1:nr
+#     push!(html, "<div style=\"clear:both;\">")
+#
+#     nc = ncols(subplt.layout, r)
+#     pw = w / nc
+#
+#     for c in 1:nc
+#       plt = subplt[r,c]
+#       push!(html, html_body(plt, "float:left; width:$(pw)px; height:$(ph)px;"))
+#     end
+#
+#     push!(html, "</div>")
+#   end
+#   push!(html, "</div>")
+#
+#   join(html)
+# end
 
 
 # ----------------------------------------------------------------

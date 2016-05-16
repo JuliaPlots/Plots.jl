@@ -100,7 +100,7 @@ function subplot{P,I<:Integer}(pltsPerRow::AVec{I}, plt1::Plot{P}, plts::Plot{P}
 end
 
 # this will be called internally
-function subplot{P<:AbstractBackend}(plts::AVec{Plot{P}}, layout::SubplotLayout, d::KW)
+function subplot{P<:AbstractBackend}(plts::AVec{Plot{P}}, layout::AbstractLayout, d::KW)
   validateSubplotSupported()
   p = length(layout)
   n = sum([plt.n for plt in plts])
