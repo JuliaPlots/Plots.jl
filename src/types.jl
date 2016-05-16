@@ -35,12 +35,28 @@ end
 # Layouts
 # -----------------------------------------------------------
 
+# wraps bounding box coords (percent of parent area)
+# NOTE: (0,0) is the bottom-left, and (1,1) is the top-right!
+immutable BoundingBox
+    left::Float64
+    bottom::Float64
+    right::Float64
+    top::Float64
+end
+BoundingBox() = BoundingBox(0,0,0,0)
+
+# -----------------------------------------------------------
+
 abstract AbstractLayout
 
 # -----------------------------------------------------------
 
 # contains blank space
-immutable EmptyLayout <: AbstractLayout end
+type EmptyLayout <: AbstractLayout
+    parent::AbstractLayout
+    bbox::BoundingBox
+end
+EmptyLayout(parent) = EmptyLayout(parent, BoundingBox(0,0,1,1))
 
 # this is the parent of the top-level layout
 immutable RootLayout <: AbstractLayout
@@ -50,8 +66,9 @@ end
 # -----------------------------------------------------------
 
 # a single subplot
-type Subplot <: AbstractLayout
+type Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
+    bbox::BoundingBox  # the canvas area which is available to this subplot
     attr::KW  # args specific to this subplot
     # axisviews::Vector{AxisView}
     o  # can store backend-specific data... like a pyplot ax
@@ -59,18 +76,39 @@ type Subplot <: AbstractLayout
     # Subplot(parent = RootLayout(); attr = KW())
 end
 
-Subplot() = Subplot(RootLayout(), KW(), nothing)
+function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
+    Subplot{T}(parent, BoundingBox(0,0,1,1), KW(), nothing)
+end
 
 # -----------------------------------------------------------
 
 # nested, gridded layout with optional size percentages
-immutable GridLayout <: AbstractLayout
+type GridLayout <: AbstractLayout
     parent::AbstractLayout
+    bbox::BoundingBox
     grid::Matrix{AbstractLayout} # Nested layouts. Each position is a AbstractLayout, which allows for arbitrary recursion
-    # widths::Vector{Float64}
-    # heights::Vector{Float64}
+    widths::Vector{Float64}
+    heights::Vector{Float64}
     attr::KW
 end
+
+function GridLayout(dims...;
+                    parent = RootLayout(),
+                    widths = ones(dims[2]),
+                    heights = ones(dims[1]),
+                    kw...)
+    grid = Matrix{AbstractLayout}(dims...)
+    layout = GridLayout(
+        parent,
+        BoundingBox(0,0,1,1),
+        grid,
+        convert(Vector{Float64}, widths),
+        convert(Vector{Float64}, heights),
+        KW(kw))
+    fill!(grid, EmptyLayout(layout))
+    layout
+end
+
 
 # -----------------------------------------------------------
 

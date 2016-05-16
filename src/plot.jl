@@ -47,15 +47,15 @@ function plot(args...; kw...)
     d = KW(kw)
     preprocessArgs!(d)
 
-    layout = pop!(d, :layout, Subplot())
-    subplots = Subplot[layout]  # TODO: build full list
-    smap = SubplotMap(1 => layout) # TODO: actually build a map
+    layout, subplots, spmap = build_layout(pop!(d, :layout, :auto))
+    # subplots = Subplot[layout]  # TODO: build full list
+    # smap = SubplotMap(1 => layout) # TODO: actually build a map
 
     # TODO: this seems wrong... I only call getPlotArgs when creating a new plot??
     plotargs = merge(d, getPlotArgs(pkg, d, 1))
     # plt = _create_plot(pkg, plotargs)  # create a new, blank plot
 
-    plt = Plot(nothing, pkg, 0, plotargs, Series[], subplots, smap, layout)
+    plt = Plot(nothing, pkg, 0, plotargs, Series[], subplots, spmap, layout)
     plt.o = _create_backend_figure(plt)
 
     # now update the plot

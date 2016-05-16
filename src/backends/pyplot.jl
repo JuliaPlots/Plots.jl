@@ -66,6 +66,7 @@ function _initialize_backend(::PyPlotBackend)
         const pyticker = PyPlot.pywrap(PyPlot.pyimport("matplotlib.ticker"))
         const pycmap = PyPlot.pywrap(PyPlot.pyimport("matplotlib.cm"))
         const pynp = PyPlot.pywrap(PyPlot.pyimport("numpy"))
+        const pytransforms = PyPlot.pywrap(PyPlot.pyimport("matplotlib.transforms"))
     end
 
     PyPlot.ioff()
@@ -221,19 +222,109 @@ function add_pyfixedformatter(cbar, vals::AVec)
 end
 
 # ---------------------------------------------------------------------------
+# Figure utils -- F*** matplotlib for making me work so hard to figure this crap out
+
+# the drawing surface
+canvas(fig) = fig[:canvas]
+
+# the object controlling draw commands
+renderer(fig) = canvas(fig)[:get_renderer]()
+
+# draw commands... paint the screen (probably updating internals too)
+drawfig(fig) = fig[:draw](renderer(fig))
+drawax(ax) = ax[:draw](renderer(ax[:get_figure]()))
+
+bbox(obj) = obj[:get_window_extent](renderer(obj[:get_figure]()))
+pos(obj) = obj[:get_position]()
+
+# merge a list of bounding boxes together to become the area that surrounds them all
+bbox_union(bboxes) = pytransforms.Bbox[:union](bboxes)
+
+function bbox_pct(obj)
+    pybbox_pixels = obj[:get_window_extent]()
+    fig = obj[:get_figure]()
+    pybbox_pct = pybbox_pixels[:inverse_transformed](fig[:transFigure])
+    left, right, bottom, top = pybbox_pct[:get_points]()
+    BoundingBox(left, bottom, right, top)
+end
+
+# bbox_from_pyplot(obj) =
+
+function bbox_ticks(ax, letter)
+    # fig = ax[:get_figure]()
+    # @show fig
+    labels = ax[symbol("get_"*letter*"ticklabels")]()
+    # @show labels
+    # bboxes = []
+    bbox_union = BoundingBox()
+    for lab in labels
+        # @show lab,lab[:get_text]()
+        bbox = bbox_pct(lab)
+        bbox_union = bbox_union + bbox
+        # @show bbox_union
+    end
+    bbox_union
+end
+
+function bbox_axislabel(ax, letter)
+    pyaxis_label = ax[symbol("get_"*letter*"axis")]()
+    bbox_pct(pyaxis_label)
+end
+
+# get a bounding box for the whole axis
+function bbox_axis(ax, letter)
+    bbox_ticks(ax, letter) + bbox_axislabel(ax, letter)
+end
+
+# get a bounding box for the title area
+function bbox_title(ax)
+    bbox_pct(ax[:title])
+end
+
+xaxis_height(sp::Subplot{PyPlotBackend}) = height(bbox_axis(sp.o,"x"))
+yaxis_width(sp::Subplot{PyPlotBackend}) = width(bbox_axis(sp.o,"y"))
+title_height(sp::Subplot{PyPlotBackend}) = height(bbox_title(sp.o))
+
+# ---------------------------------------------------------------------------
+
+# function used_width(sp::Subplot{PyPlotBackend})
+#     ax = sp.o
+#     width(bbox_axis(ax,"y"))
+# end
+#
+# function used_height(sp::Subplot{PyPlotBackend})
+#     ax = sp.o
+#     height(bbox_axis(ax,"x")) + height(bbox_title(ax))
+# end
+
+
+# # bounding box (relative to canvas) for plot area
+# function plotarea_bbox(sp::Subplot{PyPlotBackend})
+#     crop(bbox(sp), BoundingBox())
+# end
+
+function update_position!(sp::Subplot{PyPlotBackend})
+    ax = sp.o
+    bb = plotarea_bbox(sp)
+    ax[:set_position]([f(bb) for f in (left, bottom, width, height)])
+end
+
+# ---------------------------------------------------------------------------
 
 function getAxis(plt::Plot{PyPlotBackend}, subplot::Subplot = plt.subplots[1])
     if subplot.o == nothing
         @show subplot
         fig = plt.o
-        @show plt
+        @show fig
         # if fig == nothing
         #     fig =
         # TODO: actual coords?
         # NOTE: might want to use ax[:get_tightbbox](ax[:get_renderer_cache]()) to calc size of guides?
         # NOTE: can set subplot location later with ax[:set_position]([left, bottom, width, height])
-        left, bottom, width, height = 0.3, 0.3, 0.5, 0.5
-        ax = fig[:add_axes]([left, bottom, width, height])
+        # left, bottom, width, height = 0.3, 0.3, 0.5, 0.5
+
+        # init to the full canvas, then we can set_position later
+        ax = fig[:add_axes]([0,0,1,1])
         subplot.o = ax
     end
     subplot.o
@@ -1183,6 +1274,9 @@ function finalizePlot(plt::Plot{PyPlotBackend})
     ax = getLeftAxis(plt)
     addPyPlotLegend(plt, ax)
     updateAxisColors(ax, plt.plotargs)
+    drawfig(plt.o)
+    update_bboxes!(plt.layout)
+    update_position!(plt.layout)
     PyPlot.draw()
 end
 
