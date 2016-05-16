@@ -234,13 +234,13 @@ renderer(fig) = canvas(fig)[:get_renderer]()
 drawfig(fig) = fig[:draw](renderer(fig))
 drawax(ax) = ax[:draw](renderer(ax[:get_figure]()))
 
-bbox(obj) = obj[:get_window_extent](renderer(obj[:get_figure]()))
-pos(obj) = obj[:get_position]()
+# bbox(obj) = obj[:get_window_extent](renderer(obj[:get_figure]()))
+# pos(obj) = obj[:get_position]()
 
-# merge a list of bounding boxes together to become the area that surrounds them all
-bbox_union(bboxes) = pytransforms.Bbox[:union](bboxes)
+# # merge a list of bounding boxes together to become the area that surrounds them all
+# bbox_union(bboxes) = pytransforms.Bbox[:union](bboxes)
 
-function bbox_pct(obj)
+function py_bbox_pct(obj)
     pybbox_pixels = obj[:get_window_extent]()
     fig = obj[:get_figure]()
     pybbox_pct = pybbox_pixels[:inverse_transformed](fig[:transFigure])
@@ -250,7 +250,7 @@ end
 
 # bbox_from_pyplot(obj) =
 
-function bbox_ticks(ax, letter)
+function py_bbox_ticks(ax, letter)
     # fig = ax[:get_figure]()
     # @show fig
     labels = ax[symbol("get_"*letter*"ticklabels")]()
@@ -259,42 +259,63 @@ function bbox_ticks(ax, letter)
     bbox_union = BoundingBox()
     for lab in labels
         # @show lab,lab[:get_text]()
-        bbox = bbox_pct(lab)
+        bbox = py_bbox_pct(lab)
         bbox_union = bbox_union + bbox
         # @show bbox_union
     end
     bbox_union
 end
 
-function bbox_axislabel(ax, letter)
-    pyaxis_label = ax[symbol("get_"*letter*"axis")]()
-    bbox_pct(pyaxis_label)
+function py_bbox_axislabel(ax, letter)
+    pyaxis_label = ax[symbol("get_"*letter*"axis")]()[:label]
+    py_bbox_pct(pyaxis_label)
 end
 
 # get a bounding box for the whole axis
-function bbox_axis(ax, letter)
-    bbox_ticks(ax, letter) + bbox_axislabel(ax, letter)
+function py_bbox_axis(ax, letter)
+    py_bbox_ticks(ax, letter) + py_bbox_axislabel(ax, letter)
 end
 
 # get a bounding box for the title area
-function bbox_title(ax)
-    bbox_pct(ax[:title])
+function py_bbox_title(ax)
+    py_bbox_pct(ax[:title])
 end
 
-xaxis_height(sp::Subplot{PyPlotBackend}) = height(bbox_axis(sp.o,"x"))
-yaxis_width(sp::Subplot{PyPlotBackend}) = width(bbox_axis(sp.o,"y"))
-title_height(sp::Subplot{PyPlotBackend}) = height(bbox_title(sp.o))
+xaxis_height(sp::Subplot{PyPlotBackend}) = height(py_bbox_axis(sp.o,"x"))
+yaxis_width(sp::Subplot{PyPlotBackend}) = width(py_bbox_axis(sp.o,"y"))
+title_height(sp::Subplot{PyPlotBackend}) = height(py_bbox_title(sp.o))
+
+# note: this overrides the default version to allow for labels that stick out the sides
+# bounding box (relative to canvas) for plot area
+# note: we assume the x axis is on the left, and y axis is on the bottom
+# TODO: really the padding below should be part of the freespace calc, and we should probably
+#       cache the plotarea bbox while we're doing that (need to add plotarea field to Subplot)
+function plotarea_bbox(sp::Subplot{PyPlotBackend})
+    ax = sp.o
+    plot_bb = py_bbox_pct(ax)
+    xbb = py_bbox_axis(ax, "x")
+    ybb = py_bbox_axis(ax, "y")
+    titbb = py_bbox_title(ax)
+    items = [xbb, ybb, titbb]
+    # TODO: add in margin/padding from sp.attr
+    leftpad   = max(0, left(plot_bb) - minimum(map(left, items)))
+    bottompad = max(0, bottom(plot_bb) - minimum(map(bottom, items)))
+    rightpad  = max(0, maximum(map(right, items)) - right(plot_bb))
+    toppad    = max(0, maximum(map(top, items)) - top(plot_bb))
+    # crop(bbox(sp), BoundingBox(yaxis_width(sp), xaxis_height(sp), 1, 1 - title_height(sp)))
+    crop(bbox(sp), BoundingBox(leftpad, bottompad, 1 - rightpad, 1 - toppad))
+end
 
 # ---------------------------------------------------------------------------
 
 # function used_width(sp::Subplot{PyPlotBackend})
 #     ax = sp.o
-#     width(bbox_axis(ax,"y"))
+#     width(py_bbox_axis(ax,"y"))
 # end
 #
 # function used_height(sp::Subplot{PyPlotBackend})
 #     ax = sp.o
-#     height(bbox_axis(ax,"x")) + height(bbox_title(ax))
+#     height(py_bbox_axis(ax,"x")) + height(py_bbox_title(ax))
 # end
 
 
@@ -309,28 +330,29 @@ function update_position!(sp::Subplot{PyPlotBackend})
     ax[:set_position]([f(bb) for f in (left, bottom, width, height)])
 end
 
-# ---------------------------------------------------------------------------
-
-function getAxis(plt::Plot{PyPlotBackend}, subplot::Subplot = plt.subplots[1])
-    if subplot.o == nothing
-        @show subplot
-        fig = plt.o
-        @show fig
-        # if fig == nothing
-        #     fig =
-        # TODO: actual coords?
-        # NOTE: might want to use ax[:get_tightbbox](ax[:get_renderer_cache]()) to calc size of guides?
-        # NOTE: can set subplot location later with ax[:set_position]([left, bottom, width, height])
-        # left, bottom, width, height = 0.3, 0.3, 0.5, 0.5
-
-        # init to the full canvas, then we can set_position later
-        ax = fig[:add_axes]([0,0,1,1])
-        subplot.o = ax
+# each backend should set up the subplot here
+function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
+    fig = plt.o
+    ax = fig[:add_axes]([0,0,1,1])
+    for axis in (:xaxis, :yaxis)
+        ax[axis][:_autolabelpos] = false
     end
-    subplot.o
+    sp.o = ax
 end
 
-getLeftAxis(plt::Plot{PyPlotBackend}, subplot::Subplot = plt.subplots[1]) = getAxis(plt, subplot)
+# ---------------------------------------------------------------------------
+
+# these can probably be removed eventually... right now they're just keeping things working before cleanup
+# getAxis(plt::Plot{PyPlotBackend}, subplot::Subplot = plt.subplots[1]) = subplot.o
+
+getAxis(sp::Subplot) = sp.o
+
+function getAxis(plt::Plot{PyPlotBackend}, series::Series)
+    sp = get_subplot(plt, get(series.d, :subplot, 1))
+    getAxis(sp)
+end
+
+# getLeftAxis(plt::Plot{PyPlotBackend}, subplot::Subplot = plt.subplots[1]) = getAxis(plt, subplot)
 getfig(o) = o
 
 # ---------------------------------------------------------------------------
@@ -501,7 +523,7 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     fix_xy_lengths!(plt, d)
 
     # ax = getAxis(plt, d[:axis])
-    ax = getAxis(plt, get(d, :subplot, plt.subplots[1]))
+    ax = getAxis(plt, series)
     x, y, z = d[:x], d[:y], d[:z]
     @show typeof((x,y,z))
     xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
@@ -889,42 +911,43 @@ end
 # -----------------------------------------------------------------
 
 
-# given a dimension (:x, :y, or :z), loop over the seriesargs KWs to find the min/max of the underlying data
-function minmaxseries(series_list, dimension, axis)
-    lo, hi = Inf, -Inf
-    for series in series_list
-        series.d[:axis] == axis || continue
-        v = series.d[dimension]
-        if length(v) > 0
-            vlo, vhi = extrema(v)
-            lo = min(lo, vlo)
-            hi = max(hi, vhi)
-        end
-    end
-    if lo == hi
-        hi = if lo == 0
-            1e-6
-        else
-            hi + min(abs(1e-2hi), 1e-6)
-        end
-    end
-    lo, hi
-end
-
-# TODO: this needs to handle one-sided fixed limits
-function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
-    ax = getAxis(plt, axis)
-    pargs = plt.plotargs
-    if pargs[:xlims] == :auto
-        ax[pargs[:polar] ? :set_tlim : :set_xlim](minmaxseries(plt.series_list, :x, axis)...)
-    end
-    if pargs[:ylims] == :auto
-        ax[pargs[:polar] ? :set_rlim : :set_ylim](minmaxseries(plt.series_list, :y, axis)...)
-    end
-    if pargs[:zlims] == :auto && haskey(ax, :set_zlim)
-        ax[:set_zlim](minmaxseries(plt.series_list, :z, axis)...)
-    end
-end
+# # given a dimension (:x, :y, or :z), loop over the seriesargs KWs to find the min/max of the underlying data
+# function minmaxseries(series_list, dimension, axis)
+#     lo, hi = Inf, -Inf
+#     for series in series_list
+#         series.d[:axis] == axis || continue
+#         v = series.d[dimension]
+#         if length(v) > 0
+#             vlo, vhi = extrema(v)
+#             lo = min(lo, vlo)
+#             hi = max(hi, vhi)
+#         end
+#     end
+#     if lo == hi
+#         hi = if lo == 0
+#             1e-6
+#         else
+#             hi + min(abs(1e-2hi), 1e-6)
+#         end
+#     end
+#     lo, hi
+# end
+#
+# # TODO: this needs to handle one-sided fixed limits
+# # TODO: this should be handled within the Axis type
+# function set_lims!(plt::Plot{PyPlotBackend}, axis::Symbol)
+#     ax = getAxis(plt, axis)
+#     pargs = plt.plotargs
+#     if pargs[:xlims] == :auto
+#         ax[pargs[:polar] ? :set_tlim : :set_xlim](minmaxseries(plt.series_list, :x, axis)...)
+#     end
+#     if pargs[:ylims] == :auto
+#         ax[pargs[:polar] ? :set_rlim : :set_ylim](minmaxseries(plt.series_list, :y, axis)...)
+#     end
+#     if pargs[:zlims] == :auto && haskey(ax, :set_zlim)
+#         ax[:set_zlim](minmaxseries(plt.series_list, :z, axis)...)
+#     end
+# end
 
 # --------------------------------------------------------------------------
 
@@ -941,7 +964,7 @@ function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
             handle[:set_offsets](hcat(xy...))
         end
     end
-    set_lims!(plt, d[:axis])
+    # set_lims!(plt, plt.series_list[i])
     plt
 end
 
@@ -953,7 +976,7 @@ function setxyz!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
         handle[:set_data](d[:x], d[:y])
         handle[:set_3d_properties](d[:z])
     end
-    set_lims!(plt, d[:axis])
+    # set_lims!(plt, plt.series_list[i])
     plt
 end
 
@@ -1032,115 +1055,120 @@ end
 
 function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
     # @show d
-    figorax = plt.o
+    # figorax = plt.o
     # ax = getLeftAxis(figorax)
-    ax = getAxis(plt, plt.subplots[1])
-    # ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
-    guidesz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
+    for sp in plt.subplots
+        ax = getAxis(sp)
+        # ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
+        guidesz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
 
-    # title
-    haskey(d, :title) && ax[:set_title](d[:title])
-    ax[:title][:set_fontsize](guidesz)
+        # title
+        haskey(d, :title) && ax[:set_title](d[:title])
+        ax[:title][:set_fontsize](guidesz)
 
-    axes = [ax]
-    # # handle right y axis
-    # axes = [getLeftAxis(figorax)]
-    # if usingRightAxis(plt)
-    #     push!(axes, getRightAxis(figorax))
-    #     if get(d, :yrightlabel, "") != ""
-    #         rightax = getRightAxis(figorax)
-    #         rightax[:set_ylabel](d[:yrightlabel])
-    #     end
-    # end
+        # axes = [ax]
+        # # handle right y axis
+        # axes = [getLeftAxis(figorax)]
+        # if usingRightAxis(plt)
+        #     push!(axes, getRightAxis(figorax))
+        #     if get(d, :yrightlabel, "") != ""
+        #         rightax = getRightAxis(figorax)
+        #         rightax[:set_ylabel](d[:yrightlabel])
+        #     end
+        # end
 
-    for letter in ("x", "y", "z")
-        axissym = symbol(letter*"axis")
-        axis = plt.plotargs[axissym]
-        # @show axis
-        haskey(ax, axissym) || continue
-        applyPyPlotScale(ax, axis[:scale], letter)
-        addPyPlotLims(ax, axis[:lims], letter)
-        addPyPlotTicks(ax, get_ticks(axis), letter)
-        ax[symbol("set_", letter, "label")](axis[:label])
-        if get(axis.d, :flip, false)
-            ax[symbol("invert_", letter, "axis")]()
-        end
-        for tmpax in axes
-            tmpax[axissym][:label][:set_fontsize](axis[:guidefont].pointsize)
-            for lab in tmpax[symbol("get_", letter, "ticklabels")]()
-                lab[:set_fontsize](axis[:tickfont].pointsize)
-                lab[:set_rotation](axis[:rotation])
+        for letter in ("x", "y", "z")
+            axissym = symbol(letter*"axis")
+            axis = plt.plotargs[axissym]
+            # @show axis
+            haskey(ax, axissym) || continue
+            applyPyPlotScale(ax, axis[:scale], letter)
+            addPyPlotLims(ax, axis[:lims], letter)
+            addPyPlotTicks(ax, get_ticks(axis), letter)
+            ax[symbol("set_", letter, "label")](axis[:label])
+            if get(axis.d, :flip, false)
+                ax[symbol("invert_", letter, "axis")]()
             end
-            if get(d, :grid, false)
-                fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
-                tmpax[axissym][:grid](true, color = fgcolor)
-                tmpax[:set_axisbelow](true)
-            end
+            # for tmpax in axes
+                tmpax = ax
+                tmpax[axissym][:label][:set_fontsize](axis[:guidefont].pointsize)
+                for lab in tmpax[symbol("get_", letter, "ticklabels")]()
+                    lab[:set_fontsize](axis[:tickfont].pointsize)
+                    lab[:set_rotation](axis[:rotation])
+                end
+                if get(d, :grid, false)
+                    fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
+                    tmpax[axissym][:grid](true, color = fgcolor)
+                    tmpax[:set_axisbelow](true)
+                end
+            # end
+            # @show ""
         end
-        # @show ""
-    end
 
 
-    # # handle each axis in turn
-    # for letter in ("x", "y", "z")
-    #     axis, scale, lims, ticks, flip, lab, rotation =
-    #         axis_symbols(letter, "axis", "scale", "lims", "ticks", "flip", "label", "rotation")
-    #     haskey(ax, axis) || continue
-    #     haskey(d, scale) && applyPyPlotScale(ax, d[scale], letter)
-    #     haskey(d, lims)  && addPyPlotLims(ax, d[lims], letter)
-    #     haskey(d, ticks) && addPyPlotTicks(ax, d[ticks], letter)
-    #     haskey(d, lab)   && ax[symbol("set_", letter, "label")](d[lab])
-    #     if get(d, flip, false)
-    #         ax[symbol("invert_", letter, "axis")]()
-    #     end
-    #     for tmpax in axes
-    #         tmpax[axis][:label][:set_fontsize](guidesz)
-    #         for lab in tmpax[symbol("get_", letter, "ticklabels")]()
-    #             lab[:set_fontsize](ticksz)
-    #             haskey(d, rotation) && lab[:set_rotation](d[rotation])
-    #         end
-    #         if get(d, :grid, false)
-    #             fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
-    #             tmpax[axis][:grid](true, color = fgcolor)
-    #             tmpax[:set_axisbelow](true)
-    #         end
-    #     end
-    # end
+        # # handle each axis in turn
+        # for letter in ("x", "y", "z")
+        #     axis, scale, lims, ticks, flip, lab, rotation =
+        #         axis_symbols(letter, "axis", "scale", "lims", "ticks", "flip", "label", "rotation")
+        #     haskey(ax, axis) || continue
+        #     haskey(d, scale) && applyPyPlotScale(ax, d[scale], letter)
+        #     haskey(d, lims)  && addPyPlotLims(ax, d[lims], letter)
+        #     haskey(d, ticks) && addPyPlotTicks(ax, d[ticks], letter)
+        #     haskey(d, lab)   && ax[symbol("set_", letter, "label")](d[lab])
+        #     if get(d, flip, false)
+        #         ax[symbol("invert_", letter, "axis")]()
+        #     end
+        #     for tmpax in axes
+        #         tmpax[axis][:label][:set_fontsize](guidesz)
+        #         for lab in tmpax[symbol("get_", letter, "ticklabels")]()
+        #             lab[:set_fontsize](ticksz)
+        #             haskey(d, rotation) && lab[:set_rotation](d[rotation])
+        #         end
+        #         if get(d, :grid, false)
+        #             fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
+        #             tmpax[axis][:grid](true, color = fgcolor)
+        #             tmpax[:set_axisbelow](true)
+        #         end
+        #     end
+        # end
 
-    # do we want to change the aspect ratio?
-    aratio = get(d, :aspect_ratio, :none)
-    if aratio != :none
-        ax[:set_aspect](isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
+        # do we want to change the aspect ratio?
+        aratio = get(d, :aspect_ratio, :none)
+        if aratio != :none
+            ax[:set_aspect](isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
+        end
     end
 end
 
 
 # -----------------------------------------------------------------
 
-function createPyPlotAnnotationObject(plt::Plot{PyPlotBackend}, x, y, val::@compat(AbstractString))
-    ax = getLeftAxis(plt)
-    ax[:annotate](val, xy = (x,y))
-end
+# TODO: these should apply to a Subplot, NOT a Plot
 
-
-function createPyPlotAnnotationObject(plt::Plot{PyPlotBackend}, x, y, val::PlotText)
-    ax = getLeftAxis(plt)
-    ax[:annotate](val.str,
-        xy = (x,y),
-        family = val.font.family,
-        color = getPyPlotColor(val.font.color),
-        horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
-        verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
-        rotation = val.font.rotation * 180 / π,
-        size = val.font.pointsize
-    )
-end
-
-function _add_annotations{X,Y,V}(plt::Plot{PyPlotBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
-    for ann in anns
-        createPyPlotAnnotationObject(plt, ann...)
-    end
-end
+# function createPyPlotAnnotationObject(plt::Plot{PyPlotBackend}, x, y, val::@compat(AbstractString))
+#     ax = getLeftAxis(plt)
+#     ax[:annotate](val, xy = (x,y))
+# end
+#
+#
+# function createPyPlotAnnotationObject(plt::Plot{PyPlotBackend}, x, y, val::PlotText)
+#     ax = getLeftAxis(plt)
+#     ax[:annotate](val.str,
+#         xy = (x,y),
+#         family = val.font.family,
+#         color = getPyPlotColor(val.font.color),
+#         horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
+#         verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
+#         rotation = val.font.rotation * 180 / π,
+#         size = val.font.pointsize
+#     )
+# end
+#
+# function _add_annotations{X,Y,V}(plt::Plot{PyPlotBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
+#     for ann in anns
+#         createPyPlotAnnotationObject(plt, ann...)
+#     end
+# end
 
 # -----------------------------------------------------------------
 
@@ -1271,9 +1299,12 @@ end
 # -----------------------------------------------------------------
 
 function finalizePlot(plt::Plot{PyPlotBackend})
-    ax = getLeftAxis(plt)
-    addPyPlotLegend(plt, ax)
-    updateAxisColors(ax, plt.plotargs)
+    for sp in plt.subplots
+        # ax = getLeftAxis(plt)
+        ax = getAxis(sp)
+        addPyPlotLegend(plt, ax)
+        updateAxisColors(ax, plt.plotargs)
+    end
     drawfig(plt.o)
     update_bboxes!(plt.layout)
     update_position!(plt.layout)

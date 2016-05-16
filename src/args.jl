@@ -156,7 +156,7 @@ _seriesDefaults[:weights]         = nothing   # optional weights for histograms 
 _seriesDefaults[:contours]        = false     # add contours to 3d surface and wireframe plots
 _seriesDefaults[:match_dimensions] = false   # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
                                              # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
-_seriesDefaults[:subplot_index]   = :auto
+_seriesDefaults[:subplot]   = :auto
 
 
 const _plotDefaults = KW()
@@ -721,7 +721,7 @@ end
 function warnOnUnsupportedArgs(pkg::AbstractBackend, d::KW)
     for k in sortedkeys(d)
         if (!(k in supportedArgs(pkg))
-                && k != :subplot
+                # && k != :subplot
                 && d[k] != default(k))
             warn("Keyword argument $k not supported with $pkg.  Choose from: $(supportedArgs(pkg))")
         end

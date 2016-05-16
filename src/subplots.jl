@@ -58,6 +58,9 @@ used_size(layout::AbstractLayout) = (used_width(layout), used_height(layout))
 #
 # end
 
+update_position!(layout::AbstractLayout) = nothing
+update_bboxes!(layout::AbstractLayout) = nothing
+
 # ----------------------------------------------------------------------
 
 Base.size(layout::EmptyLayout) = (0,0)
@@ -67,7 +70,6 @@ Base.getindex(layout::EmptyLayout, r::Int, c::Int) = nothing
 used_width(layout::EmptyLayout) = 0.0
 used_height(layout::EmptyLayout) = 0.0
 
-update_position!(layout::EmptyLayout) = nothing
 
 # ----------------------------------------------------------------------
 
@@ -118,7 +120,7 @@ function used_width(layout::GridLayout)
     w = 0.0
     nr,nc = size(layout)
     for c=1:nc
-        w += maximum([used_width(layout(r,c)) for r=1:nr])
+        w += maximum([used_width(layout[r,c]) for r=1:nr])
     end
     w
 end
@@ -127,7 +129,7 @@ function used_height(layout::GridLayout)
     h = 0.0
     nr,nc = size(layout)
     for r=1:nr
-        h += maximum([used_height(layout(r,c)) for c=1:nc])
+        h += maximum([used_height(layout[r,c]) for c=1:nc])
     end
     h
 end
@@ -142,8 +144,8 @@ function update_bboxes!(layout::GridLayout) #, parent_bbox::BoundingBox = Boundi
     # initialize the free space (per child!)
     nr, nc = size(layout)
     freew, freeh = free_size(layout)
-    freew /= nc
-    freeh /= nr
+    freew /= sum(layout.widths)
+    freeh /= sum(layout.heights)
 
     # TODO: this should really track used/free space for each row/column so that we can align plot areas properly
 
@@ -152,7 +154,11 @@ function update_bboxes!(layout::GridLayout) #, parent_bbox::BoundingBox = Boundi
         # compute the child's bounding box relative to the parent
         child = layout[r,c]
         usedw, usedh = used_size(child)
-        child_bbox = BoundingBox(l, b, l + usedw + freew, b + usedh + freeh)
+        child_bbox = BoundingBox(
+            l, b,
+            l + usedw + freew * layout.widths[c],
+            b + usedh + freeh * layout.heights[r]
+        )
 
         # then compute the bounding box relative to the canvas, and cache it in the child object
         bbox!(child, crop(bbox(layout), child_bbox))
@@ -167,7 +173,7 @@ end
 # return the top-level layout, a list of subplots, and a SubplotMap
 function build_layout(s::Symbol)
     s == :auto || error() # TODO: handle anything else
-    layout = GridLayout(1, 2)
+    layout = GridLayout(1, 2) #TODO this need to go
     nr, nc = size(layout)
     subplots = Subplot[]
     spmap = SubplotMap()
@@ -181,6 +187,11 @@ function build_layout(s::Symbol)
 end
 
 # ----------------------------------------------------------------------
+
+get_subplot(plt::Plot, sp::Subplot) = sp
+get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
+get_subplot(plt::Plot, k) = plt.spmap[k]
+
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
 

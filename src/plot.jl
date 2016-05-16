@@ -47,7 +47,6 @@ function plot(args...; kw...)
     d = KW(kw)
     preprocessArgs!(d)
 
-    layout, subplots, spmap = build_layout(pop!(d, :layout, :auto))
     # subplots = Subplot[layout]  # TODO: build full list
     # smap = SubplotMap(1 => layout) # TODO: actually build a map
 
@@ -55,8 +54,14 @@ function plot(args...; kw...)
     plotargs = merge(d, getPlotArgs(pkg, d, 1))
     # plt = _create_plot(pkg, plotargs)  # create a new, blank plot
 
-    plt = Plot(nothing, pkg, 0, plotargs, Series[], subplots, spmap, layout)
+    # plt = Plot(nothing, pkg, 0, plotargs, Series[]) #, subplots, spmap, layout)
+    plt = Plot(plotargs)
     plt.o = _create_backend_figure(plt)
+
+    plt.layout, plt.subplots, plt.spmap = build_layout(pop!(d, :layout, :auto))
+    for sp in plt.subplots
+        _initialize_subplot(plt, sp)
+    end
 
     # now update the plot
     _plot!(plt, d, args...)

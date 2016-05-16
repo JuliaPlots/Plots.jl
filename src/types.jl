@@ -56,7 +56,7 @@ type EmptyLayout <: AbstractLayout
     parent::AbstractLayout
     bbox::BoundingBox
 end
-EmptyLayout(parent) = EmptyLayout(parent, BoundingBox(0,0,1,1))
+EmptyLayout(parent = RootLayout()) = EmptyLayout(parent, BoundingBox(0,0,1,1))
 
 # this is the parent of the top-level layout
 immutable RootLayout <: AbstractLayout
@@ -123,15 +123,18 @@ type Series
 end
 
 type Plot{T<:AbstractBackend} <: AbstractPlot{T}
-    o                        # the backend's plot object
     backend::T               # the backend type
     n::Int                   # number of series
     plotargs::KW             # arguments for the whole plot
-    # seriesargs::Vector{KW}   # arguments for each series
     series_list::Vector{Series}   # arguments for each series
+    o  # the backend's plot object
     subplots::Vector{Subplot}
-    subplot_map::SubplotMap  # provide any label as a map to a subplot
+    spmap::SubplotMap  # provide any label as a map to a subplot
     layout::AbstractLayout
+end
+
+function Plot(plotargs::KW)
+    Plot(backend(), 0, plotargs, Series[], nothing, Subplot[], SubplotMap(), EmptyLayout())
 end
 
 # -----------------------------------------------------------
