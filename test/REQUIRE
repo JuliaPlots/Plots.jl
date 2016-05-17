@@ -3,6 +3,7 @@ julia 0.4
 RecipesBase
 Colors
 Reexport
+Measures
 FactCheck
 Cairo
 Gadfly

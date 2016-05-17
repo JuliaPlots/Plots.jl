@@ -241,15 +241,22 @@ drawax(ax) = ax[:draw](renderer(ax[:get_figure]()))
 # # merge a list of bounding boxes together to become the area that surrounds them all
 # bbox_union(bboxes) = pytransforms.Bbox[:union](bboxes)
 
-function py_bbox_pct(obj)
-    pybbox_pixels = obj[:get_window_extent]()
-    fig = obj[:get_figure]()
-    pybbox_pct = pybbox_pixels[:inverse_transformed](fig[:transFigure])
-    left, right, bottom, top = pybbox_pct[:get_points]()
-    BoundingBox(left, bottom, right, top)
+# function py_bbox_pct(obj)
+#     pybbox_pixels = obj[:get_window_extent]()
+#     fig = obj[:get_figure]()
+#     pybbox_pct = pybbox_pixels[:inverse_transformed](fig[:transFigure])
+#     left, right, bottom, top = pybbox_pct[:get_points]()
+#     BoundingBox(left, bottom, right, top)
+# end
+
+function py_bbox(obj)
+    l, r, b, t = obj[:get_window_extent]()[:get_points]()
+    BoundingBox(l*px, b*px, (r-l)*px, (t-b)*px)
 end
 
 # bbox_from_pyplot(obj) =
+
+py_bbox_fig(plt::Plot) = py_bbox(plt.o)
 
 function py_bbox_ticks(ax, letter)
     # fig = ax[:get_figure]()
@@ -257,10 +264,10 @@ function py_bbox_ticks(ax, letter)
     labels = ax[symbol("get_"*letter*"ticklabels")]()
     # @show labels
     # bboxes = []
-    bbox_union = BoundingBox()
+    bbox_union = defaultbox
     for lab in labels
         # @show lab,lab[:get_text]()
-        bbox = py_bbox_pct(lab)
+        bbox = py_bbox(lab)
         bbox_union = bbox_union + bbox
         # @show bbox_union
     end
@@ -269,7 +276,7 @@ end
 
 function py_bbox_axislabel(ax, letter)
     pyaxis_label = ax[symbol("get_"*letter*"axis")]()[:label]
-    py_bbox_pct(pyaxis_label)
+    py_bbox(pyaxis_label)
 end
 
 # get a bounding box for the whole axis
@@ -279,7 +286,7 @@ end
 
 # get a bounding box for the title area
 function py_bbox_title(ax)
-    py_bbox_pct(ax[:title])
+    py_bbox(ax[:title])
 end
 
 xaxis_height(sp::Subplot{PyPlotBackend}) = height(py_bbox_axis(sp.o,"x"))
@@ -293,26 +300,37 @@ title_height(sp::Subplot{PyPlotBackend}) = height(py_bbox_title(sp.o))
 #       cache the plotarea bbox while we're doing that (need to add plotarea field to Subplot)
 function plotarea_bbox(sp::Subplot{PyPlotBackend})
     ax = sp.o
-    plot_bb = py_bbox_pct(ax)
+    plot_bb = py_bbox(ax)
     xbb = py_bbox_axis(ax, "x")
     ybb = py_bbox_axis(ax, "y")
     titbb = py_bbox_title(ax)
     items = [xbb, ybb, titbb]
     # TODO: add in margin/padding from sp.attr
-    leftpad   = max(0, left(plot_bb) - minimum(map(left, items)))
-    bottompad = max(0, bottom(plot_bb) - minimum(map(bottom, items)))
-    rightpad  = max(0, maximum(map(right, items)) - right(plot_bb))
-    toppad    = max(0, maximum(map(top, items)) - top(plot_bb))
-    # crop(bbox(sp), BoundingBox(yaxis_width(sp), xaxis_height(sp), 1, 1 - title_height(sp)))
-    crop(bbox(sp), BoundingBox(leftpad, bottompad, 1 - rightpad, 1 - toppad))
+    leftpad   = max(0mm, left(plot_bb) - minimum(map(left, items)))
+    bottompad = max(0mm, bottom(plot_bb) - minimum(map(bottom, items)))
+    rightpad  = max(0mm, maximum(map(right, items)) - right(plot_bb))
+    toppad    = max(0mm, maximum(map(top, items)) - top(plot_bb))
+    crop(bbox(sp), BoundingBox(leftpad, bottompad,
+                               width(sp) - rightpad - leftpad,
+                               height(sp) - toppad - bottompad))
 end
 
 # ---------------------------------------------------------------------------
 
 function update_position!(sp::Subplot{PyPlotBackend})
     ax = sp.o
-    bb = plotarea_bbox(sp)
-    ax[:set_position]([f(bb) for f in (left, bottom, width, height)])
+    figw, figh = size(py_bbox(ax[:get_figure]()))
+
+    plot_bb = plotarea_bbox(sp)
+    @show sp.bbox plot_bb
+    # l = float(left(plot_bb) / px) / figw
+    # b = float(bottom(plot_bb) / px) / figh
+    # w = float(width(plot_bb) / px) / figw
+    mms = Float64[f(plot_bb).value for f in (left, bottom, width, height)]
+    @show mms
+    pcts = mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
+    @show pcts
+    ax[:set_position](pcts)
 end
 
 # each backend should set up the subplot here
@@ -1297,7 +1315,8 @@ function finalizePlot(plt::Plot{PyPlotBackend})
         ax[:title][:set_color](getPyPlotColor(plt.plotargs[:titlefont].color))
     end
     drawfig(plt.o)
-    update_bboxes!(plt.layout)
+    plt.layout.bbox = py_bbox_fig(plt)
+    upadte_child_bboxes!(plt.layout)
     update_position!(plt.layout)
     PyPlot.draw()
 end
