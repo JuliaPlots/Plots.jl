@@ -316,7 +316,7 @@ function _plot!(plt::Plot, d::KW, args...)
         end
 
         # get the Subplot object to which the series belongs
-        sp = slice_arg(kw[:subplot], i)
+        sp = slice_arg(get(kw,:subplot,1), i)
         if sp == :auto
             sp = 1  # TODO: something useful
         end

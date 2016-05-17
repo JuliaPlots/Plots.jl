@@ -201,7 +201,7 @@ _subplot_defaults[:aspect_ratio]             = :none             # choose from :
 
 const _axis_defaults = KW()
 
-_axis_defaults[:label]     = :auto
+_axis_defaults[:label]     = ""
 _axis_defaults[:lims]      = :auto
 _axis_defaults[:ticks]     = :auto
 _axis_defaults[:scale]     = :identity

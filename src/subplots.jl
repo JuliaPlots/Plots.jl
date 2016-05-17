@@ -123,6 +123,8 @@ function upadte_child_bboxes!(layout::GridLayout) #, parent_bbox::BoundingBox = 
     freeh /= sum(layout.heights)
     @show freew, freeh
 
+    @show layout.bbox
+
     # TODO: this should really track used/free space for each row/column so that we can align plot areas properly
 
     # l, b = 0.0, 0.0

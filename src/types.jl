@@ -64,7 +64,7 @@ Base.(:*)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.v
 Base.(:/)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
 Base.(:/)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
 
-const defaultbox = BoundingBox(0mm, 0mm, 20mm, 20mm)
+const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
 
 # left(bbox::BoundingBox) = bbox.left
 # bottom(bbox::BoundingBox) = bbox.bottom
