@@ -309,22 +309,6 @@ end
 
 # ---------------------------------------------------------------------------
 
-# function used_width(sp::Subplot{PyPlotBackend})
-#     ax = sp.o
-#     width(py_bbox_axis(ax,"y"))
-# end
-#
-# function used_height(sp::Subplot{PyPlotBackend})
-#     ax = sp.o
-#     height(py_bbox_axis(ax,"x")) + height(py_bbox_title(ax))
-# end
-
-
-# # bounding box (relative to canvas) for plot area
-# function plotarea_bbox(sp::Subplot{PyPlotBackend})
-#     crop(bbox(sp), BoundingBox())
-# end
-
 function update_position!(sp::Subplot{PyPlotBackend})
     ax = sp.o
     bb = plotarea_bbox(sp)
@@ -336,9 +320,9 @@ function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend
     fig = plt.o
     # add a new axis, and force it to create a new one by setting a distinct label
     ax = fig[:add_axes]([0,0,1,1], label = string(gensym()))
-    for axis in (:xaxis, :yaxis)
-        ax[axis][:_autolabelpos] = false
-    end
+    # for axis in (:xaxis, :yaxis)
+    #     ax[axis][:_autolabelpos] = false
+    # end
     sp.o = ax
 end
 
@@ -1031,17 +1015,16 @@ end
 
 
 function updateAxisColors(ax, a::Axis)
-    guidecolor = getPyPlotColor(a[:foreground_color_guide])
     for (loc, spine) in ax[:spines]
         spine[:set_color](getPyPlotColor(a[:foreground_color_border]))
     end
     # for letter in ("x", "y", "z")
-        axis = axis_symbol(letter, "axis")
-        if haskey(ax, axis)
-            ax[:tick_params](axis=letter, which="both",
+        axissym = symbol(a[:letter], :axis)
+        if haskey(ax, axissym)
+            ax[:tick_params](axis=string(a[:letter]), which="both",
                              colors=getPyPlotColor(a[:foreground_color_axis]),
                              labelcolor=getPyPlotColor(a[:foreground_color_text]))
-            ax[axis][:label][:set_color](guidecolor)
+            ax[axissym][:label][:set_color](getPyPlotColor(a[:foreground_color_guide]))
         end
     # end
 end

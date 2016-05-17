@@ -350,6 +350,7 @@ add_aliases(:quiver, :velocity, :quiver2d, :gradient)
 add_aliases(:normalize, :norm, :normed, :normalized)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:match_dimensions, :transpose, :transpose_z)
+add_aliases(:subplot, :sp, :subplt, :splt)
 
 
 # add all pluralized forms to the _keyAliases dict
@@ -925,6 +926,12 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW)
 
         # update the axis
         update!(axis, args...; kw...)
+
+        # update the axis colors
+        color_or_match!(axis.d, :foreground_color_axis, fg)
+        color_or_match!(axis.d, :foreground_color_border, fg)
+        color_or_match!(axis.d, :foreground_color_guide, fg)
+        color_or_match!(axis.d, :foreground_color_text, fg)
     end
 end
 
