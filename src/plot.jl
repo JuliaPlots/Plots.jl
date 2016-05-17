@@ -200,6 +200,11 @@ function _plot!(plt::Plot, d::KW, args...)
     # just in case the backend needs to set up the plot (make it current or something)
     _before_add_series(plt)
 
+    # first apply any args for the subplots
+    for sp in plt.subplots
+        _update_subplot_args(plt, sp, d)
+    end
+
     # the grouping mechanism is a recipe on a GroupBy object
     # we simply add the GroupBy object to the front of the args list to allow
     # the recipe to be applied
@@ -316,7 +321,7 @@ function _plot!(plt::Plot, d::KW, args...)
         end
 
         # get the Subplot object to which the series belongs
-        sp = slice_arg(get(kw,:subplot,1), i)
+        sp = slice_arg(get(kw, :subplot, :auto), i)
         if sp == :auto
             sp = 1  # TODO: something useful
         end

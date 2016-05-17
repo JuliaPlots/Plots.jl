@@ -249,14 +249,22 @@ drawax(ax) = ax[:draw](renderer(ax[:get_figure]()))
 #     BoundingBox(left, bottom, right, top)
 # end
 
+function py_bbox_fig(obj)
+    fl, fr, fb, ft = fig[:get_window_extent]()
+    BoundingBox(0px, 0px, (fr-fl)*px, (ft-fb)*px)
+end
+
+# compute a bounding box (with origin top-left), however pyplot gives coords with origin bottom-left
 function py_bbox(obj)
+    fl, fr, fb, ft = py_bbox_fig(obj[:get_figure]())
     l, r, b, t = obj[:get_window_extent]()[:get_points]()
-    BoundingBox(l*px, b*px, (r-l)*px, (t-b)*px)
+    BoundingBox(l*px, (ft-t)*px, (r-l)*px, (t-b)*px)
+    # BoundingBox(l*px, (t*px, (r-l)*px, (t-b)*px)
 end
 
 # bbox_from_pyplot(obj) =
 
-py_bbox_fig(plt::Plot) = py_bbox(plt.o)
+py_bbox_fig(plt::Plot) = py_bbox_fig(plt.o)
 
 function py_bbox_ticks(ax, letter)
     # fig = ax[:get_figure]()
@@ -289,31 +297,40 @@ function py_bbox_title(ax)
     py_bbox(ax[:title])
 end
 
-xaxis_height(sp::Subplot{PyPlotBackend}) = height(py_bbox_axis(sp.o,"x"))
-yaxis_width(sp::Subplot{PyPlotBackend}) = width(py_bbox_axis(sp.o,"y"))
-title_height(sp::Subplot{PyPlotBackend}) = height(py_bbox_title(sp.o))
+# TODO: need to compute each of these by subtracting the plotarea position from
+# the most extreme guide/axis in each direction.  Can pass method (left,top,right,bottom)
+# and aggregation (minimum or maximum) into a method to do this.
 
-# note: this overrides the default version to allow for labels that stick out the sides
-# bounding box (relative to canvas) for plot area
-# note: we assume the x axis is on the left, and y axis is on the bottom
-# TODO: really the padding below should be part of the freespace calc, and we should probably
-#       cache the plotarea bbox while we're doing that (need to add plotarea field to Subplot)
-function plotarea_bbox(sp::Subplot{PyPlotBackend})
-    ax = sp.o
-    plot_bb = py_bbox(ax)
-    xbb = py_bbox_axis(ax, "x")
-    ybb = py_bbox_axis(ax, "y")
-    titbb = py_bbox_title(ax)
-    items = [xbb, ybb, titbb]
-    # TODO: add in margin/padding from sp.attr
-    leftpad   = max(0mm, left(plot_bb) - minimum(map(left, items)))
-    bottompad = max(0mm, bottom(plot_bb) - minimum(map(bottom, items)))
-    rightpad  = max(0mm, maximum(map(right, items)) - right(plot_bb))
-    toppad    = max(0mm, maximum(map(top, items)) - top(plot_bb))
-    crop(bbox(sp), BoundingBox(leftpad, bottompad,
-                               width(sp) - rightpad - leftpad,
-                               height(sp) - toppad - bottompad))
-end
+min_padding_left(layout::Subplot{PyPlotBackend})   = 0mm
+min_padding_top(layout::Subplot{PyPlotBackend})    = 0mm
+min_padding_right(layout::Subplot{PyPlotBackend})  = 0mm
+min_padding_bottom(layout::Subplot{PyPlotBackend}) = 0mm
+
+# xaxis_height(sp::Subplot{PyPlotBackend}) = height(py_bbox_axis(sp.o,"x"))
+# yaxis_width(sp::Subplot{PyPlotBackend}) = width(py_bbox_axis(sp.o,"y"))
+# title_height(sp::Subplot{PyPlotBackend}) = height(py_bbox_title(sp.o))
+
+# # note: this overrides the default version to allow for labels that stick out the sides
+# # bounding box (relative to canvas) for plot area
+# # note: we assume the x axis is on the left, and y axis is on the bottom
+# # TODO: really the padding below should be part of the freespace calc, and we should probably
+# #       cache the plotarea bbox while we're doing that (need to add plotarea field to Subplot)
+# function plotarea_bbox(sp::Subplot{PyPlotBackend})
+#     ax = sp.o
+#     plot_bb = py_bbox(ax)
+#     xbb = py_bbox_axis(ax, "x")
+#     ybb = py_bbox_axis(ax, "y")
+#     titbb = py_bbox_title(ax)
+#     items = [xbb, ybb, titbb]
+#     # TODO: add in margin/padding from sp.attr
+#     leftpad   = max(0mm, left(plot_bb) - minimum(map(left, items)))
+#     bottompad = max(0mm, bottom(plot_bb) - minimum(map(bottom, items)))
+#     rightpad  = max(0mm, maximum(map(right, items)) - right(plot_bb))
+#     toppad    = max(0mm, maximum(map(top, items)) - top(plot_bb))
+#     crop(bbox(sp), BoundingBox(leftpad, bottompad,
+#                                width(sp) - rightpad - leftpad,
+#                                height(sp) - toppad - bottompad))
+# end
 
 # ---------------------------------------------------------------------------
 
@@ -1316,7 +1333,7 @@ function finalizePlot(plt::Plot{PyPlotBackend})
     end
     drawfig(plt.o)
     plt.layout.bbox = py_bbox_fig(plt)
-    upadte_child_bboxes!(plt.layout)
+    update_child_bboxes!(plt.layout)
     update_position!(plt.layout)
     PyPlot.draw()
 end

@@ -35,15 +35,7 @@ end
 # Layouts
 # -----------------------------------------------------------
 
-# # wraps bounding box coords (percent of parent area)
-# # NOTE: (0,0) is the bottom-left, and (1,1) is the top-right!
-# immutable BoundingBox
-#     left::Float64
-#     bottom::Float64
-#     right::Float64
-#     top::Float64
-# end
-# BoundingBox() = BoundingBox(0,0,0,0)
+# NOTE: (0,0) is the top-left !!!
 
 import Measures
 import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height
@@ -76,9 +68,9 @@ const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
 
 
 left(bbox::BoundingBox) = bbox.x0[1]
-bottom(bbox::BoundingBox) = bbox.x0[2]
+top(bbox::BoundingBox) = bbox.x0[2]
 right(bbox::BoundingBox) = left(bbox) + width(bbox)
-top(bbox::BoundingBox) = bottom(bbox) + height(bbox)
+bottom(bbox::BoundingBox) = top(bbox) + height(bbox)
 Base.size(bbox::BoundingBox) = (width(bbox), height(bbox))
 
 # Base.(:*){T,N}(m1::Length{T,N}, m2::Length{T,N}) = Length{T,N}(m1.value * m2.value)
@@ -101,7 +93,7 @@ function Base.(:+)(bb1::BoundingBox, bb2::BoundingBox)
     b = min(bottom(bb1), bottom(bb2))
     r = max(right(bb1), right(bb2))
     t = max(top(bb1), top(bb2))
-    BoundingBox(l, b, r-l, t-b)
+    BoundingBox(l, t, r-l, t-b)
 end
 
 # this creates a bounding box in the parent's scope, where the child bounding box
@@ -112,14 +104,14 @@ function crop(parent::BoundingBox, child::BoundingBox)
     # w = width(parent) * width(child)
     # h = height(parent) * height(child)
     l = left(parent) + left(child)
-    b = bottom(parent) + bottom(child)
+    t = top(parent) + top(child)
     w = width(child)
     h = height(child)
-    BoundingBox(l, b, w, h)
+    BoundingBox(l, t, w, h)
 end
 
 function Base.show(io::IO, bbox::BoundingBox)
-    print(io, "BBox{l,b,r,t,w,h = $(left(bbox)), $(bottom(bbox)), $(right(bbox)), $(top(bbox)), $(width(bbox)), $(height(bbox))}")
+    print(io, "BBox{l,t,r,b,w,h = $(left(bbox)),$(top(bbox)), $(right(bbox)),$(bottom(bbox)), $(width(bbox)),$(height(bbox))}")
 end
 
 # -----------------------------------------------------------
@@ -149,9 +141,11 @@ end
 type Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
     bbox::BoundingBox  # the canvas area which is available to this subplot
+    plotarea::BoundingBox  # the part where the data goes
     subplotargs::KW  # args specific to this subplot
     # axisviews::Vector{AxisView}
     o  # can store backend-specific data... like a pyplot ax
+    plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
 
     # Subplot(parent = RootLayout(); attr = KW())
 end
@@ -161,6 +155,8 @@ function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
 end
 
 # -----------------------------------------------------------
+
+# TODO: i'll want a plotarea! method to set the plotarea only if the field exists
 
 # nested, gridded layout with optional size percentages
 type GridLayout <: AbstractLayout
