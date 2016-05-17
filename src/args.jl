@@ -113,118 +113,114 @@ const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 
 # -----------------------------------------------------------------------------
 
-const _seriesDefaults = KW()
+const _series_defaults = KW()
 
 # series-specific
-_seriesDefaults[:axis]            = :left
-_seriesDefaults[:label]           = "AUTO"
-_seriesDefaults[:seriescolor]     = :auto
-_seriesDefaults[:seriesalpha]     = nothing
-_seriesDefaults[:seriestype]        = :path
-_seriesDefaults[:linestyle]       = :solid
-_seriesDefaults[:linewidth]       = :auto
-_seriesDefaults[:linecolor]       = :match
-_seriesDefaults[:linealpha]       = nothing
-_seriesDefaults[:fillrange]       = nothing   # ribbons, areas, etc
-_seriesDefaults[:fillcolor]       = :match
-_seriesDefaults[:fillalpha]       = nothing
-_seriesDefaults[:markershape]     = :none
-_seriesDefaults[:markercolor]     = :match
-_seriesDefaults[:markeralpha]     = nothing
-_seriesDefaults[:markersize]      = 6
-_seriesDefaults[:markerstrokestyle] = :solid
-_seriesDefaults[:markerstrokewidth] = 1
-_seriesDefaults[:markerstrokecolor] = :match
-_seriesDefaults[:markerstrokealpha] = nothing
-_seriesDefaults[:bins]            = 30               # number of bins for hists
-_seriesDefaults[:smooth]          = false               # regression line?
-_seriesDefaults[:group]           = nothing           # groupby vector
-_seriesDefaults[:x]               = nothing
-_seriesDefaults[:y]               = nothing
-_seriesDefaults[:z]               = nothing           # depth for contour, surface, etc
-_seriesDefaults[:marker_z]        = nothing           # value for color scale
-_seriesDefaults[:levels]          = 15
-_seriesDefaults[:orientation]     = :vertical
-_seriesDefaults[:bar_position]    = :overlay  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
-_seriesDefaults[:xerror]          = nothing
-_seriesDefaults[:yerror]          = nothing
-_seriesDefaults[:ribbon]          = nothing
-_seriesDefaults[:quiver]          = nothing
-_seriesDefaults[:arrow]           = nothing   # allows for adding arrows to line/path... call `arrow(args...)`
-_seriesDefaults[:normalize]       = false     # do we want a normalized histogram?
-_seriesDefaults[:weights]         = nothing   # optional weights for histograms (1D and 2D)
-_seriesDefaults[:contours]        = false     # add contours to 3d surface and wireframe plots
-_seriesDefaults[:match_dimensions] = false   # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
+_series_defaults[:axis]            = :left
+_series_defaults[:label]           = "AUTO"
+_series_defaults[:seriescolor]     = :auto
+_series_defaults[:seriesalpha]     = nothing
+_series_defaults[:seriestype]        = :path
+_series_defaults[:linestyle]       = :solid
+_series_defaults[:linewidth]       = :auto
+_series_defaults[:linecolor]       = :match
+_series_defaults[:linealpha]       = nothing
+_series_defaults[:fillrange]       = nothing   # ribbons, areas, etc
+_series_defaults[:fillcolor]       = :match
+_series_defaults[:fillalpha]       = nothing
+_series_defaults[:markershape]     = :none
+_series_defaults[:markercolor]     = :match
+_series_defaults[:markeralpha]     = nothing
+_series_defaults[:markersize]      = 6
+_series_defaults[:markerstrokestyle] = :solid
+_series_defaults[:markerstrokewidth] = 1
+_series_defaults[:markerstrokecolor] = :match
+_series_defaults[:markerstrokealpha] = nothing
+_series_defaults[:bins]            = 30               # number of bins for hists
+_series_defaults[:smooth]          = false               # regression line?
+_series_defaults[:group]           = nothing           # groupby vector
+_series_defaults[:x]               = nothing
+_series_defaults[:y]               = nothing
+_series_defaults[:z]               = nothing           # depth for contour, surface, etc
+_series_defaults[:marker_z]        = nothing           # value for color scale
+_series_defaults[:levels]          = 15
+_series_defaults[:orientation]     = :vertical
+_series_defaults[:bar_position]    = :overlay  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
+_series_defaults[:xerror]          = nothing
+_series_defaults[:yerror]          = nothing
+_series_defaults[:ribbon]          = nothing
+_series_defaults[:quiver]          = nothing
+_series_defaults[:arrow]           = nothing   # allows for adding arrows to line/path... call `arrow(args...)`
+_series_defaults[:normalize]       = false     # do we want a normalized histogram?
+_series_defaults[:weights]         = nothing   # optional weights for histograms (1D and 2D)
+_series_defaults[:contours]        = false     # add contours to 3d surface and wireframe plots
+_series_defaults[:match_dimensions] = false   # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
                                              # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
-_seriesDefaults[:subplot]   = :auto
+_series_defaults[:subplot]   = :auto         # which subplot(s) does this series belong to?
 
 
-const _plotDefaults = KW()
+const _plot_defaults = KW()
 
-# plot globals
-_plotDefaults[:title]             = ""
-_plotDefaults[:xlabel]            = ""
-_plotDefaults[:ylabel]            = ""
-_plotDefaults[:zlabel]            = ""
-_plotDefaults[:yrightlabel]       = ""
-_plotDefaults[:legend]            = :best
-_plotDefaults[:colorbar]          = :legend
-_plotDefaults[:background_color]            = colorant"white"   # default for all backgrounds
-_plotDefaults[:background_color_legend]     = :match            # background of legend
-_plotDefaults[:background_color_inside]     = :match            # background inside grid
-_plotDefaults[:background_color_outside]    = :match            # background outside grid
-_plotDefaults[:foreground_color]            = :auto             # default for all foregrounds
-_plotDefaults[:foreground_color_legend]     = :match            # foreground of legend
-_plotDefaults[:foreground_color_grid]       = :match            # grid color
-_plotDefaults[:foreground_color_axis]       = :match            # axis border/tick colors
-_plotDefaults[:foreground_color_border]     = :match            # plot area border/spines
-_plotDefaults[:foreground_color_text]       = :match            # tick text color
-_plotDefaults[:foreground_color_guide]      = :match            # guide text color
-_plotDefaults[:xlims]             = :auto
-_plotDefaults[:ylims]             = :auto
-_plotDefaults[:zlims]             = :auto
-_plotDefaults[:xticks]            = :auto
-_plotDefaults[:yticks]            = :auto
-_plotDefaults[:zticks]            = :auto
-_plotDefaults[:xscale]            = :identity
-_plotDefaults[:yscale]            = :identity
-_plotDefaults[:zscale]            = :identity
-_plotDefaults[:xrotation]         = 0
-_plotDefaults[:yrotation]         = 0
-_plotDefaults[:zrotation]         = 0
-_plotDefaults[:xflip]             = false
-_plotDefaults[:yflip]             = false
-_plotDefaults[:zflip]             = false
-_plotDefaults[:size]              = (600,400)
-_plotDefaults[:pos]               = (0,0)
-_plotDefaults[:windowtitle]       = "Plots.jl"
-_plotDefaults[:show]              = false
-_plotDefaults[:layout]            = :auto
-_plotDefaults[:n]                 = -1
-_plotDefaults[:nr]                = -1
-_plotDefaults[:nc]                = -1
-_plotDefaults[:color_palette]     = :auto
-_plotDefaults[:link]              = false
-_plotDefaults[:linkx]             = false
-_plotDefaults[:linky]             = false
-_plotDefaults[:linkfunc]          = nothing
-_plotDefaults[:tickfont]          = font(8)
-_plotDefaults[:guidefont]         = font(11)
-_plotDefaults[:legendfont]        = font(8)
-_plotDefaults[:grid]              = true
-_plotDefaults[:annotation]        = nothing           # annotation tuple(s)... (x,y,annotation)
-_plotDefaults[:overwrite_figure]  = false
-_plotDefaults[:polar]             = false
-_plotDefaults[:aspect_ratio]        = :none             # choose from :none or :equal
-_plotDefaults[:xaxis]             = xaxis()
-_plotDefaults[:yaxis]             = yaxis()
-_plotDefaults[:zaxis]             = zaxis()
+_plot_defaults[:title]             = ""
+_plot_defaults[:legend]            = :best
+_plot_defaults[:colorbar]          = :legend
+_plot_defaults[:background_color]            = colorant"white"   # default for all backgrounds
+_plot_defaults[:background_color_outside]    = :match            # background outside grid
+_plot_defaults[:foreground_color]            = :auto             # default for all foregrounds
+_plot_defaults[:size]              = (600,400)
+_plot_defaults[:pos]               = (0,0)
+_plot_defaults[:windowtitle]       = "Plots.jl"
+_plot_defaults[:show]              = false
+_plot_defaults[:layout]            = :auto
+_plot_defaults[:num_subplots]      = -1
+_plot_defaults[:num_rows]          = -1
+_plot_defaults[:num_cols]          = -1
+_plot_defaults[:color_palette]     = :auto
+_plot_defaults[:link]              = false
+_plot_defaults[:linkx]             = false
+_plot_defaults[:linky]             = false
+_plot_defaults[:linkfunc]          = nothing
+_plot_defaults[:overwrite_figure]  = false
 
 
-# TODO: x/y scales
+const _subplot_defaults = KW()
 
-const _allArgs = sort(collect(union(keys(_seriesDefaults), keys(_plotDefaults))))
-supportedArgs(::AbstractBackend) = error("supportedArgs not defined") #_allArgs
+_subplot_defaults[:title]                   = ""
+_subplot_defaults[:background_color_legend] = :match            # background of legend
+_subplot_defaults[:background_color_inside] = :match            # background inside grid
+_subplot_defaults[:foreground_color_legend] = :match            # foreground of legend
+_subplot_defaults[:foreground_color_grid]   = :match            # grid color
+_subplot_defaults[:legendfont]              = font(8)
+_subplot_defaults[:grid]                    = true
+_subplot_defaults[:annotation]              = nothing           # annotation tuple(s)... (x,y,annotation)
+_subplot_defaults[:polar]                   = false
+_subplot_defaults[:aspect_ratio]            = :none             # choose from :none or :equal
+
+const _axis_defaults = KW()
+
+_axis_defaults[:label]     = :auto
+_axis_defaults[:xlims]     = :auto
+_axis_defaults[:xticks]    = :auto
+_axis_defaults[:xscale]    = :identity
+_axis_defaults[:xrotation] = 0
+_axis_defaults[:xflip]     = false
+# _axis_defaults[:axis]      = :auto
+_axis_defaults[:tickfont]  = font(8)
+_axis_defaults[:guidefont] = font(11)
+_axis_defaults[:foreground_color_axis]   = :match            # axis border/tick colors
+_axis_defaults[:foreground_color_border] = :match            # plot area border/spines
+_axis_defaults[:foreground_color_text]   = :match            # tick text color
+_axis_defaults[:foreground_color_guide]  = :match            # guide text color
+
+const _all_defaults = KW[
+    _series_defaults,
+    _plot_defaults,
+    _subplot_defaults,
+    _axis_defaults
+]
+
+const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
+supportedArgs(::AbstractBackend) = error("supportedArgs not defined") #_all_args
 supportedArgs() = supportedArgs(backend())
 
 RecipesBase.is_key_supported(k::Symbol) = (k in supportedArgs())
@@ -342,8 +338,9 @@ add_aliases(:show, :gui, :display)
 add_aliases(:color_palette, :palette)
 add_aliases(:linkx, :xlink)
 add_aliases(:linky, :ylink)
-add_aliases(:nr, :nrow, :nrows, :rows)
-add_aliases(:nc, :ncol, :ncols, :cols, :ncolumns, :columns)
+add_aliases(:num_subplots, :n, :numplots, :nplts)
+add_aliases(:num_rows, :nr, :nrow, :nrows, :rows)
+add_aliases(:num_cols, :nc, :ncol, :ncols, :cols, :ncolumns, :columns)
 add_aliases(:overwrite_figure, :clf, :clearfig, :overwrite, :reuse)
 add_aliases(:xerror, :xerr, :xerrorbar)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
@@ -354,7 +351,7 @@ add_aliases(:match_dimensions, :transpose, :transpose_z)
 
 
 # add all pluralized forms to the _keyAliases dict
-for arg in keys(_seriesDefaults)
+for arg in keys(_series_defaults)
     _keyAliases[makeplural(arg)] = arg
 end
 
@@ -372,24 +369,37 @@ end
 
 function default(k::Symbol)
     k = get(_keyAliases, k, k)
-    if haskey(_seriesDefaults, k)
-        return _seriesDefaults[k]
-    elseif haskey(_plotDefaults, k)
-        return _plotDefaults[k]
-    else
-        error("Unknown key: ", k)
+    for defaults in _all_defaults
+        if haskey(defaults, k)
+            return defaults[k]
+        end
     end
+    error("Unknown key: ", k)
+    # if haskey(_series_defaults, k)
+    #     return _series_defaults[k]
+    # elseif haskey(_plot_defaults, k)
+    #     return _plot_defaults[k]
+    # else
+    #     error("Unknown key: ", k)
+    # end
 end
 
 function default(k::Symbol, v)
     k = get(_keyAliases, k, k)
-    if haskey(_seriesDefaults, k)
-        _seriesDefaults[k] = v
-    elseif haskey(_plotDefaults, k)
-        _plotDefaults[k] = v
-    else
-        error("Unknown key: ", k)
+    for defaults in _all_defaults
+        if haskey(defaults, k)
+            defaults[k] = v
+            return v
+        end
     end
+    error("Unknown key: ", k)
+    # if haskey(_series_defaults, k)
+    #     _series_defaults[k] = v
+    # elseif haskey(_plot_defaults, k)
+    #     _plot_defaults[k] = v
+    # else
+    #     error("Unknown key: ", k)
+    # end
 end
 
 function default(; kw...)
@@ -801,8 +811,8 @@ function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
 
     # add defaults?
     if set_defaults
-        for k in keys(_plotDefaults)
-            setDictValue(kwdict, d, k, idx, _plotDefaults)
+        for k in keys(_plot_defaults)
+            setDictValue(kwdict, d, k, idx, _plot_defaults)
         end
     end
     #
@@ -839,8 +849,8 @@ end
 #     d = KW()
 #
 #     # add defaults?
-#     for k in keys(_seriesDefaults)
-#         setDictValue(kwdict, d, k, commandIndex, _seriesDefaults)
+#     for k in keys(_series_defaults)
+#         setDictValue(kwdict, d, k, commandIndex, _series_defaults)
 #     end
 #
 #     # groupby args?

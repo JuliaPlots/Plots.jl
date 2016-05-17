@@ -273,7 +273,7 @@ const _axis_symbols_fonts_colors = (
     )
 
 function Axis(letter::AbstractString, args...; kw...)
-    # init with values from _plotDefaults
+    # init with values from _plot_defaults
     d = KW(
         :letter => letter,
         :extrema => (Inf, -Inf),
@@ -282,13 +282,14 @@ function Axis(letter::AbstractString, args...; kw...)
         :use_minor => false,
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
-    for sym in _axis_symbols
-        k = symbol(letter * string(sym))
-        d[sym] = _plotDefaults[k]
-    end
-    for k in _axis_symbols_fonts_colors
-        d[k] = _plotDefaults[k]
-    end
+    merge!(d, _axis_defaults)
+    # for sym in _axis_symbols
+    #     k = symbol(letter * string(sym))
+    #     d[sym] = _plot_defaults[k]
+    # end
+    # for k in _axis_symbols_fonts_colors
+    #     d[k] = _plot_defaults[k]
+    # end
 
     # update the defaults
     update!(Axis(d), args...; kw...)

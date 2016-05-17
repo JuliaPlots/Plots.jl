@@ -364,8 +364,8 @@ function handlePlotColors(::AbstractBackend, d::KW)
     if :background_color in supportedArgs()
         bgcolor = convertColor(d[:background_color])
     else
-        bgcolor = _plotDefaults[:background_color]
-        if d[:background_color] != _plotDefaults[:background_color]
+        bgcolor = default(:background_color)
+        if d[:background_color] != default(:background_color)
             warn("Cannot set background_color with backend $(backend())")
         end
     end

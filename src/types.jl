@@ -69,7 +69,7 @@ end
 type Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
     bbox::BoundingBox  # the canvas area which is available to this subplot
-    attr::KW  # args specific to this subplot
+    subplotargs::KW  # args specific to this subplot
     # axisviews::Vector{AxisView}
     o  # can store backend-specific data... like a pyplot ax
 

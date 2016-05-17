@@ -614,7 +614,7 @@ function supportGraph(allvals, func)
             aspect_ratio = :equal)
 end
 
-supportGraphArgs()    = supportGraph(_allArgs, supportedArgs)
+supportGraphArgs()    = supportGraph(_all_args, supportedArgs)
 supportGraphTypes()   = supportGraph(_allTypes, supportedTypes)
 supportGraphStyles()  = supportGraph(_allStyles, supportedStyles)
 supportGraphMarkers() = supportGraph(_allMarkers, supportedMarkers)

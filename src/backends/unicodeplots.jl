@@ -186,7 +186,7 @@ end
 
 function _create_backend_figure(plt::Plot{UnicodePlotsBackend})
   # do we want to give a new default size?
-  if !haskey(plt.plotargs, :size) || plt.plotargs[:size] == _plotDefaults[:size]
+  if !haskey(plt.plotargs, :size) || plt.plotargs[:size] == default(:size)
     plt.plotargs[:size] = (60,20)
   end
   nothing

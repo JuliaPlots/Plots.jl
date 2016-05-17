@@ -94,6 +94,7 @@ function strip_first_letter(s::Symbol)
     str[1:1], symbol(str[2:end])
 end
 
+# TODO: need to apply axis args to the axes, subplot args to the subplots, and plot args to the plot
 # merge the KW d into the plot args
 function _add_plotargs!(plt::Plot, d::KW)
     # @show d
@@ -139,7 +140,7 @@ function _add_plotargs!(plt::Plot, d::KW)
         # @show 4,axis
     end
 
-    for k in keys(_plotDefaults)
+    for k in keys(_plot_defaults)
         if haskey(d, k)
             plt.plotargs[k] = pop!(d, k)
         end
@@ -262,7 +263,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
     # !!! note: at this point, kw_list is fully decomposed into individual series... one KW per series !!!
 
-
+    # TODO: move annotations into subplot update
     # now include any annotations which were added during recipes
     for kw in kw_list
         append!(anns, annotations(pop!(kw, :annotation, [])))
@@ -295,28 +296,6 @@ function _plot!(plt::Plot, d::KW, args...)
             plt.n += 1
         end
 
-        # TODO: can this be handled as a recipe??  (yes... need to remove)
-        # note: this could probably be handled using a recipe signature f{S<:Union{AbstractString,Symbol}}(v::AVec{S}, letter::AbstractString)
-        # that gets called from within the SliceIt section
-        # if !stringsSupported() && di[:seriestype] != :pie
-        #     setTicksFromStringVector(plt, d, di, "x")
-        #     setTicksFromStringVector(plt, d, di, "y")
-        #     setTicksFromStringVector(plt, d, di, "z")
-        # end
-
-        # TODO: unnecessary??  (yes... deleted as part of _add_plotargs... remove this)
-        # # remove plot args
-        # for k in keys(_plotDefaults)
-        #     delete!(di, k)
-        # end
-
-        # TODO: why??  (I think we can remove??)
-        # # merge in plotarg_overrides
-        # plotarg_overrides = pop!(di, :plotarg_overrides, nothing)
-        # if plotarg_overrides != nothing
-        #     merge!(plt.plotargs, plotarg_overrides)
-        # end
-
         # set default values, select from attribute cycles, and generally set the final attributes
         _add_defaults!(kw, plt, i)
 
@@ -334,12 +313,8 @@ function _plot!(plt::Plot, d::KW, args...)
     # now that we're done adding all the series, add the annotations
     _add_annotations(plt, anns)
 
-    # add title, axis labels, ticks, etc
-    # TODO: do we really need this subplot check?
-    # if !haskey(d, :subplot)
-        # merge!(plt.plotargs, d)  # this shouldn't be needed since we merged the keys earlier
-        _update_plot(plt, plt.plotargs)
-    # end
+    # TODO just need to pass plt... and we should do all non-series updates here
+    _update_plot(plt, plt.plotargs)
 
     current(plt)
 
@@ -411,7 +386,7 @@ end
 #         end
 #
 #         # remove plot args
-#         for k in keys(_plotDefaults)
+#         for k in keys(_plot_defaults)
 #             delete!(di, k)
 #         end
 #
@@ -540,7 +515,7 @@ function Base.copy(plt::Plot)
     backend(plt.backend)
     plt2 = plot(; plt.plotargs...)
     for sargs in plt.seriesargs
-        sargs = filter((k,v) -> haskey(_seriesDefaults,k), sargs)
+        sargs = filter((k,v) -> haskey(_series_defaults,k), sargs)
         plot!(plt2; sargs...)
     end
     plt2

@@ -10,8 +10,8 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
     globalIndex = n
 
     # add defaults?
-    for k in keys(_seriesDefaults)
-        setDictValue(d, d, k, commandIndex, _seriesDefaults)
+    for k in keys(_series_defaults)
+        setDictValue(d, d, k, commandIndex, _series_defaults)
     end
 
     if d[:subplot] == :auto

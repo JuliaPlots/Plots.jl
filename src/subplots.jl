@@ -177,19 +177,45 @@ end
 # ----------------------------------------------------------------------
 
 # return the top-level layout, a list of subplots, and a SubplotMap
-function build_layout(s::Symbol)
-    s == :auto || error() # TODO: handle anything else
-    layout = GridLayout(1, 2) #TODO this need to go
-    nr, nc = size(layout)
+function build_layout(d::KW)
+    l = get(d, :layout, :auto)
+    n = get(d, :num_subplots, -1)
+    nr = get(d, :num_rows, -1)
+    nc = get(d, :num_cols, -1)
+
+    l == :auto || error() # TODO: handle anything else
+
+    nr, nc = compute_gridsize(n, nr, nc)
+    layout = GridLayout(nr, nc)
     subplots = Subplot[]
     spmap = SubplotMap()
+    i = 1
     for r=1:nr, c=1:nc
+        i > n && break  # only add n subplots
         sp = Subplot(backend(), parent=layout)
         layout[r,c] = sp
         push!(subplots, sp)
         spmap[(r,c)] = sp
+        i += 1
     end
     layout, subplots, spmap
+end
+
+
+
+function compute_gridsize(numplts::Int, nr::Int, nc::Int)
+    # figure out how many rows/columns we need
+    if nr == -1
+        if nc == -1
+            nr = round(Int, sqrt(numplts))
+            nc = ceil(Int, numplts / nr)
+        else
+            nr = ceil(Int, numplts / nc)
+        end
+    else
+        nc = ceil(Int, numplts / nr)
+    end
+    nr, nc
 end
 
 # ----------------------------------------------------------------------
