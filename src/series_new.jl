@@ -2,29 +2,30 @@
 # we are going to build recipes to do the processing and splitting of the args
 
 
-function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
+function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     pkg = plt.backend
-    n = plt.n
-    plotargs = getplotargs(plt, n)
-    plotIndex = convertSeriesIndex(plt, n)
-    globalIndex = n
+    # n = plt.n
+    # plotargs = getplotargs(plt, n)
+    # plotIndex = convertSeriesIndex(plt, n)
+    globalIndex = plt.n
 
-    # add defaults?
-    for k in keys(_series_defaults)
-        setDictValue(d, d, k, commandIndex, _series_defaults)
+    # # add defaults?
+    # for k in keys(_series_defaults)
+    #     setDictValue(d, d, k, commandIndex, _series_defaults)
+    # end
+    for (k,v) in _series_defaults
+        slice_arg!(d, d, k, v, commandIndex)
     end
 
-    if d[:subplot] == :auto
-        # TODO: something useful
-        d[:subplot] = 1
-    end
+    # this is how many series belong to this subplot
+    plotIndex = count(series -> series.d[:subplot] === sp, plt.series_list)
 
-    aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
+    # aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
     aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
     aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
 
     # update color
-    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], plotargs, plotIndex)
+    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], sp.subplotargs, plotIndex)
 
     # update colors
     for csym in (:linecolor, :markercolor, :fillcolor)
@@ -35,13 +36,17 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
                 d[:seriescolor]
             end
         else
-            getSeriesRGBColor(d[csym], plotargs, plotIndex)
+            getSeriesRGBColor(d[csym], sp.subplotargs, plotIndex)
         end
     end
 
     # update markerstrokecolor
     c = d[:markerstrokecolor]
-    c = (c == :match ? plotargs[:foreground_color] : getSeriesRGBColor(c, plotargs, plotIndex))
+    c = if c == :match
+        sp.subplotargs[:foreground_color_subplot]
+    else
+        getSeriesRGBColor(c, sp.subplotargs, plotIndex)
+    end
     d[:markerstrokecolor] = c
 
     # update alphas
@@ -62,11 +67,12 @@ function _add_defaults!(d::KW, plt::Plot, commandIndex::Int)
     # set label
     label = d[:label]
     label = (label == "AUTO" ? "y$globalIndex" : label)
-    if d[:axis] == :right && !(length(label) >= 4 && label[end-3:end] != " (R)")
-        label = string(label, " (R)")
-    end
+    # if d[:axis] == :right && !(length(label) >= 4 && label[end-3:end] != " (R)")
+    #     label = string(label, " (R)")
+    # end
     d[:label] = label
 
+    _replace_linewidth(d)
     d
 end
 

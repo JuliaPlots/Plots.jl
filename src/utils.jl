@@ -268,8 +268,8 @@ limsType{T<:Real,S<:Real}(lims::@compat(Tuple{T,S}))    = :limits
 limsType(lims::Symbol)                                  = lims == :auto ? :auto : :invalid
 limsType(lims)                                          = :invalid
 
-axis_symbol(letter, postfix) = symbol(letter * postfix)
-axis_symbols(letter, postfix...) = map(s -> axis_symbol(letter, s), postfix)
+# axis_symbol(letter, postfix) = symbol(letter * postfix)
+# axis_symbols(letter, postfix...) = map(s -> axis_symbol(letter, s), postfix)
 
 Base.convert{T<:Real}(::Type{Vector{T}}, rng::Range{T})         = T[x for x in rng]
 Base.convert{T<:Real,S<:Real}(::Type{Vector{T}}, rng::Range{S}) = T[x for x in rng]

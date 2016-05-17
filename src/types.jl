@@ -133,8 +133,9 @@ type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     layout::AbstractLayout
 end
 
-function Plot(plotargs::KW)
-    Plot(backend(), 0, plotargs, Series[], nothing, Subplot[], SubplotMap(), EmptyLayout())
+function Plot()
+    Plot(backend(), 0, KW(), Series[], nothing,
+         Subplot[], SubplotMap(), EmptyLayout())
 end
 
 # -----------------------------------------------------------

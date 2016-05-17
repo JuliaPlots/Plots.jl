@@ -223,6 +223,7 @@ end
 get_subplot(plt::Plot, sp::Subplot) = sp
 get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
 get_subplot(plt::Plot, k) = plt.spmap[k]
+get_subplot(series::Series) = series.d[:subplot]
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------

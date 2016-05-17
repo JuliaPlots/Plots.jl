@@ -258,21 +258,21 @@ end
 # -----------------------------------------------------------------------
 
 
-xaxis(args...) = Axis("x", args...)
-yaxis(args...) = Axis("y", args...)
-zaxis(args...) = Axis("z", args...)
+xaxis(args...) = Axis(:x, args...)
+yaxis(args...) = Axis(:y, args...)
+zaxis(args...) = Axis(:z, args...)
 
 
-const _axis_symbols = (:label, :lims, :ticks, :scale, :flip, :rotation)
-const _axis_symbols_fonts_colors = (
-    :guidefont, :tickfont,
-    :foreground_color_axis,
-    :foreground_color_border,
-    :foreground_color_text,
-    :foreground_color_guide
-    )
+# const _axis_symbols = (:label, :lims, :ticks, :scale, :flip, :rotation)
+# const _axis_symbols_fonts_colors = (
+#     :guidefont, :tickfont,
+#     :foreground_color_axis,
+#     :foreground_color_border,
+#     :foreground_color_text,
+#     :foreground_color_guide
+#     )
 
-function Axis(letter::AbstractString, args...; kw...)
+function Axis(letter::Symbol, args...; kw...)
     # init with values from _plot_defaults
     d = KW(
         :letter => letter,
@@ -283,13 +283,6 @@ function Axis(letter::AbstractString, args...; kw...)
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
     merge!(d, _axis_defaults)
-    # for sym in _axis_symbols
-    #     k = symbol(letter * string(sym))
-    #     d[sym] = _plot_defaults[k]
-    # end
-    # for k in _axis_symbols_fonts_colors
-    #     d[k] = _plot_defaults[k]
-    # end
 
     # update the defaults
     update!(Axis(d), args...; kw...)

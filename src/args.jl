@@ -116,7 +116,7 @@ const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _series_defaults = KW()
 
 # series-specific
-_series_defaults[:axis]              = :left
+# _series_defaults[:axis]              = :left
 _series_defaults[:label]             = "AUTO"
 _series_defaults[:seriescolor]       = :auto
 _series_defaults[:seriesalpha]       = nothing
@@ -162,8 +162,7 @@ _series_defaults[:subplot]           = :auto     # which subplot(s) does this se
 const _plot_defaults = KW()
 
 _plot_defaults[:title]                       = ""
-_plot_defaults[:legend]                      = :best
-_plot_defaults[:colorbar]                    = :legend
+_plot_defaults[:titlefont]                  = font(14)
 _plot_defaults[:background_color]            = colorant"white"   # default for all backgrounds
 _plot_defaults[:background_color_outside]    = :match            # background outside grid
 _plot_defaults[:foreground_color]            = :auto             # default for all foregrounds, and title color
@@ -175,7 +174,6 @@ _plot_defaults[:layout]                      = :auto
 _plot_defaults[:num_subplots]                = -1
 _plot_defaults[:num_rows]                    = -1
 _plot_defaults[:num_cols]                    = -1
-_plot_defaults[:color_palette]               = :auto
 _plot_defaults[:link]                        = false
 _plot_defaults[:linkx]                       = false
 _plot_defaults[:linky]                       = false
@@ -192,6 +190,9 @@ _subplot_defaults[:background_color_inside]  = :match            # background in
 _subplot_defaults[:foreground_color_subplot] = :match            # default for other fg colors... match takes plot default
 _subplot_defaults[:foreground_color_legend]  = :match            # foreground of legend
 _subplot_defaults[:foreground_color_grid]    = :match            # grid color
+_subplot_defaults[:color_palette]            = :auto
+_subplot_defaults[:legend]                   = :best
+_subplot_defaults[:colorbar]                 = :legend
 _subplot_defaults[:legendfont]               = font(8)
 _subplot_defaults[:grid]                     = true
 _subplot_defaults[:annotation]               = nothing           # annotation tuple(s)... (x,y,annotation)
@@ -426,41 +427,41 @@ function handleColors!(d::KW, arg, csym::Symbol)
     false
 end
 
-# given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
-# TODO: use trueOrAllTrue for subplots which can pass vectors for these
-function processAxisArg(d::KW, letter::AbstractString, arg)
-    T = typeof(arg)
-    arg = get(_scaleAliases, arg, arg)
-    scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
-
-    if typeof(arg) <: Font
-        d[:tickfont] = arg
-
-    elseif arg in _allScales
-        d[scale] = arg
-
-    elseif arg in (:flip, :invert, :inverted)
-        d[flip] = true
-
-    elseif T <: @compat(AbstractString)
-        d[label] = arg
-
-    # xlims/ylims
-    elseif (T <: Tuple || T <: AVec) && length(arg) == 2
-        d[typeof(arg[1]) <: Number ? lim : tick] = arg
-
-    # xticks/yticks
-    elseif T <: AVec
-        d[tick] = arg
-
-    elseif arg == nothing
-        d[tick] = []
-
-    else
-        warn("Skipped $(letter)axis arg $arg")
-
-    end
-end
+# # given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
+# # TODO: use trueOrAllTrue for subplots which can pass vectors for these
+# function processAxisArg(d::KW, letter::AbstractString, arg)
+#     T = typeof(arg)
+#     arg = get(_scaleAliases, arg, arg)
+#     scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
+#
+#     if typeof(arg) <: Font
+#         d[:tickfont] = arg
+#
+#     elseif arg in _allScales
+#         d[scale] = arg
+#
+#     elseif arg in (:flip, :invert, :inverted)
+#         d[flip] = true
+#
+#     elseif T <: @compat(AbstractString)
+#         d[label] = arg
+#
+#     # xlims/ylims
+#     elseif (T <: Tuple || T <: AVec) && length(arg) == 2
+#         d[typeof(arg[1]) <: Number ? lim : tick] = arg
+#
+#     # xticks/yticks
+#     elseif T <: AVec
+#         d[tick] = arg
+#
+#     elseif arg == nothing
+#         d[tick] = []
+#
+#     else
+#         warn("Skipped $(letter)axis arg $arg")
+#
+#     end
+# end
 
 
 function processLineArg(d::KW, arg)
@@ -575,26 +576,26 @@ end
 function preprocessArgs!(d::KW)
     replaceAliases!(d, _keyAliases)
 
-    # handle axis args
-    for letter in ("x", "y", "z")
-        asym = symbol(letter * "axis")
-        for arg in wraptuple(pop!(d, asym, ()))
-            processAxisArg(d, letter, arg)
-        end
-        # delete!(d, asym)
-
-        # # NOTE: this logic was moved to _add_plotargs...
-        # # turn :labels into :ticks_and_labels
-        # tsym = symbol(letter * "ticks")
-        # if haskey(d, tsym) && ticksType(d[tsym]) == :labels
-        #     d[tsym] = (1:length(d[tsym]), d[tsym])
-        # end
-        #
-        # ssym = symbol(letter * "scale")
-        # if haskey(d, ssym) && haskey(_scaleAliases, d[ssym])
-        #     d[ssym] = _scaleAliases[d[ssym]]
-        # end
-    end
+    # # handle axis args
+    # for letter in ("x", "y", "z")
+    #     asym = symbol(letter * "axis")
+    #     for arg in wraptuple(pop!(d, asym, ()))
+    #         processAxisArg(d, letter, arg)
+    #     end
+    #     # delete!(d, asym)
+    #
+    #     # # NOTE: this logic was moved to _add_plotargs...
+    #     # # turn :labels into :ticks_and_labels
+    #     # tsym = symbol(letter * "ticks")
+    #     # if haskey(d, tsym) && ticksType(d[tsym]) == :labels
+    #     #     d[tsym] = (1:length(d[tsym]), d[tsym])
+    #     # end
+    #     #
+    #     # ssym = symbol(letter * "scale")
+    #     # if haskey(d, ssym) && haskey(_scaleAliases, d[ssym])
+    #     #     d[ssym] = _scaleAliases[d[ssym]]
+    #     # end
+    # end
 
     # handle line args
     for arg in wraptuple(pop!(d, :line, ()))
@@ -668,18 +669,18 @@ function preprocessArgs!(d::KW)
         delete!(d, :link)
     end
 
-    # pull out invalid keywords into their own KW dict... these are likely user-defined through recipes
-    kw = KW()
-    for k in keys(d)
-        try
-            # this should error for invalid keywords (assume they are user-defined)
-            k == :markershape_to_add || default(k)
-        catch
-            # not a valid key... pop and add to user list
-            kw[k] = pop!(d, k)
-        end
-    end
-    kw
+    # # pull out invalid keywords into their own KW dict... these are likely user-defined through recipes
+    # kw = KW()
+    # for k in keys(d)
+    #     try
+    #         # this should error for invalid keywords (assume they are user-defined)
+    #         k == :markershape_to_add || default(k)
+    #     catch
+    #         # not a valid key... pop and add to user list
+    #         kw[k] = pop!(d, k)
+    #     end
+    # end
+    # kw
 end
 
 # -----------------------------------------------------------------------------
@@ -744,8 +745,8 @@ _markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supportedM
 _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warnOnUnsupported(pkg::AbstractBackend, d::KW)
-    (d[:axis] in supportedAxes(pkg)
-        || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
+    # (d[:axis] in supportedAxes(pkg)
+    #     || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
     (d[:seriestype] == :none
         || d[:seriestype] in supportedTypes(pkg)
         || warn("seriestype $(d[:seriestype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))"))
@@ -767,28 +768,16 @@ end
 
 # -----------------------------------------------------------------------------
 
-# 1-row matrices will give an element
-# multi-row matrices will give a column
-# InputWrapper just gives the contents
-# anything else is returned as-is
-# getArgValue(v::Tuple, idx::Int) = v[mod1(idx, length(v))]
-function getArgValue(v::AMat, idx::Int)
-    c = mod1(idx, size(v,2))
-    size(v,1) == 1 ? v[1,c] : v[:,c]
-end
-getArgValue(wrapper::InputWrapper, idx) = wrapper.obj
-getArgValue(v, idx) = v
 
-
-# given an argument key (k), we want to extract the argument value for this index.
-# if nothing is set (or container is empty), return the default.
-function setDictValue(d_in::KW, d_out::KW, k::Symbol, idx::Int, defaults::KW)
-    if haskey(d_in, k) && !(typeof(d_in[k]) <: Union{AbstractMatrix, Tuple} && isempty(d_in[k]))
-        d_out[k] = getArgValue(d_in[k], idx)
-    else
-        d_out[k] = deepcopy(defaults[k])
-    end
-end
+# # given an argument key (k), we want to extract the argument value for this index.
+# # if nothing is set (rarg is empty), return the default.
+# function setDictValue(d_in::KW, d_out::KW, k::Symbol, idx::Int, defaults::KW)
+#     if haskey(d_in, k) && !(typeof(d_in[k]) <: Union{AbstractMatrix, Tuple} && isempty(d_in[k]))
+#         d_out[k] = slice_arg(d_in[k], idx)
+#     else
+#         d_out[k] = deepcopy(defaults[k])
+#     end
+# end
 
 function convertLegendValue(val::Symbol)
     if val in (:both, :all, :yes)
@@ -806,39 +795,139 @@ convertLegendValue(val::Bool) = val ? :best : :none
 # -----------------------------------------------------------------------------
 
 # build the argument dictionary for the plot
-function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
-    kwdict = KW(kw)
-    d = KW()
+# function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
+#     d_in = KW(kw)
+#     d_out = KW()
+#
+#     # add defaults?
+#     if set_defaults
+#         for k in keys(_plot_defaults)
+#             setDictValue(d_in, d_out, k, idx, _plot_defaults)
+#         end
+#     end
+#
+#     # handle legend/colorbar
+#     d_out[:legend] = convertLegendValue(d_out[:legend])
+#     d_out[:colorbar] = convertLegendValue(d_out[:colorbar])
+#     if d_out[:colorbar] == :legend
+#         d_out[:colorbar] = d_out[:legend]
+#     end
+#
+#     # convert color
+#     handlePlotColors(pkg, d_out)
+#
+#     # no need for these
+#     delete!(d_out, :x)
+#     delete!(d_out, :y)
+#
+#     d_out
+# end
 
-    # add defaults?
-    if set_defaults
-        for k in keys(_plot_defaults)
-            setDictValue(kwdict, d, k, idx, _plot_defaults)
-        end
+# 1-row matrices will give an element
+# multi-row matrices will give a column
+# InputWrapper just gives the contents
+# anything else is returned as-is
+function slice_arg(v::AMat, idx::Int)
+    c = mod1(idx, size(v,2))
+    size(v,1) == 1 ? v[1,c] : v[:,c]
+end
+slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
+slice_arg(v, idx) = v
+
+
+# given an argument key (k), we want to extract the argument value for this index.
+# matrices are sliced by column, otherwise we
+# if nothing is set (or container is empty), return the default or the existing value.
+function slice_arg!(d_in::KW, d_out::KW, k::Symbol, default_value, idx::Int = 1)
+    v = pop!(d_in, k, get(d_out, k, default_value))
+    d_out[k] = if haskey(d_in, k) && typeof(v) <: AMat && !isempty(v)
+        slice_arg(v, idx)
+    else
+        v
     end
-    #
-    # for k in (:xscale, :yscale)
-    #     if haskey(_scaleAliases, d[k])
-    #         d[k] = _scaleAliases[d[k]]
-    #     end
-    # end
+end
+
+# if the value is `:match` then we take whatever match_color is.
+# this is mainly used for cascading defaults for foreground and background colors
+function color_or_match!(d::KW, k::Symbol, match_color)
+    v = d[k]
+    d[k] = if v == :match
+        match_color
+    elseif v == nothing
+        colorscheme(RGBA(0,0,0,0))
+    else
+        v
+    end
+end
+
+
+# update plotargs from an input dictionary
+function _update_plot_args(plt::Plot, d_in::KW)
+    pargs = plt.plotargs
+    for (k,v) in _plot_defaults
+        slice_arg!(d_in, pargs, k, v)
+    end
+
+    # handle colors
+    bg = convertColor(pargs[:background_color])
+    fg = pargs[:foreground_color]
+    if fg == :auto
+        fg = isdark(bg) ? colorant"white" : colorant"black"
+    end
+    pargs[:background_color] = bg
+    pargs[:foreground_color] = convertColor(fg)
+    color_or_match!(pargs, :background_color_outside, bg)
+end
+
+
+# update a subplots args and axes
+function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW)
+    pargs = plt.plotargs
+    spargs = sp.subplotargs
+    for (k,v) in _subplot_defaults
+        slice_arg!(d_in, spargs, k, v)
+    end
 
     # handle legend/colorbar
-    d[:legend] = convertLegendValue(d[:legend])
-    d[:colorbar] = convertLegendValue(d[:colorbar])
-    if d[:colorbar] == :legend
-        d[:colorbar] = d[:legend]
+    spargs[:legend] = convertLegendValue(spargs[:legend])
+    spargs[:colorbar] = convertLegendValue(spargs[:colorbar])
+    if spargs[:colorbar] == :legend
+        spargs[:colorbar] = spargs[:legend]
     end
 
-    # convert color
-    handlePlotColors(pkg, d)
+    # background colors
+    bg = color_or_match!(spargs, :background_color_subplot, pargs[:background_color])
+    spargs[:color_palette] = get_color_palette(spargs[:color_palette], bg, 30)
+    color_or_match!(spargs, :background_color_legend, bg)
+    color_or_match!(spargs, :background_color_inside, bg)
 
-    # no need for these
-    delete!(d, :x)
-    delete!(d, :y)
+    # foreground colors
+    fg = color_or_match!(spargs, :foreground_color_subplot, pargs[:foreground_color])
+    color_or_match!(spargs, :foreground_color_legend, fg)
+    color_or_match!(spargs, :foreground_color_grid, fg)
 
-    d
+    for letter in (:x, :y, :z)
+        # get (maybe initialize) the axis
+        axissym = symbol(letter, :axis)
+        axis = get!(spargs, axissym, Axis(letter))
+
+        # grab magic args (for example `xaxis = (:flip, :log)`)
+        args = wraptuple(get(d_in, axissym, ()))
+
+        # build the KW of arguments from the letter version (i.e. xticks --> ticks)
+        kw = KW()
+        for k in _axis_defaults
+            lk = symbol(letter, k)
+            if haskey(d_in, lk)
+                kw[k] = d_in[lk]
+            end
+        end
+
+        # update the axis
+        update!(axis, args...; kw...)
+    end
 end
+
 
 function has_black_border_for_default(st::Symbol)
     like_histogram(st) || st in (:hexbin, :bar)

@@ -22,7 +22,7 @@ supportedArgs(::PyPlotBackend) = [
     :title, :windowtitle, :show, :size,
     :x, :xlabel, :xlims, :xticks, :xscale, :xflip, :xrotation,
     :y, :ylabel, :ylims, :yticks, :yscale, :yflip, :yrotation,
-    :axis, :yrightlabel,
+    # :axis, :yrightlabel,
     :z, :zlabel, :zlims, :zticks, :zscale, :zflip, :zrotation,
     :z,
     :tickfont, :guidefont, :legendfont,
@@ -881,7 +881,7 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     # this sets the bg color inside the grid
-    ax[:set_axis_bgcolor](getPyPlotColor(plt.plotargs[:background_color_inside]))
+    ax[:set_axis_bgcolor](getPyPlotColor(d[:subplot].subplotargs[:background_color_inside]))
 
     # handle area filling
     fillrange = d[:fillrange]
@@ -1030,21 +1030,20 @@ function applyPyPlotScale(ax, scaleType::Symbol, letter)
 end
 
 
-function updateAxisColors(ax, d::KW)
-    guidecolor = getPyPlotColor(d[:foreground_color_guide])
+function updateAxisColors(ax, a::Axis)
+    guidecolor = getPyPlotColor(a[:foreground_color_guide])
     for (loc, spine) in ax[:spines]
-        spine[:set_color](getPyPlotColor(d[:foreground_color_border]))
+        spine[:set_color](getPyPlotColor(a[:foreground_color_border]))
     end
-    for letter in ("x", "y", "z")
+    # for letter in ("x", "y", "z")
         axis = axis_symbol(letter, "axis")
         if haskey(ax, axis)
             ax[:tick_params](axis=letter, which="both",
-                             colors=getPyPlotColor(d[:foreground_color_axis]),
-                             labelcolor=getPyPlotColor(d[:foreground_color_text]))
+                             colors=getPyPlotColor(a[:foreground_color_axis]),
+                             labelcolor=getPyPlotColor(a[:foreground_color_text]))
             ax[axis][:label][:set_color](guidecolor)
         end
-    end
-    ax[:title][:set_color](guidecolor)
+    # end
 end
 
 # function usingRightAxis(plt::Plot{PyPlotBackend})
@@ -1060,13 +1059,14 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
     # figorax = plt.o
     # ax = getLeftAxis(figorax)
     for sp in plt.subplots
+        spargs = sp.subplotargs
         ax = getAxis(sp)
         # ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
-        guidesz = get(d, :guidefont, plt.plotargs[:guidefont]).pointsize
+        # guidesz = get(d, :guidefont, spargs[:guidefont]).pointsize
 
         # title
         haskey(d, :title) && ax[:set_title](d[:title])
-        ax[:title][:set_fontsize](guidesz)
+        ax[:title][:set_fontsize](plt.plotargs[:titlefont].pointsize)
 
         # axes = [ax]
         # # handle right y axis
@@ -1079,9 +1079,9 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         #     end
         # end
 
-        for letter in ("x", "y", "z")
-            axissym = symbol(letter*"axis")
-            axis = plt.plotargs[axissym]
+        for letter in (:x, :y, :z)
+            axissym = symbol(letter, :axis)
+            axis = spargs[axissym]
             # @show axis
             haskey(ax, axissym) || continue
             applyPyPlotScale(ax, axis[:scale], letter)
@@ -1099,7 +1099,7 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
                     lab[:set_rotation](axis[:rotation])
                 end
                 if get(d, :grid, false)
-                    fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
+                    fgcolor = getPyPlotColor(spargs[:foreground_color_grid])
                     tmpax[axissym][:grid](true, color = fgcolor)
                     tmpax[:set_axisbelow](true)
                 end
@@ -1253,17 +1253,20 @@ const _pyplot_legend_pos = KW(
   )
 
 # function addPyPlotLegend(plt::Plot)
-function addPyPlotLegend(plt::Plot, ax)
-    leg = plt.plotargs[:legend]
+# function addPyPlotLegend(plt::Plot, ax)
+function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
+    leg = sp.subplotargs[:legend]
     if leg != :none
         # gotta do this to ensure both axes are included
         labels = []
         handles = []
         for series in plt.series_list
-            if series.d[:label] != "" && !(series.d[:seriestype] in (
-                    :hist,:density,:hexbin,:hist2d,:hline,:vline,
-                    :contour,:contour3d,:surface,:wireframe,
-                    :heatmap,:path3d,:scatter3d, :pie, :image))
+            if get_subplot(series) === sp &&
+                        series.d[:label] != "" &&
+                        !(series.d[:seriestype] in (
+                            :hist,:density,:hexbin,:hist2d,:hline,:vline,
+                            :contour,:contour3d,:surface,:wireframe,
+                            :heatmap,:path3d,:scatter3d, :pie, :image))
                 push!(handles, series.d[:serieshandle][1])
                 push!(labels, series.d[:label])
             end
@@ -1280,19 +1283,19 @@ function addPyPlotLegend(plt::Plot, ax)
                 labels, #[d[:label] for d in args],
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
-                fontsize = plt.plotargs[:legendfont].pointsize
+                fontsize = sp.subplotargs[:legendfont].pointsize
                 # framealpha = 0.6
             )
             leg[:set_zorder](1000)
 
-            fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_legend])
+            fgcolor = getPyPlotColor(sp.subplotargs[:foreground_color_legend])
             for txt in leg[:get_texts]()
                 PyPlot.plt[:setp](txt, color = fgcolor)
             end
 
             # set some legend properties
             frame = leg[:get_frame]()
-            frame[:set_facecolor](getPyPlotColor(plt.plotargs[:background_color_legend]))
+            frame[:set_facecolor](getPyPlotColor(sp.subplotargs[:background_color_legend]))
             frame[:set_edgecolor](fgcolor)
         end
     end
@@ -1304,8 +1307,11 @@ function finalizePlot(plt::Plot{PyPlotBackend})
     for sp in plt.subplots
         # ax = getLeftAxis(plt)
         ax = getAxis(sp)
-        addPyPlotLegend(plt, ax)
-        updateAxisColors(ax, plt.plotargs)
+        addPyPlotLegend(plt, sp, ax)
+        for asym in (:xaxis, :yaxis, :zaxis)
+            updateAxisColors(ax, sp.subplotargs[asym])
+        end
+        ax[:title][:set_color](getPyPlotColor(plt.plotargs[:titlefont].color))
     end
     drawfig(plt.o)
     update_bboxes!(plt.layout)

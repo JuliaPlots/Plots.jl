@@ -47,22 +47,18 @@ function plot(args...; kw...)
     d = KW(kw)
     preprocessArgs!(d)
 
-    # subplots = Subplot[layout]  # TODO: build full list
-    # smap = SubplotMap(1 => layout) # TODO: actually build a map
-
-    # TODO: this seems wrong... I only call getPlotArgs when creating a new plot??
-    plotargs = merge(d, getPlotArgs(pkg, d, 1))
-    # plt = _create_plot(pkg, plotargs)  # create a new, blank plot
-
-    # plt = Plot(nothing, pkg, 0, plotargs, Series[]) #, subplots, spmap, layout)
-    plt = Plot(plotargs)
+    # create an empty Plot, update the args using the inputs, then pass it
+    # to the backend to finish backend-specific initialization
+    plt = Plot()
+    _update_plot_args(plt, d)
     plt.o = _create_backend_figure(plt)
 
-    plt.layout, plt.subplots, plt.spmap = build_layout(pop!(d, :layout, :auto))
+    # create the layout and subplots from the inputs
+    plt.layout, plt.subplots, plt.spmap = build_layout(plt.plotargs)
     for sp in plt.subplots
-        @show sp.o
+        # update the subplot/axis args from inputs, then pass to backend to init further
+        _update_subplot_args(plt, sp, d)
         _initialize_subplot(plt, sp)
-        @show sp.o
     end
 
     # now update the plot
@@ -94,58 +90,58 @@ function strip_first_letter(s::Symbol)
     str[1:1], symbol(str[2:end])
 end
 
-# TODO: need to apply axis args to the axes, subplot args to the subplots, and plot args to the plot
-# merge the KW d into the plot args
-function _add_plotargs!(plt::Plot, d::KW)
-    # @show d
-
-    # handle axis updates from a recipe
-    for letter in ("x","y","z")
-        # get the Axis object
-        asym = symbol(letter * "axis")
-        axis = plt.plotargs[asym]
-        if axis == nothing
-            # create a new one on first pass
-            axis = Axis(letter)
-        end
-        # @show 1,typeof(axis)
-
-        # update xlabel, xscale, etc
-        for k in _axis_symbols
-            lk = symbol(letter * string(k))
-            if haskey(d, lk)
-                axis[k] = d[lk]
-            end
-        end
-        # @show 2,axis
-
-        # update guidefont, etc
-        for k in _axis_symbols_fonts_colors
-            if haskey(d, k)
-                axis[k] = d[k]
-            end
-        end
-        # @show 3,axis
-
-        # update extrema and discrete values
-        datasym = symbol(letter)
-        if haskey(d, datasym)
-            v = d[datasym]
-            if eltype(v) <: Number
-                expand_extrema!(axis, v)
-            else
-                d[datasym] = discrete_value!(axis, v)
-            end
-        end
-        # @show 4,axis
-    end
-
-    for k in keys(_plot_defaults)
-        if haskey(d, k)
-            plt.plotargs[k] = pop!(d, k)
-        end
-    end
-end
+# # TODO: need to apply axis args to the axes, subplot args to the subplots, and plot args to the plot
+# # merge the KW d into the plot args
+# function _add_plotargs!(plt::Plot, d::KW)
+#     # @show d
+#
+#     # handle axis updates from a recipe
+#     for letter in ("x","y","z")
+#         # get the Axis object
+#         asym = symbol(letter * "axis")
+#         axis = plt.plotargs[asym]
+#         if axis == nothing
+#             # create a new one on first pass
+#             axis = Axis(letter)
+#         end
+#         # @show 1,typeof(axis)
+#
+#         # update xlabel, xscale, etc
+#         for k in _axis_symbols
+#             lk = symbol(letter * string(k))
+#             if haskey(d, lk)
+#                 axis[k] = d[lk]
+#             end
+#         end
+#         # @show 2,axis
+#
+#         # update guidefont, etc
+#         for k in _axis_symbols_fonts_colors
+#             if haskey(d, k)
+#                 axis[k] = d[k]
+#             end
+#         end
+#         # @show 3,axis
+#
+#         # update extrema and discrete values
+#         datasym = symbol(letter)
+#         if haskey(d, datasym)
+#             v = d[datasym]
+#             if eltype(v) <: Number
+#                 expand_extrema!(axis, v)
+#             else
+#                 d[datasym] = discrete_value!(axis, v)
+#             end
+#         end
+#         # @show 4,axis
+#     end
+#
+#     for k in keys(_plot_defaults)
+#         if haskey(d, k)
+#             plt.plotargs[k] = pop!(d, k)
+#         end
+#     end
+# end
 
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
@@ -154,11 +150,32 @@ function _apply_series_recipe(plt::Plot, d::KW)
     # dumpdict(d, "apply_series_recipe", true)
     if st in supportedTypes()
         # println("adding series!!")
+
+        # getting ready to add the series... last update to subplot from anything
+        # that might have been added during series recipes
+        sp = d[:subplot]
+        _update_subplot_args(plt, sp, d)
+
+        # adjust extrema and discrete info
+        for s in (:x, :y, :z)
+            data = d[s]
+            axis = sp.subplotargs[symbol(s, "axis")]
+            if eltype(data) <: Number
+                expand_extrema!(axis, data)
+            else
+                # TODO: need more here... gotta track the discrete reference value
+                #       as well as any coord offset (think of boxplot shape coords... they all
+                #       correspond to the same x-value)
+                d[s] = discrete_value!(axis, data)
+            end
+        end
+
+        # add the series!
         warnOnUnsupported(plt.backend, d)
         series = Series(d)
         push!(plt.series_list, series)
-        # _add_series(plt.backend, plt, d)
         _add_series(plt, series)
+
     else
         # get a sub list of series for this seriestype
         series_list = try
@@ -275,15 +292,17 @@ function _plot!(plt::Plot, d::KW, args...)
     #     @show typeof((kw[:x], kw[:y], kw[:z]))
     # end
 
-    # merge plot args... this is where we combine all the plot args from the user and
-    # from the recipes... axis info, colors, etc
-    # TODO: why do i need to check for the subplot key?
-    # if !haskey(d, :subplot)
-        for kw in vcat(kw_list, d)
-            _add_plotargs!(plt, kw)
-        end
-        handlePlotColors(plt.backend, plt.plotargs)
+    # # merge plot args... this is where we combine all the plot args from the user and
+    # # from the recipes... axis info, colors, etc
+    # # TODO: why do i need to check for the subplot key?
+    # # if !haskey(d, :subplot)
+    # # for kw in vcat(kw_list, d)
+    # for kw in kw_list
+    #     _update_subplot_args(plt, kw[:subplot], kw)
+    #     # _add_plotargs!(plt, kw)
     # end
+    # # handlePlotColors(plt.backend, plt.plotargs)
+    # # end
 
     # for kw in kw_list
     #     @show typeof((kw[:x], kw[:y], kw[:z]))
@@ -296,10 +315,20 @@ function _plot!(plt::Plot, d::KW, args...)
             plt.n += 1
         end
 
-        # set default values, select from attribute cycles, and generally set the final attributes
-        _add_defaults!(kw, plt, i)
+        # get the Subplot object to which the series belongs
+        sp = slice_arg(kw[:subplot], i)
+        if sp == :auto
+            sp = 1  # TODO: something useful
+        end
+        sp = kw[:subplot] = get_subplot(plt, sp)
 
-        _replace_linewidth(kw)
+        # we update subplot args in case something like the color palatte is part of the recipe
+        _update_subplot_args(plt, sp, kw)
+
+        # set default values, select from attribute cycles, and generally set the final attributes
+        _add_defaults!(kw, plt, sp, i)
+
+        #
 
         # now we have a fully specified series, with colors chosen.   we must recursively handle
         # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,

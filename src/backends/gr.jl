@@ -22,7 +22,7 @@ supportedArgs(::GRBackend) = [
     :title, :windowtitle, :show, :size,
     :x, :xlabel, :xlims, :xticks, :xscale, :xflip,
     :y, :ylabel, :ylims, :yticks, :yscale, :yflip,
-    :axis, :yrightlabel,
+    # :axis, :yrightlabel,
     :z, :zlabel, :zlims, :zticks, :zscale, :zflip,
     :z,
     :tickfont, :guidefont, :legendfont,
@@ -80,7 +80,8 @@ function gr_getcolorind(v)
 end
 
 function gr_getaxisind(p)
-  axis = get(p, :axis, :none)
+  # axis = get(p, :axis, :none)
+  axis = :left
   if axis in [:none, :left]
     return 1
   else
@@ -423,14 +424,14 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.text(vp[1], 0.5 * (viewport[3] + viewport[4]), d[:ylabel])
     GR.restorestate()
   end
-  if get(d, :yrightlabel, "") != ""
-    GR.savestate()
-    GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-    GR.setcharup(1, 0)
-    GR.settextcolorind(fg)
-    GR.text(vp[2], 0.5 * (viewport[3] + viewport[4]), d[:yrightlabel])
-    GR.restorestate()
-  end
+  # if get(d, :yrightlabel, "") != ""
+  #   GR.savestate()
+  #   GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+  #   GR.setcharup(1, 0)
+  #   GR.settextcolorind(fg)
+  #   GR.text(vp[2], 0.5 * (viewport[3] + viewport[4]), d[:yrightlabel])
+  #   GR.restorestate()
+  # end
 
   GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
 

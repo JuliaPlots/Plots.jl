@@ -173,10 +173,10 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
 end
 
 
-function handlePlotColors(::UnicodePlotsBackend, d::KW)
-  # TODO: something special for unicodeplots, since it doesn't take kindly to people messing with its color palette
-  d[:color_palette] = [RGB(0,0,0)]
-end
+# function handlePlotColors(::UnicodePlotsBackend, d::KW)
+#   # TODO: something special for unicodeplots, since it doesn't take kindly to people messing with its color palette
+#   d[:color_palette] = [RGB(0,0,0)]
+# end
 
 # -------------------------------
 
@@ -189,6 +189,7 @@ function _create_backend_figure(plt::Plot{UnicodePlotsBackend})
   if !haskey(plt.plotargs, :size) || plt.plotargs[:size] == default(:size)
     plt.plotargs[:size] = (60,20)
   end
+  plt.plotargs[:color_palette] = [RGB(0,0,0)]
   nothing
 
   # plt
