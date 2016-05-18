@@ -249,22 +249,21 @@ drawax(ax) = ax[:draw](renderer(ax[:get_figure]()))
 #     BoundingBox(left, bottom, right, top)
 # end
 
-function py_bbox_fig(obj)
-    fl, fr, fb, ft = fig[:get_window_extent]()
+get_extents(obj) = obj[:get_window_extent]()[:get_points]()
+
+function py_bbox_fig(fig)
+    fl, fr, fb, ft = get_extents(fig)
     BoundingBox(0px, 0px, (fr-fl)*px, (ft-fb)*px)
 end
+py_bbox_fig(plt::Plot) = py_bbox_fig(plt.o)
 
 # compute a bounding box (with origin top-left), however pyplot gives coords with origin bottom-left
 function py_bbox(obj)
-    fl, fr, fb, ft = py_bbox_fig(obj[:get_figure]())
-    l, r, b, t = obj[:get_window_extent]()[:get_points]()
+    fl, fr, fb, ft = get_extents(obj[:get_figure]())
+    l, r, b, t = get_extents(obj)
     BoundingBox(l*px, (ft-t)*px, (r-l)*px, (t-b)*px)
-    # BoundingBox(l*px, (t*px, (r-l)*px, (t-b)*px)
 end
 
-# bbox_from_pyplot(obj) =
-
-py_bbox_fig(plt::Plot) = py_bbox_fig(plt.o)
 
 function py_bbox_ticks(ax, letter)
     # fig = ax[:get_figure]()
@@ -301,10 +300,26 @@ end
 # the most extreme guide/axis in each direction.  Can pass method (left,top,right,bottom)
 # and aggregation (minimum or maximum) into a method to do this.
 
-min_padding_left(layout::Subplot{PyPlotBackend})   = 0mm
-min_padding_top(layout::Subplot{PyPlotBackend})    = 0mm
-min_padding_right(layout::Subplot{PyPlotBackend})  = 0mm
-min_padding_bottom(layout::Subplot{PyPlotBackend}) = 0mm
+min_padding_left(layout::Subplot{PyPlotBackend})   = compute_min_padding(layout, left,   1)
+min_padding_top(layout::Subplot{PyPlotBackend})    = compute_min_padding(layout, top,   -1)
+min_padding_right(layout::Subplot{PyPlotBackend})  = compute_min_padding(layout, right, -1)
+min_padding_bottom(layout::Subplot{PyPlotBackend}) = compute_min_padding(layout, bottom, 1)
+
+# loop over the guides and axes and compute how far they "stick out" from the plot area,
+# so that we know the minimum padding we need to avoid cropping and overlapping text.
+# `func` is one of (left,top,right,bottom), and we multiply by 1 or -1 depending on direction
+function compute_min_padding(sp::Subplot{PyPlotBackend}, func::Function, mult::Number)
+    ax = sp.o
+    plotbb = py_bbox(ax)
+    padding = 0mm
+    for bb in (py_bbox_axis(ax, "x"),
+               py_bbox_axis(ax, "y"),
+               py_bbox_title(ax))
+        diff = func(plotbb) - func(bb)
+        padding = max(padding, mult * diff)
+    end
+    padding
+end
 
 # xaxis_height(sp::Subplot{PyPlotBackend}) = height(py_bbox_axis(sp.o,"x"))
 # yaxis_width(sp::Subplot{PyPlotBackend}) = width(py_bbox_axis(sp.o,"y"))
@@ -336,9 +351,10 @@ min_padding_bottom(layout::Subplot{PyPlotBackend}) = 0mm
 
 function update_position!(sp::Subplot{PyPlotBackend})
     ax = sp.o
-    figw, figh = size(py_bbox(ax[:get_figure]()))
+    figw, figh = size(py_bbox_fig(sp.plt))
 
-    plot_bb = plotarea_bbox(sp)
+    # plot_bb = plotarea_bbox(sp)
+    plot_bb = sp.plotarea
     @show sp.bbox plot_bb
     # l = float(left(plot_bb) / px) / figw
     # b = float(bottom(plot_bb) / px) / figh

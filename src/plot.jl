@@ -57,6 +57,7 @@ function plot(args...; kw...)
     plt.layout, plt.subplots, plt.spmap = build_layout(plt.plotargs)
     for sp in plt.subplots
         # update the subplot/axis args from inputs, then pass to backend to init further
+        sp.plt = plt
         _update_subplot_args(plt, sp, d)
         _initialize_subplot(plt, sp)
     end

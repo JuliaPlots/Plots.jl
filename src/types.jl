@@ -47,6 +47,15 @@ typealias BBox Measures.Absolute2DBox
 const px = AbsoluteLength(0.254)
 const pct = Length{:pct, Float64}(1.0)
 
+Base.(:.*)(m::Measure, n::Number) = m * n
+Base.(:.*)(n::Number, m::Measure) = m * n
+Base.(:-)(m::Measure, a::AbstractArray) = map(ai -> m - ai, a)
+Base.(:-)(a::AbstractArray, m::Measure) = map(ai -> ai - m, a)
+Base.zero(::Type{typeof(mm)}) = 0mm
+Base.one(::Type{typeof(mm)}) = 1mm
+Base.typemin(::typeof(mm)) = -Inf*mm
+Base.typemax(::typeof(mm)) = Inf*mm
+
 Base.(:+)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
 Base.(:+)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (1 + m1.value))
 Base.(:-)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 - m2.value))
@@ -55,6 +64,12 @@ Base.(:*)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.v
 Base.(:*)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
 Base.(:/)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
 Base.(:/)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
+
+
+Base.zero(::Type{typeof(pct)}) = 0pct
+Base.one(::Type{typeof(pct)}) = 1pct
+Base.typemin(::typeof(pct)) = 0pct
+Base.typemax(::typeof(pct)) = 1pct
 
 const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
 
@@ -120,6 +135,7 @@ abstract AbstractLayout
 
 width(layout::AbstractLayout) = width(layout.bbox)
 height(layout::AbstractLayout) = height(layout.bbox)
+plotarea!(layout::AbstractLayout, bbox::BoundingBox) = nothing
 
 # -----------------------------------------------------------
 
@@ -151,12 +167,12 @@ type Subplot{T<:AbstractBackend} <: AbstractLayout
 end
 
 function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
-    Subplot{T}(parent, defaultbox, KW(), nothing)
+    Subplot{T}(parent, defaultbox, defaultbox, KW(), nothing, nothing)
 end
 
-# -----------------------------------------------------------
+plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
 
-# TODO: i'll want a plotarea! method to set the plotarea only if the field exists
+# -----------------------------------------------------------
 
 # nested, gridded layout with optional size percentages
 type GridLayout <: AbstractLayout
