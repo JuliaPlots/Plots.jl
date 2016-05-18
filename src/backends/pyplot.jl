@@ -260,7 +260,9 @@ py_bbox_fig(plt::Plot) = py_bbox_fig(plt.o)
 # compute a bounding box (with origin top-left), however pyplot gives coords with origin bottom-left
 function py_bbox(obj)
     fl, fr, fb, ft = get_extents(obj[:get_figure]())
+    # @show fl, fr, fb, ft
     l, r, b, t = get_extents(obj)
+    # @show l, r, b, t, obj
     BoundingBox(l*px, (ft-t)*px, (r-l)*px, (t-b)*px)
 end
 
@@ -276,6 +278,7 @@ function py_bbox_ticks(ax, letter)
         # @show lab,lab[:get_text]()
         bbox = py_bbox(lab)
         bbox_union = bbox_union + bbox
+        # @show letter,bbox bbox_union
         # @show bbox_union
     end
     bbox_union
@@ -288,7 +291,10 @@ end
 
 # get a bounding box for the whole axis
 function py_bbox_axis(ax, letter)
-    py_bbox_ticks(ax, letter) + py_bbox_axislabel(ax, letter)
+    ticks = py_bbox_ticks(ax, letter)
+    labels = py_bbox_axislabel(ax, letter)
+    # @show ticks labels ticks+labels
+    ticks + labels
 end
 
 # get a bounding box for the title area
@@ -301,9 +307,9 @@ end
 # and aggregation (minimum or maximum) into a method to do this.
 
 min_padding_left(layout::Subplot{PyPlotBackend})   = compute_min_padding(layout, left,   1)
-min_padding_top(layout::Subplot{PyPlotBackend})    = compute_min_padding(layout, top,   -1)
+min_padding_top(layout::Subplot{PyPlotBackend})    = compute_min_padding(layout, top,    1)
 min_padding_right(layout::Subplot{PyPlotBackend})  = compute_min_padding(layout, right, -1)
-min_padding_bottom(layout::Subplot{PyPlotBackend}) = compute_min_padding(layout, bottom, 1)
+min_padding_bottom(layout::Subplot{PyPlotBackend}) = compute_min_padding(layout, bottom,-1)
 
 # loop over the guides and axes and compute how far they "stick out" from the plot area,
 # so that we know the minimum padding we need to avoid cropping and overlapping text.
@@ -311,12 +317,17 @@ min_padding_bottom(layout::Subplot{PyPlotBackend}) = compute_min_padding(layout,
 function compute_min_padding(sp::Subplot{PyPlotBackend}, func::Function, mult::Number)
     ax = sp.o
     plotbb = py_bbox(ax)
+    # @show func, mult plotbb
     padding = 0mm
     for bb in (py_bbox_axis(ax, "x"),
                py_bbox_axis(ax, "y"),
                py_bbox_title(ax))
         diff = func(plotbb) - func(bb)
-        padding = max(padding, mult * diff)
+        # @show diff,bb
+        if ispositive(width(bb)) && ispositive(height(bb))
+            padding = max(padding, mult * diff)
+        end
+        # @show padding
     end
     padding
 end
@@ -355,14 +366,16 @@ function update_position!(sp::Subplot{PyPlotBackend})
 
     # plot_bb = plotarea_bbox(sp)
     plot_bb = sp.plotarea
-    @show sp.bbox plot_bb
+    # @show sp.bbox plot_bb
     # l = float(left(plot_bb) / px) / figw
     # b = float(bottom(plot_bb) / px) / figh
     # w = float(width(plot_bb) / px) / figw
     mms = Float64[f(plot_bb).value for f in (left, bottom, width, height)]
-    @show mms
+
+    mms[2] = figh.value - mms[2]
+    # @show mms
     pcts = mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
-    @show pcts
+    # @show pcts
     ax[:set_position](pcts)
 end
 

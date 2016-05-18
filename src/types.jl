@@ -105,10 +105,10 @@ function Base.(:+)(bb1::BoundingBox, bb2::BoundingBox)
     #     return bb1
     # end
     l = min(left(bb1), left(bb2))
-    b = min(bottom(bb1), bottom(bb2))
+    t = min(top(bb1), top(bb2))
     r = max(right(bb1), right(bb2))
-    t = max(top(bb1), top(bb2))
-    BoundingBox(l, t, r-l, t-b)
+    b = max(bottom(bb1), bottom(bb2))
+    BoundingBox(l, t, r-l, b-t)
 end
 
 # this creates a bounding box in the parent's scope, where the child bounding box
