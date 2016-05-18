@@ -46,19 +46,25 @@ function plot(args...; kw...)
     pkg = backend()
     d = KW(kw)
     preprocessArgs!(d)
+    DD(d,"pre")
 
     # create an empty Plot, update the args using the inputs, then pass it
     # to the backend to finish backend-specific initialization
     plt = Plot()
     _update_plot_args(plt, d)
+    DD(plt.plotargs,"pargs")
     plt.o = _create_backend_figure(plt)
 
     # create the layout and subplots from the inputs
     plt.layout, plt.subplots, plt.spmap = build_layout(plt.plotargs)
-    for sp in plt.subplots
+    for (idx,sp) in enumerate(plt.subplots)
         # update the subplot/axis args from inputs, then pass to backend to init further
         sp.plt = plt
-        _update_subplot_args(plt, sp, d)
+        _update_subplot_args(plt, sp, copy(d), idx)
+        DD(sp.subplotargs[:xaxis].d,"$idx")
+
+        # TODO: i'd like to know what projection we're using by this point... can I push this off until later??
+        # I won't easily be able to auto-determine what series types are coming...
         _initialize_subplot(plt, sp)
     end
 
@@ -155,7 +161,8 @@ function _apply_series_recipe(plt::Plot, d::KW)
         # getting ready to add the series... last update to subplot from anything
         # that might have been added during series recipes
         sp = d[:subplot]
-        _update_subplot_args(plt, sp, d)
+        sp_idx = get_subplot_index(plt, sp)
+        _update_subplot_args(plt, sp, d, sp_idx)
 
         # adjust extrema and discrete info
         for s in (:x, :y, :z)
@@ -202,8 +209,8 @@ function _plot!(plt::Plot, d::KW, args...)
     _before_add_series(plt)
 
     # first apply any args for the subplots
-    for sp in plt.subplots
-        _update_subplot_args(plt, sp, d)
+    for (idx,sp) in enumerate(plt.subplots)
+        _update_subplot_args(plt, sp, d, idx)
     end
 
     # the grouping mechanism is a recipe on a GroupBy object
@@ -317,6 +324,7 @@ function _plot!(plt::Plot, d::KW, args...)
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
     for (i,kw) in enumerate(kw_list)
+        # DD(kw, "series $i before")
         if !(get(kw, :seriestype, :none) in (:xerror, :yerror))
             plt.n += 1
         end
@@ -327,12 +335,17 @@ function _plot!(plt::Plot, d::KW, args...)
             sp = 1  # TODO: something useful
         end
         sp = kw[:subplot] = get_subplot(plt, sp)
+        idx = get_subplot_index(plt, sp)
 
         # we update subplot args in case something like the color palatte is part of the recipe
-        _update_subplot_args(plt, sp, kw)
+        # DD(sp.subplotargs[:xaxis].d, "before USA $i")
+        # DD(kw, "kw")
+        _update_subplot_args(plt, sp, kw, idx)
+        # DD(sp.subplotargs[:xaxis].d, "after USA $i")
 
         # set default values, select from attribute cycles, and generally set the final attributes
         _add_defaults!(kw, plt, sp, i)
+        # DD(kw, "series $i after")
 
         #
 
@@ -342,7 +355,9 @@ function _plot!(plt::Plot, d::KW, args...)
         # For example, a histogram is just a bar plot with binned data, a bar plot is really a filled step plot,
         # and a step plot is really just a path.  So any backend that supports drawing a path will implicitly
         # be able to support step, bar, and histogram plots (and any recipes that use those components).
+        # DD(sp.subplotargs[:xaxis].d, "before $i")
         _apply_series_recipe(plt, kw)
+        # DD(sp.subplotargs[:xaxis].d, "after $i")
     end
 
     # now that we're done adding all the series, add the annotations
@@ -501,7 +516,7 @@ end
 # TODO: remove
 # # should we update the x/y label given the meta info during input slicing?
 # function updateDictWithMeta(d::KW, plotargs::KW, meta::Symbol, isx::Bool)
-#     lsym = isx ? :xlabel : :ylabel
+#     lsym = isx ? :xguide : :yguide
 #     if plotargs[lsym] == default(lsym)
 #         d[lsym] = string(meta)
 #     end

@@ -37,11 +37,11 @@ supportedArgs(::UnicodePlotsBackend) = [
     :title,
     :windowtitle,
     :x,
-    :xlabel,
+    :xguide,
     :xlims,
     # :xticks,
     :y,
-    :ylabel,
+    :yguide,
     :ylims,
     # :yrightlabel,
     # :yticks,
@@ -116,8 +116,8 @@ function rebuildUnicodePlot!(plt::Plot)
                                 ylim = ylim)
 
   # set the axis labels
-  UnicodePlots.xlabel!(o, iargs[:xlabel])
-  UnicodePlots.ylabel!(o, iargs[:ylabel])
+  UnicodePlots.xlabel!(o, iargs[:xguide])
+  UnicodePlots.ylabel!(o, iargs[:yguide])
 
   # now use the ! functions to add to the plot
   for d in sargs
@@ -209,7 +209,7 @@ end
 
 
 function _update_plot(plt::Plot{UnicodePlotsBackend}, d::KW)
-  for k in (:title, :xlabel, :ylabel, :xlims, :ylims)
+  for k in (:title, :xguide, :yguide, :xlims, :ylims)
     if haskey(d, k)
       plt.plotargs[k] = d[k]
     end

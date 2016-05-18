@@ -170,15 +170,15 @@ _plot_defaults[:size]                        = (600,400)
 _plot_defaults[:pos]                         = (0,0)
 _plot_defaults[:windowtitle]                 = "Plots.jl"
 _plot_defaults[:show]                        = false
-_plot_defaults[:layout]                      = :auto
-_plot_defaults[:num_subplots]                = -1
-_plot_defaults[:num_rows]                    = -1
-_plot_defaults[:num_cols]                    = -1
+_plot_defaults[:layout]                      = 1
+# _plot_defaults[:num_subplots]                = -1
+# _plot_defaults[:num_rows]                    = -1
+# _plot_defaults[:num_cols]                    = -1
 _plot_defaults[:link]                        = false
 _plot_defaults[:linkx]                       = false
 _plot_defaults[:linky]                       = false
 _plot_defaults[:linkfunc]                    = nothing
-_plot_defaults[:overwrite_figure]            = false
+_plot_defaults[:overwrite_figure]            = true
 
 
 const _subplot_defaults = KW()
@@ -196,12 +196,13 @@ _subplot_defaults[:colorbar]                 = :legend
 _subplot_defaults[:legendfont]               = font(8)
 _subplot_defaults[:grid]                     = true
 _subplot_defaults[:annotation]               = nothing           # annotation tuple(s)... (x,y,annotation)
-_subplot_defaults[:polar]                    = false
+# _subplot_defaults[:polar]                    = false
+_subplot_defaults[:projection]               = :none             # can also be :polar or :3d
 _subplot_defaults[:aspect_ratio]             = :none             # choose from :none or :equal
 
 const _axis_defaults = KW()
 
-_axis_defaults[:label]     = ""
+_axis_defaults[:guide]     = ""
 _axis_defaults[:lims]      = :auto
 _axis_defaults[:ticks]     = :auto
 _axis_defaults[:scale]     = :identity
@@ -214,11 +215,36 @@ _axis_defaults[:foreground_color_border] = :match            # plot area border/
 _axis_defaults[:foreground_color_text]   = :match            # tick text color
 _axis_defaults[:foreground_color_guide]  = :match            # guide text color
 
+# add defaults for the letter versions
+const _axis_defaults_byletter = KW()
+for letter in (:x,:y,:z)
+    for k in (:guide,
+            :lims,
+            :ticks,
+            :scale,
+            :rotation,
+            :flip,
+            :tickfont,
+            :guidefont,
+            :foreground_color_axis,
+            :foreground_color_border,
+            :foreground_color_text,
+            :foreground_color_guide)
+        _axis_defaults_byletter[symbol(letter,k)] = nothing
+    end
+end
+@show _axis_defaults
+# for letter in (:x, :y, :z)
+#     for (k,v) in _axis_defaults
+#         _axis_defaults[symbol(letter,k)] = v
+#     end
+# end
+
 const _all_defaults = KW[
     _series_defaults,
     _plot_defaults,
     _subplot_defaults,
-    _axis_defaults
+    _axis_defaults_byletter
 ]
 
 const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
@@ -315,18 +341,18 @@ add_aliases(:group, :g, :grouping)
 add_aliases(:bins, :bin, :nbin, :nbins, :nb)
 add_aliases(:ribbon, :rib)
 add_aliases(:annotation, :ann, :anns, :annotate, :annotations)
-add_aliases(:xlabel, :xlab, :xl)
+add_aliases(:xguide, :xlabel, :xlab, :xl)
 add_aliases(:xlims, :xlim, :xlimit, :xlimits)
 add_aliases(:xticks, :xtick)
 add_aliases(:xrotation, :xrot, :xr)
-add_aliases(:ylabel, :ylab, :yl)
+add_aliases(:xguide, :ylabel, :ylab, :yl)
 add_aliases(:ylims, :ylim, :ylimit, :ylimits)
 add_aliases(:yticks, :ytick)
-add_aliases(:yrightlabel, :yrlab, :yrl, :ylabel2, :y2label, :ylab2, :y2lab, :ylabr, :ylabelright)
-add_aliases(:yrightlims, :yrlim, :yrlimit, :yrlimits)
-add_aliases(:yrightticks, :yrtick)
+# add_aliases(:yrightlabel, :yrlab, :yrl, :ylabel2, :y2label, :ylab2, :y2lab, :ylabr, :ylabelright)
+# add_aliases(:yrightlims, :yrlim, :yrlimit, :yrlimits)
+# add_aliases(:yrightticks, :yrtick)
 add_aliases(:yrotation, :yrot, :yr)
-add_aliases(:zlabel, :zlab, :zl)
+add_aliases(:zguide, :zlabel, :zlab, :zl)
 add_aliases(:zlims, :zlim, :zlimit, :zlimits)
 add_aliases(:zticks, :ztick)
 add_aliases(:zrotation, :zrot, :zr)
@@ -340,9 +366,9 @@ add_aliases(:show, :gui, :display)
 add_aliases(:color_palette, :palette)
 add_aliases(:linkx, :xlink)
 add_aliases(:linky, :ylink)
-add_aliases(:num_subplots, :n, :numplots, :nplts)
-add_aliases(:num_rows, :nr, :nrow, :nrows, :rows)
-add_aliases(:num_cols, :nc, :ncol, :ncols, :cols, :ncolumns, :columns)
+# add_aliases(:num_subplots, :n, :numplots, :nplts)
+# add_aliases(:num_rows, :nr, :nrow, :nrows, :rows)
+# add_aliases(:num_cols, :nc, :ncol, :ncols, :cols, :ncolumns, :columns)
 add_aliases(:overwrite_figure, :clf, :clearfig, :overwrite, :reuse)
 add_aliases(:xerror, :xerr, :xerrorbar)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
@@ -351,6 +377,7 @@ add_aliases(:normalize, :norm, :normed, :normalized)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:match_dimensions, :transpose, :transpose_z)
 add_aliases(:subplot, :sp, :subplt, :splt)
+add_aliases(:projection, :proj)
 
 
 # add all pluralized forms to the _keyAliases dict
@@ -839,12 +866,15 @@ slice_arg(v, idx) = v
 # given an argument key (k), we want to extract the argument value for this index.
 # matrices are sliced by column, otherwise we
 # if nothing is set (or container is empty), return the default or the existing value.
-function slice_arg!(d_in::KW, d_out::KW, k::Symbol, default_value, idx::Int = 1)
-    v = pop!(d_in, k, get(d_out, k, default_value))
-    d_out[k] = if haskey(d_in, k) && typeof(v) <: AMat && !isempty(v)
+function slice_arg!(d_in::KW, d_out::KW, k::Symbol, default_value, idx::Int = 1; new_key::Symbol = k, remove_pair::Bool = true)
+    v = get(d_in, k, get(d_out, new_key, default_value))
+    d_out[new_key] = if haskey(d_in, k) && typeof(v) <: AMat && !isempty(v)
         slice_arg(v, idx)
     else
         v
+    end
+    if remove_pair
+        delete!(d_in, k)
     end
 end
 
@@ -882,11 +912,12 @@ end
 
 
 # update a subplots args and axes
-function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW)
+function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::Integer)
     pargs = plt.plotargs
     spargs = sp.subplotargs
+    # @show subplot_index, sp
     for (k,v) in _subplot_defaults
-        slice_arg!(d_in, spargs, k, v)
+        slice_arg!(d_in, spargs, k, v, subplot_index)
     end
 
     # handle legend/colorbar
@@ -907,6 +938,9 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW)
     color_or_match!(spargs, :foreground_color_legend, fg)
     color_or_match!(spargs, :foreground_color_grid, fg)
 
+    # info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    # DD(spargs, "before loop")
+
     for letter in (:x, :y, :z)
         # get (maybe initialize) the axis
         axissym = symbol(letter, :axis)
@@ -917,14 +951,38 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW)
 
         # build the KW of arguments from the letter version (i.e. xticks --> ticks)
         kw = KW()
-        for k in _axis_defaults
+        # DD(d_in, "d_in before")
+
+        for (k,v) in _axis_defaults
+            # first get the args without the letter: `tickfont = font(10)`
+            # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
+            if haskey(d_in, k)
+                kw[k] = slice_arg(d_in[k], subplot_index)
+            end
+
+            # then get those args that were passed with a leading letter: `xlabel = "X"`
             lk = symbol(letter, k)
             if haskey(d_in, lk)
-                kw[k] = d_in[lk]
+                kw[k] = slice_arg(pop!(d_in, lk), subplot_index)
             end
         end
 
+        # for (k,v) in _axis_defaults
+        #     # first get the args without the letter: `tickfont = font(10)`
+        #     slice_arg!(d_in, kw, k, v, subplot_index)
+        #
+        #     # then get those args that were passed with a leading letter: `xlabel = "X"`
+        #     lk = symbol(letter, k)
+        #     slice_arg!(d_in, kw, lk, v, subplot_index; new_key = k)
+        #     # if haskey(d_in, lk)
+        #     #     kw[k] = d_in[lk]
+        #     # end
+        # end
+        # DD(d_in, "d_in after")
+        # DD(kw, "kw")
+
         # update the axis
+        # @show args,kw
         update!(axis, args...; kw...)
 
         # update the axis colors
@@ -932,7 +990,16 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW)
         color_or_match!(axis.d, :foreground_color_border, fg)
         color_or_match!(axis.d, :foreground_color_guide, fg)
         color_or_match!(axis.d, :foreground_color_text, fg)
+        # DD(axis.d, "axis")
     end
+
+    # now we can get rid of the axis keys without a letter
+    for k in keys(_axis_defaults)
+        delete!(d_in, k)
+    end
+
+    # DD(spargs[:xaxis].d, "after loop")
+    # info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 end
 
 

@@ -13,9 +13,9 @@ supportedArgs(::GadflyBackend) = [
     :fillrange, :fillcolor, :fillalpha,
     :bins, :n, :nc, :nr, :layout, :smooth,
     :title, :windowtitle, :show, :size,
-    :x, :xlabel, :xlims, :xticks, :xscale, :xflip,
-    :y, :ylabel, :ylims, :yticks, :yscale, :yflip,
-    # :z, :zlabel, :zlims, :zticks, :zscale, :zflip,
+    :x, :xguide, :xlims, :xticks, :xscale, :xflip,
+    :y, :yguide, :ylims, :yticks, :yscale, :yflip,
+    # :z, :zguide, :zlims, :zticks, :zscale, :zflip,
     :z,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
@@ -59,8 +59,8 @@ function createGadflyPlotObject(d::KW)
     gplt.data_source = Gadfly.DataFrames.DataFrame()
     # gplt.layers = gplt.layers[1:0]
     gplt.layers = [Gadfly.layer(Gadfly.Geom.point(tag=:remove), x=zeros(1), y=zeros(1));] # x=MissingVec(), y=MissingVec());]
-    gplt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xlabel]),
-                                   Gadfly.Guide.ylabel(d[:ylabel]),
+    gplt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xguide]),
+                                   Gadfly.Guide.ylabel(d[:yguide]),
                                    Gadfly.Guide.title(d[:title])]
     gplt
 end
@@ -469,8 +469,8 @@ end
 function updateGadflyGuides(plt::Plot, d::KW)
     gplt = getGadflyContext(plt)
     haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, string(d[:title]))
-    haskey(d, :xlabel) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, string(d[:xlabel]))
-    haskey(d, :ylabel) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, string(d[:ylabel]))
+    haskey(d, :xguide) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, string(d[:xguide]))
+    haskey(d, :yguide) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, string(d[:yguide]))
 
     xlims, xfunc = addGadflyLimitsScale(gplt, d, true)
     ylims, yfunc = addGadflyLimitsScale(gplt, d, false)

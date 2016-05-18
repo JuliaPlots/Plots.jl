@@ -286,8 +286,8 @@ function _add_series_subplot(subplt::Subplot, d::KW, ::Void, args...;
       # cleanup the dictionary that we pass into the plot! command
       di[:show] = false
       di[:subplot] = true
-      for k in (:title, :xlabel, :xticks, :xlims, :xscale, :xflip,
-                        :ylabel, :yticks, :ylims, :yscale, :yflip)
+      for k in (:title, :xguide, :xticks, :xlims, :xscale, :xflip,
+                        :yguide, :yticks, :ylims, :yscale, :yflip)
         delete!(di, k)
       end
       dumpdict(di, "subplot! kwList $i")

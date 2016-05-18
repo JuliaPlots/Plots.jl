@@ -20,10 +20,10 @@ supportedArgs(::GRBackend) = [
     :n, :nc, :nr, :layout,
     :smooth,
     :title, :windowtitle, :show, :size,
-    :x, :xlabel, :xlims, :xticks, :xscale, :xflip,
-    :y, :ylabel, :ylims, :yticks, :yscale, :yflip,
+    :x, :xguide, :xlims, :xticks, :xscale, :xflip,
+    :y, :yguide, :ylims, :yticks, :yscale, :yflip,
     # :axis, :yrightlabel,
-    :z, :zlabel, :zlims, :zticks, :zscale, :zflip,
+    :z, :zguide, :zlims, :zticks, :zscale, :zflip,
     :z,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
@@ -409,19 +409,19 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.text(0.5 * (viewport[1] + viewport[2]), vp[4], d[:title])
     GR.restorestate()
   end
-  if get(d, :xlabel, "") != ""
+  if get(d, :xguide, "") != ""
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
     GR.settextcolorind(fg)
-    GR.text(0.5 * (viewport[1] + viewport[2]), vp[3], d[:xlabel])
+    GR.text(0.5 * (viewport[1] + viewport[2]), vp[3], d[:xguide])
     GR.restorestate()
   end
-  if get(d, :ylabel, "") != ""
+  if get(d, :yguide, "") != ""
     GR.savestate()
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
     GR.settextcolorind(fg)
-    GR.text(vp[1], 0.5 * (viewport[3] + viewport[4]), d[:ylabel])
+    GR.text(vp[1], 0.5 * (viewport[3] + viewport[4]), d[:yguide])
     GR.restorestate()
   end
   # if get(d, :yrightlabel, "") != ""
@@ -872,7 +872,7 @@ end
 # end
 
 function _update_plot(plt::Plot{GRBackend}, d::KW)
-  for k in (:title, :xlabel, :ylabel)
+  for k in (:title, :xguide, :yguide)
     haskey(d, k) && (plt.plotargs[k] = d[k])
   end
 end

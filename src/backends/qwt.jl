@@ -33,11 +33,11 @@ supportedArgs(::QwtBackend) = [
     :title,
     :windowtitle,
     :x,
-    :xlabel,
+    :xguide,
     :xlims,
     :xticks,
     :y,
-    :ylabel,
+    :yguide,
     :ylims,
     :yrightlabel,
     :yticks,
@@ -192,8 +192,8 @@ end
 
 function _update_plot(plt::Plot{QwtBackend}, d::KW)
   haskey(d, :title) && Qwt.title(plt.o, d[:title])
-  haskey(d, :xlabel) && Qwt.xlabel(plt.o, d[:xlabel])
-  haskey(d, :ylabel) && Qwt.ylabel(plt.o, d[:ylabel])
+  haskey(d, :xguide) && Qwt.xlabel(plt.o, d[:xguide])
+  haskey(d, :yguide) && Qwt.ylabel(plt.o, d[:yguide])
   updateLimsAndTicks(plt, d, true)
   updateLimsAndTicks(plt, d, false)
 end

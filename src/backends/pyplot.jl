@@ -20,10 +20,10 @@ supportedArgs(::PyPlotBackend) = [
     :n, :nc, :nr, :layout,
     :smooth,
     :title, :windowtitle, :show, :size,
-    :x, :xlabel, :xlims, :xticks, :xscale, :xflip, :xrotation,
-    :y, :ylabel, :ylims, :yticks, :yscale, :yflip, :yrotation,
+    :x, :xguide, :xlims, :xticks, :xscale, :xflip, :xrotation,
+    :y, :yguide, :ylims, :yticks, :yscale, :yflip, :yrotation,
     # :axis, :yrightlabel,
-    :z, :zlabel, :zlims, :zticks, :zscale, :zflip, :zrotation,
+    :z, :zguide, :zlims, :zticks, :zscale, :zflip, :zrotation,
     :z,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
@@ -383,7 +383,14 @@ end
 function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
     fig = plt.o
     # add a new axis, and force it to create a new one by setting a distinct label
-    ax = fig[:add_axes]([0,0,1,1], label = string(gensym()))
+    proj = sp.subplotargs[:projection]
+    ax = fig[:add_axes](
+        [0,0,1,1],
+        label = string(gensym()),
+        projection = (proj in (nothing,:none) ? nothing : string(proj))
+    )
+    # projection =
+    # ax = fig[:add_subplot](111, projection = _py_projections[sp.subplotargs[:projection]])
     # for axis in (:xaxis, :yaxis)
     #     ax[axis][:_autolabelpos] = false
     # end
@@ -1130,11 +1137,13 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
             axissym = symbol(letter, :axis)
             axis = spargs[axissym]
             # @show axis
+            # DD(axis.d, "updateplot")
+            # @show haskey(ax, axissym)
             haskey(ax, axissym) || continue
             applyPyPlotScale(ax, axis[:scale], letter)
             addPyPlotLims(ax, axis[:lims], letter)
             addPyPlotTicks(ax, get_ticks(axis), letter)
-            ax[symbol("set_", letter, "label")](axis[:label])
+            ax[symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)
                 ax[symbol("invert_", letter, "axis")]()
             end

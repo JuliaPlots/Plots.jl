@@ -3,6 +3,8 @@
 
 # ----------------------------------------------------------------------
 
+Base.show(io::IO, layout::AbstractLayout) = print(io, "$(typeof(layout))$(size(layout))")
+
 # this is the available area for drawing everything in this layout... as percentages of total canvas
 bbox(layout::AbstractLayout) = layout.bbox
 bbox!(layout::AbstractLayout, bb::BoundingBox) = (layout.bbox = bb)
@@ -235,17 +237,62 @@ end
 
 # ----------------------------------------------------------------------
 
-# return the top-level layout, a list of subplots, and a SubplotMap
+# # build_layout should return a tuple: (a top-level layout, a list of subplots, and a SubplotMap)
+# function build_layout(d::KW)
+#     layout = get(d, :layout, default(:layout))
+#     T = typeof(layout)
+#     if T <: AbstractLayout
+#         build_layout(layout)
+#     elseif T <: Integer
+#         if layout == 1
+#             # just a single subplot
+#             sp = Subplot(backend())
+#             sp, Subplot[sp], SubplotMap((1,1) => sp)
+#         else
+#             nr, nc = compute_gridsize(layout)
+#             build_layout(GridLayout(nr, nc), layout)
+#         end
+#     elseif T <: NTuple{2}
+#         build_layout(GridLayout(layout...))
+#     elseif T <: NTuple{3}
+#         n, nr, nc = layout
+#         build_layout(GridLayout())
+#     else
+#         error("unhandled layout type $T: $layout")
+#     end
+# end
+
+
+# pass the layout arg through
 function build_layout(d::KW)
-    l = get(d, :layout, :auto)
-    n = get(d, :num_subplots, -1)
-    nr = get(d, :num_rows, -1)
-    nc = get(d, :num_cols, -1)
+    build_layout(get(d, :layout, default(:layout)))
+end
 
-    l == :auto || error() # TODO: handle anything else
+function build_layout(n::Integer)
+    nr, nc = compute_gridsize(n, -1, -1)
+    build_layout(GridLayout(nr, nc), n)
+end
 
+function build_layout{I<:Integer}(sztup::NTuple{2,I})
+    nr, nc = sztup
+    build_layout(GridLayout(nr, nc))
+end
+
+function build_layout{I<:Integer}(sztup::NTuple{3,I})
+    n, nr, nc = sztup
     nr, nc = compute_gridsize(n, nr, nc)
-    layout = GridLayout(nr, nc)
+    build_layout(GridLayout(nr, nc), n)
+end
+
+# compute number of subplots
+function build_layout(layout::GridLayout)
+    nr, nc = size(layout)
+    build_layout(layout, nr*nc)
+end
+
+# n is the number of subplots
+function build_layout(layout::GridLayout, n::Integer)
+    nr, nc = size(layout)
     subplots = Subplot[]
     spmap = SubplotMap()
     i = 1
@@ -260,12 +307,14 @@ function build_layout(d::KW)
     layout, subplots, spmap
 end
 
+build_layout(huh) = error("unhandled layout type $(typeof(huh)): $huh")
 
+# ----------------------------------------------------------------------
 
 function compute_gridsize(numplts::Int, nr::Int, nc::Int)
     # figure out how many rows/columns we need
-    if nr == -1
-        if nc == -1
+    if nr < 1
+        if nc < 1
             nr = round(Int, sqrt(numplts))
             nc = ceil(Int, numplts / nr)
         else
@@ -283,6 +332,9 @@ get_subplot(plt::Plot, sp::Subplot) = sp
 get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
 get_subplot(plt::Plot, k) = plt.spmap[k]
 get_subplot(series::Series) = series.d[:subplot]
+
+get_subplot_index(plt::Plot, idx::Integer) = idx
+get_subplot_index(plt::Plot, sp::Subplot) = findfirst(sp->sp === plt.subplots[2], plt.subplots)
 
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------

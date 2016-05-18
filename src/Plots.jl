@@ -292,6 +292,7 @@ function __init__()
     setup_ijulia()
     # setup_dataframes()
     setup_atom()
+    # add_axis_letter_defaults()
 end
 
 # ---------------------------------------------------------

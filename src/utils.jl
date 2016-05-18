@@ -440,6 +440,7 @@ function dumpdict(d::KW, prefix = "", alwaysshow = false)
   end
   println()
 end
+DD(d::KW, prefix = "") = dumpdict(d, prefix, true)
 
 
 function dumpcallstack()

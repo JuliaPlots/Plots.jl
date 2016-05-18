@@ -333,9 +333,9 @@ function update!(a::Axis, args...; kw...)
 
     # then override for any keywords... only those keywords that already exists in d
     for (k,v) in kw
-        sym = symbol(string(k)[2:end])
-        if haskey(d, sym)
-            d[sym] = v
+        # sym = symbol(string(k)[2:end])
+        if haskey(d, k)
+            d[k] = v
         end
     end
     a

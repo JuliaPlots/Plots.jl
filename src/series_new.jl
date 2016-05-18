@@ -13,12 +13,14 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     # for k in keys(_series_defaults)
     #     setDictValue(d, d, k, commandIndex, _series_defaults)
     # end
+
+    # add default values to our dictionary, being careful not to delete what we just added!
     for (k,v) in _series_defaults
-        slice_arg!(d, d, k, v, commandIndex)
+        slice_arg!(d, d, k, v, commandIndex, remove_pair = false)
     end
 
     # this is how many series belong to this subplot
-    plotIndex = count(series -> series.d[:subplot] === sp, plt.series_list)
+    plotIndex = count(series -> series.d[:subplot] === sp, plt.series_list) + 1
 
     # aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
     aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)

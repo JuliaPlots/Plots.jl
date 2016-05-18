@@ -38,11 +38,11 @@ supportedArgs(::PGFPlotsBackend) = [
      :title,
     # :windowtitle,
      :x,
-     :xlabel,
+     :xguide,
      :xlims,
     # :xticks,
      :y,
-     :ylabel,
+     :yguide,
      :ylims,
     # :yrightlabel,
     # :yticks,
@@ -297,7 +297,7 @@ end
 
 function _pgfplots_get_axis_kwargs(d)
     axisargs = KW()
-    for arg in (:xlabel, :ylabel, :zlabel, :title)
+    for arg in (:xguide, :yguide, :zguide, :title)
         axisargs[arg] = d[arg]
     end
     axisargs[:style] = ""

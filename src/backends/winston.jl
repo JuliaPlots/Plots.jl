@@ -41,11 +41,11 @@ supportedArgs(::WinstonBackend) = [
     :title,
     :windowtitle,
     :x,
-    :xlabel,
+    :xguide,
     :xlims,
     # :xticks,
     :y,
-    :ylabel,
+    :yguide,
     :ylims,
     # :yrightlabel,
     # :yticks,
@@ -105,8 +105,8 @@ end
 function _create_backend_figure(plt::Plot{WinstonBackend})
     Winston.FramedPlot(
         title = plt.plotargs[:title],
-        xlabel = plt.plotargs[:xlabel],
-        ylabel = plt.plotargs[:ylabel]
+        xlabel = plt.plotargs[:xguide],
+        ylabel = plt.plotargs[:yguide]
     )
 end
 
@@ -229,7 +229,7 @@ end
 
 function _update_plot(plt::Plot{WinstonBackend}, d::KW)
   window, canvas, wplt = getWinstonItems(plt)
-  for k in (:xlabel, :ylabel, :title, :xlims, :ylims)
+  for k in (:xguide, :yguide, :title, :xlims, :ylims)
     if haskey(d, k)
       Winston.setattr(wplt, string(get(_winstonNames, k, k)), d[k])
     end
