@@ -161,8 +161,7 @@ _series_defaults[:subplot]           = :auto     # which subplot(s) does this se
 
 const _plot_defaults = KW()
 
-_plot_defaults[:title]                       = ""
-_plot_defaults[:titlefont]                  = font(14)
+_plot_defaults[:plot_title]                       = ""
 _plot_defaults[:background_color]            = colorant"white"   # default for all backgrounds
 _plot_defaults[:background_color_outside]    = :match            # background outside grid
 _plot_defaults[:foreground_color]            = :auto             # default for all foregrounds, and title color
@@ -184,6 +183,8 @@ _plot_defaults[:overwrite_figure]            = true
 const _subplot_defaults = KW()
 
 _subplot_defaults[:title]                    = ""
+_subplot_defaults[:title_location]           = :center           # also :left or :right
+_subplot_defaults[:titlefont]                = font(14)
 _subplot_defaults[:background_color_subplot] = :match            # default for other bg colors... match takes plot default
 _subplot_defaults[:background_color_legend]  = :match            # background of legend
 _subplot_defaults[:background_color_inside]  = :match            # background inside grid
@@ -378,6 +379,7 @@ add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:match_dimensions, :transpose, :transpose_z)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
+add_aliases(:title_location, :title_loc, :titleloc)
 
 
 # add all pluralized forms to the _keyAliases dict
@@ -623,6 +625,12 @@ function preprocessArgs!(d::KW)
     #     # if haskey(d, ssym) && haskey(_scaleAliases, d[ssym])
     #     #     d[ssym] = _scaleAliases[d[ssym]]
     #     # end
+    # end
+
+    # # if title is just a single string, then assume we want plot_title
+    # # TODO: make a decision if this is correct
+    # if haskey(d, :title) && typeof(d[:title]) <: AbstractString
+    #     d[:plot_title] = pop!(d, :title)
     # end
 
     # handle line args

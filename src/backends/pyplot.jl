@@ -293,13 +293,17 @@ end
 function py_bbox_axis(ax, letter)
     ticks = py_bbox_ticks(ax, letter)
     labels = py_bbox_axislabel(ax, letter)
-    # @show ticks labels ticks+labels
+    letter == "x" && @show ticks labels ticks+labels
     ticks + labels
 end
 
 # get a bounding box for the title area
 function py_bbox_title(ax)
-    py_bbox(ax[:title])
+    bb = defaultbox
+    for s in (:title, :_left_title, :_right_title)
+        bb = bb + py_bbox(ax[s])
+    end
+    bb
 end
 
 # TODO: need to compute each of these by subtracting the plotarea position from
@@ -318,6 +322,7 @@ function compute_min_padding(sp::Subplot{PyPlotBackend}, func::Function, mult::N
     ax = sp.o
     plotbb = py_bbox(ax)
     # @show func, mult plotbb
+    # @show func, py_bbox_axis(ax, "x")
     padding = 0mm
     for bb in (py_bbox_axis(ax, "x"),
                py_bbox_axis(ax, "y"),
@@ -329,6 +334,13 @@ function compute_min_padding(sp::Subplot{PyPlotBackend}, func::Function, mult::N
         end
         # @show padding
     end
+
+    # if func == top
+    #     titlebbox = py_bbox_title(ax)
+    #     padding = max(padding, height(titlebbox))
+    #     @show titlebbox height(titlebbox),padding
+    # end
+
     padding
 end
 
@@ -582,7 +594,7 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     # ax = getAxis(plt, d[:axis])
     ax = getAxis(plt, series)
     x, y, z = d[:x], d[:y], d[:z]
-    @show typeof((x,y,z))
+    # @show typeof((x,y,z))
     xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
 
     # handle zcolor and get c/cmap
@@ -1058,18 +1070,30 @@ end
 
 function addPyPlotTicks(ax, ticks, letter)
     ticks == :auto && return
+    axis = ax[symbol(letter,"axis")]
+    # tickfunc = symbol("set_", letter, "ticks")
+    # labfunc = symbol("set_", letter, "ticklabels")
     if ticks == :none || ticks == nothing
-        ticks = zeros(0)
+        # ax[][:set_major_locator]
+        # ax[tickfunc]([])
+        # ax[labfunc]([])
+        kw = KW()
+        for dir in (:top,:bottom,:left,:right)
+            kw[dir] = kw[symbol(:label,dir)] = "off"
+        end
+        axis[:set_tick_params](;which="both", kw...)
+        return
     end
 
     ttype = ticksType(ticks)
-    tickfunc = symbol("set_", letter, "ticks")
-    labfunc = symbol("set_", letter, "ticklabels")
     if ttype == :ticks
-        ax[tickfunc](ticks)
+        # ax[tickfunc](ticks)
+        axis[:set_ticks](ticks)
     elseif ttype == :ticks_and_labels
-        ax[tickfunc](ticks[1])
-        ax[labfunc](ticks[2])
+        # ax[tickfunc](ticks[1])
+        # ax[labfunc](ticks[2])
+        axis[:set_ticks](ticks[1])
+        axis[:set_ticklabels](ticks[2])
     else
         error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
     end
@@ -1119,17 +1143,30 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         # guidesz = get(d, :guidefont, spargs[:guidefont]).pointsize
 
         # title
-        haskey(d, :title) && ax[:set_title](d[:title])
-        ax[:title][:set_fontsize](plt.plotargs[:titlefont].pointsize)
+        if haskey(spargs, :title)
+            loc = lowercase(string(spargs[:title_location]))
+            field = if loc == "left"
+                :_left_title
+            elseif loc == "right"
+                :_right_title
+            else
+                :title
+            end
+            ax[field][:set_text](spargs[:title])
+            ax[field][:set_fontsize](spargs[:titlefont].pointsize)
+            ax[field][:set_color](getPyPlotColor(spargs[:titlefont].color))
+            ax[:set_title](spargs[:title], loc = loc)
+            # TODO: set other font attributes
+        end
 
         # axes = [ax]
         # # handle right y axis
         # axes = [getLeftAxis(figorax)]
         # if usingRightAxis(plt)
         #     push!(axes, getRightAxis(figorax))
-        #     if get(d, :yrightlabel, "") != ""
+        #     if get(spargs, :yrightlabel, "") != ""
         #         rightax = getRightAxis(figorax)
-        #         rightax[:set_ylabel](d[:yrightlabel])
+        #         rightax[:set_ylabel](spargs[:yrightlabel])
         #     end
         # end
 
@@ -1137,7 +1174,7 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
             axissym = symbol(letter, :axis)
             axis = spargs[axissym]
             # @show axis
-            # DD(axis.d, "updateplot")
+            # DD(axis.spargs, "updateplot")
             # @show haskey(ax, axissym)
             haskey(ax, axissym) || continue
             applyPyPlotScale(ax, axis[:scale], letter)
@@ -1154,7 +1191,7 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
                     lab[:set_fontsize](axis[:tickfont].pointsize)
                     lab[:set_rotation](axis[:rotation])
                 end
-                if get(d, :grid, false)
+                if get(spargs, :grid, false)
                     fgcolor = getPyPlotColor(spargs[:foreground_color_grid])
                     tmpax[axissym][:grid](true, color = fgcolor)
                     tmpax[:set_axisbelow](true)
@@ -1169,20 +1206,20 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         #     axis, scale, lims, ticks, flip, lab, rotation =
         #         axis_symbols(letter, "axis", "scale", "lims", "ticks", "flip", "label", "rotation")
         #     haskey(ax, axis) || continue
-        #     haskey(d, scale) && applyPyPlotScale(ax, d[scale], letter)
-        #     haskey(d, lims)  && addPyPlotLims(ax, d[lims], letter)
-        #     haskey(d, ticks) && addPyPlotTicks(ax, d[ticks], letter)
-        #     haskey(d, lab)   && ax[symbol("set_", letter, "label")](d[lab])
-        #     if get(d, flip, false)
+        #     haskey(spargs, scale) && applyPyPlotScale(ax, spargs[scale], letter)
+        #     haskey(spargs, lims)  && addPyPlotLims(ax, spargs[lims], letter)
+        #     haskey(spargs, ticks) && addPyPlotTicks(ax, spargs[ticks], letter)
+        #     haskey(spargs, lab)   && ax[symbol("set_", letter, "label")](spargs[lab])
+        #     if get(spargs, flip, false)
         #         ax[symbol("invert_", letter, "axis")]()
         #     end
         #     for tmpax in axes
         #         tmpax[axis][:label][:set_fontsize](guidesz)
         #         for lab in tmpax[symbol("get_", letter, "ticklabels")]()
         #             lab[:set_fontsize](ticksz)
-        #             haskey(d, rotation) && lab[:set_rotation](d[rotation])
+        #             haskey(spargs, rotation) && lab[:set_rotation](spargs[rotation])
         #         end
-        #         if get(d, :grid, false)
+        #         if get(spargs, :grid, false)
         #             fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
         #             tmpax[axis][:grid](true, color = fgcolor)
         #             tmpax[:set_axisbelow](true)
@@ -1191,7 +1228,7 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         # end
 
         # do we want to change the aspect ratio?
-        aratio = get(d, :aspect_ratio, :none)
+        aratio = get(spargs, :aspect_ratio, :none)
         if aratio != :none
             ax[:set_aspect](isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
         end
@@ -1367,7 +1404,6 @@ function finalizePlot(plt::Plot{PyPlotBackend})
         for asym in (:xaxis, :yaxis, :zaxis)
             updateAxisColors(ax, sp.subplotargs[asym])
         end
-        ax[:title][:set_color](getPyPlotColor(plt.plotargs[:titlefont].color))
     end
     drawfig(plt.o)
     plt.layout.bbox = py_bbox_fig(plt)

@@ -52,7 +52,7 @@ function plot(args...; kw...)
     # to the backend to finish backend-specific initialization
     plt = Plot()
     _update_plot_args(plt, d)
-    DD(plt.plotargs,"pargs")
+    # DD(plt.plotargs,"pargs")
     plt.o = _create_backend_figure(plt)
 
     # create the layout and subplots from the inputs
@@ -61,7 +61,7 @@ function plot(args...; kw...)
         # update the subplot/axis args from inputs, then pass to backend to init further
         sp.plt = plt
         _update_subplot_args(plt, sp, copy(d), idx)
-        DD(sp.subplotargs[:xaxis].d,"$idx")
+        # DD(sp.subplotargs[:xaxis].d,"$idx")
 
         # TODO: i'd like to know what projection we're using by this point... can I push this off until later??
         # I won't easily be able to auto-determine what series types are coming...

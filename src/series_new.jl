@@ -88,7 +88,7 @@ immutable SliceIt end
 
 # the catch-all recipes
 @recipe function f(::Type{SliceIt}, x, y, z)
-    @show "HERE", typeof((x,y,z))
+    # @show "HERE", typeof((x,y,z))
     xs, _ = convertToAnyVector(x, d)
     ys, _ = convertToAnyVector(y, d)
     zs, _ = convertToAnyVector(z, d)
@@ -111,9 +111,9 @@ immutable SliceIt end
         # add a new series
         di = copy(d)
         xi, yi, zi = xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]
-        @show i, typeof((xi, yi, zi))
+        # @show i, typeof((xi, yi, zi))
         di[:x], di[:y], di[:z] = compute_xyz(xi, yi, zi)
-        @show i, typeof((di[:x], di[:y], di[:z]))
+        # @show i, typeof((di[:x], di[:y], di[:z]))
 
         # handle fillrange
         fr = fillranges[mod1(i,mf)]

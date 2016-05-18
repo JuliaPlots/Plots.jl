@@ -262,6 +262,15 @@ end
 #     end
 # end
 
+calc_num_subplots(layout::AbstractLayout) = 1
+function calc_num_subplots(layout::GridLayout)
+    tot = 0
+    for l in layout.grid
+        tot += calc_num_subplots(l)
+    end
+    tot
+end
+
 
 # pass the layout arg through
 function build_layout(d::KW)
@@ -286,8 +295,12 @@ end
 
 # compute number of subplots
 function build_layout(layout::GridLayout)
-    nr, nc = size(layout)
-    build_layout(layout, nr*nc)
+    # nr, nc = size(layout)
+    # build_layout(layout, nr*nc)
+
+    # recursively get the size of the grid
+    n = calc_num_subplots(layout)
+    build_layout(layout, n)
 end
 
 # n is the number of subplots
@@ -298,11 +311,22 @@ function build_layout(layout::GridLayout, n::Integer)
     i = 1
     for r=1:nr, c=1:nc
         i > n && break  # only add n subplots
-        sp = Subplot(backend(), parent=layout)
-        layout[r,c] = sp
-        push!(subplots, sp)
-        spmap[(r,c)] = sp
-        i += 1
+        l = layout[r,c]
+        if isa(l, EmptyLayout)
+            sp = Subplot(backend(), parent=layout)
+            layout[r,c] = sp
+            push!(subplots, sp)
+            spmap[length(subplots)] = sp
+            i += 1
+        elseif isa(l, GridLayout)
+            # sub-grid
+            l, sps, m = build_layout(l)
+            append!(subplots, sps)
+            for (k,v) in m
+                spmap[k+length(subplots)] = v
+            end
+            i += length(sps)
+        end
     end
     layout, subplots, spmap
 end
