@@ -234,7 +234,7 @@ for letter in (:x,:y,:z)
         _axis_defaults_byletter[symbol(letter,k)] = nothing
     end
 end
-@show _axis_defaults
+# @show _axis_defaults
 # for letter in (:x, :y, :z)
 #     for (k,v) in _axis_defaults
 #         _axis_defaults[symbol(letter,k)] = v
@@ -922,7 +922,7 @@ end
 # update a subplots args and axes
 function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::Integer)
     pargs = plt.plotargs
-    spargs = sp.subplotargs
+    spargs = sp.attr
     # @show subplot_index, sp
     for (k,v) in _subplot_defaults
         slice_arg!(d_in, spargs, k, v, subplot_index)

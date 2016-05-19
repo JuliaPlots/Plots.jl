@@ -46,7 +46,7 @@ function plot(args...; kw...)
     pkg = backend()
     d = KW(kw)
     preprocessArgs!(d)
-    DD(d,"pre")
+    # DD(d,"pre")
 
     # create an empty Plot, update the args using the inputs, then pass it
     # to the backend to finish backend-specific initialization
@@ -61,7 +61,7 @@ function plot(args...; kw...)
         # update the subplot/axis args from inputs, then pass to backend to init further
         sp.plt = plt
         _update_subplot_args(plt, sp, copy(d), idx)
-        # DD(sp.subplotargs[:xaxis].d,"$idx")
+        # DD(sp.attr[:xaxis].d,"$idx")
 
         # TODO: i'd like to know what projection we're using by this point... can I push this off until later??
         # I won't easily be able to auto-determine what series types are coming...
@@ -167,7 +167,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
         # adjust extrema and discrete info
         for s in (:x, :y, :z)
             data = d[s]
-            axis = sp.subplotargs[symbol(s, "axis")]
+            axis = sp.attr[symbol(s, "axis")]
             if eltype(data) <: Number
                 expand_extrema!(axis, data)
             else
@@ -330,18 +330,20 @@ function _plot!(plt::Plot, d::KW, args...)
         end
 
         # get the Subplot object to which the series belongs
-        sp = slice_arg(get(kw, :subplot, :auto), i)
-        if sp == :auto
-            sp = 1  # TODO: something useful
+        sp = get(kw, :subplot, :auto)
+        sp = if sp == :auto
+            mod1(i,length(plt.subplots))
+        else
+            slice_arg(sp, i)
         end
         sp = kw[:subplot] = get_subplot(plt, sp)
         idx = get_subplot_index(plt, sp)
 
         # we update subplot args in case something like the color palatte is part of the recipe
-        # DD(sp.subplotargs[:xaxis].d, "before USA $i")
+        # DD(sp.attr[:xaxis].d, "before USA $i")
         # DD(kw, "kw")
         _update_subplot_args(plt, sp, kw, idx)
-        # DD(sp.subplotargs[:xaxis].d, "after USA $i")
+        # DD(sp.attr[:xaxis].d, "after USA $i")
 
         # set default values, select from attribute cycles, and generally set the final attributes
         _add_defaults!(kw, plt, sp, i)
@@ -355,9 +357,9 @@ function _plot!(plt::Plot, d::KW, args...)
         # For example, a histogram is just a bar plot with binned data, a bar plot is really a filled step plot,
         # and a step plot is really just a path.  So any backend that supports drawing a path will implicitly
         # be able to support step, bar, and histogram plots (and any recipes that use those components).
-        # DD(sp.subplotargs[:xaxis].d, "before $i")
+        # DD(sp.attr[:xaxis].d, "before $i")
         _apply_series_recipe(plt, kw)
-        # DD(sp.subplotargs[:xaxis].d, "after $i")
+        # DD(sp.attr[:xaxis].d, "after $i")
     end
 
     # now that we're done adding all the series, add the annotations

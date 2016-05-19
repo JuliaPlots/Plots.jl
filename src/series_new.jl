@@ -27,7 +27,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
 
     # update color
-    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], sp.subplotargs, plotIndex)
+    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], sp.attr, plotIndex)
 
     # update colors
     for csym in (:linecolor, :markercolor, :fillcolor)
@@ -38,16 +38,16 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
                 d[:seriescolor]
             end
         else
-            getSeriesRGBColor(d[csym], sp.subplotargs, plotIndex)
+            getSeriesRGBColor(d[csym], sp.attr, plotIndex)
         end
     end
 
     # update markerstrokecolor
     c = d[:markerstrokecolor]
     c = if c == :match
-        sp.subplotargs[:foreground_color_subplot]
+        sp.attr[:foreground_color_subplot]
     else
-        getSeriesRGBColor(c, sp.subplotargs, plotIndex)
+        getSeriesRGBColor(c, sp.attr, plotIndex)
     end
     d[:markerstrokecolor] = c
 

@@ -125,29 +125,29 @@ function update_child_bboxes!(layout::GridLayout)
     nr, nc = size(layout)
 
     # create a matrix for each minimum padding direction
-    minpad_left = map(min_padding_left, layout.grid)
-    minpad_top = map(min_padding_top, layout.grid)
-    minpad_right = map(min_padding_right, layout.grid)
+    minpad_left   = map(min_padding_left,   layout.grid)
+    minpad_top    = map(min_padding_top,    layout.grid)
+    minpad_right  = map(min_padding_right,  layout.grid)
     minpad_bottom = map(min_padding_bottom, layout.grid)
     # @show minpad_left minpad_top minpad_right minpad_bottom
 
     # get the max horizontal (left and right) padding over columns,
     # and max vertical (bottom and top) padding over rows
     # TODO: add extra padding here
-    pad_left = maximum(minpad_left, 1)
-    pad_top = maximum(minpad_top, 2)
-    pad_right = maximum(minpad_right, 1)
+    pad_left   = maximum(minpad_left,   1)
+    pad_top    = maximum(minpad_top,    2)
+    pad_right  = maximum(minpad_right,  1)
     pad_bottom = maximum(minpad_bottom, 2)
     # @show pad_left pad_top pad_right pad_bottom
 
     # scale this up to the total padding in each direction
     total_pad_horizontal = (pad_left + pad_right) .* nc
-    total_pad_vertical = (pad_top + pad_bottom) .* nr
+    total_pad_vertical   = (pad_top + pad_bottom) .* nr
     # @show total_pad_horizontal total_pad_vertical
 
     # now we can compute the total plot area in each direction
-    total_plotarea_horizontal = width(layout) - total_pad_horizontal
-    total_plotarea_vertical = height(layout) - total_pad_vertical
+    total_plotarea_horizontal = width(layout)  - total_pad_horizontal
+    total_plotarea_vertical   = height(layout) - total_pad_vertical
     # @show total_plotarea_horizontal total_plotarea_vertical
 
     # normalize widths/heights so they sum to 1
@@ -161,19 +161,19 @@ function update_child_bboxes!(layout::GridLayout)
 
         # get the top-left corner of this child
         child_left = (c == 1 ? 0mm : right(layout[r, c-1].bbox))
-        child_top = (r == 1 ? 0mm : bottom(layout[r-1, c].bbox))
+        child_top  = (r == 1 ? 0mm : bottom(layout[r-1, c].bbox))
 
         # compute plot area
-        plotarea_left = child_left + pad_left[c]
-        plotarea_top = child_top + pad_top[r]
-        plotarea_width = total_plotarea_horizontal[c] * layout.widths[c] / denom_w
+        plotarea_left   = child_left + pad_left[c]
+        plotarea_top    = child_top + pad_top[r]
+        plotarea_width  = total_plotarea_horizontal[c] * layout.widths[c] / denom_w
         plotarea_height = total_plotarea_vertical[r] * layout.heights[r] / denom_h
-        child_plotarea = BoundingBox(plotarea_left, plotarea_top, plotarea_width, plotarea_height)
+        child_plotarea  = BoundingBox(plotarea_left, plotarea_top, plotarea_width, plotarea_height)
 
         # compute child bbox
-        child_width = pad_left[c] + plotarea_width + pad_right[c]
+        child_width  = pad_left[c] + plotarea_width + pad_right[c]
         child_height = pad_top[r] + plotarea_height + pad_bottom[r]
-        child_bbox = BoundingBox(child_left, child_top, child_width, child_height)
+        child_bbox   = BoundingBox(child_left, child_top, child_width, child_height)
         # @show (r,c) child_plotarea child_bbox
 
         # the bounding boxes are currently relative to the parent, but we need them relative to the canvas
@@ -308,25 +308,29 @@ function build_layout(layout::GridLayout, n::Integer)
     nr, nc = size(layout)
     subplots = Subplot[]
     spmap = SubplotMap()
-    i = 1
+    i = 0
     for r=1:nr, c=1:nc
-        i > n && break  # only add n subplots
         l = layout[r,c]
         if isa(l, EmptyLayout)
             sp = Subplot(backend(), parent=layout)
             layout[r,c] = sp
             push!(subplots, sp)
-            spmap[length(subplots)] = sp
+            spmap[attr(l,:label)] = sp
+            if hasattr(l,:width)
+                layout.widths[c] = attr(l,:width)
+            end
+            if hasattr(l,:height)
+                layout.heights[r] = attr(l,:height)
+            end
             i += 1
         elseif isa(l, GridLayout)
             # sub-grid
-            l, sps, m = build_layout(l)
+            l, sps, m = build_layout(l, n-i)
             append!(subplots, sps)
-            for (k,v) in m
-                spmap[k+length(subplots)] = v
-            end
+            merge!(spmap, m)
             i += length(sps)
         end
+        i >= n && break  # only add n subplots
     end
     layout, subplots, spmap
 end
@@ -361,6 +365,37 @@ get_subplot_index(plt::Plot, idx::Integer) = idx
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(sp->sp === plt.subplots[2], plt.subplots)
 
 # ----------------------------------------------------------------------
+
+function create_grid(expr::Expr)
+    cellsym = gensym(:cell)
+    constructor = if expr.head == :vcat
+        :(let
+            $cellsym = GridLayout($(length(expr.args)), 1)
+            $([:($cellsym[$i,1] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
+            $cellsym
+        end)
+    elseif expr.head in (:hcat,:row)
+        :(let
+            $cellsym = GridLayout(1, $(length(expr.args)))
+            $([:($cellsym[1,$i] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
+            $cellsym
+        end)
+
+    elseif expr.head == :curly
+        length(expr.args) == 3 || error("Should be width and height in curly. Got: ", expr.args)
+        s,w,h = expr.args
+        :(EmptyLayout(label = $(QuoteNode(s)), width = $w, height = $h))
+    end
+end
+
+function create_grid(s::Symbol)
+    :(EmptyLayout(label = $(QuoteNode(s))))
+end
+
+macro layout(mat::Expr)
+    create_grid(mat)
+end
+
 # ----------------------------------------------------------------------
 
 # Base.start(layout::GridLayout) = 1

@@ -293,7 +293,7 @@ end
 function py_bbox_axis(ax, letter)
     ticks = py_bbox_ticks(ax, letter)
     labels = py_bbox_axislabel(ax, letter)
-    letter == "x" && @show ticks labels ticks+labels
+    # letter == "x" && @show ticks labels ticks+labels
     ticks + labels
 end
 
@@ -395,14 +395,14 @@ end
 function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
     fig = plt.o
     # add a new axis, and force it to create a new one by setting a distinct label
-    proj = sp.subplotargs[:projection]
+    proj = sp.attr[:projection]
     ax = fig[:add_axes](
         [0,0,1,1],
         label = string(gensym()),
         projection = (proj in (nothing,:none) ? nothing : string(proj))
     )
     # projection =
-    # ax = fig[:add_subplot](111, projection = _py_projections[sp.subplotargs[:projection]])
+    # ax = fig[:add_subplot](111, projection = _py_projections[sp.attr[:projection]])
     # for axis in (:xaxis, :yaxis)
     #     ax[axis][:_autolabelpos] = false
     # end
@@ -948,7 +948,7 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     # this sets the bg color inside the grid
-    ax[:set_axis_bgcolor](getPyPlotColor(d[:subplot].subplotargs[:background_color_inside]))
+    ax[:set_axis_bgcolor](getPyPlotColor(d[:subplot].attr[:background_color_inside]))
 
     # handle area filling
     fillrange = d[:fillrange]
@@ -1137,7 +1137,7 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
     # figorax = plt.o
     # ax = getLeftAxis(figorax)
     for sp in plt.subplots
-        spargs = sp.subplotargs
+        spargs = sp.attr
         ax = getAxis(sp)
         # ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
         # guidesz = get(d, :guidefont, spargs[:guidefont]).pointsize
@@ -1348,7 +1348,7 @@ const _pyplot_legend_pos = KW(
 # function addPyPlotLegend(plt::Plot)
 # function addPyPlotLegend(plt::Plot, ax)
 function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
-    leg = sp.subplotargs[:legend]
+    leg = sp.attr[:legend]
     if leg != :none
         # gotta do this to ensure both axes are included
         labels = []
@@ -1376,19 +1376,19 @@ function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
                 labels, #[d[:label] for d in args],
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
-                fontsize = sp.subplotargs[:legendfont].pointsize
+                fontsize = sp.attr[:legendfont].pointsize
                 # framealpha = 0.6
             )
             leg[:set_zorder](1000)
 
-            fgcolor = getPyPlotColor(sp.subplotargs[:foreground_color_legend])
+            fgcolor = getPyPlotColor(sp.attr[:foreground_color_legend])
             for txt in leg[:get_texts]()
                 PyPlot.plt[:setp](txt, color = fgcolor)
             end
 
             # set some legend properties
             frame = leg[:get_frame]()
-            frame[:set_facecolor](getPyPlotColor(sp.subplotargs[:background_color_legend]))
+            frame[:set_facecolor](getPyPlotColor(sp.attr[:background_color_legend]))
             frame[:set_edgecolor](fgcolor)
         end
     end
@@ -1402,7 +1402,7 @@ function finalizePlot(plt::Plot{PyPlotBackend})
         ax = getAxis(sp)
         addPyPlotLegend(plt, sp, ax)
         for asym in (:xaxis, :yaxis, :zaxis)
-            updateAxisColors(ax, sp.subplotargs[asym])
+            updateAxisColors(ax, sp.attr[asym])
         end
     end
     drawfig(plt.o)

@@ -99,11 +99,6 @@ function Base.(:+)(bb1::BoundingBox, bb2::BoundingBox)
     ispositive(width(bb2))  || return bb1
     ispositive(height(bb2)) || return bb1
 
-    # if width(bb1) <= 0mm || height(bb1) <= 0mm
-    #     return bb2
-    # elseif width(bb2) <= 0mm || height(bb2) <= 0mm
-    #     return bb1
-    # end
     l = min(left(bb1), left(bb2))
     t = min(top(bb1), top(bb2))
     r = max(right(bb1), right(bb2))
@@ -114,10 +109,6 @@ end
 # this creates a bounding box in the parent's scope, where the child bounding box
 # is relative to the parent
 function crop(parent::BoundingBox, child::BoundingBox)
-    # l = left(parent) + width(parent) * left(child)
-    # b = bottom(parent) + height(parent) * bottom(child)
-    # w = width(parent) * width(child)
-    # h = height(parent) * height(child)
     l = left(parent) + left(child)
     t = top(parent) + top(child)
     w = width(child)
@@ -137,14 +128,20 @@ width(layout::AbstractLayout) = width(layout.bbox)
 height(layout::AbstractLayout) = height(layout.bbox)
 plotarea!(layout::AbstractLayout, bbox::BoundingBox) = nothing
 
+attr(layout::AbstractLayout, k::Symbol) = layout.attr[k]
+attr!(layout::AbstractLayout, v, k::Symbol) = (layout.attr[k] = v)
+hasattr(layout::AbstractLayout, k::Symbol) = haskey(layout.attr, k)
+
 # -----------------------------------------------------------
 
 # contains blank space
 type EmptyLayout <: AbstractLayout
     parent::AbstractLayout
     bbox::BoundingBox
+    attr::KW  # store label, width, and height for initialization
+    # label  # this is the label that the subplot will take (since we create a layout before initialization)
 end
-EmptyLayout(parent = RootLayout()) = EmptyLayout(parent, defaultbox)
+EmptyLayout(parent = RootLayout(); kw...) = EmptyLayout(parent, defaultbox, KW(kw))
 
 # this is the parent of the top-level layout
 immutable RootLayout <: AbstractLayout
@@ -158,7 +155,7 @@ type Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
     bbox::BoundingBox  # the canvas area which is available to this subplot
     plotarea::BoundingBox  # the part where the data goes
-    subplotargs::KW  # args specific to this subplot
+    attr::KW  # args specific to this subplot
     # axisviews::Vector{AxisView}
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
@@ -216,6 +213,9 @@ type Series
     d::KW
 end
 
+attr(series::Series, k::Symbol) = series.d[k]
+attr!(series::Series, v, k::Symbol) = (series.d[k] = v)
+
 type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T               # the backend type
     n::Int                   # number of series
@@ -231,6 +231,13 @@ function Plot()
     Plot(backend(), 0, KW(), Series[], nothing,
          Subplot[], SubplotMap(), EmptyLayout())
 end
+
+# TODO: make a decision... should plt[1] return the first subplot or the first series??
+# Base.getindex(plt::Plot, i::Integer) = plt.subplots[i]
+Base.getindex(plt::Plot, s::Symbol) = plt.spmap[s]
+Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r,c]
+attr(plt::Plot, k::Symbol) = plt.plotargs[k]
+attr!(plt::Plot, v, k::Symbol) = (plt.plotargs[k] = v)
 
 # -----------------------------------------------------------
 # Subplot
