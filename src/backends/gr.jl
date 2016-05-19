@@ -36,14 +36,18 @@ supportedArgs(::GRBackend) = [
     :aspect_ratio
   ]
 supportedAxes(::GRBackend) = _allAxes
-supportedTypes(::GRBackend) = [:none, :line, :path, :steppre, :steppost, :sticks,
-                               :scatter, :hist2d, :hexbin, :hist, :density, :bar,
-                               :hline, :vline, :contour, :heatmap, :path3d, :scatter3d, :surface,
-                               :wireframe, :ohlc, :pie]
+supportedTypes(::GRBackend) = [
+    :none, :line, :path, :steppre, :steppost,
+    :scatter, :hist2d, :hexbin, :hist, :density,
+    :bar, :sticks,
+    :hline, :vline, :heatmap, :pie, :image, :ohlc,
+    :contour, :path3d, :scatter3d, :surface, :wireframe
+  ]
 supportedStyles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::GRBackend) = vcat(_allMarkers, Shape)
 supportedScales(::GRBackend) = [:identity, :log10]
 subplotSupported(::GRBackend) = true
+nativeImagesSupported(::GRBackend) = true
 
 
 # --------------------------------------------------------------------------------------
@@ -435,9 +439,9 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
 
   GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
 
-  legend = false
+  legend = falses(length(plt.seriesargs))
 
-  for p in plt.seriesargs
+  for (ind, p) in enumerate(plt.seriesargs)
     st = p[:seriestype]
     if st in (:hist2d, :hexbin, :contour, :surface, :wireframe, :heatmap)
       if isa(p[:fillcolor], ColorGradient)
@@ -470,13 +474,13 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         end
         GR.polyline(p[:x], p[:y])
       end
-      legend = true
+      legend[ind] = true
     end
     if st == :line
       if length(p[:x]) > 1
         gr_polyline(p[:x], p[:y])
       end
-      legend = true
+      legend[ind] = true
     elseif st in [:steppre, :steppost]
       n = length(p[:x])
       x = zeros(2*n + 1)
@@ -496,13 +500,13 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       if n > 1
         GR.polyline(x, y)
       end
-      legend = true
+      legend[ind] = true
     elseif st == :sticks
       x, y = p[:x], p[:y]
       for i = 1:length(y)
         GR.polyline([x[i], x[i]], [ymin, y[i]])
       end
-      legend = true
+      legend[ind] = true
     elseif st == :scatter || (p[:markershape] != :none && axes_2d)
       GR.setmarkercolorind(gr_getcolorind(p[:markercolor]))
       gr_setmarkershape(p)
@@ -523,7 +527,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
           gr_polymarker(p, [p[:x][i]], [p[:y][i]])
         end
       end
-      legend = true
+      legend[ind] = true
     elseif st == :bar
       y = p[:y]
       for i = 1:length(y)
@@ -574,6 +578,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       charheight = max(0.016 * diag, 0.01)
       GR.setcharheight(charheight)
       GR.colormap()
+      GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
     elseif st == :contour
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), false)
@@ -594,6 +599,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       charheight = max(0.016 * diag, 0.01)
       GR.setcharheight(charheight)
       GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
+      GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
     elseif st in [:surface, :wireframe]
       x, y, z = p[:x], p[:y], transpose_z(p, p[:z].surf, false)
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
@@ -630,11 +636,12 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), true)
       GR.setspace(zmin, zmax, 0, 90)
       z = reshape(z, length(x) * length(y))
-      GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
+      GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
       if cmap
         GR.setviewport(viewport[2] + 0.02, viewport[2] + 0.05,
                        viewport[3], viewport[4])
         GR.colormap()
+        GR.setviewport(viewport[1], viewport[2], viewport[3], viewport[4])
       end
     elseif st in [:path3d, :scatter3d]
       x, y, z = p[:x], p[:y], p[:z]
@@ -722,6 +729,19 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         a1 = a2
       end
       GR.selntran(1)
+    elseif st == :image
+      img = p[:z].surf
+      w, h = size(img)
+      if eltype(img) <: Colors.AbstractGray
+        grey = round(UInt8, float(img) * 255)
+        rgba = map(c -> UInt32( 0xff000000 + Int(c)<<16 + Int(c)<<8 + Int(c) ), grey)
+      else
+        rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
+                                round(Int,  blue(c) * 255) << 16 +
+                                round(Int, green(c) * 255) << 8  +
+                                round(Int,   red(c) * 255) ), img)
+      end
+      GR.drawimage(xmin, xmax, ymin, ymax, w, h, rgba)
     elseif st == :polar
       xmin, xmax, ymin, ymax = viewport
       ymax -= 0.05 * (xmax - xmin)
@@ -746,15 +766,15 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.restorestate()
   end
 
-  if d[:legend] != :none && legend
+  if d[:legend] != :none && any(legend) == true
     GR.savestate()
     GR.selntran(0)
     GR.setscale(0)
     w = 0
     i = 0
     n = 0
-    for p in plt.seriesargs
-      if p[:label] == ""
+    for (ind, p) in enumerate(plt.seriesargs)
+      if !legend[ind] || p[:label] == ""
         continue
       end
       n += 1
@@ -777,8 +797,8 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.setlinewidth(1)
     GR.drawrect(px - 0.08, px + w + 0.02, py + dy, py - dy * n)
     i = 0
-    for p in plt.seriesargs
-      if p[:label] == ""
+    for (ind, p) in enumerate(plt.seriesargs)
+      if !legend[ind] || p[:label] == ""
         continue
       end
       GR.setlinewidth(p[:linewidth])

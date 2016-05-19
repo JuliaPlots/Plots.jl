@@ -24,7 +24,7 @@ supportedArgs(::PGFPlotsBackend) = [
      :markercolor,
      :markersize,
      :markeralpha,
-    # :markerstrokewidth,
+     :markerstrokewidth,
      :markerstrokecolor,
      :markerstrokestyle,
     # :n,
@@ -34,7 +34,7 @@ supportedArgs(::PGFPlotsBackend) = [
     # :pos,
     # :smooth,
     # :show,
-    # :size,
+     :size,
      :title,
     # :windowtitle,
      :x,
@@ -87,17 +87,17 @@ const _pgfplots_linestyles = KW(
 )
 
 const _pgfplots_markers = KW(
-    :none => "mark = none,",
-    :cross => "mark = +,",
-    :xcross => "mark = x,",
-    :utriangle => "mark = triangle*,",
-    :dtriangle => "mark = triangle*,",
-    :ellipse => "mark = o*,",
-    :rect => "mark = square*,",
-    :star5 => "mark = star,",
-    :star6 => "mark = asterisk,",
-    :diamond => "mark = diamond*,",
-    :pentagon => "mark = pentagon*,"
+    :none => "none",
+    :cross => "+",
+    :xcross => "x",
+    :utriangle => "triangle*",
+    :dtriangle => "triangle*",
+    :ellipse => "o*",
+    :rect => "square*",
+    :star5 => "star",
+    :star6 => "asterisk",
+    :diamond => "diamond*",
+    :pentagon => "pentagon*"
 )
 
 const _pgfplots_legend_pos = KW(
@@ -120,50 +120,52 @@ end
 function _pgfplots_get_linestyle!(kwargs, plt)
     ls = plt[:linestyle]
     if haskey(_pgfplots_linestyles, ls)
-        kwargs[:style] *= _pgfplots_linestyles[ls]*","
+        push!(kwargs[:style], _pgfplots_linestyles[ls])
     end
 
-    kwargs[:style] *= "line width = $(plt[:linewidth]) pt"*","
+    push!(kwargs[:style], "line width = $(plt[:linewidth]) pt")
 end
 
 
 function _pgfplots_get_marker!(kwargs, plt)
-    # Control marker shape
+    # Control marker shape, size, colors, alphas, and stroke width
     mark = plt[:markershape]
-    kwargs[:style] *= _pgfplots_markers[mark]
-
-    # Control marker size
-    kwargs[:style] *= "mark size = $(plt[:markersize]/2),"
-
-    # Control marker colors and alphas
     α = plt[:markeralpha] == nothing ? 1.0 : plt[:markeralpha]
-    kwargs[:style] *= "mark options = {color=$(_pgfplots_get_color(plt, :markerstrokecolor)),"
-    kwargs[:style] *= mark == :dtriangle ? "rotate=180," : ""
-    kwargs[:style] *= "fill=$(_pgfplots_get_color(plt, :markercolor)),"
-    kwargs[:style] *= "fill opacity = $α,"
-    markstrokestyle = plt[:markerstrokestyle]
-    if haskey(_pgfplots_linestyles, markstrokestyle)
-        kwargs[:style] *= _pgfplots_linestyles[markstrokestyle]
+    push!(kwargs[:style], "mark = " * _pgfplots_markers[mark],
+                          "mark size = $(plt[:markersize]/2)",
+                          "mark options = {color=$(_pgfplots_get_color(plt, :markerstrokecolor))",
+                          "fill=$(_pgfplots_get_color(plt, :markercolor))",
+                          "fill opacity = $α",
+                          "line width=$(plt[:markerstrokewidth])")
+
+    # Rotate the marker if :dtriangle was chosen
+    mark == :dtriangle && push!(kwargs[:style], "rotate=180")
+
+    # Apply marker stroke style if it is a valid PGFPlots stroke style
+    if haskey(_pgfplots_linestyles, plt[:markerstrokestyle])
+        push!(kwargs[:style], _pgfplots_linestyles[plt[:markerstrokestyle]])
     end
-    kwargs[:style] *= "},"
+
+    # End the open mark options bracker
+    push!(kwargs[:style], "}")
 end
 
 function _pgfplots_get_series_color!(kwargs, plt)
     α = plt[:seriesalpha] == nothing ? 1.0 : plt[:seriesalpha]
-    kwargs[:style] *= "color=$(_pgfplots_get_color(plt, :seriescolor)),"
-    kwargs[:style] *= "draw opacity = $α,"
+    push!(kwargs[:style], "color=$(_pgfplots_get_color(plt, :seriescolor))",
+                          "draw opacity = $α")
 end
 
 function _pgfplots_get_line_color!(kwargs, plt)
     α = plt[:linealpha] == nothing ? 1.0 : plt[:linealpha]
-    kwargs[:style] *= "color=$(_pgfplots_get_color(plt, :linecolor)),"
-    kwargs[:style] *= "draw opacity = $α,"
+    kwargs[:style] *= ", color=$(_pgfplots_get_color(plt, :linecolor))" *
+                      ", draw opacity = $α"
 end
 
 function _pgfplots_get_fill_color!(kwargs, plt)
     α = plt[:fillalpha] == nothing ? 1.0 : plt[:fillalpha]
-    kwargs[:style] *= "fill=$(_pgfplots_get_color(plt, :fillcolor)),"
-    kwargs[:style] *= "fill opacity = $α,"
+    kwargs[:style] *= ", fill=$(_pgfplots_get_color(plt, :fillcolor))" *
+                      ", fill opacity = $α"
 end
 
 function _pgfplots_get_label!(kwargs, plt)
@@ -172,55 +174,55 @@ function _pgfplots_get_label!(kwargs, plt)
     end
 end
 
-
 function _pgfplots_get_plot_kwargs(plt)
     kwargs = KW()
-    kwargs[:style] = ""
+    kwargs[:style] = []
     _pgfplots_get_linestyle!(kwargs, plt)
     _pgfplots_get_marker!(kwargs, plt)
     _pgfplots_get_series_color!(kwargs, plt)
     _pgfplots_get_label!(kwargs, plt)
+    kwargs[:style] = join(kwargs[:style], ',')
     kwargs
 end
 
 function _pgfplots_axis(plt_series)
     line_type = plt_series[:seriestype]
     plt_kwargs = _pgfplots_get_plot_kwargs(plt_series)
-        if line_type == :path
+    if line_type == :path
         PGFPlots.Linear(plt_series[:x], plt_series[:y]; plt_kwargs...)
     elseif line_type == :path3d
         PGFPlots.Linear3(plt_series[:x], plt_series[:y], plt_series[:z]; plt_kwargs...)
     elseif line_type == :scatter
         PGFPlots.Scatter(plt_series[:x], plt_series[:y]; plt_kwargs...)
     elseif line_type == :steppre
-        plt_kwargs[:style] *= "const plot mark right,"
+        plt_kwargs[:style] *= ", const plot mark right"
         PGFPlots.Linear(plt_series[:x], plt_series[:y]; plt_kwargs...)
     elseif line_type == :stepmid
-        plt_kwargs[:style] *= "const plot mark mid,"
+        plt_kwargs[:style] *= ", const plot mark mid"
         PGFPlots.Linear(plt_series[:x], plt_series[:y]; plt_kwargs...)
     elseif line_type == :steppost
-        plt_kwargs[:style] *= "const plot,"
+        plt_kwargs[:style] *= ", const plot"
         PGFPlots.Linear(plt_series[:x], plt_series[:y]; plt_kwargs...)
     elseif line_type == :hist
         #TODO patch this in PGFPlots.jl instead; the problem is that PGFPlots will
         # save _all_ data points in the figure which can be quite heavy
         plt_hist = hist(plt_series[:y])
-        plt_kwargs[:style] *= "ybar interval,"
+        plt_kwargs[:style] *= ", ybar interval"
         _pgfplots_get_line_color!(plt_kwargs, plt_series)
         _pgfplots_get_fill_color!(plt_kwargs, plt_series)
         PGFPlots.Linear(plt_hist[1][1:end-1]+plt_hist[1].step/2, plt_hist[2]; plt_kwargs...)
     elseif line_type == :hist2d
         PGFPlots.Histogram2(plt_series[:x], plt_series[:y])
     elseif line_type == :bar
-        plt_kwargs[:style] *= "ybar,"
+        plt_kwargs[:style] *= ", ybar"
         _pgfplots_get_line_color!(plt_kwargs, plt_series)
         _pgfplots_get_fill_color!(plt_kwargs, plt_series)
         PGFPlots.Linear(plt_series[:x], plt_series[:y]; plt_kwargs...)
     elseif line_type == :sticks || line_type == :ysticks
-        plt_kwargs[:style] *= "ycomb"
+        plt_kwargs[:style] *= ", ycomb"
         PGFPlots.Linear(plt_series[:x], plt_series[:y]; plt_kwargs...)
     elseif line_type == :xsticks
-        plt_kwargs[:style] *= "xcomb"
+        plt_kwargs[:style] *= ", xcomb"
         PGFPlots.Linear(plt_series[:x], plt_series[:y]; plt_kwargs...)
     elseif line_type == :contour
         PGFPlots.Contour(plt_series[:z].surf, plt_series[:x], plt_series[:y])
@@ -300,36 +302,36 @@ function _pgfplots_get_axis_kwargs(d)
     for arg in (:xguide, :yguide, :zguide, :title)
         axisargs[arg] = d[arg]
     end
-    axisargs[:style] = ""
-    axisargs[:style] *= d[:xflip] == true ? "x dir=reverse," : ""
-    axisargs[:style] *= d[:yflip] == true ? "y dir=reverse," : ""
+    axisargs[:style] = []
+    d[:xflip] == true && push!(axisargs[:style], "x dir=reverse")
+    d[:yflip] == true && push!(axisargs[:style], "y dir=reverse")
     if d[:xscale] in (:log, :log2, :ln, :log10)
         axisargs[:xmode] = "log"
         if d[:xscale] == :log2
-            axisargs[:style] *= "log basis x=2,"
+            push!(axisargs[:style], "log basis x=2")
         elseif d[:xscale] in (:log, :log10)
-            axisargs[:style] *= "log basis x=10,"
+            push!(axisargs[:style], "log basis x=10")
         end
     end
     if d[:yscale] in (:log, :log2, :ln, :log10)
         axisargs[:ymode] = "log"
         if d[:yscale] == :log2
-            axisargs[:style] *= "log basis y=2,"
+            push!(axisargs[:style], "log basis y=2")
         elseif d[:yscale] in (:log, :log10)
-            axisargs[:style] *= "log basis x=10,"
+            push!(axisargs[:style], "log basis x=10")
         end
     end
     if d[:zscale] in (:log, :log2, :ln, :log10)
         axisargs[:zmode] = "log"
         if d[:zscale] == :log2
-            axisargs[:style] *= "log basis z=2,"
+            push!(axisargs[:style], "log basis z=2")
         elseif d[:zscale] in (:log, :log10)
-            axisargs[:style] *= "log basis x=10,"
+            push!(axisargs[:style], "log basis x=10")
         end
     end
 
     # Control background color
-    axisargs[:style] *= "axis background/.style={fill=$(_pgfplots_get_color(d, :background_color))},"
+    push!(axisargs[:style], "axis background/.style={fill=$(_pgfplots_get_color(d, :background_color))}")
     # Control x/y-limits
     if d[:xlims] !== :auto
         axisargs[:xmin] = d[:xlims][1]
@@ -339,11 +341,8 @@ function _pgfplots_get_axis_kwargs(d)
         axisargs[:ymin] = d[:ylims][1]
         axisargs[:ymax] = d[:ylims][2]
     end
-    if d[:grid] == true
-        axisargs[:style] *= "grid = major,"
-    elseif d[:grid] == false
 
-    end
+    d[:grid] == true && push!(axisargs[:style], "grid = major")
 
     if d[:aspect_ratio] == :equal || d[:aspect_ratio] == 1
         axisargs[:axisEqual] = "true"
@@ -352,6 +351,7 @@ function _pgfplots_get_axis_kwargs(d)
     if ((d[:legend] != :none) || (d[:legend] != :best)) && (d[:legend] in keys(_pgfplots_legend_pos))
         axisargs[:legendPos] = _pgfplots_legend_pos[d[:legend]]
     end
+    axisargs[:style] = join(axisargs[:style], ',')
     axisargs
 end
 
@@ -366,7 +366,8 @@ function _make_pgf_plot(plt::Plot{PGFPlotsBackend})
         push!(os, _pgfplots_axis(plt_series))
     end
     axisargs  =_pgfplots_get_axis_kwargs(plt.plotargs)
-    plt.o = PGFPlots.Axis([os...]; axisargs...)
+    w, h = map(px2mm, plt.plotargs[:size])
+    plt.o = PGFPlots.Axis([os...]; width = "$w mm", height = "$h mm", axisargs...)
 end
 
 function Base.writemime(io::IO, mime::MIME"image/svg+xml", plt::AbstractPlot{PGFPlotsBackend})
