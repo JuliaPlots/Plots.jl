@@ -952,8 +952,12 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
     for letter in (:x, :y, :z)
         # get (maybe initialize) the axis
         axissym = symbol(letter, :axis)
-        axis = get!(spargs, axissym, Axis(letter))
-
+        axis = if haskey(spargs, axissym)
+            spargs[axissym]
+        else
+            spargs[axissym] = Axis(letter)
+        end
+        
         # grab magic args (for example `xaxis = (:flip, :log)`)
         args = wraptuple(get(d_in, axissym, ()))
 

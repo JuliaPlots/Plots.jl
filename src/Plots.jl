@@ -16,6 +16,7 @@ export
     Subplot,
     AbstractLayout,
     GridLayout,
+    grid,
     EmptyLayout,
     @layout,
     # RowsLayout,
@@ -171,18 +172,25 @@ export
 
 # ---------------------------------------------------------
 
+import Measures
+import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height
+typealias BBox Measures.Absolute2DBox
+export BBox, BoundingBox, mm, cm, inch, pt, px, pct
+
+# ---------------------------------------------------------
+
 include("types.jl")
 include("utils.jl")
 include("colors.jl")
 include("components.jl")
+include("axes.jl")
 include("backends.jl")
 include("args.jl")
 include("themes.jl")
 include("plot.jl")
 include("series_args.jl")
 include("series_new.jl")
-# include("subplot.jl")
-# include("layouts.jl")
+include("layouts.jl")
 include("subplots.jl")
 include("recipes.jl")
 include("animation.jl")

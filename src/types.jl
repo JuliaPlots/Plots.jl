@@ -1,151 +1,30 @@
 
+# TODO: I declare lots of types here because of the lacking ability to do forward declarations in current Julia
+# I should move these to the relevant files when something like "extern" is implemented
+
 typealias AVec AbstractVector
 typealias AMat AbstractMatrix
+typealias KW Dict{Symbol,Any}
 
 immutable PlotsDisplay <: Display end
 
 abstract AbstractBackend
 abstract AbstractPlot{T<:AbstractBackend}
+abstract AbstractLayout
 
-typealias KW Dict{Symbol,Any}
+# -----------------------------------------------------------
 
 immutable InputWrapper{T}
     obj::T
 end
-
 wrap{T}(obj::T) = InputWrapper{T}(obj)
 Base.isempty(wrapper::InputWrapper) = false
 
 # -----------------------------------------------------------
-# Axes
-# -----------------------------------------------------------
 
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
-type Axis #<: Associative{Symbol,Any}
+type Axis
     d::KW
-end
-
-type AxisView
-    label::UTF8String
-    axis::Axis
-end
-
-
-# -----------------------------------------------------------
-# Layouts
-# -----------------------------------------------------------
-
-# NOTE: (0,0) is the top-left !!!
-
-import Measures
-import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height
-export BBox, BoundingBox, mm, cm, inch, pt, px, pct
-
-typealias BBox Measures.Absolute2DBox
-
-# allow pixels and percentages
-const px = AbsoluteLength(0.254)
-const pct = Length{:pct, Float64}(1.0)
-
-Base.(:.*)(m::Measure, n::Number) = m * n
-Base.(:.*)(n::Number, m::Measure) = m * n
-Base.(:-)(m::Measure, a::AbstractArray) = map(ai -> m - ai, a)
-Base.(:-)(a::AbstractArray, m::Measure) = map(ai -> ai - m, a)
-Base.zero(::Type{typeof(mm)}) = 0mm
-Base.one(::Type{typeof(mm)}) = 1mm
-Base.typemin(::typeof(mm)) = -Inf*mm
-Base.typemax(::typeof(mm)) = Inf*mm
-
-Base.(:+)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
-Base.(:+)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (1 + m1.value))
-Base.(:-)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 - m2.value))
-Base.(:-)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (m1.value - 1))
-Base.(:*)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
-Base.(:*)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
-Base.(:/)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
-Base.(:/)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
-
-
-Base.zero(::Type{typeof(pct)}) = 0pct
-Base.one(::Type{typeof(pct)}) = 1pct
-Base.typemin(::typeof(pct)) = 0pct
-Base.typemax(::typeof(pct)) = 1pct
-
-const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
-
-# left(bbox::BoundingBox) = bbox.left
-# bottom(bbox::BoundingBox) = bbox.bottom
-# right(bbox::BoundingBox) = bbox.right
-# top(bbox::BoundingBox) = bbox.top
-# width(bbox::BoundingBox) = bbox.right - bbox.left
-# height(bbox::BoundingBox) = bbox.top - bbox.bottom
-
-
-
-left(bbox::BoundingBox) = bbox.x0[1]
-top(bbox::BoundingBox) = bbox.x0[2]
-right(bbox::BoundingBox) = left(bbox) + width(bbox)
-bottom(bbox::BoundingBox) = top(bbox) + height(bbox)
-Base.size(bbox::BoundingBox) = (width(bbox), height(bbox))
-
-# Base.(:*){T,N}(m1::Length{T,N}, m2::Length{T,N}) = Length{T,N}(m1.value * m2.value)
-ispositive(m::Measure) = m.value > 0
-
-# union together bounding boxes
-function Base.(:+)(bb1::BoundingBox, bb2::BoundingBox)
-    # empty boxes don't change the union
-    ispositive(width(bb1))  || return bb2
-    ispositive(height(bb1)) || return bb2
-    ispositive(width(bb2))  || return bb1
-    ispositive(height(bb2)) || return bb1
-
-    l = min(left(bb1), left(bb2))
-    t = min(top(bb1), top(bb2))
-    r = max(right(bb1), right(bb2))
-    b = max(bottom(bb1), bottom(bb2))
-    BoundingBox(l, t, r-l, b-t)
-end
-
-# this creates a bounding box in the parent's scope, where the child bounding box
-# is relative to the parent
-function crop(parent::BoundingBox, child::BoundingBox)
-    l = left(parent) + left(child)
-    t = top(parent) + top(child)
-    w = width(child)
-    h = height(child)
-    BoundingBox(l, t, w, h)
-end
-
-function Base.show(io::IO, bbox::BoundingBox)
-    print(io, "BBox{l,t,r,b,w,h = $(left(bbox)),$(top(bbox)), $(right(bbox)),$(bottom(bbox)), $(width(bbox)),$(height(bbox))}")
-end
-
-# -----------------------------------------------------------
-
-abstract AbstractLayout
-
-width(layout::AbstractLayout) = width(layout.bbox)
-height(layout::AbstractLayout) = height(layout.bbox)
-plotarea!(layout::AbstractLayout, bbox::BoundingBox) = nothing
-
-attr(layout::AbstractLayout, k::Symbol) = layout.attr[k]
-attr!(layout::AbstractLayout, v, k::Symbol) = (layout.attr[k] = v)
-hasattr(layout::AbstractLayout, k::Symbol) = haskey(layout.attr, k)
-
-# -----------------------------------------------------------
-
-# contains blank space
-type EmptyLayout <: AbstractLayout
-    parent::AbstractLayout
-    bbox::BoundingBox
-    attr::KW  # store label, width, and height for initialization
-    # label  # this is the label that the subplot will take (since we create a layout before initialization)
-end
-EmptyLayout(parent = RootLayout(); kw...) = EmptyLayout(parent, defaultbox, KW(kw))
-
-# this is the parent of the top-level layout
-immutable RootLayout <: AbstractLayout
-    # child::AbstractLayout
 end
 
 # -----------------------------------------------------------
@@ -156,57 +35,14 @@ type Subplot{T<:AbstractBackend} <: AbstractLayout
     bbox::BoundingBox  # the canvas area which is available to this subplot
     plotarea::BoundingBox  # the part where the data goes
     attr::KW  # args specific to this subplot
-    # axisviews::Vector{AxisView}
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
-
-    # Subplot(parent = RootLayout(); attr = KW())
 end
-
-function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
-    Subplot{T}(parent, defaultbox, defaultbox, KW(), nothing, nothing)
-end
-
-plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
-
-# -----------------------------------------------------------
-
-# nested, gridded layout with optional size percentages
-type GridLayout <: AbstractLayout
-    parent::AbstractLayout
-    bbox::BoundingBox
-    grid::Matrix{AbstractLayout} # Nested layouts. Each position is a AbstractLayout, which allows for arbitrary recursion
-    widths::Vector{Measure}
-    heights::Vector{Measure}
-    attr::KW
-end
-
-function GridLayout(dims...;
-                    parent = RootLayout(),
-                    widths = ones(dims[2]),
-                    heights = ones(dims[1]),
-                    kw...)
-    grid = Matrix{AbstractLayout}(dims...)
-    layout = GridLayout(
-        parent,
-        defaultbox,
-        grid,
-        Measure[w*pct for w in widths],
-        Measure[h*pct for h in heights],
-        # convert(Vector{Float64}, widths),
-        # convert(Vector{Float64}, heights),
-        KW(kw))
-    fill!(grid, EmptyLayout(layout))
-    layout
-end
-
 
 # -----------------------------------------------------------
 
 typealias SubplotMap Dict{Any, Subplot}
 
-# -----------------------------------------------------------
-# Plot
 # -----------------------------------------------------------
 
 type Series
@@ -215,6 +51,8 @@ end
 
 attr(series::Series, k::Symbol) = series.d[k]
 attr!(series::Series, v, k::Symbol) = (series.d[k] = v)
+
+# -----------------------------------------------------------
 
 type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T               # the backend type
@@ -239,22 +77,5 @@ Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r,c]
 attr(plt::Plot, k::Symbol) = plt.plotargs[k]
 attr!(plt::Plot, v, k::Symbol) = (plt.plotargs[k] = v)
 
-# -----------------------------------------------------------
-# Subplot
-# -----------------------------------------------------------
-
-# type Subplot{T<:AbstractBackend, L<:AbstractLayout} <: AbstractPlot{T}
-#     o                           # the underlying object
-#     plts::Vector{Plot{T}}       # the individual plots
-#     backend::T
-#     p::Int                      # number of plots
-#     n::Int                      # number of series
-#     layout::L
-#     plotargs::KW
-#     initialized::Bool
-#     linkx::Bool
-#     linky::Bool
-#     linkfunc::Function # maps (row,column) -> (BoolOrNothing, BoolOrNothing)... if xlink/ylink are nothing, then use subplt.linkx/y
-# end
 
 # -----------------------------------------------------------------------
