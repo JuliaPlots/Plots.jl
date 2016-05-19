@@ -16,7 +16,7 @@ supportedArgs(::PyPlotBackend) = [
     :markershape, :markercolor, :markersize, :markeralpha,
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
     :fillrange, :fillcolor, :fillalpha,
-    :bins,
+    :bins, :bar_width, :bar_edges,
     :n, :nc, :nr, :layout,
     :smooth,
     :title, :windowtitle, :show, :size,
@@ -94,6 +94,7 @@ end
 getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
 getPyPlotColor(cvec::ColorVector, α=nothing) = map(getPyPlotColor, convertColor(cvec, α).v)
 getPyPlotColor(scheme::ColorScheme, α=nothing) = getPyPlotColor(convertColor(getColor(scheme), α))
+getPyPlotColor(vec::AVec, α=nothing) = map(c->getPyPlotColor(c,α), vec) 
 getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
 
 function getPyPlotColorMap(c::ColorGradient, α=nothing)
@@ -662,14 +663,14 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :bar
-        extrakw[isvertical(d) ? :width : :height] = 0.9
+        extrakw[isvertical(d) ? :width : :height] = d[:bar_width]
         handle = ax[isvertical(d) ? :bar : :barh](x, y;
             label = d[:label],
             zorder = plt.n,
             color = pyfillcolor(d),
             edgecolor = pylinecolor(d),
             linewidth = d[:linewidth],
-            align = "center",
+            align = d[:bar_edges] ? "edge" : "center",
             extrakw...
         )[1]
         push!(handles, handle)

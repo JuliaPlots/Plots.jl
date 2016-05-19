@@ -179,6 +179,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
         end
 
         # add the series!
+        warnOnUnsupportedArgs(plt.backend, d)
         warnOnUnsupported(plt.backend, d)
         series = Series(d)
         push!(plt.series_list, series)
@@ -269,7 +270,6 @@ function _plot!(plt::Plot, d::KW, args...)
                 end
 
                 # check that the backend will support the command and add it to the list
-                warnOnUnsupportedArgs(plt.backend, kw)
                 warnOnUnsupportedScales(plt.backend, kw)
                 push!(kw_list, kw)
 

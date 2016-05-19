@@ -146,6 +146,8 @@ _series_defaults[:marker_z]          = nothing   # value for color scale
 _series_defaults[:levels]            = 15
 _series_defaults[:orientation]       = :vertical
 _series_defaults[:bar_position]      = :overlay  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
+_series_defaults[:bar_width]         = 0.8
+_series_defaults[:bar_edges]         = false
 _series_defaults[:xerror]            = nothing
 _series_defaults[:yerror]            = nothing
 _series_defaults[:ribbon]            = nothing
@@ -957,7 +959,7 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
         else
             spargs[axissym] = Axis(letter)
         end
-        
+
         # grab magic args (for example `xaxis = (:flip, :log)`)
         args = wraptuple(get(d_in, axissym, ()))
 
