@@ -575,6 +575,7 @@ pymarkercolormap(d::KW)     = getPyPlotColorMap(d[:markercolor], d[:markeralpha]
 pyfillcolormap(d::KW)       = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
 
 # function _add_series(pkg::PyPlotBackend, plt::Plot, d::KW)
+# TODO: change this to accept Subplot??
 function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     d = series.d
     st = d[:seriestype]
@@ -927,7 +928,7 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     handleSmooth(plt, ax, d, d[:smooth])
 
     # add the colorbar legend
-    if needs_colorbar && plt.plotargs[:colorbar] != :none
+    if needs_colorbar && attr(d[:subplot], :colorbar) != :none
         # cbar = PyPlot.colorbar(handles[end], ax=ax)
 
         # do we need a discrete colorbar?
