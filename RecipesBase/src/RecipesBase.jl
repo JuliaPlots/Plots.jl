@@ -6,20 +6,15 @@ module RecipesBase
 export
     @recipe,
     RecipeData
-    # apply_recipe,
-    # KW
-    # PlotData
-    # is_key_supported
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.is_key_supported(k::Symbol)
 function is_key_supported end
 
-# this holds the recipe definitions to be dispatched on
-# the function takes in an attribute dict `d`, a user attributes dict `userkw`,
-# and a list of args.
-# Our goal is to
-apply_recipe(d::Dict{Symbol,Any}, userkw::Dict{Symbol,Any}) = ()
+# This holds the recipe definitions to be dispatched on
+# the function takes in an attribute dict `d` and a list of args.
+# This default definition specifies the "no-arg" case.
+apply_recipe(d::Dict{Symbol,Any}) = ()
 
 const _debug_recipes = Bool[false]
 function debug(v::Bool = true)
@@ -33,41 +28,6 @@ immutable RecipeData
     d::Dict{Symbol,Any}
     args::Tuple
 end
-
-# typealias KW Dict{Symbol, Any}
-
-# immutable PlotData{X,Y,Z} <: Associative{Symbol,Any}
-#     x::X
-#     y::Y
-#     z::Z
-#     kw::KW
-# end
-# PlotData(y::)
-# # PlotData(data, kw::KW) = PlotData(wrap_tuple(data), kw)
-#
-# function Base.getindex(d::PlotData, k::Symbol)
-#     if k == :x
-#         d.x
-#     elseif k == :y
-#         d.y
-#     elseif k == :z
-#         d.z
-#     else
-#         d.kw[k]
-#     end
-# end
-#
-# function Base.setindex!(d::PlotData, val, k::Symbol)
-#     if k == :x
-#         d.x = val
-#     elseif k == :y
-#         d.y = val
-#     elseif k == :z
-#         d.z = val
-#     else
-#         d.kw[k] = val
-#     end
-# end
 
 # --------------------------------------------------------------------------
 
@@ -128,10 +88,8 @@ end
 # and we push this block onto the series_blocks list.
 # then at the end we push the main body onto the series list
 function process_recipe_body!(expr::Expr)
-    # @show expr
     for (i,e) in enumerate(expr.args)
         if isa(e,Expr)
-            # @show e
 
             # process trailing flags, like:
             #   a --> b, :quiet, :force
@@ -146,7 +104,6 @@ function process_recipe_body!(expr::Expr)
                         force = true
                     end
                 end
-                # @show e
                 e = e.args[1]
             end
 
@@ -174,8 +131,6 @@ function process_recipe_body!(expr::Expr)
                 else
                     set_expr
                 end
-
-                # @show quiet, force, expr.args[i]
 
             # TODO elseif it's a @series macrocall, add a series block and push to the `series` list
 
@@ -257,11 +212,7 @@ macro recipe(funcexpr::Expr)
     # this is where the receipe func_body is processed
     # replace all the key => value lines with argument setting logic
     # and break up by series.
-    # series_blocks = Expr[]
     process_recipe_body!(func_body)
-
-    # dump(func_body, 20)
-    # @show func_body
 
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
     # we are creating a vector of RecipeData objects, one per series.
@@ -277,16 +228,8 @@ macro recipe(funcexpr::Expr)
                 push!(series_list, RecipeData(d, RecipesBase.wrap_tuple(func_return)))
             end
             series_list
-            # ret = $func_body
-            # RecipeData(d, if typeof(ret) <: Tuple
-            #     ret
-            # else
-            #     (ret,)
-            # end)
         end
     end)
-
-    # @show funcdef
     funcdef
 end
 
