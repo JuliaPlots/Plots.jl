@@ -1066,10 +1066,10 @@ function addPyPlotLims(ax, lims, letter)
         setf = ax[symbol("set_", letter, "lim")]
         l1, l2 = lims
         if isfinite(l1)
-            letter == "x" ? setf(left = l1) : setf(bottom = l1)
+            letter == :x ? setf(left = l1) : setf(bottom = l1)
         end
         if isfinite(l2)
-            letter == "x" ? setf(right = l2) : setf(top = l2)
+            letter == :x ? setf(right = l2) : setf(top = l2)
         end
     else
         error("Invalid input for $letter: ", lims)
