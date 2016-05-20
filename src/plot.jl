@@ -197,6 +197,12 @@ function _plot!(plt::Plot, d::KW, args...)
         next_series = pop!(still_to_process)
         series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
         for series in series_list
+
+            # series should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
+            if !(typeof(series) <: RecipeData)
+                error("Inputs couldn't be processed... expected RecipeData but got: $series")
+            end
+
             # @show series
             if isempty(series.args)
                 # when the arg tuple is empty, that means there's nothing left to recursively

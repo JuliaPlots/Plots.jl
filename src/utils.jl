@@ -156,12 +156,18 @@ maketuple{T,S}(x::@compat(Tuple{T,S})) = x
 mapFuncOrFuncs(f::Function, u::AVec)        = map(f, u)
 mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
 
-unzip{T,S}(xy::AVec{Tuple{T,S}})              = [x[1] for x in xy], [y[2] for y in xy]
-unzip{T,S,R}(xyz::AVec{Tuple{T,S,R}})         = [x[1] for x in xyz], [y[2] for y in xyz], [z[3] for z in xyz]
-unzip{T}(xy::AVec{FixedSizeArrays.Vec{2,T}})  = T[x[1] for x in xy], T[y[2] for y in xy]
+unzip{X,Y}(xy::AVec{Tuple{X,Y}})              = [t[1] for t in xy], [t[2] for t in xy]
+unzip{X,Y,Z}(xyz::AVec{Tuple{X,Y,Z}})         = [t[1] for t in xyz], [t[2] for t in xyz], [t[3] for t in xyz]
+unzip{X,Y,U,V}(xyuv::AVec{Tuple{X,Y,U,V}})    = [t[1] for t in xyuv], [t[2] for t in xyuv], [t[3] for t in xyuv], [t[4] for t in xyuv]
+
+unzip{T}(xy::AVec{FixedSizeArrays.Vec{2,T}})  = T[t[1] for t in xy], T[t[2] for t in xy]
 unzip{T}(xy::FixedSizeArrays.Vec{2,T})        = T[xy[1]], T[xy[2]]
-unzip{T}(xyz::AVec{FixedSizeArrays.Vec{3,T}}) = T[x[1] for x in xyz], T[y[2] for y in xyz], T[z[3] for z in xyz]
+
+unzip{T}(xyz::AVec{FixedSizeArrays.Vec{3,T}}) = T[t[1] for t in xyz], T[t[2] for t in xyz], T[t[3] for t in xyz]
 unzip{T}(xyz::FixedSizeArrays.Vec{3,T})       = T[xyz[1]], T[xyz[2]], T[xyz[3]]
+
+unzip{T}(xyuv::AVec{FixedSizeArrays.Vec{4,T}}) = T[t[1] for t in xyuv], T[t[2] for t in xyuv], T[t[3] for t in xyuv], T[t[4] for t in xyuv]
+unzip{T}(xyuv::FixedSizeArrays.Vec{4,T})       = T[xyuv[1]], T[xyuv[2]], T[xyuv[3]], T[xyuv[4]]
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)

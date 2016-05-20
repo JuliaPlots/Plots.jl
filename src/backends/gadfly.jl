@@ -298,9 +298,9 @@ function addGadflySeries!(plt::Plot, d::KW)
 
     # special handling for ohlc and scatter
     st = d[:seriestype]
-    if st == :ohlc
-        error("Haven't re-implemented after refactoring")
-    elseif st in (:hist2d, :hexbin) && (isa(d[:fillcolor], ColorGradient) || isa(d[:fillcolor], ColorFunction))
+    # if st == :ohlc
+    #     error("Haven't re-implemented after refactoring")
+    if st in (:hist2d, :hexbin) && (isa(d[:fillcolor], ColorGradient) || isa(d[:fillcolor], ColorFunction))
         push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:fillcolor], p))))
     elseif st == :scatter && d[:markershape] == :none
         d[:markershape] = :ellipse

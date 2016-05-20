@@ -374,15 +374,6 @@ end
 
 # -----------------------------------------------------------------------
 
-type OHLC{T<:Real}
-  open::T
-  high::T
-  low::T
-  close::T
-end
-
-# -----------------------------------------------------------------------
-
 # style is :open or :closed (for now)
 immutable Arrow
     style::Symbol

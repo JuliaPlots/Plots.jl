@@ -20,7 +20,7 @@ num_series(x) = 1
 # _apply_recipe(d::KW, kw::KW) = ()
 
 # if it's not a recipe, just do nothing and return the args
-function RecipesBase.apply_recipe(d::KW, kw::KW, args...; issubplot=false)
+function RecipesBase.apply_recipe(d::KW, args...; issubplot=false)
     if issubplot && !isempty(args) && !haskey(d, :n) && !haskey(d, :layout)
         # put in a sensible default
         d[:n] = maximum(map(num_series, args))
@@ -540,7 +540,65 @@ function getRecipeArgs(ep::EllipseRecipe)
   [(:line, (3, [:dot :solid], [:red :blue], :path))]
 end
 
-# # -------------------------------------------------
+# -------------------------------------------------
+
+# TODO: this should really be in another package...
+type OHLC{T<:Real}
+  open::T
+  high::T
+  low::T
+  close::T
+end
+tuple(ohlc::OHLC) = (ohlc.open, ohlc.high, ohlc.low, ohlc.close)
+
+# get one OHLC path
+function get_xy(o::OHLC, x, xdiff)
+    xl, xm, xr = x-xdiff, x, x+xdiff
+    ox = [xl, xm, NaN,
+          xm, xm, NaN,
+          xm, xr]
+    oy = [o.open, o.open, NaN,
+          o.low, o.high, NaN,
+          o.close, o.close]
+    ox, oy
+end
+
+# get the joined vector
+function get_xy(v::AVec{OHLC}, x = 1:length(v))
+    xdiff = 0.3mean(abs(diff(x)))
+    x_out, y_out = zeros(0), zeros(0)
+    for (i,ohlc) in enumerate(v)
+        ox,oy = get_xy(ohlc, x[i], xdiff)
+        nanappend!(x_out, ox)
+        nanappend!(y_out, oy)
+    end
+    x_out, y_out
+end
+
+# these are for passing in a vector of OHLC objects
+# TODO: when I allow `@recipe f(::Type{T}, v::T) = ...` definitions to replace convertToAnyVector,
+#       then I should replace these with one definition to convert to a vector of 4-tuples
+
+# to squash ambiguity warnings...
+@recipe f(x::AVec{Function}, v::AVec{OHLC}) = error()
+@recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(x::AVec{Function}, v::AVec{Tuple{R1,R2,R3,R4}}) = error()
+
+# this must be OHLC?
+@recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(x::AVec, ohlc::AVec{Tuple{R1,R2,R3,R4}}) = x, OHLC[OHLC(t...) for t in ohlc]
+
+@recipe function f(x::AVec, v::AVec{OHLC})
+    d[:seriestype] = :path
+    get_xy(v, x)
+end
+
+@recipe function f(v::AVec{OHLC})
+    d[:seriestype] = :path
+    get_xy(v)
+end
+
+# the series recipe, when passed vectors of 4-tuples
+
+# -------------------------------------------------
 
 
 "Sparsity plot... heatmap of non-zero values of a matrix"

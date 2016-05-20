@@ -40,7 +40,7 @@ supportedTypes(::GRBackend) = [
     :none, :line, :path, :steppre, :steppost,
     :scatter, :hist2d, :hexbin, :hist, :density,
     :bar, :sticks,
-    :hline, :vline, :heatmap, :pie, :image, :ohlc,
+    :hline, :vline, :heatmap, :pie, :image, #:ohlc,
     :contour, :path3d, :scatter3d, :surface, :wireframe
   ]
 supportedStyles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -261,8 +261,8 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         end
         if st == :bar
           x, y = 1:length(p[:y]), p[:y]
-        elseif st == :ohlc
-          x, y = 1:size(p[:y], 1), p[:y]
+        # elseif st == :ohlc
+        #   x, y = 1:size(p[:y], 1), p[:y]
         elseif st in [:hist, :density]
           x, y = Base.hist(p[:y], p[:bins])
         elseif st in [:hist2d, :hexbin]
@@ -295,15 +295,15 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
         if !(st in [:pie, :polar])
           xmin = min(minimum(x), xmin)
           xmax = max(maximum(x), xmax)
-          if st == :ohlc
-            for val in y
-              ymin = min(val.open, val.high, val.low, val.close, ymin)
-              ymax = max(val.open, val.high, val.low, val.close, ymax)
-            end
-          else
+        #   if st == :ohlc
+        #     for val in y
+        #       ymin = min(val.open, val.high, val.low, val.close, ymin)
+        #       ymax = max(val.open, val.high, val.low, val.close, ymax)
+        #     end
+        #   else
             ymin = min(minimum(y), ymin)
             ymax = max(maximum(y), ymax)
-          end
+        #   end
           if p[:xerror] != nothing || p[:yerror] != nothing
             dx = xmax - xmin
             xmin -= 0.02 * dx
@@ -460,7 +460,7 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
     GR.savestate()
     xmin, xmax, ymin, ymax = extrema[gr_getaxisind(p),:]
     GR.setwindow(xmin, xmax, ymin, ymax)
-    if st in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline, :ohlc, :polar]
+    if st in [:path, :line, :steppre, :steppost, :sticks, :hline, :vline, :polar] # :ohlc, :polar]
       GR.setlinetype(gr_linetype[p[:linestyle]])
       GR.setlinewidth(p[:linewidth])
       GR.setlinecolorind(gr_getcolorind(p[:linecolor]))
@@ -675,15 +675,15 @@ function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
       GR.setcharheight(charheight)
       GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
       GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
-    elseif st == :ohlc
-      y = p[:y]
-      n = size(y, 1)
-      ticksize = 0.5 * (xmax - xmin) / n
-      for i in 1:n
-        GR.polyline([i-ticksize, i], [y[i].open, y[i].open])
-        GR.polyline([i, i], [y[i].low, y[i].high])
-        GR.polyline([i, i+ticksize], [y[i].close, y[i].close])
-      end
+    # elseif st == :ohlc
+    #   y = p[:y]
+    #   n = size(y, 1)
+    #   ticksize = 0.5 * (xmax - xmin) / n
+    #   for i in 1:n
+    #     GR.polyline([i-ticksize, i], [y[i].open, y[i].open])
+    #     GR.polyline([i, i], [y[i].low, y[i].high])
+    #     GR.polyline([i, i+ticksize], [y[i].close, y[i].close])
+    #   end
     elseif st == :pie
       GR.selntran(0)
       GR.setfillintstyle(GR.INTSTYLE_SOLID)
