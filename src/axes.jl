@@ -28,7 +28,6 @@ function update!(a::Axis, args...; kw...)
     for arg in args
         T = typeof(arg)
         arg = get(_scaleAliases, arg, arg)
-        # scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
 
         if typeof(arg) <: Font
             d[:tickfont] = arg
@@ -41,7 +40,7 @@ function update!(a::Axis, args...; kw...)
             d[:flip] = true
 
         elseif T <: @compat(AbstractString)
-            d[:label] = arg
+            d[:guide] = arg
 
         # xlims/ylims
         elseif (T <: Tuple || T <: AVec) && length(arg) == 2

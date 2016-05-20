@@ -46,26 +46,18 @@ function plot(args...; kw...)
     pkg = backend()
     d = KW(kw)
     preprocessArgs!(d)
-    # DD(d,"pre")
 
     # create an empty Plot, update the args using the inputs, then pass it
     # to the backend to finish backend-specific initialization
     plt = Plot()
     _update_plot_args(plt, d)
-    # DD(plt.plotargs,"pargs")
     plt.o = _create_backend_figure(plt)
 
     # create the layout and subplots from the inputs
     plt.layout, plt.subplots, plt.spmap = build_layout(plt.plotargs)
     for (idx,sp) in enumerate(plt.subplots)
-        # update the subplot/axis args from inputs, then pass to backend to init further
         sp.plt = plt
         _update_subplot_args(plt, sp, copy(d), idx)
-        # DD(sp.attr[:xaxis].d,"$idx")
-
-        # TODO: i'd like to know what projection we're using by this point... can I push this off until later??
-        # I won't easily be able to auto-determine what series types are coming...
-        _initialize_subplot(plt, sp)
     end
 
     # now update the plot
@@ -97,58 +89,6 @@ function strip_first_letter(s::Symbol)
     str[1:1], symbol(str[2:end])
 end
 
-# # TODO: need to apply axis args to the axes, subplot args to the subplots, and plot args to the plot
-# # merge the KW d into the plot args
-# function _add_plotargs!(plt::Plot, d::KW)
-#     # @show d
-#
-#     # handle axis updates from a recipe
-#     for letter in ("x","y","z")
-#         # get the Axis object
-#         asym = symbol(letter * "axis")
-#         axis = plt.plotargs[asym]
-#         if axis == nothing
-#             # create a new one on first pass
-#             axis = Axis(letter)
-#         end
-#         # @show 1,typeof(axis)
-#
-#         # update xlabel, xscale, etc
-#         for k in _axis_symbols
-#             lk = symbol(letter * string(k))
-#             if haskey(d, lk)
-#                 axis[k] = d[lk]
-#             end
-#         end
-#         # @show 2,axis
-#
-#         # update guidefont, etc
-#         for k in _axis_symbols_fonts_colors
-#             if haskey(d, k)
-#                 axis[k] = d[k]
-#             end
-#         end
-#         # @show 3,axis
-#
-#         # update extrema and discrete values
-#         datasym = symbol(letter)
-#         if haskey(d, datasym)
-#             v = d[datasym]
-#             if eltype(v) <: Number
-#                 expand_extrema!(axis, v)
-#             else
-#                 d[datasym] = discrete_value!(axis, v)
-#             end
-#         end
-#         # @show 4,axis
-#     end
-#
-#     for k in keys(_plot_defaults)
-#         if haskey(d, k)
-#             plt.plotargs[k] = pop!(d, k)
-#         end
-#     end
-# end
 
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
@@ -163,6 +103,17 @@ function _apply_series_recipe(plt::Plot, d::KW)
         sp = d[:subplot]
         sp_idx = get_subplot_index(plt, sp)
         _update_subplot_args(plt, sp, d, sp_idx)
+
+        # change to a 3d projection for this subplot?
+        if is3d(st)
+            sp.attr[:projection] = "3d"
+        end
+
+        # initialize now that we know the first series type
+        if !haskey(sp.attr, :init)
+            _initialize_subplot(plt, sp)
+            sp.attr[:init] = true
+        end
 
         # adjust extrema and discrete info
         for s in (:x, :y, :z)

@@ -94,7 +94,7 @@ end
 getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
 getPyPlotColor(cvec::ColorVector, α=nothing) = map(getPyPlotColor, convertColor(cvec, α).v)
 getPyPlotColor(scheme::ColorScheme, α=nothing) = getPyPlotColor(convertColor(getColor(scheme), α))
-getPyPlotColor(vec::AVec, α=nothing) = map(c->getPyPlotColor(c,α), vec) 
+getPyPlotColor(vec::AVec, α=nothing) = map(c->getPyPlotColor(c,α), vec)
 getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
 
 function getPyPlotColorMap(c::ColorGradient, α=nothing)
@@ -321,6 +321,7 @@ min_padding_bottom(layout::Subplot{PyPlotBackend}) = compute_min_padding(layout,
 # `func` is one of (left,top,right,bottom), and we multiply by 1 or -1 depending on direction
 function compute_min_padding(sp::Subplot{PyPlotBackend}, func::Function, mult::Number)
     ax = sp.o
+    ax == nothing && return 0mm
     plotbb = py_bbox(ax)
     # @show func, mult plotbb
     # @show func, py_bbox_axis(ax, "x")
@@ -375,6 +376,7 @@ end
 
 function update_position!(sp::Subplot{PyPlotBackend})
     ax = sp.o
+    ax == nothing && return
     figw, figh = size(py_bbox_fig(sp.plt))
 
     # plot_bb = plotarea_bbox(sp)
@@ -402,6 +404,8 @@ function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend
         label = string(gensym()),
         projection = (proj in (nothing,:none) ? nothing : string(proj))
     )
+
+    # @show proj, ax
     # projection =
     # ax = fig[:add_subplot](111, projection = _py_projections[sp.attr[:projection]])
     # for axis in (:xaxis, :yaxis)
@@ -512,11 +516,11 @@ function pyplot_figure(plotargs::KW)
     fig
 end
 
-function pyplot_3d_setup!(wrap, d)
-    if trueOrAllTrue(st -> st in _3dTypes, get(d, :seriestype, :none))
-        push!(wrap.kwargs, (:projection, "3d"))
-    end
-end
+# function pyplot_3d_setup!(wrap, d)
+#     if trueOrAllTrue(st -> st in _3dTypes, get(d, :seriestype, :none))
+#         push!(wrap.kwargs, (:projection, "3d"))
+#     end
+# end
 
 # ---------------------------------------------------------------------------
 
@@ -584,11 +588,11 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
         error("seriestype $(st) is unsupported in PyPlot.  Choose from: $(supportedTypes(plt.backend))")
     end
 
-    # 3D plots have a different underlying Axes object in PyPlot
-    # TODO: BUG: this adds to kwargs but never changes anything... source of subplot(wireframe(...)) bug?
-    if st in _3dTypes && isempty(plt.o.kwargs)
-        push!(plt.o.kwargs, (:projection, "3d"))
-    end
+    # # 3D plots have a different underlying Axes object in PyPlot
+    # # TODO: BUG: this adds to kwargs but never changes anything... source of subplot(wireframe(...)) bug?
+    # if st in _3dTypes && isempty(plt.o.kwargs)
+    #     push!(plt.o.kwargs, (:projection, "3d"))
+    # end
 
     # PyPlot doesn't handle mismatched x/y
     fix_xy_lengths!(plt, d)
@@ -618,6 +622,8 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     else
         error("Only numbers and vectors are supported with levels keyword")
     end
+
+    # @show ax d
 
     # for each plotting command, optionally build and add a series handle to the list
 
@@ -1139,14 +1145,17 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
     # figorax = plt.o
     # ax = getLeftAxis(figorax)
     for sp in plt.subplots
-        spargs = sp.attr
+        attr = sp.attr
         ax = getAxis(sp)
+        if ax == nothing
+            continue
+        end
         # ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
-        # guidesz = get(d, :guidefont, spargs[:guidefont]).pointsize
+        # guidesz = get(d, :guidefont, attr[:guidefont]).pointsize
 
         # title
-        if haskey(spargs, :title)
-            loc = lowercase(string(spargs[:title_location]))
+        if haskey(attr, :title)
+            loc = lowercase(string(attr[:title_location]))
             field = if loc == "left"
                 :_left_title
             elseif loc == "right"
@@ -1154,10 +1163,11 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
             else
                 :title
             end
-            ax[field][:set_text](spargs[:title])
-            ax[field][:set_fontsize](spargs[:titlefont].pointsize)
-            ax[field][:set_color](getPyPlotColor(spargs[:titlefont].color))
-            ax[:set_title](spargs[:title], loc = loc)
+            ax[field][:set_text](attr[:title])
+            ax[field][:set_fontsize](attr[:titlefont].pointsize)
+            # ax[field][:set_color](getPyPlotColor(attr[:titlefont].color))
+            ax[field][:set_color](getPyPlotColor(attr[:foreground_color_title]))
+            ax[:set_title](attr[:title], loc = loc)
             # TODO: set other font attributes
         end
 
@@ -1166,17 +1176,17 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         # axes = [getLeftAxis(figorax)]
         # if usingRightAxis(plt)
         #     push!(axes, getRightAxis(figorax))
-        #     if get(spargs, :yrightlabel, "") != ""
+        #     if get(attr, :yrightlabel, "") != ""
         #         rightax = getRightAxis(figorax)
-        #         rightax[:set_ylabel](spargs[:yrightlabel])
+        #         rightax[:set_ylabel](attr[:yrightlabel])
         #     end
         # end
 
         for letter in (:x, :y, :z)
             axissym = symbol(letter, :axis)
-            axis = spargs[axissym]
+            axis = attr[axissym]
             # @show axis
-            # DD(axis.spargs, "updateplot")
+            # DD(axis.attr, "updateplot")
             # @show haskey(ax, axissym)
             haskey(ax, axissym) || continue
             applyPyPlotScale(ax, axis[:scale], letter)
@@ -1193,8 +1203,8 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
                     lab[:set_fontsize](axis[:tickfont].pointsize)
                     lab[:set_rotation](axis[:rotation])
                 end
-                if get(spargs, :grid, false)
-                    fgcolor = getPyPlotColor(spargs[:foreground_color_grid])
+                if get(attr, :grid, false)
+                    fgcolor = getPyPlotColor(attr[:foreground_color_grid])
                     tmpax[axissym][:grid](true, color = fgcolor)
                     tmpax[:set_axisbelow](true)
                 end
@@ -1208,20 +1218,20 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         #     axis, scale, lims, ticks, flip, lab, rotation =
         #         axis_symbols(letter, "axis", "scale", "lims", "ticks", "flip", "label", "rotation")
         #     haskey(ax, axis) || continue
-        #     haskey(spargs, scale) && applyPyPlotScale(ax, spargs[scale], letter)
-        #     haskey(spargs, lims)  && addPyPlotLims(ax, spargs[lims], letter)
-        #     haskey(spargs, ticks) && addPyPlotTicks(ax, spargs[ticks], letter)
-        #     haskey(spargs, lab)   && ax[symbol("set_", letter, "label")](spargs[lab])
-        #     if get(spargs, flip, false)
+        #     haskey(attr, scale) && applyPyPlotScale(ax, attr[scale], letter)
+        #     haskey(attr, lims)  && addPyPlotLims(ax, attr[lims], letter)
+        #     haskey(attr, ticks) && addPyPlotTicks(ax, attr[ticks], letter)
+        #     haskey(attr, lab)   && ax[symbol("set_", letter, "label")](attr[lab])
+        #     if get(attr, flip, false)
         #         ax[symbol("invert_", letter, "axis")]()
         #     end
         #     for tmpax in axes
         #         tmpax[axis][:label][:set_fontsize](guidesz)
         #         for lab in tmpax[symbol("get_", letter, "ticklabels")]()
         #             lab[:set_fontsize](ticksz)
-        #             haskey(spargs, rotation) && lab[:set_rotation](spargs[rotation])
+        #             haskey(attr, rotation) && lab[:set_rotation](attr[rotation])
         #         end
-        #         if get(spargs, :grid, false)
+        #         if get(attr, :grid, false)
         #             fgcolor = getPyPlotColor(plt.plotargs[:foreground_color_grid])
         #             tmpax[axis][:grid](true, color = fgcolor)
         #             tmpax[:set_axisbelow](true)
@@ -1230,7 +1240,7 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         # end
 
         # do we want to change the aspect ratio?
-        aratio = get(spargs, :aspect_ratio, :none)
+        aratio = get(attr, :aspect_ratio, :none)
         if aratio != :none
             ax[:set_aspect](isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
         end
@@ -1402,6 +1412,7 @@ function finalizePlot(plt::Plot{PyPlotBackend})
     for sp in plt.subplots
         # ax = getLeftAxis(plt)
         ax = getAxis(sp)
+        ax == nothing && continue
         addPyPlotLegend(plt, sp, ax)
         for asym in (:xaxis, :yaxis, :zaxis)
             updateAxisColors(ax, sp.attr[asym])

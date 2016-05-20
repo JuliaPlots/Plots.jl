@@ -193,6 +193,7 @@ _subplot_defaults[:background_color_inside]  = :match            # background in
 _subplot_defaults[:foreground_color_subplot] = :match            # default for other fg colors... match takes plot default
 _subplot_defaults[:foreground_color_legend]  = :match            # foreground of legend
 _subplot_defaults[:foreground_color_grid]    = :match            # grid color
+_subplot_defaults[:foreground_color_title]   = :match            # title color
 _subplot_defaults[:color_palette]            = :auto
 _subplot_defaults[:legend]                   = :best
 _subplot_defaults[:colorbar]                 = :legend
@@ -312,6 +313,8 @@ add_aliases(:foreground_color_legend, :fg_legend, :fglegend, :fgcolor_legend, :f
                             :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend)
 add_aliases(:foreground_color_grid, :fg_grid, :fggrid, :fgcolor_grid, :fg_color_grid, :foreground_grid,
                             :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid, :gridcolor)
+add_aliases(:foreground_color_title, :fg_title, :fgtitle, :fgcolor_title, :fg_color_title, :foreground_title,
+                            :foreground_colour_title, :fgcolour_title, :fg_colour_title, :titlecolor)
 add_aliases(:foreground_color_axis, :fg_axis, :fgaxis, :fgcolor_axis, :fg_color_axis, :foreground_axis,
                             :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis, :axiscolor)
 add_aliases(:foreground_color_border, :fg_border, :fgborder, :fgcolor_border, :fg_color_border, :foreground_border,
@@ -348,7 +351,7 @@ add_aliases(:xguide, :xlabel, :xlab, :xl)
 add_aliases(:xlims, :xlim, :xlimit, :xlimits)
 add_aliases(:xticks, :xtick)
 add_aliases(:xrotation, :xrot, :xr)
-add_aliases(:xguide, :ylabel, :ylab, :yl)
+add_aliases(:yguide, :ylabel, :ylab, :yl)
 add_aliases(:ylims, :ylim, :ylimit, :ylimits)
 add_aliases(:yticks, :ytick)
 # add_aliases(:yrightlabel, :yrlab, :yrl, :ylabel2, :y2label, :ylab2, :y2lab, :ylabr, :ylabelright)
@@ -947,6 +950,7 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
     fg = color_or_match!(spargs, :foreground_color_subplot, pargs[:foreground_color])
     color_or_match!(spargs, :foreground_color_legend, fg)
     color_or_match!(spargs, :foreground_color_grid, fg)
+    color_or_match!(spargs, :foreground_color_title, fg)
 
     # info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
     # DD(spargs, "before loop")

@@ -36,7 +36,7 @@ if is_installed("DataFrames")
 
         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, dfs::DFS)
             if isa(dfs, Symbol)
-                get!(d, symbol(letter * "label"), string(dfs))
+                get!(d, symbol(letter * "guide"), string(dfs))
                 collect(df[dfs])
             else
                 get!(d, :label, reshape(dfs, 1, length(dfs)))
