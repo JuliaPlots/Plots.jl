@@ -2,7 +2,7 @@
 # https://plot.ly/javascript/getting-started
 
 supportedArgs(::PlotlyBackend) = [
-    :annotation,
+    :annotations,
     :background_color, :foreground_color, :color_palette,
     # :background_color_legend, :background_color_inside, :background_color_outside,
     # :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,

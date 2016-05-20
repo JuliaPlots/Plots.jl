@@ -3,7 +3,7 @@
 
 
 supportedArgs(::GadflyBackend) = [
-    :annotation,
+    :annotations,
     :background_color, :foreground_color, :color_palette,
     :group, :label, :seriestype,
     :seriescolor, :seriesalpha,

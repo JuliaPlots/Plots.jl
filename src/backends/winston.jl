@@ -4,7 +4,7 @@
 # credit goes to https://github.com/jverzani for contributing to the first draft of this backend implementation
 
 supportedArgs(::WinstonBackend) = [
-    :annotation,
+    :annotations,
     # :args,
     # :axis,
     # :background_color,

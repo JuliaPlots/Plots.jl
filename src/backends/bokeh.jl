@@ -3,7 +3,7 @@
 
 
 supportedArgs(::BokehBackend) = [
-    # :annotation,
+    # :annotations,
     # :axis,
     # :background_color,
     :linecolor,

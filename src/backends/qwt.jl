@@ -3,7 +3,7 @@
 
 
 supportedArgs(::QwtBackend) = [
-    :annotation,
+    :annotations,
     :axis,
     :background_color,
     :linecolor,

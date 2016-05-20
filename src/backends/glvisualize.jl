@@ -3,7 +3,7 @@
 # [WEBSITE]
 
 supportedArgs(::GLVisualizeBackend) = [
-    # :annotation,
+    # :annotations,
     # :axis,
     # :background_color,
     # :color_palette,

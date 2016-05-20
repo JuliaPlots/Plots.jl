@@ -2,7 +2,7 @@
 # https://github.com/Evizero/UnicodePlots.jl
 
 supportedArgs(::UnicodePlotsBackend) = [
-    # :annotation,
+    # :annotations,
     # :args,
     # :axis,
     # :background_color,

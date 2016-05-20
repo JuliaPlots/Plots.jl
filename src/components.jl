@@ -252,6 +252,7 @@ immutable PlotText
 end
 PlotText(str) = PlotText(string(str), font())
 
+text(t::PlotText) = t
 function text(str, args...)
   PlotText(string(str), font(args...))
 end

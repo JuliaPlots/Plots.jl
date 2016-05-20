@@ -3,7 +3,7 @@
 
 
 supportedArgs(::PyPlotBackend) = [
-    :annotation,
+    :annotations,
     :background_color, :foreground_color, :color_palette,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
@@ -1153,6 +1153,11 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         # ticksz = get(d, :tickfont, plt.plotargs[:tickfont]).pointsize
         # guidesz = get(d, :guidefont, attr[:guidefont]).pointsize
 
+        # add the annotations
+        for ann in attr[:annotations]
+            createPyPlotAnnotationObject(sp, ann...)
+        end
+
         # title
         if haskey(attr, :title)
             loc = lowercase(string(attr[:title_location]))
@@ -1252,28 +1257,28 @@ end
 
 # TODO: these should apply to a Subplot, NOT a Plot
 
-# function createPyPlotAnnotationObject(plt::Plot{PyPlotBackend}, x, y, val::@compat(AbstractString))
-#     ax = getLeftAxis(plt)
-#     ax[:annotate](val, xy = (x,y))
-# end
-#
-#
-# function createPyPlotAnnotationObject(plt::Plot{PyPlotBackend}, x, y, val::PlotText)
-#     ax = getLeftAxis(plt)
-#     ax[:annotate](val.str,
-#         xy = (x,y),
-#         family = val.font.family,
-#         color = getPyPlotColor(val.font.color),
-#         horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
-#         verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
-#         rotation = val.font.rotation * 180 / π,
-#         size = val.font.pointsize
-#     )
-# end
-#
-# function _add_annotations{X,Y,V}(plt::Plot{PyPlotBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
+function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val::@compat(AbstractString))
+    ax = sp.o
+    ax[:annotate](val, xy = (x,y))
+end
+
+
+function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val::PlotText)
+    ax = sp.o
+    ax[:annotate](val.str,
+        xy = (x,y),
+        family = val.font.family,
+        color = getPyPlotColor(val.font.color),
+        horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
+        verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
+        rotation = val.font.rotation * 180 / π,
+        size = val.font.pointsize
+    )
+end
+
+# function _add_annotations(sp::Subplot{PyPlotBackend}, anns::AVec)
 #     for ann in anns
-#         createPyPlotAnnotationObject(plt, ann...)
+#         createPyPlotAnnotationObject(sp, ann...)
 #     end
 # end
 

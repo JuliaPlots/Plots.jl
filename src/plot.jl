@@ -172,14 +172,14 @@ function _plot!(plt::Plot, d::KW, args...)
         args = tuple(extractGroupArgs(d[:group], args...), args...)
     end
 
-    # initialize the annotations list with what was passed in
-    # TODO: there must be cleaner way to handle this!
-    anns = annotations(get(d, :annotation, NTuple{3}[]))
-    if typeof(anns)  <: AVec{PlotText}
-        anns = NTuple{3}[]
-    else
-        delete!(d, :annotation)
-    end
+    # # initialize the annotations list with what was passed in
+    # # TODO: there must be cleaner way to handle this!
+    # anns = annotations(get(d, :annotation, NTuple{3}[]))
+    # if typeof(anns)  <: AVec{PlotText}
+    #     anns = NTuple{3}[]
+    # else
+    #     delete!(d, :annotation)
+    # end
 
 
     # for plotting recipes, swap out the args and update the parameter dictionary
@@ -250,12 +250,12 @@ function _plot!(plt::Plot, d::KW, args...)
 
     # !!! note: at this point, kw_list is fully decomposed into individual series... one KW per series !!!
 
-    # TODO: move annotations into subplot update
-    # now include any annotations which were added during recipes
-    for kw in kw_list
-        append!(anns, annotations(pop!(kw, :annotation, [])))
-    end
-    # @show anns
+    # # TODO: move annotations into subplot update
+    # # now include any annotations which were added during recipes
+    # for kw in kw_list
+    #     append!(anns, annotations(pop!(kw, :annotation, [])))
+    # end
+    # # @show anns
 
 
     # for kw in kw_list
@@ -296,6 +296,18 @@ function _plot!(plt::Plot, d::KW, args...)
         sp = kw[:subplot] = get_subplot(plt, sp)
         idx = get_subplot_index(plt, sp)
 
+        # strip out series annotations (those which are based on series x/y coords)
+        # and add them to the subplot attr
+        sp_anns = annotations(sp.attr[:annotations])
+        anns = annotations(pop!(kw, :series_annotations, []))
+        if length(anns) > 0
+            x, y = kw[:x], kw[:y]
+            nx, ny, na = map(length, (x,y,anns))
+            n = max(nx, ny, na)
+            anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(anns[mod1(i,na)])) for i=1:n]
+        end
+        sp.attr[:annotations] = vcat(sp_anns, anns)
+
         # we update subplot args in case something like the color palatte is part of the recipe
         # DD(sp.attr[:xaxis].d, "before USA $i")
         # DD(kw, "kw")
@@ -319,8 +331,8 @@ function _plot!(plt::Plot, d::KW, args...)
         # DD(sp.attr[:xaxis].d, "after $i")
     end
 
-    # now that we're done adding all the series, add the annotations
-    _add_annotations(plt, anns)
+    # # now that we're done adding all the series, add the annotations
+    # _add_annotations(plt, anns)
 
     # TODO just need to pass plt... and we should do all non-series updates here
     _update_plot(plt, plt.plotargs)
@@ -484,38 +496,40 @@ end
 
 # --------------------------------------------------------------------
 
-annotations(::@compat(Void)) = []
-annotations{X,Y,V}(v::AVec{@compat(Tuple{X,Y,V})}) = v
-annotations{X,Y,V}(t::@compat(Tuple{X,Y,V})) = [t]
-annotations(v::AVec{PlotText}) = v
-annotations(v::AVec) = map(PlotText, v)
-annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
-                       "(x, y, annotation)\n    got: $(typeof(anns))")
+annotations(::Void) = []
+annotations(anns::AVec) = anns
+annotations(anns) = Any[anns]
+# annotations{X,Y,V}(v::AVec{@compat(Tuple{X,Y,V})}) = v
+# annotations{X,Y,V}(t::@compat(Tuple{X,Y,V})) = [t]
+# annotations(v::AVec{PlotText}) = v
+# annotations(v::AVec) = map(PlotText, v)
+# annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
+#                        "(x, y, annotation)\n    got: $(typeof(anns))")
 
-function annotations(plt::Plot, anns)
-    anns = annotations(anns)
-    # if we just have a list of PlotText objects, then create (x,y,text) tuples
-    if typeof(anns) <: AVec{PlotText}
-        x, y = plt[plt.n]
-        anns = Tuple{Float64,Float64,PlotText}[(x[i], y[i], t) for (i,t) in enumerate(anns)]
-    end
-    anns
-end
+# function annotations(plt::Plot, anns)
+#     anns = annotations(anns)
+#     # if we just have a list of PlotText objects, then create (x,y,text) tuples
+#     if typeof(anns) <: AVec{PlotText}
+#         x, y = plt[plt.n]
+#         anns = Tuple{Float64,Float64,PlotText}[(x[i], y[i], t) for (i,t) in enumerate(anns)]
+#     end
+#     anns
+# end
 
 
-function _add_annotations(plt::Plot, d::KW)
-    anns = annotations(get(d, :annotation, nothing))
-    if !isempty(anns)
-
-        # if we just have a list of PlotText objects, then create (x,y,text) tuples
-        if typeof(anns) <: AVec{PlotText}
-            x, y = plt[plt.n]
-            anns = Tuple{Float64,Float64,PlotText}[(x[i], y[i], t) for (i,t) in enumerate(anns)]
-        end
-
-        _add_annotations(plt, anns)
-    end
-end
+# function _add_annotations(plt::Plot, d::KW)
+#     anns = annotations(get(d, :annotation, nothing))
+#     if !isempty(anns)
+#
+#         # if we just have a list of PlotText objects, then create (x,y,text) tuples
+#         if typeof(anns) <: AVec{PlotText}
+#             x, y = plt[plt.n]
+#             anns = Tuple{Float64,Float64,PlotText}[(x[i], y[i], t) for (i,t) in enumerate(anns)]
+#         end
+#
+#         _add_annotations(plt, anns)
+#     end
+# end
 
 
 # --------------------------------------------------------------------

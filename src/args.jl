@@ -159,6 +159,7 @@ _series_defaults[:contours]          = false     # add contours to 3d surface an
 _series_defaults[:match_dimensions]  = false     # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
                                                  # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
 _series_defaults[:subplot]           = :auto     # which subplot(s) does this series belong to?
+_series_defaults[:series_annotations] = []       # a list of annotations which apply to the coordinates of this series
 
 
 const _plot_defaults = KW()
@@ -199,7 +200,7 @@ _subplot_defaults[:legend]                   = :best
 _subplot_defaults[:colorbar]                 = :legend
 _subplot_defaults[:legendfont]               = font(8)
 _subplot_defaults[:grid]                     = true
-_subplot_defaults[:annotation]               = nothing           # annotation tuple(s)... (x,y,annotation)
+_subplot_defaults[:annotations]              = []                # annotation tuples... list of (x,y,annotation)
 # _subplot_defaults[:polar]                    = false
 _subplot_defaults[:projection]               = :none             # can also be :polar or :3d
 _subplot_defaults[:aspect_ratio]             = :none             # choose from :none or :equal
@@ -346,7 +347,7 @@ add_aliases(:fillrange, :fillrng, :frange, :fillto, :fill_between)
 add_aliases(:group, :g, :grouping)
 add_aliases(:bins, :bin, :nbin, :nbins, :nb)
 add_aliases(:ribbon, :rib)
-add_aliases(:annotation, :ann, :anns, :annotate, :annotations)
+add_aliases(:annotations, :ann, :anns, :annotate, :annotation)
 add_aliases(:xguide, :xlabel, :xlab, :xl)
 add_aliases(:xlims, :xlim, :xlimit, :xlimits)
 add_aliases(:xticks, :xtick)
@@ -385,6 +386,7 @@ add_aliases(:match_dimensions, :transpose, :transpose_z)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
 add_aliases(:title_location, :title_loc, :titleloc)
+add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation)
 
 
 # add all pluralized forms to the _keyAliases dict

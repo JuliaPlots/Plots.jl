@@ -24,11 +24,11 @@ function _add_series(plt::Plot{[PkgName]Backend}, series::Series)
   # TODO: add one series to the underlying package
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{[PkgName]AbstractBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
-  for ann in anns
-    # TODO: add the annotation to the plot
-  end
-end
+# function _add_annotations{X,Y,V}(plt::Plot{[PkgName]AbstractBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
+#   for ann in anns
+#     # TODO: add the annotation to the plot
+#   end
+# end
 
 # ----------------------------------------------------------------
 
@@ -61,13 +61,13 @@ end
 #   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
 # end
 
-function _expand_limits(lims, plt::Plot{[PkgName]AbstractBackend}, isx::Bool)
-  # TODO: call expand limits for each plot data
-end
-
-function _remove_axis(plt::Plot{[PkgName]AbstractBackend}, isx::Bool)
-  # TODO: if plot is inner subplot, might need to remove ticks or axis labels
-end
+# function _expand_limits(lims, plt::Plot{[PkgName]AbstractBackend}, isx::Bool)
+#   # TODO: call expand limits for each plot data
+# end
+#
+# function _remove_axis(plt::Plot{[PkgName]AbstractBackend}, isx::Bool)
+#   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
+# end
 
 # ----------------------------------------------------------------
 
