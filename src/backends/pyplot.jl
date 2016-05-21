@@ -1084,13 +1084,69 @@ end
 #     end
 # end
 
+# # set the lims for each axis using the axis extrema, overriding if needed
+# # TODO: most of this is the same for all backends!
+# function set_lims!(sp::Subplot{PyPlotBackend})
+#     ax = sp.o
+#     ax == nothing && return
+#     for letter in (:x, :y, :z)
+#         axis = sp.attr[symbol(letter,:axis)]
+#         # get the extrema
+#         lims = copy(axis[:extrema])
+#         # if d[:lims] != :auto, update lim when `isfinite`
+#         lims_override = axis[:lims]
+#         if lims_override != :auto
+#             if isfinite(lims_override[1])
+#                 lims[1] = lims_override[1]
+#             end
+#             if isfinite(lims_override[2])
+#                 lims[2] = lims_override[2]
+#             end
+#         end
+#         # ax[:set_<>lim](lims)
+#         # TODO: check for polar, set tlim/rlim instead
+#         func = symbol(:set_, letter, :lim)
+#         if haskey(ax, func)
+#             ax[func](lims...)
+#         end
+#     end
+# end
+
+function set_lims!(sp::Subplot{PyPlotBackend}, axis::Axis)
+    lims = copy(axis[:extrema])
+    # if d[:lims] != :auto, update lim when `isfinite`
+    lims_override = axis[:lims]
+    if lims_override != :auto
+        if isfinite(lims_override[1])
+            lims[1] = lims_override[1]
+        end
+        if isfinite(lims_override[2])
+            lims[2] = lims_override[2]
+        end
+    end
+    # TODO: check for polar, set tlim/rlim instead
+
+    # pyplot's set_xlim (or y/z) method:
+    sp.o[symbol(:set_, axis[:letter], :lim)](lims...)
+end
+
 # --------------------------------------------------------------------------
 
-# TODO: d[:serieshandle] should really be a list of handles... then we should set
-# the x/y data for each handle (for example, plot and scatter)
+# get_axis and update_limits! should be moved to subplots.jl? or axes.jl?
+
+get_axis(sp::Subplot, letter::Symbol) = sp.attr[symbol(letter, :axis)]
+
+function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
+    for letter in letters
+        axis = get_axis(sp, letter)
+        expand_extrema!(axis, series.d[letter])
+        set_lims!(sp, axis)
+    end
+end
 
 function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
-    d = plt.series_list[i].d
+    series = plt.series_list[i]
+    d = series.d
     d[:x], d[:y] = xy
     for handle in d[:serieshandle]
         try
@@ -1100,18 +1156,26 @@ function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
         end
     end
     # set_lims!(plt, plt.series_list[i])
+    # expand_extrema!(axis, d[letter])
+    # set_lims!(d[:subplot])
+    update_limits!(d[:subplot], series, (:x,:y))
     plt
 end
 
 
 function setxyz!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
-    d = plt.series_list[i].d
+    # d = plt.series_list[i].d
+    series = plt.series_list[i]
+    d = series.d
     d[:x], d[:y], d[:z] = xyz
+    # d[:x], d[:y], d[:z] = xyz
     for handle in d[:serieshandle]
         handle[:set_data](d[:x], d[:y])
         handle[:set_3d_properties](d[:z])
     end
     # set_lims!(plt, plt.series_list[i])
+    # set_lims!(d[:subplot])
+    update_limits!(d[:subplot], series, (:x,:y,:z))
     plt
 end
 

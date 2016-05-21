@@ -472,20 +472,20 @@ tovec(v::AbstractVector) = v
 tovec(v::Void) = zeros(0)
 
 function getxy(plt::Plot, i::Integer)
-    d = plt.seriesargs[i]
+    d = plt.series_list[i].d
     tovec(d[:x]), tovec(d[:y])
 end
 function getxyz(plt::Plot, i::Integer)
-    d = plt.seriesargs[i]
+    d = plt.series_list[i].d
     tovec(d[:x]), tovec(d[:y]), tovec(d[:z])
 end
 
 function setxy!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer)
-    d = plt.seriesargs[i]
+    d = plt.series_list[i].d
     d[:x], d[:y] = xy
 end
 function setxyz!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
-    d = plt.seriesargs[i]
+    d = plt.series_list[i].d
     d[:x], d[:y], d[:z] = xyz
 end
 
@@ -657,9 +657,9 @@ mm2px(mm::Real)         = float(px / MM_PER_PX)
 
 
 "Smallest x in plot"
-xmin(plt::Plot) = minimum([minimum(d[:x]) for d in plt.seriesargs])
+xmin(plt::Plot) = minimum([minimum(series.d[:x]) for series in plt.series_list])
 "Largest x in plot"
-xmax(plt::Plot) = maximum([maximum(d[:x]) for d in plt.seriesargs])
+xmax(plt::Plot) = maximum([maximum(series.d[:x]) for series in plt.series_list])
 
 "Extrema of x-values in plot"
 Base.extrema(plt::Plot) = (xmin(plt), xmax(plt))

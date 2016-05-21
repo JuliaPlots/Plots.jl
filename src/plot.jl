@@ -534,14 +534,14 @@ annotations(anns) = Any[anns]
 
 # --------------------------------------------------------------------
 
-function Base.copy(plt::Plot)
-    backend(plt.backend)
-    plt2 = plot(; plt.plotargs...)
-    for sargs in plt.seriesargs
-        sargs = filter((k,v) -> haskey(_series_defaults,k), sargs)
-        plot!(plt2; sargs...)
-    end
-    plt2
-end
+# function Base.copy(plt::Plot)
+#     backend(plt.backend)
+#     plt2 = plot(; plt.plotargs...)
+#     for sargs in plt.seriesargs
+#         sargs = filter((k,v) -> haskey(_series_defaults,k), sargs)
+#         plot!(plt2; sargs...)
+#     end
+#     plt2
+# end
 
 # --------------------------------------------------------------------
