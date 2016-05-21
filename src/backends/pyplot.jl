@@ -267,22 +267,31 @@ function py_bbox(obj)
     BoundingBox(l*px, (ft-t)*px, (r-l)*px, (t-b)*px)
 end
 
+# get the bounding box of the union of the objects
+function py_bbox(v::AVec)
+    bbox_union = defaultbox
+    for obj in v
+        bbox_union = bbox_union + py_bbox(obj)
+    end
+    bbox_union
+end
 
 function py_bbox_ticks(ax, letter)
     # fig = ax[:get_figure]()
     # @show fig
     labels = ax[symbol("get_"*letter*"ticklabels")]()
-    # @show labels
-    # bboxes = []
-    bbox_union = defaultbox
-    for lab in labels
-        # @show lab,lab[:get_text]()
-        bbox = py_bbox(lab)
-        bbox_union = bbox_union + bbox
-        # @show letter,bbox bbox_union
-        # @show bbox_union
-    end
-    bbox_union
+    py_bbox(labels)
+    # # @show labels
+    # # bboxes = []
+    # bbox_union = defaultbox
+    # for lab in labels
+    #     # @show lab,lab[:get_text]()
+    #     bbox = py_bbox(lab)
+    #     bbox_union = bbox_union + bbox
+    #     # @show letter,bbox bbox_union
+    #     # @show bbox_union
+    # end
+    # bbox_union
 end
 
 function py_bbox_axislabel(ax, letter)
@@ -316,6 +325,8 @@ min_padding_top(layout::Subplot{PyPlotBackend})    = compute_min_padding(layout,
 min_padding_right(layout::Subplot{PyPlotBackend})  = compute_min_padding(layout, right, -1)
 min_padding_bottom(layout::Subplot{PyPlotBackend}) = compute_min_padding(layout, bottom,-1)
 
+const _cbar_width = 5mm
+
 # loop over the guides and axes and compute how far they "stick out" from the plot area,
 # so that we know the minimum padding we need to avoid cropping and overlapping text.
 # `func` is one of (left,top,right,bottom), and we multiply by 1 or -1 depending on direction
@@ -335,6 +346,14 @@ function compute_min_padding(sp::Subplot{PyPlotBackend}, func::Function, mult::N
             padding = max(padding, mult * diff)
         end
         # @show padding
+    end
+
+    if func == right && haskey(sp.attr, :cbar_ax)
+        # TODO: need bounding box of colorbar labels
+        # bb = py_bbox(sp.attr[:cbar_ax][:get_ticklabels]())
+        bb = BoundingBox(0mm,0mm,15mm,15mm)
+        sp.attr[:cbar_width] = _cbar_width + width(bb)
+        padding = padding + sp.attr[:cbar_width]
     end
 
     # if func == top
@@ -374,24 +393,47 @@ end
 
 # ---------------------------------------------------------------------------
 
+# TODO: add this (and _cbar_width) to layouts.jl?
+function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
+    mms = Float64[f(bb).value for f in (left,bottom,width,height)]
+    if flipy
+        mms[2] = figh.value - mms[2]  # flip y when origin in bottom-left
+    end
+    mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
+end
+
+
 function update_position!(sp::Subplot{PyPlotBackend})
     ax = sp.o
     ax == nothing && return
     figw, figh = size(py_bbox_fig(sp.plt))
 
     # plot_bb = plotarea_bbox(sp)
-    plot_bb = sp.plotarea
+    # plot_bb = sp.plotarea
     # @show sp.bbox plot_bb
     # l = float(left(plot_bb) / px) / figw
     # b = float(bottom(plot_bb) / px) / figh
     # w = float(width(plot_bb) / px) / figw
-    mms = Float64[f(plot_bb).value for f in (left, bottom, width, height)]
-
-    mms[2] = figh.value - mms[2]
-    # @show mms
-    pcts = mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
+    # mms = Float64[f(plot_bb).value for f in (left, bottom, width, height)]
+    #
+    # mms[2] = figh.value - mms[2]
+    # # @show mms
+    # pcts = mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
+    pcts = bbox_to_pcts(sp.plotarea, figw, figh)
     # @show pcts
     ax[:set_position](pcts)
+
+    # set the cbar position if there is one
+    # @show sp.attr[:cbar_ax]
+    if haskey(sp.attr, :cbar_ax)
+        cbw = sp.attr[:cbar_width]
+        # cb_bbox = BoundingBox(figw - cbw, 0.1figh, cbw, figh - 0.2pct)
+        # this is the bounding box of just the colors of the colorbar (not labels)
+        cb_bbox = BoundingBox(right(sp.bbox)-cbw+2mm, top(sp.bbox)+2mm, _cbar_width, height(sp.bbox)-4mm)
+        pcts = bbox_to_pcts(cb_bbox, figw, figh)
+        # @show cbw cb_bbox pcts
+        sp.attr[:cbar_ax][:set_position](pcts)
+    end
 end
 
 # each backend should set up the subplot here
@@ -935,24 +977,40 @@ function _add_series(plt::Plot{PyPlotBackend}, series::Series)
     handleSmooth(plt, ax, d, d[:smooth])
 
     # add the colorbar legend
-    if needs_colorbar && attr(d[:subplot], :colorbar) != :none
+    sp = d[:subplot]
+    if needs_colorbar && sp.attr[:colorbar] != :none
         # cbar = PyPlot.colorbar(handles[end], ax=ax)
 
         # do we need a discrete colorbar?
-        if discrete_colorbar_values == nothing
-            PyPlot.colorbar(handles[end], ax=ax)
-        else
-            # add_pyfixedformatter(cbar, discrete_colorbar_values)
+        handle = handles[end]
+        kw = KW()
+        if discrete_colorbar_values != nothing
             locator, formatter = get_locator_and_formatter(discrete_colorbar_values)
-            vals = 1:length(discrete_colorbar_values)
-            PyPlot.colorbar(handles[end],
-                ax = ax,
-                ticks = locator,
-                format = formatter,
-                boundaries = vcat(0, vals + 0.5),
-                values = vals
-            )
+            kw[:values] = 1:length(discrete_colorbar_values)
+            kw[:ticks] = locator
+            kw[:format] = formatter
+            kw[:boundaries] = vcat(0, kw[:values] + 0.5)
         end
+
+        fig = plt.o
+        cbax = fig[:add_axes]([0.8,0.1,0.03,0.8])
+        sp.attr[:cbar_handle] = fig[:colorbar](handle, cax = cbax, kw...)
+        sp.attr[:cbar_ax] = cbax
+
+        # if discrete_colorbar_values == nothing
+        #     PyPlot.colorbar(handles[end], ax=ax)
+        # else
+        #     # add_pyfixedformatter(cbar, discrete_colorbar_values)
+        #     locator, formatter = get_locator_and_formatter(discrete_colorbar_values)
+        #     vals = 1:length(discrete_colorbar_values)
+        #     PyPlot.colorbar(handles[end],
+        #         ax = ax,
+        #         ticks = locator,
+        #         format = formatter,
+        #         boundaries = vcat(0, vals + 0.5),
+        #         values = vals
+        #     )
+        # end
     end
 
     # this sets the bg color inside the grid

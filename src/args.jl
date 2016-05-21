@@ -613,26 +613,29 @@ end
 function preprocessArgs!(d::KW)
     replaceAliases!(d, _keyAliases)
 
-    # # handle axis args
-    # for letter in ("x", "y", "z")
-    #     asym = symbol(letter * "axis")
-    #     for arg in wraptuple(pop!(d, asym, ()))
-    #         processAxisArg(d, letter, arg)
-    #     end
-    #     # delete!(d, asym)
-    #
-    #     # # NOTE: this logic was moved to _add_plotargs...
-    #     # # turn :labels into :ticks_and_labels
-    #     # tsym = symbol(letter * "ticks")
-    #     # if haskey(d, tsym) && ticksType(d[tsym]) == :labels
-    #     #     d[tsym] = (1:length(d[tsym]), d[tsym])
-    #     # end
-    #     #
-    #     # ssym = symbol(letter * "scale")
-    #     # if haskey(d, ssym) && haskey(_scaleAliases, d[ssym])
-    #     #     d[ssym] = _scaleAliases[d[ssym]]
-    #     # end
-    # end
+    # handle axis args
+    for letter in (:x, :y, :z)
+        asym = symbol(letter, :axis)
+        args = pop!(d, asym, ())
+        if !(typeof(args) <: Axis)
+            for arg in wraptuple(args)
+                process_axis_arg!(d, arg, letter)
+            end
+        end
+        # delete!(d, asym)
+
+        # # NOTE: this logic was moved to _add_plotargs...
+        # # turn :labels into :ticks_and_labels
+        # tsym = symbol(letter * "ticks")
+        # if haskey(d, tsym) && ticksType(d[tsym]) == :labels
+        #     d[tsym] = (1:length(d[tsym]), d[tsym])
+        # end
+        #
+        # ssym = symbol(letter * "scale")
+        # if haskey(d, ssym) && haskey(_scaleAliases, d[ssym])
+        #     d[ssym] = _scaleAliases[d[ssym]]
+        # end
+    end
 
     # # if title is just a single string, then assume we want plot_title
     # # TODO: make a decision if this is correct

@@ -21,46 +21,50 @@ function Axis(letter::Symbol, args...; kw...)
     update!(Axis(d), args...; kw...)
 end
 
+function process_axis_arg!(d::KW, arg, letter = "")
+    T = typeof(arg)
+    arg = get(_scaleAliases, arg, arg)
+
+    if typeof(arg) <: Font
+        d[symbol(letter,:tickfont)] = arg
+        d[symbol(letter,:guidefont)] = arg
+
+    elseif arg in _allScales
+        d[symbol(letter,:scale)] = arg
+
+    elseif arg in (:flip, :invert, :inverted)
+        d[symbol(letter,:flip)] = true
+
+    elseif T <: @compat(AbstractString)
+        d[symbol(letter,:guide)] = arg
+
+    # xlims/ylims
+    elseif (T <: Tuple || T <: AVec) && length(arg) == 2
+        sym = typeof(arg[1]) <: Number ? :lims : :ticks
+        d[symbol(letter,sym)] = arg
+
+    # xticks/yticks
+    elseif T <: AVec
+        d[symbol(letter,:ticks)] = arg
+
+    elseif arg == nothing
+        d[symbol(letter,:ticks)] = []
+
+    elseif typeof(arg) <: Number
+        d[symbol(letter,:rotation)] = arg
+
+    else
+        warn("Skipped $(letter)axis arg $arg")
+
+    end
+end
+
 # update an Axis object with magic args and keywords
 function update!(a::Axis, args...; kw...)
     # first process args
     d = a.d
     for arg in args
-        T = typeof(arg)
-        arg = get(_scaleAliases, arg, arg)
-
-        if typeof(arg) <: Font
-            d[:tickfont] = arg
-            d[:guidefont] = arg
-
-        elseif arg in _allScales
-            d[:scale] = arg
-
-        elseif arg in (:flip, :invert, :inverted)
-            d[:flip] = true
-
-        elseif T <: @compat(AbstractString)
-            d[:guide] = arg
-
-        # xlims/ylims
-        elseif (T <: Tuple || T <: AVec) && length(arg) == 2
-            sym = typeof(arg[1]) <: Number ? :lims : :ticks
-            d[sym] = arg
-
-        # xticks/yticks
-        elseif T <: AVec
-            d[:ticks] = arg
-
-        elseif arg == nothing
-            d[:ticks] = []
-
-        elseif typeof(arg) <: Number
-            d[:rotation] = arg
-
-        else
-            warn("Skipped $(letter)axis arg $arg")
-
-        end
+        process_axis_arg!(d, arg)
     end
 
     # then override for any keywords... only those keywords that already exists in d
