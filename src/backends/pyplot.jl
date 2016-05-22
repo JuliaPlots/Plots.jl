@@ -336,7 +336,8 @@ function compute_min_padding(sp::Subplot{PyPlotBackend}, func::Function, mult::N
     plotbb = py_bbox(ax)
     # @show func, mult plotbb
     # @show func, py_bbox_axis(ax, "x")
-    padding = 0mm
+    # TODO: this should initialize to the margin from sp.attr
+    padding = 1mm
     for bb in (py_bbox_axis(ax, "x"),
                py_bbox_axis(ax, "y"),
                py_bbox_title(ax))
@@ -350,9 +351,10 @@ function compute_min_padding(sp::Subplot{PyPlotBackend}, func::Function, mult::N
 
     if func == right && haskey(sp.attr, :cbar_ax)
         # TODO: need bounding box of colorbar labels
+        bb = py_bbox(sp.attr[:cbar_handle][:ax][:get_yticklabels]())
         # bb = py_bbox(sp.attr[:cbar_ax][:get_ticklabels]())
-        bb = BoundingBox(0mm,0mm,15mm,15mm)
-        sp.attr[:cbar_width] = _cbar_width + width(bb)
+        # bb = BoundingBox(0mm,0mm,15mm,15mm)
+        sp.attr[:cbar_width] = _cbar_width + width(bb) + 1mm
         padding = padding + sp.attr[:cbar_width]
     end
 
@@ -429,7 +431,8 @@ function update_position!(sp::Subplot{PyPlotBackend})
         cbw = sp.attr[:cbar_width]
         # cb_bbox = BoundingBox(figw - cbw, 0.1figh, cbw, figh - 0.2pct)
         # this is the bounding box of just the colors of the colorbar (not labels)
-        cb_bbox = BoundingBox(right(sp.bbox)-cbw+2mm, top(sp.bbox)+2mm, _cbar_width, height(sp.bbox)-4mm)
+        # TODO: use buffers from sp.attr, or maybe the layouts?
+        cb_bbox = BoundingBox(right(sp.bbox)-cbw+1mm, top(sp.bbox)+2mm, _cbar_width-1mm, height(sp.bbox)-4mm)
         pcts = bbox_to_pcts(cb_bbox, figw, figh)
         # @show cbw cb_bbox pcts
         sp.attr[:cbar_ax][:set_position](pcts)
