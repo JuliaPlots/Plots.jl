@@ -167,7 +167,7 @@ function _plot!(plt::Plot, d::KW, args...)
     # we simply add the GroupBy object to the front of the args list to allow
     # the recipe to be applied
     if haskey(d, :group)
-        args = tuple(extractGroupArgs(d[:group], args...), args...)
+        args = (extractGroupArgs(d[:group], args...), args...)
     end
 
 

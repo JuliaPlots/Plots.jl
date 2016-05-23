@@ -549,6 +549,7 @@ type OHLC{T<:Real}
   low::T
   close::T
 end
+Base.convert(::Type{OHLC}, tup::Tuple) = OHLC(tup...)
 tuple(ohlc::OHLC) = (ohlc.open, ohlc.high, ohlc.low, ohlc.close)
 
 # get one OHLC path
