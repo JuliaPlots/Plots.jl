@@ -95,8 +95,8 @@ function _create_backend_figure(plt::Plot{GLVisualizeBackend})
 end
 
 
-# function _add_series(::GLVisualizeBackend, plt::Plot, d::KW)
-function _add_series(plt::Plot{GLVisualizeBackend}, series::Series)
+# function _series_added(::GLVisualizeBackend, plt::Plot, d::KW)
+function _series_added(plt::Plot{GLVisualizeBackend}, series::Series)
   # TODO: add one series to the underlying package
   # push!(plt.seriesargs, d)
   # TODO: this should be moved to the display method?

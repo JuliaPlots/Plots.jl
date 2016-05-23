@@ -94,9 +94,7 @@ end
 # natively by the backend
 function _apply_series_recipe(plt::Plot, d::KW)
     st = d[:seriestype]
-    # dumpdict(d, "apply_series_recipe", true)
     if st in supportedTypes()
-        # println("adding series!!")
 
         # getting ready to add the series... last update to subplot from anything
         # that might have been added during series recipes
@@ -134,7 +132,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
         warnOnUnsupported(plt.backend, d)
         series = Series(d)
         push!(plt.series_list, series)
-        _add_series(plt, series)
+        _series_added(plt, series)
 
     else
         # get a sub list of series for this seriestype
@@ -158,7 +156,7 @@ end
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
 function _plot!(plt::Plot, d::KW, args...)
     # just in case the backend needs to set up the plot (make it current or something)
-    _before_add_series(plt)
+    _before_update(plt)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
@@ -171,15 +169,6 @@ function _plot!(plt::Plot, d::KW, args...)
     if haskey(d, :group)
         args = tuple(extractGroupArgs(d[:group], args...), args...)
     end
-
-    # # initialize the annotations list with what was passed in
-    # # TODO: there must be cleaner way to handle this!
-    # anns = annotations(get(d, :annotation, NTuple{3}[]))
-    # if typeof(anns)  <: AVec{PlotText}
-    #     anns = NTuple{3}[]
-    # else
-    #     delete!(d, :annotation)
-    # end
 
 
     # for plotting recipes, swap out the args and update the parameter dictionary
@@ -212,7 +201,6 @@ function _plot!(plt::Plot, d::KW, args...)
 
                 # if there was a grouping, filter the data here
                 _filter_input_data!(kw)
-                # @show typeof((kw[:x], kw[:y], kw[:z]))
 
                 # map marker_z if it's a Function
                 if isa(get(kw, :marker_z, nothing), Function)
@@ -250,38 +238,9 @@ function _plot!(plt::Plot, d::KW, args...)
 
     # !!! note: at this point, kw_list is fully decomposed into individual series... one KW per series !!!
 
-    # # TODO: move annotations into subplot update
-    # # now include any annotations which were added during recipes
-    # for kw in kw_list
-    #     append!(anns, annotations(pop!(kw, :annotation, [])))
-    # end
-    # # @show anns
-
-
-    # for kw in kw_list
-    #     @show typeof((kw[:x], kw[:y], kw[:z]))
-    # end
-
-    # # merge plot args... this is where we combine all the plot args from the user and
-    # # from the recipes... axis info, colors, etc
-    # # TODO: why do i need to check for the subplot key?
-    # # if !haskey(d, :subplot)
-    # # for kw in vcat(kw_list, d)
-    # for kw in kw_list
-    #     _update_subplot_args(plt, kw[:subplot], kw)
-    #     # _add_plotargs!(plt, kw)
-    # end
-    # # handlePlotColors(plt.backend, plt.plotargs)
-    # # end
-
-    # for kw in kw_list
-    #     @show typeof((kw[:x], kw[:y], kw[:z]))
-    # end
-
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
     for (i,kw) in enumerate(kw_list)
-        # DD(kw, "series $i before")
         if !(get(kw, :seriestype, :none) in (:xerror, :yerror))
             plt.n += 1
         end
@@ -309,16 +268,10 @@ function _plot!(plt::Plot, d::KW, args...)
         sp.attr[:annotations] = vcat(sp_anns, anns)
 
         # we update subplot args in case something like the color palatte is part of the recipe
-        # DD(sp.attr[:xaxis].d, "before USA $i")
-        # DD(kw, "kw")
         _update_subplot_args(plt, sp, kw, idx)
-        # DD(sp.attr[:xaxis].d, "after USA $i")
 
         # set default values, select from attribute cycles, and generally set the final attributes
         _add_defaults!(kw, plt, sp, i)
-        # DD(kw, "series $i after")
-
-        #
 
         # now we have a fully specified series, with colors chosen.   we must recursively handle
         # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,
@@ -326,13 +279,8 @@ function _plot!(plt::Plot, d::KW, args...)
         # For example, a histogram is just a bar plot with binned data, a bar plot is really a filled step plot,
         # and a step plot is really just a path.  So any backend that supports drawing a path will implicitly
         # be able to support step, bar, and histogram plots (and any recipes that use those components).
-        # DD(sp.attr[:xaxis].d, "before $i")
         _apply_series_recipe(plt, kw)
-        # DD(sp.attr[:xaxis].d, "after $i")
     end
-
-    # # now that we're done adding all the series, add the annotations
-    # _add_annotations(plt, anns)
 
     # TODO just need to pass plt... and we should do all non-series updates here
     _update_plot(plt, plt.plotargs)
@@ -348,18 +296,6 @@ function _plot!(plt::Plot, d::KW, args...)
     plt
 end
 
-# # handle the grouping
-# function _add_series(plt::Plot, d::KW, groupby::GroupBy, args...)
-#     starting_n = plt.n
-#     for (i, glab) in enumerate(groupby.groupLabels)
-#         tmpd = copy(d)
-#         tmpd[:numUncounted] = plt.n - starting_n
-#         _add_series(plt, tmpd, nothing, args...;
-#                     idxfilter = groupby.groupIds[i],
-#                     grouplabel = string(glab))
-#     end
-# end
-
 
 function _replace_linewidth(d::KW)
     # get a good default linewidth... 0 for surface and heatmaps
@@ -368,63 +304,6 @@ function _replace_linewidth(d::KW)
     end
 end
 
-# # no grouping
-# function _add_series(plt::Plot, d::KW, args...;
-#                      idxfilter = nothing,
-#                      grouplabel = "")
-#
-#     # get the list of dictionaries, one per series
-#     dumpdict(d, "before process_inputs")
-#     process_inputs(plt, d, args...)
-#     dumpdict(d, "after process_inputs")
-#
-#     if idxfilter != nothing
-#         # add the group name as the label if there isn't one passed in
-#         get!(d, :label, grouplabel)
-#         # filter the data
-#         filter_data!(d, idxfilter)
-#     end
-#     # dumpdict(d,"",true)
-#
-#     seriesArgList, xmeta, ymeta = build_series_args(plt, d) #, idxfilter)
-#     # seriesArgList, xmeta, ymeta = build_series_args(plt, groupargs..., args...; d...)
-#
-#     # # if we were able to extract guide information from the series inputs, then update the plot
-#     # # @show xmeta, ymeta
-#     # updateDictWithMeta(d, plt.plotargs, xmeta, true)
-#     # updateDictWithMeta(d, plt.plotargs, ymeta, false)
-#
-#
-# # function _add_series(plt::Plot, ds::)
-#     # now we can plot the series
-#     for (i,di) in enumerate(seriesArgList)
-#         plt.n += 1
-#
-#         if !stringsSupported() && di[:seriestype] != :pie
-#             setTicksFromStringVector(plt, d, di, "x")
-#             setTicksFromStringVector(plt, d, di, "y")
-#             setTicksFromStringVector(plt, d, di, "z")
-#         end
-#
-#         # remove plot args
-#         for k in keys(_plot_defaults)
-#             delete!(di, k)
-#         end
-#
-#         # merge in plotarg_overrides
-#         plotarg_overrides = pop!(di, :plotarg_overrides, nothing)
-#         if plotarg_overrides != nothing
-#             merge!(plt.plotargs, plotarg_overrides)
-#         end
-#         # dumpdict(plt.plotargs, "pargs", true)
-#
-#         dumpdict(di, "Series $i")
-#
-#         _replace_linewidth(di)
-#
-#         _add_series(plt.backend, plt, di)
-#     end
-# end
 
 # --------------------------------------------------------------------
 
@@ -484,52 +363,9 @@ end
 
 # --------------------------------------------------------------------
 
-# TODO: remove
-# # should we update the x/y label given the meta info during input slicing?
-# function updateDictWithMeta(d::KW, plotargs::KW, meta::Symbol, isx::Bool)
-#     lsym = isx ? :xguide : :yguide
-#     if plotargs[lsym] == default(lsym)
-#         d[lsym] = string(meta)
-#     end
-# end
-# updateDictWithMeta(d::KW, plotargs::KW, meta, isx::Bool) = nothing
-
-# --------------------------------------------------------------------
-
 annotations(::Void) = []
 annotations(anns::AVec) = anns
 annotations(anns) = Any[anns]
-# annotations{X,Y,V}(v::AVec{@compat(Tuple{X,Y,V})}) = v
-# annotations{X,Y,V}(t::@compat(Tuple{X,Y,V})) = [t]
-# annotations(v::AVec{PlotText}) = v
-# annotations(v::AVec) = map(PlotText, v)
-# annotations(anns) = error("Expecting a tuple (or vector of tuples) for annotations: ",
-#                        "(x, y, annotation)\n    got: $(typeof(anns))")
-
-# function annotations(plt::Plot, anns)
-#     anns = annotations(anns)
-#     # if we just have a list of PlotText objects, then create (x,y,text) tuples
-#     if typeof(anns) <: AVec{PlotText}
-#         x, y = plt[plt.n]
-#         anns = Tuple{Float64,Float64,PlotText}[(x[i], y[i], t) for (i,t) in enumerate(anns)]
-#     end
-#     anns
-# end
-
-
-# function _add_annotations(plt::Plot, d::KW)
-#     anns = annotations(get(d, :annotation, nothing))
-#     if !isempty(anns)
-#
-#         # if we just have a list of PlotText objects, then create (x,y,text) tuples
-#         if typeof(anns) <: AVec{PlotText}
-#             x, y = plt[plt.n]
-#             anns = Tuple{Float64,Float64,PlotText}[(x[i], y[i], t) for (i,t) in enumerate(anns)]
-#         end
-#
-#         _add_annotations(plt, anns)
-#     end
-# end
 
 
 # --------------------------------------------------------------------

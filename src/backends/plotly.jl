@@ -91,7 +91,7 @@ end
 # end
 
 
-# function _add_series(::PlotlyBackend, plt::Plot, d::KW)
+# function _series_added(::PlotlyBackend, plt::Plot, d::KW)
 #   # TODO: add one series to the underlying package
 #   push!(plt.seriesargs, d)
 #   plt

@@ -5,6 +5,8 @@
 const px = AbsoluteLength(0.254)
 const pct = Length{:pct, Float64}(1.0)
 
+const _cbar_width = 5mm
+
 Base.(:.*)(m::Measure, n::Number) = m * n
 Base.(:.*)(n::Number, m::Measure) = m * n
 Base.(:-)(m::Measure, a::AbstractArray) = map(ai -> m - ai, a)
@@ -65,6 +67,15 @@ function crop(parent::BoundingBox, child::BoundingBox)
     BoundingBox(l, t, w, h)
 end
 
+# convert a bounding box from absolute coords to percentages... returns an array of percentages of figure size: [left, bottom, width, height]
+function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
+    mms = Float64[f(bb).value for f in (left,bottom,width,height)]
+    if flipy
+        mms[2] = figh.value - mms[2]  # flip y when origin in bottom-left
+    end
+    mms ./ Float64[figw.value, figh.value, figw.value, figh.value]
+end
+
 function Base.show(io::IO, bbox::BoundingBox)
     print(io, "BBox{l,t,r,b,w,h = $(left(bbox)),$(top(bbox)), $(right(bbox)),$(bottom(bbox)), $(width(bbox)),$(height(bbox))}")
 end
@@ -93,7 +104,7 @@ padding_w(layout::AbstractLayout) = left_padding(layout) + right_padding(layout)
 padding_h(layout::AbstractLayout) = bottom_padding(layout) + top_padding(layout)
 padding(layout::AbstractLayout) = (padding_w(layout), padding_h(layout))
 
-update_position!(layout::AbstractLayout) = nothing
+_update_position!(layout::AbstractLayout) = nothing
 update_child_bboxes!(layout::AbstractLayout) = nothing
 
 width(layout::AbstractLayout) = width(layout.bbox)
@@ -104,6 +115,11 @@ attr(layout::AbstractLayout, k::Symbol) = layout.attr[k]
 attr(layout::AbstractLayout, k::Symbol, v) = get(layout.attr, k, v)
 attr!(layout::AbstractLayout, v, k::Symbol) = (layout.attr[k] = v)
 hasattr(layout::AbstractLayout, k::Symbol) = haskey(layout.attr, k)
+
+leftpad(layout::AbstractLayout)   = 0mm
+toppad(layout::AbstractLayout)    = 0mm
+rightpad(layout::AbstractLayout)  = 0mm
+bottompad(layout::AbstractLayout) = 0mm
 
 # -----------------------------------------------------------
 # RootLayout
@@ -138,6 +154,7 @@ Base.getindex(layout::EmptyLayout, r::Int, c::Int) = nothing
 # nested, gridded layout with optional size percentages
 type GridLayout <: AbstractLayout
     parent::AbstractLayout
+    minpad::Tuple # leftpad, toppad, rightpad, bottompad
     bbox::BoundingBox
     grid::Matrix{AbstractLayout} # Nested layouts. Each position is a AbstractLayout, which allows for arbitrary recursion
     widths::Vector{Measure}
@@ -155,6 +172,7 @@ function GridLayout(dims...;
     grid = Matrix{AbstractLayout}(dims...)
     layout = GridLayout(
         parent,
+        (20mm, 5mm, 2mm, 10mm),
         defaultbox,
         grid,
         Measure[w*pct for w in widths],
@@ -173,13 +191,39 @@ function Base.setindex!(layout::GridLayout, v, r::Int, c::Int)
     layout.grid[r,c] = v
 end
 
-min_padding_left(layout::GridLayout)   = maximum(map(min_padding_left, layout.grid[:,1]))
-min_padding_top(layout::GridLayout)    = maximum(map(min_padding_top, layout.grid[1,:]))
-min_padding_right(layout::GridLayout)  = maximum(map(min_padding_right, layout.grid[:,end]))
-min_padding_bottom(layout::GridLayout) = maximum(map(min_padding_bottom, layout.grid[end,:]))
+leftpad(layout::GridLayout)   = layout.minpad[1]
+toppad(layout::GridLayout)    = layout.minpad[2]
+rightpad(layout::GridLayout)  = layout.minpad[3]
+bottompad(layout::GridLayout) = layout.minpad[4]
+
+# min_padding_left(layout::GridLayout)   = maximum(map(min_padding_left, layout.grid[:,1]))
+# min_padding_top(layout::GridLayout)    = maximum(map(min_padding_top, layout.grid[1,:]))
+# min_padding_right(layout::GridLayout)  = maximum(map(min_padding_right, layout.grid[:,end]))
+# min_padding_bottom(layout::GridLayout) = maximum(map(min_padding_bottom, layout.grid[end,:]))
 
 
-update_position!(layout::GridLayout) = map(update_position!, layout.grid)
+# leftpad, toppad, rightpad, bottompad
+function _update_min_padding!(layout::GridLayout)
+    # minpad_matrix = map(_update_min_padding!, layout.grid)
+    # nr,nc = size(layout)
+    # leftpad   = maximum([minpad_matrix[r,1][1]   for r=1:nr])
+    # toppad    = maximum([minpad_matrix[1,c][2]   for c=1:nc])
+    # rightpad  = maximum([minpad_matrix[r,end][3] for r=1:nr])
+    # bottompad = maximum([minpad_matrix[end,c][4] for c=1:nc])
+    map(_update_min_padding!, layout.grid)
+    layout.minpad = (
+        maximum(map(leftpad,   layout.grid[:,1])),
+        maximum(map(toppad,    layout.grid[1,:])),
+        maximum(map(rightpad,  layout.grid[:,end])),
+        maximum(map(bottompad, layout.grid[end,:]))
+    )
+    # layout.minpad = (leftpad, toppad, rightpad, bottompad)
+end
+
+
+function _update_position!(layout::GridLayout)
+    map(_update_position!, layout.grid)
+end
 
 
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
@@ -187,10 +231,16 @@ function update_child_bboxes!(layout::GridLayout)
     nr, nc = size(layout)
 
     # create a matrix for each minimum padding direction
-    minpad_left   = map(min_padding_left,   layout.grid)
-    minpad_top    = map(min_padding_top,    layout.grid)
-    minpad_right  = map(min_padding_right,  layout.grid)
-    minpad_bottom = map(min_padding_bottom, layout.grid)
+    _update_min_padding!(layout)
+    # minpad_left = map(l -> l.minpad[1], layout.grid)
+    # minpad_left   = map(min_padding_left,   layout.grid)
+    # minpad_top    = map(min_padding_top,    layout.grid)
+    # minpad_right  = map(min_padding_right,  layout.grid)
+    # minpad_bottom = map(min_padding_bottom, layout.grid)
+    minpad_left   = map(leftpad,   layout.grid)
+    minpad_top    = map(toppad,    layout.grid)
+    minpad_right  = map(rightpad,  layout.grid)
+    minpad_bottom = map(bottompad, layout.grid)
     # @show minpad_left minpad_top minpad_right minpad_bottom
 
     # get the max horizontal (left and right) padding over columns,

@@ -96,7 +96,7 @@ end
                             :star5 => "asterisk"
                            )
 
-function _before_add_series(plt::Plot{WinstonBackend})
+function _before_update(plt::Plot{WinstonBackend})
   Winston.ghf(plt.o)
 end
 
@@ -127,7 +127,7 @@ function getWinstonItems(plt::Plot)
   window, canvas, wplt
 end
 
-function _add_series(plt::Plot{WinstonBackend}, series::Series)
+function _series_added(plt::Plot{WinstonBackend}, series::Series)
     d = series.d
   window, canvas, wplt = getWinstonItems(plt)
 

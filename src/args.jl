@@ -51,6 +51,7 @@ like_line(seriestype::Symbol)      = seriestype in (:line, :path, :steppre, :ste
 like_surface(seriestype::Symbol)   = seriestype in (:contour, :contour3d, :heatmap, :surface, :wireframe, :image)
 
 is3d(seriestype::Symbol) = seriestype in _3dTypes
+is3d(series::Series) = is3d(series.d)
 is3d(d::KW) = trueOrAllTrue(is3d, d[:seriestype])
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]

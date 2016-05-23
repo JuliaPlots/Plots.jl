@@ -42,13 +42,13 @@ end
 
 
 # # plot one data series
-# function _add_series(::ImmerseBackend, plt::Plot, d::KW)
+# function _series_added(::ImmerseBackend, plt::Plot, d::KW)
 #   addGadflySeries!(plt, d)
 #   push!(plt.seriesargs, d)
 #   plt
 # end
 
-function _add_series(plt::Plot{ImmerseBackend}, series::Series)
+function _series_added(plt::Plot{ImmerseBackend}, series::Series)
     addGadflySeries!(plt, series.d)
 end
 

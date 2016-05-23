@@ -32,6 +32,7 @@ end
 # a single subplot
 type Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
+    minpad::Tuple # leftpad, toppad, rightpad, bottompad
     bbox::BoundingBox  # the canvas area which is available to this subplot
     plotarea::BoundingBox  # the part where the data goes
     attr::KW  # args specific to this subplot

@@ -79,13 +79,6 @@ function _initialize_backend(::BokehBackend; kw...)
   end
 end
 
-# make255(x) = round(Int, 255 * x)
-
-# function bokehcolor(c::Colorant)
-#   @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
-# end
-# bokehcolor(cs::ColorScheme) = bokehcolor(getColor(cs))
-
 
 const _glyphtypes = KW(
     :ellipse    => :Circle,
@@ -154,8 +147,8 @@ function _create_backend_figure(plt::Plot{BokehBackend})
 end
 
 
-# function _add_series(::BokehBackend, plt::Plot, d::KW)
-function _add_series(plt::Plot{BokehBackend}, series::Series)
+# function _series_added(::BokehBackend, plt::Plot, d::KW)
+function _series_added(plt::Plot{BokehBackend}, series::Series)
   bdata = Dict{Symbol, Vector}(:x => collect(series.d[:x]), :y => collect(series.d[:y]))
 
   glyph = Bokeh.Bokehjs.Glyph(
@@ -180,9 +173,6 @@ end
 function _update_plot(plt::Plot{BokehBackend}, d::KW)
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{BokehBackend}, d::KW)
-end
-
 # ----------------------------------------------------------------
 
 # accessors for x/y data
@@ -199,29 +189,9 @@ end
 # end
 
 
-# ----------------------------------------------------------------
-
-function _add_annotations{X,Y,V}(plt::Plot{BokehBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
-  for ann in anns
-    # TODO: add the annotation to the plot
-  end
-end
 
 # ----------------------------------------------------------------
 
-# function _create_subplot(subplt::Subplot{BokehBackend}, isbefore::Bool)
-#   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-#
-# end
-
-
-function _expand_limits(lims, plt::Plot{BokehBackend}, isx::Bool)
-  # TODO: call expand limits for each plot data
-end
-
-function _remove_axis(plt::Plot{BokehBackend}, isx::Bool)
-  # TODO: if plot is inner subplot, might need to remove ticks or axis labels
-end
 
 # ----------------------------------------------------------------
 

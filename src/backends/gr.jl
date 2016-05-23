@@ -873,7 +873,7 @@ end
 #   Plot(nothing, pkg, 0, d, KW[])
 # end
 
-# function _add_series(::GRBackend, plt::Plot, d::KW)
+# function _series_added(::GRBackend, plt::Plot, d::KW)
 #   push!(plt.seriesargs, d)
 #   plt
 # end

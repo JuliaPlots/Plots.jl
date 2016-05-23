@@ -113,7 +113,7 @@ function _create_backend_figure(plt::Plot{PlotlyJSBackend})
 end
 
 
-function _add_series(plt::Plot{PlotlyJSBackend}, series::Series)
+function _series_added(plt::Plot{PlotlyJSBackend}, series::Series)
     d = series.d
     syncplot = plt.o
 

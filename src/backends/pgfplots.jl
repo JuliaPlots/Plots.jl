@@ -238,7 +238,7 @@ end
 # end
 
 
-# function _add_series(::PGFPlotsBackend, plt::Plot, d::KW)
+# function _series_added(::PGFPlotsBackend, plt::Plot, d::KW)
 #   # TODO: add one series to the underlying package
 #   push!(plt.seriesargs, d)
 #   plt

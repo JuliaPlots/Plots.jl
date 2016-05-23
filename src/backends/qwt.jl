@@ -137,8 +137,8 @@ function _create_backend_figure(plt::Plot{QwtBackend})
   # plt
 end
 
-# function _add_series(::QwtBackend, plt::Plot, d::KW)
-function _add_series(plt::Plot{QwtBackend}, series::Series)
+# function _series_added(::QwtBackend, plt::Plot, d::KW)
+function _series_added(plt::Plot{QwtBackend}, series::Series)
   d = adjustQwtKeywords(plt, false; series.d...)
   fixcolors(d)
   dumpdict(d,"\n\n!!! plot!")
