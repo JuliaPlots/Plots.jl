@@ -10,8 +10,10 @@ function Axis(letter::Symbol, args...; kw...)
     d = KW(
         :letter => letter,
         :extrema => (Inf, -Inf),
-        :discrete_map => Dict(),   # map discrete values to continuous plot values
-        :discrete_values => Tuple{Float64,Any}[],
+        :discrete_map => Dict(),   # map discrete values to discrete indices
+        # :discrete_values => Tuple{Float64,Any}[],
+        :discrete_values => [],
+        :continuous_values => zeros(0),
         :use_minor => false,
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
@@ -89,7 +91,8 @@ function get_ticks(a::Axis)
     ticks = a[:ticks]
     dvals = a[:discrete_values]
     if !isempty(dvals) && ticks == :auto
-        vals, labels = unzip(dvals)
+        # vals, labels = unzip(dvals)
+        a[:continuous_values], dvals
     else
         ticks
     end
@@ -114,18 +117,26 @@ end
 # these methods track the discrete values which correspond to axis continuous values (cv)
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)
-function discrete_value!(a::Axis, v)
-    cv_idx = get(a[:discrete_map], v, 0)
-    if cv_idx == 0
+function discrete_value!(a::Axis, dv)
+    cv_idx = get(a[:discrete_map], dv, -1)
+    if cv_idx == -1
         emin, emax = a[:extrema]
         cv = max(0.5, emax + 1.0)
         expand_extrema!(a, cv)
-        a[:discrete_map][v] = cv
-        push!(a[:discrete_values], (cv, v))
-        cv, length(a[:discrete_values])
+        push!(a[:discrete_values], dv)
+        push!(a[:continuous_values], cv)
+        cv_idx = length(a[:discrete_values])
+        a[:discrete_map][dv] = cv_idx
+        cv, cv_idx
     else
-        a[:discrete_values][cv_idx][1], cv_idx
+        cv = a[:continuous_values][cv_idx]
+        cv, cv_idx
     end
+end
+
+# continuous value... just pass back with a negative index
+function discrete_value!(a::Axis, cv::Number)
+    cv, -1
 end
 
 # add the discrete value for each item.  return the continuous values and the indices

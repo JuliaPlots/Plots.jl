@@ -461,7 +461,11 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
 
     # TODO: this should initialize to the margin from sp.attr
     # figure out how much the axis components and title "stick out" from the plot area
-    leftpad = toppad = rightpad = bottompad = 1mm
+    # leftpad = toppad = rightpad = bottompad = 1mm
+    leftpad   = sp.attr[:left_margin]
+    toppad    = sp.attr[:top_margin]
+    rightpad  = sp.attr[:right_margin]
+    bottompad = sp.attr[:bottom_margin]
     for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
         if ispositive(width(bb)) && ispositive(height(bb))
             leftpad   = max(leftpad,   left(plotbb) - left(bb))
@@ -717,15 +721,15 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
 
         # contour fills
-        # if st == :contour
-        handle = ax[:contourf](x, y, z, levelargs...;
-            label = d[:label],
-            zorder = plt.n + 0.5,
-            cmap = pyfillcolormap(d),
-            extrakw...
-        )
-        push!(handles, handle)
-        # end
+        if d[:fillrange] != nothing
+            handle = ax[:contourf](x, y, z, levelargs...;
+                label = d[:label],
+                zorder = plt.n + 0.5,
+                cmap = pyfillcolormap(d),
+                extrakw...
+            )
+            push!(handles, handle)
+        end
     end
 
     if st in (:surface, :wireframe)
@@ -837,13 +841,12 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :pie
+
         handle = ax[:pie](y;
-            # label = d[:label],
             # colors = # a vector of colors?
-            # labels = x
             labels = if haskey(d,:x_discrete_indices)
                 dvals = sp.attr[:xaxis].d[:discrete_values]
-                [dvals[idx][2] for idx in d[:x_discrete_indices]]
+                [dvals[idx] for idx in d[:x_discrete_indices]]
             else
                 d[:x]
             end

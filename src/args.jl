@@ -205,6 +205,11 @@ const _subplot_defaults = KW(
     # :polar                    => false,
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :none,             # choose from :none or :equal
+    :margin                   => 2mm,
+    :left_margin              => :match,
+    :top_margin               => :match,
+    :right_margin             => :match,
+    :bottom_margin            => :match,
 )
 
 const _axis_defaults = KW(
@@ -393,7 +398,7 @@ add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:match_dimensions, :transpose, :transpose_z)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
-add_aliases(:title_location, :title_loc, :titleloc)
+add_aliases(:title_location, :title_loc, :titleloc, :title_position, :title_pos, :titlepos, :titleposition, :title_align, :title_alignment)
 add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation)
 
 
@@ -954,6 +959,12 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
     color_or_match!(spargs, :foreground_color_legend, fg)
     color_or_match!(spargs, :foreground_color_grid, fg)
     color_or_match!(spargs, :foreground_color_title, fg)
+
+    for k in (:left_margin, :top_margin, :right_margin, :bottom_margin)
+        if spargs[k] == :match
+            spargs[k] = spargs[:margin]
+        end
+    end
 
     # info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
     # DD(spargs, "before loop")
