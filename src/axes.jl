@@ -113,20 +113,28 @@ end
 
 # these methods track the discrete values which correspond to axis continuous values (cv)
 # whenever we have discrete values, we automatically set the ticks to match.
-# we return the plot value
+# we return (continuous_value, discrete_index)
 function discrete_value!(a::Axis, v)
-    cv = get(a[:discrete_map], v, NaN)
-    if isnan(cv)
+    cv_idx = get(a[:discrete_map], v, 0)
+    if cv_idx == 0
         emin, emax = a[:extrema]
         cv = max(0.5, emax + 1.0)
         expand_extrema!(a, cv)
         a[:discrete_map][v] = cv
         push!(a[:discrete_values], (cv, v))
+        cv, length(a[:discrete_values])
+    else
+        a[:discrete_values][cv_idx][1], cv_idx
     end
-    cv
 end
 
-# add the discrete value for each item
+# add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(a::Axis, v::AVec)
-    Float64[discrete_value!(a, vi) for vi=v]
+    n = length(v)
+    cvec = zeros(n)
+    discrete_indices = zeros(Int, n)
+    for i=1:n
+        cvec[i], discrete_indices[i] = discrete_value!(a, v[i])
+    end
+    cvec, discrete_indices
 end

@@ -508,6 +508,8 @@ end
 function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     d = series.d
     st = d[:seriestype]
+    sp = d[:subplot]
+
     if !(st in supportedTypes(plt.backend))
         error("seriestype $(st) is unsupported in PyPlot.  Choose from: $(supportedTypes(plt.backend))")
     end
@@ -838,7 +840,13 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         handle = ax[:pie](y;
             # label = d[:label],
             # colors = # a vector of colors?
-            labels = x
+            # labels = x
+            labels = if haskey(d,:x_discrete_indices)
+                dvals = sp.attr[:xaxis].d[:discrete_values]
+                [dvals[idx][2] for idx in d[:x_discrete_indices]]
+            else
+                d[:x]
+            end
         )
         push!(handles, handle)
     end
@@ -849,7 +857,6 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     handleSmooth(plt, ax, d, d[:smooth])
 
     # add the colorbar legend
-    sp = d[:subplot]
     if needs_colorbar && sp.attr[:colorbar] != :none
         # add keyword args for a discrete colorbar
         handle = handles[end]

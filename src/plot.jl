@@ -114,16 +114,16 @@ function _apply_series_recipe(plt::Plot, d::KW)
         end
 
         # adjust extrema and discrete info
-        for s in (:x, :y, :z)
-            data = d[s]
-            axis = sp.attr[symbol(s, "axis")]
+        for letter in (:x, :y, :z)
+            data = d[letter]
+            axis = sp.attr[symbol(letter, "axis")]
             if eltype(data) <: Number
                 expand_extrema!(axis, data)
             else
                 # TODO: need more here... gotta track the discrete reference value
                 #       as well as any coord offset (think of boxplot shape coords... they all
                 #       correspond to the same x-value)
-                d[s] = discrete_value!(axis, data)
+                d[letter], d[symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
             end
         end
 
