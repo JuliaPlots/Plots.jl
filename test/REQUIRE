@@ -5,8 +5,6 @@ Colors
 Reexport
 Measures
 FactCheck
-Cairo
-Gadfly
 Images
 PyPlot
 @osx QuartzImageIO
