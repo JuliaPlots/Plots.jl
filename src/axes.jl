@@ -114,6 +114,25 @@ function expand_extrema!{N<:Number}(a::Axis, v::AVec{N})
     a[:extrema]
 end
 
+
+# using the axis extrema and limit overrides, return the min/max value for this axis
+function axis_limits(axis::Axis, letter)
+    amin, amax = axis[:extrema]
+    lims = axis[:lims]
+    if isa(lims, Tuple) && length(lims) == 2
+        if isfinite(lims[1])
+            amin = lims[1]
+        end
+        if isfinite(lims[2])
+            amax = lims[2]
+        end
+    end
+    if amax <= amin
+        amax = amin + 1.0
+    end
+    amin, amax
+end
+
 # these methods track the discrete values which correspond to axis continuous values (cv)
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)

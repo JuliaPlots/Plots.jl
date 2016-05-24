@@ -12,6 +12,7 @@ function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
     )
 end
 
+plotarea(sp::Subplot) = sp.plotarea
 plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
 
 

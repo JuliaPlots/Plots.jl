@@ -15,6 +15,7 @@ Base.zero(::Type{typeof(mm)}) = 0mm
 Base.one(::Type{typeof(mm)}) = 1mm
 Base.typemin(::typeof(mm)) = -Inf*mm
 Base.typemax(::typeof(mm)) = Inf*mm
+Base.convert{F<:AbstractFloat}(::Type{F}, l::AbsoluteLength) = convert(F, l.value)
 
 Base.(:+)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
 Base.(:+)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (1 + m1.value))
@@ -199,20 +200,10 @@ toppad(layout::GridLayout)    = layout.minpad[2]
 rightpad(layout::GridLayout)  = layout.minpad[3]
 bottompad(layout::GridLayout) = layout.minpad[4]
 
-# min_padding_left(layout::GridLayout)   = maximum(map(min_padding_left, layout.grid[:,1]))
-# min_padding_top(layout::GridLayout)    = maximum(map(min_padding_top, layout.grid[1,:]))
-# min_padding_right(layout::GridLayout)  = maximum(map(min_padding_right, layout.grid[:,end]))
-# min_padding_bottom(layout::GridLayout) = maximum(map(min_padding_bottom, layout.grid[end,:]))
 
 
 # leftpad, toppad, rightpad, bottompad
 function _update_min_padding!(layout::GridLayout)
-    # minpad_matrix = map(_update_min_padding!, layout.grid)
-    # nr,nc = size(layout)
-    # leftpad   = maximum([minpad_matrix[r,1][1]   for r=1:nr])
-    # toppad    = maximum([minpad_matrix[1,c][2]   for c=1:nc])
-    # rightpad  = maximum([minpad_matrix[r,end][3] for r=1:nr])
-    # bottompad = maximum([minpad_matrix[end,c][4] for c=1:nc])
     map(_update_min_padding!, layout.grid)
     layout.minpad = (
         maximum(map(leftpad,   layout.grid[:,1])),
@@ -220,7 +211,6 @@ function _update_min_padding!(layout::GridLayout)
         maximum(map(rightpad,  layout.grid[:,end])),
         maximum(map(bottompad, layout.grid[end,:]))
     )
-    # layout.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 
 
@@ -236,11 +226,6 @@ function update_child_bboxes!(layout::GridLayout)
     # create a matrix for each minimum padding direction
     _update_min_padding!(layout)
 
-    # minpad_left = map(l -> l.minpad[1], layout.grid)
-    # minpad_left   = map(min_padding_left,   layout.grid)
-    # minpad_top    = map(min_padding_top,    layout.grid)
-    # minpad_right  = map(min_padding_right,  layout.grid)
-    # minpad_bottom = map(min_padding_bottom, layout.grid)
     minpad_left   = map(leftpad,   layout.grid)
     minpad_top    = map(toppad,    layout.grid)
     minpad_right  = map(rightpad,  layout.grid)
@@ -294,18 +279,6 @@ function update_child_bboxes!(layout::GridLayout)
         # recursively update the child's children
         update_child_bboxes!(child)
     end
-
-    # # now re-scale/crop to the figure dimensions, and recursively update the children
-    # for child in layout.grid
-    #     # the bounding boxes are currently relative to the parent, but we need them relative to the canvas
-    #     # plotarea!(child, crop(layout.bbox, plotarea(child)))
-    #     # bbox!(child, crop(layout.bbox, bbox(child)))
-    #     # @show "!!!" plotarea(child) bbox(child)
-    #
-    #     # recursively update the child's children
-    #     update_child_bboxes!(child)
-    #     @show "???" plotarea(child) bbox(child)
-    # end
 end
 
 
