@@ -605,7 +605,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             weights = d[:weights],
             orientation = (isvertical(d) ? "vertical" : "horizontal"),
             histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
-        )[1]
+        )[3]
         push!(handles, handle)
     end
 
@@ -1124,10 +1124,14 @@ function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
             if get_subplot(series) === sp &&
                         series.d[:label] != "" &&
                         !(series.d[:seriestype] in (
-                            :hist,:density,:hexbin,:hist2d,:hline,:vline,
+                            :hexbin,:hist2d,:hline,:vline,
                             :contour,:contour3d,:surface,:wireframe,
                             :heatmap,:path3d,:scatter3d, :pie, :image))
-                push!(handles, series.d[:serieshandle][1])
+                push!(handles, if series.d[:seriestype] == :hist
+                    PyPlot.plt[:Line2D]((0,1),(0,0), color=pyfillcolor(series.d), linewidth=4)
+                else
+                    series.d[:serieshandle][1]
+                end)
                 push!(labels, series.d[:label])
             end
         end
