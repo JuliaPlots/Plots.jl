@@ -218,7 +218,7 @@ use_axis_field(ticks) = !(ticks in (nothing, :none))
 # labelsym(letter) = symbol(letter * "label")
 # rotationsym(letter) = symbol(letter * "rotation")
 
-function plotlyaxis(axis::Axis, sp::Subplot{PlotlyBackend})
+function plotly_axis(axis::Axis, sp::Subplot)
     letter = axis[:letter]
     d = axis.d
     ax = KW(
@@ -273,10 +273,10 @@ function plotlyaxis(axis::Axis, sp::Subplot{PlotlyBackend})
     ax
 end
 
-# function get_plot_json(plt::Plot{PlotlyBackend})
+# function plotly_layout_json(plt::Plot{PlotlyBackend})
 #   d = plt.attr
 # function plotly_layout(d::KW, seriesargs::AVec{KW})
-function plotly_layout(plt::Plot{PlotlyBackend})
+function plotly_layout(plt::Plot)
     d_out = KW()
 
     # for now, we only support 1 subplot
@@ -302,13 +302,13 @@ function plotly_layout(plt::Plot{PlotlyBackend})
     # if any(is3d, seriesargs)
     if is3d(sp)
         d_out[:scene] = KW(
-            :xaxis => plotlyaxis(sp.attr[:xaxis], sp),
-            :yaxis => plotlyaxis(sp.attr[:yaxis], sp),
-            :xzxis => plotlyaxis(sp.attr[:zaxis], sp),
+            :xaxis => plotly_axis(sp.attr[:xaxis], sp),
+            :yaxis => plotly_axis(sp.attr[:yaxis], sp),
+            :xzxis => plotly_axis(sp.attr[:zaxis], sp),
         )
     else
-        d_out[:xaxis] = plotlyaxis(sp.attr[:xaxis], sp)
-        d_out[:yaxis] = plotlyaxis(sp.attr[:yaxis], sp)
+        d_out[:xaxis] = plotly_axis(sp.attr[:xaxis], sp)
+        d_out[:yaxis] = plotly_axis(sp.attr[:yaxis], sp)
     end
 
     # legend
@@ -354,7 +354,7 @@ function plotly_layout(plt::Plot{PlotlyBackend})
     d_out
 end
 
-function get_plot_json(plt::Plot{PlotlyBackend})
+function plotly_layout_json(plt::Plot)
     JSON.json(plotly_layout(plt))
 end
 
@@ -375,7 +375,7 @@ const _plotly_markers = KW(
 )
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
-function plotly_series(plt::Plot{PlotlyBackend}, series::Series)
+function plotly_series(plt::Plot, series::Series)
     d = series.d
     d_out = KW()
 
@@ -520,7 +520,7 @@ function plotly_series(plt::Plot{PlotlyBackend}, series::Series)
 end
 
 # get a list of dictionaries, each representing the series params
-function get_series_json(plt::Plot{PlotlyBackend})
+function plotly_series_json(plt::Plot)
     JSON.json(map(series -> plotly_series(plt, series), plt.series_list))
 end
 
@@ -540,7 +540,7 @@ function html_body(plt::Plot{PlotlyBackend}, style = nothing)
         <div id=\"$(uuid)\" style=\"$(style)\"></div>
         <script>
         PLOT = document.getElementById('$(uuid)');
-        Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
+        Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
         </script>
     """
     html
@@ -549,7 +549,7 @@ end
 function js_body(plt::Plot{PlotlyBackend}, uuid)
     js = """
           PLOT = document.getElementById('$(uuid)');
-          Plotly.plot(PLOT, $(get_series_json(plt)), $(get_plot_json(plt)));
+          Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
     """
 end
 

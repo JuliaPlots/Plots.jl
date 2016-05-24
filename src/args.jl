@@ -59,6 +59,7 @@ is3d(d::KW) = trueOrAllTrue(is3d, d[:seriestype])
 
 is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
+ispolar(series::Series) = ispolar(series.d[:subplot])
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 @compat const _styleAliases = KW(
