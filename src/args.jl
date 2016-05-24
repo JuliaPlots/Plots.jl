@@ -214,6 +214,7 @@ const _subplot_defaults = KW(
     :top_margin               => :match,
     :right_margin             => :match,
     :bottom_margin            => :match,
+    :subplot_index            => -1,
 )
 
 const _axis_defaults = KW(
@@ -236,6 +237,7 @@ const _suppress_warnings = KW(
     :y_discrete_indices => nothing,
     :z_discrete_indices => nothing,
     :subplot => nothing,
+    :subplot_index => nothing,
 )
 
 # add defaults for the letter versions

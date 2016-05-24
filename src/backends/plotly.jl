@@ -211,6 +211,27 @@ end
 
 use_axis_field(ticks) = !(ticks in (nothing, :none))
 
+# this method gets the start/end in percentage of the canvas for this axis direction
+function plotly_domain(sp::Subplot, letter)
+    figw, figh = sp.plt.attr[:size]
+    # @show letter,figw,figh sp.plotarea
+    pcts = bbox_to_pcts(sp.plotarea, figw*px, figh*px)
+    # @show pcts
+    i1,i2 = (letter == :x ? (1,3) : (2,4))
+    # @show i1,i2
+    [pcts[i1], pcts[i1]+pcts[i2]]
+end
+
+# TODO: this should actually take into account labels, font sizes, etc
+# sets (left, top, right, bottom)
+function plotly_minpad(sp::Subplot)
+    (12mm, 2mm, 2mm, 8mm)
+end
+
+function _update_min_padding!(sp::Subplot{PlotlyBackend})
+    sp.minpad = plotly_minpad(sp)
+end
+
 # tickssym(letter) = symbol(letter * "ticks")
 # limssym(letter) = symbol(letter * "lims")
 # flipsym(letter) = symbol(letter * "flip")
@@ -229,6 +250,14 @@ function plotly_axis(axis::Axis, sp::Subplot)
 
     # fgcolor = webcolor(d[:foreground_color])
     # tsym = tickssym(letter)
+
+    # spidx = sp.attr[:subplot_index]
+    # d_out[:xaxis] = "x$spidx"
+    # d_out[:yaxis] = "y$spidx"
+    if letter in (:x,:y)
+        ax[:domain] = plotly_domain(sp, letter)
+        ax[:anchor] = "$(letter==:x ? :y : :x)$(plotly_subplot_index(sp))"
+    end
 
     rot = d[:rotation]
     if rot != 0
@@ -279,76 +308,78 @@ end
 function plotly_layout(plt::Plot)
     d_out = KW()
 
-    # for now, we only support 1 subplot
-    if length(plt.subplots) > 1
-        warn("Subplots not supported yet")
-    end
-    sp = plt.subplots[1]
+    # # for now, we only support 1 subplot
+    # if length(plt.subplots) > 1
+    #     warn("Subplots not supported yet")
+    # end
+    # sp = plt.subplots[1]
 
     d_out[:width], d_out[:height] = plt.attr[:size]
-
-    # set the fields for the plot
-    d_out[:title] = sp.attr[:title]
-    d_out[:titlefont] = plotlyfont(sp.attr[:titlefont], webcolor(sp.attr[:foreground_color_title]))
-
-    # TODO: use subplot positioning logic
-    d_out[:margin] = KW(:l=>35, :b=>30, :r=>8, :t=>20)
-
-    d_out[:plot_bgcolor] = webcolor(sp.attr[:background_color_inside])
     d_out[:paper_bgcolor] = webcolor(plt.attr[:background_color_outside])
 
-    # TODO: x/y axis tick values/labels
+    for sp in plt.subplots
+        sp_out = KW()
+        spidx = plotly_subplot_index(sp)
 
-    # if any(is3d, seriesargs)
-    if is3d(sp)
-        d_out[:scene] = KW(
-            :xaxis => plotly_axis(sp.attr[:xaxis], sp),
-            :yaxis => plotly_axis(sp.attr[:yaxis], sp),
-            :xzxis => plotly_axis(sp.attr[:zaxis], sp),
-        )
-    else
-        d_out[:xaxis] = plotly_axis(sp.attr[:xaxis], sp)
-        d_out[:yaxis] = plotly_axis(sp.attr[:yaxis], sp)
-    end
+        # set the fields for the plot
+        d_out[:title] = sp.attr[:title]
+        d_out[:titlefont] = plotlyfont(sp.attr[:titlefont], webcolor(sp.attr[:foreground_color_title]))
 
-    # legend
-    d_out[:showlegend] = sp.attr[:legend] != :none
-    if sp.attr[:legend] != :none
-        d_out[:legend] = KW(
-            :bgcolor  => webcolor(sp.attr[:background_color_legend]),
-            :bordercolor => webcolor(sp.attr[:foreground_color_legend]),
-            :font     => plotlyfont(sp.attr[:legendfont]),
-        )
-    end
+        # # TODO: use subplot positioning logic
+        # d_out[:margin] = KW(:l=>35, :b=>30, :r=>8, :t=>20)
+        d_out[:margin] = KW(:l=>0, :b=>0, :r=>0, :t=>30)
 
-    # if haskey(plt.attr, :annotation_list)
-    #   append!(plt.attr[:annotation_list], anns)
-    # else
-    #   plt.attr[:annotation_list] = anns
-    # end
+        d_out[:plot_bgcolor] = webcolor(sp.attr[:background_color_inside])
 
-    # annotations
-    anns = get(sp.attr, :annotations, [])
-    d_out[:annotations] = if isempty(anns)
-        KW[]
-    else
-        KW[get_annotation_dict(ann...) for ann in anns]
-    end
+        # TODO: x/y axis tick values/labels
 
-    # # arrows
-    # for sargs in seriesargs
-    #     a = sargs[:arrow]
-    #     if sargs[:seriestype] in (:path, :line) && typeof(a) <: Arrow
-    #         add_arrows(sargs[:x], sargs[:y]) do xyprev, xy
-    #             push!(d_out[:annotations], get_annotation_dict_for_arrow(sargs, xyprev, xy, a))
-    #         end
-    #     end
-    # end
-    # dumpdict(d_out,"",true)
-    # @show d_out[:annotations]
+        # if any(is3d, seriesargs)
+        if is3d(sp)
+            d_out[:scene] = KW(
+                symbol("xaxis$spidx") => plotly_axis(sp.attr[:xaxis], sp),
+                symbol("yaxis$spidx") => plotly_axis(sp.attr[:yaxis], sp),
+                symbol("zaxis$spidx") => plotly_axis(sp.attr[:zaxis], sp),
+            )
+        else
+            d_out[symbol("xaxis$spidx")] = plotly_axis(sp.attr[:xaxis], sp)
+            d_out[symbol("yaxis$spidx")] = plotly_axis(sp.attr[:yaxis], sp)
+        end
 
-    if ispolar(sp)
-        d_out[:direction] = "counterclockwise"
+        # legend
+        d_out[:showlegend] = sp.attr[:legend] != :none
+        if sp.attr[:legend] != :none
+            d_out[:legend] = KW(
+                :bgcolor  => webcolor(sp.attr[:background_color_legend]),
+                :bordercolor => webcolor(sp.attr[:foreground_color_legend]),
+                :font     => plotlyfont(sp.attr[:legendfont]),
+            )
+        end
+
+        # annotations
+        anns = get(sp.attr, :annotations, [])
+        d_out[:annotations] = if isempty(anns)
+            KW[]
+        else
+            KW[get_annotation_dict(ann...) for ann in anns]
+        end
+
+        # # arrows
+        # for sargs in seriesargs
+        #     a = sargs[:arrow]
+        #     if sargs[:seriestype] in (:path, :line) && typeof(a) <: Arrow
+        #         add_arrows(sargs[:x], sargs[:y]) do xyprev, xy
+        #             push!(d_out[:annotations], get_annotation_dict_for_arrow(sargs, xyprev, xy, a))
+        #         end
+        #     end
+        # end
+        # dumpdict(d_out,"",true)
+        # @show d_out[:annotations]
+
+        if ispolar(sp)
+            d_out[:direction] = "counterclockwise"
+        end
+
+        d_out
     end
 
     d_out
@@ -374,14 +405,25 @@ const _plotly_markers = KW(
     :hline      => "line-ew",
 )
 
+function plotly_subplot_index(sp::Subplot)
+    spidx = sp.attr[:subplot_index]
+    spidx == 1 ? "" : spidx
+end
+
+
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     d = series.d
+    sp = d[:subplot]
     d_out = KW()
+
+    # these are the axes that the series should be mapped to
+    spidx = plotly_subplot_index(sp)
+    d_out[:xaxis] = "x$spidx"
+    d_out[:yaxis] = "y$spidx"
 
     x, y = collect(d[:x]), collect(d[:y])
     d_out[:name] = d[:label]
-
     st = d[:seriestype]
     isscatter = st in (:scatter, :scatter3d)
     hasmarker = isscatter || d[:markershape] != :none
@@ -450,7 +492,12 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st == :pie
         d_out[:type] = "pie"
-        d_out[:labels] = x
+        d_out[:labels] = if haskey(d,:x_discrete_indices)
+            dvals = sp.attr[:xaxis].d[:discrete_values]
+            [dvals[idx] for idx in d[:x_discrete_indices]]
+        else
+            d[:x]
+        end
         d_out[:values] = y
         d_out[:hoverinfo] = "label+percent+name"
 
@@ -556,14 +603,24 @@ end
 
 # ----------------------------------------------------------------
 
+# compute layout bboxes
+function plotly_finalize(plt::Plot)
+    w, h = plt.attr[:size]
+    plt.layout.bbox = BoundingBox(0mm, 0mm, w*px, h*px)
+    update_child_bboxes!(plt.layout)
+end
+
 function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{PlotlyBackend})
+    plotly_finalize(plt)
     writemime_png_from_html(io, plt)
 end
 
 function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot{PlotlyBackend})
+    plotly_finalize(plt)
     write(io, html_head(plt) * html_body(plt))
 end
 
 function Base.display(::PlotsDisplay, plt::AbstractPlot{PlotlyBackend})
-  standalone_html_window(plt)
+    plotly_finalize(plt)
+    standalone_html_window(plt)
 end

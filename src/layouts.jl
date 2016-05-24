@@ -67,7 +67,8 @@ function crop(parent::BoundingBox, child::BoundingBox)
     BoundingBox(l, t, w, h)
 end
 
-# convert a bounding box from absolute coords to percentages... returns an array of percentages of figure size: [left, bottom, width, height]
+# convert a bounding box from absolute coords to percentages...
+# returns an array of percentages of figure size: [left, bottom, width, height]
 function bbox_to_pcts(bb::BoundingBox, figw, figh, flipy = true)
     mms = Float64[f(bb).value for f in (left,bottom,width,height)]
     if flipy

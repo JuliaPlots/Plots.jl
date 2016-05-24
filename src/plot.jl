@@ -57,6 +57,7 @@ function plot(args...; kw...)
     plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
     for (idx,sp) in enumerate(plt.subplots)
         sp.plt = plt
+        sp.attr[:subplot_index] = idx
         _update_subplot_args(plt, sp, copy(d), idx)
     end
 

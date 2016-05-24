@@ -211,7 +211,13 @@ end
 #     writemime_png_from_html(io, plt)
 # end
 
+
+function _update_min_padding!(sp::Subplot{PlotlyBackend})
+    sp.minpad = plotly_minpad(sp)
+end
+
 function Base.display(::PlotsDisplay, plt::Plot{PlotlyJSBackend})
+    plotly_finalize(plt)
     display(plt.o)
 end
 
