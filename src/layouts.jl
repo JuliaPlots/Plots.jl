@@ -109,6 +109,8 @@ update_child_bboxes!(layout::AbstractLayout) = nothing
 
 width(layout::AbstractLayout) = width(layout.bbox)
 height(layout::AbstractLayout) = height(layout.bbox)
+
+plotarea(layout::AbstractLayout) = defaultbox
 plotarea!(layout::AbstractLayout, bbox::BoundingBox) = nothing
 
 attr(layout::AbstractLayout, k::Symbol) = layout.attr[k]
@@ -232,6 +234,7 @@ function update_child_bboxes!(layout::GridLayout)
 
     # create a matrix for each minimum padding direction
     _update_min_padding!(layout)
+
     # minpad_left = map(l -> l.minpad[1], layout.grid)
     # minpad_left   = map(min_padding_left,   layout.grid)
     # minpad_top    = map(min_padding_top,    layout.grid)
@@ -250,51 +253,58 @@ function update_child_bboxes!(layout::GridLayout)
     pad_top    = maximum(minpad_top,    2)
     pad_right  = maximum(minpad_right,  1)
     pad_bottom = maximum(minpad_bottom, 2)
-    # @show pad_left pad_top pad_right pad_bottom
+    @show pad_left pad_top pad_right pad_bottom
 
     # scale this up to the total padding in each direction
     total_pad_horizontal = (pad_left + pad_right) .* nc
     total_pad_vertical   = (pad_top + pad_bottom) .* nr
-    # @show total_pad_horizontal total_pad_vertical
+    @show total_pad_horizontal total_pad_vertical
 
     # now we can compute the total plot area in each direction
-    total_plotarea_horizontal = width(layout)  - total_pad_horizontal
-    total_plotarea_vertical   = height(layout) - total_pad_vertical
-    # @show total_plotarea_horizontal total_plotarea_vertical
+    total_plotarea_horizontal = width(layout)  - sum(total_pad_horizontal)
+    total_plotarea_vertical   = height(layout) - sum(total_pad_vertical)
+    @show total_plotarea_horizontal total_plotarea_vertical
 
     # normalize widths/heights so they sum to 1
     denom_w = sum(layout.widths)
     denom_h = sum(layout.heights)
-    # @show denom_w, denom_h
+    @show layout.widths layout.heights denom_w, denom_h
 
-    # we have all the data we need... lets compute the plot areas
+    # we have all the data we need... lets compute the plot areas and set the bounding boxes
     for r=1:nr, c=1:nc
         child = layout[r,c]
 
-        # get the top-left corner of this child
-        child_left = (c == 1 ? 0mm : right(layout[r, c-1].bbox))
-        child_top  = (r == 1 ? 0mm : bottom(layout[r-1, c].bbox))
+        # get the top-left corner of this child... the first one is top-left of the parent (i.e. layout)
+        child_left = (c == 1 ? left(layout.bbox) : right(layout[r, c-1].bbox))
+        child_top  = (r == 1 ? top(layout.bbox) : bottom(layout[r-1, c].bbox))
 
         # compute plot area
         plotarea_left   = child_left + pad_left[c]
         plotarea_top    = child_top + pad_top[r]
-        plotarea_width  = total_plotarea_horizontal[c] * layout.widths[c] / denom_w
-        plotarea_height = total_plotarea_vertical[r] * layout.heights[r] / denom_h
+        plotarea_width  = total_plotarea_horizontal * layout.widths[c] / denom_w
+        plotarea_height = total_plotarea_vertical * layout.heights[r] / denom_h
         child_plotarea  = BoundingBox(plotarea_left, plotarea_top, plotarea_width, plotarea_height)
 
         # compute child bbox
         child_width  = pad_left[c] + plotarea_width + pad_right[c]
         child_height = pad_top[r] + plotarea_height + pad_bottom[r]
         child_bbox   = BoundingBox(child_left, child_top, child_width, child_height)
-        # @show (r,c) child_plotarea child_bbox
+        @show (r,c) child_plotarea child_bbox
 
+        plotarea!(child, child_plotarea)
+        bbox!(child, child_bbox)
+    end
+
+    # now re-scale/crop to the figure dimensions, and recursively update the children
+    for child in layout.grid
         # the bounding boxes are currently relative to the parent, but we need them relative to the canvas
-        plotarea!(child, crop(layout.bbox, child_plotarea))
-        bbox!(child, crop(layout.bbox, child_bbox))
-        # @show child_plotarea child_bbox
+        # plotarea!(child, crop(layout.bbox, plotarea(child)))
+        # bbox!(child, crop(layout.bbox, bbox(child)))
+        # @show "!!!" plotarea(child) bbox(child)
 
         # recursively update the child's children
         update_child_bboxes!(child)
+        @show "???" plotarea(child) bbox(child)
     end
 end
 

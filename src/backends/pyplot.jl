@@ -1221,8 +1221,11 @@ function finalizePlot(plt::Plot{PyPlotBackend})
     end
     drawfig(plt.o)
     plt.layout.bbox = py_bbox_fig(plt)
+
+    # TODO: these should be called outside of pyplot... how?
     update_child_bboxes!(plt.layout)
     _update_position!(plt.layout)
+
     PyPlot.draw()
 end
 
