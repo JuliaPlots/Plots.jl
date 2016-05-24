@@ -88,7 +88,8 @@ function _initialize_backend(::PyPlotBackend)
     end
 end
 
-# -------------------------------
+# --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
@@ -350,59 +351,6 @@ function py_bbox_title(ax)
     end
     bb
 end
-
-# ---------------------------------------------------------------------------
-
-# # TODO: remove these after _min_padding is done
-#
-# # need to compute each of these by subtracting the plotarea position from
-# # the most extreme guide/axis in each direction.  Can pass method (left,top,right,bottom)
-# # and aggregation (minimum or maximum) into a method to do this.
-#
-# min_padding_left(layout::Subplot{PyPlotBackend})   = compute_min_padding(layout, left,   1)
-# min_padding_top(layout::Subplot{PyPlotBackend})    = compute_min_padding(layout, top,    1)
-# min_padding_right(layout::Subplot{PyPlotBackend})  = compute_min_padding(layout, right, -1)
-# min_padding_bottom(layout::Subplot{PyPlotBackend}) = compute_min_padding(layout, bottom,-1)
-#
-#
-# # loop over the guides and axes and compute how far they "stick out" from the plot area,
-# # so that we know the minimum padding we need to avoid cropping and overlapping text.
-# # `func` is one of (left,top,right,bottom), and we multiply by 1 or -1 depending on direction
-# function compute_min_padding(sp::Subplot{PyPlotBackend}, func::Function, mult::Number)
-#     ax = sp.o
-#     ax == nothing && return 0mm
-#     plotbb = py_bbox(ax)
-#     # @show func, mult plotbb
-#     # @show func, py_bbox_axis(ax, "x")
-#     # TODO: this should initialize to the margin from sp.attr
-#     padding = 1mm
-#     for bb in (py_bbox_axis(ax, "x"),
-#                py_bbox_axis(ax, "y"),
-#                py_bbox_title(ax))
-#         diff = func(plotbb) - func(bb)
-#         # @show diff,bb
-#         if ispositive(width(bb)) && ispositive(height(bb))
-#             padding = max(padding, mult * diff)
-#         end
-#         # @show padding
-#     end
-#
-#     if func == right && haskey(sp.attr, :cbar_ax)
-#         # get width of colorbar labels and add to width of colorbar
-#         bb = py_bbox(sp.attr[:cbar_handle][:ax][:get_yticklabels]())
-#         sp.attr[:cbar_width] = _cbar_width + width(bb) + 1mm
-#         padding = padding + sp.attr[:cbar_width]
-#     end
-#
-#     # if func == top
-#     #     titlebbox = py_bbox_title(ax)
-#     #     padding = max(padding, height(titlebbox))
-#     #     @show titlebbox height(titlebbox),padding
-#     # end
-#
-#     padding
-# end
-
 
 # ---------------------------------------------------------------------------
 
