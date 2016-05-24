@@ -19,7 +19,7 @@ supportedArgs(::PyPlotBackend) = [
     :bins, :bar_width, :bar_edges,
     :n, :nc, :nr, :layout,
     :smooth,
-    :title, :windowtitle, :show, :size,
+    :title, :window_title, :show, :size,
     :x, :xguide, :xlims, :xticks, :xscale, :xflip, :xrotation,
     :y, :yguide, :ylims, :yticks, :yscale, :yflip, :yrotation,
     # :axis, :yrightlabel,
@@ -354,11 +354,11 @@ end
 
 # ---------------------------------------------------------------------------
 
-function pyplot_figure(plotargs::KW)
-    w,h = map(px2inch, plotargs[:size])
+function pyplot_figure(attr::KW)
+    w,h = map(px2inch, attr[:size])
 
     # reuse the current figure?
-    fig = if plotargs[:overwrite_figure]
+    fig = if attr[:overwrite_figure]
         PyPlot.gcf()
     else
         PyPlot.figure()
@@ -366,7 +366,7 @@ function pyplot_figure(plotargs::KW)
 
     # update the specs
     fig[:set_size_inches](w, h, forward = true)
-    fig[:set_facecolor](getPyPlotColor(plotargs[:background_color_outside]))
+    fig[:set_facecolor](getPyPlotColor(attr[:background_color_outside]))
     fig[:set_dpi](DPI)
     # fig[:set_tight_layout](true)
 
@@ -374,7 +374,7 @@ function pyplot_figure(plotargs::KW)
     PyPlot.clf()
 
     # resize the window
-    PyPlot.plt[:get_current_fig_manager]()[:resize](plotargs[:size]...)
+    PyPlot.plt[:get_current_fig_manager]()[:resize](attr[:size]...)
     fig
 end
 
@@ -382,7 +382,7 @@ end
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{PyPlotBackend})
-    pyplot_figure(plt.plotargs)
+    pyplot_figure(plt.attr)
 end
 
 # Set up the subplot within the backend object.
@@ -1212,7 +1212,7 @@ for (mime, fmt) in _pyplot_mimeformats
             io,
             format=$fmt,
             # bbox_inches = "tight",
-            # figsize = map(px2inch, plt.plotargs[:size]),
+            # figsize = map(px2inch, plt.attr[:size]),
             facecolor = fig.o["get_facecolor"](),
             edgecolor = "none",
             dpi = DPI

@@ -19,7 +19,7 @@ supportedArgs(::GRBackend) = [
     :bins,
     :n, :nc, :nr, :layout,
     :smooth,
-    :title, :windowtitle, :show, :size,
+    :title, :window_title, :show, :size,
     :x, :xguide, :xlims, :xticks, :xscale, :xflip,
     :y, :yguide, :ylims, :yticks, :yscale, :yflip,
     # :axis, :yrightlabel,
@@ -194,7 +194,7 @@ end
 
 function gr_display(plt::Plot{GRBackend}, clear=true, update=true,
                     subplot=[0, 1, 0, 1])
-  d = plt.plotargs
+  d = plt.attr
 
   clear && GR.clearws()
 
@@ -879,10 +879,10 @@ end
 # end
 
 function _add_annotations{X,Y,V}(plt::Plot{GRBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
-  if haskey(plt.plotargs, :anns)
-    append!(plt.plotargs[:anns], anns)
+  if haskey(plt.attr, :anns)
+    append!(plt.attr[:anns], anns)
   else
-    plt.plotargs[:anns] = anns
+    plt.attr[:anns] = anns
   end
 end
 
@@ -893,7 +893,7 @@ end
 
 function _update_plot(plt::Plot{GRBackend}, d::KW)
   for k in (:title, :xguide, :yguide)
-    haskey(d, k) && (plt.plotargs[k] = d[k])
+    haskey(d, k) && (plt.attr[k] = d[k])
   end
 end
 

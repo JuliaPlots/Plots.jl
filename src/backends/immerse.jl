@@ -21,7 +21,7 @@ end
 
 function createImmerseFigure(d::KW)
   w,h = d[:size]
-  figidx = Immerse.figure(; name = d[:windowtitle], width = w, height = h)
+  figidx = Immerse.figure(; name = d[:window_title], width = w, height = h)
   Immerse.Figure(figidx)
 end
 
@@ -37,7 +37,7 @@ end
 #   Plot((nothing,gplt), pkg, 0, d, KW[])
 # end
 function _create_backend_figure(plt::Plot{ImmerseBackend})
-    (nothing, createGadflyPlotObject(plt.plotargs))
+    (nothing, createGadflyPlotObject(plt.attr))
 end
 
 
@@ -95,10 +95,10 @@ end
 #
 # function showSubplotObject(subplt::Subplot{ImmerseBackend})
 #   # create the Gtk window with vertical box vsep
-#   d = getplotargs(subplt,1)
+#   d = getattr(subplt,1)
 #   w,h = d[:size]
 #   vsep = Gtk.GtkBoxLeaf(:v)
-#   win = Gtk.GtkWindowLeaf(vsep, d[:windowtitle], w, h)
+#   win = Gtk.GtkWindowLeaf(vsep, d[:window_title], w, h)
 #
 #   figindices = []
 #   row = Gtk.GtkBoxLeaf(:h)
@@ -158,7 +158,7 @@ function Base.display(::PlotsDisplay, plt::Plot{ImmerseBackend})
 
   fig, gplt = plt.o
   if fig == nothing
-    fig = createImmerseFigure(plt.plotargs)
+    fig = createImmerseFigure(plt.attr)
     Gtk.on_signal_destroy((x...) -> (Immerse.dropfig(Immerse._display, fig.figno); plt.o = (nothing,gplt)), fig.canvas)
     plt.o = (fig, gplt)
   end

@@ -4,7 +4,7 @@
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
 
 
-function standalone_html(plt::AbstractPlot; title::AbstractString = get(plt.plotargs, :window_title, "Plots.jl"))
+function standalone_html(plt::AbstractPlot; title::AbstractString = get(plt.attr, :window_title, "Plots.jl"))
     """
     <!DOCTYPE html>
     <html>
@@ -27,7 +27,7 @@ function open_browser_window(filename::AbstractString)
 end
 
 function write_temp_html(plt::AbstractPlot)
-    html = standalone_html(plt; title = plt.plotargs[:title])
+    html = standalone_html(plt; title = plt.attr[:window_title])
     filename = string(tempname(), ".html")
     output = open(filename, "w")
     write(output, html)
@@ -51,7 +51,7 @@ function writemime_png_from_html(io::IO, plt::AbstractPlot)
 
     # convert that html file to a temporary png file using wkhtmltoimage
     png_fn = tempname() * ".png"
-    w, h = plt.plotargs[:size]
+    w, h = plt.attr[:size]
     html_to_png(html_fn, png_fn, w, h)
 
     # now read that file data into io

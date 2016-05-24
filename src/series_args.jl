@@ -138,7 +138,7 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #         n = plt.n + i
 #
 #         dumpdict(d, "before getSeriesArgs")
-#         d = getSeriesArgs(plt.backend, getplotargs(plt, n), d, commandIndex, convertSeriesIndex(plt, n), n)
+#         d = getSeriesArgs(plt.backend, getattr(plt, n), d, commandIndex, convertSeriesIndex(plt, n), n)
 #         dumpdict(d, "after getSeriesArgs")
 #
 #         d[:x], d[:y], d[:z] = compute_xyz(xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)])
@@ -384,7 +384,7 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #
 # # special handling... xmin/xmax with function(s)
 # function process_inputs(plt::AbstractPlot, d::KW, f::FuncOrFuncs, xmin::Number, xmax::Number)
-#     width = get(plt.plotargs, :size, (100,))[1]
+#     width = get(plt.attr, :size, (100,))[1]
 #     x = linspace(xmin, xmax, width)
 #     process_inputs(plt, d, x, f)
 # end

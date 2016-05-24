@@ -5,7 +5,7 @@
 function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     pkg = plt.backend
     # n = plt.n
-    # plotargs = getplotargs(plt, n)
+    # attr = getattr(plt, n)
     # plotIndex = convertSeriesIndex(plt, n)
     globalIndex = plt.n
 
@@ -380,7 +380,7 @@ end
 #
 # # special handling... xmin/xmax with function(s)
 # function process_inputs(plt::AbstractPlot, d::KW, f::FuncOrFuncs, xmin::Number, xmax::Number)
-#     width = get(plt.plotargs, :size, (100,))[1]
+#     width = get(plt.attr, :size, (100,))[1]
 #     x = linspace(xmin, xmax, width)
 #     process_inputs(plt, d, x, f)
 # end

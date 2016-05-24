@@ -348,10 +348,10 @@ end
 make255(x) = round(Int, 255 * x)
 
 function webcolor(c::Color)
-  @sprintf("rgb(%d, %d, %d)", [make255(f(c)) for f in [red,green,blue]]...)
+    @sprintf("rgb(%d, %d, %d)", [make255(f(c)) for f in [red,green,blue]]...)
 end
 function webcolor(c::TransparentColor)
-  @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
+    @sprintf("rgba(%d, %d, %d, %1.3f)", [make255(f(c)) for f in [red,green,blue]]..., alpha(c))
 end
 webcolor(cs::ColorScheme) = webcolor(getColor(cs))
 webcolor(c) = webcolor(convertColor(c))
@@ -412,10 +412,10 @@ webcolor(c, α) = webcolor(convertColor(getColor(c), α))
 # end
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
-function getSeriesRGBColor(c, plotargs::KW, n::Int)
+function getSeriesRGBColor(c, attr::KW, n::Int)
 
   if c == :auto
-    c = autopick(plotargs[:color_palette], n)
+    c = autopick(attr[:color_palette], n)
   end
 
   # c should now be a subtype of ColorScheme

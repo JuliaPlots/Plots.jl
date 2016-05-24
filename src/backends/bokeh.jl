@@ -37,7 +37,7 @@ supportedArgs(::BokehBackend) = [
     # :show,
     :size,
     :title,
-    # :windowtitle,
+    # :window_title,
     :x,
     # :xguide,
     # :xlims,
@@ -134,11 +134,11 @@ function _create_backend_figure(plt::Plot{BokehBackend})
   datacolumns = Bokeh.BokehDataSet[]
   tools = Bokeh.tools()
   filename = tempname() * ".html"
-  title = plt.plotargs[:title]
-  w, h = plt.plotargs[:size]
-  xaxis_type = plt.plotargs[:xscale] == :log10 ? :log : :auto
-  yaxis_type = plt.plotargs[:yscale] == :log10 ? :log : :auto
-  # legend = plt.plotargs[:legend] ? xxxx : nothing
+  title = plt.attr[:title]
+  w, h = plt.attr[:size]
+  xaxis_type = plt.attr[:xscale] == :log10 ? :log : :auto
+  yaxis_type = plt.attr[:yscale] == :log10 ? :log : :auto
+  # legend = plt.attr[:legend] ? xxxx : nothing
   legend = nothing
   extra_args = KW()  # TODO: we'll put extra settings (xlim, etc) here
   Bokeh.Plot(datacolumns, tools, filename, title, w, h, xaxis_type, yaxis_type, legend) #, extra_args)

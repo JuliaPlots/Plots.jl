@@ -37,7 +37,7 @@ supportedArgs(::GLVisualizeBackend) = [
     # :show,
     # :size,
     # :title,
-    # :windowtitle,
+    # :window_title,
     # :x,
     # :xguide,
     # :xlims,

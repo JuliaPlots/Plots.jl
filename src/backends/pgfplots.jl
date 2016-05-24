@@ -36,7 +36,7 @@ supportedArgs(::PGFPlotsBackend) = [
     # :show,
      :size,
      :title,
-    # :windowtitle,
+    # :window_title,
      :x,
      :xguide,
      :xlims,
@@ -246,10 +246,10 @@ end
 
 function _add_annotations{X,Y,V}(plt::Plot{PGFPlotsBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
   # set or add to the annotation_list
-  if haskey(plt.plotargs, :annotation_list)
-    append!(plt.plotargs[:annotation_list], anns)
+  if haskey(plt.attr, :annotation_list)
+    append!(plt.attr[:annotation_list], anns)
   else
-    plt.plotargs[:annotation_list] = anns
+    plt.attr[:annotation_list] = anns
   end
 end
 
@@ -362,11 +362,11 @@ function _make_pgf_plot(plt::Plot{PGFPlotsBackend})
     os = Any[]
     # We need to send the :legend KW to the axis
     for plt_series in plt.seriesargs
-        plt_series[:legend] = plt.plotargs[:legend]
+        plt_series[:legend] = plt.attr[:legend]
         push!(os, _pgfplots_axis(plt_series))
     end
-    axisargs  =_pgfplots_get_axis_kwargs(plt.plotargs)
-    w, h = map(px2mm, plt.plotargs[:size])
+    axisargs  =_pgfplots_get_axis_kwargs(plt.attr)
+    w, h = map(px2mm, plt.attr[:size])
     plt.o = PGFPlots.Axis([os...]; width = "$w mm", height = "$h mm", axisargs...)
 end
 

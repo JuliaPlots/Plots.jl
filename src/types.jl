@@ -58,7 +58,7 @@ attr!(series::Series, v, k::Symbol) = (series.d[k] = v)
 type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T               # the backend type
     n::Int                   # number of series
-    plotargs::KW             # arguments for the whole plot
+    attr::KW             # arguments for the whole plot
     series_list::Vector{Series}   # arguments for each series
     o  # the backend's plot object
     subplots::Vector{Subplot}
@@ -75,8 +75,8 @@ end
 # Base.getindex(plt::Plot, i::Integer) = plt.subplots[i]
 Base.getindex(plt::Plot, s::Symbol) = plt.spmap[s]
 Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r,c]
-attr(plt::Plot, k::Symbol) = plt.plotargs[k]
-attr!(plt::Plot, v, k::Symbol) = (plt.plotargs[k] = v)
+attr(plt::Plot, k::Symbol) = plt.attr[k]
+attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
 
 
 # -----------------------------------------------------------------------

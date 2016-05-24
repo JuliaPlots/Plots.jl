@@ -12,7 +12,7 @@ supportedArgs(::GadflyBackend) = [
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
     :fillrange, :fillcolor, :fillalpha,
     :bins, :n, :nc, :nr, :layout, :smooth,
-    :title, :windowtitle, :show, :size,
+    :title, :window_title, :show, :size,
     :x, :xguide, :xlims, :xticks, :xscale, :xflip,
     :y, :yguide, :ylims, :yticks, :yscale, :yflip,
     # :z, :zguide, :zlims, :zticks, :zscale, :zflip,
@@ -190,7 +190,7 @@ function getMarkerGeom(d::KW)
     end
 end
 
-function getGadflyMarkerTheme(d::KW, plotargs::KW)
+function getGadflyMarkerTheme(d::KW, attr::KW)
     c = getColor(d[:markercolor])
     α = d[:markeralpha]
     if α != nothing
@@ -216,15 +216,15 @@ function getGadflyMarkerTheme(d::KW, plotargs::KW)
 end
 
 function addGadflyContColorScale(plt::Plot{GadflyBackend}, c)
-    plt.plotargs[:colorbar] == :none && return
+    plt.attr[:colorbar] == :none && return
     if !isa(c, ColorGradient)
         c = default_gradient()
     end
     push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(c, p))))
 end
 
-function addGadflyMarker!(plt::Plot, numlayers::Int, d::KW, plotargs::KW, geoms...)
-    gfargs = vcat(geoms..., getGadflyMarkerTheme(d, plotargs), getMarkerGeom(d))
+function addGadflyMarker!(plt::Plot, numlayers::Int, d::KW, attr::KW, geoms...)
+    gfargs = vcat(geoms..., getGadflyMarkerTheme(d, attr), getMarkerGeom(d))
     kwargs = KW()
 
     # handle continuous color scales for the markers
@@ -241,7 +241,7 @@ end
 # ---------------------------------------------------------------------------
 
 function addToGadflyLegend(plt::Plot, d::KW)
-    if plt.plotargs[:legend] != :none && d[:label] != ""
+    if plt.attr[:legend] != :none && d[:label] != ""
         gplt = getGadflyContext(plt)
 
         # add the legend if needed
@@ -308,7 +308,7 @@ function addGadflySeries!(plt::Plot, d::KW)
 
     # markers
     if d[:markershape] != :none || st == :shape
-        prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), d, plt.plotargs, smooth...))
+        prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), d, plt.attr, smooth...))
     end
 
     st in (:hist2d, :hexbin, :contour) || addToGadflyLegend(plt, d)
@@ -575,7 +575,7 @@ end
 #     Plot(gplt, pkg, 0, d, KW[])
 # end
 function _create_backend_figure(plt::Plot{GadflyBackend})
-    createGadflyPlotObject(plt.plotargs)
+    createGadflyPlotObject(plt.attr)
 end
 
 
@@ -674,8 +674,8 @@ getGadflyContext(plt::Plot{GadflyBackend}) = plt.o
 # end
 
 setGadflyDisplaySize(w,h) = Compose.set_default_graphic_size(w * Compose.px, h * Compose.px)
-setGadflyDisplaySize(plt::Plot) = setGadflyDisplaySize(plt.plotargs[:size]...)
-# setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getplotargs(subplt, 1)[:size]...)
+setGadflyDisplaySize(plt::Plot) = setGadflyDisplaySize(plt.attr[:size]...)
+# setGadflyDisplaySize(subplt::Subplot) = setGadflyDisplaySize(getattr(subplt, 1)[:size]...)
 # -------------------------------------------------------------------------
 
 
@@ -703,13 +703,13 @@ end
 
 
 function Base.display(::PlotsDisplay, plt::Plot{GadflyBackend})
-    setGadflyDisplaySize(plt.plotargs[:size]...)
+    setGadflyDisplaySize(plt.attr[:size]...)
     display(plt.o)
 end
 
 
 # function Base.display(::PlotsDisplay, subplt::Subplot{GadflyBackend})
-#     setGadflyDisplaySize(getplotargs(subplt,1)[:size]...)
+#     setGadflyDisplaySize(getattr(subplt,1)[:size]...)
 #     ctx = buildGadflySubplotContext(subplt)
 #
 #     # taken from Gadfly since I couldn't figure out how to do it directly

@@ -35,7 +35,7 @@ supportedArgs(::UnicodePlotsBackend) = [
     :show,
     :size,
     :title,
-    :windowtitle,
+    :window_title,
     :x,
     :xguide,
     :xlims,
@@ -78,7 +78,7 @@ function rebuildUnicodePlot!(plt::Plot)
 
   # figure out the plotting area xlim = [xmin, xmax] and ylim = [ymin, ymax]
   sargs = plt.seriesargs
-  iargs = plt.plotargs
+  iargs = plt.attr
 
   # get the x/y limits
   if get(iargs, :xlims, :auto) == :auto
@@ -186,10 +186,10 @@ end
 
 function _create_backend_figure(plt::Plot{UnicodePlotsBackend})
   # do we want to give a new default size?
-  if !haskey(plt.plotargs, :size) || plt.plotargs[:size] == default(:size)
-    plt.plotargs[:size] = (60,20)
+  if !haskey(plt.attr, :size) || plt.attr[:size] == default(:size)
+    plt.attr[:size] = (60,20)
   end
-  plt.plotargs[:color_palette] = [RGB(0,0,0)]
+  plt.attr[:color_palette] = [RGB(0,0,0)]
   nothing
 
   # plt
@@ -211,7 +211,7 @@ end
 function _update_plot(plt::Plot{UnicodePlotsBackend}, d::KW)
   for k in (:title, :xguide, :yguide, :xlims, :ylims)
     if haskey(d, k)
-      plt.plotargs[k] = d[k]
+      plt.attr[k] = d[k]
     end
   end
 end

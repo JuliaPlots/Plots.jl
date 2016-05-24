@@ -31,7 +31,7 @@ supportedArgs(::QwtBackend) = [
     :show,
     :size,
     :title,
-    :windowtitle,
+    :window_title,
     :x,
     :xguide,
     :xlims,
@@ -130,9 +130,9 @@ end
 
 # function _create_plot(pkg::QwtBackend, d::KW)
 function _create_backend_figure(plt::Plot{QwtBackend})
-  fixcolors(plt.plotargs)
-  dumpdict(plt.plotargs,"\n\n!!! plot")
-  o = Qwt.plot(zeros(0,0); plt.plotargs..., show=false)
+  fixcolors(plt.attr)
+  dumpdict(plt.attr,"\n\n!!! plot")
+  o = Qwt.plot(zeros(0,0); plt.attr..., show=false)
   # plt = Plot(o, pkg, 0, d, KW[])
   # plt
 end
@@ -287,7 +287,7 @@ end
 #   #   i += rowcnt
 #   # end
 #   subplt.o = Qwt.vsplitter(rows...)
-#   # Qwt.resizewidget(subplt.o, getplotargs(subplt,1)[:size]...)
+#   # Qwt.resizewidget(subplt.o, getattr(subplt,1)[:size]...)
 #   # Qwt.moveToLastScreen(subplt.o)  # hack so it goes to my center monitor... sorry
 #   true
 # end

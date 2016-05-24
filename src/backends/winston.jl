@@ -39,7 +39,7 @@ supportedArgs(::WinstonBackend) = [
     :show,
     :size,
     :title,
-    :windowtitle,
+    :window_title,
     :x,
     :xguide,
     :xlims,
@@ -104,9 +104,9 @@ end
 
 function _create_backend_figure(plt::Plot{WinstonBackend})
     Winston.FramedPlot(
-        title = plt.plotargs[:title],
-        xlabel = plt.plotargs[:xguide],
-        ylabel = plt.plotargs[:yguide]
+        title = plt.attr[:title],
+        xlabel = plt.attr[:xguide],
+        ylabel = plt.attr[:yguide]
     )
 end
 
@@ -268,7 +268,7 @@ end
 # ----------------------------------------------------------------
 
 function addWinstonLegend(plt::Plot, wplt)
-  if plt.plotargs[:legend] != :none
+  if plt.attr[:legend] != :none
     Winston.legend(wplt, [sd[:label] for sd in plt.seriesargs])
   end
 end
@@ -289,9 +289,9 @@ function Base.display(::PlotsDisplay, plt::Plot{WinstonBackend})
       error("Gtk is the only supported display for Winston in Plots.  Set `output_surface = gtk` in src/Winston.ini")
     end
     # initialize window
-    w,h = plt.plotargs[:size]
+    w,h = plt.attr[:size]
     canvas = Gtk.GtkCanvasLeaf()
-    window = Gtk.GtkWindowLeaf(canvas, plt.plotargs[:windowtitle], w, h)
+    window = Gtk.GtkWindowLeaf(canvas, plt.attr[:window_title], w, h)
     plt.o = (window, canvas, wplt)
   end
 

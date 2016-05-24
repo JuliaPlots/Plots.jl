@@ -57,6 +57,9 @@ is3d(seriestype::Symbol) = seriestype in _3dTypes
 is3d(series::Series) = is3d(series.d)
 is3d(d::KW) = trueOrAllTrue(is3d, d[:seriestype])
 
+is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
+ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
+
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 @compat const _styleAliases = KW(
     :a    => :auto,
@@ -171,7 +174,7 @@ const _plot_defaults = KW(
     :foreground_color            => :auto,             # default for all foregrounds, and title color,
     :size                        => (600,400),
     :pos                         => (0,0),
-    :windowtitle                 => "Plots.jl",
+    :window_title                 => "Plots.jl",
     :show                        => false,
     :layout                      => 1,
     # :num_subplots                => -1,
@@ -231,6 +234,7 @@ const _suppress_warnings = KW(
     :x_discrete_indices => nothing,
     :y_discrete_indices => nothing,
     :z_discrete_indices => nothing,
+    :subplot => nothing,
 )
 
 # add defaults for the letter versions
@@ -381,7 +385,7 @@ add_aliases(:colorbar, :cb, :cbar, :colorkey)
 add_aliases(:smooth, :regression, :reg)
 add_aliases(:levels, :nlevels, :nlev, :levs)
 add_aliases(:size, :windowsize, :wsize)
-add_aliases(:windowtitle, :wtitle)
+add_aliases(:window_title, :windowtitle, :wtitle)
 add_aliases(:show, :gui, :display)
 add_aliases(:color_palette, :palette)
 add_aliases(:linkx, :xlink)
@@ -627,7 +631,7 @@ function preprocessArgs!(d::KW)
         end
         # delete!(d, asym)
 
-        # # NOTE: this logic was moved to _add_plotargs...
+        # # NOTE: this logic was moved to _add_attr...
         # # turn :labels into :ticks_and_labels
         # tsym = symbol(letter * "ticks")
         # if haskey(d, tsym) && ticksType(d[tsym]) == :labels
@@ -913,9 +917,9 @@ function color_or_match!(d::KW, k::Symbol, match_color)
 end
 
 
-# update plotargs from an input dictionary
+# update attr from an input dictionary
 function _update_plot_args(plt::Plot, d_in::KW)
-    pargs = plt.plotargs
+    pargs = plt.attr
     for (k,v) in _plot_defaults
         slice_arg!(d_in, pargs, k, v)
     end
@@ -934,7 +938,7 @@ end
 
 # update a subplots args and axes
 function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::Integer)
-    pargs = plt.plotargs
+    pargs = plt.attr
     spargs = sp.attr
     # @show subplot_index, sp
     for (k,v) in _subplot_defaults
@@ -1040,7 +1044,7 @@ function has_black_border_for_default(st::Symbol)
 end
 #
 # # build the argument dictionary for a series
-# function getSeriesArgs(pkg::AbstractBackend, plotargs::KW, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in plotargs, not plt
+# function getSeriesArgs(pkg::AbstractBackend, attr::KW, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in attr, not plt
 #     kwdict = KW(kw)
 #     d = KW()
 #
@@ -1065,21 +1069,21 @@ end
 #     aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
 #
 #     # update color
-#     d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], plotargs, plotIndex)
+#     d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], attr, plotIndex)
 #
 #     # # update linecolor
 #     # c = d[:linecolor]
-#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, attr, plotIndex))
 #     # d[:linecolor] = c
 #
 #     # # update markercolor
 #     # c = d[:markercolor]
-#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, attr, plotIndex))
 #     # d[:markercolor] = c
 #
 #     # # update fillcolor
 #     # c = d[:fillcolor]
-#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, plotargs, plotIndex))
+#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, attr, plotIndex))
 #     # d[:fillcolor] = c
 #
 #     # update colors
@@ -1091,13 +1095,13 @@ end
 #                 d[:seriescolor]
 #             end
 #         else
-#             getSeriesRGBColor(d[csym], plotargs, plotIndex)
+#             getSeriesRGBColor(d[csym], attr, plotIndex)
 #         end
 #     end
 #
 #     # update markerstrokecolor
 #     c = d[:markerstrokecolor]
-#     c = (c == :match ? plotargs[:foreground_color] : getSeriesRGBColor(c, plotargs, plotIndex))
+#     c = (c == :match ? attr[:foreground_color] : getSeriesRGBColor(c, attr, plotIndex))
 #     d[:markerstrokecolor] = c
 #
 #     # update alphas

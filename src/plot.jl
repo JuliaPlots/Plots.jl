@@ -22,7 +22,7 @@ Base.print(io::IO, plt::Plot) = print(io, string(plt))
 Base.show(io::IO, plt::Plot) = print(io, string(plt))
 
 getplot(plt::Plot) = plt
-getplotargs(plt::Plot, idx::Int = 1) = plt.plotargs
+getattr(plt::Plot, idx::Int = 1) = plt.attr
 convertSeriesIndex(plt::Plot, n::Int) = n
 
 # ---------------------------------------------------------
@@ -54,7 +54,7 @@ function plot(args...; kw...)
     plt.o = _create_backend_figure(plt)
 
     # create the layout and subplots from the inputs
-    plt.layout, plt.subplots, plt.spmap = build_layout(plt.plotargs)
+    plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
     for (idx,sp) in enumerate(plt.subplots)
         sp.plt = plt
         _update_subplot_args(plt, sp, copy(d), idx)
@@ -146,7 +146,12 @@ function _apply_series_recipe(plt::Plot, d::KW)
 
         # assuming there was no error, recursively apply the series recipes
         for series in series_list
-            _apply_series_recipe(plt, series.d)
+            if isa(series, Series)
+                _apply_series_recipe(plt, series.d)
+            else
+                warn("Unhandled series: $(series_list)")
+                break
+            end
         end
     end
 end
@@ -284,7 +289,7 @@ function _plot!(plt::Plot, d::KW, args...)
     end
 
     # TODO just need to pass plt... and we should do all non-series updates here
-    _update_plot(plt, plt.plotargs)
+    _update_plot(plt, plt.attr)
 
     current(plt)
 
@@ -317,7 +322,7 @@ end
 # function setTicksFromStringVector(plt::Plot, d::KW, di::KW, letter)
 #     sym = symbol(letter)
 #     ticksym = symbol(letter * "ticks")
-#     pargs = plt.plotargs
+#     pargs = plt.attr
 #     v = di[sym]
 #
 #     # do we really want to do this?
@@ -345,7 +350,7 @@ end
 #     end
 #
 #     d[ticksym] = ticks, labels
-#     plt.plotargs[ticksym] = ticks, labels
+#     plt.attr[ticksym] = ticks, labels
 #
 #     # add an origsym field so that later on we can re-compute the x vector if ticks change
 #     origsym = symbol(letter * "orig")
@@ -373,7 +378,7 @@ annotations(anns) = Any[anns]
 
 # function Base.copy(plt::Plot)
 #     backend(plt.backend)
-#     plt2 = plot(; plt.plotargs...)
+#     plt2 = plot(; plt.attr...)
 #     for sargs in plt.seriesargs
 #         sargs = filter((k,v) -> haskey(_series_defaults,k), sargs)
 #         plot!(plt2; sargs...)

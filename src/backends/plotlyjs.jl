@@ -36,7 +36,7 @@ supportedArgs(::PlotlyJSBackend) = [
     :show,
     :size,
     :title,
-    :windowtitle,
+    :window_title,
     :x,
     :xguide,
     :xlims,
@@ -118,7 +118,7 @@ function _series_added(plt::Plot{PlotlyJSBackend}, series::Series)
     syncplot = plt.o
 
     # add to the data array
-    pdict = plotly_series(d, plt.plotargs)
+    pdict = plotly_series(d, plt.attr)
     typ = pop!(pdict, :type)
     gt = PlotlyJS.GenericTrace(typ; pdict...)
     PlotlyJS.addtraces!(syncplot, gt)
@@ -133,10 +133,10 @@ end
 
 function _add_annotations{X,Y,V}(plt::Plot{PlotlyJSBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
     # set or add to the annotation_list
-    if !haskey(plt.plotargs, :annotation_list)
-        plt.plotargs[:annotation_list] = Any[]
+    if !haskey(plt.attr, :annotation_list)
+        plt.attr[:annotation_list] = Any[]
     end
-    append!(plt.plotargs[:annotation_list], anns)
+    append!(plt.attr[:annotation_list], anns)
 end
 
 # ----------------------------------------------------------------
@@ -146,7 +146,7 @@ end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
 function _update_plot(plt::Plot{PlotlyJSBackend}, d::KW)
-    pdict = plotly_layout(plt.plotargs, plt.seriesargs)
+    pdict = plotly_layout(plt.attr, plt.seriesargs)
     syncplot = plt.o
     w,h = d[:size]
     PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)
@@ -167,7 +167,7 @@ end
 
 function setxy!{X,Y}(plt::Plot{PlotlyJSBackend}, xy::Tuple{X,Y}, i::Integer)
   d = plt.seriesargs[i]
-  ispolar = get(plt.plotargs, :polar, false)
+  ispolar = get(plt.attr, :polar, false)
   xsym = ispolar ? :t : :x
   ysym = ispolar ? :r : :y
   d[xsym], d[ysym] = xy
