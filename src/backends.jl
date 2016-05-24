@@ -137,13 +137,21 @@ end
 Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
-  CURRENT_BACKEND.sym = backend_name(pkg)
-  CURRENT_BACKEND.pkg = pkg
+    CURRENT_BACKEND.sym = backend_name(pkg)
+    warn_on_deprecated_backend(CURRENT_BACKEND.sym)
+    CURRENT_BACKEND.pkg = pkg
 end
 
 function backend(modname::Symbol)
-  CURRENT_BACKEND.sym = modname
-  CURRENT_BACKEND.pkg = _backend_instance(modname)
+    warn_on_deprecated_backend(modname)
+    CURRENT_BACKEND.sym = modname
+    CURRENT_BACKEND.pkg = _backend_instance(modname)
+end
+
+function warn_on_deprecated_backend(bsym::Symbol)
+    if bsym in (:qwt, :winston, :bokeh, :gadfly, :immerse)
+        warn("Backend $bsym has been deprecated.  It may not work as originally intended.")
+    end
 end
 
 # ---------------------------------------------------------
