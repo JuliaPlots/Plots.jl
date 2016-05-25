@@ -168,3 +168,13 @@ function discrete_value!(a::Axis, v::AVec)
     end
     cvec, discrete_indices
 end
+
+function pie_labels(sp::Subplot, series::Series)
+    d = series.d
+    if haskey(d,:x_discrete_indices)
+        dvals = sp.attr[:xaxis].d[:discrete_values]
+        [dvals[idx] for idx in d[:x_discrete_indices]]
+    else
+        d[:x]
+    end
+end

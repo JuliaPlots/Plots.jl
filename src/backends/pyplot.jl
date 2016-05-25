@@ -761,12 +761,13 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 
         handle = ax[:pie](y;
             # colors = # a vector of colors?
-            labels = if haskey(d,:x_discrete_indices)
-                dvals = sp.attr[:xaxis].d[:discrete_values]
-                [dvals[idx] for idx in d[:x_discrete_indices]]
-            else
-                d[:x]
-            end
+            labels = pie_labels(sp, series)
+            # labels = if haskey(d,:x_discrete_indices)
+            #     dvals = sp.attr[:xaxis].d[:discrete_values]
+            #     [dvals[idx] for idx in d[:x_discrete_indices]]
+            # else
+            #     d[:x]
+            # end
         )
         push!(handles, handle)
     end

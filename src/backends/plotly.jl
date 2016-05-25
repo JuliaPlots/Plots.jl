@@ -492,12 +492,13 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st == :pie
         d_out[:type] = "pie"
-        d_out[:labels] = if haskey(d,:x_discrete_indices)
-            dvals = sp.attr[:xaxis].d[:discrete_values]
-            [dvals[idx] for idx in d[:x_discrete_indices]]
-        else
-            d[:x]
-        end
+        d_out[:labels] = pie_labels(sp, series)
+        # d_out[:labels] = if haskey(d,:x_discrete_indices)
+        #     dvals = sp.attr[:xaxis].d[:discrete_values]
+        #     [dvals[idx] for idx in d[:x_discrete_indices]]
+        # else
+        #     d[:x]
+        # end
         d_out[:values] = y
         d_out[:hoverinfo] = "label+percent+name"
 
