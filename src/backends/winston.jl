@@ -227,7 +227,7 @@ end
     :yscale => :ylog,
   )
 
-function _update_plot(plt::Plot{WinstonBackend}, d::KW)
+function _update_plot_object(plt::Plot{WinstonBackend}, d::KW)
   window, canvas, wplt = getWinstonItems(plt)
   for k in (:xguide, :yguide, :title, :xlims, :ylims)
     if haskey(d, k)

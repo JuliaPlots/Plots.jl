@@ -114,47 +114,34 @@ end
 
 
 function _series_added(plt::Plot{PlotlyJSBackend}, series::Series)
-    # d = series.d
     syncplot = plt.o
-
-    # add to the data array
     pdict = plotly_series(plt, series)
     typ = pop!(pdict, :type)
     gt = PlotlyJS.GenericTrace(typ; pdict...)
     PlotlyJS.addtraces!(syncplot, gt)
-
-    # push!(plt.seriesargs, d)
-    # plt
 end
 
+function _series_updated(plt::Plot{PlotlyJSBackend}, series::Series)
+    xsym, ysym = (ispolar(series) ? (:t,:r) : (:x,:y))
+    PlotlyJS.restyle!(
+        plt.o,
+        findfirst(plt.series_list, series),
+        KW(xsym => (series.d[:x],), ysym => (series.d[:y],))
+    )
+end
 
-# ---------------------------------------------------------------------------
-
-
-# function _add_annotations{X,Y,V}(plt::Plot{PlotlyJSBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
-#     # set or add to the annotation_list
-#     if !haskey(plt.attr, :annotation_list)
-#         plt.attr[:annotation_list] = Any[]
-#     end
-#     append!(plt.attr[:annotation_list], anns)
-# end
 
 # ----------------------------------------------------------------
 
-# function _before_update_plot(plt::Plot{PlotlyJSBackend})
-# end
-
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{PlotlyJSBackend}, d::KW)
+function _update_plot_object(plt::Plot{PlotlyJSBackend})
     pdict = plotly_layout(plt)
     syncplot = plt.o
     w,h = plt.attr[:size]
+    DD(pdict)
     PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)
 end
 
-
-# function _update_plot_pos_size(plt::AbstractPlot{PlotlyJSBackend}, d::KW)
-# end
 
 # ----------------------------------------------------------------
 
@@ -164,15 +151,6 @@ end
 #   d = plt.seriesargs[i]
 #   d[:x], d[:y]
 # end
-
-function _series_updated(plt::Plot{PlotlyJSBackend}, series::Series)
-    xsym, ysym = (ispolar(series) ? (:t,:r) : (:x,:y))
-    PlotlyJS.restyle!(
-        plt.o,
-        findfirst(plt.series_list, series),
-        KW(xsym => series.d[:x], ysym => series.d[:y])
-    )
-end
 
 # function setxy!{X,Y}(plt::Plot{PlotlyJSBackend}, xy::Tuple{X,Y}, i::Integer)
 #   d = plt.seriesargs[i]
@@ -185,47 +163,25 @@ end
 #   plt
 # end
 
-# ----------------------------------------------------------------
-
-# function _create_subplot(subplt::Subplot{PlotlyJSBackend}, isbefore::Bool)
-#   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-#   true
-# end
-
-# function _expand_limits(lims, plt::Plot{PlotlyJSBackend}, isx::Bool)
-#   # TODO: call expand limits for each plot data
-# end
-#
-# function _remove_axis(plt::Plot{PlotlyJSBackend}, isx::Bool)
-#   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
-# end
 
 # ----------------------------------------------------------------
-
-# function Base.writemime(io::IO, m::MIME"text/html", plt::AbstractPlot{PlotlyJSBackend})
-#     Base.writemime(io, m, plt.o)
-# end
-
-# function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{PlotlyJSBackend})
-#     println("here!")
-#     writemime_png_from_html(io, plt)
-# end
-
 
 function _update_min_padding!(sp::Subplot{PlotlyBackend})
     sp.minpad = plotly_minpad(sp)
 end
 
-function plotlyjs_finalize(plt::Plot)
-    plotly_finalize(plt)
-    PlotlyJS.relayout!(plt.o, plotly_layout(plt))
+# function plotlyjs_finalize(plt::Plot)
+#     plotly_finalize(plt)
+#     PlotlyJS.relayout!(plt.o, plotly_layout(plt))
+# end
+
+function _writemime(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend})
+    tmpfn = tempname() * "png"
+    PlotlyJS.savefig(plt.o, tmpfn)
+    write(io, read(open(tmpfn)))
 end
 
-function Base.display(::PlotsDisplay, plt::Plot{PlotlyJSBackend})
-    plotlyjs_finalize(plt)
+function _display(plt::Plot{PlotlyJSBackend})
+    # plotlyjs_finalize(plt)
     display(plt.o)
 end
-
-# function Base.display(::PlotsDisplay, plt::Subplot{PlotlyJSBackend})
-#     error()
-# end

@@ -300,12 +300,12 @@ drawax(ax) = ax[:draw](renderer(ax[:get_figure]()))
 # get a vector [left, right, bottom, top] in PyPlot coords (origin is bottom-left!)
 get_extents(obj) = obj[:get_window_extent]()[:get_points]()
 
-# bounding box of the figure
-function py_bbox_fig(fig)
-    fl, fr, fb, ft = get_extents(fig)
-    BoundingBox(0px, 0px, (fr-fl)*px, (ft-fb)*px)
-end
-py_bbox_fig(plt::Plot) = py_bbox_fig(plt.o)
+# # bounding box of the figure
+# function py_bbox_fig(fig)
+#     fl, fr, fb, ft = get_extents(fig)
+#     BoundingBox(0px, 0px, (fr-fl)*px, (ft-fb)*px)
+# end
+# py_bbox_fig(plt::Plot) = py_bbox_fig(plt.o)
 
 # compute a bounding box (with origin top-left), however pyplot gives coords with origin bottom-left
 function py_bbox(obj)
@@ -399,58 +399,27 @@ function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend
     )
     sp.o = ax
 end
-
-# Set the (left, top, right, bottom) minimum padding around the plot area
-# to fit ticks, tick labels, guides, colorbars, etc.
-function _update_min_padding!(sp::Subplot{PyPlotBackend})
-    ax = sp.o
-    ax == nothing && return sp.minpad
-    plotbb = py_bbox(ax)
-
-    # TODO: this should initialize to the margin from sp.attr
-    # figure out how much the axis components and title "stick out" from the plot area
-    # leftpad = toppad = rightpad = bottompad = 1mm
-    leftpad   = sp.attr[:left_margin]
-    toppad    = sp.attr[:top_margin]
-    rightpad  = sp.attr[:right_margin]
-    bottompad = sp.attr[:bottom_margin]
-    for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
-        if ispositive(width(bb)) && ispositive(height(bb))
-            leftpad   = max(leftpad,   left(plotbb) - left(bb))
-            toppad    = max(toppad,    top(plotbb)  - top(bb))
-            rightpad  = max(rightpad,  right(bb)    - right(plotbb))
-            bottompad = max(bottompad, bottom(bb)   - bottom(plotbb))
-        end
-    end
-
-    # optionally add the width of colorbar labels and colorbar to rightpad
-    if haskey(sp.attr, :cbar_ax)
-        bb = py_bbox(sp.attr[:cbar_handle][:ax][:get_yticklabels]())
-        sp.attr[:cbar_width] = _cbar_width + width(bb) + 1mm
-        rightpad = rightpad + sp.attr[:cbar_width]
-    end
-
-    sp.minpad = (leftpad, toppad, rightpad, bottompad)
-end
-
-# Use the bounding boxes (and methods left/top/right/bottom/width/height) `sp.bbox` and `sp.plotarea` to
-# position the subplot in the backend.
-function _update_position!(sp::Subplot{PyPlotBackend})
-    ax = sp.o
-    ax == nothing && return
-    figw, figh = size(py_bbox_fig(sp.plt))
-    pcts = bbox_to_pcts(sp.plotarea, figw, figh)
-    ax[:set_position](pcts)
-
-    # set the cbar position if there is one
-    if haskey(sp.attr, :cbar_ax)
-        cbw = sp.attr[:cbar_width]
-        # this is the bounding box of just the colors of the colorbar (not labels)
-        cb_bbox = BoundingBox(right(sp.bbox)-cbw+1mm, top(sp.bbox)+2mm, _cbar_width-1mm, height(sp.bbox)-4mm)
-        pcts = bbox_to_pcts(cb_bbox, figw, figh)
-        sp.attr[:cbar_ax][:set_position](pcts)
-    end
-end
+#
+# # Use the bounding boxes (and methods left/top/right/bottom/width/height) `sp.bbox` and `sp.plotarea` to
+# # position the subplot in the backend.
+# function _update_position!(sp::Subplot{PyPlotBackend})
+#     ax = sp.o
+#     ax == nothing && return
+#     # figw, figh = size(py_bbox_fig(sp.plt))
+#     figw, figh = sp.plt.attr[:size]
+#     figw, figh = figw*px, figh*px
+#     pcts = bbox_to_pcts(sp.plotarea, figw, figh)
+#     ax[:set_position](pcts)
+#
+#     # set the cbar position if there is one
+#     if haskey(sp.attr, :cbar_ax)
+#         cbw = sp.attr[:cbar_width]
+#         # this is the bounding box of just the colors of the colorbar (not labels)
+#         cb_bbox = BoundingBox(right(sp.bbox)-cbw+1mm, top(sp.bbox)+2mm, _cbar_width-1mm, height(sp.bbox)-4mm)
+#         pcts = bbox_to_pcts(cb_bbox, figw, figh)
+#         sp.attr[:cbar_ax][:set_position](pcts)
+#     end
+# end
 
 # ---------------------------------------------------------------------------
 
@@ -1003,7 +972,7 @@ end
 # --------------------------------------------------------------------------
 
 
-function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
+function _before_layout_calcs(plt::Plot{PyPlotBackend})
     for sp in plt.subplots
         attr = sp.attr
         ax = getAxis(sp)
@@ -1054,6 +1023,7 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
                 ax[axissym][:grid](true, color = fgcolor)
                 ax[:set_axisbelow](true)
             end
+            updateAxisColors(ax, axis)
         end
 
         # aspect ratio
@@ -1061,7 +1031,44 @@ function _update_plot(plt::Plot{PyPlotBackend}, d::KW)
         if aratio != :none
             ax[:set_aspect](isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
         end
+
+        addPyPlotLegend(plt, sp, ax)
     end
+    drawfig(plt.o)
+end
+
+
+# Set the (left, top, right, bottom) minimum padding around the plot area
+# to fit ticks, tick labels, guides, colorbars, etc.
+function _update_min_padding!(sp::Subplot{PyPlotBackend})
+    ax = sp.o
+    ax == nothing && return sp.minpad
+    plotbb = py_bbox(ax)
+
+    # TODO: this should initialize to the margin from sp.attr
+    # figure out how much the axis components and title "stick out" from the plot area
+    # leftpad = toppad = rightpad = bottompad = 1mm
+    leftpad   = sp.attr[:left_margin]
+    toppad    = sp.attr[:top_margin]
+    rightpad  = sp.attr[:right_margin]
+    bottompad = sp.attr[:bottom_margin]
+    for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
+        if ispositive(width(bb)) && ispositive(height(bb))
+            leftpad   = max(leftpad,   left(plotbb) - left(bb))
+            toppad    = max(toppad,    top(plotbb)  - top(bb))
+            rightpad  = max(rightpad,  right(bb)    - right(plotbb))
+            bottompad = max(bottompad, bottom(bb)   - bottom(plotbb))
+        end
+    end
+
+    # optionally add the width of colorbar labels and colorbar to rightpad
+    if haskey(sp.attr, :cbar_ax)
+        bb = py_bbox(sp.attr[:cbar_handle][:ax][:get_yticklabels]())
+        sp.attr[:cbar_width] = _cbar_width + width(bb) + 1mm
+        rightpad = rightpad + sp.attr[:cbar_width]
+    end
+
+    sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 
 
@@ -1160,38 +1167,74 @@ end
 
 # -----------------------------------------------------------------
 
-# add legend, update colors and positions, then draw
-function finalizePlot(plt::Plot{PyPlotBackend})
+# # add legend, update colors and positions, then draw
+# function finalizePlot(plt::Plot{PyPlotBackend})
+#     # for sp in plt.subplots
+#     #     # ax = getLeftAxis(plt)
+#     #     ax = getAxis(sp)
+#     #     ax == nothing && continue
+#     #     addPyPlotLegend(plt, sp, ax)
+#     #     for asym in (:xaxis, :yaxis, :zaxis)
+#     #         updateAxisColors(ax, sp.attr[asym])
+#     #     end
+#     # end
+#     drawfig(plt.o)
+#     # plt.layout.bbox = py_bbox_fig(plt)
+#
+#     # TODO: these should be called outside of pyplot... how?
+#     update_child_bboxes!(plt.layout)
+#     _update_position!(plt.layout)
+#
+#     PyPlot.draw()
+# end
+
+# function _before_layout_calcs(plt::Plot{PyPlotBackend})
+#     drawfig(plt.o)
+# end
+
+# Use the bounding boxes (and methods left/top/right/bottom/width/height) `sp.bbox` and `sp.plotarea` to
+# position the subplot in the backend.
+function _update_plot_object(plt::Plot{PyPlotBackend})
     for sp in plt.subplots
-        # ax = getLeftAxis(plt)
-        ax = getAxis(sp)
-        ax == nothing && continue
-        addPyPlotLegend(plt, sp, ax)
-        for asym in (:xaxis, :yaxis, :zaxis)
-            updateAxisColors(ax, sp.attr[asym])
+        ax = sp.o
+        ax == nothing && return
+        # figw, figh = size(py_bbox_fig(sp.plt))
+        figw, figh = sp.plt.attr[:size]
+        figw, figh = figw*px, figh*px
+        pcts = bbox_to_pcts(sp.plotarea, figw, figh)
+        ax[:set_position](pcts)
+
+        # set the cbar position if there is one
+        if haskey(sp.attr, :cbar_ax)
+            cbw = sp.attr[:cbar_width]
+            # this is the bounding box of just the colors of the colorbar (not labels)
+            cb_bbox = BoundingBox(right(sp.bbox)-cbw+1mm, top(sp.bbox)+2mm, _cbar_width-1mm, height(sp.bbox)-4mm)
+            pcts = bbox_to_pcts(cb_bbox, figw, figh)
+            sp.attr[:cbar_ax][:set_position](pcts)
         end
     end
-    drawfig(plt.o)
-    plt.layout.bbox = py_bbox_fig(plt)
-
-    # TODO: these should be called outside of pyplot... how?
-    update_child_bboxes!(plt.layout)
-    _update_position!(plt.layout)
-
     PyPlot.draw()
 end
-
 
 # -----------------------------------------------------------------
 # display/output
 
-function Base.display(::PlotsDisplay, plt::AbstractPlot{PyPlotBackend})
-    finalizePlot(plt)
+# function Base.display(::PlotsDisplay, plt::Plot{PyPlotBackend})
+#     finalizePlot(plt)
+#     if isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
+#         display(getfig(plt.o))
+#     end
+#     getfig(plt.o)[:show]()
+# end
+
+function _display(plt::Plot{PyPlotBackend})
+    # finalizePlot(plt)
     if isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
         display(getfig(plt.o))
     end
     getfig(plt.o)[:show]()
 end
+
 
 
 const _pyplot_mimeformats = Dict(
@@ -1205,8 +1248,9 @@ const _pyplot_mimeformats = Dict(
 
 
 for (mime, fmt) in _pyplot_mimeformats
-    @eval function Base.writemime(io::IO, ::MIME{symbol($mime)}, plt::AbstractPlot{PyPlotBackend})
-        finalizePlot(plt)
+    # @eval function Base.writemime(io::IO, ::MIME{symbol($mime)}, plt::Plot{PyPlotBackend})
+    @eval function _writemime(io::IO, ::MIME{symbol($mime)}, plt::Plot{PyPlotBackend})
+        # finalizePlot(plt)
         fig = getfig(plt.o)
         fig.o["canvas"][:print_figure](
             io,

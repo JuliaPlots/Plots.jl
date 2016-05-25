@@ -112,10 +112,10 @@ end
 # end
 #
 # # TODO: override this to update plot items (title, xlabel, etc) after creation
-# function _update_plot(plt::Plot{PlotlyBackend}, d::KW)
+# function _update_plot_object(plt::Plot{PlotlyBackend}, d::KW)
 # end
 
-# function _update_plot_pos_size(plt::AbstractPlot{PlotlyBackend}, d::KW)
+# function _update_plot_pos_size(plt::Plot{PlotlyBackend}, d::KW)
 # end
 
 # ----------------------------------------------------------------
@@ -573,7 +573,7 @@ end
 
 # ----------------------------------------------------------------
 
-function html_head(plt::AbstractPlot{PlotlyBackend})
+function html_head(plt::Plot{PlotlyBackend})
     "<script src=\"$(Pkg.dir("Plots","deps","plotly-latest.min.js"))\"></script>"
 end
 
@@ -603,24 +603,25 @@ end
 
 # ----------------------------------------------------------------
 
-# compute layout bboxes
-function plotly_finalize(plt::Plot)
-    w, h = plt.attr[:size]
-    plt.layout.bbox = BoundingBox(0mm, 0mm, w*px, h*px)
-    update_child_bboxes!(plt.layout)
-end
+# # compute layout bboxes
+# function plotly_finalize(plt::Plot)
+#     w, h = plt.attr[:size]
+#     plt.layout.bbox = BoundingBox(0mm, 0mm, w*px, h*px)
+#     update_child_bboxes!(plt.layout)
+# end
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{PlotlyBackend})
-    plotly_finalize(plt)
+function _writemime(io::IO, ::MIME"image/png", plt::Plot{PlotlyBackend})
+    # plotly_finalize(plt)
     writemime_png_from_html(io, plt)
 end
 
-function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot{PlotlyBackend})
-    plotly_finalize(plt)
+function _writemime(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
+    # plotly_finalize(plt)
     write(io, html_head(plt) * html_body(plt))
 end
 
-function Base.display(::PlotsDisplay, plt::AbstractPlot{PlotlyBackend})
-    plotly_finalize(plt)
+# function Base.display(::PlotsDisplay, plt::Plot{PlotlyBackend})
+function _display(plt::Plot{PlotlyBackend})
+    # plotly_finalize(plt)
     standalone_html_window(plt)
 end

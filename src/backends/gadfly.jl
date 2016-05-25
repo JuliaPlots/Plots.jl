@@ -595,7 +595,7 @@ end
 
 
 
-function _update_plot(plt::Plot{GadflyBackend}, d::KW)
+function _update_plot_object(plt::Plot{GadflyBackend}, d::KW)
     updateGadflyGuides(plt, d)
     updateGadflyPlotTheme(plt, d)
 end

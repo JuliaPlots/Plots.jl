@@ -103,13 +103,35 @@ savefig(fn::@compat(AbstractString)) = savefig(current(), fn)
 
 gui(plt::AbstractPlot = current()) = display(PlotsDisplay(), plt)
 
+function Base.display(::PlotsDisplay, plt::Plot)
+    prepare_output(plt)
+    _display(plt)
+end
 
 # override the REPL display to open a gui window
 Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::AbstractPlot) = gui(plt)
 
+# ---------------------------------------------------------
+
+const _mimeformats = Dict(
+    "application/eps"         => "eps",
+    "image/eps"               => "eps",
+    "application/pdf"         => "pdf",
+    "image/png"               => "png",
+    "application/postscript"  => "ps",
+    "image/svg+xml"           => "svg"
+)
+
 # a backup for html... passes to svg
 function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot)
     writemime(io, MIME("image/svg+xml"), plt)
+end
+
+for mime in keys(_mimeformats)
+    @eval function writemime(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
+        prepare_output(plt)
+        _writemime(io, m, plt)
+    end
 end
 
 # ---------------------------------------------------------

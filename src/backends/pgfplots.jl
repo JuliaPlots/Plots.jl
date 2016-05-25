@@ -259,7 +259,7 @@ end
 # end
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{PGFPlotsBackend}, d::KW)
+function _update_plot_object(plt::Plot{PGFPlotsBackend}, d::KW)
 end
 
 # function _update_plot_pos_size(plt::AbstractPlot{PGFPlotsBackend}, d::KW)

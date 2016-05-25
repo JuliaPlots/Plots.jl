@@ -256,6 +256,13 @@ text(t::PlotText) = t
 function text(str, args...)
   PlotText(string(str), font(args...))
 end
+
+
+annotations(::Void) = []
+annotations(anns::AVec) = anns
+annotations(anns) = Any[anns]
+
+
 # -----------------------------------------------------------------------
 
 # -----------------------------------------------------------------------

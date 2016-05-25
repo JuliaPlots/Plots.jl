@@ -208,7 +208,7 @@ function _series_added(plt::Plot{UnicodePlotsBackend}, series::Series)
 end
 
 
-function _update_plot(plt::Plot{UnicodePlotsBackend}, d::KW)
+function _update_plot_object(plt::Plot{UnicodePlotsBackend}, d::KW)
   for k in (:title, :xguide, :yguide, :xlims, :ylims)
     if haskey(d, k)
       plt.attr[k] = d[k]

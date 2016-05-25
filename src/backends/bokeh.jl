@@ -170,7 +170,7 @@ end
 # ----------------------------------------------------------------
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot(plt::Plot{BokehBackend}, d::KW)
+function _update_plot_object(plt::Plot{BokehBackend}, d::KW)
 end
 
 # ----------------------------------------------------------------

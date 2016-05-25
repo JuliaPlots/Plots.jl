@@ -190,7 +190,7 @@ function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
 end
 
 
-function _update_plot(plt::Plot{QwtBackend}, d::KW)
+function _update_plot_object(plt::Plot{QwtBackend}, d::KW)
   haskey(d, :title) && Qwt.title(plt.o, d[:title])
   haskey(d, :xguide) && Qwt.xlabel(plt.o, d[:xguide])
   haskey(d, :yguide) && Qwt.ylabel(plt.o, d[:yguide])

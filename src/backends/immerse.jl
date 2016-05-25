@@ -53,7 +53,7 @@ function _series_added(plt::Plot{ImmerseBackend}, series::Series)
 end
 
 
-function _update_plot(plt::Plot{ImmerseBackend}, d::KW)
+function _update_plot_object(plt::Plot{ImmerseBackend}, d::KW)
   updateGadflyGuides(plt, d)
   updateGadflyPlotTheme(plt, d)
 end

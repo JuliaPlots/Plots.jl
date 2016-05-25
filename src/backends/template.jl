@@ -3,7 +3,7 @@
 
 # [ADD BACKEND WEBSITE]
 
-function _initialize_backend(::[PkgName]AbstractBackend; kw...)
+function _initialize_backend(::[PkgName]Backend; kw...)
     @eval begin
         import [PkgName]
         export [PkgName]
@@ -19,8 +19,30 @@ function _create_backend_figure(plt::Plot{[PkgName]Backend})
     nothing
 end
 
+# this is called early in the pipeline, use it to make the plot current or something
+function _prepare_plot_object(plt::Plot{[PkgName]})
+end
+
 # Set up the subplot within the backend object.
 function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
+end
+
+# ---------------------------------------------------------------------------
+
+# Add one series to the underlying backend object.
+function _series_added(plt::Plot{[PkgName]Backend}, series::Series)
+end
+
+# When series data is added/changed, this callback can do dynamic updates to the backend object.
+# note: if the backend rebuilds the plot from scratch on display, then you might not do anything here.
+function _series_updated(plt::Plot{[PkgName]Backend}, series::Series)
+end
+
+# ---------------------------------------------------------------------------
+
+# called just before updating layout bounding boxes... in case you need to prep
+# for the calcs
+function _before_layout_calcs(plt::Plot)
 end
 
 # Set the (left, top, right, bottom) minimum padding around the plot area
@@ -29,32 +51,11 @@ function _update_min_padding!(sp::Subplot{[PkgName]Backend})
     sp.minpad = (20mm, 5mm, 2mm, 10mm)
 end
 
-# Use the bounding boxes (and methods left/top/right/bottom/width/height) `sp.bbox` and `sp.plotarea` to
-# position the subplot in the backend.
-function _update_position!(sp::Subplot{[PkgName]Backend})
-end
 
 # ----------------------------------------------------------------
-
-# This is called before series processing... use it if you need to make the backend object current or something.
-function _before_update(plt::Plot{[PkgName]AbstractBackend})
-end
-
-
-# Add one series to the underlying backend object.
-function _series_added(plt::Plot{[PkgName]Backend}, series::Series)
-end
-
 
 # Override this to update plot items (title, xlabel, etc), and add annotations (d[:annotations])
-function _update_plot(plt::Plot{[PkgName]AbstractBackend}, d::KW)
-end
-
-# ----------------------------------------------------------------
-
-# When series data is added/changed, this callback can do dynamic updates to the backend object.
-# note: if the backend rebuilds the plot from scratch on display, then you might not do anything here.
-function _series_updated(plt::Plot{[PkgName]AbstractBackend}, series::Series)
+function _update_plot_object(plt::Plot{[PkgName]Backend})
 end
 
 # ----------------------------------------------------------------
@@ -66,9 +67,9 @@ end
     # "image/png"               => "png",
     # "application/postscript"  => "ps",
     # "image/svg+xml"           => "svg"
-function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{[PkgName]AbstractBackend})
+function _writemime(io::IO, ::MIME"image/png", plt::Plot{[PkgName]Backend})
 end
 
 # Display/show the plot (open a GUI window, or browser page, for example).
-function Base.display(::PlotsDisplay, plt::Plot{[PkgName]AbstractBackend})
+function _display(plt::Plot{[PkgName]Backend})
 end

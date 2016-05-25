@@ -163,7 +163,7 @@ end
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
 function _plot!(plt::Plot, d::KW, args...)
     # just in case the backend needs to set up the plot (make it current or something)
-    _before_update(plt)
+    _prepare_plot_object(plt)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
@@ -289,8 +289,14 @@ function _plot!(plt::Plot, d::KW, args...)
         _apply_series_recipe(plt, kw)
     end
 
-    # TODO just need to pass plt... and we should do all non-series updates here
-    _update_plot(plt, plt.attr)
+    # # everything is processed, time to compute the layout bounding boxes
+    # _before_layout_calcs(plt)
+    # w, h = plt.attr[:size]
+    # plt.layout.bbox = BoundingBox(0mm, 0mm, w*px, h*px)
+    # update_child_bboxes!(plt.layout)
+    #
+    # # TODO just need to pass plt... and we should do all non-series updates here
+    # _update_plot_object(plt)
 
     current(plt)
 
@@ -311,6 +317,17 @@ function _replace_linewidth(d::KW)
     end
 end
 
+# we're getting ready to display/output.  prep for layout calcs, then update
+# the plot object after
+function prepare_output(plt::Plot)
+    _before_layout_calcs(plt)
+
+    w, h = plt.attr[:size]
+    plt.layout.bbox = BoundingBox(0mm, 0mm, w*px, h*px)
+    update_child_bboxes!(plt.layout)
+
+    _update_plot_object(plt)
+end
 
 # --------------------------------------------------------------------
 
@@ -370,9 +387,6 @@ end
 
 # --------------------------------------------------------------------
 
-annotations(::Void) = []
-annotations(anns::AVec) = anns
-annotations(anns) = Any[anns]
 
 
 # --------------------------------------------------------------------
