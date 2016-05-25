@@ -231,13 +231,53 @@ end
 
 end
 
+
+# midpoints = d[:x]
+# heights = d[:y]
+# fillrange = d[:fillrange] == nothing ? 0.0 : d[:fillrange]
+#
+# # estimate the edges
+# dists = diff(midpoints) * 0.5
+# edges = zeros(length(midpoints)+1)
+# for i in 1:length(edges)
+#   if i == 1
+#     edge = midpoints[1] - dists[1]
+#   elseif i == length(edges)
+#     edge = midpoints[i-1] + dists[i-2]
+#   else
+#     edge = midpoints[i-1] + dists[i-1]
+#   end
+#   edges[i] = edge
+# end
+#
+# x = Float64[]
+# y = Float64[]
+# for i in 1:length(heights)
+#   e1, e2 = edges[i:i+1]
+#   append!(x, [e1, e1, e2, e2])
+#   append!(y, [fillrange, heights[i], heights[i], fillrange])
+# end
+#
+# d[:x] = x
+# d[:y] = y
+# d[:seriestype] = :path
+# d[:fillrange] = fillrange
+
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
     nx, ny = length(x), length(y)
-    d[:x] = if nx == ny
-        # x is centers
-        halfwidths = 0.5 * diff(x)
-        vcat(halfwidths[1], halfwidths, halfwidths[end])
+    edges = if nx == ny
+        # x is centers, calc the edges
+        # TODO: use bar_width, etc
+        midpoints = x
+        halfwidths = diff(midpoints) * 0.5
+        Float64[if i == 1
+            midpoints[1] - halfwidths[1]
+        elseif i == ny+1
+            midpoints[i-1] + halfwidths[i-2]
+        else
+            midpoints[i-1] + halfwidths[i-1]
+        end for i=1:ny+1]
     elseif nx == ny + 1
         # x is edges
         x
@@ -245,9 +285,39 @@ end
         error("bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
     end
 
-    # TODO: use y/fillrange to compute new y/fillrange vectors
+    # make fillto a vector... default fills to 0
+    fillto = d[:fillrange]
+    if fillto == nothing
+        fillto = zeros(1)
+    elseif isa(fillto, Number)
+        fillto = Float64[fillto]
+    end
+    nf = length(fillto)
 
-    d[:seriestype] = :steppre
+    npts = 3ny + 1
+    heights = y
+    x = zeros(npts)
+    y = zeros(npts)
+    fillrng = zeros(npts)
+
+    # create the path in triplets.  after the first bottom-left coord of the first bar:
+    # add the top-left, top-right, and bottom-right coords for each height
+    x[1] = edges[1]
+    y[1] = fillto[1]
+    fillrng[1] = fillto[1]
+    for i=1:ny
+        idx = 3i
+        rng = idx-1:idx+1
+        fi = fillto[mod1(i,nf)]
+        x[rng] = [edges[i], edges[i+1], edges[i+1]]
+        y[rng] = [heights[i], heights[i], fi]
+        fillrng[rng] = [fi, fi, fi]
+    end
+
+    d[:x] = x
+    d[:y] = y
+    d[:fillrange] = fillrng
+    d[:seriestype] = :path
     ()
 end
 

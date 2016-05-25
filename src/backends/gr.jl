@@ -38,8 +38,8 @@ supportedArgs(::GRBackend) = [
 supportedAxes(::GRBackend) = _allAxes
 supportedTypes(::GRBackend) = [
     :path, :steppre, :steppost,
-    :scatter, :hist2d, :hexbin, 
-    :bar, :sticks,
+    :scatter, :hist2d, :hexbin,
+    :sticks,
     :hline, :vline, :heatmap, :pie, :image, #:ohlc,
     :contour, :path3d, :scatter3d, :surface, :wireframe
 ]
@@ -145,8 +145,8 @@ end
 function gr_polymarker(d, x, y)
     if d[:vertices] != :none
         vertices= d[:vertices]
-        dx = Float64[el[1] for el in vertices] * 0.01
-        dy = Float64[el[2] for el in vertices] * 0.01
+        dx = Float64[el[1] for el in vertices] * 0.03
+        dy = Float64[el[2] for el in vertices] * 0.03
         GR.selntran(0)
         GR.setfillcolorind(gr_getcolorind(d[:markercolor]))
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
@@ -160,25 +160,39 @@ function gr_polymarker(d, x, y)
     end
 end
 
-# TODO: simplify
 function gr_polyline(x, y)
-    if NaN in x || NaN in y
-        i = 1
-        j = 1
-        n = length(x)
-        while i < n
-            while j < n && x[j] != Nan && y[j] != NaN
-                j += 1
-            end
-            if i < j
-                GR.polyline(x[i:j], y[i:j])
-            end
-            i = j + 1
+    i = j = 1
+    n = length(x)
+    while i < n
+        while j < n && x[j] != NaN && y[j] != NaN
+            j += 1
         end
-    else
-        GR.polyline(x, y)
+        if i < j
+            GR.polyline(x[i:j], y[i:j])
+        end
+        i = j + 1
     end
 end
+
+# # TODO: simplify
+# function gr_polyline(x, y)
+#     if NaN in x || NaN in y
+#         i = 1
+#         j = 1
+#         n = length(x)
+#         while i < n
+#             while j < n && x[j] != Nan && y[j] != NaN
+#                 j += 1
+#             end
+#             if i < j
+#                 GR.polyline(x[i:j], y[i:j])
+#             end
+#             i = j + 1
+#         end
+#     else
+#         GR.polyline(x, y)
+#     end
+# end
 
 function gr_polaraxes(rmin, rmax)
     GR.savestate()
@@ -270,25 +284,49 @@ function gr_fillrect(series::Series, l, r, b, t)
     GR.fillrect(l, r, b, t)
 end
 
-function gr_barplot(series::Series, x, y)
-    # x, y = d[:x], d[:y]
-    n = length(y)
-    if length(x) == n + 1
-        # x is edges
-        for i=1:n
-            gr_fillrect(series, x[i], x[i+1], 0, y[i])
-        end
-    elseif length(x) == n
-        # x is centers
-        leftwidth = length(x) > 1 ? abs(0.5 * (x[2] - x[1])) : 0.5
-        for i=1:n
-            rightwidth = (i == n ? leftwidth : abs(0.5 * (x[i+1] - x[i])))
-            gr_fillrect(series, x[i] - leftwidth, x[i] + rightwidth, 0, y[i])
+function gr_draw_markers(series::Series)
+    d = series.d
+    msize = 0.5 * d[:markersize]
+    GR.setmarkercolorind(gr_getcolorind(d[:markercolor]))
+    gr_setmarkershape(d)
+    if typeof(msize) <: Number
+        GR.setmarkersize(msize)
+        if length(d[:x]) > 0
+            gr_polymarker(d, d[:x], d[:y])
         end
     else
-        error("gr_barplot: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
+        c = d[:markercolor]
+        GR.setcolormap(-GR.COLORMAP_GLOWING)
+        for i = 1:length(d[:x])
+            if isa(c, ColorGradient) && d[:marker_z] != nothing
+                ci = round(Int, 1000 + d[:marker_z][i] * 255)
+                GR.setmarkercolorind(ci)
+            end
+            GR.setmarkersize(msize[i])
+            gr_polymarker(d, [d[:x][i]], [d[:y][i]])
+        end
     end
 end
+
+# function gr_barplot(series::Series, x, y)
+#     # x, y = d[:x], d[:y]
+#     n = length(y)
+#     if length(x) == n + 1
+#         # x is edges
+#         for i=1:n
+#             gr_fillrect(series, x[i], x[i+1], 0, y[i])
+#         end
+#     elseif length(x) == n
+#         # x is centers
+#         leftwidth = length(x) > 1 ? abs(0.5 * (x[2] - x[1])) : 0.5
+#         for i=1:n
+#             rightwidth = (i == n ? leftwidth : abs(0.5 * (x[i+1] - x[i])))
+#             gr_fillrect(series, x[i] - leftwidth, x[i] + rightwidth, 0, y[i])
+#         end
+#     else
+#         error("gr_barplot: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
+#     end
+# end
 
 
 # --------------------------------------------------------------------------------------
@@ -350,7 +388,7 @@ function gr_display(plt::Plot)
 
     # fill in the viewport_canvas background
     gr_fill_viewport(viewport_canvas, plt.attr[:background_color_outside])
-    @show "PLOT SETUP" plt.layout.bbox ratio viewport_canvas
+    # @show "PLOT SETUP" plt.layout.bbox ratio viewport_canvas
 
     # subplots:
     for sp in plt.subplots
@@ -365,7 +403,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # the viewports for this subplot
     viewport_subplot = gr_viewport_from_bbox(bbox(sp), w, h, viewport_canvas)
     viewport_plotarea = gr_viewport_from_bbox(plotarea(sp), w, h, viewport_canvas)
-    @show "SUBPLOT",sp.attr[:subplot_index] bbox(sp) plotarea(sp) viewport_subplot viewport_plotarea
+    # @show "SUBPLOT",sp.attr[:subplot_index] bbox(sp) plotarea(sp) viewport_subplot viewport_plotarea
 
     # fill in the plot area background
     gr_fill_viewport(viewport_plotarea, sp.attr[:background_color_inside])
@@ -689,6 +727,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setlinecolorind(gr_getcolorind(d[:linecolor]))
         end
 
+    # @show "HERE" d[:markershape]
         if ispolar(sp)
             xmin, xmax, ymin, ymax = viewport_plotarea
             ymax -= 0.05 * (xmax - xmin)
@@ -708,18 +747,37 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 x[i] = r[i] * cos(phi[i])
                 y[i] = r[i] * sin(phi[i])
             end
-            GR.polyline(x, y)
+            gr_polyline(x, y)
 
         elseif st == :path
-            if length(d[:x]) > 1
-                if d[:fillrange] != nothing
+            x, y = d[:x], d[:y]
+            if length(x) > 1
+                frng = d[:fillrange]
+                if frng != nothing
                     GR.setfillcolorind(gr_getcolorind(d[:fillcolor]))
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
-                    GR.fillarea([d[:x][1]; d[:x]; d[:x][length(d[:x])]], [d[:fillrange]; d[:y]; d[:fillrange]])
+                    # @show map(length,(d[:x], d[:fillrange], d[:y]))
+                    # @show size([d[:x][1]; d[:x]; d[:x][length(d[:x])]], [d[:fillrange]; d[:y]; d[:fillrange]])
+                    # GR.fillarea([d[:x][1]; d[:x]; d[:x][length(d[:x])]], [d[:fillrange]; d[:y]; d[:fillrange]])
+                    frng = isa(frng, Number) ? Float64[frng] : frng
+                    nx, ny, nf = length(x), length(y), length(frng)
+                    n = max(nx, ny)
+                    fx, fy = zeros(2n), zeros(2n)
+                    for i=1:n
+                        fx[i] = fx[end-i+1] = x[mod1(i,nx)]
+                        fy[i] = y[mod1(i,ny)]
+                        fy[end-i+1] = frng[mod1(i,nf)]
+                    end
+                    GR.fillarea(fx, fy)
                 end
-                GR.polyline(d[:x], d[:y])
+                gr_polyline(x, y)
             end
             # legend[idx] = true
+
+            if d[:markershape] != :none && axes_2d
+                gr_draw_markers(series)
+            end
+
 
         # # TODO: use recipe
         # elseif st == :line
@@ -746,7 +804,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 j += 2
             end
             if n > 1
-                GR.polyline(x, y)
+                gr_polyline(x, y)
             end
             # legend[idx] = true
 
@@ -754,44 +812,48 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st == :sticks
             x, y = d[:x], d[:y]
             for i = 1:length(y)
-                GR.polyline([x[i], x[i]], [ymin, y[i]])
+                gr_polyline([x[i], x[i]], [ymin, y[i]])
             end
             # legend[idx] = true
 
-        elseif st == :scatter || (d[:markershape] != :none && axes_2d)
-            GR.setmarkercolorind(gr_getcolorind(d[:markercolor]))
-            gr_setmarkershape(d)
-            if typeof(d[:markersize]) <: Number
-                GR.setmarkersize(d[:markersize] / 4.0)
-                if length(d[:x]) > 0
-                    gr_polymarker(d, d[:x], d[:y])
-                end
-            else
-                c = d[:markercolor]
-                GR.setcolormap(-GR.COLORMAP_GLOWING)
-                for i = 1:length(d[:x])
-                    if isa(c, ColorGradient) && d[:marker_z] != nothing
-                        ci = round(Int, 1000 + d[:marker_z][i] * 255)
-                        GR.setmarkercolorind(ci)
-                    end
-                    GR.setmarkersize(d[:markersize][i] / 4.0)
-                    gr_polymarker(d, [d[:x][i]], [d[:y][i]])
-                end
+        elseif st == :scatter
+            if d[:markershape] != :none && axes_2d
+                gr_draw_markers(series)
             end
-            # legend[idx] = true
-
-        # TODO: use recipe
-        elseif st == :bar
-            gr_barplot(series, d[:x], d[:y])
-            # for i = 1:length(y)
-            #     gr_fillrect(series, i-0.4, i+0.4, max(0, ymin), y[i])
-            #     # GR.setfillcolorind(gr_getcolorind(d[:fillcolor]))
-            #     # GR.setfillintstyle(GR.INTSTYLE_SOLID)
-            #     # GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
-            #     # GR.setfillcolorind(fg)
-            #     # GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
-            #     # GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
+            # @show "HERE" d[:markershape]
+            # GR.setmarkercolorind(gr_getcolorind(d[:markercolor]))
+            # gr_setmarkershape(d)
+            # if typeof(d[:markersize]) <: Number
+            #     GR.setmarkersize(d[:markersize] / 4.0)
+            #     if length(d[:x]) > 0
+            #         gr_polymarker(d, d[:x], d[:y])
+            #     end
+            # else
+            #     c = d[:markercolor]
+            #     GR.setcolormap(-GR.COLORMAP_GLOWING)
+            #     for i = 1:length(d[:x])
+            #         if isa(c, ColorGradient) && d[:marker_z] != nothing
+            #             ci = round(Int, 1000 + d[:marker_z][i] * 255)
+            #             GR.setmarkercolorind(ci)
+            #         end
+            #         GR.setmarkersize(d[:markersize][i] / 4.0)
+            #         gr_polymarker(d, [d[:x][i]], [d[:y][i]])
+            #     end
             # end
+            # legend[idx] = true
+
+        # # TODO: use recipe
+        # elseif st == :bar
+        #     gr_barplot(series, d[:x], d[:y])
+        #     # for i = 1:length(y)
+        #     #     gr_fillrect(series, i-0.4, i+0.4, max(0, ymin), y[i])
+        #     #     # GR.setfillcolorind(gr_getcolorind(d[:fillcolor]))
+        #     #     # GR.setfillintstyle(GR.INTSTYLE_SOLID)
+        #     #     # GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
+        #     #     # GR.setfillcolorind(fg)
+        #     #     # GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
+        #     #     # GR.fillrect(i-0.4, i+0.4, max(0, ymin), y[i])
+        #     # end
 
         # # TODO: use recipe
         # elseif st in [:hist, :density]
@@ -811,9 +873,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st in [:hline, :vline]
             for xy in d[:y]
                 if st == :hline
-                    GR.polyline([xmin, xmax], [xy, xy])
+                    gr_polyline([xmin, xmax], [xy, xy])
                 else
-                    GR.polyline([xy, xy], [ymin, ymax])
+                    gr_polyline([xy, xy], [ymin, ymax])
                 end
             end
 
@@ -985,7 +1047,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
                     GR.text(x[3] + 0.01, y[3], string(labels[i]))
                 end
-                GR.polyline(x, y)
+                gr_polyline(x, y)
                 a1 = a2
             end
             GR.selntran(1)
