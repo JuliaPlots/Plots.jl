@@ -20,11 +20,11 @@ function _create_backend_figure(plt::Plot{[PkgName]Backend})
 end
 
 # this is called early in the pipeline, use it to make the plot current or something
-function _prepare_plot_object(plt::Plot{[PkgName]})
+function _prepare_plot_object(plt::Plot{[PkgName]Backend})
 end
 
 # Set up the subplot within the backend object.
-function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
+function _initialize_subplot(plt::Plot{[PkgName]Backend}, sp::Subplot{[PkgName]Backend})
 end
 
 # ---------------------------------------------------------------------------
@@ -42,7 +42,7 @@ end
 
 # called just before updating layout bounding boxes... in case you need to prep
 # for the calcs
-function _before_layout_calcs(plt::Plot)
+function _before_layout_calcs(plt::Plot{[PkgName]Backend})
 end
 
 # Set the (left, top, right, bottom) minimum padding around the plot area

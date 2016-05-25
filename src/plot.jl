@@ -95,6 +95,7 @@ end
 # natively by the backend
 function _apply_series_recipe(plt::Plot, d::KW)
     st = d[:seriestype]
+    @show st
     if st in supportedTypes()
 
         # getting ready to add the series... last update to subplot from anything
@@ -138,7 +139,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
 
     else
         # get a sub list of series for this seriestype
-        series_list = try
+        datalist = try
             RecipesBase.apply_recipe(d, Val{st}, d[:x], d[:y], d[:z])
         catch
             warn("Exception during apply_recipe(Val{$st}, ...) with types ($(typeof(d[:x])), $(typeof(d[:y])), $(typeof(d[:z])))")
@@ -146,9 +147,9 @@ function _apply_series_recipe(plt::Plot, d::KW)
         end
 
         # assuming there was no error, recursively apply the series recipes
-        for series in series_list
-            if isa(series, Series)
-                _apply_series_recipe(plt, series.d)
+        for data in datalist
+            if isa(data, RecipeData)
+                _apply_series_recipe(plt, data.d)
             else
                 warn("Unhandled series: $(series_list)")
                 break
@@ -221,6 +222,10 @@ function _plot!(plt::Plot, d::KW, args...)
                     kw[:fillrange] = (kw[:y] - rib, kw[:y] + rib)
                 end
 
+                # add the plot index
+                plt.n += 1
+                kw[:series_plotindex] = plt.n
+
                 # check that the backend will support the command and add it to the list
                 warnOnUnsupportedScales(plt.backend, kw)
                 push!(kw_list, kw)
@@ -248,9 +253,9 @@ function _plot!(plt::Plot, d::KW, args...)
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
     for (i,kw) in enumerate(kw_list)
-        if !(get(kw, :seriestype, :none) in (:xerror, :yerror))
-            plt.n += 1
-        end
+        # if !(get(kw, :seriestype, :none) in (:xerror, :yerror))
+        #     plt.n += 1
+        # end
 
         # get the Subplot object to which the series belongs
         sp = get(kw, :subplot, :auto)

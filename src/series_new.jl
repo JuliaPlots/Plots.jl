@@ -7,7 +7,8 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     # n = plt.n
     # attr = getattr(plt, n)
     # plotIndex = convertSeriesIndex(plt, n)
-    globalIndex = plt.n
+    # globalIndex = plt.n
+    globalIndex = d[:series_plotindex]
 
     # # add defaults?
     # for k in keys(_series_defaults)

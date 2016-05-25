@@ -1,8 +1,8 @@
 
 
-defaultOutputFormat(plt::AbstractPlot) = "png"
+defaultOutputFormat(plt::Plot) = "png"
 
-function png(plt::AbstractPlot, fn::@compat(AbstractString))
+function png(plt::Plot, fn::@compat(AbstractString))
   fn = addExtension(fn, "png")
   io = open(fn, "w")
   writemime(io, MIME("image/png"), plt)
@@ -10,7 +10,7 @@ function png(plt::AbstractPlot, fn::@compat(AbstractString))
 end
 png(fn::@compat(AbstractString)) = png(current(), fn)
 
-function svg(plt::AbstractPlot, fn::@compat(AbstractString))
+function svg(plt::Plot, fn::@compat(AbstractString))
   fn = addExtension(fn, "svg")
   io = open(fn, "w")
   writemime(io, MIME("image/svg+xml"), plt)
@@ -19,7 +19,7 @@ end
 svg(fn::@compat(AbstractString)) = svg(current(), fn)
 
 
-function pdf(plt::AbstractPlot, fn::@compat(AbstractString))
+function pdf(plt::Plot, fn::@compat(AbstractString))
   fn = addExtension(fn, "pdf")
   io = open(fn, "w")
   writemime(io, MIME("application/pdf"), plt)
@@ -28,7 +28,7 @@ end
 pdf(fn::@compat(AbstractString)) = pdf(current(), fn)
 
 
-function ps(plt::AbstractPlot, fn::@compat(AbstractString))
+function ps(plt::Plot, fn::@compat(AbstractString))
   fn = addExtension(fn, "ps")
   io = open(fn, "w")
   writemime(io, MIME("application/postscript"), plt)
@@ -37,7 +37,7 @@ end
 ps(fn::@compat(AbstractString)) = ps(current(), fn)
 
 
-function tex(plt::AbstractPlot, fn::@compat(AbstractString))
+function tex(plt::Plot, fn::@compat(AbstractString))
   fn = addExtension(fn, "tex")
   io = open(fn, "w")
   writemime(io, MIME("application/x-tex"), plt)
@@ -78,7 +78,7 @@ function addExtension(fn::@compat(AbstractString), ext::@compat(AbstractString))
   end
 end
 
-function savefig(plt::AbstractPlot, fn::@compat(AbstractString))
+function savefig(plt::Plot, fn::@compat(AbstractString))
 
   # get the extension
   local ext
@@ -101,7 +101,7 @@ savefig(fn::@compat(AbstractString)) = savefig(current(), fn)
 
 # ---------------------------------------------------------
 
-gui(plt::AbstractPlot = current()) = display(PlotsDisplay(), plt)
+gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
 function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)
@@ -109,7 +109,7 @@ function Base.display(::PlotsDisplay, plt::Plot)
 end
 
 # override the REPL display to open a gui window
-Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::AbstractPlot) = gui(plt)
+Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::Plot) = gui(plt)
 
 # ---------------------------------------------------------
 
@@ -123,12 +123,12 @@ const _mimeformats = Dict(
 )
 
 # a backup for html... passes to svg
-function Base.writemime(io::IO, ::MIME"text/html", plt::AbstractPlot)
+function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
     writemime(io, MIME("image/svg+xml"), plt)
 end
 
 for mime in keys(_mimeformats)
-    @eval function writemime(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
+    @eval function Base.writemime(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         prepare_output(plt)
         _writemime(io, m, plt)
     end
@@ -151,13 +151,13 @@ function setup_ijulia()
                 global _ijulia_output
                 _ijulia_output[1] = mimestr
             end
-            function IJulia.display_dict(plt::AbstractPlot)
+            function IJulia.display_dict(plt::Plot)
                 global _ijulia_output
                 Dict{ASCIIString, ByteString}(_ijulia_output[1] => sprint(writemime, _ijulia_output[1], plt))
             end
         end
 
-        # IJulia.display_dict(plt::AbstractPlot) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
+        # IJulia.display_dict(plt::Plot) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
         set_ijulia_output("text/html")
     end
 end
@@ -174,15 +174,15 @@ function setup_atom()
 
         # connects the render function
         for T in (GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend)
-            Atom.Media.media(AbstractPlot{T}, Atom.Media.Plot)
+            Atom.Media.media(Plot{T}, Atom.Media.Plot)
         end
         # Atom.Media.media{T <: Union{GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend}}(Plot{T}, Atom.Media.Plot)
 
-        # Atom.displaysize(::AbstractPlot) = (535, 379)
-        # Atom.displaytitle(plt::AbstractPlot) = "Plots.jl (backend: $(backend(plt)))"
+        # Atom.displaysize(::Plot) = (535, 379)
+        # Atom.displaytitle(plt::Plot) = "Plots.jl (backend: $(backend(plt)))"
 
         # this is like "display"... sends an html div with the plot to the PlotPane
-        function Atom.Media.render(pane::Atom.PlotPane, plt::AbstractPlot)
+        function Atom.Media.render(pane::Atom.PlotPane, plt::Plot)
             Atom.Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
         end
 

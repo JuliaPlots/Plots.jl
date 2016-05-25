@@ -33,4 +33,14 @@ get_subplot(series::Series) = series.d[:subplot]
 get_subplot_index(plt::Plot, idx::Integer) = idx
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(_ -> _ === sp, plt.subplots)
 
+series_list(sp::Subplot) = filter(series -> series.d[:subplot] === sp, sp.plt.series_list)
+
+function should_add_to_legend(series::Series)
+    !(series.d[:label] == "" || series.d[:seriestype] in (
+        :hexbin,:hist2d,:hline,:vline,
+        :contour,:contour3d,:surface,:wireframe,
+        :heatmap,:path3d,:scatter3d, :pie, :image
+    ))
+end
+
 # ----------------------------------------------------------------------

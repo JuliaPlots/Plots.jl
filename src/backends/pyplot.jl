@@ -1127,13 +1127,16 @@ function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
         # gotta do this to ensure both axes are included
         labels = []
         handles = []
-        for series in plt.series_list
-            if get_subplot(series) === sp &&
-                        series.d[:label] != "" &&
-                        !(series.d[:seriestype] in (
-                            :hexbin,:hist2d,:hline,:vline,
-                            :contour,:contour3d,:surface,:wireframe,
-                            :heatmap,:path3d,:scatter3d, :pie, :image))
+        # for series in plt.series_list
+        #     if get_subplot(series) === sp &&
+        #                 series.d[:label] != "" &&
+        #                 !(series.d[:seriestype] in (
+        #                     :hexbin,:hist2d,:hline,:vline,
+        #                     :contour,:contour3d,:surface,:wireframe,
+        #                     :heatmap,:path3d,:scatter3d, :pie, :image))
+        for series in series_list(sp)
+            if should_add_to_legend(series)
+                # add a line/marker and a label
                 push!(handles, if series.d[:seriestype] == :hist
                     PyPlot.plt[:Line2D]((0,1),(0,0), color=pyfillcolor(series.d), linewidth=4)
                 else
@@ -1142,6 +1145,8 @@ function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
                 push!(labels, series.d[:label])
             end
         end
+
+        # if anything was added, call ax.legend and set the colors
         if !isempty(handles)
             leg = ax[:legend](handles,
                 labels,

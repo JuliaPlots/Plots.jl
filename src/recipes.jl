@@ -226,6 +226,55 @@ end
     ()
 end
 
+# create a path from steps
+@recipe function f(::Type{Val{:steppre}}, x, y, z)
+
+end
+
+# create a bar plot as a filled step function
+@recipe function f(::Type{Val{:bar}}, x, y, z)
+    nx, ny = length(x), length(y)
+    d[:x] = if nx == ny
+        # x is centers
+        halfwidths = 0.5 * diff(x)
+        vcat(halfwidths[1], halfwidths, halfwidths[end])
+    elseif nx == ny + 1
+        # x is edges
+        x
+    else
+        error("bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
+    end
+
+    # TODO: use y/fillrange to compute new y/fillrange vectors
+
+    d[:seriestype] = :steppre
+    ()
+end
+
+
+    #     # x is edges
+    #     for i=1:n
+    #         gr_fillrect(series, x[i], x[i+1], 0, y[i])
+    #     end
+    # elseif length(x) == n
+    #     # x is centers
+    #     leftwidth = length(x) > 1 ? abs(0.5 * (x[2] - x[1])) : 0.5
+    #     for i=1:n
+    #         rightwidth = (i == n ? leftwidth : abs(0.5 * (x[i+1] - x[i])))
+    #         gr_fillrect(series, x[i] - leftwidth, x[i] + rightwidth, 0, y[i])
+    #     end
+    # else
+    #     error("gr_barplot: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
+    # end
+
+@recipe function f(::Type{Val{:hist}}, x, y, z)
+    edges, counts = Base.hist(y, d[:bins])
+    d[:x] = edges
+    d[:y] = counts
+    d[:seriestype] = :bar
+    ()
+end
+
 # ---------------------------------------------------------------------------
 # Box Plot
 

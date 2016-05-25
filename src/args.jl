@@ -232,13 +232,14 @@ const _axis_defaults = KW(
     :foreground_color_guide  => :match,            # guide text color,
 )
 
-const _suppress_warnings = KW(
-    :x_discrete_indices => nothing,
-    :y_discrete_indices => nothing,
-    :z_discrete_indices => nothing,
-    :subplot => nothing,
-    :subplot_index => nothing,
-)
+const _suppress_warnings = Set{Symbol}([
+    :x_discrete_indices,
+    :y_discrete_indices,
+    :z_discrete_indices,
+    :subplot,
+    :subplot_index,
+    :series_plotindex,
+])
 
 # add defaults for the letter versions
 const _axis_defaults_byletter = KW()
@@ -433,9 +434,7 @@ function default(k::Symbol)
             return defaults[k]
         end
     end
-    if !haskey(_suppress_warnings, k)
-        error("Unknown key: ", k)
-    end
+    k in _suppress_warnings || error("Unknown key: ", k)
 end
 
 function default(k::Symbol, v)
@@ -446,9 +445,7 @@ function default(k::Symbol, v)
             return v
         end
     end
-    if !haskey(_suppress_warnings, k)
-        error("Unknown key: ", k)
-    end
+    k in _suppress_warnings || error("Unknown key: ", k)
 end
 
 function default(; kw...)
@@ -789,7 +786,7 @@ end
 function warnOnUnsupportedArgs(pkg::AbstractBackend, d::KW)
     for k in sortedkeys(d)
         k in supportedArgs(pkg) && continue
-        haskey(_suppress_warnings, k) && continue
+        k in _suppress_warnings && continue
         if d[k] != default(k)
             warn("Keyword argument $k not supported with $pkg.  Choose from: $(supportedArgs(pkg))")
         end
