@@ -216,8 +216,13 @@ function _update_min_padding!(sp::Subplot{PlotlyBackend})
     sp.minpad = plotly_minpad(sp)
 end
 
-function Base.display(::PlotsDisplay, plt::Plot{PlotlyJSBackend})
+function plotlyjs_finalize(plt::Plot)
     plotly_finalize(plt)
+    PlotlyJS.relayout!(plt.o, plotly_layout(plt))
+end
+
+function Base.display(::PlotsDisplay, plt::Plot{PlotlyJSBackend})
+    plotlyjs_finalize(plt)
     display(plt.o)
 end
 
