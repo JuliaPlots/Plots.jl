@@ -160,17 +160,38 @@ function gr_polymarker(d, x, y)
     end
 end
 
+# draw line segments, splitting x/y into contiguous/finite segments
 function gr_polyline(x, y)
-    i = j = 1
+    iend = 0
     n = length(x)
-    while i < n
-        while j < n && x[j] != NaN && y[j] != NaN
-            j += 1
+    while iend < n-1
+        # set istart to the first index that is finite
+        istart = -1
+        for j = iend+1:n
+            if isfinite(x[j]) && isfinite(y[j])
+                istart = j
+                break
+            end
         end
-        if i < j
-            GR.polyline(x[i:j], y[i:j])
+
+        if istart > 0
+            # iend is the last finite index
+            iend = -1
+            for j = istart+1:n
+                if isfinite(x[j]) && isfinite(y[j])
+                    iend = j
+                else
+                    break
+                end
+            end
         end
-        i = j + 1
+
+        # if we found a start and end, draw the line segment, otherwise we're done
+        if istart > 0 && iend > 0
+            GR.polyline(x[istart:iend], y[istart:iend])
+        else
+            break
+        end
     end
 end
 
@@ -181,7 +202,7 @@ end
 #         j = 1
 #         n = length(x)
 #         while i < n
-#             while j < n && x[j] != Nan && y[j] != NaN
+#             while j < n && x[j] != NaN && y[j] != NaN
 #                 j += 1
 #             end
 #             if i < j

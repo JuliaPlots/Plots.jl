@@ -95,7 +95,7 @@ end
 # natively by the backend
 function _apply_series_recipe(plt::Plot, d::KW)
     st = d[:seriestype]
-    @show st
+    # @show st
     if st in supportedTypes()
 
         # getting ready to add the series... last update to subplot from anything
