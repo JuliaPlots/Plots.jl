@@ -427,7 +427,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # @show "SUBPLOT",sp.attr[:subplot_index] bbox(sp) plotarea(sp) viewport_subplot viewport_plotarea
 
     # fill in the plot area background
-    bg = sp.attr[:background_color_inside]
+    bg = getColor(sp.attr[:background_color_inside])
     gr_fill_viewport(viewport_plotarea, bg)
     #     # # # c = getColor(d[:background_color_inside])
     dark_bg = 0.21 * bg.r + 0.72 * bg.g + 0.07 * bg.b < 0.9
