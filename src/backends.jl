@@ -60,11 +60,12 @@ guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefont].pointsiz
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot)
-    toppad = 2mm + title_padding(sp)
-    bottompad = 5mm + guide_padding(sp.attr[:xaxis])
-    leftpad = 10mm + guide_padding(sp.attr[:yaxis])
-    @show (leftpad, toppad, 3mm, bottompad)
-    sp.minpad = (leftpad, toppad, 3mm, bottompad)
+    leftpad   = 10mm + sp.attr[:left_margin]   + guide_padding(sp.attr[:yaxis])
+    toppad    =  2mm + sp.attr[:top_margin]    + title_padding(sp)
+    rightpad  =  3mm + sp.attr[:right_margin]
+    bottompad =  5mm + sp.attr[:bottom_margin] + guide_padding(sp.attr[:xaxis])
+    @show (leftpad, toppad, rightpad, bottompad)
+    sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 
 _update_plot_object(plt::Plot) = nothing
