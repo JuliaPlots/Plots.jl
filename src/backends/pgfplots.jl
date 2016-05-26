@@ -148,7 +148,7 @@ const _pgf_series_extrastyle = KW(
 function pgf_color(c, a = nothing)
     c = getColor(c)
     cstr = @sprintf("{rgb,1:red,%.8f;green,%.8f;blue,%.8f}", red(c), green(c), blue(c))
-    a = (a == nothing ? alpha(c) : a)
+    a = float(a == nothing ? alpha(c) : a)
     cstr, a
 end
 
@@ -263,10 +263,12 @@ function pgf_series(sp::Subplot, series::Series)
 
     push!(style, pgf_linestyle(d))
     push!(style, pgf_marker(d))
-    push!(style, pgf_fillstyle(d))
+    if d[:fillrange] != nothing
+        push!(style, pgf_fillstyle(d))
+    end
 
     # add to legend?
-    if should_add_to_legend(series)
+    if sp.attr[:legend] != :none && should_add_to_legend(series)
         kw[:legendentry] = d[:label]
     end
 
@@ -486,7 +488,7 @@ end
 # end
 
 function _make_pgf_plot!(plt::Plot)
-    plt.o = []
+    plt.o = PGFPlots.Axis[]
     for sp in plt.subplots
         # first build the PGFPlots.Axis object
         style = []
@@ -501,16 +503,24 @@ function _make_pgf_plot!(plt::Plot)
         end
 
         # bounding box values are in mm
+        # note: bb origin is top-left, pgf is bottom-left
         bb = bbox(sp)
-        push!(style, "xshift = $(left(bb).value)mm")
-        push!(style, "yshift = $((height(bb) - (bottom(bb))).value)mm")  # bb origin is top-left, pgf is bottom-left
-        push!(style, "width = $(width(bb).value)mm")
-        push!(style, "height = $(height(bb).value)mm")
-        push!(style, "title = \"$(sp.attr[:title])\"")
-        push!(style, "axis background/.style={fill=$(pgf_color(sp.attr[:background_color_inside])[1])}")
+        push!(style, """
+            xshift = $(left(bb).value)mm,
+            yshift = $((height(bb) - (bottom(bb))).value)mm,
+            width = $(width(bb).value)mm,
+            height = $(height(bb).value)mm,
+            axis background/.style={fill=$(pgf_color(sp.attr[:background_color_inside])[1])}
+        """)
+
+        if sp.attr[:title] != ""
+            push!(style, "title = $(sp.attr[:title])")
+        end
 
         sp.attr[:grid] && push!(style, "grid = major")
-        sp.attr[:aspect_ratio] in (1, :equal) && (kw[:axisEqual] = "true")
+        if sp.attr[:aspect_ratio] in (1, :equal)
+            kw[:axisEqual] = "true"
+        end
 
         legpos = sp.attr[:legend]
         if haskey(_pgfplots_legend_pos, legpos)
@@ -531,6 +541,11 @@ end
 
 
 function _writemime(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend})
+  _make_pgf_plot!(plt)
+  writemime(io, mime, plt.o)
+end
+
+function _writemime(io::IO, mime::MIME"image/png", plt::Plot{PGFPlotsBackend})
   _make_pgf_plot!(plt)
   writemime(io, mime, plt.o)
 end
