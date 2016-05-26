@@ -1,6 +1,7 @@
 
 # https://github.com/jheinen/GR.jl
 
+# significant contributions by @jheinen
 
 supportedArgs(::GRBackend) = [
     :annotations,
@@ -1201,11 +1202,11 @@ end
 
 # ----------------------------------------------------------------
 
-# Set the (left, top, right, bottom) minimum padding around the plot area
-# to fit ticks, tick labels, guides, colorbars, etc.
-function _update_min_padding!(sp::Subplot{GRBackend})
-    sp.minpad = (10mm, 5mm, 3mm, 8mm)
-end
+# # Set the (left, top, right, bottom) minimum padding around the plot area
+# # to fit ticks, tick labels, guides, colorbars, etc.
+# function _update_min_padding!(sp::Subplot{GRBackend})
+#     sp.minpad = (10mm, 5mm, 3mm, 8mm)
+# end
 
 # # clear, display, and update the plot... using in all output modes
 # function gr_finalize(plt::Plot{GRBackend})

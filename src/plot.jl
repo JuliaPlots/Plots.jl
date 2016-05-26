@@ -50,16 +50,16 @@ function plot(args...; kw...)
     # create an empty Plot, update the args using the inputs, then pass it
     # to the backend to finish backend-specific initialization
     plt = Plot()
-    _update_plot_args(plt, d)
-    plt.o = _create_backend_figure(plt)
-
-    # create the layout and subplots from the inputs
-    plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
-    for (idx,sp) in enumerate(plt.subplots)
-        sp.plt = plt
-        sp.attr[:subplot_index] = idx
-        _update_subplot_args(plt, sp, copy(d), idx)
-    end
+    # _update_plot_args(plt, d)
+    # plt.o = _create_backend_figure(plt)
+    #
+    # # create the layout and subplots from the inputs
+    # plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
+    # for (idx,sp) in enumerate(plt.subplots)
+    #     sp.plt = plt
+    #     sp.attr[:subplot_index] = idx
+    #     _update_subplot_args(plt, sp, copy(d), idx)
+    # end
 
     # now update the plot
     _plot!(plt, d, args...)
@@ -163,13 +163,13 @@ end
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
 function _plot!(plt::Plot, d::KW, args...)
-    # just in case the backend needs to set up the plot (make it current or something)
-    _prepare_plot_object(plt)
-
-    # first apply any args for the subplots
-    for (idx,sp) in enumerate(plt.subplots)
-        _update_subplot_args(plt, sp, d, idx)
-    end
+    # # just in case the backend needs to set up the plot (make it current or something)
+    # _prepare_plot_object(plt)
+    #
+    # # first apply any args for the subplots
+    # for (idx,sp) in enumerate(plt.subplots)
+    #     _update_subplot_args(plt, sp, d, idx)
+    # end
 
     # the grouping mechanism is a recipe on a GroupBy object
     # we simply add the GroupBy object to the front of the args list to allow
@@ -246,6 +246,39 @@ function _plot!(plt::Plot, d::KW, args...)
                 push!(still_to_process, series)
             end
         end
+    end
+
+    # merge in anything meant for plot/subplot
+    for kw in kw_list
+        for (k,v) in kw
+            if haskey(_plot_defaults, k) || haskey(_subplot_defaults, k)
+                d[k] = v
+            end
+        end
+    end
+
+    # TODO: init subplots here
+    if !plt.init
+        _update_plot_args(plt, d)
+        plt.o = _create_backend_figure(plt)
+
+        # create the layout and subplots from the inputs
+        plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
+        for (idx,sp) in enumerate(plt.subplots)
+            sp.plt = plt
+            sp.attr[:subplot_index] = idx
+            # _update_subplot_args(plt, sp, copy(d), idx)
+        end
+
+        plt.init = true
+    end
+
+    # just in case the backend needs to set up the plot (make it current or something)
+    _prepare_plot_object(plt)
+
+    # first apply any args for the subplots
+    for (idx,sp) in enumerate(plt.subplots)
+        _update_subplot_args(plt, sp, d, idx)
     end
 
     # !!! note: at this point, kw_list is fully decomposed into individual series... one KW per series !!!

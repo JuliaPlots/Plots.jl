@@ -64,11 +64,12 @@ type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     subplots::Vector{Subplot}
     spmap::SubplotMap  # provide any label as a map to a subplot
     layout::AbstractLayout
+    init::Bool
 end
 
 function Plot()
     Plot(backend(), 0, KW(), Series[], nothing,
-         Subplot[], SubplotMap(), EmptyLayout())
+         Subplot[], SubplotMap(), EmptyLayout(), false)
 end
 
 # TODO: make a decision... should plt[1] return the first subplot or the first series??
