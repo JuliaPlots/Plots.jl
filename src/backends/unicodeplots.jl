@@ -52,14 +52,18 @@ supportedArgs(::UnicodePlotsBackend) = [
     # :z,
   ]
 supportedAxes(::UnicodePlotsBackend) = [:auto, :left]
-supportedTypes(::UnicodePlotsBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
+supportedTypes(::UnicodePlotsBackend) = [
+    :path, :steppre, :steppost, :scatter,
+    :hist2d, :hline, :vline
+]
 supportedStyles(::UnicodePlotsBackend) = [:auto, :solid]
 supportedMarkers(::UnicodePlotsBackend) = [:none, :auto, :ellipse]
 supportedScales(::UnicodePlotsBackend) = [:identity]
 subplotSupported(::UnicodePlotsBackend) = true
 
 
-
+# don't warn on unsupported... there's just too many warnings!!
+warnOnUnsupportedArgs(pkg::UnicodePlotsBackend, d::KW) = nothing
 
 # --------------------------------------------------------------------------------------
 
@@ -72,80 +76,136 @@ end
 
 # -------------------------------
 
+# convert_size_from_pixels(sz) =
 
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
 function rebuildUnicodePlot!(plt::Plot)
+    plt.o = []
+    for sp in plt.subplots
+        xaxis = sp.attr[:xaxis]
+        yaxis = sp.attr[:yaxis]
+        xlim =  axis_limits(xaxis)
+        ylim =  axis_limits(yaxis)
 
-  # figure out the plotting area xlim = [xmin, xmax] and ylim = [ymin, ymax]
-  sargs = plt.seriesargs
-  iargs = plt.attr
+        # make vectors
+        xlim = [xlim[1], xlim[2]]
+        ylim = [ylim[1], ylim[2]]
 
-  # get the x/y limits
-  if get(iargs, :xlims, :auto) == :auto
-    xlim = [Inf, -Inf]
-    for d in sargs
-      _expand_limits(xlim, d[:x])
+        # we set x/y to have a single point, since we need to create the plot with some data.
+        # since this point is at the bottom left corner of the plot, it shouldn't actually be shown
+        x = Float64[xlim[1]]
+        y = Float64[ylim[1]]
+
+        # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
+        width, height = plt.attr[:size]
+        o = UnicodePlots.Plot(x, y;
+            width = width,
+            height = height,
+            title = sp.attr[:title],
+            xlim = xlim,
+            ylim = ylim
+        )
+
+        # set the axis labels
+        UnicodePlots.xlabel!(o, xaxis[:guide])
+        UnicodePlots.ylabel!(o, yaxis[:guide])
+
+        # now use the ! functions to add to the plot
+        for series in series_list(sp)
+            addUnicodeSeries!(o, series.d, sp.attr[:legend] != :none, xlim, ylim)
+        end
+
+        # save the object
+        push!(plt.o, o)
     end
-  else
-    xmin, xmax = iargs[:xlims]
-    xlim = [xmin, xmax]
-  end
-
-  if get(iargs, :ylims, :auto) == :auto
-    ylim = [Inf, -Inf]
-    for d in sargs
-      _expand_limits(ylim, d[:y])
-    end
-  else
-    ymin, ymax = iargs[:ylims]
-    ylim = [ymin, ymax]
-  end
-
-  # we set x/y to have a single point, since we need to create the plot with some data.
-  # since this point is at the bottom left corner of the plot, it shouldn't actually be shown
-  x = Float64[xlim[1]]
-  y = Float64[ylim[1]]
-
-  # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
-  width, height = iargs[:size]
-  o = UnicodePlots.Plot(x, y; width = width,
-                                height = height,
-                                title = iargs[:title],
-                                # labels = iargs[:legend],
-                                xlim = xlim,
-                                ylim = ylim)
-
-  # set the axis labels
-  UnicodePlots.xlabel!(o, iargs[:xguide])
-  UnicodePlots.ylabel!(o, iargs[:yguide])
-
-  # now use the ! functions to add to the plot
-  for d in sargs
-    addUnicodeSeries!(o, d, iargs[:legend] != :none, xlim, ylim)
-  end
-
-  # save the object
-  plt.o = o
 end
+
+# # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
+# function rebuildUnicodePlot!(plt::Plot)
+#
+#   # figure out the plotting area xlim = [xmin, xmax] and ylim = [ymin, ymax]
+#   sargs = plt.seriesargs
+#   iargs = plt.attr
+#
+#   # get the x/y limits
+#   if get(iargs, :xlims, :auto) == :auto
+#     xlim = [Inf, -Inf]
+#     for d in sargs
+#       _expand_limits(xlim, d[:x])
+#     end
+#   else
+#     xmin, xmax = iargs[:xlims]
+#     xlim = [xmin, xmax]
+#   end
+#
+#   if get(iargs, :ylims, :auto) == :auto
+#     ylim = [Inf, -Inf]
+#     for d in sargs
+#       _expand_limits(ylim, d[:y])
+#     end
+#   else
+#     ymin, ymax = iargs[:ylims]
+#     ylim = [ymin, ymax]
+#   end
+#
+#   # we set x/y to have a single point, since we need to create the plot with some data.
+#   # since this point is at the bottom left corner of the plot, it shouldn't actually be shown
+#   x = Float64[xlim[1]]
+#   y = Float64[ylim[1]]
+#
+#   # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
+#   width, height = iargs[:size]
+#   o = UnicodePlots.Plot(x, y; width = width,
+#                                 height = height,
+#                                 title = iargs[:title],
+#                                 # labels = iargs[:legend],
+#                                 xlim = xlim,
+#                                 ylim = ylim)
+#
+#   # set the axis labels
+#   UnicodePlots.xlabel!(o, iargs[:xguide])
+#   UnicodePlots.ylabel!(o, iargs[:yguide])
+#
+#   # now use the ! functions to add to the plot
+#   for d in sargs
+#     addUnicodeSeries!(o, d, iargs[:legend] != :none, xlim, ylim)
+#   end
+#
+#   # save the object
+#   plt.o = o
+# end
 
 
 # add a single series
 function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
 
-  # get the function, or special handling for step/bar/hist
-  st = d[:seriestype]
+    # get the function, or special handling for step/bar/hist
+    st = d[:seriestype]
 
-  # handle hline/vline separately
-  if st in (:hline,:vline)
-    for yi in d[:y]
-      if st == :hline
-        UnicodePlots.lineplot!(o, xlim, [yi,yi])
-      else
-        UnicodePlots.lineplot!(o, [yi,yi], ylim)
-      end
+    # handle hline/vline separately
+    if st in (:hline,:vline)
+        for yi in d[:y]
+            if st == :hline
+                UnicodePlots.lineplot!(o, xlim, [yi,yi])
+            else
+                UnicodePlots.lineplot!(o, [yi,yi], ylim)
+            end
+        end
+        return
+
+    # elseif st == :bar
+    #     UnicodePlots.barplot!(o, d[:x], d[:y])
+    #     return
+
+    # elseif st == :hist
+    #     UnicodePlots.histogram!(o, d[:y], bins = d[:bins])
+    #     return
+
+    elseif st == :hist2d
+        UnicodePlots.densityplot!(o, d[:x], d[:y])
+        return
+
     end
-    return
-  end
 
   stepstyle = :post
   if st == :path
@@ -195,26 +255,26 @@ function _create_backend_figure(plt::Plot{UnicodePlotsBackend})
   # plt
 end
 
-function _series_added(plt::Plot{UnicodePlotsBackend}, series::Series)
-    d = series.d
-    # TODO don't need these once the "bar" series recipe is done
-  if d[:seriestype] in (:sticks, :bar)
-    d = barHack(; d...)
-  elseif d[:seriestype] == :hist
-    d = barHack(; histogramHack(; d...)...)
-  end
-  # push!(plt.seriesargs, d)
-  # plt
-end
-
-
-function _update_plot_object(plt::Plot{UnicodePlotsBackend}, d::KW)
-  for k in (:title, :xguide, :yguide, :xlims, :ylims)
-    if haskey(d, k)
-      plt.attr[k] = d[k]
-    end
-  end
-end
+# function _series_added(plt::Plot{UnicodePlotsBackend}, series::Series)
+#     d = series.d
+#     # TODO don't need these once the "bar" series recipe is done
+#   if d[:seriestype] in (:sticks, :bar)
+#     d = barHack(; d...)
+#   elseif d[:seriestype] == :hist
+#     d = barHack(; histogramHack(; d...)...)
+#   end
+#   # push!(plt.seriesargs, d)
+#   # plt
+# end
+#
+#
+# function _update_plot_object(plt::Plot{UnicodePlotsBackend}, d::KW)
+#   for k in (:title, :xguide, :yguide, :xlims, :ylims)
+#     if haskey(d, k)
+#       plt.attr[k] = d[k]
+#     end
+#   end
+# end
 
 
 # -------------------------------
@@ -254,9 +314,10 @@ end
 # end
 
 
-function Base.display(::PlotsDisplay, plt::Plot{UnicodePlotsBackend})
+function _display(plt::Plot{UnicodePlotsBackend})
   rebuildUnicodePlot!(plt)
-  show(plt.o)
+  map(show, plt.o)
+  nothing
 end
 
 

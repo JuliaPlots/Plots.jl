@@ -151,7 +151,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
             if isa(data, RecipeData)
                 _apply_series_recipe(plt, data.d)
             else
-                warn("Unhandled series: $(series_list)")
+                warn("Unhandled recipe: $(data)")
                 break
             end
         end

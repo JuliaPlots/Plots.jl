@@ -226,10 +226,24 @@ end
     ()
 end
 
-# create a path from steps
-@recipe function f(::Type{Val{:steppre}}, x, y, z)
-
+@recipe function f(::Type{Val{:sticks}}, x, y, z)
+    nx = length(x)
+    n = 3nx
+    newx, newy = zeros(n), zeros(n)
+    for i=1:nx
+        rng = 3i-2:3i
+        newx[rng] = x[i]
+        newy[rng] = [0., y[i], 0.]
+    end
+    d[:x], d[:y] = newx, newy
+    d[:seriestype] = :path
+    ()
 end
+
+# # create a path from steps
+# @recipe function f(::Type{Val{:steppre}}, x, y, z)
+#
+# end
 
 
 # midpoints = d[:x]

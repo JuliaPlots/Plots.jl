@@ -266,16 +266,16 @@ end
 # end
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
-gr_x_axislims(sp::Subplot) = axis_limits(sp.attr[:xaxis], :x)
-gr_y_axislims(sp::Subplot) = axis_limits(sp.attr[:yaxis], :y)
-gr_z_axislims(sp::Subplot) = axis_limits(sp.attr[:zaxis], :z)
+gr_x_axislims(sp::Subplot) = axis_limits(sp.attr[:xaxis])
+gr_y_axislims(sp::Subplot) = axis_limits(sp.attr[:yaxis])
+gr_z_axislims(sp::Subplot) = axis_limits(sp.attr[:zaxis])
 gr_xy_axislims(sp::Subplot) = gr_x_axislims(sp)..., gr_y_axislims(sp)...
 
 function gr_lims(axis::Axis, adjust::Bool, expand = nothing)
     if expand != nothing
         expand_extrema!(axis, expand)
     end
-    lims = axis_limits(axis, axis[:letter])
+    lims = axis_limits(axis)
     if adjust
         GR.adjustrange(lims...)
     else
@@ -668,7 +668,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if axes_2d
             GR.setlinewidth(1)
-            GR.setlinetype(GR.LINETYPE_DOTTED)
+            # GR.setlinetype(GR.LINETYPE_DOTTED)
             GR.setlinecolorind(gr_getcolorind(sp.attr[:foreground_color_grid]))
             ticksize = 0.0075 * diag
             if outside_ticks

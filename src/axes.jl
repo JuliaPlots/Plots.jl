@@ -116,7 +116,7 @@ end
 
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
-function axis_limits(axis::Axis, letter)
+function axis_limits(axis::Axis)
     amin, amax = axis[:extrema]
     lims = axis[:lims]
     if isa(lims, Tuple) && length(lims) == 2
