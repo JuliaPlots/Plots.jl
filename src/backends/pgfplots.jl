@@ -1,69 +1,51 @@
 # https://github.com/sisl/PGFPlots.jl
 
 supportedArgs(::PGFPlotsBackend) = [
-    # :annotation,
-    :aspect_ratio,
-    # :axis,
-     :background_color,
-    # :color_palette,
-    # :fillrange,
-     :fillcolor,
-     :fillalpha,
-    # :foreground_color,
-    # :group,
-     :label,
-    # :layout,
-     :legend,
-     :seriescolor, :seriesalpha,
-     :linecolor,
-     :linestyle,
-     :seriestype,
-     :linewidth,
-     :linealpha,
-     :markershape,
-     :markercolor,
-     :markersize,
-     :markeralpha,
-     :markerstrokewidth,
-     :markerstrokecolor,
-     :markerstrokestyle,
-    # :n,
-    # :bins,
-    # :nc,
-    # :nr,
-    # :pos,
+    # :annotations,
+    :background_color, :foreground_color,
+    :color_palette,
+    # :background_color_legend,
+    :background_color_inside,
+    # :background_color_outside,
+    # :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
+    #     :foreground_color_text, :foreground_color_border,
+    :group,
+    :label,
+    :seriestype,
+    :seriescolor, :seriesalpha,
+    :linecolor, :linestyle, :linewidth, :linealpha,
+    :markershape, :markercolor, :markersize, :markeralpha,
+    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
+    :fillrange, :fillcolor, :fillalpha,
+    :bins,
+    # :bar_width, :bar_edges,
+    # :n, :nc, :nr,
+    :layout,
     # :smooth,
-    # :show,
-     :size,
-     :title,
+    :title,
     # :window_title,
-     :x,
-     :xguide,
-     :xlims,
-    # :xticks,
-     :y,
-     :yguide,
-     :ylims,
-    # :yrightlabel,
-    # :yticks,
-     :xscale,
-     :yscale,
-     :xflip,
-     :yflip,
-     :z,
-     :zscale,
-    # :tickfont,
-    # :guidefont,
-    # :legendfont,
-     :grid,
-    # :surface
-    # :levels,
+    :show, :size,
+    :x, :xguide, :xlims, :xticks, :xscale, :xflip, :xrotation,
+    :y, :yguide, :ylims, :yticks, :yscale, :yflip, :yrotation,
+    :z, :zguide, :zlims, :zticks, :zscale, :zflip, :zrotation,
+    :tickfont, :guidefont, :legendfont,
+    :grid, :legend,
+    # :colorbar,
+    # :marker_z, :levels,
+    # :xerror, :yerror,
+    # :ribbon, :quiver, :arrow,
+    # :orientation,
+    # :overwrite_figure,
+    # :polar,
+    # :normalize, :weights, :contours,
+    :aspect_ratio,
+    # :match_dimensions,
   ]
 supportedAxes(::PGFPlotsBackend) = [:auto, :left]
-supportedTypes(::PGFPlotsBackend) = [:path, :path3d, :scatter, :line, :steppre, :stepmid, :steppost, :hist, :bar, :hist2d, :sticks, :ysticks, :xsticks, :contour] #  :hexbin, :hline, :vline,]
+supportedTypes(::PGFPlotsBackend) = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :hist2d, :ysticks, :xsticks, :contour]
 supportedStyles(::PGFPlotsBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::PGFPlotsBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
-supportedScales(::PGFPlotsBackend) = [:identity, :log, :ln, :log2, :log10] # :asinh, :sqrt]
+supportedScales(::PGFPlotsBackend) = [:identity, :ln, :log2, :log10] # :asinh, :sqrt]
 subplotSupported(::PGFPlotsBackend) = false
 
 
@@ -263,6 +245,7 @@ function pgf_series(sp::Subplot, series::Series)
 
     push!(style, pgf_linestyle(d))
     push!(style, pgf_marker(d))
+
     if d[:fillrange] != nothing
         push!(style, pgf_fillstyle(d))
     end
