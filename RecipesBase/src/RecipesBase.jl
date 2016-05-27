@@ -5,6 +5,7 @@ module RecipesBase
 
 export
     @recipe,
+    @series,
     RecipeData
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
@@ -239,6 +240,41 @@ macro recipe(funcexpr::Expr)
         end
     end)
     funcdef
+end
+
+
+# --------------------------------------------------------------------------
+
+"""
+Meant to be used inside a recipe to add additional RecipeData objects to the list:
+
+```
+@recipe function f(::T)
+    # everything get this setting
+    linecolor --> :red
+
+    @series begin
+        # this setting is only for this series
+        fillcolor := :green
+
+        # return the args, just like in recipes
+        rand(10)
+    end
+
+    # this is the main series... though it can be skipped by returning nothing.
+    # note: a @series block returns nothing
+    rand(100)
+end
+```
+"""
+macro series(expr::Expr)
+    esc(quote
+        let d = copy(d)
+            args = $expr
+            push!(series_list, RecipeData(d, RecipesBase.wrap_tuple(args)))
+            nothing
+        end
+    end)
 end
 
 # --------------------------------------------------------------------------
