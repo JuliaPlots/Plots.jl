@@ -869,7 +869,8 @@ function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
     for letter in letters
         axis = get_axis(sp, letter)
         expand_extrema!(axis, series.d[letter])
-        set_lims!(sp, axis)
+        # set_lims!(sp, axis)
+        setPyPlotLims(sp.o, axis)
     end
 end
 
@@ -920,21 +921,27 @@ end
 
 # --------------------------------------------------------------------------
 
-function addPyPlotLims(ax, lims, letter)
-    lims == :auto && return
-    ltype = limsType(lims)
-    if ltype == :limits
-        setf = ax[symbol("set_", letter, "lim")]
-        l1, l2 = lims
-        if isfinite(l1)
-            letter == :x ? setf(left = l1) : setf(bottom = l1)
-        end
-        if isfinite(l2)
-            letter == :x ? setf(right = l2) : setf(top = l2)
-        end
-    else
-        error("Invalid input for $letter: ", lims)
-    end
+# function addPyPlotLims(ax, lims, letter)
+#     lims == :auto && return
+#     ltype = limsType(lims)
+#     if ltype == :limits
+#         setf = ax[symbol("set_", letter, "lim")]
+#         l1, l2 = lims
+#         if isfinite(l1)
+#             letter == :x ? setf(left = l1) : setf(bottom = l1)
+#         end
+#         if isfinite(l2)
+#             letter == :x ? setf(right = l2) : setf(top = l2)
+#         end
+#     else
+#         error("Invalid input for $letter: ", lims)
+#     end
+# end
+
+function setPyPlotLims(ax, axis::Axis)
+    letter = axis[:letter]
+    lims = axis_limits(axis)
+    ax[symbol("set_", letter, "lim")](lims...)
 end
 
 function addPyPlotTicks(ax, ticks, letter)
@@ -1022,7 +1029,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             axis = attr[axissym]
             haskey(ax, axissym) || continue
             applyPyPlotScale(ax, axis[:scale], letter)
-            addPyPlotLims(ax, axis[:lims], letter)
+            setPyPlotLims(ax, axis)
             addPyPlotTicks(ax, get_ticks(axis), letter)
             ax[symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)

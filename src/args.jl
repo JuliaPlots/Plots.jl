@@ -1,5 +1,18 @@
 
 
+const _keyAliases = KW()
+
+function add_aliases(sym::Symbol, aliases::Symbol...)
+    for alias in aliases
+        if haskey(_keyAliases, alias)
+            error("Already an alias $alias => $(_keyAliases[alias])... can't also alias $sym")
+        end
+        _keyAliases[alias] = sym
+    end
+end
+
+# ------------------------------------------------------------
+
 const _allAxes = [:auto, :left, :right]
 const _axesAliases = KW(
     :a => :auto,
@@ -12,8 +25,8 @@ const _3dTypes = [
 ]
 const _allTypes = vcat([
     :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-    :heatmap, :hexbin, :histogram, :histogram2d, :histogram3d, :density, :bar, :hline, :vline, #:ohlc,
-    :contour, :pie, :shape, :image #, :boxplot, :violin, :quiver,
+    :heatmap, :hexbin, :histogram, :histogram2d, :histogram3d, :density, :bar, :hline, :vline,
+    :contour, :pie, :shape, :image
 ], _3dTypes)
 
 @compat const _typeAliases = KW(
@@ -62,6 +75,8 @@ is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
 ispolar(series::Series) = ispolar(series.d[:subplot])
 
+# ------------------------------------------------------------
+
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 @compat const _styleAliases = KW(
     :a    => :auto,
@@ -71,8 +86,6 @@ const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
     :ddd  => :dashdotdot,
 )
 
-# const _allMarkers = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
-#                      :cross, :xcross, :star5, :star8, :hexagon, :octagon, Shape]
 const _allMarkers = vcat(:none, :auto, sort(collect(keys(_shapes))))
 @compat const _markerAliases = KW(
     :n            => :none,
@@ -179,9 +192,6 @@ const _plot_defaults = KW(
     :window_title                 => "Plots.jl",
     :show                        => false,
     :layout                      => 1,
-    # :num_subplots                => -1,
-    # :num_rows                    => -1,
-    # :num_cols                    => -1,
     :link                        => false,
     :linkx                       => false,
     :linky                       => false,
@@ -208,7 +218,6 @@ const _subplot_defaults = KW(
     :legendfont               => font(8),
     :grid                     => true,
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
-    # :polar                    => false,
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :none,             # choose from :none or :equal
     :margin                   => 2mm,
@@ -232,6 +241,7 @@ const _axis_defaults = KW(
     :foreground_color_border => :match,            # plot area border/spines,
     :foreground_color_text   => :match,            # tick text color,
     :foreground_color_guide  => :match,            # guide text color,
+    :discrete_values => [],
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -246,27 +256,27 @@ const _suppress_warnings = Set{Symbol}([
 # add defaults for the letter versions
 const _axis_defaults_byletter = KW()
 for letter in (:x,:y,:z)
-    for k in (:guide,
-            :lims,
-            :ticks,
-            :scale,
-            :rotation,
-            :flip,
-            :tickfont,
-            :guidefont,
-            :foreground_color_axis,
-            :foreground_color_border,
-            :foreground_color_text,
-            :foreground_color_guide)
+    for k in (
+                :guide,
+                :lims,
+                :ticks,
+                :scale,
+                :rotation,
+                :flip,
+                :tickfont,
+                :guidefont,
+                :foreground_color_axis,
+                :foreground_color_border,
+                :foreground_color_text,
+                :foreground_color_guide,
+                :discrete_values
+            )
         _axis_defaults_byletter[symbol(letter,k)] = nothing
+
+        # allow the underscore version too: xguide or x_guide
+        add_aliases(symbol(letter, k), symbol(letter, "_", k))
     end
 end
-# @show _axis_defaults
-# for letter in (:x, :y, :z)
-#     for (k,v) in _axis_defaults
-#         _axis_defaults[symbol(letter,k)] = v
-#     end
-# end
 
 const _all_defaults = KW[
     _series_defaults,
@@ -305,16 +315,6 @@ end
 
 # -----------------------------------------------------------------------------
 
-const _keyAliases = KW()
-
-function add_aliases(sym::Symbol, aliases::Symbol...)
-    for alias in aliases
-        if haskey(_keyAliases, alias)
-            error("Already an alias $alias => $(_keyAliases[alias])... can't also alias $sym")
-        end
-        _keyAliases[alias] = sym
-    end
-end
 
 # colors
 add_aliases(:seriescolor, :c, :color, :colour)
@@ -378,9 +378,6 @@ add_aliases(:xrotation, :xrot, :xr)
 add_aliases(:yguide, :ylabel, :ylab, :yl)
 add_aliases(:ylims, :ylim, :ylimit, :ylimits)
 add_aliases(:yticks, :ytick)
-# add_aliases(:yrightlabel, :yrlab, :yrl, :ylabel2, :y2label, :ylab2, :y2lab, :ylabr, :ylabelright)
-# add_aliases(:yrightlims, :yrlim, :yrlimit, :yrlimits)
-# add_aliases(:yrightticks, :yrtick)
 add_aliases(:yrotation, :yrot, :yr)
 add_aliases(:zguide, :zlabel, :zlab, :zl)
 add_aliases(:zlims, :zlim, :zlimit, :zlimits)
@@ -396,9 +393,6 @@ add_aliases(:show, :gui, :display)
 add_aliases(:color_palette, :palette)
 add_aliases(:linkx, :xlink)
 add_aliases(:linky, :ylink)
-# add_aliases(:num_subplots, :n, :numplots, :nplts)
-# add_aliases(:num_rows, :nr, :nrow, :nrows, :rows)
-# add_aliases(:num_cols, :nc, :ncol, :ncols, :cols, :ncolumns, :columns)
 add_aliases(:overwrite_figure, :clf, :clearfig, :overwrite, :reuse)
 add_aliases(:xerror, :xerr, :xerrorbar)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
@@ -474,41 +468,6 @@ function handleColors!(d::KW, arg, csym::Symbol)
     false
 end
 
-# # given one value (:log, or :flip, or (-1,1), etc), set the appropriate arg
-# # TODO: use trueOrAllTrue for subplots which can pass vectors for these
-# function processAxisArg(d::KW, letter::AbstractString, arg)
-#     T = typeof(arg)
-#     arg = get(_scaleAliases, arg, arg)
-#     scale, flip, label, lim, tick = axis_symbols(letter, "scale", "flip", "label", "lims", "ticks")
-#
-#     if typeof(arg) <: Font
-#         d[:tickfont] = arg
-#
-#     elseif arg in _allScales
-#         d[scale] = arg
-#
-#     elseif arg in (:flip, :invert, :inverted)
-#         d[flip] = true
-#
-#     elseif T <: @compat(AbstractString)
-#         d[label] = arg
-#
-#     # xlims/ylims
-#     elseif (T <: Tuple || T <: AVec) && length(arg) == 2
-#         d[typeof(arg[1]) <: Number ? lim : tick] = arg
-#
-#     # xticks/yticks
-#     elseif T <: AVec
-#         d[tick] = arg
-#
-#     elseif arg == nothing
-#         d[tick] = []
-#
-#     else
-#         warn("Skipped $(letter)axis arg $arg")
-#
-#     end
-# end
 
 
 function processLineArg(d::KW, arg)
@@ -632,26 +591,7 @@ function preprocessArgs!(d::KW)
                 process_axis_arg!(d, arg, letter)
             end
         end
-        # delete!(d, asym)
-
-        # # NOTE: this logic was moved to _add_attr...
-        # # turn :labels into :ticks_and_labels
-        # tsym = symbol(letter * "ticks")
-        # if haskey(d, tsym) && ticksType(d[tsym]) == :labels
-        #     d[tsym] = (1:length(d[tsym]), d[tsym])
-        # end
-        #
-        # ssym = symbol(letter * "scale")
-        # if haskey(d, ssym) && haskey(_scaleAliases, d[ssym])
-        #     d[ssym] = _scaleAliases[d[ssym]]
-        # end
     end
-
-    # # if title is just a single string, then assume we want plot_title
-    # # TODO: make a decision if this is correct
-    # if haskey(d, :title) && typeof(d[:title]) <: AbstractString
-    #     d[:plot_title] = pop!(d, :title)
-    # end
 
     # handle line args
     for arg in wraptuple(pop!(d, :line, ()))
@@ -724,19 +664,6 @@ function preprocessArgs!(d::KW)
         end
         delete!(d, :link)
     end
-
-    # # pull out invalid keywords into their own KW dict... these are likely user-defined through recipes
-    # kw = KW()
-    # for k in keys(d)
-    #     try
-    #         # this should error for invalid keywords (assume they are user-defined)
-    #         k == :markershape_to_add || default(k)
-    #     catch
-    #         # not a valid key... pop and add to user list
-    #         kw[k] = pop!(d, k)
-    #     end
-    # end
-    # kw
 end
 
 # -----------------------------------------------------------------------------
@@ -801,8 +728,6 @@ _markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supportedM
 _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warnOnUnsupported(pkg::AbstractBackend, d::KW)
-    # (d[:axis] in supportedAxes(pkg)
-    #     || warn("axis $(d[:axis]) is unsupported with $pkg.  Choose from: $(supportedAxes(pkg))"))
     (d[:seriestype] == :none
         || d[:seriestype] in supportedTypes(pkg)
         || warn("seriestype $(d[:seriestype]) is unsupported with $pkg.  Choose from: $(supportedTypes(pkg))"))
@@ -824,17 +749,6 @@ end
 
 # -----------------------------------------------------------------------------
 
-
-# # given an argument key (k), we want to extract the argument value for this index.
-# # if nothing is set (rarg is empty), return the default.
-# function setDictValue(d_in::KW, d_out::KW, k::Symbol, idx::Int, defaults::KW)
-#     if haskey(d_in, k) && !(typeof(d_in[k]) <: Union{AbstractMatrix, Tuple} && isempty(d_in[k]))
-#         d_out[k] = slice_arg(d_in[k], idx)
-#     else
-#         d_out[k] = deepcopy(defaults[k])
-#     end
-# end
-
 function convertLegendValue(val::Symbol)
     if val in (:both, :all, :yes)
         :best
@@ -850,34 +764,6 @@ convertLegendValue(val::Bool) = val ? :best : :none
 
 # -----------------------------------------------------------------------------
 
-# build the argument dictionary for the plot
-# function getPlotArgs(pkg::AbstractBackend, kw, idx::Int; set_defaults = true)
-#     d_in = KW(kw)
-#     d_out = KW()
-#
-#     # add defaults?
-#     if set_defaults
-#         for k in keys(_plot_defaults)
-#             setDictValue(d_in, d_out, k, idx, _plot_defaults)
-#         end
-#     end
-#
-#     # handle legend/colorbar
-#     d_out[:legend] = convertLegendValue(d_out[:legend])
-#     d_out[:colorbar] = convertLegendValue(d_out[:colorbar])
-#     if d_out[:colorbar] == :legend
-#         d_out[:colorbar] = d_out[:legend]
-#     end
-#
-#     # convert color
-#     handlePlotColors(pkg, d_out)
-#
-#     # no need for these
-#     delete!(d_out, :x)
-#     delete!(d_out, :y)
-#
-#     d_out
-# end
 
 # 1-row matrices will give an element
 # multi-row matrices will give a column
@@ -973,9 +859,6 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
         end
     end
 
-    # info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-    # DD(spargs, "before loop")
-
     for letter in (:x, :y, :z)
         # get (maybe initialize) the axis
         axissym = symbol(letter, :axis)
@@ -1006,22 +889,7 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
             end
         end
 
-        # for (k,v) in _axis_defaults
-        #     # first get the args without the letter: `tickfont = font(10)`
-        #     slice_arg!(d_in, kw, k, v, subplot_index)
-        #
-        #     # then get those args that were passed with a leading letter: `xlabel = "X"`
-        #     lk = symbol(letter, k)
-        #     slice_arg!(d_in, kw, lk, v, subplot_index; new_key = k)
-        #     # if haskey(d_in, lk)
-        #     #     kw[k] = d_in[lk]
-        #     # end
-        # end
-        # DD(d_in, "d_in after")
-        # DD(kw, "kw")
-
         # update the axis
-        # @show args,kw
         update!(axis, args...; kw...)
 
         # update the axis colors
@@ -1029,108 +897,15 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
         color_or_match!(axis.d, :foreground_color_border, fg)
         color_or_match!(axis.d, :foreground_color_guide, fg)
         color_or_match!(axis.d, :foreground_color_text, fg)
-        # DD(axis.d, "axis")
     end
 
     # now we can get rid of the axis keys without a letter
     for k in keys(_axis_defaults)
         delete!(d_in, k)
     end
-
-    # DD(spargs[:xaxis].d, "after loop")
-    # info("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 end
 
 
 function has_black_border_for_default(st::Symbol)
     like_histogram(st) || st in (:hexbin, :bar)
 end
-#
-# # build the argument dictionary for a series
-# function getSeriesArgs(pkg::AbstractBackend, attr::KW, kw, commandIndex::Int, plotIndex::Int, globalIndex::Int)  # TODO, pass in attr, not plt
-#     kwdict = KW(kw)
-#     d = KW()
-#
-#     # add defaults?
-#     for k in keys(_series_defaults)
-#         setDictValue(kwdict, d, k, commandIndex, _series_defaults)
-#     end
-#
-#     # groupby args?
-#     for k in (:idxfilter, :numUncounted, :dataframe)
-#         if haskey(kwdict, k)
-#             d[k] = kwdict[k]
-#         end
-#     end
-#
-#     if haskey(_typeAliases, d[:seriestype])
-#         d[:seriestype] = _typeAliases[d[:seriestype]]
-#     end
-#
-#     aliasesAndAutopick(d, :axis, _axesAliases, supportedAxes(pkg), plotIndex)
-#     aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
-#     aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
-#
-#     # update color
-#     d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], attr, plotIndex)
-#
-#     # # update linecolor
-#     # c = d[:linecolor]
-#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, attr, plotIndex))
-#     # d[:linecolor] = c
-#
-#     # # update markercolor
-#     # c = d[:markercolor]
-#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, attr, plotIndex))
-#     # d[:markercolor] = c
-#
-#     # # update fillcolor
-#     # c = d[:fillcolor]
-#     # c = (c == :match ? d[:seriescolor] : getSeriesRGBColor(c, attr, plotIndex))
-#     # d[:fillcolor] = c
-#
-#     # update colors
-#     for csym in (:linecolor, :markercolor, :fillcolor)
-#         d[csym] = if d[csym] == :match
-#             if has_black_border_for_default(d[:seriestype]) && csym == :linecolor
-#                 :black
-#             else
-#                 d[:seriescolor]
-#             end
-#         else
-#             getSeriesRGBColor(d[csym], attr, plotIndex)
-#         end
-#     end
-#
-#     # update markerstrokecolor
-#     c = d[:markerstrokecolor]
-#     c = (c == :match ? attr[:foreground_color] : getSeriesRGBColor(c, attr, plotIndex))
-#     d[:markerstrokecolor] = c
-#
-#     # update alphas
-#     for asym in (:linealpha, :markeralpha, :markerstrokealpha, :fillalpha)
-#         if d[asym] == nothing
-#             d[asym] = d[:seriesalpha]
-#         end
-#     end
-#
-#     # scatter plots don't have a line, but must have a shape
-#     if d[:seriestype] in (:scatter, :scatter3d)
-#         d[:linewidth] = 0
-#         if d[:markershape] == :none
-#             d[:markershape] = :ellipse
-#         end
-#     end
-#
-#     # set label
-#     label = d[:label]
-#     label = (label == "AUTO" ? "y$globalIndex" : label)
-#     if d[:axis] == :right && !(length(label) >= 4 && label[end-3:end] != " (R)")
-#         label = string(label, " (R)")
-#     end
-#     d[:label] = label
-#
-#     warnOnUnsupported(pkg, d)
-#
-#     d
-# end

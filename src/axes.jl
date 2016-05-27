@@ -12,12 +12,15 @@ function Axis(letter::Symbol, args...; kw...)
         :extrema => (Inf, -Inf),
         :discrete_map => Dict(),   # map discrete values to discrete indices
         # :discrete_values => Tuple{Float64,Any}[],
-        :discrete_values => [],
+        # :discrete_values => [],
         :continuous_values => zeros(0),
         :use_minor => false,
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
     merge!(d, _axis_defaults)
+    d[:discrete_values] = []
+    # DD(d)
+    # @show args kw
 
     # update the defaults
     update!(Axis(d), args...; kw...)
@@ -62,21 +65,27 @@ function process_axis_arg!(d::KW, arg, letter = "")
 end
 
 # update an Axis object with magic args and keywords
-function update!(a::Axis, args...; kw...)
+function update!(axis::Axis, args...; kw...)
     # first process args
-    d = a.d
+    d = axis.d
     for arg in args
         process_axis_arg!(d, arg)
     end
 
     # then override for any keywords... only those keywords that already exists in d
     for (k,v) in kw
-        # sym = symbol(string(k)[2:end])
         if haskey(d, k)
-            d[k] = v
+            if k == :discrete_values
+                # add these discrete values to the axis
+                for vi in v
+                    discrete_value!(axis, vi)
+                end
+            else
+                d[k] = v
+            end
         end
     end
-    a
+    axis
 end
 
 
@@ -114,9 +123,15 @@ function expand_extrema!{N<:Number}(a::Axis, v::AVec{N})
     a[:extrema]
 end
 
+# push the limits out slightly
+function widen(lmin, lmax)
+    span = lmax - lmin
+    eps = max(1e-16, min(1e-2span, 1e-10))
+    lmin-eps, lmax+eps
+end
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
-function axis_limits(axis::Axis)
+function axis_limits(axis::Axis, should_widen::Bool = true)
     amin, amax = axis[:extrema]
     lims = axis[:lims]
     if isa(lims, Tuple) && length(lims) == 2
@@ -130,7 +145,11 @@ function axis_limits(axis::Axis)
     if amax <= amin
         amax = amin + 1.0
     end
-    amin, amax
+    if should_widen
+        widen(amin, amax)
+    else
+        amin, amax
+    end
 end
 
 # these methods track the discrete values which correspond to axis continuous values (cv)
@@ -138,6 +157,7 @@ end
 # we return (continuous_value, discrete_index)
 function discrete_value!(a::Axis, dv)
     cv_idx = get(a[:discrete_map], dv, -1)
+    # @show a[:discrete_map], a[:discrete_values], dv
     if cv_idx == -1
         emin, emax = a[:extrema]
         cv = max(0.5, emax + 1.0)

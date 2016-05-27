@@ -266,24 +266,18 @@ end
 #     zmin, zmax
 # end
 
-function widen(lims)
-    lmin, lmax = lims
-    span = lmax - lmin
-    eps = max(1e-16, min(1e-2span, 1e-10))
-    lmin-eps, lmax+eps
-end
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
-gr_x_axislims(sp::Subplot) = widen(axis_limits(sp.attr[:xaxis]))
-gr_y_axislims(sp::Subplot) = widen(axis_limits(sp.attr[:yaxis]))
-gr_z_axislims(sp::Subplot) = widen(axis_limits(sp.attr[:zaxis]))
+gr_x_axislims(sp::Subplot) = axis_limits(sp.attr[:xaxis], true)
+gr_y_axislims(sp::Subplot) = axis_limits(sp.attr[:yaxis], true)
+gr_z_axislims(sp::Subplot) = axis_limits(sp.attr[:zaxis], true)
 gr_xy_axislims(sp::Subplot) = gr_x_axislims(sp)..., gr_y_axislims(sp)...
 
 function gr_lims(axis::Axis, adjust::Bool, expand = nothing)
     if expand != nothing
         expand_extrema!(axis, expand)
     end
-    lims = widen(axis_limits(axis))
+    lims = axis_limits(axis, true)
     if adjust
         GR.adjustrange(lims...)
     else
