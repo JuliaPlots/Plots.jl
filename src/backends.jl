@@ -64,7 +64,7 @@ function _update_min_padding!(sp::Subplot)
     toppad    =  2mm + sp.attr[:top_margin]    + title_padding(sp)
     rightpad  =  3mm + sp.attr[:right_margin]
     bottompad =  5mm + sp.attr[:bottom_margin] + guide_padding(sp.attr[:xaxis])
-    @show (leftpad, toppad, rightpad, bottompad)
+    # @show (leftpad, toppad, rightpad, bottompad)
     sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 

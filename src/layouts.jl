@@ -17,10 +17,12 @@ Base.typemin(::typeof(mm)) = -Inf*mm
 Base.typemax(::typeof(mm)) = Inf*mm
 Base.convert{F<:AbstractFloat}(::Type{F}, l::AbsoluteLength) = convert(F, l.value)
 
-Base.(:+)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
-Base.(:+)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (1 + m1.value))
-Base.(:-)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 - m2.value))
-Base.(:-)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (m1.value - 1))
+# TODO: these are unintuitive and may cause tricky bugs
+# Base.(:+)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
+# Base.(:+)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (1 + m1.value))
+# Base.(:-)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 - m2.value))
+# Base.(:-)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (m1.value - 1))
+
 Base.(:*)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
 Base.(:*)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
 Base.(:/)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
@@ -151,6 +153,7 @@ Base.size(layout::EmptyLayout) = (0,0)
 Base.length(layout::EmptyLayout) = 0
 Base.getindex(layout::EmptyLayout, r::Int, c::Int) = nothing
 
+_update_min_padding!(layout::EmptyLayout) = nothing
 
 # -----------------------------------------------------------
 # GridLayout
@@ -170,8 +173,8 @@ grid(args...; kw...) = GridLayout(args...; kw...)
 
 function GridLayout(dims...;
                     parent = RootLayout(),
-                    widths = ones(dims[2]),
-                    heights = ones(dims[1]),
+                    widths = zeros(dims[2]),
+                    heights = zeros(dims[1]),
                     kw...)
     grid = Matrix{AbstractLayout}(dims...)
     layout = GridLayout(
@@ -218,6 +221,25 @@ function _update_position!(layout::GridLayout)
     map(_update_position!, layout.grid)
 end
 
+function recompute_lengths(v)
+    # dump(v)
+    tot = 0pct
+    cnt = 0
+    for vi in v
+        if vi == 0pct
+            cnt += 1
+        else
+            tot += vi
+        end
+    end
+    leftover = 1.0pct - tot
+    if leftover.value <= 0
+        error("Not enough length left over in layout!  v = $v, leftover = $leftover")
+    end
+
+    # now fill in the blanks
+    Measure[(vi == 0pct ? leftover / cnt : vi) for vi in v]
+end
 
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
 function update_child_bboxes!(layout::GridLayout)
@@ -251,9 +273,14 @@ function update_child_bboxes!(layout::GridLayout)
     total_plotarea_vertical   = height(layout) - total_pad_vertical
     # @show total_plotarea_horizontal total_plotarea_vertical
 
+    # recompute widths/heights
+    layout.widths = recompute_lengths(layout.widths)
+    layout.heights = recompute_lengths(layout.heights)
+    # @show layout.widths layout.heights
+
     # normalize widths/heights so they sum to 1
-    denom_w = sum(layout.widths)
-    denom_h = sum(layout.heights)
+    # denom_w = sum(layout.widths)
+    # denom_h = sum(layout.heights)
     # @show layout.widths layout.heights denom_w, denom_h
 
     # we have all the data we need... lets compute the plot areas and set the bounding boxes
@@ -267,8 +294,8 @@ function update_child_bboxes!(layout::GridLayout)
         # compute plot area
         plotarea_left   = child_left + pad_left[c]
         plotarea_top    = child_top + pad_top[r]
-        plotarea_width  = total_plotarea_horizontal * layout.widths[c] / denom_w
-        plotarea_height = total_plotarea_vertical * layout.heights[r] / denom_h
+        plotarea_width  = total_plotarea_horizontal * layout.widths[c]
+        plotarea_height = total_plotarea_vertical * layout.heights[r]
         plotarea!(child, BoundingBox(plotarea_left, plotarea_top, plotarea_width, plotarea_height))
 
         # compute child bbox
@@ -395,10 +422,10 @@ function build_layout(layout::GridLayout, n::Integer)
             layout[r,c] = sp
             push!(subplots, sp)
             spmap[attr(l,:label,gensym())] = sp
-            if hasattr(l,:width)
+            if get(l.attr, :width, :auto) != :auto
                 layout.widths[c] = attr(l,:width)
             end
-            if hasattr(l,:height)
+            if get(l.attr, :height, :auto) != :auto
                 layout.heights[r] = attr(l,:height)
             end
             i += 1
@@ -428,10 +455,10 @@ function build_layout(layout::GridLayout, numsp::Integer, plts::AVec{Plot})
             layout[r,c] = plt.layout
             append!(subplots, plt.subplots)
             merge!(spmap, plt.spmap)
-            if hasattr(l,:width)
+            if get(l.attr, :width, :auto) != :auto
                 layout.widths[c] = attr(l,:width)
             end
-            if hasattr(l,:height)
+            if get(l.attr, :height, :auto) != :auto
                 layout.heights[r] = attr(l,:height)
             end
             i += length(plt.subplots)
@@ -451,6 +478,29 @@ end
 # ----------------------------------------------------------------------
 # @layout macro
 
+function add_layout_pct!(kw::KW, v::Expr, idx::Integer)
+    # dump(v)
+    # something like {0.2w}?
+    if v.head == :call && v.args[1] == :*
+        num = v.args[2]
+        if length(v.args) == 3 && isa(num, Number)
+            units = v.args[3]
+            if units == :h
+                return kw[:h] = num*pct
+            elseif units == :w
+                return kw[:w] = num*pct
+            elseif units in (:pct, :px, :mm, :cm, :inch)
+                return kw[idx == 1 ? :w : :h] = v
+            end
+        end
+    end
+    error("Couldn't match layout curly (idx=$idx): $v")
+end
+
+function add_layout_pct!(kw::KW, v::Number, idx::Integer)
+    kw[idx == 1 ? :w : :h] = v*pct
+end
+
 function create_grid(expr::Expr)
     cellsym = gensym(:cell)
     constructor = if expr.head == :vcat
@@ -467,9 +517,15 @@ function create_grid(expr::Expr)
         end)
 
     elseif expr.head == :curly
-        length(expr.args) == 3 || error("Should be width and height in curly. Got: ", expr.args)
-        s,w,h = expr.args
-        :(EmptyLayout(label = $(QuoteNode(s)), width = $w, height = $h))
+        # length(expr.args) == 3 || error("Should be width and height in curly. Got: ", expr.args)
+        # s,w,h = expr.args
+        s = expr.args[1]
+        kw = KW()
+        for (i,arg) in enumerate(expr.args[2:end])
+            add_layout_pct!(kw, arg, i)
+        end
+        # @show kw
+        :(EmptyLayout(label = $(QuoteNode(s)), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto)))))
 
     else
         # if it's something else, just return that (might be an existing layout?)
