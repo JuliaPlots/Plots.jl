@@ -148,7 +148,7 @@ end
 # function process_inputs{T<:Number}(plt::AbstractPlot, d::KW, mat::AMat{T})
 #     if all3D(d)
 #         n,m = size(mat)
-#         d[:x], d[:y], d[:z] = 1:n, 1:m, mat
+#         d[:x], d[:y], d[:z] = 1:m, 1:n, mat
 #     else
 #         d[:y] = mat
 #     end
@@ -158,9 +158,9 @@ end
 @recipe function f{T<:Number}(mat::AMat{T})
     if all3D(d)
         n,m = size(mat)
-        1:n, 1:m, Surface(mat)
+        SliceIt, 1:m, 1:n, Surface(mat)
     else
-        nothing, mat, nothing
+        SliceIt, nothing, mat, nothing
     end
 end
 
@@ -170,7 +170,7 @@ end
 # function process_inputs{T<:Gray}(plt::AbstractPlot, d::KW, mat::AMat{T})
 #     d[:seriestype] = :image
 #     n,m = size(mat)
-#     d[:x], d[:y], d[:z] = 1:n, 1:m, Surface(mat)
+#     d[:x], d[:y], d[:z] = 1:m, 1:n, Surface(mat)
 #     # handle images... when not supported natively, do a hack to use heatmap machinery
 #     if !nativeImagesSupported()
 #         d[:seriestype] = :heatmap
@@ -182,14 +182,14 @@ end
 
 @recipe function f{T<:Gray}(mat::AMat{T})
     if nativeImagesSupported()
-        seriestype --> :image, force
+        seriestype := :image
         n, m = size(mat)
-        1:n, 1:m, Surface(mat)
+        SliceIt, 1:m, 1:n, Surface(mat)
     else
-        seriestype --> :heatmap, force
+        seriestype := :heatmap
         yflip --> true
         fillcolor --> ColorGradient([:black, :white])
-        1:n, 1:m, Surface(convert(Matrix{Float64}, mat))
+        SliceIt, 1:m, 1:n, Surface(convert(Matrix{Float64}, mat))
     end
 end
 
@@ -198,7 +198,7 @@ end
 # function process_inputs{T<:Colorant}(plt::AbstractPlot, d::KW, mat::AMat{T})
 #     d[:seriestype] = :image
 #     n,m = size(mat)
-#     d[:x], d[:y], d[:z] = 1:n, 1:m, Surface(mat)
+#     d[:x], d[:y], d[:z] = 1:m, 1:n, Surface(mat)
 #     # handle images... when not supported natively, do a hack to use heatmap machinery
 #     if !nativeImagesSupported()
 #         d[:yflip] = true
@@ -209,14 +209,14 @@ end
 
 @recipe function f{T<:Colorant}(mat::AMat{T})
     if nativeImagesSupported()
-        seriestype --> :image, force
+        seriestype := :image
         n, m = size(mat)
-        1:n, 1:m, Surface(mat)
+        SliceIt, 1:m, 1:n, Surface(mat)
     else
-        seriestype --> :heatmap, force
+        seriestype := :heatmap
         yflip --> true
         z, d[:fillcolor] = replace_image_with_heatmap(mat)
-        1:n, 1:m, Surface(z)
+        SliceIt, 1:m, 1:n, Surface(z)
     end
 end
 
@@ -228,7 +228,7 @@ end
 # end
 
 @recipe function f(shape::Shape)
-    seriestype --> :shape, force
+    seriestype := :shape
     shape_coords(shape)
 end
 
@@ -238,7 +238,7 @@ end
 # end
 
 @recipe function f(shapes::AVec{Shape})
-    seriestype --> :shape, force
+    seriestype := :shape
     shape_coords(shapes)
 end
 
@@ -312,8 +312,18 @@ end
     st = get(d, :seriestype, :none)
     if st == :scatter
         d[:seriestype] = :scatter3d
-    elseif !(st in _3dTypes)
+    elseif !is3d(st)
         d[:seriestype] = :path3d
+    end
+    SliceIt, x, y, z
+end
+
+@recipe function f(x::AMat, y::AMat, z::AMat)
+    st = get(d, :seriestype, :none)
+    if size(x) == size(y) == size(z)
+        if !is3d(st)
+            seriestype := :path3d
+        end
     end
     SliceIt, x, y, z
 end

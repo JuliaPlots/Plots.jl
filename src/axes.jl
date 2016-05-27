@@ -169,6 +169,21 @@ function discrete_value!(a::Axis, v::AVec)
     cvec, discrete_indices
 end
 
+# add the discrete value for each item.  return the continuous values and the indices
+function discrete_value!(a::Axis, v::AMat)
+    n,m = size(v)
+    cmat = zeros(n,m)
+    discrete_indices = zeros(Int, n, m)
+    for i=1:n, j=1:m
+        cmat[i,j], discrete_indices[i,j] = discrete_value!(a, v[i,j])
+    end
+    cmat, discrete_indices
+end
+
+function discrete_value!(a::Axis, v::Surface)
+    map(Surface, discrete_value!(a, v.surf))
+end
+
 function pie_labels(sp::Subplot, series::Series)
     d = series.d
     if haskey(d,:x_discrete_indices)

@@ -714,6 +714,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :image
+        # @show typeof(z)
         img = Array(transpose_z(d, z.surf))
         z = if eltype(img) <: Colors.AbstractGray
             float(img)
@@ -723,15 +724,22 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             z  # hopefully it's in a data format that will "just work" with imshow
         end
         handle = ax[:imshow](z;
-            zorder = plt.n
+            zorder = plt.n,
+            cmap = getPyPlotColorMap([:black, :white]),
+            vmin = 0.0,
+            vmax = 1.0
         )
         push!(handles, handle)
     end
 
     if st == :heatmap
         x, y, z = heatmap_edges(x), heatmap_edges(y), transpose_z(d, z.surf)
-        if !(eltype(z) <: Number)
-            z, discrete_colorbar_values = indices_and_unique_values(z)
+        # if !(eltype(z) <: Number)
+        #     z, discrete_colorbar_values = indices_and_unique_values(z)
+        # end
+        dvals = sp.attr[:zaxis][:discrete_values]
+        if !isempty(dvals)
+            discrete_colorbar_values = dvals
         end
         handle = ax[:pcolormesh](x, y, z;
             label = d[:label],
@@ -784,7 +792,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         kw = KW()
         if discrete_colorbar_values != nothing
             locator, formatter = get_locator_and_formatter(discrete_colorbar_values)
-            kw[:values] = 1:length(discrete_colorbar_values)
+            # kw[:values] = 1:length(discrete_colorbar_values)
+            kw[:values] = sp.attr[:zaxis][:continuous_values]
             kw[:ticks] = locator
             kw[:format] = formatter
             kw[:boundaries] = vcat(0, kw[:values] + 0.5)
@@ -794,7 +803,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         # note: the colorbar axis is positioned independently from the subplot axis
         fig = plt.o
         cbax = fig[:add_axes]([0.8,0.1,0.03,0.8])
-        sp.attr[:cbar_handle] = fig[:colorbar](handle, cax = cbax, kw...)
+        sp.attr[:cbar_handle] = fig[:colorbar](handle; cax = cbax, kw...)
         sp.attr[:cbar_ax] = cbax
     end
 
