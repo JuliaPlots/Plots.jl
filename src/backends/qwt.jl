@@ -44,7 +44,7 @@ supportedArgs(::QwtBackend) = [
     :xscale,
     :yscale,
   ]
-supportedTypes(::QwtBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :hist2d, :hexbin, :hist, :bar, :hline, :vline]
+supportedTypes(::QwtBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :histogram2d, :hexbin, :histogram, :bar, :hline, :vline]
 supportedMarkers(::QwtBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
 supportedScales(::QwtBackend) = [:identity, :log10]
 subplotSupported(::QwtBackend) = true
@@ -109,7 +109,7 @@ function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
 
   elseif !iscreating && st == :bar
     d = barHack(; kw...)
-  elseif !iscreating && st == :hist
+  elseif !iscreating && st == :histogram
     d = barHack(; histogramHack(; kw...)...)
   end
 

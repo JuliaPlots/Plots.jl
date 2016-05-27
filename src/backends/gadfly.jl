@@ -27,7 +27,7 @@ supportedArgs(::GadflyBackend) = [
 supportedAxes(::GadflyBackend) = [:auto, :left]
 supportedTypes(::GadflyBackend) = [
         :none, :line, :path, :steppre, :steppost, :sticks,
-        :scatter, :hist2d, :hexbin, :hist,
+        :scatter, :histogram2d, :hexbin, :histogram,
         :bar, #:box, :violin, :quiver,
         :hline, :vline, :contour, :shape
     ]
@@ -73,9 +73,9 @@ function getLineGeom(d::KW)
     xbins, ybins = maketuple(d[:bins])
     if st == :hexb
         Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)
-    elseif st == :hist2d
+    elseif st == :histogram2d
         Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)
-    elseif st == :hist
+    elseif st == :histogram
         Gadfly.Geom.histogram(bincount = xbins,
                               orientation = isvertical(d) ? :vertical : :horizontal,
                               position = d[:bar_position] == :stack ? :stack : :dodge)
@@ -121,7 +121,7 @@ function getGadflyLineTheme(d::KW)
     fc = convertColor(getColor(d[:fillcolor]), d[:fillalpha])
 
     Gadfly.Theme(;
-        default_color = (st in (:hist,:hist2d,:hexbin,:bar,:sticks) ? fc : lc),
+        default_color = (st in (:histogram,:histogram2d,:hexbin,:bar,:sticks) ? fc : lc),
         line_width = (st == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
         # line_style = Gadfly.get_stroke_vector(d[:linestyle]),
         lowlight_color = x->RGB(fc),  # fill/ribbon
@@ -160,7 +160,7 @@ function addGadflyLine!(plt::Plot, numlayers::Int, d::KW, geoms...)
             addGadflyContColorScale(plt, d[:linecolor])
         end
 
-        kwargs[:x] = d[st == :hist ? :y : :x]
+        kwargs[:x] = d[st == :histogram ? :y : :x]
         kwargs[:y] = d[:y]
 
     end
@@ -300,7 +300,7 @@ function addGadflySeries!(plt::Plot, d::KW)
     st = d[:seriestype]
     # if st == :ohlc
     #     error("Haven't re-implemented after refactoring")
-    if st in (:hist2d, :hexbin) && (isa(d[:fillcolor], ColorGradient) || isa(d[:fillcolor], ColorFunction))
+    if st in (:histogram2d, :hexbin) && (isa(d[:fillcolor], ColorGradient) || isa(d[:fillcolor], ColorFunction))
         push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:fillcolor], p))))
     elseif st == :scatter && d[:markershape] == :none
         d[:markershape] = :ellipse
@@ -311,7 +311,7 @@ function addGadflySeries!(plt::Plot, d::KW)
         prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), d, plt.attr, smooth...))
     end
 
-    st in (:hist2d, :hexbin, :contour) || addToGadflyLegend(plt, d)
+    st in (:histogram2d, :hexbin, :contour) || addToGadflyLegend(plt, d)
 
     # now save the layers that apply to this series
     d[:gadflylayers] = layers

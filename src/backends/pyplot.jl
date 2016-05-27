@@ -40,7 +40,7 @@ supportedArgs(::PyPlotBackend) = [
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [
         :none, :line, :path, :steppre, :steppost, :shape,
-        :scatter, :hist2d, :hexbin, :hist, :density,
+        :scatter, :histogram2d, :hexbin, :histogram, :density,
         :bar, :sticks, #:box, :violin, :quiver,
         :hline, :vline, :heatmap, :pie, :image,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
@@ -567,7 +567,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
     end
 
-    if st == :hist
+    if st == :histogram
         handle = ax[:hist](y;
             label = d[:label],
             zorder = plt.n,
@@ -583,7 +583,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
     end
 
-    if st == :hist2d
+    if st == :histogram2d
         handle = ax[:hist2d](x, y;
             label = d[:label],
             zorder = plt.n,
@@ -1146,13 +1146,13 @@ function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
         #     if get_subplot(series) === sp &&
         #                 series.d[:label] != "" &&
         #                 !(series.d[:seriestype] in (
-        #                     :hexbin,:hist2d,:hline,:vline,
+        #                     :hexbin,:histogram2d,:hline,:vline,
         #                     :contour,:contour3d,:surface,:wireframe,
         #                     :heatmap,:path3d,:scatter3d, :pie, :image))
         for series in series_list(sp)
             if should_add_to_legend(series)
                 # add a line/marker and a label
-                push!(handles, if series.d[:seriestype] == :hist
+                push!(handles, if series.d[:seriestype] == :histogram
                     PyPlot.plt[:Line2D]((0,1),(0,0), color=pyfillcolor(series.d), linewidth=4)
                 else
                     series.d[:serieshandle][1]

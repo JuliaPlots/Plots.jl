@@ -39,7 +39,7 @@ supportedArgs(::GRBackend) = [
 supportedAxes(::GRBackend) = _allAxes
 supportedTypes(::GRBackend) = [
     :path, :steppre, :steppost,
-    :scatter, :hist2d, :hexbin,
+    :scatter, :histogram2d, :hexbin,
     :sticks,
     :hline, :vline, :heatmap, :pie, :image, #:ohlc,
     :contour, :path3d, :scatter3d, :surface, :wireframe
@@ -514,7 +514,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     axes_2d = true
     for series in series_list(sp)
         st = ispolar(sp) ? :polar : series.d[:seriestype]
-        if st in (:hist2d, :hexbin, :contour, :surface, :heatmap)
+        if st in (:histogram2d, :hexbin, :contour, :surface, :heatmap)
             cmap = true
         end
         if st in (:pie, :polar, :surface, :wireframe, :path3d, :scatter3d)
@@ -542,9 +542,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     #             end
     #             if st == :bar
     #                 x, y = 1:length(d[:y]), d[:y]
-    #             elseif st in [:hist, :density]
+    #             elseif st in [:histogram, :density]
     #                 x, y = Base.hist(d[:y], d[:bins])
-    #             elseif st in [:hist2d, :hexbin]
+    #             elseif st in [:histogram2d, :hexbin]
     #                 E = zeros(length(d[:x]),2)
     #                 E[:,1] = d[:x]
     #                 E[:,2] = d[:y]
@@ -743,7 +743,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         d = series.d
         # idx = d[:series_plotindex]
         st = d[:seriestype]
-        if st in (:hist2d, :hexbin, :contour, :surface, :wireframe, :heatmap)
+        if st in (:histogram2d, :hexbin, :contour, :surface, :wireframe, :heatmap)
             # grad = isa(d[:fillcolor], ColorGradient) ? d[:fillcolor] : default_gradient()
             # cs = [getColorZ(grad, z) for z in linspace(0, 1, 256)]
             # for (i, c) in enumerate(cs)
@@ -895,7 +895,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         #     # end
 
         # # TODO: use recipe
-        # elseif st in [:hist, :density]
+        # elseif st in [:histogram, :density]
         #     edges, counts = Base.hist(d[:y], d[:bins])
         #     gr_barplot(series, edges, counts)
         #     # x, y = float(collect(h[1])), float(h[2])
@@ -919,7 +919,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
 
         # TODO: use recipe
-        elseif st in [:hist2d, :hexbin]
+        elseif st in [:histogram2d, :hexbin]
             E = zeros(length(d[:x]),2)
             E[:,1] = d[:x]
             E[:,2] = d[:y]

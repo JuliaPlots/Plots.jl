@@ -54,7 +54,7 @@ supportedArgs(::UnicodePlotsBackend) = [
 supportedAxes(::UnicodePlotsBackend) = [:auto, :left]
 supportedTypes(::UnicodePlotsBackend) = [
     :path, :steppre, :steppost, :scatter,
-    :hist2d, :hline, :vline
+    :histogram2d, :hline, :vline
 ]
 supportedStyles(::UnicodePlotsBackend) = [:auto, :solid]
 supportedMarkers(::UnicodePlotsBackend) = [:none, :auto, :ellipse]
@@ -197,11 +197,11 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
     #     UnicodePlots.barplot!(o, d[:x], d[:y])
     #     return
 
-    # elseif st == :hist
+    # elseif st == :histogram
     #     UnicodePlots.histogram!(o, d[:y], bins = d[:bins])
     #     return
 
-    elseif st == :hist2d
+    elseif st == :histogram2d
         UnicodePlots.densityplot!(o, d[:x], d[:y])
         return
 
@@ -260,7 +260,7 @@ end
 #     # TODO don't need these once the "bar" series recipe is done
 #   if d[:seriestype] in (:sticks, :bar)
 #     d = barHack(; d...)
-#   elseif d[:seriestype] == :hist
+#   elseif d[:seriestype] == :histogram
 #     d = barHack(; histogramHack(; d...)...)
 #   end
 #   # push!(plt.seriesargs, d)

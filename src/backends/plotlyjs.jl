@@ -66,7 +66,7 @@ supportedArgs(::PlotlyJSBackend) = [
   ]
 supportedAxes(::PlotlyJSBackend) = [:auto, :left]
 supportedTypes(::PlotlyJSBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
-                                   :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
+                                   :histogram2d, :histogram, :density, :bar, :contour, :surface, :path3d, :scatter3d,
                                    :pie, :heatmap] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyJSBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyJSBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,

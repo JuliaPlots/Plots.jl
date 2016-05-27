@@ -396,7 +396,7 @@ end
     #     error("gr_barplot: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
     # end
 
-@recipe function f(::Type{Val{:hist}}, x, y, z)
+@recipe function f(::Type{Val{:histogram}}, x, y, z)
     edges, counts = Base.hist(y, d[:bins])
     d[:x] = edges
     d[:y] = counts

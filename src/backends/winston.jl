@@ -56,7 +56,7 @@ supportedArgs(::WinstonBackend) = [
     # :z,
   ]
 supportedAxes(::WinstonBackend) = [:auto, :left]
-supportedTypes(::WinstonBackend) = [:none, :line, :path, :sticks, :scatter, :hist, :bar]
+supportedTypes(::WinstonBackend) = [:none, :line, :path, :sticks, :scatter, :histogram, :bar]
 supportedStyles(::WinstonBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::WinstonBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
 supportedScales(::WinstonBackend) = [:identity, :log10]
@@ -150,7 +150,7 @@ function _series_added(plt::Plot{WinstonBackend}, series::Series)
 
 
 
-  ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :hist2d, :hexbin, :hist, :bar
+  ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :histogram2d, :hexbin, :histogram, :bar
   if d[:seriestype] == :none
     Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)..., color=getColor(d[:markercolor])))
 
@@ -185,13 +185,13 @@ function _series_added(plt::Plot{WinstonBackend}, series::Series)
   # elseif d[:seriestype] == :dots
   #     fn = Winston.XXX
 
-  # elseif d[:seriestype] == :hist2d
+  # elseif d[:seriestype] == :histogram2d
   #     fn = Winston.XXX
 
   # elseif d[:seriestype] == :hexbin
   #     fn = Winston.XXX
 
-  elseif d[:seriestype] == :hist
+  elseif d[:seriestype] == :histogram
       hst = hist(d[:y], d[:bins])
       Winston.add(wplt, Winston.Histogram(hst...; copy_remove(e, :bins)...))
 
@@ -211,7 +211,7 @@ function _series_added(plt::Plot{WinstonBackend}, series::Series)
 
 
   # optionally add a regression line
-  d[:smooth] && d[:seriestype] != :hist && addRegressionLineWinston(d, wplt)
+  d[:smooth] && d[:seriestype] != :histogram && addRegressionLineWinston(d, wplt)
 
   # push!(plt.seriesargs, d)
   # plt

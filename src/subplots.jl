@@ -37,7 +37,7 @@ series_list(sp::Subplot) = filter(series -> series.d[:subplot] === sp, sp.plt.se
 
 function should_add_to_legend(series::Series)
     !(series.d[:label] == "" || series.d[:seriestype] in (
-        :hexbin,:hist2d,:hline,:vline,
+        :hexbin,:histogram2d,:hline,:vline,
         :contour,:contour3d,:surface,:wireframe,
         :heatmap,:path3d,:scatter3d, :pie, :image
     ))

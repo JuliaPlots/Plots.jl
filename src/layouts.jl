@@ -233,8 +233,8 @@ function recompute_lengths(v)
         end
     end
     leftover = 1.0pct - tot
-    if leftover.value <= 0
-        error("Not enough length left over in layout!  v = $v, leftover = $leftover")
+    if cnt > 1 && leftover.value <= 0
+        error("Not enough length left over in layout!  v = $v, cnt = $cnt, leftover = $leftover")
     end
 
     # now fill in the blanks

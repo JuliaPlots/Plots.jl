@@ -12,7 +12,7 @@ const _3dTypes = [
 ]
 const _allTypes = vcat([
     :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-    :heatmap, :hexbin, :hist, :hist2d, :hist3d, :density, :bar, :hline, :vline, #:ohlc,
+    :heatmap, :hexbin, :histogram, :histogram2d, :histogram3d, :density, :bar, :hline, :vline, #:ohlc,
     :contour, :pie, :shape, :image #, :boxplot, :violin, :quiver,
 ], _3dTypes)
 
@@ -32,7 +32,6 @@ const _allTypes = vcat([
     :stem          => :sticks,
     :stems         => :sticks,
     :dots          => :scatter,
-    :histogram     => :hist,
     :pdf           => :density,
     :contours      => :contour,
     :line3d        => :path3d,
@@ -47,9 +46,11 @@ const _allTypes = vcat([
     :img           => :image,
     :imshow        => :image,
     :imagesc       => :image,
+    :hist          => :histogram,
+    :hist2d        => :histogram2d,
 )
 
-like_histogram(seriestype::Symbol) = seriestype in (:hist, :density)
+like_histogram(seriestype::Symbol) = seriestype in (:histogram, :density)
 like_line(seriestype::Symbol)      = seriestype in (:line, :path, :steppre, :steppost)
 like_surface(seriestype::Symbol)   = seriestype in (:contour, :contour3d, :heatmap, :surface, :wireframe, :image)
 

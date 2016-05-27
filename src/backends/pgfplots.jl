@@ -44,7 +44,7 @@ supportedArgs(::PGFPlotsBackend) = [
     # :match_dimensions,
   ]
 supportedAxes(::PGFPlotsBackend) = [:auto, :left]
-supportedTypes(::PGFPlotsBackend) = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :hist2d, :ysticks, :xsticks, :contour]
+supportedTypes(::PGFPlotsBackend) = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
 supportedStyles(::PGFPlotsBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supportedMarkers(::PGFPlotsBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
 supportedScales(::PGFPlotsBackend) = [:identity, :ln, :log2, :log10] # :asinh, :sqrt]
@@ -184,7 +184,7 @@ function pgf_series(sp::Subplot, series::Series)
         PGFPlots.Linear3
     elseif st == :scatter
         PGFPlots.Scatter
-    elseif st == :hist2d
+    elseif st == :histogram2d
         PGFPlots.Histogram2
     elseif st == :contour
         PGFPlots.Contour

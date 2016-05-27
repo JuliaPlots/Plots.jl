@@ -36,7 +36,7 @@ supportedArgs(::PlotlyBackend) = [
 
 supportedAxes(::PlotlyBackend) = [:auto, :left]
 supportedTypes(::PlotlyBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
-                                   :hist2d, :hist, :density, :bar, :contour, :surface, :path3d, :scatter3d,
+                                   :histogram2d, :histogram, :density, :bar, :contour, :surface, :path3d, :scatter3d,
                                    :pie, :heatmap] #,, :sticks, :hexbin, :hline, :vline]
 supportedStyles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PlotlyBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
@@ -449,7 +449,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:type] = "bar"
         d_out[:x], d_out[:y] = x, y
 
-    elseif st == :hist2d
+    elseif st == :histogram2d
         d_out[:type] = "histogram2d"
         d_out[:x], d_out[:y] = x, y
         if isa(d[:bins], Tuple)
@@ -460,13 +460,13 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:nbinsx] = xbins
         d_out[:nbinsy] = ybins
 
-    elseif st in (:hist, :density)
+    elseif st in (:histogram, :density)
         d_out[:type] = "histogram"
         isvert = isvertical(d)
         d_out[isvert ? :x : :y] = y
         d_out[isvert ? :nbinsx : :nbinsy] = d[:bins]
         if st == :density
-            d_out[:histnorm] = "probability density"
+            d_out[:histogramnorm] = "probability density"
         end
 
     elseif st == :heatmap
