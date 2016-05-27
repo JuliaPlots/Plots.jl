@@ -201,7 +201,7 @@ end
 
 function setup_atom()
     # @require Atom begin
-    if isatom()
+    if isatom() && get(ENV, "PLOTS_USE_ATOM_PLOTPANE", false) in (true, 1, "1", "true", "yes")
         # @eval import Atom, Media
         @eval import Atom
 
