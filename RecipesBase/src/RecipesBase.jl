@@ -107,7 +107,15 @@ function process_recipe_body!(expr::Expr)
                 e = e.args[1]
             end
 
+            # the unused operator `:=` will mean force: `x := 5` is equivalent to `x --> 5, force`
+            # note: this means "x is defined as 5"
+            if e.head == :(:=)
+                force = true
+                e.head = :(-->)
+            end
+
             # we are going to recursively swap out `a --> b, flags...` commands
+            # note: this means "x may become 5"
             if e.head == :(-->)
                 k, v = e.args
                 if isa(k, Symbol)
