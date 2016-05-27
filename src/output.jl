@@ -122,11 +122,28 @@ const _mimeformats = Dict(
     "image/svg+xml"           => "svg"
 )
 
-# # a backup for html... passes to svg
-# function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
-#     writemime(io, MIME("image/svg+xml"), plt)
-# end
+const _best_html_output_type = KW(
+    :pyplot => :png,
+)
 
+# a backup for html... passes to svg or png depending on the html_output_format arg
+function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
+    output_type = symbol(plt.attr[:html_output_format])
+    if output_type == :auto
+        output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
+    end
+    if output_type == :png
+        # info("writing png to html output")
+        print(io, "<img src=\"data:image/png;base64,", base64encode(writemime, MIME("image/png"), plt), "\" />")
+    elseif output_type == :svg
+        # info("writing svg to html output")
+        writemime(io, MIME("image/svg+xml"), plt)
+    else
+        error("only png or svg allowed. got: $output_type")
+    end
+end
+
+# for writing to io streams... first prepare, then callback
 for mime in keys(_mimeformats)
     @eval function Base.writemime(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         prepare_output(plt)
@@ -134,21 +151,21 @@ for mime in keys(_mimeformats)
     end
 end
 
-function html_output_format(fmt)
-    if fmt == "png"
-        @eval function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
-            print(io, "<img src=\"data:image/png;base64,", base64(writemime, MIME("image/png"), plt), "\" />")
-        end
-    elseif fmt == "svg"
-        @eval function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
-            writemime(io, MIME("image/svg+xml"), plt)
-        end
-    else
-        error("only png or svg allowed. got: $fmt")
-    end
-end
-
-html_output_format("svg")
+# function html_output_format(fmt)
+#     if fmt == "png"
+#         @eval function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
+#             print(io, "<img src=\"data:image/png;base64,", base64(writemime, MIME("image/png"), plt), "\" />")
+#         end
+#     elseif fmt == "svg"
+#         @eval function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
+#             writemime(io, MIME("image/svg+xml"), plt)
+#         end
+#     else
+#         error("only png or svg allowed. got: $fmt")
+#     end
+# end
+#
+# html_output_format("svg")
 
 # ---------------------------------------------------------
 # IJulia

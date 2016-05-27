@@ -186,6 +186,7 @@ const _plot_defaults = KW(
     :linky                       => false,
     :linkfunc                    => nothing,
     :overwrite_figure            => true,
+    :html_output_format          => :auto,
 )
 
 
@@ -408,6 +409,7 @@ add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
 add_aliases(:title_location, :title_loc, :titleloc, :title_position, :title_pos, :titlepos, :titleposition, :title_align, :title_alignment)
 add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation)
+add_aliases(:html_output_format, :format, :fmt, :html_format)
 
 
 # add all pluralized forms to the _keyAliases dict
