@@ -929,8 +929,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 xbins = ybins = d[:bins]
             end
             x, y, H = Base.hist2d(E, xbins, ybins)
-            counts = round(Int32, 1000 + 255 * H / maximum(H))
-            n, m = size(counts)
+            maxh = maximum(H)
+            n, m = size(H)
+            counts = Int32[round(Int32, 1000 + 255 * H[n-i+1,j] / maxh) for i=1:n,j=1:m]
             GR.cellarray(xmin, xmax, ymin, ymax, n, m, counts)
 
             # NOTE: set viewport to the colorbar area, get character height, draw it, then reset viewport
