@@ -63,6 +63,10 @@ function convertToAnyVector(v::AVec, d::KW)
 end
 
 
+function convertToAnyVector(args...)
+    error("No recipes could handle the argument types: $(map(typeof, args[1:end-1]))")
+end
+
 # --------------------------------------------------------------------
 
 # TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array

@@ -5,6 +5,51 @@
 # a recipe should fully describe the plotting command(s) and call them, likewise for updating.
 #   actually... maybe those should explicitly derive from AbstractPlot???
 
+
+"""
+You can easily define your own plotting recipes with convenience methods:
+
+```
+@userplot type GroupHist
+    args
+end
+
+@recipe function f(gh::GroupHist)
+    # set some attributes, add some series, using gh.args as input
+end
+
+# now you can plot like:
+grouphist(rand(1000,4))
+```
+"""
+macro userplot(expr::Expr)
+    if expr.head != :type
+        errror("Must call userplot on a type/immutable expression.  Got: $expr")
+    end
+
+    typename = expr.args[2]
+    funcname = symbol(lowercase(string(typename)))
+    funcname2 = symbol(funcname, "!")
+    # @show typename funcname expr
+
+    # return a code block with the type definition and convenience plotting methods
+    ret = esc(quote
+        $expr
+        $funcname(args...; kw...) = plot($typename(args...); kw...)
+        $funcname2(args...; kw...) = plot!($typename(args...); kw...)
+    end)
+    # dump(ret,20)
+    # @show ret
+    ret
+end
+
+# ----------------------------------------------------------------------------------
+
+
+
+
+# ----------------------------------------------------------------------------------
+
 abstract PlotRecipe
 
 getRecipeXY(recipe::PlotRecipe) = Float64[], Float64[]

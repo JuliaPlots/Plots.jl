@@ -9,6 +9,7 @@ using Reexport
 # using Requires
 using FixedSizeArrays
 @reexport using RecipesBase
+using Base.Meta
 
 export
     AbstractPlot,
@@ -40,53 +41,54 @@ export
     default,
     with,
 
-    scatter,
-    scatter!,
-    bar,
-    bar!,
-    barh,
-    barh!,
-    histogram,
-    histogram!,
-    histogram2d,
-    histogram2d!,
-    density,
-    density!,
-    heatmap,
-    heatmap!,
-    hexbin,
-    hexbin!,
-    sticks,
-    sticks!,
-    hline,
-    hline!,
-    vline,
-    vline!,
-    ohlc,
-    ohlc!,
+    @userplot,
+    # scatter,
+    # scatter!,
+    # bar,
+    # bar!,
+    # barh,
+    # barh!,
+    # histogram,
+    # histogram!,
+    # histogram2d,
+    # histogram2d!,
+    # density,
+    # density!,
+    # heatmap,
+    # heatmap!,
+    # hexbin,
+    # hexbin!,
+    # sticks,
+    # sticks!,
+    # hline,
+    # hline!,
+    # vline,
+    # vline!,
+    # ohlc,
+    # ohlc!,
     pie,
     pie!,
-    contour,
-    contour!,
-    contour3d,
-    contour3d!,
-    surface,
-    surface!,
-    wireframe,
-    wireframe!,
-    path3d,
-    path3d!,
+    # contour,
+    # contour!,
+    # contour3d,
+    # contour3d!,
+    # surface,
+    # surface!,
+    # wireframe,
+    # wireframe!,
+    # path3d,
+    # path3d!,
     plot3d,
     plot3d!,
-    scatter3d,
-    scatter3d!,
-    abline!,
-    boxplot,
-    boxplot!,
-    violin,
-    violin!,
-    quiver,
-    quiver!,
+    # scatter3d,
+    # scatter3d!,
+    # abline!,
+    # boxplot,
+    # boxplot!,
+    # violin,
+    # violin!,
+    # quiver,
+    # quiver!,
 
     title!,
     xlabel!,
@@ -199,52 +201,88 @@ include("output.jl")
 
 # ---------------------------------------------------------
 
-scatter(args...; kw...)    = plot(args...; kw...,  seriestype = :scatter)
-scatter!(args...; kw...)   = plot!(args...; kw..., seriestype = :scatter)
-bar(args...; kw...)        = plot(args...; kw...,  seriestype = :bar)
-bar!(args...; kw...)       = plot!(args...; kw..., seriestype = :bar)
-barh(args...; kw...)        = plot(args...; kw...,  seriestype = :barh, orientation = :h)
-barh!(args...; kw...)       = plot!(args...; kw..., seriestype = :barh, orientation = :h)
-histogram(args...; kw...)  = plot(args...; kw...,  seriestype = :hist)
-histogram!(args...; kw...) = plot!(args...; kw..., seriestype = :hist)
-histogram2d(args...; kw...)  = plot(args...; kw...,  seriestype = :hist2d)
-histogram2d!(args...; kw...) = plot!(args...; kw..., seriestype = :hist2d)
-density(args...; kw...)    = plot(args...; kw...,  seriestype = :density)
-density!(args...; kw...)   = plot!(args...; kw..., seriestype = :density)
-heatmap(args...; kw...)    = plot(args...; kw...,  seriestype = :heatmap)
-heatmap!(args...; kw...)   = plot!(args...; kw..., seriestype = :heatmap)
-hexbin(args...; kw...)     = plot(args...; kw...,  seriestype = :hexbin)
-hexbin!(args...; kw...)    = plot!(args...; kw..., seriestype = :hexbin)
-sticks(args...; kw...)     = plot(args...; kw...,  seriestype = :sticks, marker = :ellipse)
-sticks!(args...; kw...)    = plot!(args...; kw..., seriestype = :sticks, marker = :ellipse)
-hline(args...; kw...)      = plot(args...; kw...,  seriestype = :hline)
-hline!(args...; kw...)     = plot!(args...; kw..., seriestype = :hline)
-vline(args...; kw...)      = plot(args...; kw...,  seriestype = :vline)
-vline!(args...; kw...)     = plot!(args...; kw..., seriestype = :vline)
-ohlc(args...; kw...)       = plot(args...; kw...,  seriestype = :ohlc)
-ohlc!(args...; kw...)      = plot!(args...; kw..., seriestype = :ohlc)
+# define and export shorthand plotting method definitions
+macro shorthands(funcname::Symbol)
+    funcname2 = symbol(funcname, "!")
+    ret = esc(quote
+        export $funcname, $funcname2
+        $funcname(args...; kw...) = plot(args...; kw..., seriestype = $(quot(funcname)))
+        $funcname2(args...; kw...) = plot!(args...; kw..., seriestype = $(quot(funcname)))
+    end)
+    # dump(ret,20)
+    # @show ret
+    ret
+end
+
+@shorthands scatter
+@shorthands bar
+@shorthands barh
+@shorthands histogram
+@shorthands histogram2d
+@shorthands density
+@shorthands heatmap
+@shorthands hexbin
+@shorthands sticks
+@shorthands hline
+@shorthands vline
+@shorthands ohlc
+# @shorthands pie
+@shorthands contour
+@shorthands contour3d
+@shorthands surface
+@shorthands wireframe
+@shorthands path3d
+@shorthands scatter3d
+@shorthands boxplot
+@shorthands violin
+@shorthands quiver
+
+# scatter(args...; kw...)    = plot(args...; kw...,  seriestype = :scatter)
+# scatter!(args...; kw...)   = plot!(args...; kw..., seriestype = :scatter)
+# bar(args...; kw...)        = plot(args...; kw...,  seriestype = :bar)
+# bar!(args...; kw...)       = plot!(args...; kw..., seriestype = :bar)
+# barh(args...; kw...)        = plot(args...; kw...,  seriestype = :barh, orientation = :h)
+# barh!(args...; kw...)       = plot!(args...; kw..., seriestype = :barh, orientation = :h)
+# histogram(args...; kw...)  = plot(args...; kw...,  seriestype = :hist)
+# histogram!(args...; kw...) = plot!(args...; kw..., seriestype = :hist)
+# histogram2d(args...; kw...)  = plot(args...; kw...,  seriestype = :hist2d)
+# histogram2d!(args...; kw...) = plot!(args...; kw..., seriestype = :hist2d)
+# density(args...; kw...)    = plot(args...; kw...,  seriestype = :density)
+# density!(args...; kw...)   = plot!(args...; kw..., seriestype = :density)
+# heatmap(args...; kw...)    = plot(args...; kw...,  seriestype = :heatmap)
+# heatmap!(args...; kw...)   = plot!(args...; kw..., seriestype = :heatmap)
+# hexbin(args...; kw...)     = plot(args...; kw...,  seriestype = :hexbin)
+# hexbin!(args...; kw...)    = plot!(args...; kw..., seriestype = :hexbin)
+# sticks(args...; kw...)     = plot(args...; kw...,  seriestype = :sticks, marker = :ellipse)
+# sticks!(args...; kw...)    = plot!(args...; kw..., seriestype = :sticks, marker = :ellipse)
+# hline(args...; kw...)      = plot(args...; kw...,  seriestype = :hline)
+# hline!(args...; kw...)     = plot!(args...; kw..., seriestype = :hline)
+# vline(args...; kw...)      = plot(args...; kw...,  seriestype = :vline)
+# vline!(args...; kw...)     = plot!(args...; kw..., seriestype = :vline)
+# ohlc(args...; kw...)       = plot(args...; kw...,  seriestype = :ohlc)
+# ohlc!(args...; kw...)      = plot!(args...; kw..., seriestype = :ohlc)
 pie(args...; kw...)        = plot(args...; kw...,  seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
 pie!(args...; kw...)       = plot!(args...; kw..., seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
-contour(args...; kw...)    = plot(args...; kw...,  seriestype = :contour)
-contour!(args...; kw...)   = plot!(args...; kw..., seriestype = :contour)
-contour3d(args...; kw...)  = plot(args...; kw...,  seriestype = :contour3d)
-contour3d!(args...; kw...) = plot!(args...; kw..., seriestype = :contour3d)
-surface(args...; kw...)    = plot(args...; kw...,  seriestype = :surface)
-surface!(args...; kw...)   = plot!(args...; kw..., seriestype = :surface)
-wireframe(args...; kw...)  = plot(args...; kw...,  seriestype = :wireframe)
-wireframe!(args...; kw...) = plot!(args...; kw..., seriestype = :wireframe)
-path3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)
-path3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
+# contour(args...; kw...)    = plot(args...; kw...,  seriestype = :contour)
+# contour!(args...; kw...)   = plot!(args...; kw..., seriestype = :contour)
+# contour3d(args...; kw...)  = plot(args...; kw...,  seriestype = :contour3d)
+# contour3d!(args...; kw...) = plot!(args...; kw..., seriestype = :contour3d)
+# surface(args...; kw...)    = plot(args...; kw...,  seriestype = :surface)
+# surface!(args...; kw...)   = plot!(args...; kw..., seriestype = :surface)
+# wireframe(args...; kw...)  = plot(args...; kw...,  seriestype = :wireframe)
+# wireframe!(args...; kw...) = plot!(args...; kw..., seriestype = :wireframe)
+# path3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)
+# path3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
 plot3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)
 plot3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
-scatter3d(args...; kw...)  = plot(args...; kw...,  seriestype = :scatter3d)
-scatter3d!(args...; kw...) = plot!(args...; kw..., seriestype = :scatter3d)
-boxplot(args...; kw...)    = plot(args...; kw...,  seriestype = :boxplot)
-boxplot!(args...; kw...)   = plot!(args...; kw..., seriestype = :boxplot)
-violin(args...; kw...)     = plot(args...; kw...,  seriestype = :violin)
-violin!(args...; kw...)    = plot!(args...; kw..., seriestype = :violin)
-quiver(args...; kw...)     = plot(args...; kw...,  seriestype = :quiver)
-quiver!(args...; kw...)    = plot!(args...; kw..., seriestype = :quiver)
+# scatter3d(args...; kw...)  = plot(args...; kw...,  seriestype = :scatter3d)
+# scatter3d!(args...; kw...) = plot!(args...; kw..., seriestype = :scatter3d)
+# boxplot(args...; kw...)    = plot(args...; kw...,  seriestype = :boxplot)
+# boxplot!(args...; kw...)   = plot!(args...; kw..., seriestype = :boxplot)
+# violin(args...; kw...)     = plot(args...; kw...,  seriestype = :violin)
+# violin!(args...; kw...)    = plot!(args...; kw..., seriestype = :violin)
+# quiver(args...; kw...)     = plot(args...; kw...,  seriestype = :quiver)
+# quiver!(args...; kw...)    = plot!(args...; kw..., seriestype = :quiver)
 
 
 title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)

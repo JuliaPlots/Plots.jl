@@ -507,6 +507,11 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 
     if st == :bar
         extrakw[isvertical(d) ? :width : :height] = d[:bar_width]
+        fr = get(d, :fillrange, nothing)
+        if fr != nothing
+            extrakw[:bottom] = fr
+            d[:fillrange] = nothing
+        end
         handle = ax[isvertical(d) ? :bar : :barh](x, y;
             label = d[:label],
             zorder = plt.n,
