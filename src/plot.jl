@@ -371,6 +371,11 @@ function prepare_output(plt::Plot)
     _update_plot_object(plt)
 end
 
+function prepared_object(plt::Plot)
+    prepare_output(plt)
+    plt.o
+end
+
 # --------------------------------------------------------------------
 
 # function get_indices(orig, labels)
