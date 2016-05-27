@@ -312,33 +312,73 @@ end
 # constructors
 
 # pass the layout arg through
-function build_layout(d::KW)
-    build_layout(get(d, :layout, default(:layout)))
+function layout_args(d::KW)
+    layout_args(get(d, :layout, default(:layout)))
 end
 
-function build_layout(n::Integer)
+function layout_args(d::KW, n_override::Integer)
+    layout, n = layout_args(get(d, :layout, n_override))
+    if n != n_override
+        error("When doing layout, n != n_override.  You're probably trying to force existing plots into a layout that doesn't fit them.")
+    end
+    layout, n
+end
+
+function layout_args(n::Integer)
     nr, nc = compute_gridsize(n, -1, -1)
-    build_layout(GridLayout(nr, nc), n)
+    GridLayout(nr, nc), n
 end
 
-function build_layout{I<:Integer}(sztup::NTuple{2,I})
+function layout_args{I<:Integer}(sztup::NTuple{2,I})
     nr, nc = sztup
-    build_layout(GridLayout(nr, nc))
+    GridLayout(nr, nc), nr*nc
 end
 
-function build_layout{I<:Integer}(sztup::NTuple{3,I})
+function layout_args{I<:Integer}(sztup::NTuple{3,I})
     n, nr, nc = sztup
     nr, nc = compute_gridsize(n, nr, nc)
-    build_layout(GridLayout(nr, nc), n)
+    GridLayout(nr, nc), n
 end
 
 # compute number of subplots
-function build_layout(layout::GridLayout)
-    # nr, nc = size(layout)
-    # build_layout(layout, nr*nc)
-
+function layout_args(layout::GridLayout)
     # recursively get the size of the grid
     n = calc_num_subplots(layout)
+    layout, n
+end
+
+layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
+
+# # pass the layout arg through
+# function build_layout(d::KW)
+#     build_layout(get(d, :layout, default(:layout)))
+# end
+#
+# function build_layout(n::Integer)
+#     nr, nc = compute_gridsize(n, -1, -1)
+#     build_layout(GridLayout(nr, nc), n)
+# end
+#
+# function build_layout{I<:Integer}(sztup::NTuple{2,I})
+#     nr, nc = sztup
+#     build_layout(GridLayout(nr, nc))
+# end
+#
+# function build_layout{I<:Integer}(sztup::NTuple{3,I})
+#     n, nr, nc = sztup
+#     nr, nc = compute_gridsize(n, nr, nc)
+#     build_layout(GridLayout(nr, nc), n)
+# end
+#
+# # compute number of subplots
+# function build_layout(layout::GridLayout)
+#     # recursively get the size of the grid
+#     n = calc_num_subplots(layout)
+#     build_layout(layout, n)
+# end
+
+function build_layout(args...)
+    layout, n = layout_args(args...)
     build_layout(layout, n)
 end
 
@@ -374,7 +414,39 @@ function build_layout(layout::GridLayout, n::Integer)
     layout, subplots, spmap
 end
 
-build_layout(huh) = error("unhandled layout type $(typeof(huh)): $huh")
+# build a layout from a list of existing Plot objects
+# TODO... much of the logic overlaps with the method above... can we merge?
+function build_layout(layout::GridLayout, numsp::Integer, plts::AVec{Plot})
+    nr, nc = size(layout)
+    subplots = Subplot[]
+    spmap = SubplotMap()
+    i = 0
+    for r=1:nr, c=1:nc
+        l = layout[r,c]
+        if isa(l, EmptyLayout)
+            plt = shift!(plts)  # grab the first plot out of the list
+            layout[r,c] = plt.layout
+            append!(subplots, plt.subplots)
+            merge!(spmap, plt.spmap)
+            if hasattr(l,:width)
+                layout.widths[c] = attr(l,:width)
+            end
+            if hasattr(l,:height)
+                layout.heights[r] = attr(l,:height)
+            end
+            i += length(plt.subplots)
+        elseif isa(l, GridLayout)
+            # sub-grid
+            l, sps, m = build_layout(l, numsp-i, plts)
+            append!(subplots, sps)
+            merge!(spmap, m)
+            i += length(sps)
+        end
+        i >= numsp && break  # only add n subplots
+    end
+    layout, subplots, spmap
+end
+
 
 # ----------------------------------------------------------------------
 # @layout macro
