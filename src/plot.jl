@@ -251,6 +251,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
         warnOnUnsupported(plt.backend, d)
         series = Series(d)
         push!(plt.series_list, series)
+        # @show series
         _series_added(plt, series)
 
     else
@@ -307,7 +308,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
         # grab the first in line to be processed and pass it through apply_recipe
         # to generate a list of RecipeData objects (data + attributes)
-        next_series = pop!(still_to_process)
+        next_series = shift!(still_to_process)
         series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
         for series in series_list
 
