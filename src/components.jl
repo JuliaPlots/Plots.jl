@@ -356,7 +356,7 @@ immutable Surface{M<:AMat} <: AbstractSurface
   surf::M
 end
 
-Surface(f::Function, x, y) = Surface(Float64[f(xi,yi) for xi in x, yi in y])
+Surface(f::Function, x, y) = Surface(Float64[f(xi,yi) for yi in y, xi in x])
 
 Base.Array(surf::Surface) = surf.surf
 
