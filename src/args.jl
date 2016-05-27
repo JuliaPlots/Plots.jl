@@ -431,6 +431,9 @@ function default(k::Symbol)
             return defaults[k]
         end
     end
+    if haskey(_axis_defaults, k)
+        return _axis_defaults[k]
+    end
     k in _suppress_warnings || error("Unknown key: ", k)
 end
 
@@ -441,6 +444,10 @@ function default(k::Symbol, v)
             defaults[k] = v
             return v
         end
+    end
+    if haskey(_axis_defaults, k)
+        _axis_defaults[k] = v
+        return v
     end
     k in _suppress_warnings || error("Unknown key: ", k)
 end
