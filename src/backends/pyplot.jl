@@ -196,7 +196,7 @@ function getPyPlotMarker(markers::AVec)
 end
 
 # pass through
-function getPyPlotMarker(marker::@compat(String))
+function getPyPlotMarker(marker::AbstractString)
     @assert length(marker) == 1
     marker
 end
@@ -1096,7 +1096,7 @@ end
 
 # -----------------------------------------------------------------
 
-function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val::@compat(String))
+function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val)
     ax = sp.o
     ax[:annotate](val, xy = (x,y))
 end

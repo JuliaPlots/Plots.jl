@@ -285,9 +285,9 @@ plot3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
 # quiver!(args...; kw...)    = plot!(args...; kw..., seriestype = :quiver)
 
 
-title!(s::@compat(String); kw...)                 = plot!(; title = s, kw...)
-xlabel!(s::@compat(String); kw...)                = plot!(; xlabel = s, kw...)
-ylabel!(s::@compat(String); kw...)                = plot!(; ylabel = s, kw...)
+title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)
+xlabel!(s::AbstractString; kw...)                = plot!(; xlabel = s, kw...)
+ylabel!(s::AbstractString; kw...)                = plot!(; ylabel = s, kw...)
 xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; xlims = lims, kw...)
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; ylims = lims, kw...)
 zlims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; zlims = lims, kw...)
@@ -296,9 +296,9 @@ ylims!(ymin::Real, ymax::Real; kw...)                     = plot!(; ylims = (ymi
 zlims!(zmin::Real, zmax::Real; kw...)                     = plot!(; zlims = (zmin,zmax), kw...)
 xticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; xticks = v, kw...)
 yticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; yticks = v, kw...)
-xticks!{T<:Real,S<:@compat(String)}(
+xticks!{T<:Real,S<:AbstractString}(
               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(; xticks = (ticks,labels), kw...)
-yticks!{T<:Real,S<:@compat(String)}(
+yticks!{T<:Real,S<:AbstractString}(
               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(; yticks = (ticks,labels), kw...)
 annotate!(anns...; kw...)                                 = plot!(; annotation = anns, kw...)
 annotate!{T<:Tuple}(anns::AVec{T}; kw...)                 = plot!(; annotation = anns, kw...)
@@ -307,9 +307,9 @@ yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip
 xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
 
-title!(plt::Plot, s::@compat(String); kw...)                  = plot!(plt; title = s, kw...)
-xlabel!(plt::Plot, s::@compat(String); kw...)                 = plot!(plt; xlabel = s, kw...)
-ylabel!(plt::Plot, s::@compat(String); kw...)                 = plot!(plt; ylabel = s, kw...)
+title!(plt::Plot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)
+xlabel!(plt::Plot, s::AbstractString; kw...)                 = plot!(plt; xlabel = s, kw...)
+ylabel!(plt::Plot, s::AbstractString; kw...)                 = plot!(plt; ylabel = s, kw...)
 xlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; xlims = lims, kw...)
 ylims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; ylims = lims, kw...)
 zlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; zlims = lims, kw...)
@@ -318,9 +318,9 @@ ylims!(plt::Plot, ymin::Real, ymax::Real; kw...)                      = plot!(pl
 zlims!(plt::Plot, zmin::Real, zmax::Real; kw...)                      = plot!(plt; zlims = (zmin,zmax), kw...)
 xticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; xticks = ticks, kw...)
 yticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; yticks = ticks, kw...)
-xticks!{T<:Real,S<:@compat(String)}(plt::Plot,
+xticks!{T<:Real,S<:AbstractString}(plt::Plot,
                           ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; xticks = (ticks,labels), kw...)
-yticks!{T<:Real,S<:@compat(String)}(plt::Plot,
+yticks!{T<:Real,S<:AbstractString}(plt::Plot,
                           ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; yticks = (ticks,labels), kw...)
 annotate!(plt::Plot, anns...; kw...)                                  = plot!(plt; annotation = anns, kw...)
 annotate!{T<:Tuple}(plt::Plot, anns::AVec{T}; kw...)                  = plot!(plt; annotation = anns, kw...)

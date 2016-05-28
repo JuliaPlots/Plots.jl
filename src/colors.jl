@@ -18,7 +18,8 @@ colorscheme(c::Colorant; kw...) = ColorWrapper(c; kw...)
 # --------------------------------------------------------------
 
 
-convertColor(c::@compat(Union{@compat(String), Symbol})) = parse(Colorant, string(c))
+convertColor(c::AbstractString) = parse(Colorant, c)
+convertColor(c::Symbol) = parse(Colorant, string(c))
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 convertColor(c::ColorScheme) = c

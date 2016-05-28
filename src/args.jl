@@ -678,8 +678,8 @@ end
 
 "A special type that will break up incoming data into groups, and allow for easier creation of grouped plots"
 type GroupBy
-    groupLabels::Vector{@compat(String)}   # length == numGroups
-    groupIds::Vector{Vector{Int}}     # list of indices for each group
+    groupLabels::Vector           # length == numGroups
+    groupIds::Vector{Vector{Int}} # list of indices for each group
 end
 
 

@@ -4,7 +4,7 @@
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
 
 
-function standalone_html(plt::AbstractPlot; title::@compat(String) = get(plt.attr, :window_title, "Plots.jl"))
+function standalone_html(plt::AbstractPlot; title::AbstractString = get(plt.attr, :window_title, "Plots.jl"))
     """
     <!DOCTYPE html>
     <html>
@@ -19,7 +19,7 @@ function standalone_html(plt::AbstractPlot; title::@compat(String) = get(plt.att
     """
 end
 
-function open_browser_window(filename::@compat(String))
+function open_browser_window(filename::AbstractString)
     @osx_only   return run(`open $(filename)`)
     @linux_only return run(`xdg-open $(filename)`)
     @windows_only return run(`$(ENV["COMSPEC"]) /c start $(filename)`)

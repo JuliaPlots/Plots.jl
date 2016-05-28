@@ -38,7 +38,7 @@ function process_axis_arg!(d::KW, arg, letter = "")
     elseif arg in (:flip, :invert, :inverted)
         d[Symbol(letter,:flip)] = true
 
-    elseif T <: @compat(String)
+    elseif T <: AbstractString
         d[Symbol(letter,:guide)] = arg
 
     # xlims/ylims

@@ -158,7 +158,7 @@ function plotlyfont(font::Font, color = font.color)
     )
 end
 
-function get_annotation_dict(x, y, val::Union{@compat(String),Symbol})
+function get_annotation_dict(x, y, val)
     KW(
         :text => val,
         :xref => "x",

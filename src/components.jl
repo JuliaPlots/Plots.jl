@@ -196,7 +196,7 @@ end
 
 
 immutable Font
-  family::@compat(String)
+  family::AbstractString
   pointsize::Int
   halign::Symbol
   valign::Symbol
@@ -227,7 +227,7 @@ function font(args...)
       valign = arg
     elseif T <: Colorant
       color = arg
-    elseif T <: @compat Union{Symbol,@compat(String)}
+    elseif T <: Symbol || T <: AbstractString
       try
         color = parse(Colorant, string(arg))
       catch
@@ -247,7 +247,7 @@ end
 
 "Wrap a string with font info"
 immutable PlotText
-  str::@compat(String)
+  str::AbstractString
   font::Font
 end
 PlotText(str) = PlotText(string(str), font())
@@ -287,7 +287,7 @@ function stroke(args...; alpha = nothing)
       style = arg
     elseif T <: Colorant
       color = arg
-    elseif T <: @compat Union{Symbol,@compat(String)}
+    elseif T <: Symbol || T <: AbstractString
       try
         color = parse(Colorant, string(arg))
       end
@@ -319,7 +319,7 @@ function brush(args...; alpha = nothing)
 
     if T <: Colorant
       color = arg
-    elseif T <: @compat Union{Symbol,@compat(String)}
+    elseif T <: Symbol || T <: AbstractString
       try
         color = parse(Colorant, string(arg))
       end
