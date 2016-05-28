@@ -54,7 +54,7 @@ function _initialize_backend(::PlotlyBackend; kw...)
     JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
 
     _js_path = Pkg.dir("Plots", "deps", "plotly-latest.min.js")
-    _js_code = open(readall, _js_path, "r")
+    _js_code = open(@compat(readstring), _js_path, "r")
 
     # borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
     _js_script = """
@@ -222,15 +222,15 @@ function plotly_domain(sp::Subplot, letter)
     [pcts[i1], pcts[i1]+pcts[i2]]
 end
 
-# TODO: this should actually take into account labels, font sizes, etc
-# sets (left, top, right, bottom)
-function plotly_minpad(sp::Subplot)
-    (12mm, 2mm, 2mm, 8mm)
-end
-
-function _update_min_padding!(sp::Subplot{PlotlyBackend})
-    sp.minpad = plotly_minpad(sp)
-end
+# # TODO: this should actually take into account labels, font sizes, etc
+# # sets (left, top, right, bottom)
+# function plotly_minpad(sp::Subplot)
+#     (12mm, 2mm, 2mm, 8mm)
+# end
+#
+# function _update_min_padding!(sp::Subplot{PlotlyBackend})
+#     sp.minpad = plotly_minpad(sp)
+# end
 
 # tickssym(letter) = Symbol(letter * "ticks")
 # limssym(letter) = Symbol(letter * "lims")

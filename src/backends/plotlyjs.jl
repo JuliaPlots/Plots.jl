@@ -166,9 +166,9 @@ end
 
 # ----------------------------------------------------------------
 
-function _update_min_padding!(sp::Subplot{PlotlyBackend})
-    sp.minpad = plotly_minpad(sp)
-end
+# function _update_min_padding!(sp::Subplot{PlotlyBackend})
+#     sp.minpad = plotly_minpad(sp)
+# end
 
 # function plotlyjs_finalize(plt::Plot)
 #     plotly_finalize(plt)

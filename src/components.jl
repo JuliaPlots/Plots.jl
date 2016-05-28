@@ -436,7 +436,7 @@ type BezierCurve{T <: FixedSizeArrays.Vec}
   control_points::Vector{T}
 end
 
-function Base.call(bc::BezierCurve, t::Real)
+@compat function (bc::BezierCurve)(t::Real)
   p = zero(P2)
   n = length(bc.control_points)-1
   for i in 0:n

@@ -7,10 +7,10 @@ const pct = Length{:pct, Float64}(1.0)
 
 const _cbar_width = 5mm
 
-Base.(:.*)(m::Measure, n::Number) = m * n
-Base.(:.*)(n::Number, m::Measure) = m * n
-Base.(:-)(m::Measure, a::AbstractArray) = map(ai -> m - ai, a)
-Base.(:-)(a::AbstractArray, m::Measure) = map(ai -> ai - m, a)
+@compat Base.:.*(m::Measure, n::Number) = m * n
+@compat Base.:.*(n::Number, m::Measure) = m * n
+@compat Base.:-(m::Measure, a::AbstractArray) = map(ai -> m - ai, a)
+@compat Base.:-(a::AbstractArray, m::Measure) = map(ai -> ai - m, a)
 Base.zero(::Type{typeof(mm)}) = 0mm
 Base.one(::Type{typeof(mm)}) = 1mm
 Base.typemin(::typeof(mm)) = -Inf*mm
@@ -18,15 +18,15 @@ Base.typemax(::typeof(mm)) = Inf*mm
 Base.convert{F<:AbstractFloat}(::Type{F}, l::AbsoluteLength) = convert(F, l.value)
 
 # TODO: these are unintuitive and may cause tricky bugs
-# Base.(:+)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
-# Base.(:+)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (1 + m1.value))
-# Base.(:-)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 - m2.value))
-# Base.(:-)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (m1.value - 1))
+# @compat Base.:+(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
+# @compat Base.:+(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (1 + m1.value))
+# @compat Base.:-(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 - m2.value))
+# @compat Base.:-(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (m1.value - 1))
 
-Base.(:*)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
-Base.(:*)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
-Base.(:/)(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
-Base.(:/)(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
+@compat Base.:*(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
+@compat Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
+@compat Base.:/(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
+@compat Base.:/(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
 
 
 Base.zero(::Type{typeof(pct)}) = 0pct
@@ -42,11 +42,11 @@ right(bbox::BoundingBox) = left(bbox) + width(bbox)
 bottom(bbox::BoundingBox) = top(bbox) + height(bbox)
 Base.size(bbox::BoundingBox) = (width(bbox), height(bbox))
 
-# Base.(:*){T,N}(m1::Length{T,N}, m2::Length{T,N}) = Length{T,N}(m1.value * m2.value)
+# @compat Base.:*{T,N}(m1::Length{T,N}, m2::Length{T,N}) = Length{T,N}(m1.value * m2.value)
 ispositive(m::Measure) = m.value > 0
 
 # union together bounding boxes
-function Base.(:+)(bb1::BoundingBox, bb2::BoundingBox)
+@compat function Base.:+(bb1::BoundingBox, bb2::BoundingBox)
     # empty boxes don't change the union
     ispositive(width(bb1))  || return bb2
     ispositive(height(bb1)) || return bb2

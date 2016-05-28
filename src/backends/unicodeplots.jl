@@ -287,7 +287,8 @@ function png(plt::AbstractPlot{UnicodePlotsBackend}, fn::AbstractString)
   println("\n\n\n\n\n\n")
   gui(plt)
 
-  @osx_only begin
+  # @osx_only begin
+  @compat @static if is_apple()
     # BEGIN HACK
 
     # wait while the plot gets drawn
