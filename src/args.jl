@@ -272,10 +272,10 @@ for letter in (:x,:y,:z)
                 :foreground_color_guide,
                 :discrete_values
             )
-        _axis_defaults_byletter[symbol(letter,k)] = nothing
+        _axis_defaults_byletter[Symbol(letter,k)] = nothing
 
         # allow the underscore version too: xguide or x_guide
-        add_aliases(symbol(letter, k), symbol(letter, "_", k))
+        add_aliases(Symbol(letter, k), Symbol(letter, "_", k))
     end
 end
 
@@ -294,7 +294,7 @@ RecipesBase.is_key_supported(k::Symbol) = (k in supportedArgs())
 
 # -----------------------------------------------------------------------------
 
-makeplural(s::Symbol) = symbol(string(s,"s"))
+makeplural(s::Symbol) = Symbol(string(s,"s"))
 
 autopick(arr::AVec, idx::Integer) = arr[mod1(idx,length(arr))]
 autopick(notarr, idx::Integer) = notarr
@@ -592,7 +592,7 @@ function preprocessArgs!(d::KW)
 
     # handle axis args
     for letter in (:x, :y, :z)
-        asym = symbol(letter, :axis)
+        asym = Symbol(letter, :axis)
         args = pop!(d, asym, ())
         if !(typeof(args) <: Axis)
             for arg in wraptuple(args)
@@ -678,7 +678,7 @@ end
 
 "A special type that will break up incoming data into groups, and allow for easier creation of grouped plots"
 type GroupBy
-    groupLabels::Vector{UTF8String}   # length == numGroups
+    groupLabels::Vector{@compat(String)}   # length == numGroups
     groupIds::Vector{Vector{Int}}     # list of indices for each group
 end
 
@@ -869,7 +869,7 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
 
     for letter in (:x, :y, :z)
         # get (maybe initialize) the axis
-        axissym = symbol(letter, :axis)
+        axissym = Symbol(letter, :axis)
         axis = if haskey(spargs, axissym)
             spargs[axissym]
         else
@@ -891,7 +891,7 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
             end
 
             # then get those args that were passed with a leading letter: `xlabel = "X"`
-            lk = symbol(letter, k)
+            lk = Symbol(letter, k)
             if haskey(d_in, lk)
                 kw[k] = slice_arg(pop!(d_in, lk), subplot_index)
             end

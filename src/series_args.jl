@@ -476,7 +476,7 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 #
 #         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, dfs::DFS)
 #             if isa(dfs, Symbol)
-#                 get!(d, symbol(letter * "label"), string(dfs))
+#                 get!(d, Symbol(letter * "label"), string(dfs))
 #                 collect(df[dfs])
 #             else
 #                 get!(d, :label, reshape(dfs, 1, length(dfs)))

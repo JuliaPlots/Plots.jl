@@ -85,7 +85,7 @@ function _initialize_backend(::PlotlyJSBackend; kw...)
 
     for (mime, fmt) in PlotlyJS._mimeformats
         # mime == "image/png" && continue  # don't use plotlyjs's writemime for png
-        @eval Base.writemime(io::IO, m::MIME{symbol($mime)}, p::Plot{PlotlyJSBackend}) = writemime(io, m, p.o)
+        @eval Base.writemime(io::IO, m::MIME{Symbol($mime)}, p::Plot{PlotlyJSBackend}) = writemime(io, m, p.o)
     end
 
     # override IJulia inline display

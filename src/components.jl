@@ -110,7 +110,7 @@ const _shapes = KW(
   )
 
 for n in [4,5,6,7,8]
-  _shapes[symbol("star$n")] = makestar(n)
+  _shapes[Symbol("star$n")] = makestar(n)
 end
 
 # -----------------------------------------------------------------------
@@ -196,7 +196,7 @@ end
 
 
 immutable Font
-  family::AbstractString
+  family::@compat(String)
   pointsize::Int
   halign::Symbol
   valign::Symbol
@@ -227,7 +227,7 @@ function font(args...)
       valign = arg
     elseif T <: Colorant
       color = arg
-    elseif T <: @compat Union{Symbol,AbstractString}
+    elseif T <: @compat Union{Symbol,@compat(String)}
       try
         color = parse(Colorant, string(arg))
       catch
@@ -247,7 +247,7 @@ end
 
 "Wrap a string with font info"
 immutable PlotText
-  str::@compat(AbstractString)
+  str::@compat(String)
   font::Font
 end
 PlotText(str) = PlotText(string(str), font())
@@ -287,7 +287,7 @@ function stroke(args...; alpha = nothing)
       style = arg
     elseif T <: Colorant
       color = arg
-    elseif T <: @compat Union{Symbol,AbstractString}
+    elseif T <: @compat Union{Symbol,@compat(String)}
       try
         color = parse(Colorant, string(arg))
       end
@@ -319,7 +319,7 @@ function brush(args...; alpha = nothing)
 
     if T <: Colorant
       color = arg
-    elseif T <: @compat Union{Symbol,AbstractString}
+    elseif T <: @compat Union{Symbol,@compat(String)}
       try
         color = parse(Colorant, string(arg))
       end
@@ -367,12 +367,11 @@ Base.copy(surf::Surface) = Surface(copy(surf.surf))
 Base.eltype(surf::Surface) = eltype(surf.surf)
 
 function expand_extrema!(a::Axis, surf::Surface)
-    v = surf.surf
-    if !isempty(v)
-        emin, emax = a[:extrema]
-        a[:extrema] = (min(minimum(v), emin), max(maximum(v), emax))
+    ex = a[:extrema]
+    for vi in surf.surf
+        expand_extrema!(ex, vi)
     end
-    a[:extrema]
+    ex
 end
 
 "For the case of representing a surface as a function of x/y... can possibly avoid allocations."

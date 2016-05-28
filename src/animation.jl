@@ -1,12 +1,12 @@
 
 immutable Animation
-  dir::ASCIIString
-  frames::Vector{ASCIIString}
+  dir::@compat(String)
+  frames::Vector{@compat(String)}
 end
 
 function Animation()
-  tmpdir = convert(ASCIIString, mktempdir())
-  Animation(tmpdir, ASCIIString[])
+  tmpdir = convert(@compat(String), mktempdir())
+  Animation(tmpdir, @compat(String)[])
 end
 
 function frame{P<:AbstractPlot}(anim::Animation, plt::P=current())
@@ -21,10 +21,10 @@ end
 
 "Wraps the location of an animated gif so that it can be displayed"
 immutable AnimatedGif
-  filename::ASCIIString
+  filename::@compat(String)
 end
 
-function gif(anim::Animation, fn::@compat(AbstractString) = "tmp.gif"; fps::Integer = 20)
+function gif(anim::Animation, fn::@compat(String) = "tmp.gif"; fps::Integer = 20)
   fn = abspath(fn)
 
   try

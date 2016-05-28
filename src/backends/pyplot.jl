@@ -196,7 +196,7 @@ function getPyPlotMarker(markers::AVec)
 end
 
 # pass through
-function getPyPlotMarker(marker::AbstractString)
+function getPyPlotMarker(marker::@compat(String))
     @assert length(marker) == 1
     marker
 end
@@ -325,13 +325,13 @@ end
 
 # bounding box: union of axis tick labels
 function py_bbox_ticks(ax, letter)
-    labels = ax[symbol("get_"*letter*"ticklabels")]()
+    labels = ax[Symbol("get_"*letter*"ticklabels")]()
     py_bbox(labels)
 end
 
 # bounding box: axis guide
 function py_bbox_axislabel(ax, letter)
-    pyaxis_label = ax[symbol("get_"*letter*"axis")]()[:label]
+    pyaxis_label = ax[Symbol("get_"*letter*"axis")]()[:label]
     py_bbox(pyaxis_label)
 end
 
@@ -856,21 +856,21 @@ end
 #     # TODO: check for polar, do set_tlim/set_rlim instead
 #
 #     # pyplot's set_xlim (or y/z) method:
-#     sp.o[symbol(:set_, axis[:letter], :lim)](lims...)
+#     sp.o[Symbol(:set_, axis[:letter], :lim)](lims...)
 # end
 
 # --------------------------------------------------------------------------
 
 # get_axis and update_limits! should be moved to subplots.jl? or axes.jl?
 
-get_axis(sp::Subplot, letter::Symbol) = sp.attr[symbol(letter, :axis)]
+get_axis(sp::Subplot, letter::Symbol) = sp.attr[Symbol(letter, :axis)]
 
 function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
     for letter in letters
         # axis = get_axis(sp, letter)
         # expand_extrema!(axis, series.d[letter])
         # set_lims!(sp, axis)
-        setPyPlotLims(sp.o, sp.attr[symbol(letter, :axis)])
+        setPyPlotLims(sp.o, sp.attr[Symbol(letter, :axis)])
     end
 end
 
@@ -925,7 +925,7 @@ end
 #     lims == :auto && return
 #     ltype = limsType(lims)
 #     if ltype == :limits
-#         setf = ax[symbol("set_", letter, "lim")]
+#         setf = ax[Symbol("set_", letter, "lim")]
 #         l1, l2 = lims
 #         if isfinite(l1)
 #             letter == :x ? setf(left = l1) : setf(bottom = l1)
@@ -941,16 +941,16 @@ end
 function setPyPlotLims(ax, axis::Axis)
     letter = axis[:letter]
     lims = axis_limits(axis)
-    ax[symbol("set_", letter, "lim")](lims...)
+    ax[Symbol("set_", letter, "lim")](lims...)
 end
 
 function addPyPlotTicks(ax, ticks, letter)
     ticks == :auto && return
-    axis = ax[symbol(letter,"axis")]
+    axis = ax[Symbol(letter,"axis")]
     if ticks == :none || ticks == nothing
         kw = KW()
         for dir in (:top,:bottom,:left,:right)
-            kw[dir] = kw[symbol(:label,dir)] = "off"
+            kw[dir] = kw[Symbol(:label,dir)] = "off"
         end
         axis[:set_tick_params](;which="both", kw...)
         return
@@ -968,7 +968,7 @@ function addPyPlotTicks(ax, ticks, letter)
 end
 
 function applyPyPlotScale(ax, scaleType::Symbol, letter)
-    func = ax[symbol("set_", letter, "scale")]
+    func = ax[Symbol("set_", letter, "scale")]
     scaleType == :identity && return func("linear")
     scaleType == :ln && return func("log", basex = e, basey = e)
     scaleType == :log2 && return func("log", basex = 2, basey = 2)
@@ -981,7 +981,7 @@ function updateAxisColors(ax, a::Axis)
     for (loc, spine) in ax[:spines]
         spine[:set_color](getPyPlotColor(a[:foreground_color_border]))
     end
-    axissym = symbol(a[:letter], :axis)
+    axissym = Symbol(a[:letter], :axis)
     if haskey(ax, axissym)
         ax[:tick_params](axis=string(a[:letter]), which="both",
                          colors=getPyPlotColor(a[:foreground_color_axis]),
@@ -1025,18 +1025,18 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
         # axis attributes
         for letter in (:x, :y, :z)
-            axissym = symbol(letter, :axis)
+            axissym = Symbol(letter, :axis)
             axis = attr[axissym]
             haskey(ax, axissym) || continue
             applyPyPlotScale(ax, axis[:scale], letter)
             setPyPlotLims(ax, axis)
             addPyPlotTicks(ax, get_ticks(axis), letter)
-            ax[symbol("set_", letter, "label")](axis[:guide])
+            ax[Symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)
-                ax[symbol("invert_", letter, "axis")]()
+                ax[Symbol("invert_", letter, "axis")]()
             end
             ax[axissym][:label][:set_fontsize](axis[:guidefont].pointsize)
-            for lab in ax[symbol("get_", letter, "ticklabels")]()
+            for lab in ax[Symbol("get_", letter, "ticklabels")]()
                 lab[:set_fontsize](axis[:tickfont].pointsize)
                 lab[:set_rotation](axis[:rotation])
             end
@@ -1096,7 +1096,7 @@ end
 
 # -----------------------------------------------------------------
 
-function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val::@compat(AbstractString))
+function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val::@compat(String))
     ax = sp.o
     ax[:annotate](val, xy = (x,y))
 end
@@ -1275,8 +1275,8 @@ const _pyplot_mimeformats = Dict(
 
 
 for (mime, fmt) in _pyplot_mimeformats
-    # @eval function Base.writemime(io::IO, ::MIME{symbol($mime)}, plt::Plot{PyPlotBackend})
-    @eval function _writemime(io::IO, ::MIME{symbol($mime)}, plt::Plot{PyPlotBackend})
+    # @eval function Base.writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
+    @eval function _writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
         # finalizePlot(plt)
         fig = getfig(plt.o)
         fig.o["canvas"][:print_figure](

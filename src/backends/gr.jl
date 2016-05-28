@@ -1236,8 +1236,8 @@ const _gr_mimeformats = Dict(
 
 
 for (mime, fmt) in _gr_mimeformats
-    # @eval function Base.writemime(io::IO, ::MIME{symbol($mime)}, plt::Plot{PyPlotBackend})
-    @eval function _writemime(io::IO, ::MIME{symbol($mime)}, plt::Plot{GRBackend})
+    # @eval function Base.writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
+    @eval function _writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
         ENV["GKS_WSTYPE"] = $fmt
         gr_display(plt)

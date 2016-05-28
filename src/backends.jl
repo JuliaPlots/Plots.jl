@@ -12,16 +12,16 @@ _backend_instance(sym::Symbol) = haskey(_backendType, sym) ? _backendType[sym]()
 
 macro init_backend(s)
     str = lowercase(string(s))
-    sym = symbol(str)
-    T = symbol(string(s) * "Backend")
+    sym = Symbol(str)
+    T = Symbol(string(s) * "Backend")
     esc(quote
         immutable $T <: AbstractBackend end
         export $sym
-        $sym(; kw...) = (default(; kw...); backend(symbol($str)))
-        backend_name(::$T) = symbol($str)
-        push!(_backends, symbol($str))
-        _backendType[symbol($str)] = $T
-        _backendSymbol[$T] = symbol($str)
+        $sym(; kw...) = (default(; kw...); backend(Symbol($str)))
+        backend_name(::$T) = Symbol($str)
+        push!(_backends, Symbol($str))
+        _backendType[Symbol($str)] = $T
+        _backendSymbol[$T] = Symbol($str)
         include("backends/" * $str * ".jl")
     end)
 end
@@ -86,7 +86,7 @@ function pickDefaultBackend()
     if env_default != ""
         try
             Pkg.installed(env_default)  # this will error if not installed
-            sym = symbol(lowercase(env_default))
+            sym = Symbol(lowercase(env_default))
             if haskey(_backendType, sym)
                 return backend(sym)
             else
@@ -103,7 +103,7 @@ function pickDefaultBackend()
     # features, speed, and robustness
     for pkgstr in ("PyPlot", "GR", "PlotlyJS", "Immerse", "Gadfly", "UnicodePlots")
         if Pkg.installed(pkgstr) != nothing
-            return backend(symbol(lowercase(pkgstr)))
+            return backend(Symbol(lowercase(pkgstr)))
         end
     end
 

@@ -158,7 +158,7 @@ function plotlyfont(font::Font, color = font.color)
     )
 end
 
-function get_annotation_dict(x, y, val::Union{AbstractString,Symbol})
+function get_annotation_dict(x, y, val::Union{@compat(String),Symbol})
     KW(
         :text => val,
         :xref => "x",
@@ -232,12 +232,12 @@ function _update_min_padding!(sp::Subplot{PlotlyBackend})
     sp.minpad = plotly_minpad(sp)
 end
 
-# tickssym(letter) = symbol(letter * "ticks")
-# limssym(letter) = symbol(letter * "lims")
-# flipsym(letter) = symbol(letter * "flip")
-# scalesym(letter) = symbol(letter * "scale")
-# labelsym(letter) = symbol(letter * "label")
-# rotationsym(letter) = symbol(letter * "rotation")
+# tickssym(letter) = Symbol(letter * "ticks")
+# limssym(letter) = Symbol(letter * "lims")
+# flipsym(letter) = Symbol(letter * "flip")
+# scalesym(letter) = Symbol(letter * "scale")
+# labelsym(letter) = Symbol(letter * "label")
+# rotationsym(letter) = Symbol(letter * "rotation")
 
 function plotly_axis(axis::Axis, sp::Subplot)
     letter = axis[:letter]
@@ -336,13 +336,13 @@ function plotly_layout(plt::Plot)
         # if any(is3d, seriesargs)
         if is3d(sp)
             d_out[:scene] = KW(
-                symbol("xaxis$spidx") => plotly_axis(sp.attr[:xaxis], sp),
-                symbol("yaxis$spidx") => plotly_axis(sp.attr[:yaxis], sp),
-                symbol("zaxis$spidx") => plotly_axis(sp.attr[:zaxis], sp),
+                Symbol("xaxis$spidx") => plotly_axis(sp.attr[:xaxis], sp),
+                Symbol("yaxis$spidx") => plotly_axis(sp.attr[:yaxis], sp),
+                Symbol("zaxis$spidx") => plotly_axis(sp.attr[:zaxis], sp),
             )
         else
-            d_out[symbol("xaxis$spidx")] = plotly_axis(sp.attr[:xaxis], sp)
-            d_out[symbol("yaxis$spidx")] = plotly_axis(sp.attr[:yaxis], sp)
+            d_out[Symbol("xaxis$spidx")] = plotly_axis(sp.attr[:xaxis], sp)
+            d_out[Symbol("yaxis$spidx")] = plotly_axis(sp.attr[:yaxis], sp)
         end
 
         # legend

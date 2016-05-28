@@ -2,48 +2,48 @@
 
 defaultOutputFormat(plt::Plot) = "png"
 
-function png(plt::Plot, fn::@compat(AbstractString))
+function png(plt::Plot, fn::@compat(String))
   fn = addExtension(fn, "png")
   io = open(fn, "w")
   writemime(io, MIME("image/png"), plt)
   close(io)
 end
-png(fn::@compat(AbstractString)) = png(current(), fn)
+png(fn::@compat(String)) = png(current(), fn)
 
-function svg(plt::Plot, fn::@compat(AbstractString))
+function svg(plt::Plot, fn::@compat(String))
   fn = addExtension(fn, "svg")
   io = open(fn, "w")
   writemime(io, MIME("image/svg+xml"), plt)
   close(io)
 end
-svg(fn::@compat(AbstractString)) = svg(current(), fn)
+svg(fn::@compat(String)) = svg(current(), fn)
 
 
-function pdf(plt::Plot, fn::@compat(AbstractString))
+function pdf(plt::Plot, fn::@compat(String))
   fn = addExtension(fn, "pdf")
   io = open(fn, "w")
   writemime(io, MIME("application/pdf"), plt)
   close(io)
 end
-pdf(fn::@compat(AbstractString)) = pdf(current(), fn)
+pdf(fn::@compat(String)) = pdf(current(), fn)
 
 
-function ps(plt::Plot, fn::@compat(AbstractString))
+function ps(plt::Plot, fn::@compat(String))
   fn = addExtension(fn, "ps")
   io = open(fn, "w")
   writemime(io, MIME("application/postscript"), plt)
   close(io)
 end
-ps(fn::@compat(AbstractString)) = ps(current(), fn)
+ps(fn::@compat(String)) = ps(current(), fn)
 
 
-function tex(plt::Plot, fn::@compat(AbstractString))
+function tex(plt::Plot, fn::@compat(String))
   fn = addExtension(fn, "tex")
   io = open(fn, "w")
   writemime(io, MIME("application/x-tex"), plt)
   close(io)
 end
-tex(fn::@compat(AbstractString)) = tex(current(), fn)
+tex(fn::@compat(String)) = tex(current(), fn)
 
 
 # ----------------------------------------------------------------
@@ -57,7 +57,7 @@ tex(fn::@compat(AbstractString)) = tex(current(), fn)
     "tex" => tex,
   )
 
-function getExtension(fn::@compat(AbstractString))
+function getExtension(fn::@compat(String))
   pieces = split(fn, ".")
   length(pieces) > 1 || error("Can't extract file extension: ", fn)
   ext = pieces[end]
@@ -65,7 +65,7 @@ function getExtension(fn::@compat(AbstractString))
   ext
 end
 
-function addExtension(fn::@compat(AbstractString), ext::@compat(AbstractString))
+function addExtension(fn::@compat(String), ext::@compat(String))
   try
     oldext = getExtension(fn)
     if oldext == ext
@@ -78,7 +78,7 @@ function addExtension(fn::@compat(AbstractString), ext::@compat(AbstractString))
   end
 end
 
-function savefig(plt::Plot, fn::@compat(AbstractString))
+function savefig(plt::Plot, fn::@compat(String))
 
   # get the extension
   local ext
@@ -96,7 +96,7 @@ function savefig(plt::Plot, fn::@compat(AbstractString))
   end
   func(plt, fn)
 end
-savefig(fn::@compat(AbstractString)) = savefig(current(), fn)
+savefig(fn::@compat(String)) = savefig(current(), fn)
 
 
 # ---------------------------------------------------------
@@ -128,7 +128,7 @@ const _best_html_output_type = KW(
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
 function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
-    output_type = symbol(plt.attr[:html_output_format])
+    output_type = Symbol(plt.attr[:html_output_format])
     if output_type == :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
     end
@@ -171,7 +171,7 @@ end
 # IJulia
 # ---------------------------------------------------------
 
-const _ijulia_output = ASCIIString["text/html"]
+const _ijulia_output = @compat(String)["text/html"]
 
 function setup_ijulia()
     # override IJulia inline display
@@ -179,18 +179,18 @@ function setup_ijulia()
         @eval begin
             import IJulia
             export set_ijulia_output
-            function set_ijulia_output(mimestr::ASCIIString)
+            function set_ijulia_output(mimestr::@compat(String))
                 # info("Setting IJulia output format to $mimestr")
                 global _ijulia_output
                 _ijulia_output[1] = mimestr
             end
             function IJulia.display_dict(plt::Plot)
                 global _ijulia_output
-                Dict{ASCIIString, ByteString}(_ijulia_output[1] => sprint(writemime, _ijulia_output[1], plt))
+                Dict{@compat(String), ByteString}(_ijulia_output[1] => sprint(writemime, _ijulia_output[1], plt))
             end
         end
 
-        # IJulia.display_dict(plt::Plot) = Dict{ASCIIString, ByteString}("text/html" => sprint(writemime, "text/html", plt))
+        # IJulia.display_dict(plt::Plot) = Dict{@compat(String), ByteString}("text/html" => sprint(writemime, "text/html", plt))
         set_ijulia_output("text/html")
     end
 end

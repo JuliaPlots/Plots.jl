@@ -28,8 +28,8 @@ macro userplot(expr::Expr)
     end
 
     typename = expr.args[2]
-    funcname = symbol(lowercase(string(typename)))
-    funcname2 = symbol(funcname, "!")
+    funcname = Symbol(lowercase(string(typename)))
+    funcname2 = Symbol(funcname, "!")
     # @show typename funcname expr
 
     # return a code block with the type definition and convenience plotting methods
@@ -81,7 +81,7 @@ if is_installed("DataFrames")
 
         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, dfs::DFS)
             if isa(dfs, Symbol)
-                get!(d, symbol(letter * "guide"), string(dfs))
+                get!(d, Symbol(letter * "guide"), string(dfs))
                 collect(df[dfs])
             else
                 get!(d, :label, reshape(dfs, 1, length(dfs)))
@@ -135,10 +135,10 @@ end
 #         expr.args[1].head == :(-->)
 # end
 #
-# function _equals_symbol(arg::Symbol, sym::Symbol)
+# function _equals_Symbol(arg::Symbol, sym::Symbol)
 #     arg == sym
 # end
-# function _equals_symbol(arg::Expr, sym::Symbol)
+# function _equals_Symbol(arg::Expr, sym::Symbol)
 #     arg.head == :quote && arg.args[1] == sym
 # end
 #
@@ -152,11 +152,11 @@ end
 #             quiet, require, force = false, false, false
 #             if _is_arrow_tuple(e)
 #                 for flag in e.args
-#                     if _equals_symbol(flag, :quiet)
+#                     if _equals_Symbol(flag, :quiet)
 #                         quiet = true
-#                     elseif _equals_symbol(flag, :require)
+#                     elseif _equals_Symbol(flag, :require)
 #                         require = true
-#                     elseif _equals_symbol(flag, :force)
+#                     elseif _equals_Symbol(flag, :force)
 #                         force = true
 #                     end
 #                 end

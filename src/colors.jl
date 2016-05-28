@@ -18,7 +18,7 @@ colorscheme(c::Colorant; kw...) = ColorWrapper(c; kw...)
 # --------------------------------------------------------------
 
 
-convertColor(c::@compat(Union{AbstractString, Symbol})) = parse(Colorant, string(c))
+convertColor(c::@compat(Union{@compat(String), Symbol})) = parse(Colorant, string(c))
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 convertColor(c::ColorScheme) = c
@@ -390,7 +390,7 @@ webcolor(c, α) = webcolor(convertColor(getColor(c), α))
 #
 #     # update sub-background colors
 #     for bgtype in ("legend", "inside", "outside")
-#         bgsym = symbol("background_color_" * bgtype)
+#         bgsym = Symbol("background_color_" * bgtype)
 #         if d[bgsym] == :match
 #             d[bgsym] = d[:background_color]
 #         elseif d[bgsym] == nothing
@@ -400,7 +400,7 @@ webcolor(c, α) = webcolor(convertColor(getColor(c), α))
 #
 #     # update sub-foreground colors
 #     for fgtype in ("legend", "grid", "axis", "text", "border", "guide")
-#         fgsym = symbol("foreground_color_" * fgtype)
+#         fgsym = Symbol("foreground_color_" * fgtype)
 #         if d[fgsym] == :match
 #             d[fgsym] = d[:foreground_color]
 #         elseif d[fgsym] == nothing

@@ -29,32 +29,32 @@ function process_axis_arg!(d::KW, arg, letter = "")
     arg = get(_scaleAliases, arg, arg)
 
     if typeof(arg) <: Font
-        d[symbol(letter,:tickfont)] = arg
-        d[symbol(letter,:guidefont)] = arg
+        d[Symbol(letter,:tickfont)] = arg
+        d[Symbol(letter,:guidefont)] = arg
 
     elseif arg in _allScales
-        d[symbol(letter,:scale)] = arg
+        d[Symbol(letter,:scale)] = arg
 
     elseif arg in (:flip, :invert, :inverted)
-        d[symbol(letter,:flip)] = true
+        d[Symbol(letter,:flip)] = true
 
-    elseif T <: @compat(AbstractString)
-        d[symbol(letter,:guide)] = arg
+    elseif T <: @compat(String)
+        d[Symbol(letter,:guide)] = arg
 
     # xlims/ylims
     elseif (T <: Tuple || T <: AVec) && length(arg) == 2
         sym = typeof(arg[1]) <: Number ? :lims : :ticks
-        d[symbol(letter,sym)] = arg
+        d[Symbol(letter,sym)] = arg
 
     # xticks/yticks
     elseif T <: AVec
-        d[symbol(letter,:ticks)] = arg
+        d[Symbol(letter,:ticks)] = arg
 
     elseif arg == nothing
-        d[symbol(letter,:ticks)] = []
+        d[Symbol(letter,:ticks)] = []
 
     elseif typeof(arg) <: Number
-        d[symbol(letter,:rotation)] = arg
+        d[Symbol(letter,:rotation)] = arg
 
     else
         warn("Skipped $(letter)axis arg $arg")

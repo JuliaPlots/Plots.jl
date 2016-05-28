@@ -199,7 +199,7 @@ end
 
 function strip_first_letter(s::Symbol)
     str = string(s)
-    str[1:1], symbol(str[2:end])
+    str[1:1], Symbol(str[2:end])
 end
 
 
@@ -231,7 +231,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
         if st != :image
             for letter in (:x, :y, :z)
                 data = d[letter]
-                axis = sp.attr[symbol(letter, "axis")]
+                axis = sp.attr[Symbol(letter, "axis")]
                 if eltype(data) <: Number
                     expand_extrema!(axis, data)
                 elseif isa(data, Surface) && eltype(data.surf) <: Number
@@ -241,7 +241,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
                     #       as well as any coord offset (think of boxplot shape coords... they all
                     #       correspond to the same x-value)
                     # @show letter,eltype(data),typeof(data)
-                    d[letter], d[symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
+                    d[letter], d[Symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
                 end
             end
         end
@@ -501,8 +501,8 @@ end
 # # TODO: remove?? this is the old way of handling discrete data... should be
 # # replaced by the Axis type and logic
 # function setTicksFromStringVector(plt::Plot, d::KW, di::KW, letter)
-#     sym = symbol(letter)
-#     ticksym = symbol(letter * "ticks")
+#     sym = Symbol(letter)
+#     ticksym = Symbol(letter * "ticks")
 #     pargs = plt.attr
 #     v = di[sym]
 #
@@ -534,7 +534,7 @@ end
 #     plt.attr[ticksym] = ticks, labels
 #
 #     # add an origsym field so that later on we can re-compute the x vector if ticks change
-#     origsym = symbol(letter * "orig")
+#     origsym = Symbol(letter * "orig")
 #     di[origsym] = v
 #     di[sym] = get_indices(v, labels)
 #

@@ -198,12 +198,12 @@ end
 # ----------------------------------------------------------------
 
 function pgf_axis(sp::Subplot, letter)
-    axis = sp.attr[symbol(letter,:axis)]
+    axis = sp.attr[Symbol(letter,:axis)]
     style = []
     kw = KW()
 
     # axis guide
-    kw[symbol(letter,:label)] = axis[:guide]
+    kw[Symbol(letter,:label)] = axis[:guide]
 
     # flip/reverse?
     axis[:flip] && push!(style, "$letter dir=reverse")
@@ -211,14 +211,14 @@ function pgf_axis(sp::Subplot, letter)
     # scale
     scale = axis[:scale]
     if scale in (:log2, :ln, :log10)
-        kw[symbol(letter,:mode)] = "log"
+        kw[Symbol(letter,:mode)] = "log"
         scale == :ln || push!(style, "log basis $letter=$(scale == :log2 ? 2 : 10)")
     end
 
     # limits
     lims = axis_limits(axis)
-    kw[symbol(letter,:min)] = lims[1]
-    kw[symbol(letter,:max)] = lims[2]
+    kw[Symbol(letter,:min)] = lims[1]
+    kw[Symbol(letter,:max)] = lims[2]
 
     # return the style list and KW args
     style, kw

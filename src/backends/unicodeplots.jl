@@ -280,7 +280,7 @@ end
 # -------------------------------
 
 # since this is such a hack, it's only callable using `png`... should error during normal `writemime`
-function png(plt::AbstractPlot{UnicodePlotsBackend}, fn::@compat(AbstractString))
+function png(plt::AbstractPlot{UnicodePlotsBackend}, fn::@compat(String))
   fn = addExtension(fn, "png")
 
   # make some whitespace and show the plot
