@@ -483,42 +483,20 @@ end
 function setxy!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer)
     series = plt.series_list[i]
     series.d[:x], series.d[:y] = xy
+    sp = series.d[:subplot]
+    expand_extrema!(sp.attr[:xaxis], xy[1])
+    expand_extrema!(sp.attr[:yaxis], xy[2])
     _series_updated(plt, series)
 end
 function setxyz!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
     series = plt.series_list[i]
     series.d[:x], series.d[:y], series.d[:z] = xyz
+    sp = series.d[:subplot]
+    expand_extrema!(sp.attr[:xaxis], xy[1])
+    expand_extrema!(sp.attr[:yaxis], xy[2])
+    expand_extrema!(sp.attr[:zaxis], xy[3])
     _series_updated(plt, series)
 end
-#
-#
-# function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
-#     series = plt.series_list[i]
-#     d = series.d
-#     d[:x], d[:y] = xy
-#     for handle in d[:serieshandle]
-#         try
-#             handle[:set_data](xy...)
-#         catch
-#             handle[:set_offsets](hcat(xy...))
-#         end
-#     end
-#     update_limits!(d[:subplot], series, (:x,:y))
-#     plt
-# end
-#
-#
-# function setxyz!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
-#     series = plt.series_list[i]
-#     d = series.d
-#     d[:x], d[:y], d[:z] = xyz
-#     for handle in d[:serieshandle]
-#         handle[:set_data](d[:x], d[:y])
-#         handle[:set_3d_properties](d[:z])
-#     end
-#     update_limits!(d[:subplot], series, (:x,:y,:z))
-#     plt
-# end
 
 # -------------------------------------------------------
 # indexing notation

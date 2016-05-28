@@ -4,23 +4,21 @@ xaxis(args...; kw...) = Axis(:x, args...; kw...)
 yaxis(args...; kw...) = Axis(:y, args...; kw...)
 zaxis(args...; kw...) = Axis(:z, args...; kw...)
 
+# -------------------------------------------------------------------------
 
 function Axis(letter::Symbol, args...; kw...)
     # init with values from _plot_defaults
     d = KW(
         :letter => letter,
-        :extrema => (Inf, -Inf),
+        # :extrema => (Inf, -Inf),
+        :extrema => Extrema(),
         :discrete_map => Dict(),   # map discrete values to discrete indices
-        # :discrete_values => Tuple{Float64,Any}[],
-        # :discrete_values => [],
         :continuous_values => zeros(0),
         :use_minor => false,
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
     merge!(d, _axis_defaults)
     d[:discrete_values] = []
-    # DD(d)
-    # @show args kw
 
     # update the defaults
     update!(Axis(d), args...; kw...)
@@ -88,40 +86,51 @@ function update!(axis::Axis, args...; kw...)
     axis
 end
 
+# -------------------------------------------------------------------------
 
-Base.show(io::IO, a::Axis) = dumpdict(a.d, "Axis", true)
-Base.getindex(a::Axis, k::Symbol) = getindex(a.d, k)
-Base.setindex!(a::Axis, v, ks::Symbol...) = setindex!(a.d, v, ks...)
-Base.haskey(a::Axis, k::Symbol) = haskey(a.d, k)
-Base.extrema(a::Axis) = a[:extrema]
+Base.show(io::IO, axis::Axis) = dumpdict(axis.d, "Axis", true)
+Base.getindex(axis::Axis, k::Symbol) = getindex(axis.d, k)
+Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.d, v, ks...)
+Base.haskey(axis::Axis, k::Symbol) = haskey(axis.d, k)
+Base.extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 # get discrete ticks, or not
-function get_ticks(a::Axis)
-    ticks = a[:ticks]
-    dvals = a[:discrete_values]
+function get_ticks(axis::Axis)
+    ticks = axis[:ticks]
+    dvals = axis[:discrete_values]
     if !isempty(dvals) && ticks == :auto
-        # vals, labels = unzip(dvals)
-        a[:continuous_values], dvals
+        axis[:continuous_values], dvals
     else
         ticks
     end
 end
 
-function expand_extrema!(a::Axis, v::Number)
-    emin, emax = a[:extrema]
-    a[:extrema] = (min(v, emin), max(v, emax))
+# -------------------------------------------------------------------------
+
+function expand_extrema!(ex::Extrema, v::Number)
+    ex.emin = min(v, ex.emin)
+    ex.emax = max(v, ex.emax)
+    ex
 end
-function expand_extrema!{MIN<:Number,MAX<:Number}(a::Axis, v::Tuple{MIN,MAX})
-    emin, emax = a[:extrema]
-    a[:extrema] = (min(v[1], emin), max(v[2], emax))
+
+function expand_extrema!(axis::Axis, v::Number)
+    expand_extrema!(axis[:extrema], v)
 end
-function expand_extrema!{N<:Number}(a::Axis, v::AVec{N})
-    if !isempty(v)
-        emin, emax = a[:extrema]
-        a[:extrema] = (min(minimum(v), emin), max(maximum(v), emax))
+function expand_extrema!{MIN<:Number,MAX<:Number}(axis::Axis, v::Tuple{MIN,MAX})
+    ex = axis[:extrema]
+    ex.emin = min(v[1], ex.emin)
+    ex.emax = max(v[2], ex.emax)
+    ex
+end
+function expand_extrema!{N<:Number}(axis::Axis, v::AVec{N})
+    ex = axis[:extrema]
+    for vi in v
+        expand_extrema!(ex, vi)
     end
-    a[:extrema]
+    ex
 end
+
+# -------------------------------------------------------------------------
 
 # push the limits out slightly
 function widen(lmin, lmax)
@@ -132,7 +141,8 @@ end
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
 function axis_limits(axis::Axis, should_widen::Bool = true)
-    amin, amax = axis[:extrema]
+    ex = axis[:extrema]
+    amin, amax = ex.emin, ex.emax
     lims = axis[:lims]
     if isa(lims, Tuple) && length(lims) == 2
         if isfinite(lims[1])
@@ -152,57 +162,61 @@ function axis_limits(axis::Axis, should_widen::Bool = true)
     end
 end
 
-# these methods track the discrete values which correspond to axis continuous values (cv)
+# -------------------------------------------------------------------------
+
+# these methods track the discrete (categorical) values which correspond to axis continuous values (cv)
 # whenever we have discrete values, we automatically set the ticks to match.
 # we return (continuous_value, discrete_index)
-function discrete_value!(a::Axis, dv)
-    cv_idx = get(a[:discrete_map], dv, -1)
-    # @show a[:discrete_map], a[:discrete_values], dv
+function discrete_value!(axis::Axis, dv)
+    cv_idx = get(axis[:discrete_map], dv, -1)
+    # @show axis[:discrete_map], axis[:discrete_values], dv
     if cv_idx == -1
-        emin, emax = a[:extrema]
-        cv = max(0.5, emax + 1.0)
-        expand_extrema!(a, cv)
-        push!(a[:discrete_values], dv)
-        push!(a[:continuous_values], cv)
-        cv_idx = length(a[:discrete_values])
-        a[:discrete_map][dv] = cv_idx
+        ex = axis[:extrema]
+        cv = max(0.5, ex.emax + 1.0)
+        expand_extrema!(axis, cv)
+        push!(axis[:discrete_values], dv)
+        push!(axis[:continuous_values], cv)
+        cv_idx = length(axis[:discrete_values])
+        axis[:discrete_map][dv] = cv_idx
         cv, cv_idx
     else
-        cv = a[:continuous_values][cv_idx]
+        cv = axis[:continuous_values][cv_idx]
         cv, cv_idx
     end
 end
 
-# continuous value... just pass back with a negative index
-function discrete_value!(a::Axis, cv::Number)
+# continuous value... just pass back with axis negative index
+function discrete_value!(axis::Axis, cv::Number)
     cv, -1
 end
 
 # add the discrete value for each item.  return the continuous values and the indices
-function discrete_value!(a::Axis, v::AVec)
+function discrete_value!(axis::Axis, v::AVec)
     n = length(v)
     cvec = zeros(n)
     discrete_indices = zeros(Int, n)
     for i=1:n
-        cvec[i], discrete_indices[i] = discrete_value!(a, v[i])
+        cvec[i], discrete_indices[i] = discrete_value!(axis, v[i])
     end
     cvec, discrete_indices
 end
 
 # add the discrete value for each item.  return the continuous values and the indices
-function discrete_value!(a::Axis, v::AMat)
+function discrete_value!(axis::Axis, v::AMat)
     n,m = size(v)
     cmat = zeros(n,m)
     discrete_indices = zeros(Int, n, m)
     for i=1:n, j=1:m
-        cmat[i,j], discrete_indices[i,j] = discrete_value!(a, v[i,j])
+        cmat[i,j], discrete_indices[i,j] = discrete_value!(axis, v[i,j])
     end
     cmat, discrete_indices
 end
 
-function discrete_value!(a::Axis, v::Surface)
-    map(Surface, discrete_value!(a, v.surf))
+function discrete_value!(axis::Axis, v::Surface)
+    map(Surface, discrete_value!(axis, v.surf))
 end
+
+# -------------------------------------------------------------------------
 
 function pie_labels(sp::Subplot, series::Series)
     d = series.d

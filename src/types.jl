@@ -27,6 +27,12 @@ type Axis
     d::KW
 end
 
+type Extrema
+    emin::Float64
+    emax::Float64
+end
+Extrema() = Extrema(Inf, -Inf)
+
 # -----------------------------------------------------------
 
 # a single subplot

@@ -438,6 +438,7 @@ function build_layout(layout::GridLayout, n::Integer)
         end
         i >= n && break  # only add n subplots
     end
+
     layout, subplots, spmap
 end
 
@@ -478,7 +479,7 @@ end
 # ----------------------------------------------------------------------
 # @layout macro
 
-function add_layout_pct!(kw::KW, v::Expr, idx::Integer)
+function add_layout_pct!(kw::KW, v::Expr, idx::Integer, nidx::Integer)
     # dump(v)
     # something like {0.2w}?
     if v.head == :call && v.args[1] == :*
@@ -490,7 +491,9 @@ function add_layout_pct!(kw::KW, v::Expr, idx::Integer)
             elseif units == :w
                 return kw[:w] = num*pct
             elseif units in (:pct, :px, :mm, :cm, :inch)
-                return kw[idx == 1 ? :w : :h] = v
+                idx == 1 && (kw[:w] = v)
+                (idx == 2 || nidx == 1) && (kw[:h] = v)
+                # return kw[idx == 1 ? :w : :h] = v
             end
         end
     end
@@ -498,7 +501,9 @@ function add_layout_pct!(kw::KW, v::Expr, idx::Integer)
 end
 
 function add_layout_pct!(kw::KW, v::Number, idx::Integer)
-    kw[idx == 1 ? :w : :h] = v*pct
+    # kw[idx == 1 ? :w : :h] = v*pct
+    idx == 1 && (kw[:w] = v*pct)
+    (idx == 2 || nidx == 1) && (kw[:h] = v*pct)
 end
 
 function create_grid(expr::Expr)
@@ -522,7 +527,7 @@ function create_grid(expr::Expr)
         s = expr.args[1]
         kw = KW()
         for (i,arg) in enumerate(expr.args[2:end])
-            add_layout_pct!(kw, arg, i)
+            add_layout_pct!(kw, arg, i, length(expr.args)-1)
         end
         # @show kw
         :(EmptyLayout(label = $(QuoteNode(s)), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto)))))
@@ -539,4 +544,51 @@ end
 
 macro layout(mat::Expr)
     create_grid(mat)
+end
+
+
+# -------------------------------------------------------------------------
+
+# make all reference the same axis extrema/values
+function link_axes!(axes::Axis...)
+    a1 = axes[1]
+    for i=2:length(axes)
+        a2 = axes[i]
+        for k in (:extrema, :discrete_values, :continuous_values, :discrete_map)
+            a2[k] = a1[k]
+        end
+    end
+end
+
+# for some vector or matrix of layouts, filter only the Subplots and link those axes
+function link_axes!(a::AbstractArray{AbstractLayout}, axissym::Symbol)
+    subplots = filter(l -> isa(l, Subplot), a)
+    axes = [sp.attr[axissym] for sp in subplots]
+    link_axes!(axes...)
+end
+
+# don't do anything for most layout types
+function link_axes!(l::AbstractLayout, link::Symbol)
+end
+
+# process a GridLayout, recursively linking axes according to the link symbol
+function link_axes!(layout::GridLayout, link::Symbol)
+    nr, nc = size(layout)
+    if link in (:x, :both)
+        for c=1:nc
+            link_axes!(layout.grid[:,c], :xaxis)
+        end
+    end
+    if link in (:y, :both)
+        for r=1:nr
+            link_axes!(layout.grid[r,:], :yaxis)
+        end
+    end
+    if link == :all
+        link_axes!(layout.grid, :xaxis)
+        link_axes!(layout.grid, :yaxis)
+    end
+    for l in layout.grid
+        link_axes!(l, link)
+    end
 end

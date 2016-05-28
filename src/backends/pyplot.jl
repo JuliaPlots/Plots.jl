@@ -841,23 +841,23 @@ end
 
 # -----------------------------------------------------------------
 
-function set_lims!(sp::Subplot{PyPlotBackend}, axis::Axis)
-    lims = copy(axis[:extrema])
-    lims_override = axis[:lims]
-    if lims_override != :auto
-        if isfinite(lims_override[1])
-            lims[1] = lims_override[1]
-        end
-        if isfinite(lims_override[2])
-            lims[2] = lims_override[2]
-        end
-    end
-
-    # TODO: check for polar, do set_tlim/set_rlim instead
-
-    # pyplot's set_xlim (or y/z) method:
-    sp.o[symbol(:set_, axis[:letter], :lim)](lims...)
-end
+# function set_lims!(sp::Subplot{PyPlotBackend}, axis::Axis)
+#     lims = copy(axis[:extrema])
+#     lims_override = axis[:lims]
+#     if lims_override != :auto
+#         if isfinite(lims_override[1])
+#             lims[1] = lims_override[1]
+#         end
+#         if isfinite(lims_override[2])
+#             lims[2] = lims_override[2]
+#         end
+#     end
+#
+#     # TODO: check for polar, do set_tlim/set_rlim instead
+#
+#     # pyplot's set_xlim (or y/z) method:
+#     sp.o[symbol(:set_, axis[:letter], :lim)](lims...)
+# end
 
 # --------------------------------------------------------------------------
 
@@ -867,10 +867,10 @@ get_axis(sp::Subplot, letter::Symbol) = sp.attr[symbol(letter, :axis)]
 
 function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
     for letter in letters
-        axis = get_axis(sp, letter)
-        expand_extrema!(axis, series.d[letter])
+        # axis = get_axis(sp, letter)
+        # expand_extrema!(axis, series.d[letter])
         # set_lims!(sp, axis)
-        setPyPlotLims(sp.o, axis)
+        setPyPlotLims(sp.o, sp.attr[symbol(letter, :axis)])
     end
 end
 

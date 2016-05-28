@@ -309,19 +309,17 @@ function _plot!(plt::Plot, d::KW, args...)
         # grab the first in line to be processed and pass it through apply_recipe
         # to generate a list of RecipeData objects (data + attributes)
         next_series = shift!(still_to_process)
-        series_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
-        for series in series_list
+        for recipedata in RecipesBase.apply_recipe(next_series.d, next_series.args...)
 
-            # series should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
-            if !(typeof(series) <: RecipeData)
-                error("Inputs couldn't be processed... expected RecipeData but got: $series")
+            # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
+            if !(typeof(recipedata) <: RecipeData)
+                error("Inputs couldn't be processed... expected RecipeData but got: $recipedata")
             end
 
-            # @show series
-            if isempty(series.args)
+            if isempty(recipedata.args)
                 # when the arg tuple is empty, that means there's nothing left to recursively
                 # process... finish up and add to the kw_list
-                kw = series.d
+                kw = recipedata.d
                 _add_markershape(kw)
 
                 # if there was a grouping, filter the data here
@@ -347,8 +345,8 @@ function _plot!(plt::Plot, d::KW, args...)
                 warnOnUnsupportedScales(plt.backend, kw)
                 push!(kw_list, kw)
 
-                # handle error bars by creating new series data... these will have
-                # the same series index as the series they are copied from
+                # handle error bars by creating new recipedata data... these will have
+                # the same recipedata index as the recipedata they are copied from
                 for esym in (:xerror, :yerror)
                     if get(d, esym, nothing) != nothing
                         # we make a copy of the KW and apply an errorbar recipe
@@ -360,7 +358,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
             else
                 # args are non-empty, so there's still processing to do... add it back to the queue
-                push!(still_to_process, series)
+                push!(still_to_process, recipedata)
             end
         end
     end
@@ -398,7 +396,11 @@ function _plot!(plt::Plot, d::KW, args...)
         _update_subplot_args(plt, sp, d, idx)
     end
 
-    # !!! note: at this point, kw_list is fully decomposed into individual series... one KW per series !!!
+    # do we need to link any axes together?
+    link_axes!(plt.layout, plt.attr[:link])
+
+    # !!! note: At this point, kw_list is fully decomposed into individual series... one KW per series.          !!!
+    # !!!       The next step is to recursively apply series recipes until the backend supports that series type !!!
 
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes

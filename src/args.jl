@@ -192,10 +192,10 @@ const _plot_defaults = KW(
     :window_title                 => "Plots.jl",
     :show                        => false,
     :layout                      => 1,
-    :link                        => false,
-    :linkx                       => false,
-    :linky                       => false,
-    :linkfunc                    => nothing,
+    :link                        => :none,
+    # :linkx                       => false,
+    # :linky                       => false,
+    # :linkfunc                    => nothing,
     :overwrite_figure            => true,
     :html_output_format          => :auto,
 )
@@ -251,6 +251,7 @@ const _suppress_warnings = Set{Symbol}([
     :subplot,
     :subplot_index,
     :series_plotindex,
+    :link,
 ])
 
 # add defaults for the letter versions
@@ -391,8 +392,8 @@ add_aliases(:size, :windowsize, :wsize)
 add_aliases(:window_title, :windowtitle, :wtitle)
 add_aliases(:show, :gui, :display)
 add_aliases(:color_palette, :palette)
-add_aliases(:linkx, :xlink)
-add_aliases(:linky, :ylink)
+# add_aliases(:linkx, :xlink)
+# add_aliases(:linky, :ylink)
 add_aliases(:overwrite_figure, :clf, :clearfig, :overwrite, :reuse)
 add_aliases(:xerror, :xerr, :xerrorbar)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
@@ -656,21 +657,21 @@ function preprocessArgs!(d::KW)
         d[:colorbar] = convertLegendValue(d[:colorbar])
     end
 
-    # handle subplot links
-    if haskey(d, :link)
-        l = d[:link]
-        if isa(l, Bool)
-            d[:linkx] = l
-            d[:linky] = l
-        elseif isa(l, Function)
-            d[:linkx] = true
-            d[:linky] = true
-            d[:linkfunc] = l
-        else
-            warn("Unhandled/invalid link $l.  Should be a Bool or a function mapping (row,column) -> (linkx, linky), where linkx/y can be Bool or Void (nothing)")
-        end
-        delete!(d, :link)
-    end
+    # # handle subplot links
+    # if haskey(d, :link)
+    #     l = d[:link]
+    #     if isa(l, Bool)
+    #         d[:linkx] = l
+    #         d[:linky] = l
+    #     elseif isa(l, Function)
+    #         d[:linkx] = true
+    #         d[:linky] = true
+    #         d[:linkfunc] = l
+    #     else
+    #         warn("Unhandled/invalid link $l.  Should be a Bool or a function mapping (row,column) -> (linkx, linky), where linkx/y can be Bool or Void (nothing)")
+    #     end
+    #     delete!(d, :link)
+    # end
 end
 
 # -----------------------------------------------------------------------------
@@ -904,6 +905,8 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
         color_or_match!(axis.d, :foreground_color_border, fg)
         color_or_match!(axis.d, :foreground_color_guide, fg)
         color_or_match!(axis.d, :foreground_color_text, fg)
+
+        # TODO: need to handle linking here?
     end
 
     # now we can get rid of the axis keys without a letter
