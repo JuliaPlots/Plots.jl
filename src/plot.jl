@@ -71,24 +71,17 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     d = KW(kw)
     preprocessArgs!(d)
 
-    # create a layout, but don't add subplots... we expect nplts == layout capacity
-    # TODO: move this to layouts.jl
-    # plts = vcat(plt1, plts)
-
-    # build our plot vector
+    # build our plot vector from the args
     n = length(plts_tail) + 1
     plts = Array(Plot, n)
     plts[1] = plt1
     for (i,plt) in enumerate(plts_tail)
         plts[i+1] = plt
     end
-    # plts[2:end] = plts_tail
-    # @show typeof(plts),n
 
     # compute the layout
     layout = layout_args(d, n)[1]
     num_sp = sum([length(p.subplots) for p in plts])
-    # @show typeof(layout), num_sp
 
     # create a new plot object, with subplot list/map made of existing subplots.
     # note: we create a new backend figure for this new plot object
@@ -108,7 +101,6 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
 
     # create the layout and initialize the subplots
     plt.layout, plt.subplots, plt.spmap = build_layout(layout, num_sp, copy(plts))
-    # @show map(typeof, (plt.layout, plt.subplots, plt.spmap))
     for (idx, sp) in enumerate(plt.subplots)
         _initialize_subplot(plt, sp)
         serieslist = series_list(sp)
@@ -126,55 +118,6 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         gui()
     end
     plt
-
-        # _update_plot_args(plt, d)
-        # plt.o = _create_backend_figure(plt)
-        #
-        # # create the layout and subplots from the inputs
-        # plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
-        # for (idx,sp) in enumerate(plt.subplots)
-        #     sp.plt = plt
-        #     sp.attr[:subplot_index] = idx
-        #     # _update_subplot_args(plt, sp, copy(d), idx)
-        # end
-        #
-        # plt.init = true
-    #
-    # nr, nc = size(layout)
-    # subplots = Subplot[]
-    # spmap = SubplotMap()
-    # i = 0
-    # for r=1:nr, c=1:nc
-    #     l = layout[r,c]
-    #     if isa(l, EmptyLayout)
-    #         i += 1
-    #         plt = plts[i]
-    #         layout[r,c] = plt.layout
-    #         append!(subplots, plt.subplots)
-    #         merge!(spmap, plt.spmap)
-    #         # if init_sp
-    #         #     sp = Subplot(backend(), parent=layout)
-    #         #     layout[r,c] = sp
-    #         #     push!(subplots, sp)
-    #         #     spmap[attr(l,:label,gensym())] = sp
-    #         # end
-    #         if hasattr(l,:width)
-    #             layout.widths[c] = attr(l,:width)
-    #         end
-    #         if hasattr(l,:height)
-    #             layout.heights[r] = attr(l,:height)
-    #         end
-    #     elseif isa(l, GridLayout)
-    #         # sub-grid
-    #         l, sps, m = build_layout(l, n-i)
-    #         append!(subplots, sps)
-    #         merge!(spmap, m)
-    #         i += length(sps)
-    #     end
-    #     i >= n && break  # only add n subplots
-    # end
-    # layout, subplots, spmap
-
 end
 
 

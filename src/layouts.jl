@@ -417,7 +417,7 @@ function build_layout(layout::GridLayout, n::Integer)
     i = 0
     for r=1:nr, c=1:nc
         l = layout[r,c]
-        if isa(l, EmptyLayout)
+        if isa(l, EmptyLayout) && !get(l.attr, :blank, false)
             sp = Subplot(backend(), parent=layout)
             layout[r,c] = sp
             push!(subplots, sp)
@@ -451,7 +451,7 @@ function build_layout(layout::GridLayout, numsp::Integer, plts::AVec{Plot})
     i = 0
     for r=1:nr, c=1:nc
         l = layout[r,c]
-        if isa(l, EmptyLayout)
+        if isa(l, EmptyLayout) && !get(l.attr, :blank, false)
             plt = shift!(plts)  # grab the first plot out of the list
             layout[r,c] = plt.layout
             append!(subplots, plt.subplots)
@@ -506,40 +506,120 @@ function add_layout_pct!(kw::KW, v::Number, idx::Integer)
     (idx == 2 || nidx == 1) && (kw[:h] = v*pct)
 end
 
+isrow(v) = isa(v, Expr) && v.head in (:hcat,:row)
+iscol(v) = isa(v, Expr) && v.head == :vcat
+rowsize(v) = isrow(v) ? length(v.args) : 1
+
+
 function create_grid(expr::Expr)
-    cellsym = gensym(:cell)
-    constructor = if expr.head == :vcat
-        :(let
-            $cellsym = GridLayout($(length(expr.args)), 1)
-            $([:($cellsym[$i,1] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
-            $cellsym
+    # cellsym = gensym(:cell)
+    @show expr
+    if iscol(expr)
+        create_grid_vcat(expr)
+        # rowsizes = map(rowsize, expr.args)
+        # rmin, rmax = extrema(rowsizes)
+        # if rmin > 0 && rmin == rmax
+        #     # we have a grid... build the whole thing
+        #     # note: rmin is the number of columns
+        #     nr = length(expr.args)
+        #     nc = rmin
+        #
+        #     :(let cell = GridLayout($nr, $nc)
+        #         $([:(cell[$r,$c] = $(create_grid(expr.args[r], c))) for r=1:nr, c=1:nc]...)
+        #         for r=1:nr
+        #             layout = $(create_grid(expr.args[r])
+        #             cell[r,]
+        #         $([:($cellsym[$r,1] = $(create_grid(expr.args[r]))) for r=1:length(expr.args)]...)
+        #         $cellsym
+        #     end)
+        # else
+        #     # otherwise just build one row at a time
+        #     :(let
+        #         $cellsym = GridLayout($(length(expr.args)), 1)
+        #         $([:($cellsym[$i,1] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
+        #         $cellsym
+        #     end)
+        # end
+    elseif isrow(expr)
+        :(let cell = GridLayout(1, $(length(expr.args)))
+            $([:(cell[1,$i] = $(create_grid(v))) for (i,v) in enumerate(expr.args)]...)
+            cell
         end)
-    elseif expr.head in (:hcat,:row)
-        :(let
-            $cellsym = GridLayout(1, $(length(expr.args)))
-            $([:($cellsym[1,$i] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
-            $cellsym
-        end)
+        # :(let
+        #     $cellsym = GridLayout(1, $(length(expr.args)))
+        #     $([:($cellsym[1,$i] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
+        #     $cellsym
+        # end)
 
     elseif expr.head == :curly
-        # length(expr.args) == 3 || error("Should be width and height in curly. Got: ", expr.args)
-        # s,w,h = expr.args
-        s = expr.args[1]
-        kw = KW()
-        for (i,arg) in enumerate(expr.args[2:end])
-            add_layout_pct!(kw, arg, i, length(expr.args)-1)
-        end
-        # @show kw
-        :(EmptyLayout(label = $(QuoteNode(s)), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto)))))
-
+        create_grid_curly(expr)
     else
         # if it's something else, just return that (might be an existing layout?)
         expr
     end
 end
 
+function create_grid_vcat(expr::Expr)
+    rowsizes = map(rowsize, expr.args)
+    rmin, rmax = extrema(rowsizes)
+    @show rmin, rmax
+    if rmin > 0 && rmin == rmax
+        # we have a grid... build the whole thing
+        # note: rmin is the number of columns
+        nr = length(expr.args)
+        nc = rmin
+        @show nr, nc
+        body = Expr(:block)
+        for r=1:nr
+            arg = expr.args[r]
+            @show r, arg
+            if isrow(arg)
+                for (c,item) in enumerate(arg.args)
+                    push!(body.args, :(cell[$r,$c] = $(create_grid(item))))
+                end
+            else
+                push!(body.args, :(cell[$r,1] = $(create_grid(arg))))
+            end
+        end
+        @show body
+        :(let cell = GridLayout($nr, $nc)
+            $body
+            cell
+        end)
+        # :(let cell = GridLayout($nr, $nc)
+        #     $([:(cell[$r,$c] = $(create_grid(expr.args[r], c))) for r=1:nr, c=1:nc]...)
+        #     for r=1:nr
+        #         layout = $(create_grid(expr.args[r])
+        #         cell[r,]
+        #     $([:($cellsym[$r,1] = $(create_grid(expr.args[r]))) for r=1:length(expr.args)]...)
+        #     $cellsym
+        # end)
+    else
+        # otherwise just build one row at a time
+        :(let cell = GridLayout($(length(expr.args)), 1)
+            $([:(cell[$i,1] = $(create_grid(v))) for (i,v) in enumerate(expr.args)]...)
+            cell
+        end)
+        # :(let
+        #     $cellsym = GridLayout($(length(expr.args)), 1)
+        #     $([:($cellsym[$i,1] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
+        #     $cellsym
+        # end)
+    end
+end
+
+function create_grid_curly(expr::Expr)
+    s = expr.args[1]
+    kw = KW()
+    for (i,arg) in enumerate(expr.args[2:end])
+        add_layout_pct!(kw, arg, i, length(expr.args)-1)
+    end
+    # @show kw
+    :(EmptyLayout(label = $(QuoteNode(s)), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto)))))
+end
+
 function create_grid(s::Symbol)
-    :(EmptyLayout(label = $(QuoteNode(s))))
+    :(EmptyLayout(label = $(QuoteNode(s)), blank = $(s == :_)))
 end
 
 macro layout(mat::Expr)

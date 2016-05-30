@@ -963,7 +963,7 @@ function addPyPlotTicks(ax, ticks, letter)
         axis[:set_ticks](ticks[1])
         axis[:set_ticklabels](ticks[2])
     else
-        error("Invalid input for $(isx ? "xticks" : "yticks"): ", ticks)
+        error("Invalid input for $(letter)ticks: $ticks")
     end
 end
 
