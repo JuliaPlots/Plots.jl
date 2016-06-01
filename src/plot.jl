@@ -231,6 +231,8 @@ function _plot!(plt::Plot, d::KW, args...)
     #     _update_subplot_args(plt, sp, d, idx)
     # end
 
+    d[:plot_object] = plt
+
     # the grouping mechanism is a recipe on a GroupBy object
     # we simply add the GroupBy object to the front of the args list to allow
     # the recipe to be applied

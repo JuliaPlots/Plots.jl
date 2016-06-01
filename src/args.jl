@@ -252,6 +252,7 @@ const _suppress_warnings = Set{Symbol}([
     :subplot_index,
     :series_plotindex,
     :link,
+    :plot_object,
 ])
 
 # add defaults for the letter versions

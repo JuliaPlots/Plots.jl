@@ -270,7 +270,10 @@ end
 #     process_inputs(plt, d, f, xmin(plt), xmax(plt))
 # end
 
-@recipe f(f::FuncOrFuncs) = f, xmin(plt), xmax(plt)
+@recipe function f(f::FuncOrFuncs)
+    plt = d[:plot_object]
+    f, xmin(plt), xmax(plt)
+end
 
 #
 # # --------------------------------------------------------------------
