@@ -94,6 +94,7 @@ end
 # convert colorant to 4-tuple RGBA
 getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
 getPyPlotColor(cvec::ColorVector, α=nothing) = map(getPyPlotColor, convertColor(cvec, α).v)
+getPyPlotColor(grad::ColorGradient, α=nothing) = map(c -> getPyPlotColor(c, α), grad.colors)
 getPyPlotColor(scheme::ColorScheme, α=nothing) = getPyPlotColor(convertColor(getColor(scheme), α))
 getPyPlotColor(vec::AVec, α=nothing) = map(c->getPyPlotColor(c,α), vec)
 getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
