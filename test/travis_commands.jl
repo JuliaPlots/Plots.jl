@@ -8,7 +8,8 @@ Pkg.clone("GR")
 Pkg.build("GR")
 
 # Pkg.clone("https://github.com/JuliaPlots/RecipesBase.jl.git")
-Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");
+# Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");
+Pkg.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git")
 
 # Pkg.clone("https://github.com/JunoLab/Blink.jl.git")
 # Pkg.build("Blink")
@@ -17,6 +18,7 @@ Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");
 # Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")
 
 Pkg.checkout("RecipesBase")
+Pkg.checkout("VisualRegressionTests")
 
 ENV["PYTHON"] = ""
 Pkg.add("PyPlot")

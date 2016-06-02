@@ -1,6 +1,6 @@
 
 using VisualRegressionTests
-using ExamplePlots
+# using ExamplePlots
 
 import DataFrames, RDatasets
 
@@ -14,6 +14,7 @@ end
 
 
 using Plots, FactCheck
+using Glob
 
 default(size=(500,300))
 
@@ -21,37 +22,66 @@ default(size=(500,300))
 # TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
+const _current_plots_version = v"0.6.1"
+
+
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], eps = 1e-2)
+    Plots._debugMode.on = debug
+    example = Plots._examples[idx]
+    info("Testing plot: $pkg:$idx:$(example.header)")
+    backend(pkg)
+    backend()
 
-  # first
-  Plots._debugMode.on = debug
-  example = ExamplePlots._examples[idx]
-  info("Testing plot: $pkg:$idx:$(example.header)")
-  backend(pkg)
-  backend()
+    # ensure consistent results
+    srand(1234)
 
-  # ensure consistent results
-  srand(1234)
+    # reference image directory setup
+    # refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))
+    refdir = Pkg.dir("PlotReferenceImages", "Plots", string(pkg))
+    fn = "ref$idx.png"
 
-  # reference image directory setup
-  refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))
+    # firgure out version info
+    G = glob(relpath(refdir) * "/*")
+    @show refdir fn G
+    versions = map(fn -> VersionNumber(split(fn,"/")[end]), G)
+    versions = reverse(sort(versions))
+    @show refdir fn versions
 
-  # test function
-  func = (fn, idx) -> begin
-    map(eval, example.exprs)
-    png(fn)
-  end
+    reffn = nothing
+    newfn = joinpath(refdir, string(_current_plots_version), fn)
+    for v in versions
+        try
+            tmpfn = joinpath(refdir, string(v), fn)
+            @show "trying", tmpfn
+            f = open(tmpfn)
+            reffn = tmpfn
+        end
+    end
 
-  try
-    run(`mkdir -p $refdir`)
-  catch err
-    display(err)
-  end
-  reffn = joinpath(refdir, "ref$idx.png")
+    # now we have the fn (if any)... do the comparison
+    @show reffn
+    if reffn == nothing
+        reffn = newfn
+    end
+    @show reffn
+    # return
 
-  # the test
-  vtest = VisualTest(func, reffn, idx)
-  test_images(vtest, popup=popup, sigma=sigma, eps=eps)
+    # test function
+    func = (fn, idx) -> begin
+        map(eval, example.exprs)
+        png(fn)
+    end
+
+    # try
+    #     run(`mkdir -p $refdir`)
+    # catch err
+    #     display(err)
+    # end
+    # reffn = joinpath(refdir, "ref$idx.png")
+
+    # the test
+    vtest = VisualTest(func, reffn, idx)
+    test_images(vtest, popup=popup, sigma=sigma, eps=eps, newfn = newfn)
 end
 
 function image_comparison_facts(pkg::Symbol;
@@ -60,7 +90,7 @@ function image_comparison_facts(pkg::Symbol;
                                 debug = false,  # print debug information?
                                 sigma = [1,1],  # number of pixels to "blur"
                                 eps = 1e-2)     # acceptable error (percent)
-  for i in 1:length(ExamplePlots._examples)
+  for i in 1:length(Plots._examples)
     i in skip && continue
     if only == nothing || i in only
       @fact image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) |> success --> true

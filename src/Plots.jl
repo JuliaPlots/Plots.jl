@@ -161,6 +161,8 @@ export
     @recipe,
     # @plotrecipe,
 
+    test_examples,
+
     translate,
     translate!,
     rotate,
@@ -197,6 +199,7 @@ include("subplots.jl")
 include("recipes.jl")
 include("animation.jl")
 include("output.jl")
+include("examples.jl")
 
 
 # ---------------------------------------------------------
