@@ -22,7 +22,7 @@ default(size=(500,300))
 # TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
-const _current_plots_version = v"0.6.1"
+const _current_plots_version = v"0.7.0"
 
 
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], eps = 1e-2)
@@ -42,28 +42,29 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
 
     # firgure out version info
     G = glob(relpath(refdir) * "/*")
-    @show refdir fn G
+    # @show refdir fn G
     versions = map(fn -> VersionNumber(split(fn,"/")[end]), G)
     versions = reverse(sort(versions))
-    @show refdir fn versions
+    # @show refdir fn versions
 
     reffn = nothing
-    newfn = joinpath(refdir, string(_current_plots_version), fn)
+    newdir = joinpath(refdir, string(_current_plots_version))
+    newfn = joinpath(newdir, fn)
     for v in versions
         try
             tmpfn = joinpath(refdir, string(v), fn)
-            @show "trying", tmpfn
+            # @show "trying", tmpfn
             f = open(tmpfn)
             reffn = tmpfn
         end
     end
 
     # now we have the fn (if any)... do the comparison
-    @show reffn
+    # @show reffn
     if reffn == nothing
         reffn = newfn
     end
-    @show reffn
+    # @show reffn
     # return
 
     # test function
@@ -72,11 +73,11 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
         png(fn)
     end
 
-    # try
-    #     run(`mkdir -p $refdir`)
-    # catch err
-    #     display(err)
-    # end
+    try
+        run(`mkdir -p $newdir`)
+    catch err
+        display(err)
+    end
     # reffn = joinpath(refdir, "ref$idx.png")
 
     # the test
