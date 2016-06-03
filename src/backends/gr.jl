@@ -633,14 +633,14 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     for axis_idx = 1:num_axes
         xmin, xmax, ymin, ymax = extrema[axis_idx,:]
         if scale & GR.OPTION_X_LOG == 0
-            xmin, xmax = GR.adjustlimits(xmin, xmax)
+            # xmin, xmax = GR.adjustlimits(xmin, xmax)
             majorx = 5
             xtick = GR.tick(xmin, xmax) / majorx
         else
             xtick = majorx = 1
         end
         if scale & GR.OPTION_Y_LOG == 0
-            ymin, ymax = GR.adjustlimits(ymin, ymax)
+            # ymin, ymax = GR.adjustlimits(ymin, ymax)
             majory = 5
             ytick = GR.tick(ymin, ymax) / majory
         else

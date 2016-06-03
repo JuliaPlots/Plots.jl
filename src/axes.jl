@@ -130,6 +130,58 @@ function expand_extrema!{N<:Number}(axis::Axis, v::AVec{N})
     ex
 end
 
+
+function expand_extrema!(sp::Subplot, d::KW)
+    # first expand for the data
+    for letter in (:x, :y, :z)
+        data = d[letter]
+        axis = sp.attr[Symbol(letter, "axis")]
+        if eltype(data) <: Number
+            expand_extrema!(axis, data)
+        elseif isa(data, Surface) && eltype(data.surf) <: Number
+            expand_extrema!(axis, data)
+        elseif data != nothing
+            # TODO: need more here... gotta track the discrete reference value
+            #       as well as any coord offset (think of boxplot shape coords... they all
+            #       correspond to the same x-value)
+            # @show letter,eltype(data),typeof(data)
+            d[letter], d[Symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
+        end
+    end
+
+    # # expand for fillrange/bar_width
+    # fillaxis, baraxis = sp.attr[:yaxis], sp.attr[:xaxis]
+    # if isvertical(d)
+    #     fillaxis, baraxis = baraxis, fillaxis
+    # end
+
+    # expand for fillrange
+    vert = isvertical(d)
+    fr = d[:fillrange]
+    if fr == nothing && d[:seriestype] == :bar
+        fr = 0.0
+    end
+    expand_extrema!(sp.attr[vert ? :yaxis : :xaxis], fr)
+    # @show d[:fillrange] d[:bar_width]
+
+    # expand for bar_width
+    if d[:seriestype] == :bar
+        dsym = vert ? :x : :y
+        data = d[dsym]
+
+        bw = d[:bar_width]
+        if bw == nothing
+            bw = d[:bar_width] = mean(diff(data))
+        end
+        @show data bw
+
+        axis = sp.attr[Symbol(dsym, :axis)]
+        expand_extrema!(axis, maximum(data) + 0.5maximum(bw))
+        expand_extrema!(axis, minimum(data) - 0.5minimum(bw))
+    end
+
+end
+
 # -------------------------------------------------------------------------
 
 # push the limits out slightly

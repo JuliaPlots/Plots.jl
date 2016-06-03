@@ -40,7 +40,7 @@ supportedArgs(::PyPlotBackend) = [
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [
         :none, :line, :path, :steppre, :steppost, :shape,
-        :scatter, :histogram2d, :hexbin, :histogram, :density,
+        :scatter, :histogram2d, :hexbin, #:histogram, #:density,
         :bar, :sticks, #:box, :violin, :quiver,
         :hline, :vline, :heatmap, :pie, :image,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
@@ -507,7 +507,11 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :bar
-        extrakw[isvertical(d) ? :width : :height] = d[:bar_width]
+        bw = d[:bar_width]
+        if bw == nothing
+            bw = mean(diff(isvertical(d) ? x : y))
+        end
+        extrakw[isvertical(d) ? :width : :height] = bw
         fr = get(d, :fillrange, nothing)
         if fr != nothing
             extrakw[:bottom] = fr
@@ -568,21 +572,21 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
     end
 
-    if st == :histogram
-        handle = ax[:hist](y;
-            label = d[:label],
-            zorder = plt.n,
-            color = pyfillcolor(d),
-            edgecolor = pylinecolor(d),
-            linewidth = d[:linewidth],
-            bins = d[:bins],
-            normed = d[:normalize],
-            weights = d[:weights],
-            orientation = (isvertical(d) ? "vertical" : "horizontal"),
-            histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
-        )[3]
-        push!(handles, handle)
-    end
+    # if st == :histogram
+    #     handle = ax[:hist](y;
+    #         label = d[:label],
+    #         zorder = plt.n,
+    #         color = pyfillcolor(d),
+    #         edgecolor = pylinecolor(d),
+    #         linewidth = d[:linewidth],
+    #         bins = d[:bins],
+    #         normed = d[:normalize],
+    #         weights = d[:weights],
+    #         orientation = (isvertical(d) ? "vertical" : "horizontal"),
+    #         histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
+    #     )[3]
+    #     push!(handles, handle)
+    # end
 
     if st == :histogram2d
         handle = ax[:hist2d](x, y;

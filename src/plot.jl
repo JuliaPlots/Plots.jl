@@ -171,23 +171,25 @@ function _apply_series_recipe(plt::Plot, d::KW)
         end
 
         # adjust extrema and discrete info
-        if st != :image
-            for letter in (:x, :y, :z)
-                data = d[letter]
-                axis = sp.attr[Symbol(letter, "axis")]
-                if eltype(data) <: Number
-                    expand_extrema!(axis, data)
-                elseif isa(data, Surface) && eltype(data.surf) <: Number
-                    expand_extrema!(axis, data)
-                elseif data != nothing
-                    # TODO: need more here... gotta track the discrete reference value
-                    #       as well as any coord offset (think of boxplot shape coords... they all
-                    #       correspond to the same x-value)
-                    # @show letter,eltype(data),typeof(data)
-                    d[letter], d[Symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
-                end
-            end
+        if !(st in (:image, :histogram, :histogram2d))
+            expand_extrema!(sp, d)
+            # for letter in (:x, :y, :z)
+            #     data = d[letter]
+            #     axis = sp.attr[Symbol(letter, "axis")]
+            #     if eltype(data) <: Number
+            #         expand_extrema!(axis, data)
+            #     elseif isa(data, Surface) && eltype(data.surf) <: Number
+            #         expand_extrema!(axis, data)
+            #     elseif data != nothing
+            #         # TODO: need more here... gotta track the discrete reference value
+            #         #       as well as any coord offset (think of boxplot shape coords... they all
+            #         #       correspond to the same x-value)
+            #         # @show letter,eltype(data),typeof(data)
+            #         d[letter], d[Symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
+            #     end
+            # end
         end
+
 
         # add the series!
         warnOnUnsupportedArgs(plt.backend, d)
