@@ -162,7 +162,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
         end
 
         # adjust extrema and discrete info
-        if !(st in (:image, :histogram, :histogram2d))
+        if !(st in (:pie, :image, :histogram, :histogram2d))
             expand_extrema!(sp, d)
         end
 

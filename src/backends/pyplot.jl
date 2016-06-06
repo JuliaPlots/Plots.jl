@@ -40,7 +40,7 @@ supportedArgs(::PyPlotBackend) = [
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [
         :none, :line, :path, :steppre, :steppost, :shape,
-        :scatter, :histogram2d, :hexbin, #:histogram, #:density,
+        :scatter, :histogram2d, :hexbin, :histogram, #:density,
         :bar, :sticks, #:box, :violin, :quiver,
         :hline, :vline, :heatmap, :pie, :image,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
@@ -546,21 +546,29 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
     end
 
-    # if st == :histogram
-    #     handle = ax[:hist](y;
-    #         label = d[:label],
-    #         zorder = plt.n,
-    #         color = pyfillcolor(d),
-    #         edgecolor = pylinecolor(d),
-    #         linewidth = d[:linewidth],
-    #         bins = d[:bins],
-    #         normed = d[:normalize],
-    #         weights = d[:weights],
-    #         orientation = (isvertical(d) ? "vertical" : "horizontal"),
-    #         histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
-    #     )[3]
-    #     push!(handles, handle)
-    # end
+    if st == :histogram
+        handle = ax[:hist](y;
+            label = d[:label],
+            zorder = plt.n,
+            color = pyfillcolor(d),
+            edgecolor = pylinecolor(d),
+            linewidth = d[:linewidth],
+            bins = d[:bins],
+            normed = d[:normalize],
+            weights = d[:weights],
+            orientation = (isvertical(d) ? "vertical" : "horizontal"),
+            histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
+        )[3]
+        push!(handles, handle)
+
+        # expand the extrema... handle is a list of Rectangle objects
+        for rect in handle
+            xmin, ymin, xmax, ymax = rect[:get_bbox]()[:extents]
+            expand_extrema!(sp, xmin, xmax, ymin, ymax)
+            # expand_extrema!(sp[:xaxis], (xmin, xmax))
+            # expand_extrema!(sp[:yaxis], (ymin, ymax))
+        end
+    end
 
     if st == :histogram2d
         handle = ax[:hist2d](x, y;
@@ -573,6 +581,12 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         )[4]
         push!(handles, handle)
         needs_colorbar = true
+
+        # expand the extrema... handle is a AxesImage object
+        expand_extrema!(sp, handle[:get_extent]()...)
+        # xmin, xmax, ymin, ymax = handle[:get_extent]()
+        # expand_extrema!(sp[:xaxis], (xmin, xmax))
+        # expand_extrema!(sp[:yaxis], (ymin, ymax))
     end
 
     if st == :hexbin
@@ -714,6 +728,11 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             vmax = 1.0
         )
         push!(handles, handle)
+
+        # expand extrema... handle is AxesImage object
+        xmin, xmax, ymax, ymin = handle[:get_extent]()
+        expand_extrema!(sp, xmin, xmax, ymin, ymax)
+        sp[:yaxis].d[:flip] = true
     end
 
     if st == :heatmap
@@ -733,6 +752,16 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         )
         push!(handles, handle)
         needs_colorbar = true
+
+        # TODO: this should probably be handled generically
+        # expand extrema... handle is a QuadMesh object
+        for path in handle[:properties]()["paths"]
+            verts = path[:vertices]
+            xmin, ymin = minimum(verts, 1)
+            xmax, ymax = maximum(verts, 1)
+            expand_extrema!(sp, xmin, xmax, ymin, ymax)
+        end
+
     end
 
     if st == :shape
@@ -750,12 +779,18 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :pie
-
         handle = ax[:pie](y;
             # colors = # a vector of colors?
             labels = pie_labels(sp, series)
-        )
+        )[1]
         push!(handles, handle)
+
+        # # expand extrema... get list of Wedge objects
+        # for wedge in handle
+        #     path = wedge[:get_path]()
+        #     for 
+        lim = 1.1
+        expand_extrema!(sp, -lim, lim, -lim, lim)
     end
 
     d[:serieshandle] = handles
@@ -809,26 +844,6 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 end
 
 
-# -----------------------------------------------------------------
-
-# function set_lims!(sp::Subplot{PyPlotBackend}, axis::Axis)
-#     lims = copy(axis[:extrema])
-#     lims_override = axis[:lims]
-#     if lims_override != :auto
-#         if isfinite(lims_override[1])
-#             lims[1] = lims_override[1]
-#         end
-#         if isfinite(lims_override[2])
-#             lims[2] = lims_override[2]
-#         end
-#     end
-#
-#     # TODO: check for polar, do set_tlim/set_rlim instead
-#
-#     # pyplot's set_xlim (or y/z) method:
-#     sp.o[Symbol(:set_, axis[:letter], :lim)](lims...)
-# end
-
 # --------------------------------------------------------------------------
 
 function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
@@ -854,57 +869,13 @@ function _series_updated(plt::Plot{PyPlotBackend}, series::Series)
     update_limits!(d[:subplot], series, is3d(series) ? (:x,:y,:z) : (:x,:y))
 end
 
-# function setxy!{X,Y}(plt::Plot{PyPlotBackend}, xy::Tuple{X,Y}, i::Integer)
-#     series = plt.series_list[i]
-#     d = series.d
-#     d[:x], d[:y] = xy
-#     for handle in d[:serieshandle]
-#         try
-#             handle[:set_data](xy...)
-#         catch
-#             handle[:set_offsets](hcat(xy...))
-#         end
-#     end
-#     update_limits!(d[:subplot], series, (:x,:y))
-#     plt
-# end
-#
-#
-# function setxyz!{X,Y,Z}(plt::Plot{PyPlotBackend}, xyz::Tuple{X,Y,Z}, i::Integer)
-#     series = plt.series_list[i]
-#     d = series.d
-#     d[:x], d[:y], d[:z] = xyz
-#     for handle in d[:serieshandle]
-#         handle[:set_data](d[:x], d[:y])
-#         handle[:set_3d_properties](d[:z])
-#     end
-#     update_limits!(d[:subplot], series, (:x,:y,:z))
-#     plt
-# end
 
 # --------------------------------------------------------------------------
 
-# function addPyPlotLims(ax, lims, letter)
-#     lims == :auto && return
-#     ltype = limsType(lims)
-#     if ltype == :limits
-#         setf = ax[Symbol("set_", letter, "lim")]
-#         l1, l2 = lims
-#         if isfinite(l1)
-#             letter == :x ? setf(left = l1) : setf(bottom = l1)
-#         end
-#         if isfinite(l2)
-#             letter == :x ? setf(right = l2) : setf(top = l2)
-#         end
-#     else
-#         error("Invalid input for $letter: ", lims)
-#     end
-# end
-
 function setPyPlotLims(ax, axis::Axis)
     letter = axis[:letter]
-    lims = axis_limits(axis)
-    ax[Symbol("set_", letter, "lim")](lims...)
+    lfrom, lto = axis_limits(axis)
+    ax[Symbol("set_", letter, "lim")](lfrom, lto)
 end
 
 function addPyPlotTicks(ax, ticks, letter)

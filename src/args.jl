@@ -270,7 +270,7 @@ for letter in (:x,:y,:z)
                 :foreground_color_guide,
                 :discrete_values
             )
-        _axis_defaults_byletter[Symbol(letter,k)] = nothing
+        _axis_defaults_byletter[Symbol(letter,k)] = :match
 
         # allow the underscore version too: xguide or x_guide
         add_aliases(Symbol(letter, k), Symbol(letter, "_", k))

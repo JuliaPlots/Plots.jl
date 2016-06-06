@@ -17,7 +17,15 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
         :use_minor => false,
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
-    merge!(d, _axis_defaults)
+
+    # get defaults from letter version, unless match
+    for (k,v) in _axis_defaults
+        lk = Symbol(letter, k)
+        lv = _axis_defaults_byletter[lk]
+        d[k] = (lv == :match ? v : lv)
+    end     
+
+    # merge!(d, _axis_defaults)
     d[:discrete_values] = []
 
     # update the defaults
@@ -181,6 +189,11 @@ function expand_extrema!(sp::Subplot, d::KW)
         expand_extrema!(axis, minimum(data) - 0.5minimum(bw))
     end
 
+end
+
+function expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)
+    expand_extrema!(sp[:xaxis], (xmin, xmax))
+    expand_extrema!(sp[:yaxis], (ymin, ymax))
 end
 
 # -------------------------------------------------------------------------
