@@ -360,57 +360,6 @@ webcolor(c, α) = webcolor(convertColor(getColor(c), α))
 
 # ----------------------------------------------------------------------------------
 
-# TODO: allow the setting of the algorithm, either by passing a symbol (:colordiff, :fixed, etc) or a function?
-
-# function handlePlotColors(::AbstractBackend, d::KW)
-#     if :background_color in supportedArgs()
-#         bgcolor = convertColor(d[:background_color])
-#     else
-#         bgcolor = default(:background_color)
-#         if d[:background_color] != default(:background_color)
-#             warn("Cannot set background_color with backend $(backend())")
-#         end
-#     end
-#
-#
-#     d[:color_palette] = get_color_palette(get(d, :color_palette, :auto), bgcolor, 100)
-#
-#
-#     # set the foreground color (text, ticks, gridlines) to be white or black depending
-#     # on how dark the background is.
-#     fgcolor = get(d, :foreground_color, :auto)
-#     fgcolor = if fgcolor == :auto
-#         isdark(bgcolor) ? colorant"white" : colorant"black"
-#     else
-#         convertColor(fgcolor)
-#     end
-#
-#     # bg/fg color
-#     d[:background_color] = colorscheme(bgcolor)
-#     d[:foreground_color] = colorscheme(fgcolor)
-#
-#     # update sub-background colors
-#     for bgtype in ("legend", "inside", "outside")
-#         bgsym = Symbol("background_color_" * bgtype)
-#         if d[bgsym] == :match
-#             d[bgsym] = d[:background_color]
-#         elseif d[bgsym] == nothing
-#             d[bgsym] = colorscheme(RGBA(0,0,0,0))
-#         end
-#     end
-#
-#     # update sub-foreground colors
-#     for fgtype in ("legend", "grid", "axis", "text", "border", "guide")
-#         fgsym = Symbol("foreground_color_" * fgtype)
-#         if d[fgsym] == :match
-#             d[fgsym] = d[:foreground_color]
-#         elseif d[fgsym] == nothing
-#             d[fgsym] = colorscheme(RGBA(0,0,0,0))
-#         end
-#     end
-#
-#
-# end
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
 function getSeriesRGBColor(c, attr::KW, n::Int)

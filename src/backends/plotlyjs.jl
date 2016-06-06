@@ -138,7 +138,7 @@ function _update_plot_object(plt::Plot{PlotlyJSBackend})
     pdict = plotly_layout(plt)
     syncplot = plt.o
     w,h = plt.attr[:size]
-    DD(pdict)
+    # DD(pdict)
     PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)
 end
 

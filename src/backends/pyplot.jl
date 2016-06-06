@@ -355,41 +355,35 @@ end
 
 # ---------------------------------------------------------------------------
 
-function pyplot_figure(attr::KW)
-    w,h = map(px2inch, attr[:size])
+# Create the window/figure for this backend.
+function _create_backend_figure(plt::Plot{PyPlotBackend})
+    w,h = map(px2inch, plt[:size])
 
     # reuse the current figure?
-    fig = if attr[:overwrite_figure]
+    fig = if plt[:overwrite_figure]
         PyPlot.gcf()
     else
         PyPlot.figure()
     end
 
-    # update the specs
-    fig[:set_size_inches](w, h, forward = true)
-    fig[:set_facecolor](getPyPlotColor(attr[:background_color_outside]))
-    fig[:set_dpi](DPI)
-    # fig[:set_tight_layout](true)
+    # # update the specs
+    # fig[:set_size_inches](w, h, forward = true)
+    # fig[:set_facecolor](getPyPlotColor(plt[:background_color_outside]))
+    # fig[:set_dpi](DPI)
+    # # fig[:set_tight_layout](true)
 
     # clear the figure
     PyPlot.clf()
 
-    # resize the window
-    PyPlot.plt[:get_current_fig_manager]()[:resize](attr[:size]...)
+    # # resize the window
+    # PyPlot.plt[:get_current_fig_manager]()[:resize](plt[:size]...)
     fig
-end
-
-# ---------------------------------------------------------------------------
-
-# Create the window/figure for this backend.
-function _create_backend_figure(plt::Plot{PyPlotBackend})
-    pyplot_figure(plt.attr)
 end
 
 # Set up the subplot within the backend object.
 function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
     fig = plt.o
-    proj = sp.attr[:projection]
+    proj = sp[:projection]
     proj = (proj in (nothing,:none) ? nothing : string(proj))
 
     # add a new axis, and force it to create a new one by setting a distinct label
@@ -400,27 +394,7 @@ function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend
     )
     sp.o = ax
 end
-#
-# # Use the bounding boxes (and methods left/top/right/bottom/width/height) `sp.bbox` and `sp.plotarea` to
-# # position the subplot in the backend.
-# function _update_position!(sp::Subplot{PyPlotBackend})
-#     ax = sp.o
-#     ax == nothing && return
-#     # figw, figh = size(py_bbox_fig(sp.plt))
-#     figw, figh = sp.plt.attr[:size]
-#     figw, figh = figw*px, figh*px
-#     pcts = bbox_to_pcts(sp.plotarea, figw, figh)
-#     ax[:set_position](pcts)
-#
-#     # set the cbar position if there is one
-#     if haskey(sp.attr, :cbar_ax)
-#         cbw = sp.attr[:cbar_width]
-#         # this is the bounding box of just the colors of the colorbar (not labels)
-#         cb_bbox = BoundingBox(right(sp.bbox)-cbw+1mm, top(sp.bbox)+2mm, _cbar_width-1mm, height(sp.bbox)-4mm)
-#         pcts = bbox_to_pcts(cb_bbox, figw, figh)
-#         sp.attr[:cbar_ax][:set_position](pcts)
-#     end
-# end
+
 
 # ---------------------------------------------------------------------------
 
@@ -747,7 +721,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         # if !(eltype(z) <: Number)
         #     z, discrete_colorbar_values = indices_and_unique_values(z)
         # end
-        dvals = sp.attr[:zaxis][:discrete_values]
+        dvals = sp[:zaxis][:discrete_values]
         if !isempty(dvals)
             discrete_colorbar_values = dvals
         end
@@ -780,12 +754,6 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         handle = ax[:pie](y;
             # colors = # a vector of colors?
             labels = pie_labels(sp, series)
-            # labels = if haskey(d,:x_discrete_indices)
-            #     dvals = sp.attr[:xaxis].d[:discrete_values]
-            #     [dvals[idx] for idx in d[:x_discrete_indices]]
-            # else
-            #     d[:x]
-            # end
         )
         push!(handles, handle)
     end
@@ -796,14 +764,14 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     handleSmooth(plt, ax, d, d[:smooth])
 
     # add the colorbar legend
-    if needs_colorbar && sp.attr[:colorbar] != :none
+    if needs_colorbar && sp[:colorbar] != :none
         # add keyword args for a discrete colorbar
         handle = handles[end]
         kw = KW()
         if discrete_colorbar_values != nothing
             locator, formatter = get_locator_and_formatter(discrete_colorbar_values)
             # kw[:values] = 1:length(discrete_colorbar_values)
-            kw[:values] = sp.attr[:zaxis][:continuous_values]
+            kw[:values] = sp[:zaxis][:continuous_values]
             kw[:ticks] = locator
             kw[:format] = formatter
             kw[:boundaries] = vcat(0, kw[:values] + 0.5)
@@ -816,9 +784,6 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         sp.attr[:cbar_handle] = fig[:colorbar](handle; cax = cbax, kw...)
         sp.attr[:cbar_ax] = cbax
     end
-
-    # this sets the bg color inside the grid
-    ax[:set_axis_bgcolor](getPyPlotColor(d[:subplot].attr[:background_color_inside]))
 
     # handle area filling
     fillrange = d[:fillrange]
@@ -866,16 +831,9 @@ end
 
 # --------------------------------------------------------------------------
 
-# get_axis and update_limits! should be moved to subplots.jl? or axes.jl?
-
-get_axis(sp::Subplot, letter::Symbol) = sp.attr[Symbol(letter, :axis)]
-
 function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
     for letter in letters
-        # axis = get_axis(sp, letter)
-        # expand_extrema!(axis, series.d[letter])
-        # set_lims!(sp, axis)
-        setPyPlotLims(sp.o, sp.attr[Symbol(letter, :axis)])
+        setPyPlotLims(sp.o, sp[Symbol(letter, :axis)])
     end
 end
 
@@ -1000,21 +958,31 @@ end
 
 
 function _before_layout_calcs(plt::Plot{PyPlotBackend})
+    # update the specs
+    w, h = plt[:size]
+    fig = plt.o
+    fig[:set_size_inches](px2inch(w), px2inch(h), forward = true)
+    fig[:set_facecolor](getPyPlotColor(plt[:background_color_outside]))
+    fig[:set_dpi](DPI)
+    
+    # resize the window
+    PyPlot.plt[:get_current_fig_manager]()[:resize](w, h)
+
+    # update subplots
     for sp in plt.subplots
-        attr = sp.attr
         ax = getAxis(sp)
         if ax == nothing
             continue
         end
 
         # add the annotations
-        for ann in attr[:annotations]
+        for ann in sp[:annotations]
             createPyPlotAnnotationObject(sp, ann...)
         end
 
         # title
-        if haskey(attr, :title)
-            loc = lowercase(string(attr[:title_location]))
+        if sp[:title] != ""
+            loc = lowercase(string(sp[:title_location]))
             field = if loc == "left"
                 :_left_title
             elseif loc == "right"
@@ -1022,16 +990,16 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             else
                 :title
             end
-            ax[field][:set_text](attr[:title])
-            ax[field][:set_fontsize](attr[:titlefont].pointsize)
-            ax[field][:set_color](getPyPlotColor(attr[:foreground_color_title]))
-            # ax[:set_title](attr[:title], loc = loc)
+            ax[field][:set_text](sp[:title])
+            ax[field][:set_fontsize](sp[:titlefont].pointsize)
+            ax[field][:set_color](getPyPlotColor(sp[:foreground_color_title]))
+            # ax[:set_title](sp[:title], loc = loc)
         end
 
         # axis attributes
         for letter in (:x, :y, :z)
             axissym = Symbol(letter, :axis)
-            axis = attr[axissym]
+            axis = sp[axissym]
             haskey(ax, axissym) || continue
             applyPyPlotScale(ax, axis[:scale], letter)
             setPyPlotLims(ax, axis)
@@ -1045,8 +1013,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 lab[:set_fontsize](axis[:tickfont].pointsize)
                 lab[:set_rotation](axis[:rotation])
             end
-            if get(attr, :grid, false)
-                fgcolor = getPyPlotColor(attr[:foreground_color_grid])
+            if sp[:grid]
+                fgcolor = getPyPlotColor(sp[:foreground_color_grid])
                 ax[axissym][:grid](true, color = fgcolor)
                 ax[:set_axisbelow](true)
             end
@@ -1054,14 +1022,18 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         end
 
         # aspect ratio
-        aratio = get(attr, :aspect_ratio, :none)
+        aratio = sp[:aspect_ratio]
         if aratio != :none
             ax[:set_aspect](isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
         end
 
+        # legend
         addPyPlotLegend(plt, sp, ax)
+
+        # this sets the bg color inside the grid
+        ax[:set_axis_bgcolor](getPyPlotColor(sp[:background_color_inside]))
     end
-    drawfig(plt.o)
+    drawfig(fig)
 end
 
 
@@ -1075,10 +1047,10 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     # TODO: this should initialize to the margin from sp.attr
     # figure out how much the axis components and title "stick out" from the plot area
     # leftpad = toppad = rightpad = bottompad = 1mm
-    leftpad   = sp.attr[:left_margin]
-    toppad    = sp.attr[:top_margin]
-    rightpad  = sp.attr[:right_margin]
-    bottompad = sp.attr[:bottom_margin]
+    leftpad   = sp[:left_margin]
+    toppad    = sp[:top_margin]
+    rightpad  = sp[:right_margin]
+    bottompad = sp[:bottom_margin]
     for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
         if ispositive(width(bb)) && ispositive(height(bb))
             leftpad   = max(leftpad,   left(plotbb) - left(bb))
@@ -1149,7 +1121,7 @@ const _pyplot_legend_pos = KW(
   )
 
 function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
-    leg = sp.attr[:legend]
+    leg = sp[:legend]
     if leg != :none
         # gotta do this to ensure both axes are included
         labels = []
@@ -1179,19 +1151,19 @@ function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
                 labels,
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
-                fontsize = sp.attr[:legendfont].pointsize
+                fontsize = sp[:legendfont].pointsize
                 # framealpha = 0.6
             )
             leg[:set_zorder](1000)
 
-            fgcolor = getPyPlotColor(sp.attr[:foreground_color_legend])
+            fgcolor = getPyPlotColor(sp[:foreground_color_legend])
             for txt in leg[:get_texts]()
                 PyPlot.plt[:setp](txt, color = fgcolor)
             end
 
             # set some legend properties
             frame = leg[:get_frame]()
-            frame[:set_facecolor](getPyPlotColor(sp.attr[:background_color_legend]))
+            frame[:set_facecolor](getPyPlotColor(sp[:background_color_legend]))
             frame[:set_edgecolor](fgcolor)
         end
     end
@@ -1231,7 +1203,7 @@ function _update_plot_object(plt::Plot{PyPlotBackend})
         ax = sp.o
         ax == nothing && return
         # figw, figh = size(py_bbox_fig(sp.plt))
-        figw, figh = sp.plt.attr[:size]
+        figw, figh = sp.plt[:size]
         figw, figh = figw*px, figh*px
         pcts = bbox_to_pcts(sp.plotarea, figw, figh)
         ax[:set_position](pcts)
@@ -1288,7 +1260,7 @@ for (mime, fmt) in _pyplot_mimeformats
             io,
             format=$fmt,
             # bbox_inches = "tight",
-            # figsize = map(px2inch, plt.attr[:size]),
+            # figsize = map(px2inch, plt[:size]),
             facecolor = fig.o["get_facecolor"](),
             edgecolor = "none",
             dpi = DPI

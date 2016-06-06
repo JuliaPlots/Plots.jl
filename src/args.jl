@@ -798,19 +798,97 @@ function slice_arg!(d_in::KW, d_out::KW, k::Symbol, default_value, idx::Int = 1;
     end
 end
 
-# if the value is `:match` then we take whatever match_color is.
-# this is mainly used for cascading defaults for foreground and background colors
-function color_or_match!(d::KW, k::Symbol, match_color)
+# -----------------------------------------------------------------------------
+
+# # if the value is `:match` then we take whatever match_color is.
+# # this is mainly used for cascading defaults for foreground and background colors
+# function color_or_match!(d::KW, k::Symbol, match_color)
+#     v = d[k]
+#     d[k] = if v == :match
+#         match_color
+#     elseif v == nothing
+#         colorscheme(RGBA(0,0,0,0))
+#     else
+#         v
+#     end
+# end
+
+function color_or_nothing!(d::KW, k::Symbol)
     v = d[k]
-    d[k] = if v == :match
-        match_color
-    elseif v == nothing
+    d[k] = if v == nothing
         colorscheme(RGBA(0,0,0,0))
     else
         v
     end
 end
 
+# -----------------------------------------------------------------------------
+
+# when a value can be `:match`, this is the key that should be used instead for value retrieval
+const _match_map = KW(
+    :background_color_outside => :background_color,
+    :background_color_legend  => :background_color_subplot,
+    :background_color_inside  => :background_color_subplot,
+    :foreground_color_legend  => :foreground_color_subplot,
+    :foreground_color_grid    => :foreground_color_subplot,
+    :foreground_color_title   => :foreground_color_subplot,
+    :left_margin   => :margin,
+    :top_margin    => :margin,
+    :right_margin  => :margin,
+    :bottom_margin => :margin,
+)
+
+# these can match values from the parent container (axis --> subplot --> plot)
+const _match_map2 = KW(
+    :background_color_subplot => :background_color,
+    :foreground_color_subplot => :foreground_color,
+    :foreground_color_axis    => :foreground_color_subplot,
+    :foreground_color_border  => :foreground_color_subplot,
+    :foreground_color_guide   => :foreground_color_subplot,
+    :foreground_color_text    => :foreground_color_subplot,
+)
+
+# properly retrieve from plt.attr, passing `:match` to the correct key
+function Base.getindex(plt::Plot, k::Symbol)
+    v = plt.attr[k]
+    if v == :match
+        plt[_match_map[k]]
+    else
+        v
+    end
+end
+
+
+# properly retrieve from sp.attr, passing `:match` to the correct key
+function Base.getindex(sp::Subplot, k::Symbol)
+    v = sp.attr[k]
+    if v == :match
+        if haskey(_match_map2, k)
+            sp.plt[_match_map2[k]]
+        else
+            sp[_match_map[k]]
+        end
+    else
+        v
+    end
+end
+
+
+# properly retrieve from axis.attr, passing `:match` to the correct key
+function Base.getindex(axis::Axis, k::Symbol)
+    v = axis.d[k]
+    if v == :match
+        if haskey(_match_map2, k)
+            axis.sp[_match_map2[k]]
+        else
+            axis[_match_map[k]]
+        end
+    else
+        v
+    end
+end
+
+# -----------------------------------------------------------------------------
 
 # update attr from an input dictionary
 function _update_plot_args(plt::Plot, d_in::KW)
@@ -827,7 +905,8 @@ function _update_plot_args(plt::Plot, d_in::KW)
     end
     pargs[:background_color] = bg
     pargs[:foreground_color] = convertColor(fg)
-    color_or_match!(pargs, :background_color_outside, bg)
+    # color_or_match!(pargs, :background_color_outside, bg)
+    color_or_nothing!(pargs, :background_color_outside)
 end
 
 
@@ -848,22 +927,30 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
     end
 
     # background colors
-    bg = color_or_match!(spargs, :background_color_subplot, pargs[:background_color])
+    # bg = color_or_match!(spargs, :background_color_subplot, pargs[:background_color])
+    color_or_nothing!(spargs, :background_color_subplot)
+    bg = sp[:background_color_subplot]
     spargs[:color_palette] = get_color_palette(spargs[:color_palette], bg, 30)
-    color_or_match!(spargs, :background_color_legend, bg)
-    color_or_match!(spargs, :background_color_inside, bg)
+    # color_or_match!(spargs, :background_color_legend, bg)
+    color_or_nothing!(spargs, :background_color_legend)
+    # color_or_match!(spargs, :background_color_inside, bg)
+    color_or_nothing!(spargs, :background_color_inside)
 
     # foreground colors
-    fg = color_or_match!(spargs, :foreground_color_subplot, pargs[:foreground_color])
-    color_or_match!(spargs, :foreground_color_legend, fg)
-    color_or_match!(spargs, :foreground_color_grid, fg)
-    color_or_match!(spargs, :foreground_color_title, fg)
+    # fg = color_or_match!(spargs, :foreground_color_subplot, pargs[:foreground_color])
+    color_or_nothing!(spargs, :foreground_color_subplot)
+    # color_or_match!(spargs, :foreground_color_legend, fg)
+    color_or_nothing!(spargs, :foreground_color_legend)
+    # color_or_match!(spargs, :foreground_color_grid, fg)
+    color_or_nothing!(spargs, :foreground_color_grid)
+    # color_or_match!(spargs, :foreground_color_title, fg)
+    color_or_nothing!(spargs, :foreground_color_title)
 
-    for k in (:left_margin, :top_margin, :right_margin, :bottom_margin)
-        if spargs[k] == :match
-            spargs[k] = spargs[:margin]
-        end
-    end
+    # for k in (:left_margin, :top_margin, :right_margin, :bottom_margin)
+    #     if spargs[k] == :match
+    #         spargs[k] = spargs[:margin]
+    #     end
+    # end
 
     for letter in (:x, :y, :z)
         # get (maybe initialize) the axis
@@ -871,7 +958,7 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
         axis = if haskey(spargs, axissym)
             spargs[axissym]
         else
-            spargs[axissym] = Axis(letter)
+            spargs[axissym] = Axis(sp, letter)
         end
 
         # grab magic args (for example `xaxis = (:flip, :log)`)
@@ -898,11 +985,15 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
         # update the axis
         update!(axis, args...; kw...)
 
-        # update the axis colors
-        color_or_match!(axis.d, :foreground_color_axis, fg)
-        color_or_match!(axis.d, :foreground_color_border, fg)
-        color_or_match!(axis.d, :foreground_color_guide, fg)
-        color_or_match!(axis.d, :foreground_color_text, fg)
+        # # update the axis colors
+        # color_or_match!(axis.d, :foreground_color_axis, fg)
+        color_or_nothing!(axis.d, :foreground_color_axis)
+        # color_or_match!(axis.d, :foreground_color_border, fg)
+        color_or_nothing!(axis.d, :foreground_color_border)
+        # color_or_match!(axis.d, :foreground_color_guide, fg)
+        color_or_nothing!(axis.d, :foreground_color_guide)
+        # color_or_match!(axis.d, :foreground_color_text, fg)
+        color_or_nothing!(axis.d, :foreground_color_text)
 
         # TODO: need to handle linking here?
     end

@@ -20,18 +20,6 @@ end
 wrap{T}(obj::T) = InputWrapper{T}(obj)
 Base.isempty(wrapper::InputWrapper) = false
 
-# -----------------------------------------------------------
-
-# simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
-type Axis
-    d::KW
-end
-
-type Extrema
-    emin::Float64
-    emax::Float64
-end
-Extrema() = Extrema(Inf, -Inf)
 
 # -----------------------------------------------------------
 
@@ -45,6 +33,20 @@ type Subplot{T<:AbstractBackend} <: AbstractLayout
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
 end
+
+# -----------------------------------------------------------
+
+# simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
+type Axis
+    sp::Subplot
+    d::KW
+end
+
+type Extrema
+    emin::Float64
+    emax::Float64
+end
+Extrema() = Extrema(Inf, -Inf)
 
 # -----------------------------------------------------------
 
@@ -62,14 +64,14 @@ attr!(series::Series, v, k::Symbol) = (series.d[k] = v)
 # -----------------------------------------------------------
 
 type Plot{T<:AbstractBackend} <: AbstractPlot{T}
-    backend::T               # the backend type
-    n::Int                   # number of series
-    attr::KW             # arguments for the whole plot
-    user_attr::KW        # raw arg inputs (after aliases).  these are used as the input dict in `_plot!`
-    series_list::Vector{Series}   # arguments for each series
-    o  # the backend's plot object
+    backend::T                   # the backend type
+    n::Int                       # number of series
+    attr::KW                     # arguments for the whole plot
+    user_attr::KW                # raw arg inputs (after aliases).  these are used as the input dict in `_plot!`
+    series_list::Vector{Series}  # arguments for each series
+    o                            # the backend's plot object
     subplots::Vector{Subplot}
-    spmap::SubplotMap  # provide any label as a map to a subplot
+    spmap::SubplotMap            # provide any label as a map to a subplot
     layout::AbstractLayout
     init::Bool
 end

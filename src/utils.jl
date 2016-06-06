@@ -640,7 +640,7 @@ function dumpSupportGraphs()
     for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles,
                supportGraphMarkers, supportGraphScales, supportGraphAxes)
         plt = func()
-        png(Pkg.dir("ExamplePlots", "docs", "examples", "img", "supported", "$(string(func))"))
+        png(Pkg.dir("PlotDocs", "docs", "examples", "img", "supported", "$(string(func))"))
     end
 end
 

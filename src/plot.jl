@@ -48,8 +48,8 @@ function plot(args...; kw...)
 
     # create an empty Plot then process
     plt = Plot()
-    plt.user_attr = d
-    _plot!(plt, args...)
+    # plt.user_attr = d
+    _plot!(plt, d, args...)
 end
 
 # build a new plot from existing plots
@@ -127,8 +127,8 @@ end
 function plot!(plt::Plot, args...; kw...)
     d = KW(kw)
     preprocessArgs!(d)
-    merge!(plt.user_attr, d)
-    _plot!(plt, args...)
+    # merge!(plt.user_attr, d)
+    _plot!(plt, d, args...)
 end
 
 function strip_first_letter(s::Symbol)
@@ -201,8 +201,8 @@ end
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
-function _plot!(plt::Plot, args...)
-    d = plt.user_attr
+function _plot!(plt::Plot, d::KW, args...)
+    # d = plt.user_attr
     d[:plot_object] = plt
 
     # the grouping mechanism is a recipe on a GroupBy object
@@ -290,8 +290,8 @@ function _plot!(plt::Plot, args...)
     end
 
     # TODO: init subplots here
+    _update_plot_args(plt, d)
     if !plt.init
-        _update_plot_args(plt, d)
         plt.o = _create_backend_figure(plt)
 
         # create the layout and subplots from the inputs
@@ -309,7 +309,6 @@ function _plot!(plt::Plot, args...)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
-        DD(d,"$idx")
         _update_subplot_args(plt, sp, d, idx)
     end
 

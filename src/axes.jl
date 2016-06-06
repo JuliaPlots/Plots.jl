@@ -1,12 +1,12 @@
 
 
-xaxis(args...; kw...) = Axis(:x, args...; kw...)
-yaxis(args...; kw...) = Axis(:y, args...; kw...)
-zaxis(args...; kw...) = Axis(:z, args...; kw...)
+# xaxis(args...; kw...) = Axis(:x, args...; kw...)
+# yaxis(args...; kw...) = Axis(:y, args...; kw...)
+# zaxis(args...; kw...) = Axis(:z, args...; kw...)
 
 # -------------------------------------------------------------------------
 
-function Axis(letter::Symbol, args...; kw...)
+function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     # init with values from _plot_defaults
     d = KW(
         :letter => letter,
@@ -21,7 +21,7 @@ function Axis(letter::Symbol, args...; kw...)
     d[:discrete_values] = []
 
     # update the defaults
-    update!(Axis(d), args...; kw...)
+    update!(Axis(sp, d), args...; kw...)
 end
 
 function process_axis_arg!(d::KW, arg, letter = "")
@@ -89,7 +89,7 @@ end
 # -------------------------------------------------------------------------
 
 Base.show(io::IO, axis::Axis) = dumpdict(axis.d, "Axis", true)
-Base.getindex(axis::Axis, k::Symbol) = getindex(axis.d, k)
+# Base.getindex(axis::Axis, k::Symbol) = getindex(axis.d, k)
 Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.d, v, ks...)
 Base.haskey(axis::Axis, k::Symbol) = haskey(axis.d, k)
 Base.extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
