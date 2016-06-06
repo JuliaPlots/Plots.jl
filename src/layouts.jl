@@ -513,7 +513,7 @@ rowsize(v) = isrow(v) ? length(v.args) : 1
 
 function create_grid(expr::Expr)
     # cellsym = gensym(:cell)
-    @show expr
+    # @show expr
     if iscol(expr)
         create_grid_vcat(expr)
         # rowsizes = map(rowsize, expr.args)
@@ -562,17 +562,17 @@ end
 function create_grid_vcat(expr::Expr)
     rowsizes = map(rowsize, expr.args)
     rmin, rmax = extrema(rowsizes)
-    @show rmin, rmax
+    # @show rmin, rmax
     if rmin > 0 && rmin == rmax
         # we have a grid... build the whole thing
         # note: rmin is the number of columns
         nr = length(expr.args)
         nc = rmin
-        @show nr, nc
+        # @show nr, nc
         body = Expr(:block)
         for r=1:nr
             arg = expr.args[r]
-            @show r, arg
+            # @show r, arg
             if isrow(arg)
                 for (c,item) in enumerate(arg.args)
                     push!(body.args, :(cell[$r,$c] = $(create_grid(item))))
@@ -581,7 +581,7 @@ function create_grid_vcat(expr::Expr)
                 push!(body.args, :(cell[$r,1] = $(create_grid(arg))))
             end
         end
-        @show body
+        # @show body
         :(let cell = GridLayout($nr, $nc)
             $body
             cell
@@ -614,7 +614,7 @@ function create_grid_curly(expr::Expr)
     for (i,arg) in enumerate(expr.args[2:end])
         add_layout_pct!(kw, arg, i, length(expr.args)-1)
     end
-    # @show kw
+    @show kw
     :(EmptyLayout(label = $(QuoteNode(s)), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto)))))
 end
 

@@ -182,7 +182,7 @@ function expand_extrema!(sp::Subplot, d::KW)
         if bw == nothing
             bw = d[:bar_width] = mean(diff(data))
         end
-        @show data bw
+        # @show data bw
 
         axis = sp.attr[Symbol(dsym, :axis)]
         expand_extrema!(axis, maximum(data) + 0.5maximum(bw))

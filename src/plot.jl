@@ -278,6 +278,24 @@ function _plot!(plt::Plot, d::KW, args...)
                     end
                 end
 
+                # handle smoothing by adding a new series
+                if get(d, :smooth, false)
+                    x, y = kw[:x], kw[:y]
+                    β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
+                    sx = [minimum(x), maximum(x)]
+                    sy = β * sx + α
+                    push!(kw_list, merge(copy(kw), KW(
+                        :seriestype => :path,
+                        :x => sx,
+                        :y => sy,
+                        :fillrange => nothing,
+                        :label => "",
+                    )))
+
+                    # don't allow something else to handle it
+                    d[:smooth] = false
+                end
+
             else
                 # args are non-empty, so there's still processing to do... add it back to the queue
                 push!(still_to_process, recipedata)
@@ -334,6 +352,7 @@ function _plot!(plt::Plot, d::KW, args...)
         # if !(get(kw, :seriestype, :none) in (:xerror, :yerror))
         #     plt.n += 1
         # end
+        command_idx = kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
 
         # get the Subplot object to which the series belongs
         sp = get(kw, :subplot, :auto)
@@ -361,7 +380,7 @@ function _plot!(plt::Plot, d::KW, args...)
         _update_subplot_args(plt, sp, kw, idx)
 
         # set default values, select from attribute cycles, and generally set the final attributes
-        _add_defaults!(kw, plt, sp, i)
+        _add_defaults!(kw, plt, sp, command_idx)
 
         # now we have a fully specified series, with colors chosen.   we must recursively handle
         # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,

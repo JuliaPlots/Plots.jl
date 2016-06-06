@@ -34,12 +34,14 @@ supportedArgs(::GRBackend) = [
     :orientation,
     :overwrite_figure,
     :polar,
-    :aspect_ratio
+    :aspect_ratio,
+    :normalize, :weights
 ]
 supportedAxes(::GRBackend) = _allAxes
 supportedTypes(::GRBackend) = [
     :path, :steppre, :steppost,
-    :scatter, :histogram2d, :hexbin,
+    :scatter,
+    #:histogram2d, :hexbin,
     :sticks,
     # :hline, :vline, 
     :heatmap, :pie, :image,
@@ -647,19 +649,26 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     for axis_idx = 1:num_axes
         xmin, xmax, ymin, ymax = extrema[axis_idx,:]
+
+        # NOTE: for log axes, the major_x and major_y - if non-zero (omit labels) - control the minor grid lines (1 = draw 9 minor grid lines, 2 = no minor grid lines)
+        # NOTE: for log axes, the x_tick and y_tick - if non-zero (omit axes) - only affect the output appearance (1 = nomal, 2 = scientiic notation)
         if scale & GR.OPTION_X_LOG == 0
             # xmin, xmax = GR.adjustlimits(xmin, xmax)
             majorx = 5
             xtick = GR.tick(xmin, xmax) / majorx
         else
-            xtick = majorx = 1
+            # xtick = majorx = 1
+            xtick = 2  # scientific notation
+            majorx = 2 # no minor grid lines
         end
         if scale & GR.OPTION_Y_LOG == 0
             # ymin, ymax = GR.adjustlimits(ymin, ymax)
             majory = 5
             ytick = GR.tick(ymin, ymax) / majory
         else
-            ytick = majory = 1
+            # ytick = majory = 1
+            ytick = 2  # scientific notation
+            majory = 2 # no minor grid lines
         end
         xorg = (scale & GR.OPTION_FLIP_X == 0) ? (xmin,xmax) : (xmax,xmin)
         yorg = (scale & GR.OPTION_FLIP_Y == 0) ? (ymin,ymax) : (ymax,ymin)
@@ -692,12 +701,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 ticksize = -ticksize
             end
             if grid_flag
-                @show dark_bg, xtick, ytick, majorx, majory
-                if dark_bg
-                    GR.grid(xtick * majorx, ytick * majory, 0, 0, 1, 1)
-                else
-                    GR.grid(xtick, ytick, 0, 0, majorx, majory)
-                end
+                GR.grid(xtick, ytick, 0, 0, majorx, majory)
+                # @show dark_bg, xtick, ytick, majorx, majory
+                # if dark_bg
+                #     GR.grid(xtick * majorx, ytick * majory, 0, 0, 1, 1)
+                # else
+                #     GR.grid(xtick, ytick, 0, 0, majorx, majory)
+                # end
             end
             # TODO: this should be done for each axis separately
             GR.setlinecolorind(gr_getcolorind(xaxis[:foreground_color_axis]))
@@ -927,32 +937,32 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         #         end
         #     end
 
-        # TODO: use recipe
-        elseif st in [:histogram2d, :hexbin]
-            E = zeros(length(d[:x]),2)
-            E[:,1] = d[:x]
-            E[:,2] = d[:y]
-            if isa(d[:bins], Tuple)
-                xbins, ybins = d[:bins]
-            else
-                xbins = ybins = d[:bins]
-            end
-            x, y, H = Base.hist2d(E, xbins, ybins)
-            maxh = maximum(H)
-            n, m = size(H)
-            counts = Int32[round(Int32, 1000 + 255 * H[n-i+1,j] / maxh) for i=1:n,j=1:m]
-            GR.cellarray(xmin, xmax, ymin, ymax, n, m, counts)
+        # # TODO: use recipe
+        # elseif st in [:histogram2d, :hexbin]
+        #     E = zeros(length(d[:x]),2)
+        #     E[:,1] = d[:x]
+        #     E[:,2] = d[:y]
+        #     if isa(d[:bins], Tuple)
+        #         xbins, ybins = d[:bins]
+        #     else
+        #         xbins = ybins = d[:bins]
+        #     end
+        #     x, y, H = Base.hist2d(E, xbins, ybins)
+        #     maxh = maximum(H)
+        #     n, m = size(H)
+        #     counts = Int32[round(Int32, 1000 + 255 * H[n-i+1,j] / maxh) for i=1:n,j=1:m]
+        #     GR.cellarray(xmin, xmax, ymin, ymax, n, m, counts)
 
-            # NOTE: set viewport to the colorbar area, get character height, draw it, then reset viewport
-            GR.setviewport(viewport_plotarea[2] + 0.02, viewport_plotarea[2] + 0.05, viewport_plotarea[3], viewport_plotarea[4])
-            # zmin, zmax = gr_getzlims(d, 0, maximum(counts), false)
-            zmin, zmax = gr_lims(zaxis, false, (0, maximum(counts)))
-            GR.setspace(zmin, zmax, 0, 90)
-            diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
-            charheight = max(0.016 * diag, 0.01)
-            GR.setcharheight(charheight)
-            GR.colormap()
-            GR.setviewport(viewport_plotarea[1], viewport_plotarea[2], viewport_plotarea[3], viewport_plotarea[4])
+        #     # NOTE: set viewport to the colorbar area, get character height, draw it, then reset viewport
+        #     GR.setviewport(viewport_plotarea[2] + 0.02, viewport_plotarea[2] + 0.05, viewport_plotarea[3], viewport_plotarea[4])
+        #     # zmin, zmax = gr_getzlims(d, 0, maximum(counts), false)
+        #     zmin, zmax = gr_lims(zaxis, false, (0, maximum(counts)))
+        #     GR.setspace(zmin, zmax, 0, 90)
+        #     diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
+        #     charheight = max(0.016 * diag, 0.01)
+        #     GR.setcharheight(charheight)
+        #     GR.colormap()
+        #     GR.setviewport(viewport_plotarea[1], viewport_plotarea[2], viewport_plotarea[3], viewport_plotarea[4])
 
         elseif st == :contour
             x, y, z = d[:x], d[:y], transpose_z(d, d[:z].surf, false)

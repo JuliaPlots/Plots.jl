@@ -186,36 +186,7 @@ end
 # end
 
 
-# midpoints = d[:x]
-# heights = d[:y]
-# fillrange = d[:fillrange] == nothing ? 0.0 : d[:fillrange]
-#
-# # estimate the edges
-# dists = diff(midpoints) * 0.5
-# edges = zeros(length(midpoints)+1)
-# for i in 1:length(edges)
-#   if i == 1
-#     edge = midpoints[1] - dists[1]
-#   elseif i == length(edges)
-#     edge = midpoints[i-1] + dists[i-2]
-#   else
-#     edge = midpoints[i-1] + dists[i-1]
-#   end
-#   edges[i] = edge
-# end
-#
-# x = Float64[]
-# y = Float64[]
-# for i in 1:length(heights)
-#   e1, e2 = edges[i:i+1]
-#   append!(x, [e1, e1, e2, e2])
-#   append!(y, [fillrange, heights[i], heights[i], fillrange])
-# end
-#
-# d[:x] = x
-# d[:y] = y
-# d[:seriestype] = :path
-# d[:fillrange] = fillrange
+# ---------------------------------------------------------------------------
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
@@ -275,27 +246,88 @@ end
     ()
 end
 
+# ---------------------------------------------------------------------------
+# Histograms
 
-    #     # x is edges
-    #     for i=1:n
-    #         gr_fillrect(series, x[i], x[i+1], 0, y[i])
-    #     end
-    # elseif length(x) == n
-    #     # x is centers
-    #     leftwidth = length(x) > 1 ? abs(0.5 * (x[2] - x[1])) : 0.5
-    #     for i=1:n
-    #         rightwidth = (i == n ? leftwidth : abs(0.5 * (x[i+1] - x[i])))
-    #         gr_fillrect(series, x[i] - leftwidth, x[i] + rightwidth, 0, y[i])
-    #     end
-    # else
-    #     error("gr_barplot: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
-    # end
+# edges from number of bins
+function calc_edges(v, bins::Integer)
+    vmin, vmax = extrema(v)
+    linspace(vmin, vmax, bins+1)
+end
+
+# just pass through arrays
+calc_edges(v, bins::AVec) = v
+
+# find the bucket index of this value
+function bucket_index(vi, edges)
+    for (i,e) in enumerate(edges)
+        if vi <= e
+            return max(1,i-1)
+        end
+    end
+    return length(edges)-1
+end
+
+function my_hist(v, bins; normed = false, weights = nothing)
+    edges = calc_edges(v, bins)
+    counts = zeros(length(edges)-1)
+
+    for (i,vi) in enumerate(v)
+        idx = bucket_index(vi, edges)
+        counts[idx] += (weights == nothing ? 1.0 : weights[i])
+    end
+
+    norm_denom = normed ? sum(counts) : 1.0
+    if norm_denom == 0
+        norm_denom = 1.0
+    end
+
+    edges, counts ./ norm_denom
+end
+
 
 @recipe function f(::Type{Val{:histogram}}, x, y, z)
-    edges, counts = Base.hist(y, d[:bins])
+    edges, counts = my_hist(y, d[:bins], normed = d[:normalize], weights = d[:weights])
     d[:x] = edges
     d[:y] = counts
     d[:seriestype] = :bar
+    ()
+end
+
+# ---------------------------------------------------------------------------
+# Histogram 2D
+
+# if tuple, map out bins, otherwise use the same for both
+calc_edges_2d(x, y, bins) = calc_edges(x, bins), calc_edges(y, bins)
+calc_edges_2d{X,Y}(x, y, bins::Tuple{X,Y}) = calc_edges(x, bins[1]), calc_edges(y, bins[2])
+
+# the 2D version
+function my_hist_2d(x, y, bins; normed = false, weights = nothing)
+    xedges, yedges = calc_edges_2d(x, y, bins)
+    counts = zeros(length(yedges)-1, length(xedges)-1)
+
+    for i=1:length(x)
+        r = bucket_index(y[i], yedges)
+        c = bucket_index(x[i], xedges)
+        counts[r,c] += (weights == nothing ? 1.0 : weights[i])
+    end
+
+    norm_denom = normed ? sum(counts) : 1.0
+    if norm_denom == 0
+        norm_denom = 1.0
+    end
+
+    xedges, yedges, counts ./ norm_denom
+end
+
+centers(v::AVec) = v[1] + cumsum(diff(v))
+
+@recipe function f(::Type{Val{:histogram2d}}, x, y, z)
+    xedges, yedges, counts = my_hist_2d(x, y, d[:bins], normed = d[:normalize], weights = d[:weights])
+    d[:x] = centers(xedges)
+    d[:y] = centers(yedges)
+    d[:z] = Surface(counts)
+    d[:seriestype] = :heatmap
     ()
 end
 
