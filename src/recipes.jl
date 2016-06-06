@@ -30,17 +30,13 @@ macro userplot(expr::Expr)
     typename = expr.args[2]
     funcname = Symbol(lowercase(string(typename)))
     funcname2 = Symbol(funcname, "!")
-    # @show typename funcname expr
 
     # return a code block with the type definition and convenience plotting methods
-    ret = esc(quote
+    esc(quote
         $expr
         $funcname(args...; kw...) = plot($typename(args...); kw...)
         $funcname2(args...; kw...) = plot!($typename(args...); kw...)
     end)
-    # dump(ret,20)
-    # @show ret
-    ret
 end
 
 # ----------------------------------------------------------------------------------
@@ -62,7 +58,6 @@ plot!(plt::Plot, recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-# _apply_recipe(d::KW, kw::KW) = ()
 
 # if it's not a recipe, just do nothing and return the args
 function RecipesBase.apply_recipe(d::KW, args...; issubplot=false)
@@ -125,127 +120,6 @@ if is_installed("DataFrames")
     end
 end
 
-# macro kw(k, v)
-#     esc(:(get!(d, $k, $v)))
-# end
-#
-# function _is_arrow_tuple(expr::Expr)
-#     expr.head == :tuple &&
-#         isa(expr.args[1], Expr) &&
-#         expr.args[1].head == :(-->)
-# end
-#
-# function _equals_Symbol(arg::Symbol, sym::Symbol)
-#     arg == sym
-# end
-# function _equals_Symbol(arg::Expr, sym::Symbol)
-#     arg.head == :quote && arg.args[1] == sym
-# end
-#
-# # TODO: when this is moved out of Plots, also move the replacement of key aliases to just after the _apply_recipe calls
-# function replace_recipe_arrows!(expr::Expr)
-#     for (i,e) in enumerate(expr.args)
-#         if isa(e,Expr)
-#
-#             # process trailing flags, like:
-#             #   a --> b, :quiet, :force
-#             quiet, require, force = false, false, false
-#             if _is_arrow_tuple(e)
-#                 for flag in e.args
-#                     if _equals_Symbol(flag, :quiet)
-#                         quiet = true
-#                     elseif _equals_Symbol(flag, :require)
-#                         require = true
-#                     elseif _equals_Symbol(flag, :force)
-#                         force = true
-#                     end
-#                 end
-#                 e = e.args[1]
-#             end
-#
-#             # we are going to recursively swap out `a --> b, flags...` commands
-#             if e.head == :(-->)
-#                 k, v = e.args
-#                 keyexpr = :(get(Plots._keyAliases, $k, $k))
-#
-#                 set_expr = if force
-#                     # forced override user settings
-#                     :(d[$keyexpr] = $v)
-#                 else
-#                     # if the user has set this keyword, use theirs
-#                     :(get!(d, $keyexpr, $v))
-#                 end
-#
-#                 expr.args[i] = if quiet
-#                     # quietly ignore keywords which are not supported
-#                     :($keyexpr in supportedArgs() ? $set_expr : nothing)
-#                 elseif require
-#                     # error when not supported by the backend
-#                     :($keyexpr in supportedArgs() ? $set_expr : error("In recipe: required keyword ", $k, " is not supported by backend $(backend_name())"))
-#                 else
-#                     set_expr
-#                 end
-#
-#                 # @show quiet, force, expr.args[i]
-#
-#             elseif e.head != :call
-#                 # we want to recursively replace the arrows, but not inside function calls
-#                 # as this might include things like Dict(1=>2)
-#                 replace_recipe_arrows!(e)
-#             end
-#         end
-#     end
-# end
-#
-#
-# macro recipe(funcexpr::Expr)
-#     lhs, body = funcexpr.args
-#
-#     if !(funcexpr.head in (:(=), :function))
-#         error("Must wrap a valid function call!")
-#     end
-#     if !(isa(lhs, Expr) && lhs.head == :call)
-#         error("Expected `lhs = ...` with lhs as a call Expr... got: $lhs")
-#     end
-#
-#     # for parametric definitions, take the "curly" expression and add the func
-#     front = lhs.args[1]
-#     func = :(Plots._apply_recipe)
-#     if isa(front, Expr) && front.head == :curly
-#         front.args[1] = func
-#         func = front
-#     end
-#
-#     # get the arg list, stripping out any keyword parameters into a
-#     # bunch of get!(kw, key, value) lines
-#     args = lhs.args[2:end]
-#     kw_body = Expr(:block)
-#     if isa(args[1], Expr) && args[1].head == :parameters
-#         for kwpair in args[1].args
-#             k, v = kwpair.args
-#             push!(kw_body.args, :(get!(kw, $(QuoteNode(k)), $v)))
-#         end
-#         args = args[2:end]
-#     end
-#
-#     # replace all the key => value lines with argument setting logic
-#     replace_recipe_arrows!(body)
-#
-#     # now build a function definition for _apply_recipe, wrapping the return value in a tuple if needed
-#     esc(quote
-#         function $func(d::KW, kw::KW, $(args...); issubplot=false)
-#             $kw_body
-#             ret = $body
-#             if typeof(ret) <: Tuple
-#                 ret
-#             else
-#                 (ret,)
-#             end
-#         end
-#     end)
-# end
-#
-
 
 # ---------------------------------------------------------------------------
 
@@ -284,6 +158,27 @@ end
     d[:seriestype] = :path
     ()
 end
+
+@recipe function f(::Type{Val{:hline}}, x, y, z)
+    xmin, xmax = axis_limits(d[:subplot][:xaxis])
+    n = length(y)
+    newx = repmat(Float64[xmin, xmax, NaN], n)
+    newy = vec(Float64[yi for i=1:3,yi=y])
+    d[:x], d[:y] = newx, newy
+    d[:seriestype] = :path
+    ()
+end
+
+@recipe function f(::Type{Val{:vline}}, x, y, z)
+    ymin, ymax = axis_limits(d[:subplot][:yaxis])
+    n = length(y)
+    newx = vec(Float64[yi for i=1:3,yi=y])
+    newy = repmat(Float64[ymin, ymax, NaN], n)
+    d[:x], d[:y] = newx, newy
+    d[:seriestype] = :path
+    ()
+end
+
 
 # # create a path from steps
 # @recipe function f(::Type{Val{:steppre}}, x, y, z)

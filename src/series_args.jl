@@ -87,11 +87,15 @@ compute_z(x, y, z::AbstractMatrix)  = Surface(z)
 compute_z(x, y, z::Void)            = nothing
 compute_z(x, y, z)                  = copy(z)
 
+nobigs(v::AVec{BigFloat}) = map(Float64, v)
+nobigs(v::AVec{BigInt}) = map(Int64, v)
+nobigs(v) = v
+
 @noinline function compute_xyz(x, y, z)
     x = compute_x(x,y,z)
     y = compute_y(x,y,z)
     z = compute_z(x,y,z)
-    x, y, z
+    nobigs(x), nobigs(y), nobigs(z)
 end
 
 # not allowed

@@ -54,16 +54,16 @@ _series_updated(plt::Plot, series::Series) = nothing
 
 _before_layout_calcs(plt::Plot) = nothing
 
-title_padding(sp::Subplot) = sp.attr[:title] == "" ? 0mm : sp.attr[:titlefont].pointsize * pt
+title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefont].pointsize * pt
 guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefont].pointsize * pt
 
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot)
-    leftpad   = 10mm + sp.attr[:left_margin]   + guide_padding(sp.attr[:yaxis])
-    toppad    =  2mm + sp.attr[:top_margin]    + title_padding(sp)
-    rightpad  =  3mm + sp.attr[:right_margin]
-    bottompad =  5mm + sp.attr[:bottom_margin] + guide_padding(sp.attr[:xaxis])
+    leftpad   = 10mm + sp[:left_margin]   + guide_padding(sp[:yaxis])
+    toppad    =  2mm + sp[:top_margin]    + title_padding(sp)
+    rightpad  =  3mm + sp[:right_margin]
+    bottompad =  5mm + sp[:bottom_margin] + guide_padding(sp[:xaxis])
     # @show (leftpad, toppad, rightpad, bottompad)
     sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end

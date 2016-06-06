@@ -732,7 +732,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         # expand extrema... handle is AxesImage object
         xmin, xmax, ymax, ymin = handle[:get_extent]()
         expand_extrema!(sp, xmin, xmax, ymin, ymax)
-        sp[:yaxis].d[:flip] = true
+        # sp[:yaxis].d[:flip] = true
     end
 
     if st == :heatmap
