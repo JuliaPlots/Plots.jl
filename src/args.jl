@@ -911,13 +911,18 @@ end
 
 
 # update a subplots args and axes
-function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::Integer)
+function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::Integer; remove_pair = true)
     pargs = plt.attr
     spargs = sp.attr
-    # @show subplot_index, sp
+    anns = pop!(sp.attr, :annotations, [])
+
+    # grab those args which apply to this subplot
     for (k,v) in _subplot_defaults
-        slice_arg!(d_in, spargs, k, v, subplot_index)
+        slice_arg!(d_in, spargs, k, v, subplot_index, remove_pair = remove_pair)
     end
+
+    # extend annotations
+    sp.attr[:annotations] = vcat(anns, sp[:annotations])
 
     # handle legend/colorbar
     spargs[:legend] = convertLegendValue(spargs[:legend])

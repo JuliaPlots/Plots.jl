@@ -283,9 +283,14 @@ function _plot!(plt::Plot, d::KW, args...)
     # merge in anything meant for plot/subplot
     for kw in kw_list
         for (k,v) in kw
-            if haskey(_plot_defaults, k) || haskey(_subplot_defaults, k)
-                d[k] = v
+            for defdict in (_plot_defaults, _subplot_defaults)
+                if haskey(defdict, k)
+                    d[k] = pop!(kw, k)
+                end
             end
+            # if haskey(_plot_defaults, k) || haskey(_subplot_defaults, k)
+            #     d[k] = v
+            # end
         end
     end
 
@@ -309,11 +314,11 @@ function _plot!(plt::Plot, d::KW, args...)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
-        _update_subplot_args(plt, sp, d, idx)
+        _update_subplot_args(plt, sp, d, idx, remove_pair = false)
     end
 
     # do we need to link any axes together?
-    link_axes!(plt.layout, plt.attr[:link])
+    link_axes!(plt.layout, plt[:link])
 
     # !!! note: At this point, kw_list is fully decomposed into individual series... one KW per series.          !!!
     # !!!       The next step is to recursively apply series recipes until the backend supports that series type !!!
@@ -337,7 +342,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
         # strip out series annotations (those which are based on series x/y coords)
         # and add them to the subplot attr
-        sp_anns = annotations(sp.attr[:annotations])
+        sp_anns = annotations(sp[:annotations])
         anns = annotations(pop!(kw, :series_annotations, []))
         if length(anns) > 0
             x, y = kw[:x], kw[:y]

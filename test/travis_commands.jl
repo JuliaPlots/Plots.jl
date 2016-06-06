@@ -18,7 +18,7 @@ Pkg.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git")
 # Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")
 
 Pkg.checkout("RecipesBase")
-Pkg.checkout("VisualRegressionTests")
+Pkg.clone("VisualRegressionTests")
 
 ENV["PYTHON"] = ""
 Pkg.add("PyPlot")

@@ -179,6 +179,7 @@ PlotExample("Adding to subplots",
 PlotExample("",
     "",
     [:(begin
+        srand(111)
         plot!(Plots.fakedata(100,10))
     end)]
 ),
@@ -220,13 +221,24 @@ PlotExample("Custom Markers",
 ),
 
 PlotExample("Contours",
-    "",
+    "Any value for fill works here.  We first build a filled contour from a function, then an unfilled contour from a matrix.",
     [:(begin
-        x = 1:0.3:20
-        y = x
-        f(x,y) = sin(x)+cos(y)
-        contour(x, y, f, fill=true)
+        x = 1:0.5:20
+        y = 1:0.5:10
+        f(x,y) = (3x+y^2)*abs(sin(x)+cos(y))
+        X = repmat(x', length(y), 1)
+        Y = repmat(y, 1, length(x))
+        Z = map(f, X, Y)
+        p1 = contour(x, y, f, fill=true)
+        p2 = contour(x, y, Z)
+        plot(p1, p2)
     end)]
+    # [:(begin
+    #     x = 1:0.3:20
+    #     y = x
+    #     f(x,y) = sin(x)+cos(y)
+    #     contour(x, y, f, fill=true)
+    # end)]
 ),
 
 PlotExample("Pie",
