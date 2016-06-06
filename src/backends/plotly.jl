@@ -82,71 +82,6 @@ function _initialize_backend(::PlotlyBackend; kw...)
   # TODO: other initialization
 end
 
-# ---------------------------------------------------------------------------
-
-# function _create_plot(pkg::PlotlyBackend, d::KW)
-#   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
-#   # TODO: initialize the plot... title, xlabel, bgcolor, etc
-#   Plot(nothing, pkg, 0, d, KW[])
-# end
-
-
-# function _series_added(::PlotlyBackend, plt::Plot, d::KW)
-#   # TODO: add one series to the underlying package
-#   push!(plt.seriesargs, d)
-#   plt
-# end
-
-# function _add_annotations{X,Y,V}(plt::Plot{PlotlyBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
-#   # set or add to the annotation_list
-#   if haskey(plt.attr, :annotation_list)
-#     append!(plt.attr[:annotation_list], anns)
-#   else
-#     plt.attr[:annotation_list] = anns
-#   end
-# end
-
-# ----------------------------------------------------------------
-
-# function _before_update_plot(plt::Plot{PlotlyBackend})
-# end
-#
-# # TODO: override this to update plot items (title, xlabel, etc) after creation
-# function _update_plot_object(plt::Plot{PlotlyBackend}, d::KW)
-# end
-
-# function _update_plot_pos_size(plt::Plot{PlotlyBackend}, d::KW)
-# end
-
-# ----------------------------------------------------------------
-
-# accessors for x/y data
-
-# function getxy(plt::Plot{PlotlyBackend}, i::Int)
-#   d = plt.seriesargs[i]
-#   d[:x], d[:y]
-# end
-#
-# function setxy!{X,Y}(plt::Plot{PlotlyBackend}, xy::Tuple{X,Y}, i::Integer)
-#   d = plt.seriesargs[i]
-#   d[:x], d[:y] = xy
-#   plt
-# end
-
-# ----------------------------------------------------------------
-
-# function _create_subplot(subplt::Subplot{PlotlyBackend}, isbefore::Bool)
-#   # TODO: build the underlying Subplot object.  this is where you might layout the panes within a GUI window, for example
-#   true
-# end
-
-# function _expand_limits(lims, plt::Plot{PlotlyBackend}, isx::Bool)
-#   # TODO: call expand limits for each plot data
-# end
-#
-# function _remove_axis(plt::Plot{PlotlyBackend}, isx::Bool)
-#   # TODO: if plot is inner subplot, might need to remove ticks or axis labels
-# end
 
 # ----------------------------------------------------------------
 
@@ -214,30 +149,11 @@ use_axis_field(ticks) = !(ticks in (nothing, :none))
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot, letter)
     figw, figh = sp.plt.attr[:size]
-    # @show letter,figw,figh sp.plotarea
     pcts = bbox_to_pcts(sp.plotarea, figw*px, figh*px)
-    # @show pcts
     i1,i2 = (letter == :x ? (1,3) : (2,4))
-    # @show i1,i2
     [pcts[i1], pcts[i1]+pcts[i2]]
 end
 
-# # TODO: this should actually take into account labels, font sizes, etc
-# # sets (left, top, right, bottom)
-# function plotly_minpad(sp::Subplot)
-#     (12mm, 2mm, 2mm, 8mm)
-# end
-#
-# function _update_min_padding!(sp::Subplot{PlotlyBackend})
-#     sp.minpad = plotly_minpad(sp)
-# end
-
-# tickssym(letter) = Symbol(letter * "ticks")
-# limssym(letter) = Symbol(letter * "lims")
-# flipsym(letter) = Symbol(letter * "flip")
-# scalesym(letter) = Symbol(letter * "scale")
-# labelsym(letter) = Symbol(letter * "label")
-# rotationsym(letter) = Symbol(letter * "rotation")
 
 function plotly_axis(axis::Axis, sp::Subplot)
     letter = axis[:letter]
@@ -493,12 +409,6 @@ function plotly_series(plt::Plot, series::Series)
     elseif st == :pie
         d_out[:type] = "pie"
         d_out[:labels] = pie_labels(sp, series)
-        # d_out[:labels] = if haskey(d,:x_discrete_indices)
-        #     dvals = sp.attr[:xaxis].d[:discrete_values]
-        #     [dvals[idx] for idx in d[:x_discrete_indices]]
-        # else
-        #     d[:x]
-        # end
         d_out[:values] = y
         d_out[:hoverinfo] = "label+percent+name"
 
@@ -604,25 +514,16 @@ end
 
 # ----------------------------------------------------------------
 
-# # compute layout bboxes
-# function plotly_finalize(plt::Plot)
-#     w, h = plt.attr[:size]
-#     plt.layout.bbox = BoundingBox(0mm, 0mm, w*px, h*px)
-#     update_child_bboxes!(plt.layout)
-# end
 
 function _writemime(io::IO, ::MIME"image/png", plt::Plot{PlotlyBackend})
-    # plotly_finalize(plt)
     writemime_png_from_html(io, plt)
 end
 
 function _writemime(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
-    # plotly_finalize(plt)
     write(io, html_head(plt) * html_body(plt))
 end
 
 # function Base.display(::PlotsDisplay, plt::Plot{PlotlyBackend})
 function _display(plt::Plot{PlotlyBackend})
-    # plotly_finalize(plt)
     standalone_html_window(plt)
 end

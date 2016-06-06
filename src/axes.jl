@@ -161,8 +161,9 @@ function expand_extrema!(sp::Subplot, d::KW)
     if fr == nothing && d[:seriestype] == :bar
         fr = 0.0
     end
-    expand_extrema!(sp.attr[vert ? :yaxis : :xaxis], fr)
-    # @show d[:fillrange] d[:bar_width]
+    if fr != nothing
+        expand_extrema!(sp.attr[vert ? :yaxis : :xaxis], fr)
+    end
 
     # expand for bar_width
     if d[:seriestype] == :bar

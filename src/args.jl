@@ -193,9 +193,6 @@ const _plot_defaults = KW(
     :show                        => false,
     :layout                      => 1,
     :link                        => :none,
-    # :linkx                       => false,
-    # :linky                       => false,
-    # :linkfunc                    => nothing,
     :overwrite_figure            => true,
     :html_output_format          => :auto,
 )

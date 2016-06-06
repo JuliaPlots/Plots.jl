@@ -43,26 +43,13 @@ When you pass in matrices, it splits by columns.  See the documentation for more
 
 # this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
-    # pkg = backend()
     d = KW(kw)
     preprocessArgs!(d)
 
-    # create an empty Plot, update the args using the inputs, then pass it
-    # to the backend to finish backend-specific initialization
+    # create an empty Plot then process
     plt = Plot()
-    # _update_plot_args(plt, d)
-    # plt.o = _create_backend_figure(plt)
-    #
-    # # create the layout and subplots from the inputs
-    # plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
-    # for (idx,sp) in enumerate(plt.subplots)
-    #     sp.plt = plt
-    #     sp.attr[:subplot_index] = idx
-    #     _update_subplot_args(plt, sp, copy(d), idx)
-    # end
-
-    # now update the plot
-    _plot!(plt, d, args...)
+    plt.user_attr = d
+    _plot!(plt, args...)
 end
 
 # build a new plot from existing plots
@@ -88,6 +75,9 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     # note: all subplots and series "belong" to this new plot...
     plt = Plot()
 
+    # TODO: build the user_attr dict by creating "Any matrices" for the args of each subplot
+
+    # TODO: replace this with proper processing from a merged user_attr KW
     # update plot args, first with existing plots, then override with d
     for p in plts
         _update_plot_args(plt, p.attr)
@@ -137,7 +127,8 @@ end
 function plot!(plt::Plot, args...; kw...)
     d = KW(kw)
     preprocessArgs!(d)
-    _plot!(plt, d, args...)
+    merge!(plt.user_attr, d)
+    _plot!(plt, args...)
 end
 
 function strip_first_letter(s::Symbol)
@@ -173,21 +164,6 @@ function _apply_series_recipe(plt::Plot, d::KW)
         # adjust extrema and discrete info
         if !(st in (:image, :histogram, :histogram2d))
             expand_extrema!(sp, d)
-            # for letter in (:x, :y, :z)
-            #     data = d[letter]
-            #     axis = sp.attr[Symbol(letter, "axis")]
-            #     if eltype(data) <: Number
-            #         expand_extrema!(axis, data)
-            #     elseif isa(data, Surface) && eltype(data.surf) <: Number
-            #         expand_extrema!(axis, data)
-            #     elseif data != nothing
-            #         # TODO: need more here... gotta track the discrete reference value
-            #         #       as well as any coord offset (think of boxplot shape coords... they all
-            #         #       correspond to the same x-value)
-            #         # @show letter,eltype(data),typeof(data)
-            #         d[letter], d[Symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
-            #     end
-            # end
         end
 
 
@@ -197,6 +173,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
         series = Series(d)
         push!(plt.series_list, series)
         # @show series
+        
         _series_added(plt, series)
 
     else
@@ -224,15 +201,8 @@ end
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
-function _plot!(plt::Plot, d::KW, args...)
-    # # just in case the backend needs to set up the plot (make it current or something)
-    # _prepare_plot_object(plt)
-    #
-    # # first apply any args for the subplots
-    # for (idx,sp) in enumerate(plt.subplots)
-    #     _update_subplot_args(plt, sp, d, idx)
-    # end
-
+function _plot!(plt::Plot, args...)
+    d = plt.user_attr
     d[:plot_object] = plt
 
     # the grouping mechanism is a recipe on a GroupBy object
@@ -329,7 +299,6 @@ function _plot!(plt::Plot, d::KW, args...)
         for (idx,sp) in enumerate(plt.subplots)
             sp.plt = plt
             sp.attr[:subplot_index] = idx
-            # _update_subplot_args(plt, sp, copy(d), idx)
         end
 
         plt.init = true
@@ -340,6 +309,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
+        DD(d,"$idx")
         _update_subplot_args(plt, sp, d, idx)
     end
 

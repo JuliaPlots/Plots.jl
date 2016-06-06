@@ -65,6 +65,7 @@ type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T               # the backend type
     n::Int                   # number of series
     attr::KW             # arguments for the whole plot
+    user_attr::KW        # raw arg inputs (after aliases).  these are used as the input dict in `_plot!`
     series_list::Vector{Series}   # arguments for each series
     o  # the backend's plot object
     subplots::Vector{Subplot}
@@ -74,7 +75,7 @@ type Plot{T<:AbstractBackend} <: AbstractPlot{T}
 end
 
 function Plot()
-    Plot(backend(), 0, KW(), Series[], nothing,
+    Plot(backend(), 0, KW(), KW(), Series[], nothing,
          Subplot[], SubplotMap(), EmptyLayout(), false)
 end
 

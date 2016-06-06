@@ -1025,7 +1025,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             ax[field][:set_text](attr[:title])
             ax[field][:set_fontsize](attr[:titlefont].pointsize)
             ax[field][:set_color](getPyPlotColor(attr[:foreground_color_title]))
-            ax[:set_title](attr[:title], loc = loc)
+            # ax[:set_title](attr[:title], loc = loc)
         end
 
         # axis attributes
