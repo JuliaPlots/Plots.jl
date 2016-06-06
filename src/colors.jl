@@ -362,10 +362,10 @@ webcolor(c, α) = webcolor(convertColor(getColor(c), α))
 
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
-function getSeriesRGBColor(c, attr::KW, n::Int)
+function getSeriesRGBColor(c, sp::Subplot, n::Int)
 
   if c == :auto
-    c = autopick(attr[:color_palette], n)
+    c = autopick(sp[:color_palette], n)
   end
 
   # c should now be a subtype of ColorScheme
