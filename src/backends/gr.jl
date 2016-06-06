@@ -268,16 +268,16 @@ end
 
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
-gr_x_axislims(sp::Subplot) = axis_limits(sp.attr[:xaxis], true)
-gr_y_axislims(sp::Subplot) = axis_limits(sp.attr[:yaxis], true)
-gr_z_axislims(sp::Subplot) = axis_limits(sp.attr[:zaxis], true)
+gr_x_axislims(sp::Subplot) = axis_limits(sp.attr[:xaxis], false)
+gr_y_axislims(sp::Subplot) = axis_limits(sp.attr[:yaxis], false)
+gr_z_axislims(sp::Subplot) = axis_limits(sp.attr[:zaxis], false)
 gr_xy_axislims(sp::Subplot) = gr_x_axislims(sp)..., gr_y_axislims(sp)...
 
 function gr_lims(axis::Axis, adjust::Bool, expand = nothing)
     if expand != nothing
         expand_extrema!(axis, expand)
     end
-    lims = axis_limits(axis, true)
+    lims = axis_limits(axis, false)
     if adjust
         GR.adjustrange(lims...)
     else
