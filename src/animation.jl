@@ -31,10 +31,17 @@ function gif(anim::Animation, fn::Compat.ASCIIString = "tmp.gif"; fps::Integer =
 
     # high quality
     speed = round(Int, 100 / fps)
-    run(`convert -delay $speed -loop 0 $(anim.dir)/*.png -alpha off $fn`)
+    file = joinpath(Pkg.dir("ImageMagick"), "deps","deps.jl")
+    if isfile(file) && !haskey(ENV, "MAGICK_CONFIGURE_PATH")
+        include(file)
+    end
+    prefix = get(ENV, "MAGICK_CONFIGURE_PATH", "")
+    run(`$(joinpath(prefix, "convert")) -delay $speed -loop 0 $(joinpath(anim.dir, "*.png")) -alpha off $fn`)
 
   catch err
-    warn("Tried to create gif using convert (ImageMagick), but got error: $err\nWill try ffmpeg, but it's lower quality...)")
+    warn("""Tried to create gif using convert (ImageMagick), but got error: $err
+    ImageMagick can be installed by executing `Pkg.add("ImageMagick")`
+    Will try ffmpeg, but it's lower quality...)""")
 
     # low quality
     run(`ffmpeg -v 0 -framerate $fps -i $(anim.dir)/%06d.png -y $fn`)
