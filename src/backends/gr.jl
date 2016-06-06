@@ -39,7 +39,7 @@ supportedArgs(::GRBackend) = [
 ]
 supportedAxes(::GRBackend) = _allAxes
 supportedTypes(::GRBackend) = [
-    :path, :steppre, :steppost,
+    :path, #:steppre, :steppost,
     :scatter,
     #:histogram2d, :hexbin,
     :sticks,
@@ -657,6 +657,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             majorx = 5
             xtick = GR.tick(xmin, xmax) / majorx
         else
+            # log axis
             # xtick = majorx = 1
             xtick = 2  # scientific notation
             majorx = 2 # no minor grid lines
@@ -666,6 +667,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             majory = 5
             ytick = GR.tick(ymin, ymax) / majory
         else
+            # log axis
             # ytick = majory = 1
             ytick = 2  # scientific notation
             majory = 2 # no minor grid lines
@@ -776,7 +778,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.savestate()
         xmin, xmax, ymin, ymax = extrema[gr_getaxisind(d),:]
         GR.setwindow(xmin, xmax, ymin, ymax)
-        if st in [:path, :steppre, :steppost, :sticks, :polar]
+        if st in [:path, :sticks, :polar]
             GR.setlinetype(gr_linetype[d[:linestyle]])
             GR.setlinewidth(d[:linewidth])
             GR.setlinecolorind(gr_getcolorind(d[:linecolor]))
@@ -844,27 +846,27 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         #     end
         #     # legend[idx] = true
 
-        # TODO: use recipe
-        elseif st in [:steppre, :steppost]
-            n = length(d[:x])
-            x = zeros(2*n + 1)
-            y = zeros(2*n + 1)
-            x[1], y[1] = d[:x][1], d[:y][1]
-            j = 2
-            for i = 2:n
-                if st == :steppre
-                    x[j], x[j+1] = d[:x][i-1], d[:x][i]
-                    y[j], y[j+1] = d[:y][i],   d[:y][i]
-                else
-                    x[j], x[j+1] = d[:x][i],   d[:x][i]
-                    y[j], y[j+1] = d[:y][i-1], d[:y][i]
-                end
-                j += 2
-            end
-            if n > 1
-                gr_polyline(x, y)
-            end
-            # legend[idx] = true
+        # # TODO: use recipe
+        # elseif st in [:steppre, :steppost]
+        #     n = length(d[:x])
+        #     x = zeros(2*n + 1)
+        #     y = zeros(2*n + 1)
+        #     x[1], y[1] = d[:x][1], d[:y][1]
+        #     j = 2
+        #     for i = 2:n
+        #         if st == :steppre
+        #             x[j], x[j+1] = d[:x][i-1], d[:x][i]
+        #             y[j], y[j+1] = d[:y][i],   d[:y][i]
+        #         else
+        #             x[j], x[j+1] = d[:x][i],   d[:x][i]
+        #             y[j], y[j+1] = d[:y][i-1], d[:y][i]
+        #         end
+        #         j += 2
+        #     end
+        #     if n > 1
+        #         gr_polyline(x, y)
+        #     end
+        #     # legend[idx] = true
 
         # TODO: use recipe
         elseif st == :sticks
@@ -1186,7 +1188,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 d = series.d
                 st = d[:seriestype]
                 GR.setlinewidth(d[:linewidth])
-                if d[:seriestype] in [:path, :line, :steppre, :steppost, :sticks]
+                if d[:seriestype] in [:path, :sticks]
                     GR.setlinecolorind(gr_getcolorind(d[:linecolor]))
                     GR.setlinetype(gr_linetype[d[:linestyle]])
                     GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
@@ -1194,7 +1196,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if d[:seriestype] == :scatter || d[:markershape] != :none
                     GR.setmarkercolorind(gr_getcolorind(d[:markercolor]))
                     gr_setmarkershape(d)
-                    if d[:seriestype] in [:path, :line, :steppre, :steppost, :sticks]
+                    if d[:seriestype] in [:path, :sticks]
                         gr_polymarker(d, [xpos - 0.06, xpos - 0.02], [ypos, ypos])
                     else
                         gr_polymarker(d, [xpos - 0.06, xpos - 0.04, xpos - 0.02], [ypos, ypos, ypos])
