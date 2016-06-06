@@ -71,7 +71,8 @@ end
 
 
 facts("Axes") do
-    axis = xaxis()
+    p = plot()
+    axis = p.subplots[1][:xaxis]
     @fact typeof(axis) --> Axis
     @fact Plots.discrete_value!(axis, "HI") --> (0.5, 1)
     @fact Plots.discrete_value!(axis, :yo) --> (1.5, 2)
