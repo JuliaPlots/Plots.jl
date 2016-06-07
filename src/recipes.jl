@@ -429,30 +429,68 @@ end
 
 const _box_halfwidth = 0.4
 
+notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
+
 # function apply_series_recipe(d::KW, ::Type{Val{:box}})
-@recipe function f(::Type{Val{:boxplot}}, x, y, z)
-    # dumpdict(d, "box before", true)
-    # TODO: add scatter series with outliers
+@recipe function f(::Type{Val{:boxplot}}, x, y, z; notch=false, range=1.5)
+    # Plots.dumpdict(d, "box before", true)
 
     # create a list of shapes, where each shape is a single boxplot
     shapes = Shape[]
     groupby = extractGroupArgs(x)
+    outliers_y = Float64[]
+    outliers_x = Float64[]
+
+    warning = false
 
     for (i, glabel) in enumerate(groupby.groupLabels)
 
-        # filter y values, then compute quantiles
-        q1,q2,q3,q4,q5 = quantile(d[:y][groupby.groupIds[i]], linspace(0,1,5))
+        # filter y values
+        values = d[:y][groupby.groupIds[i]]
+        # then compute quantiles
+        q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
+        # notch
+        n = notch_width(q2, q4, length(values))
+
+        if notch && !warning && ( (q2>(q3-n)) || (q4<(q3+n)) )
+            warn("Boxplot's notch went outside hinges. Set notch to false.")
+            warning = true # Show the warning only one time
+        end
 
         # make the shape
         center = i - 0.5
         l, m, r = center - _box_halfwidth, center, center + _box_halfwidth
-        xcoords = [
+        # internal nodes for notches
+        L, R = center - 0.5 * _box_halfwidth, center + 0.5 * _box_halfwidth
+        # outliers
+        limit = range*(q4-q2)
+        for value in values
+            if (value < (q2 - limit)) || (value > (q4 + limit))
+                push!(outliers_y, value)
+                push!(outliers_x, center)
+            end
+        end
+        # change q1 and q5 to use the limit in order to show outliers
+        q1 = q2 - limit
+        q5 = q4 + limit
+        # Box
+        xcoords = notch::Bool ? [
+            m, l, r, m, m, NaN,       # lower T
+            l, l, L, R, r, r, l, NaN, # lower box
+            l, l, L, R, r, r, l, NaN, # upper box
+            m, l, r, m, m, NaN,       # upper T
+        ] : [
             m, l, r, m, m, NaN,         # lower T
             l, l, r, r, l, NaN,         # lower box
             l, l, r, r, l, NaN,         # upper box
             m, l, r, m, m, NaN,         # upper T
         ]
-        ycoords = [
+        ycoords = notch::Bool ? [
+            q1, q1, q1, q1, q2, NaN,             # lower T
+            q2, q3-n, q3, q3, q3-n, q2, q2, NaN, # lower box
+            q4, q3+n, q3, q3, q3+n, q4, q4, NaN, # upper box
+            q5, q5, q5, q5, q4, NaN,             # upper T
+        ] : [
             q1, q1, q1, q1, q2, NaN,    # lower T
             q2, q3, q3, q2, q2, NaN,    # lower box
             q4, q3, q3, q4, q4, NaN,    # upper box
@@ -467,8 +505,24 @@ const _box_halfwidth = 0.4
     n = length(groupby.groupLabels)
     xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
+    # clean d
+    pop!(d, :notch)
+    pop!(d, :range)
+
     # we want to set the fields directly inside series recipes... args are ignored
-    d[:x], d[:y] = shape_coords(shapes)
+    d[:x], d[:y] = Plots.shape_coords(shapes)
+
+    # Outliers
+    @series begin
+        seriestype := :scatter
+        markershape := :ellipse
+        x := outliers_x
+        y := outliers_y
+        label := ""
+        primary := false
+        ()
+    end
+
     () # expects a tuple returned
 
     # KW[d]
