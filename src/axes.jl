@@ -206,8 +206,19 @@ function widen(lmin, lmax)
     lmin-eps, lmax+eps
 end
 
+# figure out if widening is a good idea
+function default_should_widen(axis::Axis)
+    should_widen = false
+    for series in series_list(axis.sp)
+        if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
+            should_widen = true
+        end
+    end
+    should_widen
+end
+
 # using the axis extrema and limit overrides, return the min/max value for this axis
-function axis_limits(axis::Axis, should_widen::Bool = true)
+function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis))
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
     lims = axis[:lims]

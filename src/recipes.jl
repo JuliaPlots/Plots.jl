@@ -22,7 +22,11 @@ end
 grouphist(rand(1000,4))
 ```
 """
-macro userplot(expr::Expr)
+macro userplot(expr)
+    _userplot(expr)
+end
+
+function _userplot(expr::Expr)
     if expr.head != :type
         errror("Must call userplot on a type/immutable expression.  Got: $expr")
     end
@@ -34,10 +38,18 @@ macro userplot(expr::Expr)
     # return a code block with the type definition and convenience plotting methods
     esc(quote
         $expr
-        $funcname(args...; kw...) = plot($typename(args...); kw...)
-        $funcname2(args...; kw...) = plot!($typename(args...); kw...)
+        export $funcname, $funcname2
+        $funcname(args...; kw...) = plot($typename(args); kw...)
+        $funcname2(args...; kw...) = plot!($typename(args); kw...)
     end)
 end
+
+function _userplot(sym::Symbol)
+    _userplot(:(type $sym
+            args
+    end))
+end
+
 
 # ----------------------------------------------------------------------------------
 
@@ -59,14 +71,14 @@ num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
 
-# if it's not a recipe, just do nothing and return the args
-function RecipesBase.apply_recipe(d::KW, args...; issubplot=false)
-    if issubplot && !isempty(args) && !haskey(d, :n) && !haskey(d, :layout)
-        # put in a sensible default
-        d[:n] = maximum(map(num_series, args))
-    end
-    args
-end
+# # if it's not a recipe, just do nothing and return the args
+# function RecipesBase.apply_recipe(d::KW, args...; issubplot=false)
+#     if issubplot && !isempty(args) && !haskey(d, :n) && !haskey(d, :layout)
+#         # put in a sensible default
+#         d[:n] = maximum(map(num_series, args))
+#     end
+#     args
+# end
 
 
 if is_installed("DataFrames")
@@ -136,12 +148,12 @@ end
 # for seriestype `line`, need to sort by x values
 @recipe function f(::Type{Val{:line}}, x, y, z)
     indices = sortperm(x)
-    d[:x] = x[indices]
-    d[:y] = y[indices]
+    x := x[indices]
+    y := y[indices]
     if typeof(z) <: AVec
-        d[:z] = z[indices]
+        z := z[indices]
     end
-    d[:seriestype] = :path
+    seriestype := :path
     ()
 end
 
@@ -154,8 +166,9 @@ end
         newx[rng] = x[i]
         newy[rng] = [0., y[i], 0.]
     end
-    d[:x], d[:y] = newx, newy
-    d[:seriestype] = :path
+    x := newx
+    y := newy
+    seriestype := :path
     ()
 end
 
@@ -164,8 +177,9 @@ end
     n = length(y)
     newx = repmat(Float64[xmin, xmax, NaN], n)
     newy = vec(Float64[yi for i=1:3,yi=y])
-    d[:x], d[:y] = newx, newy
-    d[:seriestype] = :path
+    x := newx
+    y := newy
+    seriestype := :path
     ()
 end
 
@@ -174,8 +188,9 @@ end
     n = length(y)
     newx = vec(Float64[yi for i=1:3,yi=y])
     newy = repmat(Float64[ymin, ymax, NaN], n)
-    d[:x], d[:y] = newx, newy
-    d[:seriestype] = :path
+    x := newx
+    y := newy
+    seriestype := :path
     ()
 end
 
@@ -255,7 +270,8 @@ sticks_fillfrom(fr::AVec, i::Integer) = fr[mod1(i, length(fr))]
         newx[rng] = [x[i], x[i], NaN]
         newy[rng] = [sticks_fillfrom(fr,i), y[i], NaN]
     end
-    d[:x], d[:y] = newx, newy
+    x := newx
+    y := newy
     fillrange := nothing
     seriestype := :path
 
@@ -328,10 +344,10 @@ end
         fillrng[rng] = [fi, fi, fi]
     end
 
-    d[:x] = x
-    d[:y] = y
-    d[:fillrange] = fillrng
-    d[:seriestype] = :path
+    x := x
+    y := y
+    fillrange := fillrng
+    seriestype := :path
     ()
 end
 
@@ -378,10 +394,12 @@ end
 
 
 @recipe function f(::Type{Val{:histogram}}, x, y, z)
-    edges, counts = my_hist(y, d[:bins], normed = d[:normalize], weights = d[:weights])
-    d[:x] = edges
-    d[:y] = counts
-    d[:seriestype] = :bar
+    edges, counts = my_hist(y, d[:bins],
+                               normed = d[:normalize],
+                               weights = d[:weights])
+    x := edges
+    y := counts
+    seriestype := :bar
     ()
 end
 
@@ -416,11 +434,13 @@ end
 centers(v::AVec) = v[1] + cumsum(diff(v))
 
 @recipe function f(::Type{Val{:histogram2d}}, x, y, z)
-    xedges, yedges, counts = my_hist_2d(x, y, d[:bins], normed = d[:normalize], weights = d[:weights])
-    d[:x] = centers(xedges)
-    d[:y] = centers(yedges)
-    d[:z] = Surface(counts)
-    d[:seriestype] = :heatmap
+    xedges, yedges, counts = my_hist_2d(x, y, d[:bins],
+                                              normed = d[:normalize],
+                                              weights = d[:weights])
+    x := centers(xedges)
+    y := centers(yedges)
+    z := Surface(counts)
+    seriestype := :heatmap
     ()
 end
 
@@ -501,7 +521,7 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
 
     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
 
-    d[:seriestype] = :shape
+    seriestype := :shape
     n = length(groupby.groupLabels)
     xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
@@ -574,7 +594,7 @@ end
     end
 
     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
-    d[:seriestype] = :shape
+    seriestype := :shape
     n = length(groupby.groupLabels)
     xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
@@ -592,7 +612,8 @@ end
     if isvertical(d)
         newx, newy = newy, newx
     end
-    d[:x], d[:y] = newx, newy
+    x := newx
+    y := newy
     seriestype := :path
     ()
 end
@@ -642,21 +663,17 @@ end
 
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
-# function apply_series_recipe(d::KW, ::Type{Val{:yerror}})
 @recipe function f(::Type{Val{:yerror}}, x, y, z)
     error_style!(d)
-    d[:markershape] = :hline
+    markershape := :hline
     d[:x], d[:y] = error_coords(d[:x], d[:y], error_zipit(d[:yerror]))
-    # KW[d]
     ()
 end
 
-# function apply_series_recipe(d::KW, ::Type{Val{:xerror}})
 @recipe function f(::Type{Val{:xerror}}, x, y, z)
     error_style!(d)
-    d[:markershape] = :vline
+    markershape := :vline
     d[:y], d[:x] = error_coords(d[:y], d[:x], error_zipit(d[:xerror]))
-    # KW[d]
     ()
 end
 
@@ -705,8 +722,8 @@ end
 
 # function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
 function quiver_using_hack(d::KW)
-    d[:label] = ""
-    d[:seriestype] = :shape
+    label := ""
+    seriestype := :shape
 
     velocity = error_zipit(d[:quiver])
     xorig, yorig = d[:x], d[:y]
@@ -855,12 +872,12 @@ end
 @recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(x::AVec, ohlc::AVec{Tuple{R1,R2,R3,R4}}) = x, OHLC[OHLC(t...) for t in ohlc]
 
 @recipe function f(x::AVec, v::AVec{OHLC})
-    d[:seriestype] = :path
+    seriestype := :path
     get_xy(v, x)
 end
 
 @recipe function f(v::AVec{OHLC})
-    d[:seriestype] = :path
+    seriestype := :path
     get_xy(v)
 end
 

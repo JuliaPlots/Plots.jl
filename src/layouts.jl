@@ -614,7 +614,7 @@ function create_grid_curly(expr::Expr)
     for (i,arg) in enumerate(expr.args[2:end])
         add_layout_pct!(kw, arg, i, length(expr.args)-1)
     end
-    @show kw
+    # @show kw
     :(EmptyLayout(label = $(QuoteNode(s)), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto)))))
 end
 
