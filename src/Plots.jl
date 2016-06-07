@@ -200,6 +200,7 @@ include("recipes.jl")
 include("animation.jl")
 include("output.jl")
 include("examples.jl")
+include("arg_desc.jl")
 
 
 # ---------------------------------------------------------
