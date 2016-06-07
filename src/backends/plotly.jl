@@ -148,7 +148,7 @@ use_axis_field(ticks) = !(ticks in (nothing, :none))
 
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot, letter)
-    figw, figh = sp.plt.attr[:size]
+    figw, figh = sp.plt[:size]
     pcts = bbox_to_pcts(sp.plotarea, figw*px, figh*px)
     i1,i2 = (letter == :x ? (1,3) : (2,4))
     [pcts[i1], pcts[i1]+pcts[i2]]
@@ -157,17 +157,17 @@ end
 
 function plotly_axis(axis::Axis, sp::Subplot)
     letter = axis[:letter]
-    d = axis.d
+    # d = axis.d
     ax = KW(
-        :title      => d[:guide],
-        :showgrid   => sp.attr[:grid],
+        :title      => axis[:guide],
+        :showgrid   => sp[:grid],
         :zeroline   => false,
     )
 
-    # fgcolor = webcolor(d[:foreground_color])
+    # fgcolor = webcolor(axis[:foreground_color])
     # tsym = tickssym(letter)
 
-    # spidx = sp.attr[:subplot_index]
+    # spidx = sp[:subplot_index]
     # d_out[:xaxis] = "x$spidx"
     # d_out[:yaxis] = "y$spidx"
     if letter in (:x,:y)
@@ -175,31 +175,31 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:anchor] = "$(letter==:x ? :y : :x)$(plotly_subplot_index(sp))"
     end
 
-    rot = d[:rotation]
+    rot = axis[:rotation]
     if rot != 0
         ax[:tickangle] = rot
     end
 
-    if use_axis_field(d[:ticks])
-        ax[:titlefont] = plotlyfont(d[:guidefont], webcolor(d[:foreground_color_guide]))
-        ax[:type] = plotlyscale(d[:scale])
-        ax[:tickfont] = plotlyfont(d[:tickfont], webcolor(d[:foreground_color_text]))
-        ax[:tickcolor] = webcolor(d[:foreground_color_border])
-        ax[:linecolor] = webcolor(d[:foreground_color_border])
+    if use_axis_field(axis[:ticks])
+        ax[:titlefont] = plotlyfont(axis[:guidefont], webcolor(axis[:foreground_color_guide]))
+        ax[:type] = plotlyscale(axis[:scale])
+        ax[:tickfont] = plotlyfont(axis[:tickfont], webcolor(axis[:foreground_color_text]))
+        ax[:tickcolor] = webcolor(axis[:foreground_color_border])
+        ax[:linecolor] = webcolor(axis[:foreground_color_border])
 
         # lims
-        lims = d[:lims]
+        lims = axis[:lims]
         if lims != :auto && limsType(lims) == :limits
             ax[:range] = lims
         end
 
         # flip
-        if d[:flip]
+        if axis[:flip]
             ax[:autorange] = "reversed"
         end
 
         # ticks
-        ticks = d[:ticks]
+        ticks = axis[:ticks]
         if ticks != :auto
             ttype = ticksType(ticks)
             if ttype == :ticks
@@ -219,7 +219,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
 end
 
 # function plotly_layout_json(plt::Plot{PlotlyBackend})
-#   d = plt.attr
+#   d = plt
 # function plotly_layout(d::KW, seriesargs::AVec{KW})
 function plotly_layout(plt::Plot)
     d_out = KW()
@@ -230,49 +230,49 @@ function plotly_layout(plt::Plot)
     # end
     # sp = plt.subplots[1]
 
-    d_out[:width], d_out[:height] = plt.attr[:size]
-    d_out[:paper_bgcolor] = webcolor(plt.attr[:background_color_outside])
+    d_out[:width], d_out[:height] = plt[:size]
+    d_out[:paper_bgcolor] = webcolor(plt[:background_color_outside])
 
     for sp in plt.subplots
         sp_out = KW()
         spidx = plotly_subplot_index(sp)
 
         # set the fields for the plot
-        d_out[:title] = sp.attr[:title]
-        d_out[:titlefont] = plotlyfont(sp.attr[:titlefont], webcolor(sp.attr[:foreground_color_title]))
+        d_out[:title] = sp[:title]
+        d_out[:titlefont] = plotlyfont(sp[:titlefont], webcolor(sp[:foreground_color_title]))
 
         # # TODO: use subplot positioning logic
         # d_out[:margin] = KW(:l=>35, :b=>30, :r=>8, :t=>20)
         d_out[:margin] = KW(:l=>0, :b=>0, :r=>0, :t=>30)
 
-        d_out[:plot_bgcolor] = webcolor(sp.attr[:background_color_inside])
+        d_out[:plot_bgcolor] = webcolor(sp[:background_color_inside])
 
         # TODO: x/y axis tick values/labels
 
         # if any(is3d, seriesargs)
         if is3d(sp)
             d_out[:scene] = KW(
-                Symbol("xaxis$spidx") => plotly_axis(sp.attr[:xaxis], sp),
-                Symbol("yaxis$spidx") => plotly_axis(sp.attr[:yaxis], sp),
-                Symbol("zaxis$spidx") => plotly_axis(sp.attr[:zaxis], sp),
+                Symbol("xaxis$spidx") => plotly_axis(sp[:xaxis], sp),
+                Symbol("yaxis$spidx") => plotly_axis(sp[:yaxis], sp),
+                Symbol("zaxis$spidx") => plotly_axis(sp[:zaxis], sp),
             )
         else
-            d_out[Symbol("xaxis$spidx")] = plotly_axis(sp.attr[:xaxis], sp)
-            d_out[Symbol("yaxis$spidx")] = plotly_axis(sp.attr[:yaxis], sp)
+            d_out[Symbol("xaxis$spidx")] = plotly_axis(sp[:xaxis], sp)
+            d_out[Symbol("yaxis$spidx")] = plotly_axis(sp[:yaxis], sp)
         end
 
         # legend
-        d_out[:showlegend] = sp.attr[:legend] != :none
-        if sp.attr[:legend] != :none
+        d_out[:showlegend] = sp[:legend] != :none
+        if sp[:legend] != :none
             d_out[:legend] = KW(
-                :bgcolor  => webcolor(sp.attr[:background_color_legend]),
-                :bordercolor => webcolor(sp.attr[:foreground_color_legend]),
-                :font     => plotlyfont(sp.attr[:legendfont]),
+                :bgcolor  => webcolor(sp[:background_color_legend]),
+                :bordercolor => webcolor(sp[:foreground_color_legend]),
+                :font     => plotlyfont(sp[:legendfont]),
             )
         end
 
         # annotations
-        anns = get(sp.attr, :annotations, [])
+        anns = sp[:annotations]
         d_out[:annotations] = if isempty(anns)
             KW[]
         else
@@ -322,7 +322,7 @@ const _plotly_markers = KW(
 )
 
 function plotly_subplot_index(sp::Subplot)
-    spidx = sp.attr[:subplot_index]
+    spidx = sp[:subplot_index]
     spidx == 1 ? "" : spidx
 end
 
@@ -375,6 +375,7 @@ function plotly_series(plt::Plot, series::Series)
         end
         d_out[:nbinsx] = xbins
         d_out[:nbinsy] = ybins
+        d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
     elseif st in (:histogram, :density)
         d_out[:type] = "histogram"
@@ -387,14 +388,16 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
-        d_out[:x], d_out[:y] = x, y
-        d_out[:z] = d[:z].surf
+        # d_out[:x], d_out[:y] = x, y
+        # d_out[:z] = d[:z].surf
+        d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
         d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
     elseif st == :contour
         d_out[:type] = "contour"
-        d_out[:x], d_out[:y] = x, y
-        d_out[:z] = d[:z].surf
+        # d_out[:x], d_out[:y] = x, y
+        # d_out[:z] = d[:z].surf
+        d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
         # d_out[:showscale] = d[:colorbar] != :none
         d_out[:ncontours] = d[:levels]
         d_out[:contours] = KW(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
@@ -402,8 +405,9 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
-        d_out[:x], d_out[:y] = x, y
-        d_out[:z] = d[:z].surf
+        # d_out[:x], d_out[:y] = x, y
+        # d_out[:z] = d[:z].surf
+        d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
         d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
     elseif st == :pie
@@ -490,7 +494,7 @@ end
 
 function html_body(plt::Plot{PlotlyBackend}, style = nothing)
     if style == nothing
-        w, h = plt.attr[:size]
+        w, h = plt[:size]
         style = "width:$(w)px;height:$(h)px;"
     end
     uuid = Base.Random.uuid4()

@@ -290,6 +290,7 @@ function _plot!(plt::Plot, d::KW, args...)
                         :y => sy,
                         :fillrange => nothing,
                         :label => "",
+                        :primary => false,
                     )))
 
                     # don't allow something else to handle it

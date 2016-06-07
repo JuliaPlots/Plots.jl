@@ -253,6 +253,7 @@ const _suppress_warnings = Set{Symbol}([
     :link,
     :plot_object,
     :primary,
+    :smooth,
 ])
 
 # add defaults for the letter versions
