@@ -440,7 +440,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     # for each plotting command, optionally build and add a series handle to the list
 
     # line plot
-    if st in (:path, :line, :scatter, :path3d, :scatter3d, :steppre, :steppost)
+    if st in (:path, :line, :path3d, :steppre, :steppost)
         if d[:linewidth] > 0
             handle = ax[:plot](xyargs...;
                 label = d[:label],
