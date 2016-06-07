@@ -116,10 +116,54 @@ immutable SliceIt end
     nothing  # don't add a series for the main block
 end
 
-# pass these through to the slicer
-@recipe f(x, y, z)  = SliceIt, x, y, z
-@recipe f(x, y)     = SliceIt, x, y, nothing
-@recipe f(y)        = SliceIt, nothing, y, nothing
+# this is the default "type recipe"... just pass the object through
+@recipe f{T}(::Type{T}, v::T) = v
+
+_apply_type_recipe(d, v) = RecipesBase.apply_recipe(d, typeof(v), v)[1].args[1]
+
+# handle "type recipes" by converting inputs, and then either re-calling or slicing
+@recipe function f(x, y, z)
+    did_replace = false
+    newx = _apply_type_recipe(d, x)
+    x === newx || (did_replace = true)
+    newy = _apply_type_recipe(d, y)
+    y === newy || (did_replace = true)
+    newz = _apply_type_recipe(d, z)
+    z === newz || (did_replace = true)
+    if did_replace
+        newx, newy, newz
+    else
+        SliceIt, x, y, z
+    end
+end
+@recipe function f(x, y)
+    did_replace = false
+    newx = _apply_type_recipe(d, x)
+    x === newx || (did_replace = true)
+    newy = _apply_type_recipe(d, y)
+    y === newy || (did_replace = true)
+    if did_replace
+        newx, newy
+    else
+        SliceIt, x, y, nothing
+    end
+end
+@recipe function f(y)
+    newy = _apply_type_recipe(d, y)
+    if y !== newy
+        newy
+    else
+        SliceIt, nothing, y, nothing
+    end
+end
+# @recipe f(x, y, z)  = SliceIt, apply_recipe(typeof(x), x), apply_recipe(typeof(y), y), apply_recipe(typeof(z), z)
+# @recipe f(x, y)     = SliceIt, apply_recipe(typeof(x), x), apply_recipe(typeof(y), y), nothing
+# @recipe f(y)        = SliceIt, nothing, apply_recipe(typeof(y), y), nothing
+
+# # pass these through to the slicer
+# @recipe f(x, y, z)  = SliceIt, x, y, z
+# @recipe f(x, y)     = SliceIt, x, y, nothing
+# @recipe f(y)        = SliceIt, nothing, y, nothing
 
 
 # # --------------------------------------------------------------------
