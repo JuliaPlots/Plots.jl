@@ -49,7 +49,7 @@ supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supportedMarkers(::PyPlotBackend) = vcat(_allMarkers, Shape)
 supportedScales(::PyPlotBackend) = [:identity, :ln, :log2, :log10]
 subplotSupported(::PyPlotBackend) = true
-nativeImagesSupported(::PyPlotBackend) = true
+# nativeImagesSupported(::PyPlotBackend) = true
 
 
 # --------------------------------------------------------------------------------------

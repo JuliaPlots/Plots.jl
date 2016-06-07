@@ -174,7 +174,7 @@ supportedMarkers(::AbstractBackend) = [:none]
 supportedScales(::AbstractBackend) = [:identity]
 subplotSupported(::AbstractBackend) = false
 stringsSupported(::AbstractBackend) = false
-nativeImagesSupported(::AbstractBackend) = false
+nativeImagesSupported(b::AbstractBackend) = :image in supportedTypes(b)
 
 supportedAxes() = supportedAxes(backend())
 supportedTypes() = supportedTypes(backend())

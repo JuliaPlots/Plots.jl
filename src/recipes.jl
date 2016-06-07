@@ -361,12 +361,14 @@ function my_hist(v, bins; normed = false, weights = nothing)
     edges = calc_edges(v, bins)
     counts = zeros(length(edges)-1)
 
+    # add a weighted count
     for (i,vi) in enumerate(v)
         idx = bucket_index(vi, edges)
         counts[idx] += (weights == nothing ? 1.0 : weights[i])
     end
 
-    norm_denom = normed ? sum(counts) : 1.0
+    # normalize by bar area?
+    norm_denom = normed ? sum(diff(edges) .* counts) : 1.0
     if norm_denom == 0
         norm_denom = 1.0
     end
@@ -395,13 +397,15 @@ function my_hist_2d(x, y, bins; normed = false, weights = nothing)
     xedges, yedges = calc_edges_2d(x, y, bins)
     counts = zeros(length(yedges)-1, length(xedges)-1)
 
+    # add a weighted count
     for i=1:length(x)
         r = bucket_index(y[i], yedges)
         c = bucket_index(x[i], xedges)
         counts[r,c] += (weights == nothing ? 1.0 : weights[i])
     end
 
-    norm_denom = normed ? sum(counts) : 1.0
+    # normalize to cubic area of the imaginary surface towers
+    norm_denom = normed ? sum((diff(yedges) * diff(xedges)') .* counts) : 1.0
     if norm_denom == 0
         norm_denom = 1.0
     end
@@ -477,13 +481,13 @@ end
 # otherwise, just use a histogram
 if is_installed("KernelDensity")
     @eval import KernelDensity
-    @eval function violin_coords(y)
-        kd = KernelDensity.kde(y, npoints = 30)
+    @eval function violin_coords(y, bins = 30)
+        kd = KernelDensity.kde(y, npoints = isa(bins, Integer) ? bins : 30)
         kd.density, kd.x
     end
 else
-    @eval function violin_coords(y)
-        edges, widths = hist(y, 20)
+    @eval function violin_coords(y, bins = 30)
+        edges, widths = hist(y, isa(bins, Integer) ? bins : 30)
         centers = 0.5 * (edges[1:end-1] + edges[2:end])
         ymin, ymax = extrema(y)
         vcat(0.0, widths, 0.0), vcat(ymin, centers, ymax)
@@ -525,6 +529,21 @@ end
 
     # KW[d]
 end
+
+# ---------------------------------------------------------------------------
+# density
+
+@recipe function f(::Type{Val{:density}}, x, y, z)
+    newx, newy = violin_coords(y, d[:bins])
+    if isvertical(d)
+        newx, newy = newy, newx
+    end
+    d[:x], d[:y] = newx, newy
+    seriestype := :path
+    ()
+end
+
+
 
 # ---------------------------------------------------------------------------
 # Error Bars

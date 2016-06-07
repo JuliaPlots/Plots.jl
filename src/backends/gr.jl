@@ -52,7 +52,7 @@ supportedStyles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdo
 supportedMarkers(::GRBackend) = vcat(_allMarkers, Shape)
 supportedScales(::GRBackend) = [:identity, :log10]
 subplotSupported(::GRBackend) = true
-nativeImagesSupported(::GRBackend) = true
+# nativeImagesSupported(::GRBackend) = true
 
 
 
@@ -722,14 +722,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.settextcolorind(gr_getcolorind(xaxis[:foreground_color_text]))
 
         if axes_2d
+            # draw the grid lines
             GR.setlinewidth(1)
             # GR.setlinetype(GR.LINETYPE_DOTTED)
-            GR.setlinecolorind(gr_getcolorind(sp[:foreground_color_grid]))
-            ticksize = 0.0075 * window_diag
-            if outside_ticks
-                ticksize = -ticksize
-            end
             if grid_flag
+                GR.setlinecolorind(gr_getcolorind(sp[:foreground_color_grid]))
                 GR.grid(xtick, ytick, 0, 0, majorx, majory)
                 # @show dark_bg, xtick, ytick, majorx, majory
                 # if dark_bg
@@ -737,6 +734,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # else
                 #     GR.grid(xtick, ytick, 0, 0, majorx, majory)
                 # end
+            end
+
+            ticksize = 0.0075 * window_diag
+            if outside_ticks
+                ticksize = -ticksize
             end
             # TODO: this should be done for each axis separately
             GR.setlinecolorind(gr_getcolorind(xaxis[:foreground_color_axis]))
