@@ -201,7 +201,8 @@ end
 # push the limits out slightly
 function widen(lmin, lmax)
     span = lmax - lmin
-    eps = max(1e-16, min(1e-2span, 1e-10))
+    # eps = max(1e-16, min(1e-2span, 1e-10))
+    eps = max(1e-16, 0.03span)
     lmin-eps, lmax+eps
 end
 

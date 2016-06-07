@@ -472,7 +472,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
                         ax[:annotate]("",
                             xytext = (0.001xyprev[1] + 0.999xy[1], 0.001xyprev[2] + 0.999xy[2]),
                             xy = xy,
-                            arrowprops = arrowprops
+                            arrowprops = arrowprops,
+                            zorder = 999
                         )
                     end
                 end
@@ -1046,7 +1047,7 @@ end
 
 function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val)
     ax = sp.o
-    ax[:annotate](val, xy = (x,y))
+    ax[:annotate](val, xy = (x,y), zorder = 999)
 end
 
 
@@ -1059,7 +1060,8 @@ function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val::Plo
         horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
         verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
         rotation = val.font.rotation * 180 / π,
-        size = val.font.pointsize
+        size = val.font.pointsize,
+        zorder = 999
     )
 end
 
