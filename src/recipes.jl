@@ -201,11 +201,15 @@ end
 @recipe function f(::Type{Val{:steppre}}, x, y, z)
     d[:x], d[:y] = make_steps(x, y, :steppre)
     seriestype := :path
+
+    # create a secondary series for the markers
     if d[:markershape] != :none
         @series begin
             seriestype := :scatter
             x := x
             y := y
+            label := ""
+            primary := false
             ()
         end
         markershape := :none
@@ -217,11 +221,52 @@ end
 @recipe function f(::Type{Val{:steppost}}, x, y, z)
     d[:x], d[:y] = make_steps(x, y, :steppost)
     seriestype := :path
+
+    # create a secondary series for the markers
     if d[:markershape] != :none
         @series begin
             seriestype := :scatter
             x := x
             y := y
+            label := ""
+            primary := false
+            ()
+        end
+        markershape := :none
+    end
+    ()
+end
+
+
+# ---------------------------------------------------------------------------
+# sticks
+
+sticks_fillfrom(fr::Void, i::Integer) = 0.0
+sticks_fillfrom(fr::Number, i::Integer) = fr
+sticks_fillfrom(fr::AVec, i::Integer) = fr[mod1(i, length(fr))]
+
+# create vertical line segments from fill
+@recipe function f(::Type{Val{:sticks}}, x, y, z)
+    n = length(x)
+    fr = d[:fillrange]
+    newx, newy = zeros(3n), zeros(3n)
+    for i=1:n
+        rng = 3i-2:3i
+        newx[rng] = [x[i], x[i], NaN]
+        newy[rng] = [sticks_fillfrom(fr,i), y[i], NaN]
+    end
+    d[:x], d[:y] = newx, newy
+    fillrange := nothing
+    seriestype := :path
+
+    # create a secondary series for the markers
+    if d[:markershape] != :none
+        @series begin
+            seriestype := :scatter
+            x := x
+            y := y
+            label := ""
+            primary := false
             ()
         end
         markershape := :none

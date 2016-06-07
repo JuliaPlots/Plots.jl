@@ -12,7 +12,10 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     end
 
     # this is how many series belong to this subplot
-    plotIndex = count(series -> series.d[:subplot] === sp, plt.series_list) + 1
+    plotIndex = count(series -> series.d[:subplot] === sp && series.d[:primary], plt.series_list)
+    if get(d, :primary, true)
+        plotIndex += 1
+    end
 
     aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
     aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)

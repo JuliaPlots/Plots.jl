@@ -179,6 +179,8 @@ const _series_defaults = KW(
                                      # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
     :subplot           => :auto,     # which subplot(s) does this series belong to?
     :series_annotations => [],       # a list of annotations which apply to the coordinates of this series
+    :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
+                                     #     one logical series to be broken up (path and markers, for example)
 )
 
 
@@ -250,6 +252,7 @@ const _suppress_warnings = Set{Symbol}([
     :series_plotindex,
     :link,
     :plot_object,
+    :primary,
 ])
 
 # add defaults for the letter versions

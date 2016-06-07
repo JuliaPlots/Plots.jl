@@ -42,7 +42,7 @@ supportedTypes(::GRBackend) = [
     :path, #:steppre, :steppost,
     :scatter,
     #:histogram2d, :hexbin,
-    :sticks,
+    # :sticks,
     # :hline, :vline, 
     :heatmap, :pie, :image,
     :contour, :path3d, :scatter3d, :surface, :wireframe,
@@ -369,6 +369,21 @@ function gr_set_fill(c)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
 end
 
+# this stores the conversion from a font pointsize to "percentage of window height" which is what GR uses
+const _gr_point_mult = zeros(1)
+
+# set the font attributes... assumes _gr_point_mult has been populated already
+function gr_set_font(f::Font)
+    family = lowercase(f.family)
+    GR.setcharheight(_gr_point_mult[1] * f.pointsize)
+    GR.setcharup(sin(f.rotation), cos(f.rotation))
+    if haskey(gr_font_family, family)
+        GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
+    end
+    GR.settextcolorind(gr_getcolorind(f.color))
+    GR.settextalign(gr_halign[f.halign], gr_valign[f.valign])
+end
+
 # --------------------------------------------------------------------------------------
 
 # # convert a bounding box from absolute coords to percentages...
@@ -430,6 +445,10 @@ function gr_display(plt::Plot)
     gr_fill_viewport(viewport_canvas, plt[:background_color_outside])
     # @show "PLOT SETUP" plt.layout.bbox ratio viewport_canvas
 
+    # update point mult
+    px_per_pt = px / pt
+    _gr_point_mult[1] = px_per_pt / h
+
     # subplots:
     for sp in plt.subplots
         gr_display(sp, w*px, h*px, viewport_canvas)
@@ -450,6 +469,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     gr_fill_viewport(viewport_plotarea, bg)
     #     # # # c = getColor(d[:background_color_inside])
     dark_bg = 0.21 * bg.r + 0.72 * bg.g + 0.07 * bg.b < 0.9
+
+    # # multiplier to convert a font's pointsize to GR's percentage of window height
+    # winheight_px = sp.plt[:size][2]
+    # px_per_pt = px / pt
+    # pointsize_mult = px_per_pt / winheight_px
+    # @show winheight_px px_per_pt pointsize_mult 
 
 # end
 #
@@ -647,6 +672,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # get(d, :xflip, false) && (scale |= GR.OPTION_FLIP_X)
     # get(d, :yflip, false) && (scale |= GR.OPTION_FLIP_Y)
 
+    window_diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
+
     for axis_idx = 1:num_axes
         xmin, xmax, ymin, ymax = extrema[axis_idx,:]
 
@@ -654,7 +681,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         # NOTE: for log axes, the x_tick and y_tick - if non-zero (omit axes) - only affect the output appearance (1 = nomal, 2 = scientiic notation)
         if scale & GR.OPTION_X_LOG == 0
             # xmin, xmax = GR.adjustlimits(xmin, xmax)
-            majorx = 5
+            majorx = 1 #5
             xtick = GR.tick(xmin, xmax) / majorx
         else
             # log axis
@@ -664,7 +691,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
         if scale & GR.OPTION_Y_LOG == 0
             # ymin, ymax = GR.adjustlimits(ymin, ymax)
-            majory = 5
+            majory = 1 #5
             ytick = GR.tick(ymin, ymax) / majory
         else
             # log axis
@@ -689,16 +716,16 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.setwindow(xmin, xmax, ymin, ymax)
         GR.setscale(scale)
 
-        diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
-        charheight = max(0.018 * diag, 0.01)
-        GR.setcharheight(charheight)
+        # window_diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
+        # charheight = max(0.018 * window_diag, 0.01)
+        # GR.setcharheight(charheight)
         GR.settextcolorind(gr_getcolorind(xaxis[:foreground_color_text]))
 
         if axes_2d
             GR.setlinewidth(1)
             # GR.setlinetype(GR.LINETYPE_DOTTED)
             GR.setlinecolorind(gr_getcolorind(sp[:foreground_color_grid]))
-            ticksize = 0.0075 * diag
+            ticksize = 0.0075 * window_diag
             if outside_ticks
                 ticksize = -ticksize
             end
@@ -724,22 +751,30 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
     end
 
+    # GR.setcharheight(pointsize_mult * sp[:titlefont].pointsize)
     if sp[:title] != ""
         GR.savestate()
+        gr_set_font(sp[:titlefont])
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
         GR.settextcolorind(gr_getcolorind(sp[:foreground_color_title]))
         GR.text(0.5 * (viewport_plotarea[1] + viewport_plotarea[2]), viewport_subplot[4], sp[:title])
         GR.restorestate()
     end
+
+    # GR.setcharheight(pointsize_mult * xaxis[:guidefont].pointsize)
     if xaxis[:guide] != ""
         GR.savestate()
+        gr_set_font(xaxis[:guidefont])
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
         GR.settextcolorind(gr_getcolorind(xaxis[:foreground_color_guide]))
         GR.text(0.5 * (viewport_plotarea[1] + viewport_plotarea[2]), viewport_subplot[3], xaxis[:guide])
         GR.restorestate()
     end
+
+    # GR.setcharheight(pointsize_mult * yaxis[:guidefont].pointsize)
     if yaxis[:guide] != ""
         GR.savestate()
+        gr_set_font(yaxis[:guidefont])
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
         GR.setcharup(-1, 0)
         GR.settextcolorind(gr_getcolorind(yaxis[:foreground_color_guide]))
@@ -755,6 +790,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     #   GR.restorestate()
     # end
 
+    gr_set_font(xaxis[:tickfont])
     GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
 
     # legend = falses(length(plt.seriesargs))
@@ -778,7 +814,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.savestate()
         xmin, xmax, ymin, ymax = extrema[gr_getaxisind(d),:]
         GR.setwindow(xmin, xmax, ymin, ymax)
-        if st in [:path, :sticks, :polar]
+        if st in [:path, :polar]
             GR.setlinetype(gr_linetype[d[:linestyle]])
             GR.setlinewidth(d[:linewidth])
             GR.setlinecolorind(gr_getcolorind(d[:linecolor]))
@@ -868,13 +904,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         #     end
         #     # legend[idx] = true
 
-        # TODO: use recipe
-        elseif st == :sticks
-            x, y = d[:x], d[:y]
-            for i = 1:length(y)
-                gr_polyline([x[i], x[i]], [ymin, y[i]])
-            end
-            # legend[idx] = true
+        # # TODO: use recipe
+        # elseif st == :sticks
+        #     x, y = d[:x], d[:y]
+        #     for i = 1:length(y)
+        #         gr_polyline([x[i], x[i]], [ymin, y[i]])
+        #     end
+        #     # legend[idx] = true
 
         elseif st == :scatter
             if d[:markershape] != :none && axes_2d
@@ -960,8 +996,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         #     # zmin, zmax = gr_getzlims(d, 0, maximum(counts), false)
         #     zmin, zmax = gr_lims(zaxis, false, (0, maximum(counts)))
         #     GR.setspace(zmin, zmax, 0, 90)
-        #     diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
-        #     charheight = max(0.016 * diag, 0.01)
+        #     window_diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
+        #     charheight = max(0.016 * window_diag, 0.01)
         #     GR.setcharheight(charheight)
         #     GR.colormap()
         #     GR.setviewport(viewport_plotarea[1], viewport_plotarea[2], viewport_plotarea[3], viewport_plotarea[4])
@@ -982,9 +1018,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setwindow(xmin, xmax, zmin, zmax)
             GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
             ztick = 0.5 * GR.tick(zmin, zmax)
-            diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
-            charheight = max(0.016 * diag, 0.01)
-            GR.setcharheight(charheight)
+            # window_diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
+            # charheight = max(0.016 * window_diag, 0.01)
+            # GR.setcharheight(charheight)
             GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
             GR.setviewport(viewport_plotarea[1], viewport_plotarea[2], viewport_plotarea[3], viewport_plotarea[4])
 
@@ -996,8 +1032,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             xtick = GR.tick(xmin, xmax) / 2
             ytick = GR.tick(ymin, ymax) / 2
             ztick = GR.tick(zmin, zmax) / 2
-            diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
-            charheight = max(0.018 * diag, 0.01)
+            # window_diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
+            # charheight = max(0.018 * window_diag, 0.01)
             ticksize = 0.01 * (viewport_plotarea[2] - viewport_plotarea[1])
             GR.setlinewidth(1)
             if grid_flag
@@ -1012,7 +1048,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 GR.surface(x, y, z, GR.OPTION_FILLED_MESH)
             end
             GR.setlinewidth(1)
-            GR.setcharheight(charheight)
+            # GR.setcharheight(charheight)
             GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
             GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
             if cmap
@@ -1041,8 +1077,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             xtick = GR.tick(xmin, xmax) / 2
             ytick = GR.tick(ymin, ymax) / 2
             ztick = GR.tick(zmin, zmax) / 2
-            diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
-            charheight = max(0.018 * diag, 0.01)
+            # window_diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
+            # charheight = max(0.018 * window_diag, 0.01)
             ticksize = 0.01 * (viewport_plotarea[2] - viewport_plotarea[1])
             GR.setlinewidth(1)
             if grid_flag && st == :path3d
@@ -1063,7 +1099,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 end
             end
             GR.setlinewidth(1)
-            GR.setcharheight(charheight)
+            # GR.setcharheight(charheight)
             GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
             GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
 
@@ -1149,6 +1185,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
+        gr_set_font(sp[:legendfont])
         w = 0
         i = 0
         n = 0
@@ -1171,7 +1208,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if w > 0
             xpos = viewport_plotarea[2] - 0.05 - w
             ypos = viewport_plotarea[4] - 0.06
-            dy = 0.03 * sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
+            # dy = 0.03 * sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
+            dy = 0.03 * window_diag
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             GR.setfillcolorind(gr_getcolorind(sp[:background_color_legend]))
             GR.fillrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
@@ -1188,15 +1226,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 d = series.d
                 st = d[:seriestype]
                 GR.setlinewidth(d[:linewidth])
-                if d[:seriestype] in [:path, :sticks]
+                if st == :path
                     GR.setlinecolorind(gr_getcolorind(d[:linecolor]))
                     GR.setlinetype(gr_linetype[d[:linestyle]])
                     GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
                 end
-                if d[:seriestype] == :scatter || d[:markershape] != :none
+                if st == :scatter || d[:markershape] != :none
                     GR.setmarkercolorind(gr_getcolorind(d[:markercolor]))
                     gr_setmarkershape(d)
-                    if d[:seriestype] in [:path, :sticks]
+                    if st == :path
                         gr_polymarker(d, [xpos - 0.06, xpos - 0.02], [ypos, ypos])
                     else
                         gr_polymarker(d, [xpos - 0.06, xpos - 0.04, xpos - 0.02], [ypos, ypos, ypos])
@@ -1222,15 +1260,16 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     for ann in sp[:annotations]
         x, y, val = ann
         x, y = GR.wctondc(x, y)
-        alpha = val.font.rotation
-        family = lowercase(val.font.family)
-        GR.setcharheight(0.7 * val.font.pointsize / sp.plt[:size][2])
-        GR.setcharup(sin(val.font.rotation), cos(val.font.rotation))
-        if haskey(gr_font_family, family)
-            GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
-        end
-        GR.settextcolorind(gr_getcolorind(val.font.color))
-        GR.settextalign(gr_halign[val.font.halign], gr_valign[val.font.valign])
+        # alpha = val.font.rotation
+        # family = lowercase(val.font.family)
+        # GR.setcharheight(0.7 * val.font.pointsize / sp.plt[:size][2])
+        # GR.setcharup(sin(val.font.rotation), cos(val.font.rotation))
+        # if haskey(gr_font_family, family)
+        #     GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
+        # end
+        # GR.settextcolorind(gr_getcolorind(val.font.color))
+        # GR.settextalign(gr_halign[val.font.halign], gr_valign[val.font.valign])
+        gr_set_font(val.font)
         GR.text(x, y, val.str)
     end
     GR.restorestate()
