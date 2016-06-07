@@ -132,7 +132,7 @@ function pgf_marker(d::KW)
     cstr, a = pgf_color(d[:markercolor], d[:markeralpha])
     cstr_stroke, a_stroke = pgf_color(d[:markerstrokecolor], d[:markerstrokealpha])
     """
-    mark = $(get(_pgfplots_markers, shape, "o*")),
+    mark = $(get(_pgfplots_markers, shape, "*")),
     mark size = $(0.5 * d[:markersize]),
     mark options = {
         color = $cstr_stroke, draw opacity = $a_stroke,
@@ -160,7 +160,7 @@ function pgf_series(sp::Subplot, series::Series)
     end
 
     # add to legend?
-    if sp.attr[:legend] != :none && should_add_to_legend(series)
+    if sp[:legend] != :none && should_add_to_legend(series)
         kw[:legendentry] = d[:label]
     end
 
@@ -198,7 +198,7 @@ end
 # ----------------------------------------------------------------
 
 function pgf_axis(sp::Subplot, letter)
-    axis = sp.attr[Symbol(letter,:axis)]
+    axis = sp[Symbol(letter,:axis)]
     style = []
     kw = KW()
 
@@ -250,19 +250,19 @@ function _make_pgf_plot!(plt::Plot)
             yshift = $((height(bb) - (bottom(bb))).value)mm,
             width = $(width(bb).value)mm,
             height = $(height(bb).value)mm,
-            axis background/.style={fill=$(pgf_color(sp.attr[:background_color_inside])[1])}
+            axis background/.style={fill=$(pgf_color(sp[:background_color_inside])[1])}
         """)
 
-        if sp.attr[:title] != ""
-            push!(style, "title = $(sp.attr[:title])")
+        if sp[:title] != ""
+            push!(style, "title = $(sp[:title])")
         end
 
-        sp.attr[:grid] && push!(style, "grid = major")
-        if sp.attr[:aspect_ratio] in (1, :equal)
+        sp[:grid] && push!(style, "grid = major")
+        if sp[:aspect_ratio] in (1, :equal)
             kw[:axisEqual] = "true"
         end
 
-        legpos = sp.attr[:legend]
+        legpos = sp[:legend]
         if haskey(_pgfplots_legend_pos, legpos)
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end

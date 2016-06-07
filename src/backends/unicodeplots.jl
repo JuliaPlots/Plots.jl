@@ -82,8 +82,8 @@ end
 function rebuildUnicodePlot!(plt::Plot)
     plt.o = []
     for sp in plt.subplots
-        xaxis = sp.attr[:xaxis]
-        yaxis = sp.attr[:yaxis]
+        xaxis = sp[:xaxis]
+        yaxis = sp[:yaxis]
         xlim =  axis_limits(xaxis)
         ylim =  axis_limits(yaxis)
 
@@ -97,11 +97,11 @@ function rebuildUnicodePlot!(plt::Plot)
         y = Float64[ylim[1]]
 
         # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
-        width, height = plt.attr[:size]
+        width, height = plt[:size]
         o = UnicodePlots.Plot(x, y;
             width = width,
             height = height,
-            title = sp.attr[:title],
+            title = sp[:title],
             xlim = xlim,
             ylim = ylim
         )
@@ -112,7 +112,7 @@ function rebuildUnicodePlot!(plt::Plot)
 
         # now use the ! functions to add to the plot
         for series in series_list(sp)
-            addUnicodeSeries!(o, series.d, sp.attr[:legend] != :none, xlim, ylim)
+            addUnicodeSeries!(o, series.d, sp[:legend] != :none, xlim, ylim)
         end
 
         # save the object
@@ -246,9 +246,11 @@ end
 
 function _create_backend_figure(plt::Plot{UnicodePlotsBackend})
   # do we want to give a new default size?
-  if !haskey(plt.attr, :size) || plt.attr[:size] == default(:size)
-    plt.attr[:size] = (60,20)
-  end
+  # if !haskey(plt.attr, :size) || plt.attr[:size] == default(:size)
+  #   plt.attr[:size] = (60,20)
+  # end
+  w, h = plt[:size]
+  plt.attr[:size] = div(w, 10), div(h, 20)
   plt.attr[:color_palette] = [RGB(0,0,0)]
   nothing
 
