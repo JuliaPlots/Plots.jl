@@ -819,7 +819,7 @@ end
 
 function color_or_nothing!(d::KW, k::Symbol)
     v = d[k]
-    d[k] = if v == nothing
+    d[k] = if v == nothing || v == false
         colorscheme(RGBA(0,0,0,0))
     else
         v

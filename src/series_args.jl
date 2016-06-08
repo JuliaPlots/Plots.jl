@@ -62,9 +62,11 @@ function convertToAnyVector(v::AVec, d::KW)
     end
 end
 
+convertToAnyVector(t::Tuple, d::KW) = Any[t], nothing
+
 
 function convertToAnyVector(args...)
-    error("No recipes could handle the argument types: $(map(typeof, args[1:end-1]))")
+    error("In convertToAnyVector, could not handle the argument types: $(map(typeof, args[1:end-1]))")
 end
 
 # --------------------------------------------------------------------

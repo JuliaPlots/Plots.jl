@@ -170,7 +170,14 @@ function expand_extrema!(sp::Subplot, d::KW)
         fr = 0.0
     end
     if fr != nothing
-        expand_extrema!(sp.attr[vert ? :yaxis : :xaxis], fr)
+        axis = sp.attr[vert ? :yaxis : :xaxis]
+        if typeof(fr) <: Tuple
+            for fri in fr
+                expand_extrema!(axis, fri)
+            end
+        else
+            expand_extrema!(axis, fr)
+        end
     end
 
     # expand for bar_width

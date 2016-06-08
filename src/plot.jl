@@ -255,8 +255,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
                 # convert a ribbon into a fillrange
                 if get(kw, :ribbon, nothing) != nothing
-                    rib = kw[:ribbon]
-                    kw[:fillrange] = (kw[:y] - rib, kw[:y] + rib)
+                    make_fillrange_from_ribbon(kw)
                 end
 
                 # add the plot index
