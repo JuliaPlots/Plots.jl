@@ -483,16 +483,21 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
         # internal nodes for notches
         L, R = center - 0.5 * _box_halfwidth, center + 0.5 * _box_halfwidth
         # outliers
-        limit = range*(q4-q2)
-        for value in values
-            if (value < (q2 - limit)) || (value > (q4 + limit))
-                push!(outliers_y, value)
-                push!(outliers_x, center)
+        if Float64(range) != 0.0  # if the range is 0.0, the whiskers will extend to the data
+            limit = range*(q4-q2)
+            inside = Float64[]
+            for value in values
+                if (value < (q2 - limit)) || (value > (q4 + limit))
+                    push!(outliers_y, value)
+                    push!(outliers_x, center)
+                else
+                    push!(inside, value)
+                end
             end
+            # change q1 and q5 to show outliers
+            # using maximum and minimum values inside the limits
+            q1, q5 = extrema(inside)
         end
-        # change q1 and q5 to use the limit in order to show outliers
-        q1 = q2 - limit
-        q5 = q4 + limit
         # Box
         xcoords = notch::Bool ? [
             m, l, r, m, m, NaN,       # lower T
