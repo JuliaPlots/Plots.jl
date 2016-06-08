@@ -593,15 +593,16 @@ end
         widths = _box_halfwidth * widths / maximum(widths)
 
         # make the violin
-        xcoords = vcat(widths, -reverse(widths)) + (i - 0.5)
+        xcenter = discrete_value!(d[:subplot][:xaxis], glabel)[1]
+        xcoords = vcat(widths, -reverse(widths)) + xcenter
         ycoords = vcat(centers, reverse(centers))
         push!(shapes, Shape(xcoords, ycoords))
     end
 
     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
     seriestype := :shape
-    n = length(groupby.groupLabels)
-    xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
+    # n = length(groupby.groupLabels)
+    # xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
     d[:x], d[:y] = shape_coords(shapes)
     ()
