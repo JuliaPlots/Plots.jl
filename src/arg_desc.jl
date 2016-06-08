@@ -101,16 +101,3 @@ const _arg_desc = KW(
 :foreground_color_guide   => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of axis guides (axis labels).",
 
 )
-
-# need dataframes to make html tables, etc easily
-if is_installed("DataFrames")
-    @eval begin
-    	import DataFrames
-
-    	function save_html(df::DataFrames.AbstractDataFrame, fn = "/tmp/tmp.html")
-    		f = open(fn, "w")
-    		writemime(f, MIME("text/html"), df)
-    		close(f)
-    	end
-    end
-end

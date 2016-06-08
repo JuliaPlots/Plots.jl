@@ -7,19 +7,6 @@ type PlotExample
   exprs::Vector{Expr}
 end
 
-function pretty_print_expr(io::IO, expr::Expr)
-    lines = split(string(expr), "\n")
-    start_idx = 1
-    if expr.head == :block
-        lines = lines[2:end-1]
-        start_idx = 5
-    end
-    lines_without_comments = map(str -> split(str,"#")[1][start_idx:end], lines)
-    for line in lines_without_comments
-        println(io, expr)
-    end
-end
-
 # the _examples we'll run for each
 const _examples = PlotExample[
 

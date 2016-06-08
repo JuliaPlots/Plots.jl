@@ -159,8 +159,10 @@ function backend(modname::Symbol)
     CURRENT_BACKEND.pkg = _backend_instance(modname)
 end
 
+const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse]
+
 function warn_on_deprecated_backend(bsym::Symbol)
-    if bsym in (:qwt, :winston, :bokeh, :gadfly, :immerse)
+    if bsym in _deprecated_backends
         warn("Backend $bsym has been deprecated.  It may not work as originally intended.")
     end
 end

@@ -621,47 +621,6 @@ end
 
 
 # ---------------------------------------------------------------
-# ---------------------------------------------------------------
-# graphs detailing the features that each backend supports
-
-function supportGraph(allvals, func)
-    vals = reverse(sort(allvals))
-    bs = sort(backends())
-    x, y = map(string, bs), map(string, vals)
-    nx, ny = map(length, (x,y))
-    z = zeros(nx, ny)
-    for i=1:nx, j=1:ny
-        supported = func(Plots._backend_instance(bs[i]))
-        z[i,j] = float(vals[j] in supported) * (0.4i/nx+0.6)
-    end
-    heatmap(x, y, z,
-            color = ColorGradient([:white, :darkblue]),
-            line = (1, :black),
-            leg = false,
-            size = (50nx+50, 35ny+100),
-            xlim = (0.5, nx+0.5),
-            ylim = (0.5, ny+0.5),
-            xrotation = 60,
-            aspect_ratio = :equal)
-end
-
-supportGraphArgs()    = supportGraph(_all_args, supportedArgs)
-supportGraphTypes()   = supportGraph(_allTypes, supportedTypes)
-supportGraphStyles()  = supportGraph(_allStyles, supportedStyles)
-supportGraphMarkers() = supportGraph(_allMarkers, supportedMarkers)
-supportGraphScales()  = supportGraph(_allScales, supportedScales)
-supportGraphAxes()    = supportGraph(_allAxes, supportedAxes)
-
-function dumpSupportGraphs()
-    for func in (supportGraphArgs, supportGraphTypes, supportGraphStyles,
-               supportGraphMarkers, supportGraphScales, supportGraphAxes)
-        plt = func()
-        png(Pkg.dir("PlotDocs", "docs", "examples", "img", "supported", "$(string(func))"))
-    end
-end
-
-# ---------------------------------------------------------------
-# ---------------------------------------------------------------
 
 
 # Some conversion functions
