@@ -366,14 +366,27 @@ end
 # # handle grouping
 # # --------------------------------------------------------------------
 
+# @recipe function f(groupby::GroupBy, args...)
+#     for (i,glab) in enumerate(groupby.groupLabels)
+#         # create a new series, with the label of the group, and an idxfilter (to be applied in slice_and_dice)
+#         # TODO: use @series instead
+#         @show i, glab, groupby.groupIds[i]
+#         di = copy(d)
+#         get!(di, :label, string(glab))
+#         get!(di, :idxfilter, groupby.groupIds[i])
+#         push!(series_list, RecipeData(di, args))
+#     end
+#     nothing
+# end
+
+# split the group into 1 series per group, and set the label and idxfilter for each
 @recipe function f(groupby::GroupBy, args...)
     for (i,glab) in enumerate(groupby.groupLabels)
-        # create a new series, with the label of the group, and an idxfilter (to be applied in slice_and_dice)
-        # TODO: use @series instead
-        di = copy(d)
-        get!(di, :label, string(glab))
-        get!(di, :idxfilter, groupby.groupIds[i])
-        push!(series_list, RecipeData(di, args))
+        @series begin
+            label     --> string(glab)
+            idxfilter --> groupby.groupIds[i]
+            args
+        end
     end
-    nothing
 end
+

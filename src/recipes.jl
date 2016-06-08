@@ -478,7 +478,7 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
         end
 
         # make the shape
-        center = i - 0.5
+        center = discrete_value!(d[:subplot][:xaxis], glabel)[1]
         l, m, r = center - _box_halfwidth, center, center + _box_halfwidth
         # internal nodes for notches
         L, R = center - 0.5 * _box_halfwidth, center + 0.5 * _box_halfwidth
@@ -522,8 +522,8 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
 
     seriestype := :shape
-    n = length(groupby.groupLabels)
-    xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
+    # n = length(groupby.groupLabels)
+    # xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
     # clean d
     pop!(d, :notch)

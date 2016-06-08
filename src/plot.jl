@@ -274,6 +274,8 @@ function _plot!(plt::Plot, d::KW, args...)
                         # we make a copy of the KW and apply an errorbar recipe
                         errkw = copy(kw)
                         errkw[:seriestype] = esym
+                        errkw[:label] = ""
+                        errkw[:primary] = false
                         push!(kw_list, errkw)
                     end
                 end
