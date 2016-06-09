@@ -16,13 +16,13 @@ end
 
 # this is similar to how Plots would call the method
 typealias KW Dict{Symbol,Any}
-d = KW()
-kw = KW(:customcolor => :red)
-args = RecipesBase.apply_recipe(d, kw, T(), 2; issubplot = false)
+d = KW(:customcolor => :red)
+data_list = RecipesBase.apply_recipe(d, T(), 2)
 
 # make sure the attribute dictionary was populated correctly, and the returned arguments are as expected
-@test args == (srand(1); (rand(10,2),))
+@test data_list[1].args == (srand(1); (rand(10,2),))
 @test d == KW(
+	:customcolor => :red,
     :markershape => :auto,
     :markercolor => :red,
     :xrotation => 5,
