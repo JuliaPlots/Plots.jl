@@ -560,13 +560,18 @@ end
 # otherwise, just use a histogram
 if is_installed("KernelDensity")
     @eval import KernelDensity
-    @eval function violin_coords(y, bins = 30)
-        kd = KernelDensity.kde(y, npoints = isa(bins, Integer) ? bins : 30)
+    @eval function violin_coords(y; trim::Bool=false)
+        kd = KernelDensity.kde(y, npoints = 200)
+        if trim
+            xmin, xmax = extrema(y)
+            inside = Bool[ xmin <= x <= xmax for x in kd.x]
+            return(kd.density[inside], kd.x[inside])
+        end
         kd.density, kd.x
     end
 else
-    @eval function violin_coords(y, bins = 30)
-        edges, widths = hist(y, isa(bins, Integer) ? bins : 30)
+    @eval function violin_coords(y; trim::Bool=false)
+        edges, widths = hist(y, 30)
         centers = 0.5 * (edges[1:end-1] + edges[2:end])
         ymin, ymax = extrema(y)
         vcat(0.0, widths, 0.0), vcat(ymin, centers, ymax)
@@ -575,7 +580,7 @@ end
 
 
 # function apply_series_recipe(d::KW, ::Type{Val{:violin}})
-@recipe function f(::Type{Val{:violin}}, x, y, z)
+@recipe function f(::Type{Val{:violin}}, x, y, z; trim=true)
     # dumpdict(d, "box before", true)
     # TODO: add scatter series with outliers
 
@@ -587,7 +592,7 @@ end
 
         # get the edges and widths
         y = d[:y][groupby.groupIds[i]]
-        widths, centers = violin_coords(y)
+        widths, centers = violin_coords(y, trim=trim)
 
         # normalize
         widths = _box_halfwidth * widths / maximum(widths)
@@ -604,6 +609,9 @@ end
     # n = length(groupby.groupLabels)
     # xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
 
+    # clean up d
+    pop!(d, :trim)
+
     d[:x], d[:y] = shape_coords(shapes)
     ()
 
@@ -613,14 +621,18 @@ end
 # ---------------------------------------------------------------------------
 # density
 
-@recipe function f(::Type{Val{:density}}, x, y, z)
-    newx, newy = violin_coords(y, d[:bins])
+@recipe function f(::Type{Val{:density}}, x, y, z; trim=false)
+    newx, newy = violin_coords(y, trim=trim)
     if isvertical(d)
         newx, newy = newy, newx
     end
     x := newx
     y := newy
     seriestype := :path
+
+    # clean up d
+    pop!(d, :trim)
+
     ()
 end
 
