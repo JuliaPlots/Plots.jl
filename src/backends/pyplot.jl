@@ -72,20 +72,20 @@ function _initialize_backend(::PyPlotBackend)
 
     PyPlot.ioff()
 
-    if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
-        PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
+    # if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
+    #     PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
 
-        # # TODO: how the hell can I use PyQt4??
-        # "pyqt4"=>:qt_pyqt4
-        # PyPlot.backend[1] = "pyqt4"
-        # PyPlot.gui[1] = :qt_pyqt4
-        # PyPlot.switch_backend("Qt4Agg")
+    #     # # TODO: how the hell can I use PyQt4??
+    #     # "pyqt4"=>:qt_pyqt4
+    #     # PyPlot.backend[1] = "pyqt4"
+    #     # PyPlot.gui[1] = :qt_pyqt4
+    #     # PyPlot.switch_backend("Qt4Agg")
 
-        # only turn on the gui if we want it
-        if PyPlot.gui != :none
-            PyPlot.pygui(true)
-        end
-    end
+    #     # only turn on the gui if we want it
+    #     if PyPlot.gui != :none
+    #         PyPlot.pygui(true)
+    #     end
+    # end
 end
 
 # --------------------------------------------------------------------------------------
@@ -1196,20 +1196,15 @@ end
 # -----------------------------------------------------------------
 # display/output
 
-# function Base.display(::PlotsDisplay, plt::Plot{PyPlotBackend})
-#     finalizePlot(plt)
-#     if isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
-#         display(getfig(plt.o))
-#     end
-#     getfig(plt.o)[:show]()
-# end
-
 function _display(plt::Plot{PyPlotBackend})
-    # finalizePlot(plt)
-    if isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
-        display(getfig(plt.o))
-    end
-    getfig(plt.o)[:show]()
+    # if isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
+    #     display(plt.o)
+    # end
+    # PyPlot.ion()
+    PyPlot.pygui(false)
+    plt.o[:show]()
+    PyPlot.pygui(true)
+    # PyPlot.ioff()
 end
 
 
@@ -1225,10 +1220,8 @@ const _pyplot_mimeformats = Dict(
 
 
 for (mime, fmt) in _pyplot_mimeformats
-    # @eval function Base.writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
     @eval function _writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
-        # finalizePlot(plt)
-        fig = getfig(plt.o)
+        fig = plt.o
         fig.o["canvas"][:print_figure](
             io,
             format=$fmt,

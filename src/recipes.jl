@@ -754,8 +754,8 @@ end
 
 # function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
 function quiver_using_hack(d::KW)
-    label := ""
-    seriestype := :shape
+    d[:label] = ""
+    d[:seriestype] = :shape
 
     velocity = error_zipit(d[:quiver])
     xorig, yorig = d[:x], d[:y]
