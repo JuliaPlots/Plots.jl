@@ -508,9 +508,9 @@ function setxyz!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
     series = plt.series_list[i]
     series.d[:x], series.d[:y], series.d[:z] = xyz
     sp = series.d[:subplot]
-    expand_extrema!(sp.attr[:xaxis], xy[1])
-    expand_extrema!(sp.attr[:yaxis], xy[2])
-    expand_extrema!(sp.attr[:zaxis], xy[3])
+    expand_extrema!(sp.attr[:xaxis], xyz[1])
+    expand_extrema!(sp.attr[:yaxis], xyz[2])
+    expand_extrema!(sp.attr[:zaxis], xyz[3])
     _series_updated(plt, series)
 end
 

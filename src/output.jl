@@ -151,6 +151,36 @@ for mime in keys(_mimeformats)
     end
 end
 
+
+# ---------------------------------------------------------
+# A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
+
+if is_installed("FileIO")
+    @eval begin
+        import FileIO
+        function _writemime(io::IO, ::MIME"image/png", plt::Plot)
+            fn = tempname()
+
+            # first save a pdf file
+            pdf(plt, fn)
+
+            # load that pdf into a FileIO Stream
+            s = FileIO.load(fn * ".pdf")
+
+            # save a png
+            pngfn = fn * ".png"
+            FileIO.save(pngfn, s)
+
+            # now write from the file
+            write(io, readall(open(pngfn)))
+        end
+    end
+end
+
+
+
+
+
 # function html_output_format(fmt)
 #     if fmt == "png"
 #         @eval function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)

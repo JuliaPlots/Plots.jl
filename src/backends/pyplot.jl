@@ -57,6 +57,9 @@ subplotSupported(::PyPlotBackend) = true
 
 function _initialize_backend(::PyPlotBackend)
     @eval begin
+        # see: https://github.com/tbreloff/Plots.jl/issues/308
+        ENV["OVERRIDE_PYPLOT_DISPLAY"] = true
+
         import PyPlot
         export PyPlot
         const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
@@ -70,22 +73,8 @@ function _initialize_backend(::PyPlotBackend)
         const pytransforms = PyPlot.pywrap(PyPlot.pyimport("matplotlib.transforms"))
     end
 
+    # we don't want every command to update the figure
     PyPlot.ioff()
-
-    # if !isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
-    #     PyPlot.ioff()  # stops wierd behavior of displaying incomplete graphs in IJulia
-
-    #     # # TODO: how the hell can I use PyQt4??
-    #     # "pyqt4"=>:qt_pyqt4
-    #     # PyPlot.backend[1] = "pyqt4"
-    #     # PyPlot.gui[1] = :qt_pyqt4
-    #     # PyPlot.switch_backend("Qt4Agg")
-
-    #     # only turn on the gui if we want it
-    #     if PyPlot.gui != :none
-    #         PyPlot.pygui(true)
-    #     end
-    # end
 end
 
 # --------------------------------------------------------------------------------------
@@ -301,12 +290,6 @@ drawax(ax) = ax[:draw](renderer(ax[:get_figure]()))
 # get a vector [left, right, bottom, top] in PyPlot coords (origin is bottom-left!)
 get_extents(obj) = obj[:get_window_extent]()[:get_points]()
 
-# # bounding box of the figure
-# function py_bbox_fig(fig)
-#     fl, fr, fb, ft = get_extents(fig)
-#     BoundingBox(0px, 0px, (fr-fl)*px, (ft-fb)*px)
-# end
-# py_bbox_fig(plt::Plot) = py_bbox_fig(plt.o)
 
 # compute a bounding box (with origin top-left), however pyplot gives coords with origin bottom-left
 function py_bbox(obj)
@@ -359,24 +342,15 @@ end
 function _create_backend_figure(plt::Plot{PyPlotBackend})
     w,h = map(px2inch, plt[:size])
 
-    # reuse the current figure?
+    # # reuse the current figure?
     fig = if plt[:overwrite_figure]
         PyPlot.gcf()
     else
         PyPlot.figure()
     end
 
-    # # update the specs
-    # fig[:set_size_inches](w, h, forward = true)
-    # fig[:set_facecolor](getPyPlotColor(plt[:background_color_outside]))
-    # fig[:set_dpi](DPI)
-    # # fig[:set_tight_layout](true)
-
     # clear the figure
     PyPlot.clf()
-
-    # # resize the window
-    # PyPlot.plt[:get_current_fig_manager]()[:resize](plt[:size]...)
     fig
 end
 
@@ -1099,13 +1073,6 @@ function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
         # gotta do this to ensure both axes are included
         labels = []
         handles = []
-        # for series in plt.series_list
-        #     if get_subplot(series) === sp &&
-        #                 series.d[:label] != "" &&
-        #                 !(series.d[:seriestype] in (
-        #                     :hexbin,:histogram2d,:hline,:vline,
-        #                     :contour,:contour3d,:surface,:wireframe,
-        #                     :heatmap,:path3d,:scatter3d, :pie, :image))
         for series in series_list(sp)
             if should_add_to_legend(series)
                 # add a line/marker and a label
@@ -1144,30 +1111,6 @@ end
 
 # -----------------------------------------------------------------
 
-# # add legend, update colors and positions, then draw
-# function finalizePlot(plt::Plot{PyPlotBackend})
-#     # for sp in plt.subplots
-#     #     # ax = getLeftAxis(plt)
-#     #     ax = getAxis(sp)
-#     #     ax == nothing && continue
-#     #     addPyPlotLegend(plt, sp, ax)
-#     #     for asym in (:xaxis, :yaxis, :zaxis)
-#     #         updateAxisColors(ax, sp.attr[asym])
-#     #     end
-#     # end
-#     drawfig(plt.o)
-#     # plt.layout.bbox = py_bbox_fig(plt)
-#
-#     # TODO: these should be called outside of pyplot... how?
-#     update_child_bboxes!(plt.layout)
-#     _update_position!(plt.layout)
-#
-#     PyPlot.draw()
-# end
-
-# function _before_layout_calcs(plt::Plot{PyPlotBackend})
-#     drawfig(plt.o)
-# end
 
 # Use the bounding boxes (and methods left/top/right/bottom/width/height) `sp.bbox` and `sp.plotarea` to
 # position the subplot in the backend.
@@ -1175,7 +1118,6 @@ function _update_plot_object(plt::Plot{PyPlotBackend})
     for sp in plt.subplots
         ax = sp.o
         ax == nothing && return
-        # figw, figh = size(py_bbox_fig(sp.plt))
         figw, figh = sp.plt[:size]
         figw, figh = figw*px, figh*px
         pcts = bbox_to_pcts(sp.plotarea, figw, figh)
@@ -1197,14 +1139,7 @@ end
 # display/output
 
 function _display(plt::Plot{PyPlotBackend})
-    # if isa(Base.Multimedia.displays[end], Base.REPL.REPLDisplay)
-    #     display(plt.o)
-    # end
-    # PyPlot.ion()
-    # PyPlot.pygui(false)
     plt.o[:show]()
-    # PyPlot.pygui(true)
-    # PyPlot.ioff()
 end
 
 
