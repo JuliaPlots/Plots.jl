@@ -1201,9 +1201,9 @@ function _display(plt::Plot{PyPlotBackend})
     #     display(plt.o)
     # end
     # PyPlot.ion()
-    PyPlot.pygui(false)
+    # PyPlot.pygui(false)
     plt.o[:show]()
-    PyPlot.pygui(true)
+    # PyPlot.pygui(true)
     # PyPlot.ioff()
 end
 
