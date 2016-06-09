@@ -3,15 +3,51 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-- I (@tbreloff) am in development of totally revamped internals, in which much of the logic in building series is changed to recursively stacking recipes in a modular fashion.  I'll write a blog post sometime soon detailing why this is amazing, but for now you can get a taste of it by looking at the [RecipesBase readme](https://github.com/JuliaPlots/RecipesBase.jl)
-- Version 0.6.2 will be the last full release of the "Old Plots", and the 0.6 minor will be only small bug fixes.
-- All new development should target 0.7 (recipes and subplots)!
+- All new development should target 0.7!
 
-## 0.7 (WIP on tb_recipes/dev and master)
+---
 
+## 0.7 (current master/dev)
+
+#### 0.7.0
+
+- Check out [the summary](http://plots.readthedocs.io/en/latest/plots_v0.7/)
 - Revamped and simplified internals
 - [Recipes, recipes, recipes](https://github.com/JuliaPlots/RecipesBase.jl/issues/6)
 - [Layouts and Subplots](https://github.com/tbreloff/Plots.jl/issues/60)
+- DataFrames is loaded automatically when installed
+- Overhaul to GroupBy mechanic (now offloads to a recipe)
+- Replaced much of the argument processing with recipes
+- Added series recipes, and began to strip down un-needed backend code.  Some recipes:
+	- line, step, sticks, bar, histogram, histogram2d, boxplot, violin, quiver, errorbars, density, ohlc
+- Added `@shorthands` and `@userplot` macros for recipe convenience
+- Better handling of errorbars and ribbons
+- New Axis type
+	- Tracks extrema and discrete values
+	- New `link_axes` functionality
+- `linetype` has been renamed `seriestype` (the alias is reversed)
+- Many fixes and huge cleanup in GR
+- Brand new subplot layout mechanics:
+	- `@layout` macro
+	- AbstractLayout, Subplot, GridLayout, and everything related
+	- Added dependency on Measures.jl
+	- Computations of axis/guide sizes and precise positioning
+- Refactored and compartmentalized default dictionaries for attributes
+- Deprecated Gadfly and Immerse backends
+- Added `series_annotations` attribute (previously that functionality was merged with `annotations`, which are not series-specific)
+- Removed `axis` attribute... currently not supporting twin (right) y axes
+- Check for `ENV["PLOTS_USE_ATOM_PLOTPANE"]` and default to false
+- Improved backend interface to reduce redundant code.  Template updated.
+- Added `html_output_format`, primarily for choosing between png and svg output in IJulia.
+- Partial support of Julia v0.5
+- Switched testing to dump reference images to JuliaPlots/PlotReferenceImages.jl
+- Moved docs-specific code to new JuliaPlots/PlotDocs.jl
+- Moved example list from ExamplePlots into Plots.
+- Added several examples and improved others.
+- Many other smaller changes and bug fixes.
+
+
+---
 
 ## Version 0.6
 
@@ -66,6 +102,10 @@
 - `wrap` method to bypass input processing
 - `translate`, `scale` and `rotate` methods for coordinates and shapes
 - and many more minor fixes and improvements
+
+---
+
+## Version 0.5
 
 #### 0.5.4
 

@@ -42,6 +42,7 @@ export
     with,
 
     @userplot,
+    @shorthands,
     # scatter,
     # scatter!,
     # bar,
@@ -158,7 +159,7 @@ export
     chorddiagram,
 
     # @kw,
-    @recipe,
+    # @recipe,
     # @plotrecipe,
 
     test_examples,
