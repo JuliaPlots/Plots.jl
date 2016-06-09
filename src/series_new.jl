@@ -117,7 +117,10 @@ immutable SliceIt end
 end
 
 # this is the default "type recipe"... just pass the object through
-@recipe f{T}(::Type{T}, v::T) = v
+@recipe f{T<:Any}(::Type{T}, v::T) = v
+
+# this should catch unhandled "series recipes" and error with a nice message
+@recipe f{V<:Val}(::Type{V}, x, y, z) = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
 
 _apply_type_recipe(d, v) = RecipesBase.apply_recipe(d, typeof(v), v)[1].args[1]
 
@@ -156,6 +159,24 @@ end
         SliceIt, nothing, y, nothing
     end
 end
+
+# if there's more than 3 inputs, it can't be passed directly to SliceIt
+# so we'll apply_type_recipe to all of them
+@recipe function f(v1, v2, v3, v4, vrest...)
+    did_replace = false
+    newargs = map(v -> begin
+        newv = _apply_type_recipe(d, v)
+        if newv !== v
+            did_replace = true
+        end
+        newv
+    end, (v1, v2, v3, v4, vrest...))
+    if !did_replace
+        error("Couldn't process recipe args: $(map(typeof, (v1, v2, v3, v4, vrest...)))")
+    end
+    newargs
+end
+
 # @recipe f(x, y, z)  = SliceIt, apply_recipe(typeof(x), x), apply_recipe(typeof(y), y), apply_recipe(typeof(z), z)
 # @recipe f(x, y)     = SliceIt, apply_recipe(typeof(x), x), apply_recipe(typeof(y), y), nothing
 # @recipe f(y)        = SliceIt, nothing, apply_recipe(typeof(y), y), nothing
@@ -323,7 +344,7 @@ end
 @recipe function f(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec)
     mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
 end
-@recipe function f(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPointsn = 200)
+@recipe function f(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPoints = 200)
     fx, fy, fz, linspace(umin, umax, numPoints)
 end
 

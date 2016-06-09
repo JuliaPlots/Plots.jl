@@ -444,6 +444,20 @@ centers(v::AVec) = v[1] + cumsum(diff(v))
     ()
 end
 
+
+# ---------------------------------------------------------------------------
+# scatter 3d
+
+@recipe function f(::Type{Val{:scatter3d}}, x, y, z)
+    seriestype := :path3d
+    if d[:markershape] == :none
+        markershape := :ellipse
+    end
+    linewidth := 0
+    linealpha := 0
+    ()
+end
+
 # ---------------------------------------------------------------------------
 # Box Plot
 

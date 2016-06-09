@@ -145,7 +145,6 @@ end
 
 # --------------------------------------------------------------------------------------
 
-
 function pgf_series(sp::Subplot, series::Series)
     d = series.d
     st = d[:seriestype]
@@ -172,6 +171,18 @@ function pgf_series(sp::Subplot, series::Series)
     else
         d[:x], d[:y]
     end
+
+    # PGFPlots can't handle non-Vector?
+    args = map(a -> if typeof(a) <: AbstractVector && typeof(a) != Vector
+            collect(a)
+        else
+            a
+        end, args)
+    # for (i,a) in enumerate(args)
+    #     if typeof(a) <: AbstractVector && typeof(a) != Vector
+    #         args[i] = collect(a)
+    #     end
+    # end
 
     # include additional style, then add to the kw
     if haskey(_pgf_series_extrastyle, st)
@@ -216,9 +227,12 @@ function pgf_axis(sp::Subplot, letter)
     end
 
     # limits
-    lims = axis_limits(axis)
-    kw[Symbol(letter,:min)] = lims[1]
-    kw[Symbol(letter,:max)] = lims[2]
+    # TODO: support zlims
+    if letter != :z
+        lims = axis_limits(axis)
+        kw[Symbol(letter,:min)] = lims[1]
+        kw[Symbol(letter,:max)] = lims[2]
+    end
 
     # return the style list and KW args
     style, kw
