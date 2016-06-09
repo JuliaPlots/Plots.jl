@@ -55,10 +55,10 @@ subplotSupported(::PGFPlotsBackend) = false
 
 
 function _initialize_backend(::PGFPlotsBackend; kw...)
-  @eval begin
-    import PGFPlots
-    export PGFPlots
-  end
+    @eval begin
+        import PGFPlots
+        export PGFPlots
+    end
 end
 
 
@@ -295,25 +295,39 @@ end
 
 
 function _writemime(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend})
-  _make_pgf_plot!(plt)
-  writemime(io, mime, plt.o)
+    _make_pgf_plot!(plt)
+    writemime(io, mime, plt.o)
 end
 
 function _writemime(io::IO, mime::MIME"application/pdf", plt::Plot{PGFPlotsBackend})
-  _make_pgf_plot!(plt)
+    _make_pgf_plot!(plt)
 
-  # prepare the object
-  pgfplt = PGFPlots.plot(plt.o)
+    # prepare the object
+    pgfplt = PGFPlots.plot(plt.o)
 
-  # save a pdf
-  fn = tempname()*".pdf"
-  PGFPlots.save(PGFPlots.PDF(fn), pgfplt)
+    # save a pdf
+    fn = tempname()*".pdf"
+    PGFPlots.save(PGFPlots.PDF(fn), pgfplt)
 
-  # read it into io
-  write(io, readall(open(fn)))
+    # read it into io
+    write(io, readall(open(fn)))
+
+    # cleanup
+    PGFPlots.cleanup(plt.o)
 end
 
 function _display(plt::Plot{PGFPlotsBackend})
-  _make_pgf_plot!(plt)
-  display(plt.o)
+    # prepare the object
+    _make_pgf_plot!(plt)
+    pgfplt = PGFPlots.plot(plt.o)
+
+    # save an svg
+    fn = string(tempname(), ".svg")
+    PGFPlots.save(PGFPlots.SVG(fn), pgfplt)
+
+    # show it
+    open_browser_window(fn)
+
+    # cleanup
+    PGFPlots.cleanup(plt.o)
 end
