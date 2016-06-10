@@ -229,7 +229,7 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
     lims = axis[:lims]
-    if isa(lims, Tuple) && length(lims) == 2
+    if (isa(lims, Tuple) || isa(lims, AVec)) && length(lims) == 2
         if isfinite(lims[1])
             amin = lims[1]
         end

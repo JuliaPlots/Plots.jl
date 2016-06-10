@@ -348,6 +348,7 @@ function _create_backend_figure(plt::Plot{PyPlotBackend})
         PyPlot.gcf()
     else
         PyPlot.figure()
+        finalizer(fig, close)
     end
 
     # clear the figure
