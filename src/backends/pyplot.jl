@@ -36,6 +36,7 @@ supportedArgs(::PyPlotBackend) = [
     :normalize, :weights, :contours, :aspect_ratio,
     :match_dimensions,
     :subplot,
+    :clims,
   ]
 supportedAxes(::PyPlotBackend) = _allAxes
 supportedTypes(::PyPlotBackend) = [
@@ -502,6 +503,11 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         else
             extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
             extrakw[:cmap] = pymarkercolormap(d)
+            clims = sp[:clims]
+            if isa(clims, Tuple) && length(clims) == 2
+                isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+                isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+            end
             needs_colorbar = true
         end
         xyargs = if st in (:bar, :sticks) && !isvertical(d)
@@ -546,13 +552,19 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :histogram2d
+        clims = sp[:clims]
+        if isa(clims, Tuple) && length(clims) == 2
+            isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+            isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+        end
         handle = ax[:hist2d](x, y;
             label = d[:label],
             zorder = plt.n,
             bins = d[:bins],
             normed = d[:normalize],
             weights = d[:weights],
-            cmap = pyfillcolormap(d)  # applies to the pcolorfast object
+            cmap = pyfillcolormap(d),  # applies to the pcolorfast object
+            extrakw...
         )[4]
         push!(handles, handle)
         needs_colorbar = true
@@ -565,13 +577,19 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :hexbin
+        clims = sp[:clims]
+        if isa(clims, Tuple) && length(clims) == 2
+            isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+            isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+        end
         handle = ax[:hexbin](x, y;
             label = d[:label],
             zorder = plt.n,
             gridsize = d[:bins],
             linewidths = d[:linewidth],
             edgecolors = pylinecolor(d),
-            cmap = pyfillcolormap(d)  # applies to the pcolorfast object
+            cmap = pyfillcolormap(d),  # applies to the pcolorfast object
+            extrakw...
         )
         push!(handles, handle)
         needs_colorbar = true
@@ -594,6 +612,11 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         z = transpose_z(d, z.surf)
         needs_colorbar = true
 
+        clims = sp[:clims]
+        if isa(clims, Tuple) && length(clims) == 2
+            isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+            isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+        end
 
         if st == :contour3d
             extrakw[:extend3d] = true
@@ -635,6 +658,11 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
                 if d[:marker_z] != nothing
                     extrakw[:facecolors] = getPyPlotCustomShading(d[:fillcolor], d[:marker_z], d[:fillalpha])
                     extrakw[:shade] = false
+                    clims = sp[:clims]
+                    if isa(clims, Tuple) && length(clims) == 2
+                        isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+                        isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+                    end
                 else
                     extrakw[:cmap] = pyfillcolormap(d)
                     needs_colorbar = true
@@ -672,12 +700,18 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 
         elseif typeof(z) <: AbstractVector
             # tri-surface plot (http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
+            clims = sp[:clims]
+            if isa(clims, Tuple) && length(clims) == 2
+                isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+                isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+            end
             handle = ax[:plot_trisurf](x, y, z;
                 label = d[:label],
                 zorder = plt.n,
                 cmap = pyfillcolormap(d),
                 linewidth = d[:linewidth],
-                edgecolor = pylinecolor(d)
+                edgecolor = pylinecolor(d),
+                extrakw...
             )
             push!(handles, handle)
             needs_colorbar = true
@@ -719,11 +753,19 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         if !isempty(dvals)
             discrete_colorbar_values = dvals
         end
+
+        clims = sp[:clims]
+        if isa(clims, Tuple) && length(clims) == 2
+            isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+            isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+        end
+        
         handle = ax[:pcolormesh](x, y, z;
             label = d[:label],
             zorder = plt.n,
             cmap = pyfillcolormap(d),
-            edgecolors = (d[:linewidth] > 0 ? pylinecolor(d) : "face")
+            edgecolors = (d[:linewidth] > 0 ? pylinecolor(d) : "face"),
+            extrakw...
         )
         push!(handles, handle)
         needs_colorbar = true

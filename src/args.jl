@@ -214,6 +214,7 @@ const _subplot_defaults = KW(
     :color_palette            => :auto,
     :legend                   => :best,
     :colorbar                 => :legend,
+    :clims                    => :auto,
     :legendfont               => font(8),
     :grid                     => true,
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
@@ -388,6 +389,7 @@ add_aliases(:zticks, :ztick)
 add_aliases(:zrotation, :zrot, :zr)
 add_aliases(:legend, :leg, :key)
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
+add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
 add_aliases(:smooth, :regression, :reg)
 add_aliases(:levels, :nlevels, :nlev, :levs)
 add_aliases(:size, :windowsize, :wsize)

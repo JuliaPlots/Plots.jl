@@ -74,6 +74,7 @@ const _arg_desc = KW(
 :color_palette            => "Vector of colors (cycle through) or color gradient (generate list from gradient) or `:auto` (generate a color list using `Colors.distiguishable_colors` and custom seed colors chosen to contrast with the background).  The color palette is a color list from which series colors are automatically chosen.",
 :legend                   => "Bool (show the legend?) or Symbol (legend position).  Symbol values: `:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:inside`, `:legend`, `:topright`, `:topleft`, `:bottomleft`, `:bottomright` (note: only some may be supported in each backend)",
 :colorbar                 => "Bool (show the colorbar?) or Symbol (colorbar position).  Symbol values: `:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:legend` (matches legend value) (note: only some may be supported in each backend)",
+:clims 					  => "`:auto` or NTuple{2,Number}.  Fixes the limits of the colorbar.",
 :legendfont               => "Font. Font of legend items.",
 :grid                     => "Bool. Show the grid lines?",
 :annotations              => "(x,y,text) tuple(s).  Can be a single tuple or a list of them.  Text can be String or PlotText (created with `text(args...)`)  Add one-off text annotations at the x,y coordinates.",
