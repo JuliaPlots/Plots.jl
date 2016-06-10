@@ -119,6 +119,11 @@ function ColorGradient(grad::ColorGradient; alpha = nothing)
   ColorGradient(convertColor(grad.colors, alpha), grad.values)
 end
 
+# anything else just gets the default gradient
+function ColorGradient(cw; alpha=nothing)
+    ColorGradient(default_gradient(), alpha=alpha)
+end
+
 getColor(gradient::ColorGradient, idx::Int) = gradient.colors[mod1(idx, length(gradient.colors))]
 
 function getColorZ(gradient::ColorGradient, z::Real)

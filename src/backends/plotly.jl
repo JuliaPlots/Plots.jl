@@ -523,7 +523,7 @@ function _writemime(io::IO, ::MIME"image/png", plt::Plot{PlotlyBackend})
     writemime_png_from_html(io, plt)
 end
 
-function _writemime(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
+function _writemime(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyBackend})
     write(io, html_head(plt) * html_body(plt))
 end
 
