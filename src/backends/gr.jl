@@ -43,7 +43,7 @@ supportedTypes(::GRBackend) = [
     :scatter,
     #:histogram2d, :hexbin,
     # :sticks,
-    # :hline, :vline, 
+    # :hline, :vline,
     :heatmap, :pie, :image,
     :contour, :path3d, :scatter3d, :surface, :wireframe,
     :shape
@@ -324,7 +324,7 @@ end
 
 function gr_draw_markers(series::Series, x = series.d[:x], y = series.d[:y])
     d = series.d
-    msize = 0.5 * d[:markersize]
+    msize = 0.4 * d[:markersize]
     mz = normalize_zvals(d[:marker_z])
     GR.setmarkercolorind(gr_getcolorind(d[:markercolor]))
     gr_setmarkershape(d)
@@ -493,7 +493,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # winheight_px = sp.plt[:size][2]
     # px_per_pt = px / pt
     # pointsize_mult = px_per_pt / winheight_px
-    # @show winheight_px px_per_pt pointsize_mult 
+    # @show winheight_px px_per_pt pointsize_mult
 
 # end
 #
@@ -696,44 +696,46 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     for axis_idx = 1:num_axes
         xmin, xmax, ymin, ymax = extrema[axis_idx,:]
 
-        # NOTE: for log axes, the major_x and major_y - if non-zero (omit labels) - control the minor grid lines (1 = draw 9 minor grid lines, 2 = no minor grid lines)
-        # NOTE: for log axes, the x_tick and y_tick - if non-zero (omit axes) - only affect the output appearance (1 = nomal, 2 = scientiic notation)
-        if scale & GR.OPTION_X_LOG == 0
-            # xmin, xmax = GR.adjustlimits(xmin, xmax)
-            majorx = 1 #5
-            xtick = GR.tick(xmin, xmax) / majorx
-        else
-            # log axis
-            # xtick = majorx = 1
-            xtick = 2  # scientific notation
-            majorx = 2 # no minor grid lines
-        end
-        if scale & GR.OPTION_Y_LOG == 0
-            # ymin, ymax = GR.adjustlimits(ymin, ymax)
-            majory = 1 #5
-            ytick = GR.tick(ymin, ymax) / majory
-        else
-            # log axis
-            # ytick = majory = 1
-            ytick = 2  # scientific notation
-            majory = 2 # no minor grid lines
-        end
-        xorg = (scale & GR.OPTION_FLIP_X == 0) ? (xmin,xmax) : (xmax,xmin)
-        yorg = (scale & GR.OPTION_FLIP_Y == 0) ? (ymin,ymax) : (ymax,ymin)
-        # if scale & GR.OPTION_FLIP_X == 0
-        #     xorg = (xmin, xmax)
-        # else
-        #     xorg = (xmax, xmin)
-        # end
-        # if scale & GR.OPTION_FLIP_Y == 0
-        #     yorg = (ymin, ymax)
-        # else
-        #     yorg = (ymax, ymin)
-        # end
+        if xmax > xmin && ymax > ymin
+            # NOTE: for log axes, the major_x and major_y - if non-zero (omit labels) - control the minor grid lines (1 = draw 9 minor grid lines, 2 = no minor grid lines)
+            # NOTE: for log axes, the x_tick and y_tick - if non-zero (omit axes) - only affect the output appearance (1 = nomal, 2 = scientiic notation)
+            if scale & GR.OPTION_X_LOG == 0
+                # xmin, xmax = GR.adjustlimits(xmin, xmax)
+                majorx = 1 #5
+                xtick = GR.tick(xmin, xmax) / majorx
+            else
+                # log axis
+                # xtick = majorx = 1
+                xtick = 2  # scientific notation
+                majorx = 2 # no minor grid lines
+            end
+            if scale & GR.OPTION_Y_LOG == 0
+                # ymin, ymax = GR.adjustlimits(ymin, ymax)
+                majory = 1 #5
+                ytick = GR.tick(ymin, ymax) / majory
+            else
+                # log axis
+                # ytick = majory = 1
+                ytick = 2  # scientific notation
+                majory = 2 # no minor grid lines
+            end
+            xorg = (scale & GR.OPTION_FLIP_X == 0) ? (xmin,xmax) : (xmax,xmin)
+            yorg = (scale & GR.OPTION_FLIP_Y == 0) ? (ymin,ymax) : (ymax,ymin)
+            # if scale & GR.OPTION_FLIP_X == 0
+            #     xorg = (xmin, xmax)
+            # else
+            #     xorg = (xmax, xmin)
+            # end
+            # if scale & GR.OPTION_FLIP_Y == 0
+            #     yorg = (ymin, ymax)
+            # else
+            #     yorg = (ymax, ymin)
+            # end
 
-        extrema[axis_idx,:] = [xmin, xmax, ymin, ymax]
-        GR.setwindow(xmin, xmax, ymin, ymax)
-        GR.setscale(scale)
+            extrema[axis_idx,:] = [xmin, xmax, ymin, ymax]
+            GR.setwindow(xmin, xmax, ymin, ymax)
+            GR.setscale(scale)
+        end
 
         # window_diag = sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
         # charheight = max(0.018 * window_diag, 0.01)
@@ -836,7 +838,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         # end
         GR.savestate()
         xmin, xmax, ymin, ymax = extrema[gr_getaxisind(d),:]
-        GR.setwindow(xmin, xmax, ymin, ymax)
+        if xmax > xmin && ymax > ymin
+            GR.setwindow(xmin, xmax, ymin, ymax)
+        end
         if st in [:path, :polar]
             GR.setlinetype(gr_linetype[d[:linestyle]])
             GR.setlinewidth(d[:linewidth])
@@ -1029,13 +1033,17 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             x, y, z = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
             # zmin, zmax = gr_getzlims(d, minimum(z), maximum(z), false)
             zmin, zmax = gr_lims(zaxis, false)
-            GR.setspace(zmin, zmax, 0, 90)
             if typeof(d[:levels]) <: Array
                 h = d[:levels]
             else
                 h = linspace(zmin, zmax, d[:levels])
             end
-            GR.contour(x, y, h, reshape(z, length(x) * length(y)), 1000)
+            GR.setspace(zmin, zmax, 0, 90)
+            if d[:fillrange] != nothing
+                GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
+            else
+                GR.contour(x, y, h, reshape(z, length(x) * length(y)), 1000)
+            end
             GR.setviewport(viewport_plotarea[2] + 0.02, viewport_plotarea[2] + 0.05, viewport_plotarea[3], viewport_plotarea[4])
             l = round(Int32, 1000 + (h - minimum(h)) / (maximum(h) - minimum(h)) * 255)
             GR.setwindow(xmin, xmax, zmin, zmax)
@@ -1234,13 +1242,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 lab = series.d[:label]
             end
             tbx, tby = GR.inqtext(0, 0, lab)
-            w = max(w, tbx[3])
+            w = max(w, tbx[3] - tbx[1])
         end
         if w > 0
             xpos = viewport_plotarea[2] - 0.05 - w
             ypos = viewport_plotarea[4] - 0.06
             # dy = 0.03 * sqrt((viewport_plotarea[2] - viewport_plotarea[1])^2 + (viewport_plotarea[4] - viewport_plotarea[3])^2)
-            dy = 0.03 * window_diag
+            dy = _gr_point_mult[1] * sp[:legendfont].pointsize * 1.75
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             GR.setfillcolorind(gr_getcolorind(sp[:background_color_legend]))
             GR.fillrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
