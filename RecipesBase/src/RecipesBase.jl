@@ -231,10 +231,10 @@ macro recipe(funcexpr::Expr)
                 println("apply_recipe args: ", $args)
             end
             $kw_body
-            series_list = RecipeData[]
+            series_list = RecipesBase.RecipeData[]
             func_return = $func_body
             if func_return != nothing
-                push!(series_list, RecipeData(d, RecipesBase.wrap_tuple(func_return)))
+                push!(series_list, RecipesBase.RecipeData(d, RecipesBase.wrap_tuple(func_return)))
             end
             series_list
         end
@@ -271,7 +271,7 @@ macro series(expr::Expr)
     esc(quote
         let d = copy(d)
             args = $expr
-            push!(series_list, RecipeData(d, RecipesBase.wrap_tuple(args)))
+            push!(series_list, RecipesBase.RecipeData(d, RecipesBase.wrap_tuple(args)))
             nothing
         end
     end)
