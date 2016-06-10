@@ -896,78 +896,75 @@ end
 
 # update attr from an input dictionary
 function _update_plot_args(plt::Plot, d_in::KW)
-    pargs = plt.attr
     for (k,v) in _plot_defaults
-        slice_arg!(d_in, pargs, k, v)
+        slice_arg!(d_in, plt.attr, k, v)
     end
 
     # handle colors
-    bg = convertColor(pargs[:background_color])
-    fg = pargs[:foreground_color]
+    bg = convertColor(plt.attr[:background_color])
+    fg = plt.attr[:foreground_color]
     if fg == :auto
         fg = isdark(bg) ? colorant"white" : colorant"black"
     end
-    pargs[:background_color] = bg
-    pargs[:foreground_color] = convertColor(fg)
-    # color_or_match!(pargs, :background_color_outside, bg)
-    color_or_nothing!(pargs, :background_color_outside)
+    plt.attr[:background_color] = bg
+    plt.attr[:foreground_color] = convertColor(fg)
+    # color_or_match!(plt.attr, :background_color_outside, bg)
+    color_or_nothing!(plt.attr, :background_color_outside)
 end
 
 
 # update a subplots args and axes
 function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::Integer; remove_pair = true)
-    pargs = plt.attr
-    spargs = sp.attr
     anns = pop!(sp.attr, :annotations, [])
 
     # grab those args which apply to this subplot
     for (k,v) in _subplot_defaults
-        slice_arg!(d_in, spargs, k, v, subplot_index, remove_pair = remove_pair)
+        slice_arg!(d_in, sp.attr, k, v, subplot_index, remove_pair = remove_pair)
     end
 
     # extend annotations
     sp.attr[:annotations] = vcat(anns, sp[:annotations])
 
     # handle legend/colorbar
-    spargs[:legend] = convertLegendValue(spargs[:legend])
-    spargs[:colorbar] = convertLegendValue(spargs[:colorbar])
-    if spargs[:colorbar] == :legend
-        spargs[:colorbar] = spargs[:legend]
+    sp.attr[:legend] = convertLegendValue(sp.attr[:legend])
+    sp.attr[:colorbar] = convertLegendValue(sp.attr[:colorbar])
+    if sp.attr[:colorbar] == :legend
+        sp.attr[:colorbar] = sp.attr[:legend]
     end
 
     # background colors
-    # bg = color_or_match!(spargs, :background_color_subplot, pargs[:background_color])
-    color_or_nothing!(spargs, :background_color_subplot)
-    bg = sp[:background_color_subplot]
-    spargs[:color_palette] = get_color_palette(spargs[:color_palette], bg, 30)
-    # color_or_match!(spargs, :background_color_legend, bg)
-    color_or_nothing!(spargs, :background_color_legend)
-    # color_or_match!(spargs, :background_color_inside, bg)
-    color_or_nothing!(spargs, :background_color_inside)
+    # bg = color_or_match!(sp.attr, :background_color_subplot, plt.attr[:background_color])
+    color_or_nothing!(sp.attr, :background_color_subplot)
+    bg = convertColor(sp[:background_color_subplot])
+    sp.attr[:color_palette] = get_color_palette(sp.attr[:color_palette], bg, 30)
+    # color_or_match!(sp.attr, :background_color_legend, bg)
+    color_or_nothing!(sp.attr, :background_color_legend)
+    # color_or_match!(sp.attr, :background_color_inside, bg)
+    color_or_nothing!(sp.attr, :background_color_inside)
 
     # foreground colors
-    # fg = color_or_match!(spargs, :foreground_color_subplot, pargs[:foreground_color])
-    color_or_nothing!(spargs, :foreground_color_subplot)
-    # color_or_match!(spargs, :foreground_color_legend, fg)
-    color_or_nothing!(spargs, :foreground_color_legend)
-    # color_or_match!(spargs, :foreground_color_grid, fg)
-    color_or_nothing!(spargs, :foreground_color_grid)
-    # color_or_match!(spargs, :foreground_color_title, fg)
-    color_or_nothing!(spargs, :foreground_color_title)
+    # fg = color_or_match!(sp.attr, :foreground_color_subplot, plt.attr[:foreground_color])
+    color_or_nothing!(sp.attr, :foreground_color_subplot)
+    # color_or_match!(sp.attr, :foreground_color_legend, fg)
+    color_or_nothing!(sp.attr, :foreground_color_legend)
+    # color_or_match!(sp.attr, :foreground_color_grid, fg)
+    color_or_nothing!(sp.attr, :foreground_color_grid)
+    # color_or_match!(sp.attr, :foreground_color_title, fg)
+    color_or_nothing!(sp.attr, :foreground_color_title)
 
     # for k in (:left_margin, :top_margin, :right_margin, :bottom_margin)
-    #     if spargs[k] == :match
-    #         spargs[k] = spargs[:margin]
+    #     if sp.attr[k] == :match
+    #         sp.attr[k] = sp.attr[:margin]
     #     end
     # end
 
     for letter in (:x, :y, :z)
         # get (maybe initialize) the axis
         axissym = Symbol(letter, :axis)
-        axis = if haskey(spargs, axissym)
-            spargs[axissym]
+        axis = if haskey(sp.attr, axissym)
+            sp.attr[axissym]
         else
-            spargs[axissym] = Axis(sp, letter)
+            sp.attr[axissym] = Axis(sp, letter)
         end
 
         # grab magic args (for example `xaxis = (:flip, :log)`)
@@ -987,7 +984,8 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
             # then get those args that were passed with a leading letter: `xlabel = "X"`
             lk = Symbol(letter, k)
             if haskey(d_in, lk)
-                kw[k] = slice_arg(pop!(d_in, lk), subplot_index)
+                # kw[k] = slice_arg(pop!(d_in, lk), subplot_index)
+                kw[k] = slice_arg(d_in[lk], subplot_index)
             end
         end
 
@@ -1007,10 +1005,10 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
         # TODO: need to handle linking here?
     end
 
-    # now we can get rid of the axis keys without a letter
-    for k in keys(_axis_defaults)
-        delete!(d_in, k)
-    end
+    # # now we can get rid of the axis keys without a letter
+    # for k in keys(_axis_defaults)
+    #     delete!(d_in, k)
+    # end
 end
 
 

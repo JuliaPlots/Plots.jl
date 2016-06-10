@@ -102,6 +102,25 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         end
     end
 
+    # just in case the backend needs to set up the plot (make it current or something)
+    _prepare_plot_object(plt)
+
+    # first apply any args for the subplots
+    for (idx,sp) in enumerate(plt.subplots)
+        _update_subplot_args(plt, sp, d, idx, remove_pair = false)
+    end
+
+    # # now we can get rid of the axis keys without a letter
+    # for k in keys(_axis_defaults)
+    #     delete!(d, k)
+    #     for letter in (:x,:y,:z)
+    #         delete!(d, Symbol(letter,k))
+    #     end
+    # end
+
+    # do we need to link any axes together?
+    link_axes!(plt.layout, plt[:link])
+
     # finish up
     current(plt)
     if get(d, :show, default(:show))
@@ -305,17 +324,17 @@ function _plot!(plt::Plot, d::KW, args...)
         end
     end
 
-    # merge in anything meant for plot/subplot
+    # merge in anything meant for plot/subplot/axis
     for kw in kw_list
         for (k,v) in kw
-            for defdict in (_plot_defaults, _subplot_defaults)
+            for defdict in (_plot_defaults,
+                            _subplot_defaults,
+                            _axis_defaults,
+                            _axis_defaults_byletter)
                 if haskey(defdict, k)
                     d[k] = pop!(kw, k)
                 end
             end
-            # if haskey(_plot_defaults, k) || haskey(_subplot_defaults, k)
-            #     d[k] = v
-            # end
         end
     end
 
@@ -351,9 +370,6 @@ function _plot!(plt::Plot, d::KW, args...)
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
     for (i,kw) in enumerate(kw_list)
-        # if !(get(kw, :seriestype, :none) in (:xerror, :yerror))
-        #     plt.n += 1
-        # end
         command_idx = kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
 
         # get the Subplot object to which the series belongs
@@ -393,15 +409,6 @@ function _plot!(plt::Plot, d::KW, args...)
         _apply_series_recipe(plt, kw)
     end
 
-    # # everything is processed, time to compute the layout bounding boxes
-    # _before_layout_calcs(plt)
-    # w, h = plt.attr[:size]
-    # plt.layout.bbox = BoundingBox(0mm, 0mm, w*px, h*px)
-    # update_child_bboxes!(plt.layout)
-    #
-    # # TODO just need to pass plt... and we should do all non-series updates here
-    # _update_plot_object(plt)
-
     current(plt)
 
     # note: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
@@ -429,8 +436,15 @@ function prepare_output(plt::Plot)
 
     w, h = plt.attr[:size]
     plt.layout.bbox = BoundingBox(0mm, 0mm, w*px, h*px)
+
+    # One pass down and back up the tree to compute the minimum padding
+    # of the children on the perimeter.  This is an backend callback.
+    _update_min_padding!(plt.layout)
+
+    # now another pass down, to update the bounding boxes
     update_child_bboxes!(plt.layout)
 
+    # the backend callback, to reposition subplots, etc
     _update_plot_object(plt)
 end
 

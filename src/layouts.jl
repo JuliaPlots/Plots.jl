@@ -97,19 +97,12 @@ bbox!(layout::AbstractLayout, bb::BoundingBox) = (layout.bbox = bb)
 Base.parent(layout::AbstractLayout) = layout.parent
 parent_bbox(layout::AbstractLayout) = bbox(parent(layout))
 
-# NOTE: these should be implemented for subplots in each backend!
-# they represent the minimum size of the axes and guides
-min_padding_left(layout::AbstractLayout)   = 0mm
-min_padding_top(layout::AbstractLayout)    = 0mm
-min_padding_right(layout::AbstractLayout)  = 0mm
-min_padding_bottom(layout::AbstractLayout) = 0mm
+# padding_w(layout::AbstractLayout) = left_padding(layout) + right_padding(layout)
+# padding_h(layout::AbstractLayout) = bottom_padding(layout) + top_padding(layout)
+# padding(layout::AbstractLayout) = (padding_w(layout), padding_h(layout))
 
-padding_w(layout::AbstractLayout) = left_padding(layout) + right_padding(layout)
-padding_h(layout::AbstractLayout) = bottom_padding(layout) + top_padding(layout)
-padding(layout::AbstractLayout) = (padding_w(layout), padding_h(layout))
-
-_update_position!(layout::AbstractLayout) = nothing
-update_child_bboxes!(layout::AbstractLayout) = nothing
+update_position!(layout::AbstractLayout) = nothing
+update_child_bboxes!(layout::AbstractLayout, minimum_perimeter = [0mm,0mm,0mm,0mm]) = nothing
 
 width(layout::AbstractLayout) = width(layout.bbox)
 height(layout::AbstractLayout) = height(layout.bbox)
@@ -204,6 +197,12 @@ rightpad(layout::GridLayout)  = layout.minpad[3]
 bottompad(layout::GridLayout) = layout.minpad[4]
 
 
+# here's how this works... first we recursively "update the minimum padding" (which 
+# means to calculate the minimum size needed from the edge of the subplot to plot area)
+# for the whole layout tree.  then we can compute the "padding borders" of this
+# layout as the biggest padding of the children on the perimeter.  then we need to
+# recursively pass those borders back down the tree, one side at a time, but ONLY
+# to those perimeter children.
 
 # leftpad, toppad, rightpad, bottompad
 function _update_min_padding!(layout::GridLayout)
@@ -217,10 +216,11 @@ function _update_min_padding!(layout::GridLayout)
 end
 
 
-function _update_position!(layout::GridLayout)
-    map(_update_position!, layout.grid)
+function update_position!(layout::GridLayout)
+    map(update_position!, layout.grid)
 end
 
+# some lengths are fixed... we have to split up the free space among the list v
 function recompute_lengths(v)
     # dump(v)
     tot = 0pct
@@ -242,11 +242,11 @@ function recompute_lengths(v)
 end
 
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
-function update_child_bboxes!(layout::GridLayout)
+function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0mm,0mm])
     nr, nc = size(layout)
 
-    # create a matrix for each minimum padding direction
-    _update_min_padding!(layout)
+    # # create a matrix for each minimum padding direction
+    # _update_min_padding!(layout)
 
     minpad_left   = map(leftpad,   layout.grid)
     minpad_top    = map(toppad,    layout.grid)
@@ -262,6 +262,12 @@ function update_child_bboxes!(layout::GridLayout)
     pad_right  = maximum(minpad_right,  1)
     pad_bottom = maximum(minpad_bottom, 2)
     # @show pad_left pad_top pad_right pad_bottom
+
+    # make sure the perimeter match the parent
+    pad_left[1]     = max(pad_left[1], minimum_perimeter[1])
+    pad_top[1]      = max(pad_top[1], minimum_perimeter[2])
+    pad_right[end]  = max(pad_right[end], minimum_perimeter[3])
+    pad_bottom[end] = max(pad_bottom[end], minimum_perimeter[4])
 
     # scale this up to the total padding in each direction
     total_pad_horizontal = sum(pad_left + pad_right)
@@ -303,8 +309,17 @@ function update_child_bboxes!(layout::GridLayout)
         child_height = pad_top[r] + plotarea_height + pad_bottom[r]
         bbox!(child, BoundingBox(child_left, child_top, child_width, child_height))
 
+        # this is the minimum perimeter as decided by this child's parent, so that
+        # all children on this border have the same value
+        min_child_perimeter = [
+            c == 1  ? layout.minpad[1] : 0mm,
+            r == 1  ? layout.minpad[2] : 0mm,
+            c == nc ? layout.minpad[3] : 0mm,
+            r == nr ? layout.minpad[4] : 0mm
+        ]
+
         # recursively update the child's children
-        update_child_bboxes!(child)
+        update_child_bboxes!(child, min_child_perimeter)
     end
 end
 
@@ -376,40 +391,21 @@ end
 
 layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
 
-# # pass the layout arg through
-# function build_layout(d::KW)
-#     build_layout(get(d, :layout, default(:layout)))
-# end
-#
-# function build_layout(n::Integer)
-#     nr, nc = compute_gridsize(n, -1, -1)
-#     build_layout(GridLayout(nr, nc), n)
-# end
-#
-# function build_layout{I<:Integer}(sztup::NTuple{2,I})
-#     nr, nc = sztup
-#     build_layout(GridLayout(nr, nc))
-# end
-#
-# function build_layout{I<:Integer}(sztup::NTuple{3,I})
-#     n, nr, nc = sztup
-#     nr, nc = compute_gridsize(n, nr, nc)
-#     build_layout(GridLayout(nr, nc), n)
-# end
-#
-# # compute number of subplots
-# function build_layout(layout::GridLayout)
-#     # recursively get the size of the grid
-#     n = calc_num_subplots(layout)
-#     build_layout(layout, n)
-# end
+
+# ----------------------------------------------------------------------
+
 
 function build_layout(args...)
     layout, n = layout_args(args...)
     build_layout(layout, n)
 end
 
-# n is the number of subplots
+# # just a single subplot
+# function build_layout(sp::Subplot, n::Integer)
+#     sp, Subplot[sp], SubplotMap(gensym() => sp)
+# end
+
+# n is the number of subplots... build a grid and initialize the inner subplots recursively
 function build_layout(layout::GridLayout, n::Integer)
     nr, nc = size(layout)
     subplots = Subplot[]
@@ -644,7 +640,9 @@ end
 function link_axes!(a::AbstractArray{AbstractLayout}, axissym::Symbol)
     subplots = filter(l -> isa(l, Subplot), a)
     axes = [sp.attr[axissym] for sp in subplots]
-    link_axes!(axes...)
+    if length(axes) > 0
+        link_axes!(axes...)
+    end
 end
 
 # don't do anything for most layout types
