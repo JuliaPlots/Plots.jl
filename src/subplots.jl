@@ -36,11 +36,12 @@ get_subplot_index(plt::Plot, sp::Subplot) = findfirst(_ -> _ === sp, plt.subplot
 series_list(sp::Subplot) = filter(series -> series.d[:subplot] === sp, sp.plt.series_list)
 
 function should_add_to_legend(series::Series)
-    !(series.d[:label] == "" || series.d[:seriestype] in (
-        :hexbin,:histogram2d,:hline,:vline,
-        :contour,:contour3d,:surface,:wireframe,
-        :heatmap,:path3d,:scatter3d, :pie, :image
-    ))
+    series.d[:primary] && series.d[:label] != "" &&
+        !(series.d[:seriestype] in (
+            :hexbin,:histogram2d,:hline,:vline,
+            :contour,:contour3d,:surface,:wireframe,
+            :heatmap, :pie, :image
+        ))
 end
 
 # ----------------------------------------------------------------------

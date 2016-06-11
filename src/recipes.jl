@@ -677,9 +677,9 @@ function error_coords(xorig, yorig, ebar)
 
     # for each point, create a line segment from the bottom to the top of the errorbar
     for i = 1:max(length(xorig), length(yorig))
-        xi = get_mod(xorig, i)
-        yi = get_mod(yorig, i)
-        ebi = get_mod(ebar, i)
+        xi = cycle(xorig, i)
+        yi = cycle(yorig, i)
+        ebi = cycle(ebar, i)
         nanappend!(x, [xi, xi])
         e1, e2 = if istuple(ebi)
             first(ebi), last(ebi)
@@ -728,11 +728,11 @@ function quiver_using_arrows(d::KW)
     x, y = zeros(0), zeros(0)
     for i = 1:max(length(xorig), length(yorig))
         # get the starting position
-        xi = get_mod(xorig, i)
-        yi = get_mod(yorig, i)
+        xi = cycle(xorig, i)
+        yi = cycle(yorig, i)
 
         # get the velocity
-        vi = get_mod(velocity, i)
+        vi = cycle(velocity, i)
         vx, vy = if istuple(vi)
             first(vi), last(vi)
         elseif isscalar(vi)
@@ -765,12 +765,12 @@ function quiver_using_hack(d::KW)
     for i = 1:max(length(xorig), length(yorig))
 
         # get the starting position
-        xi = get_mod(xorig, i)
-        yi = get_mod(yorig, i)
+        xi = cycle(xorig, i)
+        yi = cycle(yorig, i)
         p = P2(xi, yi)
 
         # get the velocity
-        vi = get_mod(velocity, i)
+        vi = cycle(velocity, i)
         vx, vy = if istuple(vi)
             first(vi), last(vi)
         elseif isscalar(vi)
