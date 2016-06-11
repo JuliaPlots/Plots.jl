@@ -289,18 +289,22 @@ end
 
 function gr_draw_markers(d::KW, x, y, msize, mz, c, a)
     if length(x) > 0
+        mz == nothing && gr_set_markercolor(c, a)
+        
         if typeof(msize) <: Number && mz == nothing
             # draw the markers all the same
             GR.setmarkersize(msize)
-            gr_set_markercolor(c, a)
+            # gr_set_markercolor(c, a)
             gr_polymarker(d, x, y)
         else
             # draw each marker differently
             for i = 1:length(x)
                 if mz != nothing
-                    gr_set_markercolor(getColorZ(c, mz[i]), a)
-                else
-                    gr_set_markercolor(c, a)
+                    # gr_set_markercolor(getColorZ(c, mz[i]), a)
+                    ci = round(Int, 1000 + mz[i] * 255)
+                    GR.setmarkercolorind(ci)
+                # else
+                #     gr_set_markercolor(c, a)
                 end
                 GR.setmarkersize(isa(msize, Number) ? msize : msize[mod1(i, length(msize))])
                 gr_polymarker(d, [x[i]], [y[i]])
@@ -408,9 +412,11 @@ end
 
 # add the colorbar
 function gr_colorbar(sp::Subplot)
-    gr_set_viewport_cmap(sp)
-    GR.colormap()
-    gr_set_viewport_plotarea()
+    if sp[:colorbar] != :none
+        gr_set_viewport_cmap(sp)
+        GR.colormap()
+        gr_set_viewport_plotarea()
+    end
 end
 
 gr_view_xcenter() = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
@@ -514,7 +520,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
     end
 
-    if cmap
+    if cmap && sp[:colorbar] != :none
         # note: add extra midpadding on the right for the colorbar
         viewport_plotarea[2] -= 0.1
     end
@@ -790,14 +796,16 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
             
             # create the colorbar of contour levels
-            # GR.setviewport(viewport_plotarea[2] + 0.02, viewport_plotarea[2] + 0.05, viewport_plotarea[3], viewport_plotarea[4])
-            gr_set_viewport_cmap(sp)
-            l = round(Int32, 1000 + (h - minimum(h)) / (maximum(h) - minimum(h)) * 255)
-            GR.setwindow(xmin, xmax, zmin, zmax)
-            GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
-            ztick = 0.5 * GR.tick(zmin, zmax)
-            GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
-            gr_set_viewport_plotarea()
+            if sp[:colorbar] != :none
+                # GR.setviewport(viewport_plotarea[2] + 0.02, viewport_plotarea[2] + 0.05, viewport_plotarea[3], viewport_plotarea[4])
+                gr_set_viewport_cmap(sp)
+                l = round(Int32, 1000 + (h - minimum(h)) / (maximum(h) - minimum(h)) * 255)
+                GR.setwindow(xmin, xmax, zmin, zmax)
+                GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
+                ztick = 0.5 * GR.tick(zmin, zmax)
+                GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
+                gr_set_viewport_plotarea()
+            end
 
         elseif st in [:surface, :wireframe]
             # x, y, z = d[:x], d[:y], transpose_z(d, d[:z].surf, false)

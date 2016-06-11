@@ -773,6 +773,7 @@ function convertLegendValue(val::Symbol)
     end
 end
 convertLegendValue(val::Bool) = val ? :best : :none
+convertLegendValue(val::Void) = :none
 
 # -----------------------------------------------------------------------------
 
