@@ -1074,6 +1074,7 @@ for (mime, fmt) in _gr_mimeformats
         gr_display(plt)
         GR.emergencyclosegks()
         write(io, readall("gks." * $fmt))
+        ENV["GKS_WSTYPE"] = ""
     end
 end
 
