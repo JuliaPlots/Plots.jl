@@ -84,7 +84,7 @@ function make_polygon(geom::ShapeGeometry, xs::AbstractArray, ys::AbstractArray,
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
-    polys[i] = T[(x + r * sx, y + r * sy) for (sx,sy) in get_mod(geom.vertices, i)]
+    polys[i] = T[(x + r * sx, y + r * sy) for (sx,sy) in cycle(geom.vertices, i)]
   end
   Gadfly.polygon(polys, geom.tag)
 end

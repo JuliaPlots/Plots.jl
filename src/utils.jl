@@ -142,9 +142,9 @@ end
 nop() = nothing
 notimpl() = error("This has not been implemented yet")
 
-get_mod(v::AVec, idx::Int) = v[mod1(idx, length(v))]
-get_mod(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
-get_mod(v, idx::Int)       = v
+Base.cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
+Base.cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
+Base.cycle(v, idx::Int)       = v
 
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]
@@ -231,6 +231,27 @@ function heatmap_edges(v::AVec)
   vcat(vmin-extra, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra)
 end
 
+
+function calc_r_extrema(x, y)
+    xmin, xmax = extrema(x)
+    ymin, ymax = extrema(y)
+    r = 0.5 * min(xmax - xmin, ymax - ymin)
+    extrema(r)
+end
+
+function convert_to_polar(x, y, r_extrema = calc_r_extrema(x, y))
+    rmin, rmax = r_extrema
+    phi, r = x, y
+    r = 0.5 * (r - rmin) / (rmax - rmin)
+    n = max(length(phi), length(r))
+    x = zeros(n)
+    y = zeros(n)
+    for i in 1:n
+        x[i] = cycle(r,i) * cos(cycle(phi,i))
+        y[i] = cycle(r,i) * sin(cycle(phi,i))
+    end
+    x, y
+end
 
 function fakedata(sz...)
   y = zeros(sz...)
