@@ -91,6 +91,12 @@ function update!(axis::Axis, args...; kw...)
             end
         end
     end
+
+    # replace scale aliases
+    if haskey(_scaleAliases, d[:scale])
+        d[:scale] = _scaleAliases[d[:scale]]
+    end
+
     axis
 end
 

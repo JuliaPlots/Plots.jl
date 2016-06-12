@@ -933,6 +933,7 @@ function applyPyPlotScale(ax, scaleType::Symbol, letter)
         elseif scaleType == :log10
             10
         end
+        # kw[Symbol(:linthresh,letter)] = 1e-16
         "symlog"
     end
     func(arg; kw...)

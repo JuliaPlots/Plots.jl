@@ -553,10 +553,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # get data limits and set the scale flags and window
     data_lims = gr_xy_axislims(sp)
     xmin, xmax, ymin, ymax = data_lims
+    scale = 0
     if xmax > xmin && ymax > ymin
         # NOTE: for log axes, the major_x and major_y - if non-zero (omit labels) - control the minor grid lines (1 = draw 9 minor grid lines, 2 = no minor grid lines)
         # NOTE: for log axes, the x_tick and y_tick - if non-zero (omit axes) - only affect the output appearance (1 = nomal, 2 = scientiic notation)
-        scale = 0
         xaxis[:scale] == :log10 && (scale |= GR.OPTION_X_LOG)
         yaxis[:scale] == :log10 && (scale |= GR.OPTION_Y_LOG)
         xaxis[:flip]            && (scale |= GR.OPTION_FLIP_X)
@@ -696,6 +696,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             xmin, xmax, ymin, ymax = data_lims
             if xmax > xmin && ymax > ymin
                 GR.setwindow(xmin, xmax, ymin, ymax)
+                GR.setscale(scale)
             end
         end
 

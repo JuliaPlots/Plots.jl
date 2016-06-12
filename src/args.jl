@@ -751,11 +751,15 @@ function warnOnUnsupported(pkg::AbstractBackend, d::KW)
 end
 
 function warnOnUnsupportedScales(pkg::AbstractBackend, d::KW)
-  for k in (:xscale, :yscale)
-    if haskey(d, k)
-      d[k] in supportedScales(pkg) || warn("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supportedScales(pkg))")
+    for k in (:xscale, :yscale, :zscale)
+        if haskey(d, k)
+            v = d[k]
+            v = get(_scaleAliases, v, v)
+            if !(v in supportedScales(pkg))
+                warn("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supportedScales(pkg))")
+            end
+        end
     end
-  end
 end
 
 
