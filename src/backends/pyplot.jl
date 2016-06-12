@@ -920,12 +920,22 @@ function addPyPlotTicks(ax, ticks, letter)
 end
 
 function applyPyPlotScale(ax, scaleType::Symbol, letter)
+    scaleType in supportedScales() || return warn("Unhandled scale value in pyplot: $scaleType")
     func = ax[Symbol("set_", letter, "scale")]
-    scaleType == :identity && return func("linear")
-    scaleType == :ln && return func("log", basex = e, basey = e)
-    scaleType == :log2 && return func("log", basex = 2, basey = 2)
-    scaleType == :log10 && return func("log", basex = 10, basey = 10)
-    warn("Unhandled scaleType: ", scaleType)
+    kw = KW()
+    arg = if scaleType == :identity
+        "linear"
+    else
+        kw[Symbol(:base,letter)] = if scaleType == :ln
+            e
+        elseif scaleType == :log2
+            2
+        elseif scaleType == :log10
+            10
+        end
+        "symlog"
+    end
+    func(arg; kw...)
 end
 
 
