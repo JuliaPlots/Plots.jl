@@ -45,17 +45,19 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
     # @show refdir fn G
     versions = map(fn -> VersionNumber(split(fn,"/")[end]), G)
     versions = reverse(sort(versions))
+    versions = filter(v -> v <= _current_plots_version, versions)
     # @show refdir fn versions
 
-    reffn = nothing
     newdir = joinpath(refdir, string(_current_plots_version))
     newfn = joinpath(newdir, fn)
+
+    # figure out which reference file we should compare to, by finding the highest versioned file
+    reffn = nothing
     for v in versions
-        try
-            tmpfn = joinpath(refdir, string(v), fn)
-            # @show "trying", tmpfn
-            f = open(tmpfn)
+        tmpfn = joinpath(refdir, string(v), fn)
+        if isfile(tmpfn)
             reffn = tmpfn
+            break
         end
     end
 

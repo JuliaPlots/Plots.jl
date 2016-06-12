@@ -915,21 +915,32 @@ function py_set_ticks(ax, ticks, letter)
     end
 end
 
-function py_set_scale(ax, scaleType::Symbol, letter)
-    scaleType in supported_scales() || return warn("Unhandled scale value in pyplot: $scaleType")
+function py_compute_axis_minval(axis::Axis)
+    minval = 1.0
+    sp = axis.sp
+    for series in series_list(axis.sp)
+        minval = min(minval, minimum(abs(series.d[axis[:letter]])))
+    end
+    minval
+end
+
+function py_set_scale(ax, axis::Axis)
+    scale = axis[:scale]
+    letter = axis[:letter]
+    scale in supported_scales() || return warn("Unhandled scale value in pyplot: $scale")
     func = ax[Symbol("set_", letter, "scale")]
     kw = KW()
-    arg = if scaleType == :identity
+    arg = if scale == :identity
         "linear"
     else
-        kw[Symbol(:base,letter)] = if scaleType == :ln
+        kw[Symbol(:base,letter)] = if scale == :ln
             e
-        elseif scaleType == :log2
+        elseif scale == :log2
             2
-        elseif scaleType == :log10
+        elseif scale == :log10
             10
         end
-        # kw[Symbol(:linthresh,letter)] = 1e-16
+        kw[Symbol(:linthresh,letter)] = max(1e-16, py_compute_axis_minval(axis))
         "symlog"
     end
     func(arg; kw...)
@@ -998,7 +1009,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             axissym = Symbol(letter, :axis)
             axis = sp[axissym]
             haskey(ax, axissym) || continue
-            py_set_scale(ax, axis[:scale], letter)
+            py_set_scale(ax, axis)
             py_set_lims(ax, axis)
             py_set_ticks(ax, get_ticks(axis), letter)
             ax[Symbol("set_", letter, "label")](axis[:guide])
