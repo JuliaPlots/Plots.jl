@@ -2,7 +2,7 @@
 # https://github.com/stevengj/PyPlot.jl
 
 
-supportedArgs(::PyPlotBackend) = [
+supported_args(::PyPlotBackend) = [
     :annotations,
     :background_color, :foreground_color, :color_palette,
     :background_color_legend, :background_color_inside, :background_color_outside,
@@ -38,19 +38,17 @@ supportedArgs(::PyPlotBackend) = [
     :subplot,
     :clims,
   ]
-supportedAxes(::PyPlotBackend) = _allAxes
-supportedTypes(::PyPlotBackend) = [
+supported_types(::PyPlotBackend) = [
         :none, :line, :path, :steppre, :steppost, :shape,
-        :scatter, :histogram2d, :hexbin, :histogram, #:density,
-        :bar, :sticks, #:box, :violin, :quiver,
+        :scatter, :histogram2d, :hexbin, :histogram,
+        :bar, :sticks,
         :hline, :vline, :heatmap, :pie, :image,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
     ]
-supportedStyles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::PyPlotBackend) = vcat(_allMarkers, Shape)
-supportedScales(::PyPlotBackend) = [:identity, :ln, :log2, :log10]
-subplotSupported(::PyPlotBackend) = true
-# nativeImagesSupported(::PyPlotBackend) = true
+supported_styles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supported_markers(::PyPlotBackend) = vcat(_allMarkers, Shape)
+supported_scales(::PyPlotBackend) = [:identity, :ln, :log2, :log10]
+is_subplot_supported(::PyPlotBackend) = true
 
 
 # --------------------------------------------------------------------------------------
@@ -82,37 +80,34 @@ end
 # --------------------------------------------------------------------------------------
 
 # convert colorant to 4-tuple RGBA
-getPyPlotColor(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
-getPyPlotColor(cvec::ColorVector, α=nothing) = map(getPyPlotColor, convertColor(cvec, α).v)
-getPyPlotColor(grad::ColorGradient, α=nothing) = map(c -> getPyPlotColor(c, α), grad.colors)
-getPyPlotColor(scheme::ColorScheme, α=nothing) = getPyPlotColor(convertColor(getColor(scheme), α))
-getPyPlotColor(vec::AVec, α=nothing) = map(c->getPyPlotColor(c,α), vec)
-getPyPlotColor(c, α=nothing) = getPyPlotColor(convertColor(c, α))
+py_color(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
+py_color(cvec::ColorVector, α=nothing) = map(py_color, convertColor(cvec, α).v)
+py_color(grad::ColorGradient, α=nothing) = map(c -> py_color(c, α), grad.colors)
+py_color(scheme::ColorScheme, α=nothing) = py_color(convertColor(getColor(scheme), α))
+py_color(vec::AVec, α=nothing) = map(c->py_color(c,α), vec)
+py_color(c, α=nothing) = py_color(convertColor(c, α))
 
-function getPyPlotColorMap(c::ColorGradient, α=nothing)
-    pyvals = [(v, getPyPlotColor(getColorZ(c, v), α)) for v in c.values]
+function py_colormap(c::ColorGradient, α=nothing)
+    pyvals = [(v, py_color(getColorZ(c, v), α)) for v in c.values]
     pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
 end
 
 # convert vectors and ColorVectors to standard ColorGradients
 # TODO: move this logic to colors.jl and keep a barebones wrapper for pyplot
-getPyPlotColorMap(cv::ColorVector, α=nothing) = getPyPlotColorMap(ColorGradient(cv.v), α)
-getPyPlotColorMap(v::AVec, α=nothing) = getPyPlotColorMap(ColorGradient(v), α)
+py_colormap(cv::ColorVector, α=nothing) = py_colormap(ColorGradient(cv.v), α)
+py_colormap(v::AVec, α=nothing) = py_colormap(ColorGradient(v), α)
 
 # anything else just gets a bluesred gradient
-getPyPlotColorMap(c, α=nothing) = getPyPlotColorMap(default_gradient(), α)
+py_colormap(c, α=nothing) = py_colormap(default_gradient(), α)
 
-function getPyPlotCustomShading(c, z, α=nothing)
-    cmap = getPyPlotColorMap(c, α)
-    # sm = pycmap.pymember("ScalarMappable")(cmap = cmap)
-    # sm[:set_array](z)
-    # sm
+function py_shading(c, z, α=nothing)
+    cmap = py_colormap(c, α)
     ls = pycolors.pymember("LightSource")(270,45)
     ls[:shade](z, cmap, vert_exag=0.1, blend_mode="soft")
 end
 
 # get the style (solid, dashed, etc)
-function getPyPlotLineStyle(seriestype::Symbol, linestyle::Symbol)
+function py_linestyle(seriestype::Symbol, linestyle::Symbol)
     seriestype == :none && return " "
     linestyle == :solid && return "-"
     linestyle == :dash && return "--"
@@ -122,7 +117,7 @@ function getPyPlotLineStyle(seriestype::Symbol, linestyle::Symbol)
     return "-"
 end
 
-function getPyPlotMarker(marker::Shape)
+function py_marker(marker::Shape)
     x, y = shape_coords(marker)
     n = length(x)
     mat = zeros(n+1,2)
@@ -140,7 +135,7 @@ const _path_CLOSEPOLY = UInt8(79)
 
 # see http://matplotlib.org/users/path_tutorial.html
 # and http://matplotlib.org/api/path_api.html#matplotlib.path.Path
-function buildPyPlotPath(x, y)
+function py_path(x, y)
     n = length(x)
     mat = zeros(n+1, 2)
     codes = zeros(UInt8, n+1)
@@ -161,7 +156,7 @@ function buildPyPlotPath(x, y)
 end
 
 # get the marker shape
-function getPyPlotMarker(marker::Symbol)
+function py_marker(marker::Symbol)
     marker == :none && return " "
     marker == :ellipse && return "o"
     marker == :rect && return "s"
@@ -174,32 +169,32 @@ function getPyPlotMarker(marker::Symbol)
     marker == :pentagon && return "p"
     marker == :hexagon && return "h"
     marker == :octagon && return "8"
-    haskey(_shapes, marker) && return getPyPlotMarker(_shapes[marker])
+    haskey(_shapes, marker) && return py_marker(_shapes[marker])
 
     warn("Unknown marker $marker")
     return "o"
 end
 
-# getPyPlotMarker(markers::AVec) = map(getPyPlotMarker, markers)
-function getPyPlotMarker(markers::AVec)
+# py_marker(markers::AVec) = map(py_marker, markers)
+function py_marker(markers::AVec)
     warn("Vectors of markers are currently unsupported in PyPlot: $markers")
-    getPyPlotMarker(markers[1])
+    py_marker(markers[1])
 end
 
 # pass through
-function getPyPlotMarker(marker::AbstractString)
+function py_marker(marker::AbstractString)
     @assert length(marker) == 1
     marker
 end
 
-function getPyPlotStepStyle(seriestype::Symbol)
+function py_stepstyle(seriestype::Symbol)
     seriestype == :steppost && return "steps-post"
     seriestype == :steppre && return "steps-pre"
     return "default"
 end
 
 # untested... return a FontProperties object from a Plots.Font
-function getPyPlotFont(font::Font)
+function py_font(font::Font)
     pyfont.pymember("FontProperties")(
         family = font.family,
         size = font.size
@@ -215,18 +210,18 @@ function add_pyfixedformatter(cbar, vals::AVec)
     cbar[:update_ticks]()
 end
 
-# TODO: smoothing should be moved into the SliceIt method, should not touch backends
-function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Bool)
-    if smooth
-        xs, ys = regressionXY(d[:x], d[:y])
-        ax[:plot](xs, ys,
-                  # linestyle = getPyPlotLineStyle(:path, :dashdot),
-                  color = getPyPlotColor(d[:linecolor]),
-                  linewidth = 2
-                 )
-    end
-end
-handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Real) = handleSmooth(plt, ax, d, true)
+# # TODO: smoothing should be moved into the SliceIt method, should not touch backends
+# function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Bool)
+#     if smooth
+#         xs, ys = regressionXY(d[:x], d[:y])
+#         ax[:plot](xs, ys,
+#                   # linestyle = py_linestyle(:path, :dashdot),
+#                   color = py_color(d[:linecolor]),
+#                   linewidth = 2
+#                  )
+#     end
+# end
+# handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Real) = handleSmooth(plt, ax, d, true)
 
 # ---------------------------------------------------------------------------
 
@@ -244,7 +239,7 @@ end
 
 # total hack due to PyPlot bug (see issue #145).
 # hack: duplicate the color vector when the total rgba fields is the same as the series length
-function color_fix(c, x)
+function py_color_fix(c, x)
     if (typeof(c) <: AbstractArray && length(c)*4 == length(x)) ||
                     (typeof(c) <: Tuple && length(x) == 4)
         vcat(c, c)
@@ -253,49 +248,49 @@ function color_fix(c, x)
     end
 end
 
-pylinecolor(d::KW)          = getPyPlotColor(d[:linecolor], d[:linealpha])
-pymarkercolor(d::KW)        = getPyPlotColor(d[:markercolor], d[:markeralpha])
-pymarkerstrokecolor(d::KW)  = getPyPlotColor(d[:markerstrokecolor], d[:markerstrokealpha])
-pyfillcolor(d::KW)          = getPyPlotColor(d[:fillcolor], d[:fillalpha])
+py_linecolor(d::KW)          = py_color(d[:linecolor], d[:linealpha])
+py_markercolor(d::KW)        = py_color(d[:markercolor], d[:markeralpha])
+py_markerstrokecolor(d::KW)  = py_color(d[:markerstrokecolor], d[:markerstrokealpha])
+py_fillcolor(d::KW)          = py_color(d[:fillcolor], d[:fillalpha])
 
-pylinecolormap(d::KW)       = getPyPlotColorMap(d[:linecolor], d[:linealpha])
-pymarkercolormap(d::KW)     = getPyPlotColorMap(d[:markercolor], d[:markeralpha])
-pyfillcolormap(d::KW)       = getPyPlotColorMap(d[:fillcolor], d[:fillalpha])
+py_linecolormap(d::KW)       = py_colormap(d[:linecolor], d[:linealpha])
+py_markercolormap(d::KW)     = py_colormap(d[:markercolor], d[:markeralpha])
+py_fillcolormap(d::KW)       = py_colormap(d[:fillcolor], d[:fillalpha])
 
 # ---------------------------------------------------------------------------
 
 # TODO: these can probably be removed eventually... right now they're just keeping things working before cleanup
 
-getAxis(sp::Subplot) = sp.o
+# getAxis(sp::Subplot) = sp.o
 
-function getAxis(plt::Plot{PyPlotBackend}, series::Series)
-    sp = get_subplot(plt, get(series.d, :subplot, 1))
-    getAxis(sp)
-end
+# function getAxis(plt::Plot{PyPlotBackend}, series::Series)
+#     sp = get_subplot(plt, get(series.d, :subplot, 1))
+#     getAxis(sp)
+# end
 
-getfig(o) = o
+# getfig(o) = o
 
 # ---------------------------------------------------------------------------
 # Figure utils -- F*** matplotlib for making me work so hard to figure this crap out
 
 # the drawing surface
-canvas(fig) = fig[:canvas]
+py_canvas(fig) = fig[:canvas]
 
 # the object controlling draw commands
-renderer(fig) = canvas(fig)[:get_renderer]()
+py_renderer(fig) = py_canvas(fig)[:get_renderer]()
 
 # draw commands... paint the screen (probably updating internals too)
-drawfig(fig) = fig[:draw](renderer(fig))
-drawax(ax) = ax[:draw](renderer(ax[:get_figure]()))
+py_drawfig(fig) = fig[:draw](py_renderer(fig))
+# py_drawax(ax) = ax[:draw](py_renderer(ax[:get_figure]()))
 
 # get a vector [left, right, bottom, top] in PyPlot coords (origin is bottom-left!)
-get_extents(obj) = obj[:get_window_extent]()[:get_points]()
+py_extents(obj) = obj[:get_window_extent]()[:get_points]()
 
 
 # compute a bounding box (with origin top-left), however pyplot gives coords with origin bottom-left
 function py_bbox(obj)
-    fl, fr, fb, ft = get_extents(obj[:get_figure]())
-    l, r, b, t = get_extents(obj)
+    fl, fr, fb, ft = py_extents(obj[:get_figure]())
+    l, r, b, t = py_extents(obj)
     BoundingBox(l*px, (ft-t)*px, (r-l)*px, (t-b)*px)
 end
 
@@ -381,15 +376,16 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     d = series.d
     st = d[:seriestype]
     sp = d[:subplot]
+    ax = sp.o
 
-    if !(st in supportedTypes(plt.backend))
-        error("seriestype $(st) is unsupported in PyPlot.  Choose from: $(supportedTypes(plt.backend))")
+    if !(st in supported_types(plt.backend))
+        error("seriestype $(st) is unsupported in PyPlot.  Choose from: $(supported_types(plt.backend))")
     end
 
     # PyPlot doesn't handle mismatched x/y
     fix_xy_lengths!(plt, d)
 
-    ax = getAxis(plt, series)
+    # ax = getAxis(plt, series)
     x, y, z = d[:x], d[:y], d[:z]
     xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
 
@@ -421,12 +417,12 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             handle = ax[:plot](xyargs...;
                 label = d[:label],
                 zorder = plt.n,
-                color = pylinecolor(d),
+                color = py_linecolor(d),
                 linewidth = d[:linewidth],
-                linestyle = getPyPlotLineStyle(st, d[:linestyle]),
+                linestyle = py_linestyle(st, d[:linestyle]),
                 solid_capstyle = "round",
                 # dash_capstyle = "round",
-                drawstyle = getPyPlotStepStyle(st)
+                drawstyle = py_stepstyle(st)
             )[1]
             push!(handles, handle)
 
@@ -439,10 +435,10 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
                         :arrowstyle => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
                         :shrinkA => 0,
                         :shrinkB => 0,
-                        :edgecolor => pylinecolor(d),
-                        :facecolor => pylinecolor(d),
+                        :edgecolor => py_linecolor(d),
+                        :facecolor => py_linecolor(d),
                         :linewidth => d[:linewidth],
-                        :linestyle => getPyPlotLineStyle(st, d[:linestyle]),
+                        :linestyle => py_linestyle(st, d[:linestyle]),
                     )
                     add_arrows(x, y) do xyprev, xy
                         ax[:annotate]("",
@@ -471,8 +467,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         handle = ax[isvertical(d) ? :bar : :barh](x, y;
             label = d[:label],
             zorder = plt.n,
-            color = pyfillcolor(d),
-            edgecolor = pylinecolor(d),
+            color = py_fillcolor(d),
+            edgecolor = py_linecolor(d),
             linewidth = d[:linewidth],
             align = d[:bar_edges] ? "edge" : "center",
             extrakw...
@@ -485,8 +481,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         handle = ax[isvertical(d) ? :bar : :barh](x, y;
             label = d[:label],
             zorder = plt.n,
-            color = pylinecolor(d),
-            edgecolor = pylinecolor(d),
+            color = py_linecolor(d),
+            edgecolor = py_linecolor(d),
             linewidth = d[:linewidth],
             align = "center",
             extrakw...
@@ -500,10 +496,10 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
                                           :bar, :sticks)
         extrakw = KW()
         if d[:marker_z] == nothing
-            extrakw[:c] = color_fix(pymarkercolor(d), x)
+            extrakw[:c] = py_color_fix(py_markercolor(d), x)
         else
             extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
-            extrakw[:cmap] = pymarkercolormap(d)
+            extrakw[:cmap] = py_markercolormap(d)
             clims = sp[:clims]
             if isa(clims, Tuple) && length(clims) == 2
                 isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
@@ -519,9 +515,9 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         handle = ax[:scatter](xyargs...;
             label = d[:label],
             zorder = plt.n + 0.5,
-            marker = getPyPlotMarker(d[:markershape]),
+            marker = py_marker(d[:markershape]),
             s = d[:markersize] .^ 2,
-            edgecolors = pymarkerstrokecolor(d),
+            edgecolors = py_markerstrokecolor(d),
             linewidths = d[:markerstrokewidth],
             extrakw...
         )
@@ -532,8 +528,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         handle = ax[:hist](y;
             label = d[:label],
             zorder = plt.n,
-            color = pyfillcolor(d),
-            edgecolor = pylinecolor(d),
+            color = py_fillcolor(d),
+            edgecolor = py_linecolor(d),
             linewidth = d[:linewidth],
             bins = d[:bins],
             normed = d[:normalize],
@@ -564,7 +560,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             bins = d[:bins],
             normed = d[:normalize],
             weights = d[:weights],
-            cmap = pyfillcolormap(d),  # applies to the pcolorfast object
+            cmap = py_fillcolormap(d),  # applies to the pcolorfast object
             extrakw...
         )[4]
         push!(handles, handle)
@@ -588,8 +584,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             zorder = plt.n,
             gridsize = d[:bins],
             linewidths = d[:linewidth],
-            edgecolors = pylinecolor(d),
-            cmap = pyfillcolormap(d),  # applies to the pcolorfast object
+            edgecolors = py_linecolor(d),
+            cmap = py_fillcolormap(d),  # applies to the pcolorfast object
             extrakw...
         )
         push!(handles, handle)
@@ -601,8 +597,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             func = ax[st == :hline ? :axhline : :axvline]
             handle = func(yi;
                 linewidth=d[:linewidth],
-                color=pylinecolor(d),
-                linestyle=getPyPlotLineStyle(st, d[:linestyle])
+                color=py_linecolor(d),
+                linestyle=py_linestyle(st, d[:linestyle])
             )
             push!(handles, handle)
         end
@@ -628,8 +624,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             label = d[:label],
             zorder = plt.n,
             linewidths = d[:linewidth],
-            linestyles = getPyPlotLineStyle(st, d[:linestyle]),
-            cmap = pylinecolormap(d),
+            linestyles = py_linestyle(st, d[:linestyle]),
+            cmap = py_linecolormap(d),
             extrakw...
         )
         push!(handles, handle)
@@ -639,7 +635,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             handle = ax[:contourf](x, y, z, levelargs...;
                 label = d[:label],
                 zorder = plt.n + 0.5,
-                cmap = pyfillcolormap(d),
+                cmap = py_fillcolormap(d),
                 extrakw...
             )
             push!(handles, handle)
@@ -657,7 +653,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             z = transpose_z(d, z)
             if st == :surface
                 if d[:marker_z] != nothing
-                    extrakw[:facecolors] = getPyPlotCustomShading(d[:fillcolor], d[:marker_z], d[:fillalpha])
+                    extrakw[:facecolors] = py_shading(d[:fillcolor], d[:marker_z], d[:fillalpha])
                     extrakw[:shade] = false
                     clims = sp[:clims]
                     if isa(clims, Tuple) && length(clims) == 2
@@ -665,7 +661,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
                         isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
                     end
                 else
-                    extrakw[:cmap] = pyfillcolormap(d)
+                    extrakw[:cmap] = py_fillcolormap(d)
                     needs_colorbar = true
                 end
             end
@@ -675,7 +671,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
                 rstride = 1,
                 cstride = 1,
                 linewidth = d[:linewidth],
-                edgecolor = pylinecolor(d),
+                edgecolor = py_linecolor(d),
                 extrakw...
             )
             push!(handles, handle)
@@ -686,7 +682,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
                     offset = (zdir == "y" ? maximum : minimum)(mat)
                     handle = ax[:contourf](x, y, z, levelargs...;
                         zdir = zdir,
-                        cmap = pyfillcolormap(d),
+                        cmap = py_fillcolormap(d),
                         offset = (zdir == "y" ? maximum : minimum)(mat)  # where to draw the contour plane
                     )
                     push!(handles, handle)
@@ -709,9 +705,9 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             handle = ax[:plot_trisurf](x, y, z;
                 label = d[:label],
                 zorder = plt.n,
-                cmap = pyfillcolormap(d),
+                cmap = py_fillcolormap(d),
                 linewidth = d[:linewidth],
-                edgecolor = pylinecolor(d),
+                edgecolor = py_linecolor(d),
                 extrakw...
             )
             push!(handles, handle)
@@ -733,7 +729,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         end
         handle = ax[:imshow](z;
             zorder = plt.n,
-            cmap = getPyPlotColorMap([:black, :white]),
+            cmap = py_colormap([:black, :white]),
             vmin = 0.0,
             vmax = 1.0
         )
@@ -764,8 +760,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         handle = ax[:pcolormesh](x, y, z;
             label = d[:label],
             zorder = plt.n,
-            cmap = pyfillcolormap(d),
-            edgecolors = (d[:linewidth] > 0 ? pylinecolor(d) : "face"),
+            cmap = py_fillcolormap(d),
+            edgecolors = (d[:linewidth] > 0 ? py_linecolor(d) : "face"),
             extrakw...
         )
         push!(handles, handle)
@@ -783,12 +779,12 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :shape
-        path = buildPyPlotPath(x, y)
+        path = py_path(x, y)
         patches = pypatches.pymember("PathPatch")(path;
             label = d[:label],
             zorder = plt.n,
-            edgecolor = pymarkerstrokecolor(d),
-            facecolor = pymarkercolor(d),
+            edgecolor = py_markerstrokecolor(d),
+            facecolor = py_markercolor(d),
             linewidth = d[:markerstrokewidth],
             fill = true
         )
@@ -813,8 +809,8 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 
     d[:serieshandle] = handles
 
-    # smoothing
-    handleSmooth(plt, ax, d, d[:smooth])
+    # # smoothing
+    # handleSmooth(plt, ax, d, d[:smooth])
 
     # add the colorbar legend
     if needs_colorbar && sp[:colorbar] != :none
@@ -854,7 +850,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 
         handle = ax[f](args...;
             zorder = plt.n,
-            facecolor = pyfillcolor(d),
+            facecolor = py_fillcolor(d),
             linewidths = 0
         )
         push!(handles, handle)
@@ -866,7 +862,7 @@ end
 
 function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
     for letter in letters
-        setPyPlotLims(sp.o, sp[Symbol(letter, :axis)])
+        py_set_lims(sp.o, sp[Symbol(letter, :axis)])
     end
 end
 
@@ -890,13 +886,13 @@ end
 
 # --------------------------------------------------------------------------
 
-function setPyPlotLims(ax, axis::Axis)
+function py_set_lims(ax, axis::Axis)
     letter = axis[:letter]
     lfrom, lto = axis_limits(axis)
     ax[Symbol("set_", letter, "lim")](lfrom, lto)
 end
 
-function addPyPlotTicks(ax, ticks, letter)
+function py_set_ticks(ax, ticks, letter)
     ticks == :auto && return
     axis = ax[Symbol(letter,"axis")]
     if ticks == :none || ticks == nothing
@@ -919,8 +915,8 @@ function addPyPlotTicks(ax, ticks, letter)
     end
 end
 
-function applyPyPlotScale(ax, scaleType::Symbol, letter)
-    scaleType in supportedScales() || return warn("Unhandled scale value in pyplot: $scaleType")
+function py_set_scale(ax, scaleType::Symbol, letter)
+    scaleType in supported_scales() || return warn("Unhandled scale value in pyplot: $scaleType")
     func = ax[Symbol("set_", letter, "scale")]
     kw = KW()
     arg = if scaleType == :identity
@@ -940,16 +936,16 @@ function applyPyPlotScale(ax, scaleType::Symbol, letter)
 end
 
 
-function updateAxisColors(ax, a::Axis)
+function py_set_axis_colors(ax, a::Axis)
     for (loc, spine) in ax[:spines]
-        spine[:set_color](getPyPlotColor(a[:foreground_color_border]))
+        spine[:set_color](py_color(a[:foreground_color_border]))
     end
     axissym = Symbol(a[:letter], :axis)
     if haskey(ax, axissym)
         ax[:tick_params](axis=string(a[:letter]), which="both",
-                         colors=getPyPlotColor(a[:foreground_color_axis]),
-                         labelcolor=getPyPlotColor(a[:foreground_color_text]))
-        ax[axissym][:label][:set_color](getPyPlotColor(a[:foreground_color_guide]))
+                         colors=py_color(a[:foreground_color_axis]),
+                         labelcolor=py_color(a[:foreground_color_text]))
+        ax[axissym][:label][:set_color](py_color(a[:foreground_color_guide]))
     end
 end
 
@@ -962,7 +958,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig[:set_size_inches](px2inch(w), px2inch(h), forward = true)
-    fig[:set_facecolor](getPyPlotColor(plt[:background_color_outside]))
+    fig[:set_facecolor](py_color(plt[:background_color_outside]))
     fig[:set_dpi](DPI)
     
     # resize the window
@@ -970,14 +966,15 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
     # update subplots
     for sp in plt.subplots
-        ax = getAxis(sp)
+        # ax = getAxis(sp)
+        ax = sp.o
         if ax == nothing
             continue
         end
 
         # add the annotations
         for ann in sp[:annotations]
-            createPyPlotAnnotationObject(sp, ann...)
+            py_add_annotations(sp, ann...)
         end
 
         # title
@@ -992,7 +989,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             ax[field][:set_text](sp[:title])
             ax[field][:set_fontsize](sp[:titlefont].pointsize)
-            ax[field][:set_color](getPyPlotColor(sp[:foreground_color_title]))
+            ax[field][:set_color](py_color(sp[:foreground_color_title]))
             # ax[:set_title](sp[:title], loc = loc)
         end
 
@@ -1001,9 +998,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             axissym = Symbol(letter, :axis)
             axis = sp[axissym]
             haskey(ax, axissym) || continue
-            applyPyPlotScale(ax, axis[:scale], letter)
-            setPyPlotLims(ax, axis)
-            addPyPlotTicks(ax, get_ticks(axis), letter)
+            py_set_scale(ax, axis[:scale], letter)
+            py_set_lims(ax, axis)
+            py_set_ticks(ax, get_ticks(axis), letter)
             ax[Symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)
                 ax[Symbol("invert_", letter, "axis")]()
@@ -1014,11 +1011,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 lab[:set_rotation](axis[:rotation])
             end
             if sp[:grid]
-                fgcolor = getPyPlotColor(sp[:foreground_color_grid])
+                fgcolor = py_color(sp[:foreground_color_grid])
                 ax[axissym][:grid](true, color = fgcolor)
                 ax[:set_axisbelow](true)
             end
-            updateAxisColors(ax, axis)
+            py_set_axis_colors(ax, axis)
         end
 
         # aspect ratio
@@ -1028,12 +1025,12 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         end
 
         # legend
-        addPyPlotLegend(plt, sp, ax)
+        py_add_legend(plt, sp, ax)
 
         # this sets the bg color inside the grid
-        ax[:set_axis_bgcolor](getPyPlotColor(sp[:background_color_inside]))
+        ax[:set_axis_bgcolor](py_color(sp[:background_color_inside]))
     end
-    drawfig(fig)
+    py_drawfig(fig)
 end
 
 
@@ -1073,18 +1070,18 @@ end
 
 # -----------------------------------------------------------------
 
-function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val)
+function py_add_annotations(sp::Subplot{PyPlotBackend}, x, y, val)
     ax = sp.o
     ax[:annotate](val, xy = (x,y), zorder = 999)
 end
 
 
-function createPyPlotAnnotationObject(sp::Subplot{PyPlotBackend}, x, y, val::PlotText)
+function py_add_annotations(sp::Subplot{PyPlotBackend}, x, y, val::PlotText)
     ax = sp.o
     ax[:annotate](val.str,
         xy = (x,y),
         family = val.font.family,
-        color = getPyPlotColor(val.font.color),
+        color = py_color(val.font.color),
         horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
         verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
         rotation = val.font.rotation * 180 / π,
@@ -1121,7 +1118,7 @@ const _pyplot_legend_pos = KW(
     :topleft => "upper left"
   )
 
-function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
+function py_add_legend(plt::Plot, sp::Subplot, ax)
     leg = sp[:legend]
     if leg != :none
         # gotta do this to ensure both axes are included
@@ -1131,7 +1128,7 @@ function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
             if should_add_to_legend(series)
                 # add a line/marker and a label
                 push!(handles, if series.d[:seriestype] == :histogram
-                    PyPlot.plt[:Line2D]((0,1),(0,0), color=pyfillcolor(series.d), linewidth=4)
+                    PyPlot.plt[:Line2D]((0,1),(0,0), color=py_fillcolor(series.d), linewidth=4)
                 else
                     series.d[:serieshandle][1]
                 end)
@@ -1150,14 +1147,14 @@ function addPyPlotLegend(plt::Plot, sp::Subplot, ax)
             )
             leg[:set_zorder](1000)
 
-            fgcolor = getPyPlotColor(sp[:foreground_color_legend])
+            fgcolor = py_color(sp[:foreground_color_legend])
             for txt in leg[:get_texts]()
                 PyPlot.plt[:setp](txt, color = fgcolor)
             end
 
             # set some legend properties
             frame = leg[:get_frame]()
-            frame[:set_facecolor](getPyPlotColor(sp[:background_color_legend]))
+            frame[:set_facecolor](py_color(sp[:background_color_legend]))
             frame[:set_edgecolor](fgcolor)
         end
     end

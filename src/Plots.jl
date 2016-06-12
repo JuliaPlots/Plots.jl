@@ -20,13 +20,9 @@ export
     grid,
     EmptyLayout,
     @layout,
-    # RowsLayout,
-    # FlexLayout,
     AVec,
     AMat,
     KW,
-    # attr,
-    # attr!,
 
     wrap,
     set_theme,
@@ -34,8 +30,6 @@ export
 
     plot,
     plot!,
-    # subplot,
-    # subplot!,
 
     current,
     default,
@@ -43,53 +37,11 @@ export
 
     @userplot,
     @shorthands,
-    # scatter,
-    # scatter!,
-    # bar,
-    # bar!,
-    # barh,
-    # barh!,
-    # histogram,
-    # histogram!,
-    # histogram2d,
-    # histogram2d!,
-    # density,
-    # density!,
-    # heatmap,
-    # heatmap!,
-    # hexbin,
-    # hexbin!,
-    # sticks,
-    # sticks!,
-    # hline,
-    # hline!,
-    # vline,
-    # vline!,
-    # ohlc,
-    # ohlc!,
+
     pie,
     pie!,
-    # contour,
-    # contour!,
-    # contour3d,
-    # contour3d!,
-    # surface,
-    # surface!,
-    # wireframe,
-    # wireframe!,
-    # path3d,
-    # path3d!,
     plot3d,
     plot3d!,
-    # scatter3d,
-    # scatter3d!,
-    # abline!,
-    # boxplot,
-    # boxplot!,
-    # violin,
-    # violin!,
-    # quiver,
-    # quiver!,
 
     title!,
     xlabel!,
@@ -119,9 +71,6 @@ export
     text,
     font,
     Axis,
-    # xaxis,
-    # yaxis,
-    # zaxis,
     stroke,
     brush,
     Surface,
@@ -140,12 +89,11 @@ export
 
     debugplots,
 
-    supportedArgs,
-    supportedAxes,
-    supportedTypes,
-    supportedStyles,
-    supportedMarkers,
-    subplotSupported,
+    supported_args,
+    supported_types,
+    supported_styles,
+    supported_markers,
+    is_subplot_supported,
 
     Animation,
     frame,
@@ -157,10 +105,6 @@ export
     spy,
     arcdiagram,
     chorddiagram,
-
-    # @kw,
-    # @recipe,
-    # @plotrecipe,
 
     test_examples,
 
@@ -209,14 +153,11 @@ include("arg_desc.jl")
 # define and export shorthand plotting method definitions
 macro shorthands(funcname::Symbol)
     funcname2 = Symbol(funcname, "!")
-    ret = esc(quote
+    esc(quote
         export $funcname, $funcname2
         $funcname(args...; kw...) = plot(args...; kw..., seriestype = $(quot(funcname)))
         $funcname2(args...; kw...) = plot!(args...; kw..., seriestype = $(quot(funcname)))
     end)
-    # dump(ret,20)
-    # @show ret
-    ret
 end
 
 @shorthands scatter
@@ -231,7 +172,6 @@ end
 @shorthands hline
 @shorthands vline
 @shorthands ohlc
-# @shorthands pie
 @shorthands contour
 @shorthands contour3d
 @shorthands surface
@@ -242,52 +182,10 @@ end
 @shorthands violin
 @shorthands quiver
 
-# scatter(args...; kw...)    = plot(args...; kw...,  seriestype = :scatter)
-# scatter!(args...; kw...)   = plot!(args...; kw..., seriestype = :scatter)
-# bar(args...; kw...)        = plot(args...; kw...,  seriestype = :bar)
-# bar!(args...; kw...)       = plot!(args...; kw..., seriestype = :bar)
-# barh(args...; kw...)        = plot(args...; kw...,  seriestype = :barh, orientation = :h)
-# barh!(args...; kw...)       = plot!(args...; kw..., seriestype = :barh, orientation = :h)
-# histogram(args...; kw...)  = plot(args...; kw...,  seriestype = :histogram)
-# histogram!(args...; kw...) = plot!(args...; kw..., seriestype = :histogram)
-# histogram2d(args...; kw...)  = plot(args...; kw...,  seriestype = :histogram2d)
-# histogram2d!(args...; kw...) = plot!(args...; kw..., seriestype = :histogram2d)
-# density(args...; kw...)    = plot(args...; kw...,  seriestype = :density)
-# density!(args...; kw...)   = plot!(args...; kw..., seriestype = :density)
-# heatmap(args...; kw...)    = plot(args...; kw...,  seriestype = :heatmap)
-# heatmap!(args...; kw...)   = plot!(args...; kw..., seriestype = :heatmap)
-# hexbin(args...; kw...)     = plot(args...; kw...,  seriestype = :hexbin)
-# hexbin!(args...; kw...)    = plot!(args...; kw..., seriestype = :hexbin)
-# sticks(args...; kw...)     = plot(args...; kw...,  seriestype = :sticks, marker = :ellipse)
-# sticks!(args...; kw...)    = plot!(args...; kw..., seriestype = :sticks, marker = :ellipse)
-# hline(args...; kw...)      = plot(args...; kw...,  seriestype = :hline)
-# hline!(args...; kw...)     = plot!(args...; kw..., seriestype = :hline)
-# vline(args...; kw...)      = plot(args...; kw...,  seriestype = :vline)
-# vline!(args...; kw...)     = plot!(args...; kw..., seriestype = :vline)
-# ohlc(args...; kw...)       = plot(args...; kw...,  seriestype = :ohlc)
-# ohlc!(args...; kw...)      = plot!(args...; kw..., seriestype = :ohlc)
 pie(args...; kw...)        = plot(args...; kw...,  seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
 pie!(args...; kw...)       = plot!(args...; kw..., seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
-# contour(args...; kw...)    = plot(args...; kw...,  seriestype = :contour)
-# contour!(args...; kw...)   = plot!(args...; kw..., seriestype = :contour)
-# contour3d(args...; kw...)  = plot(args...; kw...,  seriestype = :contour3d)
-# contour3d!(args...; kw...) = plot!(args...; kw..., seriestype = :contour3d)
-# surface(args...; kw...)    = plot(args...; kw...,  seriestype = :surface)
-# surface!(args...; kw...)   = plot!(args...; kw..., seriestype = :surface)
-# wireframe(args...; kw...)  = plot(args...; kw...,  seriestype = :wireframe)
-# wireframe!(args...; kw...) = plot!(args...; kw..., seriestype = :wireframe)
-# path3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)
-# path3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
 plot3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)
 plot3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
-# scatter3d(args...; kw...)  = plot(args...; kw...,  seriestype = :scatter3d)
-# scatter3d!(args...; kw...) = plot!(args...; kw..., seriestype = :scatter3d)
-# boxplot(args...; kw...)    = plot(args...; kw...,  seriestype = :boxplot)
-# boxplot!(args...; kw...)   = plot!(args...; kw..., seriestype = :boxplot)
-# violin(args...; kw...)     = plot(args...; kw...,  seriestype = :violin)
-# violin!(args...; kw...)    = plot!(args...; kw..., seriestype = :violin)
-# quiver(args...; kw...)     = plot(args...; kw...,  seriestype = :quiver)
-# quiver!(args...; kw...)    = plot!(args...; kw..., seriestype = :quiver)
 
 
 title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)
@@ -340,13 +238,9 @@ yaxis!(plt::Plot, args...; kw...)                                     = plot!(pl
 
 const CURRENT_BACKEND = CurrentBackend(:none)
 
-# setup_dataframes()
-
 function __init__()
     setup_ijulia()
-    # setup_dataframes()
     setup_atom()
-    # add_axis_letter_defaults()
 end
 
 # ---------------------------------------------------------

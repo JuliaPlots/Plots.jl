@@ -2,7 +2,7 @@
 # https://github.com/dcjones/Gadfly.jl
 
 
-supportedArgs(::GadflyBackend) = [
+supported_args(::GadflyBackend) = [
     :annotations,
     :background_color, :foreground_color, :color_palette,
     :group, :label, :seriestype,
@@ -15,7 +15,6 @@ supportedArgs(::GadflyBackend) = [
     :title, :window_title, :show, :size,
     :x, :xguide, :xlims, :xticks, :xscale, :xflip,
     :y, :yguide, :ylims, :yticks, :yscale, :yflip,
-    # :z, :zguide, :zlims, :zticks, :zscale, :zflip,
     :z,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
@@ -24,17 +23,16 @@ supportedArgs(::GadflyBackend) = [
     :ribbon, :quiver,
     :orientation,
   ]
-supportedAxes(::GadflyBackend) = [:auto, :left]
-supportedTypes(::GadflyBackend) = [
+supported_types(::GadflyBackend) = [
         :none, :line, :path, :steppre, :steppost, :sticks,
         :scatter, :histogram2d, :hexbin, :histogram,
-        :bar, #:box, :violin, :quiver,
+        :bar,
         :hline, :vline, :contour, :shape
     ]
-supportedStyles(::GadflyBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::GadflyBackend) = vcat(_allMarkers, Shape)
-supportedScales(::GadflyBackend) = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::GadflyBackend) = true
+supported_styles(::GadflyBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supported_markers(::GadflyBackend) = vcat(_allMarkers, Shape)
+supported_scales(::GadflyBackend) = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
+is_subplot_supported(::GadflyBackend) = true
 
 
 # --------------------------------------------------------------------------------------

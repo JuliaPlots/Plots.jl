@@ -115,7 +115,7 @@ PlotExample("Line types",
 PlotExample("Line styles",
     "",
     [:(begin
-        styles = setdiff(supportedStyles(), [:auto])'
+        styles = setdiff(supported_styles(), [:auto])'
         plot(cumsum(randn(20,length(styles)),1), style=:auto, label=map(string,styles), w=5)
     end)]
 ),
@@ -123,7 +123,7 @@ PlotExample("Line styles",
 PlotExample("Marker types",
     "",
     [:(begin
-        markers = setdiff(supportedMarkers(), [:none,:auto,Shape])'
+        markers = setdiff(supported_markers(), [:none,:auto,Shape])'
         n = length(markers)
         x = linspace(0,10,n+2)[2:end-1]
         y = repmat(reverse(x)', n, 1)

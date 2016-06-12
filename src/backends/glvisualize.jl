@@ -2,7 +2,7 @@
 
 # [WEBSITE]
 
-supportedArgs(::GLVisualizeBackend) = [
+supported_args(::GLVisualizeBackend) = [
     # :annotations,
     # :axis,
     # :background_color,
@@ -59,12 +59,11 @@ supportedArgs(::GLVisualizeBackend) = [
     # :surface
     # :levels,
   ]
-supportedAxes(::GLVisualizeBackend) = [:auto, :left]
-supportedTypes(::GLVisualizeBackend) = [:surface] #, :path, :scatter ,:steppre, :steppost, :sticks, :heatmap, :hexbin, :histogram, :bar, :hline, :vline, :contour]
-supportedStyles(::GLVisualizeBackend) = [:auto, :solid] #, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::GLVisualizeBackend) = [:none, :auto, :ellipse] #, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
-supportedScales(::GLVisualizeBackend) = [:identity] #, :log, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::GLVisualizeBackend) = false
+supported_types(::GLVisualizeBackend) = [:surface]
+supported_styles(::GLVisualizeBackend) = [:auto, :solid]
+supported_markers(::GLVisualizeBackend) = [:none, :auto, :ellipse]
+supported_scales(::GLVisualizeBackend) = [:identity]
+is_subplot_supported(::GLVisualizeBackend) = false
 
 # --------------------------------------------------------------------------------------
 

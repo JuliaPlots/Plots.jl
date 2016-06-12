@@ -2,7 +2,7 @@
 # https://github.com/bokeh/Bokeh.jl
 
 
-supportedArgs(::BokehBackend) = [
+supported_args(::BokehBackend) = [
     # :annotations,
     # :axis,
     # :background_color,
@@ -59,12 +59,11 @@ supportedArgs(::BokehBackend) = [
     # :surface,
     # :levels,
   ]
-supportedAxes(::BokehBackend) = [:auto, :left]
-supportedTypes(::BokehBackend) = [:none, :path, :scatter] #,:steppre, :steppost, :sticks, :histogram2d, :hexbin, :histogram, :bar, :hline, :vline, :contour]
-supportedStyles(::BokehBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::BokehBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5] #vcat(_allMarkers, Shape)
-supportedScales(::BokehBackend) = [:identity, :ln] #, :ln, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::BokehBackend) = false
+supported_types(::BokehBackend) = [:none, :path, :scatter]
+supported_styles(::BokehBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supported_markers(::BokehBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
+supported_scales(::BokehBackend) = [:identity, :ln]
+is_subplot_supported(::BokehBackend) = false
 
 
 # --------------------------------------------------------------------------------------

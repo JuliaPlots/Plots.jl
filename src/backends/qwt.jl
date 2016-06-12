@@ -2,7 +2,7 @@
 # https://github.com/tbreloff/Qwt.jl
 
 
-supportedArgs(::QwtBackend) = [
+supported_args(::QwtBackend) = [
     :annotations,
     :axis,
     :background_color,
@@ -44,10 +44,10 @@ supportedArgs(::QwtBackend) = [
     :xscale,
     :yscale,
   ]
-supportedTypes(::QwtBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :histogram2d, :hexbin, :histogram, :bar, :hline, :vline]
-supportedMarkers(::QwtBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
-supportedScales(::QwtBackend) = [:identity, :log10]
-subplotSupported(::QwtBackend) = true
+supported_types(::QwtBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :histogram2d, :hexbin, :histogram, :bar, :hline, :vline]
+supported_markers(::QwtBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
+supported_scales(::QwtBackend) = [:identity, :log10]
+is_subplot_supported(::QwtBackend) = true
 
 
 # --------------------------------------------------------------------------------------
@@ -184,7 +184,7 @@ function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
     # scaletype == :log       && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLogScaleEngine(e))
     # scaletype == :log2      && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLogScaleEngine(2))
     scaletype == :log10     && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLog10ScaleEngine())
-    scaletype in supportedScales() || warn("Unsupported scale type: ", scaletype)
+    scaletype in supported_scales() || warn("Unsupported scale type: ", scaletype)
   end
 
 end

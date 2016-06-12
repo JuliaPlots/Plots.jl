@@ -17,8 +17,8 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
         plotIndex += 1
     end
 
-    aliasesAndAutopick(d, :linestyle, _styleAliases, supportedStyles(pkg), plotIndex)
-    aliasesAndAutopick(d, :markershape, _markerAliases, supportedMarkers(pkg), plotIndex)
+    aliasesAndAutopick(d, :linestyle, _styleAliases, supported_styles(pkg), plotIndex)
+    aliasesAndAutopick(d, :markershape, _markerAliases, supported_markers(pkg), plotIndex)
 
     # update color
     d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], sp, plotIndex)

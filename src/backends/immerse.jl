@@ -1,13 +1,12 @@
 
 # https://github.com/JuliaGraphics/Immerse.jl
 
-supportedArgs(::ImmerseBackend) = supportedArgs(GadflyBackend())
-supportedAxes(::ImmerseBackend) = supportedAxes(GadflyBackend())
-supportedTypes(::ImmerseBackend) = supportedTypes(GadflyBackend())
-supportedStyles(::ImmerseBackend) = supportedStyles(GadflyBackend())
-supportedMarkers(::ImmerseBackend) = supportedMarkers(GadflyBackend())
-supportedScales(::ImmerseBackend) = supportedScales(GadflyBackend())
-subplotSupported(::ImmerseBackend) = true
+supported_args(::ImmerseBackend) = supported_args(GadflyBackend())
+supported_types(::ImmerseBackend) = supported_types(GadflyBackend())
+supported_styles(::ImmerseBackend) = supported_styles(GadflyBackend())
+supported_markers(::ImmerseBackend) = supported_markers(GadflyBackend())
+supported_scales(::ImmerseBackend) = supported_scales(GadflyBackend())
+is_subplot_supported(::ImmerseBackend) = true
 
 # --------------------------------------------------------------------------------------
 

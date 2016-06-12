@@ -3,7 +3,7 @@
 
 # credit goes to https://github.com/jverzani for contributing to the first draft of this backend implementation
 
-supportedArgs(::WinstonBackend) = [
+supported_args(::WinstonBackend) = [
     :annotations,
     # :args,
     # :axis,
@@ -55,12 +55,11 @@ supportedArgs(::WinstonBackend) = [
     # :yflip,
     # :z,
   ]
-supportedAxes(::WinstonBackend) = [:auto, :left]
-supportedTypes(::WinstonBackend) = [:none, :line, :path, :sticks, :scatter, :histogram, :bar]
-supportedStyles(::WinstonBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::WinstonBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
-supportedScales(::WinstonBackend) = [:identity, :log10]
-subplotSupported(::WinstonBackend) = false
+supported_types(::WinstonBackend) = [:none, :line, :path, :sticks, :scatter, :histogram, :bar]
+supported_styles(::WinstonBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supported_markers(::WinstonBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
+supported_scales(::WinstonBackend) = [:identity, :log10]
+is_subplot_supported(::WinstonBackend) = false
 
 
 # --------------------------------------------------------------------------------------

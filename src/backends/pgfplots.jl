@@ -2,7 +2,7 @@
 
 # significant contributions by: @pkofod
 
-supportedArgs(::PGFPlotsBackend) = [
+supported_args(::PGFPlotsBackend) = [
     # :annotations,
     :background_color, :foreground_color,
     :color_palette,
@@ -43,12 +43,11 @@ supportedArgs(::PGFPlotsBackend) = [
     :aspect_ratio,
     # :match_dimensions,
   ]
-supportedAxes(::PGFPlotsBackend) = [:auto, :left]
-supportedTypes(::PGFPlotsBackend) = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
-supportedStyles(::PGFPlotsBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::PGFPlotsBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
-supportedScales(::PGFPlotsBackend) = [:identity, :ln, :log2, :log10] # :asinh, :sqrt]
-subplotSupported(::PGFPlotsBackend) = false
+supported_types(::PGFPlotsBackend) = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
+supported_styles(::PGFPlotsBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supported_markers(::PGFPlotsBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
+supported_scales(::PGFPlotsBackend) = [:identity, :ln, :log2, :log10]
+is_subplot_supported(::PGFPlotsBackend) = false
 
 
 # --------------------------------------------------------------------------------------

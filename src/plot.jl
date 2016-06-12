@@ -161,7 +161,7 @@ end
 function _apply_series_recipe(plt::Plot, d::KW)
     st = d[:seriestype]
     # @show st
-    if st in supportedTypes()
+    if st in supported_types()
 
         # getting ready to add the series... last update to subplot from anything
         # that might have been added during series recipes
@@ -192,7 +192,7 @@ function _apply_series_recipe(plt::Plot, d::KW)
 
 
         # add the series!
-        warnOnUnsupportedArgs(plt.backend, d)
+        warnOnUnsupported_args(plt.backend, d)
         warnOnUnsupported(plt.backend, d)
         series = Series(d)
         push!(plt.series_list, series)
@@ -282,7 +282,7 @@ function _plot!(plt::Plot, d::KW, args...)
                 kw[:series_plotindex] = plt.n
 
                 # check that the backend will support the command and add it to the list
-                warnOnUnsupportedScales(plt.backend, kw)
+                warnOnUnsupported_scales(plt.backend, kw)
                 push!(kw_list, kw)
 
                 # handle error bars by creating new recipedata data... these will have

@@ -800,7 +800,7 @@ end
 
 # function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
 @recipe function f(::Type{Val{:quiver}}, x, y, z)
-    if :arrow in supportedArgs()
+    if :arrow in supported_args()
         quiver_using_arrows(d)
     else
         quiver_using_hack(d)

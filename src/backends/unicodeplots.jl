@@ -1,7 +1,7 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
-supportedArgs(::UnicodePlotsBackend) = [
+supported_args(::UnicodePlotsBackend) = [
     # :annotations,
     # :args,
     # :axis,
@@ -51,19 +51,18 @@ supportedArgs(::UnicodePlotsBackend) = [
     # :yflip,
     # :z,
   ]
-supportedAxes(::UnicodePlotsBackend) = [:auto, :left]
-supportedTypes(::UnicodePlotsBackend) = [
+supported_types(::UnicodePlotsBackend) = [
     :path, :steppre, :steppost, :scatter,
     :histogram2d, :hline, :vline
 ]
-supportedStyles(::UnicodePlotsBackend) = [:auto, :solid]
-supportedMarkers(::UnicodePlotsBackend) = [:none, :auto, :ellipse]
-supportedScales(::UnicodePlotsBackend) = [:identity]
-subplotSupported(::UnicodePlotsBackend) = true
+supported_styles(::UnicodePlotsBackend) = [:auto, :solid]
+supported_markers(::UnicodePlotsBackend) = [:none, :auto, :ellipse]
+supported_scales(::UnicodePlotsBackend) = [:identity]
+is_subplot_supported(::UnicodePlotsBackend) = true
 
 
 # don't warn on unsupported... there's just too many warnings!!
-warnOnUnsupportedArgs(pkg::UnicodePlotsBackend, d::KW) = nothing
+warnOnUnsupported_args(pkg::UnicodePlotsBackend, d::KW) = nothing
 
 # --------------------------------------------------------------------------------------
 

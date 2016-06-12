@@ -1,7 +1,7 @@
 
 # https://plot.ly/javascript/getting-started
 
-supportedArgs(::PlotlyBackend) = [
+supported_args(::PlotlyBackend) = [
     :annotations,
     :background_color, :foreground_color, :color_palette,
     # :background_color_legend, :background_color_inside, :background_color_outside,
@@ -34,16 +34,16 @@ supportedArgs(::PlotlyBackend) = [
     # :normalize, :weights, :contours, :aspect_ratio
   ]
 
-supportedAxes(::PlotlyBackend) = [:auto, :left]
-supportedTypes(::PlotlyBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
-                                   :histogram2d, :histogram, :density, :bar, :contour, :surface, :path3d, :scatter3d,
-                                   :pie, :heatmap] #,, :sticks, :hexbin, :hline, :vline]
-supportedStyles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::PlotlyBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
-                                     :pentagon, :hexagon, :octagon, :vline, :hline] #vcat(_allMarkers, Shape)
-supportedScales(::PlotlyBackend) = [:identity, :log10] #, :ln, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::PlotlyBackend) = true
-stringsSupported(::PlotlyBackend) = true
+supported_types(::PlotlyBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
+                                   :histogram2d, :histogram, :density, :bar,
+                                   :contour, :surface, :path3d, :scatter3d,
+                                   :pie, :heatmap]
+supported_styles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supported_markers(::PlotlyBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
+                                     :pentagon, :hexagon, :octagon, :vline, :hline]
+supported_scales(::PlotlyBackend) = [:identity, :log10]
+is_subplot_supported(::PlotlyBackend) = true
+is_string_supported(::PlotlyBackend) = true
 
 
 # --------------------------------------------------------------------------------------

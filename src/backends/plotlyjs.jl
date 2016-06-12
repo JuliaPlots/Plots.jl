@@ -1,7 +1,7 @@
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 
-supportedArgs(::PlotlyJSBackend) = [
+supported_args(::PlotlyJSBackend) = [
     :annotation,
     # :axis,
     :background_color,
@@ -64,16 +64,15 @@ supportedArgs(::PlotlyJSBackend) = [
     :orientation,
     :polar,
   ]
-supportedAxes(::PlotlyJSBackend) = [:auto, :left]
-supportedTypes(::PlotlyJSBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
+supported_types(::PlotlyJSBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
                                    :histogram2d, :histogram, :density, :bar, :contour, :surface, :path3d, :scatter3d,
-                                   :pie, :heatmap] #,, :sticks, :hexbin, :hline, :vline]
-supportedStyles(::PlotlyJSBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supportedMarkers(::PlotlyJSBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
-                                     :pentagon, :hexagon, :octagon, :vline, :hline] #vcat(_allMarkers, Shape)
-supportedScales(::PlotlyJSBackend) = [:identity, :log10] #, :ln, :log2, :log10, :asinh, :sqrt]
-subplotSupported(::PlotlyJSBackend) = true
-stringsSupported(::PlotlyJSBackend) = true
+                                   :pie, :heatmap]
+supported_styles(::PlotlyJSBackend) = [:auto, :solid, :dash, :dot, :dashdot]
+supported_markers(::PlotlyJSBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
+                                     :pentagon, :hexagon, :octagon, :vline, :hline]
+supported_scales(::PlotlyJSBackend) = [:identity, :log10]
+is_subplot_supported(::PlotlyJSBackend) = true
+is_string_supported(::PlotlyJSBackend) = true
 
 # --------------------------------------------------------------------------------------
 

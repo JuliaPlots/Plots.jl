@@ -3,7 +3,7 @@
 
 # significant contributions by @jheinen
 
-supportedArgs(::GRBackend) = [
+supported_args(::GRBackend) = [
     :annotations,
     :background_color, :foreground_color, :color_palette,
     :background_color_legend, :background_color_inside, :background_color_outside,
@@ -36,17 +36,16 @@ supportedArgs(::GRBackend) = [
     :aspect_ratio,
     :normalize, :weights
 ]
-supportedAxes(::GRBackend) = _allAxes
-supportedTypes(::GRBackend) = [
+supported_types(::GRBackend) = [
     :path, :scatter,
     :heatmap, :pie, :image,
     :contour, :path3d, :scatter3d, :surface, :wireframe,
     :shape
 ]
-supportedStyles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supportedMarkers(::GRBackend) = vcat(_allMarkers, Shape)
-supportedScales(::GRBackend) = [:identity, :log10]
-subplotSupported(::GRBackend) = true
+supported_styles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+supported_markers(::GRBackend) = vcat(_allMarkers, Shape)
+supported_scales(::GRBackend) = [:identity, :log10]
+is_subplot_supported(::GRBackend) = true
 
 
 

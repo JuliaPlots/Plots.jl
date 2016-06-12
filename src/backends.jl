@@ -169,22 +169,20 @@ end
 
 # ---------------------------------------------------------
 
-supportedAxes(::AbstractBackend) = [:left]
-supportedTypes(::AbstractBackend) = []
-supportedStyles(::AbstractBackend) = [:solid]
-supportedMarkers(::AbstractBackend) = [:none]
-supportedScales(::AbstractBackend) = [:identity]
-subplotSupported(::AbstractBackend) = false
-stringsSupported(::AbstractBackend) = false
-nativeImagesSupported(b::AbstractBackend) = :image in supportedTypes(b)
+supported_types(::AbstractBackend) = []
+supported_styles(::AbstractBackend) = [:solid]
+supported_markers(::AbstractBackend) = [:none]
+supported_scales(::AbstractBackend) = [:identity]
+is_subplot_supported(::AbstractBackend) = false
+is_string_supported(::AbstractBackend) = false
+nativeImagesSupported(b::AbstractBackend) = :image in supported_types(b)
 
-supportedAxes() = supportedAxes(backend())
-supportedTypes() = supportedTypes(backend())
-supportedStyles() = supportedStyles(backend())
-supportedMarkers() = supportedMarkers(backend())
-supportedScales() = supportedScales(backend())
-subplotSupported() = subplotSupported(backend())
-stringsSupported() = stringsSupported(backend())
+supported_types() = supported_types(backend())
+supported_styles() = supported_styles(backend())
+supported_markers() = supported_markers(backend())
+supported_scales() = supported_scales(backend())
+is_subplot_supported() = is_subplot_supported(backend())
+is_string_supported() = is_string_supported(backend())
 nativeImagesSupported() = nativeImagesSupported(backend())
 
 # ---------------------------------------------------------
