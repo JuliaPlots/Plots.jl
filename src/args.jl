@@ -756,7 +756,7 @@ function warnOnUnsupported_scales(pkg::AbstractBackend, d::KW)
             v = d[k]
             v = get(_scaleAliases, v, v)
             if !(v in supported_scales(pkg))
-                warn("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
+                Base.warn_once("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
             end
         end
     end

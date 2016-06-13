@@ -2,11 +2,13 @@
 # https://plot.ly/javascript/getting-started
 
 supported_args(::PlotlyBackend) = [
-    :annotations,
-    :background_color, :foreground_color, :color_palette,
-    # :background_color_legend, :background_color_inside, :background_color_outside,
-    # :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
-    #     :foreground_color_text, :foreground_color_border,
+    :annotations, :color_palette,
+    :background_color,
+    :background_color_legend, :background_color_inside, :background_color_outside,
+    :foreground_color,
+    :foreground_color_legend, :foreground_color_guide,
+    # :foreground_color_grid, :foreground_color_axis,
+    :foreground_color_text, :foreground_color_border,
     :group,
     :label,
     :seriestype,
@@ -16,8 +18,7 @@ supported_args(::PlotlyBackend) = [
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
     :fillrange, :fillcolor, :fillalpha,
     :bins,
-    :n, :nc, :nr, :layout,
-    # :smooth,
+    :layout,
     :title, :window_title, :show, :size,
     :x, :xguide, :xlims, :xticks, :xscale, :xflip, :xrotation,
     :y, :yguide, :ylims, :yticks, :yscale, :yflip, :yrotation,
@@ -31,16 +32,19 @@ supported_args(::PlotlyBackend) = [
     :orientation,
     # :overwrite_figure,
     :polar,
-    # :normalize, :weights, :contours, :aspect_ratio
+    :normalize, :weights,
+    # :contours, :aspect_ratio
   ]
 
-supported_types(::PlotlyBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
-                                   :histogram2d, :histogram, :density, :bar,
-                                   :contour, :surface, :path3d, :scatter3d,
-                                   :pie, :heatmap]
+supported_types(::PlotlyBackend) = [
+    :path, :scatter, :bar, :pie, :heatmap,
+    :contour, :surface, :path3d, :scatter3d
+]
 supported_styles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supported_markers(::PlotlyBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
-                                     :pentagon, :hexagon, :octagon, :vline, :hline]
+supported_markers(::PlotlyBackend) = [
+    :none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
+    :cross, :xcross, :pentagon, :hexagon, :octagon, :vline, :hline
+]
 supported_scales(::PlotlyBackend) = [:identity, :log10]
 is_subplot_supported(::PlotlyBackend) = true
 is_string_supported(::PlotlyBackend) = true
@@ -85,7 +89,7 @@ end
 
 # ----------------------------------------------------------------
 
-function plotlyfont(font::Font, color = font.color)
+function plotly_font(font::Font, color = font.color)
     KW(
         :family => font.family,
         :size   => round(Int, font.pointsize*1.4),
@@ -93,7 +97,7 @@ function plotlyfont(font::Font, color = font.color)
     )
 end
 
-function get_annotation_dict(x, y, val)
+function plotly_annotation_dict(x, y, val)
     KW(
         :text => val,
         :xref => "x",
@@ -104,9 +108,9 @@ function get_annotation_dict(x, y, val)
     )
 end
 
-function get_annotation_dict(x, y, ptxt::PlotText)
-    merge(get_annotation_dict(x, y, ptxt.str), KW(
-        :font => plotlyfont(ptxt.font),
+function plotly_annotation_dict(x, y, ptxt::PlotText)
+    merge(plotly_annotation_dict(x, y, ptxt.str), KW(
+        :font => plotly_font(ptxt.font),
         :xanchor => ptxt.font.halign == :hcenter ? :center : ptxt.font.halign,
         :yanchor => ptxt.font.valign == :vcenter ? :middle : ptxt.font.valign,
         :rotation => ptxt.font.rotation,
@@ -136,15 +140,13 @@ end
 #     )
 # end
 
-function plotlyscale(scale::Symbol)
+function plotly_scale(scale::Symbol)
     if scale == :log10
         "log"
     else
         "-"
     end
 end
-
-use_axis_field(ticks) = !(ticks in (nothing, :none))
 
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot, letter)
@@ -157,19 +159,12 @@ end
 
 function plotly_axis(axis::Axis, sp::Subplot)
     letter = axis[:letter]
-    # d = axis.d
     ax = KW(
         :title      => axis[:guide],
         :showgrid   => sp[:grid],
         :zeroline   => false,
     )
 
-    # fgcolor = webcolor(axis[:foreground_color])
-    # tsym = tickssym(letter)
-
-    # spidx = sp[:subplot_index]
-    # d_out[:xaxis] = "x$spidx"
-    # d_out[:yaxis] = "y$spidx"
     if letter in (:x,:y)
         ax[:domain] = plotly_domain(sp, letter)
         ax[:anchor] = "$(letter==:x ? :y : :x)$(plotly_subplot_index(sp))"
@@ -180,10 +175,10 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:tickangle] = rot
     end
 
-    if use_axis_field(axis[:ticks])
-        ax[:titlefont] = plotlyfont(axis[:guidefont], webcolor(axis[:foreground_color_guide]))
-        ax[:type] = plotlyscale(axis[:scale])
-        ax[:tickfont] = plotlyfont(axis[:tickfont], webcolor(axis[:foreground_color_text]))
+    if !(axis[:ticks] in (nothing, :none))
+        ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
+        ax[:type] = plotly_scale(axis[:scale])
+        ax[:tickfont] = plotly_font(axis[:tickfont], axis[:foreground_color_text])
         ax[:tickcolor] = webcolor(axis[:foreground_color_border])
         ax[:linecolor] = webcolor(axis[:foreground_color_border])
 
@@ -239,7 +234,7 @@ function plotly_layout(plt::Plot)
 
         # set the fields for the plot
         d_out[:title] = sp[:title]
-        d_out[:titlefont] = plotlyfont(sp[:titlefont], webcolor(sp[:foreground_color_title]))
+        d_out[:titlefont] = plotly_font(sp[:titlefont], sp[:foreground_color_title])
 
         # # TODO: use subplot positioning logic
         # d_out[:margin] = KW(:l=>35, :b=>30, :r=>8, :t=>20)
@@ -267,17 +262,12 @@ function plotly_layout(plt::Plot)
             d_out[:legend] = KW(
                 :bgcolor  => webcolor(sp[:background_color_legend]),
                 :bordercolor => webcolor(sp[:foreground_color_legend]),
-                :font     => plotlyfont(sp[:legendfont]),
+                :font     => plotly_font(sp[:legendfont], sp[:foreground_color_legend]),
             )
         end
 
         # annotations
-        anns = sp[:annotations]
-        d_out[:annotations] = if isempty(anns)
-            KW[]
-        else
-            KW[get_annotation_dict(ann...) for ann in anns]
-        end
+        d_out[:annotations] = KW[plotly_annotation_dict(ann...) for ann in sp[:annotations]]
 
         # # arrows
         # for sargs in seriesargs
@@ -346,7 +336,7 @@ function plotly_series(plt::Plot, series::Series)
     hasline = !isscatter
 
     # set the "type"
-    if st in (:line, :path, :scatter, :steppre, :steppost)
+    if st in (:path, :scatter)
         d_out[:type] = "scatter"
         d_out[:mode] = if hasmarker
             hasline ? "lines+markers" : "markers"
@@ -364,39 +354,36 @@ function plotly_series(plt::Plot, series::Series)
     elseif st == :bar
         d_out[:type] = "bar"
         d_out[:x], d_out[:y] = x, y
+        d_out[:orientation] = isvertical(d) ? "v" : "h"
 
-    elseif st == :histogram2d
-        d_out[:type] = "histogram2d"
-        d_out[:x], d_out[:y] = x, y
-        if isa(d[:bins], Tuple)
-            xbins, ybins = d[:bins]
-        else
-            xbins = ybins = d[:bins]
-        end
-        d_out[:nbinsx] = xbins
-        d_out[:nbinsy] = ybins
-        d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
+    # elseif st == :histogram2d
+    #     d_out[:type] = "histogram2d"
+    #     d_out[:x], d_out[:y] = x, y
+    #     if isa(d[:bins], Tuple)
+    #         xbins, ybins = d[:bins]
+    #     else
+    #         xbins = ybins = d[:bins]
+    #     end
+    #     d_out[:nbinsx] = xbins
+    #     d_out[:nbinsy] = ybins
+    #     d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
-    elseif st in (:histogram, :density)
-        d_out[:type] = "histogram"
-        isvert = isvertical(d)
-        d_out[isvert ? :x : :y] = y
-        d_out[isvert ? :nbinsx : :nbinsy] = d[:bins]
-        if st == :density
-            d_out[:histogramnorm] = "probability density"
-        end
+    # elseif st in (:histogram, :density)
+    #     d_out[:type] = "histogram"
+    #     isvert = isvertical(d)
+    #     d_out[isvert ? :x : :y] = y
+    #     d_out[isvert ? :nbinsx : :nbinsy] = d[:bins]
+    #     if st == :density
+    #         d_out[:histogramnorm] = "probability density"
+    #     end
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
-        # d_out[:x], d_out[:y] = x, y
-        # d_out[:z] = d[:z].surf
         d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
         d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
     elseif st == :contour
         d_out[:type] = "contour"
-        # d_out[:x], d_out[:y] = x, y
-        # d_out[:z] = d[:z].surf
         d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
         # d_out[:showscale] = d[:colorbar] != :none
         d_out[:ncontours] = d[:levels]
@@ -405,8 +392,6 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
-        # d_out[:x], d_out[:y] = x, y
-        # d_out[:z] = d[:z].surf
         d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
         d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
@@ -527,7 +512,6 @@ function _writemime(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyBackend})
     write(io, html_head(plt) * html_body(plt))
 end
 
-# function Base.display(::PlotsDisplay, plt::Plot{PlotlyBackend})
 function _display(plt::Plot{PlotlyBackend})
     standalone_html_window(plt)
 end

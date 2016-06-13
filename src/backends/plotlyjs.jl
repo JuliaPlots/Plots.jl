@@ -1,76 +1,10 @@
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 
-supported_args(::PlotlyJSBackend) = [
-    :annotation,
-    # :axis,
-    :background_color,
-    :color_palette,
-    :fillrange,
-    :fillcolor,
-    :fillalpha,
-    :foreground_color,
-    :group,
-    :label,
-    :layout,
-    :legend,
-    :seriescolor, :seriesalpha,
-    :linecolor,
-    :linestyle,
-    :seriestype,
-    :linewidth,
-    :linealpha,
-    :markershape,
-    :markercolor,
-    :markersize,
-    :markeralpha,
-    :markerstrokewidth,
-    :markerstrokecolor,
-    :markerstrokestyle,
-    :n,
-    :bins,
-    :nc,
-    :nr,
-    # :pos,
-    # :smooth,
-    :show,
-    :size,
-    :title,
-    :window_title,
-    :x,
-    :xguide,
-    :xlims,
-    :xticks,
-    :y,
-    :yguide,
-    :ylims,
-    # :yrightlabel,
-    :yticks,
-    :xscale,
-    :yscale,
-    :xflip,
-    :yflip,
-    :z,
-    :marker_z,
-    :tickfont,
-    :guidefont,
-    :legendfont,
-    :grid,
-    :levels,
-    :xerror,
-    :yerror,
-    :ribbon,
-    :quiver,
-    :orientation,
-    :polar,
-  ]
-supported_types(::PlotlyJSBackend) = [:none, :line, :path, :scatter, :steppre, :steppost,
-                                   :histogram2d, :histogram, :density, :bar, :contour, :surface, :path3d, :scatter3d,
-                                   :pie, :heatmap]
-supported_styles(::PlotlyJSBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supported_markers(::PlotlyJSBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross,
-                                     :pentagon, :hexagon, :octagon, :vline, :hline]
-supported_scales(::PlotlyJSBackend) = [:identity, :log10]
+supported_args(::PlotlyJSBackend) = supported_args(PlotlyBackend())
+supported_types(::PlotlyJSBackend) = supported_types(PlotlyBackend())
+supported_styles(::PlotlyJSBackend) = supported_styles(PlotlyBackend())
+supported_markers(::PlotlyJSBackend) = supported_markers(PlotlyBackend())
 is_subplot_supported(::PlotlyJSBackend) = true
 is_string_supported(::PlotlyJSBackend) = true
 
@@ -82,30 +16,19 @@ function _initialize_backend(::PlotlyJSBackend; kw...)
         export PlotlyJS
     end
 
-    for (mime, fmt) in PlotlyJS._mimeformats
-        # mime == "image/png" && continue  # don't use plotlyjs's writemime for png
-        @eval Base.writemime(io::IO, m::MIME{Symbol($mime)}, p::Plot{PlotlyJSBackend}) = writemime(io, m, p.o)
-    end
+    # for (mime, fmt) in PlotlyJS._mimeformats
+    #     # mime == "image/png" && continue  # don't use plotlyjs's writemime for png
+    #     @eval Base.writemime(io::IO, m::MIME{Symbol($mime)}, p::Plot{PlotlyJSBackend}) = writemime(io, m, p.o)
+    # end
 
-    # override IJulia inline display
-    if isijulia()
-        IJulia.display_dict(plt::AbstractPlot{PlotlyJSBackend}) = IJulia.display_dict(plt.o)
-    end
+    # # override IJulia inline display
+    # if isijulia()
+    #     IJulia.display_dict(plt::AbstractPlot{PlotlyJSBackend}) = IJulia.display_dict(plt.o)
+    # end
 end
 
 # ---------------------------------------------------------------------------
 
-# function _create_plot(pkg::PlotlyJSBackend, d::KW)
-#     # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
-#     # TODO: initialize the plot... title, xlabel, bgcolor, etc
-#     # o = PlotlyJS.Plot(PlotlyJS.GenericTrace[], PlotlyJS.Layout(),
-#     #                   Base.Random.uuid4(), PlotlyJS.ElectronDisplay())
-#     # T = isijulia() ? PlotlyJS.JupyterPlot : PlotlyJS.ElectronPlot
-#     # o = T(PlotlyJS.Plot())
-#     o = PlotlyJS.plot()
-#
-#     Plot(o, pkg, 0, d, KW[])
-# end
 
 function _create_backend_figure(plt::Plot{PlotlyJSBackend})
     PlotlyJS.plot()
@@ -137,7 +60,6 @@ function _update_plot_object(plt::Plot{PlotlyJSBackend})
     pdict = plotly_layout(plt)
     syncplot = plt.o
     w,h = plt[:size]
-    # DD(pdict)
     PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)
 end
 
@@ -165,14 +87,9 @@ end
 
 # ----------------------------------------------------------------
 
-# function _update_min_padding!(sp::Subplot{PlotlyBackend})
-#     sp.minpad = plotly_minpad(sp)
-# end
-
-# function plotlyjs_finalize(plt::Plot)
-#     plotly_finalize(plt)
-#     PlotlyJS.relayout!(plt.o, plotly_layout(plt))
-# end
+function _writemime(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend})
+    writemime(io, MIME("text/html"), plt.o)
+end
 
 function _writemime(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend})
     tmpfn = tempname() * "png"
@@ -181,6 +98,5 @@ function _writemime(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend})
 end
 
 function _display(plt::Plot{PlotlyJSBackend})
-    # plotlyjs_finalize(plt)
     display(plt.o)
 end
