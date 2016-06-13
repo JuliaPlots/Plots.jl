@@ -510,7 +510,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         xaxis[:flip]            && (scale |= GR.OPTION_FLIP_X)
         yaxis[:flip]            && (scale |= GR.OPTION_FLIP_Y)
         if scale & GR.OPTION_X_LOG == 0
-            majorx = 1 #5
+            majorx = 1
             xtick = GR.tick(xmin, xmax) / majorx
         else
             # log axis
@@ -518,7 +518,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             majorx = 2 # no minor grid lines
         end
         if scale & GR.OPTION_Y_LOG == 0
-            majory = 1 #5
+            majory = 1
             ytick = GR.tick(ymin, ymax) / majory
         else
             # log axis
