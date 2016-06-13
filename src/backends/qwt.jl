@@ -2,48 +2,25 @@
 # https://github.com/tbreloff/Qwt.jl
 
 
-supported_args(::QwtBackend) = [
+supported_args(::QwtBackend) = merge_with_base_supported([
     :annotations,
-    :axis,
-    :background_color,
     :linecolor,
-    :color_palette,
     :fillrange,
     :fillcolor,
-    :foreground_color,
-    :group,
     :label,
-    :layout,
     :legend,
     :seriescolor, :seriesalpha,
     :linestyle,
-    :seriestype,
     :linewidth,
     :markershape,
     :markercolor,
     :markersize,
-    :n,
     :bins,
-    :nc,
-    :nr,
     :pos,
-    :smooth,
-    :show,
-    :size,
     :title,
     :window_title,
-    :x,
-    :xguide,
-    :xlims,
-    :xticks,
-    :y,
-    :yguide,
-    :ylims,
-    :yrightlabel,
-    :yticks,
-    :xscale,
-    :yscale,
-  ]
+    :guide, :lims, :ticks, :scale,
+  ])
 supported_types(::QwtBackend) = [:path, :scatter, :hexbin, :bar]
 supported_markers(::QwtBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
 supported_scales(::QwtBackend) = [:identity, :log10]

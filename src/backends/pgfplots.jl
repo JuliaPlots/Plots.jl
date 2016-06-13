@@ -2,39 +2,28 @@
 
 # significant contributions by: @pkofod
 
-supported_args(::PGFPlotsBackend) = [
+supported_args(::PGFPlotsBackend) = merge_with_base_supported([
     # :annotations,
-    :background_color, :foreground_color,
-    :color_palette,
     # :background_color_legend,
     :background_color_inside,
     # :background_color_outside,
     # :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
     #     :foreground_color_text, :foreground_color_border,
-    :group,
     :label,
-    :seriestype,
     :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
+    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
     :fillrange, :fillcolor, :fillalpha,
     :bins,
     # :bar_width, :bar_edges,
-    # :n, :nc, :nr,
-    :layout,
-    # :smooth,
     :title,
     # :window_title,
-    :show, :size,
-    :x, :xguide, :xlims, :xticks, :xscale, :xflip, :xrotation,
-    :y, :yguide, :ylims, :yticks, :yscale, :yflip, :yrotation,
-    :z, :zguide, :zlims, :zticks, :zscale, :zflip, :zrotation,
+    :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend,
     # :colorbar,
     # :marker_z, :levels,
-    # :xerror, :yerror,
     # :ribbon, :quiver, :arrow,
     # :orientation,
     # :overwrite_figure,
@@ -42,7 +31,7 @@ supported_args(::PGFPlotsBackend) = [
     # :normalize, :weights, :contours,
     :aspect_ratio,
     # :match_dimensions,
-  ]
+  ])
 supported_types(::PGFPlotsBackend) = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
 supported_styles(::PGFPlotsBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supported_markers(::PGFPlotsBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)

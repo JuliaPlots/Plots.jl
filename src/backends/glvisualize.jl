@@ -2,7 +2,7 @@
 
 # [WEBSITE]
 
-supported_args(::GLVisualizeBackend) = [
+supported_args(::GLVisualizeBackend) = merge_with_base_supported([
     # :annotations,
     # :axis,
     # :background_color,
@@ -17,7 +17,7 @@ supported_args(::GLVisualizeBackend) = [
     # :legend,
     # :linecolor,
     # :linestyle,
-     :seriestype
+     # :seriestype
     #  :seriescolor, :seriesalpha,
     # :linewidth,
     # :linealpha,
@@ -58,7 +58,7 @@ supported_args(::GLVisualizeBackend) = [
     # :grid,
     # :surface
     # :levels,
-  ]
+  ])
 supported_types(::GLVisualizeBackend) = [:surface]
 supported_styles(::GLVisualizeBackend) = [:auto, :solid]
 supported_markers(::GLVisualizeBackend) = [:none, :auto, :ellipse]

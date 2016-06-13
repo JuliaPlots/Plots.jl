@@ -1,34 +1,26 @@
 
 # https://plot.ly/javascript/getting-started
 
-supported_args(::PlotlyBackend) = [
-    :annotations, :color_palette,
-    :background_color,
+supported_args(::PlotlyBackend) = merge_with_base_supported([
+    :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color,
     :foreground_color_legend, :foreground_color_guide,
     # :foreground_color_grid, :foreground_color_axis,
     :foreground_color_text, :foreground_color_border,
-    :group,
+    :foreground_color_title,
     :label,
-    :seriestype,
     :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
+    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
     :fillrange, :fillcolor, :fillalpha,
     :bins,
-    :layout,
     :title, :title_location, :titlefont,
-    :window_title, :show, :size,
-    :x, :xguide, :xlims, :xticks, :xscale, :xflip, :xrotation,
-    :y, :yguide, :ylims, :yticks, :yscale, :yflip, :yrotation,
-    :z, :zguide, :zlims, :zticks, :zscale, :zflip, :zrotation,
-    :z,
+    :window_title,
+    :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
     :marker_z, :levels,
-    :xerror, :yerror,
     :ribbon, :quiver,
     :orientation,
     # :overwrite_figure,
@@ -36,7 +28,8 @@ supported_args(::PlotlyBackend) = [
     :normalize, :weights,
     # :contours, :aspect_ratio,
     :hover,
-  ]
+    :inset_subplots,
+  ])
 
 supported_types(::PlotlyBackend) = [
     :path, :scatter, :bar, :pie, :heatmap,

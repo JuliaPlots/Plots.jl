@@ -2,7 +2,7 @@
 # https://github.com/bokeh/Bokeh.jl
 
 
-supported_args(::BokehBackend) = [
+supported_args(::BokehBackend) = merge_with_base_supported([
     # :annotations,
     # :axis,
     # :background_color,
@@ -58,7 +58,7 @@ supported_args(::BokehBackend) = [
     # :grid,
     # :surface,
     # :levels,
-  ]
+  ])
 supported_types(::BokehBackend) = [:path, :scatter]
 supported_styles(::BokehBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supported_markers(::BokehBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]

@@ -186,3 +186,44 @@ is_string_supported() = is_string_supported(backend())
 nativeImagesSupported() = nativeImagesSupported(backend())
 
 # ---------------------------------------------------------
+
+# these are args which every backend supports because they're not used in the backend code
+const _base_supported_args = [
+    :color_palette,
+    :background_color, :background_color_subplot,
+    :foreground_color, :foreground_color_subplot,
+    :group,
+    :seriestype,
+    :seriescolor, :seriesalpha,
+    :smooth,
+    :xerror, :yerror,
+    :subplot,
+    :x, :y, :z,
+    :show, :size,
+    :margin,
+    :left_margin,
+    :right_margin,
+    :top_margin,
+    :bottom_margin,
+    :html_output_format,
+    :layout,
+    :link,
+    :primary,
+    :series_annotations,
+    :subplot_index,
+    :discrete_values,
+    :projection,
+    
+]
+
+function merge_with_base_supported(v::AVec)
+    v = vcat(v, _base_supported_args)
+    for vi in v
+        if haskey(_axis_defaults, vi)
+            for letter in (:x,:y,:z)
+                push!(v, Symbol(letter,vi))
+            end
+        end
+    end
+    v
+end

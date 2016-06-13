@@ -3,39 +3,32 @@
 
 # significant contributions by @jheinen
 
-supported_args(::GRBackend) = [
+supported_args(::GRBackend) = merge_with_base_supported([
     :annotations,
-    :background_color, :foreground_color, :color_palette,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
     :foreground_color_text, :foreground_color_border,
-    :group,
     :label,
-    :seriestype,
     :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
     :fillrange, :fillcolor, :fillalpha,
     :bins,
-    :n, :nc, :nr, :layout,
-    :smooth,
-    :title, :window_title, :show, :size,
-    :x, :xguide, :xlims, :xticks, :xscale, :xflip,
-    :y, :yguide, :ylims, :yticks, :yscale, :yflip,
-    :z, :zguide, :zlims, :zticks, :zscale, :zflip,
-    :z,
+    :layout,
+    :title, :window_title,
+    :guide, :lims, :ticks, :scale, :flip,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
     :marker_z, :levels,
-    :xerror, :yerror,
     :ribbon, :quiver,
     :orientation,
     :overwrite_figure,
     :polar,
     :aspect_ratio,
-    :normalize, :weights
-]
+    :normalize, :weights,
+    :inset_subplots,
+])
 supported_types(::GRBackend) = [
     :path, :scatter,
     :heatmap, :pie, :image,
