@@ -264,7 +264,7 @@ PlotExample("Groups and Subplots",
     "",
     [:(begin
         group = rand(map(i->"group $i",1:4),100)
-        plot(rand(100), layout=@layout([a b;c]), group=group, n=3, linetype=[:bar :scatter :steppre])
+        plot(rand(100), layout=@layout([a b;c]), group=group, linetype=[:bar :scatter :steppre])
     end)]
 ),
 

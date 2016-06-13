@@ -181,6 +181,7 @@ const _series_defaults = KW(
     :series_annotations => [],       # a list of annotations which apply to the coordinates of this series
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
                                      #     one logical series to be broken up (path and markers, for example)
+    :hover              => nothing,  # text to display when hovering over the data points
 )
 
 
@@ -725,12 +726,17 @@ end
 
 # -----------------------------------------------------------------------------
 
+const _already_warned = Set()
+
 function warnOnUnsupported_args(pkg::AbstractBackend, d::KW)
     for k in sortedkeys(d)
         k in supported_args(pkg) && continue
         k in _suppress_warnings && continue
         if d[k] != default(k)
-            warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_args(pkg))")
+            if !((pkg, k) in _already_warned)
+                push!(_already_warned, (pkg,k))
+                warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_args(pkg))")
+            end
         end
     end
 end
@@ -756,7 +762,7 @@ function warnOnUnsupported_scales(pkg::AbstractBackend, d::KW)
             v = d[k]
             v = get(_scaleAliases, v, v)
             if !(v in supported_scales(pkg))
-                Base.warn_once("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
+                warn("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
             end
         end
     end

@@ -16,11 +16,6 @@ function _initialize_backend(::PlotlyJSBackend; kw...)
         export PlotlyJS
     end
 
-    # for (mime, fmt) in PlotlyJS._mimeformats
-    #     # mime == "image/png" && continue  # don't use plotlyjs's writemime for png
-    #     @eval Base.writemime(io::IO, m::MIME{Symbol($mime)}, p::Plot{PlotlyJSBackend}) = writemime(io, m, p.o)
-    # end
-
     # # override IJulia inline display
     # if isijulia()
     #     IJulia.display_dict(plt::AbstractPlot{PlotlyJSBackend}) = IJulia.display_dict(plt.o)
@@ -55,34 +50,12 @@ end
 
 # ----------------------------------------------------------------
 
-# TODO: override this to update plot items (title, xlabel, etc) after creation
 function _update_plot_object(plt::Plot{PlotlyJSBackend})
     pdict = plotly_layout(plt)
     syncplot = plt.o
     w,h = plt[:size]
     PlotlyJS.relayout!(syncplot, pdict, width = w, height = h)
 end
-
-
-# ----------------------------------------------------------------
-
-# accessors for x/y data
-
-# function getxy(plt::Plot{PlotlyJSBackend}, i::Int)
-#   d = plt.seriesargs[i]
-#   d[:x], d[:y]
-# end
-
-# function setxy!{X,Y}(plt::Plot{PlotlyJSBackend}, xy::Tuple{X,Y}, i::Integer)
-#   d = plt.seriesargs[i]
-#   ispolar = get(plt.attr, :polar, false)
-#   xsym = ispolar ? :t : :x
-#   ysym = ispolar ? :r : :y
-#   d[xsym], d[ysym] = xy
-#   # TODO: this is likely ineffecient... we should make a call that ONLY changes the plot data
-#   PlotlyJS.restyle!(plt.o, i, KW(xsym=>(d[xsym],), ysym=>(d[ysym],)))
-#   plt
-# end
 
 
 # ----------------------------------------------------------------

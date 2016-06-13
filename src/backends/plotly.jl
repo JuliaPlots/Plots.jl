@@ -216,17 +216,8 @@ function plotly_axis(axis::Axis, sp::Subplot)
     ax
 end
 
-# function plotly_layout_json(plt::Plot{PlotlyBackend})
-#   d = plt
-# function plotly_layout(d::KW, seriesargs::AVec{KW})
 function plotly_layout(plt::Plot)
     d_out = KW()
-
-    # # for now, we only support 1 subplot
-    # if length(plt.subplots) > 1
-    #     warn("Subplots not supported yet")
-    # end
-    # sp = plt.subplots[1]
 
     w, h = plt[:size]
     d_out[:width], d_out[:height] = w, h
@@ -238,9 +229,10 @@ function plotly_layout(plt::Plot)
     for sp in plt.subplots
         spidx = plotly_subplot_index(sp)
 
-        # TODO: add an annotation for the title
+        # add an annotation for the title... positioned horizontally relative to plotarea,
+        # but vertically just below the top of the subplot bounding box
         if sp[:title] != ""
-            bb = bbox(sp)
+            bb = plotarea(sp)
             tpos = sp[:title_location]
             xmm = if tpos == :left
                 left(bb)
@@ -249,7 +241,7 @@ function plotly_layout(plt::Plot)
             else
                 0.5 * (left(bb) + right(bb))
             end
-            titlex, titley = xy_mm_to_pcts(xmm, top(bb), w*px, h*px)
+            titlex, titley = xy_mm_to_pcts(xmm, top(bbox(sp)), w*px, h*px)
             titlefont = font(sp[:titlefont], :top, sp[:foreground_color_title])
             push!(d_out[:annotations], plotly_annotation_dict(titlex, titley, text(sp[:title], titlefont)))
         end
@@ -292,8 +284,6 @@ function plotly_layout(plt::Plot)
         #         end
         #     end
         # end
-        # dumpdict(d_out,"",true)
-        # @show d_out[:annotations]
 
         if ispolar(sp)
             d_out[:direction] = "counterclockwise"
