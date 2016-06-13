@@ -218,7 +218,14 @@ function font(args...)
   for arg in args
     T = typeof(arg)
 
-    if arg == :center
+    if T == Font
+      family = arg.family
+      pointsize = arg.pointsize
+      halign = arg.halign
+      valign = arg.valign
+      rotation = arg.rotation
+      color = arg.color
+    elseif arg == :center
       halign = :hcenter
       valign = :vcenter
     elseif arg in (:hcenter, :left, :right)
@@ -253,6 +260,7 @@ end
 PlotText(str) = PlotText(string(str), font())
 
 text(t::PlotText) = t
+text(str::AbstractString, f::Font) = PlotText(str, f)
 function text(str, args...)
   PlotText(string(str), font(args...))
 end

@@ -22,7 +22,6 @@ supported_args(::PyPlotBackend) = [
     :title, :window_title, :show, :size,
     :x, :xguide, :xlims, :xticks, :xscale, :xflip, :xrotation,
     :y, :yguide, :ylims, :yticks, :yscale, :yflip, :yrotation,
-    # :axis, :yrightlabel,
     :z, :zguide, :zlims, :zticks, :zscale, :zflip, :zrotation,
     :z,
     :tickfont, :guidefont, :legendfont,
@@ -916,11 +915,17 @@ function py_set_ticks(ax, ticks, letter)
 end
 
 function py_compute_axis_minval(axis::Axis)
+    # compute the smallest absolute value for the log scale's linear threshold
     minval = 1.0
     sp = axis.sp
     for series in series_list(axis.sp)
         minval = min(minval, minimum(abs(series.d[axis[:letter]])))
     end
+
+    # now if the axis limits go to a smaller abs value, use that instead
+    vmin, vmax = axis_limits(axis)
+    minval = min(minval, abs(vmin), abs(vmax))
+
     minval
 end
 

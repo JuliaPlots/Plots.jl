@@ -19,7 +19,8 @@ supported_args(::PlotlyBackend) = [
     :fillrange, :fillcolor, :fillalpha,
     :bins,
     :layout,
-    :title, :window_title, :show, :size,
+    :title, :title_location, :titlefont,
+    :window_title, :show, :size,
     :x, :xguide, :xlims, :xticks, :xscale, :xflip, :xrotation,
     :y, :yguide, :ylims, :yticks, :yscale, :yflip, :yrotation,
     :z, :zguide, :zlims, :zticks, :zscale, :zflip, :zrotation,
@@ -33,7 +34,8 @@ supported_args(::PlotlyBackend) = [
     # :overwrite_figure,
     :polar,
     :normalize, :weights,
-    # :contours, :aspect_ratio
+    # :contours, :aspect_ratio,
+    :hover,
   ]
 
 supported_types(::PlotlyBackend) = [
@@ -97,19 +99,19 @@ function plotly_font(font::Font, color = font.color)
     )
 end
 
-function plotly_annotation_dict(x, y, val)
+function plotly_annotation_dict(x, y, val; xref="paper", yref="paper")
     KW(
         :text => val,
-        :xref => "x",
+        :xref => xref,
         :x => x,
-        :yref => "y",
+        :yref => xref,
         :y => y,
         :showarrow => false,
     )
 end
 
-function plotly_annotation_dict(x, y, ptxt::PlotText)
-    merge(plotly_annotation_dict(x, y, ptxt.str), KW(
+function plotly_annotation_dict(x, y, ptxt::PlotText; xref="paper", yref="paper")
+    merge(plotly_annotation_dict(x, y, ptxt.str; xref=xref, yref=yref), KW(
         :font => plotly_font(ptxt.font),
         :xanchor => ptxt.font.halign == :hcenter ? :center : ptxt.font.halign,
         :yanchor => ptxt.font.valign == :vcenter ? :middle : ptxt.font.valign,
@@ -147,6 +149,7 @@ function plotly_scale(scale::Symbol)
         "-"
     end
 end
+
 
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot, letter)
@@ -225,20 +228,31 @@ function plotly_layout(plt::Plot)
     # end
     # sp = plt.subplots[1]
 
-    d_out[:width], d_out[:height] = plt[:size]
+    w, h = plt[:size]
+    d_out[:width], d_out[:height] = w, h
     d_out[:paper_bgcolor] = webcolor(plt[:background_color_outside])
+    d_out[:margin] = KW(:l=>0, :b=>0, :r=>0, :t=>20)
+
+    d_out[:annotations] = KW[]
 
     for sp in plt.subplots
-        sp_out = KW()
         spidx = plotly_subplot_index(sp)
 
-        # set the fields for the plot
-        d_out[:title] = sp[:title]
-        d_out[:titlefont] = plotly_font(sp[:titlefont], sp[:foreground_color_title])
-
-        # # TODO: use subplot positioning logic
-        # d_out[:margin] = KW(:l=>35, :b=>30, :r=>8, :t=>20)
-        d_out[:margin] = KW(:l=>0, :b=>0, :r=>0, :t=>30)
+        # TODO: add an annotation for the title
+        if sp[:title] != ""
+            bb = bbox(sp)
+            tpos = sp[:title_location]
+            xmm = if tpos == :left
+                left(bb)
+            elseif tpos == :right
+                right(bb)
+            else
+                0.5 * (left(bb) + right(bb))
+            end
+            titlex, titley = xy_mm_to_pcts(xmm, top(bb), w*px, h*px)
+            titlefont = font(sp[:titlefont], :top, sp[:foreground_color_title])
+            push!(d_out[:annotations], plotly_annotation_dict(titlex, titley, text(sp[:title], titlefont)))
+        end
 
         d_out[:plot_bgcolor] = webcolor(sp[:background_color_inside])
 
@@ -267,7 +281,7 @@ function plotly_layout(plt::Plot)
         end
 
         # annotations
-        d_out[:annotations] = KW[plotly_annotation_dict(ann...) for ann in sp[:annotations]]
+        append!(d_out[:annotations], KW[plotly_annotation_dict(ann...; xref = "x$spidx", yref = "y$spidx") for ann in sp[:annotations]])
 
         # # arrows
         # for sargs in seriesargs
@@ -327,6 +341,7 @@ function plotly_series(plt::Plot, series::Series)
     spidx = plotly_subplot_index(sp)
     d_out[:xaxis] = "x$spidx"
     d_out[:yaxis] = "y$spidx"
+    d_out[:showlegend] = should_add_to_legend(series)
 
     x, y = collect(d[:x]), collect(d[:y])
     d_out[:name] = d[:label]
@@ -461,6 +476,12 @@ function plotly_series(plt::Plot, series::Series)
     if ispolar(d[:subplot])
         d_out[:t] = rad2deg(pop!(d_out, :x))
         d_out[:r] = pop!(d_out, :y)
+    end
+
+    # hover text
+    if get(d, :hover, nothing) != nothing
+        d_out[:hoverinfo] = "text"
+        d_out[:text] = d[:hover]
     end
 
     d_out

@@ -5,6 +5,8 @@
 const px = AbsoluteLength(0.254)
 const pct = Length{:pct, Float64}(1.0)
 
+to_pixels(m::AbsoluteLength) = m / 0.254
+
 const _cbar_width = 5mm
 
 @compat Base.:.*(m::Measure, n::Number) = m * n
@@ -68,6 +70,16 @@ function crop(parent::BoundingBox, child::BoundingBox)
     w = width(child)
     h = height(child)
     BoundingBox(l, t, w, h)
+end
+
+# convert x,y coordinates from absolute coords to percentages...
+# returns x_pct, y_pct
+function xy_mm_to_pcts(x::AbsoluteLength, y::AbsoluteLength, figw, figh, flipy = true)
+    xmm, ymm = x.value, y.value
+    if flipy
+        ymm = figh.value - ymm  # flip y when origin in bottom-left
+    end
+    xmm / figw.value, ymm / figh.value
 end
 
 # convert a bounding box from absolute coords to percentages...
