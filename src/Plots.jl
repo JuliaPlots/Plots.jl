@@ -241,6 +241,10 @@ const CURRENT_BACKEND = CurrentBackend(:none)
 function __init__()
     setup_ijulia()
     setup_atom()
+
+    if haskey(ENV, "PLOTS_DEFAULTS")
+        default(; ENV["PLOTS_DEFAULTS"]...)
+    end
 end
 
 # ---------------------------------------------------------
