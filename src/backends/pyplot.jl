@@ -341,8 +341,9 @@ function _create_backend_figure(plt::Plot{PyPlotBackend})
     fig = if plt[:overwrite_figure]
         PyPlot.gcf()
     else
-        PyPlot.figure()
-        finalizer(fig, close)
+        fig = PyPlot.figure()
+        # finalizer(fig, close)
+        fig
     end
 
     # clear the figure

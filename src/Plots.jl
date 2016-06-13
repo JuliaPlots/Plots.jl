@@ -243,7 +243,9 @@ function __init__()
     setup_atom()
 
     if haskey(ENV, "PLOTS_DEFAULTS")
-        default(; ENV["PLOTS_DEFAULTS"]...)
+        for (k,v) in eval(parse(ENV["PLOTS_DEFAULTS"]))
+            default(k, v)
+        end
     end
 end
 
