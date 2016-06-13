@@ -219,12 +219,15 @@ function widen(lmin, lmax)
     lmin-eps, lmax+eps
 end
 
-# figure out if widening is a good idea
+# figure out if widening is a good idea.  if there's a scale set it's too tricky,
+# so lazy out and don't widen
 function default_should_widen(axis::Axis)
     should_widen = false
-    for series in series_list(axis.sp)
-        if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
-            should_widen = true
+    if axis[:scale] == :identity
+        for series in series_list(axis.sp)
+            if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
+                should_widen = true
+            end
         end
     end
     should_widen
