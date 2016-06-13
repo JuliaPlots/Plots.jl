@@ -51,12 +51,14 @@ immutable GLScreenWrapper
     window
 end
 
-function gl_display(plt::Plot{GLVisualizeBackend})
+function _create_backend_figure(plt::Plot{GLVisualizeBackend})
     # init a window
-    w=GLVisualize.glscreen()
-    @async GLVisualize.renderloop(w)
-    GLScreenWrapper(w)
+    window = GLVisualize.glscreen()
+    @async GLVisualize.renderloop(window)
+    window
+end
 
+function gl_display(plt::Plot{GLVisualizeBackend})
     for sp in plt.subplots
         # TODO: setup subplot
 
@@ -64,13 +66,20 @@ function gl_display(plt::Plot{GLVisualizeBackend})
             # TODO: setup series
             d = series.d
             st = d[:seriestype]
+            x, y, z = map(Float32, d[:x]), map(Float32, d[:y]), d[:z]
 
             if st == :surface
-                x, y, z = map(Float32, series.d[:x]), map(Float32, series.d[:y]), map(Float32, series.d[:z].surf)
-                GLVisualize.view(GLVisualize.visualize((x*ones(y)', ones(x)*y', z), :surface), plt.o.window)
+                ismatrix(x) || (x = repmat(x', length(y), 1))
+                ismatrix(y) || (y = repmat(y, 1, length(x)))
+                z = transpose_z(d, map(Float32, z.surf), false)
+                viz = GLVisualize.visualize((x, y, z), :surface)
+                GLVisualize.view(viz, plt.o)
+                return
+
             else
                 error("Series type $st not supported by GLVisualize")
             end
+
         end
     end
 end
