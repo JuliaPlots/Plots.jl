@@ -52,8 +52,8 @@ supported_args(::UnicodePlotsBackend) = [
     # :z,
   ]
 supported_types(::UnicodePlotsBackend) = [
-    :path, :steppre, :steppost, :scatter,
-    :histogram2d, :hline, :vline
+    :path, :scatter,
+    :histogram2d
 ]
 supported_styles(::UnicodePlotsBackend) = [:auto, :solid]
 supported_markers(::UnicodePlotsBackend) = [:none, :auto, :ellipse]

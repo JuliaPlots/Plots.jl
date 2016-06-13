@@ -53,7 +53,47 @@ end
 
 # ----------------------------------------------------------------------------------
 
+const _series_recipe_deps = Dict()
 
+function series_recipe_dependencies(st::Symbol, deps::Symbol...)
+    _series_recipe_deps[st] = deps
+end
+
+function seriestype_supported(st::Symbol)
+    seriestype_supported(backend(), st)
+end
+
+# returns :no, :native, or :recipe depending on how it's supported
+function seriestype_supported(pkg::AbstractBackend, st::Symbol)
+    # is it natively supported
+    if st in supported_types(pkg)
+        return :native
+    end
+    
+    haskey(_series_recipe_deps, st) || return :no
+
+    supported = true
+    for dep in _series_recipe_deps[st]
+        if seriestype_supported(pkg, dep) == :no
+            supported = false
+        end
+    end
+    supported ? :recipe : :no
+end
+
+macro deps(st, args...)
+    :(series_recipe_dependencies($(quot(st)), $(map(quot, args)...)))
+end
+
+# get a list of all seriestypes
+function all_seriestypes()
+    sts = Set{Symbol}(keys(_series_recipe_deps))
+    for bsym in backends()
+        btype = _backendType[bsym]
+        sts = union(sts, Set{Symbol}(supported_types(btype())))
+    end
+    sort(collect(sts))
+end
 
 
 # ----------------------------------------------------------------------------------
@@ -156,21 +196,23 @@ end
     seriestype := :path
     ()
 end
+@deps line path
 
-@recipe function f(::Type{Val{:sticks}}, x, y, z)
-    nx = length(x)
-    n = 3nx
-    newx, newy = zeros(n), zeros(n)
-    for i=1:nx
-        rng = 3i-2:3i
-        newx[rng] = x[i]
-        newy[rng] = [0., y[i], 0.]
-    end
-    x := newx
-    y := newy
-    seriestype := :path
-    ()
-end
+# @recipe function f(::Type{Val{:sticks}}, x, y, z)
+#     nx = length(x)
+#     n = 3nx
+#     newx, newy = zeros(n), zeros(n)
+#     for i=1:nx
+#         rng = 3i-2:3i
+#         newx[rng] = x[i]
+#         newy[rng] = [0., y[i], 0.]
+#     end
+#     x := newx
+#     y := newy
+#     seriestype := :path
+#     ()
+# end
+# @deps sticks path
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     xmin, xmax = axis_limits(d[:subplot][:xaxis])
@@ -182,6 +224,7 @@ end
     seriestype := :path
     ()
 end
+@deps hline path
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
     ymin, ymax = axis_limits(d[:subplot][:yaxis])
@@ -193,6 +236,7 @@ end
     seriestype := :path
     ()
 end
+@deps vline path
 
 # ---------------------------------------------------------------------------
 # steps
@@ -231,6 +275,7 @@ end
     end
     ()
 end
+@deps steppre path scatter
 
 # create a path from steps
 @recipe function f(::Type{Val{:steppost}}, x, y, z)
@@ -251,6 +296,7 @@ end
     end
     ()
 end
+@deps steppost path scatter
 
 
 # ---------------------------------------------------------------------------
@@ -289,6 +335,7 @@ sticks_fillfrom(fr::AVec, i::Integer) = fr[mod1(i, length(fr))]
     end
     ()
 end
+@deps sticks path scatter
 
 
 # ---------------------------------------------------------------------------
@@ -350,6 +397,7 @@ end
     seriestype := :path
     ()
 end
+@deps bar path
 
 # ---------------------------------------------------------------------------
 # Histograms
@@ -402,6 +450,7 @@ end
     seriestype := :bar
     ()
 end
+@deps histogram bar
 
 # ---------------------------------------------------------------------------
 # Histogram 2D
@@ -443,6 +492,7 @@ centers(v::AVec) = v[1] + cumsum(diff(v))
     seriestype := :heatmap
     ()
 end
+@deps histogram2d heatmap
 
 
 # ---------------------------------------------------------------------------
@@ -457,6 +507,8 @@ end
     linealpha := 0
     ()
 end
+
+# note: don't add dependencies because this really isn't a drop-in replacement
 
 # ---------------------------------------------------------------------------
 # Box Plot
@@ -563,9 +615,8 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
     end
 
     () # expects a tuple returned
-
-    # KW[d]
 end
+@deps boxplot shape scatter
 
 # ---------------------------------------------------------------------------
 # Violin Plot
@@ -628,9 +679,8 @@ end
 
     d[:x], d[:y] = shape_coords(shapes)
     ()
-
-    # KW[d]
 end
+@deps violin shape
 
 # ---------------------------------------------------------------------------
 # density
@@ -649,6 +699,7 @@ end
 
     ()
 end
+@deps density path
 
 
 
@@ -701,6 +752,7 @@ end
     d[:x], d[:y] = error_coords(d[:x], d[:y], error_zipit(d[:yerror]))
     ()
 end
+@deps yerror path
 
 @recipe function f(::Type{Val{:xerror}}, x, y, z)
     error_style!(d)
@@ -708,6 +760,7 @@ end
     d[:y], d[:x] = error_coords(d[:y], d[:x], error_zipit(d[:xerror]))
     ()
 end
+@deps xerror path
 
 
 # ---------------------------------------------------------------------------
@@ -807,6 +860,7 @@ end
     end
     ()
 end
+@deps quiver shape path
 
 
 # ---------------------------------------------------------------------------

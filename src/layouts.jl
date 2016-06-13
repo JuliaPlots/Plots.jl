@@ -102,7 +102,19 @@ end
 Base.show(io::IO, layout::AbstractLayout) = print(io, "$(typeof(layout))$(size(layout))")
 
 # create a new bbox
-bbox(left, top, w, h) = BoundingBox(left, top, w, h)
+function bbox(x, y, w, h; h_anchor = :left, v_anchor = :top)
+    left = if h_anchor == :left
+        x
+    else
+        x - w * (h_anchor == :right ? 1.0 : 0.5)
+    end
+    top = if v_anchor == :top
+        y
+    else
+        y - h * (v_anchor == :bottom ? 1.0 : 0.5)
+    end
+    BoundingBox(left, top, w, h)
+end
 
 # this is the available area for drawing everything in this layout... as percentages of total canvas
 bbox(layout::AbstractLayout) = layout.bbox

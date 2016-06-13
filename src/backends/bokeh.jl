@@ -59,7 +59,7 @@ supported_args(::BokehBackend) = [
     # :surface,
     # :levels,
   ]
-supported_types(::BokehBackend) = [:none, :path, :scatter]
+supported_types(::BokehBackend) = [:path, :scatter]
 supported_styles(::BokehBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supported_markers(::BokehBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
 supported_scales(::BokehBackend) = [:identity, :ln]

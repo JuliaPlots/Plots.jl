@@ -55,7 +55,7 @@ supported_args(::WinstonBackend) = [
     # :yflip,
     # :z,
   ]
-supported_types(::WinstonBackend) = [:none, :line, :path, :sticks, :scatter, :histogram, :bar]
+supported_types(::WinstonBackend) = [:path, :scatter, :bar]
 supported_styles(::WinstonBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supported_markers(::WinstonBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
 supported_scales(::WinstonBackend) = [:identity, :log10]

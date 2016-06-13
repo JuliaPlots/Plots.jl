@@ -94,6 +94,9 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     for (idx, sp) in enumerate(plt.subplots)
         _initialize_subplot(plt, sp)
         serieslist = series_list(sp)
+        if sp in sp.plt.inset_subplots
+            push!(plt.inset_subplots, sp)
+        end
         sp.plt = plt
         sp.attr[:subplot_index] = idx
         for series in serieslist

@@ -24,10 +24,10 @@ supported_args(::GadflyBackend) = [
     :orientation,
   ]
 supported_types(::GadflyBackend) = [
-        :none, :line, :path, :steppre, :steppost, :sticks,
-        :scatter, :histogram2d, :hexbin, :histogram,
+        :path,
+        :scatter, :hexbin,
         :bar,
-        :hline, :vline, :contour, :shape
+        :contour, :shape
     ]
 supported_styles(::GadflyBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 supported_markers(::GadflyBackend) = vcat(_allMarkers, Shape)

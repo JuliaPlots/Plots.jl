@@ -44,7 +44,7 @@ supported_args(::QwtBackend) = [
     :xscale,
     :yscale,
   ]
-supported_types(::QwtBackend) = [:none, :line, :path, :steppre, :steppost, :sticks, :scatter, :histogram2d, :hexbin, :histogram, :bar, :hline, :vline]
+supported_types(::QwtBackend) = [:path, :scatter, :hexbin, :bar]
 supported_markers(::QwtBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
 supported_scales(::QwtBackend) = [:identity, :log10]
 is_subplot_supported(::QwtBackend) = true
