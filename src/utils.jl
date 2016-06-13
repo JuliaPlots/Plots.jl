@@ -281,6 +281,8 @@ ismatrix(::Any)  = false
 isscalar(::Real) = true
 isscalar(::Any)  = false
 
+is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
+
 
 isvertical(d::KW) = get(d, :orientation, :vertical) in (:vertical, :v, :vert)
 

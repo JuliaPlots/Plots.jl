@@ -124,9 +124,9 @@ export
 # ---------------------------------------------------------
 
 import Measures
-import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height
+import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height, w, h
 typealias BBox Measures.Absolute2DBox
-export BBox, BoundingBox, mm, cm, inch, pt, px, pct
+export BBox, BoundingBox, mm, cm, inch, pt, px, pct, w, h
 
 # ---------------------------------------------------------
 

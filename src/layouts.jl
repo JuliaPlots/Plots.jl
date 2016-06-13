@@ -138,8 +138,9 @@ bottom(layout::AbstractLayout) = bottom(bbox(layout))
 width(layout::AbstractLayout) = width(bbox(layout))
 height(layout::AbstractLayout) = height(bbox(layout))
 
-plotarea(layout::AbstractLayout) = defaultbox
-plotarea!(layout::AbstractLayout, bbox::BoundingBox) = nothing
+# pass these through to the bbox methods if there's no plotarea
+plotarea(layout::AbstractLayout) = bbox(layout)
+plotarea!(layout::AbstractLayout, bb::BoundingBox) = bbox!(layout, bb)
 
 attr(layout::AbstractLayout, k::Symbol) = layout.attr[k]
 attr(layout::AbstractLayout, k::Symbol, v) = get(layout.attr, k, v)
@@ -354,23 +355,19 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
     end
 end
 
+# for each inset (floating) subplot, resolve the relative position
+# to absolute canvas coordinates, relative to the parent's plotarea
 function update_inset_bboxes!(plt::Plot)
     for sp in plt.inset_subplots
-        relative_bbox = sp[:relative_bbox]
-        # TODO: need to handle percentages... right now only AbsoluteLength works
+        p_area = Measures.resolve(plotarea(sp.parent), sp[:relative_bbox])
+        # @show bbox(sp.parent) sp[:relative_bbox] p_area
+        plotarea!(sp, p_area)
 
-        bb = bbox!(sp, bbox(
-            left(sp.parent) + left(relative_bbox),
-            top(sp.parent) + top(relative_bbox),
-            width(relative_bbox),
-            height(relative_bbox)
-        ))
-
-        plotarea!(sp, bbox(
-            left(bb) + leftpad(sp),
-            top(bb) + toppad(sp),
-            width(bb) - leftpad(sp) - rightpad(sp),
-            height(bb) - toppad(sp) - bottompad(sp)
+        bbox!(sp, bbox(
+            left(p_area) - leftpad(sp),
+            top(p_area) - toppad(sp),
+            width(p_area) + leftpad(sp) + rightpad(sp),
+            height(p_area) + toppad(sp) + bottompad(sp)
         ))
     end
 end

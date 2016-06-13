@@ -353,28 +353,30 @@ function _plot!(plt::Plot, d::KW, args...)
             sp.attr[:subplot_index] = idx
         end
 
-        # handle inset subplots
-        insets = plt[:inset_subplots]
-        if insets != nothing
-            for (parent, bb) in insets
-                P = typeof(parent)
-                if P <: Integer
-                    parent = plt.subplots[parent]
-                elseif P == Symbol
-                    parent = plt.spmap[parent]
-                else
-                    parent = plt.layout
-                end
-                sp = Subplot(backend(), parent=parent)
-                sp.plt = plt
-                sp.attr[:relative_bbox] = bb
-                push!(plt.subplots, sp)
-                sp.attr[:subplot_index] = length(plt.subplots)
-                push!(plt.inset_subplots, sp)
-            end
-        end
-
         plt.init = true
+    end
+    
+
+    # handle inset subplots
+    insets = plt[:inset_subplots]
+    if insets != nothing
+        for inset in insets
+            parent, bb = is_2tuple(inset) ? inset : (nothing, inset)
+            P = typeof(parent)
+            if P <: Integer
+                parent = plt.subplots[parent]
+            elseif P == Symbol
+                parent = plt.spmap[parent]
+            else
+                parent = plt.layout
+            end
+            sp = Subplot(backend(), parent=parent)
+            sp.plt = plt
+            sp.attr[:relative_bbox] = bb
+            push!(plt.subplots, sp)
+            sp.attr[:subplot_index] = length(plt.subplots)
+            push!(plt.inset_subplots, sp)
+        end
     end
 
     # just in case the backend needs to set up the plot (make it current or something)

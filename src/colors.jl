@@ -23,6 +23,8 @@ convertColor(c::Symbol) = parse(Colorant, string(c))
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 convertColor(c::ColorScheme) = c
+convertColor(v::Void) = RGBA(0,0,0,0)
+convertColor(b::Bool) = b ? RGBA(0,0,0,1) : RGBA(0,0,0,0)
 
 function convertColor(c, α::Real)
   c = convertColor(c)
