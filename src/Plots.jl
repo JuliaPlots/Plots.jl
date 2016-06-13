@@ -19,6 +19,8 @@ export
     GridLayout,
     grid,
     EmptyLayout,
+    bbox,
+    plotarea,
     @layout,
     AVec,
     AMat,

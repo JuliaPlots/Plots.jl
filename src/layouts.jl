@@ -101,6 +101,9 @@ end
 
 Base.show(io::IO, layout::AbstractLayout) = print(io, "$(typeof(layout))$(size(layout))")
 
+# create a new bbox
+bbox(left, top, w, h) = BoundingBox(left, top, w, h)
+
 # this is the available area for drawing everything in this layout... as percentages of total canvas
 bbox(layout::AbstractLayout) = layout.bbox
 bbox!(layout::AbstractLayout, bb::BoundingBox) = (layout.bbox = bb)
@@ -116,8 +119,12 @@ parent_bbox(layout::AbstractLayout) = bbox(parent(layout))
 update_position!(layout::AbstractLayout) = nothing
 update_child_bboxes!(layout::AbstractLayout, minimum_perimeter = [0mm,0mm,0mm,0mm]) = nothing
 
-width(layout::AbstractLayout) = width(layout.bbox)
-height(layout::AbstractLayout) = height(layout.bbox)
+left(layout::AbstractLayout) = left(bbox(layout))
+top(layout::AbstractLayout) = top(bbox(layout))
+right(layout::AbstractLayout) = right(bbox(layout))
+bottom(layout::AbstractLayout) = bottom(bbox(layout))
+width(layout::AbstractLayout) = width(bbox(layout))
+height(layout::AbstractLayout) = height(bbox(layout))
 
 plotarea(layout::AbstractLayout) = defaultbox
 plotarea!(layout::AbstractLayout, bbox::BoundingBox) = nothing
@@ -335,6 +342,26 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
     end
 end
 
+function update_inset_bboxes!(plt::Plot)
+    for sp in plt.inset_subplots
+        relative_bbox = sp[:relative_bbox]
+        # TODO: need to handle percentages... right now only AbsoluteLength works
+
+        bb = bbox!(sp, bbox(
+            left(sp.parent) + left(relative_bbox),
+            top(sp.parent) + top(relative_bbox),
+            width(relative_bbox),
+            height(relative_bbox)
+        ))
+
+        plotarea!(sp, bbox(
+            left(bb) + leftpad(sp),
+            top(bb) + toppad(sp),
+            width(bb) - leftpad(sp) - rightpad(sp),
+            height(bb) - toppad(sp) - bottompad(sp)
+        ))
+    end
+end
 
 # ----------------------------------------------------------------------
 

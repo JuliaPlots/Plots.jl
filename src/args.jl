@@ -198,6 +198,8 @@ const _plot_defaults = KW(
     :link                        => :none,
     :overwrite_figure            => true,
     :html_output_format          => :auto,
+    :inset_subplots              => nothing,   # optionally pass a vector of (parent,bbox) tuples which are
+                                               # the parent layout and the relative bounding box of inset subplots
 )
 
 
@@ -256,6 +258,7 @@ const _suppress_warnings = Set{Symbol}([
     :plot_object,
     :primary,
     :smooth,
+    :relative_bbox,
 ])
 
 # add defaults for the letter versions

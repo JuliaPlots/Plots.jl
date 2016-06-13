@@ -350,6 +350,27 @@ function _plot!(plt::Plot, d::KW, args...)
             sp.attr[:subplot_index] = idx
         end
 
+        # handle inset subplots
+        insets = plt[:inset_subplots]
+        if insets != nothing
+            for (parent, bb) in insets
+                P = typeof(parent)
+                if P <: Integer
+                    parent = plt.subplots[parent]
+                elseif P == Symbol
+                    parent = plt.spmap[parent]
+                else
+                    parent = plt.layout
+                end
+                sp = Subplot(backend(), parent=parent)
+                sp.plt = plt
+                sp.attr[:relative_bbox] = bb
+                push!(plt.subplots, sp)
+                sp.attr[:subplot_index] = length(plt.subplots)
+                push!(plt.inset_subplots, sp)
+            end
+        end
+
         plt.init = true
     end
 
@@ -440,9 +461,15 @@ function prepare_output(plt::Plot)
     # One pass down and back up the tree to compute the minimum padding
     # of the children on the perimeter.  This is an backend callback.
     _update_min_padding!(plt.layout)
+    for sp in plt.inset_subplots
+        _update_min_padding!(sp)
+    end
 
     # now another pass down, to update the bounding boxes
     update_child_bboxes!(plt.layout)
+
+    # update those bounding boxes of inset subplots
+    update_inset_bboxes!(plt)
 
     # the backend callback, to reposition subplots, etc
     _update_plot_object(plt)

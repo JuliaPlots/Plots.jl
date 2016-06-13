@@ -576,8 +576,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         x1, x2 = xaxis[:flip] ? (xmax,xmin) : (xmin,xmax)
         y1, y2 = yaxis[:flip] ? (ymax,ymin) : (ymin,ymax)
-        GR.axes(xtick, ytick, x1, y1, majorx, majory, ticksize)
-        GR.axes(xtick, ytick, x2, y2, -majorx, -majory, -ticksize)
+        GR.axes(xtick, ytick, x1, y1, 1, 1, ticksize)
+        GR.axes(xtick, ytick, x2, y2, -1, -1, -ticksize)
     end
     # end
 
