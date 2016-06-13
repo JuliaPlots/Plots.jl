@@ -301,7 +301,7 @@ function addGadflySeries!(plt::Plot, d::KW)
     if st in (:histogram2d, :hexbin) && (isa(d[:fillcolor], ColorGradient) || isa(d[:fillcolor], ColorFunction))
         push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:fillcolor], p))))
     elseif st == :scatter && d[:markershape] == :none
-        d[:markershape] = :ellipse
+        d[:markershape] = :circle
     end
 
     # markers

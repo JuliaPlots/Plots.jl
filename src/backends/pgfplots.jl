@@ -34,7 +34,7 @@ supported_args(::PGFPlotsBackend) = merge_with_base_supported([
   ])
 supported_types(::PGFPlotsBackend) = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
 supported_styles(::PGFPlotsBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supported_markers(::PGFPlotsBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
+supported_markers(::PGFPlotsBackend) = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
 supported_scales(::PGFPlotsBackend) = [:identity, :ln, :log2, :log10]
 is_subplot_supported(::PGFPlotsBackend) = false
 
@@ -66,7 +66,7 @@ const _pgfplots_markers = KW(
     :xcross => "x",
     :utriangle => "triangle*",
     :dtriangle => "triangle*",
-    :ellipse => "*",
+    :circle => "*",
     :rect => "square*",
     :star5 => "star",
     :star6 => "asterisk",

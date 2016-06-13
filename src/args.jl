@@ -91,8 +91,9 @@ const _allMarkers = vcat(:none, :auto, sort(collect(keys(_shapes))))
     :n            => :none,
     :no           => :none,
     :a            => :auto,
-    :circle       => :ellipse,
-    :c            => :ellipse,
+    :ellipse      => :circle,
+    :c            => :circle,
+    :circ         => :circle,
     :square       => :rect,
     :sq           => :rect,
     :r            => :rect,
@@ -628,7 +629,7 @@ function preprocessArgs!(d::KW)
     if haskey(d, :markershape)
         d[:markershape] = _replace_markershape(d[:markershape])
     elseif anymarker
-        d[:markershape_to_add] = :ellipse  # add it after _apply_recipe
+        d[:markershape_to_add] = :circle  # add it after _apply_recipe
     end
 
     # handle fill

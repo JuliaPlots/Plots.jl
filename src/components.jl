@@ -101,7 +101,7 @@ function makearrowhead(angle; h = 2.0, w = 0.4)
 end
 
 const _shapes = KW(
-    :ellipse    => makeshape(20),
+    :circle    => makeshape(20),
     :rect       => makeshape(4, offset=-0.25),
     :diamond    => makeshape(4),
     :utriangle  => makeshape(3),

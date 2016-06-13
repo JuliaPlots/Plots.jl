@@ -501,7 +501,7 @@ end
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)
     seriestype := :path3d
     if d[:markershape] == :none
-        markershape := :ellipse
+        markershape := :circle
     end
     linewidth := 0
     linealpha := 0
@@ -606,7 +606,7 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
     # Outliers
     @series begin
         seriestype := :scatter
-        markershape := :ellipse
+        markershape := :circle
         x := outliers_x
         y := outliers_y
         label := ""

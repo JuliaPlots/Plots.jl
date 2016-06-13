@@ -37,7 +37,7 @@ supported_types(::PlotlyBackend) = [
 ]
 supported_styles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supported_markers(::PlotlyBackend) = [
-    :none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle,
+    :none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle,
     :cross, :xcross, :pentagon, :hexagon, :octagon, :vline, :hline
 ]
 supported_scales(::PlotlyBackend) = [:identity, :log10]

@@ -17,7 +17,7 @@ supported_types(::UnicodePlotsBackend) = [
     :histogram2d
 ]
 supported_styles(::UnicodePlotsBackend) = [:auto, :solid]
-supported_markers(::UnicodePlotsBackend) = [:none, :auto, :ellipse]
+supported_markers(::UnicodePlotsBackend) = [:none, :auto, :circle]
 supported_scales(::UnicodePlotsBackend) = [:identity]
 is_subplot_supported(::UnicodePlotsBackend) = true
 

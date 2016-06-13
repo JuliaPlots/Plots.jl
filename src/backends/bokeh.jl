@@ -61,7 +61,7 @@ supported_args(::BokehBackend) = merge_with_base_supported([
   ])
 supported_types(::BokehBackend) = [:path, :scatter]
 supported_styles(::BokehBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supported_markers(::BokehBackend) = [:none, :auto, :ellipse, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
+supported_markers(::BokehBackend) = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
 supported_scales(::BokehBackend) = [:identity, :ln]
 is_subplot_supported(::BokehBackend) = false
 
@@ -80,7 +80,7 @@ end
 
 
 const _glyphtypes = KW(
-    :ellipse    => :Circle,
+    :circle    => :Circle,
     :rect       => :Square,
     :diamond    => :Diamond,
     :utriangle  => :Triangle,
@@ -99,7 +99,7 @@ function bokeh_glyph_type(d::KW)
   st = d[:seriestype]
   mt = d[:markershape]
   if st == :scatter && mt == :none
-    mt = :ellipse
+    mt = :circle
   end
 
   # if we have a marker, use that

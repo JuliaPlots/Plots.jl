@@ -56,7 +56,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     if d[:seriestype] in (:scatter, :scatter3d)
         d[:linewidth] = 0
         if d[:markershape] == :none
-            d[:markershape] = :ellipse
+            d[:markershape] = :circle
         end
     end
 

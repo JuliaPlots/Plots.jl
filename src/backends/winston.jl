@@ -23,7 +23,7 @@ supported_args(::WinstonBackend) = merge_with_base_supported([
   ])
 supported_types(::WinstonBackend) = [:path, :scatter, :bar]
 supported_styles(::WinstonBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supported_markers(::WinstonBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
+supported_markers(::WinstonBackend) = [:none, :auto, :rect, :circle, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5]
 supported_scales(::WinstonBackend) = [:identity, :log10]
 is_subplot_supported(::WinstonBackend) = false
 
@@ -52,7 +52,7 @@ end
 
 @compat const winston_marker = KW(:none=>".",
                             :rect => "square",
-                            :ellipse=>"circle",
+                            :circle=>"circle",
                             :diamond=>"diamond",
                             :utriangle=>"triangle",
                             :dtriangle=>"down-triangle",
@@ -135,7 +135,7 @@ function _series_added(plt::Plot{WinstonBackend}, series::Series)
 
   elseif d[:seriestype] == :scatter
     if d[:markershape] == :none
-      d[:markershape] = :ellipse
+      d[:markershape] = :circle
     end
 
   # elseif d[:seriestype] == :step

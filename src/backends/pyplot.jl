@@ -149,7 +149,7 @@ end
 # get the marker shape
 function py_marker(marker::Symbol)
     marker == :none && return " "
-    marker == :ellipse && return "o"
+    marker == :circle && return "o"
     marker == :rect && return "s"
     marker == :diamond && return "D"
     marker == :utriangle && return "^"

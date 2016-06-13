@@ -22,7 +22,7 @@ supported_args(::QwtBackend) = merge_with_base_supported([
     :guide, :lims, :ticks, :scale,
   ])
 supported_types(::QwtBackend) = [:path, :scatter, :hexbin, :bar]
-supported_markers(::QwtBackend) = [:none, :auto, :rect, :ellipse, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
+supported_markers(::QwtBackend) = [:none, :auto, :rect, :circle, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :star8, :hexagon]
 supported_scales(::QwtBackend) = [:identity, :log10]
 is_subplot_supported(::QwtBackend) = true
 
@@ -72,13 +72,13 @@ function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
   if st == :scatter
     d[:seriestype] = :none
     if d[:markershape] == :none
-      d[:markershape] = :ellipse
+      d[:markershape] = :circle
     end
 
   elseif st in (:hline, :vline)
     addLineMarker(plt, d)
     d[:seriestype] = :none
-    d[:markershape] = :ellipse
+    d[:markershape] = :circle
     d[:markersize] = 1
     if st == :vline
       d[:x], d[:y] = d[:y], d[:x]
