@@ -40,7 +40,7 @@ supported_args(::PlotlyBackend) = [
 
 supported_types(::PlotlyBackend) = [
     :path, :scatter, :bar, :pie, :heatmap,
-    :contour, :surface, :path3d, :scatter3d, :shape
+    :contour, :surface, :path3d, :scatter3d, :shape, :scattergl,
 ]
 supported_styles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supported_markers(::PlotlyBackend) = [
@@ -292,6 +292,11 @@ function plotly_layout(plt::Plot)
         d_out
     end
 
+    # turn off hover if nothing's using it
+    if all(series -> series.d[:hover] in (false,:none), plt.series_list)
+        d_out[:hovermode] = "none"
+    end
+
     d_out
 end
 
@@ -347,14 +352,14 @@ function plotly_series(plt::Plot, series::Series)
     x, y = collect(d[:x]), collect(d[:y])
     d_out[:name] = d[:label]
     st = d[:seriestype]
-    isscatter = st in (:scatter, :scatter3d)
+    isscatter = st in (:scatter, :scatter3d, :scattergl)
     hasmarker = isscatter || d[:markershape] != :none
     # hasline = !isscatter
     hasline = st in (:path, :path3d)
 
     # set the "type"
-    if st in (:path, :scatter)
-        d_out[:type] = "scatter"
+    if st in (:path, :scatter, :scattergl)
+        d_out[:type] = st==:scattergl ? "scattergl" : "scatter"
         d_out[:mode] = if hasmarker
             hasline ? "lines+markers" : "markers"
         else
@@ -500,9 +505,12 @@ function plotly_series(plt::Plot, series::Series)
     end
 
     # hover text
-    if get(d, :hover, nothing) != nothing
+    hover = d[:hover]
+    if hover in (:none, false)
+        d_out[:hoverinfo] = "none"
+    elseif hover != nothing
         d_out[:hoverinfo] = "text"
-        d_out[:text] = d[:hover]
+        d_out[:text] = hover
     end
 
     d_out
