@@ -40,7 +40,7 @@ supported_args(::PlotlyBackend) = [
 
 supported_types(::PlotlyBackend) = [
     :path, :scatter, :bar, :pie, :heatmap,
-    :contour, :surface, :path3d, :scatter3d
+    :contour, :surface, :path3d, :scatter3d, :shape
 ]
 supported_styles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
 supported_markers(::PlotlyBackend) = [
@@ -321,6 +321,17 @@ function plotly_subplot_index(sp::Subplot)
 end
 
 
+# the Shape contructor will automatically close the shape. since we need it closed,
+# we split by NaNs and then construct/destruct the shapes to get the closed coords
+function plotly_close_shapes(x, y)
+    xs, ys = nansplit(x), nansplit(y)
+    for i=1:length(xs)
+        shape = Shape(xs[i], ys[i])
+        xs[i], ys[i] = shape_coords(shape)
+    end
+    nanvcat(xs), nanvcat(ys)
+end
+
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     d = series.d
@@ -338,7 +349,8 @@ function plotly_series(plt::Plot, series::Series)
     st = d[:seriestype]
     isscatter = st in (:scatter, :scatter3d)
     hasmarker = isscatter || d[:markershape] != :none
-    hasline = !isscatter
+    # hasline = !isscatter
+    hasline = st in (:path, :path3d)
 
     # set the "type"
     if st in (:path, :scatter)
@@ -355,6 +367,25 @@ function plotly_series(plt::Plot, series::Series)
             warn("fillrange ignored... plotly only supports filling to zero. fillrange: $(d[:fillrange])")
         end
         d_out[:x], d_out[:y] = x, y
+
+    elseif st == :shape
+        # to draw polygons, we actually draw lines with fill
+        d_out[:type] = "scatter"
+        d_out[:mode] = "lines"
+        d_out[:x], d_out[:y] = plotly_close_shapes(x, y)
+        # @show map(length, (x,y,d_out[:x],d_out[:y]))
+        # @show d_out[:x] d_out[:y]
+        d_out[:fill] = "tozeroy"
+        d_out[:fillcolor] = webcolor(d[:markercolor], d[:markeralpha])
+        if d[:markerstrokewidth] > 0
+            d_out[:line] = KW(
+                :color => webcolor(d[:markerstrokecolor], d[:markerstrokealpha]),
+                :width => d[:markerstrokewidth],
+                :dash => string(d[:markerstrokestyle]),
+            )
+        end
+
+
 
     elseif st == :bar
         d_out[:type] = "bar"

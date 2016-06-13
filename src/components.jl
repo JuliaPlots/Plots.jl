@@ -12,8 +12,15 @@ compute_angle(v::P2) = (angle = atan2(v[2], v[1]); angle < 0 ? 2π - angle : ang
 # -------------------------------------------------------------
 
 immutable Shape
-  x::AVec
-  y::AVec
+    x::Vector{Float64}
+    y::Vector{Float64}
+    function Shape(x::AVec, y::AVec)
+        if x[1] != x[end] || y[1] != y[end]
+            new(vcat(x, x[1]), vcat(y, y[1]))
+        else
+            new(x, y)
+        end
+    end
 end
 Shape(verts::AVec) = Shape(unzip(verts)...)
 

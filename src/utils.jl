@@ -306,6 +306,30 @@ Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b))
 nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
 
+function nansplit(v::AVec)
+    vs = Vector{eltype(v)}[]
+    while true
+        idx = findfirst(isnan, v)
+        if idx <= 0
+            # no nans
+            push!(vs, v)
+            break
+        elseif idx > 1
+            push!(vs, v[1:idx-1])
+        end
+        v = v[idx+1:end]
+    end
+    vs
+end
+
+function nanvcat(vs::AVec)
+    v_out = zeros(0)
+    for v in vs
+        nanappend!(v_out, v)
+    end
+    v_out
+end
+
 # given an array of discrete values, turn it into an array of indices of the unique values
 # returns the array of indices (znew) and a vector of unique values (vals)
 function indices_and_unique_values(z::AbstractArray)
