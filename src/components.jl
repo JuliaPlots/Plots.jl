@@ -100,6 +100,27 @@ function makearrowhead(angle; h = 2.0, w = 0.4)
         from_polar(angle + 0.5π, w) - tip, (0,0)])
 end
 
+const _shape_keys = Symbol[
+  :circle,
+  :rect,
+  :star5,
+  :diamond,
+  :hexagon,
+  :cross,
+  :xcross,
+  :utriangle,
+  :dtriangle,
+  :pentagon,
+  :heptagon,
+  :octagon,
+  :star4,
+  :star6,
+  :star7,
+  :star8,
+  :vline,
+  :hline,
+]
+
 const _shapes = KW(
     :circle    => makeshape(20),
     :rect       => makeshape(4, offset=-0.25),

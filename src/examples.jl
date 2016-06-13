@@ -115,15 +115,17 @@ PlotExample("Line types",
 PlotExample("Line styles",
     "",
     [:(begin
-        styles = setdiff(supported_styles(), [:auto])'
-        plot(cumsum(randn(20,length(styles)),1), style=:auto, label=map(string,styles), w=5)
+        styles = filter(s -> s in supported_styles(), [:solid, :dash, :dot, :dashdot, :dashdotdot])'
+        n = length(styles)
+        y = cumsum(randn(20,n),1)
+        plot(y, line = (5, styles), label = map(string,styles))
     end)]
 ),
 
 PlotExample("Marker types",
     "",
     [:(begin
-        markers = setdiff(supported_markers(), [:none,:auto,Shape])'
+        markers = filter(m -> m in supported_markers(), Plots._shape_keys)'
         n = length(markers)
         x = linspace(0,10,n+2)[2:end-1]
         y = repmat(reverse(x)', n, 1)

@@ -86,7 +86,7 @@ const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
     :ddd  => :dashdotdot,
 )
 
-const _allMarkers = vcat(:none, :auto, sort(collect(keys(_shapes))))
+const _allMarkers = vcat(:none, :auto, _shape_keys) #sort(collect(keys(_shapes))))
 @compat const _markerAliases = KW(
     :n            => :none,
     :no           => :none,
