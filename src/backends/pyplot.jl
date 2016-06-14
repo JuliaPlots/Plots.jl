@@ -347,7 +347,9 @@ function _create_backend_figure(plt::Plot{PyPlotBackend})
 end
 
 # Set up the subplot within the backend object.
-function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
+# function _initialize_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
+
+function py_init_subplot(plt::Plot{PyPlotBackend}, sp::Subplot{PyPlotBackend})
     fig = plt.o
     proj = sp[:projection]
     proj = (proj in (nothing,:none) ? nothing : string(proj))
@@ -367,7 +369,9 @@ end
 
 # function _series_added(pkg::PyPlotBackend, plt::Plot, d::KW)
 # TODO: change this to accept Subplot??
-function _series_added(plt::Plot{PyPlotBackend}, series::Series)
+# function _series_added(plt::Plot{PyPlotBackend}, series::Series)
+
+function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     d = series.d
     st = d[:seriestype]
     sp = d[:subplot]
@@ -875,28 +879,28 @@ end
 
 # --------------------------------------------------------------------------
 
-function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
-    for letter in letters
-        py_set_lims(sp.o, sp[Symbol(letter, :axis)])
-    end
-end
+# function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
+#     for letter in letters
+#         py_set_lims(sp.o, sp[Symbol(letter, :axis)])
+#     end
+# end
 
-function _series_updated(plt::Plot{PyPlotBackend}, series::Series)
-    d = series.d
-    for handle in d[:serieshandle]
-        if is3d(series)
-            handle[:set_data](d[:x], d[:y])
-            handle[:set_3d_properties](d[:z])
-        else
-            try
-                handle[:set_data](d[:x], d[:y])
-            catch
-                handle[:set_offsets](hcat(d[:x], d[:y]))
-            end
-        end
-    end
-    update_limits!(d[:subplot], series, is3d(series) ? (:x,:y,:z) : (:x,:y))
-end
+# function _series_updated(plt::Plot{PyPlotBackend}, series::Series)
+#     d = series.d
+#     for handle in get(d, :serieshandle, [])
+#         if is3d(series)
+#             handle[:set_data](d[:x], d[:y])
+#             handle[:set_3d_properties](d[:z])
+#         else
+#             try
+#                 handle[:set_data](d[:x], d[:y])
+#             catch
+#                 handle[:set_offsets](hcat(d[:x], d[:y]))
+#             end
+#         end
+#     end
+#     update_limits!(d[:subplot], series, is3d(series) ? (:x,:y,:z) : (:x,:y))
+# end
 
 
 # --------------------------------------------------------------------------
@@ -986,6 +990,9 @@ end
 
 
 function _before_layout_calcs(plt::Plot{PyPlotBackend})
+    # clear the figure
+    PyPlot.clf()
+
     # update the specs
     w, h = plt[:size]
     fig = plt.o
@@ -996,9 +1003,18 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     # resize the window
     PyPlot.plt[:get_current_fig_manager]()[:resize](w, h)
 
+    # initialize subplots
+    for sp in plt.subplots
+        py_init_subplot(plt, sp)
+    end
+
+    # add the series
+    for series in plt.series_list
+        py_add_series(plt, series)
+    end
+
     # update subplots
     for sp in plt.subplots
-        # ax = getAxis(sp)
         ax = sp.o
         if ax == nothing
             continue
@@ -1012,16 +1028,16 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         # title
         if sp[:title] != ""
             loc = lowercase(string(sp[:title_location]))
-            field = if loc == "left"
+            func = if loc == "left"
                 :_left_title
             elseif loc == "right"
                 :_right_title
             else
                 :title
             end
-            ax[field][:set_text](sp[:title])
-            ax[field][:set_fontsize](sp[:titlefont].pointsize)
-            ax[field][:set_color](py_color(sp[:foreground_color_title]))
+            ax[func][:set_text](sp[:title])
+            ax[func][:set_fontsize](sp[:titlefont].pointsize)
+            ax[func][:set_color](py_color(sp[:foreground_color_title]))
             # ax[:set_title](sp[:title], loc = loc)
         end
 
