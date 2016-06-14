@@ -18,7 +18,9 @@ supported_args(::PyPlotBackend) = merge_with_base_supported([
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
-    :marker_z, :levels,
+    :marker_z,
+    :line_z,
+    :levels,
     :ribbon, :quiver, :arrow,
     :orientation,
     :overwrite_figure,
@@ -61,6 +63,7 @@ function _initialize_backend(::PyPlotBackend)
         const pycmap = PyPlot.pywrap(PyPlot.pyimport("matplotlib.cm"))
         const pynp = PyPlot.pywrap(PyPlot.pyimport("numpy"))
         const pytransforms = PyPlot.pywrap(PyPlot.pyimport("matplotlib.transforms"))
+        const pycollections = PyPlot.pywrap(PyPlot.pyimport("matplotlib.collections"))
     end
 
     # we don't want every command to update the figure
@@ -406,17 +409,37 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
     # line plot
     if st in (:path, :path3d, :steppre, :steppost)
         if d[:linewidth] > 0
-            handle = ax[:plot](xyargs...;
-                label = d[:label],
-                zorder = plt.n,
-                color = py_linecolor(d),
-                linewidth = d[:linewidth],
-                linestyle = py_linestyle(st, d[:linestyle]),
-                solid_capstyle = "round",
-                # dash_capstyle = "round",
-                drawstyle = py_stepstyle(st)
-            )[1]
-            push!(handles, handle)
+            if d[:line_z] == nothing
+                handle = ax[:plot](xyargs...;
+                    label = d[:label],
+                    zorder = plt.n,
+                    color = py_linecolor(d),
+                    linewidth = d[:linewidth],
+                    linestyle = py_linestyle(st, d[:linestyle]),
+                    solid_capstyle = "round",
+                    drawstyle = py_stepstyle(st)
+                )[1]
+                push!(handles, handle)
+
+            else
+                # multicolored line segments
+                n = length(x) - 1
+                segments = Array(Any,n)
+                for i=1:n
+                    segments[i] = [(cycle(x,i), cycle(y,i)), (cycle(x,i+1), cycle(y,i+1))]
+                end
+                lc = pycollections.LineCollection(segments;
+                    label = d[:label],
+                    zorder = plt.n,
+                    cmap = py_linecolormap(d),
+                    linewidth = d[:linewidth],
+                    linestyle = py_linestyle(st, d[:linestyle])
+                )
+                lc[:set_array](d[:line_z])
+                handle = ax[:add_collection](lc)
+                push!(handles, handle)
+                needs_colorbar = true
+            end
 
             a = d[:arrow]
             if a != nothing && !is3d(st)  # TODO: handle 3d later
@@ -493,7 +516,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
             extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
             extrakw[:cmap] = py_markercolormap(d)
             clims = sp[:clims]
-            if isa(clims, Tuple) && length(clims) == 2
+            if is_2tuple(clims)
                 isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
                 isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
             end
@@ -542,7 +565,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 
     if st == :histogram2d
         clims = sp[:clims]
-        if isa(clims, Tuple) && length(clims) == 2
+        if is_2tuple(clims)
             isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
             isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
         end
@@ -567,7 +590,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 
     if st == :hexbin
         clims = sp[:clims]
-        if isa(clims, Tuple) && length(clims) == 2
+        if is_2tuple(clims)
             isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
             isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
         end
@@ -602,7 +625,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         needs_colorbar = true
 
         clims = sp[:clims]
-        if isa(clims, Tuple) && length(clims) == 2
+        if is_2tuple(clims)
             isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
             isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
         end
@@ -648,7 +671,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
                     extrakw[:facecolors] = py_shading(d[:fillcolor], d[:marker_z], d[:fillalpha])
                     extrakw[:shade] = false
                     clims = sp[:clims]
-                    if isa(clims, Tuple) && length(clims) == 2
+                    if is_2tuple(clims)
                         isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
                         isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
                     end
@@ -690,7 +713,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         elseif typeof(z) <: AbstractVector
             # tri-surface plot (http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
             clims = sp[:clims]
-            if isa(clims, Tuple) && length(clims) == 2
+            if is_2tuple(clims)
                 isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
                 isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
             end
@@ -744,7 +767,7 @@ function _series_added(plt::Plot{PyPlotBackend}, series::Series)
         end
 
         clims = sp[:clims]
-        if isa(clims, Tuple) && length(clims) == 2
+        if is_2tuple(clims)
             isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
             isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
         end

@@ -272,7 +272,12 @@ function _plot!(plt::Plot, d::KW, args...)
                 # map marker_z if it's a Function
                 if isa(get(kw, :marker_z, nothing), Function)
                     # TODO: should this take y and/or z as arguments?
-                    kw[:marker_z] = map(kw[:marker_z], kw[:x])
+                    kw[:marker_z] = map(kw[:marker_z], kw[:x], kw[:y], kw[:z])
+                end
+
+                # map line_z if it's a Function
+                if isa(get(kw, :line_z, nothing), Function)
+                    kw[:line_z] = map(kw[:line_z], kw[:x], kw[:y], kw[:z])
                 end
 
                 # convert a ribbon into a fillrange

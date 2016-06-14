@@ -163,6 +163,7 @@ const _series_defaults = KW(
     :y                 => nothing,
     :z                 => nothing,   # depth for contour, surface, etc
     :marker_z          => nothing,   # value for color scale
+    :line_z            => nothing,
     :levels            => 15,
     :orientation       => :vertical,
     :bar_position      => :overlay,  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
@@ -375,7 +376,8 @@ add_aliases(:linestyle, :style, :s, :ls)
 add_aliases(:marker, :m, :mark)
 add_aliases(:markershape, :shape)
 add_aliases(:markersize, :ms, :msize)
-add_aliases(:marker_z, :markerz, :zcolor)
+add_aliases(:marker_z, :markerz, :zcolor, :mz)
+add_aliases(:line_z, :linez, :zline, :lz)
 add_aliases(:fill, :f, :area)
 add_aliases(:fillrange, :fillrng, :frange, :fillto, :fill_between)
 add_aliases(:group, :g, :grouping)
