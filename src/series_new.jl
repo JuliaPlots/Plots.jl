@@ -46,10 +46,13 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     d[:markerstrokecolor] = c
 
     # update alphas
-    for asym in (:linealpha, :markeralpha, :markerstrokealpha, :fillalpha)
+    for asym in (:linealpha, :markeralpha, :fillalpha)
         if d[asym] == nothing
             d[asym] = d[:seriesalpha]
         end
+    end
+    if d[:markerstrokealpha] == nothing
+        d[:markerstrokealpha] = d[:markeralpha]
     end
 
     # scatter plots don't have a line, but must have a shape

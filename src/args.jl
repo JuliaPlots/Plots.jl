@@ -239,6 +239,7 @@ const _axis_defaults = KW(
     :scale     => :identity,
     :rotation  => 0,
     :flip      => false,
+    :link      => [],
     :tickfont  => font(8),
     :guidefont => font(11),
     :foreground_color_axis   => :match,            # axis border/tick colors,
@@ -272,6 +273,7 @@ for letter in (:x,:y,:z)
                 :scale,
                 :rotation,
                 :flip,
+                :link,
                 :tickfont,
                 :guidefont,
                 :foreground_color_axis,
@@ -401,8 +403,6 @@ add_aliases(:size, :windowsize, :wsize)
 add_aliases(:window_title, :windowtitle, :wtitle)
 add_aliases(:show, :gui, :display)
 add_aliases(:color_palette, :palette)
-# add_aliases(:linkx, :xlink)
-# add_aliases(:linky, :ylink)
 add_aliases(:overwrite_figure, :clf, :clearfig, :overwrite, :reuse)
 add_aliases(:xerror, :xerr, :xerrorbar)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
@@ -954,19 +954,13 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
     color_or_nothing!(sp.attr, :background_color_subplot)
     bg = convertColor(sp[:background_color_subplot])
     sp.attr[:color_palette] = get_color_palette(sp.attr[:color_palette], bg, 30)
-    # color_or_match!(sp.attr, :background_color_legend, bg)
     color_or_nothing!(sp.attr, :background_color_legend)
-    # color_or_match!(sp.attr, :background_color_inside, bg)
     color_or_nothing!(sp.attr, :background_color_inside)
 
     # foreground colors
-    # fg = color_or_match!(sp.attr, :foreground_color_subplot, plt.attr[:foreground_color])
     color_or_nothing!(sp.attr, :foreground_color_subplot)
-    # color_or_match!(sp.attr, :foreground_color_legend, fg)
     color_or_nothing!(sp.attr, :foreground_color_legend)
-    # color_or_match!(sp.attr, :foreground_color_grid, fg)
     color_or_nothing!(sp.attr, :foreground_color_grid)
-    # color_or_match!(sp.attr, :foreground_color_title, fg)
     color_or_nothing!(sp.attr, :foreground_color_title)
 
     # for k in (:left_margin, :top_margin, :right_margin, :bottom_margin)
@@ -977,20 +971,13 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
 
     for letter in (:x, :y, :z)
         # get (maybe initialize) the axis
-        axissym = Symbol(letter, :axis)
-        axis = if haskey(sp.attr, axissym)
-            sp.attr[axissym]
-        else
-            sp.attr[axissym] = Axis(sp, letter)
-        end
+        axis = get_axis(sp, letter)
 
         # grab magic args (for example `xaxis = (:flip, :log)`)
-        args = wraptuple(get(d_in, axissym, ()))
+        args = wraptuple(get(d_in, Symbol(letter, :axis), ()))
 
         # build the KW of arguments from the letter version (i.e. xticks --> ticks)
         kw = KW()
-        # DD(d_in, "d_in before")
-
         for (k,v) in _axis_defaults
             # first get the args without the letter: `tickfont = font(10)`
             # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
@@ -1001,7 +988,6 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
             # then get those args that were passed with a leading letter: `xlabel = "X"`
             lk = Symbol(letter, k)
             if haskey(d_in, lk)
-                # kw[k] = slice_arg(pop!(d_in, lk), subplot_index)
                 kw[k] = slice_arg(d_in[lk], subplot_index)
             end
         end
@@ -1009,23 +995,28 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
         # update the axis
         update!(axis, args...; kw...)
 
+        # convert a bool into auto or nothing
+        if isa(axis[:ticks], Bool)
+            axis[:ticks] = axis[:ticks] ? :auto : nothing
+        end
+
         # # update the axis colors
-        # color_or_match!(axis.d, :foreground_color_axis, fg)
         color_or_nothing!(axis.d, :foreground_color_axis)
-        # color_or_match!(axis.d, :foreground_color_border, fg)
         color_or_nothing!(axis.d, :foreground_color_border)
-        # color_or_match!(axis.d, :foreground_color_guide, fg)
         color_or_nothing!(axis.d, :foreground_color_guide)
-        # color_or_match!(axis.d, :foreground_color_text, fg)
         color_or_nothing!(axis.d, :foreground_color_text)
 
-        # TODO: need to handle linking here?
+        # handle linking here.  if we're passed a list of
+        # other subplots to link to, link them together
+        link = axis[:link]
+        if !isempty(link)
+            for other_sp in link
+                other_sp = get_subplot(plt, other_sp)
+                link_axes!(axis, get_axis(other_sp, letter))
+            end
+            axis.d[:link] = []
+        end
     end
-
-    # # now we can get rid of the axis keys without a letter
-    # for k in keys(_axis_defaults)
-    #     delete!(d_in, k)
-    # end
 end
 
 

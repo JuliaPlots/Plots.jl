@@ -19,9 +19,9 @@ function _create_backend_figure(plt::Plot{[PkgName]Backend})
     nothing
 end
 
-# this is called early in the pipeline, use it to make the plot current or something
-function _prepare_plot_object(plt::Plot{[PkgName]Backend})
-end
+# # this is called early in the pipeline, use it to make the plot current or something
+# function _prepare_plot_object(plt::Plot{[PkgName]Backend})
+# end
 
 # Set up the subplot within the backend object.
 function _initialize_subplot(plt::Plot{[PkgName]Backend}, sp::Subplot{[PkgName]Backend})

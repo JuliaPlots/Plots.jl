@@ -105,8 +105,8 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         end
     end
 
-    # just in case the backend needs to set up the plot (make it current or something)
-    _prepare_plot_object(plt)
+    # # just in case the backend needs to set up the plot (make it current or something)
+    # _prepare_plot_object(plt)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
@@ -330,10 +330,10 @@ function _plot!(plt::Plot, d::KW, args...)
     # merge in anything meant for plot/subplot/axis
     for kw in kw_list
         for (k,v) in kw
-            for defdict in (_plot_defaults,
-                            _subplot_defaults,
-                            _axis_defaults,
-                            _axis_defaults_byletter)
+            for defdict in (_plot_defaults,)
+                            # _subplot_defaults,
+                            # _axis_defaults,
+                            # _axis_defaults_byletter)
                 if haskey(defdict, k)
                     d[k] = pop!(kw, k)
                 end
@@ -345,6 +345,7 @@ function _plot!(plt::Plot, d::KW, args...)
     _update_plot_args(plt, d)
     if !plt.init
         plt.o = _create_backend_figure(plt)
+        # DD(d)
 
         # create the layout and subplots from the inputs
         plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
@@ -355,7 +356,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
         plt.init = true
     end
-    
+
 
     # handle inset subplots
     insets = plt[:inset_subplots]
@@ -379,13 +380,47 @@ function _plot!(plt::Plot, d::KW, args...)
         end
     end
 
-    # just in case the backend needs to set up the plot (make it current or something)
-    _prepare_plot_object(plt)
+    # we'll keep a map of subplot to an attribute override dict.
+    # any series which belong to that subplot
+    sp_attrs = Dict{Subplot,Any}()
+    for (i,kw) in enumerate(kw_list)
+        # get the Subplot object to which the series belongs
+        sp = get(kw, :subplot, :auto)
+        sp = if sp == :auto
+            mod1(i,length(plt.subplots))
+        else
+            slice_arg(sp, i)
+        end
+        sp = kw[:subplot] = get_subplot(plt, sp)
+        # idx = get_subplot_index(plt, sp)
+        attr = KW()
+
+        for (k,v) in kw
+            for defdict in (_subplot_defaults,
+                            _axis_defaults,
+                            _axis_defaults_byletter)
+                if haskey(defdict, k)
+                    attr[k] = pop!(kw, k)
+                end
+            end
+        end
+        sp_attrs[sp] = attr
+    end
+
+
+
+    # # just in case the backend needs to set up the plot (make it current or something)
+    # _prepare_plot_object(plt)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
-        _update_subplot_args(plt, sp, d, idx, remove_pair = false)
+        # if we picked up any subplot-specific overrides, merge them here
+        attr = merge(d, get(sp_attrs, sp, KW()))
+        # DD(attr, "sp$idx")
+        _update_subplot_args(plt, sp, attr, idx, remove_pair = false)
     end
+
+
 
     # do we need to link any axes together?
     link_axes!(plt.layout, plt[:link])
@@ -398,14 +433,15 @@ function _plot!(plt::Plot, d::KW, args...)
     for (i,kw) in enumerate(kw_list)
         command_idx = kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
 
-        # get the Subplot object to which the series belongs
-        sp = get(kw, :subplot, :auto)
-        sp = if sp == :auto
-            mod1(i,length(plt.subplots))
-        else
-            slice_arg(sp, i)
-        end
-        sp = kw[:subplot] = get_subplot(plt, sp)
+        # # get the Subplot object to which the series belongs
+        # sp = get(kw, :subplot, :auto)
+        # sp = if sp == :auto
+        #     mod1(i,length(plt.subplots))
+        # else
+        #     slice_arg(sp, i)
+        # end
+        # sp = kw[:subplot] = get_subplot(plt, sp)
+        sp = kw[:subplot]
         idx = get_subplot_index(plt, sp)
 
         # strip out series annotations (those which are based on series x/y coords)

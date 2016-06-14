@@ -5,7 +5,7 @@
 const px = AbsoluteLength(0.254)
 const pct = Length{:pct, Float64}(1.0)
 
-to_pixels(m::AbsoluteLength) = m / 0.254
+to_pixels(m::AbsoluteLength) = m.value / 0.254
 
 const _cbar_width = 5mm
 
@@ -556,44 +556,13 @@ rowsize(v) = isrow(v) ? length(v.args) : 1
 
 
 function create_grid(expr::Expr)
-    # cellsym = gensym(:cell)
-    # @show expr
     if iscol(expr)
         create_grid_vcat(expr)
-        # rowsizes = map(rowsize, expr.args)
-        # rmin, rmax = extrema(rowsizes)
-        # if rmin > 0 && rmin == rmax
-        #     # we have a grid... build the whole thing
-        #     # note: rmin is the number of columns
-        #     nr = length(expr.args)
-        #     nc = rmin
-        #
-        #     :(let cell = GridLayout($nr, $nc)
-        #         $([:(cell[$r,$c] = $(create_grid(expr.args[r], c))) for r=1:nr, c=1:nc]...)
-        #         for r=1:nr
-        #             layout = $(create_grid(expr.args[r])
-        #             cell[r,]
-        #         $([:($cellsym[$r,1] = $(create_grid(expr.args[r]))) for r=1:length(expr.args)]...)
-        #         $cellsym
-        #     end)
-        # else
-        #     # otherwise just build one row at a time
-        #     :(let
-        #         $cellsym = GridLayout($(length(expr.args)), 1)
-        #         $([:($cellsym[$i,1] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
-        #         $cellsym
-        #     end)
-        # end
     elseif isrow(expr)
         :(let cell = GridLayout(1, $(length(expr.args)))
             $([:(cell[1,$i] = $(create_grid(v))) for (i,v) in enumerate(expr.args)]...)
             cell
         end)
-        # :(let
-        #     $cellsym = GridLayout(1, $(length(expr.args)))
-        #     $([:($cellsym[1,$i] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
-        #     $cellsym
-        # end)
 
     elseif expr.head == :curly
         create_grid_curly(expr)
@@ -606,17 +575,14 @@ end
 function create_grid_vcat(expr::Expr)
     rowsizes = map(rowsize, expr.args)
     rmin, rmax = extrema(rowsizes)
-    # @show rmin, rmax
     if rmin > 0 && rmin == rmax
         # we have a grid... build the whole thing
         # note: rmin is the number of columns
         nr = length(expr.args)
         nc = rmin
-        # @show nr, nc
         body = Expr(:block)
         for r=1:nr
             arg = expr.args[r]
-            # @show r, arg
             if isrow(arg)
                 for (c,item) in enumerate(arg.args)
                     push!(body.args, :(cell[$r,$c] = $(create_grid(item))))
@@ -625,30 +591,16 @@ function create_grid_vcat(expr::Expr)
                 push!(body.args, :(cell[$r,1] = $(create_grid(arg))))
             end
         end
-        # @show body
         :(let cell = GridLayout($nr, $nc)
             $body
             cell
         end)
-        # :(let cell = GridLayout($nr, $nc)
-        #     $([:(cell[$r,$c] = $(create_grid(expr.args[r], c))) for r=1:nr, c=1:nc]...)
-        #     for r=1:nr
-        #         layout = $(create_grid(expr.args[r])
-        #         cell[r,]
-        #     $([:($cellsym[$r,1] = $(create_grid(expr.args[r]))) for r=1:length(expr.args)]...)
-        #     $cellsym
-        # end)
     else
         # otherwise just build one row at a time
         :(let cell = GridLayout($(length(expr.args)), 1)
             $([:(cell[$i,1] = $(create_grid(v))) for (i,v) in enumerate(expr.args)]...)
             cell
         end)
-        # :(let
-        #     $cellsym = GridLayout($(length(expr.args)), 1)
-        #     $([:($cellsym[$i,1] = $(create_grid(expr.args[i]))) for i=1:length(expr.args)]...)
-        #     $cellsym
-        # end)
     end
 end
 

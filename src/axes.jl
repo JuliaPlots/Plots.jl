@@ -32,6 +32,15 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     update!(Axis(sp, d), args...; kw...)
 end
 
+function get_axis(sp::Subplot, letter::Symbol)
+    axissym = Symbol(letter, :axis)
+    if haskey(sp.attr, axissym)
+        sp.attr[axissym]
+    else
+        sp.attr[axissym] = Axis(sp, letter)
+    end
+end
+
 function process_axis_arg!(d::KW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scaleAliases, arg, arg)
