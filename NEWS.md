@@ -9,6 +9,37 @@
 
 ## 0.7 (current master/dev)
 
+#### 0.7.1
+
+- inset (floating) subplots
+- change: when setting subplot/axis args from user recipes, they should apply only to their own subplot
+- trim for violin/boxplot
+- scatter3d recipe
+- removed plotly.js in favor of build.jl download
+- improvements/fixes to pgfplots backend
+- improvements/fixes to plotly/plotlyjs backends
+	- titles are annotations and properly placed with title_position
+	- hover attribute
+	- shapes (almost)
+	- scattergl
+- minimum perimeter logic in layout calc... fixed misaligned subplots
+- new clims attribute
+- more options for test_examples
+- GR refactor
+	- added transparency
+	- moved axis/grid logic out of series loop
+	- generalized 3d and polar projections
+- renamed get_mod to Base.cycle
+- pyplot log scale fixes
+- PLOTS_DEFAULTS environment var processing
+- rename :ellipse to :circle, :ellipse is now an alias
+- supported args/types cleanup
+- seriestype dependency methods and `@deps` macro
+- bbox `h_anchor`/`v_anchor`
+- new axis arg: `:link` is a list of subplots to link axes with
+- cleanup/simplification of glvisualize backend
+
+
 #### 0.7.0
 
 - Check out [the summary](http://plots.readthedocs.io/en/latest/plots_v0.7/)
