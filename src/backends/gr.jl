@@ -895,11 +895,12 @@ const _gr_mimeformats = Dict(
 for (mime, fmt) in _gr_mimeformats
     @eval function _writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
+        wstype = haskey(ENV, "GKS_WSTYPE") ? ENV["GKS_WSTYPE"] : "0"
         ENV["GKS_WSTYPE"] = $fmt
         gr_display(plt)
         GR.emergencyclosegks()
         write(io, readall("gks." * $fmt))
-        ENV["GKS_WSTYPE"] = ""
+        ENV["GKS_WSTYPE"] = wstype
     end
 end
 
