@@ -41,6 +41,11 @@ supported_scales(::GRBackend) = [:identity, :log10]
 is_subplot_supported(::GRBackend) = true
 
 
+if haskey(ENV, "GKS_WSTYPE")
+    _gr_wstype = ENV["GKS_WSTYPE"]
+else
+    _gr_wstype = nothing
+end
 
 function _initialize_backend(::GRBackend; kw...)
     @eval begin
@@ -895,11 +900,15 @@ const _gr_mimeformats = Dict(
 for (mime, fmt) in _gr_mimeformats
     @eval function _writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
-        ENV["GKS_WSTYPE"] = $fmt
+        setenv("GKS_WSTYPE", $fmt)
         gr_display(plt)
         GR.emergencyclosegks()
         write(io, readall("gks." * $fmt))
-        ENV["GKS_WSTYPE"] = ""
+        if _gr_wstype != nothing
+            setenv("GKS_WSTYPE", $_gr_wstype)
+        else
+            setenv("GKS_WSTYPE", "")
+        end
     end
 end
 
