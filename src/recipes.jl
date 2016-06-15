@@ -339,6 +339,73 @@ end
 
 
 # ---------------------------------------------------------------------------
+# bezier curves
+
+# get the value of the curve point at position t 
+function bezier_value(pts::AVec, t::Real)
+    val = 0.0
+    n = length(pts)-1
+    for (i,p) in enumerate(pts)
+        val += p * binomial(n, i-1) * (1-t)^(n-i+1) * t^(i-1)
+    end
+    val
+end
+
+# create segmented bezier curves in place of line segments
+@recipe function f(::Type{Val{:curves}}, x, y, z)
+    args = z != nothing ? (x,y,z) : (x,y)
+    newx, newy = zeros(0), zeros(0)
+    fr = d[:fillrange]
+    newfr = fr != nothing ? zeros(0) : nothing
+    newz = z != nothing ? zeros(0) : nothing
+    lz = d[:line_z]
+    newlz = lz != nothing ? zeros(0) : nothing
+
+    # for each line segment (point series with no NaNs), convert it into a bezier curve
+    # where the points are the control points of the curve
+    for rng in iter_segments(args...)
+        length(rng) < 2 && continue
+        ts = linspace(0, 1, pop!(d, :npoints, 20))
+        nanappend!(newx, map(t -> bezier_value(cycle(x,rng), t), ts))
+        nanappend!(newy, map(t -> bezier_value(cycle(y,rng), t), ts))
+        if z != nothing
+            nanappend!(newz, map(t -> bezier_value(cycle(z,rng), t), ts))
+        end
+        if fr != nothing
+            nanappend!(newfr, map(t -> bezier_value(cycle(fr,rng), t), ts))
+        end
+        if lz != nothing
+            lzrng = cycle(lz, rng) # the line_z's for this segment
+            # @show lzrng, sizeof(lzrng) map(t -> 1+floor(Int, t * (length(rng)-1)), ts)
+            # choose the line_z value of the control point just before this t
+            push!(newlz, 0.0)
+            append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
+            # lzrng = vcat()
+            # nanappend!(newlz,   #map(t -> bezier_value(cycle(lz,rng), t), ts))
+        end
+    end
+
+    x := newx
+    y := newy
+    if z == nothing
+        seriestype := :path
+    else
+        seriestype := :path3d
+        z := newz
+    end
+    if fr != nothing
+        fillrange := newfr
+    end
+    if lz != nothing
+        line_z := newlz
+        linecolor := (isa(d[:linecolor], ColorGradient) ? d[:linecolor] : default_gradient())
+    end
+    # Plots.DD(d)
+    ()
+end
+@deps curves path
+
+# ---------------------------------------------------------------------------
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)

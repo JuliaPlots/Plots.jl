@@ -11,6 +11,16 @@ function add_aliases(sym::Symbol, aliases::Symbol...)
     end
 end
 
+function add_non_underscore_aliases!(aliases::KW)
+    for (k,v) in aliases
+        s = string(k)
+        if '_' in s
+            aliases[Symbol(replace(s, "_", ""))] = v
+        end
+    end
+end
+
+
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
@@ -61,7 +71,11 @@ const _allTypes = vcat([
     :imagesc       => :image,
     :hist          => :histogram,
     :hist2d        => :histogram2d,
+    :bezier        => :curves,
+    :bezier_curves => :curves,
 )
+
+add_non_underscore_aliases!(_typeAliases)
 
 like_histogram(seriestype::Symbol) = seriestype in (:histogram, :density)
 like_line(seriestype::Symbol)      = seriestype in (:line, :path, :steppre, :steppost)

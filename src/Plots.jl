@@ -109,6 +109,7 @@ export
     chorddiagram,
 
     test_examples,
+    iter_segments,
 
     translate,
     translate!,
@@ -183,6 +184,7 @@ end
 @shorthands boxplot
 @shorthands violin
 @shorthands quiver
+@shorthands curves
 
 pie(args...; kw...)        = plot(args...; kw...,  seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
 pie!(args...; kw...)       = plot!(args...; kw..., seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)

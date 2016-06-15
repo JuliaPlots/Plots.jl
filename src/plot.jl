@@ -172,6 +172,11 @@ function _apply_series_recipe(plt::Plot, d::KW)
         sp_idx = get_subplot_index(plt, sp)
         _update_subplot_args(plt, sp, d, sp_idx)
 
+        # do we want to override the series type?
+        if !is3d(st) && d[:z] != nothing && (size(d[:x]) == size(d[:y]) == size(d[:z]))
+            st = d[:seriestype] = (st == :scatter ? :scatter3d : :path3d)
+        end
+
         # change to a 3d projection for this subplot?
         if is3d(st)
             sp.attr[:projection] = "3d"

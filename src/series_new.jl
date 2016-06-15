@@ -292,22 +292,22 @@ end
 # # 3d line or scatter
 
 @recipe function f(x::AVec, y::AVec, z::AVec)
-    st = get(d, :seriestype, :none)
-    if st == :scatter
-        d[:seriestype] = :scatter3d
-    elseif !is3d(st)
-        d[:seriestype] = :path3d
-    end
+    # st = get(d, :seriestype, :none)
+    # if st == :scatter
+    #     d[:seriestype] = :scatter3d
+    # elseif !is3d(st)
+    #     d[:seriestype] = :path3d
+    # end
     SliceIt, x, y, z
 end
 
 @recipe function f(x::AMat, y::AMat, z::AMat)
-    st = get(d, :seriestype, :none)
-    if size(x) == size(y) == size(z)
-        if !is3d(st)
-            seriestype := :path3d
-        end
-    end
+    # st = get(d, :seriestype, :none)
+    # if size(x) == size(y) == size(z)
+    #     if !is3d(st)
+    #         seriestype := :path3d
+    #     end
+    # end
     SliceIt, x, y, z
 end
 

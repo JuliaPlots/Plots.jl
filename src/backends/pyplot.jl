@@ -444,6 +444,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     lc = pyart3d.Line3DCollection(segments; kw...)
                     lc[:set_array](d[:line_z])
                     ax[:add_collection3d](lc, zs=z) #, zdir='y')
+                    lc
                 else
                     for i=1:n
                         segments[i] = [(cycle(x,i), cycle(y,i)), (cycle(x,i+1), cycle(y,i+1))]
@@ -451,6 +452,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     lc = pycollections.LineCollection(segments; kw...)
                     lc[:set_array](d[:line_z])
                     ax[:add_collection](lc)
+                    lc
                 end
                 push!(handles, handle)
                 needs_colorbar = true

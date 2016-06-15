@@ -136,6 +136,53 @@ function imageHack(d::KW)
     d[:z], d[:fillcolor] = replace_image_with_heatmap(d[:z].surf)
 end
 # ---------------------------------------------------------------
+
+# -----------------------------------------------------
+# helper to manage NaN-separated segments
+
+type SegmentsIterator
+    args::Tuple
+    nextidx::Int
+    n::Int
+end
+function iter_segments(args...)
+    tup = Plots.wraptuple(args)
+    n = maximum(map(length, tup))
+    SegmentsIterator(tup, 0, n)
+end
+
+# helpers to figure out if there are NaN values in a list of array types
+anynan(i::Int, args...) = any(a -> isnan(cycle(a,i)), args)
+anynan(istart::Int, iend::Int, args...) = any(i -> anynan(i, args...), istart:iend)
+allnan(istart::Int, iend::Int, args...) = all(i -> anynan(i, args...), istart:iend)
+
+Base.start(itr::SegmentsIterator) = (itr.nextidx = 1) #resets
+Base.done(itr::SegmentsIterator, unused::Int) = itr.nextidx > itr.n
+function Base.next(itr::SegmentsIterator, unused::Int)
+    i = istart = iend = itr.nextidx
+
+    # find the next NaN, and iend is the one before
+    while i <= itr.n + 1
+        if i > itr.n || anynan(i, itr.args...)
+            # done... array end or found NaN
+            iend = i-1
+            break
+        end
+        i += 1
+    end
+
+    # find the next non-NaN, and set itr.nextidx
+    while i <= itr.n
+        if !anynan(i, itr.args...)
+            break
+        end
+        i += 1
+    end
+
+    itr.nextidx = i
+    istart:iend, 0
+end
+
 # ------------------------------------------------------------------------------------
 
 
@@ -145,6 +192,10 @@ notimpl() = error("This has not been implemented yet")
 Base.cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
 Base.cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
 Base.cycle(v, idx::Int)       = v
+
+Base.cycle(v::AVec, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
+Base.cycle(v::AMat, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
+Base.cycle(v, idx::AVec{Int})       = v
 
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]
