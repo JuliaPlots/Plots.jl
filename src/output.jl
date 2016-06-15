@@ -119,11 +119,13 @@ const _mimeformats = Dict(
     "application/pdf"         => "pdf",
     "image/png"               => "png",
     "application/postscript"  => "ps",
-    "image/svg+xml"           => "svg"
+    "image/svg+xml"           => "svg",
+    "text/plain"              => "txt",
 )
 
 const _best_html_output_type = KW(
     :pyplot => :png,
+    :unicodeplots => :txt,
 )
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
@@ -138,6 +140,8 @@ function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
     elseif output_type == :svg
         # info("writing svg to html output")
         writemime(io, MIME("image/svg+xml"), plt)
+    elseif output_type == :txt
+        writemime(io, MIME("text/plain"), plt)
     else
         error("only png or svg allowed. got: $output_type")
     end
