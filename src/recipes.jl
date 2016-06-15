@@ -360,12 +360,13 @@ end
     newz = z != nothing ? zeros(0) : nothing
     lz = d[:line_z]
     newlz = lz != nothing ? zeros(0) : nothing
+    npoints = pop!(d, :npoints, 30)
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
     for rng in iter_segments(args...)
         length(rng) < 2 && continue
-        ts = linspace(0, 1, pop!(d, :npoints, 20))
+        ts = linspace(0, 1, npoints)
         nanappend!(newx, map(t -> bezier_value(cycle(x,rng), t), ts))
         nanappend!(newy, map(t -> bezier_value(cycle(y,rng), t), ts))
         if z != nothing
