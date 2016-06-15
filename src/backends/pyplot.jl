@@ -64,6 +64,7 @@ function _initialize_backend(::PyPlotBackend)
         const pynp = PyPlot.pywrap(PyPlot.pyimport("numpy"))
         const pytransforms = PyPlot.pywrap(PyPlot.pyimport("matplotlib.transforms"))
         const pycollections = PyPlot.pywrap(PyPlot.pyimport("matplotlib.collections"))
+        const pyart3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d.art3d"))
     end
 
     # we don't want every command to update the figure
@@ -429,18 +430,28 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 # multicolored line segments
                 n = length(x) - 1
                 segments = Array(Any,n)
-                for i=1:n
-                    segments[i] = [(cycle(x,i), cycle(y,i)), (cycle(x,i+1), cycle(y,i+1))]
-                end
-                lc = pycollections.LineCollection(segments;
-                    label = d[:label],
-                    zorder = plt.n,
-                    cmap = py_linecolormap(d),
-                    linewidth = d[:linewidth],
-                    linestyle = py_linestyle(st, d[:linestyle])
+                kw = KW(
+                    :label => d[:label],
+                    :zorder => plt.n,
+                    :cmap => py_linecolormap(d),
+                    :linewidth => d[:linewidth],
+                    :linestyle => py_linestyle(st, d[:linestyle])
                 )
-                lc[:set_array](d[:line_z])
-                handle = ax[:add_collection](lc)
+                handle = if is3d(st)
+                    for i=1:n
+                        segments[i] = [(cycle(x,i), cycle(y,i), cycle(z,i)), (cycle(x,i+1), cycle(y,i+1), cycle(z,i+1))]
+                    end
+                    lc = pyart3d.Line3DCollection(segments; kw...)
+                    lc[:set_array](d[:line_z])
+                    ax[:add_collection3d](lc, zs=z) #, zdir='y')
+                else
+                    for i=1:n
+                        segments[i] = [(cycle(x,i), cycle(y,i)), (cycle(x,i+1), cycle(y,i+1))]
+                    end
+                    lc = pycollections.LineCollection(segments; kw...)
+                    lc[:set_array](d[:line_z])
+                    ax[:add_collection](lc)
+                end
                 push!(handles, handle)
                 needs_colorbar = true
             end
