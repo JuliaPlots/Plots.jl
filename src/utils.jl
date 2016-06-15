@@ -152,7 +152,7 @@ function iter_segments(args...)
 end
 
 # helpers to figure out if there are NaN values in a list of array types
-anynan(i::Int, args...) = any(a -> isnan(cycle(a,i)), args)
+anynan(i::Int, args...) = any(a -> !isfinite(cycle(a,i)), args)
 anynan(istart::Int, iend::Int, args...) = any(i -> anynan(i, args...), istart:iend)
 allnan(istart::Int, iend::Int, args...) = all(i -> anynan(i, args...), istart:iend)
 
