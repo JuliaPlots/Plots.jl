@@ -337,9 +337,6 @@ function _plot!(plt::Plot, d::KW, args...)
                         :label => "",
                         :primary => false,
                     )))
-
-                    # don't allow something else to handle it
-                    d[:smooth] = false
                 end
 
             else
@@ -348,6 +345,9 @@ function _plot!(plt::Plot, d::KW, args...)
             end
         end
     end
+
+    # don't allow something else to handle it
+    d[:smooth] = false
 
     # merge in anything meant for plot/subplot/axis
     for kw in kw_list
@@ -405,13 +405,15 @@ function _plot!(plt::Plot, d::KW, args...)
     # we'll keep a map of subplot to an attribute override dict.
     # any series which belong to that subplot
     sp_attrs = Dict{Subplot,Any}()
-    for (i,kw) in enumerate(kw_list)
+    for kw in kw_list
         # get the Subplot object to which the series belongs
         sp = get(kw, :subplot, :auto)
+        command_idx = kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
         sp = if sp == :auto
-            mod1(i,length(plt.subplots))
+            cycle(plt.subplots, command_idx)
+            # mod1(command_idx, length(plt.subplots))
         else
-            slice_arg(sp, i)
+            slice_arg(sp, command_idx)
         end
         sp = kw[:subplot] = get_subplot(plt, sp)
         # idx = get_subplot_index(plt, sp)
@@ -452,7 +454,7 @@ function _plot!(plt::Plot, d::KW, args...)
 
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
-    for (i,kw) in enumerate(kw_list)
+    for kw in kw_list
         command_idx = kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
 
         # # get the Subplot object to which the series belongs

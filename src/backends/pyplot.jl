@@ -952,7 +952,10 @@ function py_compute_axis_minval(axis::Axis)
     minval = 1.0
     sp = axis.sp
     for series in series_list(axis.sp)
-        minval = min(minval, minimum(abs(series.d[axis[:letter]])))
+        v = series.d[axis[:letter]]
+        if !isempty(v)
+            minval = min(minval, minimum(abs(v)))
+        end
     end
 
     # now if the axis limits go to a smaller abs value, use that instead

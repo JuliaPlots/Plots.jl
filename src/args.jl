@@ -712,7 +712,7 @@ end
 function extractGroupArgs(v::AVec, args...)
     groupLabels = sort(collect(unique(v)))
     n = length(groupLabels)
-    if n > 20
+    if n > 100
         warn("You created n=$n groups... Is that intended?")
     end
     groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]

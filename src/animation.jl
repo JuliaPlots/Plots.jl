@@ -24,7 +24,7 @@ immutable AnimatedGif
   filename::Compat.ASCIIString
 end
 
-function gif(anim::Animation, fn = "tmp.gif"; fps::Integer = 20)
+function gif(anim::Animation, fn = tempname()*".gif"; fps::Integer = 20)
   fn = abspath(fn)
 
   try
