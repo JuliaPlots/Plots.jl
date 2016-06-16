@@ -431,6 +431,7 @@ add_aliases(:projection, :proj)
 add_aliases(:title_location, :title_loc, :titleloc, :title_position, :title_pos, :titlepos, :titleposition, :title_align, :title_alignment)
 add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation)
 add_aliases(:html_output_format, :format, :fmt, :html_format)
+add_aliases(:orientation, :direction, :dir)
 
 
 # add all pluralized forms to the _keyAliases dict

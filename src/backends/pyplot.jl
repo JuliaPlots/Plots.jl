@@ -34,8 +34,8 @@ supported_args(::PyPlotBackend) = merge_with_base_supported([
 supported_types(::PyPlotBackend) = [
         :path, :steppre, :steppost, :shape,
         :scatter, :histogram2d, :hexbin, :histogram,
-        :bar, :sticks,
-        :hline, :vline, :heatmap, :pie, :image,
+        :bar,
+        :heatmap, :pie, :image,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
     ]
 supported_styles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
@@ -508,24 +508,24 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
     end
 
-    if st == :sticks
-        extrakw[isvertical(d) ? :width : :height] = 0.0
-        handle = ax[isvertical(d) ? :bar : :barh](x, y;
-            label = d[:label],
-            zorder = plt.n,
-            color = py_linecolor(d),
-            edgecolor = py_linecolor(d),
-            linewidth = d[:linewidth],
-            align = "center",
-            extrakw...
-        )[1]
-        push!(handles, handle)
-    end
+    # if st == :sticks
+    #     extrakw[isvertical(d) ? :width : :height] = 0.0
+    #     handle = ax[isvertical(d) ? :bar : :barh](x, y;
+    #         label = d[:label],
+    #         zorder = plt.n,
+    #         color = py_linecolor(d),
+    #         edgecolor = py_linecolor(d),
+    #         linewidth = d[:linewidth],
+    #         align = "center",
+    #         extrakw...
+    #     )[1]
+    #     push!(handles, handle)
+    # end
 
     # add markers?
     if d[:markershape] != :none && st in (:path, :scatter, :path3d,
                                           :scatter3d, :steppre, :steppost,
-                                          :bar, :sticks)
+                                          :bar)
         extrakw = KW()
         if d[:marker_z] == nothing
             extrakw[:c] = py_color_fix(py_markercolor(d), x)
@@ -539,7 +539,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             needs_colorbar = true
         end
-        xyargs = if st in (:bar, :sticks) && !isvertical(d)
+        xyargs = if st == :bar && !isvertical(d)
             (y, x)
         else
             xyargs
@@ -624,17 +624,17 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         needs_colorbar = true
     end
 
-    if st in (:hline,:vline)
-        for yi in d[:y]
-            func = ax[st == :hline ? :axhline : :axvline]
-            handle = func(yi;
-                linewidth=d[:linewidth],
-                color=py_linecolor(d),
-                linestyle=py_linestyle(st, d[:linestyle])
-            )
-            push!(handles, handle)
-        end
-    end
+    # if st in (:hline,:vline)
+    #     for yi in d[:y]
+    #         func = ax[st == :hline ? :axhline : :axvline]
+    #         handle = func(yi;
+    #             linewidth=d[:linewidth],
+    #             color=py_linecolor(d),
+    #             linestyle=py_linestyle(st, d[:linestyle])
+    #         )
+    #         push!(handles, handle)
+    #     end
+    # end
 
     if st in (:contour, :contour3d)
         # z = z.surf'

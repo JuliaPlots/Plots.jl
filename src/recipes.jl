@@ -1039,6 +1039,9 @@ end
 
 # -------------------------------------------------
 
+# TODO: everything below here should be either changed to a
+#       series recipe or moved to PlotRecipes
+
 
 "Sparsity plot... heatmap of non-zero values of a matrix"
 function spy{T<:Real}(z::AMat{T}; kw...)
@@ -1100,56 +1103,56 @@ end
 
 curvecolor(value, min, max, grad) = getColorZ(grad, (value-min)/(max-min))
 
-"Plots a clockwise arc, from source to destiny, colored by weight"
-function arc!(source, destiny, weight, min, max, grad)
-    radius = (destiny - source) / 2
-    arc = Plots.partialcircle(0, π, 30, radius)
-    x, y = Plots.unzip(arc)
-    plot!(x .+ radius .+ source,  y, line = (curvecolor(weight, min, max, grad), 0.5, 2), legend=false)
-end
+# "Plots a clockwise arc, from source to destiny, colored by weight"
+# function arc!(source, destiny, weight, min, max, grad)
+#     radius = (destiny - source) / 2
+#     arc = Plots.partialcircle(0, π, 30, radius)
+#     x, y = Plots.unzip(arc)
+#     plot!(x .+ radius .+ source,  y, line = (curvecolor(weight, min, max, grad), 0.5, 2), legend=false)
+# end
 
-"""
-`arcdiagram(source, destiny, weight[, grad])`
+# """
+# `arcdiagram(source, destiny, weight[, grad])`
 
-Plots an arc diagram, form `source` to `destiny` (clockwise), using `weight` to determine the colors.
-"""
-function arcdiagram(source, destiny, weight; kargs...)
+# Plots an arc diagram, form `source` to `destiny` (clockwise), using `weight` to determine the colors.
+# """
+# function arcdiagram(source, destiny, weight; kargs...)
 
-    args = KW(kargs)
-    grad = pop!(args, :grad,   ColorGradient([colorant"darkred", colorant"darkblue"]))
+#     args = KW(kargs)
+#     grad = pop!(args, :grad,   ColorGradient([colorant"darkred", colorant"darkblue"]))
 
-    if length(source) == length(destiny) == length(weight)
+#     if length(source) == length(destiny) == length(weight)
 
-        vertices = unique(vcat(source, destiny))
-        sort!(vertices)
+#         vertices = unique(vcat(source, destiny))
+#         sort!(vertices)
 
-        xmin, xmax = extrema(vertices)
-        plot(xlim=(xmin - 0.5, xmax + 0.5), legend=false)
+#         xmin, xmax = extrema(vertices)
+#         plot(xlim=(xmin - 0.5, xmax + 0.5), legend=false)
 
-        wmin,wmax = extrema(weight)
+#         wmin,wmax = extrema(weight)
 
-        for (i, j, value) in zip(source,destiny,weight)
-            arc!(i, j, value, wmin, wmax, grad)
-        end
+#         for (i, j, value) in zip(source,destiny,weight)
+#             arc!(i, j, value, wmin, wmax, grad)
+#         end
 
-        scatter!(vertices, zeros(length(vertices)); legend=false, args...)
+#         scatter!(vertices, zeros(length(vertices)); legend=false, args...)
 
-    else
+#     else
 
-        throw(ArgumentError("source, destiny and weight should have the same length"))
+#         throw(ArgumentError("source, destiny and weight should have the same length"))
 
-    end
-end
+#     end
+# end
 
-"""
-`arcdiagram(mat[, grad])`
+# """
+# `arcdiagram(mat[, grad])`
 
-Plots an arc diagram from an adjacency matrix, form rows to columns (clockwise),
-using the values on the matrix as weights to determine the colors.
-Doesn't show edges with value zero if the input is sparse.
-For simmetric matrices, only the upper triangular values are used.
-"""
-arcdiagram{T}(mat::AbstractArray{T,2}; kargs...) = arcdiagram(mat2list(mat)...; kargs...)
+# Plots an arc diagram from an adjacency matrix, form rows to columns (clockwise),
+# using the values on the matrix as weights to determine the colors.
+# Doesn't show edges with value zero if the input is sparse.
+# For simmetric matrices, only the upper triangular values are used.
+# """
+# arcdiagram{T}(mat::AbstractArray{T,2}; kargs...) = arcdiagram(mat2list(mat)...; kargs...)
 
 # ---------------------------------------------------------------------------
 # Chord diagram
