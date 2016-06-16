@@ -343,7 +343,7 @@ function _create_backend_figure(plt::Plot{PyPlotBackend})
     end
 
     # clear the figure
-    PyPlot.clf()
+    # PyPlot.clf()
     fig
 end
 
@@ -1003,12 +1003,10 @@ end
 
 
 function _before_layout_calcs(plt::Plot{PyPlotBackend})
-    # clear the figure
-    PyPlot.clf()
-
-    # update the specs
+    # update the fig
     w, h = plt[:size]
     fig = plt.o
+    fig[:clear]()
     fig[:set_size_inches](px2inch(w), px2inch(h), forward = true)
     fig[:set_facecolor](py_color(plt[:background_color_outside]))
     fig[:set_dpi](DPI)

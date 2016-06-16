@@ -188,6 +188,18 @@ function _apply_series_recipe(plt::Plot, d::KW)
             sp.attr[:init] = true
         end
 
+        # strip out series annotations (those which are based on series x/y coords)
+        # and add them to the subplot attr
+        sp_anns = annotations(sp[:annotations])
+        anns = annotations(pop!(d, :series_annotations, []))
+        if length(anns) > 0
+            x, y = d[:x], d[:y]
+            nx, ny, na = map(length, (x,y,anns))
+            n = max(nx, ny, na)
+            anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(anns[mod1(i,na)])) for i=1:n]
+        end
+        sp.attr[:annotations] = vcat(sp_anns, anns)
+
         # adjust extrema and discrete info
         if st == :image
             w, h = size(d[:z])
@@ -454,17 +466,17 @@ function _plot!(plt::Plot, d::KW, args...)
         sp = kw[:subplot]
         idx = get_subplot_index(plt, sp)
 
-        # strip out series annotations (those which are based on series x/y coords)
-        # and add them to the subplot attr
-        sp_anns = annotations(sp[:annotations])
-        anns = annotations(pop!(kw, :series_annotations, []))
-        if length(anns) > 0
-            x, y = kw[:x], kw[:y]
-            nx, ny, na = map(length, (x,y,anns))
-            n = max(nx, ny, na)
-            anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(anns[mod1(i,na)])) for i=1:n]
-        end
-        sp.attr[:annotations] = vcat(sp_anns, anns)
+        # # strip out series annotations (those which are based on series x/y coords)
+        # # and add them to the subplot attr
+        # sp_anns = annotations(sp[:annotations])
+        # anns = annotations(pop!(kw, :series_annotations, []))
+        # if length(anns) > 0
+        #     x, y = kw[:x], kw[:y]
+        #     nx, ny, na = map(length, (x,y,anns))
+        #     n = max(nx, ny, na)
+        #     anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(anns[mod1(i,na)])) for i=1:n]
+        # end
+        # sp.attr[:annotations] = vcat(sp_anns, anns)
 
         # we update subplot args in case something like the color palatte is part of the recipe
         _update_subplot_args(plt, sp, kw, idx)
