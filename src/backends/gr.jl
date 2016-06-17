@@ -41,7 +41,6 @@ supported_scales(::GRBackend) = [:identity, :log10]
 is_subplot_supported(::GRBackend) = true
 
 
-
 function _initialize_backend(::GRBackend; kw...)
     @eval begin
         import GR
@@ -261,6 +260,23 @@ function normalize_zvals(zv::AVec)
 end
 
 
+function gr_draw_markers(d::KW, x, y)
+    if d[:markershape] in (:circle, :rect, :diamond, :utriangle, :dtriangle,
+                           :pentagon, :hexagon, :heptagon, :octagon,
+                           :star4, :star5, :star6, :star7, :star8)
+        # for filled markers, draw the marker border first and
+        # then continue drawing with reduced marker size
+        msize = 0.5 * d[:markersize]
+        GR.setmarkersize(msize)
+        gr_set_markercolor(d[:markerstrokecolor], d[:markerstrokealpha])
+        gr_polymarker(d, x, y)
+        GR.setmarkersize(msize * 0.75)
+        gr_set_markercolor(d[:markercolor], d[:markeralpha])
+    end
+    gr_polymarker(d, x, y)
+end
+
+
 function gr_draw_markers(d::KW, x, y, msize, mz, c, a)
     if length(x) > 0
         mz == nothing && gr_set_markercolor(c, a)
@@ -268,7 +284,7 @@ function gr_draw_markers(d::KW, x, y, msize, mz, c, a)
         if typeof(msize) <: Number && mz == nothing
             # draw the markers all the same
             GR.setmarkersize(msize)
-            gr_polymarker(d, x, y)
+            gr_draw_markers(d, x, y)
         else
             # draw each marker differently
             for i = 1:length(x)
