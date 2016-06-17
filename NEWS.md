@@ -9,6 +9,19 @@
 
 ## 0.7 (current master/dev)
 
+#### 0.7.2
+
+- line_z arg for multicolored line segments
+- pyplot
+	- line_z (2d and 3d)
+	- pushed all fig updates into display pipeline
+	- remove native sticks/hline/vline in favor of recipes
+- unicodeplots cleanup, ijulia fixes, ascii canvas
+- `curves` series type
+- `iter_segments` iterator
+- moved arcdiagram out and into PlotRecipes (thanks @diegozea)
+- several other fixes/checks
+
 #### 0.7.1
 
 - inset (floating) subplots
