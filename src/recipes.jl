@@ -714,18 +714,17 @@ end
 
 # function apply_series_recipe(d::KW, ::Type{Val{:violin}})
 @recipe function f(::Type{Val{:violin}}, x, y, z; trim=true)
-    # dumpdict(d, "box before", true)
-    # TODO: add scatter series with outliers
+    delete!(d, :trim)
 
     # create a list of shapes, where each shape is a single boxplot
     shapes = Shape[]
-    groupby = extractGroupArgs(d[:x])
+    groupby = extractGroupArgs(x)
 
     for (i, glabel) in enumerate(groupby.groupLabels)
-
         # get the edges and widths
         y = d[:y][groupby.groupIds[i]]
         widths, centers = violin_coords(y, trim=trim)
+        isempty(widths) && continue
 
         # normalize
         widths = _box_halfwidth * widths / maximum(widths)
@@ -737,14 +736,7 @@ end
         push!(shapes, Shape(xcoords, ycoords))
     end
 
-    # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
     seriestype := :shape
-    # n = length(groupby.groupLabels)
-    # xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
-
-    # clean up d
-    pop!(d, :trim)
-
     d[:x], d[:y] = shape_coords(shapes)
     ()
 end

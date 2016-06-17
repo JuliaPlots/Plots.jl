@@ -5,6 +5,7 @@ supported_args(::PlotlyJSBackend) = supported_args(PlotlyBackend())
 supported_types(::PlotlyJSBackend) = supported_types(PlotlyBackend())
 supported_styles(::PlotlyJSBackend) = supported_styles(PlotlyBackend())
 supported_markers(::PlotlyJSBackend) = supported_markers(PlotlyBackend())
+supported_scales(::PlotlyJSBackend) = supported_scales(PlotlyBackend())
 is_subplot_supported(::PlotlyJSBackend) = true
 is_string_supported(::PlotlyJSBackend) = true
 
