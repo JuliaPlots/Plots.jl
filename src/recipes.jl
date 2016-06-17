@@ -69,7 +69,7 @@ function seriestype_supported(pkg::AbstractBackend, st::Symbol)
     if st in supported_types(pkg)
         return :native
     end
-    
+
     haskey(_series_recipe_deps, st) || return :no
 
     supported = true
@@ -341,7 +341,7 @@ end
 # ---------------------------------------------------------------------------
 # bezier curves
 
-# get the value of the curve point at position t 
+# get the value of the curve point at position t
 function bezier_value(pts::AVec, t::Real)
     val = 0.0
     n = length(pts)-1
@@ -719,23 +719,38 @@ end
 
     # create a list of shapes, where each shape is a single boxplot
     shapes = Shape[]
-    groupby = extractGroupArgs(d[:x])
 
-    for (i, glabel) in enumerate(groupby.groupLabels)
+    legend --> false
 
-        # get the edges and widths
-        y = d[:y][groupby.groupIds[i]]
-        widths, centers = violin_coords(y, trim=trim)
-
+    if length(d[:x])==1
+        widths, centers = violin_coords(d[:y], trim=trim)
         # normalize
         widths = _box_halfwidth * widths / maximum(widths)
 
         # make the violin
-        xcenter = discrete_value!(d[:subplot][:xaxis], glabel)[1]
+        xcenter = discrete_value!(d[:subplot][:xaxis], d[:x][1])[1]
         xcoords = vcat(widths, -reverse(widths)) + xcenter
         ycoords = vcat(centers, reverse(centers))
         push!(shapes, Shape(xcoords, ycoords))
+    else
+        groupby = extractGroupArgs(d[:x])
+        for (i, glabel) in enumerate(groupby.groupLabels)
+
+            # get the edges and widths
+            y = d[:y][groupby.groupIds[i]]
+            widths, centers = violin_coords(y, trim=trim)
+
+            # normalize
+            widths = _box_halfwidth * widths / maximum(widths)
+
+            # make the violin
+            xcenter = discrete_value!(d[:subplot][:xaxis], glabel)[1]
+            xcoords = vcat(widths, -reverse(widths)) + xcenter
+            ycoords = vcat(centers, reverse(centers))
+            push!(shapes, Shape(xcoords, ycoords))
+        end
     end
+
 
     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
     seriestype := :shape
