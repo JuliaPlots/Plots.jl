@@ -896,11 +896,14 @@ for (mime, fmt) in _gr_mimeformats
     @eval function _writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
         wstype = haskey(ENV, "GKS_WSTYPE") ? ENV["GKS_WSTYPE"] : "0"
+        filepath = tempname() * "." * $fmt
         ENV["GKS_WSTYPE"] = $fmt
+        ENV["GKS_FILEPATH"] = filepath
         gr_display(plt)
         GR.emergencyclosegks()
-        write(io, readall("gks." * $fmt))
+        write(io, readall(filepath))
         ENV["GKS_WSTYPE"] = wstype
+        rm(filepath)
     end
 end
 
