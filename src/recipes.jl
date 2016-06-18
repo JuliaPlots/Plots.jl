@@ -214,8 +214,20 @@ end
 # end
 # @deps sticks path
 
+function hvline_limits(axis::Axis)
+    vmin, vmax = axis_limits(axis)
+    if vmin >= vmax
+        if isfinite(vmin)
+            vmax = vmin + 1
+        else
+            vmin, vmax = 0.0, 1.1
+        end
+    end
+    vmin, vmax
+end
+
 @recipe function f(::Type{Val{:hline}}, x, y, z)
-    xmin, xmax = axis_limits(d[:subplot][:xaxis])
+    xmin, xmax = hvline_limits(d[:subplot][:xaxis])
     n = length(y)
     newx = repmat(Float64[xmin, xmax, NaN], n)
     newy = vec(Float64[yi for i=1:3,yi=y])
@@ -227,7 +239,7 @@ end
 @deps hline path
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
-    ymin, ymax = axis_limits(d[:subplot][:yaxis])
+    ymin, ymax = hvline_limits(d[:subplot][:yaxis])
     n = length(y)
     newx = vec(Float64[yi for i=1:3,yi=y])
     newy = repmat(Float64[ymin, ymax, NaN], n)

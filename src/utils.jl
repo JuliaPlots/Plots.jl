@@ -189,6 +189,9 @@ end
 nop() = nothing
 notimpl() = error("This has not been implemented yet")
 
+Base.cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
+Base.cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
+
 Base.cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
 Base.cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
 Base.cycle(v, idx::Int)       = v

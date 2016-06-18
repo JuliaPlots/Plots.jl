@@ -162,8 +162,11 @@ end
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
 function _apply_series_recipe(plt::Plot, d::KW)
+    # replace seriestype aliases
     st = d[:seriestype]
-    # @show st
+    st = d[:seriestype] = get(_typeAliases, st, st)
+
+    # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
     if st in supported_types()
 
         # getting ready to add the series... last update to subplot from anything
@@ -256,6 +259,24 @@ function _plot!(plt::Plot, d::KW, args...)
         args = (extractGroupArgs(d[:group], args...), args...)
     end
 
+    kw_list = KW[]
+    # still_to_process = isempty(args) ? [] : [RecipeData(copy(d), args)]
+    still_to_process = if isempty(args)
+        []
+    else
+        # if we were passed a vector/matrix of series types and there's more than one row,
+        # we want to duplicate the inputs, once for each seriestype row.
+        sts = get(d, :seriestype, :path)
+        if typeof(sts) <: AbstractArray
+            [begin
+                dc = copy(d)
+                dc[:seriestype] = sts[r,:]
+                RecipeData(dc, args)
+            end for r=1:size(sts,1)]
+        else
+            [RecipeData(copy(d), args)]
+        end
+    end
 
     # for plotting recipes, swap out the args and update the parameter dictionary
     # we are keeping a queue of series that still need to be processed.
@@ -263,8 +284,6 @@ function _plot!(plt::Plot, d::KW, args...)
     # the recipe will return a list a Series objects... the ones that are
     # finished (no more args) get added to the kw_list, and the rest go into the queue
     # for processing.
-    kw_list = KW[]
-    still_to_process = isempty(args) ? [] : [RecipeData(copy(d), args)]
     while !isempty(still_to_process)
 
         # grab the first in line to be processed and pass it through apply_recipe
@@ -409,12 +428,13 @@ function _plot!(plt::Plot, d::KW, args...)
         # get the Subplot object to which the series belongs
         sp = get(kw, :subplot, :auto)
         command_idx = kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
-        sp = if sp == :auto
-            cycle(plt.subplots, command_idx)
-            # mod1(command_idx, length(plt.subplots))
-        else
-            slice_arg(sp, command_idx)
-        end
+        sp = cycle(sp==:auto ? plt.subplots : sp, command_idx)
+        # sp = if sp == :auto
+        #     cycle(plt.subplots, command_idx)
+        #     # mod1(command_idx, length(plt.subplots))
+        # else
+        #     cycle(sp, command_idx)
+        # end
         sp = kw[:subplot] = get_subplot(plt, sp)
         # idx = get_subplot_index(plt, sp)
         attr = KW()
