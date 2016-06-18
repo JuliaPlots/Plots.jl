@@ -244,12 +244,15 @@ function _apply_series_recipe(plt::Plot, d::KW)
     end
 end
 
+function command_idx(kw_list::AVec{KW}, kw::KW)
+    kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
+end
+
 
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
 function _plot!(plt::Plot, d::KW, args...)
-    # d = plt.user_attr
     d[:plot_object] = plt
 
     # the grouping mechanism is a recipe on a GroupBy object
@@ -259,13 +262,12 @@ function _plot!(plt::Plot, d::KW, args...)
         args = (extractGroupArgs(d[:group], args...), args...)
     end
 
+    # if we were passed a vector/matrix of seriestypes and there's more than one row,
+    # we want to duplicate the inputs, once for each seriestype row.
     kw_list = KW[]
-    # still_to_process = isempty(args) ? [] : [RecipeData(copy(d), args)]
     still_to_process = if isempty(args)
         []
     else
-        # if we were passed a vector/matrix of series types and there's more than one row,
-        # we want to duplicate the inputs, once for each seriestype row.
         sts = get(d, :seriestype, :path)
         if typeof(sts) <: AbstractArray
             [begin
@@ -277,6 +279,10 @@ function _plot!(plt::Plot, d::KW, args...)
             [RecipeData(copy(d), args)]
         end
     end
+
+    # --------------------------------
+    # "USER RECIPES"
+    # --------------------------------
 
     # for plotting recipes, swap out the args and update the parameter dictionary
     # we are keeping a queue of series that still need to be processed.
@@ -368,25 +374,49 @@ function _plot!(plt::Plot, d::KW, args...)
     # don't allow something else to handle it
     d[:smooth] = false
 
-    # merge in anything meant for plot/subplot/axis
-    for kw in kw_list
-        for (k,v) in kw
-            for defdict in (_plot_defaults,)
-                            # _subplot_defaults,
-                            # _axis_defaults,
-                            # _axis_defaults_byletter)
-                if haskey(defdict, k)
-                    d[k] = pop!(kw, k)
-                end
+    # --------------------------------
+    # "PLOT RECIPES"
+    # --------------------------------
+
+    # TODO: a new recipe type: "plot recipe", which acts like a series type, and is processed before
+    # the plot layout is created, which allows for setting layouts and other plot-wide attributes.
+    # we get inputs which have been fully processed by "user recipes" and "type recipes",
+    # so we can expect standard vectors, surfaces, etc.  No defaults have been set yet.
+    still_to_process = kw_list
+    kw_list = KW[]
+    while !isempty(still_to_process)
+        # Grab the first in line to be processed and pass it through apply_recipe
+        # to generate a list of RecipeData objects (data + attributes).
+        # If we applied a "plot recipe" without error, then add the returned datalist's KWs,
+        # otherwise we just add the original KW.
+        next_kw = shift!(still_to_process)
+        try
+            st = next_kw[:seriestype]
+            st = next_kw[:seriestype] = get(_typeAliases, st, st)
+            datalist = RecipesBase.apply_recipe(next_kw, Val{st})
+            info("processed $st $(length(datalist))")
+            for data in datalist
+                push!(kw_list, data.d)
             end
+        catch err
+            @show err
+            push!(kw_list, next_kw)
         end
+    end
+
+    # --------------------------------
+    # Plot/Subplot/Layout setup
+    # --------------------------------
+    
+    # merge in anything meant for the Plot
+    for kw in kw_list, (k,v) in kw
+        haskey(_plot_defaults, k) && (d[k] = pop!(kw, k))
     end
 
     # TODO: init subplots here
     _update_plot_args(plt, d)
     if !plt.init
         plt.o = _create_backend_figure(plt)
-        # DD(d)
 
         # create the layout and subplots from the inputs
         plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
@@ -415,30 +445,24 @@ function _plot!(plt::Plot, d::KW, args...)
             sp = Subplot(backend(), parent=parent)
             sp.plt = plt
             sp.attr[:relative_bbox] = bb
-            push!(plt.subplots, sp)
             sp.attr[:subplot_index] = length(plt.subplots)
+            push!(plt.subplots, sp)
             push!(plt.inset_subplots, sp)
         end
     end
 
     # we'll keep a map of subplot to an attribute override dict.
-    # any series which belong to that subplot
+    # Subplot/Axis attributes set by a user/series recipe apply only to the
+    # Subplot object which they belong to.
+    # TODO: allow matrices to still apply to all subplots
     sp_attrs = Dict{Subplot,Any}()
     for kw in kw_list
-        # get the Subplot object to which the series belongs
-        sp = get(kw, :subplot, :auto)
-        command_idx = kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
-        sp = cycle(sp==:auto ? plt.subplots : sp, command_idx)
-        # sp = if sp == :auto
-        #     cycle(plt.subplots, command_idx)
-        #     # mod1(command_idx, length(plt.subplots))
-        # else
-        #     cycle(sp, command_idx)
-        # end
-        sp = kw[:subplot] = get_subplot(plt, sp)
-        # idx = get_subplot_index(plt, sp)
-        attr = KW()
+        # get the Subplot object to which the series belongs.
+        sps = get(kw, :subplot, :auto)
+        sp = get_subplot(plt, cycle(sps == :auto ? plt.subplots : sps, command_idx(kw_list,kw)))
+        kw[:subplot] = sp
 
+        attr = KW()
         for (k,v) in kw
             for defdict in (_subplot_defaults,
                             _axis_defaults,
@@ -451,20 +475,11 @@ function _plot!(plt::Plot, d::KW, args...)
         sp_attrs[sp] = attr
     end
 
-
-
-    # # just in case the backend needs to set up the plot (make it current or something)
-    # _prepare_plot_object(plt)
-
-    # first apply any args for the subplots
+    # override subplot/axis args.  `sp_attrs` take precendence
     for (idx,sp) in enumerate(plt.subplots)
-        # if we picked up any subplot-specific overrides, merge them here
         attr = merge(d, get(sp_attrs, sp, KW()))
-        # DD(attr, "sp$idx")
         _update_subplot_args(plt, sp, attr, idx, remove_pair = false)
     end
-
-
 
     # do we need to link any axes together?
     link_axes!(plt.layout, plt[:link])
@@ -472,39 +487,21 @@ function _plot!(plt::Plot, d::KW, args...)
     # !!! note: At this point, kw_list is fully decomposed into individual series... one KW per series.          !!!
     # !!!       The next step is to recursively apply series recipes until the backend supports that series type !!!
 
+    # --------------------------------
+    # "SERIES RECIPES"
+    # --------------------------------
+    
     # this is it folks!
     # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
     for kw in kw_list
-        command_idx = kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
-
-        # # get the Subplot object to which the series belongs
-        # sp = get(kw, :subplot, :auto)
-        # sp = if sp == :auto
-        #     mod1(i,length(plt.subplots))
-        # else
-        #     slice_arg(sp, i)
-        # end
-        # sp = kw[:subplot] = get_subplot(plt, sp)
         sp = kw[:subplot]
         idx = get_subplot_index(plt, sp)
 
-        # # strip out series annotations (those which are based on series x/y coords)
-        # # and add them to the subplot attr
-        # sp_anns = annotations(sp[:annotations])
-        # anns = annotations(pop!(kw, :series_annotations, []))
-        # if length(anns) > 0
-        #     x, y = kw[:x], kw[:y]
-        #     nx, ny, na = map(length, (x,y,anns))
-        #     n = max(nx, ny, na)
-        #     anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(anns[mod1(i,na)])) for i=1:n]
-        # end
-        # sp.attr[:annotations] = vcat(sp_anns, anns)
-
-        # we update subplot args in case something like the color palatte is part of the recipe
-        _update_subplot_args(plt, sp, kw, idx)
+        # # we update subplot args in case something like the color palatte is part of the recipe
+        # _update_subplot_args(plt, sp, kw, idx)
 
         # set default values, select from attribute cycles, and generally set the final attributes
-        _add_defaults!(kw, plt, sp, command_idx)
+        _add_defaults!(kw, plt, sp, command_idx(kw_list,kw))
 
         # now we have a fully specified series, with colors chosen.   we must recursively handle
         # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,
@@ -514,6 +511,8 @@ function _plot!(plt::Plot, d::KW, args...)
         # be able to support step, bar, and histogram plots (and any recipes that use those components).
         _apply_series_recipe(plt, kw)
     end
+
+    # --------------------------------
 
     current(plt)
 
