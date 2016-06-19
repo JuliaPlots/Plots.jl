@@ -378,7 +378,7 @@ function _plot!(plt::Plot, d::KW, args...)
     # "PLOT RECIPES"
     # --------------------------------
 
-    # TODO: a new recipe type: "plot recipe", which acts like a series type, and is processed before
+    # "plot recipe", which acts like a series type, and is processed before
     # the plot layout is created, which allows for setting layouts and other plot-wide attributes.
     # we get inputs which have been fully processed by "user recipes" and "type recipes",
     # so we can expect standard vectors, surfaces, etc.  No defaults have been set yet.
@@ -393,14 +393,19 @@ function _plot!(plt::Plot, d::KW, args...)
         try
             st = next_kw[:seriestype]
             st = next_kw[:seriestype] = get(_typeAliases, st, st)
-            datalist = RecipesBase.apply_recipe(next_kw, Val{st})
-            info("processed $st $(length(datalist))")
+            datalist = RecipesBase.apply_recipe(next_kw, Val{st}, plt)
             for data in datalist
-                push!(kw_list, data.d)
+                if data.d[:seriestype] == st
+                    error("Plot recipe $st returned the same seriestype: $(data.d)")
+                end
+                push!(still_to_process, data.d)
             end
         catch err
-            @show err
-            push!(kw_list, next_kw)
+            if isa(err, MethodError)
+                push!(kw_list, next_kw)
+            else
+                rethrow()
+            end
         end
     end
 

@@ -111,6 +111,8 @@ num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
 
+RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::Plot) = throw(MethodError("Unmatched plot recipe: $T"))
+
 # # if it's not a recipe, just do nothing and return the args
 # function RecipesBase.apply_recipe(d::KW, args...; issubplot=false)
 #     if issubplot && !isempty(args) && !haskey(d, :n) && !haskey(d, :layout)
