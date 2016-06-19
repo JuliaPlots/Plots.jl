@@ -1,6 +1,31 @@
 
 abstract ColorScheme
 
+export
+    cgrad
+
+cgrad() = default_gradient()
+
+function cgrad(arg, values = nothing; alpha = nothing, scale = :identity)
+    colors = ColorGradient(arg, alpha=alpha).colors
+    values = if values != nothing
+        values
+    elseif scale in (:log, :log10)
+        log10(linspace(1,10,30))
+    elseif scale == :log2
+        log2(linspace(1,2,30))
+    elseif scale == :ln
+        log(linspace(1,pi,30))
+    elseif scale in (:exp, :exp10)
+        (exp10(linspace(0,1,30)) - 1) / 9
+    else
+        linspace(0, 1, length(colors))
+    end
+    ColorGradient(colors, values)
+end
+
+# --------------------------------------------------------------
+
 getColor(scheme::ColorScheme) = getColor(scheme, 1)
 getColorVector(scheme::ColorScheme) = [getColor(scheme)]
 
@@ -102,6 +127,12 @@ immutable ColorGradient <: ColorScheme
     new(convertColor(cs, alpha), vals)
   end
 end
+
+
+
+Base.getindex(cs::ColorGradient, i::Integer) = getColor(cs, i)
+Base.getindex(cs::ColorGradient, z::Number) = getColorZ(cs, z)
+
 
 # create a gradient from a symbol (blues, reds, etc) and vector of boundary values
 function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:0; kw...)
