@@ -390,6 +390,11 @@ function _plot!(plt::Plot, d::KW, args...)
         # If we applied a "plot recipe" without error, then add the returned datalist's KWs,
         # otherwise we just add the original KW.
         next_kw = shift!(still_to_process)
+        if !isa(get(next_kw, :seriestype, nothing), Symbol)
+            # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
+            push!(kw_list, next_kw)
+            continue
+        end
         try
             st = next_kw[:seriestype]
             st = next_kw[:seriestype] = get(_typeAliases, st, st)
