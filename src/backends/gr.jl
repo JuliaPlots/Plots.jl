@@ -120,33 +120,6 @@ gr_set_textcolor(c, a=nothing) = GR.settextcolorind(gr_getcolorind(c, a))
 
 # --------------------------------------------------------------------------------------
 
-function gr_setmarkershape(d)
-    if d[:markershape] != :none
-        shape = d[:markershape]
-        if isa(shape, Shape)
-            d[:vertices] = vertices(shape)
-        else
-            GR.setmarkertype(gr_markertype[shape])
-            d[:vertices] = :none
-        end
-    end
-end
-
-function gr_polymarker(d, x, y)
-    if d[:vertices] != :none
-        vertices= d[:vertices]
-        dx = Float64[el[1] for el in vertices] * 0.03
-        dy = Float64[el[2] for el in vertices] * 0.03
-        GR.selntran(0)
-        for i = 1:length(x)
-            xn, yn = GR.wctondc(x[i], y[i])
-            GR.fillarea(xn + dx, yn + dy)
-        end
-        GR.selntran(1)
-    else
-        GR.polymarker(x, y)
-    end
-end
 
 # draw line segments, splitting x/y into contiguous/finite segments
 # note: this can be used for shapes by passing func `GR.fillarea`
@@ -259,65 +232,64 @@ function normalize_zvals(zv::AVec)
     end
 end
 
+# ---------------------------------------------------------
 
-function gr_draw_markers(d::KW, x, y)
-    if d[:markershape] in (:circle, :rect, :diamond, :utriangle, :dtriangle,
-                           :pentagon, :hexagon, :heptagon, :octagon,
-                           :star4, :star5, :star6, :star7, :star8)
-        # for filled markers, draw the marker border first and
-        # then continue drawing with reduced marker size
-        msize = 0.5 * d[:markersize]
-        GR.setmarkersize(msize)
-        gr_set_markercolor(d[:markerstrokecolor], d[:markerstrokealpha])
-        gr_polymarker(d, x, y)
-        GR.setmarkersize(msize * 0.75)
-        gr_set_markercolor(d[:markercolor], d[:markeralpha])
-    end
-    gr_polymarker(d, x, y)
+# draw ONE Shape
+function gr_draw_marker(xi, yi, msize, shape::Shape)
+    sx, sy = shape_coords(shape)
+    GR.selntran(0)
+    xi, yi = GR.wctondc(xi, yi)
+    GR.fillarea(xi + sx * 0.0015msize,
+                yi + sy * 0.0015msize)
+    GR.selntran(1)
+end
+
+# draw ONE symbol marker
+function gr_draw_marker(xi, yi, msize::Number, shape::Symbol)
+    GR.setmarkertype(gr_markertype[shape])
+    GR.setmarkersize(0.3msize)
+    GR.polymarker([xi], [yi])
 end
 
 
-function gr_draw_markers(d::KW, x, y, msize, mz, c, a)
-    if length(x) > 0
-        mz == nothing && gr_set_markercolor(c, a)
-        
-        if typeof(msize) <: Number && mz == nothing
-            # draw the markers all the same
-            GR.setmarkersize(msize)
-            gr_draw_markers(d, x, y)
-        else
-            # draw each marker differently
-            for i = 1:length(x)
-                if mz != nothing
-                    ci = round(Int, 1000 + mz[i] * 255)
-                    GR.setmarkercolorind(ci)
-                end
-                GR.setmarkersize(isa(msize, Number) ? msize : msize[mod1(i, length(msize))])
-                gr_polymarker(d, [x[i]], [y[i]])
+# draw the markers, one at a time
+function gr_draw_markers(d::KW, x, y, msize, mz)
+    shape = d[:markershape]
+    if shape != :none
+        for i=1:length(x)
+            msize = cycle(msize, i)
+            cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
+            cfuncind = isa(shape, Shape) ? GR.setfillcolorind : GR.setmarkercolorind
+
+            # draw a filled in shape, slightly bigger, to estimate a stroke
+            cfunc(d[:markerstrokecolor], d[:markerstrokealpha])
+            gr_draw_marker(x[i], y[i], msize*1.2, shape, )
+
+            # draw the shape
+            if mz == nothing
+                cfunc(d[:markercolor], d[:markeralpha])
+            else
+                # pick a color from the pre-loaded gradient
+                ci = round(Int, 1000 + cycle(mz, i) * 255)
+                cfuncind(ci)
             end
+            gr_draw_marker(x[i], y[i], msize, shape)
         end
     end
 end
 
 function gr_draw_markers(series::Series, x, y)
+    isempty(x) && return
     d = series.d
-    msize = 0.5 * d[:markersize]
     mz = normalize_zvals(d[:marker_z])
-
-    # draw the marker
-    gr_setmarkershape(d)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
-    gr_draw_markers(d, x, y, msize, mz, d[:markercolor], d[:markeralpha])
-
-    # # draw the stroke
-    # GR.setfillintstyle(GR.INTSTYLE_HOLLOW)
-    # gr_draw_markers(d, x, y, msize, mz, d[:markerstrokecolor], d[:markerstrokealpha])
-
+    gr_draw_markers(d, x, y, d[:markersize], mz)
     if mz != nothing
         gr_colorbar(d[:subplot])
     end
 end
 
+# ---------------------------------------------------------
 
 function gr_set_line(w, style, c, a)
     GR.setlinetype(gr_linetype[style])
@@ -861,15 +833,24 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     GR.setlinetype(gr_linetype[d[:linestyle]])
                     GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
                 end
-                if st == :scatter || d[:markershape] != :none
-                    gr_set_markercolor(d[:markercolor], d[:markeralpha])
-                    gr_setmarkershape(d)
-                    if st == :path
-                        gr_polymarker(d, [xpos - 0.06, xpos - 0.02], [ypos, ypos])
-                    else
-                        gr_polymarker(d, [xpos - 0.06, xpos - 0.04, xpos - 0.02], [ypos, ypos, ypos])
-                    end
-                end
+
+                gr_draw_markers(d, xpos-[0.06,0.02], [ypos,ypos], 10, nothing)
+                # shape = d[:markershape]
+                # if shape != :none #st == :scatter || d[:markershape] != :none
+                #     msize = 10
+                #     for xoff in [0.06,0.02]
+                #         gr_set_markercolor(d[:markerstrokecolor], d[:markerstrokealpha])
+                #         gr_draw_marker(xpos-xoff, ypos, msize*1.1, shape)
+                #         gr_set_markercolor(d[:markercolor], d[:markeralpha])
+                #         gr_draw_marker(xpos-xoff, ypos, msize, shape)
+                #     end
+                #     # gr_setmarkershape(d)
+                #     # if st == :path
+                #     #     gr_polymarker(d, [xpos - 0.06, xpos - 0.02], [ypos, ypos])
+                #     # else
+                #     #     gr_polymarker(d, [xpos - 0.06, xpos - 0.04, xpos - 0.02], [ypos, ypos, ypos])
+                #     # end
+                # end
                 if typeof(d[:label]) <: Array
                     i += 1
                     lab = d[:label][i]

@@ -281,12 +281,14 @@ function _plot!(plt::Plot, d::KW, args...)
     end
 
     # remove subplot and axis args from d... they will be passed through in the kw_list
-    for (k,v) in d
-        for defdict in (_subplot_defaults,
-                        _axis_defaults,
-                        _axis_defaults_byletter)
-            if haskey(defdict, k)
-                delete!(d, k)
+    if !isempty(args)
+        for (k,v) in d
+            for defdict in (_subplot_defaults,
+                            _axis_defaults,
+                            _axis_defaults_byletter)
+                if haskey(defdict, k)
+                    delete!(d, k)
+                end
             end
         end
     end
