@@ -442,6 +442,9 @@ function _plot!(plt::Plot, d::KW, args...)
     # handle inset subplots
     insets = plt[:inset_subplots]
     if insets != nothing
+        if !(typeof(insets) <: AVec)
+            insets = [insets]
+        end
         for inset in insets
             parent, bb = is_2tuple(inset) ? inset : (nothing, inset)
             P = typeof(parent)

@@ -101,19 +101,46 @@ end
 
 Base.show(io::IO, layout::AbstractLayout) = print(io, "$(typeof(layout))$(size(layout))")
 
+make_measure_hor(n::Number) = n * w
+make_measure_hor(m::Measure) = m
+
+make_measure_vert(n::Number) = n * h
+make_measure_vert(m::Measure) = m
+
+
+function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
+    oargs = vcat(oarg1, originargs...)
+    orighor = :left
+    origver = :top
+    for oarg in oargs
+        if oarg in (:left, :right)
+            orighor = oarg
+        elseif oarg in (:top, :bottom)
+            origver = oarg
+        else
+            warn("Unused origin arg in bbox construction: $oarg")
+        end
+    end
+    bbox(x, y, w, h; h_anchor = orighor, v_anchor = origver)
+end
+
 # create a new bbox
-function bbox(x, y, w, h; h_anchor = :left, v_anchor = :top)
+function bbox(x, y, width, height; h_anchor = :left, v_anchor = :top)
+    x = make_measure_hor(x)
+    y = make_measure_vert(y)
+    width = make_measure_hor(width)
+    height = make_measure_vert(height)
     left = if h_anchor == :left
         x
     else
-        x - w * (h_anchor == :right ? 1.0 : 0.5)
+        1w - x - width 
     end
     top = if v_anchor == :top
         y
     else
-        y - h * (v_anchor == :bottom ? 1.0 : 0.5)
+        1h - y - height 
     end
-    BoundingBox(left, top, w, h)
+    BoundingBox(left, top, width, height)
 end
 
 # this is the available area for drawing everything in this layout... as percentages of total canvas
