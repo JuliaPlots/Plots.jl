@@ -280,6 +280,17 @@ function _plot!(plt::Plot, d::KW, args...)
         end
     end
 
+    # remove subplot and axis args from d... they will be passed through in the kw_list
+    for (k,v) in d
+        for defdict in (_subplot_defaults,
+                        _axis_defaults,
+                        _axis_defaults_byletter)
+            if haskey(defdict, k)
+                delete!(d, k)
+            end
+        end
+    end
+
     # --------------------------------
     # "USER RECIPES"
     # --------------------------------
@@ -472,7 +483,7 @@ function _plot!(plt::Plot, d::KW, args...)
     for kw in kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
-        sp = get_subplot(plt, cycle(sps == :auto ? plt.subplots : sps, command_idx(kw_list,kw)))
+        sp = get_subplot(plt, cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
         kw[:subplot] = sp
 
         attr = KW()
