@@ -424,6 +424,11 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
+    # if horizontal, switch x/y
+    if !isvertical(d)
+        x, y = y, x
+    end
+
     nx, ny = length(x), length(y)
     edges = if nx == ny
         # x is centers, calc the edges
@@ -447,36 +452,54 @@ end
     # make fillto a vector... default fills to 0
     fillto = d[:fillrange]
     if fillto == nothing
-        fillto = zeros(1)
-    elseif isa(fillto, Number)
-        fillto = Float64[fillto]
+        fillto = 0
     end
-    nf = length(fillto)
+    # if fillto == nothing
+    #     fillto = zeros(1)
+    # elseif isa(fillto, Number)
+    #     fillto = Float64[fillto]
+    # end
+    # nf = length(fillto)
 
-    npts = 3ny + 1
-    heights = y
-    x = zeros(npts)
-    y = zeros(npts)
-    fillrng = zeros(npts)
+    # npts = 3ny + 1
+    # heights = y
+    # x = zeros(npts)
+    # y = zeros(npts)
+    # fillrng = zeros(npts)
 
-    # create the path in triplets.  after the first bottom-left coord of the first bar:
-    # add the top-left, top-right, and bottom-right coords for each height
-    x[1] = edges[1]
-    y[1] = fillto[1]
-    fillrng[1] = fillto[1]
+    # shapes = Shape[]
+    xseg, yseg = Segments(), Segments()
     for i=1:ny
-        idx = 3i
-        rng = idx-1:idx+1
-        fi = fillto[mod1(i,nf)]
-        x[rng] = [edges[i], edges[i+1], edges[i+1]]
-        y[rng] = [heights[i], heights[i], fi]
-        fillrng[rng] = [fi, fi, fi]
+        fi = cycle(fillto,i)
+        push!(xseg, edges[i], edges[i], edges[i+1], edges[i+1])
+        push!(yseg, y[i], fi, fi, y[i])
     end
 
-    x := x
-    y := y
-    fillrange := fillrng
-    seriestype := :path
+
+    # # create the path in triplets.  after the first bottom-left coord of the first bar:
+    # # add the top-left, top-right, and bottom-right coords for each height
+    # x[1] = edges[1]
+    # y[1] = fillto[1]
+    # fillrng[1] = fillto[1]
+    # for i=1:ny
+    #     idx = 3i
+    #     rng = idx-1:idx+1
+    #     fi = fillto[mod1(i,nf)]
+    #     x[rng] = [edges[i], edges[i+1], edges[i+1]]
+    #     y[rng] = [heights[i], heights[i], fi]
+    #     fillrng[rng] = [fi, fi, fi]
+    # end
+
+    # switch back
+    if !isvertical(d)
+        xseg, yseg = yseg, xseg
+    end
+
+    x := xseg.pts
+    y := yseg.pts
+    # fillrange := fillrng
+    # seriestype := :path
+    seriestype := :shape
     ()
 end
 @deps bar path
@@ -571,6 +594,7 @@ centers(v::AVec) = v[1] + cumsum(diff(v))
     x := centers(xedges)
     y := centers(yedges)
     z := Surface(counts)
+    linewidth := 0
     seriestype := :heatmap
     ()
 end

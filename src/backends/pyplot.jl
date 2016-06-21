@@ -33,8 +33,8 @@ supported_args(::PyPlotBackend) = merge_with_base_supported([
   ])
 supported_types(::PyPlotBackend) = [
         :path, :steppre, :steppost, :shape,
-        :scatter, :histogram2d, :hexbin, :histogram,
-        :bar,
+        :scatter, :hexbin, #:histogram2d, :histogram,
+        # :bar,
         :heatmap, :pie, :image,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
     ]
@@ -140,7 +140,7 @@ function py_path(x, y)
         mat[i,1] = x[i]
         mat[i,2] = y[i]
         nan = !ok(x[i], y[i])
-        codes[i] = if nan
+        codes[i] = if nan && i>1
             _path_CLOSEPOLY
         else
             lastnan ? _path_MOVETO : _path_LINETO
@@ -486,28 +486,28 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
     end
 
-    if st == :bar
-        bw = d[:bar_width]
-        if bw == nothing
-            bw = mean(diff(isvertical(d) ? x : y))
-        end
-        extrakw[isvertical(d) ? :width : :height] = bw
-        fr = get(d, :fillrange, nothing)
-        if fr != nothing
-            extrakw[:bottom] = fr
-            d[:fillrange] = nothing
-        end
-        handle = ax[isvertical(d) ? :bar : :barh](x, y;
-            label = d[:label],
-            zorder = plt.n,
-            color = py_fillcolor(d),
-            edgecolor = py_linecolor(d),
-            linewidth = d[:linewidth],
-            align = d[:bar_edges] ? "edge" : "center",
-            extrakw...
-        )[1]
-        push!(handles, handle)
-    end
+    # if st == :bar
+    #     bw = d[:bar_width]
+    #     if bw == nothing
+    #         bw = mean(diff(isvertical(d) ? x : y))
+    #     end
+    #     extrakw[isvertical(d) ? :width : :height] = bw
+    #     fr = get(d, :fillrange, nothing)
+    #     if fr != nothing
+    #         extrakw[:bottom] = fr
+    #         d[:fillrange] = nothing
+    #     end
+    #     handle = ax[isvertical(d) ? :bar : :barh](x, y;
+    #         label = d[:label],
+    #         zorder = plt.n,
+    #         color = py_fillcolor(d),
+    #         edgecolor = py_linecolor(d),
+    #         linewidth = d[:linewidth],
+    #         align = d[:bar_edges] ? "edge" : "center",
+    #         extrakw...
+    #     )[1]
+    #     push!(handles, handle)
+    # end
 
     # if st == :sticks
     #     extrakw[isvertical(d) ? :width : :height] = 0.0
@@ -557,54 +557,54 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
     end
 
-    if st == :histogram
-        handle = ax[:hist](y;
-            label = d[:label],
-            zorder = plt.n,
-            color = py_fillcolor(d),
-            edgecolor = py_linecolor(d),
-            linewidth = d[:linewidth],
-            bins = d[:bins],
-            normed = d[:normalize],
-            weights = d[:weights],
-            orientation = (isvertical(d) ? "vertical" : "horizontal"),
-            histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
-        )[3]
-        push!(handles, handle)
+    # if st == :histogram
+    #     handle = ax[:hist](y;
+    #         label = d[:label],
+    #         zorder = plt.n,
+    #         color = py_fillcolor(d),
+    #         edgecolor = py_linecolor(d),
+    #         linewidth = d[:linewidth],
+    #         bins = d[:bins],
+    #         normed = d[:normalize],
+    #         weights = d[:weights],
+    #         orientation = (isvertical(d) ? "vertical" : "horizontal"),
+    #         histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
+    #     )[3]
+    #     push!(handles, handle)
 
-        # expand the extrema... handle is a list of Rectangle objects
-        for rect in handle
-            xmin, ymin, xmax, ymax = rect[:get_bbox]()[:extents]
-            expand_extrema!(sp, xmin, xmax, ymin, ymax)
-            # expand_extrema!(sp[:xaxis], (xmin, xmax))
-            # expand_extrema!(sp[:yaxis], (ymin, ymax))
-        end
-    end
+    #     # expand the extrema... handle is a list of Rectangle objects
+    #     for rect in handle
+    #         xmin, ymin, xmax, ymax = rect[:get_bbox]()[:extents]
+    #         expand_extrema!(sp, xmin, xmax, ymin, ymax)
+    #         # expand_extrema!(sp[:xaxis], (xmin, xmax))
+    #         # expand_extrema!(sp[:yaxis], (ymin, ymax))
+    #     end
+    # end
 
-    if st == :histogram2d
-        clims = sp[:clims]
-        if is_2tuple(clims)
-            isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-            isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-        end
-        handle = ax[:hist2d](x, y;
-            label = d[:label],
-            zorder = plt.n,
-            bins = d[:bins],
-            normed = d[:normalize],
-            weights = d[:weights],
-            cmap = py_fillcolormap(d),  # applies to the pcolorfast object
-            extrakw...
-        )[4]
-        push!(handles, handle)
-        needs_colorbar = true
+    # if st == :histogram2d
+    #     clims = sp[:clims]
+    #     if is_2tuple(clims)
+    #         isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+    #         isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+    #     end
+    #     handle = ax[:hist2d](x, y;
+    #         label = d[:label],
+    #         zorder = plt.n,
+    #         bins = d[:bins],
+    #         normed = d[:normalize],
+    #         weights = d[:weights],
+    #         cmap = py_fillcolormap(d),  # applies to the pcolorfast object
+    #         extrakw...
+    #     )[4]
+    #     push!(handles, handle)
+    #     needs_colorbar = true
 
-        # expand the extrema... handle is a AxesImage object
-        expand_extrema!(sp, handle[:get_extent]()...)
-        # xmin, xmax, ymin, ymax = handle[:get_extent]()
-        # expand_extrema!(sp[:xaxis], (xmin, xmax))
-        # expand_extrema!(sp[:yaxis], (ymin, ymax))
-    end
+    #     # expand the extrema... handle is a AxesImage object
+    #     expand_extrema!(sp, handle[:get_extent]()...)
+    #     # xmin, xmax, ymin, ymax = handle[:get_extent]()
+    #     # expand_extrema!(sp[:xaxis], (xmin, xmax))
+    #     # expand_extrema!(sp[:yaxis], (ymin, ymax))
+    # end
 
     if st == :hexbin
         clims = sp[:clims]

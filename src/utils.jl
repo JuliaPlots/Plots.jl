@@ -137,6 +137,30 @@ function imageHack(d::KW)
 end
 # ---------------------------------------------------------------
 
+
+type Segments
+    pts::Vector{Float64}
+end
+
+Segments() = Segments(zeros(0))
+
+function Base.push!(segments::Segments, vs...)
+    push!(segments.pts, NaN)
+    for v in vs
+        push!(segments.pts, v)
+    end
+    segments
+end
+
+function Base.push!(segments::Segments, vs::AVec)
+    push!(segments.pts, NaN)
+    for v in vs
+        push!(segments.pts, v)
+    end
+    segments
+end
+
+
 # -----------------------------------------------------
 # helper to manage NaN-separated segments
 

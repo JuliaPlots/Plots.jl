@@ -78,6 +78,7 @@ export
     Surface,
     OHLC,
     arrow,
+    Segments,
 
     colorscheme,
     ColorScheme,

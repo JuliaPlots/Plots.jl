@@ -517,8 +517,6 @@ function _plot!(plt::Plot, d::KW, args...)
     # "SERIES RECIPES"
     # --------------------------------
     
-    # this is it folks!
-    # TODO: we probably shouldn't use i for tracking series index, but rather explicitly track it in recipes
     for kw in kw_list
         sp = kw[:subplot]
         idx = get_subplot_index(plt, sp)
