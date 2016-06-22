@@ -225,12 +225,13 @@ function _apply_series_recipe(plt::Plot, d::KW)
 
     else
         # get a sub list of series for this seriestype
-        datalist = try
-            RecipesBase.apply_recipe(d, Val{st}, d[:x], d[:y], d[:z])
-        catch
-            warn("Exception during apply_recipe(Val{$st}, ...) with types ($(typeof(d[:x])), $(typeof(d[:y])), $(typeof(d[:z])))")
-            rethrow()
-        end
+        datalist = RecipesBase.apply_recipe(d, Val{st}, d[:x], d[:y], d[:z])
+        # datalist = try
+        #     RecipesBase.apply_recipe(d, Val{st}, d[:x], d[:y], d[:z])
+        # catch
+        #     warn("Exception during apply_recipe(Val{$st}, ...) with types ($(typeof(d[:x])), $(typeof(d[:y])), $(typeof(d[:z])))")
+        #     rethrow()
+        # end
 
         # assuming there was no error, recursively apply the series recipes
         for data in datalist

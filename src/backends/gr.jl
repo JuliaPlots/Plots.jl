@@ -483,6 +483,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     data_lims = gr_xy_axislims(sp)
     xmin, xmax, ymin, ymax = data_lims
     scale = 0
+    xtick, ytick = 1, 1
     if xmax > xmin && ymax > ymin
         # NOTE: for log axes, the major_x and major_y - if non-zero (omit labels) - control the minor grid lines (1 = draw 9 minor grid lines, 2 = no minor grid lines)
         # NOTE: for log axes, the x_tick and y_tick - if non-zero (omit axes) - only affect the output appearance (1 = nomal, 2 = scientiic notation)
