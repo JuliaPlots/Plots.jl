@@ -24,7 +24,7 @@ immutable AnimatedGif
   filename::Compat.ASCIIString
 end
 
-function gif(anim::Animation, fn = tempname()*".gif"; fps::Integer = 20)
+function gif(anim::Animation, fn = (isijulia() ? "tmp.gif" : tempname()*".gif"); fps::Integer = 20)
   fn = abspath(fn)
 
   try
@@ -35,8 +35,8 @@ function gif(anim::Animation, fn = tempname()*".gif"; fps::Integer = 20)
     if isfile(file) && !haskey(ENV, "MAGICK_CONFIGURE_PATH")
         include(file)
     end
-    prefix = get(ENV, "MAGICK_CONFIGURE_PATH", "")
-    run(`$(joinpath(prefix, "convert")) -delay $speed -loop 0 $(joinpath(anim.dir, "*.png")) -alpha off $fn`)
+    # prefix = get(ENV, "MAGICK_CONFIGURE_PATH", "")
+    run(`convert -delay $speed -loop 0 $(joinpath(anim.dir, "*.png")) -alpha off $fn`)
 
   catch err
     warn("""Tried to create gif using convert (ImageMagick), but got error: $err
@@ -56,7 +56,7 @@ end
 
 # write out html to view the gif... note the rand call which is a hack so the image doesn't get cached
 function Base.writemime(io::IO, ::MIME"text/html", agif::AnimatedGif)
-  write(io, "<img src=\"$(relpath(agif.filename))?$(rand())>\" />")
+    write(io, "<img src=\"$(relpath(agif.filename))?$(rand())>\" />")
 end
 
 
