@@ -22,8 +22,6 @@ Use the [preprocessing pipeline](http://plots.readthedocs.io/en/latest/pipeline/
 
 ```julia
 using Plots
-pyplot(reuse=true)
-
 @gif for i in linspace(0,2π,100)
     X = Y = linspace(-5,5,40)
     surface(X, Y, (x,y) -> sin(x+10sin(i))+cos(y))
