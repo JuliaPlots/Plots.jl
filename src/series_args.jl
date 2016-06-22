@@ -21,21 +21,12 @@ convertToAnyVector{T<:Number}(v::AVec{T}, d::KW) = Any[v], nothing
 # string vector
 convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}, d::KW) = Any[v], nothing
 
-# numeric matrix
-function convertToAnyVector{T<:Number}(v::AMat{T}, d::KW)
+function convertToAnyVector(v::AMat, d::KW)
     if all3D(d)
         Any[Surface(v)]
     else
         Any[v[:,i] for i in 1:size(v,2)]
     end, nothing
-end
-
-# other matrix... vector of columns
-function convertToAnyVector(m::AMat, d::KW)
-    Any[begin
-        v = vec(m[:,i])
-        length(v) == 1 ? v[1] : v
-    end for i=1:size(m,2)], nothing
 end
 
 # function

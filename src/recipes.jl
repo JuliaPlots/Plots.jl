@@ -752,21 +752,9 @@ end
 
 @recipe function f(::Type{Val{:violin}}, x, y, z; trim=true)
     delete!(d, :trim)
-
-    # create a list of shapes, where each shape is a single boxplot
-    # shapes = Shape[]
     xsegs, ysegs = Segments(), Segments()
-    # groupby = extractGroupArgs(x)
     glabels = sort(collect(unique(x)))
-
-    # for (i, glabel) in enumerate(groupby.groupLabels)
     for glabel in glabels
-        # get the edges and widths
-        # gids = groupby.groupIds[i]
-        # y = eltype(y)[yi for (i,yi) in e]
-        # y = y[filter(i -> cycle(x,i) == glabel, 1:length(y))]
-
-        # y = d[:y][groupby.groupIds[i]]
         widths, centers = violin_coords(y[filter(i -> cycle(x,i) == glabel, 1:length(y))], trim=trim)
         isempty(widths) && continue
 
@@ -777,14 +765,12 @@ end
         xcenter = discrete_value!(d[:subplot][:xaxis], glabel)[1]
         xcoords = vcat(widths, -reverse(widths)) + xcenter
         ycoords = vcat(centers, reverse(centers))
-        # push!(shapes, Shape(xcoords, ycoords))
 
         push!(xsegs, xcoords)
         push!(ysegs, ycoords)
     end
 
     seriestype := :shape
-    # d[:x], d[:y] = shape_coords(shapes)
     x := xsegs.pts
     y := ysegs.pts
     ()
