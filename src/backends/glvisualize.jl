@@ -29,7 +29,7 @@ supported_args(::GLVisualizeBackend) = merge_with_base_supported([
     # :clims,
     # :inset_subplots,
   ])
-supported_types(::GLVisualizeBackend) = [:surface]
+supported_types(::GLVisualizeBackend) = [:surface, :scatter, :scatter3d]
 supported_styles(::GLVisualizeBackend) = [:auto, :solid]
 supported_markers(::GLVisualizeBackend) = [:none, :auto, :circle]
 supported_scales(::GLVisualizeBackend) = [:identity]
@@ -40,16 +40,14 @@ is_subplot_supported(::GLVisualizeBackend) = false
 
 function _initialize_backend(::GLVisualizeBackend; kw...)
     @eval begin
-        import GLVisualize
+        import GLVisualize, GeometryTypes, GLAbstraction, GLWindow
+        import GeometryTypes: Point2f0, Point3f0
         export GLVisualize
     end
 end
 
 # ---------------------------------------------------------------------------
 
-immutable GLScreenWrapper
-    window
-end
 
 function _create_backend_figure(plt::Plot{GLVisualizeBackend})
     # init a window
@@ -58,30 +56,59 @@ function _create_backend_figure(plt::Plot{GLVisualizeBackend})
     window
 end
 
+function gl_relative_size(plt::Plot{GLVisualizeBackend}, msize::Number)
+    winsz = min(plt[:size]...)
+    Float32(msize / winsz)
+end
+
+function gl_marker(shape::Symbol, msize::Number)
+    GeometryTypes.Circle(Point2f0(0), msize)
+end
+
 function gl_display(plt::Plot{GLVisualizeBackend})
+    window = plt.o
     for sp in plt.subplots
         # TODO: setup subplot
 
         for series in series_list(sp)
-            # TODO: setup series
             d = series.d
             st = d[:seriestype]
             x, y, z = map(Float32, d[:x]), map(Float32, d[:y]), d[:z]
+            msize = gl_relative_size(plt, d[:markersize])
 
-            if st == :surface
+            viz = if st == :surface
                 ismatrix(x) || (x = repmat(x', length(y), 1))
                 ismatrix(y) || (y = repmat(y, 1, length(x)))
                 z = transpose_z(d, map(Float32, z.surf), false)
-                viz = GLVisualize.visualize((x, y, z), :surface)
-                GLVisualize.view(viz, plt.o)
-                return
+                GLVisualize.visualize((x, y, z), :surface)
+
+            elseif st in (:scatter, :scatter3d)
+                marker = gl_marker(d[:markershape], msize)
+                @show marker msize
+                # GLVisualize.visualize((marker ,(x, y, z)))
+                points = if is3d(st)
+                    z = map(Float32, z)
+                    Point3f0[Point3f0(xi,yi,zi) for (xi,yi,zi) in zip(x, y, z)]
+                else
+                    Point2f0[Point2f0(xi,yi) for (xi,yi) in zip(x, y)]
+                end
+                GLVisualize.visualize((marker, points))
+                #GLVisualize.visualize((marker , map(Point3f0, zip(x, y, z),
+                # billboard=true
+                #))                
 
             else
                 error("Series type $st not supported by GLVisualize")
             end
 
+            GLVisualize.view(viz, window, camera = :perspective)
+
         end
     end
+    # GLAbstraction.center!(window)
+
+    # TODO: render one frame at a time?  (no renderloop)
+    # GLWindow.render_frame(window)
 end
 
 
