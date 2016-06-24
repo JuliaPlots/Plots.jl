@@ -691,6 +691,16 @@ function link_axes!(layout::GridLayout, link::Symbol)
             link_axes!(layout.grid[r,:], :yaxis)
         end
     end
+    if link == :square
+        sps = filter(l -> isa(l, Subplot), layout.grid)
+        if !isempty(sps)
+            base_axis = sps[1][:xaxis]
+            for sp in sps
+                link_axes!(base_axis, sp[:xaxis])
+                link_axes!(base_axis, sp[:yaxis])
+            end
+        end
+    end
     if link == :all
         link_axes!(layout.grid, :xaxis)
         link_axes!(layout.grid, :yaxis)
