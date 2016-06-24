@@ -78,8 +78,16 @@ end
 
 function gl_display(plt::Plot{GLVisualizeBackend})
     screen = plt.o
-    for sp in plt.subplots
+    # for sp in plt.subplots
+    for (name, sp) in plt.spmap
         # TODO: setup subplot
+
+        f = rect -> gl_viewport(bbox(sp), rect)
+        sp_screen = Screen(
+            screen,
+            name = name,
+            area = GLVisualize.const_lift(f, screen.area)
+        )
 
         for series in series_list(sp)
             d = series.d
@@ -92,7 +100,7 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                 ismatrix(y) || (y = repmat(y, 1, length(x)))
                 z = transpose_z(d, map(Float32, d[:z].surf), false)
                 viz = GLVisualize.visualize((x, y, z), :surface)
-                GLVisualize.view(viz, screen, camera = :perspective)
+                GLVisualize.view(viz, sp_screen, camera = :perspective)
 
             else
                 points = if is3d(st)
@@ -108,7 +116,7 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                 if st in (:scatter, :scatter3d) || d[:markershape] != :none
                     marker = gl_marker(d[:markershape], msize, is3d(st))
                     viz = GLVisualize.visualize((marker, points), color = gl_color(d[:markercolor], d[:markeralpha]))
-                    GLVisualize.view(viz, screen, camera = camera)
+                    GLVisualize.view(viz, sp_screen, camera = camera)
 
                     # TODO: might need to switch to these forms later?
                     # GLVisualize.visualize((marker ,(x, y, z)))
@@ -121,7 +129,7 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                 lw = d[:linewidth]
                 if !(st in (:scatter, :scatter3d)) && lw > 0
                     viz = GLVisualize.visualize(points, :lines) #, color=colors, model=rotation)
-                    GLVisualize.view(viz, screen, camera = camera)
+                    GLVisualize.view(viz, sp_screen, camera = camera)
                 end
             end
         end
