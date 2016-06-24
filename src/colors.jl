@@ -1,6 +1,8 @@
 
 abstract ColorScheme
 
+Base.getindex(scheme::ColorScheme, i::Integer) = getColor(scheme, i)
+
 export
     cgrad
 

@@ -50,10 +50,15 @@ end
 
 
 function _create_backend_figure(plt::Plot{GLVisualizeBackend})
-    # init a window
-    window = GLVisualize.glscreen()
-    @async GLVisualize.renderloop(window)
-    window
+    # init a screen
+    screen = if isdefined(GLVisualize, :ROOT_SCREEN)
+        GLVisualize.ROOT_SCREEN
+    else
+        s = GLVisualize.glscreen()
+        @async GLVisualize.renderloop(s)
+        s
+    end
+    empty!(screen)
 end
 
 function gl_relative_size(plt::Plot{GLVisualizeBackend}, msize::Number)
@@ -65,8 +70,14 @@ function gl_marker(shape::Symbol, msize::Number, _3d::Bool)
     GeometryTypes.HyperSphere((_3d ? Point3f0 : Point2f0)(0), msize)
 end
 
+function gl_color(c, a)
+    c = convertColor(c, a)[1]
+    @show typeof(c)
+    RGBA{Float32}(c)
+end
+
 function gl_display(plt::Plot{GLVisualizeBackend})
-    window = plt.o
+    screen = plt.o
     for sp in plt.subplots
         # TODO: setup subplot
 
@@ -81,7 +92,7 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                 ismatrix(y) || (y = repmat(y, 1, length(x)))
                 z = transpose_z(d, map(Float32, d[:z].surf), false)
                 viz = GLVisualize.visualize((x, y, z), :surface)
-                GLVisualize.view(viz, window, camera = :perspective)
+                GLVisualize.view(viz, screen, camera = :perspective)
 
             else
                 points = if is3d(st)
@@ -90,12 +101,14 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                 else
                     Point2f0[Point2f0(xi,yi) for (xi,yi) in zip(x, y)]
                 end
+
+                camera = is3d(st) ? :perspective : :orthographic_pixel
                 
                 # markers?
                 if st in (:scatter, :scatter3d) || d[:markershape] != :none
                     marker = gl_marker(d[:markershape], msize, is3d(st))
-                    viz = GLVisualize.visualize((marker, points))
-                    GLVisualize.view(viz, window, camera = :perspective)
+                    viz = GLVisualize.visualize((marker, points), color = gl_color(d[:markercolor], d[:markeralpha]))
+                    GLVisualize.view(viz, screen, camera = camera)
 
                     # TODO: might need to switch to these forms later?
                     # GLVisualize.visualize((marker ,(x, y, z)))
@@ -108,24 +121,28 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                 lw = d[:linewidth]
                 if !(st in (:scatter, :scatter3d)) && lw > 0
                     viz = GLVisualize.visualize(points, :lines) #, color=colors, model=rotation)
-                    GLVisualize.view(viz, window, camera = :perspective)
+                    GLVisualize.view(viz, screen, camera = camera)
                 end
             end
         end
     end
-    # GLAbstraction.center!(window)
+    # GLAbstraction.center!(screen)
 
     # TODO: render one frame at a time?  (no renderloop)
-    # GLWindow.render_frame(window)
+    # GLWindow.render_frame(screen)
 end
 
 
 # ----------------------------------------------------------------
 
+function _update_plot_object(plt::Plot{GLVisualizeBackend})
+    gl_display(plt)
+end
+
 # function _writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{GLVisualizeBackend})
 #     # TODO: write a png to io
 # end
 
-function _display(plt::Plot{GLVisualizeBackend})
-    gl_display(plt)
-end
+# function _display(plt::Plot{GLVisualizeBackend})
+#     gl_display(plt)
+# end
