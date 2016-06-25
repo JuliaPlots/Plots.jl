@@ -98,14 +98,14 @@ end
 
 # ----------------------------------------------------------------------------------
 
-abstract PlotRecipe
+# abstract PlotRecipe
 
-getRecipeXY(recipe::PlotRecipe) = Float64[], Float64[]
-getRecipeArgs(recipe::PlotRecipe) = ()
+# getRecipeXY(recipe::PlotRecipe) = Float64[], Float64[]
+# getRecipeArgs(recipe::PlotRecipe) = ()
 
-plot(recipe::PlotRecipe, args...; kw...) = plot(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
-plot!(recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
-plot!(plt::Plot, recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
+# plot(recipe::PlotRecipe, args...; kw...) = plot(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
+# plot!(recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
+# plot!(plt::Plot, recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
 
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1

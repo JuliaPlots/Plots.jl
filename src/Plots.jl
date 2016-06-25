@@ -104,9 +104,9 @@ export
     @animate,
     @gif,
 
-    PlotRecipe,
+    # PlotRecipe,
     spy,
-    arcdiagram,
+    # arcdiagram,
     chorddiagram,
 
     test_examples,

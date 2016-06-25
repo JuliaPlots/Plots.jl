@@ -31,7 +31,7 @@ supported_args(::GLVisualizeBackend) = merge_with_base_supported([
   ])
 supported_types(::GLVisualizeBackend) = [:surface, :scatter, :scatter3d, :path, :path3d]
 supported_styles(::GLVisualizeBackend) = [:auto, :solid]
-supported_markers(::GLVisualizeBackend) = vcat([:none, :auto, :circle], keys(_gl_marker_map))
+supported_markers(::GLVisualizeBackend) = vcat([:none, :auto, :circle], collect(keys(_gl_marker_map)))
 supported_scales(::GLVisualizeBackend) = [:identity]
 is_subplot_supported(::GLVisualizeBackend) = true
 
@@ -61,6 +61,8 @@ function _create_backend_figure(plt::Plot{GLVisualizeBackend})
     empty!(screen)
     screen
 end
+
+# ---------------------------------------------------------------------------
 
 # size as a percentage of the window size
 function gl_relative_size(plt::Plot{GLVisualizeBackend}, msize::Number)
@@ -92,10 +94,12 @@ function gl_marker(shape::Symbol, msize::Number, _3d::Bool)
     GeometryTypes.HyperSphere((_3d ? Point3f0 : Point2f0)(0), msize)
 end
 
+gl_color(c::RGBA{Float32}) = c
+
 # convert to RGBA
-function gl_color(c, a)
-    c = convertColor(c, a)[1]
-    RGBA{Float32}(c)
+function gl_color(c, a=nothing)
+    c = convertColor(c, a)
+    RGBA{Float32}(getColor(c))
 end
 
 function gl_viewport(bb, rect)
@@ -109,12 +113,84 @@ function gl_viewport(bb, rect)
     )
 end
 
+gl_make_points(x, y) = Point2f0[Point2f0(x[i], y[i]) for i=1:length(x)]
+gl_make_points(x, y, z) = Point3f0[Point3f0(x[i], y[i], z[i]) for i=1:length(x)]
+
+function gl_draw_lines_2d(x, y, color, linewidth, sp_screen)
+    color = gl_color(color)
+    thickness = Float32(linewidth)
+    for rng in iter_segments(x, y)
+        n = length(rng)
+        n < 2 && continue
+        viz = GLVisualize.visualize(
+            gl_make_points(x[rng], y[rng]),
+            n==2 ? :linesegment : :lines,
+            color=color,
+            thickness = Float32(linewidth)
+        )
+        GLVisualize.view(viz, sp_screen, camera=:orthographic_pixel)
+    end
+end
+
+function gl_draw_lines_3d(x, y, z, color, linewidth, sp_screen)
+    color = gl_color(color)
+    thickness = Float32(linewidth)
+    for rng in iter_segments(x, y, z)
+        n = length(rng)
+        n < 2 && continue
+        viz = GLVisualize.visualize(
+            gl_make_points(x[rng], y[rng], z[rng]),
+            n==2 ? :linesegment : :lines,
+            color=color,
+            thickness = Float32(linewidth)
+        )
+        GLVisualize.view(viz, sp_screen, camera=:perspective)
+    end
+end
+
+# function gl_draw_lines_3d(x, y, z, color, linewidth, sp_screen)
+#     color = gl_color(color)
+#     thickness = Float32(linewidth)
+#     _3d = camera == :perspective
+#     xyz = _3d
+#     for rng in (_3d ? line_segments(x, y, z) : line_segments(x, y))
+#         n = length(poi)
+#         n < 2 && continue
+#         viz = GLVisualize.visualize(
+#             gl_make_points(x, y,
+#             n==2 ? :linesegment : :lines,
+#             color=color,
+#             thickness = Float32(linewidth)
+#         )
+#         GLVisualize.view(viz, sp_screen, camera=:perspective)
+#     end
+# end
+
+function gl_draw_axes_2d(sp::Subplot{GLVisualizeBackend}, sp_screen)
+    xaxis = sp[:xaxis]
+    xmin, xmax = axis_limits(xaxis)
+    yaxis = sp[:yaxis]
+    ymin, ymax = axis_limits(yaxis)
+
+    # x axis
+    gl_draw_lines_2d([xmin, xmax], [ymin, ymin], xaxis[:foreground_color_border], 1, sp_screen)
+
+    # y axis
+    gl_draw_lines_2d([xmin, xmin], [ymin, ymax], yaxis[:foreground_color_border], 1, sp_screen)
+end
+
+# ---------------------------------------------------------------------------
+
 # draw everything
 function gl_display(plt::Plot{GLVisualizeBackend})
     screen = plt.o
     sw, sh = plt[:size]
     sw, sh = sw*px, sh*px
     for (name, sp) in plt.spmap
+
+        _3d = is3d(sp)
+        camera = _3d ? :perspective : :orthographic_pixel
+        # camera = :perspective
 
         # initialize the sub-screen for this subplot
         # note: we create a lift function to update the size on resize
@@ -126,6 +202,10 @@ function gl_display(plt::Plot{GLVisualizeBackend})
             area = GLVisualize.const_lift(f, screen.area)
         )
 
+        if !is3d(sp)
+            gl_draw_axes_2d(sp, sp_screen)
+        end
+
         # loop over the series and add them to the subplot
         for series in series_list(sp)
             d = series.d
@@ -134,6 +214,7 @@ function gl_display(plt::Plot{GLVisualizeBackend})
             msize = gl_relative_size(plt, d[:markersize])
 
             viz = if st == :surface
+                # TODO: can pass just the ranges and surface
                 ismatrix(x) || (x = repmat(x', length(y), 1))
                 ismatrix(y) || (y = repmat(y, 1, length(x)))
                 z = transpose_z(d, map(Float32, d[:z].surf), false)
@@ -141,15 +222,20 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                 GLVisualize.view(viz, sp_screen, camera = :perspective)
 
             else
-                _3d = is3d(st)
-                points = if _3d
-                    z = map(Float32, d[:z])
-                    Point3f0[Point3f0(xi,yi,zi) for (xi,yi,zi) in zip(x, y, z)]
-                else
-                    Point2f0[Point2f0(xi,yi) for (xi,yi) in zip(x, y)]
-                end
+                # paths and scatters
 
-                camera = _3d ? :perspective : :orthographic_pixel
+                _3d && (z = map(Float32, d[:z]))
+
+                # paths?
+                lw = d[:linewidth]
+                if lw > 0
+                    c = gl_color(d[:linecolor], d[:linealpha])
+                    if _3d
+                        gl_draw_lines_3d(x, y, z, c, lw, sp_screen)
+                    else
+                        gl_draw_lines_2d(x, y, c, lw, sp_screen)
+                    end
+                end
                 
                 # markers?
                 if st in (:scatter, :scatter3d) || d[:markershape] != :none
@@ -167,6 +253,11 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                         gl_marker(d[:markershape], msize, _3d)
                     end
 
+                    if !_3d
+                        extrakw[:billboard] = true
+                    end
+
+                    points = _3d ? gl_make_points(x,y,z) : gl_make_points(x,y)
                     viz = GLVisualize.visualize(
                         (marker, points);
                         color = c,
@@ -180,21 +271,9 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                     # billboard=true
                     #))
                 end
-
-                # paths
-                lw = d[:linewidth]
-                if !(st in (:scatter, :scatter3d)) && lw > 0
-                    c = gl_color(d[:linecolor], d[:linealpha])
-                    viz = GLVisualize.visualize(
-                        points,
-                        :lines,
-                        color = c,
-                        thickness = Float32(lw)
-                    )
-                    GLVisualize.view(viz, sp_screen, camera = camera)
-                end
             end
         end
+        GLAbstraction.center!(sp_screen, camera)
     end
 
     # TODO: render one frame at a time?  (no renderloop)
