@@ -43,6 +43,9 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         import GLVisualize, GeometryTypes, GLAbstraction, GLWindow
         import GeometryTypes: Point2f0, Point3f0, Vec2f0, Vec3f0
         export GLVisualize
+
+        # TODO: remove this when PlotUtils is registered
+        import PlotUtils
     end
 end
 
@@ -148,24 +151,6 @@ function gl_draw_lines_3d(x, y, z, color, linewidth, sp_screen)
     end
 end
 
-# function gl_draw_lines_3d(x, y, z, color, linewidth, sp_screen)
-#     color = gl_color(color)
-#     thickness = Float32(linewidth)
-#     _3d = camera == :perspective
-#     xyz = _3d
-#     for rng in (_3d ? line_segments(x, y, z) : line_segments(x, y))
-#         n = length(poi)
-#         n < 2 && continue
-#         viz = GLVisualize.visualize(
-#             gl_make_points(x, y,
-#             n==2 ? :linesegment : :lines,
-#             color=color,
-#             thickness = Float32(linewidth)
-#         )
-#         GLVisualize.view(viz, sp_screen, camera=:perspective)
-#     end
-# end
-
 function gl_draw_axes_2d(sp::Subplot{GLVisualizeBackend}, sp_screen)
     xaxis = sp[:xaxis]
     xmin, xmax = axis_limits(xaxis)
@@ -173,10 +158,29 @@ function gl_draw_axes_2d(sp::Subplot{GLVisualizeBackend}, sp_screen)
     ymin, ymax = axis_limits(yaxis)
 
     # x axis
-    gl_draw_lines_2d([xmin, xmax], [ymin, ymin], xaxis[:foreground_color_border], 1, sp_screen)
+    xsegs, ysegs = Segments(), Segments()
+    ticksz = 0.03*(ymax-ymin)
+    push!(xsegs, [xmin,xmax]); push!(ysegs, [ymin,ymin])
+    for tick in PlotUtils.optimize_ticks(xmin, xmax)[1]
+        push!(xsegs, [tick,tick]); push!(ysegs, [ymin,ymin+ticksz])
+        # TODO: add the ticklabel
+    end
+    gl_draw_lines_2d(xsegs.pts, ysegs.pts, xaxis[:foreground_color_border], 1, sp_screen)
 
     # y axis
-    gl_draw_lines_2d([xmin, xmin], [ymin, ymax], yaxis[:foreground_color_border], 1, sp_screen)
+    xsegs, ysegs = Segments(), Segments()
+    push!(xsegs, [xmin,xmin]); push!(ysegs, [ymin,ymax])
+    for tick in PlotUtils.optimize_ticks(xmin, xmax)[1]
+        push!(xsegs, [xmin,xmin+ticksz]); push!(ysegs, [tick,tick])
+        # TODO: add the ticklabel
+    end
+    gl_draw_lines_2d(xsegs.pts, ysegs.pts, yaxis[:foreground_color_border], 1, sp_screen)
+
+    # # x axis
+    # gl_draw_lines_2d([xmin, xmax], [ymin, ymin], xaxis[:foreground_color_border], 1, sp_screen)
+
+    # # y axis
+    # gl_draw_lines_2d([xmin, xmin], [ymin, ymax], yaxis[:foreground_color_border], 1, sp_screen)
 end
 
 # ---------------------------------------------------------------------------

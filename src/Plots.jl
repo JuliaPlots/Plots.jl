@@ -10,6 +10,7 @@ using Reexport
 using FixedSizeArrays
 @reexport using RecipesBase
 using Base.Meta
+# using PlotUtils
 
 export
     AbstractPlot,
