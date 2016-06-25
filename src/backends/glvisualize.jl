@@ -31,9 +31,9 @@ supported_args(::GLVisualizeBackend) = merge_with_base_supported([
   ])
 supported_types(::GLVisualizeBackend) = [:surface, :scatter, :scatter3d, :path, :path3d]
 supported_styles(::GLVisualizeBackend) = [:auto, :solid]
-supported_markers(::GLVisualizeBackend) = [:none, :auto, :circle]
+supported_markers(::GLVisualizeBackend) = vcat([:none, :auto, :circle], keys(_gl_marker_map))
 supported_scales(::GLVisualizeBackend) = [:identity]
-is_subplot_supported(::GLVisualizeBackend) = false
+is_subplot_supported(::GLVisualizeBackend) = true
 
 # --------------------------------------------------------------------------------------
 
@@ -41,14 +41,14 @@ is_subplot_supported(::GLVisualizeBackend) = false
 function _initialize_backend(::GLVisualizeBackend; kw...)
     @eval begin
         import GLVisualize, GeometryTypes, GLAbstraction, GLWindow
-        import GeometryTypes: Point2f0, Point3f0
+        import GeometryTypes: Point2f0, Point3f0, Vec2f0, Vec3f0
         export GLVisualize
     end
 end
 
 # ---------------------------------------------------------------------------
 
-
+# initialize the figure/window
 function _create_backend_figure(plt::Plot{GLVisualizeBackend})
     # init a screen
     screen = if isdefined(GLVisualize, :ROOT_SCREEN)
@@ -59,36 +59,74 @@ function _create_backend_figure(plt::Plot{GLVisualizeBackend})
         s
     end
     empty!(screen)
+    screen
 end
 
+# size as a percentage of the window size
 function gl_relative_size(plt::Plot{GLVisualizeBackend}, msize::Number)
     winsz = min(plt[:size]...)
     Float32(msize / winsz)
 end
 
+const _gl_marker_map = KW(
+  :rect => '■',
+  :star5 => '★',
+  :diamond => '◆',
+  :hexagon => '⬢',
+  :cross => '✚',
+  :xcross => '❌',
+  :utriangle => '▲',
+  :dtriangle => '▼',
+  :pentagon => '⬟',
+  :octagon => '⯄',
+  :star4 => '✦',
+  :star6 => '✶',
+  :star8 => '✷',
+  :vline => '┃',
+  :hline => '━',
+)
+
+
+# create a marker/shape type
 function gl_marker(shape::Symbol, msize::Number, _3d::Bool)
     GeometryTypes.HyperSphere((_3d ? Point3f0 : Point2f0)(0), msize)
 end
 
+# convert to RGBA
 function gl_color(c, a)
     c = convertColor(c, a)[1]
-    @show typeof(c)
     RGBA{Float32}(c)
 end
 
+function gl_viewport(bb, rect)
+    l, b, bw, bh = bb
+    rw, rh = rect.w, rect.h
+    GLVisualize.SimpleRectangle(
+        round(Int, rect.x + rw * l),
+        round(Int, rect.y + rh * b),
+        round(Int, rw * bw),
+        round(Int, rh * bh)
+    )
+end
+
+# draw everything
 function gl_display(plt::Plot{GLVisualizeBackend})
     screen = plt.o
-    # for sp in plt.subplots
+    sw, sh = plt[:size]
+    sw, sh = sw*px, sh*px
     for (name, sp) in plt.spmap
-        # TODO: setup subplot
 
-        f = rect -> gl_viewport(bbox(sp), rect)
-        sp_screen = Screen(
+        # initialize the sub-screen for this subplot
+        # note: we create a lift function to update the size on resize
+        rel_bbox = bbox_to_pcts(bbox(sp), sw, sh)
+        f = rect -> gl_viewport(rel_bbox, rect)
+        sp_screen = GLVisualize.Screen(
             screen,
             name = name,
             area = GLVisualize.const_lift(f, screen.area)
         )
 
+        # loop over the series and add them to the subplot
         for series in series_list(sp)
             d = series.d
             st = d[:seriestype]
@@ -103,19 +141,37 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                 GLVisualize.view(viz, sp_screen, camera = :perspective)
 
             else
-                points = if is3d(st)
+                _3d = is3d(st)
+                points = if _3d
                     z = map(Float32, d[:z])
                     Point3f0[Point3f0(xi,yi,zi) for (xi,yi,zi) in zip(x, y, z)]
                 else
                     Point2f0[Point2f0(xi,yi) for (xi,yi) in zip(x, y)]
                 end
 
-                camera = is3d(st) ? :perspective : :orthographic_pixel
+                camera = _3d ? :perspective : :orthographic_pixel
                 
                 # markers?
                 if st in (:scatter, :scatter3d) || d[:markershape] != :none
-                    marker = gl_marker(d[:markershape], msize, is3d(st))
-                    viz = GLVisualize.visualize((marker, points), color = gl_color(d[:markercolor], d[:markeralpha]))
+                    extrakw = KW()
+                    c = gl_color(d[:markercolor], d[:markeralpha])
+
+                    # get the marker
+                    shape = d[:markershape] 
+                    shape = get(_gl_marker_map, shape, shape)
+                    marker = if isa(shape, Char)
+                        # extrakw[:scale] = Vec2f0(_3d ? 0.6*d[:markersize] : msize)
+                        extrakw[:scale] = Vec2f0(msize)
+                        shape
+                    else
+                        gl_marker(d[:markershape], msize, _3d)
+                    end
+
+                    viz = GLVisualize.visualize(
+                        (marker, points);
+                        color = c,
+                        extrakw...
+                    )
                     GLVisualize.view(viz, sp_screen, camera = camera)
 
                     # TODO: might need to switch to these forms later?
@@ -128,13 +184,18 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                 # paths
                 lw = d[:linewidth]
                 if !(st in (:scatter, :scatter3d)) && lw > 0
-                    viz = GLVisualize.visualize(points, :lines) #, color=colors, model=rotation)
+                    c = gl_color(d[:linecolor], d[:linealpha])
+                    viz = GLVisualize.visualize(
+                        points,
+                        :lines,
+                        color = c,
+                        thickness = Float32(lw)
+                    )
                     GLVisualize.view(viz, sp_screen, camera = camera)
                 end
             end
         end
     end
-    # GLAbstraction.center!(screen)
 
     # TODO: render one frame at a time?  (no renderloop)
     # GLWindow.render_frame(screen)
@@ -151,6 +212,5 @@ end
 #     # TODO: write a png to io
 # end
 
-# function _display(plt::Plot{GLVisualizeBackend})
-#     gl_display(plt)
-# end
+function _display(plt::Plot{GLVisualizeBackend})
+end
