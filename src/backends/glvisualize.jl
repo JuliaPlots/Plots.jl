@@ -151,7 +151,11 @@ function gl_draw_lines_3d(x, y, z, color, linewidth, sp_screen)
     end
 end
 
-function gl_draw_axes_2d(sp::Subplot{GLVisualizeBackend}, sp_screen)
+function gl_annotate(sp::Subplot{GLVisualizeBackend}, x, y, txt::PlotText)
+end
+
+function gl_draw_axes_2d(sp::Subplot{GLVisualizeBackend})
+    sp_screen = sp.o
     xaxis = sp[:xaxis]
     xmin, xmax = axis_limits(xaxis)
     yaxis = sp[:yaxis]
@@ -175,12 +179,6 @@ function gl_draw_axes_2d(sp::Subplot{GLVisualizeBackend}, sp_screen)
         # TODO: add the ticklabel
     end
     gl_draw_lines_2d(xsegs.pts, ysegs.pts, yaxis[:foreground_color_border], 1, sp_screen)
-
-    # # x axis
-    # gl_draw_lines_2d([xmin, xmax], [ymin, ymin], xaxis[:foreground_color_border], 1, sp_screen)
-
-    # # y axis
-    # gl_draw_lines_2d([xmin, xmin], [ymin, ymax], yaxis[:foreground_color_border], 1, sp_screen)
 end
 
 # ---------------------------------------------------------------------------
@@ -206,8 +204,9 @@ function gl_display(plt::Plot{GLVisualizeBackend})
             area = GLVisualize.const_lift(f, screen.area)
         )
 
+        sp.o = sp_screen
         if !is3d(sp)
-            gl_draw_axes_2d(sp, sp_screen)
+            gl_draw_axes_2d(sp)
         end
 
         # loop over the series and add them to the subplot

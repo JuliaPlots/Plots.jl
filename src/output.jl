@@ -156,6 +156,7 @@ for mime in keys(_mimeformats)
 end
 
 
+
 # ---------------------------------------------------------
 # A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
 
@@ -221,6 +222,11 @@ function setup_ijulia()
             function IJulia.display_dict(plt::Plot)
                 global _ijulia_output
                 Dict{Compat.ASCIIString, ByteString}(_ijulia_output[1] => sprint(writemime, _ijulia_output[1], plt))
+            end
+
+            # default text/plain passes to html... handles Interact issues
+            function Base.writemime(io::IO, m::MIME"text/plain", plt::Plot)
+                writemime(io, MIME("text/html"), plt)
             end
         end
         set_ijulia_output("text/html")
