@@ -303,8 +303,8 @@ PlotExample("Boxplot and Violin series recipes",
     [:(begin
         import RDatasets
         singers = RDatasets.dataset("lattice", "singer")
-        violin(singers, :VoicePart, :Height, marker = (0.2, :blue, stroke(0)))
-        boxplot!(singers, :VoicePart, :Height, marker = (0.3, :orange, stroke(2)))
+        violin(singers, :VoicePart, :Height, line = 0, fill = (0.2, :blue))
+        boxplot!(singers, :VoicePart, :Height, line = (2,:black), fill = (0.3, :orange))
     end)]
 )
 

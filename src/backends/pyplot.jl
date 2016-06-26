@@ -816,9 +816,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         patches = pypatches.pymember("PathPatch")(path;
             label = d[:label],
             zorder = plt.n,
-            edgecolor = py_markerstrokecolor(d),
-            facecolor = py_markercolor(d),
-            linewidth = d[:markerstrokewidth],
+            edgecolor = py_linecolor(d),
+            facecolor = py_fillcolor(d),
+            linewidth = d[:linewidth],
             fill = true
         )
         handle = ax[:add_patch](patches)

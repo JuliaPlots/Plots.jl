@@ -180,15 +180,6 @@ end
     newargs
 end
 
-# @recipe f(x, y, z)  = SliceIt, apply_recipe(typeof(x), x), apply_recipe(typeof(y), y), apply_recipe(typeof(z), z)
-# @recipe f(x, y)     = SliceIt, apply_recipe(typeof(x), x), apply_recipe(typeof(y), y), nothing
-# @recipe f(y)        = SliceIt, nothing, apply_recipe(typeof(y), y), nothing
-
-# # pass these through to the slicer
-# @recipe f(x, y, z)  = SliceIt, x, y, z
-# @recipe f(x, y)     = SliceIt, x, y, nothing
-# @recipe f(y)        = SliceIt, nothing, y, nothing
-
 
 # # --------------------------------------------------------------------
 # # 1 argument

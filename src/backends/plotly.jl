@@ -374,12 +374,12 @@ function plotly_series(plt::Plot, series::Series)
         # @show map(length, (x,y,d_out[:x],d_out[:y]))
         # @show d_out[:x] d_out[:y]
         d_out[:fill] = "tozeroy"
-        d_out[:fillcolor] = webcolor(d[:markercolor], d[:markeralpha])
+        d_out[:fillcolor] = webcolor(d[:fillcolor], d[:fillalpha])
         if d[:markerstrokewidth] > 0
             d_out[:line] = KW(
-                :color => webcolor(d[:markerstrokecolor], d[:markerstrokealpha]),
-                :width => d[:markerstrokewidth],
-                :dash => string(d[:markerstrokestyle]),
+                :color => webcolor(d[:linecolor], d[:linealpha]),
+                :width => d[:linewidth],
+                :dash => string(d[:linestyle]),
             )
         end
 

@@ -454,41 +454,14 @@ end
     if fillto == nothing
         fillto = 0
     end
-    # if fillto == nothing
-    #     fillto = zeros(1)
-    # elseif isa(fillto, Number)
-    #     fillto = Float64[fillto]
-    # end
-    # nf = length(fillto)
 
-    # npts = 3ny + 1
-    # heights = y
-    # x = zeros(npts)
-    # y = zeros(npts)
-    # fillrng = zeros(npts)
-
-    # shapes = Shape[]
+    # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i=1:ny
         fi = cycle(fillto,i)
         push!(xseg, edges[i], edges[i], edges[i+1], edges[i+1])
         push!(yseg, y[i], fi, fi, y[i])
     end
-
-
-    # # create the path in triplets.  after the first bottom-left coord of the first bar:
-    # # add the top-left, top-right, and bottom-right coords for each height
-    # x[1] = edges[1]
-    # y[1] = fillto[1]
-    # fillrng[1] = fillto[1]
-    # for i=1:ny
-    #     idx = 3i
-    #     rng = idx-1:idx+1
-    #     fi = fillto[mod1(i,nf)]
-    #     x[rng] = [edges[i], edges[i+1], edges[i+1]]
-    #     y[rng] = [heights[i], heights[i], fi]
-    #     fillrng[rng] = [fi, fi, fi]
-    # end
 
     # switch back
     if !isvertical(d)
@@ -497,8 +470,6 @@ end
 
     x := xseg.pts
     y := yseg.pts
-    # fillrange := fillrng
-    # seriestype := :path
     seriestype := :shape
     ()
 end
@@ -623,27 +594,25 @@ const _box_halfwidth = 0.4
 
 notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
 
-# function apply_series_recipe(d::KW, ::Type{Val{:box}})
+
 @recipe function f(::Type{Val{:boxplot}}, x, y, z; notch=false, range=1.5)
-    # Plots.dumpdict(d, "box before", true)
-
-    # create a list of shapes, where each shape is a single boxplot
-    shapes = Shape[]
-    groupby = extractGroupArgs(x)
-    outliers_y = Float64[]
-    outliers_x = Float64[]
-
+    delete!(d, :notch)
+    delete!(d, :range)
+    xsegs, ysegs = Segments(), Segments()
+    glabels = sort(collect(unique(x)))
     warning = false
+    outliers_x, outliers_y = zeros(0), zeros(0)
+    for glabel in glabels
+        # filter y
+        values = y[filter(i -> cycle(x,i) == glabel, 1:length(y))]
 
-    for (i, glabel) in enumerate(groupby.groupLabels)
-
-        # filter y values
-        values = d[:y][groupby.groupIds[i]]
-        # then compute quantiles
+        # compute quantiles
         q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
+        
         # notch
         n = notch_width(q2, q4, length(values))
 
+        # warn on inverted notches?
         if notch && !warning && ( (q2>(q3-n)) || (q4<(q3+n)) )
             warn("Boxplot's notch went outside hinges. Set notch to false.")
             warning = true # Show the warning only one time
@@ -652,8 +621,10 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
         # make the shape
         center = discrete_value!(d[:subplot][:xaxis], glabel)[1]
         l, m, r = center - _box_halfwidth, center, center + _box_halfwidth
+        
         # internal nodes for notches
         L, R = center - 0.5 * _box_halfwidth, center + 0.5 * _box_halfwidth
+        
         # outliers
         if Float64(range) != 0.0  # if the range is 0.0, the whiskers will extend to the data
             limit = range*(q4-q2)
@@ -670,58 +641,144 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
             # using maximum and minimum values inside the limits
             q1, q5 = extrema(inside)
         end
+
         # Box
-        xcoords = notch::Bool ? [
-            m, l, r, m, m, NaN,       # lower T
-            l, l, L, R, r, r, l, NaN, # lower box
-            l, l, L, R, r, r, l, NaN, # upper box
-            m, l, r, m, m, NaN,       # upper T
-        ] : [
-            m, l, r, m, m, NaN,         # lower T
-            l, l, r, r, l, NaN,         # lower box
-            l, l, r, r, l, NaN,         # upper box
-            m, l, r, m, m, NaN,         # upper T
-        ]
-        ycoords = notch::Bool ? [
-            q1, q1, q1, q1, q2, NaN,             # lower T
-            q2, q3-n, q3, q3, q3-n, q2, q2, NaN, # lower box
-            q4, q3+n, q3, q3, q3+n, q4, q4, NaN, # upper box
-            q5, q5, q5, q5, q4, NaN,             # upper T
-        ] : [
-            q1, q1, q1, q1, q2, NaN,    # lower T
-            q2, q3, q3, q2, q2, NaN,    # lower box
-            q4, q3, q3, q4, q4, NaN,    # upper box
-            q5, q5, q5, q5, q4, NaN,    # upper T
-        ]
-        push!(shapes, Shape(xcoords, ycoords))
+        if notch
+            push!(xsegs, m, l, r, m, m)       # lower T
+            push!(xsegs, l, l, L, R, r, r, l) # lower box
+            push!(xsegs, l, l, L, R, r, r, l) # upper box
+            push!(xsegs, m, l, r, m, m)       # upper T
+
+            push!(ysegs, q1, q1, q1, q1, q2)             # lower T
+            push!(ysegs, q2, q3-n, q3, q3, q3-n, q2, q2) # lower box
+            push!(ysegs, q4, q3+n, q3, q3, q3+n, q4, q4) # upper box
+            push!(ysegs, q5, q5, q5, q5, q4)             # upper T
+        else
+            push!(xsegs, m, l, r, m, m)         # lower T
+            push!(xsegs, l, l, r, r, l)         # lower box
+            push!(xsegs, l, l, r, r, l)         # upper box
+            push!(xsegs, m, l, r, m, m)         # upper T
+
+            push!(ysegs, q1, q1, q1, q1, q2)    # lower T
+            push!(ysegs, q2, q3, q3, q2, q2)    # lower box
+            push!(ysegs, q4, q3, q3, q4, q4)    # upper box
+            push!(ysegs, q5, q5, q5, q5, q4)    # upper T
+        end
     end
-
-    # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
-
-    seriestype := :shape
-    # n = length(groupby.groupLabels)
-    # xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
-
-    # clean d
-    pop!(d, :notch)
-    pop!(d, :range)
-
-    # we want to set the fields directly inside series recipes... args are ignored
-    d[:x], d[:y] = Plots.shape_coords(shapes)
 
     # Outliers
     @series begin
-        seriestype := :scatter
-        markershape := :circle
-        x := outliers_x
-        y := outliers_y
-        label := ""
-        primary := false
+        seriestype  := :scatter
+        markershape --> :circle
+        x           := outliers_x
+        y           := outliers_y
+        primary     := false
         ()
     end
 
-    () # expects a tuple returned
+    seriestype := :shape
+    x := xsegs.pts
+    y := ysegs.pts
+    ()
 end
+
+# @recipe function f(::Type{Val{:boxplot}}, x, y, z; notch=false, range=1.5)
+#     # Plots.dumpdict(d, "box before", true)
+
+#     # create a list of shapes, where each shape is a single boxplot
+#     shapes = Shape[]
+#     groupby = extractGroupArgs(x)
+#     outliers_y = Float64[]
+#     outliers_x = Float64[]
+
+#     warning = false
+
+#     for (i, glabel) in enumerate(groupby.groupLabels)
+
+#         # filter y values
+#         values = d[:y][groupby.groupIds[i]]
+#         # then compute quantiles
+#         q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
+#         # notch
+#         n = notch_width(q2, q4, length(values))
+
+#         if notch && !warning && ( (q2>(q3-n)) || (q4<(q3+n)) )
+#             warn("Boxplot's notch went outside hinges. Set notch to false.")
+#             warning = true # Show the warning only one time
+#         end
+
+#         # make the shape
+#         center = discrete_value!(d[:subplot][:xaxis], glabel)[1]
+#         l, m, r = center - _box_halfwidth, center, center + _box_halfwidth
+#         # internal nodes for notches
+#         L, R = center - 0.5 * _box_halfwidth, center + 0.5 * _box_halfwidth
+#         # outliers
+#         if Float64(range) != 0.0  # if the range is 0.0, the whiskers will extend to the data
+#             limit = range*(q4-q2)
+#             inside = Float64[]
+#             for value in values
+#                 if (value < (q2 - limit)) || (value > (q4 + limit))
+#                     push!(outliers_y, value)
+#                     push!(outliers_x, center)
+#                 else
+#                     push!(inside, value)
+#                 end
+#             end
+#             # change q1 and q5 to show outliers
+#             # using maximum and minimum values inside the limits
+#             q1, q5 = extrema(inside)
+#         end
+#         # Box
+#         xcoords = notch::Bool ? [
+#             m, l, r, m, m, NaN,       # lower T
+#             l, l, L, R, r, r, l, NaN, # lower box
+#             l, l, L, R, r, r, l, NaN, # upper box
+#             m, l, r, m, m, NaN,       # upper T
+#         ] : [
+#             m, l, r, m, m, NaN,         # lower T
+#             l, l, r, r, l, NaN,         # lower box
+#             l, l, r, r, l, NaN,         # upper box
+#             m, l, r, m, m, NaN,         # upper T
+#         ]
+#         ycoords = notch::Bool ? [
+#             q1, q1, q1, q1, q2, NaN,             # lower T
+#             q2, q3-n, q3, q3, q3-n, q2, q2, NaN, # lower box
+#             q4, q3+n, q3, q3, q3+n, q4, q4, NaN, # upper box
+#             q5, q5, q5, q5, q4, NaN,             # upper T
+#         ] : [
+#             q1, q1, q1, q1, q2, NaN,    # lower T
+#             q2, q3, q3, q2, q2, NaN,    # lower box
+#             q4, q3, q3, q4, q4, NaN,    # upper box
+#             q5, q5, q5, q5, q4, NaN,    # upper T
+#         ]
+#         push!(shapes, Shape(xcoords, ycoords))
+#     end
+
+#     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
+
+#     seriestype := :shape
+#     # n = length(groupby.groupLabels)
+#     # xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
+
+#     # clean d
+#     pop!(d, :notch)
+#     pop!(d, :range)
+
+#     # we want to set the fields directly inside series recipes... args are ignored
+#     d[:x], d[:y] = Plots.shape_coords(shapes)
+
+#     # Outliers
+#     @series begin
+#         seriestype := :scatter
+#         markershape --> :circle
+#         x := outliers_x
+#         y := outliers_y
+#         primary := false
+#         ()
+#     end
+
+#     () # expects a tuple returned
+# end
 @deps boxplot shape scatter
 
 # ---------------------------------------------------------------------------

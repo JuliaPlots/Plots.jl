@@ -764,11 +764,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :shape
             # draw the shapes
-            gr_set_line(d[:markerstrokewidth], :solid, d[:markerstrokecolor], d[:markerstrokealpha])
+            gr_set_line(d[:linewidth], :solid, d[:linecolor], d[:linealpha])
             gr_polyline(d[:x], d[:y])
 
             # draw the interior
-            gr_set_fill(d[:markercolor], d[:markeralpha])
+            gr_set_fill(d[:fillcolor], d[:fillalpha])
             gr_polyline(d[:x], d[:y], GR.fillarea)
 
 
