@@ -149,12 +149,17 @@ end
 
 # for writing to io streams... first prepare, then callback
 for mime in keys(_mimeformats)
+    @eval function _writemime(io::IO, m, plt::Plot)
+        warn("_writemime is not defined for this backend. m=", string(m))
+    end
+    @eval function _display(plt::Plot)
+        warn("_display is not defined for this backend.")
+    end
     @eval function Base.writemime(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         prepare_output(plt)
         _writemime(io, m, plt)
     end
 end
-
 
 
 # ---------------------------------------------------------
