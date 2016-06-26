@@ -105,10 +105,7 @@ export
     @animate,
     @gif,
 
-    # PlotRecipe,
     spy,
-    # arcdiagram,
-    chorddiagram,
 
     test_examples,
     iter_segments,
