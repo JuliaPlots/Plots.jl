@@ -30,7 +30,7 @@ facts("GR") do
     @fact gr() --> Plots.GRBackend()
     @fact backend() --> Plots.GRBackend()
 
-    # image_comparison_facts(:gr, skip=[30], eps=img_eps)
+    # @linux_only image_comparison_facts(:gr, skip=[], eps=img_eps)
 end
 
 facts("Plotly") do
