@@ -190,13 +190,13 @@ function py_stepstyle(seriestype::Symbol)
     return "default"
 end
 
-# untested... return a FontProperties object from a Plots.Font
-function py_font(font::Font)
-    pyfont.pymember("FontProperties")(
-        family = font.family,
-        size = font.size
-    )
-end
+# # untested... return a FontProperties object from a Plots.Font
+# function py_font(font::Font)
+#     pyfont.pymember("FontProperties")(
+#         family = font.family,
+#         size = font.size
+#     )
+# end
 
 function get_locator_and_formatter(vals::AVec)
     pyticker.pymember("FixedLocator")(1:length(vals)), pyticker.pymember("FixedFormatter")(vals)
@@ -329,6 +329,10 @@ function py_bbox_title(ax)
     bb
 end
 
+function py_dpi_scale(plt::Plot{PyPlotBackend}, ptsz)
+    ptsz * DPI / plt[:dpi]
+end
+
 # ---------------------------------------------------------------------------
 
 # Create the window/figure for this backend.
@@ -421,7 +425,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     label = d[:label],
                     zorder = plt.n,
                     color = py_linecolor(d),
-                    linewidth = d[:linewidth],
+                    linewidth = py_dpi_scale(plt, d[:linewidth]),
                     linestyle = py_linestyle(st, d[:linestyle]),
                     solid_capstyle = "round",
                     drawstyle = py_stepstyle(st)
@@ -436,7 +440,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     :label => d[:label],
                     :zorder => plt.n,
                     :cmap => py_linecolormap(d),
-                    :linewidth => d[:linewidth],
+                    :linewidth => py_dpi_scale(plt, d[:linewidth]),
                     :linestyle => py_linestyle(st, d[:linestyle])
                 )
                 handle = if is3d(st)
@@ -471,7 +475,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                         :shrinkB => 0,
                         :edgecolor => py_linecolor(d),
                         :facecolor => py_linecolor(d),
-                        :linewidth => d[:linewidth],
+                        :linewidth => py_dpi_scale(plt, d[:linewidth]),
                         :linestyle => py_linestyle(st, d[:linestyle]),
                     )
                     add_arrows(x, y) do xyprev, xy
@@ -550,9 +554,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             label = d[:label],
             zorder = plt.n + 0.5,
             marker = py_marker(d[:markershape]),
-            s = d[:markersize] .^ 2,
+            s = py_dpi_scale(plt, d[:markersize] .^ 2),
             edgecolors = py_markerstrokecolor(d),
-            linewidths = d[:markerstrokewidth],
+            linewidths = py_dpi_scale(plt, d[:markerstrokewidth]),
             extrakw...
         )
         push!(handles, handle)
@@ -617,7 +621,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             label = d[:label],
             zorder = plt.n,
             gridsize = d[:bins],
-            linewidths = d[:linewidth],
+            linewidths = py_dpi_scale(plt, d[:linewidth]),
             edgecolors = py_linecolor(d),
             cmap = py_fillcolormap(d),  # applies to the pcolorfast object
             extrakw...
@@ -657,7 +661,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         handle = ax[:contour](x, y, z, levelargs...;
             label = d[:label],
             zorder = plt.n,
-            linewidths = d[:linewidth],
+            linewidths = py_dpi_scale(plt, d[:linewidth]),
             linestyles = py_linestyle(st, d[:linestyle]),
             cmap = py_linecolormap(d),
             extrakw...
@@ -704,7 +708,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 zorder = plt.n,
                 rstride = 1,
                 cstride = 1,
-                linewidth = d[:linewidth],
+                linewidth = py_dpi_scale(plt, d[:linewidth]),
                 edgecolor = py_linecolor(d),
                 extrakw...
             )
@@ -740,7 +744,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 label = d[:label],
                 zorder = plt.n,
                 cmap = py_fillcolormap(d),
-                linewidth = d[:linewidth],
+                linewidth = py_dpi_scale(plt, d[:linewidth]),
                 edgecolor = py_linecolor(d),
                 extrakw...
             )
@@ -819,7 +823,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             zorder = plt.n,
             edgecolor = py_linecolor(d),
             facecolor = py_fillcolor(d),
-            linewidth = d[:linewidth],
+            linewidth = py_dpi_scale(plt, d[:linewidth]),
             fill = true
         )
         handle = ax[:add_patch](patches)
@@ -1012,9 +1016,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig[:clear]()
-    fig[:set_size_inches](px2inch(w), px2inch(h), forward = true)
+    # fig[:set_size_inches](px2inch(w), px2inch(h), forward = true)
+    dpi = plt[:dpi]
+    fig[:set_size_inches](w/dpi, h/dpi, forward = true)
     fig[:set_facecolor](py_color(plt[:background_color_outside]))
-    fig[:set_dpi](plt[:dpi])
+    fig[:set_dpi](dpi)
     
     # resize the window
     PyPlot.plt[:get_current_fig_manager]()[:resize](w, h)
@@ -1052,7 +1058,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 :title
             end
             ax[func][:set_text](sp[:title])
-            ax[func][:set_fontsize](sp[:titlefont].pointsize)
+            ax[func][:set_fontsize](py_dpi_scale(plt, sp[:titlefont].pointsize))
             ax[func][:set_color](py_color(sp[:foreground_color_title]))
             # ax[:set_title](sp[:title], loc = loc)
         end
@@ -1069,9 +1075,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             if get(axis.d, :flip, false)
                 ax[Symbol("invert_", letter, "axis")]()
             end
-            ax[axissym][:label][:set_fontsize](axis[:guidefont].pointsize)
+            ax[axissym][:label][:set_fontsize](py_dpi_scale(plt, axis[:guidefont].pointsize))
             for lab in ax[Symbol("get_", letter, "ticklabels")]()
-                lab[:set_fontsize](axis[:tickfont].pointsize)
+                lab[:set_fontsize](py_dpi_scale(plt, axis[:tickfont].pointsize))
                 lab[:set_rotation](axis[:rotation])
             end
             if sp[:grid]
@@ -1149,7 +1155,7 @@ function py_add_annotations(sp::Subplot{PyPlotBackend}, x, y, val::PlotText)
         horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
         verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
         rotation = val.font.rotation * 180 / π,
-        size = val.font.pointsize,
+        size = py_dpi_scale(sp.plt, val.font.pointsize),
         zorder = 999
     )
 end
@@ -1192,7 +1198,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             if should_add_to_legend(series)
                 # add a line/marker and a label
                 push!(handles, if series.d[:seriestype] == :histogram
-                    PyPlot.plt[:Line2D]((0,1),(0,0), color=py_fillcolor(series.d), linewidth=4)
+                    PyPlot.plt[:Line2D]((0,1),(0,0), color=py_fillcolor(series.d), linewidth=py_dpi_scale(plt, 4))
                 else
                     series.d[:serieshandle][1]
                 end)
@@ -1206,7 +1212,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 labels,
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
-                fontsize = sp[:legendfont].pointsize
+                fontsize = py_dpi_scale(plt, sp[:legendfont].pointsize)
                 # framealpha = 0.6
             )
             leg[:set_zorder](1000)
