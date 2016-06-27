@@ -69,14 +69,16 @@ function create_kw_body(func_signature::Expr)
     # bunch of get!(kw, key, value) lines
     args = func_signature.args[2:end]
     kw_body = Expr(:block)
+    cleanup_body = Expr(:block)
     if isa(args[1], Expr) && args[1].head == :parameters
         for kwpair in args[1].args
             k, v = kwpair.args
             push!(kw_body.args, :($k = get!(d, $(QuoteNode(k)), $v)))
+            push!(cleanup_body.args, :(RecipesBase.is_key_supported($(QuoteNode(k))) || delete!(d, $(QuoteNode(k)))))
         end
         args = args[2:end]
     end
-    args, kw_body
+    args, kw_body, cleanup_body
 end
 
 # process the body of the recipe recursively.
@@ -216,7 +218,7 @@ macro recipe(funcexpr::Expr)
     end
 
     func = get_function_def(func_signature)
-    args, kw_body = create_kw_body(func_signature)
+    args, kw_body, cleanup_body = create_kw_body(func_signature)
 
     # this is where the receipe func_body is processed
     # replace all the key => value lines with argument setting logic
@@ -226,7 +228,7 @@ macro recipe(funcexpr::Expr)
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
     # we are creating a vector of RecipeData objects, one per series.
     funcdef = esc(quote
-        function $func(d::Dict{Symbol,Any}, $(args...); issubplot=false)
+        function $func(d::Dict{Symbol,Any}, $(args...))
             if RecipesBase._debug_recipes[1]
                 println("apply_recipe args: ", $args)
             end
@@ -236,6 +238,7 @@ macro recipe(funcexpr::Expr)
             if func_return != nothing
                 push!(series_list, RecipesBase.RecipeData(d, RecipesBase.wrap_tuple(func_return)))
             end
+            $cleanup_body
             series_list
         end
     end)

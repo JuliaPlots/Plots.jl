@@ -4,7 +4,7 @@
 
 ### Author: Thomas Breloff (@tbreloff)
 
-This package implements a handy macro `@recipe` which will define a custom transformation
+This package implements handy macros `@recipe` and `@series` which will define a custom transformation
 and attach attributes for user types.  Its design is an attempt to simplify and generalize
 the summary and display of types and data from external packages.  With no extra dependencies
 and minimal code, package authors can describe visualization routines that can be used
@@ -13,7 +13,7 @@ as components in more complex visualizations.
 This functionality is primarily geared to turning user types and settings into the
 data and attributes that describe a [Plots](https://github.com/tbreloff/Plots.jl) visualization,
 though it could be used for other purposes as well.
-Plots has extensive machinery to uniquely take advantage of the simplified recipe description you define.
+Plots has extensive machinery to uniquely take advantage of the simplified recipe description you define.  See the [Plots documentation on recipes](http://plots.readthedocs.io/en/latest/recipes/) for more information.
 
 The `@recipe` macro will process a function definition, use `-->` commands to define attributes, and
 pass the return value through for further processing (likely by Plots.jl).
@@ -25,7 +25,7 @@ methods of visualizing that structure and data.  This package solves the difficu
 build generic visualizations of user-defined data types, without adding bulky dependencies on complex
 graphics packages.
 
-This package is as lightweight as possible.  It **exports one macro**, and defines only a few internal methods.
+This package is as lightweight as possible.  It exports two macros, and defines only a few internal methods.
 It has **zero dependencies**.
 
 However, although it is lightweight, it enables a lot.  The entirety of the Plots framework becomes available
@@ -43,7 +43,7 @@ I challenge you to create the pictures that are worth a thousand words.
 
 For more information about Plots, see [the docs](http://plots.readthedocs.io/), and be sure to reference
 the [supported keywords](http://plots.readthedocs.io/en/latest/supported/#keyword-arguments).
-For additional examples of recipes in the wild, see [MLPlots](https://github.com/JuliaML/MLPlots.jl).
+For additional examples of recipes in the wild, see [PlotRecipes](https://github.com/JuliaPlots/PlotRecipes.jl).
 Ask questions on [gitter](https://gitter.im/tbreloff/Plots.jl) or in the issues.
 
 ## Hello world
@@ -70,11 +70,11 @@ type T end
 # This is all we define.  It uses a familiar signature, but strips it apart
 # in order to add a custom definition to the internal method `RecipesBase.apply_recipe`
 @recipe function plot(::T, n = 1; customcolor = :green)
-    markershape --> :auto, :require
-    markercolor --> customcolor, :force
-    xrotation   --> 45
-    zrotation   --> 90, :quiet
-    rand(10,n)
+    markershape --> :auto          # if markershape is unset, make it :auto
+    markercolor :=  customcolor    # force markercolor to be customcolor
+    xrotation   --> 45 			   # if xrotation is unset, make it 45
+    zrotation   --> 90 			   # if zrotation is unset, make it 90
+    rand(10,n)					   # return the arguments (input data) for the next recipe
 end
 
 # ----------------------------
@@ -105,6 +105,40 @@ number of series to display.  User-defined keyword arguments are passed through,
 - `quiet`:   Suppress unsupported keyword warnings
 - `require`: Error if keyword is unsupported
 - `force`:   Don't allow user override for this keyword
+
+### Series
+
+For complex visualizations, it can be beneficial to create many series inside a single recipe.  The `@series` macro will make a copy of the attribute dictionary `d`, and add a new RecipeData object to the returned list.  See the [case studies](http://plots.readthedocs.io/en/latest/recipes/#case-studies) for more details.
+
+### Generated code
+
+For the example above, the following code is generated.  In it, you can see the managing of the scope of the keyword args, creation of a definition for `RecipesBase.apply_recipe`, setting attributes, and creating the list of `RecipeData` objects:
+
+```julia
+function RecipesBase.apply_recipe(d::Dict{Symbol,Any},::T,n=1)
+    if RecipesBase._debug_recipes[1]
+        println("apply_recipe args: ",Any[:(::T),:(n=1)])
+    end
+    begin 
+        customcolor = get!(d,:customcolor,:green)
+    end
+    series_list = RecipesBase.RecipeData[]
+    func_return = begin 
+            get!(d,:markershape,:auto)
+            d[:markercolor] = customcolor
+            get!(d,:xrotation,45)
+            get!(d,:zrotation,90)
+            rand(10,n)
+        end
+    if func_return != nothing
+        push!(series_list,RecipesBase.RecipeData(d,RecipesBase.wrap_tuple(func_return)))
+    end
+    begin 
+        RecipesBase.is_key_supported(:customcolor) || delete!(d,:customcolor)
+    end
+    series_list
+end
+```
 
 ### A humble request
 
