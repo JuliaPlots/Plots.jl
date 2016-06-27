@@ -9,6 +9,30 @@
 
 ## 0.7 (current master/dev)
 
+#### 0.7.3
+
+- rebuild violin and boxplot recipes
+- "plot recipes"
+- `cgrad` method for easy color gradient creation
+- improvements to inset subplots
+- Segments and iter_segments for NaN-separated vectors
+- `bar` recipe now creates a `shape` series
+- writemime fix for Interact.jl
+- `link = :square` option
+- !!! set `shape` attributes with line/fill, NOT marker/markerstroke !!!
+- basic DPI support
+- moved chorddiagram to PlotRecipes
+- GR:
+	- use temp files for img output
+	- basic support for marker strokes and other marker fixes
+- PyPlot:
+	- Switch to recipes for bar, histogram, histogram2d
+- GLVisualize
+	- subplots
+	- path/scatter and path3d/scatter3d
+	- initial drawing of axes
+- many smaller fixes and improvements
+
 #### 0.7.2
 
 - line_z arg for multicolored line segments
