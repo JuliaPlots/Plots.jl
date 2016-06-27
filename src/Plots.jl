@@ -1,5 +1,4 @@
 
- __precompile__()
 
 module Plots
 
@@ -250,6 +249,13 @@ function __init__()
             default(k, v)
         end
     end
+end
+
+# ---------------------------------------------------------
+
+if VERSION >= v"0.4.0-dev+5512"
+    include("precompile.jl")
+    _precompile_()
 end
 
 # ---------------------------------------------------------
