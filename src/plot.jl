@@ -541,10 +541,8 @@ function _plot!(plt::Plot, d::KW, args...)
 
     current(plt)
 
-    # note: lets ignore the show param and effectively use the semicolon at the end of the REPL statement
-    # # do we want to show it?
-    # if haskey(d, :show) && d[:show]
-    if get(d, :show, default(:show))
+    # do we want to force display?
+    if plt[:show]
         gui()
     end
 
