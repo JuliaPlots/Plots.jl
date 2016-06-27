@@ -62,6 +62,7 @@ const _arg_desc = KW(
 :overwrite_figure         => "Bool.  Should we reuse the same GUI window/figure when plotting (true) or open a new one (false).",
 :html_output_format       => "Symbol.  When writing html output, what is the format?  `:png` and `:svg` are currently supported.",
 :inset_subplots 		  => "nothing or vector of 2-tuple (parent,bbox).  optionally pass a vector of (parent,bbox) tuples which are the parent layout and the relative bounding box of inset subplots",
+:dpi 					  => "Number.  Dots Per Inch of output figures",
 
 # subplot args
 :title                    => "String. Subplot title.",

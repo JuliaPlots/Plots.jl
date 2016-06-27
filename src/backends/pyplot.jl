@@ -30,6 +30,7 @@ supported_args(::PyPlotBackend) = merge_with_base_supported([
     :match_dimensions,
     :clims,
     :inset_subplots,
+    :dpi,
   ])
 supported_types(::PyPlotBackend) = [
         :path, :steppre, :steppost, :shape,
@@ -1013,7 +1014,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     fig[:clear]()
     fig[:set_size_inches](px2inch(w), px2inch(h), forward = true)
     fig[:set_facecolor](py_color(plt[:background_color_outside]))
-    fig[:set_dpi](DPI)
+    fig[:set_dpi](plt[:dpi])
     
     # resize the window
     PyPlot.plt[:get_current_fig_manager]()[:resize](w, h)
@@ -1278,7 +1279,7 @@ for (mime, fmt) in _pyplot_mimeformats
             # figsize = map(px2inch, plt[:size]),
             facecolor = fig.o["get_facecolor"](),
             edgecolor = "none",
-            dpi = DPI
+            dpi = plt[:dpi]
         )
     end
 end
