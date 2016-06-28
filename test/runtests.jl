@@ -5,7 +5,7 @@ include("imgcomp.jl")
 # don't actually show the plots
 srand(1234)
 default(show=false, reuse=true)
-img_eps = 5e-2
+img_eps = isinteractive() ? 1e-2 : 10e-2
 
 # facts("Gadfly") do
 #     @fact gadfly() --> Plots.GadflyBackend()
@@ -30,7 +30,7 @@ facts("GR") do
     @fact gr() --> Plots.GRBackend()
     @fact backend() --> Plots.GRBackend()
 
-    @linux_only image_comparison_facts(:gr, skip=[], eps=img_eps)
+    @linux_only image_comparison_facts(:gr, skip=[30], eps=img_eps)
 end
 
 facts("Plotly") do
