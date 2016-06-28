@@ -26,4 +26,4 @@ build_script:
 
 test_script:
   # - C:\projects\julia\bin\julia -e "Pkg.test(\"Plots\")"
-  - C:\projects\julia\bin\julia -e "include(Pkg.dir(\"Plots\", \"test\", \"travis_commands.jl\")"
+  - C:\projects\julia\bin\julia -e "include(Pkg.dir(\"Plots\", \"test\", \"travis_commands.jl\"))"
