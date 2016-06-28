@@ -157,6 +157,25 @@ function gr_polyline(x, y, func = GR.polyline)
     end
 end
 
+function gr_inqtext(x, y, s)
+    if length(s) >= 2 && s[1] == '$' && s[end] == '$'
+        GR.inqtextext(x, y, s[2:end-1])
+    elseif search(s, '\\') != 0 || search(s, '_') != 0 || search(s, '^') != 0
+        GR.inqtextext(x, y, s)
+    else
+        GR.inqtext(x, y, s)
+    end
+end
+
+function gr_text(x, y, s)
+    if length(s) >= 2 && s[1] == '$' && s[end] == '$'
+        GR.mathtex(x, y, s[2:end-1])
+    elseif search(s, '\\') != 0 || search(s, '_') != 0 || search(s, '^') != 0
+        GR.textext(x, y, s)
+    else
+        GR.text(x, y, s)
+    end
+end
 
 function gr_polaraxes(rmin, rmax)
     GR.savestate()
@@ -569,14 +588,14 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_set_font(sp[:titlefont])
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
         gr_set_textcolor(sp[:foreground_color_title])
-        GR.text(gr_view_xcenter(), viewport_subplot[4], sp[:title])
+        gr_text(gr_view_xcenter(), viewport_subplot[4], sp[:title])
     end
 
     if xaxis[:guide] != ""
         gr_set_font(xaxis[:guidefont])
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
         gr_set_textcolor(xaxis[:foreground_color_guide])
-        GR.text(gr_view_xcenter(), viewport_subplot[3], xaxis[:guide])
+        gr_text(gr_view_xcenter(), viewport_subplot[3], xaxis[:guide])
     end
 
     if yaxis[:guide] != ""
@@ -584,7 +603,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
         GR.setcharup(-1, 0)
         gr_set_textcolor(yaxis[:foreground_color_guide])
-        GR.text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
+        gr_text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
     end
     GR.restorestate()
 
@@ -751,11 +770,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if 90 <= alpha < 270
                     x[3] = x[2] - 0.05
                     GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
-                    GR.text(x[3] - 0.01, y[3], string(labels[i]))
+                    gr_text(x[3] - 0.01, y[3], string(labels[i]))
                 else
                     x[3] = x[2] + 0.05
                     GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-                    GR.text(x[3] + 0.01, y[3], string(labels[i]))
+                    gr_text(x[3] + 0.01, y[3], string(labels[i]))
                 end
                 gr_polyline(x, y)
                 a1 = a2
@@ -809,7 +828,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             else
                 lab = series.d[:label]
             end
-            tbx, tby = GR.inqtext(0, 0, lab)
+            tbx, tby = gr_inqtext(0, 0, lab)
             w = max(w, tbx[3] - tbx[1])
         end
         if w > 0
@@ -865,7 +884,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 end
                 GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
                 gr_set_textcolor(sp[:foreground_color_legend])
-                GR.text(xpos, ypos, lab)
+                gr_text(xpos, ypos, lab)
                 ypos -= dy
             end
         end
@@ -879,7 +898,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         x, y, val = ann
         x, y = GR.wctondc(x, y)
         gr_set_font(val.font)
-        GR.text(x, y, val.str)
+        gr_text(x, y, val.str)
     end
     GR.restorestate()
 end
