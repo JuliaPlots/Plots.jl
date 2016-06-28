@@ -257,13 +257,13 @@ function gr_draw_markers(d::KW, x, y, msize, mz)
     shape = d[:markershape]
     if shape != :none
         for i=1:length(x)
-            msize = cycle(msize, i)
+            msi = cycle(msize, i)
             cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
             cfuncind = isa(shape, Shape) ? GR.setfillcolorind : GR.setmarkercolorind
 
             # draw a filled in shape, slightly bigger, to estimate a stroke
             cfunc(d[:markerstrokecolor], d[:markerstrokealpha])
-            gr_draw_marker(x[i], y[i], msize*1.2, shape, )
+            gr_draw_marker(x[i], y[i], msi*1.2, shape, )
 
             # draw the shape
             if mz == nothing
@@ -273,7 +273,7 @@ function gr_draw_markers(d::KW, x, y, msize, mz)
                 ci = round(Int, 1000 + cycle(mz, i) * 255)
                 cfuncind(ci)
             end
-            gr_draw_marker(x[i], y[i], msize, shape)
+            gr_draw_marker(x[i], y[i], msi, shape)
         end
     end
 end
@@ -763,14 +763,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.selntran(1)
 
         elseif st == :shape
-            # draw the shapes
-            gr_set_line(d[:linewidth], :solid, d[:linecolor], d[:linealpha])
-            gr_polyline(d[:x], d[:y])
-
             # draw the interior
             gr_set_fill(d[:fillcolor], d[:fillalpha])
             gr_polyline(d[:x], d[:y], GR.fillarea)
 
+            # draw the shapes
+            gr_set_line(d[:linewidth], :solid, d[:linecolor], d[:linealpha])
+            gr_polyline(d[:x], d[:y])
 
 
         elseif st == :image
@@ -828,11 +827,17 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 should_add_to_legend(series) || continue
                 d = series.d
                 st = d[:seriestype]
-                GR.setlinewidth(d[:linewidth])
+                gr_set_line(d[:linewidth], d[:linestyle], d[:linecolor], d[:linealpha])
                 if st == :path
-                    gr_set_linecolor(d[:linecolor], d[:linealpha])
-                    GR.setlinetype(gr_linetype[d[:linestyle]])
                     GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
+                elseif st == :shape
+                    gr_set_fill(d[:fillcolor], d[:fillalpha])
+                    l, r = xpos-0.07, xpos-0.01
+                    b, t = ypos-0.4dy, ypos+0.4dy
+                    x = [l, r, r, l, l]
+                    y = [b, b, t, t, b]
+                    gr_polyline(x, y, GR.fillarea)
+                    gr_polyline(x, y)
                 end
 
                 gr_draw_markers(d, xpos-[0.06,0.02], [ypos,ypos], 10, nothing)

@@ -1,4 +1,5 @@
 
+__precompile__()
 
 module Plots
 
@@ -253,10 +254,10 @@ end
 
 # ---------------------------------------------------------
 
-if VERSION >= v"0.4.0-dev+5512"
-    include("precompile.jl")
-    _precompile_()
-end
+# if VERSION >= v"0.4.0-dev+5512"
+#     include("precompile.jl")
+#     _precompile_()
+# end
 
 # ---------------------------------------------------------
 

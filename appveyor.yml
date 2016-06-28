@@ -1,14 +1,11 @@
 environment:
   matrix:
-  - JULIAVERSION: "julialang/bin/winnt/x86/0.3/julia-0.3-latest-win32.exe"
-  - JULIAVERSION: "julialang/bin/winnt/x64/0.3/julia-0.3-latest-win64.exe"
-  - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
-  - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
-
-branches:
-  only:
-    - master
-    - /release-.*/
+# Releases
+  - JULIAVERSION: "stable/win32"
+  - JULIAVERSION: "stable/win64"
+# Nightlies
+  - JULIAVERSION: "download/win32"
+  - JULIAVERSION: "download/win64"
 
 notifications:
   - provider: Email
@@ -18,17 +15,15 @@ notifications:
 
 install:
 # Download most recent Julia Windows binary
-  - ps: (new-object net.webclient).DownloadFile(
-        $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
-        "C:\projects\julia-binary.exe")
+  - ps: (new-object net.webclient).DownloadFile($("http://status.julialang.org/"+$env:JULIAVERSION), "C:\projects\julia-binary.exe")
 # Run installer silently, output to C:\projects\julia
   - C:\projects\julia-binary.exe /S /D=C:\projects\julia
 
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
-  - C:\projects\julia\bin\julia -e "versioninfo();
-      Pkg.clone(pwd(), \"Plots\"); Pkg.build(\"Plots\")"
+  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.clone(pwd(), \"Plots\"); Pkg.build(\"Plots\")"
 
 test_script:
-  - C:\projects\julia\bin\julia --check-bounds=yes -e "Pkg.test(\"Plots\")"
+  # - C:\projects\julia\bin\julia -e "Pkg.test(\"Plots\")"
+  - C:\projects\julia\bin\julia -e "include(Pkg.dir(\"Plots\", \"test\", \"travis_commands.jl\")"

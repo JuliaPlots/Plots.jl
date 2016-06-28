@@ -366,7 +366,7 @@ function bezier_value(pts::AVec, t::Real)
 end
 
 # create segmented bezier curves in place of line segments
-@recipe function f(::Type{Val{:curves}}, x, y, z)
+@recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)
     args = z != nothing ? (x,y,z) : (x,y)
     newx, newy = zeros(0), zeros(0)
     fr = d[:fillrange]
@@ -374,7 +374,6 @@ end
     newz = z != nothing ? zeros(0) : nothing
     lz = d[:line_z]
     newlz = lz != nothing ? zeros(0) : nothing
-    npoints = pop!(d, :npoints, 30)
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
@@ -391,12 +390,8 @@ end
         end
         if lz != nothing
             lzrng = cycle(lz, rng) # the line_z's for this segment
-            # @show lzrng, sizeof(lzrng) map(t -> 1+floor(Int, t * (length(rng)-1)), ts)
-            # choose the line_z value of the control point just before this t
             push!(newlz, 0.0)
             append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
-            # lzrng = vcat()
-            # nanappend!(newlz,   #map(t -> bezier_value(cycle(lz,rng), t), ts))
         end
     end
 
@@ -596,8 +591,6 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
 
 
 @recipe function f(::Type{Val{:boxplot}}, x, y, z; notch=false, range=1.5)
-    delete!(d, :notch)
-    delete!(d, :range)
     xsegs, ysegs = Segments(), Segments()
     glabels = sort(collect(unique(x)))
     warning = false
@@ -669,7 +662,11 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
     # Outliers
     @series begin
         seriestype  := :scatter
-        markershape --> :circle
+        markershape := :circle
+        markercolor := d[:fillcolor]
+        markeralpha := d[:fillalpha]
+        markerstrokecolor := d[:linecolor]
+        markerstrokealpha := d[:linealpha]
         x           := outliers_x
         y           := outliers_y
         primary     := false
@@ -681,104 +678,6 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
     y := ysegs.pts
     ()
 end
-
-# @recipe function f(::Type{Val{:boxplot}}, x, y, z; notch=false, range=1.5)
-#     # Plots.dumpdict(d, "box before", true)
-
-#     # create a list of shapes, where each shape is a single boxplot
-#     shapes = Shape[]
-#     groupby = extractGroupArgs(x)
-#     outliers_y = Float64[]
-#     outliers_x = Float64[]
-
-#     warning = false
-
-#     for (i, glabel) in enumerate(groupby.groupLabels)
-
-#         # filter y values
-#         values = d[:y][groupby.groupIds[i]]
-#         # then compute quantiles
-#         q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
-#         # notch
-#         n = notch_width(q2, q4, length(values))
-
-#         if notch && !warning && ( (q2>(q3-n)) || (q4<(q3+n)) )
-#             warn("Boxplot's notch went outside hinges. Set notch to false.")
-#             warning = true # Show the warning only one time
-#         end
-
-#         # make the shape
-#         center = discrete_value!(d[:subplot][:xaxis], glabel)[1]
-#         l, m, r = center - _box_halfwidth, center, center + _box_halfwidth
-#         # internal nodes for notches
-#         L, R = center - 0.5 * _box_halfwidth, center + 0.5 * _box_halfwidth
-#         # outliers
-#         if Float64(range) != 0.0  # if the range is 0.0, the whiskers will extend to the data
-#             limit = range*(q4-q2)
-#             inside = Float64[]
-#             for value in values
-#                 if (value < (q2 - limit)) || (value > (q4 + limit))
-#                     push!(outliers_y, value)
-#                     push!(outliers_x, center)
-#                 else
-#                     push!(inside, value)
-#                 end
-#             end
-#             # change q1 and q5 to show outliers
-#             # using maximum and minimum values inside the limits
-#             q1, q5 = extrema(inside)
-#         end
-#         # Box
-#         xcoords = notch::Bool ? [
-#             m, l, r, m, m, NaN,       # lower T
-#             l, l, L, R, r, r, l, NaN, # lower box
-#             l, l, L, R, r, r, l, NaN, # upper box
-#             m, l, r, m, m, NaN,       # upper T
-#         ] : [
-#             m, l, r, m, m, NaN,         # lower T
-#             l, l, r, r, l, NaN,         # lower box
-#             l, l, r, r, l, NaN,         # upper box
-#             m, l, r, m, m, NaN,         # upper T
-#         ]
-#         ycoords = notch::Bool ? [
-#             q1, q1, q1, q1, q2, NaN,             # lower T
-#             q2, q3-n, q3, q3, q3-n, q2, q2, NaN, # lower box
-#             q4, q3+n, q3, q3, q3+n, q4, q4, NaN, # upper box
-#             q5, q5, q5, q5, q4, NaN,             # upper T
-#         ] : [
-#             q1, q1, q1, q1, q2, NaN,    # lower T
-#             q2, q3, q3, q2, q2, NaN,    # lower box
-#             q4, q3, q3, q4, q4, NaN,    # upper box
-#             q5, q5, q5, q5, q4, NaN,    # upper T
-#         ]
-#         push!(shapes, Shape(xcoords, ycoords))
-#     end
-
-#     # d[:plotarg_overrides] = KW(:xticks => (1:length(shapes), groupby.groupLabels))
-
-#     seriestype := :shape
-#     # n = length(groupby.groupLabels)
-#     # xticks --> (linspace(0.5,n-0.5,n), groupby.groupLabels)
-
-#     # clean d
-#     pop!(d, :notch)
-#     pop!(d, :range)
-
-#     # we want to set the fields directly inside series recipes... args are ignored
-#     d[:x], d[:y] = Plots.shape_coords(shapes)
-
-#     # Outliers
-#     @series begin
-#         seriestype := :scatter
-#         markershape --> :circle
-#         x := outliers_x
-#         y := outliers_y
-#         primary := false
-#         ()
-#     end
-
-#     () # expects a tuple returned
-# end
 @deps boxplot shape scatter
 
 # ---------------------------------------------------------------------------
@@ -808,7 +707,6 @@ end
 
 
 @recipe function f(::Type{Val{:violin}}, x, y, z; trim=true)
-    delete!(d, :trim)
     xsegs, ysegs = Segments(), Segments()
     glabels = sort(collect(unique(x)))
     for glabel in glabels
@@ -845,10 +743,6 @@ end
     x := newx
     y := newy
     seriestype := :path
-
-    # clean up d
-    pop!(d, :trim)
-
     ()
 end
 @deps density path
