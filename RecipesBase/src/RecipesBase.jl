@@ -233,12 +233,12 @@ macro recipe(funcexpr::Expr)
                 println("apply_recipe args: ", $args)
             end
             $kw_body
+            $cleanup_body
             series_list = RecipesBase.RecipeData[]
             func_return = $func_body
             if func_return != nothing
                 push!(series_list, RecipesBase.RecipeData(d, RecipesBase.wrap_tuple(func_return)))
             end
-            $cleanup_body
             series_list
         end
     end)
