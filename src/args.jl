@@ -79,7 +79,7 @@ add_non_underscore_aliases!(_typeAliases)
 
 like_histogram(seriestype::Symbol) = seriestype in (:histogram, :density)
 like_line(seriestype::Symbol)      = seriestype in (:line, :path, :steppre, :steppost)
-like_surface(seriestype::Symbol)   = seriestype in (:contour, :contour3d, :heatmap, :surface, :wireframe, :image)
+like_surface(seriestype::Symbol)   = seriestype in (:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image)
 
 is3d(seriestype::Symbol) = seriestype in _3dTypes
 is3d(series::Series) = is3d(series.d)

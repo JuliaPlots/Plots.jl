@@ -39,7 +39,7 @@ function should_add_to_legend(series::Series)
     series.d[:primary] && series.d[:label] != "" &&
         !(series.d[:seriestype] in (
             :hexbin,:histogram2d,:hline,:vline,
-            :contour,:contour3d,:surface,:wireframe,
+            :contour,:contourf,:contour3d,:surface,:wireframe,
             :heatmap, :pie, :image
         ))
 end

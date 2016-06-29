@@ -175,6 +175,7 @@ end
 @shorthands vline
 @shorthands ohlc
 @shorthands contour
+@shorthands contourf
 @shorthands contour3d
 @shorthands surface
 @shorthands wireframe

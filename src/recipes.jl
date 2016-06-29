@@ -747,7 +747,14 @@ end
 end
 @deps density path
 
+# ---------------------------------------------------------------------------
+# contourf - filled contours
 
+@recipe function f(::Type{Val{:contourf}}, x, y, z)
+    fillrange := true
+    seriestype := :contour
+    ()
+end
 
 # ---------------------------------------------------------------------------
 # Error Bars

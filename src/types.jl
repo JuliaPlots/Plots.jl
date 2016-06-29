@@ -83,12 +83,13 @@ function Plot()
          Subplot[], false)
 end
 
-# TODO: make a decision... should plt[1] return the first subplot or the first series??
-# Base.getindex(plt::Plot, i::Integer) = plt.subplots[i]
-Base.getindex(plt::Plot, s::Symbol) = plt.spmap[s]
-Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r,c]
-attr(plt::Plot, k::Symbol) = plt.attr[k]
-attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
+# -----------------------------------------------------------------------
 
+Base.getindex(plt::Plot, i::Integer) = plt.subplots[i]
+Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r,c]
+# attr(plt::Plot, k::Symbol) = plt.attr[k]
+# attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
+
+Base.getindex(sp::Subplot, i::Integer) = series_list(sp)[i]
 
 # -----------------------------------------------------------------------

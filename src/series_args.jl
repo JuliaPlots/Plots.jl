@@ -7,7 +7,7 @@
 
 typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
 
-all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :heatmap, :surface, :wireframe, :contour3d, :image), get(d, :seriestype, :none))
+all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image), get(d, :seriestype, :none))
 
 # missing
 convertToAnyVector(v::@compat(Void), d::KW) = Any[nothing], nothing

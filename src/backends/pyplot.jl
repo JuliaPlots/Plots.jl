@@ -423,7 +423,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             if d[:line_z] == nothing
                 handle = ax[:plot](xyargs...;
                     label = d[:label],
-                    zorder = plt.n,
+                    zorder = d[:series_plotindex],
                     color = py_linecolor(d),
                     linewidth = py_dpi_scale(plt, d[:linewidth]),
                     linestyle = py_linestyle(st, d[:linestyle]),
@@ -504,7 +504,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     #     end
     #     handle = ax[isvertical(d) ? :bar : :barh](x, y;
     #         label = d[:label],
-    #         zorder = plt.n,
+    #         zorder = d[:series_plotindex],
     #         color = py_fillcolor(d),
     #         edgecolor = py_linecolor(d),
     #         linewidth = d[:linewidth],
@@ -518,7 +518,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     #     extrakw[isvertical(d) ? :width : :height] = 0.0
     #     handle = ax[isvertical(d) ? :bar : :barh](x, y;
     #         label = d[:label],
-    #         zorder = plt.n,
+    #         zorder = d[:series_plotindex],
     #         color = py_linecolor(d),
     #         edgecolor = py_linecolor(d),
     #         linewidth = d[:linewidth],
@@ -552,7 +552,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
         handle = ax[:scatter](xyargs...;
             label = d[:label],
-            zorder = plt.n + 0.5,
+            zorder = d[:series_plotindex] + 0.5,
             marker = py_marker(d[:markershape]),
             s = py_dpi_scale(plt, d[:markersize] .^ 2),
             edgecolors = py_markerstrokecolor(d),
@@ -565,7 +565,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # if st == :histogram
     #     handle = ax[:hist](y;
     #         label = d[:label],
-    #         zorder = plt.n,
+    #         zorder = d[:series_plotindex],
     #         color = py_fillcolor(d),
     #         edgecolor = py_linecolor(d),
     #         linewidth = d[:linewidth],
@@ -594,7 +594,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     #     end
     #     handle = ax[:hist2d](x, y;
     #         label = d[:label],
-    #         zorder = plt.n,
+    #         zorder = d[:series_plotindex],
     #         bins = d[:bins],
     #         normed = d[:normalize],
     #         weights = d[:weights],
@@ -619,7 +619,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
         handle = ax[:hexbin](x, y;
             label = d[:label],
-            zorder = plt.n,
+            zorder = d[:series_plotindex],
             gridsize = d[:bins],
             linewidths = py_dpi_scale(plt, d[:linewidth]),
             edgecolors = py_linecolor(d),
@@ -660,7 +660,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         # contour lines
         handle = ax[:contour](x, y, z, levelargs...;
             label = d[:label],
-            zorder = plt.n,
+            zorder = d[:series_plotindex],
             linewidths = py_dpi_scale(plt, d[:linewidth]),
             linestyles = py_linestyle(st, d[:linestyle]),
             cmap = py_linecolormap(d),
@@ -672,7 +672,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         if d[:fillrange] != nothing
             handle = ax[:contourf](x, y, z, levelargs...;
                 label = d[:label],
-                zorder = plt.n + 0.5,
+                zorder = d[:series_plotindex] + 0.5,
                 cmap = py_fillcolormap(d),
                 extrakw...
             )
@@ -705,7 +705,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             handle = ax[st == :surface ? :plot_surface : :plot_wireframe](x, y, z;
                 label = d[:label],
-                zorder = plt.n,
+                zorder = d[:series_plotindex],
                 rstride = 1,
                 cstride = 1,
                 linewidth = py_dpi_scale(plt, d[:linewidth]),
@@ -742,7 +742,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             handle = ax[:plot_trisurf](x, y, z;
                 label = d[:label],
-                zorder = plt.n,
+                zorder = d[:series_plotindex],
                 cmap = py_fillcolormap(d),
                 linewidth = py_dpi_scale(plt, d[:linewidth]),
                 edgecolor = py_linecolor(d),
@@ -766,7 +766,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             z  # hopefully it's in a data format that will "just work" with imshow
         end
         handle = ax[:imshow](z;
-            zorder = plt.n,
+            zorder = d[:series_plotindex],
             cmap = py_colormap([:black, :white]),
             vmin = 0.0,
             vmax = 1.0
@@ -797,7 +797,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         
         handle = ax[:pcolormesh](x, y, z;
             label = d[:label],
-            zorder = plt.n,
+            zorder = d[:series_plotindex],
             cmap = py_fillcolormap(d),
             edgecolors = (d[:linewidth] > 0 ? py_linecolor(d) : "face"),
             extrakw...
@@ -820,7 +820,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         path = py_path(x, y)
         patches = pypatches.pymember("PathPatch")(path;
             label = d[:label],
-            zorder = plt.n,
+            zorder = d[:series_plotindex],
             edgecolor = py_linecolor(d),
             facecolor = py_fillcolor(d),
             linewidth = py_dpi_scale(plt, d[:linewidth]),
@@ -887,7 +887,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
 
         handle = ax[f](args...;
-            zorder = plt.n,
+            zorder = d[:series_plotindex],
             facecolor = py_fillcolor(d),
             linewidths = 0
         )

@@ -588,75 +588,15 @@ function prepared_object(plt::Plot)
 end
 
 # --------------------------------------------------------------------
+# plot to a Subplot
 
-# function get_indices(orig, labels)
-#     Int[findnext(labels, l, 1) for l in orig]
-# end
-
-# # TODO: remove?? this is the old way of handling discrete data... should be
-# # replaced by the Axis type and logic
-# function setTicksFromStringVector(plt::Plot, d::KW, di::KW, letter)
-#     sym = Symbol(letter)
-#     ticksym = Symbol(letter * "ticks")
-#     pargs = plt.attr
-#     v = di[sym]
-#
-#     # do we really want to do this?
-#     typeof(v) <: AbstractArray || return
-#     isempty(v) && return
-#     trueOrAllTrue(_ -> typeof(_) <: AbstractString, v) || return
-#
-#     # compute the ticks and labels
-#     ticks, labels = if ticksType(pargs[ticksym]) == :ticks_and_labels
-#         # extend the existing ticks and labels. only add to labels if they're new!
-#         ticks, labels = pargs[ticksym]
-#         newlabels = filter(_ -> !(_ in labels), unique(v))
-#         newticks = if isempty(ticks)
-#             collect(1:length(newlabels))
-#         else
-#             maximum(ticks) + collect(1:length(newlabels))
-#         end
-#         ticks = vcat(ticks, newticks)
-#         labels = vcat(labels, newlabels)
-#         ticks, labels
-#     else
-#         # create new ticks and labels
-#         newlabels = unique(v)
-#         collect(1:length(newlabels)), newlabels
-#     end
-#
-#     d[ticksym] = ticks, labels
-#     plt.attr[ticksym] = ticks, labels
-#
-#     # add an origsym field so that later on we can re-compute the x vector if ticks change
-#     origsym = Symbol(letter * "orig")
-#     di[origsym] = v
-#     di[sym] = get_indices(v, labels)
-#
-#     # loop through existing plt.seriesargs and adjust indices if there is an origsym key
-#     for sargs in plt.seriesargs
-#         if haskey(sargs, origsym)
-#             # TODO: might need to call the setindex function instead to trigger a plot update for some backends??
-#             sargs[sym] = get_indices(sargs[origsym], labels)
-#         end
-#     end
-# end
-
-
-# --------------------------------------------------------------------
-
-
-
-# --------------------------------------------------------------------
-
-# function Base.copy(plt::Plot)
-#     backend(plt.backend)
-#     plt2 = plot(; plt.attr...)
-#     for sargs in plt.seriesargs
-#         sargs = filter((k,v) -> haskey(_series_defaults,k), sargs)
-#         plot!(plt2; sargs...)
-#     end
-#     plt2
-# end
+function plot(sp::Subplot, args...; kw...)
+    plt = sp.plt
+    plot(plt, args...; kw..., subplot = findfirst(plt.subplots, sp))
+end
+function plot!(sp::Subplot, args...; kw...)
+    plt = sp.plt
+    plot!(plt, args...; kw..., subplot = findfirst(plt.subplots, sp))
+end
 
 # --------------------------------------------------------------------

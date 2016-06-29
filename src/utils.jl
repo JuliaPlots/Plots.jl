@@ -642,7 +642,7 @@ end
 # -------------------------------------------------------
 # indexing notation
 
-Base.getindex(plt::Plot, i::Integer) = getxy(plt, i)
+# Base.getindex(plt::Plot, i::Integer) = getxy(plt, i)
 Base.setindex!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer) = setxy!(plt, xy, i)
 Base.setindex!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) = setxyz!(plt, xyz, i)
 
