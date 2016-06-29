@@ -12,22 +12,11 @@
 Plots is a plotting API and toolset.  My goals with the package are:
 
 - **Powerful**.  Do more with less.  Complex visualizations become easy.
-- **Intuitive**.  Start generating plots without reading volumes of documentation.  Commands should "just work".
+- **Intuitive**.  Stop reading so much documentation.  Commands should "just work".
 - **Concise**.  Less code means fewer mistakes and more efficient development/analysis.
 - **Flexible**.  Produce your favorite plots from your favorite package, but quicker and simpler.
-- **Consistent**.  Don't commit to one graphics package.  Use the same code and access the strengths of all [backends](http://juliaplots.github.io/backends/).
-- **Lightweight**.  Very few dependencies, since backends are loaded and initialized dynamically.
-
-Use the [preprocessing pipeline](http://juliaplots.github.io/pipeline/) in Plots to fully describe your visualization before it calls the backend code.  This maintains modularity and allows for efficient separation of front end code, algorithms, and backend graphics.  New graphical backends can be added with minimal effort.
-
-```julia
-using Plots
-@gif for i in linspace(0,2π,100)
-    X = Y = linspace(-5,5,40)
-    surface(X, Y, (x,y) -> sin(x+10sin(i))+cos(y))
-end
-```
-
-![waves](http://juliaplots.github.io/examples/img/waves.gif)
+- **Consistent**.  Don't commit to one graphics package, use the same code everywhere.
+- **Lightweight**.  Very few dependencies.
+- **Smart**. Attempts to figure out what you **want** it to do... not just what you **tell** it.
 
 View the [full documentation](http://juliaplots.github.io).
