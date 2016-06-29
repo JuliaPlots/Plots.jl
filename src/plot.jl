@@ -271,6 +271,7 @@ function _plot!(plt::Plot, d::KW, args...)
     else
         sts = get(d, :seriestype, :path)
         if typeof(sts) <: AbstractArray
+            delete!(d, :seriestype)
             [begin
                 dc = copy(d)
                 dc[:seriestype] = sts[r,:]

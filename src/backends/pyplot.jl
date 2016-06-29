@@ -807,7 +807,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
         # TODO: this should probably be handled generically
         # expand extrema... handle is a QuadMesh object
-        for path in handle[:properties]()["paths"]
+        for path in handle[:properties]()[:paths]
             verts = path[:vertices]
             xmin, ymin = minimum(verts, 1)
             xmax, ymax = maximum(verts, 1)
@@ -1278,12 +1278,12 @@ const _pyplot_mimeformats = Dict(
 for (mime, fmt) in _pyplot_mimeformats
     @eval function _writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
         fig = plt.o
-        fig.o["canvas"][:print_figure](
+        fig.o[:canvas][:print_figure](
             io,
             format=$fmt,
             # bbox_inches = "tight",
             # figsize = map(px2inch, plt[:size]),
-            facecolor = fig.o["get_facecolor"](),
+            facecolor = fig.o[:get_facecolor](),
             edgecolor = "none",
             dpi = plt[:dpi]
         )
