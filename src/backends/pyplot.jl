@@ -807,7 +807,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
         # TODO: this should probably be handled generically
         # expand extrema... handle is a QuadMesh object
-        for path in handle[:properties]()[:paths]
+        for path in handle[:properties]()["paths"]
             verts = path[:vertices]
             xmin, ymin = minimum(verts, 1)
             xmax, ymax = maximum(verts, 1)

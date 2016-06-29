@@ -98,14 +98,6 @@ end
 
 # ----------------------------------------------------------------------------------
 
-# abstract PlotRecipe
-
-# getRecipeXY(recipe::PlotRecipe) = Float64[], Float64[]
-# getRecipeArgs(recipe::PlotRecipe) = ()
-
-# plot(recipe::PlotRecipe, args...; kw...) = plot(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
-# plot!(recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
-# plot!(plt::Plot, recipe::PlotRecipe, args...; kw...) = plot!(getRecipeXY(recipe)..., args...; getRecipeArgs(recipe)..., kw...)
 
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
@@ -113,63 +105,45 @@ num_series(x) = 1
 
 RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::Plot) = throw(MethodError("Unmatched plot recipe: $T"))
 
-# # if it's not a recipe, just do nothing and return the args
-# function RecipesBase.apply_recipe(d::KW, args...; issubplot=false)
-#     if issubplot && !isempty(args) && !haskey(d, :n) && !haskey(d, :layout)
-#         # put in a sensible default
-#         d[:n] = maximum(map(num_series, args))
-#     end
-#     args
-# end
 
 
 if is_installed("DataFrames")
     @eval begin
         import DataFrames
-        DFS = Union{Symbol, AbstractArray{Symbol}}
 
-        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, dfs::DFS)
-            if isa(dfs, Symbol)
-                get!(d, Symbol(letter * "guide"), string(dfs))
-                collect(df[dfs])
-            else
-                get!(d, :label, reshape(dfs, 1, length(dfs)))
-                Any[collect(df[s]) for s in dfs]
-            end
+        # if it's one symbol, set the guide and return the column
+        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, sym::Symbol)
+            get!(d, Symbol(letter * "guide"), string(sym))
+            collect(df[sym])
         end
 
+        # if it's an array of symbols, set the labels and return a Vector{Any} of columns
+        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, syms::AbstractArray{Symbol})
+            get!(d, :label, reshape(syms, 1, length(syms)))
+            Any[collect(df[s]) for s in syms]
+        end
+
+        # for anything else, no-op
+        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, anything)
+            anything
+        end
+
+        # handle grouping by DataFrame column
         function extractGroupArgs(group::Symbol, df::DataFrames.AbstractDataFrame, args...)
             extractGroupArgs(collect(df[group]))
         end
 
-
-        function handle_group(df::DataFrames.AbstractDataFrame, d::KW)
-            if haskey(d, :group)
-                g = d[:group]
-                if isa(g, Symbol)
-                    d[:group] = collect(df[g])
+        # if a DataFrame is the first arg, lets swap symbols out for columns
+        @recipe function f(df::DataFrames.AbstractDataFrame, args...)
+            # if any of these attributes are symbols, swap out for the df column
+            for k in (:fillrange, :line_z, :marker_z, :markersize, :ribbon, :weights, :xerror, :yerror)
+                if haskey(d, k) && isa(d[k], Symbol)
+                    d[k] = collect(df[d[k]])
                 end
             end
-        end
 
-        @recipe function f(df::DataFrames.AbstractDataFrame, sy::DFS)
-            handle_group(df, d)
-            handle_dfs(df, d, "y", sy)
-        end
-
-        @recipe function f(df::DataFrames.AbstractDataFrame, sx::DFS, sy::DFS)
-            handle_group(df, d)
-            x = handle_dfs(df, d, "x", sx)
-            y = handle_dfs(df, d, "y", sy)
-            x, y
-        end
-
-        @recipe function f(df::DataFrames.AbstractDataFrame, sx::DFS, sy::DFS, sz::DFS)
-            handle_group(df, d)
-            x = handle_dfs(df, d, "x", sx)
-            y = handle_dfs(df, d, "y", sy)
-            z = handle_dfs(df, d, "z", sz)
-            x, y, z
+            # return a list of new arguments
+            tuple(Any[handle_dfs(df, d, (i==1 ? "x" : i==2 ? "y" : "z"), arg) for (i,arg) in enumerate(args)]...)
         end
     end
 end
