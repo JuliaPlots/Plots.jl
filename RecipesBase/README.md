@@ -41,7 +41,7 @@ using custom combinations of data types.  Some examples of applications:
 Really there's very little that *couldn't* be mapped to a useful visualization.
 I challenge you to create the pictures that are worth a thousand words.
 
-For more information about Plots, see [the docs](http://plots.readthedocs.io/), and be sure to reference
+For more information about Plots, see [the docs](http://juliaplots.github.io/), and be sure to reference
 the [supported keywords](http://juliaplots.github.io/supported/#keyword-arguments).
 For additional examples of recipes in the wild, see [PlotRecipes](https://github.com/JuliaPlots/PlotRecipes.jl).
 Ask questions on [gitter](https://gitter.im/tbreloff/Plots.jl) or in the issues.
