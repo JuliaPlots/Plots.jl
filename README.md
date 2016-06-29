@@ -30,4 +30,4 @@ end
 
 ![waves](http://juliaplots.github.io/examples/img/waves.gif)
 
-View the [full documentation](http://plots.readthedocs.io).
+View the [full documentation](http://juliaplots.github.io).

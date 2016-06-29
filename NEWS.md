@@ -211,7 +211,7 @@
 - Integration with [PlotlyJS.jl](https://github.com/spencerlyon2/PlotlyJS.jl) for using Plotly inside a Blink window @spencerlyon2
 - The Plotly backend has been split into my built-in version (`plotly()`) and @spencerlyon2's backend (`plotlyjs()`)
 - Revamped backend setup code for easily adding new backends
-- New docs (WIP) at http://plots.readthedocs.org/
+- New docs (WIP) at http://juliaplots.github.io/
 - Overhaul to `:legend` keyword (see https://github.com/tbreloff/Plots.jl/issues/135)
 - New dependency on Requires, allows auto-loading of DataFrames support
 - Support for plotting lists of Tuples and FixedSizeArrays
