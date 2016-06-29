@@ -217,6 +217,8 @@ const _plot_defaults = KW(
     :inset_subplots              => nothing,   # optionally pass a vector of (parent,bbox) tuples which are
                                                # the parent layout and the relative bounding box of inset subplots
     :dpi                         => DPI,        # dots per inch for images, etc
+    :display_type                => :auto,
+    :extra_kwargs                => KW(),
 )
 
 
