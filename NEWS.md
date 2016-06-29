@@ -79,7 +79,7 @@
 
 #### 0.7.0
 
-- Check out [the summary](http://plots.readthedocs.io/en/latest/plots_v0.7/)
+- Check out [the summary](http://juliaplots.github.io/plots_v0.7/)
 - Revamped and simplified internals
 - [Recipes, recipes, recipes](https://github.com/JuliaPlots/RecipesBase.jl/issues/6)
 - [Layouts and Subplots](https://github.com/tbreloff/Plots.jl/issues/60)
