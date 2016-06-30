@@ -63,8 +63,8 @@ const _arg_desc = KW(
 :html_output_format       => "Symbol.  When writing html output, what is the format?  `:png` and `:svg` are currently supported.",
 :inset_subplots 		  => "nothing or vector of 2-tuple (parent,bbox).  optionally pass a vector of (parent,bbox) tuples which are the parent layout and the relative bounding box of inset subplots",
 :dpi 					  => "Number.  Dots Per Inch of output figures",
-:display_type 			  => "Symbol (`:auto`, `:gui`, or `:inline`).  When supported, `display` will either open a GUI window or plot inline."
-:extra_kwargs 			  => "KW (Dict{Symbol,Any}).  Pass a map of extra keyword args which may be specific to a backend."
+:display_type 			  => "Symbol (`:auto`, `:gui`, or `:inline`).  When supported, `display` will either open a GUI window or plot inline.",
+:extra_kwargs 			  => "KW (Dict{Symbol,Any}).  Pass a map of extra keyword args which may be specific to a backend.",
 
 # subplot args
 :title                    => "String. Subplot title.",
