@@ -930,6 +930,10 @@ function Base.getindex(axis::Axis, k::Symbol)
     end
 end
 
+function Base.getindex(series::Series, k::Symbol)
+    series.d[k]
+end
+
 # -----------------------------------------------------------------------------
 
 # update attr from an input dictionary

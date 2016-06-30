@@ -399,8 +399,8 @@ Base.Array(surf::Surface) = surf.surf
 for f in (:length, :size)
   @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
 end
-Base.copy(surf::Surface) = Surface(copy(surf.surf))
-Base.eltype(surf::Surface) = eltype(surf.surf)
+Base.copy(surf::Surface) = Surface{typeof(surf.surf)}(copy(surf.surf))
+Base.eltype{T}(surf::Surface{T}) = eltype(T)
 
 function expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]

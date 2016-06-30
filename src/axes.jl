@@ -159,16 +159,18 @@ function expand_extrema!(sp::Subplot, d::KW)
     for letter in (:x, :y, :z)
         data = d[letter]
         axis = sp.attr[Symbol(letter, "axis")]
-        if eltype(data) <: Number
-            expand_extrema!(axis, data)
-        elseif isa(data, Surface) && eltype(data.surf) <: Number
+        if eltype(data) <: Number || (isa(data, Surface) && all(di -> isa(di, Number), data.surf))
+            if !(eltype(data) <: Number)
+                # huh... must have been a mis-typed surface? lets swap it out
+                data = d[letter] = Surface(Matrix{Float64}(data.surf))
+            end
             expand_extrema!(axis, data)
         elseif data != nothing
             # TODO: need more here... gotta track the discrete reference value
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
-            # @show letter,eltype(data),typeof(data)
             d[letter], d[Symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
+            expand_extrema!(axis, d[letter])
         end
     end
 
