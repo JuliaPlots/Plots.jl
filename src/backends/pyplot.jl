@@ -50,10 +50,12 @@ is_subplot_supported(::PyPlotBackend) = true
 
 function _initialize_backend(::PyPlotBackend)
     @eval begin
-        # see: https://github.com/tbreloff/Plots.jl/issues/308
-        ENV["OVERRIDE_PYPLOT_DISPLAY"] = true
-
+        # problem: https://github.com/tbreloff/Plots.jl/issues/308
+        # solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
+        otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
         import PyPlot
+        append!(Base.Multimedia.displays, otherdisplays)
+
         export PyPlot
         const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
         const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
