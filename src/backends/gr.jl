@@ -930,5 +930,17 @@ for (mime, fmt) in _gr_mimeformats
 end
 
 function _display(plt::Plot{GRBackend})
-    gr_display(plt)
+    if plt[:display_type] == :inline
+        GR.emergencyclosegks()
+        filepath = tempname() * ".pdf"
+        ENV["GKS_WSTYPE"] = "pdf"
+        ENV["GKS_FILEPATH"] = filepath
+        gr_display(plt)
+        GR.emergencyclosegks()
+        content = string("\033]1337;File=inline=1;preserveAspectRatio=0:", base64encode(open(readbytes, filepath)), "\a")
+        println(content)
+        rm(filepath)
+    else
+        gr_display(plt)
+    end
 end
