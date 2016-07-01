@@ -166,13 +166,13 @@ end
 
 type SegmentsIterator
     args::Tuple
-    nextidx::Int
+    # nextidx::Int
     n::Int
 end
 function iter_segments(args...)
     tup = Plots.wraptuple(args)
     n = maximum(map(length, tup))
-    SegmentsIterator(tup, 0, n)
+    SegmentsIterator(tup, n)
 end
 
 # helpers to figure out if there are NaN values in a list of array types
@@ -180,10 +180,16 @@ anynan(i::Int, args...) = any(a -> !isfinite(cycle(a,i)), args)
 anynan(istart::Int, iend::Int, args...) = any(i -> anynan(i, args...), istart:iend)
 allnan(istart::Int, iend::Int, args...) = all(i -> anynan(i, args...), istart:iend)
 
-Base.start(itr::SegmentsIterator) = (itr.nextidx = 1) #resets
-Base.done(itr::SegmentsIterator, unused::Int) = itr.nextidx > itr.n
-function Base.next(itr::SegmentsIterator, unused::Int)
-    i = istart = iend = itr.nextidx
+function Base.start(itr::SegmentsIterator)
+    nextidx = 1
+    if anynan(1, itr.args...)
+        _, nextidx = next(itr, 1)
+    end
+    nextidx
+end
+Base.done(itr::SegmentsIterator, nextidx::Int) = nextidx > itr.n
+function Base.next(itr::SegmentsIterator, nextidx::Int)
+    i = istart = iend = nextidx
 
     # find the next NaN, and iend is the one before
     while i <= itr.n + 1
@@ -195,7 +201,7 @@ function Base.next(itr::SegmentsIterator, unused::Int)
         i += 1
     end
 
-    # find the next non-NaN, and set itr.nextidx
+    # find the next non-NaN, and set nextidx
     while i <= itr.n
         if !anynan(i, itr.args...)
             break
@@ -203,8 +209,7 @@ function Base.next(itr::SegmentsIterator, unused::Int)
         i += 1
     end
 
-    itr.nextidx = i
-    istart:iend, 0
+    istart:iend, i
 end
 
 # ------------------------------------------------------------------------------------

@@ -29,7 +29,7 @@ supported_args(::GLVisualizeBackend) = merge_with_base_supported([
     # :clims,
     # :inset_subplots,
   ])
-supported_types(::GLVisualizeBackend) = [:surface, :scatter, :scatter3d, :path, :path3d]
+supported_types(::GLVisualizeBackend) = [:surface, :scatter, :scatter3d, :path, :path3d, :shape]
 supported_styles(::GLVisualizeBackend) = [:auto, :solid]
 supported_markers(::GLVisualizeBackend) = vcat([:none, :auto, :circle], collect(keys(_gl_marker_map)))
 supported_scales(::GLVisualizeBackend) = [:identity]
@@ -101,8 +101,10 @@ gl_color(c::RGBA{Float32}) = c
 
 # convert to RGBA
 function gl_color(c, a=nothing)
+    @show c, a
     c = convertColor(c, a)
-    RGBA{Float32}(getColor(c))
+    @show c
+    RGBA{Float32}(c)
 end
 
 function gl_viewport(bb, rect)
@@ -125,11 +127,13 @@ function gl_draw_lines_2d(x, y, color, linewidth, sp_screen)
     for rng in iter_segments(x, y)
         n = length(rng)
         n < 2 && continue
+        pts = gl_make_points(x[rng], y[rng])
+        @show pts, n
         viz = GLVisualize.visualize(
-            gl_make_points(x[rng], y[rng]),
+            pts,
             n==2 ? :linesegment : :lines,
-            color=color,
-            thickness = Float32(linewidth)
+            color = color,
+            thickness = thickness
         )
         GLVisualize.view(viz, sp_screen, camera=:orthographic_pixel)
     end
@@ -141,11 +145,12 @@ function gl_draw_lines_3d(x, y, z, color, linewidth, sp_screen)
     for rng in iter_segments(x, y, z)
         n = length(rng)
         n < 2 && continue
+        pts = gl_make_points(x[rng], y[rng], z[rng])
         viz = GLVisualize.visualize(
-            gl_make_points(x[rng], y[rng], z[rng]),
+            pts,
             n==2 ? :linesegment : :lines,
             color=color,
-            thickness = Float32(linewidth)
+            thickness = thickness
         )
         GLVisualize.view(viz, sp_screen, camera=:perspective)
     end
@@ -206,7 +211,7 @@ function gl_display(plt::Plot{GLVisualizeBackend})
 
         sp.o = sp_screen
         if !is3d(sp)
-            gl_draw_axes_2d(sp)
+            # gl_draw_axes_2d(sp)
         end
 
         # loop over the series and add them to the subplot
@@ -216,16 +221,16 @@ function gl_display(plt::Plot{GLVisualizeBackend})
             x, y = map(Float32, d[:x]), map(Float32, d[:y])
             msize = gl_relative_size(plt, d[:markersize])
 
-            viz = if st == :surface
+            if st == :surface
                 # TODO: can pass just the ranges and surface
                 ismatrix(x) || (x = repmat(x', length(y), 1))
                 ismatrix(y) || (y = repmat(y, 1, length(x)))
                 z = transpose_z(d, map(Float32, d[:z].surf), false)
                 viz = GLVisualize.visualize((x, y, z), :surface)
-                GLVisualize.view(viz, sp_screen, camera = :perspective)
+                GLVisualize.view(viz, sp_screen, camera = camera)
 
             else
-                # paths and scatters
+                # paths, scatters, and shape
 
                 _3d && (z = map(Float32, d[:z]))
 
@@ -273,6 +278,22 @@ function gl_display(plt::Plot{GLVisualizeBackend})
                     #GLVisualize.visualize((marker , map(Point3f0, zip(x, y, z),
                     # billboard=true
                     #))
+                end
+
+                if st == :shape
+                    for rng in iter_segments(x, y)
+                        pts = Point2f0[Point2f0(x[i], y[i]) for i in rng]
+                        @show pts
+                        mesh = GeometryTypes.GLNormalMesh(pts)
+                        @show mesh
+                        if !isempty(GeometryTypes.faces(mesh))
+                            viz = GLVisualize.visualize(
+                                mesh,
+                                color = gl_color(d[:fillcolor], d[:fillalpha])
+                            )
+                            GLVisualize.view(viz, sp_screen, camera = camera)
+                        end
+                    end
                 end
             end
         end

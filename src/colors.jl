@@ -32,6 +32,7 @@ getColor(scheme::ColorScheme) = getColor(scheme, 1)
 getColorVector(scheme::ColorScheme) = [getColor(scheme)]
 
 colorscheme(scheme::ColorScheme) = scheme
+colorscheme(s::AbstractString; kw...) = colorscheme(Symbol(s); kw...)
 colorscheme(s::Symbol; kw...) = haskey(_gradients, s) ? ColorGradient(s; kw...) : ColorWrapper(convertColor(s); kw...)
 colorscheme{T<:Real}(s::Symbol, vals::AVec{T}; kw...) = ColorGradient(s, vals; kw...)
 colorscheme(cs::AVec, vs::AVec; kw...) = ColorGradient(cs, vs; kw...)
@@ -55,10 +56,10 @@ convertColor(b::Bool) = b ? RGBA(0,0,0,1) : RGBA(0,0,0,0)
 
 function convertColor(c, α::Real)
   c = convertColor(c)
-  RGBA(RGB(c), α)
+  RGBA(RGB(getColor(c)), α)
 end
 convertColor(cs::AVec, α::Real) = map(c -> convertColor(c, α), cs)
-convertColor(c, α::@compat(Void)) = convertColor(c)
+convertColor(c, α::Void) = convertColor(c)
 
 # backup... try to convert
 getColor(c) = convertColor(c)
@@ -220,7 +221,7 @@ immutable ColorZFunction <: ColorScheme
   f::Function
 end
 
-getColorZ(scheme::ColorFunction, z::Real) = scheme.f(z)
+getColorZ(scheme::ColorZFunction, z::Real) = scheme.f(z)
 
 # --------------------------------------------------------------
 
@@ -246,6 +247,7 @@ ColorWrapper(s::Symbol; alpha = nothing) = ColorWrapper(convertColor(parse(Color
 
 getColor(scheme::ColorWrapper, idx::Int) = scheme.c
 getColorZ(scheme::ColorWrapper, z::Real) = scheme.c
+convertColor(c::ColorWrapper, α::Void) = c.c
 
 # --------------------------------------------------------------
 
