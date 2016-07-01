@@ -9,6 +9,28 @@
 
 ## 0.7 (current master/dev)
 
+#### 0.7.5
+
+- GR: LaTeX support
+- Changed docs url to juliaplots.github.io
+- added `contourf` seriestype
+- allow `plt[1]` to return first Subplot
+- allow `sp[1]` to return the first Series of the Subplot
+- `series[k]` now passes through to `series.d[k]`
+- allow calling `plot!(sp, ...)` to update a target Subplot
+- PyPlot: zorder fix
+- new DataFrames logic/recipe: more flexible/robust and allow Symbols for:
+	- `(:fillrange, :line_z, :marker_z, :markersize, :ribbon, :weights, :xerror, :yerror)`
+- new `display_type` and `extra_kwargs` plot attributes
+- surface fix
+
+#### 0.7.4
+
+- added snooped precompiles, but left commented out
+- GR fixes: markersize, shapes, legends
+- fixes to recipes
+- turned on Appveyor
+
 #### 0.7.3
 
 - rebuild violin and boxplot recipes
