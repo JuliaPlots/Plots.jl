@@ -78,7 +78,7 @@ end
 
 # --------------------------------------------------------------
 
-const _rainbowColors = [colorant"blue", colorant"purple", colorant"green", colorant"orange", colorant"red"]
+const _rainbowColors = [colorant"purple", colorant"blue", colorant"green", colorant"orange", colorant"red"]
 const _testColors = [colorant"darkblue", colorant"blueviolet",  colorant"darkcyan",colorant"green",
                      darken(colorant"yellow",0.3), colorant"orange", darken(colorant"red",0.2)]
 
