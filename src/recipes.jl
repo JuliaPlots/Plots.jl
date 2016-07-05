@@ -454,7 +454,7 @@ function calc_edges(v, bins::Integer)
 end
 
 # just pass through arrays
-calc_edges(v, bins::AVec) = v
+calc_edges(v, bins::AVec) = bins
 
 # find the bucket index of this value
 function bucket_index(vi, edges)
