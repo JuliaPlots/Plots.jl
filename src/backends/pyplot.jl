@@ -935,7 +935,7 @@ end
 function py_set_ticks(ax, ticks, letter)
     ticks == :auto && return
     axis = ax[Symbol(letter,"axis")]
-    if ticks == :none || ticks == nothing
+    if ticks == :none || ticks == nothing || ticks == false
         kw = KW()
         for dir in (:top,:bottom,:left,:right)
             kw[dir] = kw[Symbol(:label,dir)] = "off"

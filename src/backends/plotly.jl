@@ -190,7 +190,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         end
 
         # ticks
-        ticks = axis[:ticks]
+        ticks = get_ticks(axis)
         if ticks != :auto
             ttype = ticksType(ticks)
             if ttype == :ticks

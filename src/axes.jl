@@ -122,7 +122,14 @@ function get_ticks(axis::Axis)
     ticks = axis[:ticks]
     dvals = axis[:discrete_values]
     if !isempty(dvals) && ticks == :auto
-        axis[:continuous_values], dvals
+        cv, dv = axis[:continuous_values], dvals
+        # TODO: better/smarter cutoff values for sampling ticks
+        if length(cv) > 30
+            rng = Int[round(Int,i) for i in linspace(1, length(cv), 15)]
+            cv[rng], dv[rng]
+        else
+            cv, dv
+        end
     else
         ticks
     end
