@@ -402,15 +402,11 @@ end
         error("bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
     end
 
-    # # if horizontal, switch x/y
-    # if !isvertical(d)
-    #     x, y = y, x
-    #     # nx, ny = ny, nx
-    # end
-
+    axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
     bw = d[:bar_width]
     hw = if bw == nothing
-        0.5mean(diff(x))
+        # 0.5mean(diff(x))
+        0.5mean(diff([discrete_value!(axis, xi)[1] for xi=x]))
     else
         Float64[0.5cycle(bw,i) for i=1:length(x)]
     end
@@ -424,11 +420,12 @@ end
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i=1:ny
-        ci = x[i]
+        # ci = x[i]
+        center = discrete_value!(axis, x[i])[1]
         hwi = cycle(hw,i)
         yi = y[i]
         fi = cycle(fillto,i)
-        push!(xseg, ci-hwi, ci-hwi, ci+hwi, ci+hwi, ci-hwi)
+        push!(xseg, center-hwi, center-hwi, center+hwi, center+hwi, center-hwi)
         push!(yseg, yi, fi, fi, yi, yi)
     end
 
