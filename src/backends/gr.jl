@@ -28,6 +28,7 @@ supported_args(::GRBackend) = merge_with_base_supported([
     :aspect_ratio,
     :normalize, :weights,
     :inset_subplots,
+    :bar_width,
 ])
 supported_types(::GRBackend) = [
     :path, :scatter,

@@ -399,23 +399,19 @@ end
     end
 
     nx, ny = length(x), length(y)
-    edges = if nx == ny
-        # x is centers, calc the edges
-        # TODO: use bar_width, etc
-        midpoints = x
-        halfwidths = diff(midpoints) * 0.5
-        Float64[if i == 1
-            midpoints[1] - halfwidths[1]
-        elseif i == ny+1
-            midpoints[i-1] + halfwidths[i-2]
-        else
-            midpoints[i-1] + halfwidths[i-1]
-        end for i=1:ny+1]
-    elseif nx == ny + 1
-        # x is edges
+    centers = if nx == ny
         x
+    elseif nx == ny + 1
+        diff(x) + x[1:end-1]
     else
         error("bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
+    end
+
+    bw = d[:bar_width]
+    hw = if bw == nothing
+        0.5mean(diff(centers))
+    else
+        Float64[0.5cycle(bw,i) for i=1:length(centers)]
     end
 
     # make fillto a vector... default fills to 0
@@ -427,9 +423,12 @@ end
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i=1:ny
+        ci = centers[i]
+        hwi = cycle(hw,i)
+        yi = y[i]
         fi = cycle(fillto,i)
-        push!(xseg, edges[i], edges[i], edges[i+1], edges[i+1])
-        push!(yseg, y[i], fi, fi, y[i])
+        push!(xseg, ci-hwi, ci-hwi, ci+hwi, ci+hwi, ci-hwi)
+        push!(yseg, yi, fi, fi, yi, yi)
     end
 
     # switch back
@@ -442,7 +441,7 @@ end
     seriestype := :shape
     ()
 end
-@deps bar path
+@deps bar shape
 
 # ---------------------------------------------------------------------------
 # Histograms
@@ -569,7 +568,7 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
     glabels = sort(collect(unique(x)))
     warning = false
     outliers_x, outliers_y = zeros(0), zeros(0)
-    for glabel in glabels
+    for (i,glabel) in enumerate(glabels)
         # filter y
         values = y[filter(i -> cycle(x,i) == glabel, 1:length(y))]
 
@@ -587,10 +586,11 @@ notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
 
         # make the shape
         center = discrete_value!(d[:subplot][:xaxis], glabel)[1]
-        l, m, r = center - _box_halfwidth, center, center + _box_halfwidth
+        hw = d[:bar_width] == nothing ? _box_halfwidth : 0.5cycle(d[:bar_width], i)
+        l, m, r = center - hw, center, center + hw
         
         # internal nodes for notches
-        L, R = center - 0.5 * _box_halfwidth, center + 0.5 * _box_halfwidth
+        L, R = center - 0.5 * hw, center + 0.5 * hw
         
         # outliers
         if Float64(range) != 0.0  # if the range is 0.0, the whiskers will extend to the data

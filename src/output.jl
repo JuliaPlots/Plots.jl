@@ -248,10 +248,11 @@ function setup_atom()
         # @eval import Atom, Media
         @eval import Atom
 
-        # connects the render function
-        for T in (GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend)
-            Atom.Media.media(Plot{T}, Atom.Media.Plot)
-        end
+        # # connects the render function
+        # for T in (GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend)
+        #     Atom.Media.media(Plot{T}, Atom.Media.Plot)
+        # end
+        Atom.Media.media(Plot, Atom.Media.Graphical)
         # Atom.Media.media{T <: Union{GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend}}(Plot{T}, Atom.Media.Plot)
 
         # Atom.displaysize(::Plot) = (535, 379)
@@ -259,9 +260,15 @@ function setup_atom()
 
         # this is like "display"... sends an html div with the plot to the PlotPane
         function Atom.Media.render(pane::Atom.PlotPane, plt::Plot)
+            @show "here"
             Atom.Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
         end
 
+        # # force text/plain to output to the PlotPane
+        # function Base.writemime(io::IO, ::MIME"text/plain", plt::Plot)
+        #     # writemime(io::IO, MIME("text/html"), plt)
+        #     Atom.Media.render(pane)
+        # end
 
         # function Atom.Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
         #     html = Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
