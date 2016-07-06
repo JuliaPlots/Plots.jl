@@ -393,13 +393,8 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
-    # if horizontal, switch x/y
-    if !isvertical(d)
-        x, y = y, x
-    end
-
     nx, ny = length(x), length(y)
-    centers = if nx == ny
+    x = if nx == ny
         x
     elseif nx == ny + 1
         diff(x) + x[1:end-1]
@@ -407,11 +402,17 @@ end
         error("bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
     end
 
+    # # if horizontal, switch x/y
+    # if !isvertical(d)
+    #     x, y = y, x
+    #     # nx, ny = ny, nx
+    # end
+
     bw = d[:bar_width]
     hw = if bw == nothing
-        0.5mean(diff(centers))
+        0.5mean(diff(x))
     else
-        Float64[0.5cycle(bw,i) for i=1:length(centers)]
+        Float64[0.5cycle(bw,i) for i=1:length(x)]
     end
 
     # make fillto a vector... default fills to 0
@@ -423,7 +424,7 @@ end
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i=1:ny
-        ci = centers[i]
+        ci = x[i]
         hwi = cycle(hw,i)
         yi = y[i]
         fi = cycle(fillto,i)
