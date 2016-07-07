@@ -498,7 +498,8 @@ function handleColors!(d::KW, arg, csym::Symbol)
         if arg == :auto
             d[csym] = :auto
         else
-            c = colorscheme(arg)
+            # c = colorscheme(arg)
+            c = plot_color(arg, nothing)
             d[csym] = c
         end
         return true
@@ -943,13 +944,13 @@ function _update_plot_args(plt::Plot, d_in::KW)
     end
 
     # handle colors
-    bg = convertColor(plt.attr[:background_color])
+    bg = plot_color(plt.attr[:background_color])
     fg = plt.attr[:foreground_color]
     if fg == :auto
         fg = isdark(bg) ? colorant"white" : colorant"black"
     end
     plt.attr[:background_color] = bg
-    plt.attr[:foreground_color] = convertColor(fg)
+    plt.attr[:foreground_color] = plot_color(fg)
     # color_or_match!(plt.attr, :background_color_outside, bg)
     color_or_nothing!(plt.attr, :background_color_outside)
 end
@@ -977,7 +978,7 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
     # background colors
     # bg = color_or_match!(sp.attr, :background_color_subplot, plt.attr[:background_color])
     color_or_nothing!(sp.attr, :background_color_subplot)
-    bg = convertColor(sp[:background_color_subplot])
+    bg = plot_color(sp[:background_color_subplot])
     sp.attr[:color_palette] = get_color_palette(sp.attr[:color_palette], bg, 30)
     color_or_nothing!(sp.attr, :background_color_legend)
     color_or_nothing!(sp.attr, :background_color_inside)
@@ -1044,7 +1045,92 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
     end
 end
 
+# -----------------------------------------------------------------------------
 
 function has_black_border_for_default(st::Symbol)
     like_histogram(st) || st in (:hexbin, :bar)
 end
+
+
+# converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
+function getSeriesRGBColor(c, α, sp::Subplot, n::Int)
+
+  if c == :auto
+    c = autopick(sp[:color_palette], n)
+  end
+
+  # # c should now be a subtype of AbstractPlotColor
+  # colorscheme(c)
+  plot_color(c, α)
+end
+
+
+function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
+    pkg = plt.backend
+    globalIndex = d[:series_plotindex]
+
+    # add default values to our dictionary, being careful not to delete what we just added!
+    for (k,v) in _series_defaults
+        slice_arg!(d, d, k, v, commandIndex, remove_pair = false)
+    end
+
+    # this is how many series belong to this subplot
+    plotIndex = count(series -> series.d[:subplot] === sp && series.d[:primary], plt.series_list)
+    if get(d, :primary, true)
+        plotIndex += 1
+    end
+
+    aliasesAndAutopick(d, :linestyle, _styleAliases, supported_styles(pkg), plotIndex)
+    aliasesAndAutopick(d, :markershape, _markerAliases, supported_markers(pkg), plotIndex)
+
+    # update alphas
+    for asym in (:linealpha, :markeralpha, :fillalpha)
+        if d[asym] == nothing
+            d[asym] = d[:seriesalpha]
+        end
+    end
+    if d[:markerstrokealpha] == nothing
+        d[:markerstrokealpha] = d[:markeralpha]
+    end
+
+    # update series color
+    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], d[:seriesalpha], sp, plotIndex)
+
+    # update other colors
+    for s in (:line, :marker, :fill)
+        csym, asym = Symbol(s,:color), Symbol(s,:alpha)
+        d[csym] = if d[csym] == :match
+            if has_black_border_for_default(d[:seriestype]) && csym == :line
+                plot_color(:black, d[asym])
+            else
+                d[:seriescolor]
+            end
+        else
+            getSeriesRGBColor(d[csym], d[asym], sp, plotIndex)
+        end
+    end
+
+    # update markerstrokecolor
+    d[:markerstrokecolor] = if d[:markerstrokecolor] == :match
+        sp[:foreground_color_subplot]
+    else
+        getSeriesRGBColor(d[:markerstrokecolor], d[:markerstrokealpha], sp, plotIndex)
+    end
+
+    # scatter plots don't have a line, but must have a shape
+    if d[:seriestype] in (:scatter, :scatter3d)
+        d[:linewidth] = 0
+        if d[:markershape] == :none
+            d[:markershape] = :circle
+        end
+    end
+
+    # set label
+    label = d[:label]
+    label = (label == "AUTO" ? "y$globalIndex" : label)
+    d[:label] = label
+
+    _replace_linewidth(d)
+    d
+end
+

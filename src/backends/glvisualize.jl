@@ -44,8 +44,8 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         import GeometryTypes: Point2f0, Point3f0, Vec2f0, Vec3f0
         export GLVisualize
 
-        # TODO: remove this when PlotUtils is registered
-        import PlotUtils
+        # # TODO: remove this when PlotUtils is registered
+        # import PlotUtils
     end
 end
 

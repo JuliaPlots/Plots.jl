@@ -88,7 +88,7 @@ function plotly_font(font::Font, color = font.color)
     KW(
         :family => font.family,
         :size   => round(Int, font.pointsize*1.4),
-        :color  => webcolor(color),
+        :color  => rgba_string(color),
     )
 end
 
@@ -126,7 +126,7 @@ end
 #         # :ay => -40,
 #         :ax => 10xdiff / dist,
 #         :ay => -10ydiff / dist,
-#         :arrowcolor => webcolor(d[:linecolor], d[:linealpha]),
+#         :arrowcolor => rgba_string(d[:linecolor]),
 #         :xref => "x",
 #         :yref => "y",
 #         :arrowsize => 10a.headwidth,
@@ -175,8 +175,8 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
         ax[:type] = plotly_scale(axis[:scale])
         ax[:tickfont] = plotly_font(axis[:tickfont], axis[:foreground_color_text])
-        ax[:tickcolor] = webcolor(axis[:foreground_color_border])
-        ax[:linecolor] = webcolor(axis[:foreground_color_border])
+        ax[:tickcolor] = rgba_string(axis[:foreground_color_border])
+        ax[:linecolor] = rgba_string(axis[:foreground_color_border])
 
         # lims
         lims = axis[:lims]
@@ -214,7 +214,7 @@ function plotly_layout(plt::Plot)
 
     w, h = plt[:size]
     d_out[:width], d_out[:height] = w, h
-    d_out[:paper_bgcolor] = webcolor(plt[:background_color_outside])
+    d_out[:paper_bgcolor] = rgba_string(plt[:background_color_outside])
     d_out[:margin] = KW(:l=>0, :b=>0, :r=>0, :t=>20)
 
     d_out[:annotations] = KW[]
@@ -239,7 +239,7 @@ function plotly_layout(plt::Plot)
             push!(d_out[:annotations], plotly_annotation_dict(titlex, titley, text(sp[:title], titlefont)))
         end
 
-        d_out[:plot_bgcolor] = webcolor(sp[:background_color_inside])
+        d_out[:plot_bgcolor] = rgba_string(sp[:background_color_inside])
 
         # TODO: x/y axis tick values/labels
 
@@ -259,8 +259,8 @@ function plotly_layout(plt::Plot)
         d_out[:showlegend] = sp[:legend] != :none
         if sp[:legend] != :none
             d_out[:legend] = KW(
-                :bgcolor  => webcolor(sp[:background_color_legend]),
-                :bordercolor => webcolor(sp[:foreground_color_legend]),
+                :bgcolor  => rgba_string(sp[:background_color_legend]),
+                :bordercolor => rgba_string(sp[:foreground_color_legend]),
                 :font     => plotly_font(sp[:legendfont], sp[:foreground_color_legend]),
             )
         end
@@ -299,7 +299,7 @@ end
 
 
 function plotly_colorscale(grad::ColorGradient, alpha = nothing)
-    [[grad.values[i], webcolor(grad.colors[i], alpha)] for i in 1:length(grad.colors)]
+    [[grad.values[i], rgba_string(grad.colors[i], alpha)] for i in 1:length(grad.colors)]
 end
 plotly_colorscale(c, alpha = nothing) = plotly_colorscale(default_gradient(), alpha)
 
@@ -330,6 +330,9 @@ function plotly_close_shapes(x, y)
     nanvcat(xs), nanvcat(ys)
 end
 
+plotly_data(v) = collect(v)
+plotly_data{R<:Rational}(v::AbstractArray{R}) = float(v)
+
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     d = series.d
@@ -342,7 +345,7 @@ function plotly_series(plt::Plot, series::Series)
     d_out[:yaxis] = "y$spidx"
     d_out[:showlegend] = should_add_to_legend(series)
 
-    x, y = collect(d[:x]), collect(d[:y])
+    x, y = plotly_data(d[:x]), plotly_data(d[:y])
     d_out[:name] = d[:label]
     st = d[:seriestype]
     isscatter = st in (:scatter, :scatter3d, :scattergl)
@@ -360,7 +363,7 @@ function plotly_series(plt::Plot, series::Series)
         end
         if d[:fillrange] == true || d[:fillrange] == 0
             d_out[:fill] = "tozeroy"
-            d_out[:fillcolor] = webcolor(d[:fillcolor], d[:fillalpha])
+            d_out[:fillcolor] = rgba_string(d[:fillcolor])
         elseif !(d[:fillrange] in (false, nothing))
             warn("fillrange ignored... plotly only supports filling to zero. fillrange: $(d[:fillrange])")
         end
@@ -374,10 +377,10 @@ function plotly_series(plt::Plot, series::Series)
         # @show map(length, (x,y,d_out[:x],d_out[:y]))
         # @show d_out[:x] d_out[:y]
         d_out[:fill] = "tozeroy"
-        d_out[:fillcolor] = webcolor(d[:fillcolor], d[:fillalpha])
+        d_out[:fillcolor] = rgba_string(d[:fillcolor])
         if d[:markerstrokewidth] > 0
             d_out[:line] = KW(
-                :color => webcolor(d[:linecolor], d[:linealpha]),
+                :color => rgba_string(d[:linecolor]),
                 :width => d[:linewidth],
                 :dash => string(d[:linestyle]),
             )
@@ -400,7 +403,7 @@ function plotly_series(plt::Plot, series::Series)
     #     end
     #     d_out[:nbinsx] = xbins
     #     d_out[:nbinsy] = ybins
-    #     d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
+    #     d_out[:colorscale] = plotly_colorscale(d[:fillcolor])
 
     # elseif st in (:histogram, :density)
     #     d_out[:type] = "histogram"
@@ -414,7 +417,7 @@ function plotly_series(plt::Plot, series::Series)
     elseif st == :heatmap
         d_out[:type] = "heatmap"
         d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
-        d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
+        d_out[:colorscale] = plotly_colorscale(d[:fillcolor])
 
     elseif st == :contour
         d_out[:type] = "contour"
@@ -422,12 +425,12 @@ function plotly_series(plt::Plot, series::Series)
         # d_out[:showscale] = d[:colorbar] != :none
         d_out[:ncontours] = d[:levels]
         d_out[:contours] = KW(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
-        d_out[:colorscale] = plotly_colorscale(d[:linecolor], d[:linealpha])
+        d_out[:colorscale] = plotly_colorscale(d[:linecolor])
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
         d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
-        d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
+        d_out[:colorscale] = plotly_colorscale(d[:fillcolor])
 
     elseif st == :pie
         d_out[:type] = "pie"
@@ -443,7 +446,7 @@ function plotly_series(plt::Plot, series::Series)
             hasline ? "lines" : "none"
         end
         d_out[:x], d_out[:y] = x, y
-        d_out[:z] = collect(d[:z])
+        d_out[:z] = plotly_data(d[:z])
 
     else
         warn("Plotly: seriestype $st isn't supported.")
@@ -454,11 +457,11 @@ function plotly_series(plt::Plot, series::Series)
     if hasmarker
         d_out[:marker] = KW(
             :symbol => get(_plotly_markers, d[:markershape], string(d[:markershape])),
-            :opacity => d[:markeralpha],
+            # :opacity => d[:markeralpha],
             :size => 2 * d[:markersize],
-            :color => webcolor(d[:markercolor], d[:markeralpha]),
+            :color => rgba_string(d[:markercolor]),
             :line => KW(
-                :color => webcolor(d[:markerstrokecolor], d[:markerstrokealpha]),
+                :color => rgba_string(d[:markerstrokecolor]),
                 :width => d[:markerstrokewidth],
             ),
         )
@@ -466,18 +469,18 @@ function plotly_series(plt::Plot, series::Series)
         # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
         if d[:marker_z] != nothing
             # d_out[:marker][:color] = d[:marker_z]
-            # d_out[:marker][:colorscale] = plotly_colorscale(d[:markercolor], d[:markeralpha])
+            # d_out[:marker][:colorscale] = plotly_colorscale(d[:markercolor])
             # d_out[:showscale] = true
             grad = ColorGradient(d[:markercolor], alpha=d[:markeralpha])
             zmin, zmax = extrema(d[:marker_z])
-            d_out[:marker][:color] = [webcolor(getColorZ(grad, (zi - zmin) / (zmax - zmin))) for zi in d[:marker_z]]
+            d_out[:marker][:color] = [rgba_string(getColorZ(grad, (zi - zmin) / (zmax - zmin))) for zi in d[:marker_z]]
         end
     end
 
     # add "line"
     if hasline
         d_out[:line] = KW(
-            :color => webcolor(d[:linecolor], d[:linealpha]),
+            :color => rgba_string(d[:linecolor]),
             :width => d[:linewidth],
             :shape => if st == :steppre
                 "vh"

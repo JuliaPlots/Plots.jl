@@ -78,26 +78,37 @@ end
 # --------------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------------
 
-# convert colorant to 4-tuple RGBA
-py_color(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
-py_color(cvec::ColorVector, α=nothing) = map(py_color, convertColor(cvec, α).v)
-py_color(grad::ColorGradient, α=nothing) = map(c -> py_color(c, α), grad.colors)
-py_color(scheme::ColorScheme, α=nothing) = py_color(convertColor(getColor(scheme), α))
-py_color(vec::AVec, α=nothing) = map(c->py_color(c,α), vec)
-py_color(c, α=nothing) = py_color(convertColor(c, α))
+# # convert colorant to 4-tuple RGBA
+# py_color(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
+# py_color(cvec::ColorVector, α=nothing) = map(py_color, convertColor(cvec, α).v)
+# py_color(grad::ColorGradient, α=nothing) = map(c -> py_color(c, α), grad.colors)
+# py_color(scheme::ColorScheme, α=nothing) = py_color(convertColor(getColor(scheme), α))
+# py_color(vec::AVec, α=nothing) = map(c->py_color(c,α), vec)
+# py_color(c, α=nothing) = py_color(convertColor(c, α))
 
-function py_colormap(c::ColorGradient, α=nothing)
-    pyvals = [(v, py_color(getColorZ(c, v), α)) for v in c.values]
-    pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
+# function py_colormap(c::ColorGradient, α=nothing)
+#     pyvals = [(v, py_color(getColorZ(c, v), α)) for v in c.values]
+#     pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
+# end
+
+# # convert vectors and ColorVectors to standard ColorGradients
+# # TODO: move this logic to colors.jl and keep a barebones wrapper for pyplot
+# py_colormap(cv::ColorVector, α=nothing) = py_colormap(ColorGradient(cv.v), α)
+# py_colormap(v::AVec, α=nothing) = py_colormap(ColorGradient(v), α)
+
+# # anything else just gets a bluesred gradient
+# py_colormap(c, α=nothing) = py_colormap(default_gradient(), α)
+
+py_color(c::Colorant) = (red(c), green(c), blue(c), alpha(c))
+py_color(cs::AVec) = map(py_color, cs)
+py_color(grad::ColorGradient) = py_color(grad.colors)
+
+function py_colormap(grad::ColorGradient)
+    pyvals = [(z, py_color(c[z])) for z in c.values]
+    pycolors.LinearSegmentedColormap[:from_list]("tmp", pyvals)
 end
+py_colormap(c) = py_colormap(cgrad())
 
-# convert vectors and ColorVectors to standard ColorGradients
-# TODO: move this logic to colors.jl and keep a barebones wrapper for pyplot
-py_colormap(cv::ColorVector, α=nothing) = py_colormap(ColorGradient(cv.v), α)
-py_colormap(v::AVec, α=nothing) = py_colormap(ColorGradient(v), α)
-
-# anything else just gets a bluesred gradient
-py_colormap(c, α=nothing) = py_colormap(default_gradient(), α)
 
 function py_shading(c, z, α=nothing)
     cmap = py_colormap(c, α)
@@ -247,14 +258,14 @@ function py_color_fix(c, x)
     end
 end
 
-py_linecolor(d::KW)          = py_color(d[:linecolor], d[:linealpha])
-py_markercolor(d::KW)        = py_color(d[:markercolor], d[:markeralpha])
-py_markerstrokecolor(d::KW)  = py_color(d[:markerstrokecolor], d[:markerstrokealpha])
-py_fillcolor(d::KW)          = py_color(d[:fillcolor], d[:fillalpha])
+py_linecolor(d::KW)          = py_color(d[:linecolor]) #, d[:linealpha])
+py_markercolor(d::KW)        = py_color(d[:markercolor]) #, d[:markeralpha])
+py_markerstrokecolor(d::KW)  = py_color(d[:markerstrokecolor]) #, d[:markerstrokealpha])
+py_fillcolor(d::KW)          = py_color(d[:fillcolor]) #, d[:fillalpha])
 
-py_linecolormap(d::KW)       = py_colormap(d[:linecolor], d[:linealpha])
-py_markercolormap(d::KW)     = py_colormap(d[:markercolor], d[:markeralpha])
-py_fillcolormap(d::KW)       = py_colormap(d[:fillcolor], d[:fillalpha])
+py_linecolormap(d::KW)       = py_colormap(d[:linecolor]) #, d[:linealpha])
+py_markercolormap(d::KW)     = py_colormap(d[:markercolor]) #, d[:markeralpha])
+py_fillcolormap(d::KW)       = py_colormap(d[:fillcolor]) #, d[:fillalpha])
 
 # ---------------------------------------------------------------------------
 

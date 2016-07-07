@@ -382,7 +382,7 @@ end
     end
     if lz != nothing
         line_z := newlz
-        linecolor := (isa(d[:linecolor], ColorGradient) ? d[:linecolor] : default_gradient())
+        linecolor := (isa(d[:linecolor], ColorGradient) ? d[:linecolor] : cgrad())
     end
     # Plots.DD(d)
     ()
@@ -405,7 +405,6 @@ end
     axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
     bw = d[:bar_width]
     hw = if bw == nothing
-        # 0.5mean(diff(x))
         0.5mean(diff([discrete_value!(axis, xi)[1] for xi=x]))
     else
         Float64[0.5cycle(bw,i) for i=1:length(x)]
@@ -420,7 +419,6 @@ end
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i=1:ny
-        # ci = x[i]
         center = discrete_value!(axis, x[i])[1]
         hwi = cycle(hw,i)
         yi = y[i]

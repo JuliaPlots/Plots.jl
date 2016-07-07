@@ -107,17 +107,15 @@ const gr_font_family = Dict(
 
 # --------------------------------------------------------------------------------------
 
-function gr_getcolorind(v, a =nothing)
-    c = getColor(v)
-    idx = convert(Int, GR.inqcolorfromrgb(c.r, c.g, c.b))
-    GR.settransparency(float(a==nothing ? alpha(c) : a))
-    idx
+function gr_getcolorind(c)
+    GR.settransparency(float(alpha(c)))
+    convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
 end
 
-gr_set_linecolor(c, a=nothing) = GR.setlinecolorind(gr_getcolorind(c, a))
-gr_set_fillcolor(c, a=nothing) = GR.setfillcolorind(gr_getcolorind(c, a))
-gr_set_markercolor(c, a=nothing) = GR.setmarkercolorind(gr_getcolorind(c, a))
-gr_set_textcolor(c, a=nothing) = GR.settextcolorind(gr_getcolorind(c, a))
+gr_set_linecolor(c) = GR.setlinecolorind(gr_getcolorind(c))
+gr_set_fillcolor(c) = GR.setfillcolorind(gr_getcolorind(c))
+gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(c))
+gr_set_textcolor(c) = GR.settextcolorind(gr_getcolorind(c))
 
 # --------------------------------------------------------------------------------------
 
@@ -282,12 +280,14 @@ function gr_draw_markers(d::KW, x, y, msize, mz)
             cfuncind = isa(shape, Shape) ? GR.setfillcolorind : GR.setmarkercolorind
 
             # draw a filled in shape, slightly bigger, to estimate a stroke
-            cfunc(d[:markerstrokecolor], d[:markerstrokealpha])
-            gr_draw_marker(x[i], y[i], msi*1.2, shape, )
+            if d[:markerstrokewidth] > 0
+                cfunc(cycle(d[:markerstrokecolor], i)) #, d[:markerstrokealpha])
+                gr_draw_marker(x[i], y[i], msi + d[:markerstrokewidth], shape)
+            end
 
             # draw the shape
             if mz == nothing
-                cfunc(d[:markercolor], d[:markeralpha])
+                cfunc(cycle(d[:markercolor], i)) #, d[:markeralpha])
             else
                 # pick a color from the pre-loaded gradient
                 ci = round(Int, 1000 + cycle(mz, i) * 255)
@@ -311,16 +311,16 @@ end
 
 # ---------------------------------------------------------
 
-function gr_set_line(w, style, c, a)
+function gr_set_line(w, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
     GR.setlinewidth(w)
-    gr_set_linecolor(c, a)
+    gr_set_linecolor(c) #, a)
 end
 
 
 
-function gr_set_fill(c, a)
-    gr_set_fillcolor(c, a)
+function gr_set_fill(c) #, a)
+    gr_set_fillcolor(c) #, a)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
 end
 
@@ -404,12 +404,12 @@ gr_view_ydiff() = viewport_plotarea[4] - viewport_plotarea[3]
 # --------------------------------------------------------------------------------------
 
 
-function gr_set_gradient(c, a)
-    grad = isa(c, ColorGradient) ? c : default_gradient()
-    grad = ColorGradient(grad, alpha=a)
+function gr_set_gradient(c) #, a)
+    grad = isa(c, ColorGradient) ? c : cgrad()
+    # grad = ColorGradient(grad, alpha=a)
     for (i,z) in enumerate(linspace(0, 1, 256))
-        c = getColorZ(grad, z)
-        GR.setcolorrep(999+i, red(c), green(c), blue(c))
+        c = grad[z]
+        GR.setcolorrep(999+i, red(c), green(c), blue(c), alpha(c))
     end
     grad
 end
@@ -464,7 +464,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     viewport_plotarea[:] = gr_viewport_from_bbox(plotarea(sp), w, h, viewport_canvas)
 
     # fill in the plot area background
-    bg = getColor(sp[:background_color_inside])
+    bg = plot_color(sp[:background_color_inside])
     gr_fill_viewport(viewport_plotarea, bg)
 
     # reduced from before... set some flags based on the series in this subplot
@@ -618,7 +618,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # update the current stored gradient
         if st in (:contour, :surface, :wireframe, :heatmap)
-            gr_set_gradient(d[:fillcolor], d[:fillalpha])
+            gr_set_gradient(d[:fillcolor]) #, d[:fillalpha])
         elseif d[:marker_z] != nothing
             d[:markercolor] = gr_set_gradient(d[:markercolor], d[:markeralpha])
         end
@@ -653,7 +653,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                 # do area fill
                 if frng != nothing
-                    gr_set_fillcolor(d[:fillcolor], d[:fillalpha])
+                    gr_set_fillcolor(d[:fillcolor]) #, d[:fillalpha])
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
                     frng = isa(frng, Number) ? Float64[frng] : frng
                     nx, ny, nf = length(x), length(y), length(frng)
@@ -669,7 +669,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                 # draw the line(s)
                 if st == :path
-                    gr_set_line(d[:linewidth], d[:linestyle], d[:linecolor], d[:linealpha])
+                    gr_set_line(d[:linewidth], d[:linestyle], d[:linecolor]) #, d[:linealpha])
                     gr_polyline(x, y)
                 end
             end
@@ -723,7 +723,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # draw path
             if st == :path3d
                 if length(x) > 1
-                    gr_set_line(d[:linewidth], d[:linestyle], d[:linecolor], d[:linealpha])
+                    gr_set_line(d[:linewidth], d[:linestyle], d[:linecolor]) #, d[:linealpha])
                     GR.polyline3d(x, y, z)
                 end
             end
@@ -784,11 +784,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :shape
             # draw the interior
-            gr_set_fill(d[:fillcolor], d[:fillalpha])
+            gr_set_fill(d[:fillcolor]) #, d[:fillalpha])
             gr_polyline(d[:x], d[:y], GR.fillarea)
 
             # draw the shapes
-            gr_set_line(d[:linewidth], :solid, d[:linecolor], d[:linealpha])
+            gr_set_line(d[:linewidth], :solid, d[:linecolor]) #, d[:linealpha])
             gr_polyline(d[:x], d[:y])
 
 
@@ -847,11 +847,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 should_add_to_legend(series) || continue
                 d = series.d
                 st = d[:seriestype]
-                gr_set_line(d[:linewidth], d[:linestyle], d[:linecolor], d[:linealpha])
+                gr_set_line(d[:linewidth], d[:linestyle], d[:linecolor]) #, d[:linealpha])
                 if st == :path
                     GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
                 elseif st == :shape
-                    gr_set_fill(d[:fillcolor], d[:fillalpha])
+                    gr_set_fill(d[:fillcolor]) #, d[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
                     b, t = ypos-0.4dy, ypos+0.4dy
                     x = [l, r, r, l, l]
@@ -865,7 +865,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # if shape != :none #st == :scatter || d[:markershape] != :none
                 #     msize = 10
                 #     for xoff in [0.06,0.02]
-                #         gr_set_markercolor(d[:markerstrokecolor], d[:markerstrokealpha])
+                #         gr_set_markercolor(d[:markerstrokecolor]) #, d[:markerstrokealpha])
                 #         gr_draw_marker(xpos-xoff, ypos, msize*1.1, shape)
                 #         gr_set_markercolor(d[:markercolor], d[:markeralpha])
                 #         gr_draw_marker(xpos-xoff, ypos, msize, shape)

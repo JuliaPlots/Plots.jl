@@ -10,7 +10,7 @@ using Reexport
 using FixedSizeArrays
 @reexport using RecipesBase
 using Base.Meta
-# using PlotUtils
+using PlotUtils
 
 export
     AbstractPlot,
@@ -81,15 +81,15 @@ export
     arrow,
     Segments,
 
-    colorscheme,
-    ColorScheme,
-    ColorGradient,
-    ColorVector,
-    ColorWrapper,
-    ColorFunction,
-    ColorZFunction,
-    getColor,
-    getColorZ,
+    # colorscheme,
+    # ColorScheme,
+    # ColorGradient,
+    # ColorVector,
+    # ColorWrapper,
+    # ColorFunction,
+    # ColorZFunction,
+    # getColor,
+    # getColorZ,
 
     debugplots,
 
@@ -132,15 +132,13 @@ export BBox, BoundingBox, mm, cm, inch, pt, px, pct, w, h
 
 include("types.jl")
 include("utils.jl")
-include("colors.jl")
 include("components.jl")
 include("axes.jl")
 include("backends.jl")
 include("args.jl")
 include("themes.jl")
 include("plot.jl")
-include("series_args.jl")
-include("series_new.jl")
+include("series.jl")
 include("layouts.jl")
 include("subplots.jl")
 include("recipes.jl")

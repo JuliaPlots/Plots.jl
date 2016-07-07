@@ -1,81 +1,106 @@
 
-# we are going to build recipes to do the processing and splitting of the args
 
+# create a new "build_series_args" which converts all inputs into xs = Any[xitems], ys = Any[yitems].
+# Special handling for: no args, xmin/xmax, parametric, dataframes
+# Then once inputs have been converted, build the series args, map functions, etc.
+# This should cut down on boilerplate code and allow more focused dispatch on type
+# note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
-function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
-    pkg = plt.backend
-    globalIndex = d[:series_plotindex]
+typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
 
-    # add default values to our dictionary, being careful not to delete what we just added!
-    for (k,v) in _series_defaults
-        slice_arg!(d, d, k, v, commandIndex, remove_pair = false)
-    end
+all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image), get(d, :seriestype, :none))
 
-    # this is how many series belong to this subplot
-    plotIndex = count(series -> series.d[:subplot] === sp && series.d[:primary], plt.series_list)
-    if get(d, :primary, true)
-        plotIndex += 1
-    end
+# missing
+convertToAnyVector(v::@compat(Void), d::KW) = Any[nothing], nothing
 
-    aliasesAndAutopick(d, :linestyle, _styleAliases, supported_styles(pkg), plotIndex)
-    aliasesAndAutopick(d, :markershape, _markerAliases, supported_markers(pkg), plotIndex)
+# fixed number of blank series
+convertToAnyVector(n::Integer, d::KW) = Any[zeros(0) for i in 1:n], nothing
 
-    # update color
-    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], sp, plotIndex)
+# numeric vector
+convertToAnyVector{T<:Number}(v::AVec{T}, d::KW) = Any[v], nothing
 
-    # update colors
-    for csym in (:linecolor, :markercolor, :fillcolor)
-        d[csym] = if d[csym] == :match
-            if has_black_border_for_default(d[:seriestype]) && csym == :linecolor
-                :black
-            else
-                d[:seriescolor]
-            end
-        else
-            getSeriesRGBColor(d[csym], sp, plotIndex)
-        end
-    end
+# string vector
+convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}, d::KW) = Any[v], nothing
 
-    # update markerstrokecolor
-    c = d[:markerstrokecolor]
-    c = if c == :match
-        sp[:foreground_color_subplot]
+function convertToAnyVector(v::AMat, d::KW)
+    if all3D(d)
+        Any[Surface(v)]
     else
-        getSeriesRGBColor(c, sp, plotIndex)
-    end
-    d[:markerstrokecolor] = c
-
-    # update alphas
-    for asym in (:linealpha, :markeralpha, :fillalpha)
-        if d[asym] == nothing
-            d[asym] = d[:seriesalpha]
-        end
-    end
-    if d[:markerstrokealpha] == nothing
-        d[:markerstrokealpha] = d[:markeralpha]
-    end
-
-    # scatter plots don't have a line, but must have a shape
-    if d[:seriestype] in (:scatter, :scatter3d)
-        d[:linewidth] = 0
-        if d[:markershape] == :none
-            d[:markershape] = :circle
-        end
-    end
-
-    # set label
-    label = d[:label]
-    label = (label == "AUTO" ? "y$globalIndex" : label)
-    d[:label] = label
-
-    _replace_linewidth(d)
-    d
+        Any[v[:,i] for i in 1:size(v,2)]
+    end, nothing
 end
 
-# -------------------------------------------------------------------
-# -------------------------------------------------------------------
+# function
+convertToAnyVector(f::Function, d::KW) = Any[f], nothing
 
-# instead of process_inputs:
+# surface
+convertToAnyVector(s::Surface, d::KW) = Any[s], nothing
+
+# # vector of OHLC
+# convertToAnyVector(v::AVec{OHLC}, d::KW) = Any[v], nothing
+
+# dates
+convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}, d::KW) = Any[dts], nothing
+
+# list of things (maybe other vectors, functions, or something else)
+function convertToAnyVector(v::AVec, d::KW)
+    if all(x -> typeof(x) <: Number, v)
+        # all real numbers wrap the whole vector as one item
+        Any[convert(Vector{Float64}, v)], nothing
+    else
+        # something else... treat each element as an item
+        vcat(Any[convertToAnyVector(vi, d)[1] for vi in v]...), nothing
+        # Any[vi for vi in v], nothing
+    end
+end
+
+convertToAnyVector(t::Tuple, d::KW) = Any[t], nothing
+
+
+function convertToAnyVector(args...)
+    error("In convertToAnyVector, could not handle the argument types: $(map(typeof, args[1:end-1]))")
+end
+
+# --------------------------------------------------------------------
+
+# TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array
+#       result in that array being shared.  push!, etc will add too many items to that array
+
+compute_x(x::Void, y::Void, z)      = 1:size(z,1)
+compute_x(x::Void, y, z)            = 1:size(y,1)
+compute_x(x::Function, y, z)        = map(x, y)
+compute_x(x, y, z)                  = copy(x)
+
+# compute_y(x::Void, y::Function, z)  = error()
+compute_y(x::Void, y::Void, z)      = 1:size(z,2)
+compute_y(x, y::Function, z)        = map(y, x)
+compute_y(x, y, z)                  = copy(y)
+
+compute_z(x, y, z::Function)        = map(z, x, y)
+compute_z(x, y, z::AbstractMatrix)  = Surface(z)
+compute_z(x, y, z::Void)            = nothing
+compute_z(x, y, z)                  = copy(z)
+
+nobigs(v::AVec{BigFloat}) = map(Float64, v)
+nobigs(v::AVec{BigInt}) = map(Int64, v)
+nobigs(v) = v
+
+@noinline function compute_xyz(x, y, z)
+    x = compute_x(x,y,z)
+    y = compute_y(x,y,z)
+    z = compute_z(x,y,z)
+    nobigs(x), nobigs(y), nobigs(z)
+end
+
+# not allowed
+compute_xyz(x::Void, y::FuncOrFuncs, z)       = error("If you want to plot the function `$y`, you need to define the x values!")
+compute_xyz(x::Void, y::Void, z::FuncOrFuncs) = error("If you want to plot the function `$z`, you need to define x and y values!")
+compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
+
+# --------------------------------------------------------------------
+
+
+# we are going to build recipes to do the processing and splitting of the args
 
 # ensure we dispatch to the slicer
 immutable SliceIt end
