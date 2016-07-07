@@ -242,13 +242,10 @@ end
 end
 
 @recipe function f(shapes::AMat{Shape})
+    seriestype := :shape
     for j in 1:size(shapes,2)
-        # create one series for each column
-        # @series shape_coords(vec(shapes[:,j]))
-        di = copy(d)
-        push!(series_list, RecipeData(di, shape_coords(vec(shapes[:,j]))))
+        @series shape_coords(vec(shapes[:,j]))
     end
-    nothing # don't create a series for the main block
 end
 
 #
