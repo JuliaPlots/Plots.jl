@@ -94,20 +94,18 @@ const _pgf_series_extrastyle = KW(
 # --------------------------------------------------------------------------------------
 
 # takes in color,alpha, and returns color and alpha appropriate for pgf style
-function pgf_color(c, a = nothing)
-    c = getColor(c)
+function pgf_color(c)
     cstr = @sprintf("{rgb,1:red,%.8f;green,%.8f;blue,%.8f}", red(c), green(c), blue(c))
-    a = float(a == nothing ? alpha(c) : a)
-    cstr, a
+    cstr, alpha(c)
 end
 
 function pgf_fillstyle(d::KW)
-    cstr,a = pgf_color(d[:fillcolor], d[:fillalpha])
+    cstr,a = pgf_color(d[:fillcolor])
     "fill = $cstr, fill opacity=$a"
 end
 
 function pgf_linestyle(d::KW)
-    cstr,a = pgf_color(d[:linecolor], d[:linealpha])
+    cstr,a = pgf_color(d[:linecolor])
     """
     color = $cstr,
     draw opacity=$a,
@@ -117,8 +115,8 @@ end
 
 function pgf_marker(d::KW)
     shape = d[:markershape]
-    cstr, a = pgf_color(d[:markercolor], d[:markeralpha])
-    cstr_stroke, a_stroke = pgf_color(d[:markerstrokecolor], d[:markerstrokealpha])
+    cstr, a = pgf_color(d[:markercolor])
+    cstr_stroke, a_stroke = pgf_color(d[:markerstrokecolor])
     """
     mark = $(get(_pgfplots_markers, shape, "*")),
     mark size = $(0.5 * d[:markersize]),
