@@ -298,10 +298,11 @@ function plotly_layout_json(plt::Plot)
 end
 
 
-function plotly_colorscale(grad::ColorGradient, alpha = nothing)
-    [[grad.values[i], rgba_string(grad.colors[i], alpha)] for i in 1:length(grad.colors)]
+function plotly_colorscale(grad::ColorGradient, α)
+    [[grad.values[i], rgb_string(grad.colors[i])] for i in 1:length(grad.colors)]
 end
-plotly_colorscale(c, alpha = nothing) = plotly_colorscale(cgrad(), alpha)
+plotly_colorscale(c, α) = plotly_colorscale(cgrad(alpha=α), α)
+# plotly_colorscale(c, alpha = nothing) = plotly_colorscale(cgrad(), alpha)
 
 const _plotly_markers = KW(
     :rect       => "square",
@@ -374,8 +375,6 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:type] = "scatter"
         d_out[:mode] = "lines"
         d_out[:x], d_out[:y] = plotly_close_shapes(x, y)
-        # @show map(length, (x,y,d_out[:x],d_out[:y]))
-        # @show d_out[:x] d_out[:y]
         d_out[:fill] = "tozeroy"
         d_out[:fillcolor] = rgba_string(d[:fillcolor])
         if d[:markerstrokewidth] > 0
@@ -386,38 +385,15 @@ function plotly_series(plt::Plot, series::Series)
             )
         end
 
-
-
     elseif st == :bar
         d_out[:type] = "bar"
         d_out[:x], d_out[:y] = x, y
         d_out[:orientation] = isvertical(d) ? "v" : "h"
 
-    # elseif st == :histogram2d
-    #     d_out[:type] = "histogram2d"
-    #     d_out[:x], d_out[:y] = x, y
-    #     if isa(d[:bins], Tuple)
-    #         xbins, ybins = d[:bins]
-    #     else
-    #         xbins = ybins = d[:bins]
-    #     end
-    #     d_out[:nbinsx] = xbins
-    #     d_out[:nbinsy] = ybins
-    #     d_out[:colorscale] = plotly_colorscale(d[:fillcolor])
-
-    # elseif st in (:histogram, :density)
-    #     d_out[:type] = "histogram"
-    #     isvert = isvertical(d)
-    #     d_out[isvert ? :x : :y] = y
-    #     d_out[isvert ? :nbinsx : :nbinsy] = d[:bins]
-    #     if st == :density
-    #         d_out[:histogramnorm] = "probability density"
-    #     end
-
     elseif st == :heatmap
         d_out[:type] = "heatmap"
         d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
-        d_out[:colorscale] = plotly_colorscale(d[:fillcolor])
+        d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
     elseif st == :contour
         d_out[:type] = "contour"
@@ -425,12 +401,12 @@ function plotly_series(plt::Plot, series::Series)
         # d_out[:showscale] = d[:colorbar] != :none
         d_out[:ncontours] = d[:levels]
         d_out[:contours] = KW(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
-        d_out[:colorscale] = plotly_colorscale(d[:linecolor])
+        d_out[:colorscale] = plotly_colorscale(d[:linecolor], d[:linealpha])
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
         d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
-        d_out[:colorscale] = plotly_colorscale(d[:fillcolor])
+        d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
 
     elseif st == :pie
         d_out[:type] = "pie"
@@ -459,7 +435,7 @@ function plotly_series(plt::Plot, series::Series)
             :symbol => get(_plotly_markers, d[:markershape], string(d[:markershape])),
             # :opacity => d[:markeralpha],
             :size => 2 * d[:markersize],
-            :color => rgba_string(d[:markercolor]),
+            # :color => rgba_string(d[:markercolor]),
             :line => KW(
                 :color => rgba_string(d[:markerstrokecolor]),
                 :width => d[:markerstrokewidth],
@@ -467,13 +443,13 @@ function plotly_series(plt::Plot, series::Series)
         )
 
         # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
-        if d[:marker_z] != nothing
-            # d_out[:marker][:color] = d[:marker_z]
-            # d_out[:marker][:colorscale] = plotly_colorscale(d[:markercolor])
-            # d_out[:showscale] = true
-            grad = ColorGradient(d[:markercolor], alpha=d[:markeralpha])
+        d_out[:marker][:color] = if d[:marker_z] == nothing
+            rgba_string(d[:markercolor])
+        else
+            # grad = ColorGradient(d[:markercolor], alpha=d[:markeralpha])
+            grad = d[:markercolor]
             zmin, zmax = extrema(d[:marker_z])
-            d_out[:marker][:color] = [rgba_string(getColorZ(grad, (zi - zmin) / (zmax - zmin))) for zi in d[:marker_z]]
+            [rgba_string(grad[(zi - zmin) / (zmax - zmin)]) for zi in d[:marker_z]]
         end
     end
 

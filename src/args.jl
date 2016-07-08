@@ -1067,14 +1067,16 @@ end
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
 function getSeriesRGBColor(c, α, sp::Subplot, n::Int)
+    if c == :auto
+        c = autopick(sp[:color_palette], n)
+    end
+    plot_color(c, α)
+end
 
-  if c == :auto
-    c = autopick(sp[:color_palette], n)
-  end
-
-  # # c should now be a subtype of AbstractPlotColor
-  # colorscheme(c)
-  plot_color(c, α)
+function ensure_gradient!(d::KW, csym::Symbol, asym::Symbol)
+    if !isa(d[csym], ColorGradient)
+        d[csym] = cgrad(alpha = d[asym])
+    end
 end
 
 
@@ -1114,7 +1116,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
         d[csym] = if d[csym] == :match
             plot_color(if has_black_border_for_default(d[:seriestype]) && s == :line
-                :black
+                sp[:foreground_color_subplot]
             else
                 d[:seriescolor]
             end, d[asym])
@@ -1128,6 +1130,14 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
         plot_color(sp[:foreground_color_subplot], d[:markerstrokealpha])
     else
         getSeriesRGBColor(d[:markerstrokecolor], d[:markerstrokealpha], sp, plotIndex)
+    end
+
+    # if marker_z or line_z are set, ensure we have a gradient
+    if d[:marker_z] != nothing
+        ensure_gradient!(d, :markercolor, :markeralpha)
+    end
+    if d[:line_z] != nothing
+        ensure_gradient!(d, :linecolor, :linealpha)
     end
 
     # scatter plots don't have a line, but must have a shape
