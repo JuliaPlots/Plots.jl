@@ -445,26 +445,29 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     :linewidth => py_dpi_scale(plt, series[:linewidth]),
                     :linestyle => py_linestyle(st, series[:linestyle])
                 )
+                lz = collect(series[:line_z])
                 handle = if is3d(st)
                     for rng in iter_segments(x, y, z)
+                        length(rng) < 2 && continue
                         push!(segments, [(cycle(x,i),cycle(y,i),cycle(z,i)) for i in rng])
                     end
                     # for i=1:n
                     #     segments[i] = [(cycle(x,i), cycle(y,i), cycle(z,i)), (cycle(x,i+1), cycle(y,i+1), cycle(z,i+1))]
                     # end
                     lc = pyart3d.Line3DCollection(segments; kw...)
-                    lc[:set_array](series[:line_z])
+                    lc[:set_array](lz)
                     ax[:add_collection3d](lc, zs=z) #, zdir='y')
                     lc
                 else
                     for rng in iter_segments(x, y)
+                        length(rng) < 2 && continue
                         push!(segments, [(cycle(x,i),cycle(y,i)) for i in rng])
                     end
                     # for i=1:n
                     #     segments[i] = [(cycle(x,i), cycle(y,i)), (cycle(x,i+1), cycle(y,i+1))]
                     # end
                     lc = pycollections.LineCollection(segments; kw...)
-                    lc[:set_array](series[:line_z])
+                    lc[:set_array](lz)
                     ax[:add_collection](lc)
                     lc
                 end

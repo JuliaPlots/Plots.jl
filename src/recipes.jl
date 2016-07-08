@@ -346,8 +346,8 @@ end
     fr = d[:fillrange]
     newfr = fr != nothing ? zeros(0) : nothing
     newz = z != nothing ? zeros(0) : nothing
-    lz = d[:line_z]
-    newlz = lz != nothing ? zeros(0) : nothing
+    # lz = d[:line_z]
+    # newlz = lz != nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
@@ -362,11 +362,11 @@ end
         if fr != nothing
             nanappend!(newfr, map(t -> bezier_value(cycle(fr,rng), t), ts))
         end
-        if lz != nothing
-            lzrng = cycle(lz, rng) # the line_z's for this segment
-            push!(newlz, 0.0)
-            append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
-        end
+        # if lz != nothing
+        #     lzrng = cycle(lz, rng) # the line_z's for this segment
+        #     push!(newlz, 0.0)
+        #     append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
+        # end
     end
 
     x := newx
@@ -380,10 +380,10 @@ end
     if fr != nothing
         fillrange := newfr
     end
-    if lz != nothing
-        line_z := newlz
-        linecolor := (isa(d[:linecolor], ColorGradient) ? d[:linecolor] : cgrad())
-    end
+    # if lz != nothing
+    #     # line_z := newlz
+    #     linecolor := (isa(d[:linecolor], ColorGradient) ? d[:linecolor] : cgrad())
+    # end
     # Plots.DD(d)
     ()
 end
