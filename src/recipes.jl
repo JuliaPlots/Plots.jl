@@ -653,6 +653,8 @@ end
 # ---------------------------------------------------------------------------
 # Violin Plot
 
+const _violin_warned = [false]
+
 # if the user has KernelDensity installed, use this for violin plots.
 # otherwise, just use a histogram
 if is_installed("KernelDensity")
@@ -668,7 +670,11 @@ if is_installed("KernelDensity")
     end
 else
     @eval function violin_coords(y; trim::Bool=false)
-        edges, widths = hist(y, 30)
+        if !_violin_warned[1]
+            warn("Install the KernelDensity package for best results.")
+            _violin_warned[1] = true
+        end
+        edges, widths = my_hist(y, 10)
         centers = 0.5 * (edges[1:end-1] + edges[2:end])
         ymin, ymax = extrema(y)
         vcat(0.0, widths, 0.0), vcat(ymin, centers, ymax)

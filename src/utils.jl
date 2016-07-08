@@ -166,7 +166,6 @@ end
 
 type SegmentsIterator
     args::Tuple
-    # nextidx::Int
     n::Int
 end
 function iter_segments(args...)
@@ -176,13 +175,13 @@ function iter_segments(args...)
 end
 
 # helpers to figure out if there are NaN values in a list of array types
-anynan(i::Int, args...) = any(a -> !isfinite(cycle(a,i)), args)
-anynan(istart::Int, iend::Int, args...) = any(i -> anynan(i, args...), istart:iend)
-allnan(istart::Int, iend::Int, args...) = all(i -> anynan(i, args...), istart:iend)
+anynan(i::Int, args::Tuple) = any(a -> !isfinite(cycle(a,i)), args)
+anynan(istart::Int, iend::Int, args::Tuple) = any(i -> anynan(i, args), istart:iend)
+allnan(istart::Int, iend::Int, args::Tuple) = all(i -> anynan(i, args), istart:iend)
 
 function Base.start(itr::SegmentsIterator)
     nextidx = 1
-    if anynan(1, itr.args...)
+    if anynan(1, itr.args)
         _, nextidx = next(itr, 1)
     end
     nextidx
@@ -193,7 +192,7 @@ function Base.next(itr::SegmentsIterator, nextidx::Int)
 
     # find the next NaN, and iend is the one before
     while i <= itr.n + 1
-        if i > itr.n || anynan(i, itr.args...)
+        if i > itr.n || anynan(i, itr.args)
             # done... array end or found NaN
             iend = i-1
             break
@@ -203,7 +202,7 @@ function Base.next(itr::SegmentsIterator, nextidx::Int)
 
     # find the next non-NaN, and set nextidx
     while i <= itr.n
-        if !anynan(i, itr.args...)
+        if !anynan(i, itr.args)
             break
         end
         i += 1
@@ -228,6 +227,8 @@ Base.cycle(v, idx::Int)       = v
 Base.cycle(v::AVec, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
 Base.cycle(v::AMat, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
 Base.cycle(v, idx::AVec{Int})       = v
+
+Base.cycle(grad::ColorGradient, idx) = cycle(grad.colors, idx)
 
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]
@@ -264,6 +265,7 @@ function _expand_limits(lims, x)
   nothing
 end
 
+expand_data(v, n::Integer) = [cycle(v, i) for i=1:n]
 
 # if the type exists in a list, replace the first occurence.  otherwise add it to the end
 function addOrReplace(v::AbstractVector, t::DataType, args...; kw...)
@@ -368,6 +370,7 @@ is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
 
 isvertical(d::KW) = get(d, :orientation, :vertical) in (:vertical, :v, :vert)
+isvertical(series::Series) = isvertical(series.d)
 
 
 # ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
@@ -427,7 +430,7 @@ end
 # this is a helper function to determine whether we need to transpose a surface matrix.
 # it depends on whether the backend matches rows to x (transpose_on_match == true) or vice versa
 # for example: PyPlot sends rows to y, so transpose_on_match should be true
-function transpose_z(d::KW, z, transpose_on_match::Bool = true)
+function transpose_z(d, z, transpose_on_match::Bool = true)
     if d[:match_dimensions] == transpose_on_match
         z'
     else

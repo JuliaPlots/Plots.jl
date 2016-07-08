@@ -499,7 +499,7 @@ function handleColors!(d::KW, arg, csym::Symbol)
             d[csym] = :auto
         else
             # c = colorscheme(arg)
-            c = plot_color(arg, nothing)
+            c = plot_color(arg)
             d[csym] = c
         end
         return true
@@ -520,13 +520,13 @@ function processLineArg(d::KW, arg)
 
     elseif typeof(arg) <: Stroke
         arg.width == nothing || (d[:linewidth] = arg.width)
-        arg.color == nothing || (d[:linecolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.color == nothing || (d[:linecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha == nothing || (d[:linealpha] = arg.alpha)
         arg.style == nothing || (d[:linestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
         arg.size  == nothing || (d[:fillrange] = arg.size)
-        arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
     elseif typeof(arg) <: Arrow || arg in (:arrow, :arrows)
@@ -559,13 +559,13 @@ function processMarkerArg(d::KW, arg)
 
     elseif typeof(arg) <: Stroke
         arg.width == nothing || (d[:markerstrokewidth] = arg.width)
-        arg.color == nothing || (d[:markerstrokecolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.color == nothing || (d[:markerstrokecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha == nothing || (d[:markerstrokealpha] = arg.alpha)
         arg.style == nothing || (d[:markerstrokestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
         arg.size  == nothing || (d[:markersize]  = arg.size)
-        arg.color == nothing || (d[:markercolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.color == nothing || (d[:markercolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha == nothing || (d[:markeralpha] = arg.alpha)
 
     # linealpha
@@ -587,7 +587,7 @@ end
 function processFillArg(d::KW, arg)
     if typeof(arg) <: Brush
         arg.size  == nothing || (d[:fillrange] = arg.size)
-        arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : colorscheme(arg.color))
+        arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
     # fillrange function
@@ -850,7 +850,7 @@ end
 #     d[k] = if v == :match
 #         match_color
 #     elseif v == nothing
-#         colorscheme(RGBA(0,0,0,0))
+#         plot_color(RGBA(0,0,0,0))
 #     else
 #         v
 #     end
@@ -859,7 +859,9 @@ end
 function color_or_nothing!(d::KW, k::Symbol)
     v = d[k]
     d[k] = if v == nothing || v == false
-        colorscheme(RGBA(0,0,0,0))
+        plot_color(RGBA(0,0,0,0))
+    elseif v != :match
+        plot_color(v)
     else
         v
     end
@@ -934,6 +936,17 @@ end
 function Base.getindex(series::Series, k::Symbol)
     series.d[k]
 end
+
+Base.setindex!(plt::Plot, v, k::Symbol)      = (plt.attr[k] = v)
+Base.setindex!(sp::Subplot, v, k::Symbol)    = (sp.attr[k] = v)
+Base.setindex!(axis::Axis, v, k::Symbol)     = (axis.d[k] = v)
+Base.setindex!(series::Series, v, k::Symbol) = (series.d[k] = v)
+
+Base.get(plt::Plot, k::Symbol, v)      = get(plt.attr, k, v)
+Base.get(sp::Subplot, k::Symbol, v)    = get(sp.attr, k, v)
+Base.get(axis::Axis, k::Symbol, v)     = get(axis.d, k, v)
+Base.get(series::Series, k::Symbol, v) = get(series.d, k, v)
+
 
 # -----------------------------------------------------------------------------
 
@@ -1048,7 +1061,7 @@ end
 # -----------------------------------------------------------------------------
 
 function has_black_border_for_default(st::Symbol)
-    like_histogram(st) || st in (:hexbin, :bar)
+    like_histogram(st) || st in (:hexbin, :bar, :shape)
 end
 
 
@@ -1100,7 +1113,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
         d[csym] = if d[csym] == :match
-            if has_black_border_for_default(d[:seriestype]) && csym == :line
+            if has_black_border_for_default(d[:seriestype]) && s == :line
                 plot_color(:black, d[asym])
             else
                 d[:seriescolor]
@@ -1112,7 +1125,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
 
     # update markerstrokecolor
     d[:markerstrokecolor] = if d[:markerstrokecolor] == :match
-        sp[:foreground_color_subplot]
+        plot_color(sp[:foreground_color_subplot], d[:markerstrokealpha])
     else
         getSeriesRGBColor(d[:markerstrokecolor], d[:markerstrokealpha], sp, plotIndex)
     end

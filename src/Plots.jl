@@ -5,12 +5,12 @@ module Plots
 
 using Compat
 using Reexport
-@reexport using Colors
+# @reexport using Colors
 # using Requires
 using FixedSizeArrays
 @reexport using RecipesBase
 using Base.Meta
-using PlotUtils
+@reexport using PlotUtils
 
 export
     AbstractPlot,

@@ -104,7 +104,7 @@ py_color(cs::AVec) = map(py_color, cs)
 py_color(grad::ColorGradient) = py_color(grad.colors)
 
 function py_colormap(grad::ColorGradient)
-    pyvals = [(z, py_color(c[z])) for z in c.values]
+    pyvals = [(z, py_color(grad[z])) for z in grad.values]
     pycolors.LinearSegmentedColormap[:from_list]("tmp", pyvals)
 end
 py_colormap(c) = py_colormap(cgrad())
@@ -143,27 +143,27 @@ const _path_MOVETO = UInt8(1)
 const _path_LINETO = UInt8(2)
 const _path_CLOSEPOLY = UInt8(79)
 
-# see http://matplotlib.org/users/path_tutorial.html
-# and http://matplotlib.org/api/path_api.html#matplotlib.path.Path
-function py_path(x, y)
-    n = length(x)
-    mat = zeros(n+1, 2)
-    codes = zeros(UInt8, n+1)
-    lastnan = true
-    for i=1:n
-        mat[i,1] = x[i]
-        mat[i,2] = y[i]
-        nan = !ok(x[i], y[i])
-        codes[i] = if nan && i>1
-            _path_CLOSEPOLY
-        else
-            lastnan ? _path_MOVETO : _path_LINETO
-        end
-        lastnan = nan
-    end
-    codes[n+1] = _path_CLOSEPOLY
-    pypath.pymember("Path")(mat, codes)
-end
+# # see http://matplotlib.org/users/path_tutorial.html
+# # and http://matplotlib.org/api/path_api.html#matplotlib.path.Path
+# function py_path(x, y)
+#     n = length(x)
+#     mat = zeros(n+1, 2)
+#     codes = zeros(UInt8, n+1)
+#     lastnan = true
+#     for i=1:n
+#         mat[i,1] = x[i]
+#         mat[i,2] = y[i]
+#         nan = !ok(x[i], y[i])
+#         codes[i] = if nan && i>1
+#             _path_CLOSEPOLY
+#         else
+#             lastnan ? _path_MOVETO : _path_LINETO
+#         end
+#         lastnan = nan
+#     end
+#     codes[n+1] = _path_CLOSEPOLY
+#     pypath.pymember("Path")(mat, codes)
+# end
 
 # get the marker shape
 function py_marker(marker::Symbol)
@@ -220,29 +220,17 @@ function add_pyfixedformatter(cbar, vals::AVec)
     cbar[:update_ticks]()
 end
 
-# # TODO: smoothing should be moved into the SliceIt method, should not touch backends
-# function handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Bool)
-#     if smooth
-#         xs, ys = regressionXY(d[:x], d[:y])
-#         ax[:plot](xs, ys,
-#                   # linestyle = py_linestyle(:path, :dashdot),
-#                   color = py_color(d[:linecolor]),
-#                   linewidth = 2
-#                  )
-#     end
-# end
-# handleSmooth(plt::Plot{PyPlotBackend}, ax, d::KW, smooth::Real) = handleSmooth(plt, ax, d, true)
 
 # ---------------------------------------------------------------------------
 
-function fix_xy_lengths!(plt::Plot{PyPlotBackend}, d::KW)
-    x, y = d[:x], d[:y]
+function fix_xy_lengths!(plt::Plot{PyPlotBackend}, series::Series)
+    x, y = series[:x], series[:y]
     nx, ny = length(x), length(y)
-    if !isa(get(d, :z, nothing), Surface) && nx != ny
+    if !isa(get(series.d, :z, nothing), Surface) && nx != ny
         if nx < ny
-            d[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
+            series[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
         else
-            d[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
+            series[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
         end
     end
 end
@@ -258,14 +246,14 @@ function py_color_fix(c, x)
     end
 end
 
-py_linecolor(d::KW)          = py_color(d[:linecolor]) #, d[:linealpha])
-py_markercolor(d::KW)        = py_color(d[:markercolor]) #, d[:markeralpha])
-py_markerstrokecolor(d::KW)  = py_color(d[:markerstrokecolor]) #, d[:markerstrokealpha])
-py_fillcolor(d::KW)          = py_color(d[:fillcolor]) #, d[:fillalpha])
+py_linecolor(series::Series)          = py_color(series[:linecolor])
+py_markercolor(series::Series)        = py_color(series[:markercolor])
+py_markerstrokecolor(series::Series)  = py_color(series[:markerstrokecolor])
+py_fillcolor(series::Series)          = py_color(series[:fillcolor])
 
-py_linecolormap(d::KW)       = py_colormap(d[:linecolor]) #, d[:linealpha])
-py_markercolormap(d::KW)     = py_colormap(d[:markercolor]) #, d[:markeralpha])
-py_fillcolormap(d::KW)       = py_colormap(d[:fillcolor]) #, d[:fillalpha])
+py_linecolormap(series::Series)       = py_colormap(series[:linecolor])
+py_markercolormap(series::Series)     = py_colormap(series[:markercolor])
+py_fillcolormap(series::Series)       = py_colormap(series[:fillcolor])
 
 # ---------------------------------------------------------------------------
 
@@ -392,9 +380,9 @@ end
 # function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 
 function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
-    d = series.d
-    st = d[:seriestype]
-    sp = d[:subplot]
+    # d = series.d
+    st = series[:seriestype]
+    sp = series[:subplot]
     ax = sp.o
 
     if !(st in supported_types(plt.backend))
@@ -402,10 +390,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     # PyPlot doesn't handle mismatched x/y
-    fix_xy_lengths!(plt, d)
+    fix_xy_lengths!(plt, series)
 
     # ax = getAxis(plt, series)
-    x, y, z = d[:x], d[:y], d[:z]
+    x, y, z = series[:x], series[:y], series[:z]
     xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
 
     # handle zcolor and get c/cmap
@@ -418,7 +406,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
 
     # pass in an integer value as an arg, but a levels list as a keyword arg
-    levels = d[:levels]
+    levels = series[:levels]
     levelargs = if isscalar(levels)
         (levels)
     elseif isvector(levels)
@@ -432,14 +420,14 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # line plot
     if st in (:path, :path3d, :steppre, :steppost)
-        if d[:linewidth] > 0
-            if d[:line_z] == nothing
+        if series[:linewidth] > 0
+            if series[:line_z] == nothing
                 handle = ax[:plot](xyargs...;
-                    label = d[:label],
-                    zorder = d[:series_plotindex],
-                    color = py_linecolor(d),
-                    linewidth = py_dpi_scale(plt, d[:linewidth]),
-                    linestyle = py_linestyle(st, d[:linestyle]),
+                    label = series[:label],
+                    zorder = series[:series_plotindex],
+                    color = py_linecolor(series),
+                    linewidth = py_dpi_scale(plt, series[:linewidth]),
+                    linestyle = py_linestyle(st, series[:linestyle]),
                     solid_capstyle = "round",
                     drawstyle = py_stepstyle(st)
                 )[1]
@@ -450,18 +438,18 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 n = length(x) - 1
                 segments = Array(Any,n)
                 kw = KW(
-                    :label => d[:label],
+                    :label => series[:label],
                     :zorder => plt.n,
-                    :cmap => py_linecolormap(d),
-                    :linewidth => py_dpi_scale(plt, d[:linewidth]),
-                    :linestyle => py_linestyle(st, d[:linestyle])
+                    :cmap => py_linecolormap(series),
+                    :linewidth => py_dpi_scale(plt, series[:linewidth]),
+                    :linestyle => py_linestyle(st, series[:linestyle])
                 )
                 handle = if is3d(st)
                     for i=1:n
                         segments[i] = [(cycle(x,i), cycle(y,i), cycle(z,i)), (cycle(x,i+1), cycle(y,i+1), cycle(z,i+1))]
                     end
                     lc = pyart3d.Line3DCollection(segments; kw...)
-                    lc[:set_array](d[:line_z])
+                    lc[:set_array](series[:line_z])
                     ax[:add_collection3d](lc, zs=z) #, zdir='y')
                     lc
                 else
@@ -469,7 +457,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                         segments[i] = [(cycle(x,i), cycle(y,i)), (cycle(x,i+1), cycle(y,i+1))]
                     end
                     lc = pycollections.LineCollection(segments; kw...)
-                    lc[:set_array](d[:line_z])
+                    lc[:set_array](series[:line_z])
                     ax[:add_collection](lc)
                     lc
                 end
@@ -477,7 +465,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 needs_colorbar = true
             end
 
-            a = d[:arrow]
+            a = series[:arrow]
             if a != nothing && !is3d(st)  # TODO: handle 3d later
                 if typeof(a) != Arrow
                     warn("Unexpected type for arrow: $(typeof(a))")
@@ -486,10 +474,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                         :arrowstyle => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
                         :shrinkA => 0,
                         :shrinkB => 0,
-                        :edgecolor => py_linecolor(d),
-                        :facecolor => py_linecolor(d),
-                        :linewidth => py_dpi_scale(plt, d[:linewidth]),
-                        :linestyle => py_linestyle(st, d[:linestyle]),
+                        :edgecolor => py_linecolor(series),
+                        :facecolor => py_linecolor(series),
+                        :linewidth => py_dpi_scale(plt, series[:linewidth]),
+                        :linestyle => py_linestyle(st, series[:linestyle]),
                     )
                     add_arrows(x, y) do xyprev, xy
                         ax[:annotate]("",
@@ -504,53 +492,16 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
     end
 
-    # if st == :bar
-    #     bw = d[:bar_width]
-    #     if bw == nothing
-    #         bw = mean(diff(isvertical(d) ? x : y))
-    #     end
-    #     extrakw[isvertical(d) ? :width : :height] = bw
-    #     fr = get(d, :fillrange, nothing)
-    #     if fr != nothing
-    #         extrakw[:bottom] = fr
-    #         d[:fillrange] = nothing
-    #     end
-    #     handle = ax[isvertical(d) ? :bar : :barh](x, y;
-    #         label = d[:label],
-    #         zorder = d[:series_plotindex],
-    #         color = py_fillcolor(d),
-    #         edgecolor = py_linecolor(d),
-    #         linewidth = d[:linewidth],
-    #         align = d[:bar_edges] ? "edge" : "center",
-    #         extrakw...
-    #     )[1]
-    #     push!(handles, handle)
-    # end
-
-    # if st == :sticks
-    #     extrakw[isvertical(d) ? :width : :height] = 0.0
-    #     handle = ax[isvertical(d) ? :bar : :barh](x, y;
-    #         label = d[:label],
-    #         zorder = d[:series_plotindex],
-    #         color = py_linecolor(d),
-    #         edgecolor = py_linecolor(d),
-    #         linewidth = d[:linewidth],
-    #         align = "center",
-    #         extrakw...
-    #     )[1]
-    #     push!(handles, handle)
-    # end
-
     # add markers?
-    if d[:markershape] != :none && st in (:path, :scatter, :path3d,
+    if series[:markershape] != :none && st in (:path, :scatter, :path3d,
                                           :scatter3d, :steppre, :steppost,
                                           :bar)
         extrakw = KW()
-        if d[:marker_z] == nothing
-            extrakw[:c] = py_color_fix(py_markercolor(d), x)
+        if series[:marker_z] == nothing
+            extrakw[:c] = py_color_fix(py_markercolor(series), x)
         else
-            extrakw[:c] = convert(Vector{Float64}, d[:marker_z])
-            extrakw[:cmap] = py_markercolormap(d)
+            extrakw[:c] = convert(Vector{Float64}, series[:marker_z])
+            extrakw[:cmap] = py_markercolormap(series)
             clims = sp[:clims]
             if is_2tuple(clims)
                 isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
@@ -558,71 +509,22 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             needs_colorbar = true
         end
-        xyargs = if st == :bar && !isvertical(d)
+        xyargs = if st == :bar && !isvertical(series)
             (y, x)
         else
             xyargs
         end
         handle = ax[:scatter](xyargs...;
-            label = d[:label],
-            zorder = d[:series_plotindex] + 0.5,
-            marker = py_marker(d[:markershape]),
-            s = py_dpi_scale(plt, d[:markersize] .^ 2),
-            edgecolors = py_markerstrokecolor(d),
-            linewidths = py_dpi_scale(plt, d[:markerstrokewidth]),
+            label = series[:label],
+            zorder = series[:series_plotindex] + 0.5,
+            marker = py_marker(series[:markershape]),
+            s = py_dpi_scale(plt, series[:markersize] .^ 2),
+            edgecolors = py_markerstrokecolor(series),
+            linewidths = py_dpi_scale(plt, series[:markerstrokewidth]),
             extrakw...
         )
         push!(handles, handle)
     end
-
-    # if st == :histogram
-    #     handle = ax[:hist](y;
-    #         label = d[:label],
-    #         zorder = d[:series_plotindex],
-    #         color = py_fillcolor(d),
-    #         edgecolor = py_linecolor(d),
-    #         linewidth = d[:linewidth],
-    #         bins = d[:bins],
-    #         normed = d[:normalize],
-    #         weights = d[:weights],
-    #         orientation = (isvertical(d) ? "vertical" : "horizontal"),
-    #         histtype = (d[:bar_position] == :stack ? "barstacked" : "bar")
-    #     )[3]
-    #     push!(handles, handle)
-
-    #     # expand the extrema... handle is a list of Rectangle objects
-    #     for rect in handle
-    #         xmin, ymin, xmax, ymax = rect[:get_bbox]()[:extents]
-    #         expand_extrema!(sp, xmin, xmax, ymin, ymax)
-    #         # expand_extrema!(sp[:xaxis], (xmin, xmax))
-    #         # expand_extrema!(sp[:yaxis], (ymin, ymax))
-    #     end
-    # end
-
-    # if st == :histogram2d
-    #     clims = sp[:clims]
-    #     if is_2tuple(clims)
-    #         isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-    #         isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-    #     end
-    #     handle = ax[:hist2d](x, y;
-    #         label = d[:label],
-    #         zorder = d[:series_plotindex],
-    #         bins = d[:bins],
-    #         normed = d[:normalize],
-    #         weights = d[:weights],
-    #         cmap = py_fillcolormap(d),  # applies to the pcolorfast object
-    #         extrakw...
-    #     )[4]
-    #     push!(handles, handle)
-    #     needs_colorbar = true
-
-    #     # expand the extrema... handle is a AxesImage object
-    #     expand_extrema!(sp, handle[:get_extent]()...)
-    #     # xmin, xmax, ymin, ymax = handle[:get_extent]()
-    #     # expand_extrema!(sp[:xaxis], (xmin, xmax))
-    #     # expand_extrema!(sp[:yaxis], (ymin, ymax))
-    # end
 
     if st == :hexbin
         clims = sp[:clims]
@@ -631,33 +533,20 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
         end
         handle = ax[:hexbin](x, y;
-            label = d[:label],
-            zorder = d[:series_plotindex],
-            gridsize = d[:bins],
-            linewidths = py_dpi_scale(plt, d[:linewidth]),
-            edgecolors = py_linecolor(d),
-            cmap = py_fillcolormap(d),  # applies to the pcolorfast object
+            label = series[:label],
+            zorder = series[:series_plotindex],
+            gridsize = series[:bins],
+            linewidths = py_dpi_scale(plt, series[:linewidth]),
+            edgecolors = py_linecolor(series),
+            cmap = py_fillcolormap(series),  # applies to the pcolorfast object
             extrakw...
         )
         push!(handles, handle)
         needs_colorbar = true
     end
 
-    # if st in (:hline,:vline)
-    #     for yi in d[:y]
-    #         func = ax[st == :hline ? :axhline : :axvline]
-    #         handle = func(yi;
-    #             linewidth=d[:linewidth],
-    #             color=py_linecolor(d),
-    #             linestyle=py_linestyle(st, d[:linestyle])
-    #         )
-    #         push!(handles, handle)
-    #     end
-    # end
-
     if st in (:contour, :contour3d)
-        # z = z.surf'
-        z = transpose_z(d, z.surf)
+        z = transpose_z(series, z.surf)
         needs_colorbar = true
 
         clims = sp[:clims]
@@ -672,21 +561,21 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
         # contour lines
         handle = ax[:contour](x, y, z, levelargs...;
-            label = d[:label],
-            zorder = d[:series_plotindex],
-            linewidths = py_dpi_scale(plt, d[:linewidth]),
-            linestyles = py_linestyle(st, d[:linestyle]),
-            cmap = py_linecolormap(d),
+            label = series[:label],
+            zorder = series[:series_plotindex],
+            linewidths = py_dpi_scale(plt, series[:linewidth]),
+            linestyles = py_linestyle(st, series[:linestyle]),
+            cmap = py_linecolormap(series),
             extrakw...
         )
         push!(handles, handle)
 
         # contour fills
-        if d[:fillrange] != nothing
+        if series[:fillrange] != nothing
             handle = ax[:contourf](x, y, z, levelargs...;
-                label = d[:label],
-                zorder = d[:series_plotindex] + 0.5,
-                cmap = py_fillcolormap(d),
+                label = series[:label],
+                zorder = series[:series_plotindex] + 0.5,
+                cmap = py_fillcolormap(series),
                 extrakw...
             )
             push!(handles, handle)
@@ -698,13 +587,13 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             x, y, z = map(Array, (x,y,z))
             if !ismatrix(x) || !ismatrix(y)
                 x = repmat(x', length(y), 1)
-                y = repmat(y, 1, length(d[:x]))
+                y = repmat(y, 1, length(series[:x]))
             end
             # z = z'
-            z = transpose_z(d, z)
+            z = transpose_z(series, z)
             if st == :surface
-                if d[:marker_z] != nothing
-                    extrakw[:facecolors] = py_shading(d[:fillcolor], d[:marker_z], d[:fillalpha])
+                if series[:marker_z] != nothing
+                    extrakw[:facecolors] = py_shading(series[:fillcolor], series[:marker_z], series[:fillalpha])
                     extrakw[:shade] = false
                     clims = sp[:clims]
                     if is_2tuple(clims)
@@ -712,28 +601,28 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                         isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
                     end
                 else
-                    extrakw[:cmap] = py_fillcolormap(d)
+                    extrakw[:cmap] = py_fillcolormap(series)
                     needs_colorbar = true
                 end
             end
             handle = ax[st == :surface ? :plot_surface : :plot_wireframe](x, y, z;
-                label = d[:label],
-                zorder = d[:series_plotindex],
+                label = series[:label],
+                zorder = series[:series_plotindex],
                 rstride = 1,
                 cstride = 1,
-                linewidth = py_dpi_scale(plt, d[:linewidth]),
-                edgecolor = py_linecolor(d),
+                linewidth = py_dpi_scale(plt, series[:linewidth]),
+                edgecolor = py_linecolor(series),
                 extrakw...
             )
             push!(handles, handle)
 
             # contours on the axis planes
-            if d[:contours]
+            if series[:contours]
                 for (zdir,mat) in (("x",x), ("y",y), ("z",z))
                     offset = (zdir == "y" ? maximum : minimum)(mat)
                     handle = ax[:contourf](x, y, z, levelargs...;
                         zdir = zdir,
-                        cmap = py_fillcolormap(d),
+                        cmap = py_fillcolormap(series),
                         offset = (zdir == "y" ? maximum : minimum)(mat)  # where to draw the contour plane
                     )
                     push!(handles, handle)
@@ -754,11 +643,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
             end
             handle = ax[:plot_trisurf](x, y, z;
-                label = d[:label],
-                zorder = d[:series_plotindex],
-                cmap = py_fillcolormap(d),
-                linewidth = py_dpi_scale(plt, d[:linewidth]),
-                edgecolor = py_linecolor(d),
+                label = series[:label],
+                zorder = series[:series_plotindex],
+                cmap = py_fillcolormap(series),
+                linewidth = py_dpi_scale(plt, series[:linewidth]),
+                edgecolor = py_linecolor(series),
                 extrakw...
             )
             push!(handles, handle)
@@ -770,7 +659,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     if st == :image
         # @show typeof(z)
-        img = Array(transpose_z(d, z.surf))
+        img = Array(transpose_z(series, z.surf))
         z = if eltype(img) <: Colors.AbstractGray
             float(img)
         elseif eltype(img) <: Colorant
@@ -779,7 +668,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             z  # hopefully it's in a data format that will "just work" with imshow
         end
         handle = ax[:imshow](z;
-            zorder = d[:series_plotindex],
+            zorder = series[:series_plotindex],
             cmap = py_colormap([:black, :white]),
             vmin = 0.0,
             vmax = 1.0
@@ -789,11 +678,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         # expand extrema... handle is AxesImage object
         xmin, xmax, ymax, ymin = handle[:get_extent]()
         expand_extrema!(sp, xmin, xmax, ymin, ymax)
-        # sp[:yaxis].d[:flip] = true
+        # sp[:yaxis].series[:flip] = true
     end
 
     if st == :heatmap
-        x, y, z = heatmap_edges(x), heatmap_edges(y), transpose_z(d, z.surf)
+        x, y, z = heatmap_edges(x), heatmap_edges(y), transpose_z(series, z.surf)
         # if !(eltype(z) <: Number)
         #     z, discrete_colorbar_values = indices_and_unique_values(z)
         # end
@@ -809,10 +698,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
         
         handle = ax[:pcolormesh](x, y, z;
-            label = d[:label],
-            zorder = d[:series_plotindex],
-            cmap = py_fillcolormap(d),
-            edgecolors = (d[:linewidth] > 0 ? py_linecolor(d) : "face"),
+            label = series[:label],
+            zorder = series[:series_plotindex],
+            cmap = py_fillcolormap(series),
+            edgecolors = (series[:linewidth] > 0 ? py_linecolor(series) : "face"),
             extrakw...
         )
         push!(handles, handle)
@@ -830,16 +719,32 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :shape
-        path = py_path(x, y)
-        patches = pypatches.pymember("PathPatch")(path;
-            label = d[:label],
-            zorder = d[:series_plotindex],
-            edgecolor = py_linecolor(d),
-            facecolor = py_fillcolor(d),
-            linewidth = py_dpi_scale(plt, d[:linewidth]),
-            fill = true
-        )
-        handle = ax[:add_patch](patches)
+        handle = []
+        for (i,rng) in enumerate(iter_segments(x, y))
+            if length(rng) > 1
+                path = pypath.pymember("Path")(hcat(x[rng], y[rng]))
+                patches = pypatches.pymember("PathPatch")(
+                    path;
+                    label = series[:label],
+                    zorder = series[:series_plotindex],
+                    edgecolor = py_color(cycle(series[:linecolor], i)),
+                    facecolor = py_color(cycle(series[:fillcolor], i)),
+                    linewidth = py_dpi_scale(plt, series[:linewidth]),
+                    fill = true
+                )
+                push!(handle, ax[:add_patch](patches))
+            end
+        end
+        # path = py_path(x, y)
+        # patches = pypatches.pymember("PathPatch")(path;
+        #     label = series[:label],
+        #     zorder = series[:series_plotindex],
+        #     edgecolor = py_linecolor(series),
+        #     facecolor = py_fillcolor(series),
+        #     linewidth = py_dpi_scale(plt, series[:linewidth]),
+        #     fill = true
+        # )
+        # handle = ax[:add_patch](patches)
         push!(handles, handle)
     end
 
@@ -858,10 +763,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         expand_extrema!(sp, -lim, lim, -lim, lim)
     end
 
-    d[:serieshandle] = handles
+    series[:serieshandle] = handles
 
     # # smoothing
-    # handleSmooth(plt, ax, d, d[:smooth])
+    # handleSmooth(plt, ax, series, series[:smooth])
 
     # add the colorbar legend
     if needs_colorbar && sp[:colorbar] != :none
@@ -886,54 +791,28 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     # handle area filling
-    fillrange = d[:fillrange]
+    fillrange = series[:fillrange]
     if fillrange != nothing && st != :contour
-        f, dim1, dim2 = if isvertical(d)
+        f, dim1, dim2 = if isvertical(series)
             :fill_between, x, y
         else
             :fill_betweenx, y, x
         end
+        n = length(dim1)
         args = if typeof(fillrange) <: Union{Real, AVec}
-            dim1, fillrange, dim2
-        else
-            dim1, fillrange...
+            dim1, expand_data(fillrange, n), dim2
+        elseif is_2tuple(fillrange)
+            dim1, expand_data(fillrange[1], n), expand_data(fillrange[2], n)
         end
 
         handle = ax[f](args...;
-            zorder = d[:series_plotindex],
-            facecolor = py_fillcolor(d),
+            zorder = series[:series_plotindex],
+            facecolor = py_fillcolor(series),
             linewidths = 0
         )
         push!(handles, handle)
     end
 end
-
-
-# --------------------------------------------------------------------------
-
-# function update_limits!(sp::Subplot{PyPlotBackend}, series::Series, letters)
-#     for letter in letters
-#         py_set_lims(sp.o, sp[Symbol(letter, :axis)])
-#     end
-# end
-
-# function _series_updated(plt::Plot{PyPlotBackend}, series::Series)
-#     d = series.d
-#     for handle in get(d, :serieshandle, [])
-#         if is3d(series)
-#             handle[:set_data](d[:x], d[:y])
-#             handle[:set_3d_properties](d[:z])
-#         else
-#             try
-#                 handle[:set_data](d[:x], d[:y])
-#             catch
-#                 handle[:set_offsets](hcat(d[:x], d[:y]))
-#             end
-#         end
-#     end
-#     update_limits!(d[:subplot], series, is3d(series) ? (:x,:y,:z) : (:x,:y))
-# end
-
 
 # --------------------------------------------------------------------------
 
@@ -1029,7 +908,6 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig[:clear]()
-    # fig[:set_size_inches](px2inch(w), px2inch(h), forward = true)
     dpi = plt[:dpi]
     fig[:set_size_inches](w/dpi, h/dpi, forward = true)
     fig[:set_facecolor](py_color(plt[:background_color_outside]))
@@ -1175,21 +1053,6 @@ end
 
 # -----------------------------------------------------------------
 
-# function _remove_axis(plt::Plot{PyPlotBackend}, isx::Bool)
-#     if isx
-#         plot!(plt, xticks=zeros(0), xlabel="")
-#     else
-#         plot!(plt, yticks=zeros(0), ylabel="")
-#     end
-# end
-#
-# function _expand_limits(lims, plt::Plot{PyPlotBackend}, isx::Bool)
-#     pltlims = plt.o.ax[isx ? :get_xbound : :get_ybound]()
-#     _expand_limits(lims, pltlims)
-# end
-
-# -----------------------------------------------------------------
-
 const _pyplot_legend_pos = KW(
     :right => "right",
     :left => "center left",
@@ -1210,12 +1073,15 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
         for series in series_list(sp)
             if should_add_to_legend(series)
                 # add a line/marker and a label
-                push!(handles, if series.d[:seriestype] == :histogram
-                    PyPlot.plt[:Line2D]((0,1),(0,0), color=py_fillcolor(series.d), linewidth=py_dpi_scale(plt, 4))
+                push!(handles, if series[:seriestype] == :shape
+                    PyPlot.plt[:Line2D]((0,1),(0,0),
+                        color = py_color(cycle(series[:fillcolor],1)),
+                        linewidth = py_dpi_scale(plt, 4)
+                    )
                 else
-                    series.d[:serieshandle][1]
+                    series[:serieshandle][1]
                 end)
-                push!(labels, series.d[:label])
+                push!(labels, series[:label])
             end
         end
 
