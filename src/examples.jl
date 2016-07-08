@@ -221,12 +221,6 @@ PlotExample("Contours",
         p2 = contour(x, y, Z)
         plot(p1, p2)
     end)]
-    # [:(begin
-    #     x = 1:0.3:20
-    #     y = x
-    #     f(x,y) = sin(x)+cos(y)
-    #     contour(x, y, f, fill=true)
-    # end)]
 ),
 
 PlotExample("Pie",

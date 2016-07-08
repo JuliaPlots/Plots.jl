@@ -228,7 +228,7 @@ Base.cycle(v::AVec, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
 Base.cycle(v::AMat, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
 Base.cycle(v, idx::AVec{Int})       = v
 
-Base.cycle(grad::ColorGradient, idx) = cycle(grad.colors, idx)
+Base.cycle(grad::ColorGradient, idx::Int) = cycle(grad.colors, idx)
 
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]

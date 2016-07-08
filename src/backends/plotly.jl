@@ -301,7 +301,7 @@ end
 function plotly_colorscale(grad::ColorGradient, alpha = nothing)
     [[grad.values[i], rgba_string(grad.colors[i], alpha)] for i in 1:length(grad.colors)]
 end
-plotly_colorscale(c, alpha = nothing) = plotly_colorscale(default_gradient(), alpha)
+plotly_colorscale(c, alpha = nothing) = plotly_colorscale(cgrad(), alpha)
 
 const _plotly_markers = KW(
     :rect       => "square",

@@ -10,6 +10,7 @@ Pkg.build("GR")
 # Pkg.clone("https://github.com/JuliaPlots/RecipesBase.jl.git")
 # Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");
 Pkg.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git")
+Pkg.clone("https://github.com/JuliaPlots/PlotUtils.jl.git")
 
 Pkg.clone("https://github.com/JuliaStats/KernelDensity.jl.git")
 

@@ -1113,11 +1113,11 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
         d[csym] = if d[csym] == :match
-            if has_black_border_for_default(d[:seriestype]) && s == :line
-                plot_color(:black, d[asym])
+            plot_color(if has_black_border_for_default(d[:seriestype]) && s == :line
+                :black
             else
                 d[:seriescolor]
-            end
+            end, d[asym])
         else
             getSeriesRGBColor(d[csym], d[asym], sp, plotIndex)
         end
