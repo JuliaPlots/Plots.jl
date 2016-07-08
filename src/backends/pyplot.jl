@@ -436,7 +436,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             else
                 # multicolored line segments
                 n = length(x) - 1
-                segments = Array(Any,n)
+                # segments = Array(Any,n)
+                segments = []
                 kw = KW(
                     :label => series[:label],
                     :zorder => plt.n,
@@ -445,17 +446,23 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     :linestyle => py_linestyle(st, series[:linestyle])
                 )
                 handle = if is3d(st)
-                    for i=1:n
-                        segments[i] = [(cycle(x,i), cycle(y,i), cycle(z,i)), (cycle(x,i+1), cycle(y,i+1), cycle(z,i+1))]
+                    for rng in iter_segments(x, y, z)
+                        push!(segments, [(cycle(x,i),cycle(y,i),cycle(z,i)) for i in rng])
                     end
+                    # for i=1:n
+                    #     segments[i] = [(cycle(x,i), cycle(y,i), cycle(z,i)), (cycle(x,i+1), cycle(y,i+1), cycle(z,i+1))]
+                    # end
                     lc = pyart3d.Line3DCollection(segments; kw...)
                     lc[:set_array](series[:line_z])
                     ax[:add_collection3d](lc, zs=z) #, zdir='y')
                     lc
                 else
-                    for i=1:n
-                        segments[i] = [(cycle(x,i), cycle(y,i)), (cycle(x,i+1), cycle(y,i+1))]
+                    for rng in iter_segments(x, y)
+                        push!(segments, [(cycle(x,i),cycle(y,i)) for i in rng])
                     end
+                    # for i=1:n
+                    #     segments[i] = [(cycle(x,i), cycle(y,i)), (cycle(x,i+1), cycle(y,i+1))]
+                    # end
                     lc = pycollections.LineCollection(segments; kw...)
                     lc[:set_array](series[:line_z])
                     ax[:add_collection](lc)

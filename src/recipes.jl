@@ -394,18 +394,20 @@ end
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
     nx, ny = length(x), length(y)
+    axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
+    cv = [discrete_value!(axis, xi)[1] for xi=x]
     x = if nx == ny
-        x
+        cv
     elseif nx == ny + 1
-        diff(x) + x[1:end-1]
+        0.5diff(cv) + cv[1:end-1]
     else
         error("bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
     end
 
-    axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
+    # compute half-width of bars
     bw = d[:bar_width]
     hw = if bw == nothing
-        0.5mean(diff([discrete_value!(axis, xi)[1] for xi=x]))
+        0.5mean(diff(x))
     else
         Float64[0.5cycle(bw,i) for i=1:length(x)]
     end
@@ -419,7 +421,7 @@ end
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i=1:ny
-        center = discrete_value!(axis, x[i])[1]
+        center = x[i]
         hwi = cycle(hw,i)
         yi = y[i]
         fi = cycle(fillto,i)
