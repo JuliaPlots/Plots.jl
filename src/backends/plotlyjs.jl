@@ -33,10 +33,12 @@ end
 
 function _series_added(plt::Plot{PlotlyJSBackend}, series::Series)
     syncplot = plt.o
-    pdict = plotly_series(plt, series)
-    typ = pop!(pdict, :type)
-    gt = PlotlyJS.GenericTrace(typ; pdict...)
-    PlotlyJS.addtraces!(syncplot, gt)
+    pdicts = plotly_series(plt, series)
+    for pdict in pdicts
+        typ = pop!(pdict, :type)
+        gt = PlotlyJS.GenericTrace(typ; pdict...)
+        PlotlyJS.addtraces!(syncplot, gt)
+    end
 end
 
 function _series_updated(plt::Plot{PlotlyJSBackend}, series::Series)

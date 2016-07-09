@@ -336,8 +336,12 @@ plotly_data{R<:Rational}(v::AbstractArray{R}) = float(v)
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
-    d = series.d
-    sp = d[:subplot]
+    st = series[:seriestype]
+    if st == :shape
+        return plotly_series_shapes(plt, series)
+    end
+
+    sp = series[:subplot]
     d_out = KW()
 
     # these are the axes that the series should be mapped to
@@ -346,12 +350,11 @@ function plotly_series(plt::Plot, series::Series)
     d_out[:yaxis] = "y$spidx"
     d_out[:showlegend] = should_add_to_legend(series)
 
-    x, y = plotly_data(d[:x]), plotly_data(d[:y])
-    d_out[:name] = d[:label]
-    st = d[:seriestype]
+    x, y = plotly_data(series[:x]), plotly_data(series[:y])
+    d_out[:name] = series[:label]
+
     isscatter = st in (:scatter, :scatter3d, :scattergl)
-    hasmarker = isscatter || d[:markershape] != :none
-    # hasline = !isscatter
+    hasmarker = isscatter || series[:markershape] != :none
     hasline = st in (:path, :path3d)
 
     # set the "type"
@@ -362,51 +365,36 @@ function plotly_series(plt::Plot, series::Series)
         else
             hasline ? "lines" : "none"
         end
-        if d[:fillrange] == true || d[:fillrange] == 0
+        if series[:fillrange] == true || series[:fillrange] == 0
             d_out[:fill] = "tozeroy"
-            d_out[:fillcolor] = rgba_string(d[:fillcolor])
-        elseif !(d[:fillrange] in (false, nothing))
-            warn("fillrange ignored... plotly only supports filling to zero. fillrange: $(d[:fillrange])")
+            d_out[:fillcolor] = rgba_string(series[:fillcolor])
+        elseif !(series[:fillrange] in (false, nothing))
+            warn("fillrange ignored... plotly only supports filling to zero. fillrange: $(series[:fillrange])")
         end
         d_out[:x], d_out[:y] = x, y
-
-    elseif st == :shape
-        # to draw polygons, we actually draw lines with fill
-        d_out[:type] = "scatter"
-        d_out[:mode] = "lines"
-        d_out[:x], d_out[:y] = plotly_close_shapes(x, y)
-        d_out[:fill] = "tozeroy"
-        d_out[:fillcolor] = rgba_string(d[:fillcolor])
-        if d[:markerstrokewidth] > 0
-            d_out[:line] = KW(
-                :color => rgba_string(d[:linecolor]),
-                :width => d[:linewidth],
-                :dash => string(d[:linestyle]),
-            )
-        end
 
     elseif st == :bar
         d_out[:type] = "bar"
         d_out[:x], d_out[:y] = x, y
-        d_out[:orientation] = isvertical(d) ? "v" : "h"
+        d_out[:orientation] = isvertical(series) ? "v" : "h"
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
-        d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
-        d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
+        d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
 
     elseif st == :contour
         d_out[:type] = "contour"
-        d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
-        # d_out[:showscale] = d[:colorbar] != :none
-        d_out[:ncontours] = d[:levels]
-        d_out[:contours] = KW(:coloring => d[:fillrange] != nothing ? "fill" : "lines")
-        d_out[:colorscale] = plotly_colorscale(d[:linecolor], d[:linealpha])
+        d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        # d_out[:showscale] = series[:colorbar] != :none
+        d_out[:ncontours] = series[:levels]
+        d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines")
+        d_out[:colorscale] = plotly_colorscale(series[:linecolor], series[:linealpha])
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
-        d_out[:x], d_out[:y], d_out[:z] = d[:x], d[:y], transpose_z(d, d[:z].surf, false)
-        d_out[:colorscale] = plotly_colorscale(d[:fillcolor], d[:fillalpha])
+        d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
 
     elseif st == :pie
         d_out[:type] = "pie"
@@ -422,7 +410,7 @@ function plotly_series(plt::Plot, series::Series)
             hasline ? "lines" : "none"
         end
         d_out[:x], d_out[:y] = x, y
-        d_out[:z] = plotly_data(d[:z])
+        d_out[:z] = plotly_data(series[:z])
 
     else
         warn("Plotly: seriestype $st isn't supported.")
@@ -432,32 +420,32 @@ function plotly_series(plt::Plot, series::Series)
     # add "marker"
     if hasmarker
         d_out[:marker] = KW(
-            :symbol => get(_plotly_markers, d[:markershape], string(d[:markershape])),
-            # :opacity => d[:markeralpha],
-            :size => 2 * d[:markersize],
-            # :color => rgba_string(d[:markercolor]),
+            :symbol => get(_plotly_markers, series[:markershape], string(series[:markershape])),
+            # :opacity => series[:markeralpha],
+            :size => 2 * series[:markersize],
+            # :color => rgba_string(series[:markercolor]),
             :line => KW(
-                :color => rgba_string(d[:markerstrokecolor]),
-                :width => d[:markerstrokewidth],
+                :color => rgba_string(series[:markerstrokecolor]),
+                :width => series[:markerstrokewidth],
             ),
         )
 
         # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
-        d_out[:marker][:color] = if d[:marker_z] == nothing
-            rgba_string(d[:markercolor])
+        d_out[:marker][:color] = if series[:marker_z] == nothing
+            rgba_string(series[:markercolor])
         else
-            # grad = ColorGradient(d[:markercolor], alpha=d[:markeralpha])
-            grad = d[:markercolor]
-            zmin, zmax = extrema(d[:marker_z])
-            [rgba_string(grad[(zi - zmin) / (zmax - zmin)]) for zi in d[:marker_z]]
+            # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
+            grad = series[:markercolor]
+            zmin, zmax = extrema(series[:marker_z])
+            [rgba_string(grad[(zi - zmin) / (zmax - zmin)]) for zi in series[:marker_z]]
         end
     end
 
     # add "line"
     if hasline
         d_out[:line] = KW(
-            :color => rgba_string(d[:linecolor]),
-            :width => d[:linewidth],
+            :color => rgba_string(series[:linecolor]),
+            :width => series[:linewidth],
             :shape => if st == :steppre
                 "vh"
             elseif st == :steppost
@@ -465,32 +453,85 @@ function plotly_series(plt::Plot, series::Series)
             else
                 "linear"
             end,
-            :dash => string(d[:linestyle]),
+            :dash => string(series[:linestyle]),
             # :dash => "solid",
         )
     end
 
+    plotly_polar!(d_out, series)
+    plotly_hover!(d_out, series[:hover])
+
+    [d_out]
+end
+
+function plotly_series_shapes(plt::Plot, series::Series)
+    d_outs = []
+    
+    # TODO: create a d_out for each polygon
+    # x, y = series[:x], series[:y]
+    
+    # these are the axes that the series should be mapped to
+    spidx = plotly_subplot_index(series[:subplot])
+    base_d = KW()
+    base_d[:xaxis] = "x$spidx"
+    base_d[:yaxis] = "y$spidx"
+    base_d[:name] = series[:label]
+    # base_d[:legendgroup] = series[:label]
+    
+    x, y = plotly_data(series[:x]), plotly_data(series[:y])
+    for (i,rng) in enumerate(iter_segments(x,y))
+        length(rng) < 2 && continue
+
+        # to draw polygons, we actually draw lines with fill
+        d_out = merge(base_d, KW(
+            :type => "scatter",
+            :mode => "lines",
+            :x => vcat(x[rng], x[rng[1]]),
+            :y => vcat(y[rng], y[rng[1]]),
+            :fill => "tozeroy",
+            :fillcolor => rgba_string(cycle(series[:fillcolor], i)),
+        ))
+        if series[:markerstrokewidth] > 0
+            d_out[:line] = KW(
+                :color => rgba_string(cycle(series[:linecolor], i)),
+                :width => series[:linewidth],
+                :dash => string(series[:linestyle]),
+            )
+        end
+        d_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
+        plotly_polar!(d_out, series)
+        plotly_hover!(d_out, cycle(series[:hover], i))
+        push!(d_outs, d_out)
+    end
+    d_outs
+end
+
+function plotly_polar!(d_out::KW, series::Series)
     # convert polar plots x/y to theta/radius
-    if ispolar(d[:subplot])
+    if ispolar(series[:subplot])
         d_out[:t] = rad2deg(pop!(d_out, :x))
         d_out[:r] = pop!(d_out, :y)
     end
+end
 
+function plotly_hover!(d_out::KW, hover)
     # hover text
-    hover = d[:hover]
     if hover in (:none, false)
         d_out[:hoverinfo] = "none"
     elseif hover != nothing
         d_out[:hoverinfo] = "text"
         d_out[:text] = hover
     end
-
-    d_out
 end
 
 # get a list of dictionaries, each representing the series params
 function plotly_series_json(plt::Plot)
-    JSON.json(map(series -> plotly_series(plt, series), plt.series_list))
+    slist = []
+    for series in plt.series_list
+        append!(slist, plotly_series(plt, series))
+    end
+    JSON.json(slist)
+    # JSON.json(map(series -> plotly_series(plt, series), plt.series_list))
 end
 
 # ----------------------------------------------------------------
