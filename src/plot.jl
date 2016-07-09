@@ -490,13 +490,16 @@ function _plot!(plt::Plot, d::KW, args...)
         sp = get_subplot(plt, cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
         kw[:subplot] = sp
 
+        # extract subplot/axis attributes from kw and add to sp_attr
         attr = KW()
         for (k,v) in kw
-            for defdict in (_subplot_defaults,
-                            _axis_defaults,
-                            _axis_defaults_byletter)
-                if haskey(defdict, k)
-                    attr[k] = pop!(kw, k)
+            if haskey(_subplot_defaults, k) || haskey(_axis_defaults_byletter, k)
+                attr[k] = pop!(kw, k)
+            end
+            if haskey(_axis_defaults, k)
+                v = pop!(kw, k)
+                for letter in (:x,:y,:z)
+                    attr[Symbol(letter,k)] = v
                 end
             end
         end

@@ -57,13 +57,26 @@ _before_layout_calcs(plt::Plot) = nothing
 title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefont].pointsize * pt
 guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefont].pointsize * pt
 
+# TODO: this should account for both tick font and the size/length/rotation of tick labels
+function tick_padding(axis::Axis)
+    ptsz = axis[:tickfont].pointsize * pt
+    if axis[:ticks] in (nothing,false)
+        0mm
+    elseif axis[:letter] == :x
+        2mm + ptsz
+    else
+        8mm
+    end
+end
+
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot)
-    leftpad   = 10mm + sp[:left_margin]   + guide_padding(sp[:yaxis])
-    toppad    =  2mm + sp[:top_margin]    + title_padding(sp)
-    rightpad  =  3mm + sp[:right_margin]
-    bottompad =  5mm + sp[:bottom_margin] + guide_padding(sp[:xaxis])
+    # TODO: something different when `is3d(sp) == true`
+    leftpad   = tick_padding(sp[:yaxis]) + sp[:left_margin]   + guide_padding(sp[:yaxis])
+    toppad    = sp[:top_margin]    + title_padding(sp)
+    rightpad  = sp[:right_margin]
+    bottompad = tick_padding(sp[:xaxis]) + sp[:bottom_margin] + guide_padding(sp[:xaxis])
     # @show (leftpad, toppad, rightpad, bottompad)
     sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end

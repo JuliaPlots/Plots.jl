@@ -1015,10 +1015,10 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     # TODO: this should initialize to the margin from sp.attr
     # figure out how much the axis components and title "stick out" from the plot area
     # leftpad = toppad = rightpad = bottompad = 1mm
-    leftpad   = sp[:left_margin]
-    toppad    = sp[:top_margin]
-    rightpad  = sp[:right_margin]
-    bottompad = sp[:bottom_margin]
+    leftpad   = 0mm
+    toppad    = 0mm
+    rightpad  = 0mm
+    bottompad = 0mm
     for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
         if ispositive(width(bb)) && ispositive(height(bb))
             leftpad   = max(leftpad,   left(plotbb) - left(bb))
@@ -1034,6 +1034,12 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
         sp.attr[:cbar_width] = _cbar_width + width(bb) + 1mm
         rightpad = rightpad + sp.attr[:cbar_width]
     end
+
+    # add in the user-specified margin
+    leftpad   += sp[:left_margin]
+    toppad    += sp[:top_margin]
+    rightpad  += sp[:right_margin]
+    bottompad += sp[:bottom_margin]
 
     sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end

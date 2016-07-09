@@ -522,7 +522,7 @@ function my_hist_2d(x, y, bins; normed = false, weights = nothing)
     xedges, yedges, counts ./ norm_denom
 end
 
-centers(v::AVec) = v[1] + cumsum(diff(v))
+centers(v::AVec) = 0.5 * (v[1:end-1] + v[2:end])
 
 @recipe function f(::Type{Val{:histogram2d}}, x, y, z)
     xedges, yedges, counts = my_hist_2d(x, y, d[:bins],
