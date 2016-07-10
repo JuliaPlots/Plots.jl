@@ -814,9 +814,9 @@ slice_arg(v, idx) = v
 # given an argument key (k), we want to extract the argument value for this index.
 # matrices are sliced by column, otherwise we
 # if nothing is set (or container is empty), return the default or the existing value.
-function slice_arg!(d_in::KW, d_out::KW, k::Symbol, default_value, idx::Int = 1; new_key::Symbol = k, remove_pair::Bool = true)
-    v = get(d_in, k, get(d_out, new_key, default_value))
-    d_out[new_key] = if haskey(d_in, k) && typeof(v) <: AMat && !isempty(v)
+function slice_arg!(d_in::KW, d_out::KW, k::Symbol, default_value, idx::Int, remove_pair::Bool)
+    v = get(d_in, k, get(d_out, k, default_value))
+    d_out[k] = if haskey(d_in, k) && typeof(v) <: AMat && !isempty(v)
         slice_arg(v, idx)
     else
         v
@@ -824,6 +824,7 @@ function slice_arg!(d_in::KW, d_out::KW, k::Symbol, default_value, idx::Int = 1;
     if remove_pair
         delete!(d_in, k)
     end
+    return
 end
 
 # -----------------------------------------------------------------------------
@@ -844,12 +845,13 @@ end
 function color_or_nothing!(d::KW, k::Symbol)
     v = d[k]
     d[k] = if v == nothing || v == false
-        plot_color(RGBA(0,0,0,0))
+        RGBA{Float64}(0,0,0,0)
     elseif v != :match
         plot_color(v)
     else
         v
     end
+    return
 end
 
 # -----------------------------------------------------------------------------
@@ -938,7 +940,7 @@ Base.get(series::Series, k::Symbol, v) = get(series.d, k, v)
 # update attr from an input dictionary
 function _update_plot_args(plt::Plot, d_in::KW)
     for (k,v) in _plot_defaults
-        slice_arg!(d_in, plt.attr, k, v)
+        slice_arg!(d_in, plt.attr, k, v, 1, true)
     end
 
     # handle colors
@@ -949,20 +951,12 @@ function _update_plot_args(plt::Plot, d_in::KW)
     end
     plt.attr[:background_color] = bg
     plt.attr[:foreground_color] = plot_color(fg)
-    # color_or_match!(plt.attr, :background_color_outside, bg)
     color_or_nothing!(plt.attr, :background_color_outside)
 end
 
+# -----------------------------------------------------------------------------
 
-# update a subplots args and axes
-function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::Integer; remove_pair = true)
-    anns = pop!(sp.attr, :annotations, [])
-
-    # grab those args which apply to this subplot
-    for (k,v) in _subplot_defaults
-        slice_arg!(d_in, sp.attr, k, v, subplot_index, remove_pair = remove_pair)
-    end
-
+function _update_subplot_periphery(sp::Subplot, anns::AVec)
     # extend annotations
     sp.attr[:annotations] = vcat(anns, sp[:annotations])
 
@@ -972,9 +966,11 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
     if sp.attr[:colorbar] == :legend
         sp.attr[:colorbar] = sp.attr[:legend]
     end
+    return
+end
 
+function _update_subplot_colors(sp::Subplot)
     # background colors
-    # bg = color_or_match!(sp.attr, :background_color_subplot, plt.attr[:background_color])
     color_or_nothing!(sp.attr, :background_color_subplot)
     bg = plot_color(sp[:background_color_subplot])
     sp.attr[:color_palette] = get_color_palette(sp.attr[:color_palette], bg, 30)
@@ -986,60 +982,87 @@ function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::I
     color_or_nothing!(sp.attr, :foreground_color_legend)
     color_or_nothing!(sp.attr, :foreground_color_grid)
     color_or_nothing!(sp.attr, :foreground_color_title)
+    return
+end
 
-    # for k in (:left_margin, :top_margin, :right_margin, :bottom_margin)
-    #     if sp.attr[k] == :match
-    #         sp.attr[k] = sp.attr[:margin]
-    #     end
-    # end
+function _update_axis(plt::Plot, sp::Subplot, d_in::KW, letter::Symbol, subplot_index::Int)
+    # get (maybe initialize) the axis
+    axis = get_axis(sp, letter)
+
+    _update_axis(axis, d_in, letter, subplot_index)
+
+    # convert a bool into auto or nothing
+    if isa(axis[:ticks], Bool)
+        axis[:ticks] = axis[:ticks] ? :auto : nothing
+    end
+
+    _update_axis_colors(axis)
+    _update_axis_links(plt, axis, letter)
+    return
+end
+
+function _update_axis(axis::Axis, d_in::KW, letter::Symbol, subplot_index::Int)
+    # grab magic args (for example `xaxis = (:flip, :log)`)
+    args = wraptuple(get(d_in, Symbol(letter, :axis), ()))
+
+    # build the KW of arguments from the letter version (i.e. xticks --> ticks)
+    kw = KW()
+    for (k,v) in _axis_defaults
+        # first get the args without the letter: `tickfont = font(10)`
+        # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
+        if haskey(d_in, k)
+            kw[k] = slice_arg(d_in[k], subplot_index)
+        end
+
+        # then get those args that were passed with a leading letter: `xlabel = "X"`
+        lk = Symbol(letter, k)
+        if haskey(d_in, lk)
+            kw[k] = slice_arg(d_in[lk], subplot_index)
+        end
+    end
+
+    # update the axis
+    update!(axis, args...; kw...)
+    return
+end
+
+function _update_axis_colors(axis::Axis)
+    # # update the axis colors
+    color_or_nothing!(axis.d, :foreground_color_axis)
+    color_or_nothing!(axis.d, :foreground_color_border)
+    color_or_nothing!(axis.d, :foreground_color_guide)
+    color_or_nothing!(axis.d, :foreground_color_text)
+    return
+end
+
+function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
+    # handle linking here.  if we're passed a list of
+    # other subplots to link to, link them together
+    link = axis[:link]
+    if !isempty(link)
+        for other_sp in link
+            other_sp = get_subplot(plt, other_sp)
+            link_axes!(axis, get_axis(other_sp, letter))
+        end
+        axis.d[:link] = []
+    end
+    return
+end
+
+# update a subplots args and axes
+function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::Int, remove_pair::Bool)
+    anns = pop!(sp.attr, :annotations, [])
+
+    # grab those args which apply to this subplot
+    for (k,v) in _subplot_defaults
+        slice_arg!(d_in, sp.attr, k, v, subplot_index, remove_pair)
+    end
+
+    _update_subplot_periphery(sp, anns)
+    _update_subplot_colors(sp)
 
     for letter in (:x, :y, :z)
-        # get (maybe initialize) the axis
-        axis = get_axis(sp, letter)
-
-        # grab magic args (for example `xaxis = (:flip, :log)`)
-        args = wraptuple(get(d_in, Symbol(letter, :axis), ()))
-
-        # build the KW of arguments from the letter version (i.e. xticks --> ticks)
-        kw = KW()
-        for (k,v) in _axis_defaults
-            # first get the args without the letter: `tickfont = font(10)`
-            # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
-            if haskey(d_in, k)
-                kw[k] = slice_arg(d_in[k], subplot_index)
-            end
-
-            # then get those args that were passed with a leading letter: `xlabel = "X"`
-            lk = Symbol(letter, k)
-            if haskey(d_in, lk)
-                kw[k] = slice_arg(d_in[lk], subplot_index)
-            end
-        end
-
-        # update the axis
-        update!(axis, args...; kw...)
-
-        # convert a bool into auto or nothing
-        if isa(axis[:ticks], Bool)
-            axis[:ticks] = axis[:ticks] ? :auto : nothing
-        end
-
-        # # update the axis colors
-        color_or_nothing!(axis.d, :foreground_color_axis)
-        color_or_nothing!(axis.d, :foreground_color_border)
-        color_or_nothing!(axis.d, :foreground_color_guide)
-        color_or_nothing!(axis.d, :foreground_color_text)
-
-        # handle linking here.  if we're passed a list of
-        # other subplots to link to, link them together
-        link = axis[:link]
-        if !isempty(link)
-            for other_sp in link
-                other_sp = get_subplot(plt, other_sp)
-                link_axes!(axis, get_axis(other_sp, letter))
-            end
-            axis.d[:link] = []
-        end
+        _update_axis(plt, sp, d_in, letter, subplot_index)
     end
 end
 
@@ -1071,7 +1094,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
 
     # add default values to our dictionary, being careful not to delete what we just added!
     for (k,v) in _series_defaults
-        slice_arg!(d, d, k, v, commandIndex, remove_pair = false)
+        slice_arg!(d, d, k, v, commandIndex, false)
     end
 
     # this is how many series belong to this subplot

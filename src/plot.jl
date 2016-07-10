@@ -43,7 +43,6 @@ When you pass in matrices, it splits by columns.  See the documentation for more
 
 # this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
-    info("started to plot")
     d = KW(kw)
     preprocessArgs!(d)
 
@@ -108,7 +107,7 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
-        _update_subplot_args(plt, sp, d, idx, remove_pair = false)
+        _update_subplot_args(plt, sp, d, idx, false)
     end
 
     # do we need to link any axes together?
@@ -152,16 +151,13 @@ end
 
 # getting ready to add the series... last update to subplot from anything
 # that might have been added during series recipes
-function _prepare_subplot(plt::Plot, d::KW)
-    st = d[:seriestype]
-    sp = d[:subplot]
+function _prepare_subplot{T}(plt::Plot{T}, d::KW)
+    st::Symbol = d[:seriestype]
+    sp::Subplot{T} = d[:subplot]
     sp_idx = get_subplot_index(plt, sp)
-    _update_subplot_args(plt, sp, d, sp_idx)
+    _update_subplot_args(plt, sp, d, sp_idx, true)
 
-    # do we want to override the series type?
-    if !is3d(st) && d[:z] != nothing && (size(d[:x]) == size(d[:y]) == size(d[:z]))
-        st = d[:seriestype] = (st == :scatter ? :scatter3d : :path3d)
-    end
+    st = _override_seriestype_check(d, st)
 
     # change to a 3d projection for this subplot?
     if is3d(st)
@@ -173,7 +169,19 @@ function _prepare_subplot(plt::Plot, d::KW)
         _initialize_subplot(plt, sp)
         sp.attr[:init] = true
     end
-    sp::Subplot
+    sp
+end
+
+function _override_seriestype_check(d::KW, st::Symbol)
+    # do we want to override the series type?
+    if !is3d(st)
+        z = d[:z]
+        if !isa(z, Void) && (size(d[:x]) == size(d[:y]) == size(z))
+            st = (st == :scatter ? :scatter3d : :path3d)
+            d[:seriestype] = st
+        end
+    end
+    st
 end
 
 function _prepare_annotations(sp::Subplot, d::KW)
@@ -244,7 +252,7 @@ function _process_seriesrecipe(plt::Plot, d::KW)
 end
 
 function command_idx(kw_list::AVec{KW}, kw::KW)
-    kw[:series_plotindex] - kw_list[1][:series_plotindex] + 1
+    Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
 end
 
 function _expand_seriestype_array(d::KW, args)
@@ -406,7 +414,7 @@ end
 # to generate a list of RecipeData objects (data + attributes).
 # If we applied a "plot recipe" without error, then add the returned datalist's KWs,
 # otherwise we just add the original KW.
-function _process_plotrecipe(kw::KW, kw_list::Vector{KW}, still_to_process::Vector{KW})
+function _process_plotrecipe(plt::Plot, kw::KW, kw_list::Vector{KW}, still_to_process::Vector{KW})
     if !isa(get(kw, :seriestype, nothing), Symbol)
         # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
         push!(kw_list, kw)
@@ -511,7 +519,7 @@ function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
     # override subplot/axis args.  `sp_attrs` take precendence
     for (idx,sp) in enumerate(plt.subplots)
         attr = merge(d, get(sp_attrs, sp, KW()))
-        _update_subplot_args(plt, sp, attr, idx, remove_pair = false)
+        _update_subplot_args(plt, sp, attr, idx, false)
     end
 
     # do we need to link any axes together?
@@ -543,7 +551,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
     kw_list = KW[]
     while !isempty(still_to_process)
         next_kw = shift!(still_to_process)
-        _process_plotrecipe(next_kw, kw_list, still_to_process)
+        _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
     end
 
     # --------------------------------
@@ -560,11 +568,11 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
     # --------------------------------
     
     for kw in kw_list
-        sp = kw[:subplot]
-        idx = get_subplot_index(plt, sp)
+        sp::Subplot = kw[:subplot]
+        # idx = get_subplot_index(plt, sp)
 
         # # we update subplot args in case something like the color palatte is part of the recipe
-        # _update_subplot_args(plt, sp, kw, idx)
+        # _update_subplot_args(plt, sp, kw, idx, true)
 
         # set default values, select from attribute cycles, and generally set the final attributes
         _add_defaults!(kw, plt, sp, command_idx(kw_list,kw))
@@ -584,7 +592,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
 
     # do we want to force display?
     if plt[:show]
-        gui()
+        gui(plt)
     end
 
     plt

@@ -38,7 +38,7 @@ function get_axis(sp::Subplot, letter::Symbol)
         sp.attr[axissym]
     else
         sp.attr[axissym] = Axis(sp, letter)
-    end
+    end::Axis
 end
 
 function process_axis_arg!(d::KW, arg, letter = "")

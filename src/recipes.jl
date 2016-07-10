@@ -1,10 +1,5 @@
 
 
-# TODO: there should be a distinction between an object that will manage a full plot, vs a component of a plot.
-# the PlotRecipe as currently implemented is more of a "custom component"
-# a recipe should fully describe the plotting command(s) and call them, likewise for updating.
-#   actually... maybe those should explicitly derive from AbstractPlot???
-
 
 """
 You can easily define your own plotting recipes with convenience methods:
@@ -106,59 +101,50 @@ num_series(x) = 1
 RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::Plot) = throw(MethodError("Unmatched plot recipe: $T"))
 
 
-# # TODO: remove when StatPlots is ready
-# if is_installed("DataFrames")
-#     @eval begin
-#         import DataFrames
+# TODO: remove when StatPlots is ready
+if is_installed("DataFrames")
+    @eval begin
+        import DataFrames
 
-#         # if it's one symbol, set the guide and return the column
-#         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, sym::Symbol)
-#             get!(d, Symbol(letter * "guide"), string(sym))
-#             collect(df[sym])
-#         end
+        # if it's one symbol, set the guide and return the column
+        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, sym::Symbol)
+            get!(d, Symbol(letter * "guide"), string(sym))
+            collect(df[sym])
+        end
 
-#         # if it's an array of symbols, set the labels and return a Vector{Any} of columns
-#         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, syms::AbstractArray{Symbol})
-#             get!(d, :label, reshape(syms, 1, length(syms)))
-#             Any[collect(df[s]) for s in syms]
-#         end
+        # if it's an array of symbols, set the labels and return a Vector{Any} of columns
+        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, syms::AbstractArray{Symbol})
+            get!(d, :label, reshape(syms, 1, length(syms)))
+            Any[collect(df[s]) for s in syms]
+        end
 
-#         # for anything else, no-op
-#         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, anything)
-#             anything
-#         end
+        # for anything else, no-op
+        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, anything)
+            anything
+        end
 
-#         # handle grouping by DataFrame column
-#         function extractGroupArgs(group::Symbol, df::DataFrames.AbstractDataFrame, args...)
-#             extractGroupArgs(collect(df[group]))
-#         end
+        # handle grouping by DataFrame column
+        function extractGroupArgs(group::Symbol, df::DataFrames.AbstractDataFrame, args...)
+            extractGroupArgs(collect(df[group]))
+        end
 
-#         # if a DataFrame is the first arg, lets swap symbols out for columns
-#         @recipe function f(df::DataFrames.AbstractDataFrame, args...)
-#             # if any of these attributes are symbols, swap out for the df column
-#             for k in (:fillrange, :line_z, :marker_z, :markersize, :ribbon, :weights, :xerror, :yerror)
-#                 if haskey(d, k) && isa(d[k], Symbol)
-#                     d[k] = collect(df[d[k]])
-#                 end
-#             end
+        # if a DataFrame is the first arg, lets swap symbols out for columns
+        @recipe function f(df::DataFrames.AbstractDataFrame, args...)
+            # if any of these attributes are symbols, swap out for the df column
+            for k in (:fillrange, :line_z, :marker_z, :markersize, :ribbon, :weights, :xerror, :yerror)
+                if haskey(d, k) && isa(d[k], Symbol)
+                    d[k] = collect(df[d[k]])
+                end
+            end
 
-#             # return a list of new arguments
-#             tuple(Any[handle_dfs(df, d, (i==1 ? "x" : i==2 ? "y" : "z"), arg) for (i,arg) in enumerate(args)]...)
-#         end
-#     end
-# end
+            # return a list of new arguments
+            tuple(Any[handle_dfs(df, d, (i==1 ? "x" : i==2 ? "y" : "z"), arg) for (i,arg) in enumerate(args)]...)
+        end
+    end
+end
 
 
 # ---------------------------------------------------------------------------
-
-# """
-# `apply_series_recipe` should take a processed series KW dict and break it up
-# into component parts.  For example, a box plot is made up of `shape` for the
-# boxes, `path` for the lines, and `scatter` for the outliers.
-#
-# Returns a Vector{KW}.
-# """
-# apply_series_recipe(d::KW, st) = KW[d]
 
 
 # for seriestype `line`, need to sort by x values
@@ -174,21 +160,6 @@ RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::Plot) = throw(MethodError("Un
 end
 @deps line path
 
-# @recipe function f(::Type{Val{:sticks}}, x, y, z)
-#     nx = length(x)
-#     n = 3nx
-#     newx, newy = zeros(n), zeros(n)
-#     for i=1:nx
-#         rng = 3i-2:3i
-#         newx[rng] = x[i]
-#         newy[rng] = [0., y[i], 0.]
-#     end
-#     x := newx
-#     y := newy
-#     seriestype := :path
-#     ()
-# end
-# @deps sticks path
 
 function hvline_limits(axis::Axis)
     vmin, vmax = axis_limits(axis)
@@ -897,53 +868,6 @@ end
 end
 @deps quiver shape path
 
-
-# ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-
-# function rotate(x::Real, y::Real, θ::Real; center = (0,0))
-#   cx = x - center[1]
-#   cy = y - center[2]
-#   xrot = cx * cos(θ) - cy * sin(θ)
-#   yrot = cy * cos(θ) + cx * sin(θ)
-#   xrot + center[1], yrot + center[2]
-# end
-#
-# # ---------------------------------------------------------------------------
-#
-# type EllipseRecipe <: PlotRecipe
-#   w::Float64
-#   h::Float64
-#   x::Float64
-#   y::Float64
-#   θ::Float64
-# end
-# EllipseRecipe(w,h,x,y) = EllipseRecipe(w,h,x,y,0)
-#
-# # return x,y coords of a rotated ellipse, centered at the origin
-# function rotatedEllipse(w, h, x, y, θ, rotθ)
-#   # # coord before rotation
-#   xpre = w * cos(θ)
-#   ypre = h * sin(θ)
-#
-#   # rotate and translate
-#   r = rotate(xpre, ypre, rotθ)
-#   x + r[1], y + r[2]
-# end
-#
-# function getRecipeXY(ep::EllipseRecipe)
-#   x, y = unzip([rotatedEllipse(ep.w, ep.h, ep.x, ep.y, u, ep.θ) for u in linspace(0,2π,100)])
-#   top = rotate(0, ep.h, ep.θ)
-#   right = rotate(ep.w, 0, ep.θ)
-#   linex = Float64[top[1], 0, right[1]] + ep.x
-#   liney = Float64[top[2], 0, right[2]] + ep.y
-#   Any[x, linex], Any[y, liney]
-# end
-#
-# function getRecipeArgs(ep::EllipseRecipe)
-#   [(:line, (3, [:dot :solid], [:red :blue], :path))]
-# end
 
 # -------------------------------------------------
 

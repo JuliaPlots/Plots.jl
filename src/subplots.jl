@@ -30,7 +30,7 @@ get_subplot(plt::Plot, i::Integer) = plt.subplots[i]
 get_subplot(plt::Plot, k) = plt.spmap[k]
 get_subplot(series::Series) = series.d[:subplot]
 
-get_subplot_index(plt::Plot, idx::Integer) = idx
+get_subplot_index(plt::Plot, idx::Integer) = Int(idx)
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(_ -> _ === sp, plt.subplots)
 
 series_list(sp::Subplot) = filter(series -> series.d[:subplot] === sp, sp.plt.series_list)
