@@ -1,6 +1,6 @@
 
 
-const _keyAliases = KW()
+const _keyAliases = Dict{Symbol,Symbol}()
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
@@ -11,7 +11,7 @@ function add_aliases(sym::Symbol, aliases::Symbol...)
     end
 end
 
-function add_non_underscore_aliases!(aliases::KW)
+function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k,v) in aliases
         s = string(k)
         if '_' in s
@@ -24,7 +24,7 @@ end
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
-const _axesAliases = KW(
+const _axesAliases = Dict{Symbol,Symbol}(
     :a => :auto,
     :l => :left,
     :r => :right
@@ -39,7 +39,7 @@ const _allTypes = vcat([
     :contour, :pie, :shape, :image
 ], _3dTypes)
 
-@compat const _typeAliases = KW(
+@compat const _typeAliases = Dict{Symbol,Symbol}(
     :n             => :none,
     :no            => :none,
     :l             => :line,
@@ -83,7 +83,7 @@ like_surface(seriestype::Symbol)   = seriestype in (:contour, :contourf, :contou
 
 is3d(seriestype::Symbol) = seriestype in _3dTypes
 is3d(series::Series) = is3d(series.d)
-is3d(d::KW) = trueOrAllTrue(is3d, d[:seriestype])
+is3d(d::KW) = trueOrAllTrue(is3d, Symbol(d[:seriestype]))
 
 is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
@@ -92,7 +92,7 @@ ispolar(series::Series) = ispolar(series.d[:subplot])
 # ------------------------------------------------------------
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-@compat const _styleAliases = KW(
+@compat const _styleAliases = Dict{Symbol,Symbol}(
     :a    => :auto,
     :s    => :solid,
     :d    => :dash,
@@ -101,7 +101,7 @@ const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 )
 
 const _allMarkers = vcat(:none, :auto, _shape_keys) #sort(collect(keys(_shapes))))
-@compat const _markerAliases = KW(
+@compat const _markerAliases = Dict{Symbol,Symbol}(
     :n            => :none,
     :no           => :none,
     :a            => :auto,
@@ -143,7 +143,7 @@ const _allMarkers = vcat(:none, :auto, _shape_keys) #sort(collect(keys(_shapes))
 )
 
 const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
-@compat const _scaleAliases = KW(
+@compat const _scaleAliases = Dict{Symbol,Symbol}(
     :none => :identity,
     :log  => :log10,
 )
@@ -330,7 +330,7 @@ autopick(notarr, idx::Integer) = notarr
 autopick_ignore_none_auto(arr::AVec, idx::Integer) = autopick(setdiff(arr, [:none, :auto]), idx)
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
-function aliasesAndAutopick(d::KW, sym::Symbol, aliases::KW, options::AVec, plotIndex::Int)
+function aliasesAndAutopick(d::KW, sym::Symbol, aliases::Dict{Symbol,Symbol}, options::AVec, plotIndex::Int)
     if d[sym] == :auto
         d[sym] = autopick_ignore_none_auto(options, plotIndex)
     elseif haskey(aliases, d[sym])
@@ -338,7 +338,7 @@ function aliasesAndAutopick(d::KW, sym::Symbol, aliases::KW, options::AVec, plot
     end
 end
 
-function aliases(aliasMap::KW, val)
+function aliases(aliasMap::Dict{Symbol,Symbol}, val)
     sortedkeys(filter((k,v)-> v==val, aliasMap))
 end
 
@@ -687,22 +687,7 @@ function preprocessArgs!(d::KW)
     if haskey(d, :colorbar)
         d[:colorbar] = convertLegendValue(d[:colorbar])
     end
-
-    # # handle subplot links
-    # if haskey(d, :link)
-    #     l = d[:link]
-    #     if isa(l, Bool)
-    #         d[:linkx] = l
-    #         d[:linky] = l
-    #     elseif isa(l, Function)
-    #         d[:linkx] = true
-    #         d[:linky] = true
-    #         d[:linkfunc] = l
-    #     else
-    #         warn("Unhandled/invalid link $l.  Should be a Bool or a function mapping (row,column) -> (linkx, linky), where linkx/y can be Bool or Void (nothing)")
-    #     end
-    #     delete!(d, :link)
-    # end
+    return
 end
 
 # -----------------------------------------------------------------------------
