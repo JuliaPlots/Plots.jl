@@ -1,105 +1,7 @@
 
-# getting ready to add the series... last update to subplot from anything
-# that might have been added during series recipes
-function _prepare_subplot{T}(plt::Plot{T}, d::KW)
-    st::Symbol = d[:seriestype]
-    sp::Subplot{T} = d[:subplot]
-    sp_idx = get_subplot_index(plt, sp)
-    _update_subplot_args(plt, sp, d, sp_idx, true)
 
-    st = _override_seriestype_check(d, st)
-
-    # change to a 3d projection for this subplot?
-    if is3d(st)
-        sp.attr[:projection] = "3d"
-    end
-
-    # initialize now that we know the first series type
-    if !haskey(sp.attr, :init)
-        _initialize_subplot(plt, sp)
-        sp.attr[:init] = true
-    end
-    sp
-end
-
-function _override_seriestype_check(d::KW, st::Symbol)
-    # do we want to override the series type?
-    if !is3d(st)
-        z = d[:z]
-        if !isa(z, Void) && (size(d[:x]) == size(d[:y]) == size(z))
-            st = (st == :scatter ? :scatter3d : :path3d)
-            d[:seriestype] = st
-        end
-    end
-    st
-end
-
-function _prepare_annotations(sp::Subplot, d::KW)
-    # strip out series annotations (those which are based on series x/y coords)
-    # and add them to the subplot attr
-    sp_anns = annotations(sp[:annotations])
-    anns = annotations(pop!(d, :series_annotations, []))
-    if length(anns) > 0
-        x, y = d[:x], d[:y]
-        nx, ny, na = map(length, (x,y,anns))
-        n = max(nx, ny, na)
-        anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(anns[mod1(i,na)])) for i=1:n]
-    end
-    sp.attr[:annotations] = vcat(sp_anns, anns)
-end
-
-function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
-    # adjust extrema and discrete info
-    if st == :image
-        w, h = size(d[:z])
-        expand_extrema!(sp[:xaxis], (0,w))
-        expand_extrema!(sp[:yaxis], (0,h))
-        sp[:yaxis].d[:flip] = true
-    elseif !(st in (:pie, :histogram, :histogram2d))
-        expand_extrema!(sp, d)
-    end
-end
-
-function _add_the_series(plt, d)
-    warnOnUnsupported_args(plt.backend, d)
-    warnOnUnsupported(plt.backend, d)
-    series = Series(d)
-    push!(plt.series_list, series)
-    _series_added(plt, series)
-end
-
-# -------------------------------------------------------------------------------
-
-# this method recursively applies series recipes when the seriestype is not supported
-# natively by the backend
-function _process_seriesrecipe(plt::Plot, d::KW)
-    # replace seriestype aliases
-    st = Symbol(d[:seriestype])
-    st = d[:seriestype] = get(_typeAliases, st, st)
-
-    # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
-    if st in supported_types()
-        sp = _prepare_subplot(plt, d)
-        _prepare_annotations(sp, d)
-        _expand_subplot_extrema(sp, d, st)
-        _add_the_series(plt, d)
-
-    else
-        # get a sub list of series for this seriestype
-        datalist = RecipesBase.apply_recipe(d, Val{st}, d[:x], d[:y], d[:z])
-
-        # assuming there was no error, recursively apply the series recipes
-        for data in datalist
-            if isa(data, RecipeData)
-                _process_seriesrecipe(plt, data.d)
-            else
-                warn("Unhandled recipe: $(data)")
-                break
-            end
-        end
-    end
-    nothing
-end
+# ------------------------------------------------------------------
+# preprocessing
 
 function command_idx(kw_list::AVec{KW}, kw::KW)
     Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
@@ -149,6 +51,62 @@ function _preprocess_args(d::KW, args, still_to_process::Vector{RecipeData})
     args
 end
 
+# ------------------------------------------------------------------
+# user recipes
+
+
+function _process_userrecipes(plt::Plot, d::KW, args)
+    still_to_process = RecipeData[]
+    args = _preprocess_args(d, args, still_to_process)
+
+    # for plotting recipes, swap out the args and update the parameter dictionary
+    # we are keeping a queue of series that still need to be processed.
+    # each pass through the loop, we pop one off and apply the recipe.
+    # the recipe will return a list a Series objects... the ones that are
+    # finished (no more args) get added to the kw_list, and the rest go into the queue
+    # for processing.
+    kw_list = KW[]
+    while !isempty(still_to_process)
+        # grab the first in line to be processed and pass it through apply_recipe
+        # to generate a list of RecipeData objects (data + attributes)
+        next_series = shift!(still_to_process)
+        rd_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
+        for recipedata in rd_list
+            # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
+            if !(typeof(recipedata) <: RecipeData)
+                error("Inputs couldn't be processed... expected RecipeData but got: $recipedata")
+            end
+
+            if isempty(recipedata.args)
+                _process_userrecipe(plt, kw_list, recipedata)
+            else
+                # args are non-empty, so there's still processing to do... add it back to the queue
+                push!(still_to_process, recipedata)
+            end
+        end
+    end
+
+    # don't allow something else to handle it
+    d[:smooth] = false
+    kw_list
+end
+
+function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeData)
+    # when the arg tuple is empty, that means there's nothing left to recursively
+    # process... finish up and add to the kw_list
+    kw = recipedata.d
+    _preprocess_userrecipe(kw)
+    warnOnUnsupported_scales(plt.backend, kw)
+
+    # add the plot index
+    plt.n += 1
+    kw[:series_plotindex] = plt.n
+
+    push!(kw_list, kw)
+    _add_errorbar_kw(kw_list, kw)
+    _add_smooth_kw(kw_list, kw)
+    return
+end
 
 function _preprocess_userrecipe(kw::KW)
     _add_markershape(kw)
@@ -207,58 +165,8 @@ function _add_smooth_kw(kw_list::Vector{KW}, kw::KW)
     end
 end
 
-function _process_userrecipes(plt::Plot, d::KW, args)
-    still_to_process = RecipeData[]
-    args = _preprocess_args(d, args, still_to_process)
-
-    # for plotting recipes, swap out the args and update the parameter dictionary
-    # we are keeping a queue of series that still need to be processed.
-    # each pass through the loop, we pop one off and apply the recipe.
-    # the recipe will return a list a Series objects... the ones that are
-    # finished (no more args) get added to the kw_list, and the rest go into the queue
-    # for processing.
-    kw_list = KW[]
-    while !isempty(still_to_process)
-        # grab the first in line to be processed and pass it through apply_recipe
-        # to generate a list of RecipeData objects (data + attributes)
-        next_series = shift!(still_to_process)
-        rd_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
-        for recipedata in rd_list
-            # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
-            if !(typeof(recipedata) <: RecipeData)
-                error("Inputs couldn't be processed... expected RecipeData but got: $recipedata")
-            end
-
-            if isempty(recipedata.args)
-                _process_userrecipe(plt, kw_list, recipedata)
-            else
-                # args are non-empty, so there's still processing to do... add it back to the queue
-                push!(still_to_process, recipedata)
-            end
-        end
-    end
-
-    # don't allow something else to handle it
-    d[:smooth] = false
-    kw_list
-end
-
-function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeData)
-    # when the arg tuple is empty, that means there's nothing left to recursively
-    # process... finish up and add to the kw_list
-    kw = recipedata.d
-    _preprocess_userrecipe(kw)
-    warnOnUnsupported_scales(plt.backend, kw)
-
-    # add the plot index
-    plt.n += 1
-    kw[:series_plotindex] = plt.n
-
-    push!(kw_list, kw)
-    _add_errorbar_kw(kw_list, kw)
-    _add_smooth_kw(kw_list, kw)
-    return
-end
+# ------------------------------------------------------------------
+# plot recipes
 
 # Grab the first in line to be processed and pass it through apply_recipe
 # to generate a list of RecipeData objects (data + attributes).
@@ -289,6 +197,10 @@ function _process_plotrecipe(plt::Plot, kw::KW, kw_list::Vector{KW}, still_to_pr
     end
     return
 end
+
+
+# ------------------------------------------------------------------
+# setup plot and subplot
 
 function _plot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
     # merge in anything meant for the Plot
@@ -374,4 +286,109 @@ function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
 
     # do we need to link any axes together?
     link_axes!(plt.layout, plt[:link])
+end
+
+# getting ready to add the series... last update to subplot from anything
+# that might have been added during series recipes
+function _prepare_subplot{T}(plt::Plot{T}, d::KW)
+    st::Symbol = d[:seriestype]
+    sp::Subplot{T} = d[:subplot]
+    sp_idx = get_subplot_index(plt, sp)
+    _update_subplot_args(plt, sp, d, sp_idx, true)
+
+    st = _override_seriestype_check(d, st)
+
+    # change to a 3d projection for this subplot?
+    if is3d(st)
+        sp.attr[:projection] = "3d"
+    end
+
+    # initialize now that we know the first series type
+    if !haskey(sp.attr, :init)
+        _initialize_subplot(plt, sp)
+        sp.attr[:init] = true
+    end
+    sp
+end
+
+# ------------------------------------------------------------------
+# series types
+
+function _override_seriestype_check(d::KW, st::Symbol)
+    # do we want to override the series type?
+    if !is3d(st)
+        z = d[:z]
+        if !isa(z, Void) && (size(d[:x]) == size(d[:y]) == size(z))
+            st = (st == :scatter ? :scatter3d : :path3d)
+            d[:seriestype] = st
+        end
+    end
+    st
+end
+
+function _prepare_annotations(sp::Subplot, d::KW)
+    # strip out series annotations (those which are based on series x/y coords)
+    # and add them to the subplot attr
+    sp_anns = annotations(sp[:annotations])
+    anns = annotations(pop!(d, :series_annotations, []))
+    if length(anns) > 0
+        x, y = d[:x], d[:y]
+        nx, ny, na = map(length, (x,y,anns))
+        n = max(nx, ny, na)
+        anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(anns[mod1(i,na)])) for i=1:n]
+    end
+    sp.attr[:annotations] = vcat(sp_anns, anns)
+end
+
+function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
+    # adjust extrema and discrete info
+    if st == :image
+        w, h = size(d[:z])
+        expand_extrema!(sp[:xaxis], (0,w))
+        expand_extrema!(sp[:yaxis], (0,h))
+        sp[:yaxis].d[:flip] = true
+    elseif !(st in (:pie, :histogram, :histogram2d))
+        expand_extrema!(sp, d)
+    end
+end
+
+function _add_the_series(plt, d)
+    warnOnUnsupported_args(plt.backend, d)
+    warnOnUnsupported(plt.backend, d)
+    series = Series(d)
+    push!(plt.series_list, series)
+    _series_added(plt, series)
+end
+
+# -------------------------------------------------------------------------------
+
+# this method recursively applies series recipes when the seriestype is not supported
+# natively by the backend
+function _process_seriesrecipe(plt::Plot, d::KW)
+    # replace seriestype aliases
+    st = Symbol(d[:seriestype])
+    st = d[:seriestype] = get(_typeAliases, st, st)
+
+    # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
+    if st in supported_types()
+        sp = _prepare_subplot(plt, d)
+        _prepare_annotations(sp, d)
+        _expand_subplot_extrema(sp, d, st)
+        _add_the_series(plt, d)
+
+    else
+        # get a sub list of series for this seriestype
+        datalist = RecipesBase.apply_recipe(d, Val{st}, d[:x], d[:y], d[:z])
+
+        # assuming there was no error, recursively apply the series recipes
+        for data in datalist
+            if isa(data, RecipeData)
+                _process_seriesrecipe(plt, data.d)
+            else
+                warn("Unhandled recipe: $(data)")
+                break
+            end
+        end
+    end
+    nothing
 end

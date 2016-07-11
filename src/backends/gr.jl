@@ -640,7 +640,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # recompute data
         if typeof(z) <: Surface
-        # if st in (:contour, :surface, :wireframe)
+            if st == :heatmap #&& size(z.surf) == (length(y), length(x))
+                expand_extrema!(sp[:xaxis], (x[1]-0.5*(x[2]-x[1]), x[end]+0.5*(x[end]-x[end-1])))
+                expand_extrema!(sp[:yaxis], (y[1]-0.5*(y[2]-y[1]), y[end]+0.5*(y[end]-y[end-1])))
+            #     # coords are centers... turn into edges
+            #     xd = diff(x)
+            #     x = vcat(x[1]-0.5xd[1], x[1]+xd, x[end]+0.5xd[end])
+            #     yd = diff(y)
+            #     y = vcat(y[1]-0.5yd[1], y[1]+yd, y[end]+0.5yd[end])
+            end
             z = vec(transpose_z(series, z.surf, false))
         elseif ispolar(sp)
             if frng != nothing
@@ -718,10 +726,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             cmap && gr_colorbar(sp)
 
         elseif st == :heatmap
-            z = vec(transpose_z(series, z.surf, false))
+            # z = vec(transpose_z(series, z.surf, false))
             zmin, zmax = gr_lims(zaxis, true)
             GR.setspace(zmin, zmax, 0, 90)
-            GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
+            # GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
+            GR.surface(x, y, z, GR.OPTION_HEATMAP)
             cmap && gr_colorbar(sp)
 
         elseif st in (:path3d, :scatter3d)
