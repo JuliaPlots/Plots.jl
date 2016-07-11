@@ -639,7 +639,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         frng = series[:fillrange]
 
         # recompute data
-        if st in (:contour, :surface, :wireframe)
+        if typeof(z) <: Surface
+        # if st in (:contour, :surface, :wireframe)
             z = vec(transpose_z(series, z.surf, false))
         elseif ispolar(sp)
             if frng != nothing
@@ -705,7 +706,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st in [:surface, :wireframe]
             if st == :surface
-                GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
+                if length(x) == length(y) == length(z)
+                    GR.trisurface(x, y, z)
+                else
+                    GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
+                end
             else
                 GR.setfillcolorind(0)
                 GR.surface(x, y, z, GR.OPTION_FILLED_MESH)
