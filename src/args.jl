@@ -585,14 +585,15 @@ end
 
 
 function processFillArg(d::KW, arg)
+    fr = get(d, :fillrange, 0)
     if typeof(arg) <: Brush
-        arg.size  == nothing || (d[:fillrange] = arg.size)
+        arg.size  == nothing || (fr = arg.size)
         arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
     # fillrange function
     elseif allFunctions(arg)
-        d[:fillrange] = arg
+        fr = arg
 
     # fillalpha
     elseif allAlphas(arg)
@@ -600,8 +601,10 @@ function processFillArg(d::KW, arg)
 
     elseif !handleColors!(d, arg, :fillcolor)
 
-        d[:fillrange] = arg
+        fr = arg
     end
+    d[:fillrange] = fr
+    return    
 end
 
 _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
@@ -1087,6 +1090,12 @@ function ensure_gradient!(d::KW, csym::Symbol, asym::Symbol)
     end
 end
 
+function _replace_linewidth(d::KW)
+    # get a good default linewidth... 0 for surface and heatmaps
+    if get(d, :linewidth, :auto) == :auto
+        d[:linewidth] = (get(d, :seriestype, :path) in (:surface,:heatmap,:image) ? 0 : 1)
+    end
+end
 
 function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     pkg = plt.backend
