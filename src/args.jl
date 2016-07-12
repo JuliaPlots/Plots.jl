@@ -809,6 +809,7 @@ function convertLegendValue(val::Symbol)
 end
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Void) = :none
+convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
 # -----------------------------------------------------------------------------
 
