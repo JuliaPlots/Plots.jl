@@ -13,7 +13,9 @@ try
 end
 
 
-using Plots, FactCheck
+using Plots
+using StatPlots
+using FactCheck
 using Glob
 
 default(size=(500,300))

@@ -101,47 +101,47 @@ num_series(x) = 1
 RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::Plot) = throw(MethodError("Unmatched plot recipe: $T"))
 
 
-# TODO: remove when StatPlots is ready
-if is_installed("DataFrames")
-    @eval begin
-        import DataFrames
+# # TODO: remove when StatPlots is ready
+# if is_installed("DataFrames")
+#     @eval begin
+#         import DataFrames
 
-        # if it's one symbol, set the guide and return the column
-        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, sym::Symbol)
-            get!(d, Symbol(letter * "guide"), string(sym))
-            collect(df[sym])
-        end
+#         # if it's one symbol, set the guide and return the column
+#         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, sym::Symbol)
+#             get!(d, Symbol(letter * "guide"), string(sym))
+#             collect(df[sym])
+#         end
 
-        # if it's an array of symbols, set the labels and return a Vector{Any} of columns
-        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, syms::AbstractArray{Symbol})
-            get!(d, :label, reshape(syms, 1, length(syms)))
-            Any[collect(df[s]) for s in syms]
-        end
+#         # if it's an array of symbols, set the labels and return a Vector{Any} of columns
+#         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, syms::AbstractArray{Symbol})
+#             get!(d, :label, reshape(syms, 1, length(syms)))
+#             Any[collect(df[s]) for s in syms]
+#         end
 
-        # for anything else, no-op
-        function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, anything)
-            anything
-        end
+#         # for anything else, no-op
+#         function handle_dfs(df::DataFrames.AbstractDataFrame, d::KW, letter, anything)
+#             anything
+#         end
 
-        # handle grouping by DataFrame column
-        function extractGroupArgs(group::Symbol, df::DataFrames.AbstractDataFrame, args...)
-            extractGroupArgs(collect(df[group]))
-        end
+#         # handle grouping by DataFrame column
+#         function extractGroupArgs(group::Symbol, df::DataFrames.AbstractDataFrame, args...)
+#             extractGroupArgs(collect(df[group]))
+#         end
 
-        # if a DataFrame is the first arg, lets swap symbols out for columns
-        @recipe function f(df::DataFrames.AbstractDataFrame, args...)
-            # if any of these attributes are symbols, swap out for the df column
-            for k in (:fillrange, :line_z, :marker_z, :markersize, :ribbon, :weights, :xerror, :yerror)
-                if haskey(d, k) && isa(d[k], Symbol)
-                    d[k] = collect(df[d[k]])
-                end
-            end
+#         # if a DataFrame is the first arg, lets swap symbols out for columns
+#         @recipe function f(df::DataFrames.AbstractDataFrame, args...)
+#             # if any of these attributes are symbols, swap out for the df column
+#             for k in (:fillrange, :line_z, :marker_z, :markersize, :ribbon, :weights, :xerror, :yerror)
+#                 if haskey(d, k) && isa(d[k], Symbol)
+#                     d[k] = collect(df[d[k]])
+#                 end
+#             end
 
-            # return a list of new arguments
-            tuple(Any[handle_dfs(df, d, (i==1 ? "x" : i==2 ? "y" : "z"), arg) for (i,arg) in enumerate(args)]...)
-        end
-    end
-end
+#             # return a list of new arguments
+#             tuple(Any[handle_dfs(df, d, (i==1 ? "x" : i==2 ? "y" : "z"), arg) for (i,arg) in enumerate(args)]...)
+#         end
+#     end
+# end
 
 
 # ---------------------------------------------------------------------------
@@ -524,179 +524,179 @@ end
 
 # note: don't add dependencies because this really isn't a drop-in replacement
 
-# TODO: move boxplots and violin plots to StatPlots when it's ready
+# # TODO: move boxplots and violin plots to StatPlots when it's ready
 
-# ---------------------------------------------------------------------------
-# Box Plot
+# # ---------------------------------------------------------------------------
+# # Box Plot
 
-const _box_halfwidth = 0.4
+# const _box_halfwidth = 0.4
 
-notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
+# notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
 
 
-@recipe function f(::Type{Val{:boxplot}}, x, y, z; notch=false, range=1.5)
-    xsegs, ysegs = Segments(), Segments()
-    glabels = sort(collect(unique(x)))
-    warning = false
-    outliers_x, outliers_y = zeros(0), zeros(0)
-    for (i,glabel) in enumerate(glabels)
-        # filter y
-        values = y[filter(i -> cycle(x,i) == glabel, 1:length(y))]
+# @recipe function f(::Type{Val{:boxplot}}, x, y, z; notch=false, range=1.5)
+#     xsegs, ysegs = Segments(), Segments()
+#     glabels = sort(collect(unique(x)))
+#     warning = false
+#     outliers_x, outliers_y = zeros(0), zeros(0)
+#     for (i,glabel) in enumerate(glabels)
+#         # filter y
+#         values = y[filter(i -> cycle(x,i) == glabel, 1:length(y))]
 
-        # compute quantiles
-        q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
+#         # compute quantiles
+#         q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
         
-        # notch
-        n = notch_width(q2, q4, length(values))
+#         # notch
+#         n = notch_width(q2, q4, length(values))
 
-        # warn on inverted notches?
-        if notch && !warning && ( (q2>(q3-n)) || (q4<(q3+n)) )
-            warn("Boxplot's notch went outside hinges. Set notch to false.")
-            warning = true # Show the warning only one time
-        end
+#         # warn on inverted notches?
+#         if notch && !warning && ( (q2>(q3-n)) || (q4<(q3+n)) )
+#             warn("Boxplot's notch went outside hinges. Set notch to false.")
+#             warning = true # Show the warning only one time
+#         end
 
-        # make the shape
-        center = discrete_value!(d[:subplot][:xaxis], glabel)[1]
-        hw = d[:bar_width] == nothing ? _box_halfwidth : 0.5cycle(d[:bar_width], i)
-        l, m, r = center - hw, center, center + hw
+#         # make the shape
+#         center = discrete_value!(d[:subplot][:xaxis], glabel)[1]
+#         hw = d[:bar_width] == nothing ? _box_halfwidth : 0.5cycle(d[:bar_width], i)
+#         l, m, r = center - hw, center, center + hw
         
-        # internal nodes for notches
-        L, R = center - 0.5 * hw, center + 0.5 * hw
+#         # internal nodes for notches
+#         L, R = center - 0.5 * hw, center + 0.5 * hw
         
-        # outliers
-        if Float64(range) != 0.0  # if the range is 0.0, the whiskers will extend to the data
-            limit = range*(q4-q2)
-            inside = Float64[]
-            for value in values
-                if (value < (q2 - limit)) || (value > (q4 + limit))
-                    push!(outliers_y, value)
-                    push!(outliers_x, center)
-                else
-                    push!(inside, value)
-                end
-            end
-            # change q1 and q5 to show outliers
-            # using maximum and minimum values inside the limits
-            q1, q5 = extrema(inside)
-        end
+#         # outliers
+#         if Float64(range) != 0.0  # if the range is 0.0, the whiskers will extend to the data
+#             limit = range*(q4-q2)
+#             inside = Float64[]
+#             for value in values
+#                 if (value < (q2 - limit)) || (value > (q4 + limit))
+#                     push!(outliers_y, value)
+#                     push!(outliers_x, center)
+#                 else
+#                     push!(inside, value)
+#                 end
+#             end
+#             # change q1 and q5 to show outliers
+#             # using maximum and minimum values inside the limits
+#             q1, q5 = extrema(inside)
+#         end
 
-        # Box
-        if notch
-            push!(xsegs, m, l, r, m, m)       # lower T
-            push!(xsegs, l, l, L, R, r, r, l) # lower box
-            push!(xsegs, l, l, L, R, r, r, l) # upper box
-            push!(xsegs, m, l, r, m, m)       # upper T
+#         # Box
+#         if notch
+#             push!(xsegs, m, l, r, m, m)       # lower T
+#             push!(xsegs, l, l, L, R, r, r, l) # lower box
+#             push!(xsegs, l, l, L, R, r, r, l) # upper box
+#             push!(xsegs, m, l, r, m, m)       # upper T
 
-            push!(ysegs, q1, q1, q1, q1, q2)             # lower T
-            push!(ysegs, q2, q3-n, q3, q3, q3-n, q2, q2) # lower box
-            push!(ysegs, q4, q3+n, q3, q3, q3+n, q4, q4) # upper box
-            push!(ysegs, q5, q5, q5, q5, q4)             # upper T
-        else
-            push!(xsegs, m, l, r, m, m)         # lower T
-            push!(xsegs, l, l, r, r, l)         # lower box
-            push!(xsegs, l, l, r, r, l)         # upper box
-            push!(xsegs, m, l, r, m, m)         # upper T
+#             push!(ysegs, q1, q1, q1, q1, q2)             # lower T
+#             push!(ysegs, q2, q3-n, q3, q3, q3-n, q2, q2) # lower box
+#             push!(ysegs, q4, q3+n, q3, q3, q3+n, q4, q4) # upper box
+#             push!(ysegs, q5, q5, q5, q5, q4)             # upper T
+#         else
+#             push!(xsegs, m, l, r, m, m)         # lower T
+#             push!(xsegs, l, l, r, r, l)         # lower box
+#             push!(xsegs, l, l, r, r, l)         # upper box
+#             push!(xsegs, m, l, r, m, m)         # upper T
 
-            push!(ysegs, q1, q1, q1, q1, q2)    # lower T
-            push!(ysegs, q2, q3, q3, q2, q2)    # lower box
-            push!(ysegs, q4, q3, q3, q4, q4)    # upper box
-            push!(ysegs, q5, q5, q5, q5, q4)    # upper T
-        end
-    end
+#             push!(ysegs, q1, q1, q1, q1, q2)    # lower T
+#             push!(ysegs, q2, q3, q3, q2, q2)    # lower box
+#             push!(ysegs, q4, q3, q3, q4, q4)    # upper box
+#             push!(ysegs, q5, q5, q5, q5, q4)    # upper T
+#         end
+#     end
 
-    # Outliers
-    @series begin
-        seriestype  := :scatter
-        markershape := :circle
-        markercolor := d[:fillcolor]
-        markeralpha := d[:fillalpha]
-        markerstrokecolor := d[:linecolor]
-        markerstrokealpha := d[:linealpha]
-        x           := outliers_x
-        y           := outliers_y
-        primary     := false
-        ()
-    end
+#     # Outliers
+#     @series begin
+#         seriestype  := :scatter
+#         markershape := :circle
+#         markercolor := d[:fillcolor]
+#         markeralpha := d[:fillalpha]
+#         markerstrokecolor := d[:linecolor]
+#         markerstrokealpha := d[:linealpha]
+#         x           := outliers_x
+#         y           := outliers_y
+#         primary     := false
+#         ()
+#     end
 
-    seriestype := :shape
-    x := xsegs.pts
-    y := ysegs.pts
-    ()
-end
-@deps boxplot shape scatter
+#     seriestype := :shape
+#     x := xsegs.pts
+#     y := ysegs.pts
+#     ()
+# end
+# @deps boxplot shape scatter
 
-# ---------------------------------------------------------------------------
-# Violin Plot
+# # ---------------------------------------------------------------------------
+# # Violin Plot
 
-const _violin_warned = [false]
+# const _violin_warned = [false]
 
-# if the user has KernelDensity installed, use this for violin plots.
-# otherwise, just use a histogram
-if is_installed("KernelDensity")
-    @eval import KernelDensity
-    @eval function violin_coords(y; trim::Bool=false)
-        kd = KernelDensity.kde(y, npoints = 200)
-        if trim
-            xmin, xmax = extrema(y)
-            inside = Bool[ xmin <= x <= xmax for x in kd.x]
-            return(kd.density[inside], kd.x[inside])
-        end
-        kd.density, kd.x
-    end
-else
-    @eval function violin_coords(y; trim::Bool=false)
-        if !_violin_warned[1]
-            warn("Install the KernelDensity package for best results.")
-            _violin_warned[1] = true
-        end
-        edges, widths = my_hist(y, 10)
-        centers = 0.5 * (edges[1:end-1] + edges[2:end])
-        ymin, ymax = extrema(y)
-        vcat(0.0, widths, 0.0), vcat(ymin, centers, ymax)
-    end
-end
+# # if the user has KernelDensity installed, use this for violin plots.
+# # otherwise, just use a histogram
+# if is_installed("KernelDensity")
+#     @eval import KernelDensity
+#     @eval function violin_coords(y; trim::Bool=false)
+#         kd = KernelDensity.kde(y, npoints = 200)
+#         if trim
+#             xmin, xmax = extrema(y)
+#             inside = Bool[ xmin <= x <= xmax for x in kd.x]
+#             return(kd.density[inside], kd.x[inside])
+#         end
+#         kd.density, kd.x
+#     end
+# else
+#     @eval function violin_coords(y; trim::Bool=false)
+#         if !_violin_warned[1]
+#             warn("Install the KernelDensity package for best results.")
+#             _violin_warned[1] = true
+#         end
+#         edges, widths = my_hist(y, 10)
+#         centers = 0.5 * (edges[1:end-1] + edges[2:end])
+#         ymin, ymax = extrema(y)
+#         vcat(0.0, widths, 0.0), vcat(ymin, centers, ymax)
+#     end
+# end
 
 
-@recipe function f(::Type{Val{:violin}}, x, y, z; trim=true)
-    xsegs, ysegs = Segments(), Segments()
-    glabels = sort(collect(unique(x)))
-    for glabel in glabels
-        widths, centers = violin_coords(y[filter(i -> cycle(x,i) == glabel, 1:length(y))], trim=trim)
-        isempty(widths) && continue
+# @recipe function f(::Type{Val{:violin}}, x, y, z; trim=true)
+#     xsegs, ysegs = Segments(), Segments()
+#     glabels = sort(collect(unique(x)))
+#     for glabel in glabels
+#         widths, centers = violin_coords(y[filter(i -> cycle(x,i) == glabel, 1:length(y))], trim=trim)
+#         isempty(widths) && continue
 
-        # normalize
-        widths = _box_halfwidth * widths / maximum(widths)
+#         # normalize
+#         widths = _box_halfwidth * widths / maximum(widths)
 
-        # make the violin
-        xcenter = discrete_value!(d[:subplot][:xaxis], glabel)[1]
-        xcoords = vcat(widths, -reverse(widths)) + xcenter
-        ycoords = vcat(centers, reverse(centers))
+#         # make the violin
+#         xcenter = discrete_value!(d[:subplot][:xaxis], glabel)[1]
+#         xcoords = vcat(widths, -reverse(widths)) + xcenter
+#         ycoords = vcat(centers, reverse(centers))
 
-        push!(xsegs, xcoords)
-        push!(ysegs, ycoords)
-    end
+#         push!(xsegs, xcoords)
+#         push!(ysegs, ycoords)
+#     end
 
-    seriestype := :shape
-    x := xsegs.pts
-    y := ysegs.pts
-    ()
-end
-@deps violin shape
+#     seriestype := :shape
+#     x := xsegs.pts
+#     y := ysegs.pts
+#     ()
+# end
+# @deps violin shape
 
-# ---------------------------------------------------------------------------
-# density
+# # ---------------------------------------------------------------------------
+# # density
 
-@recipe function f(::Type{Val{:density}}, x, y, z; trim=false)
-    newx, newy = violin_coords(y, trim=trim)
-    if isvertical(d)
-        newx, newy = newy, newx
-    end
-    x := newx
-    y := newy
-    seriestype := :path
-    ()
-end
-@deps density path
+# @recipe function f(::Type{Val{:density}}, x, y, z; trim=false)
+#     newx, newy = violin_coords(y, trim=trim)
+#     if isvertical(d)
+#         newx, newy = newy, newx
+#     end
+#     x := newx
+#     y := newy
+#     seriestype := :path
+#     ()
+# end
+# @deps density path
 
 # ---------------------------------------------------------------------------
 # contourf - filled contours

@@ -1,7 +1,8 @@
 julia 0.4
 
 RecipesBase
-Colors
+PlotUtils
+StatPlots
 Reexport
 Measures
 FactCheck
