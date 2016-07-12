@@ -17,8 +17,8 @@ Pkg.clone("https://github.com/JuliaStats/KernelDensity.jl.git")
 # Pkg.checkout("RecipesBase")
 Pkg.clone("VisualRegressionTests")
 
-# ENV["PYTHON"] = ""
-# Pkg.add("PyPlot")
-# Pkg.build("PyPlot")
+ENV["PYTHON"] = ""
+Pkg.add("PyPlot")
+Pkg.build("PyPlot")
 
 Pkg.test("Plots"; coverage=false)

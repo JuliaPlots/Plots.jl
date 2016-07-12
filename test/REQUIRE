@@ -7,7 +7,6 @@ Reexport
 Measures
 FactCheck
 Images
-PyPlot
 @osx QuartzImageIO
 GR
 DataFrames
