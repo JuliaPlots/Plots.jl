@@ -8,7 +8,7 @@ Pkg.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git")
 
 # Pkg.clone("https://github.com/JuliaStats/KernelDensity.jl.git")
 
-Pkg.checkout("StatPlots")
+Pkg.clone("StatPlots")
 
 # Pkg.clone("https://github.com/JunoLab/Blink.jl.git")
 # Pkg.build("Blink")
