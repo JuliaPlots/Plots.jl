@@ -690,6 +690,13 @@ function preprocessArgs!(d::KW)
     if haskey(d, :colorbar)
         d[:colorbar] = convertLegendValue(d[:colorbar])
     end
+
+    # warnings for moved recipes
+    st = get(d, :seriestype, :path)
+    if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatPlots)
+        warn("seriestype $st has been moved to StatPlots.  To use: \`Pkg.add(\"StatPlots\"); using StatPlots\`")
+    end
+
     return
 end
 

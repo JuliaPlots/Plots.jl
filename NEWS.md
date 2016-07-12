@@ -7,7 +7,32 @@
 
 ---
 
-## 0.7 (current master/dev)
+## 0.8 (current master/dev)
+
+#### 0.8.0
+
+- added dependency on PlotUtils
+- BREAKING: removed DataFrames support (now in StatPlots.jl)
+- BREAKING: removed boxplot/violin/density recipes (now in StatPlots.jl)
+- GR:
+    - inline iterm2 support
+    - trisurface support
+    - heatmap fix
+- PyPlot:
+    - ijulia display fix
+- GLVisualize:
+    - first try with shapes
+- iter_segments improvements
+- bar_width support
+- horizontal bars
+- improve tick display
+- better shape handling in pyplot, plotly
+- improved padding calcs
+- internal reorg of _plots method, add pipeline.jl
+
+---
+
+## 0.7
 
 #### 0.7.5
 
