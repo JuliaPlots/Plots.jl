@@ -369,6 +369,11 @@ function _process_seriesrecipe(plt::Plot, d::KW)
     st = Symbol(d[:seriestype])
     st = d[:seriestype] = get(_typeAliases, st, st)
 
+    # shapes shouldn't have fillrange set
+    if d[:seriestype] == :shape
+        d[:fillrange] = nothing
+    end
+
     # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
     if st in supported_types()
         sp = _prepare_subplot(plt, d)
