@@ -328,7 +328,7 @@ end
 const _gr_point_mult = zeros(1)
 
 # set the font attributes... assumes _gr_point_mult has been populated already
-function gr_set_font(f::Font)
+function gr_set_font(f::Font; halign = f.halign, valign = f.valign)
     family = lowercase(f.family)
     GR.setcharheight(_gr_point_mult[1] * f.pointsize)
     GR.setcharup(sin(f.rotation), cos(f.rotation))
@@ -336,7 +336,7 @@ function gr_set_font(f::Font)
         GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
     end
     gr_set_textcolor(f.color)
-    GR.settextalign(gr_halign[f.halign], gr_valign[f.valign])
+    GR.settextalign(gr_halign[halign], gr_valign[valign])
 end
 
 # --------------------------------------------------------------------------------------
@@ -448,7 +448,7 @@ function gr_display(plt::Plot)
 
     # update point mult
     px_per_pt = px / pt
-    _gr_point_mult[1] = px_per_pt / h
+    _gr_point_mult[1] = px_per_pt / max(h,w)
 
     # subplots:
     for sp in plt.subplots
@@ -561,26 +561,55 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_polaraxes(rmin, rmax)
 
     elseif draw_axes
+        if xmax > xmin && ymax > ymin
+            GR.setwindow(xmin, xmax, ymin, ymax)
+        end
+
+        xticks, yticks, spine_segs, grid_segs = axis_drawing_info(sp)
+        # @show xticks yticks spine_segs grid_segs
+
         # draw the grid lines
-        # TODO: control line style/width
-        # GR.setlinetype(GR.LINETYPE_DOTTED)
         if sp[:grid]
-            gr_set_linecolor(sp[:foreground_color_grid])
-            GR.grid(xtick, ytick, 0, 0, majorx, majory)
+            # gr_set_linecolor(sp[:foreground_color_grid])
+            # GR.grid(xtick, ytick, 0, 0, majorx, majory)
+            gr_set_line(1, :dot, sp[:foreground_color_grid])
+            GR.settransparency(0.5)
+            gr_polyline(coords(grid_segs)...)
+        end
+        GR.settransparency(1.0)
+
+        # spine (border) and tick marks
+        gr_set_line(1, :solid, sp[:xaxis][:foreground_color_axis])
+        gr_polyline(coords(spine_segs)...)
+
+        # x labels
+        gr_set_font(sp[:xaxis][:tickfont], valign = :top)
+        for (cv, dv) in zip(xticks...)
+            xi, yi = GR.wctondc(cv, ymin)
+            # @show cv dv ymin xi yi
+            gr_text(xi, yi-0.01, string(dv))
         end
 
-        window_diag = sqrt(gr_view_xdiff()^2 + gr_view_ydiff()^2)
-        ticksize = 0.0075 * window_diag
-        if outside_ticks
-            ticksize = -ticksize
+        # y labels
+        gr_set_font(sp[:yaxis][:tickfont], halign = :right)
+        for (cv, dv) in zip(yticks...)
+            xi, yi = GR.wctondc(xmin, cv)
+            # @show cv dv xmin xi yi
+            gr_text(xi-0.01, yi, string(dv))
         end
-        # TODO: this should be done for each axis separately
-        gr_set_linecolor(xaxis[:foreground_color_axis])
 
-        x1, x2 = xaxis[:flip] ? (xmax,xmin) : (xmin,xmax)
-        y1, y2 = yaxis[:flip] ? (ymax,ymin) : (ymin,ymax)
-        GR.axes(xtick, ytick, x1, y1, 1, 1, ticksize)
-        GR.axes(xtick, ytick, x2, y2, -1, -1, -ticksize)
+        # window_diag = sqrt(gr_view_xdiff()^2 + gr_view_ydiff()^2)
+        # ticksize = 0.0075 * window_diag
+        # if outside_ticks
+        #     ticksize = -ticksize
+        # end
+        # # TODO: this should be done for each axis separately
+        # gr_set_linecolor(xaxis[:foreground_color_axis])
+
+        # x1, x2 = xaxis[:flip] ? (xmax,xmin) : (xmin,xmax)
+        # y1, y2 = yaxis[:flip] ? (ymax,ymin) : (ymin,ymax)
+        # GR.axes(xtick, ytick, x1, y1, 1, 1, ticksize)
+        # GR.axes(xtick, ytick, x2, y2, -1, -1, -ticksize)
     end
     # end
 

@@ -81,16 +81,6 @@ export
     arrow,
     Segments,
 
-    # colorscheme,
-    # ColorScheme,
-    # ColorGradient,
-    # ColorVector,
-    # ColorWrapper,
-    # ColorFunction,
-    # ColorZFunction,
-    # getColor,
-    # getColorZ,
-
     debugplots,
 
     supported_args,
@@ -109,6 +99,7 @@ export
 
     test_examples,
     iter_segments,
+    coords,
 
     translate,
     translate!,

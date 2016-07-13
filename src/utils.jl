@@ -138,24 +138,41 @@ end
 # ---------------------------------------------------------------
 
 
-type Segments
-    pts::Vector{Float64}
+type Segments{T}
+    pts::Vector{T}
 end
 
-Segments() = Segments(zeros(0))
+# Segments() = Segments{Float64}(zeros(0))
 
-function Base.push!(segments::Segments, vs...)
-    push!(segments.pts, NaN)
+Segments() = Segments(Float64)
+Segments{T}(::Type{T}) = Segments(T[])
+Segments(p::Int) = Segments(NTuple{2,Float64}[])
+
+
+# Segments() = Segments(zeros(0))
+
+to_nan(::Type{Float64}) = NaN
+to_nan(::Type{NTuple{2,Float64}}) = (NaN, NaN)
+
+coords(segs::Segments{Float64}) = segs.pts
+coords(segs::Segments{NTuple{2,Float64}}) = Float64[p[1] for p in segs.pts], Float64[p[2] for p in segs.pts]
+
+function Base.push!{T}(segments::Segments{T}, vs...)
+    if !isempty(segments.pts)
+        push!(segments.pts, to_nan(T))
+    end
     for v in vs
-        push!(segments.pts, v)
+        push!(segments.pts, convert(T,v))
     end
     segments
 end
 
-function Base.push!(segments::Segments, vs::AVec)
-    push!(segments.pts, NaN)
+function Base.push!{T}(segments::Segments{T}, vs::AVec)
+    if !isempty(segments.pts)
+        push!(segments.pts, to_nan(T))
+    end
     for v in vs
-        push!(segments.pts, v)
+        push!(segments.pts, convert(T,v))
     end
     segments
 end

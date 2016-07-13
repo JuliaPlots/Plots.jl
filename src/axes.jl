@@ -117,21 +117,29 @@ Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.d, v, ks...)
 Base.haskey(axis::Axis, k::Symbol) = haskey(axis.d, k)
 Base.extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
-# get discrete ticks, or not
+# return (continuous_values, discrete_values) for the ticks on this axis
 function get_ticks(axis::Axis)
     ticks = axis[:ticks]
     dvals = axis[:discrete_values]
-    if !isempty(dvals) && ticks == :auto
-        cv, dv = axis[:continuous_values], dvals
-        # TODO: better/smarter cutoff values for sampling ticks
-        if length(cv) > 30
-            rng = Int[round(Int,i) for i in linspace(1, length(cv), 15)]
-            cv[rng], dv[rng]
-        else
-            cv, dv
-        end
-    else
+    cv, dv = if !isempty(dvals) && ticks == :auto
+        # discrete ticks...
+        axis[:continuous_values], dvals
+    elseif ticks == :auto
+        cv = optimize_ticks(map(Float64, axis_limits(axis))..., k_max=5)[1]
+        cv, cv
+    elseif typeof(ticks) <: NTuple{2}
         ticks
+    else
+        error("Unknown ticks type in get_ticks: $(typeof(ticks))")
+    end
+    # @show ticks dvals cv dv
+
+    # TODO: better/smarter cutoff values for sampling ticks
+    if length(cv) > 30
+        rng = Int[round(Int,i) for i in linspace(1, length(cv), 15)]
+        cv[rng], dv[rng]
+    else
+        cv, dv
     end
 end
 
@@ -339,3 +347,39 @@ function pie_labels(sp::Subplot, series::Series)
         d[:x]
     end
 end
+
+# -------------------------------------------------------------------------
+
+# compute the line segments which should be drawn for this axis
+function axis_drawing_info(sp::Subplot)
+    xaxis, yaxis = sp[:xaxis], sp[:yaxis]
+    xmin, xmax = axis_limits(xaxis)
+    ymin, ymax = axis_limits(yaxis)
+    xticks = get_ticks(xaxis)
+    yticks = get_ticks(yaxis)
+    spine_segs = Segments(2)
+    grid_segs = Segments(2)
+
+    # x axis
+    ticksz = 0.015 * (ymax - ymin)
+    push!(spine_segs, (xmin,ymin), (xmax,ymin)) # bottom spine
+    push!(spine_segs, (xmin,ymax), (xmax,ymax)) # top spine
+    for xtick in xticks[1]
+        push!(spine_segs, (xtick, ymin),        (xtick, ymin+ticksz)) # bottom tick
+        push!(grid_segs,  (xtick, ymin+ticksz), (xtick, ymax-ticksz)) # vertical grid
+        push!(spine_segs, (xtick, ymax),        (xtick, ymax-ticksz)) # top tick
+    end
+
+    # y axis
+    ticksz = 0.015 * (xmax - xmin)
+    push!(spine_segs, (xmin,ymin), (xmin,ymax)) # left spine
+    push!(spine_segs, (xmax,ymin), (xmax,ymax)) # right spine
+    for ytick in yticks[1]
+        push!(spine_segs, (xmin, ytick),        (xmin+ticksz, ytick)) # left tick
+        push!(grid_segs,  (xmin+ticksz, ytick), (xmax-ticksz, ytick)) # horizontal grid
+        push!(spine_segs, (xmax, ytick),        (xmax-ticksz, ytick)) # right tick
+    end
+
+    xticks, yticks, spine_segs, grid_segs
+end
+
