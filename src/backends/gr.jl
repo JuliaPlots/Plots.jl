@@ -328,14 +328,14 @@ end
 const _gr_point_mult = zeros(1)
 
 # set the font attributes... assumes _gr_point_mult has been populated already
-function gr_set_font(f::Font; halign = f.halign, valign = f.valign)
+function gr_set_font(f::Font; halign = f.halign, valign = f.valign, color = f.color)
     family = lowercase(f.family)
     GR.setcharheight(_gr_point_mult[1] * f.pointsize)
     GR.setcharup(sin(f.rotation), cos(f.rotation))
     if haskey(gr_font_family, family)
         GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
     end
-    gr_set_textcolor(f.color)
+    gr_set_textcolor(color)
     GR.settextalign(gr_halign[halign], gr_valign[valign])
 end
 
@@ -582,20 +582,26 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_set_line(1, :solid, sp[:xaxis][:foreground_color_axis])
         gr_polyline(coords(spine_segs)...)
 
-        # x labels
-        gr_set_font(sp[:xaxis][:tickfont], valign = :top)
-        for (cv, dv) in zip(xticks...)
-            xi, yi = GR.wctondc(cv, ymin)
-            # @show cv dv ymin xi yi
-            gr_text(xi, yi-0.01, string(dv))
+        if !(xticks in (nothing, false))
+            # x labels
+            flip = sp[:yaxis][:flip]
+            gr_set_font(sp[:xaxis][:tickfont], valign = :top, color = sp[:xaxis][:foreground_color_axis])
+            for (cv, dv) in zip(xticks...)
+                xi, yi = GR.wctondc(cv, flip ? ymax : ymin)
+                # @show cv dv ymin xi yi
+                gr_text(xi, yi-0.01, string(dv))
+            end
         end
 
-        # y labels
-        gr_set_font(sp[:yaxis][:tickfont], halign = :right)
-        for (cv, dv) in zip(yticks...)
-            xi, yi = GR.wctondc(xmin, cv)
-            # @show cv dv xmin xi yi
-            gr_text(xi-0.01, yi, string(dv))
+        if !(yticks in (nothing, false))
+            # y labels
+            flip = sp[:xaxis][:flip]
+            gr_set_font(sp[:yaxis][:tickfont], halign = :right, color = sp[:yaxis][:foreground_color_axis])
+            for (cv, dv) in zip(yticks...)
+                xi, yi = GR.wctondc(flip ? xmax : xmin, cv)
+                # @show cv dv xmin xi yi
+                gr_text(xi-0.01, yi, string(dv))
+            end
         end
 
         # window_diag = sqrt(gr_view_xdiff()^2 + gr_view_ydiff()^2)
