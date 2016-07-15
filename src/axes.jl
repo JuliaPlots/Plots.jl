@@ -130,8 +130,8 @@ const _inv_scale_funcs = Dict{Symbol,Function}(
 )
 
 
-scalefunc(scale::Symbol) = get(_scale_funcs, scale, identity)
-invscalefunc(scale::Symbol) = get(_inv_scale_funcs, scale, identity)
+scalefunc(scale::Symbol) = x -> get(_scale_funcs, scale, identity)(Float64(x))
+invscalefunc(scale::Symbol) = x -> get(_inv_scale_funcs, scale, identity)(Float64(x))
 
 function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     lims = axis_limits(axis)
@@ -139,15 +139,6 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     # scale the limits
     scale = axis[:scale]
     scaled_lims = map(scalefunc(scale), lims)
-    # scaled_lims = if scale == :log10 # TODO: log10(xmin), log10(xmax)
-    #     map(log10, lims)
-    # elseif scale == :log2
-    #     map(log2, lims)
-    # elseif scale == :ln
-    #     map(log, lims)
-    # else
-    #     lims
-    # end
 
     # get a list of well-laid-out ticks
     cv = if ticks == nothing
@@ -160,15 +151,6 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     tickvals = map(invscalefunc(scale), cv)
     basestr = scale == :log10 ? "10^" : scale == :log2 ? "2^" : scale == :ln ? "e^" : ""
     tickvals, ["$basestr$cvi" for cvi in cv]
-    # if scale == :log10
-    #     map(exp10, cv), ["10^$cvi" for cvi in cv]
-    # elseif scale == :log2
-    #     map(exp2, cv), ["2^$cvi" for cvi in cv]
-    # elseif scale == :ln
-    #     map(exp, cv), ["e^$cvi" for cvi in cv]
-    # else
-    #     cv, map(string, cv)
-    # end
 end
 
 # return (continuous_values, discrete_values) for the ticks on this axis
