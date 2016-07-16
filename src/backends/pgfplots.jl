@@ -212,6 +212,11 @@ function pgf_axis(sp::Subplot, letter)
         scale == :ln || push!(style, "log basis $letter=$(scale == :log2 ? 2 : 10)")
     end
 
+    # ticks on or off
+    if axis[:ticks] in (nothing, false)
+        push!(style, "$(letter)majorticks=false")
+    end
+
     # limits
     # TODO: support zlims
     if letter != :z
@@ -239,6 +244,9 @@ function _make_pgf_plot!(plt::Plot)
             if letter != :z || is3d(sp)
                 axisstyle, axiskw = pgf_axis(sp, letter)
                 merge!(kw, axiskw)
+                for sty in axisstyle
+                    push!(style, sty)
+                end
             end
         end
 
