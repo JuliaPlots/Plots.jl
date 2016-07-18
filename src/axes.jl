@@ -219,6 +219,12 @@ end
 function expand_extrema!(axis::Axis, v::Number)
     expand_extrema!(axis[:extrema], v)
 end
+
+# these shouldn't impact the extrema
+expand_extrema!(axis::Axis, ::Void) = axis[:extrema]
+expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
+
+
 function expand_extrema!{MIN<:Number,MAX<:Number}(axis::Axis, v::Tuple{MIN,MAX})
     ex = axis[:extrema]
     ex.emin = min(v[1], ex.emin)
