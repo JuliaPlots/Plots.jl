@@ -5,8 +5,10 @@ PlotUtils
 StatPlots
 Reexport
 Measures
+Showoff
 FactCheck
 Images
+ImageMagick
 @osx QuartzImageIO
 GR
 DataFrames

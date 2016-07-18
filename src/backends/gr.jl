@@ -448,7 +448,7 @@ function gr_display(plt::Plot)
 
     # update point mult
     px_per_pt = px / pt
-    _gr_point_mult[1] = px_per_pt / max(h,w)
+    _gr_point_mult[1] = 1.5 * px_per_pt / max(h,w)
 
     # subplots:
     for sp in plt.subplots
@@ -566,7 +566,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
 
         xticks, yticks, spine_segs, grid_segs = axis_drawing_info(sp)
-        # @show xticks yticks spine_segs grid_segs
+        # @show xticks yticks #spine_segs grid_segs
 
         # draw the grid lines
         if sp[:grid]

@@ -77,7 +77,7 @@ function seriestype_supported(pkg::AbstractBackend, st::Symbol)
 end
 
 macro deps(st, args...)
-    :(series_recipe_dependencies($(quot(st)), $(map(quot, args)...)))
+    :(Plots.series_recipe_dependencies($(quot(st)), $(map(quot, args)...)))
 end
 
 # get a list of all seriestypes

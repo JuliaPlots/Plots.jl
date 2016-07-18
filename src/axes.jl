@@ -129,9 +129,18 @@ const _inv_scale_funcs = Dict{Symbol,Function}(
     :ln => exp,
 )
 
+const _label_func = Dict{Symbol,Function}(
+    :log10 => x -> "10^$x",
+    :log2 => x -> "2^$x",
+    :ln => x -> "e^$x",
+    # :log2 => exp2,
+    # :ln => exp,
+)
+
 
 scalefunc(scale::Symbol) = x -> get(_scale_funcs, scale, identity)(Float64(x))
 invscalefunc(scale::Symbol) = x -> get(_inv_scale_funcs, scale, identity)(Float64(x))
+labelfunc(scale::Symbol) = get(_label_func, scale, string)
 
 function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     lims = axis_limits(axis)
@@ -139,18 +148,32 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     # scale the limits
     scale = axis[:scale]
     scaled_lims = map(scalefunc(scale), lims)
+    # @show lims scaled_lims
 
     # get a list of well-laid-out ticks
     cv = if ticks == nothing
-        optimize_ticks(scaled_lims...)[1]
+        optimize_ticks(scaled_lims...,
+            k_min = 5, # minimum number of ticks
+            k_max = 8, # maximum number of ticks
+            span_buffer = 0.0 # padding buffer in case nice ticks are closeby
+        )[1]
     else
         ticks
     end
 
+    # # expand to ensure we see all the ticks
+    # expand_extrema!(axis, cv)
+
     # rescale and return values and labels
+    # @show cv
+    ticklabels = map(labelfunc(scale), Showoff.showoff(cv, :plain))
+
     tickvals = map(invscalefunc(scale), cv)
-    basestr = scale == :log10 ? "10^" : scale == :log2 ? "2^" : scale == :ln ? "e^" : ""
-    tickvals, ["$basestr$cvi" for cvi in cv]
+    # @show tickvals ticklabels
+    # ticklabels = Showoff.showoff(tickvals, scale == :log10 ? :scientific : :auto)
+    tickvals, ticklabels
+    # basestr = scale == :log10 ? "10^" : scale == :log2 ? "2^" : scale == :ln ? "e^" : ""
+    # tickvals, ["$basestr$cvi" for cvi in cv]
 end
 
 # return (continuous_values, discrete_values) for the ticks on this axis

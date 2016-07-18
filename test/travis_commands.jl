@@ -1,8 +1,8 @@
-Pkg.clone("ImageMagick")
-Pkg.build("ImageMagick")
+# Pkg.clone("ImageMagick")
+# Pkg.build("ImageMagick")
 
-Pkg.clone("GR")
-Pkg.build("GR")
+# Pkg.clone("GR")
+# Pkg.build("GR")
 
 Pkg.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git")
 
@@ -17,8 +17,9 @@ Pkg.clone("StatPlots")
 # Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")
 
 # Pkg.checkout("RecipesBase")
-Pkg.clone("VisualRegressionTests")
+# Pkg.clone("VisualRegressionTests")
 
+# need this to use Conda
 ENV["PYTHON"] = ""
 Pkg.add("PyPlot")
 Pkg.build("PyPlot")

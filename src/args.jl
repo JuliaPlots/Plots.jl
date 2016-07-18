@@ -585,15 +585,15 @@ end
 
 
 function processFillArg(d::KW, arg)
-    fr = get(d, :fillrange, 0)
+    # fr = get(d, :fillrange, 0)
     if typeof(arg) <: Brush
-        arg.size  == nothing || (fr = arg.size)
+        arg.size  == nothing || (d[:fillrange] = arg.size)
         arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
     # fillrange function
     elseif allFunctions(arg)
-        fr = arg
+        d[:fillrange] = arg
 
     # fillalpha
     elseif allAlphas(arg)
@@ -601,9 +601,9 @@ function processFillArg(d::KW, arg)
 
     elseif !handleColors!(d, arg, :fillcolor)
 
-        fr = arg
+        d[:fillrange] = arg
     end
-    d[:fillrange] = fr
+    # d[:fillrange] = fr
     return    
 end
 
@@ -778,7 +778,7 @@ function warnOnUnsupported(pkg::AbstractBackend, d::KW)
 end
 
 function warnOnUnsupported_scales(pkg::AbstractBackend, d::KW)
-    for k in (:xscale, :yscale, :zscale)
+    for k in (:xscale, :yscale, :zscale, :scale)
         if haskey(d, k)
             v = d[k]
             v = get(_scaleAliases, v, v)

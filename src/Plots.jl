@@ -11,6 +11,7 @@ using FixedSizeArrays
 @reexport using RecipesBase
 using Base.Meta
 @reexport using PlotUtils
+import Showoff
 
 export
     AbstractPlot,
@@ -236,8 +237,8 @@ function __init__()
     setup_ijulia()
     setup_atom()
 
-    if haskey(ENV, "PLOTS_DEFAULTS")
-        for (k,v) in eval(parse(ENV["PLOTS_DEFAULTS"]))
+    if isdefined(Main, :PLOTS_DEFAULTS)
+        for (k,v) in Main.PLOTS_DEFAULTS
             default(k, v)
         end
     end
