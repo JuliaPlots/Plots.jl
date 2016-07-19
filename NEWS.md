@@ -3,11 +3,29 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-- All new development should target 0.7!
+- All new development should target 0.9!
+- Minor version 0.8 is the last one to support Julia 0.4!!
+	- Critical bugfixes only
 
 ---
 
-## 0.8 (current master/dev)
+## 0.9 (current master/dev)
+
+---
+
+## 0.8
+
+####
+
+- manual drawing of axes/ticks/labels
+- get_ticks uses optimize_ticks and Showoff
+- changed PLOTS_DEFAULTS to be a global variable, not ENV key
+- parameterized Segments for pushing tuples
+- fix to axis extrema for Bool/nothing
+- GR:
+	- manually draw 2D axes... fixes several issues and missing features
+	- fontsize fix
+- PGFPlots: pass axis syle
 
 #### 0.8.0
 
