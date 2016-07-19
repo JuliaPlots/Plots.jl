@@ -54,6 +54,7 @@ function _initialize_backend(::PyPlotBackend)
         # solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
         otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
         import PyPlot
+        import LaTeXStrings: latexstring
         append!(Base.Multimedia.displays, otherdisplays)
 
         export PyPlot
@@ -220,6 +221,18 @@ function add_pyfixedformatter(cbar, vals::AVec)
     cbar[:update_ticks]()
 end
 
+
+function labelfunc(scale::Symbol, backend::PyPlotBackend)
+    if scale == :log10
+        x -> latexstring("10^{$x}")
+    elseif scale == :log2
+        x -> latexstring("2^{$x}")
+    elseif scale == :ln
+        x -> latexstring("e^{$x}")
+    else
+        string
+    end
+end
 
 # ---------------------------------------------------------------------------
 

@@ -133,14 +133,12 @@ const _label_func = Dict{Symbol,Function}(
     :log10 => x -> "10^$x",
     :log2 => x -> "2^$x",
     :ln => x -> "e^$x",
-    # :log2 => exp2,
-    # :ln => exp,
 )
 
 
 scalefunc(scale::Symbol) = x -> get(_scale_funcs, scale, identity)(Float64(x))
 invscalefunc(scale::Symbol) = x -> get(_inv_scale_funcs, scale, identity)(Float64(x))
-labelfunc(scale::Symbol) = get(_label_func, scale, string)
+labelfunc(scale::Symbol, backend::AbstractBackend) = get(_label_func, scale, string)
 
 function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     lims = axis_limits(axis)
@@ -155,7 +153,7 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
         optimize_ticks(scaled_lims...,
             k_min = 5, # minimum number of ticks
             k_max = 8, # maximum number of ticks
-            span_buffer = 0.0 # padding buffer in case nice ticks are closeby
+            # span_buffer = 0.0 # padding buffer in case nice ticks are closeby
         )[1]
     else
         ticks
@@ -166,7 +164,11 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
 
     # rescale and return values and labels
     # @show cv
-    ticklabels = map(labelfunc(scale), Showoff.showoff(cv, :plain))
+    ticklabels = if any(isfinite, cv)
+        map(labelfunc(scale, backend()), Showoff.showoff(cv, :plain))
+    else
+        UTF8String[]
+    end
 
     tickvals = map(invscalefunc(scale), cv)
     # @show tickvals ticklabels
