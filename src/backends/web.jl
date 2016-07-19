@@ -51,7 +51,7 @@ function html_to_png(html_fn, png_fn, w, h)
     run(`wkhtmltoimage -f png -q --width $w --height $h --disable-smart-width $html_fn $png_fn`)
 end
 
-function writemime_png_from_html(io::IO, plt::AbstractPlot)
+function show_png_from_html(io::IO, plt::AbstractPlot)
     # write html to a temporary file
     html_fn = write_temp_html(plt)
 

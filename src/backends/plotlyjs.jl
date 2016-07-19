@@ -63,11 +63,11 @@ end
 
 # ----------------------------------------------------------------
 
-function _writemime(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend})
-    writemime(io, MIME("text/html"), plt.o)
+function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend})
+    show(io, MIME("text/html"), plt.o)
 end
 
-function _writemime(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend})
+function _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend})
     tmpfn = tempname() * ".png"
     PlotlyJS.savefig(plt.o, tmpfn)
     write(io, read(open(tmpfn)))

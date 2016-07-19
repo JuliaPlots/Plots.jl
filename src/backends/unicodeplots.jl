@@ -113,7 +113,7 @@ end
 
 # -------------------------------
 
-# since this is such a hack, it's only callable using `png`... should error during normal `writemime`
+# since this is such a hack, it's only callable using `png`... should error during normal `show`
 function png(plt::AbstractPlot{UnicodePlotsBackend}, fn::AbstractString)
     fn = addExtension(fn, "png")
 
@@ -150,7 +150,7 @@ function _update_plot_object(plt::Plot{UnicodePlotsBackend})
   rebuildUnicodePlot!(plt)
 end
 
-function _writemime(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
+function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
   map(show, plt.o)
   nothing
 end

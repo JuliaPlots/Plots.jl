@@ -67,7 +67,7 @@ end
     # "image/png"               => "png",
     # "application/postscript"  => "ps",
     # "image/svg+xml"           => "svg"
-function _writemime(io::IO, ::MIME"image/png", plt::Plot{[PkgName]Backend})
+function _show(io::IO, ::MIME"image/png", plt::Plot{[PkgName]Backend})
 end
 
 # Display/show the plot (open a GUI window, or browser page, for example).

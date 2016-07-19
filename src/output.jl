@@ -5,7 +5,7 @@ defaultOutputFormat(plt::Plot) = "png"
 function png(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "png")
   io = open(fn, "w")
-  writemime(io, MIME("image/png"), plt)
+  show(io, MIME("image/png"), plt)
   close(io)
 end
 png(fn::AbstractString) = png(current(), fn)
@@ -13,7 +13,7 @@ png(fn::AbstractString) = png(current(), fn)
 function svg(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "svg")
   io = open(fn, "w")
-  writemime(io, MIME("image/svg+xml"), plt)
+  show(io, MIME("image/svg+xml"), plt)
   close(io)
 end
 svg(fn::AbstractString) = svg(current(), fn)
@@ -22,7 +22,7 @@ svg(fn::AbstractString) = svg(current(), fn)
 function pdf(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "pdf")
   io = open(fn, "w")
-  writemime(io, MIME("application/pdf"), plt)
+  show(io, MIME("application/pdf"), plt)
   close(io)
 end
 pdf(fn::AbstractString) = pdf(current(), fn)
@@ -31,7 +31,7 @@ pdf(fn::AbstractString) = pdf(current(), fn)
 function ps(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "ps")
   io = open(fn, "w")
-  writemime(io, MIME("application/postscript"), plt)
+  show(io, MIME("application/postscript"), plt)
   close(io)
 end
 ps(fn::AbstractString) = ps(current(), fn)
@@ -40,7 +40,7 @@ ps(fn::AbstractString) = ps(current(), fn)
 function tex(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "tex")
   io = open(fn, "w")
-  writemime(io, MIME("application/x-tex"), plt)
+  show(io, MIME("application/x-tex"), plt)
   close(io)
 end
 tex(fn::AbstractString) = tex(current(), fn)
@@ -129,26 +129,26 @@ const _best_html_output_type = KW(
 )
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
-function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
+function Base.show(io::IO, ::MIME"text/html", plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
     if output_type == :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
     end
     if output_type == :png
         # info("writing png to html output")
-        print(io, "<img src=\"data:image/png;base64,", base64encode(writemime, MIME("image/png"), plt), "\" />")
+        print(io, "<img src=\"data:image/png;base64,", base64encode(show, MIME("image/png"), plt), "\" />")
     elseif output_type == :svg
         # info("writing svg to html output")
-        writemime(io, MIME("image/svg+xml"), plt)
+        show(io, MIME("image/svg+xml"), plt)
     elseif output_type == :txt
-        writemime(io, MIME("text/plain"), plt)
+        show(io, MIME("text/plain"), plt)
     else
         error("only png or svg allowed. got: $output_type")
     end
 end
 
-function _writemime(io::IO, m, plt::Plot)
-    warn("_writemime is not defined for this backend. m=", string(m))
+function _show(io::IO, m, plt::Plot)
+    warn("_show is not defined for this backend. m=", string(m))
 end
 function _display(plt::Plot)
     warn("_display is not defined for this backend.")
@@ -156,9 +156,9 @@ end
 
 # for writing to io streams... first prepare, then callback
 for mime in keys(_mimeformats)
-    @eval function Base.writemime(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
+    @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         prepare_output(plt)
-        _writemime(io, m, plt)
+        _show(io, m, plt)
     end
 end
 
@@ -168,7 +168,7 @@ end
 
 if is_installed("FileIO")
     @eval import FileIO
-    function _writemime(io::IO, ::MIME"image/png", plt::Plot)
+    function _show(io::IO, ::MIME"image/png", plt::Plot)
         fn = tempname()
 
         # first save a pdf file
@@ -192,12 +192,12 @@ end
 
 # function html_output_format(fmt)
 #     if fmt == "png"
-#         @eval function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
-#             print(io, "<img src=\"data:image/png;base64,", base64(writemime, MIME("image/png"), plt), "\" />")
+#         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
+#             print(io, "<img src=\"data:image/png;base64,", base64(show, MIME("image/png"), plt), "\" />")
 #         end
 #     elseif fmt == "svg"
-#         @eval function Base.writemime(io::IO, ::MIME"text/html", plt::Plot)
-#             writemime(io, MIME("image/svg+xml"), plt)
+#         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
+#             show(io, MIME("image/svg+xml"), plt)
 #         end
 #     else
 #         error("only png or svg allowed. got: $fmt")
@@ -225,12 +225,12 @@ function setup_ijulia()
             end
             function IJulia.display_dict(plt::Plot)
                 global _ijulia_output
-                Dict{Compat.ASCIIString, ByteString}(_ijulia_output[1] => sprint(writemime, _ijulia_output[1], plt))
+                Dict{Compat.ASCIIString, ByteString}(_ijulia_output[1] => sprint(show, _ijulia_output[1], plt))
             end
 
             # default text/plain passes to html... handles Interact issues
-            function Base.writemime(io::IO, m::MIME"text/plain", plt::Plot)
-                writemime(io, MIME("text/html"), plt)
+            function Base.show(io::IO, m::MIME"text/plain", plt::Plot)
+                show(io, MIME("text/html"), plt)
             end
         end
         set_ijulia_output("text/html")
@@ -264,8 +264,8 @@ function setup_atom()
         end
 
         # # force text/plain to output to the PlotPane
-        # function Base.writemime(io::IO, ::MIME"text/plain", plt::Plot)
-        #     # writemime(io::IO, MIME("text/html"), plt)
+        # function Base.show(io::IO, ::MIME"text/plain", plt::Plot)
+        #     # show(io::IO, MIME("text/html"), plt)
         #     Atom.Media.render(pane)
         # end
 

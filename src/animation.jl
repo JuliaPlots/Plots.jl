@@ -55,7 +55,7 @@ end
 
 
 # write out html to view the gif... note the rand call which is a hack so the image doesn't get cached
-function Base.writemime(io::IO, ::MIME"text/html", agif::AnimatedGif)
+function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     write(io, "<img src=\"$(relpath(agif.filename))?$(rand())>\" />")
 end
 

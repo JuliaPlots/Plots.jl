@@ -311,7 +311,7 @@ function _update_plot_object(plt::Plot{GLVisualizeBackend})
     gl_display(plt)
 end
 
-# function _writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{GLVisualizeBackend})
+# function _show(io::IO, ::MIME"image/png", plt::AbstractPlot{GLVisualizeBackend})
 #     # TODO: write a png to io
 # end
 

@@ -238,10 +238,10 @@ function addWinstonLegend(plt::Plot, wplt)
   end
 end
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{WinstonBackend})
+function Base.show(io::IO, ::MIME"image/png", plt::AbstractPlot{WinstonBackend})
   window, canvas, wplt = getWinstonItems(plt)
   addWinstonLegend(plt, wplt)
-  writemime(io, "image/png", wplt)
+  show(io, "image/png", wplt)
 end
 
 

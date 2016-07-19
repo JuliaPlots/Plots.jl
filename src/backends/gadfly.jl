@@ -677,7 +677,7 @@ setGadflyDisplaySize(plt::Plot) = setGadflyDisplaySize(plt.attr[:size]...)
 # -------------------------------------------------------------------------
 
 
-function dowritemime{P<:Union{GadflyBackend,ImmerseBackend}}(io::IO, func, plt::AbstractPlot{P})
+function doshow{P<:Union{GadflyBackend,ImmerseBackend}}(io::IO, func, plt::AbstractPlot{P})
     gplt = getGadflyContext(plt)
     setGadflyDisplaySize(plt)
     Gadfly.draw(func(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
@@ -692,9 +692,9 @@ getGadflyWriteFunc(::MIME"application/x-tex") = Gadfly.PGF
 getGadflyWriteFunc(m::MIME) = error("Unsupported in Gadfly/Immerse: ", m)
 
 for mime in (MIME"image/png", MIME"image/svg+xml", MIME"application/pdf", MIME"application/postscript", MIME"application/x-tex")
-    @eval function Base.writemime{P<:Union{GadflyBackend,ImmerseBackend}}(io::IO, ::$mime, plt::AbstractPlot{P})
+    @eval function Base.show{P<:Union{GadflyBackend,ImmerseBackend}}(io::IO, ::$mime, plt::AbstractPlot{P})
         func = getGadflyWriteFunc($mime())
-        dowritemime(io, func, plt)
+        doshow(io, func, plt)
     end
 end
 

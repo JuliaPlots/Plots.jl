@@ -961,7 +961,7 @@ const _gr_mimeformats = Dict(
 
 
 for (mime, fmt) in _gr_mimeformats
-    @eval function _writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
+    @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
         wstype = haskey(ENV, "GKS_WSTYPE") ? ENV["GKS_WSTYPE"] : "0"
         filepath = tempname() * "." * $fmt
@@ -969,7 +969,7 @@ for (mime, fmt) in _gr_mimeformats
         ENV["GKS_FILEPATH"] = filepath
         gr_display(plt)
         GR.emergencyclosegks()
-        write(io, readall(filepath))
+        write(io, readstring(filepath))
         ENV["GKS_WSTYPE"] = wstype
         rm(filepath)
     end

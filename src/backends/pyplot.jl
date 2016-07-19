@@ -1184,7 +1184,7 @@ const _pyplot_mimeformats = Dict(
 
 
 for (mime, fmt) in _pyplot_mimeformats
-    @eval function _writemime(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
+    @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
         fig = plt.o
         fig.o[:canvas][:print_figure](
             io,

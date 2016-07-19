@@ -288,12 +288,12 @@ function _make_pgf_plot!(plt::Plot)
 end
 
 
-function _writemime(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend})
+function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend})
     _make_pgf_plot!(plt)
-    writemime(io, mime, plt.o)
+    show(io, mime, plt.o)
 end
 
-function _writemime(io::IO, mime::MIME"application/pdf", plt::Plot{PGFPlotsBackend})
+function _show(io::IO, mime::MIME"application/pdf", plt::Plot{PGFPlotsBackend})
     _make_pgf_plot!(plt)
 
     # prepare the object

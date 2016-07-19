@@ -282,13 +282,13 @@ end
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::Plot{QwtBackend})
+function Base.show(io::IO, ::MIME"image/png", plt::Plot{QwtBackend})
   Qwt.refresh(plt.o)
   Qwt.savepng(plt.o, "/tmp/dfskjdhfkh.png")
   write(io, readall("/tmp/dfskjdhfkh.png"))
 end
 
-# function Base.writemime(io::IO, ::MIME"image/png", subplt::Subplot{QwtBackend})
+# function Base.show(io::IO, ::MIME"image/png", subplt::Subplot{QwtBackend})
 #   for plt in subplt.plts
 #     Qwt.refresh(plt.o)
 #   end

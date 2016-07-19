@@ -194,7 +194,7 @@ end
 
 # ----------------------------------------------------------------
 
-function Base.writemime(io::IO, ::MIME"image/png", plt::AbstractPlot{BokehBackend})
+function Base.show(io::IO, ::MIME"image/png", plt::AbstractPlot{BokehBackend})
   # TODO: write a png to io
   warn("mime png not implemented")
 end
