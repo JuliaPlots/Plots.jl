@@ -20,13 +20,13 @@ function standalone_html(plt::AbstractPlot; title::AbstractString = get(plt.attr
 end
 
 function open_browser_window(filename::AbstractString)
-    @compat @static if is_apple()
+    @static if is_apple()
         return run(`open $(filename)`)
     end
-    @compat @static if is_linux()
+    @static if is_linux()
         return run(`xdg-open $(filename)`)
     end
-    @compat @static if is_windows()
+    @static if is_windows()
         return run(`$(ENV["COMSPEC"]) /c start $(filename)`)
     end
     warn("Unknown OS... cannot open browser window.")

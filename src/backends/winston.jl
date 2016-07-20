@@ -44,13 +44,13 @@ end
 
 
 ## dictionaries for conversion of Plots.jl names to Winston ones.
-@compat const winston_linestyle =  KW(:solid=>"solid",
+const winston_linestyle =  KW(:solid=>"solid",
                                 :dash=>"dash",
                                 :dot=>"dotted",
                                 :dashdot=>"dotdashed"
                                )
 
-@compat const winston_marker = KW(:none=>".",
+const winston_marker = KW(:none=>".",
                             :rect => "square",
                             :circle=>"circle",
                             :diamond=>"diamond",
@@ -185,7 +185,7 @@ end
 
 # ----------------------------------------------------------------
 
-@compat const _winstonNames = KW(
+const _winstonNames = KW(
     :xlims => :xrange,
     :ylims => :yrange,
     :xscale => :xlog,
@@ -213,11 +213,11 @@ end
 
 # ----------------------------------------------------------------
 
-function createWinstonAnnotationObject(plt::Plot{WinstonBackend}, x, y, val::@compat(AbstractString))
+function createWinstonAnnotationObject(plt::Plot{WinstonBackend}, x, y, val::AbstractString)
   Winston.text(x, y, val)
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{WinstonBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{WinstonBackend}, anns::AVec{Tuple{X,Y,V}})
   for ann in anns
     createWinstonAnnotationObject(plt, ann...)
   end

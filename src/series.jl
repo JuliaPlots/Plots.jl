@@ -6,12 +6,12 @@
 # This should cut down on boilerplate code and allow more focused dispatch on type
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
-typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
+typealias FuncOrFuncs Union{Function, AVec{Function}}
 
 all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image), get(d, :seriestype, :none))
 
 # missing
-convertToAnyVector(v::@compat(Void), d::KW) = Any[nothing], nothing
+convertToAnyVector(v::Void, d::KW) = Any[nothing], nothing
 
 # fixed number of blank series
 convertToAnyVector(n::Integer, d::KW) = Any[zeros(0) for i in 1:n], nothing
@@ -20,7 +20,7 @@ convertToAnyVector(n::Integer, d::KW) = Any[zeros(0) for i in 1:n], nothing
 convertToAnyVector{T<:Number}(v::AVec{T}, d::KW) = Any[v], nothing
 
 # string vector
-convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}, d::KW) = Any[v], nothing
+convertToAnyVector{T<:AbstractString}(v::AVec{T}, d::KW) = Any[v], nothing
 
 function convertToAnyVector(v::AMat, d::KW)
     if all3D(d)
@@ -210,7 +210,7 @@ end
 # # 1 argument
 # # --------------------------------------------------------------------
 
-@recipe f(n::Integer) = n, n, n
+@recipe f(n::Integer) = is3d(get(d,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
 @recipe function f{T<:Number}(mat::AMat{T})

@@ -244,7 +244,7 @@ function addToGadflyLegend(plt::Plot, d::KW)
 
         # add the legend if needed
         if all(g -> !isa(g, Gadfly.Guide.ManualColorKey), gplt.guides)
-            unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", @compat(AbstractString)[], Color[]))
+            unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
         end
 
         # now add the series to the legend
@@ -456,7 +456,7 @@ function updateGadflyAxisFlips(gplt, d::KW, xlims, ylims, xfunc, yfunc)
 end
 
 
-function findGuideAndSet(gplt, t::DataType, args...; kw...) #s::@compat(AbstractString))
+function findGuideAndSet(gplt, t::DataType, args...; kw...)
     for (i,guide) in enumerate(gplt.guides)
         if isa(guide, t)
             gplt.guides[i] = t(args...; kw...)
@@ -537,7 +537,7 @@ end
 # ----------------------------------------------------------------
 
 
-function createGadflyAnnotationObject(x, y, val::@compat(AbstractString))
+function createGadflyAnnotationObject(x, y, val::AbstractString)
     Gadfly.Guide.annotation(Compose.compose(
                               Compose.context(),
                               Compose.text(x, y, val)
@@ -558,7 +558,7 @@ function createGadflyAnnotationObject(x, y, txt::PlotText)
                             ))
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{GadflyBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{GadflyBackend}, anns::AVec{Tuple{X,Y,V}})
     for ann in anns
         push!(plt.o.guides, createGadflyAnnotationObject(ann...))
     end

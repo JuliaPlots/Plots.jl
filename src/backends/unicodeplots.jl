@@ -122,7 +122,7 @@ function png(plt::AbstractPlot{UnicodePlotsBackend}, fn::AbstractString)
     gui(plt)
 
     # @osx_only begin
-    @compat @static if is_apple()
+    @static if is_apple()
         # BEGIN HACK
 
         # wait while the plot gets drawn

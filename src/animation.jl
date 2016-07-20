@@ -1,12 +1,12 @@
 
 immutable Animation
-  dir::Compat.ASCIIString
-  frames::Vector{Compat.ASCIIString}
+  dir::String
+  frames::Vector{String}
 end
 
 function Animation()
-  tmpdir = convert(Compat.ASCIIString, mktempdir())
-  Animation(tmpdir, Compat.ASCIIString[])
+  tmpdir = convert(String, mktempdir())
+  Animation(tmpdir, String[])
 end
 
 function frame{P<:AbstractPlot}(anim::Animation, plt::P=current())
@@ -21,7 +21,7 @@ end
 
 "Wraps the location of an animated gif so that it can be displayed"
 immutable AnimatedGif
-  filename::Compat.ASCIIString
+  filename::String
 end
 
 function gif(anim::Animation, fn = (isijulia() ? "tmp.gif" : tempname()*".gif"); fps::Integer = 20)

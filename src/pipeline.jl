@@ -13,7 +13,7 @@ function _expand_seriestype_array(d::KW, args)
         delete!(d, :seriestype)
         RecipeData[begin
             dc = copy(d)
-            dc[:seriestype] = sts[r,:]
+            dc[:seriestype] = sts[r:r,:]
             RecipeData(dc, args)
         end for r=1:size(sts,1)]
     else

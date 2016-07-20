@@ -156,6 +156,9 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
 
     kw_list = _process_userrecipes(plt, d, args)
 
+    # info(1)
+    # map(DD, kw_list)
+
 
     # --------------------------------
     # "PLOT RECIPES"
@@ -172,6 +175,9 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
         _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
     end
 
+    # info(2)
+    # map(DD, kw_list)
+
     # --------------------------------
     # Plot/Subplot/Layout setup
     # --------------------------------
@@ -184,6 +190,9 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
     # --------------------------------
     # "SERIES RECIPES"
     # --------------------------------
+
+    # info(3)
+    # map(DD, kw_list)
     
     for kw in kw_list
         sp::Subplot = kw[:subplot]

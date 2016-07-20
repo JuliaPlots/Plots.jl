@@ -1,17 +1,9 @@
-julia 0.5-
-
-RecipesBase
-PlotUtils
 StatPlots
-Reexport
-Measures
-Showoff
 FactCheck
 Images
 ImageMagick
 @osx QuartzImageIO
 GR
-DataFrames
 RDatasets
 VisualRegressionTests
 UnicodePlots

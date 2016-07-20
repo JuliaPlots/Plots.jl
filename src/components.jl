@@ -47,7 +47,7 @@ end
 
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r=1)
-  @compat(Tuple{Float64,Float64})[(r*cos(u),r*sin(u)) for u in linspace(start_θ, end_θ, n)]
+    Tuple{Float64,Float64}[(r*cos(u),r*sin(u)) for u in linspace(start_θ, end_θ, n)]
 end
 
 "interleave 2 vectors into each other (like a zipper's teeth)"
@@ -472,7 +472,7 @@ type BezierCurve{T <: FixedSizeArrays.Vec}
   control_points::Vector{T}
 end
 
-@compat function (bc::BezierCurve)(t::Real)
+function (bc::BezierCurve)(t::Real)
   p = zero(P2)
   n = length(bc.control_points)-1
   for i in 0:n

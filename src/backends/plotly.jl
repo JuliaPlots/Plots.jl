@@ -53,7 +53,7 @@ function _initialize_backend(::PlotlyBackend; kw...)
     JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
 
     _js_path = Pkg.dir("Plots", "deps", "plotly-latest.min.js")
-    _js_code = open(@compat(readstring), _js_path, "r")
+    _js_code = open(readstring, _js_path, "r")
 
     # borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
     _js_script = """

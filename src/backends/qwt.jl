@@ -39,7 +39,7 @@ end
 
 # -------------------------------
 
-@compat const _qwtAliases = KW(
+const _qwtAliases = KW(
     :bins => :heatmap_n,
     :fillrange => :fillto,
     :linewidth => :width,
@@ -133,7 +133,7 @@ function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
   w = plt.o.widget
   axisid = Qwt.QWT.QwtPlot[isx ? :xBottom : :yLeft]
 
-  if typeof(lims) <: @compat(Union{Tuple,AVec}) && length(lims) == 2
+  if typeof(lims) <: Union{Tuple,AVec} && length(lims) == 2
     if isx
       plt.o.autoscale_x = false
     else
@@ -211,14 +211,14 @@ function createQwtAnnotation(plt::Plot, x, y, val::PlotText)
   marker[:attach](plt.o.widget)
 end
 
-function createQwtAnnotation(plt::Plot, x, y, val::@compat(AbstractString))
+function createQwtAnnotation(plt::Plot, x, y, val::AbstractString)
   marker = Qwt.QWT.QwtPlotMarker()
   marker[:setValue](x, y)
   marker[:setLabel](Qwt.QWT.QwtText(val))
   marker[:attach](plt.o.widget)
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{QwtBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{QwtBackend}, anns::AVec{Tuple{X,Y,V}})
   for ann in anns
     createQwtAnnotation(plt, ann...)
   end
@@ -241,8 +241,6 @@ end
 
 
 # -------------------------------
-
-# savepng(::QwtBackend, plt::AbstractPlot, fn::@compat(AbstractString), args...) = Qwt.savepng(plt.o, fn)
 
 # -------------------------------
 

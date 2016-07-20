@@ -49,7 +49,7 @@ tex(fn::AbstractString) = tex(current(), fn)
 # ----------------------------------------------------------------
 
 
-@compat const _savemap = Dict(
+const _savemap = Dict(
     "png" => png,
     "svg" => svg,
     "pdf" => pdf,
@@ -210,7 +210,7 @@ end
 # IJulia
 # ---------------------------------------------------------
 
-const _ijulia_output = Compat.ASCIIString["text/html"]
+const _ijulia_output = String["text/html"]
 
 function setup_ijulia()
     # override IJulia inline display
@@ -225,7 +225,7 @@ function setup_ijulia()
             end
             function IJulia.display_dict(plt::Plot)
                 global _ijulia_output
-                Dict{Compat.ASCIIString, ByteString}(_ijulia_output[1] => sprint(show, _ijulia_output[1], plt))
+                Dict{String, String}(_ijulia_output[1] => sprint(show, _ijulia_output[1], plt))
             end
 
             # default text/plain passes to html... handles Interact issues

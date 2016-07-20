@@ -61,7 +61,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _add_annotations{X,Y,V}(plt::Plot{ImmerseBackend}, anns::AVec{@compat(Tuple{X,Y,V})})
+function _add_annotations{X,Y,V}(plt::Plot{ImmerseBackend}, anns::AVec{Tuple{X,Y,V}})
   for ann in anns
     push!(getGadflyContext(plt).guides, createGadflyAnnotationObject(ann...))
   end

@@ -202,6 +202,7 @@ end
 
 function make_steps(x, y, st)
     n = length(x)
+    n == 0 && return zeros(0),zeros(0)
     newx, newy = zeros(2n-1), zeros(2n-1)
     for i=1:n
         idx = 2i-1

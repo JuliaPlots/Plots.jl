@@ -252,7 +252,7 @@ makevec{T}(v::T) = T[v]
 
 "duplicate a single value, or pass the 2-tuple through"
 maketuple(x::Real)                     = (x,x)
-maketuple{T,S}(x::@compat(Tuple{T,S})) = x
+maketuple{T,S}(x::Tuple{T,S}) = x
 
 mapFuncOrFuncs(f::Function, u::AVec)        = map(f, u)
 mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
@@ -386,13 +386,12 @@ isvertical(d::KW) = get(d, :orientation, :vertical) in (:vertical, :v, :vert)
 isvertical(series::Series) = isvertical(series.d)
 
 
-# ticksType{T<:Real,S<:Real}(ticks::@compat(Tuple{T,S})) = :limits
 ticksType{T<:Real}(ticks::AVec{T})                      = :ticks
 ticksType{T<:AbstractString}(ticks::AVec{T})            = :labels
-ticksType{T<:AVec,S<:AVec}(ticks::@compat(Tuple{T,S}))  = :ticks_and_labels
+ticksType{T<:AVec,S<:AVec}(ticks::Tuple{T,S})  = :ticks_and_labels
 ticksType(ticks)                                        = :invalid
 
-limsType{T<:Real,S<:Real}(lims::@compat(Tuple{T,S}))    = :limits
+limsType{T<:Real,S<:Real}(lims::Tuple{T,S})    = :limits
 limsType(lims::Symbol)                                  = lims == :auto ? :auto : :invalid
 limsType(lims)                                          = :invalid
 
@@ -476,7 +475,7 @@ end
 
 # ---------------------------------------------------------------
 
-wraptuple(x::@compat(Tuple)) = x
+wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
 
 trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
@@ -666,6 +665,42 @@ end
 # Base.getindex(plt::Plot, i::Integer) = getxy(plt, i)
 Base.setindex!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer) = setxy!(plt, xy, i)
 Base.setindex!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) = setxyz!(plt, xyz, i)
+
+# -------------------------------------------------------
+
+# operate on individual series
+
+function push_x!(series::Series, xi)
+    push!(series[:x], xi)
+    expand_extrema!(series[:subplot][:xaxis], xi)
+    return
+end
+function push_y!(series::Series, yi)
+    push!(series[:y], yi)
+    expand_extrema!(series[:subplot][:yaxis], yi)
+    return
+end
+function push_z!(series::Series, zi)
+    push!(series[:z], zi)
+    expand_extrema!(series[:subplot][:zaxis], zi)
+    return
+end
+
+Base.push!(series::Series, xi, yi) = (push_x!(series,xi); push_y!(series,yi))
+Base.push!(series::Series, xi, yi, zi) = (push_x!(series,xi); push_y!(series,yi); push_z!(series,zi))
+
+function update!(series::Series; kw...)
+    d = KW(kw)
+    preprocessArgs!(d)
+    for (k,v) in d
+        if haskey(_series_defaults, k)
+            series[k] = v
+        else
+            warn("unused key $k in series update")
+        end
+    end
+    _series_updated(series[:subplot].plt, series)
+end
 
 # -------------------------------------------------------
 # push/append for one series

@@ -1186,12 +1186,12 @@ const _pyplot_mimeformats = Dict(
 for (mime, fmt) in _pyplot_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
         fig = plt.o
-        fig.o[:canvas][:print_figure](
+        fig[:canvas][:print_figure](
             io,
             format=$fmt,
             # bbox_inches = "tight",
             # figsize = map(px2inch, plt[:size]),
-            facecolor = fig.o[:get_facecolor](),
+            facecolor = fig[:get_facecolor](),
             edgecolor = "none",
             dpi = plt[:dpi]
         )

@@ -39,7 +39,7 @@ const _allTypes = vcat([
     :contour, :pie, :shape, :image
 ], _3dTypes)
 
-@compat const _typeAliases = Dict{Symbol,Symbol}(
+const _typeAliases = Dict{Symbol,Symbol}(
     :n             => :none,
     :no            => :none,
     :l             => :line,
@@ -92,7 +92,7 @@ ispolar(series::Series) = ispolar(series.d[:subplot])
 # ------------------------------------------------------------
 
 const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-@compat const _styleAliases = Dict{Symbol,Symbol}(
+const _styleAliases = Dict{Symbol,Symbol}(
     :a    => :auto,
     :s    => :solid,
     :d    => :dash,
@@ -101,7 +101,7 @@ const _allStyles = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 )
 
 const _allMarkers = vcat(:none, :auto, _shape_keys) #sort(collect(keys(_shapes))))
-@compat const _markerAliases = Dict{Symbol,Symbol}(
+const _markerAliases = Dict{Symbol,Symbol}(
     :n            => :none,
     :no           => :none,
     :a            => :auto,
@@ -143,7 +143,7 @@ const _allMarkers = vcat(:none, :auto, _shape_keys) #sort(collect(keys(_shapes))
 )
 
 const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
-@compat const _scaleAliases = Dict{Symbol,Symbol}(
+const _scaleAliases = Dict{Symbol,Symbol}(
     :none => :identity,
     :log  => :log10,
 )

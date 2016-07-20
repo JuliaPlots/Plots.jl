@@ -3,7 +3,7 @@ __precompile__()
 
 module Plots
 
-using Compat
+# using Compat
 using Reexport
 # @reexport using Colors
 # using Requires
