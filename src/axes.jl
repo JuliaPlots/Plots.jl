@@ -167,7 +167,7 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     ticklabels = if any(isfinite, cv)
         map(labelfunc(scale, backend()), Showoff.showoff(cv, :plain))
     else
-        UTF8String[]
+        String[]
     end
 
     tickvals = map(invscalefunc(scale), cv)
