@@ -34,6 +34,7 @@ export
 
     plot,
     plot!,
+    update!,
 
     current,
     default,

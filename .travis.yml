@@ -4,11 +4,11 @@ os:
   - linux
   - osx
 julia:
-  - release
+  # - release
   - nightly
-matrix:
-  allow_failures:
-    - julia: nightly
+# matrix:
+#   allow_failures:
+#     - julia: nightly
 
 # # before install:
 # #   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi

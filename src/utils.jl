@@ -686,8 +686,16 @@ function push_z!(series::Series, zi)
     return
 end
 
+function Base.push!(series::Series, yi)
+    x = extendSeriesByOne(series[:x])
+    expand_extrema!(series[:subplot][:xaxis], x[end])
+    series[:x] = x
+    push_y!(series, yi)
+end
 Base.push!(series::Series, xi, yi) = (push_x!(series,xi); push_y!(series,yi))
 Base.push!(series::Series, xi, yi, zi) = (push_x!(series,xi); push_y!(series,yi); push_z!(series,zi))
+
+# -------------------------------------------------------
 
 function update!(series::Series; kw...)
     d = KW(kw)
@@ -700,6 +708,20 @@ function update!(series::Series; kw...)
         end
     end
     _series_updated(series[:subplot].plt, series)
+    series
+end
+
+function update!(sp::Subplot; kw...)
+    d = KW(kw)
+    preprocessArgs!(d)
+    for (k,v) in d
+        if haskey(_subplot_defaults, k)
+            sp[k] = v
+        else
+            warn("unused key $k in subplot update")
+        end
+    end
+    sp
 end
 
 # -------------------------------------------------------
