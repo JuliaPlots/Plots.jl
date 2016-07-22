@@ -78,12 +78,12 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
         png(fn)
     end
 
-    try
-        run(`mkdir -p $newdir`)
-    catch err
-        display(err)
-    end
-    # reffn = joinpath(refdir, "ref$idx.png")
+    # try
+    #     run(`mkdir -p $newdir`)
+    # catch err
+    #     display(err)
+    # end
+    # # reffn = joinpath(refdir, "ref$idx.png")
 
     # the test
     vtest = VisualTest(func, reffn, idx)
