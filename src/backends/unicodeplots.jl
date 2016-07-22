@@ -38,7 +38,7 @@ end
 
 
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
-function rebuildUnicodePlot!(plt::Plot)
+function rebuildUnicodePlot!(plt::Plot, width, height)
     plt.o = []
 
     for sp in plt.subplots
@@ -57,7 +57,6 @@ function rebuildUnicodePlot!(plt::Plot)
         y = Float64[ylim[1]]
 
         # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
-        width, height = plt[:size]
         canvas_type = isijulia() ? UnicodePlots.AsciiCanvas : UnicodePlots.BrailleCanvas
         o = UnicodePlots.Plot(x, y, canvas_type;
             width = width,
@@ -143,21 +142,22 @@ end
 
 # we don't do very much for subplots... just stack them vertically
 
-function _update_plot_object(plt::Plot{UnicodePlotsBackend})
-  w, h = plt[:size]
-  plt.attr[:size] = div(w, 10), div(h, 20)
-  plt.attr[:color_palette] = [RGB(0,0,0)]
-  rebuildUnicodePlot!(plt)
+function unicodeplots_rebuild(plt::Plot{UnicodePlotsBackend})
+    w, h = plt[:size]
+    plt.attr[:color_palette] = [RGB(0,0,0)]
+    rebuildUnicodePlot!(plt, div(w, 10), div(h, 20))
 end
 
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
-  map(show, plt.o)
-  nothing
+    unicodeplots_rebuild(plt)
+    map(show, plt.o)
+    nothing
 end
 
 
 function _display(plt::Plot{UnicodePlotsBackend})
-  map(show, plt.o)
-  nothing
+    unicodeplots_rebuild(plt)
+    map(show, plt.o)
+    nothing
 end
 
