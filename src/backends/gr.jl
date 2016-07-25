@@ -660,6 +660,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         GR.savestate()
 
+
         # update the bounding window
         if ispolar(sp)
             gr_set_viewport_polar()
@@ -933,9 +934,22 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # add annotations
     GR.savestate()
+    # update the bounding window
+    if ispolar(sp)
+        gr_set_viewport_polar()
+    else
+        xmin, xmax, ymin, ymax = data_lims
+        if xmax > xmin && ymax > ymin
+            GR.setwindow(xmin, xmax, ymin, ymax)
+        end
+    end
     for ann in sp[:annotations]
         x, y, val = ann
-        x, y = GR.wctondc(x, y)
+        x, y = if is3d(sp)
+            # GR.wc3towc(x, y, z)
+        else
+            GR.wctondc(x, y)
+        end
         gr_set_font(val.font)
         gr_text(x, y, val.str)
     end
