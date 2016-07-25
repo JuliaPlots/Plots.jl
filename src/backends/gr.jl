@@ -675,14 +675,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # recompute data
         if typeof(z) <: Surface
-            if st == :heatmap #&& size(z.surf) == (length(y), length(x))
+            if st == :heatmap
                 expand_extrema!(sp[:xaxis], (x[1]-0.5*(x[2]-x[1]), x[end]+0.5*(x[end]-x[end-1])))
                 expand_extrema!(sp[:yaxis], (y[1]-0.5*(y[2]-y[1]), y[end]+0.5*(y[end]-y[end-1])))
-            #     # coords are centers... turn into edges
-            #     xd = diff(x)
-            #     x = vcat(x[1]-0.5xd[1], x[1]+xd, x[end]+0.5xd[end])
-            #     yd = diff(y)
-            #     y = vcat(y[1]-0.5yd[1], y[1]+yd, y[end]+0.5yd[end])
             end
             z = vec(transpose_z(series, z.surf, false))
         elseif ispolar(sp)
@@ -694,21 +689,19 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if st in (:path, :scatter)
             if length(x) > 1
-
                 # do area fill
                 if frng != nothing
-                    gr_set_fillcolor(series[:fillcolor]) #, series[:fillalpha])
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
-                    frng = isa(frng, Number) ? Float64[frng] : frng
-                    nx, ny, nf = length(x), length(y), length(frng)
-                    n = max(nx, ny)
-                    fx, fy = zeros(2n), zeros(2n)
-                    for i=1:n
-                        fx[i] = fx[end-i+1] = cycle(x,i)
-                        fy[i] = cycle(y,i)
-                        fy[end-i+1] = cycle(frng,i)
+                    fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
+                    for (i,rng) in enumerate(iter_segments(series[:x], series[:y]))
+                        if length(rng) > 1
+                            gr_set_fillcolor(cycle(series[:fillcolor], i))
+                            fx = cycle(x, vcat(rng, reverse(rng)))
+                            fy = vcat(cycle(fr_from,rng), cycle(fr_to,reverse(rng)))
+                            @show i rng fx fy
+                            GR.fillarea(fx, fy)
+                        end
                     end
-                    GR.fillarea(fx, fy)
                 end
 
                 # draw the line(s)
