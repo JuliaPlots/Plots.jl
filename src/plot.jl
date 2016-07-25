@@ -148,7 +148,7 @@ end
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
 function _plot!(plt::Plot, d::KW, args::Tuple)
-    # d[:plot_object] = plt
+    d[:plot_object] = plt
 
     # --------------------------------
     # "USER RECIPES"

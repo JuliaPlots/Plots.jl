@@ -273,14 +273,15 @@ end
     end
 end
 
-#
-#
-# # function without range... use the current range of the x-axis
 
-# @recipe function f(f::FuncOrFuncs)
-#     plt = d[:plot_object]
-#     f, xmin(plt), xmax(plt)
-# end
+
+# function without range... use the current range of the x-axis
+
+@recipe function f(f::FuncOrFuncs)
+    plt = d[:plot_object]
+    xmin,xmax = axis_limits(plt[1][:xaxis])
+    f, xmin, xmax
+end
 
 #
 # # --------------------------------------------------------------------
