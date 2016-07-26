@@ -248,6 +248,7 @@ function _plot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
             push!(plt.inset_subplots, sp)
         end
     end
+    plt[:inset_subplots] = nothing
 end
 
 function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
