@@ -100,6 +100,7 @@ const _arg_desc = KW(
 :scale     				  => "Symbol. Scale of the axis: `:none`, `:ln`, `:log2`, `:log10`",
 :rotation  				  => "Number. Degrees rotation of tick labels.",
 :flip      				  => "Bool.  Should we flip (reverse) the axis?",
+:formatter 				  => "Function, :scientific, or :auto. A method which converts a number to a string for tick labeling.",
 :tickfont  				  => "Font. Font of axis tick labels.",
 :guidefont 				  => "Font. Font of axis guide (label).",
 :foreground_color_axis    => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of axis ticks.",

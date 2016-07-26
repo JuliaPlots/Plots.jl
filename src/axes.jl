@@ -73,6 +73,9 @@ function process_axis_arg!(d::KW, arg, letter = "")
     elseif typeof(arg) <: Number
         d[Symbol(letter,:rotation)] = arg
 
+    elseif typeof(arg) <: Function
+        d[Symbol(letter,:formatter)] = arg
+
     else
         warn("Skipped $(letter)axis arg $arg")
 
@@ -129,6 +132,12 @@ const _inv_scale_funcs = Dict{Symbol,Function}(
     :ln => exp,
 )
 
+# const _label_func = Dict{Symbol,Function}(
+#     :log10 => x -> "10^$x",
+#     :log2 => x -> "2^$x",
+#     :ln => x -> "e^$x",
+# )
+
 const _label_func = Dict{Symbol,Function}(
     :log10 => x -> "10^$x",
     :log2 => x -> "2^$x",
@@ -141,41 +150,44 @@ invscalefunc(scale::Symbol) = x -> get(_inv_scale_funcs, scale, identity)(Float6
 labelfunc(scale::Symbol, backend::AbstractBackend) = get(_label_func, scale, string)
 
 function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
-    lims = axis_limits(axis)
+    amin,amax = axis_limits(axis)
 
     # scale the limits
     scale = axis[:scale]
-    scaled_lims = map(scalefunc(scale), lims)
-    # @show lims scaled_lims
+    sf = scalefunc(scale)
 
     # get a list of well-laid-out ticks
-    cv = if ticks == nothing
-        optimize_ticks(scaled_lims...,
+    scaled_ticks = if ticks == nothing
+        optimize_ticks(
+            sf(amin),
+            sf(amax);
             k_min = 5, # minimum number of ticks
             k_max = 8, # maximum number of ticks
-            # span_buffer = 0.0 # padding buffer in case nice ticks are closeby
         )[1]
     else
-        ticks
+        map(sf, ticks)
     end
+    unscaled_ticks = map(invscalefunc(scale), scaled_ticks)
 
-    # # expand to ensure we see all the ticks
-    # expand_extrema!(axis, cv)
-
-    # rescale and return values and labels
-    # @show cv
-    ticklabels = if any(isfinite, cv)
-        map(labelfunc(scale, backend()), Showoff.showoff(cv, :plain))
+    labels = if any(isfinite, unscaled_ticks)
+        formatter = axis[:formatter]
+        if formatter == :auto
+            # the default behavior is to make strings of the scaled values and then apply the labelfunc
+            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :plain))
+        elseif formatter == :scientific
+            Showoff.showoff(unscaled_ticks, :scientific)
+        else
+            # there was an override for the formatter... use that on the unscaled ticks
+            map(formatter, unscaled_ticks)
+        end
     else
+        # no finite ticks to show...
         String[]
     end
 
-    tickvals = map(invscalefunc(scale), cv)
-    # @show tickvals ticklabels
-    # ticklabels = Showoff.showoff(tickvals, scale == :log10 ? :scientific : :auto)
-    tickvals, ticklabels
-    # basestr = scale == :log10 ? "10^" : scale == :log2 ? "2^" : scale == :ln ? "e^" : ""
-    # tickvals, ["$basestr$cvi" for cvi in cv]
+    # @show unscaled_ticks labels
+    # labels = Showoff.showoff(unscaled_ticks, scale == :log10 ? :scientific : :auto)
+    unscaled_ticks, labels
 end
 
 # return (continuous_values, discrete_values) for the ticks on this axis

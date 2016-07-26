@@ -265,6 +265,7 @@ const _axis_defaults = KW(
     :foreground_color_text   => :match,            # tick text color,
     :foreground_color_guide  => :match,            # guide text color,
     :discrete_values => [],
+    :formatter => :auto,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -298,7 +299,8 @@ for letter in (:x,:y,:z)
                 :foreground_color_border,
                 :foreground_color_text,
                 :foreground_color_guide,
-                :discrete_values
+                :discrete_values,
+                :formatter,
             )
         _axis_defaults_byletter[Symbol(letter,k)] = :match
 
