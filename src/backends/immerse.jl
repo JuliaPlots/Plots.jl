@@ -14,7 +14,7 @@ function _initialize_backend(::ImmerseBackend; kw...)
   @eval begin
     import Immerse, Gadfly, Compose, Gtk
     export Immerse, Gadfly, Compose, Gtk
-    include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
+    include(joinpath(dirname(@__FILE__), "gadfly_shapes.jl"))
   end
 end
 

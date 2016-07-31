@@ -41,7 +41,7 @@ function _initialize_backend(::GadflyBackend; kw...)
     @eval begin
         import Gadfly, Compose
         export Gadfly, Compose
-        include(joinpath(Pkg.dir("Plots"), "src", "backends", "gadfly_shapes.jl"))
+        include(joinpath(dirname(@__FILE__), "gadfly_shapes.jl"))
     end
 end
 

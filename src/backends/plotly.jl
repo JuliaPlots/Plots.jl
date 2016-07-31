@@ -537,7 +537,7 @@ end
 # ----------------------------------------------------------------
 
 function html_head(plt::Plot{PlotlyBackend})
-    "<script src=\"$(Pkg.dir("Plots","deps","plotly-latest.min.js"))\"></script>"
+    "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
 end
 
 function html_body(plt::Plot{PlotlyBackend}, style = nothing)
