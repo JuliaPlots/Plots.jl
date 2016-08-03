@@ -699,7 +699,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                             gr_set_fillcolor(cycle(series[:fillcolor], i))
                             fx = cycle(x, vcat(rng, reverse(rng)))
                             fy = vcat(cycle(fr_from,rng), cycle(fr_to,reverse(rng)))
-                            @show i rng fx fy
+                            # @show i rng fx fy
                             GR.fillarea(fx, fy)
                         end
                     end
@@ -994,6 +994,7 @@ function _display(plt::Plot{GRBackend})
         println(content)
         rm(filepath)
     else
+        ENV["GKS_DOUBLE_BUF"] = "true"
         gr_display(plt)
     end
 end
