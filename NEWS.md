@@ -11,11 +11,28 @@
 
 ## 0.9 (current master/dev)
 
+#### 0.9.0
+
+- fixes to cycle
+- add back single function recipe: `plot!(cos)`
+- new axis formatter attribute... accepts functions to convert numbers to strings
+- fix for inset plots
+- GR:
+	- fillrange fix
+	- annotations fix
+	- force double buffering in display
+
 ---
 
 ## 0.8
 
-####
+#### 0.8.2 (backported bug fixes for julia 0.4)
+
+- plotly ticks fix
+- unicodeplots size fix
+- remove mkdir call in tests
+
+#### 0.8.1
 
 - manual drawing of axes/ticks/labels
 - get_ticks uses optimize_ticks and Showoff
