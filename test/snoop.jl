@@ -4,7 +4,7 @@ import SnoopCompile
 # This only needs to be run once (to generate "/tmp/plots_compiles.csv")
 
 # SnoopCompile.@snoop "/tmp/plots_compiles.csv" begin
-#     include(Pkg.dir("Plots", "test","runtests.jl"))
+#     include(joinpath(dirname(@__FILE__), "runtests.jl"))
 # end
 
 # ----------------------------------------------------------
@@ -32,5 +32,5 @@ blacklist = ["MIME"]
 pc, discards = SnoopCompile.parcel(data[end:-1:1,2], subst=subst, blacklist=blacklist)
 SnoopCompile.write("/tmp/precompile", pc)
 
-pdir = Pkg.dir("Plots")
+pdir = joinpath(dirname(@__FILE__), "..")
 run(`cp /tmp/precompile/precompile_Plots.jl $pdir/src/precompile.jl`)
