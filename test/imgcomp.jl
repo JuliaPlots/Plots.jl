@@ -45,7 +45,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
     # firgure out version info
     G = glob(joinpath(relpath(refdir), "*"))
     # @show refdir fn G
-    slash = (@windows ? "\\" : "/")
+    slash = (@static is_windows() ? "\\" : "/")
     versions = map(fn -> VersionNumber(split(fn, slash)[end]), G)
     versions = reverse(sort(versions))
     versions = filter(v -> v <= _current_plots_version, versions)

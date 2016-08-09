@@ -252,7 +252,7 @@ PlotExample("DataFrames",
         iris = RDatasets.dataset("datasets", "iris")
         scatter(iris, :SepalLength, :SepalWidth, group=:Species,
             title = "My awesome plot", xlabel = "Length", ylabel = "Width",
-            marker = (0.5, [:+ :h :star7], 12), bg=RGB(.2,.2,.2))
+            marker = (0.5, [:cross :hex :star7], 12), bg=RGB(.2,.2,.2))
     end)]
 ),
 

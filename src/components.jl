@@ -119,6 +119,8 @@ const _shape_keys = Symbol[
   :star8,
   :vline,
   :hline,
+  :+,
+  :x,
 ]
 
 const _shapes = KW(

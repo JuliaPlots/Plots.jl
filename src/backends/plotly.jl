@@ -307,6 +307,7 @@ plotly_colorscale(c, α) = plotly_colorscale(cgrad(alpha=α), α)
 const _plotly_markers = KW(
     :rect       => "square",
     :xcross     => "x",
+    :x          => "x",
     :utriangle  => "triangle-up",
     :dtriangle  => "triangle-down",
     :star5      => "star-triangle-up",
