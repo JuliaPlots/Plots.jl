@@ -458,6 +458,13 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     :linewidth => py_dpi_scale(plt, series[:linewidth]),
                     :linestyle => py_linestyle(st, series[:linestyle])
                 )
+                clims = sp[:clims]
+                if is_2tuple(clims)
+                    extrakw = KW()
+                    isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+                    isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+                    kw[:norm] = pycolors.Normalize(; extrakw...)
+                end
                 lz = collect(series[:line_z])
                 handle = if is3d(st)
                     for rng in iter_segments(x, y, z)
