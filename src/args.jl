@@ -626,6 +626,21 @@ end
 function preprocessArgs!(d::KW)
     replaceAliases!(d, _keyAliases)
 
+    # clear all axis stuff
+    if haskey(d, :axis) && d[:axis] in (:none, nothing, false)
+        d[:ticks] = nothing
+        d[:foreground_color_border] = RGBA(0,0,0,0)
+        d[:grid] = false
+        delete!(d, :axis)
+    end
+    # for letter in (:x, :y, :z)
+    #     asym = Symbol(letter, :axis)
+    #     if haskey(d, asym) || d[asym] in (:none, nothing, false)
+    #         d[Symbol(letter, :ticks)] = nothing
+    #         d[Symbol(letter, :foreground_color_border)] = RGBA(0,0,0,0)
+    #     end
+    # end
+
     # handle axis args
     for letter in (:x, :y, :z)
         asym = Symbol(letter, :axis)
