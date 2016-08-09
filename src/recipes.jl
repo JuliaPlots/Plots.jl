@@ -262,19 +262,23 @@ end
 # ---------------------------------------------------------------------------
 # sticks
 
-sticks_fillfrom(fr::Void, i::Integer) = 0.0
-sticks_fillfrom(fr::Number, i::Integer) = fr
-sticks_fillfrom(fr::AVec, i::Integer) = fr[mod1(i, length(fr))]
-
 # create vertical line segments from fill
 @recipe function f(::Type{Val{:sticks}}, x, y, z)
     n = length(x)
     fr = d[:fillrange]
+    if fr == nothing
+        yaxis = d[:subplot][:yaxis]
+        fr = if yaxis[:scale] == :identity
+            0.0
+        else
+            min(axis_limits(yaxis)[1], minimum(y))
+        end
+    end
     newx, newy = zeros(3n), zeros(3n)
     for i=1:n
         rng = 3i-2:3i
         newx[rng] = [x[i], x[i], NaN]
-        newy[rng] = [sticks_fillfrom(fr,i), y[i], NaN]
+        newy[rng] = [cycle(fr,i), y[i], NaN]
     end
     x := newx
     y := newy
