@@ -222,6 +222,11 @@ function pgf_axis(sp::Subplot, letter)
         kw[Symbol(letter,:max)] = lims[2]
     end
 
+    if !(axis[:ticks] in (nothing, false, :none, :auto))
+       push!(style, "$(letter)"*"tick = {$(join(get_ticks(axis),","))}")
+    end
+
+
     # return the style list and KW args
     style, kw
 end
@@ -240,6 +245,7 @@ function _make_pgf_plot!(plt::Plot)
         for letter in (:x, :y, :z)
             if letter != :z || is3d(sp)
                 axisstyle, axiskw = pgf_axis(sp, letter)
+                append!(style, axisstyle)
                 merge!(kw, axiskw)
             end
         end
