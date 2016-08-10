@@ -713,9 +713,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     if st == :heatmap
         x, y, z = heatmap_edges(x), heatmap_edges(y), transpose_z(series, z.surf)
-        # if !(eltype(z) <: Number)
-        #     z, discrete_colorbar_values = indices_and_unique_values(z)
-        # end
+
+        expand_extrema!(sp[:xaxis], x)
+        expand_extrema!(sp[:yaxis], y)
         dvals = sp[:zaxis][:discrete_values]
         if !isempty(dvals)
             discrete_colorbar_values = dvals
@@ -731,21 +731,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             label = series[:label],
             zorder = series[:series_plotindex],
             cmap = py_fillcolormap(series),
-            edgecolors = (series[:linewidth] > 0 ? py_linecolor(series) : "face"),
+            # edgecolors = (series[:linewidth] > 0 ? py_linecolor(series) : "face"),
             extrakw...
         )
         push!(handles, handle)
         needs_colorbar = true
-
-        # TODO: this should probably be handled generically
-        # expand extrema... handle is a QuadMesh object
-        for path in handle[:properties]()["paths"]
-            verts = path[:vertices]
-            xmin, ymin = minimum(verts, 1)
-            xmax, ymax = maximum(verts, 1)
-            expand_extrema!(sp, xmin, xmax, ymin, ymax)
-        end
-
     end
 
     if st == :shape
