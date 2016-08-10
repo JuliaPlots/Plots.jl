@@ -211,8 +211,9 @@ function rotate!(shape::Shape, Θ::Real, c = center(shape))
     x, y = shape_coords(shape)
     cx, cy = c
     for i=1:length(x)
-        x[i] = rotate_x(x[i], y[i], Θ, cx, cy)
-        y[i] = rotate_y(x[i], y[i], Θ, cx, cy)
+        xi = rotate_x(x[i], y[i], Θ, cx, cy)
+        yi = rotate_y(x[i], y[i], Θ, cx, cy)
+        x[i], y[i] = xi, yi
     end
     shape
 end
