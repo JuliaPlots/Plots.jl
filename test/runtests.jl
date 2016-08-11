@@ -30,7 +30,7 @@ facts("GR") do
     @fact gr() --> Plots.GRBackend()
     @fact backend() --> Plots.GRBackend()
 
-    # @linux_only image_comparison_facts(:gr, skip=[], eps=img_eps)
+    # @static is_linux() && image_comparison_facts(:gr, skip=[], eps=img_eps)
 end
 
 facts("Plotly") do
@@ -38,7 +38,7 @@ facts("Plotly") do
     @fact backend() --> Plots.PlotlyBackend()
 
     # # until png generation is reliable on OSX, just test on linux
-    # @linux_only image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
+    # @static is_linux() && image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
 end
 
 

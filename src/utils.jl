@@ -445,7 +445,8 @@ end
 # for example: PyPlot sends rows to y, so transpose_on_match should be true
 function transpose_z(d, z, transpose_on_match::Bool = true)
     if d[:match_dimensions] == transpose_on_match
-        z'
+        # z'
+        permutedims(z, [2,1])
     else
         z
     end

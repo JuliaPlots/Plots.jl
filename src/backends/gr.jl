@@ -199,14 +199,14 @@ function gr_polaraxes(rmin, rmax)
             GR.drawarc(-r, r, -r, r, 0, 359)
         end
     end
-    for alpha in 0:45:315
-        a = alpha + 90
+    for α in 0:45:315
+        a = α + 90
         sinf = sin(a * pi / 180)
         cosf = cos(a * pi / 180)
         GR.polyline([sinf, 0], [cosf, 0])
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
         x, y = GR.wctondc(1.1 * sinf, 1.1 * cosf)
-        GR.textext(x, y, string(alpha, "^o"))
+        GR.textext(x, y, string(α, "^o"))
     end
     GR.restorestate()
 end
@@ -648,7 +648,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # TODO: can we remove?
     gr_set_font(xaxis[:tickfont])
-    GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
+    # GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
 
     for (idx, series) in enumerate(series_list(sp))
         st = series[:seriestype]
@@ -805,15 +805,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 a2 = round(Int, a1 + (slices[i] / total) * 360.0)
                 GR.setfillcolorind(980 + (i-1) % 20)
                 GR.fillarc(xmin, xmax, ymin, ymax, a1, a2)
-                alpha = 0.5 * (a1 + a2)
-                cosf = r * cos(alpha * pi / 180)
-                sinf = r * sin(alpha * pi / 180)
+                α = 0.5 * (a1 + a2)
+                cosf = r * cos(α * pi / 180)
+                sinf = r * sin(α * pi / 180)
                 x[1] = xcenter + cosf
                 y[1] = ycenter + sinf
                 x[2] = x[1] + 0.1 * cosf
                 y[2] = y[1] + 0.1 * sinf
                 y[3] = y[2]
-                if 90 <= alpha < 270
+                if 90 <= α < 270
                     x[3] = x[2] - 0.05
                     GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
                     gr_text(x[3] - 0.01, y[3], string(labels[i]))
@@ -849,15 +849,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :image
             img = series[:z].surf
-            w, h = size(img)
-            if eltype(img) <: Colors.AbstractGray
-                grey = round(UInt8, float(img) * 255)
+            h, w = size(img)
+            if eltype(z) <: Colors.AbstractGray
+                grey = round(UInt8, float(z) * 255)
                 rgba = map(c -> UInt32( 0xff000000 + Int(c)<<16 + Int(c)<<8 + Int(c) ), grey)
             else
                 rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
                                         round(Int,  blue(c) * 255) << 16 +
                                         round(Int, green(c) * 255) << 8  +
-                                        round(Int,   red(c) * 255) ), img)
+                                        round(Int,   red(c) * 255) ), z)
             end
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
         end
