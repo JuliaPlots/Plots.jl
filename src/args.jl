@@ -795,12 +795,17 @@ function warnOnUnsupported(pkg::AbstractBackend, d::KW)
 end
 
 function warnOnUnsupported_scales(pkg::AbstractBackend, d::KW)
+    scales = supported_scales(pkg)
     for k in (:xscale, :yscale, :zscale, :scale)
         if haskey(d, k)
             v = d[k]
-            v = get(_scaleAliases, v, v)
-            if !(v in supported_scales(pkg))
-                warn("scale $(d[k]) is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
+            all_supported = if typeof(v) <: AbstractArray
+                all(vi -> get(_scaleAliases, vi, vi) in scales, v)
+            else
+                get(_scaleAliases, v, v) in scales
+            end
+            if !all_supported
+                warn("scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
             end
         end
     end
