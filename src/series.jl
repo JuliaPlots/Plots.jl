@@ -125,21 +125,19 @@ immutable SliceIt end
     mx = length(xs)
     my = length(ys)
     mz = length(zs)
-    # ret = Any[]
-    for i in 1:max(mx, my, mz)
-        # add a new series
-        di = copy(d)
-        xi, yi, zi = xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]
-        # @show i, typeof((xi, yi, zi))
-        di[:x], di[:y], di[:z] = compute_xyz(xi, yi, zi)
-        # @show i, typeof((di[:x], di[:y], di[:z]))
+    if mx > 0 && my > 0 && mz > 0
+        for i in 1:max(mx, my, mz)
+            # add a new series
+            di = copy(d)
+            xi, yi, zi = xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]
+            di[:x], di[:y], di[:z] = compute_xyz(xi, yi, zi)
 
-        # handle fillrange
-        fr = fillranges[mod1(i,mf)]
-        di[:fillrange] = isa(fr, Function) ? map(fr, di[:x]) : fr
+            # handle fillrange
+            fr = fillranges[mod1(i,mf)]
+            di[:fillrange] = isa(fr, Function) ? map(fr, di[:x]) : fr
 
-        # @show i, di[:x], di[:y], di[:z]
-        push!(series_list, RecipeData(di, ()))
+            push!(series_list, RecipeData(di, ()))
+        end
     end
     nothing  # don't add a series for the main block
 end
