@@ -69,6 +69,7 @@ export
     backend,
     backends,
     backend_name,
+    add_backend,
     aliases,
     dataframes,
 

@@ -47,6 +47,14 @@ is_subplot_supported(::PyPlotBackend) = true
 
 # --------------------------------------------------------------------------------------
 
+function add_backend(::PyPlotBackend)
+    if !is_installed("PyPlot")
+        withenv("PYTHON" => "") do
+            Pkg.add("PyPlot")
+            Pkg.build("PyPlot")
+        end
+    end
+end
 
 function _initialize_backend(::PyPlotBackend)
     @eval begin

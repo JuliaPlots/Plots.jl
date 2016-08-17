@@ -11,6 +11,17 @@ is_string_supported(::PlotlyJSBackend) = true
 
 # --------------------------------------------------------------------------------------
 
+
+function add_backend(::PlotlyJSBackend)
+    if !is_installed("PlotlyJS")
+        Pkg.add("PlotlyJS")
+        @eval import Blink
+        Blink.AtomShell.install()
+        Pkg.add("Rsvg")
+    end
+end
+
+
 function _initialize_backend(::PlotlyJSBackend; kw...)
     @eval begin
         import PlotlyJS

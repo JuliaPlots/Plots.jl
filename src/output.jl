@@ -255,9 +255,15 @@ function setup_atom()
         # @eval import Atom, Media
         @eval import Atom
 
+        # default text/plain passes to html... handles Interact issues
+        function Base.show(io::IO, m::MIME"text/plain", plt::Plot)
+            show(io, MIME("text/html"), plt)
+        end
+
         # for inline values, display the plot (gui) and return a graph icon
         function Atom.Media.render(::Atom.Inline, plt::Plot)
-            display(PlotsDisplay(), plt)
+            # info("using Media.render")
+            display(plt)
             Atom.icon("graph")
         end
 

@@ -47,6 +47,11 @@ is_string_supported(::PlotlyBackend) = true
 
 # --------------------------------------------------------------------------------------
 
+function add_backend(::PlotlyBackend)
+    Pkg.build("Plots")
+end
+
+
 const _plotly_js_path = joinpath(dirname(@__FILE__), "..", "..", "deps", "plotly-latest.min.js")
 
 function _initialize_backend(::PlotlyBackend; kw...)

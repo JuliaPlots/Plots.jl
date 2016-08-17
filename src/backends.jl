@@ -44,6 +44,9 @@ include("backends/web.jl")
 
 # ---------------------------------------------------------
 
+add_backend(pkg::Symbol) = add_backend(_backend_instance(pkg))
+add_backend(b::AbstractBackend) = warn("No custom install defined for $(backend_name(b))")
+
 # don't do anything as a default
 _create_backend_figure(plt::Plot) = nothing
 _prepare_plot_object(plt::Plot) = nothing
