@@ -410,6 +410,9 @@ end
         xseg, yseg = yseg, xseg
     end
 
+    # reset orientation
+    orientation := default(:orientation)
+
     x := xseg.pts
     y := yseg.pts
     seriestype := :shape

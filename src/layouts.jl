@@ -239,7 +239,9 @@ function GridLayout(dims...;
         # convert(Vector{Float64}, widths),
         # convert(Vector{Float64}, heights),
         KW(kw))
-    fill!(grid, EmptyLayout(layout))
+    for i in eachindex(grid)
+        grid[i] = EmptyLayout(layout)
+    end
     layout
 end
 
@@ -311,7 +313,6 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
     minpad_top    = map(toppad,    layout.grid)
     minpad_right  = map(rightpad,  layout.grid)
     minpad_bottom = map(bottompad, layout.grid)
-    # @show minpad_left minpad_top minpad_right minpad_bottom
 
     # get the max horizontal (left and right) padding over columns,
     # and max vertical (bottom and top) padding over rows
@@ -320,7 +321,6 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
     pad_top    = maximum(minpad_top,    2)
     pad_right  = maximum(minpad_right,  1)
     pad_bottom = maximum(minpad_bottom, 2)
-    # @show pad_left pad_top pad_right pad_bottom
 
     # make sure the perimeter match the parent
     pad_left[1]     = max(pad_left[1], minimum_perimeter[1])
@@ -331,22 +331,18 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
     # scale this up to the total padding in each direction
     total_pad_horizontal = sum(pad_left + pad_right)
     total_pad_vertical   = sum(pad_top + pad_bottom)
-    # @show total_pad_horizontal total_pad_vertical
 
     # now we can compute the total plot area in each direction
     total_plotarea_horizontal = width(layout)  - total_pad_horizontal
     total_plotarea_vertical   = height(layout) - total_pad_vertical
-    # @show total_plotarea_horizontal total_plotarea_vertical
 
     # recompute widths/heights
     layout.widths = recompute_lengths(layout.widths)
     layout.heights = recompute_lengths(layout.heights)
-    # @show layout.widths layout.heights
 
     # normalize widths/heights so they sum to 1
     # denom_w = sum(layout.widths)
     # denom_h = sum(layout.heights)
-    # @show layout.widths layout.heights denom_w, denom_h
 
     # we have all the data we need... lets compute the plot areas and set the bounding boxes
     for r=1:nr, c=1:nc
@@ -387,7 +383,6 @@ end
 function update_inset_bboxes!(plt::Plot)
     for sp in plt.inset_subplots
         p_area = Measures.resolve(plotarea(sp.parent), sp[:relative_bbox])
-        # @show bbox(sp.parent) sp[:relative_bbox] p_area
         plotarea!(sp, p_area)
 
         bbox!(sp, bbox(
@@ -597,7 +592,7 @@ function create_grid(expr::Expr)
         create_grid_curly(expr)
     else
         # if it's something else, just return that (might be an existing layout?)
-        expr
+        esc(expr)
     end
 end
 
@@ -639,7 +634,6 @@ function create_grid_curly(expr::Expr)
     for (i,arg) in enumerate(expr.args[2:end])
         add_layout_pct!(kw, arg, i, length(expr.args)-1)
     end
-    # @show kw
     :(EmptyLayout(label = $(QuoteNode(s)), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto)))))
 end
 
