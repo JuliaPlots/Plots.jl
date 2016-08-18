@@ -958,3 +958,14 @@ function abline!(plt::Plot, a, b; kw...)
 end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
+
+
+# -------------------------------------------------
+# Dates
+
+@recipe function f{T<:AbstractArray{Date}}(::Type{T}, dts::T)
+    date_formatter = dt -> string(convert(Date, dt))
+    xformatter := date_formatter
+    map(dt->convert(Int,dt), dts)
+end
+
