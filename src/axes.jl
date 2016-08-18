@@ -255,9 +255,16 @@ end
 
 
 function expand_extrema!(sp::Subplot, d::KW)
+    vert = isvertical(d)
+
     # first expand for the data
     for letter in (:x, :y, :z)
-        data = d[letter]
+        data = d[if vert
+            letter
+        else
+            letter == :x ? :y : letter == :y ? :x : :z
+        end]
+        # data = d[letter]
         axis = sp.attr[Symbol(letter, "axis")]
         if eltype(data) <: Number || (isa(data, Surface) && all(di -> isa(di, Number), data.surf))
             if !(eltype(data) <: Number)
@@ -281,7 +288,6 @@ function expand_extrema!(sp::Subplot, d::KW)
     # end
 
     # expand for fillrange
-    vert = isvertical(d)
     fr = d[:fillrange]
     if fr == nothing && d[:seriestype] == :bar
         fr = 0.0
