@@ -36,6 +36,13 @@ function ps(plt::Plot, fn::AbstractString)
 end
 ps(fn::AbstractString) = ps(current(), fn)
 
+function eps(plt::Plot, fn::AbstractString)
+  fn = addExtension(fn, "eps")
+  io = open(fn, "w")
+  writemime(io, MIME("image/eps"), plt)
+  close(io)
+end
+eps(fn::AbstractString) = eps(current(), fn)
 
 function tex(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "tex")
@@ -54,6 +61,7 @@ const _savemap = Dict(
     "svg" => svg,
     "pdf" => pdf,
     "ps"  => ps,
+    "eps" => eps,
     "tex" => tex,
   )
 
