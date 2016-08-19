@@ -969,3 +969,8 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
     map(dt->convert(Int,dt), dts)
 end
 
+@recipe function f{T<:AbstractArray{DateTime}}(::Type{T}, dts::T)
+    date_formatter = dt -> string(convert(DateTime, dt))
+    xformatter := date_formatter
+    map(dt->convert(Int,dt), dts)
+end
