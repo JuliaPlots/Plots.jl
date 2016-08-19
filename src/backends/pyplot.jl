@@ -985,8 +985,15 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         # axis attributes
         for letter in (:x, :y, :z)
             axissym = Symbol(letter, :axis)
-            axis = sp[axissym]
             haskey(ax, axissym) || continue
+            axis = sp[axissym]
+            pyaxis = ax[axissym]
+            if axis[:mirror] && letter != :z
+                pos = letter == :x ? "top" : "right"
+                pyaxis[:set_label_position](pos)     # the guides
+                pyaxis[:set_ticks_position]("both")  # the hash marks
+                pyaxis[Symbol(:tick_, pos)]()        # the tick labels
+            end
             py_set_scale(ax, axis)
             py_set_lims(ax, axis)
             py_set_ticks(ax, get_ticks(axis), letter)
@@ -994,14 +1001,14 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             if get(axis.d, :flip, false)
                 ax[Symbol("invert_", letter, "axis")]()
             end
-            ax[axissym][:label][:set_fontsize](py_dpi_scale(plt, axis[:guidefont].pointsize))
+            pyaxis[:label][:set_fontsize](py_dpi_scale(plt, axis[:guidefont].pointsize))
             for lab in ax[Symbol("get_", letter, "ticklabels")]()
                 lab[:set_fontsize](py_dpi_scale(plt, axis[:tickfont].pointsize))
                 lab[:set_rotation](axis[:rotation])
             end
             if sp[:grid]
                 fgcolor = py_color(sp[:foreground_color_grid])
-                ax[axissym][:grid](true, color = fgcolor)
+                pyaxis[:grid](true, color = fgcolor)
                 ax[:set_axisbelow](true)
             end
             py_set_axis_colors(ax, axis)

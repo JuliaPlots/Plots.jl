@@ -266,6 +266,7 @@ const _axis_defaults = KW(
     :foreground_color_guide  => :match,            # guide text color,
     :discrete_values => [],
     :formatter => :auto,
+    :mirror => true,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -285,23 +286,24 @@ const _suppress_warnings = Set{Symbol}([
 # add defaults for the letter versions
 const _axis_defaults_byletter = KW()
 for letter in (:x,:y,:z)
-    for k in (
-                :guide,
-                :lims,
-                :ticks,
-                :scale,
-                :rotation,
-                :flip,
-                :link,
-                :tickfont,
-                :guidefont,
-                :foreground_color_axis,
-                :foreground_color_border,
-                :foreground_color_text,
-                :foreground_color_guide,
-                :discrete_values,
-                :formatter,
-            )
+    for k in keys(_axis_defaults)
+    # for k in (
+    #             :guide,
+    #             :lims,
+    #             :ticks,
+    #             :scale,
+    #             :rotation,
+    #             :flip,
+    #             :link,
+    #             :tickfont,
+    #             :guidefont,
+    #             :foreground_color_axis,
+    #             :foreground_color_border,
+    #             :foreground_color_text,
+    #             :foreground_color_guide,
+    #             :discrete_values,
+    #             :formatter,
+    #         )
         _axis_defaults_byletter[Symbol(letter,k)] = :match
 
         # allow the underscore version too: xguide or x_guide

@@ -107,5 +107,6 @@ const _arg_desc = KW(
 :foreground_color_border  => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of plot area border (spines).",
 :foreground_color_text    => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of tick labels.",
 :foreground_color_guide   => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of axis guides (axis labels).",
+:mirror                   => "Bool.  Switch the side of the tick labels (right or top).",
 
 )
