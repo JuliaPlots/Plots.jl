@@ -57,7 +57,6 @@ const _plotly_js_path = joinpath(dirname(@__FILE__), "..", "..", "deps", "plotly
 function _initialize_backend(::PlotlyBackend; kw...)
   @eval begin
     import JSON
-    JSON._print(io::IO, state::JSON.State, dt::Union{Date,DateTime}) = print(io, '"', dt, '"')
 
     _js_code = open(readstring, _plotly_js_path, "r")
 
