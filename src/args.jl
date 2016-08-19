@@ -266,7 +266,7 @@ const _axis_defaults = KW(
     :foreground_color_guide  => :match,            # guide text color,
     :discrete_values => [],
     :formatter => :auto,
-    :mirror => true,
+    :mirror => false,
 )
 
 const _suppress_warnings = Set{Symbol}([
