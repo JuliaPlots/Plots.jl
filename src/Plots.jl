@@ -39,6 +39,7 @@ export
     current,
     default,
     with,
+    twinx,
 
     @userplot,
     @shorthands,

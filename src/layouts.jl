@@ -712,3 +712,22 @@ function link_axes!(layout::GridLayout, link::Symbol)
         link_axes!(l, link)
     end
 end
+
+# -------------------------------------------------------------------------
+
+"Adds a new, empty subplot overlayed on top of `sp`, with a mirrored y-axis and linked x-axis."
+function twinx(sp::Subplot)
+    sp[:right_margin] = max(sp[:right_margin], 30px)
+    idx = length(sp.plt.subplots) + 1
+    plot!(
+        sp.plt,
+        ymirror = true,
+        xlink = [sp],
+        inset = (sp[:subplot_index], bbox(0,0,1,1)),
+        bg_inside = nothing,
+        subplot = idx
+    )
+    sp.plt[idx]
+end
+
+twinx(plt::Plot = current()) = twinx(plt[1])
