@@ -85,6 +85,44 @@ facts("Axes") do
 end
 
 
+# tests for preprocessing recipes
+
+# facts("recipes") do
+
+    # user recipe
+
+    # type T end
+    # @recipe function f(::T)
+    #     line := (3,0.3,:red)
+    #     marker := (20,0.5,:blue,:o)
+    #     bg := :yellow
+    #     rand(10)
+    # end
+    # plot(T())
+
+    # plot recipe
+
+    # @recipe function f(::Type{Val{:hiplt}},plt::Plot)
+    #     line := (3,0.3,:red)
+    #     marker := (20,0.5,:blue,:o)
+    #     t := :path
+    #     bg:=:green
+    #     ()
+    # end
+    # plot(rand(10),t=:hiplt)
+
+    # series recipe
+
+    # @recipe function f(::Type{Val{:hi}},x,y,z)
+    #     line := (3,0.3,:red)
+    #     marker := (20,0.5,:blue,:o)
+    #     t := :path
+    #     ()
+    # end
+    # plot(rand(10),t=:hiplt)
+
+# end
+
 
 
 FactCheck.exitstatus()

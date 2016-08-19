@@ -688,7 +688,7 @@ function preprocessArgs!(d::KW)
         a = d[:arrow]
         d[:arrow] = if a == true
             arrow()
-        elseif a == false
+        elseif a in (false, nothing, :none)
             nothing
         elseif !(typeof(a) <: Arrow)
             arrow(wraptuple(a)...)
@@ -698,9 +698,9 @@ function preprocessArgs!(d::KW)
     end
 
 
-    if get(d, :arrow, false) == true
-        d[:arrow] = arrow()
-    end
+    # if get(d, :arrow, false) == true
+    #     d[:arrow] = arrow()
+    # end
 
     # legends
     if haskey(d, :legend)

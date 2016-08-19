@@ -95,6 +95,7 @@ function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeD
     # when the arg tuple is empty, that means there's nothing left to recursively
     # process... finish up and add to the kw_list
     kw = recipedata.d
+    preprocessArgs!(kw)
     _preprocess_userrecipe(kw)
     warnOnUnsupported_scales(plt.backend, kw)
 
@@ -183,6 +184,7 @@ function _process_plotrecipe(plt::Plot, kw::KW, kw_list::Vector{KW}, still_to_pr
         st = kw[:seriestype] = get(_typeAliases, st, st)
         datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
         for data in datalist
+            preprocessArgs!(data.d)
             if data.d[:seriestype] == st
                 error("Plot recipe $st returned the same seriestype: $(data.d)")
             end
@@ -389,6 +391,10 @@ function _process_seriesrecipe(plt::Plot, d::KW)
         # assuming there was no error, recursively apply the series recipes
         for data in datalist
             if isa(data, RecipeData)
+                preprocessArgs!(data.d)
+                if data.d[:seriestype] == st
+                    error("The seriestype didn't change in series recipe $st.  This will cause a StackOverflow.")
+                end
                 _process_seriesrecipe(plt, data.d)
             else
                 warn("Unhandled recipe: $(data)")
