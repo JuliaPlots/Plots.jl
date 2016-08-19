@@ -876,11 +876,13 @@ end
 function py_compute_axis_minval(axis::Axis)
     # compute the smallest absolute value for the log scale's linear threshold
     minval = 1.0
-    sp = axis.sp
-    for series in series_list(axis.sp)
-        v = series.d[axis[:letter]]
-        if !isempty(v)
-            minval = min(minval, minimum(abs(v)))
+    sps = axis.sps
+    for sp in sps
+        for series in series_list(sp)
+            v = series.d[axis[:letter]]
+            if !isempty(v)
+                minval = min(minval, minimum(abs(v)))
+            end
         end
     end
 

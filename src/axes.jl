@@ -29,7 +29,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     d[:discrete_values] = []
 
     # update the defaults
-    update!(Axis(sp, d), args...; kw...)
+    update!(Axis([sp], d), args...; kw...)
 end
 
 function get_axis(sp::Subplot, letter::Symbol)
@@ -341,9 +341,11 @@ end
 function default_should_widen(axis::Axis)
     should_widen = false
     if axis[:scale] == :identity
-        for series in series_list(axis.sp)
-            if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
-                should_widen = true
+        for sp in axis.sps
+            for series in series_list(sp)
+                if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
+                    should_widen = true
+                end
             end
         end
     end

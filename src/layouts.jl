@@ -648,14 +648,23 @@ end
 
 # -------------------------------------------------------------------------
 
-# make all reference the same axis extrema/values
+# make all reference the same axis extrema/values.
+# merge subplot lists.
 function link_axes!(axes::Axis...)
     a1 = axes[1]
     for i=2:length(axes)
         a2 = axes[i]
+        expand_extrema!(a1, extrema(a2))
         for k in (:extrema, :discrete_values, :continuous_values, :discrete_map)
             a2[k] = a1[k]
         end
+
+        # make a2's subplot list refer to a1's and add any missing values
+        sps2 = a2.sps
+        for sp in sps2
+            sp in a1.sps || push!(a1.sps, sp)
+        end
+        a2.sps = a1.sps
     end
 end
 

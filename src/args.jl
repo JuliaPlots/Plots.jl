@@ -946,7 +946,7 @@ function Base.getindex(axis::Axis, k::Symbol)
     v = axis.d[k]
     if v == :match
         if haskey(_match_map2, k)
-            axis.sp[_match_map2[k]]
+            axis.sps[1][_match_map2[k]]
         else
             axis[_match_map[k]]
         end

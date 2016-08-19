@@ -242,10 +242,10 @@ function _plot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
             end
             sp = Subplot(backend(), parent=parent)
             sp.plt = plt
-            sp.attr[:relative_bbox] = bb
-            sp.attr[:subplot_index] = length(plt.subplots)
             push!(plt.subplots, sp)
             push!(plt.inset_subplots, sp)
+            sp.attr[:relative_bbox] = bb
+            sp.attr[:subplot_index] = length(plt.subplots)
         end
     end
     plt[:inset_subplots] = nothing

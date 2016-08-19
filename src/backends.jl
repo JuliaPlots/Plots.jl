@@ -80,6 +80,15 @@ function _update_min_padding!(sp::Subplot)
     toppad    = sp[:top_margin]    + title_padding(sp)
     rightpad  = sp[:right_margin]
     bottompad = tick_padding(sp[:xaxis]) + sp[:bottom_margin] + guide_padding(sp[:xaxis])
+
+    # switch them?
+    if sp[:xaxis][:mirror]
+        bottompad, toppad = toppad, bottompad
+    end
+    if sp[:yaxis][:mirror]
+        leftpad, rightpad = rightpad, leftpad
+    end
+
     # @show (leftpad, toppad, rightpad, bottompad)
     sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end

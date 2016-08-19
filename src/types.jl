@@ -34,11 +34,13 @@ type Subplot{T<:AbstractBackend} <: AbstractLayout
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
 end
 
+Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
+
 # -----------------------------------------------------------
 
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
 type Axis
-    sp::Subplot
+    sps::Vector{Subplot}
     d::KW
 end
 

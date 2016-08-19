@@ -587,22 +587,26 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if !(xticks in (nothing, false))
             # x labels
             flip = sp[:yaxis][:flip]
-            gr_set_font(sp[:xaxis][:tickfont], valign = :top, color = sp[:xaxis][:foreground_color_axis])
+            mirror = sp[:xaxis][:mirror]
+            gr_set_font(sp[:xaxis][:tickfont], valign = (mirror ? :bottom : :top), color = sp[:xaxis][:foreground_color_axis])
             for (cv, dv) in zip(xticks...)
-                xi, yi = GR.wctondc(cv, flip ? ymax : ymin)
-                # @show cv dv ymin xi yi
-                gr_text(xi, yi-0.01, string(dv))
+                # use xor ($) to get the right y coords
+                xi, yi = GR.wctondc(cv, (flip $ mirror) ? ymax : ymin)
+                # @show cv dv ymin xi yi flip mirror (flip $ mirror)
+                gr_text(xi, yi + (mirror ? 1 : -1) * 0.01, string(dv))
             end
         end
 
         if !(yticks in (nothing, false))
             # y labels
             flip = sp[:xaxis][:flip]
-            gr_set_font(sp[:yaxis][:tickfont], halign = :right, color = sp[:yaxis][:foreground_color_axis])
+            mirror = sp[:yaxis][:mirror]
+            gr_set_font(sp[:yaxis][:tickfont], halign = (mirror ? :left : :right), color = sp[:yaxis][:foreground_color_axis])
             for (cv, dv) in zip(yticks...)
-                xi, yi = GR.wctondc(flip ? xmax : xmin, cv)
+                # use xor ($) to get the right y coords
+                xi, yi = GR.wctondc((flip $ mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
-                gr_text(xi-0.01, yi, string(dv))
+                gr_text(xi + (mirror ? 1 : -1) * 0.01, yi, string(dv))
             end
         end
 
