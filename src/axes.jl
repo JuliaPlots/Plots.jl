@@ -264,9 +264,13 @@ function expand_extrema!(sp::Subplot, d::KW)
         else
             letter == :x ? :y : letter == :y ? :x : :z
         end]
-        # data = d[letter]
-        axis = sp.attr[Symbol(letter, "axis")]
-        if eltype(data) <: Number || (isa(data, Surface) && all(di -> isa(di, Number), data.surf))
+        axis = sp[Symbol(letter, "axis")]
+
+        if isa(data, Volume)
+            expand_extrema!(sp[:xaxis], data.x_extents)
+            expand_extrema!(sp[:yaxis], data.y_extents)
+            expand_extrema!(sp[:zaxis], data.z_extents)
+        elseif eltype(data) <: Number || (isa(data, Surface) && all(di -> isa(di, Number), data.surf))
             if !(eltype(data) <: Number)
                 # huh... must have been a mis-typed surface? lets swap it out
                 data = d[letter] = Surface(Matrix{Float64}(data.surf))

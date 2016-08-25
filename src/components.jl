@@ -418,6 +418,35 @@ immutable SurfaceFunction <: AbstractSurface
     f::Function
 end
 
+
+# -----------------------------------------------------------------------
+
+# # I don't want to clash with ValidatedNumerics, but this would be nice:
+# ..(a::T, b::T) = (a,b)
+
+immutable Volume{T}
+    v::Array{T,3}
+    x_extents::Tuple{T,T}
+    y_extents::Tuple{T,T}
+    z_extents::Tuple{T,T}
+end
+
+default_extents{T}(::Type{T}) = (zero(T), one(T))
+
+function Volume{T}(v::Array{T,3},
+                   x_extents = default_extents(T),
+                   y_extents = default_extents(T),
+                   z_extents = default_extents(T))
+    Volume(v, x_extents, y_extents, z_extents)
+end
+
+Base.Array(vol::Volume) = vol.v
+for f in (:length, :size)
+  @eval Base.$f(vol::Volume, args...) = $f(vol.v, args...)
+end
+Base.copy{T}(vol::Volume{T}) = Volume{T}(copy(vol.v), vol.x_extents, vol.y_extents, vol.z_extents)
+Base.eltype{T}(vol::Volume{T}) = T
+
 # -----------------------------------------------------------------------
 
 # style is :open or :closed (for now)

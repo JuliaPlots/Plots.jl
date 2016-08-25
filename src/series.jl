@@ -36,6 +36,9 @@ convertToAnyVector(f::Function, d::KW) = Any[f], nothing
 # surface
 convertToAnyVector(s::Surface, d::KW) = Any[s], nothing
 
+# volume
+convertToAnyVector(v::Volume, d::KW) = Any[v], nothing
+
 # # vector of OHLC
 # convertToAnyVector(v::AVec{OHLC}, d::KW) = Any[v], nothing
 
@@ -218,6 +221,12 @@ end
     else
         SliceIt, nothing, mat, nothing
     end
+end
+
+# assume this is a Volume, so construct one
+@recipe function f{T<:Number}(vol::AbstractArray{T,3}, args...)
+    seriestype := :volume
+    SliceIt, nothing, Volume(vol, args...), nothing
 end
 
 

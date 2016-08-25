@@ -31,7 +31,7 @@ const _axesAliases = Dict{Symbol,Symbol}(
 )
 
 const _3dTypes = [
-    :path3d, :scatter3d, :surface, :wireframe, :contour3d
+    :path3d, :scatter3d, :surface, :wireframe, :contour3d, :volume
 ]
 const _allTypes = vcat([
     :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
