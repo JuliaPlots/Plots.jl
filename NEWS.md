@@ -6,10 +6,37 @@
 - All new development should target 0.9!
 - Minor version 0.8 is the last one to support Julia 0.4!!
 	- Critical bugfixes only
+    - `backports` branch is for Julia 0.4
 
 ---
 
 ## 0.9 (current master/dev)
+
+#### 0.9.1
+
+- Pkg.dir --> dirname (@tkelman)
+- `axis = nothing` magic
+- fixes:
+    - clim for line_z
+    - sticks default range for log scale
+    - rotate method
+    - pyplot heatmap
+    - spurious scale warnings
+    - gr image/alpha
+    - plotly.js path
+    - orientation extrema
+    - bar, reset orientation
+- switch transpose_z to use permutedims
+- skinny x/+ markers
+- ticks in pgfplots
+- eps in savefig (@anriseth)
+- add_backend convenience
+- type recipes for Date/DateTime (@maximsch2)
+- mirror attribute and twinx convenience
+- Axis.sp --> Axis.sps
+- recipe postprocessing for allowing aliases and magic args in recipe bodies
+
+
 
 #### 0.9.0
 
