@@ -388,6 +388,13 @@ function hover(to_hover, to_display, window)
     end
     mh = GLWindow.mouse2id(window)
     popup = GLWindow.Screen(window, area=area, hidden=true)
+    cam = get!(popup.cameras, :perspective) do
+        GLAbstraction.PerspectiveCamera(
+            popup.inputs, Vec3f0(3), Vec3f0(0),
+            keep=Signal(false),
+            theta= Signal(Vec3f0(0)), trans= Signal(Vec3f0(0))
+        )
+    end
     Reactive.preserve(map(mh) do mh
         popup.hidden = !(mh.id == to_hover.id)
     end)
@@ -395,12 +402,17 @@ function hover(to_hover, to_display, window)
         i,d = id
         robj = visualize(d)
         viewit = Reactive.droprepeats(map(mh->mh.id == to_hover.id && mh.index == i, mh))
-        cam = get_cam(robj)
+        camtype = get_cam(robj)
         Reactive.preserve(map(viewit) do vi
             if vi
                 empty!(popup)
-                GLVisualize._view(robj, popup)
-                GLAbstraction.center!(popup, cam)
+                if camtype == :perspective
+                    cam.projectiontype.value = GLVisualize.PERSPECTIVE
+                else
+                    cam.projectiontype.value = GLVisualize.ORTHOGRAPHIC
+                end
+                GLVisualize._view(robj, popup, camera=cam)
+                GLAbstraction.center!(popup, :perspective)
             end
         end)
     end
@@ -614,7 +626,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, 0.0, color)
         kw = Dict{Symbol, Any}(:model => text_model(font))
         extract_font(font, kw)
-        xy = Point2f0(area.x+area.w/2, area_w[2])
+        xy = Point2f0(area.w/2, area_w[2])
         t = PlotText(sp[:title], font)
         push!(axis_vis, text(xy, t, kw))
     end
@@ -622,7 +634,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         tf = xaxis[:guidefont]; color = gl_color(xaxis[:foreground_color_guide])
         font = Plots.Font(tf.family, tf.pointsize, :hcenter, :bottom, 0.0, color)
         kw = Dict{Symbol, Any}(:model => text_model(font))
-        xy = Point2f0(area.x+area.w/2, area.y)
+        xy = Point2f0(area.w/2, 0)
         t = PlotText(xaxis[:guide], font)
         extract_font(font, kw)
         push!(axis_vis, text(xy, t, kw))
@@ -632,7 +644,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         tf = yaxis[:guidefont]; color = gl_color(yaxis[:foreground_color_guide])
         font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, 0.0, color)
         kw = Dict{Symbol, Any}(:model => text_model(font))
-        xy = Point2f0(area.x, area.y+area.h/2)
+        xy = Point2f0(0, area.h/2)
         t = PlotText(yaxis[:guide], font)
         extract_font(font, kw)
         push!(axis_vis, text(xy, t, kw))
@@ -870,7 +882,7 @@ function _display(plt::Plot{GLVisualizeBackend})
         if !_3d
             axis = gl_draw_axes_2d(sp, model_m, Reactive.value(sub_area))
             GLVisualize._view(axis, sp_screen, camera=cam)
-            push!(cam.projectiontype, GLVisualize.ORTHOGRAPHIC)
+            cam.projectiontype.value = GLVisualize.ORTHOGRAPHIC
             Reactive.run_till_now() # make sure Reactive.push! arrives
             GLAbstraction.center!(cam,
                 GeometryTypes.AABB(
