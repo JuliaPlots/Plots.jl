@@ -251,53 +251,41 @@ end
 # ---------------------------------------------------------
 
 function setup_atom()
-    # @require Atom begin
     if isatom()
-        # @eval import Atom, Media
         @eval import Atom, Media
         Media.media(Plot, Media.Plot)
 
-        # default text/plain passes to html
-        @eval function Base.show{B}(io::IO, m::MIME{Symbol("text/plain")}, plt::Plot{B})
-            # show(io, MIME("text/html"), plt)
+        # default text/plain so it doesn't complain
+        function Base.show{B}(io::IO, ::MIME"text/plain", plt::Plot{B})
             print(io, "Plot{$B}()")
         end
 
-        # for inline values, display the plot (gui) and return a graph icon
-        function Atom.Media.render(::Atom.Inline, plt::Plot)
-            # # info("using Media.render")
-            # display(plt)
-            # Media.render(Atom.icon("graph"))
-            # Media.render(Atom.PlotPane(), plt)
+        function Media.render(::Atom.Inline, plt::Plot)
             nothing
         end
 
-        # if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", false) in (true, 1, "1", "true", "yes")
-
-        #     # # connects the render function
-        #     # for T in (GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend)
-        #     #     Atom.Media.media(Plot{T}, Atom.Media.Plot)
-        #     # end
-        #     Atom.Media.media(Plot, Atom.Media.Graphical)
-        #     # Atom.Media.media{T <: Union{GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend}}(Plot{T}, Atom.Media.Plot)
-
-        #     # Atom.displaysize(::Plot) = (535, 379)
-        #     # Atom.displaytitle(plt::Plot) = "Plots.jl (backend: $(backend(plt)))"
-
-        # this is like "display"... sends an html div with the plot to the PlotPane
-        function Media.render(pane::Atom.PlotPane, plt::Plot)
-            Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
+        if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", true) in (true, 1, "1", "true", "yes")
+            # this is like "display"... sends an html div with the plot to the PlotPane
+            function Media.render(pane::Atom.PlotPane, plt::Plot)
+                Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
+            end
+        else
+            #
+            function Media.render(pane::Atom.PlotPane, plt::Plot)
+                display(Plots.PlotsDisplay(), plt)
+                s = "PlotPane turned off.  Unset ENV[\"PLOTS_USE_ATOM_PLOTPANE\"] and restart Julia to enable it."
+                Media.render(pane, Atom.div(Atom.d(), Atom.HTML(s)))
+            end
         end
 
-        #     # # force text/plain to output to the PlotPane
-        #     # function Base.show(io::IO, ::MIME"text/plain", plt::Plot)
-        #     #     # show(io::IO, MIME("text/html"), plt)
-        #     #     Atom.Media.render(pane)
-        #     # end
+        # Atom.displaysize(::Plot) = (535, 379)
+        # Atom.displaytitle(plt::Plot) = "Plots.jl (backend: $(backend(plt)))"
 
-        #     # function Atom.Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
-        #     #     html = Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
-        #     # end
-        # end
+        # special handling for plotly/plotlyjs
+        function Media.render{B<:Union{PlotlyBackend,PlotlyJSBackend}}(pane::Atom.PlotPane, plt::Plot{B})
+            display(Plots.PlotsDisplay(), plt)
+            s = "PlotPane turned off.  The plotly and plotlyjs backends cannot render in the PlotPane due to javascript issues."
+            Media.render(pane, Atom.div(Atom.d(), Atom.HTML(s)))
+        end
     end
 end

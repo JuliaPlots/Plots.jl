@@ -152,8 +152,8 @@ function backend()
   sym = CURRENT_BACKEND.sym
   if !(sym in _initialized_backends)
 
-    # initialize
-    println("[Plots.jl] Initializing backend: ", sym)
+    # # initialize
+    # println("[Plots.jl] Initializing backend: ", sym)
 
     inst = _backend_instance(sym)
     try
@@ -176,12 +176,14 @@ function backend(pkg::AbstractBackend)
     CURRENT_BACKEND.sym = backend_name(pkg)
     warn_on_deprecated_backend(CURRENT_BACKEND.sym)
     CURRENT_BACKEND.pkg = pkg
+    backend()
 end
 
 function backend(modname::Symbol)
     warn_on_deprecated_backend(modname)
     CURRENT_BACKEND.sym = modname
     CURRENT_BACKEND.pkg = _backend_instance(modname)
+    backend()
 end
 
 const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse]
