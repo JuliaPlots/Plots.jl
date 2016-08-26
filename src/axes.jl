@@ -23,7 +23,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
         lk = Symbol(letter, k)
         lv = _axis_defaults_byletter[lk]
         d[k] = (lv == :match ? v : lv)
-    end     
+    end
 
     # merge!(d, _axis_defaults)
     d[:discrete_values] = []
@@ -309,15 +309,13 @@ function expand_extrema!(sp::Subplot, d::KW)
 
     # expand for bar_width
     if d[:seriestype] == :bar
-        dsym = vert ? :x : :y
+        dsym = (!vert) ? :x : :y
         data = d[dsym]
 
         bw = d[:bar_width]
         if bw == nothing
             bw = d[:bar_width] = mean(diff(data))
         end
-        # @show data bw
-
         axis = sp.attr[Symbol(dsym, :axis)]
         expand_extrema!(axis, maximum(data) + 0.5maximum(bw))
         expand_extrema!(axis, minimum(data) - 0.5minimum(bw))
@@ -489,4 +487,3 @@ function axis_drawing_info(sp::Subplot)
 
     xticks, yticks, spine_segs, grid_segs
 end
-
