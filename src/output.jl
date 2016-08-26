@@ -260,21 +260,21 @@ function setup_atom()
             print(io, "Plot{$B}()")
         end
 
-        function Media.render(::Atom.Inline, plt::Plot)
-            nothing
+        function Media.render(e::Atom.Editor, plt::Plot)
+            Media.render(e, nothing)
         end
 
         if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", true) in (true, 1, "1", "true", "yes")
             # this is like "display"... sends an html div with the plot to the PlotPane
             function Media.render(pane::Atom.PlotPane, plt::Plot)
-                Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
+                Media.render(pane, Atom.div(Atom.HTML(stringmime(MIME("text/html"), plt))))
             end
         else
             #
             function Media.render(pane::Atom.PlotPane, plt::Plot)
                 display(Plots.PlotsDisplay(), plt)
                 s = "PlotPane turned off.  Unset ENV[\"PLOTS_USE_ATOM_PLOTPANE\"] and restart Julia to enable it."
-                Media.render(pane, Atom.div(Atom.d(), Atom.HTML(s)))
+                Media.render(pane, Atom.div(Atom.HTML(s)))
             end
         end
 
@@ -285,7 +285,7 @@ function setup_atom()
         function Media.render{B<:Union{PlotlyBackend,PlotlyJSBackend}}(pane::Atom.PlotPane, plt::Plot{B})
             display(Plots.PlotsDisplay(), plt)
             s = "PlotPane turned off.  The plotly and plotlyjs backends cannot render in the PlotPane due to javascript issues."
-            Media.render(pane, Atom.div(Atom.d(), Atom.HTML(s)))
+            Media.render(pane, Atom.div(Atom.HTML(s)))
         end
     end
 end
