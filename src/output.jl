@@ -155,7 +155,8 @@ function Base.show(io::IO, ::MIME"text/html", plt::Plot)
     end
 end
 
-function _show(io::IO, m, plt::Plot)
+function _show{B}(io::IO, m, plt::Plot{B})
+    # Base.show_backtrace(STDOUT, backtrace())
     warn("_show is not defined for this backend. m=", string(m))
 end
 function _display(plt::Plot)
@@ -164,7 +165,7 @@ end
 
 # for writing to io streams... first prepare, then callback
 for mime in keys(_mimeformats)
-    @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
+    @eval function Base.show{B}(io::IO, m::MIME{Symbol($mime)}, plt::Plot{B})
         prepare_output(plt)
         _show(io, m, plt)
     end
@@ -253,47 +254,50 @@ function setup_atom()
     # @require Atom begin
     if isatom()
         # @eval import Atom, Media
-        @eval import Atom
+        @eval import Atom, Media
+        Media.media(Plot, Media.Plot)
 
-        # default text/plain passes to html... handles Interact issues
-        function Base.show(io::IO, m::MIME"text/plain", plt::Plot)
-            show(io, MIME("text/html"), plt)
+        # default text/plain passes to html
+        @eval function Base.show{B}(io::IO, m::MIME{Symbol("text/plain")}, plt::Plot{B})
+            # show(io, MIME("text/html"), plt)
+            print(io, "Plot{$B}()")
         end
 
         # for inline values, display the plot (gui) and return a graph icon
         function Atom.Media.render(::Atom.Inline, plt::Plot)
-            # info("using Media.render")
-            display(plt)
-            Atom.icon("graph")
+            # # info("using Media.render")
+            # display(plt)
+            # Media.render(Atom.icon("graph"))
+            # Media.render(Atom.PlotPane(), plt)
+            nothing
         end
 
-        if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", false) in (true, 1, "1", "true", "yes")
+        # if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", false) in (true, 1, "1", "true", "yes")
 
-            # # connects the render function
-            # for T in (GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend)
-            #     Atom.Media.media(Plot{T}, Atom.Media.Plot)
-            # end
-            Atom.Media.media(Plot, Atom.Media.Graphical)
-            # Atom.Media.media{T <: Union{GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend}}(Plot{T}, Atom.Media.Plot)
+        #     # # connects the render function
+        #     # for T in (GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend)
+        #     #     Atom.Media.media(Plot{T}, Atom.Media.Plot)
+        #     # end
+        #     Atom.Media.media(Plot, Atom.Media.Graphical)
+        #     # Atom.Media.media{T <: Union{GadflyBackend,ImmerseBackend,PyPlotBackend,GRBackend}}(Plot{T}, Atom.Media.Plot)
 
-            # Atom.displaysize(::Plot) = (535, 379)
-            # Atom.displaytitle(plt::Plot) = "Plots.jl (backend: $(backend(plt)))"
+        #     # Atom.displaysize(::Plot) = (535, 379)
+        #     # Atom.displaytitle(plt::Plot) = "Plots.jl (backend: $(backend(plt)))"
 
-            # this is like "display"... sends an html div with the plot to the PlotPane
-            function Atom.Media.render(pane::Atom.PlotPane, plt::Plot)
-                @show "here"
-                Atom.Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
-            end
-
-            # # force text/plain to output to the PlotPane
-            # function Base.show(io::IO, ::MIME"text/plain", plt::Plot)
-            #     # show(io::IO, MIME("text/html"), plt)
-            #     Atom.Media.render(pane)
-            # end
-
-            # function Atom.Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
-            #     html = Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
-            # end
+        # this is like "display"... sends an html div with the plot to the PlotPane
+        function Media.render(pane::Atom.PlotPane, plt::Plot)
+            Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
         end
+
+        #     # # force text/plain to output to the PlotPane
+        #     # function Base.show(io::IO, ::MIME"text/plain", plt::Plot)
+        #     #     # show(io::IO, MIME("text/html"), plt)
+        #     #     Atom.Media.render(pane)
+        #     # end
+
+        #     # function Atom.Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
+        #     #     html = Media.render(pane, Atom.div(Atom.d(), Atom.HTML(stringmime(MIME("text/html"), plt))))
+        #     # end
+        # end
     end
 end
