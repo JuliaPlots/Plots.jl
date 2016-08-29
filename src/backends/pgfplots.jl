@@ -333,3 +333,9 @@ function _display(plt::Plot{PGFPlotsBackend})
     # cleanup
     PGFPlots.cleanup(plt.o)
 end
+
+function prepared_object(plt::Plot{PGFPlotsBackend})
+    prepare_output(plt)
+    _make_pgf_plot!(plt)
+    plt.o
+end
