@@ -239,7 +239,7 @@ end
 # ----------------------------------------------------------------
 
 
-function _make_pgf_plot!(plt::Plot)
+function _update_plot_object(plt::Plot{PGFPlotsBackend})
     plt.o = PGFPlots.Axis[]
     for sp in plt.subplots
         # first build the PGFPlots.Axis object
@@ -297,13 +297,10 @@ end
 
 
 function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend})
-    _make_pgf_plot!(plt)
     show(io, mime, plt.o)
 end
 
 function _show(io::IO, mime::MIME"application/pdf", plt::Plot{PGFPlotsBackend})
-    _make_pgf_plot!(plt)
-
     # prepare the object
     pgfplt = PGFPlots.plot(plt.o)
 
@@ -320,7 +317,6 @@ end
 
 function _display(plt::Plot{PGFPlotsBackend})
     # prepare the object
-    _make_pgf_plot!(plt)
     pgfplt = PGFPlots.plot(plt.o)
 
     # save an svg

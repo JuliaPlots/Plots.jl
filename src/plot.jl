@@ -193,7 +193,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
 
     # info(3)
     # map(DD, kw_list)
-    
+
     for kw in kw_list
         sp::Subplot = kw[:subplot]
         # idx = get_subplot_index(plt, sp)
@@ -251,7 +251,7 @@ function prepare_output(plt::Plot)
     _update_plot_object(plt)
 end
 
-function prepared_object(plt::Plot)
+function backend_object(plt::Plot)
     prepare_output(plt)
     plt.o
 end
