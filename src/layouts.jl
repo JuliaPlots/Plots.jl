@@ -113,9 +113,11 @@ function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
     orighor = :left
     origver = :top
     for oarg in oargs
-        if oarg in (:left, :right)
+        if oarg == :center
+            orighor = origver = oarg
+        elseif oarg in (:left, :right, :hcenter)
             orighor = oarg
-        elseif oarg in (:top, :bottom)
+        elseif oarg in (:top, :bottom, :vcenter)
             origver = oarg
         else
             warn("Unused origin arg in bbox construction: $oarg")
@@ -132,13 +134,17 @@ function bbox(x, y, width, height; h_anchor = :left, v_anchor = :top)
     height = make_measure_vert(height)
     left = if h_anchor == :left
         x
+    elseif h_anchor in (:center, :hcenter)
+        0.5w - 0.5width + x
     else
-        1w - x - width 
+        1w - x - width
     end
     top = if v_anchor == :top
         y
+    elseif v_anchor in (:center, :vcenter)
+        0.5h - 0.5height + y
     else
-        1h - y - height 
+        1h - y - height
     end
     BoundingBox(left, top, width, height)
 end
@@ -258,7 +264,7 @@ rightpad(layout::GridLayout)  = layout.minpad[3]
 bottompad(layout::GridLayout) = layout.minpad[4]
 
 
-# here's how this works... first we recursively "update the minimum padding" (which 
+# here's how this works... first we recursively "update the minimum padding" (which
 # means to calculate the minimum size needed from the edge of the subplot to plot area)
 # for the whole layout tree.  then we can compute the "padding borders" of this
 # layout as the biggest padding of the children on the perimeter.  then we need to
