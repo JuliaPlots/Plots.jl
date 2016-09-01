@@ -608,7 +608,7 @@ function processFillArg(d::KW, arg)
         d[:fillrange] = arg
     end
     # d[:fillrange] = fr
-    return    
+    return
 end
 
 _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
@@ -1112,6 +1112,8 @@ end
 function getSeriesRGBColor(c, α, sp::Subplot, n::Int)
     if c == :auto
         c = autopick(sp[:color_palette], n)
+    elseif isa(c, Int)
+        c = autopick(sp[:color_palette], c)
     end
     plot_color(c, α)
 end
@@ -1205,4 +1207,3 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     _replace_linewidth(d)
     d
 end
-
