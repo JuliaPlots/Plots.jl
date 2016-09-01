@@ -162,7 +162,7 @@ function gl_marker(shape::Symbol, msize)
     isa(msize, Array) && (msize = first(msize)) # size doesn't really matter now
     if shape == :rect
         GeometryTypes.HyperRectangle(Vec{2, Float32}(0), msize)
-    elseif shape == :circle
+    elseif shape == :circle || shape == :none
         GeometryTypes.HyperSphere(Point{2, Float32}(0), maximum(msize))
     elseif haskey(_gl_marker_map, shape)
         _gl_marker_map[shape]
@@ -1146,7 +1146,7 @@ function contour(x,y,z, kw_args)
         zmin, zmax = get(kw_args, :limits, Vec2f0(extrema(z)))
         cmap = get(kw_args, :color_map, get(kw_args, :color, RGBA{Float32}(0,0,0,1)))
         colors = RGBA{Float32}[]
-        for c in levels
+        for c in levels.contours
             for elem in c.lines
                 append!(result, elem.vertices)
                 push!(result, Point2f0(NaN32))
