@@ -543,6 +543,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     if is3d(sp)
         zmin, zmax = gr_lims(zaxis, true)
+        clims = sp[:clims]
+        if is_2tuple(clims)
+            isfinite(clims[1]) && (zmin = clims[1])
+            isfinite(clims[2]) && (zmax = clims[2])
+        end
         GR.setspace(zmin, zmax, 40, 70)
         xtick = GR.tick(xmin, xmax) / 2
         ytick = GR.tick(ymin, ymax) / 2
@@ -724,6 +729,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :contour
             zmin, zmax = gr_lims(zaxis, false)
+            clims = sp[:clims]
+            if is_2tuple(clims)
+                isfinite(clims[1]) && (zmin = clims[1])
+                isfinite(clims[2]) && (zmax = clims[2])
+            end
             if typeof(series[:levels]) <: Array
                 h = series[:levels]
             else
@@ -763,6 +773,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st == :heatmap
             # z = vec(transpose_z(series, z.surf, false))
             zmin, zmax = gr_lims(zaxis, true)
+            clims = sp[:clims]
+            if is_2tuple(clims)
+                isfinite(clims[1]) && (zmin = clims[1])
+                isfinite(clims[2]) && (zmax = clims[2])
+            end
             GR.setspace(zmin, zmax, 0, 90)
             # GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
             GR.surface(x, y, z, GR.OPTION_HEATMAP)
