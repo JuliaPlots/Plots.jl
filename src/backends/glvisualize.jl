@@ -74,6 +74,12 @@ function add_backend(::GLVisualizeBackend)
     if !is_installed("Contour")
         Pkg.add("Contour")
     end
+
+    # TODO: remove this section when the tagged versions catch up
+    for pkg in ["GLWindow", "GLAbstraction", "GLVisualize", "GeometryTypes"]
+        warn("Running Pkg.checkout(\"$pkg\").  To revert, run Pkg.free(\"$pkg\")")
+        Pkg.checkout(pkg)
+    end
 end
 
 # ---------------------------------------------------------------------------
