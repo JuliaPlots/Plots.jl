@@ -309,7 +309,7 @@ function expand_extrema!(sp::Subplot, d::KW)
 
     # expand for bar_width
     if d[:seriestype] == :bar
-        dsym = (!vert) ? :x : :y
+        dsym = vert ? :x : :y
         data = d[dsym]
 
         bw = d[:bar_width]
