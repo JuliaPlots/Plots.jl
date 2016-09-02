@@ -76,7 +76,7 @@ function add_backend(::GLVisualizeBackend)
     end
 
     # TODO: remove this section when the tagged versions catch up
-    for pkg in ["GLWindow", "GLAbstraction", "GLVisualize", "GeometryTypes"]
+    for pkg in ["GLWindow", "GLAbstraction", "GLVisualize", "GeometryTypes", "FixedSizeArrays"]
         warn("Running Pkg.checkout(\"$pkg\").  To revert, run Pkg.free(\"$pkg\")")
         Pkg.checkout(pkg)
     end
