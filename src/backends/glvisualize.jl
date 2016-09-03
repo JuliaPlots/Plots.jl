@@ -143,7 +143,7 @@ const _gl_marker_map = KW(
     :rect => '■',
     :star5 => '★',
     :diamond => '◆',
-    #:hexagon => '⬢',
+    :hexagon => '⬢',
     :cross => '✚',
     :xcross => '❌',
     :utriangle => '▲',
@@ -584,6 +584,7 @@ function text(position, text, kw_args)
     end
     kw_args[:position] = position
     kw_args[:offset] = offset
+    kw_args[:scale_primitive] = false
     visualize(text.str, Style(:default), kw_args)
 end
 
@@ -623,7 +624,8 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         :offset => offsets,
         :color => fcolor,
         :relative_scale =>  Vec2f0(3/sz),
-        :model => model
+        :model => model,
+        :scale_primitive => false
     )
     push!(axis_vis, visualize(t, Style(:default), kw_args))
     area_w = GeometryTypes.widths(area)
