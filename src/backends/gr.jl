@@ -465,6 +465,28 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # the viewports for this subplot
     viewport_subplot = gr_viewport_from_bbox(bbox(sp), w, h, viewport_canvas)
     viewport_plotarea[:] = gr_viewport_from_bbox(plotarea(sp), w, h, viewport_canvas)
+    # get data limits
+    data_lims = gr_xy_axislims(sp)
+
+    ratio = sp[:aspect_ratio]
+    if ratio != :none
+        if ratio == :equal
+            ratio = 1
+        end
+        viewport_ratio = (viewport_plotarea[2] - viewport_plotarea[1]) / (viewport_plotarea[4] - viewport_plotarea[3])
+        window_ratio = (data_lims[2] - data_lims[1]) / (data_lims[4] - data_lims[3]) / ratio
+        if window_ratio < viewport_ratio
+            viewport_center = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
+            viewport_size = (viewport_plotarea[2] - viewport_plotarea[1]) * window_ratio / viewport_ratio
+            viewport_plotarea[1] = viewport_center - 0.5 * viewport_size
+            viewport_plotarea[2] = viewport_center + 0.5 * viewport_size
+        elseif window_ratio > viewport_ratio
+            viewport_center = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
+            viewport_size = (viewport_plotarea[4] - viewport_plotarea[3]) * viewport_ratio / window_ratio
+            viewport_plotarea[3] = viewport_center - 0.5 * viewport_size
+            viewport_plotarea[4] = viewport_center + 0.5 * viewport_size
+        end
+    end
 
     # fill in the plot area background
     bg = plot_color(sp[:background_color_inside])
@@ -502,8 +524,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     yaxis = sp[:yaxis]
     zaxis = sp[:zaxis]
 
-    # get data limits and set the scale flags and window
-    data_lims = gr_xy_axislims(sp)
+    # set the scale flags and window
     xmin, xmax, ymin, ymax = data_lims
     scale = 0
     xtick, ytick = 1, 1
