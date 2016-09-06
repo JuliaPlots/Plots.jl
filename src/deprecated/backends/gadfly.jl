@@ -2,7 +2,7 @@
 # https://github.com/dcjones/Gadfly.jl
 
 
-supported_args(::GadflyBackend) = merge_with_base_supported([
+supported_attrs(::GadflyBackend) = merge_with_base_supported([
     :annotations,
     :background_color, :foreground_color, :color_palette,
     :group, :label, :seriestype,

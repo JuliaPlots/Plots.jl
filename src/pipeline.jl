@@ -378,7 +378,7 @@ function _process_seriesrecipe(plt::Plot, d::KW)
     end
 
     # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
-    if st in supported_types()
+    if is_seriestype_supported(st)
         sp = _prepare_subplot(plt, d)
         _prepare_annotations(sp, d)
         _expand_subplot_extrema(sp, d, st)

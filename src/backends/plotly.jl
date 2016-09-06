@@ -1,7 +1,7 @@
 
 # https://plot.ly/javascript/getting-started
 
-supported_args(::PlotlyBackend) = merge_with_base_supported([
+const _plotly_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_legend, :foreground_color_guide,
@@ -31,18 +31,18 @@ supported_args(::PlotlyBackend) = merge_with_base_supported([
     :inset_subplots,
   ])
 
-supported_types(::PlotlyBackend) = [
+const _plotly_seriestype = [
     :path, :scatter, :bar, :pie, :heatmap,
     :contour, :surface, :path3d, :scatter3d, :shape, :scattergl,
 ]
-supported_styles(::PlotlyBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supported_markers(::PlotlyBackend) = [
+const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
+const _plotly_marker = [
     :none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle,
     :cross, :xcross, :pentagon, :hexagon, :octagon, :vline, :hline
 ]
-supported_scales(::PlotlyBackend) = [:identity, :log10]
+const _plotly_scale = [:identity, :log10]
 is_subplot_supported(::PlotlyBackend) = true
-is_string_supported(::PlotlyBackend) = true
+# is_string_supported(::PlotlyBackend) = true
 
 
 # --------------------------------------------------------------------------------------
@@ -472,10 +472,10 @@ end
 
 function plotly_series_shapes(plt::Plot, series::Series)
     d_outs = []
-    
+
     # TODO: create a d_out for each polygon
     # x, y = series[:x], series[:y]
-    
+
     # these are the axes that the series should be mapped to
     spidx = plotly_subplot_index(series[:subplot])
     base_d = KW()
@@ -483,7 +483,7 @@ function plotly_series_shapes(plt::Plot, series::Series)
     base_d[:yaxis] = "y$spidx"
     base_d[:name] = series[:label]
     # base_d[:legendgroup] = series[:label]
-    
+
     x, y = plotly_data(series[:x]), plotly_data(series[:y])
     for (i,rng) in enumerate(iter_segments(x,y))
         length(rng) < 2 && continue

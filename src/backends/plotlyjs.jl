@@ -1,13 +1,11 @@
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 
-supported_args(::PlotlyJSBackend) = supported_args(PlotlyBackend())
-supported_types(::PlotlyJSBackend) = supported_types(PlotlyBackend())
-supported_styles(::PlotlyJSBackend) = supported_styles(PlotlyBackend())
-supported_markers(::PlotlyJSBackend) = supported_markers(PlotlyBackend())
-supported_scales(::PlotlyJSBackend) = supported_scales(PlotlyBackend())
-is_subplot_supported(::PlotlyJSBackend) = true
-is_string_supported(::PlotlyJSBackend) = true
+const _plotlyjs_attr        = _plotly_attr
+const _plotlyjs_seriestype  = _plotly_seriestype
+const _plotlyjs_style       = _plotly_style
+const _plotlyjs_marker      = _plotly_marker
+const _plotlyjs_scale       = _plotly_scale
 
 # --------------------------------------------------------------------------------------
 

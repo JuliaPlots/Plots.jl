@@ -233,7 +233,7 @@ end
 # # images - grays
 
 @recipe function f{T<:Gray}(mat::AMat{T})
-    if nativeImagesSupported()
+    if is_seriestype_supported(:image)
         seriestype := :image
         n, m = size(mat)
         SliceIt, 1:m, 1:n, Surface(mat)
@@ -248,7 +248,7 @@ end
 # # images - colors
 
 @recipe function f{T<:Colorant}(mat::AMat{T})
-    if nativeImagesSupported()
+    if is_seriestype_supported(:image)
         seriestype := :image
         n, m = size(mat)
         SliceIt, 1:m, 1:n, Surface(mat)
@@ -434,4 +434,3 @@ end
         end
     end
 end
-

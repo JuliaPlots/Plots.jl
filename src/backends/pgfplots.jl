@@ -2,7 +2,7 @@
 
 # significant contributions by: @pkofod
 
-supported_args(::PGFPlotsBackend) = merge_with_base_supported([
+const _pgfplots_attr = merge_with_base_supported([
     # :annotations,
     # :background_color_legend,
     :background_color_inside,
@@ -32,11 +32,10 @@ supported_args(::PGFPlotsBackend) = merge_with_base_supported([
     :aspect_ratio,
     # :match_dimensions,
   ])
-supported_types(::PGFPlotsBackend) = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
-supported_styles(::PGFPlotsBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supported_markers(::PGFPlotsBackend) = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
-supported_scales(::PGFPlotsBackend) = [:identity, :ln, :log2, :log10]
-is_subplot_supported(::PGFPlotsBackend) = false
+const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
+const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
+const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 
 # --------------------------------------------------------------------------------------

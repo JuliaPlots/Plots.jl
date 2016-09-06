@@ -131,7 +131,7 @@ function replace_image_with_heatmap{T<:Colorant}(z::Array{T})
 end
 
 function imageHack(d::KW)
-    :heatmap in supported_types() || error("Neither :image or :heatmap are supported!")
+    is_seriestype_supported(:heatmap) || error("Neither :image or :heatmap are supported!")
     d[:seriestype] = :heatmap
     d[:z], d[:fillcolor] = replace_image_with_heatmap(d[:z].surf)
 end

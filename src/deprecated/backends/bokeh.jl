@@ -2,7 +2,7 @@
 # https://github.com/bokeh/Bokeh.jl
 
 
-supported_args(::BokehBackend) = merge_with_base_supported([
+supported_attrs(::BokehBackend) = merge_with_base_supported([
     # :annotations,
     # :axis,
     # :background_color,

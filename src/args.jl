@@ -319,10 +319,8 @@ const _all_defaults = KW[
 ]
 
 const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
-supported_args(::AbstractBackend) = error("supported_args not defined") #_all_args
-supported_args() = supported_args(backend())
 
-RecipesBase.is_key_supported(k::Symbol) = (k in supported_args())
+RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
 
 # -----------------------------------------------------------------------------
 
@@ -766,47 +764,50 @@ end
 
 # -----------------------------------------------------------------------------
 
-const _already_warned = Set()
+const _already_warned = Dict{Symbol,Set{Symbol}}()
+const _to_warn = Set{Symbol}()
 
 function warnOnUnsupported_args(pkg::AbstractBackend, d::KW)
-    for k in sortedkeys(d)
-        k in supported_args(pkg) && continue
+    empty!(_to_warn)
+    bend = backend_name(pkg)
+    already_warned = get!(_already_warned, bend, Set{Symbol}())
+    for k in keys(d)
+        is_attr_supported(pkg, k) && continue
         k in _suppress_warnings && continue
         if d[k] != default(k)
-            if !((pkg, k) in _already_warned)
-                push!(_already_warned, (pkg,k))
-                warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_args(pkg))")
-            end
+            k in already_warned || push!(_to_warn, k)
+        end
+    end
+
+    if !isempty(_to_warn)
+        for k in sort(collect(_to_warn))
+            push!(already_warned, k)
+            warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_attrs(pkg))")
         end
     end
 end
 
-_markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supported_markers(pkg)
-_markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supported_markers(pkg)
-_markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
+# _markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supported_markers(pkg)
+# _markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supported_markers(pkg)
+# _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warnOnUnsupported(pkg::AbstractBackend, d::KW)
-    (d[:seriestype] == :none
-        || d[:seriestype] in supported_types(pkg)
-        || warn("seriestype $(d[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_types(pkg))"))
-    (d[:linestyle] in supported_styles(pkg)
-        || warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))"))
-    (d[:markershape] == :none
-        || _markershape_supported(pkg, d[:markershape])
-        || warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))"))
+    if !is_seriestype_supported(pkg, d[:seriestype])
+        warn("seriestype $(d[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))")
+    end
+    if !is_style_supported(pkg, d[:linestyle])
+        warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))")
+    end
+    if !is_marker_supported(pkg, d[:markershape])
+        warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))")
+    end
 end
 
 function warnOnUnsupported_scales(pkg::AbstractBackend, d::KW)
-    scales = supported_scales(pkg)
     for k in (:xscale, :yscale, :zscale, :scale)
         if haskey(d, k)
             v = d[k]
-            all_supported = if typeof(v) <: AbstractArray
-                all(vi -> get(_scaleAliases, vi, vi) in scales, v)
-            else
-                get(_scaleAliases, v, v) in scales
-            end
-            if !all_supported
+            if !is_scale_supported(pkg, v)
                 warn("scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
             end
         end

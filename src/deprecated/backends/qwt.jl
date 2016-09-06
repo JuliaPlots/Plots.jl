@@ -2,7 +2,7 @@
 # https://github.com/tbreloff/Qwt.jl
 
 
-supported_args(::QwtBackend) = merge_with_base_supported([
+supported_attrs(::QwtBackend) = merge_with_base_supported([
     :annotations,
     :linecolor,
     :fillrange,

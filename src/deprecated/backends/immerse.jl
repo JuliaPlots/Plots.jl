@@ -1,7 +1,7 @@
 
 # https://github.com/JuliaGraphics/Immerse.jl
 
-supported_args(::ImmerseBackend) = supported_args(GadflyBackend())
+supported_attrs(::ImmerseBackend) = supported_attrs(GadflyBackend())
 supported_types(::ImmerseBackend) = supported_types(GadflyBackend())
 supported_styles(::ImmerseBackend) = supported_styles(GadflyBackend())
 supported_markers(::ImmerseBackend) = supported_markers(GadflyBackend())

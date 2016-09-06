@@ -86,14 +86,6 @@ export
     arrow,
     Segments,
 
-    debugplots,
-
-    supported_args,
-    supported_types,
-    supported_styles,
-    supported_markers,
-    is_subplot_supported,
-
     Animation,
     frame,
     gif,
@@ -130,8 +122,8 @@ include("types.jl")
 include("utils.jl")
 include("components.jl")
 include("axes.jl")
-include("backends.jl")
 include("args.jl")
+include("backends.jl")
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")

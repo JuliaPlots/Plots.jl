@@ -61,10 +61,10 @@ end
 # returns :no, :native, or :recipe depending on how it's supported
 function seriestype_supported(pkg::AbstractBackend, st::Symbol)
     # is it natively supported
-    if st in supported_types(pkg)
+    if is_seriestype_supported(pkg, st)
         return :native
     end
-    
+
     haskey(_series_recipe_deps, st) || return :no
 
     supported = true
@@ -85,7 +85,7 @@ function all_seriestypes()
     sts = Set{Symbol}(keys(_series_recipe_deps))
     for bsym in backends()
         btype = _backendType[bsym]
-        sts = union(sts, Set{Symbol}(supported_types(btype())))
+        sts = union(sts, Set{Symbol}(supported_seriestypes(btype())))
     end
     sort(collect(sts))
 end
@@ -305,7 +305,7 @@ end
 # ---------------------------------------------------------------------------
 # bezier curves
 
-# get the value of the curve point at position t 
+# get the value of the curve point at position t
 function bezier_value(pts::AVec, t::Real)
     val = 0.0
     n = length(pts)-1
@@ -553,7 +553,7 @@ end
 
 #         # compute quantiles
 #         q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
-        
+
 #         # notch
 #         n = notch_width(q2, q4, length(values))
 
@@ -567,10 +567,10 @@ end
 #         center = discrete_value!(d[:subplot][:xaxis], glabel)[1]
 #         hw = d[:bar_width] == nothing ? _box_halfwidth : 0.5cycle(d[:bar_width], i)
 #         l, m, r = center - hw, center, center + hw
-        
+
 #         # internal nodes for notches
 #         L, R = center - 0.5 * hw, center + 0.5 * hw
-        
+
 #         # outliers
 #         if Float64(range) != 0.0  # if the range is 0.0, the whiskers will extend to the data
 #             limit = range*(q4-q2)
@@ -867,7 +867,7 @@ end
 
 # function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
 @recipe function f(::Type{Val{:quiver}}, x, y, z)
-    if :arrow in supported_args()
+    if :arrow in supported_attrs()
         quiver_using_arrows(d)
     else
         quiver_using_hack(d)

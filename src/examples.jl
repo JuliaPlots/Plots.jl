@@ -61,7 +61,7 @@ PlotExample("Global",
 #             "Use the `axis` arguments.",
 #             [
 #               :(plot(Vector[randn(100), randn(100)*100], axis = [:l :r], ylabel="LEFT", yrightlabel="RIGHT", xlabel="X", title="TITLE"))
-#             ]), 
+#             ]),
 
 PlotExample("Images",
     "Plot an image.  y-axis is set to flipped",
@@ -115,7 +115,7 @@ PlotExample("Line types",
 PlotExample("Line styles",
     "",
     [:(begin
-        styles = filter(s -> s in supported_styles(), [:solid, :dash, :dot, :dashdot, :dashdotdot])'
+        styles = filter(s -> s in Plots.supported_styles(), [:solid, :dash, :dot, :dashdot, :dashdotdot])'
         n = length(styles)
         y = cumsum(randn(20,n),1)
         plot(y, line = (5, styles), label = map(string,styles))
@@ -125,7 +125,7 @@ PlotExample("Line styles",
 PlotExample("Marker types",
     "",
     [:(begin
-        markers = filter(m -> m in supported_markers(), Plots._shape_keys)'
+        markers = filter(m -> m in Plots.supported_markers(), Plots._shape_keys)'
         n = length(markers)
         x = linspace(0,10,n+2)[2:end-1]
         y = repmat(reverse(x)', n, 1)

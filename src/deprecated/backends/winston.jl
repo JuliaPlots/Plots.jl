@@ -3,7 +3,7 @@
 
 # credit goes to https://github.com/jverzani for contributing to the first draft of this backend implementation
 
-supported_args(::WinstonBackend) = merge_with_base_supported([
+supported_attrs(::WinstonBackend) = merge_with_base_supported([
     :annotations,
     :linecolor,
     :fillrange,

@@ -10,7 +10,7 @@ TODO
     * why is there so little unicode supported in the font!??!?
 =#
 
-supported_args(::GLVisualizeBackend) = merge_with_base_supported([
+const _glvisualize_attr = merge_with_base_supported([
     #:annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
@@ -41,17 +41,17 @@ supported_args(::GLVisualizeBackend) = merge_with_base_supported([
     :dpi,
     :hover
 ])
-supported_types(::GLVisualizeBackend) = [
+const _glvisualize_seriestype = [
     :path, :shape,
     :scatter, :hexbin,
     :bar, :boxplot,
     :heatmap, :image, :volume,
     :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
 ]
-supported_styles(::GLVisualizeBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supported_markers(::GLVisualizeBackend) = vcat(_allMarkers, Shape)
-supported_scales(::GLVisualizeBackend) = [:identity, :ln, :log2, :log10]
-is_subplot_supported(::GLVisualizeBackend) = true
+const _glvisualize_style = [:auto, :solid, :dash, :dot, :dashdot]
+const _glvisualize_marker = _allMarkers
+const _glvisualize_scale = [:identity, :ln, :log2, :log10]
+is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
 
 # --------------------------------------------------------------------------------------
 

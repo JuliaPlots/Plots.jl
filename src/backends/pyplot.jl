@@ -2,7 +2,7 @@
 # https://github.com/stevengj/PyPlot.jl
 
 
-supported_args(::PyPlotBackend) = merge_with_base_supported([
+const _pyplot_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
@@ -32,17 +32,17 @@ supported_args(::PyPlotBackend) = merge_with_base_supported([
     :inset_subplots,
     :dpi,
   ])
-supported_types(::PyPlotBackend) = [
+const _pyplot_seriestype = [
         :path, :steppre, :steppost, :shape,
         :scatter, :hexbin, #:histogram2d, :histogram,
         # :bar,
         :heatmap, :pie, :image,
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
     ]
-supported_styles(::PyPlotBackend) = [:auto, :solid, :dash, :dot, :dashdot]
-supported_markers(::PyPlotBackend) = vcat(_allMarkers, Shape)
-supported_scales(::PyPlotBackend) = [:identity, :ln, :log2, :log10]
-is_subplot_supported(::PyPlotBackend) = true
+const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
+const _pyplot_marker = _allMarkers
+const _pyplot_scale = [:identity, :ln, :log2, :log10]
+is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
 
 # --------------------------------------------------------------------------------------
@@ -406,10 +406,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     sp = series[:subplot]
     ax = sp.o
 
-    if !(st in supported_types(plt.backend))
-        error("seriestype $(st) is unsupported in PyPlot.  Choose from: $(supported_types(plt.backend))")
-    end
-
     # PyPlot doesn't handle mismatched x/y
     fix_xy_lengths!(plt, series)
 
@@ -734,7 +730,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
             isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
         end
-        
+
         handle = ax[:pcolormesh](x, y, z;
             label = series[:label],
             zorder = series[:series_plotindex],
@@ -786,7 +782,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         # # expand extrema... get list of Wedge objects
         # for wedge in handle
         #     path = wedge[:get_path]()
-        #     for 
+        #     for
         lim = 1.1
         expand_extrema!(sp, -lim, lim, -lim, lim)
     end
@@ -942,7 +938,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     fig[:set_size_inches](w/dpi, h/dpi, forward = true)
     fig[:set_facecolor](py_color(plt[:background_color_outside]))
     fig[:set_dpi](dpi)
-    
+
     # resize the window
     PyPlot.plt[:get_current_fig_manager]()[:resize](w, h)
 

@@ -3,7 +3,8 @@
 
 # significant contributions by @jheinen
 
-supported_args(::GRBackend) = merge_with_base_supported([
+
+const _gr_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
@@ -30,16 +31,16 @@ supported_args(::GRBackend) = merge_with_base_supported([
     :inset_subplots,
     :bar_width,
 ])
-supported_types(::GRBackend) = [
+const _gr_seriestype = [
     :path, :scatter,
     :heatmap, :pie, :image,
     :contour, :path3d, :scatter3d, :surface, :wireframe,
     :shape
 ]
-supported_styles(::GRBackend) = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-supported_markers(::GRBackend) = vcat(_allMarkers, Shape)
-supported_scales(::GRBackend) = [:identity, :log10]
-is_subplot_supported(::GRBackend) = true
+const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+const _gr_marker = _allMarkers
+const _gr_scale = [:identity, :log10]
+is_marker_supported(::GRBackend, shape::Shape) = true
 
 
 function _initialize_backend(::GRBackend; kw...)
@@ -586,6 +587,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     elseif ispolar(sp)
         r = gr_set_viewport_polar()
         rmin, rmax = GR.adjustrange(minimum(r), maximum(r))
+        # rmin, rmax = axis_limits(sp[:yaxis])
         gr_polaraxes(rmin, rmax)
 
     elseif draw_axes
@@ -766,7 +768,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             else
                 GR.contour(x, y, h, z, 1000)
             end
-            
+
             # create the colorbar of contour levels
             if sp[:colorbar] != :none
                 gr_set_viewport_cmap(sp)

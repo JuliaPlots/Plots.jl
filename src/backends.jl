@@ -26,19 +26,6 @@ macro init_backend(s)
     end)
 end
 
-@init_backend Immerse
-@init_backend Gadfly
-@init_backend PyPlot
-@init_backend Qwt
-@init_backend UnicodePlots
-@init_backend Winston
-@init_backend Bokeh
-@init_backend Plotly
-@init_backend PlotlyJS
-@init_backend GR
-@init_backend GLVisualize
-@init_backend PGFPlots
-
 include("backends/web.jl")
 # include("backends/supported.jl")
 
@@ -194,23 +181,7 @@ function warn_on_deprecated_backend(bsym::Symbol)
     end
 end
 
-# ---------------------------------------------------------
 
-supported_types(::AbstractBackend) = []
-supported_styles(::AbstractBackend) = [:solid]
-supported_markers(::AbstractBackend) = [:none]
-supported_scales(::AbstractBackend) = [:identity]
-is_subplot_supported(::AbstractBackend) = false
-is_string_supported(::AbstractBackend) = false
-nativeImagesSupported(b::AbstractBackend) = :image in supported_types(b)
-
-supported_types() = supported_types(backend())
-supported_styles() = supported_styles(backend())
-supported_markers() = supported_markers(backend())
-supported_scales() = supported_scales(backend())
-is_subplot_supported() = is_subplot_supported(backend())
-is_string_supported() = is_string_supported(backend())
-nativeImagesSupported() = nativeImagesSupported(backend())
 
 # ---------------------------------------------------------
 
@@ -240,7 +211,7 @@ const _base_supported_args = [
     :subplot_index,
     :discrete_values,
     :projection,
-    
+
 ]
 
 function merge_with_base_supported(v::AVec)
@@ -252,5 +223,47 @@ function merge_with_base_supported(v::AVec)
             end
         end
     end
-    v
+    Set(v)
 end
+
+
+
+# @init_backend Immerse
+# @init_backend Gadfly
+@init_backend PyPlot
+# @init_backend Qwt
+@init_backend UnicodePlots
+# @init_backend Winston
+# @init_backend Bokeh
+@init_backend Plotly
+@init_backend PlotlyJS
+@init_backend GR
+@init_backend GLVisualize
+@init_backend PGFPlots
+
+# ---------------------------------------------------------
+
+# create the various `is_xxx_supported` and `supported_xxxs` methods
+# by default they pass through to checking membership in `_gr_xxx`
+for s in (:attr, :seriestype, :marker, :style, :scale)
+    f = Symbol("is_", s, "_supported")
+    f2 = Symbol("supported_", s, "s")
+    @eval begin
+        $f(::AbstractBackend, $s) = false
+        $f(bend::AbstractBackend, $s::AbstractVector) = all(v -> $f(bend, v), $s)
+        $f($s) = $f(backend(), $s)
+        $f2() = $f2(backend())
+    end
+
+    for bend in backends()
+        bend_type = typeof(_backend_instance(bend))
+        v = Symbol("_", bend, "_", s)
+        @eval begin
+            $f(::$bend_type, $s::Symbol) = $s in $v
+            $f2(::$bend_type) = $v
+        end
+    end
+end
+
+# is_subplot_supported(::AbstractBackend) = false
+# is_subplot_supported() = is_subplot_supported(backend())

@@ -1,7 +1,7 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
-supported_args(::UnicodePlotsBackend) = merge_with_base_supported([
+const _unicodeplots_attr = merge_with_base_supported([
     :label,
     :legend,
     :seriescolor,
@@ -12,18 +12,17 @@ supported_args(::UnicodePlotsBackend) = merge_with_base_supported([
     :title,
     :guide, :lims,
   ])
-supported_types(::UnicodePlotsBackend) = [
+const _unicodeplots_seriestype = [
     :path, :scatter,
     :histogram2d
 ]
-supported_styles(::UnicodePlotsBackend) = [:auto, :solid]
-supported_markers(::UnicodePlotsBackend) = [:none, :auto, :circle]
-supported_scales(::UnicodePlotsBackend) = [:identity]
-is_subplot_supported(::UnicodePlotsBackend) = true
+const _unicodeplots_style = [:auto, :solid]
+const _unicodeplots_marker = [:none, :auto, :circle]
+const _unicodeplots_scale = [:identity]
 
 
 # don't warn on unsupported... there's just too many warnings!!
-warnOnUnsupported_args(pkg::UnicodePlotsBackend, d::KW) = nothing
+warnOnUnsupported_args(::UnicodePlotsBackend, d::KW) = nothing
 
 # --------------------------------------------------------------------------------------
 
@@ -160,4 +159,3 @@ function _display(plt::Plot{UnicodePlotsBackend})
     map(show, plt.o)
     nothing
 end
-
