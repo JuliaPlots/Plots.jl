@@ -149,6 +149,8 @@ function pgf_series(sp::Subplot, series::Series)
     # add to legend?
     if sp[:legend] != :none && should_add_to_legend(series)
         kw[:legendentry] = d[:label]
+    else
+        push!(style, "forget plot")
     end
 
     # function args
