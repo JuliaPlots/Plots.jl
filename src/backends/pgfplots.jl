@@ -264,13 +264,13 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         push!(style, """
             xshift = $(left(bb).value)mm,
             yshift = $((height(bb) - (bottom(bb))).value)mm,
-            width = $(width(bb).value)mm,
-            height = $(height(bb).value)mm,
             axis background/.style={fill=$(pgf_color(sp[:background_color_inside])[1])}
         """)
+        kw[:width] = "$(width(bb).value)mm"
+        kw[:height] = "$(height(bb).value)mm"
 
         if sp[:title] != ""
-            push!(style, "title = $(sp[:title])")
+            kw[:title] = "$(sp[:title])"
         end
 
         sp[:grid] && push!(style, "grid = major")
