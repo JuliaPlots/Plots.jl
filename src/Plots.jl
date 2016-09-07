@@ -63,6 +63,10 @@ export
     xaxis!,
     yaxis!,
 
+    xlims,
+    ylims,
+    zlims,
+
     savefig,
     png,
     gui,

@@ -475,6 +475,19 @@ function make_fillrange_from_ribbon(kw::KW)
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
 end
 
+function get_sp_lims(sp::Subplot, letter::Symbol)
+    axis_limits(sp[Symbol(letter, :axis)])
+end
+xlims(sp::Subplot) = get_sp_lims(sp, :x)
+ylims(sp::Subplot) = get_sp_lims(sp, :y)
+zlims(sp::Subplot) = get_sp_lims(sp, :z)
+xlims(plt::Plot, sp_idx::Int = 1) = xlims(plt[sp_idx])
+ylims(plt::Plot, sp_idx::Int = 1) = ylims(plt[sp_idx])
+zlims(plt::Plot, sp_idx::Int = 1) = zlims(plt[sp_idx])
+xlims(sp_idx::Int = 1) = xlims(current(), sp_idx)
+ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
+zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
+
 # ---------------------------------------------------------------
 
 wraptuple(x::Tuple) = x
