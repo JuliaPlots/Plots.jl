@@ -52,12 +52,7 @@ const _glvisualize_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _glvisualize_marker = _allMarkers
 const _glvisualize_scale = [:identity, :ln, :log2, :log10]
 
-function _is_marker_supported(::GLVisualizeBackend, shape)
-    (
-        isa(shape, GLVisualize.AllPrimitives) ||
-        GLVisualize.isa_image(shape)
-    )
-end
+
 
 # --------------------------------------------------------------------------------------
 
@@ -71,7 +66,10 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         import GLAbstraction: Style
         import GLVisualize: visualize
         import Plots.GL
-        Plots.slice_arg(img::Images.AbstractImage, idx) = img
+        Plots.slice_arg(img::Images.AbstractImage, idx::Int) = img
+        is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
+        is_marker_supported{Img<:Images.AbstractImage}(::GLVisualizeBackend, shape::Union{Vector{Img}, Img}) = true
+        is_marker_supported{C<:Colorant}(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) = true
     end
 end
 
