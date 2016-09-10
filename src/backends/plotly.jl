@@ -338,6 +338,7 @@ function plotly_close_shapes(x, y)
 end
 
 plotly_data(v) = collect(v)
+plotly_data(surf::Surface) = surf.surf
 plotly_data{R<:Rational}(v::AbstractArray{R}) = float(v)
 
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
