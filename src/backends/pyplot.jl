@@ -976,6 +976,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             ax[func][:set_text](sp[:title])
             ax[func][:set_fontsize](py_dpi_scale(plt, sp[:titlefont].pointsize))
+            ax[func][:set_family](sp[:titlefont].family)
             ax[func][:set_color](py_color(sp[:foreground_color_title]))
             # ax[:set_title](sp[:title], loc = loc)
         end
@@ -1000,8 +1001,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ax[Symbol("invert_", letter, "axis")]()
             end
             pyaxis[:label][:set_fontsize](py_dpi_scale(plt, axis[:guidefont].pointsize))
+            pyaxis[:label][:set_family](axis[:guidefont].family)
             for lab in ax[Symbol("get_", letter, "ticklabels")]()
                 lab[:set_fontsize](py_dpi_scale(plt, axis[:tickfont].pointsize))
+                lab[:set_family](axis[:tickfont].family)
                 lab[:set_rotation](axis[:rotation])
             end
             if sp[:grid]
@@ -1131,13 +1134,14 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
                 fontsize = py_dpi_scale(plt, sp[:legendfont].pointsize)
+                # family = sp[:legendfont].family
                 # framealpha = 0.6
             )
             leg[:set_zorder](1000)
 
             fgcolor = py_color(sp[:foreground_color_legend])
             for txt in leg[:get_texts]()
-                PyPlot.plt[:setp](txt, color = fgcolor)
+                PyPlot.plt[:setp](txt, color = fgcolor, family = sp[:legendfont].family)
             end
 
             # set some legend properties
