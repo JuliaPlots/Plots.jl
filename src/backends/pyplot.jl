@@ -31,6 +31,7 @@ const _pyplot_attr = merge_with_base_supported([
     :clims,
     :inset_subplots,
     :dpi,
+    :colorbar_title,
   ])
 const _pyplot_seriestype = [
         :path, :steppre, :steppost, :shape,
@@ -810,7 +811,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         # note: the colorbar axis is positioned independently from the subplot axis
         fig = plt.o
         cbax = fig[:add_axes]([0.8,0.1,0.03,0.8], label = string(gensym()))
-        sp.attr[:cbar_handle] = fig[:colorbar](handle; cax = cbax, kw...)
+        cb = fig[:colorbar](handle; cax = cbax, kw...)
+        cb[:set_label](sp[:colorbar_title])
+        sp.attr[:cbar_handle] = cb
         sp.attr[:cbar_ax] = cbax
     end
 
@@ -1057,7 +1060,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     # optionally add the width of colorbar labels and colorbar to rightpad
     if haskey(sp.attr, :cbar_ax)
         bb = py_bbox(sp.attr[:cbar_handle][:ax][:get_yticklabels]())
-        sp.attr[:cbar_width] = _cbar_width + width(bb) + 1mm
+        sp.attr[:cbar_width] = _cbar_width + width(bb) + 1mm + (sp[:colorbar_title] == "" ? 0px : 30px)
         rightpad = rightpad + sp.attr[:cbar_width]
     end
 

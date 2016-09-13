@@ -248,6 +248,7 @@ const _subplot_defaults = KW(
     :right_margin             => :match,
     :bottom_margin            => :match,
     :subplot_index            => -1,
+    :colorbar_title           => "",
 )
 
 const _axis_defaults = KW(
