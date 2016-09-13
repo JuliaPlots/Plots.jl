@@ -24,7 +24,7 @@ immutable AnimatedGif
   filename::String
 end
 
-function gif(anim::Animation, fn = (isijulia() ? "tmp.gif" : tempname()*".gif"); fps::Integer = 20)
+function gif(anim::Animation, fn = (isijulia() ? "tmp.gif" : tempname()*".gif"); fps::Integer = 20, loop::Integer = 0)
   fn = abspath(fn)
 
   try
@@ -36,7 +36,7 @@ function gif(anim::Animation, fn = (isijulia() ? "tmp.gif" : tempname()*".gif");
         include(file)
     end
     # prefix = get(ENV, "MAGICK_CONFIGURE_PATH", "")
-    run(`convert -delay $speed -loop 0 $(joinpath(anim.dir, "*.png")) -alpha off $fn`)
+    run(`convert -delay $speed -loop $loop $(joinpath(anim.dir, "*.png")) -alpha off $fn`)
 
   catch err
     warn("""Tried to create gif using convert (ImageMagick), but got error: $err
@@ -44,7 +44,7 @@ function gif(anim::Animation, fn = (isijulia() ? "tmp.gif" : tempname()*".gif");
     Will try ffmpeg, but it's lower quality...)""")
 
     # low quality
-    run(`ffmpeg -v 0 -framerate $fps -i $(anim.dir)/%06d.png -y $fn`)
+    run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(anim.dir)/%06d.png -y $fn`)
     # run(`ffmpeg -v warning -i  "fps=$fps,scale=320:-1:flags=lanczos"`)
   end
 
