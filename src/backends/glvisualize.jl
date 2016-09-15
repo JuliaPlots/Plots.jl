@@ -11,7 +11,7 @@ TODO
 =#
 
 const _glvisualize_attr = merge_with_base_supported([
-    #:annotations,
+    :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
     :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
@@ -51,7 +51,8 @@ const _glvisualize_seriestype = [
 const _glvisualize_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _glvisualize_marker = _allMarkers
 const _glvisualize_scale = [:identity, :ln, :log2, :log10]
-is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
+
+
 
 # --------------------------------------------------------------------------------------
 
@@ -64,6 +65,13 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         import Reactive: Signal
         import GLAbstraction: Style
         import GLVisualize: visualize
+        import Plots.GL
+        Plots.slice_arg(img::Images.AbstractImage, idx::Int) = img
+        is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
+        is_marker_supported{Img<:Images.AbstractImage}(::GLVisualizeBackend, shape::Union{Vector{Img}, Img}) = true
+        is_marker_supported{C<:Colorant}(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) = true
+        is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
+        const GL = Plots
     end
 end
 
@@ -76,10 +84,16 @@ function add_backend(::GLVisualizeBackend)
     end
 
     # TODO: remove this section when the tagged versions catch up
-    for pkg in ["GLWindow", "GLAbstraction", "GLVisualize", "GeometryTypes", "FixedSizeArrays"]
+    for pkg in [
+            "GLWindow", "GLAbstraction",
+            "GLVisualize", "GeometryTypes", "FixedSizeArrays",
+            "FreeType", "GLPlot"
+        ]
         warn("Running Pkg.checkout(\"$pkg\").  To revert, run Pkg.free(\"$pkg\")")
         Pkg.checkout(pkg)
     end
+    warn("Running Pkg.checkout(\"Reactive\", \"sd/betterstop\").  To revert, run Pkg.free(\"Reactive\")")
+    Pkg.checkout("Reactive", "sd/betterstop")
 end
 
 # ---------------------------------------------------------------------------
@@ -143,7 +157,7 @@ const _gl_marker_map = KW(
     :rect => '■',
     :star5 => '★',
     :diamond => '◆',
-    #:hexagon => '⬢',
+    :hexagon => '⬢',
     :cross => '✚',
     :xcross => '❌',
     :utriangle => '▲',
@@ -159,6 +173,9 @@ const _gl_marker_map = KW(
     :x => 'x',
 )
 
+function gl_marker(shape, size)
+    shape
+end
 function gl_marker(shape::Shape, size::FixedSizeArrays.Vec{2,Float32})
     points = Point2f0[Vec{2,Float32}(p)*10f0 for p in zip(shape.x, shape.y)]
     GeometryTypes.GLNormalMesh(points)
@@ -207,12 +224,23 @@ function extract_marker(d, kw_args)
             kw_args[:primitive] = shape
         end
     end
-    extract_c(d, kw_args, :marker)
+    # get the color
+    key = :markercolor
+    haskey(d, key) || return
+    c = gl_color(d[key])
+    if isa(c, AbstractVector) && d[:marker_z] != nothing
+        extract_colornorm(d, kw_args)
+        kw_args[:color] = nothing
+        kw_args[:color_map] = c
+        kw_args[:intensity] = convert(Vector{Float32}, d[:marker_z])
+    else
+        kw_args[:color] = c
+    end
     key = :markerstrokecolor
     haskey(d, key) || return
     c = gl_color(d[key])
     if c != nothing
-        if !isa(c, Colorant)
+        if !(isa(c, Colorant) || (isa(c, Vector) && eltype(c) <: Colorant))
             error("Stroke Color not supported: $c")
         end
         kw_args[:stroke_color] = c
@@ -392,6 +420,11 @@ function hover(to_hover, to_display, window)
     area = map(window.inputs[:mouseposition]) do mp
         SimpleRectangle{Int}(round(Int, mp+10)..., 100, 70)
     end
+    background = visualize((GLVisualize.ROUNDED_RECTANGLE, Point2f0[0]),
+        color=RGBA{Float32}(0,0,0,0), scale=Vec2f0(100, 70), offset=Vec2f0(0),
+        stroke_color=RGBA{Float32}(0,0,0,0.4),
+        stroke_width=-1.0f0
+    )
     mh = GLWindow.mouse2id(window)
     popup = GLWindow.Screen(window, area=area, hidden=true)
     cam = get!(popup.cameras, :perspective) do
@@ -404,6 +437,7 @@ function hover(to_hover, to_display, window)
     Reactive.preserve(map(mh) do mh
         popup.hidden = !(mh.id == to_hover.id)
     end)
+
     map(enumerate(to_display)) do id
         i,d = id
         robj = visualize(d)
@@ -418,7 +452,13 @@ function hover(to_hover, to_display, window)
                     cam.projectiontype.value = GLVisualize.ORTHOGRAPHIC
                 end
                 GLVisualize._view(robj, popup, camera=cam)
-                GLAbstraction.center!(popup, :perspective)
+                GLVisualize._view(background, popup, camera=:fixed_pixel)
+                bb = GLAbstraction.boundingbox(robj).value
+                mini = minimum(bb)
+                w = GeometryTypes.widths(bb)
+                wborder = w*0.08f0 #8 percent border
+                bb = GeometryTypes.AABB{Float32}(mini-wborder, w+2f0*wborder)
+                GLAbstraction.center!(cam, bb)
             end
         end)
     end
@@ -509,7 +549,7 @@ function draw_grid_lines(sp, grid_segs, thickness, style, model, color)
         :linecolor => color
     )
     Plots.extract_linestyle(d, kw_args)
-    Plots.lines(map(Point2f0, grid_segs.pts), kw_args)
+    GL.gl_lines(map(Point2f0, grid_segs.pts), kw_args)
 end
 
 function align_offset(startpos, lastpos, atlas, rscale, font, align)
@@ -572,30 +612,29 @@ function text(position, text, kw_args)
     startpos = Vec2f0(position)
     atlas = GLVisualize.get_texture_atlas()
     font = GLVisualize.DEFAULT_FONT_FACE
-    rscale2 = kw_args[:relative_scale]
+    rscale = kw_args[:relative_scale]
     m = Reactive.value(kw_args[:model])
-    xs, ys = m[1,1], m[2,2]
-    rscale = rscale2 ./ Vec2f0(xs, ys)
     position = GLVisualize.calc_position(text.str, startpos, rscale, font, atlas)
-    offset = GLVisualize.calc_offset(text.str, rscale2, font, atlas)
+    offset = GLVisualize.calc_offset(text.str, rscale, font, atlas)
     alignoff = align_offset(startpos, last(position), atlas, rscale, font, text_align)
     map!(position) do pos
         pos .+ alignoff
     end
     kw_args[:position] = position
     kw_args[:offset] = offset
+    kw_args[:scale_primitive] = true
     visualize(text.str, Style(:default), kw_args)
 end
 
-function text_model(font)
-    # if font.rotation != 0.0
-    #     rot = Float32(deg2rad(font.rotation))
-    #     rotm = GLAbstraction.rotationmatrix_z(rot)
-    #     GLAbstraction.translationmatrix(pivot)*rotm*GLAbstraction.translationmatrix(-pivot)
-    #     return
-    # else
+function text_model(font, pivot)
+    pv = GeometryTypes.Vec3f0(pivot[1], pivot[2], 0)
+    if font.rotation != 0.0
+        rot = Float32(deg2rad(font.rotation))
+        rotm = GLAbstraction.rotationmatrix_z(rot)
+        return GLAbstraction.translationmatrix(pv)*rotm*GLAbstraction.translationmatrix(-pv)
+    else
         eye(GeometryTypes.Mat4f0)
-    # end
+    end
 end
 function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, area)
     xticks, yticks, spine_segs, grid_segs = Plots.axis_drawing_info(sp)
@@ -623,24 +662,25 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         :offset => offsets,
         :color => fcolor,
         :relative_scale =>  Vec2f0(3/sz),
-        :model => model
+        :model => model,
+        :scale_primitive => false
     )
     push!(axis_vis, visualize(t, Style(:default), kw_args))
     area_w = GeometryTypes.widths(area)
     if sp[:title] != ""
         tf = sp[:titlefont]; color = gl_color(sp[:foreground_color_title])
-        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, 0.0, color)
-        kw = Dict{Symbol, Any}(:model => text_model(font))
-        extract_font(font, kw)
+        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, tf.rotation, color)
         xy = Point2f0(area.w/2, area_w[2])
+        kw = Dict(:model => text_model(font, xy), :scale_primitive=>true)
+        extract_font(font, kw)
         t = PlotText(sp[:title], font)
         push!(axis_vis, text(xy, t, kw))
     end
     if xaxis[:guide] != ""
         tf = xaxis[:guidefont]; color = gl_color(xaxis[:foreground_color_guide])
-        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :bottom, 0.0, color)
-        kw = Dict{Symbol, Any}(:model => text_model(font))
         xy = Point2f0(area.w/2, 0)
+        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :bottom, tf.rotation, color)
+        kw = Dict(:model => text_model(font, xy), :scale_primitive=>true)
         t = PlotText(xaxis[:guide], font)
         extract_font(font, kw)
         push!(axis_vis, text(xy, t, kw))
@@ -648,9 +688,9 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
 
     if yaxis[:guide] != ""
         tf = yaxis[:guidefont]; color = gl_color(yaxis[:foreground_color_guide])
-        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, 0.0, color)
-        kw = Dict{Symbol, Any}(:model => text_model(font))
+        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, 90f0, color)
         xy = Point2f0(0, area.h/2)
+        kw = Dict(:model => text_model(font, xy), :scale_primitive=>true)
         t = PlotText(yaxis[:guide], font)
         extract_font(font, kw)
         push!(axis_vis, text(xy, t, kw))
@@ -845,7 +885,6 @@ end
 # ----------------------------------------------------------------
 
 function _display(plt::Plot{GLVisualizeBackend})
-    GL = Plots
     screen = plt.o
     empty_screen!(screen)
     sw, sh = plt[:size]
@@ -879,9 +918,10 @@ function _display(plt::Plot{GLVisualizeBackend})
         model_m = map(Plots.to_modelmatrix, screen.area, sub_area, Signal(rel_plotarea), Signal(sp))
         for ann in sp[:annotations]
             x, y, plot_text = ann
-            txt_args = Dict{Symbol, Any}(:model => model_m)
+            txt_args = Dict{Symbol, Any}(:model => eye(GeometryTypes.Mat4f0))
+            x, y, _1, _1 = Reactive.value(model_m) * Vec{4,Float32}(x, y, 0, 1)
             extract_font(plot_text.font, txt_args)
-            t = GL.text(Point2f0(x, y), plot_text, txt_args)
+            t = text(Point2f0(x, y), plot_text, txt_args)
             GLVisualize._view(t, sp_screen, camera=cam)
         end
         # loop over the series and add them to the subplot
@@ -892,7 +932,7 @@ function _display(plt::Plot{GLVisualizeBackend})
             Reactive.run_till_now() # make sure Reactive.push! arrives
             GLAbstraction.center!(cam,
                 GeometryTypes.AABB(
-                    Vec3f0(0), Vec3f0(GeometryTypes.widths(sp_screen)..., 1)
+                    Vec3f0(-10), Vec3f0((GeometryTypes.widths(sp_screen)+20f0)..., 1)
                 )
             )
         else
@@ -920,17 +960,17 @@ function _display(plt::Plot{GLVisualizeBackend})
                     kw_args[:stroke_color] = d[:linecolor]
                     kw_args[:stroke_width] = Float32(d[:linewidth]/100f0)
                 end
-                vis = GL.surface(x, y, z, kw_args)
+                vis = GL.gl_surface(x, y, z, kw_args)
             elseif (st in (:path, :path3d)) && d[:linewidth] > 0
                 kw = copy(kw_args)
                 points = Plots.extract_points(d)
                 extract_linestyle(d, kw)
-                vis = GL.lines(points, kw)
+                vis = GL.gl_lines(points, kw)
                 if d[:markershape] != :none
                     kw = copy(kw_args)
                     extract_stroke(d, kw)
                     extract_marker(d, kw)
-                    vis2 = GL.scatter(copy(points), kw)
+                    vis2 = GL.gl_scatter(copy(points), kw)
                     vis = [vis; vis2]
                 end
                 if d[:fillrange] != nothing
@@ -942,15 +982,15 @@ function _display(plt::Plot{GLVisualizeBackend})
                         points
                     end
                     extract_c(d, kw, :fill)
-                    vis = [GL.poly(ps, kw), vis]
+                    vis = [GL.gl_poly(ps, kw), vis]
                 end
             elseif st in (:scatter, :scatter3d) #|| d[:markershape] != :none
                 extract_marker(d, kw_args)
                 points = extract_points(d)
-                vis = GL.scatter(points, kw_args)
+                vis = GL.gl_scatter(points, kw_args)
             elseif st == :shape
                 extract_c(d, kw_args, :fill)
-                vis = GL.shape(d, kw_args)
+                vis = GL.gl_shape(d, kw_args)
             elseif st == :contour
                 x,y,z = extract_surface(d)
                 z = transpose_z(d, z, false)
@@ -959,20 +999,20 @@ function _display(plt::Plot{GLVisualizeBackend})
                 kw_args[:fillrange] = d[:fillrange]
                 kw_args[:levels] = d[:levels]
 
-                vis = GL.contour(x,y,z, kw_args)
+                vis = GL.gl_contour(x,y,z, kw_args)
             elseif st == :heatmap
                 x,y,z = extract_surface(d)
                 extract_gradient(d, kw_args, :fill)
                 extract_extrema(d, kw_args)
                 extract_limits(sp, d, kw_args)
-                vis = GL.heatmap(x,y,z, kw_args)
+                vis = GL.gl_heatmap(x,y,z, kw_args)
             elseif st == :bar
                 extract_c(d, kw_args, :fill)
                 extract_stroke(d, kw_args, :marker)
                 vis = gl_bar(d, kw_args)
             elseif st == :image
                 extract_extrema(d, kw_args)
-                vis = GL.image(d[:z].surf, kw_args)
+                vis = GL.gl_image(d[:z].surf, kw_args)
             elseif st == :boxplot
                  extract_c(d, kw_args, :fill)
                  vis = gl_boxplot(d, kw_args)
@@ -1023,7 +1063,7 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})
 end
 
 
-function image(img, kw_args)
+function gl_image(img, kw_args)
     rect = kw_args[:primitive]
     kw_args[:primitive] = GeometryTypes.SimpleRectangle{Float32}(rect.x, rect.y, rect.h, rect.w) # seems to be flipped
     visualize(img, Style(:default), kw_args)
@@ -1041,7 +1081,8 @@ function handle_segment{P}(lines, line_segments, points::Vector{P}, segment)
         push!(lines, P(NaN))
     end
 end
-function lines(points, kw_args)
+
+function gl_lines(points, kw_args)
     result = []
     isempty(points) && return result
     P = eltype(points)
@@ -1064,31 +1105,44 @@ function lines(points, kw_args)
     end
     return result
 end
-function shape(d, kw_args)
+function gl_shape(d, kw_args)
     points = Plots.extract_points(d)
     result = []
     for rng in iter_segments(d[:x], d[:y])
         ps = points[rng]
-        meshes = poly(ps, kw_args)
+        meshes = gl_poly(ps, kw_args)
         append!(result, meshes)
     end
     result
 end
+tovec2(x::FixedSizeArrays.Vec{2, Float32}) = x
+tovec2(x::AbstractVector) = map(tovec2, x)
+tovec2(x::FixedSizeArrays.Vec) = Vec2f0(x[1], x[2])
 
-function scatter(points, kw_args)
+
+function gl_scatter(points, kw_args)
     prim = get(kw_args, :primitive, GeometryTypes.Circle)
     if isa(prim, GLNormalMesh)
         kw_args[:scale] = map(kw_args[:model]) do m
             s = m[1,1], m[2,2], m[3,3]
             1f0./Vec3f0(s)
         end
+    else # 2D prim
+        kw_args[:scale] = tovec2(kw_args[:scale])
     end
-
+    if haskey(kw_args, :stroke_width)
+        s = Reactive.value(kw_args[:scale])
+        sw = kw_args[:stroke_width]
+        if sw*5 > cycle(Reactive.value(s), 1)[1] # restrict marker stroke to 1/10th of scale (and handle arrays of scales)
+            kw_args[:stroke_width] = s[1]/5f0
+        end
+    end
+    kw_args[:scale_primitive] = false
     visualize((prim, points), Style(:default), kw_args)
 end
 
 
-function poly(points, kw_args)
+function gl_poly(points, kw_args)
     last(points) == first(points) && pop!(points)
     polys = GeometryTypes.split_intersections(points)
     result = []
@@ -1103,7 +1157,7 @@ function poly(points, kw_args)
     result
 end
 
-function surface(x,y,z, kw_args)
+function gl_surface(x,y,z, kw_args)
     if isa(x, Range) && isa(y, Range)
         main = z
         kw_args[:ranges] = (x, y)
@@ -1139,7 +1193,7 @@ function surface(x,y,z, kw_args)
 end
 
 
-function contour(x,y,z, kw_args)
+function gl_contour(x,y,z, kw_args)
     if kw_args[:fillrange] != nothing
         delete!(kw_args, :intensity)
         I = GLVisualize.Intensity{1, Float32}
@@ -1168,9 +1222,9 @@ function contour(x,y,z, kw_args)
 end
 
 
-function heatmap(x,y,z, kw_args)
+function gl_heatmap(x,y,z, kw_args)
     get!(kw_args, :color_norm, Vec2f0(extrema(z)))
-    get!(kw_args, :color_map, make_gradient(cgrad()))
+    get!(kw_args, :color_map, Plots.make_gradient(cgrad()))
     delete!(kw_args, :intensity)
     I = GLVisualize.Intensity{1, Float32}
     heatmap = I[z[j,i] for i=1:size(z, 2), j=1:size(z, 1)]
