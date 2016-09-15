@@ -228,9 +228,10 @@ function pgf_axis(sp::Subplot, letter)
     end
 
     if !(axis[:ticks] in (nothing, false, :none, :auto))
-       push!(style, "$(letter)"*"tick = {$(join(get_ticks(axis),","))}")
+        ticks = get_ticks(axis)
+        push!(style, string(letter, "tick = {", join(ticks[1],","), "}"))
+        push!(style, string(letter, "ticklabels = {", join(ticks[2],","), "}"))
     end
-
 
     # return the style list and KW args
     style, kw
