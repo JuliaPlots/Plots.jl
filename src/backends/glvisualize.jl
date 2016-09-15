@@ -70,6 +70,8 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
         is_marker_supported{Img<:Images.AbstractImage}(::GLVisualizeBackend, shape::Union{Vector{Img}, Img}) = true
         is_marker_supported{C<:Colorant}(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) = true
+        is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
+        const GL = Plots
     end
 end
 
@@ -547,7 +549,7 @@ function draw_grid_lines(sp, grid_segs, thickness, style, model, color)
         :linecolor => color
     )
     Plots.extract_linestyle(d, kw_args)
-    GL.lines(map(Point2f0, grid_segs.pts), kw_args)
+    GL.gl_lines(map(Point2f0, grid_segs.pts), kw_args)
 end
 
 function align_offset(startpos, lastpos, atlas, rscale, font, align)
@@ -958,17 +960,17 @@ function _display(plt::Plot{GLVisualizeBackend})
                     kw_args[:stroke_color] = d[:linecolor]
                     kw_args[:stroke_width] = Float32(d[:linewidth]/100f0)
                 end
-                vis = GL.surface(x, y, z, kw_args)
+                vis = GL.gl_surface(x, y, z, kw_args)
             elseif (st in (:path, :path3d)) && d[:linewidth] > 0
                 kw = copy(kw_args)
                 points = Plots.extract_points(d)
                 extract_linestyle(d, kw)
-                vis = GL.lines(points, kw)
+                vis = GL.gl_lines(points, kw)
                 if d[:markershape] != :none
                     kw = copy(kw_args)
                     extract_stroke(d, kw)
                     extract_marker(d, kw)
-                    vis2 = GL.scatter(copy(points), kw)
+                    vis2 = GL.gl_scatter(copy(points), kw)
                     vis = [vis; vis2]
                 end
                 if d[:fillrange] != nothing
@@ -980,15 +982,15 @@ function _display(plt::Plot{GLVisualizeBackend})
                         points
                     end
                     extract_c(d, kw, :fill)
-                    vis = [GL.poly(ps, kw), vis]
+                    vis = [GL.gl_poly(ps, kw), vis]
                 end
             elseif st in (:scatter, :scatter3d) #|| d[:markershape] != :none
                 extract_marker(d, kw_args)
                 points = extract_points(d)
-                vis = GL.scatter(points, kw_args)
+                vis = GL.gl_scatter(points, kw_args)
             elseif st == :shape
                 extract_c(d, kw_args, :fill)
-                vis = GL.shape(d, kw_args)
+                vis = GL.gl_shape(d, kw_args)
             elseif st == :contour
                 x,y,z = extract_surface(d)
                 z = transpose_z(d, z, false)
@@ -997,20 +999,20 @@ function _display(plt::Plot{GLVisualizeBackend})
                 kw_args[:fillrange] = d[:fillrange]
                 kw_args[:levels] = d[:levels]
 
-                vis = GL.contour(x,y,z, kw_args)
+                vis = GL.gl_contour(x,y,z, kw_args)
             elseif st == :heatmap
                 x,y,z = extract_surface(d)
                 extract_gradient(d, kw_args, :fill)
                 extract_extrema(d, kw_args)
                 extract_limits(sp, d, kw_args)
-                vis = GL.heatmap(x,y,z, kw_args)
+                vis = GL.gl_heatmap(x,y,z, kw_args)
             elseif st == :bar
                 extract_c(d, kw_args, :fill)
                 extract_stroke(d, kw_args, :marker)
                 vis = gl_bar(d, kw_args)
             elseif st == :image
                 extract_extrema(d, kw_args)
-                vis = GL.image(d[:z].surf, kw_args)
+                vis = GL.gl_image(d[:z].surf, kw_args)
             elseif st == :boxplot
                  extract_c(d, kw_args, :fill)
                  vis = gl_boxplot(d, kw_args)
@@ -1060,20 +1062,8 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})
     FileIO.save(FileIO.Stream(FileIO.DataFormat{:PNG}, io), png)
 end
 
-module GL
 
-
-import GLVisualize, GeometryTypes, Reactive, GLAbstraction, GLWindow, Contour
-import GeometryTypes: Point2f0, Point3f0, Vec2f0, Vec3f0, GLNormalMesh, SimpleRectangle
-import FileIO, Images, FixedSizeArrays
-export GLVisualize
-import Reactive: Signal
-import GLAbstraction: Style
-import GLVisualize: visualize
-using Colors
-using ..Plots
-
-function image(img, kw_args)
+function gl_image(img, kw_args)
     rect = kw_args[:primitive]
     kw_args[:primitive] = GeometryTypes.SimpleRectangle{Float32}(rect.x, rect.y, rect.h, rect.w) # seems to be flipped
     visualize(img, Style(:default), kw_args)
@@ -1092,7 +1082,7 @@ function handle_segment{P}(lines, line_segments, points::Vector{P}, segment)
     end
 end
 
-function lines(points, kw_args)
+function gl_lines(points, kw_args)
     result = []
     isempty(points) && return result
     P = eltype(points)
@@ -1115,12 +1105,12 @@ function lines(points, kw_args)
     end
     return result
 end
-function shape(d, kw_args)
+function gl_shape(d, kw_args)
     points = Plots.extract_points(d)
     result = []
     for rng in iter_segments(d[:x], d[:y])
         ps = points[rng]
-        meshes = poly(ps, kw_args)
+        meshes = gl_poly(ps, kw_args)
         append!(result, meshes)
     end
     result
@@ -1130,7 +1120,7 @@ tovec2(x::AbstractVector) = map(tovec2, x)
 tovec2(x::FixedSizeArrays.Vec) = Vec2f0(x[1], x[2])
 
 
-function scatter(points, kw_args)
+function gl_scatter(points, kw_args)
     prim = get(kw_args, :primitive, GeometryTypes.Circle)
     if isa(prim, GLNormalMesh)
         kw_args[:scale] = map(kw_args[:model]) do m
@@ -1152,7 +1142,7 @@ function scatter(points, kw_args)
 end
 
 
-function poly(points, kw_args)
+function gl_poly(points, kw_args)
     last(points) == first(points) && pop!(points)
     polys = GeometryTypes.split_intersections(points)
     result = []
@@ -1167,7 +1157,7 @@ function poly(points, kw_args)
     result
 end
 
-function surface(x,y,z, kw_args)
+function gl_surface(x,y,z, kw_args)
     if isa(x, Range) && isa(y, Range)
         main = z
         kw_args[:ranges] = (x, y)
@@ -1203,7 +1193,7 @@ function surface(x,y,z, kw_args)
 end
 
 
-function contour(x,y,z, kw_args)
+function gl_contour(x,y,z, kw_args)
     if kw_args[:fillrange] != nothing
         delete!(kw_args, :intensity)
         I = GLVisualize.Intensity{1, Float32}
@@ -1232,7 +1222,7 @@ function contour(x,y,z, kw_args)
 end
 
 
-function heatmap(x,y,z, kw_args)
+function gl_heatmap(x,y,z, kw_args)
     get!(kw_args, :color_norm, Vec2f0(extrema(z)))
     get!(kw_args, :color_map, Plots.make_gradient(cgrad()))
     delete!(kw_args, :intensity)
@@ -1263,6 +1253,4 @@ function text_plot(text, alignment, kw_args)
     transmat *= GLAbstraction.translationmatrix(Vec3f0(pos..., 0))
     GLAbstraction.transformation(obj, transmat)
     view(obj, img.screen, camera=:orthographic_pixel)
-end
-
 end
