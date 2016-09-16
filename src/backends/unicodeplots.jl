@@ -14,6 +14,8 @@ const _unicodeplots_attr = merge_with_base_supported([
   ])
 const _unicodeplots_seriestype = [
     :path, :scatter,
+    # :bar,
+    :shape,
     :histogram2d
 ]
 const _unicodeplots_style = [:auto, :solid]
@@ -57,6 +59,12 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
 
         # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
         canvas_type = isijulia() ? UnicodePlots.AsciiCanvas : UnicodePlots.BrailleCanvas
+
+        # # make it a bar canvas if plotting bar
+        # if any(series -> series[:seriestype] == :bar, series_list(sp))
+        #     canvas_type = UnicodePlots.BarplotGraphics
+        # end
+
         o = UnicodePlots.Plot(x, y, canvas_type;
             width = width,
             height = height,
@@ -94,6 +102,10 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
         func = UnicodePlots.lineplot!
     elseif st == :scatter || d[:markershape] != :none
         func = UnicodePlots.scatterplot!
+    # elseif st == :bar
+    #     func = UnicodePlots.barplot!
+    elseif st == :shape
+        func = UnicodePlots.lineplot!
     else
         error("Linestyle $st not supported by UnicodePlots")
     end
@@ -106,6 +118,7 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
     color = d[:linecolor] in UnicodePlots.color_cycle ? d[:linecolor] : :auto
 
     # add the series
+    x, y = Plots.unzip(collect(filter(xy->isfinite(xy[1])&&isfinite(xy[2]), zip(x,y))))
     func(o, x, y; color = color, name = label)
 end
 
