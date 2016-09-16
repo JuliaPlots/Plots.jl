@@ -254,9 +254,6 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
                 axisstyle, axiskw = pgf_axis(sp, letter)
                 append!(style, axisstyle)
                 merge!(kw, axiskw)
-                for sty in axisstyle
-                    push!(style, sty)
-                end
             end
         end
 
