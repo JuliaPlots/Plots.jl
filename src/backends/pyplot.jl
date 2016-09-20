@@ -41,7 +41,7 @@ const _pyplot_seriestype = [
         :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
     ]
 const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _pyplot_marker = _allMarkers
+const _pyplot_marker = vcat(_allMarkers, :pixel)
 const _pyplot_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
@@ -189,6 +189,7 @@ function py_marker(marker::Symbol)
     marker == :pentagon && return "p"
     marker == :hexagon && return "h"
     marker == :octagon && return "8"
+    marker == :pixel && return ","
     haskey(_shapes, marker) && return py_marker(_shapes[marker])
 
     warn("Unknown marker $marker")
