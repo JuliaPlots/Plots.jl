@@ -89,6 +89,7 @@ export
     OHLC,
     arrow,
     Segments,
+    Formatted,
 
     Animation,
     frame,

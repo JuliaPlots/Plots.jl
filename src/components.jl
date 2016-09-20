@@ -497,6 +497,13 @@ function add_arrows(func::Function, x::AVec, y::AVec)
     end
 end
 
+# -----------------------------------------------------------------------
+
+"Represents data values with formatting that should apply to the tick labels."
+immutable Formatted{T}
+    data::T
+    formatter::Function
+end
 
 # -----------------------------------------------------------------------
 

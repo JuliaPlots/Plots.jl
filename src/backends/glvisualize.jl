@@ -1053,8 +1053,8 @@ function _display(plt::Plot{GLVisualizeBackend})
             GLAbstraction.center!(sp_screen)
         end
     end
-    yield()
     Reactive.post_empty()
+    yield()
 end
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})

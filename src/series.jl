@@ -110,7 +110,21 @@ immutable SliceIt end
 
 # the catch-all recipes
 @recipe function f(::Type{SliceIt}, x, y, z)
-    # @show "HERE", typeof((x,y,z))
+
+    # handle data with formatting attached
+    if typeof(x) <: Formatted
+        xformatter := x.formatter
+        x = x.data
+    end
+    if typeof(y) <: Formatted
+        yformatter := y.formatter
+        y = y.data
+    end
+    if typeof(z) <: Formatted
+        zformatter := z.formatter
+        z = z.data
+    end
+
     xs, _ = convertToAnyVector(x, d)
     ys, _ = convertToAnyVector(y, d)
     zs, _ = convertToAnyVector(z, d)
@@ -152,6 +166,33 @@ end
 @recipe f{V<:Val}(::Type{V}, x, y, z) = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
 
 _apply_type_recipe(d, v) = RecipesBase.apply_recipe(d, typeof(v), v)[1].args[1]
+
+# Handle type recipes when the recipe is defined on the elements.
+# This sort of recipe should return a pair of functions... one to convert to number,
+# and one to format tick values.
+function _apply_type_recipe(d, v::AbstractArray)
+    numfunc, formatter = RecipesBase.apply_recipe(d, typeof(v[1]), v[1])[1].args
+    Formatted(map(numfunc, v), formatter)
+end
+
+# # special handling for Surface... need to properly unwrap and re-wrap
+# function _apply_type_recipe(d, v::Surface)
+#     T = eltype(v.surf)
+#     @show T
+#     if T <: Integer || T <: AbstractFloat
+#         v
+#     else
+#         ret = _apply_type_recipe(d, v.surf)
+#         if typeof(ret) <: Formatted
+#             Formatted(Surface(ret.data), ret.formatter)
+#         else
+#             v
+#         end
+#     end
+# end
+
+# don't do anything for ints or floats
+_apply_type_recipe{T<:Union{Integer,AbstractFloat}}(d, v::AbstractArray{T}) = v
 
 # handle "type recipes" by converting inputs, and then either re-calling or slicing
 @recipe function f(x, y, z)
@@ -214,12 +255,23 @@ end
 @recipe f(n::Integer) = is3d(get(d,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
-@recipe function f{T<:Number}(mat::AMat{T})
+@recipe function f{T<:Union{Integer,AbstractFloat}}(mat::AMat{T})
     if all3D(d)
         n,m = size(mat)
         SliceIt, 1:m, 1:n, Surface(mat)
     else
         SliceIt, nothing, mat, nothing
+    end
+end
+
+# if a matrix is wrapped by Formatted, do similar logic, but wrap data with Surface
+@recipe function f{T<:AbstractMatrix}(fmt::Formatted{T})
+    if all3D(d)
+        mat = fmt.data
+        n,m = size(mat)
+        SliceIt, 1:m, 1:n, Formatted(Surface(mat), fmt.formatter)
+    else
+        SliceIt, nothing, fmt, nothing
     end
 end
 
