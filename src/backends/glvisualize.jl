@@ -646,14 +646,17 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         grid = draw_grid_lines(sp, grid_segs, 1f0, :dot, model, RGBA(c, 0.3f0))
         push!(axis_vis, grid)
     end
-    spine = draw_grid_lines(sp, spine_segs, 1f0, :solid, model, RGBA(c, 1.0f0))
-    push!(axis_vis, spine)
+    if alpha(xaxis[:foreground_color_border]) > 0
+        spine = draw_grid_lines(sp, spine_segs, 1f0, :solid, model, RGBA(c, 1.0f0))
+        push!(axis_vis, spine)
+    end
     fcolor = Plots.gl_color(xaxis[:foreground_color_axis])
 
     xlim = Plots.axis_limits(xaxis)
     ylim = Plots.axis_limits(yaxis)
     m = Reactive.value(model)
     xs, ys = m[1,1], m[2,2]
+    # TODO: we should make sure we actually need to draw these...
     t, positions, offsets = draw_ticks(xaxis, xticks, :top, Point2f0(0, 7/ys), true, ylim, model)
     t, positions, offsets = draw_ticks(yaxis, yticks, :right, Point2f0(7/xs, 0), false, xlim, model, t, positions, offsets)
     sz = xaxis[:tickfont].pointsize
@@ -665,7 +668,9 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         :model => model,
         :scale_primitive => false
     )
-    push!(axis_vis, visualize(t, Style(:default), kw_args))
+    if !(xaxis[:ticks] in (nothing,false,:none))
+        push!(axis_vis, visualize(t, Style(:default), kw_args))
+    end
     area_w = GeometryTypes.widths(area)
     if sp[:title] != ""
         tf = sp[:titlefont]; color = gl_color(sp[:foreground_color_title])
@@ -1012,7 +1017,8 @@ function _display(plt::Plot{GLVisualizeBackend})
                 vis = gl_bar(d, kw_args)
             elseif st == :image
                 extract_extrema(d, kw_args)
-                vis = GL.gl_image(d[:z].surf, kw_args)
+                z = transpose_z(series, d[:z].surf, false)
+                vis = GL.gl_image(z, kw_args)
             elseif st == :boxplot
                  extract_c(d, kw_args, :fill)
                  vis = gl_boxplot(d, kw_args)

@@ -165,7 +165,7 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
             k_max = 8, # maximum number of ticks
         )[1]
     else
-        map(sf, ticks)
+        map(sf, filter(t -> amin <= t <= amax, ticks))
     end
     unscaled_ticks = map(invscalefunc(scale), scaled_ticks)
 
