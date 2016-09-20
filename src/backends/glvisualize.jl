@@ -82,6 +82,9 @@ function add_backend(::GLVisualizeBackend)
     if !is_installed("Contour")
         Pkg.add("Contour")
     end
+    if !is_installed("GLPlot")
+        Pkg.add("GLPlot")
+    end
 
     # TODO: remove this section when the tagged versions catch up
     for pkg in [
@@ -894,6 +897,7 @@ function _display(plt::Plot{GLVisualizeBackend})
     empty_screen!(screen)
     sw, sh = plt[:size]
     sw, sh = sw*px, sh*px
+    # TODO: use plt.subplots... plt.spmap can't be trusted
     for (name, sp) in plt.spmap
         _3d = Plots.is3d(sp)
         # camera = :perspective
@@ -1049,6 +1053,8 @@ function _display(plt::Plot{GLVisualizeBackend})
             GLAbstraction.center!(sp_screen)
         end
     end
+    yield()
+    Reactive.post_empty()
 end
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})
