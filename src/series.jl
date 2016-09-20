@@ -171,8 +171,13 @@ _apply_type_recipe(d, v) = RecipesBase.apply_recipe(d, typeof(v), v)[1].args[1]
 # This sort of recipe should return a pair of functions... one to convert to number,
 # and one to format tick values.
 function _apply_type_recipe(d, v::AbstractArray)
-    numfunc, formatter = RecipesBase.apply_recipe(d, typeof(v[1]), v[1])[1].args
-    Formatted(map(numfunc, v), formatter)
+    args = RecipesBase.apply_recipe(d, typeof(v[1]), v[1])[1].args
+    if length(args) == 2 && typeof(args[1]) <: Function && typeof(args[2]) <: Function
+        numfunc, formatter = args
+        Formatted(map(numfunc, v), formatter)
+    else
+        v
+    end
 end
 
 # # special handling for Surface... need to properly unwrap and re-wrap
