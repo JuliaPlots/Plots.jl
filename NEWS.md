@@ -12,6 +12,28 @@
 
 ## 0.9 (current master/dev)
 
+#### 0.9.2
+
+- glvisualize backend (@SimonDanisch)
+    - too much to list! ready for alpha testing
+- Volume and volume seriestype
+- Atom: support for PlotPane and proper gui display
+- gr:
+    - clims
+    - aspect ratio
+- pgfplots:
+    - fixes for ticks, axes, and more
+- pyplot:
+    - font families
+    - colorbar guide
+    - pixel marker
+- unicodeplots
+    - basic support for shapes
+- improved add_backend
+- refactor of is_supported methods
+- element-wise type recipes (see https://github.com/tbreloff/Plots.jl/issues/460#issuecomment-248428908)
+- several other fixes/improvements
+
 #### 0.9.1
 
 - Pkg.dir --> dirname (@tkelman)
