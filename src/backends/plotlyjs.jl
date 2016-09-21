@@ -78,11 +78,14 @@ function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend})
     show(io, MIME("text/html"), plt.o)
 end
 
-function _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend})
-    tmpfn = tempname() * ".png"
+function plotlyjs_save_hack(io::IO, plt::Plot{PlotlyJSBackend}, ext::String)
+    tmpfn = tempname() * "." * ext
     PlotlyJS.savefig(plt.o, tmpfn)
     write(io, read(open(tmpfn)))
 end
+_show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "png")
+_show(io::IO, ::MIME"application/pdf", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "pdf")
+_show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "eps")
 
 function _display(plt::Plot{PlotlyJSBackend})
     display(plt.o)
