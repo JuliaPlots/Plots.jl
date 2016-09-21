@@ -503,6 +503,12 @@ function build_layout(layout::GridLayout, n::Integer)
             i += 1
         elseif isa(l, GridLayout)
             # sub-grid
+            if get(l.attr, :width, :auto) != :auto
+                layout.widths[c] = attr(l,:width)
+            end
+            if get(l.attr, :height, :auto) != :auto
+                layout.heights[r] = attr(l,:height)
+            end
             l, sps, m = build_layout(l, n-i)
             append!(subplots, sps)
             merge!(spmap, m)
@@ -539,6 +545,12 @@ function build_layout(layout::GridLayout, numsp::Integer, plts::AVec{Plot})
             i += length(plt.subplots)
         elseif isa(l, GridLayout)
             # sub-grid
+            if get(l.attr, :width, :auto) != :auto
+                layout.widths[c] = attr(l,:width)
+            end
+            if get(l.attr, :height, :auto) != :auto
+                layout.heights[r] = attr(l,:height)
+            end
             l, sps, m = build_layout(l, numsp-i, plts)
             append!(subplots, sps)
             merge!(spmap, m)
@@ -635,12 +647,18 @@ function create_grid_vcat(expr::Expr)
 end
 
 function create_grid_curly(expr::Expr)
-    s = expr.args[1]
     kw = KW()
     for (i,arg) in enumerate(expr.args[2:end])
         add_layout_pct!(kw, arg, i, length(expr.args)-1)
     end
-    :(EmptyLayout(label = $(QuoteNode(s)), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto)))))
+    s = expr.args[1]
+    if isa(s, Expr) && s.head == :call && s.args[1] == :grid
+        create_grid(:(grid($(s.args[2:end]...), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto))))))
+    elseif isa(s, Symbol)
+        :(EmptyLayout(label = $(QuoteNode(s)), width = $(get(kw, :w, QuoteNode(:auto))), height = $(get(kw, :h, QuoteNode(:auto)))))
+    else
+        error("Unknown use of curly brackets: $expr")
+    end
 end
 
 function create_grid(s::Symbol)
