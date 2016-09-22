@@ -12,6 +12,12 @@
 
 ## 0.9 (current master/dev)
 
+#### 0.9.3
+
+- support pdf and eps in plotlyjs backend
+- allow curly after grid: `@layout [a b; grid(4,4){0.8h}]`
+- add_backend redesign
+
 #### 0.9.2
 
 - glvisualize backend (@SimonDanisch)
