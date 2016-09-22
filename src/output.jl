@@ -172,6 +172,7 @@ for mime in keys(_mimeformats)
     end
 end
 
+Base.mimewritable{B}(m::MIME, plt::Plot{B}) = mimewritable(m, plt.o)
 
 # ---------------------------------------------------------
 # A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
