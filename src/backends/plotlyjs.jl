@@ -10,15 +10,17 @@ const _plotlyjs_scale       = _plotly_scale
 # --------------------------------------------------------------------------------------
 
 
-function add_backend(::PlotlyJSBackend)
-    if !is_installed("PlotlyJS")
+function add_backend_string(::PlotlyJSBackend)
+    """
+    if !Plots.is_installed("PlotlyJS")
         Pkg.add("PlotlyJS")
     end
-    if !is_installed("Rsvg")
+    if !Plots.is_installed("Rsvg")
         Pkg.add("Rsvg")
     end
-    @eval import Blink
+    import Blink
     Blink.AtomShell.install()
+    """
 end
 
 

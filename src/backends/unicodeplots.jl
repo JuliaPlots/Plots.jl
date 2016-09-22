@@ -28,6 +28,13 @@ warnOnUnsupported_args(::UnicodePlotsBackend, d::KW) = nothing
 
 # --------------------------------------------------------------------------------------
 
+function add_backend_string(::UnicodePlotsBackend)
+    """
+    Pkg.add("UnicodePlots")
+    Pkg.build("UnicodePlots")
+    """
+end
+
 function _initialize_backend(::UnicodePlotsBackend; kw...)
     @eval begin
         import UnicodePlots

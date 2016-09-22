@@ -48,13 +48,15 @@ is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
 # --------------------------------------------------------------------------------------
 
-function add_backend(::PyPlotBackend)
-    if !is_installed("PyPlot")
-        withenv("PYTHON" => "") do
-            Pkg.add("PyPlot")
-            Pkg.build("PyPlot")
-        end
+function add_backend_string(::PyPlotBackend)
+    """
+    if !Plots.is_installed("PyPlot")
+        Pkg.add("PyPlot")
     end
+    withenv("PYTHON" => "") do
+        Pkg.build("PyPlot")
+    end
+    """
 end
 
 function _initialize_backend(::PyPlotBackend)

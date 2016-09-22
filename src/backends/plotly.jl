@@ -47,8 +47,10 @@ is_subplot_supported(::PlotlyBackend) = true
 
 # --------------------------------------------------------------------------------------
 
-function add_backend(::PlotlyBackend)
+function add_backend_string(::PlotlyBackend)
+    """
     Pkg.build("Plots")
+    """
 end
 
 

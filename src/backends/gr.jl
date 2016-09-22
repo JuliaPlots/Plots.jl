@@ -42,6 +42,12 @@ const _gr_marker = _allMarkers
 const _gr_scale = [:identity, :log10]
 is_marker_supported(::GRBackend, shape::Shape) = true
 
+function add_backend_string(::GRBackend)
+    """
+    Pkg.add("GR")
+    Pkg.build("GR")
+    """
+end
 
 function _initialize_backend(::GRBackend; kw...)
     @eval begin

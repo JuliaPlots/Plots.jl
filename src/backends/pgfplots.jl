@@ -40,6 +40,12 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 # --------------------------------------------------------------------------------------
 
+function add_backend_string(::PGFPlotsBackend)
+    """
+    Pkg.add("PGFPlots")
+    Pkg.build("PGFPlots")
+    """
+end
 
 function _initialize_backend(::PGFPlotsBackend; kw...)
     @eval begin
