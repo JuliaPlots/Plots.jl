@@ -684,9 +684,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     end
     GR.restorestate()
 
-    # TODO: can we remove?
     gr_set_font(xaxis[:tickfont])
-    # GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
+
+    # this needs to be here to point the colormap to the right indices
+    GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
 
     for (idx, series) in enumerate(series_list(sp))
         st = series[:seriestype]

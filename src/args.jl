@@ -1143,7 +1143,8 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     end
 
     # this is how many series belong to this subplot
-    plotIndex = count(series -> series.d[:subplot] === sp && series.d[:primary], plt.series_list)
+    # plotIndex = count(series -> series.d[:subplot] === sp && series.d[:primary], plt.series_list)
+    plotIndex = count(series -> series[:primary], sp.series_list)
     if get(d, :primary, true)
         plotIndex += 1
     end

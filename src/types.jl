@@ -23,9 +23,19 @@ Base.isempty(wrapper::InputWrapper) = false
 
 # -----------------------------------------------------------
 
+type Series
+    d::KW
+end
+
+attr(series::Series, k::Symbol) = series.d[k]
+attr!(series::Series, v, k::Symbol) = (series.d[k] = v)
+
+# -----------------------------------------------------------
+
 # a single subplot
 type Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
+    series_list::Vector{Series}  # arguments for each series
     minpad::Tuple # leftpad, toppad, rightpad, bottompad
     bbox::BoundingBox  # the canvas area which is available to this subplot
     plotarea::BoundingBox  # the part where the data goes
@@ -56,14 +66,6 @@ typealias SubplotMap Dict{Any, Subplot}
 
 # -----------------------------------------------------------
 
-type Series
-    d::KW
-end
-
-attr(series::Series, k::Symbol) = series.d[k]
-attr!(series::Series, v, k::Symbol) = (series.d[k] = v)
-
-# -----------------------------------------------------------
 
 type Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
