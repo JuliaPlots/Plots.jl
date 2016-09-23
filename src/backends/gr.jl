@@ -1021,14 +1021,13 @@ const _gr_mimeformats = Dict(
 for (mime, fmt) in _gr_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
-        wstype = haskey(ENV, "GKS_WSTYPE") ? ENV["GKS_WSTYPE"] : "0"
         filepath = tempname() * "." * $fmt
-        ENV["GKS_WSTYPE"] = $fmt
-        ENV["GKS_FILEPATH"] = filepath
-        gr_display(plt)
-        GR.emergencyclosegks()
+        withenv("GKS_WSTYPE" => $fmt == "png" ? "cairopng" : $fmt,
+                "GKS_FILEPATH" => filepath) do
+            gr_display(plt)
+            GR.emergencyclosegks()
+        end
         write(io, readstring(filepath))
-        ENV["GKS_WSTYPE"] = wstype
         rm(filepath)
     end
 end
@@ -1037,15 +1036,18 @@ function _display(plt::Plot{GRBackend})
     if plt[:display_type] == :inline
         GR.emergencyclosegks()
         filepath = tempname() * ".pdf"
-        ENV["GKS_WSTYPE"] = "pdf"
-        ENV["GKS_FILEPATH"] = filepath
-        gr_display(plt)
-        GR.emergencyclosegks()
+        withenv("GKS_WSTYPE" => "pdf",
+                "GKS_FILEPATH" => filepath) do
+            gr_display(plt)
+            GR.emergencyclosegks()
+        end
         content = string("\033]1337;File=inline=1;preserveAspectRatio=0:", base64encode(open(readbytes, filepath)), "\a")
         println(content)
         rm(filepath)
     else
-        ENV["GKS_DOUBLE_BUF"] = "true"
-        gr_display(plt)
+        withenv("GKS_WSTYPE" => get(ENV, "GKS_WSTYPE", "cairox11"),
+                "GKS_DOUBLE_BUF" => get(ENV ,"GKS_DOUBLE_BUF", "true")) do
+            gr_display(plt)
+        end
     end
 end
