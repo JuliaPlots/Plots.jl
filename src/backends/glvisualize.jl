@@ -949,6 +949,7 @@ function _display(plt::Plot{GLVisualizeBackend})
             GLVisualize._view(axis, sp_screen, camera=cam)
             push!(cam.projectiontype, GLVisualize.PERSPECTIVE)
         end
+
         for series in  Plots.series_list(sp)
             d = series.d
             st = d[:seriestype]; kw_args = KW() # exctract kw
@@ -1049,6 +1050,8 @@ function _display(plt::Plot{GLVisualizeBackend})
                 append!(_glplot_deletes, del_signal)
             end
         end
+        #@show model_m
+        generate_legend(sp, sp_screen, model_m)
         if _3d
             GLAbstraction.center!(sp_screen)
         end
@@ -1265,4 +1268,113 @@ function text_plot(text, alignment, kw_args)
     transmat *= GLAbstraction.translationmatrix(Vec3f0(pos..., 0))
     GLAbstraction.transformation(obj, transmat)
     view(obj, img.screen, camera=:orthographic_pixel)
+end
+
+
+
+function make_label(sp, series, i)
+    GL = Plots
+    w, gap, ho = 20f0, 5f0, 5
+    result = []
+    d = series.d
+    st = d[:seriestype]
+    kw_args = KW()
+    if (st in (:path, :path3d)) && d[:linewidth] > 0
+        points = Point2f0[(0, ho), (w, ho)]
+        kw = KW()
+        extract_linestyle(d, kw)
+        kw[:thickness] = 15f0
+        append!(result, GL.gl_lines(points, kw))
+        if d[:markershape] != :none
+            kw = KW()
+            extract_stroke(d, kw)
+            extract_marker(d, kw)
+            kw[:scale] = Vec2f0(w/2)
+            kw[:offset] = Vec2f0(-w/4)
+            if haskey(kw, :intensity)
+                cmap = kw[:color_map]
+                norm = kw[:color_norm]
+                kw[:color] = GLVisualize.color_lookup(cmap, kw[:intensity][1], norm)
+                delete!(kw, :intensity)
+                delete!(kw, :color_map)
+                delete!(kw, :color_norm)
+            else
+                color = get(kw, :color, nothing)
+                kw[:color] = isa(color, Array) ? first(color) : color
+            end
+            push!(result, GL.gl_scatter(Point2f0[(w/2, ho)], kw))
+        end
+    elseif st in (:scatter, :scatter3d) #|| d[:markershape] != :none
+        kw = KW()
+        extract_stroke(d, kw)
+        extract_marker(d, kw)
+        kw[:scale] = Vec2f0(w/2)
+        kw[:offset] = Vec2f0(-w/4)
+        if haskey(kw, :intensity)
+            cmap = kw[:color_map]
+            norm = kw[:color_norm]
+            kw[:color] = GLVisualize.color_lookup(cmap, kw[:intensity][1], norm)
+            delete!(kw, :intensity)
+            delete!(kw, :color_map)
+            delete!(kw, :color_norm)
+        else
+            color = get(kw, :color, nothing)
+            kw[:color] = isa(color, Array) ? first(color) : color
+        end
+        push!(result, GL.gl_scatter(Point2f0[(w/2, ho)], kw))
+    else
+        extract_c(d, kw_args, :fill)
+        push!(result, visualize(
+            GeometryTypes.SimpleRectangle(-w/2, ho-w/4, w/2, w/2),
+            Style(:default), kw_args
+        ))
+    end
+    labeltext = if isa(series[:label], Array)
+        i += 1
+        series[:label][i]
+    else
+        series[:label]
+    end
+    color = sp[:foreground_color_legend]
+    ft = sp[:legendfont]
+    font = Plots.Font(ft.family, ft.pointsize, :left, :bottom, 0.0, color)
+    xy = Point2f0(w+gap, 0.0)
+    kw = Dict(:model => text_model(font, xy), :scale_primitive=>true)
+    extract_font(font, kw)
+    t = PlotText(labeltext, font)
+    push!(result, text(xy, t, kw))
+    GLAbstraction.Context(result...), i
+end
+
+
+function generate_legend(sp, screen, model_m)
+    legend = GLAbstraction.Context[]
+    if sp[:legend] != :none
+        i = 0
+        for series in series_list(sp)
+            should_add_to_legend(series) || continue
+            result, i = make_label(sp, series, i)
+            push!(legend, result)
+        end
+        if isempty(legend)
+            return
+        end
+        list = visualize(legend)
+        bb = Reactive.value(GLAbstraction.boundingbox(list))
+        wx,wy,_ = GeometryTypes.widths(bb)
+        xmin, _ = Plots.axis_limits(sp[:xaxis])
+        _, ymax = Plots.axis_limits(sp[:yaxis])
+        area = map(model_m) do m
+            @show m
+            p = m * GeometryTypes.Vec4f0(xmin, ymax, 0, 1)
+
+            w = round(Int, 2*wy)
+            x,y = round(Int, p[1]) + 20, round(Int, p[2]-w)-40
+            GeometryTypes.SimpleRectangle(x, y, round(Int, wx)+20, w+20)
+        end
+        sscren = GLWindow.Screen(screen, area=area)
+        GLAbstraction._translate!(list, Vec3f0(10,10,0))
+        GLVisualize._view(list, sscren, camera=:fixed_pixel)
+    end
+    return
 end
