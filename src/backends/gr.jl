@@ -627,7 +627,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, (flip $ mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
-                gr_text(xi, yi + (mirror ? 1 : -1) * 0.01, string(dv))
+                gr_text(xi, yi + (mirror ? 1 : -1) * 2e-3, string(dv))
             end
         end
 
@@ -640,7 +640,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc((flip $ mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
-                gr_text(xi + (mirror ? 1 : -1) * 0.01, yi, string(dv))
+                gr_text(xi + (mirror ? 1 : -1) * 2e-3, yi, string(dv))
             end
         end
 
@@ -1017,12 +1017,19 @@ const _gr_mimeformats = Dict(
     "image/svg+xml"           => "svg",
 )
 
+const _gr_wstype_default = @static if is_linux()
+    "cairox11"
+elseif is_apple()
+    "quartz"
+else
+    "windows"
+end
 
 for (mime, fmt) in _gr_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
         filepath = tempname() * "." * $fmt
-        withenv("GKS_WSTYPE" => $fmt == "png" ? "cairopng" : $fmt,
+        withenv("GKS_WSTYPE" => $fmt,  # $fmt == "png" ? "cairopng" : $fmt,
                 "GKS_FILEPATH" => filepath) do
             gr_display(plt)
             GR.emergencyclosegks()
@@ -1045,7 +1052,7 @@ function _display(plt::Plot{GRBackend})
         println(content)
         rm(filepath)
     else
-        withenv("GKS_WSTYPE" => get(ENV, "GKS_WSTYPE", "cairox11"),
+        withenv("GKS_WSTYPE" => get(ENV, "GKS_WSTYPE", _gr_wstype_default),
                 "GKS_DOUBLE_BUF" => get(ENV ,"GKS_DOUBLE_BUF", "true")) do
             gr_display(plt)
         end
