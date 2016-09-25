@@ -342,7 +342,7 @@ end
 # so lazy out and don't widen
 function default_should_widen(axis::Axis)
     should_widen = false
-    if axis[:scale] == :identity
+    if axis[:scale] == :identity && !is_2tuple(axis[:lims])
         for sp in axis.sps
             for series in series_list(sp)
                 if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
