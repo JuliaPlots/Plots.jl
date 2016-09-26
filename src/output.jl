@@ -268,7 +268,11 @@ function setup_atom()
         if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", true) in (true, 1, "1", "true", "yes")
             # this is like "display"... sends an html div with the plot to the PlotPane
             function Media.render(pane::Atom.PlotPane, plt::Plot)
-                Media.render(pane, Atom.div(Atom.HTML(stringmime(MIME("text/html"), plt))))
+                # temporarily overwrite size to be Atom.plotsize
+                sz = plt[:size]
+                plt[:size] = Juno.plotsize()
+                Media.render(pane, Atom.div(".fill", Atom.HTML(stringmime(MIME("text/html"), plt))))
+                plt[:size] = sz
             end
         else
             #
@@ -279,14 +283,17 @@ function setup_atom()
             end
         end
 
-        # Atom.displaysize(::Plot) = (535, 379)
-        # Atom.displaytitle(plt::Plot) = "Plots.jl (backend: $(backend(plt)))"
-
-        # special handling for plotly/plotlyjs
-        function Media.render{B<:Union{PlotlyBackend,PlotlyJSBackend}}(pane::Atom.PlotPane, plt::Plot{B})
+        # special handling for plotly... use PlotsDisplay
+        function Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
             display(Plots.PlotsDisplay(), plt)
             s = "PlotPane turned off.  The plotly and plotlyjs backends cannot render in the PlotPane due to javascript issues."
             Media.render(pane, Atom.div(Atom.HTML(s)))
+        end
+
+        # special handling for PlotlyJS to pass through to that render method
+        function Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyJSBackend})
+            Plots.prepare_output(plt)
+            Media.render(pane, plt.o)
         end
     end
 end
