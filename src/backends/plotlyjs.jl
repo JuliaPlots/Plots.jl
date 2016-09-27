@@ -56,10 +56,15 @@ end
 
 function _series_updated(plt::Plot{PlotlyJSBackend}, series::Series)
     xsym, ysym = (ispolar(series) ? (:t,:r) : (:x,:y))
+    kw = KW(xsym => (series.d[:x],), ysym => (series.d[:y],))
+    z = series[:z]
+    if z != nothing
+        kw[:z] = (transpose_z(series, series[:z].surf, false),)
+    end
     PlotlyJS.restyle!(
         plt.o,
         findfirst(plt.series_list, series),
-        KW(xsym => (series.d[:x],), ysym => (series.d[:y],))
+        kw
     )
 end
 
