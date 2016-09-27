@@ -660,26 +660,28 @@ function setxy!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer)
     series = plt.series_list[i]
     series.d[:x], series.d[:y] = xy
     sp = series.d[:subplot]
-    expand_extrema!(sp.attr[:xaxis], xy[1])
-    expand_extrema!(sp.attr[:yaxis], xy[2])
+    reset_extrema!(sp)
     _series_updated(plt, series)
 end
 function setxyz!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
     series = plt.series_list[i]
     series.d[:x], series.d[:y], series.d[:z] = xyz
     sp = series.d[:subplot]
-    expand_extrema!(sp.attr[:xaxis], xyz[1])
-    expand_extrema!(sp.attr[:yaxis], xyz[2])
-    expand_extrema!(sp.attr[:zaxis], xyz[3])
+    reset_extrema!(sp)
     _series_updated(plt, series)
 end
+
+function setxyz!{X,Y,Z<:AbstractMatrix}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
+    setxyz!(plt, (xyz[1], xyz[2], Surface(xyz[3])), i)
+end
+
 
 # -------------------------------------------------------
 # indexing notation
 
 # Base.getindex(plt::Plot, i::Integer) = getxy(plt, i)
-Base.setindex!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer) = setxy!(plt, xy, i)
-Base.setindex!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) = setxyz!(plt, xyz, i)
+Base.setindex!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer) = (setxy!(plt, xy, i); plt)
+Base.setindex!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) = (setxyz!(plt, xyz, i); plt)
 
 # -------------------------------------------------------
 

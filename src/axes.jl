@@ -224,6 +224,21 @@ end
 
 # -------------------------------------------------------------------------
 
+
+function reset_extrema!(sp::Subplot)
+    # axis = sp[Symbol(asym,:axis)]
+    # axis[:extrema] = Extrema()
+    for asym in (:x,:y,:z)
+        sp[Symbol(asym,:axis)][:extrema] = Extrema()
+    end
+    for series in sp.series_list
+        @show series
+        # expand_extrema!(axis, series[asym])
+        expand_extrema!(sp, series.d)
+    end
+end
+
+
 function expand_extrema!(ex::Extrema, v::Number)
     ex.emin = min(v, ex.emin)
     ex.emax = max(v, ex.emax)
