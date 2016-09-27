@@ -77,27 +77,14 @@ end
 
 function add_backend_string(b::GLVisualizeBackend)
     """
-    if !Plots.is_installed("GLVisualize")
-        Pkg.add("GLVisualize")
-    end
-    if !Plots.is_installed("Contour")
-        Pkg.add("Contour")
-    end
-    if !Plots.is_installed("GLPlot")
-        Pkg.add("GLPlot")
-    end
+    For those incredibly brave souls who assume full responsibility for what happens next...
+    There's an easy way to get what you need for the GLVisualize backend to work:
 
-    # TODO: remove this section when the tagged versions catch up
-    for pkg in [
-            "GLWindow", "GLAbstraction",
-            "GLVisualize", "GeometryTypes", "FixedSizeArrays",
-            "FreeType", "GLPlot"
-        ]
-        warn("Running Pkg.checkout(\"\$pkg\").  To revert, run Pkg.free(\"\$pkg\")")
-        Pkg.checkout(pkg)
-    end
-    warn("Running Pkg.checkout(\"Reactive\", \"sd/betterstop\").  To revert, run Pkg.free(\"Reactive\")")
-    Pkg.checkout("Reactive", "sd/betterstop")
+    Pkg.clone("https://github.com/tbreloff/MetaPkg.jl")
+    import MetaPkg
+    MetaPkg.checkout("MetaGL")
+
+    See the MetaPkg readme for details...
     """
 end
 
