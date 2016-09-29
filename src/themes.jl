@@ -52,12 +52,12 @@ function add_theme(sym::Symbol;
 end
 
 add_theme(:ggplot2,
-    bglegend = _invisible,
+    bglegend = :lightgray,
     bginside = :lightgray,
-    fg       = :white,
-    fglegend = _invisible,
-    fgtext   = :gray,
-    fgguide  = :black
+    fg       = :black,
+    fggrid   = :white,
+    fgborder = _invisible,
+    fgaxis   = _invisible
 )
 
 function set_theme(sym::Symbol)

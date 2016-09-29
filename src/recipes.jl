@@ -405,10 +405,14 @@ end
         push!(yseg, yi, fi, fi, yi, yi)
     end
 
+    # widen limits out a bit
+    expand_extrema!(axis, widen(extrema(xseg.pts)...))
+
     # switch back
     if !isvertical(d)
         xseg, yseg = yseg, xseg
     end
+
 
     # reset orientation
     orientation := default(:orientation)
