@@ -386,6 +386,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:type] = "bar"
         d_out[:x], d_out[:y] = x, y
         d_out[:orientation] = isvertical(series) ? "v" : "h"
+        d_out[:marker] = KW(:color => rgba_string(series[:fillcolor]))
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
