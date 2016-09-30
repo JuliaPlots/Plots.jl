@@ -51,15 +51,24 @@ _before_layout_calcs(plt::Plot) = nothing
 title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefont].pointsize * pt
 guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefont].pointsize * pt
 
-# TODO: this should account for both tick font and the size/length/rotation of tick labels
+# account for the size/length/rotation of tick labels
 function tick_padding(axis::Axis)
+    vals, labs = get_ticks(axis)
     ptsz = axis[:tickfont].pointsize * pt
     if axis[:ticks] in (nothing,false)
         0mm
-    elseif axis[:letter] == :x
-        2mm + ptsz
     else
-        8mm
+        # we need to compute the size of the ticks generically
+        # this means computing the bounding box and then getting the width/height
+        longest_label = maximum(length(lab) for lab in labs)
+        labelwidth = 0.8longest_label * ptsz
+
+        # generalize by "rotating" y labels
+        rot = axis[:rotation] + (axis[:letter] == :y ? 90 : 0)
+
+        # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
+        hgt = abs(sind(rot)) * labelwidth + abs(cosd(rot)) * ptsz + 1mm
+        hgt
     end
 end
 

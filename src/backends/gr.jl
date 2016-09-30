@@ -337,10 +337,11 @@ end
 const _gr_point_mult = zeros(1)
 
 # set the font attributes... assumes _gr_point_mult has been populated already
-function gr_set_font(f::Font; halign = f.halign, valign = f.valign, color = f.color)
+function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
+                              color = f.color, rotation = f.rotation)
     family = lowercase(f.family)
     GR.setcharheight(_gr_point_mult[1] * f.pointsize)
-    GR.setcharup(sin(f.rotation), cos(f.rotation))
+    GR.setcharup(sind(-rotation), cosd(-rotation))
     if haskey(gr_font_family, family)
         GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
     end
@@ -622,7 +623,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # x labels
             flip = sp[:yaxis][:flip]
             mirror = sp[:xaxis][:mirror]
-            gr_set_font(sp[:xaxis][:tickfont], valign = (mirror ? :bottom : :top), color = sp[:xaxis][:foreground_color_axis])
+            gr_set_font(sp[:xaxis][:tickfont],
+                        valign = (mirror ? :bottom : :top),
+                        color = sp[:xaxis][:foreground_color_axis],
+                        rotation = sp[:xaxis][:rotation])
             for (cv, dv) in zip(xticks...)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, (flip $ mirror) ? ymax : ymin)
@@ -635,7 +639,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # y labels
             flip = sp[:xaxis][:flip]
             mirror = sp[:yaxis][:mirror]
-            gr_set_font(sp[:yaxis][:tickfont], halign = (mirror ? :left : :right), color = sp[:yaxis][:foreground_color_axis])
+            gr_set_font(sp[:yaxis][:tickfont],
+                        halign = (mirror ? :left : :right),
+                        color = sp[:yaxis][:foreground_color_axis],
+                        rotation = sp[:yaxis][:rotation])
             for (cv, dv) in zip(yticks...)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc((flip $ mirror) ? xmax : xmin, cv)

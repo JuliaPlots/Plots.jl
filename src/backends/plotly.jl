@@ -115,7 +115,7 @@ function plotly_annotation_dict(x, y, ptxt::PlotText; xref="paper", yref="paper"
         :font => plotly_font(ptxt.font),
         :xanchor => ptxt.font.halign == :hcenter ? :center : ptxt.font.halign,
         :yanchor => ptxt.font.valign == :vcenter ? :middle : ptxt.font.valign,
-        :rotation => ptxt.font.rotation,
+        :rotation => -ptxt.font.rotation,
     ))
 end
 
@@ -166,6 +166,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         :title      => axis[:guide],
         :showgrid   => sp[:grid],
         :zeroline   => false,
+        :ticks      => "inside",
     )
 
     if letter in (:x,:y)
@@ -175,7 +176,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
 
     rot = axis[:rotation]
     if rot != 0
-        ax[:tickangle] = rot
+        ax[:tickangle] = -rot
     end
 
     if !(axis[:ticks] in (nothing, :none))
