@@ -33,7 +33,7 @@ const _plotly_attr = merge_with_base_supported([
 
 const _plotly_seriestype = [
     :path, :scatter, :bar, :pie, :heatmap,
-    :contour, :surface, :path3d, :scatter3d, :shape, :scattergl,
+    :contour, :surface, :wireframe, :path3d, :scatter3d, :shape, :scattergl,
 ]
 const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _plotly_marker = [
@@ -343,6 +343,10 @@ plotly_data(v) = collect(v)
 plotly_data(surf::Surface) = surf.surf
 plotly_data{R<:Rational}(v::AbstractArray{R}) = float(v)
 
+plotly_surface_data(series::Series, a::AbstractVector) = a
+plotly_surface_data(series::Series, a::AbstractMatrix) = transpose_z(series, a, false)
+plotly_surface_data(series::Series, a::Surface) = plotly_surface_data(series, a.surf)
+
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
@@ -365,6 +369,13 @@ function plotly_series(plt::Plot, series::Series)
     isscatter = st in (:scatter, :scatter3d, :scattergl)
     hasmarker = isscatter || series[:markershape] != :none
     hasline = st in (:path, :path3d)
+
+    # for surface types, set the data
+    if st in (:heatmap, :contour, :surface, :wireframe)
+        for letter in [:x,:y,:z]
+            d_out[letter] = plotly_surface_data(series, series[letter])
+        end
+    end
 
     # set the "type"
     if st in (:path, :scatter, :scattergl)
@@ -390,12 +401,12 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
-        d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
         d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
 
     elseif st == :contour
         d_out[:type] = "contour"
-        d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
         # d_out[:showscale] = series[:colorbar] != :none
         d_out[:ncontours] = series[:levels]
         d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines")
@@ -403,8 +414,18 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
-        d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
-        d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+        # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        if st == :wireframe
+            d_out[:hidesurface] = true
+            wirelines = KW(
+                :show => true,
+                :color => rgba_string(series[:linecolor]),
+                :highlightwidth => series[:linewidth],
+            )
+            d_out[:contours] = KW(:x => wirelines, :y => wirelines, :z => wirelines)
+        else
+            d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+        end
 
     elseif st == :pie
         d_out[:type] = "pie"
