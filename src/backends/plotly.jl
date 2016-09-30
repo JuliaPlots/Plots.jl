@@ -26,7 +26,8 @@ const _plotly_attr = merge_with_base_supported([
     # :overwrite_figure,
     :polar,
     :normalize, :weights,
-    # :contours, :aspect_ratio,
+    # :contours,
+    :aspect_ratio,
     :hover,
     :inset_subplots,
   ])
@@ -150,11 +151,38 @@ function plotly_scale(scale::Symbol)
     end
 end
 
+function shrink_by(lo, sz, ratio)
+    amt = 0.5 * (1.0 - ratio) * sz
+    lo + amt, sz - 2amt
+end
+
+function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
+    aspect_ratio = sp[:aspect_ratio]
+    if aspect_ratio != :none
+        if aspect_ratio == :equal
+            aspect_ratio = 1.0
+        end
+        parea_ratio = width(plotarea) / height(plotarea)
+        if aspect_ratio > parea_ratio
+            # need to shrink y
+            ratio = parea_ratio / aspect_ratio
+            pcts[2], pcts[4] = shrink_by(pcts[2], pcts[4], ratio)
+        elseif aspect_ratio < parea_ratio
+            # need to shrink x
+            ratio = aspect_ratio / parea_ratio
+            pcts[1], pcts[3] = shrink_by(pcts[1], pcts[3], ratio)
+        end
+        pcts
+    end
+    pcts
+end
+
 
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot, letter)
     figw, figh = sp.plt[:size]
     pcts = bbox_to_pcts(sp.plotarea, figw*px, figh*px)
+    pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
     i1,i2 = (letter == :x ? (1,3) : (2,4))
     [pcts[i1], pcts[i1]+pcts[i2]]
 end
@@ -230,6 +258,7 @@ function plotly_layout(plt::Plot)
     for sp in plt.subplots
         spidx = plotly_subplot_index(sp)
 
+
         # add an annotation for the title... positioned horizontally relative to plotarea,
         # but vertically just below the top of the subplot bounding box
         if sp[:title] != ""
@@ -248,8 +277,6 @@ function plotly_layout(plt::Plot)
         end
 
         d_out[:plot_bgcolor] = rgba_string(sp[:background_color_inside])
-
-        # TODO: x/y axis tick values/labels
 
         # if any(is3d, seriesargs)
         if is3d(sp)
