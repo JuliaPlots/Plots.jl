@@ -202,10 +202,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:anchor] = "$(letter==:x ? :y : :x)$(plotly_subplot_index(sp))"
     end
 
-    rot = axis[:rotation]
-    if rot != 0
-        ax[:tickangle] = -rot
-    end
+    ax[:tickangle] = -axis[:rotation]
 
     if !(axis[:ticks] in (nothing, :none))
         ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
