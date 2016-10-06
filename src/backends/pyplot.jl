@@ -356,7 +356,7 @@ function py_bbox_title(ax)
 end
 
 function py_dpi_scale(plt::Plot{PyPlotBackend}, ptsz)
-    ptsz * DPI / plt[:dpi]
+    ptsz * plt[:dpi] / DPI
 end
 
 # ---------------------------------------------------------------------------
