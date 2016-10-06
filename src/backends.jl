@@ -53,11 +53,13 @@ guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefont].pointsiz
 
 # account for the size/length/rotation of tick labels
 function tick_padding(axis::Axis)
-    vals, labs = get_ticks(axis)
-    ptsz = axis[:tickfont].pointsize * pt
-    if axis[:ticks] in (nothing,false)
+    ticks = get_ticks(axis)
+    if ticks == nothing
         0mm
     else
+        vals, labs = ticks
+        ptsz = axis[:tickfont].pointsize * pt
+        
         # we need to compute the size of the ticks generically
         # this means computing the bounding box and then getting the width/height
         longest_label = maximum(length(lab) for lab in labs)

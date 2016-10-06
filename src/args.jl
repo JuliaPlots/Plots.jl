@@ -359,6 +359,8 @@ add_aliases(:background_color, :bg, :bgcolor, :bg_color, :background,
                               :background_colour, :bgcolour, :bg_colour)
 add_aliases(:background_color_legend, :bg_legend, :bglegend, :bgcolor_legend, :bg_color_legend, :background_legend,
                               :background_colour_legend, :bgcolour_legend, :bg_colour_legend)
+add_aliases(:background_color_subplot, :bg_subplot, :bgsubplot, :bgcolor_subplot, :bg_color_subplot, :background_subplot,
+                              :background_colour_subplot, :bgcolour_subplot, :bg_colour_subplot)
 add_aliases(:background_color_inside, :bg_inside, :bginside, :bgcolor_inside, :bg_color_inside, :background_inside,
                               :background_colour_inside, :bgcolour_inside, :bg_colour_inside)
 add_aliases(:background_color_outside, :bg_outside, :bgoutside, :bgcolor_outside, :bg_color_outside, :background_outside,
@@ -367,6 +369,8 @@ add_aliases(:foreground_color, :fg, :fgcolor, :fg_color, :foreground,
                             :foreground_colour, :fgcolour, :fg_colour)
 add_aliases(:foreground_color_legend, :fg_legend, :fglegend, :fgcolor_legend, :fg_color_legend, :foreground_legend,
                             :foreground_colour_legend, :fgcolour_legend, :fg_colour_legend)
+add_aliases(:foreground_color_subplot, :fg_subplot, :fgsubplot, :fgcolor_subplot, :fg_color_subplot, :foreground_subplot,
+                            :foreground_colour_subplot, :fgcolour_subplot, :fg_colour_subplot)
 add_aliases(:foreground_color_grid, :fg_grid, :fggrid, :fgcolor_grid, :fg_color_grid, :foreground_grid,
                             :foreground_colour_grid, :fgcolour_grid, :fg_colour_grid, :gridcolor)
 add_aliases(:foreground_color_title, :fg_title, :fgtitle, :fgcolor_title, :fg_color_title, :foreground_title,
@@ -456,6 +460,7 @@ end
 `default(key)` returns the current default value for that key
 `default(key, value)` sets the current default value for that key
 `default(; kw...)` will set the current default value for each key/value pair
+`default(d, key)` returns the key from d if it exists, otherwise `default(key)`
 """
 
 function default(k::Symbol)
@@ -491,6 +496,11 @@ function default(; kw...)
         default(k, v)
     end
 end
+
+function default(d::KW, k::Symbol)
+    get(d, k, default(k))
+end
+
 
 
 # -----------------------------------------------------------------------------
@@ -974,6 +984,27 @@ Base.get(series::Series, k::Symbol, v) = get(series.d, k, v)
 
 # -----------------------------------------------------------------------------
 
+function fg_color(d::KW)
+    fg = default(d, :foreground_color)
+    if fg == :auto
+        bg = plot_color(default(d, :background_color))
+        fg = isdark(bg) ? colorant"white" : colorant"black"
+    else
+        plot_color(fg)
+    end
+end
+
+function fg_color_sp(d::KW)
+    fgsp = default(d, :foreground_color_subplot)
+    if fg == :match
+        fg_color(d)
+    else
+        plot_color(fgsp)
+    end
+end
+
+
+
 # update attr from an input dictionary
 function _update_plot_args(plt::Plot, d_in::KW)
     for (k,v) in _plot_defaults
@@ -981,13 +1012,16 @@ function _update_plot_args(plt::Plot, d_in::KW)
     end
 
     # handle colors
-    bg = plot_color(plt.attr[:background_color])
-    fg = plt.attr[:foreground_color]
-    if fg == :auto
-        fg = isdark(bg) ? colorant"white" : colorant"black"
-    end
-    plt.attr[:background_color] = bg
-    plt.attr[:foreground_color] = plot_color(fg)
+    d = plt.attr
+    plt[:background_color] = plot_color(d[:background_color])
+    plt[:foreground_color] = fg_color(d)
+    # bg = plot_color(plt.attr[:background_color])
+    # fg = plt.attr[:foreground_color]
+    # if fg == :auto
+    #     fg = isdark(bg) ? colorant"white" : colorant"black"
+    # end
+    # plt.attr[:background_color] = bg
+    # plt.attr[:foreground_color] = plot_color(fg)
     color_or_nothing!(plt.attr, :background_color_outside)
 end
 
