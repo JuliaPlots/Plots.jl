@@ -30,6 +30,7 @@ const _plotly_attr = merge_with_base_supported([
     :aspect_ratio,
     :hover,
     :inset_subplots,
+    :bar_width,
   ])
 
 const _plotly_seriestype = [
@@ -423,8 +424,11 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st == :bar
         d_out[:type] = "bar"
-        d_out[:x], d_out[:y] = x, y
-        d_out[:orientation] = isvertical(series) ? "v" : "h"
+        d_out[:x], d_out[:y], d_out[:orientation] = if isvertical(series)
+            x, y, "v"
+        else
+            y, x, "h"
+        end
         d_out[:marker] = KW(:color => rgba_string(series[:fillcolor]))
 
     elseif st == :heatmap
