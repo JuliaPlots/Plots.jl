@@ -64,7 +64,7 @@ function _initialize_backend(::PyPlotBackend)
         # problem: https://github.com/tbreloff/Plots.jl/issues/308
         # solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
         otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
-        import PyPlot
+        import PyPlot, PyCall
         import LaTeXStrings: latexstring
         append!(Base.Multimedia.displays, otherdisplays)
 
@@ -117,7 +117,9 @@ py_color(grad::ColorGradient) = py_color(grad.colors)
 
 function py_colormap(grad::ColorGradient)
     pyvals = [(z, py_color(grad[z])) for z in grad.values]
-    pycolors.LinearSegmentedColormap[:from_list]("tmp", pyvals)
+    cm = pycolors.LinearSegmentedColormap[:from_list]("tmp", pyvals)
+    cm[:set_bad](color=(0,0,0,0.0), alpha=0.0)
+    cm
 end
 py_colormap(c) = py_colormap(cgrad())
 
@@ -244,6 +246,12 @@ function labelfunc(scale::Symbol, backend::PyPlotBackend)
     else
         string
     end
+end
+
+function py_mask_nans(z)
+    # PyPlot.pywrap(pynp.ma[:masked_invalid](PyPlot.pywrap(z)))
+    PyCall.pycall(pynp.ma[:masked_invalid], Any, z)
+    # pynp.ma[:masked_where](pynp.isnan(z),z)
 end
 
 # ---------------------------------------------------------------------------
@@ -730,12 +738,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
 
         clims = sp[:clims]
-        if is_2tuple(clims)
-            isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-            isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-        end
+        zmin, zmax = extrema(z)
+        extrakw[:vmin] = (is_2tuple(clims) && isfinite(clims[1])) ? clims[1] : zmin
+        extrakw[:vmax] = (is_2tuple(clims) && isfinite(clims[2])) ? clims[2] : zmax
 
-        handle = ax[:pcolormesh](x, y, z;
+        handle = ax[:pcolormesh](x, y, py_mask_nans(z);
             label = series[:label],
             zorder = series[:series_plotindex],
             cmap = py_fillcolormap(series),

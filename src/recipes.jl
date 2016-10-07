@@ -511,6 +511,11 @@ centers(v::AVec) = 0.5 * (v[1:end-1] + v[2:end])
     xedges, yedges, counts = my_hist_2d(x, y, d[:bins],
                                               normed = d[:normalize],
                                               weights = d[:weights])
+    for (i,c) in enumerate(counts)
+        if c == 0
+            counts[i] = NaN
+        end
+    end
     x := centers(xedges)
     y := centers(yedges)
     z := Surface(counts)
