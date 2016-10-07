@@ -162,14 +162,17 @@ function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
         if aspect_ratio == :equal
             aspect_ratio = 1.0
         end
+        xmin,xmax = axis_limits(sp[:xaxis])
+        ymin,ymax = axis_limits(sp[:yaxis])
+        want_ratio = ((xmax-xmin) / (ymax-ymin)) / aspect_ratio
         parea_ratio = width(plotarea) / height(plotarea)
-        if aspect_ratio > parea_ratio
+        if want_ratio > parea_ratio
             # need to shrink y
-            ratio = parea_ratio / aspect_ratio
+            ratio = parea_ratio / want_ratio
             pcts[2], pcts[4] = shrink_by(pcts[2], pcts[4], ratio)
-        elseif aspect_ratio < parea_ratio
+        elseif want_ratio < parea_ratio
             # need to shrink x
-            ratio = aspect_ratio / parea_ratio
+            ratio = want_ratio / parea_ratio
             pcts[1], pcts[3] = shrink_by(pcts[1], pcts[3], ratio)
         end
         pcts
