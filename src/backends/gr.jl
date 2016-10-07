@@ -1035,22 +1035,28 @@ const _gr_mimeformats = Dict(
 )
 
 const _gr_wstype_default = @static if is_linux()
-    "cairox11"
+    "x11"
+    # "cairox11"
 elseif is_apple()
     "quartz"
 else
     "windows"
 end
 
+const _gr_wstype = Ref(get(ENV, "GKS_WSTYPE", _gr_wstype_default))
+gr_set_output(wstype::String) = (_gr_wstype[] = wstype)
+
 for (mime, fmt) in _gr_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
         filepath = tempname() * "." * $fmt
-        withenv("GKS_WSTYPE" => $fmt,  # $fmt == "png" ? "cairopng" : $fmt,
-                "GKS_FILEPATH" => filepath) do
+        ENV["GKS_WSTYPE"] = $fmt
+        ENV["GKS_FILEPATH"] = filepath
+        # withenv("GKS_WSTYPE" => $fmt,  # $fmt == "png" ? "cairopng" : $fmt,
+        #         "GKS_FILEPATH" => filepath) do
             gr_display(plt)
             GR.emergencyclosegks()
-        end
+        # end
         write(io, readstring(filepath))
         rm(filepath)
     end
@@ -1060,18 +1066,22 @@ function _display(plt::Plot{GRBackend})
     if plt[:display_type] == :inline
         GR.emergencyclosegks()
         filepath = tempname() * ".pdf"
-        withenv("GKS_WSTYPE" => "pdf",
-                "GKS_FILEPATH" => filepath) do
+        ENV["GKS_WSTYPE"] = "pdf"
+        ENV["GKS_FILEPATH"] = filepath
+        # withenv("GKS_WSTYPE" => "pdf",
+        #         "GKS_FILEPATH" => filepath) do
             gr_display(plt)
             GR.emergencyclosegks()
-        end
+        # end
         content = string("\033]1337;File=inline=1;preserveAspectRatio=0:", base64encode(open(readbytes, filepath)), "\a")
         println(content)
         rm(filepath)
     else
-        withenv("GKS_WSTYPE" => get(ENV, "GKS_WSTYPE", _gr_wstype_default),
-                "GKS_DOUBLE_BUF" => get(ENV ,"GKS_DOUBLE_BUF", "true")) do
+        ENV["GKS_DOUBLE_BUF"] = true
+        ENV["GKS_WSTYPE"] = _gr_wstype[]
+        # withenv("GKS_WSTYPE" => get(ENV, "GKS_WSTYPE", _gr_wstype_default),
+        #         "GKS_DOUBLE_BUF" => get(ENV ,"GKS_DOUBLE_BUF", "true")) do
             gr_display(plt)
-        end
+        # end
     end
 end
