@@ -1,3 +1,4 @@
+# unfished
 const _solarized_palette = (:yellow, :orange, :red, :magenta, :violet, :blue,
                                :cyan, :green)
 
@@ -32,6 +33,7 @@ add_theme(:solarized,
     bgoutside= _get_solarized_color(:base02),
     fg       = _get_solarized_color(:base0),
     fgtext   = _get_solarized_color(:base0),
+    fglegend = _get_solarized_color(:base0),
     fgguide  = _get_solarized_color(:base1))
 
 add_theme(:solarized_dark, base = :solarized)
