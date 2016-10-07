@@ -349,6 +349,14 @@ function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
     GR.settextalign(gr_halign[halign], gr_valign[valign])
 end
 
+function gr_nans_to_infs!(z)
+    for (i,zi) in enumerate(z)
+        if zi == NaN
+            z[i] = Inf
+        end
+    end
+end
+
 # --------------------------------------------------------------------------------------
 # viewport plot area
 
@@ -817,7 +825,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
             GR.setspace(zmin, zmax, 0, 90)
             # GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
-            GR.surface(x, y, z, GR.OPTION_HEATMAP)
+            # GR.surface(x, y, z, GR.OPTION_HEATMAP)
+            # gr_nans_to_infs!(z)
+            GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
             cmap && gr_colorbar(sp)
 
         elseif st in (:path3d, :scatter3d)
