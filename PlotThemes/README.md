@@ -37,4 +37,8 @@ bar!(dist, func=cdf, alpha=0.3)
 plot(mp, cp, cp2, vp, np, gp, layout=(3,2))
 ```
 
-![](https://cloud.githubusercontent.com/assets/8431156/19213193/ff73747a-8d64-11e6-9a96-4cc3c5b802f5.png)
+![](https://cloud.githubusercontent.com/assets/8431156/19215305/8931f030-8d9a-11e6-9b15-011c19ff7456.png)
+
+Or using the `:sand` theme.
+
+![](https://cloud.githubusercontent.com/assets/8431156/19215525/02fbf8f6-8da1-11e6-9ef8-09d74fc802a0.png)
