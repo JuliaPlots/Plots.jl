@@ -11,6 +11,6 @@ dark = PlotTheme(dark_bg,
                     colorant"#FFFFFF",
                     expand_palette(dark_bg, dark_palette; lchoices=linspace(57,57,1),
                                                           cchoices=linspace(100,100,1)),
-                    nothing)
+                    dark_palette[[2,1]])
 
 add_plots_theme(:dark, dark)

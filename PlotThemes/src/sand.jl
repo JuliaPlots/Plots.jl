@@ -13,6 +13,6 @@ sand = PlotTheme(sand_bg,
                     colorant"#CBBFAF",
                     colorant"#725B61",
                     expand_palette(sand_bg, sand_palette),
-                    nothing)
-                    
+                    sand_palette[[1,4]])
+
 add_plots_theme(:sand, sand)
