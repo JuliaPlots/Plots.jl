@@ -97,7 +97,7 @@ export
     @animate,
     @gif,
 
-    spy,
+    # spy,
 
     test_examples,
     iter_segments,
