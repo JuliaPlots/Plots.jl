@@ -89,8 +89,16 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     plt.o = _create_backend_figure(plt)
     plt.init = true
 
+    series_attr = KW()
+    for (k,v) in d
+        if haskey(_series_defaults, k)
+            series_attr[k] = pop!(d,k)
+        end
+    end
+
     # create the layout and initialize the subplots
     plt.layout, plt.subplots, plt.spmap = build_layout(layout, num_sp, copy(plts))
+    cmdidx = 1
     for (idx, sp) in enumerate(plt.subplots)
         _initialize_subplot(plt, sp)
         serieslist = series_list(sp)
@@ -100,8 +108,11 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         sp.plt = plt
         sp.attr[:subplot_index] = idx
         for series in serieslist
+            merge!(series.d, series_attr)
+            _add_defaults!(series.d, plt, sp, cmdidx)
             push!(plt.series_list, series)
             _series_added(plt, series)
+            cmdidx += 1
         end
     end
 
