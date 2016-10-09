@@ -1,54 +1,37 @@
-# unfished
-const _solarized_palette = (:yellow, :orange, :red, :magenta, :violet, :blue,
-                               :cyan, :green)
+# https://github.com/altercation/solarized
+const _solarized_palette = (:red, :yellow, :blue, :green, :orange, :magenta, :violet, :cyan)
 
-const _solarized_colors = Dict{Symbol, Tuple}(
-                          :base03 => (0, 43, 54),
-                          :base02 => (7, 54, 66),
-                          :base01 => (88, 110, 117),
-                          :base00 => (101, 123, 131),
-                          :base0  => (131, 148, 150),
-                          :base1  => (147, 161, 161),
-                          :base2  => (238, 232, 213),
-                          :base3  => (253, 246, 227),
-                          :yellow => (181, 137, 0),
-                          :orange => (203, 75, 22),
-                          :red    => (220, 50, 47),
-                          :magenta=> (211, 54, 130),
-                          :violet => (108, 113, 196),
-                          :blue   => (38, 139, 210),
-                          :cyan   => (42, 161, 152),
-                          :green  => (133, 153, 0))
+const _solarized_colors = Dict(
+                          :base03 => RGB255(0, 43, 54),
+                          :base02 => RGB255(7, 54, 66),
+                          :base01 => RGB255(88, 110, 117),
+                          :base00 => RGB255(101, 123, 131),
+                          :base0  => RGB255(131, 148, 150),
+                          :base1  => RGB255(147, 161, 161),
+                          :base2  => RGB255(238, 232, 213),
+                          :base3  => RGB255(253, 246, 227),
+                          :blue   => RGB255(38, 139, 210),
+                          :orange => RGB255(203, 75, 22),
+                          :red    => RGB255(220, 50, 47),
+                          :green  => RGB255(133, 153, 0),
+                          :yellow => RGB255(181, 137, 0),
+                          :magenta=> RGB255(211, 54, 130),
+                          :violet => RGB255(108, 113, 196),
+                          :cyan   => RGB255(42, 161, 152))
 
-_get_solarized_color(c) = _255_to_1(c, _solarized_colors)
+solarized = PlotTheme(_solarized_colors[:base03],
+                    _solarized_colors[:base02],
+                    _solarized_colors[:base00],
+                    _solarized_colors[:base01],
+                    expand_palette(_solarized_colors[:base03], [_solarized_colors[c] for c in _solarized_palette]),
+                    [_solarized_colors[:yellow], _solarized_colors[:orange], _solarized_colors[:red]])
+add_plots_theme(:solarized, solarized)
 
-add_theme(:solarized_base,
-    palette  = [map(c->_get_solarized_color(c),_solarized_palette)...],
-    bglegend = _invisible,
-    fglegend = _invisible)
 
-add_theme(:solarized,
-    base = :solarized_base,
-    bginside = _get_solarized_color(:base03),
-    bgoutside= _get_solarized_color(:base02),
-    fg       = _get_solarized_color(:base0),
-    fgtext   = _get_solarized_color(:base0),
-    fglegend = _get_solarized_color(:base0),
-    fgguide  = _get_solarized_color(:base1))
-
-add_theme(:solarized_dark, base = :solarized)
-add_theme(:solarized_alldark,
-          base = :solarized_dark,
-          bgoutside = _get_solarized_color(:base03))
-
-add_theme(:solarized_bright,
-          base = :solarized_base,
-          bginside = _get_solarized_color(:base3),
-          bgoutside= _get_solarized_color(:base2),
-          fg       = _get_solarized_color(:base00),
-          fgtext   = _get_solarized_color(:base00),
-          fgguide  = _get_solarized_color(:base01))
-
-add_theme(:solarized_allbright,
-          base = :solarized_bright,
-          bgoutside = _get_solarized_color(:base2))
+solarized_light = PlotTheme(_solarized_colors[:base3],
+                    _solarized_colors[:base2],
+                    _solarized_colors[:base0],
+                    _solarized_colors[:base1],
+                    expand_palette(_solarized_colors[:base3], [_solarized_colors[c] for c in _solarized_palette]),
+                    [_solarized_colors[:yellow], _solarized_colors[:orange], _solarized_colors[:red]])
+add_plots_theme(:solarized_light, solarized_light)

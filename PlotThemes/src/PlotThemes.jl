@@ -5,6 +5,7 @@ import Plots: _invisible, _themes
 export PlotTheme, plot_theme
 
 _255_to_1(c::Symbol, colors) = RGBA(map(x-> x/255,colors[c])...)
+RGB255(r,g,b) = RGB(r/255, g/255, b/255)
 expand_palette(bg, palette; kwargs...) = [convert(RGBA,c) for c in  distinguishable_colors(20, vcat(bg, palette); kwargs...)][2:end]
 immutable PlotTheme
     bg_primary
