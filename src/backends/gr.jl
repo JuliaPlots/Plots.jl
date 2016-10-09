@@ -1040,7 +1040,7 @@ const _gr_wstype_default = @static if is_linux()
 elseif is_apple()
     "quartz"
 else
-    "windows"
+    "use_default"
 end
 
 const _gr_wstype = Ref(get(ENV, "GKS_WSTYPE", _gr_wstype_default))
@@ -1052,11 +1052,8 @@ for (mime, fmt) in _gr_mimeformats
         filepath = tempname() * "." * $fmt
         ENV["GKS_WSTYPE"] = $fmt
         ENV["GKS_FILEPATH"] = filepath
-        # withenv("GKS_WSTYPE" => $fmt,  # $fmt == "png" ? "cairopng" : $fmt,
-        #         "GKS_FILEPATH" => filepath) do
-            gr_display(plt)
-            GR.emergencyclosegks()
-        # end
+        gr_display(plt)
+        GR.emergencyclosegks()
         write(io, readstring(filepath))
         rm(filepath)
     end
@@ -1068,20 +1065,16 @@ function _display(plt::Plot{GRBackend})
         filepath = tempname() * ".pdf"
         ENV["GKS_WSTYPE"] = "pdf"
         ENV["GKS_FILEPATH"] = filepath
-        # withenv("GKS_WSTYPE" => "pdf",
-        #         "GKS_FILEPATH" => filepath) do
-            gr_display(plt)
-            GR.emergencyclosegks()
-        # end
+        gr_display(plt)
+        GR.emergencyclosegks()
         content = string("\033]1337;File=inline=1;preserveAspectRatio=0:", base64encode(open(readbytes, filepath)), "\a")
         println(content)
         rm(filepath)
     else
         ENV["GKS_DOUBLE_BUF"] = true
-        ENV["GKS_WSTYPE"] = _gr_wstype[]
-        # withenv("GKS_WSTYPE" => get(ENV, "GKS_WSTYPE", _gr_wstype_default),
-        #         "GKS_DOUBLE_BUF" => get(ENV ,"GKS_DOUBLE_BUF", "true")) do
-            gr_display(plt)
-        # end
+        if _gr_wstype[] != "use_default"
+            ENV["GKS_WSTYPE"] = _gr_wstype[]
+        end
+        gr_display(plt)
     end
 end
