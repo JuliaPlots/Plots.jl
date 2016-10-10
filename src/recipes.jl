@@ -790,12 +790,6 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Dates
 
-@recipe function f{T<:AbstractArray{Date}}(::Type{T}, dts::T)
-    date_formatter = dt -> string(convert(Date, dt))
-    Formatted(map(dt->convert(Int,dt), dts), date_formatter)
-end
-
-@recipe function f{T<:AbstractArray{DateTime}}(::Type{T}, dts::T)
-    date_formatter = dt -> string(convert(DateTime, dt))
-    Formatted(map(dt->convert(Int,dt), dts), date_formatter)
+@recipe function f{T<:Union{Date,DateTime}}(::Type{T}, dt::T)
+    dt -> convert(Int,dt), dt -> string(convert(Date, dt))
 end
