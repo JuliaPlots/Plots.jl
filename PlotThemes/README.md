@@ -8,7 +8,7 @@ using StatPlots, RDatasets, Distributions
 
 # load PlotThemes and choose dark (or sand/solarized/etc)
 using PlotThemes
-plot_theme(:dark) # or another theme
+plot_theme(:solarized) # or another theme
 
 # some data
 iris = dataset("datasets","iris")
@@ -48,15 +48,14 @@ oh = ohlc(y)
 plot(mp, cp, cp2, vp, np, gp, lp, oh, layout=(4,2), size=(1000,2000))
 ```
 
-![dark theme](https://cloud.githubusercontent.com/assets/8431156/19230182/6c0a2d08-8ed3-11e6-8ad8-aa46a3f67f90.png)
-
-Or using the `:sand` theme.
-
-![sand theme](https://cloud.githubusercontent.com/assets/8431156/19230183/6d5edb90-8ed3-11e6-927f-5729f888b2d7.png)
-
-# Solarized
-Using `:solarized`.
 ![solarized dark](https://cloud.githubusercontent.com/assets/8431156/19230231/c321be26-8ed3-11e6-9f17-c398d8840245.png)
 
-Using `:solarized_light`.
+Or using the `:solarized_light` theme.
 ![solarized light](https://cloud.githubusercontent.com/assets/8431156/19230234/c4a77d6c-8ed3-11e6-8226-df8874a2e9d3.png)
+
+# Atom inspired
+Using `:dark`.
+![dark theme](https://cloud.githubusercontent.com/assets/8431156/19230182/6c0a2d08-8ed3-11e6-8ad8-aa46a3f67f90.png)
+
+Using `:sand`.
+![sand theme](https://cloud.githubusercontent.com/assets/8431156/19230183/6d5edb90-8ed3-11e6-927f-5729f888b2d7.png)
