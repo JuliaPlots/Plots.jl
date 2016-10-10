@@ -5,7 +5,6 @@
 
 ```julia
 using StatPlots, RDatasets, Distributions
-pyplot(size=(1500,1000))
 
 # load PlotThemes and choose dark (or sand/solarized/etc)
 using PlotThemes
@@ -46,17 +45,18 @@ y = OHLC[(openpct[i] * hgt[i] + bot[i],bot[i] + hgt[i],bot[i],closepct[i] * hgt[
 oh = ohlc(y)
 
 # put them all together in a 4x2 grid
-plot(mp, cp, cp2, vp, np, gp, lp, oh, layout=(4,2))
+plot(mp, cp, cp2, vp, np, gp, lp, oh, layout=(4,2), size=(1000,2000))
 ```
 
-![](https://cloud.githubusercontent.com/assets/8431156/19215305/8931f030-8d9a-11e6-9b15-011c19ff7456.png)
+![dark theme](https://cloud.githubusercontent.com/assets/8431156/19230182/6c0a2d08-8ed3-11e6-8ad8-aa46a3f67f90.png)
 
 Or using the `:sand` theme.
 
-![](https://cloud.githubusercontent.com/assets/8431156/19215525/02fbf8f6-8da1-11e6-9ef8-09d74fc802a0.png)
+![sand theme](https://cloud.githubusercontent.com/assets/8431156/19230183/6d5edb90-8ed3-11e6-927f-5729f888b2d7.png)
 
 # Solarized
+Using `:solarized`.
+![solarized dark](https://cloud.githubusercontent.com/assets/8431156/19230231/c321be26-8ed3-11e6-9f17-c398d8840245.png)
 
-![](https://cloud.githubusercontent.com/assets/8431156/19223536/80e12616-8e72-11e6-9085-daca2e88baf3.png)
-
-![](https://cloud.githubusercontent.com/assets/8431156/19223543/a37b0c78-8e72-11e6-8c99-27d8cc0db403.png)
+Using `:solarized_light`.
+![solarized light](https://cloud.githubusercontent.com/assets/8431156/19230234/c4a77d6c-8ed3-11e6-8226-df8874a2e9d3.png)
