@@ -53,6 +53,9 @@ plot(mp, cp, cp2, vp, np, gp, lp, oh, layout=(4,2), size=(1000,2000))
 Or using the `:sand` theme.
 ![sand](https://cloud.githubusercontent.com/assets/8431156/19231322/b587c048-8ed9-11e6-824c-a6f8098b576c.png)
 
+# Contrast
+![contrast](https://cloud.githubusercontent.com/assets/8431156/19234379/87084ff0-8eeb-11e6-81bd-5e6abada0082.png)
+
 # Solarized
 Using `:solarized`.
 ![solarized dark theme](https://cloud.githubusercontent.com/assets/8431156/19231323/b58bf5a0-8ed9-11e6-81c0-3547a0201615.png)
