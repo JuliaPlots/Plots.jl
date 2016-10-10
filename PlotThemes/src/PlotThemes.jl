@@ -41,5 +41,6 @@ include("dark.jl")
 include("ggplot2.jl")
 include("solarized.jl")
 include("sand.jl")
-include("contrast.jl")
+include("lime.jl")
+include("orange.jl")
 end # module

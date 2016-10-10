@@ -1,0 +1,18 @@
+# a blue/green/yellow theme of no specific origin
+const lime_palette = reverse([colorant"#271924", # dark blue
+                      colorant"#394256", # semi dark blue
+                      colorant"#30727F", # green blue
+                      colorant"#36A58F", # turqoise
+                      colorant"#80D584", # green,
+                      colorant"#EBFB73"]) # yellow
+
+black = lime_palette[6]
+
+lime = PlotTheme(black,
+                 black,
+                    lime_palette[1],
+                    lime_palette[2],
+                    expand_palette(black, lime_palette[1:4]),
+                    lime_palette)
+
+add_plots_theme(:lime, lime)

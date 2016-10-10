@@ -59,8 +59,11 @@ plot(mp, cp, cp2, vp, np, gp, lp, oh, layout=(4,2), size=(1000,2000))
 Or using the `:sand` theme.
 ![sand](https://cloud.githubusercontent.com/assets/8431156/19231322/b587c048-8ed9-11e6-824c-a6f8098b576c.png)
 
-# Contrast
-![contrast](https://cloud.githubusercontent.com/assets/8431156/19234379/87084ff0-8eeb-11e6-81bd-5e6abada0082.png)
+# Lime
+![lime](https://cloud.githubusercontent.com/assets/8431156/19234379/87084ff0-8eeb-11e6-81bd-5e6abada0082.png)
+
+# Orange
+![orange](https://cloud.githubusercontent.com/assets/8431156/19236422/9aadc056-8ef7-11e6-83ad-5eb89e45680f.png)
 
 # Solarized
 Using `:solarized`.
