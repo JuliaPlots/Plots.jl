@@ -631,7 +631,8 @@ end
 
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyBackend})
-    show_png_from_html(io, plt)
+    # show_png_from_html(io, plt)
+    error("png output from the plotly backend is not supported.  Please use plotlyjs instead.")
 end
 
 function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyBackend})
