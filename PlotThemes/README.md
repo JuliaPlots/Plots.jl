@@ -2,6 +2,12 @@
 
 [![Build Status](https://travis-ci.org/pkofod/PlotThemes.jl.svg?branch=master)](https://travis-ci.org/pkofod/PlotThemes.jl)
 
+PlotThemes is a package to spice up the plots made with [Plots.jl](https://github.com/tbreloff/Plots.jl).
+The package is currently not tagget at METADATA, so you need to clone it to install.
+```julia
+Pkg.clone("https://github.com/pkofod/PlotThemes.jl.git")
+```
+Colors and theme names may change.
 
 ```julia
 using StatPlots, RDatasets, Distributions
