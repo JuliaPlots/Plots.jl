@@ -59,7 +59,7 @@ function tick_padding(axis::Axis)
     else
         vals, labs = ticks
         ptsz = axis[:tickfont].pointsize * pt
-        
+
         # we need to compute the size of the ticks generically
         # this means computing the bounding box and then getting the width/height
         longest_label = maximum(length(lab) for lab in labs)
