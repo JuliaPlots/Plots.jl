@@ -12,6 +12,31 @@
 
 ## 0.9 (current master/dev)
 
+#### 0.9.4
+
+- optimizations surrounding Subplot.series_list
+- better Atom support, support plotlyjs
+- gr:
+    - gks_wstype defaults and gr_set_output
+    - heatmap uses GR.drawimage
+- histogram2d puts NaN for zeros
+- improved support of NaN in heatmaps
+- rebuilt spy recipes to output scatters with marker_z set
+- deprecate png support in plotly... point to plotlyjs
+- fixes:
+    - axis widen with lims set
+    - reset_extrema, setxyz
+    - bar plot widen
+    - better tick padding
+    - consistent tick rotation
+    - consistent aspect_ratio
+    - pyplot dpi
+    - plotly horizontal bars
+    - handle series attributes when combining subplots
+    - gr images transposed
+    - converted Date/DateTime to new type recipe approach for arrays
+- issues closed include: #505 #513 #479 #523 #526 #529
+
 #### 0.9.3
 
 - support pdf and eps in plotlyjs backend
