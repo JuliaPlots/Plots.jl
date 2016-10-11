@@ -1,5 +1,5 @@
 using PlotThemes
 using Base.Test
 
-# write your own tests here
-@test 1 == 1
+@test haskey(PlotThemes._themes, :sand)
+@test haskey(PlotUtils._gradients, :sand)
