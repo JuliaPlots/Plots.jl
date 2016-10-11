@@ -817,18 +817,18 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :heatmap
             zmin, zmax = gr_lims(zaxis, true)
-            data = (float(z) - zmin) / (zmax - zmin)
             clims = sp[:clims]
             if is_2tuple(clims)
                 isfinite(clims[1]) && (zmin = clims[1])
                 isfinite(clims[2]) && (zmax = clims[2])
             end
-            data = [if zmin<=d<=zmax 1000 + d * 255 else 0 end for d in data]
-            data = round(Int32, data)
-            xmin, xmax = gr_lims(xaxis, false)
-            ymin, ymax = gr_lims(yaxis, false)
-            width, height = length(x), length(y)
-            GR.cellarray(xmin, xmax, ymin, ymax, width, height, data)
+            grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
+            colors = [grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)] for zi=z]
+            rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
+                                    round(Int,  blue(c) * 255) << 16 +
+                                    round(Int, green(c) * 255) << 8  +
+                                    round(Int,   red(c) * 255) ), colors)
+            GR.drawimage(xmin, xmax, ymin, ymax, length(x), length(y), rgba)
             cmap && gr_colorbar(sp)
 
         elseif st in (:path3d, :scatter3d)
