@@ -2,18 +2,21 @@
 
 [![Build Status](https://travis-ci.org/JuliaPlots/PlotThemes.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/PlotThemes.jl)
 
-PlotThemes is a package to spice up the plots made with [Plots.jl](https://github.com/tbreloff/Plots.jl).
-The package is currently not tagget at METADATA, so you need to clone it to install.
+#### Primary author: Patrick Kofod Mogensen (@pkofod)
+
+PlotThemes is a package to spice up the plots made with [Plots.jl](https://github.com/tbreloff/Plots.jl). To install:
+
 ```julia
-Pkg.clone("https://github.com/JuliaPlots/PlotThemes.jl.git")
+Pkg.add("PlotThemes")
 ```
-Colors and theme names may change.
+
+Note: This is a relatively new package, and so colors and theme names may change.
 
 ```julia
 using StatPlots, RDatasets, Distributions
 
 # choose the dark theme (or sand/solarized/etc)
-theme(:dark) # or another theme
+theme(:dark)
 
 # some data
 iris = dataset("datasets","iris")
