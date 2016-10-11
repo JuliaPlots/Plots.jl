@@ -8,11 +8,11 @@ const lime_palette = reverse([colorant"#271924", # dark blue
 
 black = lime_palette[6]
 
-lime = PlotTheme(black,
-                 black,
-                    lime_palette[1],
-                    lime_palette[2],
-                    expand_palette(black, lime_palette[1:4]),
-                    lime_palette)
-
-add_plots_theme(:lime, lime)
+_themes[:lime] = PlotTheme(
+    black,
+    black,
+    lime_palette[1],
+    lime_palette[2],
+    expand_palette(black, lime_palette[1:4]),
+    lime_palette
+)

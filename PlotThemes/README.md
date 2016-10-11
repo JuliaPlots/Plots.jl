@@ -12,9 +12,8 @@ Colors and theme names may change.
 ```julia
 using StatPlots, RDatasets, Distributions
 
-# load PlotThemes and choose dark (or sand/solarized/etc)
-using PlotThemes
-plot_theme(:dark) # or another theme
+# choose the dark theme (or sand/solarized/etc)
+theme(:dark) # or another theme
 
 # some data
 iris = dataset("datasets","iris")
