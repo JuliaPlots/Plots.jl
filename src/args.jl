@@ -353,6 +353,7 @@ add_aliases(:seriescolor, :c, :color, :colour)
 add_aliases(:linecolor, :lc, :lcolor, :lcolour, :linecolour)
 add_aliases(:markercolor, :mc, :mcolor, :mcolour, :markercolour)
 add_aliases(:markerstrokecolor, :msc, :mscolor, :mscolour, :markerstrokecolour)
+add_aliases(:markerstrokewidth, :msw, :mswidth)
 add_aliases(:fillcolor, :fc, :fcolor, :fcolour, :fillcolour)
 
 add_aliases(:background_color, :bg, :bgcolor, :bg_color, :background,
