@@ -816,18 +816,19 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             cmap && gr_colorbar(sp)
 
         elseif st == :heatmap
-            # z = vec(transpose_z(series, z.surf, false))
             zmin, zmax = gr_lims(zaxis, true)
+            data = (float(z) - zmin) / (zmax - zmin)
             clims = sp[:clims]
             if is_2tuple(clims)
                 isfinite(clims[1]) && (zmin = clims[1])
                 isfinite(clims[2]) && (zmax = clims[2])
             end
-            GR.setspace(zmin, zmax, 0, 90)
-            # GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
-            # GR.surface(x, y, z, GR.OPTION_HEATMAP)
-            # gr_nans_to_infs!(z)
-            GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
+            data = [if zmin<=d<=zmax 1000 + d * 255 else 0 end for d in data]
+            data = round(Int32, data)
+            xmin, xmax = gr_lims(xaxis, false)
+            ymin, ymax = gr_lims(yaxis, false)
+            width, height = length(x), length(y)
+            GR.cellarray(xmin, xmax, ymin, ymax, width, height, data)
             cmap && gr_colorbar(sp)
 
         elseif st in (:path3d, :scatter3d)
