@@ -61,6 +61,25 @@
 # )
 
 function theme(s::Symbol; kw...)
+    # reset?
+    if s == :none || s == :default
+        default(;
+            bg        = :white,
+            bglegend  = :match,
+            bginside  = :match,
+            bgoutside = :match,
+            fg        = :auto,
+            fglegend  = :match,
+            fggrid    = :match,
+            fgaxis    = :match,
+            fgtext    = :match,
+            fgborder  = :match,
+            fgguide   = :match,
+            palette   = :auto
+        )
+        return
+    end
+
     thm = PlotThemes._themes[s]
     PlotUtils._default_gradient[] = s
     default(;
