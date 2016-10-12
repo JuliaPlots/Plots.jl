@@ -790,6 +790,5 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Dates
 
-@recipe function f{T<:Union{Date,DateTime}}(::Type{T}, dt::T)
-    dt -> convert(Int,dt), dt -> string(convert(Date, dt))
-end
+@recipe f(::Type{Date}, dt::Date) = (dt -> convert(Int,dt), dt -> string(convert(Date,dt)))
+@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> convert(Int,dt), dt -> string(convert(DateTime,dt)))
