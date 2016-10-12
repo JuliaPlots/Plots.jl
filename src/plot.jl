@@ -161,6 +161,11 @@ end
 function _plot!(plt::Plot, d::KW, args::Tuple)
     d[:plot_object] = plt
 
+    if !isempty(args) && !isdefined(Main, :StatPlots) &&
+            first(split(string(typeof(args[1])), ".")) == "DataFrames"
+        warn("You're trying to plot a DataFrame, but this functionality is provided by StatPlots")
+    end
+
     # --------------------------------
     # "USER RECIPES"
     # --------------------------------
