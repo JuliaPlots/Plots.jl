@@ -218,7 +218,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         # lims
         lims = axis[:lims]
         if lims != :auto && limsType(lims) == :limits
-            ax[:range] = lims
+            ax[:range] = map(scalefunc(axis[:scale]), lims)
         end
 
         # flip
