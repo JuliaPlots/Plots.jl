@@ -172,6 +172,8 @@ for mime in keys(_mimeformats)
     end
 end
 
+closeall() = closeall(backend())
+
 
 # ---------------------------------------------------------
 # A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert

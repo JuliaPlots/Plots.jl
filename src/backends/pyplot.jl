@@ -1224,3 +1224,5 @@ for (mime, fmt) in _pyplot_mimeformats
         )
     end
 end
+
+closeall(::PyPlotBackend) = PyPlot.plt[:close]("all")
