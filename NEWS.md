@@ -12,6 +12,18 @@
 
 ## 0.9 (current master/dev)
 
+#### 0.9.5
+
+- added dependency on PlotThemes
+- set_theme --> theme
+- remove Compat from REQUIRE
+- warning for DataFrames without StatPlots
+- closeall exported and implemented for gr/pyplot
+- fix DateTime recipe
+- reset theme with theme(:none)
+- fix link_axes! for nested subplots
+- fix plotly lims for log scale
+
 #### 0.9.4
 
 - optimizations surrounding Subplot.series_list
