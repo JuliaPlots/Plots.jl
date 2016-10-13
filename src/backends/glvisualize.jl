@@ -178,24 +178,23 @@ const _gl_marker_map = KW(
     :x => 'x',
 )
 
-function gl_marker(shape, size)
+function gl_marker(shape)
     shape
 end
-function gl_marker(shape::Shape, size::FixedSizeArrays.Vec{2,Float32})
+function gl_marker(shape::Shape)
     points = Point2f0[Vec{2,Float32}(p)*10f0 for p in zip(shape.x, shape.y)]
     GeometryTypes.GLNormalMesh(points)
 end
 # create a marker/shape type
-function gl_marker(shape::Symbol, msize)
-    isa(msize, Array) && (msize = first(msize)) # size doesn't really matter now
+function gl_marker(shape::Symbol)
     if shape == :rect
-        GeometryTypes.HyperRectangle(Vec{2, Float32}(0), msize)
+        GeometryTypes.HyperRectangle(Vec2f0(0), Vec2f0(1))
     elseif shape == :circle || shape == :none
-        GeometryTypes.HyperSphere(Point{2, Float32}(0), maximum(msize))
+        GeometryTypes.HyperSphere(Point2f0(0), 1f0)
     elseif haskey(_gl_marker_map, shape)
         _gl_marker_map[shape]
     elseif haskey(_shapes, shape)
-        gl_marker(_shapes[shape], msize)
+        gl_marker(_shapes[shape])
     else
         error("Shape $shape not supported by GLVisualize")
     end
@@ -214,6 +213,14 @@ end
 function extract_marker(d, kw_args)
     dim = Plots.is3d(d) ? 3 : 2
     scaling = dim == 3 ? 0.003 : 2
+    if haskey(d, :markershape)
+        shape = d[:markershape]
+        shape = gl_marker(shape)
+        if shape != :none
+            kw_args[:primitive] = shape
+        end
+    end
+    dim = isa(kw_args[:primitive], GLVisualize.Sprites) ? 2 : 3
     if haskey(d, :markersize)
         msize = d[:markersize]
         if isa(msize, AbstractArray)
@@ -222,13 +229,7 @@ function extract_marker(d, kw_args)
             kw_args[:scale] = GeometryTypes.Vec{dim, Float32}(msize*scaling)
         end
     end
-    if haskey(d, :markershape)
-        shape = d[:markershape]
-        shape = gl_marker(shape, kw_args[:scale])
-        if shape != :none
-            kw_args[:primitive] = shape
-        end
-    end
+
     # get the color
     key = :markercolor
     haskey(d, key) || return
@@ -425,7 +426,7 @@ function hover(to_hover, to_display, window)
     area = map(window.inputs[:mouseposition]) do mp
         SimpleRectangle{Int}(round(Int, mp+10)..., 100, 70)
     end
-    background = visualize((GLVisualize.ROUNDED_RECTANGLE, Point2f0[0]),
+    background = visualize((GLVisualize.RECTANGLE, Point2f0[0]),
         color=RGBA{Float32}(0,0,0,0), scale=Vec2f0(100, 70), offset=Vec2f0(0),
         stroke_color=RGBA{Float32}(0,0,0,0.4),
         stroke_width=-1.0f0
@@ -478,7 +479,7 @@ end
 
 function extract_font(font, kw_args)
     kw_args[:family] = font.family
-    kw_args[:relative_scale] = font.pointsize*1.5 ./ GLVisualize.glyph_scale!('X')
+    kw_args[:relative_scale] = font.pointsize ./ GLVisualize.glyph_scale!('X')
     kw_args[:color] = gl_color(font.color)
 end
 
@@ -518,7 +519,11 @@ function extract_c(d, kw_args, sym)
     kw_args[:color] = nothing
     kw_args[:color_map] = nothing
     kw_args[:color_norm] = nothing
-    if isa(c, AbstractVector)
+    if (
+            isa(c, AbstractVector) &&
+            ((haskey(d, :marker_z) && d[:marker_z] != nothing) ||
+            (haskey(d, :line_z) && d[:line_z] != nothing))
+        )
         extract_colornorm(d, kw_args)
         kw_args[:color_map] = c
     else
@@ -590,7 +595,7 @@ function draw_ticks(axis, ticks, align, move, isx, lims, model, text = "", posit
     xs, ys = m[1,1], m[2,2]
     rscale = rscale2 ./ Vec2f0(xs, ys)
     atlas = GLVisualize.get_texture_atlas()
-    font = GLVisualize.DEFAULT_FONT_FACE
+    font = GLVisualize.defaultfont()
     if !(ticks in (nothing, false))
         # x labels
         flip = axis[:flip]
@@ -616,7 +621,7 @@ function text(position, text, kw_args)
     text_align = alignment2num(text.font)
     startpos = Vec2f0(position)
     atlas = GLVisualize.get_texture_atlas()
-    font = GLVisualize.DEFAULT_FONT_FACE
+    font = GLVisualize.defaultfont()
     rscale = kw_args[:relative_scale]
     m = Reactive.value(kw_args[:model])
     position = GLVisualize.calc_position(text.str, startpos, rscale, font, atlas)
@@ -899,8 +904,9 @@ function _display(plt::Plot{GLVisualizeBackend})
     empty_screen!(screen)
     sw, sh = plt[:size]
     sw, sh = sw*px, sh*px
+    resize!(screen, plt[:size]...)
     # TODO: use plt.subplots... plt.spmap can't be trusted
-    for (name, sp) in plt.spmap
+    for sp in plt.subplots
         _3d = Plots.is3d(sp)
         # camera = :perspective
         # initialize the sub-screen for this subplot
@@ -912,7 +918,7 @@ function _display(plt::Plot{GLVisualizeBackend})
         end
         c = plt[:background_color_outside]
         sp_screen = GLVisualize.Screen(
-            screen, name = name, color = c,
+            screen, color = c,
             area = sub_area
         )
         cam = get!(sp_screen.cameras, :perspective) do
@@ -1048,7 +1054,7 @@ function _display(plt::Plot{GLVisualizeBackend})
                 hover(vis, d[:hover], sp_screen)
             end
             if isdefined(:GLPlot) && isdefined(Main.GLPlot, :(register_plot!))
-                del_signal = Main.GLPlot.register_plot!(vis, sp_screen)
+                del_signal = Main.GLPlot.register_plot!(vis, sp_screen, create_gizmo=false)
                 append!(_glplot_deletes, del_signal)
             end
         end
@@ -1072,7 +1078,7 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})
     GLWindow.render_frame(plt.o)
     GLWindow.swapbuffers(plt.o)
     buff = GLWindow.screenbuffer(plt.o)
-    png = Images.Image(buff,
+    png = Images.Image(map(RGB{U8}, buff),
         colorspace = "sRGB",
         spatialorder = ["y", "x"]
     )
@@ -1136,13 +1142,19 @@ tovec2(x::FixedSizeArrays.Vec{2, Float32}) = x
 tovec2(x::AbstractVector) = map(tovec2, x)
 tovec2(x::FixedSizeArrays.Vec) = Vec2f0(x[1], x[2])
 
+tovec3(x) = x
+tovec3(x::FixedSizeArrays.Vec{3}) = Vec3f0(x)
+tovec3(x::AbstractVector) = map(tovec3, x)
+tovec3(x::FixedSizeArrays.Vec{2}) = Vec3f0(x[1], x[2], 1)
 
 function gl_scatter(points, kw_args)
     prim = get(kw_args, :primitive, GeometryTypes.Circle)
     if isa(prim, GLNormalMesh)
-        kw_args[:scale] = map(kw_args[:model]) do m
-            s = m[1,1], m[2,2], m[3,3]
-            1f0./Vec3f0(s)
+        if haskey(kw_args, :model)
+            kw_args[:scale] = GLAbstraction.const_lift(kw_args[:model], kw_args[:scale]) do m, sc
+                s = m[1,1], m[2,2], m[3,3]
+                tovec3(sc).*(1f0./Vec3f0(s))
+            end
         end
     else # 2D prim
         kw_args[:scale] = tovec2(kw_args[:scale])
@@ -1234,6 +1246,7 @@ function gl_contour(x,y,z, kw_args)
         kw_args[:color] = colors
         kw_args[:color_map] = nothing
         kw_args[:color_norm] = nothing
+        kw_args[:intensity] = nothing
         return visualize(result, Style(:lines),kw_args)
     end
 end
@@ -1272,8 +1285,40 @@ function text_plot(text, alignment, kw_args)
     view(obj, img.screen, camera=:orthographic_pixel)
 end
 
-
-
+"""
+Ugh, so much special casing (╯°□°）╯︵ ┻━┻
+"""
+function label_scatter(d, w, ho)
+    kw = KW()
+    extract_stroke(d, kw)
+    extract_marker(d, kw)
+    kw[:scale] = Vec2f0(w/2)
+    kw[:offset] = Vec2f0(-w/4)
+    if haskey(kw, :intensity)
+        cmap = kw[:color_map]
+        norm = kw[:color_norm]
+        kw[:color] = GLVisualize.color_lookup(cmap, kw[:intensity][1], norm)
+        delete!(kw, :intensity)
+        delete!(kw, :color_map)
+        delete!(kw, :color_norm)
+    else
+        color = get(kw, :color, nothing)
+        kw[:color] = isa(color, Array) ? first(color) : color
+    end
+    p = get(kw, :primitive, GeometryTypes.Circle)
+    if isa(p, GLNormalMesh)
+        bb = GeometryTypes.AABB{Float32}(GeometryTypes.vertices(p))
+        bbw = GeometryTypes.widths(bb)
+        mini = minimum(bb)
+        m = GLAbstraction.translationmatrix(-mini)
+        m *= GLAbstraction.scalematrix(1f0./bbw)
+        #m *= GLAbstraction.translationmatrix(-Vec3f0(0.5))
+        kw[:primitive] = m * p
+        kw[:scale] = Vec3f0(w/2)
+        delete!(kw, :offset)
+    end
+    GL.gl_scatter(Point2f0[(w/2, ho)], kw)
+end
 function make_label(sp, series, i)
     GL = Plots
     w, gap, ho = 20f0, 5f0, 5
@@ -1288,44 +1333,15 @@ function make_label(sp, series, i)
         kw[:thickness] = 15f0
         append!(result, GL.gl_lines(points, kw))
         if d[:markershape] != :none
-            kw = KW()
-            extract_stroke(d, kw)
-            extract_marker(d, kw)
-            kw[:scale] = Vec2f0(w/2)
-            kw[:offset] = Vec2f0(-w/4)
-            if haskey(kw, :intensity)
-                cmap = kw[:color_map]
-                norm = kw[:color_norm]
-                kw[:color] = GLVisualize.color_lookup(cmap, kw[:intensity][1], norm)
-                delete!(kw, :intensity)
-                delete!(kw, :color_map)
-                delete!(kw, :color_norm)
-            else
-                color = get(kw, :color, nothing)
-                kw[:color] = isa(color, Array) ? first(color) : color
-            end
-            push!(result, GL.gl_scatter(Point2f0[(w/2, ho)], kw))
+            push!(result, label_scatter(d, w, ho))
         end
     elseif st in (:scatter, :scatter3d) #|| d[:markershape] != :none
-        kw = KW()
-        extract_stroke(d, kw)
-        extract_marker(d, kw)
-        kw[:scale] = Vec2f0(w/2)
-        kw[:offset] = Vec2f0(-w/4)
-        if haskey(kw, :intensity)
-            cmap = kw[:color_map]
-            norm = kw[:color_norm]
-            kw[:color] = GLVisualize.color_lookup(cmap, kw[:intensity][1], norm)
-            delete!(kw, :intensity)
-            delete!(kw, :color_map)
-            delete!(kw, :color_norm)
-        else
-            color = get(kw, :color, nothing)
-            kw[:color] = isa(color, Array) ? first(color) : color
-        end
-        push!(result, GL.gl_scatter(Point2f0[(w/2, ho)], kw))
+        push!(result, label_scatter(d, w, ho))
     else
         extract_c(d, kw_args, :fill)
+        if isa(kw_args[:color], AbstractVector)
+            kw_args[:color] = first(kw_args[:color])
+        end
         push!(result, visualize(
             GeometryTypes.SimpleRectangle(-w/2, ho-w/4, w/2, w/2),
             Style(:default), kw_args
@@ -1341,7 +1357,7 @@ function make_label(sp, series, i)
     ft = sp[:legendfont]
     font = Plots.Font(ft.family, ft.pointsize, :left, :bottom, 0.0, color)
     xy = Point2f0(w+gap, 0.0)
-    kw = Dict(:model => text_model(font, xy), :scale_primitive=>true)
+    kw = Dict(:model => text_model(font, xy), :scale_primitive=>false)
     extract_font(font, kw)
     t = PlotText(labeltext, font)
     push!(result, text(xy, t, kw))
@@ -1361,21 +1377,23 @@ function generate_legend(sp, screen, model_m)
         if isempty(legend)
             return
         end
-        list = visualize(legend)
-        bb = Reactive.value(GLAbstraction.boundingbox(list))
+        list = visualize(legend, gap=Vec3f0(0,5,0))
+        bb = GLAbstraction._boundingbox(list)
         wx,wy,_ = GeometryTypes.widths(bb)
         xmin, _ = Plots.axis_limits(sp[:xaxis])
         _, ymax = Plots.axis_limits(sp[:yaxis])
         area = map(model_m) do m
-            @show m
             p = m * GeometryTypes.Vec4f0(xmin, ymax, 0, 1)
-
-            w = round(Int, 2*wy)
-            x,y = round(Int, p[1]) + 20, round(Int, p[2]-w)-40
-            GeometryTypes.SimpleRectangle(x, y, round(Int, wx)+20, w+20)
+            h = round(Int, wy)+20
+            w = round(Int, wx)+20
+            x,y = round(Int, p[1])+30, round(Int, p[2]-h)-30
+            GeometryTypes.SimpleRectangle(x, y, w, h)
         end
-        sscren = GLWindow.Screen(screen, area=area)
-        GLAbstraction._translate!(list, Vec3f0(10,10,0))
+        sscren = GLWindow.Screen(
+            screen, area=area,
+            color=sp[:background_color_legend]
+        )
+        GLAbstraction.translate!(list, Vec3f0(10,10,0))
         GLVisualize._view(list, sscren, camera=:fixed_pixel)
     end
     return
