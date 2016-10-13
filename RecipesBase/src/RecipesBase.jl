@@ -185,7 +185,7 @@ end
 # ---------------------
 
 # Plots will be the ultimate consumer of our recipe in this example
-using Plot; gr()
+using Plots; gr()
 
 # This call will implicitly call `RecipesBase.apply_recipe` as part of the Plots
 # processing pipeline (see the Pipeline section of the Plots documentation).
