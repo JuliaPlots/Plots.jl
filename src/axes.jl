@@ -381,6 +381,9 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
     if amax <= amin && isfinite(amin)
         amax = amin + 1.0
     end
+    if !isfinite(amin) && !isfinite(amax)
+        amin, amax = 0.0, 1.0
+    end
     if should_widen
         widen(amin, amax)
     else
