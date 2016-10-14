@@ -828,7 +828,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                                     round(Int,  blue(c) * 255) << 16 +
                                     round(Int, green(c) * 255) << 8  +
                                     round(Int,   red(c) * 255) ), colors)
-            GR.drawimage(xmin, xmax, ymin, ymax, length(x), length(y), rgba)
+            GR.drawimage(xmin, xmax, ymax, ymin, length(x), length(y), rgba)
             cmap && gr_colorbar(sp)
 
         elseif st in (:path3d, :scatter3d)
