@@ -29,7 +29,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     d[:discrete_values] = []
 
     # update the defaults
-    update!(Axis([sp], d), args...; kw...)
+    attr!(Axis([sp], d), args...; kw...)
 end
 
 function get_axis(sp::Subplot, letter::Symbol)
@@ -83,7 +83,7 @@ function process_axis_arg!(d::KW, arg, letter = "")
 end
 
 # update an Axis object with magic args and keywords
-function update!(axis::Axis, args...; kw...)
+function attr!(axis::Axis, args...; kw...)
     # first process args
     d = axis.d
     for arg in args
