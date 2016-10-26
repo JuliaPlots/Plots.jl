@@ -58,6 +58,7 @@ function tick_padding(axis::Axis)
         0mm
     else
         vals, labs = ticks
+        isempty(labs) && return 0mm
         ptsz = axis[:tickfont].pointsize * pt
 
         # we need to compute the size of the ticks generically
