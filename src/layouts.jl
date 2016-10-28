@@ -437,7 +437,7 @@ end
 function layout_args(d::KW, n_override::Integer)
     layout, n = layout_args(get(d, :layout, n_override))
     if n != n_override
-        error("When doing layout, n != n_override.  You're probably trying to force existing plots into a layout that doesn't fit them.")
+        error("When doing layout, n ($n) != n_override ($(n_override)).  You're probably trying to force existing plots into a layout that doesn't fit them.")
     end
     layout, n
 end
@@ -692,9 +692,22 @@ function link_axes!(axes::Axis...)
     end
 end
 
+# figure out which subplots to link
+function link_subplots(a::AbstractArray{AbstractLayout}, axissym::Symbol)
+    subplots = []
+    for l in a
+        if isa(l, Subplot)
+            push!(subplots, l)
+        elseif isa(l, GridLayout) && size(l) == (1,1)
+            push!(subplots, l[1,1])
+        end
+    end
+    subplots
+end
+
 # for some vector or matrix of layouts, filter only the Subplots and link those axes
 function link_axes!(a::AbstractArray{AbstractLayout}, axissym::Symbol)
-    subplots = filter(l -> isa(l, Subplot), a)
+    subplots = link_subplots(a, axissym)
     axes = [sp.attr[axissym] for sp in subplots]
     if length(axes) > 0
         link_axes!(axes...)

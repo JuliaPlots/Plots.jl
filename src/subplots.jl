@@ -3,6 +3,7 @@
 function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
     Subplot{T}(
         parent,
+        Series[],
         (20mm, 5mm, 2mm, 10mm),
         defaultbox,
         defaultbox,
@@ -33,7 +34,7 @@ get_subplot(series::Series) = series.d[:subplot]
 get_subplot_index(plt::Plot, idx::Integer) = Int(idx)
 get_subplot_index(plt::Plot, sp::Subplot) = findfirst(_ -> _ === sp, plt.subplots)
 
-series_list(sp::Subplot) = filter(series -> series.d[:subplot] === sp, sp.plt.series_list)
+series_list(sp::Subplot) = sp.series_list # filter(series -> series.d[:subplot] === sp, sp.plt.series_list)
 
 function should_add_to_legend(series::Series)
     series.d[:primary] && series.d[:label] != "" &&

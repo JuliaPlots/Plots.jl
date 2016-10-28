@@ -3,14 +3,12 @@ __precompile__()
 
 module Plots
 
-# using Compat
 using Reexport
-# @reexport using Colors
-# using Requires
 using FixedSizeArrays
 @reexport using RecipesBase
 using Base.Meta
 @reexport using PlotUtils
+@reexport using PlotThemes
 import Showoff
 
 export
@@ -29,12 +27,11 @@ export
     KW,
 
     wrap,
-    set_theme,
-    add_theme,
+    theme,
 
     plot,
     plot!,
-    update!,
+    attr!,
 
     current,
     default,
@@ -70,6 +67,7 @@ export
     savefig,
     png,
     gui,
+    closeall,
 
     backend,
     backends,
@@ -77,7 +75,6 @@ export
     backend_object,
     add_backend,
     aliases,
-    # dataframes,
 
     Shape,
     text,
@@ -96,8 +93,6 @@ export
     gif,
     @animate,
     @gif,
-
-    spy,
 
     test_examples,
     iter_segments,
@@ -244,13 +239,6 @@ function __init__()
         end
     end
 end
-
-# ---------------------------------------------------------
-
-# if VERSION >= v"0.4.0-dev+5512"
-#     include("precompile.jl")
-#     _precompile_()
-# end
 
 # ---------------------------------------------------------
 

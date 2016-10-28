@@ -660,26 +660,28 @@ function setxy!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer)
     series = plt.series_list[i]
     series.d[:x], series.d[:y] = xy
     sp = series.d[:subplot]
-    expand_extrema!(sp.attr[:xaxis], xy[1])
-    expand_extrema!(sp.attr[:yaxis], xy[2])
+    reset_extrema!(sp)
     _series_updated(plt, series)
 end
 function setxyz!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
     series = plt.series_list[i]
     series.d[:x], series.d[:y], series.d[:z] = xyz
     sp = series.d[:subplot]
-    expand_extrema!(sp.attr[:xaxis], xyz[1])
-    expand_extrema!(sp.attr[:yaxis], xyz[2])
-    expand_extrema!(sp.attr[:zaxis], xyz[3])
+    reset_extrema!(sp)
     _series_updated(plt, series)
 end
+
+function setxyz!{X,Y,Z<:AbstractMatrix}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
+    setxyz!(plt, (xyz[1], xyz[2], Surface(xyz[3])), i)
+end
+
 
 # -------------------------------------------------------
 # indexing notation
 
 # Base.getindex(plt::Plot, i::Integer) = getxy(plt, i)
-Base.setindex!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer) = setxy!(plt, xy, i)
-Base.setindex!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) = setxyz!(plt, xyz, i)
+Base.setindex!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer) = (setxy!(plt, xy, i); plt)
+Base.setindex!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) = (setxyz!(plt, xyz, i); plt)
 
 # -------------------------------------------------------
 
@@ -712,28 +714,28 @@ Base.push!(series::Series, xi, yi, zi) = (push_x!(series,xi); push_y!(series,yi)
 
 # -------------------------------------------------------
 
-function update!(series::Series; kw...)
+function attr!(series::Series; kw...)
     d = KW(kw)
     preprocessArgs!(d)
     for (k,v) in d
         if haskey(_series_defaults, k)
             series[k] = v
         else
-            warn("unused key $k in series update")
+            warn("unused key $k in series attr")
         end
     end
     _series_updated(series[:subplot].plt, series)
     series
 end
 
-function update!(sp::Subplot; kw...)
+function attr!(sp::Subplot; kw...)
     d = KW(kw)
     preprocessArgs!(d)
     for (k,v) in d
         if haskey(_subplot_defaults, k)
             sp[k] = v
         else
-            warn("unused key $k in subplot update")
+            warn("unused key $k in subplot attr")
         end
     end
     sp

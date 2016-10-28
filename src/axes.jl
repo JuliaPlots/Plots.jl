@@ -29,7 +29,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     d[:discrete_values] = []
 
     # update the defaults
-    update!(Axis([sp], d), args...; kw...)
+    attr!(Axis([sp], d), args...; kw...)
 end
 
 function get_axis(sp::Subplot, letter::Symbol)
@@ -83,7 +83,7 @@ function process_axis_arg!(d::KW, arg, letter = "")
 end
 
 # update an Axis object with magic args and keywords
-function update!(axis::Axis, args...; kw...)
+function attr!(axis::Axis, args...; kw...)
     # first process args
     d = axis.d
     for arg in args
@@ -224,6 +224,17 @@ end
 
 # -------------------------------------------------------------------------
 
+
+function reset_extrema!(sp::Subplot)
+    for asym in (:x,:y,:z)
+        sp[Symbol(asym,:axis)][:extrema] = Extrema()
+    end
+    for series in sp.series_list
+        expand_extrema!(sp, series.d)
+    end
+end
+
+
 function expand_extrema!(ex::Extrema, v::Number)
     ex.emin = min(v, ex.emin)
     ex.emax = max(v, ex.emax)
@@ -342,7 +353,7 @@ end
 # so lazy out and don't widen
 function default_should_widen(axis::Axis)
     should_widen = false
-    if axis[:scale] == :identity
+    if axis[:scale] == :identity && !is_2tuple(axis[:lims])
         for sp in axis.sps
             for series in series_list(sp)
                 if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
@@ -369,6 +380,9 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
     end
     if amax <= amin && isfinite(amin)
         amax = amin + 1.0
+    end
+    if !isfinite(amin) && !isfinite(amax)
+        amin, amax = 0.0, 1.0
     end
     if should_widen
         widen(amin, amax)
@@ -462,11 +476,11 @@ function axis_drawing_info(sp::Subplot)
         t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
 
         push!(spine_segs, (xmin,ymin), (xmax,ymin)) # bottom spine
-        push!(spine_segs, (xmin,ymax), (xmax,ymax)) # top spine
+        # push!(spine_segs, (xmin,ymax), (xmax,ymax)) # top spine
         for xtick in xticks[1]
             push!(spine_segs, (xtick, ymin), (xtick, t1)) # bottom tick
             push!(grid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
-            push!(spine_segs, (xtick, ymax), (xtick, t2)) # top tick
+            # push!(spine_segs, (xtick, ymax), (xtick, t2)) # top tick
         end
     end
 
@@ -477,11 +491,11 @@ function axis_drawing_info(sp::Subplot)
         t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
 
         push!(spine_segs, (xmin,ymin), (xmin,ymax)) # left spine
-        push!(spine_segs, (xmax,ymin), (xmax,ymax)) # right spine
+        # push!(spine_segs, (xmax,ymin), (xmax,ymax)) # right spine
         for ytick in yticks[1]
             push!(spine_segs, (xmin, ytick), (t1, ytick)) # left tick
             push!(grid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
-            push!(spine_segs, (xmax, ytick), (t2, ytick)) # right tick
+            # push!(spine_segs, (xmax, ytick), (t2, ytick)) # right tick
         end
     end
 

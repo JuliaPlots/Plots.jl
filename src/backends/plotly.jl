@@ -26,14 +26,16 @@ const _plotly_attr = merge_with_base_supported([
     # :overwrite_figure,
     :polar,
     :normalize, :weights,
-    # :contours, :aspect_ratio,
+    # :contours,
+    :aspect_ratio,
     :hover,
     :inset_subplots,
+    :bar_width,
   ])
 
 const _plotly_seriestype = [
     :path, :scatter, :bar, :pie, :heatmap,
-    :contour, :surface, :path3d, :scatter3d, :shape, :scattergl,
+    :contour, :surface, :wireframe, :path3d, :scatter3d, :shape, :scattergl,
 ]
 const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _plotly_marker = [
@@ -115,7 +117,7 @@ function plotly_annotation_dict(x, y, ptxt::PlotText; xref="paper", yref="paper"
         :font => plotly_font(ptxt.font),
         :xanchor => ptxt.font.halign == :hcenter ? :center : ptxt.font.halign,
         :yanchor => ptxt.font.valign == :vcenter ? :middle : ptxt.font.valign,
-        :rotation => ptxt.font.rotation,
+        :rotation => -ptxt.font.rotation,
     ))
 end
 
@@ -150,11 +152,41 @@ function plotly_scale(scale::Symbol)
     end
 end
 
+function shrink_by(lo, sz, ratio)
+    amt = 0.5 * (1.0 - ratio) * sz
+    lo + amt, sz - 2amt
+end
+
+function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
+    aspect_ratio = sp[:aspect_ratio]
+    if aspect_ratio != :none
+        if aspect_ratio == :equal
+            aspect_ratio = 1.0
+        end
+        xmin,xmax = axis_limits(sp[:xaxis])
+        ymin,ymax = axis_limits(sp[:yaxis])
+        want_ratio = ((xmax-xmin) / (ymax-ymin)) / aspect_ratio
+        parea_ratio = width(plotarea) / height(plotarea)
+        if want_ratio > parea_ratio
+            # need to shrink y
+            ratio = parea_ratio / want_ratio
+            pcts[2], pcts[4] = shrink_by(pcts[2], pcts[4], ratio)
+        elseif want_ratio < parea_ratio
+            # need to shrink x
+            ratio = want_ratio / parea_ratio
+            pcts[1], pcts[3] = shrink_by(pcts[1], pcts[3], ratio)
+        end
+        pcts
+    end
+    pcts
+end
+
 
 # this method gets the start/end in percentage of the canvas for this axis direction
 function plotly_domain(sp::Subplot, letter)
     figw, figh = sp.plt[:size]
     pcts = bbox_to_pcts(sp.plotarea, figw*px, figh*px)
+    pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
     i1,i2 = (letter == :x ? (1,3) : (2,4))
     [pcts[i1], pcts[i1]+pcts[i2]]
 end
@@ -166,6 +198,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         :title      => axis[:guide],
         :showgrid   => sp[:grid],
         :zeroline   => false,
+        :ticks      => "inside",
     )
 
     if letter in (:x,:y)
@@ -173,10 +206,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:anchor] = "$(letter==:x ? :y : :x)$(plotly_subplot_index(sp))"
     end
 
-    rot = axis[:rotation]
-    if rot != 0
-        ax[:tickangle] = rot
-    end
+    ax[:tickangle] = -axis[:rotation]
 
     if !(axis[:ticks] in (nothing, :none))
         ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
@@ -188,7 +218,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         # lims
         lims = axis[:lims]
         if lims != :auto && limsType(lims) == :limits
-            ax[:range] = lims
+            ax[:range] = map(scalefunc(axis[:scale]), lims)
         end
 
         # flip
@@ -229,6 +259,7 @@ function plotly_layout(plt::Plot)
     for sp in plt.subplots
         spidx = plotly_subplot_index(sp)
 
+
         # add an annotation for the title... positioned horizontally relative to plotarea,
         # but vertically just below the top of the subplot bounding box
         if sp[:title] != ""
@@ -247,8 +278,6 @@ function plotly_layout(plt::Plot)
         end
 
         d_out[:plot_bgcolor] = rgba_string(sp[:background_color_inside])
-
-        # TODO: x/y axis tick values/labels
 
         # if any(is3d, seriesargs)
         if is3d(sp)
@@ -343,6 +372,10 @@ plotly_data(v) = collect(v)
 plotly_data(surf::Surface) = surf.surf
 plotly_data{R<:Rational}(v::AbstractArray{R}) = float(v)
 
+plotly_surface_data(series::Series, a::AbstractVector) = a
+plotly_surface_data(series::Series, a::AbstractMatrix) = transpose_z(series, a, false)
+plotly_surface_data(series::Series, a::Surface) = plotly_surface_data(series, a.surf)
+
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
@@ -366,6 +399,13 @@ function plotly_series(plt::Plot, series::Series)
     hasmarker = isscatter || series[:markershape] != :none
     hasline = st in (:path, :path3d)
 
+    # for surface types, set the data
+    if st in (:heatmap, :contour, :surface, :wireframe)
+        for letter in [:x,:y,:z]
+            d_out[letter] = plotly_surface_data(series, series[letter])
+        end
+    end
+
     # set the "type"
     if st in (:path, :scatter, :scattergl)
         d_out[:type] = st==:scattergl ? "scattergl" : "scatter"
@@ -384,17 +424,21 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st == :bar
         d_out[:type] = "bar"
-        d_out[:x], d_out[:y] = x, y
-        d_out[:orientation] = isvertical(series) ? "v" : "h"
+        d_out[:x], d_out[:y], d_out[:orientation] = if isvertical(series)
+            x, y, "v"
+        else
+            y, x, "h"
+        end
+        d_out[:marker] = KW(:color => rgba_string(series[:fillcolor]))
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
-        d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
         d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
 
     elseif st == :contour
         d_out[:type] = "contour"
-        d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
         # d_out[:showscale] = series[:colorbar] != :none
         d_out[:ncontours] = series[:levels]
         d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines")
@@ -402,8 +446,18 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
-        d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
-        d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+        # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        if st == :wireframe
+            d_out[:hidesurface] = true
+            wirelines = KW(
+                :show => true,
+                :color => rgba_string(series[:linecolor]),
+                :highlightwidth => series[:linewidth],
+            )
+            d_out[:contours] = KW(:x => wirelines, :y => wirelines, :z => wirelines)
+        else
+            d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+        end
 
     elseif st == :pie
         d_out[:type] = "pie"
@@ -577,7 +631,8 @@ end
 
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyBackend})
-    show_png_from_html(io, plt)
+    # show_png_from_html(io, plt)
+    error("png output from the plotly backend is not supported.  Please use plotlyjs instead.")
 end
 
 function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyBackend})

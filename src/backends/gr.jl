@@ -337,15 +337,24 @@ end
 const _gr_point_mult = zeros(1)
 
 # set the font attributes... assumes _gr_point_mult has been populated already
-function gr_set_font(f::Font; halign = f.halign, valign = f.valign, color = f.color)
+function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
+                              color = f.color, rotation = f.rotation)
     family = lowercase(f.family)
     GR.setcharheight(_gr_point_mult[1] * f.pointsize)
-    GR.setcharup(sin(f.rotation), cos(f.rotation))
+    GR.setcharup(sind(-rotation), cosd(-rotation))
     if haskey(gr_font_family, family)
         GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
     end
     gr_set_textcolor(color)
     GR.settextalign(gr_halign[halign], gr_valign[valign])
+end
+
+function gr_nans_to_infs!(z)
+    for (i,zi) in enumerate(z)
+        if zi == NaN
+            z[i] = Inf
+        end
+    end
 end
 
 # --------------------------------------------------------------------------------------
@@ -622,12 +631,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # x labels
             flip = sp[:yaxis][:flip]
             mirror = sp[:xaxis][:mirror]
-            gr_set_font(sp[:xaxis][:tickfont], valign = (mirror ? :bottom : :top), color = sp[:xaxis][:foreground_color_axis])
+            gr_set_font(sp[:xaxis][:tickfont],
+                        valign = (mirror ? :bottom : :top),
+                        color = sp[:xaxis][:foreground_color_axis],
+                        rotation = sp[:xaxis][:rotation])
             for (cv, dv) in zip(xticks...)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, (flip $ mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
-                gr_text(xi, yi + (mirror ? 1 : -1) * 0.01, string(dv))
+                gr_text(xi, yi + (mirror ? 1 : -1) * 2e-3, string(dv))
             end
         end
 
@@ -635,12 +647,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # y labels
             flip = sp[:xaxis][:flip]
             mirror = sp[:yaxis][:mirror]
-            gr_set_font(sp[:yaxis][:tickfont], halign = (mirror ? :left : :right), color = sp[:yaxis][:foreground_color_axis])
+            gr_set_font(sp[:yaxis][:tickfont],
+                        halign = (mirror ? :left : :right),
+                        color = sp[:yaxis][:foreground_color_axis],
+                        rotation = sp[:yaxis][:rotation])
             for (cv, dv) in zip(yticks...)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc((flip $ mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
-                gr_text(xi + (mirror ? 1 : -1) * 0.01, yi, string(dv))
+                gr_text(xi + (mirror ? 1 : -1) * 2e-3, yi, string(dv))
             end
         end
 
@@ -684,9 +699,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     end
     GR.restorestate()
 
-    # TODO: can we remove?
     gr_set_font(xaxis[:tickfont])
-    # GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
+
+    # this needs to be here to point the colormap to the right indices
+    GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
 
     for (idx, series) in enumerate(series_list(sp))
         st = series[:seriestype]
@@ -716,10 +732,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # recompute data
         if typeof(z) <: Surface
-            if st == :heatmap
-                expand_extrema!(sp[:xaxis], (x[1]-0.5*(x[2]-x[1]), x[end]+0.5*(x[end]-x[end-1])))
-                expand_extrema!(sp[:yaxis], (y[1]-0.5*(y[2]-y[1]), y[end]+0.5*(y[end]-y[end-1])))
-            end
+            # if st == :heatmap
+            #     expand_extrema!(sp[:xaxis], (x[1]-0.5*(x[2]-x[1]), x[end]+0.5*(x[end]-x[end-1])))
+            #     expand_extrema!(sp[:yaxis], (y[1]-0.5*(y[2]-y[1]), y[end]+0.5*(y[end]-y[end-1])))
+            # end
             z = vec(transpose_z(series, z.surf, false))
         elseif ispolar(sp)
             if frng != nothing
@@ -800,16 +816,19 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             cmap && gr_colorbar(sp)
 
         elseif st == :heatmap
-            # z = vec(transpose_z(series, z.surf, false))
             zmin, zmax = gr_lims(zaxis, true)
             clims = sp[:clims]
             if is_2tuple(clims)
                 isfinite(clims[1]) && (zmin = clims[1])
                 isfinite(clims[2]) && (zmax = clims[2])
             end
-            GR.setspace(zmin, zmax, 0, 90)
-            # GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
-            GR.surface(x, y, z, GR.OPTION_HEATMAP)
+            grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
+            colors = [grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)] for zi=z]
+            rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
+                                    round(Int,  blue(c) * 255) << 16 +
+                                    round(Int, green(c) * 255) << 8  +
+                                    round(Int,   red(c) * 255) ), colors)
+            GR.drawimage(xmin, xmax, ymax, ymin, length(x), length(y), rgba)
             cmap && gr_colorbar(sp)
 
         elseif st in (:path3d, :scatter3d)
@@ -896,8 +915,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
 
         elseif st == :image
-            img = series[:z].surf
-            h, w = size(img)
+            z = transpose_z(series, series[:z].surf, true)
+            h, w = size(z)
             if eltype(z) <: Colors.AbstractGray
                 grey = round(UInt8, float(z) * 255)
                 rgba = map(c -> UInt32( 0xff000000 + Int(c)<<16 + Int(c)<<8 + Int(c) ), grey)
@@ -1016,18 +1035,27 @@ const _gr_mimeformats = Dict(
     "image/svg+xml"           => "svg",
 )
 
+const _gr_wstype_default = @static if is_linux()
+    "x11"
+    # "cairox11"
+elseif is_apple()
+    "quartz"
+else
+    "use_default"
+end
+
+const _gr_wstype = Ref(get(ENV, "GKS_WSTYPE", _gr_wstype_default))
+gr_set_output(wstype::String) = (_gr_wstype[] = wstype)
 
 for (mime, fmt) in _gr_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
-        wstype = haskey(ENV, "GKS_WSTYPE") ? ENV["GKS_WSTYPE"] : "0"
         filepath = tempname() * "." * $fmt
         ENV["GKS_WSTYPE"] = $fmt
         ENV["GKS_FILEPATH"] = filepath
         gr_display(plt)
         GR.emergencyclosegks()
         write(io, readstring(filepath))
-        ENV["GKS_WSTYPE"] = wstype
         rm(filepath)
     end
 end
@@ -1044,7 +1072,12 @@ function _display(plt::Plot{GRBackend})
         println(content)
         rm(filepath)
     else
-        ENV["GKS_DOUBLE_BUF"] = "true"
+        ENV["GKS_DOUBLE_BUF"] = true
+        if _gr_wstype[] != "use_default"
+            ENV["GKS_WSTYPE"] = _gr_wstype[]
+        end
         gr_display(plt)
     end
 end
+
+closeall(::GRBackend) = GR.emergencyclosegks()

@@ -42,8 +42,8 @@ convertToAnyVector(v::Volume, d::KW) = Any[v], nothing
 # # vector of OHLC
 # convertToAnyVector(v::AVec{OHLC}, d::KW) = Any[v], nothing
 
-# dates
-convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}, d::KW) = Any[dts], nothing
+# # dates
+# convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}, d::KW) = Any[dts], nothing
 
 # list of things (maybe other vectors, functions, or something else)
 function convertToAnyVector(v::AVec, d::KW)

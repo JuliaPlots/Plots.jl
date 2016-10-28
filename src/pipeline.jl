@@ -355,11 +355,12 @@ function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
     end
 end
 
-function _add_the_series(plt, d)
+function _add_the_series(plt, sp, d)
     warnOnUnsupported_args(plt.backend, d)
     warnOnUnsupported(plt.backend, d)
     series = Series(d)
     push!(plt.series_list, series)
+    push!(sp.series_list, series)
     _series_added(plt, series)
 end
 
@@ -382,7 +383,7 @@ function _process_seriesrecipe(plt::Plot, d::KW)
         sp = _prepare_subplot(plt, d)
         _prepare_annotations(sp, d)
         _expand_subplot_extrema(sp, d, st)
-        _add_the_series(plt, d)
+        _add_the_series(plt, sp, d)
 
     else
         # get a sub list of series for this seriestype
