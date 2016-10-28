@@ -112,11 +112,7 @@ end
 const _glplot_deletes = []
 function empty_screen!(screen)
     if isempty(_glplot_deletes)
-        screen.renderlist = ()
-        for c in screen.children
-            empty!(c)
-        end
-        empty!(screen.children)
+        empty!(screen)
     else
         for del_signal in _glplot_deletes
             push!(del_signal, true) # trigger delete
@@ -426,13 +422,11 @@ function hover(to_hover, to_display, window)
     area = map(window.inputs[:mouseposition]) do mp
         SimpleRectangle{Int}(round(Int, mp+10)..., 100, 70)
     end
-    background = visualize((GLVisualize.RECTANGLE, Point2f0[0]),
-        color=RGBA{Float32}(0,0,0,0), scale=Vec2f0(100, 70), offset=Vec2f0(0),
-        stroke_color=RGBA{Float32}(0,0,0,0.4),
-        stroke_width=-1.0f0
-    )
     mh = GLWindow.mouse2id(window)
-    popup = GLWindow.Screen(window, area=area, hidden=true)
+    popup = GLWindow.Screen(
+        window, hidden=true, area=area,
+        stroke=(2f0/100f0, RGBA(0f0, 0f0, 0f0, 0.8f0))
+    )
     cam = get!(popup.cameras, :perspective) do
         GLAbstraction.PerspectiveCamera(
             popup.inputs, Vec3f0(3), Vec3f0(0),
@@ -458,7 +452,6 @@ function hover(to_hover, to_display, window)
                     cam.projectiontype.value = GLVisualize.ORTHOGRAPHIC
                 end
                 GLVisualize._view(robj, popup, camera=cam)
-                GLVisualize._view(background, popup, camera=:fixed_pixel)
                 bb = GLAbstraction.boundingbox(robj).value
                 mini = minimum(bb)
                 w = GeometryTypes.widths(bb)
@@ -872,8 +865,8 @@ function gl_viewport(bb, rect)
     l, b, bw, bh = bb
     rw, rh = rect.w, rect.h
     GLVisualize.SimpleRectangle(
-        round(Int, rect.x + rw * l),
-        round(Int, rect.y + rh * b),
+        round(Int, rw * l),
+        round(Int, rh * b),
         round(Int, rw * bw),
         round(Int, rh * bh)
     )
@@ -1071,10 +1064,10 @@ end
 function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})
     _display(plt)
     GLWindow.pollevents()
-    yield()
     if Base.n_avail(Reactive._messages) > 0
         Reactive.run_till_now()
     end
+    yield()
     GLWindow.render_frame(plt.o)
     GLWindow.swapbuffers(plt.o)
     buff = GLWindow.screenbuffer(plt.o)
@@ -1389,9 +1382,11 @@ function generate_legend(sp, screen, model_m)
             x,y = round(Int, p[1])+30, round(Int, p[2]-h)-30
             GeometryTypes.SimpleRectangle(x, y, w, h)
         end
+        px_scale = minimum(GeometryTypes.widths(Reactive.value(area)))
         sscren = GLWindow.Screen(
             screen, area=area,
-            color=sp[:background_color_legend]
+            color=sp[:background_color_legend],
+            stroke=(2f0/px_scale, RGBA{Float32}(0.3,0.3,0.3,0.9))
         )
         GLAbstraction.translate!(list, Vec3f0(10,10,0))
         GLVisualize._view(list, sscren, camera=:fixed_pixel)
