@@ -1221,7 +1221,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
 
     # update markerstrokecolor
     d[:markerstrokecolor] = if d[:markerstrokecolor] == :match
-        plot_color(sp[:seriescolor], d[:markerstrokealpha])
+        plot_color(d[:seriescolor], d[:markerstrokealpha])
     else
         getSeriesRGBColor(d[:markerstrokecolor], d[:markerstrokealpha], sp, plotIndex)
     end
