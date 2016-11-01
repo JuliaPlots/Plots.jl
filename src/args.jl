@@ -1094,7 +1094,7 @@ function _update_axis(axis::Axis, d_in::KW, letter::Symbol, subplot_index::Int)
     end
 
     # update the axis
-    update!(axis, args...; kw...)
+    attr!(axis, args...; kw...)
     return
 end
 

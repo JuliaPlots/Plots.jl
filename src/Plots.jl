@@ -29,7 +29,7 @@ export
 
     plot,
     plot!,
-    update!,
+    attr!,
 
     current,
     default,

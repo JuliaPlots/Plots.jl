@@ -714,28 +714,28 @@ Base.push!(series::Series, xi, yi, zi) = (push_x!(series,xi); push_y!(series,yi)
 
 # -------------------------------------------------------
 
-function update!(series::Series; kw...)
+function attr!(series::Series; kw...)
     d = KW(kw)
     preprocessArgs!(d)
     for (k,v) in d
         if haskey(_series_defaults, k)
             series[k] = v
         else
-            warn("unused key $k in series update")
+            warn("unused key $k in series attr")
         end
     end
     _series_updated(series[:subplot].plt, series)
     series
 end
 
-function update!(sp::Subplot; kw...)
+function attr!(sp::Subplot; kw...)
     d = KW(kw)
     preprocessArgs!(d)
     for (k,v) in d
         if haskey(_subplot_defaults, k)
             sp[k] = v
         else
-            warn("unused key $k in subplot update")
+            warn("unused key $k in subplot attr")
         end
     end
     sp
