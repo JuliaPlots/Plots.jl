@@ -30,6 +30,7 @@ const _gr_attr = merge_with_base_supported([
     :normalize, :weights,
     :inset_subplots,
     :bar_width,
+    :arrow,
 ])
 const _gr_seriestype = [
     :path, :scatter,
@@ -131,7 +132,7 @@ gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(cycle(c,1)))
 
 # draw line segments, splitting x/y into contiguous/finite segments
 # note: this can be used for shapes by passing func `GR.fillarea`
-function gr_polyline(x, y, func = GR.polyline)
+function gr_polyline(x, y, func = GR.polyline; arrow=false)
     iend = 0
     n = length(x)
     while iend < n-1
@@ -159,6 +160,9 @@ function gr_polyline(x, y, func = GR.polyline)
         # if we found a start and end, draw the line segment, otherwise we're done
         if istart > 0 && iend > 0
             func(x[istart:iend], y[istart:iend])
+            if arrow
+                GR.drawarrow(x[iend-1], y[iend-1], x[iend], y[iend])
+            end
         else
             break
         end
@@ -764,7 +768,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # draw the line(s)
                 if st == :path
                     gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
-                    gr_polyline(x, y)
+                    gr_polyline(x, y; arrow = isa(series[:arrow], Arrow))
                 end
             end
 
