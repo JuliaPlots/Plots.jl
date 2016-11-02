@@ -164,7 +164,7 @@ function gr_polyline(x, y, func = GR.polyline; arrowside=:none)
                 GR.drawarrow(x[iend-1], y[iend-1], x[iend], y[iend])
             end
             if arrowside in (:tail,:both)
-                GR.drawarrow(x[2], y[2], x[1], y[1])
+                GR.drawarrow(x[istart+1], y[istart+1], x[istart], y[istart])
             end
         else
             break
