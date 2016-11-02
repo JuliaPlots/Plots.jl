@@ -792,3 +792,14 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 
 @recipe f(::Type{Date}, dt::Date) = (dt -> convert(Int,dt), dt -> string(convert(Date,dt)))
 @recipe f(::Type{DateTime}, dt::DateTime) = (dt -> convert(Int,dt), dt -> string(convert(DateTime,dt)))
+
+# -------------------------------------------------
+# Complex Numbers
+
+@userplot ComplexPlot
+@recipe function f(cp::ComplexPlot)
+    xguide --> "Real Part"
+    yguide --> "Imaginary Part"
+    linetype --> :scatter
+    real(cp.args[1]), imag(cp.args[1])
+end

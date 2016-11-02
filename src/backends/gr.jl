@@ -132,7 +132,7 @@ gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(cycle(c,1)))
 
 # draw line segments, splitting x/y into contiguous/finite segments
 # note: this can be used for shapes by passing func `GR.fillarea`
-function gr_polyline(x, y, func = GR.polyline; arrow=false)
+function gr_polyline(x, y, func = GR.polyline; arrowside=:none)
     iend = 0
     n = length(x)
     while iend < n-1
@@ -160,8 +160,11 @@ function gr_polyline(x, y, func = GR.polyline; arrow=false)
         # if we found a start and end, draw the line segment, otherwise we're done
         if istart > 0 && iend > 0
             func(x[istart:iend], y[istart:iend])
-            if arrow
+            if arrowside in (:head,:both)
                 GR.drawarrow(x[iend-1], y[iend-1], x[iend], y[iend])
+            end
+            if arrowside in (:tail,:both)
+                GR.drawarrow(x[2], y[2], x[1], y[1])
             end
         else
             break
@@ -768,7 +771,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # draw the line(s)
                 if st == :path
                     gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
-                    gr_polyline(x, y; arrow = isa(series[:arrow], Arrow))
+                    arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
+                    gr_polyline(x, y; arrowside = arrowside)
                 end
             end
 

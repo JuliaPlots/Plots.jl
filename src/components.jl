@@ -463,19 +463,25 @@ Base.eltype{T}(vol::Volume{T}) = T
 # style is :open or :closed (for now)
 immutable Arrow
     style::Symbol
+    side::Symbol  # :head (default), :tail, or :both
     headlength::Float64
     headwidth::Float64
 end
 
 function arrow(args...)
     style = :simple
+    side = :head
     headlength = 0.3
     headwidth = 0.3
     setlength = false
     for arg in args
         T = typeof(arg)
         if T == Symbol
-            style = arg
+            if arg in (:head, :tail, :both)
+                side = arg
+            else
+                style = arg
+            end
         elseif T <: Number
             # first we apply to both, but if there's more, then only change width after the first number
             headwidth = Float64(arg)
@@ -489,7 +495,7 @@ function arrow(args...)
             warn("Skipped arrow arg $arg")
         end
     end
-    Arrow(style, headlength, headwidth)
+    Arrow(style, side, headlength, headwidth)
 end
 
 
