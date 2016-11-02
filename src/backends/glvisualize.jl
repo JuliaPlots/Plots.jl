@@ -78,11 +78,11 @@ end
 function add_backend_string(b::GLVisualizeBackend)
     """
     For those incredibly brave souls who assume full responsibility for what happens next...
-    There's an easy way to get what you need for the GLVisualize backend to work:
+    There's an easy way to get what you need for the GLVisualize backend to work (until Pkg3 is usable):
 
     Pkg.clone("https://github.com/tbreloff/MetaPkg.jl")
-    import MetaPkg
-    MetaPkg.checkout("MetaGL")
+    using MetaPkg
+    meta_checkout("MetaGL")
 
     See the MetaPkg readme for details...
     """
