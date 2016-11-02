@@ -226,7 +226,7 @@ end
 # -----------------------------------------------------------------------
 
 
-immutable Font
+type Font
   family::AbstractString
   pointsize::Int
   halign::Symbol
@@ -281,6 +281,17 @@ function font(args...)
   end
 
   Font(family, pointsize, halign, valign, rotation, color)
+end
+
+function scalefontsize(k::Symbol, factor::Number)
+    f = default(k)
+    f.pointsize = round(Int, factor * f.pointsize)
+    default(k, f)
+end
+function scalefontsizes(factor::Number)
+    for k in (:titlefont, :guidefont, :tickfont, :legendfont)
+        scalefontsize(k, factor)
+    end
 end
 
 "Wrap a string with font info"
