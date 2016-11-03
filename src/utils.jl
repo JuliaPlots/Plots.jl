@@ -234,19 +234,19 @@ end
 nop() = nothing
 notimpl() = error("This has not been implemented yet")
 
-Base.cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
-Base.cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
+cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
+cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
-Base.cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
-Base.cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
-Base.cycle(v, idx::Int)       = v
+cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
+cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
+cycle(v, idx::Int)       = v
 
-Base.cycle(v::AVec, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
-Base.cycle(v::AMat, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
-Base.cycle(v, indices::AVec{Int})       = fill(v, length(indices))
+cycle(v::AVec, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
+cycle(v::AMat, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
+cycle(v, indices::AVec{Int})       = fill(v, length(indices))
 
-Base.cycle(grad::ColorGradient, idx::Int) = cycle(grad.colors, idx)
-Base.cycle(grad::ColorGradient, indices::AVec{Int}) = cycle(grad.colors, indices)
+cycle(grad::ColorGradient, idx::Int) = cycle(grad.colors, idx)
+cycle(grad::ColorGradient, indices::AVec{Int}) = cycle(grad.colors, indices)
 
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]

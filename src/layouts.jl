@@ -97,6 +97,31 @@ function Base.show(io::IO, bbox::BoundingBox)
 end
 
 # -----------------------------------------------------------
+
+# points combined by x/y, pct, and length
+type MixedMeasures
+    xy::Float64
+    pct::Float64
+    len::AbsoluteLength
+end
+
+function resolve_mixed(mix::MixedMeasures, sp::Subplot, letter::Symbol)
+    xy = mix.xy
+    pct = mix.pct
+    if mix.len != 0mm
+        f = (letter == :x ? width : height)
+        totlen = f(plotarea(sp))
+        pct += mix.len / totlen
+    end
+    if pct != 0
+        amin, amax = axis_limits(sp[Symbol(letter,:axis)])
+        xy += pct * (amax-amin)
+    end
+    xy
+end
+
+
+# -----------------------------------------------------------
 # AbstractLayout
 
 Base.show(io::IO, layout::AbstractLayout) = print(io, "$(typeof(layout))$(size(layout))")

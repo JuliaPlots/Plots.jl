@@ -308,10 +308,6 @@ function text(str, args...)
 end
 
 
-annotations(::Void) = []
-annotations(anns::AVec) = anns
-annotations(anns) = Any[anns]
-
 
 # -----------------------------------------------------------------------
 
@@ -384,6 +380,47 @@ function brush(args...; alpha = nothing)
 
   Brush(size, color, alpha)
 end
+
+# -----------------------------------------------------------------------
+
+type SeriesAnnotations
+    strs::AbstractVector  # the labels/names
+    font::Font
+    shape::Nullable{Shape}
+    shapefill::Brush
+    shapestroke::Stroke
+    bboxes::Vector{BBox}
+end
+function SeriesAnnotations(strs::AbstractVector, args...)
+    fnt = font()
+    shp = Nullable{Shape}()
+    br = brush(:steelblue)
+    stk = stroke(:black, 1)
+    for arg in args
+        if isa(arg, Shape)
+            shp = Nullable{Shape}(arg)
+        elseif isa(arg, Brush)
+            brush = arg
+        elseif isa(arg, Stroke)
+            stk = arg
+        elseif isa(arg, Font)
+            fnt = arg
+        elseif isa(arg, Symbol) && haskey(_shapes, arg)
+            shape = _shapes[arg]
+        else
+            warn("Unused SeriesAnnotations arg: $arg ($(typeof(arg)))")
+        end
+    end
+    # note: x/y coords are added later
+    SeriesAnnotations(strs, fnt, shp, br, stk, BBox[])
+end
+
+
+
+annotations(::Void) = []
+annotations(anns::AVec) = anns
+annotations(anns) = Any[anns]
+annotations(sa::SeriesAnnotations) = sa
 
 # -----------------------------------------------------------------------
 

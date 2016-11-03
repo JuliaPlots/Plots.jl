@@ -1021,14 +1021,18 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
     end
     for ann in sp[:annotations]
-        x, y, val = ann
-        x, y = if is3d(sp)
-            # GR.wc3towc(x, y, z)
+        if isa(ann, SeriesAnnotation)
+            # TODO handle series annotations
         else
-            GR.wctondc(x, y)
+            x, y, val = ann
+            x, y = if is3d(sp)
+                # GR.wc3towc(x, y, z)
+            else
+                GR.wctondc(x, y)
+            end
+            gr_set_font(val.font)
+            gr_text(x, y, val.str)
         end
-        gr_set_font(val.font)
-        gr_text(x, y, val.str)
     end
     GR.restorestate()
 end

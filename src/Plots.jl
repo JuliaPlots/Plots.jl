@@ -89,6 +89,7 @@ export
     Animation,
     frame,
     gif,
+    animate,
     @animate,
     @gif,
 

@@ -16,6 +16,33 @@ function frame{P<:AbstractPlot}(anim::Animation, plt::P=current())
   push!(anim.frames, filename)
 end
 
+giffn() = (isijulia() ? "tmp.gif" : tempname()*".gif")
+
+type FrameIterator
+    itr
+    every::Int
+    kw
+end
+FrameIterator(itr; every=1, kw...) = FrameIterator(itr, every, kw)
+
+"""
+Animate from an iterator which returns the plot args each iteration.
+"""
+function animate(fitr::FrameIterator, fn = giffn(); kw...)
+    anim = Animation()
+    for (i, plotargs) in enumerate(fitr.itr)
+        if mod1(i, fitr.every) == 1
+            plot(wraptuple(plotargs)...; fitr.kw...)
+            frame(anim)
+        end
+    end
+    gif(anim, fn; kw...)
+end
+
+# most things will implement this
+function animate(obj, fn = giffn(); every=1, fps=20, loop=0, kw...)
+    animate(FrameIterator(obj, every, kw); fps=fps, loop=loop)
+end
 
 # -----------------------------------------------
 
@@ -24,7 +51,7 @@ immutable AnimatedGif
   filename::String
 end
 
-function gif(anim::Animation, fn = (isijulia() ? "tmp.gif" : tempname()*".gif"); fps::Integer = 20, loop::Integer = 0)
+function gif(anim::Animation, fn = giffn(); fps::Integer = 20, loop::Integer = 0)
   fn = abspath(fn)
 
   try
