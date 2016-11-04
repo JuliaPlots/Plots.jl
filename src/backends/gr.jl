@@ -269,14 +269,6 @@ end
 # ---------------------------------------------------------
 
 # draw ONE Shape
-# function gr_draw_marker(xi, yi, msize, shape::Shape)
-#     sx, sy = shape_coords(shape)
-#     GR.selntran(0)
-#     xi, yi = GR.wctondc(xi, yi)
-#     GR.fillarea(xi + sx * 0.0015msize,
-#                 yi + sy * 0.0015msize)
-#     GR.selntran(1)
-# end
 function gr_draw_marker(xi, yi, msize, shape::Shape)
     sx, sy = shape_coords(shape)
     # convert to ndc coords (percentages of window)
@@ -963,52 +955,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
         end
 
-        # if anns != nothing
-            # TODO handle series annotations
-            # TODO: this should be moved with SeriesAnnotations... iterate like:
-            #           for (xi,yi,str,shape) in eachann(anns, sp) ... end
-            #       or maybe
-            #           anns.sp = sp
-            #           for (xi,yi,str,shape) in anns ... end
-            # TODO: maybe scrap all of this and do some preprocessing to overwrite the marker shape with
-            #       a vector of the computed shapes??  then marker_z, etc will still work
-            # @assert !is3d(sp)
-            # shapefillcolor = plot_color(ann.shapefill.color, ann.shapefill.alpha)
-            # shapestrokecolor = plot_color(ann.shapestroke.color, ann.shapestroke.alpha)
-            # for i=1:length(y)
-            #     xi = cycle(x,i)
-            #     yi = cycle(y,i)
-            #     # @show anns.strs typeof(anns.strs)
-            #     str = cycle(anns.strs,i)
-
-                # if !isnull(anns.baseshape)
-                #     # get the width and height of the string (in mm)
-                #     sw, sh = text_size(str, anns.font.pointsize)
-                #
-                #     # how much to scale the base shape?
-                #     xscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sw), sp, :x)
-                #     yscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sh), sp, :y)
-                #
-                #     # get the shape for this x/y/str
-                #     shape = scale(get(anns.baseshape), xscale, yscale)
-                #     translate!(shape, xi, yi)
-                #
-                #     # draw the interior
-                #     gr_set_fill(shapefillcolor)
-                #     GR.fillarea(shape_coords(shape)...)
-                #
-                #     # draw the shapes
-                #     gr_set_line(anns.shapestroke.width, anns.shapestroke.style, shapestrokecolor)
-                #     GR.polyline(shape_coords(shape)...)
-                # end
-
-            # this is all we need to add the series_annotations text
-            anns = series[:series_annotations]
-            for (xi,yi,str) in EachAnn(anns, x, y)
-                gr_set_font(anns.font)
-                gr_text(GR.wctondc(xi, yi)..., str)
-            end
-        # end
+        # this is all we need to add the series_annotations text
+        anns = series[:series_annotations]
+        for (xi,yi,str) in EachAnn(anns, x, y)
+            gr_set_font(anns.font)
+            gr_text(GR.wctondc(xi, yi)..., str)
+        end
 
         GR.restorestate()
     end
