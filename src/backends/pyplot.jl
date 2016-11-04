@@ -445,6 +445,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         error("Only numbers and vectors are supported with levels keyword")
     end
 
+    # add custom frame shapes to markershape?
+    series_annotations_shapes!(series, :xy)
+
     # for each plotting command, optionally build and add a series handle to the list
 
     # line plot
@@ -560,16 +563,46 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         else
             xyargs
         end
-        handle = ax[:scatter](xyargs...;
-            label = series[:label],
-            zorder = series[:series_plotindex] + 0.5,
-            marker = py_marker(series[:markershape]),
-            s = py_dpi_scale(plt, series[:markersize] .^ 2),
-            edgecolors = py_markerstrokecolor(series),
-            linewidths = py_dpi_scale(plt, series[:markerstrokewidth]),
-            extrakw...
-        )
-        push!(handles, handle)
+
+        if isa(series[:markershape], AbstractVector{Shape})
+            # this section will create one scatter per data point to accomodate the
+            # vector of shapes
+            handle = []
+            x,y = xyargs
+            shapes = series[:markershape]
+            msc = py_markerstrokecolor(series)
+            lw = py_dpi_scale(plt, series[:markerstrokewidth])
+            for i=1:length(y)
+                extrakw[:c] = if series[:marker_z] == nothing
+                    py_color_fix(py_color(cycle(series[:markercolor],i)), x)
+                else
+                    extrakw[:c]
+                end
+
+                push!(handle, ax[:scatter](cycle(x,i), cycle(y,i);
+                    label = series[:label],
+                    zorder = series[:series_plotindex] + 0.5,
+                    marker = py_marker(cycle(shapes,i)),
+                    s =  py_dpi_scale(plt, cycle(series[:markersize],i) .^ 2),
+                    edgecolors = msc,
+                    linewidths = lw,
+                    extrakw...
+                ))
+            end
+            push!(handles, handle)
+        else
+            # do a normal scatter plot
+            handle = ax[:scatter](xyargs...;
+                label = series[:label],
+                zorder = series[:series_plotindex] + 0.5,
+                marker = py_marker(series[:markershape]),
+                s = py_dpi_scale(plt, series[:markersize] .^ 2),
+                edgecolors = py_markerstrokecolor(series),
+                linewidths = py_dpi_scale(plt, series[:markerstrokewidth]),
+                extrakw...
+            )
+            push!(handles, handle)
+        end
     end
 
     if st == :hexbin
@@ -848,6 +881,12 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             linewidths = 0
         )
         push!(handles, handle)
+    end
+
+    # this is all we need to add the series_annotations text
+    anns = series[:series_annotations]
+    for (xi,yi,str) in EachAnn(anns, x, y)
+        py_add_annotations(sp, xi, yi, PlotText(str, anns.font))
     end
 end
 

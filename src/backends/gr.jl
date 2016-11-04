@@ -269,12 +269,22 @@ end
 # ---------------------------------------------------------
 
 # draw ONE Shape
+# function gr_draw_marker(xi, yi, msize, shape::Shape)
+#     sx, sy = shape_coords(shape)
+#     GR.selntran(0)
+#     xi, yi = GR.wctondc(xi, yi)
+#     GR.fillarea(xi + sx * 0.0015msize,
+#                 yi + sy * 0.0015msize)
+#     GR.selntran(1)
+# end
 function gr_draw_marker(xi, yi, msize, shape::Shape)
     sx, sy = shape_coords(shape)
+    # convert to ndc coords (percentages of window)
     GR.selntran(0)
     xi, yi = GR.wctondc(xi, yi)
-    GR.fillarea(xi + sx * 0.0015msize,
-                yi + sy * 0.0015msize)
+    ms_ndc_x, ms_ndc_y = gr_pixels_to_ndc(msize, msize)
+    GR.fillarea(xi .+ sx .* ms_ndc_x,
+                yi .+ sy .* ms_ndc_y)
     GR.selntran(1)
 end
 
@@ -288,10 +298,11 @@ end
 
 # draw the markers, one at a time
 function gr_draw_markers(series::Series, x, y, msize, mz)
-    shape = series[:markershape]
-    if shape != :none
+    shapes = series[:markershape]
+    if shapes != :none
         for i=1:length(x)
             msi = cycle(msize, i)
+            shape = cycle(shapes, i)
             cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
             cfuncind = isa(shape, Shape) ? GR.setfillcolorind : GR.setmarkercolorind
 
@@ -371,6 +382,9 @@ end
 # values are [xmin, xmax, ymin, ymax].  they range [0,1].
 const viewport_plotarea = zeros(4)
 
+# the size of the current plot in pixels
+const gr_plot_size = zeros(2)
+
 function gr_viewport_from_bbox(bb::BoundingBox, w, h, viewport_canvas)
     viewport = zeros(4)
     viewport[1] = viewport_canvas[2] * (left(bb) / w)
@@ -425,6 +439,13 @@ gr_view_ycenter() = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
 gr_view_xdiff() = viewport_plotarea[2] - viewport_plotarea[1]
 gr_view_ydiff() = viewport_plotarea[4] - viewport_plotarea[3]
 
+function gr_pixels_to_ndc(x_pixels, y_pixels)
+    w,h = gr_plot_size
+    totx = w * gr_view_xdiff()
+    toty = h * gr_view_ydiff()
+    x_pixels / totx, y_pixels / toty
+end
+
 
 # --------------------------------------------------------------------------------------
 
@@ -452,6 +473,7 @@ function gr_display(plt::Plot)
     # compute the viewport_canvas, normalized to the larger dimension
     viewport_canvas = Float64[0,1,0,1]
     w, h = plt[:size]
+    gr_plot_size[:] = [w, h]
     if w > h
         ratio = float(h) / w
         msize = display_width_ratio * w
@@ -737,6 +759,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         x, y, z = series[:x], series[:y], series[:z]
         frng = series[:fillrange]
 
+        # add custom frame shapes to markershape?
+        series_annotations_shapes!(series)
+        # -------------------------------------------------------
+
         # recompute data
         if typeof(z) <: Surface
             # if st == :heatmap
@@ -937,6 +963,53 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
         end
 
+        # if anns != nothing
+            # TODO handle series annotations
+            # TODO: this should be moved with SeriesAnnotations... iterate like:
+            #           for (xi,yi,str,shape) in eachann(anns, sp) ... end
+            #       or maybe
+            #           anns.sp = sp
+            #           for (xi,yi,str,shape) in anns ... end
+            # TODO: maybe scrap all of this and do some preprocessing to overwrite the marker shape with
+            #       a vector of the computed shapes??  then marker_z, etc will still work
+            # @assert !is3d(sp)
+            # shapefillcolor = plot_color(ann.shapefill.color, ann.shapefill.alpha)
+            # shapestrokecolor = plot_color(ann.shapestroke.color, ann.shapestroke.alpha)
+            # for i=1:length(y)
+            #     xi = cycle(x,i)
+            #     yi = cycle(y,i)
+            #     # @show anns.strs typeof(anns.strs)
+            #     str = cycle(anns.strs,i)
+
+                # if !isnull(anns.baseshape)
+                #     # get the width and height of the string (in mm)
+                #     sw, sh = text_size(str, anns.font.pointsize)
+                #
+                #     # how much to scale the base shape?
+                #     xscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sw), sp, :x)
+                #     yscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sh), sp, :y)
+                #
+                #     # get the shape for this x/y/str
+                #     shape = scale(get(anns.baseshape), xscale, yscale)
+                #     translate!(shape, xi, yi)
+                #
+                #     # draw the interior
+                #     gr_set_fill(shapefillcolor)
+                #     GR.fillarea(shape_coords(shape)...)
+                #
+                #     # draw the shapes
+                #     gr_set_line(anns.shapestroke.width, anns.shapestroke.style, shapestrokecolor)
+                #     GR.polyline(shape_coords(shape)...)
+                # end
+
+            # this is all we need to add the series_annotations text
+            anns = series[:series_annotations]
+            for (xi,yi,str) in EachAnn(anns, x, y)
+                gr_set_font(anns.font)
+                gr_text(GR.wctondc(xi, yi)..., str)
+            end
+        # end
+
         GR.restorestate()
     end
 
@@ -1021,55 +1094,14 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
     end
     for ann in sp[:annotations]
-        if isa(ann, SeriesAnnotations)
-            # TODO handle series annotations
-            # TODO: this should be moved with SeriesAnnotations... iterate like:
-            #           for (xi,yi,str,shape) in eachann(anns, sp) ... end
-            #       or maybe
-            #           anns.sp = sp
-            #           for (xi,yi,str,shape) in anns ... end
-            @assert !is3d(sp)
-            shapefillcolor = plot_color(ann.shapefill.color, ann.shapefill.alpha)
-            shapestrokecolor = plot_color(ann.shapestroke.color, ann.shapestroke.alpha)
-            for i=1:length(ann.y)
-                xi = cycle(ann.x,i)
-                yi = cycle(ann.y,i)
-                str = cycle(ann.strs,i)
-
-                if !isnull(ann.baseshape)
-                    # get the width and height of the string (in mm)
-                    sw, sh = text_size(str, ann.font.pointsize)
-
-                    # how much to scale the base shape?
-                    xscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sw), sp, :x)
-                    yscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sh), sp, :y)
-
-                    # get the shape for this x/y/str
-                    shape = scale(get(ann.baseshape), xscale, yscale)
-                    translate!(shape, xi, yi)
-
-                    # draw the interior
-                    gr_set_fill(shapefillcolor)
-                    GR.fillarea(shape_coords(shape)...)
-
-                    # draw the shapes
-                    gr_set_line(ann.shapestroke.width, ann.shapestroke.style, shapestrokecolor)
-                    GR.polyline(shape_coords(shape)...)
-                end
-
-                gr_set_font(ann.font)
-                gr_text(GR.wctondc(xi, yi)..., str)
-            end
+        x, y, val = ann
+        x, y = if is3d(sp)
+            # GR.wc3towc(x, y, z)
         else
-            x, y, val = ann
-            x, y = if is3d(sp)
-                # GR.wc3towc(x, y, z)
-            else
-                GR.wctondc(x, y)
-            end
-            gr_set_font(val.font)
-            gr_text(x, y, val.str)
+            GR.wctondc(x, y)
         end
+        gr_set_font(val.font)
+        gr_text(x, y, val.str)
     end
     GR.restorestate()
 end

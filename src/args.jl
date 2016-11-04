@@ -194,7 +194,7 @@ const _series_defaults = KW(
     :match_dimensions  => false,     # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
                                      # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
     :subplot           => :auto,     # which subplot(s) does this series belong to?
-    :series_annotations => [],       # a list of annotations which apply to the coordinates of this series
+    :series_annotations => nothing,       # a list of annotations which apply to the coordinates of this series
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
                                      #     one logical series to be broken up (path and markers, for example)
     :hover              => nothing,  # text to display when hovering over the data points
@@ -440,7 +440,7 @@ add_aliases(:match_dimensions, :transpose, :transpose_z)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
 add_aliases(:title_location, :title_loc, :titleloc, :title_position, :title_pos, :titlepos, :titleposition, :title_align, :title_alignment)
-add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation)
+add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation, :text, :txt, :texts, :txts)
 add_aliases(:html_output_format, :format, :fmt, :html_format)
 add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
@@ -691,6 +691,11 @@ function preprocessArgs!(d::KW)
         processFillArg(d, arg)
     end
     delete!(d, :fill)
+
+    # handle series annotations
+    if haskey(d, :series_annotations)
+        d[:series_annotations] = series_annotations(wraptuple(d[:series_annotations])...)
+    end
 
   # convert into strokes and brushes
 

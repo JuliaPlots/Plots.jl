@@ -333,17 +333,17 @@ function _prepare_annotations(sp::Subplot, d::KW)
     # strip out series annotations (those which are based on series x/y coords)
     # and add them to the subplot attr
     sp_anns = annotations(sp[:annotations])
-    series_anns = annotations(pop!(d, :series_annotations, []))
-    if isa(series_anns, SeriesAnnotations)
-        series_anns.x = d[:x]
-        series_anns.y = d[:y]
-    elseif length(series_anns) > 0
-        x, y = d[:x], d[:y]
-        nx, ny, na = map(length, (x,y,series_anns))
-        n = max(nx, ny, na)
-        series_anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(series_anns[mod1(i,na)])) for i=1:n]
-    end
-    sp.attr[:annotations] = vcat(sp_anns, series_anns)
+    # series_anns = annotations(pop!(d, :series_annotations, []))
+    # if isa(series_anns, SeriesAnnotations)
+    #     series_anns.x = d[:x]
+    #     series_anns.y = d[:y]
+    # elseif length(series_anns) > 0
+    #     x, y = d[:x], d[:y]
+    #     nx, ny, na = map(length, (x,y,series_anns))
+    #     n = max(nx, ny, na)
+    #     series_anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(series_anns[mod1(i,na)])) for i=1:n]
+    # end
+    # sp.attr[:annotations] = vcat(sp_anns, series_anns)
 end
 
 function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)

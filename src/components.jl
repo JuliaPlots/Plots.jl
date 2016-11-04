@@ -23,6 +23,7 @@ immutable Shape
     # end
 end
 Shape(verts::AVec) = Shape(unzip(verts)...)
+Shape(s::Shape) = deepcopy(s)
 
 get_xs(shape::Shape) = shape.x
 get_ys(shape::Shape) = shape.y
@@ -142,6 +143,8 @@ const _shapes = KW(
 for n in [4,5,6,7,8]
   _shapes[Symbol("star$n")] = makestar(n)
 end
+
+Shape(k::Symbol) = deepcopy(_shapes[k])
 
 # -----------------------------------------------------------------------
 
@@ -307,7 +310,7 @@ function text(str, args...)
   PlotText(string(str), font(args...))
 end
 
-
+Base.length(t::PlotText) = length(t.str)
 
 # -----------------------------------------------------------------------
 
@@ -386,44 +389,104 @@ end
 type SeriesAnnotations
     strs::AbstractVector  # the labels/names
     font::Font
-    baseshape::Nullable{Shape}
-    shapefill::Brush
-    shapestroke::Stroke
-    x
-    y
+    baseshape::Nullable
+    # shapefill::Brush
+    # shapestroke::Stroke
+    # x
+    # y
 end
 function series_annotations(strs::AbstractVector, args...)
     fnt = font()
-    shp = Nullable{Shape}()
-    br = brush(:steelblue)
-    stk = stroke()
-    α = nothing
+    shp = Nullable{Any}()
+    scalefactor = 1
+    # br = brush(:steelblue)
+    # stk = stroke()
+    # α = nothing
     for arg in args
-        if isa(arg, Shape)
-            shp = Nullable{Shape}(arg)
-        elseif isa(arg, Brush)
-            brush = arg
-        elseif isa(arg, Stroke)
-            stk = arg
+        if isa(arg, Shape) || (isa(arg, AbstractVector) && eltype(arg) == Shape)
+            shp = Nullable(arg)
+        # elseif isa(arg, Brush)
+        #     brush = arg
+        # elseif isa(arg, Stroke)
+        #     stk = arg
         elseif isa(arg, Font)
             fnt = arg
         elseif isa(arg, Symbol) && haskey(_shapes, arg)
             shp = _shapes[arg]
-        elseif allAlphas(arg)
-            α = arg
+        # elseif allAlphas(arg)
+        #     α = arg
+        elseif isa(arg, Number)
+            scalefactor = arg
         else
             warn("Unused SeriesAnnotations arg: $arg ($(typeof(arg)))")
         end
     end
-    if α != nothing
-        br.alpha = α
-        stk.alpha = α
+    if scalefactor != 1
+        for s in get(shp)
+            scale!(s, scalefactor, scalefactor, (0,0))
+        end
     end
+    # if α != nothing
+    #     br.alpha = α
+    #     stk.alpha = α
+    # end
     # note: x/y coords are added later
-    SeriesAnnotations(strs, fnt, shp, br, stk, nothing, nothing)
+    SeriesAnnotations(strs, fnt, shp)
+end
+series_annotations(anns::SeriesAnnotations) = anns
+series_annotations(::Void) = nothing
+
+function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
+    anns = series[:series_annotations]
+    if anns != nothing && !isnull(anns.baseshape)
+        # x = series[:x]
+        # y = series[:y]
+        # we should use baseshape to overwrite the markershape attribute
+        # with a list of custom shapes for each
+        msize = Float64[]
+        shapes = Shape[begin
+            # xi = cycle(x,i)
+            # yi = cycle(y,i)
+            str = cycle(anns.strs,i)
+
+            # get the width and height of the string (in mm)
+            sw, sh = text_size(str, anns.font.pointsize)
+
+            # how much to scale the base shape?
+            # note: it's a rough assumption that the shape fills the unit box [-1,-1,1,1],
+            #       so we scale the length-2 shape by 1/2 the total length
+            # if scaletype == :pixels
+            scalar = (backend() == PyPlotBackend() ? 1.7 : 1.0)
+                xscale = 0.5to_pixels(sw) * scalar
+                yscale = 0.55to_pixels(sh) * scalar
+            # else
+            #     sp = series[:subplot]
+            #     xscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sw), sp, :x)
+            #     yscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sh), sp, :y)
+            # end
+            maxscale = max(xscale, yscale)
+            push!(msize, maxscale)
+
+            # get the shape for this x/y/str
+            # @show get(anns.baseshape) xscale,yscale
+            baseshape = cycle(get(anns.baseshape),i)
+            shape = scale(baseshape, xscale/maxscale, yscale/maxscale, (0,0))
+            # @show shape
+        end for i=1:length(anns.strs)]
+        series[:markershape] = shapes
+        series[:markersize] = msize #1 # the scaling is handled in the shapes
+    end
+    return
 end
 
-
+type EachAnn
+    anns
+    x
+    y
+end
+Base.start(ea::EachAnn) = 1
+Base.done(ea::EachAnn, i) = ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
+Base.next(ea::EachAnn, i) = ((cycle(ea.x,i), cycle(ea.y,i), cycle(ea.anns.strs,i)), i+1)
 
 annotations(::Void) = []
 annotations(anns::AVec) = anns

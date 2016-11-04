@@ -111,6 +111,7 @@ function resolve_mixed(mix::MixedMeasures, sp::Subplot, letter::Symbol)
     if mix.len != 0mm
         f = (letter == :x ? width : height)
         totlen = f(plotarea(sp))
+        @show totlen
         pct += mix.len / totlen
     end
     if pct != 0
