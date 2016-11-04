@@ -335,18 +335,8 @@ function _prepare_annotations(sp::Subplot, d::KW)
     sp_anns = annotations(sp[:annotations])
     series_anns = annotations(pop!(d, :series_annotations, []))
     if isa(series_anns, SeriesAnnotations)
-        # x, y = d[:x], d[:y]
-        # nx, ny, na = map(length, (x,y,series_anns.strs))
-        # n = max(nx, ny, na)
-        # for i=1:n
-        #     str = cycle(series_anns.strs,i)
-        #     xi = cycle(x,i)
-        #     yi = cycle(y,i)
-        #     mwidth, mheight = text_size(str, series_anns.font.pointsize)
-        #     xsz = measure_to_data(sp[:xaxis], mwidth)
-        #     ysz = measure_to_data(sp[:yaxis], mheight)
-        error()
-
+        series_anns.x = d[:x]
+        series_anns.y = d[:y]
     elseif length(series_anns) > 0
         x, y = d[:x], d[:y]
         nx, ny, na = map(length, (x,y,series_anns))
@@ -354,8 +344,6 @@ function _prepare_annotations(sp::Subplot, d::KW)
         series_anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(series_anns[mod1(i,na)])) for i=1:n]
     end
     sp.attr[:annotations] = vcat(sp_anns, series_anns)
-    # sp[:series_annotations] = series_anns
-    # sp[:annotations] = sp_anns
 end
 
 function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)

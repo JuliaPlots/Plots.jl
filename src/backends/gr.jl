@@ -549,16 +549,16 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # set the scale flags and window
     xmin, xmax, ymin, ymax = data_lims
-    scale = 0
+    scaleop = 0
     xtick, ytick = 1, 1
     if xmax > xmin && ymax > ymin
         # NOTE: for log axes, the major_x and major_y - if non-zero (omit labels) - control the minor grid lines (1 = draw 9 minor grid lines, 2 = no minor grid lines)
         # NOTE: for log axes, the x_tick and y_tick - if non-zero (omit axes) - only affect the output appearance (1 = nomal, 2 = scientiic notation)
-        xaxis[:scale] == :log10 && (scale |= GR.OPTION_X_LOG)
-        yaxis[:scale] == :log10 && (scale |= GR.OPTION_Y_LOG)
-        xaxis[:flip]            && (scale |= GR.OPTION_FLIP_X)
-        yaxis[:flip]            && (scale |= GR.OPTION_FLIP_Y)
-        if scale & GR.OPTION_X_LOG == 0
+        xaxis[:scale] == :log10 && (scaleop |= GR.OPTION_X_LOG)
+        yaxis[:scale] == :log10 && (scaleop |= GR.OPTION_Y_LOG)
+        xaxis[:flip]            && (scaleop |= GR.OPTION_FLIP_X)
+        yaxis[:flip]            && (scaleop |= GR.OPTION_FLIP_Y)
+        if scaleop & GR.OPTION_X_LOG == 0
             majorx = 1 #5
             xtick = GR.tick(xmin, xmax) / majorx
         else
@@ -566,7 +566,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             xtick = 2  # scientific notation
             majorx = 2 # no minor grid lines
         end
-        if scale & GR.OPTION_Y_LOG == 0
+        if scaleop & GR.OPTION_Y_LOG == 0
             majory = 1 #5
             ytick = GR.tick(ymin, ymax) / majory
         else
@@ -577,7 +577,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # NOTE: setwindow sets the "data coordinate" limits of the current "viewport"
         GR.setwindow(xmin, xmax, ymin, ymax)
-        GR.setscale(scale)
+        GR.setscale(scaleop)
     end
 
     # draw the axes
@@ -1021,8 +1021,45 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
     end
     for ann in sp[:annotations]
-        if isa(ann, SeriesAnnotation)
+        if isa(ann, SeriesAnnotations)
             # TODO handle series annotations
+            # TODO: this should be moved with SeriesAnnotations... iterate like:
+            #           for (xi,yi,str,shape) in eachann(anns, sp) ... end
+            #       or maybe
+            #           anns.sp = sp
+            #           for (xi,yi,str,shape) in anns ... end
+            @assert !is3d(sp)
+            shapefillcolor = plot_color(ann.shapefill.color, ann.shapefill.alpha)
+            shapestrokecolor = plot_color(ann.shapestroke.color, ann.shapestroke.alpha)
+            for i=1:length(ann.y)
+                xi = cycle(ann.x,i)
+                yi = cycle(ann.y,i)
+                str = cycle(ann.strs,i)
+
+                if !isnull(ann.baseshape)
+                    # get the width and height of the string (in mm)
+                    sw, sh = text_size(str, ann.font.pointsize)
+
+                    # how much to scale the base shape?
+                    xscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sw), sp, :x)
+                    yscale = 0.5 * resolve_mixed(MixedMeasures(0, 0, sh), sp, :y)
+
+                    # get the shape for this x/y/str
+                    shape = scale(get(ann.baseshape), xscale, yscale)
+                    translate!(shape, xi, yi)
+
+                    # draw the interior
+                    gr_set_fill(shapefillcolor)
+                    GR.fillarea(shape_coords(shape)...)
+
+                    # draw the shapes
+                    gr_set_line(ann.shapestroke.width, ann.shapestroke.style, shapestrokecolor)
+                    GR.polyline(shape_coords(shape)...)
+                end
+
+                gr_set_font(ann.font)
+                gr_text(GR.wctondc(xi, yi)..., str)
+            end
         else
             x, y, val = ann
             x, y = if is3d(sp)

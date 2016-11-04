@@ -72,13 +72,13 @@ function makestar(n; offset = -0.5, radius = 1.0)
     z2 = z1 + π / (n)
     outercircle = partialcircle(z1, z1 + 2π, n+1, radius)
     innercircle = partialcircle(z2, z2 + 2π, n+1, 0.4radius)
-    Shape(weave(outercircle, innercircle)[1:end-2])
+    Shape(weave(outercircle, innercircle))
 end
 
 "create a shape by picking points around the unit circle.  `n` is the number of point/sides, `offset` is the starting angle"
 function makeshape(n; offset = -0.5, radius = 1.0)
     z = offset * π
-    Shape(partialcircle(z, z + 2π, n+1, radius)[1:end-1])
+    Shape(partialcircle(z, z + 2π, n+1, radius))
 end
 
 
@@ -88,7 +88,7 @@ function makecross(; offset = -0.5, radius = 1.0)
     outercircle = partialcircle(z1, z1 + 2π, 9, radius)
     innercircle = partialcircle(z2, z2 + 2π, 5, 0.5radius)
     Shape(weave(outercircle, innercircle,
-                ordering=Vector[outercircle,innercircle,outercircle])[1:end-2])
+                ordering=Vector[outercircle,innercircle,outercircle]))
 end
 
 
@@ -177,7 +177,7 @@ end
 
 function Base.scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
     shapecopy = deepcopy(shape)
-    scale!(shape, x, y, c)
+    scale!(shapecopy, x, y, c)
 end
 
 function translate!(shape::Shape, x::Real, y::Real = x)
@@ -191,7 +191,7 @@ end
 
 function translate(shape::Shape, x::Real, y::Real = x)
     shapecopy = deepcopy(shape)
-    translate!(shape, x, y)
+    translate!(shapecopy, x, y)
 end
 
 function rotate_x(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real)
@@ -321,9 +321,9 @@ immutable Stroke
 end
 
 function stroke(args...; alpha = nothing)
-  width = nothing
-  color = nothing
-  style = nothing
+  width = 1
+  color = :black
+  style = :solid
 
   for arg in args
     T = typeof(arg)
@@ -357,8 +357,8 @@ immutable Brush
 end
 
 function brush(args...; alpha = nothing)
-  size = nothing
-  color = nothing
+  size = 1
+  color = :black
 
   for arg in args
     T = typeof(arg)
@@ -386,16 +386,18 @@ end
 type SeriesAnnotations
     strs::AbstractVector  # the labels/names
     font::Font
-    shape::Nullable{Shape}
+    baseshape::Nullable{Shape}
     shapefill::Brush
     shapestroke::Stroke
-    bboxes::Vector{BBox}
+    x
+    y
 end
-function SeriesAnnotations(strs::AbstractVector, args...)
+function series_annotations(strs::AbstractVector, args...)
     fnt = font()
     shp = Nullable{Shape}()
     br = brush(:steelblue)
-    stk = stroke(:black, 1)
+    stk = stroke()
+    α = nothing
     for arg in args
         if isa(arg, Shape)
             shp = Nullable{Shape}(arg)
@@ -406,13 +408,19 @@ function SeriesAnnotations(strs::AbstractVector, args...)
         elseif isa(arg, Font)
             fnt = arg
         elseif isa(arg, Symbol) && haskey(_shapes, arg)
-            shape = _shapes[arg]
+            shp = _shapes[arg]
+        elseif allAlphas(arg)
+            α = arg
         else
             warn("Unused SeriesAnnotations arg: $arg ($(typeof(arg)))")
         end
     end
+    if α != nothing
+        br.alpha = α
+        stk.alpha = α
+    end
     # note: x/y coords are added later
-    SeriesAnnotations(strs, fnt, shp, br, stk, BBox[])
+    SeriesAnnotations(strs, fnt, shp, br, stk, nothing, nothing)
 end
 
 

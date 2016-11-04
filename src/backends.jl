@@ -55,8 +55,9 @@ guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefont].pointsiz
 function text_size(lablen::Int, sz::Number, rot::Number = 0)
     # we need to compute the size of the ticks generically
     # this means computing the bounding box and then getting the width/height
-    ptsz = sz * pt
-    width = 0.8lablen * ptsz
+    # note:
+    ptsz = 1.5sz * pt
+    width = 0.5lablen * ptsz
 
     # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
     height = abs(sind(rot)) * width + abs(cosd(rot)) * ptsz

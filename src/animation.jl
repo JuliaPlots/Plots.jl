@@ -41,7 +41,7 @@ end
 
 # most things will implement this
 function animate(obj, fn = giffn(); every=1, fps=20, loop=0, kw...)
-    animate(FrameIterator(obj, every, kw); fps=fps, loop=loop)
+    animate(FrameIterator(obj, every, kw), fn; fps=fps, loop=loop)
 end
 
 # -----------------------------------------------
