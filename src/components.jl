@@ -604,16 +604,16 @@ end
 # -----------------------------------------------------------------------
 
 type BezierCurve{T <: FixedSizeArrays.Vec}
-  control_points::Vector{T}
+    control_points::Vector{T}
 end
 
 function (bc::BezierCurve)(t::Real)
-  p = zero(P2)
-  n = length(bc.control_points)-1
-  for i in 0:n
-      p += bc.control_points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
-  end
-  p
+    p = zero(P2)
+    n = length(bc.control_points)-1
+    for i in 0:n
+        p += bc.control_points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
+    end
+    p
 end
 
 Base.mean(x::Real, y::Real) = 0.5*(x+y)
@@ -623,35 +623,76 @@ curve_points(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, li
 
 # build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
 # may create a loop if necessary.  Assumes the view is [0,1]
-function directed_curve(p::P2, q::P2; xview = 0:1, yview = 0:1)
-mn = mean(p, q)
-diff = q - p
+function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol = :bottom)
+    if root in (:left,:right)
+        # flip x/y to simplify
+        x1,x2,y1,y2,xview,yview = y1,y2,x1,x2,yview,xview
+    end
+    x = [x1, x1]
+    y = [y1]
 
-minx, maxx = minimum(xview), maximum(xview)
-miny, maxy = minimum(yview), maximum(yview)
-diffpct = P2(diff[1] / (maxx - minx),
-             diff[2] / (maxy - miny))
+    diffx = 0.5(x1+x2)
+    diffy = 0.5(y1+y2)
+    minx, maxx = extrema(xview)
+    miny, maxy = extrema(yview)
+    dist = sqrt((x2-x1)^2+(y2-y1)^2)
 
-# these points give the initial/final "rise"
-# vertical_offset = P2(0, (maxy - miny) * max(0.03, min(abs(0.5diffpct[2]), 1.0)))
-vertical_offset = P2(0, max(0.15, 0.5norm(diff)))
-upper_control = p + vertical_offset
-lower_control = q - vertical_offset
+    # these points give the initial/final "rise"
+    y_offset = max(0.1*(maxy-miny), 0.7dist)
+    # y_offset = 0.8dist
+    flip = root in (:top,:right)
+    if flip
+        # got the other direction
+        y_offset *= -1
+    end
+    push!(y, y1 + y_offset)
 
-# try to figure out when to loop around vs just connecting straight
-# TODO: choose loop direction based on sign of p[1]??
-# x_close_together = abs(diffpct[1]) <= 0.05
-p_is_higher = diff[2] <= 0
-inside_control_points = if p_is_higher
-  # add curve points which will create a loop
-  sgn = mn[1] < 0.5 * (maxx + minx) ? -1 : 1
-  inside_offset = P2(0.3 * (maxx - minx), 0)
-  additional_offset = P2(sgn * diff[1], 0)  # make it even loopier
-  [upper_control + sgn * (inside_offset + max(0,  additional_offset)),
-   lower_control + sgn * (inside_offset + max(0, -additional_offset))]
-else
-  []
+    # try to figure out when to loop around vs just connecting straight
+    need_loop = (flip && y1 <= y2) || (!flip && y1 >= y2)
+    if need_loop
+        # add curve points which will create a loop
+        x_offset = 0.3 * (maxx - minx)
+        append!(x, [x1 + x_offset, x2 + x_offset])
+        append!(y, [y1 + y_offset, y2 - y_offset])
+    end
+
+    append!(x, [x2, x2])
+    append!(y, [y2 - y_offset, y2])
+    if root in (:left,:right)
+        # flip x/y to simplify
+        x,y = y,x
+    end
+    x, y
 end
 
-BezierCurve([p, upper_control, inside_control_points..., lower_control, q])
+function extrema_plus_buffer(v, buffmult = 0.2)
+    vmin,vmax = extrema(v)
+    vdiff = vmax-vmin
+    buffer = vdiff * buffmult
+    vmin - buffer, vmax + buffer
+end
+
+function shorten_segment(x1, y1, x2, y2, shorten)
+    xshort = shorten * (x2-x1)
+    yshort = shorten * (y2-y1)
+    x1+xshort, y1+yshort, x2-xshort, y2-yshort
+end
+
+# we want to randomly pick a point to be the center control point of a bezier
+# curve, which is both equidistant between the endpoints and normally distributed
+# around the midpoint
+function random_control_point(xi, xj, yi, yj, curvature_scalar)
+    xmid = 0.5 * (xi+xj)
+    ymid = 0.5 * (yi+yj)
+
+    # get the angle of y relative to x
+    theta = atan((yj-yi) / (xj-xi)) + 0.5pi
+
+    # calc random shift relative to dist between x and y
+    dist = sqrt((xj-xi)^2 + (yj-yi)^2)
+    dist_from_mid = curvature_scalar * (rand()-0.5) * dist
+
+    # now we have polar coords, we can compute the position, adding to the midpoint
+    (xmid + dist_from_mid * cos(theta),
+     ymid + dist_from_mid * sin(theta))
 end
