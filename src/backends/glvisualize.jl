@@ -108,18 +108,23 @@ function empty_screen!(screen)
     end
     nothing
 end
+function poll_reactive()
+    # run_till_now blocks when message queue is empty!
+    Base.n_avail(Reactive._messages) > 0 && Reactive.run_till_now()
+end
 function create_window(plt::Plot{GLVisualizeBackend}, visible)
     # init a screen
     if isempty(GLVisualize.get_screens())
-        screen = GLVisualize.glscreen(resolution = plt[:size], visible = visible)
+        screen = GLVisualize.glscreen("Plots.jl", resolution = plt[:size], visible = visible)
         Reactive.stop()
+
         @async begin
             while isopen(screen)
                 tic()
                 GLWindow.pollevents()
                 if Base.n_avail(Reactive._messages) > 0
-                    Reactive.run_till_now()
-                    Base.n_avail(Reactive._messages) > 0 && Reactive.run_till_now() # two times for secondary signals
+                    poll_reactive()
+                    poll_reactive() # two times for secondary signals
                     GLWindow.render_frame(screen)
                     GLWindow.swapbuffers(screen)
                 end
@@ -131,6 +136,8 @@ function create_window(plt::Plot{GLVisualizeBackend}, visible)
                     diff -= toq()
                 end
             end
+            # empty message queue
+            poll_reactive()
             GLWindow.destroy!(screen)
         end
     else
@@ -168,7 +175,12 @@ function gl_marker(shape)
     shape
 end
 function gl_marker(shape::Shape)
-    points = Point2f0[Vec{2,Float32}(p)*10f0 for p in zip(shape.x, shape.y)]
+    points = Point2f0[Vec{2,Float32}(p) for p in zip(shape.x, shape.y)]
+    bb = GeometryTypes.AABB(points)
+    mini, maxi = minimum(bb), maximum(bb)
+    w3 = maxi-mini
+    origin, width = Point2f0(mini[1], mini[2]), Point2f0(w3[1], w3[2])
+    map!(p -> ((p - origin) ./ width) - 0.5f0, points) # normalize and center
     GeometryTypes.GLNormalMesh(points)
 end
 # create a marker/shape type
@@ -417,13 +429,13 @@ function hover(to_hover, to_display, window)
         window,
         hidden = map(mh-> !(mh.id == to_hover.id), mh),
         area = area,
-        stroke = (2f0/100f0, RGBA(0f0, 0f0, 0f0, 0.8f0))
+        stroke = (2f0, RGBA(0f0, 0f0, 0f0, 0.8f0))
     )
     cam = get!(popup.cameras, :perspective) do
         GLAbstraction.PerspectiveCamera(
             popup.inputs, Vec3f0(3), Vec3f0(0),
-            keep=Signal(false),
-            theta= Signal(Vec3f0(0)), trans= Signal(Vec3f0(0))
+            keep = Signal(false),
+            theta = Signal(Vec3f0(0)), trans= Signal(Vec3f0(0))
         )
     end
 
@@ -881,7 +893,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _display(plt::Plot{GLVisualizeBackend}, visible=true)
+function _display(plt::Plot{GLVisualizeBackend}, visible = true)
     screen = create_window(plt, visible)
     sw, sh = plt[:size]
     sw, sh = sw*px, sh*px
@@ -1135,7 +1147,7 @@ function gl_scatter(points, kw_args)
             kw_args[:scale] = GLAbstraction.const_lift(kw_args[:model], kw_args[:scale], p) do m, sc, p
                 s  = Vec3f0(m[1,1], m[2,2], m[3,3])
                 ps = Vec3f0(p[1,1], p[2,2], p[3,3])
-                r  = 1f0./(s.*ps)
+                r  = sc./(s.*ps)
                 r
             end
         end
@@ -1355,11 +1367,10 @@ function generate_legend(sp, screen, model_m)
             x,y = round(Int, p[1])+30, round(Int, p[2]-h)-30
             GeometryTypes.SimpleRectangle(x, y, w, h)
         end
-        px_scale = minimum(GeometryTypes.widths(Reactive.value(area)))
         sscren = GLWindow.Screen(
-            screen, area=area,
-            color=sp[:background_color_legend],
-            stroke=(2f0/px_scale, RGBA{Float32}(0.3,0.3,0.3,0.9))
+            screen, area = area,
+            color = sp[:background_color_legend],
+            stroke = (2f0, RGBA(0.3, 0.3, 0.3, 0.9))
         )
         GLAbstraction.translate!(list, Vec3f0(10,10,0))
         GLVisualize._view(list, sscren, camera=:fixed_pixel)
