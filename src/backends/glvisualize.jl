@@ -119,6 +119,7 @@ function create_window(plt::Plot{GLVisualizeBackend}, visible)
                 GLWindow.pollevents()
                 if Base.n_avail(Reactive._messages) > 0
                     Reactive.run_till_now()
+                    Base.n_avail(Reactive._messages) > 0 && Reactive.run_till_now() # two times for secondary signals
                     GLWindow.render_frame(screen)
                     GLWindow.swapbuffers(screen)
                 end
@@ -413,8 +414,10 @@ function hover(to_hover, to_display, window)
     end
     mh = GLWindow.mouse2id(window)
     popup = GLWindow.Screen(
-        window, hidden=true, area=area,
-        stroke=(2f0/100f0, RGBA(0f0, 0f0, 0f0, 0.8f0))
+        window,
+        hidden = map(mh-> !(mh.id == to_hover.id), mh),
+        area = area,
+        stroke = (2f0/100f0, RGBA(0f0, 0f0, 0f0, 0.8f0))
     )
     cam = get!(popup.cameras, :perspective) do
         GLAbstraction.PerspectiveCamera(
@@ -423,9 +426,6 @@ function hover(to_hover, to_display, window)
             theta= Signal(Vec3f0(0)), trans= Signal(Vec3f0(0))
         )
     end
-    Reactive.preserve(map(mh) do mh
-        popup.hidden = !(mh.id == to_hover.id)
-    end)
 
     map(enumerate(to_display)) do id
         i,d = id
@@ -936,7 +936,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible=true)
             GLVisualize._view(axis, sp_screen, camera=:perspective)
             push!(cam.projectiontype, GLVisualize.PERSPECTIVE)
         end
-        for series in  Plots.series_list(sp)
+        for series in Plots.series_list(sp)
 
             d = series.d
             st = d[:seriestype]; kw_args = KW() # exctract kw
