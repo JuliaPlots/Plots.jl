@@ -638,7 +638,7 @@ function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol =
     dist = sqrt((x2-x1)^2+(y2-y1)^2)
 
     # these points give the initial/final "rise"
-    y_offset = max(0.1*(maxy-miny), 0.7dist)
+    y_offset = max(0.03*(maxy-miny), 0.7dist)
     # y_offset = 0.8dist
     flip = root in (:top,:right)
     if flip
@@ -651,7 +651,7 @@ function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol =
     need_loop = (flip && y1 <= y2) || (!flip && y1 >= y2)
     if need_loop
         # add curve points which will create a loop
-        x_offset = 0.3 * (maxx - minx)
+        x_offset = 0.3 * (maxx - minx) * (rand(Bool) ? 1 : -1)
         append!(x, [x1 + x_offset, x2 + x_offset])
         append!(y, [y1 + y_offset, y2 - y_offset])
     end
