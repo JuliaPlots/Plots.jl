@@ -460,7 +460,7 @@ ok(tup::Tuple) = ok(tup...)
 # compute one side of a fill range from a ribbon
 function make_fillrange_side(y, rib)
     frs = zeros(length(y))
-    for (i, (yi, ri)) in enumerate(zip(y, cycle(rib)))
+    for (i, (yi, ri)) in enumerate(zip(y, Base.cycle(rib)))
         frs[i] = yi + ri
     end
     frs
