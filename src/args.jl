@@ -398,7 +398,7 @@ add_aliases(:foreground_color_guide, :fg_guide, :fgguide, :fgcolor_guide, :fg_co
 # alphas
 add_aliases(:seriesalpha, :alpha, :α, :opacity)
 add_aliases(:linealpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
-add_aliases(:makeralpha, :ma, :malpha, :mα, :makeropacity, :mopacity)
+add_aliases(:markeralpha, :ma, :malpha, :mα, :markeropacity, :mopacity)
 add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
 
