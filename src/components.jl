@@ -111,6 +111,8 @@ const _shape_keys = Symbol[
   :xcross,
   :utriangle,
   :dtriangle,
+  :rtriangle,
+  :ltriangle,
   :pentagon,
   :heptagon,
   :octagon,
@@ -128,8 +130,10 @@ const _shapes = KW(
     :circle    => makeshape(20),
     :rect       => makeshape(4, offset=-0.25),
     :diamond    => makeshape(4),
-    :utriangle  => makeshape(3),
-    :dtriangle  => makeshape(3, offset=0.5),
+    :utriangle  => makeshape(3, offset=0.5),
+    :dtriangle  => makeshape(3, offset=-0.5),
+    :rtriangle  => makeshape(3, offset=0.0),
+    :ltriangle  => makeshape(3, offset=1.0),
     :pentagon   => makeshape(5),
     :hexagon    => makeshape(6),
     :heptagon   => makeshape(7),
@@ -631,8 +635,8 @@ function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol =
     x = [x1, x1]
     y = [y1]
 
-    diffx = 0.5(x1+x2)
-    diffy = 0.5(y1+y2)
+    # meanx = 0.5(x1+x2)
+    # meany = 0.5(y1+y2)
     minx, maxx = extrema(xview)
     miny, maxy = extrema(yview)
     dist = sqrt((x2-x1)^2+(y2-y1)^2)
@@ -650,9 +654,16 @@ function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol =
     # try to figure out when to loop around vs just connecting straight
     need_loop = (flip && y1 <= y2) || (!flip && y1 >= y2)
     if need_loop
-        # add curve points which will create a loop
-        x_offset = 0.3 * (maxx - minx) * (rand(Bool) ? 1 : -1)
-        append!(x, [x1 + x_offset, x2 + x_offset])
+        if abs(x2-x1) > 0.1 * (maxx - minx)
+            # go between
+            sgn = x2 > x1 ? 1 : -1
+            x_offset = 0.5 * abs(x2-x1)
+            append!(x, [x1 + sgn * x_offset, x2 - sgn * x_offset])
+        else
+            # add curve points which will create a loop
+            x_offset = 0.3 * (maxx - minx) * (rand(Bool) ? 1 : -1)
+            append!(x, [x1 + x_offset, x2 + x_offset])
+        end
         append!(y, [y1 + y_offset, y2 - y_offset])
     end
 
