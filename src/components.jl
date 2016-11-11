@@ -398,7 +398,7 @@ end
 function series_annotations(strs::AbstractVector, args...)
     fnt = font()
     shp = Nullable{Any}()
-    scalefactor = 1
+    # scalefactor = 1
     for arg in args
         if isa(arg, Shape) || (isa(arg, AbstractVector) && eltype(arg) == Shape)
             shp = Nullable(arg)
@@ -406,17 +406,17 @@ function series_annotations(strs::AbstractVector, args...)
             fnt = arg
         elseif isa(arg, Symbol) && haskey(_shapes, arg)
             shp = _shapes[arg]
-        elseif isa(arg, Number)
-            scalefactor = arg
+        # elseif isa(arg, Number)
+        #     scalefactor = arg
         else
             warn("Unused SeriesAnnotations arg: $arg ($(typeof(arg)))")
         end
     end
-    if scalefactor != 1
-        for s in get(shp)
-            scale!(s, scalefactor, scalefactor, (0,0))
-        end
-    end
+    # if scalefactor != 1
+    #     for s in get(shp)
+    #         scale!(s, scalefactor, scalefactor, (0,0))
+    #     end
+    # end
     SeriesAnnotations(strs, fnt, shp)
 end
 series_annotations(anns::SeriesAnnotations) = anns
@@ -424,6 +424,8 @@ series_annotations(::Void) = nothing
 
 function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     anns = series[:series_annotations]
+    ms = series[:markersize]
+    msw,msh = is_2tuple(ms) ? ms : (ms,ms)
     if anns != nothing && !isnull(anns.baseshape)
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
@@ -446,7 +448,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
             baseshape = cycle(get(anns.baseshape),i)
-            shape = scale(baseshape, xscale/maxscale, yscale/maxscale, (0,0))
+            shape = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
         end for i=1:length(anns.strs)]
         series[:markershape] = shapes
         series[:markersize] = msize
