@@ -394,11 +394,12 @@ type SeriesAnnotations
     strs::AbstractVector  # the labels/names
     font::Font
     baseshape::Nullable
+    scalefactor::Tuple
 end
 function series_annotations(strs::AbstractVector, args...)
     fnt = font()
     shp = Nullable{Any}()
-    # scalefactor = 1
+    scalefactor = (1,1)
     for arg in args
         if isa(arg, Shape) || (isa(arg, AbstractVector) && eltype(arg) == Shape)
             shp = Nullable(arg)
@@ -406,8 +407,10 @@ function series_annotations(strs::AbstractVector, args...)
             fnt = arg
         elseif isa(arg, Symbol) && haskey(_shapes, arg)
             shp = _shapes[arg]
-        # elseif isa(arg, Number)
-        #     scalefactor = arg
+        elseif isa(arg, Number)
+            scalefactor = (arg,arg)
+        elseif is_2tuple(arg)
+            scalefactor = arg
         else
             warn("Unused SeriesAnnotations arg: $arg ($(typeof(arg)))")
         end
@@ -417,18 +420,28 @@ function series_annotations(strs::AbstractVector, args...)
     #         scale!(s, scalefactor, scalefactor, (0,0))
     #     end
     # end
-    SeriesAnnotations(strs, fnt, shp)
+    SeriesAnnotations(strs, fnt, shp, scalefactor)
 end
 series_annotations(anns::SeriesAnnotations) = anns
 series_annotations(::Void) = nothing
 
 function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     anns = series[:series_annotations]
-    ms = series[:markersize]
-    msw,msh = is_2tuple(ms) ? ms : (ms,ms)
+    # msw,msh = anns.scalefactor
+    # ms = series[:markersize]
+    # msw,msh = if isa(ms, AbstractVector)
+    #     1,1
+    # elseif is_2tuple(ms)
+    #     ms
+    # else
+    #     ms,ms
+    # end
+
+    # @show msw msh
     if anns != nothing && !isnull(anns.baseshape)
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
+        msw,msh = anns.scalefactor
         msize = Float64[]
         shapes = Shape[begin
             str = cycle(anns.strs,i)
@@ -441,7 +454,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             #       so we scale the length-2 shape by 1/2 the total length
             scalar = (backend() == PyPlotBackend() ? 1.7 : 1.0)
             xscale = 0.5to_pixels(sw) * scalar
-            yscale = 0.55to_pixels(sh) * scalar
+            yscale = 0.5to_pixels(sh) * scalar
 
             # we save the size of the larger direction to the markersize list,
             # and then re-scale a copy of baseshape to match the w/h ratio
