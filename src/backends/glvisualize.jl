@@ -122,7 +122,7 @@ function create_window(plt::Plot{GLVisualizeBackend}, visible)
         @async begin
             while isopen(screen)
                 tic()
-                GLWindow.pollevents()
+                GLWindow.poll_glfw()
                 if Base.n_avail(Reactive._messages) > 0
                     poll_reactive()
                     poll_reactive() # two times for secondary signals
@@ -436,7 +436,7 @@ function hover(to_hover, to_display, window)
         GLAbstraction.PerspectiveCamera(
             popup.inputs, Vec3f0(3), Vec3f0(0),
             keep = Signal(false),
-            theta = Signal(Vec3f0(0)), trans= Signal(Vec3f0(0))
+            theta = Signal(Vec3f0(0)), trans = Signal(Vec3f0(0))
         )
     end
 
@@ -453,12 +453,12 @@ function hover(to_hover, to_display, window)
                 else
                     cam.projectiontype.value = GLVisualize.ORTHOGRAPHIC
                 end
-                GLVisualize._view(robj, popup, camera=cam)
+                GLVisualize._view(robj, popup, camera = cam)
                 bb = GLAbstraction.boundingbox(robj).value
                 mini = minimum(bb)
                 w = GeometryTypes.widths(bb)
-                wborder = w*0.08f0 #8 percent border
-                bb = GeometryTypes.AABB{Float32}(mini-wborder, w+2f0*wborder)
+                wborder = w * 0.08f0 #8 percent border
+                bb = GeometryTypes.AABB{Float32}(mini - wborder, w + 2 * wborder)
                 GLAbstraction.center!(cam, bb)
             end
         end)
@@ -918,7 +918,6 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
     sw, sh = plt[:size]
     sw, sh = sw*px, sh*px
 
-    # TODO: use plt.subplots... plt.spmap can't be trusted
     for sp in plt.subplots
         _3d = Plots.is3d(sp)
         # camera = :perspective
@@ -1073,14 +1072,14 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
         if _3d
             GLAbstraction.center!(sp_screen)
         end
+        Reactive.post_empty()
+        yield()
     end
-    Reactive.post_empty()
-    yield()
 end
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})
     _display(plt, false)
-    GLWindow.pollevents()
+    GLWindow.poll_glfw()
     if Base.n_avail(Reactive._messages) > 0
         Reactive.run_till_now()
     end
@@ -1328,7 +1327,6 @@ function make_label(sp, series, i)
         points = Point2f0[(0, ho), (w, ho)]
         kw = KW()
         extract_linestyle(d, kw)
-        kw[:thickness] = 15f0
         append!(result, GL.gl_lines(points, kw))
         if d[:markershape] != :none
             push!(result, label_scatter(d, w, ho))
