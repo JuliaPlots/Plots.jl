@@ -98,8 +98,33 @@ end
 #     GLPlot.init()
 # end
 const _glplot_deletes = []
+
+function close_child_signals!(screen)
+    for child in screen.children
+        for (k, s) in child.inputs
+            empty!(s.actions)
+        end
+        for (k, cam) in child.cameras
+            for f in fieldnames(cam)
+                s = getfield(cam, f)
+                if isa(s, Signal)
+                    close(s, false)
+                end
+            end
+        end
+        empty!(child.cameras)
+        close_child_signals!(child)
+    end
+    return
+end
 function empty_screen!(screen)
     if isempty(_glplot_deletes)
+        close_child_signals!(screen)
+        empty!(screen)
+        empty!(screen.cameras)
+        for (k, s) in screen.inputs
+            empty!(s.actions)
+        end
         empty!(screen)
     else
         for del_signal in _glplot_deletes
@@ -113,38 +138,67 @@ function poll_reactive()
     # run_till_now blocks when message queue is empty!
     Base.n_avail(Reactive._messages) > 0 && Reactive.run_till_now()
 end
-function create_window(plt::Plot{GLVisualizeBackend}, visible)
-    # init a screen
-    if isempty(GLVisualize.get_screens())
-        screen = GLVisualize.glscreen("Plots.jl", resolution = plt[:size], visible = visible)
-        Reactive.stop()
 
-        @async begin
-            while isopen(screen)
-                tic()
-                GLWindow.poll_glfw()
-                if Base.n_avail(Reactive._messages) > 0
-                    poll_reactive()
-                    poll_reactive() # two times for secondary signals
-                    GLWindow.render_frame(screen)
-                    GLWindow.swapbuffers(screen)
-                end
-                yield()
-                diff = (1/60) - toq()
-                while diff >= 0.001
-                    tic()
-                    sleep(0.001) # sleep for the minimal amount of time
-                    diff -= toq()
-                end
-            end
-            # empty message queue
-            poll_reactive()
-            GLWindow.destroy!(screen)
-        end
-    else
-        screen = GLVisualize.current_screen()
-        empty_screen!(screen)
+
+function get_plot_screen(list::Vector, name, result = [])
+    for elem in list
+        get_plot_screen(elem, name, result)
     end
+    return result
+end
+function get_plot_screen(screen, name, result = [])
+    if screen.name == name
+        push!(result, screen)
+        return result
+    end
+    get_plot_screen(screen.children, name, result)
+end
+
+function create_window(plt::Plot{GLVisualizeBackend}, visible)
+    name = Symbol("Plots.jl")
+    screen = if isempty(GLVisualize.get_screens())
+        # create a fresh, new screen
+        parent = GLVisualize.glscreen(
+            "Plot",
+            resolution = plt[:size],
+            visible = visible
+        )
+        @async GLWindow.waiting_renderloop(parent)
+        screen = GLWindow.Screen(parent,
+            name = name,
+            area = map(identity, parent.area)
+        )
+        for (k, s) in screen.inputs # copy signals, so we can clean them up better
+            screen.inputs[k] = map(identity, s)
+        end
+        screen
+    else
+        plot_screens = get_plot_screen(GLVisualize.get_screens(), name)
+        if isempty(plot_screens)
+            parent = GLVisualize.current_screen()
+            empty!(parent)
+            inputs = Dict{Symbol, Any}()
+            for (k, s) in parent.inputs # copy signals, so we can clean them up better
+                inputs[k] = map(identity, s)
+            end
+            screen = GLWindow.Screen(parent,
+                name = name,
+                area = map(identity, parent.area)
+            )
+            for (k, s) in screen.inputs # copy signals, so we can clean them up better
+                screen.inputs[k] = map(identity, s)
+            end
+            screen
+        elseif length(plot_screens) == 1
+            plot_screens[1]
+        else
+            # okay this is silly! Lets see if we can. There is an ID we could use
+            # will not be fine for more than 255 screens though -.-.
+            error("multiple Plot screens. Please don't use any screen with the name Plots.jl")
+        end
+    end
+    # Since we own this window, we can do deep cleansing
+    empty_screen!(screen)
     plt.o = screen
     GLWindow.set_visibility!(screen, visible)
     resize!(screen, plt[:size]...)
@@ -161,6 +215,8 @@ const _gl_marker_map = KW(
     :xcross => '❌',
     :utriangle => '▲',
     :dtriangle => '▼',
+    :ltriangle => '◀',
+    :rtriangle => '▶',
     :pentagon => '⬟',
     :octagon => '⯄',
     :star4 => '✦',
@@ -937,12 +993,15 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
             theta = _3d ? nothing : Signal(Vec3f0(0)) # surpress rotation for 2D (nothing will get usual rotation controle)
             GLAbstraction.PerspectiveCamera(
                 sp_screen.inputs, Vec3f0(3), Vec3f0(0),
-                keep=inside, theta=theta
+                keep = inside, theta = theta
             )
         end
 
         rel_plotarea = Plots.bbox_to_pcts(plotarea(sp), sw, sh)
-        model_m = map(Plots.to_modelmatrix, screen.area, sub_area, Signal(rel_plotarea), Signal(sp))
+        model_m = map(Plots.to_modelmatrix,
+            screen.area, sub_area,
+            Signal(rel_plotarea), Signal(sp)
+        )
         for ann in sp[:annotations]
             x, y, plot_text = ann
             txt_args = Dict{Symbol, Any}(:model => eye(GeometryTypes.Mat4f0))
@@ -1305,9 +1364,12 @@ function label_scatter(d, w, ho)
     if isa(p, GLNormalMesh)
         bb = GeometryTypes.AABB{Float32}(GeometryTypes.vertices(p))
         bbw = GeometryTypes.widths(bb)
+        if isapprox(bbw[3], 0)
+            bbw = Vec3f0(bbw[1], bbw[2], 1)
+        end
         mini = minimum(bb)
         m = GLAbstraction.translationmatrix(-mini)
-        m *= GLAbstraction.scalematrix(1f0./bbw)
+        m *= GLAbstraction.scalematrix(1 ./ bbw)
         kw[:primitive] = m * p
         kw[:scale] = Vec3f0(w/2)
         delete!(kw, :offset)
