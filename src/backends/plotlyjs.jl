@@ -63,7 +63,7 @@ function _series_updated(plt::Plot{PlotlyJSBackend}, series::Series)
     kw = KW(xsym => (series.d[:x],), ysym => (series.d[:y],))
     z = series[:z]
     if z != nothing
-        kw[:z] = (transpose_z(series, series[:z].surf, false),)
+        kw[:z] = (isa(z,Surface) ? transpose_z(series, series[:z].surf, false) : z,)
     end
     PlotlyJS.restyle!(
         plt.o,
