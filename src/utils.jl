@@ -234,6 +234,9 @@ end
 nop() = nothing
 notimpl() = error("This has not been implemented yet")
 
+isnothing(x::Void) = true
+isnothing(x) = false
+
 cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
 cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
