@@ -283,7 +283,11 @@ function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
 
     # override subplot/axis args.  `sp_attrs` take precendence
     for (idx,sp) in enumerate(plt.subplots)
-        attr = merge(d, get(sp_attrs, sp, KW()))
+        attr = if !haskey(d, :subplot) || d[:subplot] == idx
+            merge(d, get(sp_attrs, sp, KW()))
+        else
+            get(sp_attrs, sp, KW())
+        end
         _update_subplot_args(plt, sp, attr, idx, false)
     end
 
