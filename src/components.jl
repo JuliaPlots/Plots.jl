@@ -657,7 +657,7 @@ function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol =
     dist = sqrt((x2-x1)^2+(y2-y1)^2)
 
     # these points give the initial/final "rise"
-    y_offset = max(0.03*(maxy-miny), 0.7dist)
+    y_offset = max(0.02*(maxy-miny), min(0.7dist, 2*(y2-y1)))
     # y_offset = 0.8dist
     flip = root in (:top,:right)
     if flip
