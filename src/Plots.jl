@@ -200,28 +200,29 @@ yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip
 xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
 
-title!(plt::Plot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)
-xlabel!(plt::Plot, s::AbstractString; kw...)                 = plot!(plt; xlabel = s, kw...)
-ylabel!(plt::Plot, s::AbstractString; kw...)                 = plot!(plt; ylabel = s, kw...)
-xlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; xlims = lims, kw...)
-ylims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; ylims = lims, kw...)
-zlims!{T<:Real,S<:Real}(plt::Plot, lims::Tuple{T,S}; kw...)  = plot!(plt; zlims = lims, kw...)
-xlims!(plt::Plot, xmin::Real, xmax::Real; kw...)                      = plot!(plt; xlims = (xmin,xmax), kw...)
-ylims!(plt::Plot, ymin::Real, ymax::Real; kw...)                      = plot!(plt; ylims = (ymin,ymax), kw...)
-zlims!(plt::Plot, zmin::Real, zmax::Real; kw...)                      = plot!(plt; zlims = (zmin,zmax), kw...)
-xticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; xticks = ticks, kw...)
-yticks!{T<:Real}(plt::Plot, ticks::AVec{T}; kw...)                    = plot!(plt; yticks = ticks, kw...)
-xticks!{T<:Real,S<:AbstractString}(plt::Plot,
-                          ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; xticks = (ticks,labels), kw...)
-yticks!{T<:Real,S<:AbstractString}(plt::Plot,
-                          ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; yticks = (ticks,labels), kw...)
-annotate!(plt::Plot, anns...; kw...)                                  = plot!(plt; annotation = anns, kw...)
-annotate!{T<:Tuple}(plt::Plot, anns::AVec{T}; kw...)                  = plot!(plt; annotation = anns, kw...)
-xflip!(plt::Plot, flip::Bool = true; kw...)                           = plot!(plt; xflip = flip, kw...)
-yflip!(plt::Plot, flip::Bool = true; kw...)                           = plot!(plt; yflip = flip, kw...)
-xaxis!(plt::Plot, args...; kw...)                                     = plot!(plt; xaxis = args, kw...)
-yaxis!(plt::Plot, args...; kw...)                                     = plot!(plt; yaxis = args, kw...)
-
+let PlotOrSubplot = Union{Plot, Subplot}
+    title!(plt::PlotOrSubplot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)
+    xlabel!(plt::PlotOrSubplot, s::AbstractString; kw...)                 = plot!(plt; xlabel = s, kw...)
+    ylabel!(plt::PlotOrSubplot, s::AbstractString; kw...)                 = plot!(plt; ylabel = s, kw...)
+    xlims!{T<:Real,S<:Real}(plt::PlotOrSubplot, lims::Tuple{T,S}; kw...)  = plot!(plt; xlims = lims, kw...)
+    ylims!{T<:Real,S<:Real}(plt::PlotOrSubplot, lims::Tuple{T,S}; kw...)  = plot!(plt; ylims = lims, kw...)
+    zlims!{T<:Real,S<:Real}(plt::PlotOrSubplot, lims::Tuple{T,S}; kw...)  = plot!(plt; zlims = lims, kw...)
+    xlims!(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...)             = plot!(plt; xlims = (xmin,xmax), kw...)
+    ylims!(plt::PlotOrSubplot, ymin::Real, ymax::Real; kw...)             = plot!(plt; ylims = (ymin,ymax), kw...)
+    zlims!(plt::PlotOrSubplot, zmin::Real, zmax::Real; kw...)             = plot!(plt; zlims = (zmin,zmax), kw...)
+    xticks!{T<:Real}(plt::PlotOrSubplot, ticks::AVec{T}; kw...)           = plot!(plt; xticks = ticks, kw...)
+    yticks!{T<:Real}(plt::PlotOrSubplot, ticks::AVec{T}; kw...)           = plot!(plt; yticks = ticks, kw...)
+    xticks!{T<:Real,S<:AbstractString}(plt::PlotOrSubplot,
+                              ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; xticks = (ticks,labels), kw...)
+    yticks!{T<:Real,S<:AbstractString}(plt::PlotOrSubplot,
+                              ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; yticks = (ticks,labels), kw...)
+    annotate!(plt::PlotOrSubplot, anns...; kw...)                         = plot!(plt; annotation = anns, kw...)
+    annotate!{T<:Tuple}(plt::PlotOrSubplot, anns::AVec{T}; kw...)         = plot!(plt; annotation = anns, kw...)
+    xflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)                  = plot!(plt; xflip = flip, kw...)
+    yflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)                  = plot!(plt; yflip = flip, kw...)
+    xaxis!(plt::PlotOrSubplot, args...; kw...)                            = plot!(plt; xaxis = args, kw...)
+    yaxis!(plt::PlotOrSubplot, args...; kw...)                            = plot!(plt; yaxis = args, kw...)
+end
 
 
 # ---------------------------------------------------------
