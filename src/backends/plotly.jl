@@ -375,7 +375,7 @@ function plotly_close_shapes(x, y)
     xs, ys = nansplit(x), nansplit(y)
     for i=1:length(xs)
         shape = Shape(xs[i], ys[i])
-        xs[i], ys[i] = shape_coords(shape)
+        xs[i], ys[i] = coords(shape)
     end
     nanvcat(xs), nanvcat(ys)
 end

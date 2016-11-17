@@ -493,6 +493,8 @@ zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
 # ---------------------------------------------------------------
 
+makekw(; kw...) = KW(kw)
+
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
 

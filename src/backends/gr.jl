@@ -270,7 +270,7 @@ end
 
 # draw ONE Shape
 function gr_draw_marker(xi, yi, msize, shape::Shape)
-    sx, sy = shape_coords(shape)
+    sx, sy = coords(shape)
     # convert to ndc coords (percentages of window)
     GR.selntran(0)
     xi, yi = GR.wctondc(xi, yi)

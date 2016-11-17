@@ -322,18 +322,18 @@ end
 
 @recipe function f(shape::Shape)
     seriestype --> :shape
-    shape_coords(shape)
+    coords(shape)
 end
 
 @recipe function f(shapes::AVec{Shape})
     seriestype --> :shape
-    shape_coords(shapes)
+    coords(shapes)
 end
 
 @recipe function f(shapes::AMat{Shape})
     seriestype --> :shape
     for j in 1:size(shapes,2)
-        @series shape_coords(vec(shapes[:,j]))
+        @series coords(vec(shapes[:,j]))
     end
 end
 

@@ -142,7 +142,7 @@ function py_linestyle(seriestype::Symbol, linestyle::Symbol)
 end
 
 function py_marker(marker::Shape)
-    x, y = shape_coords(marker)
+    x, y = coords(marker)
     n = length(x)
     mat = zeros(n+1,2)
     for i=1:n
