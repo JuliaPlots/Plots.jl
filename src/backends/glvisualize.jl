@@ -261,10 +261,12 @@ function extract_limits(sp, d, kw_args)
 end
 
 to_vec{T <: FixedVector}(::Type{T}, vec::T) = vec
+to_vec{T <: FixedVector}(::Type{T}, s::Number) = T(s)
+
 to_vec{T <: FixedVector{2}}(::Type{T}, vec::FixedVector{3}) = T(vec[1], vec[2])
 to_vec{T <: FixedVector{3}}(::Type{T}, vec::FixedVector{2}) = T(vec[1], vec[2], 0)
 
-to_vec{T <: FixedVector}(::Type{T}, vecs::Vector) = map(x-> to_vec(T, x), vecs)
+to_vec{T <: FixedVector}(::Type{T}, vecs::AbstractVector) = map(x-> to_vec(T, x), vecs)
 
 function extract_marker(d, kw_args)
     dim = Plots.is3d(d) ? 3 : 2
