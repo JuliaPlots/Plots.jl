@@ -1169,12 +1169,11 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
                 append!(_glplot_deletes, del_signal)
             end
             anns = series[:series_annotations]
-            for (x, y, str) in EachAnn(anns, d[:x], d[:y])
+            for (x, y, str, font) in EachAnn(anns, d[:x], d[:y])
                 txt_args = Dict{Symbol, Any}(:model => eye(GLAbstraction.Mat4f0))
                 x, y = Reactive.value(model_m) * Vec{4, Float32}(x, y, 0, 1)
-                extract_font(anns.font, txt_args)
-                pt = isa(str, String) ? PlotText(str, anns.font) : str
-                t = text(Point2f0(x, y), pt, txt_args)
+                extract_font(font, txt_args)
+                t = text(Point2f0(x, y), PlotText(str, font), txt_args)
                 GLVisualize._view(t, sp_screen, camera = :perspective)
             end
 
