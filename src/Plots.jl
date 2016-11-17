@@ -10,18 +10,10 @@ using Base.Meta
 import Showoff
 
 export
-    # AbstractPlot,
-    # Plot,
-    # Subplot,
-    # AbstractLayout,
-    # GridLayout,
     grid,
-    # EmptyLayout,
     bbox,
     plotarea,
     @layout,
-    # AVec,
-    # AMat,
     KW,
 
     wrap,
@@ -77,7 +69,6 @@ export
     Shape,
     text,
     font,
-    # Axis,
     stroke,
     brush,
     Surface,
@@ -104,9 +95,7 @@ export
     center,
     P2,
     P3,
-    BezierCurve,
-    curve_points,
-    directed_curve
+    BezierCurve
 
 # ---------------------------------------------------------
 

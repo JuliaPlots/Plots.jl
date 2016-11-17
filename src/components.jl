@@ -29,16 +29,18 @@ get_xs(shape::Shape) = shape.x
 get_ys(shape::Shape) = shape.y
 vertices(shape::Shape) = collect(zip(shape.x, shape.y))
 
+#deprecated
+@deprecate shape_coords coords
 
-function shape_coords(shape::Shape)
+function coords(shape::Shape)
     shape.x, shape.y
 end
 
-function shape_coords(shapes::AVec{Shape})
+function coords(shapes::AVec{Shape})
     length(shapes) == 0 && return zeros(0), zeros(0)
     xs = map(get_xs, shapes)
     ys = map(get_ys, shapes)
-    x, y = map(copy, shape_coords(shapes[1]))
+    x, y = map(copy, coords(shapes[1]))
     for shape in shapes[2:end]
         nanappend!(x, shape.x)
         nanappend!(y, shape.y)
@@ -155,7 +157,7 @@ Shape(k::Symbol) = deepcopy(_shapes[k])
 
 # uses the centroid calculation from https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
 function center(shape::Shape)
-    x, y = shape_coords(shape)
+    x, y = coords(shape)
     n = length(x)
     A, Cx, Cy = 0.0, 0.0, 0.0
     for i=1:n
@@ -173,7 +175,7 @@ function center(shape::Shape)
 end
 
 function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
-    sx, sy = shape_coords(shape)
+    sx, sy = coords(shape)
     cx, cy = c
     for i=1:length(sx)
         sx[i] = (sx[i] - cx) * x + cx
@@ -188,7 +190,7 @@ function Base.scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
 end
 
 function translate!(shape::Shape, x::Real, y::Real = x)
-    sx, sy = shape_coords(shape)
+    sx, sy = coords(shape)
     for i=1:length(sx)
         sx[i] += x
         sy[i] += y
@@ -215,7 +217,7 @@ function rotate(x::Real, y::Real, θ::Real, c = center(shape))
 end
 
 function rotate!(shape::Shape, Θ::Real, c = center(shape))
-    x, y = shape_coords(shape)
+    x, y = coords(shape)
     cx, cy = c
     for i=1:length(x)
         xi = rotate_x(x[i], y[i], Θ, cx, cy)
@@ -646,57 +648,14 @@ end
 Base.mean(x::Real, y::Real) = 0.5*(x+y)
 Base.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps)
 
-curve_points(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, linspace(range..., n))
+@deprecate curve_points coords
+
+coords(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, linspace(range..., n))
 
 # build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
 # may create a loop if necessary.  Assumes the view is [0,1]
-function directed_curve(x1, x2, y1, y2; xview = 0:1, yview = 0:1, root::Symbol = :bottom)
-    if root in (:left,:right)
-        # flip x/y to simplify
-        x1,x2,y1,y2,xview,yview = y1,y2,x1,x2,yview,xview
-    end
-    x = [x1, x1]
-    y = [y1]
-
-    # meanx = 0.5(x1+x2)
-    # meany = 0.5(y1+y2)
-    minx, maxx = extrema(xview)
-    miny, maxy = extrema(yview)
-    dist = sqrt((x2-x1)^2+(y2-y1)^2)
-
-    # these points give the initial/final "rise"
-    y_offset = max(0.02*(maxy-miny), min(0.7dist, 2*(y2-y1)))
-    # y_offset = 0.8dist
-    flip = root in (:top,:right)
-    if flip
-        # got the other direction
-        y_offset *= -1
-    end
-    push!(y, y1 + y_offset)
-
-    # try to figure out when to loop around vs just connecting straight
-    need_loop = (flip && y1 <= y2) || (!flip && y1 >= y2)
-    if need_loop
-        if abs(x2-x1) > 0.1 * (maxx - minx)
-            # go between
-            sgn = x2 > x1 ? 1 : -1
-            x_offset = 0.5 * abs(x2-x1)
-            append!(x, [x1 + sgn * x_offset, x2 - sgn * x_offset])
-        else
-            # add curve points which will create a loop
-            x_offset = 0.3 * (maxx - minx) * (rand(Bool) ? 1 : -1)
-            append!(x, [x1 + x_offset, x2 + x_offset])
-        end
-        append!(y, [y1 + y_offset, y2 - y_offset])
-    end
-
-    append!(x, [x2, x2])
-    append!(y, [y2 - y_offset, y2])
-    if root in (:left,:right)
-        # flip x/y to simplify
-        x,y = y,x
-    end
-    x, y
+function directed_curve(args...; kw...)
+    error("directed_curve has been moved to PlotRecipes")
 end
 
 function extrema_plus_buffer(v, buffmult = 0.2)
@@ -704,29 +663,4 @@ function extrema_plus_buffer(v, buffmult = 0.2)
     vdiff = vmax-vmin
     buffer = vdiff * buffmult
     vmin - buffer, vmax + buffer
-end
-
-function shorten_segment(x1, y1, x2, y2, shorten)
-    xshort = shorten * (x2-x1)
-    yshort = shorten * (y2-y1)
-    x1+xshort, y1+yshort, x2-xshort, y2-yshort
-end
-
-# we want to randomly pick a point to be the center control point of a bezier
-# curve, which is both equidistant between the endpoints and normally distributed
-# around the midpoint
-function random_control_point(xi, xj, yi, yj, curvature_scalar)
-    xmid = 0.5 * (xi+xj)
-    ymid = 0.5 * (yi+yj)
-
-    # get the angle of y relative to x
-    theta = atan((yj-yi) / (xj-xi)) + 0.5pi
-
-    # calc random shift relative to dist between x and y
-    dist = sqrt((xj-xi)^2 + (yj-yi)^2)
-    dist_from_mid = curvature_scalar * (rand()-0.5) * dist
-
-    # now we have polar coords, we can compute the position, adding to the midpoint
-    (xmid + dist_from_mid * cos(theta),
-     ymid + dist_from_mid * sin(theta))
 end
