@@ -1044,8 +1044,14 @@ end
 # -----------------------------------------------------------------------------
 
 function _update_subplot_periphery(sp::Subplot, anns::AVec)
-    # extend annotations
-    sp.attr[:annotations] = vcat(anns, sp[:annotations])
+    # extend annotations, and ensure we always have a (x,y,PlotText) tuple
+    newanns = vcat(anns, sp[:annotations])
+    for (i,ann) in enumerate(newanns)
+        x,y,tmp = ann
+        ptxt = isa(tmp, PlotText) ? tmp : text(tmp)
+        newanns[i] = (x,y,ptxt)
+    end
+    sp.attr[:annotations] = newanns
 
     # handle legend/colorbar
     sp.attr[:legend] = convertLegendValue(sp.attr[:legend])

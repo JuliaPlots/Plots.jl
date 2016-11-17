@@ -875,8 +875,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # this is all we need to add the series_annotations text
     anns = series[:series_annotations]
-    for (xi,yi,str) in EachAnn(anns, x, y)
-        py_add_annotations(sp, xi, yi, PlotText(str, anns.font))
+    for (xi,yi,str,fnt) in EachAnn(anns, x, y)
+        py_add_annotations(sp, xi, yi, PlotText(str, fnt))
     end
 end
 

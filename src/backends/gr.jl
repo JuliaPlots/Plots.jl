@@ -957,8 +957,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # this is all we need to add the series_annotations text
         anns = series[:series_annotations]
-        for (xi,yi,str) in EachAnn(anns, x, y)
-            gr_set_font(anns.font)
+        for (xi,yi,str,fnt) in EachAnn(anns, x, y)
+            gr_set_font(fnt)
             gr_text(GR.wctondc(xi, yi)..., str)
         end
 

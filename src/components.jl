@@ -476,7 +476,15 @@ type EachAnn
 end
 Base.start(ea::EachAnn) = 1
 Base.done(ea::EachAnn, i) = ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
-Base.next(ea::EachAnn, i) = ((cycle(ea.x,i), cycle(ea.y,i), cycle(ea.anns.strs,i)), i+1)
+function Base.next(ea::EachAnn, i)
+    tmp = cycle(ea.anns.strs,i)
+    str,fnt = if isa(tmp, PlotText)
+        tmp.str, tmp.font
+    else
+        tmp, ea.anns.font
+    end
+    ((cycle(ea.x,i), cycle(ea.y,i), str, fnt), i+1)
+end
 
 annotations(::Void) = []
 annotations(anns::AVec) = anns
