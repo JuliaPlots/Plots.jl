@@ -93,6 +93,20 @@ end
 
 # ----------------------------------------------------------------
 
+const _plotly_legend_pos = KW(
+    :right => [1., 0.5],
+    :left => [0., 0.5],
+    :top => [0.5, 1.],
+    :bottom => [0.5, 0.],
+    :bottomleft => [0., 0.],
+    :bottomright => [1., 0.],
+    :topright => [1., 1.],
+    :topleft => [0., 1.]
+    )
+
+plotly_legend_pos(pos::Symbol) = get(_plotly_legend_pos, pos, [1.,1.])
+plotly_legend_pos{S<:Real, T<:Real}(v::Tuple{S,T}) = v
+
 function plotly_font(font::Font, color = font.color)
     KW(
         :family => font.family,
@@ -100,6 +114,7 @@ function plotly_font(font::Font, color = font.color)
         :color  => rgba_string(color),
     )
 end
+
 
 function plotly_annotation_dict(x, y, val; xref="paper", yref="paper")
     KW(
@@ -293,11 +308,14 @@ function plotly_layout(plt::Plot)
 
         # legend
         d_out[:showlegend] = sp[:legend] != :none
+        xpos,ypos = plotly_legend_pos(sp[:legend])
         if sp[:legend] != :none
             d_out[:legend] = KW(
                 :bgcolor  => rgba_string(sp[:background_color_legend]),
                 :bordercolor => rgba_string(sp[:foreground_color_legend]),
                 :font     => plotly_font(sp[:legendfont], sp[:foreground_color_legend]),
+                :x => xpos,
+                :y => ypos
             )
         end
 

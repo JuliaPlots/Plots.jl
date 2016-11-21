@@ -857,6 +857,7 @@ function convertLegendValue(val::Symbol)
 end
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Void) = :none
+convertLegendValue{S<:Real, T<:Real}(v::Tuple{S,T}) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
 # -----------------------------------------------------------------------------
