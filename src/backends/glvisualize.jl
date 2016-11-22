@@ -159,12 +159,12 @@ function create_window(plt::Plot{GLVisualizeBackend}, visible)
     # make sure we have any screen open
     if isempty(GLVisualize.get_screens())
         # create a fresh, new screen
-        s = GLVisualize.glscreen(
+        parent_screen = GLVisualize.glscreen(
             "Plot",
             resolution = plt[:size],
             visible = visible
         )
-        @async GLWindow.waiting_renderloop(s)
+        @async GLWindow.waiting_renderloop(parent_screen)
     end
     # now lets get ourselves a permanent Plotting screen
     plot_screens = get_plot_screen(GLVisualize.get_screens(), name)
