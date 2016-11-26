@@ -228,6 +228,12 @@ function Base.next(itr::SegmentsIterator, nextidx::Int)
     istart:iend, i
 end
 
+# Find minimal type that can contain NaN and x
+# To allow use of NaN separated segments with categorical x axis
+
+float_extended_type{T}(x::AbstractArray{T}) = Union{T,Float64}
+float_extended_type{T<:Real}(x::AbstractArray{T}) = Float64
+
 # ------------------------------------------------------------------------------------
 
 
