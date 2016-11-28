@@ -86,7 +86,11 @@ end
 # ----------------------------------------------------------------
 
 function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend})
-    show(io, MIME("text/html"), plt.o)
+    if Plots.isijulia()
+        print(io, PlotlyJS.html_body(plt.o))
+    else
+        show(io, MIME("text/html"), plt.o)
+    end
 end
 
 function plotlyjs_save_hack(io::IO, plt::Plot{PlotlyJSBackend}, ext::String)
