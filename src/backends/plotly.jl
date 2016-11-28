@@ -57,6 +57,7 @@ end
 
 
 const _plotly_js_path = joinpath(dirname(@__FILE__), "..", "..", "deps", "plotly-latest.min.js")
+const _plotly_js_path_remote = "https://cdn.plot.ly/plotly-latest.min.js"
 
 function _initialize_backend(::PlotlyBackend; kw...)
   @eval begin
@@ -629,8 +630,12 @@ end
 
 # ----------------------------------------------------------------
 
+const _use_remote = Ref(false)
+
 function html_head(plt::Plot{PlotlyBackend})
-    "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
+    jsfilename = _use_remote[] ? _plotly_js_path_remote : _plotly_js_path
+    # "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
+    "<script src=\"$jsfilename\"></script>"
 end
 
 function html_body(plt::Plot{PlotlyBackend}, style = nothing)
