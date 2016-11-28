@@ -90,10 +90,18 @@ end
 # -----------------------------------------------------------------------
 
 Base.getindex(plt::Plot, i::Integer) = plt.subplots[i]
+Base.length(plt::Plot) = length(plt.subplots)
+Base.endof(plt::Plot) = length(plt)
+
 Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r,c]
+Base.size(plt::Plot) = size(plt.layout)
+Base.size(plt::Plot, i::Integer) = size(plt.layout)[i]
+Base.ndims(plt::Plot) = 2
+
 # attr(plt::Plot, k::Symbol) = plt.attr[k]
 # attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
 
 Base.getindex(sp::Subplot, i::Integer) = series_list(sp)[i]
+Base.endof(sp::Subplot) = length(series_list(sp))
 
 # -----------------------------------------------------------------------
