@@ -80,6 +80,8 @@ export
     Animation,
     frame,
     gif,
+    mov,
+    mp4,
     animate,
     @animate,
     @gif,

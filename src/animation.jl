@@ -17,6 +17,8 @@ function frame{P<:AbstractPlot}(anim::Animation, plt::P=current())
 end
 
 giffn() = (isijulia() ? "tmp.gif" : tempname()*".gif")
+movfn() = (isijulia() ? "tmp.mov" : tempname()*".mov")
+mp4fn() = (isijulia() ? "tmp.mp4" : tempname()*".mp4")
 
 type FrameIterator
     itr
@@ -51,11 +53,14 @@ immutable AnimatedGif
   filename::String
 end
 
-function gif(anim::Animation, fn = giffn(); fps::Integer = 20, loop::Integer = 0)
+gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim.dir, fn; kw...)
+mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim.dir, fn; kw...)
+mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim.dir, fn; kw...)
+
+function buildanimation(animdir::AbstractString, fn::AbstractString;
+                        fps::Integer = 20, loop::Integer = 0)
   fn = abspath(fn)
-
   try
-
     # high quality
     speed = round(Int, 100 / fps)
     file = joinpath(Pkg.dir("ImageMagick"), "deps","deps.jl")
@@ -63,7 +68,7 @@ function gif(anim::Animation, fn = giffn(); fps::Integer = 20, loop::Integer = 0
         include(file)
     end
     # prefix = get(ENV, "MAGICK_CONFIGURE_PATH", "")
-    run(`convert -delay $speed -loop $loop $(joinpath(anim.dir, "*.png")) -alpha off $fn`)
+    run(`convert -delay $speed -loop $loop $(joinpath(animdir, "*.png")) -alpha off $fn`)
 
   catch err
     warn("""Tried to create gif using convert (ImageMagick), but got error: $err
@@ -71,7 +76,7 @@ function gif(anim::Animation, fn = giffn(); fps::Integer = 20, loop::Integer = 0
     Will try ffmpeg, but it's lower quality...)""")
 
     # low quality
-    run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(anim.dir)/%06d.png -y $fn`)
+    run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -y $fn`)
     # run(`ffmpeg -v warning -i  "fps=$fps,scale=320:-1:flags=lanczos"`)
   end
 
