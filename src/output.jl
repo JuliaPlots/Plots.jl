@@ -122,6 +122,13 @@ savefig(fn::AbstractString) = savefig(current(), fn)
 
 gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
+# IJulia only... inline display
+function inline(plt::Plot = current())
+    isijulia() || error("inline() is IJulia-only")
+    Main.IJulia.clear_output(true)
+    display(Main.IJulia.InlineDisplay(), plt)
+end
+
 function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)
     _display(plt)
@@ -129,6 +136,13 @@ end
 
 # override the REPL display to open a gui window
 Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::Plot) = gui(plt)
+
+
+_do_plot_show(plt, showval::Bool) = showval && gui(plt)
+function _do_plot_show(plt, showval::Symbol)
+    showval == :gui && gui(plt)
+    showval in (:inline,:ijulia) && inline(plt)
+end
 
 # ---------------------------------------------------------
 

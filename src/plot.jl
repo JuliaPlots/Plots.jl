@@ -126,9 +126,7 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
 
     # finish up
     current(plt)
-    if get(d, :show, default(:show))
-        gui()
-    end
+    _do_plot_show(plt, get(d, :show, default(:show)))
     plt
 end
 
@@ -234,9 +232,10 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
     current(plt)
 
     # do we want to force display?
-    if plt[:show]
-        gui(plt)
-    end
+    # if plt[:show]
+    #     gui(plt)
+    # end
+    _do_plot_show(plt, plt[:show])
 
     plt
 end
