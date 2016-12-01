@@ -57,6 +57,7 @@ export
     savefig,
     png,
     gui,
+    inline,
     closeall,
 
     backend,
