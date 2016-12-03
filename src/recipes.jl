@@ -799,6 +799,6 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 @recipe function f(cp::ComplexPlot)
     xguide --> "Real Part"
     yguide --> "Imaginary Part"
-    linetype --> :scatter
+    seriestype --> :scatter
     real(cp.args[1]), imag(cp.args[1])
 end
