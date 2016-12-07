@@ -86,8 +86,8 @@ end
 # ----------------------------------------------------------------
 
 function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend})
-    if Plots.isijulia()
-        print(io, PlotlyJS.html_body(plt.o))
+    if isijulia() && !_use_remote[]
+        write(io, PlotlyJS.html_body(PlotlyJS.JupyterPlot(plt.o)))
     else
         show(io, MIME("text/html"), plt.o)
     end
