@@ -1,9 +1,9 @@
-julia 0.5-
+julia 0.5
 
 RecipesBase
 PlotUtils
+PlotThemes
 Reexport
-Compat
 FixedSizeArrays
 Measures
 Showoff

@@ -40,7 +40,11 @@ end
 
 
 function _create_backend_figure(plt::Plot{PlotlyJSBackend})
-    PlotlyJS.plot()
+    if !isplotnull() && plt[:overwrite_figure] && isa(current().o, PlotlyJS.SyncPlot)
+        PlotlyJS.SyncPlot(PlotlyJS.Plot(), current().o.view)
+    else
+        PlotlyJS.plot()
+    end
 end
 
 
@@ -59,7 +63,7 @@ function _series_updated(plt::Plot{PlotlyJSBackend}, series::Series)
     kw = KW(xsym => (series.d[:x],), ysym => (series.d[:y],))
     z = series[:z]
     if z != nothing
-        kw[:z] = (transpose_z(series, series[:z].surf, false),)
+        kw[:z] = (isa(z,Surface) ? transpose_z(series, series[:z].surf, false) : z,)
     end
     PlotlyJS.restyle!(
         plt.o,
@@ -82,7 +86,11 @@ end
 # ----------------------------------------------------------------
 
 function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend})
-    show(io, MIME("text/html"), plt.o)
+    if Plots.isijulia()
+        print(io, PlotlyJS.html_body(plt.o))
+    else
+        show(io, MIME("text/html"), plt.o)
+    end
 end
 
 function plotlyjs_save_hack(io::IO, plt::Plot{PlotlyJSBackend}, ext::String)
@@ -96,4 +104,11 @@ _show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hac
 
 function _display(plt::Plot{PlotlyJSBackend})
     display(plt.o)
+end
+
+
+function closeall(::PlotlyJSBackend)
+    if !isplotnull() && isa(current().o, PlotlyJS.SyncPlot)
+        close(current().o)
+    end
 end

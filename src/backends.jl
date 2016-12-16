@@ -51,6 +51,21 @@ _before_layout_calcs(plt::Plot) = nothing
 title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefont].pointsize * pt
 guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefont].pointsize * pt
 
+"Returns the (width,height) of a text label."
+function text_size(lablen::Int, sz::Number, rot::Number = 0)
+    # we need to compute the size of the ticks generically
+    # this means computing the bounding box and then getting the width/height
+    # note:
+    ptsz = sz * pt
+    width = 0.8lablen * ptsz
+
+    # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
+    height = abs(sind(rot)) * width + abs(cosd(rot)) * ptsz
+    width = abs(sind(rot+90)) * width + abs(cosd(rot+90)) * ptsz
+    width, height
+end
+text_size(lab::AbstractString, sz::Number, rot::Number = 0) = text_size(length(lab), sz, rot)
+
 # account for the size/length/rotation of tick labels
 function tick_padding(axis::Axis)
     ticks = get_ticks(axis)
@@ -58,19 +73,24 @@ function tick_padding(axis::Axis)
         0mm
     else
         vals, labs = ticks
-        ptsz = axis[:tickfont].pointsize * pt
-        
-        # we need to compute the size of the ticks generically
-        # this means computing the bounding box and then getting the width/height
+        isempty(labs) && return 0mm
+        # ptsz = axis[:tickfont].pointsize * pt
         longest_label = maximum(length(lab) for lab in labs)
-        labelwidth = 0.8longest_label * ptsz
 
         # generalize by "rotating" y labels
         rot = axis[:rotation] + (axis[:letter] == :y ? 90 : 0)
 
-        # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
-        hgt = abs(sind(rot)) * labelwidth + abs(cosd(rot)) * ptsz + 1mm
-        hgt
+        # # we need to compute the size of the ticks generically
+        # # this means computing the bounding box and then getting the width/height
+        # labelwidth = 0.8longest_label * ptsz
+        #
+        #
+        # # now compute the generalized "height" after rotation as the "opposite+adjacent" of 2 triangles
+        # hgt = abs(sind(rot)) * labelwidth + abs(cosd(rot)) * ptsz + 1mm
+        # hgt
+
+        # get the height of the rotated label
+        text_size(longest_label, axis[:tickfont].pointsize, rot)[2]
     end
 end
 

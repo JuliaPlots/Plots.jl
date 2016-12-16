@@ -30,6 +30,7 @@ const _plotly_attr = merge_with_base_supported([
     :aspect_ratio,
     :hover,
     :inset_subplots,
+    :bar_width,
   ])
 
 const _plotly_seriestype = [
@@ -56,6 +57,7 @@ end
 
 
 const _plotly_js_path = joinpath(dirname(@__FILE__), "..", "..", "deps", "plotly-latest.min.js")
+const _plotly_js_path_remote = "https://cdn.plot.ly/plotly-latest.min.js"
 
 function _initialize_backend(::PlotlyBackend; kw...)
   @eval begin
@@ -92,6 +94,20 @@ end
 
 # ----------------------------------------------------------------
 
+const _plotly_legend_pos = KW(
+    :right => [1., 0.5],
+    :left => [0., 0.5],
+    :top => [0.5, 1.],
+    :bottom => [0.5, 0.],
+    :bottomleft => [0., 0.],
+    :bottomright => [1., 0.],
+    :topright => [1., 1.],
+    :topleft => [0., 1.]
+    )
+
+plotly_legend_pos(pos::Symbol) = get(_plotly_legend_pos, pos, [1.,1.])
+plotly_legend_pos{S<:Real, T<:Real}(v::Tuple{S,T}) = v
+
 function plotly_font(font::Font, color = font.color)
     KW(
         :family => font.family,
@@ -99,6 +115,7 @@ function plotly_font(font::Font, color = font.color)
         :color  => rgba_string(color),
     )
 end
+
 
 function plotly_annotation_dict(x, y, val; xref="paper", yref="paper")
     KW(
@@ -162,14 +179,17 @@ function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
         if aspect_ratio == :equal
             aspect_ratio = 1.0
         end
+        xmin,xmax = axis_limits(sp[:xaxis])
+        ymin,ymax = axis_limits(sp[:yaxis])
+        want_ratio = ((xmax-xmin) / (ymax-ymin)) / aspect_ratio
         parea_ratio = width(plotarea) / height(plotarea)
-        if aspect_ratio > parea_ratio
+        if want_ratio > parea_ratio
             # need to shrink y
-            ratio = parea_ratio / aspect_ratio
+            ratio = parea_ratio / want_ratio
             pcts[2], pcts[4] = shrink_by(pcts[2], pcts[4], ratio)
-        elseif aspect_ratio < parea_ratio
+        elseif want_ratio < parea_ratio
             # need to shrink x
-            ratio = aspect_ratio / parea_ratio
+            ratio = want_ratio / parea_ratio
             pcts[1], pcts[3] = shrink_by(pcts[1], pcts[3], ratio)
         end
         pcts
@@ -214,7 +234,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         # lims
         lims = axis[:lims]
         if lims != :auto && limsType(lims) == :limits
-            ax[:range] = lims
+            ax[:range] = map(scalefunc(axis[:scale]), lims)
         end
 
         # flip
@@ -289,16 +309,31 @@ function plotly_layout(plt::Plot)
 
         # legend
         d_out[:showlegend] = sp[:legend] != :none
+        xpos,ypos = plotly_legend_pos(sp[:legend])
         if sp[:legend] != :none
             d_out[:legend] = KW(
                 :bgcolor  => rgba_string(sp[:background_color_legend]),
                 :bordercolor => rgba_string(sp[:foreground_color_legend]),
                 :font     => plotly_font(sp[:legendfont], sp[:foreground_color_legend]),
+                :x => xpos,
+                :y => ypos
             )
         end
 
         # annotations
         append!(d_out[:annotations], KW[plotly_annotation_dict(ann...; xref = "x$spidx", yref = "y$spidx") for ann in sp[:annotations]])
+
+        # series_annotations
+        for series in series_list(sp)
+            anns = series[:series_annotations]
+            for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
+                push!(d_out[:annotations], plotly_annotation_dict(
+                    xi,
+                    yi,
+                    PlotText(str,fnt); xref = "x$spidx", yref = "y$spidx")
+                )
+            end
+        end
 
         # # arrows
         # for sargs in seriesargs
@@ -359,7 +394,7 @@ function plotly_close_shapes(x, y)
     xs, ys = nansplit(x), nansplit(y)
     for i=1:length(xs)
         shape = Shape(xs[i], ys[i])
-        xs[i], ys[i] = shape_coords(shape)
+        xs[i], ys[i] = coords(shape)
     end
     nanvcat(xs), nanvcat(ys)
 end
@@ -420,8 +455,11 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st == :bar
         d_out[:type] = "bar"
-        d_out[:x], d_out[:y] = x, y
-        d_out[:orientation] = isvertical(series) ? "v" : "h"
+        d_out[:x], d_out[:y], d_out[:orientation] = if isvertical(series)
+            x, y, "v"
+        else
+            y, x, "h"
+        end
         d_out[:marker] = KW(:color => rgba_string(series[:fillcolor]))
 
     elseif st == :heatmap
@@ -592,8 +630,12 @@ end
 
 # ----------------------------------------------------------------
 
+const _use_remote = Ref(false)
+
 function html_head(plt::Plot{PlotlyBackend})
-    "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
+    jsfilename = _use_remote[] ? _plotly_js_path_remote : _plotly_js_path
+    # "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
+    "<script src=\"$jsfilename\"></script>"
 end
 
 function html_body(plt::Plot{PlotlyBackend}, style = nothing)
@@ -624,7 +666,8 @@ end
 
 
 function _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyBackend})
-    show_png_from_html(io, plt)
+    # show_png_from_html(io, plt)
+    error("png output from the plotly backend is not supported.  Please use plotlyjs instead.")
 end
 
 function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyBackend})

@@ -1,62 +1,109 @@
 
 immutable Animation
-  dir::String
-  frames::Vector{String}
+    dir::String
+    frames::Vector{String}
 end
 
 function Animation()
-  tmpdir = convert(String, mktempdir())
-  Animation(tmpdir, String[])
+    tmpdir = convert(String, mktempdir())
+    Animation(tmpdir, String[])
 end
 
 function frame{P<:AbstractPlot}(anim::Animation, plt::P=current())
-  i = length(anim.frames) + 1
-  filename = @sprintf("%06d.png", i)
-  png(plt, joinpath(anim.dir, filename))
-  push!(anim.frames, filename)
+    i = length(anim.frames) + 1
+    filename = @sprintf("%06d.png", i)
+    png(plt, joinpath(anim.dir, filename))
+    push!(anim.frames, filename)
 end
 
+giffn() = (isijulia() ? "tmp.gif" : tempname()*".gif")
+movfn() = (isijulia() ? "tmp.mov" : tempname()*".mov")
+mp4fn() = (isijulia() ? "tmp.mp4" : tempname()*".mp4")
+
+type FrameIterator
+    itr
+    every::Int
+    kw
+end
+FrameIterator(itr; every=1, kw...) = FrameIterator(itr, every, kw)
+
+"""
+Animate from an iterator which returns the plot args each iteration.
+"""
+function animate(fitr::FrameIterator, fn = giffn(); kw...)
+    anim = Animation()
+    for (i, plotargs) in enumerate(fitr.itr)
+        if mod1(i, fitr.every) == 1
+            plot(wraptuple(plotargs)...; fitr.kw...)
+            frame(anim)
+        end
+    end
+    gif(anim, fn; kw...)
+end
+
+# most things will implement this
+function animate(obj, fn = giffn(); every=1, fps=20, loop=0, kw...)
+    animate(FrameIterator(obj, every, kw), fn; fps=fps, loop=loop)
+end
 
 # -----------------------------------------------
 
 "Wraps the location of an animated gif so that it can be displayed"
 immutable AnimatedGif
-  filename::String
+    filename::String
 end
 
-function gif(anim::Animation, fn = (isijulia() ? "tmp.gif" : tempname()*".gif"); fps::Integer = 20, loop::Integer = 0)
-  fn = abspath(fn)
+file_extension(fn) = Base.Filesystem.splitext(fn)[2][2:end]
 
-  try
+gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim.dir, fn; kw...)
+mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim.dir, fn; kw...)
+mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim.dir, fn; kw...)
 
-    # high quality
-    speed = round(Int, 100 / fps)
-    file = joinpath(Pkg.dir("ImageMagick"), "deps","deps.jl")
-    if isfile(file) && !haskey(ENV, "MAGICK_CONFIGURE_PATH")
-        include(file)
+const _imagemagick_initialized = Ref(false)
+
+function buildanimation(animdir::AbstractString, fn::AbstractString;
+                        fps::Integer = 20, loop::Integer = 0)
+    fn = abspath(fn)
+    try
+        if !_imagemagick_initialized[]
+            file = joinpath(Pkg.dir("ImageMagick"), "deps","deps.jl")
+            if isfile(file) && !haskey(ENV, "MAGICK_CONFIGURE_PATH")
+                include(file)
+            end
+            _imagemagick_initialized[] = true
+        end
+
+        # prefix = get(ENV, "MAGICK_CONFIGURE_PATH", "")
+        # high quality
+        speed = round(Int, 100 / fps)
+        run(`convert -delay $speed -loop $loop $(joinpath(animdir, "*.png")) -alpha off $fn`)
+
+    catch err
+        warn("""Tried to create gif using convert (ImageMagick), but got error: $err
+            ImageMagick can be installed by executing `Pkg.add("ImageMagick")`
+            Will try ffmpeg, but it's lower quality...)""")
+
+        # low quality
+        run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -y $fn`)
+        # run(`ffmpeg -v warning -i  "fps=$fps,scale=320:-1:flags=lanczos"`)
     end
-    # prefix = get(ENV, "MAGICK_CONFIGURE_PATH", "")
-    run(`convert -delay $speed -loop $loop $(joinpath(anim.dir, "*.png")) -alpha off $fn`)
 
-  catch err
-    warn("""Tried to create gif using convert (ImageMagick), but got error: $err
-    ImageMagick can be installed by executing `Pkg.add("ImageMagick")`
-    Will try ffmpeg, but it's lower quality...)""")
-
-    # low quality
-    run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(anim.dir)/%06d.png -y $fn`)
-    # run(`ffmpeg -v warning -i  "fps=$fps,scale=320:-1:flags=lanczos"`)
-  end
-
-  info("Saved animation to ", fn)
-  AnimatedGif(fn)
+    info("Saved animation to ", fn)
+    AnimatedGif(fn)
 end
 
 
 
 # write out html to view the gif... note the rand call which is a hack so the image doesn't get cached
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
-    write(io, "<img src=\"$(relpath(agif.filename))?$(rand())>\" />")
+    ext = file_extension(agif.filename)
+    write(io, if ext == "gif"
+        "<img src=\"$(relpath(agif.filename))?$(rand())>\" />"
+    elseif ext in ("mov", "mp4")
+        "<video controls><source src=\"$(relpath(agif.filename))?$(rand())>\" type=\"video/$ext\"></video>"
+    else
+        error("Cannot show animation with extension $ext: $agif")
+    end)
 end
 
 
@@ -122,7 +169,7 @@ Example:
 ```
 """
 macro gif(forloop::Expr, args...)
-  _animate(forloop, args...; callgif = true)
+    _animate(forloop, args...; callgif = true)
 end
 
 """
@@ -131,13 +178,13 @@ Collect one frame per for-block iteration and return an `Animation` object.
 Example:
 
 ```
-  p = plot(1)
-  anim = @animate for x=0:0.1:5
+p = plot(1)
+anim = @animate for x=0:0.1:5
     push!(p, 1, sin(x))
-  end
-  gif(anim)
+end
+gif(anim)
 ```
 """
 macro animate(forloop::Expr, args...)
-  _animate(forloop, args...)
+    _animate(forloop, args...)
 end

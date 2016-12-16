@@ -16,7 +16,8 @@ const _unicodeplots_seriestype = [
     :path, :scatter,
     # :bar,
     :shape,
-    :histogram2d
+    :histogram2d,
+    :spy
 ]
 const _unicodeplots_style = [:auto, :solid]
 const _unicodeplots_marker = [:none, :auto, :circle]
@@ -44,6 +45,18 @@ end
 
 # -------------------------------
 
+const _canvas_type = Ref(:auto)
+
+function _canvas_map()
+    KW(
+        :braille => UnicodePlots.BrailleCanvas,
+        :ascii => UnicodePlots.AsciiCanvas,
+        :block => UnicodePlots.BlockCanvas,
+        :dot => UnicodePlots.DotCanvas,
+        :density => UnicodePlots.DensityCanvas,
+    )
+end
+
 
 # do all the magic here... build it all at once, since we need to know about all the series at the very beginning
 function rebuildUnicodePlot!(plt::Plot, width, height)
@@ -65,7 +78,27 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
         y = Float64[ylim[1]]
 
         # create a plot window with xlim/ylim set, but the X/Y vectors are outside the bounds
-        canvas_type = isijulia() ? UnicodePlots.AsciiCanvas : UnicodePlots.BrailleCanvas
+        ct = _canvas_type[]
+        canvas_type = if ct == :auto
+            isijulia() ? UnicodePlots.AsciiCanvas : UnicodePlots.BrailleCanvas
+        else
+            _canvas_map()[ct]
+        end
+
+        # special handling for spy
+        if length(sp.series_list) == 1
+            series = sp.series_list[1]
+            if series[:seriestype] == :spy
+                push!(plt.o, UnicodePlots.spy(
+                    series[:z].surf,
+                    width = width,
+                    height = height,
+                    title = sp[:title],
+                    canvas = canvas_type
+                ))
+                continue
+            end
+        end
 
         # # make it a bar canvas if plotting bar
         # if any(series -> series[:seriestype] == :bar, series_list(sp))

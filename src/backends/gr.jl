@@ -30,6 +30,7 @@ const _gr_attr = merge_with_base_supported([
     :normalize, :weights,
     :inset_subplots,
     :bar_width,
+    :arrow,
 ])
 const _gr_seriestype = [
     :path, :scatter,
@@ -131,7 +132,7 @@ gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(cycle(c,1)))
 
 # draw line segments, splitting x/y into contiguous/finite segments
 # note: this can be used for shapes by passing func `GR.fillarea`
-function gr_polyline(x, y, func = GR.polyline)
+function gr_polyline(x, y, func = GR.polyline; arrowside=:none)
     iend = 0
     n = length(x)
     while iend < n-1
@@ -159,6 +160,12 @@ function gr_polyline(x, y, func = GR.polyline)
         # if we found a start and end, draw the line segment, otherwise we're done
         if istart > 0 && iend > 0
             func(x[istart:iend], y[istart:iend])
+            if arrowside in (:head,:both)
+                GR.drawarrow(x[iend-1], y[iend-1], x[iend], y[iend])
+            end
+            if arrowside in (:tail,:both)
+                GR.drawarrow(x[istart+1], y[istart+1], x[istart], y[istart])
+            end
         else
             break
         end
@@ -263,11 +270,13 @@ end
 
 # draw ONE Shape
 function gr_draw_marker(xi, yi, msize, shape::Shape)
-    sx, sy = shape_coords(shape)
+    sx, sy = coords(shape)
+    # convert to ndc coords (percentages of window)
     GR.selntran(0)
     xi, yi = GR.wctondc(xi, yi)
-    GR.fillarea(xi + sx * 0.0015msize,
-                yi + sy * 0.0015msize)
+    ms_ndc_x, ms_ndc_y = gr_pixels_to_ndc(msize, msize)
+    GR.fillarea(xi .+ sx .* ms_ndc_x,
+                yi .+ sy .* ms_ndc_y)
     GR.selntran(1)
 end
 
@@ -281,10 +290,11 @@ end
 
 # draw the markers, one at a time
 function gr_draw_markers(series::Series, x, y, msize, mz)
-    shape = series[:markershape]
-    if shape != :none
+    shapes = series[:markershape]
+    if shapes != :none
         for i=1:length(x)
             msi = cycle(msize, i)
+            shape = cycle(shapes, i)
             cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
             cfuncind = isa(shape, Shape) ? GR.setfillcolorind : GR.setmarkercolorind
 
@@ -349,12 +359,23 @@ function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
     GR.settextalign(gr_halign[halign], gr_valign[valign])
 end
 
+function gr_nans_to_infs!(z)
+    for (i,zi) in enumerate(z)
+        if zi == NaN
+            z[i] = Inf
+        end
+    end
+end
+
 # --------------------------------------------------------------------------------------
 # viewport plot area
 
 # this stays constant for a given subplot while displaying that subplot.
 # values are [xmin, xmax, ymin, ymax].  they range [0,1].
 const viewport_plotarea = zeros(4)
+
+# the size of the current plot in pixels
+const gr_plot_size = zeros(2)
 
 function gr_viewport_from_bbox(bb::BoundingBox, w, h, viewport_canvas)
     viewport = zeros(4)
@@ -410,6 +431,13 @@ gr_view_ycenter() = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
 gr_view_xdiff() = viewport_plotarea[2] - viewport_plotarea[1]
 gr_view_ydiff() = viewport_plotarea[4] - viewport_plotarea[3]
 
+function gr_pixels_to_ndc(x_pixels, y_pixels)
+    w,h = gr_plot_size
+    totx = w * gr_view_xdiff()
+    toty = h * gr_view_ydiff()
+    x_pixels / totx, y_pixels / toty
+end
+
 
 # --------------------------------------------------------------------------------------
 
@@ -437,6 +465,7 @@ function gr_display(plt::Plot)
     # compute the viewport_canvas, normalized to the larger dimension
     viewport_canvas = Float64[0,1,0,1]
     w, h = plt[:size]
+    gr_plot_size[:] = [w, h]
     if w > h
         ratio = float(h) / w
         msize = display_width_ratio * w
@@ -534,16 +563,16 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # set the scale flags and window
     xmin, xmax, ymin, ymax = data_lims
-    scale = 0
+    scaleop = 0
     xtick, ytick = 1, 1
     if xmax > xmin && ymax > ymin
         # NOTE: for log axes, the major_x and major_y - if non-zero (omit labels) - control the minor grid lines (1 = draw 9 minor grid lines, 2 = no minor grid lines)
         # NOTE: for log axes, the x_tick and y_tick - if non-zero (omit axes) - only affect the output appearance (1 = nomal, 2 = scientiic notation)
-        xaxis[:scale] == :log10 && (scale |= GR.OPTION_X_LOG)
-        yaxis[:scale] == :log10 && (scale |= GR.OPTION_Y_LOG)
-        xaxis[:flip]            && (scale |= GR.OPTION_FLIP_X)
-        yaxis[:flip]            && (scale |= GR.OPTION_FLIP_Y)
-        if scale & GR.OPTION_X_LOG == 0
+        xaxis[:scale] == :log10 && (scaleop |= GR.OPTION_X_LOG)
+        yaxis[:scale] == :log10 && (scaleop |= GR.OPTION_Y_LOG)
+        xaxis[:flip]            && (scaleop |= GR.OPTION_FLIP_X)
+        yaxis[:flip]            && (scaleop |= GR.OPTION_FLIP_Y)
+        if scaleop & GR.OPTION_X_LOG == 0
             majorx = 1 #5
             xtick = GR.tick(xmin, xmax) / majorx
         else
@@ -551,7 +580,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             xtick = 2  # scientific notation
             majorx = 2 # no minor grid lines
         end
-        if scale & GR.OPTION_Y_LOG == 0
+        if scaleop & GR.OPTION_Y_LOG == 0
             majory = 1 #5
             ytick = GR.tick(ymin, ymax) / majory
         else
@@ -562,7 +591,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # NOTE: setwindow sets the "data coordinate" limits of the current "viewport"
         GR.setwindow(xmin, xmax, ymin, ymax)
-        GR.setscale(scale)
+        GR.setscale(scaleop)
     end
 
     # draw the axes
@@ -585,8 +614,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # GR.setlinetype(GR.LINETYPE_DOTTED)
         if sp[:grid]
-            GR.grid3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2)
-            GR.grid3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0)
+            GR.grid3d(xtick, 0, ztick, xmin, ymax, zmin, 2, 0, 2)
+            GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
         end
         GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
         GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
@@ -722,12 +751,16 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         x, y, z = series[:x], series[:y], series[:z]
         frng = series[:fillrange]
 
+        # add custom frame shapes to markershape?
+        series_annotations_shapes!(series)
+        # -------------------------------------------------------
+
         # recompute data
         if typeof(z) <: Surface
-            if st == :heatmap
-                expand_extrema!(sp[:xaxis], (x[1]-0.5*(x[2]-x[1]), x[end]+0.5*(x[end]-x[end-1])))
-                expand_extrema!(sp[:yaxis], (y[1]-0.5*(y[2]-y[1]), y[end]+0.5*(y[end]-y[end-1])))
-            end
+            # if st == :heatmap
+            #     expand_extrema!(sp[:xaxis], (x[1]-0.5*(x[2]-x[1]), x[end]+0.5*(x[end]-x[end-1])))
+            #     expand_extrema!(sp[:yaxis], (y[1]-0.5*(y[2]-y[1]), y[end]+0.5*(y[end]-y[end-1])))
+            # end
             z = vec(transpose_z(series, z.surf, false))
         elseif ispolar(sp)
             if frng != nothing
@@ -756,7 +789,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # draw the line(s)
                 if st == :path
                     gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
-                    gr_polyline(x, y)
+                    arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
+                    gr_polyline(x, y; arrowside = arrowside)
                 end
             end
 
@@ -808,16 +842,19 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             cmap && gr_colorbar(sp)
 
         elseif st == :heatmap
-            # z = vec(transpose_z(series, z.surf, false))
             zmin, zmax = gr_lims(zaxis, true)
             clims = sp[:clims]
             if is_2tuple(clims)
                 isfinite(clims[1]) && (zmin = clims[1])
                 isfinite(clims[2]) && (zmax = clims[2])
             end
-            GR.setspace(zmin, zmax, 0, 90)
-            # GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
-            GR.surface(x, y, z, GR.OPTION_HEATMAP)
+            grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
+            colors = [grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)] for zi=z]
+            rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
+                                    round(Int,  blue(c) * 255) << 16 +
+                                    round(Int, green(c) * 255) << 8  +
+                                    round(Int,   red(c) * 255) ), colors)
+            GR.drawimage(xmin, xmax, ymax, ymin, length(x), length(y), rgba)
             cmap && gr_colorbar(sp)
 
         elseif st in (:path3d, :scatter3d)
@@ -904,8 +941,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
 
         elseif st == :image
-            img = series[:z].surf
-            h, w = size(img)
+            z = transpose_z(series, series[:z].surf, true)
+            h, w = size(z)
             if eltype(z) <: Colors.AbstractGray
                 grey = round(UInt8, float(z) * 255)
                 rgba = map(c -> UInt32( 0xff000000 + Int(c)<<16 + Int(c)<<8 + Int(c) ), grey)
@@ -916,6 +953,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                                         round(Int,   red(c) * 255) ), z)
             end
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
+        end
+
+        # this is all we need to add the series_annotations text
+        anns = series[:series_annotations]
+        for (xi,yi,str,fnt) in EachAnn(anns, x, y)
+            gr_set_font(fnt)
+            gr_text(GR.wctondc(xi, yi)..., str)
         end
 
         GR.restorestate()
@@ -1025,22 +1069,25 @@ const _gr_mimeformats = Dict(
 )
 
 const _gr_wstype_default = @static if is_linux()
-    "cairox11"
+    "x11"
+    # "cairox11"
 elseif is_apple()
     "quartz"
 else
-    "windows"
+    "use_default"
 end
+
+const _gr_wstype = Ref(get(ENV, "GKS_WSTYPE", _gr_wstype_default))
+gr_set_output(wstype::String) = (_gr_wstype[] = wstype)
 
 for (mime, fmt) in _gr_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
         filepath = tempname() * "." * $fmt
-        withenv("GKS_WSTYPE" => $fmt,  # $fmt == "png" ? "cairopng" : $fmt,
-                "GKS_FILEPATH" => filepath) do
-            gr_display(plt)
-            GR.emergencyclosegks()
-        end
+        ENV["GKS_WSTYPE"] = $fmt
+        ENV["GKS_FILEPATH"] = filepath
+        gr_display(plt)
+        GR.emergencyclosegks()
         write(io, readstring(filepath))
         rm(filepath)
     end
@@ -1050,18 +1097,20 @@ function _display(plt::Plot{GRBackend})
     if plt[:display_type] == :inline
         GR.emergencyclosegks()
         filepath = tempname() * ".pdf"
-        withenv("GKS_WSTYPE" => "pdf",
-                "GKS_FILEPATH" => filepath) do
-            gr_display(plt)
-            GR.emergencyclosegks()
-        end
+        ENV["GKS_WSTYPE"] = "pdf"
+        ENV["GKS_FILEPATH"] = filepath
+        gr_display(plt)
+        GR.emergencyclosegks()
         content = string("\033]1337;File=inline=1;preserveAspectRatio=0:", base64encode(open(readbytes, filepath)), "\a")
         println(content)
         rm(filepath)
     else
-        withenv("GKS_WSTYPE" => get(ENV, "GKS_WSTYPE", _gr_wstype_default),
-                "GKS_DOUBLE_BUF" => get(ENV ,"GKS_DOUBLE_BUF", "true")) do
-            gr_display(plt)
+        ENV["GKS_DOUBLE_BUF"] = true
+        if _gr_wstype[] != "use_default"
+            ENV["GKS_WSTYPE"] = _gr_wstype[]
         end
+        gr_display(plt)
     end
 end
+
+closeall(::GRBackend) = GR.emergencyclosegks()

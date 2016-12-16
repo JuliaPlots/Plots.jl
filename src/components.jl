@@ -23,21 +23,24 @@ immutable Shape
     # end
 end
 Shape(verts::AVec) = Shape(unzip(verts)...)
+Shape(s::Shape) = deepcopy(s)
 
 get_xs(shape::Shape) = shape.x
 get_ys(shape::Shape) = shape.y
 vertices(shape::Shape) = collect(zip(shape.x, shape.y))
 
+#deprecated
+@deprecate shape_coords coords
 
-function shape_coords(shape::Shape)
+function coords(shape::Shape)
     shape.x, shape.y
 end
 
-function shape_coords(shapes::AVec{Shape})
+function coords(shapes::AVec{Shape})
     length(shapes) == 0 && return zeros(0), zeros(0)
     xs = map(get_xs, shapes)
     ys = map(get_ys, shapes)
-    x, y = map(copy, shape_coords(shapes[1]))
+    x, y = map(copy, coords(shapes[1]))
     for shape in shapes[2:end]
         nanappend!(x, shape.x)
         nanappend!(y, shape.y)
@@ -72,13 +75,13 @@ function makestar(n; offset = -0.5, radius = 1.0)
     z2 = z1 + π / (n)
     outercircle = partialcircle(z1, z1 + 2π, n+1, radius)
     innercircle = partialcircle(z2, z2 + 2π, n+1, 0.4radius)
-    Shape(weave(outercircle, innercircle)[1:end-2])
+    Shape(weave(outercircle, innercircle))
 end
 
 "create a shape by picking points around the unit circle.  `n` is the number of point/sides, `offset` is the starting angle"
 function makeshape(n; offset = -0.5, radius = 1.0)
     z = offset * π
-    Shape(partialcircle(z, z + 2π, n+1, radius)[1:end-1])
+    Shape(partialcircle(z, z + 2π, n+1, radius))
 end
 
 
@@ -88,7 +91,7 @@ function makecross(; offset = -0.5, radius = 1.0)
     outercircle = partialcircle(z1, z1 + 2π, 9, radius)
     innercircle = partialcircle(z2, z2 + 2π, 5, 0.5radius)
     Shape(weave(outercircle, innercircle,
-                ordering=Vector[outercircle,innercircle,outercircle])[1:end-2])
+                ordering=Vector[outercircle,innercircle,outercircle]))
 end
 
 
@@ -110,6 +113,8 @@ const _shape_keys = Symbol[
   :xcross,
   :utriangle,
   :dtriangle,
+  :rtriangle,
+  :ltriangle,
   :pentagon,
   :heptagon,
   :octagon,
@@ -127,8 +132,10 @@ const _shapes = KW(
     :circle    => makeshape(20),
     :rect       => makeshape(4, offset=-0.25),
     :diamond    => makeshape(4),
-    :utriangle  => makeshape(3),
-    :dtriangle  => makeshape(3, offset=0.5),
+    :utriangle  => makeshape(3, offset=0.5),
+    :dtriangle  => makeshape(3, offset=-0.5),
+    :rtriangle  => makeshape(3, offset=0.0),
+    :ltriangle  => makeshape(3, offset=1.0),
     :pentagon   => makeshape(5),
     :hexagon    => makeshape(6),
     :heptagon   => makeshape(7),
@@ -143,12 +150,14 @@ for n in [4,5,6,7,8]
   _shapes[Symbol("star$n")] = makestar(n)
 end
 
+Shape(k::Symbol) = deepcopy(_shapes[k])
+
 # -----------------------------------------------------------------------
 
 
 # uses the centroid calculation from https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
 function center(shape::Shape)
-    x, y = shape_coords(shape)
+    x, y = coords(shape)
     n = length(x)
     A, Cx, Cy = 0.0, 0.0, 0.0
     for i=1:n
@@ -166,7 +175,7 @@ function center(shape::Shape)
 end
 
 function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
-    sx, sy = shape_coords(shape)
+    sx, sy = coords(shape)
     cx, cy = c
     for i=1:length(sx)
         sx[i] = (sx[i] - cx) * x + cx
@@ -177,11 +186,11 @@ end
 
 function Base.scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
     shapecopy = deepcopy(shape)
-    scale!(shape, x, y, c)
+    scale!(shapecopy, x, y, c)
 end
 
 function translate!(shape::Shape, x::Real, y::Real = x)
-    sx, sy = shape_coords(shape)
+    sx, sy = coords(shape)
     for i=1:length(sx)
         sx[i] += x
         sy[i] += y
@@ -191,7 +200,7 @@ end
 
 function translate(shape::Shape, x::Real, y::Real = x)
     shapecopy = deepcopy(shape)
-    translate!(shape, x, y)
+    translate!(shapecopy, x, y)
 end
 
 function rotate_x(x::Real, y::Real, Θ::Real, centerx::Real, centery::Real)
@@ -208,7 +217,7 @@ function rotate(x::Real, y::Real, θ::Real, c = center(shape))
 end
 
 function rotate!(shape::Shape, Θ::Real, c = center(shape))
-    x, y = shape_coords(shape)
+    x, y = coords(shape)
     cx, cy = c
     for i=1:length(x)
         xi = rotate_x(x[i], y[i], Θ, cx, cy)
@@ -226,7 +235,7 @@ end
 # -----------------------------------------------------------------------
 
 
-immutable Font
+type Font
   family::AbstractString
   pointsize::Int
   halign::Symbol
@@ -283,6 +292,17 @@ function font(args...)
   Font(family, pointsize, halign, valign, rotation, color)
 end
 
+function scalefontsize(k::Symbol, factor::Number)
+    f = default(k)
+    f.pointsize = round(Int, factor * f.pointsize)
+    default(k, f)
+end
+function scalefontsizes(factor::Number)
+    for k in (:titlefont, :guidefont, :tickfont, :legendfont)
+        scalefontsize(k, factor)
+    end
+end
+
 "Wrap a string with font info"
 immutable PlotText
   str::AbstractString
@@ -296,11 +316,7 @@ function text(str, args...)
   PlotText(string(str), font(args...))
 end
 
-
-annotations(::Void) = []
-annotations(anns::AVec) = anns
-annotations(anns) = Any[anns]
-
+Base.length(t::PlotText) = length(t.str)
 
 # -----------------------------------------------------------------------
 
@@ -314,9 +330,9 @@ immutable Stroke
 end
 
 function stroke(args...; alpha = nothing)
-  width = nothing
-  color = nothing
-  style = nothing
+  width = 1
+  color = :black
+  style = :solid
 
   for arg in args
     T = typeof(arg)
@@ -350,8 +366,8 @@ immutable Brush
 end
 
 function brush(args...; alpha = nothing)
-  size = nothing
-  color = nothing
+  size = 1
+  color = :black
 
   for arg in args
     T = typeof(arg)
@@ -373,6 +389,109 @@ function brush(args...; alpha = nothing)
 
   Brush(size, color, alpha)
 end
+
+# -----------------------------------------------------------------------
+
+type SeriesAnnotations
+    strs::AbstractVector  # the labels/names
+    font::Font
+    baseshape::Nullable
+    scalefactor::Tuple
+end
+function series_annotations(strs::AbstractVector, args...)
+    fnt = font()
+    shp = Nullable{Any}()
+    scalefactor = (1,1)
+    for arg in args
+        if isa(arg, Shape) || (isa(arg, AbstractVector) && eltype(arg) == Shape)
+            shp = Nullable(arg)
+        elseif isa(arg, Font)
+            fnt = arg
+        elseif isa(arg, Symbol) && haskey(_shapes, arg)
+            shp = _shapes[arg]
+        elseif isa(arg, Number)
+            scalefactor = (arg,arg)
+        elseif is_2tuple(arg)
+            scalefactor = arg
+        else
+            warn("Unused SeriesAnnotations arg: $arg ($(typeof(arg)))")
+        end
+    end
+    # if scalefactor != 1
+    #     for s in get(shp)
+    #         scale!(s, scalefactor, scalefactor, (0,0))
+    #     end
+    # end
+    SeriesAnnotations(strs, fnt, shp, scalefactor)
+end
+series_annotations(anns::SeriesAnnotations) = anns
+series_annotations(::Void) = nothing
+
+function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
+    anns = series[:series_annotations]
+    # msw,msh = anns.scalefactor
+    # ms = series[:markersize]
+    # msw,msh = if isa(ms, AbstractVector)
+    #     1,1
+    # elseif is_2tuple(ms)
+    #     ms
+    # else
+    #     ms,ms
+    # end
+
+    # @show msw msh
+    if anns != nothing && !isnull(anns.baseshape)
+        # we use baseshape to overwrite the markershape attribute
+        # with a list of custom shapes for each
+        msw,msh = anns.scalefactor
+        msize = Float64[]
+        shapes = Shape[begin
+            str = cycle(anns.strs,i)
+
+            # get the width and height of the string (in mm)
+            sw, sh = text_size(str, anns.font.pointsize)
+
+            # how much to scale the base shape?
+            # note: it's a rough assumption that the shape fills the unit box [-1,-1,1,1],
+            #       so we scale the length-2 shape by 1/2 the total length
+            scalar = (backend() == PyPlotBackend() ? 1.7 : 1.0)
+            xscale = 0.5to_pixels(sw) * scalar
+            yscale = 0.5to_pixels(sh) * scalar
+
+            # we save the size of the larger direction to the markersize list,
+            # and then re-scale a copy of baseshape to match the w/h ratio
+            maxscale = max(xscale, yscale)
+            push!(msize, maxscale)
+            baseshape = cycle(get(anns.baseshape),i)
+            shape = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
+        end for i=1:length(anns.strs)]
+        series[:markershape] = shapes
+        series[:markersize] = msize
+    end
+    return
+end
+
+type EachAnn
+    anns
+    x
+    y
+end
+Base.start(ea::EachAnn) = 1
+Base.done(ea::EachAnn, i) = ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
+function Base.next(ea::EachAnn, i)
+    tmp = cycle(ea.anns.strs,i)
+    str,fnt = if isa(tmp, PlotText)
+        tmp.str, tmp.font
+    else
+        tmp, ea.anns.font
+    end
+    ((cycle(ea.x,i), cycle(ea.y,i), str, fnt), i+1)
+end
+
+annotations(::Void) = []
+annotations(anns::AVec) = anns
+annotations(anns) = Any[anns]
+annotations(sa::SeriesAnnotations) = sa
 
 # -----------------------------------------------------------------------
 
@@ -452,19 +571,25 @@ Base.eltype{T}(vol::Volume{T}) = T
 # style is :open or :closed (for now)
 immutable Arrow
     style::Symbol
+    side::Symbol  # :head (default), :tail, or :both
     headlength::Float64
     headwidth::Float64
 end
 
 function arrow(args...)
     style = :simple
+    side = :head
     headlength = 0.3
     headwidth = 0.3
     setlength = false
     for arg in args
         T = typeof(arg)
         if T == Symbol
-            style = arg
+            if arg in (:head, :tail, :both)
+                side = arg
+            else
+                style = arg
+            end
         elseif T <: Number
             # first we apply to both, but if there's more, then only change width after the first number
             headwidth = Float64(arg)
@@ -478,7 +603,7 @@ function arrow(args...)
             warn("Skipped arrow arg $arg")
         end
     end
-    Arrow(style, headlength, headwidth)
+    Arrow(style, side, headlength, headwidth)
 end
 
 
@@ -508,54 +633,34 @@ end
 # -----------------------------------------------------------------------
 
 type BezierCurve{T <: FixedSizeArrays.Vec}
-  control_points::Vector{T}
+    control_points::Vector{T}
 end
 
 function (bc::BezierCurve)(t::Real)
-  p = zero(P2)
-  n = length(bc.control_points)-1
-  for i in 0:n
-      p += bc.control_points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
-  end
-  p
+    p = zero(P2)
+    n = length(bc.control_points)-1
+    for i in 0:n
+        p += bc.control_points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
+    end
+    p
 end
 
 Base.mean(x::Real, y::Real) = 0.5*(x+y)
 Base.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps)
 
-curve_points(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, linspace(range..., n))
+@deprecate curve_points coords
+
+coords(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, linspace(range..., n))
 
 # build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
 # may create a loop if necessary.  Assumes the view is [0,1]
-function directed_curve(p::P2, q::P2; xview = 0:1, yview = 0:1)
-mn = mean(p, q)
-diff = q - p
-
-minx, maxx = minimum(xview), maximum(xview)
-miny, maxy = minimum(yview), maximum(yview)
-diffpct = P2(diff[1] / (maxx - minx),
-             diff[2] / (maxy - miny))
-
-# these points give the initial/final "rise"
-# vertical_offset = P2(0, (maxy - miny) * max(0.03, min(abs(0.5diffpct[2]), 1.0)))
-vertical_offset = P2(0, max(0.15, 0.5norm(diff)))
-upper_control = p + vertical_offset
-lower_control = q - vertical_offset
-
-# try to figure out when to loop around vs just connecting straight
-# TODO: choose loop direction based on sign of p[1]??
-# x_close_together = abs(diffpct[1]) <= 0.05
-p_is_higher = diff[2] <= 0
-inside_control_points = if p_is_higher
-  # add curve points which will create a loop
-  sgn = mn[1] < 0.5 * (maxx + minx) ? -1 : 1
-  inside_offset = P2(0.3 * (maxx - minx), 0)
-  additional_offset = P2(sgn * diff[1], 0)  # make it even loopier
-  [upper_control + sgn * (inside_offset + max(0,  additional_offset)),
-   lower_control + sgn * (inside_offset + max(0, -additional_offset))]
-else
-  []
+function directed_curve(args...; kw...)
+    error("directed_curve has been moved to PlotRecipes")
 end
 
-BezierCurve([p, upper_control, inside_control_points..., lower_control, q])
+function extrema_plus_buffer(v, buffmult = 0.2)
+    vmin,vmax = extrema(v)
+    vdiff = vmax-vmin
+    buffer = vdiff * buffmult
+    vmin - buffer, vmax + buffer
 end

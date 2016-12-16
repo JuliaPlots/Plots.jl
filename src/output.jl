@@ -52,6 +52,16 @@ function tex(plt::Plot, fn::AbstractString)
 end
 tex(fn::AbstractString) = tex(current(), fn)
 
+function html(plt::Plot, fn::AbstractString)
+    fn = addExtension(fn, "html")
+    io = open(fn, "w")
+    _use_remote[] = true
+    show(io, MIME("text/html"), plt)
+    _use_remote[] = false
+    close(io)
+end
+html(fn::AbstractString) = html(current(), fn)
+
 
 # ----------------------------------------------------------------
 
@@ -63,6 +73,7 @@ const _savemap = Dict(
     "ps"  => ps,
     "eps" => eps,
     "tex" => tex,
+    "html" => html,
   )
 
 function getExtension(fn::AbstractString)
@@ -111,6 +122,13 @@ savefig(fn::AbstractString) = savefig(current(), fn)
 
 gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
+# IJulia only... inline display
+function inline(plt::Plot = current())
+    isijulia() || error("inline() is IJulia-only")
+    Main.IJulia.clear_output(true)
+    display(Main.IJulia.InlineDisplay(), plt)
+end
+
 function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)
     _display(plt)
@@ -118,6 +136,13 @@ end
 
 # override the REPL display to open a gui window
 Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::Plot) = gui(plt)
+
+
+_do_plot_show(plt, showval::Bool) = showval && gui(plt)
+function _do_plot_show(plt, showval::Symbol)
+    showval == :gui && gui(plt)
+    showval in (:inline,:ijulia) && inline(plt)
+end
 
 # ---------------------------------------------------------
 
@@ -171,6 +196,8 @@ for mime in keys(_mimeformats)
         _show(io, m, plt)
     end
 end
+
+closeall() = closeall(backend())
 
 
 # ---------------------------------------------------------

@@ -64,7 +64,7 @@ function _initialize_backend(::PyPlotBackend)
         # problem: https://github.com/tbreloff/Plots.jl/issues/308
         # solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
         otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
-        import PyPlot
+        import PyPlot, PyCall
         import LaTeXStrings: latexstring
         append!(Base.Multimedia.displays, otherdisplays)
 
@@ -117,7 +117,9 @@ py_color(grad::ColorGradient) = py_color(grad.colors)
 
 function py_colormap(grad::ColorGradient)
     pyvals = [(z, py_color(grad[z])) for z in grad.values]
-    pycolors.LinearSegmentedColormap[:from_list]("tmp", pyvals)
+    cm = pycolors.LinearSegmentedColormap[:from_list]("tmp", pyvals)
+    cm[:set_bad](color=(0,0,0,0.0), alpha=0.0)
+    cm
 end
 py_colormap(c) = py_colormap(cgrad())
 
@@ -140,7 +142,7 @@ function py_linestyle(seriestype::Symbol, linestyle::Symbol)
 end
 
 function py_marker(marker::Shape)
-    x, y = shape_coords(marker)
+    x, y = coords(marker)
     n = length(x)
     mat = zeros(n+1,2)
     for i=1:n
@@ -244,6 +246,12 @@ function labelfunc(scale::Symbol, backend::PyPlotBackend)
     else
         string
     end
+end
+
+function py_mask_nans(z)
+    # PyPlot.pywrap(pynp.ma[:masked_invalid](PyPlot.pywrap(z)))
+    PyCall.pycall(pynp.ma[:masked_invalid], Any, z)
+    # pynp.ma[:masked_where](pynp.isnan(z),z)
 end
 
 # ---------------------------------------------------------------------------
@@ -437,6 +445,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         error("Only numbers and vectors are supported with levels keyword")
     end
 
+    # add custom frame shapes to markershape?
+    series_annotations_shapes!(series, :xy)
+
     # for each plotting command, optionally build and add a series handle to the list
 
     # line plot
@@ -552,16 +563,46 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         else
             xyargs
         end
-        handle = ax[:scatter](xyargs...;
-            label = series[:label],
-            zorder = series[:series_plotindex] + 0.5,
-            marker = py_marker(series[:markershape]),
-            s = py_dpi_scale(plt, series[:markersize] .^ 2),
-            edgecolors = py_markerstrokecolor(series),
-            linewidths = py_dpi_scale(plt, series[:markerstrokewidth]),
-            extrakw...
-        )
-        push!(handles, handle)
+
+        if isa(series[:markershape], AbstractVector{Shape})
+            # this section will create one scatter per data point to accomodate the
+            # vector of shapes
+            handle = []
+            x,y = xyargs
+            shapes = series[:markershape]
+            msc = py_markerstrokecolor(series)
+            lw = py_dpi_scale(plt, series[:markerstrokewidth])
+            for i=1:length(y)
+                extrakw[:c] = if series[:marker_z] == nothing
+                    py_color_fix(py_color(cycle(series[:markercolor],i)), x)
+                else
+                    extrakw[:c]
+                end
+
+                push!(handle, ax[:scatter](cycle(x,i), cycle(y,i);
+                    label = series[:label],
+                    zorder = series[:series_plotindex] + 0.5,
+                    marker = py_marker(cycle(shapes,i)),
+                    s =  py_dpi_scale(plt, cycle(series[:markersize],i) .^ 2),
+                    edgecolors = msc,
+                    linewidths = lw,
+                    extrakw...
+                ))
+            end
+            push!(handles, handle)
+        else
+            # do a normal scatter plot
+            handle = ax[:scatter](xyargs...;
+                label = series[:label],
+                zorder = series[:series_plotindex] + 0.5,
+                marker = py_marker(series[:markershape]),
+                s = py_dpi_scale(plt, series[:markersize] .^ 2),
+                edgecolors = py_markerstrokecolor(series),
+                linewidths = py_dpi_scale(plt, series[:markerstrokewidth]),
+                extrakw...
+            )
+            push!(handles, handle)
+        end
     end
 
     if st == :hexbin
@@ -730,12 +771,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
 
         clims = sp[:clims]
-        if is_2tuple(clims)
-            isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-            isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-        end
+        zmin, zmax = extrema(z)
+        extrakw[:vmin] = (is_2tuple(clims) && isfinite(clims[1])) ? clims[1] : zmin
+        extrakw[:vmax] = (is_2tuple(clims) && isfinite(clims[2])) ? clims[2] : zmax
 
-        handle = ax[:pcolormesh](x, y, z;
+        handle = ax[:pcolormesh](x, y, py_mask_nans(z);
             label = series[:label],
             zorder = series[:series_plotindex],
             cmap = py_fillcolormap(series),
@@ -763,16 +803,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 push!(handle, ax[:add_patch](patches))
             end
         end
-        # path = py_path(x, y)
-        # patches = pypatches.pymember("PathPatch")(path;
-        #     label = series[:label],
-        #     zorder = series[:series_plotindex],
-        #     edgecolor = py_linecolor(series),
-        #     facecolor = py_fillcolor(series),
-        #     linewidth = py_dpi_scale(plt, series[:linewidth]),
-        #     fill = true
-        # )
-        # handle = ax[:add_patch](patches)
         push!(handles, handle)
     end
 
@@ -841,6 +871,12 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             linewidths = 0
         )
         push!(handles, handle)
+    end
+
+    # this is all we need to add the series_annotations text
+    anns = series[:series_annotations]
+    for (xi,yi,str,fnt) in EachAnn(anns, x, y)
+        py_add_annotations(sp, xi, yi, PlotText(str, fnt))
     end
 end
 
@@ -1217,3 +1253,5 @@ for (mime, fmt) in _pyplot_mimeformats
         )
     end
 end
+
+closeall(::PyPlotBackend) = PyPlot.plt[:close]("all")

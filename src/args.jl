@@ -123,6 +123,16 @@ const _markerAliases = Dict{Symbol,Symbol}(
     :dtri         => :dtriangle,
     :downtri      => :dtriangle,
     :downtriangle => :dtriangle,
+    :>            => :rtriangle,
+    :rt           => :rtriangle,
+    :rtri         => :rtriangle,
+    :righttri      => :rtriangle,
+    :righttriangle => :rtriangle,
+    :<            => :ltriangle,
+    :lt           => :ltriangle,
+    :ltri         => :ltriangle,
+    :lighttri      => :ltriangle,
+    :lighttriangle => :ltriangle,
     # :+            => :cross,
     :plus         => :cross,
     # :x            => :xcross,
@@ -165,7 +175,7 @@ const _series_defaults = KW(
     :markershape       => :none,
     :markercolor       => :match,
     :markeralpha       => nothing,
-    :markersize        => 6,
+    :markersize        => 4,
     :markerstrokestyle => :solid,
     :markerstrokewidth => 1,
     :markerstrokecolor => :match,
@@ -194,7 +204,7 @@ const _series_defaults = KW(
     :match_dimensions  => false,     # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
                                      # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
     :subplot           => :auto,     # which subplot(s) does this series belong to?
-    :series_annotations => [],       # a list of annotations which apply to the coordinates of this series
+    :series_annotations => nothing,       # a list of annotations which apply to the coordinates of this series
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
                                      #     one logical series to be broken up (path and markers, for example)
     :hover              => nothing,  # text to display when hovering over the data points
@@ -353,6 +363,7 @@ add_aliases(:seriescolor, :c, :color, :colour)
 add_aliases(:linecolor, :lc, :lcolor, :lcolour, :linecolour)
 add_aliases(:markercolor, :mc, :mcolor, :mcolour, :markercolour)
 add_aliases(:markerstrokecolor, :msc, :mscolor, :mscolour, :markerstrokecolour)
+add_aliases(:markerstrokewidth, :msw, :mswidth)
 add_aliases(:fillcolor, :fc, :fcolor, :fcolour, :fillcolour)
 
 add_aliases(:background_color, :bg, :bgcolor, :bg_color, :background,
@@ -387,7 +398,7 @@ add_aliases(:foreground_color_guide, :fg_guide, :fgguide, :fgcolor_guide, :fg_co
 # alphas
 add_aliases(:seriesalpha, :alpha, :α, :opacity)
 add_aliases(:linealpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
-add_aliases(:makeralpha, :ma, :malpha, :mα, :makeropacity, :mopacity)
+add_aliases(:markeralpha, :ma, :malpha, :mα, :markeropacity, :mopacity)
 add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
 
@@ -439,7 +450,7 @@ add_aliases(:match_dimensions, :transpose, :transpose_z)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
 add_aliases(:title_location, :title_loc, :titleloc, :title_position, :title_pos, :titlepos, :titleposition, :title_align, :title_alignment)
-add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation)
+add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation, :text, :txt, :texts, :txts)
 add_aliases(:html_output_format, :format, :fmt, :html_format)
 add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
@@ -691,6 +702,11 @@ function preprocessArgs!(d::KW)
     end
     delete!(d, :fill)
 
+    # handle series annotations
+    if haskey(d, :series_annotations)
+        d[:series_annotations] = series_annotations(wraptuple(d[:series_annotations])...)
+    end
+
   # convert into strokes and brushes
 
     if haskey(d, :arrow)
@@ -841,6 +857,7 @@ function convertLegendValue(val::Symbol)
 end
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Void) = :none
+convertLegendValue{S<:Real, T<:Real}(v::Tuple{S,T}) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
 # -----------------------------------------------------------------------------
@@ -1028,8 +1045,14 @@ end
 # -----------------------------------------------------------------------------
 
 function _update_subplot_periphery(sp::Subplot, anns::AVec)
-    # extend annotations
-    sp.attr[:annotations] = vcat(anns, sp[:annotations])
+    # extend annotations, and ensure we always have a (x,y,PlotText) tuple
+    newanns = vcat(anns, sp[:annotations])
+    for (i,ann) in enumerate(newanns)
+        x,y,tmp = ann
+        ptxt = isa(tmp, PlotText) ? tmp : text(tmp)
+        newanns[i] = (x,y,ptxt)
+    end
+    sp.attr[:annotations] = newanns
 
     # handle legend/colorbar
     sp.attr[:legend] = convertLegendValue(sp.attr[:legend])
@@ -1093,7 +1116,7 @@ function _update_axis(axis::Axis, d_in::KW, letter::Symbol, subplot_index::Int)
     end
 
     # update the axis
-    update!(axis, args...; kw...)
+    attr!(axis, args...; kw...)
     return
 end
 

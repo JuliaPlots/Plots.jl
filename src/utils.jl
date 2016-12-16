@@ -228,25 +228,34 @@ function Base.next(itr::SegmentsIterator, nextidx::Int)
     istart:iend, i
 end
 
+# Find minimal type that can contain NaN and x
+# To allow use of NaN separated segments with categorical x axis
+
+float_extended_type{T}(x::AbstractArray{T}) = Union{T,Float64}
+float_extended_type{T<:Real}(x::AbstractArray{T}) = Float64
+
 # ------------------------------------------------------------------------------------
 
 
 nop() = nothing
 notimpl() = error("This has not been implemented yet")
 
-Base.cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
-Base.cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
+isnothing(x::Void) = true
+isnothing(x) = false
 
-Base.cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
-Base.cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
-Base.cycle(v, idx::Int)       = v
+cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
+cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
-Base.cycle(v::AVec, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
-Base.cycle(v::AMat, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
-Base.cycle(v, indices::AVec{Int})       = fill(v, length(indices))
+cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
+cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
+cycle(v, idx::Int)       = v
 
-Base.cycle(grad::ColorGradient, idx::Int) = cycle(grad.colors, idx)
-Base.cycle(grad::ColorGradient, indices::AVec{Int}) = cycle(grad.colors, indices)
+cycle(v::AVec, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
+cycle(v::AMat, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
+cycle(v, indices::AVec{Int})       = fill(v, length(indices))
+
+cycle(grad::ColorGradient, idx::Int) = cycle(grad.colors, idx)
+cycle(grad::ColorGradient, indices::AVec{Int}) = cycle(grad.colors, indices)
 
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]
@@ -460,7 +469,7 @@ ok(tup::Tuple) = ok(tup...)
 # compute one side of a fill range from a ribbon
 function make_fillrange_side(y, rib)
     frs = zeros(length(y))
-    for (i, (yi, ri)) in enumerate(zip(y, cycle(rib)))
+    for (i, (yi, ri)) in enumerate(zip(y, Base.cycle(rib)))
         frs[i] = yi + ri
     end
     frs
@@ -489,6 +498,8 @@ ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
 # ---------------------------------------------------------------
+
+makekw(; kw...) = KW(kw)
 
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
@@ -714,28 +725,28 @@ Base.push!(series::Series, xi, yi, zi) = (push_x!(series,xi); push_y!(series,yi)
 
 # -------------------------------------------------------
 
-function update!(series::Series; kw...)
+function attr!(series::Series; kw...)
     d = KW(kw)
     preprocessArgs!(d)
     for (k,v) in d
         if haskey(_series_defaults, k)
             series[k] = v
         else
-            warn("unused key $k in series update")
+            warn("unused key $k in series attr")
         end
     end
     _series_updated(series[:subplot].plt, series)
     series
 end
 
-function update!(sp::Subplot; kw...)
+function attr!(sp::Subplot; kw...)
     d = KW(kw)
     preprocessArgs!(d)
     for (k,v) in d
         if haskey(_subplot_defaults, k)
             sp[k] = v
         else
-            warn("unused key $k in subplot update")
+            warn("unused key $k in subplot attr")
         end
     end
     sp
