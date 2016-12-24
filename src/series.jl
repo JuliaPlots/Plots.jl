@@ -343,8 +343,9 @@ end
 
 @recipe function f(f::FuncOrFuncs)
     plt = d[:plot_object]
-    xmin,xmax = axis_limits(plt[1][:xaxis])
-    f, xmin, xmax
+    xmin, xmax = axis_limits(plt[1][:xaxis])
+    xs = adapted_grid(f, (xmin, xmax))
+    xs, f
 end
 
 #
