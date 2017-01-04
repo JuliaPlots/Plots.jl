@@ -2,16 +2,15 @@
 # https://github.com/ma-laforge/InspectDR.jl
 
 #=TODO:
+    Tweak scale factor for width & other sizes
+
 Not supported by InspectDR:
-    :foreground_color_title (font), title_location
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
-    :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
+    :foreground_color_grid
+    :foreground_color_border
     :polar,
 
-
 Add in functionality to Plots.jl:
-    :annotations, :aspect_ratio,
+    :aspect_ratio,
 =#
 
 # ---------------------------------------------------------------------------
@@ -50,56 +49,32 @@ const _inspectdr_attr = merge_with_base_supported([
   ])
 const _inspectdr_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _inspectdr_seriestype = [
-        :path, :scatter #, :steppre, :steppost, :shape,
+        :path, :scatter, :shape #, :steppre, :steppost
     ]
 #see: _allMarkers, _shape_keys
 const _inspectdr_marker = Symbol[
-    :none,
-    :auto,
-    :circle,
-    :rect,
-  :diamond,
-#  :hexagon,
-  :cross,
-  :xcross,
-  :utriangle,
-  :dtriangle,
-  :rtriangle,
-  :ltriangle,
-#  :pentagon,
-#  :heptagon,
-#  :octagon,
-#  :star4,
-#    :star5,
-#  :star6,
-#  :star7,
-  :star8,
-#  :vline,
-#  :hline,
-  :+,
-  :x,
+    :none, :auto,
+    :circle, :rect, :diamond,
+    :cross, :xcross,
+    :utriangle, :dtriangle, :rtriangle, :ltriangle,
+    :pentagon, :hexagon, :heptagon, :octagon,
+    :star4, :star5, :star6, :star7, :star8,
+    :vline, :hline, :+, :x,
 ]
 
-const _inspectdr_scale = [:identity, :ln, :log2, :log10] #Does not really support ln, (plot using log10 instead).
+const _inspectdr_scale = [:identity, :ln, :log2, :log10]
+
+is_marker_supported(::InspectDRBackend, shape::Shape) = true
 
 #Do we avoid Map to avoid possible pre-comile issues?
 function _inspectdr_mapglyph(s::Symbol)
     s == :rect && return :square
-    s == :utriangle && return :uarrow
-    s == :dtriangle && return :darrow
-    s == :ltriangle && return :larrow
-    s == :rtriangle && return :rarrow
-    s == :xcross && return :diagcross
-    s == :star8 && return :*
-
-#= Actually supported:
-    :square, :diamond,
-    :uarrow, :darrow, :larrow, :rarrow, #usually triangles
-    :cross, :+, :diagcross, :x,
-    :circle, :o, :star, :*,
-=#
-
     return s
+end
+
+function _inspectdr_mapglyph(s::Shape)
+    x, y = coords(s)
+    return InspectDR.GlyphPolyline(x, y)
 end
 
 # py_marker(markers::AVec) = map(py_marker, markers)
@@ -124,6 +99,25 @@ end
 #Hack: suggested point size does not seem adequate relative to plot size, for some reason.
 _inspectdr_mapptsize(v) = 1.5*v
 
+function _inspectdr_add_annotations(plot, x, y, val)
+    #What kind of annotation is this?
+end
+
+#plot::InspectDR.Plot2D
+function _inspectdr_add_annotations(plot, x, y, val::PlotText)
+    vmap = Dict{Symbol, Symbol}(:top=>:t, :bottom=>:b) #:vcenter
+    hmap = Dict{Symbol, Symbol}(:left=>:l, :right=>:r) #:hcenter
+    align = Symbol(get(vmap, val.font.valign, :c), get(hmap, val.font.halign, :c))
+    fnt = InspectDR.Font(val.font.family, val.font.pointsize,
+        color =_inspectdr_mapcolor(val.font.color)
+    )
+    ann = InspectDR.atext(val.str, x=x, y=y,
+        font=fnt, angle=val.font.rotation, align=align
+    )
+    InspectDR.add(plot, ann)
+    return
+end
+
 # ---------------------------------------------------------------------------
 #InspectDR-dependent structures and method signatures.
 #(To be evalutated only once ready to load module)
@@ -131,6 +125,11 @@ const _inspectdr_depcode = quote
 
 import InspectDR
 export InspectDR
+
+#Glyph used when plotting "Shape"s:
+const INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
+    2*InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y
+)
 
 type InspectDRPlotEnv
     #Stores reference to active plot GUI:
@@ -142,13 +141,13 @@ end #_inspectdr_depcode
 # ---------------------------------------------------------------------------
 
 function _inspectdr_getscale(s::Symbol)
-#TODO: Support :ln, :asinh, :sqrt
+#TODO: Support :asinh, :sqrt
     if :log2 == s
         return InspectDR.AxisScale(:log2)
     elseif :log10 == s
         return InspectDR.AxisScale(:log10)
     elseif :ln == s
-        return InspectDR.AxisScale(:log10) #At least it will be a log-plot
+        return InspectDR.AxisScale(:ln)
     else #identity
         return InspectDR.AxisScale(:lin)
     end
@@ -203,7 +202,10 @@ function _initialize_subplot(plt::Plot{InspectDRBackend}, sp::Subplot{InspectDRB
     #Don't do anything without a "subplot" object:  Will process later.
     if nothing == plot; return; end
     plot.data = []
-    
+    plot.markers = [] #Clear old markers
+    plot.atext = [] #Clear old annotation
+    plot.apline = [] #Clear old poly lines
+
     return plot
 end
 
@@ -235,10 +237,44 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
 #= TODO: Eventually support
     series[:fillcolor] #I think this is fill under line
     zorder = series[:series_plotindex]
+
+For st in :shape:
+    zorder = series[:series_plotindex],
 =#
 
-    #TODO: scale width & sizes
-   if st in (:path, :scatter) #, :steppre, :steppost)
+    if st in (:shape,)
+        nmax = 0
+        for (i,rng) in enumerate(iter_segments(x, y))
+            nmax = i
+            if length(rng) > 1
+                linewidth = series[:linewidth]
+                linecolor = _inspectdr_mapcolor(cycle(series[:linecolor], i))
+                fillcolor = _inspectdr_mapcolor(cycle(series[:fillcolor], i))
+                line = InspectDR.line(
+                    style=:solid, width=linewidth, color=linecolor
+                )
+                apline = InspectDR.PolylineAnnotation(
+                    x[rng], y[rng], line=line, fillcolor=fillcolor
+                )
+                push!(plot.apline, apline)
+            end
+        end
+
+        i = (nmax >= 2? div(nmax, 2): nmax) #Must pick one set of colors for legend
+        if i > 1 #Add dummy waveform for legend entry:
+            linewidth = series[:linewidth]
+            linecolor = _inspectdr_mapcolor(cycle(series[:linecolor], i))
+            fillcolor = _inspectdr_mapcolor(cycle(series[:fillcolor], i))
+            wfrm = InspectDR.add(plot, Float64[], Float64[], id=series[:label])
+            wfrm.line = InspectDR.line(
+                style=:none, width=linewidth, #linewidth affects glyph
+            )
+            wfrm.glyph = InspectDR.glyph(
+                shape = INSPECTDR_GLYPH_SHAPE, size = 8,
+                color = linecolor, fillcolor = fillcolor
+            )
+        end
+   elseif st in (:path, :scatter) #, :steppre, :steppost)
         #NOTE: In Plots.jl, :scatter plots have 0-linewidths (I think).
         linewidth = series[:linewidth]
         #More efficient & allows some support for markerstrokewidth:
@@ -260,6 +296,12 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
             color = _inspectdr_mapcolor(series[:markerstrokecolor]),
             fillcolor = _inspectdr_mapcolor(series[:markercolor]),
         )
+    end
+
+    # this is all we need to add the series_annotations text
+    anns = series[:series_annotations]
+    for (xi,yi,str,fnt) in EachAnn(anns, x, y)
+        _inspectdr_add_annotations(plot, xi, yi, PlotText(str, fnt))
     end
     return
 end
@@ -285,7 +327,6 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
         plot.axes = InspectDR.AxesRect(xscale, yscale)
         xmin, xmax  = axis_limits(xaxis)
         ymin, ymax  = axis_limits(yaxis)
-        #TODO: not sure which extents we should be modifying.
         plot.ext = InspectDR.PExtents2D() #reset
         plot.ext_full = InspectDR.PExtents2D(xmin, xmax, ymin, ymax)
     a = plot.annotation
@@ -293,20 +334,31 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
         a.xlabel = xaxis[:guide]; a.ylabel = yaxis[:guide]
 
     l = plot.layout
-        l.fnttitle.name = sp[:titlefont].family
-        l.fnttitle._size = _inspectdr_mapptsize(sp[:titlefont].pointsize)
+        l.framedata.fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
+        l.framedata.line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
+        l.fnttitle = InspectDR.Font(sp[:titlefont].family,
+            _inspectdr_mapptsize(sp[:titlefont].pointsize),
+            color = _inspectdr_mapcolor(sp[:foreground_color_title])
+        )
         #Cannot independently control fonts of axes with InspectDR:
-        l.fntaxlabel.name = xaxis[:guidefont].family
-        l.fntaxlabel._size = _inspectdr_mapptsize(xaxis[:guidefont].pointsize)
-        l.fntticklabel.name = xaxis[:tickfont].family
-        l.fntticklabel._size = _inspectdr_mapptsize(xaxis[:tickfont].pointsize)
+        l.fntaxlabel = InspectDR.Font(xaxis[:guidefont].family,
+            _inspectdr_mapptsize(xaxis[:guidefont].pointsize),
+            color = _inspectdr_mapcolor(xaxis[:foreground_color_guide])
+        )
+        l.fntticklabel = InspectDR.Font(xaxis[:tickfont].family,
+            _inspectdr_mapptsize(xaxis[:tickfont].pointsize),
+            color = _inspectdr_mapcolor(xaxis[:foreground_color_text])
+        )
         #No independent control of grid???
         l.grid = sp[:grid]? gridon: gridoff
     leg = l.legend
         leg.enabled = (sp[:legend] != :none)
         #leg.width = 150 #TODO: compute???
-        leg.font.name = sp[:legendfont].family
-        leg.font._size = _inspectdr_mapptsize(sp[:legendfont].pointsize)
+        leg.font = InspectDR.Font(sp[:legendfont].family,
+            _inspectdr_mapptsize(sp[:legendfont].pointsize),
+            color = _inspectdr_mapcolor(sp[:foreground_color_legend])
+        )
+        leg.frame.fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
 end
 
 # called just before updating layout bounding boxes... in case you need to prep
@@ -322,11 +374,21 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
         sp.o = mplot.subplots[i]
         _initialize_subplot(plt, sp)
         _inspectdr_setupsubplot(sp)
+
+            sp.o.layout.frame.fillcolor =
+                _inspectdr_mapcolor(plt[:background_color_outside])
+
+        # add the annotations
+        for ann in sp[:annotations]
+            _inspectdr_add_annotations(mplot.subplots[i], ann...)
+        end
     end
 
     #Do not yet support absolute plot positionning.
     #Just try to make things look more-or less ok:
-    if nsubplots <= 4
+    if nsubplots <= 1
+        mplot.ncolumns = 1
+    elseif nsubplots <= 4
         mplot.ncolumns = 2
     elseif nsubplots <= 6
         mplot.ncolumns = 3
@@ -377,7 +439,7 @@ const _inspectdr_mimeformats_nodpi = Dict(
     "image/svg+xml"           => "svg",
     "application/eps"         => "eps",
     "image/eps"               => "eps",
-#    "application/postscript"  => "ps", #TODO: support
+#    "application/postscript"  => "ps", #TODO: support once Cairo supports PSSurface
     "application/pdf"         => "pdf"
 )
 _inspectdr_show(io::IO, mime::MIME, ::Void) =
