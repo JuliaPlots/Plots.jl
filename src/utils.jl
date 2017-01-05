@@ -265,7 +265,7 @@ maketuple(x::Real)                     = (x,x)
 maketuple{T,S}(x::Tuple{T,S}) = x
 
 mapFuncOrFuncs(f::Function, u::AVec)        = map(f, u)
-mapFuncOrFuncs(fs::AVec{Function}, u::AVec) = [map(f, u) for f in fs]
+mapFuncOrFuncs{F<:Function}(fs::AVec{F}, u::AVec) = [map(f, u) for f in fs]
 
 unzip{X,Y}(xy::AVec{Tuple{X,Y}})              = [t[1] for t in xy], [t[2] for t in xy]
 unzip{X,Y,Z}(xyz::AVec{Tuple{X,Y,Z}})         = [t[1] for t in xyz], [t[2] for t in xyz], [t[3] for t in xyz]
