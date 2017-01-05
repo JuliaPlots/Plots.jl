@@ -361,7 +361,8 @@ end
 # # as there would be more than one function passed in)
 
 @recipe function f{F<:Function}(f::FuncOrFuncs{F}, x)
-    @assert !(typeof(x) <: FuncOrFuncs)  # otherwise we'd hit infinite recursion here
+    F2 = typeof(x)
+    @assert !(F2 <: Function || (F2 <: AbstractArray && F2.parameters[1] <: Function))  # otherwise we'd hit infinite recursion here
     x, f
 end
 
