@@ -91,9 +91,14 @@ end
 
 _inspectdr_mapcolor(v::Colorant) = v
 function _inspectdr_mapcolor(g::PlotUtils.ColorGradient)
-    warn("Vectors of colors are currently unsupported in InspectDR.")
+    warn("Color gradients are currently unsupported in InspectDR.")
     #Pick middle color:
     _inspectdr_mapcolor(g.colors[div(1+end,2)])
+end
+function _inspectdr_mapcolor(v::AVec)
+    warn("Vectors of colors are currently unsupported in InspectDR.")
+    #Pick middle color:
+    _inspectdr_mapcolor(v[div(1+end,2)])
 end
 
 #Hack: suggested point size does not seem adequate relative to plot size, for some reason.
@@ -119,26 +124,6 @@ function _inspectdr_add_annotations(plot, x, y, val::PlotText)
 end
 
 # ---------------------------------------------------------------------------
-#InspectDR-dependent structures and method signatures.
-#(To be evalutated only once ready to load module)
-const _inspectdr_depcode = quote
-
-import InspectDR
-export InspectDR
-
-#Glyph used when plotting "Shape"s:
-const INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
-    2*InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y
-)
-
-type InspectDRPlotEnv
-    #Stores reference to active plot GUI:
-    cur_gui::Nullable{InspectDR.GtkPlot}
-end
-InspectDRPlotEnv() = InspectDRPlotEnv(nothing)
-const _inspectdr_plotenv = InspectDRPlotEnv()
-end #_inspectdr_depcode
-# ---------------------------------------------------------------------------
 
 function _inspectdr_getscale(s::Symbol)
 #TODO: Support :asinh, :sqrt
@@ -156,35 +141,53 @@ end
 # ---------------------------------------------------------------------------
 
 function _initialize_backend(::InspectDRBackend; kw...)
-    eval(_inspectdr_depcode)
+    @eval begin
+        import InspectDR
+        export InspectDR
+
+        #Glyph used when plotting "Shape"s:
+        const INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
+            2*InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y
+        )
+
+        type InspecDRPlotRef
+            mplot::Union{Void, InspectDR.Multiplot}
+            gui::Union{Void, InspectDR.GtkPlot}
+        end
+
+        _inspectdr_getmplot(::Any) = nothing
+        _inspectdr_getmplot(r::InspecDRPlotRef) = r.mplot
+
+        _inspectdr_getgui(::Any) = nothing
+        _inspectdr_getgui(gplot::InspectDR.GtkPlot) = (gplot.destroyed? nothing: gplot)
+        _inspectdr_getgui(r::InspecDRPlotRef) = _inspectdr_getgui(r.gui)
+    end
 end
 
 # ---------------------------------------------------------------------------
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{InspectDRBackend})
-    mplot = plt.o
+    mplot = _inspectdr_getmplot(plt.o)
+    gplot = _inspectdr_getgui(plt.o)
 
     #:overwrite_figure: want to reuse current figure
-    if plt[:overwrite_figure] && isa(mplot, InspectDR.Multiplot)
+    if plt[:overwrite_figure] && mplot != nothing
         mplot.subplots = [] #Reset
-        if !isnull(_inspectdr_plotenv.cur_gui) #Create new one:
-            gplot = get(_inspectdr_plotenv.cur_gui)
+        if gplot != nothing #Ensure still references current plot
             gplot.src = mplot
         end
     else #want new one:
         mplot = InspectDR.Multiplot()
-        if !isnull(_inspectdr_plotenv.cur_gui) #Create new one:
-            _inspectdr_plotenv.cur_gui = display(InspectDR.GtkDisplay(), mplot)
-        end
+        gplot = nothing #Will be created later
     end
 
     #break link with old subplots
     for sp in plt.subplots
         sp.o = nothing
     end
-    plt.o = mplot
-    return mplot
+
+    return InspecDRPlotRef(mplot, gplot)
 end
 
 # ---------------------------------------------------------------------------
@@ -364,7 +367,9 @@ end
 # called just before updating layout bounding boxes... in case you need to prep
 # for the calcs
 function _before_layout_calcs(plt::Plot{InspectDRBackend})
-    mplot = plt.o
+    const mplot = _inspectdr_getmplot(plt.o)
+    if nothing == mplot; return; end
+
     resize!(mplot.subplots, length(plt.subplots))
     nsubplots = length(plt.subplots)
     for (i, sp) in enumerate(plt.subplots)
@@ -401,6 +406,7 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
     for series in plt.series_list
         _series_added(plt, series)
     end
+    return
 end
 
 # ----------------------------------------------------------------
@@ -416,18 +422,14 @@ end
 
 # Override this to update plot items (title, xlabel, etc), and add annotations (d[:annotations])
 function _update_plot_object(plt::Plot{InspectDRBackend})
-    const mplot = plt.o
+    mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end
-    if isnull(_inspectdr_plotenv.cur_gui); return; end
-    const gplot = get(_inspectdr_plotenv.cur_gui)
+    gplot = _inspectdr_getgui(plt.o)
+    if nothing == gplot; return; end
 
-    if gplot.destroyed
-        _inspectdr_plotenv.cur_gui = display(InspectDR.GtkDisplay(), mplot)
-    else
-        gplot.src = mplot
-        InspectDR.refresh(gplot)
-    end
-    return mplot
+    gplot.src = mplot #Ensure still references current plot
+    InspectDR.refresh(gplot)
+    return
 end
 
 # ----------------------------------------------------------------
@@ -449,25 +451,30 @@ _inspectdr_show(io::IO, mime::MIME, mplot) = show(io, mime, mplot)
 for (mime, fmt) in _inspectdr_mimeformats_dpi
     @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{InspectDRBackend})
         dpi = plt[:dpi]#TODO: support
-        _inspectdr_show(io, mime, plt.o)
+        _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o))
     end
 end
 for (mime, fmt) in _inspectdr_mimeformats_nodpi
     @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{InspectDRBackend})
-        _inspectdr_show(io, mime, plt.o)
+        _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o))
     end
 end
+_show(io::IO, mime::MIME"text/plain", plt::Plot{InspectDRBackend}) = nothing #Don't show
 
 # ----------------------------------------------------------------
 
 # Display/show the plot (open a GUI window, or browser page, for example).
 function _display(plt::Plot{InspectDRBackend})
-    const mplot = plt.o
-    if isnull(_inspectdr_plotenv.cur_gui)
-        _inspectdr_plotenv.cur_gui = display(InspectDR.GtkDisplay(), mplot)
+    mplot = _inspectdr_getmplot(plt.o)
+    if nothing == mplot; return; end
+    gplot = _inspectdr_getgui(plt.o)
+
+    if nothing == gplot && true == plt[:show]
+        gplot = display(InspectDR.GtkDisplay(), mplot)
     else
         #redundant... Plots.jl will call _update_plot_object:
-        #InspectDR.refresh(get(_inspectdr_plotenv.cur_gui))
+        #InspectDR.refresh(gplot)
     end
-    return get(_inspectdr_plotenv.cur_gui)
+    plt.o = InspecDRPlotRef(mplot, gplot)
+    return gplot
 end
