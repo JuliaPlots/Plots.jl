@@ -343,7 +343,11 @@ end
 
 @recipe function f(f::FuncOrFuncs)
     plt = d[:plot_object]
-    xmin,xmax = axis_limits(plt[1][:xaxis])
+    xmin, xmax = try
+        axis_limits(plt[1][:xaxis])
+    catch
+        -5, 5
+    end
     f, xmin, xmax
 end
 
@@ -416,7 +420,10 @@ end
 
 #
 # # special handling... xmin/xmax with parametric function(s)
-@recipe f(f::FuncOrFuncs, xmin::Number, xmax::Number) = linspace(xmin, xmax, 100), f
+@recipe function f(f::FuncOrFuncs, xmin::Number, xmax::Number)
+    xs = adapted_grid(f, (xmin, xmax))
+    xs, f
+end
 @recipe f(fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec)  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
 @recipe f(fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Number, umax::Number, n = 200) = fx, fy, linspace(umin, umax, n)
 
