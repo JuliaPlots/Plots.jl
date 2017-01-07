@@ -52,6 +52,11 @@ function tex(plt::Plot, fn::AbstractString)
 end
 tex(fn::AbstractString) = tex(current(), fn)
 
+function tex(plt::Plot{PGFPlotsBackend}, fn::AbstractString)
+  fn = addExtension(fn, "tex")
+  PGFPlots.save(fn, backend_object(plt), include_preamble=false)
+end
+
 function html(plt::Plot, fn::AbstractString)
     fn = addExtension(fn, "html")
     io = open(fn, "w")
