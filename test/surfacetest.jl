@@ -1,4 +1,6 @@
 module SurfacePlotsTests
+using Plots
+plotlyjs();
 m=32; n=5;
 r = (0:m)/m
 theta = reshape(pi*(-n*m:n*m)/m, 1, 2*n*m+1)
