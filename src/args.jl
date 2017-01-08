@@ -189,6 +189,7 @@ const _series_defaults = KW(
     :marker_z          => nothing,   # value for color scale
     :line_z            => nothing,
     :levels            => 15,
+    :surfacecolor      => nothing,
     :orientation       => :vertical,
     :bar_position      => :overlay,  # for bar plots and histograms: could also be stack (stack up) or dodge (side by side)
     :bar_width         => nothing,
@@ -431,6 +432,7 @@ add_aliases(:zguide, :zlabel, :zlab, :zl)
 add_aliases(:zlims, :zlim, :zlimit, :zlimits)
 add_aliases(:zticks, :ztick)
 add_aliases(:zrotation, :zrot, :zr)
+add_aliases(:surfacecolor, :surfacecolour, :sc, :surfcolor, :surfcolour)
 add_aliases(:legend, :leg, :key)
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
 add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
