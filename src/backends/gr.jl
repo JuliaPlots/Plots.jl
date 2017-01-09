@@ -1077,14 +1077,14 @@ else
     "use_default"
 end
 
-const _gr_wstype = Ref(get(ENV, "GKS_WSTYPE", _gr_wstype_default))
+const _gr_wstype = Ref(get(ENV, "GKSwstype", _gr_wstype_default))
 gr_set_output(wstype::String) = (_gr_wstype[] = wstype)
 
 for (mime, fmt) in _gr_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         GR.emergencyclosegks()
         filepath = tempname() * "." * $fmt
-        ENV["GKS_WSTYPE"] = $fmt
+        ENV["GKSwstype"] = $fmt
         ENV["GKS_FILEPATH"] = filepath
         gr_display(plt)
         GR.emergencyclosegks()
@@ -1097,7 +1097,7 @@ function _display(plt::Plot{GRBackend})
     if plt[:display_type] == :inline
         GR.emergencyclosegks()
         filepath = tempname() * ".pdf"
-        ENV["GKS_WSTYPE"] = "pdf"
+        ENV["GKSwstype"] = "pdf"
         ENV["GKS_FILEPATH"] = filepath
         gr_display(plt)
         GR.emergencyclosegks()
@@ -1107,7 +1107,7 @@ function _display(plt::Plot{GRBackend})
     else
         ENV["GKS_DOUBLE_BUF"] = true
         if _gr_wstype[] != "use_default"
-            ENV["GKS_WSTYPE"] = _gr_wstype[]
+            ENV["GKSwstype"] = _gr_wstype[]
         end
         gr_display(plt)
     end

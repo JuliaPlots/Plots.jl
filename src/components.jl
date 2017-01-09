@@ -248,7 +248,7 @@ end
 function font(args...)
 
   # defaults
-  family = "Helvetica"
+  family = "sans-serif"
   pointsize = 14
   halign = :hcenter
   valign = :vcenter

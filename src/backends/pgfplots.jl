@@ -314,10 +314,16 @@ function _show(io::IO, mime::MIME"application/pdf", plt::Plot{PGFPlotsBackend})
     PGFPlots.save(PGFPlots.PDF(fn), pgfplt)
 
     # read it into io
-    write(io, readall(open(fn)))
+    write(io, readstring(open(fn)))
 
     # cleanup
     PGFPlots.cleanup(plt.o)
+end
+
+function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsBackend})
+    fn = tempname()*".tex"
+    PGFPlots.save(fn, backend_object(plt), include_preamble=false)
+    write(io, readstring(open(fn)))
 end
 
 function _display(plt::Plot{PGFPlotsBackend})

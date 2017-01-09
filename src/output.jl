@@ -154,6 +154,7 @@ const _mimeformats = Dict(
     "application/postscript"  => "ps",
     "image/svg+xml"           => "svg",
     "text/plain"              => "txt",
+    "application/x-tex"       => "tex",
 )
 
 const _best_html_output_type = KW(
