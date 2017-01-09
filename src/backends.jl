@@ -276,6 +276,7 @@ end
 @init_backend GR
 @init_backend GLVisualize
 @init_backend PGFPlots
+@init_backend InspectDR
 
 # ---------------------------------------------------------
 
