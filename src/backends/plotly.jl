@@ -20,7 +20,7 @@ const _plotly_attr = merge_with_base_supported([
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
-    :marker_z, :levels,
+    :marker_z, :surfacecolor, :levels,
     :ribbon, :quiver,
     :orientation,
     # :overwrite_figure,
@@ -432,7 +432,7 @@ function plotly_series(plt::Plot, series::Series)
 
     # for surface types, set the data
     if st in (:heatmap, :contour, :surface, :wireframe)
-        for letter in [:x,:y,:z]
+        for letter in [:x,:y,:z,:surfacecolor]
             d_out[letter] = plotly_surface_data(series, series[letter])
         end
     end
