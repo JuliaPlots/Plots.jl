@@ -6,7 +6,7 @@
 # This should cut down on boilerplate code and allow more focused dispatch on type
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
-typealias FuncOrFuncs Union{Function, AVec{Function}}
+typealias FuncOrFuncs{F} Union{F, Vector{F}, Matrix{F}}
 
 all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image), get(d, :seriestype, :none))
 
@@ -96,8 +96,8 @@ nobigs(v) = v
 end
 
 # not allowed
-compute_xyz(x::Void, y::FuncOrFuncs, z)       = error("If you want to plot the function `$y`, you need to define the x values!")
-compute_xyz(x::Void, y::Void, z::FuncOrFuncs) = error("If you want to plot the function `$z`, you need to define x and y values!")
+compute_xyz{F<:Function}(x::Void, y::FuncOrFuncs{F}, z)       = error("If you want to plot the function `$y`, you need to define the x values!")
+compute_xyz{F<:Function}(x::Void, y::Void, z::FuncOrFuncs{F}) = error("If you want to plot the function `$z`, you need to define x and y values!")
 compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 
 # --------------------------------------------------------------------
@@ -341,7 +341,7 @@ end
 
 # function without range... use the current range of the x-axis
 
-@recipe function f(f::FuncOrFuncs)
+@recipe function f{F<:Function}(f::FuncOrFuncs{F})
     plt = d[:plot_object]
     xmin, xmax = try
         axis_limits(plt[1][:xaxis])
@@ -360,8 +360,9 @@ end
 # # if functions come first, just swap the order (not to be confused with parametric functions...
 # # as there would be more than one function passed in)
 
-@recipe function f(f::FuncOrFuncs, x)
-    @assert !(typeof(x) <: FuncOrFuncs)  # otherwise we'd hit infinite recursion here
+@recipe function f{F<:Function}(f::FuncOrFuncs{F}, x)
+    F2 = typeof(x)
+    @assert !(F2 <: Function || (F2 <: AbstractArray && F2.parameters[1] <: Function))  # otherwise we'd hit infinite recursion here
     x, f
 end
 
@@ -420,19 +421,23 @@ end
 
 #
 # # special handling... xmin/xmax with parametric function(s)
-@recipe function f(f::FuncOrFuncs, xmin::Number, xmax::Number)
+@recipe function f(f::Function, xmin::Number, xmax::Number)
     xs = adapted_grid(f, (xmin, xmax))
     xs, f
 end
-@recipe f(fx::FuncOrFuncs, fy::FuncOrFuncs, u::AVec)  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
-@recipe f(fx::FuncOrFuncs, fy::FuncOrFuncs, umin::Number, umax::Number, n = 200) = fx, fy, linspace(umin, umax, n)
+@recipe function f{F<:Function}(fs::AbstractArray{F}, xmin::Number, xmax::Number)
+    xs = Any[adapted_grid(f, (xmin, xmax)) for f in fs]
+    xs, fs
+end
+@recipe f{F<:Function,G<:Function}(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec)  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
+@recipe f{F<:Function,G<:Function}(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) = fx, fy, linspace(umin, umax, n)
 
 #
 # # special handling... 3D parametric function(s)
-@recipe function f(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, u::AVec)
+@recipe function f{F<:Function,G<:Function,H<:Function}(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, u::AVec)
     mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
 end
-@recipe function f(fx::FuncOrFuncs, fy::FuncOrFuncs, fz::FuncOrFuncs, umin::Number, umax::Number, numPoints = 200)
+@recipe function f{F<:Function,G<:Function,H<:Function}(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, umin::Number, umax::Number, numPoints = 200)
     fx, fy, fz, linspace(umin, umax, numPoints)
 end
 
