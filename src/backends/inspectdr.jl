@@ -140,6 +140,14 @@ end
 
 # ---------------------------------------------------------------------------
 
+function add_backend_string(::InspectDRBackend)
+    """
+    if !Plots.is_installed("InspectDR")
+        Pkg.add("InspectDR")
+    end
+    """
+end
+
 function _initialize_backend(::InspectDRBackend; kw...)
     @eval begin
         import InspectDR
@@ -469,7 +477,7 @@ function _display(plt::Plot{InspectDRBackend})
     if nothing == mplot; return; end
     gplot = _inspectdr_getgui(plt.o)
 
-    if nothing == gplot && true == plt[:show]
+    if nothing == gplot
         gplot = display(InspectDR.GtkDisplay(), mplot)
     else
         #redundant... Plots.jl will call _update_plot_object:
