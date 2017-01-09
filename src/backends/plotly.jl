@@ -20,7 +20,7 @@ const _plotly_attr = merge_with_base_supported([
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
-    :marker_z, :levels,
+    :marker_z, :fill_z, :levels,
     :ribbon, :quiver,
     :orientation,
     # :overwrite_figure,
@@ -371,6 +371,7 @@ end
 plotly_colorscale(c, α) = plotly_colorscale(cgrad(alpha=α), α)
 # plotly_colorscale(c, alpha = nothing) = plotly_colorscale(cgrad(), alpha)
 
+
 const _plotly_markers = KW(
     :rect       => "square",
     :xcross     => "x",
@@ -488,6 +489,9 @@ function plotly_series(plt::Plot, series::Series)
             d_out[:contours] = KW(:x => wirelines, :y => wirelines, :z => wirelines)
         else
             d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+            if series[:fill_z] != nothing
+                d_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
+            end
         end
 
     elseif st == :pie
