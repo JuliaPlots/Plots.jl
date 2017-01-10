@@ -403,6 +403,7 @@ end
     #         seriestype := :path3d
     #     end
     # end
+    wrap_surfaces(d)
     SliceIt, x, y, z
 end
 
