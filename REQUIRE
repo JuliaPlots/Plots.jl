@@ -4,6 +4,6 @@ RecipesBase
 PlotUtils
 PlotThemes
 Reexport
-FixedSizeArrays
 Measures
 Showoff
+StaticArrays

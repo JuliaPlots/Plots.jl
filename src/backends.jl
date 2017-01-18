@@ -19,10 +19,11 @@ macro init_backend(s)
         export $sym
         $sym(; kw...) = (default(; kw...); backend(Symbol($str)))
         backend_name(::$T) = Symbol($str)
+        backend_package_name(::$T) = Symbol("Plots", string(s))
         push!(_backends, Symbol($str))
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
-        include("backends/" * $str * ".jl")
+        # include("backends/" * $str * ".jl")
     end)
 end
 
@@ -148,7 +149,7 @@ function pickDefaultBackend()
     # the ordering/inclusion of this package list is my semi-arbitrary guess at
     # which one someone will want to use if they have the package installed...accounting for
     # features, speed, and robustness
-    for pkgstr in ("PyPlot", "GR", "PlotlyJS", "Immerse", "Gadfly", "UnicodePlots")
+    for pkgstr in ("GR", "PlotlyJS", "PyPlot", "UnicodePlots")
         if Pkg.installed(pkgstr) != nothing
             return backend(Symbol(lowercase(pkgstr)))
         end
@@ -263,22 +264,31 @@ function merge_with_base_supported(v::AVec)
 end
 
 
-
-# @init_backend Immerse
-# @init_backend Gadfly
-@init_backend PyPlot
-# @init_backend Qwt
-@init_backend UnicodePlots
-# @init_backend Winston
-# @init_backend Bokeh
+# @init_backend PyPlot
+# @init_backend UnicodePlots
 @init_backend Plotly
-@init_backend PlotlyJS
+# @init_backend PlotlyJS
 @init_backend GR
-@init_backend GLVisualize
-@init_backend PGFPlots
-@init_backend InspectDR
+# @init_backend GLVisualize
+# @init_backend PGFPlots
+# @init_backend InspectDR
+
+_initialize_backend(::PlotlyBackend) = include("backends/plotly.jl")
+
+function _initialize_backend(b::AbstractBackend)
+    bname = backend_name(b)
+    @eval import $(backend_package_name(b))
+end
 
 # ---------------------------------------------------------
+
+const _attr = KW()
+const _seriestype = KW()
+const _marker = KW()
+const _style = KW()
+const _scale = KW()
+
+using Base.Meta
 
 # create the various `is_xxx_supported` and `supported_xxxs` methods
 # by default they pass through to checking membership in `_gr_xxx`
@@ -294,13 +304,38 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
 
     for bend in backends()
         bend_type = typeof(_backend_instance(bend))
-        v = Symbol("_", bend, "_", s)
+        # v = Symbol("_", bend, "_", s)
+        v = Symbol("_", s)
         @eval begin
-            $f(::$bend_type, $s::Symbol) = $s in $v
-            $f2(::$bend_type) = $v
+            $f(::$bend_type, $s::Symbol) = $s in $v[$(quot(bend))]
+            $f2(::$bend_type) = $v[$(quot(bend))]
         end
     end
 end
 
-# is_subplot_supported(::AbstractBackend) = false
-# is_subplot_supported() = is_subplot_supported(backend())
+# ---------------------------------------------------------
+
+# # create the various `is_xxx_supported` and `supported_xxxs` methods
+# # by default they pass through to checking membership in `_gr_xxx`
+# for s in (:attr, :seriestype, :marker, :style, :scale)
+#     f = Symbol("is_", s, "_supported")
+#     f2 = Symbol("supported_", s, "s")
+#     @eval begin
+#         $f(::AbstractBackend, $s) = false
+#         $f(bend::AbstractBackend, $s::AbstractVector) = all(v -> $f(bend, v), $s)
+#         $f($s) = $f(backend(), $s)
+#         $f2() = $f2(backend())
+#     end
+#
+#     for bend in backends()
+#         bend_type = typeof(_backend_instance(bend))
+#         v = Symbol("_", bend, "_", s)
+#         @eval begin
+#             $f(::$bend_type, $s::Symbol) = $s in $v
+#             $f2(::$bend_type) = $v
+#         end
+#     end
+# end
+#
+# # is_subplot_supported(::AbstractBackend) = false
+# # is_subplot_supported() = is_subplot_supported(backend())

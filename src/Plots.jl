@@ -3,7 +3,7 @@ __precompile__(true)
 module Plots
 
 using Reexport
-using FixedSizeArrays
+using StaticArrays
 @reexport using RecipesBase
 using Base.Meta
 @reexport using PlotUtils
