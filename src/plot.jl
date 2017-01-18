@@ -29,12 +29,12 @@ convertSeriesIndex(plt::Plot, n::Int) = n
 
 
 """
-The main plot command.  Use `plot` to create a new plot object, and `plot!` to add to an existing one:
+The main plot command.  Use `plot` to create a new plot object, and `plot!` to mutate an existing one:
 
 ```
-    plot(args...; kw...)                  # creates a new plot window, and sets it to be the current
-    plot!(args...; kw...)                 # adds to the `current`
-    plot!(plotobj, args...; kw...)        # adds to the plot `plotobj`
+    plot(args...; kw...)                  # creates a new Plot, and sets it to be the current
+    plot!(args...; kw...)                 # adds to the `current` Plot
+    plot!(plotobj, args...; kw...)        # adds to the Plot `plotobj`
 ```
 
 There are lots of ways to pass in data, and lots of keyword arguments... just try it and it will likely work as expected.
