@@ -55,6 +55,10 @@ function add_backend_string(::PyPlotBackend)
     withenv("PYTHON" => "") do
         Pkg.build("PyPlot")
     end
+    import Conda
+    Conda.add("qt=4.8.5")
+
+    # now restart julia!
     """
 end
 
@@ -87,9 +91,8 @@ function _initialize_backend(::PyPlotBackend)
         import Conda
         kw = Conda._installed_packages_dict()
         if (!haskey(kw,"qt") || (qt_version=get(kw,"qt",0)[1]!=v"4.8.5"))
-          print("\n Switching to qt v4.8.5!! \n")
-          Conda.add("qt=4.8.5")
-          error("\n Please RESTART julia to use qt v4.8.5!! \n If we did not error here, a Segmentation fault error would occur. \n \n")
+          print("\n If the code has a Segmentation fault error switch to qt v4.8.5 by pasting the following code into julia: \n \n")
+          add_backend_string(backend())
         end
       end
     end
