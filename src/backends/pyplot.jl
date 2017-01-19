@@ -56,6 +56,34 @@ function add_backend_string(::PyPlotBackend)
         Pkg.build("PyPlot")
     end
     """
+    if !Plots.is_installed("PyPlot")
+        Pkg.add("PyPlot")
+    end
+    withenv("PYTHON" => "") do
+        Pkg.build("PyPlot")
+    end
+    import Conda          # TODO since this only known to occur on Ubuntu we could also check the user's OS here
+    Conda.add("qt=4.8.5") # run the old version of Conda
+    # TO AVOID:
+    # 1) Segfault when attempting to run pylplot
+        # caused by Conda update to Segfault with qt >=4.8.6 on Ubuntu https://github.com/JuliaPy/PyPlot.jl/issues/234
+    # 2) precomilation issue after updating Plots.jl
+        #=
+        INFO: Recompiling stale cache file /home/febbo/.julia/lib/v0.5/Plots.ji for module Plots.
+        ERROR: LoadError: Declaring __precompile__(false) is not allowed in files that are being precompiled.
+        in __precompile__(::Bool) at ./loading.jl:300
+        in include_from_node1(::String) at ./loading.jl:488
+        in macro expansion; at ./none:2 [inlined]
+        in anonymous at ./<missing>:?
+        in eval(::Module, ::Any) at ./boot.jl:234
+        in process_options(::Base.JLOptions) at ./client.jl:239
+        in _start() at ./client.jl:318
+        while loading /home/febbo/.julia/v0.5/Plots/src/Plots.jl, in expression starting on line 1
+        ERROR: LoadError: Failed to precompile Plots to /home/febbo/.julia/lib/v0.5/Plots.ji.
+        in compilecache(::String) at ./loading.jl:593
+        in require(::Symbol) at ./loading.jl:393
+        in include_from_node1(::String) at ./loading.jl:488
+        =#
 end
 
 function _initialize_backend(::PyPlotBackend)
