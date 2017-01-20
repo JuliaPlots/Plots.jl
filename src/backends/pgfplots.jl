@@ -32,7 +32,7 @@ const _pgfplots_attr = merge_with_base_supported([
     :aspect_ratio,
     # :match_dimensions,
   ])
-const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
+const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
 const _pgfplots_scale = [:identity, :ln, :log2, :log10]
@@ -147,7 +147,7 @@ function pgf_series(sp::Subplot, series::Series)
     push!(style, pgf_linestyle(d))
     push!(style, pgf_marker(d))
 
-    if d[:fillrange] != nothing
+    if d[:fillcolor] != nothing
         push!(style, pgf_fillstyle(d))
     end
 
