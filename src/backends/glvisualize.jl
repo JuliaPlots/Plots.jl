@@ -1141,8 +1141,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
                 vis = gl_bar(d, kw_args)
             elseif st == :image
                 extract_extrema(d, kw_args)
-                z = transpose_z(series, d[:z].surf, false)
-                vis = GL.gl_image(z, kw_args)
+                vis = GL.gl_image(d[:z].surf, kw_args)
             elseif st == :boxplot
                  extract_c(d, kw_args, :fill)
                  vis = gl_boxplot(d, kw_args)
@@ -1182,7 +1181,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
         if _3d
             GLAbstraction.center!(sp_screen)
         end
-        Reactive.post_empty()
+        GLAbstraction.post_empty()
         yield()
     end
 end
