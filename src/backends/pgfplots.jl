@@ -147,7 +147,7 @@ function pgf_series(sp::Subplot, series::Series)
     push!(style, pgf_linestyle(d))
     push!(style, pgf_marker(d))
 
-    if d[:fillcolor] != nothing
+    if d[:fillrange] != nothing || st in (:shape,)
         push!(style, pgf_fillstyle(d))
     end
 
