@@ -249,8 +249,12 @@ end
 
 function _update_plot_object(plt::Plot{PGFPlotsBackend})
     plt.o = PGFPlots.Axis[]
+    # Obtain the total height of the plot by extracting the maximal bottom
+    # coordinate from the bounding box.
+    # TODO: Maybe there is a better way to get the total height of the plot.
+    total_height = maximum([bottom(bbox(sp)) for sp in plt.subplots])
     for sp in plt.subplots
-        # first build the PGFPlots.Axis object
+       # first build the PGFPlots.Axis object
         style = ["unbounded coords=jump"]
         kw = KW()
 
@@ -268,7 +272,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         bb = bbox(sp)
         push!(style, """
             xshift = $(left(bb).value)mm,
-            yshift = $((height(bb) - (bottom(bb))).value)mm,
+            yshift = $((total_height - (bottom(bb))).value)mm,
             axis background/.style={fill=$(pgf_color(sp[:background_color_inside])[1])}
         """)
         kw[:width] = "$(width(bb).value)mm"
