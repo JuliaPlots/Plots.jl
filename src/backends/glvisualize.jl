@@ -1,4 +1,4 @@
-``#=
+#=
 TODO
     * move all gl_ methods to GLPlot
     * integrate GLPlot UI
@@ -7,7 +7,6 @@ TODO
     * polar plots
     * labes and axis
     * fix units in all visuals (e.g dotted lines, marker scale, surfaces)
-    * why is there so little unicode supported in the font!??!?
 =#
 
 const _glvisualize_attr = merge_with_base_supported([
@@ -134,11 +133,6 @@ function empty_screen!(screen)
     end
     nothing
 end
-function poll_reactive()
-    # run_till_now blocks when message queue is empty!
-    Base.n_avail(Reactive._messages) > 0 && Reactive.run_till_now()
-end
-
 
 function get_plot_screen(list::Vector, name, result = [])
     for elem in list
