@@ -3,7 +3,7 @@
 # significant contributions by: @pkofod
 
 const _pgfplots_attr = merge_with_base_supported([
-    # :annotations,
+    :annotations,
     # :background_color_legend,
     :background_color_inside,
     # :background_color_outside,
@@ -27,7 +27,7 @@ const _pgfplots_attr = merge_with_base_supported([
     # :ribbon, :quiver, :arrow,
     # :orientation,
     # :overwrite_figure,
-    # :polar,
+    :polar,
     # :normalize, :weights, :contours,
     :aspect_ratio,
     # :match_dimensions,
@@ -134,6 +134,20 @@ function pgf_marker(d::KW)
         rotate = $(shape == :dtriangle ? 180 : 0),
         $(get(_pgfplots_linestyles, d[:markerstrokestyle], "solid"))
     }"""
+end
+
+function pgf_add_annotation!(o,x,y,val)
+    # Construct the style string.
+    # Currently supports color and orientation
+    halign = val.font.halign == :hcenter ? "" : string(val.font.halign)
+    cstr,a = pgf_color(val.font.color)
+    push!(o, PGFPlots.Plots.Node(val.str, # Annotation Text
+                                 x, y, # x,y
+                                 style="""
+                                 $halign,
+                                 color=$cstr, draw opacity=$(convert(Float16,a)),
+                                 rotate=$(val.font.rotation)
+                                 """))
 end
 
 # --------------------------------------------------------------------------------------
@@ -298,13 +312,24 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         # add the series object to the PGFPlots.Axis
         for series in series_list(sp)
             push!(o, pgf_series(sp, series))
+
+            # add series annotations
+            anns = series[:series_annotations]
+            for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
+                pgf_add_annotation!(o, xi, yi, PlotText(str, fnt))
+            end
         end
+
+        # add the annotations
+        for ann in sp[:annotations]
+            pgf_add_annotation!(o,ann...)
+        end
+
 
         # add the PGFPlots.Axis to the list
         push!(plt.o, o)
     end
 end
-
 
 function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend})
     show(io, mime, plt.o)
