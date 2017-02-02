@@ -225,6 +225,9 @@ function pgf_axis(sp::Subplot, letter)
     # axis guide
     kw[Symbol(letter,:label)] = axis[:guide]
 
+    # ticks
+    push!(style, "$(letter)ticklabel style={rotate = $(axis[:rotation])}")
+
     # flip/reverse?
     axis[:flip] && push!(style, "$letter dir=reverse")
 
