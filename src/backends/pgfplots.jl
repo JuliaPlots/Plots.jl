@@ -307,7 +307,11 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
 
-        o = PGFPlots.Axis(; style = style, kw...)
+        axisf = PGFPlots.Axis
+        if sp[:projection] == :polar
+            axisf = PGFPlots.PolarAxis
+        end
+        o = axisf(; style = style, kw...)
 
         # add the series object to the PGFPlots.Axis
         for series in series_list(sp)
