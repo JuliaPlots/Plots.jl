@@ -454,9 +454,9 @@ function _update_min_padding!(sp::Subplot{InspectDRBackend})
 
     # add in the user-specified margin to InspectDR padding:
     leftpad   = abs(bb.xmin)*px + sp[:left_margin]
-    toppad    = abs(bb.ymax)*px + sp[:top_margin]
+    toppad    = abs(bb.ymin)*px + sp[:top_margin]
     rightpad  = abs(bb.xmax)*px + sp[:right_margin]
-    bottompad = abs(bb.ymin)*px + sp[:bottom_margin]
+    bottompad = abs(bb.ymax)*px + sp[:bottom_margin]
     sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 
