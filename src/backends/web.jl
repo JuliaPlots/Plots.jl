@@ -27,7 +27,7 @@ function open_browser_window(filename::AbstractString)
         return run(`xdg-open $(filename)`)
     end
     @static if is_windows()
-        return run(`$(ENV["COMSPEC"]) /c start $(filename)`)
+        return run(`$(ENV["COMSPEC"]) /c start "" "$(filename)"`)
     end
     warn("Unknown OS... cannot open browser window.")
 end
