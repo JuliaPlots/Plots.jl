@@ -3,7 +3,7 @@
 # significant contributions by: @pkofod
 
 const _pgfplots_attr = merge_with_base_supported([
-    # :annotations,
+    :annotations,
     # :background_color_legend,
     :background_color_inside,
     # :background_color_outside,
@@ -27,12 +27,12 @@ const _pgfplots_attr = merge_with_base_supported([
     # :ribbon, :quiver, :arrow,
     # :orientation,
     # :overwrite_figure,
-    # :polar,
+    :polar,
     # :normalize, :weights, :contours,
     :aspect_ratio,
     # :match_dimensions,
   ])
-const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
+const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
 const _pgfplots_scale = [:identity, :ln, :log2, :log10]
@@ -136,6 +136,20 @@ function pgf_marker(d::KW)
     }"""
 end
 
+function pgf_add_annotation!(o,x,y,val)
+    # Construct the style string.
+    # Currently supports color and orientation
+    halign = val.font.halign == :hcenter ? "" : string(val.font.halign)
+    cstr,a = pgf_color(val.font.color)
+    push!(o, PGFPlots.Plots.Node(val.str, # Annotation Text
+                                 x, y,
+                                 style="""
+                                 $halign,
+                                 color=$cstr, draw opacity=$(convert(Float16,a)),
+                                 rotate=$(val.font.rotation)
+                                 """))
+end
+
 # --------------------------------------------------------------------------------------
 
 function pgf_series(sp::Subplot, series::Series)
@@ -147,7 +161,7 @@ function pgf_series(sp::Subplot, series::Series)
     push!(style, pgf_linestyle(d))
     push!(style, pgf_marker(d))
 
-    if d[:fillrange] != nothing
+    if d[:fillrange] != nothing || st in (:shape,)
         push!(style, pgf_fillstyle(d))
     end
 
@@ -211,6 +225,9 @@ function pgf_axis(sp::Subplot, letter)
     # axis guide
     kw[Symbol(letter,:label)] = axis[:guide]
 
+    # Add ticklabel rotations
+    push!(style, "$(letter)ticklabel style={rotate = $(axis[:rotation])}")
+
     # flip/reverse?
     axis[:flip] && push!(style, "$letter dir=reverse")
 
@@ -249,8 +266,11 @@ end
 
 function _update_plot_object(plt::Plot{PGFPlotsBackend})
     plt.o = PGFPlots.Axis[]
+    # Obtain the total height of the plot by extracting the maximal bottom
+    # coordinate from the bounding box.
+    total_height = bottom(bbox(plt.layout))
     for sp in plt.subplots
-        # first build the PGFPlots.Axis object
+       # first build the PGFPlots.Axis object
         style = ["unbounded coords=jump"]
         kw = KW()
 
@@ -265,10 +285,12 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # bounding box values are in mm
         # note: bb origin is top-left, pgf is bottom-left
+        # A round on 2 decimal places should be enough precision for 300 dpi
+        # plots.
         bb = bbox(sp)
         push!(style, """
             xshift = $(left(bb).value)mm,
-            yshift = $((height(bb) - (bottom(bb))).value)mm,
+            yshift = $(round((total_height - (bottom(bb))).value,2))mm,
             axis background/.style={fill=$(pgf_color(sp[:background_color_inside])[1])}
         """)
         kw[:width] = "$(width(bb).value)mm"
@@ -288,18 +310,33 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
 
-        o = PGFPlots.Axis(; style = style, kw...)
+        axisf = PGFPlots.Axis
+        if sp[:projection] == :polar
+            axisf = PGFPlots.PolarAxis
+        end
+        o = axisf(; style = style, kw...)
 
         # add the series object to the PGFPlots.Axis
         for series in series_list(sp)
             push!(o, pgf_series(sp, series))
+
+            # add series annotations
+            anns = series[:series_annotations]
+            for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
+                pgf_add_annotation!(o, xi, yi, PlotText(str, fnt))
+            end
         end
+
+        # add the annotations
+        for ann in sp[:annotations]
+            pgf_add_annotation!(o,ann...)
+        end
+
 
         # add the PGFPlots.Axis to the list
         push!(plt.o, o)
     end
 end
-
 
 function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend})
     show(io, mime, plt.o)
