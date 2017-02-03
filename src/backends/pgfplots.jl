@@ -142,7 +142,7 @@ function pgf_add_annotation!(o,x,y,val)
     halign = val.font.halign == :hcenter ? "" : string(val.font.halign)
     cstr,a = pgf_color(val.font.color)
     push!(o, PGFPlots.Plots.Node(val.str, # Annotation Text
-                                 x, y, # x,y
+                                 x, y,
                                  style="""
                                  $halign,
                                  color=$cstr, draw opacity=$(convert(Float16,a)),
@@ -225,7 +225,7 @@ function pgf_axis(sp::Subplot, letter)
     # axis guide
     kw[Symbol(letter,:label)] = axis[:guide]
 
-    # ticks
+    # Add ticklabel rotations
     push!(style, "$(letter)ticklabel style={rotate = $(axis[:rotation])}")
 
     # flip/reverse?
