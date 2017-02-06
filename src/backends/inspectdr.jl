@@ -128,16 +128,17 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _inspectdr_getscale(s::Symbol)
+function _inspectdr_getscale(s::Symbol, yaxis::Bool)
 #TODO: Support :asinh, :sqrt
+    kwargs = yaxis? (:tgtmajor=>8, :tgtminor=>2): () #More grid lines on y-axis
     if :log2 == s
-        return InspectDR.AxisScale(:log2)
+        return InspectDR.AxisScale(:log2; kwargs...)
     elseif :log10 == s
-        return InspectDR.AxisScale(:log10)
+        return InspectDR.AxisScale(:log10; kwargs...)
     elseif :ln == s
-        return InspectDR.AxisScale(:ln)
+        return InspectDR.AxisScale(:ln; kwargs...)
     else #identity
-        return InspectDR.AxisScale(:lin)
+        return InspectDR.AxisScale(:lin; kwargs...)
     end
 end
 
@@ -337,14 +338,17 @@ end
 # ---------------------------------------------------------------------------
 
 function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
-    const gridon = InspectDR.grid(vmajor=true, hmajor=true)
-    const gridoff = InspectDR.grid()
+    const gridon = InspectDR.GridRect(vmajor=true, hmajor=true)
+    const gridoff = InspectDR.GridRect()
     const plot = sp.o
+    const strip = plot.strips[1] #Only 1 strip supported with Plots.jl
+
+	#No independent control of grid???
+	strip.grid = sp[:grid]? gridon: gridoff
 
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
-        xscale = _inspectdr_getscale(xaxis[:scale])
-        yscale = _inspectdr_getscale(yaxis[:scale])
-        plot.axes = InspectDR.AxesRect(xscale, yscale)
+        plot.xscale = _inspectdr_getscale(xaxis[:scale], false)
+        strip.yscale = _inspectdr_getscale(yaxis[:scale], true)
         xmin, xmax  = axis_limits(xaxis)
         ymin, ymax  = axis_limits(yaxis)
         if ispolar(sp)
@@ -353,11 +357,13 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
             xmin, xmax = -rmax, rmax
             ymin, ymax = -rmax, rmax
         end
-        plot.ext = InspectDR.PExtents2D() #reset
-        plot.ext_full = InspectDR.PExtents2D(xmin, xmax, ymin, ymax)
+        plot.xext = InspectDR.PExtents1D() #reset
+        strip.yext = InspectDR.PExtents1D() #reset
+        plot.xext_full = InspectDR.PExtents1D(xmin, xmax)
+        strip.yext_full = InspectDR.PExtents1D(ymin, ymax)
     a = plot.annotation
         a.title = sp[:title]
-        a.xlabel = xaxis[:guide]; a.ylabel = yaxis[:guide]
+        a.xlabel = xaxis[:guide]; a.ylabels = [yaxis[:guide]]
 
     l = plot.layout
         l.frame.fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
@@ -376,8 +382,6 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
             _inspectdr_mapptsize(xaxis[:tickfont].pointsize),
             color = _inspectdr_mapcolor(xaxis[:foreground_color_text])
         )
-        #No independent control of grid???
-        l.grid = sp[:grid]? gridon: gridoff
     leg = l.legend
         leg.enabled = (sp[:legend] != :none)
         #leg.width = 150 #TODO: compute???
