@@ -302,6 +302,10 @@ function setup_atom()
                 Media.render(pane, Atom.div(".fill", Atom.HTML(stringmime(MIME("text/html"), plt))))
                 plt[:size] = sz
             end
+            # special handling for PlotlyJS
+            function Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyJSBackend})
+                display(Plots.PlotsDisplay(), plt)
+            end
         else
             #
             function Media.render(pane::Atom.PlotPane, plt::Plot)
@@ -316,12 +320,6 @@ function setup_atom()
             display(Plots.PlotsDisplay(), plt)
             s = "PlotPane turned off.  The plotly and plotlyjs backends cannot render in the PlotPane due to javascript issues."
             Media.render(pane, Atom.div(Atom.HTML(s)))
-        end
-
-        # special handling for PlotlyJS to pass through to that render method
-        function Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyJSBackend})
-            Plots.prepare_output(plt)
-            Media.render(pane, plt.o)
         end
     end
 end

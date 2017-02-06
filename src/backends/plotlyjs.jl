@@ -102,8 +102,18 @@ _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hac
 _show(io::IO, ::MIME"application/pdf", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "pdf")
 _show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "eps")
 
+function write_temp_html(plt::Plot{PlotlyJSBackend})
+    filename = string(tempname(), ".html")
+    savefig(plt, filename)
+    filename
+end
+
 function _display(plt::Plot{PlotlyJSBackend})
-    display(plt.o)
+    if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", true) in (true, 1, "1", "true", "yes")
+        display(plt.o)
+    else
+        standalone_html_window(plt)
+    end
 end
 
 
