@@ -1,8 +1,8 @@
 
-const _attribute_defaults =  Dict(:Series => Plots._series_defaults,
-                        :Subplot => Plots._subplot_defaults,
-                        :Plot => Plots._plot_defaults,
-                        :Axis => Plots._axis_defaults)
+const _attribute_defaults =  Dict(:Series => _series_defaults,
+                        :Subplot => _subplot_defaults,
+                        :Plot => _plot_defaults,
+                        :Axis => _axis_defaults)
 
 attrtypes() = join(keys(_attribute_defaults), ", ")
 attributes(attrtype::Symbol) = sort(collect(keys(_attribute_defaults[attrtype])))
