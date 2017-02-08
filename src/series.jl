@@ -257,12 +257,23 @@ end
 # # 1 argument
 # # --------------------------------------------------------------------
 
+# helper function to ensure relevant attributes are wrapped by Surface
+function wrap_surfaces(d::KW)
+    if haskey(d, :fill_z)
+        v = d[:fill_z]
+        if !isa(v, Surface)
+            d[:fill_z] = Surface(v)
+        end
+    end
+end
+
 @recipe f(n::Integer) = is3d(get(d,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
 @recipe function f{T<:Union{Integer,AbstractFloat}}(mat::AMat{T})
     if all3D(d)
         n,m = size(mat)
+        wrap_surfaces(d)
         SliceIt, 1:m, 1:n, Surface(mat)
     else
         SliceIt, nothing, mat, nothing
@@ -274,6 +285,7 @@ end
     if all3D(d)
         mat = fmt.data
         n,m = size(mat)
+        wrap_surfaces(d)
         SliceIt, 1:m, 1:n, Formatted(Surface(mat), fmt.formatter)
     else
         SliceIt, nothing, fmt, nothing
@@ -391,6 +403,7 @@ end
     #         seriestype := :path3d
     #     end
     # end
+    wrap_surfaces(d)
     SliceIt, x, y, z
 end
 
@@ -400,6 +413,7 @@ end
 @recipe function f(x::AVec, y::AVec, zf::Function)
     # x = X <: Number ? sort(x) : x
     # y = Y <: Number ? sort(y) : y
+    wrap_surfaces(d)
     SliceIt, x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
 end
 
@@ -410,6 +424,7 @@ end
     if !like_surface(get(d, :seriestype, :none))
         d[:seriestype] = :contour
     end
+    wrap_surfaces(d)
     SliceIt, x, y, Surface(z)
 end
 

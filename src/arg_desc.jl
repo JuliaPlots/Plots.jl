@@ -29,6 +29,7 @@ const _arg_desc = KW(
 :z                 	=> "Various. Input data. Third Dimension. May be wrapped by a `Surface` for surface and heatmap types.",
 :marker_z          	=> "AbstractVector, Function `f(x,y,z) -> z_value`, or nothing. z-values for each series data point, which correspond to the color to be used from a markercolor gradient.",
 :line_z          	=> "AbstractVector, Function `f(x,y,z) -> z_value`, or nothing. z-values for each series line segment, which correspond to the color to be used from a linecolor gradient.  Note that for N points, only the first N-1 values are used (one per line-segment).",
+:fill_z           => "Matrix{Float64} of the same size as z matrix, which specifies the color of the 3D surface; the default value is `nothing`.",
 :levels            	=> "Integer, NTuple{2,Integer}. Number of levels (or x-levels/y-levels) for a contour type.",
 :orientation       	=> "Symbol.  Horizontal or vertical orientation for bar types.  Values `:h`, `:hor`, `:horizontal` correspond to horizontal (sideways, anchored to y-axis), and `:v`, `:vert`, and `:vertical` correspond to vertical (the default).",
 :bar_position      	=> "Symbol.  Choose from `:overlay` (default), `:stack`.  (warning: May not be implemented fully)",

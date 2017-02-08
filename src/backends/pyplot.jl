@@ -18,8 +18,7 @@ const _pyplot_attr = merge_with_base_supported([
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend, :colorbar,
-    :marker_z,
-    :line_z,
+    :marker_z, :line_z, :fill_z,
     :levels,
     :ribbon, :quiver, :arrow,
     :orientation,
@@ -56,6 +55,10 @@ function add_backend_string(::PyPlotBackend)
     withenv("PYTHON" => "") do
         Pkg.build("PyPlot")
     end
+    import Conda
+    Conda.add("qt=4.8.5")
+
+    # now restart julia!
     """
 end
 
@@ -82,7 +85,17 @@ function _initialize_backend(::PyPlotBackend)
         const pycollections = PyPlot.pywrap(PyPlot.pyimport("matplotlib.collections"))
         const pyart3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d.art3d"))
     end
-
+    if is_linux()
+      @eval begin
+        # avoid Conda update that causes Segfault with qt >=4.8.6 on Ubuntu https://github.com/JuliaPy/PyPlot.jl/issues/234
+        import Conda
+        kw = Conda._installed_packages_dict()
+        if (!haskey(kw,"qt") || (qt_version=get(kw,"qt",0)[1]!=v"4.8.5"))
+          print("\n If the code has a Segmentation fault error switch to qt v4.8.5 by pasting the following code into julia: \n \n")
+          print(add_backend_string(PyPlotBackend()))
+        end
+      end
+    end
     # we don't want every command to update the figure
     PyPlot.ioff()
 end
@@ -124,8 +137,8 @@ end
 py_colormap(c) = py_colormap(cgrad())
 
 
-function py_shading(c, z, α=nothing)
-    cmap = py_colormap(c, α)
+function py_shading(c, z)
+    cmap = py_colormap(c)
     ls = pycolors.pymember("LightSource")(270,45)
     ls[:shade](z, cmap, vert_exag=0.1, blend_mode="soft")
 end
@@ -668,21 +681,16 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 x = repmat(x', length(y), 1)
                 y = repmat(y, 1, length(series[:x]))
             end
-            # z = z'
             z = transpose_z(series, z)
             if st == :surface
-                if series[:marker_z] != nothing
-                    extrakw[:facecolors] = py_shading(series[:fillcolor], series[:marker_z], series[:fillalpha])
+                if series[:fill_z] != nothing
+                    # the surface colors are different than z-value
+                    extrakw[:facecolors] = py_shading(series[:fillcolor], transpose_z(series, series[:fill_z].surf))
                     extrakw[:shade] = false
-                    clims = sp[:clims]
-                    if is_2tuple(clims)
-                        isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-                        isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-                    end
                 else
                     extrakw[:cmap] = py_fillcolormap(series)
-                    needs_colorbar = true
                 end
+                needs_colorbar = true
             end
             handle = ax[st == :surface ? :plot_surface : :plot_wireframe](x, y, z;
                 label = series[:label],
