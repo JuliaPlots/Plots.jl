@@ -99,7 +99,9 @@ export
     center,
     P2,
     P3,
-    BezierCurve
+    BezierCurve,
+
+    plotattr
 
 # ---------------------------------------------------------
 
@@ -127,6 +129,7 @@ include("animation.jl")
 include("output.jl")
 include("examples.jl")
 include("arg_desc.jl")
+include("plotattr.jl")
 
 
 # ---------------------------------------------------------
