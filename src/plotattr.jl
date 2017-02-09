@@ -45,12 +45,12 @@ function plotattr(attrtype::Symbol, attribute::AbstractString)
     desc = strip(desc[first_period_idx+1:end])
     als = keys(filter((_,v)->v==attribute, _keyAliases)) |> collect |> sort
     als = join(map(string,als), ", ")
+    def = _attribute_defaults[attrtype][attribute]
 
 
     # Looks up the different elements and plots them
-    println("$attribute ($attrtype attribute)")
-    println("Aliases: $als \n")
-    println("Default: $(_attribute_defaults[attrtype][attribute])\t(Type: $typedesc)\n")
-    println("Description: ")
-    println(desc)
+    println("$attribute ", typedesc == "" ? "" : "{$typedesc}")
+    als == "" || println("$als")
+    println("\n",desc)
+    println("$(attrtype) attribute, ", def == "" ? "" : " default: $def")
 end
