@@ -49,8 +49,8 @@ function plotattr(attrtype::Symbol, attribute::AbstractString)
 
 
     # Looks up the different elements and plots them
-    println("$attribute ", typedesc == "" ? "" : "{$typedesc}")
-    als == "" || println("$als")
-    println("\n",desc)
-    println("$(attrtype) attribute, ", def == "" ? "" : " default: $def")
+    println("$attribute ", typedesc == "" ? "" : "{$typedesc}", "\n",
+        als == "" ? "" : "$als\n",
+        "\n$desc\n",
+        "$(attrtype) attribute, ", def == "" ? "" : " default: $def")
 end
