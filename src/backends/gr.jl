@@ -33,7 +33,7 @@ const _gr_attr = merge_with_base_supported([
     :arrow,
 ])
 const _gr_seriestype = [
-    :path, :scatter, :hexbin,
+    :path, :scatter,
     :heatmap, :pie, :image,
     :contour, :path3d, :scatter3d, :surface, :wireframe,
     :shape
@@ -653,6 +653,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             flip = sp[:yaxis][:flip]
             mirror = sp[:xaxis][:mirror]
             gr_set_font(sp[:xaxis][:tickfont],
+                        halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
                         valign = (mirror ? :bottom : :top),
                         color = sp[:xaxis][:foreground_color_axis],
                         rotation = sp[:xaxis][:rotation])
@@ -670,6 +671,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             mirror = sp[:yaxis][:mirror]
             gr_set_font(sp[:yaxis][:tickfont],
                         halign = (mirror ? :left : :right),
+                        valign = (:top, :vcenter, :bottom)[sign(sp[:yaxis][:rotation]) + 2],
                         color = sp[:yaxis][:foreground_color_axis],
                         rotation = sp[:yaxis][:rotation])
             for (cv, dv) in zip(yticks...)
@@ -797,9 +799,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if series[:markershape] != :none
                 gr_draw_markers(series, x, y)
             end
-
-        elseif st == :hexbin
-            GR.hexbin(x, y, nbins = series[:bins])
 
         elseif st == :contour
             zmin, zmax = gr_lims(zaxis, false)
