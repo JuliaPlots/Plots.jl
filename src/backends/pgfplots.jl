@@ -98,6 +98,12 @@ const _pgf_series_extrastyle = KW(
     :xsticks => "xcomb",
 )
 
+const _pgf_annotation_halign = KW(
+    :center => "",
+    :left => "right",
+    :right => "left"
+)
+
 # --------------------------------------------------------------------------------------
 
 # takes in color,alpha, and returns color and alpha appropriate for pgf style
@@ -139,12 +145,11 @@ end
 function pgf_add_annotation!(o,x,y,val)
     # Construct the style string.
     # Currently supports color and orientation
-    halign = val.font.halign == :hcenter ? "" : string(val.font.halign)
     cstr,a = pgf_color(val.font.color)
     push!(o, PGFPlots.Plots.Node(val.str, # Annotation Text
                                  x, y,
                                  style="""
-                                 $halign,
+                                 $(get(_pgf_annotation_halign,val.font.halign,"")),
                                  color=$cstr, draw opacity=$(convert(Float16,a)),
                                  rotate=$(val.font.rotation)
                                  """))
