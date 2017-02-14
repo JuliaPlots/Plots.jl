@@ -33,7 +33,7 @@ const _gr_attr = merge_with_base_supported([
     :arrow,
 ])
 const _gr_seriestype = [
-    :path, :scatter,
+    :path, :scatter, :hexbin,
     :heatmap, :pie, :image,
     :contour, :path3d, :scatter3d, :surface, :wireframe,
     :shape
@@ -797,6 +797,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if series[:markershape] != :none
                 gr_draw_markers(series, x, y)
             end
+
+        elseif st == :hexbin
+            GR.hexbin(x, y, nbins = series[:bins])
 
         elseif st == :contour
             zmin, zmax = gr_lims(zaxis, false)
