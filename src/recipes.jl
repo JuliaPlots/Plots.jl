@@ -465,10 +465,6 @@ end
 end
 @deps histogram2d heatmap
 
-@recipe function f{T, E}(h::StatsBase.Histogram{T, 2, E})
-    seriestype := :bar
-    h.edges[1], h.weights
-end
 # ---------------------------------------------------------------------------
 # scatter 3d
 
