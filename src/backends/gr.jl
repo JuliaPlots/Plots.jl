@@ -653,6 +653,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             flip = sp[:yaxis][:flip]
             mirror = sp[:xaxis][:mirror]
             gr_set_font(sp[:xaxis][:tickfont],
+                        halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
                         valign = (mirror ? :bottom : :top),
                         color = sp[:xaxis][:foreground_color_axis],
                         rotation = sp[:xaxis][:rotation])
@@ -670,6 +671,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             mirror = sp[:yaxis][:mirror]
             gr_set_font(sp[:yaxis][:tickfont],
                         halign = (mirror ? :left : :right),
+                        valign = (:top, :vcenter, :bottom)[sign(sp[:yaxis][:rotation]) + 2],
                         color = sp[:yaxis][:foreground_color_axis],
                         rotation = sp[:yaxis][:rotation])
             for (cv, dv) in zip(yticks...)
