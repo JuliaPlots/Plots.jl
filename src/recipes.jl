@@ -802,3 +802,33 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
     seriestype --> :scatter
     real(cp.args[1]), imag(cp.args[1])
 end
+
+
+# --------------------------------------------------
+# Color Gradients
+
+@userplot ShowLibrary
+@recipe function f(cl::ShowLibrary)
+    if !(length(cl.args) == 1 && isa(cl.args[1], Symbol))
+        error("ShowLibrary takes the name of a color library as a Symbol")
+    end
+
+    library = clibrary(cl.args[1])
+    z = sqrt.((1:20)*(1:15)')
+
+    seriestype := :heatmap
+    ticks := nothing
+    legend := false
+
+    layout := length(library.lib)
+
+    i = 0
+    for grad in keys(library.lib)
+        @series begin
+            seriescolor := cgrad(grad, color_library = cl.args[1])
+            title := grad
+            subplot := i += 1
+            z
+        end
+    end
+end
