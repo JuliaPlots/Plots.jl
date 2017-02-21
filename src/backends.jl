@@ -19,7 +19,7 @@ macro init_backend(s)
         export $sym
         $sym(; kw...) = (default(; kw...); backend(Symbol($str)))
         backend_name(::$T) = Symbol($str)
-        backend_package_name(::$T) = Symbol("Plots", string(s))
+        backend_package_name(::$T) = Symbol("Plots", $(string(s)))
         push!(_backends, Symbol($str))
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)

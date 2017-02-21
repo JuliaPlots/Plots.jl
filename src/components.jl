@@ -184,7 +184,7 @@ function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     shape
 end
 
-function Base.scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
+function scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
     shapecopy = deepcopy(shape)
     scale!(shapecopy, x, y, c)
 end
