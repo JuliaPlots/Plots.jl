@@ -50,8 +50,6 @@ export
     yflip!,
     xaxis!,
     yaxis!,
-    xgrid!,
-    ygrid!,
 
     xlims,
     ylims,
@@ -197,8 +195,6 @@ xflip!(flip::Bool = true; kw...)                          = plot!(; xflip = flip
 yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip, kw...)
 xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
-xgrid!(grid::Bool = true; kw...)                          = plot!(; xgrid = grid, kw...)
-ygrid!(grid::Bool = true; kw...)                          = plot!(; ygrid = grid, kw...)
 
 let PlotOrSubplot = Union{Plot, Subplot}
     title!(plt::PlotOrSubplot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)
@@ -222,8 +218,6 @@ let PlotOrSubplot = Union{Plot, Subplot}
     yflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)                  = plot!(plt; yflip = flip, kw...)
     xaxis!(plt::PlotOrSubplot, args...; kw...)                            = plot!(plt; xaxis = args, kw...)
     yaxis!(plt::PlotOrSubplot, args...; kw...)                            = plot!(plt; yaxis = args, kw...)
-    xgrid!(plt::PlotOrSubplot, grid::Bool = true; kw...)                  = plot!(plt; xgrid = grid, kw...)
-    ygrid!(plt::PlotOrSubplot, grid::Bool = true; kw...)                  = plot!(plt; ygrid = grid, kw...)
 end
 
 
