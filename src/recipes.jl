@@ -381,51 +381,37 @@ end
 # ---------------------------------------------------------------------------
 # Histograms
 
-# edges from number of bins
-function calc_edges(v, bins::Integer)
-    vmin, vmax = extrema(v)
-    linspace(vmin, vmax, bins+1)
+function my_hist(v, bins::Int, weights::Void)
+    h = StatsBase.fit(StatsBase.Histogram, v, nbins = bins)
+    h.edges[1], h.weights
 end
 
-# just pass through arrays
-calc_edges(v, bins::AVec) = bins
-
-# find the bucket index of this value
-function bucket_index(vi, edges)
-    for (i,e) in enumerate(edges)
-        if vi <= e
-            return max(1,i-1)
-        end
-    end
-    return length(edges)-1
+function my_hist(v, bins::AVec, weights::Void)
+    h = StatsBase.fit(StatsBase.Histogram, v, bins)
+    h.edges[1], h.weights
 end
 
-function my_hist(v, bins; normed = false, weights = nothing)
-    edges = calc_edges(v, bins)
-    counts = zeros(length(edges)-1)
+function my_hist(v, bins::Int, weights::AVec)
+    h = StatsBase.fit(StatsBase.Histogram, v, StatsBase.weights(weights), nbins = bins)
+    h.edges[1], h.weights
+end
 
-    # add a weighted count
-    for (i,vi) in enumerate(v)
-        idx = bucket_index(vi, edges)
-        counts[idx] += (weights == nothing ? 1.0 : weights[i])
-    end
+function my_hist(v, bins::AVec, weights::AVec)
+    h = StatsBase.fit(StatsBase.Histogram, v, bins, StatsBase.weights(weights))
+    h.edges[1], h.weights
+end
+
+@recipe function f(::Type{Val{:histogram}}, x, y, z)
+    edges, counts = my_hist(y, d[:bins], d[:weights])
 
     # normalize by bar area?
-    norm_denom = normed ? sum(diff(edges) .* counts) : 1.0
+    norm_denom = d[:normalize] ? sum(diff(edges) .* counts) : 1.0
     if norm_denom == 0
         norm_denom = 1.0
     end
 
-    edges, counts ./ norm_denom
-end
-
-
-@recipe function f(::Type{Val{:histogram}}, x, y, z)
-    edges, counts = my_hist(y, d[:bins],
-                               normed = d[:normalize],
-                               weights = d[:weights])
     x := edges
-    y := counts
+    y := counts ./ norm_denom
     seriestype := :bar
     ()
 end
@@ -434,52 +420,55 @@ end
 # ---------------------------------------------------------------------------
 # Histogram 2D
 
-# if tuple, map out bins, otherwise use the same for both
-calc_edges_2d(x, y, bins) = calc_edges(x, bins), calc_edges(y, bins)
-calc_edges_2d{X,Y}(x, y, bins::Tuple{X,Y}) = calc_edges(x, bins[1]), calc_edges(y, bins[2])
+centers(v::AVec) = 0.5 * (v[1:end-1] + v[2:end])
 
-# the 2D version
-function my_hist_2d(x, y, bins; normed = false, weights = nothing)
-    xedges, yedges = calc_edges_2d(x, y, bins)
-    counts = zeros(length(yedges)-1, length(xedges)-1)
+function my_hist_2d(v1, v2, bins::Union{AVec, Tuple{AVec, AVec}}, weights::AVec)
+    h = StatsBase.fit(StatsBase.Histogram, (v1, v2), bins, StatsBase.weights(weights))
+    h.edges..., Float64.(h.weights)
+end
 
-    # add a weighted count
-    for i=1:length(x)
-        r = bucket_index(y[i], yedges)
-        c = bucket_index(x[i], xedges)
-        counts[r,c] += (weights == nothing ? 1.0 : weights[i])
-    end
+function my_hist_2d(v1, v2, bins::Union{AVec, Tuple{AVec, AVec}}, weights::Void)
+    h = StatsBase.fit(StatsBase.Histogram, (v1, v2), bins)
+    h.edges..., Float64.(h.weights)
+end
 
-    # normalize to cubic area of the imaginary surface towers
-    norm_denom = normed ? sum((diff(yedges) * diff(xedges)') .* counts) : 1.0
+function my_hist_2d(v1, v2, bins::Union{Int, Tuple{Int, Int}}, weights::Void)
+    h = StatsBase.fit(StatsBase.Histogram, (v1, v2), nbins = bins)
+    h.edges..., Float64.(h.weights)
+end
+
+function my_hist_2d(v1, v2, bins::Union{Int, Tuple{Int, Int}}, weights::AVec)
+    h = StatsBase.fit(StatsBase.Histogram, (v1, v2), StatsBase.weights(weights), nbins = bins)
+    h.edges..., Float64.(h.weights)
+end
+
+@recipe function f(::Type{Val{:histogram2d}}, x, y, z)
+    yedges, xedges, counts = my_hist_2d(x, y, d[:bins], d[:weights])
+
+    norm_denom = d[:normalize] ? sum((diff(yedges) * diff(xedges)') .* counts) : 1.0
     if norm_denom == 0
         norm_denom = 1.0
     end
 
-    xedges, yedges, counts ./ norm_denom
-end
-
-centers(v::AVec) = 0.5 * (v[1:end-1] + v[2:end])
-
-@recipe function f(::Type{Val{:histogram2d}}, x, y, z)
-    xedges, yedges, counts = my_hist_2d(x, y, d[:bins],
-                                              normed = d[:normalize],
-                                              weights = d[:weights])
     for (i,c) in enumerate(counts)
         if c == 0
             counts[i] = NaN
         end
     end
+
     x := centers(xedges)
     y := centers(yedges)
-    z := Surface(counts)
+    z := Surface(counts ./ norm_denom)
     linewidth := 0
     seriestype := :heatmap
     ()
 end
 @deps histogram2d heatmap
 
-
+@recipe function f{T, E}(h::StatsBase.Histogram{T, 2, E})
+    seriestype := :bar
+    h.edges[1], h.weights
+end
 # ---------------------------------------------------------------------------
 # scatter 3d
 

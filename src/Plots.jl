@@ -9,6 +9,7 @@ using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
 import Showoff
+import StatsBase
 
 export
     grid,
