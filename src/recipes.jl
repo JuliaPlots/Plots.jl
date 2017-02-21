@@ -814,7 +814,7 @@ end
     end
 
     library = clibrary(cl.args[1])
-    z = sqrt.((1:20)*(1:15)')
+    z = sqrt.((1:15)*(1:20)')
 
     seriestype := :heatmap
     ticks := nothing
