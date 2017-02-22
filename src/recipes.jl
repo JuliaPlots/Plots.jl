@@ -814,7 +814,7 @@ end
     end
 
     library = clibrary(cl.args[1])
-    z = sqrt.((1:15)*(1:20)')
+    z = (1:20).+(1:20)'
 
     seriestype := :heatmap
     ticks := nothing
@@ -838,7 +838,7 @@ end
     if !(length(grad.args) == 1 && isa(grad.args[1], Symbol))
         error("showgradient takes the name of a color gradient as a Symbol")
     end
-    z = sqrt.((1:15)*(1:20)')
+    z = (1:20).+(1:20)'
     seriestype := :heatmap
     ticks := nothing
     legend := false
