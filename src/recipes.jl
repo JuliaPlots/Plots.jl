@@ -810,7 +810,7 @@ end
 @userplot ShowLibrary
 @recipe function f(cl::ShowLibrary)
     if !(length(cl.args) == 1 && isa(cl.args[1], Symbol))
-        error("ShowLibrary takes the name of a color library as a Symbol")
+        error("showlibrary takes the name of a color library as a Symbol")
     end
 
     library = clibrary(cl.args[1])
@@ -831,4 +831,18 @@ end
             z
         end
     end
+end
+
+@userplot ShowGradient
+@recipe function f(grad::ShowGradient)
+    if !(length(grad.args) == 1 && isa(grad.args[1], Symbol))
+        error("showgradient takes the name of a color gradient as a Symbol")
+    end
+    z = sqrt.((1:15)*(1:20)')
+    seriestype := :heatmap
+    ticks := nothing
+    legend := false
+    seriescolor := grad.args[1]
+    title := grad.args[1]
+    z
 end
