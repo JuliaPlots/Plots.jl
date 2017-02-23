@@ -635,7 +635,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         # @show xticks yticks #spine_segs grid_segs
 
         # draw the grid lines
-        if sp[:grid]
+        if axis[:grid]
             # gr_set_linecolor(sp[:foreground_color_grid])
             # GR.grid(xtick, ytick, 0, 0, majorx, majory)
             gr_set_line(1, :dot, sp[:foreground_color_grid])
