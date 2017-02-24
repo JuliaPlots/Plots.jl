@@ -31,6 +31,7 @@ const _plotly_attr = merge_with_base_supported([
     :hover,
     :inset_subplots,
     :bar_width,
+    :clims,
   ])
 
 const _plotly_seriestype = [
@@ -436,6 +437,11 @@ function plotly_series(plt::Plot, series::Series)
         for letter in [:x,:y,:z]
             d_out[letter] = plotly_surface_data(series, series[letter])
         end
+    end
+
+    clims = sp[:clims]
+    if is_2tuple(clims)
+        d_out[:zmin], d_out[:zmax] = clims
     end
 
     # set the "type"
