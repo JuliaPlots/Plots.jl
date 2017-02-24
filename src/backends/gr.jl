@@ -1017,7 +1017,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 end
 
                 if series[:markershape] != :none
-                    gr_draw_markers(series, xpos-[0.06,0.02], [ypos,ypos], 10, nothing)
+                    gr_draw_markers(series, xpos - .035, ypos, 6, nothing)
                 end
 
                 if typeof(series[:label]) <: Array
