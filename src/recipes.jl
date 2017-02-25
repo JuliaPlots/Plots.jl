@@ -424,7 +424,8 @@ end
     edges, counts = my_hist(y, d[:bins],
                                normed = d[:normalize],
                                weights = d[:weights])
-    x := edges
+    bar_width := diff(edges)
+    x := centers(edges)
     y := counts
     seriestype := :bar
     ()
