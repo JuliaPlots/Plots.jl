@@ -43,7 +43,7 @@ gradient_name(s::Symbol) = Symbol(s, "_grad")
 
 function add_theme(s::Symbol, thm::PlotTheme)
     if thm.gradient != nothing
-        PlotUtils.register_gradient_colors(gradient_name(s), thm.gradient)
+        PlotUtils.register_gradient_colors(gradient_name(s), thm.gradient, :plotthemes)
     end
     _themes[s] = thm
 end
@@ -58,6 +58,7 @@ include("juno.jl")
 
 function __init__()
     # need to do this here so PlotUtils picks up the change
+    PlotUtils.register_color_library(:plotthemes)
     for (s,thm) in _themes
         add_theme(s, thm)
     end
