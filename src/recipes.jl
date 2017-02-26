@@ -410,6 +410,8 @@ function my_hist(v, bins; normed = false, weights = nothing)
         counts[idx] += (weights == nothing ? 1.0 : weights[i])
     end
 
+    counts = isapprox(extrema(diff(edges))...) ? counts : counts ./ diff(edges) # for uneven bins, normalize to area.
+
     # normalize by bar area?
     norm_denom = normed ? sum(diff(edges) .* counts) : 1.0
     if norm_denom == 0
@@ -424,7 +426,8 @@ end
     edges, counts = my_hist(y, d[:bins],
                                normed = d[:normalize],
                                weights = d[:weights])
-    x := edges
+    bar_width := diff(edges)
+    x := centers(edges)
     y := counts
     seriestype := :bar
     ()
