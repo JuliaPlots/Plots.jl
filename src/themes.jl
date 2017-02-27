@@ -2,7 +2,7 @@
 function theme(s::Symbol; kw...)
     # reset?
     if s == :none || s == :default
-        PlotUtils.set_clibrary(:matplotlib)
+        PlotUtils.set_clibrary(:Plots)
         PlotUtils.cgraddefaults(:inferno)
         default(;
             bg        = :white,
@@ -24,7 +24,7 @@ function theme(s::Symbol; kw...)
     # update the default gradient and other defaults
     thm = PlotThemes._themes[s]
     if thm.gradient != nothing
-        PlotUtils.set_clibrary(:plotthemes)
+        PlotUtils.set_clibrary(:Plots)
         PlotUtils.cgraddefaults(default = PlotThemes.gradient_name(s))
     end
     default(;
