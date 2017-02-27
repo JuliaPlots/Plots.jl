@@ -23,7 +23,7 @@ facts("PyPlot") do
     @fact pyplot() --> Plots.PyPlotBackend()
     @fact backend() --> Plots.PyPlotBackend()
 
-    image_comparison_facts(:pyplot, skip=[25,30], eps=img_eps)
+    image_comparison_facts(:pyplot, skip=[6,25,30], eps=img_eps)
 end
 
 facts("GR") do
