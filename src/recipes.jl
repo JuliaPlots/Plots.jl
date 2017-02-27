@@ -816,7 +816,7 @@ end
         error("showlibrary takes the name of a color library as a Symbol")
     end
 
-    library = clibrary(cl.args[1])
+    library = PlotUtils.color_libraries[cl.args[1]]
     z = sqrt.((1:15)*(1:20)')
 
     seriestype := :heatmap
@@ -828,8 +828,8 @@ end
     i = 0
     for grad in keys(library.lib)
         @series begin
-            seriescolor := cgrad(grad, color_library = cl.args[1])
-            title := grad
+            seriescolor := cgrad(grad, cl.args[1])
+            title := string(grad)
             subplot := i += 1
             z
         end
