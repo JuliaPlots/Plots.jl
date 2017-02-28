@@ -24,7 +24,7 @@ function theme(s::Symbol; kw...)
     # update the default gradient and other defaults
     thm = PlotThemes._themes[s]
     if thm.gradient != nothing
-        PlotUtils.clibrary(:Plots)
+        PlotUtils.clibrary(:hisc)
         PlotUtils.default_cgrad(default = PlotThemes.gradient_name(s))
     end
     default(;
