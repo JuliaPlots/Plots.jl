@@ -3,7 +3,7 @@ function theme(s::Symbol; kw...)
     # reset?
     if s == :none || s == :default
         PlotUtils.clibrary(:Plots)
-        PlotUtils.default_cgrad(:inferno)
+        PlotUtils.default_cgrad(default = :sequential, sequential = :inferno)
         default(;
             bg        = :white,
             bglegend  = :match,
@@ -24,8 +24,8 @@ function theme(s::Symbol; kw...)
     # update the default gradient and other defaults
     thm = PlotThemes._themes[s]
     if thm.gradient != nothing
-        PlotUtils.clibrary(:hisc)
-        PlotUtils.default_cgrad(default = PlotThemes.gradient_name(s))
+        PlotUtils.clibrary(:misc)
+        PlotUtils.default_cgrad(default = :sequential, sequential = PlotThemes.gradient_name(s))
     end
     default(;
         bg       = thm.bg_secondary,
