@@ -846,6 +846,6 @@ end
     ticks := nothing
     legend := false
     seriescolor := grad.args[1]
-    title := grad.args[1]
+    title := string(grad.args[1])
     z
 end
