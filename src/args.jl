@@ -77,7 +77,7 @@ const _typeAliases = Dict{Symbol,Symbol}(
 
 add_non_underscore_aliases!(_typeAliases)
 
-like_histogram(seriestype::Symbol) = seriestype in (:histogram, :density)
+like_histogram(seriestype::Symbol) = seriestype in (:histogram, :barhist, :barbins, :density)
 like_line(seriestype::Symbol)      = seriestype in (:line, :path, :steppre, :steppost)
 like_surface(seriestype::Symbol)   = seriestype in (:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image)
 
@@ -1260,7 +1260,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     end
 
     # scatter plots don't have a line, but must have a shape
-    if d[:seriestype] in (:scatter, :scatter3d)
+    if d[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
         d[:linewidth] = 0
         if d[:markershape] == :none
             d[:markershape] = :circle
