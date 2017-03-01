@@ -9,6 +9,7 @@ using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
 import Showoff
+import StatsBase
 
 export
     grid,
@@ -148,6 +149,9 @@ end
 @shorthands bar
 @shorthands barh
 @shorthands histogram
+@shorthands barhist
+@shorthands stephist
+@shorthands scatterhist
 @shorthands histogram2d
 @shorthands density
 @shorthands heatmap
