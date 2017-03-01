@@ -1075,7 +1075,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         py_add_legend(plt, sp, ax)
 
         # this sets the bg color inside the grid
-        ax[:set_axis_bgcolor](py_color(sp[:background_color_inside]))
+        ax[:set_facecolor](py_color(sp[:background_color_inside]))
     end
     py_drawfig(fig)
 end
