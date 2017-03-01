@@ -409,7 +409,7 @@ end
 @deps scatterbins scatter
 
 
-_stepbins_path(edge, weights) = begin
+function _stepbins_path(edge, weights)
     nbins = length(linearindices(weights))
     if length(linearindices(edge)) != nbins + 1
         error("Edge vector must be 1 longer than weight vector")
