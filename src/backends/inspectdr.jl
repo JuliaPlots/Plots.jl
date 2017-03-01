@@ -213,14 +213,10 @@ end
 # Set up the subplot within the backend object.
 function _initialize_subplot(plt::Plot{InspectDRBackend}, sp::Subplot{InspectDRBackend})
     plot = sp.o
-
     #Don't do anything without a "subplot" object:  Will process later.
     if nothing == plot; return; end
     plot.data = []
-    plot.markers = [] #Clear old markers
-    plot.atext = [] #Clear old annotation
-    plot.apline = [] #Clear old poly lines
-
+    plot.userannot = [] #Clear old markers/text annotation/polyline "annotation"
     return plot
 end
 
@@ -277,7 +273,7 @@ For st in :shape:
                 apline = InspectDR.PolylineAnnotation(
                     x[rng], y[rng], line=line, fillcolor=fillcolor
                 )
-                push!(plot.apline, apline)
+                InspectDR.add(plot, apline)
             end
         end
 
