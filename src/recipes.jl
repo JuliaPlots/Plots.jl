@@ -823,10 +823,10 @@ end
     ticks := nothing
     legend := false
 
-    layout := length(library.lib)
+    layout --> length(library.lib)
 
     i = 0
-    for grad in keys(library.lib)
+    for grad in sort(collect(keys(library.lib)))
         @series begin
             seriescolor := cgrad(grad, cl.args[1])
             title := string(grad)
