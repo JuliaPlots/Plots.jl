@@ -43,7 +43,7 @@ gradient_name(s::Symbol) = Symbol(s, "_grad")
 
 function add_theme(s::Symbol, thm::PlotTheme)
     if thm.gradient != nothing
-        PlotUtils.register_gradient_colors(gradient_name(s), thm.gradient)
+        PlotUtils.register_gradient_colors(gradient_name(s), thm.gradient, :Plots)
     end
     _themes[s] = thm
 end
