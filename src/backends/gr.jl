@@ -172,6 +172,8 @@ function gr_polyline(x, y, func = GR.polyline; arrowside=:none)
     end
 end
 
+gr_inqtext(x, y, s::Symbol) = gr_inqtext(x, y, string(s))
+
 function gr_inqtext(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.inqtextext(x, y, s[2:end-1])
@@ -181,6 +183,8 @@ function gr_inqtext(x, y, s)
         GR.inqtext(x, y, s)
     end
 end
+
+gr_text(x, y, s::Symbol) = gr_text(x, y, string(s))
 
 function gr_text(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
