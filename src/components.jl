@@ -174,7 +174,7 @@ function center(shape::Shape)
     Cx / 6A, Cy / 6A
 end
 
-function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
+function scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     sx, sy = coords(shape)
     cx, cy = c
     for i=1:length(sx)
@@ -184,7 +184,7 @@ function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     shape
 end
 
-function Base.scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
+function scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
     shapecopy = deepcopy(shape)
     scale!(shapecopy, x, y, c)
 end
