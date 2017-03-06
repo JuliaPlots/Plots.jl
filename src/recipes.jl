@@ -792,8 +792,11 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Dates
 
-@recipe f(::Type{Date}, dt::Date) = (dt -> convert(Int,dt), dt -> string(convert(Date,dt)))
-@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> convert(Int,dt), dt -> string(convert(DateTime,dt)))
+dateformatter(dt) = string(convert(Date, convert(DateTime, dt)))
+datetimeformatter(dt) = string(convert(DateTime, dt))
+
+@recipe f(::Type{Date}, dt::Date) = (dt -> convert(Int, convert(DateTime, dt)), dateformatter)
+@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> convert(Int,dt), datetimeformatter)
 
 # -------------------------------------------------
 # Complex Numbers
