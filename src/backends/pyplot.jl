@@ -1059,7 +1059,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             if sp[:grid]
                 fgcolor = py_color(sp[:foreground_color_grid])
-                pyaxis[:grid](true, color = fgcolor)
+                pyaxis[:grid](true, color = fgcolor, linestyle = ":")
                 ax[:set_axisbelow](true)
             end
             py_set_axis_colors(ax, axis)
