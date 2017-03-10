@@ -77,7 +77,7 @@ const _typeAliases = Dict{Symbol,Symbol}(
 
 add_non_underscore_aliases!(_typeAliases)
 
-like_histogram(seriestype::Symbol) = seriestype in (:histogram, :density)
+like_histogram(seriestype::Symbol) = seriestype == :histogram
 like_line(seriestype::Symbol)      = seriestype in (:line, :path, :steppre, :steppost)
 like_surface(seriestype::Symbol)   = seriestype in (:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image)
 
