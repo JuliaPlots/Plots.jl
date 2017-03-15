@@ -156,6 +156,13 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     scale = axis[:scale]
     sf = scalefunc(scale)
 
+    # If the axis input was a Date or DateTime use a special logic to find
+    # "round" Date(Time)s as ticks
+    # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
+    if axis[:formatter] in (dateformatter, datetimeformatter) && ticks == nothing && scale == :identity
+        return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
+    end
+
     # get a list of well-laid-out ticks
     scaled_ticks = if ticks == nothing
         optimize_ticks(
