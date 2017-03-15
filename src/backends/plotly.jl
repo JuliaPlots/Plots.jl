@@ -409,6 +409,13 @@ plotly_surface_data(series::Series, a::AbstractVector) = a
 plotly_surface_data(series::Series, a::AbstractMatrix) = transpose_z(series, a, false)
 plotly_surface_data(series::Series, a::Surface) = plotly_surface_data(series, a.surf)
 
+#ensures that a gradient is called if a single color is supplied where a gradient is needed (e.g. if a series recipe defines marker_z)
+as_gradient(grad::ColorGradient, α) = grad
+as_gradient(grad, α) = cgrad(alpha = α)
+
+# allows passing a ColorGradient where a single color is expected - the other backends allow this
+PlotUtils.rgba_string(cg::ColorGradient) = rgba_string(cg[1])
+
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
@@ -539,9 +546,10 @@ function plotly_series(plt::Plot, series::Series)
             rgba_string(series[:markercolor])
         else
             # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
-            grad = series[:markercolor]
+            grad = as_gradient(series[:markercolor], series[:markeralpha])
             zmin, zmax = extrema(series[:marker_z])
-            [rgba_string(grad[(zi - zmin) / (zmax - zmin)]) for zi in series[:marker_z]]
+            zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
+            [rgba_string(grad[(zi - zmin) / zrange]) for zi in series[:marker_z]]
         end
     end
 
