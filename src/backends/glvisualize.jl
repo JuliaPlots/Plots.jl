@@ -1,4 +1,4 @@
-``#=
+#=
 TODO
     * move all gl_ methods to GLPlot
     * integrate GLPlot UI
@@ -7,7 +7,6 @@ TODO
     * polar plots
     * labes and axis
     * fix units in all visuals (e.g dotted lines, marker scale, surfaces)
-    * why is there so little unicode supported in the font!??!?
 =#
 
 const _glvisualize_attr = merge_with_base_supported([
@@ -134,11 +133,6 @@ function empty_screen!(screen)
     end
     nothing
 end
-function poll_reactive()
-    # run_till_now blocks when message queue is empty!
-    Base.n_avail(Reactive._messages) > 0 && Reactive.run_till_now()
-end
-
 
 function get_plot_screen(list::Vector, name, result = [])
     for elem in list
@@ -155,19 +149,20 @@ function get_plot_screen(screen, name, result = [])
 end
 
 function create_window(plt::Plot{GLVisualizeBackend}, visible)
-    name = Symbol("Plots.jl")
+    name = Symbol("__Plots.jl")
     # make sure we have any screen open
     if isempty(GLVisualize.get_screens())
         # create a fresh, new screen
         parent_screen = GLVisualize.glscreen(
-            "Plot",
+            "Plots",
             resolution = plt[:size],
             visible = visible
         )
         @async GLWindow.waiting_renderloop(parent_screen)
+        GLVisualize.add_screen(parent_screen)
     end
     # now lets get ourselves a permanent Plotting screen
-    plot_screens = get_plot_screen(GLVisualize.get_screens(), name)
+    plot_screens = get_plot_screen(GLVisualize.current_screen(), name)
     screen = if isempty(plot_screens) # no screen with `name`
         parent = GLVisualize.current_screen()
         screen = GLWindow.Screen(
@@ -183,7 +178,7 @@ function create_window(plt::Plot{GLVisualizeBackend}, visible)
     else
         # okay this is silly! Lets see if we can. There is an ID we could use
         # will not be fine for more than 255 screens though -.-.
-        error("multiple Plot screens. Please don't use any screen with the name Plots.jl")
+        error("multiple Plot screens. Please don't use any screen with the name $name")
     end
     # Since we own this window, we can do deep cleansing
     empty_screen!(screen)
@@ -1141,8 +1136,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
                 vis = gl_bar(d, kw_args)
             elseif st == :image
                 extract_extrema(d, kw_args)
-                z = transpose_z(series, d[:z].surf, false)
-                vis = GL.gl_image(z, kw_args)
+                vis = GL.gl_image(d[:z].surf, kw_args)
             elseif st == :boxplot
                  extract_c(d, kw_args, :fill)
                  vis = gl_boxplot(d, kw_args)
@@ -1182,7 +1176,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
         if _3d
             GLAbstraction.center!(sp_screen)
         end
-        Reactive.post_empty()
+        GLAbstraction.post_empty()
         yield()
     end
 end
@@ -1422,6 +1416,8 @@ function label_scatter(d, w, ho)
         color = get(kw, :color, nothing)
         kw[:color] = isa(color, Array) ? first(color) : color
     end
+    strcolor = get(kw, :stroke_color, RGBA{Float32}(0,0,0,0))
+    kw[:stroke_color] = isa(strcolor, Array) ? first(strcolor) : strcolor
     p = get(kw, :primitive, GeometryTypes.Circle)
     if isa(p, GLNormalMesh)
         bb = GeometryTypes.AABB{Float32}(GeometryTypes.vertices(p))
@@ -1435,6 +1431,9 @@ function label_scatter(d, w, ho)
         kw[:primitive] = m * p
         kw[:scale] = Vec3f0(w/2)
         delete!(kw, :offset)
+    end
+    if isa(p, Array)
+        kw[:primitive] = GeometryTypes.Circle
     end
     GL.gl_scatter(Point2f0[(w/2, ho)], kw)
 end
