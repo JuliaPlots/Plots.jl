@@ -370,15 +370,19 @@ function py_bbox_title(ax)
     bb
 end
 
-function py_dpi_scale(plt::Plot{PyPlotBackend}, ptsz)
-    ptsz * plt[:dpi] / DPI
-end
+#Re-scale font size (points) before sending to PyPlot:
+py_font_scale(plt::Plot{PyPlotBackend}, ptsz) = Float64(ptsz) #Passthrough
+
+#Convert pixels to PyPlot's unit (typography points):
+py_dpi_scale(plt::Plot{PyPlotBackend}, px) = px2pt(px, plt[:dpi])
+py_dpi_scale(plt::Plot{PyPlotBackend}, v::Vector) = Float64[py_dpi_scale(plt,px) for px in v]
 
 # ---------------------------------------------------------------------------
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{PyPlotBackend})
-    w,h = map(px2inch, plt[:size])
+#    dpi = plt[:dpi]
+#    w,h = map((px)->px2inch(px,dpi), plt[:size])
 
     # # reuse the current figure?
     fig = if plt[:overwrite_figure]
@@ -984,7 +988,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     fig = plt.o
     fig[:clear]()
     dpi = plt[:dpi]
-    fig[:set_size_inches](w/dpi, h/dpi, forward = true)
+    fig[:set_size_inches](px2inch(w, dpi), px2inch(h, dpi), forward = true)
     fig[:set_facecolor](py_color(plt[:background_color_outside]))
     fig[:set_dpi](dpi)
 
@@ -1024,7 +1028,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 :title
             end
             ax[func][:set_text](sp[:title])
-            ax[func][:set_fontsize](py_dpi_scale(plt, sp[:titlefont].pointsize))
+            ax[func][:set_fontsize](py_font_scale(plt, sp[:titlefont].pointsize))
             ax[func][:set_family](sp[:titlefont].family)
             ax[func][:set_color](py_color(sp[:foreground_color_title]))
             # ax[:set_title](sp[:title], loc = loc)
@@ -1049,10 +1053,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             if get(axis.d, :flip, false)
                 ax[Symbol("invert_", letter, "axis")]()
             end
-            pyaxis[:label][:set_fontsize](py_dpi_scale(plt, axis[:guidefont].pointsize))
+            pyaxis[:label][:set_fontsize](py_font_scale(plt, axis[:guidefont].pointsize))
             pyaxis[:label][:set_family](axis[:guidefont].family)
             for lab in ax[Symbol("get_", letter, "ticklabels")]()
-                lab[:set_fontsize](py_dpi_scale(plt, axis[:tickfont].pointsize))
+                lab[:set_fontsize](py_font_scale(plt, axis[:tickfont].pointsize))
                 lab[:set_family](axis[:tickfont].family)
                 lab[:set_rotation](axis[:rotation])
             end
@@ -1137,7 +1141,7 @@ function py_add_annotations(sp::Subplot{PyPlotBackend}, x, y, val::PlotText)
         horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
         verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
         rotation = val.font.rotation * 180 / π,
-        size = py_dpi_scale(sp.plt, val.font.pointsize),
+        size = py_font_scale(sp.plt, val.font.pointsize),
         zorder = 999
     )
 end
@@ -1182,7 +1186,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 labels,
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
-                fontsize = py_dpi_scale(plt, sp[:legendfont].pointsize)
+                fontsize = py_font_scale(plt, sp[:legendfont].pointsize)
                 # family = sp[:legendfont].family
                 # framealpha = 0.6
             )
