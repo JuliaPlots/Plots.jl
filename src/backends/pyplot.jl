@@ -327,9 +327,12 @@ py_extents(obj) = obj[:get_window_extent]()[:get_points]()
 
 # compute a bounding box (with origin top-left), however pyplot gives coords with origin bottom-left
 function py_bbox(obj)
-    fl, fr, fb, ft = py_extents(obj[:get_figure]())
+    const fig = obj[:get_figure]()
+    const dpi = fig[:dpi]
+    const LENGTH_PIXEL = LENGTH_POINT*(72/dpi)
+    fl, fr, fb, ft = py_extents(fig) #malaforge: reads GUI size instead of *intended* size?
     l, r, b, t = py_extents(obj)
-    BoundingBox(l*px, (ft-t)*px, (r-l)*px, (t-b)*px)
+    BoundingBox(l*LENGTH_PIXEL, (ft-t)*LENGTH_PIXEL, (r-l)*LENGTH_PIXEL, (t-b)*LENGTH_PIXEL)
 end
 
 # get the bounding box of the union of the objects
@@ -371,10 +374,11 @@ function py_bbox_title(ax)
 end
 
 #Re-scale font size (points) before sending to PyPlot:
-py_font_scale(plt::Plot{PyPlotBackend}, ptsz) = Float64(ptsz) #Passthrough
+py_font_scale(plt::Plot{PyPlotBackend}, ptsz) = Float64(ptsz) #Passthrough (Assume point value)
 
 #Convert pixels to PyPlot's unit (typography points):
-py_dpi_scale(plt::Plot{PyPlotBackend}, px) = px2pt(px, plt[:dpi])
+py_dpi_scale(plt::Plot{PyPlotBackend}, ptsz) = Float64(ptsz) #Passthrough (Assume point value)
+#py_dpi_scale(plt::Plot{PyPlotBackend}, px) = px2pt(px, plt[:dpi]) #Assume dimensions in pixels.
 py_dpi_scale(plt::Plot{PyPlotBackend}, v::Vector) = Float64[py_dpi_scale(plt,px) for px in v]
 
 # ---------------------------------------------------------------------------
@@ -987,8 +991,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig[:clear]()
-    dpi = plt[:dpi]
-    fig[:set_size_inches](px2inch(w, dpi), px2inch(h, dpi), forward = true)
+    dpi = plt[:dpi] #User-requested resolution
+    #Set size assuming all line/font sizes/image dimensions are in points:
+    fig[:set_size_inches](pt2inch(w), pt2inch(h), forward = true)
     fig[:set_facecolor](py_color(plt[:background_color_outside]))
     fig[:set_dpi](dpi)
 
@@ -1216,7 +1221,7 @@ function _update_plot_object(plt::Plot{PyPlotBackend})
         ax = sp.o
         ax == nothing && return
         figw, figh = sp.plt[:size]
-        figw, figh = figw*px, figh*px
+        figw, figh = figw*LENGTH_POINT, figh*LENGTH_POINT
         pcts = bbox_to_pcts(sp.plotarea, figw, figh)
         ax[:set_position](pcts)
 

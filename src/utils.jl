@@ -860,13 +860,14 @@ end
 const DTPPOINTS_PER_INCH = 72 #Typography (desktop publishing) points per inch
 const DEFAULT_DPI   = DTPPOINTS_PER_INCH
 const MM_PER_INCH   = 25.4
+const MM_PER_POINT  = MM_PER_INCH/DTPPOINTS_PER_INCH
 
 inch2mm(inches::Real)   = float(inches * MM_PER_INCH)
 mm2inch(mm::Real)       = float(mm / MM_PER_INCH)
 px2inch(px::Float64, dpi::Float64) = px / dpi
 px2inch(px::Real, dpi::Real) = px2inch(Float64(px), Float64(dpi))
-
-#Convert to typography "points":
+pt2inch(pt::Float64)    = pt / DTPPOINTS_PER_INCH
+pt2inch(pt::Real)       = pt2inch(Float64(pt))
 px2pt(px::Float64, dpi::Float64) = px * (DTPPOINTS_PER_INCH / dpi)
 px2pt(px::Real, dpi::Real) = px2pt(Float64(px), Float64(dpi))
 

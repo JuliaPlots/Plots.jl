@@ -2,10 +2,12 @@
 # NOTE: (0,0) is the top-left !!!
 
 # allow pixels and percentages
-const px = AbsoluteLength(0.254)
-const pct = Length{:pct, Float64}(1.0)
+const LENGTH_POINT = AbsoluteLength(MM_PER_POINT)
+const px = LENGTH_POINT #malaforge: Hack.  Should deprecate.
+#const px = AbsoluteLength(0.254) #Old def assumed 100 dpi... why?
+const pct = Length{:pct, Float64}(1.0) #Represents 1%
 
-to_pixels(m::AbsoluteLength) = m.value / 0.254
+to_pixels(m::AbsoluteLength) = m.value / MM_PER_POINT #malaforge: should be called "to_point"
 
 const _cbar_width = 5mm
 
