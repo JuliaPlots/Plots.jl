@@ -425,7 +425,7 @@ end
 function gr_colorbar(sp::Subplot)
     if sp[:colorbar] != :none
         gr_set_viewport_cmap(sp)
-        GR.colormap()
+        GR.colorbar()
         gr_set_viewport_plotarea()
     end
 end
