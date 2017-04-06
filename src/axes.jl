@@ -158,9 +158,26 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
 
     # If the axis input was a Date or DateTime use a special logic to find
     # "round" Date(Time)s as ticks
+    # This bypasses the rest of optimal_ticks_and_labels, because
+    # optimize_datetime_ticks returns ticks AND labels: the label format (Date
+    # or DateTime) is chosen based on the time span between amin and amax
+    # rather than on the input format
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
-    if axis[:formatter] in (dateformatter, datetimeformatter) && ticks == nothing && scale == :identity
-        return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
+    if ticks == nothing && scale == :identity
+        if axis[:formatter] == dateformatter
+            # optimize_datetime_ticks returns ticks and labels(!) based on
+            # integers/floats corresponding to the DateTime type. Thus, the axes
+            # limits, which resulted from converting the Date type to integers,
+            # are converted to 'DateTime integers' (actually floats) before
+            # being passed to optimize_datetime_ticks.
+            # (convert(Int, convert(DateTime, convert(Date, i))) == 87600000*i)
+            ticks, labels = optimize_datetime_ticks(864e5 * amin, 864e5 * amax;
+                k_min = 2, k_max = 4)
+            # Now the ticks are converted back to floats corresponding to Dates.
+            return ticks / 864e5, labels
+        elseif axis[:formatter] == datetimeformatter
+            return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
+        end
     end
 
     # get a list of well-laid-out ticks
