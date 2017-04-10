@@ -335,9 +335,10 @@ end
 
 # ---------------------------------------------------------
 
-function gr_set_line(w, style, c) #, a)
+function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
-    GR.setlinewidth(w)
+    w, h = gr_plot_size
+    GR.setlinewidth(max(1, lw / ((w + h) * 0.001)))
     gr_set_linecolor(c) #, a)
 end
 
