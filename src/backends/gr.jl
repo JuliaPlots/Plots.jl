@@ -287,7 +287,8 @@ end
 # draw ONE symbol marker
 function gr_draw_marker(xi, yi, msize::Number, shape::Symbol)
     GR.setmarkertype(gr_markertype[shape])
-    GR.setmarkersize(0.3msize)
+    w, h = gr_plot_size
+    GR.setmarkersize(0.3msize / ((w + h) * 0.001))
     GR.polymarker([xi], [yi])
 end
 
