@@ -683,6 +683,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             z = transpose_z(series, z)
             if st == :surface
+                clims = sp[:clims]
+                if is_2tuple(clims)
+                    isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+                    isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+                end
                 if series[:fill_z] != nothing
                     # the surface colors are different than z-value
                     extrakw[:facecolors] = py_shading(series[:fillcolor], transpose_z(series, series[:fill_z].surf))
