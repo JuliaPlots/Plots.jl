@@ -551,6 +551,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
         if st == :heatmap
             outside_ticks = true
+            x, y = heatmap_edges(series[:x]), heatmap_edges(series[:y])
+            expand_extrema!(sp[:xaxis], x)
+            expand_extrema!(sp[:yaxis], y)
+            data_lims = gr_xy_axislims(sp)
         end
     end
 
@@ -765,10 +769,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # recompute data
         if typeof(z) <: Surface
-            # if st == :heatmap
-            #     expand_extrema!(sp[:xaxis], (x[1]-0.5*(x[2]-x[1]), x[end]+0.5*(x[end]-x[end-1])))
-            #     expand_extrema!(sp[:yaxis], (y[1]-0.5*(y[2]-y[1]), y[end]+0.5*(y[end]-y[end-1])))
-            # end
             z = vec(transpose_z(series, z.surf, false))
         elseif ispolar(sp)
             if frng != nothing
