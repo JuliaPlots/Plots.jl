@@ -811,8 +811,8 @@ end
 
 # Splits a complex matrix to its real and complex parts
 # Reals defaults solid, imaginary defaults dashed
-# Label defaults are changed to match the real-imaginary reference / indexing 
-@recipe function f{T<:Number,T2<:Number}(x::AbstractArray{T},y::Array{Complex{T2}})
+# Label defaults are changed to match the real-imaginary reference / indexing
+@recipe function f{T<:Real,T2<:Number}(x::AbstractArray{T},y::Array{Complex{T2}})
   A = real.(y)
   B = imag.(y)
   _y = [!iseven(i) ? A[:,i÷2+1] : B[:,i÷2] for i in 1:2size(A,2)]
