@@ -809,6 +809,18 @@ datetimeformatter(dt) = string(convert(DateTime, dt))
     real(cp.args[1]), imag(cp.args[1])
 end
 
+# Splits a complex matrix to its real and complex parts
+# Reals defaults solid, imaginary defaults dashed
+# Label defaults are changed to match the real-imaginary reference / indexing 
+@recipe function f{T<:Number,T2<:Number}(x::AbstractArray{T},y::Array{Complex{T2}})
+  A = real.(y)
+  B = imag.(y)
+  _y = [!iseven(i) ? A[:,i÷2+1] : B[:,i÷2] for i in 1:2size(A,2)]
+  linestyle --> reshape([!iseven(i) ? :solid : :dash for i in 1:2size(A,2)],1,2size(A,2))
+  label --> reshape([!iseven(i) ? "Re(y$(i÷2+1))" : "Im(y$(i÷2))" for i in 1:2size(A,2)],1,2size(A,2))
+  x,_y
+end
+
 
 # --------------------------------------------------
 # Color Gradients
