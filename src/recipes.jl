@@ -818,6 +818,7 @@ end
   _y = [!iseven(i) ? A[:,i÷2+1] : B[:,i÷2] for i in 1:2size(A,2)]
   linestyle --> reshape([!iseven(i) ? :solid : :dash for i in 1:2size(A,2)],1,2size(A,2))
   label --> reshape([!iseven(i) ? "Re(y$(i÷2+1))" : "Im(y$(i÷2))" for i in 1:2size(A,2)],1,2size(A,2))
+  color --> reshape([!iseven(i) ? i÷2+1 : i÷2 for i in 1:2size(A,2)],1,2size(A,2))
   x,_y
 end
 
