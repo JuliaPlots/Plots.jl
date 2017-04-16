@@ -801,12 +801,10 @@ datetimeformatter(dt) = string(convert(DateTime, dt))
 # -------------------------------------------------
 # Complex Numbers
 
-@userplot ComplexPlot
-@recipe function f(cp::ComplexPlot)
-    xguide --> "Real Part"
-    yguide --> "Imaginary Part"
-    seriestype --> :scatter
-    real(cp.args[1]), imag(cp.args[1])
+@recipe function f{T<:Number}(A::Array{Complex{T}})
+    xguide --> "Re(x)"
+    yguide --> "Im(x)"
+    real.(A), imag.(A)
 end
 
 # Splits a complex matrix to its real and complex parts
