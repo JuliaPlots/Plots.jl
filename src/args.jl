@@ -65,6 +65,7 @@ const _typeAliases = Dict{Symbol,Symbol}(
     :polygon       => :shape,
     :box           => :boxplot,
     :velocity      => :quiver,
+    :vectorfield   => :quiver,
     :gradient      => :quiver,
     :img           => :image,
     :imshow        => :image,
@@ -445,7 +446,7 @@ add_aliases(:color_palette, :palette)
 add_aliases(:overwrite_figure, :clf, :clearfig, :overwrite, :reuse)
 add_aliases(:xerror, :xerr, :xerrorbar)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
-add_aliases(:quiver, :velocity, :quiver2d, :gradient)
+add_aliases(:quiver, :velocity, :quiver2d, :gradient, :vectorfield)
 add_aliases(:normalize, :norm, :normed, :normalized)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:match_dimensions, :transpose, :transpose_z)
