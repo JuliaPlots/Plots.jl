@@ -411,8 +411,6 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
         plot = sp.o
         _initialize_subplot(plt, sp)
         _inspectdr_setupsubplot(sp)
-        graphbb = _inspectdr_to_pixels(plotarea(sp))
-        plot.plotbb = InspectDR.plotbounds(plot.layout, graphbb)
 
         # add the annotations
         for ann in sp[:annotations]
@@ -467,7 +465,11 @@ function _update_plot_object(plt::Plot{InspectDRBackend})
     mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end
 
-    #TODO: should plotbb be computed here??
+    for (i, sp) in enumerate(plt.subplots)
+        graphbb = _inspectdr_to_pixels(plotarea(sp))
+        plot = mplot.subplots[i]
+        plot.plotbb = InspectDR.plotbounds(plot.layout, graphbb)
+    end
 
     gplot = _inspectdr_getgui(plt.o)
     if nothing == gplot; return; end
