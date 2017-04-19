@@ -277,7 +277,6 @@ end
 @init_backend GLVisualize
 @init_backend PGFPlots
 @init_backend InspectDR
-@init_backend HDF5
 
 # ---------------------------------------------------------
 
