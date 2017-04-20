@@ -19,7 +19,7 @@ const _plotly_attr = merge_with_base_supported([
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :colorbar,
+    :grid, :legend, :colorbar, :colorbar_title,
     :marker_z, :fill_z, :levels,
     :ribbon, :quiver,
     :orientation,
@@ -445,6 +445,8 @@ function plotly_series(plt::Plot, series::Series)
             d_out[letter] = plotly_surface_data(series, series[letter])
         end
     end
+
+    d_out[:colorbar] = KW(:title => sp[:colorbar_title])
 
     clims = sp[:clims]
     if is_2tuple(clims)
