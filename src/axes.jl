@@ -188,6 +188,23 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
             k_min = 5, # minimum number of ticks
             k_max = 8, # maximum number of ticks
         )[1]
+    elseif typeof(ticks) <: Int
+        # only return ticks within the axis limits
+        filter(
+            ti -> sf(amin) <= ti <= sf(amax),
+            optimize_ticks(
+                sf(amin),
+                sf(amax);
+                # TODO: find a better configuration to return the chosen number
+                # of ticks
+                k_min = ticks + 1, # minimum number of ticks
+                k_max = ticks + 2, # maximum number of ticks
+                k_ideal = ticks + 2,
+                # `strict_span = false` rewards cases where the span of the
+                # chosen  ticks is not too much bigger than amin - amax:
+                strict_span = false,
+            )[1]
+        )
     else
         map(sf, filter(t -> amin <= t <= amax, ticks))
     end
@@ -226,7 +243,7 @@ function get_ticks(axis::Axis)
     elseif ticks == :auto
         # compute optimal ticks and labels
         optimal_ticks_and_labels(axis)
-    elseif typeof(ticks) <: AVec
+    elseif typeof(ticks) <: Union{AVec, Int}
         # override ticks, but get the labels
         optimal_ticks_and_labels(axis, ticks)
     elseif typeof(ticks) <: NTuple{2}
