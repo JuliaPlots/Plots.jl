@@ -82,7 +82,7 @@ function buildanimation(animdir::AbstractString, fn::AbstractString;
         warn("""Tried to create gif using convert (ImageMagick), but got error: $err
             ImageMagick needs to be installed in julia and on your machine:
               1) in julia>> `Pkg.add("ImageMagick")`
-              2) on your machine (for Ubuntu): $$ sudo apt install imagemagick
+              2) on your machine (in terminal run): sudo apt install imagemagick
             Will try ffmpeg, but it's lower quality...)""")
 
         # low quality
