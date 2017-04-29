@@ -357,7 +357,7 @@ function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
         expand_extrema!(sp[:xaxis], (0,w))
         expand_extrema!(sp[:yaxis], (0,h))
         sp[:yaxis].d[:flip] = true
-    elseif !(st in (:pie, :histogram, :histogram2d))
+    elseif !(st in (:pie, :histogram, :bins2d, :histogram2d))
         expand_extrema!(sp, d)
     end
 end
