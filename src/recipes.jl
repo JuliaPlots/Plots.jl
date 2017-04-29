@@ -323,10 +323,11 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
-    nx, ny = length(x), length(y)
+    procx, procy, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
+    nx, ny = length(procx), length(procy)
     axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
-    cv = [discrete_value!(axis, xi)[1] for xi=x]
-    x = if nx == ny
+    cv = [discrete_value!(axis, xi)[1] for xi=procx]
+    procx = if nx == ny
         cv
     elseif nx == ny + 1
         0.5diff(cv) + cv[1:end-1]
@@ -337,9 +338,9 @@ end
     # compute half-width of bars
     bw = d[:bar_width]
     hw = if bw == nothing
-        0.5mean(diff(x))
+        0.5mean(diff(procx))
     else
-        Float64[0.5cycle(bw,i) for i=1:length(x)]
+        Float64[0.5cycle(bw,i) for i=1:length(procx)]
     end
 
     # make fillto a vector... default fills to 0
@@ -347,16 +348,21 @@ end
     if fillto == nothing
         fillto = 0
     end
+    if (yscale in _logScales) && !all(_is_positive, fillto)
+        fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
+    end
 
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i=1:ny
-        center = x[i]
-        hwi = cycle(hw,i)
-        yi = y[i]
-        fi = cycle(fillto,i)
-        push!(xseg, center-hwi, center-hwi, center+hwi, center+hwi, center-hwi)
-        push!(yseg, yi, fi, fi, yi, yi)
+        yi = procy[i]
+        if !isnan(yi)
+            center = procx[i]
+            hwi = cycle(hw,i)
+            fi = cycle(fillto,i)
+            push!(xseg, center-hwi, center-hwi, center+hwi, center+hwi, center-hwi)
+            push!(yseg, yi, fi, fi, yi, yi)
+        end
     end
 
     # widen limits out a bit
@@ -384,9 +390,51 @@ end
 
 _bin_centers(v::AVec) = (v[1:end-1] + v[2:end]) / 2
 
+_is_positive(x) = (x > 0) && !(x ≈ 0)
+
+_positive_else_nan{T}(::Type{T}, x::Real) = _is_positive(x) ? T(x) : T(NaN)
+
+function _scale_adjusted_values{T<:AbstractFloat}(::Type{T}, V::AbstractVector, scale::Symbol)
+    if scale in _logScales
+        [_positive_else_nan(T, x) for x in V]
+    else
+        [T(x) for x in V]
+    end
+end
+
+function _hist_ylim_lo{T<:Real}(ymin::T, yscale::Symbol)
+    if (yscale in _logScales)
+        ymin / T(_logScaleBases[yscale]^log10(2))
+    else
+        zero(T)
+    end
+end
+
+function _hist_ylim_hi{T<:Real}(ymax::T, yscale::Symbol)
+    if (yscale in _logScales)
+        ymax * T(_logScaleBases[yscale]^log10(2))
+    else
+        ymax * T(1.1)
+    end
+end
+
+
+function _preprocess_binlike(d, x, y)
+    xscale = get(d, :xscale, :identity)
+    yscale = get(d, :yscale, :identity)
+
+    T = float(promote_type(eltype(x), eltype(y)))
+    edge = map(T, x)
+    weights = _scale_adjusted_values(T, y, yscale)
+    w_min = minimum(weights)
+    baseline = _hist_ylim_lo(isnan(w_min) ? one(T) : w_min, yscale)
+    edge, weights, xscale, yscale, baseline
+end
+
+
 
 @recipe function f(::Type{Val{:barbins}}, x, y, z)
-    edge, weights = x, y
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
     if (d[:bar_width] == nothing)
         bar_width := diff(edge)
     end
@@ -395,11 +443,11 @@ _bin_centers(v::AVec) = (v[1:end-1] + v[2:end]) / 2
     seriestype := :bar
     ()
 end
-@deps barbins bins
+@deps barbins bar
 
 
 @recipe function f(::Type{Val{:scatterbins}}, x, y, z)
-    edge, weights = x, y
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
     xerror := diff(edge)/2
     x := _bin_centers(edge)
     y := weights
@@ -409,43 +457,65 @@ end
 @deps scatterbins scatter
 
 
-function _stepbins_path(edge, weights)
+function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::Symbol)
+    log_scale_x = xscale in _logScales
+    log_scale_y = yscale in _logScales
+
     nbins = length(linearindices(weights))
     if length(linearindices(edge)) != nbins + 1
         error("Edge vector must be 1 longer than weight vector")
     end
 
+    x = eltype(edge)[]
+    y = eltype(weights)[]
+
     it_e, it_w = start(edge), start(weights)
-    px, it_e = next(edge, it_e)
-    py = zero(eltype(weights))
+    a, it_e = next(edge, it_e)
+    last_w = eltype(weights)(NaN)
+    i = 1
+    while (!done(edge, it_e) && !done(edge, it_e))
+        b, it_e = next(edge, it_e)
+        w, it_w = next(weights, it_w)
 
-    npathpts = 2 * nbins + 2
-    x = Vector{eltype(px)}(npathpts)
-    y = Vector{eltype(py)}(npathpts)
+        if (log_scale_x && a ≈ 0)
+            a = b/_logScaleBases[xscale]^3
+        end
 
-    x[1], y[1] = px, py
-    i = 2
-    while (i < npathpts - 1)
-        py, it_w = next(weights, it_w)
-        x[i], y[i] = px, py
-        i += 1
-        px, it_e = next(edge, it_e)
-        x[i], y[i] = px, py
-        i += 1
+        if isnan(w)
+            if !isnan(last_w)
+                push!(x, a)
+                push!(y, baseline)
+            end
+        else
+            if isnan(last_w)
+                push!(x, a)
+                push!(y, baseline)
+            end
+            push!(x, a)
+            push!(y, w)
+            push!(x, b)
+            push!(y, w)
+        end
+
+        a = b
+        last_w = w
     end
-    assert(i == npathpts)
-    x[end], y[end] = px, zero(py)
+    if (last_w != baseline)
+        push!(x, a)
+        push!(y, baseline)
+    end
 
     (x, y)
 end
 
-@recipe function f(::Type{Val{:stepbins}}, x, y, z)
-    edge, weights = x, y
 
+@recipe function f(::Type{Val{:stepbins}}, x, y, z)
     axis = d[:subplot][Plots.isvertical(d) ? :xaxis : :yaxis]
 
-    xpts, ypts = _stepbins_path(edge, weights)
-    if !Plots.isvertical(d)
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
+
+    xpts, ypts = _stepbins_path(edge, weights, baseline, xscale, yscale)
+    if !isvertical(d)
         xpts, ypts = ypts, xpts
     end
 
@@ -453,7 +523,7 @@ end
     if d[:markershape] != :none
         @series begin
             seriestype := :scatter
-            x := Plots._bin_centers(edge)
+            x := _bin_centers(edge)
             y := weights
             fillrange := nothing
             label := ""
@@ -468,7 +538,8 @@ end
     x := xpts
     y := ypts
     seriestype := :path
-    ylims --> [0, 1.1 * maximum(weights)]
+
+    ylims --> [baseline, _hist_ylim_hi(maximum(weights), yscale)]
     ()
 end
 Plots.@deps stepbins path
@@ -568,9 +639,11 @@ end
 
     if d[:seriestype] == :scatterbins
         # Workaround, error bars currently not set correctly by scatterbins
+        edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, h.edges[1], h.weights)
+        info("xscale = $xscale, yscale = $yscale")
         xerror --> diff(h.edges[1])/2
         seriestype := :scatter
-        (Plots._bin_centers(h.edges[1]), h.weights)
+        (Plots._bin_centers(edge), weights)
     else
         (h.edges[1], h.weights)
     end
