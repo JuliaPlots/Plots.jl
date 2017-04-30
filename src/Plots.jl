@@ -9,6 +9,7 @@ using Reexport
 # using Requires
 using FixedSizeArrays
 @reexport using RecipesBase
+import RecipesBase: plot
 using Base.Meta
 @reexport using PlotUtils
 import Showoff
