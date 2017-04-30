@@ -181,32 +181,32 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     end
 
     # get a list of well-laid-out ticks
-    scaled_ticks = if ticks == nothing
-        optimize_ticks(
+    if ticks == nothing
+        scaled_ticks = optimize_ticks(
             sf(amin),
             sf(amax);
             k_min = 5, # minimum number of ticks
             k_max = 8, # maximum number of ticks
-        )[1]
+        )[1], sf(amin), sf(amax)
     elseif typeof(ticks) <: Int
-        # only return ticks within the axis limits
-        filter(
-            ti -> sf(amin) <= ti <= sf(amax),
-            optimize_ticks(
-                sf(amin),
-                sf(amax);
-                # TODO: find a better configuration to return the chosen number
-                # of ticks
-                k_min = ticks + 1, # minimum number of ticks
-                k_max = ticks + 2, # maximum number of ticks
-                k_ideal = ticks + 2,
-                # `strict_span = false` rewards cases where the span of the
-                # chosen  ticks is not too much bigger than amin - amax:
-                strict_span = false,
-            )[1]
+        scaled_ticks, viewmin, viewmax = optimize_ticks(
+            sf(amin),
+            sf(amax);
+            # TODO: find a better configuration to return the chosen number
+            # of ticks
+            k_min = ticks, # minimum number of ticks
+            k_max = ticks, # maximum number of ticks
+            k_ideal = ticks,
+            # k_min = ticks + 1, # minimum number of ticks
+            # k_max = ticks + 2, # maximum number of ticks
+            # k_ideal = ticks + 2,
+            # `strict_span = false` rewards cases where the span of the
+            # chosen  ticks is not too much bigger than amin - amax:
+            strict_span = false,
         )
+        axis[:lims] = map(invscalefunc(scale), (viewmin, viewmax))
     else
-        map(sf, filter(t -> amin <= t <= amax, ticks))
+        scaled_ticks = map(sf, (filter(t -> amin <= t <= amax, ticks), amin, amax))
     end
     unscaled_ticks = map(invscalefunc(scale), scaled_ticks)
 
@@ -503,10 +503,10 @@ end
 # compute the line segments which should be drawn for this axis
 function axis_drawing_info(sp::Subplot)
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]
-    xmin, xmax = axis_limits(xaxis)
-    ymin, ymax = axis_limits(yaxis)
     xticks = get_ticks(xaxis)
     yticks = get_ticks(yaxis)
+    xmin, xmax = axis_limits(xaxis)
+    ymin, ymax = axis_limits(yaxis)
     spine_segs = Segments(2)
     grid_segs = Segments(2)
 
