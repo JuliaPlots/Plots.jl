@@ -3,6 +3,8 @@ __precompile__()
 
 module RecipesBase
 
+using Compat
+
 export
     @recipe,
     @series,
@@ -13,9 +15,9 @@ export
     AbstractLayout
 
 # Common abstract types for the Plots ecosystem
-abstract AbstractBackend
-abstract AbstractPlot{T<:AbstractBackend}
-abstract AbstractLayout
+@compat abstract type AbstractBackend end
+@compat abstract type AbstractPlot{T<:AbstractBackend} end
+@compat abstract type AbstractLayout end
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.plot since RecipesBase is the common
