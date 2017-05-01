@@ -7,7 +7,15 @@ export
     @recipe,
     @series,
     @userplot,
-    RecipeData
+    RecipeData,
+    AbstractBackend,
+    AbstractPlot,
+    AbstractLayout
+
+# Common abstract types for the Plots ecosystem
+abstract AbstractBackend
+abstract AbstractPlot{T<:AbstractBackend}
+abstract AbstractLayout
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.plot since RecipesBase is the common
