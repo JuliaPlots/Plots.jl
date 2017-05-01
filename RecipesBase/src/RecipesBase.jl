@@ -6,6 +6,7 @@ module RecipesBase
 export
     @recipe,
     @series,
+    @userplot,
     RecipeData
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
