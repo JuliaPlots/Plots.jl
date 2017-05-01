@@ -5,7 +5,7 @@ module Plots
 using Reexport
 using FixedSizeArrays
 @reexport using RecipesBase
-import RecipesBase: plot
+import RecipesBase: plot, _cycle
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes

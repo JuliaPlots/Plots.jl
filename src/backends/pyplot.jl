@@ -501,10 +501,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 handle = if is3d(st)
                     for rng in iter_segments(x, y, z)
                         length(rng) < 2 && continue
-                        push!(segments, [(cycle(x,i),cycle(y,i),cycle(z,i)) for i in rng])
+                        push!(segments, [(_cycle(x,i),_cycle(y,i),_cycle(z,i)) for i in rng])
                     end
                     # for i=1:n
-                    #     segments[i] = [(cycle(x,i), cycle(y,i), cycle(z,i)), (cycle(x,i+1), cycle(y,i+1), cycle(z,i+1))]
+                    #     segments[i] = [(_cycle(x,i), _cycle(y,i), _cycle(z,i)), (_cycle(x,i+1), _cycle(y,i+1), _cycle(z,i+1))]
                     # end
                     lc = pyart3d.Line3DCollection(segments; kw...)
                     lc[:set_array](lz)
@@ -513,10 +513,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 else
                     for rng in iter_segments(x, y)
                         length(rng) < 2 && continue
-                        push!(segments, [(cycle(x,i),cycle(y,i)) for i in rng])
+                        push!(segments, [(_cycle(x,i),_cycle(y,i)) for i in rng])
                     end
                     # for i=1:n
-                    #     segments[i] = [(cycle(x,i), cycle(y,i)), (cycle(x,i+1), cycle(y,i+1))]
+                    #     segments[i] = [(_cycle(x,i), _cycle(y,i)), (_cycle(x,i+1), _cycle(y,i+1))]
                     # end
                     lc = pycollections.LineCollection(segments; kw...)
                     lc[:set_array](lz)
@@ -587,16 +587,16 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             lw = py_dpi_scale(plt, series[:markerstrokewidth])
             for i=1:length(y)
                 extrakw[:c] = if series[:marker_z] == nothing
-                    py_color_fix(py_color(cycle(series[:markercolor],i)), x)
+                    py_color_fix(py_color(_cycle(series[:markercolor],i)), x)
                 else
                     extrakw[:c]
                 end
 
-                push!(handle, ax[:scatter](cycle(x,i), cycle(y,i);
+                push!(handle, ax[:scatter](_cycle(x,i), _cycle(y,i);
                     label = series[:label],
                     zorder = series[:series_plotindex] + 0.5,
-                    marker = py_marker(cycle(shapes,i)),
-                    s =  py_dpi_scale(plt, cycle(series[:markersize],i) .^ 2),
+                    marker = py_marker(_cycle(shapes,i)),
+                    s =  py_dpi_scale(plt, _cycle(series[:markersize],i) .^ 2),
                     edgecolors = msc,
                     linewidths = lw,
                     extrakw...
@@ -803,8 +803,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     path;
                     label = series[:label],
                     zorder = series[:series_plotindex],
-                    edgecolor = py_color(cycle(series[:linecolor], i)),
-                    facecolor = py_color(cycle(series[:fillcolor], i)),
+                    edgecolor = py_color(_cycle(series[:linecolor], i)),
+                    facecolor = py_color(_cycle(series[:fillcolor], i)),
                     linewidth = py_dpi_scale(plt, series[:linewidth]),
                     fill = true
                 )
@@ -1167,7 +1167,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 # add a line/marker and a label
                 push!(handles, if series[:seriestype] == :shape
                     PyPlot.plt[:Line2D]((0,1),(0,0),
-                        color = py_color(cycle(series[:fillcolor],1)),
+                        color = py_color(_cycle(series[:fillcolor],1)),
                         linewidth = py_dpi_scale(plt, 4)
                     )
                 else
