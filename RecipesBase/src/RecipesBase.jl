@@ -9,6 +9,7 @@ export
     @recipe,
     @series,
     @userplot,
+    @shorthands,
     RecipeData,
     AbstractBackend,
     AbstractPlot,
@@ -341,6 +342,18 @@ function _userplot(sym::Symbol)
     _userplot(:(type $sym
             args
     end))
+end
+
+#----------------------------------------------------------------------------
+
+# define and export shorthand plotting method definitions
+macro shorthands(funcname::Symbol)
+    funcname2 = Symbol(funcname, "!")
+    esc(quote
+        export $funcname, $funcname2
+        $funcname(args...; kw...) = plot(args...; kw..., seriestype = $(quot(funcname)))
+        $funcname2(args...; kw...) = plot!(args...; kw..., seriestype = $(quot(funcname)))
+    end)
 end
 
 end # module
