@@ -351,8 +351,8 @@ macro shorthands(funcname::Symbol)
     funcname2 = Symbol(funcname, "!")
     esc(quote
         export $funcname, $funcname2
-        $funcname(args...; kw...) = plot(args...; kw..., seriestype = $(quot(funcname)))
-        $funcname2(args...; kw...) = plot!(args...; kw..., seriestype = $(quot(funcname)))
+        $funcname(args...; kw...) = plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
+        $funcname2(args...; kw...) = plot!(args...; kw..., seriestype = $(Meta.quot(funcname)))
     end)
 end
 
