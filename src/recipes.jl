@@ -290,7 +290,7 @@ end
     hw = if bw == nothing
         0.5mean(diff(x))
     else
-        Float64[0.5cycle(bw,i) for i=1:length(x)]
+        Float64[0.5_cycle(bw,i) for i=1:length(x)]
     end
 
     # make fillto a vector... default fills to 0
