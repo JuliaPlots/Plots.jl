@@ -1107,7 +1107,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     # optionally add the width of colorbar labels and colorbar to rightpad
     if haskey(sp.attr, :cbar_ax)
         bb = py_bbox(sp.attr[:cbar_handle][:ax][:get_yticklabels]())
-        sp.attr[:cbar_width] = _cbar_width + width(bb) + 1mm + (sp[:colorbar_title] == "" ? 0px : 30px)
+        sp.attr[:cbar_width] = _cbar_width + width(bb) + 2.3mm + (sp[:colorbar_title] == "" ? 0px : 30px)
         rightpad = rightpad + sp.attr[:cbar_width]
     end
 
