@@ -238,7 +238,7 @@ function get_ticks(axis::Axis)
     # @show ticks dvals cv dv
 
     # TODO: better/smarter cutoff values for sampling ticks
-    if length(cv) > 30
+    if length(cv) > 30 && ticks == :auto
         rng = Int[round(Int,i) for i in linspace(1, length(cv), 15)]
         cv[rng], dv[rng]
     else
