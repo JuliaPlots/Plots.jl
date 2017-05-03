@@ -22,8 +22,8 @@ const _pgfplots_attr = merge_with_base_supported([
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend,
-    # :colorbar,
-    # :marker_z, :levels,
+    :colorbar,
+    :marker_z, #:levels,
     # :ribbon, :quiver, :arrow,
     # :orientation,
     # :overwrite_figure,
@@ -98,6 +98,8 @@ const _pgf_series_extrastyle = KW(
     :xsticks => "xcomb",
 )
 
+# PGFPlots uses the anchors to define orientations for example to align left 
+# one needs to use the right edge as anchor
 const _pgf_annotation_halign = KW(
     :center => "",
     :left => "right",
@@ -107,9 +109,22 @@ const _pgf_annotation_halign = KW(
 # --------------------------------------------------------------------------------------
 
 # takes in color,alpha, and returns color and alpha appropriate for pgf style
-function pgf_color(c)
+function pgf_color(c::Colorant)
     cstr = @sprintf("{rgb,1:red,%.8f;green,%.8f;blue,%.8f}", red(c), green(c), blue(c))
     cstr, alpha(c)
+end
+
+function pgf_color(grad::ColorGradient)
+    # Can't handle ColorGradient here, fallback to defaults.
+    cstr = @sprintf("{rgb,1:red,%.8f;green,%.8f;blue,%.8f}", 0.0, 0.60560316,0.97868012)
+    cstr, 1
+end
+
+# Generates a colormap for pgfplots based on a ColorGradient
+function pgf_colormap(grad::ColorGradient) 
+    join(map(grad.colors) do c
+        @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c),blue(c))
+    end,", ")
 end
 
 function pgf_fillstyle(d::KW)
@@ -162,7 +177,6 @@ function pgf_series(sp::Subplot, series::Series)
     st = d[:seriestype]
     style = []
     kw = KW()
-
     push!(style, pgf_linestyle(d))
     push!(style, pgf_marker(d))
 
@@ -182,6 +196,10 @@ function pgf_series(sp::Subplot, series::Series)
         d[:z].surf, d[:x], d[:y]
     elseif is3d(st)
         d[:x], d[:y], d[:z]
+    elseif d[:marker_z] != nothing
+        # If a marker_z is used pass it as third coordinate to a 2D plot.
+        # See "Scatter Plots" in PGFPlots documentation
+        d[:x], d[:y], d[:marker_z]
     else
         d[:x], d[:y]
     end
@@ -274,6 +292,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
     # Obtain the total height of the plot by extracting the maximal bottom
     # coordinate from the bounding box.
     total_height = bottom(bbox(plt.layout))
+
     for sp in plt.subplots
        # first build the PGFPlots.Axis object
         style = ["unbounded coords=jump"]
@@ -319,6 +338,34 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         if sp[:projection] == :polar
             axisf = PGFPlots.PolarAxis
         end
+
+        # Search series for any gradient. In case one series uses a gradient set
+        # the colorbar and colomap.
+        # The reasoning behind doing this on the axis level is that pgfplots
+        # colorbar seems to only works on axis level and needs the proper colormap for
+        # correctly displaying it.
+        # It's also possible to assign the colormap to the series itself but
+        # then the colormap needs to be added twice, once for the axis and once for the
+        # series.
+        # As it is likely that all series within the same axis use the same
+        # colormap this should not cause any problem.
+        for series in series_list(sp)
+            for col in (:markercolor, :fillcolor)
+                if typeof(series.d[col]) == ColorGradient
+                    push!(style,"colormap={plots}{$(pgf_colormap(series.d[col]))}")
+
+                    if sp[:colorbar] == :none
+                        kw[:colorbar] = "false"
+                    else
+                        kw[:colorbar] = "true"
+                    end
+                    # goto is needed to break out of col and series for
+                    @goto colorbar_end 
+                end
+            end
+        end
+        @label colorbar_end
+
         o = axisf(; style = style, kw...)
 
         # add the series object to the PGFPlots.Axis
