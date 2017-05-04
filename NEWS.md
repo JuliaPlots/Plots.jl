@@ -10,7 +10,40 @@
 
 ---
 
-## 0.9 (current master/dev)
+## 0.11 (current master/dev)
+
+#### 0.11.0
+
+- julia 0.6 compatibility
+- matplotlib 0.2.0 compatibility
+- add inspectdr backend
+- improved histogram functionality:
+- added a `:stephist` and `:scatterhist` series type as well as ``:barhist` (the default)
+- support for log scale axes with histograms
+- support for plotting `StatsBase.Histogram`
+- allowing bins to be specified as `:sturges`, `:rice`, `:scott` or :fd
+- allow `normalization` to be specified as :density (for unequal bins) or :pdf (sum to 1)
+- add a `plotattr` function to access documentation for Plots attribute
+- add `fill_z` attribute for pyplot
+- add colorbar_title to plotlyjs
+- enable standalone window for plotlyjs
+- improved support for pgfplots, ticks rotation, clims, series_annotations
+- restore colorbars for GR
+- better axis labels for heatmap in GR
+- better marker sizes in GR
+- fix color representation in GR
+- update GR legend
+- fix image bug on GR
+- fix glvisualize dependencies
+- set dotted grid lines for pyplot
+- several improvements to inspectdr
+- improved tick positions for TimeType x axes
+- support for improved color gradient capability in PlotUtils
+- add a showlibrary recipe to display color libraries
+- add a showgradient recipe to display color gradients
+- add `vectorfield` as an alias for `quiver`
+- use `PlotUtils.adaptedgrid` for functions
+
 
 #### 0.9.5
 
