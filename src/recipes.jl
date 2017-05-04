@@ -1,53 +1,4 @@
 
-
-
-"""
-You can easily define your own plotting recipes with convenience methods:
-
-```
-@userplot type GroupHist
-    args
-end
-
-@recipe function f(gh::GroupHist)
-    # set some attributes, add some series, using gh.args as input
-end
-
-# now you can plot like:
-grouphist(rand(1000,4))
-```
-"""
-macro userplot(expr)
-    _userplot(expr)
-end
-
-function _userplot(expr::Expr)
-    if expr.head != :type
-        errror("Must call userplot on a type/immutable expression.  Got: $expr")
-    end
-
-    typename = expr.args[2]
-    funcname = Symbol(lowercase(string(typename)))
-    funcname2 = Symbol(funcname, "!")
-
-    # return a code block with the type definition and convenience plotting methods
-    esc(quote
-        $expr
-        export $funcname, $funcname2
-        $funcname(args...; kw...) = plot($typename(args); kw...)
-        $funcname2(args...; kw...) = plot!($typename(args); kw...)
-    end)
-end
-
-function _userplot(sym::Symbol)
-    _userplot(:(type $sym
-            args
-    end))
-end
-
-
-# ----------------------------------------------------------------------------------
-
 const _series_recipe_deps = Dict()
 
 function series_recipe_dependencies(st::Symbol, deps::Symbol...)
@@ -96,7 +47,7 @@ end
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::Plot) = throw(MethodError("Unmatched plot recipe: $T"))
+RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::AbstractPlot) = throw(MethodError("Unmatched plot recipe: $T"))
 
 # ---------------------------------------------------------------------------
 
@@ -232,7 +183,7 @@ end
     for i=1:n
         rng = 3i-2:3i
         newx[rng] = [x[i], x[i], NaN]
-        newy[rng] = [cycle(fr,i), y[i], NaN]
+        newy[rng] = [_cycle(fr,i), y[i], NaN]
     end
     x := newx
     y := newy
@@ -284,16 +235,16 @@ end
     for rng in iter_segments(args...)
         length(rng) < 2 && continue
         ts = linspace(0, 1, npoints)
-        nanappend!(newx, map(t -> bezier_value(cycle(x,rng), t), ts))
-        nanappend!(newy, map(t -> bezier_value(cycle(y,rng), t), ts))
+        nanappend!(newx, map(t -> bezier_value(_cycle(x,rng), t), ts))
+        nanappend!(newy, map(t -> bezier_value(_cycle(y,rng), t), ts))
         if z != nothing
-            nanappend!(newz, map(t -> bezier_value(cycle(z,rng), t), ts))
+            nanappend!(newz, map(t -> bezier_value(_cycle(z,rng), t), ts))
         end
         if fr != nothing
-            nanappend!(newfr, map(t -> bezier_value(cycle(fr,rng), t), ts))
+            nanappend!(newfr, map(t -> bezier_value(_cycle(fr,rng), t), ts))
         end
         # if lz != nothing
-        #     lzrng = cycle(lz, rng) # the line_z's for this segment
+        #     lzrng = _cycle(lz, rng) # the line_z's for this segment
         #     push!(newlz, 0.0)
         #     append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
         # end
@@ -339,7 +290,7 @@ end
     hw = if bw == nothing
         0.5mean(diff(x))
     else
-        Float64[0.5cycle(bw,i) for i=1:length(x)]
+        Float64[0.5_cycle(bw,i) for i=1:length(x)]
     end
 
     # make fillto a vector... default fills to 0
@@ -352,9 +303,9 @@ end
     xseg, yseg = Segments(), Segments()
     for i=1:ny
         center = x[i]
-        hwi = cycle(hw,i)
+        hwi = _cycle(hw,i)
         yi = y[i]
-        fi = cycle(fillto,i)
+        fi = _cycle(fillto,i)
         push!(xseg, center-hwi, center-hwi, center+hwi, center+hwi, center-hwi)
         push!(yseg, yi, fi, fi, yi, yi)
     end
@@ -532,9 +483,9 @@ function error_coords(xorig, yorig, ebar)
     x, y = Array(float_extended_type(xorig), 0), Array(Float64, 0)
     # for each point, create a line segment from the bottom to the top of the errorbar
     for i = 1:max(length(xorig), length(yorig))
-        xi = cycle(xorig, i)
-        yi = cycle(yorig, i)
-        ebi = cycle(ebar, i)
+        xi = _cycle(xorig, i)
+        yi = _cycle(yorig, i)
+        ebi = _cycle(ebar, i)
         nanappend!(x, [xi, xi])
         e1, e2 = if istuple(ebi)
             first(ebi), last(ebi)
@@ -587,11 +538,11 @@ function quiver_using_arrows(d::KW)
     x, y = zeros(0), zeros(0)
     for i = 1:max(length(xorig), length(yorig))
         # get the starting position
-        xi = cycle(xorig, i)
-        yi = cycle(yorig, i)
+        xi = _cycle(xorig, i)
+        yi = _cycle(yorig, i)
 
         # get the velocity
-        vi = cycle(velocity, i)
+        vi = _cycle(velocity, i)
         vx, vy = if istuple(vi)
             first(vi), last(vi)
         elseif isscalar(vi)
@@ -624,12 +575,12 @@ function quiver_using_hack(d::KW)
     for i = 1:max(length(xorig), length(yorig))
 
         # get the starting position
-        xi = cycle(xorig, i)
-        yi = cycle(yorig, i)
+        xi = _cycle(xorig, i)
+        yi = _cycle(yorig, i)
         p = P2(xi, yi)
 
         # get the velocity
-        vi = cycle(velocity, i)
+        vi = _cycle(velocity, i)
         vx, vy = if istuple(vi)
             first(vi), last(vi)
         elseif isscalar(vi)

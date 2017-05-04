@@ -8,10 +8,6 @@ typealias KW Dict{Symbol,Any}
 
 immutable PlotsDisplay <: Display end
 
-abstract AbstractBackend
-abstract AbstractPlot{T<:AbstractBackend}
-abstract AbstractLayout
-
 # -----------------------------------------------------------
 
 immutable InputWrapper{T}

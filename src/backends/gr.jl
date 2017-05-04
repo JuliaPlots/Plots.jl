@@ -122,10 +122,10 @@ function gr_getcolorind(c)
     convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
 end
 
-gr_set_linecolor(c)   = GR.setlinecolorind(gr_getcolorind(cycle(c,1)))
-gr_set_fillcolor(c)   = GR.setfillcolorind(gr_getcolorind(cycle(c,1)))
-gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(cycle(c,1)))
-gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(cycle(c,1)))
+gr_set_linecolor(c)   = GR.setlinecolorind(gr_getcolorind(_cycle(c,1)))
+gr_set_fillcolor(c)   = GR.setfillcolorind(gr_getcolorind(_cycle(c,1)))
+gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_cycle(c,1)))
+gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(_cycle(c,1)))
 
 # --------------------------------------------------------------------------------------
 
@@ -298,23 +298,23 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
     shapes = series[:markershape]
     if shapes != :none
         for i=1:length(x)
-            msi = cycle(msize, i)
-            shape = cycle(shapes, i)
+            msi = _cycle(msize, i)
+            shape = _cycle(shapes, i)
             cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
             cfuncind = isa(shape, Shape) ? GR.setfillcolorind : GR.setmarkercolorind
 
             # draw a filled in shape, slightly bigger, to estimate a stroke
             if series[:markerstrokewidth] > 0
-                cfunc(cycle(series[:markerstrokecolor], i)) #, series[:markerstrokealpha])
+                cfunc(_cycle(series[:markerstrokecolor], i)) #, series[:markerstrokealpha])
                 gr_draw_marker(x[i], y[i], msi + series[:markerstrokewidth], shape)
             end
 
             # draw the shape
             if mz == nothing
-                cfunc(cycle(series[:markercolor], i)) #, series[:markeralpha])
+                cfunc(_cycle(series[:markercolor], i)) #, series[:markeralpha])
             else
                 # pick a color from the pre-loaded gradient
-                ci = round(Int, 1000 + cycle(mz, i) * 255)
+                ci = round(Int, 1000 + _cycle(mz, i) * 255)
                 cfuncind(ci)
                 GR.settransparency(_gr_gradient_alpha[ci-999])
             end
@@ -785,9 +785,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
                     for (i,rng) in enumerate(iter_segments(series[:x], series[:y]))
                         if length(rng) > 1
-                            gr_set_fillcolor(cycle(series[:fillcolor], i))
-                            fx = cycle(x, vcat(rng, reverse(rng)))
-                            fy = vcat(cycle(fr_from,rng), cycle(fr_to,reverse(rng)))
+                            gr_set_fillcolor(_cycle(series[:fillcolor], i))
+                            fx = _cycle(x, vcat(rng, reverse(rng)))
+                            fy = vcat(_cycle(fr_from,rng), _cycle(fr_to,reverse(rng)))
                             # @show i rng fx fy
                             GR.fillarea(fx, fy)
                         end
@@ -938,11 +938,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     x, y = series[:x][rng], series[:y][rng]
 
                     # draw the interior
-                    gr_set_fill(cycle(series[:fillcolor], i))
+                    gr_set_fill(_cycle(series[:fillcolor], i))
                     GR.fillarea(x, y)
 
                     # draw the shapes
-                    gr_set_line(series[:linewidth], :solid, cycle(series[:linecolor], i))
+                    gr_set_line(series[:linewidth], :solid, _cycle(series[:linecolor], i))
                     GR.polyline(x, y)
                 end
             end

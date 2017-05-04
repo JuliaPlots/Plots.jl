@@ -262,7 +262,7 @@ function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
     for kw in kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
-        sp = get_subplot(plt, cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
+        sp = get_subplot(plt, _cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
         kw[:subplot] = sp
 
         # extract subplot/axis attributes from kw and add to sp_attr

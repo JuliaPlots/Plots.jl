@@ -5,6 +5,7 @@ module Plots
 using Reexport
 using FixedSizeArrays
 @reexport using RecipesBase
+import RecipesBase: plot, _cycle
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
@@ -28,9 +29,6 @@ export
     default,
     with,
     twinx,
-
-    @userplot,
-    @shorthands,
 
     pie,
     pie!,
@@ -133,16 +131,6 @@ include("plotattr.jl")
 
 
 # ---------------------------------------------------------
-
-# define and export shorthand plotting method definitions
-macro shorthands(funcname::Symbol)
-    funcname2 = Symbol(funcname, "!")
-    esc(quote
-        export $funcname, $funcname2
-        $funcname(args...; kw...) = plot(args...; kw..., seriestype = $(quot(funcname)))
-        $funcname2(args...; kw...) = plot!(args...; kw..., seriestype = $(quot(funcname)))
-    end)
-end
 
 @shorthands scatter
 @shorthands bar
