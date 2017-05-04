@@ -85,19 +85,7 @@ function _initialize_backend(::PyPlotBackend)
         const pycollections = PyPlot.pywrap(PyPlot.pyimport("matplotlib.collections"))
         const pyart3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d.art3d"))
     end
-    if is_linux()
-      @eval begin
-        # avoid Conda update that causes Segfault with qt >=4.8.6 on Ubuntu https://github.com/JuliaPy/PyPlot.jl/issues/234
-        import Conda
-        if isfile(Conda.conda) # Using Conda-internal conda (instead of an external conda)
-            kw = Conda._installed_packages_dict()
-            if (!haskey(kw,"qt") || (qt_version=get(kw,"qt",0)[1]!=v"4.8.5"))
-              print("\n If the code has a Segmentation fault error switch to qt v4.8.5 by pasting the following code into julia: \n \n")
-              print(add_backend_string(PyPlotBackend()))
-            end
-        end
-      end
-    end
+
     # we don't want every command to update the figure
     PyPlot.ioff()
 end
