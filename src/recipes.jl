@@ -640,7 +640,6 @@ end
     if d[:seriestype] == :scatterbins
         # Workaround, error bars currently not set correctly by scatterbins
         edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, h.edges[1], h.weights)
-        info("xscale = $xscale, yscale = $yscale")
         xerror --> diff(h.edges[1])/2
         seriestype := :scatter
         (Plots._bin_centers(edge), weights)
