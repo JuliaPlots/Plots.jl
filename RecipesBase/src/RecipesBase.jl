@@ -29,10 +29,6 @@ function plot end
 # can add their own definition of RecipesBase.is_key_supported(k::Symbol)
 function is_key_supported end
 
-# a commonly used function in recipes, thus defined here for Plots.jl to extend
-# not related to Base.cycle
-function _cycle end
-
 # This holds the recipe definitions to be dispatched on
 # the function takes in an attribute dict `d` and a list of args.
 # This default definition specifies the "no-arg" case.
