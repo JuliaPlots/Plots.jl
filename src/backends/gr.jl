@@ -497,7 +497,7 @@ function gr_display(plt::Plot)
 
     # subplots:
     for sp in plt.subplots
-        gr_display(sp, w*px, h*px, viewport_canvas)
+        gr_display(sp, 1.2*w*px, 1.2*h*px, viewport_canvas)
     end
 
     GR.updatews()
