@@ -582,9 +582,11 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
 
     v = vs[dim]
 
-    if mode == :sqrt  # Square-root choice
+    if mode == :auto
+        30
+    elseif mode == :sqrt  # Square-root choice
         _cl(sqrt(n))
-    elseif mode == :sturges || mode ==:auto  # Sturges' formula
+    elseif mode == :sturges  # Sturges' formula
         _cl(log2(n)) + 1
     elseif mode == :rice  # Rice Rule
         _cl(2 * n^(1/3))
@@ -594,7 +596,7 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
         _cl(_span(v) / (2 * _iqr(v) / n^(1/3)))
     else
         error("Unknown auto-binning mode $mode")
-    end
+    end::Int
 end
 
 _hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) = StatsBase.histrange(vs[dim], binning, :left)
@@ -611,6 +613,7 @@ _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
 function _make_hist{N}(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing)
+    info("binning = $binning")
     edges = _hist_edges(vs, binning)
     h = float( weights == nothing ?
         StatsBase.fit(StatsBase.Histogram, vs, edges, closed = :left) :
