@@ -340,7 +340,7 @@ end
     hw = if bw == nothing
         0.5ignorenan_mean(diff(procx))
     else
-        Float64[0.5cycle(bw,i) for i=1:length(procx)]
+        Float64[0.5_cycle(bw,i) for i=1:length(procx)]
     end
 
     # make fillto a vector... default fills to 0
