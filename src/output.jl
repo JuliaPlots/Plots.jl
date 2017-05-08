@@ -271,7 +271,7 @@ function setup_ijulia()
                 show(io, MIME("text/html"), plt)
             end
         end
-        set_ijulia_output("text/html")
+        @eval set_ijulia_output("text/html")
     end
 end
 
