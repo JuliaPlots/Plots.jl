@@ -783,7 +783,7 @@ function gl_bar(d, kw_args)
     hw = if bw == nothing
         ignorenan_mean(diff(x))
     else
-        Float64[cycle(bw,i)*0.5 for i=1:length(x)]
+        Float64[_cycle(bw,i)*0.5 for i=1:length(x)]
     end
 
     # make fillto a vector... default fills to 0
@@ -797,7 +797,7 @@ function gl_bar(d, kw_args)
     sx, sy = m[1,1], m[2,2]
     for i=1:ny
         center = x[i]
-        hwi = abs(cycle(hw,i)); yi = y[i]; fi = cycle(fillto,i)
+        hwi = abs(_cycle(hw,i)); yi = y[i]; fi = _cycle(fillto,i)
         if Plots.isvertical(d)
             sz = (hwi*sx, yi*sy)
         else
@@ -833,7 +833,7 @@ function gl_boxplot(d, kw_args)
     sx, sy = m[1,1], m[2,2]
     for (i,glabel) in enumerate(glabels)
         # filter y
-        values = y[filter(i -> cycle(x,i) == glabel, 1:length(y))]
+        values = y[filter(i -> _cycle(x,i) == glabel, 1:length(y))]
         # compute quantiles
         q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
         # notch
@@ -846,7 +846,7 @@ function gl_boxplot(d, kw_args)
 
         # make the shape
         center = Plots.discrete_value!(d[:subplot][:xaxis], glabel)[1]
-        hw = d[:bar_width] == nothing ? Plots._box_halfwidth*2 : cycle(d[:bar_width], i)
+        hw = d[:bar_width] == nothing ? Plots._box_halfwidth*2 : _cycle(d[:bar_width], i)
         l, m, r = center - hw/2, center, center + hw/2
 
         # internal nodes for notches
@@ -945,7 +945,7 @@ function scale_for_annotations!(series::Series, scaletype::Symbol = :pixels)
         msw, msh = anns.scalefactor
         offsets = Array(Vec2f0, length(anns.strs))
         series[:markersize] = map(1:length(anns.strs)) do i
-            str = cycle(anns.strs, i)
+            str = _cycle(anns.strs, i)
             # get the width and height of the string (in mm)
             sw, sh = text_size(str, anns.font.pointsize)
 
@@ -1058,7 +1058,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
                     kw = copy(kw_args)
                     fr = d[:fillrange]
                     ps = if all(x-> x >= 0, diff(d[:x])) # if is monotonic
-                        vcat(points, Point2f0[(points[i][1], cycle(fr, i)) for i=length(points):-1:1])
+                        vcat(points, Point2f0[(points[i][1], _cycle(fr, i)) for i=length(points):-1:1])
                     else
                         points
                     end
@@ -1231,7 +1231,7 @@ function gl_scatter(points, kw_args)
     if haskey(kw_args, :stroke_width)
         s = Reactive.value(kw_args[:scale])
         sw = kw_args[:stroke_width]
-        if sw*5 > cycle(Reactive.value(s), 1)[1] # restrict marker stroke to 1/10th of scale (and handle arrays of scales)
+        if sw*5 > _cycle(Reactive.value(s), 1)[1] # restrict marker stroke to 1/10th of scale (and handle arrays of scales)
             kw_args[:stroke_width] = s[1] / 5f0
         end
     end

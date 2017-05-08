@@ -232,7 +232,7 @@ end
     for i=1:n
         rng = 3i-2:3i
         newx[rng] = [x[i], x[i], NaN]
-        newy[rng] = [cycle(fr,i), y[i], NaN]
+        newy[rng] = [_cycle(fr,i), y[i], NaN]
     end
     x := newx
     y := newy
@@ -284,16 +284,16 @@ end
     for rng in iter_segments(args...)
         length(rng) < 2 && continue
         ts = linspace(0, 1, npoints)
-        nanappend!(newx, map(t -> bezier_value(cycle(x,rng), t), ts))
-        nanappend!(newy, map(t -> bezier_value(cycle(y,rng), t), ts))
+        nanappend!(newx, map(t -> bezier_value(_cycle(x,rng), t), ts))
+        nanappend!(newy, map(t -> bezier_value(_cycle(y,rng), t), ts))
         if z != nothing
-            nanappend!(newz, map(t -> bezier_value(cycle(z,rng), t), ts))
+            nanappend!(newz, map(t -> bezier_value(_cycle(z,rng), t), ts))
         end
         if fr != nothing
-            nanappend!(newfr, map(t -> bezier_value(cycle(fr,rng), t), ts))
+            nanappend!(newfr, map(t -> bezier_value(_cycle(fr,rng), t), ts))
         end
         # if lz != nothing
-        #     lzrng = cycle(lz, rng) # the line_z's for this segment
+        #     lzrng = _cycle(lz, rng) # the line_z's for this segment
         #     push!(newlz, 0.0)
         #     append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
         # end
@@ -358,8 +358,8 @@ end
         yi = procy[i]
         if !isnan(yi)
             center = procx[i]
-            hwi = cycle(hw,i)
-            fi = cycle(fillto,i)
+            hwi = _cycle(hw,i)
+            fi = _cycle(fillto,i)
             push!(xseg, center-hwi, center-hwi, center+hwi, center+hwi, center-hwi)
             push!(yseg, yi, fi, fi, yi, yi)
         end
@@ -755,9 +755,9 @@ function error_coords(xorig, yorig, ebar)
     x, y = Array(float_extended_type(xorig), 0), Array(Float64, 0)
     # for each point, create a line segment from the bottom to the top of the errorbar
     for i = 1:max(length(xorig), length(yorig))
-        xi = cycle(xorig, i)
-        yi = cycle(yorig, i)
-        ebi = cycle(ebar, i)
+        xi = _cycle(xorig, i)
+        yi = _cycle(yorig, i)
+        ebi = _cycle(ebar, i)
         nanappend!(x, [xi, xi])
         e1, e2 = if istuple(ebi)
             first(ebi), last(ebi)
@@ -810,11 +810,11 @@ function quiver_using_arrows(d::KW)
     x, y = zeros(0), zeros(0)
     for i = 1:max(length(xorig), length(yorig))
         # get the starting position
-        xi = cycle(xorig, i)
-        yi = cycle(yorig, i)
+        xi = _cycle(xorig, i)
+        yi = _cycle(yorig, i)
 
         # get the velocity
-        vi = cycle(velocity, i)
+        vi = _cycle(velocity, i)
         vx, vy = if istuple(vi)
             first(vi), last(vi)
         elseif isscalar(vi)
@@ -847,12 +847,12 @@ function quiver_using_hack(d::KW)
     for i = 1:max(length(xorig), length(yorig))
 
         # get the starting position
-        xi = cycle(xorig, i)
-        yi = cycle(yorig, i)
+        xi = _cycle(xorig, i)
+        yi = _cycle(yorig, i)
         p = P2(xi, yi)
 
         # get the velocity
-        vi = cycle(velocity, i)
+        vi = _cycle(velocity, i)
         vx, vy = if istuple(vi)
             first(vi), last(vi)
         elseif isscalar(vi)

@@ -192,7 +192,7 @@ function iter_segments(args...)
 end
 
 # helpers to figure out if there are NaN values in a list of array types
-anynan(i::Int, args::Tuple) = any(a -> !isfinite(cycle(a,i)), args)
+anynan(i::Int, args::Tuple) = any(a -> !isfinite(_cycle(a,i)), args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(i -> anynan(i, args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(i -> anynan(i, args), istart:iend)
 
@@ -243,19 +243,19 @@ notimpl() = error("This has not been implemented yet")
 isnothing(x::Void) = true
 isnothing(x) = false
 
-cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
-cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
+_cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
+_cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
-cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
-cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
-cycle(v, idx::Int)       = v
+_cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
+_cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
+_cycle(v, idx::Int)       = v
 
-cycle(v::AVec, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
-cycle(v::AMat, indices::AVec{Int}) = map(i -> cycle(v,i), indices)
-cycle(v, indices::AVec{Int})       = fill(v, length(indices))
+_cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
+_cycle(v::AMat, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
+_cycle(v, indices::AVec{Int})       = fill(v, length(indices))
 
-cycle(grad::ColorGradient, idx::Int) = cycle(grad.colors, idx)
-cycle(grad::ColorGradient, indices::AVec{Int}) = cycle(grad.colors, indices)
+_cycle(grad::ColorGradient, idx::Int) = _cycle(grad.colors, idx)
+_cycle(grad::ColorGradient, indices::AVec{Int}) = _cycle(grad.colors, indices)
 
 makevec(v::AVec) = v
 makevec{T}(v::T) = T[v]
@@ -292,7 +292,7 @@ function _expand_limits(lims, x)
   nothing
 end
 
-expand_data(v, n::Integer) = [cycle(v, i) for i=1:n]
+expand_data(v, n::Integer) = [_cycle(v, i) for i=1:n]
 
 # if the type exists in a list, replace the first occurence.  otherwise add it to the end
 function addOrReplace(v::AbstractVector, t::DataType, args...; kw...)
@@ -355,8 +355,8 @@ function convert_to_polar(x, y, r_extrema = calc_r_extrema(x, y))
     x = zeros(n)
     y = zeros(n)
     for i in 1:n
-        x[i] = cycle(r,i) * cos.(cycle(phi,i))
-        y[i] = cycle(r,i) * sin.(cycle(phi,i))
+        x[i] = _cycle(r,i) * cos.(_cycle(phi,i))
+        y[i] = _cycle(r,i) * sin.(_cycle(phi,i))
     end
     x, y
 end

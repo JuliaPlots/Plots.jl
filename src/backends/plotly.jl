@@ -600,18 +600,18 @@ function plotly_series_shapes(plt::Plot, series::Series)
             :x => vcat(x[rng], x[rng[1]]),
             :y => vcat(y[rng], y[rng[1]]),
             :fill => "tozeroy",
-            :fillcolor => rgba_string(cycle(series[:fillcolor], i)),
+            :fillcolor => rgba_string(_cycle(series[:fillcolor], i)),
         ))
         if series[:markerstrokewidth] > 0
             d_out[:line] = KW(
-                :color => rgba_string(cycle(series[:linecolor], i)),
+                :color => rgba_string(_cycle(series[:linecolor], i)),
                 :width => series[:linewidth],
                 :dash => string(series[:linestyle]),
             )
         end
         d_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
         plotly_polar!(d_out, series)
-        plotly_hover!(d_out, cycle(series[:hover], i))
+        plotly_hover!(d_out, _cycle(series[:hover], i))
         push!(d_outs, d_out)
     end
     d_outs

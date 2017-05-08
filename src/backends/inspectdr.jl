@@ -265,8 +265,8 @@ For st in :shape:
             nmax = i
             if length(rng) > 1
                 linewidth = series[:linewidth]
-                linecolor = _inspectdr_mapcolor(cycle(series[:linecolor], i))
-                fillcolor = _inspectdr_mapcolor(cycle(series[:fillcolor], i))
+                linecolor = _inspectdr_mapcolor(_cycle(series[:linecolor], i))
+                fillcolor = _inspectdr_mapcolor(_cycle(series[:fillcolor], i))
                 line = InspectDR.line(
                     style=:solid, width=linewidth, color=linecolor
                 )
@@ -280,8 +280,8 @@ For st in :shape:
         i = (nmax >= 2? div(nmax, 2): nmax) #Must pick one set of colors for legend
         if i > 1 #Add dummy waveform for legend entry:
             linewidth = series[:linewidth]
-            linecolor = _inspectdr_mapcolor(cycle(series[:linecolor], i))
-            fillcolor = _inspectdr_mapcolor(cycle(series[:fillcolor], i))
+            linecolor = _inspectdr_mapcolor(_cycle(series[:linecolor], i))
+            fillcolor = _inspectdr_mapcolor(_cycle(series[:fillcolor], i))
             wfrm = InspectDR.add(plot, Float64[], Float64[], id=series[:label])
             wfrm.line = InspectDR.line(
                 style=:none, width=linewidth, #linewidth affects glyph
