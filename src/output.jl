@@ -117,7 +117,15 @@ function savefig(plt::Plot, fn::AbstractString)
 end
 savefig(fn::AbstractString) = savefig(current(), fn)
 
-
+function Base.tempname()
+    tempfile_limit = UInt32(30)
+    global tempname_counter = if isdefined(Plots, :tempname_counter)
+        tempname_counter + UInt32(1)
+    else
+        UInt32(1)
+    end
+    return tempname(tempname_counter % tempfile_limit)
+end
 # ---------------------------------------------------------
 
 gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
