@@ -813,12 +813,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 isfinite(clims[1]) && (zmin = clims[1])
                 isfinite(clims[2]) && (zmax = clims[2])
             end
+            GR.setspace(zmin, zmax, 0, 90)
             if typeof(series[:levels]) <: Array
                 h = series[:levels]
             else
                 h = linspace(zmin, zmax, series[:levels])
             end
-            GR.setspace(zmin, zmax, 0, 90)
             if series[:fillrange] != nothing
                 GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
             else
@@ -856,6 +856,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 isfinite(clims[1]) && (zmin = clims[1])
                 isfinite(clims[2]) && (zmax = clims[2])
             end
+            GR.setspace(zmin, zmax, 0, 90)
             grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
             colors = [grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)] for zi=z]
             rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
