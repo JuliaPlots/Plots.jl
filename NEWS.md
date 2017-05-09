@@ -3,8 +3,8 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-- All new development should target 0.9!
-- Minor version 0.8 is the last one to support Julia 0.4!!
+- All new development should target 0.12!
+- Minor version 0.11 is the last one to support Julia 0.5!!
 	- Critical bugfixes only
     - `backports` branch is for Julia 0.4
 
