@@ -269,7 +269,7 @@ function plotly_layout(plt::Plot)
     w, h = plt[:size]
     d_out[:width], d_out[:height] = w, h
     d_out[:paper_bgcolor] = rgba_string(plt[:background_color_outside])
-    d_out[:margin] = KW(:l=>0, :b=>0, :r=>0, :t=>20)
+    d_out[:margin] = KW(:l=>0, :b=>20, :r=>0, :t=>20)
 
     d_out[:annotations] = KW[]
 
