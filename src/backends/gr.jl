@@ -1110,7 +1110,7 @@ function _display(plt::Plot{GRBackend})
         ENV["GKS_FILEPATH"] = filepath
         gr_display(plt)
         GR.emergencyclosegks()
-        content = string("\033]1337;File=inline=1;preserveAspectRatio=0:", base64encode(open(readbytes, filepath)), "\a")
+        content = string("\033]1337;File=inline=1;preserveAspectRatio=0:", base64encode(open(read, filepath)), "\a")
         println(content)
         rm(filepath)
     else
