@@ -318,7 +318,7 @@ function setup_atom()
         # special handling for plotly... use PlotsDisplay
         function Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
             display(Plots.PlotsDisplay(), plt)
-            s = "PlotPane turned off.  The plotly and plotlyjs backends cannot render in the PlotPane due to javascript issues."
+            s = "PlotPane turned off.  The plotly backend cannot render in the PlotPane due to javascript issues. Plotlyjs is similar to plotly and is compatible with the plot pane."
             Media.render(pane, Atom.div(Atom.HTML(s)))
         end
     end
