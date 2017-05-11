@@ -413,9 +413,6 @@ plotly_surface_data(series::Series, a::Surface) = plotly_surface_data(series, a.
 as_gradient(grad::ColorGradient, α) = grad
 as_gradient(grad, α) = cgrad(alpha = α)
 
-# allows passing a ColorGradient where a single color is expected - the other backends allow this
-PlotUtils.rgba_string(cg::ColorGradient) = rgba_string(cg[1])
-
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
