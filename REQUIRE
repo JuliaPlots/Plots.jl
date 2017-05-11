@@ -1,8 +1,8 @@
 julia 0.5
 
 RecipesBase
-PlotUtils 0.4
-PlotThemes 0.1.2
+PlotUtils 0.4.1
+PlotThemes 0.1.3
 Reexport
 FixedSizeArrays
 Measures
