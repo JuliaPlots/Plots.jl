@@ -7,7 +7,7 @@ sudo apt-get -qq update
 
 sudo apt-get install -y xfonts-75dpi
 wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2/wkhtmltox-0.12.2_linux-trusty-amd64.deb
-sudo dpkg -i wkhtmltox-0.12.2_linux-trusty-amd64.deb || true
+sudo dpkg -i --depends wkhtmltox-0.12.2_linux-trusty-amd64.deb
 sudo apt-get -f install
 wkhtmltoimage http://www.google.com test.png
 ls
