@@ -2,9 +2,9 @@
 # TODO: I declare lots of types here because of the lacking ability to do forward declarations in current Julia
 # I should move these to the relevant files when something like "extern" is implemented
 
-typealias AVec AbstractVector
-typealias AMat AbstractMatrix
-typealias KW Dict{Symbol,Any}
+const AVec = AbstractVector
+const AMat = AbstractMatrix
+const KW = Dict{Symbol,Any}
 
 immutable PlotsDisplay <: Display end
 
@@ -62,7 +62,7 @@ Extrema() = Extrema(Inf, -Inf)
 
 # -----------------------------------------------------------
 
-typealias SubplotMap Dict{Any, Subplot}
+const SubplotMap = Dict{Any, Subplot}
 
 # -----------------------------------------------------------
 

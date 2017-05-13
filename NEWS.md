@@ -364,7 +364,7 @@
 - z-axis keywords
 - 3D indexing overhaul: `push!`, `append!` support
 - matplotlib colormap constants (`:inferno` is the new default colormap for Plots)
-- `typealias KW Dict{Symbol,Any}` used in place of splatting in many places
+- `const KW = Dict{Symbol,Any}` used in place of splatting in many places
 - png generation for plotly backend using wkhtmltoimage
 - `normalize` and `weights` keywords
 - background/foreground subcategories for fine-tuning of looks
