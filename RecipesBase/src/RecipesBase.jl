@@ -24,6 +24,11 @@ abstract type AbstractLayout end
 function plot end
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
+# can add their own definition of RecipesBase.animate since RecipesBase is the common
+# dependency of the Plots ecosystem
+function animate end
+
+# a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.is_key_supported(k::Symbol)
 function is_key_supported end
 
