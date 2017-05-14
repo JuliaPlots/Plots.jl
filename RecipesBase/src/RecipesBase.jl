@@ -25,7 +25,8 @@ function plot end
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.animate since RecipesBase is the common
-# dependency of the Plots ecosystem
+# dependency of the Plots ecosystem. Plots.jl will handle the basic cases, while
+# other packages can now extend for their types
 function animate end
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
