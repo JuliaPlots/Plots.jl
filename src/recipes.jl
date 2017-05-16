@@ -323,7 +323,7 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
-    procx, procy, xscale, yscale, baseline, wautolims = _preprocess_barlike(d, x, y)
+    procx, procy, xscale, yscale, baseline = _preprocess_barlike(d, x, y)
     nx, ny = length(procx), length(procy)
     axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
     cv = [discrete_value!(axis, xi)[1] for xi=procx]
@@ -380,7 +380,6 @@ end
     x := xseg.pts
     y := yseg.pts
     seriestype := :shape
-    ylims --> wautolims
     ()
 end
 @deps bar shape
@@ -412,41 +411,20 @@ function _binbarlike_baseline{T<:Real}(min_value::T, scale::Symbol)
     end
 end
 
-function _binbarlike_autolims{T<:Real}(min_value::T, max_value::T, scale::Symbol)
-    lo = if (scale in _logScales)
-        _binbarlike_baseline(min_value, scale)
-    else
-        min(min_value * T(1.1), zero(T))
-    end::T
-
-    hi = if !isnan(max_value)
-        if (scale in _logScales)
-            max_value * T(_logScaleBases[scale]^log10(2))
-        else
-            max(max_value * T(1.1), zero(T))
-        end
-    else
-        one(T)
-    end::T
-
-    (lo, hi)
-end
-
 
 function _preprocess_binbarlike_weights{T<:AbstractFloat}(::Type{T}, w, wscale::Symbol)
     w_adj = _scale_adjusted_values(T, w, wscale)
     w_min = minimum(w_adj)
     w_max = maximum(w_adj)
     baseline = _binbarlike_baseline(w_min, wscale)
-    autolims = _binbarlike_autolims(w_min, w_max,wscale)
-    w_adj, baseline, autolims
+    w_adj, baseline
 end
 
 function _preprocess_barlike(d, x, y)
     xscale = get(d, :xscale, :identity)
     yscale = get(d, :yscale, :identity)
-    weights, baseline, wautolims = _preprocess_binbarlike_weights(float(eltype(y)), y, yscale)
-    x, weights, xscale, yscale, baseline, wautolims
+    weights, baseline = _preprocess_binbarlike_weights(float(eltype(y)), y, yscale)
+    x, weights, xscale, yscale, baseline
 end
 
 function _preprocess_binlike(d, x, y)
@@ -454,13 +432,13 @@ function _preprocess_binlike(d, x, y)
     yscale = get(d, :yscale, :identity)
     T = float(promote_type(eltype(x), eltype(y)))
     edge = T.(x)
-    weights, baseline, wautolims = _preprocess_binbarlike_weights(T, y, yscale)
-    edge, weights, xscale, yscale, baseline, wautolims
+    weights, baseline = _preprocess_binbarlike_weights(T, y, yscale)
+    edge, weights, xscale, yscale, baseline
 end
 
 
 @recipe function f(::Type{Val{:barbins}}, x, y, z)
-    edge, weights, xscale, yscale, baseline, wautolims = _preprocess_binlike(d, x, y)
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
     if (d[:bar_width] == nothing)
         bar_width := diff(edge)
     end
@@ -473,7 +451,7 @@ end
 
 
 @recipe function f(::Type{Val{:scatterbins}}, x, y, z)
-    edge, weights, xscale, yscale, baseline, wautolims = _preprocess_binlike(d, x, y)
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
     xerror := diff(edge)/2
     x := _bin_centers(edge)
     y := weights
@@ -538,7 +516,7 @@ end
 @recipe function f(::Type{Val{:stepbins}}, x, y, z)
     axis = d[:subplot][Plots.isvertical(d) ? :xaxis : :yaxis]
 
-    edge, weights, xscale, yscale, baseline, wautolims = _preprocess_binlike(d, x, y)
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
 
     xpts, ypts = _stepbins_path(edge, weights, baseline, xscale, yscale)
     if !isvertical(d)
@@ -564,8 +542,6 @@ end
     x := xpts
     y := ypts
     seriestype := :path
-
-    ylims --> wautolims
     ()
 end
 Plots.@deps stepbins path
@@ -668,7 +644,7 @@ end
 
     if d[:seriestype] == :scatterbins
         # Workaround, error bars currently not set correctly by scatterbins
-        edge, weights, xscale, yscale, baseline, wautolims = _preprocess_binlike(d, h.edges[1], h.weights)
+        edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, h.edges[1], h.weights)
         xerror --> diff(h.edges[1])/2
         seriestype := :scatter
         (Plots._bin_centers(edge), weights)
