@@ -482,13 +482,13 @@ end
 
 #
 # # 2D FixedSizeArrays
-@recipe f{T<:Number}(xy::AVec{FixedSizeArrays.Vec{2,T}}) = unzip(xy)
-@recipe f{T<:Number}(xy::FixedSizeArrays.Vec{2,T})       = [xy[1]], [xy[2]]
+@recipe f{T<:Number}(xy::AVec{StaticArrays.SVector{2,T}}) = unzip(xy)
+@recipe f{T<:Number}(xy::StaticArrays.SVector{2,T})       = [xy[1]], [xy[2]]
 
 #
 # # 3D FixedSizeArrays
-@recipe f{T<:Number}(xyz::AVec{FixedSizeArrays.Vec{3,T}}) = unzip(xyz)
-@recipe f{T<:Number}(xyz::FixedSizeArrays.Vec{3,T})       = [xyz[1]], [xyz[2]], [xyz[3]]
+@recipe f{T<:Number}(xyz::AVec{StaticArrays.SVector{3,T}}) = unzip(xyz)
+@recipe f{T<:Number}(xyz::StaticArrays.SVector{3,T})       = [xyz[1]], [xyz[2]], [xyz[3]]
 
 #
 # # --------------------------------------------------------------------

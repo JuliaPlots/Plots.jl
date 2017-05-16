@@ -1,7 +1,7 @@
 
 
-const P2 = FixedSizeArrays.Vec{2,Float64}
-const P3 = FixedSizeArrays.Vec{3,Float64}
+const P2 = StaticArrays.SVector{2,Float64}
+const P3 = StaticArrays.SVector{3,Float64}
 
 nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
 nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
@@ -632,7 +632,7 @@ end
 
 # -----------------------------------------------------------------------
 
-type BezierCurve{T <: FixedSizeArrays.Vec}
+type BezierCurve{T <: StaticArrays.SVector}
     control_points::Vector{T}
 end
 
@@ -646,7 +646,7 @@ function (bc::BezierCurve)(t::Real)
 end
 
 Base.mean(x::Real, y::Real) = 0.5*(x+y)
-Base.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps)
+Base.mean{N,T<:Real}(ps::StaticArrays.SVector{N,T}...) = sum(ps) / length(ps)
 
 @deprecate curve_points coords
 
