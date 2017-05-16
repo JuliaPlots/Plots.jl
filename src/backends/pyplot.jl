@@ -221,6 +221,12 @@ function py_stepstyle(seriestype::Symbol)
     return "default"
 end
 
+function py_fillstepstyle(seriestype::Symbol)
+    seriestype == :steppost && return "post"
+    seriestype == :steppre && return "pre"
+    return nothing
+end
+
 # # untested... return a FontProperties object from a Plots.Font
 # function py_font(font::Font)
 #     pyfont.pymember("FontProperties")(
@@ -868,7 +874,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             dim1, expand_data(fillrange[1], n), expand_data(fillrange[2], n)
         end
 
-        handle = ax[f](args...;
+        handle = ax[f](args..., trues(n), false, py_fillstepstyle(st);
             zorder = series[:series_plotindex],
             facecolor = py_fillcolor(series),
             linewidths = 0
