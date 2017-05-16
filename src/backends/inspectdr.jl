@@ -38,7 +38,7 @@ const _inspectdr_attr = merge_with_base_supported([
  #   :ribbon, :quiver, :arrow,
 #    :orientation,
     :overwrite_figure,
-#    :polar,
+    :polar,
 #    :normalize, :weights,
 #    :contours, :aspect_ratio,
     :match_dimensions,
@@ -65,6 +65,9 @@ const _inspectdr_marker = Symbol[
 const _inspectdr_scale = [:identity, :ln, :log2, :log10]
 
 is_marker_supported(::InspectDRBackend, shape::Shape) = true
+
+_inspectdr_to_pixels(bb::BoundingBox) =
+    InspectDR.BoundingBox(to_pixels(left(bb)), to_pixels(right(bb)), to_pixels(top(bb)), to_pixels(bottom(bb)))
 
 #Do we avoid Map to avoid possible pre-comile issues?
 function _inspectdr_mapglyph(s::Symbol)
@@ -125,16 +128,17 @@ end
 
 # ---------------------------------------------------------------------------
 
-function _inspectdr_getscale(s::Symbol)
+function _inspectdr_getscale(s::Symbol, yaxis::Bool)
 #TODO: Support :asinh, :sqrt
+    kwargs = yaxis? (:tgtmajor=>8, :tgtminor=>2): () #More grid lines on y-axis
     if :log2 == s
-        return InspectDR.AxisScale(:log2)
+        return InspectDR.AxisScale(:log2; kwargs...)
     elseif :log10 == s
-        return InspectDR.AxisScale(:log10)
+        return InspectDR.AxisScale(:log10; kwargs...)
     elseif :ln == s
-        return InspectDR.AxisScale(:ln)
+        return InspectDR.AxisScale(:ln; kwargs...)
     else #identity
-        return InspectDR.AxisScale(:lin)
+        return InspectDR.AxisScale(:lin; kwargs...)
     end
 end
 
@@ -209,14 +213,10 @@ end
 # Set up the subplot within the backend object.
 function _initialize_subplot(plt::Plot{InspectDRBackend}, sp::Subplot{InspectDRBackend})
     plot = sp.o
-
     #Don't do anything without a "subplot" object:  Will process later.
     if nothing == plot; return; end
     plot.data = []
-    plot.markers = [] #Clear old markers
-    plot.atext = [] #Clear old annotation
-    plot.apline = [] #Clear old poly lines
-
+    plot.userannot = [] #Clear old markers/text annotation/polyline "annotation"
     return plot
 end
 
@@ -236,6 +236,12 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
 
     _vectorize(v) = isa(v, Vector)? v: collect(v) #InspectDR only supports vectors
     x = _vectorize(series[:x]); y = _vectorize(series[:y])
+
+    #No support for polar grid... but can still perform polar transformation:
+    if ispolar(sp)
+        Θ = x; r = y
+        x = r.*cos(Θ); y = r.*sin(Θ)
+    end
 
     # doesn't handle mismatched x/y - wrap data (pyplot behaviour):
     nx = length(x); ny = length(y)
@@ -267,7 +273,7 @@ For st in :shape:
                 apline = InspectDR.PolylineAnnotation(
                     x[rng], y[rng], line=line, fillcolor=fillcolor
                 )
-                push!(plot.apline, apline)
+                InspectDR.add(plot, apline)
             end
         end
 
@@ -328,23 +334,35 @@ end
 # ---------------------------------------------------------------------------
 
 function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
-    const gridon = InspectDR.grid(vmajor=true, hmajor=true)
-    const gridoff = InspectDR.grid()
+    const gridon = InspectDR.GridRect(vmajor=true, hmajor=true)
+    const gridoff = InspectDR.GridRect()
     const plot = sp.o
+    const strip = plot.strips[1] #Only 1 strip supported with Plots.jl
+
+	#No independent control of grid???
+	strip.grid = sp[:grid]? gridon: gridoff
 
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
-        xscale = _inspectdr_getscale(xaxis[:scale])
-        yscale = _inspectdr_getscale(yaxis[:scale])
-        plot.axes = InspectDR.AxesRect(xscale, yscale)
+        plot.xscale = _inspectdr_getscale(xaxis[:scale], false)
+        strip.yscale = _inspectdr_getscale(yaxis[:scale], true)
         xmin, xmax  = axis_limits(xaxis)
         ymin, ymax  = axis_limits(yaxis)
-        plot.ext = InspectDR.PExtents2D() #reset
-        plot.ext_full = InspectDR.PExtents2D(xmin, xmax, ymin, ymax)
+        if ispolar(sp)
+            #Plots.jl appears to give (xmin,xmax) ≜ (Θmin,Θmax) & (ymin,ymax) ≜ (rmin,rmax)
+            rmax = max(abs(ymin), abs(ymax))
+            xmin, xmax = -rmax, rmax
+            ymin, ymax = -rmax, rmax
+        end
+        plot.xext = InspectDR.PExtents1D() #reset
+        strip.yext = InspectDR.PExtents1D() #reset
+        plot.xext_full = InspectDR.PExtents1D(xmin, xmax)
+        strip.yext_full = InspectDR.PExtents1D(ymin, ymax)
     a = plot.annotation
         a.title = sp[:title]
-        a.xlabel = xaxis[:guide]; a.ylabel = yaxis[:guide]
+        a.xlabel = xaxis[:guide]; a.ylabels = [yaxis[:guide]]
 
     l = plot.layout
+        l.frame.fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
         l.framedata.fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
         l.framedata.line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
         l.fnttitle = InspectDR.Font(sp[:titlefont].family,
@@ -360,8 +378,6 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
             _inspectdr_mapptsize(xaxis[:tickfont].pointsize),
             color = _inspectdr_mapcolor(xaxis[:foreground_color_text])
         )
-        #No independent control of grid???
-        l.grid = sp[:grid]? gridon: gridoff
     leg = l.legend
         leg.enabled = (sp[:legend] != :none)
         #leg.width = 150 #TODO: compute???
@@ -378,6 +394,13 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
     const mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end
 
+    mplot.title = plt[:plot_title]
+    if "" == mplot.title
+        #Don't use window_title... probably not what you want.
+        #mplot.title = plt[:window_title]
+    end
+    mplot.frame.fillcolor = _inspectdr_mapcolor(plt[:background_color_outside])
+
     resize!(mplot.subplots, length(plt.subplots))
     nsubplots = length(plt.subplots)
     for (i, sp) in enumerate(plt.subplots)
@@ -385,15 +408,13 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
             mplot.subplots[i] = InspectDR.Plot2D()
         end
         sp.o = mplot.subplots[i]
+        plot = sp.o
         _initialize_subplot(plt, sp)
         _inspectdr_setupsubplot(sp)
 
-            sp.o.layout.frame.fillcolor =
-                _inspectdr_mapcolor(plt[:background_color_outside])
-
         # add the annotations
         for ann in sp[:annotations]
-            _inspectdr_add_annotations(mplot.subplots[i], ann...)
+            _inspectdr_add_annotations(plot, ann...)
         end
     end
 
@@ -422,8 +443,19 @@ end
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{InspectDRBackend})
-    sp.minpad = (20mm, 5mm, 2mm, 10mm)
-    #TODO: Add support for padding.
+    plot = sp.o
+    if !isa(plot, InspectDR.Plot2D); return sp.minpad; end
+    #Computing plotbounds with 0-BoundingBox returns required padding:
+    bb = InspectDR.plotbounds(plot.layout, InspectDR.BoundingBox(0,0,0,0))
+    #NOTE: plotbounds always pads for titles, legends, etc. even if not in use.
+    #TODO: possibly zero-out items not in use??
+
+    # add in the user-specified margin to InspectDR padding:
+    leftpad   = abs(bb.xmin)*px + sp[:left_margin]
+    toppad    = abs(bb.ymin)*px + sp[:top_margin]
+    rightpad  = abs(bb.xmax)*px + sp[:right_margin]
+    bottompad = abs(bb.ymax)*px + sp[:bottom_margin]
+    sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 
 # ----------------------------------------------------------------
@@ -432,6 +464,13 @@ end
 function _update_plot_object(plt::Plot{InspectDRBackend})
     mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end
+
+    for (i, sp) in enumerate(plt.subplots)
+        graphbb = _inspectdr_to_pixels(plotarea(sp))
+        plot = mplot.subplots[i]
+        plot.plotbb = InspectDR.plotbounds(plot.layout, graphbb)
+    end
+
     gplot = _inspectdr_getgui(plt.o)
     if nothing == gplot; return; end
 
@@ -452,19 +491,21 @@ const _inspectdr_mimeformats_nodpi = Dict(
 #    "application/postscript"  => "ps", #TODO: support once Cairo supports PSSurface
     "application/pdf"         => "pdf"
 )
-_inspectdr_show(io::IO, mime::MIME, ::Void) =
+_inspectdr_show(io::IO, mime::MIME, ::Void, w, h) =
     throw(ErrorException("Cannot show(::IO, ...) plot - not yet generated"))
-_inspectdr_show(io::IO, mime::MIME, mplot) = show(io, mime, mplot)
+function _inspectdr_show(io::IO, mime::MIME, mplot, w, h)
+    InspectDR._show(io, mime, mplot, Float64(w), Float64(h))
+end
 
 for (mime, fmt) in _inspectdr_mimeformats_dpi
     @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{InspectDRBackend})
         dpi = plt[:dpi]#TODO: support
-        _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o))
+        _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
     end
 end
 for (mime, fmt) in _inspectdr_mimeformats_nodpi
     @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{InspectDRBackend})
-        _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o))
+        _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
     end
 end
 _show(io::IO, mime::MIME"text/plain", plt::Plot{InspectDRBackend}) = nothing #Don't show

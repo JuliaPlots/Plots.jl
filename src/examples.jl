@@ -172,6 +172,24 @@ PlotExample("",
     end)]
 ),
 
+PlotExample("Animation with subplots",
+    "The `layout` macro can be used to create an animation with subplots.",
+    [:(begin
+        l = @layout([[a; b] c])
+        p = plot(plot([sin,cos],1,leg=false),
+        scatter([atan,cos],1,leg=false),
+        plot(log,1,xlims=(1,10π),ylims=(0,5),leg=false),layout=l)
+
+        anim = Animation()
+        for x = linspace(1,10π,100)
+          plot(push!(p,x,Float64[sin(x),cos(x),atan(x),cos(x),log(x)]))
+          frame(anim)
+        end
+    end)]
+),
+
+
+
 PlotExample("Open/High/Low/Close",
     "Create an OHLC chart.  Pass in a list of (open,high,low,close) tuples as your `y` argument.  This uses recipes to first convert the tuples to OHLC objects, and subsequently create a :path series with the appropriate line segments.",
     [:(begin

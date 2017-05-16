@@ -80,7 +80,8 @@ function buildanimation(animdir::AbstractString, fn::AbstractString;
 
     catch err
         warn("""Tried to create gif using convert (ImageMagick), but got error: $err
-            ImageMagick can be installed by executing `Pkg.add("ImageMagick")`
+            ImageMagick can be installed by executing `Pkg.add("ImageMagick")`.
+            You may also need to install the imagemagick c++ library through your operating system. 
             Will try ffmpeg, but it's lower quality...)""")
 
         # low quality

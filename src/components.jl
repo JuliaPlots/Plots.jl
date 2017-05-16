@@ -1,7 +1,7 @@
 
 
-typealias P2 StaticArrays.SVector{2,Float64}
-typealias P3 StaticArrays.SVector{3,Float64}
+const P2 = StaticArrays.SVector{2,Float64}
+const P3 = StaticArrays.SVector{3,Float64}
 
 nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
 nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
@@ -174,7 +174,7 @@ function center(shape::Shape)
     Cx / 6A, Cy / 6A
 end
 
-function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
+function scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     sx, sy = coords(shape)
     cx, cy = c
     for i=1:length(sx)
@@ -521,7 +521,7 @@ Base.Array(surf::Surface) = surf.surf
 for f in (:length, :size)
   @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
 end
-Base.copy(surf::Surface) = Surface{typeof(surf.surf)}(copy(surf.surf))
+Base.copy(surf::Surface) = Surface(copy(surf.surf))
 Base.eltype{T}(surf::Surface{T}) = eltype(T)
 
 function expand_extrema!(a::Axis, surf::Surface)

@@ -35,7 +35,9 @@ const _3dTypes = [
 ]
 const _allTypes = vcat([
     :none, :line, :path, :steppre, :steppost, :sticks, :scatter,
-    :heatmap, :hexbin, :histogram, :histogram2d, :histogram3d, :density, :bar, :hline, :vline,
+    :heatmap, :hexbin, :barbins, :barhist, :histogram, :scatterbins,
+    :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :histogram3d,
+    :density, :bar, :hline, :vline,
     :contour, :pie, :shape, :image
 ], _3dTypes)
 
@@ -65,6 +67,7 @@ const _typeAliases = Dict{Symbol,Symbol}(
     :polygon       => :shape,
     :box           => :boxplot,
     :velocity      => :quiver,
+    :vectorfield   => :quiver,
     :gradient      => :quiver,
     :img           => :image,
     :imshow        => :image,
@@ -77,7 +80,7 @@ const _typeAliases = Dict{Symbol,Symbol}(
 
 add_non_underscore_aliases!(_typeAliases)
 
-like_histogram(seriestype::Symbol) = seriestype in (:histogram, :density)
+like_histogram(seriestype::Symbol) = seriestype in (:histogram, :barhist, :barbins)
 like_line(seriestype::Symbol)      = seriestype in (:line, :path, :steppre, :steppost)
 like_surface(seriestype::Symbol)   = seriestype in (:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image)
 
@@ -153,6 +156,8 @@ const _markerAliases = Dict{Symbol,Symbol}(
 )
 
 const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
+const _logScales = [:ln, :log2, :log10]
+const _logScaleBases = Dict(:ln => e, :log2 => 2.0, :log10 => 10.0)
 const _scaleAliases = Dict{Symbol,Symbol}(
     :none => :identity,
     :log  => :log10,
@@ -180,7 +185,7 @@ const _series_defaults = KW(
     :markerstrokewidth => 1,
     :markerstrokecolor => :match,
     :markerstrokealpha => nothing,
-    :bins              => 30,        # number of bins for hists
+    :bins              => :auto,        # number of bins for hists
     :smooth            => false,     # regression line?
     :group             => nothing,   # groupby vector
     :x                 => nothing,
@@ -445,7 +450,7 @@ add_aliases(:color_palette, :palette)
 add_aliases(:overwrite_figure, :clf, :clearfig, :overwrite, :reuse)
 add_aliases(:xerror, :xerr, :xerrorbar)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
-add_aliases(:quiver, :velocity, :quiver2d, :gradient)
+add_aliases(:quiver, :velocity, :quiver2d, :gradient, :vectorfield)
 add_aliases(:normalize, :norm, :normed, :normalized)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:match_dimensions, :transpose, :transpose_z)
@@ -1260,7 +1265,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     end
 
     # scatter plots don't have a line, but must have a shape
-    if d[:seriestype] in (:scatter, :scatter3d)
+    if d[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
         d[:linewidth] = 0
         if d[:markershape] == :none
             d[:markershape] = :circle

@@ -55,6 +55,10 @@ function add_backend_string(::PyPlotBackend)
     withenv("PYTHON" => "") do
         Pkg.build("PyPlot")
     end
+    import Conda
+    Conda.add("qt=4.8.5")
+
+    # now restart julia!
     """
 end
 
@@ -215,6 +219,12 @@ function py_stepstyle(seriestype::Symbol)
     seriestype == :steppost && return "steps-post"
     seriestype == :steppre && return "steps-pre"
     return "default"
+end
+
+function py_fillstepstyle(seriestype::Symbol)
+    seriestype == :steppost && return "post"
+    seriestype == :steppre && return "pre"
+    return nothing
 end
 
 # # untested... return a FontProperties object from a Plots.Font
@@ -669,6 +679,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             z = transpose_z(series, z)
             if st == :surface
+                clims = sp[:clims]
+                if is_2tuple(clims)
+                    isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
+                    isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+                end
                 if series[:fill_z] != nothing
                     # the surface colors are different than z-value
                     extrakw[:facecolors] = py_shading(series[:fillcolor], transpose_z(series, series[:fill_z].surf))
@@ -859,7 +874,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             dim1, expand_data(fillrange[1], n), expand_data(fillrange[2], n)
         end
 
-        handle = ax[f](args...;
+        handle = ax[f](args..., trues(n), false, py_fillstepstyle(st);
             zorder = series[:series_plotindex],
             facecolor = py_fillcolor(series),
             linewidths = 0
@@ -1045,7 +1060,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             if sp[:grid]
                 fgcolor = py_color(sp[:foreground_color_grid])
-                pyaxis[:grid](true, color = fgcolor)
+                pyaxis[:grid](true, color = fgcolor, linestyle = ":")
                 ax[:set_axisbelow](true)
             end
             py_set_axis_colors(ax, axis)
@@ -1061,7 +1076,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         py_add_legend(plt, sp, ax)
 
         # this sets the bg color inside the grid
-        ax[:set_axis_bgcolor](py_color(sp[:background_color_inside]))
+        ax[:set_facecolor](py_color(sp[:background_color_inside]))
     end
     py_drawfig(fig)
 end
@@ -1093,7 +1108,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     # optionally add the width of colorbar labels and colorbar to rightpad
     if haskey(sp.attr, :cbar_ax)
         bb = py_bbox(sp.attr[:cbar_handle][:ax][:get_yticklabels]())
-        sp.attr[:cbar_width] = _cbar_width + width(bb) + 1mm + (sp[:colorbar_title] == "" ? 0px : 30px)
+        sp.attr[:cbar_width] = _cbar_width + width(bb) + 2.3mm + (sp[:colorbar_title] == "" ? 0px : 30px)
         rightpad = rightpad + sp.attr[:cbar_width]
     end
 

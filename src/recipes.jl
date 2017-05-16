@@ -323,10 +323,11 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
-    nx, ny = length(x), length(y)
+    procx, procy, xscale, yscale, baseline = _preprocess_barlike(d, x, y)
+    nx, ny = length(procx), length(procy)
     axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
-    cv = [discrete_value!(axis, xi)[1] for xi=x]
-    x = if nx == ny
+    cv = [discrete_value!(axis, xi)[1] for xi=procx]
+    procx = if nx == ny
         cv
     elseif nx == ny + 1
         0.5diff(cv) + cv[1:end-1]
@@ -337,9 +338,9 @@ end
     # compute half-width of bars
     bw = d[:bar_width]
     hw = if bw == nothing
-        0.5mean(diff(x))
+        0.5mean(diff(procx))
     else
-        Float64[0.5cycle(bw,i) for i=1:length(x)]
+        Float64[0.5cycle(bw,i) for i=1:length(procx)]
     end
 
     # make fillto a vector... default fills to 0
@@ -347,16 +348,21 @@ end
     if fillto == nothing
         fillto = 0
     end
+    if (yscale in _logScales) && !all(_is_positive, fillto)
+        fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
+    end
 
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i=1:ny
-        center = x[i]
-        hwi = cycle(hw,i)
-        yi = y[i]
-        fi = cycle(fillto,i)
-        push!(xseg, center-hwi, center-hwi, center+hwi, center+hwi, center-hwi)
-        push!(yseg, yi, fi, fi, yi, yi)
+        yi = procy[i]
+        if !isnan(yi)
+            center = procx[i]
+            hwi = cycle(hw,i)
+            fi = cycle(fillto,i)
+            push!(xseg, center-hwi, center-hwi, center+hwi, center+hwi, center-hwi)
+            push!(yseg, yi, fi, fi, yi, yi)
+        end
     end
 
     # widen limits out a bit
@@ -378,106 +384,327 @@ end
 end
 @deps bar shape
 
+
 # ---------------------------------------------------------------------------
 # Histograms
 
-# edges from number of bins
-function calc_edges(v, bins::Integer)
-    vmin, vmax = extrema(v)
-    linspace(vmin, vmax, bins+1)
+_bin_centers(v::AVec) = (v[1:end-1] + v[2:end]) / 2
+
+_is_positive(x) = (x > 0) && !(x ≈ 0)
+
+_positive_else_nan{T}(::Type{T}, x::Real) = _is_positive(x) ? T(x) : T(NaN)
+
+function _scale_adjusted_values{T<:AbstractFloat}(::Type{T}, V::AbstractVector, scale::Symbol)
+    if scale in _logScales
+        [_positive_else_nan(T, x) for x in V]
+    else
+        [T(x) for x in V]
+    end
 end
 
-# just pass through arrays
-calc_edges(v, bins::AVec) = bins
 
-# find the bucket index of this value
-function bucket_index(vi, edges)
-    for (i,e) in enumerate(edges)
-        if vi <= e
-            return max(1,i-1)
+function _binbarlike_baseline{T<:Real}(min_value::T, scale::Symbol)
+    if (scale in _logScales)
+        !isnan(min_value) ? min_value / T(_logScaleBases[scale]^log10(2)) : T(1E-3)
+    else
+        zero(T)
+    end
+end
+
+
+function _preprocess_binbarlike_weights{T<:AbstractFloat}(::Type{T}, w, wscale::Symbol)
+    w_adj = _scale_adjusted_values(T, w, wscale)
+    w_min = minimum(w_adj)
+    w_max = maximum(w_adj)
+    baseline = _binbarlike_baseline(w_min, wscale)
+    w_adj, baseline
+end
+
+function _preprocess_barlike(d, x, y)
+    xscale = get(d, :xscale, :identity)
+    yscale = get(d, :yscale, :identity)
+    weights, baseline = _preprocess_binbarlike_weights(float(eltype(y)), y, yscale)
+    x, weights, xscale, yscale, baseline
+end
+
+function _preprocess_binlike(d, x, y)
+    xscale = get(d, :xscale, :identity)
+    yscale = get(d, :yscale, :identity)
+    T = float(promote_type(eltype(x), eltype(y)))
+    edge = T.(x)
+    weights, baseline = _preprocess_binbarlike_weights(T, y, yscale)
+    edge, weights, xscale, yscale, baseline
+end
+
+
+@recipe function f(::Type{Val{:barbins}}, x, y, z)
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
+    if (d[:bar_width] == nothing)
+        bar_width := diff(edge)
+    end
+    x := _bin_centers(edge)
+    y := weights
+    seriestype := :bar
+    ()
+end
+@deps barbins bar
+
+
+@recipe function f(::Type{Val{:scatterbins}}, x, y, z)
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
+    xerror := diff(edge)/2
+    x := _bin_centers(edge)
+    y := weights
+    seriestype := :scatter
+    ()
+end
+@deps scatterbins scatter
+
+
+function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::Symbol)
+    log_scale_x = xscale in _logScales
+    log_scale_y = yscale in _logScales
+
+    nbins = length(linearindices(weights))
+    if length(linearindices(edge)) != nbins + 1
+        error("Edge vector must be 1 longer than weight vector")
+    end
+
+    x = eltype(edge)[]
+    y = eltype(weights)[]
+
+    it_e, it_w = start(edge), start(weights)
+    a, it_e = next(edge, it_e)
+    last_w = eltype(weights)(NaN)
+    i = 1
+    while (!done(edge, it_e) && !done(edge, it_e))
+        b, it_e = next(edge, it_e)
+        w, it_w = next(weights, it_w)
+
+        if (log_scale_x && a ≈ 0)
+            a = b/_logScaleBases[xscale]^3
         end
+
+        if isnan(w)
+            if !isnan(last_w)
+                push!(x, a)
+                push!(y, baseline)
+            end
+        else
+            if isnan(last_w)
+                push!(x, a)
+                push!(y, baseline)
+            end
+            push!(x, a)
+            push!(y, w)
+            push!(x, b)
+            push!(y, w)
+        end
+
+        a = b
+        last_w = w
     end
-    return length(edges)-1
+    if (last_w != baseline)
+        push!(x, a)
+        push!(y, baseline)
+    end
+
+    (x, y)
 end
 
-function my_hist(v, bins; normed = false, weights = nothing)
-    edges = calc_edges(v, bins)
-    counts = zeros(length(edges)-1)
 
-    # add a weighted count
-    for (i,vi) in enumerate(v)
-        idx = bucket_index(vi, edges)
-        counts[idx] += (weights == nothing ? 1.0 : weights[i])
+@recipe function f(::Type{Val{:stepbins}}, x, y, z)
+    axis = d[:subplot][Plots.isvertical(d) ? :xaxis : :yaxis]
+
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
+
+    xpts, ypts = _stepbins_path(edge, weights, baseline, xscale, yscale)
+    if !isvertical(d)
+        xpts, ypts = ypts, xpts
     end
 
-    # normalize by bar area?
-    norm_denom = normed ? sum(diff(edges) .* counts) : 1.0
-    if norm_denom == 0
-        norm_denom = 1.0
+    # create a secondary series for the markers
+    if d[:markershape] != :none
+        @series begin
+            seriestype := :scatter
+            x := _bin_centers(edge)
+            y := weights
+            fillrange := nothing
+            label := ""
+            primary := false
+            ()
+        end
+        markershape := :none
+        xerror := :none
+        yerror := :none
     end
 
-    edges, counts ./ norm_denom
+    x := xpts
+    y := ypts
+    seriestype := :path
+    ()
+end
+Plots.@deps stepbins path
+
+
+function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto)
+    _cl(x) = max(ceil(Int, x), 1)
+    _iqr(v) = quantile(v, 0.75) - quantile(v, 0.25)
+    _span(v) = maximum(v) - minimum(v)
+
+    n_samples = length(linearindices(first(vs)))
+    # Estimator for number of samples in one row/column of bins along each axis:
+    n = max(1, n_samples^(1/N))
+
+    v = vs[dim]
+
+    if mode == :auto
+        30
+    elseif mode == :sqrt  # Square-root choice
+        _cl(sqrt(n))
+    elseif mode == :sturges  # Sturges' formula
+        _cl(log2(n)) + 1
+    elseif mode == :rice  # Rice Rule
+        _cl(2 * n^(1/3))
+    elseif mode == :scott  # Scott's normal reference rule
+        _cl(_span(v) / (3.5 * std(v) / n^(1/3)))
+    elseif mode == :fd  # Freedman–Diaconis rule
+        _cl(_span(v) / (2 * _iqr(v) / n^(1/3)))
+    else
+        error("Unknown auto-binning mode $mode")
+    end::Int
+end
+
+_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) = StatsBase.histrange(vs[dim], binning, :left)
+_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) = _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
+_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) = binning
+
+_hist_edges{N}(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) =
+    map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...))
+
+_hist_edges{N}(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, AbstractVector}) =
+    map(dim -> _hist_edge(vs, dim, binning), (1:N...))
+
+_hist_norm_mode(mode::Symbol) = mode
+_hist_norm_mode(mode::Bool) = mode ? :pdf : :none
+
+function _make_hist{N}(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing)
+    info("binning = $binning")
+    edges = _hist_edges(vs, binning)
+    h = float( weights == nothing ?
+        StatsBase.fit(StatsBase.Histogram, vs, edges, closed = :left) :
+        StatsBase.fit(StatsBase.Histogram, vs, weights, edges, closed = :left)
+    )
+    normalize!(h, mode = _hist_norm_mode(normed))
 end
 
 
 @recipe function f(::Type{Val{:histogram}}, x, y, z)
-    edges, counts = my_hist(y, d[:bins],
-                               normed = d[:normalize],
-                               weights = d[:weights])
-    x := edges
-    y := counts
-    seriestype := :bar
+    seriestype := :barhist
     ()
 end
-@deps histogram bar
+@deps histogram barhist
+
+@recipe function f(::Type{Val{:barhist}}, x, y, z)
+    h = _make_hist((y,), d[:bins], normed = d[:normalize], weights = d[:weights])
+    x := h.edges[1]
+    y := h.weights
+    seriestype := :barbins
+    ()
+end
+@deps barhist barbins
+
+@recipe function f(::Type{Val{:stephist}}, x, y, z)
+    h = _make_hist((y,), d[:bins], normed = d[:normalize], weights = d[:weights])
+    x := h.edges[1]
+    y := h.weights
+    seriestype := :stepbins
+    ()
+end
+@deps stephist stepbins
+
+@recipe function f(::Type{Val{:scatterhist}}, x, y, z)
+    h = _make_hist((y,), d[:bins], normed = d[:normalize], weights = d[:weights])
+    x := h.edges[1]
+    y := h.weights
+    seriestype := :scatterbins
+    ()
+end
+@deps scatterhist scatterbins
+
+
+@recipe function f{T, E}(h::StatsBase.Histogram{T, 1, E})
+    seriestype --> :barbins
+
+    st_map = Dict(
+        :bar => :barbins, :scatter => :scatterbins, :step => :stepbins,
+        :steppost => :stepbins # :step can be mapped to :steppost in pre-processing
+    )
+    seriestype := get(st_map, d[:seriestype], d[:seriestype])
+
+    if d[:seriestype] == :scatterbins
+        # Workaround, error bars currently not set correctly by scatterbins
+        edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, h.edges[1], h.weights)
+        xerror --> diff(h.edges[1])/2
+        seriestype := :scatter
+        (Plots._bin_centers(edge), weights)
+    else
+        (h.edges[1], h.weights)
+    end
+end
+
+
+@recipe function f{H <: StatsBase.Histogram}(hv::AbstractVector{H})
+    for h in hv
+        @series begin
+            h
+        end
+    end
+end
+
 
 # ---------------------------------------------------------------------------
 # Histogram 2D
 
-# if tuple, map out bins, otherwise use the same for both
-calc_edges_2d(x, y, bins) = calc_edges(x, bins), calc_edges(y, bins)
-calc_edges_2d{X,Y}(x, y, bins::Tuple{X,Y}) = calc_edges(x, bins[1]), calc_edges(y, bins[2])
+@recipe function f(::Type{Val{:bins2d}}, x, y, z)
+    edge_x, edge_y, weights = x, y, z.surf
 
-# the 2D version
-function my_hist_2d(x, y, bins; normed = false, weights = nothing)
-    xedges, yedges = calc_edges_2d(x, y, bins)
-    counts = zeros(length(yedges)-1, length(xedges)-1)
-
-    # add a weighted count
-    for i=1:length(x)
-        r = bucket_index(y[i], yedges)
-        c = bucket_index(x[i], xedges)
-        counts[r,c] += (weights == nothing ? 1.0 : weights[i])
+    float_weights = float(weights)
+    if is(float_weights, weights)
+        float_weights = deepcopy(float_weights)
     end
-
-    # normalize to cubic area of the imaginary surface towers
-    norm_denom = normed ? sum((diff(yedges) * diff(xedges)') .* counts) : 1.0
-    if norm_denom == 0
-        norm_denom = 1.0
-    end
-
-    xedges, yedges, counts ./ norm_denom
-end
-
-centers(v::AVec) = 0.5 * (v[1:end-1] + v[2:end])
-
-@recipe function f(::Type{Val{:histogram2d}}, x, y, z)
-    xedges, yedges, counts = my_hist_2d(x, y, d[:bins],
-                                              normed = d[:normalize],
-                                              weights = d[:weights])
-    for (i,c) in enumerate(counts)
+    for (i, c) in enumerate(float_weights)
         if c == 0
-            counts[i] = NaN
+            float_weights[i] = NaN
         end
     end
-    x := centers(xedges)
-    y := centers(yedges)
-    z := Surface(counts)
-    linewidth := 0
+
+    x := Plots._bin_centers(edge_x)
+    y := Plots._bin_centers(edge_y)
+    z := Surface(float_weights)
+
+    match_dimensions := true
     seriestype := :heatmap
     ()
 end
-@deps histogram2d heatmap
+Plots.@deps bins2d heatmap
+
+
+@recipe function f(::Type{Val{:histogram2d}}, x, y, z)
+    h = _make_hist((x, y), d[:bins], normed = d[:normalize], weights = d[:weights])
+    x := h.edges[1]
+    y := h.edges[2]
+    z := Surface(h.weights)
+    seriestype := :bins2d
+    ()
+end
+@deps histogram2d bins2d
+
+
+@recipe function f{T, E}(h::StatsBase.Histogram{T, 2, E})
+    seriestype --> :bins2d
+    (h.edges[1], h.edges[2], Surface(h.weights))
+end
 
 
 # ---------------------------------------------------------------------------
@@ -789,16 +1016,70 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Dates
 
-@recipe f(::Type{Date}, dt::Date) = (dt -> convert(Int,dt), dt -> string(convert(Date,dt)))
-@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> convert(Int,dt), dt -> string(convert(DateTime,dt)))
+dateformatter(dt) = string(convert(Date, dt))
+datetimeformatter(dt) = string(convert(DateTime, dt))
+
+@recipe f(::Type{Date}, dt::Date) = (dt -> convert(Int, dt), dateformatter)
+@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> convert(Int, dt), datetimeformatter)
 
 # -------------------------------------------------
 # Complex Numbers
 
-@userplot ComplexPlot
-@recipe function f(cp::ComplexPlot)
-    xguide --> "Real Part"
-    yguide --> "Imaginary Part"
-    seriestype --> :scatter
-    real(cp.args[1]), imag(cp.args[1])
+@recipe function f{T<:Number}(A::Array{Complex{T}})
+    xguide --> "Re(x)"
+    yguide --> "Im(x)"
+    real.(A), imag.(A)
+end
+
+# Splits a complex matrix to its real and complex parts
+# Reals defaults solid, imaginary defaults dashed
+# Label defaults are changed to match the real-imaginary reference / indexing
+@recipe function f{T<:Real,T2}(x::AbstractArray{T},y::Array{Complex{T2}})
+  ylabel --> "Re(y)"
+  zlabel --> "Im(y)"
+  x,real.(y),imag.(y)
+end
+
+
+# --------------------------------------------------
+# Color Gradients
+
+@userplot ShowLibrary
+@recipe function f(cl::ShowLibrary)
+    if !(length(cl.args) == 1 && isa(cl.args[1], Symbol))
+        error("showlibrary takes the name of a color library as a Symbol")
+    end
+
+    library = PlotUtils.color_libraries[cl.args[1]]
+    z = sqrt.((1:15)*(1:20)')
+
+    seriestype := :heatmap
+    ticks := nothing
+    legend := false
+
+    layout --> length(library.lib)
+
+    i = 0
+    for grad in sort(collect(keys(library.lib)))
+        @series begin
+            seriescolor := cgrad(grad, cl.args[1])
+            title := string(grad)
+            subplot := i += 1
+            z
+        end
+    end
+end
+
+@userplot ShowGradient
+@recipe function f(grad::ShowGradient)
+    if !(length(grad.args) == 1 && isa(grad.args[1], Symbol))
+        error("showgradient takes the name of a color gradient as a Symbol")
+    end
+    z = sqrt.((1:15)*(1:20)')
+    seriestype := :heatmap
+    ticks := nothing
+    legend := false
+    seriescolor := grad.args[1]
+    title := string(grad.args[1])
+    z
 end

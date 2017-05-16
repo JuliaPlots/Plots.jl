@@ -5,7 +5,7 @@
 # This should cut down on boilerplate code and allow more focused dispatch on type
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
-typealias FuncOrFuncs @compat(Union{Function, AVec{Function}})
+const FuncOrFuncs = @compat(Union{Function, AVec{Function}})
 
 all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image), get(d, :seriestype, :none))
 

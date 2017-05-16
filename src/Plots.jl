@@ -9,6 +9,7 @@ using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
 import Showoff
+import StatsBase
 
 export
     grid,
@@ -99,13 +100,15 @@ export
     center,
     P2,
     P3,
-    BezierCurve
+    BezierCurve,
+
+    plotattr
 
 # ---------------------------------------------------------
 
 import Measures
 import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height, w, h
-typealias BBox Measures.Absolute2DBox
+const BBox = Measures.Absolute2DBox
 export BBox, BoundingBox, mm, cm, inch, pt, px, pct, w, h
 
 # ---------------------------------------------------------
@@ -127,6 +130,7 @@ include("animation.jl")
 include("output.jl")
 include("examples.jl")
 include("arg_desc.jl")
+include("plotattr.jl")
 
 
 # ---------------------------------------------------------
@@ -145,6 +149,9 @@ end
 @shorthands bar
 @shorthands barh
 @shorthands histogram
+@shorthands barhist
+@shorthands stephist
+@shorthands scatterhist
 @shorthands histogram2d
 @shorthands density
 @shorthands heatmap

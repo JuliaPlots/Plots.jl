@@ -1,9 +1,10 @@
 julia 0.5
 
 RecipesBase
-PlotUtils
-PlotThemes
+PlotUtils 0.4.1
+PlotThemes 0.1.3
 Reexport
 Measures
 Showoff
+StatsBase 0.14.0
 StaticArrays

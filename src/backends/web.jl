@@ -23,11 +23,11 @@ function open_browser_window(filename::AbstractString)
     @static if is_apple()
         return run(`open $(filename)`)
     end
-    @static if is_linux()
+    @static if is_linux() || is_bsd()    # is_bsd() addition is as yet untested, but based on suggestion in https://github.com/JuliaPlots/Plots.jl/issues/681
         return run(`xdg-open $(filename)`)
     end
     @static if is_windows()
-        return run(`$(ENV["COMSPEC"]) /c start $(filename)`)
+        return run(`$(ENV["COMSPEC"]) /c start "" "$(filename)"`)
     end
     warn("Unknown OS... cannot open browser window.")
 end

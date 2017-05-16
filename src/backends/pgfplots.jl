@@ -3,7 +3,7 @@
 # significant contributions by: @pkofod
 
 const _pgfplots_attr = merge_with_base_supported([
-    # :annotations,
+    :annotations,
     # :background_color_legend,
     :background_color_inside,
     # :background_color_outside,
@@ -22,17 +22,17 @@ const _pgfplots_attr = merge_with_base_supported([
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend,
-    # :colorbar,
-    # :marker_z, :levels,
+    :colorbar,
+    :marker_z, #:levels,
     # :ribbon, :quiver, :arrow,
     # :orientation,
     # :overwrite_figure,
-    # :polar,
+    :polar,
     # :normalize, :weights, :contours,
     :aspect_ratio,
     # :match_dimensions,
   ])
-const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour]
+const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
 const _pgfplots_scale = [:identity, :ln, :log2, :log10]
@@ -98,12 +98,33 @@ const _pgf_series_extrastyle = KW(
     :xsticks => "xcomb",
 )
 
+# PGFPlots uses the anchors to define orientations for example to align left 
+# one needs to use the right edge as anchor
+const _pgf_annotation_halign = KW(
+    :center => "",
+    :left => "right",
+    :right => "left"
+)
+
 # --------------------------------------------------------------------------------------
 
 # takes in color,alpha, and returns color and alpha appropriate for pgf style
-function pgf_color(c)
+function pgf_color(c::Colorant)
     cstr = @sprintf("{rgb,1:red,%.8f;green,%.8f;blue,%.8f}", red(c), green(c), blue(c))
     cstr, alpha(c)
+end
+
+function pgf_color(grad::ColorGradient)
+    # Can't handle ColorGradient here, fallback to defaults.
+    cstr = @sprintf("{rgb,1:red,%.8f;green,%.8f;blue,%.8f}", 0.0, 0.60560316,0.97868012)
+    cstr, 1
+end
+
+# Generates a colormap for pgfplots based on a ColorGradient
+function pgf_colormap(grad::ColorGradient) 
+    join(map(grad.colors) do c
+        @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c),blue(c))
+    end,", ")
 end
 
 function pgf_fillstyle(d::KW)
@@ -136,6 +157,19 @@ function pgf_marker(d::KW)
     }"""
 end
 
+function pgf_add_annotation!(o,x,y,val)
+    # Construct the style string.
+    # Currently supports color and orientation
+    cstr,a = pgf_color(val.font.color)
+    push!(o, PGFPlots.Plots.Node(val.str, # Annotation Text
+                                 x, y,
+                                 style="""
+                                 $(get(_pgf_annotation_halign,val.font.halign,"")),
+                                 color=$cstr, draw opacity=$(convert(Float16,a)),
+                                 rotate=$(val.font.rotation)
+                                 """))
+end
+
 # --------------------------------------------------------------------------------------
 
 function pgf_series(sp::Subplot, series::Series)
@@ -143,11 +177,10 @@ function pgf_series(sp::Subplot, series::Series)
     st = d[:seriestype]
     style = []
     kw = KW()
-
     push!(style, pgf_linestyle(d))
     push!(style, pgf_marker(d))
 
-    if d[:fillrange] != nothing
+    if d[:fillrange] != nothing || st in (:shape,)
         push!(style, pgf_fillstyle(d))
     end
 
@@ -163,6 +196,10 @@ function pgf_series(sp::Subplot, series::Series)
         d[:z].surf, d[:x], d[:y]
     elseif is3d(st)
         d[:x], d[:y], d[:z]
+    elseif d[:marker_z] != nothing
+        # If a marker_z is used pass it as third coordinate to a 2D plot.
+        # See "Scatter Plots" in PGFPlots documentation
+        d[:x], d[:y], d[:marker_z]
     else
         d[:x], d[:y]
     end
@@ -211,6 +248,9 @@ function pgf_axis(sp::Subplot, letter)
     # axis guide
     kw[Symbol(letter,:label)] = axis[:guide]
 
+    # Add ticklabel rotations
+    push!(style, "$(letter)ticklabel style={rotate = $(axis[:rotation])}")
+
     # flip/reverse?
     axis[:flip] && push!(style, "$letter dir=reverse")
 
@@ -249,8 +289,12 @@ end
 
 function _update_plot_object(plt::Plot{PGFPlotsBackend})
     plt.o = PGFPlots.Axis[]
+    # Obtain the total height of the plot by extracting the maximal bottom
+    # coordinate from the bounding box.
+    total_height = bottom(bbox(plt.layout))
+
     for sp in plt.subplots
-        # first build the PGFPlots.Axis object
+       # first build the PGFPlots.Axis object
         style = ["unbounded coords=jump"]
         kw = KW()
 
@@ -265,10 +309,12 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # bounding box values are in mm
         # note: bb origin is top-left, pgf is bottom-left
+        # A round on 2 decimal places should be enough precision for 300 dpi
+        # plots.
         bb = bbox(sp)
         push!(style, """
             xshift = $(left(bb).value)mm,
-            yshift = $((height(bb) - (bottom(bb))).value)mm,
+            yshift = $(round((total_height - (bottom(bb))).value,2))mm,
             axis background/.style={fill=$(pgf_color(sp[:background_color_inside])[1])}
         """)
         kw[:width] = "$(width(bb).value)mm"
@@ -288,18 +334,61 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
 
-        o = PGFPlots.Axis(; style = style, kw...)
+        axisf = PGFPlots.Axis
+        if sp[:projection] == :polar
+            axisf = PGFPlots.PolarAxis
+        end
+
+        # Search series for any gradient. In case one series uses a gradient set
+        # the colorbar and colomap.
+        # The reasoning behind doing this on the axis level is that pgfplots
+        # colorbar seems to only works on axis level and needs the proper colormap for
+        # correctly displaying it.
+        # It's also possible to assign the colormap to the series itself but
+        # then the colormap needs to be added twice, once for the axis and once for the
+        # series.
+        # As it is likely that all series within the same axis use the same
+        # colormap this should not cause any problem.
+        for series in series_list(sp)
+            for col in (:markercolor, :fillcolor)
+                if typeof(series.d[col]) == ColorGradient
+                    push!(style,"colormap={plots}{$(pgf_colormap(series.d[col]))}")
+
+                    if sp[:colorbar] == :none
+                        kw[:colorbar] = "false"
+                    else
+                        kw[:colorbar] = "true"
+                    end
+                    # goto is needed to break out of col and series for
+                    @goto colorbar_end 
+                end
+            end
+        end
+        @label colorbar_end
+
+        o = axisf(; style = style, kw...)
 
         # add the series object to the PGFPlots.Axis
         for series in series_list(sp)
             push!(o, pgf_series(sp, series))
+
+            # add series annotations
+            anns = series[:series_annotations]
+            for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
+                pgf_add_annotation!(o, xi, yi, PlotText(str, fnt))
+            end
         end
+
+        # add the annotations
+        for ann in sp[:annotations]
+            pgf_add_annotation!(o,ann...)
+        end
+
 
         # add the PGFPlots.Axis to the list
         push!(plt.o, o)
     end
 end
-
 
 function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsBackend})
     show(io, mime, plt.o)

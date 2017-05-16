@@ -277,6 +277,13 @@ function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
                     attr[Symbol(letter,k)] = v
                 end
             end
+            for k in (:scale,), letter in (:x,:y,:z)
+                # Series recipes may need access to this information
+                lk = Symbol(letter,k)
+                if haskey(attr, lk)
+                    kw[lk] = attr[lk]
+                end
+            end
         end
         sp_attrs[sp] = attr
     end
@@ -357,7 +364,7 @@ function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
         expand_extrema!(sp[:xaxis], (0,w))
         expand_extrema!(sp[:yaxis], (0,h))
         sp[:yaxis].d[:flip] = true
-    elseif !(st in (:pie, :histogram, :histogram2d))
+    elseif !(st in (:pie, :histogram, :bins2d, :histogram2d))
         expand_extrema!(sp, d)
     end
 end

@@ -19,7 +19,7 @@ const _plotly_attr = merge_with_base_supported([
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :colorbar,
+    :grid, :legend, :colorbar, :colorbar_title,
     :marker_z, :fill_z, :levels,
     :ribbon, :quiver,
     :orientation,
@@ -31,6 +31,7 @@ const _plotly_attr = merge_with_base_supported([
     :hover,
     :inset_subplots,
     :bar_width,
+    :clims,
   ])
 
 const _plotly_seriestype = [
@@ -268,7 +269,7 @@ function plotly_layout(plt::Plot)
     w, h = plt[:size]
     d_out[:width], d_out[:height] = w, h
     d_out[:paper_bgcolor] = rgba_string(plt[:background_color_outside])
-    d_out[:margin] = KW(:l=>0, :b=>0, :r=>0, :t=>20)
+    d_out[:margin] = KW(:l=>0, :b=>20, :r=>0, :t=>20)
 
     d_out[:annotations] = KW[]
 
@@ -408,6 +409,10 @@ plotly_surface_data(series::Series, a::AbstractVector) = a
 plotly_surface_data(series::Series, a::AbstractMatrix) = transpose_z(series, a, false)
 plotly_surface_data(series::Series, a::Surface) = plotly_surface_data(series, a.surf)
 
+#ensures that a gradient is called if a single color is supplied where a gradient is needed (e.g. if a series recipe defines marker_z)
+as_gradient(grad::ColorGradient, α) = grad
+as_gradient(grad, α) = cgrad(alpha = α)
+
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
@@ -436,6 +441,13 @@ function plotly_series(plt::Plot, series::Series)
         for letter in [:x,:y,:z]
             d_out[letter] = plotly_surface_data(series, series[letter])
         end
+    end
+
+    d_out[:colorbar] = KW(:title => sp[:colorbar_title])
+
+    clims = sp[:clims]
+    if is_2tuple(clims)
+        d_out[:zmin], d_out[:zmax] = clims
     end
 
     # set the "type"
@@ -533,9 +545,10 @@ function plotly_series(plt::Plot, series::Series)
             rgba_string(series[:markercolor])
         else
             # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
-            grad = series[:markercolor]
+            grad = as_gradient(series[:markercolor], series[:markeralpha])
             zmin, zmax = extrema(series[:marker_z])
-            [rgba_string(grad[(zi - zmin) / (zmax - zmin)]) for zi in series[:marker_z]]
+            zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
+            [rgba_string(grad[(zi - zmin) / zrange]) for zi in series[:marker_z]]
         end
     end
 
