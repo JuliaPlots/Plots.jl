@@ -335,6 +335,10 @@ const _all_defaults = KW[
     _axis_defaults_byletter
 ]
 
+# to be able to reset things to initial values
+const _all_initial_defaults = deepcopy(_all_defaults)
+const _axis_initial_defaults = deepcopy(_axis_defaults)
+
 const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
 
 RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
@@ -519,6 +523,24 @@ function default(d::KW, k::Symbol)
     get(d, k, default(k))
 end
 
+# reset the defaults globally to values at startup
+
+"""
+`initial(key)` returns the intial value for that key
+"""
+
+function initial(k::Symbol)
+    k = get(_keyAliases, k, k)
+    for defaults in _all_initial_defaults
+        if haskey(defaults, k)
+            return defaults[k]
+        end
+    end
+    if haskey(_axis_initial_defaults, k)
+        return _axis_initial_defaults[k]
+    end
+    k in _suppress_warnings || error("Unknown key: ", k)
+end
 
 
 # -----------------------------------------------------------------------------

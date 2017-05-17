@@ -304,11 +304,16 @@ function scalefontsizes(factor::Number)
 end
 
 function resetfontsize(k::Symbol)
+    i = initial(k)
     f = default(k)
-    default(k,f)
+    # some fonts don't have an initial value!
+    if i != false
+      f.pointsize = i.pointsize
+      default(k, i)
+    end
 end
 
-"Reset all fonts to default size"
+"Reset all fonts to initial size"
 function resetfontsizes()
     for k in (:titlefont, :guidefont, :tickfont, :legendfont)
         resetfontsize(k)
