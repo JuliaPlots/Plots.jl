@@ -23,7 +23,7 @@ facts("PyPlot") do
     @fact pyplot() --> Plots.PyPlotBackend()
     @fact backend() --> Plots.PyPlotBackend()
 
-    image_comparison_facts(:pyplot, skip=[6,25,30], eps=img_eps)
+    image_comparison_facts(:pyplot, skip=[6,25,30,31], eps=img_eps)
 end
 
 facts("GR") do
@@ -31,7 +31,7 @@ facts("GR") do
     @fact backend() --> Plots.GRBackend()
 
     if is_linux() && isinteractive()
-        image_comparison_facts(:gr, skip=[2,25,30], eps=img_eps)
+        image_comparison_facts(:gr, skip=[2,25,30,31], eps=img_eps)
     end
 end
 
