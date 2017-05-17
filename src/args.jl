@@ -335,9 +335,11 @@ const _all_defaults = KW[
     _axis_defaults_byletter
 ]
 
-# to be able to reset things to initial values
-const _all_initial_defaults = deepcopy(_all_defaults)
-const _axis_initial_defaults = deepcopy(_axis_defaults)
+# to be able to reset font sizes to initial values
+const _initial_fontsizes = Dict(:titlefont  => deepcopy(_subplot_defaults[:titlefont]),
+                                :legendfont => deepcopy(_subplot_defaults[:legendfont]),
+                                :tickfont   => deepcopy(_axis_defaults[:tickfont]),
+                                :guidefont  => deepcopy(_axis_defaults[:guidefont]))
 
 const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
 
