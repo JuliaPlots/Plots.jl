@@ -311,7 +311,7 @@ end
 "Reset all fonts to default size"
 function resetfontsizes()
     for k in (:titlefont, :guidefont, :tickfont, :legendfont)
-        resetfontsize(k, factor)
+        resetfontsize(k)
     end
 end
 
