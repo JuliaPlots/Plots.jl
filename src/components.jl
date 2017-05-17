@@ -307,7 +307,7 @@ end
 function scalefontsizes()
   for k in (:titlefont, :guidefont, :tickfont, :legendfont)
       f = default(k)
-      for k in keys(_initial_fontsizes)
+      if k in keys(_initial_fontsizes)
         factor = f.pointsize / _initial_fontsizes[k]
         scalefontsize(k, 1.0/factor)
       end
