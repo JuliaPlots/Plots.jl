@@ -303,6 +303,18 @@ function scalefontsizes(factor::Number)
     end
 end
 
+function resetfontsize(k::Symbol)
+    f = default(k)
+    default(k,f)
+end
+
+"Reset all fonts to default size"
+function resetfontsizes()
+    for k in (:titlefont, :guidefont, :tickfont, :legendfont)
+        resetfontsize(k, factor)
+    end
+end
+
 "Wrap a string with font info"
 immutable PlotText
   str::AbstractString
