@@ -336,10 +336,10 @@ const _all_defaults = KW[
 ]
 
 # to be able to reset font sizes to initial values
-const _initial_fontsizes = Dict(:titlefont  => deepcopy(_subplot_defaults[:titlefont]),
-                                :legendfont => deepcopy(_subplot_defaults[:legendfont]),
-                                :tickfont   => deepcopy(_axis_defaults[:tickfont]),
-                                :guidefont  => deepcopy(_axis_defaults[:guidefont]))
+const _initial_fontsizes = Dict(:titlefont  => _subplot_defaults[:titlefont].pointsize,
+                                :legendfont => _subplot_defaults[:legendfont].pointsize,
+                                :tickfont   => _axis_defaults[:tickfont].pointsize,
+                                :guidefont  => _axis_defaults[:guidefont].pointsize)
 
 const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
 
@@ -523,25 +523,6 @@ end
 
 function default(d::KW, k::Symbol)
     get(d, k, default(k))
-end
-
-# reset the defaults globally to values at startup
-
-"""
-`initial(key)` returns the intial value for that key
-"""
-
-function initial(k::Symbol)
-    k = get(_keyAliases, k, k)
-    for defaults in _all_initial_defaults
-        if haskey(defaults, k)
-            return defaults[k]
-        end
-    end
-    if haskey(_axis_initial_defaults, k)
-        return _axis_initial_defaults[k]
-    end
-    k in _suppress_warnings || error("Unknown key: ", k)
 end
 
 
