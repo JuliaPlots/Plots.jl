@@ -84,10 +84,10 @@ function _initialize_backend(::PyPlotBackend)
         const pytransforms = PyPlot.pywrap(PyPlot.pyimport("matplotlib.transforms"))
         const pycollections = PyPlot.pywrap(PyPlot.pyimport("matplotlib.collections"))
         const pyart3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d.art3d"))
-    end
 
-    # we don't want every command to update the figure
-    PyPlot.ioff()
+        # we don't want every command to update the figure
+        PyPlot.ioff()
+    end
 end
 
 # --------------------------------------------------------------------------------------
