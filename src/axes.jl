@@ -241,7 +241,7 @@ function get_ticks(axis::Axis)
     elseif typeof(ticks) <: Union{AVec, Int}
         # override ticks, but get the labels
         optimal_ticks_and_labels(axis, ticks)
-    elseif typeof(ticks) <: NTuple{2, Any}
+    elseif typeof(ticks) <: NTuple{2}
         # assuming we're passed (ticks, labels)
         ticks
     else
