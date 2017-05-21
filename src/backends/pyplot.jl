@@ -55,8 +55,6 @@ function add_backend_string(::PyPlotBackend)
     withenv("PYTHON" => "") do
         Pkg.build("PyPlot")
     end
-    import Conda
-    Conda.add("qt=4.8.5")
 
     # now restart julia!
     """
