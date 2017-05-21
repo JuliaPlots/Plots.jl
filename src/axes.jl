@@ -229,7 +229,7 @@ function get_ticks(axis::Axis)
     elseif typeof(ticks) <: AVec
         # override ticks, but get the labels
         optimal_ticks_and_labels(axis, ticks)
-    elseif typeof(ticks) <: NTuple{2}
+    elseif typeof(ticks) <: NTuple{2, Any}
         # assuming we're passed (ticks, labels)
         ticks
     else
