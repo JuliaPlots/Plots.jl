@@ -10,6 +10,7 @@ using Base.Meta
 @reexport using PlotThemes
 import Showoff
 import StatsBase
+import NaNMath: extrema
 
 export
     grid,
