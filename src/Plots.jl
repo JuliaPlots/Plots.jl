@@ -133,11 +133,15 @@ ignorenan_extrema(x) = Base.extrema(x)
 
 # ---------------------------------------------------------
 
+module Measure
 import Measures
 import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height, w, h
 const BBox = Measures.Absolute2DBox
 export BBox, BoundingBox, mm, cm, inch, pt, px, pct, w, h
 
+end
+importall Measure
+export BBox, BoundingBox
 # ---------------------------------------------------------
 
 include("types.jl")
