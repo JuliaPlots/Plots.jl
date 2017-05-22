@@ -118,7 +118,7 @@ Base.show(io::IO, axis::Axis) = dumpdict(axis.d, "Axis", true)
 # Base.getindex(axis::Axis, k::Symbol) = getindex(axis.d, k)
 Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.d, v, ks...)
 Base.haskey(axis::Axis, k::Symbol) = haskey(axis.d, k)
-Base.extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
+extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax)) #This is the NaNMath version, not the Base version
 
 
 const _scale_funcs = Dict{Symbol,Function}(
