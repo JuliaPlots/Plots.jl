@@ -98,41 +98,6 @@ end
 # end
 const _glplot_deletes = []
 
-function close_child_signals!(screen)
-    for child in screen.children
-        for (k, s) in child.inputs
-            empty!(s.actions)
-        end
-        for (k, cam) in child.cameras
-            for f in fieldnames(cam)
-                s = getfield(cam, f)
-                if isa(s, Signal)
-                    close(s, false)
-                end
-            end
-        end
-        empty!(child.cameras)
-        close_child_signals!(child)
-    end
-    return
-end
-function empty_screen!(screen)
-    if isempty(_glplot_deletes)
-        close_child_signals!(screen)
-        empty!(screen)
-        empty!(screen.cameras)
-        for (k, s) in screen.inputs
-            empty!(s.actions)
-        end
-        empty!(screen)
-    else
-        for del_signal in _glplot_deletes
-            push!(del_signal, true) # trigger delete
-        end
-        empty!(_glplot_deletes)
-    end
-    nothing
-end
 
 function get_plot_screen(list::Vector, name, result = [])
     for elem in list
@@ -158,7 +123,7 @@ function create_window(plt::Plot{GLVisualizeBackend}, visible)
             resolution = plt[:size],
             visible = visible
         )
-        @async GLWindow.waiting_renderloop(parent_screen)
+        @async GLWindow.renderloop(parent_screen)
         GLVisualize.add_screen(parent_screen)
     end
     # now lets get ourselves a permanent Plotting screen
@@ -169,9 +134,6 @@ function create_window(plt::Plot{GLVisualizeBackend}, visible)
             parent, area = map(GLWindow.zeroposition, parent.area),
             name = name
         )
-        for (k, s) in screen.inputs # copy signals, so we can clean them up better
-            screen.inputs[k] = map(identity, s)
-        end
         screen
     elseif length(plot_screens) == 1
         plot_screens[1]
@@ -181,7 +143,7 @@ function create_window(plt::Plot{GLVisualizeBackend}, visible)
         error("multiple Plot screens. Please don't use any screen with the name $name")
     end
     # Since we own this window, we can do deep cleansing
-    empty_screen!(screen)
+    empty!(screen)
     plt.o = screen
     GLWindow.set_visibility!(screen, visible)
     resize!(screen, plt[:size]...)
