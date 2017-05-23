@@ -692,7 +692,7 @@ function draw_ticks(
     text, positions, offsets
 end
 
-function text(position, text, kw_args)
+function glvisualize_textposition, text, kw_args)
     text_align = alignment2num(text.font)
     startpos = Vec2f0(position)
     atlas = GLVisualize.get_texture_atlas()
@@ -769,7 +769,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         kw = Dict(:model => text_model(font, xy), :scale_primitive => true)
         extract_font(font, kw)
         t = PlotText(sp[:title], font)
-        push!(axis_vis, text(xy, t, kw))
+        push!(axis_vis, glvisualize_textxy, t, kw))
     end
     if xaxis[:guide] != ""
         tf = xaxis[:guidefont]; color = gl_color(xaxis[:foreground_color_guide])
@@ -778,7 +778,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         kw = Dict(:model => text_model(font, xy), :scale_primitive => true)
         t = PlotText(xaxis[:guide], font)
         extract_font(font, kw)
-        push!(axis_vis, text(xy, t, kw))
+        push!(axis_vis, glvisualize_textxy, t, kw))
     end
 
     if yaxis[:guide] != ""
@@ -788,7 +788,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         kw = Dict(:model => text_model(font, xy), :scale_primitive=>true)
         t = PlotText(yaxis[:guide], font)
         extract_font(font, kw)
-        push!(axis_vis, text(xy, t, kw))
+        push!(axis_vis, glvisualize_textxy, t, kw))
     end
 
     axis_vis
@@ -1167,7 +1167,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
                 txt_args = Dict{Symbol, Any}(:model => eye(GLAbstraction.Mat4f0))
                 x, y = Reactive.value(model_m) * Vec{4, Float32}(x, y, 0, 1)
                 extract_font(font, txt_args)
-                t = text(Point2f0(x, y), PlotText(str, font), txt_args)
+                t = glvisualize_textPoint2f0(x, y), PlotText(str, font), txt_args)
                 GLVisualize._view(t, sp_screen, camera = :perspective)
             end
 
@@ -1479,7 +1479,7 @@ function make_label(sp, series, i)
     kw = Dict(:model => text_model(font, xy), :scale_primitive=>false)
     extract_font(font, kw)
     t = PlotText(labeltext, font)
-    push!(result, text(xy, t, kw))
+    push!(result, glvisualize_textxy, t, kw))
     GLAbstraction.Context(result...), i
 end
 
