@@ -148,7 +148,7 @@ function pickDefaultBackend()
     # the ordering/inclusion of this package list is my semi-arbitrary guess at
     # which one someone will want to use if they have the package installed...accounting for
     # features, speed, and robustness
-    for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR", "GLVIsualize")
+    for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR", "GLVisualize")
         if Pkg.installed(pkgstr) != nothing
             return backend(Symbol(lowercase(pkgstr)))
         end
