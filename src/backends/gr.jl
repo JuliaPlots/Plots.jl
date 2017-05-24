@@ -383,20 +383,28 @@ const viewport_plotarea = zeros(4)
 # the size of the current plot in pixels
 const gr_plot_size = zeros(2)
 
-function gr_viewport_from_bbox(bb::BoundingBox, w, h, viewport_canvas)
+function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, viewport_canvas)
     viewport = zeros(4)
     viewport[1] = viewport_canvas[2] * (left(bb) / w)
     viewport[2] = viewport_canvas[2] * (right(bb) / w)
     viewport[3] = viewport_canvas[4] * (1.0 - bottom(bb) / h)
     viewport[4] = viewport_canvas[4] * (1.0 - top(bb) / h)
+    if is3d(sp)
+        vp = viewport[:]
+        extent = min(vp[2] - vp[1], vp[4] - vp[3])
+        viewport[1] = 0.5 * (vp[1] + vp[2] - extent)
+        viewport[2] = 0.5 * (vp[1] + vp[2] + extent)
+        viewport[3] = 0.5 * (vp[3] + vp[4] - extent)
+        viewport[4] = 0.5 * (vp[3] + vp[4] + extent)
+    end
     viewport
 end
 
 # change so we're focused on the viewport area
 function gr_set_viewport_cmap(sp::Subplot)
     GR.setviewport(
-        viewport_plotarea[2] + (is3d(sp) ? 0.04 : 0.02),
-        viewport_plotarea[2] + (is3d(sp) ? 0.07 : 0.05),
+        viewport_plotarea[2] + (is3d(sp) ? 0.07 : 0.02),
+        viewport_plotarea[2] + (is3d(sp) ? 0.10 : 0.05),
         viewport_plotarea[3],
         viewport_plotarea[4]
     )
@@ -506,8 +514,8 @@ end
 
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # the viewports for this subplot
-    viewport_subplot = gr_viewport_from_bbox(bbox(sp), w, h, viewport_canvas)
-    viewport_plotarea[:] = gr_viewport_from_bbox(plotarea(sp), w, h, viewport_canvas)
+    viewport_subplot = gr_viewport_from_bbox(sp, bbox(sp), w, h, viewport_canvas)
+    viewport_plotarea[:] = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
     # get data limits
     data_lims = gr_xy_axislims(sp)
 
