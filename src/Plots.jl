@@ -10,7 +10,6 @@ using Base.Meta
 @reexport using PlotThemes
 import Showoff
 import StatsBase
-import NaNMath: extrema, maximum, minimum
 
 export
     grid,
@@ -104,6 +103,15 @@ export
     BezierCurve,
 
     plotattr
+
+# ---------------------------------------------------------
+
+import NaNMath
+# define functions (e.g. `_extrema`, that uses the NaNMath version (which ignores NaNs)) when the type is applicable
+for fun in (:extrema, :minimum, :maximum, :mean)
+       @eval $(Symbol(string("_",fun)))(x) = Base.$(fun)(x)
+       @eval $(Symbol(string("_",fun))){F <: AbstractFloat}(x::AbstractVector{F}) = NaNMath.$(fun)(x)
+end
 
 # ---------------------------------------------------------
 
