@@ -301,10 +301,10 @@ bottompad(layout::GridLayout) = layout.minpad[4]
 function _update_min_padding!(layout::GridLayout)
     map(_update_min_padding!, layout.grid)
     layout.minpad = (
-        maximum(map(leftpad,   layout.grid[:,1])),
-        maximum(map(toppad,    layout.grid[1,:])),
-        maximum(map(rightpad,  layout.grid[:,end])),
-        maximum(map(bottompad, layout.grid[end,:]))
+        _maximum(map(leftpad,   layout.grid[:,1])),
+        _maximum(map(toppad,    layout.grid[1,:])),
+        _maximum(map(rightpad,  layout.grid[:,end])),
+        _maximum(map(bottompad, layout.grid[end,:]))
     )
 end
 
@@ -349,10 +349,10 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
     # get the max horizontal (left and right) padding over columns,
     # and max vertical (bottom and top) padding over rows
     # TODO: add extra padding here
-    pad_left   = maximum(minpad_left,   1)
-    pad_top    = maximum(minpad_top,    2)
-    pad_right  = maximum(minpad_right,  1)
-    pad_bottom = maximum(minpad_bottom, 2)
+    pad_left   = _maximum(minpad_left,   1)
+    pad_top    = _maximum(minpad_top,    2)
+    pad_right  = _maximum(minpad_right,  1)
+    pad_bottom = _maximum(minpad_bottom, 2)
 
     # make sure the perimeter match the parent
     pad_left[1]     = max(pad_left[1], minimum_perimeter[1])
@@ -642,7 +642,7 @@ end
 
 function create_grid_vcat(expr::Expr)
     rowsizes = map(rowsize, expr.args)
-    rmin, rmax = extrema(rowsizes)
+    rmin, rmax = _extrema(rowsizes)
     if rmin > 0 && rmin == rmax
         # we have a grid... build the whole thing
         # note: rmin is the number of columns
