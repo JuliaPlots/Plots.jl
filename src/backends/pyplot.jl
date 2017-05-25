@@ -705,11 +705,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             # contours on the axis planes
             if series[:contours]
                 for (zdir,mat) in (("x",x), ("y",y), ("z",z))
-                    offset = (zdir == "y" ? maximum : minimum)(mat)
+                    offset = (zdir == "y" ? _maximum : _minimum)(mat)
                     handle = ax[:contourf](x, y, z, levelargs...;
                         zdir = zdir,
                         cmap = py_fillcolormap(series),
-                        offset = (zdir == "y" ? maximum : minimum)(mat)  # where to draw the contour plane
+                        offset = (zdir == "y" ? _maximum : _minimum)(mat)  # where to draw the contour plane
                     )
                     push!(handles, handle)
                     needs_colorbar = true
@@ -778,7 +778,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
 
         clims = sp[:clims]
-        zmin, zmax = extrema(z)
+        zmin, zmax = _extrema(z)
         extrakw[:vmin] = (is_2tuple(clims) && isfinite(clims[1])) ? clims[1] : zmin
         extrakw[:vmax] = (is_2tuple(clims) && isfinite(clims[2])) ? clims[2] : zmax
 
@@ -926,7 +926,7 @@ function py_compute_axis_minval(axis::Axis)
         for series in series_list(sp)
             v = series.d[axis[:letter]]
             if !isempty(v)
-                minval = min(minval, minimum(abs(v)))
+                minval = min(minval, _minimum(abs(v)))
             end
         end
     end
