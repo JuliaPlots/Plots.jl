@@ -277,10 +277,11 @@ function gr_draw_marker(xi, yi, msize, shape::Shape)
     sx, sy = coords(shape)
     # convert to ndc coords (percentages of window)
     GR.selntran(0)
+    w, h = gr_plot_size
+    f = msize / (w + h)
     xi, yi = GR.wctondc(xi, yi)
-    ms_ndc_x, ms_ndc_y = gr_pixels_to_ndc(msize, msize)
-    GR.fillarea(xi .+ sx .* ms_ndc_x,
-                yi .+ sy .* ms_ndc_y)
+    GR.fillarea(xi .+ sx .* f,
+                yi .+ sy .* f)
     GR.selntran(1)
 end
 
@@ -442,15 +443,6 @@ end
 
 gr_view_xcenter() = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
 gr_view_ycenter() = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
-gr_view_xdiff() = viewport_plotarea[2] - viewport_plotarea[1]
-gr_view_ydiff() = viewport_plotarea[4] - viewport_plotarea[3]
-
-function gr_pixels_to_ndc(x_pixels, y_pixels)
-    w,h = gr_plot_size
-    totx = w * gr_view_xdiff()
-    toty = h * gr_view_ydiff()
-    x_pixels / totx, y_pixels / toty
-end
 
 
 # --------------------------------------------------------------------------------------
@@ -509,6 +501,11 @@ function gr_display(plt::Plot)
     end
 
     GR.updatews()
+end
+
+
+function _update_min_padding!(sp::Subplot{GRBackend})
+    sp.minpad = (10mm,2mm,2mm,8mm)
 end
 
 
@@ -699,19 +696,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 gr_text(xi + (mirror ? 1 : -1) * 2e-3, yi, string(dv))
             end
         end
-
-        # window_diag = sqrt(gr_view_xdiff()^2 + gr_view_ydiff()^2)
-        # ticksize = 0.0075 * window_diag
-        # if outside_ticks
-        #     ticksize = -ticksize
-        # end
-        # # TODO: this should be done for each axis separately
-        # gr_set_linecolor(xaxis[:foreground_color_axis])
-
-        # x1, x2 = xaxis[:flip] ? (xmax,xmin) : (xmin,xmax)
-        # y1, y2 = yaxis[:flip] ? (ymax,ymin) : (ymin,ymax)
-        # GR.axes(xtick, ytick, x1, y1, 1, 1, ticksize)
-        # GR.axes(xtick, ytick, x2, y2, -1, -1, -ticksize)
     end
     # end
 
