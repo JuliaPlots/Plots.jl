@@ -444,6 +444,34 @@ end
 gr_view_xcenter() = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
 gr_view_ycenter() = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
 
+function gr_legend_pos(s::Symbol,w,h)
+    str = string(s)
+    println(str)
+    if str == "best"
+        str = "topright"
+    end
+    if contains(str,"right")
+        xpos = viewport_plotarea[2] - 0.05 - w
+    elseif contains(str,"left")
+        xpos = viewport_plotarea[1] + 0.11
+    else
+        xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 +.04
+    end
+    if contains(str,"top")
+        ypos = viewport_plotarea[4] - 0.06
+    elseif contains(str,"bottom")
+        ypos = viewport_plotarea[3] + h + 0.06
+    else
+        ypos = (viewport_plotarea[4]-viewport_plotarea[3])/2 + h/2
+    end
+    (xpos,ypos)
+end
+
+function gr_legend_pos{S<:Real, T<:Real}(v::Tuple{S,T},w,h)
+    xpos = v[1] * (viewport_plotarea[2] - viewport_plotarea[1]) + viewport_plotarea[1]
+    ypos = v[2] * (viewport_plotarea[4] - viewport_plotarea[3]) + viewport_plotarea[3]
+    (xpos,ypos)
+end
 
 # --------------------------------------------------------------------------------------
 
@@ -989,9 +1017,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             w = max(w, tbx[3] - tbx[1])
         end
         if w > 0
-            xpos = viewport_plotarea[2] - 0.05 - w
-            ypos = viewport_plotarea[4] - 0.06
             dy = _gr_point_mult[1] * sp[:legendfont].pointsize * 1.75
+            h = dy*n
+            (xpos,ypos) = gr_legend_pos(sp[:legend],w,h)
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             gr_set_fillcolor(sp[:background_color_legend])
             GR.fillrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
