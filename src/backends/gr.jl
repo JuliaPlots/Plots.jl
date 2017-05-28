@@ -661,7 +661,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # spine (border) and tick marks
         gr_set_line(1, :solid, sp[:xaxis][:foreground_color_axis])
+        GR.setclip(0)
         gr_polyline(coords(spine_segs)...)
+        GR.setclip(1)
 
         if !(xticks in (nothing, false))
             # x labels
@@ -676,7 +678,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, (flip $ mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
-                gr_text(xi, yi + (mirror ? 1 : -1) * 2e-3, string(dv))
+                gr_text(xi, yi + (mirror ? 1 : -1) * 1e-2, string(dv))
             end
         end
 
@@ -693,7 +695,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc((flip $ mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
-                gr_text(xi + (mirror ? 1 : -1) * 2e-3, yi, string(dv))
+                gr_text(xi + (mirror ? 1 : -1) * 1e-2, yi, string(dv))
             end
         end
     end
