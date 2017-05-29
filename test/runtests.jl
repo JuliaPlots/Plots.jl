@@ -19,30 +19,70 @@ img_eps = isinteractive() ? 1e-2 : 10e-2
 #     image_comparison_facts(:gadfly, skip=[4,6,23,24,27], eps=img_eps)
 # end
 
-facts("PyPlot") do
-    @fact pyplot() --> Plots.PyPlotBackend()
-    @fact backend() --> Plots.PyPlotBackend()
-
-    image_comparison_facts(:pyplot, skip=[6,25,30,31], eps=img_eps)
-end
+# facts("GR") do
+#     @fact gr() --> Plots.GRBackend()
+#     @fact backend() --> Plots.GRBackend()
+#
+#     if is_linux() && isinteractive()
+#         image_comparison_facts(:gr, eps=img_eps)
+#     end
+# end
 
 facts("GR") do
     @fact gr() --> Plots.GRBackend()
     @fact backend() --> Plots.GRBackend()
 
-    if is_linux() && isinteractive()
-        image_comparison_facts(:gr, skip=[2,25,30,31], eps=img_eps)
-    end
+    image_comparison_facts(:gr,
+        skip=[
+            13, # :rtriangle not found
+        ],
+        eps=img_eps)
 end
 
-facts("Plotly") do
-    @fact plotly() --> Plots.PlotlyBackend()
-    @fact backend() --> Plots.PlotlyBackend()
+facts("PyPlot") do
+    @fact pyplot() --> Plots.PyPlotBackend()
+    @fact backend() --> Plots.PyPlotBackend()
 
-    # # until png generation is reliable on OSX, just test on linux
-    # @static is_linux() && image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
+    image_comparison_facts(:pyplot, skip=[2,31], eps=img_eps)
 end
 
+facts("PlotlyJS") do
+    @fact plotlyjs() --> Plots.PlotlyJSBackend()
+    @fact backend() --> Plots.PlotlyJSBackend()
+
+    image_comparison_facts(:plotlyjs,
+        skip=[
+            2,  # animation
+            10, # match_dimensions not defined
+            27, # (polar plots) takes very long / not working
+            31, # animation
+        ],
+        eps=img_eps)
+end
+
+facts("InspectDR") do
+    @fact inspectdr() --> Plots.InspectDRBackend()
+    @fact backend() --> Plots.InspectDRBackend()
+
+    image_comparison_facts(:inspectdr,
+        skip=[
+            6,  # heatmap not defined
+            10, # heatmap not defined
+            22, # contour not defined
+            23, # pie not defined
+            28, # heatmap not defined
+        ],
+        eps=img_eps)
+end
+
+# facts("Plotly") do
+#     @fact plotly() --> Plots.PlotlyBackend()
+#     @fact backend() --> Plots.PlotlyBackend()
+#
+#     # # until png generation is reliable on OSX, just test on linux
+#     # @static is_linux() && image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
+#     image_comparison_facts(:plotly, eps=img_eps)
+# end
 
 # facts("Immerse") do
 #     @fact immerse() --> Plots.ImmerseBackend()
