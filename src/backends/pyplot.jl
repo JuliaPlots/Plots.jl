@@ -926,14 +926,14 @@ function py_compute_axis_minval(axis::Axis)
         for series in series_list(sp)
             v = series.d[axis[:letter]]
             if !isempty(v)
-                minval = min(minval, _minimum(abs(v)))
+                minval = _min(minval, _minimum(abs(v)))
             end
         end
     end
 
     # now if the axis limits go to a smaller abs value, use that instead
     vmin, vmax = axis_limits(axis)
-    minval = min(minval, abs(vmin), abs(vmax))
+    minval = _min(minval, abs(vmin), abs(vmax))
 
     minval
 end
@@ -954,7 +954,7 @@ function py_set_scale(ax, axis::Axis)
         elseif scale == :log10
             10
         end
-        kw[Symbol(:linthresh,letter)] = max(1e-16, py_compute_axis_minval(axis))
+        kw[Symbol(:linthresh,letter)] = _max(1e-16, py_compute_axis_minval(axis))
         "symlog"
     end
     func(arg; kw...)
@@ -1096,10 +1096,10 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     bottompad = 0mm
     for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
         if ispositive(width(bb)) && ispositive(height(bb))
-            leftpad   = max(leftpad,   left(plotbb) - left(bb))
-            toppad    = max(toppad,    top(plotbb)  - top(bb))
-            rightpad  = max(rightpad,  right(bb)    - right(plotbb))
-            bottompad = max(bottompad, bottom(bb)   - bottom(plotbb))
+            leftpad   = _max(leftpad,   left(plotbb) - left(bb))
+            toppad    = _max(toppad,    top(plotbb)  - top(bb))
+            rightpad  = _max(rightpad,  right(bb)    - right(plotbb))
+            bottompad = _max(bottompad, bottom(bb)   - bottom(plotbb))
         end
     end
 

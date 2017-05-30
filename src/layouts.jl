@@ -55,10 +55,10 @@ function Base.:+(bb1::BoundingBox, bb2::BoundingBox)
     ispositive(width(bb2))  || return bb1
     ispositive(height(bb2)) || return bb1
 
-    l = min(left(bb1), left(bb2))
-    t = min(top(bb1), top(bb2))
-    r = max(right(bb1), right(bb2))
-    b = max(bottom(bb1), bottom(bb2))
+    l = _min(left(bb1), left(bb2))
+    t = _min(top(bb1), top(bb2))
+    r = _max(right(bb1), right(bb2))
+    b = _max(bottom(bb1), bottom(bb2))
     BoundingBox(l, t, r-l, b-t)
 end
 
