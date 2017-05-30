@@ -482,7 +482,7 @@ function hover(to_hover, to_display, window)
 end
 
 function extract_extrema(d, kw_args)
-    xmin, xmax = extrema(d[:x]); ymin, ymax = _extrema(d[:y])
+    xmin, xmax = _extrema(d[:x]); ymin, ymax = _extrema(d[:y])
     kw_args[:primitive] = GeometryTypes.SimpleRectangle{Float32}(xmin, ymin, xmax-xmin, ymax-ymin)
     nothing
 end

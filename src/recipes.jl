@@ -366,7 +366,7 @@ end
     end
 
     # widen limits out a bit
-    expand_extrema!(axis, widen(extrema(xseg.pts)...))
+    expand_extrema!(axis, widen(_extrema(xseg.pts)...))
 
     # switch back
     if !isvertical(d)

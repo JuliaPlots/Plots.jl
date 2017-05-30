@@ -83,7 +83,7 @@ facts("Axes") do
 
     Plots.discrete_value!(axis, ["x$i" for i=1:5])
     Plots.discrete_value!(axis, ["x$i" for i=0:2])
-    @fact Plots.extrema(axis) --> (0.5, 7.5)
+    @fact Plots._extrema(axis) --> (0.5, 7.5)
 end
 
 
