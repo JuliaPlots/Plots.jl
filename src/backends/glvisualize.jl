@@ -367,14 +367,14 @@ end
 
 
 dist(a, b) = abs(a-b)
-mindist(x, a, b) = min(dist(a, x), dist(b, x))
+mindist(x, a, b) = _min(dist(a, x), dist(b, x))
 
 function gappy(x, ps)
     n = length(ps)
     x <= first(ps) && return first(ps) - x
     for j=1:(n-1)
         p0 = ps[j]
-        p1 = ps[min(j+1, n)]
+        p1 = ps[_min(j+1, n)]
         if p0 <= x && p1 >= x
             return mindist(x, p0, p1) * (isodd(j) ? 1 : -1)
         end
