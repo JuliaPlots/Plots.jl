@@ -76,6 +76,8 @@ const gr_markertype = KW(
     :diamond => -13,
     :utriangle => -3,
     :dtriangle => -5,
+    :ltriangle => -18,
+    :rtriangle => -17,
     :pentagon => -21,
     :hexagon => -22,
     :heptagon => -23,
@@ -678,7 +680,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, (flip $ mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
-                gr_text(xi, yi + (mirror ? 1 : -1) * 1e-2, string(dv))
+                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3, string(dv))
             end
         end
 
@@ -880,7 +882,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.selntran(0)
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             xmin, xmax, ymin, ymax = viewport_plotarea
-            ymax -= 0.05 * (xmax - xmin)
+            ymax -= 0.1 * (xmax - xmin)
             xcenter = 0.5 * (xmin + xmax)
             ycenter = 0.5 * (ymin + ymax)
             if xmax - xmin > ymax - ymin
@@ -944,7 +946,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
 
         elseif st == :image
-            z = transpose_z(series, series[:z].surf, true)
+            z = transpose_z(series, series[:z].surf, true)'
             w, h = size(z)
             if eltype(z) <: Colors.AbstractGray
                 grey = round(UInt8, float(z) * 255)

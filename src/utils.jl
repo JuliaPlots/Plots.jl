@@ -350,7 +350,7 @@ end
 function convert_to_polar(x, y, r_extrema = calc_r_extrema(x, y))
     rmin, rmax = r_extrema
     phi, r = x, y
-    r = 0.5 * (r - rmin) / (rmax - rmin)
+    r = (r - rmin) / (rmax - rmin)
     n = max(length(phi), length(r))
     x = zeros(n)
     y = zeros(n)
