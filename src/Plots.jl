@@ -108,7 +108,7 @@ export
 
 # define functions (e.g. `_extrema`, that uses the NaNMath version (which ignores NaNs)) when the type is applicable
 for fun in (:extrema, :minimum, :maximum, :mean)
-       @eval $(Symbol(string("_",fun))){F<:AbstractFloat, N<:Integer}(x::AbstractArray{F, N}) = Base.$(fun)(filter(!isnan(x)))
+       @eval $(Symbol(string("_",fun))){F<:AbstractFloat}(x::AbstractArray{F}) = Base.$(fun)(filter(!isnan,x))
        @eval $(Symbol(string("_",fun)))(x) = Base.$(fun)(x)
 end
 
