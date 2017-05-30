@@ -225,7 +225,7 @@ end
         fr = if yaxis[:scale] == :identity
             0.0
         else
-            _min(axis_limits(yaxis)[1], _minimum(y))
+            NaNMath.min(axis_limits(yaxis)[1], _minimum(y))
         end
     end
     newx, newy = zeros(3n), zeros(3n)
@@ -548,7 +548,7 @@ Plots.@deps stepbins path
 
 
 function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto)
-    _cl(x) = _max(ceil(Int, x), 1)
+    _cl(x) = NaNMath.max(ceil(Int, x), 1)
     _iqr(v) = quantile(v, 0.75) - quantile(v, 0.25)
     _span(v) = _maximum(v) - _minimum(v)
 

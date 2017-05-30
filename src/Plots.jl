@@ -106,9 +106,10 @@ export
 
 # ---------------------------------------------------------
 
+import NaNMath
 # define functions (e.g. `_extrema`, that ignores NaNs, when the type is applicable. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
 for fun in (:extrema, :minimum, :maximum)
-       @eval $(Symbol(string("_",fun))){F<:AbstractFloat}(x::AbstractArray{F}) = Base.$(fun)(filter(!isnan,x))
+       @eval $(Symbol(string("_",fun))){F<:AbstractFloat}(x::AbstractArray{F}) = NaNMath.$(fun)(x)
        @eval $(Symbol(string("_",fun)))(x) = Base.$(fun)(x)
 end
 

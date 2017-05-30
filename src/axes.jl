@@ -260,8 +260,8 @@ end
 
 
 function expand_extrema!(ex::Extrema, v::Number)
-    ex.emin = _min(v, ex.emin)
-    ex.emax = _max(v, ex.emax)
+    ex.emin = NaNMath.min(v, ex.emin)
+    ex.emax = NaNMath.max(v, ex.emax)
     ex
 end
 
@@ -276,8 +276,8 @@ expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 function expand_extrema!{MIN<:Number,MAX<:Number}(axis::Axis, v::Tuple{MIN,MAX})
     ex = axis[:extrema]
-    ex.emin = _min(v[1], ex.emin)
-    ex.emax = _max(v[2], ex.emax)
+    ex.emin = NaNMath.min(v[1], ex.emin)
+    ex.emax = NaNMath.max(v[2], ex.emax)
     ex
 end
 function expand_extrema!{N<:Number}(axis::Axis, v::AVec{N})
@@ -368,8 +368,8 @@ end
 # push the limits out slightly
 function widen(lmin, lmax)
     span = lmax - lmin
-    # eps = _max(1e-16, min(1e-2span, 1e-10))
-    eps = _max(1e-16, 0.03span)
+    # eps = NaNMath.max(1e-16, min(1e-2span, 1e-10))
+    eps = NaNMath.max(1e-16, 0.03span)
     lmin-eps, lmax+eps
 end
 
@@ -425,7 +425,7 @@ function discrete_value!(axis::Axis, dv)
     # @show axis[:discrete_map], axis[:discrete_values], dv
     if cv_idx == -1
         ex = axis[:extrema]
-        cv = _max(0.5, ex.emax + 1.0)
+        cv = NaNMath.max(0.5, ex.emax + 1.0)
         expand_extrema!(axis, cv)
         push!(axis[:discrete_values], dv)
         push!(axis[:continuous_values], cv)

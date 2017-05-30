@@ -6,7 +6,7 @@ function binData(data, nbins)
   lo, hi = _extrema(data)
   edges = collect(linspace(lo, hi, nbins+1))
   midpoints = calcMidpoints(edges)
-  buckets = Int[_max(2, _min(searchsortedfirst(edges, x), length(edges)))-1 for x in data]
+  buckets = Int[NaNMath.max(2, NaNMath.min(searchsortedfirst(edges, x), length(edges)))-1 for x in data]
   counts = zeros(Int, length(midpoints))
   for b in buckets
     counts[b] += 1
@@ -284,8 +284,8 @@ unzip{T}(xyuv::FixedSizeArrays.Vec{4,T})       = T[xyuv[1]], T[xyuv[2]], T[xyuv[
 function _expand_limits(lims, x)
   try
     e1, e2 = _extrema(x)
-    lims[1] = _min(lims[1], e1)
-    lims[2] = _max(lims[2], e2)
+    lims[1] = NaNMath.min(lims[1], e1)
+    lims[2] = NaNMath.max(lims[2], e2)
   # catch err
   #   warn(err)
   end
@@ -343,7 +343,7 @@ end
 function calc_r_extrema(x, y)
     xmin, xmax = _extrema(x)
     ymin, ymax = _extrema(y)
-    r = 0.5 * _min(xmax - xmin, ymax - ymin)
+    r = 0.5 * NaNMath.min(xmax - xmin, ymax - ymin)
     _extrema(r)
 end
 

@@ -349,7 +349,7 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
         ymin, ymax  = axis_limits(yaxis)
         if ispolar(sp)
             #Plots.jl appears to give (xmin,xmax) ≜ (Θmin,Θmax) & (ymin,ymax) ≜ (rmin,rmax)
-            rmax = _max(abs(ymin), abs(ymax))
+            rmax = NaNMath.max(abs(ymin), abs(ymax))
             xmin, xmax = -rmax, rmax
             ymin, ymax = -rmax, rmax
         end
