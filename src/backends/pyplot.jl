@@ -705,11 +705,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             # contours on the axis planes
             if series[:contours]
                 for (zdir,mat) in (("x",x), ("y",y), ("z",z))
-                    offset = (zdir == "y" ? _maximum : _minimum)(mat)
+                    offset = (zdir == "y" ? NaNMath.maximum : NaNMath.minimum)(mat)
                     handle = ax[:contourf](x, y, z, levelargs...;
                         zdir = zdir,
                         cmap = py_fillcolormap(series),
-                        offset = (zdir == "y" ? _maximum : _minimum)(mat)  # where to draw the contour plane
+                        offset = (zdir == "y" ? NaNMath.maximum : NaNMath.minimum)(mat)  # where to draw the contour plane
                     )
                     push!(handles, handle)
                     needs_colorbar = true
@@ -1096,10 +1096,10 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     bottompad = 0mm
     for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
         if ispositive(width(bb)) && ispositive(height(bb))
-            leftpad   = NaNMath.max(leftpad,   left(plotbb) - left(bb))
-            toppad    = NaNMath.max(toppad,    top(plotbb)  - top(bb))
-            rightpad  = NaNMath.max(rightpad,  right(bb)    - right(plotbb))
-            bottompad = NaNMath.max(bottompad, bottom(bb)   - bottom(plotbb))
+            leftpad   = max(leftpad,   left(plotbb) - left(bb))
+            toppad    = max(toppad,    top(plotbb)  - top(bb))
+            rightpad  = max(rightpad,  right(bb)    - right(plotbb))
+            bottompad = max(bottompad, bottom(bb)   - bottom(plotbb))
         end
     end
 

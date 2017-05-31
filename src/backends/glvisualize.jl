@@ -1382,7 +1382,7 @@ function label_scatter(d, w, ho)
         if isapprox(bbw[3], 0)
             bbw = Vec3f0(bbw[1], bbw[2], 1)
         end
-        mini = NaNMath.minimum(bb)
+        mini = minimum(bb)
         m = GLAbstraction.translationmatrix(-mini)
         m *= GLAbstraction.scalematrix(1 ./ bbw)
         kw[:primitive] = m * p

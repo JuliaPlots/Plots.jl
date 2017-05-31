@@ -646,7 +646,7 @@ function (bc::BezierCurve)(t::Real)
 end
 
 # mean(x::Real, y::Real) = 0.5*(x+y) #commented out as I cannot see this used anywhere and it overwrites a Base method with different functionality
-NaNMath.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = NaNMath.sum(ps) / length(ps)
+# mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps) # I also could not see this used anywhere, and it's type piracy - implementing a NaNMath version for this would just involve converting to a standard array
 
 @deprecate curve_points coords
 

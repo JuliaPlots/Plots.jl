@@ -6,7 +6,7 @@ function binData(data, nbins)
   lo, hi = NaNMath.extrema(data)
   edges = collect(linspace(lo, hi, nbins+1))
   midpoints = calcMidpoints(edges)
-  buckets = Int[NaNMath.max(2, NaNMath.min(searchsortedfirst(edges, x), length(edges)))-1 for x in data]
+  buckets = Int[max(2, min(searchsortedfirst(edges, x), length(edges)))-1 for x in data]
   counts = zeros(Int, length(midpoints))
   for b in buckets
     counts[b] += 1

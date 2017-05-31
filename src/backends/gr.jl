@@ -341,7 +341,7 @@ end
 function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
     w, h = gr_plot_size
-    GR.setlinewidth(NaNMath.max(0, lw / ((w + h) * 0.001)))
+    GR.setlinewidth(max(0, lw / ((w + h) * 0.001)))
     gr_set_linecolor(c) #, a)
 end
 
@@ -394,7 +394,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
     viewport[4] = viewport_canvas[4] * (1.0 - top(bb) / h)
     if is3d(sp)
         vp = viewport[:]
-        extent = NaNMath.min(vp[2] - vp[1], vp[4] - vp[3])
+        extent = min(vp[2] - vp[1], vp[4] - vp[3])
         viewport[1] = 0.5 * (vp[1] + vp[2] - extent)
         viewport[2] = 0.5 * (vp[1] + vp[2] + extent)
         viewport[3] = 0.5 * (vp[3] + vp[4] - extent)
@@ -824,7 +824,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # create the colorbar of contour levels
             if sp[:colorbar] != :none
                 gr_set_viewport_cmap(sp)
-                l = round(Int32, 1000 + (h - NaNMath.minimum(h)) / (NaNMath.maximum(h) - NaNMath.minimum(h)) * 255) #much in doubt whether to use the NaNMath minimum here
+                l = round(Int32, 1000 + (h - NaNMath.minimum(h)) / (NaNMath.maximum(h) - NaNMath.minimum(h)) * 255)
                 GR.setwindow(xmin, xmax, zmin, zmax)
                 GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
                 ztick = 0.5 * GR.tick(zmin, zmax)
