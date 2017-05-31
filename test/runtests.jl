@@ -33,9 +33,9 @@ facts("GR") do
     @fact backend() --> Plots.GRBackend()
 
     image_comparison_facts(:gr,
-        skip=[
-            13, # :rtriangle not found
-        ],
+        # skip=[
+        #     13, # :rtriangle not found
+        # ],
         eps=img_eps)
 end
 
