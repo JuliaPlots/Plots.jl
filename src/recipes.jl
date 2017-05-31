@@ -589,7 +589,6 @@ _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
 function _make_hist{N}(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing)
-    info("binning = $binning")
     edges = _hist_edges(vs, binning)
     h = float( weights == nothing ?
         StatsBase.fit(StatsBase.Histogram, vs, edges, closed = :left) :
