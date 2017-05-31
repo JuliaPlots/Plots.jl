@@ -23,9 +23,7 @@ facts("GR") do
     @fact gr() --> Plots.GRBackend()
     @fact backend() --> Plots.GRBackend()
 
-    if is_linux() # && isinteractive()
-        image_comparison_facts(:gr, eps=img_eps)
-    end
+    image_comparison_facts(:gr, eps=img_eps)
 end
 
 facts("PyPlot") do
@@ -39,14 +37,16 @@ facts("PlotlyJS") do
     @fact plotlyjs() --> Plots.PlotlyJSBackend()
     @fact backend() --> Plots.PlotlyJSBackend()
 
-    image_comparison_facts(:plotlyjs,
-        skip=[
-            2,  # animation
-            10, # match_dimensions not defined
-            27, # (polar plots) takes very long / not working
-            31, # animation
-        ],
-        eps=img_eps)
+    if is_linux()
+        image_comparison_facts(:plotlyjs,
+            skip=[
+                2,  # animation
+                10, # match_dimensions not defined
+                27, # (polar plots) takes very long / not working
+                31, # animation
+            ],
+            eps=img_eps)
+    end
 end
 
 facts("InspectDR") do
