@@ -3,7 +3,7 @@ calcMidpoints(edges::AbstractVector) = Float64[0.5 * (edges[i] + edges[i+1]) for
 
 "Make histogram-like bins of data"
 function binData(data, nbins)
-  lo, hi = _extrema(data)
+  lo, hi = NaNMath.extrema(data)
   edges = collect(linspace(lo, hi, nbins+1))
   midpoints = calcMidpoints(edges)
   buckets = Int[NaNMath.max(2, NaNMath.min(searchsortedfirst(edges, x), length(edges)))-1 for x in data]
@@ -109,7 +109,7 @@ function regressionXY(x, y)
   β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
 
   # make a line segment
-  regx = [_minimum(x), _maximum(x)]
+  regx = [NaNMath.minimum(x), NaNMath.maximum(x)]
   regy = β * regx + α
   regx, regy
 end
@@ -187,7 +187,7 @@ type SegmentsIterator
 end
 function iter_segments(args...)
     tup = Plots.wraptuple(args)
-    n = _maximum(map(length, tup))
+    n = maximum(map(length, tup))
     SegmentsIterator(tup, n)
 end
 
@@ -283,7 +283,7 @@ unzip{T}(xyuv::FixedSizeArrays.Vec{4,T})       = T[xyuv[1]], T[xyuv[2]], T[xyuv[
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
   try
-    e1, e2 = _extrema(x)
+    e1, e2 = NaNMath.extrema(x)
     lims[1] = NaNMath.min(lims[1], e1)
     lims[2] = NaNMath.max(lims[2], e2)
   # catch err
@@ -334,17 +334,17 @@ sortedkeys(d::Dict) = sort(collect(keys(d)))
 
 "create an (n+1) list of the outsides of heatmap rectangles"
 function heatmap_edges(v::AVec)
-  vmin, vmax = _extrema(v)
+  vmin, vmax = NaNMath.extrema(v)
   extra = 0.5 * (vmax-vmin) / (length(v)-1)
   vcat(vmin-extra, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra)
 end
 
 
 function calc_r_extrema(x, y)
-    xmin, xmax = _extrema(x)
-    ymin, ymax = _extrema(y)
+    xmin, xmax = NaNMath.extrema(x)
+    ymin, ymax = NaNMath.extrema(y)
     r = 0.5 * NaNMath.min(xmax - xmin, ymax - ymin)
-    _extrema(r)
+    NaNMath.extrema(r)
 end
 
 function convert_to_polar(x, y, r_extrema = calc_r_extrema(x, y))
@@ -644,8 +644,8 @@ end
 # ---------------------------------------------------------------
 # used in updating an existing series
 
-extendSeriesByOne(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (_minimum(v):_maximum(v)+n)
-extendSeriesByOne(v::AVec, n::Integer = 1)       = isempty(v) ? (1:n) : vcat(v, (1:n) + _maximum(v))
+extendSeriesByOne(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
+extendSeriesByOne(v::AVec, n::Integer = 1)       = isempty(v) ? (1:n) : vcat(v, (1:n) + NaNMath.maximum(v))
 extendSeriesData{T}(v::Range{T}, z::Real)        = extendSeriesData(float(collect(v)), z)
 extendSeriesData{T}(v::Range{T}, z::AVec)        = extendSeriesData(float(collect(v)), z)
 extendSeriesData{T}(v::AVec{T}, z::Real)         = (push!(v, convert(T, z)); v)
@@ -871,9 +871,9 @@ mm2px(mm::Real)         = float(px / MM_PER_PX)
 
 
 "Smallest x in plot"
-xmin(plt::Plot) = _minimum([_minimum(series.d[:x]) for series in plt.series_list])
+xmin(plt::Plot) = NaNMath.minimum([NaNMath.minimum(series.d[:x]) for series in plt.series_list])
 "Largest x in plot"
-xmax(plt::Plot) = _maximum([_maximum(series.d[:x]) for series in plt.series_list])
+xmax(plt::Plot) = NaNMath.maximum([NaNMath.maximum(series.d[:x]) for series in plt.series_list])
 
 "Extrema of x-values in plot"
-_extrema(plt::Plot) = (xmin(plt), xmax(plt))
+NaNMath.extrema(plt::Plot) = (xmin(plt), xmax(plt))

@@ -778,7 +778,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
 
         clims = sp[:clims]
-        zmin, zmax = _extrema(z)
+        zmin, zmax = NaNMath.extrema(z)
         extrakw[:vmin] = (is_2tuple(clims) && isfinite(clims[1])) ? clims[1] : zmin
         extrakw[:vmax] = (is_2tuple(clims) && isfinite(clims[2])) ? clims[2] : zmax
 
@@ -926,7 +926,7 @@ function py_compute_axis_minval(axis::Axis)
         for series in series_list(sp)
             v = series.d[axis[:letter]]
             if !isempty(v)
-                minval = NaNMath.min(minval, _minimum(abs(v)))
+                minval = NaNMath.min(minval, NaNMath.minimum(abs(v)))
             end
         end
     end

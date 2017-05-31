@@ -264,7 +264,7 @@ end
 
 normalize_zvals(zv::Void) = zv
 function normalize_zvals(zv::AVec)
-    vmin, vmax = _extrema(zv)
+    vmin, vmax = NaNMath.extrema(zv)
     if vmin == vmax
         zeros(length(zv))
     else
@@ -639,7 +639,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     elseif ispolar(sp)
         r = gr_set_viewport_polar()
-        rmin, rmax = GR.adjustrange(_minimum(r), _maximum(r))
+        rmin, rmax = GR.adjustrange(minimum(r), maximum(r))
         # rmin, rmax = axis_limits(sp[:yaxis])
         gr_polaraxes(rmin, rmax)
 
@@ -824,7 +824,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # create the colorbar of contour levels
             if sp[:colorbar] != :none
                 gr_set_viewport_cmap(sp)
-                l = round(Int32, 1000 + (h - _minimum(h)) / (_maximum(h) - _minimum(h)) * 255)
+                l = round(Int32, 1000 + (h - NaNMath.minimum(h)) / (NaNMath.maximum(h) - NaNMath.minimum(h)) * 255) #much in doubt whether to use the NaNMath minimum here
                 GR.setwindow(xmin, xmax, zmin, zmax)
                 GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
                 ztick = 0.5 * GR.tick(zmin, zmax)

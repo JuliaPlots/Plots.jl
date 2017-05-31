@@ -642,7 +642,7 @@ end
 
 function create_grid_vcat(expr::Expr)
     rowsizes = map(rowsize, expr.args)
-    rmin, rmax = _extrema(rowsizes)
+    rmin, rmax = extrema(rowsizes)
     if rmin > 0 && rmin == rmax
         # we have a grid... build the whole thing
         # note: rmin is the number of columns
@@ -704,7 +704,7 @@ function link_axes!(axes::Axis...)
     a1 = axes[1]
     for i=2:length(axes)
         a2 = axes[i]
-        expand_extrema!(a1, _extrema(a2))
+        expand_extrema!(a1, NaNMath.extrema(a2))
         for k in (:extrema, :discrete_values, :continuous_values, :discrete_map)
             a2[k] = a1[k]
         end
