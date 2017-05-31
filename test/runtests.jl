@@ -19,24 +19,13 @@ img_eps = isinteractive() ? 1e-2 : 10e-2
 #     image_comparison_facts(:gadfly, skip=[4,6,23,24,27], eps=img_eps)
 # end
 
-# facts("GR") do
-#     @fact gr() --> Plots.GRBackend()
-#     @fact backend() --> Plots.GRBackend()
-#
-#     if is_linux() && isinteractive()
-#         image_comparison_facts(:gr, eps=img_eps)
-#     end
-# end
-
 facts("GR") do
     @fact gr() --> Plots.GRBackend()
     @fact backend() --> Plots.GRBackend()
 
-    image_comparison_facts(:gr,
-        # skip=[
-        #     13, # :rtriangle not found
-        # ],
-        eps=img_eps)
+    if is_linux() # && isinteractive()
+        image_comparison_facts(:gr, eps=img_eps)
+    end
 end
 
 facts("PyPlot") do
