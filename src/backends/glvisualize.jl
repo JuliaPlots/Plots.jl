@@ -78,7 +78,7 @@ end
 function add_backend_string(b::GLVisualizeBackend)
     """
     if !Plots.is_installed("GLVisualize")
-        Pkg.add("PyPlot")
+        Pkg.add("GLVisualize")
     end
     """
 end
