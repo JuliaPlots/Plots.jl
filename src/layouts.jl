@@ -704,7 +704,7 @@ function link_axes!(axes::Axis...)
     a1 = axes[1]
     for i=2:length(axes)
         a2 = axes[i]
-        expand_extrema!(a1, extrema(a2))
+        expand_extrema!(a1, NaNMath.extrema(a2))
         for k in (:extrema, :discrete_values, :continuous_values, :discrete_map)
             a2[k] = a1[k]
         end

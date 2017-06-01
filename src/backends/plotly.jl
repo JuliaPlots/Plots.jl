@@ -546,7 +546,7 @@ function plotly_series(plt::Plot, series::Series)
         else
             # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
             grad = as_gradient(series[:markercolor], series[:markeralpha])
-            zmin, zmax = extrema(series[:marker_z])
+            zmin, zmax = NaNMath.extrema(series[:marker_z])
             zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
             [rgba_string(grad[(zi - zmin) / zrange]) for zi in series[:marker_z]]
         end

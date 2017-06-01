@@ -10,6 +10,7 @@ using Base.Meta
 @reexport using PlotThemes
 import Showoff
 import StatsBase
+import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
 
 export
     grid,

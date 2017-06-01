@@ -153,7 +153,7 @@ function _add_smooth_kw(kw_list::Vector{KW}, kw::KW)
     if get(kw, :smooth, false)
         x, y = kw[:x], kw[:y]
         β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
-        sx = [minimum(x), maximum(x)]
+        sx = [NaNMath.minimum(x), NaNMath.maximum(x)]
         sy = β * sx + α
         push!(kw_list, merge(copy(kw), KW(
             :seriestype => :path,
