@@ -639,7 +639,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     elseif ispolar(sp)
         r = gr_set_viewport_polar()
-        rmin, rmax = GR.adjustrange(minimum(r), maximum(r))
+        rmin, rmax = GR.adjustrange(NaNMath.minimum(r), NaNMath.maximum(r))
         # rmin, rmax = axis_limits(sp[:yaxis])
         gr_polaraxes(rmin, rmax)
 
