@@ -46,7 +46,6 @@ facts("PlotlyJS") do
         image_comparison_facts(:plotlyjs,
             skip=[
                 2,  # animation (skipped for speed)
-                10, # match_dimensions not defined
                 27, # (polar plots) takes very long / not working
                 31, # animation (skipped for speed)
             ],
@@ -60,11 +59,14 @@ facts("InspectDR") do
 
     image_comparison_facts(:inspectdr,
         skip=[
+            2,  # animation
             6,  # heatmap not defined
             10, # heatmap not defined
             22, # contour not defined
             23, # pie not defined
+            27, # polar plot not working
             28, # heatmap not defined
+            31, # animation
         ],
         eps=img_eps)
 end
