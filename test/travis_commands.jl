@@ -16,7 +16,7 @@ Pkg.build("Blink")
 import Blink
 Blink.AtomShell.install()
 Pkg.add("Rsvg")
-Pkg.clone("PlotlyJS")
+Pkg.add("PlotlyJS")
 
 # Pkg.checkout("RecipesBase")
 # Pkg.clone("VisualRegressionTests")
