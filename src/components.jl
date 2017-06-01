@@ -501,7 +501,7 @@ immutable ZValues
   zrange::Tuple{Float64,Float64}
 end
 
-function zvalues{T<:Real}(values::AVec{T}, zrange::Tuple{T,T} = (minimum(values), maximum(values)))
+function zvalues{T<:Real}(values::AVec{T}, zrange::Tuple{T,T} = (NaNMath.minimum(values), NaNMath.maximum(values)))
   ZValues(collect(float(values)), map(Float64, zrange))
 end
 
@@ -645,8 +645,8 @@ function (bc::BezierCurve)(t::Real)
     p
 end
 
-Base.mean(x::Real, y::Real) = 0.5*(x+y)
-Base.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps)
+# mean(x::Real, y::Real) = 0.5*(x+y) #commented out as I cannot see this used anywhere and it overwrites a Base method with different functionality
+# mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps) # I also could not see this used anywhere, and it's type piracy - implementing a NaNMath version for this would just involve converting to a standard array
 
 @deprecate curve_points coords
 
@@ -659,7 +659,7 @@ function directed_curve(args...; kw...)
 end
 
 function extrema_plus_buffer(v, buffmult = 0.2)
-    vmin,vmax = extrema(v)
+    vmin,vmax = NaNMath.extrema(v)
     vdiff = vmax-vmin
     buffer = vdiff * buffmult
     vmin - buffer, vmax + buffer

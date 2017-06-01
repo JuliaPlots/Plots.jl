@@ -304,7 +304,7 @@ function extract_any_color(d, kw_args)
                     kw_args[:color_norm] = Vec2f0(clims)
                 end
             elseif clims == :auto
-                kw_args[:color_norm] = Vec2f0(extrema(d[:y]))
+                kw_args[:color_norm] = Vec2f0(NaNMath.extrema(d[:y]))
             end
         end
     else
@@ -315,7 +315,7 @@ function extract_any_color(d, kw_args)
                 kw_args[:color_norm] = Vec2f0(clims)
             end
         elseif clims == :auto
-            kw_args[:color_norm] = Vec2f0(extrema(d[:y]))
+            kw_args[:color_norm] = Vec2f0(NaNMath.extrema(d[:y]))
         else
             error("Unsupported limits: $clims")
         end
@@ -367,14 +367,14 @@ end
 
 
 dist(a, b) = abs(a-b)
-mindist(x, a, b) = min(dist(a, x), dist(b, x))
+mindist(x, a, b) = NaNMath.min(dist(a, x), dist(b, x))
 
 function gappy(x, ps)
     n = length(ps)
     x <= first(ps) && return first(ps) - x
     for j=1:(n-1)
         p0 = ps[j]
-        p1 = ps[min(j+1, n)]
+        p1 = ps[NaNMath.min(j+1, n)]
         if p0 <= x && p1 >= x
             return mindist(x, p0, p1) * (isodd(j) ? 1 : -1)
         end
@@ -482,7 +482,7 @@ function hover(to_hover, to_display, window)
 end
 
 function extract_extrema(d, kw_args)
-    xmin, xmax = extrema(d[:x]); ymin, ymax = extrema(d[:y])
+    xmin, xmax = NaNMath.extrema(d[:x]); ymin, ymax = NaNMath.extrema(d[:y])
     kw_args[:primitive] = GeometryTypes.SimpleRectangle{Float32}(xmin, ymin, xmax-xmin, ymax-ymin)
     nothing
 end
@@ -509,7 +509,7 @@ function extract_colornorm(d, kw_args)
         else
             d[:y]
         end
-        kw_args[:color_norm] = Vec2f0(extrema(z))
+        kw_args[:color_norm] = Vec2f0(NaNMath.extrema(z))
         kw_args[:intensity] = map(Float32, collect(z))
     end
 end
@@ -781,7 +781,7 @@ function gl_bar(d, kw_args)
     # compute half-width of bars
     bw = nothing
     hw = if bw == nothing
-        mean(diff(x))
+        NaNMath.mean(diff(x))
     else
         Float64[cycle(bw,i)*0.5 for i=1:length(x)]
     end
@@ -864,7 +864,7 @@ function gl_boxplot(d, kw_args)
             end
             # change q1 and q5 to show outliers
             # using maximum and minimum values inside the limits
-            q1, q5 = extrema(inside)
+            q1, q5 = NaNMath.extrema(inside)
         end
         # Box
         if notch
@@ -1318,7 +1318,7 @@ function gl_contour(x, y, z, kw_args)
         T = eltype(z)
         levels = Contour.contours(map(T, x), map(T, y), z, h)
         result = Point2f0[]
-        zmin, zmax = get(kw_args, :limits, Vec2f0(extrema(z)))
+        zmin, zmax = get(kw_args, :limits, Vec2f0(NaNMath.extrema(z)))
         cmap = get(kw_args, :color_map, get(kw_args, :color, RGBA{Float32}(0,0,0,1)))
         colors = RGBA{Float32}[]
         for c in levels.contours
@@ -1339,7 +1339,7 @@ end
 
 
 function gl_heatmap(x,y,z, kw_args)
-    get!(kw_args, :color_norm, Vec2f0(extrema(z)))
+    get!(kw_args, :color_norm, Vec2f0(NaNMath.extrema(z)))
     get!(kw_args, :color_map, Plots.make_gradient(cgrad()))
     delete!(kw_args, :intensity)
     I = GLVisualize.Intensity{1, Float32}

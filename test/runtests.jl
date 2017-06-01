@@ -114,12 +114,12 @@ facts("Axes") do
     @fact typeof(axis) --> Plots.Axis
     @fact Plots.discrete_value!(axis, "HI") --> (0.5, 1)
     @fact Plots.discrete_value!(axis, :yo) --> (1.5, 2)
-    @fact extrema(axis) --> (0.5,1.5)
+    @fact Plots.NaNMath.extrema(axis) --> (0.5,1.5)
     @fact axis[:discrete_map] --> Dict{Any,Any}(:yo  => 2, "HI" => 1)
 
     Plots.discrete_value!(axis, ["x$i" for i=1:5])
     Plots.discrete_value!(axis, ["x$i" for i=0:2])
-    @fact extrema(axis) --> (0.5, 7.5)
+    @fact Plots.NaNMath.extrema(axis) --> (0.5, 7.5)
 end
 
 

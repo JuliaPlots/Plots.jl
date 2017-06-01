@@ -705,11 +705,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             # contours on the axis planes
             if series[:contours]
                 for (zdir,mat) in (("x",x), ("y",y), ("z",z))
-                    offset = (zdir == "y" ? maximum : minimum)(mat)
+                    offset = (zdir == "y" ? NaNMath.maximum : NaNMath.minimum)(mat)
                     handle = ax[:contourf](x, y, z, levelargs...;
                         zdir = zdir,
                         cmap = py_fillcolormap(series),
-                        offset = (zdir == "y" ? maximum : minimum)(mat)  # where to draw the contour plane
+                        offset = (zdir == "y" ? NaNMath.maximum : NaNMath.minimum)(mat)  # where to draw the contour plane
                     )
                     push!(handles, handle)
                     needs_colorbar = true
@@ -778,7 +778,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
 
         clims = sp[:clims]
-        zmin, zmax = extrema(z)
+        zmin, zmax = NaNMath.extrema(z)
         extrakw[:vmin] = (is_2tuple(clims) && isfinite(clims[1])) ? clims[1] : zmin
         extrakw[:vmax] = (is_2tuple(clims) && isfinite(clims[2])) ? clims[2] : zmax
 
@@ -926,14 +926,14 @@ function py_compute_axis_minval(axis::Axis)
         for series in series_list(sp)
             v = series.d[axis[:letter]]
             if !isempty(v)
-                minval = min(minval, minimum(abs(v)))
+                minval = NaNMath.min(minval, NaNMath.minimum(abs(v)))
             end
         end
     end
 
     # now if the axis limits go to a smaller abs value, use that instead
     vmin, vmax = axis_limits(axis)
-    minval = min(minval, abs(vmin), abs(vmax))
+    minval = NaNMath.min(minval, abs(vmin), abs(vmax))
 
     minval
 end
@@ -954,7 +954,7 @@ function py_set_scale(ax, axis::Axis)
         elseif scale == :log10
             10
         end
-        kw[Symbol(:linthresh,letter)] = max(1e-16, py_compute_axis_minval(axis))
+        kw[Symbol(:linthresh,letter)] = NaNMath.max(1e-16, py_compute_axis_minval(axis))
         "symlog"
     end
     func(arg; kw...)
