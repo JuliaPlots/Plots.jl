@@ -106,6 +106,15 @@ export
 
 # ---------------------------------------------------------
 
+import NaNMath
+# define functions (e.g. `_extrema`, that uses the NaNMath version (which ignores NaNs)) when the type is applicable
+for fun in (:extrema, :minimum, :maximum, :mean)
+       @eval $(Symbol(string("_",fun)))(x...) = Base.$(fun)(x...)
+       @eval $(Symbol(string("_",fun))){F <: AbstractFloat}(x::AbstractVector{F}) = NaNMath.$(fun)(x)
+end
+
+# ---------------------------------------------------------
+
 import Measures
 import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height, w, h
 const BBox = Measures.Absolute2DBox

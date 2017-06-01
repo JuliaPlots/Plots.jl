@@ -118,7 +118,7 @@ Base.show(io::IO, axis::Axis) = dumpdict(axis.d, "Axis", true)
 # Base.getindex(axis::Axis, k::Symbol) = getindex(axis.d, k)
 Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.d, v, ks...)
 Base.haskey(axis::Axis, k::Symbol) = haskey(axis.d, k)
-Base.extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
+_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 
 const _scale_funcs = Dict{Symbol,Function}(
@@ -349,11 +349,11 @@ function expand_extrema!(sp::Subplot, d::KW)
 
         bw = d[:bar_width]
         if bw == nothing
-            bw = d[:bar_width] = mean(diff(data))
+            bw = d[:bar_width] = _mean(diff(data))
         end
         axis = sp.attr[Symbol(dsym, :axis)]
-        expand_extrema!(axis, maximum(data) + 0.5maximum(bw))
-        expand_extrema!(axis, minimum(data) - 0.5minimum(bw))
+        expand_extrema!(axis, _maximum(data) + 0.5_maximum(bw))
+        expand_extrema!(axis, _minimum(data) - 0.5_minimum(bw))
     end
 
 end

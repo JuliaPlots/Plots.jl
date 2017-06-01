@@ -225,7 +225,7 @@ end
         fr = if yaxis[:scale] == :identity
             0.0
         else
-            min(axis_limits(yaxis)[1], minimum(y))
+            min(axis_limits(yaxis)[1], _minimum(y))
         end
     end
     newx, newy = zeros(3n), zeros(3n)
@@ -338,7 +338,7 @@ end
     # compute half-width of bars
     bw = d[:bar_width]
     hw = if bw == nothing
-        0.5mean(diff(procx))
+        0.5_mean(diff(procx))
     else
         Float64[0.5cycle(bw,i) for i=1:length(procx)]
     end
@@ -414,8 +414,8 @@ end
 
 function _preprocess_binbarlike_weights{T<:AbstractFloat}(::Type{T}, w, wscale::Symbol)
     w_adj = _scale_adjusted_values(T, w, wscale)
-    w_min = minimum(w_adj)
-    w_max = maximum(w_adj)
+    w_min = _minimum(w_adj)
+    w_max = _maximum(w_adj)
     baseline = _binbarlike_baseline(w_min, wscale)
     w_adj, baseline
 end
@@ -550,7 +550,7 @@ Plots.@deps stepbins path
 function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto)
     _cl(x) = max(ceil(Int, x), 1)
     _iqr(v) = quantile(v, 0.75) - quantile(v, 0.25)
-    _span(v) = maximum(v) - minimum(v)
+    _span(v) = _maximum(v) - _minimum(v)
 
     n_samples = length(linearindices(first(vs)))
     # Estimator for number of samples in one row/column of bins along each axis:
@@ -919,7 +919,7 @@ end
 
 # get the joined vector
 function get_xy(v::AVec{OHLC}, x = 1:length(v))
-    xdiff = 0.3mean(abs(diff(x)))
+    xdiff = 0.3_mean(abs(diff(x)))
     x_out, y_out = zeros(0), zeros(0)
     for (i,ohlc) in enumerate(v)
         ox,oy = get_xy(ohlc, x[i], xdiff)
@@ -984,8 +984,8 @@ end
     yflip := true
     aspect_ratio := 1
     rs, cs, zs = findnz(z.surf)
-    xlim := extrema(cs)
-    ylim := extrema(rs)
+    xlim := _extrema(cs)
+    ylim := _extrema(rs)
     if d[:markershape] == :none
         markershape := :circle
     end
@@ -1006,7 +1006,7 @@ end
 
 "Adds a+bx... straight line over the current plot"
 function abline!(plt::Plot, a, b; kw...)
-    plot!(plt, [extrema(plt)...], x -> b + a*x; kw...)
+    plot!(plt, [_extrema(plt)...], x -> b + a*x; kw...)
 end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
