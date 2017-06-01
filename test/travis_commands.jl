@@ -26,6 +26,6 @@ ENV["PYTHON"] = ""
 Pkg.add("PyPlot")
 Pkg.build("PyPlot")
 
-Pkg.add("InspectDR")
+# Pkg.add("InspectDR")
 
 Pkg.test("Plots"; coverage=false)

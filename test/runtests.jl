@@ -41,38 +41,42 @@ end
 # The plotlyjs testimages return a connection error on travis:
 # connect: connection refused (ECONNREFUSED)
 
-facts("PlotlyJS") do
-    @fact plotlyjs() --> Plots.PlotlyJSBackend()
-    @fact backend() --> Plots.PlotlyJSBackend()
+# facts("PlotlyJS") do
+#     @fact plotlyjs() --> Plots.PlotlyJSBackend()
+#     @fact backend() --> Plots.PlotlyJSBackend()
+#
+#     if is_linux() && isinteractive()
+#         image_comparison_facts(:plotlyjs,
+#             skip=[
+#                 2,  # animation (skipped for speed)
+#                 27, # (polar plots) takes very long / not working
+#                 31, # animation (skipped for speed)
+#             ],
+#             eps=img_eps)
+#     end
+# end
 
-    if is_linux() && isinteractive()
-        image_comparison_facts(:plotlyjs,
-            skip=[
-                2,  # animation (skipped for speed)
-                27, # (polar plots) takes very long / not working
-                31, # animation (skipped for speed)
-            ],
-            eps=img_eps)
-    end
-end
+# InspectDR returns that error on travis:
+# ERROR: LoadError: InitError: Cannot open display:
+#  in Gtk.GLib.GError(::Gtk.##229#230) at /home/travis/.julia/v0.5/Gtk/src/GLib/gerror.jl:17
 
-facts("InspectDR") do
-    @fact inspectdr() --> Plots.InspectDRBackend()
-    @fact backend() --> Plots.InspectDRBackend()
-
-    image_comparison_facts(:inspectdr,
-        skip=[
-            2,  # animation
-            6,  # heatmap not defined
-            10, # heatmap not defined
-            22, # contour not defined
-            23, # pie not defined
-            27, # polar plot not working
-            28, # heatmap not defined
-            31, # animation
-        ],
-        eps=img_eps)
-end
+# facts("InspectDR") do
+#     @fact inspectdr() --> Plots.InspectDRBackend()
+#     @fact backend() --> Plots.InspectDRBackend()
+#
+#     image_comparison_facts(:inspectdr,
+#         skip=[
+#             2,  # animation
+#             6,  # heatmap not defined
+#             10, # heatmap not defined
+#             22, # contour not defined
+#             23, # pie not defined
+#             27, # polar plot not working
+#             28, # heatmap not defined
+#             31, # animation
+#         ],
+#         eps=img_eps)
+# end
 
 # facts("Plotly") do
 #     @fact plotly() --> Plots.PlotlyBackend()
