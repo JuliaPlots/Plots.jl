@@ -38,11 +38,14 @@ facts("PyPlot") do
         eps=img_eps)
 end
 
+# The plotlyjs testimages return a connection error on travis:
+# connect: connection refused (ECONNREFUSED)
+
 facts("PlotlyJS") do
     @fact plotlyjs() --> Plots.PlotlyJSBackend()
     @fact backend() --> Plots.PlotlyJSBackend()
 
-    if is_linux()
+    if is_linux() && isinteractive()
         image_comparison_facts(:plotlyjs,
             skip=[
                 2,  # animation (skipped for speed)
