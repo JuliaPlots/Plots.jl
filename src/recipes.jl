@@ -548,7 +548,7 @@ Plots.@deps stepbins path
 
 
 function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto)
-    _cl(x) = max(ceil(Int, x), 1)
+    _cl(x) = ceil(Int, NaNMath.max(x, one(x)))
     _iqr(v) = quantile(v, 0.75) - quantile(v, 0.25)
     _span(v) = NaNMath.maximum(v) - NaNMath.minimum(v)
 
