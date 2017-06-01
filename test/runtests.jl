@@ -30,7 +30,12 @@ facts("PyPlot") do
     @fact pyplot() --> Plots.PyPlotBackend()
     @fact backend() --> Plots.PyPlotBackend()
 
-    image_comparison_facts(:pyplot, skip=[2,31], eps=img_eps)
+    image_comparison_facts(:pyplot,
+        skip=[
+            2,  # animation (skipped for speed)
+            31, # animation (skipped for speed)
+        ],
+        eps=img_eps)
 end
 
 facts("PlotlyJS") do
@@ -40,10 +45,10 @@ facts("PlotlyJS") do
     if is_linux()
         image_comparison_facts(:plotlyjs,
             skip=[
-                2,  # animation
+                2,  # animation (skipped for speed)
                 10, # match_dimensions not defined
                 27, # (polar plots) takes very long / not working
-                31, # animation
+                31, # animation (skipped for speed)
             ],
             eps=img_eps)
     end
