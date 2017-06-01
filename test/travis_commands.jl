@@ -13,7 +13,7 @@ Pkg.checkout("PlotUtils")
 
 Pkg.clone("Blink")
 Pkg.build("Blink")
-using Blink
+import Blink
 Blink.AtomShell.install()
 Pkg.add("Rsvg")
 Pkg.clone("PlotlyJS")
