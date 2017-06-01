@@ -225,7 +225,7 @@ end
         fr = if yaxis[:scale] == :identity
             0.0
         else
-            NaNMath.min(axis_limits(yaxis)[1], NaNMath.minimum(y))
+            NaNMath.min(axis_limits(yaxis)[1], ignoreNaN_minimum(y))
         end
     end
     newx, newy = zeros(3n), zeros(3n)
@@ -338,7 +338,7 @@ end
     # compute half-width of bars
     bw = d[:bar_width]
     hw = if bw == nothing
-        0.5NaNMath.mean(diff(procx))
+        0.5ignoreNaN_mean(diff(procx))
     else
         Float64[0.5cycle(bw,i) for i=1:length(procx)]
     end
@@ -366,7 +366,7 @@ end
     end
 
     # widen limits out a bit
-    expand_extrema!(axis, widen(NaNMath.extrema(xseg.pts)...))
+    expand_extrema!(axis, widen(ignoreNaN_extrema(xseg.pts)...))
 
     # switch back
     if !isvertical(d)
@@ -414,8 +414,8 @@ end
 
 function _preprocess_binbarlike_weights{T<:AbstractFloat}(::Type{T}, w, wscale::Symbol)
     w_adj = _scale_adjusted_values(T, w, wscale)
-    w_min = NaNMath.minimum(w_adj)
-    w_max = NaNMath.maximum(w_adj)
+    w_min = ignoreNaN_minimum(w_adj)
+    w_max = ignoreNaN_maximum(w_adj)
     baseline = _binbarlike_baseline(w_min, wscale)
     w_adj, baseline
 end
@@ -550,7 +550,7 @@ Plots.@deps stepbins path
 function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto)
     _cl(x) = ceil(Int, NaNMath.max(x, one(x)))
     _iqr(v) = quantile(v, 0.75) - quantile(v, 0.25)
-    _span(v) = NaNMath.maximum(v) - NaNMath.minimum(v)
+    _span(v) = ignoreNaN_maximum(v) - ignoreNaN_minimum(v)
 
     n_samples = length(linearindices(first(vs)))
     # Estimator for number of samples in one row/column of bins along each axis:
@@ -919,7 +919,7 @@ end
 
 # get the joined vector
 function get_xy(v::AVec{OHLC}, x = 1:length(v))
-    xdiff = 0.3NaNMath.mean(abs(diff(x)))
+    xdiff = 0.3ignoreNaN_mean(abs(diff(x)))
     x_out, y_out = zeros(0), zeros(0)
     for (i,ohlc) in enumerate(v)
         ox,oy = get_xy(ohlc, x[i], xdiff)
@@ -984,8 +984,8 @@ end
     yflip := true
     aspect_ratio := 1
     rs, cs, zs = findnz(z.surf)
-    xlim := NaNMath.extrema(cs)
-    ylim := NaNMath.extrema(rs)
+    xlim := ignoreNaN_extrema(cs)
+    ylim := ignoreNaN_extrema(rs)
     if d[:markershape] == :none
         markershape := :circle
     end
@@ -1006,7 +1006,7 @@ end
 
 "Adds a+bx... straight line over the current plot"
 function abline!(plt::Plot, a, b; kw...)
-    plot!(plt, [NaNMath.extrema(plt)...], x -> b + a*x; kw...)
+    plot!(plt, [ignoreNaN_extrema(plt)...], x -> b + a*x; kw...)
 end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)

@@ -501,7 +501,7 @@ immutable ZValues
   zrange::Tuple{Float64,Float64}
 end
 
-function zvalues{T<:Real}(values::AVec{T}, zrange::Tuple{T,T} = (NaNMath.minimum(values), NaNMath.maximum(values)))
+function zvalues{T<:Real}(values::AVec{T}, zrange::Tuple{T,T} = (ignoreNaN_minimum(values), ignoreNaN_maximum(values)))
   ZValues(collect(float(values)), map(Float64, zrange))
 end
 
@@ -659,7 +659,7 @@ function directed_curve(args...; kw...)
 end
 
 function extrema_plus_buffer(v, buffmult = 0.2)
-    vmin,vmax = NaNMath.extrema(v)
+    vmin,vmax = ignoreNaN_extrema(v)
     vdiff = vmax-vmin
     buffer = vdiff * buffmult
     vmin - buffer, vmax + buffer

@@ -10,7 +10,6 @@ using Base.Meta
 @reexport using PlotThemes
 import Showoff
 import StatsBase
-import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
 
 export
     grid,
@@ -104,6 +103,18 @@ export
     BezierCurve,
 
     plotattr
+
+# ---------------------------------------------------------
+
+import NaNMath # define functions that ignores NaNs. To overcome the destructive effects of https://github.com/JuliaLang/julia/pull/12563
+ignoreNaN_minimum{F<:AbstractFloat}(x::AbstractArray{F}) = NaNMath.minimum(x)
+ignoreNaN_minimum(x) = Base.minimum(x)
+ignoreNaN_maximum{F<:AbstractFloat}(x::AbstractArray{F}) = NaNMath.maximum(x)
+ignoreNaN_maximum(x) = Base.maximum(x)
+ignoreNaN_mean{F<:AbstractFloat}(x::AbstractArray{F}) = NaNMath.mean(x)
+ignoreNaN_mean(x) = Base.mean(x)
+ignoreNaN_extrema{F<:AbstractFloat}(x::AbstractArray{F}) = NaNMath.extrema(x)
+ignoreNaN_extrema(x) = Base.extrema(x)
 
 # ---------------------------------------------------------
 
