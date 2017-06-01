@@ -55,10 +55,10 @@ function Base.:+(bb1::BoundingBox, bb2::BoundingBox)
     ispositive(width(bb2))  || return bb1
     ispositive(height(bb2)) || return bb1
 
-    l = min(left(bb1), left(bb2))
-    t = min(top(bb1), top(bb2))
-    r = max(right(bb1), right(bb2))
-    b = max(bottom(bb1), bottom(bb2))
+    l = _min(left(bb1), left(bb2))
+    t = _min(top(bb1), top(bb2))
+    r = _max(right(bb1), right(bb2))
+    b = _max(bottom(bb1), bottom(bb2))
     BoundingBox(l, t, r-l, b-t)
 end
 
@@ -642,7 +642,7 @@ end
 
 function create_grid_vcat(expr::Expr)
     rowsizes = map(rowsize, expr.args)
-    rmin, rmax = extrema(rowsizes)
+    rmin, rmax = _extrema(rowsizes)
     if rmin > 0 && rmin == rmax
         # we have a grid... build the whole thing
         # note: rmin is the number of columns
@@ -704,7 +704,7 @@ function link_axes!(axes::Axis...)
     a1 = axes[1]
     for i=2:length(axes)
         a2 = axes[i]
-        expand_extrema!(a1, extrema(a2))
+        expand_extrema!(a1, _extrema(a2))
         for k in (:extrema, :discrete_values, :continuous_values, :discrete_map)
             a2[k] = a1[k]
         end

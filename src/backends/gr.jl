@@ -264,7 +264,7 @@ end
 
 normalize_zvals(zv::Void) = zv
 function normalize_zvals(zv::AVec)
-    vmin, vmax = extrema(zv)
+    vmin, vmax = _extrema(zv)
     if vmin == vmax
         zeros(length(zv))
     else
@@ -341,7 +341,7 @@ end
 function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
     w, h = gr_plot_size
-    GR.setlinewidth(max(0, lw / ((w + h) * 0.001)))
+    GR.setlinewidth(_max(0, lw / ((w + h) * 0.001)))
     gr_set_linecolor(c) #, a)
 end
 
@@ -394,7 +394,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
     viewport[4] = viewport_canvas[4] * (1.0 - top(bb) / h)
     if is3d(sp)
         vp = viewport[:]
-        extent = min(vp[2] - vp[1], vp[4] - vp[3])
+        extent = _min(vp[2] - vp[1], vp[4] - vp[3])
         viewport[1] = 0.5 * (vp[1] + vp[2] - extent)
         viewport[2] = 0.5 * (vp[1] + vp[2] + extent)
         viewport[3] = 0.5 * (vp[3] + vp[4] - extent)
@@ -428,7 +428,7 @@ function gr_set_viewport_polar()
     ymax -= 0.05 * (xmax - xmin)
     xcenter = 0.5 * (xmin + xmax)
     ycenter = 0.5 * (ymin + ymax)
-    r = 0.5 * min(xmax - xmin, ymax - ymin)
+    r = 0.5 * _min(xmax - xmin, ymax - ymin)
     GR.setviewport(xcenter -r, xcenter + r, ycenter - r, ycenter + r)
     GR.setwindow(-1, 1, -1, 1)
     r
@@ -639,7 +639,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     elseif ispolar(sp)
         r = gr_set_viewport_polar()
-        rmin, rmax = GR.adjustrange(minimum(r), maximum(r))
+        rmin, rmax = GR.adjustrange(_minimum(r), _maximum(r))
         # rmin, rmax = axis_limits(sp[:yaxis])
         gr_polaraxes(rmin, rmax)
 
@@ -824,7 +824,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # create the colorbar of contour levels
             if sp[:colorbar] != :none
                 gr_set_viewport_cmap(sp)
-                l = round(Int32, 1000 + (h - minimum(h)) / (maximum(h) - minimum(h)) * 255)
+                l = round(Int32, 1000 + (h - _minimum(h)) / (_maximum(h) - _minimum(h)) * 255)
                 GR.setwindow(xmin, xmax, zmin, zmax)
                 GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
                 ztick = 0.5 * GR.tick(zmin, zmax)
