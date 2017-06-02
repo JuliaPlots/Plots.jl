@@ -990,6 +990,7 @@ end
         markershape := :circle
     end
     if d[:markersize] == default(:markersize)
+        info("In the spy recipe the default markersize is 1. If you are viewing a small matrix, you may consider increasing it with the markersize attribute.")
         markersize := 1
     end
     markerstrokewidth := 0
