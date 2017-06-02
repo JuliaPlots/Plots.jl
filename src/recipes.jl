@@ -976,6 +976,9 @@ end
     @assert length(g.args) == 1 && typeof(g.args[1]) <: AbstractMatrix
     seriestype := :spy
     mat = g.args[1]
+    if length(unique(mat)) <= 2
+        legend --> nothing
+    end
     n,m = size(mat)
     Plots.SliceIt, 1:m, 1:n, Surface(mat)
 end
@@ -990,7 +993,6 @@ end
         markershape := :circle
     end
     if d[:markersize] == default(:markersize)
-        info("In the spy recipe the default markersize is 1. If you are viewing a small matrix, you may consider increasing it with the markersize attribute.")
         markersize := 1
     end
     markerstrokewidth := 0
@@ -1000,6 +1002,7 @@ end
     y := rs
     z := nothing
     seriestype := :scatter
+    grid --> false
     ()
 end
 
