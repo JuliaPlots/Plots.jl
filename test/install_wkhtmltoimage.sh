@@ -5,9 +5,11 @@ set -ex
 sudo apt-get -qq update
 # sudo apt-get install -y wkhtmltopdf
 
-sudo apt-get install -y xfonts-75dpi
-wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2/wkhtmltox-0.12.2_linux-trusty-amd64.deb
-sudo dpkg -i wkhtmltox-0.12.2_linux-trusty-amd64.deb
+sudo apt-get install -y xfonts-base
+wget https://downloads.wkhtmltopdf.org/0.12/0.12.2/wkhtmltox-0.12.2_linux-precise-amd64.deb
+sudo dpkg -i wkhtmltox-0.12.2_linux-precise-amd64.deb
+# wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2/wkhtmltox-0.12.2_linux-trusty-amd64.deb
+# sudo dpkg -i wkhtmltox-0.12.2_linux-trusty-amd64.deb
 wkhtmltoimage http://www.google.com test.png
 ls
 
