@@ -251,6 +251,7 @@ const _subplot_defaults = KW(
     :foreground_color_title   => :match,            # title color
     :color_palette            => :auto,
     :legend                   => :best,
+    :legend_title             => nothing,
     :colorbar                 => :legend,
     :clims                    => :auto,
     :legendfont               => font(8),
@@ -439,6 +440,7 @@ add_aliases(:zticks, :ztick)
 add_aliases(:zrotation, :zrot, :zr)
 add_aliases(:fill_z, :fillz, :fz, :surfacecolor, :surfacecolour, :sc, :surfcolor, :surfcolour)
 add_aliases(:legend, :leg, :key)
+add_aliases(:legend_title, :leg_title, :key_title)
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
 add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
 add_aliases(:smooth, :regression, :reg)
