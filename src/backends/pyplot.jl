@@ -17,7 +17,7 @@ const _pyplot_attr = merge_with_base_supported([
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :legend_title, :colorbar,
+    :grid, :legend, :legendtitle, :colorbar,
     :marker_z, :line_z, :fill_z,
     :levels,
     :ribbon, :quiver, :arrow,
@@ -1187,7 +1187,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 # framealpha = 0.6
             )
             leg[:set_zorder](1000)
-            sp[:legend_title] != nothing && leg[:set_title](sp[:legend_title])
+            sp[:legendtitle] != nothing && leg[:set_title](sp[:legendtitle])
 
             fgcolor = py_color(sp[:foreground_color_legend])
             for txt in leg[:get_texts]()
