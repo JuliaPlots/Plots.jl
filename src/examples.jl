@@ -319,12 +319,11 @@ PlotExample("Animation with subplots",
 ),
 
 PlotExample("Spy",
-    "For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has various different nonzero values, a colorbar is added. The colorbar can be disabled with `legend = nothing`. As always, the marker shape and size can be changed with `spy(mat, markersize = 5, markershape = :diamond)`",
+    "For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has various different nonzero values, a colorbar is added. The colorbar can be disabled with `legend = nothing`. As always, the marker shape and size can be changed with `spy(mat, markersize = 3, markershape = :star)`",
     [:(begin
-    a = spdiagm((ones(200), ones(199), ones(199), ones(150), ones(150)),(0, 1, -1, 50, -50))
-    n = 20
-    b = [i > j ? i * j : 0 for i in 1:n, j in 1:n]
-    plot(spy(a), spy(b, markersize = 5, markershape = :diamond), title = ["Unique nonzeros" "Different nonzeros"], yguide = "Row", xguide = "Column")
+    a = spdiagm((ones(50), ones(49), ones(49), ones(40), ones(40)),(0, 1, -1, 10, -10))
+    b = spdiagm((1:50, 1:49, 1:49, 1:40, 1:40),(0, 1, -1, 10, -10))
+    plot(spy(a, markershape = :star), spy(b), markersize = 3, title = ["Unique nonzeros" "Different nonzeros"])
     end)]
 ),
 

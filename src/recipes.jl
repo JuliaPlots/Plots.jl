@@ -976,7 +976,7 @@ end
     @assert length(g.args) == 1 && typeof(g.args[1]) <: AbstractMatrix
     seriestype := :spy
     mat = g.args[1]
-    if length(unique(mat)) <= 2
+    if length(unique(mat[mat .!= 0])) < 2
         legend --> nothing
     end
     n,m = size(mat)
