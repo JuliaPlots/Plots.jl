@@ -1007,9 +1007,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
                 gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
-                if st == :path
+                if st == :path && series[:fillrange] == nothing
                     GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
-                elseif st == :shape
+                elseif st == :shape || series[:fillrange] != nothing
                     gr_set_fill(series[:fillcolor]) #, series[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
                     b, t = ypos-0.4dy, ypos+0.4dy
