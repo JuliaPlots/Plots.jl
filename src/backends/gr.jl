@@ -20,7 +20,7 @@ const _gr_attr = merge_with_base_supported([
     :title, :window_title,
     :guide, :lims, :ticks, :scale, :flip,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :colorbar,
+    :grid, :legend, :legendtitle, :colorbar,
     :marker_z, :levels,
     :ribbon, :quiver,
     :orientation,
@@ -980,6 +980,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         w = 0
         i = 0
         n = 0
+        if sp[:legendtitle] != nothing
+            tbx, tby = gr_inqtext(0, 0, string(sp[:legendtitle]))
+            w = tbx[3] - tbx[1]
+            n += 1
+        end
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             n += 1
@@ -1003,6 +1008,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setlinewidth(1)
             GR.drawrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
             i = 0
+            if sp[:legendtitle] != nothing
+                GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
+                gr_set_textcolor(sp[:foreground_color_legend])
+                gr_text(xpos - 0.03 + 0.5*w, ypos, string(sp[:legendtitle]))
+                ypos -= dy
+            end
             for series in series_list(sp)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
