@@ -323,7 +323,7 @@ PlotExample("Spy",
     [:(begin
     a = spdiagm((ones(50), ones(49), ones(49), ones(40), ones(40)),(0, 1, -1, 10, -10))
     b = spdiagm((1:50, 1:49, 1:49, 1:40, 1:40),(0, 1, -1, 10, -10))
-    plot(spy(a, markershape = :star), spy(b), markersize = 3, title = ["Unique nonzeros" "Different nonzeros"])
+    plot(spy(a, markershape = :dtriangle), spy(b), markersize = 3, title = ["Unique nonzeros" "Different nonzeros"])
     end)]
 ),
 
