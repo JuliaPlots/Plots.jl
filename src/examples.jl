@@ -115,7 +115,8 @@ PlotExample("Line types",
 PlotExample("Line styles",
     "",
     [:(begin
-        styles = filter(s -> s in Plots.supported_styles(), [:solid, :dash, :dot, :dashdot, :dashdotdot])'
+        styles = filter(s -> s in Plots.supported_styles(), [:solid, :dash, :dot, :dashdot, :dashdotdot])
+        styles = reshape(styles, 1, length(styles)) # Julia 0.6 unfortunately gives an error when transposing symbol vectors
         n = length(styles)
         y = cumsum(randn(20,n),1)
         plot(y, line = (5, styles), label = map(string,styles))
