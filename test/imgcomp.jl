@@ -13,7 +13,7 @@ try
 end
 
 
-# using Plots # reexported by StatPlots
+using Plots 
 using StatPlots
 using FactCheck
 using Glob
