@@ -118,7 +118,7 @@ PlotExample("Line styles",
         styles = filter(s -> s in Plots.supported_styles(), [:solid, :dash, :dot, :dashdot, :dashdotdot])'
         n = length(styles)
         y = cumsum(randn(20,n),1)
-        plot(y, line = (5, styles), label = map(string,styles), legendtitle = "linestyle")
+        plot(y, line = (5, styles), label = map(string,styles), legendtitle = "Linestyle:")
     end)]
 ),
 
