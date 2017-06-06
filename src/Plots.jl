@@ -130,7 +130,6 @@ include("utils.jl")
 include("components.jl")
 include("axes.jl")
 include("args.jl")
-include("backends.jl")
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
@@ -143,6 +142,7 @@ include("output.jl")
 include("examples.jl")
 include("arg_desc.jl")
 include("plotattr.jl")
+include("backends.jl")
 
 
 # ---------------------------------------------------------
