@@ -119,14 +119,15 @@ PlotExample("Line styles",
         styles = reshape(styles, 1, length(styles)) # Julia 0.6 unfortunately gives an error when transposing symbol vectors
         n = length(styles)
         y = cumsum(randn(20,n),1)
-        plot(y, line = (5, styles), label = map(string,styles))
+        plot(y, line = (5, styles), label = map(string,styles), legendtitle = "linestyle")
     end)]
 ),
 
 PlotExample("Marker types",
     "",
     [:(begin
-        markers = filter(m -> m in Plots.supported_markers(), Plots._shape_keys)'
+        markers = filter(m -> m in Plots.supported_markers(), Plots._shape_keys)
+        markers = reshape(markers, 1, length(markers))
         n = length(markers)
         x = linspace(0,10,n+2)[2:end-1]
         y = repmat(reverse(x)', n, 1)
