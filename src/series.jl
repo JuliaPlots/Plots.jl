@@ -6,7 +6,7 @@
 # This should cut down on boilerplate code and allow more focused dispatch on type
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
-typealias FuncOrFuncs{F} Union{F, Vector{F}, Matrix{F}}
+const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
 
 all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image), get(d, :seriestype, :none))
 
@@ -318,7 +318,7 @@ end
 
 @recipe function f{T<:Colorant}(mat::AMat{T})
 	n, m = size(mat)
-	
+
     if is_seriestype_supported(:image)
         seriestype := :image
         SliceIt, 1:m, 1:n, Surface(mat)

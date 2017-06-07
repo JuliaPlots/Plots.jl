@@ -1,5 +1,5 @@
 
-abstract ColorScheme
+abstract type ColorScheme end
 
 Base.getindex(scheme::ColorScheme, i::Integer) = getColor(scheme, i)
 
