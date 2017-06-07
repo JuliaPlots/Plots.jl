@@ -1,4 +1,4 @@
-Pkg.clone("ImageMagick")
+Pkg.add("ImageMagick")
 Pkg.build("ImageMagick")
 
 Pkg.clone("GR")
