@@ -976,6 +976,9 @@ end
     @assert length(g.args) == 1 && typeof(g.args[1]) <: AbstractMatrix
     seriestype := :spy
     mat = g.args[1]
+    if length(unique(mat[mat .!= 0])) < 2
+        legend --> nothing
+    end
     n,m = size(mat)
     Plots.SliceIt, 1:m, 1:n, Surface(mat)
 end
@@ -999,6 +1002,7 @@ end
     y := rs
     z := nothing
     seriestype := :scatter
+    grid --> false
     ()
 end
 
