@@ -41,7 +41,7 @@ PlotExample("Colors",
     [:(begin
         y = rand(100)
         plot(0:10:100,rand(11,4),lab="lines",w=3,palette=:grays,fill=0, α=0.6)
-        scatter!(y, zcolor=abs(y-.5), m=(:heat,0.8,stroke(1,:green)), ms=10*abs(y-0.5)+4, lab="grad")
+        scatter!(y, zcolor=abs.(y-.5), m=(:heat,0.8,stroke(1,:green)), ms=10*abs.(y-0.5)+4, lab="grad")
     end)]
 ),
 
@@ -269,7 +269,7 @@ PlotExample("Polar Plots",
     "",
     [:(begin
         Θ = linspace(0,1.5π,100)
-        r = abs(0.1randn(100)+sin(3Θ))
+        r = abs.(0.1randn(100)+sin.(3Θ))
         plot(Θ, r, proj=:polar, m=2)
     end)]
 ),

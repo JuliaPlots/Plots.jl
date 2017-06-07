@@ -669,7 +669,7 @@ end
     edge_x, edge_y, weights = x, y, z.surf
 
     float_weights = float(weights)
-    if is(float_weights, weights)
+    if float_weights === weights
         float_weights = deepcopy(float_weights)
     end
     for (i, c) in enumerate(float_weights)

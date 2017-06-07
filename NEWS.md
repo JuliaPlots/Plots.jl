@@ -10,7 +10,9 @@
 
 ---
 
-## 0.11 (current master/dev)
+## 0.12 (current master/dev)
+
+- 0.6 only
 
 #### 0.11.3
 

@@ -118,6 +118,15 @@ ignoreNaN_extrema(x) = Base.extrema(x)
 
 # ---------------------------------------------------------
 
+# to cater for block matrices, Base.transpose is recursive.
+# This makes it impossible to create row vectors of String and Symbol with the transpose operator.
+# This solves this issue, internally in Plots at least.
+
+Base.transpose(x::Symbol) = x
+Base.transpose(x::String) = x
+
+# ---------------------------------------------------------
+
 import Measures
 import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height, w, h
 const BBox = Measures.Absolute2DBox

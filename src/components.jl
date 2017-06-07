@@ -507,7 +507,7 @@ end
 
 # -----------------------------------------------------------------------
 
-abstract AbstractSurface
+abstract type AbstractSurface end
 
 "represents a contour or surface mesh"
 immutable Surface{M<:AMat} <: AbstractSurface

@@ -8,9 +8,9 @@ const KW = Dict{Symbol,Any}
 
 immutable PlotsDisplay <: Display end
 
-abstract AbstractBackend
-abstract AbstractPlot{T<:AbstractBackend}
-abstract AbstractLayout
+abstract type AbstractBackend end
+abstract type AbstractPlot{T<:AbstractBackend} end
+abstract type AbstractLayout end
 
 # -----------------------------------------------------------
 

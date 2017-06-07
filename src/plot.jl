@@ -60,7 +60,7 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
 
     # build our plot vector from the args
     n = length(plts_tail) + 1
-    plts = Array(Plot, n)
+    plts = Array{Plot}(n)
     plts[1] = plt1
     for (i,plt) in enumerate(plts_tail)
         plts[i+1] = plt
