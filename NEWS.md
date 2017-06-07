@@ -12,6 +12,18 @@
 
 ## 0.11 (current master/dev)
 
+#### 0.11.3
+
+- add HDF5 backend
+- GR replaces PyPlot as first-choice backend
+- support for legend position in GR
+- smaller markers in GR
+- better viewport size in GR
+- fix glvisualize support
+- remove bug with three-argument method of `text`
+- `legendtitle` attribute added
+- add test for `spy`
+
 #### 0.11.0
 
 - julia 0.6 compatibility
