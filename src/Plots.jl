@@ -1,4 +1,4 @@
-__precompile__(true)
+__precompile__(false)
 
 module Plots
 
@@ -115,6 +115,15 @@ ignoreNaN_mean{F<:AbstractFloat}(x::AbstractArray{F}) = NaNMath.mean(x)
 ignoreNaN_mean(x) = Base.mean(x)
 ignoreNaN_extrema{F<:AbstractFloat}(x::AbstractArray{F}) = NaNMath.extrema(x)
 ignoreNaN_extrema(x) = Base.extrema(x)
+
+# ---------------------------------------------------------
+
+# to cater for block matrices, Base.transpose is recursive.
+# This makes it impossible to create row vectors of String and Symbol with the transpose operator.
+# This solves this issue, internally in Plots at least.
+
+Base.transpose(x::Symbol) = x
+Base.transpose(x::String) = x
 
 # ---------------------------------------------------------
 

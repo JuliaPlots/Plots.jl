@@ -355,8 +355,8 @@ function convert_to_polar(x, y, r_extrema = calc_r_extrema(x, y))
     x = zeros(n)
     y = zeros(n)
     for i in 1:n
-        x[i] = cycle(r,i) * cos(cycle(phi,i))
-        y[i] = cycle(r,i) * sin(cycle(phi,i))
+        x[i] = cycle(r,i) * cos.(cycle(phi,i))
+        y[i] = cycle(r,i) * sin.(cycle(phi,i))
     end
     x, y
 end
