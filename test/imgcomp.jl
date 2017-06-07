@@ -13,7 +13,7 @@ try
 end
 
 
-using Plots 
+using Plots
 using StatPlots
 using FactCheck
 using Glob
@@ -99,7 +99,7 @@ function image_comparison_facts(pkg::Symbol;
   for i in 1:length(Plots._examples)
     i in skip && continue
     if only == nothing || i in only
-      @fact image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) |> success --> true
+      @fact @eval(image_comparison_tests(Symbol(String(Symbol($pkg))[7:end]), $i, debug=$debug, sigma=$sigma, eps=$eps)) |> success --> true
     end
   end
 end

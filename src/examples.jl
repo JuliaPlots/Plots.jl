@@ -126,7 +126,8 @@ PlotExample("Line styles",
 PlotExample("Marker types",
     "",
     [:(begin
-        markers = filter(m -> m in Plots.supported_markers(), Plots._shape_keys)'
+        markers = filter(m -> m in Plots.supported_markers(), Plots._shape_keys)
+        markers = reshape(markers, 1, length(markers))
         n = length(markers)
         x = linspace(0,10,n+2)[2:end-1]
         y = repmat(reverse(x)', n, 1)
