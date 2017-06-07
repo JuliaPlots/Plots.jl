@@ -7,19 +7,6 @@ srand(1234)
 default(show=false, reuse=true)
 img_eps = isinteractive() ? 1e-2 : 10e-2
 
-# facts("Gadfly") do
-#     @fact gadfly() --> Plots.GadflyBackend()
-#     @fact backend() --> Plots.GadflyBackend()
-#
-#     @fact typeof(plot(1:10)) --> Plots.Plot{Plots.GadflyBackend}
-#     @fact plot(Int[1,2,3], rand(3)) --> not(nothing)
-#     @fact plot(sort(rand(10)), rand(Int, 10, 3)) --> not(nothing)
-#     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
-#
-#     image_comparison_facts(:gadfly, skip=[4,6,23,24,27], eps=img_eps)
-# end
-
-
 facts("GR") do
     @fact gr() --> Plots.GRBackend()
     @fact backend() --> Plots.GRBackend()
@@ -35,6 +22,13 @@ facts("PyPlot") do
     image_comparison_facts(:pyplot, eps=img_eps)
 end
 
+facts("UnicodePlots") do
+    @fact unicodeplots() --> Plots.UnicodePlotsBackend()
+    @fact backend() --> Plots.UnicodePlotsBackend()
+
+    # lets just make sure it runs without error
+    @fact isa(plot(rand(10)), Plots.Plot) --> true
+end
 
 # The plotlyjs testimages return a connection error on travis:
 # connect: connection refused (ECONNREFUSED)
@@ -105,13 +99,18 @@ end
 # end
 
 
-facts("UnicodePlots") do
-    @fact unicodeplots() --> Plots.UnicodePlotsBackend()
-    @fact backend() --> Plots.UnicodePlotsBackend()
+# facts("Gadfly") do
+#     @fact gadfly() --> Plots.GadflyBackend()
+#     @fact backend() --> Plots.GadflyBackend()
+#
+#     @fact typeof(plot(1:10)) --> Plots.Plot{Plots.GadflyBackend}
+#     @fact plot(Int[1,2,3], rand(3)) --> not(nothing)
+#     @fact plot(sort(rand(10)), rand(Int, 10, 3)) --> not(nothing)
+#     @fact plot!(rand(10,3), rand(10,3)) --> not(nothing)
+#
+#     image_comparison_facts(:gadfly, skip=[4,6,23,24,27], eps=img_eps)
+# end
 
-    # lets just make sure it runs without error
-    @fact isa(plot(rand(10)), Plots.Plot) --> true
-end
 
 
 
