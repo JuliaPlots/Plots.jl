@@ -367,7 +367,7 @@ end
 
     # widen limits out a bit
     if !(axis[:scale] in _logScales && extrema(xseg.pts)[1] <= 0)
-        expand_extrema!(axis, widen(extrema(xseg.pts)..., axis[:scale]))
+        expand_extrema!(axis, widen(ignorenan_extrema(xseg.pts)..., axis[:scale]))
     end
 
     # switch back

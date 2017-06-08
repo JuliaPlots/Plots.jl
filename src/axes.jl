@@ -370,8 +370,8 @@ function widen(lmin, lmax, scale)
     sf = scalefunc(scale)
     isf = invscalefunc(scale)
     span = sf(lmax) - sf(lmin)
-    # eps = max(1e-16, min(1e-2span, 1e-10))
-    eps = max(1e-16, 0.03span)
+    # eps = NaNMath.max(1e-16, min(1e-2span, 1e-10))
+    eps = NaNMath.max(1e-16, 0.03span)
     isf(lmin-eps), isf(lmax+eps)
 end
 
