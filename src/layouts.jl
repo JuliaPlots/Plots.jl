@@ -9,8 +9,8 @@ to_pixels(m::AbsoluteLength) = m.value / 0.254
 
 const _cbar_width = 5mm
 
-Base.:.*(m::Measure, n::Number) = m * n
-Base.:.*(n::Number, m::Measure) = m * n
+Base.broadcast(::typeof(Base.:.*), m::Measure, n::Number) = m * n
+Base.broadcast(::typeof(Base.:.*), m::Number, n::Measure) = m * n
 Base.:-(m::Measure, a::AbstractArray) = map(ai -> m - ai, a)
 Base.:-(a::AbstractArray, m::Measure) = map(ai -> ai - m, a)
 Base.zero(::Type{typeof(mm)}) = 0mm
