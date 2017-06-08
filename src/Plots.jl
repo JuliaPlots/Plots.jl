@@ -242,8 +242,10 @@ end
 const CURRENT_BACKEND = CurrentBackend(:none)
 
 function __init__()
+    # for compatibility with Requires.jl:
+    @init
+
     setup_ijulia()
-    setup_atom()
 
     if isdefined(Main, :PLOTS_DEFAULTS)
         for (k,v) in Main.PLOTS_DEFAULTS
