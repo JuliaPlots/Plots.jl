@@ -255,7 +255,6 @@ const _subplot_defaults = KW(
     :colorbar                 => :legend,
     :clims                    => :auto,
     :legendfont               => font(8),
-    :grid                     => true,
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :none,             # choose from :none or :equal
@@ -285,6 +284,7 @@ const _axis_defaults = KW(
     :discrete_values => [],
     :formatter => :auto,
     :mirror => false,
+    :grid => true,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -321,6 +321,7 @@ for letter in (:x,:y,:z)
     #             :foreground_color_guide,
     #             :discrete_values,
     #             :formatter,
+    #             :grid,
     #         )
         _axis_defaults_byletter[Symbol(letter,k)] = :match
 

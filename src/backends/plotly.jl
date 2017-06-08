@@ -213,7 +213,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
     letter = axis[:letter]
     ax = KW(
         :title      => axis[:guide],
-        :showgrid   => sp[:grid],
+        :showgrid   => axis[:grid],
         :zeroline   => false,
         :ticks      => "inside",
     )

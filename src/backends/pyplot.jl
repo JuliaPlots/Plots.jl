@@ -1056,7 +1056,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 lab[:set_family](axis[:tickfont].family)
                 lab[:set_rotation](axis[:rotation])
             end
-            if sp[:grid]
+            if axis[:grid]
                 fgcolor = py_color(sp[:foreground_color_grid])
                 pyaxis[:grid](true, color = fgcolor, linestyle = ":")
                 ax[:set_axisbelow](true)

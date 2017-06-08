@@ -84,7 +84,6 @@ const _arg_desc = KW(
 :colorbar                 => "Bool (show the colorbar?) or Symbol (colorbar position).  Symbol values: `:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:legend` (matches legend value) (note: only some may be supported in each backend)",
 :clims 					  => "`:auto` or NTuple{2,Number}.  Fixes the limits of the colorbar.",
 :legendfont               => "Font. Font of legend items.",
-:grid                     => "Bool. Show the grid lines?",
 :annotations              => "(x,y,text) tuple(s).  Can be a single tuple or a list of them.  Text can be String or PlotText (created with `text(args...)`)  Add one-off text annotations at the x,y coordinates.",
 :projection               => "Symbol or String.  '3d' or 'polar'",
 :aspect_ratio             => "Symbol (:equal) or Number. Plot area is resized so that 1 y-unit is the same size as `apect_ratio` x-units.",
@@ -111,5 +110,6 @@ const _arg_desc = KW(
 :foreground_color_text    => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of tick labels.",
 :foreground_color_guide   => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of axis guides (axis labels).",
 :mirror                   => "Bool.  Switch the side of the tick labels (right or top).",
+:grid                     => "Bool. Show grid lines?"
 
 )
