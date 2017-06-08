@@ -448,7 +448,6 @@ gr_view_ycenter() = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
 
 function gr_legend_pos(s::Symbol,w,h)
     str = string(s)
-    println(str)
     if str == "best"
         str = "topright"
     end
