@@ -446,7 +446,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         msw,msh = anns.scalefactor
         msize = Float64[]
         shapes = Shape[begin
-            str = cycle(anns.strs,i)
+            str = _cycle(anns.strs,i)
 
             # get the width and height of the string (in mm)
             sw, sh = text_size(str, anns.font.pointsize)
@@ -462,7 +462,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             # and then re-scale a copy of baseshape to match the w/h ratio
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
-            baseshape = cycle(get(anns.baseshape),i)
+            baseshape = _cycle(get(anns.baseshape),i)
             shape = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
         end for i=1:length(anns.strs)]
         series[:markershape] = shapes
@@ -479,13 +479,13 @@ end
 Base.start(ea::EachAnn) = 1
 Base.done(ea::EachAnn, i) = ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
 function Base.next(ea::EachAnn, i)
-    tmp = cycle(ea.anns.strs,i)
+    tmp = _cycle(ea.anns.strs,i)
     str,fnt = if isa(tmp, PlotText)
         tmp.str, tmp.font
     else
         tmp, ea.anns.font
     end
-    ((cycle(ea.x,i), cycle(ea.y,i), str, fnt), i+1)
+    ((_cycle(ea.x,i), _cycle(ea.y,i), str, fnt), i+1)
 end
 
 annotations(::Void) = []
