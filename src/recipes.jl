@@ -1,53 +1,4 @@
 
-
-
-"""
-You can easily define your own plotting recipes with convenience methods:
-
-```
-@userplot type GroupHist
-    args
-end
-
-@recipe function f(gh::GroupHist)
-    # set some attributes, add some series, using gh.args as input
-end
-
-# now you can plot like:
-grouphist(rand(1000,4))
-```
-"""
-macro userplot(expr)
-    _userplot(expr)
-end
-
-function _userplot(expr::Expr)
-    if expr.head != :type
-        errror("Must call userplot on a type/immutable expression.  Got: $expr")
-    end
-
-    typename = expr.args[2]
-    funcname = Symbol(lowercase(string(typename)))
-    funcname2 = Symbol(funcname, "!")
-
-    # return a code block with the type definition and convenience plotting methods
-    esc(quote
-        $expr
-        export $funcname, $funcname2
-        $funcname(args...; kw...) = plot($typename(args); kw...)
-        $funcname2(args...; kw...) = plot!($typename(args); kw...)
-    end)
-end
-
-function _userplot(sym::Symbol)
-    _userplot(:(type $sym
-            args
-    end))
-end
-
-
-# ----------------------------------------------------------------------------------
-
 const _series_recipe_deps = Dict()
 
 function series_recipe_dependencies(st::Symbol, deps::Symbol...)
@@ -96,7 +47,7 @@ end
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::Plot) = throw(MethodError("Unmatched plot recipe: $T"))
+RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::AbstractPlot) = throw(MethodError("Unmatched plot recipe: $T"))
 
 # ---------------------------------------------------------------------------
 
