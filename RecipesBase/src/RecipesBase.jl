@@ -6,7 +6,28 @@ module RecipesBase
 export
     @recipe,
     @series,
-    RecipeData
+    @userplot,
+    @shorthands,
+    RecipeData,
+    AbstractBackend,
+    AbstractPlot,
+    AbstractLayout
+
+# Common abstract types for the Plots ecosystem
+abstract type AbstractBackend end
+abstract type AbstractPlot{T<:AbstractBackend} end
+abstract type AbstractLayout end
+
+# a placeholder to establish the name so that other packages (Plots.jl for example)
+# can add their own definition of RecipesBase.plot since RecipesBase is the common
+# dependency of the Plots ecosystem
+function plot end
+
+# a placeholder to establish the name so that other packages (Plots.jl for example)
+# can add their own definition of RecipesBase.animate since RecipesBase is the common
+# dependency of the Plots ecosystem. Plots.jl will handle the basic cases, while
+# other packages can now extend for their types
+function animate end
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.is_key_supported(k::Symbol)
@@ -281,5 +302,58 @@ macro series(expr::Expr)
 end
 
 # --------------------------------------------------------------------------
+
+"""
+You can easily define your own plotting recipes with convenience methods:
+```
+@userplot type GroupHist
+    args
+end
+@recipe function f(gh::GroupHist)
+    # set some attributes, add some series, using gh.args as input
+end
+# now you can plot like:
+grouphist(rand(1000,4))
+```
+"""
+macro userplot(expr)
+    _userplot(expr)
+end
+
+function _userplot(expr::Expr)
+    if expr.head != :type
+        errror("Must call userplot on a type/immutable expression.  Got: $expr")
+    end
+
+    typename = expr.args[2]
+    funcname = Symbol(lowercase(string(typename)))
+    funcname2 = Symbol(funcname, "!")
+
+    # return a code block with the type definition and convenience plotting methods
+    esc(quote
+        $expr
+        export $funcname, $funcname2
+        $funcname(args...; kw...) = plot($typename(args); kw...)
+        $funcname2(args...; kw...) = plot!($typename(args); kw...)
+    end)
+end
+
+function _userplot(sym::Symbol)
+    _userplot(:(type $sym
+            args
+    end))
+end
+
+#----------------------------------------------------------------------------
+
+# define and export shorthand plotting method definitions
+macro shorthands(funcname::Symbol)
+    funcname2 = Symbol(funcname, "!")
+    esc(quote
+        export $funcname, $funcname2
+        $funcname(args...; kw...) = plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
+        $funcname2(args...; kw...) = plot!(args...; kw..., seriestype = $(Meta.quot(funcname)))
+    end)
+end
 
 end # module
