@@ -1,4 +1,4 @@
-__precompile__(true)
+__precompile__(false)
 
 module Plots
 
@@ -120,8 +120,11 @@ ignorenan_extrema(x) = Base.extrema(x)
 # This makes it impossible to create row vectors of String and Symbol with the transpose operator.
 # This solves this issue, internally in Plots at least.
 
-Base.transpose(x::Symbol) = x
-Base.transpose(x::String) = x
+
+# commented out on the insistence of the METADATA maintainers
+
+#Base.transpose(x::Symbol) = x
+#Base.transpose(x::String) = x
 
 # ---------------------------------------------------------
 

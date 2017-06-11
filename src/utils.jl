@@ -324,7 +324,7 @@ function replaceAliases!(d::KW, aliases::Dict{Symbol,Symbol})
   end
 end
 
-createSegments(z) = collect(repmat(z',2,1))[2:end]
+createSegments(z) = collect(repmat(reshape(z,1,:),2,1))[2:end]
 
 Base.first(c::Colorant) = c
 Base.first(x::Symbol) = x
