@@ -870,7 +870,7 @@ end
 
 # get the joined vector
 function get_xy(v::AVec{OHLC}, x = 1:length(v))
-    xdiff = 0.3ignorenan_mean(abs(diff(x)))
+    xdiff = 0.3ignorenan_mean(abs.(diff(x)))
     x_out, y_out = zeros(0), zeros(0)
     for (i,ohlc) in enumerate(v)
         ox,oy = get_xy(ohlc, x[i], xdiff)
@@ -911,7 +911,7 @@ end
 
 # "Sparsity plot... heatmap of non-zero values of a matrix"
 # function spy{T<:Real}(z::AMat{T}; kw...)
-#     mat = map(zi->float(zi!=0), z)'
+#     mat = reshape(map(zi->float(zi!=0), z),1,:)
 #     xn, yn = size(mat)
 #     heatmap(mat; leg=false, yflip=true, aspect_ratio=:equal,
 #         xlim=(0.5, xn+0.5), ylim=(0.5, yn+0.5),
@@ -1005,7 +1005,7 @@ end
     end
 
     library = PlotUtils.color_libraries[cl.args[1]]
-    z = sqrt.((1:15)*(1:20)')
+    z = sqrt.((1:15)*reshape(1:20,1,:))
 
     seriestype := :heatmap
     ticks := nothing
@@ -1029,7 +1029,7 @@ end
     if !(length(grad.args) == 1 && isa(grad.args[1], Symbol))
         error("showgradient takes the name of a color gradient as a Symbol")
     end
-    z = sqrt.((1:15)*(1:20)')
+    z = sqrt.((1:15)*reshape(1:20,1,:))
     seriestype := :heatmap
     ticks := nothing
     legend := false

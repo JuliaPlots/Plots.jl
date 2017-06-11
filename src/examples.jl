@@ -130,7 +130,7 @@ PlotExample("Marker types",
         markers = reshape(markers, 1, length(markers))
         n = length(markers)
         x = linspace(0,10,n+2)[2:end-1]
-        y = repmat(reverse(x)', n, 1)
+        y = repmat(reshape(reverse(x),1,:), n, 1)
         scatter(x, y, m=(8,:auto), lab=map(string,markers), bg=:linen, xlim=(0,10), ylim=(0,10))
     end)]
 ),
@@ -216,7 +216,7 @@ PlotExample("Contours",
         x = 1:0.5:20
         y = 1:0.5:10
         f(x,y) = (3x+y^2)*abs(sin(x)+cos(y))
-        X = repmat(x', length(y), 1)
+        X = repmat(reshape(x,1,:), length(y), 1)
         Y = repmat(y, 1, length(x))
         Z = map(f, X, Y)
         p1 = contour(x, y, f, fill=true)
@@ -280,7 +280,7 @@ PlotExample("Heatmap, categorical axes, and aspect_ratio",
     [:(begin
         xs = [string("x",i) for i=1:10]
         ys = [string("y",i) for i=1:4]
-        z = float((1:4)*(1:10)')
+        z = float((1:4)*reshape(1:10,1,:))
         heatmap(xs, ys, z, aspect_ratio=1)
     end)]
 ),
