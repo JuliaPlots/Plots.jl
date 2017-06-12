@@ -1221,7 +1221,7 @@ function _update_plot_object(plt::Plot{PyPlotBackend})
             cbw = sp.attr[:cbar_width]
             # this is the bounding box of just the colors of the colorbar (not labels)
             has_toplabel = sp[:zaxis][:extrema].emax >= 1e7
-            cb_bbox = BoundingBox(right(sp.bbox)-cbw+1mm, top(sp.bbox) +  (has_toplabel ? 4mm : 2mm), _cbar_width-1mm, height(sp.bbox) - (has_toplabel ? 8mm : 4mm))
+            cb_bbox = BoundingBox(right(sp.bbox)-cbw+1mm, top(sp.bbox) +  (has_toplabel ? 4mm : 2mm), _cbar_width-1mm, height(sp.bbox) - (has_toplabel ? 6mm : 4mm))
             pcts = bbox_to_pcts(cb_bbox, figw, figh)
             sp.attr[:cbar_ax][:set_position](pcts)
         end
