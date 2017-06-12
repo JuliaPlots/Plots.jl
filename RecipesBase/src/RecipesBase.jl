@@ -101,8 +101,8 @@ function create_kw_body(func_signature::Expr)
     if isa(args[1], Expr) && args[1].head == :parameters
         for kwpair in args[1].args
             k, v = kwpair.args
-            push!(kw_body.args, :($k = get!(d, $(QuoteNode(k)), $v)))
-            push!(cleanup_body.args, :(RecipesBase.is_key_supported($(QuoteNode(k))) || delete!(d, $(QuoteNode(k)))))
+            push!(kw_body.args, :($k = get!($PLOTATTRIBUTES, $(QuoteNode(k)), $v)))
+            push!(cleanup_body.args, :(RecipesBase.is_key_supported($(QuoteNode(k))) || delete!($PLOTATTRIBUTES, $(QuoteNode(k)))))
         end
         args = args[2:end]
     end
@@ -155,10 +155,10 @@ function process_recipe_body!(expr::Expr)
 
                 set_expr = if force
                     # forced override user settings
-                    :(d[$k] = $v)
+                    :($PLOTATTRIBUTES[$k] = $v)
                 else
                     # if the user has set this keyword, use theirs
-                    :(get!(d, $k, $v))
+                    :(get!($PLOTATTRIBUTES, $k, $v))
                 end
 
                 expr.args[i] = if quiet
@@ -182,6 +182,20 @@ function process_recipe_body!(expr::Expr)
     end
 end
 
+# PLOTATTRIBUTES_OLD and_replace can be removed after d for accessing plot attributes is
+# is not supported anymore
+const PLOTATTRIBUTES = :plotattributes
+const PLOTATTRIBUTES_OLD = :d
+_replace(ex, old, new) = _replace(ex, 0, old, new)
+_replace(ex, n, old, new) = (ex == old) ? (new, n+1) : (ex, n)
+function _replace(ex::Expr, n, old, new)
+    new_args = []
+    for old_arg in ex.args
+        new_arg, n = _replace(old_arg, n, old, new)
+        push!(new_args, new_arg)
+    end
+    Expr(ex.head, new_args...), n
+end
 # --------------------------------------------------------------------------
 
 """
@@ -233,8 +247,15 @@ number of series to display.  User-defined keyword arguments are passed through,
 - force:   Don't allow user override for this keyword
 """
 macro recipe(funcexpr::Expr)
+    funcexpr, n_depr = _replace(funcexpr, PLOTATTRIBUTES_OLD, PLOTATTRIBUTES)
     func_signature, func_body = funcexpr.args
 
+    if n_depr > 0
+        msg = "Usage of `$PLOTATTRIBUTES_OLD` for accessing plot attributes is deprecated. Found $n_depr usages of `$PLOTATTRIBUTES_OLD` inside `@recipe`. Use `$PLOTATTRIBUTES` instead.\n"
+        deprecation_body = :(Base.depwarn($msg, :d))
+    else
+        deprecation_body = :()
+    end
     if !(funcexpr.head in (:(=), :function))
         error("Must wrap a valid function call!")
     end
@@ -255,6 +276,7 @@ macro recipe(funcexpr::Expr)
 
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
     # we are creating a vector of RecipeData objects, one per series.
+<<<<<<< HEAD
     funcdef = Expr(:function, func, esc(quote
         if RecipesBase._debug_recipes[1]
             println("apply_recipe args: ", $args)
@@ -269,6 +291,24 @@ macro recipe(funcexpr::Expr)
         series_list
     end))
     funcdef
+=======
+    funcdef = esc(quote
+        $deprecation_body
+        function $func($PLOTATTRIBUTES::Dict{Symbol,Any}, $(args...))
+            if RecipesBase._debug_recipes[1]
+                println("apply_recipe args: ", $args)
+            end
+            $kw_body
+            $cleanup_body
+            series_list = RecipesBase.RecipeData[]
+            func_return = $func_body
+            if func_return != nothing
+                push!(series_list, RecipesBase.RecipeData($PLOTATTRIBUTES, RecipesBase.wrap_tuple(func_return)))
+            end
+            series_list
+        end
+    end)
+>>>>>>> 4b4a501... replace d by plotattribues
 end
 
 
@@ -298,9 +338,9 @@ end
 """
 macro series(expr::Expr)
     esc(quote
-        let d = copy(d)
+        let $PLOTATTRIBUTES = copy($PLOTATTRIBUTES)
             args = $expr
-            push!(series_list, RecipesBase.RecipeData(d, RecipesBase.wrap_tuple(args)))
+            push!(series_list, RecipesBase.RecipeData($PLOTATTRIBUTES, RecipesBase.wrap_tuple(args)))
             nothing
         end
     end)
