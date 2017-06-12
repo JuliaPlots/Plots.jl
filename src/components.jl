@@ -297,10 +297,31 @@ function scalefontsize(k::Symbol, factor::Number)
     f.pointsize = round(Int, factor * f.pointsize)
     default(k, f)
 end
+
+"""
+    scalefontsizes(factor::Number)
+
+Scales all **current** font sizes by `factor`. For example `scalefontsizes(1.1)` increases all current font sizes by 10%. To reset to initial sizes, use `scalefontsizes()`
+"""
 function scalefontsizes(factor::Number)
     for k in (:titlefont, :guidefont, :tickfont, :legendfont)
         scalefontsize(k, factor)
     end
+end
+
+"""
+    scalefontsizes()
+
+Resets font sizes to initial default values.
+"""
+function scalefontsizes()
+  for k in (:titlefont, :guidefont, :tickfont, :legendfont)
+      f = default(k)
+      if k in keys(_initial_fontsizes)
+        factor = f.pointsize / _initial_fontsizes[k]
+        scalefontsize(k, 1.0/factor)
+      end
+  end
 end
 
 "Wrap a string with font info"

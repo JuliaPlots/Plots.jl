@@ -336,6 +336,12 @@ const _all_defaults = KW[
     _axis_defaults_byletter
 ]
 
+# to be able to reset font sizes to initial values
+const _initial_fontsizes = Dict(:titlefont  => _subplot_defaults[:titlefont].pointsize,
+                                :legendfont => _subplot_defaults[:legendfont].pointsize,
+                                :tickfont   => _axis_defaults[:tickfont].pointsize,
+                                :guidefont  => _axis_defaults[:guidefont].pointsize)
+
 const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
 
 RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
@@ -520,7 +526,6 @@ end
 function default(d::KW, k::Symbol)
     get(d, k, default(k))
 end
-
 
 
 # -----------------------------------------------------------------------------
