@@ -768,7 +768,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :heatmap
-        x, y, z = heatmap_edges(x), heatmap_edges(y), transpose_z(series, z.surf)
+        x, y, z = heatmap_edges(x, sp[:xaxis][:scale]), heatmap_edges(y, sp[:yaxis][:scale]), transpose_z(series, z.surf)
 
         expand_extrema!(sp[:xaxis], x)
         expand_extrema!(sp[:yaxis], y)

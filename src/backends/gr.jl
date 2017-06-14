@@ -585,7 +585,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
         if st == :heatmap
             outside_ticks = true
-            x, y = heatmap_edges(series[:x]), heatmap_edges(series[:y])
+            x, y = heatmap_edges(series[:x], sp[:xaxis][:scale]), heatmap_edges(series[:y], sp[:yaxis][:scale])
             expand_extrema!(sp[:xaxis], x)
             expand_extrema!(sp[:yaxis], y)
             data_lims = gr_xy_axislims(sp)
