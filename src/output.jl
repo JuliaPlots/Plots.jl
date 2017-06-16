@@ -283,22 +283,20 @@ using Requires
     import Hiccup, Media
     Media.media(Plot, Media.Plot)
 
-    # default text/plain so it doesn't complain
-    function Base.show{B}(io::IO, ::MIME"text/plain", plt::Plot{B})
-        print(io, "Plot{$B}()")
-    end
-
     function Juno.render(e::Juno.Editor, plt::Plot)
         Juno.render(e, nothing)
     end
 
     if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", true) in (true, 1, "1", "true", "yes")
-        # this is like "display"... sends an html div with the plot to the PlotPane
         function Juno.render(pane::Juno.PlotPane, plt::Plot)
             # temporarily overwrite size to be Atom.plotsize
             sz = plt[:size]
+            jsize = Juno.plotsize()
+            jsize[1] == 0 && (jsize[1] = 400)
+            jsize[2] == 0 && (jsize[2] = 500)
+
             plt[:size] = Juno.plotsize()
-            Juno.render(pane, Hiccup.div(".fill", HTML(stringmime(MIME("text/html"), plt))))
+            Juno.render(pane, HTML(stringmime(MIME("text/html"), plt)))
             plt[:size] = sz
         end
         # special handling for PlotlyJS
@@ -309,7 +307,7 @@ using Requires
         function Juno.render(pane::Juno.PlotPane, plt::Plot)
             display(Plots.PlotsDisplay(), plt)
             s = "PlotPane turned off.  Unset ENV[\"PLOTS_USE_ATOM_PLOTPANE\"] and restart Julia to enable it."
-            Juno.render(pane, Hiccup.div(HTML(s)))
+            Juno.render(pane, HTML(s))
         end
     end
 
@@ -317,6 +315,6 @@ using Requires
     function Juno.render(pane::Juno.PlotPane, plt::Plot{PlotlyBackend})
         display(Plots.PlotsDisplay(), plt)
         s = "PlotPane turned off.  The plotly backend cannot render in the PlotPane due to javascript issues. Plotlyjs is similar to plotly and is compatible with the plot pane."
-        Juno.render(pane, Hiccup.div(HTML(s)))
+        Juno.render(pane, HTML(s))
     end
 end
