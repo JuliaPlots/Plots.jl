@@ -220,7 +220,7 @@ if is_installed("FileIO")
         FileIO.save(pngfn, s)
 
         # now write from the file
-        write(io, readall(open(pngfn)))
+        write(io, readstring(open(pngfn)))
     end
 end
 
