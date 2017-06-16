@@ -362,30 +362,29 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
         a.xlabel = xaxis[:guide]; a.ylabels = [yaxis[:guide]]
 
     l = plot.layout
-        l.frame.fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
-        l.framedata.fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
-        l.framedata.line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
-        l.fnttitle = InspectDR.Font(sp[:titlefont].family,
+        l[:frame_canvas].fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
+        l[:frame_data].fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
+        l[:frame_data].line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
+        l[:font_title] = InspectDR.Font(sp[:titlefont].family,
             _inspectdr_mapptsize(sp[:titlefont].pointsize),
             color = _inspectdr_mapcolor(sp[:foreground_color_title])
         )
         #Cannot independently control fonts of axes with InspectDR:
-        l.fntaxlabel = InspectDR.Font(xaxis[:guidefont].family,
+        l[:font_axislabel] = InspectDR.Font(xaxis[:guidefont].family,
             _inspectdr_mapptsize(xaxis[:guidefont].pointsize),
             color = _inspectdr_mapcolor(xaxis[:foreground_color_guide])
         )
-        l.fntticklabel = InspectDR.Font(xaxis[:tickfont].family,
+        l[:font_ticklabel] = InspectDR.Font(xaxis[:tickfont].family,
             _inspectdr_mapptsize(xaxis[:tickfont].pointsize),
             color = _inspectdr_mapcolor(xaxis[:foreground_color_text])
         )
-    leg = l.legend
-        leg.enabled = (sp[:legend] != :none)
-        #leg.width = 150 #TODO: compute???
-        leg.font = InspectDR.Font(sp[:legendfont].family,
+        l[:enable_legend] = (sp[:legend] != :none)
+        #l[:halloc_legend] = 150 #TODO: compute???
+        l[:font_legend] = InspectDR.Font(sp[:legendfont].family,
             _inspectdr_mapptsize(sp[:legendfont].pointsize),
             color = _inspectdr_mapcolor(sp[:foreground_color_legend])
         )
-        leg.frame.fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
+        l[:frame_legend].fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
 end
 
 # called just before updating layout bounding boxes... in case you need to prep
@@ -399,7 +398,7 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
         #Don't use window_title... probably not what you want.
         #mplot.title = plt[:window_title]
     end
-    mplot.frame.fillcolor = _inspectdr_mapcolor(plt[:background_color_outside])
+    mplot.layout[:frame].fillcolor = _inspectdr_mapcolor(plt[:background_color_outside])
 
     resize!(mplot.subplots, length(plt.subplots))
     nsubplots = length(plt.subplots)
@@ -421,15 +420,15 @@ function _before_layout_calcs(plt::Plot{InspectDRBackend})
     #Do not yet support absolute plot positionning.
     #Just try to make things look more-or less ok:
     if nsubplots <= 1
-        mplot.ncolumns = 1
+        mplot.layout[:ncolumns] = 1
     elseif nsubplots <= 4
-        mplot.ncolumns = 2
+        mplot.layout[:ncolumns] = 2
     elseif nsubplots <= 6
-        mplot.ncolumns = 3
+        mplot.layout[:ncolumns] = 3
     elseif nsubplots <= 12
-        mplot.ncolumns = 4
+        mplot.layout[:ncolumns] = 4
     else
-        mplot.ncolumns = 5
+        mplot.layout[:ncolumns] = 5
     end
 
     for series in plt.series_list
@@ -446,7 +445,7 @@ function _update_min_padding!(sp::Subplot{InspectDRBackend})
     plot = sp.o
     if !isa(plot, InspectDR.Plot2D); return sp.minpad; end
     #Computing plotbounds with 0-BoundingBox returns required padding:
-    bb = InspectDR.plotbounds(plot.layout, InspectDR.BoundingBox(0,0,0,0))
+    bb = InspectDR.plotbounds(plot.layout.values, InspectDR.BoundingBox(0,0,0,0))
     #NOTE: plotbounds always pads for titles, legends, etc. even if not in use.
     #TODO: possibly zero-out items not in use??
 
@@ -468,7 +467,7 @@ function _update_plot_object(plt::Plot{InspectDRBackend})
     for (i, sp) in enumerate(plt.subplots)
         graphbb = _inspectdr_to_pixels(plotarea(sp))
         plot = mplot.subplots[i]
-        plot.plotbb = InspectDR.plotbounds(plot.layout, graphbb)
+        plot.plotbb = InspectDR.plotbounds(plot.layout.values, graphbb)
     end
 
     gplot = _inspectdr_getgui(plt.o)
