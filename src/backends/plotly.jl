@@ -479,6 +479,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:type] = "heatmap"
         # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
         d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+        d_out[:showscale] = sp[:legend] != :none
 
     elseif st == :contour
         d_out[:type] = "contour"
@@ -487,6 +488,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:ncontours] = series[:levels]
         d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines")
         d_out[:colorscale] = plotly_colorscale(series[:linecolor], series[:linealpha])
+        d_out[:showscale] = sp[:legend] != :none
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
@@ -504,6 +506,7 @@ function plotly_series(plt::Plot, series::Series)
             if series[:fill_z] != nothing
                 d_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
             end
+            d_out[:showscale] = sp[:legend] != :none
         end
 
     elseif st == :pie
