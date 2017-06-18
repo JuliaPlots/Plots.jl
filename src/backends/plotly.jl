@@ -501,6 +501,7 @@ function plotly_series(plt::Plot, series::Series)
                 :highlightwidth => series[:linewidth],
             )
             d_out[:contours] = KW(:x => wirelines, :y => wirelines, :z => wirelines)
+            d_out[:showscale] = false
         else
             d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
             if series[:fill_z] != nothing
