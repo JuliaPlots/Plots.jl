@@ -873,6 +873,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             cmap && gr_colorbar(sp)
 
         elseif st == :heatmap
+            xmin, xmax, ymin, ymax = data_lims
             zmin, zmax = gr_lims(zaxis, true)
             clims = sp[:clims]
             if is_2tuple(clims)
@@ -887,7 +888,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                                     round(Int, green(c) * 255) << 8  +
                                     round(Int,   red(c) * 255) ), colors)
             w, h = length(x), length(y)
-            GR.drawimage(0.5, w + 0.5, h + 0.5, 0.5, w, h, rgba)
+            GR.drawimage(xmin - 0.5 * (xmax - xmin) / (w - 1),
+                         xmax + 0.5 * (xmax - xmin) / (w - 1),
+                         ymax + 0.5 * (ymax - ymin) / (h - 1),
+                         ymin - 0.5 * (ymax - ymin) / (h - 1), w, h, rgba)
             cmap && gr_colorbar(sp)
 
         elseif st in (:path3d, :scatter3d)
