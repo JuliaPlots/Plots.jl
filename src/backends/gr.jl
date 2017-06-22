@@ -544,6 +544,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     viewport_plotarea[:] = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
     # get data limits
     data_lims = gr_xy_axislims(sp)
+    xy_lims = data_lims
 
     ratio = sp[:aspect_ratio]
     if ratio != :none
@@ -586,6 +587,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if st == :heatmap
             outside_ticks = true
             x, y = heatmap_edges(series[:x]), heatmap_edges(series[:y])
+            xy_lims = x[1], x[end], y[1], y[end]
             expand_extrema!(sp[:xaxis], x)
             expand_extrema!(sp[:yaxis], y)
             data_lims = gr_xy_axislims(sp)
@@ -873,7 +875,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             cmap && gr_colorbar(sp)
 
         elseif st == :heatmap
-            xmin, xmax, ymin, ymax = data_lims
+            xmin, xmax, ymin, ymax = xy_lims
             zmin, zmax = gr_lims(zaxis, true)
             clims = sp[:clims]
             if is_2tuple(clims)
@@ -888,10 +890,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                                     round(Int, green(c) * 255) << 8  +
                                     round(Int,   red(c) * 255) ), colors)
             w, h = length(x), length(y)
-            GR.drawimage(xmin - 0.5 * (xmax - xmin) / (w - 1),
-                         xmax + 0.5 * (xmax - xmin) / (w - 1),
-                         ymax + 0.5 * (ymax - ymin) / (h - 1),
-                         ymin - 0.5 * (ymax - ymin) / (h - 1), w, h, rgba)
+            GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
             cmap && gr_colorbar(sp)
 
         elseif st in (:path3d, :scatter3d)
