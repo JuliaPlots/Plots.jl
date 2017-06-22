@@ -970,11 +970,11 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Dates
 
-dateformatter(dt) = string(convert(Date, dt))
-datetimeformatter(dt) = string(convert(DateTime, dt))
+dateformatter(dt) = string(Date(Dates.UTD(dt)))
+datetimeformatter(dt) = string(DateTime(Dates.UTM(dt)))
 
-@recipe f(::Type{Date}, dt::Date) = (dt -> convert(Int, dt), dateformatter)
-@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> convert(Int, dt), datetimeformatter)
+@recipe f(::Type{Date}, dt::Date) = (dt -> Dates.value(dt), dateformatter)
+@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> Dates.value(dt), datetimeformatter)
 
 # -------------------------------------------------
 # Complex Numbers
