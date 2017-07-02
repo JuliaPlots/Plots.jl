@@ -493,8 +493,14 @@ function make_fillrange_from_ribbon(kw::KW)
     y, rib = kw[:y], kw[:ribbon]
     rib = wraptuple(rib)
     rib1, rib2 = -first(rib), last(rib)
-    kw[:ribbon] = nothing
+    # kw[:ribbon] = nothing
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
+end
+
+# check if series has a ribbon
+function has_ribbon(series::Series)
+    series[:ribbon] == nothing && return false
+    return series[:ribbon] > 0
 end
 
 function get_sp_lims(sp::Subplot, letter::Symbol)

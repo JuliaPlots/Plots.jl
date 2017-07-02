@@ -1049,7 +1049,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
                 gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
-                if st == :path && series[:fillrange] == nothing
+                if st == :path && (series[:fillrange] == nothing || has_ribbon(series))
                     GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
                 elseif st == :shape || series[:fillrange] != nothing
                     gr_set_fill(series[:fillcolor]) #, series[:fillalpha])
