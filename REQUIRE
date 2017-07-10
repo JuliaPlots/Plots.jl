@@ -4,7 +4,7 @@ RecipesBase 0.2.0
 PlotUtils 0.4.1
 PlotThemes 0.1.3
 Reexport
-FixedSizeArrays
+StaticArrays 0.5
 FixedPointNumbers 0.3
 Measures
 Showoff
