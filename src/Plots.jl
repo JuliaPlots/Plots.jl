@@ -3,7 +3,10 @@ __precompile__(true)
 module Plots
 
 using Reexport
+
+import StaticArrays
 using StaticArrays.FixedSizeArrays
+
 @reexport using RecipesBase
 import RecipesBase: plot, animate
 using Base.Meta

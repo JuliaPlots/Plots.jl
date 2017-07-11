@@ -58,7 +58,7 @@ const _glvisualize_scale = [:identity, :ln, :log2, :log10]
 function _initialize_backend(::GLVisualizeBackend; kw...)
     @eval begin
         import GLVisualize, GeometryTypes, Reactive, GLAbstraction, GLWindow, Contour
-        import GeometryTypes: Point2f0, Point3f0, Vec2f0, Vec3f0, GLNormalMesh, SimpleRectangle
+        import GeometryTypes: Point2f0, Point3f0, Vec2f0, Vec3f0, GLNormalMesh, SimpleRectangle, Point, Vec
         import FileIO, Images
         export GLVisualize
         import Reactive: Signal
@@ -173,12 +173,12 @@ function gl_marker(shape)
     shape
 end
 function gl_marker(shape::Shape)
-    points = Point2f0[Vec{2,Float32}(p) for p in zip(shape.x, shape.y)]
+    points = Point2f0[GeometryTypes.Vec{2, Float32}(p) for p in zip(shape.x, shape.y)]
     bb = GeometryTypes.AABB(points)
     mini, maxi = minimum(bb), maximum(bb)
     w3 = maxi-mini
     origin, width = Point2f0(mini[1], mini[2]), Point2f0(w3[1], w3[2])
-    map!(p -> ((p - origin) ./ width) - 0.5f0, points) # normalize and center
+    map!(p -> ((p - origin) ./ width) - 0.5f0, points, points) # normalize and center
     GeometryTypes.GLNormalMesh(points)
 end
 # create a marker/shape type
@@ -212,13 +212,13 @@ function extract_limits(sp, d, kw_args)
     nothing
 end
 
-to_vec{T <: FixedVector}(::Type{T}, vec::T) = vec
-to_vec{T <: FixedVector}(::Type{T}, s::Number) = T(s)
+to_vec{T <: StaticArrays.StaticVector}(::Type{T}, vec::T) = vec
+to_vec{T <: StaticArrays.StaticVector}(::Type{T}, s::Number) = T(s)
 
-to_vec{T <: FixedVector{2}}(::Type{T}, vec::FixedVector{3}) = T(vec[1], vec[2])
-to_vec{T <: FixedVector{3}}(::Type{T}, vec::FixedVector{2}) = T(vec[1], vec[2], 0)
+to_vec{T <: StaticArrays.StaticVector{2}}(::Type{T}, vec::StaticArrays.StaticVector{3}) = T(vec[1], vec[2])
+to_vec{T <: StaticArrays.StaticVector{3}}(::Type{T}, vec::StaticArrays.StaticVector{2}) = T(vec[1], vec[2], 0)
 
-to_vec{T <: FixedVector}(::Type{T}, vecs::AbstractVector) = map(x-> to_vec(T, x), vecs)
+to_vec{T <: StaticArrays.StaticVector}(::Type{T}, vecs::AbstractVector) = map(x-> to_vec(T, x), vecs)
 
 function extract_marker(d, kw_args)
     dim = Plots.is3d(d) ? 3 : 2
@@ -274,7 +274,7 @@ function extract_surface(d)
     map(_extract_surface, (d[:x], d[:y], d[:z]))
 end
 function topoints{P}(::Type{P}, array)
-    P[x for x in zip(array...)]
+    [P(x) for x in zip(array...)]
 end
 function extract_points(d)
     dim = is3d(d) ? 3 : 2
@@ -576,8 +576,10 @@ end
 
 function align_offset(startpos, lastpos, atlas, rscale, font, align)
     xscale, yscale = GLVisualize.glyph_scale!('X', rscale)
-    xmove = (lastpos-startpos)[1]+xscale
-    if align == :top
+    xmove = (lastpos-startpos)[1] + xscale
+    if isa(align, GeometryTypes.Vec)
+        return -Vec2f0(xmove, yscale) .* align
+    elseif align == :top
         return -Vec2f0(xmove/2f0, yscale)
     elseif align == :right
         return -Vec2f0(xmove, yscale/2f0)
@@ -586,11 +588,6 @@ function align_offset(startpos, lastpos, atlas, rscale, font, align)
     end
 end
 
-function align_offset(startpos, lastpos, atlas, rscale, font, align::Vec)
-    xscale, yscale = GLVisualize.glyph_scale!('X', rscale)
-    xmove = (lastpos-startpos)[1] + xscale
-    return -Vec2f0(xmove, yscale) .* align
-end
 
 function alignment2num(x::Symbol)
     (x in (:hcenter, :vcenter)) && return 0.5
@@ -638,7 +635,7 @@ function draw_ticks(
         position = GLVisualize.calc_position(str, startpos, sz, font, atlas)
         offset = GLVisualize.calc_offset(str, sz, font, atlas)
         alignoff = align_offset(startpos, last(position), atlas, sz, font, align)
-        map!(position) do pos
+        map!(position, position) do pos
             pos .+ alignoff
         end
         append!(positions, position)
@@ -660,7 +657,7 @@ function glvisualize_text(position, text, kw_args)
     offset = GLVisualize.calc_offset(text.str, rscale, font, atlas)
     alignoff = align_offset(startpos, last(position), atlas, rscale, font, text_align)
 
-    map!(position) do pos
+    map!(position, position) do pos
         pos .+ alignoff
     end
     kw_args[:position] = position
@@ -1122,7 +1119,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
             anns = series[:series_annotations]
             for (x, y, str, font) in EachAnn(anns, d[:x], d[:y])
                 txt_args = Dict{Symbol, Any}(:model => eye(GLAbstraction.Mat4f0))
-                x, y = Reactive.value(model_m) * Vec{4, Float32}(x, y, 0, 1)
+                x, y = Reactive.value(model_m) * GeometryTypes.Vec{4, Float32}(x, y, 0, 1)
                 extract_font(font, txt_args)
                 t = glvisualize_text(Point2f0(x, y), PlotText(str, font), txt_args)
                 GLVisualize._view(t, sp_screen, camera = :perspective)
@@ -1309,8 +1306,8 @@ function gl_contour(x, y, z, kw_args)
     if kw_args[:fillrange] != nothing
 
         delete!(kw_args, :intensity)
-        I = GLVisualize.Intensity{1, Float32}
-        main = I[z[j,i] for i=1:size(z, 2), j=1:size(z, 1)]
+        I = GLVisualize.Intensity{Float32}
+        main = [I(z[j,i]) for i=1:size(z, 2), j=1:size(z, 1)]
         return visualize(main, Style(:default), kw_args)
 
     else
@@ -1342,7 +1339,7 @@ function gl_heatmap(x,y,z, kw_args)
     get!(kw_args, :color_norm, Vec2f0(ignorenan_extrema(z)))
     get!(kw_args, :color_map, Plots.make_gradient(cgrad()))
     delete!(kw_args, :intensity)
-    I = GLVisualize.Intensity{1, Float32}
+    I = GLVisualize.Intensity{Float32}
     heatmap = I[z[j,i] for i=1:size(z, 2), j=1:size(z, 1)]
     tex = GLAbstraction.Texture(heatmap, minfilter=:nearest)
     kw_args[:stroke_width] = 0f0
