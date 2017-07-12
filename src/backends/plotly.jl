@@ -435,6 +435,7 @@ function plotly_series(plt::Plot, series::Series)
     isscatter = st in (:scatter, :scatter3d, :scattergl)
     hasmarker = isscatter || series[:markershape] != :none
     hasline = st in (:path, :path3d)
+    hasfillrange = st in (:path, :scatter, :scattergl) && isa(series[:fillrange], AbstractVector)
 
     # for surface types, set the data
     if st in (:heatmap, :contour, :surface, :wireframe)
@@ -461,8 +462,11 @@ function plotly_series(plt::Plot, series::Series)
         if series[:fillrange] == true || series[:fillrange] == 0
             d_out[:fill] = "tozeroy"
             d_out[:fillcolor] = rgba_string(series[:fillcolor])
+        elseif isa(series[:fillrange], AbstractVector)
+            d_out[:fill] = "tonexty"
+            d_out[:fillcolor] = rgba_string(series[:fillcolor])
         elseif !(series[:fillrange] in (false, nothing))
-            warn("fillrange ignored... plotly only supports filling to zero. fillrange: $(series[:fillrange])")
+            warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
         end
         d_out[:x], d_out[:y] = x, y
 
@@ -576,7 +580,18 @@ function plotly_series(plt::Plot, series::Series)
     plotly_polar!(d_out, series)
     plotly_hover!(d_out, series[:hover])
 
-    [d_out]
+    if hasfillrange
+        # if hasfillrange is true, return two dictionaries (one for original
+        # series, one for series being filled to) instead of one
+        d_out_fillrange = copy(d_out)
+        d_out_fillrange[:y] = series[:fillrange]
+        delete!(d_out_fillrange, :fill)
+        delete!(d_out_fillrange, :fillcolor)
+
+        return [d_out_fillrange, d_out]
+    else
+        return [d_out]
+    end
 end
 
 function plotly_series_shapes(plt::Plot, series::Series)
