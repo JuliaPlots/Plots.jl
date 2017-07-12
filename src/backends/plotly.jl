@@ -585,6 +585,7 @@ function plotly_series(plt::Plot, series::Series)
         # series, one for series being filled to) instead of one
         d_out_fillrange = copy(d_out)
         d_out_fillrange[:y] = series[:fillrange]
+        d_out_fillrange[:showlegend] = false
         delete!(d_out_fillrange, :fill)
         delete!(d_out_fillrange, :fillcolor)
 
