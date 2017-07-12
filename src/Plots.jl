@@ -245,8 +245,6 @@ function __init__()
     # for compatibility with Requires.jl:
     @init
 
-    setup_ijulia()
-
     if isdefined(Main, :PLOTS_DEFAULTS)
         for (k,v) in Main.PLOTS_DEFAULTS
             default(k, v)
