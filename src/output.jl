@@ -295,7 +295,7 @@ end
                 jsize[1] == 0 && (jsize[1] = 400)
                 jsize[2] == 0 && (jsize[2] = 500)
 
-                plt[:size] = Juno.plotsize()
+                plt[:size] = jsize
                 Juno.render(pane, HTML(stringmime(MIME("text/html"), plt)))
                 plt[:size] = sz
             end
