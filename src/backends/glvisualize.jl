@@ -66,9 +66,8 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         import GLVisualize: visualize
         import Plots.GL
         import UnicodeFun
-        Plots.slice_arg(img::Images.AbstractImage, idx::Int) = img
+        Plots.slice_arg{C<:Colorant}(img::Matrix{C}, idx::Int) = img
         is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
-        is_marker_supported{Img<:Images.AbstractImage}(::GLVisualizeBackend, shape::Union{Vector{Img}, Img}) = true
         is_marker_supported{C<:Colorant}(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) = true
         is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
         const GL = Plots
@@ -1145,10 +1144,7 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})
     GLWindow.render_frame(GLWindow.rootscreen(plt.o))
     GLWindow.swapbuffers(plt.o)
     buff = GLWindow.screenbuffer(plt.o)
-    png = Images.Image(map(RGB{U8}, buff),
-        colorspace = "sRGB",
-        spatialorder = ["y", "x"]
-    )
+    png = map(RGB{U8}, buff)
     FileIO.save(FileIO.Stream(FileIO.DataFormat{:PNG}, io), png)
 end
 
