@@ -241,10 +241,8 @@ end
 
 const CURRENT_BACKEND = CurrentBackend(:none)
 
-function __init__()
-    # for compatibility with Requires.jl:
-    @init
-
+# for compatibility with Requires.jl:
+@init begin
     if isdefined(Main, :PLOTS_DEFAULTS)
         for (k,v) in Main.PLOTS_DEFAULTS
             default(k, v)
