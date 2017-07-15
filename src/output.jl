@@ -284,7 +284,7 @@ end
         Media.media(Plot, Media.Plot)
 
 
-        _show{B}(io::IO, m::MIME"text/plain", plt::Plot{B}) = show(io, m, plt)
+        _show{B}(io::IO, m::MIME"text/plain", plt::Plot{B}) = print(io, "Plot{$B}()")
 
         function Juno.render(e::Juno.Editor, plt::Plot)
             Juno.render(e, nothing)
