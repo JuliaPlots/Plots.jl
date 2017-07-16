@@ -703,7 +703,7 @@ end
 
 function error_coords(xorig, yorig, ebar)
     # init empty x/y, and zip errors if passed Tuple{Vector,Vector}
-    x, y = Array(float_extended_type(xorig), 0), Array(Float64, 0)
+    x, y = Array{float_extended_type(xorig)}(0), Array{Float64}(0)
     # for each point, create a line segment from the bottom to the top of the errorbar
     for i = 1:max(length(xorig), length(yorig))
         xi = _cycle(xorig, i)
@@ -970,11 +970,11 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 # -------------------------------------------------
 # Dates
 
-dateformatter(dt) = string(convert(Date, dt))
-datetimeformatter(dt) = string(convert(DateTime, dt))
+dateformatter(dt) = string(Date(Dates.UTD(dt)))
+datetimeformatter(dt) = string(DateTime(Dates.UTM(dt)))
 
-@recipe f(::Type{Date}, dt::Date) = (dt -> convert(Int, dt), dateformatter)
-@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> convert(Int, dt), datetimeformatter)
+@recipe f(::Type{Date}, dt::Date) = (dt -> Dates.value(dt), dateformatter)
+@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> Dates.value(dt), datetimeformatter)
 
 # -------------------------------------------------
 # Complex Numbers

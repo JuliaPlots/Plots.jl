@@ -435,6 +435,7 @@ function plotly_series(plt::Plot, series::Series)
     isscatter = st in (:scatter, :scatter3d, :scattergl)
     hasmarker = isscatter || series[:markershape] != :none
     hasline = st in (:path, :path3d)
+    hasfillrange = st in (:path, :scatter, :scattergl) && isa(series[:fillrange], AbstractVector)
 
     # for surface types, set the data
     if st in (:heatmap, :contour, :surface, :wireframe)
@@ -461,8 +462,11 @@ function plotly_series(plt::Plot, series::Series)
         if series[:fillrange] == true || series[:fillrange] == 0
             d_out[:fill] = "tozeroy"
             d_out[:fillcolor] = rgba_string(series[:fillcolor])
+        elseif isa(series[:fillrange], AbstractVector)
+            d_out[:fill] = "tonexty"
+            d_out[:fillcolor] = rgba_string(series[:fillcolor])
         elseif !(series[:fillrange] in (false, nothing))
-            warn("fillrange ignored... plotly only supports filling to zero. fillrange: $(series[:fillrange])")
+            warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
         end
         d_out[:x], d_out[:y] = x, y
 
@@ -479,6 +483,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:type] = "heatmap"
         # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
         d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+        d_out[:showscale] = sp[:legend] != :none
 
     elseif st == :contour
         d_out[:type] = "contour"
@@ -487,6 +492,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:ncontours] = series[:levels]
         d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines")
         d_out[:colorscale] = plotly_colorscale(series[:linecolor], series[:linealpha])
+        d_out[:showscale] = sp[:legend] != :none
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
@@ -499,11 +505,13 @@ function plotly_series(plt::Plot, series::Series)
                 :highlightwidth => series[:linewidth],
             )
             d_out[:contours] = KW(:x => wirelines, :y => wirelines, :z => wirelines)
+            d_out[:showscale] = false
         else
             d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
             if series[:fill_z] != nothing
                 d_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
             end
+            d_out[:showscale] = sp[:legend] != :none
         end
 
     elseif st == :pie
@@ -572,7 +580,19 @@ function plotly_series(plt::Plot, series::Series)
     plotly_polar!(d_out, series)
     plotly_hover!(d_out, series[:hover])
 
-    [d_out]
+    if hasfillrange
+        # if hasfillrange is true, return two dictionaries (one for original
+        # series, one for series being filled to) instead of one
+        d_out_fillrange = copy(d_out)
+        d_out_fillrange[:y] = series[:fillrange]
+        d_out_fillrange[:showlegend] = false
+        delete!(d_out_fillrange, :fill)
+        delete!(d_out_fillrange, :fillcolor)
+
+        return [d_out_fillrange, d_out]
+    else
+        return [d_out]
+    end
 end
 
 function plotly_series_shapes(plt::Plot, series::Series)

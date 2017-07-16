@@ -926,7 +926,7 @@ function py_compute_axis_minval(axis::Axis)
         for series in series_list(sp)
             v = series.d[axis[:letter]]
             if !isempty(v)
-                minval = NaNMath.min(minval, ignorenan_minimum(abs(v)))
+                minval = NaNMath.min(minval, ignorenan_minimum(abs.(v)))
             end
         end
     end
