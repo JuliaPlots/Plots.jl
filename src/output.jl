@@ -224,10 +224,6 @@ if is_installed("FileIO")
     end
 end
 
-
-
-
-
 # function html_output_format(fmt)
 #     if fmt == "png"
 #         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
@@ -250,76 +246,75 @@ end
 
 const _ijulia_output = String["text/html"]
 
-function setup_ijulia()
-    # override IJulia inline display
-    if isijulia()
-        @eval begin
-            import IJulia
-            export set_ijulia_output
-            function set_ijulia_output(mimestr::AbstractString)
-                # info("Setting IJulia output format to $mimestr")
-                global _ijulia_output
-                _ijulia_output[1] = mimestr
-            end
-            function IJulia.display_dict(plt::Plot)
-                global _ijulia_output
-                Dict{String, String}(_ijulia_output[1] => sprint(show, _ijulia_output[1], plt))
-            end
+using Requires
+@require IJulia begin
+    if IJulia.inited
+        export set_ijulia_output
 
-            # default text/plain passes to html... handles Interact issues
-            function Base.show(io::IO, m::MIME"text/plain", plt::Plot)
-                show(io, MIME("text/html"), plt)
-            end
+        function set_ijulia_output(mimestr::AbstractString)
+            # info("Setting IJulia output format to $mimestr")
+            global _ijulia_output
+            _ijulia_output[1] = mimestr
         end
-        @eval set_ijulia_output("text/html")
+        function IJulia.display_dict(plt::Plot)
+            global _ijulia_output
+            Dict{String, String}(_ijulia_output[1] => sprint(show, _ijulia_output[1], plt))
+        end
+
+        # default text/plain passes to html... handles Interact issues
+        function Base.show(io::IO, m::MIME"text/plain", plt::Plot)
+            show(io, MIME("text/html"), plt)
+        end
+
+        set_ijulia_output("text/html")
     end
 end
 
 # ---------------------------------------------------------
 # Atom PlotPane
 # ---------------------------------------------------------
+@require Juno begin
+    import Hiccup, Media
 
-function setup_atom()
-    if isatom()
-        @eval import Atom, Media
+    if Juno.isactive()
         Media.media(Plot, Media.Plot)
 
-        # default text/plain so it doesn't complain
-        function Base.show{B}(io::IO, ::MIME"text/plain", plt::Plot{B})
-            print(io, "Plot{$B}()")
-        end
 
-        function Media.render(e::Atom.Editor, plt::Plot)
-            Media.render(e, nothing)
+        _show{B}(io::IO, m::MIME"text/plain", plt::Plot{B}) = print(io, "Plot{$B}()")
+
+        function Juno.render(e::Juno.Editor, plt::Plot)
+            Juno.render(e, nothing)
         end
 
         if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", true) in (true, 1, "1", "true", "yes")
-            # this is like "display"... sends an html div with the plot to the PlotPane
-            function Media.render(pane::Atom.PlotPane, plt::Plot)
+            function Juno.render(pane::Juno.PlotPane, plt::Plot)
                 # temporarily overwrite size to be Atom.plotsize
                 sz = plt[:size]
-                plt[:size] = Juno.plotsize()
-                Media.render(pane, Atom.div(".fill", Atom.HTML(stringmime(MIME("text/html"), plt))))
+                jsize = Juno.plotsize()
+                jsize[1] == 0 && (jsize[1] = 400)
+                jsize[2] == 0 && (jsize[2] = 500)
+
+                plt[:size] = jsize
+                Juno.render(pane, HTML(stringmime(MIME("text/html"), plt)))
                 plt[:size] = sz
             end
             # special handling for PlotlyJS
-            function Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyJSBackend})
+            function Juno.render(pane::Juno.PlotPane, plt::Plot{PlotlyJSBackend})
                 display(Plots.PlotsDisplay(), plt)
             end
         else
-            #
-            function Media.render(pane::Atom.PlotPane, plt::Plot)
+            function Juno.render(pane::Juno.PlotPane, plt::Plot)
                 display(Plots.PlotsDisplay(), plt)
                 s = "PlotPane turned off.  Unset ENV[\"PLOTS_USE_ATOM_PLOTPANE\"] and restart Julia to enable it."
-                Media.render(pane, Atom.div(Atom.HTML(s)))
+                Juno.render(pane, HTML(s))
             end
         end
 
         # special handling for plotly... use PlotsDisplay
-        function Media.render(pane::Atom.PlotPane, plt::Plot{PlotlyBackend})
+        function Juno.render(pane::Juno.PlotPane, plt::Plot{PlotlyBackend})
             display(Plots.PlotsDisplay(), plt)
             s = "PlotPane turned off.  The plotly backend cannot render in the PlotPane due to javascript issues. Plotlyjs is similar to plotly and is compatible with the plot pane."
-            Media.render(pane, Atom.div(Atom.HTML(s)))
+            Juno.render(pane, HTML(s))
         end
     end
 end
