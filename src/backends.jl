@@ -135,7 +135,7 @@ function pickDefaultBackend()
             Pkg.installed(env_default)  # this will error if not installed
             sym = Symbol(lowercase(env_default))
             if haskey(_backendType, sym)
-                return @eval backend($sym)
+                return backend(sym)
             else
                 warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t",
                      join(sort(_backends), "\n\t"))
@@ -150,12 +150,12 @@ function pickDefaultBackend()
     # features, speed, and robustness
     for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR", "GLVisualize")
         if Pkg.installed(pkgstr) != nothing
-            return @eval backend(Symbol(lowercase($pkgstr)))
+            return backend(Symbol(lowercase(pkgstr)))
         end
     end
 
     # the default if nothing else is installed
-    @eval backend(:plotly)
+    backend(:plotly)
 end
 
 

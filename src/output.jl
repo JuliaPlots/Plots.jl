@@ -224,10 +224,6 @@ if is_installed("FileIO")
     end
 end
 
-
-
-
-
 # function html_output_format(fmt)
 #     if fmt == "png"
 #         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
