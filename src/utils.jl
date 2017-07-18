@@ -332,11 +332,24 @@ Base.first(x::Symbol) = x
 
 sortedkeys(d::Dict) = sort(collect(keys(d)))
 
+
+const _scale_base = Dict{Symbol, Real}(
+    :log10 => 10,
+    :log2 => 2,
+    :ln => e,
+)
+
 "create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(v::AVec)
+function heatmap_edges(v::AVec, scale::Symbol = :identity)
   vmin, vmax = ignorenan_extrema(v)
-  extra = 0.5 * (vmax-vmin) / (length(v)-1)
-  vcat(vmin-extra, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra)
+  extra_min = extra_max = 0.5 * (vmax-vmin) / (length(v)-1)
+  if scale in _logScales
+      vmin > 0 || error("The axis values must be positive for a $scale scale")
+      while vmin - extra_min <= 0
+          extra_min /= _scale_base[scale]
+      end
+  end
+  vcat(vmin-extra_min, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra_max)
 end
 
 
