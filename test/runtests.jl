@@ -8,34 +8,34 @@ default(show=false, reuse=true)
 img_eps = isinteractive() ? 1e-2 : 10e-2
 
 @testset "GR" begin
-    @fact gr() == Plots.GRBackend()
-    @fact backend() == Plots.GRBackend()
+    @test gr() == Plots.GRBackend()
+    @test backend() == Plots.GRBackend()
 
     image_comparison_facts(:gr, eps=img_eps)
 end
 
 
 @testset "PyPlot" begin
-    @fact pyplot() == Plots.PyPlotBackend()
-    @fact backend() == Plots.PyPlotBackend()
+    @test pyplot() == Plots.PyPlotBackend()
+    @test backend() == Plots.PyPlotBackend()
 
     image_comparison_facts(:pyplot, eps=img_eps)
 end
 
 @testset "UnicodePlots" begin
-    @fact unicodeplots() == Plots.UnicodePlotsBackend()
-    @fact backend() == Plots.UnicodePlotsBackend()
+    @test unicodeplots() == Plots.UnicodePlotsBackend()
+    @test backend() == Plots.UnicodePlotsBackend()
 
     # lets just make sure it runs without error
-    @fact isa(plot(rand(10)), Plots.Plot) == true
+    @test isa(plot(rand(10)), Plots.Plot) == true
 end
 
 # The plotlyjs testimages return a connection error on travis:
 # connect: connection refused (ECONNREFUSED)
 
-@testset "PlotlyJS" begin
-#     @fact plotlyjs() == Plots.PlotlyJSBackend()
-#     @fact backend() == Plots.PlotlyJSBackend()
+# @testset "PlotlyJS" begin
+#     @test plotlyjs() == Plots.PlotlyJSBackend()
+#     @test backend() == Plots.PlotlyJSBackend()
 #
 #     if is_linux() && isinteractive()
 #         image_comparison_facts(:plotlyjs,
@@ -54,8 +54,8 @@ end
 #  in Gtk.GLib.GError(::Gtk.##229#230) at /home/travis/.julia/v0.5/Gtk/src/GLib/gerror.jl:17
 
 # @testset "InspectDR" begin
-#     @fact inspectdr() == Plots.InspectDRBackend()
-#     @fact backend() == Plots.InspectDRBackend()
+#     @test inspectdr() == Plots.InspectDRBackend()
+#     @test backend() == Plots.InspectDRBackend()
 #
 #     image_comparison_facts(:inspectdr,
 #         skip=[
@@ -73,8 +73,8 @@ end
 
 
 # @testset "Plotly" begin
-#     @fact plotly() == Plots.PlotlyBackend()
-#     @fact backend() == Plots.PlotlyBackend()
+#     @test plotly() == Plots.PlotlyBackend()
+#     @test backend() == Plots.PlotlyBackend()
 #
 #     # # until png generation is reliable on OSX, just test on linux
 #     # @static is_linux() && image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], eps=img_eps)
@@ -82,8 +82,8 @@ end
 
 
 # @testset "Immerse" begin
-#     @fact immerse() == Plots.ImmerseBackend()
-#     @fact backend() == Plots.ImmerseBackend()
+#     @test immerse() == Plots.ImmerseBackend()
+#     @test backend() == Plots.ImmerseBackend()
 #
 #     # as long as we can plot anything without error, it should be the same as Gadfly
 #     image_comparison_facts(:immerse, only=[1], eps=img_eps)
@@ -91,8 +91,8 @@ end
 
 
 # @testset "PlotlyJS" begin
-#     @fact plotlyjs() == Plots.PlotlyJSBackend()
-#     @fact backend() == Plots.PlotlyJSBackend()
+#     @test plotlyjs() == Plots.PlotlyJSBackend()
+#     @test backend() == Plots.PlotlyJSBackend()
 #
 #     # as long as we can plot anything without error, it should be the same as Plotly
 #     image_comparison_facts(:plotlyjs, only=[1], eps=img_eps)
@@ -100,13 +100,13 @@ end
 
 
 # @testset "Gadfly" begin
-#     @fact gadfly() == Plots.GadflyBackend()
-#     @fact backend() == Plots.GadflyBackend()
+#     @test gadfly() == Plots.GadflyBackend()
+#     @test backend() == Plots.GadflyBackend()
 #
-#     @fact typeof(plot(1:10)) == Plots.Plot{Plots.GadflyBackend}
-#     @fact plot(Int[1,2,3], rand(3)) == not(nothing)
-#     @fact plot(sort(rand(10)), rand(Int, 10, 3)) == not(nothing)
-#     @fact plot!(rand(10,3), rand(10,3)) == not(nothing)
+#     @test typeof(plot(1:10)) == Plots.Plot{Plots.GadflyBackend}
+#     @test plot(Int[1,2,3], rand(3)) == not(nothing)
+#     @test plot(sort(rand(10)), rand(Int, 10, 3)) == not(nothing)
+#     @test plot!(rand(10,3), rand(10,3)) == not(nothing)
 #
 #     image_comparison_facts(:gadfly, skip=[4,6,23,24,27], eps=img_eps)
 # end
@@ -117,15 +117,15 @@ end
 @testset "Axes" begin
     p = plot()
     axis = p.subplots[1][:xaxis]
-    @fact typeof(axis) == Plots.Axis
-    @fact Plots.discrete_value!(axis, "HI") == (0.5, 1)
-    @fact Plots.discrete_value!(axis, :yo) == (1.5, 2)
-    @fact Plots.ignorenan_extrema(axis) == (0.5,1.5)
-    @fact axis[:discrete_map] == Dict{Any,Any}(:yo  => 2, "HI" => 1)
+    @test typeof(axis) == Plots.Axis
+    @test Plots.discrete_value!(axis, "HI") == (0.5, 1)
+    @test Plots.discrete_value!(axis, :yo) == (1.5, 2)
+    @test Plots.ignorenan_extrema(axis) == (0.5,1.5)
+    @test axis[:discrete_map] == Dict{Any,Any}(:yo  => 2, "HI" => 1)
 
     Plots.discrete_value!(axis, ["x$i" for i=1:5])
     Plots.discrete_value!(axis, ["x$i" for i=0:2])
-    @fact Plots.ignorenan_extrema(axis) == (0.5, 7.5)
+    @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
 end
 
 
