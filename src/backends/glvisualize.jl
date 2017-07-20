@@ -66,9 +66,8 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         import GLVisualize: visualize
         import Plots.GL
         import UnicodeFun
-        Plots.slice_arg(img::Images.AbstractImage, idx::Int) = img
+        Plots.slice_arg{C<:Colorant}(img::Matrix{C}, idx::Int) = img
         is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
-        is_marker_supported{Img<:Images.AbstractImage}(::GLVisualizeBackend, shape::Union{Vector{Img}, Img}) = true
         is_marker_supported{C<:Colorant}(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) = true
         is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
         const GL = Plots
@@ -789,7 +788,7 @@ function gl_bar(d, kw_args)
         fillto = 0
     end
     # create the bar shapes by adding x/y segments
-    positions, scales = Array(Point2f0, ny), Array(Vec2f0, ny)
+    positions, scales = Array{Point2f0}(ny), Array{Vec2f0}(ny)
     m = Reactive.value(kw_args[:model])
     sx, sy = m[1,1], m[2,2]
     for i=1:ny
@@ -940,7 +939,7 @@ function scale_for_annotations!(series::Series, scaletype::Symbol = :pixels)
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
         msw, msh = anns.scalefactor
-        offsets = Array(Vec2f0, length(anns.strs))
+        offsets = Array{Vec2f0}(length(anns.strs))
         series[:markersize] = map(1:length(anns.strs)) do i
             str = _cycle(anns.strs, i)
             # get the width and height of the string (in mm)
@@ -1145,10 +1144,7 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})
     GLWindow.render_frame(GLWindow.rootscreen(plt.o))
     GLWindow.swapbuffers(plt.o)
     buff = GLWindow.screenbuffer(plt.o)
-    png = Images.Image(map(RGB{U8}, buff),
-        colorspace = "sRGB",
-        spatialorder = ["y", "x"]
-    )
+    png = map(RGB{U8}, buff)
     FileIO.save(FileIO.Stream(FileIO.DataFormat{:PNG}, io), png)
 end
 

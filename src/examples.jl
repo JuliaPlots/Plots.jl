@@ -66,8 +66,8 @@ PlotExample("Global",
 PlotExample("Images",
     "Plot an image.  y-axis is set to flipped",
     [:(begin
-        import Images
-        img = Images.load(Pkg.dir("PlotReferenceImages","Plots","pyplot","0.7.0","ref1.png"))
+        import FileIO
+        img = FileIO.load(Pkg.dir("PlotReferenceImages","Plots","pyplot","0.7.0","ref1.png"))
         plot(img)
     end)]
 ),
