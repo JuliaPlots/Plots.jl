@@ -16,7 +16,6 @@ end
 using Plots
 using StatPlots
 using Base.Test
-using Glob
 
 default(size=(500,300))
 
@@ -43,11 +42,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
     fn = "ref$idx.png"
 
     # firgure out version info
-    G = glob(joinpath(relpath(refdir), "*"))
-    # @show refdir fn G
-    slash = (@static is_windows() ? "\\" : "/")
-    versions = map(fn -> VersionNumber(split(fn, slash)[end]), G)
-    versions = reverse(sort(versions))
+    versions = sort(VersionNumber.(readdir(refdir)), rev = true)
     versions = filter(v -> v <= _current_plots_version, versions)
     # @show refdir fn versions
 
