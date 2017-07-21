@@ -1057,11 +1057,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     x = [l, r, r, l, l]
                     y = [b, b, t, t, b]
                     gr_polyline(x, y, GR.fillarea)
-                    series[:ribbon] != nothing || gr_polyline(x, y)
+                    st == :shape && gr_polyline(x, y)
                 end
 
-                if st == :path && (series[:fillrange] == nothing || series[:ribbon] != nothing)
-                    GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
+                if st == :path
+                    if series[:fillrange] == nothing || series[:ribbon] != nothing
+                        GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
+                    else
+                        GR.polyline([xpos - 0.07, xpos - 0.01], [ypos+0.4dy, ypos+0.4dy])
+                    end
                 end
 
                 if series[:markershape] != :none
