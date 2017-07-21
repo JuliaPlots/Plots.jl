@@ -272,6 +272,10 @@ function normalize_zvals(zv::AVec)
     end
 end
 
+
+gr_alpha(α::Void) = 1
+gr_alpha(α::Real) = α
+
 # ---------------------------------------------------------
 
 # draw ONE Shape
@@ -1042,6 +1046,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if sp[:legendtitle] != nothing
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
                 gr_set_textcolor(sp[:foreground_color_legend])
+                GR.settransparency(1)
                 gr_text(xpos - 0.03 + 0.5*w, ypos, string(sp[:legendtitle]))
                 ypos -= dy
             end
@@ -1056,11 +1061,14 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     b, t = ypos-0.4dy, ypos+0.4dy
                     x = [l, r, r, l, l]
                     y = [b, b, t, t, b]
+                    GR.settransparency(gr_alpha(series[:fillalpha]))
                     gr_polyline(x, y, GR.fillarea)
+                    GR.settransparency(gr_alpha(series[:linealpha]))
                     st == :shape && gr_polyline(x, y)
                 end
 
                 if st == :path
+                    GR.settransparency(gr_alpha(series[:linealpha]))
                     if series[:fillrange] == nothing || series[:ribbon] != nothing
                         GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
                     else
