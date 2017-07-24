@@ -1,5 +1,4 @@
 StatPlots
-FactCheck
 Images
 ImageMagick
 @osx QuartzImageIO
@@ -7,4 +6,3 @@ GR
 RDatasets
 VisualRegressionTests
 UnicodePlots
-Glob
