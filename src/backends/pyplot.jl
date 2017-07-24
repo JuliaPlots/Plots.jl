@@ -85,7 +85,7 @@ function _initialize_backend(::PyPlotBackend)
 
         # "support" matplotlib v1.5
         const set_facecolor_sym = if PyPlot.version < v"2"
-            warning("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
+            warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
             :set_axis_bgcolor
         else
             :set_facecolor
