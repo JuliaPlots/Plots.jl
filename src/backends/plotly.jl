@@ -508,6 +508,7 @@ function plotly_series(plt::Plot, series::Series)
             d_out[:showscale] = false
         else
             d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+            d_out[:opacity] = series[:fillalpha]
             if series[:fill_z] != nothing
                 d_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
             end
