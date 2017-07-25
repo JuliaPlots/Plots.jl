@@ -83,6 +83,14 @@ function _initialize_backend(::PyPlotBackend)
         const pycollections = PyPlot.pywrap(PyPlot.pyimport("matplotlib.collections"))
         const pyart3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d.art3d"))
 
+        # "support" matplotlib v1.5
+        const set_facecolor_sym = if PyPlot.version < v"2"
+            warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
+            :set_axis_bgcolor
+        else
+            :set_facecolor
+        end
+
         # we don't want every command to update the figure
         PyPlot.ioff()
     end
@@ -985,7 +993,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     fig[:clear]()
     dpi = plt[:dpi]
     fig[:set_size_inches](w/dpi, h/dpi, forward = true)
-    fig[:set_facecolor](py_color(plt[:background_color_outside]))
+    fig[set_facecolor_sym](py_color(plt[:background_color_outside]))
     fig[:set_dpi](dpi)
 
     # resize the window
@@ -1074,7 +1082,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         py_add_legend(plt, sp, ax)
 
         # this sets the bg color inside the grid
-        ax[:set_facecolor](py_color(sp[:background_color_inside]))
+        ax[set_facecolor_sym](py_color(sp[:background_color_inside]))
     end
     py_drawfig(fig)
 end
@@ -1196,7 +1204,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
 
             # set some legend properties
             frame = leg[:get_frame]()
-            frame[:set_facecolor](py_color(sp[:background_color_legend]))
+            frame[set_facecolor_sym](py_color(sp[:background_color_legend]))
             frame[:set_edgecolor](fgcolor)
         end
     end
