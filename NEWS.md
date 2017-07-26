@@ -9,8 +9,22 @@
     - `backports` branch is for Julia 0.4
 
 ---
+## 0.12.1 (current master/dev)
 
-## 0.12 (current master/dev)
+- fix deprecation warnings
+- switch from FixedSizeArrays to StaticArrays.FixedSizeArrays
+- drop FactCheck in tests
+- remove julia 0.5 compliant uses of transpose operator
+- fix GR heatmap bugs
+- fix GR guide padding
+- improve legend markers in GR
+- add surface alpha for Plotly(JS)
+- add fillrange to Plotly(JS)
+- allow usage of Matplotlib 1.5 with PyPlot
+- fix GLVisualize for julia 0.6
+- conform to changes in InspectDR
+
+#### 0.12.0
 
 - 0.6 only
 
