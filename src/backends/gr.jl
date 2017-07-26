@@ -538,7 +538,20 @@ end
 
 
 function _update_min_padding!(sp::Subplot{GRBackend})
-    sp.minpad = (10mm,2mm,2mm,8mm)
+    leftpad   = 10mm
+    toppad    = 2mm
+    rightpad  = 2mm
+    bottompad = 6mm
+    if sp[:title] != ""
+        toppad += 5mm
+    end
+    if sp[:xaxis][:guide] != ""
+        bottompad += 4mm
+    end
+    if sp[:yaxis][:guide] != ""
+        leftpad += 4mm
+    end
+    sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 
 
