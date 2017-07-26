@@ -70,18 +70,18 @@ function _initialize_backend(::PyPlotBackend)
         append!(Base.Multimedia.displays, otherdisplays)
 
         export PyPlot
-        const pycolors = PyPlot.pywrap(PyPlot.pyimport("matplotlib.colors"))
-        const pypath = PyPlot.pywrap(PyPlot.pyimport("matplotlib.path"))
-        const mplot3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d"))
-        const pypatches = PyPlot.pywrap(PyPlot.pyimport("matplotlib.patches"))
-        const pyfont = PyPlot.pywrap(PyPlot.pyimport("matplotlib.font_manager"))
-        const pyticker = PyPlot.pywrap(PyPlot.pyimport("matplotlib.ticker"))
-        const pycmap = PyPlot.pywrap(PyPlot.pyimport("matplotlib.cm"))
-        const pynp = PyPlot.pywrap(PyPlot.pyimport("numpy"))
-        pynp.seterr(invalid="ignore")
-        const pytransforms = PyPlot.pywrap(PyPlot.pyimport("matplotlib.transforms"))
-        const pycollections = PyPlot.pywrap(PyPlot.pyimport("matplotlib.collections"))
-        const pyart3d = PyPlot.pywrap(PyPlot.pyimport("mpl_toolkits.mplot3d.art3d"))
+        const pycolors = PyPlot.pyimport("matplotlib.colors")
+        const pypath = PyPlot.pyimport("matplotlib.path")
+        const mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
+        const pypatches = PyPlot.pyimport("matplotlib.patches")
+        const pyfont = PyPlot.pyimport("matplotlib.font_manager")
+        const pyticker = PyPlot.pyimport("matplotlib.ticker")
+        const pycmap = PyPlot.pyimport("matplotlib.cm")
+        const pynp = PyPlot.pyimport("numpy")
+        pynp["seterr"](invalid="ignore")
+        const pytransforms = PyPlot.pyimport("matplotlib.transforms")
+        const pycollections = PyPlot.pyimport("matplotlib.collections")
+        const pyart3d = PyPlot.pyimport("mpl_toolkits.mplot3d.art3d")
 
         # we don't want every command to update the figure
         PyPlot.ioff()
@@ -118,7 +118,7 @@ py_color(grad::ColorGradient) = py_color(grad.colors)
 
 function py_colormap(grad::ColorGradient)
     pyvals = [(z, py_color(grad[z])) for z in grad.values]
-    cm = pycolors.LinearSegmentedColormap[:from_list]("tmp", pyvals)
+    cm = pycolors["LinearSegmentedColormap"][:from_list]("tmp", pyvals)
     cm[:set_bad](color=(0,0,0,0.0), alpha=0.0)
     cm
 end
@@ -256,7 +256,7 @@ function labelfunc(scale::Symbol, backend::PyPlotBackend)
 end
 
 function py_mask_nans(z)
-    # PyPlot.pywrap(pynp.ma[:masked_invalid](PyPlot.pywrap(z)))
+    # pynp.ma[:masked_invalid](z)))
     PyCall.pycall(pynp.ma[:masked_invalid], Any, z)
     # pynp.ma[:masked_where](pynp.isnan(z),z)
 end
