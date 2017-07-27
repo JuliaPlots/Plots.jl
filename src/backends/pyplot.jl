@@ -101,7 +101,7 @@ end
 
 # function py_colormap(c::ColorGradient, α=nothing)
 #     pyvals = [(v, py_color(getColorZ(c, v), α)) for v in c.values]
-#     pycolors.pymember("LinearSegmentedColormap")[:from_list]("tmp", pyvals)
+#     pycolors["LinearSegmentedColormap"][:from_list]("tmp", pyvals)
 # end
 
 # # convert vectors and ColorVectors to standard ColorGradients
@@ -127,7 +127,7 @@ py_colormap(c) = py_colormap(cgrad())
 
 function py_shading(c, z)
     cmap = py_colormap(c)
-    ls = pycolors.pymember("LightSource")(270,45)
+    ls = pycolors["LightSource"](270,45)
     ls[:shade](z, cmap, vert_exag=0.1, blend_mode="soft")
 end
 
@@ -151,7 +151,7 @@ function py_marker(marker::Shape)
         mat[i,2] = y[i]
     end
     mat[n+1,:] = mat[1,:]
-    pypath.pymember("Path")(mat)
+    pypath["Path"](mat)
 end
 
 const _path_MOVETO = UInt8(1)
@@ -177,7 +177,7 @@ const _path_CLOSEPOLY = UInt8(79)
 #         lastnan = nan
 #     end
 #     codes[n+1] = _path_CLOSEPOLY
-#     pypath.pymember("Path")(mat, codes)
+#     pypath["Path"](mat, codes)
 # end
 
 # get the marker shape
@@ -227,14 +227,14 @@ end
 
 # # untested... return a FontProperties object from a Plots.Font
 # function py_font(font::Font)
-#     pyfont.pymember("FontProperties")(
+#     pyfont["FontProperties"](
 #         family = font.family,
 #         size = font.size
 #     )
 # end
 
 function get_locator_and_formatter(vals::AVec)
-    pyticker.pymember("FixedLocator")(1:length(vals)), pyticker.pymember("FixedFormatter")(vals)
+    pyticker["FixedLocator"](1:length(vals)), pyticker["FixedFormatter"](vals)
 end
 
 function add_pyfixedformatter(cbar, vals::AVec)
@@ -256,9 +256,9 @@ function labelfunc(scale::Symbol, backend::PyPlotBackend)
 end
 
 function py_mask_nans(z)
-    # pynp.ma[:masked_invalid](z)))
-    PyCall.pycall(pynp.ma[:masked_invalid], Any, z)
-    # pynp.ma[:masked_where](pynp.isnan(z),z)
+    # pynp["ma"][:masked_invalid](z)))
+    PyCall.pycall(pynp["ma"][:masked_invalid], Any, z)
+    # pynp["ma"][:masked_where](pynp["isnan"](z),z)
 end
 
 # ---------------------------------------------------------------------------
@@ -489,7 +489,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     extrakw = KW()
                     isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
                     isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-                    kw[:norm] = pycolors.Normalize(; extrakw...)
+                    kw[:norm] = pycolors["Normalize"](; extrakw...)
                 end
                 lz = collect(series[:line_z])
                 handle = if is3d(st)
@@ -500,7 +500,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     # for i=1:n
                     #     segments[i] = [(_cycle(x,i), _cycle(y,i), _cycle(z,i)), (_cycle(x,i+1), _cycle(y,i+1), _cycle(z,i+1))]
                     # end
-                    lc = pyart3d.Line3DCollection(segments; kw...)
+                    lc = pyart3d["Line3DCollection"](segments; kw...)
                     lc[:set_array](lz)
                     ax[:add_collection3d](lc, zs=z) #, zdir='y')
                     lc
@@ -512,7 +512,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     # for i=1:n
                     #     segments[i] = [(_cycle(x,i), _cycle(y,i)), (_cycle(x,i+1), _cycle(y,i+1))]
                     # end
-                    lc = pycollections.LineCollection(segments; kw...)
+                    lc = pycollections["LineCollection"](segments; kw...)
                     lc[:set_array](lz)
                     ax[:add_collection](lc)
                     lc
@@ -797,8 +797,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         handle = []
         for (i,rng) in enumerate(iter_segments(x, y))
             if length(rng) > 1
-                path = pypath.pymember("Path")(hcat(x[rng], y[rng]))
-                patches = pypatches.pymember("PathPatch")(
+                path = pypath["Path"](hcat(x[rng], y[rng]))
+                patches = pypatches["PathPatch"](
                     path;
                     label = series[:label],
                     zorder = series[:series_plotindex],
