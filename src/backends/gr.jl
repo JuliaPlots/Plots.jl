@@ -357,7 +357,7 @@ function gr_set_fill(c) #, a)
 end
 
 # this stores the conversion from a font pointsize to "percentage of window height" (which is what GR uses)
-const _gr_point_mult = zeros(1)
+const _gr_point_mult = 0.0018 * ones(1)
 
 # set the font attributes... assumes _gr_point_mult has been populated already
 function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
@@ -388,7 +388,7 @@ end
 const viewport_plotarea = zeros(4)
 
 # the size of the current plot in pixels
-const gr_plot_size = zeros(2)
+const gr_plot_size = [600.0, 400.0]
 
 function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, viewport_canvas)
     viewport = zeros(4)
@@ -546,7 +546,22 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         toppad += 5mm
     end
     if sp[:xaxis][:guide] != ""
-        bottompad += 4mm
+        xticks = axis_drawing_info(sp)[1]
+        if !(xticks in (nothing, false))
+            gr_set_font(sp[:xaxis][:tickfont],
+                        halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
+                        valign = :top,
+                        color = sp[:xaxis][:foreground_color_axis],
+                        rotation = sp[:xaxis][:rotation])
+            h = 0
+            for (cv, dv) in zip(xticks...)
+                tbx, tby = gr_inqtext(0, 0, string(dv))
+                h = max(h, tby[2] - tby[1])
+            end
+            bottompad += 1mm + gr_plot_size[2] * h * px
+        else
+            bottompad += 4mm
+        end
     end
     if sp[:yaxis][:guide] != ""
         leftpad += 4mm
