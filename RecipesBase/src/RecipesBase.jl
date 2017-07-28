@@ -74,20 +74,23 @@ function _equals_symbol(arg::Expr, sym::Symbol)
 end
 
 # build an apply_recipe function header from the recipe function header
-function get_function_def(func_signature::Expr)
+function get_where_args(func_signature::Expr)
     # for parametric definitions, take the "curly" expression and add the func
     front = func_signature.args[1]
-    func = :(RecipesBase.apply_recipe)
-    if isa(front, Expr) && front.head == :curly
-        front.args[1] = func
-        func = front
+    where_args = if isa(front, Expr) && front.head == :curly
+        front.args[2:end]
+    elseif func_signature.head == :where
+        func_signature.args[2:end]
+    else
+        []
     end
-    func
+    where_args
 end
 
 function create_kw_body(func_signature::Expr)
     # get the arg list, stripping out any keyword parameters into a
     # bunch of get!(kw, key, value) lines
+    func_signature.head == :where && return create_kw_body(func_signature.args[1])
     args = func_signature.args[2:end]
     kw_body = Expr(:block)
     cleanup_body = Expr(:block)
@@ -231,14 +234,14 @@ macro recipe(funcexpr::Expr)
     if !(funcexpr.head in (:(=), :function))
         error("Must wrap a valid function call!")
     end
-    if !(isa(func_signature, Expr) && func_signature.head == :call)
+    if !(isa(func_signature, Expr) && (func_signature.head == :call || (func_signature.head == :where && func_signature.args[1].head == :call)))
         error("Expected `func_signature = ...` with func_signature as a call Expr... got: $func_signature")
     end
     if length(func_signature.args) < 2
         error("Missing function arguments... need something to dispatch on!")
     end
 
-    func = get_function_def(func_signature)
+    where_args = get_where_args(func_signature)
     args, kw_body, cleanup_body = create_kw_body(func_signature)
 
     # this is where the receipe func_body is processed
@@ -249,7 +252,7 @@ macro recipe(funcexpr::Expr)
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
     # we are creating a vector of RecipeData objects, one per series.
     funcdef = esc(quote
-        function $func(d::Dict{Symbol,Any}, $(args...))
+        function RecipesBase.apply_recipe(d::Dict{Symbol, Any}, $(args...)) where $(where_args...)
             if RecipesBase._debug_recipes[1]
                 println("apply_recipe args: ", $args)
             end
