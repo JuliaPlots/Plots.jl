@@ -706,6 +706,9 @@ function preprocessArgs!(d::KW)
     delete!(d, :marker)
     if haskey(d, :markershape)
         d[:markershape] = _replace_markershape(d[:markershape])
+        if d[:markershape] == :none && d[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
+            d[:markershape] = :circle
+        end
     elseif anymarker
         d[:markershape_to_add] = :circle  # add it after _apply_recipe
     end
