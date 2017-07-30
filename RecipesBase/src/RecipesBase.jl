@@ -237,6 +237,9 @@ macro recipe(funcexpr::Expr)
     if !(funcexpr.head in (:(=), :function))
         error("Must wrap a valid function call!")
     end
+    if !(isa(func_signature, Expr) && func_signature.head in (:call, :where))
+        error("Expected `func_signature = ...` with func_signature as a call or where Expr... got: $func_signature")
+    end
     if length(func_signature.args) < 2
         error("Missing function arguments... need something to dispatch on!")
     end
