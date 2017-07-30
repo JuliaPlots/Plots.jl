@@ -77,11 +77,12 @@ end
 function get_function_def(func_signature::Expr, args::Vector)
     front = func_signature.args[1]
     if func_signature.head == :where
-        Expr(:where, get_function_def(front, args), [esc(arg) for arg in func_signature.args[2:end]]...)
+        Expr(:where, get_function_def(front, args), esc.(func_signature.args[2:end])...)
     elseif func_signature.head == :call
-        func = Expr(:call, :(RecipesBase.apply_recipe), [esc(arg) for arg in [:(d::Dict{Symbol, Any}); args]]...)
+        func = Expr(:call, :(RecipesBase.apply_recipe), esc.([:(d::Dict{Symbol, Any}); args])...)
         if isa(front, Expr) && front.head == :curly
-            Expr(:where, func, [esc(arg) for arg in front.args[2:end]]...)
+            # Expr(:where, func, [esc(arg) for arg in front.args[2:end]]...)
+            Expr(:where, func, esc.(front.args[2:end])...)
         else
             func
         end
