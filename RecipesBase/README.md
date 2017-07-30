@@ -52,7 +52,7 @@ This will build a spiky surface:
 
 ```julia
 using Plots; gr()
-type T end
+struct T end
 @recipe f(::T) = rand(100,100)
 surface(T())
 ```
@@ -65,16 +65,16 @@ surface(T())
 using RecipesBase
 
 # Our user-defined data type
-type T end
+struct T end
 
 # This is all we define.  It uses a familiar signature, but strips it apart
 # in order to add a custom definition to the internal method `RecipesBase.apply_recipe`
 @recipe function plot(::T, n = 1; customcolor = :green)
-    markershape --> :auto          # if markershape is unset, make it :auto
-    markercolor :=  customcolor    # force markercolor to be customcolor
-    xrotation   --> 45 			   # if xrotation is unset, make it 45
-    zrotation   --> 90 			   # if zrotation is unset, make it 90
-    rand(10,n)					   # return the arguments (input data) for the next recipe
+    markershape --> :auto        # if markershape is unset, make it :auto
+    markercolor :=  customcolor  # force markercolor to be customcolor
+    xrotation   --> 45           # if xrotation is unset, make it 45
+    zrotation   --> 90           # if zrotation is unset, make it 90
+    rand(10,n)                   # return the arguments (input data) for the next recipe
 end
 
 # ----------------------------
@@ -119,11 +119,11 @@ function RecipesBase.apply_recipe(d::Dict{Symbol,Any},::T,n=1)
     if RecipesBase._debug_recipes[1]
         println("apply_recipe args: ",Any[:(::T),:(n=1)])
     end
-    begin 
+    begin
         customcolor = get!(d,:customcolor,:green)
     end
     series_list = RecipesBase.RecipeData[]
-    func_return = begin 
+    func_return = begin
             get!(d,:markershape,:auto)
             d[:markercolor] = customcolor
             get!(d,:xrotation,45)
@@ -133,7 +133,7 @@ function RecipesBase.apply_recipe(d::Dict{Symbol,Any},::T,n=1)
     if func_return != nothing
         push!(series_list,RecipesBase.RecipeData(d,RecipesBase.wrap_tuple(func_return)))
     end
-    begin 
+    begin
         RecipesBase.is_key_supported(:customcolor) || delete!(d,:customcolor)
     end
     series_list
