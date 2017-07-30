@@ -81,7 +81,6 @@ function get_function_def(func_signature::Expr, args::Vector)
     elseif func_signature.head == :call
         func = Expr(:call, :(RecipesBase.apply_recipe), esc.([:(d::Dict{Symbol, Any}); args])...)
         if isa(front, Expr) && front.head == :curly
-            # Expr(:where, func, [esc(arg) for arg in front.args[2:end]]...)
             Expr(:where, func, esc.(front.args[2:end])...)
         else
             func
