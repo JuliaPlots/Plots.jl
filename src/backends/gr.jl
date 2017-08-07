@@ -306,7 +306,7 @@ end
 function gr_draw_markers(series::Series, x, y, msize, mz)
     shapes = series[:markershape]
     if shapes != :none
-        for i=1:length(x)
+        for i=linearindices(x)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
             cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
