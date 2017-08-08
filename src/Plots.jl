@@ -151,12 +151,11 @@ include("layouts.jl")
 include("subplots.jl")
 include("recipes.jl")
 include("animation.jl")
-include("output.jl")
 include("examples.jl")
 include("arg_desc.jl")
 include("plotattr.jl")
 include("backends.jl")
-
+include("output.jl")
 
 # ---------------------------------------------------------
 
