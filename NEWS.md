@@ -9,7 +9,16 @@
     - `backports` branch is for Julia 0.4
 
 ---
-## 0.12.1 (current master/dev)
+## (current master)
+
+## 0.12.2
+
+- fix an issue with Juno/PlotlyJS compatibility on new installations
+- fix markers not showing up in seriesrecipes using :scatter
+- don't use pywrap in the pyplot backend
+- improve the bottom margin for the gr backend
+
+## 0.12.1
 
 - fix deprecation warnings
 - switch from FixedSizeArrays to StaticArrays.FixedSizeArrays
