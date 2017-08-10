@@ -495,43 +495,33 @@ function axis_drawing_info(sp::Subplot)
     xgrid_segs = Segments(2)
     ygrid_segs = Segments(2)
 
-    f = scalefunc(yaxis[:scale])
-    invf = invscalefunc(yaxis[:scale])
-    t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
-    t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
-
     if !(xaxis[:ticks] in (nothing, false))
+        f = scalefunc(yaxis[:scale])
+        invf = invscalefunc(yaxis[:scale])
+        t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
+        t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
+
         push!(xspine_segs, (xmin,ymin), (xmax,ymin)) # bottom spine
         # push!(xspine_segs, (xmin,ymax), (xmax,ymax)) # top spine
         for xtick in xticks[1]
             push!(xspine_segs, (xtick, ymin), (xtick, t1)) # bottom tick
             # push!(xspine_segs, (xtick, ymax), (xtick, t2)) # top tick
+            !(xaxis[:grid] in (nothing, false)) && push!(xgrid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
         end
     end
-
-    if !(xaxis[:grid] in (nothing, false))
-        for xtick in xticks[1]
-            push!(xgrid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
-        end
-    end
-
-    f = scalefunc(xaxis[:scale])
-    invf = invscalefunc(xaxis[:scale])
-    t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
-    t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
 
     if !(yaxis[:ticks] in (nothing, false))
+        f = scalefunc(xaxis[:scale])
+        invf = invscalefunc(xaxis[:scale])
+        t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
+        t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
+
         push!(yspine_segs, (xmin,ymin), (xmin,ymax)) # left spine
         # push!(yspine_segs, (xmax,ymin), (xmax,ymax)) # right spine
         for ytick in yticks[1]
             push!(yspine_segs, (xmin, ytick), (t1, ytick)) # left tick
             # push!(yspine_segs, (xmax, ytick), (t2, ytick)) # right tick
-        end
-    end
-
-    if !(yaxis[:grid] in (nothing, false))
-        for ytick in yticks[1]
-            push!(ygrid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
+            !(yaxis[:grid] in (nothing, false)) && push!(ygrid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
         end
     end
 
