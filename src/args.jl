@@ -247,7 +247,6 @@ const _subplot_defaults = KW(
     :background_color_inside  => :match,            # background inside grid
     :foreground_color_subplot => :match,            # default for other fg colors... match takes plot default
     :foreground_color_legend  => :match,            # foreground of legend
-    :foreground_color_grid    => :match,            # grid color
     :foreground_color_title   => :match,            # title color
     :color_palette            => :auto,
     :legend                   => :best,
@@ -255,7 +254,6 @@ const _subplot_defaults = KW(
     :colorbar                 => :legend,
     :clims                    => :auto,
     :legendfont               => font(8),
-    :grid                     => true,
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :none,             # choose from :none or :equal
@@ -285,6 +283,8 @@ const _axis_defaults = KW(
     :discrete_values => [],
     :formatter => :auto,
     :mirror => false,
+    :grid                     => true,
+    :foreground_color_grid    => :match,            # grid color
 )
 
 const _suppress_warnings = Set{Symbol}([
