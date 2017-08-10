@@ -860,6 +860,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
 
             if series[:markershape] != :none
+                if series[:marker_z] != nothing
+                    zmin, zmax = extrema(series[:marker_z])
+                    GR.setspace(zmin, zmax, 0, 90)
+                    GR.setscale(0)
+                end
                 gr_draw_markers(series, x, y)
             end
 
