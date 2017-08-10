@@ -691,10 +691,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         ticksize = 0.01 * (viewport_plotarea[2] - viewport_plotarea[1])
 
         # GR.setlinetype(GR.LINETYPE_DOTTED)
-        # if sp[:grid]
-        GR.grid3d(xtick, 0, ztick, xmin, ymax, zmin, 2, 0, 2)
-        GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
-        # end
+        if !(xaxis[:grid] in (nothing, false))
+            GR.grid3d(xtick, 0, 0, xmin, ymax, zmin, 2, 0, 0)
+        end
+        if !(yaxis[:grid] in (nothing, false))
+            GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
+        end
+        if !(zaxis[:grid] in (nothing, false))
+            GR.grid3d(0, 0, ztick, xmin, ymax, zmin, 0, 0, 2)
+        end
         GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
         GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
 

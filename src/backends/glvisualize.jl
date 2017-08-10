@@ -676,17 +676,29 @@ function text_model(font, pivot)
     end
 end
 function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, area)
-    xticks, yticks, spine_segs, grid_segs = Plots.axis_drawing_info(sp)
+    xticks, yticks, xspine_segs, yspine_segs, xgrid_segs, ygrid_segs = Plots.axis_drawing_info(sp)
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
 
-    c = Colors.color(Plots.gl_color(sp[:foreground_color_grid]))
+    xgc = Colors.color(Plots.gl_color(xaxis[:foreground_color_grid]))
+    ygc = Colors.color(Plots.gl_color(yaxis[:foreground_color_grid]))
     axis_vis = []
-    if sp[:grid]
-        grid = draw_grid_lines(sp, grid_segs, 1f0, :dot, model, RGBA(c, 0.3f0))
+    if !(xaxis[:grid] in (nothing, false))
+        grid = draw_grid_lines(sp, xgrid_segs, 1f0, :dot, model, RGBA(xgc, 0.3f0))
         push!(axis_vis, grid)
     end
-    if alpha(xaxis[:foreground_color_border]) > 0
-        spine = draw_grid_lines(sp, spine_segs, 1f0, :solid, model, RGBA(c, 1.0f0))
+    if !(yaxis[:grid] in (nothing, false))
+        grid = draw_grid_lines(sp, ygrid_segs, 1f0, :dot, model, RGBA(ygc, 0.3f0))
+        push!(axis_vis, grid)
+    end
+
+    xac = Colors.color(Plots.gl_color(xaxis[:foreground_color_axis]))
+    yac = Colors.color(Plots.gl_color(yaxis[:foreground_color_axis]))
+    if alpha(xaxis[:foreground_color_axis]) > 0
+        spine = draw_grid_lines(sp, xspine_segs, 1f0, :solid, model, RGBA(xac, 1.0f0))
+        push!(axis_vis, spine)
+    end
+    if alpha(yaxis[:foreground_color_axis]) > 0
+        spine = draw_grid_lines(sp, yspine_segs, 1f0, :solid, model, RGBA(yac, 1.0f0))
         push!(axis_vis, spine)
     end
     fcolor = Plots.gl_color(xaxis[:foreground_color_axis])

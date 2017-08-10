@@ -18,7 +18,8 @@ Add in functionality to Plots.jl:
 const _inspectdr_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
+    # :foreground_color_grid,
+    :foreground_color_legend, :foreground_color_title,
     :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
     :label,
     :linecolor, :linestyle, :linewidth, :linealpha,
@@ -334,15 +335,18 @@ end
 # ---------------------------------------------------------------------------
 
 function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
-    const gridon = InspectDR.GridRect(vmajor=true, hmajor=true)
-    const gridoff = InspectDR.GridRect()
     const plot = sp.o
     const strip = plot.strips[1] #Only 1 strip supported with Plots.jl
 
-	#No independent control of grid???
-	strip.grid = sp[:grid]? gridon: gridoff
-
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
+    xgrid_show = !(xaxis[:grid] in (nothing, false))
+    ygrid_show = !(yaxis[:grid] in (nothing, false))
+
+    strip.grid = InspectDR.GridRect(
+    	vmajor=xgrid_show, # vminor=xgrid_show,
+    	hmajor=ygrid_show, # hminor=ygrid_show,
+    )
+
         plot.xscale = _inspectdr_getscale(xaxis[:scale], false)
         strip.yscale = _inspectdr_getscale(yaxis[:scale], true)
         xmin, xmax  = axis_limits(xaxis)

@@ -98,7 +98,7 @@ const _pgf_series_extrastyle = KW(
     :xsticks => "xcomb",
 )
 
-# PGFPlots uses the anchors to define orientations for example to align left 
+# PGFPlots uses the anchors to define orientations for example to align left
 # one needs to use the right edge as anchor
 const _pgf_annotation_halign = KW(
     :center => "",
@@ -121,7 +121,7 @@ function pgf_color(grad::ColorGradient)
 end
 
 # Generates a colormap for pgfplots based on a ColorGradient
-function pgf_colormap(grad::ColorGradient) 
+function pgf_colormap(grad::ColorGradient)
     join(map(grad.colors) do c
         @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c),blue(c))
     end,", ")
@@ -266,6 +266,11 @@ function pgf_axis(sp::Subplot, letter)
         push!(style, "$(letter)majorticks=false")
     end
 
+    # grid on or off
+    if !(axis[:grid] in (nothing, false))
+        push!(style, "$(letter)majorgrids = true")
+    end
+
     # limits
     # TODO: support zlims
     if letter != :z
@@ -324,7 +329,6 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             kw[:title] = "$(sp[:title])"
         end
 
-        sp[:grid] && push!(style, "grid = major")
         if sp[:aspect_ratio] in (1, :equal)
             kw[:axisEqual] = "true"
         end
@@ -360,7 +364,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
                         kw[:colorbar] = "true"
                     end
                     # goto is needed to break out of col and series for
-                    @goto colorbar_end 
+                    @goto colorbar_end
                 end
             end
         end
