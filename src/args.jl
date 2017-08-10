@@ -943,7 +943,6 @@ const _match_map = KW(
     :background_color_legend  => :background_color_subplot,
     :background_color_inside  => :background_color_subplot,
     :foreground_color_legend  => :foreground_color_subplot,
-    :foreground_color_grid    => :foreground_color_subplot,
     :foreground_color_title   => :foreground_color_subplot,
     :left_margin   => :margin,
     :top_margin    => :margin,
@@ -957,6 +956,7 @@ const _match_map2 = KW(
     :foreground_color_subplot => :foreground_color,
     :foreground_color_axis    => :foreground_color_subplot,
     :foreground_color_border  => :foreground_color_subplot,
+    :foreground_color_grid    => :foreground_color_subplot,
     :foreground_color_guide   => :foreground_color_subplot,
     :foreground_color_text    => :foreground_color_subplot,
 )
@@ -1091,7 +1091,6 @@ function _update_subplot_colors(sp::Subplot)
     # foreground colors
     color_or_nothing!(sp.attr, :foreground_color_subplot)
     color_or_nothing!(sp.attr, :foreground_color_legend)
-    color_or_nothing!(sp.attr, :foreground_color_grid)
     color_or_nothing!(sp.attr, :foreground_color_title)
     return
 end
@@ -1143,6 +1142,7 @@ function _update_axis_colors(axis::Axis)
     color_or_nothing!(axis.d, :foreground_color_border)
     color_or_nothing!(axis.d, :foreground_color_guide)
     color_or_nothing!(axis.d, :foreground_color_text)
+    color_or_nothing!(axis.d, :foreground_color_grid)
     return
 end
 
