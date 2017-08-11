@@ -337,8 +337,8 @@ function _userplot(expr::Expr)
     esc(quote
         $expr
         export $funcname, $funcname2
-        $funcname(args...; kw...) = plot($typename(args); kw...)
-        $funcname2(args...; kw...) = plot!($typename(args); kw...)
+        $funcname(args...; kw...) = RecipesBase.plot($typename(args); kw...)
+        $funcname2(args...; kw...) = RecipesBase.plot!($typename(args); kw...)
     end)
 end
 
@@ -355,8 +355,8 @@ macro shorthands(funcname::Symbol)
     funcname2 = Symbol(funcname, "!")
     esc(quote
         export $funcname, $funcname2
-        $funcname(args...; kw...) = plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
-        $funcname2(args...; kw...) = plot!(args...; kw..., seriestype = $(Meta.quot(funcname)))
+        $funcname(args...; kw...) = RecipesBase.plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
+        $funcname2(args...; kw...) = RecipesBase.plot!(args...; kw..., seriestype = $(Meta.quot(funcname)))
     end)
 end
 
