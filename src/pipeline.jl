@@ -60,29 +60,26 @@ function _process_userrecipes(plt::Plot, d::KW, args)
     args = _preprocess_args(d, args, still_to_process)
 
     # for plotting recipes, swap out the args and update the parameter dictionary
-    # we are keeping a queue of series that still need to be processed.
+    # we are keeping a stack of series that still need to be processed.
     # each pass through the loop, we pop one off and apply the recipe.
     # the recipe will return a list a Series objects... the ones that are
-    # finished (no more args) get added to the kw_list, and the rest go into the queue
-    # for processing.
+    # finished (no more args) get added to the kw_list, the ones that are not
+    # are placed on top of the stack and are then processed further.
     kw_list = KW[]
     while !isempty(still_to_process)
-        # grab the first in line to be processed and pass it through apply_recipe
-        # to generate a list of RecipeData objects (data + attributes)
+        # grab the first in line to be processed and either add it to the kw_list or
+        # pass it through apply_recipe to generate a list of RecipeData objects (data + attributes)
+        # for further processing.
         next_series = shift!(still_to_process)
-        rd_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
-        for recipedata in rd_list
-            # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
-            if !(typeof(recipedata) <: RecipeData)
-                error("Inputs couldn't be processed... expected RecipeData but got: $recipedata")
-            end
-
-            if isempty(recipedata.args)
-                _process_userrecipe(plt, kw_list, recipedata)
-            else
-                # args are non-empty, so there's still processing to do... add it back to the queue
-                push!(still_to_process, recipedata)
-            end
+        # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
+        if !(typeof(next_series) <: RecipeData)
+            error("Inputs couldn't be processed... expected RecipeData but got: $recipedata")
+        end
+        if isempty(next_series.args)
+            _process_userrecipe(plt, kw_list, next_series)
+        else
+            rd_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
+            prepend!(still_to_process,rd_list)
         end
     end
 
