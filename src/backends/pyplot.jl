@@ -31,8 +31,7 @@ const _pyplot_attr = merge_with_base_supported([
     :inset_subplots,
     :dpi,
     :colorbar_title,
-    :rstride,
-    :cstride,
+    :stride,
   ])
 const _pyplot_seriestype = [
         :path, :steppre, :steppost, :shape,
@@ -704,8 +703,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             handle = ax[st == :surface ? :plot_surface : :plot_wireframe](x, y, z;
                 label = series[:label],
                 zorder = series[:series_plotindex],
-                rstride = series[:rstride],
-                cstride = series[:cstride],
+                rstride = series[:stride][1],
+                cstride = series[:stride][2],
                 linewidth = py_dpi_scale(plt, series[:linewidth]),
                 edgecolor = py_linecolor(series),
                 extrakw...

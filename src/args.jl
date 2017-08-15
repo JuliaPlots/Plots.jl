@@ -214,8 +214,7 @@ const _series_defaults = KW(
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
                                      #     one logical series to be broken up (path and markers, for example)
     :hover              => nothing,  # text to display when hovering over the data points
-    :rstride            => 1,        # array row stride for wireframe/surface
-    :cstride            => 1,        # array column stride for wireframe/surface
+    :stride,            => (1,1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
 )
 
 
@@ -471,6 +470,7 @@ add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesa
 add_aliases(:html_output_format, :format, :fmt, :html_format)
 add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
+add_aliases(:stride, :wirefame_stride, :surface_stride, :surf_str, :str)
 
 
 # add all pluralized forms to the _keyAliases dict

@@ -48,6 +48,7 @@ const _arg_desc = KW(
 :series_annotations => "AbstractVector of String or PlotText.  These are annotations which are mapped to data points/positions.",
 :primary            => "Bool.  Does this count as a 'real series'?  For example, you could have a path (primary), and a scatter (secondary) as 2 separate series, maybe with different data (see sticks recipe for an example).  The secondary series will get the same color, etc as the primary.",
 :hover 				=> "nothing or vector of strings. Text to display when hovering over each data point.",
+:stride             => "(1,1). Array row and column strides. Used in surface/wireframe."
 
 # plot args
 :plot_title               => "String. Title for the whole plot (not the subplots) (Note: Not currently implemented)",
