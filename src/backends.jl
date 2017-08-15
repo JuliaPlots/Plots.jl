@@ -6,7 +6,10 @@ const _backendSymbol = Dict{DataType, Symbol}(NoBackend => :none)
 const _backends = Symbol[]
 const _initialized_backends = Set{Symbol}()
 
+"Returns a list of supported backends"
 backends() = _backends
+
+"Returns the name of the current backend"
 backend_name() = CURRENT_BACKEND.sym
 _backend_instance(sym::Symbol) = haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
 

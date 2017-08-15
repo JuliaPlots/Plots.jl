@@ -500,9 +500,28 @@ end
 function get_sp_lims(sp::Subplot, letter::Symbol)
     axis_limits(sp[Symbol(letter, :axis)])
 end
+
+"""
+    xlims([plt])
+
+Returns the x axis limits of the current plot or subplot
+"""
 xlims(sp::Subplot) = get_sp_lims(sp, :x)
+
+"""
+    ylims([plt])
+
+Returns the y axis limits of the current plot or subplot
+"""
 ylims(sp::Subplot) = get_sp_lims(sp, :y)
+
+"""
+    zlims([plt])
+
+Returns the z axis limits of the current plot or subplot
+"""
 zlims(sp::Subplot) = get_sp_lims(sp, :z)
+
 xlims(plt::Plot, sp_idx::Int = 1) = xlims(plt[sp_idx])
 ylims(plt::Plot, sp_idx::Int = 1) = ylims(plt[sp_idx])
 zlims(plt::Plot, sp_idx::Int = 1) = zlims(plt[sp_idx])
@@ -536,7 +555,7 @@ allFunctions(arg)   = trueOrAllTrue(a -> isa(a, Function), arg)
 """
 Allows temporary setting of backend and defaults for Plots. Settings apply only for the `do` block.  Example:
 ```
-with(:gadfly, size=(400,400), type=:histogram) do
+with(:gr, size=(400,400), type=:histogram) do
   plot(rand(10))
   plot(rand(10))
 end

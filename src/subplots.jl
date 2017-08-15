@@ -13,6 +13,11 @@ function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
     )
 end
 
+"""
+    plotarea(subplot)
+
+Return the bounding box of a subplot
+"""
 plotarea(sp::Subplot) = sp.plotarea
 plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
 

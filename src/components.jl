@@ -22,6 +22,13 @@ immutable Shape
     #     end
     # end
 end
+
+"""
+    Shape(x, y)
+    Shape(vertices)
+
+Construct a polygon to be plotted
+"""
 Shape(verts::AVec) = Shape(unzip(verts)...)
 Shape(s::Shape) = deepcopy(s)
 
@@ -331,6 +338,11 @@ immutable PlotText
 end
 PlotText(str) = PlotText(string(str), font())
 
+"""
+    text(string, args...)
+
+Create a PlotText object wrapping a string with font info, for plot annotations
+"""
 text(t::PlotText) = t
 text(str::AbstractString, f::Font) = PlotText(str, f)
 function text(str, args...)
