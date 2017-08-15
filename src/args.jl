@@ -214,6 +214,8 @@ const _series_defaults = KW(
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
                                      #     one logical series to be broken up (path and markers, for example)
     :hover              => nothing,  # text to display when hovering over the data points
+    :rstride            => 1,        # array row stride for wireframe/surface
+    :cstride            => 1,        # array column stride for wireframe/surface
 )
 
 
