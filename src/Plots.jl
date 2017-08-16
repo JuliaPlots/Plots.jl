@@ -8,7 +8,7 @@ import StaticArrays
 using StaticArrays.FixedSizeArrays
 
 @reexport using RecipesBase
-import RecipesBase: plot, animate
+import RecipesBase: plot, plot!, animate
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
