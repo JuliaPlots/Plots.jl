@@ -329,6 +329,18 @@ PlotExample("Spy",
     end)]
 ),
 
+PlotExample("Magic grid argument",
+    "The grid lines can be modified individually for each axis with the magic grid argument",
+    [:(begin
+    x = rand(10)
+    p1 = plot(x, title = "Default looks")
+    p2 = plot(x, grid = (:y, :olivedrab, :solid, 0.5), title = "Modified y grid")
+    p3 = plot(deepcopy(p2), title = "Add x grid")
+    xgrid!(p3, :on, :cadetblue, 2, :dashdot)
+    plot(p1, p2, p3, layout = (1, 3), label = "", fillrange = 0, fillalpha = 0.3)
+    end)]
+),
+
 ]
 
 # ---------------------------------------------------------------------------------

@@ -215,8 +215,8 @@ xflip!(flip::Bool = true; kw...)                          = plot!(; xflip = flip
 yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip, kw...)
 xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
-xgrid!(grid::Bool = true; kw...)                          = plot!(; xgrid = grid, kw...)
-ygrid!(grid::Bool = true; kw...)                          = plot!(; ygrid = grid, kw...)
+xgrid!(args...; kw...)                                    = plot!(; xgrid = args, kw...)
+ygrid!(args...; kw...)                                    = plot!(; ygrid = args, kw...)
 
 let PlotOrSubplot = Union{Plot, Subplot}
     title!(plt::PlotOrSubplot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)

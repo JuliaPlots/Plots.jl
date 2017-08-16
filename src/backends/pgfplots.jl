@@ -267,7 +267,7 @@ function pgf_axis(sp::Subplot, letter)
     end
 
     # grid on or off
-    if !(axis[:grid] in (nothing, false))
+    if axis[:grid]
         push!(style, "$(letter)majorgrids = true")
     end
 

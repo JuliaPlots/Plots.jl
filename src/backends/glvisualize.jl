@@ -24,7 +24,8 @@ const _glvisualize_attr = merge_with_base_supported([
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :colorbar,
+    :grid, :gridalpha, :gridstyle, :gridlinewidth,
+    :legend, :colorbar,
     :marker_z,
     :line_z,
     :levels,
@@ -682,12 +683,12 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     xgc = Colors.color(Plots.gl_color(xaxis[:foreground_color_grid]))
     ygc = Colors.color(Plots.gl_color(yaxis[:foreground_color_grid]))
     axis_vis = []
-    if !(xaxis[:grid] in (nothing, false))
-        grid = draw_grid_lines(sp, xgrid_segs, 1f0, :dot, model, RGBA(xgc, 0.3f0))
+    if xaxis[:grid]
+        grid = draw_grid_lines(sp, xgrid_segs, xaxis[:gridlinewidth], xaxis[:gridstyle], model, RGBA(xgc, xaxis[:gridalpha]))
         push!(axis_vis, grid)
     end
-    if !(yaxis[:grid] in (nothing, false))
-        grid = draw_grid_lines(sp, ygrid_segs, 1f0, :dot, model, RGBA(ygc, 0.3f0))
+    if yaxis[:grid]
+        grid = draw_grid_lines(sp, ygrid_segs, yaxis[:gridlinewidth], yaxis[:gridstyle], model, RGBA(ygc, yaxis[:gridalpha]))
         push!(axis_vis, grid)
     end
 

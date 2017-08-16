@@ -339,8 +339,8 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
     const strip = plot.strips[1] #Only 1 strip supported with Plots.jl
 
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
-    xgrid_show = !(xaxis[:grid] in (nothing, false))
-    ygrid_show = !(yaxis[:grid] in (nothing, false))
+    xgrid_show = xaxis[:grid]
+    ygrid_show = yaxis[:grid]
 
     strip.grid = InspectDR.GridRect(
     	vmajor=xgrid_show, # vminor=xgrid_show,

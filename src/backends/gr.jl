@@ -20,7 +20,8 @@ const _gr_attr = merge_with_base_supported([
     :title, :window_title,
     :guide, :lims, :ticks, :scale, :flip,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :legendtitle, :colorbar,
+    :grid, :gridalpha, :gridstyle, :gridlinewidth,
+    :legend, :legendtitle, :colorbar,
     :marker_z, :levels,
     :ribbon, :quiver,
     :orientation,
@@ -691,15 +692,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         ticksize = 0.01 * (viewport_plotarea[2] - viewport_plotarea[1])
 
         # GR.setlinetype(GR.LINETYPE_DOTTED)
-        if !(xaxis[:grid] in (nothing, false))
-            GR.grid3d(xtick, 0, 0, xmin, ymax, zmin, 2, 0, 0)
-        end
-        if !(yaxis[:grid] in (nothing, false))
-            GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
-        end
-        if !(zaxis[:grid] in (nothing, false))
-            GR.grid3d(0, 0, ztick, xmin, ymax, zmin, 0, 0, 2)
-        end
+        xaxis[:grid] && GR.grid3d(xtick, 0, 0, xmin, ymax, zmin, 2, 0, 0)
+        yaxis[:grid] && GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
+        zaxis[:grid] && GR.grid3d(0, 0, ztick, xmin, ymax, zmin, 0, 0, 2)
         GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
         GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
 
@@ -718,16 +713,16 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         # @show xticks yticks #spine_segs grid_segs
 
         # draw the grid lines
-        if !(xaxis[:grid] in (nothing, false))
+        if xaxis[:grid]
             # gr_set_linecolor(sp[:foreground_color_grid])
             # GR.grid(xtick, ytick, 0, 0, majorx, majory)
-            gr_set_line(1, :dot, xaxis[:foreground_color_grid])
-            GR.settransparency(0.5)
+            gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
+            GR.settransparency(xaxis[:gridalpha])
             gr_polyline(coords(xgrid_segs)...)
         end
-        if !(yaxis[:grid] in (nothing, false))
-            gr_set_line(1, :dot, yaxis[:foreground_color_grid])
-            GR.settransparency(0.5)
+        if yaxis[:grid]
+            gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
+            GR.settransparency(yaxis[:gridalpha])
             gr_polyline(coords(ygrid_segs)...)
         end
         GR.settransparency(1.0)
