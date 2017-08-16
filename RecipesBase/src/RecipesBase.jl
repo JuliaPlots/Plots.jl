@@ -22,6 +22,7 @@ abstract type AbstractLayout end
 # can add their own definition of RecipesBase.plot since RecipesBase is the common
 # dependency of the Plots ecosystem
 function plot end
+function plot! end
 
 # a placeholder to establish the name so that other packages (Plots.jl for example)
 # can add their own definition of RecipesBase.animate since RecipesBase is the common
