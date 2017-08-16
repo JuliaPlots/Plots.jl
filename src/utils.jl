@@ -137,7 +137,7 @@ function imageHack(d::KW)
 end
 # ---------------------------------------------------------------
 
-
+"Build line segments for plotting"
 type Segments{T}
     pts::Vector{T}
 end
@@ -185,6 +185,7 @@ type SegmentsIterator
     args::Tuple
     n::Int
 end
+
 function iter_segments(args...)
     tup = Plots.wraptuple(args)
     n = maximum(map(length, tup))
