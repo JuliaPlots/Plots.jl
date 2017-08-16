@@ -234,8 +234,8 @@ let PlotOrSubplot = Union{Plot, Subplot}
                               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; xticks = (ticks,labels), kw...)
     yticks!{T<:Real,S<:AbstractString}(plt::PlotOrSubplot,
                               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; yticks = (ticks,labels), kw...)
-    xgrid!(plt::PlotOrSubplot, grid::Bool = true; kw...)                  = plot!(plt; xgrid = grid, kw...)
-    ygrid!(plt::PlotOrSubplot, grid::Bool = true; kw...)                  = plot!(plt; ygrid = grid, kw...)
+    xgrid!(plt::PlotOrSubplot, args...; kw...)                  = plot!(plt; xgrid = args, kw...)
+    ygrid!(plt::PlotOrSubplot, args...; kw...)                  = plot!(plt; ygrid = args, kw...)
     annotate!(plt::PlotOrSubplot, anns...; kw...)                         = plot!(plt; annotation = anns, kw...)
     annotate!{T<:Tuple}(plt::PlotOrSubplot, anns::AVec{T}; kw...)         = plot!(plt; annotation = anns, kw...)
     xflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)                  = plot!(plt; xflip = flip, kw...)
