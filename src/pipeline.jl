@@ -73,7 +73,7 @@ function _process_userrecipes(plt::Plot, d::KW, args)
         next_series = shift!(still_to_process)
         # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
         if !(typeof(next_series) <: RecipeData)
-            error("Inputs couldn't be processed... expected RecipeData but got: $recipedata")
+            error("Inputs couldn't be processed... expected RecipeData but got: $next_series")
         end
         if isempty(next_series.args)
             _process_userrecipe(plt, kw_list, next_series)
