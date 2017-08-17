@@ -168,7 +168,7 @@ const _allGridSyms = [:x, :y, :z,
                     :xyz, :xzy, :yxz, :yzx, :zxy, :zyx,
                     :all, :both, :on,
                     :none, :off,]
-const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing; false; true]
+const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing]
 hasgrid(arg::Void, letter) = false
 hasgrid(arg::Bool, letter) = arg
 function hasgrid(arg::Symbol, letter)
@@ -671,7 +671,7 @@ end
 
 
 function processGridArg!(d::KW, arg, letter)
-    if arg in _allGridArgs
+    if arg in _allGridArgs || isa(arg, Bool)
         d[Symbol(letter, :grid)] = hasgrid(arg, letter)
 
     elseif allStyles(arg)
