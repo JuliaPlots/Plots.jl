@@ -336,6 +336,7 @@ function gr_draw_markers(series::Series, x, y)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     gr_draw_markers(series, x, y, series[:markersize], mz)
     if mz != nothing
+        GR.setscale(0)
         gr_colorbar(series[:subplot])
     end
 end
@@ -863,7 +864,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if series[:marker_z] != nothing
                     zmin, zmax = extrema(series[:marker_z])
                     GR.setspace(zmin, zmax, 0, 90)
-                    GR.setscale(0)
                 end
                 gr_draw_markers(series, x, y)
             end
