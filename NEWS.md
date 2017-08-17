@@ -11,14 +11,23 @@
 ---
 ## (current master)
 
-## 0.12.2
+## 0.12.3
+
+- new grid line style defaults
+- `grid` is now an axis attribute and a magic argument: it is now possible to modify the grid line style, alpha and line width
+- Enforce plot order in user recipes
+- import `plot!` from RecipesBase
+- GR no longer automatically handles _ and ^ in texts
+- fix GR colorbar for scatter plots
+
+#### 0.12.2
 
 - fix an issue with Juno/PlotlyJS compatibility on new installations
 - fix markers not showing up in seriesrecipes using :scatter
 - don't use pywrap in the pyplot backend
 - improve the bottom margin for the gr backend
 
-## 0.12.1
+#### 0.12.1
 
 - fix deprecation warnings
 - switch from FixedSizeArrays to StaticArrays.FixedSizeArrays
