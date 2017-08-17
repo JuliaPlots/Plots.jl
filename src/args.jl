@@ -175,7 +175,7 @@ function hasgrid(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on) || contains(string(arg), string(letter))
     else
-        warn("Unknown grid argument $arg; $letter\grid was set to `true` instead")
+        warn("Unknown grid argument $arg; $letter\grid was set to `true` instead.")
         true
     end
 end
@@ -303,9 +303,9 @@ const _axis_defaults = KW(
     :mirror => false,
     :grid                     => true,
     :foreground_color_grid    => :match,            # grid color
-    :gridalpha                => 0.3,
-    :gridstyle                => :dot,
-    :gridlinewidth                => 1,
+    :gridalpha                => 0.1,
+    :gridstyle                => :solid,
+    :gridlinewidth            => 0.5,
 )
 
 const _suppress_warnings = Set{Symbol}([
