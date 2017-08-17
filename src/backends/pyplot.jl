@@ -17,7 +17,8 @@ const _pyplot_attr = merge_with_base_supported([
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :legendtitle, :colorbar,
+    :grid, :gridalpha, :gridstyle, :gridlinewidth,
+    :legend, :legendtitle, :colorbar,
     :marker_z, :line_z, :fill_z,
     :levels,
     :ribbon, :quiver, :arrow,
@@ -1064,9 +1065,13 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 lab[:set_family](axis[:tickfont].family)
                 lab[:set_rotation](axis[:rotation])
             end
-            if sp[:grid]
-                fgcolor = py_color(sp[:foreground_color_grid])
-                pyaxis[:grid](true, color = fgcolor, linestyle = ":")
+            if axis[:grid]
+                fgcolor = py_color(axis[:foreground_color_grid])
+                pyaxis[:grid](true,
+                    color = fgcolor,
+                    linestyle = py_linestyle(:line, axis[:gridstyle]),
+                    linewidth = axis[:gridlinewidth],
+                    alpha = axis[:gridalpha])
                 ax[:set_axisbelow](true)
             end
             py_set_axis_colors(ax, axis)

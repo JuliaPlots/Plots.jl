@@ -20,7 +20,8 @@ const _gr_attr = merge_with_base_supported([
     :title, :window_title,
     :guide, :lims, :ticks, :scale, :flip,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :legendtitle, :colorbar,
+    :grid, :gridalpha, :gridstyle, :gridlinewidth,
+    :legend, :legendtitle, :colorbar,
     :marker_z, :levels,
     :ribbon, :quiver,
     :orientation,
@@ -692,10 +693,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         ticksize = 0.01 * (viewport_plotarea[2] - viewport_plotarea[1])
 
         # GR.setlinetype(GR.LINETYPE_DOTTED)
-        if sp[:grid]
-            GR.grid3d(xtick, 0, ztick, xmin, ymax, zmin, 2, 0, 2)
-            GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
-        end
+        xaxis[:grid] && GR.grid3d(xtick, 0, 0, xmin, ymax, zmin, 2, 0, 0)
+        yaxis[:grid] && GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
+        zaxis[:grid] && GR.grid3d(0, 0, ztick, xmin, ymax, zmin, 0, 0, 2)
         GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
         GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
 
@@ -710,23 +710,31 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setwindow(xmin, xmax, ymin, ymax)
         end
 
-        xticks, yticks, spine_segs, grid_segs = axis_drawing_info(sp)
+        xticks, yticks, xspine_segs, yspine_segs, xgrid_segs, ygrid_segs = axis_drawing_info(sp)
         # @show xticks yticks #spine_segs grid_segs
 
         # draw the grid lines
-        if sp[:grid]
+        if xaxis[:grid]
             # gr_set_linecolor(sp[:foreground_color_grid])
             # GR.grid(xtick, ytick, 0, 0, majorx, majory)
-            gr_set_line(1, :dot, sp[:foreground_color_grid])
-            GR.settransparency(0.5)
-            gr_polyline(coords(grid_segs)...)
+            gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
+            GR.settransparency(xaxis[:gridalpha])
+            gr_polyline(coords(xgrid_segs)...)
+        end
+        if yaxis[:grid]
+            gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
+            GR.settransparency(yaxis[:gridalpha])
+            gr_polyline(coords(ygrid_segs)...)
         end
         GR.settransparency(1.0)
 
         # spine (border) and tick marks
-        gr_set_line(1, :solid, sp[:xaxis][:foreground_color_axis])
+        gr_set_line(1, :solid, xaxis[:foreground_color_axis])
         GR.setclip(0)
-        gr_polyline(coords(spine_segs)...)
+        gr_polyline(coords(xspine_segs)...)
+        gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+        GR.setclip(0)
+        gr_polyline(coords(yspine_segs)...)
         GR.setclip(1)
 
         if !(xticks in (nothing, false))

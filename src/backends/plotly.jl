@@ -5,7 +5,7 @@ const _plotly_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_legend, :foreground_color_guide,
-    # :foreground_color_grid, :foreground_color_axis,
+    :foreground_color_grid, :foreground_color_axis,
     :foreground_color_text, :foreground_color_border,
     :foreground_color_title,
     :label,
@@ -19,7 +19,8 @@ const _plotly_attr = merge_with_base_supported([
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :colorbar, :colorbar_title,
+    :grid, :gridalpha, :gridlinewidth,
+    :legend, :colorbar, :colorbar_title,
     :marker_z, :fill_z, :levels,
     :ribbon, :quiver,
     :orientation,
@@ -213,7 +214,9 @@ function plotly_axis(axis::Axis, sp::Subplot)
     letter = axis[:letter]
     ax = KW(
         :title      => axis[:guide],
-        :showgrid   => sp[:grid],
+        :showgrid   => axis[:grid],
+        :gridcolor  => rgba_string(plot_color(axis[:foreground_color_grid], axis[:gridalpha])),
+        :gridwidth  => axis[:gridlinewidth],
         :zeroline   => false,
         :ticks      => "inside",
     )
@@ -229,8 +232,8 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
         ax[:type] = plotly_scale(axis[:scale])
         ax[:tickfont] = plotly_font(axis[:tickfont], axis[:foreground_color_text])
-        ax[:tickcolor] = rgba_string(axis[:foreground_color_border])
-        ax[:linecolor] = rgba_string(axis[:foreground_color_border])
+        ax[:tickcolor] = rgba_string(axis[:foreground_color_axis])
+        ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
         # lims
         lims = axis[:lims]

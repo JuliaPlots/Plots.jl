@@ -76,7 +76,6 @@ const _arg_desc = KW(
 :background_color_inside  => "Color Type or `:match` (matches `:background_color_subplot`).  Background color inside the plot area (under the grid).",
 :foreground_color_subplot => "Color Type or `:match` (matches `:foreground_color`).  Base foreground color of the subplot.",
 :foreground_color_legend  => "Color Type or `:match` (matches `:foreground_color_subplot`).  Foreground color of the legend.",
-:foreground_color_grid    => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of grid lines.",
 :foreground_color_title   => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of subplot title.",
 :color_palette            => "Vector of colors (cycle through) or color gradient (generate list from gradient) or `:auto` (generate a color list using `Colors.distiguishable_colors` and custom seed colors chosen to contrast with the background).  The color palette is a color list from which series colors are automatically chosen.",
 :legend                   => "Bool (show the legend?) or Symbol (legend position).  Symbol values: `:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:inside`, `:legend`, `:topright`, `:topleft`, `:bottomleft`, `:bottomright` (note: only some may be supported in each backend)",
@@ -84,7 +83,6 @@ const _arg_desc = KW(
 :colorbar                 => "Bool (show the colorbar?) or Symbol (colorbar position).  Symbol values: `:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:legend` (matches legend value) (note: only some may be supported in each backend)",
 :clims 					  => "`:auto` or NTuple{2,Number}.  Fixes the limits of the colorbar.",
 :legendfont               => "Font. Font of legend items.",
-:grid                     => "Bool. Show the grid lines?",
 :annotations              => "(x,y,text) tuple(s).  Can be a single tuple or a list of them.  Text can be String or PlotText (created with `text(args...)`)  Add one-off text annotations at the x,y coordinates.",
 :projection               => "Symbol or String.  '3d' or 'polar'",
 :aspect_ratio             => "Symbol (:equal) or Number. Plot area is resized so that 1 y-unit is the same size as `apect_ratio` x-units.",
@@ -111,5 +109,9 @@ const _arg_desc = KW(
 :foreground_color_text    => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of tick labels.",
 :foreground_color_guide   => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of axis guides (axis labels).",
 :mirror                   => "Bool.  Switch the side of the tick labels (right or top).",
-
+:grid                     => "Bool, Symbol, String or `nothing`. Show the grid lines? `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:none`, `:off`",
+:foreground_color_grid    => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of grid lines.",
+:gridalpha                => "Number in [0,1]. The alpha/opacity override for the grid lines.",
+:gridstyle                => "Symbol. Style of the grid lines. Choose from $(_allStyles)",
+:gridlinewidth            => "Number. Width of the grid lines (in pixels)",
 )

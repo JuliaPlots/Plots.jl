@@ -321,11 +321,23 @@ PlotExample("Animation with subplots",
 ),
 
 PlotExample("Spy",
-    "For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has various different nonzero values, a colorbar is added. The colorbar can be disabled with `legend = nothing`. As always, the marker shape and size can be changed with `spy(mat, markersize = 3, markershape = :star)`",
+    "For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has various different nonzero values, a colorbar is added. The colorbar can be disabled with `legend = nothing`. As always, the marker shape and size can be changed with `spy(mat, markersize = 3, markershape = :star)`.",
     [:(begin
     a = spdiagm((ones(50), ones(49), ones(49), ones(40), ones(40)),(0, 1, -1, 10, -10))
     b = spdiagm((1:50, 1:49, 1:49, 1:40, 1:40),(0, 1, -1, 10, -10))
     plot(spy(a, markershape = :dtriangle), spy(b), markersize = 3, title = ["Unique nonzeros" "Different nonzeros"])
+    end)]
+),
+
+PlotExample("Magic grid argument",
+    "The grid lines can be modified individually for each axis with the magic grid argument.",
+    [:(begin
+    x = rand(10)
+    p1 = plot(x, title = "Default looks")
+    p2 = plot(x, grid = (:y, :olivedrab, :dot, 1, 0.9), title = "Modified y grid")
+    p3 = plot(deepcopy(p2), title = "Add x grid")
+    xgrid!(p3, :on, :cadetblue, 2, :dashdot, 0.4)
+    plot(p1, p2, p3, layout = (1, 3), label = "", fillrange = 0, fillalpha = 0.3)
     end)]
 ),
 

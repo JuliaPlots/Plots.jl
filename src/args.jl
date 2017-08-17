@@ -163,6 +163,24 @@ const _scaleAliases = Dict{Symbol,Symbol}(
     :log  => :log10,
 )
 
+const _allGridSyms = [:x, :y, :z,
+                    :xy, :xz, :yx, :yz, :zx, :zy,
+                    :xyz, :xzy, :yxz, :yzx, :zxy, :zyx,
+                    :all, :both, :on,
+                    :none, :off,]
+const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing]
+hasgrid(arg::Void, letter) = false
+hasgrid(arg::Bool, letter) = arg
+function hasgrid(arg::Symbol, letter)
+    if arg in _allGridSyms
+        arg in (:all, :both, :on) || contains(string(arg), string(letter))
+    else
+        warn("Unknown grid argument $arg; $letter\grid was set to `true` instead.")
+        true
+    end
+end
+hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
+
 # -----------------------------------------------------------------------------
 
 const _series_defaults = KW(
@@ -247,7 +265,6 @@ const _subplot_defaults = KW(
     :background_color_inside  => :match,            # background inside grid
     :foreground_color_subplot => :match,            # default for other fg colors... match takes plot default
     :foreground_color_legend  => :match,            # foreground of legend
-    :foreground_color_grid    => :match,            # grid color
     :foreground_color_title   => :match,            # title color
     :color_palette            => :auto,
     :legend                   => :best,
@@ -255,7 +272,6 @@ const _subplot_defaults = KW(
     :colorbar                 => :legend,
     :clims                    => :auto,
     :legendfont               => font(8),
-    :grid                     => true,
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :none,             # choose from :none or :equal
@@ -285,6 +301,11 @@ const _axis_defaults = KW(
     :discrete_values => [],
     :formatter => :auto,
     :mirror => false,
+    :grid                     => true,
+    :foreground_color_grid    => :match,            # grid color
+    :gridalpha                => 0.1,
+    :gridstyle                => :solid,
+    :gridlinewidth            => 0.5,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -414,6 +435,7 @@ add_aliases(:linealpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
 add_aliases(:markeralpha, :ma, :malpha, :mα, :markeropacity, :mopacity)
 add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
+add_aliases(:gridalpha, :ga, :galpha, :gα, :gridopacity, :gopacity)
 
 # series attributes
 add_aliases(:seriestype, :st, :t, :typ, :linetype, :lt)
@@ -469,6 +491,8 @@ add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesa
 add_aliases(:html_output_format, :format, :fmt, :html_format)
 add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
+add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
+add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
 
 
 # add all pluralized forms to the _keyAliases dict
@@ -645,6 +669,36 @@ function processFillArg(d::KW, arg)
     return
 end
 
+
+function processGridArg!(d::KW, arg, letter)
+    if arg in _allGridArgs || isa(arg, Bool)
+        d[Symbol(letter, :grid)] = hasgrid(arg, letter)
+
+    elseif allStyles(arg)
+        d[Symbol(letter, :gridstyle)] = arg
+
+    elseif typeof(arg) <: Stroke
+        arg.width == nothing || (d[Symbol(letter, :gridlinewidth)] = arg.width)
+        arg.color == nothing || (d[Symbol(letter, :foreground_color_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
+        arg.alpha == nothing || (d[Symbol(letter, :gridalpha)] = arg.alpha)
+        arg.style == nothing || (d[Symbol(letter, :gridstyle)] = arg.style)
+
+    # linealpha
+    elseif allAlphas(arg)
+        d[Symbol(letter, :gridalpha)] = arg
+
+    # linewidth
+    elseif allReals(arg)
+        d[Symbol(letter, :gridlinewidth)] = arg
+
+    # color
+elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_grid))
+        warn("Skipped grid arg $arg.")
+
+    end
+end
+
+
 _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
 _replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
 _replace_markershape(shape) = shape
@@ -685,6 +739,22 @@ function preprocessArgs!(d::KW)
             for arg in wraptuple(args)
                 process_axis_arg!(d, arg, letter)
             end
+        end
+    end
+
+    # handle grid args common to all axes
+    args = pop!(d, :grid, ())
+    for arg in wraptuple(args)
+        for letter in (:x, :y, :z)
+            processGridArg!(d, arg, letter)
+        end
+    end
+    # handle individual axes grid args
+    for letter in (:x, :y, :z)
+        gridsym = Symbol(letter, :grid)
+        args = pop!(d, gridsym, ())
+        for arg in wraptuple(args)
+            processGridArg!(d, arg, letter)
         end
     end
 
@@ -943,7 +1013,6 @@ const _match_map = KW(
     :background_color_legend  => :background_color_subplot,
     :background_color_inside  => :background_color_subplot,
     :foreground_color_legend  => :foreground_color_subplot,
-    :foreground_color_grid    => :foreground_color_subplot,
     :foreground_color_title   => :foreground_color_subplot,
     :left_margin   => :margin,
     :top_margin    => :margin,
@@ -957,6 +1026,7 @@ const _match_map2 = KW(
     :foreground_color_subplot => :foreground_color,
     :foreground_color_axis    => :foreground_color_subplot,
     :foreground_color_border  => :foreground_color_subplot,
+    :foreground_color_grid    => :foreground_color_subplot,
     :foreground_color_guide   => :foreground_color_subplot,
     :foreground_color_text    => :foreground_color_subplot,
 )
@@ -1091,7 +1161,6 @@ function _update_subplot_colors(sp::Subplot)
     # foreground colors
     color_or_nothing!(sp.attr, :foreground_color_subplot)
     color_or_nothing!(sp.attr, :foreground_color_legend)
-    color_or_nothing!(sp.attr, :foreground_color_grid)
     color_or_nothing!(sp.attr, :foreground_color_title)
     return
 end
@@ -1143,6 +1212,7 @@ function _update_axis_colors(axis::Axis)
     color_or_nothing!(axis.d, :foreground_color_border)
     color_or_nothing!(axis.d, :foreground_color_guide)
     color_or_nothing!(axis.d, :foreground_color_text)
+    color_or_nothing!(axis.d, :foreground_color_grid)
     return
 end
 
