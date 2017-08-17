@@ -1,4 +1,4 @@
-__precompile__(true)
+__precompile__(false)
 
 module Plots
 
