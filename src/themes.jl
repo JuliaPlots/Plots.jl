@@ -1,4 +1,8 @@
+"""
+    theme(s::Symbol)
 
+Specify the colour theme for plots.
+"""
 function theme(s::Symbol; kw...)
     # reset?
     if s == :none || s == :default

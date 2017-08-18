@@ -22,6 +22,13 @@ immutable Shape
     #     end
     # end
 end
+
+"""
+    Shape(x, y)
+    Shape(vertices)
+
+Construct a polygon to be plotted
+"""
 Shape(verts::AVec) = Shape(unzip(verts)...)
 Shape(s::Shape) = deepcopy(s)
 
@@ -32,6 +39,7 @@ vertices(shape::Shape) = collect(zip(shape.x, shape.y))
 #deprecated
 @deprecate shape_coords coords
 
+"return the vertex points from a Shape or Segments object"
 function coords(shape::Shape)
     shape.x, shape.y
 end
@@ -156,6 +164,7 @@ Shape(k::Symbol) = deepcopy(_shapes[k])
 
 
 # uses the centroid calculation from https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
+"return the centroid of a Shape"
 function center(shape::Shape)
     x, y = coords(shape)
     n = length(x)
@@ -189,6 +198,7 @@ function scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
     scale!(shapecopy, x, y, c)
 end
 
+"translate a Shape in space"
 function translate!(shape::Shape, x::Real, y::Real = x)
     sx, sy = coords(shape)
     for i=1:length(sx)
@@ -227,6 +237,7 @@ function rotate!(shape::Shape, Θ::Real, c = center(shape))
     shape
 end
 
+"rotate an object in space"
 function rotate(shape::Shape, Θ::Real, c = center(shape))
     shapecopy = deepcopy(shape)
     rotate!(shapecopy, Θ, c)
@@ -331,6 +342,11 @@ immutable PlotText
 end
 PlotText(str) = PlotText(string(str), font())
 
+"""
+    text(string, args...)
+
+Create a PlotText object wrapping a string with font info, for plot annotations
+"""
 text(t::PlotText) = t
 text(str::AbstractString, f::Font) = PlotText(str, f)
 function text(str, args...)
@@ -350,6 +366,11 @@ immutable Stroke
   style
 end
 
+"""
+    stroke(args...; alpha = nothing)
+
+Define the properties of the stroke used in plotting lines
+"""
 function stroke(args...; alpha = nothing)
   width = 1
   color = :black
@@ -597,6 +618,12 @@ immutable Arrow
     headwidth::Float64
 end
 
+"""
+    arrow(args...)
+
+Define arrowheads to apply to lines - args are `style` (`:open` or `:closed`),
+`side` (`:head`, `:tail` or `:both`), `headlength` and `headwidth`
+"""
 function arrow(args...)
     style = :simple
     side = :head
@@ -652,7 +679,7 @@ immutable Formatted{T}
 end
 
 # -----------------------------------------------------------------------
-
+"create a BezierCurve for plotting"
 type BezierCurve{T <: FixedSizeArrays.Vec}
     control_points::Vector{T}
 end

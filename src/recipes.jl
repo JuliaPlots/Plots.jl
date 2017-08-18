@@ -847,6 +847,7 @@ end
 
 # TODO: move OHLC to PlotRecipes finance.jl
 
+"Represent Open High Low Close data (used in finance)"
 type OHLC{T<:Real}
   open::T
   high::T

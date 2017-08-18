@@ -512,7 +512,6 @@ end
 `default(; kw...)` will set the current default value for each key/value pair
 `default(d, key)` returns the key from d if it exists, otherwise `default(key)`
 """
-
 function default(k::Symbol)
     k = get(_keyAliases, k, k)
     for defaults in _all_defaults

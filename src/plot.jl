@@ -6,6 +6,10 @@ const CURRENT_PLOT = CurrentPlot(Nullable{AbstractPlot}())
 
 isplotnull() = isnull(CURRENT_PLOT.nullableplot)
 
+"""
+    current()
+Returns the Plot object for the current plot
+"""
 function current()
     if isplotnull()
         error("No current plot/subplot")

@@ -1,4 +1,4 @@
-
+"Represents an animation object"
 immutable Animation
     dir::String
     frames::Vector{String}
@@ -9,6 +9,11 @@ function Animation()
     Animation(tmpdir, String[])
 end
 
+"""
+    frame(animation[, plot])
+
+Add a plot (the current plot if not specified) to an existing animation
+"""
 function frame{P<:AbstractPlot}(anim::Animation, plt::P=current())
     i = length(anim.frames) + 1
     filename = @sprintf("%06d.png", i)
@@ -81,7 +86,7 @@ function buildanimation(animdir::AbstractString, fn::AbstractString;
     catch err
         warn("""Tried to create gif using convert (ImageMagick), but got error: $err
             ImageMagick can be installed by executing `Pkg.add("ImageMagick")`.
-            You may also need to install the imagemagick c++ library through your operating system. 
+            You may also need to install the imagemagick c++ library through your operating system.
             Will try ffmpeg, but it's lower quality...)""")
 
         # low quality
