@@ -498,6 +498,14 @@ function make_fillrange_from_ribbon(kw::KW)
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
 end
 
+#turn tuple of fillranges to one path
+function concatenate_fillrange(x,y::Tuple)
+    rib1, rib2 = first(y), last(y)
+    yline = vcat(rib1,(rib2)[end:-1:1])
+    xline = vcat(x,x[end:-1:1])
+    return xline, yline
+end
+
 function get_sp_lims(sp::Subplot, letter::Symbol)
     axis_limits(sp[Symbol(letter, :axis)])
 end
