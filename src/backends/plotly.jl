@@ -589,9 +589,9 @@ function plotly_series(plt::Plot, series::Series)
         # if hasfillrange is true, return two dictionaries (one for original
         # series, one for series being filled to) instead of one
         d_out_fillrange = deepcopy(d_out)
+        d_out_fillrange[:showlegend] = false
         if isa(series[:fillrange], AbstractVector)
             d_out_fillrange[:y] = series[:fillrange]
-            d_out_fillrange[:showlegend] = false
             delete!(d_out_fillrange, :fill)
             delete!(d_out_fillrange, :fillcolor)
         else
@@ -600,7 +600,6 @@ function plotly_series(plt::Plot, series::Series)
             d_out_fillrange[:x], d_out_fillrange[:y] =
                 concatenate_fillrange(series[:x], series[:fillrange])
             d_out_fillrange[:line][:width] = 0
-            d_out[:showlegend] = false
             delete!(d_out, :fill)
             delete!(d_out, :fillcolor)
         end
