@@ -93,6 +93,7 @@ const _arg_desc = KW(
 :bottom_margin            => "Measure (multiply by `mm`, `px`, etc) or `:match` (matches `:margin`).  Specifies the extra padding on the bottom of the subplot.",
 :subplot_index            => "Integer.  Internal (not set by user).  Specifies the index of this subplot in the Plot's `plt.subplot` list.",
 :colorbar_title           => "String.  Title of colorbar.",
+:draw_axes_border         => "Bool.  Draw a border around the axes.",
 
 # axis args
 :guide     				  => "String. Axis guide (label).",

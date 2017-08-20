@@ -282,6 +282,7 @@ const _subplot_defaults = KW(
     :bottom_margin            => :match,
     :subplot_index            => -1,
     :colorbar_title           => "",
+    :draw_axes_border         => false,
 )
 
 const _axis_defaults = KW(
@@ -493,6 +494,7 @@ add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
 add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
 add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
+add_aliases(:draw_axes_border, :axes_border, :show_axes_border)
 
 
 # add all pluralized forms to the _keyAliases dict

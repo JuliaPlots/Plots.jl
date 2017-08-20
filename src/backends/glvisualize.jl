@@ -39,7 +39,8 @@ const _glvisualize_attr = merge_with_base_supported([
     :clims,
     :inset_subplots,
     :dpi,
-    :hover
+    :hover,
+    :draw_axes_border,
 ])
 const _glvisualize_seriestype = [
     :path, :shape,

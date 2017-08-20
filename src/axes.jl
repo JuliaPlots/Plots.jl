@@ -502,10 +502,10 @@ function axis_drawing_info(sp::Subplot)
         t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
 
         push!(xspine_segs, (xmin,ymin), (xmax,ymin)) # bottom spine
-        # push!(xspine_segs, (xmin,ymax), (xmax,ymax)) # top spine
+        sp[:draw_axes_border] && push!(xspine_segs, (xmin,ymax), (xmax,ymax)) # top spine
         for xtick in xticks[1]
             push!(xspine_segs, (xtick, ymin), (xtick, t1)) # bottom tick
-            # push!(xspine_segs, (xtick, ymax), (xtick, t2)) # top tick
+            # sp[:draw_axes_border] && push!(xspine_segs, (xtick, ymax), (xtick, t2)) # top tick
             xaxis[:grid] && push!(xgrid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
         end
     end
@@ -517,10 +517,10 @@ function axis_drawing_info(sp::Subplot)
         t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
 
         push!(yspine_segs, (xmin,ymin), (xmin,ymax)) # left spine
-        # push!(yspine_segs, (xmax,ymin), (xmax,ymax)) # right spine
+        sp[:draw_axes_border] &&  push!(yspine_segs, (xmax,ymin), (xmax,ymax)) # right spine
         for ytick in yticks[1]
             push!(yspine_segs, (xmin, ytick), (t1, ytick)) # left tick
-            # push!(yspine_segs, (xmax, ytick), (t2, ytick)) # right tick
+            # sp[:draw_axes_border] && push!(yspine_segs, (xmax, ytick), (t2, ytick)) # right tick
             yaxis[:grid] && push!(ygrid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
         end
     end

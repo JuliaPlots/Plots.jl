@@ -32,6 +32,7 @@ const _gr_attr = merge_with_base_supported([
     :inset_subplots,
     :bar_width,
     :arrow,
+    :draw_axes_border,
 ])
 const _gr_seriestype = [
     :path, :scatter,
