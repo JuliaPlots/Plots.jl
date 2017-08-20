@@ -1096,7 +1096,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 st = series[:seriestype]
                 gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
 
-                if st == :shape || series[:fillrange] != nothing
+                if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
                     gr_set_fill(series[:fillcolor]) #, series[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
                     b, t = ypos-0.4dy, ypos+0.4dy

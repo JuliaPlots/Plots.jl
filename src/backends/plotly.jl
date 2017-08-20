@@ -438,7 +438,8 @@ function plotly_series(plt::Plot, series::Series)
     isscatter = st in (:scatter, :scatter3d, :scattergl)
     hasmarker = isscatter || series[:markershape] != :none
     hasline = st in (:path, :path3d)
-    hasfillrange = st in (:path, :scatter, :scattergl) && isa(series[:fillrange], AbstractVector)
+    hasfillrange = st in (:path, :scatter, :scattergl) &&
+        (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     # for surface types, set the data
     if st in (:heatmap, :contour, :surface, :wireframe)
@@ -462,7 +463,7 @@ function plotly_series(plt::Plot, series::Series)
         else
             hasline ? "lines" : "none"
         end
-        if series[:fillrange] == true || series[:fillrange] == 0
+        if series[:fillrange] == true || series[:fillrange] == 0 || isa(series[:fillrange], Tuple)
             d_out[:fill] = "tozeroy"
             d_out[:fillcolor] = rgba_string(series[:fillcolor])
         elseif isa(series[:fillrange], AbstractVector)
@@ -587,11 +588,21 @@ function plotly_series(plt::Plot, series::Series)
     if hasfillrange
         # if hasfillrange is true, return two dictionaries (one for original
         # series, one for series being filled to) instead of one
-        d_out_fillrange = copy(d_out)
-        d_out_fillrange[:y] = series[:fillrange]
+        d_out_fillrange = deepcopy(d_out)
         d_out_fillrange[:showlegend] = false
-        delete!(d_out_fillrange, :fill)
-        delete!(d_out_fillrange, :fillcolor)
+        if isa(series[:fillrange], AbstractVector)
+            d_out_fillrange[:y] = series[:fillrange]
+            delete!(d_out_fillrange, :fill)
+            delete!(d_out_fillrange, :fillcolor)
+        else
+            # if fillrange is a tuple with upper and lower limit, d_out_fillrange
+            # is the series that will do the filling
+            d_out_fillrange[:x], d_out_fillrange[:y] =
+                concatenate_fillrange(series[:x], series[:fillrange])
+            d_out_fillrange[:line][:width] = 0
+            delete!(d_out, :fill)
+            delete!(d_out, :fillcolor)
+        end
 
         return [d_out_fillrange, d_out]
     else
