@@ -1091,9 +1091,15 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         ax[set_facecolor_sym](py_color(sp[:background_color_inside]))
 
         if !sp[:draw_axes_border]
-            # hide the right and top spines
-            ax[:spines]["right"][:set_visible](false)
-            ax[:spines]["top"][:set_visible](false)
+            if ispolar(sp)
+                for (loc, spine) in ax[:spines]
+                    spine[:set_visible](false)
+                end
+            else
+                # hide the right and top spines
+                ax[:spines]["right"][:set_visible](false)
+                ax[:spines]["top"][:set_visible](false)
+            end
         end
     end
     py_drawfig(fig)
