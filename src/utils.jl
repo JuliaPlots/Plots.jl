@@ -496,6 +496,7 @@ function make_fillrange_from_ribbon(kw::KW)
     rib1, rib2 = -first(rib), last(rib)
     # kw[:ribbon] = nothing
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
+    (get(kw, :fillalpha, nothing) == nothing) && (kw[:fillalpha] = 0.5)
 end
 
 #turn tuple of fillranges to one path
