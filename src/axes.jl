@@ -216,7 +216,7 @@ end
 
 # return (continuous_values, discrete_values) for the ticks on this axis
 function get_ticks(axis::Axis)
-    ticks = axis[:ticks]
+    ticks = _transform_ticks(axis[:ticks])
     ticks in (nothing, false) && return nothing
 
     dvals = axis[:discrete_values]
@@ -245,6 +245,10 @@ function get_ticks(axis::Axis)
         cv, dv
     end
 end
+
+_transform_ticks(ticks) = ticks
+_transform_ticks(ticks::AbstractArray{T}) where T <: Dates.TimeType = Dates.value.(ticks)
+_transform_ticks(ticks::NTuple{2, Any}) = (_transform_ticks(ticks[1]), ticks[2])
 
 # -------------------------------------------------------------------------
 
