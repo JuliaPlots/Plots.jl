@@ -854,7 +854,7 @@ end
 # expecting a mapping of "group label" to "group indices"
 function extractGroupArgs{T, V<:AVec{Int}}(idxmap::Dict{T,V}, args...)
     groupLabels = sortedkeys(idxmap)
-    groupIds = VecI[collect(idxmap[k]) for k in groupLabels]
+    groupIds = Vector{Int}[collect(idxmap[k]) for k in groupLabels]
     GroupBy(groupLabels, groupIds)
 end
 

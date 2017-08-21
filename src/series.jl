@@ -515,6 +515,13 @@ end
         @series begin
             label     --> string(glab)
             idxfilter --> groupby.groupIds[i]
+            for (key,val) in d
+                length(args) == 0 && break
+                if key != :group && isa(val, AbstractArray) && size(val,1) == size(args[1],1)
+                    n = ndims(val)
+                    :($key) := val[groupby.groupIds[i], fill(Colon(), n-1)...]
+                end
+            end
             args
         end
     end
