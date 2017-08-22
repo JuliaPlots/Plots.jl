@@ -47,7 +47,7 @@ end
 # --------------------------------------------------------------------------
 
 # this holds the data and attributes of one series, and is returned from apply_recipe
-immutable RecipeData
+struct RecipeData
     d::Dict{Symbol,Any}
     args::Tuple
 end

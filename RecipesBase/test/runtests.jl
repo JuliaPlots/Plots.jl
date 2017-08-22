@@ -30,7 +30,7 @@ end
 @testset "simple parametric type" begin
     @test_throws MethodError RecipesBase.apply_recipe(KW(), T1())
 
-    @recipe function plot{N <: Integer}(t::T1, n::N = 1; customcolor = :green)
+    @recipe function plot(t::T1, n::N = 1; customcolor = :green) where N <: Integer
         :markershape --> :auto, :require
         :markercolor --> customcolor, :force
         :xrotation --> 5
