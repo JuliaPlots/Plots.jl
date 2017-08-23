@@ -326,7 +326,7 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
                 cfuncind(ci)
                 GR.settransparency(_gr_gradient_alpha[ci-999])
             end
-            # don't draw filled area if marker shape is 1D  
+            # don't draw filled area if marker shape is 1D
             if !(shape in (:hline, :vline, :+, :x, :cross, :xcross))
                 gr_draw_marker(x[i], y[i], msi, shape)
             end
@@ -543,10 +543,10 @@ end
 
 
 function _update_min_padding!(sp::Subplot{GRBackend})
-    leftpad   = 10mm
-    toppad    = 2mm
-    rightpad  = 2mm
-    bottompad = 6mm
+    leftpad   = 10mm + sp[:left_margin]
+    toppad    = 2mm  + sp[:top_margin]
+    rightpad  = 2mm  + sp[:right_margin]
+    bottompad = 6mm  + sp[:bottom_margin]
     if sp[:title] != ""
         toppad += 5mm
     end
@@ -558,10 +558,11 @@ function _update_min_padding!(sp::Subplot{GRBackend})
                         valign = :top,
                         color = sp[:xaxis][:foreground_color_axis],
                         rotation = sp[:xaxis][:rotation])
-            h = 0
+            h = 0.0
             for (cv, dv) in zip(xticks...)
                 tbx, tby = gr_inqtext(0, 0, string(dv))
-                h = max(h, tby[2] - tby[1])
+                tby_min, tby_max = extrema(tby)
+                h = max(h, tby_max - tby_min)
             end
             bottompad += 1mm + gr_plot_size[2] * h * px
         else
