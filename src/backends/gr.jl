@@ -542,6 +542,30 @@ function gr_display(plt::Plot)
 end
 
 
+function gr_set_xticks_font(sp)
+    flip = sp[:yaxis][:flip]
+    mirror = sp[:xaxis][:mirror]
+    gr_set_font(sp[:xaxis][:tickfont],
+                halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
+                valign = (mirror ? :bottom : :top),
+                color = sp[:xaxis][:foreground_color_axis],
+                rotation = sp[:xaxis][:rotation])
+    return flip, mirror
+end
+
+
+function gr_set_yticks_font(sp)
+    flip = sp[:xaxis][:flip]
+    mirror = sp[:yaxis][:mirror]
+    gr_set_font(sp[:yaxis][:tickfont],
+                halign = (mirror ? :left : :right),
+                valign = (:top, :vcenter, :bottom)[sign(sp[:yaxis][:rotation]) + 2],
+                color = sp[:yaxis][:foreground_color_axis],
+                rotation = sp[:yaxis][:rotation])
+    return flip, mirror
+end
+
+
 function _update_min_padding!(sp::Subplot{GRBackend})
     # Add margin given by the user
     leftpad   = 10mm + sp[:left_margin]
@@ -747,13 +771,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if !(xticks in (nothing, false))
             # x labels
-            flip = sp[:yaxis][:flip]
-            mirror = sp[:xaxis][:mirror]
-            gr_set_font(sp[:xaxis][:tickfont],
-                        halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
-                        valign = (mirror ? :bottom : :top),
-                        color = sp[:xaxis][:foreground_color_axis],
-                        rotation = sp[:xaxis][:rotation])
+            flip, mirror = gr_set_xticks_font(sp)
             for (cv, dv) in zip(xticks...)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, xor(flip, mirror) ? ymax : ymin)
@@ -764,13 +782,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if !(yticks in (nothing, false))
             # y labels
-            flip = sp[:xaxis][:flip]
-            mirror = sp[:yaxis][:mirror]
-            gr_set_font(sp[:yaxis][:tickfont],
-                        halign = (mirror ? :left : :right),
-                        valign = (:top, :vcenter, :bottom)[sign(sp[:yaxis][:rotation]) + 2],
-                        color = sp[:yaxis][:foreground_color_axis],
-                        rotation = sp[:yaxis][:rotation])
+            flip, mirror = gr_set_yticks_font(sp)
             for (cv, dv) in zip(yticks...)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(xor(flip, mirror) ? xmax : xmin, cv)
