@@ -326,7 +326,10 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
                 cfuncind(ci)
                 GR.settransparency(_gr_gradient_alpha[ci-999])
             end
-            gr_draw_marker(x[i], y[i], msi, shape)
+            # don't draw filled area if marker shape is 1D  
+            if !(shape in (:hline, :vline, :+, :x, :cross, :xcross))
+                gr_draw_marker(x[i], y[i], msi, shape)
+            end
         end
     end
 end
