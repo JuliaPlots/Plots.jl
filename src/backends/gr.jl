@@ -543,32 +543,36 @@ end
 
 
 function _update_min_padding!(sp::Subplot{GRBackend})
+    # Add margin given by the user
     leftpad   = 10mm + sp[:left_margin]
     toppad    = 2mm  + sp[:top_margin]
-    rightpad  = 2mm  + sp[:right_margin]
-    bottompad = 6mm  + sp[:bottom_margin]
+    rightpad  = 4mm  + sp[:right_margin]
+    bottompad = 2mm  + sp[:bottom_margin]
+    # Add margin for title
     if sp[:title] != ""
         toppad += 5mm
     end
-    if sp[:xaxis][:guide] != ""
-        xticks = axis_drawing_info(sp)[1]
-        if !(xticks in (nothing, false))
-            gr_set_font(sp[:xaxis][:tickfont],
-                        halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
-                        valign = :top,
-                        color = sp[:xaxis][:foreground_color_axis],
-                        rotation = sp[:xaxis][:rotation])
-            h = 0.0
-            for (cv, dv) in zip(xticks...)
-                tbx, tby = gr_inqtext(0, 0, string(dv))
-                tby_min, tby_max = extrema(tby)
-                h = max(h, tby_max - tby_min)
-            end
-            bottompad += 1mm + gr_plot_size[2] * h * px
-        else
-            bottompad += 4mm
+    # Add margin for x ticks
+    xticks = axis_drawing_info(sp)[1]
+    if !(xticks in (nothing, false))
+        gr_set_font(sp[:xaxis][:tickfont],
+                    halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
+                    valign = :top,
+                    color = sp[:xaxis][:foreground_color_axis],
+                    rotation = sp[:xaxis][:rotation])
+        h = 0.0
+        for (cv, dv) in zip(xticks...)
+            tbx, tby = gr_inqtext(0, 0, string(dv))
+            tby_min, tby_max = extrema(tby)
+            h = max(h, tby_max - tby_min)
         end
+        bottompad += 1mm + gr_plot_size[2] * h * px
     end
+    # Add margin for x label
+    if sp[:xaxis][:guide] != ""
+        bottompad += 4mm
+    end
+    # Add margin for y label
     if sp[:yaxis][:guide] != ""
         leftpad += 4mm
     end
