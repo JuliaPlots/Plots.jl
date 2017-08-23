@@ -565,10 +565,19 @@ function gr_set_yticks_font(sp)
     return flip, mirror
 end
 
+function gr_get_ticks_size(ticks, i)
+    l = 0.0
+    for (cv, dv) in zip(ticks...)
+        tb = gr_inqtext(0, 0, string(dv))[i]
+        tb_min, tb_max = extrema(tb)
+        l = max(l, tb_max - tb_min)
+    end
+    return l
+end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
     # Add margin given by the user
-    leftpad   = 10mm + sp[:left_margin]
+    leftpad   = 2mm  + sp[:left_margin]
     toppad    = 2mm  + sp[:top_margin]
     rightpad  = 4mm  + sp[:right_margin]
     bottompad = 2mm  + sp[:bottom_margin]
@@ -576,21 +585,25 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     if sp[:title] != ""
         toppad += 5mm
     end
-    # Add margin for x ticks
-    xticks = axis_drawing_info(sp)[1]
+    # Add margin for x and y ticks
+    xticks, yticks = axis_drawing_info(sp)[1:2]
     if !(xticks in (nothing, false))
-        gr_set_font(sp[:xaxis][:tickfont],
-                    halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
-                    valign = :top,
-                    color = sp[:xaxis][:foreground_color_axis],
-                    rotation = sp[:xaxis][:rotation])
-        h = 0.0
-        for (cv, dv) in zip(xticks...)
-            tbx, tby = gr_inqtext(0, 0, string(dv))
-            tby_min, tby_max = extrema(tby)
-            h = max(h, tby_max - tby_min)
+        flip, mirror = gr_set_xticks_font(sp)
+        l = gr_get_ticks_size(xticks, 2)
+        if mirror
+            toppad += 1mm + gr_plot_size[2] * l * px
+        else
+            bottompad += 1mm + gr_plot_size[2] * l * px
         end
-        bottompad += 1mm + gr_plot_size[2] * h * px
+    end
+    if !(yticks in (nothing, false))
+        flip, mirror = gr_set_yticks_font(sp)
+        l = gr_get_ticks_size(yticks, 1)
+        if mirror
+            rightpad += 1mm + gr_plot_size[1] * l * px
+        else
+            leftpad += 1mm + gr_plot_size[1] * l * px
+        end
     end
     # Add margin for x label
     if sp[:xaxis][:guide] != ""
