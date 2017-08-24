@@ -432,7 +432,7 @@ add_aliases(:foreground_color_title, :fg_title, :fgtitle, :fgcolor_title, :fg_co
 add_aliases(:foreground_color_axis, :fg_axis, :fgaxis, :fgcolor_axis, :fg_color_axis, :foreground_axis,
                             :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis, :axiscolor)
 add_aliases(:foreground_color_border, :fg_border, :fgborder, :fgcolor_border, :fg_color_border, :foreground_border,
-                            :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor, :border)
+                            :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor)
 add_aliases(:foreground_color_text, :fg_text, :fgtext, :fgcolor_text, :fg_color_text, :foreground_text,
                             :foreground_colour_text, :fgcolour_text, :fg_colour_text, :textcolor)
 add_aliases(:foreground_color_guide, :fg_guide, :fgguide, :fgcolor_guide, :fg_color_guide, :foreground_guide,

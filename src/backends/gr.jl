@@ -739,7 +739,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.setclip(1)
 
         # tick marks
-        if !(xticks in (nothing, false))
+        if !(xticks in (:none, nothing, false))
             # x labels
             flip = sp[:yaxis][:flip]
             mirror = sp[:xaxis][:mirror]
@@ -756,7 +756,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
         end
 
-        if !(yticks in (nothing, false))
+        if !(yticks in (:none, nothing, false))
             # y labels
             flip = sp[:xaxis][:flip]
             mirror = sp[:yaxis][:mirror]
