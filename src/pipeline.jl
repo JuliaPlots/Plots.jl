@@ -210,7 +210,7 @@ function _plot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
     # TODO: init subplots here
     _update_plot_args(plt, d)
     if !plt.init
-        plt.o = _create_backend_figure(plt)
+        plt.o = Base.invokelatest(_create_backend_figure, plt)
 
         # create the layout and subplots from the inputs
         plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
