@@ -502,7 +502,7 @@ add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
 add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
 add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
-add_aliases(:framestyle, :frame_style, :frame, :axesstyle, :axes_style, :boxstyle, :box_style, :box)
+add_aliases(:framestyle, :frame_style, :frame, :axesstyle, :axes_style, :boxstyle, :box_style, :box, :borderstyle, :border_style, :border)
 
 
 # add all pluralized forms to the _keyAliases dict

@@ -155,7 +155,7 @@ PlotExample("Subplots",
     """,
     [:(begin
         l = @layout([a{0.1h}; b [c;d e]])
-        plot(randn(100,5), layout=l, t=[:line :histogram :scatter :steppre :bar], leg=false, ticks=nothing, border=false)
+        plot(randn(100,5), layout=l, t=[:line :histogram :scatter :steppre :bar], leg=false, ticks=nothing, border=:none)
     end)]
 ),
 
@@ -330,7 +330,7 @@ PlotExample("Spy",
 ),
 
 PlotExample("Magic grid argument",
-    "The grid lines can be modified individually for each axis with the magic grid argument.",
+    "The grid lines can be modified individually for each axis with the magic `grid` argument.",
     [:(begin
     x = rand(10)
     p1 = plot(x, title = "Default looks")
@@ -338,6 +338,14 @@ PlotExample("Magic grid argument",
     p3 = plot(deepcopy(p2), title = "Add x grid")
     xgrid!(p3, :on, :cadetblue, 2, :dashdot, 0.4)
     plot(p1, p2, p3, layout = (1, 3), label = "", fillrange = 0, fillalpha = 0.3)
+    end)]
+),
+
+PlotExample("Framestyle",
+    "The style of the frame/axes of a (sub)plot can be changed with the `framestyle` attribute. The default framestyle is `:axes`.",
+    [:(begin
+    histogram(fill(randn(1000), 5), framestyle = [:box :semi :axes :grid :none],
+        title = [":box" ":semi" ":axes" ":grid" ":none"], color = RowVector(1:5), layout = 5, label = "")
     end)]
 ),
 
@@ -365,7 +373,7 @@ test_examples(pkgname[, idx]; debug = false, disp = true, sleep = nothing,
                                         skip = [], only = nothing
 
 Run the `idx` test example for a given backend, or all examples if `idx`
-is not specified. 
+is not specified.
 """
 function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = nothing,
                                         skip = [], only = nothing)
