@@ -181,6 +181,14 @@ function hasgrid(arg::Symbol, letter)
 end
 hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
+const _allFramestyles = [:box, :semi, :axes, :grid, :none]
+const _framestyleAliases = Dict{Symbol, Symbol}(
+    :frame              => :box,
+    :border             => :box,
+    :on                 => :box,
+    :transparent        => :semi,
+    :semitransparent    => :semi,
+)
 # -----------------------------------------------------------------------------
 
 const _series_defaults = KW(
@@ -282,7 +290,7 @@ const _subplot_defaults = KW(
     :bottom_margin            => :match,
     :subplot_index            => -1,
     :colorbar_title           => "",
-    :draw_axes_border         => false,
+    :framestyle               => :axes,
 )
 
 const _axis_defaults = KW(
@@ -494,7 +502,7 @@ add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
 add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
 add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
-add_aliases(:draw_axes_border, :axes_border, :show_axes_border, :box, :frame)
+add_aliases(:framestyle, :frame_style, :frame, :axesstyle, :axes_style, :boxstyle, :box_style, :box)
 
 
 # add all pluralized forms to the _keyAliases dict
@@ -721,6 +729,7 @@ function preprocessArgs!(d::KW)
     if haskey(d, :axis) && d[:axis] in (:none, nothing, false)
         d[:ticks] = nothing
         d[:foreground_color_border] = RGBA(0,0,0,0)
+        d[:foreground_color_axis] = RGBA(0,0,0,0)
         d[:grid] = false
         delete!(d, :axis)
     end
@@ -821,6 +830,11 @@ function preprocessArgs!(d::KW)
     end
     if haskey(d, :colorbar)
         d[:colorbar] = convertLegendValue(d[:colorbar])
+    end
+
+
+    if haskey(d, :framestyle) && haskey(_framestyleAliases, d[:framestyle])
+        d[:framestyle] = _framestyleAliases[d[:framestyle]]
     end
 
     # warnings for moved recipes

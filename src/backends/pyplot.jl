@@ -32,7 +32,7 @@ const _pyplot_attr = merge_with_base_supported([
     :inset_subplots,
     :dpi,
     :colorbar_title,
-    :draw_axes_border,
+    :framestyle,
   ])
 const _pyplot_seriestype = [
         :path, :steppre, :steppost, :shape,
@@ -1054,7 +1054,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             py_set_scale(ax, axis)
             py_set_lims(ax, axis)
-            py_set_ticks(ax, get_ticks(axis), letter)
+            ticks = sp[:framestyle] == :none ? nothing : get_ticks(axis)
+            py_set_ticks(ax, ticks, letter)
             ax[Symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)
                 ax[Symbol("invert_", letter, "axis")]()
@@ -1066,7 +1067,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 lab[:set_family](axis[:tickfont].family)
                 lab[:set_rotation](axis[:rotation])
             end
-            if axis[:grid]
+            if axis[:grid] && sp[:framestyle] != :none
                 fgcolor = py_color(axis[:foreground_color_grid])
                 pyaxis[:grid](true,
                     color = fgcolor,
@@ -1090,17 +1091,34 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         # this sets the bg color inside the grid
         ax[set_facecolor_sym](py_color(sp[:background_color_inside]))
 
-        if !sp[:draw_axes_border]
-            if ispolar(sp)
+        # framestyle
+        if !ispolar(sp) && !is3d(sp)
+            if sp[:framestyle] == :semi
+                intensity = 0.5
+                ax[:spines]["right"][:set_alpha](intensity)
+                ax[:spines]["top"][:set_alpha](intensity)
+                ax[:spines]["right"][:set_linewidth](intensity)
+                ax[:spines]["top"][:set_linewidth](intensity)
+            elseif sp[:framestyle] == :axes
+                ax[:spines]["right"][:set_visible](false)
+                ax[:spines]["top"][:set_visible](false)
+            elseif sp[:framestyle] in (:grid, :none)
                 for (loc, spine) in ax[:spines]
                     spine[:set_visible](false)
                 end
-            else
-                # hide the right and top spines
-                ax[:spines]["right"][:set_visible](false)
-                ax[:spines]["top"][:set_visible](false)
             end
         end
+        # if !sp[:draw_axes_border]
+        #     if ispolar(sp)
+        #         for (loc, spine) in ax[:spines]
+        #             spine[:set_visible](false)
+        #         end
+        #     else
+        #         # hide the right and top spines
+        #         ax[:spines]["right"][:set_visible](false)
+        #         ax[:spines]["top"][:set_visible](false)
+        #     end
+        # end
     end
     py_drawfig(fig)
 end
