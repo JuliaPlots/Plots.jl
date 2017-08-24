@@ -181,15 +181,27 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     end
 
     # get a list of well-laid-out ticks
-    scaled_ticks = if ticks == nothing
-        optimize_ticks(
+    if ticks == nothing
+        scaled_ticks = optimize_ticks(
             sf(amin),
             sf(amax);
             k_min = 5, # minimum number of ticks
             k_max = 8, # maximum number of ticks
         )[1]
+    elseif typeof(ticks) <: Int
+        scaled_ticks, viewmin, viewmax = optimize_ticks(
+            sf(amin),
+            sf(amax);
+            k_min = ticks, # minimum number of ticks
+            k_max = ticks, # maximum number of ticks
+            k_ideal = ticks,
+            # `strict_span = false` rewards cases where the span of the
+            # chosen  ticks is not too much bigger than amin - amax:
+            strict_span = false,
+        )
+        axis[:lims] = map(invscalefunc(scale), (viewmin, viewmax))
     else
-        map(sf, filter(t -> amin <= t <= amax, ticks))
+        scaled_ticks = map(sf, (filter(t -> amin <= t <= amax, ticks)))
     end
     unscaled_ticks = map(invscalefunc(scale), scaled_ticks)
 
@@ -226,7 +238,7 @@ function get_ticks(axis::Axis)
     elseif ticks == :auto
         # compute optimal ticks and labels
         optimal_ticks_and_labels(axis)
-    elseif typeof(ticks) <: AVec
+    elseif typeof(ticks) <: Union{AVec, Int}
         # override ticks, but get the labels
         optimal_ticks_and_labels(axis, ticks)
     elseif typeof(ticks) <: NTuple{2, Any}
