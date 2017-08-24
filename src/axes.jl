@@ -506,40 +506,46 @@ function axis_drawing_info(sp::Subplot)
     ymin, ymax = axis_limits(yaxis)
     xticks = get_ticks(xaxis)
     yticks = get_ticks(yaxis)
-    xspine_segs = Segments(2)
-    yspine_segs = Segments(2)
+    xaxis_segs = Segments(2)
+    yaxis_segs = Segments(2)
     xgrid_segs = Segments(2)
     ygrid_segs = Segments(2)
+    xborder_segs = Segments(2)
+    yborder_segs = Segments(2)
 
-    if !(xaxis[:ticks] in (nothing, false))
-        f = scalefunc(yaxis[:scale])
-        invf = invscalefunc(yaxis[:scale])
-        t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
-        t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
+    if !(sp[:framestyle] == :none)
+        # xaxis
+        sp[:framestyle] == :grid || push!(xaxis_segs, (xmin,ymin), (xmax,ymin)) # bottom spine / xaxis
+        sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin,ymax), (xmax,ymax)) # top spine
+        if !(xaxis[:ticks] in (nothing, false))
+            f = scalefunc(yaxis[:scale])
+            invf = invscalefunc(yaxis[:scale])
+            t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
+            t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
 
-        push!(xspine_segs, (xmin,ymin), (xmax,ymin)) # bottom spine
-        # push!(xspine_segs, (xmin,ymax), (xmax,ymax)) # top spine
-        for xtick in xticks[1]
-            push!(xspine_segs, (xtick, ymin), (xtick, t1)) # bottom tick
-            # push!(xspine_segs, (xtick, ymax), (xtick, t2)) # top tick
-            xaxis[:grid] && push!(xgrid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
+            for xtick in xticks[1]
+                push!(xaxis_segs, (xtick, ymin), (xtick, t1)) # bottom tick
+                # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
+                xaxis[:grid] && push!(xgrid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
+            end
+        end
+
+        # yaxis
+        sp[:framestyle] == :grid || push!(yaxis_segs, (xmin,ymin), (xmin,ymax)) # left spine / yaxis
+        sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (xmax,ymin), (xmax,ymax)) # right spine
+        if !(yaxis[:ticks] in (nothing, false))
+            f = scalefunc(xaxis[:scale])
+            invf = invscalefunc(xaxis[:scale])
+            t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
+            t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
+
+            for ytick in yticks[1]
+                push!(yaxis_segs, (xmin, ytick), (t1, ytick)) # left tick
+                # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
+                yaxis[:grid] && push!(ygrid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
+            end
         end
     end
 
-    if !(yaxis[:ticks] in (nothing, false))
-        f = scalefunc(xaxis[:scale])
-        invf = invscalefunc(xaxis[:scale])
-        t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
-        t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
-
-        push!(yspine_segs, (xmin,ymin), (xmin,ymax)) # left spine
-        # push!(yspine_segs, (xmax,ymin), (xmax,ymax)) # right spine
-        for ytick in yticks[1]
-            push!(yspine_segs, (xmin, ytick), (t1, ytick)) # left tick
-            # push!(yspine_segs, (xmax, ytick), (t2, ytick)) # right tick
-            yaxis[:grid] && push!(ygrid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
-        end
-    end
-
-    xticks, yticks, xspine_segs, yspine_segs, xgrid_segs, ygrid_segs
+    xticks, yticks, xaxis_segs, yaxis_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs
 end

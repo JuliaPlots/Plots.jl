@@ -39,7 +39,8 @@ const _glvisualize_attr = merge_with_base_supported([
     :clims,
     :inset_subplots,
     :dpi,
-    :hover
+    :hover,
+    :framestyle,
 ])
 const _glvisualize_seriestype = [
     :path, :shape,
@@ -677,7 +678,7 @@ function text_model(font, pivot)
     end
 end
 function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, area)
-    xticks, yticks, xspine_segs, yspine_segs, xgrid_segs, ygrid_segs = Plots.axis_drawing_info(sp)
+    xticks, yticks, xspine_segs, yspine_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs = Plots.axis_drawing_info(sp)
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
 
     xgc = Colors.color(Plots.gl_color(xaxis[:foreground_color_grid]))
@@ -707,7 +708,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     xlim = Plots.axis_limits(xaxis)
     ylim = Plots.axis_limits(yaxis)
 
-    if !(xaxis[:ticks] in (nothing, false, :none))
+    if !(xaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none)
         ticklabels = map(model) do m
             mirror = xaxis[:mirror]
             t, positions, offsets = draw_ticks(xaxis, xticks, true, ylim, m)
@@ -725,6 +726,15 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
             :scale_primitive => false
         )
         push!(axis_vis, visualize(map(first, ticklabels), Style(:default), kw_args))
+    end
+
+    xbc = Colors.color(Plots.gl_color(xaxis[:foreground_color_border]))
+    ybc = Colors.color(Plots.gl_color(yaxis[:foreground_color_border]))
+    intensity = sp[:framestyle] == :semi ? 0.5f0 : 1.0f0
+    if sp[:framestyle] in (:box, :semi)
+        xborder = draw_grid_lines(sp, xborder_segs, intensity, :solid, model, RGBA(xbc, intensity))
+        yborder = draw_grid_lines(sp, yborder_segs, intensity, :solid, model, RGBA(ybc, intensity))
+        push!(axis_vis, xborder, yborder)
     end
 
     area_w = GeometryTypes.widths(area)

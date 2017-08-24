@@ -32,6 +32,7 @@ const _gr_attr = merge_with_base_supported([
     :inset_subplots,
     :bar_width,
     :arrow,
+    :framestyle,
 ])
 const _gr_seriestype = [
     :path, :scatter,
@@ -653,7 +654,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # TODO: can these be generic flags?
     outside_ticks = false
     cmap = false
-    draw_axes = true
+    draw_axes = sp[:framestyle] != :none
     # axes_2d = true
     for series in series_list(sp)
         st = series[:seriestype]
@@ -755,7 +756,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setwindow(xmin, xmax, ymin, ymax)
         end
 
-        xticks, yticks, xspine_segs, yspine_segs, xgrid_segs, ygrid_segs = axis_drawing_info(sp)
+        xticks, yticks, xspine_segs, yspine_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs = axis_drawing_info(sp)
         # @show xticks yticks #spine_segs grid_segs
 
         # draw the grid lines
@@ -773,7 +774,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
         GR.settransparency(1.0)
 
-        # spine (border) and tick marks
+        # axis lines
         gr_set_line(1, :solid, xaxis[:foreground_color_axis])
         GR.setclip(0)
         gr_polyline(coords(xspine_segs)...)
@@ -782,7 +783,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_polyline(coords(yspine_segs)...)
         GR.setclip(1)
 
-        if !(xticks in (nothing, false))
+        # tick marks
+        if !(xticks in (:none, nothing, false))
             # x labels
             flip, mirror = gr_set_xticks_font(sp)
             for (cv, dv) in zip(xticks...)
@@ -793,7 +795,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
         end
 
-        if !(yticks in (nothing, false))
+        if !(yticks in (:none, nothing, false))
             # y labels
             flip, mirror = gr_set_yticks_font(sp)
             for (cv, dv) in zip(yticks...)
@@ -802,6 +804,17 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # @show cv dv xmin xi yi
                 gr_text(xi + (mirror ? 1 : -1) * 1e-2, yi, string(dv))
             end
+        end
+
+        # border
+        intensity = sp[:framestyle] == :semi ? 0.5 : 1.0
+        if sp[:framestyle] in (:box, :semi)
+            gr_set_line(intensity, :solid, xaxis[:foreground_color_border])
+            GR.settransparency(intensity)
+            gr_polyline(coords(xborder_segs)...)
+            gr_set_line(intensity, :solid, yaxis[:foreground_color_border])
+            GR.settransparency(intensity)
+            gr_polyline(coords(yborder_segs)...)
         end
     end
     # end

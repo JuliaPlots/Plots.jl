@@ -181,6 +181,14 @@ function hasgrid(arg::Symbol, letter)
 end
 hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
+const _allFramestyles = [:box, :semi, :axes, :grid, :none]
+const _framestyleAliases = Dict{Symbol, Symbol}(
+    :frame              => :box,
+    :border             => :box,
+    :on                 => :box,
+    :transparent        => :semi,
+    :semitransparent    => :semi,
+)
 # -----------------------------------------------------------------------------
 
 const _series_defaults = KW(
@@ -282,6 +290,7 @@ const _subplot_defaults = KW(
     :bottom_margin            => :match,
     :subplot_index            => -1,
     :colorbar_title           => "",
+    :framestyle               => :axes,
 )
 
 const _axis_defaults = KW(
@@ -423,7 +432,7 @@ add_aliases(:foreground_color_title, :fg_title, :fgtitle, :fgcolor_title, :fg_co
 add_aliases(:foreground_color_axis, :fg_axis, :fgaxis, :fgcolor_axis, :fg_color_axis, :foreground_axis,
                             :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis, :axiscolor)
 add_aliases(:foreground_color_border, :fg_border, :fgborder, :fgcolor_border, :fg_color_border, :foreground_border,
-                            :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor, :border)
+                            :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor)
 add_aliases(:foreground_color_text, :fg_text, :fgtext, :fgcolor_text, :fg_color_text, :foreground_text,
                             :foreground_colour_text, :fgcolour_text, :fg_colour_text, :textcolor)
 add_aliases(:foreground_color_guide, :fg_guide, :fgguide, :fgcolor_guide, :fg_color_guide, :foreground_guide,
@@ -493,6 +502,7 @@ add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
 add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
 add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
+add_aliases(:framestyle, :frame_style, :frame, :axesstyle, :axes_style, :boxstyle, :box_style, :box, :borderstyle, :border_style, :border)
 
 
 # add all pluralized forms to the _keyAliases dict
@@ -719,6 +729,7 @@ function preprocessArgs!(d::KW)
     if haskey(d, :axis) && d[:axis] in (:none, nothing, false)
         d[:ticks] = nothing
         d[:foreground_color_border] = RGBA(0,0,0,0)
+        d[:foreground_color_axis] = RGBA(0,0,0,0)
         d[:grid] = false
         delete!(d, :axis)
     end
@@ -819,6 +830,11 @@ function preprocessArgs!(d::KW)
     end
     if haskey(d, :colorbar)
         d[:colorbar] = convertLegendValue(d[:colorbar])
+    end
+
+    # framestyle
+    if haskey(d, :framestyle) && haskey(_framestyleAliases, d[:framestyle])
+        d[:framestyle] = _framestyleAliases[d[:framestyle]]
     end
 
     # warnings for moved recipes
