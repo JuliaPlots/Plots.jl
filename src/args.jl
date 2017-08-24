@@ -832,7 +832,7 @@ function preprocessArgs!(d::KW)
         d[:colorbar] = convertLegendValue(d[:colorbar])
     end
 
-
+    # framestyle
     if haskey(d, :framestyle) && haskey(_framestyleAliases, d[:framestyle])
         d[:framestyle] = _framestyleAliases[d[:framestyle]]
     end

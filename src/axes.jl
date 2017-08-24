@@ -499,14 +499,14 @@ function axis_drawing_info(sp::Subplot)
 
     if !(sp[:framestyle] == :none)
         # xaxis
-        f = scalefunc(yaxis[:scale])
-        invf = invscalefunc(yaxis[:scale])
-        t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
-        t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
-
         sp[:framestyle] == :grid || push!(xaxis_segs, (xmin,ymin), (xmax,ymin)) # bottom spine / xaxis
         sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin,ymax), (xmax,ymax)) # top spine
         if !(xaxis[:ticks] in (nothing, false))
+            f = scalefunc(yaxis[:scale])
+            invf = invscalefunc(yaxis[:scale])
+            t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
+            t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
+
             for xtick in xticks[1]
                 push!(xaxis_segs, (xtick, ymin), (xtick, t1)) # bottom tick
                 # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
@@ -515,14 +515,14 @@ function axis_drawing_info(sp::Subplot)
         end
 
         # yaxis
-        f = scalefunc(xaxis[:scale])
-        invf = invscalefunc(xaxis[:scale])
-        t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
-        t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
-
         sp[:framestyle] == :grid || push!(yaxis_segs, (xmin,ymin), (xmin,ymax)) # left spine / yaxis
         sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (xmax,ymin), (xmax,ymax)) # right spine
         if !(yaxis[:ticks] in (nothing, false))
+            f = scalefunc(xaxis[:scale])
+            invf = invscalefunc(xaxis[:scale])
+            t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
+            t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
+
             for ytick in yticks[1]
                 push!(yaxis_segs, (xmin, ytick), (t1, ytick)) # left tick
                 # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
