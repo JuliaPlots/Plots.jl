@@ -326,7 +326,7 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
                 cfuncind(ci)
                 GR.settransparency(_gr_gradient_alpha[ci-999])
             end
-            # don't draw filled area if marker shape is 1D  
+            # don't draw filled area if marker shape is 1D
             if !(shape in (:hline, :vline, :+, :x, :cross, :xcross))
                 gr_draw_marker(x[i], y[i], msi, shape)
             end
@@ -542,32 +542,74 @@ function gr_display(plt::Plot)
 end
 
 
+function gr_set_xticks_font(sp)
+    flip = sp[:yaxis][:flip]
+    mirror = sp[:xaxis][:mirror]
+    gr_set_font(sp[:xaxis][:tickfont],
+                halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
+                valign = (mirror ? :bottom : :top),
+                color = sp[:xaxis][:foreground_color_axis],
+                rotation = sp[:xaxis][:rotation])
+    return flip, mirror
+end
+
+
+function gr_set_yticks_font(sp)
+    flip = sp[:xaxis][:flip]
+    mirror = sp[:yaxis][:mirror]
+    gr_set_font(sp[:yaxis][:tickfont],
+                halign = (mirror ? :left : :right),
+                valign = (:top, :vcenter, :bottom)[sign(sp[:yaxis][:rotation]) + 2],
+                color = sp[:yaxis][:foreground_color_axis],
+                rotation = sp[:yaxis][:rotation])
+    return flip, mirror
+end
+
+function gr_get_ticks_size(ticks, i)
+    l = 0.0
+    for (cv, dv) in zip(ticks...)
+        tb = gr_inqtext(0, 0, string(dv))[i]
+        tb_min, tb_max = extrema(tb)
+        l = max(l, tb_max - tb_min)
+    end
+    return l
+end
+
 function _update_min_padding!(sp::Subplot{GRBackend})
-    leftpad   = 10mm
-    toppad    = 2mm
-    rightpad  = 2mm
-    bottompad = 6mm
+    # Add margin given by the user
+    leftpad   = 2mm  + sp[:left_margin]
+    toppad    = 2mm  + sp[:top_margin]
+    rightpad  = 4mm  + sp[:right_margin]
+    bottompad = 2mm  + sp[:bottom_margin]
+    # Add margin for title
     if sp[:title] != ""
         toppad += 5mm
     end
-    if sp[:xaxis][:guide] != ""
-        xticks = axis_drawing_info(sp)[1]
-        if !(xticks in (nothing, false))
-            gr_set_font(sp[:xaxis][:tickfont],
-                        halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
-                        valign = :top,
-                        color = sp[:xaxis][:foreground_color_axis],
-                        rotation = sp[:xaxis][:rotation])
-            h = 0
-            for (cv, dv) in zip(xticks...)
-                tbx, tby = gr_inqtext(0, 0, string(dv))
-                h = max(h, tby[2] - tby[1])
-            end
-            bottompad += 1mm + gr_plot_size[2] * h * px
+    # Add margin for x and y ticks
+    xticks, yticks = axis_drawing_info(sp)[1:2]
+    if !(xticks in (nothing, false))
+        flip, mirror = gr_set_xticks_font(sp)
+        l = gr_get_ticks_size(xticks, 2)
+        if mirror
+            toppad += 1mm + gr_plot_size[2] * l * px
         else
-            bottompad += 4mm
+            bottompad += 1mm + gr_plot_size[2] * l * px
         end
     end
+    if !(yticks in (nothing, false))
+        flip, mirror = gr_set_yticks_font(sp)
+        l = gr_get_ticks_size(yticks, 1)
+        if mirror
+            rightpad += 1mm + gr_plot_size[1] * l * px
+        else
+            leftpad += 1mm + gr_plot_size[1] * l * px
+        end
+    end
+    # Add margin for x label
+    if sp[:xaxis][:guide] != ""
+        bottompad += 4mm
+    end
+    # Add margin for y label
     if sp[:yaxis][:guide] != ""
         leftpad += 4mm
     end
@@ -742,13 +784,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if !(xticks in (nothing, false))
             # x labels
-            flip = sp[:yaxis][:flip]
-            mirror = sp[:xaxis][:mirror]
-            gr_set_font(sp[:xaxis][:tickfont],
-                        halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
-                        valign = (mirror ? :bottom : :top),
-                        color = sp[:xaxis][:foreground_color_axis],
-                        rotation = sp[:xaxis][:rotation])
+            flip, mirror = gr_set_xticks_font(sp)
             for (cv, dv) in zip(xticks...)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, xor(flip, mirror) ? ymax : ymin)
@@ -759,13 +795,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if !(yticks in (nothing, false))
             # y labels
-            flip = sp[:xaxis][:flip]
-            mirror = sp[:yaxis][:mirror]
-            gr_set_font(sp[:yaxis][:tickfont],
-                        halign = (mirror ? :left : :right),
-                        valign = (:top, :vcenter, :bottom)[sign(sp[:yaxis][:rotation]) + 2],
-                        color = sp[:yaxis][:foreground_color_axis],
-                        rotation = sp[:yaxis][:rotation])
+            flip, mirror = gr_set_yticks_font(sp)
             for (cv, dv) in zip(yticks...)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(xor(flip, mirror) ? xmax : xmin, cv)
