@@ -708,7 +708,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     xlim = Plots.axis_limits(xaxis)
     ylim = Plots.axis_limits(yaxis)
 
-    if !(xaxis[:ticks] in (nothing, false, :none))
+    if !(xaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none)
         ticklabels = map(model) do m
             mirror = xaxis[:mirror]
             t, positions, offsets = draw_ticks(xaxis, xticks, true, ylim, m)
