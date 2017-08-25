@@ -55,5 +55,5 @@ script:
  # - julia -e 'ENV["PYTHON"] = ""; Pkg.add("PyPlot"); Pkg.build("PyPlot")'
  #
  # # - $TESTCMD -e 'Pkg.test("Plots"; coverage=false)'
- - julia -e 'Pkg.test("Plots"; coverage=false)'
+ # - julia -e 'Pkg.test("Plots"; coverage=false)'
  # # - julia -e 'cd(Pkg.dir("Plots")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
