@@ -567,12 +567,15 @@ function gr_set_yticks_font(sp)
 end
 
 function gr_get_ticks_size(ticks, i)
+    GR.savestate()
+    GR.selntran(0)
     l = 0.0
     for (cv, dv) in zip(ticks...)
         tb = gr_inqtext(0, 0, string(dv))[i]
         tb_min, tb_max = extrema(tb)
         l = max(l, tb_max - tb_min)
     end
+    GR.restorestate()
     return l
 end
 
