@@ -579,7 +579,7 @@ function gr_get_ticks_size(ticks, i)
     return l
 end
 
-function _update_min_padding!(sp::Subplot{GRBackend})
+function gr_update_min_padding(sp::Subplot{GRBackend})
     # Add margin given by the user
     leftpad   = 2mm  + sp[:left_margin]
     toppad    = 2mm  + sp[:top_margin]
@@ -622,6 +622,8 @@ end
 
 
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
+    gr_update_min_padding(sp)
+
     # the viewports for this subplot
     viewport_subplot = gr_viewport_from_bbox(sp, bbox(sp), w, h, viewport_canvas)
     viewport_plotarea[:] = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
