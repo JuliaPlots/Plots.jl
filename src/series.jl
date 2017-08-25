@@ -509,6 +509,13 @@ end
 #     nothing
 # end
 
+splittable_kw(key, val, lengthGroup) = false
+splittable_kw(key, val::AbstractArray, lengthGroup) = (key != :group) && size(val,1) == lengthGroup
+splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengthGroup))
+
+split_kw(key, val::AbstractArray, indices) = val[indices, fill(Colon(), ndims(val)-1)...]
+split_kw(key, val::Tuple, indices) = Tuple(split_kw(key, v, indices) for v in val)
+
 # split the group into 1 series per group, and set the label and idxfilter for each
 @recipe function f(groupby::GroupBy, args...)
     lengthGroup = maximum(union(groupby.groupIds...))
@@ -517,9 +524,8 @@ end
             label     --> string(glab)
             idxfilter --> groupby.groupIds[i]
             for (key,val) in d
-                if key != :group && isa(val, AbstractArray) && size(val,1) >= lengthGroup
-                    n = ndims(val)
-                    :($key) := val[groupby.groupIds[i], fill(Colon(), n-1)...]
+                if splittable_kw(key, val, lengthGroup)
+                    :($key) := split_kw(key, val, groupby.groupIds[i])
                 end
             end
             args
