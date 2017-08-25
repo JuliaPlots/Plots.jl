@@ -23,9 +23,9 @@ Pkg.checkout("PlotUtils")
 
 # need this to use Conda
 ENV["PYTHON"] = ""
-Pkg.clone("PyPlot")
+Pkg.add("PyPlot")
 Pkg.build("PyPlot")
 
 # Pkg.add("InspectDR")
 
-Pkg.test("Plots"; coverage=false)
+# Pkg.test("Plots"; coverage=false)
