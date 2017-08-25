@@ -198,7 +198,7 @@ const _series_defaults = KW(
     :seriestype        => :path,
     :linestyle         => :solid,
     :linewidth         => :auto,
-    :linecolor         => :match,
+    :linecolor         => :auto,
     :linealpha         => nothing,
     :fillrange         => nothing,   # ribbons, areas, etc
     :fillcolor         => :match,
@@ -1333,12 +1333,14 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     # update other colors
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
-        d[csym] = if d[csym] == :match
+        d[csym] = if d[csym] == :auto
             plot_color(if has_black_border_for_default(d[:seriestype]) && s == :line
                 sp[:foreground_color_subplot]
             else
                 d[:seriescolor]
             end, d[asym])
+        elseif d[csym] == :match
+            plot_color(d[:seriescolor], d[asym])
         else
             getSeriesRGBColor(d[csym], d[asym], sp, plotIndex)
         end
