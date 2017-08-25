@@ -278,6 +278,7 @@ using Requires
             show(io, MIME("text/html"), plt)
         end
 
+        ENV["MPLBACKEND"] = "Agg"
         set_ijulia_output("text/html")
     end
 end
