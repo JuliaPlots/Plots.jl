@@ -28,4 +28,4 @@ Pkg.build("PyPlot")
 
 # Pkg.add("InspectDR")
 
-Pkg.test("Plots"; coverage=false)
+# Pkg.test("Plots"; coverage=false)

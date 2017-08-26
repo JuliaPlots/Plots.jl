@@ -42,7 +42,7 @@ before_install:
 notifications:
   email: true
 # uncomment the following lines to override the default test script
-script:
+before_script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
  - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")'
  - julia test/travis_commands.jl
@@ -54,6 +54,7 @@ script:
  # # - julia -e 'Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")'
  # - julia -e 'ENV["PYTHON"] = ""; Pkg.add("PyPlot"); Pkg.build("PyPlot")'
  #
+ script:
  # # - $TESTCMD -e 'Pkg.test("Plots"; coverage=false)'
- # - julia -e 'Pkg.test("Plots"; coverage=false)'
+ - julia -e 'Pkg.test("Plots"; coverage=false)'
  # # - julia -e 'cd(Pkg.dir("Plots")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
