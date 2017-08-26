@@ -620,8 +620,9 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 
-
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
+    _update_min_padding!(sp)
+
     # the viewports for this subplot
     viewport_subplot = gr_viewport_from_bbox(sp, bbox(sp), w, h, viewport_canvas)
     viewport_plotarea[:] = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
