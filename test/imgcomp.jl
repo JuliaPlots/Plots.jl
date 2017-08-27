@@ -42,7 +42,8 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
     fn = "ref$idx.png"
 
     # firgure out version info
-    versions = sort(VersionNumber.(readdir(refdir)), rev = true)
+    vns = filter(x->x[1] != '.', readdir(refdir))
+    versions = sort(VersionNumber.(vns), rev = true)
     versions = filter(v -> v <= _current_plots_version, versions)
     # @show refdir fn versions
 
