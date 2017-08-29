@@ -181,13 +181,14 @@ function hasgrid(arg::Symbol, letter)
 end
 hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
-const _allFramestyles = [:box, :semi, :axes, :grid, :none]
+const _allFramestyles = [:box, :semi, :axes, :origin, :grid, :none]
 const _framestyleAliases = Dict{Symbol, Symbol}(
     :frame              => :box,
     :border             => :box,
     :on                 => :box,
     :transparent        => :semi,
     :semitransparent    => :semi,
+    :zeroline           => :origin,
 )
 # -----------------------------------------------------------------------------
 

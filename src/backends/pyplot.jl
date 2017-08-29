@@ -1099,9 +1099,13 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ax[:spines]["top"][:set_alpha](intensity)
                 ax[:spines]["right"][:set_linewidth](intensity)
                 ax[:spines]["top"][:set_linewidth](intensity)
-            elseif sp[:framestyle] == :axes
+            elseif sp[:framestyle] in (:axes, :origin)
                 ax[:spines]["right"][:set_visible](false)
                 ax[:spines]["top"][:set_visible](false)
+                if sp[:framestyle] == :origin
+                    ax[:spines]["left"][:set_position]("zero")
+                    ax[:spines]["bottom"][:set_position]("zero")
+                end
             elseif sp[:framestyle] in (:grid, :none)
                 for (loc, spine) in ax[:spines]
                     spine[:set_visible](false)
