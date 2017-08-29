@@ -497,6 +497,7 @@ end
 end
 Plots.@deps stepbins path
 
+wand_edges(x...) = error("Load the StatPlots package in order to use :wand bins")
 
 function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto)
     _cl(x) = ceil(Int, NaNMath.max(x, one(x)))
@@ -529,8 +530,11 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
 end
 
 _hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) = StatsBase.histrange(vs[dim], binning, :left)
-_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) = _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
 _hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) = binning
+function _hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol)
+    binning == :wand && return(wand_edges(vs[dim]))
+    _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
+end
 
 _hist_edges{N}(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) =
     map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...))
