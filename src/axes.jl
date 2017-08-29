@@ -185,7 +185,7 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
         scaled_ticks = optimize_ticks(
             sf(amin),
             sf(amax);
-            k_min = 5, # minimum number of ticks
+            k_min = 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
         )[1]
     elseif typeof(ticks) <: Int
