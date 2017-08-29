@@ -856,21 +856,29 @@ end
 
 
 # this is when given a vector-type of values to group by
-function extractGroupArgs(v::AVec, args...)
+function extractGroupArgs(v::AVec, args...; legendEntry = string)
     groupLabels = sort(collect(unique(v)))
     n = length(groupLabels)
     if n > 100
         warn("You created n=$n groups... Is that intended?")
     end
     groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
-    GroupBy(map(string, groupLabels), groupIds)
+    GroupBy(map(legendEntry, groupLabels), groupIds)
 end
 
+legendEntryFromTuple(ns::Tuple) = string(("$n " for n in ns)...)
+
+# this is when given a tuple of vectors of values to group by
+function extractGroupArgs(vs::Tuple, args...)
+    (vs == ()) && return GroupBy([""], [1:size(args[1],1)])
+    v = collect(zip(vs...))
+    extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
+end
 
 # expecting a mapping of "group label" to "group indices"
 function extractGroupArgs{T, V<:AVec{Int}}(idxmap::Dict{T,V}, args...)
     groupLabels = sortedkeys(idxmap)
-    groupIds = VecI[collect(idxmap[k]) for k in groupLabels]
+    groupIds = Vector{Int}[collect(idxmap[k]) for k in groupLabels]
     GroupBy(groupLabels, groupIds)
 end
 
