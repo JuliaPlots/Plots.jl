@@ -175,7 +175,7 @@ function hasgrid(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on) || contains(string(arg), string(letter))
     else
-        warn("Unknown grid argument $arg; $letter\\grid was set to `true` instead.")
+        warn("Unknown grid argument $arg; $(Symbol(letter, :grid)) was set to `true` instead.")
         true
     end
 end
