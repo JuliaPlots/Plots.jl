@@ -89,7 +89,7 @@ end
 "create a shape by picking points around the unit circle.  `n` is the number of point/sides, `offset` is the starting angle"
 function makeshape(n; offset = -0.5, radius = 1.0)
     z = offset * π
-    Shape(partialcircle(z, z + 2π, n+1, radius))
+    Shape(partialcircle(z, z + 2π, n+1., radius))
 end
 
 
