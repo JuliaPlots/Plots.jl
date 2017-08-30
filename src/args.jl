@@ -189,6 +189,7 @@ const _framestyleAliases = Dict{Symbol, Symbol}(
     :transparent        => :semi,
     :semitransparent    => :semi,
     :zeroline           => :origin,
+    :zero               => :origin,
 )
 # -----------------------------------------------------------------------------
 

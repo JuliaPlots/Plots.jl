@@ -1077,6 +1077,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             py_set_scale(ax, axis)
             py_set_lims(ax, axis)
             ticks = sp[:framestyle] == :none ? nothing : get_ticks(axis)
+            # don't show the 0 tick label for the origin framestyle
+            if sp[:framestyle] == :origin && length(ticks) > 1
+                ticks[2][ticks[1] .== 0] = ""
+            end
             py_set_ticks(ax, ticks, letter)
             ax[Symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)

@@ -516,7 +516,13 @@ function axis_drawing_info(sp::Subplot)
     if !(sp[:framestyle] == :none)
         # xaxis
         sp[:framestyle] in (:grid, :origin) || push!(xaxis_segs, (xmin,ymin), (xmax,ymin)) # bottom spine / xaxis
-        sp[:framestyle] == :origin && push!(xaxis_segs, (xmin, 0.0), (xmax, 0.0))
+        if sp[:framestyle] == :origin
+            push!(xaxis_segs, (xmin, 0.0), (xmax, 0.0))
+            # don't show the 0 tick label for the origin framestyle
+            if length(yticks) > 1
+                xticks[2][xticks[1] .== 0] = ""
+            end
+        end
         sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin,ymax), (xmax,ymax)) # top spine
         if !(xaxis[:ticks] in (nothing, false))
             f = scalefunc(yaxis[:scale])
@@ -539,7 +545,13 @@ function axis_drawing_info(sp::Subplot)
 
         # yaxis
         sp[:framestyle] in (:grid, :origin) || push!(yaxis_segs, (xmin,ymin), (xmin,ymax)) # left spine / yaxis
-        sp[:framestyle] == :origin && push!(yaxis_segs, (0.0, ymin), (0.0, ymax))
+        if sp[:framestyle] == :origin
+            push!(yaxis_segs, (0.0, ymin), (0.0, ymax))
+            # don't show the 0 tick label for the origin framestyle
+            if length(yticks) > 1
+                yticks[2][yticks[1] .== 0] = ""
+            end
+        end
         sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (xmax,ymin), (xmax,ymax)) # right spine
         if !(yaxis[:ticks] in (nothing, false))
             f = scalefunc(xaxis[:scale])
