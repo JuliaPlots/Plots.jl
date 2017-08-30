@@ -1040,6 +1040,28 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             # ax[:set_title](sp[:title], loc = loc)
         end
 
+        # framestyle
+        if !ispolar(sp) && !is3d(sp)
+            if sp[:framestyle] == :semi
+                intensity = 0.5
+                ax[:spines]["right"][:set_alpha](intensity)
+                ax[:spines]["top"][:set_alpha](intensity)
+                ax[:spines]["right"][:set_linewidth](intensity)
+                ax[:spines]["top"][:set_linewidth](intensity)
+            elseif sp[:framestyle] in (:axes, :origin)
+                ax[:spines]["right"][:set_visible](false)
+                ax[:spines]["top"][:set_visible](false)
+                if sp[:framestyle] == :origin
+                    ax[:spines]["bottom"][:set_position]("zero")
+                    ax[:spines]["left"][:set_position]("zero")
+                end
+            elseif sp[:framestyle] in (:grid, :none, :origin)
+                for (loc, spine) in ax[:spines]
+                    spine[:set_visible](false)
+                end
+            end
+        end
+
         # axis attributes
         for letter in (:x, :y, :z)
             axissym = Symbol(letter, :axis)
@@ -1091,27 +1113,6 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         # this sets the bg color inside the grid
         ax[set_facecolor_sym](py_color(sp[:background_color_inside]))
 
-        # framestyle
-        if !ispolar(sp) && !is3d(sp)
-            if sp[:framestyle] == :semi
-                intensity = 0.5
-                ax[:spines]["right"][:set_alpha](intensity)
-                ax[:spines]["top"][:set_alpha](intensity)
-                ax[:spines]["right"][:set_linewidth](intensity)
-                ax[:spines]["top"][:set_linewidth](intensity)
-            elseif sp[:framestyle] == :axes
-                ax[:spines]["right"][:set_visible](false)
-                ax[:spines]["top"][:set_visible](false)
-            elseif sp[:framestyle] in (:grid, :none, :origin)
-                for (loc, spine) in ax[:spines]
-                    spine[:set_visible](false)
-                end
-                if sp[:framestyle] == :origin
-                    ax[:axhline](y = 0, color= py_color(sp[:xaxis][:foreground_color_axis]), lw = 0.5)
-                    ax[:axvline](x = 0, color= py_color(sp[:yaxis][:foreground_color_axis]), lw = 0.5)
-                end
-            end
-        end
     end
     py_drawfig(fig)
 end

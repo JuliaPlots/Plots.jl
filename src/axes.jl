@@ -523,9 +523,15 @@ function axis_drawing_info(sp::Subplot)
             invf = invscalefunc(yaxis[:scale])
             t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
             t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
+            t3 = invf(f(0) - 0.015*(f(ymax)-f(ymin)))
 
             for xtick in xticks[1]
-                push!(xaxis_segs, (xtick, ymin), (xtick, t1)) # bottom tick
+                tick_start, tick_stop = if sp[:framestyle] == :origin
+                    (0, xaxis[:mirror] ? -t3 : t3)
+                else
+                    xaxis[:mirror] ? (ymax, t2) : (ymin, t1)
+                end
+                push!(xaxis_segs, (xtick, tick_start), (xtick, tick_stop)) # bottom tick
                 # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
                 xaxis[:grid] && push!(xgrid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
             end
@@ -540,9 +546,15 @@ function axis_drawing_info(sp::Subplot)
             invf = invscalefunc(xaxis[:scale])
             t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
             t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
+            t3 = invf(f(0) - 0.015*(f(xmax)-f(xmin)))
 
             for ytick in yticks[1]
-                push!(yaxis_segs, (xmin, ytick), (t1, ytick)) # left tick
+                tick_start, tick_stop = if sp[:framestyle] == :origin
+                    (0, yaxis[:mirror] ? -t3 : t3)
+                else
+                    yaxis[:mirror] ? (xmax, t2) : (xmin, t1)
+                end
+                push!(yaxis_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
                 # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
                 yaxis[:grid] && push!(ygrid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
             end

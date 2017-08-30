@@ -793,7 +793,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             flip, mirror = gr_set_xticks_font(sp)
             for (cv, dv) in zip(xticks...)
                 # use xor ($) to get the right y coords
-                xi, yi = GR.wctondc(cv, xor(flip, mirror) ? ymax : ymin)
+                xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
                 gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3, string(dv))
             end
@@ -804,7 +804,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             flip, mirror = gr_set_yticks_font(sp)
             for (cv, dv) in zip(yticks...)
                 # use xor ($) to get the right y coords
-                xi, yi = GR.wctondc(xor(flip, mirror) ? xmax : xmin, cv)
+                xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
                 gr_text(xi + (mirror ? 1 : -1) * 1e-2, yi, string(dv))
             end

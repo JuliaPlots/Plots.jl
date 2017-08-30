@@ -604,7 +604,7 @@ end
 pointsize(font) = font.pointsize * 2
 
 function draw_ticks(
-        axis, ticks, isx, lims, m, text = "",
+        axis, ticks, isx, isorigin, lims, m, text = "",
         positions = Point2f0[], offsets=Vec2f0[]
     )
     sz = pointsize(axis[:tickfont])
@@ -622,7 +622,11 @@ function draw_ticks(
     for (cv, dv) in zip(ticks...)
 
         x, y = cv, lims[1]
-        xy = isx ? (x, y) : (y, x)
+        xy = if isorigin
+            isx ? (x, 0) : (0, x)
+        else
+            isx ? (x, y) : (y, x)
+        end
         _pos = m * GeometryTypes.Vec4f0(xy[1], xy[2], 0, 1)
         startpos = Point2f0(_pos[1], _pos[2]) - axis_gap
         str = string(dv)
@@ -711,10 +715,10 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     if !(xaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none)
         ticklabels = map(model) do m
             mirror = xaxis[:mirror]
-            t, positions, offsets = draw_ticks(xaxis, xticks, true, ylim, m)
+            t, positions, offsets = draw_ticks(xaxis, xticks, true, sp[:framestyle] == :origin, ylim, m)
             mirror = xaxis[:mirror]
             t, positions, offsets = draw_ticks(
-                yaxis, yticks, false, xlim, m,
+                yaxis, yticks, false, sp[:framestyle] == :origin, xlim, m,
                 t, positions, offsets
             )
         end
