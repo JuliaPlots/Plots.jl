@@ -510,8 +510,10 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
     v = vs[dim]
 
     if mode == :auto
-        30
-    elseif mode == :sqrt  # Square-root choice
+        mode == :fd
+    end
+
+    if mode == :sqrt  # Square-root choice
         _cl(sqrt(n))
     elseif mode == :sturges  # Sturges' formula
         _cl(log2(n)) + 1
@@ -550,7 +552,7 @@ end
 
 
 @recipe function f(::Type{Val{:histogram}}, x, y, z)
-    seriestype := :barhist
+    seriestype := length(y) > 1e6 ? :stephist : :barhist
     ()
 end
 @deps histogram barhist
