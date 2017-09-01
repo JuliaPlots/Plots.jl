@@ -532,8 +532,8 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
 end
 
 _hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) = StatsBase.histrange(vs[dim], binning, :left)
-_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) = binning
 _hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) = _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
+_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) = binning
 
 _hist_edges{N}(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) =
     map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...))
