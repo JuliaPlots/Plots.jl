@@ -510,7 +510,7 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
     v = vs[dim]
 
     if mode == :auto
-        mode == :fd
+        mode = :fd
     end
 
     if mode == :sqrt  # Square-root choice
