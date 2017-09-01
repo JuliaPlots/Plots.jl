@@ -497,7 +497,7 @@ end
 end
 Plots.@deps stepbins path
 
-wand_edges(x...) = error("Load the StatPlots package in order to use :wand bins")
+wand_edges(x...) = (warn("Load the StatPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
 
 function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto)
     _cl(x) = ceil(Int, NaNMath.max(x, one(x)))
@@ -524,17 +524,16 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
         _cl(_span(v) / (3.5 * std(v) / n^(1/3)))
     elseif mode == :fd  # Freedman–Diaconis rule
         _cl(_span(v) / (2 * _iqr(v) / n^(1/3)))
+    elseif mode == :wand
+        wand_edges(v)  # this makes this function not type stable, but the type instability does not propagate
     else
         error("Unknown auto-binning mode $mode")
-    end::Int
+    end
 end
 
 _hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) = StatsBase.histrange(vs[dim], binning, :left)
 _hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) = binning
-function _hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol)
-    binning == :wand && return(wand_edges(vs[dim]))
-    _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
-end
+_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) = _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
 
 _hist_edges{N}(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) =
     map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...))
