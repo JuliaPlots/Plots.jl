@@ -290,7 +290,7 @@ PlotExample("Layouts, margins, label rotation, title location",
     [:(begin
         plot(rand(100,6),layout=@layout([a b; c]),title=["A" "B" "C"],
                         title_location=:left, left_margin=[20mm 0mm],
-                        bottom_margin=50px, xrotation=60)
+                        bottom_margin=10px, xrotation=60)
     end)]
 ),
 
