@@ -472,10 +472,10 @@ end
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AMat)
-    n,m = size(v)
-    cmat = zeros(n,m)
-    discrete_indices = zeros(Int, n, m)
-    for i=1:n, j=1:m
+    n,m = indices(v)
+    cmat = zeros(v)
+    discrete_indices = similar(Array{Int}, n, m)
+    @inbounds for i=n, j=m
         cmat[i,j], discrete_indices[i,j] = discrete_value!(axis, v[i,j])
     end
     cmat, discrete_indices

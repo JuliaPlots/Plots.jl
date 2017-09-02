@@ -983,7 +983,8 @@ convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 # anything else is returned as-is
 function slice_arg(v::AMat, idx::Int)
     c = mod1(idx, size(v,2))
-    size(v,1) == 1 ? v[1,c] : v[:,c]
+    m,n = indices(v)
+    size(v,1) == 1 ? v[first(m),n[c]] : v[:,n[c]]
 end
 slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v, idx) = v

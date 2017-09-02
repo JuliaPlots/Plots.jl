@@ -1291,8 +1291,8 @@ function gl_surface(x,y,z, kw_args)
         if isa(x, AbstractMatrix) && isa(y, AbstractMatrix)
             main = map(s->map(Float32, s), (x, y, z))
         elseif isa(x, AbstractVector) || isa(y, AbstractVector)
-            x = Float32[x[i] for i = 1:size(z,1), j = 1:size(z,2)]
-            y = Float32[y[j] for i = 1:size(z,1), j = 1:size(z,2)]
+            x = Float32[x[i] for i = indices(z,1), j = indices(z,2)]
+            y = Float32[y[j] for i = indices(z,1), j = indices(z,2)]
             main = (x, y, map(Float32, z))
         else
             error("surface: combination of types not supported: $(typeof(x)) $(typeof(y)) $(typeof(z))")
@@ -1301,7 +1301,7 @@ function gl_surface(x,y,z, kw_args)
             points = map(Point3f0, zip(vec(x), vec(y), vec(z)))
             faces = Cuint[]
             idx = (i,j) -> sub2ind(size(z), i, j) - 1
-            for i=1:size(z,1), j=1:size(z,2)
+            for i=indices(z,1), j=indices(z,2)
 
                 i < size(z,1) && push!(faces, idx(i, j), idx(i+1, j))
                 j < size(z,2) && push!(faces, idx(i, j), idx(i, j+1))
