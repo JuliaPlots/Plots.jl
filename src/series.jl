@@ -69,13 +69,13 @@ end
 # TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array
 #       result in that array being shared.  push!, etc will add too many items to that array
 
-compute_x(x::Void, y::Void, z)      = 1:size(z,1)
-compute_x(x::Void, y, z)            = 1:size(y,1)
+compute_x(x::Void, y::Void, z)      = indices(z,1)
+compute_x(x::Void, y, z)            = indices(y,1)
 compute_x(x::Function, y, z)        = map(x, y)
 compute_x(x, y, z)                  = copy(x)
 
 # compute_y(x::Void, y::Function, z)  = error()
-compute_y(x::Void, y::Void, z)      = 1:size(z,2)
+compute_y(x::Void, y::Void, z)      = indices(z,2)
 compute_y(x, y::Function, z)        = map(y, x)
 compute_y(x, y, z)                  = copy(y)
 
@@ -272,9 +272,9 @@ end
 # return a surface if this is a 3d plot, otherwise let it be sliced up
 @recipe function f{T<:Union{Integer,AbstractFloat}}(mat::AMat{T})
     if all3D(d)
-        n,m = size(mat)
+        inds = indices(mat)
         wrap_surfaces(d)
-        SliceIt, 1:m, 1:n, Surface(mat)
+        SliceIt, inds[2], inds[1], Surface(mat)
     else
         SliceIt, nothing, mat, nothing
     end
