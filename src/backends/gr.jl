@@ -580,8 +580,10 @@ function gr_get_ticks_size(ticks, i)
 end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
-    if !haskey(ENV, "GKSwstype") && isijulia()
-        ENV["GKSwstype"] = "svg"
+    if !haskey(ENV, "GKSwstype")
+        if isijulia() || (isdefined(Main, :Juno) && Juno.isactive())
+            ENV["GKSwstype"] = "svg"
+        end
     end
     # Add margin given by the user
     leftpad   = 2mm  + sp[:left_margin]
