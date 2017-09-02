@@ -1276,6 +1276,7 @@ end
 
 # -----------------------------------------------------------------------------
 
+has_black_border_for_default(st) = error("The seriestype attribute only accepts Symbols, you passed $st.")
 function has_black_border_for_default(st::Symbol)
     like_histogram(st) || st in (:hexbin, :bar, :shape)
 end
