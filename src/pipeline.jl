@@ -365,7 +365,7 @@ function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
         expand_extrema!(sp, d)
     end
     # expand for zerolines (axes through origin)
-    if sp[:framestyle] == :origin
+    if sp[:framestyle] in (:origin, :zerolines)
         expand_extrema!(sp[:xaxis], 0.0)
         expand_extrema!(sp[:yaxis], 0.0)
     end

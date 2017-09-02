@@ -760,7 +760,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setwindow(xmin, xmax, ymin, ymax)
         end
 
-        xticks, yticks, xspine_segs, yspine_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs = axis_drawing_info(sp)
+        xticks, yticks, xspine_segs, yspine_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs = axis_drawing_info(sp)
         # @show xticks yticks #spine_segs grid_segs
 
         # draw the grid lines
@@ -785,6 +785,25 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_set_line(1, :solid, yaxis[:foreground_color_axis])
         GR.setclip(0)
         gr_polyline(coords(yspine_segs)...)
+        GR.setclip(1)
+
+        # axis ticks
+        if sp[:framestyle] in (:zerolines, :grid)
+            gr_set_line(1, :solid, xaxis[:foreground_color_grid])
+            GR.settransparency(xaxis[:gridalpha])
+        else
+            gr_set_line(1, :solid, xaxis[:foreground_color_axis])
+        end
+        GR.setclip(0)
+        gr_polyline(coords(xtick_segs)...)
+        if sp[:framestyle] in (:zerolines, :grid)
+            gr_set_line(1, :solid, yaxis[:foreground_color_grid])
+            GR.settransparency(yaxis[:gridalpha])
+        else
+            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+        end
+        GR.setclip(0)
+        gr_polyline(coords(ytick_segs)...)
         GR.setclip(1)
 
         # tick marks

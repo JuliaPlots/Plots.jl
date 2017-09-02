@@ -971,14 +971,15 @@ function py_set_scale(ax, axis::Axis)
 end
 
 
-function py_set_axis_colors(ax, a::Axis)
+function py_set_axis_colors(sp, ax, a::Axis)
     for (loc, spine) in ax[:spines]
         spine[:set_color](py_color(a[:foreground_color_border]))
     end
     axissym = Symbol(a[:letter], :axis)
     if haskey(ax, axissym)
+        tickcolor = sp[:framestyle] == :zerolines ? py_color(plot_color(a[:foreground_color_grid], a[:gridalpha])) : py_color(a[:foreground_color_axis])
         ax[:tick_params](axis=string(a[:letter]), which="both",
-                         colors=py_color(a[:foreground_color_axis]),
+                         colors=tickcolor,
                          labelcolor=py_color(a[:foreground_color_text]))
         ax[axissym][:label][:set_color](py_color(a[:foreground_color_guide]))
     end
@@ -1055,9 +1056,13 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     ax[:spines]["bottom"][:set_position]("zero")
                     ax[:spines]["left"][:set_position]("zero")
                 end
-            elseif sp[:framestyle] in (:grid, :none, :origin)
+            elseif sp[:framestyle] in (:grid, :none, :zerolines)
                 for (loc, spine) in ax[:spines]
                     spine[:set_visible](false)
+                end
+                if sp[:framestyle] == :zerolines
+                    ax[:axhline](y = 0, color = py_color(sp[:xaxis][:foreground_color_axis]), lw = 0.75)
+                    ax[:axvline](x = 0, color = py_color(sp[:yaxis][:foreground_color_axis]), lw = 0.75)
                 end
             end
         end
@@ -1102,7 +1107,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     alpha = axis[:gridalpha])
                 ax[:set_axisbelow](true)
             end
-            py_set_axis_colors(ax, axis)
+            py_set_axis_colors(sp, ax, axis)
         end
 
         # aspect ratio
