@@ -92,7 +92,7 @@ function image_comparison_facts(pkg::Symbol;
                                 debug = false,  # print debug information?
                                 sigma = [1,1],  # number of pixels to "blur"
                                 eps = 1e-2)     # acceptable error (percent)
-  for i in 1:length(Plots._examples)
+  for i in linearindices(Plots._examples)
     i in skip && continue
     if only == nothing || i in only
       @test image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) |> success == true

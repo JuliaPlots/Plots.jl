@@ -866,7 +866,7 @@ function extractGroupArgs(v::AVec, args...; legendEntry = string)
     if n > 100
         warn("You created n=$n groups... Is that intended?")
     end
-    groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
+    groupIds = Vector{Int}[filter(i -> v[i] == glab, linearindices(v)) for glab in groupLabels]
     GroupBy(map(legendEntry, groupLabels), groupIds)
 end
 
@@ -874,7 +874,7 @@ legendEntryFromTuple(ns::Tuple) = string(("$n " for n in ns)...)
 
 # this is when given a tuple of vectors of values to group by
 function extractGroupArgs(vs::Tuple, args...)
-    (vs == ()) && return GroupBy([""], [1:size(args[1],1)])
+    (vs == ()) && return GroupBy([""], [indices(args[1],1)])
     v = collect(zip(vs...))
     extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
 end

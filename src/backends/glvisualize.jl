@@ -802,7 +802,7 @@ function gl_bar(d, kw_args)
     hw = if bw == nothing
         ignorenan_mean(diff(x))
     else
-        Float64[_cycle(bw,i)*0.5 for i=1:length(x)]
+        Float64[_cycle(bw,i)*0.5 for i=linearindices(x)]
     end
 
     # make fillto a vector... default fills to 0
@@ -852,7 +852,7 @@ function gl_boxplot(d, kw_args)
     sx, sy = m[1,1], m[2,2]
     for (i,glabel) in enumerate(glabels)
         # filter y
-        values = y[filter(i -> _cycle(x,i) == glabel, 1:length(y))]
+        values = y[filter(i -> _cycle(x,i) == glabel, linearindices(y))]
         # compute quantiles
         q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
         # notch
@@ -963,7 +963,7 @@ function scale_for_annotations!(series::Series, scaletype::Symbol = :pixels)
         # with a list of custom shapes for each
         msw, msh = anns.scalefactor
         offsets = Array{Vec2f0}(length(anns.strs))
-        series[:markersize] = map(1:length(anns.strs)) do i
+        series[:markersize] = map(linearindices(anns.strs)) do i
             str = _cycle(anns.strs, i)
             # get the width and height of the string (in mm)
             sw, sh = text_size(str, anns.font.pointsize)

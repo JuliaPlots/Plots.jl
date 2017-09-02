@@ -244,7 +244,7 @@ end
 # end
 
 function get_locator_and_formatter(vals::AVec)
-    pyticker["FixedLocator"](1:length(vals)), pyticker["FixedFormatter"](vals)
+    pyticker["FixedLocator"](linearindices(vals)), pyticker["FixedFormatter"](vals)
 end
 
 function add_pyfixedformatter(cbar, vals::AVec)
@@ -589,7 +589,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             shapes = series[:markershape]
             msc = py_markerstrokecolor(series)
             lw = py_dpi_scale(plt, series[:markerstrokewidth])
-            for i=1:length(y)
+            for i=linearindices(y)
                 extrakw[:c] = if series[:marker_z] == nothing
                     py_color_fix(py_color(_cycle(series[:markercolor],i)), x)
                 else
@@ -850,7 +850,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         kw = KW()
         if discrete_colorbar_values != nothing
             locator, formatter = get_locator_and_formatter(discrete_colorbar_values)
-            # kw[:values] = 1:length(discrete_colorbar_values)
+            # kw[:values] = linearindices(discrete_colorbar_values)
             kw[:values] = sp[:zaxis][:continuous_values]
             kw[:ticks] = locator
             kw[:format] = formatter

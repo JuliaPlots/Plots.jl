@@ -291,7 +291,7 @@ end
     hw = if bw == nothing
         0.5ignorenan_mean(diff(procx))
     else
-        Float64[0.5_cycle(bw,i) for i=1:length(procx)]
+        Float64[0.5_cycle(bw,i) for i=linearindices(procx)]
     end
 
     # make fillto a vector... default fills to 0
@@ -872,7 +872,7 @@ function get_xy(o::OHLC, x, xdiff)
 end
 
 # get the joined vector
-function get_xy(v::AVec{OHLC}, x = 1:length(v))
+function get_xy(v::AVec{OHLC}, x = linearindices(v))
     xdiff = 0.3ignorenan_mean(abs.(diff(x)))
     x_out, y_out = zeros(0), zeros(0)
     for (i,ohlc) in enumerate(v)

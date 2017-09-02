@@ -1,5 +1,5 @@
 
-calcMidpoints(edges::AbstractVector) = Float64[0.5 * (edges[i] + edges[i+1]) for i in 1:length(edges)-1]
+calcMidpoints(edges::AbstractVector) = Float64[0.5 * (edges[i] + edges[i+1]) for i in linearindices(edges)-1]
 
 "Make histogram-like bins of data"
 function binData(data, nbins)
@@ -43,7 +43,7 @@ function barHack(; kw...)
   # estimate the edges
   dists = diff(midpoints) * 0.5
   edges = zeros(length(midpoints)+1)
-  for i in 1:length(edges)
+  for i in linearindices(edges)
     if i == 1
       edge = midpoints[1] - dists[1]
     elseif i == length(edges)
@@ -56,7 +56,7 @@ function barHack(; kw...)
 
   x = Float64[]
   y = Float64[]
-  for i in 1:length(heights)
+  for i in linearindices(heights)
     e1, e2 = edges[i:i+1]
     append!(x, [e1, e1, e2, e2])
     append!(y, [fillrange, heights[i], heights[i], fillrange])

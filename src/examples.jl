@@ -379,7 +379,7 @@ function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = noth
                                         skip = [], only = nothing)
   Plots._debugMode.on = debug
   plts = Dict()
-  for i in 1:length(_examples)
+  for i in linearindices(_examples)
     only != nothing && !(i in only) && continue
     i in skip && continue
     try

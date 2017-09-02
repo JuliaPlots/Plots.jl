@@ -370,7 +370,7 @@ end
 
 
 function plotly_colorscale(grad::ColorGradient, α)
-    [[grad.values[i], rgb_string(grad.colors[i])] for i in 1:length(grad.colors)]
+    [[grad.values[i], rgb_string(grad.colors[i])] for i in linearindices(grad.colors)]
 end
 plotly_colorscale(c, α) = plotly_colorscale(cgrad(alpha=α), α)
 # plotly_colorscale(c, alpha = nothing) = plotly_colorscale(cgrad(), alpha)
@@ -397,7 +397,7 @@ end
 # we split by NaNs and then construct/destruct the shapes to get the closed coords
 function plotly_close_shapes(x, y)
     xs, ys = nansplit(x), nansplit(y)
-    for i=1:length(xs)
+    for i=linearindices(xs)
         shape = Shape(xs[i], ys[i])
         xs[i], ys[i] = coords(shape)
     end
