@@ -8,6 +8,7 @@ default(show=false, reuse=true)
 img_eps = isinteractive() ? 1e-2 : 10e-2
 
 @testset "GR" begin
+    ENV["GKSwstype"] = "100"
     @test gr() == Plots.GRBackend()
     @test backend() == Plots.GRBackend()
 

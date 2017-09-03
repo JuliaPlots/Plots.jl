@@ -24,7 +24,8 @@ const _glvisualize_attr = merge_with_base_supported([
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :colorbar,
+    :grid, :gridalpha, :gridstyle, :gridlinewidth,
+    :legend, :colorbar,
     :marker_z,
     :line_z,
     :levels,
@@ -38,7 +39,8 @@ const _glvisualize_attr = merge_with_base_supported([
     :clims,
     :inset_subplots,
     :dpi,
-    :hover
+    :hover,
+    :framestyle,
 ])
 const _glvisualize_seriestype = [
     :path, :shape,
@@ -676,17 +678,29 @@ function text_model(font, pivot)
     end
 end
 function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, area)
-    xticks, yticks, spine_segs, grid_segs = Plots.axis_drawing_info(sp)
+    xticks, yticks, xspine_segs, yspine_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs = Plots.axis_drawing_info(sp)
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
 
-    c = Colors.color(Plots.gl_color(sp[:foreground_color_grid]))
+    xgc = Colors.color(Plots.gl_color(xaxis[:foreground_color_grid]))
+    ygc = Colors.color(Plots.gl_color(yaxis[:foreground_color_grid]))
     axis_vis = []
-    if sp[:grid]
-        grid = draw_grid_lines(sp, grid_segs, 1f0, :dot, model, RGBA(c, 0.3f0))
+    if xaxis[:grid]
+        grid = draw_grid_lines(sp, xgrid_segs, xaxis[:gridlinewidth], xaxis[:gridstyle], model, RGBA(xgc, xaxis[:gridalpha]))
         push!(axis_vis, grid)
     end
-    if alpha(xaxis[:foreground_color_border]) > 0
-        spine = draw_grid_lines(sp, spine_segs, 1f0, :solid, model, RGBA(c, 1.0f0))
+    if yaxis[:grid]
+        grid = draw_grid_lines(sp, ygrid_segs, yaxis[:gridlinewidth], yaxis[:gridstyle], model, RGBA(ygc, yaxis[:gridalpha]))
+        push!(axis_vis, grid)
+    end
+
+    xac = Colors.color(Plots.gl_color(xaxis[:foreground_color_axis]))
+    yac = Colors.color(Plots.gl_color(yaxis[:foreground_color_axis]))
+    if alpha(xaxis[:foreground_color_axis]) > 0
+        spine = draw_grid_lines(sp, xspine_segs, 1f0, :solid, model, RGBA(xac, 1.0f0))
+        push!(axis_vis, spine)
+    end
+    if alpha(yaxis[:foreground_color_axis]) > 0
+        spine = draw_grid_lines(sp, yspine_segs, 1f0, :solid, model, RGBA(yac, 1.0f0))
         push!(axis_vis, spine)
     end
     fcolor = Plots.gl_color(xaxis[:foreground_color_axis])
@@ -694,7 +708,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     xlim = Plots.axis_limits(xaxis)
     ylim = Plots.axis_limits(yaxis)
 
-    if !(xaxis[:ticks] in (nothing, false, :none))
+    if !(xaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none)
         ticklabels = map(model) do m
             mirror = xaxis[:mirror]
             t, positions, offsets = draw_ticks(xaxis, xticks, true, ylim, m)
@@ -712,6 +726,15 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
             :scale_primitive => false
         )
         push!(axis_vis, visualize(map(first, ticklabels), Style(:default), kw_args))
+    end
+
+    xbc = Colors.color(Plots.gl_color(xaxis[:foreground_color_border]))
+    ybc = Colors.color(Plots.gl_color(yaxis[:foreground_color_border]))
+    intensity = sp[:framestyle] == :semi ? 0.5f0 : 1.0f0
+    if sp[:framestyle] in (:box, :semi)
+        xborder = draw_grid_lines(sp, xborder_segs, intensity, :solid, model, RGBA(xbc, intensity))
+        yborder = draw_grid_lines(sp, yborder_segs, intensity, :solid, model, RGBA(ybc, intensity))
+        push!(axis_vis, xborder, yborder)
     end
 
     area_w = GeometryTypes.widths(area)

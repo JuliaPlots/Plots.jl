@@ -1,6 +1,7 @@
 # Plots
 
 [![Build Status](https://travis-ci.org/JuliaPlots/Plots.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/Plots.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/github/tbreloff/plots.jl?branch=master&svg=true)](https://ci.appveyor.com/project/tbreloff/plots-jl)
 [![Join the chat at https://gitter.im/tbreloff/Plots.jl](https://badges.gitter.im/tbreloff/Plots.jl.svg)](https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 <!-- [![Plots](http://pkg.julialang.org/badges/Plots_0.3.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.3) -->
 <!-- [![Plots](http://pkg.julialang.org/badges/Plots_0.4.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.4) -->

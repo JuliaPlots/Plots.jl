@@ -5,7 +5,7 @@ const _plotly_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_legend, :foreground_color_guide,
-    # :foreground_color_grid, :foreground_color_axis,
+    :foreground_color_grid, :foreground_color_axis,
     :foreground_color_text, :foreground_color_border,
     :foreground_color_title,
     :label,
@@ -19,7 +19,8 @@ const _plotly_attr = merge_with_base_supported([
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :colorbar, :colorbar_title,
+    :grid, :gridalpha, :gridlinewidth,
+    :legend, :colorbar, :colorbar_title,
     :marker_z, :fill_z, :levels,
     :ribbon, :quiver,
     :orientation,
@@ -213,7 +214,9 @@ function plotly_axis(axis::Axis, sp::Subplot)
     letter = axis[:letter]
     ax = KW(
         :title      => axis[:guide],
-        :showgrid   => sp[:grid],
+        :showgrid   => axis[:grid],
+        :gridcolor  => rgba_string(plot_color(axis[:foreground_color_grid], axis[:gridalpha])),
+        :gridwidth  => axis[:gridlinewidth],
         :zeroline   => false,
         :ticks      => "inside",
     )
@@ -229,8 +232,8 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
         ax[:type] = plotly_scale(axis[:scale])
         ax[:tickfont] = plotly_font(axis[:tickfont], axis[:foreground_color_text])
-        ax[:tickcolor] = rgba_string(axis[:foreground_color_border])
-        ax[:linecolor] = rgba_string(axis[:foreground_color_border])
+        ax[:tickcolor] = rgba_string(axis[:foreground_color_axis])
+        ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
         # lims
         lims = axis[:lims]
@@ -435,7 +438,8 @@ function plotly_series(plt::Plot, series::Series)
     isscatter = st in (:scatter, :scatter3d, :scattergl)
     hasmarker = isscatter || series[:markershape] != :none
     hasline = st in (:path, :path3d)
-    hasfillrange = st in (:path, :scatter, :scattergl) && isa(series[:fillrange], AbstractVector)
+    hasfillrange = st in (:path, :scatter, :scattergl) &&
+        (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     # for surface types, set the data
     if st in (:heatmap, :contour, :surface, :wireframe)
@@ -459,7 +463,7 @@ function plotly_series(plt::Plot, series::Series)
         else
             hasline ? "lines" : "none"
         end
-        if series[:fillrange] == true || series[:fillrange] == 0
+        if series[:fillrange] == true || series[:fillrange] == 0 || isa(series[:fillrange], Tuple)
             d_out[:fill] = "tozeroy"
             d_out[:fillcolor] = rgba_string(series[:fillcolor])
         elseif isa(series[:fillrange], AbstractVector)
@@ -584,11 +588,21 @@ function plotly_series(plt::Plot, series::Series)
     if hasfillrange
         # if hasfillrange is true, return two dictionaries (one for original
         # series, one for series being filled to) instead of one
-        d_out_fillrange = copy(d_out)
-        d_out_fillrange[:y] = series[:fillrange]
+        d_out_fillrange = deepcopy(d_out)
         d_out_fillrange[:showlegend] = false
-        delete!(d_out_fillrange, :fill)
-        delete!(d_out_fillrange, :fillcolor)
+        if isa(series[:fillrange], AbstractVector)
+            d_out_fillrange[:y] = series[:fillrange]
+            delete!(d_out_fillrange, :fill)
+            delete!(d_out_fillrange, :fillcolor)
+        else
+            # if fillrange is a tuple with upper and lower limit, d_out_fillrange
+            # is the series that will do the filling
+            d_out_fillrange[:x], d_out_fillrange[:y] =
+                concatenate_fillrange(series[:x], series[:fillrange])
+            d_out_fillrange[:line][:width] = 0
+            delete!(d_out, :fill)
+            delete!(d_out, :fillcolor)
+        end
 
         return [d_out_fillrange, d_out]
     else

@@ -155,7 +155,7 @@ PlotExample("Subplots",
     """,
     [:(begin
         l = @layout([a{0.1h}; b [c;d e]])
-        plot(randn(100,5), layout=l, t=[:line :histogram :scatter :steppre :bar], leg=false, ticks=nothing, border=false)
+        plot(randn(100,5), layout=l, t=[:line :histogram :scatter :steppre :bar], leg=false, ticks=nothing, border=:none)
     end)]
 ),
 
@@ -290,7 +290,7 @@ PlotExample("Layouts, margins, label rotation, title location",
     [:(begin
         plot(rand(100,6),layout=@layout([a b; c]),title=["A" "B" "C"],
                         title_location=:left, left_margin=[20mm 0mm],
-                        bottom_margin=50px, xrotation=60)
+                        bottom_margin=10px, xrotation=60)
     end)]
 ),
 
@@ -321,11 +321,31 @@ PlotExample("Animation with subplots",
 ),
 
 PlotExample("Spy",
-    "For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has various different nonzero values, a colorbar is added. The colorbar can be disabled with `legend = nothing`. As always, the marker shape and size can be changed with `spy(mat, markersize = 3, markershape = :star)`",
+    "For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has various different nonzero values, a colorbar is added. The colorbar can be disabled with `legend = nothing`. As always, the marker shape and size can be changed with `spy(mat, markersize = 3, markershape = :star)`.",
     [:(begin
     a = spdiagm((ones(50), ones(49), ones(49), ones(40), ones(40)),(0, 1, -1, 10, -10))
     b = spdiagm((1:50, 1:49, 1:49, 1:40, 1:40),(0, 1, -1, 10, -10))
     plot(spy(a, markershape = :dtriangle), spy(b), markersize = 3, title = ["Unique nonzeros" "Different nonzeros"])
+    end)]
+),
+
+PlotExample("Magic grid argument",
+    "The grid lines can be modified individually for each axis with the magic `grid` argument.",
+    [:(begin
+    x = rand(10)
+    p1 = plot(x, title = "Default looks")
+    p2 = plot(x, grid = (:y, :olivedrab, :dot, 1, 0.9), title = "Modified y grid")
+    p3 = plot(deepcopy(p2), title = "Add x grid")
+    xgrid!(p3, :on, :cadetblue, 2, :dashdot, 0.4)
+    plot(p1, p2, p3, layout = (1, 3), label = "", fillrange = 0, fillalpha = 0.3)
+    end)]
+),
+
+PlotExample("Framestyle",
+    "The style of the frame/axes of a (sub)plot can be changed with the `framestyle` attribute. The default framestyle is `:axes`.",
+    [:(begin
+    histogram(fill(randn(1000), 5), framestyle = [:box :semi :axes :grid :none],
+        title = [":box" ":semi" ":axes" ":grid" ":none"], color = RowVector(1:5), layout = 5, label = "")
     end)]
 ),
 
@@ -348,6 +368,13 @@ function test_examples(pkgname::Symbol, idx::Int; debug = false, disp = true)
 end
 
 # generate all plots and create a dict mapping idx --> plt
+"""
+test_examples(pkgname[, idx]; debug = false, disp = true, sleep = nothing,
+                                        skip = [], only = nothing
+
+Run the `idx` test example for a given backend, or all examples if `idx`
+is not specified.
+"""
 function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = nothing,
                                         skip = [], only = nothing)
   Plots._debugMode.on = debug

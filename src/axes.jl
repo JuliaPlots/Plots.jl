@@ -181,15 +181,27 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     end
 
     # get a list of well-laid-out ticks
-    scaled_ticks = if ticks == nothing
-        optimize_ticks(
+    if ticks == nothing
+        scaled_ticks = optimize_ticks(
             sf(amin),
             sf(amax);
-            k_min = 5, # minimum number of ticks
+            k_min = 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
         )[1]
+    elseif typeof(ticks) <: Int
+        scaled_ticks, viewmin, viewmax = optimize_ticks(
+            sf(amin),
+            sf(amax);
+            k_min = ticks, # minimum number of ticks
+            k_max = ticks, # maximum number of ticks
+            k_ideal = ticks,
+            # `strict_span = false` rewards cases where the span of the
+            # chosen  ticks is not too much bigger than amin - amax:
+            strict_span = false,
+        )
+        axis[:lims] = map(invscalefunc(scale), (viewmin, viewmax))
     else
-        map(sf, filter(t -> amin <= t <= amax, ticks))
+        scaled_ticks = map(sf, (filter(t -> amin <= t <= amax, ticks)))
     end
     unscaled_ticks = map(invscalefunc(scale), scaled_ticks)
 
@@ -216,7 +228,7 @@ end
 
 # return (continuous_values, discrete_values) for the ticks on this axis
 function get_ticks(axis::Axis)
-    ticks = axis[:ticks]
+    ticks = _transform_ticks(axis[:ticks])
     ticks in (nothing, false) && return nothing
 
     dvals = axis[:discrete_values]
@@ -226,7 +238,7 @@ function get_ticks(axis::Axis)
     elseif ticks == :auto
         # compute optimal ticks and labels
         optimal_ticks_and_labels(axis)
-    elseif typeof(ticks) <: AVec
+    elseif typeof(ticks) <: Union{AVec, Int}
         # override ticks, but get the labels
         optimal_ticks_and_labels(axis, ticks)
     elseif typeof(ticks) <: NTuple{2, Any}
@@ -245,6 +257,10 @@ function get_ticks(axis::Axis)
         cv, dv
     end
 end
+
+_transform_ticks(ticks) = ticks
+_transform_ticks(ticks::AbstractArray{T}) where T <: Dates.TimeType = Dates.value.(ticks)
+_transform_ticks(ticks::NTuple{2, Any}) = (_transform_ticks(ticks[1]), ticks[2])
 
 # -------------------------------------------------------------------------
 
@@ -490,38 +506,46 @@ function axis_drawing_info(sp::Subplot)
     ymin, ymax = axis_limits(yaxis)
     xticks = get_ticks(xaxis)
     yticks = get_ticks(yaxis)
-    spine_segs = Segments(2)
-    grid_segs = Segments(2)
+    xaxis_segs = Segments(2)
+    yaxis_segs = Segments(2)
+    xgrid_segs = Segments(2)
+    ygrid_segs = Segments(2)
+    xborder_segs = Segments(2)
+    yborder_segs = Segments(2)
 
-    if !(xaxis[:ticks] in (nothing, false))
-        f = scalefunc(yaxis[:scale])
-        invf = invscalefunc(yaxis[:scale])
-        t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
-        t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
+    if !(sp[:framestyle] == :none)
+        # xaxis
+        sp[:framestyle] == :grid || push!(xaxis_segs, (xmin,ymin), (xmax,ymin)) # bottom spine / xaxis
+        sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin,ymax), (xmax,ymax)) # top spine
+        if !(xaxis[:ticks] in (nothing, false))
+            f = scalefunc(yaxis[:scale])
+            invf = invscalefunc(yaxis[:scale])
+            t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
+            t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
 
-        push!(spine_segs, (xmin,ymin), (xmax,ymin)) # bottom spine
-        # push!(spine_segs, (xmin,ymax), (xmax,ymax)) # top spine
-        for xtick in xticks[1]
-            push!(spine_segs, (xtick, ymin), (xtick, t1)) # bottom tick
-            push!(grid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
-            # push!(spine_segs, (xtick, ymax), (xtick, t2)) # top tick
+            for xtick in xticks[1]
+                push!(xaxis_segs, (xtick, ymin), (xtick, t1)) # bottom tick
+                # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
+                xaxis[:grid] && push!(xgrid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
+            end
+        end
+
+        # yaxis
+        sp[:framestyle] == :grid || push!(yaxis_segs, (xmin,ymin), (xmin,ymax)) # left spine / yaxis
+        sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (xmax,ymin), (xmax,ymax)) # right spine
+        if !(yaxis[:ticks] in (nothing, false))
+            f = scalefunc(xaxis[:scale])
+            invf = invscalefunc(xaxis[:scale])
+            t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
+            t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
+
+            for ytick in yticks[1]
+                push!(yaxis_segs, (xmin, ytick), (t1, ytick)) # left tick
+                # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
+                yaxis[:grid] && push!(ygrid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
+            end
         end
     end
 
-    if !(yaxis[:ticks] in (nothing, false))
-        f = scalefunc(xaxis[:scale])
-        invf = invscalefunc(xaxis[:scale])
-        t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
-        t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
-
-        push!(spine_segs, (xmin,ymin), (xmin,ymax)) # left spine
-        # push!(spine_segs, (xmax,ymin), (xmax,ymax)) # right spine
-        for ytick in yticks[1]
-            push!(spine_segs, (xmin, ytick), (t1, ytick)) # left tick
-            push!(grid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
-            # push!(spine_segs, (xmax, ytick), (t2, ytick)) # right tick
-        end
-    end
-
-    xticks, yticks, spine_segs, grid_segs
+    xticks, yticks, xaxis_segs, yaxis_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs
 end

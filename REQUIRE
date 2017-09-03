@@ -1,4 +1,4 @@
-julia 0.6-pre
+julia 0.6
 
 RecipesBase 0.2.0
 PlotUtils 0.4.1

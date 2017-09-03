@@ -97,6 +97,13 @@ function addExtension(fn::AbstractString, ext::AbstractString)
   end
 end
 
+"""
+    savefig([plot,] filename)
+
+Save a Plot (the current plot if `plot` is not passed) to file. The file
+type is inferred from the file extension. All backends support png and pdf
+file types, some also support svg, ps, eps, html and tex.
+"""
 function savefig(plt::Plot, fn::AbstractString)
 
   # get the extension
@@ -119,7 +126,11 @@ savefig(fn::AbstractString) = savefig(current(), fn)
 
 
 # ---------------------------------------------------------
+"""
+    gui([plot])
 
+Display a plot using the backends' gui window
+"""
 gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
 # IJulia only... inline display
@@ -198,6 +209,7 @@ for mime in keys(_mimeformats)
     end
 end
 
+"Close all open gui windows of the current backend"
 closeall() = closeall(backend())
 
 
@@ -266,6 +278,7 @@ using Requires
             show(io, MIME("text/html"), plt)
         end
 
+        ENV["MPLBACKEND"] = "Agg"
         set_ijulia_output("text/html")
     end
 end

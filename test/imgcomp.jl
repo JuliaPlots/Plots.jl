@@ -23,7 +23,7 @@ default(size=(500,300))
 # TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
-const _current_plots_version = v"0.12.1"
+const _current_plots_version = v"0.12.3"
 
 
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], eps = 1e-2)
@@ -42,7 +42,8 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
     fn = "ref$idx.png"
 
     # firgure out version info
-    versions = sort(VersionNumber.(readdir(refdir)), rev = true)
+    vns = filter(x->x[1] != '.', readdir(refdir))
+    versions = sort(VersionNumber.(vns), rev = true)
     versions = filter(v -> v <= _current_plots_version, versions)
     # @show refdir fn versions
 

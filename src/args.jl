@@ -80,9 +80,13 @@ const _typeAliases = Dict{Symbol,Symbol}(
 
 add_non_underscore_aliases!(_typeAliases)
 
-like_histogram(seriestype::Symbol) = seriestype in (:histogram, :barhist, :barbins)
-like_line(seriestype::Symbol)      = seriestype in (:line, :path, :steppre, :steppost)
-like_surface(seriestype::Symbol)   = seriestype in (:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image)
+const _histogram_like = [:histogram, :barhist, :barbins]
+const _line_like = [:line, :path, :steppre, :steppost]
+const _surface_like = [:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image]
+
+like_histogram(seriestype::Symbol) = seriestype in _histogram_like
+like_line(seriestype::Symbol)      = seriestype in _line_like
+like_surface(seriestype::Symbol)   = seriestype in _surface_like
 
 is3d(seriestype::Symbol) = seriestype in _3dTypes
 is3d(series::Series) = is3d(series.d)
@@ -163,6 +167,32 @@ const _scaleAliases = Dict{Symbol,Symbol}(
     :log  => :log10,
 )
 
+const _allGridSyms = [:x, :y, :z,
+                    :xy, :xz, :yx, :yz, :zx, :zy,
+                    :xyz, :xzy, :yxz, :yzx, :zxy, :zyx,
+                    :all, :both, :on,
+                    :none, :off,]
+const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing]
+hasgrid(arg::Void, letter) = false
+hasgrid(arg::Bool, letter) = arg
+function hasgrid(arg::Symbol, letter)
+    if arg in _allGridSyms
+        arg in (:all, :both, :on) || contains(string(arg), string(letter))
+    else
+        warn("Unknown grid argument $arg; $(Symbol(letter, :grid)) was set to `true` instead.")
+        true
+    end
+end
+hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
+
+const _allFramestyles = [:box, :semi, :axes, :grid, :none]
+const _framestyleAliases = Dict{Symbol, Symbol}(
+    :frame              => :box,
+    :border             => :box,
+    :on                 => :box,
+    :transparent        => :semi,
+    :semitransparent    => :semi,
+)
 # -----------------------------------------------------------------------------
 
 const _series_defaults = KW(
@@ -172,7 +202,7 @@ const _series_defaults = KW(
     :seriestype        => :path,
     :linestyle         => :solid,
     :linewidth         => :auto,
-    :linecolor         => :match,
+    :linecolor         => :auto,
     :linealpha         => nothing,
     :fillrange         => nothing,   # ribbons, areas, etc
     :fillcolor         => :match,
@@ -248,7 +278,6 @@ const _subplot_defaults = KW(
     :background_color_inside  => :match,            # background inside grid
     :foreground_color_subplot => :match,            # default for other fg colors... match takes plot default
     :foreground_color_legend  => :match,            # foreground of legend
-    :foreground_color_grid    => :match,            # grid color
     :foreground_color_title   => :match,            # title color
     :color_palette            => :auto,
     :legend                   => :best,
@@ -256,7 +285,6 @@ const _subplot_defaults = KW(
     :colorbar                 => :legend,
     :clims                    => :auto,
     :legendfont               => font(8),
-    :grid                     => true,
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :none,             # choose from :none or :equal
@@ -267,6 +295,7 @@ const _subplot_defaults = KW(
     :bottom_margin            => :match,
     :subplot_index            => -1,
     :colorbar_title           => "",
+    :framestyle               => :axes,
 )
 
 const _axis_defaults = KW(
@@ -286,6 +315,11 @@ const _axis_defaults = KW(
     :discrete_values => [],
     :formatter => :auto,
     :mirror => false,
+    :grid                     => true,
+    :foreground_color_grid    => :match,            # grid color
+    :gridalpha                => 0.1,
+    :gridstyle                => :solid,
+    :gridlinewidth            => 0.5,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -403,7 +437,7 @@ add_aliases(:foreground_color_title, :fg_title, :fgtitle, :fgcolor_title, :fg_co
 add_aliases(:foreground_color_axis, :fg_axis, :fgaxis, :fgcolor_axis, :fg_color_axis, :foreground_axis,
                             :foreground_colour_axis, :fgcolour_axis, :fg_colour_axis, :axiscolor)
 add_aliases(:foreground_color_border, :fg_border, :fgborder, :fgcolor_border, :fg_color_border, :foreground_border,
-                            :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor, :border)
+                            :foreground_colour_border, :fgcolour_border, :fg_colour_border, :bordercolor)
 add_aliases(:foreground_color_text, :fg_text, :fgtext, :fgcolor_text, :fg_color_text, :foreground_text,
                             :foreground_colour_text, :fgcolour_text, :fg_colour_text, :textcolor)
 add_aliases(:foreground_color_guide, :fg_guide, :fgguide, :fgcolor_guide, :fg_color_guide, :foreground_guide,
@@ -415,6 +449,7 @@ add_aliases(:linealpha, :la, :lalpha, :lα, :lineopacity, :lopacity)
 add_aliases(:markeralpha, :ma, :malpha, :mα, :markeropacity, :mopacity)
 add_aliases(:markerstrokealpha, :msa, :msalpha, :msα, :markerstrokeopacity, :msopacity)
 add_aliases(:fillalpha, :fa, :falpha, :fα, :fillopacity, :fopacity)
+add_aliases(:gridalpha, :ga, :galpha, :gα, :gridopacity, :gopacity)
 
 # series attributes
 add_aliases(:seriestype, :st, :t, :typ, :linetype, :lt)
@@ -471,6 +506,9 @@ add_aliases(:html_output_format, :format, :fmt, :html_format)
 add_aliases(:orientation, :direction, :dir)
 add_aliases(:inset_subplots, :inset, :floating)
 add_aliases(:stride, :wirefame_stride, :surface_stride, :surf_str, :str)
+add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :grid_lw)
+add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
+add_aliases(:framestyle, :frame_style, :frame, :axesstyle, :axes_style, :boxstyle, :box_style, :box, :borderstyle, :border_style, :border)
 
 
 # add all pluralized forms to the _keyAliases dict
@@ -490,7 +528,6 @@ end
 `default(; kw...)` will set the current default value for each key/value pair
 `default(d, key)` returns the key from d if it exists, otherwise `default(key)`
 """
-
 function default(k::Symbol)
     k = get(_keyAliases, k, k)
     for defaults in _all_defaults
@@ -647,6 +684,36 @@ function processFillArg(d::KW, arg)
     return
 end
 
+
+function processGridArg!(d::KW, arg, letter)
+    if arg in _allGridArgs || isa(arg, Bool)
+        d[Symbol(letter, :grid)] = hasgrid(arg, letter)
+
+    elseif allStyles(arg)
+        d[Symbol(letter, :gridstyle)] = arg
+
+    elseif typeof(arg) <: Stroke
+        arg.width == nothing || (d[Symbol(letter, :gridlinewidth)] = arg.width)
+        arg.color == nothing || (d[Symbol(letter, :foreground_color_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
+        arg.alpha == nothing || (d[Symbol(letter, :gridalpha)] = arg.alpha)
+        arg.style == nothing || (d[Symbol(letter, :gridstyle)] = arg.style)
+
+    # linealpha
+    elseif allAlphas(arg)
+        d[Symbol(letter, :gridalpha)] = arg
+
+    # linewidth
+    elseif allReals(arg)
+        d[Symbol(letter, :gridlinewidth)] = arg
+
+    # color
+elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_grid))
+        warn("Skipped grid arg $arg.")
+
+    end
+end
+
+
 _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
 _replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
 _replace_markershape(shape) = shape
@@ -668,6 +735,7 @@ function preprocessArgs!(d::KW)
     if haskey(d, :axis) && d[:axis] in (:none, nothing, false)
         d[:ticks] = nothing
         d[:foreground_color_border] = RGBA(0,0,0,0)
+        d[:foreground_color_axis] = RGBA(0,0,0,0)
         d[:grid] = false
         delete!(d, :axis)
     end
@@ -687,6 +755,22 @@ function preprocessArgs!(d::KW)
             for arg in wraptuple(args)
                 process_axis_arg!(d, arg, letter)
             end
+        end
+    end
+
+    # handle grid args common to all axes
+    args = pop!(d, :grid, ())
+    for arg in wraptuple(args)
+        for letter in (:x, :y, :z)
+            processGridArg!(d, arg, letter)
+        end
+    end
+    # handle individual axes grid args
+    for letter in (:x, :y, :z)
+        gridsym = Symbol(letter, :grid)
+        args = pop!(d, gridsym, ())
+        for arg in wraptuple(args)
+            processGridArg!(d, arg, letter)
         end
     end
 
@@ -754,6 +838,11 @@ function preprocessArgs!(d::KW)
         d[:colorbar] = convertLegendValue(d[:colorbar])
     end
 
+    # framestyle
+    if haskey(d, :framestyle) && haskey(_framestyleAliases, d[:framestyle])
+        d[:framestyle] = _framestyleAliases[d[:framestyle]]
+    end
+
     # warnings for moved recipes
     st = get(d, :seriestype, :path)
     if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatPlots)
@@ -773,21 +862,29 @@ end
 
 
 # this is when given a vector-type of values to group by
-function extractGroupArgs(v::AVec, args...)
+function extractGroupArgs(v::AVec, args...; legendEntry = string)
     groupLabels = sort(collect(unique(v)))
     n = length(groupLabels)
     if n > 100
         warn("You created n=$n groups... Is that intended?")
     end
     groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
-    GroupBy(map(string, groupLabels), groupIds)
+    GroupBy(map(legendEntry, groupLabels), groupIds)
 end
 
+legendEntryFromTuple(ns::Tuple) = string(("$n " for n in ns)...)
+
+# this is when given a tuple of vectors of values to group by
+function extractGroupArgs(vs::Tuple, args...)
+    (vs == ()) && return GroupBy([""], [1:size(args[1],1)])
+    v = collect(zip(vs...))
+    extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
+end
 
 # expecting a mapping of "group label" to "group indices"
 function extractGroupArgs{T, V<:AVec{Int}}(idxmap::Dict{T,V}, args...)
     groupLabels = sortedkeys(idxmap)
-    groupIds = VecI[collect(idxmap[k]) for k in groupLabels]
+    groupIds = Vector{Int}[collect(idxmap[k]) for k in groupLabels]
     GroupBy(groupLabels, groupIds)
 end
 
@@ -945,7 +1042,6 @@ const _match_map = KW(
     :background_color_legend  => :background_color_subplot,
     :background_color_inside  => :background_color_subplot,
     :foreground_color_legend  => :foreground_color_subplot,
-    :foreground_color_grid    => :foreground_color_subplot,
     :foreground_color_title   => :foreground_color_subplot,
     :left_margin   => :margin,
     :top_margin    => :margin,
@@ -959,6 +1055,7 @@ const _match_map2 = KW(
     :foreground_color_subplot => :foreground_color,
     :foreground_color_axis    => :foreground_color_subplot,
     :foreground_color_border  => :foreground_color_subplot,
+    :foreground_color_grid    => :foreground_color_subplot,
     :foreground_color_guide   => :foreground_color_subplot,
     :foreground_color_text    => :foreground_color_subplot,
 )
@@ -1093,7 +1190,6 @@ function _update_subplot_colors(sp::Subplot)
     # foreground colors
     color_or_nothing!(sp.attr, :foreground_color_subplot)
     color_or_nothing!(sp.attr, :foreground_color_legend)
-    color_or_nothing!(sp.attr, :foreground_color_grid)
     color_or_nothing!(sp.attr, :foreground_color_title)
     return
 end
@@ -1145,6 +1241,7 @@ function _update_axis_colors(axis::Axis)
     color_or_nothing!(axis.d, :foreground_color_border)
     color_or_nothing!(axis.d, :foreground_color_guide)
     color_or_nothing!(axis.d, :foreground_color_text)
+    color_or_nothing!(axis.d, :foreground_color_grid)
     return
 end
 
@@ -1250,12 +1347,14 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     # update other colors
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
-        d[csym] = if d[csym] == :match
+        d[csym] = if d[csym] == :auto
             plot_color(if has_black_border_for_default(d[:seriestype]) && s == :line
                 sp[:foreground_color_subplot]
             else
                 d[:seriescolor]
             end, d[asym])
+        elseif d[csym] == :match
+            plot_color(d[:seriescolor], d[asym])
         else
             getSeriesRGBColor(d[csym], d[asym], sp, plotIndex)
         end

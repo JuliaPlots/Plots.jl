@@ -8,7 +8,7 @@ import StaticArrays
 using StaticArrays.FixedSizeArrays
 
 @reexport using RecipesBase
-import RecipesBase: plot, animate
+import RecipesBase: plot, plot!, animate
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
@@ -52,6 +52,8 @@ export
     yflip!,
     xaxis!,
     yaxis!,
+    xgrid!,
+    ygrid!,
 
     xlims,
     ylims,
@@ -186,33 +188,65 @@ include("output.jl")
 @shorthands quiver
 @shorthands curves
 
+"Plot a pie diagram"
 pie(args...; kw...)        = plot(args...; kw...,  seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
 pie!(args...; kw...)       = plot!(args...; kw..., seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
+
+"Plot with seriestype :path3d"
 plot3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)
 plot3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
 
-
+"Add title to an existing plot"
 title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)
+
+"Add xlabel to an existing plot"
 xlabel!(s::AbstractString; kw...)                = plot!(; xlabel = s, kw...)
+
+"Add ylabel to an existing plot"
 ylabel!(s::AbstractString; kw...)                = plot!(; ylabel = s, kw...)
+
+"Set xlims for an existing plot"
 xlims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; xlims = lims, kw...)
+
+"Set ylims for an existing plot"
 ylims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; ylims = lims, kw...)
+
+"Set zlims for an existing plot"
 zlims!{T<:Real,S<:Real}(lims::Tuple{T,S}; kw...) = plot!(; zlims = lims, kw...)
+
 xlims!(xmin::Real, xmax::Real; kw...)                     = plot!(; xlims = (xmin,xmax), kw...)
 ylims!(ymin::Real, ymax::Real; kw...)                     = plot!(; ylims = (ymin,ymax), kw...)
 zlims!(zmin::Real, zmax::Real; kw...)                     = plot!(; zlims = (zmin,zmax), kw...)
+
+
+"Set xticks for an existing plot"
 xticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; xticks = v, kw...)
+
+"Set yticks for an existing plot"
 yticks!{T<:Real}(v::AVec{T}; kw...)                       = plot!(; yticks = v, kw...)
+
 xticks!{T<:Real,S<:AbstractString}(
               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(; xticks = (ticks,labels), kw...)
 yticks!{T<:Real,S<:AbstractString}(
               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(; yticks = (ticks,labels), kw...)
+
+"Add annotations to an existing plot"
 annotate!(anns...; kw...)                                 = plot!(; annotation = anns, kw...)
 annotate!{T<:Tuple}(anns::AVec{T}; kw...)                 = plot!(; annotation = anns, kw...)
+
+"Flip the current plots' x axis"
 xflip!(flip::Bool = true; kw...)                          = plot!(; xflip = flip, kw...)
+
+"Flip the current plots' y axis"
 yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip, kw...)
+
+"Specify x axis attributes for an existing plot"
 xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
+
+"Specify x axis attributes for an existing plot"
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
+xgrid!(args...; kw...)                                    = plot!(; xgrid = args, kw...)
+ygrid!(args...; kw...)                                    = plot!(; ygrid = args, kw...)
 
 let PlotOrSubplot = Union{Plot, Subplot}
     title!(plt::PlotOrSubplot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)
@@ -230,6 +264,8 @@ let PlotOrSubplot = Union{Plot, Subplot}
                               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; xticks = (ticks,labels), kw...)
     yticks!{T<:Real,S<:AbstractString}(plt::PlotOrSubplot,
                               ticks::AVec{T}, labels::AVec{S}; kw...)     = plot!(plt; yticks = (ticks,labels), kw...)
+    xgrid!(plt::PlotOrSubplot, args...; kw...)                  = plot!(plt; xgrid = args, kw...)
+    ygrid!(plt::PlotOrSubplot, args...; kw...)                  = plot!(plt; ygrid = args, kw...)
     annotate!(plt::PlotOrSubplot, anns...; kw...)                         = plot!(plt; annotation = anns, kw...)
     annotate!{T<:Tuple}(plt::PlotOrSubplot, anns::AVec{T}; kw...)         = plot!(plt; annotation = anns, kw...)
     xflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)                  = plot!(plt; xflip = flip, kw...)
