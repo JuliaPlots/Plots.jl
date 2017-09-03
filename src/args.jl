@@ -193,6 +193,8 @@ const _framestyleAliases = Dict{Symbol, Symbol}(
     :transparent        => :semi,
     :semitransparent    => :semi,
 )
+
+const _bar_width = 0.8
 # -----------------------------------------------------------------------------
 
 const _series_defaults = KW(

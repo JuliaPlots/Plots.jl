@@ -289,7 +289,7 @@ end
     # compute half-width of bars
     bw = d[:bar_width]
     hw = if bw == nothing
-        0.5ignorenan_mean(diff(procx))
+        0.5*_bar_width*ignorenan_mean(diff(procx))
     else
         Float64[0.5_cycle(bw,i) for i=1:length(procx)]
     end
