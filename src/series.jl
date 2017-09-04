@@ -516,10 +516,12 @@ splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengt
 split_kw(key, val::AbstractArray, indices) = val[indices, fill(Colon(), ndims(val)-1)...]
 split_kw(key, val::Tuple, indices) = Tuple(split_kw(key, v, indices) for v in val)
 
+group_as_matrix(t) = false
+
 # split the group into 1 series per group, and set the label and idxfilter for each
 @recipe function f(groupby::GroupBy, args...)
     lengthGroup = maximum(union(groupby.groupIds...))
-    if !(RecipesBase.group_as_matrix(args[1]))
+    if !(group_as_matrix(args[1]))
         for (i,glab) in enumerate(groupby.groupLabels)
             @series begin
                 label     --> string(glab)
