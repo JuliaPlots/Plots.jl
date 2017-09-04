@@ -784,7 +784,7 @@ end
 
 function gl_bar(d, kw_args)
     x, y = d[:x], d[:y]
-    nx, ny = length(x), length(y)
+    nx, ny = length(linearindices(x)), length(linearindices(y))
     axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
     cv = [discrete_value!(axis, xi)[1] for xi=x]
     x = if nx == ny
@@ -792,7 +792,7 @@ function gl_bar(d, kw_args)
     elseif nx == ny + 1
         0.5diff(cv) + cv[1:end-1]
     else
-        error("bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
+        error("bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(nx), length(y)=$(ny)")
     end
     if haskey(kw_args, :stroke_width) # stroke is inside for bars
         #kw_args[:stroke_width] = -kw_args[:stroke_width]
@@ -856,7 +856,7 @@ function gl_boxplot(d, kw_args)
         # compute quantiles
         q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
         # notch
-        n = Plots.notch_width(q2, q4, length(values))
+        n = Plots.notch_width(q2, q4, length(linearindices(values)))
         # warn on inverted notches?
         if notch && !warning && ( (q2>(q3-n)) || (q4<(q3+n)) )
             warn("Boxplot's notch went outside hinges. Set notch to false.")
@@ -1077,7 +1077,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
                     kw = copy(kw_args)
                     fr = d[:fillrange]
                     ps = if all(x-> x >= 0, diff(d[:x])) # if is monotonic
-                        vcat(points, Point2f0[(points[i][1], _cycle(fr, i)) for i=length(points):-1:1])
+                        vcat(points, Point2f0[(points[i][1], _cycle(fr, i)) for i=reverse(linearindices(points))])
                     else
                         points
                     end
