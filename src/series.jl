@@ -516,6 +516,16 @@ splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengt
 split_kw(key, val::AbstractArray, indices) = val[indices, fill(Colon(), ndims(val)-1)...]
 split_kw(key, val::Tuple, indices) = Tuple(split_kw(key, v, indices) for v in val)
 
+function build_arg_mat(x_ind, x, y, groupby)
+    y_mat = fill(NaN, length(keys(x_ind)), length(groupby.groupLabels))
+    for i in 1:length(groupby.groupLabels)
+        xi = x[groupby.groupIds[i]]
+        yi = y[groupby.groupIds[i]]
+        y_mat[getindex.(x_ind, xi), i] = yi
+    end
+    return y_mat
+end
+
 group_as_matrix(t) = false
 
 # split the group into 1 series per group, and set the label and idxfilter for each
@@ -536,16 +546,19 @@ group_as_matrix(t) = false
         end
     else
         g = args[1]
-        x, y = g.args
-        x_u = unique(x)
-        y_mat = Array{eltype(y)}(length(x_u), length(groupby.groupLabels))
-        for i in 1:length(groupby.groupLabels)
-            xi = x[groupby.groupIds[i]]
-            yi = y[groupby.groupIds[i]]
-            x2y = Dict(zip(xi,yi))
-            y_mat[:, i] = [get(x2y, s, NaN) for s in x_u]
+        if length(g.args) == 1
+            x = zeros(Int64, lengthGroup)
+            for indexes in groupby.groupIds
+                x[indexes] = 1:length(indexes)
+            end
+            last_args = g.args
+        else
+            x = g.args[1]
+            last_args = g.args[2:end]
         end
+        x_u = unique(x)
+        x_ind = Dict(zip(x_u, 1:length(x_u)))
         label --> reshape(groupby.groupLabels, 1, :)
-        typeof(g)((x_u, y_mat))
+        typeof(g)((x_u, (build_arg_mat(x_ind, x, arg, groupby) for arg in last_args)...))
     end
 end
