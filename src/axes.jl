@@ -461,10 +461,10 @@ end
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AVec)
-    n = length(v)
+    n = linearindices(v)
     cvec = zeros(n)
     discrete_indices = zeros(Int, n)
-    for i=1:n
+    for i=n
         cvec[i], discrete_indices[i] = discrete_value!(axis, v[i])
     end
     cvec, discrete_indices
