@@ -6,10 +6,26 @@
 - All new development should target 0.12!
 - Minor version 0.11 is the last one to support Julia 0.5!!
 	- Critical bugfixes only
-    - `backports` branch is for Julia 0.4
+    - `backports` branch is for Julia 0.5
 
 ---
 ## (current master)
+
+## 0.12.4
+
+- added a new `framestyle` argument with choices: :box, :semi, :axes, :grid and :none
+- changed the default bar width to 0.8
+- added working ribbon to plotly backend
+- ensure that automatic ticks always generate 4 to 8 ticks
+- group now groups keyword arguments of the same length as the input
+- allow passing DateTime objects as ticks
+- allow specifying the number of ticks as an integre
+- fix bug on errorbars in gr
+- fixed some but not all world age issues
+- better margin with room for text
+- added a `match` option for linecolor
+- better error message un unsupported series types
+- add a 'stride' keyword for the pyplot backend
 
 ## 0.12.3
 
