@@ -519,7 +519,7 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
     if mode == :sqrt  # Square-root choice
         _cl(sqrt(n_samples))
     elseif mode == :sturges  # Sturges' formula
-        _cl(log2(n_samples)) + 1
+        _cl(log2(n_samples) + 1)
     elseif mode == :rice  # Rice Rule
         _cl(2 * nd)
     elseif mode == :scott  # Scott's normal reference rule
