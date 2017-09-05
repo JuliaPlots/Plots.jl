@@ -506,7 +506,8 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
 
     n_samples = length(linearindices(first(vs)))
     # Estimator for number of samples in one row/column of bins along each axis:
-    n = max(1, n_samples^(1/N))
+    nd = n_samples^(1/(2+N))
+
 
     v = vs[dim]
 
@@ -515,15 +516,15 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
     end
 
     if mode == :sqrt  # Square-root choice
-        _cl(sqrt(n))
+        _cl(sqrt(n_samples))
     elseif mode == :sturges  # Sturges' formula
-        _cl(log2(n)) + 1
+        _cl(log2(n_samples)) + 1
     elseif mode == :rice  # Rice Rule
-        _cl(2 * n^(1/3))
+        _cl(2 * nd)
     elseif mode == :scott  # Scott's normal reference rule
-        _cl(_span(v) / (3.5 * std(v) / n^(1/3)))
+        _cl(_span(v) / (3.5 * std(v) / nd))
     elseif mode == :fd  # Freedman–Diaconis rule
-        _cl(_span(v) / (2 * _iqr(v) / n^(1/3)))
+        _cl(_span(v) / (2 * _iqr(v) / nd))
     elseif mode == :wand
         wand_edges(v)  # this makes this function not type stable, but the type instability does not propagate
     else
