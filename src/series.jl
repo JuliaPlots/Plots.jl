@@ -516,19 +516,57 @@ splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengt
 split_kw(key, val::AbstractArray, indices) = val[indices, fill(Colon(), ndims(val)-1)...]
 split_kw(key, val::Tuple, indices) = Tuple(split_kw(key, v, indices) for v in val)
 
+function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
+    y_mat = Array{promote_type(eltype(y), typeof(def_val))}(length(keys(x_ind)), length(groupby.groupLabels))
+    fill!(y_mat, def_val)
+    for i in 1:length(groupby.groupLabels)
+        xi = x[groupby.groupIds[i]]
+        yi = y[groupby.groupIds[i]]
+        y_mat[getindex.(x_ind, xi), i] = yi
+    end
+    return y_mat
+end
+
+groupedvec2mat(x_ind, x, y::Tuple, groupby) = Tuple(groupedvec2mat(x_ind, x, v, groupby) for v in y)
+
+group_as_matrix(t) = false
+
 # split the group into 1 series per group, and set the label and idxfilter for each
 @recipe function f(groupby::GroupBy, args...)
     lengthGroup = maximum(union(groupby.groupIds...))
-    for (i,glab) in enumerate(groupby.groupLabels)
-        @series begin
-            label     --> string(glab)
-            idxfilter --> groupby.groupIds[i]
-            for (key,val) in d
-                if splittable_kw(key, val, lengthGroup)
-                    :($key) := split_kw(key, val, groupby.groupIds[i])
+    if !(group_as_matrix(args[1]))
+        for (i,glab) in enumerate(groupby.groupLabels)
+            @series begin
+                label     --> string(glab)
+                idxfilter --> groupby.groupIds[i]
+                for (key,val) in d
+                    if splittable_kw(key, val, lengthGroup)
+                        :($key) := split_kw(key, val, groupby.groupIds[i])
+                    end
                 end
+                args
             end
-            args
         end
+    else
+        g = args[1]
+        if length(g.args) == 1
+            x = zeros(Int64, lengthGroup)
+            for indexes in groupby.groupIds
+                x[indexes] = 1:length(indexes)
+            end
+            last_args = g.args
+        else
+            x = g.args[1]
+            last_args = g.args[2:end]
+        end
+        x_u = unique(x)
+        x_ind = Dict(zip(x_u, 1:length(x_u)))
+        for (key,val) in d
+            if splittable_kw(key, val, lengthGroup)
+                :($key) := groupedvec2mat(x_ind, x, val, groupby)
+            end
+        end
+        label --> reshape(groupby.groupLabels, 1, :)
+        typeof(g)((x_u, (groupedvec2mat(x_ind, x, arg, groupby, NaN) for arg in last_args)...))
     end
 end
