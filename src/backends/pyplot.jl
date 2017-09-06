@@ -972,14 +972,15 @@ function py_set_scale(ax, axis::Axis)
 end
 
 
-function py_set_axis_colors(ax, a::Axis)
+function py_set_axis_colors(sp, ax, a::Axis)
     for (loc, spine) in ax[:spines]
         spine[:set_color](py_color(a[:foreground_color_border]))
     end
     axissym = Symbol(a[:letter], :axis)
     if haskey(ax, axissym)
+        tickcolor = sp[:framestyle] == :zerolines ? py_color(plot_color(a[:foreground_color_grid], a[:gridalpha])) : py_color(a[:foreground_color_axis])
         ax[:tick_params](axis=string(a[:letter]), which="both",
-                         colors=py_color(a[:foreground_color_axis]),
+                         colors=tickcolor,
                          labelcolor=py_color(a[:foreground_color_text]))
         ax[axissym][:label][:set_color](py_color(a[:foreground_color_guide]))
     end
@@ -1041,6 +1042,32 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             # ax[:set_title](sp[:title], loc = loc)
         end
 
+        # framestyle
+        if !ispolar(sp) && !is3d(sp)
+            if sp[:framestyle] == :semi
+                intensity = 0.5
+                ax[:spines]["right"][:set_alpha](intensity)
+                ax[:spines]["top"][:set_alpha](intensity)
+                ax[:spines]["right"][:set_linewidth](intensity)
+                ax[:spines]["top"][:set_linewidth](intensity)
+            elseif sp[:framestyle] in (:axes, :origin)
+                ax[:spines]["right"][:set_visible](false)
+                ax[:spines]["top"][:set_visible](false)
+                if sp[:framestyle] == :origin
+                    ax[:spines]["bottom"][:set_position]("zero")
+                    ax[:spines]["left"][:set_position]("zero")
+                end
+            elseif sp[:framestyle] in (:grid, :none, :zerolines)
+                for (loc, spine) in ax[:spines]
+                    spine[:set_visible](false)
+                end
+                if sp[:framestyle] == :zerolines
+                    ax[:axhline](y = 0, color = py_color(sp[:xaxis][:foreground_color_axis]), lw = 0.75)
+                    ax[:axvline](x = 0, color = py_color(sp[:yaxis][:foreground_color_axis]), lw = 0.75)
+                end
+            end
+        end
+
         # axis attributes
         for letter in (:x, :y, :z)
             axissym = Symbol(letter, :axis)
@@ -1056,6 +1083,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             py_set_scale(ax, axis)
             py_set_lims(ax, axis)
             ticks = sp[:framestyle] == :none ? nothing : get_ticks(axis)
+            # don't show the 0 tick label for the origin framestyle
+            if sp[:framestyle] == :origin && length(ticks) > 1
+                ticks[2][ticks[1] .== 0] = ""
+            end
             py_set_ticks(ax, ticks, letter)
             ax[Symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)
@@ -1077,7 +1108,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     alpha = axis[:gridalpha])
                 ax[:set_axisbelow](true)
             end
-            py_set_axis_colors(ax, axis)
+            py_set_axis_colors(sp, ax, axis)
         end
 
         # aspect ratio
@@ -1092,23 +1123,6 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         # this sets the bg color inside the grid
         ax[set_facecolor_sym](py_color(sp[:background_color_inside]))
 
-        # framestyle
-        if !ispolar(sp) && !is3d(sp)
-            if sp[:framestyle] == :semi
-                intensity = 0.5
-                ax[:spines]["right"][:set_alpha](intensity)
-                ax[:spines]["top"][:set_alpha](intensity)
-                ax[:spines]["right"][:set_linewidth](intensity)
-                ax[:spines]["top"][:set_linewidth](intensity)
-            elseif sp[:framestyle] == :axes
-                ax[:spines]["right"][:set_visible](false)
-                ax[:spines]["top"][:set_visible](false)
-            elseif sp[:framestyle] in (:grid, :none)
-                for (loc, spine) in ax[:spines]
-                    spine[:set_visible](false)
-                end
-            end
-        end
     end
     py_drawfig(fig)
 end

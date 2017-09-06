@@ -364,6 +364,11 @@ function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
     elseif !(st in (:pie, :histogram, :bins2d, :histogram2d))
         expand_extrema!(sp, d)
     end
+    # expand for zerolines (axes through origin)
+    if sp[:framestyle] in (:origin, :zerolines)
+        expand_extrema!(sp[:xaxis], 0.0)
+        expand_extrema!(sp[:yaxis], 0.0)
+    end
 end
 
 function _add_the_series(plt, sp, d)
