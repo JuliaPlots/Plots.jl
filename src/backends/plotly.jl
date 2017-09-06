@@ -33,6 +33,7 @@ const _plotly_attr = merge_with_base_supported([
     :inset_subplots,
     :bar_width,
     :clims,
+    :framestyle,
   ])
 
 const _plotly_seriestype = [
@@ -47,6 +48,17 @@ const _plotly_marker = [
 const _plotly_scale = [:identity, :log10]
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
+const _plotly_framestyles = [:box, :axes, :zerolines, :grid, :none]
+const _plotly_framestyle_defaults = Dict(:semi => :box, :origin => :zerolines)
+function _plotly_framestyle(style::Symbol)
+    if style in _plotly_framestyles
+        return style
+    else
+        default_style = get(_plotly_framestyle_defaults, style, :axes)
+        warn("Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was cosen instead.")
+        default_style
+    end
+end
 
 
 # --------------------------------------------------------------------------------------
@@ -212,13 +224,19 @@ end
 
 function plotly_axis(axis::Axis, sp::Subplot)
     letter = axis[:letter]
+    framestyle = sp[:framestyle]
     ax = KW(
+        :visible    => framestyle != :none,
         :title      => axis[:guide],
         :showgrid   => axis[:grid],
         :gridcolor  => rgba_string(plot_color(axis[:foreground_color_grid], axis[:gridalpha])),
         :gridwidth  => axis[:gridlinewidth],
-        :zeroline   => false,
+        :zeroline   => framestyle == :zerolines,
+        :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
+        :showline   => framestyle in (:box, :axes),
+        :linecolor  => rgba_string(plot_color(axis[:foreground_color_axis])),
         :ticks      => "inside",
+        :mirror     => framestyle == :box,
     )
 
     if letter in (:x,:y)
@@ -232,7 +250,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
         ax[:type] = plotly_scale(axis[:scale])
         ax[:tickfont] = plotly_font(axis[:tickfont], axis[:foreground_color_text])
-        ax[:tickcolor] = rgba_string(axis[:foreground_color_axis])
+        ax[:tickcolor] = framestyle in (:zerolines, :grid) ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
         # lims
@@ -298,6 +316,9 @@ function plotly_layout(plt::Plot)
         end
 
         d_out[:plot_bgcolor] = rgba_string(sp[:background_color_inside])
+
+        # set to supported framestyle
+        sp[:framestyle] = _plotly_framestyle(sp[:framestyle])
 
         # if any(is3d, seriesargs)
         if is3d(sp)
