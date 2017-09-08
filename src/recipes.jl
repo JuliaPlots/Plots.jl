@@ -501,7 +501,7 @@ wand_edges(x...) = (warn("Load the StatPlots package in order to use :wand bins.
 
 function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto)
     _cl(x) = ceil(Int, NaNMath.max(x, one(x)))
-    _iqr(v) = quantile(v, 0.75) - quantile(v, 0.25)
+    _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
     _span(v) = ignorenan_maximum(v) - ignorenan_minimum(v)
 
     n_samples = length(linearindices(first(vs)))
