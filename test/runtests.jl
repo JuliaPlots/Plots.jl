@@ -129,6 +129,9 @@ end
     @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
 end
 
+@testset "NoFail" begin
+    histogram([1, 0, 0, 0, 0, 0])
+end
 
 # tests for preprocessing recipes
 
