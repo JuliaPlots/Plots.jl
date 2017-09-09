@@ -341,7 +341,7 @@ function gr_draw_markers(series::Series, x, y, clims)
     mz = normalize_zvals(series[:marker_z], clims)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     gr_draw_markers(series, x, y, series[:markersize], mz)
-    if mz != nothing
+    if hascolorbar(series[:subplot])
         GR.setscale(0)
         gr_colorbar(series[:subplot], clims)
     end
@@ -447,25 +447,21 @@ end
 
 # add the colorbar
 function gr_colorbar(sp::Subplot)
-    if sp[:colorbar] != :none
-        gr_set_viewport_cmap(sp)
-        GR.colorbar()
-        gr_set_viewport_plotarea()
-    end
+    gr_set_viewport_cmap(sp)
+    GR.colorbar()
+    gr_set_viewport_plotarea()
 end
 
 function gr_colorbar(sp::Subplot, clims)
-    if sp[:colorbar] != :none
-        xmin, xmax = gr_xy_axislims(sp)[1:2]
-        gr_set_viewport_cmap(sp)
-        l = zeros(Int32, 1, 256)
-        l[1,:] = Int[round(Int, _i) for _i in linspace(1000, 1255, 256)]
-        GR.setwindow(xmin, xmax, clims[1], clims[2])
-        GR.cellarray(xmin, xmax, clims[2], clims[1], 1, length(l), l)
-        ztick = 0.5 * GR.tick(clims[1], clims[2])
-        GR.axes(0, ztick, xmax, clims[1], 0, 1, 0.005)
-        gr_set_viewport_plotarea()
-    end
+    xmin, xmax = gr_xy_axislims(sp)[1:2]
+    gr_set_viewport_cmap(sp)
+    l = zeros(Int32, 1, 256)
+    l[1,:] = Int[round(Int, _i) for _i in linspace(1000, 1255, 256)]
+    GR.setwindow(xmin, xmax, clims[1], clims[2])
+    GR.cellarray(xmin, xmax, clims[2], clims[1], 1, length(l), l)
+    ztick = 0.5 * GR.tick(clims[1], clims[2])
+    GR.axes(0, ztick, xmax, clims[1], 0, 1, 0.005)
+    gr_set_viewport_plotarea()
 end
 
 gr_view_xcenter() = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
@@ -677,14 +673,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # reduced from before... set some flags based on the series in this subplot
     # TODO: can these be generic flags?
     outside_ticks = false
-    cmap = false
+    cmap = hascolorbar(sp)
     draw_axes = sp[:framestyle] != :none
     # axes_2d = true
     for series in series_list(sp)
         st = series[:seriestype]
-        if st in (:contour, :surface, :heatmap) || series[:marker_z] != nothing
-            cmap = true
-        end
         if st == :pie
             draw_axes = false
         end
@@ -698,7 +691,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
     end
 
-    if cmap && sp[:colorbar] != :none
+    if cmap
         # note: add extra midpadding on the right for the colorbar
         viewport_plotarea[2] -= 0.1
     end
@@ -983,7 +976,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
 
             # create the colorbar of contour levels
-            if sp[:colorbar] != :none
+            if cmap
                 gr_set_viewport_cmap(sp)
                 l = round.(Int32, 1000 + (h - ignorenan_minimum(h)) / (ignorenan_maximum(h) - ignorenan_minimum(h)) * 255)
                 GR.setwindow(xmin, xmax, zmin, zmax)

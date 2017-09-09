@@ -561,6 +561,19 @@ end
 
 _update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
 
+function hascolorbar(sp::Subplot)
+    cbar = sp[:colorbar]
+    hascbar = false
+    if cbar != :none
+        for series in series_list(sp)
+            if series[:seriestype] in (:heatmap, :contour, :surface) || series[:marker_z] != nothing || series[:line_z] != nothing
+                hascbar = true
+            end
+        end
+    end
+    hascbar
+end
+
 # ---------------------------------------------------------------
 
 makekw(; kw...) = KW(kw)
