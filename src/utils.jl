@@ -539,6 +539,28 @@ xlims(sp_idx::Int = 1) = xlims(current(), sp_idx)
 ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
+
+function get_clims(sp::Subplot)
+    zmin, zmax = Inf, -Inf
+    for series in series_list(sp)
+        for vals in (series[:z], series[:line_z], series[:marker_z])
+            if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Real)
+                zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
+            elseif (vals != nothing) && (eltype(vals) <: Real)
+                zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
+            end
+        end
+    end
+    clims = sp[:clims]
+    if is_2tuple(clims)
+        isfinite(clims[1]) && (zmin = clims[1])
+        isfinite(clims[2]) && (zmax = clims[2])
+    end
+    return zmin < zmax ? (zmin, zmax) : (0.0, 0.0)
+end
+
+_update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
+
 # ---------------------------------------------------------------
 
 makekw(; kw...) = KW(kw)

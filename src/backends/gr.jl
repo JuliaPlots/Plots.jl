@@ -264,16 +264,17 @@ function gr_fill_viewport(vp::AVec{Float64}, c)
 end
 
 
-normalize_zvals(zv::Void) = zv
-function normalize_zvals(zv::AVec)
+normalize_zvals(args...) = nothing
+function normalize_zvals(zv::AVec, clims::NTuple{2, <:Real})
     vmin, vmax = ignorenan_extrema(zv)
+    isfinite(clims[1]) && (vmin = clims[1])
+    isfinite(clims[2]) && (vmax = clims[2])
     if vmin == vmax
         zeros(length(zv))
     else
-        (zv - vmin) ./ (vmax - vmin)
+        clamp.((zv - vmin) ./ (vmax - vmin), 0, 1)
     end
 end
-
 
 gr_alpha(α::Void) = 1
 gr_alpha(α::Real) = α
@@ -335,14 +336,14 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
     end
 end
 
-function gr_draw_markers(series::Series, x, y)
+function gr_draw_markers(series::Series, x, y, clims)
     isempty(x) && return
-    mz = normalize_zvals(series[:marker_z])
+    mz = normalize_zvals(series[:marker_z], clims)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     gr_draw_markers(series, x, y, series[:markersize], mz)
     if mz != nothing
         GR.setscale(0)
-        gr_colorbar(series[:subplot])
+        gr_colorbar(series[:subplot], clims)
     end
 end
 
@@ -449,6 +450,20 @@ function gr_colorbar(sp::Subplot)
     if sp[:colorbar] != :none
         gr_set_viewport_cmap(sp)
         GR.colorbar()
+        gr_set_viewport_plotarea()
+    end
+end
+
+function gr_colorbar(sp::Subplot, clims)
+    if sp[:colorbar] != :none
+        xmin, xmax = gr_xy_axislims(sp)[1:2]
+        gr_set_viewport_cmap(sp)
+        l = zeros(Int32, 1, 256)
+        l[1,:] = Int[round(Int, _i) for _i in linspace(1000, 1255, 256)]
+        GR.setwindow(xmin, xmax, clims[1], clims[2])
+        GR.cellarray(xmin, xmax, clims[2], clims[1], 1, length(l), l)
+        ztick = 0.5 * GR.tick(clims[1], clims[2])
+        GR.axes(0, ztick, xmax, clims[1], 0, 1, 0.005)
         gr_set_viewport_plotarea()
     end
 end
@@ -877,6 +892,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # this needs to be here to point the colormap to the right indices
     GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
 
+    # calculate the colorbar limits once for a subplot
+    clims = get_clims(sp)
+
     for (idx, series) in enumerate(series_list(sp))
         st = series[:seriestype]
 
@@ -947,16 +965,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     zmin, zmax = extrema(series[:marker_z])
                     GR.setspace(zmin, zmax, 0, 90)
                 end
-                gr_draw_markers(series, x, y)
+                gr_draw_markers(series, x, y, clims)
             end
 
         elseif st == :contour
-            zmin, zmax = gr_lims(zaxis, false)
-            clims = sp[:clims]
-            if is_2tuple(clims)
-                isfinite(clims[1]) && (zmin = clims[1])
-                isfinite(clims[2]) && (zmax = clims[2])
-            end
+            zmin, zmax = clims
             GR.setspace(zmin, zmax, 0, 90)
             if typeof(series[:levels]) <: Array
                 h = series[:levels]
@@ -995,12 +1008,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :heatmap
             xmin, xmax, ymin, ymax = xy_lims
-            zmin, zmax = gr_lims(zaxis, true)
-            clims = sp[:clims]
-            if is_2tuple(clims)
-                isfinite(clims[1]) && (zmin = clims[1])
-                isfinite(clims[2]) && (zmax = clims[2])
-            end
+            zmin, zmax = clims
             GR.setspace(zmin, zmax, 0, 90)
             grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
             colors = [grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)] for zi=z]
@@ -1010,7 +1018,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                                     round(Int,   red(c) * 255) ), colors)
             w, h = length(x), length(y)
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
-            cmap && gr_colorbar(sp)
+            cmap && gr_colorbar(sp, clims)
 
         elseif st in (:path3d, :scatter3d)
             # draw path
@@ -1024,7 +1032,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # draw markers
             if st == :scatter3d || series[:markershape] != :none
                 x2, y2 = unzip(map(GR.wc3towc, x, y, z))
-                gr_draw_markers(series, x2, y2)
+                gr_draw_markers(series, x2, y2, clims)
             end
 
         # TODO: replace with pie recipe
