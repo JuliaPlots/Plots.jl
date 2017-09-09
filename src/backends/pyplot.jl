@@ -444,11 +444,16 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
 
     # handle zcolor and get c/cmap
-    extrakw = KW()
+    needs_colorbar = hascolorbar(sp)
+    extrakw = if needs_colorbar
+        vmin, vmax = get_clims(sp)
+        KW(:vmin => vmin, :vmax => vmax)
+    else
+        KW()
+    end
 
     # holds references to any python object representing the matplotlib series
     handles = []
-    needs_colorbar = false
     discrete_colorbar_values = nothing
 
 
@@ -495,11 +500,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     :linewidth => py_dpi_scale(plt, series[:linewidth]),
                     :linestyle => py_linestyle(st, series[:linestyle])
                 )
-                clims = sp[:clims]
-                if is_2tuple(clims)
-                    extrakw = KW()
-                    isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-                    isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
+                if needs_colorbar
                     kw[:norm] = pycolors["Normalize"](; extrakw...)
                 end
                 lz = collect(series[:line_z])
@@ -563,18 +564,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     if series[:markershape] != :none && st in (:path, :scatter, :path3d,
                                           :scatter3d, :steppre, :steppost,
                                           :bar)
-        extrakw = KW()
         if series[:marker_z] == nothing
             extrakw[:c] = py_color_fix(py_markercolor(series), x)
         else
             extrakw[:c] = convert(Vector{Float64}, series[:marker_z])
             extrakw[:cmap] = py_markercolormap(series)
-            clims = sp[:clims]
-            if is_2tuple(clims)
-                isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-                isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-            end
-            needs_colorbar = true
         end
         xyargs = if st == :bar && !isvertical(series)
             (y, x)
@@ -624,11 +618,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :hexbin
-        clims = sp[:clims]
-        if is_2tuple(clims)
-            isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-            isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-        end
         handle = ax[:hexbin](x, y;
             label = series[:label],
             zorder = series[:series_plotindex],
@@ -645,12 +634,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     if st in (:contour, :contour3d)
         z = transpose_z(series, z.surf)
         needs_colorbar = true
-
-        clims = sp[:clims]
-        if is_2tuple(clims)
-            isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-            isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-        end
 
         if st == :contour3d
             extrakw[:extend3d] = true
@@ -688,11 +671,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             z = transpose_z(series, z)
             if st == :surface
-                clims = sp[:clims]
-                if is_2tuple(clims)
-                    isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-                    isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-                end
                 if series[:fill_z] != nothing
                     # the surface colors are different than z-value
                     extrakw[:facecolors] = py_shading(series[:fillcolor], transpose_z(series, series[:fill_z].surf))
@@ -727,10 +705,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 end
             end
 
-            # no colorbar if we are creating a surface LightSource
-            if haskey(extrakw, :facecolors)
-                needs_colorbar = false
-            end
 
         elseif typeof(z) <: AbstractVector
             # tri-surface plot (http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
@@ -788,11 +762,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             discrete_colorbar_values = dvals
         end
 
-        clims = sp[:clims]
-        zmin, zmax = ignorenan_extrema(z)
-        extrakw[:vmin] = (is_2tuple(clims) && isfinite(clims[1])) ? clims[1] : zmin
-        extrakw[:vmax] = (is_2tuple(clims) && isfinite(clims[2])) ? clims[2] : zmax
-
         handle = ax[:pcolormesh](x, y, py_mask_nans(z);
             label = series[:label],
             zorder = series[:series_plotindex],
@@ -843,30 +812,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # # smoothing
     # handleSmooth(plt, ax, series, series[:smooth])
-
-    # add the colorbar legend
-    if needs_colorbar && sp[:colorbar] != :none
-        # add keyword args for a discrete colorbar
-        handle = handles[end]
-        kw = KW()
-        if discrete_colorbar_values != nothing
-            locator, formatter = get_locator_and_formatter(discrete_colorbar_values)
-            # kw[:values] = 1:length(discrete_colorbar_values)
-            kw[:values] = sp[:zaxis][:continuous_values]
-            kw[:ticks] = locator
-            kw[:format] = formatter
-            kw[:boundaries] = vcat(0, kw[:values] + 0.5)
-        end
-
-        # create and store the colorbar object (handle) and the axis that it is drawn on.
-        # note: the colorbar axis is positioned independently from the subplot axis
-        fig = plt.o
-        cbax = fig[:add_axes]([0.8,0.1,0.03,0.8], label = string(gensym()))
-        cb = fig[:colorbar](handle; cax = cbax, kw...)
-        cb[:set_label](sp[:colorbar_title])
-        sp.attr[:cbar_handle] = cb
-        sp.attr[:cbar_ax] = cbax
-    end
 
     # handle area filling
     fillrange = series[:fillrange]
@@ -1040,6 +985,32 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             ax[func][:set_family](sp[:titlefont].family)
             ax[func][:set_color](py_color(sp[:foreground_color_title]))
             # ax[:set_title](sp[:title], loc = loc)
+        end
+
+        # add the colorbar legend
+        if hascolorbar(sp)
+            # add keyword args for a discrete colorbar
+            slist = series_list(sp)
+            colorbar_series = slist[findfirst(hascolorbar.(slist))]
+            handle = colorbar_series[:serieshandle][end]
+            kw = KW()
+            if !isempty(sp[:zaxis][:discrete_values]) && colorbar_series[:seriestype] == :heatmap
+                locator, formatter = get_locator_and_formatter(sp[:zaxis][:discrete_values])
+                # kw[:values] = 1:length(sp[:zaxis][:discrete_values])
+                kw[:values] = sp[:zaxis][:continuous_values]
+                kw[:ticks] = locator
+                kw[:format] = formatter
+                kw[:boundaries] = vcat(0, kw[:values] + 0.5)
+            end
+
+            # create and store the colorbar object (handle) and the axis that it is drawn on.
+            # note: the colorbar axis is positioned independently from the subplot axis
+            fig = plt.o
+            cbax = fig[:add_axes]([0.8,0.1,0.03,0.8], label = string(gensym()))
+            cb = fig[:colorbar](handle; cax = cbax, kw...)
+            cb[:set_label](sp[:colorbar_title])
+            sp.attr[:cbar_handle] = cb
+            sp.attr[:cbar_ax] = cbax
         end
 
         # framestyle

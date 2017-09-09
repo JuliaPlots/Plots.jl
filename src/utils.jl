@@ -561,12 +561,25 @@ end
 
 _update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
 
+function hascolorbar(series::Series)
+    st = series[:seriestype]
+    hascbar = st in (:heatmap, :contour)
+    if series[:marker_z] != nothing || series[:line_z] != nothing
+        hascbar = true
+    end
+    # no colorbar if we are creating a surface LightSource
+    if xor(st == :surface, series[:fill_z] != nothing)
+        hascbar = true
+    end
+    return hascbar
+end
+
 function hascolorbar(sp::Subplot)
     cbar = sp[:colorbar]
     hascbar = false
     if cbar != :none
         for series in series_list(sp)
-            if series[:seriestype] in (:heatmap, :contour, :surface) || series[:marker_z] != nothing || series[:line_z] != nothing
+            if hascolorbar(series)
                 hascbar = true
             end
         end
