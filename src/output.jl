@@ -39,7 +39,7 @@ ps(fn::AbstractString) = ps(current(), fn)
 function eps(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "eps")
   io = open(fn, "w")
-  writemime(io, MIME("image/eps"), plt)
+  show(io, MIME("image/eps"), plt)
   close(io)
 end
 eps(fn::AbstractString) = eps(current(), fn)
