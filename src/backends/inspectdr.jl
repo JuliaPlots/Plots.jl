@@ -13,6 +13,10 @@ Add in functionality to Plots.jl:
     :aspect_ratio,
 =#
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "inspectdr.jl")) 
+end
+
 # ---------------------------------------------------------------------------
 #TODO: remove features
 const _inspectdr_attr = merge_with_base_supported([

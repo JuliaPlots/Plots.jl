@@ -3,6 +3,9 @@
 
 # significant contributions by @jheinen
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "gr.jl")) 
+end
 
 const _gr_attr = merge_with_base_supported([
     :annotations,

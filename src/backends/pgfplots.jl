@@ -2,6 +2,10 @@
 
 # significant contributions by: @pkofod
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pgfplots.jl"))
+end
+
 const _pgfplots_attr = merge_with_base_supported([
     :annotations,
     # :background_color_legend,

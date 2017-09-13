@@ -258,7 +258,6 @@ end
 
 const _ijulia_output = String["text/html"]
 
-using Requires
 @require IJulia begin
     if IJulia.inited
         export set_ijulia_output

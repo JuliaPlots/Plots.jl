@@ -28,6 +28,9 @@ Read from .hdf5 file using:
     - Should be reliable for archival purposes.
 ==#
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "hdf5.jl")) 
+end
 
 import FixedPointNumbers: N0f8 #In core Julia
 
@@ -128,7 +131,7 @@ function _hdf5_merge!(dest::Dict, src::Dict)
             _hdf5_merge!(dest[k].d, v.d)
         else
             dest[k] = v
-        end    
+        end
     end
     return
 end

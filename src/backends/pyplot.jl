@@ -1,6 +1,9 @@
 
 # https://github.com/stevengj/PyPlot.jl
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pyplot.jl")) 
+end
 
 const _pyplot_attr = merge_with_base_supported([
     :annotations,
