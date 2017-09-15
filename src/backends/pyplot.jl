@@ -445,7 +445,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # handle zcolor and get c/cmap
     needs_colorbar = hascolorbar(sp)
-    extrakw = if needs_colorbar
+    extrakw = if needs_colorbar || is_2tuple(sp[:clims])
         vmin, vmax = get_clims(sp)
         KW(:vmin => vmin, :vmax => vmax)
     else
@@ -530,7 +530,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     lc
                 end
                 push!(handles, handle)
-                needs_colorbar = true
             end
 
             a = series[:arrow]
@@ -628,12 +627,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             extrakw...
         )
         push!(handles, handle)
-        needs_colorbar = true
     end
 
     if st in (:contour, :contour3d)
         z = transpose_z(series, z.surf)
-        needs_colorbar = true
 
         if st == :contour3d
             extrakw[:extend3d] = true
@@ -678,7 +675,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 else
                     extrakw[:cmap] = py_fillcolormap(series)
                 end
-                needs_colorbar = true
             end
             handle = ax[st == :surface ? :plot_surface : :plot_wireframe](x, y, z;
                 label = series[:label],
@@ -701,7 +697,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                         offset = (zdir == "y" ? ignorenan_maximum : ignorenan_minimum)(mat)  # where to draw the contour plane
                     )
                     push!(handles, handle)
-                    needs_colorbar = true
                 end
             end
 
@@ -722,7 +717,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 extrakw...
             )
             push!(handles, handle)
-            needs_colorbar = true
         else
             error("Unsupported z type $(typeof(z)) for seriestype=$st")
         end
@@ -770,7 +764,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             extrakw...
         )
         push!(handles, handle)
-        needs_colorbar = true
     end
 
     if st == :shape
