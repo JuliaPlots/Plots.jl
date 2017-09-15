@@ -445,7 +445,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # handle zcolor and get c/cmap
     needs_colorbar = hascolorbar(sp)
-    extrakw = if needs_colorbar
+    extrakw = if needs_colorbar || is_2tuple(sp[:clims])
         vmin, vmax = get_clims(sp)
         KW(:vmin => vmin, :vmax => vmax)
     else
