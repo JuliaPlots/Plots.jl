@@ -575,14 +575,18 @@ function plotly_series(plt::Plot, series::Series)
         )
 
         # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
-        d_out[:marker][:color] = if series[:marker_z] == nothing
-            rgba_string(series[:markercolor])
+        if series[:marker_z] == nothing
+            d_out[:marker][:color] = rgba_string(series[:markercolor])
         else
             # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
-            grad = as_gradient(series[:markercolor], series[:markeralpha])
-            zmin, zmax = ignorenan_extrema(series[:marker_z])
-            zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
-            [rgba_string(grad[(zi - zmin) / zrange]) for zi in series[:marker_z]]
+            # grad = as_gradient(series[:markercolor], series[:markeralpha])
+            cmin, cmax = get_clims(sp)
+            # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
+            d_out[:marker][:color] = [clamp(zi, cmin, cmax) for zi in series[:marker_z]]
+            d_out[:marker][:cmin] = cmin
+            d_out[:marker][:cmax] = cmax
+            d_out[:marker][:colorscale] = plotly_colorscale(series[:markercolor], series[:markeralpha])
+            d_out[:marker][:showscale] = hascolorbar(sp)
         end
     end
 
