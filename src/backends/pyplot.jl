@@ -903,7 +903,7 @@ function py_set_scale(ax, axis::Axis)
         elseif scale == :log10
             10
         end
-        kw[Symbol(:linthresh,letter)] = NaNMath.max(1e-16, py_compute_axis_minval(axis))
+        kw[Symbol(:linthresh,letter)] = NaNMath.min(1e-16, py_compute_axis_minval(axis))
         "symlog"
     end
     func(arg; kw...)
