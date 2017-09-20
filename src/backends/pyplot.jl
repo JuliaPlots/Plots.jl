@@ -999,9 +999,14 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             # create and store the colorbar object (handle) and the axis that it is drawn on.
             # note: the colorbar axis is positioned independently from the subplot axis
             fig = plt.o
-            cbax = fig[:add_axes]([0.8,0.1,0.03,0.8], label = string(gensym()))
-            cb = fig[:colorbar](handle; cax = cbax, kw...)
-            cb[:set_label](sp[:colorbar_title])
+			axis = sp[Symbol(:y,:axis)]
+			cbax = fig[:add_axes]([0.8,0.1,0.03,0.8], label = string(gensym()))
+			cb = fig[:colorbar](handle; cax = cbax, kw...)
+			cb[:set_label](sp[:colorbar_title],size=py_dpi_scale(plt, axis[:guidefont].pointsize),family=axis[:guidefont].family)
+			for lab in cb[:ax][:yaxis][:get_ticklabels]()
+				lab[:set_fontsize](py_dpi_scale(plt, axis[:tickfont].pointsize))
+				lab[:set_family](axis[:tickfont].family)
+			end 
             sp.attr[:cbar_handle] = cb
             sp.attr[:cbar_ax] = cbax
         end
