@@ -98,6 +98,7 @@ end
         :xrotation --> 5
         :zrotation --> 6, :quiet
         plotattributes[:hello] = "hi"
+        d[:world] = "world"
         rand(10,n)
     end
     srand(1)
@@ -107,7 +108,8 @@ end
     :markercolor => :red,
     :xrotation => 5,
     :zrotation => 6,
-    :hello => "hi"
+    :hello => "hi",
+    :world => "world"
    ))
 end
 
