@@ -80,7 +80,7 @@ function get_function_def(func_signature::Expr, args::Vector)
     if func_signature.head == :where
         Expr(:where, get_function_def(front, args), esc.(func_signature.args[2:end])...)
     elseif func_signature.head == :call
-        func = Expr(:call, :(RecipesBase.apply_recipe), esc.([:(d::Dict{Symbol, Any}); args])...)
+        func = Expr(:call, :(RecipesBase.apply_recipe), esc.([:($PLOTATTRIBUTES::Dict{Symbol, Any}); args])...)
         if isa(front, Expr) && front.head == :curly
             Expr(:where, func, esc.(front.args[2:end])...)
         else
@@ -276,7 +276,6 @@ macro recipe(funcexpr::Expr)
 
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
     # we are creating a vector of RecipeData objects, one per series.
-<<<<<<< HEAD
     funcdef = Expr(:function, func, esc(quote
         if RecipesBase._debug_recipes[1]
             println("apply_recipe args: ", $args)
@@ -286,29 +285,11 @@ macro recipe(funcexpr::Expr)
         series_list = RecipesBase.RecipeData[]
         func_return = $func_body
         if func_return != nothing
-            push!(series_list, RecipesBase.RecipeData(d, RecipesBase.wrap_tuple(func_return)))
+            push!(series_list, RecipesBase.RecipeData($PLOTATTRIBUTES, RecipesBase.wrap_tuple(func_return)))
         end
         series_list
     end))
     funcdef
-=======
-    funcdef = esc(quote
-        $deprecation_body
-        function $func($PLOTATTRIBUTES::Dict{Symbol,Any}, $(args...))
-            if RecipesBase._debug_recipes[1]
-                println("apply_recipe args: ", $args)
-            end
-            $kw_body
-            $cleanup_body
-            series_list = RecipesBase.RecipeData[]
-            func_return = $func_body
-            if func_return != nothing
-                push!(series_list, RecipesBase.RecipeData($PLOTATTRIBUTES, RecipesBase.wrap_tuple(func_return)))
-            end
-            series_list
-        end
-    end)
->>>>>>> 4b4a501... replace d by plotattribues
 end
 
 
