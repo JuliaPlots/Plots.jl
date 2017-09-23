@@ -79,7 +79,7 @@ function hvline_limits(axis::Axis)
 end
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
-    xmin, xmax = hvline_limits(d[:subplot][:xaxis])
+    xmin, xmax = hvline_limits(plotattributes[:subplot][:xaxis])
     n = length(y)
     newx = repmat(Float64[xmin, xmax, NaN], n)
     newy = vec(Float64[yi for i=1:3,yi=y])
@@ -91,7 +91,7 @@ end
 @deps hline path
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
-    ymin, ymax = hvline_limits(d[:subplot][:yaxis])
+    ymin, ymax = hvline_limits(plotattributes[:subplot][:yaxis])
     n = length(y)
     newx = vec(Float64[yi for i=1:3,yi=y])
     newy = repmat(Float64[ymin, ymax, NaN], n)
@@ -123,11 +123,11 @@ end
 
 # create a path from steps
 @recipe function f(::Type{Val{:steppre}}, x, y, z)
-    d[:x], d[:y] = make_steps(x, y, :steppre)
+    plotattributes[:x], plotattributes[:y] = make_steps(x, y, :steppre)
     seriestype := :path
 
     # create a secondary series for the markers
-    if d[:markershape] != :none
+    if plotattributes[:markershape] != :none
         @series begin
             seriestype := :scatter
             x := x
@@ -144,11 +144,11 @@ end
 
 # create a path from steps
 @recipe function f(::Type{Val{:steppost}}, x, y, z)
-    d[:x], d[:y] = make_steps(x, y, :steppost)
+    plotattributes[:x], plotattributes[:y] = make_steps(x, y, :steppost)
     seriestype := :path
 
     # create a secondary series for the markers
-    if d[:markershape] != :none
+    if plotattributes[:markershape] != :none
         @series begin
             seriestype := :scatter
             x := x
@@ -170,9 +170,9 @@ end
 # create vertical line segments from fill
 @recipe function f(::Type{Val{:sticks}}, x, y, z)
     n = length(x)
-    fr = d[:fillrange]
+    fr = plotattributes[:fillrange]
     if fr == nothing
-        yaxis = d[:subplot][:yaxis]
+        yaxis = plotattributes[:subplot][:yaxis]
         fr = if yaxis[:scale] == :identity
             0.0
         else
@@ -191,7 +191,7 @@ end
     seriestype := :path
 
     # create a secondary series for the markers
-    if d[:markershape] != :none
+    if plotattributes[:markershape] != :none
         @series begin
             seriestype := :scatter
             x := x
@@ -224,7 +224,7 @@ end
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)
     args = z != nothing ? (x,y,z) : (x,y)
     newx, newy = zeros(0), zeros(0)
-    fr = d[:fillrange]
+    fr = plotattributes[:fillrange]
     newfr = fr != nothing ? zeros(0) : nothing
     newz = z != nothing ? zeros(0) : nothing
     # lz = d[:line_z]
@@ -274,9 +274,9 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
-    procx, procy, xscale, yscale, baseline = _preprocess_barlike(d, x, y)
+    procx, procy, xscale, yscale, baseline = _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
-    axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
+    axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
     cv = [discrete_value!(axis, xi)[1] for xi=procx]
     procx = if nx == ny
         cv
@@ -287,7 +287,7 @@ end
     end
 
     # compute half-width of bars
-    bw = d[:bar_width]
+    bw = plotattributes[:bar_width]
     hw = if bw == nothing
         0.5*_bar_width*ignorenan_mean(diff(procx))
     else
@@ -295,7 +295,7 @@ end
     end
 
     # make fillto a vector... default fills to 0
-    fillto = d[:fillrange]
+    fillto = plotattributes[:fillrange]
     if fillto == nothing
         fillto = 0
     end
@@ -320,7 +320,7 @@ end
     expand_extrema!(axis, widen(ignorenan_extrema(xseg.pts)...))
 
     # switch back
-    if !isvertical(d)
+    if !isvertical(plotattributes)
         xseg, yseg = yseg, xseg
     end
 
@@ -389,8 +389,8 @@ end
 
 
 @recipe function f(::Type{Val{:barbins}}, x, y, z)
-    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
-    if (d[:bar_width] == nothing)
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
+    if (plotattributes[:bar_width] == nothing)
         bar_width := diff(edge)
     end
     x := _bin_centers(edge)
@@ -402,7 +402,7 @@ end
 
 
 @recipe function f(::Type{Val{:scatterbins}}, x, y, z)
-    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
     xerror := diff(edge)/2
     x := _bin_centers(edge)
     y := weights
@@ -465,17 +465,17 @@ end
 
 
 @recipe function f(::Type{Val{:stepbins}}, x, y, z)
-    axis = d[:subplot][Plots.isvertical(d) ? :xaxis : :yaxis]
+    axis = plotattributes[:subplot][Plots.isvertical(plotattributes) ? :xaxis : :yaxis]
 
-    edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, x, y)
+    edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
 
     xpts, ypts = _stepbins_path(edge, weights, baseline, xscale, yscale)
-    if !isvertical(d)
+    if !isvertical(plotattributes)
         xpts, ypts = ypts, xpts
     end
 
     # create a secondary series for the markers
-    if d[:markershape] != :none
+    if plotattributes[:markershape] != :none
         @series begin
             seriestype := :scatter
             x := _bin_centers(edge)
@@ -563,7 +563,7 @@ end
 @deps histogram barhist
 
 @recipe function f(::Type{Val{:barhist}}, x, y, z)
-    h = _make_hist((y,), d[:bins], normed = d[:normalize], weights = d[:weights])
+    h = _make_hist((y,), plotattributes[:bins], normed = plotattributes[:normalize], weights = plotattributes[:weights])
     x := h.edges[1]
     y := h.weights
     seriestype := :barbins
@@ -572,7 +572,7 @@ end
 @deps barhist barbins
 
 @recipe function f(::Type{Val{:stephist}}, x, y, z)
-    h = _make_hist((y,), d[:bins], normed = d[:normalize], weights = d[:weights])
+    h = _make_hist((y,), plotattributes[:bins], normed = plotattributes[:normalize], weights = plotattributes[:weights])
     x := h.edges[1]
     y := h.weights
     seriestype := :stepbins
@@ -581,7 +581,7 @@ end
 @deps stephist stepbins
 
 @recipe function f(::Type{Val{:scatterhist}}, x, y, z)
-    h = _make_hist((y,), d[:bins], normed = d[:normalize], weights = d[:weights])
+    h = _make_hist((y,), plotattributes[:bins], normed = plotattributes[:normalize], weights = plotattributes[:weights])
     x := h.edges[1]
     y := h.weights
     seriestype := :scatterbins
@@ -597,11 +597,11 @@ end
         :bar => :barbins, :scatter => :scatterbins, :step => :stepbins,
         :steppost => :stepbins # :step can be mapped to :steppost in pre-processing
     )
-    seriestype := get(st_map, d[:seriestype], d[:seriestype])
+    seriestype := get(st_map, plotattributes[:seriestype], plotattributes[:seriestype])
 
-    if d[:seriestype] == :scatterbins
+    if plotattributes[:seriestype] == :scatterbins
         # Workaround, error bars currently not set correctly by scatterbins
-        edge, weights, xscale, yscale, baseline = _preprocess_binlike(d, h.edges[1], h.weights)
+        edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, h.edges[1], h.weights)
         xerror --> diff(h.edges[1])/2
         seriestype := :scatter
         (Plots._bin_centers(edge), weights)
@@ -648,7 +648,7 @@ Plots.@deps bins2d heatmap
 
 
 @recipe function f(::Type{Val{:histogram2d}}, x, y, z)
-    h = _make_hist((x, y), d[:bins], normed = d[:normalize], weights = d[:weights])
+    h = _make_hist((x, y), plotattributes[:bins], normed = plotattributes[:normalize], weights = plotattributes[:weights])
     x := h.edges[1]
     y := h.edges[2]
     z := Surface(h.weights)
@@ -669,7 +669,7 @@ end
 
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)
     seriestype := :path3d
-    if d[:markershape] == :none
+    if plotattributes[:markershape] == :none
         markershape := :circle
     end
     linewidth := 0
@@ -732,17 +732,17 @@ end
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
 @recipe function f(::Type{Val{:yerror}}, x, y, z)
-    error_style!(d)
+    error_style!(plotattributes)
     markershape := :hline
-    d[:x], d[:y] = error_coords(d[:x], d[:y], error_zipit(d[:yerror]))
+    plotattributes[:x], plotattributes[:y] = error_coords(plotattributes[:x], plotattributes[:y], error_zipit(plotattributes[:yerror]))
     ()
 end
 @deps yerror path
 
 @recipe function f(::Type{Val{:xerror}}, x, y, z)
-    error_style!(d)
+    error_style!(plotattributes)
     markershape := :vline
-    d[:y], d[:x] = error_coords(d[:y], d[:x], error_zipit(d[:xerror]))
+    plotattributes[:y], plotattributes[:x] = error_coords(plotattributes[:y], plotattributes[:x], error_zipit(plotattributes[:xerror]))
     ()
 end
 @deps xerror path
@@ -841,9 +841,9 @@ end
 # function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
 @recipe function f(::Type{Val{:quiver}}, x, y, z)
     if :arrow in supported_attrs()
-        quiver_using_arrows(d)
+        quiver_using_arrows(plotattributes)
     else
-        quiver_using_hack(d)
+        quiver_using_hack(plotattributes)
     end
     ()
 end
@@ -948,10 +948,10 @@ end
     rs, cs, zs = findnz(z.surf)
     xlim := ignorenan_extrema(cs)
     ylim := ignorenan_extrema(rs)
-    if d[:markershape] == :none
+    if plotattributes[:markershape] == :none
         markershape := :circle
     end
-    if d[:markersize] == default(:markersize)
+    if plotattributes[:markersize] == default(:markersize)
         markersize := 1
     end
     markerstrokewidth := 0

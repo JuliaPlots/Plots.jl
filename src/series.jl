@@ -128,15 +128,15 @@ immutable SliceIt end
         z = z.data
     end
 
-    xs, _ = convertToAnyVector(x, d)
-    ys, _ = convertToAnyVector(y, d)
-    zs, _ = convertToAnyVector(z, d)
+    xs, _ = convertToAnyVector(x, plotattributes)
+    ys, _ = convertToAnyVector(y, plotattributes)
+    zs, _ = convertToAnyVector(z, plotattributes)
 
-    fr = pop!(d, :fillrange, nothing)
+    fr = pop!(plotattributes, :fillrange, nothing)
     fillranges, _ = if typeof(fr) <: Number
         ([fr],nothing)
     else
-        convertToAnyVector(fr, d)
+        convertToAnyVector(fr, plotattributes)
     end
     mf = length(fillranges)
 
@@ -148,7 +148,7 @@ immutable SliceIt end
     if mx > 0 && my > 0 && mz > 0
         for i in 1:max(mx, my, mz)
             # add a new series
-            di = copy(d)
+            di = copy(plotattributes)
             xi, yi, zi = xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]
             di[:x], di[:y], di[:z] = compute_xyz(xi, yi, zi)
 
@@ -206,11 +206,11 @@ _apply_type_recipe{T<:Union{Integer,AbstractFloat}}(d, v::AbstractArray{T}) = v
 # handle "type recipes" by converting inputs, and then either re-calling or slicing
 @recipe function f(x, y, z)
     did_replace = false
-    newx = _apply_type_recipe(d, x)
+    newx = _apply_type_recipe(plotattributes, x)
     x === newx || (did_replace = true)
-    newy = _apply_type_recipe(d, y)
+    newy = _apply_type_recipe(plotattributes, y)
     y === newy || (did_replace = true)
-    newz = _apply_type_recipe(d, z)
+    newz = _apply_type_recipe(plotattributes, z)
     z === newz || (did_replace = true)
     if did_replace
         newx, newy, newz
@@ -220,9 +220,9 @@ _apply_type_recipe{T<:Union{Integer,AbstractFloat}}(d, v::AbstractArray{T}) = v
 end
 @recipe function f(x, y)
     did_replace = false
-    newx = _apply_type_recipe(d, x)
+    newx = _apply_type_recipe(plotattributes, x)
     x === newx || (did_replace = true)
-    newy = _apply_type_recipe(d, y)
+    newy = _apply_type_recipe(plotattributes, y)
     y === newy || (did_replace = true)
     if did_replace
         newx, newy
@@ -231,7 +231,7 @@ end
     end
 end
 @recipe function f(y)
-    newy = _apply_type_recipe(d, y)
+    newy = _apply_type_recipe(plotattributes, y)
     if y !== newy
         newy
     else
@@ -244,7 +244,7 @@ end
 @recipe function f(v1, v2, v3, v4, vrest...)
     did_replace = false
     newargs = map(v -> begin
-        newv = _apply_type_recipe(d, v)
+        newv = _apply_type_recipe(plotattributes, v)
         if newv !== v
             did_replace = true
         end
@@ -271,13 +271,13 @@ function wrap_surfaces(d::KW)
     end
 end
 
-@recipe f(n::Integer) = is3d(get(d,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
+@recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
 @recipe function f{T<:Union{Integer,AbstractFloat}}(mat::AMat{T})
-    if all3D(d)
+    if all3D(plotattributes)
         n,m = size(mat)
-        wrap_surfaces(d)
+        wrap_surfaces(plotattributes)
         SliceIt, 1:m, 1:n, Surface(mat)
     else
         SliceIt, nothing, mat, nothing
@@ -286,10 +286,10 @@ end
 
 # if a matrix is wrapped by Formatted, do similar logic, but wrap data with Surface
 @recipe function f{T<:AbstractMatrix}(fmt::Formatted{T})
-    if all3D(d)
+    if all3D(plotattributes)
         mat = fmt.data
         n,m = size(mat)
-        wrap_surfaces(d)
+        wrap_surfaces(plotattributes)
         SliceIt, 1:m, 1:n, Formatted(Surface(mat), fmt.formatter)
     else
         SliceIt, nothing, fmt, nothing
@@ -329,7 +329,7 @@ end
     else
         seriestype := :heatmap
         yflip --> true
-        z, d[:fillcolor] = replace_image_with_heatmap(mat)
+        z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
         SliceIt, 1:m, 1:n, Surface(z)
     end
 end
@@ -359,7 +359,7 @@ end
 # function without range... use the current range of the x-axis
 
 @recipe function f{F<:Function}(f::FuncOrFuncs{F})
-    plt = d[:plot_object]
+    plt = plotattributes[:plot_object]
     xmin, xmax = try
         axis_limits(plt[1][:xaxis])
     catch
@@ -421,7 +421,7 @@ end
     #         seriestype := :path3d
     #     end
     # end
-    wrap_surfaces(d)
+    wrap_surfaces(plotattributes)
     SliceIt, x, y, z
 end
 
@@ -431,7 +431,7 @@ end
 @recipe function f(x::AVec, y::AVec, zf::Function)
     # x = X <: Number ? sort(x) : x
     # y = Y <: Number ? sort(y) : y
-    wrap_surfaces(d)
+    wrap_surfaces(plotattributes)
     SliceIt, x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
 end
 
@@ -439,10 +439,10 @@ end
 # # surface-like... matrix grid
 
 @recipe function f(x::AVec, y::AVec, z::AMat)
-    if !like_surface(get(d, :seriestype, :none))
-        d[:seriestype] = :contour
+    if !like_surface(get(plotattributes, :seriestype, :none))
+        plotattributes[:seriestype] = :contour
     end
-    wrap_surfaces(d)
+    wrap_surfaces(plotattributes)
     SliceIt, x, y, Surface(z)
 end
 
@@ -494,7 +494,7 @@ end
 @recipe f{R1<:Number,R2<:Number,R3<:Number}(xyz::Tuple{R1,R2,R3})       = [xyz[1]], [xyz[2]], [xyz[3]]
 
 # these might be points+velocity, or OHLC or something else
-@recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(xyuv::AVec{Tuple{R1,R2,R3,R4}}) = get(d,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
+@recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(xyuv::AVec{Tuple{R1,R2,R3,R4}}) = get(plotattributes,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
 @recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(xyuv::Tuple{R1,R2,R3,R4})       = [xyuv[1]], [xyuv[2]], [xyuv[3]], [xyuv[4]]
 
 
@@ -556,7 +556,7 @@ group_as_matrix(t) = false
             @series begin
                 label     --> string(glab)
                 idxfilter --> groupby.groupIds[i]
-                for (key,val) in d
+                for (key,val) in plotattributes
                     if splittable_kw(key, val, lengthGroup)
                         :($key) := split_kw(key, val, groupby.groupIds[i])
                     end
@@ -578,7 +578,7 @@ group_as_matrix(t) = false
         end
         x_u = unique(x)
         x_ind = Dict(zip(x_u, 1:length(x_u)))
-        for (key,val) in d
+        for (key,val) in plotattributes
             if splittable_kw(key, val, lengthGroup)
                 :($key) := groupedvec2mat(x_ind, x, val, groupby)
             end
