@@ -587,6 +587,17 @@ function hascolorbar(sp::Subplot)
     hascbar
 end
 
+function get_linecolor(sp::Subplot, series::Series)
+    lc = series[:linecolor]
+    if series[:line_z] == nothing
+        lc
+    else
+        cmin, cmax = get_clims(sp)
+        grad = isa(lc, ColorGradient) ? lc : cgrad()
+        grad[clamp((series[:line_z] - cmin) / (cmax -cmin), 0, 1)]
+    end
+end
+
 # ---------------------------------------------------------------
 
 makekw(; kw...) = KW(kw)

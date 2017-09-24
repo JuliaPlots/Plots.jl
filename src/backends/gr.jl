@@ -22,7 +22,7 @@ const _gr_attr = merge_with_base_supported([
     :tickfont, :guidefont, :legendfont,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
     :legend, :legendtitle, :colorbar,
-    :marker_z, :levels,
+    :line_z, :marker_z, :levels,
     :ribbon, :quiver,
     :orientation,
     :overwrite_figure,
@@ -896,6 +896,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             gr_set_gradient(series[:fillcolor]) #, series[:fillalpha])
         elseif series[:marker_z] != nothing
             series[:markercolor] = gr_set_gradient(series[:markercolor])
+        elseif series[:line_z] !=  nothing
+            series[:linecolor] = gr_set_gradient(series[:linecolor])
         end
 
         GR.savestate()
@@ -947,9 +949,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                 # draw the line(s)
                 if st == :path
-                    gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
+                    gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series)) #, series[:linealpha])
                     arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
                     gr_polyline(x, y; arrowside = arrowside)
+                    gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+                    cmap && gr_colorbar(sp, clims)
                 end
             end
 
@@ -1169,7 +1173,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for series in series_list(sp)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
-                gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
+                gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series)) #, series[:linealpha])
 
                 if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
                     gr_set_fill(series[:fillcolor]) #, series[:fillalpha])
