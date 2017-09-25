@@ -587,14 +587,15 @@ function hascolorbar(sp::Subplot)
     hascbar
 end
 
-function get_linecolor(sp::Subplot, series::Series)
+function get_linecolor(sp::Subplot, series::Series, i::Int)
     lc = series[:linecolor]
-    if series[:line_z] == nothing
-        lc
+    lz = series[:line_z]
+    if lz == nothing
+        _cycle(lc, i)
     else
         cmin, cmax = get_clims(sp)
         grad = isa(lc, ColorGradient) ? lc : cgrad()
-        grad[clamp((series[:line_z] - cmin) / (cmax -cmin), 0, 1)]
+        grad[clamp((_cycle(lz, i) - cmin) / (cmax -cmin), 0, 1)]
     end
 end
 

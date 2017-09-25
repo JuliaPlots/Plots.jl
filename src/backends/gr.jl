@@ -949,9 +949,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                 # draw the line(s)
                 if st == :path
-                    gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series)) #, series[:linealpha])
-                    arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
-                    gr_polyline(x, y; arrowside = arrowside)
+                    for (i,rng) in enumerate(iter_segments(series[:x], series[:y]))
+                        gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
+                        arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
+                        gr_polyline(series[:x][rng], series[:y][rng]; arrowside = arrowside)
+                    end
                     gr_set_line(1, :solid, yaxis[:foreground_color_axis])
                     cmap && gr_colorbar(sp, clims)
                 end
@@ -1173,7 +1175,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for series in series_list(sp)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
-                gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series)) #, series[:linealpha])
+                gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, 1)) #, series[:linealpha])
 
                 if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
                     gr_set_fill(series[:fillcolor]) #, series[:fillalpha])
