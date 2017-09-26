@@ -1100,8 +1100,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                     # get the segments
                     xseg, yseg = x[rng], y[rng]
-                    @show xseg
-                    @show yseg
 
                     # draw the interior
                     gr_set_fill(get_fillcolor(sp, series, i))
@@ -1111,9 +1109,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     gr_set_line(series[:linewidth], :solid, get_linecolor(sp, series, i))
                     GR.polyline(xseg, yseg)
                 end
-                gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-                cmap && gr_colorbar(sp, clims)
             end
+            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+            cmap && gr_colorbar(sp, clims)
 
 
         elseif st == :image
