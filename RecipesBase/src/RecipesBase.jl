@@ -73,6 +73,7 @@ end
 function _equals_symbol(arg::Expr, sym::Symbol)
     arg.head == :quote && arg.args[1] == sym
 end
+_equals_symbol(x, sym::Symbol) = false
 
 # build an apply_recipe function header from the recipe function header
 function get_function_def(func_signature::Expr, args::Vector)
@@ -365,7 +366,7 @@ function _userplot(expr::Expr)
 end
 
 function _userplot(sym::Symbol)
-    _userplot(:(type $sym
+    _userplot(:(mutable struct $sym
             args
     end))
 end
