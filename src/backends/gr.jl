@@ -942,7 +942,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                         gr_set_fillcolor(get_fillcolor(sp, series, i))
                         xseg = _cycle(x, [i, i+1, i+1, i])
                         yseg = [_cycle(fr_from, [i, i+1]); _cycle(fr_to, [i+1, i])]
-                        GR.settransparency(series[:fillalpha])
+                        series[:fillalpha] != nothing && GR.settransparency(series[:fillalpha])
                         GR.fillarea(xseg, yseg)
                     end
                     gr_set_line(1, :solid, yaxis[:foreground_color_axis])
