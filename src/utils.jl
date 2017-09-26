@@ -543,7 +543,7 @@ zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 function get_clims(sp::Subplot)
     zmin, zmax = Inf, -Inf
     for series in series_list(sp)
-        for vals in (series[:z], series[:line_z], series[:marker_z])
+        for vals in (series[:z], series[:line_z], series[:marker_z], series[:fill_z])
             if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Real)
                 zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
             elseif (vals != nothing) && (eltype(vals) <: Real)
@@ -564,7 +564,7 @@ _update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
 function hascolorbar(series::Series)
     st = series[:seriestype]
     hascbar = st in (:heatmap, :contour)
-    if series[:marker_z] != nothing || series[:line_z] != nothing
+    if series[:marker_z] != nothing || series[:line_z] != nothing || series[:fill_z] != nothing
         hascbar = true
     end
     # no colorbar if we are creating a surface LightSource
@@ -587,15 +587,32 @@ function hascolorbar(sp::Subplot)
     hascbar
 end
 
-function get_linecolor(sp::Subplot, series::Series, i::Int)
+function get_linecolor(sp::Subplot, series::Series, i::Int = 1)
     lc = series[:linecolor]
     lz = series[:line_z]
     if lz == nothing
-        _cycle(lc, i)
+        isa(lc, ColorGradient) ? lc : _cycle(lc, i)
     else
         cmin, cmax = get_clims(sp)
         grad = isa(lc, ColorGradient) ? lc : cgrad()
-        grad[clamp((_cycle(lz, i) - cmin) / (cmax -cmin), 0, 1)]
+        grad[clamp((_cycle(lz, i) - cmin) / (cmax - cmin), 0, 1)]
+    end
+end
+
+function get_fillcolor(sp::Subplot, series::Series, i::Int = 1)
+    fc = series[:fillcolor]
+    fz = series[:fill_z]
+    lz = series[:line_z]
+    if fz == nothing && lz == nothing
+        isa(fc, ColorGradient) ? fc : _cycle(fc, i)
+    else
+        cmin, cmax = get_clims(sp)
+        grad = isa(fc, ColorGradient) ? fc : cgrad()
+        if fz != nothing
+            grad[clamp((_cycle(fz, i) - cmin) / (cmax - cmin), 0, 1)]
+        elseif lz != nothing
+            grad[clamp((_cycle(lz, i) - cmin) / (cmax - cmin), 0, 1)]
+        end
     end
 end
 
