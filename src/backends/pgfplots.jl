@@ -31,6 +31,7 @@ const _pgfplots_attr = merge_with_base_supported([
     # :normalize, :weights, :contours,
     :aspect_ratio,
     # :match_dimensions,
+    :tick_direction,
   ])
 const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -283,6 +284,7 @@ function pgf_axis(sp::Subplot, letter)
         ticks = get_ticks(axis)
         push!(style, string(letter, "tick = {", join(ticks[1],","), "}"))
         push!(style, string(letter, "ticklabels = {", join(ticks[2],","), "}"))
+        push!(style, string(letter, "tick align = ", (axis[:tick_direction] == :out ? "outside" : "inside")))
     end
 
     # return the style list and KW args
