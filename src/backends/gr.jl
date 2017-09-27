@@ -33,6 +33,7 @@ const _gr_attr = merge_with_base_supported([
     :bar_width,
     :arrow,
     :framestyle,
+    :tick_direction,
 ])
 const _gr_seriestype = [
     :path, :scatter,

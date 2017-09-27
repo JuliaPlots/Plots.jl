@@ -41,6 +41,7 @@ const _glvisualize_attr = merge_with_base_supported([
     :dpi,
     :hover,
     :framestyle,
+    :tick_direction,
 ])
 const _glvisualize_seriestype = [
     :path, :shape,

@@ -34,6 +34,7 @@ const _pyplot_attr = merge_with_base_supported([
     :colorbar_title,
     :stride,
     :framestyle,
+    :tick_direction,
   ])
 const _pyplot_seriestype = [
         :path, :steppre, :steppost, :shape,

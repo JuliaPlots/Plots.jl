@@ -34,6 +34,7 @@ const _plotly_attr = merge_with_base_supported([
     :bar_width,
     :clims,
     :framestyle,
+    :tick_direction,
   ])
 
 const _plotly_seriestype = [
