@@ -1371,12 +1371,15 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
         getSeriesRGBColor(d[:markerstrokecolor], d[:markerstrokealpha], sp, plotIndex)
     end
 
-    # if marker_z or line_z are set, ensure we have a gradient
+    # if marker_z, fill_z or line_z are set, ensure we have a gradient
     if d[:marker_z] != nothing
         ensure_gradient!(d, :markercolor, :markeralpha)
     end
     if d[:line_z] != nothing
         ensure_gradient!(d, :linecolor, :linealpha)
+    end
+    if d[:fill_z] != nothing
+        ensure_gradient!(d, :fillcolor, :fillalpha)
     end
 
     # scatter plots don't have a line, but must have a shape

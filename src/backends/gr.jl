@@ -22,7 +22,7 @@ const _gr_attr = merge_with_base_supported([
     :tickfont, :guidefont, :legendfont,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
     :legend, :legendtitle, :colorbar,
-    :marker_z, :levels,
+    :fill_z, :line_z, :marker_z, :levels,
     :ribbon, :quiver,
     :orientation,
     :overwrite_figure,
@@ -896,6 +896,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             gr_set_gradient(series[:fillcolor]) #, series[:fillalpha])
         elseif series[:marker_z] != nothing
             series[:markercolor] = gr_set_gradient(series[:markercolor])
+        elseif series[:line_z] !=  nothing
+            series[:linecolor] = gr_set_gradient(series[:linecolor])
+        elseif series[:fill_z] != nothing
+            series[:fillcolor] = gr_set_gradient(series[:fillcolor])
         end
 
         GR.savestate()
@@ -934,22 +938,29 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if frng != nothing
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
                     fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
-                    for (i,rng) in enumerate(iter_segments(series[:x], series[:y]))
-                        if length(rng) > 1
-                            gr_set_fillcolor(_cycle(series[:fillcolor], i))
-                            fx = _cycle(x, vcat(rng, reverse(rng)))
-                            fy = vcat(_cycle(fr_from,rng), _cycle(fr_to,reverse(rng)))
-                            # @show i rng fx fy
-                            GR.fillarea(fx, fy)
-                        end
+                    for i in 1:length(x) - 1
+                        gr_set_fillcolor(get_fillcolor(sp, series, i))
+                        xseg = _cycle(x, [i, i+1, i+1, i])
+                        yseg = [_cycle(fr_from, [i, i+1]); _cycle(fr_to, [i+1, i])]
+                        series[:fillalpha] != nothing && GR.settransparency(series[:fillalpha])
+                        GR.fillarea(xseg, yseg)
                     end
+                    gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+                    GR.settransparency(1)
+                    cmap && gr_colorbar(sp, clims)
                 end
 
                 # draw the line(s)
                 if st == :path
-                    gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
-                    arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
-                    gr_polyline(x, y; arrowside = arrowside)
+                    for i in 1:length(x) - 1
+                        xseg = x[i:(i + 1)]
+                        yseg = y[i:(i + 1)]
+                        gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
+                        arrowside = (i == length(y) - 1) && isa(series[:arrow], Arrow) ? series[:arrow].side : :none
+                        gr_polyline(xseg, yseg; arrowside = arrowside)
+                    end
+                    gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+                    cmap && gr_colorbar(sp, clims)
                 end
             end
 
@@ -1016,10 +1027,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st in (:path3d, :scatter3d)
             # draw path
             if st == :path3d
-                if length(x) > 1
-                    gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
-                    GR.polyline3d(x, y, z)
+                for i in 1:length(x) - 1
+                    xseg = x[i:(i + 1)]
+                    yseg = y[i:(i + 1)]
+                    zseg = z[i:(i + 1)]
+                    gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
+                    GR.polyline3d(xseg, yseg, zseg)
                 end
+                gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+                cmap && gr_colorbar(sp, clims)
             end
 
             # draw markers
@@ -1077,23 +1093,25 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.selntran(1)
 
         elseif st == :shape
-            for (i,rng) in enumerate(iter_segments(series[:x], series[:y]))
+            for (i,rng) in enumerate(iter_segments(x, y))
                 if length(rng) > 1
                     # connect to the beginning
                     rng = vcat(rng, rng[1])
 
                     # get the segments
-                    x, y = series[:x][rng], series[:y][rng]
+                    xseg, yseg = x[rng], y[rng]
 
                     # draw the interior
-                    gr_set_fill(_cycle(series[:fillcolor], i))
-                    GR.fillarea(x, y)
+                    gr_set_fill(get_fillcolor(sp, series, i))
+                    GR.fillarea(xseg, yseg)
 
                     # draw the shapes
-                    gr_set_line(series[:linewidth], :solid, _cycle(series[:linecolor], i))
-                    GR.polyline(x, y)
+                    gr_set_line(series[:linewidth], :solid, get_linecolor(sp, series, i))
+                    GR.polyline(xseg, yseg)
                 end
             end
+            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+            cmap && gr_colorbar(sp, clims)
 
 
         elseif st == :image
@@ -1169,10 +1187,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for series in series_list(sp)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
-                gr_set_line(series[:linewidth], series[:linestyle], series[:linecolor]) #, series[:linealpha])
+                gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series)) #, series[:linealpha])
 
                 if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
-                    gr_set_fill(series[:fillcolor]) #, series[:fillalpha])
+                    gr_set_fill(get_fillcolor(sp, series)) #, series[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
                     b, t = ypos-0.4dy, ypos+0.4dy
                     x = [l, r, r, l, l]
