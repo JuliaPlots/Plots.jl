@@ -531,9 +531,9 @@ function axis_drawing_info(sp::Subplot)
             f = scalefunc(yaxis[:scale])
             invf = invscalefunc(yaxis[:scale])
             ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
-            t1 = invf(f(ymin) + 0.013 * (f(ymax) - f(ymin)) * ticks_in)
-            t2 = invf(f(ymax) - 0.013 * (f(ymax) - f(ymin)) * ticks_in)
-            t3 = invf(f(0) + 0.013 * (f(ymax) - f(ymin)) * ticks_in)
+            t1 = invf(f(ymin) + 0.015 * (f(ymax) - f(ymin)) * ticks_in)
+            t2 = invf(f(ymax) - 0.015 * (f(ymax) - f(ymin)) * ticks_in)
+            t3 = invf(f(0) + 0.015 * (f(ymax) - f(ymin)) * ticks_in)
 
             for xtick in xticks[1]
                 tick_start, tick_stop = if sp[:framestyle] == :origin
@@ -562,9 +562,9 @@ function axis_drawing_info(sp::Subplot)
             f = scalefunc(xaxis[:scale])
             invf = invscalefunc(xaxis[:scale])
             ticks_in = yaxis[:tick_direction] == :out ? -1 : 1
-            t1 = invf(f(xmin) + 0.013 * (f(xmax) - f(xmin)) * ticks_in)
-            t2 = invf(f(xmax) - 0.013 * (f(xmax) - f(xmin)) * ticks_in)
-            t3 = invf(f(0) + 0.013 * (f(xmax) - f(xmin)) * ticks_in)
+            t1 = invf(f(xmin) + 0.015 * (f(xmax) - f(xmin)) * ticks_in)
+            t2 = invf(f(xmax) - 0.015 * (f(xmax) - f(xmin)) * ticks_in)
+            t3 = invf(f(0) + 0.015 * (f(xmax) - f(xmin)) * ticks_in)
 
             for ytick in yticks[1]
                 tick_start, tick_stop = if sp[:framestyle] == :origin
