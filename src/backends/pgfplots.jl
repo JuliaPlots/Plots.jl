@@ -280,7 +280,7 @@ function pgf_axis(sp::Subplot, letter)
         kw[Symbol(letter,:max)] = lims[2]
     end
 
-    if !(axis[:ticks] in (nothing, false, :none, :auto))
+    if !(axis[:ticks] in (nothing, false, :none))
         ticks = get_ticks(axis)
         push!(style, string(letter, "tick = {", join(ticks[1],","), "}"))
         push!(style, string(letter, "ticklabels = {", join(ticks[2],","), "}"))
