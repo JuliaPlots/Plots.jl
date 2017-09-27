@@ -235,7 +235,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
         :showline   => framestyle in (:box, :axes),
         :linecolor  => rgba_string(plot_color(axis[:foreground_color_axis])),
-        :ticks      => "inside",
+        :ticks      => axis[:tick_direction] == :out ? "outside" : "inside",
         :mirror     => framestyle == :box,
     )
 

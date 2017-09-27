@@ -1052,6 +1052,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ticks[2][ticks[1] .== 0] = ""
             end
             py_set_ticks(ax, ticks, letter)
+            pyaxis[:set_tick_params](direction = axis[:tick_direction] == :out ? "out" : "in")
             ax[Symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)
                 ax[Symbol("invert_", letter, "axis")]()
