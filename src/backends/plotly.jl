@@ -234,10 +234,11 @@ function plotly_axis(axis::Axis, sp::Subplot)
         :gridwidth  => axis[:gridlinewidth],
         :zeroline   => framestyle == :zerolines,
         :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
-        :showline   => framestyle in (:box, :axes),
+        :showline   => framestyle in (:box, :axes) && axis[:showaxis],
         :linecolor  => rgba_string(plot_color(axis[:foreground_color_axis])),
         :ticks      => axis[:tick_direction] == :out ? "outside" : "inside",
         :mirror     => framestyle == :box,
+        :showticklabels => axis[:showaxis],
     )
 
     if letter in (:x,:y)
@@ -251,7 +252,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
         ax[:type] = plotly_scale(axis[:scale])
         ax[:tickfont] = plotly_font(axis[:tickfont], axis[:foreground_color_text])
-        ax[:tickcolor] = framestyle in (:zerolines, :grid) ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
+        ax[:tickcolor] = framestyle in (:zerolines, :grid) || !axis[:showaxis] ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
         # lims
