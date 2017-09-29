@@ -70,7 +70,7 @@ function process_axis_arg!(d::KW, arg, letter = "")
     elseif arg == nothing
         d[Symbol(letter,:ticks)] = []
 
-    elseif arg in _allShowaxisArgs
+    elseif T <: Bool || arg in _allShowaxisArgs
         d[Symbol(letter,:showaxis)] = showaxis(arg, letter)
 
     elseif typeof(arg) <: Number
@@ -79,7 +79,7 @@ function process_axis_arg!(d::KW, arg, letter = "")
     elseif typeof(arg) <: Function
         d[Symbol(letter,:formatter)] = arg
 
-    else
+    elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_axis))
         warn("Skipped $(letter)axis arg $arg")
 
     end

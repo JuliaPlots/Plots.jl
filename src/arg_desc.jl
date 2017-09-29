@@ -110,11 +110,11 @@ const _arg_desc = KW(
 :foreground_color_text    => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of tick labels.",
 :foreground_color_guide   => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of axis guides (axis labels).",
 :mirror                   => "Bool.  Switch the side of the tick labels (right or top).",
-:grid                     => "Bool, Symbol, String or `nothing`. Show the grid lines? `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:none`, `:off`",
+:grid                     => "Bool, Symbol, String or `nothing`. Show the grid lines? `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:none`, `:off`",
 :foreground_color_grid    => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of grid lines.",
 :gridalpha                => "Number in [0,1]. The alpha/opacity override for the grid lines.",
 :gridstyle                => "Symbol. Style of the grid lines. Choose from $(_allStyles)",
 :gridlinewidth            => "Number. Width of the grid lines (in pixels)",
 :tick_direction           => "Symbol.  Direction of the ticks. `:in` or `:out`",
-:showaxis                 => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:none`, `:off`"
+:showaxis                 => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`"
 )

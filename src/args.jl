@@ -170,8 +170,8 @@ const _scaleAliases = Dict{Symbol,Symbol}(
 const _allGridSyms = [:x, :y, :z,
                     :xy, :xz, :yx, :yz, :zx, :zy,
                     :xyz, :xzy, :yxz, :yzx, :zxy, :zyx,
-                    :all, :both, :on, :yes,
-                    :none, :off, :no]
+                    :all, :both, :on, :yes, :show,
+                    :none, :off, :no, :hide]
 const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing]
 hasgrid(arg::Void, letter) = false
 hasgrid(arg::Bool, letter) = arg
@@ -188,12 +188,12 @@ hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 const _allShowaxisSyms = [:x, :y, :z,
                     :xy, :xz, :yx, :yz, :zx, :zy,
                     :xyz, :xzy, :yxz, :yzx, :zxy, :zyx,
-                    :all, :both, :on, :yes,
-                    :none, :off, :no]
+                    :all, :both, :on, :yes, :show,
+                    :off, :no, :hide]
 const _allShowaxisArgs = [_allGridSyms; string.(_allGridSyms)]
 showaxis(arg::Void, letter) = false
 showaxis(arg::Bool, letter) = arg
-function hasgrid(arg::Symbol, letter)
+function showaxis(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on, :yes) || contains(string(arg), string(letter))
     else
@@ -340,7 +340,8 @@ const _axis_defaults = KW(
     :gridalpha                => 0.1,
     :gridstyle                => :solid,
     :gridlinewidth            => 0.5,
-    :tick_direction          => :in,
+    :tick_direction           => :in,
+    :showaxis                 => true,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -728,7 +729,7 @@ function processGridArg!(d::KW, arg, letter)
         d[Symbol(letter, :gridlinewidth)] = arg
 
     # color
-elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_grid))
+    elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_grid))
         warn("Skipped grid arg $arg.")
 
     end
@@ -753,13 +754,13 @@ function preprocessArgs!(d::KW)
     replaceAliases!(d, _keyAliases)
 
     # clear all axis stuff
-    if haskey(d, :axis) && d[:axis] in (:none, nothing, false)
-        d[:ticks] = nothing
-        d[:foreground_color_border] = RGBA(0,0,0,0)
-        d[:foreground_color_axis] = RGBA(0,0,0,0)
-        d[:grid] = false
-        delete!(d, :axis)
-    end
+    # if haskey(d, :axis) && d[:axis] in (:none, nothing, false)
+    #     d[:ticks] = nothing
+    #     d[:foreground_color_border] = RGBA(0,0,0,0)
+    #     d[:foreground_color_axis] = RGBA(0,0,0,0)
+    #     d[:grid] = false
+    #     delete!(d, :axis)
+    # end
     # for letter in (:x, :y, :z)
     #     asym = Symbol(letter, :axis)
     #     if haskey(d, asym) || d[asym] in (:none, nothing, false)
@@ -768,6 +769,13 @@ function preprocessArgs!(d::KW)
     #     end
     # end
 
+    # handle axis args common to all axis
+    args = pop!(d, :axis, ())
+    for arg in wraptuple(args)
+        for letter in (:x, :y, :z)
+            process_axis_arg!(d, arg, letter)
+        end
+    end
     # handle axis args
     for letter in (:x, :y, :z)
         asym = Symbol(letter, :axis)
