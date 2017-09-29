@@ -363,11 +363,24 @@ end
     xmin, xmax = try
         axis_limits(plt[1][:xaxis])
     catch
-        -5, 5
+        xm = tryrange(f, [-5,-1,0,0.01])
+        xm, tryrange(f, filter(x->x>xm, [5,1,0.99, 0, -0.01]))
     end
+
     f, xmin, xmax
 end
 
+# try some intervals over which the function may be defined
+function tryrange(F, vec)
+    for v in vec
+        try
+            tmp = F(v)
+            return v
+        catch
+        end
+    end
+    error("Function not defined over the given interval, $vec")
+end
 #
 # # --------------------------------------------------------------------
 # # 2 arguments
