@@ -363,9 +363,10 @@ end
     xmin, xmax = try
         axis_limits(plt[1][:xaxis])
     catch
-        tryrange(f, [-5,-1,0,0.01]), tryrange(f, [5,1,0.99])
+        xm = tryrange(f, [-5,-1,0,0.01])
+        xm, tryrange(f, filter(x->x>xm, [5,1,0.99, 0, -0.01]))
     end
-    
+
     f, xmin, xmax
 end
 
