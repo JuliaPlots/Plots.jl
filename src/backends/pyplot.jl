@@ -34,6 +34,7 @@ const _pyplot_attr = merge_with_base_supported([
     :colorbar_title,
     :stride,
     :framestyle,
+    :tick_direction,
   ])
 const _pyplot_seriestype = [
         :path, :steppre, :steppost, :shape,
@@ -1052,6 +1053,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ticks[2][ticks[1] .== 0] = ""
             end
             py_set_ticks(ax, ticks, letter)
+            pyaxis[:set_tick_params](direction = axis[:tick_direction] == :out ? "out" : "in")
             ax[Symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)
                 ax[Symbol("invert_", letter, "axis")]()

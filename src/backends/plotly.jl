@@ -34,6 +34,7 @@ const _plotly_attr = merge_with_base_supported([
     :bar_width,
     :clims,
     :framestyle,
+    :tick_direction,
   ])
 
 const _plotly_seriestype = [
@@ -235,7 +236,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
         :showline   => framestyle in (:box, :axes),
         :linecolor  => rgba_string(plot_color(axis[:foreground_color_axis])),
-        :ticks      => "inside",
+        :ticks      => axis[:tick_direction] == :out ? "outside" : "inside",
         :mirror     => framestyle == :box,
     )
 

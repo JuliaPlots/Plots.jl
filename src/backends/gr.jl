@@ -33,6 +33,7 @@ const _gr_attr = merge_with_base_supported([
     :bar_width,
     :arrow,
     :framestyle,
+    :tick_direction,
 ])
 const _gr_seriestype = [
     :path, :scatter,
@@ -827,7 +828,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
-                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3, string(dv))
+                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), string(dv))
             end
         end
 
@@ -838,7 +839,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
-                gr_text(xi + (mirror ? 1 : -1) * 1e-2, yi, string(dv))
+                gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
             end
         end
 
