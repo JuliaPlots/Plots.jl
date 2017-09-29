@@ -170,8 +170,8 @@ const _scaleAliases = Dict{Symbol,Symbol}(
 const _allGridSyms = [:x, :y, :z,
                     :xy, :xz, :yx, :yz, :zx, :zy,
                     :xyz, :xzy, :yxz, :yzx, :zxy, :zyx,
-                    :all, :both, :on,
-                    :none, :off,]
+                    :all, :both, :on, :yes,
+                    :none, :off, :no]
 const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing]
 hasgrid(arg::Void, letter) = false
 hasgrid(arg::Bool, letter) = arg
@@ -184,6 +184,24 @@ function hasgrid(arg::Symbol, letter)
     end
 end
 hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
+
+const _allShowaxisSyms = [:x, :y, :z,
+                    :xy, :xz, :yx, :yz, :zx, :zy,
+                    :xyz, :xzy, :yxz, :yzx, :zxy, :zyx,
+                    :all, :both, :on, :yes,
+                    :none, :off, :no]
+const _allShowaxisArgs = [_allGridSyms; string.(_allGridSyms)]
+showaxis(arg::Void, letter) = false
+showaxis(arg::Bool, letter) = arg
+function hasgrid(arg::Symbol, letter)
+    if arg in _allGridSyms
+        arg in (:all, :both, :on, :yes) || contains(string(arg), string(letter))
+    else
+        warn("Unknown showaxis argument $arg; $(Symbol(letter, :showaxis)) was set to `true` instead.")
+        true
+    end
+end
+showaxis(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
 const _allFramestyles = [:box, :semi, :axes, :origin, :zerolines, :grid, :none]
 const _framestyleAliases = Dict{Symbol, Symbol}(

@@ -793,35 +793,43 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.settransparency(1.0)
 
         # axis lines
-        gr_set_line(1, :solid, xaxis[:foreground_color_axis])
-        GR.setclip(0)
-        gr_polyline(coords(xspine_segs)...)
-        gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-        GR.setclip(0)
-        gr_polyline(coords(yspine_segs)...)
+        if xaxis[:showaxis]
+            gr_set_line(1, :solid, xaxis[:foreground_color_axis])
+            GR.setclip(0)
+            gr_polyline(coords(xspine_segs)...)
+        end
+        if yaxis[:showaxis]
+            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+            GR.setclip(0)
+            gr_polyline(coords(yspine_segs)...)
+        end
         GR.setclip(1)
 
         # axis ticks
-        if sp[:framestyle] in (:zerolines, :grid)
-            gr_set_line(1, :solid, xaxis[:foreground_color_grid])
-            GR.settransparency(xaxis[:gridalpha])
-        else
-            gr_set_line(1, :solid, xaxis[:foreground_color_axis])
+        if xaxis[:showaxis]
+            if sp[:framestyle] in (:zerolines, :grid)
+                gr_set_line(1, :solid, xaxis[:foreground_color_grid])
+                GR.settransparency(xaxis[:gridalpha])
+            else
+                gr_set_line(1, :solid, xaxis[:foreground_color_axis])
+            end
+            GR.setclip(0)
+            gr_polyline(coords(xtick_segs)...)
         end
-        GR.setclip(0)
-        gr_polyline(coords(xtick_segs)...)
-        if sp[:framestyle] in (:zerolines, :grid)
-            gr_set_line(1, :solid, yaxis[:foreground_color_grid])
-            GR.settransparency(yaxis[:gridalpha])
-        else
-            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+        if  yaxis[:showaxis]
+            if sp[:framestyle] in (:zerolines, :grid)
+                gr_set_line(1, :solid, yaxis[:foreground_color_grid])
+                GR.settransparency(yaxis[:gridalpha])
+            else
+                gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+            end
+            GR.setclip(0)
+            gr_polyline(coords(ytick_segs)...)
         end
-        GR.setclip(0)
-        gr_polyline(coords(ytick_segs)...)
         GR.setclip(1)
 
         # tick marks
-        if !(xticks in (:none, nothing, false))
+        if !(xticks in (:none, nothing, false)) && xaxis[:showaxis]
             # x labels
             flip, mirror = gr_set_xticks_font(sp)
             for (cv, dv) in zip(xticks...)
@@ -832,7 +840,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
         end
 
-        if !(yticks in (:none, nothing, false))
+        if !(yticks in (:none, nothing, false)) && yaxis[:showaxis]
             # y labels
             flip, mirror = gr_set_yticks_font(sp)
             for (cv, dv) in zip(yticks...)

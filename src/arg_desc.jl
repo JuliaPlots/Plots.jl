@@ -115,5 +115,6 @@ const _arg_desc = KW(
 :gridalpha                => "Number in [0,1]. The alpha/opacity override for the grid lines.",
 :gridstyle                => "Symbol. Style of the grid lines. Choose from $(_allStyles)",
 :gridlinewidth            => "Number. Width of the grid lines (in pixels)",
-:tick_direction         => "Symbol. Direction of the ticks. `:in` or `:out`"
+:tick_direction           => "Symbol.  Direction of the ticks. `:in` or `:out`",
+:showaxis                 => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:none`, `:off`"
 )
