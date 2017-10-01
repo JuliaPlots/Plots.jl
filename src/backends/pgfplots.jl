@@ -32,6 +32,7 @@ const _pgfplots_attr = merge_with_base_supported([
     :aspect_ratio,
     # :match_dimensions,
     :tick_direction,
+    :framestyle,
   ])
 const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -106,6 +107,18 @@ const _pgf_annotation_halign = KW(
     :left => "right",
     :right => "left"
 )
+
+const _pgf_framestyles = [:box, :axes, :grid, :none]
+const _pgf_framestyle_defaults = Dict(:semi => :box, :origin => :axes, :zerolines => :axes)
+function pgf_framestyle(style::Symbol)
+    if style in _pgf_framestyles
+        return style
+    else
+        default_style = get(_pgf_framestyle_defaults, style, :axes)
+        warn("Framestyle :$style is not (yet) supported by the PGFPlots backend. :$default_style was cosen instead.")
+        default_style
+    end
+end
 
 # --------------------------------------------------------------------------------------
 
@@ -246,6 +259,9 @@ function pgf_axis(sp::Subplot, letter)
     style = []
     kw = KW()
 
+    # set to supported framestyle
+    framestyle = pgf_framestyle(sp[:framestyle])
+
     # axis guide
     kw[Symbol(letter,:label)] = axis[:guide]
 
@@ -263,12 +279,12 @@ function pgf_axis(sp::Subplot, letter)
     end
 
     # ticks on or off
-    if axis[:ticks] in (nothing, false)
+    if axis[:ticks] in (nothing, false) || framestyle == :none
         push!(style, "$(letter)majorticks=false")
     end
 
     # grid on or off
-    if axis[:grid]
+    if axis[:grid] && framestyle != :none
         push!(style, "$(letter)majorgrids = true")
     end
 
@@ -280,11 +296,27 @@ function pgf_axis(sp::Subplot, letter)
         kw[Symbol(letter,:max)] = lims[2]
     end
 
-    if !(axis[:ticks] in (nothing, false, :none))
+    if !(axis[:ticks] in (nothing, false, :none)) && framestyle != :none
         ticks = get_ticks(axis)
         push!(style, string(letter, "tick = {", join(ticks[1],","), "}"))
-        push!(style, string(letter, "ticklabels = {", join(ticks[2],","), "}"))
+        if axis[:showaxis]
+            push!(style, string(letter, "ticklabels = {", join(ticks[2],","), "}"))
+        else
+            push!(style, string(letter, "ticklabels = {}"))
+        end
         push!(style, string(letter, "tick align = ", (axis[:tick_direction] == :out ? "outside" : "inside")))
+    end
+
+    # framestyle
+    if sp[:framestyle] == :axes
+        push!(style, "axis lines = left")
+    end
+
+    if !axis[:showaxis]
+        push!(style, "separate axis lines")
+    end
+    if !axis[:showaxis] || framestyle in (:grid, :none)
+        push!(style, string(letter, " axis line style = {draw opacity = 0}"))
     end
 
     # return the style list and KW args
