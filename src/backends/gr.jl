@@ -750,7 +750,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             isfinite(clims[1]) && (zmin = clims[1])
             isfinite(clims[2]) && (zmax = clims[2])
         end
-        GR.setspace(zmin, zmax, 40, 70)
+        GR.setspace(zmin, zmax, 35, 60)
         xtick = GR.tick(xmin, xmax) / 2
         ytick = GR.tick(ymin, ymax) / 2
         ztick = GR.tick(zmin, zmax) / 2
