@@ -138,10 +138,10 @@ import Measures
 import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height, w, h
 const BBox = Measures.Absolute2DBox
 export BBox, BoundingBox, mm, cm, inch, pt, px, pct, w, h
-
 end
 
-importall .PlotMeasures
+using .PlotMeasures
+import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 export BBox, BoundingBox
 # ---------------------------------------------------------
 
