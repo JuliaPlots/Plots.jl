@@ -3,13 +3,36 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-- All new development should target 0.12!
+- All new development should target 0.13!
 - Minor version 0.11 is the last one to support Julia 0.5!!
 	- Critical bugfixes only
     - `backports` branch is for Julia 0.5
 
 ---
 ## (current master)
+
+## 0.13.0
+
+- support `plotattributes` rather than `d` in recipes
+- no longer export `w`, `h` and names from Measures.jl; use `using Plots.PlotMeasures` to get these names back
+- `bar_width` now depends on the minimum distance between bars, not the mean
+- better automatic x axis limits for plotting Functions
+- `tick_direction` attribute now allows ticks to be on the inside of the plot border
+- removed a bug where `p1 = plot(randn(10)); plot(p1, p2)` made `display(p1)` impossible
+- allow `plot([])` to generate an empty plot
+- add `origin` framestyle
+- ensure finite bin number on histograms with only one unique value
+- better automatic histogram bins for 2d histograms
+- more informative error message on passing unsupported seriestype in a recipe
+- allow grouping in user recipes
+- GR now has `line_z` and `fill_z` attributes for determining the color of shapes and lines
+- change GR default view angle for 3D plots to match that of PyPlot
+- fix `clims` on GR
+- fix `marker_z` for plotly backend
+- implement `framestyle` for plotly
+- fix logscale bug error for values < 1e-16 on pyplot
+- fix an issue on pyplot where >1 colorbar would be shown if there was >1 series
+- fix `writemime` for eps
 
 ## 0.12.4
 
