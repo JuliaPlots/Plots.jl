@@ -349,7 +349,7 @@ end
 
 function _userplot(expr::Expr)
     if expr.head != :type
-        errror("Must call userplot on a type/immutable expression.  Got: $expr")
+        error("Must call userplot on a type/immutable expression.  Got: $expr")
     end
 
     typename = expr.args[2]
