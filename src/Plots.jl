@@ -1,4 +1,4 @@
-__precompile__(true)
+__precompile__(false)
 
 module Plots
 
@@ -133,6 +133,7 @@ ignorenan_extrema(x) = Base.extrema(x)
 
 # ---------------------------------------------------------
 
+import Measures
 module PlotMeasures
 import Measures
 import Measures: Length, AbsoluteLength, Measure, BoundingBox, mm, cm, inch, pt, width, height, w, h
