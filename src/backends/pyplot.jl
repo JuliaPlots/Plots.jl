@@ -499,11 +499,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     :zorder => plt.n,
                     :cmap => py_linecolormap(series),
                     :linewidth => py_dpi_scale(plt, series[:linewidth]),
-                    :linestyle => py_linestyle(st, series[:linestyle])
+                    :linestyle => py_linestyle(st, series[:linestyle]),
+                    :norm => pycolors["Normalize"](; extrakw...)
                 )
-                if needs_colorbar
-                    kw[:norm] = pycolors["Normalize"](; extrakw...)
-                end
                 lz = collect(series[:line_z])
                 handle = if is3d(st)
                     for rng in iter_segments(x, y, z)
