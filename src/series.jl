@@ -373,8 +373,8 @@ end
 # try some intervals over which the function may be defined
 function tryrange(F::T, vec) where T <: AbstractArray
     rets = [tryrange(f, vec) for f in F] # get the preferred for each
-    inds = indexin(rets, vec)            # get the last attempt (most likely to fit all)
-    rets .= [tryrange(f, vec[maximum(inds):maximum(inds)]) for f in F] # ensure that all functions compute there
+    maxind = maximum(indexin(rets, vec)) # get the last attempt that succeeded (most likely to fit all)
+    rets .= [tryrange(f, vec[maxind:maxind]) for f in F] # ensure that all functions compute there
     rets[1]
 end
 
