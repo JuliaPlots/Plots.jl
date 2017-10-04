@@ -108,8 +108,8 @@ const _pgf_annotation_halign = KW(
     :right => "left"
 )
 
-const _pgf_framestyles = [:box, :axes, :grid, :none]
-const _pgf_framestyle_defaults = Dict(:semi => :box, :origin => :axes, :zerolines => :axes)
+const _pgf_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
+const _pgf_framestyle_defaults = Dict(:semi => :box)
 function pgf_framestyle(style::Symbol)
     if style in _pgf_framestyles
         return style
@@ -308,14 +308,22 @@ function pgf_axis(sp::Subplot, letter)
     end
 
     # framestyle
-    if sp[:framestyle] == :axes
-        push!(style, "axis lines = left")
+    if framestyle in (:axes, :origin)
+        axispos = framestyle == :axes ? "left" : "middle"
+        # the * after lines disables the arrows at the axes
+        push!(style, string("axis lines* = ", axispos))
+    end
+
+    if framestyle == :zerolines
+        push!(style, string("extra ", letter, " ticks = 0"))
+        push!(style, string("extra ", letter, " tick labels = "))
+        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {color = black, draw opacity=1.0, line width=0.5), solid}}"))
     end
 
     if !axis[:showaxis]
         push!(style, "separate axis lines")
     end
-    if !axis[:showaxis] || framestyle in (:grid, :none)
+    if !axis[:showaxis] || framestyle in (:zerolines, :grid, :none)
         push!(style, string(letter, " axis line style = {draw opacity = 0}"))
     end
 
