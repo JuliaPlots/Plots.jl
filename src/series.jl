@@ -371,6 +371,13 @@ end
 end
 
 # try some intervals over which the function may be defined
+function tryrange(F::T, vec) where T <: AbstractArray
+    rets = [tryrange(f, vec) for f in F] # get the preferred for each
+    inds = indexin(rets, vec)            # get the last attempt (most likely to fit all)
+    rets .= [tryrange(f, vec[maximum(inds):maximum(inds)]) for f in F] # ensure that all functions compute there
+    rets[1]
+end
+
 function tryrange(F, vec)
     for v in vec
         try
@@ -379,7 +386,7 @@ function tryrange(F, vec)
         catch
         end
     end
-    error("Function not defined over the given interval, $vec")
+    error("$F is not a Function, or is not defined at any of the values $vec")
 end
 #
 # # --------------------------------------------------------------------
