@@ -100,8 +100,8 @@ function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeD
     plt.n += 1
     kw[:series_plotindex] = plt.n
 
-    push!(kw_list, kw)
     _add_errorbar_kw(kw_list, kw)
+    push!(kw_list, kw)
     _add_smooth_kw(kw_list, kw)
     return
 end
