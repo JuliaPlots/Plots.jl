@@ -732,15 +732,25 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     xlim = Plots.axis_limits(xaxis)
     ylim = Plots.axis_limits(yaxis)
 
-    if !(xaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none)
+    if !(xaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none) && xaxis[:showaxis]
         ticklabels = map(model) do m
             mirror = xaxis[:mirror]
             t, positions, offsets = draw_ticks(xaxis, xticks, true, sp[:framestyle] == :origin, ylim, m)
-            mirror = xaxis[:mirror]
-            t, positions, offsets = draw_ticks(
-                yaxis, yticks, false, sp[:framestyle] == :origin, xlim, m,
-                t, positions, offsets
-            )
+        end
+        kw_args = Dict{Symbol, Any}(
+            :position => map(x-> x[2], ticklabels),
+            :offset => map(last, ticklabels),
+            :color => fcolor,
+            :relative_scale => pointsize(xaxis[:tickfont]),
+            :scale_primitive => false
+        )
+        push!(axis_vis, visualize(map(first, ticklabels), Style(:default), kw_args))
+    end
+
+    if !(yaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none) && yaxis[:showaxis]
+        ticklabels = map(model) do m
+            mirror = yaxis[:mirror]
+            t, positions, offsets = draw_ticks(yaxis, yticks, false, sp[:framestyle] == :origin, xlim, m)
         end
         kw_args = Dict{Symbol, Any}(
             :position => map(x-> x[2], ticklabels),
