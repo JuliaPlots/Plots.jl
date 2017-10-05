@@ -11,6 +11,11 @@
 ---
 ## (current master)
 
+## 0.13.1
+
+- fix a bug when passing a vector of functions with no bounds (e.g. `plot([sin, cos])`)
+- export pct and px from Plots.PlotMeasures
+
 ## 0.13.0
 
 - support `plotattributes` rather than `d` in recipes
