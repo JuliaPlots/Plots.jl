@@ -1002,7 +1002,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             fig = plt.o
             cbax = fig[:add_axes]([0.8,0.1,0.03,0.8], label = string(gensym()))
             cb = fig[:colorbar](handle; cax = cbax, kw...)
-            cb[:set_label](sp[:colorbar_title])
+            cb[:set_label](sp[:colorbar_title],size=py_dpi_scale(plt, sp[:yaxis][:guidefont].pointsize),family=sp[:yaxis][:guidefont].family)
+            for lab in cb[:ax][:yaxis][:get_ticklabels]()
+                  lab[:set_fontsize](py_dpi_scale(plt, sp[:yaxis][:tickfont].pointsize))
+                  lab[:set_family](sp[:yaxis][:tickfont].family)
+            end 
             sp.attr[:cbar_handle] = cb
             sp.attr[:cbar_ax] = cbax
         end
