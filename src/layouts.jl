@@ -1,10 +1,6 @@
 
 # NOTE: (0,0) is the top-left !!!
 
-# allow pixels and percentages
-const px = AbsoluteLength(0.254)
-const pct = Length{:pct, Float64}(1.0)
-
 to_pixels(m::AbsoluteLength) = m.value / 0.254
 
 const _cbar_width = 5mm
