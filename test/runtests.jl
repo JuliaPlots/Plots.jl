@@ -16,12 +16,12 @@ img_eps = isinteractive() ? 1e-2 : 10e-2
 end
 
 
-@testset "PyPlot" begin
-    @test pyplot() == Plots.PyPlotBackend()
-    @test backend() == Plots.PyPlotBackend()
-
-    image_comparison_facts(:pyplot, eps=img_eps)
-end
+#@testset "PyPlot" begin
+#    @test pyplot() == Plots.PyPlotBackend()
+#    @test backend() == Plots.PyPlotBackend()
+#
+#    image_comparison_facts(:pyplot, eps=img_eps)
+#end
 
 @testset "UnicodePlots" begin
     @test unicodeplots() == Plots.UnicodePlotsBackend()
