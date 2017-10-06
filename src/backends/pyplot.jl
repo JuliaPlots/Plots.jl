@@ -499,20 +499,19 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     :zorder => plt.n,
                     :cmap => py_linecolormap(series),
                     :linewidth => py_dpi_scale(plt, series[:linewidth]),
-                    :linestyle => py_linestyle(st, series[:linestyle])
+                    :linestyle => py_linestyle(st, series[:linestyle]),
+                    :norm => pycolors["Normalize"](; extrakw...)
                 )
-                if needs_colorbar
-                    kw[:norm] = pycolors["Normalize"](; extrakw...)
-                end
-                lz = collect(series[:line_z])
+                lz = _cycle(series[:line_z], 1:n)
                 handle = if is3d(st)
                     for rng in iter_segments(x, y, z)
                         length(rng) < 2 && continue
-                        push!(segments, [(_cycle(x,i),_cycle(y,i),_cycle(z,i)) for i in rng])
+                        for i in rng[1:end-1]
+                            push!(segments, [(_cycle(x,i),_cycle(y,i),_cycle(z,i)),
+                                             (_cycle(x,i+1),_cycle(y,i+1),_cycle(z,i+1))])
+                        end
                     end
-                    # for i=1:n
-                    #     segments[i] = [(_cycle(x,i), _cycle(y,i), _cycle(z,i)), (_cycle(x,i+1), _cycle(y,i+1), _cycle(z,i+1))]
-                    # end
+
                     lc = pyart3d["Line3DCollection"](segments; kw...)
                     lc[:set_array](lz)
                     ax[:add_collection3d](lc, zs=z) #, zdir='y')
@@ -520,11 +519,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 else
                     for rng in iter_segments(x, y)
                         length(rng) < 2 && continue
-                        push!(segments, [(_cycle(x,i),_cycle(y,i)) for i in rng])
+                        for i in rng[1:end-1]
+                            push!(segments, [(_cycle(x,i),_cycle(y,i)), (_cycle(x,i+1),_cycle(y,i+1))])
+                        end
                     end
-                    # for i=1:n
-                    #     segments[i] = [(_cycle(x,i), _cycle(y,i)), (_cycle(x,i+1), _cycle(y,i+1))]
-                    # end
+
                     lc = pycollections["LineCollection"](segments; kw...)
                     lc[:set_array](lz)
                     ax[:add_collection](lc)
