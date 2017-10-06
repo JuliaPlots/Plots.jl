@@ -502,7 +502,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     :linestyle => py_linestyle(st, series[:linestyle]),
                     :norm => pycolors["Normalize"](; extrakw...)
                 )
-                lz = collect(series[:line_z])
+                lz = _cycle(series[:line_z], 1:n)
                 handle = if is3d(st)
                     for rng in iter_segments(x, y, z)
                         length(rng) < 2 && continue
