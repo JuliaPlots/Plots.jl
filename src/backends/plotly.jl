@@ -35,6 +35,7 @@ const _plotly_attr = merge_with_base_supported([
     :clims,
     :framestyle,
     :tick_direction,
+    :camera,
   ])
 
 const _plotly_seriestype = [
@@ -324,10 +325,21 @@ function plotly_layout(plt::Plot)
 
         # if any(is3d, seriesargs)
         if is3d(sp)
+            azim = sp[:camera][1] - 90 #convert azimuthal to match GR behaviour
+            theta = 90 - sp[:camera][2] #spherical coordinate angle from z axis
             d_out[:scene] = KW(
                 Symbol("xaxis$spidx") => plotly_axis(sp[:xaxis], sp),
                 Symbol("yaxis$spidx") => plotly_axis(sp[:yaxis], sp),
                 Symbol("zaxis$spidx") => plotly_axis(sp[:zaxis], sp),
+
+                #2.6 multiplier set camera eye such that whole plot can be seen
+                :camera => KW(
+                    :eye => KW(
+                        :x => cosd(azim)*sind(theta)*2.6,
+                        :y => sind(azim)*sind(theta)*2.6,
+                        :z => cosd(theta)*2.6,
+                    ),
+                ),
             )
         else
             d_out[Symbol("xaxis$spidx")] = plotly_axis(sp[:xaxis], sp)
