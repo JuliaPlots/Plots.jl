@@ -20,4 +20,4 @@ Plots is a plotting API and toolset.  My goals with the package are:
 - **Lightweight**.  Very few dependencies.
 - **Smart**. Attempts to figure out what you **want** it to do... not just what you **tell** it.
 
-View the [full documentation](http://juliaplots.github.io).
+View the [full documentation](docs.juliaplots.org/latest).
