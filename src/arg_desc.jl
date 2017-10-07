@@ -94,7 +94,7 @@ const _arg_desc = KW(
 :subplot_index            => "Integer.  Internal (not set by user).  Specifies the index of this subplot in the Plot's `plt.subplot` list.",
 :colorbar_title           => "String.  Title of colorbar.",
 :framestyle               => "Symbol.  Style of the axes frame. Choose from $(_allFramestyles)",
-:camera                   => "NTuple{2, Int(GR)/Real(Other)}. Sets the view angle (azimuthal, elevation) for 3D plots",
+:camera                   => "NTuple{2, Real}. Sets the view angle (azimuthal, elevation) for 3D plots",
 
 # axis args
 :guide     				  => "String. Axis guide (label).",
