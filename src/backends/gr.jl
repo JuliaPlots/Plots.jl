@@ -943,16 +943,22 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if st in (:path, :scatter)
             if length(x) > 1
+                lz = series[:line_z]
+                segments_iterator = if lz != nothing && length(lz) > 1
+                    [i:(i + 1) for i in 1:(length(x) - 1)]
+                else
+                    iter_segments(x, y)
+                end
                 # do area fill
                 if frng != nothing
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
                     fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
-                    for i in 1:length(x) - 1
+                    for (i, rng) in enumerate(segments_iterator)
                         gr_set_fillcolor(get_fillcolor(sp, series, i))
-                        xseg = _cycle(x, [i, i+1, i+1, i])
-                        yseg = [_cycle(fr_from, [i, i+1]); _cycle(fr_to, [i+1, i])]
+                        fx = _cycle(x, vcat(rng, reverse(rng)))
+                        fy = vcat(_cycle(fr_from,rng), _cycle(fr_to,reverse(rng)))
                         series[:fillalpha] != nothing && GR.settransparency(series[:fillalpha])
-                        GR.fillarea(xseg, yseg)
+                        GR.fillarea(fx, fy)
                     end
                     gr_set_line(1, :solid, yaxis[:foreground_color_axis])
                     GR.settransparency(1)
@@ -961,12 +967,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                 # draw the line(s)
                 if st == :path
-                    for i in 1:length(x) - 1
-                        xseg = x[i:(i + 1)]
-                        yseg = y[i:(i + 1)]
+                    for (i, rng) in enumerate(segments_iterator)
                         gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
-                        arrowside = (i == length(y) - 1) && isa(series[:arrow], Arrow) ? series[:arrow].side : :none
-                        gr_polyline(xseg, yseg; arrowside = arrowside)
+                        arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
+                        gr_polyline(x[rng], y[rng]; arrowside = arrowside)
                     end
                     gr_set_line(1, :solid, yaxis[:foreground_color_axis])
                     cmap && gr_colorbar(sp, clims)
@@ -1036,15 +1040,20 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st in (:path3d, :scatter3d)
             # draw path
             if st == :path3d
-                for i in 1:length(x) - 1
-                    xseg = x[i:(i + 1)]
-                    yseg = y[i:(i + 1)]
-                    zseg = z[i:(i + 1)]
-                    gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
-                    GR.polyline3d(xseg, yseg, zseg)
+                if length(x) > 1
+                    lz = series[:line_z]
+                    segments_iterator = if lz != nothing && length(lz) > 1
+                        [i:(i + 1) for i in 1:(length(x) - 1)]
+                    else
+                        iter_segments(x, y, z)
+                    end
+                    for (i, rng) in enumerate(segments_iterator)
+                        gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
+                        GR.polyline3d(x[rng], y[rng], z[rng])
+                    end
+                    gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+                    cmap && gr_colorbar(sp, clims)
                 end
-                gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-                cmap && gr_colorbar(sp, clims)
             end
 
             # draw markers
