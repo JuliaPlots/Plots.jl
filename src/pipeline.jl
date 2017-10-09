@@ -100,14 +100,14 @@ function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeD
     plt.n += 1
     kw[:series_plotindex] = plt.n
 
-    if get(kw, :seriestype, :path) == :bar
-        # errorbar in front of bars
-        push!(kw_list, kw)
-        _add_errorbar_kw(kw_list, kw)
-    else
+    if get(kw, :markershape, :none) != :none || get(kw, :seriestype, :path) in (:scatter, :scatterhist)
         # errorbar behind markers and lines etc.
         _add_errorbar_kw(kw_list, kw)
         push!(kw_list, kw)
+    else
+        # errorbar in front of bars
+        push!(kw_list, kw)
+        _add_errorbar_kw(kw_list, kw)
     end
     _add_smooth_kw(kw_list, kw)
     return
