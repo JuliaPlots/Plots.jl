@@ -751,7 +751,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             isfinite(clims[1]) && (zmin = clims[1])
             isfinite(clims[2]) && (zmax = clims[2])
         end
-        GR.setspace(zmin, zmax, map(Int,map(round,sp[:camera]))...)
+        GR.setspace(zmin, zmax, round.(Int, sp[:camera])...)
         xtick = GR.tick(xmin, xmax) / 2
         ytick = GR.tick(ymin, ymax) / 2
         ztick = GR.tick(zmin, zmax) / 2
