@@ -342,10 +342,6 @@ function gr_draw_markers(series::Series, x, y, clims)
     mz = normalize_zvals(series[:marker_z], clims)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     gr_draw_markers(series, x, y, series[:markersize], mz)
-    # if hascolorbar(series[:subplot])
-    #     GR.setscale(0)
-    #     gr_colorbar(series[:subplot], clims)
-    # end
 end
 
 # ---------------------------------------------------------
@@ -447,12 +443,6 @@ function gr_set_viewport_polar()
 end
 
 # add the colorbar
-function gr_colorbar(sp::Subplot)
-    gr_set_viewport_cmap(sp)
-    GR.colorbar()
-    gr_set_viewport_plotarea()
-end
-
 function gr_colorbar(sp::Subplot, clims)
     xmin, xmax = gr_xy_axislims(sp)[1:2]
     gr_set_viewport_cmap(sp)
