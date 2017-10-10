@@ -518,12 +518,16 @@ function axis_drawing_info(sp::Subplot)
     xborder_segs = Segments(2)
     yborder_segs = Segments(2)
 
-    if !(sp[:framestyle] == :none)
+    if sp[:framestyle] != :none
         # xaxis
         if xaxis[:showaxis]
-            sp[:framestyle] in (:grid, :origin, :zerolines) || push!(xaxis_segs, (xmin,ymin), (xmax,ymin)) # bottom spine / xaxis
-            if sp[:framestyle] in (:origin, :zerolines)
-                push!(xaxis_segs, (xmin, 0.0), (xmax, 0.0))
+            if sp[:framestyle] != :grid
+                yval = if sp[:framestyle] in (:origin, :zerolines)
+                    0.0
+                else
+                    xor(xaxis[:mirror], yaxis[:flip]) ? ymax : ymin
+                end
+                push!(xaxis_segs, (xmin, yval), (xmax, yval))
                 # don't show the 0 tick label for the origin framestyle
                 if sp[:framestyle] == :origin && length(xticks) > 1
                     showticks = xticks[1] .!= 0
@@ -545,7 +549,7 @@ function axis_drawing_info(sp::Subplot)
                     tick_start, tick_stop = if sp[:framestyle] == :origin
                         (0, t3)
                     else
-                        xaxis[:mirror] ? (ymax, t2) : (ymin, t1)
+                        xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, t2) : (ymin, t1)
                     end
                     push!(xtick_segs, (xtick, tick_start), (xtick, tick_stop)) # bottom tick
                 end
@@ -556,9 +560,13 @@ function axis_drawing_info(sp::Subplot)
 
         # yaxis
         if yaxis[:showaxis]
-            sp[:framestyle] in (:grid, :origin, :zerolines) || push!(yaxis_segs, (xmin,ymin), (xmin,ymax)) # left spine / yaxis
-            if sp[:framestyle] in (:origin, :zerolines)
-                push!(yaxis_segs, (0.0, ymin), (0.0, ymax))
+            if sp[:framestyle] != :grid
+                xval = if sp[:framestyle] in (:origin, :zerolines)
+                    0.0
+                else
+                    xor(yaxis[:mirror], xaxis[:flip]) ? xmax : xmin
+                end
+                push!(yaxis_segs, (xval, ymin), (xval, ymax))
                 # don't show the 0 tick label for the origin framestyle
                 if sp[:framestyle] == :origin && length(yticks) > 1
                     showticks = yticks[1] .!= 0
@@ -580,7 +588,7 @@ function axis_drawing_info(sp::Subplot)
                     tick_start, tick_stop = if sp[:framestyle] == :origin
                         (0, t3)
                     else
-                        yaxis[:mirror] ? (xmax, t2) : (xmin, t1)
+                        xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, t2) : (xmin, t1)
                     end
                     push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
                 end
