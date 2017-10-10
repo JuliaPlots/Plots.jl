@@ -458,6 +458,7 @@ function gr_colorbar(sp::Subplot, clims)
     gr_set_viewport_cmap(sp)
     l = zeros(Int32, 1, 256)
     l[1,:] = Int[round(Int, _i) for _i in linspace(1000, 1255, 256)]
+    GR.setscale(0)
     GR.setwindow(xmin, xmax, clims[1], clims[2])
     GR.cellarray(xmin, xmax, clims[2], clims[1], 1, length(l), l)
     ztick = 0.5 * GR.tick(clims[1], clims[2])
