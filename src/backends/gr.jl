@@ -342,10 +342,6 @@ function gr_draw_markers(series::Series, x, y, clims)
     mz = normalize_zvals(series[:marker_z], clims)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     gr_draw_markers(series, x, y, series[:markersize], mz)
-    if hascolorbar(series[:subplot])
-        GR.setscale(0)
-        gr_colorbar(series[:subplot], clims)
-    end
 end
 
 # ---------------------------------------------------------
@@ -447,12 +443,6 @@ function gr_set_viewport_polar()
 end
 
 # add the colorbar
-function gr_colorbar(sp::Subplot)
-    gr_set_viewport_cmap(sp)
-    GR.colorbar()
-    gr_set_viewport_plotarea()
-end
-
 function gr_colorbar(sp::Subplot, clims)
     xmin, xmax = gr_xy_axislims(sp)[1:2]
     gr_set_viewport_cmap(sp)
@@ -961,9 +951,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                         series[:fillalpha] != nothing && GR.settransparency(series[:fillalpha])
                         GR.fillarea(fx, fy)
                     end
-                    gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-                    GR.settransparency(1)
-                    cmap && gr_colorbar(sp, clims)
                 end
 
                 # draw the line(s)
@@ -973,8 +960,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                         arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
                         gr_polyline(x[rng], y[rng]; arrowside = arrowside)
                     end
-                    gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-                    cmap && gr_colorbar(sp, clims)
                 end
             end
 
@@ -1022,7 +1007,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 GR.setfillcolorind(0)
                 GR.surface(x, y, z, GR.OPTION_FILLED_MESH)
             end
-            cmap && gr_colorbar(sp)
 
         elseif st == :heatmap
             xmin, xmax, ymin, ymax = xy_lims
@@ -1036,7 +1020,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                                     round(Int,   red(c) * 255) ), colors)
             w, h = length(x), length(y)
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
-            cmap && gr_colorbar(sp, clims)
 
         elseif st in (:path3d, :scatter3d)
             # draw path
@@ -1052,8 +1035,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                         gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
                         GR.polyline3d(x[rng], y[rng], z[rng])
                     end
-                    gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-                    cmap && gr_colorbar(sp, clims)
                 end
             end
 
@@ -1129,8 +1110,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     GR.polyline(xseg, yseg)
                 end
             end
-            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-            cmap && gr_colorbar(sp, clims)
 
 
         elseif st == :image
@@ -1146,6 +1125,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                                         round(Int,   red(c) * 255) ), z)
             end
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
+        end
+
+        # draw the colorbar
+        if cmap && st != :contour # special colorbar with steps is drawn for contours
+            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+            GR.settransparency(1)
+            gr_colorbar(sp, clims)
         end
 
         # this is all we need to add the series_annotations text
