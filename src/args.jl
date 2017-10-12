@@ -316,6 +316,7 @@ const _subplot_defaults = KW(
     :subplot_index            => -1,
     :colorbar_title           => "",
     :framestyle               => :axes,
+    :camera                   => (30,30),
 )
 
 const _axis_defaults = KW(
@@ -532,6 +533,7 @@ add_aliases(:gridlinewidth, :gridwidth, :grid_linewidth, :grid_width, :gridlw, :
 add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, :gridls)
 add_aliases(:framestyle, :frame_style, :frame, :axesstyle, :axes_style, :boxstyle, :box_style, :box, :borderstyle, :border_style, :border)
 add_aliases(:tick_direction, :tickdirection, :tick_dir, :tickdir, :tick_orientation, :tickorientation, :tick_or, :tickor)
+add_aliases(:camera, :cam, :viewangle, :view_angle)
 
 # add all pluralized forms to the _keyAliases dict
 for arg in keys(_series_defaults)

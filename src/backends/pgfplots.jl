@@ -33,6 +33,7 @@ const _pgfplots_attr = merge_with_base_supported([
     # :match_dimensions,
     :tick_direction,
     :framestyle,
+    :camera,
   ])
 const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -378,6 +379,11 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         legpos = sp[:legend]
         if haskey(_pgfplots_legend_pos, legpos)
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
+        end
+
+        if is3d(sp)
+            azim, elev = sp[:camera]
+            kw[:view] = "{$(azim)}{$(elev)}"
         end
 
         axisf = PGFPlots.Axis

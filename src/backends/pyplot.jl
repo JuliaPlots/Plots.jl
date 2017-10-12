@@ -35,6 +35,7 @@ const _pyplot_attr = merge_with_base_supported([
     :stride,
     :framestyle,
     :tick_direction,
+    :camera,
   ])
 const _pyplot_seriestype = [
         :path, :steppre, :steppost, :shape,
@@ -1102,6 +1103,13 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         aratio = sp[:aspect_ratio]
         if aratio != :none
             ax[:set_aspect](isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
+        end
+
+        #camera/view angle
+        if is3d(sp)
+            #convert azimuthal to match GR behaviour
+            #view_init(elevation, azimuthal) so reverse :camera args
+            ax[:view_init]((sp[:camera].-(90,0))[end:-1:1]...)
         end
 
         # legend

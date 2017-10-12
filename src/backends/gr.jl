@@ -34,6 +34,7 @@ const _gr_attr = merge_with_base_supported([
     :arrow,
     :framestyle,
     :tick_direction,
+    :camera,
 ])
 const _gr_seriestype = [
     :path, :scatter,
@@ -741,7 +742,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             isfinite(clims[1]) && (zmin = clims[1])
             isfinite(clims[2]) && (zmax = clims[2])
         end
-        GR.setspace(zmin, zmax, 35, 60)
+        GR.setspace(zmin, zmax, round.(Int, sp[:camera])...)
         xtick = GR.tick(xmin, xmax) / 2
         ytick = GR.tick(ymin, ymax) / 2
         ztick = GR.tick(zmin, zmax) / 2
