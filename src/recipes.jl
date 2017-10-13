@@ -550,7 +550,7 @@ function _make_hist{N}(vs::NTuple{N,AbstractVector}, binning; normed = false, we
     edges = _hist_edges(vs, binning)
     h = float( weights == nothing ?
         StatsBase.fit(StatsBase.Histogram, vs, edges, closed = :left) :
-        StatsBase.fit(StatsBase.Histogram, vs, weights, edges, closed = :left)
+        StatsBase.fit(StatsBase.Histogram, vs, StatsBase.Weights(weights), edges, closed = :left)
     )
     normalize!(h, mode = _hist_norm_mode(normed))
 end
