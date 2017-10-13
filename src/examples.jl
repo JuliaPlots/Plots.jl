@@ -145,7 +145,7 @@ PlotExample("Bar",
 PlotExample("Histogram",
     "",
     [:(begin
-        histogram(randn(1000), nbins=20)
+        histogram(randn(1000), bins = :scott, weights = repeat(1:5, outer = 200))
     end)]
 ),
 
