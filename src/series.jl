@@ -75,17 +75,17 @@ end
 compute_x(x::Void, y::Void, z)      = 1:size(z,1)
 compute_x(x::Void, y, z)            = 1:size(y,1)
 compute_x(x::Function, y, z)        = map(x, y)
-compute_x(x, y, z)                  = x
+compute_x(x, y, z)                  = copy(x)
 
 # compute_y(x::Void, y::Function, z)  = error()
 compute_y(x::Void, y::Void, z)      = 1:size(z,2)
 compute_y(x, y::Function, z)        = map(y, x)
-compute_y(x, y, z)                  = y
+compute_y(x, y, z)                  = copy(y)
 
 compute_z(x, y, z::Function)        = map(z, x, y)
 compute_z(x, y, z::AbstractMatrix)  = Surface(z)
 compute_z(x, y, z::Void)            = nothing
-compute_z(x, y, z)                  = z
+compute_z(x, y, z)                  = copy(z)
 
 nobigs(v::AVec{BigFloat}) = map(Float64, v)
 nobigs(v::AVec{BigInt}) = map(Int64, v)
@@ -371,7 +371,7 @@ end
 end
 
 # try some intervals over which the function may be defined
-function tryrange(F::AbstractArray, vec)
+function tryrange(F::AbstractArray, vec) 
     rets = [tryrange(f, vec) for f in F] # get the preferred for each
     maxind = maximum(indexin(rets, vec)) # get the last attempt that succeeded (most likely to fit all)
     rets .= [tryrange(f, vec[maxind:maxind]) for f in F] # ensure that all functions compute there
