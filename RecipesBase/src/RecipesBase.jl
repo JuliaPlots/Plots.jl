@@ -337,7 +337,7 @@ end
 """
 You can easily define your own plotting recipes with convenience methods:
 ```
-@userplot type GroupHist
+@userplot struct GroupHist
     args
 end
 @recipe function f(gh::GroupHist)
