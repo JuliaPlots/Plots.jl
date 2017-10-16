@@ -64,35 +64,15 @@ gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim.dir, fn; kw...)
 mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim.dir, fn; kw...)
 mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim.dir, fn; kw...)
 
-const _imagemagick_initialized = Ref(false)
 
 function buildanimation(animdir::AbstractString, fn::AbstractString;
                         fps::Integer = 20, loop::Integer = 0)
     fn = abspath(fn)
-    try
-        if !_imagemagick_initialized[]
-            file = joinpath(Pkg.dir("ImageMagick"), "deps","deps.jl")
-            if isfile(file) && !haskey(ENV, "MAGICK_CONFIGURE_PATH")
-                include(file)
-            end
-            _imagemagick_initialized[] = true
-        end
 
-        # prefix = get(ENV, "MAGICK_CONFIGURE_PATH", "")
-        # high quality
-        speed = round(Int, 100 / fps)
-        run(`convert -delay $speed -loop $loop $(joinpath(animdir, "*.png")) -alpha off $fn`)
-
-    catch err
-        warn("""Tried to create gif using convert (ImageMagick), but got error: $err
-            ImageMagick can be installed by executing `Pkg.add("ImageMagick")`.
-            You may also need to install the imagemagick c++ library through your operating system.
-            Will try ffmpeg, but it's lower quality...)""")
-
-        # low quality
-        run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -y $fn`)
-        # run(`ffmpeg -v warning -i  "fps=$fps,scale=320:-1:flags=lanczos"`)
-    end
+    # generate a colorpalette first so ffmpeg does not have to guess it
+    run(`ffmpeg -v 0 -i $(animdir)/%06d.png -vf palettegen -y palette.png`)
+    # then apply the palette to get better results
+    run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -i palette.png -lavfi paletteuse -y $fn`)
 
     info("Saved animation to ", fn)
     AnimatedGif(fn)
