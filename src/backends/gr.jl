@@ -1128,18 +1128,18 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
         end
 
-        # draw the colorbar
-        if cmap && st != :contour # special colorbar with steps is drawn for contours
-            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-            GR.settransparency(1)
-            gr_colorbar(sp, clims)
-        end
-
         # this is all we need to add the series_annotations text
         anns = series[:series_annotations]
         for (xi,yi,str,fnt) in EachAnn(anns, x, y)
             gr_set_font(fnt)
             gr_text(GR.wctondc(xi, yi)..., str)
+        end
+
+        # draw the colorbar
+        if cmap && st != :contour # special colorbar with steps is drawn for contours
+            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+            GR.settransparency(1)
+            gr_colorbar(sp, clims)
         end
 
         GR.restorestate()
