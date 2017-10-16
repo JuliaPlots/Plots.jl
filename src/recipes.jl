@@ -937,6 +937,8 @@ end
     mat = g.args[1]
     if length(unique(mat[mat .!= 0])) < 2
         legend --> nothing
+        # revert the default gradient to have a darker (almost black) color in the default theme
+        seriescolor --> cgrad([cgrad()[0], cgrad()[1]])
     end
     n,m = size(mat)
     Plots.SliceIt, 1:m, 1:n, Surface(mat)
@@ -945,7 +947,7 @@ end
 @recipe function f(::Type{Val{:spy}}, x,y,z)
     yflip := true
     aspect_ratio := 1
-    
+
     rs, cs, zs = findnz(z.surf)
     newz = fill(NaN, size(z)...)
 
