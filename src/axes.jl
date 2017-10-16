@@ -522,19 +522,19 @@ function axis_drawing_info(sp::Subplot)
         # xaxis
         if xaxis[:showaxis]
             if sp[:framestyle] != :grid
-                yval = if sp[:framestyle] in (:origin, :zerolines)
-                    0.0
+                y1, y2 = if sp[:framestyle] in (:origin, :zerolines)
+                    0.0, 0.0
                 else
-                    xor(xaxis[:mirror], yaxis[:flip]) ? ymax : ymin
+                    xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, ymin) : (ymin, ymax)
                 end
-                push!(xaxis_segs, (xmin, yval), (xmax, yval))
+                push!(xaxis_segs, (xmin, y1), (xmax, y1))
                 # don't show the 0 tick label for the origin framestyle
                 if sp[:framestyle] == :origin && length(xticks) > 1
                     showticks = xticks[1] .!= 0
                     xticks = (xticks[1][showticks], xticks[2][showticks])
                 end
             end
-            sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin,ymax), (xmax,ymax)) # top spine
+            sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin, y2), (xmax, y2)) # top spine
         end
         if !(xaxis[:ticks] in (nothing, false))
             f = scalefunc(yaxis[:scale])
@@ -561,19 +561,19 @@ function axis_drawing_info(sp::Subplot)
         # yaxis
         if yaxis[:showaxis]
             if sp[:framestyle] != :grid
-                xval = if sp[:framestyle] in (:origin, :zerolines)
-                    0.0
+                x1, x2 = if sp[:framestyle] in (:origin, :zerolines)
+                    0.0, 0.0
                 else
-                    xor(yaxis[:mirror], xaxis[:flip]) ? xmax : xmin
+                    xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, xmin) : (xmin, xmax)
                 end
-                push!(yaxis_segs, (xval, ymin), (xval, ymax))
+                push!(yaxis_segs, (x1, ymin), (x1, ymax))
                 # don't show the 0 tick label for the origin framestyle
                 if sp[:framestyle] == :origin && length(yticks) > 1
                     showticks = yticks[1] .!= 0
                     yticks = (yticks[1][showticks], yticks[2][showticks])
                 end
             end
-            sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (xmax,ymin), (xmax,ymax)) # right spine
+            sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (x2, ymin), (x2, ymax)) # right spine
         end
         if !(yaxis[:ticks] in (nothing, false))
             f = scalefunc(xaxis[:scale])
