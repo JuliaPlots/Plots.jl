@@ -482,7 +482,7 @@ function gr_legend_pos(s::Symbol,w,h)
     (xpos,ypos)
 end
 
-function gr_legend_pos{S<:Real, T<:Real}(v::Tuple{S,T},w,h)
+function gr_legend_pos(v::Tuple{S,T},w,h) where {S<:Real, T<:Real}
     xpos = v[1] * (viewport_plotarea[2] - viewport_plotarea[1]) + viewport_plotarea[1]
     ypos = v[2] * (viewport_plotarea[4] - viewport_plotarea[3]) + viewport_plotarea[3]
     (xpos,ypos)

@@ -6,20 +6,20 @@ const AVec = AbstractVector
 const AMat = AbstractMatrix
 const KW = Dict{Symbol,Any}
 
-immutable PlotsDisplay <: Display end
+struct PlotsDisplay <: Display end
 
 # -----------------------------------------------------------
 
-immutable InputWrapper{T}
+struct InputWrapper{T}
     obj::T
 end
-wrap{T}(obj::T) = InputWrapper{T}(obj)
+wrap(obj::T) where {T} = InputWrapper{T}(obj)
 Base.isempty(wrapper::InputWrapper) = false
 
 
 # -----------------------------------------------------------
 
-type Series
+mutable struct Series
     d::KW
 end
 
@@ -29,7 +29,7 @@ attr!(series::Series, v, k::Symbol) = (series.d[k] = v)
 # -----------------------------------------------------------
 
 # a single subplot
-type Subplot{T<:AbstractBackend} <: AbstractLayout
+mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
     series_list::Vector{Series}  # arguments for each series
     minpad::Tuple # leftpad, toppad, rightpad, bottompad
@@ -45,12 +45,12 @@ Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
 # -----------------------------------------------------------
 
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
-type Axis
+mutable struct Axis
     sps::Vector{Subplot}
     d::KW
 end
 
-type Extrema
+mutable struct Extrema
     emin::Float64
     emax::Float64
 end
@@ -63,7 +63,7 @@ const SubplotMap = Dict{Any, Subplot}
 # -----------------------------------------------------------
 
 
-type Plot{T<:AbstractBackend} <: AbstractPlot{T}
+mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
     n::Int                       # number of series
     attr::KW                     # arguments for the whole plot

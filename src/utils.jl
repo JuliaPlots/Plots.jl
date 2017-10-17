@@ -114,7 +114,7 @@ function regressionXY(x, y)
   regx, regy
 end
 
-function replace_image_with_heatmap{T<:Colorant}(z::Array{T})
+function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     @show T, size(z)
     n, m = size(z)
     # idx = 0
@@ -138,14 +138,14 @@ end
 # ---------------------------------------------------------------
 
 "Build line segments for plotting"
-type Segments{T}
+mutable struct Segments{T}
     pts::Vector{T}
 end
 
 # Segments() = Segments{Float64}(zeros(0))
 
 Segments() = Segments(Float64)
-Segments{T}(::Type{T}) = Segments(T[])
+Segments(::Type{T}) where {T} = Segments(T[])
 Segments(p::Int) = Segments(NTuple{2,Float64}[])
 
 
@@ -157,7 +157,7 @@ to_nan(::Type{NTuple{2,Float64}}) = (NaN, NaN)
 coords(segs::Segments{Float64}) = segs.pts
 coords(segs::Segments{NTuple{2,Float64}}) = Float64[p[1] for p in segs.pts], Float64[p[2] for p in segs.pts]
 
-function Base.push!{T}(segments::Segments{T}, vs...)
+function Base.push!(segments::Segments{T}, vs...) where T
     if !isempty(segments.pts)
         push!(segments.pts, to_nan(T))
     end
@@ -167,7 +167,7 @@ function Base.push!{T}(segments::Segments{T}, vs...)
     segments
 end
 
-function Base.push!{T}(segments::Segments{T}, vs::AVec)
+function Base.push!(segments::Segments{T}, vs::AVec) where T
     if !isempty(segments.pts)
         push!(segments.pts, to_nan(T))
     end
@@ -181,7 +181,7 @@ end
 # -----------------------------------------------------
 # helper to manage NaN-separated segments
 
-type SegmentsIterator
+mutable struct SegmentsIterator
     args::Tuple
     n::Int
 end
@@ -232,8 +232,8 @@ end
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
 
-float_extended_type{T}(x::AbstractArray{T}) = Union{T,Float64}
-float_extended_type{T<:Real}(x::AbstractArray{T}) = Float64
+float_extended_type(x::AbstractArray{T}) where {T} = Union{T,Float64}
+float_extended_type(x::AbstractArray{T}) where {T<:Real} = Float64
 
 # ------------------------------------------------------------------------------------
 
@@ -259,27 +259,27 @@ _cycle(grad::ColorGradient, idx::Int) = _cycle(grad.colors, idx)
 _cycle(grad::ColorGradient, indices::AVec{Int}) = _cycle(grad.colors, indices)
 
 makevec(v::AVec) = v
-makevec{T}(v::T) = T[v]
+makevec(v::T) where {T} = T[v]
 
 "duplicate a single value, or pass the 2-tuple through"
 maketuple(x::Real)                     = (x,x)
-maketuple{T,S}(x::Tuple{T,S}) = x
+maketuple(x::Tuple{T,S}) where {T,S} = x
 
 mapFuncOrFuncs(f::Function, u::AVec)        = map(f, u)
-mapFuncOrFuncs{F<:Function}(fs::AVec{F}, u::AVec) = [map(f, u) for f in fs]
+mapFuncOrFuncs(fs::AVec{F}, u::AVec) where {F<:Function} = [map(f, u) for f in fs]
 
-unzip{X,Y}(xy::AVec{Tuple{X,Y}})              = [t[1] for t in xy], [t[2] for t in xy]
-unzip{X,Y,Z}(xyz::AVec{Tuple{X,Y,Z}})         = [t[1] for t in xyz], [t[2] for t in xyz], [t[3] for t in xyz]
-unzip{X,Y,U,V}(xyuv::AVec{Tuple{X,Y,U,V}})    = [t[1] for t in xyuv], [t[2] for t in xyuv], [t[3] for t in xyuv], [t[4] for t in xyuv]
+unzip(xy::AVec{Tuple{X,Y}}) where {X,Y}              = [t[1] for t in xy], [t[2] for t in xy]
+unzip(xyz::AVec{Tuple{X,Y,Z}}) where {X,Y,Z}         = [t[1] for t in xyz], [t[2] for t in xyz], [t[3] for t in xyz]
+unzip(xyuv::AVec{Tuple{X,Y,U,V}}) where {X,Y,U,V}    = [t[1] for t in xyuv], [t[2] for t in xyuv], [t[3] for t in xyuv], [t[4] for t in xyuv]
 
-unzip{T}(xy::AVec{FixedSizeArrays.Vec{2,T}})  = T[t[1] for t in xy], T[t[2] for t in xy]
-unzip{T}(xy::FixedSizeArrays.Vec{2,T})        = T[xy[1]], T[xy[2]]
+unzip(xy::AVec{FixedSizeArrays.Vec{2,T}}) where {T}  = T[t[1] for t in xy], T[t[2] for t in xy]
+unzip(xy::FixedSizeArrays.Vec{2,T}) where {T}        = T[xy[1]], T[xy[2]]
 
-unzip{T}(xyz::AVec{FixedSizeArrays.Vec{3,T}}) = T[t[1] for t in xyz], T[t[2] for t in xyz], T[t[3] for t in xyz]
-unzip{T}(xyz::FixedSizeArrays.Vec{3,T})       = T[xyz[1]], T[xyz[2]], T[xyz[3]]
+unzip(xyz::AVec{FixedSizeArrays.Vec{3,T}}) where {T} = T[t[1] for t in xyz], T[t[2] for t in xyz], T[t[3] for t in xyz]
+unzip(xyz::FixedSizeArrays.Vec{3,T}) where {T}       = T[xyz[1]], T[xyz[2]], T[xyz[3]]
 
-unzip{T}(xyuv::AVec{FixedSizeArrays.Vec{4,T}}) = T[t[1] for t in xyuv], T[t[2] for t in xyuv], T[t[3] for t in xyuv], T[t[4] for t in xyuv]
-unzip{T}(xyuv::FixedSizeArrays.Vec{4,T})       = T[xyuv[1]], T[xyuv[2]], T[xyuv[3]], T[xyuv[4]]
+unzip(xyuv::AVec{FixedSizeArrays.Vec{4,T}}) where {T} = T[t[1] for t in xyuv], T[t[2] for t in xyuv], T[t[3] for t in xyuv], T[t[4] for t in xyuv]
+unzip(xyuv::FixedSizeArrays.Vec{4,T}) where {T}       = T[xyuv[1]], T[xyuv[2]], T[xyuv[3]], T[xyuv[4]]
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
@@ -388,7 +388,7 @@ isatom() = isdefined(Main, :Atom) && Main.Atom.isconnected()
 
 function is_installed(pkgstr::AbstractString)
     try
-        Pkg.installed(pkgstr) === nothing ? false: true
+        Pkg.installed(pkgstr) === nothing ? false : true
     catch
         false
     end
@@ -410,20 +410,20 @@ isvertical(d::KW) = get(d, :orientation, :vertical) in (:vertical, :v, :vert)
 isvertical(series::Series) = isvertical(series.d)
 
 
-ticksType{T<:Real}(ticks::AVec{T})                      = :ticks
-ticksType{T<:AbstractString}(ticks::AVec{T})            = :labels
-ticksType{T<:AVec,S<:AVec}(ticks::Tuple{T,S})  = :ticks_and_labels
+ticksType(ticks::AVec{T}) where {T<:Real}                      = :ticks
+ticksType(ticks::AVec{T}) where {T<:AbstractString}            = :labels
+ticksType(ticks::Tuple{T,S}) where {T<:AVec,S<:AVec}  = :ticks_and_labels
 ticksType(ticks)                                        = :invalid
 
-limsType{T<:Real,S<:Real}(lims::Tuple{T,S})    = :limits
+limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real}    = :limits
 limsType(lims::Symbol)                                  = lims == :auto ? :auto : :invalid
 limsType(lims)                                          = :invalid
 
 # axis_Symbol(letter, postfix) = Symbol(letter * postfix)
 # axis_symbols(letter, postfix...) = map(s -> axis_Symbol(letter, s), postfix)
 
-Base.convert{T<:Real}(::Type{Vector{T}}, rng::Range{T})         = T[x for x in rng]
-Base.convert{T<:Real,S<:Real}(::Type{Vector{T}}, rng::Range{S}) = T[x for x in rng]
+Base.convert(::Type{Vector{T}}, rng::Range{T}) where {T<:Real}         = T[x for x in rng]
+Base.convert(::Type{Vector{T}}, rng::Range{S}) where {T<:Real,S<:Real} = T[x for x in rng]
 
 Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 
@@ -727,7 +727,7 @@ end
 # ---------------------------------------------------------------
 # ---------------------------------------------------------------
 
-type DebugMode
+mutable struct DebugMode
   on::Bool
 end
 const _debugMode = DebugMode(false)
@@ -765,10 +765,10 @@ end
 
 extendSeriesByOne(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
 extendSeriesByOne(v::AVec, n::Integer = 1)       = isempty(v) ? (1:n) : vcat(v, (1:n) + ignorenan_maximum(v))
-extendSeriesData{T}(v::Range{T}, z::Real)        = extendSeriesData(float(collect(v)), z)
-extendSeriesData{T}(v::Range{T}, z::AVec)        = extendSeriesData(float(collect(v)), z)
-extendSeriesData{T}(v::AVec{T}, z::Real)         = (push!(v, convert(T, z)); v)
-extendSeriesData{T}(v::AVec{T}, z::AVec)         = (append!(v, convert(Vector{T}, z)); v)
+extendSeriesData(v::Range{T}, z::Real) where {T}        = extendSeriesData(float(collect(v)), z)
+extendSeriesData(v::Range{T}, z::AVec) where {T}        = extendSeriesData(float(collect(v)), z)
+extendSeriesData(v::AVec{T}, z::Real) where {T}         = (push!(v, convert(T, z)); v)
+extendSeriesData(v::AVec{T}, z::AVec) where {T}         = (append!(v, convert(Vector{T}, z)); v)
 
 
 # -------------------------------------------------------
@@ -786,14 +786,14 @@ function getxyz(plt::Plot, i::Integer)
     tovec(d[:x]), tovec(d[:y]), tovec(d[:z])
 end
 
-function setxy!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer)
+function setxy!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y}
     series = plt.series_list[i]
     series.d[:x], series.d[:y] = xy
     sp = series.d[:subplot]
     reset_extrema!(sp)
     _series_updated(plt, series)
 end
-function setxyz!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
+function setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z}
     series = plt.series_list[i]
     series.d[:x], series.d[:y], series.d[:z] = xyz
     sp = series.d[:subplot]
@@ -801,7 +801,7 @@ function setxyz!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
     _series_updated(plt, series)
 end
 
-function setxyz!{X,Y,Z<:AbstractMatrix}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer)
+function setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z<:AbstractMatrix}
     setxyz!(plt, (xyz[1], xyz[2], Surface(xyz[3])), i)
 end
 
@@ -810,8 +810,8 @@ end
 # indexing notation
 
 # Base.getindex(plt::Plot, i::Integer) = getxy(plt, i)
-Base.setindex!{X,Y}(plt::Plot, xy::Tuple{X,Y}, i::Integer) = (setxy!(plt, xy, i); plt)
-Base.setindex!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) = (setxyz!(plt, xyz, i); plt)
+Base.setindex!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y} = (setxy!(plt, xy, i); plt)
+Base.setindex!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z} = (setxyz!(plt, xyz, i); plt)
 
 # -------------------------------------------------------
 
@@ -923,10 +923,10 @@ function Base.append!(plt::Plot, i::Integer, x::AVec, y::AVec, z::AVec)
 end
 
 # tuples
-Base.push!{X,Y}(plt::Plot, xy::Tuple{X,Y})                  = push!(plt, 1, xy...)
-Base.push!{X,Y,Z}(plt::Plot, xyz::Tuple{X,Y,Z})             = push!(plt, 1, xyz...)
-Base.push!{X,Y}(plt::Plot, i::Integer, xy::Tuple{X,Y})      = push!(plt, i, xy...)
-Base.push!{X,Y,Z}(plt::Plot, i::Integer, xyz::Tuple{X,Y,Z}) = push!(plt, i, xyz...)
+Base.push!(plt::Plot, xy::Tuple{X,Y}) where {X,Y}                  = push!(plt, 1, xy...)
+Base.push!(plt::Plot, xyz::Tuple{X,Y,Z}) where {X,Y,Z}             = push!(plt, 1, xyz...)
+Base.push!(plt::Plot, i::Integer, xy::Tuple{X,Y}) where {X,Y}      = push!(plt, i, xy...)
+Base.push!(plt::Plot, i::Integer, xyz::Tuple{X,Y,Z}) where {X,Y,Z} = push!(plt, i, xyz...)
 
 # -------------------------------------------------------
 # push/append for all series

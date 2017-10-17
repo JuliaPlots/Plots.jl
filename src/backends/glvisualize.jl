@@ -69,9 +69,9 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         import GLVisualize: visualize
         import Plots.GL
         import UnicodeFun
-        Plots.slice_arg{C<:Colorant}(img::Matrix{C}, idx::Int) = img
+        Plots.slice_arg(img::Matrix{C}, idx::Int) where {C<:Colorant} = img
         is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
-        is_marker_supported{C<:Colorant}(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) = true
+        is_marker_supported(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) where {C<:Colorant} = true
         is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
         const GL = Plots
     end
@@ -214,13 +214,13 @@ function extract_limits(sp, d, kw_args)
     nothing
 end
 
-to_vec{T <: StaticArrays.StaticVector}(::Type{T}, vec::T) = vec
-to_vec{T <: StaticArrays.StaticVector}(::Type{T}, s::Number) = T(s)
+to_vec(::Type{T}, vec::T) where {T <: StaticArrays.StaticVector} = vec
+to_vec(::Type{T}, s::Number) where {T <: StaticArrays.StaticVector} = T(s)
 
-to_vec{T <: StaticArrays.StaticVector{2}}(::Type{T}, vec::StaticArrays.StaticVector{3}) = T(vec[1], vec[2])
-to_vec{T <: StaticArrays.StaticVector{3}}(::Type{T}, vec::StaticArrays.StaticVector{2}) = T(vec[1], vec[2], 0)
+to_vec(::Type{T}, vec::StaticArrays.StaticVector{3}) where {T <: StaticArrays.StaticVector{2}} = T(vec[1], vec[2])
+to_vec(::Type{T}, vec::StaticArrays.StaticVector{2}) where {T <: StaticArrays.StaticVector{3}} = T(vec[1], vec[2], 0)
 
-to_vec{T <: StaticArrays.StaticVector}(::Type{T}, vecs::AbstractVector) = map(x-> to_vec(T, x), vecs)
+to_vec(::Type{T}, vecs::AbstractVector) where {T <: StaticArrays.StaticVector} = map(x-> to_vec(T, x), vecs)
 
 function extract_marker(d, kw_args)
     dim = Plots.is3d(d) ? 3 : 2
@@ -275,7 +275,7 @@ end
 function extract_surface(d)
     map(_extract_surface, (d[:x], d[:y], d[:z]))
 end
-function topoints{P}(::Type{P}, array)
+function topoints(::Type{P}, array) where P
     [P(x) for x in zip(array...)]
 end
 function extract_points(d)
@@ -283,7 +283,7 @@ function extract_points(d)
     array = (d[:x], d[:y], d[:z])[1:dim]
     topoints(Point{dim, Float32}, array)
 end
-function make_gradient{C <: Colorant}(grad::Vector{C})
+function make_gradient(grad::Vector{C}) where C <: Colorant
     grad
 end
 function make_gradient(grad::ColorGradient)
@@ -338,7 +338,7 @@ function extract_color(d, sym)
 end
 
 gl_color(c::PlotUtils.ColorGradient) = c.colors
-gl_color{T<:Colorant}(c::Vector{T}) = c
+gl_color(c::Vector{T}) where {T<:Colorant} = c
 gl_color(c::RGBA{Float32}) = c
 gl_color(c::Colorant) = RGBA{Float32}(c)
 
@@ -1212,7 +1212,7 @@ function gl_image(img, kw_args)
     visualize(img, Style(:default), kw_args)
 end
 
-function handle_segment{P}(lines, line_segments, points::Vector{P}, segment)
+function handle_segment(lines, line_segments, points::Vector{P}, segment) where P
     (isempty(segment) || length(segment) < 2) && return
     if length(segment) == 2
          append!(line_segments, view(points, segment))

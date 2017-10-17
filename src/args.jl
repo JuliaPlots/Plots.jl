@@ -889,7 +889,7 @@ end
 # -----------------------------------------------------------------------------
 
 "A special type that will break up incoming data into groups, and allow for easier creation of grouped plots"
-type GroupBy
+mutable struct GroupBy
     groupLabels::Vector           # length == numGroups
     groupIds::Vector{Vector{Int}} # list of indices for each group
 end
@@ -916,7 +916,7 @@ function extractGroupArgs(vs::Tuple, args...)
 end
 
 # expecting a mapping of "group label" to "group indices"
-function extractGroupArgs{T, V<:AVec{Int}}(idxmap::Dict{T,V}, args...)
+function extractGroupArgs(idxmap::Dict{T,V}, args...) where {T, V<:AVec{Int}}
     groupLabels = sortedkeys(idxmap)
     groupIds = Vector{Int}[collect(idxmap[k]) for k in groupLabels]
     GroupBy(groupLabels, groupIds)
@@ -1007,7 +1007,7 @@ function convertLegendValue(val::Symbol)
 end
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Void) = :none
-convertLegendValue{S<:Real, T<:Real}(v::Tuple{S,T}) = v
+convertLegendValue(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
 # -----------------------------------------------------------------------------

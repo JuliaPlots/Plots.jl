@@ -2,7 +2,7 @@
 
 # Geometry which displays arbitrary shapes at given (x, y) positions.
 # note: vertices is a list of shapes
-immutable ShapeGeometry <: Gadfly.GeometryElement
+struct ShapeGeometry <: Gadfly.GeometryElement
     vertices::AbstractVector #{Tuple{Float64,Float64}}
     tag::Symbol
 

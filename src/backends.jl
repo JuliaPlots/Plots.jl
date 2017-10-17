@@ -1,5 +1,5 @@
 
-immutable NoBackend <: AbstractBackend end
+struct NoBackend <: AbstractBackend end
 
 const _backendType = Dict{Symbol, DataType}(:none => NoBackend)
 const _backendSymbol = Dict{DataType, Symbol}(NoBackend => :none)
@@ -18,7 +18,7 @@ macro init_backend(s)
     sym = Symbol(str)
     T = Symbol(string(s) * "Backend")
     esc(quote
-        immutable $T <: AbstractBackend end
+        struct $T <: AbstractBackend end
         export $sym
         $sym(; kw...) = (default(; kw...); backend(Symbol($str)))
         backend_name(::$T) = Symbol($str)
@@ -123,7 +123,7 @@ _update_plot_object(plt::Plot) = nothing
 # ---------------------------------------------------------
 
 
-type CurrentBackend
+mutable struct CurrentBackend
   sym::Symbol
   pkg::AbstractBackend
 end

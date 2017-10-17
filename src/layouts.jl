@@ -13,7 +13,7 @@ Base.zero(::Type{typeof(mm)}) = 0mm
 Base.one(::Type{typeof(mm)}) = 1mm
 Base.typemin(::typeof(mm)) = -Inf*mm
 Base.typemax(::typeof(mm)) = Inf*mm
-Base.convert{F<:AbstractFloat}(::Type{F}, l::AbsoluteLength) = convert(F, l.value)
+Base.convert(::Type{F}, l::AbsoluteLength) where {F<:AbstractFloat} = convert(F, l.value)
 
 # TODO: these are unintuitive and may cause tricky bugs
 # Base.:+(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
@@ -95,7 +95,7 @@ end
 # -----------------------------------------------------------
 
 # points combined by x/y, pct, and length
-type MixedMeasures
+mutable struct MixedMeasures
     xy::Float64
     pct::Float64
     len::AbsoluteLength
@@ -216,7 +216,7 @@ bottompad(layout::AbstractLayout) = 0mm
 # RootLayout
 
 # this is the parent of the top-level layout
-immutable RootLayout <: AbstractLayout end
+struct RootLayout <: AbstractLayout end
 
 Base.parent(::RootLayout) = nothing
 parent_bbox(::RootLayout) = defaultbox
@@ -226,7 +226,7 @@ bbox(::RootLayout) = defaultbox
 # EmptyLayout
 
 # contains blank space
-type EmptyLayout <: AbstractLayout
+mutable struct EmptyLayout <: AbstractLayout
     parent::AbstractLayout
     bbox::BoundingBox
     attr::KW  # store label, width, and height for initialization
@@ -244,7 +244,7 @@ _update_min_padding!(layout::EmptyLayout) = nothing
 # GridLayout
 
 # nested, gridded layout with optional size percentages
-type GridLayout <: AbstractLayout
+mutable struct GridLayout <: AbstractLayout
     parent::AbstractLayout
     minpad::Tuple # leftpad, toppad, rightpad, bottompad
     bbox::BoundingBox
@@ -481,12 +481,12 @@ function layout_args(n::Integer)
     GridLayout(nr, nc), n
 end
 
-function layout_args{I<:Integer}(sztup::NTuple{2,I})
+function layout_args(sztup::NTuple{2,I}) where I<:Integer
     nr, nc = sztup
     GridLayout(nr, nc), nr*nc
 end
 
-function layout_args{I<:Integer}(sztup::NTuple{3,I})
+function layout_args(sztup::NTuple{3,I}) where I<:Integer
     n, nr, nc = sztup
     nr, nc = compute_gridsize(n, nr, nc)
     GridLayout(nr, nc), n
