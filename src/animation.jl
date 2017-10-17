@@ -1,5 +1,5 @@
 "Represents an animation object"
-immutable Animation
+struct Animation
     dir::String
     frames::Vector{String}
 end
@@ -14,7 +14,7 @@ end
 
 Add a plot (the current plot if not specified) to an existing animation
 """
-function frame{P<:AbstractPlot}(anim::Animation, plt::P=current())
+function frame(anim::Animation, plt::P=current()) where P<:AbstractPlot
     i = length(anim.frames) + 1
     filename = @sprintf("%06d.png", i)
     png(plt, joinpath(anim.dir, filename))
@@ -25,7 +25,7 @@ giffn() = (isijulia() ? "tmp.gif" : tempname()*".gif")
 movfn() = (isijulia() ? "tmp.mov" : tempname()*".mov")
 mp4fn() = (isijulia() ? "tmp.mp4" : tempname()*".mp4")
 
-type FrameIterator
+mutable struct FrameIterator
     itr
     every::Int
     kw
@@ -54,7 +54,7 @@ end
 # -----------------------------------------------
 
 "Wraps the location of an animated gif so that it can be displayed"
-immutable AnimatedGif
+struct AnimatedGif
     filename::String
 end
 

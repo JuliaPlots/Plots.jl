@@ -193,7 +193,7 @@ function Base.show(io::IO, ::MIME"text/html", plt::Plot)
     end
 end
 
-function _show{B}(io::IO, m, plt::Plot{B})
+function _show(io::IO, m, plt::Plot{B}) where B
     # Base.show_backtrace(STDOUT, backtrace())
     warn("_show is not defined for this backend. m=", string(m))
 end
@@ -203,7 +203,7 @@ end
 
 # for writing to io streams... first prepare, then callback
 for mime in keys(_mimeformats)
-    @eval function Base.show{B}(io::IO, m::MIME{Symbol($mime)}, plt::Plot{B})
+    @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot{B}) where B
         prepare_output(plt)
         _show(io, m, plt)
     end
@@ -293,7 +293,7 @@ end
         Media.media(Plot, Media.Plot)
 
 
-        _show{B}(io::IO, m::MIME"text/plain", plt::Plot{B}) = print(io, "Plot{$B}()")
+        _show(io::IO, m::MIME"text/plain", plt::Plot{B}) where {B} = print(io, "Plot{$B}()")
 
         function Juno.render(e::Juno.Editor, plt::Plot)
             Juno.render(e, nothing)

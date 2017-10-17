@@ -293,13 +293,13 @@ expand_extrema!(axis::Axis, ::Void) = axis[:extrema]
 expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 
-function expand_extrema!{MIN<:Number,MAX<:Number}(axis::Axis, v::Tuple{MIN,MAX})
+function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
     ex = axis[:extrema]
     ex.emin = NaNMath.min(v[1], ex.emin)
     ex.emax = NaNMath.max(v[2], ex.emax)
     ex
 end
-function expand_extrema!{N<:Number}(axis::Axis, v::AVec{N})
+function expand_extrema!(axis::Axis, v::AVec{N}) where N<:Number
     ex = axis[:extrema]
     for vi in v
         expand_extrema!(ex, vi)

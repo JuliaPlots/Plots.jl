@@ -1,7 +1,7 @@
 """
 Holds all data needed for a documentation example... header, description, and plotting expression (Expr)
 """
-type PlotExample
+mutable struct PlotExample
   header::AbstractString
   desc::AbstractString
   exprs::Vector{Expr}

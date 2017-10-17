@@ -122,7 +122,7 @@ const _plotly_legend_pos = KW(
     )
 
 plotly_legend_pos(pos::Symbol) = get(_plotly_legend_pos, pos, [1.,1.])
-plotly_legend_pos{S<:Real, T<:Real}(v::Tuple{S,T}) = v
+plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
 
 function plotly_font(font::Font, color = font.color)
     KW(
@@ -441,7 +441,7 @@ end
 
 plotly_data(v) = collect(v)
 plotly_data(surf::Surface) = surf.surf
-plotly_data{R<:Rational}(v::AbstractArray{R}) = float(v)
+plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 
 plotly_surface_data(series::Series, a::AbstractVector) = a
 plotly_surface_data(series::Series, a::AbstractMatrix) = transpose_z(series, a, false)

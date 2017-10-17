@@ -20,10 +20,10 @@ convertToAnyVector(v::Void, d::KW) = Any[nothing], nothing
 convertToAnyVector(n::Integer, d::KW) = Any[zeros(0) for i in 1:n], nothing
 
 # numeric vector
-convertToAnyVector{T<:Number}(v::AVec{T}, d::KW) = Any[v], nothing
+convertToAnyVector(v::AVec{T}, d::KW) where {T<:Number} = Any[v], nothing
 
 # string vector
-convertToAnyVector{T<:AbstractString}(v::AVec{T}, d::KW) = Any[v], nothing
+convertToAnyVector(v::AVec{T}, d::KW) where {T<:AbstractString} = Any[v], nothing
 
 function convertToAnyVector(v::AMat, d::KW)
     if all3D(d)
@@ -99,8 +99,8 @@ nobigs(v) = v
 end
 
 # not allowed
-compute_xyz{F<:Function}(x::Void, y::FuncOrFuncs{F}, z)       = error("If you want to plot the function `$y`, you need to define the x values!")
-compute_xyz{F<:Function}(x::Void, y::Void, z::FuncOrFuncs{F}) = error("If you want to plot the function `$z`, you need to define x and y values!")
+compute_xyz(x::Void, y::FuncOrFuncs{F}, z) where {F<:Function}       = error("If you want to plot the function `$y`, you need to define the x values!")
+compute_xyz(x::Void, y::Void, z::FuncOrFuncs{F}) where {F<:Function} = error("If you want to plot the function `$z`, you need to define x and y values!")
 compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 
 # --------------------------------------------------------------------
@@ -109,7 +109,7 @@ compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
 # we are going to build recipes to do the processing and splitting of the args
 
 # ensure we dispatch to the slicer
-immutable SliceIt end
+struct SliceIt end
 
 # the catch-all recipes
 @recipe function f(::Type{SliceIt}, x, y, z)
@@ -163,10 +163,10 @@ immutable SliceIt end
 end
 
 # this is the default "type recipe"... just pass the object through
-@recipe f{T<:Any}(::Type{T}, v::T) = v
+@recipe f(::Type{T}, v::T) where {T<:Any} = v
 
 # this should catch unhandled "series recipes" and error with a nice message
-@recipe f{V<:Val}(::Type{V}, x, y, z) = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
+@recipe f(::Type{V}, x, y, z) where {V<:Val} = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
 
 _apply_type_recipe(d, v) = RecipesBase.apply_recipe(d, typeof(v), v)[1].args[1]
 
@@ -201,7 +201,7 @@ end
 # end
 
 # don't do anything for ints or floats
-_apply_type_recipe{T<:Union{Integer,AbstractFloat}}(d, v::AbstractArray{T}) = v
+_apply_type_recipe(d, v::AbstractArray{T}) where {T<:Union{Integer,AbstractFloat}} = v
 
 # handle "type recipes" by converting inputs, and then either re-calling or slicing
 @recipe function f(x, y, z)
@@ -274,7 +274,7 @@ end
 @recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
-@recipe function f{T<:Union{Integer,AbstractFloat}}(mat::AMat{T})
+@recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat}
     if all3D(plotattributes)
         n,m = size(mat)
         wrap_surfaces(plotattributes)
@@ -285,7 +285,7 @@ end
 end
 
 # if a matrix is wrapped by Formatted, do similar logic, but wrap data with Surface
-@recipe function f{T<:AbstractMatrix}(fmt::Formatted{T})
+@recipe function f(fmt::Formatted{T}) where T<:AbstractMatrix
     if all3D(plotattributes)
         mat = fmt.data
         n,m = size(mat)
@@ -297,7 +297,7 @@ end
 end
 
 # assume this is a Volume, so construct one
-@recipe function f{T<:Number}(vol::AbstractArray{T,3}, args...)
+@recipe function f(vol::AbstractArray{T,3}, args...) where T<:Number
     seriestype := :volume
     SliceIt, nothing, Volume(vol, args...), nothing
 end
@@ -305,7 +305,7 @@ end
 
 # # images - grays
 
-@recipe function f{T<:Gray}(mat::AMat{T})
+@recipe function f(mat::AMat{T}) where T<:Gray
     if is_seriestype_supported(:image)
         seriestype := :image
         n, m = size(mat)
@@ -320,7 +320,7 @@ end
 
 # # images - colors
 
-@recipe function f{T<:Colorant}(mat::AMat{T})
+@recipe function f(mat::AMat{T}) where T<:Colorant
 	n, m = size(mat)
 
     if is_seriestype_supported(:image)
@@ -358,7 +358,7 @@ end
 
 # function without range... use the current range of the x-axis
 
-@recipe function f{F<:Function}(f::FuncOrFuncs{F})
+@recipe function f(f::FuncOrFuncs{F}) where F<:Function
     plt = plotattributes[:plot_object]
     xmin, xmax = try
         axis_limits(plt[1][:xaxis])
@@ -397,7 +397,7 @@ end
 # # if functions come first, just swap the order (not to be confused with parametric functions...
 # # as there would be more than one function passed in)
 
-@recipe function f{F<:Function}(f::FuncOrFuncs{F}, x)
+@recipe function f(f::FuncOrFuncs{F}, x) where F<:Function
     F2 = typeof(x)
     @assert !(F2 <: Function || (F2 <: AbstractArray && F2.parameters[1] <: Function))  # otherwise we'd hit infinite recursion here
     x, f
@@ -465,19 +465,19 @@ end
     xs = adapted_grid(f, (xmin, xmax))
     xs, f
 end
-@recipe function f{F<:Function}(fs::AbstractArray{F}, xmin::Number, xmax::Number)
+@recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where F<:Function
     xs = Any[adapted_grid(f, (xmin, xmax)) for f in fs]
     xs, fs
 end
-@recipe f{F<:Function,G<:Function}(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec)  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
-@recipe f{F<:Function,G<:Function}(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) = fx, fy, linspace(umin, umax, n)
+@recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function}  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
+@recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) where {F<:Function,G<:Function} = fx, fy, linspace(umin, umax, n)
 
 #
 # # special handling... 3D parametric function(s)
-@recipe function f{F<:Function,G<:Function,H<:Function}(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, u::AVec)
+@recipe function f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, u::AVec) where {F<:Function,G<:Function,H<:Function}
     mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
 end
-@recipe function f{F<:Function,G<:Function,H<:Function}(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, umin::Number, umax::Number, numPoints = 200)
+@recipe function f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, umin::Number, umax::Number, numPoints = 200) where {F<:Function,G<:Function,H<:Function}
     fx, fy, fz, linspace(umin, umax, numPoints)
 end
 
@@ -492,28 +492,28 @@ end
 
 #
 # # (x,y) tuples
-@recipe f{R1<:Number,R2<:Number}(xy::AVec{Tuple{R1,R2}}) = unzip(xy)
-@recipe f{R1<:Number,R2<:Number}(xy::Tuple{R1,R2})       = [xy[1]], [xy[2]]
+@recipe f(xy::AVec{Tuple{R1,R2}}) where {R1<:Number,R2<:Number} = unzip(xy)
+@recipe f(xy::Tuple{R1,R2}) where {R1<:Number,R2<:Number}       = [xy[1]], [xy[2]]
 
 #
 # # (x,y,z) tuples
-@recipe f{R1<:Number,R2<:Number,R3<:Number}(xyz::AVec{Tuple{R1,R2,R3}}) = unzip(xyz)
-@recipe f{R1<:Number,R2<:Number,R3<:Number}(xyz::Tuple{R1,R2,R3})       = [xyz[1]], [xyz[2]], [xyz[3]]
+@recipe f(xyz::AVec{Tuple{R1,R2,R3}}) where {R1<:Number,R2<:Number,R3<:Number} = unzip(xyz)
+@recipe f(xyz::Tuple{R1,R2,R3}) where {R1<:Number,R2<:Number,R3<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
 
 # these might be points+velocity, or OHLC or something else
-@recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(xyuv::AVec{Tuple{R1,R2,R3,R4}}) = get(plotattributes,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
-@recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(xyuv::Tuple{R1,R2,R3,R4})       = [xyuv[1]], [xyuv[2]], [xyuv[3]], [xyuv[4]]
+@recipe f(xyuv::AVec{Tuple{R1,R2,R3,R4}}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = get(plotattributes,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
+@recipe f(xyuv::Tuple{R1,R2,R3,R4}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number}       = [xyuv[1]], [xyuv[2]], [xyuv[3]], [xyuv[4]]
 
 
 #
 # # 2D FixedSizeArrays
-@recipe f{T<:Number}(xy::AVec{FixedSizeArrays.Vec{2,T}}) = unzip(xy)
-@recipe f{T<:Number}(xy::FixedSizeArrays.Vec{2,T})       = [xy[1]], [xy[2]]
+@recipe f(xy::AVec{FixedSizeArrays.Vec{2,T}}) where {T<:Number} = unzip(xy)
+@recipe f(xy::FixedSizeArrays.Vec{2,T}) where {T<:Number}       = [xy[1]], [xy[2]]
 
 #
 # # 3D FixedSizeArrays
-@recipe f{T<:Number}(xyz::AVec{FixedSizeArrays.Vec{3,T}}) = unzip(xyz)
-@recipe f{T<:Number}(xyz::FixedSizeArrays.Vec{3,T})       = [xyz[1]], [xyz[2]], [xyz[3]]
+@recipe f(xyz::AVec{FixedSizeArrays.Vec{3,T}}) where {T<:Number} = unzip(xyz)
+@recipe f(xyz::FixedSizeArrays.Vec{3,T}) where {T<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
 
 #
 # # --------------------------------------------------------------------
