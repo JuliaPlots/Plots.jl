@@ -263,7 +263,7 @@ PlotExample("Groups and Subplots",
     [:(begin
         group = rand(map(i->"group $i",1:4),100)
         plot(rand(100), layout=@layout([a b;c]), group=group,
-            linetype=[:bar :scatter :steppre], linewidth = [0 0 1])
+            linetype=[:bar :scatter :steppre], linecolor = :match)
     end)]
 ),
 
@@ -349,7 +349,8 @@ PlotExample("Framestyle",
     scatter(fill(randn(10), 6), fill(randn(10), 6),
         framestyle = [:box :semi :origin :zerolines :grid :none],
         title = [":box" ":semi" ":origin" ":zerolines" ":grid" ":none"],
-        color = RowVector(1:6), layout = 6, label = "", markerstrokewidth = 0)
+        color = RowVector(1:6), layout = 6, label = "", markerstrokewidth = 0,
+        ticks = -2:2)
     end)]
 ),
 
