@@ -346,10 +346,10 @@ PlotExample("Magic grid argument",
 PlotExample("Framestyle",
     "The style of the frame/axes of a (sub)plot can be changed with the `framestyle` attribute. The default framestyle is `:axes`.",
     [:(begin
-    scatter(fill(randn(10), 7), fill(randn(10), 7),
+    scatter(fill(randn(10), 6), fill(randn(10), 6),
         framestyle = [:box :semi :origin :zerolines :grid :none],
         title = [":box" ":semi" ":origin" ":zerolines" ":grid" ":none"],
-        color = RowVector(1:7), layout = 7, label = "", markerstrokewidth = 0)
+        color = RowVector(1:6), layout = 6, label = "", markerstrokewidth = 0)
     end)]
 ),
 
