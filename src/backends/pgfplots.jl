@@ -300,7 +300,15 @@ function pgf_axis(sp::Subplot, letter)
     if !(axis[:ticks] in (nothing, false, :none)) && framestyle != :none
         ticks = get_ticks(axis)
         push!(style, string(letter, "tick = {", join(ticks[1],","), "}"))
-        if axis[:showaxis]
+        if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
+            # wrap the power part of label with }
+            tick_labels = String[begin
+                base, power = split(label, "^")
+                power = string("{", power, "}")
+                string(base, "^", power)
+            end for label in ticks[2]]
+            push!(style, string(letter, "ticklabels = {\$", join(tick_labels,"\$,\$"), "\$}"))
+        elseif axis[:showaxis]
             push!(style, string(letter, "ticklabels = {", join(ticks[2],","), "}"))
         else
             push!(style, string(letter, "ticklabels = {}"))
