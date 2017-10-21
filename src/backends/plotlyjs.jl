@@ -1,3 +1,6 @@
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotlyjs.jl")) 
+end
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 

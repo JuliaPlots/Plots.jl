@@ -1,6 +1,10 @@
 
 # https://plot.ly/javascript/getting-started
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl")) 
+end
+
 const _plotly_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,

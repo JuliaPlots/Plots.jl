@@ -1,6 +1,10 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "unicodeplots.jl")) 
+end
+
 const _unicodeplots_attr = merge_with_base_supported([
     :label,
     :legend,

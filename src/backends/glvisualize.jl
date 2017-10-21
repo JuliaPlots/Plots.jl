@@ -9,6 +9,10 @@ TODO
     * fix units in all visuals (e.g dotted lines, marker scale, surfaces)
 =#
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "glvisualize.jl")) 
+end
+
 const _glvisualize_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,

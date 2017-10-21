@@ -15,6 +15,8 @@ using Base.Meta
 import Showoff
 import StatsBase
 
+using Requires
+
 export
     grid,
     bbox,
