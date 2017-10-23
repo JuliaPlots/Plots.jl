@@ -863,16 +863,17 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     GR.savestate()
     if sp[:title] != ""
         gr_set_font(sp[:titlefont])
-        GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
         gr_set_textcolor(sp[:foreground_color_title])
-        tpos = if sp[:title_location] == :left
-            viewport_plotarea[1]
+        if sp[:title_location] == :left
+            GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_TOP)
+            gr_text(viewport_plotarea[1], viewport_subplot[4], sp[:title])
         elseif sp[:title_location] == :right
-            viewport_plotarea[2]
+            GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_TOP)
+            gr_text(viewport_plotarea[2], viewport_subplot[4], sp[:title])
         else
-            gr_view_xcenter()
+            GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+            gr_text(gr_view_xcenter(), viewport_subplot[4], sp[:title])
         end
-        gr_text(tpos, viewport_subplot[4], sp[:title])
     end
 
     if xaxis[:guide] != ""
