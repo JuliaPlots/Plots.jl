@@ -20,7 +20,7 @@ const _gr_attr = merge_with_base_supported([
     :fillrange, :fillcolor, :fillalpha,
     :bins,
     :layout,
-    :title, :window_title,
+    :title, :title_location, :window_title,
     :guide, :lims, :ticks, :scale, :flip,
     :tickfont, :guidefont, :legendfont,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
@@ -865,7 +865,14 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_set_font(sp[:titlefont])
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
         gr_set_textcolor(sp[:foreground_color_title])
-        gr_text(gr_view_xcenter(), viewport_subplot[4], sp[:title])
+        tpos = if sp[:title_location] == :left
+            viewport_plotarea[1]
+        elseif sp[:title_location] == :right
+            viewport_plotarea[2]
+        else
+            gr_view_xcenter()
+        end
+        gr_text(tpos, viewport_subplot[4], sp[:title])
     end
 
     if xaxis[:guide] != ""
