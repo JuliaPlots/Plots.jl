@@ -61,18 +61,23 @@ end
 file_extension(fn) = Base.Filesystem.splitext(fn)[2][2:end]
 
 gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim.dir, fn; kw...)
-mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim.dir, fn; kw...)
-mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim.dir, fn; kw...)
+mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim.dir, fn, false; kw...)
+mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim.dir, fn, false; kw...)
 
 
-function buildanimation(animdir::AbstractString, fn::AbstractString;
+function buildanimation(animdir::AbstractString, fn::AbstractString,
+                        is_animated_gif::Bool=true;
                         fps::Integer = 20, loop::Integer = 0)
     fn = abspath(fn)
 
-    # generate a colorpalette first so ffmpeg does not have to guess it
-    run(`ffmpeg -v 0 -i $(animdir)/%06d.png -vf palettegen -y palette.png`)
-    # then apply the palette to get better results
-    run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -i palette.png -lavfi paletteuse -y $fn`)
+    if is_animated_gif
+        # generate a colorpalette first so ffmpeg does not have to guess it
+        run(`ffmpeg -v 0 -i $(animdir)/%06d.png -vf palettegen -y palette.png`)
+        # then apply the palette to get better results
+        run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -i palette.png -lavfi paletteuse -y $fn`)
+    else
+        run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
+    end
 
     info("Saved animation to ", fn)
     AnimatedGif(fn)
