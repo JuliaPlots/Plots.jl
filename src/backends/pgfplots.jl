@@ -41,7 +41,7 @@ const _pgfplots_attr = merge_with_base_supported([
   ])
 const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
+const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon, :hline] #vcat(_allMarkers, Shape)
 const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 
@@ -86,6 +86,7 @@ const _pgfplots_markers = KW(
     :star6 => "asterisk",
     :diamond => "diamond*",
     :pentagon => "pentagon*",
+    :hline => "-"
 )
 
 const _pgfplots_legend_pos = KW(
