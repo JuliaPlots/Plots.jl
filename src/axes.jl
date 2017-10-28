@@ -385,18 +385,20 @@ end
 # -------------------------------------------------------------------------
 
 # push the limits out slightly
-function widen(lmin, lmax)
-    span = lmax - lmin
+function widen(lmin, lmax, scale)
+    sf = scalefunc(scale)
+    isf = invscalefunc(scale)
+    span = sf(lmax) - sf(lmin)
     # eps = NaNMath.max(1e-16, min(1e-2span, 1e-10))
     eps = NaNMath.max(1e-16, 0.03span)
-    lmin-eps, lmax+eps
+    isf(lmin-eps), isf(lmax+eps)
 end
 
 # figure out if widening is a good idea.  if there's a scale set it's too tricky,
 # so lazy out and don't widen
 function default_should_widen(axis::Axis)
     should_widen = false
-    if axis[:scale] == :identity && !is_2tuple(axis[:lims])
+    if (!(axis[:scale] in _logScales && axis[:extrema].emin <= 0)) && !is_2tuple(axis[:lims])
         for sp in axis.sps
             for series in series_list(sp)
                 if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
@@ -427,8 +429,9 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
     if !isfinite(amin) && !isfinite(amax)
         amin, amax = 0.0, 1.0
     end
+
     if should_widen
-        widen(amin, amax)
+        widen(amin, amax, axis[:scale])
     else
         amin, amax
     end
