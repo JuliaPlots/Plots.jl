@@ -695,6 +695,9 @@ function processFillArg(d::KW, arg)
         arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
 
+    elseif typeof(arg) <: Bool
+        d[:fillrange] = arg ? 0 : nothing
+
     # fillrange function
     elseif allFunctions(arg)
         d[:fillrange] = arg
