@@ -413,7 +413,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
         viewport[4] = 0.5 * (vp[3] + vp[4] + extent)
     end
     if hascolorbar(sp)
-        viewport[2] -= (viewport[2] - viewport[1]) * 0.1
+        viewport[2] -= 0.1
     end
     viewport
 end
