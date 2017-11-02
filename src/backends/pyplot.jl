@@ -1054,6 +1054,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             py_set_scale(ax, axis)
             py_set_lims(ax, axis)
+            if ispolar(sp) && letter == :y
+                ax[:set_rlabel_position](0)
+            end
             ticks = sp[:framestyle] == :none ? nothing : get_ticks(axis)
             # don't show the 0 tick label for the origin framestyle
             if sp[:framestyle] == :origin && length(ticks) > 1
@@ -1080,6 +1083,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     linewidth = axis[:gridlinewidth],
                     alpha = axis[:gridalpha])
                 ax[:set_axisbelow](true)
+            else
+                pyaxis[:grid](false)
             end
             py_set_axis_colors(sp, ax, axis)
         end

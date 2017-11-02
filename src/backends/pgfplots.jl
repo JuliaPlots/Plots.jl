@@ -220,6 +220,8 @@ function pgf_series(sp::Subplot, series::Series)
         # If a marker_z is used pass it as third coordinate to a 2D plot.
         # See "Scatter Plots" in PGFPlots documentation
         d[:x], d[:y], d[:marker_z]
+    elseif ispolar(sp)
+        rad2deg.(d[:x]), d[:y]
     else
         d[:x], d[:y]
     end
@@ -297,14 +299,15 @@ function pgf_axis(sp::Subplot, letter)
     # limits
     # TODO: support zlims
     if letter != :z
-        lims = axis_limits(axis)
+        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(axis)) : axis_limits(axis)
         kw[Symbol(letter,:min)] = lims[1]
         kw[Symbol(letter,:max)] = lims[2]
     end
 
     if !(axis[:ticks] in (nothing, false, :none)) && framestyle != :none
         ticks = get_ticks(axis)
-        push!(style, string(letter, "tick = {", join(ticks[1],","), "}"))
+        tick_values = ispolar(sp) && letter == :x ? rad2deg.(ticks[1]) : ticks[1]
+        push!(style, string(letter, "tick = {", join(tick_values,","), "}"))
         if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
             # wrap the power part of label with }
             tick_labels = String[begin

@@ -291,6 +291,22 @@ function plotly_axis(axis::Axis, sp::Subplot)
     ax
 end
 
+function plotly_polaraxis(axis::Axis)
+    ax = KW(
+        :visible => axis[:grid],
+        :showline => axis[:grid],
+    )
+
+    if axis[:letter] == :x
+        ax[:range] = rad2deg.(axis_limits(axis))
+    else
+        ax[:range] = axis_limits(axis)
+        ax[:orientation] = 0
+    end
+
+    ax
+end
+
 function plotly_layout(plt::Plot)
     d_out = KW()
 
@@ -345,6 +361,9 @@ function plotly_layout(plt::Plot)
                     ),
                 ),
             )
+        elseif ispolar(sp)
+            d_out[Symbol("angularaxis$spidx")] = plotly_polaraxis(sp[:xaxis])
+            d_out[Symbol("radialaxis$spidx")] = plotly_polaraxis(sp[:yaxis])
         else
             d_out[Symbol("xaxis$spidx")] = plotly_axis(sp[:xaxis], sp)
             d_out[Symbol("yaxis$spidx")] = plotly_axis(sp[:yaxis], sp)
