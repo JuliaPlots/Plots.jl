@@ -412,6 +412,9 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
         viewport[3] = 0.5 * (vp[3] + vp[4] - extent)
         viewport[4] = 0.5 * (vp[3] + vp[4] + extent)
     end
+    if hascolorbar(sp)
+        viewport[2] -= 0.1
+    end
     viewport
 end
 
@@ -685,11 +688,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             expand_extrema!(sp[:yaxis], y)
             data_lims = gr_xy_axislims(sp)
         end
-    end
-
-    if cmap
-        # note: add extra midpadding on the right for the colorbar
-        viewport_plotarea[2] -= 0.1
     end
 
     # set our plot area view
