@@ -245,7 +245,7 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     #No support for polar grid... but can still perform polar transformation:
     if ispolar(sp)
         Θ = x; r = y
-        x = r.*cos(Θ); y = r.*sin(Θ)
+        x = r.*cos.(Θ); y = r.*sin.(Θ)
     end
 
     # doesn't handle mismatched x/y - wrap data (pyplot behaviour):

@@ -717,7 +717,7 @@ end
 function plotly_polar!(d_out::KW, series::Series)
     # convert polar plots x/y to theta/radius
     if ispolar(series[:subplot])
-        d_out[:t] = rad2deg(pop!(d_out, :x))
+        d_out[:t] = rad2deg.(pop!(d_out, :x))
         d_out[:r] = pop!(d_out, :y)
     end
 end
