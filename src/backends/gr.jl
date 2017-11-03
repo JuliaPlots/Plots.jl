@@ -997,7 +997,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if series[:fillrange] != nothing
                 GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
             else
-                GR.setlinewidth(series[:linewidth])
+                GR.setlinetype(gr_linetype[series[:linestyle]])
+                width, height = gr_plot_size
+                GR.setlinewidth(max(0, series[:linewidth] / (sum(gr_plot_size) * 0.001)))
                 GR.contour(x, y, h, z, 1000)
             end
 
