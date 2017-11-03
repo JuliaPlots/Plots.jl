@@ -4,7 +4,7 @@
 # significant contributions by @jheinen
 
 @require Revise begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "gr.jl")) 
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "gr.jl"))
 end
 
 const _gr_attr = merge_with_base_supported([
@@ -995,11 +995,14 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if series[:fillrange] != nothing
                 GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
             else
+                GR.setlinetype(gr_linetype[series[:linestyle]])
+                GR.setlinewidth(max(0, series[:linewidth] / (sum(gr_plot_size) * 0.001)))
                 GR.contour(x, y, h, z, 1000)
             end
 
             # create the colorbar of contour levels
             if cmap
+                gr_set_line(1, :solid, yaxis[:foreground_color_axis])
                 gr_set_viewport_cmap(sp)
                 l = round.(Int32, 1000 + (h - ignorenan_minimum(h)) / (ignorenan_maximum(h) - ignorenan_minimum(h)) * 255)
                 GR.setwindow(xmin, xmax, zmin, zmax)
