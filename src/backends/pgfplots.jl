@@ -306,7 +306,8 @@ function pgf_axis(sp::Subplot, letter)
 
     if !(axis[:ticks] in (nothing, false, :none)) && framestyle != :none
         ticks = get_ticks(axis)
-        tick_values = ispolar(sp) && letter == :x ? rad2deg.(ticks[1]) : ticks[1]
+        #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
+        tick_values = ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 415] : ticks[1]
         push!(style, string(letter, "tick = {", join(tick_values,","), "}"))
         if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
             # wrap the power part of label with }
@@ -317,7 +318,8 @@ function pgf_axis(sp::Subplot, letter)
             end for label in ticks[2]]
             push!(style, string(letter, "ticklabels = {\$", join(tick_labels,"\$,\$"), "\$}"))
         elseif axis[:showaxis]
-            push!(style, string(letter, "ticklabels = {", join(ticks[2],","), "}"))
+            tick_labels = ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
+            push!(style, string(letter, "ticklabels = {", join(tick_labels,","), "}"))
         else
             push!(style, string(letter, "ticklabels = {}"))
         end
@@ -405,6 +407,9 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         axisf = PGFPlots.Axis
         if sp[:projection] == :polar
             axisf = PGFPlots.PolarAxis
+            #make radial axis vertical
+            kw[:xmin] = 90
+            kw[:xmax] = 450
         end
 
         # Search series for any gradient. In case one series uses a gradient set

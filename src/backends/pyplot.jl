@@ -1055,7 +1055,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             py_set_scale(ax, axis)
             py_set_lims(ax, axis)
             if ispolar(sp) && letter == :y
-                ax[:set_rlabel_position](0)
+                ax[:set_rlabel_position](90)
             end
             ticks = sp[:framestyle] == :none ? nothing : get_ticks(axis)
             # don't show the 0 tick label for the origin framestyle

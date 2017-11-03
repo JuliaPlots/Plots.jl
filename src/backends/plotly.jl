@@ -301,7 +301,7 @@ function plotly_polaraxis(axis::Axis)
         ax[:range] = rad2deg.(axis_limits(axis))
     else
         ax[:range] = axis_limits(axis)
-        ax[:orientation] = 0
+        ax[:orientation] = -90
     end
 
     ax
