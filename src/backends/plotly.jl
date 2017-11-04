@@ -728,7 +728,7 @@ end
 const _use_remote = Ref(false)
 
 function html_head(plt::Plot{PlotlyBackend})
-    jsfilename = _use_remote[] ? _plotly_js_path_remote : _plotly_js_path
+    jsfilename = _use_remote[] ? _plotly_js_path_remote : ("file://" * _plotly_js_path)
     # "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
     "<script src=\"$jsfilename\"></script>"
 end
