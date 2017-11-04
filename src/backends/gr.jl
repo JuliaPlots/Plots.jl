@@ -231,15 +231,12 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
         gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
         GR.settransparency(yaxis[:gridalpha])
         for i in 0:n
-            r = float(i) / n
-            if i % 2 == 0
-                if i > 0
-                    GR.drawarc(-r, r, -r, r, 0, 359)
-                end
-            else
+            r = float(i) * tick / rmax
+            if r <= 1.0
                 GR.drawarc(-r, r, -r, r, 0, 359)
             end
         end
+        GR.drawarc(-1, 1, -1, 1, 0, 359)
     end
 
     #prepare to draw ticks
@@ -259,8 +256,8 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     #draw radial ticks
     if yaxis[:showaxis]
         for i in 0:n
-            r = float(i) / n
-            if i % 2 == 0
+            r = float(i) * tick / rmax
+            if i % 2 == 0 && r <= 1.0
                 x, y = GR.wctondc(0.05, r)
                 GR.text(x, y, string(signif(rmin + i * tick, 12)))
             end
