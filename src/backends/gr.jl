@@ -205,35 +205,66 @@ function gr_text(x, y, s)
     end
 end
 
-function gr_polaraxes(rmin, rmax)
+function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     GR.savestate()
-    GR.setlinetype(GR.LINETYPE_SOLID)
-    GR.setlinecolorind(88)
+    xaxis = sp[:xaxis]
+    yaxis = sp[:yaxis]
+
+    α = 0:45:315
+    a = α .+ 90
+    sinf = sind.(a)
+    cosf = cosd.(a)
     tick = 0.5 * GR.tick(rmin, rmax)
     n = round(Int, (rmax - rmin) / tick + 0.5)
-    for i in 0:n
-        r = float(i) / n
-        if i % 2 == 0
-            GR.setlinecolorind(88)
-            if i > 0
-                GR.drawarc(-r, r, -r, r, 0, 359)
-            end
-            GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-            x, y = GR.wctondc(0.05, r)
-            GR.text(x, y, string(signif(rmin + i * tick, 12)))
-        else
-            GR.setlinecolorind(90)
-            GR.drawarc(-r, r, -r, r, 0, 359)
+
+    #draw angular grid
+    if xaxis[:grid]
+        gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
+        GR.settransparency(xaxis[:gridalpha])
+        for i in 1:length(α)
+            GR.polyline([sinf[i], 0], [cosf[i], 0])
         end
     end
-    for α in 0:45:315
-        a = α + 90
-        sinf = sin(a * pi / 180)
-        cosf = cos(a * pi / 180)
-        GR.polyline([sinf, 0], [cosf, 0])
-        GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
-        x, y = GR.wctondc(1.1 * sinf, 1.1 * cosf)
-        GR.textext(x, y, string(α, "^o"))
+
+    #draw radial grid
+    if yaxis[:grid]
+        gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
+        GR.settransparency(yaxis[:gridalpha])
+        for i in 0:n
+            r = float(i) / n
+            if i % 2 == 0
+                if i > 0
+                    GR.drawarc(-r, r, -r, r, 0, 359)
+                end
+            else
+                GR.drawarc(-r, r, -r, r, 0, 359)
+            end
+        end
+    end
+
+    #prepare to draw ticks
+    GR.settransparency(1)
+    GR.setlinecolorind(90)
+    GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
+
+    #draw angular ticks
+    if xaxis[:showaxis]
+        GR.drawarc(-1, 1, -1, 1, 0, 359)
+        for i in 1:length(α)
+            x, y = GR.wctondc(1.1 * sinf[i], 1.1 * cosf[i])
+            GR.textext(x, y, string((360-α[i])%360, "^o"))
+        end
+    end
+
+    #draw radial ticks
+    if yaxis[:showaxis]
+        for i in 0:n
+            r = float(i) / n
+            if i % 2 == 0
+                x, y = GR.wctondc(0.05, r)
+                GR.text(x, y, string(signif(rmin + i * tick, 12)))
+            end
+        end
     end
     GR.restorestate()
 end
@@ -760,9 +791,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     elseif ispolar(sp)
         r = gr_set_viewport_polar()
-        rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
-        # rmin, rmax = axis_limits(sp[:yaxis])
-        gr_polaraxes(rmin, rmax)
+        #rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
+        rmin, rmax = axis_limits(sp[:yaxis])
+        gr_polaraxes(rmin, rmax, sp)
 
     elseif draw_axes
         if xmax > xmin && ymax > ymin

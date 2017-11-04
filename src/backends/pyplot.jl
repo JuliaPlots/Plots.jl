@@ -1093,7 +1093,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         if !sp[:xaxis][:showaxis]
             kw = KW()
             for dir in (:top, :bottom)
-                ax[:spines][string(dir)][:set_visible](false)
+                if ispolar(sp)
+                    ax[:spines]["polar"][:set_visible](false)
+                else
+                    ax[:spines][string(dir)][:set_visible](false)
+                end
                 kw[dir] = kw[Symbol(:label,dir)] = "off"
             end
             ax[:xaxis][:set_tick_params](; which="both", kw...)
@@ -1101,7 +1105,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         if !sp[:yaxis][:showaxis]
             kw = KW()
             for dir in (:left, :right)
-                ax[:spines][string(dir)][:set_visible](false)
+                if !ispolar(sp)
+                    ax[:spines][string(dir)][:set_visible](false)
+                end
                 kw[dir] = kw[Symbol(:label,dir)] = "off"
             end
             ax[:yaxis][:set_tick_params](; which="both", kw...)

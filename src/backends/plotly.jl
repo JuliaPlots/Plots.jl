@@ -293,7 +293,7 @@ end
 
 function plotly_polaraxis(axis::Axis)
     ax = KW(
-        :visible => axis[:grid],
+        :visible => axis[:showaxis],
         :showline => axis[:grid],
     )
 

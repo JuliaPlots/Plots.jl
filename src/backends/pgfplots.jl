@@ -294,6 +294,8 @@ function pgf_axis(sp::Subplot, letter)
     # grid on or off
     if axis[:grid] && framestyle != :none
         push!(style, "$(letter)majorgrids = true")
+    else
+        push!(style, "$(letter)majorgrids = false")
     end
 
     # limits
