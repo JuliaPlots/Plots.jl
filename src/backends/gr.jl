@@ -214,8 +214,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     a = α .+ 90
     sinf = sind.(a)
     cosf = cosd.(a)
-    tick = 0.5 * GR.tick(rmin, rmax)
-    n = round(Int, (rmax - rmin) / tick + 0.5)
+    rtick_values, rtick_labels = get_ticks(yaxis)
 
     #draw angular grid
     if xaxis[:grid]
@@ -230,9 +229,9 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     if yaxis[:grid]
         gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
         GR.settransparency(yaxis[:gridalpha])
-        for i in 0:n
-            r = float(i) * tick / rmax
-            if r <= 1.0
+        for i in 1:length(rtick_values)
+            r = (rtick_values[i] - rmin) / (rmax - rmin)
+            if r <= 1.0 && r >= 0.0
                 GR.drawarc(-r, r, -r, r, 0, 359)
             end
         end
@@ -255,11 +254,11 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
 
     #draw radial ticks
     if yaxis[:showaxis]
-        for i in 0:n
-            r = float(i) * tick / rmax
-            if i % 2 == 0 && r <= 1.0
+        for i in 1:length(rtick_values)
+            r = (rtick_values[i] - rmin) / (rmax - rmin)
+            if r <= 1.0 && r >= 0.0
                 x, y = GR.wctondc(0.05, r)
-                GR.text(x, y, string(signif(rmin + i * tick, 12)))
+                gr_text(x, y, _cycle(rtick_labels, i))
             end
         end
     end
