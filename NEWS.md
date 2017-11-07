@@ -105,7 +105,7 @@
 #### 0.11.0
 
 - julia 0.6 compatibility
-- matplotlib 0.2.0 compatibility
+- matplotlib 2.0 compatibility
 - add inspectdr backend
 - improved histogram functionality:
 - added a `:stephist` and `:scatterhist` series type as well as ``:barhist` (the default)
