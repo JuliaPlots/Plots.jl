@@ -207,6 +207,9 @@ function pgf_series(sp::Subplot, series::Series)
     # add to legend?
     if sp[:legend] != :none && should_add_to_legend(series)
         kw[:legendentry] = d[:label]
+        if st == :shape || d[:fillrange] != nothing
+            push!(style, "area legend")
+        end
     else
         push!(style, "forget plot")
     end
