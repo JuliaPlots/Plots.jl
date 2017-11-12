@@ -437,7 +437,7 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
             amin, amax = 0, 2pi
         elseif lims == :auto
             #widen max radius so ticks dont overlap with theta axis
-            amin, 1.1*amax
+            amin, amax + 0.1 * abs(amax - amin)
         else
             amin, amax
         end
