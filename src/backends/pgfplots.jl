@@ -221,7 +221,8 @@ function pgf_series(sp::Subplot, series::Series)
         # See "Scatter Plots" in PGFPlots documentation
         d[:x], d[:y], d[:marker_z]
     elseif ispolar(sp)
-        rad2deg.(d[:x]), d[:y]
+        theta, r = filter_radial_data(d[:x], d[:y], axis_limits(sp[:yaxis]))
+        rad2deg.(theta), r
     else
         d[:x], d[:y]
     end
