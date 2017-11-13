@@ -223,6 +223,9 @@ function pgf_series(sp::Subplot, series::Series)
         # If a marker_z is used pass it as third coordinate to a 2D plot.
         # See "Scatter Plots" in PGFPlots documentation
         d[:x], d[:y], d[:marker_z]
+    elseif ispolar(sp)
+        theta, r = filter_radial_data(d[:x], d[:y], axis_limits(sp[:yaxis]))
+        rad2deg.(theta), r
     else
         d[:x], d[:y]
     end
@@ -295,19 +298,23 @@ function pgf_axis(sp::Subplot, letter)
     # grid on or off
     if axis[:grid] && framestyle != :none
         push!(style, "$(letter)majorgrids = true")
+    else
+        push!(style, "$(letter)majorgrids = false")
     end
 
     # limits
     # TODO: support zlims
     if letter != :z
-        lims = axis_limits(axis)
+        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(axis)) : axis_limits(axis)
         kw[Symbol(letter,:min)] = lims[1]
         kw[Symbol(letter,:max)] = lims[2]
     end
 
     if !(axis[:ticks] in (nothing, false, :none)) && framestyle != :none
         ticks = get_ticks(axis)
-        push!(style, string(letter, "tick = {", join(ticks[1],","), "}"))
+        #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
+        tick_values = ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 415] : ticks[1]
+        push!(style, string(letter, "tick = {", join(tick_values,","), "}"))
         if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
             # wrap the power part of label with }
             tick_labels = String[begin
@@ -317,7 +324,8 @@ function pgf_axis(sp::Subplot, letter)
             end for label in ticks[2]]
             push!(style, string(letter, "ticklabels = {\$", join(tick_labels,"\$,\$"), "\$}"))
         elseif axis[:showaxis]
-            push!(style, string(letter, "ticklabels = {", join(ticks[2],","), "}"))
+            tick_labels = ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
+            push!(style, string(letter, "ticklabels = {", join(tick_labels,","), "}"))
         else
             push!(style, string(letter, "ticklabels = {}"))
         end
@@ -405,6 +413,9 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         axisf = PGFPlots.Axis
         if sp[:projection] == :polar
             axisf = PGFPlots.PolarAxis
+            #make radial axis vertical
+            kw[:xmin] = 90
+            kw[:xmax] = 450
         end
 
         # Search series for any gradient. In case one series uses a gradient set

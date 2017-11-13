@@ -363,15 +363,26 @@ end
 
 function convert_to_polar(x, y, r_extrema = calc_r_extrema(x, y))
     rmin, rmax = r_extrema
-    phi, r = x, y
+    theta, r = filter_radial_data(x, y, r_extrema)
     r = (r - rmin) / (rmax - rmin)
-    n = max(length(phi), length(r))
-    x = zeros(n)
-    y = zeros(n)
+    x = r.*cos.(theta)
+    y = r.*sin.(theta)
+    x, y
+end
+
+# Filters radial data for points within the axis limits
+function filter_radial_data(theta, r, r_extrema::Tuple{Real, Real})
+    n = max(length(theta), length(r))
+    rmin, rmax = r_extrema
+    x, y = zeros(n), zeros(n)
     for i in 1:n
-        x[i] = _cycle(r,i) * cos.(_cycle(phi,i))
-        y[i] = _cycle(r,i) * sin.(_cycle(phi,i))
+        x[i] = _cycle(theta, i)
+        y[i] = _cycle(r, i)
     end
+    points = map((a, b) -> (a, b), x, y)
+    filter!(a -> a[2] >= rmin && a[2] <= rmax, points)
+    x = map(a -> a[1], points)
+    y = map(a -> a[2], points)
     x, y
 end
 

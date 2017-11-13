@@ -239,8 +239,13 @@ function get_ticks(axis::Axis)
         # discrete ticks...
         axis[:continuous_values], dvals
     elseif ticks == :auto
-        # compute optimal ticks and labels
-        optimal_ticks_and_labels(axis)
+        if ispolar(axis.sps[1]) && axis[:letter] == :x
+            #force theta axis to be full circle
+            (collect(0:pi/4:7pi/4), string.(0:45:315))
+        else
+            # compute optimal ticks and labels
+            optimal_ticks_and_labels(axis)
+        end
     elseif typeof(ticks) <: Union{AVec, Int}
         # override ticks, but get the labels
         optimal_ticks_and_labels(axis, ticks)
@@ -427,7 +432,16 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
     if !isfinite(amin) && !isfinite(amax)
         amin, amax = 0.0, 1.0
     end
-    if should_widen
+    if ispolar(axis.sps[1])
+        if axis[:letter] == :x
+            amin, amax = 0, 2pi
+        elseif lims == :auto
+            #widen max radius so ticks dont overlap with theta axis
+            amin, amax + 0.1 * abs(amax - amin)
+        else
+            amin, amax
+        end
+    elseif should_widen
         widen(amin, amax)
     else
         amin, amax

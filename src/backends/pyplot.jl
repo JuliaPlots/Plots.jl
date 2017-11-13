@@ -1054,6 +1054,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             py_set_scale(ax, axis)
             py_set_lims(ax, axis)
+            if ispolar(sp) && letter == :y
+                ax[:set_rlabel_position](90)
+            end
             ticks = sp[:framestyle] == :none ? nothing : get_ticks(axis)
             # don't show the 0 tick label for the origin framestyle
             if sp[:framestyle] == :origin && length(ticks) > 1
@@ -1080,6 +1083,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     linewidth = axis[:gridlinewidth],
                     alpha = axis[:gridalpha])
                 ax[:set_axisbelow](true)
+            else
+                pyaxis[:grid](false)
             end
             py_set_axis_colors(sp, ax, axis)
         end
@@ -1088,7 +1093,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         if !sp[:xaxis][:showaxis]
             kw = KW()
             for dir in (:top, :bottom)
-                ax[:spines][string(dir)][:set_visible](false)
+                if ispolar(sp)
+                    ax[:spines]["polar"][:set_visible](false)
+                else
+                    ax[:spines][string(dir)][:set_visible](false)
+                end
                 kw[dir] = kw[Symbol(:label,dir)] = "off"
             end
             ax[:xaxis][:set_tick_params](; which="both", kw...)
@@ -1096,7 +1105,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         if !sp[:yaxis][:showaxis]
             kw = KW()
             for dir in (:left, :right)
-                ax[:spines][string(dir)][:set_visible](false)
+                if !ispolar(sp)
+                    ax[:spines][string(dir)][:set_visible](false)
+                end
                 kw[dir] = kw[Symbol(:label,dir)] = "off"
             end
             ax[:yaxis][:set_tick_params](; which="both", kw...)
