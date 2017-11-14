@@ -313,7 +313,7 @@ function pgf_axis(sp::Subplot, letter)
     if !(axis[:ticks] in (nothing, false, :none)) && framestyle != :none
         ticks = get_ticks(axis)
         #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
-        tick_values = ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 415] : ticks[1]
+        tick_values = ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 405] : ticks[1]
         push!(style, string(letter, "tick = {", join(tick_values,","), "}"))
         if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
             # wrap the power part of label with }
