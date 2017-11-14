@@ -94,6 +94,7 @@ const _pgfplots_legend_pos = KW(
     :bottomright => "south east",
     :topright => "north east",
     :topleft => "north west",
+    :outertopright => "outer north east",
 )
 
 

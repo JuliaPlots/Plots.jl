@@ -1002,7 +1002,7 @@ function convertLegendValue(val::Symbol)
         :best
     elseif val in (:no, :none)
         :none
-    elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend, :topright, :topleft, :bottomleft, :bottomright)
+    elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend, :topright, :topleft, :bottomleft, :bottomright, :outertopright)
         val
     else
         error("Invalid symbol for legend: $val")
