@@ -272,6 +272,9 @@ function pgf_axis(sp::Subplot, letter)
     style = []
     kw = KW()
 
+    # turn off scaled ticks
+    push!(style, "scaled $(letter) ticks = false")
+
     # set to supported framestyle
     framestyle = pgf_framestyle(sp[:framestyle])
 
