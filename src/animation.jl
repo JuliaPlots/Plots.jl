@@ -71,10 +71,9 @@ function buildanimation(animdir::AbstractString, fn::AbstractString,
     fn = abspath(fn)
 
     if is_animated_gif
-        # generate a colorpalette first so ffmpeg does not have to guess it
-        run(`ffmpeg -v 0 -i $(animdir)/%06d.png -vf palettegen -y palette.gif`)
-        # then apply the palette to get better results
-        run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -i palette.gif -lavfi paletteuse -y $fn`)
+        # generate a colorpalette for each frame to improve quality
+        palette="palettegen=stats_mode=single[pal],[0:v][pal]paletteuse=new=1"
+        run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -lavfi "$palette" -y $fn`)
     else
         run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
     end
