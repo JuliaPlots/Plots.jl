@@ -262,12 +262,6 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:tickcolor] = framestyle in (:zerolines, :grid) || !axis[:showaxis] ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
-        # lims
-       
-        #if lims != :auto && limsType(lims) == :limits
-        #ax[:range] = map(scalefunc(axis[:scale]), lims)
-        #end
-
         # flip
         if axis[:flip]
             ax[:autorange] = "reversed"
