@@ -252,7 +252,9 @@ function plotly_axis(axis::Axis, sp::Subplot)
     end
 
     ax[:tickangle] = -axis[:rotation]
-    ax[:range] = axis_limits(axis)
+    lims = axis_limits(axis)
+    ax[:range] = map(scalefunc(axis[:scale]), lims)
+    
     if !(axis[:ticks] in (nothing, :none))
         ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
         ax[:type] = plotly_scale(axis[:scale])
@@ -261,10 +263,10 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
         # lims
-        lims = axis[:lims]
-        if lims != :auto && limsType(lims) == :limits
-            ax[:range] = map(scalefunc(axis[:scale]), lims)
-        end
+       
+        #if lims != :auto && limsType(lims) == :limits
+        #ax[:range] = map(scalefunc(axis[:scale]), lims)
+        #end
 
         # flip
         if axis[:flip]
