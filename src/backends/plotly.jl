@@ -252,7 +252,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
     end
 
     ax[:tickangle] = -axis[:rotation]
-
+    ax[:range] = axis_limits(axis)
     if !(axis[:ticks] in (nothing, :none))
         ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
         ax[:type] = plotly_scale(axis[:scale])
@@ -288,6 +288,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:showgrid] = false
     end
 
+    
     ax
 end
 
