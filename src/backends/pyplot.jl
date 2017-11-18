@@ -2,7 +2,7 @@
 # https://github.com/stevengj/PyPlot.jl
 
 @require Revise begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pyplot.jl")) 
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pyplot.jl"))
 end
 
 const _pyplot_attr = merge_with_base_supported([
@@ -1009,7 +1009,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             for lab in cb[:ax][:yaxis][:get_ticklabels]()
                   lab[:set_fontsize](py_dpi_scale(plt, sp[:yaxis][:tickfont].pointsize))
                   lab[:set_family](sp[:yaxis][:tickfont].family)
-            end 
+            end
             sp.attr[:cbar_handle] = cb
             sp.attr[:cbar_ax] = cbax
         end
@@ -1221,15 +1221,16 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
         for series in series_list(sp)
             if should_add_to_legend(series)
                 # add a line/marker and a label
-                push!(handles, if series[:seriestype] == :shape
-                    PyPlot.plt[:Line2D]((0,1),(0,0),
-                        color = py_color(_cycle(series[:fillcolor],1)),
-                        linewidth = py_dpi_scale(plt, 4)
+                push!(handles, if series[:seriestype] == :shape || series[:fillrange] != nothing
+                    pypatches[:Patch](
+                        edgecolor = py_color(_cycle(series[:linecolor],1)),
+                        facecolor = py_color(_cycle(series[:fillcolor],1)),
+                        linewidth = py_dpi_scale(plt, clamp(series[:linewidth], 0, 5)),
                     )
                 elseif series[:seriestype] == :path
                     PyPlot.plt[:Line2D]((0,1),(0,0),
                         color = py_color(_cycle(series[:fillcolor],1)),
-                        linewidth = py_dpi_scale(plt, 1),
+                        linewidth = py_dpi_scale(plt, clamp(series[:linewidth], 0, 5)),
                         marker = py_marker(series[:markershape]),
                         markeredgecolor = py_markerstrokecolor(series),
                         markerfacecolor = py_markercolor(series)
