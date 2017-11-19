@@ -293,7 +293,6 @@ const _plot_defaults = KW(
 const _subplot_defaults = KW(
     :title                    => "",
     :title_location           => :center,           # also :left or :right
-    :titlefont                => font(14),
     :titlefontfamily          => :match,
     :titlefontsize            => 14,
     :titlefonthalign          => :hcenter,
@@ -311,7 +310,6 @@ const _subplot_defaults = KW(
     :legendtitle              => nothing,
     :colorbar                 => :legend,
     :clims                    => :auto,
-    :legendfont               => font(8),
     :legendfontfamily         => :match,
     :legendfontsize           => 8,
     :legendfonthalign         => :hcenter,
@@ -340,14 +338,12 @@ const _axis_defaults = KW(
     :rotation  => 0,
     :flip      => false,
     :link      => [],
-    :tickfont  => font(8),
     :tickfontfamily         => :match,
     :tickfontsize           => 8,
     :tickfonthalign         => :hcenter,
     :tickfontvalign         => :vcenter,
     :tickfontrotation       => 0.0,
     :tickfontcolor          => :match,
-    :guidefont => font(11),
     :guidefontfamily         => :match,
     :guidefontsize           => 11,
     :guidefonthalign         => :hcenter,
@@ -768,6 +764,15 @@ function processGridArg!(d::KW, arg, letter)
     end
 end
 
+processFontArgs!(d::KW, fontname::Symbol, args::Tuple)
+    fnt = font(args...)
+    d[Symbol(fontname, :family)] = fnt.family
+    d[Symbol(fontname, :size)] = fnt.pointsize
+    d[Symbol(fontname, :halign)] = fnt.halign
+    d[Symbol(fontname, :valign)] = fnt.valign
+    d[Symbol(fontname, :rotation)] = fnt.rotation
+    d[Symbol(fontname, :color)] = fnt.color
+end
 
 _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
 _replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
@@ -834,6 +839,25 @@ function preprocessArgs!(d::KW)
         for arg in wraptuple(args)
             processGridArg!(d, arg, letter)
         end
+    end
+
+    # fonts
+    for fontname in (:titlefont, :legendfont)
+        args = pop!(d, fontname, ())
+        processFontArgs!(d, fontname, args)
+    end
+    # handle font args common to all axes
+    for fontname in (:tickfont, :guidefont)
+        args = pop!(d, fontname, ())
+        for letter in (:x, :y, :z)
+            processFontArgs!(d, Symbol(letter, fontname), args)
+        end
+    end
+    # handle individual axes font args
+    for letter in (:x, :y, :z)
+        for fontname in (:tickfont, :guidefont)
+        args = pop!(d, Symbol(letter, fontname), ())
+        processFontArgs!(d, Symbol(letter, fontname), args)
     end
 
     # handle line args
