@@ -293,6 +293,7 @@ const _plot_defaults = KW(
 const _subplot_defaults = KW(
     :title                    => "",
     :title_location           => :center,           # also :left or :right
+    :fontfamily_subplot       => :match,
     :titlefontfamily          => :match,
     :titlefontsize            => 14,
     :titlefonthalign          => :hcenter,
@@ -764,14 +765,37 @@ function processGridArg!(d::KW, arg, letter)
     end
 end
 
-function processFontArgs!(d::KW, fontname::Symbol, args::Tuple)
-    fnt = font(args...)
-    d[Symbol(fontname, :family)] = fnt.family
-    d[Symbol(fontname, :size)] = fnt.pointsize
-    d[Symbol(fontname, :halign)] = fnt.halign
-    d[Symbol(fontname, :valign)] = fnt.valign
-    d[Symbol(fontname, :rotation)] = fnt.rotation
-    d[Symbol(fontname, :color)] = fnt.color
+function processFontArg!(d::KW, fontname::Symbol, arg)
+    T = typeof(arg)
+    if T <: Font
+        d[Symbol(fontname, :family)] = arg.family
+        d[Symbol(fontname, :size)] = arg.pointsize
+        d[Symbol(fontname, :halign)] = arg.halign
+        d[Symbol(fontname, :valign)] = arg.valign
+        d[Symbol(fontname, :rotation)] = arg.rotation
+        d[Symbol(fontname, :color)] = arg.color
+    elseif arg == :center
+        d[Symbol(fontname, :halign)] = :hcenter
+        d[Symbol(fontname, :valign)] = :vcenter
+    elseif arg in (:hcenter, :left, :right)
+        d[Symbol(fontname, :halign)] = arg
+    elseif arg in (:vcenter, :top, :bottom)
+        d[Symbol(fontname, :valign)] = arg
+    elseif T <: Colorant
+        d[Symbol(fontname, :color)] = arg
+    elseif T <: Symbol || T <: AbstractString
+        try
+            d[Symbol(fontname, :color)] = parse(Colorant, string(arg))
+        catch
+            d[Symbol(fontname, :family)] = string(arg)
+        end
+    elseif typeof(arg) <: Integer
+        d[Symbol(fontname, :size)] = arg
+    elseif typeof(arg) <: Real
+        d[Symbol(fontname, :rotation)] = convert(Float64, arg)
+    else
+        warn("Skipped font arg: $arg ($(typeof(arg)))")
+    end
 end
 
 _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
@@ -844,20 +868,26 @@ function preprocessArgs!(d::KW)
     # fonts
     for fontname in (:titlefont, :legendfont)
         args = pop!(d, fontname, ())
-        processFontArgs!(d, fontname, args)
+        for arg in wraptuple(args)
+            processFontArg!(d, fontname, arg)
+        end
     end
     # handle font args common to all axes
     for fontname in (:tickfont, :guidefont)
         args = pop!(d, fontname, ())
-        for letter in (:x, :y, :z)
-            processFontArgs!(d, Symbol(letter, fontname), args)
+        for arg in wraptuple(args)
+            for letter in (:x, :y, :z)
+                processFontArg!(d, Symbol(letter, fontname), arg)
+            end
         end
     end
     # handle individual axes font args
     for letter in (:x, :y, :z)
         for fontname in (:tickfont, :guidefont)
             args = pop!(d, Symbol(letter, fontname), ())
-            processFontArgs!(d, Symbol(letter, fontname), args)
+            for arg in wraptuple(args)
+                processFontArg!(d, Symbol(letter, fontname), arg)
+            end
         end
     end
 
@@ -1134,12 +1164,12 @@ const _match_map = KW(
     :top_margin    => :margin,
     :right_margin  => :margin,
     :bottom_margin => :margin,
-    :titlefontfamily => :fontfamily,
-    :labelfontfamily => :fontfamily,
-    :tickfontfamily  => :fontfamily,
-    :guidefontfamily => :fontfamily,
+    :titlefontfamily => :fontfamily_subplot,
+    :legendfontfamily => :fontfamily_subplot,
     :titlefontcolor  => :foreground_color_subplot,
-    :labelfontcolor  => :foreground_color_subplot,
+    :legendfontcolor  => :foreground_color_subplot,
+    :tickfontcolor   => :foreground_color_text,
+    :guidefontcolor  => :foreground_color_guide,
 )
 
 # these can match values from the parent container (axis --> subplot --> plot)
@@ -1151,8 +1181,9 @@ const _match_map2 = KW(
     :foreground_color_grid    => :foreground_color_subplot,
     :foreground_color_guide   => :foreground_color_subplot,
     :foreground_color_text    => :foreground_color_subplot,
-    :tickfontcolor            => :foreground_color_text,
-    :guidefontcolor           => :foreground_color_guide,
+    :fontfamily_subplot       => :fontfamily,
+    :tickfontfamily           => :fontfamily_subplot,
+    :guidefontfamily          => :fontfamily_subplot,
 )
 
 # properly retrieve from plt.attr, passing `:match` to the correct key

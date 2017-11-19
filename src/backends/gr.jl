@@ -904,7 +904,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             halign = GR.TEXT_HALIGN_CENTER
         end
         GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
-        gr_set_textcolor(sp[:foreground_color_title])
         gr_text(xpos, viewport_subplot[4], sp[:title])
     end
 
@@ -1229,7 +1228,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             i = 0
             if sp[:legendtitle] != nothing
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
-                gr_set_textcolor(sp[:foreground_color_legend])
+                gr_set_textcolor(sp[:legendfontcolor])
                 GR.settransparency(1)
                 gr_text(xpos - 0.03 + 0.5*w, ypos, string(sp[:legendtitle]))
                 ypos -= dy
@@ -1271,7 +1270,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     lab = series[:label]
                 end
                 GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-                gr_set_textcolor(sp[:foreground_color_legend])
+                gr_set_textcolor(sp[:legendfontcolor])
                 gr_text(xpos, ypos, lab)
                 ypos -= dy
             end
