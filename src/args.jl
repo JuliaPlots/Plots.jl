@@ -1164,12 +1164,12 @@ const _match_map = KW(
     :top_margin    => :margin,
     :right_margin  => :margin,
     :bottom_margin => :margin,
-    :titlefontfamily => :fontfamily_subplot,
-    :legendfontfamily => :fontfamily_subplot,
-    :titlefontcolor  => :foreground_color_subplot,
-    :legendfontcolor  => :foreground_color_subplot,
-    :tickfontcolor   => :foreground_color_text,
-    :guidefontcolor  => :foreground_color_guide,
+    :titlefontfamily          => :fontfamily_subplot,
+    :legendfontfamily         => :fontfamily_subplot,
+    :titlefontcolor           => :foreground_color_subplot,
+    :legendfontcolor          => :foreground_color_subplot,
+    :tickfontcolor            => :foreground_color_text,
+    :guidefontcolor           => :foreground_color_guide,
 )
 
 # these can match values from the parent container (axis --> subplot --> plot)
