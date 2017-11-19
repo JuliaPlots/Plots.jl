@@ -418,10 +418,10 @@ const _all_defaults = KW[
 const _initial_defaults = deepcopy(_all_defaults)
 
 # to be able to reset font sizes to initial values
-const _initial_fontsizes = Dict(:titlefont  => _subplot_defaults[:titlefont].pointsize,
-                                :legendfont => _subplot_defaults[:legendfont].pointsize,
-                                :tickfont   => _axis_defaults[:tickfont].pointsize,
-                                :guidefont  => _axis_defaults[:guidefont].pointsize)
+const _initial_fontsizes = Dict(:titlefont  => _subplot_defaults[:titlefontsize],
+                                :legendfont => _subplot_defaults[:legendfontsize],
+                                :tickfont   => _axis_defaults[:tickfontsize],
+                                :guidefont  => _axis_defaults[:guidefontsize])
 
 const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
 
@@ -856,8 +856,9 @@ function preprocessArgs!(d::KW)
     # handle individual axes font args
     for letter in (:x, :y, :z)
         for fontname in (:tickfont, :guidefont)
-        args = pop!(d, Symbol(letter, fontname), ())
-        processFontArgs!(d, Symbol(letter, fontname), args)
+            args = pop!(d, Symbol(letter, fontname), ())
+            processFontArgs!(d, Symbol(letter, fontname), args)
+        end
     end
 
     # handle line args
