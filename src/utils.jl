@@ -1007,3 +1007,43 @@ xmax(plt::Plot) = ignorenan_maximum([ignorenan_maximum(series.d[:x]) for series 
 
 "Extrema of x-values in plot"
 ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
+
+
+# ---------------------------------------------------------------
+# get fonts from objects:
+
+titlefont(sp::Subplot) = font(
+    sp[:titlefontfamily],
+    sp[:titlefontsize],
+    sp[:titlefont],
+    sp[:titlefonthalign],
+    sp[:titlefontrotation],
+    sp[:titlefontcolor],
+)
+
+legendfont(sp::Subplot) = font(
+    sp[:legendfontfamily],
+    sp[:legendfontsize],
+    sp[:legendfont],
+    sp[:legendfonthalign],
+    sp[:legendfontrotation],
+    sp[:legendfontcolor],
+)
+
+tickfont(ax::Axis) = font(
+    ax[:tickfontfamily],
+    ax[:tickfontsize],
+    ax[:tickfont],
+    ax[:tickfonthalign],
+    ax[:tickfontrotation],
+    ax[:tickfontcolor],
+)
+
+guidefont(ax::Axis) = font(
+    ax[:guidefontfamily],
+    ax[:guidefontsize],
+    ax[:guidefont],
+    ax[:guidefonthalign],
+    ax[:guidefontrotation],
+    ax[:guidefontcolor],
+)

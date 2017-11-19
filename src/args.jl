@@ -764,7 +764,7 @@ function processGridArg!(d::KW, arg, letter)
     end
 end
 
-processFontArgs!(d::KW, fontname::Symbol, args::Tuple)
+function processFontArgs!(d::KW, fontname::Symbol, args::Tuple)
     fnt = font(args...)
     d[Symbol(fontname, :family)] = fnt.family
     d[Symbol(fontname, :size)] = fnt.pointsize
