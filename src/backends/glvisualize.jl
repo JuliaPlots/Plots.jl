@@ -10,7 +10,7 @@ TODO
 =#
 
 @require Revise begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "glvisualize.jl")) 
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "glvisualize.jl"))
 end
 
 const _glvisualize_attr = merge_with_base_supported([
@@ -24,10 +24,10 @@ const _glvisualize_attr = merge_with_base_supported([
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
     :fillrange, :fillcolor, :fillalpha,
     :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :title_location, :titlefont,
+    :title, :title_location,
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
+    :tickfont, :guidefont, :legendfont, :titlefont,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
     :legend, :colorbar,
     :marker_z,
@@ -612,7 +612,7 @@ function draw_ticks(
         axis, ticks, isx, isorigin, lims, m, text = "",
         positions = Point2f0[], offsets=Vec2f0[]
     )
-    sz = pointsize(axis[:tickfont])
+    sz = pointsize(tickfont(axis))
     atlas = GLVisualize.get_texture_atlas()
     font = GLVisualize.defaultfont()
 
@@ -745,7 +745,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
             :position => map(x-> x[2], ticklabels),
             :offset => map(last, ticklabels),
             :color => fcolor,
-            :relative_scale => pointsize(xaxis[:tickfont]),
+            :relative_scale => pointsize(tickfont(xaxis)),
             :scale_primitive => false
         )
         push!(axis_vis, visualize(map(first, ticklabels), Style(:default), kw_args))
@@ -760,7 +760,7 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
             :position => map(x-> x[2], ticklabels),
             :offset => map(last, ticklabels),
             :color => fcolor,
-            :relative_scale => pointsize(xaxis[:tickfont]),
+            :relative_scale => pointsize(tickfont(xaxis)),
             :scale_primitive => false
         )
         push!(axis_vis, visualize(map(first, ticklabels), Style(:default), kw_args))
@@ -777,8 +777,8 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
 
     area_w = GeometryTypes.widths(area)
     if sp[:title] != ""
-        tf = sp[:titlefont]; color = gl_color(sp[:foreground_color_title])
-        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, tf.rotation, color)
+        tf = titlefont(sp)
+        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, tf.rotation, tf.color)
         xy = Point2f0(area.w/2, area_w[2] + pointsize(tf)/2)
         kw = Dict(:model => text_model(font, xy), :scale_primitive => true)
         extract_font(font, kw)
@@ -786,9 +786,9 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         push!(axis_vis, glvisualize_text(xy, t, kw))
     end
     if xaxis[:guide] != ""
-        tf = xaxis[:guidefont]; color = gl_color(xaxis[:foreground_color_guide])
+        tf = guidefont(xaxis)
         xy = Point2f0(area.w/2, - pointsize(tf)/2)
-        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :bottom, tf.rotation, color)
+        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :bottom, tf.rotation, tf.color)
         kw = Dict(:model => text_model(font, xy), :scale_primitive => true)
         t = PlotText(xaxis[:guide], font)
         extract_font(font, kw)
@@ -796,8 +796,8 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     end
 
     if yaxis[:guide] != ""
-        tf = yaxis[:guidefont]; color = gl_color(yaxis[:foreground_color_guide])
-        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, 90f0, color)
+        tf = guidefont(yaxis)
+        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, 90f0, tf.color)
         xy = Point2f0(-pointsize(tf)/2, area.h/2)
         kw = Dict(:model => text_model(font, xy), :scale_primitive=>true)
         t = PlotText(yaxis[:guide], font)
@@ -1483,9 +1483,8 @@ function make_label(sp, series, i)
     else
         series[:label]
     end
-    color = sp[:foreground_color_legend]
-    ft = sp[:legendfont]
-    font = Plots.Font(ft.family, ft.pointsize, :left, :bottom, 0.0, color)
+    ft = legendfont(sp)
+    font = Plots.Font(ft.family, ft.pointsize, :left, :bottom, 0.0, ft.color)
     xy = Point2f0(w+gap, 0.0)
     kw = Dict(:model => text_model(font, xy), :scale_primitive=>false)
     extract_font(font, kw)
