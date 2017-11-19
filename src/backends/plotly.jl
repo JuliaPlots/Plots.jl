@@ -2,7 +2,7 @@
 # https://plot.ly/javascript/getting-started
 
 @require Revise begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl")) 
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl"))
 end
 
 const _plotly_attr = merge_with_base_supported([
@@ -19,7 +19,12 @@ const _plotly_attr = merge_with_base_supported([
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
     :fillrange, :fillcolor, :fillalpha,
     :bins,
-    :title, :title_location, :titlefont,
+    :title, :title_location,
+    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
+    :titlefontcolor,
+    :legendfontfamily, :legendfontsize, :legendfontcolor,
+    :tickfontfamily, :tickfontsize, :tickfontcolor,
+    :guidefontfamily, :guidefontsize, :guidefontcolor,
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
@@ -254,9 +259,9 @@ function plotly_axis(axis::Axis, sp::Subplot)
     ax[:tickangle] = -axis[:rotation]
 
     if !(axis[:ticks] in (nothing, :none))
-        ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
+        ax[:titlefont] = plotly_font(guidefont(axis))
         ax[:type] = plotly_scale(axis[:scale])
-        ax[:tickfont] = plotly_font(axis[:tickfont], axis[:foreground_color_text])
+        ax[:tickfont] = plotly_font(tickfont(axis))
         ax[:tickcolor] = framestyle in (:zerolines, :grid) || !axis[:showaxis] ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
@@ -334,8 +339,8 @@ function plotly_layout(plt::Plot)
                 0.5 * (left(bb) + right(bb))
             end
             titlex, titley = xy_mm_to_pcts(xmm, top(bbox(sp)), w*px, h*px)
-            titlefont = font(sp[:titlefont], :top, sp[:foreground_color_title])
-            push!(d_out[:annotations], plotly_annotation_dict(titlex, titley, text(sp[:title], titlefont)))
+            title_font = font(titlefont(sp), :top)
+            push!(d_out[:annotations], plotly_annotation_dict(titlex, titley, text(sp[:title], title_font)))
         end
 
         d_out[:plot_bgcolor] = rgba_string(sp[:background_color_inside])
@@ -376,7 +381,7 @@ function plotly_layout(plt::Plot)
             d_out[:legend] = KW(
                 :bgcolor  => rgba_string(sp[:background_color_legend]),
                 :bordercolor => rgba_string(sp[:foreground_color_legend]),
-                :font     => plotly_font(sp[:legendfont], sp[:foreground_color_legend]),
+                :font     => plotly_font(legendfont(sp)),
                 :x => xpos,
                 :y => ypos
             )
