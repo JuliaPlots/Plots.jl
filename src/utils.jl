@@ -1015,7 +1015,7 @@ ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 titlefont(sp::Subplot) = font(
     sp[:titlefontfamily],
     sp[:titlefontsize],
-    sp[:titlefont],
+    sp[:titlefontvalign],
     sp[:titlefonthalign],
     sp[:titlefontrotation],
     sp[:titlefontcolor],
@@ -1024,7 +1024,7 @@ titlefont(sp::Subplot) = font(
 legendfont(sp::Subplot) = font(
     sp[:legendfontfamily],
     sp[:legendfontsize],
-    sp[:legendfont],
+    sp[:legendfontvalign],
     sp[:legendfonthalign],
     sp[:legendfontrotation],
     sp[:legendfontcolor],
@@ -1033,7 +1033,7 @@ legendfont(sp::Subplot) = font(
 tickfont(ax::Axis) = font(
     ax[:tickfontfamily],
     ax[:tickfontsize],
-    ax[:tickfont],
+    ax[:tickfontvalign],
     ax[:tickfonthalign],
     ax[:tickfontrotation],
     ax[:tickfontcolor],
@@ -1042,7 +1042,7 @@ tickfont(ax::Axis) = font(
 guidefont(ax::Axis) = font(
     ax[:guidefontfamily],
     ax[:guidefontsize],
-    ax[:guidefont],
+    ax[:guidefontvalign],
     ax[:guidefonthalign],
     ax[:guidefontrotation],
     ax[:guidefontcolor],

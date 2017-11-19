@@ -1152,7 +1152,7 @@ const _match_map2 = KW(
     :foreground_color_guide   => :foreground_color_subplot,
     :foreground_color_text    => :foreground_color_subplot,
     :tickfontcolor            => :foreground_color_text,
-    :guidefontcolor           => :foreground_color_text,
+    :guidefontcolor           => :foreground_color_guide,
 )
 
 # properly retrieve from plt.attr, passing `:match` to the correct key
