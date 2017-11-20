@@ -380,6 +380,15 @@ function expand_extrema!(sp::Subplot, d::KW)
         expand_extrema!(axis, ignorenan_minimum(data) - 0.5minimum(bw))
     end
 
+    # expand for heatmaps
+    if d[:seriestype] == :heatmap
+        for letter in (:x, :y)
+            data = d[letter]
+            axis = sp[Symbol(letter, "axis")]
+            scale = get(d, Symbol(letter, "scale"), :identity)
+            expand_extrema!(axis, heatmap_edges(data, scale))
+        end
+    end
 end
 
 function expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)
