@@ -273,6 +273,7 @@ const _plot_defaults = KW(
     :background_color            => colorant"white",   # default for all backgrounds,
     :background_color_outside    => :match,            # background outside grid,
     :foreground_color            => :auto,             # default for all foregrounds, and title color,
+    :fontfamily                  => "sans-serif",
     :size                        => (600,400),
     :pos                         => (0,0),
     :window_title                 => "Plots.jl",
@@ -292,7 +293,13 @@ const _plot_defaults = KW(
 const _subplot_defaults = KW(
     :title                    => "",
     :title_location           => :center,           # also :left or :right
-    :titlefont                => font(14),
+    :fontfamily_subplot       => :match,
+    :titlefontfamily          => :match,
+    :titlefontsize            => 14,
+    :titlefonthalign          => :hcenter,
+    :titlefontvalign          => :vcenter,
+    :titlefontrotation        => 0.0,
+    :titlefontcolor           => :match,
     :background_color_subplot => :match,            # default for other bg colors... match takes plot default
     :background_color_legend  => :match,            # background of legend
     :background_color_inside  => :match,            # background inside grid
@@ -304,7 +311,12 @@ const _subplot_defaults = KW(
     :legendtitle              => nothing,
     :colorbar                 => :legend,
     :clims                    => :auto,
-    :legendfont               => font(8),
+    :legendfontfamily         => :match,
+    :legendfontsize           => 8,
+    :legendfonthalign         => :hcenter,
+    :legendfontvalign         => :vcenter,
+    :legendfontrotation       => 0.0,
+    :legendfontcolor          => :match,
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :none,             # choose from :none or :equal
@@ -327,8 +339,18 @@ const _axis_defaults = KW(
     :rotation  => 0,
     :flip      => false,
     :link      => [],
-    :tickfont  => font(8),
-    :guidefont => font(11),
+    :tickfontfamily         => :match,
+    :tickfontsize           => 8,
+    :tickfonthalign         => :hcenter,
+    :tickfontvalign         => :vcenter,
+    :tickfontrotation       => 0.0,
+    :tickfontcolor          => :match,
+    :guidefontfamily         => :match,
+    :guidefontsize           => 11,
+    :guidefonthalign         => :hcenter,
+    :guidefontvalign         => :vcenter,
+    :guidefontrotation       => 0.0,
+    :guidefontcolor          => :match,
     :foreground_color_axis   => :match,            # axis border/tick colors,
     :foreground_color_border => :match,            # plot area border/spines,
     :foreground_color_text   => :match,            # tick text color,
@@ -397,10 +419,10 @@ const _all_defaults = KW[
 const _initial_defaults = deepcopy(_all_defaults)
 
 # to be able to reset font sizes to initial values
-const _initial_fontsizes = Dict(:titlefont  => _subplot_defaults[:titlefont].pointsize,
-                                :legendfont => _subplot_defaults[:legendfont].pointsize,
-                                :tickfont   => _axis_defaults[:tickfont].pointsize,
-                                :guidefont  => _axis_defaults[:guidefont].pointsize)
+const _initial_fontsizes = Dict(:titlefont  => _subplot_defaults[:titlefontsize],
+                                :legendfont => _subplot_defaults[:legendfontsize],
+                                :tickfont   => _axis_defaults[:tickfontsize],
+                                :guidefont  => _axis_defaults[:guidefontsize])
 
 const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
 
@@ -743,6 +765,38 @@ function processGridArg!(d::KW, arg, letter)
     end
 end
 
+function processFontArg!(d::KW, fontname::Symbol, arg)
+    T = typeof(arg)
+    if T <: Font
+        d[Symbol(fontname, :family)] = arg.family
+        d[Symbol(fontname, :size)] = arg.pointsize
+        d[Symbol(fontname, :halign)] = arg.halign
+        d[Symbol(fontname, :valign)] = arg.valign
+        d[Symbol(fontname, :rotation)] = arg.rotation
+        d[Symbol(fontname, :color)] = arg.color
+    elseif arg == :center
+        d[Symbol(fontname, :halign)] = :hcenter
+        d[Symbol(fontname, :valign)] = :vcenter
+    elseif arg in (:hcenter, :left, :right)
+        d[Symbol(fontname, :halign)] = arg
+    elseif arg in (:vcenter, :top, :bottom)
+        d[Symbol(fontname, :valign)] = arg
+    elseif T <: Colorant
+        d[Symbol(fontname, :color)] = arg
+    elseif T <: Symbol || T <: AbstractString
+        try
+            d[Symbol(fontname, :color)] = parse(Colorant, string(arg))
+        catch
+            d[Symbol(fontname, :family)] = string(arg)
+        end
+    elseif typeof(arg) <: Integer
+        d[Symbol(fontname, :size)] = arg
+    elseif typeof(arg) <: Real
+        d[Symbol(fontname, :rotation)] = convert(Float64, arg)
+    else
+        warn("Skipped font arg: $arg ($(typeof(arg)))")
+    end
+end
 
 _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
 _replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
@@ -808,6 +862,32 @@ function preprocessArgs!(d::KW)
         args = pop!(d, gridsym, ())
         for arg in wraptuple(args)
             processGridArg!(d, arg, letter)
+        end
+    end
+
+    # fonts
+    for fontname in (:titlefont, :legendfont)
+        args = pop!(d, fontname, ())
+        for arg in wraptuple(args)
+            processFontArg!(d, fontname, arg)
+        end
+    end
+    # handle font args common to all axes
+    for fontname in (:tickfont, :guidefont)
+        args = pop!(d, fontname, ())
+        for arg in wraptuple(args)
+            for letter in (:x, :y, :z)
+                processFontArg!(d, Symbol(letter, fontname), arg)
+            end
+        end
+    end
+    # handle individual axes font args
+    for letter in (:x, :y, :z)
+        for fontname in (:tickfont, :guidefont)
+            args = pop!(d, Symbol(letter, fontname), ())
+            for arg in wraptuple(args)
+                processFontArg!(d, Symbol(letter, fontname), arg)
+            end
         end
     end
 
@@ -1084,6 +1164,12 @@ const _match_map = KW(
     :top_margin    => :margin,
     :right_margin  => :margin,
     :bottom_margin => :margin,
+    :titlefontfamily          => :fontfamily_subplot,
+    :legendfontfamily         => :fontfamily_subplot,
+    :titlefontcolor           => :foreground_color_subplot,
+    :legendfontcolor          => :foreground_color_subplot,
+    :tickfontcolor            => :foreground_color_text,
+    :guidefontcolor           => :foreground_color_guide,
 )
 
 # these can match values from the parent container (axis --> subplot --> plot)
@@ -1095,6 +1181,9 @@ const _match_map2 = KW(
     :foreground_color_grid    => :foreground_color_subplot,
     :foreground_color_guide   => :foreground_color_subplot,
     :foreground_color_text    => :foreground_color_subplot,
+    :fontfamily_subplot       => :fontfamily,
+    :tickfontfamily           => :fontfamily_subplot,
+    :guidefontfamily          => :fontfamily_subplot,
 )
 
 # properly retrieve from plt.attr, passing `:match` to the correct key

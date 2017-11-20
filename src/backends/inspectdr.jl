@@ -14,7 +14,7 @@ Add in functionality to Plots.jl:
 =#
 
 @require Revise begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "inspectdr.jl")) 
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "inspectdr.jl"))
 end
 
 # ---------------------------------------------------------------------------
@@ -32,10 +32,13 @@ const _inspectdr_attr = merge_with_base_supported([
     :markerstrokestyle, #Causes warning not to have it... what is this?
     :fillcolor, :fillalpha, #:fillrange,
 #    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :title_location, :titlefont,
+    :title, :title_location,
     :window_title,
     :guide, :lims, :scale, #:ticks, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
+    :titlefontfamily, :titlefontsize, :titlefontcolor,
+    :legendfontfamily, :legendfontsize, :legendfontcolor,
+    :tickfontfamily, :tickfontsize, :tickfontcolor,
+    :guidefontfamily, :guidefontsize, :guidefontcolor,
     :grid, :legend, #:colorbar,
 #    :marker_z,
 #    :line_z,
@@ -373,24 +376,24 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
         l[:frame_canvas].fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
         l[:frame_data].fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
         l[:frame_data].line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
-        l[:font_title] = InspectDR.Font(sp[:titlefont].family,
-            _inspectdr_mapptsize(sp[:titlefont].pointsize),
-            color = _inspectdr_mapcolor(sp[:foreground_color_title])
+        l[:font_title] = InspectDR.Font(sp[:titlefontfamily],
+            _inspectdr_mapptsize(sp[:titlefontsize]),
+            color = _inspectdr_mapcolor(sp[:titlefontcolor])
         )
         #Cannot independently control fonts of axes with InspectDR:
-        l[:font_axislabel] = InspectDR.Font(xaxis[:guidefont].family,
-            _inspectdr_mapptsize(xaxis[:guidefont].pointsize),
-            color = _inspectdr_mapcolor(xaxis[:foreground_color_guide])
+        l[:font_axislabel] = InspectDR.Font(xaxis[:guidefontfamily],
+            _inspectdr_mapptsize(xaxis[:guidefontsize]),
+            color = _inspectdr_mapcolor(xaxis[:guidefontcolor])
         )
-        l[:font_ticklabel] = InspectDR.Font(xaxis[:tickfont].family,
-            _inspectdr_mapptsize(xaxis[:tickfont].pointsize),
-            color = _inspectdr_mapcolor(xaxis[:foreground_color_text])
+        l[:font_ticklabel] = InspectDR.Font(xaxis[:tickfontfamily],
+            _inspectdr_mapptsize(xaxis[:tickfontsize]),
+            color = _inspectdr_mapcolor(xaxis[:tickfontcolor])
         )
         l[:enable_legend] = (sp[:legend] != :none)
         #l[:halloc_legend] = 150 #TODO: compute???
-        l[:font_legend] = InspectDR.Font(sp[:legendfont].family,
-            _inspectdr_mapptsize(sp[:legendfont].pointsize),
-            color = _inspectdr_mapcolor(sp[:foreground_color_legend])
+        l[:font_legend] = InspectDR.Font(sp[:legendfontfamily],
+            _inspectdr_mapptsize(sp[:legendfontsize]),
+            color = _inspectdr_mapcolor(sp[:legendfontcolor])
         )
         l[:frame_legend].fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
 end

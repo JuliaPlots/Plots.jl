@@ -19,7 +19,10 @@ const _pyplot_attr = merge_with_base_supported([
     :title, :title_location, :titlefont,
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
+    :titlefontfamily, :titlefontsize, :titlefontcolor,
+    :legendfontfamily, :legendfontsize, :legendfontcolor,
+    :tickfontfamily, :tickfontsize, :tickfontcolor,
+    :guidefontfamily, :guidefontsize, :guidefontcolor,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
     :legend, :legendtitle, :colorbar,
     :marker_z, :line_z, :fill_z,
@@ -128,6 +131,7 @@ end
 # # anything else just gets a bluesred gradient
 # py_colormap(c, α=nothing) = py_colormap(default_gradient(), α)
 
+py_color(s) = py_color(parse(Colorant, string(s)))
 py_color(c::Colorant) = (red(c), green(c), blue(c), alpha(c))
 py_color(cs::AVec) = map(py_color, cs)
 py_color(grad::ColorGradient) = py_color(grad.colors)
@@ -923,8 +927,8 @@ function py_set_axis_colors(sp, ax, a::Axis)
         tickcolor = sp[:framestyle] == :zerolines ? py_color(plot_color(a[:foreground_color_grid], a[:gridalpha])) : py_color(a[:foreground_color_axis])
         ax[:tick_params](axis=string(a[:letter]), which="both",
                          colors=tickcolor,
-                         labelcolor=py_color(a[:foreground_color_text]))
-        ax[axissym][:label][:set_color](py_color(a[:foreground_color_guide]))
+                         labelcolor=py_color(a[:tickfontcolor]))
+        ax[axissym][:label][:set_color](py_color(a[:guidefontcolor]))
     end
 end
 
@@ -978,9 +982,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 :title
             end
             ax[func][:set_text](sp[:title])
-            ax[func][:set_fontsize](py_dpi_scale(plt, sp[:titlefont].pointsize))
-            ax[func][:set_family](sp[:titlefont].family)
-            ax[func][:set_color](py_color(sp[:foreground_color_title]))
+            ax[func][:set_fontsize](py_dpi_scale(plt, sp[:titlefontsize]))
+            ax[func][:set_family](sp[:titlefontfamily])
+            ax[func][:set_color](py_color(sp[:titlefontcolor]))
             # ax[:set_title](sp[:title], loc = loc)
         end
 
@@ -1005,10 +1009,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             fig = plt.o
             cbax = fig[:add_axes]([0.8,0.1,0.03,0.8], label = string(gensym()))
             cb = fig[:colorbar](handle; cax = cbax, kw...)
-            cb[:set_label](sp[:colorbar_title],size=py_dpi_scale(plt, sp[:yaxis][:guidefont].pointsize),family=sp[:yaxis][:guidefont].family)
+            cb[:set_label](sp[:colorbar_title],size=py_dpi_scale(plt, sp[:yaxis][:guidefontsize]),family=sp[:yaxis][:guidefontamily], color = py_color(sp[:yaxis][:guidefontcolor]))
             for lab in cb[:ax][:yaxis][:get_ticklabels]()
-                  lab[:set_fontsize](py_dpi_scale(plt, sp[:yaxis][:tickfont].pointsize))
-                  lab[:set_family](sp[:yaxis][:tickfont].family)
+                  lab[:set_fontsize](py_dpi_scale(plt, sp[:yaxis][:tickfontsize]))
+                  lab[:set_family](sp[:yaxis][:tickfontfamily])
+                  lab[:set_color](py_color(sp[:yaxis][:tickfontcolor]))
             end
             sp.attr[:cbar_handle] = cb
             sp.attr[:cbar_ax] = cbax
@@ -1068,11 +1073,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             if get(axis.d, :flip, false)
                 ax[Symbol("invert_", letter, "axis")]()
             end
-            pyaxis[:label][:set_fontsize](py_dpi_scale(plt, axis[:guidefont].pointsize))
-            pyaxis[:label][:set_family](axis[:guidefont].family)
+            pyaxis[:label][:set_fontsize](py_dpi_scale(plt, axis[:guidefontsize]))
+            pyaxis[:label][:set_family](axis[:guidefontfamily])
             for lab in ax[Symbol("get_", letter, "ticklabels")]()
-                lab[:set_fontsize](py_dpi_scale(plt, axis[:tickfont].pointsize))
-                lab[:set_family](axis[:tickfont].family)
+                lab[:set_fontsize](py_dpi_scale(plt, axis[:tickfontsize]))
+                lab[:set_family](axis[:tickfontfamily])
                 lab[:set_rotation](axis[:rotation])
             end
             if axis[:grid] && !(ticks in (:none, nothing, false))
@@ -1248,7 +1253,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 labels,
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
-                fontsize = py_dpi_scale(plt, sp[:legendfont].pointsize)
+                fontsize = py_dpi_scale(plt, sp[:legendfontsize])
                 # family = sp[:legendfont].family
                 # framealpha = 0.6
             )
@@ -1256,8 +1261,9 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             sp[:legendtitle] != nothing && leg[:set_title](sp[:legendtitle])
 
             fgcolor = py_color(sp[:foreground_color_legend])
+            lfcolor = py_color(sp[:legendfontcolor])
             for txt in leg[:get_texts]()
-                PyPlot.plt[:setp](txt, color = fgcolor, family = sp[:legendfont].family)
+                PyPlot.plt[:setp](txt, color = lfcolor, family = sp[:legendfontfamily])
             end
 
             # set some legend properties

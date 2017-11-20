@@ -22,7 +22,14 @@ const _gr_attr = merge_with_base_supported([
     :layout,
     :title, :window_title,
     :guide, :lims, :ticks, :scale, :flip,
-    :tickfont, :guidefont, :legendfont,
+    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
+    :titlefontrotation, :titlefontcolor,
+    :legendfontfamily, :legendfontsize, :legendfonthalign, :legendfontvalign,
+    :legendfontrotation, :legendfontcolor,
+    :tickfontfamily, :tickfontsize, :tickfonthalign, :tickfontvalign,
+    :tickfontrotation, :tickfontcolor,
+    :guidefontfamily, :guidefontsize, :guidefonthalign, :guidefontvalign,
+    :guidefontrotation, :guidefontcolor,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
     :legend, :legendtitle, :colorbar,
     :fill_z, :line_z, :marker_z, :levels,
@@ -583,10 +590,9 @@ end
 function gr_set_xticks_font(sp)
     flip = sp[:yaxis][:flip]
     mirror = sp[:xaxis][:mirror]
-    gr_set_font(sp[:xaxis][:tickfont],
+    gr_set_font(tickfont(sp[:xaxis]),
                 halign = (:left, :hcenter, :right)[sign(sp[:xaxis][:rotation]) + 2],
                 valign = (mirror ? :bottom : :top),
-                color = sp[:xaxis][:foreground_color_axis],
                 rotation = sp[:xaxis][:rotation])
     return flip, mirror
 end
@@ -595,10 +601,9 @@ end
 function gr_set_yticks_font(sp)
     flip = sp[:xaxis][:flip]
     mirror = sp[:yaxis][:mirror]
-    gr_set_font(sp[:yaxis][:tickfont],
+    gr_set_font(tickfont(sp[:yaxis]),
                 halign = (mirror ? :left : :right),
                 valign = (:top, :vcenter, :bottom)[sign(sp[:yaxis][:rotation]) + 2],
-                color = sp[:yaxis][:foreground_color_axis],
                 rotation = sp[:yaxis][:rotation])
     return flip, mirror
 end
@@ -759,8 +764,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     end
 
     # draw the axes
-    gr_set_font(xaxis[:tickfont])
-    gr_set_textcolor(xaxis[:foreground_color_text])
+    gr_set_font(tickfont(xaxis))
     GR.setlinewidth(1)
 
     if is3d(sp)
@@ -887,7 +891,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # add the guides
     GR.savestate()
     if sp[:title] != ""
-        gr_set_font(sp[:titlefont])
+        gr_set_font(titlefont(sp))
         loc = sp[:title_location]
         if loc == :left
             xpos = viewport_plotarea[1]
@@ -900,27 +904,24 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             halign = GR.TEXT_HALIGN_CENTER
         end
         GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
-        gr_set_textcolor(sp[:foreground_color_title])
         gr_text(xpos, viewport_subplot[4], sp[:title])
     end
 
     if xaxis[:guide] != ""
-        gr_set_font(xaxis[:guidefont])
+        gr_set_font(guidefont(xaxis))
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-        gr_set_textcolor(xaxis[:foreground_color_guide])
         gr_text(gr_view_xcenter(), viewport_subplot[3], xaxis[:guide])
     end
 
     if yaxis[:guide] != ""
-        gr_set_font(yaxis[:guidefont])
+        gr_set_font(guidefont(yaxis))
         GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
         GR.setcharup(-1, 0)
-        gr_set_textcolor(yaxis[:foreground_color_guide])
         gr_text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
     end
     GR.restorestate()
 
-    gr_set_font(xaxis[:tickfont])
+    gr_set_font(tickfont(xaxis))
 
     # this needs to be here to point the colormap to the right indices
     GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
@@ -1193,7 +1194,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
-        gr_set_font(sp[:legendfont])
+        gr_set_font(legendfont(sp))
         w = 0
         i = 0
         n = 0
@@ -1215,7 +1216,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             w = max(w, tbx[3] - tbx[1])
         end
         if w > 0
-            dy = _gr_point_mult[1] * sp[:legendfont].pointsize * 1.75
+            dy = _gr_point_mult[1] * sp[:legendfontsize] * 1.75
             h = dy*n
             (xpos,ypos) = gr_legend_pos(sp[:legend],w,h)
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
@@ -1227,7 +1228,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             i = 0
             if sp[:legendtitle] != nothing
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
-                gr_set_textcolor(sp[:foreground_color_legend])
+                gr_set_textcolor(sp[:legendfontcolor])
                 GR.settransparency(1)
                 gr_text(xpos - 0.03 + 0.5*w, ypos, string(sp[:legendtitle]))
                 ypos -= dy
@@ -1269,7 +1270,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     lab = series[:label]
                 end
                 GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-                gr_set_textcolor(sp[:foreground_color_legend])
+                gr_set_textcolor(sp[:legendfontcolor])
                 gr_text(xpos, ypos, lab)
                 ypos -= dy
             end

@@ -51,8 +51,8 @@ _series_updated(plt::Plot, series::Series) = nothing
 
 _before_layout_calcs(plt::Plot) = nothing
 
-title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefont].pointsize * pt
-guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefont].pointsize * pt
+title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefontsize] * pt
+guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefontsize] * pt
 
 "Returns the (width,height) of a text label."
 function text_size(lablen::Int, sz::Number, rot::Number = 0)
@@ -93,7 +93,7 @@ function tick_padding(axis::Axis)
         # hgt
 
         # get the height of the rotated label
-        text_size(longest_label, axis[:tickfont].pointsize, rot)[2]
+        text_size(longest_label, axis[:tickfontsize], rot)[2]
     end
 end
 
