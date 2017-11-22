@@ -1212,7 +1212,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             else
                 lab = series[:label]
             end
-            tbx, tby = gr_inqtext(0, 0, lab)
+            tbx, tby = gr_inqtext(0, 0, string(lab))
             w = max(w, tbx[3] - tbx[1])
         end
         if w > 0
@@ -1271,7 +1271,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 end
                 GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
                 gr_set_textcolor(sp[:legendfontcolor])
-                gr_text(xpos, ypos, lab)
+                gr_text(xpos, ypos, string(lab))
                 ypos -= dy
             end
         end
