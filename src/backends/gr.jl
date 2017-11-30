@@ -1222,8 +1222,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             gr_set_fillcolor(sp[:background_color_legend])
             GR.fillrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
-            GR.setlinetype(1)
-            GR.setlinewidth(1)
+            gr_set_line(1, :solid, sp[:foreground_color_legend])
             GR.drawrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
             i = 0
             if sp[:legendtitle] != nothing
