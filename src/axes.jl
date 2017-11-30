@@ -577,7 +577,7 @@ function axis_drawing_info(sp::Subplot)
                     push!(xtick_segs, (xtick, tick_start), (xtick, tick_stop)) # bottom tick
                 end
                 # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
-                xaxis[:grid] && push!(xgrid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
+                xaxis[:grid] && push!(xgrid_segs, (xtick, ymin), (xtick, ymax)) # vertical grid
             end
         end
 
@@ -616,7 +616,7 @@ function axis_drawing_info(sp::Subplot)
                     push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
                 end
                 # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
-                yaxis[:grid] && push!(ygrid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
+                yaxis[:grid] && push!(ygrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
             end
         end
     end
