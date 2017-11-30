@@ -355,7 +355,7 @@ function expand_extrema!(sp::Subplot, d::KW)
     if fr == nothing && d[:seriestype] == :bar
         fr = 0.0
     end
-    if fr != nothing
+    if fr != nothing && !all3D(d)
         axis = sp.attr[vert ? :yaxis : :xaxis]
         if typeof(fr) <: Tuple
             for fri in fr
