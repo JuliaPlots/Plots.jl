@@ -924,7 +924,7 @@ function py_set_axis_colors(sp, ax, a::Axis)
     end
     axissym = Symbol(a[:letter], :axis)
     if haskey(ax, axissym)
-        tickcolor = sp[:framestyle] == :zerolines ? py_color(plot_color(a[:foreground_color_grid], a[:gridalpha])) : py_color(a[:foreground_color_axis])
+        tickcolor = sp[:framestyle] in (:zerolines, :grid) ? py_color(plot_color(a[:foreground_color_grid], a[:gridalpha])) : py_color(a[:foreground_color_axis])
         ax[:tick_params](axis=string(a[:letter]), which="both",
                          colors=tickcolor,
                          labelcolor=py_color(a[:tickfontcolor]))
