@@ -26,13 +26,15 @@ M[:,2] += 0.8sqrt(abs(M[:,1])) - 0.5M[:,3] + 5
 M[:,3] -= 0.7M[:,1].^2 + 2
 
 # marginalhist, corrplot, and cornerplot
-mp = marginalhist(iris, :PetalLength, :PetalWidth)
+mp = @df iris marginalhist(:PetalLength, :PetalWidth)
 cp = corrplot(M, label = ["x$i" for i=1:4])
 cp2 = cornerplot(M)
 
 # violin/boxplot
-vp = violin(singers,:VoicePart,:Height)
-boxplot!(singers,:VoicePart,:Height)
+vp = @df singers begin
+    violin(:VoicePart, :Height)
+    boxplot!(:VoicePart, :Height)
+end
 
 # Distributions
 np = plot(Normal(3,5), fill=(0, .5,:orange))
@@ -56,20 +58,42 @@ oh = ohlc(y)
 plot(mp, cp, cp2, vp, np, gp, lp, oh, layout=(4,2), size=(1000,2000))
 ```
 
-![dark](https://cloud.githubusercontent.com/assets/8431156/19231320/b586c026-8ed9-11e6-989a-c7f181ce8e1d.png)
+# Dark
+`theme(:dark)`
 
-Or using the `:sand` theme.
-![sand](https://cloud.githubusercontent.com/assets/8431156/19231322/b587c048-8ed9-11e6-824c-a6f8098b576c.png)
+![dark](https://user-images.githubusercontent.com/16589944/33489504-511a882e-d6b4-11e7-8b4d-64c54f926b7c.png)
+
+# Sand
+`theme(:sand)`
+
+![sand](https://user-images.githubusercontent.com/16589944/33489509-568adb42-d6b4-11e7-8529-e32602edce20.png)
 
 # Lime
-![lime](https://cloud.githubusercontent.com/assets/8431156/19234379/87084ff0-8eeb-11e6-81bd-5e6abada0082.png)
+`theme(:lime)`
+
+![lime](https://user-images.githubusercontent.com/16589944/33489523-5dbe46c4-d6b4-11e7-9976-4c217f299408.png)
 
 # Orange
-![orange](https://cloud.githubusercontent.com/assets/8431156/19236422/9aadc056-8ef7-11e6-83ad-5eb89e45680f.png)
+`theme(:orange)`
+
+![orange](https://user-images.githubusercontent.com/16589944/33489526-60efe2bc-d6b4-11e7-958d-07e766adf849.png)
 
 # Solarized
-Using `:solarized`.
-![solarized dark theme](https://cloud.githubusercontent.com/assets/8431156/19231323/b58bf5a0-8ed9-11e6-81c0-3547a0201615.png)
+`theme(:solarized)`
 
-Using `:solarized_light`.
-![solarized light theme](https://cloud.githubusercontent.com/assets/8431156/19231321/b5872ebc-8ed9-11e6-8a5b-a9b615e348a9.png)
+![solarized](https://user-images.githubusercontent.com/16589944/33489533-6500a21a-d6b4-11e7-9f02-a44e1066a20a.png)
+
+# Solarized Light
+`theme(:solarized_light)`
+
+![solarized_light](https://cloud.githubusercontent.com/assets/8431156/19231321/b5872ebc-8ed9-11e6-8a5b-a9b615e348a9.png)
+
+# Juno
+`theme(:juno)`
+
+![juno](https://user-images.githubusercontent.com/16589944/33489542-713aa45e-d6b4-11e7-8385-558819e9d47c.png)
+
+# Default
+`theme(:default)`
+
+![default](https://user-images.githubusercontent.com/16589944/33489485-4b3c190e-d6b4-11e7-90c7-b58b35b735ac.png)
