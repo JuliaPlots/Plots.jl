@@ -13,7 +13,7 @@ expand_palette(bg, palette; kwargs...) = [convert(RGBA,c) for c in  distinguisha
 
 const KW = Dict{Symbol, Any}
 
-immutable PlotTheme
+struct PlotTheme
     defaults::KW
 end
 
