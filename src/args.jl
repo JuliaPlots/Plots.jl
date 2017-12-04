@@ -417,6 +417,7 @@ const _all_defaults = KW[
 ]
 
 const _initial_defaults = deepcopy(_all_defaults)
+const _initial_axis_defaults = deepcopy(_axis_defaults)
 
 # to be able to reset font sizes to initial values
 const _initial_fontsizes = Dict(:titlefont  => _subplot_defaults[:titlefontsize],
@@ -614,7 +615,10 @@ function default(d::KW, k::Symbol)
     get(d, k, default(k))
 end
 
-reset_defaults() = foreach(merge!, _all_defaults, _initial_defaults)
+function reset_defaults()
+    foreach(merge!, _all_defaults, _initial_defaults)
+    merge!(_axis_defaults, _initial_axis_defaults)
+end
 
 # -----------------------------------------------------------------------------
 
