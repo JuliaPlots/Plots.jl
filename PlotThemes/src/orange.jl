@@ -10,10 +10,12 @@ orange_palette =  reverse([
 black = orange_palette[5]
 
 _themes[:orange] = PlotTheme(
-    black,
-    black,
-    orange_palette[1],
-    orange_palette[2],
-    expand_palette(black, orange_palette[1:4]),
-    orange_palette[1:4]
+    bg = black,
+    bginside = black,
+    fg = orange_palette[1],
+    fgtext = orange_palette[2],
+    fgguide = orange_palette[2],
+    fglegend = orange_palette[2],
+    palette = expand_palette(black, orange_palette[1:4]),
+    gradient = orange_palette[1:4]
 )

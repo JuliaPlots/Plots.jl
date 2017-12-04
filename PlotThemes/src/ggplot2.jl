@@ -22,3 +22,15 @@
 #           fgtext   = :lightgray,
 #           fglegend = :lightgray,
 #           fgguide  = :black)
+
+_themes[:ggplot2] = PlotTheme(
+    bg = :white,
+    bginside = :lightgray,
+    bglegend = plot_color(:lightgray, 0.8),
+    framestyle = :grid,
+    gridcolor = :white,
+    gridalpha = 1,
+    fgtext = :grey,
+    fglegend = :white,
+    fgguide = :black,
+)

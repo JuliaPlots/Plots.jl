@@ -11,10 +11,12 @@ const sand_palette = [
 sand_bg = colorant"#F7F3EE"
 
 _themes[:sand] = PlotTheme(
-    sand_bg,
-    colorant"#E2DCD4",
-    colorant"#CBBFAF",
-    colorant"#725B61",
-    expand_palette(sand_bg, sand_palette),
-    sand_palette[[1,4]]
+    bg = sand_bg,
+    bginside = colorant"#E2DCD4",
+    fg = colorant"#CBBFAF",
+    fgtext = colorant"#725B61",
+    fgguide = colorant"#725B61",
+    fglegend = colorant"#725B61",
+    palette = expand_palette(sand_bg, sand_palette),
+    gradient = sand_palette[[1,4]]
 )
