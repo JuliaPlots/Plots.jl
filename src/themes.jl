@@ -4,7 +4,7 @@
 Specify the colour theme for plots.
 """
 function theme(s::Symbol; kw...)
-    # Reset to defaults to overwrite active team
+    # Reset to defaults to overwrite active theme
     reset_defaults()
     thm = PlotThemes._themes[s]
 
