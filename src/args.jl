@@ -367,6 +367,18 @@ const _axis_defaults = KW(
     :showaxis                 => true,
 )
 
+const _magic_arguments = [
+    :axis,
+    :grid,
+    :marker,
+    :line,
+    :fill,
+    :titlefont,
+    :legendfont,
+    :guidefont,
+    :tickfont,
+]
+
 const _suppress_warnings = Set{Symbol}([
     :x_discrete_indices,
     :y_discrete_indices,
@@ -379,6 +391,7 @@ const _suppress_warnings = Set{Symbol}([
     :primary,
     :smooth,
     :relative_bbox,
+    _magic_arguments...
 ])
 
 # add defaults for the letter versions
@@ -605,6 +618,8 @@ function default(k::Symbol, v)
 end
 
 function default(; kw...)
+    kw = KW(kw)
+    preprocessArgs!(kw)
     for (k,v) in kw
         default(k, v)
     end
