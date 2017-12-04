@@ -1,3 +1,6 @@
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotlyjs.jl")) 
+end
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 
@@ -85,7 +88,8 @@ end
 
 # ----------------------------------------------------------------
 
-function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend})
+function Base.show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend})
+    prepare_output(plt)
     if isijulia() && !_use_remote[]
         write(io, PlotlyJS.html_body(PlotlyJS.JupyterPlot(plt.o)))
     else
@@ -98,6 +102,7 @@ function plotlyjs_save_hack(io::IO, plt::Plot{PlotlyJSBackend}, ext::String)
     PlotlyJS.savefig(plt.o, tmpfn)
     write(io, read(open(tmpfn)))
 end
+_show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "svg")
 _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "png")
 _show(io::IO, ::MIME"application/pdf", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "pdf")
 _show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "eps")

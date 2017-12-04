@@ -13,6 +13,10 @@ Add in functionality to Plots.jl:
     :aspect_ratio,
 =#
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "inspectdr.jl"))
+end
+
 # ---------------------------------------------------------------------------
 #TODO: remove features
 const _inspectdr_attr = merge_with_base_supported([
@@ -28,10 +32,13 @@ const _inspectdr_attr = merge_with_base_supported([
     :markerstrokestyle, #Causes warning not to have it... what is this?
     :fillcolor, :fillalpha, #:fillrange,
 #    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :title_location, :titlefont,
+    :title, :title_location,
     :window_title,
     :guide, :lims, :scale, #:ticks, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
+    :titlefontfamily, :titlefontsize, :titlefontcolor,
+    :legendfontfamily, :legendfontsize, :legendfontcolor,
+    :tickfontfamily, :tickfontsize, :tickfontcolor,
+    :guidefontfamily, :guidefontsize, :guidefontcolor,
     :grid, :legend, #:colorbar,
 #    :marker_z,
 #    :line_z,
@@ -131,7 +138,7 @@ end
 
 function _inspectdr_getscale(s::Symbol, yaxis::Bool)
 #TODO: Support :asinh, :sqrt
-    kwargs = yaxis? (:tgtmajor=>8, :tgtminor=>2): () #More grid lines on y-axis
+    kwargs = yaxis ? (:tgtmajor=>8, :tgtminor=>2) : () #More grid lines on y-axis
     if :log2 == s
         return InspectDR.AxisScale(:log2; kwargs...)
     elseif :log10 == s
@@ -163,7 +170,7 @@ function _initialize_backend(::InspectDRBackend; kw...)
             2*InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y
         )
 
-        type InspecDRPlotRef
+        mutable struct InspecDRPlotRef
             mplot::Union{Void, InspectDR.Multiplot}
             gui::Union{Void, InspectDR.GtkPlot}
         end
@@ -172,7 +179,7 @@ function _initialize_backend(::InspectDRBackend; kw...)
         _inspectdr_getmplot(r::InspecDRPlotRef) = r.mplot
 
         _inspectdr_getgui(::Any) = nothing
-        _inspectdr_getgui(gplot::InspectDR.GtkPlot) = (gplot.destroyed? nothing: gplot)
+        _inspectdr_getgui(gplot::InspectDR.GtkPlot) = (gplot.destroyed ? nothing : gplot)
         _inspectdr_getgui(r::InspecDRPlotRef) = _inspectdr_getgui(r.gui)
     end
 end
@@ -235,13 +242,13 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     #Don't do anything without a "subplot" object:  Will process later.
     if nothing == plot; return; end
 
-    _vectorize(v) = isa(v, Vector)? v: collect(v) #InspectDR only supports vectors
+    _vectorize(v) = isa(v, Vector) ? v : collect(v) #InspectDR only supports vectors
     x = _vectorize(series[:x]); y = _vectorize(series[:y])
 
     #No support for polar grid... but can still perform polar transformation:
     if ispolar(sp)
         Θ = x; r = y
-        x = r.*cos(Θ); y = r.*sin(Θ)
+        x = r.*cos.(Θ); y = r.*sin.(Θ)
     end
 
     # doesn't handle mismatched x/y - wrap data (pyplot behaviour):
@@ -278,7 +285,7 @@ For st in :shape:
             end
         end
 
-        i = (nmax >= 2? div(nmax, 2): nmax) #Must pick one set of colors for legend
+        i = (nmax >= 2 ? div(nmax, 2) : nmax) #Must pick one set of colors for legend
         if i > 1 #Add dummy waveform for legend entry:
             linewidth = series[:linewidth]
             linecolor = _inspectdr_mapcolor(_cycle(series[:linecolor], i))
@@ -296,7 +303,7 @@ For st in :shape:
         #NOTE: In Plots.jl, :scatter plots have 0-linewidths (I think).
         linewidth = series[:linewidth]
         #More efficient & allows some support for markerstrokewidth:
-        _style = (0==linewidth? :none: series[:linestyle])
+        _style = (0==linewidth ? :none : series[:linestyle])
         wfrm = InspectDR.add(plot, x, y, id=series[:label])
         wfrm.line = InspectDR.line(
             style = _style,
@@ -369,24 +376,24 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
         l[:frame_canvas].fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
         l[:frame_data].fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
         l[:frame_data].line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
-        l[:font_title] = InspectDR.Font(sp[:titlefont].family,
-            _inspectdr_mapptsize(sp[:titlefont].pointsize),
-            color = _inspectdr_mapcolor(sp[:foreground_color_title])
+        l[:font_title] = InspectDR.Font(sp[:titlefontfamily],
+            _inspectdr_mapptsize(sp[:titlefontsize]),
+            color = _inspectdr_mapcolor(sp[:titlefontcolor])
         )
         #Cannot independently control fonts of axes with InspectDR:
-        l[:font_axislabel] = InspectDR.Font(xaxis[:guidefont].family,
-            _inspectdr_mapptsize(xaxis[:guidefont].pointsize),
-            color = _inspectdr_mapcolor(xaxis[:foreground_color_guide])
+        l[:font_axislabel] = InspectDR.Font(xaxis[:guidefontfamily],
+            _inspectdr_mapptsize(xaxis[:guidefontsize]),
+            color = _inspectdr_mapcolor(xaxis[:guidefontcolor])
         )
-        l[:font_ticklabel] = InspectDR.Font(xaxis[:tickfont].family,
-            _inspectdr_mapptsize(xaxis[:tickfont].pointsize),
-            color = _inspectdr_mapcolor(xaxis[:foreground_color_text])
+        l[:font_ticklabel] = InspectDR.Font(xaxis[:tickfontfamily],
+            _inspectdr_mapptsize(xaxis[:tickfontsize]),
+            color = _inspectdr_mapcolor(xaxis[:tickfontcolor])
         )
         l[:enable_legend] = (sp[:legend] != :none)
         #l[:halloc_legend] = 150 #TODO: compute???
-        l[:font_legend] = InspectDR.Font(sp[:legendfont].family,
-            _inspectdr_mapptsize(sp[:legendfont].pointsize),
-            color = _inspectdr_mapcolor(sp[:foreground_color_legend])
+        l[:font_legend] = InspectDR.Font(sp[:legendfontfamily],
+            _inspectdr_mapptsize(sp[:legendfontsize]),
+            color = _inspectdr_mapcolor(sp[:legendfontcolor])
         )
         l[:frame_legend].fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
 end

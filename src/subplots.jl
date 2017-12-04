@@ -1,6 +1,6 @@
 
 
-function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
+function Subplot(::T; parent = RootLayout()) where T<:AbstractBackend
     Subplot{T}(
         parent,
         Series[],

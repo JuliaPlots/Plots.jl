@@ -28,14 +28,17 @@ Read from .hdf5 file using:
     - Should be reliable for archival purposes.
 ==#
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "hdf5.jl")) 
+end
 
 import FixedPointNumbers: N0f8 #In core Julia
 
 #Dispatch types:
-immutable HDF5PlotNative; end #Indentifies a data element that can natively be handled by HDF5
-immutable HDF5CTuple; end #Identifies a "complex" tuple structure
+struct HDF5PlotNative; end #Indentifies a data element that can natively be handled by HDF5
+struct HDF5CTuple; end #Identifies a "complex" tuple structure
 
-type HDF5Plot_PlotRef
+mutable struct HDF5Plot_PlotRef
 	ref::Union{Plot, Void}
 end
 
@@ -128,7 +131,7 @@ function _hdf5_merge!(dest::Dict, src::Dict)
             _hdf5_merge!(dest[k].d, v.d)
         else
             dest[k] = v
-        end    
+        end
     end
     return
 end
@@ -276,11 +279,11 @@ function _hdf5plot_overwritetype(grp, T::Type) #Write directly to group
     HDF5.a_delete(grp, _hdf5plot_datatypeid)
     HDF5.a_write(grp, _hdf5plot_datatypeid, tstr)
 end
-function _hdf5plot_writetype{T<:Any}(grp, ::Type{Array{T}})
+function _hdf5plot_writetype(grp, ::Type{Array{T}}) where T<:Any
     tstr = HDF5PLOT_MAP_TELEM2STR[Array] #ANY
     HDF5.a_write(grp, _hdf5plot_datatypeid, tstr)
 end
-function _hdf5plot_writetype{T<:BoundingBox}(grp, ::Type{T})
+function _hdf5plot_writetype(grp, ::Type{T}) where T<:BoundingBox
     tstr = HDF5PLOT_MAP_TELEM2STR[BoundingBox]
     HDF5.a_write(grp, _hdf5plot_datatypeid, tstr)
 end
@@ -305,7 +308,7 @@ function _hdf5plot_gwrite(grp, k::String, v) #Default
     grp[k] = v
     _hdf5plot_writetype(grp, k, HDF5PlotNative)
 end
-function _hdf5plot_gwrite{T<:Number}(grp, k::String, v::Array{T}) #Default for arrays
+function _hdf5plot_gwrite(grp, k::String, v::Array{T}) where T<:Number #Default for arrays
     grp[k] = v
     _hdf5plot_writetype(grp, k, HDF5PlotNative)
 end
@@ -355,7 +358,7 @@ function _hdf5plot_gwrite(grp, k::String, v::Colorant)
     _hdf5plot_gwrite(grp, k, ARGB{N0f8}(v))
 end
 #Custom vector (when not using simple numeric type):
-function _hdf5plot_gwritearray{T}(grp, k::String, v::Array{T})
+function _hdf5plot_gwritearray(grp, k::String, v::Array{T}) where T
     if "annotations" == k;
         return #Hack.  Does not yet support annotations.
     end
@@ -380,7 +383,7 @@ function _hdf5plot_gwrite(grp, k::String, v::Extrema)
     grp[k] = [v.emin, v.emax]
     _hdf5plot_writetype(grp, k, Extrema)
 end
-function _hdf5plot_gwrite{T}(grp, k::String, v::Length{T})
+function _hdf5plot_gwrite(grp, k::String, v::Length{T}) where T
     grp[k] = v.value
     _hdf5plot_writetype(grp, k, [HDF5PLOT_MAP_TELEM2STR[Length], string(T)])
 end

@@ -5,21 +5,21 @@
 # This should cut down on boilerplate code and allow more focused dispatch on type
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
-const FuncOrFuncs = @compat(Union{Function, AVec{Function}})
+const FuncOrFuncs = Union{Function, AVec{Function}}
 
 all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image), get(d, :seriestype, :none))
 
 # missing
-convertToAnyVector(v::@compat(Void), d::KW) = Any[nothing], nothing
+convertToAnyVector(v::Void, d::KW) = Any[nothing], nothing
 
 # fixed number of blank series
 convertToAnyVector(n::Integer, d::KW) = Any[zeros(0) for i in 1:n], nothing
 
 # numeric vector
-convertToAnyVector{T<:Number}(v::AVec{T}, d::KW) = Any[v], nothing
+convertToAnyVector(v::AVec{T}, d::KW) where {T<:Number} = Any[v], nothing
 
 # string vector
-convertToAnyVector{T<:@compat(AbstractString)}(v::AVec{T}, d::KW) = Any[v], nothing
+convertToAnyVector(v::AVec{T}, d::KW) where {T<:AbstractString} = Any[v], nothing
 
 function convertToAnyVector(v::AMat, d::KW)
     if all3D(d)
@@ -39,7 +39,7 @@ convertToAnyVector(s::Surface, d::KW) = Any[s], nothing
 # convertToAnyVector(v::AVec{OHLC}, d::KW) = Any[v], nothing
 
 # dates
-convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}, d::KW) = Any[dts], nothing
+convertToAnyVector(dts::AVec{D}, d::KW) where {D<:Union{Date,DateTime}} = Any[dts], nothing
 
 # list of things (maybe other vectors, functions, or something else)
 function convertToAnyVector(v::AVec, d::KW)

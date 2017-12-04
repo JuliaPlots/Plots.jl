@@ -1,5 +1,5 @@
 
-type CurrentPlot
+mutable struct CurrentPlot
     nullableplot::Nullable{AbstractPlot}
 end
 const CURRENT_PLOT = CurrentPlot(Nullable{AbstractPlot}())

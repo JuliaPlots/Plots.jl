@@ -11,7 +11,7 @@ compute_angle(v::P2) = (angle = atan2(v[2], v[1]); angle < 0 ? 2π - angle : ang
 
 # -------------------------------------------------------------
 
-immutable Shape
+struct Shape
     x::Vector{Float64}
     y::Vector{Float64}
     # function Shape(x::AVec, y::AVec)
@@ -246,7 +246,7 @@ end
 # -----------------------------------------------------------------------
 
 
-type Font
+mutable struct Font
   family::AbstractString
   pointsize::Int
   halign::Symbol
@@ -336,7 +336,7 @@ function scalefontsizes()
 end
 
 "Wrap a string with font info"
-immutable PlotText
+struct PlotText
   str::AbstractString
   font::Font
 end
@@ -359,7 +359,7 @@ Base.length(t::PlotText) = length(t.str)
 
 # -----------------------------------------------------------------------
 
-immutable Stroke
+struct Stroke
   width
   color
   alpha
@@ -401,7 +401,7 @@ function stroke(args...; alpha = nothing)
 end
 
 
-immutable Brush
+struct Brush
   size  # fillrange, markersize, or any other sizey attribute
   color
   alpha
@@ -434,7 +434,7 @@ end
 
 # -----------------------------------------------------------------------
 
-type SeriesAnnotations
+mutable struct SeriesAnnotations
     strs::AbstractVector  # the labels/names
     font::Font
     baseshape::Nullable
@@ -513,7 +513,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     return
 end
 
-type EachAnn
+mutable struct EachAnn
     anns
     x
     y
@@ -538,12 +538,12 @@ annotations(sa::SeriesAnnotations) = sa
 # -----------------------------------------------------------------------
 
 "type which represents z-values for colors and sizes (and anything else that might come up)"
-immutable ZValues
+struct ZValues
   values::Vector{Float64}
   zrange::Tuple{Float64,Float64}
 end
 
-function zvalues{T<:Real}(values::AVec{T}, zrange::Tuple{T,T} = (ignorenan_minimum(values), ignorenan_maximum(values)))
+function zvalues(values::AVec{T}, zrange::Tuple{T,T} = (ignorenan_minimum(values), ignorenan_maximum(values))) where T<:Real
   ZValues(collect(float(values)), map(Float64, zrange))
 end
 
@@ -552,7 +552,7 @@ end
 abstract type AbstractSurface end
 
 "represents a contour or surface mesh"
-immutable Surface{M<:AMat} <: AbstractSurface
+struct Surface{M<:AMat} <: AbstractSurface
   surf::M
 end
 
@@ -564,7 +564,7 @@ for f in (:length, :size)
   @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
 end
 Base.copy(surf::Surface) = Surface(copy(surf.surf))
-Base.eltype{T}(surf::Surface{T}) = eltype(T)
+Base.eltype(surf::Surface{T}) where {T} = eltype(T)
 
 function expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]
@@ -575,7 +575,7 @@ function expand_extrema!(a::Axis, surf::Surface)
 end
 
 "For the case of representing a surface as a function of x/y... can possibly avoid allocations."
-immutable SurfaceFunction <: AbstractSurface
+struct SurfaceFunction <: AbstractSurface
     f::Function
 end
 
@@ -585,19 +585,19 @@ end
 # # I don't want to clash with ValidatedNumerics, but this would be nice:
 # ..(a::T, b::T) = (a,b)
 
-immutable Volume{T}
+struct Volume{T}
     v::Array{T,3}
     x_extents::Tuple{T,T}
     y_extents::Tuple{T,T}
     z_extents::Tuple{T,T}
 end
 
-default_extents{T}(::Type{T}) = (zero(T), one(T))
+default_extents(::Type{T}) where {T} = (zero(T), one(T))
 
-function Volume{T}(v::Array{T,3},
-                   x_extents = default_extents(T),
-                   y_extents = default_extents(T),
-                   z_extents = default_extents(T))
+function Volume(v::Array{T,3},
+                x_extents = default_extents(T),
+                y_extents = default_extents(T),
+                z_extents = default_extents(T)) where T
     Volume(v, x_extents, y_extents, z_extents)
 end
 
@@ -605,13 +605,13 @@ Base.Array(vol::Volume) = vol.v
 for f in (:length, :size)
   @eval Base.$f(vol::Volume, args...) = $f(vol.v, args...)
 end
-Base.copy{T}(vol::Volume{T}) = Volume{T}(copy(vol.v), vol.x_extents, vol.y_extents, vol.z_extents)
-Base.eltype{T}(vol::Volume{T}) = T
+Base.copy(vol::Volume{T}) where {T} = Volume{T}(copy(vol.v), vol.x_extents, vol.y_extents, vol.z_extents)
+Base.eltype(vol::Volume{T}) where {T} = T
 
 # -----------------------------------------------------------------------
 
 # style is :open or :closed (for now)
-immutable Arrow
+struct Arrow
     style::Symbol
     side::Symbol  # :head (default), :tail, or :both
     headlength::Float64
@@ -673,14 +673,14 @@ end
 # -----------------------------------------------------------------------
 
 "Represents data values with formatting that should apply to the tick labels."
-immutable Formatted{T}
+struct Formatted{T}
     data::T
     formatter::Function
 end
 
 # -----------------------------------------------------------------------
 "create a BezierCurve for plotting"
-type BezierCurve{T <: FixedSizeArrays.Vec}
+mutable struct BezierCurve{T <: FixedSizeArrays.Vec}
     control_points::Vector{T}
 end
 

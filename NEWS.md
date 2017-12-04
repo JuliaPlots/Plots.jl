@@ -11,6 +11,11 @@
 ---
 ## (current master)
 
+## 0.13.1
+
+- fix a bug when passing a vector of functions with no bounds (e.g. `plot([sin, cos])`)
+- export `pct` and `px` from Plots.PlotMeasures
+
 ## 0.13.0
 
 - support `plotattributes` rather than `d` in recipes
@@ -100,7 +105,7 @@
 #### 0.11.0
 
 - julia 0.6 compatibility
-- matplotlib 0.2.0 compatibility
+- matplotlib 2.0 compatibility
 - add inspectdr backend
 - improved histogram functionality:
 - added a `:stephist` and `:scatterhist` series type as well as ``:barhist` (the default)

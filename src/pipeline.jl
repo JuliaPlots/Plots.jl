@@ -301,7 +301,7 @@ end
 
 # getting ready to add the series... last update to subplot from anything
 # that might have been added during series recipes
-function _prepare_subplot{T}(plt::Plot{T}, d::KW)
+function _prepare_subplot(plt::Plot{T}, d::KW) where T
     st::Symbol = d[:seriestype]
     sp::Subplot{T} = d[:subplot]
     sp_idx = get_subplot_index(plt, sp)

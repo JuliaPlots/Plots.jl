@@ -2,6 +2,10 @@
 
 # significant contributions by: @pkofod
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pgfplots.jl"))
+end
+
 const _pgfplots_attr = merge_with_base_supported([
     :annotations,
     # :background_color_legend,
@@ -32,10 +36,12 @@ const _pgfplots_attr = merge_with_base_supported([
     :aspect_ratio,
     # :match_dimensions,
     :tick_direction,
+    :framestyle,
+    :camera,
   ])
 const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon] #vcat(_allMarkers, Shape)
+const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon, :hline] #vcat(_allMarkers, Shape)
 const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 
@@ -80,6 +86,7 @@ const _pgfplots_markers = KW(
     :star6 => "asterisk",
     :diamond => "diamond*",
     :pentagon => "pentagon*",
+    :hline => "-"
 )
 
 const _pgfplots_legend_pos = KW(
@@ -87,6 +94,7 @@ const _pgfplots_legend_pos = KW(
     :bottomright => "south east",
     :topright => "north east",
     :topleft => "north west",
+    :outertopright => "outer north east",
 )
 
 
@@ -106,6 +114,18 @@ const _pgf_annotation_halign = KW(
     :left => "right",
     :right => "left"
 )
+
+const _pgf_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
+const _pgf_framestyle_defaults = Dict(:semi => :box)
+function pgf_framestyle(style::Symbol)
+    if style in _pgf_framestyles
+        return style
+    else
+        default_style = get(_pgf_framestyle_defaults, style, :axes)
+        warn("Framestyle :$style is not (yet) supported by the PGFPlots backend. :$default_style was cosen instead.")
+        default_style
+    end
+end
 
 # --------------------------------------------------------------------------------------
 
@@ -188,6 +208,9 @@ function pgf_series(sp::Subplot, series::Series)
     # add to legend?
     if sp[:legend] != :none && should_add_to_legend(series)
         kw[:legendentry] = d[:label]
+        if st == :shape || d[:fillrange] != nothing
+            push!(style, "area legend")
+        end
     else
         push!(style, "forget plot")
     end
@@ -201,6 +224,9 @@ function pgf_series(sp::Subplot, series::Series)
         # If a marker_z is used pass it as third coordinate to a 2D plot.
         # See "Scatter Plots" in PGFPlots documentation
         d[:x], d[:y], d[:marker_z]
+    elseif ispolar(sp)
+        theta, r = filter_radial_data(d[:x], d[:y], axis_limits(sp[:yaxis]))
+        rad2deg.(theta), r
     else
         d[:x], d[:y]
     end
@@ -246,6 +272,9 @@ function pgf_axis(sp::Subplot, letter)
     style = []
     kw = KW()
 
+    # set to supported framestyle
+    framestyle = pgf_framestyle(sp[:framestyle])
+
     # axis guide
     kw[Symbol(letter,:label)] = axis[:guide]
 
@@ -263,28 +292,65 @@ function pgf_axis(sp::Subplot, letter)
     end
 
     # ticks on or off
-    if axis[:ticks] in (nothing, false)
+    if axis[:ticks] in (nothing, false) || framestyle == :none
         push!(style, "$(letter)majorticks=false")
     end
 
     # grid on or off
-    if axis[:grid]
+    if axis[:grid] && framestyle != :none
         push!(style, "$(letter)majorgrids = true")
+    else
+        push!(style, "$(letter)majorgrids = false")
     end
 
     # limits
     # TODO: support zlims
     if letter != :z
-        lims = axis_limits(axis)
+        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(axis)) : axis_limits(axis)
         kw[Symbol(letter,:min)] = lims[1]
         kw[Symbol(letter,:max)] = lims[2]
     end
 
-    if !(axis[:ticks] in (nothing, false, :none))
+    if !(axis[:ticks] in (nothing, false, :none)) && framestyle != :none
         ticks = get_ticks(axis)
-        push!(style, string(letter, "tick = {", join(ticks[1],","), "}"))
-        push!(style, string(letter, "ticklabels = {", join(ticks[2],","), "}"))
+        #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
+        tick_values = ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 405] : ticks[1]
+        push!(style, string(letter, "tick = {", join(tick_values,","), "}"))
+        if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
+            # wrap the power part of label with }
+            tick_labels = String[begin
+                base, power = split(label, "^")
+                power = string("{", power, "}")
+                string(base, "^", power)
+            end for label in ticks[2]]
+            push!(style, string(letter, "ticklabels = {\$", join(tick_labels,"\$,\$"), "\$}"))
+        elseif axis[:showaxis]
+            tick_labels = ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
+            push!(style, string(letter, "ticklabels = {", join(tick_labels,","), "}"))
+        else
+            push!(style, string(letter, "ticklabels = {}"))
+        end
         push!(style, string(letter, "tick align = ", (axis[:tick_direction] == :out ? "outside" : "inside")))
+    end
+
+    # framestyle
+    if framestyle in (:axes, :origin)
+        axispos = framestyle == :axes ? "left" : "middle"
+        # the * after lines disables the arrows at the axes
+        push!(style, string("axis lines* = ", axispos))
+    end
+
+    if framestyle == :zerolines
+        push!(style, string("extra ", letter, " ticks = 0"))
+        push!(style, string("extra ", letter, " tick labels = "))
+        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {color = black, draw opacity=1.0, line width=0.5), solid}}"))
+    end
+
+    if !axis[:showaxis]
+        push!(style, "separate axis lines")
+    end
+    if !axis[:showaxis] || framestyle in (:zerolines, :grid, :none)
+        push!(style, string(letter, " axis line style = {draw opacity = 0}"))
     end
 
     # return the style list and KW args
@@ -340,9 +406,17 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
 
+        if is3d(sp)
+            azim, elev = sp[:camera]
+            kw[:view] = "{$(azim)}{$(elev)}"
+        end
+
         axisf = PGFPlots.Axis
         if sp[:projection] == :polar
             axisf = PGFPlots.PolarAxis
+            #make radial axis vertical
+            kw[:xmin] = 90
+            kw[:xmax] = 450
         end
 
         # Search series for any gradient. In case one series uses a gradient set

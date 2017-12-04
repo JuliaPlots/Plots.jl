@@ -47,7 +47,7 @@ end
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-RecipesBase.apply_recipe{T}(d::KW, ::Type{T}, plt::AbstractPlot) = throw(MethodError("Unmatched plot recipe: $T"))
+RecipesBase.apply_recipe(d::KW, ::Type{T}, plt::AbstractPlot) where {T} = throw(MethodError("Unmatched plot recipe: $T"))
 
 # ---------------------------------------------------------------------------
 
@@ -343,9 +343,9 @@ _bin_centers(v::AVec) = (v[1:end-1] + v[2:end]) / 2
 
 _is_positive(x) = (x > 0) && !(x ≈ 0)
 
-_positive_else_nan{T}(::Type{T}, x::Real) = _is_positive(x) ? T(x) : T(NaN)
+_positive_else_nan(::Type{T}, x::Real) where {T} = _is_positive(x) ? T(x) : T(NaN)
 
-function _scale_adjusted_values{T<:AbstractFloat}(::Type{T}, V::AbstractVector, scale::Symbol)
+function _scale_adjusted_values(::Type{T}, V::AbstractVector, scale::Symbol) where T<:AbstractFloat
     if scale in _logScales
         [_positive_else_nan(T, x) for x in V]
     else
@@ -354,7 +354,7 @@ function _scale_adjusted_values{T<:AbstractFloat}(::Type{T}, V::AbstractVector, 
 end
 
 
-function _binbarlike_baseline{T<:Real}(min_value::T, scale::Symbol)
+function _binbarlike_baseline(min_value::T, scale::Symbol) where T<:Real
     if (scale in _logScales)
         !isnan(min_value) ? min_value / T(_logScaleBases[scale]^log10(2)) : T(1E-3)
     else
@@ -363,7 +363,7 @@ function _binbarlike_baseline{T<:Real}(min_value::T, scale::Symbol)
 end
 
 
-function _preprocess_binbarlike_weights{T<:AbstractFloat}(::Type{T}, w, wscale::Symbol)
+function _preprocess_binbarlike_weights(::Type{T}, w, wscale::Symbol) where T<:AbstractFloat
     w_adj = _scale_adjusted_values(T, w, wscale)
     w_min = ignorenan_minimum(w_adj)
     w_max = ignorenan_maximum(w_adj)
@@ -499,7 +499,7 @@ Plots.@deps stepbins path
 
 wand_edges(x...) = (warn("Load the StatPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
 
-function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto)
+function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto) where N
     _cl(x) = ceil(Int, NaNMath.max(x, one(x)))
     _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
     _span(v) = ignorenan_maximum(v) - ignorenan_minimum(v)
@@ -533,24 +533,24 @@ function _auto_binning_nbins{N}(vs::NTuple{N,AbstractVector}, dim::Integer; mode
     end
 end
 
-_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) = StatsBase.histrange(vs[dim], binning, :left)
-_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) = _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
-_hist_edge{N}(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) = binning
+_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) where {N} = StatsBase.histrange(vs[dim], binning, :left)
+_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) where {N} = _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
+_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) where {N} = binning
 
-_hist_edges{N}(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) =
+_hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) where {N} =
     map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...))
 
-_hist_edges{N}(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, AbstractVector}) =
+_hist_edges(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, AbstractVector}) where {N} =
     map(dim -> _hist_edge(vs, dim, binning), (1:N...))
 
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
-function _make_hist{N}(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing)
+function _make_hist(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing) where N
     edges = _hist_edges(vs, binning)
     h = float( weights == nothing ?
         StatsBase.fit(StatsBase.Histogram, vs, edges, closed = :left) :
-        StatsBase.fit(StatsBase.Histogram, vs, weights, edges, closed = :left)
+        StatsBase.fit(StatsBase.Histogram, vs, StatsBase.Weights(weights), edges, closed = :left)
     )
     normalize!(h, mode = _hist_norm_mode(normed))
 end
@@ -590,7 +590,7 @@ end
 @deps scatterhist scatterbins
 
 
-@recipe function f{T, E}(h::StatsBase.Histogram{T, 1, E})
+@recipe function f(h::StatsBase.Histogram{T, 1, E}) where {T, E}
     seriestype --> :barbins
 
     st_map = Dict(
@@ -611,7 +611,7 @@ end
 end
 
 
-@recipe function f{H <: StatsBase.Histogram}(hv::AbstractVector{H})
+@recipe function f(hv::AbstractVector{H}) where H <: StatsBase.Histogram
     for h in hv
         @series begin
             h
@@ -658,7 +658,7 @@ end
 @deps histogram2d bins2d
 
 
-@recipe function f{T, E}(h::StatsBase.Histogram{T, 2, E})
+@recipe function f(h::StatsBase.Histogram{T, 2, E}) where {T, E}
     seriestype --> :bins2d
     (h.edges[1], h.edges[2], Surface(h.weights))
 end
@@ -855,7 +855,7 @@ end
 # TODO: move OHLC to PlotRecipes finance.jl
 
 "Represent Open High Low Close data (used in finance)"
-type OHLC{T<:Real}
+mutable struct OHLC{T<:Real}
   open::T
   high::T
   low::T
@@ -894,10 +894,10 @@ end
 
 # to squash ambiguity warnings...
 @recipe f(x::AVec{Function}, v::AVec{OHLC}) = error()
-@recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(x::AVec{Function}, v::AVec{Tuple{R1,R2,R3,R4}}) = error()
+@recipe f(x::AVec{Function}, v::AVec{Tuple{R1,R2,R3,R4}}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = error()
 
 # this must be OHLC?
-@recipe f{R1<:Number,R2<:Number,R3<:Number,R4<:Number}(x::AVec, ohlc::AVec{Tuple{R1,R2,R3,R4}}) = x, OHLC[OHLC(t...) for t in ohlc]
+@recipe f(x::AVec, ohlc::AVec{Tuple{R1,R2,R3,R4}}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = x, OHLC[OHLC(t...) for t in ohlc]
 
 @recipe function f(x::AVec, v::AVec{OHLC})
     seriestype := :path
@@ -937,6 +937,7 @@ end
     mat = g.args[1]
     if length(unique(mat[mat .!= 0])) < 2
         legend --> nothing
+        seriescolor --> cgrad([invisible(), fg_color(plotattributes)])
     end
     n,m = size(mat)
     Plots.SliceIt, 1:m, 1:n, Surface(mat)
@@ -945,23 +946,21 @@ end
 @recipe function f(::Type{Val{:spy}}, x,y,z)
     yflip := true
     aspect_ratio := 1
+
     rs, cs, zs = findnz(z.surf)
-    xlim := ignorenan_extrema(cs)
-    ylim := ignorenan_extrema(rs)
-    if plotattributes[:markershape] == :none
-        markershape := :circle
+    newz = fill(NaN, size(z)...)
+
+    for i in eachindex(zs)
+        newz[rs[i],cs[i]] = zs[i]
     end
-    if plotattributes[:markersize] == default(:markersize)
-        markersize := 1
-    end
-    markerstrokewidth := 0
-    marker_z := zs
-    label := ""
-    x := cs
-    y := rs
-    z := nothing
-    seriestype := :scatter
+
+    seriestype := :heatmap
     grid --> false
+    framestyle --> :box
+
+    x := x
+    y := y
+    z := Surface(newz)
     ()
 end
 
@@ -987,7 +986,7 @@ datetimeformatter(dt) = string(DateTime(Dates.UTM(dt)))
 # -------------------------------------------------
 # Complex Numbers
 
-@recipe function f{T<:Number}(A::Array{Complex{T}})
+@recipe function f(A::Array{Complex{T}}) where T<:Number
     xguide --> "Re(x)"
     yguide --> "Im(x)"
     real.(A), imag.(A)
@@ -996,7 +995,7 @@ end
 # Splits a complex matrix to its real and complex parts
 # Reals defaults solid, imaginary defaults dashed
 # Label defaults are changed to match the real-imaginary reference / indexing
-@recipe function f{T<:Real,T2}(x::AbstractArray{T},y::Array{Complex{T2}})
+@recipe function f(x::AbstractArray{T},y::Array{Complex{T2}}) where {T<:Real,T2}
   ylabel --> "Re(y)"
   zlabel --> "Im(y)"
   x,real.(y),imag.(y)

@@ -9,6 +9,10 @@ TODO
     * fix units in all visuals (e.g dotted lines, marker scale, surfaces)
 =#
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "glvisualize.jl"))
+end
+
 const _glvisualize_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
@@ -20,10 +24,13 @@ const _glvisualize_attr = merge_with_base_supported([
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
     :fillrange, :fillcolor, :fillalpha,
     :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :title_location, :titlefont,
+    :title, :title_location,
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
+    :titlefontsize, :titlefontcolor,
+    :legendfontsize, :legendfontcolor,
+    :tickfontsize,
+    :guidefontsize, :guidefontcolor,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
     :legend, :colorbar,
     :marker_z,
@@ -69,9 +76,9 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         import GLVisualize: visualize
         import Plots.GL
         import UnicodeFun
-        Plots.slice_arg{C<:Colorant}(img::Matrix{C}, idx::Int) = img
+        Plots.slice_arg(img::Matrix{C}, idx::Int) where {C<:Colorant} = img
         is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
-        is_marker_supported{C<:Colorant}(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) = true
+        is_marker_supported(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) where {C<:Colorant} = true
         is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
         const GL = Plots
     end
@@ -214,13 +221,13 @@ function extract_limits(sp, d, kw_args)
     nothing
 end
 
-to_vec{T <: StaticArrays.StaticVector}(::Type{T}, vec::T) = vec
-to_vec{T <: StaticArrays.StaticVector}(::Type{T}, s::Number) = T(s)
+to_vec(::Type{T}, vec::T) where {T <: StaticArrays.StaticVector} = vec
+to_vec(::Type{T}, s::Number) where {T <: StaticArrays.StaticVector} = T(s)
 
-to_vec{T <: StaticArrays.StaticVector{2}}(::Type{T}, vec::StaticArrays.StaticVector{3}) = T(vec[1], vec[2])
-to_vec{T <: StaticArrays.StaticVector{3}}(::Type{T}, vec::StaticArrays.StaticVector{2}) = T(vec[1], vec[2], 0)
+to_vec(::Type{T}, vec::StaticArrays.StaticVector{3}) where {T <: StaticArrays.StaticVector{2}} = T(vec[1], vec[2])
+to_vec(::Type{T}, vec::StaticArrays.StaticVector{2}) where {T <: StaticArrays.StaticVector{3}} = T(vec[1], vec[2], 0)
 
-to_vec{T <: StaticArrays.StaticVector}(::Type{T}, vecs::AbstractVector) = map(x-> to_vec(T, x), vecs)
+to_vec(::Type{T}, vecs::AbstractVector) where {T <: StaticArrays.StaticVector} = map(x-> to_vec(T, x), vecs)
 
 function extract_marker(d, kw_args)
     dim = Plots.is3d(d) ? 3 : 2
@@ -275,7 +282,7 @@ end
 function extract_surface(d)
     map(_extract_surface, (d[:x], d[:y], d[:z]))
 end
-function topoints{P}(::Type{P}, array)
+function topoints(::Type{P}, array) where P
     [P(x) for x in zip(array...)]
 end
 function extract_points(d)
@@ -283,7 +290,7 @@ function extract_points(d)
     array = (d[:x], d[:y], d[:z])[1:dim]
     topoints(Point{dim, Float32}, array)
 end
-function make_gradient{C <: Colorant}(grad::Vector{C})
+function make_gradient(grad::Vector{C}) where C <: Colorant
     grad
 end
 function make_gradient(grad::ColorGradient)
@@ -338,7 +345,7 @@ function extract_color(d, sym)
 end
 
 gl_color(c::PlotUtils.ColorGradient) = c.colors
-gl_color{T<:Colorant}(c::Vector{T}) = c
+gl_color(c::Vector{T}) where {T<:Colorant} = c
 gl_color(c::RGBA{Float32}) = c
 gl_color(c::Colorant) = RGBA{Float32}(c)
 
@@ -608,7 +615,7 @@ function draw_ticks(
         axis, ticks, isx, isorigin, lims, m, text = "",
         positions = Point2f0[], offsets=Vec2f0[]
     )
-    sz = pointsize(axis[:tickfont])
+    sz = pointsize(tickfont(axis))
     atlas = GLVisualize.get_texture_atlas()
     font = GLVisualize.defaultfont()
 
@@ -732,21 +739,31 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     xlim = Plots.axis_limits(xaxis)
     ylim = Plots.axis_limits(yaxis)
 
-    if !(xaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none)
+    if !(xaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none) && xaxis[:showaxis]
         ticklabels = map(model) do m
             mirror = xaxis[:mirror]
             t, positions, offsets = draw_ticks(xaxis, xticks, true, sp[:framestyle] == :origin, ylim, m)
-            mirror = xaxis[:mirror]
-            t, positions, offsets = draw_ticks(
-                yaxis, yticks, false, sp[:framestyle] == :origin, xlim, m,
-                t, positions, offsets
-            )
         end
         kw_args = Dict{Symbol, Any}(
             :position => map(x-> x[2], ticklabels),
             :offset => map(last, ticklabels),
             :color => fcolor,
-            :relative_scale => pointsize(xaxis[:tickfont]),
+            :relative_scale => pointsize(tickfont(xaxis)),
+            :scale_primitive => false
+        )
+        push!(axis_vis, visualize(map(first, ticklabels), Style(:default), kw_args))
+    end
+
+    if !(yaxis[:ticks] in (nothing, false, :none)) && !(sp[:framestyle] == :none) && yaxis[:showaxis]
+        ticklabels = map(model) do m
+            mirror = yaxis[:mirror]
+            t, positions, offsets = draw_ticks(yaxis, yticks, false, sp[:framestyle] == :origin, xlim, m)
+        end
+        kw_args = Dict{Symbol, Any}(
+            :position => map(x-> x[2], ticklabels),
+            :offset => map(last, ticklabels),
+            :color => fcolor,
+            :relative_scale => pointsize(tickfont(xaxis)),
             :scale_primitive => false
         )
         push!(axis_vis, visualize(map(first, ticklabels), Style(:default), kw_args))
@@ -763,8 +780,8 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
 
     area_w = GeometryTypes.widths(area)
     if sp[:title] != ""
-        tf = sp[:titlefont]; color = gl_color(sp[:foreground_color_title])
-        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, tf.rotation, color)
+        tf = titlefont(sp)
+        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, tf.rotation, tf.color)
         xy = Point2f0(area.w/2, area_w[2] + pointsize(tf)/2)
         kw = Dict(:model => text_model(font, xy), :scale_primitive => true)
         extract_font(font, kw)
@@ -772,9 +789,9 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
         push!(axis_vis, glvisualize_text(xy, t, kw))
     end
     if xaxis[:guide] != ""
-        tf = xaxis[:guidefont]; color = gl_color(xaxis[:foreground_color_guide])
+        tf = guidefont(xaxis)
         xy = Point2f0(area.w/2, - pointsize(tf)/2)
-        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :bottom, tf.rotation, color)
+        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :bottom, tf.rotation, tf.color)
         kw = Dict(:model => text_model(font, xy), :scale_primitive => true)
         t = PlotText(xaxis[:guide], font)
         extract_font(font, kw)
@@ -782,8 +799,8 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     end
 
     if yaxis[:guide] != ""
-        tf = yaxis[:guidefont]; color = gl_color(yaxis[:foreground_color_guide])
-        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, 90f0, color)
+        tf = guidefont(yaxis)
+        font = Plots.Font(tf.family, tf.pointsize, :hcenter, :top, 90f0, tf.color)
         xy = Point2f0(-pointsize(tf)/2, area.h/2)
         kw = Dict(:model => text_model(font, xy), :scale_primitive=>true)
         t = PlotText(yaxis[:guide], font)
@@ -1202,7 +1219,7 @@ function gl_image(img, kw_args)
     visualize(img, Style(:default), kw_args)
 end
 
-function handle_segment{P}(lines, line_segments, points::Vector{P}, segment)
+function handle_segment(lines, line_segments, points::Vector{P}, segment) where P
     (isempty(segment) || length(segment) < 2) && return
     if length(segment) == 2
          append!(line_segments, view(points, segment))
@@ -1469,9 +1486,8 @@ function make_label(sp, series, i)
     else
         series[:label]
     end
-    color = sp[:foreground_color_legend]
-    ft = sp[:legendfont]
-    font = Plots.Font(ft.family, ft.pointsize, :left, :bottom, 0.0, color)
+    ft = legendfont(sp)
+    font = Plots.Font(ft.family, ft.pointsize, :left, :bottom, 0.0, ft.color)
     xy = Point2f0(w+gap, 0.0)
     kw = Dict(:model => text_model(font, xy), :scale_primitive=>false)
     extract_font(font, kw)

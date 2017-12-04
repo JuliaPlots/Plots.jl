@@ -1,6 +1,10 @@
 
 # https://plot.ly/javascript/getting-started
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl"))
+end
+
 const _plotly_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
@@ -15,7 +19,12 @@ const _plotly_attr = merge_with_base_supported([
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
     :fillrange, :fillcolor, :fillalpha,
     :bins,
-    :title, :title_location, :titlefont,
+    :title, :title_location,
+    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
+    :titlefontcolor,
+    :legendfontfamily, :legendfontsize, :legendfontcolor,
+    :tickfontfamily, :tickfontsize, :tickfontcolor,
+    :guidefontfamily, :guidefontsize, :guidefontcolor,
     :window_title,
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
@@ -35,6 +44,7 @@ const _plotly_attr = merge_with_base_supported([
     :clims,
     :framestyle,
     :tick_direction,
+    :camera,
   ])
 
 const _plotly_seriestype = [
@@ -121,7 +131,7 @@ const _plotly_legend_pos = KW(
     )
 
 plotly_legend_pos(pos::Symbol) = get(_plotly_legend_pos, pos, [1.,1.])
-plotly_legend_pos{S<:Real, T<:Real}(v::Tuple{S,T}) = v
+plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
 
 function plotly_font(font::Font, color = font.color)
     KW(
@@ -234,10 +244,11 @@ function plotly_axis(axis::Axis, sp::Subplot)
         :gridwidth  => axis[:gridlinewidth],
         :zeroline   => framestyle == :zerolines,
         :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
-        :showline   => framestyle in (:box, :axes),
+        :showline   => framestyle in (:box, :axes) && axis[:showaxis],
         :linecolor  => rgba_string(plot_color(axis[:foreground_color_axis])),
         :ticks      => axis[:tick_direction] == :out ? "outside" : "inside",
         :mirror     => framestyle == :box,
+        :showticklabels => axis[:showaxis],
     )
 
     if letter in (:x,:y)
@@ -246,19 +257,15 @@ function plotly_axis(axis::Axis, sp::Subplot)
     end
 
     ax[:tickangle] = -axis[:rotation]
-
+    lims = axis_limits(axis)
+    ax[:range] = map(scalefunc(axis[:scale]), lims)
+    
     if !(axis[:ticks] in (nothing, :none))
-        ax[:titlefont] = plotly_font(axis[:guidefont], axis[:foreground_color_guide])
+        ax[:titlefont] = plotly_font(guidefont(axis))
         ax[:type] = plotly_scale(axis[:scale])
-        ax[:tickfont] = plotly_font(axis[:tickfont], axis[:foreground_color_text])
-        ax[:tickcolor] = framestyle in (:zerolines, :grid) ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
+        ax[:tickfont] = plotly_font(tickfont(axis))
+        ax[:tickcolor] = framestyle in (:zerolines, :grid) || !axis[:showaxis] ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
-
-        # lims
-        lims = axis[:lims]
-        if lims != :auto && limsType(lims) == :limits
-            ax[:range] = map(scalefunc(axis[:scale]), lims)
-        end
 
         # flip
         if axis[:flip]
@@ -280,6 +287,23 @@ function plotly_axis(axis::Axis, sp::Subplot)
     else
         ax[:showticklabels] = false
         ax[:showgrid] = false
+    end
+
+    
+    ax
+end
+
+function plotly_polaraxis(axis::Axis)
+    ax = KW(
+        :visible => axis[:showaxis],
+        :showline => axis[:grid],
+    )
+
+    if axis[:letter] == :x
+        ax[:range] = rad2deg.(axis_limits(axis))
+    else
+        ax[:range] = axis_limits(axis)
+        ax[:orientation] = -90
     end
 
     ax
@@ -312,8 +336,8 @@ function plotly_layout(plt::Plot)
                 0.5 * (left(bb) + right(bb))
             end
             titlex, titley = xy_mm_to_pcts(xmm, top(bbox(sp)), w*px, h*px)
-            titlefont = font(sp[:titlefont], :top, sp[:foreground_color_title])
-            push!(d_out[:annotations], plotly_annotation_dict(titlex, titley, text(sp[:title], titlefont)))
+            title_font = font(titlefont(sp), :top)
+            push!(d_out[:annotations], plotly_annotation_dict(titlex, titley, text(sp[:title], title_font)))
         end
 
         d_out[:plot_bgcolor] = rgba_string(sp[:background_color_inside])
@@ -323,11 +347,25 @@ function plotly_layout(plt::Plot)
 
         # if any(is3d, seriesargs)
         if is3d(sp)
+            azim = sp[:camera][1] - 90 #convert azimuthal to match GR behaviour
+            theta = 90 - sp[:camera][2] #spherical coordinate angle from z axis
             d_out[:scene] = KW(
                 Symbol("xaxis$spidx") => plotly_axis(sp[:xaxis], sp),
                 Symbol("yaxis$spidx") => plotly_axis(sp[:yaxis], sp),
                 Symbol("zaxis$spidx") => plotly_axis(sp[:zaxis], sp),
+
+                #2.6 multiplier set camera eye such that whole plot can be seen
+                :camera => KW(
+                    :eye => KW(
+                        :x => cosd(azim)*sind(theta)*2.6,
+                        :y => sind(azim)*sind(theta)*2.6,
+                        :z => cosd(theta)*2.6,
+                    ),
+                ),
             )
+        elseif ispolar(sp)
+            d_out[Symbol("angularaxis$spidx")] = plotly_polaraxis(sp[:xaxis])
+            d_out[Symbol("radialaxis$spidx")] = plotly_polaraxis(sp[:yaxis])
         else
             d_out[Symbol("xaxis$spidx")] = plotly_axis(sp[:xaxis], sp)
             d_out[Symbol("yaxis$spidx")] = plotly_axis(sp[:yaxis], sp)
@@ -340,7 +378,7 @@ function plotly_layout(plt::Plot)
             d_out[:legend] = KW(
                 :bgcolor  => rgba_string(sp[:background_color_legend]),
                 :bordercolor => rgba_string(sp[:foreground_color_legend]),
-                :font     => plotly_font(sp[:legendfont], sp[:foreground_color_legend]),
+                :font     => plotly_font(legendfont(sp)),
                 :x => xpos,
                 :y => ypos
             )
@@ -428,7 +466,7 @@ end
 
 plotly_data(v) = collect(v)
 plotly_data(surf::Surface) = surf.surf
-plotly_data{R<:Rational}(v::AbstractArray{R}) = float(v)
+plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 
 plotly_surface_data(series::Series, a::AbstractVector) = a
 plotly_surface_data(series::Series, a::AbstractMatrix) = transpose_z(series, a, false)
@@ -509,7 +547,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:type] = "heatmap"
         # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
         d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
-        d_out[:showscale] = sp[:legend] != :none
+        d_out[:showscale] = hascolorbar(sp)
 
     elseif st == :contour
         d_out[:type] = "contour"
@@ -518,7 +556,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:ncontours] = series[:levels]
         d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines")
         d_out[:colorscale] = plotly_colorscale(series[:linecolor], series[:linealpha])
-        d_out[:showscale] = sp[:legend] != :none
+        d_out[:showscale] = hascolorbar(sp)
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
@@ -538,7 +576,7 @@ function plotly_series(plt::Plot, series::Series)
             if series[:fill_z] != nothing
                 d_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
             end
-            d_out[:showscale] = sp[:legend] != :none
+            d_out[:showscale] = hascolorbar(sp)
         end
 
     elseif st == :pie
@@ -681,8 +719,9 @@ end
 function plotly_polar!(d_out::KW, series::Series)
     # convert polar plots x/y to theta/radius
     if ispolar(series[:subplot])
-        d_out[:t] = rad2deg(pop!(d_out, :x))
-        d_out[:r] = pop!(d_out, :y)
+        theta, r = filter_radial_data(pop!(d_out, :x), pop!(d_out, :y), axis_limits(series[:subplot][:yaxis]))
+        d_out[:t] = rad2deg.(theta)
+        d_out[:r] = r
     end
 end
 
@@ -711,7 +750,7 @@ end
 const _use_remote = Ref(false)
 
 function html_head(plt::Plot{PlotlyBackend})
-    jsfilename = _use_remote[] ? _plotly_js_path_remote : _plotly_js_path
+    jsfilename = _use_remote[] ? _plotly_js_path_remote : ("file://" * _plotly_js_path)
     # "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
     "<script src=\"$jsfilename\"></script>"
 end

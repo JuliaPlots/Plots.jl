@@ -70,13 +70,16 @@ function process_axis_arg!(d::KW, arg, letter = "")
     elseif arg == nothing
         d[Symbol(letter,:ticks)] = []
 
+    elseif T <: Bool || arg in _allShowaxisArgs
+        d[Symbol(letter,:showaxis)] = showaxis(arg, letter)
+
     elseif typeof(arg) <: Number
         d[Symbol(letter,:rotation)] = arg
 
     elseif typeof(arg) <: Function
         d[Symbol(letter,:formatter)] = arg
 
-    else
+    elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_axis))
         warn("Skipped $(letter)axis arg $arg")
 
     end
@@ -236,8 +239,13 @@ function get_ticks(axis::Axis)
         # discrete ticks...
         axis[:continuous_values], dvals
     elseif ticks == :auto
-        # compute optimal ticks and labels
-        optimal_ticks_and_labels(axis)
+        if ispolar(axis.sps[1]) && axis[:letter] == :x
+            #force theta axis to be full circle
+            (collect(0:pi/4:7pi/4), string.(0:45:315))
+        else
+            # compute optimal ticks and labels
+            optimal_ticks_and_labels(axis)
+        end
     elseif typeof(ticks) <: Union{AVec, Int}
         # override ticks, but get the labels
         optimal_ticks_and_labels(axis, ticks)
@@ -290,13 +298,13 @@ expand_extrema!(axis::Axis, ::Void) = axis[:extrema]
 expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 
-function expand_extrema!{MIN<:Number,MAX<:Number}(axis::Axis, v::Tuple{MIN,MAX})
+function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
     ex = axis[:extrema]
     ex.emin = NaNMath.min(v[1], ex.emin)
     ex.emax = NaNMath.max(v[2], ex.emax)
     ex
 end
-function expand_extrema!{N<:Number}(axis::Axis, v::AVec{N})
+function expand_extrema!(axis::Axis, v::AVec{N}) where N<:Number
     ex = axis[:extrema]
     for vi in v
         expand_extrema!(ex, vi)
@@ -347,7 +355,7 @@ function expand_extrema!(sp::Subplot, d::KW)
     if fr == nothing && d[:seriestype] == :bar
         fr = 0.0
     end
-    if fr != nothing
+    if fr != nothing && !all3D(d)
         axis = sp.attr[vert ? :yaxis : :xaxis]
         if typeof(fr) <: Tuple
             for fri in fr
@@ -372,6 +380,15 @@ function expand_extrema!(sp::Subplot, d::KW)
         expand_extrema!(axis, ignorenan_minimum(data) - 0.5minimum(bw))
     end
 
+    # expand for heatmaps
+    if d[:seriestype] == :heatmap
+        for letter in (:x, :y)
+            data = d[letter]
+            axis = sp[Symbol(letter, "axis")]
+            scale = get(d, Symbol(letter, "scale"), :identity)
+            expand_extrema!(axis, heatmap_edges(data, scale))
+        end
+    end
 end
 
 function expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)
@@ -424,7 +441,16 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
     if !isfinite(amin) && !isfinite(amax)
         amin, amax = 0.0, 1.0
     end
-    if should_widen
+    if ispolar(axis.sps[1])
+        if axis[:letter] == :x
+            amin, amax = 0, 2pi
+        elseif lims == :auto
+            #widen max radius so ticks dont overlap with theta axis
+            amin, amax + 0.1 * abs(amax - amin)
+        else
+            amin, amax
+        end
+    elseif should_widen
         widen(amin, amax)
     else
         amin, amax
@@ -515,18 +541,24 @@ function axis_drawing_info(sp::Subplot)
     xborder_segs = Segments(2)
     yborder_segs = Segments(2)
 
-    if !(sp[:framestyle] == :none)
+    if sp[:framestyle] != :none
         # xaxis
-        sp[:framestyle] in (:grid, :origin, :zerolines) || push!(xaxis_segs, (xmin,ymin), (xmax,ymin)) # bottom spine / xaxis
-        if sp[:framestyle] in (:origin, :zerolines)
-            push!(xaxis_segs, (xmin, 0.0), (xmax, 0.0))
-            # don't show the 0 tick label for the origin framestyle
-            if sp[:framestyle] == :origin && length(xticks) > 1
-                showticks = xticks[1] .!= 0
-                xticks = (xticks[1][showticks], xticks[2][showticks])
+        if xaxis[:showaxis]
+            if sp[:framestyle] != :grid
+                y1, y2 = if sp[:framestyle] in (:origin, :zerolines)
+                    0.0, 0.0
+                else
+                    xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, ymin) : (ymin, ymax)
+                end
+                push!(xaxis_segs, (xmin, y1), (xmax, y1))
+                # don't show the 0 tick label for the origin framestyle
+                if sp[:framestyle] == :origin && length(xticks) > 1
+                    showticks = xticks[1] .!= 0
+                    xticks = (xticks[1][showticks], xticks[2][showticks])
+                end
             end
+            sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin, y2), (xmax, y2)) # top spine
         end
-        sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin,ymax), (xmax,ymax)) # top spine
         if !(xaxis[:ticks] in (nothing, false))
             f = scalefunc(yaxis[:scale])
             invf = invscalefunc(yaxis[:scale])
@@ -536,28 +568,36 @@ function axis_drawing_info(sp::Subplot)
             t3 = invf(f(0) + 0.015 * (f(ymax) - f(ymin)) * ticks_in)
 
             for xtick in xticks[1]
-                tick_start, tick_stop = if sp[:framestyle] == :origin
-                    (0, t3)
-                else
-                    xaxis[:mirror] ? (ymax, t2) : (ymin, t1)
+                if xaxis[:showaxis]
+                    tick_start, tick_stop = if sp[:framestyle] == :origin
+                        (0, t3)
+                    else
+                        xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, t2) : (ymin, t1)
+                    end
+                    push!(xtick_segs, (xtick, tick_start), (xtick, tick_stop)) # bottom tick
                 end
-                push!(xtick_segs, (xtick, tick_start), (xtick, tick_stop)) # bottom tick
                 # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
-                xaxis[:grid] && push!(xgrid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
+                xaxis[:grid] && push!(xgrid_segs, (xtick, ymin), (xtick, ymax)) # vertical grid
             end
         end
 
         # yaxis
-        sp[:framestyle] in (:grid, :origin, :zerolines) || push!(yaxis_segs, (xmin,ymin), (xmin,ymax)) # left spine / yaxis
-        if sp[:framestyle] in (:origin, :zerolines)
-            push!(yaxis_segs, (0.0, ymin), (0.0, ymax))
-            # don't show the 0 tick label for the origin framestyle
-            if sp[:framestyle] == :origin && length(yticks) > 1
-                showticks = yticks[1] .!= 0
-                yticks = (yticks[1][showticks], yticks[2][showticks])
+        if yaxis[:showaxis]
+            if sp[:framestyle] != :grid
+                x1, x2 = if sp[:framestyle] in (:origin, :zerolines)
+                    0.0, 0.0
+                else
+                    xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, xmin) : (xmin, xmax)
+                end
+                push!(yaxis_segs, (x1, ymin), (x1, ymax))
+                # don't show the 0 tick label for the origin framestyle
+                if sp[:framestyle] == :origin && length(yticks) > 1
+                    showticks = yticks[1] .!= 0
+                    yticks = (yticks[1][showticks], yticks[2][showticks])
+                end
             end
+            sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (x2, ymin), (x2, ymax)) # right spine
         end
-        sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (xmax,ymin), (xmax,ymax)) # right spine
         if !(yaxis[:ticks] in (nothing, false))
             f = scalefunc(xaxis[:scale])
             invf = invscalefunc(xaxis[:scale])
@@ -567,14 +607,16 @@ function axis_drawing_info(sp::Subplot)
             t3 = invf(f(0) + 0.015 * (f(xmax) - f(xmin)) * ticks_in)
 
             for ytick in yticks[1]
-                tick_start, tick_stop = if sp[:framestyle] == :origin
-                    (0, t3)
-                else
-                    yaxis[:mirror] ? (xmax, t2) : (xmin, t1)
+                if yaxis[:showaxis]
+                    tick_start, tick_stop = if sp[:framestyle] == :origin
+                        (0, t3)
+                    else
+                        xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, t2) : (xmin, t1)
+                    end
+                    push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
                 end
-                push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
                 # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
-                yaxis[:grid] && push!(ygrid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
+                yaxis[:grid] && push!(ygrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
             end
         end
     end

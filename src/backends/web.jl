@@ -2,7 +2,9 @@
 # NOTE:  backend should implement `html_body` and `html_head`
 
 # CREDIT: parts of this implementation were inspired by @joshday's PlotlyLocal.jl
-
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "web.jl")) 
+end
 
 function standalone_html(plt::AbstractPlot; title::AbstractString = get(plt.attr, :window_title, "Plots.jl"))
     """

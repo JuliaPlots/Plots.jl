@@ -34,9 +34,9 @@ getColorVector(scheme::ColorScheme) = [getColor(scheme)]
 colorscheme(scheme::ColorScheme) = scheme
 colorscheme(s::AbstractString; kw...) = colorscheme(Symbol(s); kw...)
 colorscheme(s::Symbol; kw...) = haskey(_gradients, s) ? ColorGradient(s; kw...) : ColorWrapper(convertColor(s); kw...)
-colorscheme{T<:Real}(s::Symbol, vals::AVec{T}; kw...) = ColorGradient(s, vals; kw...)
+colorscheme(s::Symbol, vals::AVec{T}; kw...) where {T<:Real} = ColorGradient(s, vals; kw...)
 colorscheme(cs::AVec, vs::AVec; kw...) = ColorGradient(cs, vs; kw...)
-colorscheme{T<:Colorant}(cs::AVec{T}; kw...) = ColorGradient(cs; kw...)
+colorscheme(cs::AVec{T}; kw...) where {T<:Colorant} = ColorGradient(cs; kw...)
 colorscheme(f::Function; kw...) = ColorFunction(f; kw...)
 colorscheme(v::AVec; kw...) = ColorVector(v; kw...)
 colorscheme(m::AMat; kw...) = size(m,1) == 1 ? map(c->colorscheme(c; kw...), m) : [colorscheme(m[:,i]; kw...) for i in 1:size(m,2)]'
@@ -98,7 +98,7 @@ const _gradients = KW(
     :lighttest    => map(c -> lighten(c, 0.3), _testColors),
   )
 
-function register_gradient_colors{C<:Colorant}(name::Symbol, colors::AVec{C})
+function register_gradient_colors(name::Symbol, colors::AVec{C}) where C<:Colorant
     _gradients[name] = colors
 end
 
@@ -109,11 +109,11 @@ default_gradient() = ColorGradient(:inferno)
 # --------------------------------------------------------------
 
 "Continuous gradient between values.  Wraps a list of bounding colors and the values they represent."
-immutable ColorGradient <: ColorScheme
+struct ColorGradient <: ColorScheme
   colors::Vector
   values::Vector
 
-  function ColorGradient{S<:Real}(cs::AVec, vals::AVec{S} = linspace(0, 1, length(cs)); alpha = nothing)
+  function ColorGradient(cs::AVec, vals::AVec{S} = linspace(0, 1, length(cs)); alpha = nothing) where S<:Real
     if length(cs) == length(vals)
       return new(convertColor(cs,alpha), collect(vals))
     end
@@ -138,7 +138,7 @@ Base.getindex(cs::ColorGradient, z::Number) = getColorZ(cs, z)
 
 
 # create a gradient from a symbol (blues, reds, etc) and vector of boundary values
-function ColorGradient{T<:Real}(s::Symbol, vals::AVec{T} = 0:0; kw...)
+function ColorGradient(s::Symbol, vals::AVec{T} = 0:0; kw...) where T<:Real
   haskey(_gradients, s) || error("Invalid gradient symbol.  Choose from: ", sort(collect(keys(_gradients))))
   cs = _gradients[s]
   if vals == 0:0
@@ -208,7 +208,7 @@ end
 # --------------------------------------------------------------
 
 "Wraps a function, taking an index and returning a Colorant"
-immutable ColorFunction <: ColorScheme
+struct ColorFunction <: ColorScheme
   f::Function
 end
 
@@ -217,7 +217,7 @@ getColor(scheme::ColorFunction, idx::Int) = scheme.f(idx)
 # --------------------------------------------------------------
 
 "Wraps a function, taking an z-value and returning a Colorant"
-immutable ColorZFunction <: ColorScheme
+struct ColorZFunction <: ColorScheme
   f::Function
 end
 
@@ -226,7 +226,7 @@ getColorZ(scheme::ColorZFunction, z::Real) = scheme.f(z)
 # --------------------------------------------------------------
 
 "Wraps a vector of colors... may be vector of Symbol/String/Colorant"
-immutable ColorVector <: ColorScheme
+struct ColorVector <: ColorScheme
   v::Vector{Colorant}
   ColorVector(v::AVec; alpha = nothing) = new(convertColor(v,alpha))
 end
@@ -238,7 +238,7 @@ getColorVector(scheme::ColorVector) = scheme.v
 # --------------------------------------------------------------
 
 "Wraps a single color"
-immutable ColorWrapper <: ColorScheme
+struct ColorWrapper <: ColorScheme
   c::RGBA
   ColorWrapper(c::Colorant; alpha = nothing) = new(convertColor(c, alpha))
 end
@@ -347,8 +347,8 @@ function get_color_palette(palette, bgcolor::Union{Colorant,ColorWrapper}, numco
   RGBA[getColorZ(grad, z) for z in zrng]
 end
 
-function get_color_palette{C<:Colorant}(palette::Vector{C},
-            bgcolor::Union{Colorant,ColorWrapper}, numcolors::Integer)
+function get_color_palette(palette::Vector{C},
+bgcolor::Union{Colorant,ColorWrapper}, numcolors::Integer) where C<:Colorant
   palette
 end
 

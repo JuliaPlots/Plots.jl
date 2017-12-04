@@ -558,7 +558,7 @@ function createGadflyAnnotationObject(x, y, txt::PlotText)
                             ))
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{GadflyBackend}, anns::AVec{Tuple{X,Y,V}})
+function _add_annotations(plt::Plot{GadflyBackend}, anns::AVec{Tuple{X,Y,V}}) where {X,Y,V}
     for ann in anns
         push!(plt.o.guides, createGadflyAnnotationObject(ann...))
     end
@@ -614,7 +614,7 @@ function getxy(plt::Plot{GadflyBackend}, i::Integer)
     mapping[:x], mapping[:y]
 end
 
-function setxy!{X,Y}(plt::Plot{GadflyBackend}, xy::Tuple{X,Y}, i::Integer)
+function setxy!(plt::Plot{GadflyBackend}, xy::Tuple{X,Y}, i::Integer) where {X,Y}
     for mapping in getGadflyMappings(plt, i)
         mapping[:x], mapping[:y] = xy
     end
@@ -677,7 +677,7 @@ setGadflyDisplaySize(plt::Plot) = setGadflyDisplaySize(plt.attr[:size]...)
 # -------------------------------------------------------------------------
 
 
-function doshow{P<:Union{GadflyBackend,ImmerseBackend}}(io::IO, func, plt::AbstractPlot{P})
+function doshow(io::IO, func, plt::AbstractPlot{P}) where P<:Union{GadflyBackend,ImmerseBackend}
     gplt = getGadflyContext(plt)
     setGadflyDisplaySize(plt)
     Gadfly.draw(func(io, Compose.default_graphic_width, Compose.default_graphic_height), gplt)
@@ -692,7 +692,7 @@ getGadflyWriteFunc(::MIME"application/x-tex") = Gadfly.PGF
 getGadflyWriteFunc(m::MIME) = error("Unsupported in Gadfly/Immerse: ", m)
 
 for mime in (MIME"image/png", MIME"image/svg+xml", MIME"application/pdf", MIME"application/postscript", MIME"application/x-tex")
-    @eval function Base.show{P<:Union{GadflyBackend,ImmerseBackend}}(io::IO, ::$mime, plt::AbstractPlot{P})
+    @eval function Base.show(io::IO, ::$mime, plt::AbstractPlot{P}) where P<:Union{GadflyBackend,ImmerseBackend}
         func = getGadflyWriteFunc($mime())
         doshow(io, func, plt)
     end
