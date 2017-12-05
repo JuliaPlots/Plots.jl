@@ -306,9 +306,9 @@ end
 # # images - grays
 
 @recipe function f(mat::AMat{T}) where T<:Gray
+    n, m = size(mat)
     if is_seriestype_supported(:image)
         seriestype := :image
-        n, m = size(mat)
         SliceIt, 1:m, 1:n, Surface(mat)
     else
         seriestype := :heatmap
@@ -371,7 +371,7 @@ end
 end
 
 # try some intervals over which the function may be defined
-function tryrange(F::AbstractArray, vec) 
+function tryrange(F::AbstractArray, vec)
     rets = [tryrange(f, vec) for f in F] # get the preferred for each
     maxind = maximum(indexin(rets, vec)) # get the last attempt that succeeded (most likely to fit all)
     rets .= [tryrange(f, vec[maxind:maxind]) for f in F] # ensure that all functions compute there
