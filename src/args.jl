@@ -605,6 +605,8 @@ function default(k::Symbol, v)
 end
 
 function default(; kw...)
+    kw = KW(kw)
+    preprocessArgs!(kw)
     for (k,v) in kw
         default(k, v)
     end
