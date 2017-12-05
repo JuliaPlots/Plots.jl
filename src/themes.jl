@@ -3,7 +3,7 @@
 
 Specify the colour theme for plots.
 """
-function theme(s::Symbol, kw...)
+function theme(s::Symbol; kw...)
     thm = PlotThemes._themes[s]
     defaults = if :defaults in fieldnames(thm)
         thm.defaults
