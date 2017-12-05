@@ -3,13 +3,35 @@
 
 Specify the colour theme for plots.
 """
-function theme(s::Symbol; kw...)
+function theme(s::Symbol, kw...)
+    thm = PlotThemes._themes[s]
+    defaults = if :defaults in fieldnames(thm)
+        thm.defaults
+    else # old PlotTheme type
+        defs = KW(
+            :bg       => thm.bg_secondary,
+            :bginside => thm.bg_primary,
+            :fg       => thm.lines,
+            :fgtext   => thm.text,
+            :fgguide  => thm.text,
+            :fglegend => thm.text,
+            :palette  => thm.palette,
+        )
+        if thm.gradient != nothing
+            push!(defs, :gradient => thm.gradient)
+        end
+        defs
+    end
+    _theme(s, defaults, kw...)
+end
+
+
+function _theme(s::Symbol, defaults::KW; kw...)
     # Reset to defaults to overwrite active theme
     reset_defaults()
-    thm = PlotThemes._themes[s]
 
     # Set the theme's gradient as default
-    if haskey(thm.defaults, :gradient)
+    if haskey(defaults, :gradient)
         PlotUtils.clibrary(:misc)
         PlotUtils.default_cgrad(default = :sequential, sequential = PlotThemes.gradient_name(s))
     else
@@ -31,7 +53,7 @@ function theme(s::Symbol; kw...)
     end
 
     # Set the theme's defaults
-    default(; thm.defaults..., kw...)
+    default(; defaults..., kw...)
     return
 end
 
