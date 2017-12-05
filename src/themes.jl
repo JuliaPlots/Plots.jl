@@ -22,7 +22,7 @@ function theme(s::Symbol; kw...)
         end
         defs
     end
-    _theme(s, defaults, kw...)
+    _theme(s, defaults; kw...)
 end
 
 
