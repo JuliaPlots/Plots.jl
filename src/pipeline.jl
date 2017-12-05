@@ -264,7 +264,7 @@ function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
 
         # extract subplot/axis attributes from kw and add to sp_attr
         attr = KW()
-        for (k,v) in kw
+        for (k,v) in collect(kw)
             if haskey(_subplot_defaults, k) || haskey(_axis_defaults_byletter, k)
                 attr[k] = pop!(kw, k)
             end
