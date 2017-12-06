@@ -415,6 +415,17 @@ attribute. The default framestyle is `:axes`.
         ticks = -2:2)
     end)]
 ),
+PlotExample("Heatmap with DateTime",
+"""
+Parse `DateTime` correctly when used in the axes of a `heatmap` plot.
+""",
+    [:(begin
+    x = DateTime(2001):Dates.Year(1):DateTime(2005)
+    y = 1:5
+    z = rand(5,5)
+    heatmap(x, y, z, title = "Heatmap with DateTime")
+    end)]
+),
 
 ]
 
