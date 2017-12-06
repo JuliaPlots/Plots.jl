@@ -33,7 +33,7 @@ convertSeriesIndex(plt::Plot, n::Int) = n
 
 
 """
-The main plot command.  Use `plot` to create a new plot object, and `plot!` to add to an existing one:
+The main plot command. Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 
 ```
     plot(args...; kw...)                  # creates a new plot window, and sets it to be the current
@@ -42,7 +42,8 @@ The main plot command.  Use `plot` to create a new plot object, and `plot!` to a
 ```
 
 There are lots of ways to pass in data, and lots of keyword arguments... just try it and it will likely work as expected.
-When you pass in matrices, it splits by columns.  See the documentation for more info.
+When you pass in matrices, it splits by columns. To see the list of available attributes, use the `plotattr([attr])`
+function, where `attr` is the symbol `:Series:`, `:Subplot:`, `:Plot` or `:Axis`.
 """
 
 # this creates a new plot with args/kw and sets it to be the current plot
