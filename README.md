@@ -8,7 +8,9 @@
 <!-- [![Coverage Status](https://coveralls.io/repos/tbreloff/Plots.jl/badge.svg?branch=master)](https://coveralls.io/r/tbreloff/Plots.jl?branch=master) -->
 <!-- [![codecov.io](http://codecov.io/github/tbreloff/Plots.jl/coverage.svg?branch=master)](http://codecov.io/github/tbreloff/Plots.jl?branch=master) -->
 
-#### Author: Thomas Breloff (@tbreloff)
+#### Created by Tom Breloff (@tbreloff)
+
+#### Maintained by the [JuliaPlot members](https://github.com/orgs/JuliaPlots/people)
 
 Plots is a plotting API and toolset.  My goals with the package are:
 
