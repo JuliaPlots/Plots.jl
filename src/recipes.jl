@@ -103,6 +103,25 @@ end
 @deps vline path
 
 # ---------------------------------------------------------------------------
+# path and scatter
+
+# create a path from steps
+@recipe function f(::Type{Val{:scatterpath}}, x, y, z)
+    x := x
+    y := y
+    seriestype := :scatter
+    @series begin
+        seriestype := :path
+        label := ""
+        primary := false
+        ()
+    end
+()
+end
+@deps scatterpath path scatter
+
+
+# ---------------------------------------------------------------------------
 # steps
 
 function make_steps(x, y, st)
