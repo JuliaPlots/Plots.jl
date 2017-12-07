@@ -43,7 +43,8 @@ The main plot command. Use `plot` to create a new plot object, and `plot!` to ad
 
 There are lots of ways to pass in data, and lots of keyword arguments... just try it and it will likely work as expected.
 When you pass in matrices, it splits by columns. To see the list of available attributes, use the `plotattr([attr])`
-function, where `attr` is the symbol `:Series:`, `:Subplot:`, `:Plot` or `:Axis`.
+function, where `attr` is the symbol `:Series:`, `:Subplot:`, `:Plot` or `:Axis`. Pass any attribute to `plotattr`
+as a String to look up it's docstring; e.g. `plotattr("seriestype")`.
 """
 
 # this creates a new plot with args/kw and sets it to be the current plot
