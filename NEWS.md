@@ -3,13 +3,50 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-- All new development should target 0.13!
+- All new development should target 0.14!
 - Minor version 0.11 is the last one to support Julia 0.5!!
 	- Critical bugfixes only
     - `backports` branch is for Julia 0.5
 
 ---
 ## (current master)
+
+## 0.14.0
+
+- remove use of imagemagick; saving gifs now requires ffmpeg
+- improvements to ffmpeg gif quality and speed
+- overhaul of fonts, allows setting fonts in recipes and with magic arguments
+- added `camera` attribute to control camera position for 3d plots
+- added `showaxis` attribute to control which axes to display
+- improvements of polar plots axes, and better backend consistency
+- changed the 'spy' recipe back to using heatmap
+- added `scatterpath` seriestype
+- allow plotlyjs to save svg
+- add `reset_defaults()` function to reset plot defaults
+- update syntax to 0.6
+- make `fill = true` fill to 0 rather than to 1
+- use new `@df` syntax in StatPlots examples
+- allow changing the color of legend box
+- implement `title_location` for gr
+- add `hline` marker to pgfplots - fixes errorbars
+- pyplot legends now show marker types
+- pyplot colorbars take font style from y axis
+- pyplot tickmarks color the same as axis color
+- allow setting linewidth for contour in gr
+- allow legend to be outside plot area for pgfplots
+- expand axis extrema for heatmap
+- extendg grid lines to axis limits
+- fix `line_z` for pyplot and gr
+- fixed colorbar problem for flipped axes with gr
+- fix marker_z for 3d plots in gr
+- fix `weights` functionality for histograms
+- fix gr annotations with colorbar
+- fix aspect ratio in gr
+- fix "hidden window" problem after savefig in gr
+- fix pgfplots logscale ticks error
+- fix pgfplots legends symbols
+- fix axis linking for plotlyjs
+- fix plotting of grayscale images
 
 ## 0.13.1
 
