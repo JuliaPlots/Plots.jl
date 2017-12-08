@@ -419,10 +419,10 @@ const _all_defaults = KW[
 const _initial_defaults = deepcopy(_all_defaults)
 
 # to be able to reset font sizes to initial values
-const _initial_fontsizes = Dict(:titlefont  => _subplot_defaults[:titlefontsize],
-                                :legendfont => _subplot_defaults[:legendfontsize],
-                                :tickfont   => _axis_defaults[:tickfontsize],
-                                :guidefont  => _axis_defaults[:guidefontsize])
+const _initial_fontsizes = Dict(:titlefontsize  => _subplot_defaults[:titlefontsize],
+                                :legendfontsize => _subplot_defaults[:legendfontsize],
+                                :tickfontsize   => _axis_defaults[:tickfontsize],
+                                :guidefontsize  => _axis_defaults[:guidefontsize])
 
 const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
 
