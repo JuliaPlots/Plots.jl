@@ -104,7 +104,7 @@ function create_kw_body(func_signature::Expr)
             k, v = kwpair.args
             if isa(k, Expr) && k.head == :(::)
                 k = k.args[1]
-                warn("Type annotations on keyword arguments not currently supported. Type information has been discarded")
+                warn("Type annotations on keyword arguments not currently supported in recipes. Type information has been discarded")
             end
             push!(kw_body.args, :($k = get!($PLOTATTRIBUTES, $(QuoteNode(k)), $v)))
             push!(cleanup_body.args, :(RecipesBase.is_key_supported($(QuoteNode(k))) || delete!($PLOTATTRIBUTES, $(QuoteNode(k)))))
