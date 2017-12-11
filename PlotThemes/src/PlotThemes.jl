@@ -33,7 +33,7 @@ end
 
 const _themes = Dict{Symbol, PlotTheme}(:default => PlotTheme())
 
-gradient_name(s::Symbol) = Symbol(s, "_grad")
+gradient_name(s::Symbol) = s == :default ? :inferno : Symbol(s, "_grad")
 
 function add_theme(s::Symbol, thm::PlotTheme)
     if haskey(thm.defaults, :gradient)

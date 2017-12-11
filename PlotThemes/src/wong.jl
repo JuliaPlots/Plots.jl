@@ -12,5 +12,5 @@ const wong_palette = [
 
 _themes[:wong] = PlotTheme(
     palette = expand_palette(colorant"white", wong_palette; lchoices=linspace(57,57,1), cchoices=linspace(100,100,1)),
-    gradient = wong_palette[[2, 1]]
+    gradient = cgrad(:viridis).colors,
 )
