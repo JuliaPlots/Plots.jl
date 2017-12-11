@@ -985,9 +985,11 @@ end
 
 # -------------------------------------------------
 
-"Adds a+bx... straight line over the current plot"
+"Adds a+bx... straight line over the current plot, without changing the axis limits"
 function abline!(plt::Plot, a, b; kw...)
-    plot!(plt, [ignorenan_extrema(plt)...], x -> b + a*x; kw...)
+    xl, yl = xlims(plt), ylims(plt)
+    x1, x2 = max(xl[1], (yl[1] - b)/a), min(xl[2], (yl[2] - b)/a)
+    plot!(plt, x -> b + a*x, x1, x2; kw...)
 end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
