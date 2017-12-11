@@ -336,7 +336,7 @@ end
 function extract_stroke(d, kw_args)
     extract_c(d, kw_args, :line)
     if haskey(d, :linewidth)
-        kw_args[:thickness] = d[:linewidth] * 3
+        kw_args[:thickness] = Float32(d[:linewidth] * 3)
     end
 end
 
@@ -404,7 +404,7 @@ function extract_linestyle(d, kw_args)
     haskey(d, :linestyle) || return
     ls = d[:linestyle]
     lw = d[:linewidth]
-    kw_args[:thickness] = lw
+    kw_args[:thickness] = Float32(lw)
     if ls == :dash
         points = [0.0, lw, 2lw, 3lw, 4lw]
         insert_pattern!(points, kw_args)
@@ -576,7 +576,7 @@ function draw_grid_lines(sp, grid_segs, thickness, style, model, color)
     )
     d = Dict(
         :linestyle => style,
-        :linewidth => thickness,
+        :linewidth => Float32(thickness),
         :linecolor => color
     )
     Plots.extract_linestyle(d, kw_args)
@@ -1350,7 +1350,7 @@ function gl_surface(x,y,z, kw_args)
             end
             color = get(kw_args, :stroke_color, RGBA{Float32}(0,0,0,1))
             kw_args[:color] = color
-            kw_args[:thickness] = get(kw_args, :stroke_width, 1f0)
+            kw_args[:thickness] = Float32(get(kw_args, :stroke_width, 1f0))
             kw_args[:indices] = faces
             delete!(kw_args, :stroke_color)
             delete!(kw_args, :stroke_width)
