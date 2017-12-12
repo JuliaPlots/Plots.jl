@@ -13,7 +13,7 @@ as components in more complex visualizations.
 This functionality is primarily geared to turning user types and settings into the
 data and attributes that describe a [Plots](https://github.com/tbreloff/Plots.jl) visualization,
 though it could be used for other purposes as well.
-Plots has extensive machinery to uniquely take advantage of the simplified recipe description you define.  See the [Plots documentation on recipes](http://juliaplots.github.io/recipes/) for more information.
+Plots has extensive machinery to uniquely take advantage of the simplified recipe description you define.  See the [Plots documentation on recipes](http://docs.juliaplots.org/latest/recipes/) for more information.
 
 The `@recipe` macro will process a function definition, use `-->` commands to define attributes, and
 pass the return value through for further processing (likely by Plots.jl).
@@ -42,7 +42,7 @@ Really there's very little that *couldn't* be mapped to a useful visualization.
 I challenge you to create the pictures that are worth a thousand words.
 
 For more information about Plots, see [the docs](http://juliaplots.github.io/), and be sure to reference
-the [supported keywords](http://juliaplots.github.io/supported/#keyword-arguments).
+the [supported keywords](http://docs.juliaplots.org/latest/supported/#keyword-arguments).
 For additional examples of recipes in the wild, see [PlotRecipes](https://github.com/JuliaPlots/PlotRecipes.jl).
 Ask questions on [gitter](https://gitter.im/tbreloff/Plots.jl) or in the issues.
 
