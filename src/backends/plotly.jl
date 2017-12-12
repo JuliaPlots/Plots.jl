@@ -542,7 +542,6 @@ function plotly_series(plt::Plot, series::Series)
             y, x, "h"
         end
         d_out[:width] = series[:bar_width]
-        info(series[:strokewidth])
         d_out[:marker] = KW(:color => rgba_string(series[:fillcolor]),
                             :width => series[:strokewidth])
 
