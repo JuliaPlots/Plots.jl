@@ -416,6 +416,22 @@ attribute. The default framestyle is `:axes`.
     end)]
 ),
 
+PlotExample("Lines and markers with varying colors",
+"""
+You can use the `line_z` and `marker_z` properties to associate a color with
+each line segment or marker in the plot. 
+"""
+    [:(begin
+        t = linspace(0, 1, 100)
+        θ = 6π .* t
+        x = t .* cos.(θ)
+        y = t .* sin.(θ)
+        p1 = plot(x, y, line_z=t, linewidth=3, legend=false)
+        p2 = scatter(x, y, marker_z=t, color=:bluesreds, legend=false)
+        plot(p1, p2)
+    end)]
+),
+
 ]
 
 # ---------------------------------------------------------------------------------
