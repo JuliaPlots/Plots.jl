@@ -420,7 +420,7 @@ PlotExample("Lines and markers with varying colors",
 """
 You can use the `line_z` and `marker_z` properties to associate a color with
 each line segment or marker in the plot. 
-"""
+""",
     [:(begin
         t = linspace(0, 1, 100)
         θ = 6π .* t
