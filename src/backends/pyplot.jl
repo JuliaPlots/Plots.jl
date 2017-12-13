@@ -1236,6 +1236,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     PyPlot.plt[:Line2D]((0,1),(0,0),
                         color = py_color(_cycle(series[:fillcolor],1)),
                         linewidth = py_dpi_scale(plt, clamp(series[:linewidth], 0, 5)),
+                        linestyle = py_linestyle(:path,series[:linestyle]),
                         marker = py_marker(series[:markershape]),
                         markeredgecolor = py_markerstrokecolor(series),
                         markerfacecolor = py_markercolor(series)
