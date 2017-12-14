@@ -140,6 +140,14 @@ struct SliceIt end
     end
     mf = length(fillranges)
 
+    rib = pop!(plotattributes, :ribbon, nothing)
+    ribbons, _ = if typeof(rib) <: Number
+        ([fr],nothing)
+    else
+        convertToAnyVector(rib, plotattributes)
+    end
+    mr = length(ribbons)
+
     # @show zs
 
     mx = length(xs)
@@ -155,6 +163,10 @@ struct SliceIt end
             # handle fillrange
             fr = fillranges[mod1(i,mf)]
             di[:fillrange] = isa(fr, Function) ? map(fr, di[:x]) : fr
+
+            # handle ribbons
+            rib = ribbons[mod1(i,mr)]
+            di[:ribbon] = isa(rib, Function) ? map(rib, di[:x]) : rib
 
             push!(series_list, RecipeData(di, ()))
         end
