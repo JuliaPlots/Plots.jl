@@ -11,6 +11,15 @@
 ---
 ## (current master)
 
+## 0.14.1
+
+- Add linestyle argument to the legend
+- Plotly: bar_width and stroke_width support for bar plots
+- abline! does not change axis limits
+- Fix default log scale ticks in GR backend
+- Use the :fontsize keys so the scalefontsizes command works
+- Prepare support for new PlotTheme type in PlotThemes
+
 ## 0.14.0
 
 - remove use of imagemagick; saving gifs now requires ffmpeg
