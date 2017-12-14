@@ -5,49 +5,44 @@ module PlotThemes
 using PlotUtils
 
 export
-    add_theme
+    add_theme, palette
 
 _255_to_1(c::Symbol, colors) = RGBA(map(x-> x/255,colors[c])...)
 RGB255(r,g,b) = RGB(r/255, g/255, b/255)
 expand_palette(bg, palette; kwargs...) = [convert(RGBA,c) for c in  distinguishable_colors(20, vcat(bg, palette); kwargs...)][2:end]
 
-immutable PlotTheme
-    bg_primary
-    bg_secondary
-    lines
-    text
-    palette
-    gradient
+const KW = Dict{Symbol, Any}
+
+struct PlotTheme
+    defaults::KW
 end
 
-# by default we don't change the gradient
-function PlotTheme(bg_primary, bg_secondary, lines, text, palette)
-    PlotTheme(bg_primary, bg_secondary, lines, text, palette, nothing)
-end
+PlotTheme(; kw...) = PlotTheme(KW(kw))
 
 # adjust an existing theme
-function PlotTheme(base::PlotTheme;
-                    bg_primary = base.bg_primary,
-                    bg_secondary = base.bg_secondary,
-                    lines = base.lines,
-                    text = base.text,
-                    palette = base.palette,
-                    gradient = base.gradient
-                   )
-    PlotTheme(bg_primary, bg_secondary, lines, text, palette, gradient)
+PlotTheme(base::PlotTheme; kw...) = PlotTheme(KW(base.defaults..., KW(kw)...))
+
+"Get the palette of a PlotTheme"
+function palette(s::Symbol)
+    if haskey(_themes, s) && haskey(_themes[s].defaults, :palette)
+        return _themes[s].defaults[:palette]
+    else
+        return get_color_palette(:auto, plot_color(:white), 17)
+    end
 end
 
-const _themes = Dict{Symbol, PlotTheme}()
+const _themes = Dict{Symbol, PlotTheme}(:default => PlotTheme())
 
-gradient_name(s::Symbol) = Symbol(s, "_grad")
+gradient_name(s::Symbol) = s == :default ? :inferno : Symbol(s, "_grad")
 
 function add_theme(s::Symbol, thm::PlotTheme)
-    if thm.gradient != nothing
-        PlotUtils.register_gradient_colors(gradient_name(s), thm.gradient, :misc)
+    if haskey(thm.defaults, :gradient)
+        PlotUtils.register_gradient_colors(gradient_name(s), thm.defaults[:gradient], :misc)
     end
     _themes[s] = thm
 end
 
+# add themes
 include("dark.jl")
 include("ggplot2.jl")
 include("solarized.jl")
@@ -55,6 +50,7 @@ include("sand.jl")
 include("lime.jl")
 include("orange.jl")
 include("juno.jl")
+include("wong.jl")
 
 function __init__()
     # need to do this here so PlotUtils picks up the change

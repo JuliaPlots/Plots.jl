@@ -21,19 +21,23 @@ const _solarized_colors = Dict(
 )
 
 _themes[:solarized] = PlotTheme(
-    _solarized_colors[:base03],
-    _solarized_colors[:base02],
-    _solarized_colors[:base00],
-    _solarized_colors[:base01],
-    expand_palette(_solarized_colors[:base03], [_solarized_colors[c] for c in _solarized_palette]),
-    [_solarized_colors[:yellow], _solarized_colors[:orange], _solarized_colors[:red]]
+    bg = _solarized_colors[:base03],
+    bginside = _solarized_colors[:base02],
+    fg = _solarized_colors[:base00],
+    fgtext = _solarized_colors[:base01],
+    fgguide = _solarized_colors[:base01],
+    fglegend = _solarized_colors[:base01],
+    palette = expand_palette(_solarized_colors[:base03], [_solarized_colors[c] for c in _solarized_palette]),
+    gradient = [_solarized_colors[:yellow], _solarized_colors[:orange], _solarized_colors[:red]]
 )
 
 _themes[:solarized_light] = PlotTheme(
-    _solarized_colors[:base3],
-    _solarized_colors[:base2],
-    _solarized_colors[:base0],
-    _solarized_colors[:base1],
-    expand_palette(_solarized_colors[:base3], [_solarized_colors[c] for c in _solarized_palette]),
-    [_solarized_colors[:yellow], _solarized_colors[:orange], _solarized_colors[:red]]
+    bg = _solarized_colors[:base3],
+    bginside = _solarized_colors[:base2],
+    fg = _solarized_colors[:base0],
+    fgtext = _solarized_colors[:base1],
+    fgguide = _solarized_colors[:base1],
+    fglegend = _solarized_colors[:base1],
+    palette = expand_palette(_solarized_colors[:base3], [_solarized_colors[c] for c in _solarized_palette]),
+    gradient = [_solarized_colors[:yellow], _solarized_colors[:orange], _solarized_colors[:red]]
 )

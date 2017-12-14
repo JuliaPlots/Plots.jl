@@ -9,10 +9,12 @@ const lime_palette = reverse([colorant"#271924", # dark blue
 black = lime_palette[6]
 
 _themes[:lime] = PlotTheme(
-    black,
-    black,
-    lime_palette[1],
-    lime_palette[2],
-    expand_palette(black, lime_palette[1:4]),
-    lime_palette
+    bg = black,
+    bginside = black,
+    fg = lime_palette[1],
+    fgtext = lime_palette[2],
+    fgguide = lime_palette[2],
+    fglegend = lime_palette[2],
+    palette = expand_palette(black, lime_palette[1:4]),
+    gradient = lime_palette
 )
