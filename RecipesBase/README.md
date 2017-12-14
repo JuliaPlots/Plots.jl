@@ -108,7 +108,7 @@ number of series to display.  User-defined keyword arguments are passed through,
 
 ### Series
 
-For complex visualizations, it can be beneficial to create many series inside a single recipe.  The `@series` macro will make a copy of the attribute dictionary `d`, and add a new RecipeData object to the returned list.  See the [case studies](http://juliaplots.github.io/recipes/#case-studies) for more details.
+For complex visualizations, it can be beneficial to create many series inside a single recipe.  The `@series` macro will make a copy of the attribute dictionary `d`, and add a new RecipeData object to the returned list.  See the [case studies](http://docs.juliaplots.org/latest/recipes/#case-studies) for more details.
 
 ### Generated code
 
