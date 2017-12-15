@@ -80,11 +80,14 @@ end
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     xmin, xmax = hvline_limits(plotattributes[:subplot][:xaxis])
+    span = xmax - xmin
     n = length(y)
-    newx = repmat(Float64[xmin, xmax, NaN], n)
+    newx = repmat(Float64[xmin-10span, xmax+10span, NaN], n)
     newy = vec(Float64[yi for i=1:3,yi=y])
     x := newx
     y := newy
+    x_extent_data := Float64[]
+    y_extent_data := newy
     seriestype := :path
     ()
 end
@@ -92,11 +95,14 @@ end
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
     ymin, ymax = hvline_limits(plotattributes[:subplot][:yaxis])
+    span = ymax - ymin
     n = length(y)
     newx = vec(Float64[yi for i=1:3,yi=y])
-    newy = repmat(Float64[ymin, ymax, NaN], n)
+    newy = repmat(Float64[ymin-10span, ymax+10span, NaN], n)
     x := newx
     y := newy
+    x_extent_data := newx
+    y_extent_data := Float64[]
     seriestype := :path
     ()
 end
