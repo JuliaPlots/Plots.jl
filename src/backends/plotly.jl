@@ -543,7 +543,7 @@ function plotly_series(plt::Plot, series::Series)
         end
         d_out[:width] = series[:bar_width]
         d_out[:marker] = KW(:color => rgba_string(series[:fillcolor]),
-                            :width => series[:strokewidth])
+                            :line => KW(:width => series[:linewidth]))
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
