@@ -77,15 +77,16 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
     defaults = _get_defaults(thm)
 
     # get the gradient
-    gradient_colors = pop!(defaults, :gradient, cgrad(:inferno).colors)
+    gradient_colors = get(defaults, :gradient, cgrad(:inferno).colors)
     gradient = cgrad(cfunc.(RGB.(gradient_colors)))
 
     # get the palette
-    palette = pop!(defaults, :palette, get_color_palette(:auto, plot_color(:white), 17))
+    palette = get(defaults, :palette, get_color_palette(:auto, plot_color(:white), 17))
     palette = cfunc.(RGB.(palette))
 
     # apply the theme
     for k in keys(defaults)
+        k in (:gradient, :palette) && continue
         def = defaults[k]
         arg = get(_keyAliases, k, k)
         plotattributes[arg] = if typeof(def) <: Colorant
@@ -110,7 +111,6 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
             subplot := 1
             palette := palette
             seriestype := :path
-            linewidth := 2
             cumsum(randn(50))
         end
 
@@ -118,8 +118,6 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
             subplot := 2
             seriestype := :scatter
             palette := palette
-            markersize := 5
-            markerstrokewidth := 0
             marker := (:circle, :diamond, :star5, :square)[j]
             randn(10), randn(10)
         end
