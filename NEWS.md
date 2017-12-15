@@ -11,6 +11,12 @@
 ---
 ## (current master)
 
+## 0.14.2
+
+- fix plotly bar lines bug
+- allow passing multiple series to `ribbon`
+- add a new example for `line_z`
+
 ## 0.14.1
 
 - Add linestyle argument to the legend
