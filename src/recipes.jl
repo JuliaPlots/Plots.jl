@@ -993,9 +993,11 @@ end
 
 "Adds a+bx... straight line over the current plot, without changing the axis limits"
 function abline!(plt::Plot, a, b; kw...)
-    xl, yl = xlims(plt), ylims(plt)
-    x1, x2 = max(xl[1], (yl[1] - b)/a), min(xl[2], (yl[2] - b)/a)
-    plot!(plt, x -> b + a*x, x1, x2; kw...)
+    xmin, xmax = xlims(plt)
+    span = xmax - xmin
+    xmin, xmax = (xmin - 10span, xmax + 10span)
+    f(x) = b + a*x
+    plot!(plt, [(xmin, f(xmin)), (xmax, f(xmax))]; x_extent_data = Float64[], y_extent_data = Float64[], kw...)
 end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
