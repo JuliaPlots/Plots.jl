@@ -543,7 +543,7 @@ function gr_set_gradient(c)
 end
 
 # this is our new display func... set up the viewport_canvas, compute bounding boxes, and display each subplot
-function gr_display(plt::Plot)
+function gr_display(plt::Plot, fmt="")
     GR.clearws()
 
     # collect some monitor/display sizes in meters and pixels
@@ -554,17 +554,25 @@ function gr_display(plt::Plot)
     # compute the viewport_canvas, normalized to the larger dimension
     viewport_canvas = Float64[0,1,0,1]
     w, h = plt[:size]
+    if !haskey(ENV, "PLOTS_TEST")
+        dpi_factor = plt[:dpi] / DPI
+        if fmt == "png"
+            dpi_factor *= 6
+        end
+    else
+        dpi_factor = 1
+    end
     gr_plot_size[:] = [w, h]
     if w > h
         ratio = float(h) / w
-        msize = display_width_ratio * w
+        msize = display_width_ratio * w * dpi_factor
         GR.setwsviewport(0, msize, 0, msize * ratio)
         GR.setwswindow(0, 1, 0, ratio)
         viewport_canvas[3] *= ratio
         viewport_canvas[4] *= ratio
     else
         ratio = float(w) / h
-        msize = display_height_ratio * h
+        msize = display_height_ratio * h * dpi_factor
         GR.setwsviewport(0, msize * ratio, 0, msize)
         GR.setwswindow(0, ratio, 0, 1)
         viewport_canvas[1] *= ratio
@@ -1335,7 +1343,7 @@ for (mime, fmt) in _gr_mimeformats
         env = get(ENV, "GKSwstype", "0")
         ENV["GKSwstype"] = $fmt
         ENV["GKS_FILEPATH"] = filepath
-        gr_display(plt)
+        gr_display(plt, $fmt)
         GR.emergencyclosegks()
         write(io, readstring(filepath))
         rm(filepath)
