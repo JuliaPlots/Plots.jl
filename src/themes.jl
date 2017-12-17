@@ -140,6 +140,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
         subplot := 4
         seriestype := :heatmap
         seriescolor := gradient
+        ticks := -5:5:5
         x, y, z
     end
 
