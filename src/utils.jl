@@ -555,7 +555,7 @@ function get_clims(sp::Subplot)
     zmin, zmax = Inf, -Inf
     z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
     for series in series_list(sp)
-        for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, [:line_z], series[:marker_z], series[:fill_z])
+        for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
             if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Real)
                 zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
             elseif (vals != nothing) && (eltype(vals) <: Real)
