@@ -10,90 +10,68 @@ PlotThemes is a package to spice up the plots made with [Plots.jl](https://githu
 Pkg.add("PlotThemes")
 ```
 
-Note: This is a relatively new package, and so colors and theme names may change.
+## Using PlotThemes
 
+Currently the following themes are available:
+- `:default`
+- `:dark`
+- `:ggplot2`
+- `:juno`
+- `:lime`
+- `:orange`
+- `:sand`
+- `:solarized`
+- `:solarized_light`
+- `:wong`
+- `:wong2`
+
+When using Plots, a theme can be set using the `theme` function:
 ```julia
-using StatPlots, RDatasets, Distributions
-
-# choose the dark theme (or sand/solarized/etc)
-theme(:dark)
-
-# some data
-iris = dataset("datasets","iris")
-singers = dataset("lattice","singer")
-M = randn(1000,4)
-M[:,2] += 0.8sqrt(abs(M[:,1])) - 0.5M[:,3] + 5
-M[:,3] -= 0.7M[:,1].^2 + 2
-
-# marginalhist, corrplot, and cornerplot
-mp = @df iris marginalhist(:PetalLength, :PetalWidth)
-cp = corrplot(M, label = ["x$i" for i=1:4])
-cp2 = cornerplot(M)
-
-# violin/boxplot
-vp = @df singers begin
-    violin(:VoicePart, :Height)
-    boxplot!(:VoicePart, :Height)
-end
-
-# Distributions
-np = plot(Normal(3,5), fill=(0, .5,:orange))
-dist = Gamma(2)
-gp = scatter(dist, leg=false)
-bar!(dist, func=cdf, alpha=0.3)
-
-# Regular line plot
-lp = plot(cumsum(randn(30,5)).^2,lw=1.5, xlabel = "the x's", ylabel = "the y's")
-
-# Open-High-Low-Close plot
-n = 20
-hgt = rand(n) + 1
-bot = randn(n)
-openpct = rand(n)
-closepct = rand(n)
-y = OHLC[(openpct[i] * hgt[i] + bot[i],bot[i] + hgt[i],bot[i],closepct[i] * hgt[i] + bot[i]) for i = 1:n]
-oh = ohlc(y)
-
-# put them all together in a 4x2 grid
-plot(mp, cp, cp2, vp, np, gp, lp, oh, layout=(4,2), size=(1000,2000))
+using Plots
+theme(thm::Symbol; kwargs...)
 ```
+`theme` accepts any Plots [attribute](http://docs.juliaplots.org/attributes/) as keyword argument and sets its value as default for subsequent plots.
 
-# Dark
-`theme(:dark)`
+Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 
-![dark](https://user-images.githubusercontent.com/16589944/33489504-511a882e-d6b4-11e7-8b4d-64c54f926b7c.png)
+### `:default`
+![theme_default](https://user-images.githubusercontent.com/16589944/34081411-90c3699c-e34c-11e7-9c64-ea7aae0f066d.png)
 
-# Sand
-`theme(:sand)`
+### `:dark`
+![theme_dark](https://user-images.githubusercontent.com/16589944/34081412-928bd96c-e34c-11e7-95be-744a9f1eb19a.png)
 
-![sand](https://user-images.githubusercontent.com/16589944/33489509-568adb42-d6b4-11e7-8529-e32602edce20.png)
+### `:ggplot2`
+![theme_ggplot2](https://user-images.githubusercontent.com/16589944/34081416-943c5ca0-e34c-11e7-8b45-74f61d958c47.png)
 
-# Lime
-`theme(:lime)`
+### `:juno`
+![theme_juno](https://user-images.githubusercontent.com/16589944/34081419-9632675c-e34c-11e7-8673-d959eb242059.png)
 
-![lime](https://user-images.githubusercontent.com/16589944/33489523-5dbe46c4-d6b4-11e7-9976-4c217f299408.png)
+### `:lime`
+![theme_lime](https://user-images.githubusercontent.com/16589944/34081420-97ff3c4a-e34c-11e7-96fc-4ce5d569180c.png)
 
-# Orange
-`theme(:orange)`
+### `:orange`
+![theme_orange](https://user-images.githubusercontent.com/16589944/34081422-9a4d009a-e34c-11e7-816a-ccb796d61e4b.png)
 
-![orange](https://user-images.githubusercontent.com/16589944/33489526-60efe2bc-d6b4-11e7-958d-07e766adf849.png)
+### `:sand`
+![theme_sand](https://user-images.githubusercontent.com/16589944/34081423-9c79b660-e34c-11e7-8861-efc2d13efd30.png)
 
-# Solarized
-`theme(:solarized)`
+### `:solarized`
+![theme_solarized](https://user-images.githubusercontent.com/16589944/34081424-9de1d9b0-e34c-11e7-9aa2-efa112e77e2d.png)
 
-![solarized](https://user-images.githubusercontent.com/16589944/33489533-6500a21a-d6b4-11e7-9f02-a44e1066a20a.png)
+### `:solarized_light`
+![theme_solarized_light](https://user-images.githubusercontent.com/16589944/34081426-9f4371e2-e34c-11e7-8f9c-838232d51843.png)
 
-# Solarized Light
-`theme(:solarized_light)`
+### `:wong`
+![theme_wong](https://user-images.githubusercontent.com/16589944/34081427-a12508d6-e34c-11e7-8767-b66fa276b298.png)
 
-![solarized_light](https://cloud.githubusercontent.com/assets/8431156/19231321/b5872ebc-8ed9-11e6-8a5b-a9b615e348a9.png)
+### `:wong2`
+![theme_wong2](https://user-images.githubusercontent.com/16589944/34081428-a340fa3a-e34c-11e7-83a4-d671ba25a441.png)
 
-# Juno
-`theme(:juno)`
-
-![juno](https://user-images.githubusercontent.com/16589944/33489542-713aa45e-d6b4-11e7-8385-558819e9d47c.png)
-
-# Default
-`theme(:default)`
-
-![default](https://user-images.githubusercontent.com/16589944/33489485-4b3c190e-d6b4-11e7-90c7-b58b35b735ac.png)
+## Contributing
+A theme specifies default values for different Plots [attributes](http://docs.juliaplots.org/attributes/).
+At the moment these are typically colors, palettes and gradients, but any Plots attribute can be controlled by a theme in general.
+PRs for new themes very welcome! Adding a new theme (e.g. `mytheme`) is as easy as adding a new file (mytheme.jl) that contains at least the following line:
+```julia
+_themes[:mytheme] = PlotTheme(; kwargs...)
+```
+The keyword arguments can be any collection of Plots attributes.
