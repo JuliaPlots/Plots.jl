@@ -788,10 +788,23 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         ztick = GR.tick(zmin, zmax) / 2
         ticksize = 0.01 * (viewport_plotarea[2] - viewport_plotarea[1])
 
-        # GR.setlinetype(GR.LINETYPE_DOTTED)
-        xaxis[:grid] && GR.grid3d(xtick, 0, 0, xmin, ymax, zmin, 2, 0, 0)
-        yaxis[:grid] && GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
-        zaxis[:grid] && GR.grid3d(0, 0, ztick, xmin, ymax, zmin, 0, 0, 2)
+        if xaxis[:grid]
+            gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
+            GR.settransparency(xaxis[:gridalpha])
+            GR.grid3d(xtick, 0, 0, xmin, ymax, zmin, 2, 0, 0)
+        end
+        if yaxis[:grid]
+            gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
+            GR.settransparency(yaxis[:gridalpha])
+            GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
+        end
+        if zaxis[:grid]
+            gr_set_line(zaxis[:gridlinewidth], zaxis[:gridstyle], zaxis[:foreground_color_grid])
+            GR.settransparency(zaxis[:gridalpha])
+            GR.grid3d(0, 0, ztick, xmin, ymax, zmin, 0, 0, 2)
+        end
+        gr_set_line(1, :solid, xaxis[:foreground_color_axis])
+        GR.settransparency(1)
         GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
         GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
 
