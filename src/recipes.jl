@@ -989,7 +989,11 @@ end
 function abline!(plt::Plot, a, b; kw...)
     xl, yl = xlims(plt), ylims(plt)
     x1, x2 = max(xl[1], (yl[1] - b)/a), min(xl[2], (yl[2] - b)/a)
-    x2 > x1 && plot!(plt, x -> b + a*x, x1, x2; kw...)
+    if x2 > x1
+        plot!(plt, x -> b + a*x, x1, x2; kw...)
+    else
+        nothing
+    end
 end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
