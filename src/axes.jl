@@ -318,11 +318,16 @@ function expand_extrema!(sp::Subplot, d::KW)
 
     # first expand for the data
     for letter in (:x, :y, :z)
-        data = d[if vert
+        letter_ = if vert
             letter
         else
             letter == :x ? :y : letter == :y ? :x : :z
-        end]
+        end
+
+        extent_key = Symbol(letter_, :_extent_data)
+        # if there is extent_key, use it for calculating limits.
+        data = get(d, extent_key, d[letter_])
+
         axis = sp[Symbol(letter, "axis")]
 
         if isa(data, Volume)

@@ -80,11 +80,14 @@ end
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     xmin, xmax = hvline_limits(plotattributes[:subplot][:xaxis])
+    span = xmax - xmin
     n = length(y)
-    newx = repmat(Float64[xmin, xmax, NaN], n)
+    newx = repmat(Float64[xmin-10span, xmax+10span, NaN], n)
     newy = vec(Float64[yi for i=1:3,yi=y])
     x := newx
     y := newy
+    x_extent_data := Float64[]
+    y_extent_data := newy
     seriestype := :path
     ()
 end
@@ -92,11 +95,14 @@ end
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
     ymin, ymax = hvline_limits(plotattributes[:subplot][:yaxis])
+    span = ymax - ymin
     n = length(y)
     newx = vec(Float64[yi for i=1:3,yi=y])
-    newy = repmat(Float64[ymin, ymax, NaN], n)
+    newy = repmat(Float64[ymin-10span, ymax+10span, NaN], n)
     x := newx
     y := newy
+    x_extent_data := newx
+    y_extent_data := Float64[]
     seriestype := :path
     ()
 end
@@ -987,9 +993,11 @@ end
 
 "Adds a+bx... straight line over the current plot, without changing the axis limits"
 function abline!(plt::Plot, a, b; kw...)
-    xl, yl = xlims(plt), ylims(plt)
-    x1, x2 = max(xl[1], (yl[1] - b)/a), min(xl[2], (yl[2] - b)/a)
-    plot!(plt, x -> b + a*x, x1, x2; kw...)
+    xmin, xmax = xlims(plt)
+    span = xmax - xmin
+    xmin, xmax = (xmin - 10span, xmax + 10span)
+    f(x) = b + a*x
+    plot!(plt, [(xmin, f(xmin)), (xmax, f(xmax))]; x_extent_data = Float64[], y_extent_data = Float64[], kw...)
 end
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
