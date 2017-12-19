@@ -736,7 +736,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         z = if eltype(img) <: Colors.AbstractGray
             float(img)
         elseif eltype(img) <: Colorant
-            map(c -> Float64[red(c),green(c),blue(c)], img)
+            map(c -> Float64[red(c),green(c),blue(c),alpha(c)], img)
         else
             z  # hopefully it's in a data format that will "just work" with imshow
         end
