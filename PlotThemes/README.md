@@ -35,37 +35,37 @@ theme(thm::Symbol; kwargs...)
 Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 
 ### `:default`
-![theme_default](https://user-images.githubusercontent.com/16589944/34081411-90c3699c-e34c-11e7-9c64-ea7aae0f066d.png)
+![theme_default](https://user-images.githubusercontent.com/16589944/34177593-6a39d112-e504-11e7-9cff-5b18c8caf887.png)
 
 ### `:dark`
-![theme_dark](https://user-images.githubusercontent.com/16589944/34081412-928bd96c-e34c-11e7-95be-744a9f1eb19a.png)
+![theme_dark](https://user-images.githubusercontent.com/16589944/34177596-6d25b79c-e504-11e7-816f-9a1adbda41c2.png)
 
 ### `:ggplot2`
-![theme_ggplot2](https://user-images.githubusercontent.com/16589944/34081416-943c5ca0-e34c-11e7-8b45-74f61d958c47.png)
+![theme_ggplot2](https://user-images.githubusercontent.com/16589944/34177605-7160e6a6-e504-11e7-9c46-8dbc65b7daf3.png)
 
 ### `:juno`
-![theme_juno](https://user-images.githubusercontent.com/16589944/34081419-9632675c-e34c-11e7-8673-d959eb242059.png)
+![theme_juno](https://user-images.githubusercontent.com/16589944/34177629-7d60212e-e504-11e7-832a-abadd22138ce.png)
 
 ### `:lime`
-![theme_lime](https://user-images.githubusercontent.com/16589944/34081420-97ff3c4a-e34c-11e7-96fc-4ce5d569180c.png)
+![theme_lime](https://user-images.githubusercontent.com/16589944/34177613-7586877c-e504-11e7-948a-32f0f96d947e.png)
 
 ### `:orange`
-![theme_orange](https://user-images.githubusercontent.com/16589944/34081422-9a4d009a-e34c-11e7-816a-ccb796d61e4b.png)
+![theme_orange](https://user-images.githubusercontent.com/16589944/34177643-88c543c8-e504-11e7-8622-abd166f73e68.png)
 
 ### `:sand`
-![theme_sand](https://user-images.githubusercontent.com/16589944/34081423-9c79b660-e34c-11e7-8861-efc2d13efd30.png)
+![theme_sand](https://user-images.githubusercontent.com/16589944/34177640-86233cec-e504-11e7-9046-841a40877d7b.png)
 
 ### `:solarized`
-![theme_solarized](https://user-images.githubusercontent.com/16589944/34081424-9de1d9b0-e34c-11e7-9aa2-efa112e77e2d.png)
+![theme_solarized](https://user-images.githubusercontent.com/16589944/34177636-83a6664c-e504-11e7-89f4-2fb350fdec15.png)
 
 ### `:solarized_light`
-![theme_solarized_light](https://user-images.githubusercontent.com/16589944/34081426-9f4371e2-e34c-11e7-8f9c-838232d51843.png)
+![theme_solarized_light](https://user-images.githubusercontent.com/16589944/34177634-803e867e-e504-11e7-8a09-50ec09b3112d.png)
 
 ### `:wong`
-![theme_wong](https://user-images.githubusercontent.com/16589944/34081427-a12508d6-e34c-11e7-8767-b66fa276b298.png)
+![theme_wong](https://user-images.githubusercontent.com/16589944/34177654-90f2c4da-e504-11e7-8c4e-1f02b9fa7a21.png)
 
 ### `:wong2`
-![theme_wong2](https://user-images.githubusercontent.com/16589944/34081428-a340fa3a-e34c-11e7-83a4-d671ba25a441.png)
+![theme_wong2](https://user-images.githubusercontent.com/16589944/34177647-8bd7d116-e504-11e7-81a4-6ef7ccb0a7ed.png)
 
 ## Contributing
 A theme specifies default values for different Plots [attributes](http://docs.juliaplots.org/attributes/).
