@@ -18,5 +18,5 @@ _themes[:sand] = PlotTheme(
     fgguide = colorant"#725B61",
     fglegend = colorant"#725B61",
     palette = expand_palette(sand_bg, sand_palette),
-    gradient = sand_palette[[1,4]]
+    gradient = cgrad(:dense).colors
 )
