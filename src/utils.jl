@@ -1048,3 +1048,28 @@ guidefont(ax::Axis) = font(
     ax[:guidefontrotation],
     ax[:guidefontcolor],
 )
+
+# ---------------------------------------------------------------
+# converts unicode scientific notation unsupported by pgfplots and gr
+# into a format that works 
+
+function convert_sci_unicode(label::AbstractString)
+    unicode_dict = Dict(
+    '⁰' => "0",
+    '¹' => "1",
+    '²' => "2",
+    '³' => "3",
+    '⁴' => "4",
+    '⁵' => "5",
+    '⁶' => "6",
+    '⁷' => "7",
+    '⁸' => "8",
+    '⁹' => "9",
+    '⁻' => "-",
+    "×10" => "×10^{",
+    )
+    for key in keys(unicode_dict)
+        label = replace(label, key, unicode_dict[key])
+    end
+    string(label, "}")
+end

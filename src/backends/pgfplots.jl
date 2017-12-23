@@ -329,6 +329,7 @@ function pgf_axis(sp::Subplot, letter)
             push!(style, string(letter, "ticklabels = {\$", join(tick_labels,"\$,\$"), "\$}"))
         elseif axis[:showaxis]
             tick_labels = ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
+            tick_labels = axis[:formatter] == :scientific ? string.("\$", convert_sci_unicode.(tick_labels), "\$") : tick_labels
             push!(style, string(letter, "ticklabels = {", join(tick_labels,","), "}"))
         else
             push!(style, string(letter, "ticklabels = {}"))
@@ -500,6 +501,7 @@ end
 
 function _display(plt::Plot{PGFPlotsBackend})
     # prepare the object
+    PGFPlots.pushPGFPlotsPreamble("\\usepackage{fontspec}")
     pgfplt = PGFPlots.plot(plt.o)
 
     # save an svg
