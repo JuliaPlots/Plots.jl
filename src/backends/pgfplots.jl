@@ -465,7 +465,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # add the annotations
         for ann in sp[:annotations]
-            pgf_add_annotation!(o,ann...)
+            pgf_add_annotation!(o, locate_annotation(sp, ann...)...)
         end
 
 

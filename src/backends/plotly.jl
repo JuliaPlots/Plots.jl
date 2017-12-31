@@ -385,8 +385,9 @@ function plotly_layout(plt::Plot)
         end
 
         # annotations
-        append!(d_out[:annotations], KW[plotly_annotation_dict(ann...; xref = "x$spidx", yref = "y$spidx") for ann in sp[:annotations]])
-
+        for ann in sp[:annotations]
+            append!(d_out[:annotations], KW[plotly_annotation_dict(locate_annotation(sp, ann...)...; xref = "x$spidx", yref = "y$spidx")])
+        end
         # series_annotations
         for series in series_list(sp)
             anns = series[:series_annotations]
