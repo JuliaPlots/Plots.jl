@@ -1208,7 +1208,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                                         round(Int, green(c) * 255) << 8  +
                                         round(Int,   red(c) * 255) ), z)
             end
-            GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
+            GR.drawimage(0, w, h, 0, w, h, rgba)
         end
 
         # this is all we need to add the series_annotations text
