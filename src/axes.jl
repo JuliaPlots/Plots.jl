@@ -552,7 +552,7 @@ function axis_drawing_info(sp::Subplot)
                 end
                 push!(xaxis_segs, (xmin, y1), (xmax, y1))
                 # don't show the 0 tick label for the origin framestyle
-                if sp[:framestyle] == :origin && length(xticks) > 1
+                if sp[:framestyle] == :origin && !(xticks in (nothing,false)) && length(xticks) > 1
                     showticks = xticks[1] .!= 0
                     xticks = (xticks[1][showticks], xticks[2][showticks])
                 end
@@ -591,7 +591,7 @@ function axis_drawing_info(sp::Subplot)
                 end
                 push!(yaxis_segs, (x1, ymin), (x1, ymax))
                 # don't show the 0 tick label for the origin framestyle
-                if sp[:framestyle] == :origin && length(yticks) > 1
+                if sp[:framestyle] == :origin && !(yticks in (nothing,false)) && length(yticks) > 1
                     showticks = yticks[1] .!= 0
                     yticks = (yticks[1][showticks], yticks[2][showticks])
                 end
