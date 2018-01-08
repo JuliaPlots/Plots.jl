@@ -1207,7 +1207,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if cmap && st != :contour # special colorbar with steps is drawn for contours
             gr_set_line(1, :solid, yaxis[:foreground_color_axis])
             GR.settransparency(1)
-            gr_colorbar(sp, clims, series[:fillalpha])
+            gr_colorbar(sp, clims)
         end
 
         GR.restorestate()
