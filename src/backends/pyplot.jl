@@ -768,6 +768,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             label = series[:label],
             zorder = series[:series_plotindex],
             cmap = py_fillcolormap(series),
+            alpha = series[:fillalpha],
             # edgecolors = (series[:linewidth] > 0 ? py_linecolor(series) : "face"),
             extrakw...
         )

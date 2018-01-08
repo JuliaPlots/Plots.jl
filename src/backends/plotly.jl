@@ -259,7 +259,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
     ax[:tickangle] = -axis[:rotation]
     lims = axis_limits(axis)
     ax[:range] = map(scalefunc(axis[:scale]), lims)
-    
+
     if !(axis[:ticks] in (nothing, :none))
         ax[:titlefont] = plotly_font(guidefont(axis))
         ax[:type] = plotly_scale(axis[:scale])
@@ -289,7 +289,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
         ax[:showgrid] = false
     end
 
-    
+
     ax
 end
 
@@ -430,7 +430,7 @@ end
 
 
 function plotly_colorscale(grad::ColorGradient, α)
-    [[grad.values[i], rgb_string(grad.colors[i])] for i in 1:length(grad.colors)]
+    [[grad.values[i], rgba_string(plot_color(grad.colors[i], α))] for i in 1:length(grad.colors)]
 end
 plotly_colorscale(c, α) = plotly_colorscale(cgrad(alpha=α), α)
 # plotly_colorscale(c, alpha = nothing) = plotly_colorscale(cgrad(), alpha)
