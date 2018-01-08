@@ -542,7 +542,7 @@ function plotly_series(plt::Plot, series::Series)
             y, x, "h"
         end
         d_out[:width] = series[:bar_width]
-        d_out[:marker] = KW(:color => rgba_string(series[:fillcolor]),
+        d_out[:marker] = KW(:color => _cycle(rgba_string.(series[:fillcolor]),eachindex(series[:x])),
                             :line => KW(:width => series[:linewidth]))
 
     elseif st == :heatmap
@@ -610,14 +610,14 @@ function plotly_series(plt::Plot, series::Series)
             :size => 2 * series[:markersize],
             # :color => rgba_string(series[:markercolor]),
             :line => KW(
-                :color => rgba_string(series[:markerstrokecolor]),
+                :color => _cycle(rgba_string.(series[:markerstrokecolor]),eachindex(series[:x])),
                 :width => series[:markerstrokewidth],
             ),
         )
 
         # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
         if series[:marker_z] == nothing
-            d_out[:marker][:color] = rgba_string(series[:markercolor])
+            d_out[:marker][:color] = _cycle(rgba_string.(series[:markercolor]),eachindex(series[:x]))
         else
             # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
             # grad = as_gradient(series[:markercolor], series[:markeralpha])
