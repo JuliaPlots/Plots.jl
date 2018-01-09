@@ -1082,7 +1082,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             zmin, zmax = clims
             GR.setspace(zmin, zmax, 0, 90)
             grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
-            colors = [grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)] for zi=z]
+            colors = [plot_color(grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)], series[:fillalpha]) for zi=z]
             rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
                                     round(Int,  blue(c) * 255) << 16 +
                                     round(Int, green(c) * 255) << 8  +
