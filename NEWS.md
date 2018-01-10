@@ -11,6 +11,17 @@
 ---
 ## (current master)
 
+## 0.14.3
+
+- improve resolution of png output of GR with savefig()
+- add check for ticks=nothing
+- allow transparency in heatmaps
+- fix line_z for GR
+- fix legendcolor for pyplot
+- fix pyplot ignoring alpha values of images
+- don't let `abline!` change subplot limits
+- update showtheme recipe
+
 ## 0.14.2
 
 - fix plotly bar lines bug
