@@ -193,7 +193,7 @@ gr_inqtext(x, y, s::Symbol) = gr_inqtext(x, y, string(s))
 function gr_inqtext(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.inqtextext(x, y, s[2:end-1])
-    elseif search(s, '\\') != 0
+    elseif search(s, '\\') != 0 || contains(s, "10^{")
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
@@ -205,7 +205,7 @@ gr_text(x, y, s::Symbol) = gr_text(x, y, string(s))
 function gr_text(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.mathtex(x, y, s[2:end-1])
-    elseif search(s, '\\') != 0
+    elseif search(s, '\\') != 0 || contains(s, "10^{")
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
@@ -222,12 +222,8 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     sinf = sind.(a)
     cosf = cosd.(a)
     rtick_values, rtick_labels = get_ticks(yaxis)
-    rtick_labels = if yaxis[:formatter] == :scientific && yaxis[:ticks] == :auto
-        rtick_labels = string.(convert_sci_unicode.(rtick_labels),"\\ ")
-        # unicode × messes up superscript alignment so add space to superscript
-        replace.(rtick_labels, "{", "{ ")
-    else
-        rtick_labels
+    if yaxis[:formatter] == :scientific && yaxis[:ticks] == :auto
+        rtick_labels = convert_sci_unicode(rtick_labels)
     end
 
     #draw angular grid
@@ -889,15 +885,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
                 # ensure correct dispatch in gr_text for automatic log ticks
-                dv = if xaxis[:scale] in (:ln, :log10, :log2) && xaxis[:ticks] == :auto
-                    string(dv, "\\ ")
-                elseif xaxis[:formatter] == :scientific && xaxis[:ticks] == :auto
-                    # unicode × messes up superscript alignment so add space to superscript
-                    string(replace(convert_sci_unicode(dv), "{", "{ "), "\\ ")
-                else
-                    string(dv)
+                if xaxis[:formatter] == :scientific && xaxis[:ticks] == :auto
+                    dv = convert_sci_unicode(dv)
                 end
-                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), dv)
+                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), string(dv))
             end
         end
 
@@ -909,15 +900,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
                 # ensure correct dispatch in gr_text for automatic log ticks
-                dv = if yaxis[:scale] in (:ln, :log10, :log2) && yaxis[:ticks] == :auto
-                    string(dv, "\\ ")
-                elseif yaxis[:formatter] == :scientific && yaxis[:ticks] == :auto
-                    # unicode × messes up superscript alignment so add space to superscript
-                    string(replace(convert_sci_unicode(dv), "{", "{ "), "\\ ")
-                else
-                    string(dv)
+                if yaxis[:formatter] == :scientific && yaxis[:ticks] == :auto
+                    dv = convert_sci_unicode(dv)
                 end
-                gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, dv)
+                gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
             end
         end
 
