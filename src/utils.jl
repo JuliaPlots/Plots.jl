@@ -1071,5 +1071,8 @@ function convert_sci_unicode(label::AbstractString)
     for key in keys(unicode_dict)
         label = replace(label, key, unicode_dict[key])
     end
-    string(label, "}")
+    if contains(label, "10^{")
+        label = string(label, "}")
+    end
+    label
 end
