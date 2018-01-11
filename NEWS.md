@@ -11,7 +11,7 @@
 ---
 ## (current master)
 
-## 0.14.3
+## 0.15.0
 
 - improve resolution of png output of GR with savefig()
 - add check for ticks=nothing
