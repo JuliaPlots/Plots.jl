@@ -884,9 +884,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
-                # ensure correct dispatch in gr_text for automatic log ticks
-                if xaxis[:formatter] == :scientific && xaxis[:ticks] == :auto
-                    dv = convert_sci_unicode(dv)
+                if xaxis[:ticks] == :auto
+                    # ensure correct dispatch in gr_text for automatic log ticks
+                    if xaxis[:scale] in _logScales
+                        dv = string(dv, "\\ ")
+                    elseif xaxis[:formatter] == :scientific
+                        dv = convert_sci_unicode(dv)
+                    end
                 end
                 gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), string(dv))
             end
@@ -899,9 +903,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
-                # ensure correct dispatch in gr_text for automatic log ticks
-                if yaxis[:formatter] == :scientific && yaxis[:ticks] == :auto
-                    dv = convert_sci_unicode(dv)
+                if yaxis[:ticks] == :auto
+                    # ensure correct dispatch in gr_text for automatic log ticks
+                    if yaxis[:scale] in _logScales
+                        dv = string(dv, "\\ ")
+                    elseif yaxis[:formatter] == :scientific
+                        dv = convert_sci_unicode(dv)
+                    end
                 end
                 gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
             end
