@@ -199,7 +199,7 @@ allnan(istart::Int, iend::Int, args::Tuple) = all(i -> anynan(i, args), istart:i
 
 function Base.start(itr::SegmentsIterator)
     nextidx = 1
-    if anynan(1, itr.args)
+    if !any(iszero,map(length,itr.args)) && anynan(1, itr.args)
         _, nextidx = next(itr, 1)
     end
     nextidx
