@@ -557,6 +557,7 @@ function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, 
     positions, labs = makevec(positions), makevec(labs)
     for i in 1:max(length(positions), length(labs))
         pos, lab = _cycle(positions, i), _cycle(labs, i)
+        pos = get(_positionAliases, pos, pos)
         if lab == :auto
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (pos, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
@@ -570,12 +571,12 @@ end
 # Give each annotation coordinates based on specified position
 function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
     position_multiplier = Dict{Symbol, Tuple{Float64,Float64}}(
-        :top_left => (0.1, 0.9),
-        :top_center => (0.5, 0.9),
-        :top_right => (0.9, 0.9),
-        :bottom_right => (0.9, 0.1),
-        :bottom_left => (0.1, 0.9),
-        :bottom_center => (0.5,0.1),
+        :topleft       => (0.1, 0.9),
+        :topcenter     => (0.5, 0.9),
+        :topright      => (0.9, 0.9),
+        :bottomleft    => (0.1, 0.1),
+        :bottomcenter  => (0.5, 0.1),
+        :bottomright   => (0.9, 0.1),
     )
     xmin, xmax = ignorenan_extrema(sp[:xaxis])
     ymin, ymax = ignorenan_extrema(sp[:yaxis])
