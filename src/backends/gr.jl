@@ -1200,7 +1200,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             z = transpose_z(series, series[:z].surf, true)'
             w, h = size(z)
             if eltype(z) <: Colors.AbstractGray
-                grey = round(UInt8, float(z) * 255)
+                grey = round.(UInt8, float(z) * 255)
                 rgba = map(c -> UInt32( 0xff000000 + Int(c)<<16 + Int(c)<<8 + Int(c) ), grey)
             else
                 rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
@@ -1208,7 +1208,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                                         round(Int, green(c) * 255) << 8  +
                                         round(Int,   red(c) * 255) ), z)
             end
-            GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
+            GR.drawimage(0, w, h, 0, w, h, rgba)
         end
 
         # this is all we need to add the series_annotations text
