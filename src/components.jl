@@ -348,6 +348,7 @@ PlotText(str) = PlotText(string(str), font())
 Create a PlotText object wrapping a string with font info, for plot annotations
 """
 text(t::PlotText) = t
+text(t::PlotText, font::Font) = PlotText(t.str, font)
 text(str::AbstractString, f::Font) = PlotText(str, f)
 function text(str, args...)
   PlotText(string(str), font(args...))
@@ -535,6 +536,54 @@ annotations(anns::AVec) = anns
 annotations(anns) = Any[anns]
 annotations(sa::SeriesAnnotations) = sa
 
+# Expand arrays of coordinates, positions and labels into induvidual annotations
+# and make sure labels are of type PlotText
+function process_annotation(sp::Subplot, xs, ys, labs, font = font())
+    anns = []
+    labs = makevec(labs)
+    for i in 1:max(length(xs), length(ys), length(labs))
+        x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
+        if lab == :auto
+            alphabet = "abcdefghijklmnopqrstuvwxyz"
+            push!(anns, (x, y, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
+        else
+            push!(anns, (x, y, isa(lab, PlotText) ? lab : text(lab, font)))
+        end
+    end
+    anns
+end
+function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, labs, font = font())
+    anns = []
+    positions, labs = makevec(positions), makevec(labs)
+    for i in 1:max(length(positions), length(labs))
+        pos, lab = _cycle(positions, i), _cycle(labs, i)
+        pos = get(_positionAliases, pos, pos)
+        if lab == :auto
+            alphabet = "abcdefghijklmnopqrstuvwxyz"
+            push!(anns, (pos, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
+        else
+            push!(anns, (pos, isa(lab, PlotText) ? lab : text(lab, font)))
+        end
+    end
+    anns
+end
+
+# Give each annotation coordinates based on specified position
+function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
+    position_multiplier = Dict{Symbol, Tuple{Float64,Float64}}(
+        :topleft       => (0.1, 0.9),
+        :topcenter     => (0.5, 0.9),
+        :topright      => (0.9, 0.9),
+        :bottomleft    => (0.1, 0.1),
+        :bottomcenter  => (0.5, 0.1),
+        :bottomright   => (0.9, 0.1),
+    )
+    xmin, xmax = ignorenan_extrema(sp[:xaxis])
+    ymin, ymax = ignorenan_extrema(sp[:yaxis])
+    x, y = (xmin, ymin).+ position_multiplier[pos].* (xmax - xmin, ymax - ymin)
+    (x, y, lab)
+end
+locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
 # -----------------------------------------------------------------------
 
 "type which represents z-values for colors and sizes (and anything else that might come up)"

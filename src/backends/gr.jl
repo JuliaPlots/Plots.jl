@@ -1330,7 +1330,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
     end
     for ann in sp[:annotations]
-        x, y, val = ann
+        x, y, val = locate_annotation(sp, ann...)
         x, y = if is3d(sp)
             # GR.wc3towc(x, y, z)
         else

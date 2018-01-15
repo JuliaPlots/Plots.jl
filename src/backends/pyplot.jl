@@ -969,7 +969,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
         # add the annotations
         for ann in sp[:annotations]
-            py_add_annotations(sp, ann...)
+            py_add_annotations(sp, locate_annotation(sp, ann...)...)
         end
 
         # title

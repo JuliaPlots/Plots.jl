@@ -159,6 +159,21 @@ const _markerAliases = Dict{Symbol,Symbol}(
     :spike        => :vline,
 )
 
+const _positionAliases = Dict{Symbol,Symbol}(
+    :top_left      => :topleft,
+    :tl            => :topleft,
+    :top_center    => :topcenter,
+    :tc            => :topcenter,
+    :top_right     => :topright,
+    :tr            => :topright,
+    :bottom_left   => :bottomleft,
+    :bl            => :bottomleft,
+    :bottom_center => :bottomcenter,
+    :bc            => :bottomcenter,
+    :bottom_right  => :bottomright,
+    :br            => :bottomright,
+)
+
 const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _logScales = [:ln, :log2, :log10]
 const _logScaleBases = Dict(:ln => e, :log2 => 2.0, :log10 => 10.0)
@@ -1294,11 +1309,9 @@ end
 
 function _update_subplot_periphery(sp::Subplot, anns::AVec)
     # extend annotations, and ensure we always have a (x,y,PlotText) tuple
-    newanns = vcat(anns, sp[:annotations])
-    for (i,ann) in enumerate(newanns)
-        x,y,tmp = ann
-        ptxt = isa(tmp, PlotText) ? tmp : text(tmp)
-        newanns[i] = (x,y,ptxt)
+    newanns = []
+    for ann in vcat(anns, sp[:annotations])
+        append!(newanns, process_annotation(sp, ann...))
     end
     sp.attr[:annotations] = newanns
 
