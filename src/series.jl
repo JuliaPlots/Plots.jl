@@ -548,9 +548,14 @@ end
 splittable_kw(key, val, lengthGroup) = false
 splittable_kw(key, val::AbstractArray, lengthGroup) = (key != :group) && size(val,1) == lengthGroup
 splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengthGroup))
+splittable_kw(key, val::SeriesAnnotations, lengthGroup) = splittable_kw(key, val.strs, lengthGroup)
 
 split_kw(key, val::AbstractArray, indices) = val[indices, fill(Colon(), ndims(val)-1)...]
 split_kw(key, val::Tuple, indices) = Tuple(split_kw(key, v, indices) for v in val)
+function split_kw(key, val::SeriesAnnotations, indices)
+    split_strs = split_kw(key, val.strs, indices)
+    return SeriesAnnotations(split_strs, val.font, val.baseshape, val.scalefactor)
+end
 
 function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
     y_mat = Array{promote_type(eltype(y), typeof(def_val))}(length(keys(x_ind)), length(groupby.groupLabels))
