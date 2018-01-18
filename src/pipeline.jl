@@ -360,7 +360,6 @@ function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
         xmin, xmax = ignorenan_extrema(d[:x]); ymin, ymax = ignorenan_extrema(d[:y])
         expand_extrema!(sp[:xaxis], (xmin, xmax))
         expand_extrema!(sp[:yaxis], (ymin, ymax))
-        sp[:yaxis].d[:flip] = true
     elseif !(st in (:pie, :histogram, :bins2d, :histogram2d))
         expand_extrema!(sp, d)
     end
