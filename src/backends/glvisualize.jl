@@ -1215,7 +1215,7 @@ end
 
 function gl_image(img, kw_args)
     rect = kw_args[:primitive]
-    kw_args[:primitive] = GeometryTypes.SimpleRectangle{Float32}(rect.x, rect.y, rect.h, rect.w) # seems to be flipped
+    kw_args[:primitive] = GeometryTypes.SimpleRectangle{Float32}(rect.x, rect.y, rect.w, rect.h)
     visualize(img, Style(:default), kw_args)
 end
 

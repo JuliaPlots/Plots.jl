@@ -321,10 +321,12 @@ end
     n, m = size(mat)
     if is_seriestype_supported(:image)
         seriestype := :image
+        yflip --> true
         SliceIt, 1:m, 1:n, Surface(mat)
     else
         seriestype := :heatmap
         yflip --> true
+        cbar --> false
         fillcolor --> ColorGradient([:black, :white])
         SliceIt, 1:m, 1:n, Surface(convert(Matrix{Float64}, mat))
     end
@@ -337,10 +339,12 @@ end
 
     if is_seriestype_supported(:image)
         seriestype := :image
+        yflip --> true
         SliceIt, 1:m, 1:n, Surface(mat)
     else
         seriestype := :heatmap
         yflip --> true
+        cbar --> false
         z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
         SliceIt, 1:m, 1:n, Surface(z)
     end
@@ -463,6 +467,38 @@ end
     end
     wrap_surfaces(plotattributes)
     SliceIt, x, y, Surface(z)
+end
+
+# # images - grays
+
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where T<:Gray
+    if is_seriestype_supported(:image)
+        seriestype := :image
+        yflip --> true
+        SliceIt, x, y, Surface(mat)
+    else
+        seriestype := :heatmap
+        yflip --> true
+        cbar --> false
+        fillcolor --> ColorGradient([:black, :white])
+        SliceIt, x, y, Surface(convert(Matrix{Float64}, mat))
+    end
+end
+
+# # images - colors
+
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where T<:Colorant
+    if is_seriestype_supported(:image)
+        seriestype := :image
+        yflip --> true
+        SliceIt, x, y, Surface(mat)
+    else
+        seriestype := :heatmap
+        yflip --> true
+        cbar --> false
+        z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
+        SliceIt, x, y, Surface(z)
+    end
 end
 
 #

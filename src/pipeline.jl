@@ -357,10 +357,9 @@ end
 function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
     # adjust extrema and discrete info
     if st == :image
-        w, h = size(d[:z])
-        expand_extrema!(sp[:xaxis], (0,w))
-        expand_extrema!(sp[:yaxis], (0,h))
-        sp[:yaxis].d[:flip] = true
+        xmin, xmax = ignorenan_extrema(d[:x]); ymin, ymax = ignorenan_extrema(d[:y])
+        expand_extrema!(sp[:xaxis], (xmin, xmax))
+        expand_extrema!(sp[:yaxis], (ymin, ymax))
     elseif !(st in (:pie, :histogram, :bins2d, :histogram2d))
         expand_extrema!(sp, d)
     end
