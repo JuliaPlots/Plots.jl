@@ -115,6 +115,7 @@ function _animate(forloop::Expr, args...; callgif = false)
   # add the call to frame to the end of each iteration
   animsym = gensym("anim")
   countersym = gensym("counter")
+  freqassert = :()
   block = forloop.args[2]
 
   # create filter
@@ -127,7 +128,7 @@ function _animate(forloop::Expr, args...; callgif = false)
     # filter every `freq` frames (starting with the first frame)
     @assert n == 2
     freq = args[2]
-    @assert isa(freq, Integer) && freq > 0
+    freqassert = :(@assert isa($freq, Integer) && $freq > 0)
     :(mod1($countersym, $freq) == 1)
 
   elseif args[1] == :when
@@ -147,6 +148,7 @@ function _animate(forloop::Expr, args...; callgif = false)
 
   # full expression:
   esc(quote
+    $freqassert             # if filtering, check frequency is an Integer > 0
     $animsym = Animation()  # init animation object
     $countersym = 1         # init iteration counter
     $forloop                # for loop, saving a frame after each iteration
