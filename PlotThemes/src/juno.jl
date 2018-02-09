@@ -16,7 +16,7 @@ _themes[:juno] = PlotTheme(
     fgguide = colorant"#9EB1BE",
     fglegend = colorant"#9EB1BE",
     palette = expand_palette(juno_bg, juno_palette; lchoices=linspace(57,57,1),
-                                          cchoices=linspace(100,100,1)),
+                                                    cchoices=linspace(100,100,1)),
     gradient = cgrad(:fire).colors
 )
 
@@ -42,7 +42,7 @@ _themes[:juno] = PlotTheme(
             fgguide = colors["variable"],
             fglegend = colors["variable"],
             palette = expand_palette(colors["background"], juno_palette; lchoices=linspace(57,57,1),
-            cchoices=linspace(100,100,1)),
+                                                                         cchoices=linspace(100,100,1)),
             gradient = grad
         )
     end
