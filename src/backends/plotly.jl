@@ -232,7 +232,7 @@ function plotly_domain(sp::Subplot, letter)
 end
 
 
-function plotly_axis(axis::Axis, sp::Subplot)
+function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
     letter = axis[:letter]
     framestyle = sp[:framestyle]
     ax = KW(
@@ -252,7 +252,13 @@ function plotly_axis(axis::Axis, sp::Subplot)
 
     if letter in (:x,:y)
         ax[:domain] = plotly_domain(sp, letter)
-        ax[:anchor] = "$(letter==:x ? :y : :x)$(plotly_subplot_index(sp))"
+        if is3d(sp)
+            # don't link 3d axes for synchronized interactivity
+            x_idx = y_idx = sp[:subplot_index]
+        else
+            x_idx, y_idx = plotly_link_indicies(plt, sp)
+        end
+        ax[:anchor] = "$(letter==:x ? "y$(y_idx)" : "x$(x_idx)")"
     end
 
     ax[:tickangle] = -axis[:rotation]
@@ -319,9 +325,8 @@ function plotly_layout(plt::Plot)
     d_out[:annotations] = KW[]
 
     for sp in plt.subplots
-        spidx = plotly_subplot_index(sp)
-
-
+        spidx = sp[:subplot_index]
+        x_idx, y_idx = plotly_link_indicies(plt, sp)
         # add an annotation for the title... positioned horizontally relative to plotarea,
         # but vertically just below the top of the subplot bounding box
         if sp[:title] != ""
@@ -349,9 +354,9 @@ function plotly_layout(plt::Plot)
             azim = sp[:camera][1] - 90 #convert azimuthal to match GR behaviour
             theta = 90 - sp[:camera][2] #spherical coordinate angle from z axis
             d_out[:scene] = KW(
-                Symbol("xaxis$spidx") => plotly_axis(sp[:xaxis], sp),
-                Symbol("yaxis$spidx") => plotly_axis(sp[:yaxis], sp),
-                Symbol("zaxis$spidx") => plotly_axis(sp[:zaxis], sp),
+                Symbol("xaxis$(spidx)") => plotly_axis(plt, sp[:xaxis], sp),
+                Symbol("yaxis$(spidx)") => plotly_axis(plt, sp[:yaxis], sp),
+                Symbol("zaxis$(spidx)") => plotly_axis(plt, sp[:zaxis], sp),
 
                 #2.6 multiplier set camera eye such that whole plot can be seen
                 :camera => KW(
@@ -363,11 +368,12 @@ function plotly_layout(plt::Plot)
                 ),
             )
         elseif ispolar(sp)
-            d_out[Symbol("angularaxis$spidx")] = plotly_polaraxis(sp[:xaxis])
-            d_out[Symbol("radialaxis$spidx")] = plotly_polaraxis(sp[:yaxis])
+            d_out[Symbol("angularaxis$(spidx)")] = plotly_polaraxis(sp[:xaxis])
+            d_out[Symbol("radialaxis$(spidx)")] = plotly_polaraxis(sp[:yaxis])
         else
-            d_out[Symbol("xaxis$spidx")] = plotly_axis(sp[:xaxis], sp)
-            d_out[Symbol("yaxis$spidx")] = plotly_axis(sp[:yaxis], sp)
+            d_out[Symbol("xaxis$(x_idx)")] = plotly_axis(plt, sp[:xaxis], sp)
+            # don't allow yaxis to be reupdated/reanchored in a linked subplot
+            spidx == y_idx ? d_out[Symbol("yaxis$(y_idx)")] = plotly_axis(plt, sp[:yaxis], sp) : nothing
         end
 
         # legend
@@ -385,7 +391,7 @@ function plotly_layout(plt::Plot)
 
         # annotations
         for ann in sp[:annotations]
-            append!(d_out[:annotations], KW[plotly_annotation_dict(locate_annotation(sp, ann...)...; xref = "x$spidx", yref = "y$spidx")])
+            append!(d_out[:annotations], KW[plotly_annotation_dict(locate_annotation(sp, ann...)...; xref = "x$(x_idx)", yref = "y$(y_idx)")])
         end
         # series_annotations
         for series in series_list(sp)
@@ -394,7 +400,7 @@ function plotly_layout(plt::Plot)
                 push!(d_out[:annotations], plotly_annotation_dict(
                     xi,
                     yi,
-                    PlotText(str,fnt); xref = "x$spidx", yref = "y$spidx")
+                    PlotText(str,fnt); xref = "x$(x_idx)", yref = "y$(y_idx)")
                 )
             end
         end
@@ -455,9 +461,15 @@ const _plotly_markers = KW(
     :hline      => "line-ew",
 )
 
-function plotly_subplot_index(sp::Subplot)
-    spidx = sp[:subplot_index]
-    spidx == 1 ? "" : spidx
+# find indicies of axes to which the supblot links to
+function plotly_link_indicies(plt::Plot, sp::Subplot)
+    if plt[:link] in (:x, :y, :both)
+        x_idx = sp[:xaxis].sps[1][:subplot_index]
+        y_idx = sp[:yaxis].sps[1][:subplot_index]
+    else
+        x_idx = y_idx = sp[:subplot_index]
+    end
+    x_idx, y_idx
 end
 
 
@@ -495,9 +507,9 @@ function plotly_series(plt::Plot, series::Series)
     d_out = KW()
 
     # these are the axes that the series should be mapped to
-    spidx = plotly_subplot_index(sp)
-    d_out[:xaxis] = "x$spidx"
-    d_out[:yaxis] = "y$spidx"
+    x_idx, y_idx = plotly_link_indicies(plt, sp)
+    d_out[:xaxis] = "x$(x_idx)"
+    d_out[:yaxis] = "y$(y_idx)"
     d_out[:showlegend] = should_add_to_legend(series)
 
 
@@ -692,10 +704,10 @@ function plotly_series_shapes(plt::Plot, series::Series)
     # x, y = series[:x], series[:y]
 
     # these are the axes that the series should be mapped to
-    spidx = plotly_subplot_index(series[:subplot])
+    x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
     base_d = KW()
-    base_d[:xaxis] = "x$spidx"
-    base_d[:yaxis] = "y$spidx"
+    base_d[:xaxis] = "x$(x_idx)"
+    base_d[:yaxis] = "y$(y_idx)"
     base_d[:name] = series[:label]
     # base_d[:legendgroup] = series[:label]
 
