@@ -147,7 +147,7 @@ function plotly_annotation_dict(x, y, val; xref="paper", yref="paper")
         :text => val,
         :xref => xref,
         :x => x,
-        :yref => xref,
+        :yref => yref,
         :y => y,
         :showarrow => false,
     )
