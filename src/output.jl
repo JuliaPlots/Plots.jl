@@ -171,7 +171,8 @@ const _mimeformats = Dict(
 const _best_html_output_type = KW(
     :pyplot => :png,
     :unicodeplots => :txt,
-    :glvisualize => :png
+    :glvisualize => :png,
+    :gr => :png
 )
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
