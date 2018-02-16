@@ -256,20 +256,23 @@ end
 # IJulia
 # ---------------------------------------------------------
 
-const _ijulia_output = String["text/html"]
-
 @require IJulia begin
     if IJulia.inited
-        export set_ijulia_output
 
-        function set_ijulia_output(mimestr::AbstractString)
-            # info("Setting IJulia output format to $mimestr")
-            global _ijulia_output
-            _ijulia_output[1] = mimestr
-        end
         function IJulia.display_dict(plt::Plot)
-            global _ijulia_output
-            Dict{String, String}(_ijulia_output[1] => sprint(show, _ijulia_output[1], plt))
+            output_type = Symbol(plt.attr[:html_output_format])
+            if output_type == :auto
+                output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
+            end
+            if output_type == :png
+                mime = "image/png"
+                Dict{String,String}(mime => base64encode(show, MIME(mime), plt))
+            elseif output_type == :svg
+                mime = "image/svg+xml"
+                Dict{String,String}(mime => sprint(show, MIME(mime), plt))
+            else
+                error("Unsupported output type $output_type")
+            end
         end
 
         # default text/plain passes to html... handles Interact issues
@@ -278,7 +281,6 @@ const _ijulia_output = String["text/html"]
         end
 
         ENV["MPLBACKEND"] = "Agg"
-        set_ijulia_output("text/html")
     end
 end
 
