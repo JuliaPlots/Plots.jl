@@ -124,22 +124,6 @@ end
 # ---------------------------------------------------------------------------
 # steps
 
-function make_steps(x, y, st)
-    n = length(x)
-    n == 0 && return zeros(0),zeros(0)
-    newx, newy = zeros(2n-1), zeros(2n-1)
-    for i=1:n
-        idx = 2i-1
-        newx[idx] = x[i]
-        newy[idx] = y[i]
-        if i > 1
-            newx[idx-1] = x[st == :steppre ? i-1 : i]
-            newy[idx-1] = y[st == :steppre ? i   : i-1]
-        end
-    end
-    newx, newy
-end
-
 make_steps(x, st) = x
 function make_steps(x::AbstractArray, st)
     n = length(x)
