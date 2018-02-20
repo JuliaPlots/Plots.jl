@@ -1051,7 +1051,7 @@ guidefont(ax::Axis) = font(
 
 # ---------------------------------------------------------------
 # converts unicode scientific notation unsupported by pgfplots and gr
-# into a format that works 
+# into a format that works
 
 function convert_sci_unicode(label::AbstractString)
     unicode_dict = Dict(
