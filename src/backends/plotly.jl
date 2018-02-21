@@ -273,8 +273,8 @@ function plotly_axis(axis::Axis, sp::Subplot)
         end
 
         # ticks
-        ticks = get_ticks(axis)
-        if ticks != :auto
+        if axis[:ticks] != :native
+            ticks = get_ticks(axis)
             ttype = ticksType(ticks)
             if ttype == :ticks
                 ax[:tickmode] = "array"

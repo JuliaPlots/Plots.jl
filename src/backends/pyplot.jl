@@ -1069,7 +1069,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             if sp[:framestyle] == :origin && length(ticks) > 1
                 ticks[2][ticks[1] .== 0] = ""
             end
-            py_set_ticks(ax, ticks, letter)
+            axis[:ticks] != :native ? py_set_ticks(ax, ticks, letter) : nothing
             pyaxis[:set_tick_params](direction = axis[:tick_direction] == :out ? "out" : "in")
             ax[Symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)

@@ -222,7 +222,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     sinf = sind.(a)
     cosf = cosd.(a)
     rtick_values, rtick_labels = get_ticks(yaxis)
-    if yaxis[:formatter] == :scientific && yaxis[:ticks] == :auto
+    if yaxis[:formatter] == :scientific && yaxis[:ticks] in (:auto, :native)
         rtick_labels = convert_sci_unicode(rtick_labels)
     end
 
@@ -884,7 +884,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
-                if xaxis[:ticks] == :auto
+                if xaxis[:ticks] in (:auto, :native)
                     # ensure correct dispatch in gr_text for automatic log ticks
                     if xaxis[:scale] in _logScales
                         dv = string(dv, "\\ ")
@@ -903,7 +903,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
-                if yaxis[:ticks] == :auto
+                if yaxis[:ticks] in (:auto, :native)
                     # ensure correct dispatch in gr_text for automatic log ticks
                     if yaxis[:scale] in _logScales
                         dv = string(dv, "\\ ")

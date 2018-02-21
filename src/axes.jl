@@ -234,6 +234,9 @@ function get_ticks(axis::Axis)
     ticks = _transform_ticks(axis[:ticks])
     ticks in (nothing, false) && return nothing
 
+    # treat :native ticks as :auto
+    ticks = ticks == :native ? :auto : ticks
+
     dvals = axis[:discrete_values]
     cv, dv = if !isempty(dvals) && ticks == :auto
         # discrete ticks...
