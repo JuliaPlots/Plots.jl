@@ -450,7 +450,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         end
         @label colorbar_end
 
-        o = axisf(; style = style, kw...)
+        o = axisf(; style = join(style, ","), kw...)
 
         # add the series object to the PGFPlots.Axis
         for series in series_list(sp)
