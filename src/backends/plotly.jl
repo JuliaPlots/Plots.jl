@@ -260,7 +260,7 @@ function plotly_axis(axis::Axis, sp::Subplot)
     lims = axis_limits(axis)
     ax[:range] = map(scalefunc(axis[:scale]), lims)
 
-    if !(axis[:ticks] in (nothing, :none))
+    if !(axis[:ticks] in (nothing, :none, false))
         ax[:titlefont] = plotly_font(guidefont(axis))
         ax[:type] = plotly_scale(axis[:scale])
         ax[:tickfont] = plotly_font(tickfont(axis))

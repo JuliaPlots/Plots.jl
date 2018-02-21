@@ -295,7 +295,7 @@ function pgf_axis(sp::Subplot, letter)
     end
 
     # ticks on or off
-    if axis[:ticks] in (nothing, false) || framestyle == :none
+    if axis[:ticks] in (nothing, false, :none) || framestyle == :none
         push!(style, "$(letter)majorticks=false")
     end
 

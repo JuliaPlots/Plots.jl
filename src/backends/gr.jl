@@ -649,7 +649,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     # Add margin for x and y ticks
     xticks, yticks = axis_drawing_info(sp)[1:2]
-    if !(xticks in (nothing, false))
+    if !(xticks in (nothing, false, :none))
         flip, mirror = gr_set_xticks_font(sp)
         l = gr_get_ticks_size(xticks, 2)
         if mirror
@@ -658,7 +658,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             bottompad += 1mm + gr_plot_size[2] * l * px
         end
     end
-    if !(yticks in (nothing, false))
+    if !(yticks in (nothing, false, :none))
         flip, mirror = gr_set_yticks_font(sp)
         l = gr_get_ticks_size(yticks, 1)
         if mirror
