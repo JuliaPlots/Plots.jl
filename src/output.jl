@@ -171,7 +171,8 @@ const _mimeformats = Dict(
 const _best_html_output_type = KW(
     :pyplot => :png,
     :unicodeplots => :txt,
-    :glvisualize => :png
+    :glvisualize => :png,
+    :plotlyjs => :html
 )
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
@@ -269,6 +270,9 @@ end
                 Dict{String,String}(mime => base64encode(show, MIME(mime), plt))
             elseif output_type == :svg
                 mime = "image/svg+xml"
+                Dict{String,String}(mime => sprint(show, MIME(mime), plt))
+            elseif output_type == :html
+                mime = "text/html"
                 Dict{String,String}(mime => sprint(show, MIME(mime), plt))
             else
                 error("Unsupported output type $output_type")
