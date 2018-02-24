@@ -222,7 +222,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     sinf = sind.(a)
     cosf = cosd.(a)
     rtick_values, rtick_labels = get_ticks(yaxis)
-    if yaxis[:formatter] == :scientific && yaxis[:ticks] == :auto
+    if yaxis[:formatter] == :scientific && yaxis[:ticks] in (:auto, :native)
         rtick_labels = convert_sci_unicode(rtick_labels)
     end
 
@@ -649,7 +649,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     # Add margin for x and y ticks
     xticks, yticks = axis_drawing_info(sp)[1:2]
-    if !(xticks in (nothing, false))
+    if !(xticks in (nothing, false, :none))
         flip, mirror = gr_set_xticks_font(sp)
         l = gr_get_ticks_size(xticks, 2)
         if mirror
@@ -658,7 +658,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             bottompad += 1mm + gr_plot_size[2] * l * px
         end
     end
-    if !(yticks in (nothing, false))
+    if !(yticks in (nothing, false, :none))
         flip, mirror = gr_set_yticks_font(sp)
         l = gr_get_ticks_size(yticks, 1)
         if mirror
@@ -884,7 +884,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
-                if xaxis[:ticks] == :auto
+                if xaxis[:ticks] in (:auto, :native)
                     # ensure correct dispatch in gr_text for automatic log ticks
                     if xaxis[:scale] in _logScales
                         dv = string(dv, "\\ ")
@@ -903,7 +903,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
                 # @show cv dv xmin xi yi
-                if yaxis[:ticks] == :auto
+                if yaxis[:ticks] in (:auto, :native)
                     # ensure correct dispatch in gr_text for automatic log ticks
                     if yaxis[:scale] in _logScales
                         dv = string(dv, "\\ ")

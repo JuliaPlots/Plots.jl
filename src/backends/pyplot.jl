@@ -1060,7 +1060,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis[Symbol(:tick_, pos)]()        # the tick labels
             end
             py_set_scale(ax, axis)
-            py_set_lims(ax, axis)
+            axis[:ticks] != :native ? py_set_lims(ax, axis) : nothing
             if ispolar(sp) && letter == :y
                 ax[:set_rlabel_position](90)
             end
@@ -1069,7 +1069,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             if sp[:framestyle] == :origin && length(ticks) > 1
                 ticks[2][ticks[1] .== 0] = ""
             end
-            py_set_ticks(ax, ticks, letter)
+            axis[:ticks] != :native ? py_set_ticks(ax, ticks, letter) : nothing
             pyaxis[:set_tick_params](direction = axis[:tick_direction] == :out ? "out" : "in")
             ax[Symbol("set_", letter, "label")](axis[:guide])
             if get(axis.d, :flip, false)

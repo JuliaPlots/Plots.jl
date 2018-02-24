@@ -258,9 +258,9 @@ function plotly_axis(axis::Axis, sp::Subplot)
 
     ax[:tickangle] = -axis[:rotation]
     lims = axis_limits(axis)
-    ax[:range] = map(scalefunc(axis[:scale]), lims)
+    axis[:ticks] != :native ? ax[:range] = map(scalefunc(axis[:scale]), lims) : nothing
 
-    if !(axis[:ticks] in (nothing, :none))
+    if !(axis[:ticks] in (nothing, :none, false))
         ax[:titlefont] = plotly_font(guidefont(axis))
         ax[:type] = plotly_scale(axis[:scale])
         ax[:tickfont] = plotly_font(tickfont(axis))
@@ -273,8 +273,8 @@ function plotly_axis(axis::Axis, sp::Subplot)
         end
 
         # ticks
-        ticks = get_ticks(axis)
-        if ticks != :auto
+        if axis[:ticks] != :native
+            ticks = get_ticks(axis)
             ttype = ticksType(ticks)
             if ttype == :ticks
                 ax[:tickmode] = "array"
@@ -465,7 +465,7 @@ function plotly_close_shapes(x, y)
     nanvcat(xs), nanvcat(ys)
 end
 
-plotly_data(v) = collect(v)
+plotly_data(v) = v != nothing ? collect(v) : v
 plotly_data(surf::Surface) = surf.surf
 plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 
@@ -493,7 +493,16 @@ function plotly_series(plt::Plot, series::Series)
     d_out[:yaxis] = "y$spidx"
     d_out[:showlegend] = should_add_to_legend(series)
 
-    x, y = plotly_data(series[:x]), plotly_data(series[:y])
+
+    x, y, z = map(letter -> (axis = sp[Symbol(letter, :axis)];
+        if axis[:ticks] == :native && !isempty(axis[:discrete_values])
+            axis[:discrete_values]
+        elseif st in (:heatmap, :contour, :surface, :wireframe)
+            plotly_surface_data(series, series[letter])
+        else
+            plotly_data(series[letter])
+        end), (:x, :y, :z))
+
     d_out[:name] = series[:label]
 
     isscatter = st in (:scatter, :scatter3d, :scattergl)
@@ -501,13 +510,6 @@ function plotly_series(plt::Plot, series::Series)
     hasline = st in (:path, :path3d)
     hasfillrange = st in (:path, :scatter, :scattergl) &&
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
-
-    # for surface types, set the data
-    if st in (:heatmap, :contour, :surface, :wireframe)
-        for letter in [:x,:y,:z]
-            d_out[letter] = plotly_surface_data(series, series[letter])
-        end
-    end
 
     d_out[:colorbar] = KW(:title => sp[:colorbar_title])
 
@@ -548,13 +550,13 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
-        # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        d_out[:x], d_out[:y], d_out[:z] = x, y, z
         d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
         d_out[:showscale] = hascolorbar(sp)
 
     elseif st == :contour
         d_out[:type] = "contour"
-        # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        d_out[:x], d_out[:y], d_out[:z] = x, y, z
         # d_out[:showscale] = series[:colorbar] != :none
         d_out[:ncontours] = series[:levels]
         d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines")
@@ -563,7 +565,7 @@ function plotly_series(plt::Plot, series::Series)
 
     elseif st in (:surface, :wireframe)
         d_out[:type] = "surface"
-        # d_out[:x], d_out[:y], d_out[:z] = series[:x], series[:y], transpose_z(series, series[:z].surf, false)
+        d_out[:x], d_out[:y], d_out[:z] = x, y, z
         if st == :wireframe
             d_out[:hidesurface] = true
             wirelines = KW(
@@ -595,8 +597,7 @@ function plotly_series(plt::Plot, series::Series)
         else
             hasline ? "lines" : "none"
         end
-        d_out[:x], d_out[:y] = x, y
-        d_out[:z] = plotly_data(series[:z])
+        d_out[:x], d_out[:y], d_out[:z] = x, y, z
 
     else
         warn("Plotly: seriestype $st isn't supported.")
