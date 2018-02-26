@@ -214,6 +214,8 @@ function py_marker(marker::Symbol)
     marker == :hexagon && return "h"
     marker == :octagon && return "8"
     marker == :pixel && return ","
+    marker == :hline && return "_"
+    marker == :vline && return "|"
     haskey(_shapes, marker) && return py_marker(_shapes[marker])
 
     warn("Unknown marker $marker")
@@ -571,7 +573,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                                           :scatter3d, :steppre, :steppost,
                                           :bar)
         if series[:marker_z] == nothing
-            extrakw[:c] = py_color_fix(py_markercolor(series), x)
+            extrakw[:c] = series[:markershape] in (:+, :x, :hline, :vline) ? py_markerstrokecolor(series) : py_color_fix(py_markercolor(series), x)
         else
             extrakw[:c] = convert(Vector{Float64}, series[:marker_z])
             extrakw[:cmap] = py_markercolormap(series)
