@@ -317,7 +317,11 @@ end
     # compute half-width of bars
     bw = plotattributes[:bar_width]
     hw = if bw == nothing
-        0.5*_bar_width*ignorenan_minimum(filter(x->x>0, diff(procx)))
+        if nx > 1
+            0.5*_bar_width*ignorenan_minimum(filter(x->x>0, diff(procx)))
+        else
+            0.5 * _bar_width
+        end
     else
         Float64[0.5_cycle(bw,i) for i=1:length(procx)]
     end
