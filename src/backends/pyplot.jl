@@ -646,13 +646,18 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             extrakw[:extend3d] = true
         end
 
+        if typeof(series[:linecolor]) <: AbstractArray
+            extrakw[:colors] = py_color.(series[:linecolor])
+        else
+            extrakw[:cmap] = py_linecolormap(series)
+        end
+
         # contour lines
         handle = ax[:contour](x, y, z, levelargs...;
             label = series[:label],
             zorder = series[:series_plotindex],
             linewidths = py_dpi_scale(plt, series[:linewidth]),
             linestyles = py_linestyle(st, series[:linestyle]),
-            cmap = py_linecolormap(series),
             extrakw...
         )
         if series[:contour_labels] == true
@@ -665,7 +670,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             handle = ax[:contourf](x, y, z, levelargs...;
                 label = series[:label],
                 zorder = series[:series_plotindex] + 0.5,
-                cmap = py_fillcolormap(series),
                 extrakw...
             )
             push!(handles, handle)
