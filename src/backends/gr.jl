@@ -1076,7 +1076,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if cmap
                 gr_set_line(1, :solid, yaxis[:foreground_color_axis])
                 gr_set_viewport_cmap(sp)
-                l = (length(h) > 1) ? round.(Int32, 1000 + (h - ignorenan_minimum(h)) / (ignorenan_maximum(h) - ignorenan_minimum(h)) * 255) : 1000
+                l = (length(h) > 1) ? round.(Int32, 1000 + (h - ignorenan_minimum(h)) / (ignorenan_maximum(h) - ignorenan_minimum(h)) * 255) : Int32[1000, 1255]
                 GR.setwindow(xmin, xmax, zmin, zmax)
                 GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
                 ztick = 0.5 * GR.tick(zmin, zmax)
