@@ -1066,7 +1066,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             else
                 GR.setlinetype(gr_linetype[series[:linestyle]])
                 GR.setlinewidth(max(0, series[:linewidth] / (sum(gr_plot_size) * 0.001)))
-                if plot_color(series[:linecolor]) == plot_color(:black)
+                if plot_color(series[:linecolor]) == [plot_color(:black)]
                     GR.contour(x, y, h, z, 0 + (series[:contour_labels] == true ? 1 : 0))
                 else
                     GR.contour(x, y, h, z, 1000 + (series[:contour_labels] == true ? 1 : 0))
