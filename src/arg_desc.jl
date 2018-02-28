@@ -43,6 +43,7 @@ const _arg_desc = KW(
 :normalize         	=> "Bool or Symbol. Histogram normalization mode. Possible values are: false/:none (no normalization, default), true/:pdf (normalize to a discrete Probability Density Function, where the total area of the bins is 1), :probability (bin heights sum to 1) and :density (the area of each bin, rather than the height, is equal to the counts - useful for uneven bin sizes).",
 :weights           	=> "AbstractVector. Used in histogram types for weighted counts.",
 :contours          	=> "Bool. Add contours to the side-grids of 3D plots?  Used in surface/wireframe.",
+:contour_labels     => "Bool. Show labels at the contour lines?",
 :match_dimensions  	=> "Bool. For heatmap types... should the first dimension of a matrix (rows) correspond to the first dimension of the plot (x-axis)?  The default is false, which matches the behavior of Matplotlib, Plotly, and others.  Note: when passing a function for z, the function should still map `(x,y) -> z`.",
 :subplot           	=> "Integer (subplot index) or Subplot object.  The subplot that this series belongs to.",
 :series_annotations => "AbstractVector of String or PlotText.  These are annotations which are mapped to data points/positions.",

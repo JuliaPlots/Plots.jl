@@ -1055,24 +1055,28 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st == :contour
             zmin, zmax = clims
             GR.setspace(zmin, zmax, 0, 90)
-            if typeof(series[:levels]) <: Array
+            if typeof(series[:levels]) <: AbstractArray
                 h = series[:levels]
             else
-                h = linspace(zmin, zmax, series[:levels])
+                h = series[:levels] > 1 ? linspace(zmin, zmax, series[:levels]) : [(zmin + zmax) / 2]
             end
             if series[:fillrange] != nothing
                 GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
             else
                 GR.setlinetype(gr_linetype[series[:linestyle]])
                 GR.setlinewidth(max(0, series[:linewidth] / (sum(gr_plot_size) * 0.001)))
-                GR.contour(x, y, h, z, 1000)
+                if plot_color(series[:linecolor]) == plot_color(:black)
+                    GR.contour(x, y, h, z, 0 + (series[:contour_labels] == true ? 1 : 0))
+                else
+                    GR.contour(x, y, h, z, 1000 + (series[:contour_labels] == true ? 1 : 0))
+                end
             end
 
             # create the colorbar of contour levels
             if cmap
                 gr_set_line(1, :solid, yaxis[:foreground_color_axis])
                 gr_set_viewport_cmap(sp)
-                l = round.(Int32, 1000 + (h - ignorenan_minimum(h)) / (ignorenan_maximum(h) - ignorenan_minimum(h)) * 255)
+                l = (length(h) > 1) ? round.(Int32, 1000 + (h - ignorenan_minimum(h)) / (ignorenan_maximum(h) - ignorenan_minimum(h)) * 255) : 1000
                 GR.setwindow(xmin, xmax, zmin, zmax)
                 GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
                 ztick = 0.5 * GR.tick(zmin, zmax)
