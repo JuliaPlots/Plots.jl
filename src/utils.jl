@@ -575,7 +575,10 @@ _update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
 
 function hascolorbar(series::Series)
     st = series[:seriestype]
-    hascbar = st in (:heatmap, :contour)
+    hascbar = st == :heatmap
+    if st == :contour
+        hascbar = (isscalar(series[:levels]) ? (series[:levels] > 1) : (length(series[:levels]) > 1)) && (length(unique(Array(series[:z]))) > 1)
+    end
     if series[:marker_z] != nothing || series[:line_z] != nothing || series[:fill_z] != nothing
         hascbar = true
     end

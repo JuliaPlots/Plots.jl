@@ -42,6 +42,7 @@ const _pyplot_attr = merge_with_base_supported([
     :framestyle,
     :tick_direction,
     :camera,
+    :contour_labels,
   ])
 const _pyplot_seriestype = [
         :path, :steppre, :steppost, :shape,
@@ -654,6 +655,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             cmap = py_linecolormap(series),
             extrakw...
         )
+        if series[:contour_labels] == true
+            PyPlot.clabel(handle, handle[:levels])
+        end
         push!(handles, handle)
 
         # contour fills

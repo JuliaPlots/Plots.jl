@@ -45,6 +45,7 @@ const _gr_attr = merge_with_base_supported([
     :framestyle,
     :tick_direction,
     :camera,
+    :contour_labels,
 ])
 const _gr_seriestype = [
     :path, :scatter,
