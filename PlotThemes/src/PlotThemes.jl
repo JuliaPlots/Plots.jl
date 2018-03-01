@@ -2,7 +2,7 @@ __precompile__(true)
 
 module PlotThemes
 
-using PlotUtils
+using PlotUtils, Requires
 
 export
     add_theme, palette
@@ -49,10 +49,10 @@ include("solarized.jl")
 include("sand.jl")
 include("lime.jl")
 include("orange.jl")
-include("juno.jl")
 include("wong.jl")
+include("juno.jl")
 
-function __init__()
+@init begin
     # need to do this here so PlotUtils picks up the change
     for (s,thm) in _themes
         add_theme(s, thm)
