@@ -45,6 +45,7 @@ const _plotly_attr = merge_with_base_supported([
     :framestyle,
     :tick_direction,
     :camera,
+    :contour_labels,
   ])
 
 const _plotly_seriestype = [
@@ -432,6 +433,14 @@ function plotly_colorscale(grad::ColorGradient, α)
     [[grad.values[i], rgba_string(plot_color(grad.colors[i], α))] for i in 1:length(grad.colors)]
 end
 plotly_colorscale(c, α) = plotly_colorscale(cgrad(alpha=α), α)
+function plotly_colorscale(c::AbstractVector{<:RGBA}, α)
+    if length(c) == 1
+        return [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
+    else
+        vals = linspace(0.0, 1.0, length(c))
+        return [[vals[i], rgba_string(plot_color(c[i], α))] for i in eachindex(c)]
+    end
+end
 # plotly_colorscale(c, alpha = nothing) = plotly_colorscale(cgrad(), alpha)
 
 
@@ -557,7 +566,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:x], d_out[:y], d_out[:z] = x, y, z
         # d_out[:showscale] = series[:colorbar] != :none
         d_out[:ncontours] = series[:levels]
-        d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines")
+        d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines", :showlabels => series[:contour_labels] == true)
         d_out[:colorscale] = plotly_colorscale(series[:linecolor], series[:linealpha])
         d_out[:showscale] = hascolorbar(sp)
 

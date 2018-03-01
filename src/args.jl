@@ -272,6 +272,7 @@ const _series_defaults = KW(
     :normalize         => false,     # do we want a normalized histogram?
     :weights           => nothing,   # optional weights for histograms (1D and 2D)
     :contours          => false,     # add contours to 3d surface and wireframe plots
+    :contour_labels    => false,
     :match_dimensions  => false,     # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
                                      # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
     :subplot           => :auto,     # which subplot(s) does this series belong to?
@@ -574,6 +575,7 @@ add_aliases(:gridstyle, :grid_style, :gridlinestyle, :grid_linestyle, :grid_ls, 
 add_aliases(:framestyle, :frame_style, :frame, :axesstyle, :axes_style, :boxstyle, :box_style, :box, :borderstyle, :border_style, :border)
 add_aliases(:tick_direction, :tickdirection, :tick_dir, :tickdir, :tick_orientation, :tickorientation, :tick_or, :tickor)
 add_aliases(:camera, :cam, :viewangle, :view_angle)
+add_aliases(:contour_labels, :contourlabels, :clabels, :clabs)
 
 # add all pluralized forms to the _keyAliases dict
 for arg in keys(_series_defaults)
