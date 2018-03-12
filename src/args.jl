@@ -1024,7 +1024,7 @@ end
 # allow passing NamedTuples for a named legend entry
 @require NamedTuples begin
     legendEntryFromTuple(ns::NamedTuples.NamedTuple) =
-        join(["$k = $v" for (k, v) in zip(keys(ns), values(ns))], ' ')
+        join(["$k = $v" for (k, v) in zip(keys(ns), values(ns))], ", ")
 
     function extractGroupArgs(vs::NamedTuples.NamedTuple, args...)
         isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
