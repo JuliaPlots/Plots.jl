@@ -1012,13 +1012,26 @@ function extractGroupArgs(v::AVec, args...; legendEntry = string)
     GroupBy(map(legendEntry, groupLabels), groupIds)
 end
 
-legendEntryFromTuple(ns::Tuple) = string(("$n " for n in ns)...)
+legendEntryFromTuple(ns::Tuple) = join(ns, ' ')
 
 # this is when given a tuple of vectors of values to group by
 function extractGroupArgs(vs::Tuple, args...)
-    (vs == ()) && return GroupBy([""], [1:size(args[1],1)])
-    v = collect(zip(vs...))
+    isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
+    v = map(tuple, vs...)
     extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
+end
+
+# allow passing NamedTuples for a named legend entry
+@require NamedTuples begin
+    legendEntryFromTuple(ns::NamedTuples.NamedTuple) =
+        join(["$k = $v" for (k, v) in zip(keys(ns), values(ns))], ", ")
+
+    function extractGroupArgs(vs::NamedTuples.NamedTuple, args...)
+        isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
+        NT = eval(:(NamedTuples.@NT($(keys(vs)...)))){map(eltype, vs)...}
+        v = map(NT, vs...)
+        extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
+    end
 end
 
 # expecting a mapping of "group label" to "group indices"
