@@ -536,7 +536,7 @@ function plotly_series(plt::Plot, series::Series)
         if series[:fillrange] == true || series[:fillrange] == 0 || isa(series[:fillrange], Tuple)
             d_out[:fill] = "tozeroy"
             d_out[:fillcolor] = rgba_string(series[:fillcolor])
-        elseif isa(series[:fillrange], AbstractVector)
+        elseif typeof(series[:fillrange]) <: Union{AbstractVector{<:Real}, Real}
             d_out[:fill] = "tonexty"
             d_out[:fillcolor] = rgba_string(series[:fillcolor])
         elseif !(series[:fillrange] in (false, nothing))
@@ -665,6 +665,14 @@ function plotly_series(plt::Plot, series::Series)
         # series, one for series being filled to) instead of one
         d_out_fillrange = deepcopy(d_out)
         d_out_fillrange[:showlegend] = false
+        # if fillrange is provided as real or tuple of real, expand to array
+        if typeof(series[:fillrange]) <: Real
+            series[:fillrange] = fill(series[:fillrange], length(series[:x]))
+        elseif typeof(series[:fillrange]) <: Tuple
+            f1 = typeof(series[:fillrange][1]) <: Real ? fill(series[:fillrange][1], length(series[:x])) : series[:fillrange][1]
+            f2 = typeof(series[:fillrange][2]) <: Real ? fill(series[:fillrange][2], length(series[:x])) : series[:fillrange][2]
+            series[:fillrange] = (f1, f2)
+        end
         if isa(series[:fillrange], AbstractVector)
             d_out_fillrange[:y] = series[:fillrange]
             delete!(d_out_fillrange, :fill)
