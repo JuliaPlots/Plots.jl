@@ -102,8 +102,13 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         end
     end
 
-    # create the layout and initialize the subplots
+    # create the layout
     plt.layout, plt.subplots, plt.spmap = build_layout(layout, num_sp, copy(plts))
+
+    # do we need to link any axes together?
+    link_axes!(plt.layout, plt[:link])
+
+    # initialize the subplots
     cmdidx = 1
     for (idx, sp) in enumerate(plt.subplots)
         _initialize_subplot(plt, sp)
@@ -126,9 +131,6 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     for (idx,sp) in enumerate(plt.subplots)
         _update_subplot_args(plt, sp, d, idx, false)
     end
-
-    # do we need to link any axes together?
-    link_axes!(plt.layout, plt[:link])
 
     # finish up
     current(plt)
