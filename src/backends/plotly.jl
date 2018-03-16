@@ -49,7 +49,7 @@ const _plotly_attr = merge_with_base_supported([
   ])
 
 const _plotly_seriestype = [
-    :path, :scatter, :bar, :pie, :heatmap,
+    :path, :scatter, :pie, :heatmap,
     :contour, :surface, :wireframe, :path3d, :scatter3d, :shape, :scattergl,
 ]
 const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
@@ -543,17 +543,6 @@ function plotly_series(plt::Plot, series::Series)
             warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
         end
         d_out[:x], d_out[:y] = x, y
-
-    elseif st == :bar
-        d_out[:type] = "bar"
-        d_out[:x], d_out[:y], d_out[:orientation] = if isvertical(series)
-            x, y, "v"
-        else
-            y, x, "h"
-        end
-        d_out[:width] = series[:bar_width]
-        d_out[:marker] = KW(:color => _cycle(rgba_string.(series[:fillcolor]),eachindex(series[:x])),
-                            :line => KW(:width => series[:linewidth]))
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
