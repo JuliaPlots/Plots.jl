@@ -238,10 +238,18 @@ function get_ticks(axis::Axis)
     ticks = ticks == :native ? :auto : ticks
 
     dvals = axis[:discrete_values]
-    cv, dv = if !isempty(dvals) && ticks == :auto
+    cv, dv = if !isempty(dvals)
         # discrete ticks...
-        axis[:continuous_values], dvals
-    elseif ticks == :auto
+        n = length(dvals)
+        rng = if ticks == :auto
+            Int[round(Int,i) for i in linspace(1, n, 15)]
+        elseif ticks == :all
+            1:n
+        elseif typeof(ticks) <: Int
+            Int[round(Int,i) for i in linspace(1, n, ticks)]
+        end
+        axis[:continuous_values][rng], dvals[rng]
+    elseif typeof(ticks) <: Symbol
         if ispolar(axis.sps[1]) && axis[:letter] == :x
             #force theta axis to be full circle
             (collect(0:pi/4:7pi/4), string.(0:45:315))
@@ -260,13 +268,7 @@ function get_ticks(axis::Axis)
     end
     # @show ticks dvals cv dv
 
-    # TODO: better/smarter cutoff values for sampling ticks
-    if length(cv) > 30 && ticks == :auto
-        rng = Int[round(Int,i) for i in linspace(1, length(cv), 15)]
-        cv[rng], dv[rng]
-    else
-        cv, dv
-    end
+    return cv, dv
 end
 
 _transform_ticks(ticks) = ticks
