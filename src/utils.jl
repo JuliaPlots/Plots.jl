@@ -1079,3 +1079,44 @@ function convert_sci_unicode(label::AbstractString)
     end
     label
 end
+
+function straightline_data(sp::Subplot, series::Series)
+    xl, yl = isvertical(series.d) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+    x, y = series[:x], series[:y]
+    n = length(x)
+    if n == 2
+        return straightline_data(xl, yl, x, y)
+    else
+        k, r = divrem(n, 3)
+        if r == 0
+            xdata, ydata = fill(NaN, n), fill(NaN, n)
+            for i in 1:k
+                inds = (3 * i - 2):(3 * i - 1)
+                xdata[inds], ydata[inds] = straightline_data(xl, yl, x[inds], y[inds])
+            end
+            return xdata, ydata
+        else
+            error("Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n")
+        end
+    end
+end
+
+function straightline_data(xl, yl, x, y)
+    if y[1] == y[2]
+        if x[1] == x[2]
+            error("Two identical points cannot be used to describe a straight line.")
+        else
+            return [xl[1], xl[2]], [y[1], y[2]]
+        end
+    elseif x[1] == x[2]
+        return [x[1], x[2]], [yl[1], yl[2]]
+    else
+        # get a and b from the line y = a * x + b through the points given by
+        # the coordinates x and x
+        b = y[1] - (y[1] - y[2]) * x[1] / (x[1] - x[2])
+        a = (y[1] - y[2]) / (x[1] - x[2])
+        # get the data values
+        xdata = [clamp(x[1] + (x[1] - x[2]) * (ylim - y[1]) / (y[1] - y[2]), xl...) for ylim in yl]
+        return xdata, a .* xdata .+ b
+    end
+end

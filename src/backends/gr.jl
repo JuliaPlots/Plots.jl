@@ -48,7 +48,7 @@ const _gr_attr = merge_with_base_supported([
     :contour_labels,
 ])
 const _gr_seriestype = [
-    :path, :scatter,
+    :path, :scatter, :straightline,
     :heatmap, :pie, :image,
     :contour, :path3d, :scatter3d, :surface, :wireframe,
     :shape
@@ -1014,7 +1014,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             x, y = convert_to_polar(x, y, (rmin, rmax))
         end
 
-        if st in (:path, :scatter)
+        if st == :straightline
+            x, y = straightline_data(sp, series)
+        end
+
+        if st in (:path, :scatter, :straightline)
             if length(x) > 1
                 lz = series[:line_z]
                 segments_iterator = if lz != nothing && length(lz) > 1
@@ -1036,7 +1040,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 end
 
                 # draw the line(s)
-                if st == :path
+                if st in (:path, :straightline)
                     for (i, rng) in enumerate(segments_iterator)
                         gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
                         arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
@@ -1295,7 +1299,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     st == :shape && gr_polyline(x, y)
                 end
 
-                if st == :path
+                if st in (:path, :straightline)
                     GR.settransparency(gr_alpha(series[:linealpha]))
                     if series[:fillrange] == nothing || series[:ribbon] != nothing
                         GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
