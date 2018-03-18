@@ -751,6 +751,10 @@ function processFillArg(d::KW, arg)
     elseif allAlphas(arg)
         d[:fillalpha] = arg
 
+    # fillrange provided as vector or number
+    elseif typeof(arg) <: Union{AbstractArray{<:Real}, Real}
+        d[:fillrange] = arg
+
     elseif !handleColors!(d, arg, :fillcolor)
 
         d[:fillrange] = arg
