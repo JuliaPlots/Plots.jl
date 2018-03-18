@@ -212,7 +212,7 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
         formatter = axis[:formatter]
         if formatter == :auto
             # the default behavior is to make strings of the scaled values and then apply the labelfunc
-            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :plain))
+            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :auto))
         elseif formatter == :scientific
             Showoff.showoff(unscaled_ticks, :scientific)
         else
