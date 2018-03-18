@@ -1149,6 +1149,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         # this sets the bg color inside the grid
         ax[set_facecolor_sym](py_color(sp[:background_color_inside]))
 
+        # link axes
+        x_ax_link, y_ax_link = sp[:xaxis].sps[1].o, sp[:yaxis].sps[1].o
+        ax != x_ax_link && ax[:get_shared_x_axes]()[:join](ax, sp[:xaxis].sps[1].o)
+        ax != y_ax_link && ax[:get_shared_y_axes]()[:join](ax, sp[:yaxis].sps[1].o)
     end
     py_drawfig(fig)
 end
