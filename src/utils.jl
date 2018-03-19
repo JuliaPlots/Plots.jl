@@ -1121,3 +1121,25 @@ function straightline_data(xl, yl, x, y)
         return xdata, a .* xdata .+ b
     end
 end
+
+function shape_data(series)
+    sp = series[:subplot]
+    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+    x, y = series[:x], series[:y]
+    factor = 100
+    for i in eachindex(x)
+        if x[i] == -Inf
+            x[i] = xl[1] - factor * (xl[2] - xl[1])
+        elseif x[i] == Inf
+            x[i] = xl[2] + factor * (xl[2] - xl[1])
+        end
+    end
+    for i in eachindex(y)
+        if y[i] == -Inf
+            y[i] = yl[1] - factor * (yl[2] - yl[1])
+        elseif y[i] == Inf
+            y[i] = yl[2] + factor * (yl[2] - yl[1])
+        end
+    end
+    return x, y
+end

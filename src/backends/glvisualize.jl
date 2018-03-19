@@ -289,6 +289,8 @@ function extract_points(d)
     dim = is3d(d) ? 3 : 2
     array = if d[:seriestype] == :straightline
         straightline_data(d)
+    elseif d[:seriestype] == :shape
+        shape_data(series)
     else
         (d[:x], d[:y], d[:z])[1:dim]
     end

@@ -272,6 +272,7 @@ For st in :shape:
 =#
 
     if st in (:shape,)
+        x, y = shape_data(series)
         nmax = 0
         for (i,rng) in enumerate(iter_segments(x, y))
             nmax = i

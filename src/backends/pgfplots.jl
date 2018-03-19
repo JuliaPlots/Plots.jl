@@ -222,6 +222,8 @@ function pgf_series(sp::Subplot, series::Series)
         d[:x], d[:y], d[:z]
     elseif st == :straightline
         straightline_data(series)
+    elseif st == :shape
+        shape_data(series)
     elseif d[:marker_z] != nothing
         # If a marker_z is used pass it as third coordinate to a 2D plot.
         # See "Scatter Plots" in PGFPlots documentation

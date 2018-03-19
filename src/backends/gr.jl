@@ -1186,6 +1186,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.selntran(1)
 
         elseif st == :shape
+            x, y = shape_data(series)
             for (i,rng) in enumerate(iter_segments(x, y))
                 if length(rng) > 1
                     # connect to the beginning

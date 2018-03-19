@@ -454,6 +454,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     x, y, z = series[:x], series[:y], series[:z]
     if st == :straightline
         x, y = straightline_data(series)
+    elseif st == :shape
+        x, y = shape_data(series)
     end
     xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
 

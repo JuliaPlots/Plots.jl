@@ -704,7 +704,7 @@ function plotly_series_shapes(plt::Plot, series::Series)
     base_d[:name] = series[:label]
     # base_d[:legendgroup] = series[:label]
 
-    x, y = plotly_data(series[:x]), plotly_data(series[:y])
+    x, y = shape_data(series)
     for (i,rng) in enumerate(iter_segments(x,y))
         length(rng) < 2 && continue
 

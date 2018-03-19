@@ -157,6 +157,8 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
     # get the series data and label
     x, y = if st == :straightline
         straightline_data(d)
+    elseif st == :shape
+        shape_data(series)
     else
         [collect(float(d[s])) for s in (:x, :y)]
     end
