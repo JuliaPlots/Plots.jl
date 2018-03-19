@@ -51,7 +51,7 @@ const _glvisualize_attr = merge_with_base_supported([
     :tick_direction,
 ])
 const _glvisualize_seriestype = [
-    :path, :shape,
+    :path, :shape, :straightline,
     :scatter, :hexbin,
     :bar, :boxplot,
     :heatmap, :image, :volume,
@@ -289,6 +289,10 @@ function extract_points(d)
     dim = is3d(d) ? 3 : 2
     array = (d[:x], d[:y], d[:z])[1:dim]
     topoints(Point{dim, Float32}, array)
+end
+function extract_straightline_points(sp::Subplot, series::Series)
+    x, y = straightline_data(sp, series)
+    topoints(Point{2, Float32}, (x, y))
 end
 function make_gradient(grad::Vector{C}) where C <: Colorant
     grad
@@ -1102,9 +1106,9 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
                     kw_args[:stroke_width] = Float32(d[:linewidth]/100f0)
                 end
                 vis = GL.gl_surface(x, y, z, kw_args)
-            elseif (st in (:path, :path3d)) && d[:linewidth] > 0
+            elseif (st in (:path, :path3d, :straightline)) && d[:linewidth] > 0
                 kw = copy(kw_args)
-                points = Plots.extract_points(d)
+                points = st == :straightline ? extract_straightline_points(sp, series) : Plots.extract_points(d)
                 extract_linestyle(d, kw)
                 vis = GL.gl_lines(points, kw)
                 if d[:markershape] != :none
@@ -1460,7 +1464,7 @@ function make_label(sp, series, i)
     d = series.d
     st = d[:seriestype]
     kw_args = KW()
-    if (st in (:path, :path3d)) && d[:linewidth] > 0
+    if (st in (:path, :path3d, :straightline)) && d[:linewidth] > 0
         points = Point2f0[(0, ho), (w, ho)]
         kw = KW()
         extract_linestyle(d, kw)
