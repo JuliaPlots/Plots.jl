@@ -1015,7 +1015,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
 
         if st == :straightline
-            x, y = straightline_data(sp, series)
+            x, y = straightline_data(series)
         end
 
         if st in (:path, :scatter, :straightline)

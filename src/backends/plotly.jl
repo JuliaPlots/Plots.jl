@@ -51,6 +51,7 @@ const _plotly_attr = merge_with_base_supported([
 const _plotly_seriestype = [
     :path, :scatter, :bar, :pie, :heatmap,
     :contour, :surface, :wireframe, :path3d, :scatter3d, :shape, :scattergl,
+    :straightline
 ]
 const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _plotly_marker = [
@@ -510,12 +511,16 @@ function plotly_series(plt::Plot, series::Series)
             plotly_data(series[letter])
         end), (:x, :y, :z))
 
+    if st == :straightline
+        x, y = straightline_data(series)
+    end
+
     d_out[:name] = series[:label]
 
     isscatter = st in (:scatter, :scatter3d, :scattergl)
     hasmarker = isscatter || series[:markershape] != :none
-    hasline = st in (:path, :path3d)
-    hasfillrange = st in (:path, :scatter, :scattergl) &&
+    hasline = st in (:path, :path3d, :straightline)
+    hasfillrange = st in (:path, :scatter, :scattergl, :straightline) &&
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     d_out[:colorbar] = KW(:title => sp[:colorbar_title])
@@ -526,7 +531,7 @@ function plotly_series(plt::Plot, series::Series)
     end
 
     # set the "type"
-    if st in (:path, :scatter, :scattergl)
+    if st in (:path, :scatter, :scattergl, :straightline)
         d_out[:type] = st==:scattergl ? "scattergl" : "scatter"
         d_out[:mode] = if hasmarker
             hasline ? "lines+markers" : "markers"

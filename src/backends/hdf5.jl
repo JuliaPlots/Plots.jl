@@ -29,7 +29,7 @@ Read from .hdf5 file using:
 ==#
 
 @require Revise begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "hdf5.jl")) 
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "hdf5.jl"))
 end
 
 import FixedPointNumbers: N0f8 #In core Julia
@@ -97,7 +97,7 @@ const _hdf5_attr = merge_with_base_supported([
     :colorbar_title,
   ])
 const _hdf5_seriestype = [
-        :path, :steppre, :steppost, :shape,
+        :path, :steppre, :steppost, :shape, :straightline,
         :scatter, :hexbin, #:histogram2d, :histogram,
         # :bar,
         :heatmap, :pie, :image,

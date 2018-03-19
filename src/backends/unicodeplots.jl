@@ -2,7 +2,7 @@
 # https://github.com/Evizero/UnicodePlots.jl
 
 @require Revise begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "unicodeplots.jl")) 
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "unicodeplots.jl"))
 end
 
 const _unicodeplots_attr = merge_with_base_supported([
@@ -17,7 +17,7 @@ const _unicodeplots_attr = merge_with_base_supported([
     :guide, :lims,
   ])
 const _unicodeplots_seriestype = [
-    :path, :scatter,
+    :path, :scatter, :straightline,
     # :bar,
     :shape,
     :histogram2d,
@@ -142,7 +142,7 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
         return
     end
 
-    if st == :path
+    if st in (:path, :straightline)
         func = UnicodePlots.lineplot!
     elseif st == :scatter || d[:markershape] != :none
         func = UnicodePlots.scatterplot!
@@ -155,7 +155,11 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
     end
 
     # get the series data and label
-    x, y = [collect(float(d[s])) for s in (:x, :y)]
+    x, y = if st == :straightline
+        straightline_data(d)
+    else
+        [collect(float(d[s])) for s in (:x, :y)]
+    end
     label = addlegend ? d[:label] : ""
 
     # if we happen to pass in allowed color symbols, great... otherwise let UnicodePlots decide

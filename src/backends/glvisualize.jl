@@ -287,12 +287,12 @@ function topoints(::Type{P}, array) where P
 end
 function extract_points(d)
     dim = is3d(d) ? 3 : 2
-    array = (d[:x], d[:y], d[:z])[1:dim]
+    array = if d[:seriestype] == :straightline
+        straightline_data(d)
+    else
+        (d[:x], d[:y], d[:z])[1:dim]
+    end
     topoints(Point{dim, Float32}, array)
-end
-function extract_straightline_points(sp::Subplot, series::Series)
-    x, y = straightline_data(sp, series)
-    topoints(Point{2, Float32}, (x, y))
 end
 function make_gradient(grad::Vector{C}) where C <: Colorant
     grad
@@ -1108,7 +1108,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
                 vis = GL.gl_surface(x, y, z, kw_args)
             elseif (st in (:path, :path3d, :straightline)) && d[:linewidth] > 0
                 kw = copy(kw_args)
-                points = st == :straightline ? extract_straightline_points(sp, series) : Plots.extract_points(d)
+                points = Plots.extract_points(d)
                 extract_linestyle(d, kw)
                 vis = GL.gl_lines(points, kw)
                 if d[:markershape] != :none

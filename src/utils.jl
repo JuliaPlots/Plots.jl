@@ -1080,8 +1080,9 @@ function convert_sci_unicode(label::AbstractString)
     label
 end
 
-function straightline_data(sp::Subplot, series::Series)
-    xl, yl = isvertical(series.d) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+function straightline_data(series)
+    sp = series[:subplot]
+    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
     x, y = series[:x], series[:y]
     n = length(x)
     if n == 2
