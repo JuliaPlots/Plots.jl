@@ -223,7 +223,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     sinf = sind.(a)
     cosf = cosd.(a)
     rtick_values, rtick_labels = get_ticks(yaxis)
-    if (yaxis[:formatter] == :scientific || contains(rtick_labels,"×10") )&& yaxis[:ticks] in (:auto, :native)
+    if (yaxis[:formatter] == :scientific || any(contains.(rtick_labels,"×10"))) && yaxis[:ticks] in (:auto, :native)
         rtick_labels = convert_sci_unicode(rtick_labels)
     end
 
