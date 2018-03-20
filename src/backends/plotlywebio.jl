@@ -53,12 +53,12 @@ end
 
 
 function _series_added(plt::Plot{PlotlyWebIOBackend}, series::Series)
-    syncplot = plt.o
+    webioplot = plt.o
     pdicts = plotly_series(plt, series)
     for pdict in pdicts
         typ = pop!(pdict, :type)
         gt = PlotlyWebIO.GenericTrace(typ; pdict...)
-        #PlotlyWebIO.addtraces!(syncplot, gt)
+        PlotlyWebIO.addtraces!(webioplot, gt)
     end
 end
 
@@ -81,9 +81,9 @@ end
 
 function _update_plot_object(plt::Plot{PlotlyWebIOBackend})
     pdict = plotly_layout(plt)
-    syncplot = plt.o
+    webioplot = plt.o
     w,h = plt[:size]
-    PlotlyWebIO.relayout!(syncplot, pdict, width = w, height = h)
+    PlotlyWebIO.relayout!(webioplot, pdict, width = w, height = h)
 end
 
 
