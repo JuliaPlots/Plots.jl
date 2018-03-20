@@ -32,11 +32,6 @@ function _initialize_backend(::PlotlyWebIOBackend; kw...)
         import PlotlyWebIO
         export PlotlyWebIO
     end
-
-    # # override IJulia inline display
-    # if isijulia()
-    #     IJulia.display_dict(plt::AbstractPlot{PlotlyWebIOBackend}) = IJulia.display_dict(plt.o)
-    # end
 end
 
 # ---------------------------------------------------------------------------
@@ -44,8 +39,8 @@ end
 
 function _create_backend_figure(plt::Plot{PlotlyWebIOBackend})
     if !isplotnull() && plt[:overwrite_figure] && isa(current().o, PlotlyWebIO.WebIOPlot)
-        #PlotlyWebIO.WebIOPlot(PlotlyWebIO.Plot(), current().o.view)
-        current().o
+        # FIXME: Not sure what we're supposed to do here.
+        PlotlyWebIO.WebIOPlot()#PlotlyWebIO.WebIOPlot(), current().o.scope)
     else
         PlotlyWebIO.WebIOPlot()
     end
@@ -92,13 +87,14 @@ end
 function Base.show(io::IO, ::MIME"text/html", plt::Plot{PlotlyWebIOBackend})
     prepare_output(plt)
     if isijulia() && !_use_remote[]
-        write(io, PlotlyWebIO.html_body(PlotlyWebIO.JupyterPlot(plt.o)))
+        write(io, PlotlyWebIO.html_body(PlotlyWebIO.JupyterPlot(plt.o.scope)))
     else
-        show(io, MIME("text/html"), plt.o)
+        show(io, MIME("text/html"), plt.o.scope)
     end
 end
 
 function plotlywebio_save_hack(io::IO, plt::Plot{PlotlyWebIOBackend}, ext::String)
+    # Temporarily disabled. FIXME
     # tmpfn = tempname() * "." * ext
     # PlotlyWebIO.savefig(plt.o, tmpfn)
     # write(io, read(open(tmpfn)))
