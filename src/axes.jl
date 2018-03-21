@@ -213,11 +213,19 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
         if formatter == :auto
             # the default behavior is to make strings of the scaled values and then apply the labelfunc
             map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :auto))
+        elseif formatter == :plain
+            # Leave the numbers in plain format
+            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :plain))
         elseif formatter == :scientific
             Showoff.showoff(unscaled_ticks, :scientific)
         else
             # there was an override for the formatter... use that on the unscaled ticks
             map(formatter, unscaled_ticks)
+            # if the formatter left us with numbers, still apply the default formatter
+            # However it leave us with the problem of unicode number decoding by the backend
+            # if eltype(unscaled_ticks) <: Number
+            #     Showoff.showoff(unscaled_ticks, :auto)
+            # end
         end
     else
         # no finite ticks to show...
