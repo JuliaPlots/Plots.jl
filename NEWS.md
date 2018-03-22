@@ -3,13 +3,30 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-- All new development should target 0.14!
+- All new development should target 0.15!
 - Minor version 0.11 is the last one to support Julia 0.5!!
 	- Critical bugfixes only
     - `backports` branch is for Julia 0.5
 
 ---
 ## (current master)
+
+## 0.15.1
+
+- fix scientific notation for labels in GR
+- fix labels with logscale
+- fix image cropping with GR
+- fix grouping of annotations
+- fix annotations in Plotly
+- allow saving notebook with plots as pdf from IJulia
+- fix fillrange and ribbon for step recipes
+- implement native ticks that respond to zoom
+- fix bar plot with one bar
+- contour labels and colorbar fixes
+- interactive linked axis for PyPlot
+- add `NamedTuple` syntax to group with named legend
+- use bar recipe in Plotly
+- implement categorical ticks
 
 ## 0.15.0
 
