@@ -1255,7 +1255,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         linestyle = py_linestyle(:path,series[:linestyle]),
                         marker = py_marker(series[:markershape]),
                         markeredgecolor = py_markerstrokecolor(series),
-                        markerfacecolor = py_markercolor(series)
+                        markerfacecolor = series[:marker_z] == nothing ? py_markercolor(series) : py_color(series[:markercolor][0.5])
                     )
                 else
                     series[:serieshandle][1]
