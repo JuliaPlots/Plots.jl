@@ -45,7 +45,7 @@ const _pyplot_attr = merge_with_base_supported([
     :contour_labels,
   ])
 const _pyplot_seriestype = [
-        :path, :steppre, :steppost, :shape,
+        :path, :steppre, :steppost, :shape, :straightline,
         :scatter, :hexbin, #:histogram2d, :histogram,
         # :bar,
         :heatmap, :pie, :image,
@@ -453,6 +453,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # ax = getAxis(plt, series)
     x, y, z = series[:x], series[:y], series[:z]
+    if st == :straightline
+        x, y = straightline_data(series)
+    elseif st == :shape
+        x, y = shape_data(series)
+    end
     xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
 
     # handle zcolor and get c/cmap
@@ -486,7 +491,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # for each plotting command, optionally build and add a series handle to the list
 
     # line plot
-    if st in (:path, :path3d, :steppre, :steppost)
+    if st in (:path, :path3d, :steppre, :steppost, :straightline)
         if series[:linewidth] > 0
             if series[:line_z] == nothing
                 handle = ax[:plot](xyargs...;
@@ -1249,7 +1254,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         facecolor = py_color(_cycle(series[:fillcolor],1)),
                         linewidth = py_dpi_scale(plt, clamp(series[:linewidth], 0, 5)),
                     )
-                elseif series[:seriestype] == :path
+                elseif series[:seriestype] in (:path, :straightline)
                     PyPlot.plt[:Line2D]((0,1),(0,0),
                         color = py_color(_cycle(series[:linecolor],1)),
                         linewidth = py_dpi_scale(plt, clamp(series[:linewidth], 0, 5)),

@@ -39,7 +39,7 @@ const _pgfplots_attr = merge_with_base_supported([
     :framestyle,
     :camera,
   ])
-const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape]
+const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon, :hline] #vcat(_allMarkers, Shape)
 const _pgfplots_scale = [:identity, :ln, :log2, :log10]
@@ -220,6 +220,10 @@ function pgf_series(sp::Subplot, series::Series)
         d[:z].surf, d[:x], d[:y]
     elseif is3d(st)
         d[:x], d[:y], d[:z]
+    elseif st == :straightline
+        straightline_data(series)
+    elseif st == :shape
+        shape_data(series)
     elseif d[:marker_z] != nothing
         # If a marker_z is used pass it as third coordinate to a 2D plot.
         # See "Scatter Plots" in PGFPlots documentation

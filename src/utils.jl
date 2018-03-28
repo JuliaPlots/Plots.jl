@@ -1079,3 +1079,74 @@ function convert_sci_unicode(label::AbstractString)
     end
     label
 end
+
+function straightline_data(series)
+    sp = series[:subplot]
+    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+    x, y = series[:x], series[:y]
+    n = length(x)
+    if n == 2
+        return straightline_data(xl, yl, x, y)
+    else
+        k, r = divrem(n, 3)
+        if r == 0
+            xdata, ydata = fill(NaN, n), fill(NaN, n)
+            for i in 1:k
+                inds = (3 * i - 2):(3 * i - 1)
+                xdata[inds], ydata[inds] = straightline_data(xl, yl, x[inds], y[inds])
+            end
+            return xdata, ydata
+        else
+            error("Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n")
+        end
+    end
+end
+
+function straightline_data(xl, yl, x, y)
+    x_vals, y_vals = if y[1] == y[2]
+        if x[1] == x[2]
+            error("Two identical points cannot be used to describe a straight line.")
+        else
+            [xl[1], xl[2]], [y[1], y[2]]
+        end
+    elseif x[1] == x[2]
+        [x[1], x[2]], [yl[1], yl[2]]
+    else
+        # get a and b from the line y = a * x + b through the points given by
+        # the coordinates x and x
+        b = y[1] - (y[1] - y[2]) * x[1] / (x[1] - x[2])
+        a = (y[1] - y[2]) / (x[1] - x[2])
+        # get the data values
+        xdata = [clamp(x[1] + (x[1] - x[2]) * (ylim - y[1]) / (y[1] - y[2]), xl...) for ylim in yl]
+
+        xdata, a .* xdata .+ b
+    end
+    # expand the data outside the axis limits, by a certain factor too improve
+    # plotly(js) and interactive behaviour
+    factor = 100
+    x_vals = x_vals .+ (x_vals[2] - x_vals[1]) .* factor .* [-1, 1]
+    y_vals = y_vals .+ (y_vals[2] - y_vals[1]) .* factor .* [-1, 1]
+    return x_vals, y_vals
+end
+
+function shape_data(series)
+    sp = series[:subplot]
+    xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+    x, y = series[:x], series[:y]
+    factor = 100
+    for i in eachindex(x)
+        if x[i] == -Inf
+            x[i] = xl[1] - factor * (xl[2] - xl[1])
+        elseif x[i] == Inf
+            x[i] = xl[2] + factor * (xl[2] - xl[1])
+        end
+    end
+    for i in eachindex(y)
+        if y[i] == -Inf
+            y[i] = yl[1] - factor * (yl[2] - yl[1])
+        elseif y[i] == Inf
+            y[i] = yl[2] + factor * (yl[2] - yl[1])
+        end
+    end
+    return x, y
+end

@@ -57,7 +57,7 @@ const _inspectdr_attr = merge_with_base_supported([
   ])
 const _inspectdr_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _inspectdr_seriestype = [
-        :path, :scatter, :shape #, :steppre, :steppost
+        :path, :scatter, :shape, :straightline, #, :steppre, :steppost
     ]
 #see: _allMarkers, _shape_keys
 const _inspectdr_marker = Symbol[
@@ -243,7 +243,11 @@ function _series_added(plt::Plot{InspectDRBackend}, series::Series)
     if nothing == plot; return; end
 
     _vectorize(v) = isa(v, Vector) ? v : collect(v) #InspectDR only supports vectors
-    x = _vectorize(series[:x]); y = _vectorize(series[:y])
+    x, y = if st == :straightline
+        straightline_data(series)
+    else
+        _vectorize(series[:x]), _vectorize(series[:y])
+    end
 
     #No support for polar grid... but can still perform polar transformation:
     if ispolar(sp)
@@ -268,6 +272,7 @@ For st in :shape:
 =#
 
     if st in (:shape,)
+        x, y = shape_data(series)
         nmax = 0
         for (i,rng) in enumerate(iter_segments(x, y))
             nmax = i
@@ -299,7 +304,7 @@ For st in :shape:
                 color = linecolor, fillcolor = fillcolor
             )
         end
-   elseif st in (:path, :scatter) #, :steppre, :steppost)
+   elseif st in (:path, :scatter, :straightline) #, :steppre, :steppost)
         #NOTE: In Plots.jl, :scatter plots have 0-linewidths (I think).
         linewidth = series[:linewidth]
         #More efficient & allows some support for markerstrokewidth:

@@ -79,28 +79,50 @@ function hvline_limits(axis::Axis)
 end
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
-    xmin, xmax = hvline_limits(plotattributes[:subplot][:xaxis])
     n = length(y)
-    newx = repmat(Float64[xmin, xmax, NaN], n)
+    newx = repmat(Float64[-1, 1, NaN], n)
     newy = vec(Float64[yi for i=1:3,yi=y])
     x := newx
     y := newy
-    seriestype := :path
+    seriestype := :straightline
     ()
 end
-@deps hline path
+@deps hline straightline
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
-    ymin, ymax = hvline_limits(plotattributes[:subplot][:yaxis])
     n = length(y)
     newx = vec(Float64[yi for i=1:3,yi=y])
-    newy = repmat(Float64[ymin, ymax, NaN], n)
+    newy = repmat(Float64[-1, 1, NaN], n)
     x := newx
     y := newy
-    seriestype := :path
+    seriestype := :straightline
     ()
 end
-@deps vline path
+@deps vline straightline
+
+@recipe function f(::Type{Val{:hspan}}, x, y, z)
+    n = div(length(y), 2)
+    newx = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
+    newy = vcat([[y[2i-1], y[2i-1], y[2i], y[2i], NaN] for i in 1:n]...)
+    linewidth --> 0
+    x := newx
+    y := newy
+    seriestype := :shape
+    ()
+end
+@deps hspan shape
+
+@recipe function f(::Type{Val{:vspan}}, x, y, z)
+    n = div(length(y), 2)
+    newx = vcat([[y[2i-1], y[2i-1], y[2i], y[2i], NaN] for i in 1:n]...)
+    newy = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
+    linewidth --> 0
+    x := newx
+    y := newy
+    seriestype := :shape
+    ()
+end
+@deps vspan shape
 
 # ---------------------------------------------------------------------------
 # path and scatter
@@ -999,15 +1021,7 @@ end
 # -------------------------------------------------
 
 "Adds a+bx... straight line over the current plot, without changing the axis limits"
-function abline!(plt::Plot, a, b; kw...)
-    xl, yl = xlims(plt), ylims(plt)
-    x1, x2 = max(xl[1], (yl[1] - b)/a), min(xl[2], (yl[2] - b)/a)
-    if x2 > x1
-        plot!(plt, x -> b + a*x, x1, x2; kw...)
-    else
-        nothing
-    end
-end
+abline!(plt::Plot, a, b; kw...) = plot!(plt, [0, 1], [b, b+a]; seriestype = :straightline, kw...)
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
 

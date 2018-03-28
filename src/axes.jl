@@ -289,8 +289,8 @@ end
 
 
 function expand_extrema!(ex::Extrema, v::Number)
-    ex.emin = NaNMath.min(v, ex.emin)
-    ex.emax = NaNMath.max(v, ex.emax)
+    ex.emin = isfinite(v) ? min(v, ex.emin) : ex.emin
+    ex.emax = isfinite(v) ? max(v, ex.emax) : ex.emax
     ex
 end
 
@@ -305,8 +305,8 @@ expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
     ex = axis[:extrema]
-    ex.emin = NaNMath.min(v[1], ex.emin)
-    ex.emax = NaNMath.max(v[2], ex.emax)
+    ex.emin = isfinite(v[1]) ? min(v[1], ex.emin) : ex.emin
+    ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
     ex
 end
 function expand_extrema!(axis::Axis, v::AVec{N}) where N<:Number
@@ -328,6 +328,9 @@ function expand_extrema!(sp::Subplot, d::KW)
         else
             letter == :x ? :y : letter == :y ? :x : :z
         end]
+        if letter != :z && d[:seriestype] == :straightline && any(series[:seriestype] != :straightline for series in series_list(sp)) && data[1] != data[2]
+            data = [NaN]
+        end
         axis = sp[Symbol(letter, "axis")]
 
         if isa(data, Volume)
