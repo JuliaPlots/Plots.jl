@@ -15,7 +15,6 @@ using Base.Meta
 import Showoff
 import StatsBase
 import JSON
-import Base.Iterators: filter
 
 using Requires
 

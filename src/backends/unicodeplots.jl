@@ -162,7 +162,7 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
     color = d[:linecolor] in UnicodePlots.color_cycle ? d[:linecolor] : :auto
 
     # add the series
-    x, y = Plots.unzip(collect(filter(xy->isfinite(xy[1])&&isfinite(xy[2]), zip(x,y))))
+    x, y = Plots.unzip(collect(Base.Iterators.filter(xy->isfinite(xy[1])&&isfinite(xy[2]), zip(x,y))))
     func(o, x, y; color = color, name = label)
 end
 
