@@ -100,6 +100,30 @@ end
 end
 @deps vline straightline
 
+@recipe function f(::Type{Val{:hspan}}, x, y, z)
+    n = div(length(y), 2)
+    newx = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
+    newy = vcat([[y[2i-1], y[2i-1], y[2i], y[2i], NaN] for i in 1:n]...)
+    linewidth --> 0
+    x := newx
+    y := newy
+    seriestype := :shape
+    ()
+end
+@deps hspan shape
+
+@recipe function f(::Type{Val{:vspan}}, x, y, z)
+    n = div(length(y), 2)
+    newx = vcat([[y[2i-1], y[2i-1], y[2i], y[2i], NaN] for i in 1:n]...)
+    newy = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
+    linewidth --> 0
+    x := newx
+    y := newy
+    seriestype := :shape
+    ()
+end
+@deps vspan shape
+
 # ---------------------------------------------------------------------------
 # path and scatter
 

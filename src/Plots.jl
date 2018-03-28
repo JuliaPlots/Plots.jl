@@ -187,6 +187,8 @@ include("output.jl")
 @shorthands sticks
 @shorthands hline
 @shorthands vline
+@shorthands hspan
+@shorthands vspan
 @shorthands ohlc
 @shorthands contour
 @shorthands contourf
