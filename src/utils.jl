@@ -192,6 +192,20 @@ function iter_segments(args...)
     SegmentsIterator(tup, n)
 end
 
+function iter_segments(series::Series)
+    x, y, z = series[:x], series[:y], series[:z]
+    if has_attribute_segments(series)
+        return [i:(i + 1) for i in 1:(length(y) - 1)]
+    else
+        segs = UnitRange{Int64}[]
+        args = is3d(series) ? (x, y, z) : (x, y)
+        for seg in iter_segments(args...)
+            push!(segs, seg)
+        end
+        return segs
+    end
+end
+
 # helpers to figure out if there are NaN values in a list of array types
 anynan(i::Int, args::Tuple) = any(a -> !isfinite(_cycle(a,i)), args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(i -> anynan(i, args), istart:iend)
@@ -629,6 +643,18 @@ function get_fillcolor(series::Series, i::Int = 1)
             grad[clamp((_cycle(lz, i) - cmin) / (cmax - cmin), 0, 1)]
         end
     end
+end
+
+function has_attribute_segments(series::Series)
+    # we want to check if a series needs to be split into segments just because
+    # of its attributes
+    for letter in (:x, :y, :z)
+        # If we have NaNs in the data they define the segments and
+        # SegmentsIterator is used
+        NaN in series[letter] && return false
+    end
+    # ... else we check relevant attributes if they have multiple inputs
+    return any((typeof(series[attr]) <: AbstractVector && length(series[attr] > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha])
 end
 
 # ---------------------------------------------------------------

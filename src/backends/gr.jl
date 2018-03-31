@@ -1021,16 +1021,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if st in (:path, :scatter, :straightline)
             if length(x) > 1
                 lz = series[:line_z]
-                segments_iterator = if lz != nothing && length(lz) > 1
-                    [i:(i + 1) for i in 1:(length(x) - 1)]
-                else
-                    iter_segments(x, y)
-                end
+                segments = iter_segments(series)
                 # do area fill
                 if frng != nothing
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
                     fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
-                    for (i, rng) in enumerate(segments_iterator)
+                    for (i, rng) in enumerate(segments)
                         gr_set_fillcolor(get_fillcolor(series, i))
                         fx = _cycle(x, vcat(rng, reverse(rng)))
                         fy = vcat(_cycle(fr_from,rng), _cycle(fr_to,reverse(rng)))
@@ -1041,7 +1037,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                 # draw the line(s)
                 if st in (:path, :straightline)
-                    for (i, rng) in enumerate(segments_iterator)
+                    for (i, rng) in enumerate(segments)
                         gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(series, i)) #, series[:linealpha])
                         arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
                         gr_polyline(x[rng], y[rng]; arrowside = arrowside)
@@ -1119,12 +1115,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if st == :path3d
                 if length(x) > 1
                     lz = series[:line_z]
-                    segments_iterator = if lz != nothing && length(lz) > 1
-                        [i:(i + 1) for i in 1:(length(x) - 1)]
-                    else
-                        iter_segments(x, y, z)
-                    end
-                    for (i, rng) in enumerate(segments_iterator)
+                    segments = iter_segments(series)
+                    for (i, rng) in enumerate(segments)
                         gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(series, i)) #, series[:linealpha])
                         GR.polyline3d(x[rng], y[rng], z[rng])
                     end
