@@ -651,10 +651,10 @@ function has_attribute_segments(series::Series)
     for letter in (:x, :y, :z)
         # If we have NaNs in the data they define the segments and
         # SegmentsIterator is used
-        NaN in series[letter] && return false
+        series[letter] != nothing && NaN in series[letter] && return false
     end
     # ... else we check relevant attributes if they have multiple inputs
-    return any((typeof(series[attr]) <: AbstractVector && length(series[attr] > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha])
+    return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha]) || any(typeof(series[attr]) <: AbstractArray{<:Real} for attr in (:line_z, :fill_z))
 end
 
 # ---------------------------------------------------------------
