@@ -602,26 +602,26 @@ function hascolorbar(sp::Subplot)
     hascbar
 end
 
-function get_linecolor(sp::Subplot, series::Series, i::Int = 1)
+function get_linecolor(series::Series, i::Int = 1)
     lc = series[:linecolor]
     lz = series[:line_z]
     if lz == nothing
         isa(lc, ColorGradient) ? lc : _cycle(lc, i)
     else
-        cmin, cmax = get_clims(sp)
+        cmin, cmax = get_clims(series[:subplot])
         grad = isa(lc, ColorGradient) ? lc : cgrad()
         grad[clamp((_cycle(lz, i) - cmin) / (cmax - cmin), 0, 1)]
     end
 end
 
-function get_fillcolor(sp::Subplot, series::Series, i::Int = 1)
+function get_fillcolor(series::Series, i::Int = 1)
     fc = series[:fillcolor]
     fz = series[:fill_z]
     lz = series[:line_z]
     if fz == nothing && lz == nothing
         isa(fc, ColorGradient) ? fc : _cycle(fc, i)
     else
-        cmin, cmax = get_clims(sp)
+        cmin, cmax = get_clims(series[:subplot])
         grad = isa(fc, ColorGradient) ? fc : cgrad()
         if fz != nothing
             grad[clamp((_cycle(fz, i) - cmin) / (cmax - cmin), 0, 1)]

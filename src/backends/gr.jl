@@ -1031,7 +1031,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
                     fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
                     for (i, rng) in enumerate(segments_iterator)
-                        gr_set_fillcolor(get_fillcolor(sp, series, i))
+                        gr_set_fillcolor(get_fillcolor(series, i))
                         fx = _cycle(x, vcat(rng, reverse(rng)))
                         fy = vcat(_cycle(fr_from,rng), _cycle(fr_to,reverse(rng)))
                         series[:fillalpha] != nothing && GR.settransparency(series[:fillalpha])
@@ -1042,7 +1042,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # draw the line(s)
                 if st in (:path, :straightline)
                     for (i, rng) in enumerate(segments_iterator)
-                        gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
+                        gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(series, i)) #, series[:linealpha])
                         arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
                         gr_polyline(x[rng], y[rng]; arrowside = arrowside)
                     end
@@ -1125,7 +1125,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                         iter_segments(x, y, z)
                     end
                     for (i, rng) in enumerate(segments_iterator)
-                        gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series, i)) #, series[:linealpha])
+                        gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(series, i)) #, series[:linealpha])
                         GR.polyline3d(x[rng], y[rng], z[rng])
                     end
                 end
@@ -1196,11 +1196,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     xseg, yseg = x[rng], y[rng]
 
                     # draw the interior
-                    gr_set_fill(get_fillcolor(sp, series, i))
+                    gr_set_fill(get_fillcolor(series, i))
                     GR.fillarea(xseg, yseg)
 
                     # draw the shapes
-                    gr_set_line(series[:linewidth], :solid, get_linecolor(sp, series, i))
+                    gr_set_line(series[:linewidth], :solid, get_linecolor(series, i))
                     GR.polyline(xseg, yseg)
                 end
             end
@@ -1286,10 +1286,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for series in series_list(sp)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
-                gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(sp, series)) #, series[:linealpha])
+                gr_set_line(series[:linewidth], series[:linestyle], get_linecolor(series)) #, series[:linealpha])
 
                 if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
-                    gr_set_fill(get_fillcolor(sp, series)) #, series[:fillalpha])
+                    gr_set_fill(get_fillcolor(series)) #, series[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
                     b, t = ypos-0.4dy, ypos+0.4dy
                     x = [l, r, r, l, l]
