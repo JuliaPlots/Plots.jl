@@ -628,6 +628,18 @@ function get_linecolor(series::Series, i::Int = 1)
     end
 end
 
+function get_linealpha(series::Series, i::Int = 1)
+    _cycle(series[:linealpha], i)
+end
+
+function get_linewidth(series::Series, i::Int = 1)
+    _cycle(series[:linewidth], i)
+end
+
+function get_linestyle(series::Series, i::Int = 1)
+    _cycle(series[:linestyle], i)
+end
+
 function get_fillcolor(series::Series, i::Int = 1)
     fc = series[:fillcolor]
     fz = series[:fill_z]
@@ -645,6 +657,10 @@ function get_fillcolor(series::Series, i::Int = 1)
     end
 end
 
+function get_fillalpha(series::Series, i::Int = 1)
+    _cycle(series[:fillalpha], i)
+end
+
 function has_attribute_segments(series::Series)
     # we want to check if a series needs to be split into segments just because
     # of its attributes
@@ -653,6 +669,7 @@ function has_attribute_segments(series::Series)
         # SegmentsIterator is used
         series[letter] != nothing && NaN in series[letter] && return false
     end
+    series[:seriestype] == :shape && return false
     # ... else we check relevant attributes if they have multiple inputs
     return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha]) || any(typeof(series[attr]) <: AbstractArray{<:Real} for attr in (:line_z, :fill_z))
 end

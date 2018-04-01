@@ -1450,18 +1450,18 @@ end
 
 
 # converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
-function getSeriesRGBColor(c, α, sp::Subplot, n::Int)
+function getSeriesRGBColor(c, sp::Subplot, n::Int)
     if c == :auto
         c = autopick(sp[:color_palette], n)
     elseif isa(c, Int)
         c = autopick(sp[:color_palette], c)
     end
-    plot_color(c, α)
+    plot_color(c)
 end
 
 function ensure_gradient!(d::KW, csym::Symbol, asym::Symbol)
     if !isa(d[csym], ColorGradient)
-        d[csym] = cgrad(alpha = d[asym])
+        d[csym] = typeof(d[asym]) <: AbstractVector ? cgrad() : cgrad(alpha = d[asym])
     end
 end
 
@@ -1508,21 +1508,21 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     end
 
     # update series color
-    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], d[:seriesalpha], sp, plotIndex)
+    d[:seriescolor] = getSeriesRGBColor.(d[:seriescolor], sp, plotIndex)
 
     # update other colors
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
         d[csym] = if d[csym] == :auto
-            plot_color(if has_black_border_for_default(d[:seriestype]) && s == :line
+            plot_color.(if has_black_border_for_default(d[:seriestype]) && s == :line
                 sp[:foreground_color_subplot]
             else
                 d[:seriescolor]
-            end, d[asym])
+            end)
         elseif d[csym] == :match
-            plot_color(d[:seriescolor], d[asym])
+            plot_color.(d[:seriescolor])
         else
-            getSeriesRGBColor(d[csym], d[asym], sp, plotIndex)
+            getSeriesRGBColor.(d[csym], sp, plotIndex)
         end
     end
 

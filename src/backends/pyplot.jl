@@ -136,6 +136,7 @@ py_color(s) = py_color(parse(Colorant, string(s)))
 py_color(c::Colorant) = (red(c), green(c), blue(c), alpha(c))
 py_color(cs::AVec) = map(py_color, cs)
 py_color(grad::ColorGradient) = py_color(grad.colors)
+py_color(c::Colorant, α) = py_color(plot_color(c, α))
 
 function py_colormap(grad::ColorGradient)
     pyvals = [(z, py_color(grad[z])) for z in grad.values]
@@ -492,60 +493,49 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # line plot
     if st in (:path, :path3d, :steppre, :steppost, :straightline)
-        if series[:linewidth] > 0
-            if series[:line_z] == nothing
-                handle = ax[:plot](xyargs...;
-                    label = series[:label],
-                    zorder = series[:series_plotindex],
-                    color = py_linecolor(series),
-                    linewidth = py_dpi_scale(plt, series[:linewidth]),
-                    linestyle = py_linestyle(st, series[:linestyle]),
-                    solid_capstyle = "round",
-                    drawstyle = py_stepstyle(st)
-                )[1]
-                push!(handles, handle)
-
-            else
+        if maximum(series[:linewidth]) > 0
+            segments = iter_segments(series)
+            if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] != nothing)
                 # multicolored line segments
-                n = length(x) - 1
+                n = length(segments)
                 # segments = Array(Any,n)
                 segments = []
                 kw = KW(
                     :label => series[:label],
                     :zorder => plt.n,
                     :cmap => py_linecolormap(series),
-                    :linewidth => py_dpi_scale(plt, series[:linewidth]),
-                    :linestyle => py_linestyle(st, series[:linestyle]),
+                    :linewidths => py_dpi_scale(plt, get_linewidth.(series, 1:n)),
+                    :linestyles => py_linestyle(st, get_linestyle(series, 1:n)),
                     :norm => pycolors["Normalize"](; extrakw...)
                 )
                 lz = _cycle(series[:line_z], 1:n)
                 handle = if is3d(st)
-                    for rng in iter_segments(x, y, z)
-                        length(rng) < 2 && continue
-                        for i in rng[1:end-1]
-                            push!(segments, [(_cycle(x,i),_cycle(y,i),_cycle(z,i)),
-                                             (_cycle(x,i+1),_cycle(y,i+1),_cycle(z,i+1))])
-                        end
-                    end
-
-                    lc = pyart3d["Line3DCollection"](segments; kw...)
+                    line_segments = [[(x[j], y[j], z[j]) for j in rng] for rng in segments]
+                    lc = pyart3d["Line3DCollection"](line_segments; kw...)
                     lc[:set_array](lz)
                     ax[:add_collection3d](lc, zs=z) #, zdir='y')
                     lc
                 else
-                    for rng in iter_segments(x, y)
-                        length(rng) < 2 && continue
-                        for i in rng[1:end-1]
-                            push!(segments, [(_cycle(x,i),_cycle(y,i)), (_cycle(x,i+1),_cycle(y,i+1))])
-                        end
-                    end
-
-                    lc = pycollections["LineCollection"](segments; kw...)
+                    line_segments = [[(x[j], y[j]) for j in rng] for rng in segments]
+                    lc = pycollections["LineCollection"](line_segments; kw...)
                     lc[:set_array](lz)
                     ax[:add_collection](lc)
                     lc
                 end
                 push!(handles, handle)
+            else
+                for (i, rng) in enumerate(iter_segments(series))
+                    handle = ax[:plot]((arg[rng] for arg in xyargs)...;
+                        label = i == 1 ? series[:label] : "",
+                        zorder = series[:series_plotindex],
+                        color = py_color(get_linecolor(series, i), get_linealpha(series, i)),
+                        linewidth = py_dpi_scale(plt, get_linewidth(series, i)),
+                        linestyle = py_linestyle(st, get_linestyle(series, i)),
+                        solid_capstyle = "round",
+                        drawstyle = py_stepstyle(st)
+                    )[1]
+                    push!(handles, handle)
+                end
             end
 
             a = series[:arrow]
@@ -559,8 +549,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                         :shrinkB => 0,
                         :edgecolor => py_linecolor(series),
                         :facecolor => py_linecolor(series),
-                        :linewidth => py_dpi_scale(plt, series[:linewidth]),
-                        :linestyle => py_linestyle(st, series[:linestyle]),
+                        :linewidth => py_dpi_scale(plt, get_linewidth(series)),
+                        :linestyle => py_linestyle(st, get_linestyle(series)),
                     )
                     add_arrows(x, y) do xyprev, xy
                         ax[:annotate]("",
@@ -794,16 +784,17 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     if st == :shape
         handle = []
-        for (i,rng) in enumerate(iter_segments(x, y))
+        for (i, rng) in enumerate(iter_segments(series))
             if length(rng) > 1
                 path = pypath["Path"](hcat(x[rng], y[rng]))
                 patches = pypatches["PathPatch"](
                     path;
                     label = series[:label],
                     zorder = series[:series_plotindex],
-                    edgecolor = py_color(_cycle(series[:linecolor], i)),
-                    facecolor = py_color(_cycle(series[:fillcolor], i)),
-                    linewidth = py_dpi_scale(plt, series[:linewidth]),
+                    edgecolor = py_color(get_linecolor(series, i), get_linealpha(series, i)),
+                    facecolor = py_color(get_fillcolor(series, i), get_fillalpha(series, i)),
+                    linewidth = py_dpi_scale(plt, get_linewidth(series, i)),
+                    linestyle = py_linestyle(st, get_linestyle(series, i)),
                     fill = true
                 )
                 push!(handle, ax[:add_patch](patches))
@@ -835,24 +826,26 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # handle area filling
     fillrange = series[:fillrange]
     if fillrange != nothing && st != :contour
-        f, dim1, dim2 = if isvertical(series)
-            :fill_between, x, y
-        else
-            :fill_betweenx, y, x
-        end
-        n = length(dim1)
-        args = if typeof(fillrange) <: Union{Real, AVec}
-            dim1, expand_data(fillrange, n), dim2
-        elseif is_2tuple(fillrange)
-            dim1, expand_data(fillrange[1], n), expand_data(fillrange[2], n)
-        end
+        for (i, rng) in enumerate(iter_segments(series))
+            f, dim1, dim2 = if isvertical(series)
+                :fill_between, x[rng], y[rng]
+            else
+                :fill_betweenx, y[rng], x[rng]
+            end
+            n = length(dim1)
+            args = if typeof(fillrange) <: Union{Real, AVec}
+                dim1, expand_data(fillrange, n), dim2
+            elseif is_2tuple(fillrange)
+                dim1, expand_data(fillrange[1], n), expand_data(fillrange[2], n)
+            end
 
-        handle = ax[f](args..., trues(n), false, py_fillstepstyle(st);
-            zorder = series[:series_plotindex],
-            facecolor = py_fillcolor(series),
-            linewidths = 0
-        )
-        push!(handles, handle)
+            handle = ax[f](args..., trues(n), false, py_fillstepstyle(st);
+                zorder = series[:series_plotindex],
+                facecolor = py_color(get_fillcolor(series, i), get_fillalpha(series, i)),
+                linewidths = 0
+            )
+            push!(handles, handle)
+        end
     end
 
     # this is all we need to add the series_annotations text
@@ -1020,6 +1013,13 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 kw[:ticks] = locator
                 kw[:format] = formatter
                 kw[:boundaries] = vcat(0, kw[:values] + 0.5)
+            elseif any(colorbar_series[attr] != nothing for attr in (:line_z, :fill_z))
+                cmin, cmax = get_clims(sp)
+                norm = pycolors[:Normalize](vmin = cmin, vmax = cmax)
+                f = colorbar_series[:line_z] != nothing ? py_linecolormap : py_fillcolormap
+                cmap = pycmap[:ScalarMappable](norm = norm, cmap = f(colorbar_series))
+                cmap[:set_array]([])
+                handle = cmap
             end
 
             # create and store the colorbar object (handle) and the axis that it is drawn on.
@@ -1250,15 +1250,16 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 # add a line/marker and a label
                 push!(handles, if series[:seriestype] == :shape || series[:fillrange] != nothing
                     pypatches[:Patch](
-                        edgecolor = py_color(_cycle(series[:linecolor],1)),
-                        facecolor = py_color(_cycle(series[:fillcolor],1)),
-                        linewidth = py_dpi_scale(plt, clamp(series[:linewidth], 0, 5)),
+                        edgecolor = py_color(get_linecolor(series), get_linealpha(series)),
+                        facecolor = py_color(get_fillcolor(series), get_fillalpha(series)),
+                        linewidth = py_dpi_scale(plt, clamp(get_linewidth(series), 0, 5)),
+                        linestyle = py_linestyle(series[:seriestype], get_linestyle(series))
                     )
                 elseif series[:seriestype] in (:path, :straightline)
                     PyPlot.plt[:Line2D]((0,1),(0,0),
-                        color = py_color(_cycle(series[:linecolor],1)),
-                        linewidth = py_dpi_scale(plt, clamp(series[:linewidth], 0, 5)),
-                        linestyle = py_linestyle(:path,series[:linestyle]),
+                        color = py_color(get_linecolor(series), get_linealpha(series)),
+                        linewidth = py_dpi_scale(plt, clamp(get_linewidth(series), 0, 5)),
+                        linestyles = py_linestyle(:path, get_linestyle(series)),
                         marker = py_marker(series[:markershape]),
                         markeredgecolor = py_markerstrokecolor(series),
                         markerfacecolor = series[:marker_z] == nothing ? py_markercolor(series) : py_color(series[:markercolor][0.5])
