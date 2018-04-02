@@ -495,35 +495,36 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     if st in (:path, :path3d, :steppre, :steppost, :straightline)
         if maximum(series[:linewidth]) > 0
             segments = iter_segments(series)
-            if length(segments) > 1 && (!any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] != nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
-                # multicolored line segments
-                n = length(segments)
-                # segments = Array(Any,n)
-                segments = []
-                kw = KW(
-                    :label => series[:label],
-                    :zorder => plt.n,
-                    :cmap => py_linecolormap(series),
-                    :linewidths => py_dpi_scale(plt, get_linewidth.(series, 1:n)),
-                    :linestyle => py_linestyle(st, get_linestyle.(series)),
-                    :norm => pycolors["Normalize"](; extrakw...)
-                )
-                lz = _cycle(series[:line_z], 1:n)
-                handle = if is3d(st)
-                    line_segments = [[(x[j], y[j], z[j]) for j in rng] for rng in segments]
-                    lc = pyart3d["Line3DCollection"](line_segments; kw...)
-                    lc[:set_array](lz)
-                    ax[:add_collection3d](lc, zs=z) #, zdir='y')
-                    lc
-                else
-                    line_segments = [[(x[j], y[j]) for j in rng] for rng in segments]
-                    lc = pycollections["LineCollection"](line_segments; kw...)
-                    lc[:set_array](lz)
-                    ax[:add_collection](lc)
-                    lc
-                end
-                push!(handles, handle)
-            else
+            # TODO: check LineCollection alternative for speed
+            # if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] != nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
+            #     # multicolored line segments
+            #     n = length(segments)
+            #     # segments = Array(Any,n)
+            #     segments = []
+            #     kw = KW(
+            #         :label => series[:label],
+            #         :zorder => plt.n,
+            #         :cmap => py_linecolormap(series),
+            #         :linewidths => py_dpi_scale(plt, get_linewidth.(series, 1:n)),
+            #         :linestyle => py_linestyle(st, get_linestyle.(series)),
+            #         :norm => pycolors["Normalize"](; extrakw...)
+            #     )
+            #     lz = _cycle(series[:line_z], 1:n)
+            #     handle = if is3d(st)
+            #         line_segments = [[(x[j], y[j], z[j]) for j in rng] for rng in segments]
+            #         lc = pyart3d["Line3DCollection"](line_segments; kw...)
+            #         lc[:set_array](lz)
+            #         ax[:add_collection3d](lc, zs=z) #, zdir='y')
+            #         lc
+            #     else
+            #         line_segments = [[(x[j], y[j]) for j in rng] for rng in segments]
+            #         lc = pycollections["LineCollection"](line_segments; kw...)
+            #         lc[:set_array](lz)
+            #         ax[:add_collection](lc)
+            #         lc
+            #     end
+            #     push!(handles, handle)
+            # else
                 for (i, rng) in enumerate(iter_segments(series))
                     handle = ax[:plot]((arg[rng] for arg in xyargs)...;
                         label = i == 1 ? series[:label] : "",
@@ -536,7 +537,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     )[1]
                     push!(handles, handle)
                 end
-            end
+            # end
 
             a = series[:arrow]
             if a != nothing && !is3d(st)  # TODO: handle 3d later
