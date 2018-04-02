@@ -495,7 +495,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     if st in (:path, :path3d, :steppre, :steppost, :straightline)
         if maximum(series[:linewidth]) > 0
             segments = iter_segments(series)
-            if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] != nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
+            if length(segments) > 1 && (!any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] != nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
                 # multicolored line segments
                 n = length(segments)
                 # segments = Array(Any,n)
