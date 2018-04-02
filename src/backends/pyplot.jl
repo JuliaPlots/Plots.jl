@@ -495,7 +495,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     if st in (:path, :path3d, :steppre, :steppost, :straightline)
         if maximum(series[:linewidth]) > 0
             segments = iter_segments(series)
-            if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] != nothing)
+            if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] != nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
                 # multicolored line segments
                 n = length(segments)
                 # segments = Array(Any,n)
@@ -505,7 +505,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     :zorder => plt.n,
                     :cmap => py_linecolormap(series),
                     :linewidths => py_dpi_scale(plt, get_linewidth.(series, 1:n)),
-                    :linestyles => py_linestyle(st, get_linestyle(series, 1:n)),
+                    :linestyle => py_linestyle(st, get_linestyle.(series)),
                     :norm => pycolors["Normalize"](; extrakw...)
                 )
                 lz = _cycle(series[:line_z], 1:n)
@@ -1259,7 +1259,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     PyPlot.plt[:Line2D]((0,1),(0,0),
                         color = py_color(get_linecolor(series), get_linealpha(series)),
                         linewidth = py_dpi_scale(plt, clamp(get_linewidth(series), 0, 5)),
-                        linestyles = py_linestyle(:path, get_linestyle(series)),
+                        linestyle = py_linestyle(:path, get_linestyle(series)),
                         marker = py_marker(series[:markershape]),
                         markeredgecolor = py_markerstrokecolor(series),
                         markerfacecolor = series[:marker_z] == nothing ? py_markercolor(series) : py_color(series[:markercolor][0.5])
