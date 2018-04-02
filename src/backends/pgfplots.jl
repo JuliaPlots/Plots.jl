@@ -27,7 +27,7 @@ const _pgfplots_attr = merge_with_base_supported([
     :tickfont, :guidefont, :legendfont,
     :grid, :legend,
     :colorbar,
-    :marker_z, #:levels,
+    :fill_z, :line_z, :marker_z, #:levels,
     # :ribbon, :quiver, :arrow,
     # :orientation,
     # :overwrite_figure,
