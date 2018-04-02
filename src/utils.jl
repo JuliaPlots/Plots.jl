@@ -616,7 +616,7 @@ function hascolorbar(sp::Subplot)
     hascbar
 end
 
-function get_linecolor(series::Series, i::Int = 1)
+function get_linecolor(series, i::Int = 1)
     lc = series[:linecolor]
     lz = series[:line_z]
     if lz == nothing
@@ -628,19 +628,19 @@ function get_linecolor(series::Series, i::Int = 1)
     end
 end
 
-function get_linealpha(series::Series, i::Int = 1)
+function get_linealpha(series, i::Int = 1)
     _cycle(series[:linealpha], i)
 end
 
-function get_linewidth(series::Series, i::Int = 1)
+function get_linewidth(series, i::Int = 1)
     _cycle(series[:linewidth], i)
 end
 
-function get_linestyle(series::Series, i::Int = 1)
+function get_linestyle(series, i::Int = 1)
     _cycle(series[:linestyle], i)
 end
 
-function get_fillcolor(series::Series, i::Int = 1)
+function get_fillcolor(series, i::Int = 1)
     fc = series[:fillcolor]
     fz = series[:fill_z]
     lz = series[:line_z]
@@ -657,7 +657,7 @@ function get_fillcolor(series::Series, i::Int = 1)
     end
 end
 
-function get_fillalpha(series::Series, i::Int = 1)
+function get_fillalpha(series, i::Int = 1)
     _cycle(series[:fillalpha], i)
 end
 
