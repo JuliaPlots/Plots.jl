@@ -667,7 +667,7 @@ function has_attribute_segments(series::Series)
     for letter in (:x, :y, :z)
         # If we have NaNs in the data they define the segments and
         # SegmentsIterator is used
-        series[letter] != nothing && NaN in series[letter] && return false
+        series[letter] != nothing && NaN in collect(series[letter]) && return false
     end
     series[:seriestype] == :shape && return false
     # ... else we check relevant attributes if they have multiple inputs
