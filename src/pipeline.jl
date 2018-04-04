@@ -393,6 +393,10 @@ function _process_seriesrecipe(plt::Plot, d::KW)
         d[:fillrange] = nothing
     end
 
+    if (d[:seriestype] == :path) && typeof(d[:linecolor]) <: Vector
+        error("1D column vectors not supported for color specification in line plots. Perhaps you meant to use a 2D row vector?")
+    end
+
     # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
     if is_seriestype_supported(st)
         sp = _prepare_subplot(plt, d)
