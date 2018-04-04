@@ -30,7 +30,7 @@ const _plotly_attr = merge_with_base_supported([
     :tickfont, :guidefont, :legendfont,
     :grid, :gridalpha, :gridlinewidth,
     :legend, :colorbar, :colorbar_title,
-    :marker_z, :fill_z, :levels,
+    :marker_z, :fill_z, :line_z, :levels,
     :ribbon, :quiver,
     :orientation,
     # :overwrite_figure,
@@ -543,23 +543,8 @@ function plotly_series(plt::Plot, series::Series)
     end
 
     # set the "type"
-    if st in (:path, :scatter, :scattergl, :straightline)
-        d_out[:type] = st==:scattergl ? "scattergl" : "scatter"
-        d_out[:mode] = if hasmarker
-            hasline ? "lines+markers" : "markers"
-        else
-            hasline ? "lines" : "none"
-        end
-        if series[:fillrange] == true || series[:fillrange] == 0 || isa(series[:fillrange], Tuple)
-            d_out[:fill] = "tozeroy"
-            d_out[:fillcolor] = rgba_string(series[:fillcolor])
-        elseif typeof(series[:fillrange]) <: Union{AbstractVector{<:Real}, Real}
-            d_out[:fill] = "tonexty"
-            d_out[:fillcolor] = rgba_string(series[:fillcolor])
-        elseif !(series[:fillrange] in (false, nothing))
-            warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
-        end
-        d_out[:x], d_out[:y] = x, y
+    if st in (:path, :scatter, :scattergl, :straightline, :path3d, :scatter3d)
+        return plotly_series_segments(series, d_out, x, y, z)
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
@@ -583,7 +568,7 @@ function plotly_series(plt::Plot, series::Series)
             d_out[:hidesurface] = true
             wirelines = KW(
                 :show => true,
-                :color => rgba_string(series[:linecolor]),
+                :color => rgba_string(plot_color(series[:linecolor], series[:linealpha])),
                 :highlightwidth => series[:linewidth],
             )
             d_out[:contours] = KW(:x => wirelines, :y => wirelines, :z => wirelines)
@@ -602,15 +587,6 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:labels] = pie_labels(sp, series)
         d_out[:values] = y
         d_out[:hoverinfo] = "label+percent+name"
-
-    elseif st in (:path3d, :scatter3d)
-        d_out[:type] = "scatter3d"
-        d_out[:mode] = if hasmarker
-            hasline ? "lines+markers" : "markers"
-        else
-            hasline ? "lines" : "none"
-        end
-        d_out[:x], d_out[:y], d_out[:z] = x, y, z
 
     else
         warn("Plotly: seriestype $st isn't supported.")
@@ -646,61 +622,15 @@ function plotly_series(plt::Plot, series::Series)
         end
     end
 
-    # add "line"
-    if hasline
-        d_out[:line] = KW(
-            :color => rgba_string(series[:linecolor]),
-            :width => series[:linewidth],
-            :shape => if st == :steppre
-                "vh"
-            elseif st == :steppost
-                "hv"
-            else
-                "linear"
-            end,
-            :dash => string(series[:linestyle]),
-            # :dash => "solid",
-        )
-    end
-
     plotly_polar!(d_out, series)
     plotly_hover!(d_out, series[:hover])
 
-    if hasfillrange
-        # if hasfillrange is true, return two dictionaries (one for original
-        # series, one for series being filled to) instead of one
-        d_out_fillrange = deepcopy(d_out)
-        d_out_fillrange[:showlegend] = false
-        # if fillrange is provided as real or tuple of real, expand to array
-        if typeof(series[:fillrange]) <: Real
-            series[:fillrange] = fill(series[:fillrange], length(series[:x]))
-        elseif typeof(series[:fillrange]) <: Tuple
-            f1 = typeof(series[:fillrange][1]) <: Real ? fill(series[:fillrange][1], length(series[:x])) : series[:fillrange][1]
-            f2 = typeof(series[:fillrange][2]) <: Real ? fill(series[:fillrange][2], length(series[:x])) : series[:fillrange][2]
-            series[:fillrange] = (f1, f2)
-        end
-        if isa(series[:fillrange], AbstractVector)
-            d_out_fillrange[:y] = series[:fillrange]
-            delete!(d_out_fillrange, :fill)
-            delete!(d_out_fillrange, :fillcolor)
-        else
-            # if fillrange is a tuple with upper and lower limit, d_out_fillrange
-            # is the series that will do the filling
-            d_out_fillrange[:x], d_out_fillrange[:y] =
-                concatenate_fillrange(series[:x], series[:fillrange])
-            d_out_fillrange[:line][:width] = 0
-            delete!(d_out, :fill)
-            delete!(d_out, :fillcolor)
-        end
-
-        return [d_out_fillrange, d_out]
-    else
-        return [d_out]
-    end
+    return [d_out]
 end
 
 function plotly_series_shapes(plt::Plot, series::Series)
-    d_outs = []
+    segments = iter_segments(series)
+    d_outs = Vector{KW}(length(segments))
 
     # TODO: create a d_out for each polygon
     # x, y = series[:x], series[:y]
@@ -714,7 +644,7 @@ function plotly_series_shapes(plt::Plot, series::Series)
     # base_d[:legendgroup] = series[:label]
 
     x, y = shape_data(series)
-    for (i,rng) in enumerate(iter_segments(x,y))
+    for (i,rng) in enumerate(segments)
         length(rng) < 2 && continue
 
         # to draw polygons, we actually draw lines with fill
@@ -724,22 +654,185 @@ function plotly_series_shapes(plt::Plot, series::Series)
             :x => vcat(x[rng], x[rng[1]]),
             :y => vcat(y[rng], y[rng[1]]),
             :fill => "tozeroy",
-            :fillcolor => rgba_string(_cycle(series[:fillcolor], i)),
+            :fillcolor => rgba_string(plot_color(get_fillcolor(series, i), get_fillalpha(series, i))),
         ))
         if series[:markerstrokewidth] > 0
             d_out[:line] = KW(
-                :color => rgba_string(_cycle(series[:linecolor], i)),
-                :width => series[:linewidth],
-                :dash => string(series[:linestyle]),
+                :color => rgba_string(plot_color(get_linecolor(series, i), get_linealpha(series, i))),
+                :width => get_linewidth(series, i),
+                :dash => string(get_linestyle(series, i)),
             )
         end
         d_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
         plotly_polar!(d_out, series)
         plotly_hover!(d_out, _cycle(series[:hover], i))
-        push!(d_outs, d_out)
+        d_outs[i] = d_out
+    end
+    if series[:fill_z] != nothing
+        push!(d_outs, plotly_colorbar_hack(series, base_d, :line))
     end
     d_outs
 end
+
+function plotly_series_segments(series::Series, d_base::KW, x, y, z)
+    st = series[:seriestype]
+    sp = series[:subplot]
+    isscatter = st in (:scatter, :scatter3d, :scattergl)
+    hasmarker = isscatter || series[:markershape] != :none
+    hasline = st in (:path, :path3d, :straightline)
+    hasfillrange = st in (:path, :scatter, :scattergl, :straightline) &&
+        (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
+
+    segments = iter_segments(series)
+    d_outs = Vector{KW}((hasfillrange ? 2 : 1 ) * length(segments))
+
+    for (i,rng) in enumerate(segments)
+        length(rng) < 2 && continue
+
+        d_out = deepcopy(d_base)
+        d_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
+
+        # set the type
+        if st in (:path, :scatter, :scattergl, :straightline)
+            d_out[:type] = st==:scattergl ? "scattergl" : "scatter"
+            d_out[:mode] = if hasmarker
+                hasline ? "lines+markers" : "markers"
+            else
+                hasline ? "lines" : "none"
+            end
+            if series[:fillrange] == true || series[:fillrange] == 0 || isa(series[:fillrange], Tuple)
+                d_out[:fill] = "tozeroy"
+                d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, i), get_fillalpha(series, i)))
+            elseif typeof(series[:fillrange]) <: Union{AbstractVector{<:Real}, Real}
+                d_out[:fill] = "tonexty"
+                d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, i), get_fillalpha(series, i)))
+            elseif !(series[:fillrange] in (false, nothing))
+                warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
+            end
+            d_out[:x], d_out[:y] = x[rng], y[rng]
+
+        elseif st in (:path3d, :scatter3d)
+            d_out[:type] = "scatter3d"
+            d_out[:mode] = if hasmarker
+                hasline ? "lines+markers" : "markers"
+            else
+                hasline ? "lines" : "none"
+            end
+            d_out[:x], d_out[:y], d_out[:z] = x[rng], y[rng], z[rng]
+        end
+
+        # add "marker"
+        if hasmarker
+            d_out[:marker] = KW(
+                :symbol => get(_plotly_markers, series[:markershape], string(series[:markershape])),
+                # :opacity => series[:markeralpha],
+                :size => 2 * series[:markersize],
+                # :color => rgba_string(series[:markercolor]),
+                :line => KW(
+                    :color => _cycle(rgba_string.(series[:markerstrokecolor]), eachindex(rng)),
+                    :width => series[:markerstrokewidth],
+                ),
+            )
+
+            # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
+            if series[:marker_z] == nothing
+                d_out[:marker][:color] = _cycle(rgba_string.(series[:markercolor]), eachindex(rng))
+            else
+                # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
+                # grad = as_gradient(series[:markercolor], series[:markeralpha])
+                cmin, cmax = get_clims(sp)
+                # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
+                d_out[:marker][:color] = [clamp(zi, cmin, cmax) for zi in _cycle(series[:marker_z], rng)]
+                d_out[:marker][:cmin] = cmin
+                d_out[:marker][:cmax] = cmax
+                d_out[:marker][:colorscale] = plotly_colorscale(series[:markercolor], series[:markeralpha])
+                d_out[:marker][:showscale] = hascolorbar(sp)
+            end
+        end
+
+        # add "line"
+        if hasline
+            d_out[:line] = KW(
+                :color => rgba_string(plot_color(get_linecolor(series, i), get_linealpha(series, i))),
+                :width => get_linewidth(series, i),
+                :shape => if st == :steppre
+                    "vh"
+                elseif st == :steppost
+                    "hv"
+                else
+                    "linear"
+                end,
+                :dash => string(get_linestyle(series, i)),
+            )
+        end
+
+        plotly_polar!(d_out, series)
+        plotly_hover!(d_out, series[:hover])
+
+        if hasfillrange
+            # if hasfillrange is true, return two dictionaries (one for original
+            # series, one for series being filled to) instead of one
+            d_out_fillrange = deepcopy(d_out)
+            d_out_fillrange[:showlegend] = false
+            # if fillrange is provided as real or tuple of real, expand to array
+            if typeof(series[:fillrange]) <: Real
+                series[:fillrange] = fill(series[:fillrange], length(rng))
+            elseif typeof(series[:fillrange]) <: Tuple
+                f1 = typeof(series[:fillrange][1]) <: Real ? fill(series[:fillrange][1], length(rng)) : series[:fillrange][1][rng]
+                f2 = typeof(series[:fillrange][2]) <: Real ? fill(series[:fillrange][2], length(rng)) : series[:fillrange][2][rng]
+                series[:fillrange] = (f1, f2)
+            end
+            if isa(series[:fillrange], AbstractVector)
+                d_out_fillrange[:y] = series[:fillrange]
+                delete!(d_out_fillrange, :fill)
+                delete!(d_out_fillrange, :fillcolor)
+            else
+                # if fillrange is a tuple with upper and lower limit, d_out_fillrange
+                # is the series that will do the filling
+                d_out_fillrange[:x], d_out_fillrange[:y] =
+                    concatenate_fillrange(x[rng], series[:fillrange][rng])
+                d_out_fillrange[:line][:width] = 0
+                delete!(d_out, :fill)
+                delete!(d_out, :fillcolor)
+            end
+
+            d_outs[(2 * i - 1):(2 * i)] = [d_out_fillrange, d_out]
+        else
+            d_outs[i] = d_out
+        end
+    end
+
+    if series[:line_z] != nothing
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :line))
+    elseif series[:fill_z] != nothing
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :fill))
+    end
+
+    d_outs
+end
+
+function plotly_colorbar_hack(series::Series, d_base::KW, sym::Symbol)
+    d_out = deepcopy(d_base)
+    cmin, cmax = get_clims(series[:subplot])
+    d_out[:showlegend] = false
+    d_out[:type] = is3d(series) ? :scatter3d : :scatter
+    d_out[:mode] = :markers
+    d_out[:x], d_out[:y] = [series[:x][1]], [series[:y][1]]
+    if is3d(series)
+        d_out[:z] = [series[:z][1]]
+    end
+    # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
+    d_out[:marker] = KW(
+        :size => 0,
+        :color => [0.5],
+        :cmin => cmin,
+        :cmax => cmax,
+        :colorscale => plotly_colorscale(series[Symbol("$(sym)color")], 1),
+        :showscale => hascolorbar(series[:subplot]),
+    )
+    return d_out
+end
+
 
 function plotly_polar!(d_out::KW, series::Series)
     # convert polar plots x/y to theta/radius

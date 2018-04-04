@@ -27,7 +27,7 @@ const _pgfplots_attr = merge_with_base_supported([
     :tickfont, :guidefont, :legendfont,
     :grid, :legend,
     :colorbar,
-    :marker_z, #:levels,
+    :fill_z, :line_z, :marker_z, #:levels,
     # :ribbon, :quiver, :arrow,
     # :orientation,
     # :overwrite_figure,
@@ -148,33 +148,47 @@ function pgf_colormap(grad::ColorGradient)
     end,", ")
 end
 
-function pgf_fillstyle(d::KW)
-    cstr,a = pgf_color(d[:fillcolor])
+function pgf_fillstyle(d, i = 1)
+    cstr,a = pgf_color(get_fillcolor(d, i))
+    fa = get_fillalpha(d, i)
+    if fa != nothing
+        a = fa
+    end
     "fill = $cstr, fill opacity=$a"
 end
 
-function pgf_linestyle(d::KW)
-    cstr,a = pgf_color(d[:linecolor])
+function pgf_linestyle(d, i = 1)
+    cstr,a = pgf_color(get_linecolor(d, i))
+    la = get_linealpha(d, i)
+    if la != nothing
+        a = la
+    end
     """
     color = $cstr,
     draw opacity=$a,
-    line width=$(d[:linewidth]),
-    $(get(_pgfplots_linestyles, d[:linestyle], "solid"))"""
+    line width=$(get_linewidth(d, i)),
+    $(get(_pgfplots_linestyles, get_linestyle(d, i), "solid"))"""
 end
 
-function pgf_marker(d::KW)
-    shape = d[:markershape]
-    cstr, a = pgf_color(d[:markercolor])
-    cstr_stroke, a_stroke = pgf_color(d[:markerstrokecolor])
+function pgf_marker(d, i = 1)
+    shape = _cycle(d[:markershape], i)
+    cstr, a = pgf_color(_cycle(d[:markercolor], i))
+    if d[:markeralpha] != nothing
+        a = _cycle(d[:markeralpha], i)
+    end
+    cstr_stroke, a_stroke = pgf_color(_cycle(d[:markerstrokecolor], i))
+    if d[:markerstrokealpha] != nothing
+        a_stroke = _cycle(d[:markerstrokealpha], i)
+    end
     """
     mark = $(get(_pgfplots_markers, shape, "*")),
-    mark size = $(0.5 * d[:markersize]),
+    mark size = $(0.5 * _cycle(d[:markersize], i)),
     mark options = {
         color = $cstr_stroke, draw opacity = $a_stroke,
         fill = $cstr, fill opacity = $a,
-        line width = $(d[:markerstrokewidth]),
+        line width = $(_cycle(d[:markerstrokewidth], i)),
         rotate = $(shape == :dtriangle ? 180 : 0),
-        $(get(_pgfplots_linestyles, d[:markerstrokestyle], "solid"))
+        $(get(_pgfplots_linestyles, _cycle(d[:markerstrokestyle], i), "solid"))
     }"""
 end
 
@@ -196,27 +210,10 @@ end
 function pgf_series(sp::Subplot, series::Series)
     d = series.d
     st = d[:seriestype]
-    style = []
-    kw = KW()
-    push!(style, pgf_linestyle(d))
-    push!(style, pgf_marker(d))
-
-    if d[:fillrange] != nothing || st in (:shape,)
-        push!(style, pgf_fillstyle(d))
-    end
-
-    # add to legend?
-    if sp[:legend] != :none && should_add_to_legend(series)
-        kw[:legendentry] = d[:label]
-        if st == :shape || d[:fillrange] != nothing
-            push!(style, "area legend")
-        end
-    else
-        push!(style, "forget plot")
-    end
+    series_collection = PGFPlots.Plot[]
 
     # function args
-    args = if st  == :contour
+    args = if st == :contour
         d[:z].surf, d[:x], d[:y]
     elseif is3d(st)
         d[:x], d[:y], d[:z]
@@ -241,31 +238,102 @@ function pgf_series(sp::Subplot, series::Series)
         else
             a
         end, args)
-    # for (i,a) in enumerate(args)
-    #     if typeof(a) <: AbstractVector && typeof(a) != Vector
-    #         args[i] = collect(a)
-    #     end
-    # end
 
-    # include additional style, then add to the kw
+    if st in (:contour, :histogram2d)
+        style = []
+        kw = KW()
+        push!(style, pgf_linestyle(d))
+        push!(style, pgf_marker(d))
+        push!(style, "forget plot")
+
+        kw[:style] = join(style, ',')
+        func = if st == :histogram2d
+            PGFPlots.Histogram2
+        else
+            PGFPlots.Contour
+        end
+        push!(series_collection, func(args...; kw...))
+
+    else
+        # series segments
+        segments = iter_segments(series)
+        for (i, rng) in enumerate(segments)
+            style = []
+            kw = KW()
+            push!(style, pgf_linestyle(d, i))
+            push!(style, pgf_marker(d, i))
+
+            if st == :shape
+                push!(style, pgf_fillstyle(d, i))
+            end
+
+            # add to legend?
+            if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
+                kw[:legendentry] = d[:label]
+                if st == :shape # || d[:fillrange] != nothing
+                    push!(style, "area legend")
+                end
+            else
+                push!(style, "forget plot")
+            end
+
+            seg_args = (arg[rng] for arg in args)
+
+            # include additional style, then add to the kw
+            if haskey(_pgf_series_extrastyle, st)
+                push!(style, _pgf_series_extrastyle[st])
+            end
+            kw[:style] = join(style, ',')
+
+            # add fillrange
+            if series[:fillrange] != nothing && st != :shape
+                push!(series_collection, pgf_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
+            end
+
+            # build/return the series object
+            func = if st == :path3d
+                PGFPlots.Linear3
+            elseif st == :scatter
+                PGFPlots.Scatter
+            else
+                PGFPlots.Linear
+            end
+            push!(series_collection, func(seg_args...; kw...))
+        end
+    end
+    series_collection
+end
+
+function pgf_fillrange_series(series, i, fillrange, args...)
+    st = series[:seriestype]
+    style = []
+    kw = KW()
+    push!(style, "line width = 0")
+    push!(style, "draw opacity = 0")
+    push!(style, pgf_fillstyle(series, i))
+    push!(style, pgf_marker(series, i))
+    push!(style, "forget plot")
     if haskey(_pgf_series_extrastyle, st)
         push!(style, _pgf_series_extrastyle[st])
     end
     kw[:style] = join(style, ',')
+    func = is3d(series) ? PGFPlots.Linear3 : PGFPlots.Linear
+    return func(pgf_fillrange_args(fillrange, args...)...; kw...)
+end
 
-    # build/return the series object
-    func = if st == :path3d
-        PGFPlots.Linear3
-    elseif st == :scatter
-        PGFPlots.Scatter
-    elseif st == :histogram2d
-        PGFPlots.Histogram2
-    elseif st == :contour
-        PGFPlots.Contour
-    else
-        PGFPlots.Linear
-    end
-    func(args...; kw...)
+function pgf_fillrange_args(fillrange, x, y)
+    n = length(x)
+    x_fill = [x; x[n:-1:1]; x[1]]
+    y_fill = [y; _cycle(fillrange, n:-1:1); y[1]]
+    return x_fill, y_fill
+end
+
+function pgf_fillrange_args(fillrange, x, y, z)
+    n = length(x)
+    x_fill = [x; x[n:-1:1]; x[1]]
+    y_fill = [y; y[n:-1:1]; x[1]]
+    z_fill = [z; _cycle(fillrange, n:-1:1); z[1]]
+    return x_fill, y_fill, z_fill
 end
 
 
@@ -438,7 +506,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         # As it is likely that all series within the same axis use the same
         # colormap this should not cause any problem.
         for series in series_list(sp)
-            for col in (:markercolor, :fillcolor)
+            for col in (:markercolor, :fillcolor, :linecolor)
                 if typeof(series.d[col]) == ColorGradient
                     push!(style,"colormap={plots}{$(pgf_colormap(series.d[col]))}")
 
@@ -458,7 +526,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # add the series object to the PGFPlots.Axis
         for series in series_list(sp)
-            push!(o, pgf_series(sp, series))
+            push!.(o, pgf_series(sp, series))
 
             # add series annotations
             anns = series[:series_annotations]
