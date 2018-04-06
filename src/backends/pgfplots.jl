@@ -269,9 +269,14 @@ function pgf_series(sp::Subplot, series::Series)
 
             # add to legend?
             if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
-                kw[:legendentry] = d[:label]
-                if st == :shape # || d[:fillrange] != nothing
-                    push!(style, "area legend")
+                if d[:fillrange] != nothing
+                    push!(style, "forget plot")
+                    push!(series_collection, pgf_fill_legend_hack(d, args))
+                else
+                    kw[:legendentry] = d[:label]
+                    if st == :shape # || d[:fillrange] != nothing
+                        push!(style, "area legend")
+                    end
                 end
             else
                 push!(style, "forget plot")
@@ -336,6 +341,25 @@ function pgf_fillrange_args(fillrange, x, y, z)
     return x_fill, y_fill, z_fill
 end
 
+function pgf_fill_legend_hack(d, args)
+    style = []
+    kw = KW()
+    push!(style, pgf_linestyle(d, 1))
+    push!(style, pgf_marker(d, 1))
+    push!(style, pgf_fillstyle(d, 1))
+    push!(style, "area legend")
+    kw[:legendentry] = d[:label]
+    kw[:style] = join(style, ',')
+    st = d[:seriestype]
+    func = if st == :path3d
+        PGFPlots.Linear3
+    elseif st == :scatter
+        PGFPlots.Scatter
+    else
+        PGFPlots.Linear
+    end
+    return func(([arg[1]] for arg in args)...; kw...)
+end
 
 # ----------------------------------------------------------------
 
