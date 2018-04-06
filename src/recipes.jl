@@ -562,7 +562,7 @@ function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::S
 
     # The nd estimator is the key to most automatic binning methods, and is modified for twodimensional histograms to include correlation
     nd = n_samples^(1/(2+N))
-    nd = N == 2 ? nd / (1-cor(first(vs), last(vs))^2)^(3//8) : nd # the >2-dimensional case does not have a nice solution to correlations
+    nd = N == 2 ? min(n_samples^(1/(2+N)), nd / (1-cor(first(vs), last(vs))^2)^(3//8)) : nd # the >2-dimensional case does not have a nice solution to correlations
 
     v = vs[dim]
 
