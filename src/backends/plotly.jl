@@ -908,7 +908,7 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyBackend})
 end
 
 function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyBackend})
-    write(io, html_head(plt) * html_body(plt))
+    error("svg output from the plotly backend is not supported.  Please use plotlyjs instead.")
 end
 
 function Base.show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
