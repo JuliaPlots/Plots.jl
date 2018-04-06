@@ -270,7 +270,7 @@ function pgf_series(sp::Subplot, series::Series)
             # add to legend?
             if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
                 if d[:fillrange] != nothing
-                    # we add a series
+                    push!(style, "forget plot")
                     push!(series_collection, pgf_fill_legend_hack(d, args))
                 else
                     kw[:legendentry] = d[:label]
