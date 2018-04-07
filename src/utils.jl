@@ -643,17 +643,12 @@ end
 function get_fillcolor(series, i::Int = 1)
     fc = series[:fillcolor]
     fz = series[:fill_z]
-    lz = series[:line_z]
-    if fz == nothing && lz == nothing
+    if fz == nothing
         isa(fc, ColorGradient) ? fc : _cycle(fc, i)
     else
         cmin, cmax = get_clims(series[:subplot])
         grad = isa(fc, ColorGradient) ? fc : cgrad()
-        if fz != nothing
-            grad[clamp((_cycle(fz, i) - cmin) / (cmax - cmin), 0, 1)]
-        elseif lz != nothing
-            grad[clamp((_cycle(lz, i) - cmin) / (cmax - cmin), 0, 1)]
-        end
+        grad[clamp((_cycle(fz, i) - cmin) / (cmax - cmin), 0, 1)]
     end
 end
 

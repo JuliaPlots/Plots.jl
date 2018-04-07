@@ -669,6 +669,8 @@ function plotly_series_shapes(plt::Plot, series::Series)
         d_outs[i] = d_out
     end
     if series[:fill_z] != nothing
+        push!(d_outs, plotly_colorbar_hack(series, base_d, :fill))
+    elseif series[:line_z] != nothing
         push!(d_outs, plotly_colorbar_hack(series, base_d, :line))
     end
     d_outs
