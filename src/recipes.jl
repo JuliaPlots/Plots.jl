@@ -407,8 +407,7 @@ end
     end
     ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
     fill_z := fz
-    linewidth := 0
-    linecolor := invisible()
+    line_z --> fz
     x := x_pts
     y := y_pts
     z := nothing
