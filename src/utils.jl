@@ -207,7 +207,7 @@ function iter_segments(series::Series)
 end
 
 # helpers to figure out if there are NaN values in a list of array types
-anynan(i::Int, args::Tuple) = any(a -> !isfinite(_cycle(a,i)), args)
+anynan(i::Int, args::Tuple) = any(a -> try isnan(_cycle(a,i)) catch MethodError false end, args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(i -> anynan(i, args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(i -> anynan(i, args), istart:iend)
 
@@ -1192,4 +1192,8 @@ function shape_data(series)
         end
     end
     return x, y
+end
+
+function construct_categorical_data(x::AbstractArray, axis::Axis)
+    map(xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)], x)
 end

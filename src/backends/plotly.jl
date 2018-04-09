@@ -485,6 +485,21 @@ function plotly_close_shapes(x, y)
     nanvcat(xs), nanvcat(ys)
 end
 
+function plotly_data(series::Series, letter::Symbol, data)
+    axis = series[:subplot][Symbol(letter, :axis)]
+    
+    data = if axis[:ticks] == :native && data != nothing
+        plotly_native_data(axis, data)
+    else
+       data
+    end
+
+    if series[:seriestype] in (:heatmap, :contour, :surface, :wireframe)
+        plotly_surface_data(series, data)
+    else
+        plotly_data(data)
+    end
+end
 plotly_data(v) = v != nothing ? collect(v) : v
 plotly_data(surf::Surface) = surf.surf
 plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
@@ -493,6 +508,28 @@ plotly_surface_data(series::Series, a::AbstractVector) = a
 plotly_surface_data(series::Series, a::AbstractMatrix) = transpose_z(series, a, false)
 plotly_surface_data(series::Series, a::Surface) = plotly_surface_data(series, a.surf)
 
+function plotly_native_data(axis::Axis, data::AbstractArray)
+    if !isempty(axis[:discrete_values])
+        construct_categorical_data(data, axis)
+    elseif axis[:formatter] in (datetimeformatter, dateformatter, timeformatter)
+        plotly_convert_to_datetime(data, axis[:formatter])
+    else 
+        data
+    end
+end
+plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.surf))
+
+function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
+    if formatter == datetimeformatter
+        map(xi -> replace(formatter(xi), "T", " "), x)
+    elseif formatter == dateformatter
+        map(xi -> string(formatter(xi), " 00:00:00"), x)
+    elseif formatter == timeformatter
+        map(xi -> string(Dates.Date(Dates.now()), " ", formatter(xi)), x)
+    else
+        error("Invalid DateTime formatter. Expected Plots.datetime/date/time formatter but got $formatter")
+    end
+end
 #ensures that a gradient is called if a single color is supplied where a gradient is needed (e.g. if a series recipe defines marker_z)
 as_gradient(grad::ColorGradient, α) = grad
 as_gradient(grad, α) = cgrad(alpha = α)
@@ -513,19 +550,16 @@ function plotly_series(plt::Plot, series::Series)
     d_out[:yaxis] = "y$(y_idx)"
     d_out[:showlegend] = should_add_to_legend(series)
 
-
-    x, y, z = map(letter -> (axis = sp[Symbol(letter, :axis)];
-        if axis[:ticks] == :native && !isempty(axis[:discrete_values])
-            axis[:discrete_values]
-        elseif st in (:heatmap, :contour, :surface, :wireframe)
-            plotly_surface_data(series, series[letter])
-        else
-            plotly_data(series[letter])
-        end), (:x, :y, :z))
-
     if st == :straightline
         x, y = straightline_data(series)
+        z = series[:z]
+    else
+        x, y, z  = series[:x], series[:y], series[:z]
     end
+
+    x, y, z = (plotly_data(series, letter, data)
+        for (letter, data) in zip((:x, :y, :z), (x, y, z))
+    )
 
     d_out[:name] = series[:label]
 
@@ -643,7 +677,10 @@ function plotly_series_shapes(plt::Plot, series::Series)
     base_d[:name] = series[:label]
     # base_d[:legendgroup] = series[:label]
 
-    x, y = shape_data(series)
+    x, y = (plotly_data(series, letter, data) 
+        for (letter, data) in zip((:x, :y), shape_data(series))
+    )
+
     for (i,rng) in enumerate(segments)
         length(rng) < 2 && continue
 
