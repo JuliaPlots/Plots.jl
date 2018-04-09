@@ -1077,7 +1077,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis[Symbol(:tick_, pos)]()        # the tick labels
             end
             py_set_scale(ax, axis)
-            axis[:ticks] != :native ? py_set_lims(ax, axis) : nothing
+            axis[:ticks] != :native || axis[:lims] != :auto ? py_set_lims(ax, axis) : nothing
             if ispolar(sp) && letter == :y
                 ax[:set_rlabel_position](90)
             end

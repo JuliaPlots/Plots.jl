@@ -264,7 +264,10 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
 
     ax[:tickangle] = -axis[:rotation]
     lims = axis_limits(axis)
-    axis[:ticks] != :native ? ax[:range] = map(scalefunc(axis[:scale]), lims) : nothing
+
+    if axis[:ticks] != :native || axis[:lims] != :auto 
+        ax[:range] = map(scalefunc(axis[:scale]), lims)
+    end
 
     if !(axis[:ticks] in (nothing, :none, false))
         ax[:titlefont] = plotly_font(guidefont(axis))
