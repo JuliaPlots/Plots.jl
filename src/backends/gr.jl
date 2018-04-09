@@ -225,8 +225,8 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     sinf = sind.(a)
     cosf = cosd.(a)
     rtick_values, rtick_labels = get_ticks(yaxis)
-    if yaxis[:formatter] == :scientific && yaxis[:ticks] in (:auto, :native)
-        rtick_labels = convert_sci_unicode(rtick_labels)
+    if yaxis[:formatter] in (:scientific, :auto) && yaxis[:ticks] in (:auto, :native)
+        rtick_labels = convert_sci_unicode.(rtick_labels)
     end
 
     #draw angular grid
@@ -888,7 +888,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     # ensure correct dispatch in gr_text for automatic log ticks
                     if xaxis[:scale] in _logScales
                         dv = string(dv, "\\ ")
-                    elseif xaxis[:formatter] == :scientific
+                    elseif xaxis[:formatter] in (:scientific, :auto)
                         dv = convert_sci_unicode(dv)
                     end
                 end
@@ -907,7 +907,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     # ensure correct dispatch in gr_text for automatic log ticks
                     if yaxis[:scale] in _logScales
                         dv = string(dv, "\\ ")
-                    elseif yaxis[:formatter] == :scientific
+                    elseif yaxis[:formatter] in (:scientific, :auto)
                         dv = convert_sci_unicode(dv)
                     end
                 end

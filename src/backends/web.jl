@@ -12,6 +12,7 @@ function standalone_html(plt::AbstractPlot; title::AbstractString = get(plt.attr
     <html>
         <head>
             <title>$title</title>
+            <meta http-equiv="content-type" content="text/html; charset=UTF-8">
             $(html_head(plt))
         </head>
         <body>
