@@ -656,6 +656,31 @@ function get_fillalpha(series, i::Int = 1)
     _cycle(series[:fillalpha], i)
 end
 
+function get_markercolor(series, i::Int = 1)
+    mc = series[:markercolor]
+    mz = series[:marker_z]
+    if mz == nothing
+        isa(mc, ColorGradient) ? mc : _cycle(mc, i)
+    else
+        cmin, cmax = get_clims(series[:subplot])
+        grad = isa(mc, ColorGradient) ? mc : cgrad()
+        grad[clamp((_cycle(mz, i) - cmin) / (cmax - cmin), 0, 1)]
+    end
+end
+
+function get_markeralpha(series, i::Int = 1)
+    _cycle(series[:markeralpha], i)
+end
+
+function get_markerstrokecolor(series, i::Int = 1)
+    msc = series[:markerstrokecolor]
+    isa(msc, ColorGradient) ? msc : _cycle(msc, i)
+end
+
+function get_markerstrokealpha(series, i::Int = 1)
+    _cycle(series[:markerstrokealpha], i)
+end
+
 function has_attribute_segments(series::Series)
     # we want to check if a series needs to be split into segments just because
     # of its attributes

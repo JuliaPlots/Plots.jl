@@ -1532,7 +1532,7 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     elseif d[:markerstrokecolor] == :auto
         getSeriesRGBColor(plot_color(d[:markercolor], d[:markeralpha]), sp, plotIndex)
     else
-        getSeriesRGBColor(plot_color(d[:markerstrokecolor], d[:markerstrokealpha]), sp, plotIndex)
+        getSeriesRGBColor.(d[:markerstrokecolor], sp, plotIndex)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient

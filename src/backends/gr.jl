@@ -357,21 +357,15 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
 
             # draw a filled in shape, slightly bigger, to estimate a stroke
             if series[:markerstrokewidth] > 0
-                cfunc(_cycle(series[:markerstrokecolor], i)) #, series[:markerstrokealpha])
+                cfunc(get_markerstrokecolor(series, i))
+                gr_set_transparency(get_markerstrokealpha(series, i))
                 gr_draw_marker(x[i], y[i], msi + series[:markerstrokewidth], shape)
             end
 
-            # draw the shape
-            if mz == nothing
-                cfunc(_cycle(series[:markercolor], i)) #, series[:markeralpha])
-            else
-                # pick a color from the pre-loaded gradient
-                ci = round(Int, 1000 + _cycle(mz, i) * 255)
-                cfuncind(ci)
-                gr_set_transparency(_gr_gradient_alpha[ci-999])
-            end
-            # don't draw filled area if marker shape is 1D
+            # draw the shape - don't draw filled area if marker shape is 1D
             if !(shape in (:hline, :vline, :+, :x))
+                cfunc(get_markercolor(series, i))
+                gr_set_transparency(get_markeralpha(series, i))
                 gr_draw_marker(x[i], y[i], msi, shape)
             end
         end
