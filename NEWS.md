@@ -11,6 +11,18 @@
 ---
 ## (current master)
 
+## 0.17.0
+- Add GR dependency to make it the default backend
+- Improve histogram2d bin estimation
+- Allow vector arguments for certain series attributes and support line_z and fill_z on GR, PyPlot, Plotly(JS) and PGFPlots
+- Automatic scientific notation for tick labels
+- Allow to set the theme in PLOTS_DEFAULTS
+- Implement plots_heatmap seriestype providing a Plots recipe for heatmaps
+
+## 0.16.0
+- fix 3D plotting in PyPlot
+- Infinite objects
+
 ## 0.15.1
 
 - fix scientific notation for labels in GR
