@@ -1,8 +1,8 @@
 Pkg.add("ImageMagick")
 Pkg.build("ImageMagick")
 
-Pkg.clone("GR")
-Pkg.build("GR")
+# Pkg.clone("GR")
+# Pkg.build("GR")
 
 Pkg.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git")
 
