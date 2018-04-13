@@ -183,6 +183,7 @@ include("output.jl")
 @shorthands histogram2d
 @shorthands density
 @shorthands heatmap
+@shorthands plots_heatmap
 @shorthands hexbin
 @shorthands sticks
 @shorthands hline

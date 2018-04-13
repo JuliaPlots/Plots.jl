@@ -389,6 +389,33 @@ end
 end
 @deps bar shape
 
+# ---------------------------------------------------------------------------
+# Plots Heatmap
+@recipe function f(::Type{Val{:plots_heatmap}}, x, y, z)
+    xe, ye = heatmap_edges(x), heatmap_edges(y)
+    m, n = size(z.surf)
+    x_pts, y_pts = fill(NaN, 6 * m * n), fill(NaN, 6 * m * n)
+    fz = zeros(m * n)
+    for i in 1:m # y
+        for j in 1:n # x
+            k = (j - 1) * m + i
+            inds = (6 * (k - 1) + 1):(6 * k - 1)
+            x_pts[inds] .= [xe[j], xe[j + 1], xe[j + 1], xe[j], xe[j]]
+            y_pts[inds] .= [ye[i], ye[i], ye[i + 1], ye[i + 1], ye[i]]
+            fz[k] = z.surf[i, j]
+        end
+    end
+    ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
+    fill_z := fz
+    line_z := fz
+    x := x_pts
+    y := y_pts
+    z := nothing
+    seriestype := :shape
+    label := ""
+    ()
+end
+@deps plots_heatmap shape
 
 # ---------------------------------------------------------------------------
 # Histograms
