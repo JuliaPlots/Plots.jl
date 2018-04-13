@@ -2,7 +2,7 @@ StatPlots
 Images
 ImageMagick
 @osx QuartzImageIO
-GR
+GR 0.31.0
 RDatasets
 VisualRegressionTests
 UnicodePlots
