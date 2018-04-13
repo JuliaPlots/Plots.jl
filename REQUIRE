@@ -13,4 +13,4 @@ JSON
 NaNMath
 Requires
 Contour
-GR
+GR 0.31.0
