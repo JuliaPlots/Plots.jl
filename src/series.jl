@@ -8,7 +8,7 @@
 
 const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
 
-all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :heatmapr), get(d, :seriestype, :none))
+all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(d, :seriestype, :none))
 
 # unknown
 convertToAnyVector(x, d::KW) = error("No user recipe defined for $(typeof(x))")

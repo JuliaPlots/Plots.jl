@@ -390,8 +390,8 @@ end
 @deps bar shape
 
 # ---------------------------------------------------------------------------
-# Heatmap
-@recipe function f(::Type{Val{:heatmapr}}, x, y, z)
+# Plots Heatmap
+@recipe function f(::Type{Val{:plots_heatmap}}, x, y, z)
     xe, ye = heatmap_edges(x), heatmap_edges(y)
     m, n = size(z.surf)
     x_pts, y_pts = fill(NaN, 6 * m * n), fill(NaN, 6 * m * n)
@@ -415,7 +415,7 @@ end
     label := ""
     ()
 end
-@deps heatmapr shape
+@deps plots_heatmap shape
 
 # ---------------------------------------------------------------------------
 # Histograms
