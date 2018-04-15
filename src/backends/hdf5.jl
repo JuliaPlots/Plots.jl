@@ -167,6 +167,7 @@ function _initialize_backend(::HDF5Backend)
 #                "PLOTTEXT" => PlotText,
                 "COLORGRADIENT" => ColorGradient,
                 "AXIS" => Axis,
+                "SURFACE" => Surface,
                 "SUBPLOT" => Subplot,
                 "NULLABLE" => Nullable,
             )
@@ -407,6 +408,11 @@ function _hdf5plot_gwrite(grp, k::String, v::Axis)
     _hdf5plot_writetype(grp, Axis)
     return
 end
+function _hdf5plot_gwrite(grp, k::String, v::Surface)
+	grp = HDF5.g_create(grp, k)
+	_hdf5plot_gwrite(grp, "data2d", v.surf)
+	_hdf5plot_writetype(grp, Surface)
+end
 #TODO: "Properly" support Nullable using _hdf5plot_writetype?
 function _hdf5plot_gwrite(grp, k::String, v::Nullable)
     if isnull(v)
@@ -576,6 +582,11 @@ function _hdf5plot_read(grp, k::String, T::Type{Axis}, dtid)
     kwlist = KW()
     _hdf5plot_read(grp, kwlist)
     return Axis([], kwlist)
+end
+function _hdf5plot_read(grp, k::String, T::Type{Surface}, dtid)
+    grp = HDF5.g_open(grp, k)
+    data2d = _hdf5plot_read(grp, "data2d")
+    return Surface(data2d)
 end
 function _hdf5plot_read(grp, k::String, T::Type{Subplot}, dtid)
     grp = HDF5.g_open(grp, k)
