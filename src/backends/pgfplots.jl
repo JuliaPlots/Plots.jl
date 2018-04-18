@@ -27,7 +27,7 @@ const _pgfplots_attr = merge_with_base_supported([
     :tickfont, :guidefont, :legendfont,
     :grid, :legend,
     :colorbar,
-    :fill_z, :line_z, :marker_z, #:levels,
+    :fill_z, :line_z, :marker_z, :levels,
     # :ribbon, :quiver, :arrow,
     # :orientation,
     # :overwrite_figure,
@@ -38,6 +38,7 @@ const _pgfplots_attr = merge_with_base_supported([
     :tick_direction,
     :framestyle,
     :camera,
+    :contour_labels,
   ])
 const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
@@ -250,6 +251,8 @@ function pgf_series(sp::Subplot, series::Series)
         func = if st == :histogram2d
             PGFPlots.Histogram2
         else
+            kw[:labels] = series[:contour_labels]
+            kw[:levels] = series[:levels]
             PGFPlots.Contour
         end
         push!(series_collection, func(args...; kw...))
@@ -511,6 +514,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         if any(s[:seriestype] == :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"
+            kw[:colorbar] = !(sp[:colorbar] in (:none, :off, :hide, false))
         elseif is3d(sp)
             azim, elev = sp[:camera]
             kw[:view] = "{$(azim)}{$(elev)}"
