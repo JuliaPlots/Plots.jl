@@ -509,7 +509,9 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
 
-        if is3d(sp)
+        if any(s[:seriestype] == :contour for s in series_list(sp))
+            kw[:view] = "{0}{90}"
+        elseif is3d(sp)
             azim, elev = sp[:camera]
             kw[:view] = "{$(azim)}{$(elev)}"
         end
