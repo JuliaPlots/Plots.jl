@@ -197,7 +197,7 @@ function iter_segments(series::Series)
     if has_attribute_segments(series)
         return [i:(i + 1) for i in 1:(length(y) - 1)]
     else
-        segs = UnitRange{Int64}[]
+        segs = UnitRange{Int}[]
         args = is3d(series) ? (x, y, z) : (x, y)
         for seg in iter_segments(args...)
             push!(segs, seg)
