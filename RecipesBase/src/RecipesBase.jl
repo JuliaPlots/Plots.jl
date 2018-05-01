@@ -351,10 +351,8 @@ macro userplot(expr)
 end
 
 function _userplot(expr::Expr)
-    if expr.head != :type
-        error("Must call userplot on a type/immutable expression.  Got: $expr")
     if expr.head != :struct
-        errror("Must call userplot on a [mutable] struct expression.  Got: $expr")
+        error("Must call userplot on a [mutable] struct expression.  Got: $expr")
     end
 
     typename = expr.args[2]
