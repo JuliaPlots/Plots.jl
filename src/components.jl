@@ -443,7 +443,7 @@ mutable struct SeriesAnnotations
 end
 function series_annotations(strs::AbstractVector, args...)
     fnt = font()
-    shp = Nullable{Any}()
+    shp = Union{Any, Nothing}()
     scalefactor = (1,1)
     for arg in args
         if isa(arg, Shape) || (isa(arg, AbstractVector) && eltype(arg) == Shape)
