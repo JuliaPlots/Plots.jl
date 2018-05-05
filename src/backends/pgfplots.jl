@@ -173,11 +173,8 @@ end
 
 function pgf_marker(d, i = 1)
     shape = _cycle(d[:markershape], i)
-    cstr, a = pgf_color(_cycle(d[:markercolor], i))
-    if d[:markeralpha] != nothing
-        a = _cycle(d[:markeralpha], i)
-    end
-    cstr_stroke, a_stroke = pgf_color(_cycle(d[:markerstrokecolor], i))
+    cstr, a = pgf_color(plot_color(get_markercolor(d, i), get_markeralpha(d, i)))
+    cstr_stroke, a_stroke = pgf_color(plot_color(get_markerstrokecolor(d, i), get_markerstrokealpha(d, i)))
     if d[:markerstrokealpha] != nothing
         a_stroke = _cycle(d[:markerstrokealpha], i)
     end
