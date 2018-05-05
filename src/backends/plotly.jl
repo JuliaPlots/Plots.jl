@@ -265,7 +265,7 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
     ax[:tickangle] = -axis[:rotation]
     lims = axis_limits(axis)
 
-    if axis[:ticks] != :native || axis[:lims] != :auto 
+    if axis[:ticks] != :native || axis[:lims] != :auto
         ax[:range] = map(scalefunc(axis[:scale]), lims)
     end
 
@@ -490,7 +490,7 @@ end
 
 function plotly_data(series::Series, letter::Symbol, data)
     axis = series[:subplot][Symbol(letter, :axis)]
-    
+
     data = if axis[:ticks] == :native && data != nothing
         plotly_native_data(axis, data)
     else
@@ -516,7 +516,7 @@ function plotly_native_data(axis::Axis, data::AbstractArray)
         construct_categorical_data(data, axis)
     elseif axis[:formatter] in (datetimeformatter, dateformatter, timeformatter)
         plotly_convert_to_datetime(data, axis[:formatter])
-    else 
+    else
         data
     end
 end
@@ -632,31 +632,17 @@ function plotly_series(plt::Plot, series::Series)
 
     # add "marker"
     if hasmarker
+        inds = eachindex(x)
         d_out[:marker] = KW(
             :symbol => get(_plotly_markers, series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
             :size => 2 * series[:markersize],
-            # :color => rgba_string(series[:markercolor]),
+            :color => rgba_string.(plot_color.(get_markercolor.(series, inds), get_markeralpha.(series, inds))),
             :line => KW(
-                :color => _cycle(rgba_string.(series[:markerstrokecolor]),eachindex(series[:x])),
+                :color => rgba_string.(plot_color.(get_markerstrokecolor.(series, inds), get_markerstrokealpha.(series, inds))),
                 :width => series[:markerstrokewidth],
             ),
         )
-
-        # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
-        if series[:marker_z] == nothing
-            d_out[:marker][:color] = _cycle(rgba_string.(series[:markercolor]),eachindex(series[:x]))
-        else
-            # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
-            # grad = as_gradient(series[:markercolor], series[:markeralpha])
-            cmin, cmax = get_clims(sp)
-            # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
-            d_out[:marker][:color] = [clamp(zi, cmin, cmax) for zi in series[:marker_z]]
-            d_out[:marker][:cmin] = cmin
-            d_out[:marker][:cmax] = cmax
-            d_out[:marker][:colorscale] = plotly_colorscale(series[:markercolor], series[:markeralpha])
-            d_out[:marker][:showscale] = hascolorbar(sp)
-        end
     end
 
     plotly_polar!(d_out, series)
@@ -680,7 +666,7 @@ function plotly_series_shapes(plt::Plot, series::Series)
     base_d[:name] = series[:label]
     # base_d[:legendgroup] = series[:label]
 
-    x, y = (plotly_data(series, letter, data) 
+    x, y = (plotly_data(series, letter, data)
         for (letter, data) in zip((:x, :y), shape_data(series))
     )
 
@@ -712,6 +698,8 @@ function plotly_series_shapes(plt::Plot, series::Series)
         push!(d_outs, plotly_colorbar_hack(series, base_d, :fill))
     elseif series[:line_z] != nothing
         push!(d_outs, plotly_colorbar_hack(series, base_d, :line))
+    elseif series[:marker_z] != nothing
+        push!(d_outs, plotly_colorbar_hack(series, base_d, :marker))
     end
     d_outs
 end
@@ -765,31 +753,17 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
 
         # add "marker"
         if hasmarker
+            inds = eachindex(x)
             d_out[:marker] = KW(
                 :symbol => get(_plotly_markers, series[:markershape], string(series[:markershape])),
                 # :opacity => series[:markeralpha],
                 :size => 2 * series[:markersize],
-                # :color => rgba_string(series[:markercolor]),
+                :color => rgba_string.(plot_color.(get_markercolor.(series, inds), get_markeralpha.(series, inds))),
                 :line => KW(
-                    :color => _cycle(rgba_string.(series[:markerstrokecolor]), eachindex(rng)),
+                    :color => rgba_string.(plot_color.(get_markerstrokecolor.(series, inds), get_markerstrokealpha.(series, inds))),
                     :width => series[:markerstrokewidth],
                 ),
             )
-
-            # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
-            if series[:marker_z] == nothing
-                d_out[:marker][:color] = _cycle(rgba_string.(series[:markercolor]), eachindex(rng))
-            else
-                # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
-                # grad = as_gradient(series[:markercolor], series[:markeralpha])
-                cmin, cmax = get_clims(sp)
-                # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
-                d_out[:marker][:color] = [clamp(zi, cmin, cmax) for zi in _cycle(series[:marker_z], rng)]
-                d_out[:marker][:cmin] = cmin
-                d_out[:marker][:cmax] = cmax
-                d_out[:marker][:colorscale] = plotly_colorscale(series[:markercolor], series[:markeralpha])
-                d_out[:marker][:showscale] = hascolorbar(sp)
-            end
         end
 
         # add "line"
@@ -848,6 +822,8 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
         push!(d_outs, plotly_colorbar_hack(series, d_base, :line))
     elseif series[:fill_z] != nothing
         push!(d_outs, plotly_colorbar_hack(series, d_base, :fill))
+    elseif series[:marker_z] != nothing
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :marker))
     end
 
     d_outs
