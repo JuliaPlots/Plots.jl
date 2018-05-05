@@ -658,7 +658,17 @@ function plotly_series(plt::Plot, series::Series)
     plotly_polar!(d_out, series)
     plotly_hover!(d_out, series[:hover])
 
-    return [d_out]
+    d_outs = [d_out]
+    if series[:marker_z] != nothing
+        d_base = KW(
+            :xaxis => "x$(x_idx)",
+            :yaxis => "y$(y_idx)",
+            :name => series[:label],
+        )
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :marker))
+    end
+
+    return d_outs
 end
 
 function plotly_series_shapes(plt::Plot, series::Series)
@@ -670,11 +680,12 @@ function plotly_series_shapes(plt::Plot, series::Series)
 
     # these are the axes that the series should be mapped to
     x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
-    base_d = KW()
-    base_d[:xaxis] = "x$(x_idx)"
-    base_d[:yaxis] = "y$(y_idx)"
-    base_d[:name] = series[:label]
-    # base_d[:legendgroup] = series[:label]
+    d_base = KW(
+        :xaxis => "x$(x_idx)",
+        :yaxis => "y$(y_idx)",
+        :name => series[:label],
+    )
+    # d_base[:legendgroup] = series[:label]
 
     x, y = (plotly_data(series, letter, data)
         for (letter, data) in zip((:x, :y), shape_data(series))
@@ -684,7 +695,7 @@ function plotly_series_shapes(plt::Plot, series::Series)
         length(rng) < 2 && continue
 
         # to draw polygons, we actually draw lines with fill
-        d_out = merge(base_d, KW(
+        d_out = merge(d_base, KW(
             :type => "scatter",
             :mode => "lines",
             :x => vcat(x[rng], x[rng[1]]),
@@ -705,11 +716,11 @@ function plotly_series_shapes(plt::Plot, series::Series)
         d_outs[i] = d_out
     end
     if series[:fill_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, base_d, :fill))
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :fill))
     elseif series[:line_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, base_d, :line))
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :line))
     elseif series[:marker_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, base_d, :marker))
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :marker))
     end
     d_outs
 end
