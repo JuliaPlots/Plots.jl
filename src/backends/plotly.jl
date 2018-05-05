@@ -646,11 +646,11 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:marker] = KW(
             :symbol => get(_plotly_markers, series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
-            :size => 2 * series[:markersize],
+            :size => 2 * _cycle(series[:markersize], inds),
             :color => rgba_string.(plot_color.(get_markercolor.(series, inds), get_markeralpha.(series, inds))),
             :line => KW(
                 :color => rgba_string.(plot_color.(get_markerstrokecolor.(series, inds), get_markerstrokealpha.(series, inds))),
-                :width => series[:markerstrokewidth],
+                :width => _cycle(series[:markerstrokewidth], inds),
             ),
         )
     end
