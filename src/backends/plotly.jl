@@ -388,6 +388,7 @@ function plotly_layout(plt::Plot)
                 :bgcolor  => rgba_string(sp[:background_color_legend]),
                 :bordercolor => rgba_string(sp[:foreground_color_legend]),
                 :font     => plotly_font(legendfont(sp)),
+                :tracegroupgap => 0,
                 :x => xpos,
                 :y => ypos
             )
@@ -678,7 +679,7 @@ function plotly_series_shapes(plt::Plot, series::Series)
     base_d[:xaxis] = "x$(x_idx)"
     base_d[:yaxis] = "y$(y_idx)"
     base_d[:name] = series[:label]
-    # base_d[:legendgroup] = series[:label]
+    base_d[:legendgroup] = series[:label]
 
     x, y = (plotly_data(series, letter, data) 
         for (letter, data) in zip((:x, :y), shape_data(series))
@@ -733,6 +734,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
 
         d_out = deepcopy(d_base)
         d_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
+        d_out[:legendgroup] = series[:label]
 
         # set the type
         if st in (:path, :scatter, :scattergl, :straightline)
