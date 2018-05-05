@@ -353,7 +353,6 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
             cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
-            cfuncind = isa(shape, Shape) ? GR.setfillcolorind : GR.setmarkercolorind
 
             # draw a filled in shape, slightly bigger, to estimate a stroke
             if series[:markerstrokewidth] > 0
@@ -1040,10 +1039,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
 
             if series[:markershape] != :none
-                if series[:marker_z] != nothing
-                    zmin, zmax = extrema(series[:marker_z])
-                    GR.setspace(zmin, zmax, 0, 90)
-                end
                 gr_draw_markers(series, x, y, clims)
             end
 
