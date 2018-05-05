@@ -570,12 +570,12 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     if series[:markershape] != :none && st in (:path, :scatter, :path3d,
                                           :scatter3d, :steppre, :steppost,
                                           :bar)
-        if series[:marker_z] == nothing
-            extrakw[:c] = series[:markershape] in (:+, :x, :hline, :vline) ? py_markerstrokecolor(series) : py_color_fix(py_markercolor(series), x)
+        markercolor = if any(typeof(series[arg]) <: AVec for arg in (:markercolor, :markeralpha)) || series[:marker_z] != nothing
+            py_color(plot_color.(get_markercolor.(series, eachindex(x)), get_markeralpha.(series, eachindex(x))))
         else
-            extrakw[:c] = convert(Vector{Float64}, series[:marker_z])
-            extrakw[:cmap] = py_markercolormap(series)
+            py_color(plot_color(series[:markercolor], series[:markeralpha]))
         end
+        extrakw[:c] = py_color_fix(markercolor, x)
         xyargs = if st == :bar && !isvertical(series)
             (y, x)
         else
@@ -591,11 +591,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             msc = py_markerstrokecolor(series)
             lw = py_dpi_scale(plt, series[:markerstrokewidth])
             for i=1:length(y)
-                extrakw[:c] = if series[:marker_z] == nothing
-                    py_color_fix(py_color(_cycle(series[:markercolor],i)), x)
-                else
-                    extrakw[:c]
-                end
+                extrakw[:c] = _cycle(markercolor, i)
 
                 push!(handle, ax[:scatter](_cycle(x,i), _cycle(y,i);
                     label = series[:label],
@@ -1014,10 +1010,16 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 kw[:ticks] = locator
                 kw[:format] = formatter
                 kw[:boundaries] = vcat(0, kw[:values] + 0.5)
-            elseif any(colorbar_series[attr] != nothing for attr in (:line_z, :fill_z))
+            elseif any(colorbar_series[attr] != nothing for attr in (:line_z, :fill_z, :marker_z))
                 cmin, cmax = get_clims(sp)
                 norm = pycolors[:Normalize](vmin = cmin, vmax = cmax)
-                f = colorbar_series[:line_z] != nothing ? py_linecolormap : py_fillcolormap
+                f = if colorbar_series[:line_z] != nothing
+                    py_linecolormap
+                elseif colorbar_series[:fill_z] != nothing
+                    py_fillcolormap
+                else
+                    py_markercolormap
+                end
                 cmap = pycmap[:ScalarMappable](norm = norm, cmap = f(colorbar_series))
                 cmap[:set_array]([])
                 handle = cmap
@@ -1077,7 +1079,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis[Symbol(:tick_, pos)]()        # the tick labels
             end
             py_set_scale(ax, axis)
-            axis[:ticks] != :native || axis[:lims] != :auto ? py_set_lims(ax, axis) : nothing
+            axis[:ticks] != :native ? py_set_lims(ax, axis) : nothing
             if ispolar(sp) && letter == :y
                 ax[:set_rlabel_position](90)
             end
