@@ -195,7 +195,11 @@ end
 function iter_segments(series::Series)
     x, y, z = series[:x], series[:y], series[:z]
     if has_attribute_segments(series)
-        return [i:(i + 1) for i in 1:(length(y) - 1)]
+        if series[:seriestype] in (:scatter, :scatter3d)
+            return [[i] for i in 1:length(y)]
+        else
+            return [i:(i + 1) for i in 1:(length(y) - 1)]
+        end
     else
         segs = UnitRange{Int64}[]
         args = is3d(series) ? (x, y, z) : (x, y)

@@ -580,18 +580,8 @@ function plotly_series(plt::Plot, series::Series)
     end
 
     # set the "type"
-    if st in (:path, :straightline, :path3d)
+    if st in (:path, :scatter, :scattergl, :straightline, :path3d, :scatter3d)
         return plotly_series_segments(series, d_out, x, y, z)
-
-    elseif st in (:scatter, :scattergl)
-        d_out[:type] = string(st)
-        d_out[:mode] = hasline ? "lines+markers" : "markers"
-        d_out[:x], d_out[:y] = x, y
-
-    elseif st == :scatter3d
-        d_out[:mode] = string(st)
-        d_out[:mode] = hasline ? "lines+markers" : "markers"
-        d_out[:x], d_out[:y], d_out[:z] = x, y, z
 
     elseif st == :heatmap
         d_out[:type] = "heatmap"
@@ -658,17 +648,7 @@ function plotly_series(plt::Plot, series::Series)
     plotly_polar!(d_out, series)
     plotly_hover!(d_out, series[:hover])
 
-    d_outs = [d_out]
-    if series[:marker_z] != nothing
-        d_base = KW(
-            :xaxis => "x$(x_idx)",
-            :yaxis => "y$(y_idx)",
-            :name => series[:label],
-        )
-        push!(d_outs, plotly_colorbar_hack(series, d_base, :marker))
-    end
-
-    return d_outs
+    return [d_out]
 end
 
 function plotly_series_shapes(plt::Plot, series::Series)
@@ -738,7 +718,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
     d_outs = Vector{KW}((hasfillrange ? 2 : 1 ) * length(segments))
 
     for (i,rng) in enumerate(segments)
-        length(rng) < 2 && continue
+        !isscatter && length(rng) < 2 && continue
 
         d_out = deepcopy(d_base)
         d_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
@@ -778,9 +758,9 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
                 :symbol => get(_plotly_markers, _cycle(series[:markershape], i), string(_cycle(series[:markershape], i))),
                 # :opacity => series[:markeralpha],
                 :size => 2 * _cycle(series[:markersize], i),
-                :color => rgba_string.(plot_color.(get_markercolor.(series, i), get_markeralpha.(series, i))),
+                :color => rgba_string(plot_color(get_markercolor(series, i), get_markeralpha(series, i))),
                 :line => KW(
-                    :color => rgba_string.(plot_color.(get_markerstrokecolor.(series, i), get_markerstrokealpha.(series, i))),
+                    :color => rgba_string(plot_color(get_markerstrokecolor(series, i), get_markerstrokealpha(series, i))),
                     :width => _cycle(series[:markerstrokewidth], i),
                 ),
             )
