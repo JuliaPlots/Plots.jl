@@ -201,7 +201,7 @@ function iter_segments(series::Series)
             return [i:(i + 1) for i in 1:(length(y) - 1)]
         end
     else
-        segs = UnitRange{Int64}[]
+        segs = UnitRange{Int}[]
         args = is3d(series) ? (x, y, z) : (x, y)
         for seg in iter_segments(args...)
             push!(segs, seg)
