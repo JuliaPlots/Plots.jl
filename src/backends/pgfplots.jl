@@ -173,14 +173,8 @@ end
 
 function pgf_marker(d, i = 1)
     shape = _cycle(d[:markershape], i)
-    cstr, a = pgf_color(_cycle(d[:markercolor], i))
-    if d[:markeralpha] != nothing
-        a = _cycle(d[:markeralpha], i)
-    end
-    cstr_stroke, a_stroke = pgf_color(_cycle(d[:markerstrokecolor], i))
-    if d[:markerstrokealpha] != nothing
-        a_stroke = _cycle(d[:markerstrokealpha], i)
-    end
+    cstr, a = pgf_color(plot_color(get_markercolor(d, i), get_markeralpha(d, i)))
+    cstr_stroke, a_stroke = pgf_color(plot_color(get_markerstrokecolor(d, i), get_markerstrokealpha(d, i)))
     """
     mark = $(get(_pgfplots_markers, shape, "*")),
     mark size = $(0.5 * _cycle(d[:markersize], i)),
@@ -222,10 +216,6 @@ function pgf_series(sp::Subplot, series::Series)
         straightline_data(series)
     elseif st == :shape
         shape_data(series)
-    elseif d[:marker_z] != nothing
-        # If a marker_z is used pass it as third coordinate to a 2D plot.
-        # See "Scatter Plots" in PGFPlots documentation
-        d[:x], d[:y], d[:marker_z]
     elseif ispolar(sp)
         theta, r = filter_radial_data(d[:x], d[:y], axis_limits(sp[:yaxis]))
         rad2deg.(theta), r
