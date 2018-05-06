@@ -353,25 +353,18 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
             cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
-            cfuncind = isa(shape, Shape) ? GR.setfillcolorind : GR.setmarkercolorind
 
             # draw a filled in shape, slightly bigger, to estimate a stroke
             if series[:markerstrokewidth] > 0
-                cfunc(_cycle(series[:markerstrokecolor], i)) #, series[:markerstrokealpha])
+                cfunc(get_markerstrokecolor(series, i))
+                gr_set_transparency(get_markerstrokealpha(series, i))
                 gr_draw_marker(x[i], y[i], msi + series[:markerstrokewidth], shape)
             end
 
-            # draw the shape
-            if mz == nothing
-                cfunc(_cycle(series[:markercolor], i)) #, series[:markeralpha])
-            else
-                # pick a color from the pre-loaded gradient
-                ci = round(Int, 1000 + _cycle(mz, i) * 255)
-                cfuncind(ci)
-                gr_set_transparency(_gr_gradient_alpha[ci-999])
-            end
-            # don't draw filled area if marker shape is 1D
+            # draw the shape - don't draw filled area if marker shape is 1D
             if !(shape in (:hline, :vline, :+, :x))
+                cfunc(get_markercolor(series, i))
+                gr_set_transparency(get_markeralpha(series, i))
                 gr_draw_marker(x[i], y[i], msi, shape)
             end
         end
@@ -1046,10 +1039,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
 
             if series[:markershape] != :none
-                if series[:marker_z] != nothing
-                    zmin, zmax = extrema(series[:marker_z])
-                    GR.setspace(zmin, zmax, 0, 90)
-                end
                 gr_draw_markers(series, x, y, clims)
             end
 
