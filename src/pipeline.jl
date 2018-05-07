@@ -117,7 +117,7 @@ function _preprocess_userrecipe(kw::KW)
     # map marker_z if it's a Function
     if isa(get(kw, :marker_z, nothing), Function)
         # TODO: should this take y and/or z as arguments?
-        kw[:marker_z] = map(kw[:marker_z], kw[:x], kw[:y], kw[:z])
+        kw[:marker_z] = isa(kw[:z], Void) ? map(kw[:marker_z], kw[:x], kw[:y]) : map(kw[:marker_z], kw[:x], kw[:y], kw[:z])
     end
 
     # map line_z if it's a Function
