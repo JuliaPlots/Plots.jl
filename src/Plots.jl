@@ -62,8 +62,13 @@ export
     ylims,
     zlims,
 
+    # output.jl
     savefig,
     png,
+    svg,
+    pdf,
+    ps,
+    eps,
     gui,
     inline,
     closeall,
