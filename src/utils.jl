@@ -624,7 +624,7 @@ function get_linecolor(series, i::Int = 1)
     lc = series[:linecolor]
     lz = series[:line_z]
     if lz == nothing
-        isa(lc, ColorGradient) ? lc : _cycle(lc, i)
+        isa(lc, ColorGradient) ? lc : plot_color(_cycle(lc, i))
     else
         cmin, cmax = get_clims(series[:subplot])
         grad = isa(lc, ColorGradient) ? lc : cgrad()
@@ -648,7 +648,7 @@ function get_fillcolor(series, i::Int = 1)
     fc = series[:fillcolor]
     fz = series[:fill_z]
     if fz == nothing
-        isa(fc, ColorGradient) ? fc : _cycle(fc, i)
+        isa(fc, ColorGradient) ? fc : plot_color(_cycle(fc, i))
     else
         cmin, cmax = get_clims(series[:subplot])
         grad = isa(fc, ColorGradient) ? fc : cgrad()
@@ -664,7 +664,7 @@ function get_markercolor(series, i::Int = 1)
     mc = series[:markercolor]
     mz = series[:marker_z]
     if mz == nothing
-        isa(mc, ColorGradient) ? mc : _cycle(mc, i)
+        isa(mc, ColorGradient) ? mc : plot_color(_cycle(mc, i))
     else
         cmin, cmax = get_clims(series[:subplot])
         grad = isa(mc, ColorGradient) ? mc : cgrad()
