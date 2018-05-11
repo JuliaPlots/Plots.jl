@@ -398,6 +398,7 @@ function _process_seriesrecipe(plt::Plot, d::KW)
         sp = _prepare_subplot(plt, d)
         _prepare_annotations(sp, d)
         _expand_subplot_extrema(sp, d, st)
+        _update_series_attributes!(d, plt, sp)
         _add_the_series(plt, sp, d)
 
     else
