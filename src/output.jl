@@ -176,25 +176,6 @@ const _best_html_output_type = KW(
     :plotly => :html
 )
 
-# a backup for html... passes to svg or png depending on the html_output_format arg
-function Base.show(io::IO, ::MIME"text/html", plt::Plot)
-    output_type = Symbol(plt.attr[:html_output_format])
-    if output_type == :auto
-        output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
-    end
-    if output_type == :png
-        # info("writing png to html output")
-        print(io, "<img src=\"data:image/png;base64,", base64encode(show, MIME("image/png"), plt), "\" />")
-    elseif output_type == :svg
-        # info("writing svg to html output")
-        show(io, MIME("image/svg+xml"), plt)
-    elseif output_type == :txt
-        show(io, MIME("text/plain"), plt)
-    else
-        error("only png or svg allowed. got: $output_type")
-    end
-end
-
 # delegate mimewritable (showable on julia 0.7) to _show instead
 function Base.mimewritable(m::M, plt::P) where {M<:MIME, P<:Plot}
     return method_exists(_show, Tuple{IO, M, P})
@@ -307,11 +288,6 @@ end
             end
             _extra_mime_info!(plt, out)
             out
-        end
-
-        # default text/plain passes to html... handles Interact issues
-        function Base.show(io::IO, m::MIME"text/plain", plt::Plot)
-            show(io, MIME("text/html"), plt)
         end
 
         ENV["MPLBACKEND"] = "Agg"
