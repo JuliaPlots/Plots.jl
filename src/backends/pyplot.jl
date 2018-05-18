@@ -634,6 +634,12 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     if st in (:contour, :contour3d)
         z = transpose_z(series, z.surf)
+	if typeof(x)<:Plots.Surface
+            x = Plots.transpose_z(series, x.surf)
+        end
+        if typeof(y)<:Plots.Surface
+            y = Plots.transpose_z(series, y.surf)
+        end
 
         if st == :contour3d
             extrakw[:extend3d] = true

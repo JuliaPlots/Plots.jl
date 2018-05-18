@@ -327,7 +327,7 @@ end
 
 function _override_seriestype_check(d::KW, st::Symbol)
     # do we want to override the series type?
-    if !is3d(st)
+    if !is3d(st) && !(st in (:contour,:contour3d))
         z = d[:z]
         if !isa(z, Void) && (size(d[:x]) == size(d[:y]) == size(z))
             st = (st == :scatter ? :scatter3d : :path3d)
