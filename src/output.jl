@@ -195,10 +195,11 @@ function Base.show(io::IO, ::MIME"text/html", plt::Plot)
     end
 end
 
-function _show(io::IO, m, plt::Plot{B}) where B
-    # Base.show_backtrace(STDOUT, backtrace())
-    warn("_show is not defined for this backend. m=", string(m))
+# delegate mimewritable (showable on julia 0.7) to _show instead
+function Base.mimewritable(m::M, plt::P) where {M<:MIME, P<:Plot}
+    return method_exists(_show, Tuple{IO, M, P})
 end
+
 function _display(plt::Plot)
     warn("_display is not defined for this backend.")
 end
