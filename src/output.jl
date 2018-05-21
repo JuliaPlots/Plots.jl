@@ -211,6 +211,9 @@ for mime in keys(_mimeformats)
     end
 end
 
+# default text/plain for all backends
+_show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot) = show(io, plt)
+
 "Close all open gui windows of the current backend"
 closeall() = closeall(backend())
 
@@ -321,9 +324,6 @@ end
 
     if Juno.isactive()
         Media.media(Plot, Media.Plot)
-
-
-        _show(io::IO, m::MIME"text/plain", plt::Plot{B}) where {B} = print(io, "Plot{$B}()")
 
         function Juno.render(e::Juno.Editor, plt::Plot)
             Juno.render(e, nothing)
