@@ -168,14 +168,6 @@ const _mimeformats = Dict(
     "application/x-tex"       => "tex",
 )
 
-const _best_html_output_type = KW(
-    :pyplot => :png,
-    :unicodeplots => :txt,
-    :glvisualize => :png,
-    :plotlyjs => :html,
-    :plotly => :html
-)
-
 # delegate mimewritable (showable on julia 0.7) to _show instead
 function Base.mimewritable(m::M, plt::P) where {M<:MIME, P<:Plot}
     return method_exists(_show, Tuple{IO, M, P})
@@ -244,6 +236,14 @@ end
 # IJulia
 # ---------------------------------------------------------
 
+const _best_IJulia_output_type = Dict(
+    PyPlotBackend       => :png,
+    UnicodePlotsBackend => :txt,
+    GLVisualizeBackend  => :png,
+    PlotlyJSBackend     => :html,
+    PlotlyBackend       => :html
+)
+
 @require IJulia begin
     if IJulia.inited
 
@@ -268,26 +268,24 @@ end
             out
         end
 
+        # use mimewritable to "trick" IJulia to choose the right output type
+        # Union needed to avoid method overwrite from the non-IJulia definition of mimewritable
+        AllBackends = Union{PyPlotBackend, UnicodePlotsBackend, PlotlyBackend, PlotlyJSBackend,
+            GRBackend, GLVisualizeBackend, PGFPlotsBackend, InspectDRBackend, HDF5Backend}
+        function Base.mimewritable(mime::M, plt::Plot{P}) where {M<:MIME, P<:AllBackends}
+            sym = Symbol(plt.attr[:html_output_format])
+            sym = sym === (:auto) ? get(_best_IJulia_output_type, P, :svg) : sym
+            sym === :txt  && M === MIME"text/plain"    && return invoke(mimewritable, Tuple{MIME,Plot}, mime, plt)
+            sym === :png  && M === MIME"image/png"     && return invoke(mimewritable, Tuple{MIME,Plot}, mime, plt)
+            sym === :svg  && M === MIME"image/svg+xml" && return invoke(mimewritable, Tuple{MIME,Plot}, mime, plt)
+            sym === :html && M === MIME"text/html"     && return invoke(mimewritable, Tuple{MIME,Plot}, mime, plt)
+            return false
+        end
+
         function IJulia.display_dict(plt::Plot)
-            output_type = Symbol(plt.attr[:html_output_format])
-            if output_type == :auto
-                output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
-            end
-            out = Dict()
-            if output_type == :png
-                mime = "image/png"
-                out[mime] = base64encode(show, MIME(mime), plt)
-            elseif output_type == :svg
-                mime = "image/svg+xml"
-                out[mime] = sprint(show, MIME(mime), plt)
-            elseif output_type == :html
-                mime = "text/html"
-                out[mime] = sprint(show, MIME(mime), plt)
-            else
-                error("Unsupported output type $output_type")
-            end
+            out = invoke(IJulia.display_dict, Tuple{Any}, plt)
             _extra_mime_info!(plt, out)
-            out
+            return out
         end
 
         ENV["MPLBACKEND"] = "Agg"
