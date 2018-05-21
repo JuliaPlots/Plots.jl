@@ -922,8 +922,7 @@ end
 # ----------------------------------------------------------------
 
 
-function Base.show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
-    prepare_output(plt)
+function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
     write(io, html_head(plt) * html_body(plt))
 end
 
