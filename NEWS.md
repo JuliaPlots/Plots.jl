@@ -11,6 +11,15 @@
 ---
 ## (current master)
 
+## 0.17.1
+- Fix contour for PGFPlots
+- 32Bit fix: Int64 -> Int
+- Make series of shapes and segments toggle together in Plotly(JS)
+- Fix marker arguments
+- Fix processing order of series recipes
+- Fix Plotly(JS) ribbon
+- Contour plots with x,y in grid form on PyPlot
+
 ## 0.17.0
 - Add GR dependency to make it the default backend
 - Improve histogram2d bin estimation
