@@ -246,18 +246,7 @@ function get_ticks(axis::Axis)
     ticks = ticks == :native ? :auto : ticks
 
     dvals = axis[:discrete_values]
-    cv, dv = if !isempty(dvals)
-        # discrete ticks...
-        n = length(dvals)
-        rng = if ticks == :all
-            1:n
-        elseif typeof(ticks) <: Int
-            Int[round(Int,i) for i in linspace(1, n, ticks)]
-        else
-            Int[round(Int,i) for i in linspace(1, n, 15)]
-        end
-        axis[:continuous_values][rng], dvals[rng]
-    elseif typeof(ticks) <: Symbol
+    cv, dv = if typeof(ticks) <: Symbol
         if ispolar(axis.sps[1]) && axis[:letter] == :x
             #force theta axis to be full circle
             (collect(0:pi/4:7pi/4), string.(0:45:315))
@@ -271,6 +260,17 @@ function get_ticks(axis::Axis)
     elseif typeof(ticks) <: NTuple{2, Any}
         # assuming we're passed (ticks, labels)
         ticks
+    elseif !isempty(dvals)
+        # discrete ticks...
+        n = length(dvals)
+        rng = if ticks == :auto
+            Int[round(Int,i) for i in linspace(1, n, 15)]
+        elseif ticks == :all
+            1:n
+        elseif typeof(ticks) <: Int
+            Int[round(Int,i) for i in linspace(1, n, ticks)]
+        end
+        axis[:continuous_values][rng], dvals[rng]
     else
         error("Unknown ticks type in get_ticks: $(typeof(ticks))")
     end
