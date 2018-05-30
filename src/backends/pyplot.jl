@@ -1282,7 +1282,6 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
 
         # if anything was added, call ax.legend and set the colors
         if !isempty(handles)
-            fgcolor = py_color(sp[:foreground_color_legend])
             leg = ax[:legend](handles,
                 labels,
                 loc = get(_pyplot_legend_pos, leg, "best"),
@@ -1297,6 +1296,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             leg[:set_zorder](1000)
             sp[:legendtitle] != nothing && leg[:set_title](sp[:legendtitle])
 
+            # fgcolor = py_color(sp[:foreground_color_legend])
             lfcolor = py_color(sp[:legendfontcolor])
             for txt in leg[:get_texts]()
                 PyPlot.plt[:setp](txt, color = lfcolor, family = sp[:legendfontfamily])
