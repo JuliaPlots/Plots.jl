@@ -1291,7 +1291,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 # framealpha = 0.6,
                 facecolor = py_color(sp[:background_color_legend]),
                 edgecolor = py_color(sp[:foreground_color_legend]),
-                framealpha = alpha(sp[:background_color_legend]),
+                framealpha = alpha(plot_color(sp[:background_color_legend])),
             )
             leg[:set_zorder](1000)
             sp[:legendtitle] != nothing && leg[:set_title](sp[:legendtitle])
