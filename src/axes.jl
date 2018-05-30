@@ -249,12 +249,12 @@ function get_ticks(axis::Axis)
     cv, dv = if !isempty(dvals)
         # discrete ticks...
         n = length(dvals)
-        rng = if ticks == :auto
-            Int[round(Int,i) for i in linspace(1, n, 15)]
-        elseif ticks == :all
+        rng = if ticks == :all
             1:n
         elseif typeof(ticks) <: Int
             Int[round(Int,i) for i in linspace(1, n, ticks)]
+        else
+            Int[round(Int,i) for i in linspace(1, n, 15)]
         end
         axis[:continuous_values][rng], dvals[rng]
     elseif typeof(ticks) <: Symbol
