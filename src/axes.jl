@@ -246,19 +246,17 @@ function get_ticks(axis::Axis)
     ticks = ticks == :native ? :auto : ticks
 
     dvals = axis[:discrete_values]
-    cv, dv = if !isempty(dvals)
-        # discrete ticks...
-        n = length(dvals)
-        rng = if ticks == :auto
-            Int[round(Int,i) for i in linspace(1, n, 15)]
-        elseif ticks == :all
-            1:n
-        elseif typeof(ticks) <: Int
-            Int[round(Int,i) for i in linspace(1, n, ticks)]
-        end
-        axis[:continuous_values][rng], dvals[rng]
-    elseif typeof(ticks) <: Symbol
-        if ispolar(axis.sps[1]) && axis[:letter] == :x
+    cv, dv = if typeof(ticks) <: Symbol
+        if !isempty(dvals)
+            # discrete ticks...
+            n = length(dvals)
+            rng = if ticks == :auto
+                Int[round(Int,i) for i in linspace(1, n, 15)]
+            else # if ticks == :all
+                1:n
+            end
+            axis[:continuous_values][rng], dvals[rng]
+        elseif ispolar(axis.sps[1]) && axis[:letter] == :x
             #force theta axis to be full circle
             (collect(0:pi/4:7pi/4), string.(0:45:315))
         else
@@ -266,8 +264,13 @@ function get_ticks(axis::Axis)
             optimal_ticks_and_labels(axis)
         end
     elseif typeof(ticks) <: Union{AVec, Int}
-        # override ticks, but get the labels
-        optimal_ticks_and_labels(axis, ticks)
+        if !isempty(dvals) && typeof(ticks) <: Int
+            rng = Int[round(Int,i) for i in linspace(1, length(dvals), ticks)]
+            axis[:continuous_values][rng], dvals[rng]
+        else
+            # override ticks, but get the labels
+            optimal_ticks_and_labels(axis, ticks)
+        end
     elseif typeof(ticks) <: NTuple{2, Any}
         # assuming we're passed (ticks, labels)
         ticks
