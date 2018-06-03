@@ -212,7 +212,7 @@ end
 
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
-    map(show, plt.o)
+    foreach(x -> show(io, x), plt.o)
     nothing
 end
 
