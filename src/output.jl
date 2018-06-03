@@ -221,9 +221,10 @@ closeall() = closeall(backend())
 # ---------------------------------------------------------
 # A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
 
+const PDFBackends = Union{PGFPlotsBackend,PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}
 if is_installed("FileIO")
     @eval import FileIO
-    function _show(io::IO, ::MIME"image/png", plt::Plot)
+    function _show(io::IO, ::MIME"image/png", plt::Plot{<:PDFBackends})
         fn = tempname()
 
         # first save a pdf file
