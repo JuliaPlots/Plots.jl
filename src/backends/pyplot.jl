@@ -1286,23 +1286,17 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 labels,
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
-                fontsize = py_dpi_scale(plt, sp[:legendfontsize])
-                # family = sp[:legendfont].family
-                # framealpha = 0.6
+                fontsize = py_dpi_scale(plt, sp[:legendfontsize]),
+                facecolor = py_color(sp[:background_color_legend]),
+                edgecolor = py_color(sp[:foreground_color_legend]),
+                framealpha = alpha(plot_color(sp[:background_color_legend])),
             )
             leg[:set_zorder](1000)
             sp[:legendtitle] != nothing && leg[:set_title](sp[:legendtitle])
 
-            fgcolor = py_color(sp[:foreground_color_legend])
-            lfcolor = py_color(sp[:legendfontcolor])
             for txt in leg[:get_texts]()
-                PyPlot.plt[:setp](txt, color = lfcolor, family = sp[:legendfontfamily])
+                PyPlot.plt[:setp](txt, color = py_color(sp[:legendfontcolor]), family = sp[:legendfontfamily])
             end
-
-            # set some legend properties
-            frame = leg[:get_frame]()
-            frame[set_facecolor_sym](py_color(sp[:background_color_legend]))
-            frame[:set_edgecolor](fgcolor)
         end
     end
 end
