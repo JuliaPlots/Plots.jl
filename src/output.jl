@@ -157,17 +157,6 @@ end
 
 # ---------------------------------------------------------
 
-const _mimeformats = Dict(
-    "application/eps"         => "eps",
-    "image/eps"               => "eps",
-    "application/pdf"         => "pdf",
-    "image/png"               => "png",
-    "application/postscript"  => "ps",
-    "image/svg+xml"           => "svg",
-    "text/plain"              => "txt",
-    "application/x-tex"       => "tex",
-)
-
 const _best_html_output_type = KW(
     :pyplot => :png,
     :unicodeplots => :txt,
@@ -205,8 +194,10 @@ function _display(plt::Plot)
 end
 
 # for writing to io streams... first prepare, then callback
-for mime in keys(_mimeformats)
-    @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot{B}) where B
+for mime in ("text/plain", "text/html", "image/png", "image/eps", "image/svg+xml",
+             "application/eps", "application/pdf", "application/postscript",
+             "application/x-tex")
+    @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         prepare_output(plt)
         _show(io, m, plt)
     end
