@@ -1,5 +1,5 @@
 @require Revise begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotlyjs.jl")) 
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotlyjs.jl"))
 end
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
@@ -88,8 +88,7 @@ end
 
 # ----------------------------------------------------------------
 
-function Base.show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend})
-    prepare_output(plt)
+function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend})
     if isijulia() && !_use_remote[]
         write(io, PlotlyJS.html_body(PlotlyJS.JupyterPlot(plt.o)))
     else

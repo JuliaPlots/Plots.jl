@@ -177,7 +177,7 @@ const _best_html_output_type = KW(
 )
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
-function Base.show(io::IO, ::MIME"text/html", plt::Plot)
+function _show(io::IO, ::MIME"text/html", plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
     if output_type == :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
@@ -191,7 +191,7 @@ function Base.show(io::IO, ::MIME"text/html", plt::Plot)
     elseif output_type == :txt
         show(io, MIME("text/plain"), plt)
     else
-        error("only png or svg allowed. got: $output_type")
+        error("only png or svg allowed. got: $(repr(output_type))")
     end
 end
 
@@ -307,11 +307,6 @@ end
             end
             _extra_mime_info!(plt, out)
             out
-        end
-
-        # default text/plain passes to html... handles Interact issues
-        function Base.show(io::IO, m::MIME"text/plain", plt::Plot)
-            show(io, MIME("text/html"), plt)
         end
 
         ENV["MPLBACKEND"] = "Agg"
