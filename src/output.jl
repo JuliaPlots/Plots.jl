@@ -284,7 +284,10 @@ end
                 output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
             end
             out = Dict()
-            if output_type == :png
+            if output_type == :txt
+                mime = "text/plain"
+                out[mime] = sprint(show, MIME(mime), plt)
+            elseif output_type == :png
                 mime = "image/png"
                 out[mime] = base64encode(show, MIME(mime), plt)
             elseif output_type == :svg
