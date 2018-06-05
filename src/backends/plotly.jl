@@ -922,17 +922,7 @@ end
 # ----------------------------------------------------------------
 
 
-function _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyBackend})
-    # show_png_from_html(io, plt)
-    error("png output from the plotly backend is not supported.  Please use plotlyjs instead.")
-end
-
-function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyBackend})
-    error("svg output from the plotly backend is not supported.  Please use plotlyjs instead.")
-end
-
-function Base.show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
-    prepare_output(plt)
+function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
     write(io, html_head(plt) * html_body(plt))
 end
 

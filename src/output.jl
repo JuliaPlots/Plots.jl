@@ -157,17 +157,6 @@ end
 
 # ---------------------------------------------------------
 
-const _mimeformats = Dict(
-    "application/eps"         => "eps",
-    "image/eps"               => "eps",
-    "application/pdf"         => "pdf",
-    "image/png"               => "png",
-    "application/postscript"  => "ps",
-    "image/svg+xml"           => "svg",
-    "text/plain"              => "txt",
-    "application/x-tex"       => "tex",
-)
-
 const _best_html_output_type = KW(
     :pyplot => :png,
     :unicodeplots => :txt,
@@ -177,7 +166,7 @@ const _best_html_output_type = KW(
 )
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
-function Base.show(io::IO, ::MIME"text/html", plt::Plot)
+function _show(io::IO, ::MIME"text/html", plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
     if output_type == :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
@@ -191,21 +180,24 @@ function Base.show(io::IO, ::MIME"text/html", plt::Plot)
     elseif output_type == :txt
         show(io, MIME("text/plain"), plt)
     else
-        error("only png or svg allowed. got: $output_type")
+        error("only png or svg allowed. got: $(repr(output_type))")
     end
 end
 
-function _show(io::IO, m, plt::Plot{B}) where B
-    # Base.show_backtrace(STDOUT, backtrace())
-    warn("_show is not defined for this backend. m=", string(m))
+# delegate mimewritable (showable on julia 0.7) to _show instead
+function Base.mimewritable(m::M, plt::P) where {M<:MIME, P<:Plot}
+    return method_exists(_show, Tuple{IO, M, P})
 end
+
 function _display(plt::Plot)
     warn("_display is not defined for this backend.")
 end
 
 # for writing to io streams... first prepare, then callback
-for mime in keys(_mimeformats)
-    @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot{B}) where B
+for mime in ("text/plain", "text/html", "image/png", "image/eps", "image/svg+xml",
+             "application/eps", "application/pdf", "application/postscript",
+             "application/x-tex")
+    @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         prepare_output(plt)
         _show(io, m, plt)
     end
@@ -292,7 +284,10 @@ end
                 output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
             end
             out = Dict()
-            if output_type == :png
+            if output_type == :txt
+                mime = "text/plain"
+                out[mime] = sprint(show, MIME(mime), plt)
+            elseif output_type == :png
                 mime = "image/png"
                 out[mime] = base64encode(show, MIME(mime), plt)
             elseif output_type == :svg
@@ -306,11 +301,6 @@ end
             end
             _extra_mime_info!(plt, out)
             out
-        end
-
-        # default text/plain passes to html... handles Interact issues
-        function Base.show(io::IO, m::MIME"text/plain", plt::Plot)
-            show(io, MIME("text/html"), plt)
         end
 
         ENV["MPLBACKEND"] = "Agg"
