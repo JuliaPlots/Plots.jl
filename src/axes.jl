@@ -441,6 +441,13 @@ function default_should_widen(axis::Axis)
     should_widen
 end
 
+function round_limits(amin,amax)
+    scale = 10^(1-round(log10(amax - amin)))
+    amin = floor(amin*scale)/scale
+    amax = ceil(amax*scale)/scale
+    amin, amax
+end
+
 # using the axis extrema and limit overrides, return the min/max value for this axis
 function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis))
     ex = axis[:extrema]
@@ -471,6 +478,8 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
         end
     elseif should_widen
         widen(amin, amax)
+    elseif lims == :round
+        round_limits(amin,amax)
     else
         amin, amax
     end
