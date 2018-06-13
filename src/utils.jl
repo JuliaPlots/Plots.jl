@@ -358,19 +358,17 @@ const _scale_base = Dict{Symbol, Real}(
     :ln => e,
 )
 
-"create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(v::AVec, scale::Symbol = :identity)
+function _heatmap_edges(v::AVec)
   vmin, vmax = ignorenan_extrema(v)
   extra_min = extra_max = 0.5 * (vmax-vmin) / (length(v)-1)
-  if scale in _logScales
-      vmin > 0 || error("The axis values must be positive for a $scale scale")
-      while vmin - extra_min <= 0
-          extra_min /= _scale_base[scale]
-      end
-  end
   vcat(vmin-extra_min, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra_max)
 end
 
+"create an (n+1) list of the outsides of heatmap rectangles"
+function heatmap_edges(v::AVec, scale::Symbol = :identity)
+  f, invf = scalefunc(scale), invscalefunc(scale)
+  map(invf, _heatmap_edges(map(f,v)))
+end
 
 function calc_r_extrema(x, y)
     xmin, xmax = ignorenan_extrema(x)

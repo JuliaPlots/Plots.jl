@@ -587,6 +587,8 @@ function plotly_series(plt::Plot, series::Series)
         return plotly_series_segments(series, d_out, x, y, z)
 
     elseif st == :heatmap
+        x = heatmap_edges(x, sp[:xaxis][:scale])
+        y = heatmap_edges(y, sp[:yaxis][:scale])
         d_out[:type] = "heatmap"
         d_out[:x], d_out[:y], d_out[:z] = x, y, z
         d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
