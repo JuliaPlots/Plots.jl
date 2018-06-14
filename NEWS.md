@@ -11,6 +11,13 @@
 ---
 ## (current master)
 
+## 0.17.2
+- fix single subplot in plotly
+- implement `(xyz)lims = :round`
+- PyPlot: fix bg_legend = invisible()
+- set fallback tick specification for axes with discrete values
+- restructure of show methods
+
 ## 0.17.1
 - Fix contour for PGFPlots
 - 32Bit fix: Int64 -> Int
