@@ -409,15 +409,6 @@ function _hdf5plot_gwrite(grp, k::String, v::Surface)
 	_hdf5plot_gwrite(grp, "data2d", v.surf)
 	_hdf5plot_writetype(grp, Surface)
 end
-#TODO: "Properly" support Nullable using _hdf5plot_writetype?
-function _hdf5plot_gwrite(grp, k::String, v::Nullable)
-    if isnull(v)
-        _hdf5plot_gwrite(grp, k, nothing)
-    else
-        _hdf5plot_gwrite(grp, k, v.value)
-    end
-    return
-end
 
 function _hdf5plot_gwrite(grp, k::String, v::SeriesAnnotations)
     #Currently no support for SeriesAnnotations

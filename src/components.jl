@@ -438,16 +438,16 @@ end
 mutable struct SeriesAnnotations
     strs::AbstractVector  # the labels/names
     font::Font
-    baseshape::Nullable
+    baseshape::Union{Any, Nothing}
     scalefactor::Tuple
 end
 function series_annotations(strs::AbstractVector, args...)
     fnt = font()
-    shp = Nullable{Any}()
+    shp = Union{Any, Nothing}()
     scalefactor = (1,1)
     for arg in args
         if isa(arg, Shape) || (isa(arg, AbstractVector) && eltype(arg) == Shape)
-            shp = Nullable(arg)
+            shp = Union{Any, Nothing}()
         elseif isa(arg, Font)
             fnt = arg
         elseif isa(arg, Symbol) && haskey(_shapes, arg)
