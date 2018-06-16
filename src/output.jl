@@ -332,7 +332,7 @@ end
 
                 scale = minimum(jsize[i] / sz[i] for i in 1:2)
                 plt[:size] = (s * scale for s in sz)
-                plt[:dpi] = 100
+                plt[:dpi] = Plots.DPI
                 plt[:thickness_scaling] *= scale
                 Juno.render(pane, HTML(stringmime(MIME("text/html"), plt)))
                 plt[:size] = sz

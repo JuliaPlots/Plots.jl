@@ -544,7 +544,7 @@ function gr_display(plt::Plot, fmt="")
     GR.clearws()
 
     _gr_thickness_scaling[1] = plt[:thickness_scaling]
-    dpi_factor = plt[:dpi] ./ Plots.DPI
+    dpi_factor = plt[:dpi] / Plots.DPI
 
     # collect some monitor/display sizes in meters and pixels
     display_width_meters, display_height_meters, display_width_px, display_height_px = GR.inqdspsize()
