@@ -543,6 +543,8 @@ end
 function gr_display(plt::Plot, fmt="")
     GR.clearws()
 
+    _gr_dpi_factor[1] = plt[:dpi] / DPI * plt[:thickness_scaling]
+
     # collect some monitor/display sizes in meters and pixels
     display_width_meters, display_height_meters, display_width_px, display_height_px = GR.inqdspsize()
     display_width_ratio = display_width_meters / display_width_px
@@ -551,7 +553,6 @@ function gr_display(plt::Plot, fmt="")
     # compute the viewport_canvas, normalized to the larger dimension
     viewport_canvas = Float64[0,1,0,1]
     w, h = plt[:size]
-    dpi_factor = plt[:dpi] / DPI * plt[:thickness_scaling]
     gr_plot_size[:] = [w, h]
     if w > h
         ratio = float(h) / w
@@ -574,8 +575,7 @@ function gr_display(plt::Plot, fmt="")
 
     # update point mult
     px_per_pt = px / pt
-    _gr_point_mult[1] = 1.5 * dpi_factor * px_per_pt / max(h,w)
-    _gr_dpi_factor[1] = dpi_factor
+    _gr_point_mult[1] = 1.5 * _gr_dpi_factor[1] * px_per_pt / max(h,w)
 
     # subplots:
     for sp in plt.subplots
@@ -621,6 +621,7 @@ function gr_get_ticks_size(ticks, i)
 end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
+    dpi = sp.plt[:thickness_scaling] * sp.plt[:dpi] / Plots.DPI
     if !haskey(ENV, "GKSwstype")
         if isijulia() || (isdefined(Main, :Juno) && Juno.isactive())
             ENV["GKSwstype"] = "svg"
@@ -633,13 +634,13 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     bottompad = 2mm  + sp[:bottom_margin]
     # Add margin for title
     if sp[:title] != ""
-        toppad += 5mm * _gr_dpi_factor[1]
+        toppad += 5mm
     end
     # Add margin for x and y ticks
     xticks, yticks = axis_drawing_info(sp)[1:2]
     if !(xticks in (nothing, false, :none))
         flip, mirror = gr_set_xticks_font(sp)
-        l = _gr_dpi_factor[1] * gr_get_ticks_size(xticks, 2)
+        l = gr_get_ticks_size(xticks, 2)
         if mirror
             toppad += 1mm + gr_plot_size[2] * l * px
         else
@@ -648,7 +649,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     if !(yticks in (nothing, false, :none))
         flip, mirror = gr_set_yticks_font(sp)
-        l = _gr_dpi_factor[1] * gr_get_ticks_size(yticks, 1)
+        l = gr_get_ticks_size(yticks, 1)
         if mirror
             rightpad += 1mm + gr_plot_size[1] * l * px
         else
@@ -657,13 +658,13 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     # Add margin for x label
     if sp[:xaxis][:guide] != ""
-        bottompad += 4mm * _gr_dpi_factor[1]
+        bottompad += 4mm
     end
     # Add margin for y label
     if sp[:yaxis][:guide] != ""
-        leftpad += 4mm * _gr_dpi_factor[1]
+        leftpad += 4mm
     end
-    sp.minpad = (leftpad, toppad, rightpad, bottompad)
+    sp.minpad = Tuple(dpi * pad for pad in (leftpad, toppad, rightpad, bottompad))
 end
 
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
@@ -764,7 +765,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # draw the axes
     gr_set_font(tickfont(xaxis))
-    GR.setlinewidth(_gr_dpi_factor[1])
+    GR.setlinewidth(sp.plt[:thickness_scaling] * sp.plt[:dpi] / Plots.DPI)
 
     if is3d(sp)
         zmin, zmax = gr_lims(zaxis, true)
