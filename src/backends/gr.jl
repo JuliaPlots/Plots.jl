@@ -543,7 +543,8 @@ end
 function gr_display(plt::Plot, fmt="")
     GR.clearws()
 
-    _gr_dpi_factor[1] = plt[:dpi] / DPI * plt[:thickness_scaling]
+    _gr_dpi_factor[1] = plt[:thickness_scaling]
+    dpi_factor = plt[:dpi] ./ Plots.DPI
 
     # collect some monitor/display sizes in meters and pixels
     display_width_meters, display_height_meters, display_width_px, display_height_px = GR.inqdspsize()
@@ -556,14 +557,14 @@ function gr_display(plt::Plot, fmt="")
     gr_plot_size[:] = [w, h]
     if w > h
         ratio = float(h) / w
-        msize = display_width_ratio * w
+        msize = display_width_ratio * w * dpi_factor
         GR.setwsviewport(0, msize, 0, msize * ratio)
         GR.setwswindow(0, 1, 0, ratio)
         viewport_canvas[3] *= ratio
         viewport_canvas[4] *= ratio
     else
         ratio = float(w) / h
-        msize = display_height_ratio * h
+        msize = display_height_ratio * h * dpi_factor
         GR.setwsviewport(0, msize * ratio, 0, msize)
         GR.setwswindow(0, ratio, 0, 1)
         viewport_canvas[1] *= ratio
@@ -621,14 +622,14 @@ function gr_get_ticks_size(ticks, i)
 end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
-    dpi = sp.plt[:thickness_scaling] * sp.plt[:dpi] / Plots.DPI
+    dpi = sp.plt[:thickness_scaling]
     if !haskey(ENV, "GKSwstype")
         if isijulia() || (isdefined(Main, :Juno) && Juno.isactive())
             ENV["GKSwstype"] = "svg"
         end
     end
     # Add margin given by the user
-    leftpad   = 2mm  + sp[:left_margin]
+    leftpad   = 4mm  + sp[:left_margin]
     toppad    = 2mm  + sp[:top_margin]
     rightpad  = 4mm  + sp[:right_margin]
     bottompad = 2mm  + sp[:bottom_margin]
@@ -664,7 +665,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     if sp[:yaxis][:guide] != ""
         leftpad += 4mm
     end
-    sp.minpad = Tuple(dpi * pad for pad in (leftpad, toppad, rightpad, bottompad))
+    sp.minpad = Tuple(dpi * [leftpad, toppad, rightpad, bottompad])
 end
 
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
@@ -765,7 +766,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # draw the axes
     gr_set_font(tickfont(xaxis))
-    GR.setlinewidth(sp.plt[:thickness_scaling] * sp.plt[:dpi] / Plots.DPI)
+    GR.setlinewidth(sp.plt[:thickness_scaling])
 
     if is3d(sp)
         zmin, zmax = gr_lims(zaxis, true)

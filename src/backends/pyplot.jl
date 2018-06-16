@@ -402,7 +402,7 @@ end
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{PyPlotBackend})
-    w,h = map(px2inch, plt[:size])
+    w,h = map(px2inch, Tuple(s * plt[:dpi] / Plots.DPI for s in plt[:size]))
 
     # # reuse the current figure?
     fig = if plt[:overwrite_figure]
@@ -955,10 +955,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig[:clear]()
-    dpi = 100 * plt[:thickness_scaling] * plt[:dpi] / DPI
-    fig[:set_size_inches](w/dpi, h/dpi, forward = true)
+    dpi = plt[:thickness_scaling] * plt[:dpi]
+    fig[:set_size_inches](w/DPI/plt[:thickness_scaling], h/DPI/plt[:thickness_scaling], forward = true)
     fig[set_facecolor_sym](py_color(plt[:background_color_outside]))
-    fig[:set_dpi](dpi)
+    fig[:set_dpi](plt[:dpi])
 
     # resize the window
     PyPlot.plt[:get_current_fig_manager]()[:resize](w, h)
@@ -1209,7 +1209,9 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     rightpad  += sp[:right_margin]
     bottompad += sp[:bottom_margin]
 
-    sp.minpad = (leftpad, toppad, rightpad, bottompad)
+    dpi_factor = sp.plt[:thickness_scaling] * Plots.DPI / sp.plt[:dpi]
+
+    sp.minpad = Tuple(dpi_factor .* [leftpad, toppad, rightpad, bottompad])
 end
 
 
@@ -1358,7 +1360,7 @@ for (mime, fmt) in _pyplot_mimeformats
             # figsize = map(px2inch, plt[:size]),
             facecolor = fig[:get_facecolor](),
             edgecolor = "none",
-            dpi = 100 * plt[:thickness_scaling] * plt[:dpi] / DPI
+            dpi = plt[:dpi] * plt[:thickness_scaling]
         )
     end
 end
