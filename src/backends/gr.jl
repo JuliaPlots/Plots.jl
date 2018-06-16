@@ -718,6 +718,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
         if st == :heatmap
             outside_ticks = true
+            for ax in (sp[:xaxis], sp[:yaxis])
+                v = series[ax[:letter]]
+                if diff(collect(extrema(diff(v))))[1] > 1e-6*std(v)
+                    warn("GR: heatmap only supported with equally spaced data.")
+                end
+            end
             x, y = heatmap_edges(series[:x], sp[:xaxis][:scale]), heatmap_edges(series[:y], sp[:yaxis][:scale])
             xy_lims = x[1], x[end], y[1], y[end]
             expand_extrema!(sp[:xaxis], x)
