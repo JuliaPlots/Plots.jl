@@ -324,13 +324,17 @@ end
             function Juno.render(pane::Juno.PlotPane, plt::Plot)
                 # temporarily overwrite size to be Atom.plotsize
                 sz = plt[:size]
+                dpi = plt[:dpi]
                 jsize = Juno.plotsize()
                 jsize[1] == 0 && (jsize[1] = 400)
                 jsize[2] == 0 && (jsize[2] = 500)
 
-                plt[:size] = jsize
+                scale = minimum(jsize[i] / sz[i] for i in 1:2)
+                plt[:size] = (s * scale for s in sz)
+                plt[:dpi] *= scale
                 Juno.render(pane, HTML(stringmime(MIME("text/html"), plt)))
                 plt[:size] = sz
+                plt[:dpi] = dpi
             end
             # special handling for PlotlyJS
             function Juno.render(pane::Juno.PlotPane, plt::Plot{PlotlyJSBackend})

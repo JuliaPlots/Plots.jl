@@ -383,7 +383,7 @@ end
 function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
     w, h = gr_plot_size
-    GR.setlinewidth(max(0, lw / ((w + h) * 0.001)))
+    GR.setlinewidth(_gr_dpi_factor[1] * max(0, lw / ((w + h) * 0.001)))
     gr_set_linecolor(c) #, a)
 end
 
@@ -396,6 +396,7 @@ end
 
 # this stores the conversion from a font pointsize to "percentage of window height" (which is what GR uses)
 const _gr_point_mult = 0.0018 * ones(1)
+const _gr_dpi_factor = ones(1)
 
 # set the font attributes... assumes _gr_point_mult has been populated already
 function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
@@ -550,25 +551,18 @@ function gr_display(plt::Plot, fmt="")
     # compute the viewport_canvas, normalized to the larger dimension
     viewport_canvas = Float64[0,1,0,1]
     w, h = plt[:size]
-    if !haskey(ENV, "PLOTS_TEST")
-        dpi_factor = plt[:dpi] / DPI
-        if fmt == "png"
-            dpi_factor *= 6
-        end
-    else
-        dpi_factor = 1
-    end
+    dpi_factor = plt[:dpi] / DPI * plt[:thickness_scaling]
     gr_plot_size[:] = [w, h]
     if w > h
         ratio = float(h) / w
-        msize = display_width_ratio * w * dpi_factor
+        msize = display_width_ratio * w
         GR.setwsviewport(0, msize, 0, msize * ratio)
         GR.setwswindow(0, 1, 0, ratio)
         viewport_canvas[3] *= ratio
         viewport_canvas[4] *= ratio
     else
         ratio = float(w) / h
-        msize = display_height_ratio * h * dpi_factor
+        msize = display_height_ratio * h
         GR.setwsviewport(0, msize * ratio, 0, msize)
         GR.setwswindow(0, ratio, 0, 1)
         viewport_canvas[1] *= ratio
@@ -580,7 +574,8 @@ function gr_display(plt::Plot, fmt="")
 
     # update point mult
     px_per_pt = px / pt
-    _gr_point_mult[1] = 1.5 * px_per_pt / max(h,w)
+    _gr_point_mult[1] = 1.5 * dpi_factor * px_per_pt / max(h,w)
+    _gr_dpi_factor[1] = dpi_factor
 
     # subplots:
     for sp in plt.subplots
@@ -638,13 +633,13 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     bottompad = 2mm  + sp[:bottom_margin]
     # Add margin for title
     if sp[:title] != ""
-        toppad += 5mm
+        toppad += 5mm * _gr_dpi_factor[1]
     end
     # Add margin for x and y ticks
     xticks, yticks = axis_drawing_info(sp)[1:2]
     if !(xticks in (nothing, false, :none))
         flip, mirror = gr_set_xticks_font(sp)
-        l = gr_get_ticks_size(xticks, 2)
+        l = _gr_dpi_factor[1] * gr_get_ticks_size(xticks, 2)
         if mirror
             toppad += 1mm + gr_plot_size[2] * l * px
         else
@@ -653,7 +648,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     if !(yticks in (nothing, false, :none))
         flip, mirror = gr_set_yticks_font(sp)
-        l = gr_get_ticks_size(yticks, 1)
+        l = _gr_dpi_factor[1] * gr_get_ticks_size(yticks, 1)
         if mirror
             rightpad += 1mm + gr_plot_size[1] * l * px
         else
@@ -662,11 +657,11 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     # Add margin for x label
     if sp[:xaxis][:guide] != ""
-        bottompad += 4mm
+        bottompad += 4mm * _gr_dpi_factor[1]
     end
     # Add margin for y label
     if sp[:yaxis][:guide] != ""
-        leftpad += 4mm
+        leftpad += 4mm * _gr_dpi_factor[1]
     end
     sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
@@ -769,7 +764,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # draw the axes
     gr_set_font(tickfont(xaxis))
-    GR.setlinewidth(1)
+    GR.setlinewidth(_gr_dpi_factor[1])
 
     if is3d(sp)
         zmin, zmax = gr_lims(zaxis, true)

@@ -395,7 +395,7 @@ function py_bbox_title(ax)
 end
 
 function py_dpi_scale(plt::Plot{PyPlotBackend}, ptsz)
-    ptsz * plt[:dpi] / DPI
+    ptsz * plt[:thickness_scaling]
 end
 
 # ---------------------------------------------------------------------------
@@ -955,7 +955,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig[:clear]()
-    dpi = plt[:dpi]
+    dpi = 100 * plt[:dpi] / DPI
     fig[:set_size_inches](w/dpi, h/dpi, forward = true)
     fig[set_facecolor_sym](py_color(plt[:background_color_outside]))
     fig[:set_dpi](dpi)
@@ -1358,7 +1358,7 @@ for (mime, fmt) in _pyplot_mimeformats
             # figsize = map(px2inch, plt[:size]),
             facecolor = fig[:get_facecolor](),
             edgecolor = "none",
-            dpi = plt[:dpi]
+            dpi = 100 * plt[:dpi] / DPI
         )
     end
 end
