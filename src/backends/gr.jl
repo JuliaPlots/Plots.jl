@@ -383,7 +383,7 @@ end
 function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
     w, h = gr_plot_size
-    GR.setlinewidth(_gr_dpi_factor[1] * max(0, lw / ((w + h) * 0.001)))
+    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw / ((w + h) * 0.001)))
     gr_set_linecolor(c) #, a)
 end
 
@@ -396,7 +396,7 @@ end
 
 # this stores the conversion from a font pointsize to "percentage of window height" (which is what GR uses)
 const _gr_point_mult = 0.0018 * ones(1)
-const _gr_dpi_factor = ones(1)
+const _gr_thickness_scaling = ones(1)
 
 # set the font attributes... assumes _gr_point_mult has been populated already
 function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
@@ -543,7 +543,7 @@ end
 function gr_display(plt::Plot, fmt="")
     GR.clearws()
 
-    _gr_dpi_factor[1] = plt[:thickness_scaling]
+    _gr_thickness_scaling[1] = plt[:thickness_scaling]
     dpi_factor = plt[:dpi] ./ Plots.DPI
 
     # collect some monitor/display sizes in meters and pixels
@@ -576,7 +576,7 @@ function gr_display(plt::Plot, fmt="")
 
     # update point mult
     px_per_pt = px / pt
-    _gr_point_mult[1] = 1.5 * _gr_dpi_factor[1] * px_per_pt / max(h,w)
+    _gr_point_mult[1] = 1.5 * _gr_thickness_scaling[1] * px_per_pt / max(h,w)
 
     # subplots:
     for sp in plt.subplots
