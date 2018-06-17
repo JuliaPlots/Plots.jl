@@ -14,7 +14,6 @@ backend_name() = CURRENT_BACKEND.sym
 _backend_instance(sym::Symbol) = haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
 
 # kludge while waiting for Pkg alternatives
-if VERSION >= v"0.7-"
 function _findmod(f::Symbol)
     for (u,v) in Base.loaded_modules
         (Symbol(v) == f) && return u
@@ -25,11 +24,6 @@ function topimport(modname)
     @eval Base.__toplevel__  import $modname
     u = _findmod(modname)
     @eval $modname = Base.loaded_modules[$u]
-end
-else
-    function myimport(modname)
-        @eval import $modname
-    end
 end
 # end kludge
 

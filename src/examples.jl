@@ -413,7 +413,7 @@ attribute. The default framestyle is `:axes`.
     scatter(fill(randn(10), 6), fill(randn(10), 6),
         framestyle = [:box :semi :origin :zerolines :grid :none],
         title = [":box" ":semi" ":origin" ":zerolines" ":grid" ":none"],
-        color = RowVector(1:6), layout = 6, label = "", markerstrokewidth = 0,
+        color = Transpose(1:6), layout = 6, label = "", markerstrokewidth = 0,
         ticks = -2:2)
     end)]
 ),

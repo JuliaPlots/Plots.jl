@@ -1,5 +1,4 @@
 julia 0.7
-Compat 0.69
 RecipesBase 0.2.3
 PlotUtils 0.4.1
 PlotThemes 0.1.3
