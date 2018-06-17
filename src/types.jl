@@ -6,7 +6,7 @@ const AVec = AbstractVector
 const AMat = AbstractMatrix
 const KW = Dict{Symbol,Any}
 
-struct PlotsDisplay <: Display end
+struct PlotsDisplay <: AbstractDisplay end
 
 # -----------------------------------------------------------
 

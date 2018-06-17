@@ -8,7 +8,9 @@ mutable struct PlotExample
 end
 
 # the _examples we'll run for each
-const _examples = PlotExample[
+# FIXME: suppress explicit typing of array until parser is fixed
+#const _examples = PlotExample[
+const _examples = [
 
 PlotExample("Lines",
     "A simple line plot of the columns.",
@@ -157,7 +159,7 @@ PlotExample("Marker types",
         markers = reshape(markers, 1, length(markers))
         n = length(markers)
         x = linspace(0,10,n+2)[2:end-1]
-        y = repmat(reshape(reverse(x),1,:), n, 1)
+        y = repeat(reshape(reverse(x),1,:), n, 1)
         scatter(x, y, m=(8,:auto), lab=map(string,markers), bg=:linen, xlim=(0,10), ylim=(0,10))
     end)]
 ),
@@ -269,8 +271,8 @@ unfilled contour from a matrix.
         x = 1:0.5:20
         y = 1:0.5:10
         f(x,y) = (3x+y^2)*abs(sin(x)+cos(y))
-        X = repmat(reshape(x,1,:), length(y), 1)
-        Y = repmat(y, 1, length(x))
+        X = repeat(reshape(x,1,:), length(y), 1)
+        Y = repeat(y, 1, length(x))
         Z = map(f, X, Y)
         p1 = contour(x, y, f, fill=true)
         p2 = contour(x, y, Z)

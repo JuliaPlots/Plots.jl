@@ -46,9 +46,8 @@ When you pass in matrices, it splits by columns. To see the list of available at
 function, where `attr` is the symbol `:Series:`, `:Subplot:`, `:Plot` or `:Axis`. Pass any attribute to `plotattr`
 as a String to look up its docstring; e.g. `plotattr("seriestype")`.
 """
-
-# this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
+# this creates a new plot with args/kw and sets it to be the current plot
     d = KW(kw)
     preprocessArgs!(d)
 
@@ -193,7 +192,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
     still_to_process = kw_list
     kw_list = KW[]
     while !isempty(still_to_process)
-        next_kw = shift!(still_to_process)
+        next_kw = popfirst!(still_to_process)
         _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
     end
 

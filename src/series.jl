@@ -14,7 +14,7 @@ all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surfac
 convertToAnyVector(x, d::KW) = error("No user recipe defined for $(typeof(x))")
 
 # missing
-convertToAnyVector(v::Void, d::KW) = Any[nothing], nothing
+convertToAnyVector(v::Nothing, d::KW) = Any[nothing], nothing
 
 # fixed number of blank series
 convertToAnyVector(n::Integer, d::KW) = Any[zeros(0) for i in 1:n], nothing
@@ -46,7 +46,7 @@ convertToAnyVector(v::Volume, d::KW) = Any[v], nothing
 # convertToAnyVector(v::AVec{OHLC}, d::KW) = Any[v], nothing
 
 # # dates
-convertToAnyVector{D<:Union{Date,DateTime}}(dts::AVec{D}, d::KW) = Any[dts], nothing
+convertToAnyVector(dts::AVec{D}, d::KW) where {D<:Union{Date,DateTime}} = Any[dts], nothing
 
 # list of things (maybe other vectors, functions, or something else)
 function convertToAnyVector(v::AVec, d::KW)
@@ -72,19 +72,19 @@ end
 # TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array
 #       result in that array being shared.  push!, etc will add too many items to that array
 
-compute_x(x::Void, y::Void, z)      = 1:size(z,1)
-compute_x(x::Void, y, z)            = 1:size(y,1)
+compute_x(x::Nothing, y::Nothing, z)      = 1:size(z,1)
+compute_x(x::Nothing, y, z)            = 1:size(y,1)
 compute_x(x::Function, y, z)        = map(x, y)
 compute_x(x, y, z)                  = copy(x)
 
-# compute_y(x::Void, y::Function, z)  = error()
-compute_y(x::Void, y::Void, z)      = 1:size(z,2)
+# compute_y(x::Nothing, y::Function, z)  = error()
+compute_y(x::Nothing, y::Nothing, z)      = 1:size(z,2)
 compute_y(x, y::Function, z)        = map(y, x)
 compute_y(x, y, z)                  = copy(y)
 
 compute_z(x, y, z::Function)        = map(z, x, y)
 compute_z(x, y, z::AbstractMatrix)  = Surface(z)
-compute_z(x, y, z::Void)            = nothing
+compute_z(x, y, z::Nothing)            = nothing
 compute_z(x, y, z)                  = copy(z)
 
 nobigs(v::AVec{BigFloat}) = map(Float64, v)
@@ -99,9 +99,9 @@ nobigs(v) = v
 end
 
 # not allowed
-compute_xyz(x::Void, y::FuncOrFuncs{F}, z) where {F<:Function}       = error("If you want to plot the function `$y`, you need to define the x values!")
-compute_xyz(x::Void, y::Void, z::FuncOrFuncs{F}) where {F<:Function} = error("If you want to plot the function `$z`, you need to define x and y values!")
-compute_xyz(x::Void, y::Void, z::Void)        = error("x/y/z are all nothing!")
+compute_xyz(x::Nothing, y::FuncOrFuncs{F}, z) where {F<:Function}       = error("If you want to plot the function `$y`, you need to define the x values!")
+compute_xyz(x::Nothing, y::Nothing, z::FuncOrFuncs{F}) where {F<:Function} = error("If you want to plot the function `$z`, you need to define x and y values!")
+compute_xyz(x::Nothing, y::Nothing, z::Nothing)        = error("x/y/z are all nothing!")
 
 # --------------------------------------------------------------------
 

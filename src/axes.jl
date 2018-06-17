@@ -310,7 +310,7 @@ function expand_extrema!(axis::Axis, v::Number)
 end
 
 # these shouldn't impact the extrema
-expand_extrema!(axis::Axis, ::Void) = axis[:extrema]
+expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]
 expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 
