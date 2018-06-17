@@ -42,7 +42,7 @@ end
 
 function _initialize_backend(::UnicodePlotsBackend; kw...)
     @eval begin
-        import UnicodePlots
+        topimport(:UnicodePlots)
         export UnicodePlots
     end
 end

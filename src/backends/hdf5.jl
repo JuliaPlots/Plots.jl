@@ -142,7 +142,7 @@ end
 
 function _initialize_backend(::HDF5Backend)
     @eval begin
-        import HDF5
+        topimport(:HDF5)
         export HDF5
         if length(HDF5PLOT_MAP_TELEM2STR) < 1
             #Possible element types of high-level data types:

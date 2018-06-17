@@ -162,7 +162,7 @@ end
 
 function _initialize_backend(::InspectDRBackend; kw...)
     @eval begin
-        import InspectDR
+        topimport(:InspectDR)
         export InspectDR
 
         #Glyph used when plotting "Shape"s:

@@ -77,8 +77,12 @@ function _initialize_backend(::PyPlotBackend)
         # problem: https://github.com/tbreloff/Plots.jl/issues/308
         # solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
         otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
-        import PyPlot, PyCall
-        import LaTeXStrings: latexstring
+
+        topimport(:PyPlot)
+        topimport(:PyCall)
+        topimport(:LaTeXStrings)
+        latexstring = LaTeXStrings.latexstring
+
         append!(Base.Multimedia.displays, otherdisplays)
 
         export PyPlot

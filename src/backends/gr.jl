@@ -67,7 +67,7 @@ end
 
 function _initialize_backend(::GRBackend; kw...)
     @eval begin
-        import GR
+        topimport(:GR)
         export GR
     end
 end
