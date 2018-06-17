@@ -9,6 +9,8 @@ function png(plt::Plot, fn::AbstractString)
   close(io)
 end
 png(fn::AbstractString) = png(current(), fn)
+save_png(plt::Plot, fn::AbstractString) = png(plt::Plot, fn::AbstractString)
+save_png(fn::AbstractString) = png(current(), fn)
 
 function svg(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "svg")
@@ -17,6 +19,8 @@ function svg(plt::Plot, fn::AbstractString)
   close(io)
 end
 svg(fn::AbstractString) = svg(current(), fn)
+save_svg(plt::Plot, fn::AbstractString) = svg(plt::Plot, fn::AbstractString)
+save_svg(fn::AbstractString) = svg(current(), fn)
 
 
 function pdf(plt::Plot, fn::AbstractString)
@@ -26,6 +30,8 @@ function pdf(plt::Plot, fn::AbstractString)
   close(io)
 end
 pdf(fn::AbstractString) = pdf(current(), fn)
+save_pdf(plt::Plot, fn::AbstractString) = pdf(plt::Plot, fn::AbstractString)
+save_pdf(fn::AbstractString) = pdf(current(), fn)
 
 
 function ps(plt::Plot, fn::AbstractString)
@@ -35,6 +41,8 @@ function ps(plt::Plot, fn::AbstractString)
   close(io)
 end
 ps(fn::AbstractString) = ps(current(), fn)
+save_ps(plt::Plot, fn::AbstractString) = ps(plt::Plot, fn::AbstractString)
+save_ps(fn::AbstractString) = ps(current(), fn)
 
 function eps(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "eps")
@@ -43,6 +51,8 @@ function eps(plt::Plot, fn::AbstractString)
   close(io)
 end
 eps(fn::AbstractString) = eps(current(), fn)
+save_eps(plt::Plot, fn::AbstractString) = eps(plt::Plot, fn::AbstractString)
+save_eps(fn::AbstractString) = eps(current(), fn)
 
 function tex(plt::Plot, fn::AbstractString)
   fn = addExtension(fn, "tex")
