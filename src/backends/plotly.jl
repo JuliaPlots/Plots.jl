@@ -332,7 +332,7 @@ function plotly_layout(plt::Plot)
 
     for sp in plt.subplots
         spidx = multiple_subplots ? sp[:subplot_index] : ""
-        x_idx, y_idx = multiple_subplots ? plotly_link_indicies(plt, sp) : ("", "") 
+        x_idx, y_idx = multiple_subplots ? plotly_link_indicies(plt, sp) : ("", "")
         # add an annotation for the title... positioned horizontally relative to plotarea,
         # but vertically just below the top of the subplot bounding box
         if sp[:title] != ""
@@ -805,7 +805,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
                 series[:fillrange] = (f1, f2)
             end
             if isa(series[:fillrange], AbstractVector)
-                d_out_fillrange[:y] = series[:fillrange]
+                d_out_fillrange[:y] = series[:fillrange][rng]
                 delete!(d_out_fillrange, :fill)
                 delete!(d_out_fillrange, :fillcolor)
             else
