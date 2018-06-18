@@ -837,9 +837,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             n = length(dim1)
             args = if typeof(fillrange) <: Union{Real, AVec}
-                dim1, expand_data(fillrange, n), dim2
+                dim1, _cycle(fillrange, rng), dim2
             elseif is_2tuple(fillrange)
-                dim1, expand_data(fillrange[1], n), expand_data(fillrange[2], n)
+                dim1, _cycle(fillrange[1], rng), _cycle(fillrange[2], rng)
             end
 
             handle = ax[f](args..., trues(n), false, py_fillstepstyle(st);
