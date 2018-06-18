@@ -1270,8 +1270,8 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         linewidth = py_dpi_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(:path, get_linestyle(series)),
                         marker = py_marker(series[:markershape]),
-                        markeredgecolor = py_markerstrokecolor(series),
-                        markerfacecolor = series[:marker_z] == nothing ? py_markercolor(series) : py_color(series[:markercolor][0.5])
+                        markeredgecolor = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
+                        markerfacecolor = series[:marker_z] == nothing ? py_color(get_markercolor(series), get_markeralpha(series)) : py_color(series[:markercolor][0.5])
                     )
                 else
                     series[:serieshandle][1]
