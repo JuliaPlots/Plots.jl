@@ -1095,6 +1095,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st == :heatmap
             xmin, xmax, ymin, ymax = xy_lims
             zmin, zmax = clims
+            m, n = length(x), length(y)
+            xinds = sort(1:m, rev = xaxis[:flip])
+            yinds = sort(1:n, rev = yaxis[:flip])
+            z = reshape(reshape(z, m, n)[xinds, yinds], m*n)
             GR.setspace(zmin, zmax, 0, 90)
             grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
             colors = [plot_color(grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)], series[:fillalpha]) for zi=z]
@@ -1198,7 +1202,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :image
             z = transpose_z(series, series[:z].surf, true)'
-            w, h = size(z)
+            w, h = length(x), length(y)
+            xinds = sort(1:w, rev = xaxis[:flip])
+            yinds = sort(1:h, rev = yaxis[:flip])
+            z = z[xinds, yinds]
             xmin, xmax = ignorenan_extrema(series[:x]); ymin, ymax = ignorenan_extrema(series[:y])
             if eltype(z) <: Colors.AbstractGray
                 grey = round.(UInt8, float(z) * 255)
