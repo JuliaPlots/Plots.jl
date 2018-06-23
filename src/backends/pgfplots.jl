@@ -150,7 +150,7 @@ function pgf_colormap(grad::ColorGradient)
     end,", ")
 end
 
-pgf_thickness_scaling(plt::Plot) = plt[:thickness_scaling] * plt[:dpi] / DPI
+pgf_thickness_scaling(plt::Plot) = plt[:thickness_scaling]
 pgf_thickness_scaling(sp::Subplot) = pgf_thickness_scaling(sp.plt)
 pgf_thickness_scaling(series) = pgf_thickness_scaling(series[:subplot])
 
