@@ -201,17 +201,18 @@ function pgf_marker(d, i = 1)
     }"""
 end
 
-function pgf_add_annotation!(o,x,y,val)
+function pgf_add_annotation!(o, x, y, val, thickness_scaling = 1)
     # Construct the style string.
     # Currently supports color and orientation
     cstr,a = pgf_color(val.font.color)
     push!(o, PGFPlots.Plots.Node(val.str, # Annotation Text
-                                 x, y,
-                                 style="""
-                                 $(get(_pgf_annotation_halign,val.font.halign,"")),
-                                 color=$cstr, draw opacity=$(convert(Float16,a)),
-                                 rotate=$(val.font.rotation)
-                                 """))
+        x, y,
+        style="""
+        $(get(_pgf_annotation_halign,val.font.halign,"")),
+        color=$cstr, draw opacity=$(convert(Float16,a)),
+        rotate=$(val.font.rotation),
+        font=$(pgf_font(val.font.pointsize, thickness_scaling))
+        """))
 end
 
 # --------------------------------------------------------------------------------------
@@ -578,13 +579,13 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             # add series annotations
             anns = series[:series_annotations]
             for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
-                pgf_add_annotation!(o, xi, yi, PlotText(str, fnt))
+                pgf_add_annotation!(o, xi, yi, PlotText(str, fnt), pgf_thickness_scaling(series))
             end
         end
 
         # add the annotations
         for ann in sp[:annotations]
-            pgf_add_annotation!(o, locate_annotation(sp, ann...)...)
+            pgf_add_annotation!(o, locate_annotation(sp, ann...)..., pgf_thickness_scaling(sp))
         end
 
 
