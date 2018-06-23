@@ -4,10 +4,11 @@ os:
   - linux
   # - osx
 julia:
-  - 0.7
-matrix:
-  allow_failures:
-    - julia: nightly
+#  - 0.7
+  - nightly
+#matrix:
+#  allow_failures:
+#    - julia: nightly
 
 # # before install:
 # #   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
@@ -40,11 +41,11 @@ before_install:
 
 
 notifications:
-  email: true
+  email: false
 # uncomment the following lines to override the default test script
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")'
+ - julia -e 'import Pkg; Pkg.develop(pwd()); Pkg.build("Plots")'
  - julia test/travis_commands.jl
  # - julia -e 'Pkg.clone("ImageMagick"); Pkg.build("ImageMagick")'
  # - julia -e 'Pkg.clone("GR"); Pkg.build("GR")'
