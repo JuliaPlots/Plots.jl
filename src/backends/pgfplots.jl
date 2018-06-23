@@ -149,6 +149,10 @@ function pgf_colormap(grad::ColorGradient)
     end,", ")
 end
 
+pgf_thickness_scaling(plt::Plot) = plt[:thickness_scaling] * plt[:dpi] / DPI
+pgf_thickness_scaling(sp::Subplot) = pgf_thickness_scaling(sp.plt)
+pgf_thickness_scaling(series) = pgf_thickness_scaling(series[:subplot])
+
 function pgf_fillstyle(d, i = 1)
     cstr,a = pgf_color(get_fillcolor(d, i))
     fa = get_fillalpha(d, i)
@@ -167,7 +171,7 @@ function pgf_linestyle(d, i = 1)
     """
     color = $cstr,
     draw opacity=$a,
-    line width=$(get_linewidth(d, i)),
+    line width=$(pgf_thickness_scaling(d) * get_linewidth(d, i)),
     $(get(_pgfplots_linestyles, get_linestyle(d, i), "solid"))"""
 end
 
@@ -177,11 +181,11 @@ function pgf_marker(d, i = 1)
     cstr_stroke, a_stroke = pgf_color(plot_color(get_markerstrokecolor(d, i), get_markerstrokealpha(d, i)))
     """
     mark = $(get(_pgfplots_markers, shape, "*")),
-    mark size = $(0.5 * _cycle(d[:markersize], i)),
+    mark size = $(pgf_thickness_scaling(d) * 0.5 * _cycle(d[:markersize], i)),
     mark options = {
         color = $cstr_stroke, draw opacity = $a_stroke,
         fill = $cstr, fill opacity = $a,
-        line width = $(_cycle(d[:markerstrokewidth], i)),
+        line width = $(pgf_thickness_scaling(d) * _cycle(d[:markerstrokewidth], i)),
         rotate = $(shape == :dtriangle ? 180 : 0),
         $(get(_pgfplots_linestyles, _cycle(d[:markerstrokestyle], i), "solid"))
     }"""
