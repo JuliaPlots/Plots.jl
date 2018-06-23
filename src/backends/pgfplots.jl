@@ -162,17 +162,21 @@ function pgf_fillstyle(d, i = 1)
     "fill = $cstr, fill opacity=$a"
 end
 
-function pgf_linestyle(d, i = 1)
-    cstr,a = pgf_color(get_linecolor(d, i))
-    la = get_linealpha(d, i)
-    if la != nothing
-        a = la
-    end
+function pgf_linestyle(linewidth::Real, color, alpha = 1, linestyle = "solid")
+    cstr, a = pgf_color(plot_color(color, alpha))
     """
     color = $cstr,
-    draw opacity=$a,
-    line width=$(pgf_thickness_scaling(d) * get_linewidth(d, i)),
-    $(get(_pgfplots_linestyles, get_linestyle(d, i), "solid"))"""
+    draw opacity = $a,
+    line width = $linewidth,
+    $(get(_pgfplots_linestyles, linestyle, "solid"))"""
+end
+
+function pgf_linestyle(d, i = 1)
+    lw = pgf_thickness_scaling(d) * get_linewidth(d, i)
+    lc = get_linecolor(d, i)
+    la = get_linealpha(d, i)
+    ls = get_linestyle(d, i)
+    return pgf_linestyle(lw, lc, la, ls)
 end
 
 function pgf_marker(d, i = 1)
@@ -431,6 +435,7 @@ function pgf_axis(sp::Subplot, letter)
             push!(style, string(letter, "ticklabels = {}"))
         end
         push!(style, string(letter, "tick align = ", (axis[:tick_direction] == :out ? "outside" : "inside")))
+        push!(style, string(letter, " grid style = {", pgf_linestyle(pgf_thickness_scaling(sp) * axis[:gridlinewidth], axis[:foreground_color_grid], axis[:gridalpha], axis[:gridstyle]), "}"))
     end
 
     # framestyle
@@ -443,7 +448,7 @@ function pgf_axis(sp::Subplot, letter)
     if framestyle == :zerolines
         push!(style, string("extra ", letter, " ticks = 0"))
         push!(style, string("extra ", letter, " tick labels = "))
-        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {color = black, draw opacity=1.0, line width=0.5), solid}}"))
+        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_axis], 1.0), "}}"))
     end
 
     if !axis[:showaxis]
@@ -451,6 +456,8 @@ function pgf_axis(sp::Subplot, letter)
     end
     if !axis[:showaxis] || framestyle in (:zerolines, :grid, :none)
         push!(style, string(letter, " axis line style = {draw opacity = 0}"))
+    else
+        push!(style, string(letter, " axis line style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_axis], 1.0), "}"))
     end
 
     # return the style list and KW args
@@ -505,6 +512,8 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         if haskey(_pgfplots_legend_pos, legpos)
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
+        cstr, a = pgf_color(plot_color(sp[:background_color_legend]))
+        push!(style, string("legend style = {", pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid"), ",", "fill = $cstr", "}"))
 
         if any(s[:seriestype] == :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"
