@@ -8,11 +8,12 @@ end
 
 const _pgfplots_attr = merge_with_base_supported([
     :annotations,
-    # :background_color_legend,
+    :background_color_legend,
     :background_color_inside,
     # :background_color_outside,
-    # :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
-    #     :foreground_color_text, :foreground_color_border,
+    # :foreground_color_legend,
+    :foreground_color_grid, :foreground_color_axis,
+    :foreground_color_text, :foreground_color_border,
     :label,
     :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
@@ -162,8 +163,8 @@ function pgf_fillstyle(d, i = 1)
     "fill = $cstr, fill opacity=$a"
 end
 
-function pgf_linestyle(linewidth::Real, color, alpha = 1, linestyle = "solid")
-    cstr, a = pgf_color(plot_color(color, alpha))
+function pgf_linestyle(linewidth::Real, color, α = 1, linestyle = "solid")
+    cstr, a = pgf_color(plot_color(color, α))
     """
     color = $cstr,
     draw opacity = $a,
@@ -177,6 +178,11 @@ function pgf_linestyle(d, i = 1)
     la = get_linealpha(d, i)
     ls = get_linestyle(d, i)
     return pgf_linestyle(lw, lc, la, ls)
+end
+
+function pgf_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
+    fs = fontsize * thickness_scaling
+    return string("{\\fontsize{", fs, " pt}{", 1.3fs, " pt}", font, "}")
 end
 
 function pgf_marker(d, i = 1)
@@ -381,6 +387,10 @@ function pgf_axis(sp::Subplot, letter)
     # Add ticklabel rotations
     push!(style, "$(letter)ticklabel style={rotate = $(axis[:rotation])}")
 
+    # Add label font
+    cstr, α = pgf_color(plot_color(axis[:guidefontcolor]))
+    push!(style, string(letter, "label style = {font = ", pgf_font(axis[:guidefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, "}"))
+
     # flip/reverse?
     axis[:flip] && push!(style, "$letter dir=reverse")
 
@@ -435,6 +445,8 @@ function pgf_axis(sp::Subplot, letter)
             push!(style, string(letter, "ticklabels = {}"))
         end
         push!(style, string(letter, "tick align = ", (axis[:tick_direction] == :out ? "outside" : "inside")))
+        cstr, α = pgf_color(plot_color(axis[:tickfontcolor]))
+        push!(style, string(letter, "ticklabel style = {font = ", pgf_font(axis[:tickfontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, "}"))
         push!(style, string(letter, " grid style = {", pgf_linestyle(pgf_thickness_scaling(sp) * axis[:gridlinewidth], axis[:foreground_color_grid], axis[:gridalpha], axis[:gridstyle]), "}"))
     end
 
@@ -502,6 +514,8 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         if sp[:title] != ""
             kw[:title] = "$(sp[:title])"
+            cstr, α = pgf_color(plot_color(sp[:titlefontcolor]))
+            push!(style, string("title style = {font = ", pgf_font(sp[:titlefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, "}"))
         end
 
         if sp[:aspect_ratio] in (1, :equal)
@@ -513,7 +527,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
         cstr, a = pgf_color(plot_color(sp[:background_color_legend]))
-        push!(style, string("legend style = {", pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid"), ",", "fill = $cstr", "}"))
+        push!(style, string("legend style = {", pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid"), ",", "fill = $cstr,", "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)), "}"))
 
         if any(s[:seriestype] == :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"
