@@ -384,12 +384,9 @@ function pgf_axis(sp::Subplot, letter)
     # axis guide
     kw[Symbol(letter,:label)] = axis[:guide]
 
-    # Add ticklabel rotations
-    push!(style, "$(letter)ticklabel style={rotate = $(axis[:rotation])}")
-
     # Add label font
     cstr, α = pgf_color(plot_color(axis[:guidefontcolor]))
-    push!(style, string(letter, "label style = {font = ", pgf_font(axis[:guidefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, "}"))
+    push!(style, string(letter, "label style = {font = ", pgf_font(axis[:guidefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, ", rotate = ", axis[:guidefontrotation], "}"))
 
     # flip/reverse?
     axis[:flip] && push!(style, "$letter dir=reverse")
@@ -446,7 +443,7 @@ function pgf_axis(sp::Subplot, letter)
         end
         push!(style, string(letter, "tick align = ", (axis[:tick_direction] == :out ? "outside" : "inside")))
         cstr, α = pgf_color(plot_color(axis[:tickfontcolor]))
-        push!(style, string(letter, "ticklabel style = {font = ", pgf_font(axis[:tickfontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, "}"))
+        push!(style, string(letter, "ticklabel style = {font = ", pgf_font(axis[:tickfontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, ", rotate = ", axis[:tickfontrotation], "}"))
         push!(style, string(letter, " grid style = {", pgf_linestyle(pgf_thickness_scaling(sp) * axis[:gridlinewidth], axis[:foreground_color_grid], axis[:gridalpha], axis[:gridstyle]), "}"))
     end
 
@@ -515,7 +512,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         if sp[:title] != ""
             kw[:title] = "$(sp[:title])"
             cstr, α = pgf_color(plot_color(sp[:titlefontcolor]))
-            push!(style, string("title style = {font = ", pgf_font(sp[:titlefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, "}"))
+            push!(style, string("title style = {font = ", pgf_font(sp[:titlefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, ", rotate = ", sp[:titlefontrotation], "}"))
         end
 
         if sp[:aspect_ratio] in (1, :equal)
