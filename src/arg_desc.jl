@@ -65,6 +65,7 @@ const _arg_desc = KW(
 :html_output_format       => "Symbol.  When writing html output, what is the format?  `:png` and `:svg` are currently supported.",
 :inset_subplots 		  => "nothing or vector of 2-tuple (parent,bbox).  optionally pass a vector of (parent,bbox) tuples which are the parent layout and the relative bounding box of inset subplots",
 :dpi 					  => "Number.  Dots Per Inch of output figures",
+:thickness_scaling        => "Number. Scale for the thickness of all line elements like lines, borders, axes, grid lines, ... defaults to 1.",
 :display_type 			  => "Symbol (`:auto`, `:gui`, or `:inline`).  When supported, `display` will either open a GUI window or plot inline.",
 :extra_kwargs 			  => "KW (Dict{Symbol,Any}).  Pass a map of extra keyword args which may be specific to a backend.",
 :fontfamily               => "String or Symbol.  Default font family for title, legend entries, tick labels and guides",
