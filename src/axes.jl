@@ -418,21 +418,23 @@ end
 # -------------------------------------------------------------------------
 
 # push the limits out slightly
-function widen(lmin, lmax)
-    span = lmax - lmin
+function widen(lmin, lmax, scale = :identity)
+    f, invf = scalefunc(scale), invscalefunc(scale)
+    span = f(lmax) - f(lmin)
     # eps = NaNMath.max(1e-16, min(1e-2span, 1e-10))
     eps = NaNMath.max(1e-16, 0.03span)
-    lmin-eps, lmax+eps
+    invf(f(lmin)-eps), invf(f(lmax)+eps)
 end
 
-# figure out if widening is a good idea.  if there's a scale set it's too tricky,
-# so lazy out and don't widen
+# figure out if widening is a good idea.
+const _widen_seriestypes = (:line, :path, :steppre, :steppost, :sticks, :scatter, :barbins, :barhist, :histogram, :scatterbins, :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :bar, :shape, :path3d, :scatter3d)
+
 function default_should_widen(axis::Axis)
     should_widen = false
-    if axis[:scale] == :identity && !is_2tuple(axis[:lims])
+    if !is_2tuple(axis[:lims])
         for sp in axis.sps
             for series in series_list(sp)
-                if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
+                if series.d[:seriestype] in _widen_seriestypes
                     should_widen = true
                 end
             end
@@ -476,8 +478,8 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
         else
             amin, amax
         end
-    elseif should_widen
-        widen(amin, amax)
+    elseif should_widen && axis[:widen]
+        widen(amin, amax, axis[:scale])
     elseif lims == :round
         round_limits(amin,amax)
     else
