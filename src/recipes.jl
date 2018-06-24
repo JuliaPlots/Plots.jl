@@ -413,6 +413,7 @@ end
     z := nothing
     seriestype := :shape
     label := ""
+    widen --> false
     ()
 end
 @deps plots_heatmap shape
