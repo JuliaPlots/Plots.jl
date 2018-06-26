@@ -789,7 +789,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
         end
 
         plotly_polar!(d_out, series)
-        plotly_hover!(d_out, series[:hover])
+        plotly_hover!(d_out, _cycle(series[:hover], rng))
 
         if hasfillrange
             # if hasfillrange is true, return two dictionaries (one for original
@@ -840,6 +840,7 @@ function plotly_colorbar_hack(series::Series, d_base::KW, sym::Symbol)
     cmin, cmax = get_clims(series[:subplot])
     d_out[:showlegend] = false
     d_out[:type] = is3d(series) ? :scatter3d : :scatter
+    d_out[:hoverinfo] = :none
     d_out[:mode] = :markers
     d_out[:x], d_out[:y] = [series[:x][1]], [series[:y][1]]
     if is3d(series)
@@ -848,6 +849,7 @@ function plotly_colorbar_hack(series::Series, d_base::KW, sym::Symbol)
     # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
     d_out[:marker] = KW(
         :size => 0,
+        :opacity => 0,
         :color => [0.5],
         :cmin => cmin,
         :cmax => cmax,
