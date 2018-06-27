@@ -122,7 +122,7 @@ end
 
 @require WebIO begin
     function WebIO.render(plt::Plot{PlotlyJSBackend})
-        _update_plot_object(plt)
+        prepare_output(plt)
         WebIO.render(plt.o)
     end
 end
