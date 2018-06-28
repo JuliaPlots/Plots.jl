@@ -278,7 +278,7 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
 
         # flip
         if axis[:flip]
-            ax[:autorange] = "reversed"
+            ax[:range] = reverse(ax[:range])
         end
 
         # ticks
