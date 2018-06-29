@@ -1,6 +1,6 @@
 julia 0.7
 RecipesBase 0.2.3
-PlotUtils 0.4.1
+PlotUtils 0.5
 PlotThemes 0.1.3
 Reexport
 StaticArrays 0.5
