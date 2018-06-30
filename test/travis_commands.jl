@@ -9,7 +9,7 @@ Pkg.build("ImageMagick")
 
 Pkg.clone("StatPlots")
 
-Pkg.develop("PlotUtils")
+Pkg.add("PlotUtils")
 Pkg.develop("RecipesBase")
 
 # Pkg.clone("Blink")

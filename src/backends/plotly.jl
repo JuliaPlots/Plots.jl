@@ -450,7 +450,7 @@ function plotly_colorscale(c::AbstractVector{<:RGBA}, α)
     if length(c) == 1
         return [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
     else
-        vals = linspace(0.0, 1.0, length(c))
+        vals = range(0.0, stop=1.0, length=length(c))
         return [[vals[i], rgba_string(plot_color(c[i], α))] for i in eachindex(c)]
     end
 end
