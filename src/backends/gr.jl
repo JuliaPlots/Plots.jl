@@ -144,7 +144,7 @@ gr_set_fillcolor(c)   = GR.setfillcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
-function gr_set_transparency(::Void) end
+function gr_set_transparency(::Nothing) end
 
 # --------------------------------------------------------------------------------------
 
@@ -485,7 +485,7 @@ function gr_colorbar(sp::Subplot, clims)
     xmin, xmax = gr_xy_axislims(sp)[1:2]
     gr_set_viewport_cmap(sp)
     l = zeros(Int32, 1, 256)
-    l[1,:] = Int[round(Int, _i) for _i in linspace(1000, 1255, 256)]
+    l[1,:] = Int[round(Int, _i) for _i in range(1000, stop=1255, length=256)]
     GR.setscale(0)
     GR.setwindow(xmin, xmax, clims[1], clims[2])
     GR.cellarray(xmin, xmax, clims[2], clims[1], 1, length(l), l)
@@ -531,7 +531,7 @@ const _gr_gradient_alpha = ones(256)
 
 function gr_set_gradient(c)
     grad = isa(c, ColorGradient) ? c : cgrad()
-    for (i,z) in enumerate(linspace(0, 1, 256))
+    for (i,z) in enumerate(range(0, stop=1, length=256))
         c = grad[z]
         GR.setcolorrep(999+i, red(c), green(c), blue(c))
         _gr_gradient_alpha[i] = alpha(c)
@@ -718,7 +718,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for ax in (sp[:xaxis], sp[:yaxis])
                 v = series[ax[:letter]]
                 if diff(collect(extrema(diff(v))))[1] > 1e-6*std(v)
-                    warn("GR: heatmap only supported with equally spaced data.")
+                    @warn("GR: heatmap only supported with equally spaced data.")
                 end
             end
             x, y = heatmap_edges(series[:x], sp[:xaxis][:scale]), heatmap_edges(series[:y], sp[:yaxis][:scale])
@@ -1051,7 +1051,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if typeof(series[:levels]) <: AbstractArray
                 h = series[:levels]
             else
-                h = series[:levels] > 1 ? linspace(zmin, zmax, series[:levels]) : [(zmin + zmax) / 2]
+                h = series[:levels] > 1 ? range(zmin, stop=zmax, length=series[:levels]) : [(zmin + zmax) / 2]
             end
             if series[:fillrange] != nothing
                 GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
@@ -1379,7 +1379,7 @@ for (mime, fmt) in _gr_mimeformats
         ENV["GKS_FILEPATH"] = filepath
         gr_display(plt, $fmt)
         GR.emergencyclosegks()
-        write(io, readstring(filepath))
+        write(io, read(filepath, String))
         rm(filepath)
         if env != "0"
             ENV["GKSwstype"] = env

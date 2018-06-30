@@ -188,7 +188,7 @@ const _allGridSyms = [:x, :y, :z,
                     :all, :both, :on, :yes, :show,
                     :none, :off, :no, :hide]
 const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing]
-hasgrid(arg::Void, letter) = false
+hasgrid(arg::Nothing, letter) = false
 hasgrid(arg::Bool, letter) = arg
 function hasgrid(arg::Symbol, letter)
     if arg in _allGridSyms
@@ -206,7 +206,7 @@ const _allShowaxisSyms = [:x, :y, :z,
                     :all, :both, :on, :yes, :show,
                     :off, :no, :hide]
 const _allShowaxisArgs = [_allGridSyms; string.(_allGridSyms)]
-showaxis(arg::Void, letter) = false
+showaxis(arg::Nothing, letter) = false
 showaxis(arg::Bool, letter) = arg
 function showaxis(arg::Symbol, letter)
     if arg in _allGridSyms
@@ -654,6 +654,7 @@ function handleColors!(d::KW, arg, csym::Symbol)
             d[csym] = c
         end
         return true
+    catch
     end
     false
 end
@@ -1131,7 +1132,7 @@ function convertLegendValue(val::Symbol)
     end
 end
 convertLegendValue(val::Bool) = val ? :best : :none
-convertLegendValue(val::Void) = :none
+convertLegendValue(val::Nothing) = :none
 convertLegendValue(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 

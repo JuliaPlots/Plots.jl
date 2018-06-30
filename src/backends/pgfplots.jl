@@ -504,7 +504,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         bb = bbox(sp)
         push!(style, """
             xshift = $(left(bb).value)mm,
-            yshift = $(round((total_height - (bottom(bb))).value,2))mm,
+            yshift = $(round((total_height - (bottom(bb))).value, digits=2))mm,
             axis background/.style={fill=$(pgf_color(sp[:background_color_inside])[1])}
         """)
         kw[:width] = "$(width(bb).value)mm"
@@ -607,7 +607,7 @@ function _show(io::IO, mime::MIME"application/pdf", plt::Plot{PGFPlotsBackend})
     PGFPlots.save(PGFPlots.PDF(fn), pgfplt)
 
     # read it into io
-    write(io, readstring(open(fn)))
+    write(io, read(open(fn), String))
 
     # cleanup
     PGFPlots.cleanup(plt.o)
@@ -616,7 +616,7 @@ end
 function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsBackend})
     fn = tempname()*".tex"
     PGFPlots.save(fn, backend_object(plt), include_preamble=false)
-    write(io, readstring(open(fn)))
+    write(io, read(open(fn), String))
 end
 
 function _display(plt::Plot{PGFPlotsBackend})

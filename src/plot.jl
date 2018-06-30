@@ -169,7 +169,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
 
     if !isempty(args) && !isdefined(Main, :StatPlots) &&
             first(split(string(typeof(args[1])), ".")) == "DataFrames"
-        warn("You're trying to plot a DataFrame, but this functionality is provided by StatPlots")
+        @warn("You're trying to plot a DataFrame, but this functionality is provided by StatPlots")
     end
 
     # --------------------------------
@@ -193,7 +193,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
     still_to_process = kw_list
     kw_list = KW[]
     while !isempty(still_to_process)
-        next_kw = shift!(still_to_process)
+        next_kw = popfirst!(still_to_process)
         _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
     end
 

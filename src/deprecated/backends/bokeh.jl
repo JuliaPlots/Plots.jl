@@ -72,7 +72,7 @@ is_subplot_supported(::BokehBackend) = false
 
 function _initialize_backend(::BokehBackend; kw...)
   @eval begin
-    warn("Bokeh is no longer supported... many features will likely be broken.")
+    @warn("Bokeh is no longer supported... many features will likely be broken.")
     import Bokeh
     export Bokeh
   end
@@ -196,7 +196,7 @@ end
 
 function Base.show(io::IO, ::MIME"image/png", plt::AbstractPlot{BokehBackend})
   # TODO: write a png to io
-  warn("mime png not implemented")
+  @warn("mime png not implemented")
 end
 
 function Base.display(::PlotsDisplay, plt::Plot{BokehBackend})

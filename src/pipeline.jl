@@ -70,7 +70,7 @@ function _process_userrecipes(plt::Plot, d::KW, args)
         # grab the first in line to be processed and either add it to the kw_list or
         # pass it through apply_recipe to generate a list of RecipeData objects (data + attributes)
         # for further processing.
-        next_series = shift!(still_to_process)
+        next_series = popfirst!(still_to_process)
         # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
         if !(typeof(next_series) <: RecipeData)
             error("Inputs couldn't be processed... expected RecipeData but got: $next_series")
@@ -329,7 +329,7 @@ function _override_seriestype_check(d::KW, st::Symbol)
     # do we want to override the series type?
     if !is3d(st) && !(st in (:contour,:contour3d))
         z = d[:z]
-        if !isa(z, Void) && (size(d[:x]) == size(d[:y]) == size(z))
+        if !isa(z, Nothing) && (size(d[:x]) == size(d[:y]) == size(z))
             st = (st == :scatter ? :scatter3d : :path3d)
             d[:seriestype] = st
         end

@@ -82,21 +82,21 @@ function _initialize_backend(::PyPlotBackend)
         append!(Base.Multimedia.displays, otherdisplays)
 
         export PyPlot
-        const pycolors = PyPlot.pyimport("matplotlib.colors")
-        const pypath = PyPlot.pyimport("matplotlib.path")
-        const mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
-        const pypatches = PyPlot.pyimport("matplotlib.patches")
-        const pyfont = PyPlot.pyimport("matplotlib.font_manager")
-        const pyticker = PyPlot.pyimport("matplotlib.ticker")
-        const pycmap = PyPlot.pyimport("matplotlib.cm")
-        const pynp = PyPlot.pyimport("numpy")
+        pycolors = PyPlot.pyimport("matplotlib.colors")
+        pypath = PyPlot.pyimport("matplotlib.path")
+        mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
+        pypatches = PyPlot.pyimport("matplotlib.patches")
+        pyfont = PyPlot.pyimport("matplotlib.font_manager")
+        pyticker = PyPlot.pyimport("matplotlib.ticker")
+        pycmap = PyPlot.pyimport("matplotlib.cm")
+        pynp = PyPlot.pyimport("numpy")
         pynp["seterr"](invalid="ignore")
-        const pytransforms = PyPlot.pyimport("matplotlib.transforms")
-        const pycollections = PyPlot.pyimport("matplotlib.collections")
-        const pyart3d = PyPlot.art3D
+        pytransforms = PyPlot.pyimport("matplotlib.transforms")
+        pycollections = PyPlot.pyimport("matplotlib.collections")
+        pyart3d = PyPlot.art3D
 
         # "support" matplotlib v1.5
-        const set_facecolor_sym = if PyPlot.version < v"2"
+        set_facecolor_sym = if PyPlot.version < v"2"
             warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
             :set_axis_bgcolor
         else

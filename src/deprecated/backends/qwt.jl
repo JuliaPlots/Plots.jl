@@ -31,7 +31,7 @@ is_subplot_supported(::QwtBackend) = true
 
 function _initialize_backend(::QwtBackend; kw...)
   @eval begin
-    warn("Qwt is no longer supported... many features will likely be broken.")
+    @warn("Qwt is no longer supported... many features will likely be broken.")
     import Qwt
     export Qwt
   end
@@ -142,7 +142,7 @@ function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
     w[:setAxisScale](axisid, lims...)
   end
 
-  if typeof(ticks) <: Range
+  if typeof(ticks) <: AbstractRange
     if isx
       plt.o.autoscale_x = false
     else

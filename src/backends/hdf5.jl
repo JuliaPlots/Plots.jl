@@ -39,7 +39,7 @@ struct HDF5PlotNative; end #Indentifies a data element that can natively be hand
 struct HDF5CTuple; end #Identifies a "complex" tuple structure
 
 mutable struct HDF5Plot_PlotRef
-	ref::Union{Plot, Void}
+	ref::Union{Plot, Nothing}
 end
 
 
@@ -146,9 +146,9 @@ function _initialize_backend(::HDF5Backend)
         export HDF5
         if length(HDF5PLOT_MAP_TELEM2STR) < 1
             #Possible element types of high-level data types:
-            const telem2str = Dict{String, Type}(
+            telem2str = Dict{String, Type}(
                 "NATIVE" => HDF5PlotNative,
-                "VOID" => Void,
+                "VOID" => Nothing,
                 "BOOL" => Bool,
                 "SYMBOL" => Symbol,
                 "TUPLE" => Tuple,
@@ -315,9 +315,9 @@ function _hdf5plot_gwrite(grp, k::String, v::Array{Any})
     warn("Cannot write Array: $k=$v")
 end
 =#
-function _hdf5plot_gwrite(grp, k::String, v::Void)
+function _hdf5plot_gwrite(grp, k::String, v::Nothing)
     grp[k] = 0
-    _hdf5plot_writetype(grp, k, Void)
+    _hdf5plot_writetype(grp, k, Nothing)
 end
 function _hdf5plot_gwrite(grp, k::String, v::Bool)
     grp[k] = Int(v)
@@ -344,7 +344,7 @@ end
 function _hdf5plot_gwrite(grp, k::String, d::Dict)
 #    warn("Cannot write dict: $k=$d")
 end
-function _hdf5plot_gwrite(grp, k::String, v::Range)
+function _hdf5plot_gwrite(grp, k::String, v::AbstractRange)
     _hdf5plot_gwrite(grp, k, collect(v)) #For now
 end
 function _hdf5plot_gwrite(grp, k::String, v::ARGB{N0f8})
@@ -365,7 +365,7 @@ function _hdf5plot_gwritearray(grp, k::String, v::Array{T}) where T
     sz = size(v)
 
     for iter in eachindex(v)
-        coord = ind2sub(sz, iter)
+        coord = LinearIndices(sz, iter)
         elem = v[iter]
         idxstr = join(coord, "_")
         _hdf5plot_gwrite(vgrp, "v$idxstr", v[iter])
@@ -485,7 +485,7 @@ function _hdf5plot_readcount(grp) #Read directly from group
 end
 
 _hdf5plot_convert(T::Type{HDF5PlotNative}, v) = v
-_hdf5plot_convert(T::Type{Void}, v) = nothing
+_hdf5plot_convert(T::Type{Nothing}, v) = nothing
 _hdf5plot_convert(T::Type{Bool}, v) = (v!=0)
 _hdf5plot_convert(T::Type{Symbol}, v) = Symbol(v)
 _hdf5plot_convert(T::Type{Tuple}, v) = tuple(v...) #With Vector{T<:Number}
@@ -530,7 +530,7 @@ function _hdf5plot_read(grp, k::String, T::Type{Array}, dtid) #ANY
     result = Array{Any}(sz)
 
     for iter in eachindex(result)
-        coord = ind2sub(sz, iter)
+        coord = LinearIndices(sz, iter)
         idxstr = join(coord, "_")
         result[iter] = _hdf5plot_read(grp, "v$idxstr")
     end

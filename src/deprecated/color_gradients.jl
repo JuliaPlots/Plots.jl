@@ -19,7 +19,7 @@
     # work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
 function sample_evenly(v::AVec, n::Integer = length(v))
-    idx = Int[round(Int, x) for x in linspace(1, length(v), n)]
+    idx = Int[round(Int, x) for x in range(1, stop=length(v), length=n)]
     v[idx]
 end
 

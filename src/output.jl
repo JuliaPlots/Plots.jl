@@ -186,11 +186,11 @@ end
 
 # delegate mimewritable (showable on julia 0.7) to _show instead
 function Base.mimewritable(m::M, plt::P) where {M<:MIME, P<:Plot}
-    return method_exists(_show, Tuple{IO, M, P})
+    return hasmethod(_show, Tuple{IO, M, P})
 end
 
 function _display(plt::Plot)
-    warn("_display is not defined for this backend.")
+    @warn("_display is not defined for this backend.")
 end
 
 # for writing to io streams... first prepare, then callback
@@ -230,7 +230,7 @@ if is_installed("FileIO")
         FileIO.save(pngfn, s)
 
         # now write from the file
-        write(io, readstring(open(pngfn)))
+        write(io, read(open(pngfn), String))
     end
 end
 

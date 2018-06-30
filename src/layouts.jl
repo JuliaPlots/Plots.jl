@@ -566,7 +566,7 @@ function build_layout(layout::GridLayout, numsp::Integer, plts::AVec{Plot})
     for r=1:nr, c=1:nc
         l = layout[r,c]
         if isa(l, EmptyLayout) && !get(l.attr, :blank, false)
-            plt = shift!(plts)  # grab the first plot out of the list
+            plt = popfirst!(plts)  # grab the first plot out of the list
             layout[r,c] = plt.layout
             append!(subplots, plt.subplots)
             merge!(spmap, plt.spmap)

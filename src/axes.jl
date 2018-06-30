@@ -251,7 +251,7 @@ function get_ticks(axis::Axis)
             # discrete ticks...
             n = length(dvals)
             rng = if ticks == :auto
-                Int[round(Int,i) for i in linspace(1, n, 15)]
+                Int[round(Int,i) for i in range(1, stop=n, length=15)]
             else # if ticks == :all
                 1:n
             end
@@ -265,7 +265,7 @@ function get_ticks(axis::Axis)
         end
     elseif typeof(ticks) <: Union{AVec, Int}
         if !isempty(dvals) && typeof(ticks) <: Int
-            rng = Int[round(Int,i) for i in linspace(1, length(dvals), ticks)]
+            rng = Int[round(Int,i) for i in range(1, stop=length(dvals), length=ticks)]
             axis[:continuous_values][rng], dvals[rng]
         else
             # override ticks, but get the labels
@@ -310,7 +310,7 @@ function expand_extrema!(axis::Axis, v::Number)
 end
 
 # these shouldn't impact the extrema
-expand_extrema!(axis::Axis, ::Void) = axis[:extrema]
+expand_extrema!(axis::Axis, ::Nothing) = axis[:extrema]
 expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 

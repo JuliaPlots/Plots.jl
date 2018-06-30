@@ -244,7 +244,7 @@ function addToGadflyLegend(plt::Plot, d::KW)
 
         # add the legend if needed
         if all(g -> !isa(g, Gadfly.Guide.ManualColorKey), gplt.guides)
-            unshift!(gplt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
+            pushfirst!(gplt.guides, Gadfly.Guide.manual_color_key("", AbstractString[], Color[]))
         end
 
         # now add the series to the legend

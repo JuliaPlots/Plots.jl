@@ -29,7 +29,7 @@ animation.
     [:(begin
         p = plot([sin,cos], zeros(0), leg=false)
         anim = Animation()
-        for x in linspace(0, 10π, 100)
+        for x in range(0, stop=10π, length=100)
             push!(p, x, Float64[sin(x), cos(x)])
             frame(anim)
         end
@@ -156,7 +156,7 @@ PlotExample("Marker types",
         markers = filter(m -> m in Plots.supported_markers(), Plots._shape_keys)
         markers = reshape(markers, 1, length(markers))
         n = length(markers)
-        x = linspace(0,10,n+2)[2:end-1]
+        x = range(0, stop=10, length=n+2)[2:end-1]
         y = repmat(reshape(reverse(x),1,:), n, 1)
         scatter(x, y, m=(8,:auto), lab=map(string,markers), bg=:linen, xlim=(0,10), ylim=(0,10))
     end)]
@@ -238,7 +238,7 @@ y = rand(10)
 plot(y, annotations = (3,y[3],text("this is #3",:left)), leg=false)
 annotate!([(5, y[5], text("this is #5",16,:red,:center)),
           (10, y[10], text("this is #10",:right,20,"courier"))])
-scatter!(linspace(2,8,6), rand(6), marker=(50,0.2,:orange),
+scatter!(range(2, stop=8, length=6), rand(6), marker=(50,0.2,:orange),
          series_annotations = ["series","annotations","map","to","series",
                                text("data",:green)])
     end)]
@@ -291,7 +291,7 @@ PlotExample("3D",
     "",
     [:(begin
         n = 100
-        ts = linspace(0,8π,n)
+        ts = range(0, stop=8π, length=n)
         x = ts .* map(cos,ts)
         y = 0.1ts .* map(sin,ts)
         z = 1:n
@@ -323,7 +323,7 @@ PlotExample("Groups and Subplots",
 PlotExample("Polar Plots",
     "",
     [:(begin
-        Θ = linspace(0,1.5π,100)
+        Θ = range(0, stop=1.5π, length=100)
         r = abs.(0.1randn(100)+sin.(3Θ))
         plot(Θ, r, proj=:polar, m=2)
     end)]
@@ -368,7 +368,7 @@ PlotExample("Animation with subplots",
         plot(log,1,xlims=(1,10π),ylims=(0,5),leg=false),layout=l)
 
         anim = Animation()
-        for x = linspace(1,10π,100)
+        for x = range(1, stop=10π, length=100)
           plot(push!(p,x,Float64[sin(x),cos(x),atan(x),cos(x),log(x)]))
           frame(anim)
         end
@@ -422,7 +422,7 @@ You can use the `line_z` and `marker_z` properties to associate a color with
 each line segment or marker in the plot. 
 """,
     [:(begin
-        t = linspace(0, 1, 100)
+        t = range(0, stop=1, length=100)
         θ = 6π .* t
         x = t .* cos.(θ)
         y = t .* sin.(θ)

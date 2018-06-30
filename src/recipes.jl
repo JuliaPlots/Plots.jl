@@ -620,10 +620,10 @@ _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) where {N
 _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) where {N} = binning
 
 _hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) where {N} =
-    map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...))
+    map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...,))
 
 _hist_edges(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, AbstractVector}) where {N} =
-    map(dim -> _hist_edge(vs, dim, binning), (1:N...))
+    map(dim -> _hist_edge(vs, dim, binning), (1:N...,))
 
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
@@ -792,7 +792,7 @@ end
 
 function error_coords(xorig, yorig, ebar)
     # init empty x/y, and zip errors if passed Tuple{Vector,Vector}
-    x, y = Array{float_extended_type(xorig)}(0), Array{Float64}(0)
+    x, y = Array{float_extended_type(xorig)}(undef, 0), Array{Float64}(undef, 0)
     # for each point, create a line segment from the bottom to the top of the errorbar
     for i = 1:max(length(xorig), length(yorig))
         xi = _cycle(xorig, i)

@@ -80,7 +80,7 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
         is_marker_supported(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) where {C<:Colorant} = true
         is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
-        const GL = Plots
+        GL = Plots
     end
 end
 
@@ -397,7 +397,7 @@ function gappy(x, ps)
     return last(ps) - x
 end
 function ticks(points, resolution)
-    Float16[gappy(x, points) for x = linspace(first(points),last(points), resolution)]
+    Float16[gappy(x, points) for x = range(first(points), stop=last(points), length=resolution)]
 end
 
 
@@ -901,12 +901,12 @@ function gl_boxplot(d, kw_args)
         # filter y
         values = y[filter(i -> _cycle(x,i) == glabel, 1:length(y))]
         # compute quantiles
-        q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
+        q1,q2,q3,q4,q5 = quantile(values, range(0, stop=1, length=5))
         # notch
         n = Plots.notch_width(q2, q4, length(values))
         # warn on inverted notches?
         if notch && !warning && ( (q2>(q3-n)) || (q4<(q3+n)) )
-            warn("Boxplot's notch went outside hinges. Set notch to false.")
+            @warn("Boxplot's notch went outside hinges. Set notch to false.")
             warning = true # Show the warning only one time
         end
 
@@ -1331,7 +1331,7 @@ end
 
 
 function gl_surface(x,y,z, kw_args)
-    if isa(x, Range) && isa(y, Range)
+    if isa(x, AbstractRange) && isa(y, AbstractRange)
         main = z
         kw_args[:ranges] = (x, y)
     else
@@ -1347,7 +1347,7 @@ function gl_surface(x,y,z, kw_args)
         if get(kw_args, :wireframe, false)
             points = map(Point3f0, zip(vec(x), vec(y), vec(z)))
             faces = Cuint[]
-            idx = (i,j) -> sub2ind(size(z), i, j) - 1
+            idx = (i,j) -> CartesianIndices(size(z), i, j) - 1
             for i=1:size(z,1), j=1:size(z,2)
 
                 i < size(z,1) && push!(faces, idx(i, j), idx(i+1, j))

@@ -90,24 +90,24 @@ end
 
 # py_marker(markers::AVec) = map(py_marker, markers)
 function _inspectdr_mapglyph(markers::AVec)
-    warn("Vectors of markers are currently unsupported in InspectDR.")
+    @warn("Vectors of markers are currently unsupported in InspectDR.")
     _inspectdr_mapglyph(markers[1])
 end
 
 _inspectdr_mapglyphsize(v::Real) = v
 function _inspectdr_mapglyphsize(v::Vector)
-    warn("Vectors of marker sizes are currently unsupported in InspectDR.")
+    @warn("Vectors of marker sizes are currently unsupported in InspectDR.")
     _inspectdr_mapglyphsize(v[1])
 end
 
 _inspectdr_mapcolor(v::Colorant) = v
 function _inspectdr_mapcolor(g::PlotUtils.ColorGradient)
-    warn("Color gradients are currently unsupported in InspectDR.")
+    @warn("Color gradients are currently unsupported in InspectDR.")
     #Pick middle color:
     _inspectdr_mapcolor(g.colors[div(1+end,2)])
 end
 function _inspectdr_mapcolor(v::AVec)
-    warn("Vectors of colors are currently unsupported in InspectDR.")
+    @warn("Vectors of colors are currently unsupported in InspectDR.")
     #Pick middle color:
     _inspectdr_mapcolor(v[div(1+end,2)])
 end
@@ -166,13 +166,13 @@ function _initialize_backend(::InspectDRBackend; kw...)
         export InspectDR
 
         #Glyph used when plotting "Shape"s:
-        const INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
+        INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
             2*InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y
         )
 
         mutable struct InspecDRPlotRef
-            mplot::Union{Void, InspectDR.Multiplot}
-            gui::Union{Void, InspectDR.GtkPlot}
+            mplot::Union{Nothing, InspectDR.Multiplot}
+            gui::Union{Nothing, InspectDR.GtkPlot}
         end
 
         _inspectdr_getmplot(::Any) = nothing
@@ -347,8 +347,8 @@ end
 # ---------------------------------------------------------------------------
 
 function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
-    const plot = sp.o
-    const strip = plot.strips[1] #Only 1 strip supported with Plots.jl
+    plot = sp.o
+    strip = plot.strips[1] #Only 1 strip supported with Plots.jl
 
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
     xgrid_show = xaxis[:grid]
@@ -406,7 +406,7 @@ end
 # called just before updating layout bounding boxes... in case you need to prep
 # for the calcs
 function _before_layout_calcs(plt::Plot{InspectDRBackend})
-    const mplot = _inspectdr_getmplot(plt.o)
+    mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end
 
     mplot.title = plt[:plot_title]
@@ -506,7 +506,7 @@ const _inspectdr_mimeformats_nodpi = Dict(
 #    "application/postscript"  => "ps", #TODO: support once Cairo supports PSSurface
     "application/pdf"         => "pdf"
 )
-_inspectdr_show(io::IO, mime::MIME, ::Void, w, h) =
+_inspectdr_show(io::IO, mime::MIME, ::Nothing, w, h) =
     throw(ErrorException("Cannot show(::IO, ...) plot - not yet generated"))
 function _inspectdr_show(io::IO, mime::MIME, mplot, w, h)
     InspectDR._show(io, mime, mplot, Float64(w), Float64(h))
