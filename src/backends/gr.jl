@@ -353,25 +353,18 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
             cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
-            cfuncind = isa(shape, Shape) ? GR.setfillcolorind : GR.setmarkercolorind
 
             # draw a filled in shape, slightly bigger, to estimate a stroke
             if series[:markerstrokewidth] > 0
-                cfunc(_cycle(series[:markerstrokecolor], i)) #, series[:markerstrokealpha])
+                cfunc(get_markerstrokecolor(series, i))
+                gr_set_transparency(get_markerstrokealpha(series, i))
                 gr_draw_marker(x[i], y[i], msi + series[:markerstrokewidth], shape)
             end
 
-            # draw the shape
-            if mz == nothing
-                cfunc(_cycle(series[:markercolor], i)) #, series[:markeralpha])
-            else
-                # pick a color from the pre-loaded gradient
-                ci = round(Int, 1000 + _cycle(mz, i) * 255)
-                cfuncind(ci)
-                gr_set_transparency(_gr_gradient_alpha[ci-999])
-            end
-            # don't draw filled area if marker shape is 1D
+            # draw the shape - don't draw filled area if marker shape is 1D
             if !(shape in (:hline, :vline, :+, :x))
+                cfunc(get_markercolor(series, i))
+                gr_set_transparency(get_markeralpha(series, i))
                 gr_draw_marker(x[i], y[i], msi, shape)
             end
         end
@@ -390,7 +383,7 @@ end
 function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
     w, h = gr_plot_size
-    GR.setlinewidth(max(0, lw / ((w + h) * 0.001)))
+    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw / ((w + h) * 0.001)))
     gr_set_linecolor(c) #, a)
 end
 
@@ -403,6 +396,7 @@ end
 
 # this stores the conversion from a font pointsize to "percentage of window height" (which is what GR uses)
 const _gr_point_mult = 0.0018 * ones(1)
+const _gr_thickness_scaling = ones(1)
 
 # set the font attributes... assumes _gr_point_mult has been populated already
 function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
@@ -549,6 +543,9 @@ end
 function gr_display(plt::Plot, fmt="")
     GR.clearws()
 
+    _gr_thickness_scaling[1] = plt[:thickness_scaling]
+    dpi_factor = plt[:dpi] / Plots.DPI
+
     # collect some monitor/display sizes in meters and pixels
     display_width_meters, display_height_meters, display_width_px, display_height_px = GR.inqdspsize()
     display_width_ratio = display_width_meters / display_width_px
@@ -557,14 +554,6 @@ function gr_display(plt::Plot, fmt="")
     # compute the viewport_canvas, normalized to the larger dimension
     viewport_canvas = Float64[0,1,0,1]
     w, h = plt[:size]
-    if !haskey(ENV, "PLOTS_TEST")
-        dpi_factor = plt[:dpi] / DPI
-        if fmt == "png"
-            dpi_factor *= 6
-        end
-    else
-        dpi_factor = 1
-    end
     gr_plot_size[:] = [w, h]
     if w > h
         ratio = float(h) / w
@@ -587,7 +576,7 @@ function gr_display(plt::Plot, fmt="")
 
     # update point mult
     px_per_pt = px / pt
-    _gr_point_mult[1] = 1.5 * px_per_pt / max(h,w)
+    _gr_point_mult[1] = 1.5 * _gr_thickness_scaling[1] * px_per_pt / max(h,w)
 
     # subplots:
     for sp in plt.subplots
@@ -633,13 +622,14 @@ function gr_get_ticks_size(ticks, i)
 end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
+    dpi = sp.plt[:thickness_scaling]
     if !haskey(ENV, "GKSwstype")
         if isijulia() || (isdefined(Main, :Juno) && Juno.isactive())
             ENV["GKSwstype"] = "svg"
         end
     end
     # Add margin given by the user
-    leftpad   = 2mm  + sp[:left_margin]
+    leftpad   = 4mm  + sp[:left_margin]
     toppad    = 2mm  + sp[:top_margin]
     rightpad  = 4mm  + sp[:right_margin]
     bottompad = 2mm  + sp[:bottom_margin]
@@ -675,7 +665,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     if sp[:yaxis][:guide] != ""
         leftpad += 4mm
     end
-    sp.minpad = (leftpad, toppad, rightpad, bottompad)
+    sp.minpad = Tuple(dpi * [leftpad, toppad, rightpad, bottompad])
 end
 
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
@@ -725,6 +715,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
         if st == :heatmap
             outside_ticks = true
+            for ax in (sp[:xaxis], sp[:yaxis])
+                v = series[ax[:letter]]
+                if diff(collect(extrema(diff(v))))[1] > 1e-6*std(v)
+                    warn("GR: heatmap only supported with equally spaced data.")
+                end
+            end
             x, y = heatmap_edges(series[:x], sp[:xaxis][:scale]), heatmap_edges(series[:y], sp[:yaxis][:scale])
             xy_lims = x[1], x[end], y[1], y[end]
             expand_extrema!(sp[:xaxis], x)
@@ -776,7 +772,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # draw the axes
     gr_set_font(tickfont(xaxis))
-    GR.setlinewidth(1)
+    GR.setlinewidth(sp.plt[:thickness_scaling])
 
     if is3d(sp)
         zmin, zmax = gr_lims(zaxis, true)
@@ -1046,10 +1042,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
 
             if series[:markershape] != :none
-                if series[:marker_z] != nothing
-                    zmin, zmax = extrema(series[:marker_z])
-                    GR.setspace(zmin, zmax, 0, 90)
-                end
                 gr_draw_markers(series, x, y, clims)
             end
 
@@ -1100,6 +1092,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st == :heatmap
             xmin, xmax, ymin, ymax = xy_lims
             zmin, zmax = clims
+            m, n = length(x), length(y)
+            xinds = sort(1:m, rev = xaxis[:flip])
+            yinds = sort(1:n, rev = yaxis[:flip])
+            z = reshape(reshape(z, m, n)[xinds, yinds], m*n)
             GR.setspace(zmin, zmax, 0, 90)
             grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
             colors = [plot_color(grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)], series[:fillalpha]) for zi=z]
@@ -1203,7 +1199,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :image
             z = transpose_z(series, series[:z].surf, true)'
-            w, h = size(z)
+            w, h = length(x), length(y)
+            xinds = sort(1:w, rev = xaxis[:flip])
+            yinds = sort(1:h, rev = yaxis[:flip])
+            z = z[xinds, yinds]
             xmin, xmax = ignorenan_extrema(series[:x]); ymin, ymax = ignorenan_extrema(series[:y])
             if eltype(z) <: Colors.AbstractGray
                 grey = round.(UInt8, float(z) * 255)

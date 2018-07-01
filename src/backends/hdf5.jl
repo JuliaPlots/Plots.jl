@@ -240,10 +240,6 @@ end
 
 # ----------------------------------------------------------------
 
-_show(io::IO, mime::MIME"text/plain", plt::Plot{HDF5Backend}) = nothing #Don't show
-
-# ----------------------------------------------------------------
-
 # Display/show the plot (open a GUI window, or browser page, for example).
 function _display(plt::Plot{HDF5Backend})
     msg = "HDF5 interface does not support `display()` function."

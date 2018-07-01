@@ -3,13 +3,42 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-- All new development should target 0.15!
+- Minor version 0.17 is the last one to support Julia 0.6!!
 - Minor version 0.11 is the last one to support Julia 0.5!!
 	- Critical bugfixes only
     - `backports` branch is for Julia 0.5
 
 ---
 ## (current master)
+- All new development should target Julia 0.7!
+
+## 0.17.3
+- Log-scale heatmap edge computation
+- Fix size and dpi for GR and PyPlot
+- Fix fillrange with line segments on PyPlot and Plotly
+- fix flip for heatmap and image on GR
+- New attributes for PGFPlots
+- Widen axes for most series types and log scales
+- Plotly: fix log scale with no ticks
+- Fix axis flip on Plotly
+- Fix hover and zcolor interaction in Plotly
+- WebIO integration for PlotlyJS backend
+
+## 0.17.2
+- fix single subplot in plotly
+- implement `(xyz)lims = :round`
+- PyPlot: fix bg_legend = invisible()
+- set fallback tick specification for axes with discrete values
+- restructure of show methods
+
+## 0.17.1
+- Fix contour for PGFPlots
+- 32Bit fix: Int64 -> Int
+- Make series of shapes and segments toggle together in Plotly(JS)
+- Fix marker arguments
+- Fix processing order of series recipes
+- Fix Plotly(JS) ribbon
+- Contour plots with x,y in grid form on PyPlot
 
 ## 0.17.0
 - Add GR dependency to make it the default backend

@@ -627,7 +627,7 @@ group_as_matrix(t) = false
     else
         g = args[1]
         if length(g.args) == 1
-            x = zeros(Int64, lengthGroup)
+            x = zeros(Int, lengthGroup)
             for indexes in groupby.groupIds
                 x[indexes] = 1:length(indexes)
             end

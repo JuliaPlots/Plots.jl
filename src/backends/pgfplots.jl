@@ -8,11 +8,12 @@ end
 
 const _pgfplots_attr = merge_with_base_supported([
     :annotations,
-    # :background_color_legend,
+    :background_color_legend,
     :background_color_inside,
     # :background_color_outside,
-    # :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
-    #     :foreground_color_text, :foreground_color_border,
+    # :foreground_color_legend,
+    :foreground_color_grid, :foreground_color_axis,
+    :foreground_color_text, :foreground_color_border,
     :label,
     :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
@@ -149,6 +150,10 @@ function pgf_colormap(grad::ColorGradient)
     end,", ")
 end
 
+pgf_thickness_scaling(plt::Plot) = plt[:thickness_scaling]
+pgf_thickness_scaling(sp::Subplot) = pgf_thickness_scaling(sp.plt)
+pgf_thickness_scaling(series) = pgf_thickness_scaling(series[:subplot])
+
 function pgf_fillstyle(d, i = 1)
     cstr,a = pgf_color(get_fillcolor(d, i))
     fa = get_fillalpha(d, i)
@@ -158,52 +163,56 @@ function pgf_fillstyle(d, i = 1)
     "fill = $cstr, fill opacity=$a"
 end
 
-function pgf_linestyle(d, i = 1)
-    cstr,a = pgf_color(get_linecolor(d, i))
-    la = get_linealpha(d, i)
-    if la != nothing
-        a = la
-    end
+function pgf_linestyle(linewidth::Real, color, α = 1, linestyle = "solid")
+    cstr, a = pgf_color(plot_color(color, α))
     """
     color = $cstr,
-    draw opacity=$a,
-    line width=$(get_linewidth(d, i)),
-    $(get(_pgfplots_linestyles, get_linestyle(d, i), "solid"))"""
+    draw opacity = $a,
+    line width = $linewidth,
+    $(get(_pgfplots_linestyles, linestyle, "solid"))"""
+end
+
+function pgf_linestyle(d, i = 1)
+    lw = pgf_thickness_scaling(d) * get_linewidth(d, i)
+    lc = get_linecolor(d, i)
+    la = get_linealpha(d, i)
+    ls = get_linestyle(d, i)
+    return pgf_linestyle(lw, lc, la, ls)
+end
+
+function pgf_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
+    fs = fontsize * thickness_scaling
+    return string("{\\fontsize{", fs, " pt}{", 1.3fs, " pt}", font, "}")
 end
 
 function pgf_marker(d, i = 1)
     shape = _cycle(d[:markershape], i)
-    cstr, a = pgf_color(_cycle(d[:markercolor], i))
-    if d[:markeralpha] != nothing
-        a = _cycle(d[:markeralpha], i)
-    end
-    cstr_stroke, a_stroke = pgf_color(_cycle(d[:markerstrokecolor], i))
-    if d[:markerstrokealpha] != nothing
-        a_stroke = _cycle(d[:markerstrokealpha], i)
-    end
+    cstr, a = pgf_color(plot_color(get_markercolor(d, i), get_markeralpha(d, i)))
+    cstr_stroke, a_stroke = pgf_color(plot_color(get_markerstrokecolor(d, i), get_markerstrokealpha(d, i)))
     """
     mark = $(get(_pgfplots_markers, shape, "*")),
-    mark size = $(0.5 * _cycle(d[:markersize], i)),
+    mark size = $(pgf_thickness_scaling(d) * 0.5 * _cycle(d[:markersize], i)),
     mark options = {
         color = $cstr_stroke, draw opacity = $a_stroke,
         fill = $cstr, fill opacity = $a,
-        line width = $(_cycle(d[:markerstrokewidth], i)),
+        line width = $(pgf_thickness_scaling(d) * _cycle(d[:markerstrokewidth], i)),
         rotate = $(shape == :dtriangle ? 180 : 0),
         $(get(_pgfplots_linestyles, _cycle(d[:markerstrokestyle], i), "solid"))
     }"""
 end
 
-function pgf_add_annotation!(o,x,y,val)
+function pgf_add_annotation!(o, x, y, val, thickness_scaling = 1)
     # Construct the style string.
     # Currently supports color and orientation
     cstr,a = pgf_color(val.font.color)
     push!(o, PGFPlots.Plots.Node(val.str, # Annotation Text
-                                 x, y,
-                                 style="""
-                                 $(get(_pgf_annotation_halign,val.font.halign,"")),
-                                 color=$cstr, draw opacity=$(convert(Float16,a)),
-                                 rotate=$(val.font.rotation)
-                                 """))
+        x, y,
+        style="""
+        $(get(_pgf_annotation_halign,val.font.halign,"")),
+        color=$cstr, draw opacity=$(convert(Float16,a)),
+        rotate=$(val.font.rotation),
+        font=$(pgf_font(val.font.pointsize, thickness_scaling))
+        """))
 end
 
 # --------------------------------------------------------------------------------------
@@ -222,10 +231,6 @@ function pgf_series(sp::Subplot, series::Series)
         straightline_data(series)
     elseif st == :shape
         shape_data(series)
-    elseif d[:marker_z] != nothing
-        # If a marker_z is used pass it as third coordinate to a 2D plot.
-        # See "Scatter Plots" in PGFPlots documentation
-        d[:x], d[:y], d[:marker_z]
     elseif ispolar(sp)
         theta, r = filter_radial_data(d[:x], d[:y], axis_limits(sp[:yaxis]))
         rad2deg.(theta), r
@@ -380,8 +385,9 @@ function pgf_axis(sp::Subplot, letter)
     # axis guide
     kw[Symbol(letter,:label)] = axis[:guide]
 
-    # Add ticklabel rotations
-    push!(style, "$(letter)ticklabel style={rotate = $(axis[:rotation])}")
+    # Add label font
+    cstr, α = pgf_color(plot_color(axis[:guidefontcolor]))
+    push!(style, string(letter, "label style = {font = ", pgf_font(axis[:guidefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, ", rotate = ", axis[:guidefontrotation], "}"))
 
     # flip/reverse?
     axis[:flip] && push!(style, "$letter dir=reverse")
@@ -437,6 +443,9 @@ function pgf_axis(sp::Subplot, letter)
             push!(style, string(letter, "ticklabels = {}"))
         end
         push!(style, string(letter, "tick align = ", (axis[:tick_direction] == :out ? "outside" : "inside")))
+        cstr, α = pgf_color(plot_color(axis[:tickfontcolor]))
+        push!(style, string(letter, "ticklabel style = {font = ", pgf_font(axis[:tickfontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, ", rotate = ", axis[:tickfontrotation], "}"))
+        push!(style, string(letter, " grid style = {", pgf_linestyle(pgf_thickness_scaling(sp) * axis[:gridlinewidth], axis[:foreground_color_grid], axis[:gridalpha], axis[:gridstyle]), "}"))
     end
 
     # framestyle
@@ -449,7 +458,7 @@ function pgf_axis(sp::Subplot, letter)
     if framestyle == :zerolines
         push!(style, string("extra ", letter, " ticks = 0"))
         push!(style, string("extra ", letter, " tick labels = "))
-        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {color = black, draw opacity=1.0, line width=0.5), solid}}"))
+        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_axis], 1.0), "}}"))
     end
 
     if !axis[:showaxis]
@@ -457,6 +466,8 @@ function pgf_axis(sp::Subplot, letter)
     end
     if !axis[:showaxis] || framestyle in (:zerolines, :grid, :none)
         push!(style, string(letter, " axis line style = {draw opacity = 0}"))
+    else
+        push!(style, string(letter, " axis line style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_axis], 1.0), "}"))
     end
 
     # return the style list and KW args
@@ -501,6 +512,8 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         if sp[:title] != ""
             kw[:title] = "$(sp[:title])"
+            cstr, α = pgf_color(plot_color(sp[:titlefontcolor]))
+            push!(style, string("title style = {font = ", pgf_font(sp[:titlefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, ", rotate = ", sp[:titlefontrotation], "}"))
         end
 
         if sp[:aspect_ratio] in (1, :equal)
@@ -511,6 +524,8 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         if haskey(_pgfplots_legend_pos, legpos)
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
+        cstr, a = pgf_color(plot_color(sp[:background_color_legend]))
+        push!(style, string("legend style = {", pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid"), ",", "fill = $cstr,", "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)), "}"))
 
         if any(s[:seriestype] == :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"
@@ -564,13 +579,13 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             # add series annotations
             anns = series[:series_annotations]
             for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
-                pgf_add_annotation!(o, xi, yi, PlotText(str, fnt))
+                pgf_add_annotation!(o, xi, yi, PlotText(str, fnt), pgf_thickness_scaling(series))
             end
         end
 
         # add the annotations
         for ann in sp[:annotations]
-            pgf_add_annotation!(o, locate_annotation(sp, ann...)...)
+            pgf_add_annotation!(o, locate_annotation(sp, ann...)..., pgf_thickness_scaling(sp))
         end
 
 

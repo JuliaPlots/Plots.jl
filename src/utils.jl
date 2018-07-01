@@ -195,9 +195,13 @@ end
 function iter_segments(series::Series)
     x, y, z = series[:x], series[:y], series[:z]
     if has_attribute_segments(series)
-        return [i:(i + 1) for i in 1:(length(y) - 1)]
+        if series[:seriestype] in (:scatter, :scatter3d)
+            return [[i] for i in 1:length(y)]
+        else
+            return [i:(i + 1) for i in 1:(length(y) - 1)]
+        end
     else
-        segs = UnitRange{Int64}[]
+        segs = UnitRange{Int}[]
         args = is3d(series) ? (x, y, z) : (x, y)
         for seg in iter_segments(args...)
             push!(segs, seg)
@@ -354,19 +358,18 @@ const _scale_base = Dict{Symbol, Real}(
     :ln => e,
 )
 
-"create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(v::AVec, scale::Symbol = :identity)
+function _heatmap_edges(v::AVec)
   vmin, vmax = ignorenan_extrema(v)
-  extra_min = extra_max = 0.5 * (vmax-vmin) / (length(v)-1)
-  if scale in _logScales
-      vmin > 0 || error("The axis values must be positive for a $scale scale")
-      while vmin - extra_min <= 0
-          extra_min /= _scale_base[scale]
-      end
-  end
+  extra_min = (v[2] - v[1]) / 2
+  extra_max = (v[end] - v[end - 1]) / 2
   vcat(vmin-extra_min, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra_max)
 end
 
+"create an (n+1) list of the outsides of heatmap rectangles"
+function heatmap_edges(v::AVec, scale::Symbol = :identity)
+  f, invf = scalefunc(scale), invscalefunc(scale)
+  map(invf, _heatmap_edges(map(f,v)))
+end
 
 function calc_r_extrema(x, y)
     xmin, xmax = ignorenan_extrema(x)
@@ -620,7 +623,7 @@ function get_linecolor(series, i::Int = 1)
     lc = series[:linecolor]
     lz = series[:line_z]
     if lz == nothing
-        isa(lc, ColorGradient) ? lc : _cycle(lc, i)
+        isa(lc, ColorGradient) ? lc : plot_color(_cycle(lc, i))
     else
         cmin, cmax = get_clims(series[:subplot])
         grad = isa(lc, ColorGradient) ? lc : cgrad()
@@ -644,7 +647,7 @@ function get_fillcolor(series, i::Int = 1)
     fc = series[:fillcolor]
     fz = series[:fill_z]
     if fz == nothing
-        isa(fc, ColorGradient) ? fc : _cycle(fc, i)
+        isa(fc, ColorGradient) ? fc : plot_color(_cycle(fc, i))
     else
         cmin, cmax = get_clims(series[:subplot])
         grad = isa(fc, ColorGradient) ? fc : cgrad()
@@ -654,6 +657,31 @@ end
 
 function get_fillalpha(series, i::Int = 1)
     _cycle(series[:fillalpha], i)
+end
+
+function get_markercolor(series, i::Int = 1)
+    mc = series[:markercolor]
+    mz = series[:marker_z]
+    if mz == nothing
+        isa(mc, ColorGradient) ? mc : plot_color(_cycle(mc, i))
+    else
+        cmin, cmax = get_clims(series[:subplot])
+        grad = isa(mc, ColorGradient) ? mc : cgrad()
+        grad[clamp((_cycle(mz, i) - cmin) / (cmax - cmin), 0, 1)]
+    end
+end
+
+function get_markeralpha(series, i::Int = 1)
+    _cycle(series[:markeralpha], i)
+end
+
+function get_markerstrokecolor(series, i::Int = 1)
+    msc = series[:markerstrokecolor]
+    isa(msc, ColorGradient) ? msc : _cycle(msc, i)
+end
+
+function get_markerstrokealpha(series, i::Int = 1)
+    _cycle(series[:markerstrokealpha], i)
 end
 
 function has_attribute_segments(series::Series)
@@ -666,7 +694,7 @@ function has_attribute_segments(series::Series)
     end
     series[:seriestype] == :shape && return false
     # ... else we check relevant attributes if they have multiple inputs
-    return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha]) || any(typeof(series[attr]) <: AbstractArray{<:Real} for attr in (:line_z, :fill_z))
+    return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha, :markercolor, :markeralpha, :markerstrokecolor, :markerstrokealpha]) || any(typeof(series[attr]) <: AbstractArray{<:Real} for attr in (:line_z, :fill_z, :marker_z))
 end
 
 # ---------------------------------------------------------------

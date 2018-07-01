@@ -395,14 +395,14 @@ function py_bbox_title(ax)
 end
 
 function py_dpi_scale(plt::Plot{PyPlotBackend}, ptsz)
-    ptsz * plt[:dpi] / DPI
+    ptsz
 end
 
 # ---------------------------------------------------------------------------
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{PyPlotBackend})
-    w,h = map(px2inch, plt[:size])
+    w,h = map(px2inch, Tuple(s * plt[:dpi] / Plots.DPI for s in plt[:size]))
 
     # # reuse the current figure?
     fig = if plt[:overwrite_figure]
@@ -570,12 +570,12 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     if series[:markershape] != :none && st in (:path, :scatter, :path3d,
                                           :scatter3d, :steppre, :steppost,
                                           :bar)
-        if series[:marker_z] == nothing
-            extrakw[:c] = series[:markershape] in (:+, :x, :hline, :vline) ? py_markerstrokecolor(series) : py_color_fix(py_markercolor(series), x)
+        markercolor = if any(typeof(series[arg]) <: AVec for arg in (:markercolor, :markeralpha)) || series[:marker_z] != nothing
+            py_color(plot_color.(get_markercolor.(series, eachindex(x)), get_markeralpha.(series, eachindex(x))))
         else
-            extrakw[:c] = convert(Vector{Float64}, series[:marker_z])
-            extrakw[:cmap] = py_markercolormap(series)
+            py_color(plot_color(series[:markercolor], series[:markeralpha]))
         end
+        extrakw[:c] = py_color_fix(markercolor, x)
         xyargs = if st == :bar && !isvertical(series)
             (y, x)
         else
@@ -591,11 +591,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             msc = py_markerstrokecolor(series)
             lw = py_dpi_scale(plt, series[:markerstrokewidth])
             for i=1:length(y)
-                extrakw[:c] = if series[:marker_z] == nothing
-                    py_color_fix(py_color(_cycle(series[:markercolor],i)), x)
-                else
-                    extrakw[:c]
-                end
+                extrakw[:c] = _cycle(markercolor, i)
 
                 push!(handle, ax[:scatter](_cycle(x,i), _cycle(y,i);
                     label = series[:label],
@@ -638,6 +634,12 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     if st in (:contour, :contour3d)
         z = transpose_z(series, z.surf)
+	if typeof(x)<:Plots.Surface
+            x = Plots.transpose_z(series, x.surf)
+        end
+        if typeof(y)<:Plots.Surface
+            y = Plots.transpose_z(series, y.surf)
+        end
 
         if st == :contour3d
             extrakw[:extend3d] = true
@@ -835,9 +837,9 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             n = length(dim1)
             args = if typeof(fillrange) <: Union{Real, AVec}
-                dim1, expand_data(fillrange, n), dim2
+                dim1, _cycle(fillrange, rng), dim2
             elseif is_2tuple(fillrange)
-                dim1, expand_data(fillrange[1], n), expand_data(fillrange[2], n)
+                dim1, _cycle(fillrange[1], rng), _cycle(fillrange[2], rng)
             end
 
             handle = ax[f](args..., trues(n), false, py_fillstepstyle(st);
@@ -953,10 +955,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     w, h = plt[:size]
     fig = plt.o
     fig[:clear]()
-    dpi = plt[:dpi]
-    fig[:set_size_inches](w/dpi, h/dpi, forward = true)
+    dpi = plt[:thickness_scaling] * plt[:dpi]
+    fig[:set_size_inches](w/DPI/plt[:thickness_scaling], h/DPI/plt[:thickness_scaling], forward = true)
     fig[set_facecolor_sym](py_color(plt[:background_color_outside]))
-    fig[:set_dpi](dpi)
+    fig[:set_dpi](plt[:dpi])
 
     # resize the window
     PyPlot.plt[:get_current_fig_manager]()[:resize](w, h)
@@ -1014,10 +1016,16 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 kw[:ticks] = locator
                 kw[:format] = formatter
                 kw[:boundaries] = vcat(0, kw[:values] + 0.5)
-            elseif any(colorbar_series[attr] != nothing for attr in (:line_z, :fill_z))
+            elseif any(colorbar_series[attr] != nothing for attr in (:line_z, :fill_z, :marker_z))
                 cmin, cmax = get_clims(sp)
                 norm = pycolors[:Normalize](vmin = cmin, vmax = cmax)
-                f = colorbar_series[:line_z] != nothing ? py_linecolormap : py_fillcolormap
+                f = if colorbar_series[:line_z] != nothing
+                    py_linecolormap
+                elseif colorbar_series[:fill_z] != nothing
+                    py_fillcolormap
+                else
+                    py_markercolormap
+                end
                 cmap = pycmap[:ScalarMappable](norm = norm, cmap = f(colorbar_series))
                 cmap[:set_array]([])
                 handle = cmap
@@ -1077,7 +1085,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis[Symbol(:tick_, pos)]()        # the tick labels
             end
             py_set_scale(ax, axis)
-            axis[:ticks] != :native || axis[:lims] != :auto ? py_set_lims(ax, axis) : nothing
+            axis[:ticks] != :native ? py_set_lims(ax, axis) : nothing
             if ispolar(sp) && letter == :y
                 ax[:set_rlabel_position](90)
             end
@@ -1201,7 +1209,9 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     rightpad  += sp[:right_margin]
     bottompad += sp[:bottom_margin]
 
-    sp.minpad = (leftpad, toppad, rightpad, bottompad)
+    dpi_factor = sp.plt[:thickness_scaling] * Plots.DPI / sp.plt[:dpi]
+
+    sp.minpad = Tuple(dpi_factor .* [leftpad, toppad, rightpad, bottompad])
 end
 
 
@@ -1262,8 +1272,8 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         linewidth = py_dpi_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(:path, get_linestyle(series)),
                         marker = py_marker(series[:markershape]),
-                        markeredgecolor = py_markerstrokecolor(series),
-                        markerfacecolor = series[:marker_z] == nothing ? py_markercolor(series) : py_color(series[:markercolor][0.5])
+                        markeredgecolor = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
+                        markerfacecolor = series[:marker_z] == nothing ? py_color(get_markercolor(series), get_markeralpha(series)) : py_color(series[:markercolor][0.5])
                     )
                 else
                     series[:serieshandle][1]
@@ -1278,23 +1288,17 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 labels,
                 loc = get(_pyplot_legend_pos, leg, "best"),
                 scatterpoints = 1,
-                fontsize = py_dpi_scale(plt, sp[:legendfontsize])
-                # family = sp[:legendfont].family
-                # framealpha = 0.6
+                fontsize = py_dpi_scale(plt, sp[:legendfontsize]),
+                facecolor = py_color(sp[:background_color_legend]),
+                edgecolor = py_color(sp[:foreground_color_legend]),
+                framealpha = alpha(plot_color(sp[:background_color_legend])),
             )
             leg[:set_zorder](1000)
             sp[:legendtitle] != nothing && leg[:set_title](sp[:legendtitle])
 
-            fgcolor = py_color(sp[:foreground_color_legend])
-            lfcolor = py_color(sp[:legendfontcolor])
             for txt in leg[:get_texts]()
-                PyPlot.plt[:setp](txt, color = lfcolor, family = sp[:legendfontfamily])
+                PyPlot.plt[:setp](txt, color = py_color(sp[:legendfontcolor]), family = sp[:legendfontfamily])
             end
-
-            # set some legend properties
-            frame = leg[:get_frame]()
-            frame[set_facecolor_sym](py_color(sp[:background_color_legend]))
-            frame[:set_edgecolor](fgcolor)
         end
     end
 end
@@ -1356,7 +1360,7 @@ for (mime, fmt) in _pyplot_mimeformats
             # figsize = map(px2inch, plt[:size]),
             facecolor = fig[:get_facecolor](),
             edgecolor = "none",
-            dpi = plt[:dpi]
+            dpi = plt[:dpi] * plt[:thickness_scaling]
         )
     end
 end

@@ -327,7 +327,7 @@ end
 
 function _override_seriestype_check(d::KW, st::Symbol)
     # do we want to override the series type?
-    if !is3d(st)
+    if !is3d(st) && !(st in (:contour,:contour3d))
         z = d[:z]
         if !isa(z, Void) && (size(d[:x]) == size(d[:y]) == size(z))
             st = (st == :scatter ? :scatter3d : :path3d)
@@ -398,6 +398,7 @@ function _process_seriesrecipe(plt::Plot, d::KW)
         sp = _prepare_subplot(plt, d)
         _prepare_annotations(sp, d)
         _expand_subplot_extrema(sp, d, st)
+        _update_series_attributes!(d, plt, sp)
         _add_the_series(plt, sp, d)
 
     else

@@ -301,6 +301,7 @@ const _plot_defaults = KW(
     :inset_subplots              => nothing,   # optionally pass a vector of (parent,bbox) tuples which are
                                                # the parent layout and the relative bounding box of inset subplots
     :dpi                         => DPI,        # dots per inch for images, etc
+    :thickness_scaling           => 1,
     :display_type                => :auto,
     :extra_kwargs                => KW(),
 )
@@ -381,6 +382,7 @@ const _axis_defaults = KW(
     :gridlinewidth            => 0.5,
     :tick_direction           => :in,
     :showaxis                 => true,
+    :widen                    => true,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -1473,26 +1475,19 @@ function _replace_linewidth(d::KW)
 end
 
 function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
-    pkg = plt.backend
-    globalIndex = d[:series_plotindex]
-
     # add default values to our dictionary, being careful not to delete what we just added!
     for (k,v) in _series_defaults
         slice_arg!(d, d, k, v, commandIndex, false)
     end
 
-    # this is how many series belong to this subplot
-    # plotIndex = count(series -> series.d[:subplot] === sp && series.d[:primary], plt.series_list)
-    plotIndex = 0
-    for series in sp.series_list
-        if series[:primary]
-            plotIndex += 1
-        end
-    end
-    # plotIndex = count(series -> series[:primary], sp.series_list)
-    if get(d, :primary, true)
-        plotIndex += 1
-    end
+    return d
+end
+
+
+function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
+    pkg = plt.backend
+    globalIndex = d[:series_plotindex]
+    plotIndex = _series_index(d, sp)
 
     aliasesAndAutopick(d, :linestyle, _styleAliases, supported_styles(pkg), plotIndex)
     aliasesAndAutopick(d, :markershape, _markerAliases, supported_markers(pkg), plotIndex)
@@ -1528,11 +1523,11 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
 
     # update markerstrokecolor
     d[:markerstrokecolor] = if d[:markerstrokecolor] == :match
-        plot_color(sp[:foreground_color_subplot], d[:markerstrokealpha])
+        plot_color(sp[:foreground_color_subplot])
     elseif d[:markerstrokecolor] == :auto
-        getSeriesRGBColor(plot_color(d[:markercolor], d[:markeralpha]), sp, plotIndex)
+        getSeriesRGBColor.(d[:markercolor], sp, plotIndex)
     else
-        getSeriesRGBColor(plot_color(d[:markerstrokecolor], d[:markerstrokealpha]), sp, plotIndex)
+        getSeriesRGBColor.(d[:markerstrokecolor], sp, plotIndex)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
@@ -1561,4 +1556,20 @@ function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
 
     _replace_linewidth(d)
     d
+end
+
+function _series_index(d, sp)
+    idx = 0
+    for series in series_list(sp)
+        if series[:primary]
+            idx += 1
+        end
+        if series == d
+            return idx
+        end
+    end
+    if get(d, :primary, true)
+        idx += 1
+    end
+    return idx
 end
