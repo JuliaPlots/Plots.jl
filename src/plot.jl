@@ -1,10 +1,10 @@
 
 mutable struct CurrentPlot
-    nullableplot::Nullable{AbstractPlot}
+    nullableplot::Union{AbstractPlot, Nothing}
 end
-const CURRENT_PLOT = CurrentPlot(Nullable{AbstractPlot}())
+const CURRENT_PLOT = CurrentPlot(nothing)
 
-isplotnull() = isnull(CURRENT_PLOT.nullableplot)
+isplotnull() = CURRENT_PLOT.nullableplot == nothing
 
 """
     current()
@@ -16,7 +16,7 @@ function current()
     end
     get(CURRENT_PLOT.nullableplot)
 end
-current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = Nullable(plot))
+current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = plot)
 
 # ---------------------------------------------------------
 
