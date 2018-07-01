@@ -1,3 +1,5 @@
+using Pkg
+
 Pkg.add("ImageMagick")
 Pkg.build("ImageMagick")
 
