@@ -337,9 +337,8 @@ end
 """
 You can easily define your own plotting recipes with convenience methods:
 ```
-@userplot type GroupHist
-    args
-end
+@userplot GroupHist
+
 @recipe function f(gh::GroupHist)
     # set some attributes, add some series, using gh.args as input
 end
@@ -352,8 +351,8 @@ macro userplot(expr)
 end
 
 function _userplot(expr::Expr)
-    if expr.head != :type
-        error("Must call userplot on a type/immutable expression.  Got: $expr")
+    if expr.head != :struct
+        error("Must call userplot on a [mutable] struct expression.  Got: $expr")
     end
 
     typename = expr.args[2]

@@ -1,5 +1,5 @@
 using RecipesBase
-using Base.Test
+using Test, Random
 
 const KW = Dict{Symbol, Any}
 
