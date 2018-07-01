@@ -120,6 +120,12 @@ function _display(plt::Plot{PlotlyJSBackend})
     end
 end
 
+@require WebIO begin
+    function WebIO.render(plt::Plot{PlotlyJSBackend})
+        prepare_output(plt)
+        WebIO.render(plt.o)
+    end
+end
 
 function closeall(::PlotlyJSBackend)
     if !isplotnull() && isa(current().o, PlotlyJS.SyncPlot)
