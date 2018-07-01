@@ -44,7 +44,7 @@ notifications:
 # uncomment the following lines to override the default test script
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'Pkg.clone(pwd()); Pkg.build("Plots")'
+ - julia -e 'using Pkg; Pkg.add(pwd()); Pkg.build("Plots")'
  - julia test/travis_commands.jl
  # - julia -e 'Pkg.clone("ImageMagick"); Pkg.build("ImageMagick")'
  # - julia -e 'Pkg.clone("GR"); Pkg.build("GR")'
