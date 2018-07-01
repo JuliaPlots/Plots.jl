@@ -11,11 +11,11 @@ const wong_palette = [
     ]
 
 _themes[:wong] = PlotTheme(
-    palette = expand_palette(colorant"white", wong_palette; lchoices=linspace(57,57,1), cchoices=linspace(100,100,1)),
+    palette = expand_palette(colorant"white", wong_palette; lchoices = [57], cchoices = [100]),
     gradient = cgrad(:viridis).colors,
 )
 
 _themes[:wong2] = PlotTheme(
-    palette = expand_palette(colorant"white", [RGB(0,0,0); wong_palette]; lchoices=linspace(57,57,1), cchoices=linspace(100,100,1)),
+    palette = expand_palette(colorant"white", [RGB(0,0,0); wong_palette]; lchoices = [57], cchoices = [100]),
     gradient = cgrad(:viridis).colors,
 )

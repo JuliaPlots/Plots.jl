@@ -15,12 +15,11 @@ _themes[:juno] = PlotTheme(
     fgtext = colorant"#9EB1BE",
     fgguide = colorant"#9EB1BE",
     fglegend = colorant"#9EB1BE",
-    palette = expand_palette(juno_bg, juno_palette; lchoices=linspace(57,57,1),
-                                                    cchoices=linspace(100,100,1)),
+    palette = expand_palette(juno_bg, juno_palette; lchoices = [57], cchoices = [100]),
     gradient = cgrad(:fire).colors
 )
 
-@require Juno begin
+@require Juno = "e5e0dc1b-0480-54bc-9374-aad01c23163d" begin
     if Juno.isactive()
         colors = Juno.syntaxcolors()
         colors = Dict(k => parse(Colorant, "#"*hex(colors[k], 6)) for (k, v) in colors)
@@ -31,7 +30,7 @@ _themes[:juno] = PlotTheme(
         filter!(c -> c.s > 0.5*mean(c -> c.s, colvec), colvec)
         grad = Vector{eltype(colvec)}(0)
         for i = 1:length(colvec)-1
-            append!(grad, linspace(colvec[i], colvec[i+1]))
+            append!(grad, range(colvec[i], stop = colvec[i+1]))
         end
 
         _themes[:juno] = PlotTheme(
@@ -41,8 +40,7 @@ _themes[:juno] = PlotTheme(
             fgtext = colors["variable"],
             fgguide = colors["variable"],
             fglegend = colors["variable"],
-            palette = expand_palette(colors["background"], juno_palette; lchoices=linspace(57,57,1),
-                                                                         cchoices=linspace(100,100,1)),
+            palette = expand_palette(colors["background"], juno_palette; lchoices = [57], cchoices = [100]),
             gradient = grad
         )
     end
