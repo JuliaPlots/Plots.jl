@@ -6,11 +6,11 @@ Pkg.build("ImageMagick")
 # Pkg.clone("GR")
 # Pkg.build("GR")
 
-Pkg.add("https://github.com/JuliaPlots/PlotReferenceImages.jl.git")
+Pkg.checkout("https://github.com/JuliaPlots/PlotReferenceImages.jl.git")
 
 # Pkg.clone("https://github.com/JuliaStats/KernelDensity.jl.git")
 
-Pkg.add("StatPlots")
+# Pkg.add("StatPlots")
 Pkg.checkout("PlotUtils")
 Pkg.checkout("RecipesBase")
 
