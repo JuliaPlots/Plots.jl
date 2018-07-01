@@ -382,6 +382,7 @@ const _axis_defaults = KW(
     :gridlinewidth            => 0.5,
     :tick_direction           => :in,
     :showaxis                 => true,
+    :widen                    => true,
 )
 
 const _suppress_warnings = Set{Symbol}([
