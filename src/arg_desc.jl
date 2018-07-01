@@ -65,6 +65,7 @@ const _arg_desc = KW(
 :html_output_format       => "Symbol.  When writing html output, what is the format?  `:png` and `:svg` are currently supported.",
 :inset_subplots 		  => "nothing or vector of 2-tuple (parent,bbox).  optionally pass a vector of (parent,bbox) tuples which are the parent layout and the relative bounding box of inset subplots",
 :dpi 					  => "Number.  Dots Per Inch of output figures",
+:thickness_scaling        => "Number. Scale for the thickness of all line elements like lines, borders, axes, grid lines, ... defaults to 1.",
 :display_type 			  => "Symbol (`:auto`, `:gui`, or `:inline`).  When supported, `display` will either open a GUI window or plot inline.",
 :extra_kwargs 			  => "KW (Dict{Symbol,Any}).  Pass a map of extra keyword args which may be specific to a backend.",
 :fontfamily               => "String or Symbol.  Default font family for title, legend entries, tick labels and guides",
@@ -110,7 +111,7 @@ const _arg_desc = KW(
 
 # axis args
 :guide     				  => "String. Axis guide (label).",
-:lims      				  => "NTuple{2,Number}. Force axis limits.  Only finite values are used (you can set only the right limit with `xlims = (-Inf, 2)` for example).",
+:lims      				  => "NTuple{2,Number} or Symbol. Force axis limits.  Only finite values are used (you can set only the right limit with `xlims = (-Inf, 2)` for example). `:round` widens the limit to the nearest round number ie. [0.1,3.6]=>[0.0,4.0]",
 :ticks     				  => "Vector of numbers (set the tick values), Tuple of (tickvalues, ticklabels), or `:auto`",
 :scale     				  => "Symbol. Scale of the axis: `:none`, `:ln`, `:log2`, `:log10`",
 :rotation  				  => "Number. Degrees rotation of tick labels.",
@@ -139,5 +140,6 @@ const _arg_desc = KW(
 :gridstyle                => "Symbol. Style of the grid lines. Choose from $(_allStyles)",
 :gridlinewidth            => "Number. Width of the grid lines (in pixels)",
 :tick_direction           => "Symbol.  Direction of the ticks. `:in` or `:out`",
-:showaxis                 => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`"
+:showaxis                 => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`",
+:widen                    => "Bool. Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders. Defaults to `true`.",
 )

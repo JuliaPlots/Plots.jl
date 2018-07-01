@@ -523,7 +523,6 @@ for (mime, fmt) in _inspectdr_mimeformats_nodpi
         _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
     end
 end
-_show(io::IO, mime::MIME"text/plain", plt::Plot{InspectDRBackend}) = nothing #Don't show
 
 # ----------------------------------------------------------------
 

@@ -263,22 +263,22 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
     end
 
     ax[:tickangle] = -axis[:rotation]
+    ax[:type] = plotly_scale(axis[:scale])
     lims = axis_limits(axis)
 
-    if axis[:ticks] != :native || axis[:lims] != :auto 
+    if axis[:ticks] != :native || axis[:lims] != :auto
         ax[:range] = map(scalefunc(axis[:scale]), lims)
     end
 
     if !(axis[:ticks] in (nothing, :none, false))
         ax[:titlefont] = plotly_font(guidefont(axis))
-        ax[:type] = plotly_scale(axis[:scale])
         ax[:tickfont] = plotly_font(tickfont(axis))
         ax[:tickcolor] = framestyle in (:zerolines, :grid) || !axis[:showaxis] ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
         # flip
         if axis[:flip]
-            ax[:autorange] = "reversed"
+            ax[:range] = reverse(ax[:range])
         end
 
         # ticks
@@ -328,9 +328,11 @@ function plotly_layout(plt::Plot)
 
     d_out[:annotations] = KW[]
 
+    multiple_subplots = length(plt.subplots) > 1
+
     for sp in plt.subplots
-        spidx = sp[:subplot_index]
-        x_idx, y_idx = plotly_link_indicies(plt, sp)
+        spidx = multiple_subplots ? sp[:subplot_index] : ""
+        x_idx, y_idx = multiple_subplots ? plotly_link_indicies(plt, sp) : ("", "")
         # add an annotation for the title... positioned horizontally relative to plotarea,
         # but vertically just below the top of the subplot bounding box
         if sp[:title] != ""
@@ -388,6 +390,7 @@ function plotly_layout(plt::Plot)
                 :bgcolor  => rgba_string(sp[:background_color_legend]),
                 :bordercolor => rgba_string(sp[:foreground_color_legend]),
                 :font     => plotly_font(legendfont(sp)),
+                :tracegroupgap => 0,
                 :x => xpos,
                 :y => ypos
             )
@@ -490,7 +493,7 @@ end
 
 function plotly_data(series::Series, letter::Symbol, data)
     axis = series[:subplot][Symbol(letter, :axis)]
-    
+
     data = if axis[:ticks] == :native && data != nothing
         plotly_native_data(axis, data)
     else
@@ -516,7 +519,7 @@ function plotly_native_data(axis::Axis, data::AbstractArray)
         construct_categorical_data(data, axis)
     elseif axis[:formatter] in (datetimeformatter, dateformatter, timeformatter)
         plotly_convert_to_datetime(data, axis[:formatter])
-    else 
+    else
         data
     end
 end
@@ -584,6 +587,8 @@ function plotly_series(plt::Plot, series::Series)
         return plotly_series_segments(series, d_out, x, y, z)
 
     elseif st == :heatmap
+        x = heatmap_edges(x, sp[:xaxis][:scale])
+        y = heatmap_edges(y, sp[:yaxis][:scale])
         d_out[:type] = "heatmap"
         d_out[:x], d_out[:y], d_out[:z] = x, y, z
         d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
@@ -632,31 +637,17 @@ function plotly_series(plt::Plot, series::Series)
 
     # add "marker"
     if hasmarker
+        inds = eachindex(x)
         d_out[:marker] = KW(
             :symbol => get(_plotly_markers, series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
-            :size => 2 * series[:markersize],
-            # :color => rgba_string(series[:markercolor]),
+            :size => 2 * _cycle(series[:markersize], inds),
+            :color => rgba_string.(plot_color.(get_markercolor.(series, inds), get_markeralpha.(series, inds))),
             :line => KW(
-                :color => _cycle(rgba_string.(series[:markerstrokecolor]),eachindex(series[:x])),
-                :width => series[:markerstrokewidth],
+                :color => rgba_string.(plot_color.(get_markerstrokecolor.(series, inds), get_markerstrokealpha.(series, inds))),
+                :width => _cycle(series[:markerstrokewidth], inds),
             ),
         )
-
-        # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
-        if series[:marker_z] == nothing
-            d_out[:marker][:color] = _cycle(rgba_string.(series[:markercolor]),eachindex(series[:x]))
-        else
-            # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
-            # grad = as_gradient(series[:markercolor], series[:markeralpha])
-            cmin, cmax = get_clims(sp)
-            # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
-            d_out[:marker][:color] = [clamp(zi, cmin, cmax) for zi in series[:marker_z]]
-            d_out[:marker][:cmin] = cmin
-            d_out[:marker][:cmax] = cmax
-            d_out[:marker][:colorscale] = plotly_colorscale(series[:markercolor], series[:markeralpha])
-            d_out[:marker][:showscale] = hascolorbar(sp)
-        end
     end
 
     plotly_polar!(d_out, series)
@@ -674,13 +665,14 @@ function plotly_series_shapes(plt::Plot, series::Series)
 
     # these are the axes that the series should be mapped to
     x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
-    base_d = KW()
-    base_d[:xaxis] = "x$(x_idx)"
-    base_d[:yaxis] = "y$(y_idx)"
-    base_d[:name] = series[:label]
-    # base_d[:legendgroup] = series[:label]
+    d_base = KW(
+        :xaxis => "x$(x_idx)",
+        :yaxis => "y$(y_idx)",
+        :name => series[:label],
+        :legendgroup => series[:label],
+    )
 
-    x, y = (plotly_data(series, letter, data) 
+    x, y = (plotly_data(series, letter, data)
         for (letter, data) in zip((:x, :y), shape_data(series))
     )
 
@@ -688,7 +680,7 @@ function plotly_series_shapes(plt::Plot, series::Series)
         length(rng) < 2 && continue
 
         # to draw polygons, we actually draw lines with fill
-        d_out = merge(base_d, KW(
+        d_out = merge(d_base, KW(
             :type => "scatter",
             :mode => "lines",
             :x => vcat(x[rng], x[rng[1]]),
@@ -709,9 +701,11 @@ function plotly_series_shapes(plt::Plot, series::Series)
         d_outs[i] = d_out
     end
     if series[:fill_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, base_d, :fill))
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :fill))
     elseif series[:line_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, base_d, :line))
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :line))
+    elseif series[:marker_z] != nothing
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :marker))
     end
     d_outs
 end
@@ -729,10 +723,11 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
     d_outs = Vector{KW}((hasfillrange ? 2 : 1 ) * length(segments))
 
     for (i,rng) in enumerate(segments)
-        length(rng) < 2 && continue
+        !isscatter && length(rng) < 2 && continue
 
         d_out = deepcopy(d_base)
         d_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
+        d_out[:legendgroup] = series[:label]
 
         # set the type
         if st in (:path, :scatter, :scattergl, :straightline)
@@ -766,30 +761,15 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
         # add "marker"
         if hasmarker
             d_out[:marker] = KW(
-                :symbol => get(_plotly_markers, series[:markershape], string(series[:markershape])),
+                :symbol => get(_plotly_markers, _cycle(series[:markershape], i), string(_cycle(series[:markershape], i))),
                 # :opacity => series[:markeralpha],
-                :size => 2 * series[:markersize],
-                # :color => rgba_string(series[:markercolor]),
+                :size => 2 * _cycle(series[:markersize], i),
+                :color => rgba_string(plot_color(get_markercolor(series, i), get_markeralpha(series, i))),
                 :line => KW(
-                    :color => _cycle(rgba_string.(series[:markerstrokecolor]), eachindex(rng)),
-                    :width => series[:markerstrokewidth],
+                    :color => rgba_string(plot_color(get_markerstrokecolor(series, i), get_markerstrokealpha(series, i))),
+                    :width => _cycle(series[:markerstrokewidth], i),
                 ),
             )
-
-            # gotta hack this (for now?) since plotly can't handle rgba values inside the gradient
-            if series[:marker_z] == nothing
-                d_out[:marker][:color] = _cycle(rgba_string.(series[:markercolor]), eachindex(rng))
-            else
-                # grad = ColorGradient(series[:markercolor], alpha=series[:markeralpha])
-                # grad = as_gradient(series[:markercolor], series[:markeralpha])
-                cmin, cmax = get_clims(sp)
-                # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
-                d_out[:marker][:color] = [clamp(zi, cmin, cmax) for zi in _cycle(series[:marker_z], rng)]
-                d_out[:marker][:cmin] = cmin
-                d_out[:marker][:cmax] = cmax
-                d_out[:marker][:colorscale] = plotly_colorscale(series[:markercolor], series[:markeralpha])
-                d_out[:marker][:showscale] = hascolorbar(sp)
-            end
         end
 
         # add "line"
@@ -809,7 +789,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
         end
 
         plotly_polar!(d_out, series)
-        plotly_hover!(d_out, series[:hover])
+        plotly_hover!(d_out, _cycle(series[:hover], rng))
 
         if hasfillrange
             # if hasfillrange is true, return two dictionaries (one for original
@@ -825,14 +805,14 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
                 series[:fillrange] = (f1, f2)
             end
             if isa(series[:fillrange], AbstractVector)
-                d_out_fillrange[:y] = series[:fillrange]
+                d_out_fillrange[:y] = series[:fillrange][rng]
                 delete!(d_out_fillrange, :fill)
                 delete!(d_out_fillrange, :fillcolor)
             else
                 # if fillrange is a tuple with upper and lower limit, d_out_fillrange
                 # is the series that will do the filling
-                d_out_fillrange[:x], d_out_fillrange[:y] =
-                    concatenate_fillrange(x[rng], series[:fillrange][rng])
+                fillrng = Tuple(series[:fillrange][i][rng] for i in 1:2)
+                d_out_fillrange[:x], d_out_fillrange[:y] = concatenate_fillrange(x[rng], fillrng)
                 d_out_fillrange[:line][:width] = 0
                 delete!(d_out, :fill)
                 delete!(d_out, :fillcolor)
@@ -848,6 +828,8 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
         push!(d_outs, plotly_colorbar_hack(series, d_base, :line))
     elseif series[:fill_z] != nothing
         push!(d_outs, plotly_colorbar_hack(series, d_base, :fill))
+    elseif series[:marker_z] != nothing
+        push!(d_outs, plotly_colorbar_hack(series, d_base, :marker))
     end
 
     d_outs
@@ -858,6 +840,7 @@ function plotly_colorbar_hack(series::Series, d_base::KW, sym::Symbol)
     cmin, cmax = get_clims(series[:subplot])
     d_out[:showlegend] = false
     d_out[:type] = is3d(series) ? :scatter3d : :scatter
+    d_out[:hoverinfo] = :none
     d_out[:mode] = :markers
     d_out[:x], d_out[:y] = [series[:x][1]], [series[:y][1]]
     if is3d(series)
@@ -866,6 +849,7 @@ function plotly_colorbar_hack(series::Series, d_base::KW, sym::Symbol)
     # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
     d_out[:marker] = KW(
         :size => 0,
+        :opacity => 0,
         :color => [0.5],
         :cmin => cmin,
         :cmax => cmax,
@@ -944,17 +928,7 @@ end
 # ----------------------------------------------------------------
 
 
-function _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyBackend})
-    # show_png_from_html(io, plt)
-    error("png output from the plotly backend is not supported.  Please use plotlyjs instead.")
-end
-
-function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyBackend})
-    error("svg output from the plotly backend is not supported.  Please use plotlyjs instead.")
-end
-
-function Base.show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
-    prepare_output(plt)
+function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
     write(io, html_head(plt) * html_body(plt))
 end
 

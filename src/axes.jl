@@ -246,19 +246,17 @@ function get_ticks(axis::Axis)
     ticks = ticks == :native ? :auto : ticks
 
     dvals = axis[:discrete_values]
-    cv, dv = if !isempty(dvals)
-        # discrete ticks...
-        n = length(dvals)
-        rng = if ticks == :auto
-            Int[round(Int,i) for i in linspace(1, n, 15)]
-        elseif ticks == :all
-            1:n
-        elseif typeof(ticks) <: Int
-            Int[round(Int,i) for i in linspace(1, n, ticks)]
-        end
-        axis[:continuous_values][rng], dvals[rng]
-    elseif typeof(ticks) <: Symbol
-        if ispolar(axis.sps[1]) && axis[:letter] == :x
+    cv, dv = if typeof(ticks) <: Symbol
+        if !isempty(dvals)
+            # discrete ticks...
+            n = length(dvals)
+            rng = if ticks == :auto
+                Int[round(Int,i) for i in linspace(1, n, 15)]
+            else # if ticks == :all
+                1:n
+            end
+            axis[:continuous_values][rng], dvals[rng]
+        elseif ispolar(axis.sps[1]) && axis[:letter] == :x
             #force theta axis to be full circle
             (collect(0:pi/4:7pi/4), string.(0:45:315))
         else
@@ -266,8 +264,13 @@ function get_ticks(axis::Axis)
             optimal_ticks_and_labels(axis)
         end
     elseif typeof(ticks) <: Union{AVec, Int}
-        # override ticks, but get the labels
-        optimal_ticks_and_labels(axis, ticks)
+        if !isempty(dvals) && typeof(ticks) <: Int
+            rng = Int[round(Int,i) for i in linspace(1, length(dvals), ticks)]
+            axis[:continuous_values][rng], dvals[rng]
+        else
+            # override ticks, but get the labels
+            optimal_ticks_and_labels(axis, ticks)
+        end
     elseif typeof(ticks) <: NTuple{2, Any}
         # assuming we're passed (ticks, labels)
         ticks
@@ -415,27 +418,36 @@ end
 # -------------------------------------------------------------------------
 
 # push the limits out slightly
-function widen(lmin, lmax)
-    span = lmax - lmin
+function widen(lmin, lmax, scale = :identity)
+    f, invf = scalefunc(scale), invscalefunc(scale)
+    span = f(lmax) - f(lmin)
     # eps = NaNMath.max(1e-16, min(1e-2span, 1e-10))
     eps = NaNMath.max(1e-16, 0.03span)
-    lmin-eps, lmax+eps
+    invf(f(lmin)-eps), invf(f(lmax)+eps)
 end
 
-# figure out if widening is a good idea.  if there's a scale set it's too tricky,
-# so lazy out and don't widen
+# figure out if widening is a good idea.
+const _widen_seriestypes = (:line, :path, :steppre, :steppost, :sticks, :scatter, :barbins, :barhist, :histogram, :scatterbins, :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :bar, :shape, :path3d, :scatter3d)
+
 function default_should_widen(axis::Axis)
     should_widen = false
-    if axis[:scale] == :identity && !is_2tuple(axis[:lims])
+    if !is_2tuple(axis[:lims])
         for sp in axis.sps
             for series in series_list(sp)
-                if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
+                if series.d[:seriestype] in _widen_seriestypes
                     should_widen = true
                 end
             end
         end
     end
     should_widen
+end
+
+function round_limits(amin,amax)
+    scale = 10^(1-round(log10(amax - amin)))
+    amin = floor(amin*scale)/scale
+    amax = ceil(amax*scale)/scale
+    amin, amax
 end
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
@@ -466,8 +478,10 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
         else
             amin, amax
         end
-    elseif should_widen
-        widen(amin, amax)
+    elseif should_widen && axis[:widen]
+        widen(amin, amax, axis[:scale])
+    elseif lims == :round
+        round_limits(amin,amax)
     else
         amin, amax
     end
