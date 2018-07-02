@@ -80,7 +80,7 @@ end
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     n = length(y)
-    newx = repmat(Float64[-1, 1, NaN], n)
+    newx = repeat(Float64[-1, 1, NaN], n)
     newy = vec(Float64[yi for i=1:3,yi=y])
     x := newx
     y := newy
@@ -92,7 +92,7 @@ end
 @recipe function f(::Type{Val{:vline}}, x, y, z)
     n = length(y)
     newx = vec(Float64[yi for i=1:3,yi=y])
-    newy = repmat(Float64[-1, 1, NaN], n)
+    newy = repeat(Float64[-1, 1, NaN], n)
     x := newx
     y := newy
     seriestype := :straightline
@@ -284,7 +284,7 @@ end
     # where the points are the control points of the curve
     for rng in iter_segments(args...)
         length(rng) < 2 && continue
-        ts = linspace(0, 1, npoints)
+        ts = range(0, stop=1, length=npoints)
         nanappend!(newx, map(t -> bezier_value(_cycle(x,rng), t), ts))
         nanappend!(newy, map(t -> bezier_value(_cycle(y,rng), t), ts))
         if z != nothing
@@ -620,10 +620,10 @@ _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) where {N
 _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) where {N} = binning
 
 _hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) where {N} =
-    map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...))
+    map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...,))
 
 _hist_edges(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, AbstractVector}) where {N} =
-    map(dim -> _hist_edge(vs, dim, binning), (1:N...))
+    map(dim -> _hist_edge(vs, dim, binning), (1:N...,))
 
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none

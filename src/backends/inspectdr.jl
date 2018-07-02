@@ -13,7 +13,7 @@ Add in functionality to Plots.jl:
     :aspect_ratio,
 =#
 
-@require Revise begin
+@require Revise="295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "inspectdr.jl"))
 end
 
@@ -162,17 +162,17 @@ end
 
 function _initialize_backend(::InspectDRBackend; kw...)
     @eval begin
-        import InspectDR
+        topimport(:InspectDR)
         export InspectDR
 
         #Glyph used when plotting "Shape"s:
-        const INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
+        INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
             2*InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y
         )
 
         mutable struct InspecDRPlotRef
-            mplot::Union{Void, InspectDR.Multiplot}
-            gui::Union{Void, InspectDR.GtkPlot}
+            mplot::Union{Nothing, InspectDR.Multiplot}
+            gui::Union{Nothing, InspectDR.GtkPlot}
         end
 
         _inspectdr_getmplot(::Any) = nothing
@@ -347,8 +347,8 @@ end
 # ---------------------------------------------------------------------------
 
 function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
-    const plot = sp.o
-    const strip = plot.strips[1] #Only 1 strip supported with Plots.jl
+    plot = sp.o
+    strip = plot.strips[1] #Only 1 strip supported with Plots.jl
 
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
     xgrid_show = xaxis[:grid]
@@ -406,7 +406,7 @@ end
 # called just before updating layout bounding boxes... in case you need to prep
 # for the calcs
 function _before_layout_calcs(plt::Plot{InspectDRBackend})
-    const mplot = _inspectdr_getmplot(plt.o)
+    mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end
 
     mplot.title = plt[:plot_title]
@@ -506,7 +506,7 @@ const _inspectdr_mimeformats_nodpi = Dict(
 #    "application/postscript"  => "ps", #TODO: support once Cairo supports PSSurface
     "application/pdf"         => "pdf"
 )
-_inspectdr_show(io::IO, mime::MIME, ::Void, w, h) =
+_inspectdr_show(io::IO, mime::MIME, ::Nothing, w, h) =
     throw(ErrorException("Cannot show(::IO, ...) plot - not yet generated"))
 function _inspectdr_show(io::IO, mime::MIME, mplot, w, h)
     InspectDR._show(io, mime, mplot, Float64(w), Float64(h))

@@ -28,7 +28,7 @@ Read from .hdf5 file using:
     - Should be reliable for archival purposes.
 ==#
 
-@require Revise begin
+@require Revise="295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "hdf5.jl"))
 end
 
@@ -39,7 +39,7 @@ struct HDF5PlotNative; end #Indentifies a data element that can natively be hand
 struct HDF5CTuple; end #Identifies a "complex" tuple structure
 
 mutable struct HDF5Plot_PlotRef
-	ref::Union{Plot, Void}
+	ref::Union{Plot, Nothing}
 end
 
 
@@ -142,13 +142,13 @@ end
 
 function _initialize_backend(::HDF5Backend)
     @eval begin
-        import HDF5
+        topimport(:HDF5)
         export HDF5
         if length(HDF5PLOT_MAP_TELEM2STR) < 1
             #Possible element types of high-level data types:
             const telem2str = Dict{String, Type}(
                 "NATIVE" => HDF5PlotNative,
-                "VOID" => Void,
+                "VOID" => Nothing,
                 "BOOL" => Bool,
                 "SYMBOL" => Symbol,
                 "TUPLE" => Tuple,
@@ -315,9 +315,9 @@ function _hdf5plot_gwrite(grp, k::String, v::Array{Any})
     warn("Cannot write Array: $k=$v")
 end
 =#
-function _hdf5plot_gwrite(grp, k::String, v::Void)
+function _hdf5plot_gwrite(grp, k::String, v::Nothing)
     grp[k] = 0
-    _hdf5plot_writetype(grp, k, Void)
+    _hdf5plot_writetype(grp, k, Nothing)
 end
 function _hdf5plot_gwrite(grp, k::String, v::Bool)
     grp[k] = Int(v)
@@ -344,7 +344,7 @@ end
 function _hdf5plot_gwrite(grp, k::String, d::Dict)
 #    warn("Cannot write dict: $k=$d")
 end
-function _hdf5plot_gwrite(grp, k::String, v::Range)
+function _hdf5plot_gwrite(grp, k::String, v::AbstractRange)
     _hdf5plot_gwrite(grp, k, collect(v)) #For now
 end
 function _hdf5plot_gwrite(grp, k::String, v::ARGB{N0f8})
@@ -408,15 +408,6 @@ function _hdf5plot_gwrite(grp, k::String, v::Surface)
 	grp = HDF5.g_create(grp, k)
 	_hdf5plot_gwrite(grp, "data2d", v.surf)
 	_hdf5plot_writetype(grp, Surface)
-end
-#TODO: "Properly" support Nullable using _hdf5plot_writetype?
-function _hdf5plot_gwrite(grp, k::String, v::Nullable)
-    if isnull(v)
-        _hdf5plot_gwrite(grp, k, nothing)
-    else
-        _hdf5plot_gwrite(grp, k, v.value)
-    end
-    return
 end
 
 function _hdf5plot_gwrite(grp, k::String, v::SeriesAnnotations)
@@ -485,7 +476,7 @@ function _hdf5plot_readcount(grp) #Read directly from group
 end
 
 _hdf5plot_convert(T::Type{HDF5PlotNative}, v) = v
-_hdf5plot_convert(T::Type{Void}, v) = nothing
+_hdf5plot_convert(T::Type{Nothing}, v) = nothing
 _hdf5plot_convert(T::Type{Bool}, v) = (v!=0)
 _hdf5plot_convert(T::Type{Symbol}, v) = Symbol(v)
 _hdf5plot_convert(T::Type{Tuple}, v) = tuple(v...) #With Vector{T<:Number}

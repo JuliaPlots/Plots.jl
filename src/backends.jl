@@ -13,6 +13,20 @@ backends() = _backends
 backend_name() = CURRENT_BACKEND.sym
 _backend_instance(sym::Symbol) = haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
 
+# kludge while waiting for Pkg alternatives
+function _findmod(f::Symbol)
+    for (u,v) in Base.loaded_modules
+        (Symbol(v) == f) && return u
+    end
+    nothing
+end
+function topimport(modname)
+    @eval Base.__toplevel__  import $modname
+    u = _findmod(modname)
+    @eval $modname = Base.loaded_modules[$u]
+end
+# end kludge
+
 macro init_backend(s)
     str = lowercase(string(s))
     sym = Symbol(str)
@@ -134,8 +148,7 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 function pickDefaultBackend()
     env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
     if env_default != ""
-        try
-            Pkg.installed(env_default)  # this will error if not installed
+        if Base.find_package(env_default) != nothing
             sym = Symbol(lowercase(env_default))
             if haskey(_backendType, sym)
                 return backend(sym)
@@ -143,7 +156,7 @@ function pickDefaultBackend()
                 warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t",
                      join(sort(_backends), "\n\t"))
             end
-        catch
+        else
             warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not installed.")
         end
     end
@@ -152,7 +165,7 @@ function pickDefaultBackend()
     # which one someone will want to use if they have the package installed...accounting for
     # features, speed, and robustness
     for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR", "GLVisualize")
-        if Pkg.installed(pkgstr) != nothing
+        if Base.find_package(pkgstr) != nothing
             return backend(Symbol(lowercase(pkgstr)))
         end
     end

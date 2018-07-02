@@ -4,7 +4,7 @@ calcMidpoints(edges::AbstractVector) = Float64[0.5 * (edges[i] + edges[i+1]) for
 "Make histogram-like bins of data"
 function binData(data, nbins)
   lo, hi = ignorenan_extrema(data)
-  edges = collect(linspace(lo, hi, nbins+1))
+  edges = collect(range(lo, stop=hi, length=nbins+1))
   midpoints = calcMidpoints(edges)
   buckets = Int[max(2, min(searchsortedfirst(edges, x), length(edges)))-1 for x in data]
   counts = zeros(Int, length(midpoints))
@@ -119,7 +119,7 @@ function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     n, m = size(z)
     # idx = 0
     colors = ColorGradient(vec(z))
-    newz = reshape(linspace(0, 1, n*m), n, m)
+    newz = reshape(range(0, stop=1, length=n*m), n, m)
     newz, colors
     # newz = zeros(n, m)
     # for i=1:n, j=1:m
@@ -259,7 +259,7 @@ float_extended_type(x::AbstractArray{T}) where {T<:Real} = Float64
 nop() = nothing
 notimpl() = error("This has not been implemented yet")
 
-isnothing(x::Void) = true
+isnothing(x::Nothing) = true
 isnothing(x) = false
 
 _cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
@@ -305,7 +305,7 @@ function _expand_limits(lims, x)
     e1, e2 = ignorenan_extrema(x)
     lims[1] = NaNMath.min(lims[1], e1)
     lims[2] = NaNMath.max(lims[2], e2)
-  # catch err
+  catch err
   #   warn(err)
   end
   nothing
@@ -343,7 +343,7 @@ function replaceAliases!(d::KW, aliases::Dict{Symbol,Symbol})
   end
 end
 
-createSegments(z) = collect(repmat(reshape(z,1,:),2,1))[2:end]
+createSegments(z) = collect(repeat(reshape(z,1,:),2,1))[2:end]
 
 Base.first(c::Colorant) = c
 Base.first(x::Symbol) = x
@@ -355,7 +355,7 @@ sortedkeys(d::Dict) = sort(collect(keys(d)))
 const _scale_base = Dict{Symbol, Real}(
     :log10 => 10,
     :log2 => 2,
-    :ln => e,
+    :ln => euler_e
 )
 
 function _heatmap_edges(v::AVec)
@@ -450,8 +450,8 @@ limsType(lims)                                          = :invalid
 # axis_Symbol(letter, postfix) = Symbol(letter * postfix)
 # axis_symbols(letter, postfix...) = map(s -> axis_Symbol(letter, s), postfix)
 
-Base.convert(::Type{Vector{T}}, rng::Range{T}) where {T<:Real}         = T[x for x in rng]
-Base.convert(::Type{Vector{T}}, rng::Range{S}) where {T<:Real,S<:Real} = T[x for x in rng]
+Base.convert(::Type{Vector{T}}, rng::AbstractRange{T}) where {T<:Real}         = T[x for x in rng]
+Base.convert(::Type{Vector{T}}, rng::AbstractRange{S}) where {T<:Real,S<:Real} = T[x for x in rng]
 
 Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 
@@ -846,8 +846,8 @@ end
 
 extendSeriesByOne(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
 extendSeriesByOne(v::AVec, n::Integer = 1)       = isempty(v) ? (1:n) : vcat(v, (1:n) + ignorenan_maximum(v))
-extendSeriesData(v::Range{T}, z::Real) where {T}        = extendSeriesData(float(collect(v)), z)
-extendSeriesData(v::Range{T}, z::AVec) where {T}        = extendSeriesData(float(collect(v)), z)
+extendSeriesData(v::AbstractRange{T}, z::Real) where {T}        = extendSeriesData(float(collect(v)), z)
+extendSeriesData(v::AbstractRange{T}, z::AVec) where {T}        = extendSeriesData(float(collect(v)), z)
 extendSeriesData(v::AVec{T}, z::Real) where {T}         = (push!(v, convert(T, z)); v)
 extendSeriesData(v::AVec{T}, z::AVec) where {T}         = (append!(v, convert(Vector{T}, z)); v)
 
@@ -856,7 +856,7 @@ extendSeriesData(v::AVec{T}, z::AVec) where {T}         = (append!(v, convert(Ve
 # NOTE: backends should implement the following methods to get/set the x/y/z data objects
 
 tovec(v::AbstractVector) = v
-tovec(v::Void) = zeros(0)
+tovec(v::Nothing) = zeros(0)
 
 function getxy(plt::Plot, i::Integer)
     d = plt.series_list[i].d
@@ -1138,9 +1138,9 @@ function convert_sci_unicode(label::AbstractString)
     "×10" => "×10^{",
     )
     for key in keys(unicode_dict)
-        label = replace(label, key, unicode_dict[key])
+        label = replace(label, key => unicode_dict[key])
     end
-    if contains(label, "10^{")
+    if occursin("10^{", label)
         label = string(label, "}")
     end
     label

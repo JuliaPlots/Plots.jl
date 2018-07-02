@@ -9,7 +9,7 @@ TODO
     * fix units in all visuals (e.g dotted lines, marker scale, surfaces)
 =#
 
-@require Revise begin
+@require Revise="295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "glvisualize.jl"))
 end
 
@@ -397,7 +397,7 @@ function gappy(x, ps)
     return last(ps) - x
 end
 function ticks(points, resolution)
-    Float16[gappy(x, points) for x = linspace(first(points),last(points), resolution)]
+    Float16[gappy(x, points) for x = range(first(points),stop=last(points), length=resolution)]
 end
 
 
@@ -901,7 +901,7 @@ function gl_boxplot(d, kw_args)
         # filter y
         values = y[filter(i -> _cycle(x,i) == glabel, 1:length(y))]
         # compute quantiles
-        q1,q2,q3,q4,q5 = quantile(values, linspace(0,1,5))
+        q1,q2,q3,q4,q5 = quantile(values, range(0,stop=1,5))
         # notch
         n = Plots.notch_width(q2, q4, length(values))
         # warn on inverted notches?

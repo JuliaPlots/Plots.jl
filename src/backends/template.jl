@@ -5,7 +5,7 @@
 
 function _initialize_backend(::[PkgName]Backend; kw...)
     @eval begin
-        import [PkgName]
+        topimport(:[PkgName])
         export [PkgName]
         # todo: other initialization that needs to be eval-ed
     end

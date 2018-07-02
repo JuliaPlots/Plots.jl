@@ -2,7 +2,7 @@
 
 # significant contributions by: @pkofod
 
-@require Revise begin
+@require Revise="295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pgfplots.jl"))
 end
 
@@ -58,7 +58,7 @@ end
 
 function _initialize_backend(::PGFPlotsBackend; kw...)
     @eval begin
-        import PGFPlots
+        topimport(:PGFPlots)
         export PGFPlots
     end
 end

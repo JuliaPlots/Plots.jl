@@ -12,6 +12,17 @@ import RecipesBase: plot, plot!, animate
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
+
+import Dates
+using Dates: Date, DateTime
+using Printf: @printf, @sprintf
+using REPL: REPLDisplay
+using Base64: base64encode
+using Base.Sys: isapple, islinux, iswindows, isbsd
+import Pkg
+using LinearAlgebra: Transpose
+const euler_e = Base.MathConstants.e
+
 import Showoff
 import StatsBase
 import JSON
@@ -264,6 +275,8 @@ xgrid!(args...; kw...)                                    = plot!(; xgrid = args
 ygrid!(args...; kw...)                                    = plot!(; ygrid = args, kw...)
 
 let PlotOrSubplot = Union{Plot, Subplot}
+    global title!, xlabel!, ylabel!, xlims!, ylims!, zlims!, xticks!, yticks!
+    global xgrid!, ygrid!, annotate!, xflip!, yflip!, xaxis!, yaxis!
     title!(plt::PlotOrSubplot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)
     xlabel!(plt::PlotOrSubplot, s::AbstractString; kw...)                 = plot!(plt; xlabel = s, kw...)
     ylabel!(plt::PlotOrSubplot, s::AbstractString; kw...)                 = plot!(plt; ylabel = s, kw...)

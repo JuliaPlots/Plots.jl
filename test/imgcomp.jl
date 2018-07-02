@@ -4,17 +4,28 @@ using VisualRegressionTests
 
 import DataFrames, RDatasets
 
-# don't let pyplot use a gui... it'll crash
-# note: Agg will set gui -> :none in PyPlot
-ENV["MPLBACKEND"] = "Agg"
-try
-  @eval import PyPlot
-  info("Matplotlib version: $(PyPlot.matplotlib[:__version__])")
+# FIXME: pending update of PlotReferenceImages to a proper package
+# import PlotReferenceImages
+
+if !isdefined(@__MODULE__,:backends2test)
+    backends2test = Symbol.(lowercase.(
+        split(get(ENV,"PLOTS_TEST_BACKENDS","GR:UnicodePlots"),":")))
 end
 
+if :pyplot ∈ backends2test
+    # don't let pyplot use a gui... it'll crash
+    # note: Agg will set gui -> :none in PyPlot
+    ENV["MPLBACKEND"] = "Agg"
+    try
+        @eval import PyPlot
+        info("Matplotlib version: $(PyPlot.matplotlib[:__version__])")
+    catch
+    end
+end
 
 using Plots
-using StatPlots
+info("Suppressing StatPlots until dependencies are ready")
+# using StatPlots
 using Base.Test
 
 default(size=(500,300))
@@ -38,7 +49,14 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
 
     # reference image directory setup
     # refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))
-    refdir = Pkg.dir("PlotReferenceImages", "Plots", string(pkg))
+
+    # FIXME: this needs for PlotReferenceImages to be properly instantiated
+    # refdir0 = Base.find_package(@__MODULE__,"PlotReferenceImages")
+    refdir0 = joinpath(ENV["HOME"],".julia","packages","PlotReferenceImages","Rtul")
+
+    refdir0 == nothing && error("Failed to find PlotReferenceImages")
+    refdir = joinpath(refdir0, "Plots", string(pkg))
+    isdir(refdir) || error("$pkg not found in PlotReferenceImages")
     fn = "ref$idx.png"
 
     # firgure out version info
