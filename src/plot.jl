@@ -14,9 +14,9 @@ function current()
     if isplotnull()
         error("No current plot/subplot")
     end
-    get(CURRENT_PLOT.nullableplot)
+    CURRENT_PLOT.nullableplot
 end
-current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot == nothing)
+current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = plot)
 
 # ---------------------------------------------------------
 

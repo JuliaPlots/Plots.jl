@@ -450,7 +450,7 @@ function series_annotations(strs::AbstractVector, args...)
     scalefactor = (1,1)
     for arg in args
         if isa(arg, Shape) || (isa(arg, AbstractVector) && eltype(arg) == Shape)
-            shp = Union{Any, Nothing}()
+            shp = Union{Any, Nothing}(arg)
         elseif isa(arg, Font)
             fnt = arg
         elseif isa(arg, Symbol) && haskey(_shapes, arg)
