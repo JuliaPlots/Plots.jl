@@ -80,7 +80,7 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
         is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
         is_marker_supported(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) where {C<:Colorant} = true
         is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
-        const GL = Plots
+        GL = Plots
     end
 end
 
