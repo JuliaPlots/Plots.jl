@@ -1,3 +1,4 @@
+using Pkg
 
 struct NoBackend <: AbstractBackend end
 
@@ -134,8 +135,7 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 function pickDefaultBackend()
     env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
     if env_default != ""
-        try
-            Pkg.installed(env_default)  # this will error if not installed
+        if env_default in keys(Pkg.installed())
             sym = Symbol(lowercase(env_default))
             if haskey(_backendType, sym)
                 return backend(sym)
@@ -143,7 +143,7 @@ function pickDefaultBackend()
                 warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t",
                      join(sort(_backends), "\n\t"))
             end
-        catch
+        else
             warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not installed.")
         end
     end
@@ -152,7 +152,7 @@ function pickDefaultBackend()
     # which one someone will want to use if they have the package installed...accounting for
     # features, speed, and robustness
     for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR", "GLVisualize")
-        if Pkg.installed(pkgstr) != nothing
+        if pkgstr in keys(Pkg.installed())
             return backend(Symbol(lowercase(pkgstr)))
         end
     end
