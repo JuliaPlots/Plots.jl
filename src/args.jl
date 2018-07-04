@@ -1504,7 +1504,7 @@ function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
     end
 
     # update series color
-    d[:seriescolor] = getSeriesRGBColor.(d[:seriescolor], sp, plotIndex)
+    d[:seriescolor] = getSeriesRGBColor.(d[:seriescolor], Ref(sp), plotIndex)
 
     # update other colors
     for s in (:line, :marker, :fill)

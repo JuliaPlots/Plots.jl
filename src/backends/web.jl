@@ -26,7 +26,7 @@ function open_browser_window(filename::AbstractString)
     @static if Sys.isapple()
         return run(`open $(filename)`)
     end
-    @static if Sys.islinux() || is_bsd()    # is_bsd() addition is as yet untested, but based on suggestion in https://github.com/JuliaPlots/Plots.jl/issues/681
+    @static if Sys.islinux() || Sys.isbsd()    # Sys.isbsd() addition is as yet untested, but based on suggestion in https://github.com/JuliaPlots/Plots.jl/issues/681
         return run(`xdg-open $(filename)`)
     end
     @static if Sys.iswindows()
