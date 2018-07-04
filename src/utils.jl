@@ -307,7 +307,6 @@ function _expand_limits(lims, x)
     lims[2] = NaNMath.max(lims[2], e2)
   # catch err
   #   warn(err)
-  catch
   end
   nothing
 end
