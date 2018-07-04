@@ -80,7 +80,7 @@ end
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     n = length(y)
-    newx = repmat(Float64[-1, 1, NaN], n)
+    newx = repeat(Float64[-1, 1, NaN], n)
     newy = vec(Float64[yi for i=1:3,yi=y])
     x := newx
     y := newy
@@ -92,7 +92,7 @@ end
 @recipe function f(::Type{Val{:vline}}, x, y, z)
     n = length(y)
     newx = vec(Float64[yi for i=1:3,yi=y])
-    newy = repmat(Float64[-1, 1, NaN], n)
+    newy = repeat(Float64[-1, 1, NaN], n)
     x := newx
     y := newy
     seriestype := :straightline

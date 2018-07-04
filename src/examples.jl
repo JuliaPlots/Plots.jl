@@ -157,7 +157,7 @@ PlotExample("Marker types",
         markers = reshape(markers, 1, length(markers))
         n = length(markers)
         x = range(0, stop=10, length=n+2)[2:end-1]
-        y = repmat(reshape(reverse(x),1,:), n, 1)
+        y = repeat(reshape(reverse(x),1,:), n, 1)
         scatter(x, y, m=(8,:auto), lab=map(string,markers), bg=:linen, xlim=(0,10), ylim=(0,10))
     end)]
 ),
@@ -269,8 +269,8 @@ unfilled contour from a matrix.
         x = 1:0.5:20
         y = 1:0.5:10
         f(x,y) = (3x+y^2)*abs(sin(x)+cos(y))
-        X = repmat(reshape(x,1,:), length(y), 1)
-        Y = repmat(y, 1, length(x))
+        X = repeat(reshape(x,1,:), length(y), 1)
+        Y = repeat(y, 1, length(x))
         Z = map(f, X, Y)
         p1 = contour(x, y, f, fill=true)
         p2 = contour(x, y, Z)
@@ -377,8 +377,8 @@ PlotExample("Animation with subplots",
 
 PlotExample("Spy",
 """
-For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has 
-various different nonzero values, a colorbar is added. The colorbar can be disabled with 
+For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has
+various different nonzero values, a colorbar is added. The colorbar can be disabled with
 `legend = nothing`.
 """,
     [:(begin
@@ -419,7 +419,7 @@ attribute. The default framestyle is `:axes`.
 PlotExample("Lines and markers with varying colors",
 """
 You can use the `line_z` and `marker_z` properties to associate a color with
-each line segment or marker in the plot. 
+each line segment or marker in the plot.
 """,
     [:(begin
         t = range(0, stop=1, length=100)

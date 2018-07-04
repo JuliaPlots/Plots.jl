@@ -9,7 +9,7 @@ TODO
     * fix units in all visuals (e.g dotted lines, marker scale, surfaces)
 =#
 
-@require Revise begin
+@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "glvisualize.jl"))
 end
 
@@ -1005,7 +1005,7 @@ end
 
 function scale_for_annotations!(series::Series, scaletype::Symbol = :pixels)
     anns = series[:series_annotations]
-    if anns != nothing && !isnull(anns.baseshape)
+    if anns != nothing && anns.baseshape != nothing
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
         msw, msh = anns.scalefactor

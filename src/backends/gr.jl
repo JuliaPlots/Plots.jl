@@ -3,7 +3,7 @@
 
 # significant contributions by @jheinen
 
-@require Revise begin
+@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "gr.jl"))
 end
 
@@ -196,7 +196,7 @@ gr_inqtext(x, y, s::Symbol) = gr_inqtext(x, y, string(s))
 function gr_inqtext(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.inqtextext(x, y, s[2:end-1])
-    elseif search(s, '\\') != 0 || contains(s, "10^{")
+    elseif something(findfirst(isequal('\\'), s), 0) != 0 || occursin("10^{", s)
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
@@ -208,7 +208,7 @@ gr_text(x, y, s::Symbol) = gr_text(x, y, string(s))
 function gr_text(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.mathtex(x, y, s[2:end-1])
-    elseif search(s, '\\') != 0 || contains(s, "10^{")
+    elseif something(findfirst(isequal('\\'), s), 0) != 0 || occursin("10^{", s)
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
@@ -502,16 +502,16 @@ function gr_legend_pos(s::Symbol,w,h)
     if str == "best"
         str = "topright"
     end
-    if contains(str,"right")
+    if occursin("right", str)
         xpos = viewport_plotarea[2] - 0.05 - w
-    elseif contains(str,"left")
+    elseif occursin("left", str)
         xpos = viewport_plotarea[1] + 0.11
     else
         xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 +.04
     end
-    if contains(str,"top")
+    if occursin("top", str)
         ypos = viewport_plotarea[4] - 0.06
-    elseif contains(str,"bottom")
+    elseif occursin("bottom", str)
         ypos = viewport_plotarea[3] + h + 0.06
     else
         ypos = (viewport_plotarea[4]-viewport_plotarea[3])/2 + h/2
@@ -1069,7 +1069,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if cmap
                 gr_set_line(1, :solid, yaxis[:foreground_color_axis])
                 gr_set_viewport_cmap(sp)
-                l = (length(h) > 1) ? round.(Int32, 1000 + (h - ignorenan_minimum(h)) / (ignorenan_maximum(h) - ignorenan_minimum(h)) * 255) : Int32[1000, 1255]
+                l = (length(h) > 1) ? round.(Int32, 1000 .+ (h .- ignorenan_minimum(h)) ./ (ignorenan_maximum(h) - ignorenan_minimum(h)) .* 255) : Int32[1000, 1255]
                 GR.setwindow(xmin, xmax, zmin, zmax)
                 GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
                 ztick = 0.5 * GR.tick(zmin, zmax)
@@ -1358,10 +1358,10 @@ const _gr_mimeformats = Dict(
     "image/svg+xml"           => "svg",
 )
 
-const _gr_wstype_default = @static if is_linux()
+const _gr_wstype_default = @static if Sys.islinux()
     "x11"
     # "cairox11"
-elseif is_apple()
+elseif Sys.isapple()
     "quartz"
 else
     "use_default"

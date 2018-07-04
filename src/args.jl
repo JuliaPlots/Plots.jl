@@ -15,7 +15,7 @@ function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k,v) in aliases
         s = string(k)
         if '_' in s
-            aliases[Symbol(replace(s, "_", ""))] = v
+            aliases[Symbol(replace(s, "_" => ""))] = v
         end
     end
 end
@@ -176,7 +176,7 @@ const _positionAliases = Dict{Symbol,Symbol}(
 
 const _allScales = [:identity, :ln, :log2, :log10, :asinh, :sqrt]
 const _logScales = [:ln, :log2, :log10]
-const _logScaleBases = Dict(:ln => e, :log2 => 2.0, :log10 => 10.0)
+const _logScaleBases = Dict(:ln => ℯ, :log2 => 2.0, :log10 => 10.0)
 const _scaleAliases = Dict{Symbol,Symbol}(
     :none => :identity,
     :log  => :log10,
@@ -192,7 +192,7 @@ hasgrid(arg::Nothing, letter) = false
 hasgrid(arg::Bool, letter) = arg
 function hasgrid(arg::Symbol, letter)
     if arg in _allGridSyms
-        arg in (:all, :both, :on) || contains(string(arg), string(letter))
+        arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
         warn("Unknown grid argument $arg; $(Symbol(letter, :grid)) was set to `true` instead.")
         true
@@ -210,7 +210,7 @@ showaxis(arg::Nothing, letter) = false
 showaxis(arg::Bool, letter) = arg
 function showaxis(arg::Symbol, letter)
     if arg in _allGridSyms
-        arg in (:all, :both, :on, :yes) || contains(string(arg), string(letter))
+        arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
         warn("Unknown showaxis argument $arg; $(Symbol(letter, :showaxis)) was set to `true` instead.")
         true
@@ -1029,7 +1029,7 @@ function extractGroupArgs(vs::Tuple, args...)
 end
 
 # allow passing NamedTuples for a named legend entry
-@require NamedTuples begin
+@require NamedTuples = "73a701b4-84e1-5df0-88ff-1968ee2ee8dc" begin
     legendEntryFromTuple(ns::NamedTuples.NamedTuple) =
         join(["$k = $v" for (k, v) in zip(keys(ns), values(ns))], ", ")
 

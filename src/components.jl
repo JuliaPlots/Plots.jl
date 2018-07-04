@@ -486,12 +486,13 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     # end
 
     # @show msw msh
-    if anns != nothing && !isnull(anns.baseshape)
+    if anns != nothing && anns.baseshape != nothing
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
         msw,msh = anns.scalefactor
         msize = Float64[]
-        shapes = Shape[begin
+        shapes = Vector{Shape}(length(anns.strs))
+        for i in eachindex(anns.strs)
             str = _cycle(anns.strs,i)
 
             # get the width and height of the string (in mm)
@@ -509,8 +510,8 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
             baseshape = _cycle(get(anns.baseshape),i)
-            shape = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
-        end for i=1:length(anns.strs)]
+            shapes[i] = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
+        end
         series[:markershape] = shapes
         series[:markersize] = msize
     end

@@ -1,4 +1,4 @@
-@require Revise begin
+@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotlyjs.jl"))
 end
 
@@ -120,7 +120,7 @@ function _display(plt::Plot{PlotlyJSBackend})
     end
 end
 
-@require WebIO begin
+@require WebIO = "0f1e0344-ec1d-5b48-a673-e5cf874b6c29" begin
     function WebIO.render(plt::Plot{PlotlyJSBackend})
         prepare_output(plt)
         WebIO.render(plt.o)

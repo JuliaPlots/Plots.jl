@@ -1,4 +1,4 @@
-julia 0.7
+julia 0.7-alpha
 
 RecipesBase 0.2.3
 PlotUtils 0.4.1
@@ -14,4 +14,3 @@ NaNMath
 Requires
 Contour
 GR 0.31.0
-Dates

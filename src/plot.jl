@@ -46,9 +46,8 @@ When you pass in matrices, it splits by columns. To see the list of available at
 function, where `attr` is the symbol `:Series:`, `:Subplot:`, `:Plot` or `:Axis`. Pass any attribute to `plotattr`
 as a String to look up its docstring; e.g. `plotattr("seriestype")`.
 """
-
-# this creates a new plot with args/kw and sets it to be the current plot
 function plot(args...; kw...)
+    # this creates a new plot with args/kw and sets it to be the current plot
     d = KW(kw)
     preprocessArgs!(d)
 

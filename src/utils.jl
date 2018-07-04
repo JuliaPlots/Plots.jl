@@ -344,7 +344,7 @@ function replaceAliases!(d::KW, aliases::Dict{Symbol,Symbol})
   end
 end
 
-createSegments(z) = collect(repmat(reshape(z,1,:),2,1))[2:end]
+createSegments(z) = collect(repeat(reshape(z,1,:),2,1))[2:end]
 
 Base.first(c::Colorant) = c
 Base.first(x::Symbol) = x
@@ -356,7 +356,7 @@ sortedkeys(d::Dict) = sort(collect(keys(d)))
 const _scale_base = Dict{Symbol, Real}(
     :log10 => 10,
     :log2 => 2,
-    :ln => e,
+    :ln => ℯ,
 )
 
 function _heatmap_edges(v::AVec)
@@ -1139,9 +1139,9 @@ function convert_sci_unicode(label::AbstractString)
     "×10" => "×10^{",
     )
     for key in keys(unicode_dict)
-        label = replace(label, key, unicode_dict[key])
+        label = replace(label, key => unicode_dict[key])
     end
-    if contains(label, "10^{")
+    if occursin("10^{", label)
         label = string(label, "}")
     end
     label

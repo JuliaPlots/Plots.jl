@@ -11,11 +11,13 @@ function _expand_seriestype_array(d::KW, args)
     sts = get(d, :seriestype, :path)
     if typeof(sts) <: AbstractArray
         delete!(d, :seriestype)
-        RecipeData[begin
+        rd = Vector{RecipeData}(size(sts, 1))
+        for r in 1:size(sts, 1)
             dc = copy(d)
             dc[:seriestype] = sts[r:r,:]
-            RecipeData(dc, args)
-        end for r=1:size(sts,1)]
+            rd[i] = RecipeData(dc, args)
+        end
+        rd
     else
         RecipeData[RecipeData(copy(d), args)]
     end

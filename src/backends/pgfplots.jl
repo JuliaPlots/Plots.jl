@@ -2,7 +2,7 @@
 
 # significant contributions by: @pkofod
 
-@require Revise begin
+@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pgfplots.jl"))
 end
 
@@ -426,11 +426,12 @@ function pgf_axis(sp::Subplot, letter)
         push!(style, string(letter, "tick = {", join(tick_values,","), "}"))
         if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
             # wrap the power part of label with }
-            tick_labels = String[begin
+            tick_labels = Vector{String}(length(ticks[2]))
+            for (i, label) in enumerate(ticks[2])
                 base, power = split(label, "^")
                 power = string("{", power, "}")
-                string(base, "^", power)
-            end for label in ticks[2]]
+                tick_labels[i] = string(base, "^", power)
+            end
             push!(style, string(letter, "ticklabels = {\$", join(tick_labels,"\$,\$"), "\$}"))
         elseif axis[:showaxis]
             tick_labels = ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
