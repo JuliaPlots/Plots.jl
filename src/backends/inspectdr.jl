@@ -166,7 +166,7 @@ function _initialize_backend(::InspectDRBackend; kw...)
         export InspectDR
 
         #Glyph used when plotting "Shape"s:
-        const INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
+        INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
             2*InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y
         )
 
@@ -347,8 +347,8 @@ end
 # ---------------------------------------------------------------------------
 
 function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
-    const plot = sp.o
-    const strip = plot.strips[1] #Only 1 strip supported with Plots.jl
+    plot = sp.o
+    strip = plot.strips[1] #Only 1 strip supported with Plots.jl
 
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
     xgrid_show = xaxis[:grid]
@@ -406,7 +406,7 @@ end
 # called just before updating layout bounding boxes... in case you need to prep
 # for the calcs
 function _before_layout_calcs(plt::Plot{InspectDRBackend})
-    const mplot = _inspectdr_getmplot(plt.o)
+    mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end
 
     mplot.title = plt[:plot_title]
