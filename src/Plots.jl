@@ -6,7 +6,7 @@ using Reexport
 
 import StaticArrays
 using StaticArrays.FixedSizeArrays
-using Dates, Printf, Statistics, Base64
+using Dates, Printf, Statistics, Base64, LinearAlgebra
 
 @reexport using RecipesBase
 import RecipesBase: plot, plot!, animate

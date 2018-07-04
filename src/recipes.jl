@@ -586,7 +586,7 @@ function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::S
     _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
     _span(v) = ignorenan_maximum(v) - ignorenan_minimum(v)
 
-    n_samples = length(linearindices(first(vs)))
+    n_samples = length(LinearIndices(first(vs)))
 
     # The nd estimator is the key to most automatic binning methods, and is modified for twodimensional histograms to include correlation
     nd = n_samples^(1/(2+N))

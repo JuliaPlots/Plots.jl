@@ -382,7 +382,7 @@ end
 function convert_to_polar(x, y, r_extrema = calc_r_extrema(x, y))
     rmin, rmax = r_extrema
     theta, r = filter_radial_data(x, y, r_extrema)
-    r = (r - rmin) / (rmax - rmin)
+    r = (r .- rmin) ./ (rmax .- rmin)
     x = r.*cos.(theta)
     y = r.*sin.(theta)
     x, y

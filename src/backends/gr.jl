@@ -317,7 +317,7 @@ function normalize_zvals(zv::AVec, clims::NTuple{2, <:Real})
     if vmin == vmax
         zeros(length(zv))
     else
-        clamp.((zv - vmin) ./ (vmax - vmin), 0, 1)
+        clamp.((zv .- vmin) ./ (vmax .- vmin), 0, 1)
     end
 end
 

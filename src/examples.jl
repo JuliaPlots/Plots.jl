@@ -52,7 +52,7 @@ the `z` argument to turn on series gradients.
     [:(begin
 y = rand(100)
 plot(0:10:100,rand(11,4),lab="lines",w=3,palette=:grays,fill=0, α=0.6)
-scatter!(y, zcolor=abs.(y-.5), m=(:heat,0.8,stroke(1,:green)), ms=10*abs.(y-0.5)+4,
+scatter!(y, zcolor=abs.(y.-0.5), m=(:heat,0.8,stroke(1,:green)), ms=10*abs.(y.-0.5).+4,
          lab="grad")
     end)]
 ),
@@ -69,7 +69,7 @@ the preprocessing step. You can also use shorthand functions: `title!`, `xaxis!`
 y = rand(20,3)
 plot(y, xaxis=("XLABEL",(-5,30),0:2:20,:flip), background_color = RGB(0.2,0.2,0.2),
      leg=false)
-hline!(mean(y,1)+rand(1,3), line=(4,:dash,0.6,[:lightgreen :green :darkgreen]))
+hline!(mean(y, dims = 1)+rand(1,3), line=(4,:dash,0.6,[:lightgreen :green :darkgreen]))
 vline!([5,10])
 title!("TITLE")
 yaxis!("YLABEL", :log10)
@@ -145,7 +145,7 @@ styles = filter(s -> s in Plots.supported_styles(),
                 [:solid, :dash, :dot, :dashdot, :dashdotdot])
 styles = reshape(styles, 1, length(styles)) # Julia 0.6 unfortunately gives an error when transposing symbol vectors
 n = length(styles)
-y = cumsum(randn(20,n),1)
+y = cumsum(randn(20,n), dims = 1)
 plot(y, line = (5, styles), label = map(string,styles), legendtitle = "linestyle")
              end)]
 ),
@@ -202,7 +202,7 @@ plot(Plots.fakedata(100,10), layout=4, palette=[:grays :blues :heat :lightrainbo
 PlotExample("",
     "",
     [:(begin
-        srand(111)
+        Random.srand(111)
         plot!(Plots.fakedata(100,10))
     end)]
 ),
@@ -215,7 +215,7 @@ subsequently create a :path series with the appropriate line segments.
 """,
     [:(begin
 n=20
-hgt=rand(n)+1
+hgt=rand(n).+1
 bot=randn(n)
 openpct=rand(n)
 closepct=rand(n)
@@ -254,7 +254,7 @@ verts = [(-1.0,1.0),(-1.28,0.6),(-0.2,-1.4),(0.2,-1.4),(1.28,0.6),(1.0,1.0),
          (-1.0,1.0),(-0.2,-0.6),(0.0,-0.2),(-0.4,0.6),(1.28,0.6),(0.2,-1.4),
          (-0.2,-1.4),(0.6,0.2),(-0.2,0.2),(0.0,-0.2),(0.2,0.2),(-0.2,-0.6)]
 x = 0.1:0.2:0.9
-y = 0.7rand(5)+0.15
+y = 0.7rand(5).+0.15
 plot(x, y, line = (3,:dash,:lightblue), marker = (Shape(verts),30,RGBA(0,0,0,0.2)),
      bg=:pink, fg=:darkblue, xlim = (0,1), ylim=(0,1), leg=false)
     end)]
@@ -439,7 +439,7 @@ each line segment or marker in the plot.
 # make and display one plot
 function test_examples(pkgname::Symbol, idx::Int; debug = false, disp = true)
   Plots._debugMode.on = debug
-  info("Testing plot: $pkgname:$idx:$(_examples[idx].header)")
+  @info("Testing plot: $pkgname:$idx:$(_examples[idx].header)")
   backend(pkgname)
   backend()
   map(eval, _examples[idx].exprs)
