@@ -146,7 +146,7 @@ function _initialize_backend(::HDF5Backend)
         export HDF5
         if length(HDF5PLOT_MAP_TELEM2STR) < 1
             #Possible element types of high-level data types:
-            telem2str = Dict{String, Type}(
+            const telem2str = Dict{String, Type}(
                 "NATIVE" => HDF5PlotNative,
                 "VOID" => Void,
                 "BOOL" => Bool,
