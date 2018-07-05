@@ -334,8 +334,8 @@ end
 #     # create a list of vertices that go: [x1,x2,x2,x3,x3, ... ,xi,xi, ... xn,xn] (same for y)
 #     # then the vector passed to the "color" keyword should be a vector: [1,1,2,2,3,3,4,4, ..., i,i, ... , n,n]
 #     csindices = Int[mod1(i,length(cscheme.v)) for i in 1:length(d[:y])]
-#     cs = collect(repmat(csindices', 2, 1))[1:end-1]
-#     grp = collect(repmat((1:length(d[:y]))', 2, 1))[1:end-1]
+#     cs = collect(repeat(csindices', 2, 1))[1:end-1]
+#     grp = collect(repeat((1:length(d[:y]))', 2, 1))[1:end-1]
 #     d[:x], d[:y] = map(createSegments, (d[:x], d[:y]))
 #     colorgroup = [(:linecolor, cs), (:group, grp)]
 
