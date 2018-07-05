@@ -146,7 +146,8 @@ function Base.display(::PlotsDisplay, plt::Plot)
 end
 
 # override the REPL display to open a gui window
-Base.display(::Base.REPL.REPLDisplay, ::MIME"text/plain", plt::Plot) = gui(plt)
+using REPL
+Base.display(::REPL.REPLDisplay, ::MIME"text/plain", plt::Plot) = gui(plt)
 
 
 _do_plot_show(plt, showval::Bool) = showval && gui(plt)
@@ -186,11 +187,11 @@ end
 
 # delegate mimewritable (showable on julia 0.7) to _show instead
 function Base.mimewritable(m::M, plt::P) where {M<:MIME, P<:Plot}
-    return method_exists(_show, Tuple{IO, M, P})
+    return hasmethod(_show, Tuple{IO, M, P})
 end
 
 function _display(plt::Plot)
-    warn("_display is not defined for this backend.")
+    @warn("_display is not defined for this backend.")
 end
 
 # for writing to io streams... first prepare, then callback
@@ -230,7 +231,7 @@ if is_installed("FileIO")
         FileIO.save(pngfn, s)
 
         # now write from the file
-        write(io, readstring(open(pngfn)))
+        write(io, read(open(pngfn), String))
     end
 end
 
@@ -254,7 +255,7 @@ end
 # IJulia
 # ---------------------------------------------------------
 
-@require IJulia begin
+@require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
     if IJulia.inited
 
         """
@@ -310,7 +311,7 @@ end
 # ---------------------------------------------------------
 # Atom PlotPane
 # ---------------------------------------------------------
-@require Juno begin
+@require Juno = "e5e0dc1b-0480-54bc-9374-aad01c23163d" begin
     import Hiccup, Media
 
     if Juno.isactive()

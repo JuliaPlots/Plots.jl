@@ -34,7 +34,7 @@ is_subplot_supported(::WinstonBackend) = false
 function _initialize_backend(::WinstonBackend; kw...)
   @eval begin
     # ENV["WINSTON_OUTPUT"] = "gtk"
-    warn("Winston is no longer supported... many features will likely be broken.")
+    @warn("Winston is no longer supported... many features will likely be broken.")
     import Winston, Gtk
     export Winston, Gtk
   end

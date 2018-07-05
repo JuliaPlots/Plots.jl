@@ -268,7 +268,7 @@ function GridLayout(dims...;
                     widths = zeros(dims[2]),
                     heights = zeros(dims[1]),
                     kw...)
-    grid = Matrix{AbstractLayout}(dims...)
+    grid = Matrix{AbstractLayout}(undef, dims...)
     layout = GridLayout(
         parent,
         (20mm, 5mm, 2mm, 10mm),
@@ -357,10 +357,10 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
     # get the max horizontal (left and right) padding over columns,
     # and max vertical (bottom and top) padding over rows
     # TODO: add extra padding here
-    pad_left   = maximum(minpad_left,   1)
-    pad_top    = maximum(minpad_top,    2)
-    pad_right  = maximum(minpad_right,  1)
-    pad_bottom = maximum(minpad_bottom, 2)
+    pad_left   = maximum(minpad_left,   dims = 1)
+    pad_top    = maximum(minpad_top,    dims = 2)
+    pad_right  = maximum(minpad_right,  dims = 1)
+    pad_bottom = maximum(minpad_bottom, dims = 2)
 
     # make sure the perimeter match the parent
     pad_left[1]     = max(pad_left[1], minimum_perimeter[1])
@@ -566,7 +566,7 @@ function build_layout(layout::GridLayout, numsp::Integer, plts::AVec{Plot})
     for r=1:nr, c=1:nc
         l = layout[r,c]
         if isa(l, EmptyLayout) && !get(l.attr, :blank, false)
-            plt = shift!(plts)  # grab the first plot out of the list
+            plt = popfirst!(plts)  # grab the first plot out of the list
             layout[r,c] = plt.layout
             append!(subplots, plt.subplots)
             merge!(spmap, plt.spmap)

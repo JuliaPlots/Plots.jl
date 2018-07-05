@@ -93,7 +93,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
             cfunc(RGB(def))
         elseif eltype(def) <: Colorant
             cfunc.(RGB.(def))
-        elseif contains(string(arg), "color")
+        elseif occursin("color", string(arg))
             cfunc.(RGB.(plot_color.(def)))
         else
             def

@@ -13,7 +13,7 @@ img_eps = isinteractive() ? 1e-2 : 10e-2
     @test gr() == Plots.GRBackend()
     @test backend() == Plots.GRBackend()
 
-    image_comparison_facts(:gr, eps=img_eps)
+    image_comparison_facts(:gr, eps=img_eps, skip = [25, 30])
 end
 
 

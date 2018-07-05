@@ -80,7 +80,7 @@ end
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     n = length(y)
-    newx = repmat(Float64[-1, 1, NaN], n)
+    newx = repeat(Float64[-1, 1, NaN], n)
     newy = vec(Float64[yi for i=1:3,yi=y])
     x := newx
     y := newy
@@ -92,7 +92,7 @@ end
 @recipe function f(::Type{Val{:vline}}, x, y, z)
     n = length(y)
     newx = vec(Float64[yi for i=1:3,yi=y])
-    newy = repmat(Float64[-1, 1, NaN], n)
+    newy = repeat(Float64[-1, 1, NaN], n)
     x := newx
     y := newy
     seriestype := :straightline
@@ -586,7 +586,7 @@ function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::S
     _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
     _span(v) = ignorenan_maximum(v) - ignorenan_minimum(v)
 
-    n_samples = length(linearindices(first(vs)))
+    n_samples = length(LinearIndices(first(vs)))
 
     # The nd estimator is the key to most automatic binning methods, and is modified for twodimensional histograms to include correlation
     nd = n_samples^(1/(2+N))
@@ -620,10 +620,10 @@ _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) where {N
 _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) where {N} = binning
 
 _hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) where {N} =
-    map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...))
+    map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...,))
 
 _hist_edges(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, AbstractVector}) where {N} =
-    map(dim -> _hist_edge(vs, dim, binning), (1:N...))
+    map(dim -> _hist_edge(vs, dim, binning), (1:N...,))
 
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
@@ -792,7 +792,7 @@ end
 
 function error_coords(xorig, yorig, ebar)
     # init empty x/y, and zip errors if passed Tuple{Vector,Vector}
-    x, y = Array{float_extended_type(xorig)}(0), Array{Float64}(0)
+    x, y = Array{float_extended_type(xorig)}(undef, 0), Array{Float64}(undef, 0)
     # for each point, create a line segment from the bottom to the top of the errorbar
     for i = 1:max(length(xorig), length(yorig))
         xi = _cycle(xorig, i)

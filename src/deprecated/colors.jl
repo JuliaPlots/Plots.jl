@@ -13,15 +13,15 @@ function cgrad(arg, values = nothing; alpha = nothing, scale = :identity)
     values = if values != nothing
         values
     elseif scale in (:log, :log10)
-        log10(linspace(1,10,30))
+        log10(range(1, stop=10, length=30))
     elseif scale == :log2
-        log2(linspace(1,2,30))
+        log2(range(1, stop=2, length=30))
     elseif scale == :ln
-        log(linspace(1,pi,30))
+        log(range(1, stop=pi, length=30))
     elseif scale in (:exp, :exp10)
-        (exp10(linspace(0,1,30)) - 1) / 9
+        (exp10(range(0, stop=1, length=30)) - 1) / 9
     else
-        linspace(0, 1, length(colors))
+        range(0, stop=1, length=length(colors))
     end
     ColorGradient(colors, values)
 end
@@ -51,7 +51,7 @@ convertColor(c::Symbol) = parse(Colorant, string(c))
 convertColor(c::Colorant) = c
 convertColor(cvec::AbstractVector) = map(convertColor, cvec)
 convertColor(c::ColorScheme) = c
-convertColor(v::Void) = RGBA(0,0,0,0)
+convertColor(v::Nothing) = RGBA(0,0,0,0)
 convertColor(b::Bool) = b ? RGBA(0,0,0,1) : RGBA(0,0,0,0)
 
 function convertColor(c, α::Real)
@@ -59,7 +59,7 @@ function convertColor(c, α::Real)
   RGBA(RGB(getColor(c)), α)
 end
 convertColor(cs::AVec, α::Real) = map(c -> convertColor(c, α), cs)
-convertColor(c, α::Void) = convertColor(c)
+convertColor(c, α::Nothing) = convertColor(c)
 
 # backup... try to convert
 getColor(c) = convertColor(c)
@@ -113,7 +113,7 @@ struct ColorGradient <: ColorScheme
   colors::Vector
   values::Vector
 
-  function ColorGradient(cs::AVec, vals::AVec{S} = linspace(0, 1, length(cs)); alpha = nothing) where S<:Real
+  function ColorGradient(cs::AVec, vals::AVec{S} = range(0, stop=1, length=length(cs)); alpha = nothing) where S<:Real
     if length(cs) == length(vals)
       return new(convertColor(cs,alpha), collect(vals))
     end
@@ -124,9 +124,9 @@ struct ColorGradient <: ColorScheme
     # new(convertColor(cs,alpha), vs)
 
     # interpolate the colors for each value
-    vals = merge(linspace(0, 1, length(cs)), vals)
+    vals = merge(range(0, stop=1, length=length(cs)), vals)
     grad = ColorGradient(cs)
-    cs = [getColorZ(grad, z) for z in linspace(0, 1, length(vals))]
+    cs = [getColorZ(grad, z) for z in range(0, stop=1, length=length(vals))]
     new(convertColor(cs, alpha), vals)
   end
 end
@@ -142,7 +142,7 @@ function ColorGradient(s::Symbol, vals::AVec{T} = 0:0; kw...) where T<:Real
   haskey(_gradients, s) || error("Invalid gradient symbol.  Choose from: ", sort(collect(keys(_gradients))))
   cs = _gradients[s]
   if vals == 0:0
-    vals = linspace(0, 1, length(cs))
+    vals = range(0, stop=1, length=length(cs))
   end
   ColorGradient(cs, vals; kw...)
 end
@@ -247,7 +247,7 @@ ColorWrapper(s::Symbol; alpha = nothing) = ColorWrapper(convertColor(parse(Color
 
 getColor(scheme::ColorWrapper, idx::Int) = scheme.c
 getColorZ(scheme::ColorWrapper, z::Real) = scheme.c
-convertColor(c::ColorWrapper, α::Void) = c.c
+convertColor(c::ColorWrapper, α::Nothing) = c.c
 
 # --------------------------------------------------------------
 
@@ -332,7 +332,7 @@ function generate_colorgradient(bgcolor = colorant"white";
       seed_colors,
       lchoices=Float64[lightness],
       cchoices=Float64[chroma],
-      hchoices=linspace(0, 340, 20)
+      hchoices=range(0, stop=340, length=20)
     )[2:end]
   gradient_from_list(colors)
 end

@@ -11,11 +11,13 @@ function _expand_seriestype_array(d::KW, args)
     sts = get(d, :seriestype, :path)
     if typeof(sts) <: AbstractArray
         delete!(d, :seriestype)
-        RecipeData[begin
+        rd = Vector{RecipeData}(undef, size(sts, 1))
+        for r in 1:size(sts, 1)
             dc = copy(d)
             dc[:seriestype] = sts[r:r,:]
-            RecipeData(dc, args)
-        end for r=1:size(sts,1)]
+            rd[r] = RecipeData(dc, args)
+        end
+        rd
     else
         RecipeData[RecipeData(copy(d), args)]
     end
@@ -70,7 +72,7 @@ function _process_userrecipes(plt::Plot, d::KW, args)
         # grab the first in line to be processed and either add it to the kw_list or
         # pass it through apply_recipe to generate a list of RecipeData objects (data + attributes)
         # for further processing.
-        next_series = shift!(still_to_process)
+        next_series = popfirst!(still_to_process)
         # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
         if !(typeof(next_series) <: RecipeData)
             error("Inputs couldn't be processed... expected RecipeData but got: $next_series")
@@ -151,7 +153,7 @@ function _add_smooth_kw(kw_list::Vector{KW}, kw::KW)
         x, y = kw[:x], kw[:y]
         β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
         sx = [ignorenan_minimum(x), ignorenan_maximum(x)]
-        sy = β * sx + α
+        sy = β .* sx .+ α
         push!(kw_list, merge(copy(kw), KW(
             :seriestype => :path,
             :x => sx,
@@ -329,7 +331,7 @@ function _override_seriestype_check(d::KW, st::Symbol)
     # do we want to override the series type?
     if !is3d(st) && !(st in (:contour,:contour3d))
         z = d[:z]
-        if !isa(z, Void) && (size(d[:x]) == size(d[:y]) == size(z))
+        if !isa(z, Nothing) && (size(d[:x]) == size(d[:y]) == size(z))
             st = (st == :scatter ? :scatter3d : :path3d)
             d[:seriestype] = st
         end

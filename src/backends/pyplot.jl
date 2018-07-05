@@ -1,7 +1,7 @@
 
 # https://github.com/stevengj/PyPlot.jl
 
-@require Revise begin
+@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pyplot.jl"))
 end
 
@@ -82,21 +82,21 @@ function _initialize_backend(::PyPlotBackend)
         append!(Base.Multimedia.displays, otherdisplays)
 
         export PyPlot
-        const pycolors = PyPlot.pyimport("matplotlib.colors")
-        const pypath = PyPlot.pyimport("matplotlib.path")
-        const mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
-        const pypatches = PyPlot.pyimport("matplotlib.patches")
-        const pyfont = PyPlot.pyimport("matplotlib.font_manager")
-        const pyticker = PyPlot.pyimport("matplotlib.ticker")
-        const pycmap = PyPlot.pyimport("matplotlib.cm")
-        const pynp = PyPlot.pyimport("numpy")
+        pycolors = PyPlot.pyimport("matplotlib.colors")
+        pypath = PyPlot.pyimport("matplotlib.path")
+        mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
+        pypatches = PyPlot.pyimport("matplotlib.patches")
+        pyfont = PyPlot.pyimport("matplotlib.font_manager")
+        pyticker = PyPlot.pyimport("matplotlib.ticker")
+        pycmap = PyPlot.pyimport("matplotlib.cm")
+        pynp = PyPlot.pyimport("numpy")
         pynp["seterr"](invalid="ignore")
-        const pytransforms = PyPlot.pyimport("matplotlib.transforms")
-        const pycollections = PyPlot.pyimport("matplotlib.collections")
-        const pyart3d = PyPlot.art3D
+        pytransforms = PyPlot.pyimport("matplotlib.transforms")
+        pycollections = PyPlot.pyimport("matplotlib.collections")
+        pyart3d = PyPlot.art3D
 
         # "support" matplotlib v1.5
-        const set_facecolor_sym = if PyPlot.version < v"2"
+        set_facecolor_sym = if PyPlot.version < v"2"
             warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
             :set_axis_bgcolor
         else
@@ -679,8 +679,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         if typeof(z) <: AbstractMatrix || typeof(z) <: Surface
             x, y, z = map(Array, (x,y,z))
             if !ismatrix(x) || !ismatrix(y)
-                x = repmat(x', length(y), 1)
-                y = repmat(y, 1, length(series[:x]))
+                x = repeat(x', length(y), 1)
+                y = repeat(y, 1, length(series[:x]))
             end
             z = transpose_z(series, z)
             if st == :surface
@@ -919,7 +919,7 @@ function py_set_scale(ax, axis::Axis)
         "linear"
     else
         kw[Symbol(:base,letter)] = if scale == :ln
-            e
+            ℯ
         elseif scale == :log2
             2
         elseif scale == :log10

@@ -3,7 +3,7 @@
 
 # significant contributions by @jheinen
 
-@require Revise begin
+@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "gr.jl"))
 end
 
@@ -144,7 +144,7 @@ gr_set_fillcolor(c)   = GR.setfillcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
-function gr_set_transparency(::Void) end
+function gr_set_transparency(::Nothing) end
 
 # --------------------------------------------------------------------------------------
 
@@ -196,7 +196,7 @@ gr_inqtext(x, y, s::Symbol) = gr_inqtext(x, y, string(s))
 function gr_inqtext(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.inqtextext(x, y, s[2:end-1])
-    elseif search(s, '\\') != 0 || contains(s, "10^{")
+    elseif something(findfirst(isequal('\\'), s), 0) != 0 || occursin("10^{", s)
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
@@ -208,7 +208,7 @@ gr_text(x, y, s::Symbol) = gr_text(x, y, string(s))
 function gr_text(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.mathtex(x, y, s[2:end-1])
-    elseif search(s, '\\') != 0 || contains(s, "10^{")
+    elseif something(findfirst(isequal('\\'), s), 0) != 0 || occursin("10^{", s)
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
@@ -317,7 +317,7 @@ function normalize_zvals(zv::AVec, clims::NTuple{2, <:Real})
     if vmin == vmax
         zeros(length(zv))
     else
-        clamp.((zv - vmin) ./ (vmax - vmin), 0, 1)
+        clamp.((zv .- vmin) ./ (vmax .- vmin), 0, 1)
     end
 end
 
@@ -485,7 +485,7 @@ function gr_colorbar(sp::Subplot, clims)
     xmin, xmax = gr_xy_axislims(sp)[1:2]
     gr_set_viewport_cmap(sp)
     l = zeros(Int32, 1, 256)
-    l[1,:] = Int[round(Int, _i) for _i in linspace(1000, 1255, 256)]
+    l[1,:] = Int[round(Int, _i) for _i in range(1000, stop=1255, length=256)]
     GR.setscale(0)
     GR.setwindow(xmin, xmax, clims[1], clims[2])
     GR.cellarray(xmin, xmax, clims[2], clims[1], 1, length(l), l)
@@ -502,16 +502,16 @@ function gr_legend_pos(s::Symbol,w,h)
     if str == "best"
         str = "topright"
     end
-    if contains(str,"right")
+    if occursin("right", str)
         xpos = viewport_plotarea[2] - 0.05 - w
-    elseif contains(str,"left")
+    elseif occursin("left", str)
         xpos = viewport_plotarea[1] + 0.11
     else
         xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 +.04
     end
-    if contains(str,"top")
+    if occursin("top", str)
         ypos = viewport_plotarea[4] - 0.06
-    elseif contains(str,"bottom")
+    elseif occursin("bottom", str)
         ypos = viewport_plotarea[3] + h + 0.06
     else
         ypos = (viewport_plotarea[4]-viewport_plotarea[3])/2 + h/2
@@ -531,7 +531,7 @@ const _gr_gradient_alpha = ones(256)
 
 function gr_set_gradient(c)
     grad = isa(c, ColorGradient) ? c : cgrad()
-    for (i,z) in enumerate(linspace(0, 1, 256))
+    for (i,z) in enumerate(range(0, stop=1, length=256))
         c = grad[z]
         GR.setcolorrep(999+i, red(c), green(c), blue(c))
         _gr_gradient_alpha[i] = alpha(c)
@@ -718,7 +718,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for ax in (sp[:xaxis], sp[:yaxis])
                 v = series[ax[:letter]]
                 if diff(collect(extrema(diff(v))))[1] > 1e-6*std(v)
-                    warn("GR: heatmap only supported with equally spaced data.")
+                    @warn("GR: heatmap only supported with equally spaced data.")
                 end
             end
             x, y = heatmap_edges(series[:x], sp[:xaxis][:scale]), heatmap_edges(series[:y], sp[:yaxis][:scale])
@@ -1051,7 +1051,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if typeof(series[:levels]) <: AbstractArray
                 h = series[:levels]
             else
-                h = series[:levels] > 1 ? linspace(zmin, zmax, series[:levels]) : [(zmin + zmax) / 2]
+                h = series[:levels] > 1 ? range(zmin, stop=zmax, length=series[:levels]) : [(zmin + zmax) / 2]
             end
             if series[:fillrange] != nothing
                 GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
@@ -1069,7 +1069,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if cmap
                 gr_set_line(1, :solid, yaxis[:foreground_color_axis])
                 gr_set_viewport_cmap(sp)
-                l = (length(h) > 1) ? round.(Int32, 1000 + (h - ignorenan_minimum(h)) / (ignorenan_maximum(h) - ignorenan_minimum(h)) * 255) : Int32[1000, 1255]
+                l = (length(h) > 1) ? round.(Int32, 1000 .+ (h .- ignorenan_minimum(h)) ./ (ignorenan_maximum(h) - ignorenan_minimum(h)) .* 255) : Int32[1000, 1255]
                 GR.setwindow(xmin, xmax, zmin, zmax)
                 GR.cellarray(xmin, xmax, zmax, zmin, 1, length(l), l)
                 ztick = 0.5 * GR.tick(zmin, zmax)
@@ -1358,10 +1358,10 @@ const _gr_mimeformats = Dict(
     "image/svg+xml"           => "svg",
 )
 
-const _gr_wstype_default = @static if is_linux()
+const _gr_wstype_default = @static if Sys.islinux()
     "x11"
     # "cairox11"
-elseif is_apple()
+elseif Sys.isapple()
     "quartz"
 else
     "use_default"
@@ -1379,7 +1379,7 @@ for (mime, fmt) in _gr_mimeformats
         ENV["GKS_FILEPATH"] = filepath
         gr_display(plt, $fmt)
         GR.emergencyclosegks()
-        write(io, readstring(filepath))
+        write(io, read(filepath, String))
         rm(filepath)
         if env != "0"
             ENV["GKSwstype"] = env

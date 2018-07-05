@@ -2,20 +2,20 @@
 using VisualRegressionTests
 # using ExamplePlots
 
-import DataFrames, RDatasets
+# import DataFrames, RDatasets
 
 # don't let pyplot use a gui... it'll crash
 # note: Agg will set gui -> :none in PyPlot
-ENV["MPLBACKEND"] = "Agg"
-try
-  @eval import PyPlot
-  info("Matplotlib version: $(PyPlot.matplotlib[:__version__])")
-end
+# ENV["MPLBACKEND"] = "Agg"
+# try
+#   @eval import PyPlot
+#   info("Matplotlib version: $(PyPlot.matplotlib[:__version__])")
+# end
 
 
 using Plots
-using StatPlots
-using Base.Test
+# using StatPlots
+using Test
 
 default(size=(500,300))
 
