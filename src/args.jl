@@ -381,6 +381,8 @@ const _axis_defaults = KW(
     :gridstyle                => :solid,
     :gridlinewidth            => 0.5,
     :tick_direction           => :in,
+    :minorticks               => false,
+    :minorgrid                => false,
     :showaxis                 => true,
     :widen                    => true,
 )
