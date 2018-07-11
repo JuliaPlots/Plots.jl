@@ -288,16 +288,32 @@ _transform_ticks(ticks::NTuple{2, Any}) = (_transform_ticks(ticks[1]), ticks[2])
 
 function get_minor_ticks(axis,ticks)
     axis[:minorticks] in (nothing, false) && !axis[:minorgrid] && return nothing
-    length(ticks[1]) < 2 && return nothing
+    ticks = ticks[1]
+    length(ticks) < 2 && return nothing
+    
     amin, amax = axis_limits(axis)
+    #Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits 
+    if length(ticks) > 2
+        ratio = (ticks[3] - ticks[2])/(ticks[2] - ticks[1])
+    elseif axis[:scale] == :none
+        ratio = 1
+    else
+        return nothing
+    end
+    first_step = ticks[2] - ticks[1]
+    last_step = ticks[end] - ticks[end-1]
+    ticks =  [ticks[1] - first_step/ratio; ticks; ticks[end] + last_step*ratio]
+
     #Default to 5 intervals between major ticks
     n = typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 ? axis[:minorticks] : 5
-    minorticks = typeof(ticks[1][1])[]
-    for (i,hi) in enumerate(ticks[1][2:end])
-        lo = ticks[1][i]
+    minorticks = typeof(ticks[1])[]
+    for (i,hi) in enumerate(ticks[2:end])
+        lo = ticks[i]
         append!(minorticks,collect(lo:(hi-lo)/n:hi))
     end
-    minorticks
+    minorticks[amin .<= minorticks .<= amax]
+    #Duplicate major ticks as a hack to darken the major grid lines
+    #minorticks[map(x->!in(x,ticks),minorticks)]
 end
 # -------------------------------------------------------------------------
 
