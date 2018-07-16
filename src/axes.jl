@@ -309,12 +309,11 @@ function get_minor_ticks(axis,ticks)
     minorticks = typeof(ticks[1])[]
     for (i,hi) in enumerate(ticks[2:end])
         lo = ticks[i]
-        append!(minorticks,collect(lo:(hi-lo)/n:hi))
+        append!(minorticks,collect(lo + (hi-lo)/n :(hi-lo)/n: hi - (hi-lo)/2n))
     end
     minorticks[amin .<= minorticks .<= amax]
-    #Duplicate major ticks as a hack to darken the major grid lines
-    #minorticks[map(x->!in(x,ticks),minorticks)]
 end
+
 # -------------------------------------------------------------------------
 
 
@@ -661,7 +660,7 @@ function axis_drawing_info(sp::Subplot)
                     push!(xtick_segs, (xminortick, tick_start), (xminortick, tick_stop)) # bottom tick
                 end
                 # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
-                xaxis[:minorgrid] && push!(xgrid_segs, (xminortick, ymin), (xminortick, ymax)) # vertical grid
+                xaxis[:minorgrid] && push!(xminorgrid_segs, (xminortick, ymin), (xminortick, ymax)) # vertical grid
             end
         end
 
@@ -722,10 +721,10 @@ function axis_drawing_info(sp::Subplot)
                     push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
                 end
                 # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
-                yaxis[:minorgrid] && push!(ygrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
+                yaxis[:minorgrid] && push!(yminorgrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
             end
         end
     end
 
-    xticks, yticks, xaxis_segs, yaxis_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs
+    xticks, yticks, xaxis_segs, yaxis_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs
 end

@@ -696,7 +696,7 @@ function text_model(font, pivot)
     end
 end
 function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, area)
-    xticks, yticks, xspine_segs, yspine_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs = Plots.axis_drawing_info(sp)
+    xticks, yticks, xspine_segs, yspine_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs = Plots.axis_drawing_info(sp)
     xaxis = sp[:xaxis]; yaxis = sp[:yaxis]
 
     xgc = Colors.color(Plots.gl_color(xaxis[:foreground_color_grid]))
@@ -709,6 +709,14 @@ function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, are
     if yaxis[:grid]
         grid = draw_grid_lines(sp, ygrid_segs, yaxis[:gridlinewidth], yaxis[:gridstyle], model, RGBA(ygc, yaxis[:gridalpha]))
         push!(axis_vis, grid)
+    end
+    if xaxis[:minorgrid]
+        minorgrid = draw_minorgrid_lines(sp, xminorgrid_segs, xaxis[:minorgridlinewidth], xaxis[:minorgridstyle], model, RGBA(xgc, xaxis[:minorgridalpha]))
+        push!(axis_vis, minorgrid)
+    end
+    if yaxis[:minorgrid]
+        minorgrid = draw_minorgrid_lines(sp, yminorgrid_segs, yaxis[:minorgridlinewidth], yaxis[:minorgridstyle], model, RGBA(ygc, yaxis[:minorgridalpha]))
+        push!(axis_vis, minorgrid)
     end
 
     xac = Colors.color(Plots.gl_color(xaxis[:foreground_color_axis]))
