@@ -24,7 +24,7 @@ macro init_backend(s)
         export $sym
         $sym(; kw...) = (default(; kw...); backend(Symbol($str)))
         backend_name(::$T) = Symbol($str)
-        backend_package_name(::$T) = sym in _default_backends ? :Plots : Symbol("Plots", $(string(s)))
+        backend_package_name(pkg::$T) = backend_name(pkg) in _default_backends ? :Plots : Symbol("Plots", $(string(s)))
         push!(_backends, Symbol($str))
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
@@ -138,7 +138,7 @@ function pickDefaultBackend()
     env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
     if env_default != ""
         sym = Symbol(lowercase(env_default))
-        if sym in _backends && backend_package_name(sym) in names(Main)
+        if sym in _default_backends
             return backend(sym)
         else
             @warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not supported.")
@@ -187,21 +187,26 @@ end
 Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
-    if backend_name(pkg) in names(Main)
+    if backend_package_name(pkg) in nameof.(collect(values(Base.loaded_modules)))
         CURRENT_BACKEND.sym = backend_name(pkg)
         warn_on_deprecated_backend(CURRENT_BACKEND.sym)
         CURRENT_BACKEND.pkg = pkg
     else
-        @warn("To use $(_backendSymbol[pkg]) you have to run `using $(backend_package_name(pkg))` before.")
+        @warn("To use the `:$(backend_name(pkg))` backend, run `using $(backend_package_name(pkg))`.")
     end
     backend()
 end
 
 function backend(modname::Symbol)
     if modname in _backends
-        warn_on_deprecated_backend(modname)
-        CURRENT_BACKEND.sym = modname
-        CURRENT_BACKEND.pkg = _backend_instance(modname)
+        bpn = backend_package_name(_backend_instance(modname))
+        if bpn in nameof.(collect(values(Base.loaded_modules)))
+            warn_on_deprecated_backend(modname)
+            CURRENT_BACKEND.sym = modname
+            CURRENT_BACKEND.pkg = _backend_instance(modname)
+        else
+            @warn("To use the `:$modname` backend, run `using $bpn`.")
+        end
     else
         @warn("`:$modname` is not a supported Plots backend.")
     end
