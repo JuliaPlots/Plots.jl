@@ -818,7 +818,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setwindow(xmin, xmax, ymin, ymax)
         end
 
-        xticks, yticks, xspine_segs, yspine_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs = axis_drawing_info(sp)
+        xticks, yticks, xspine_segs, yspine_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs = axis_drawing_info(sp)
         # @show xticks yticks #spine_segs grid_segs
 
         # draw the grid lines
@@ -833,6 +833,18 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
             gr_set_transparency(yaxis[:gridalpha])
             gr_polyline(coords(ygrid_segs)...)
+        end
+        if xaxis[:minorgrid]
+            # gr_set_linecolor(sp[:foreground_color_grid])
+            # GR.grid(xtick, ytick, 0, 0, majorx, majory)
+            gr_set_line(xaxis[:minorgridlinewidth], xaxis[:minorgridstyle], xaxis[:foreground_color_minor_grid])
+            gr_set_transparency(xaxis[:minorgridalpha])
+            gr_polyline(coords(xminorgrid_segs)...)
+        end
+        if yaxis[:minorgrid]
+            gr_set_line(yaxis[:minorgridlinewidth], yaxis[:minorgridstyle], yaxis[:foreground_color_minor_grid])
+            gr_set_transparency(yaxis[:minorgridalpha])
+            gr_polyline(coords(yminorgrid_segs)...)
         end
         gr_set_transparency(1.0)
 
