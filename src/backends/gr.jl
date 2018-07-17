@@ -2,12 +2,13 @@
 # https://github.com/jheinen/GR.jl
 
 # significant contributions by @jheinen
+import GR
 
 @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "gr.jl"))
 end
 
-const _gr_attr = merge_with_base_supported([
+_attr[:gr] = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
@@ -47,15 +48,15 @@ const _gr_attr = merge_with_base_supported([
     :camera,
     :contour_labels,
 ])
-const _gr_seriestype = [
+_seriestype[:gr] = [
     :path, :scatter, :straightline,
     :heatmap, :pie, :image,
     :contour, :path3d, :scatter3d, :surface, :wireframe,
     :shape
 ]
-const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _gr_marker = _allMarkers
-const _gr_scale = [:identity, :log10]
+_style[:gr] = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+_marker[:gr] = _allMarkers
+_scale[:gr] = [:identity, :log10]
 is_marker_supported(::GRBackend, shape::Shape) = true
 
 function add_backend_string(::GRBackend)
@@ -63,13 +64,6 @@ function add_backend_string(::GRBackend)
     Pkg.add("GR")
     Pkg.build("GR")
     """
-end
-
-function _initialize_backend(::GRBackend; kw...)
-    @eval begin
-        import GR
-        export GR
-    end
 end
 
 # --------------------------------------------------------------------------------------
