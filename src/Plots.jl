@@ -171,6 +171,7 @@ include("arg_desc.jl")
 include("plotattr.jl")
 include("backends.jl")
 include("output.jl")
+include("init.jl")
 
 # ---------------------------------------------------------
 

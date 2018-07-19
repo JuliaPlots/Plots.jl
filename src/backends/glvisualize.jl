@@ -61,36 +61,11 @@ const _glvisualize_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _glvisualize_marker = _allMarkers
 const _glvisualize_scale = [:identity, :ln, :log2, :log10]
 
-
-
-# --------------------------------------------------------------------------------------
-
-function _initialize_backend(::GLVisualizeBackend; kw...)
-    @eval begin
-        import GLVisualize, GeometryTypes, Reactive, GLAbstraction, GLWindow, Contour
-        import GeometryTypes: Point2f0, Point3f0, Vec2f0, Vec3f0, GLNormalMesh, SimpleRectangle, Point, Vec
-        import FileIO, Images
-        export GLVisualize
-        import Reactive: Signal
-        import GLAbstraction: Style
-        import GLVisualize: visualize
-        import Plots.GL
-        import UnicodeFun
-        Plots.slice_arg(img::Matrix{C}, idx::Int) where {C<:Colorant} = img
-        is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
-        is_marker_supported(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) where {C<:Colorant} = true
-        is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
-        GL = Plots
-    end
-end
-
-function add_backend_string(b::GLVisualizeBackend)
-    """
-    if !Plots.is_installed("GLVisualize")
-        Pkg.add("GLVisualize")
-    end
-    """
-end
+slice_arg(img::Matrix{C}, idx::Int) where {C<:Colorant} = img
+is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
+is_marker_supported(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) where {C<:Colorant} = true
+is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
+GL = Plots
 
 # ---------------------------------------------------------------------------
 

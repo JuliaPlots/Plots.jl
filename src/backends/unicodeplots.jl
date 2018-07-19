@@ -33,22 +33,6 @@ warnOnUnsupported_args(::UnicodePlotsBackend, d::KW) = nothing
 
 # --------------------------------------------------------------------------------------
 
-function add_backend_string(::UnicodePlotsBackend)
-    """
-    Pkg.add("UnicodePlots")
-    Pkg.build("UnicodePlots")
-    """
-end
-
-function _initialize_backend(::UnicodePlotsBackend; kw...)
-    @eval begin
-        import UnicodePlots
-        export UnicodePlots
-    end
-end
-
-# -------------------------------
-
 const _canvas_type = Ref(:auto)
 
 function _canvas_map()

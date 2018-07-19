@@ -59,57 +59,31 @@ is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
 # --------------------------------------------------------------------------------------
 
-function add_backend_string(::PyPlotBackend)
-    """
-    if !Plots.is_installed("PyPlot")
-        Pkg.add("PyPlot")
-    end
-    withenv("PYTHON" => "") do
-        Pkg.build("PyPlot")
-    end
+# problem: https://github.com/tbreloff/Plots.jl/issues/308
+# solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
+otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
+append!(Base.Multimedia.displays, otherdisplays)
+pycolors = PyPlot.pyimport("matplotlib.colors")
+pypath = PyPlot.pyimport("matplotlib.path")
+mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
+pypatches = PyPlot.pyimport("matplotlib.patches")
+pyfont = PyPlot.pyimport("matplotlib.font_manager")
+pyticker = PyPlot.pyimport("matplotlib.ticker")
+pycmap = PyPlot.pyimport("matplotlib.cm")
+pynp = PyPlot.pyimport("numpy")
+pynp["seterr"](invalid="ignore")
+pytransforms = PyPlot.pyimport("matplotlib.transforms")
+pycollections = PyPlot.pyimport("matplotlib.collections")
+pyart3d = PyPlot.art3D
 
-    # now restart julia!
-    """
+# "support" matplotlib v1.5
+set_facecolor_sym = if PyPlot.version < v"2"
+    warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
+    :set_axis_bgcolor
+else
+    :set_facecolor
 end
 
-function _initialize_backend(::PyPlotBackend)
-    @eval begin
-        # problem: https://github.com/tbreloff/Plots.jl/issues/308
-        # solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
-        otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
-        import PyPlot, PyCall
-        import LaTeXStrings: latexstring
-        append!(Base.Multimedia.displays, otherdisplays)
-
-        export PyPlot
-        pycolors = PyPlot.pyimport("matplotlib.colors")
-        pypath = PyPlot.pyimport("matplotlib.path")
-        mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
-        pypatches = PyPlot.pyimport("matplotlib.patches")
-        pyfont = PyPlot.pyimport("matplotlib.font_manager")
-        pyticker = PyPlot.pyimport("matplotlib.ticker")
-        pycmap = PyPlot.pyimport("matplotlib.cm")
-        pynp = PyPlot.pyimport("numpy")
-        pynp["seterr"](invalid="ignore")
-        pytransforms = PyPlot.pyimport("matplotlib.transforms")
-        pycollections = PyPlot.pyimport("matplotlib.collections")
-        pyart3d = PyPlot.art3D
-
-        # "support" matplotlib v1.5
-        set_facecolor_sym = if PyPlot.version < v"2"
-            warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
-            :set_axis_bgcolor
-        else
-            :set_facecolor
-        end
-
-        # we don't want every command to update the figure
-        PyPlot.ioff()
-    end
-end
-
-# --------------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------------
 
 # # convert colorant to 4-tuple RGBA
 # py_color(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))

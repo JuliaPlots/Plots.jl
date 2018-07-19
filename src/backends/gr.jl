@@ -65,12 +65,8 @@ function add_backend_string(::GRBackend)
     """
 end
 
-function _initialize_backend(::GRBackend; kw...)
-    @eval begin
-        import GR
-        export GR
-    end
-end
+import GR
+export GR
 
 # --------------------------------------------------------------------------------------
 
