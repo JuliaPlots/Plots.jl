@@ -412,8 +412,8 @@ function fakedata(sz...)
   y
 end
 
-isijulia() = isdefined(Main, :IJulia) && Main.IJulia.inited
-isatom() = isdefined(Main, :Atom) && Main.Atom.isconnected()
+isijulia() = :IJulia in nameof.(collect(values(Base.loaded_modules)))
+isatom() = :Atom in nameof.(collect(values(Base.loaded_modules)))
 
 function is_installed(pkgstr::AbstractString)
     try

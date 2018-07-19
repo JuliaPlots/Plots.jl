@@ -3,14 +3,9 @@
 
 # [ADD BACKEND WEBSITE]
 
-function _initialize_backend(::[PkgName]Backend; kw...)
-    @eval begin
-        import [PkgName]
-        export [PkgName]
-        # todo: other initialization that needs to be eval-ed
-    end
-    # todo: other initialization
-end
+import [PkgName]
+export [PkgName]
+push!(_initialized_backends, [pgkname]::Symbol)
 
 # ---------------------------------------------------------------------------
 
