@@ -1,7 +1,7 @@
 """
 Holds all data needed for a documentation example... header, description, and plotting expression (Expr)
 """
-type PlotExample
+mutable struct PlotExample
   header::AbstractString
   desc::AbstractString
   exprs::Vector{Expr}
@@ -18,7 +18,14 @@ PlotExample("Lines",
 ),
 
 PlotExample("Functions, adding data, and animations",
-    "Plot multiple functions.  You can also put the function first, or use the form `plot(f, xmin, xmax)` where f is a Function or AbstractVector{Function}.\n\nGet series data: `x, y = plt[i]`.  Set series data: `plt[i] = (x,y)`. Add to the series with `push!`/`append!`.\n\nEasily build animations.  (`convert` or `ffmpeg` must be available to generate the animation.)  Use command `gif(anim, filename, fps=15)` to save the animation.",
+"""
+Plot multiple functions.  You can also put the function first, or use the form `plot(f,
+xmin, xmax)` where f is a Function or AbstractVector{Function}.\n\nGet series data:
+`x, y = plt[i]`.  Set series data: `plt[i] = (x,y)`. Add to the series with
+`push!`/`append!`.\n\nEasily build animations.  (`convert` or `ffmpeg` must be available
+to generate the animation.)  Use command `gif(anim, filename, fps=15)` to save the
+animation.
+""",
     [:(begin
         p = plot([sin,cos], zeros(0), leg=false)
         anim = Animation()
@@ -37,23 +44,35 @@ PlotExample("Parametric plots",
 ),
 
 PlotExample("Colors",
-    "Access predefined palettes (or build your own with the `colorscheme` method).  Line/marker colors are auto-generated from the plot's palette, unless overridden.  Set the `z` argument to turn on series gradients.",
+"""
+Access predefined palettes (or build your own with the `colorscheme` method).
+Line/marker colors are auto-generated from the plot's palette, unless overridden.  Set
+the `z` argument to turn on series gradients.
+""",
     [:(begin
-        y = rand(100)
-        plot(0:10:100,rand(11,4),lab="lines",w=3,palette=:grays,fill=0, α=0.6)
-        scatter!(y, zcolor=abs(y-.5), m=(:heat,0.8,stroke(1,:green)), ms=10*abs(y-0.5)+4, lab="grad")
+y = rand(100)
+plot(0:10:100,rand(11,4),lab="lines",w=3,palette=:grays,fill=0, α=0.6)
+scatter!(y, zcolor=abs.(y-.5), m=(:heat,0.8,stroke(1,:green)), ms=10*abs.(y-0.5)+4,
+         lab="grad")
     end)]
 ),
 
 PlotExample("Global",
-    "Change the guides/background/limits/ticks.  Convenience args `xaxis` and `yaxis` allow you to pass a tuple or value which will be mapped to the relevant args automatically.  The `xaxis` below will be replaced with `xlabel` and `xlims` args automatically during the preprocessing step. You can also use shorthand functions: `title!`, `xaxis!`, `yaxis!`, `xlabel!`, `ylabel!`, `xlims!`, `ylims!`, `xticks!`, `yticks!`",
+"""
+Change the guides/background/limits/ticks.  Convenience args `xaxis` and `yaxis` allow
+you to pass a tuple or value which will be mapped to the relevant args automatically.
+The `xaxis` below will be replaced with `xlabel` and `xlims` args automatically during
+the preprocessing step. You can also use shorthand functions: `title!`, `xaxis!`,
+`yaxis!`, `xlabel!`, `ylabel!`, `xlims!`, `ylims!`, `xticks!`, `yticks!`
+""",
     [:(begin
-        y = rand(20,3)
-        plot(y, xaxis=("XLABEL",(-5,30),0:2:20,:flip), background_color = RGB(0.2,0.2,0.2), leg=false)
-        hline!(mean(y,1)+rand(1,3), line=(4,:dash,0.6,[:lightgreen :green :darkgreen]))
-        vline!([5,10])
-        title!("TITLE")
-        yaxis!("YLABEL", :log10)
+y = rand(20,3)
+plot(y, xaxis=("XLABEL",(-5,30),0:2:20,:flip), background_color = RGB(0.2,0.2,0.2),
+     leg=false)
+hline!(mean(y,1)+rand(1,3), line=(4,:dash,0.6,[:lightgreen :green :darkgreen]))
+vline!([5,10])
+title!("TITLE")
+yaxis!("YLABEL", :log10)
     end)]
 ),
 
@@ -66,14 +85,21 @@ PlotExample("Global",
 PlotExample("Images",
     "Plot an image.  y-axis is set to flipped",
     [:(begin
-        import Images
-        img = Images.load(Pkg.dir("PlotReferenceImages","Plots","pyplot","0.7.0","ref1.png"))
+        import FileIO
+        img = FileIO.load(Pkg.dir("PlotReferenceImages","Plots","pyplot","0.7.0","ref1.png"))
         plot(img)
     end)]
 ),
 
 PlotExample("Arguments",
-    "Plot multiple series with different numbers of points.  Mix arguments that apply to all series (marker/markersize) with arguments unique to each series (colors).  Special arguments `line`, `marker`, and `fill` will automatically figure out what arguments to set (for example, we are setting the `linestyle`, `linewidth`, and `color` arguments with `line`.)  Note that we pass a matrix of colors, and this applies the colors to each series.",
+"""
+Plot multiple series with different numbers of points.  Mix arguments that apply to all
+series (marker/markersize) with arguments unique to each series (colors).  Special
+arguments `line`, `marker`, and `fill` will automatically figure out what arguments to
+set (for example, we are setting the `linestyle`, `linewidth`, and `color` arguments with
+`line`.)  Note that we pass a matrix of colors, and this applies the colors to each
+series.
+""",
     [:(begin
         ys = Vector[rand(10), rand(20)]
         plot(ys, color=[:black :orange], line=(:dot,4), marker=([:hex :d],12,0.8,stroke(3,:gray)))
@@ -115,20 +141,23 @@ PlotExample("Line types",
 PlotExample("Line styles",
     "",
     [:(begin
-        styles = filter(s -> s in Plots.supported_styles(), [:solid, :dash, :dot, :dashdot, :dashdotdot])'
-        n = length(styles)
-        y = cumsum(randn(20,n),1)
-        plot(y, line = (5, styles), label = map(string,styles))
-    end)]
+styles = filter(s -> s in Plots.supported_styles(),
+                [:solid, :dash, :dot, :dashdot, :dashdotdot])
+styles = reshape(styles, 1, length(styles)) # Julia 0.6 unfortunately gives an error when transposing symbol vectors
+n = length(styles)
+y = cumsum(randn(20,n),1)
+plot(y, line = (5, styles), label = map(string,styles), legendtitle = "linestyle")
+             end)]
 ),
 
 PlotExample("Marker types",
     "",
     [:(begin
-        markers = filter(m -> m in Plots.supported_markers(), Plots._shape_keys)'
+        markers = filter(m -> m in Plots.supported_markers(), Plots._shape_keys)
+        markers = reshape(markers, 1, length(markers))
         n = length(markers)
         x = linspace(0,10,n+2)[2:end-1]
-        y = repmat(reverse(x)', n, 1)
+        y = repmat(reshape(reverse(x),1,:), n, 1)
         scatter(x, y, m=(8,:auto), lab=map(string,markers), bg=:linen, xlim=(0,10), ylim=(0,10))
     end)]
 ),
@@ -143,24 +172,30 @@ PlotExample("Bar",
 PlotExample("Histogram",
     "",
     [:(begin
-        histogram(randn(1000), nbins=20)
+        histogram(randn(1000), bins = :scott, weights = repeat(1:5, outer = 200))
     end)]
 ),
 
 PlotExample("Subplots",
-    """
-    Use the `layout` keyword, and optionally the convenient `@layout` macro to generate arbitrarily complex subplot layouts.
-    """,
+"""
+Use the `layout` keyword, and optionally the convenient `@layout` macro to generate
+arbitrarily complex subplot layouts.
+""",
     [:(begin
-        l = @layout([a{0.1h}; b [c;d e]])
-        plot(randn(100,5), layout=l, t=[:line :histogram :scatter :steppre :bar], leg=false, ticks=nothing, border=false)
+l = @layout([a{0.1h}; b [c;d e]])
+plot(randn(100,5), layout=l, t=[:line :histogram :scatter :steppre :bar], leg=false,
+     ticks=nothing, border=:none)
     end)]
 ),
 
 PlotExample("Adding to subplots",
-    "Note here the automatic grid layout, as well as the order in which new series are added to the plots.",
+"""
+Note here the automatic grid layout, as well as the order in which new series are added
+to the plots.
+""",
     [:(begin
-        plot(Plots.fakedata(100,10), layout=4, palette=[:grays :blues :heat :lightrainbow], bg_inside=[:orange :pink :darkblue :black])
+plot(Plots.fakedata(100,10), layout=4, palette=[:grays :blues :heat :lightrainbow],
+     bg_inside=[:orange :pink :darkblue :black])
     end)]
 ),
 
@@ -173,48 +208,68 @@ PlotExample("",
 ),
 
 PlotExample("Open/High/Low/Close",
-    "Create an OHLC chart.  Pass in a list of (open,high,low,close) tuples as your `y` argument.  This uses recipes to first convert the tuples to OHLC objects, and subsequently create a :path series with the appropriate line segments.",
+"""
+Create an OHLC chart.  Pass in a list of (open,high,low,close) tuples as your `y`
+argument.  This uses recipes to first convert the tuples to OHLC objects, and
+subsequently create a :path series with the appropriate line segments.
+""",
     [:(begin
-        n=20
-        hgt=rand(n)+1
-        bot=randn(n)
-        openpct=rand(n)
-        closepct=rand(n)
-        y = OHLC[(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i], closepct[i]*hgt[i]+bot[i]) for i in 1:n]
-        ohlc(y)
+n=20
+hgt=rand(n)+1
+bot=randn(n)
+openpct=rand(n)
+closepct=rand(n)
+y = OHLC[(openpct[i]*hgt[i]+bot[i], bot[i]+hgt[i], bot[i],
+          closepct[i]*hgt[i]+bot[i]) for i in 1:n]
+ohlc(y)
     end)]
 ),
 
 PlotExample("Annotations",
-    "The `annotations` keyword is used for text annotations in data-coordinates.  Pass in a tuple (x,y,text) or a vector of annotations.  `annotate!(ann)` is shorthand for `plot!(; annotation=ann)`.  Series annotations are used for annotating individual data points.  They require only the annotation... x/y values are computed.  A `PlotText` object can be build with the method `text(string, attr...)`, which wraps font and color attributes.",
+"""
+The `annotations` keyword is used for text annotations in data-coordinates.  Pass in a
+tuple (x,y,text) or a vector of annotations.  `annotate!(ann)` is shorthand for `plot!(;
+annotation=ann)`.  Series annotations are used for annotating individual data points.
+They require only the annotation... x/y values are computed.  A `PlotText` object can be
+build with the method `text(string, attr...)`, which wraps font and color attributes.
+""",
     [:(begin
-        y = rand(10)
-        plot(y, annotations = (3,y[3],text("this is #3",:left)), leg=false)
-        annotate!([(5, y[5], text("this is #5",16,:red,:center)), (10, y[10], text("this is #10",:right,20,"courier"))])
-        scatter!(linspace(2,8,6), rand(6), marker=(50,0.2,:orange), series_annotations = ["series","annotations","map","to","series",text("data",:green)])
+y = rand(10)
+plot(y, annotations = (3,y[3],text("this is #3",:left)), leg=false)
+annotate!([(5, y[5], text("this is #5",16,:red,:center)),
+          (10, y[10], text("this is #10",:right,20,"courier"))])
+scatter!(linspace(2,8,6), rand(6), marker=(50,0.2,:orange),
+         series_annotations = ["series","annotations","map","to","series",
+                               text("data",:green)])
     end)]
 ),
 
 PlotExample("Custom Markers",
-    "A `Plots.Shape` is a light wrapper around vertices of a polygon.  For supported backends, pass arbitrary polygons as the marker shapes.  Note: The center is (0,0) and the size is expected to be rougly the area of the unit circle.",
+"""A `Plots.Shape` is a light wrapper around vertices of a polygon.  For supported
+backends, pass arbitrary polygons as the marker shapes.  Note: The center is (0,0) and
+the size is expected to be rougly the area of the unit circle.
+""",
     [:(begin
-        verts = [(-1.0,1.0),(-1.28,0.6),(-0.2,-1.4),(0.2,-1.4),(1.28,0.6),(1.0,1.0),
-                 (-1.0,1.0),(-0.2,-0.6),(0.0,-0.2),(-0.4,0.6),(1.28,0.6),(0.2,-1.4),
-                 (-0.2,-1.4),(0.6,0.2),(-0.2,0.2),(0.0,-0.2),(0.2,0.2),(-0.2,-0.6)]
-        x = 0.1:0.2:0.9
-        y = 0.7rand(5)+0.15
-        plot(x, y, line = (3,:dash,:lightblue), marker = (Shape(verts),30,RGBA(0,0,0,0.2)),
-                   bg=:pink, fg=:darkblue, xlim = (0,1), ylim=(0,1), leg=false)
+verts = [(-1.0,1.0),(-1.28,0.6),(-0.2,-1.4),(0.2,-1.4),(1.28,0.6),(1.0,1.0),
+         (-1.0,1.0),(-0.2,-0.6),(0.0,-0.2),(-0.4,0.6),(1.28,0.6),(0.2,-1.4),
+         (-0.2,-1.4),(0.6,0.2),(-0.2,0.2),(0.0,-0.2),(0.2,0.2),(-0.2,-0.6)]
+x = 0.1:0.2:0.9
+y = 0.7rand(5)+0.15
+plot(x, y, line = (3,:dash,:lightblue), marker = (Shape(verts),30,RGBA(0,0,0,0.2)),
+     bg=:pink, fg=:darkblue, xlim = (0,1), ylim=(0,1), leg=false)
     end)]
 ),
 
 PlotExample("Contours",
-    "Any value for fill works here.  We first build a filled contour from a function, then an unfilled contour from a matrix.",
+"""
+Any value for fill works here.  We first build a filled contour from a function, then an
+unfilled contour from a matrix.
+""",
     [:(begin
         x = 1:0.5:20
         y = 1:0.5:10
         f(x,y) = (3x+y^2)*abs(sin(x)+cos(y))
-        X = repmat(x', length(y), 1)
+        X = repmat(reshape(x,1,:), length(y), 1)
         Y = repmat(y, 1, length(x))
         Z = map(f, X, Y)
         p1 = contour(x, y, f, fill=true)
@@ -250,7 +305,7 @@ PlotExample("DataFrames",
     [:(begin
         import RDatasets
         iris = RDatasets.dataset("datasets", "iris")
-        scatter(iris, :SepalLength, :SepalWidth, group=:Species,
+        @df iris scatter(:SepalLength, :SepalWidth, group=:Species,
             title = "My awesome plot", xlabel = "Length", ylabel = "Width",
             marker = (0.5, [:cross :hex :star7], 12), bg=RGB(.2,.2,.2))
     end)]
@@ -260,7 +315,8 @@ PlotExample("Groups and Subplots",
     "",
     [:(begin
         group = rand(map(i->"group $i",1:4),100)
-        plot(rand(100), layout=@layout([a b;c]), group=group, linetype=[:bar :scatter :steppre])
+        plot(rand(100), layout=@layout([a b;c]), group=group,
+            linetype=[:bar :scatter :steppre], linecolor = :match)
     end)]
 ),
 
@@ -268,7 +324,7 @@ PlotExample("Polar Plots",
     "",
     [:(begin
         Θ = linspace(0,1.5π,100)
-        r = abs(0.1randn(100)+sin(3Θ))
+        r = abs.(0.1randn(100)+sin.(3Θ))
         plot(Θ, r, proj=:polar, m=2)
     end)]
 ),
@@ -278,7 +334,7 @@ PlotExample("Heatmap, categorical axes, and aspect_ratio",
     [:(begin
         xs = [string("x",i) for i=1:10]
         ys = [string("y",i) for i=1:4]
-        z = float((1:4)*(1:10)')
+        z = float((1:4)*reshape(1:10,1,:))
         heatmap(xs, ys, z, aspect_ratio=1)
     end)]
 ),
@@ -286,9 +342,10 @@ PlotExample("Heatmap, categorical axes, and aspect_ratio",
 PlotExample("Layouts, margins, label rotation, title location",
     "",
     [:(begin
+        using Plots.PlotMeasures # for Measures, e.g. mm and px
         plot(rand(100,6),layout=@layout([a b; c]),title=["A" "B" "C"],
                         title_location=:left, left_margin=[20mm 0mm],
-                        bottom_margin=50px, xrotation=60)
+                        bottom_margin=10px, xrotation=60)
     end)]
 ),
 
@@ -297,10 +354,83 @@ PlotExample("Boxplot and Violin series recipes",
     [:(begin
         import RDatasets
         singers = RDatasets.dataset("lattice", "singer")
-        violin(singers, :VoicePart, :Height, line = 0, fill = (0.2, :blue))
-        boxplot!(singers, :VoicePart, :Height, line = (2,:black), fill = (0.3, :orange))
+        @df singers violin(:VoicePart, :Height, line = 0, fill = (0.2, :blue))
+        @df singers boxplot!(:VoicePart, :Height, line = (2,:black), fill = (0.3, :orange))
     end)]
-)
+),
+
+PlotExample("Animation with subplots",
+    "The `layout` macro can be used to create an animation with subplots.",
+    [:(begin
+        l = @layout([[a; b] c])
+        p = plot(plot([sin,cos],1,leg=false),
+        scatter([atan,cos],1,leg=false),
+        plot(log,1,xlims=(1,10π),ylims=(0,5),leg=false),layout=l)
+
+        anim = Animation()
+        for x = linspace(1,10π,100)
+          plot(push!(p,x,Float64[sin(x),cos(x),atan(x),cos(x),log(x)]))
+          frame(anim)
+        end
+    end)]
+),
+
+PlotExample("Spy",
+"""
+For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has 
+various different nonzero values, a colorbar is added. The colorbar can be disabled with 
+`legend = nothing`.
+""",
+    [:(begin
+    a = spdiagm((ones(50), ones(49), ones(49), ones(40), ones(40)),(0, 1, -1, 10, -10))
+    b = spdiagm((1:50, 1:49, 1:49, 1:40, 1:40),(0, 1, -1, 10, -10))
+    plot(spy(a), spy(b), title = ["Unique nonzeros" "Different nonzeros"])
+    end)]
+),
+
+PlotExample("Magic grid argument",
+"""
+The grid lines can be modified individually for each axis with the magic `grid` argument.
+""",
+    [:(begin
+    x = rand(10)
+    p1 = plot(x, title = "Default looks")
+    p2 = plot(x, grid = (:y, :olivedrab, :dot, 1, 0.9), title = "Modified y grid")
+    p3 = plot(deepcopy(p2), title = "Add x grid")
+    xgrid!(p3, :on, :cadetblue, 2, :dashdot, 0.4)
+    plot(p1, p2, p3, layout = (1, 3), label = "", fillrange = 0, fillalpha = 0.3)
+    end)]
+),
+
+PlotExample("Framestyle",
+"""
+The style of the frame/axes of a (sub)plot can be changed with the `framestyle`
+attribute. The default framestyle is `:axes`.
+""",
+    [:(begin
+    scatter(fill(randn(10), 6), fill(randn(10), 6),
+        framestyle = [:box :semi :origin :zerolines :grid :none],
+        title = [":box" ":semi" ":origin" ":zerolines" ":grid" ":none"],
+        color = RowVector(1:6), layout = 6, label = "", markerstrokewidth = 0,
+        ticks = -2:2)
+    end)]
+),
+
+PlotExample("Lines and markers with varying colors",
+"""
+You can use the `line_z` and `marker_z` properties to associate a color with
+each line segment or marker in the plot. 
+""",
+    [:(begin
+        t = linspace(0, 1, 100)
+        θ = 6π .* t
+        x = t .* cos.(θ)
+        y = t .* sin.(θ)
+        p1 = plot(x, y, line_z=t, linewidth=3, legend=false)
+        p2 = scatter(x, y, marker_z=t, color=:bluesreds, legend=false)
+        plot(p1, p2)
+    end)]
+),
 
 ]
 
@@ -321,6 +451,13 @@ function test_examples(pkgname::Symbol, idx::Int; debug = false, disp = true)
 end
 
 # generate all plots and create a dict mapping idx --> plt
+"""
+test_examples(pkgname[, idx]; debug = false, disp = true, sleep = nothing,
+                                        skip = [], only = nothing
+
+Run the `idx` test example for a given backend, or all examples if `idx`
+is not specified.
+"""
 function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = nothing,
                                         skip = [], only = nothing)
   Plots._debugMode.on = debug

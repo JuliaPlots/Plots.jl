@@ -1,3 +1,6 @@
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotlyjs.jl"))
+end
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 
@@ -85,7 +88,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend})
+function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend})
     if isijulia() && !_use_remote[]
         write(io, PlotlyJS.html_body(PlotlyJS.JupyterPlot(plt.o)))
     else
@@ -98,14 +101,31 @@ function plotlyjs_save_hack(io::IO, plt::Plot{PlotlyJSBackend}, ext::String)
     PlotlyJS.savefig(plt.o, tmpfn)
     write(io, read(open(tmpfn)))
 end
+_show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "svg")
 _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "png")
 _show(io::IO, ::MIME"application/pdf", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "pdf")
 _show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "eps")
 
-function _display(plt::Plot{PlotlyJSBackend})
-    display(plt.o)
+function write_temp_html(plt::Plot{PlotlyJSBackend})
+    filename = string(tempname(), ".html")
+    savefig(plt, filename)
+    filename
 end
 
+function _display(plt::Plot{PlotlyJSBackend})
+    if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", true) in (true, 1, "1", "true", "yes")
+        display(plt.o)
+    else
+        standalone_html_window(plt)
+    end
+end
+
+@require WebIO begin
+    function WebIO.render(plt::Plot{PlotlyJSBackend})
+        prepare_output(plt)
+        WebIO.render(plt.o)
+    end
+end
 
 function closeall(::PlotlyJSBackend)
     if !isplotnull() && isa(current().o, PlotlyJS.SyncPlot)

@@ -1,6 +1,10 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
+@require Revise begin
+    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "unicodeplots.jl"))
+end
+
 const _unicodeplots_attr = merge_with_base_supported([
     :label,
     :legend,
@@ -13,7 +17,7 @@ const _unicodeplots_attr = merge_with_base_supported([
     :guide, :lims,
   ])
 const _unicodeplots_seriestype = [
-    :path, :scatter,
+    :path, :scatter, :straightline,
     # :bar,
     :shape,
     :histogram2d,
@@ -138,7 +142,7 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
         return
     end
 
-    if st == :path
+    if st in (:path, :straightline)
         func = UnicodePlots.lineplot!
     elseif st == :scatter || d[:markershape] != :none
         func = UnicodePlots.scatterplot!
@@ -151,14 +155,20 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
     end
 
     # get the series data and label
-    x, y = [collect(float(d[s])) for s in (:x, :y)]
+    x, y = if st == :straightline
+        straightline_data(d)
+    elseif st == :shape
+        shape_data(series)
+    else
+        [collect(float(d[s])) for s in (:x, :y)]
+    end
     label = addlegend ? d[:label] : ""
 
     # if we happen to pass in allowed color symbols, great... otherwise let UnicodePlots decide
     color = d[:linecolor] in UnicodePlots.color_cycle ? d[:linecolor] : :auto
 
     # add the series
-    x, y = Plots.unzip(collect(filter(xy->isfinite(xy[1])&&isfinite(xy[2]), zip(x,y))))
+    x, y = Plots.unzip(collect(Base.Iterators.filter(xy->isfinite(xy[1])&&isfinite(xy[2]), zip(x,y))))
     func(o, x, y; color = color, name = label)
 end
 
@@ -202,7 +212,7 @@ end
 
 function _show(io::IO, ::MIME"text/plain", plt::Plot{UnicodePlotsBackend})
     unicodeplots_rebuild(plt)
-    map(show, plt.o)
+    foreach(x -> show(io, x), plt.o)
     nothing
 end
 

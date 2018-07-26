@@ -1,23 +1,19 @@
 
 # NOTE: (0,0) is the top-left !!!
 
-# allow pixels and percentages
-const px = AbsoluteLength(0.254)
-const pct = Length{:pct, Float64}(1.0)
-
 to_pixels(m::AbsoluteLength) = m.value / 0.254
 
 const _cbar_width = 5mm
 
-Base.:.*(m::Measure, n::Number) = m * n
-Base.:.*(n::Number, m::Measure) = m * n
+Base.broadcast(::typeof(Base.:.*), m::Measure, n::Number) = m * n
+Base.broadcast(::typeof(Base.:.*), m::Number, n::Measure) = m * n
 Base.:-(m::Measure, a::AbstractArray) = map(ai -> m - ai, a)
 Base.:-(a::AbstractArray, m::Measure) = map(ai -> ai - m, a)
 Base.zero(::Type{typeof(mm)}) = 0mm
 Base.one(::Type{typeof(mm)}) = 1mm
 Base.typemin(::typeof(mm)) = -Inf*mm
 Base.typemax(::typeof(mm)) = Inf*mm
-Base.convert{F<:AbstractFloat}(::Type{F}, l::AbsoluteLength) = convert(F, l.value)
+Base.convert(::Type{F}, l::AbsoluteLength) where {F<:AbstractFloat} = convert(F, l.value)
 
 # TODO: these are unintuitive and may cause tricky bugs
 # Base.:+(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
@@ -99,7 +95,7 @@ end
 # -----------------------------------------------------------
 
 # points combined by x/y, pct, and length
-type MixedMeasures
+mutable struct MixedMeasures
     xy::Float64
     pct::Float64
     len::AbsoluteLength
@@ -133,7 +129,12 @@ make_measure_hor(m::Measure) = m
 make_measure_vert(n::Number) = n * h
 make_measure_vert(m::Measure) = m
 
+"""
+    bbox(x, y, w, h [,originargs...])
+    bbox(layout)
 
+Create a bounding box for plotting
+"""
 function bbox(x, y, w, h, oarg1::Symbol, originargs::Symbol...)
     oargs = vcat(oarg1, originargs...)
     orighor = :left
@@ -215,7 +216,7 @@ bottompad(layout::AbstractLayout) = 0mm
 # RootLayout
 
 # this is the parent of the top-level layout
-immutable RootLayout <: AbstractLayout end
+struct RootLayout <: AbstractLayout end
 
 Base.parent(::RootLayout) = nothing
 parent_bbox(::RootLayout) = defaultbox
@@ -225,7 +226,7 @@ bbox(::RootLayout) = defaultbox
 # EmptyLayout
 
 # contains blank space
-type EmptyLayout <: AbstractLayout
+mutable struct EmptyLayout <: AbstractLayout
     parent::AbstractLayout
     bbox::BoundingBox
     attr::KW  # store label, width, and height for initialization
@@ -243,7 +244,7 @@ _update_min_padding!(layout::EmptyLayout) = nothing
 # GridLayout
 
 # nested, gridded layout with optional size percentages
-type GridLayout <: AbstractLayout
+mutable struct GridLayout <: AbstractLayout
     parent::AbstractLayout
     minpad::Tuple # leftpad, toppad, rightpad, bottompad
     bbox::BoundingBox
@@ -253,6 +254,13 @@ type GridLayout <: AbstractLayout
     attr::KW
 end
 
+"""
+    grid(args...; kw...)
+
+Create a grid layout for subplots. `args` specify the dimensions, e.g.
+`grid(3,2, widths = (0.6,04))` creates a grid with three rows and two
+columns of different width.
+"""
 grid(args...; kw...) = GridLayout(args...; kw...)
 
 function GridLayout(dims...;
@@ -473,12 +481,12 @@ function layout_args(n::Integer)
     GridLayout(nr, nc), n
 end
 
-function layout_args{I<:Integer}(sztup::NTuple{2,I})
+function layout_args(sztup::NTuple{2,I}) where I<:Integer
     nr, nc = sztup
     GridLayout(nr, nc), nr*nc
 end
 
-function layout_args{I<:Integer}(sztup::NTuple{3,I})
+function layout_args(sztup::NTuple{3,I}) where I<:Integer
     n, nr, nc = sztup
     nr, nc = compute_gridsize(n, nr, nc)
     GridLayout(nr, nc), n
@@ -704,7 +712,7 @@ function link_axes!(axes::Axis...)
     a1 = axes[1]
     for i=2:length(axes)
         a2 = axes[i]
-        expand_extrema!(a1, extrema(a2))
+        expand_extrema!(a1, ignorenan_extrema(a2))
         for k in (:extrema, :discrete_values, :continuous_values, :discrete_map)
             a2[k] = a1[k]
         end

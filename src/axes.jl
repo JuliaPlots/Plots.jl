@@ -70,13 +70,16 @@ function process_axis_arg!(d::KW, arg, letter = "")
     elseif arg == nothing
         d[Symbol(letter,:ticks)] = []
 
+    elseif T <: Bool || arg in _allShowaxisArgs
+        d[Symbol(letter,:showaxis)] = showaxis(arg, letter)
+
     elseif typeof(arg) <: Number
         d[Symbol(letter,:rotation)] = arg
 
     elseif typeof(arg) <: Function
         d[Symbol(letter,:formatter)] = arg
 
-    else
+    elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_axis))
         warn("Skipped $(letter)axis arg $arg")
 
     end
@@ -118,7 +121,7 @@ Base.show(io::IO, axis::Axis) = dumpdict(axis.d, "Axis", true)
 # Base.getindex(axis::Axis, k::Symbol) = getindex(axis.d, k)
 Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.d, v, ks...)
 Base.haskey(axis::Axis, k::Symbol) = haskey(axis.d, k)
-Base.extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
+ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 
 const _scale_funcs = Dict{Symbol,Function}(
@@ -156,16 +159,52 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
     scale = axis[:scale]
     sf = scalefunc(scale)
 
+    # If the axis input was a Date or DateTime use a special logic to find
+    # "round" Date(Time)s as ticks
+    # This bypasses the rest of optimal_ticks_and_labels, because
+    # optimize_datetime_ticks returns ticks AND labels: the label format (Date
+    # or DateTime) is chosen based on the time span between amin and amax
+    # rather than on the input format
+    # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
+    if ticks == nothing && scale == :identity
+        if axis[:formatter] == dateformatter
+            # optimize_datetime_ticks returns ticks and labels(!) based on
+            # integers/floats corresponding to the DateTime type. Thus, the axes
+            # limits, which resulted from converting the Date type to integers,
+            # are converted to 'DateTime integers' (actually floats) before
+            # being passed to optimize_datetime_ticks.
+            # (convert(Int, convert(DateTime, convert(Date, i))) == 87600000*i)
+            ticks, labels = optimize_datetime_ticks(864e5 * amin, 864e5 * amax;
+                k_min = 2, k_max = 4)
+            # Now the ticks are converted back to floats corresponding to Dates.
+            return ticks / 864e5, labels
+        elseif axis[:formatter] == datetimeformatter
+            return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
+        end
+    end
+
     # get a list of well-laid-out ticks
-    scaled_ticks = if ticks == nothing
-        optimize_ticks(
+    if ticks == nothing
+        scaled_ticks = optimize_ticks(
             sf(amin),
             sf(amax);
-            k_min = 5, # minimum number of ticks
+            k_min = 4, # minimum number of ticks
             k_max = 8, # maximum number of ticks
         )[1]
+    elseif typeof(ticks) <: Int
+        scaled_ticks, viewmin, viewmax = optimize_ticks(
+            sf(amin),
+            sf(amax);
+            k_min = ticks, # minimum number of ticks
+            k_max = ticks, # maximum number of ticks
+            k_ideal = ticks,
+            # `strict_span = false` rewards cases where the span of the
+            # chosen  ticks is not too much bigger than amin - amax:
+            strict_span = false,
+        )
+        axis[:lims] = map(invscalefunc(scale), (viewmin, viewmax))
     else
-        map(sf, filter(t -> amin <= t <= amax, ticks))
+        scaled_ticks = map(sf, (filter(t -> amin <= t <= amax, ticks)))
     end
     unscaled_ticks = map(invscalefunc(scale), scaled_ticks)
 
@@ -173,12 +212,20 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
         formatter = axis[:formatter]
         if formatter == :auto
             # the default behavior is to make strings of the scaled values and then apply the labelfunc
+            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :auto))
+        elseif formatter == :plain
+            # Leave the numbers in plain format
             map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :plain))
         elseif formatter == :scientific
             Showoff.showoff(unscaled_ticks, :scientific)
         else
             # there was an override for the formatter... use that on the unscaled ticks
             map(formatter, unscaled_ticks)
+            # if the formatter left us with numbers, still apply the default formatter
+            # However it leave us with the problem of unicode number decoding by the backend
+            # if eltype(unscaled_ticks) <: Number
+            #     Showoff.showoff(unscaled_ticks, :auto)
+            # end
         end
     else
         # no finite ticks to show...
@@ -192,20 +239,39 @@ end
 
 # return (continuous_values, discrete_values) for the ticks on this axis
 function get_ticks(axis::Axis)
-    ticks = axis[:ticks]
+    ticks = _transform_ticks(axis[:ticks])
     ticks in (nothing, false) && return nothing
 
+    # treat :native ticks as :auto
+    ticks = ticks == :native ? :auto : ticks
+
     dvals = axis[:discrete_values]
-    cv, dv = if !isempty(dvals) && ticks == :auto
-        # discrete ticks...
-        axis[:continuous_values], dvals
-    elseif ticks == :auto
-        # compute optimal ticks and labels
-        optimal_ticks_and_labels(axis)
-    elseif typeof(ticks) <: AVec
-        # override ticks, but get the labels
-        optimal_ticks_and_labels(axis, ticks)
-    elseif typeof(ticks) <: NTuple{2}
+    cv, dv = if typeof(ticks) <: Symbol
+        if !isempty(dvals)
+            # discrete ticks...
+            n = length(dvals)
+            rng = if ticks == :auto
+                Int[round(Int,i) for i in linspace(1, n, 15)]
+            else # if ticks == :all
+                1:n
+            end
+            axis[:continuous_values][rng], dvals[rng]
+        elseif ispolar(axis.sps[1]) && axis[:letter] == :x
+            #force theta axis to be full circle
+            (collect(0:pi/4:7pi/4), string.(0:45:315))
+        else
+            # compute optimal ticks and labels
+            optimal_ticks_and_labels(axis)
+        end
+    elseif typeof(ticks) <: Union{AVec, Int}
+        if !isempty(dvals) && typeof(ticks) <: Int
+            rng = Int[round(Int,i) for i in linspace(1, length(dvals), ticks)]
+            axis[:continuous_values][rng], dvals[rng]
+        else
+            # override ticks, but get the labels
+            optimal_ticks_and_labels(axis, ticks)
+        end
+    elseif typeof(ticks) <: NTuple{2, Any}
         # assuming we're passed (ticks, labels)
         ticks
     else
@@ -213,14 +279,12 @@ function get_ticks(axis::Axis)
     end
     # @show ticks dvals cv dv
 
-    # TODO: better/smarter cutoff values for sampling ticks
-    if length(cv) > 30
-        rng = Int[round(Int,i) for i in linspace(1, length(cv), 15)]
-        cv[rng], dv[rng]
-    else
-        cv, dv
-    end
+    return cv, dv
 end
+
+_transform_ticks(ticks) = ticks
+_transform_ticks(ticks::AbstractArray{T}) where T <: Dates.TimeType = Dates.value.(ticks)
+_transform_ticks(ticks::NTuple{2, Any}) = (_transform_ticks(ticks[1]), ticks[2])
 
 # -------------------------------------------------------------------------
 
@@ -236,8 +300,8 @@ end
 
 
 function expand_extrema!(ex::Extrema, v::Number)
-    ex.emin = min(v, ex.emin)
-    ex.emax = max(v, ex.emax)
+    ex.emin = isfinite(v) ? min(v, ex.emin) : ex.emin
+    ex.emax = isfinite(v) ? max(v, ex.emax) : ex.emax
     ex
 end
 
@@ -250,13 +314,13 @@ expand_extrema!(axis::Axis, ::Void) = axis[:extrema]
 expand_extrema!(axis::Axis, ::Bool) = axis[:extrema]
 
 
-function expand_extrema!{MIN<:Number,MAX<:Number}(axis::Axis, v::Tuple{MIN,MAX})
+function expand_extrema!(axis::Axis, v::Tuple{MIN,MAX}) where {MIN<:Number,MAX<:Number}
     ex = axis[:extrema]
-    ex.emin = min(v[1], ex.emin)
-    ex.emax = max(v[2], ex.emax)
+    ex.emin = isfinite(v[1]) ? min(v[1], ex.emin) : ex.emin
+    ex.emax = isfinite(v[2]) ? max(v[2], ex.emax) : ex.emax
     ex
 end
-function expand_extrema!{N<:Number}(axis::Axis, v::AVec{N})
+function expand_extrema!(axis::Axis, v::AVec{N}) where N<:Number
     ex = axis[:extrema]
     for vi in v
         expand_extrema!(ex, vi)
@@ -275,6 +339,9 @@ function expand_extrema!(sp::Subplot, d::KW)
         else
             letter == :x ? :y : letter == :y ? :x : :z
         end]
+        if letter != :z && d[:seriestype] == :straightline && any(series[:seriestype] != :straightline for series in series_list(sp)) && data[1] != data[2]
+            data = [NaN]
+        end
         axis = sp[Symbol(letter, "axis")]
 
         if isa(data, Volume)
@@ -307,7 +374,7 @@ function expand_extrema!(sp::Subplot, d::KW)
     if fr == nothing && d[:seriestype] == :bar
         fr = 0.0
     end
-    if fr != nothing
+    if fr != nothing && !all3D(d)
         axis = sp.attr[vert ? :yaxis : :xaxis]
         if typeof(fr) <: Tuple
             for fri in fr
@@ -325,13 +392,22 @@ function expand_extrema!(sp::Subplot, d::KW)
 
         bw = d[:bar_width]
         if bw == nothing
-            bw = d[:bar_width] = mean(diff(data))
+            bw = d[:bar_width] = _bar_width * ignorenan_minimum(filter(x->x>0,diff(sort(data))))
         end
         axis = sp.attr[Symbol(dsym, :axis)]
-        expand_extrema!(axis, maximum(data) + 0.5maximum(bw))
-        expand_extrema!(axis, minimum(data) - 0.5minimum(bw))
+        expand_extrema!(axis, ignorenan_maximum(data) + 0.5maximum(bw))
+        expand_extrema!(axis, ignorenan_minimum(data) - 0.5minimum(bw))
     end
 
+    # expand for heatmaps
+    if d[:seriestype] == :heatmap
+        for letter in (:x, :y)
+            data = d[letter]
+            axis = sp[Symbol(letter, "axis")]
+            scale = get(d, Symbol(letter, "scale"), :identity)
+            expand_extrema!(axis, heatmap_edges(data, scale))
+        end
+    end
 end
 
 function expand_extrema!(sp::Subplot, xmin, xmax, ymin, ymax)
@@ -342,27 +418,36 @@ end
 # -------------------------------------------------------------------------
 
 # push the limits out slightly
-function widen(lmin, lmax)
-    span = lmax - lmin
-    # eps = max(1e-16, min(1e-2span, 1e-10))
-    eps = max(1e-16, 0.03span)
-    lmin-eps, lmax+eps
+function widen(lmin, lmax, scale = :identity)
+    f, invf = scalefunc(scale), invscalefunc(scale)
+    span = f(lmax) - f(lmin)
+    # eps = NaNMath.max(1e-16, min(1e-2span, 1e-10))
+    eps = NaNMath.max(1e-16, 0.03span)
+    invf(f(lmin)-eps), invf(f(lmax)+eps)
 end
 
-# figure out if widening is a good idea.  if there's a scale set it's too tricky,
-# so lazy out and don't widen
+# figure out if widening is a good idea.
+const _widen_seriestypes = (:line, :path, :steppre, :steppost, :sticks, :scatter, :barbins, :barhist, :histogram, :scatterbins, :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :bar, :shape, :path3d, :scatter3d)
+
 function default_should_widen(axis::Axis)
     should_widen = false
-    if axis[:scale] == :identity && !is_2tuple(axis[:lims])
+    if !is_2tuple(axis[:lims])
         for sp in axis.sps
             for series in series_list(sp)
-                if series.d[:seriestype] in (:scatter,) || series.d[:markershape] != :none
+                if series.d[:seriestype] in _widen_seriestypes
                     should_widen = true
                 end
             end
         end
     end
     should_widen
+end
+
+function round_limits(amin,amax)
+    scale = 10^(1-round(log10(amax - amin)))
+    amin = floor(amin*scale)/scale
+    amax = ceil(amax*scale)/scale
+    amin, amax
 end
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
@@ -384,8 +469,19 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
     if !isfinite(amin) && !isfinite(amax)
         amin, amax = 0.0, 1.0
     end
-    if should_widen
-        widen(amin, amax)
+    if ispolar(axis.sps[1])
+        if axis[:letter] == :x
+            amin, amax = 0, 2pi
+        elseif lims == :auto
+            #widen max radius so ticks dont overlap with theta axis
+            amin, amax + 0.1 * abs(amax - amin)
+        else
+            amin, amax
+        end
+    elseif should_widen && axis[:widen]
+        widen(amin, amax, axis[:scale])
+    elseif lims == :round
+        round_limits(amin,amax)
     else
         amin, amax
     end
@@ -401,7 +497,7 @@ function discrete_value!(axis::Axis, dv)
     # @show axis[:discrete_map], axis[:discrete_values], dv
     if cv_idx == -1
         ex = axis[:extrema]
-        cv = max(0.5, ex.emax + 1.0)
+        cv = NaNMath.max(0.5, ex.emax + 1.0)
         expand_extrema!(axis, cv)
         push!(axis[:discrete_values], dv)
         push!(axis[:continuous_values], cv)
@@ -466,38 +562,94 @@ function axis_drawing_info(sp::Subplot)
     ymin, ymax = axis_limits(yaxis)
     xticks = get_ticks(xaxis)
     yticks = get_ticks(yaxis)
-    spine_segs = Segments(2)
-    grid_segs = Segments(2)
+    xaxis_segs = Segments(2)
+    yaxis_segs = Segments(2)
+    xtick_segs = Segments(2)
+    ytick_segs = Segments(2)
+    xgrid_segs = Segments(2)
+    ygrid_segs = Segments(2)
+    xborder_segs = Segments(2)
+    yborder_segs = Segments(2)
 
-    if !(xaxis[:ticks] in (nothing, false))
-        f = scalefunc(yaxis[:scale])
-        invf = invscalefunc(yaxis[:scale])
-        t1 = invf(f(ymin) + 0.015*(f(ymax)-f(ymin)))
-        t2 = invf(f(ymax) - 0.015*(f(ymax)-f(ymin)))
+    if sp[:framestyle] != :none
+        # xaxis
+        if xaxis[:showaxis]
+            if sp[:framestyle] != :grid
+                y1, y2 = if sp[:framestyle] in (:origin, :zerolines)
+                    0.0, 0.0
+                else
+                    xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, ymin) : (ymin, ymax)
+                end
+                push!(xaxis_segs, (xmin, y1), (xmax, y1))
+                # don't show the 0 tick label for the origin framestyle
+                if sp[:framestyle] == :origin && !(xticks in (nothing,false)) && length(xticks) > 1
+                    showticks = xticks[1] .!= 0
+                    xticks = (xticks[1][showticks], xticks[2][showticks])
+                end
+            end
+            sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin, y2), (xmax, y2)) # top spine
+        end
+        if !(xaxis[:ticks] in (nothing, false))
+            f = scalefunc(yaxis[:scale])
+            invf = invscalefunc(yaxis[:scale])
+            ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
+            t1 = invf(f(ymin) + 0.015 * (f(ymax) - f(ymin)) * ticks_in)
+            t2 = invf(f(ymax) - 0.015 * (f(ymax) - f(ymin)) * ticks_in)
+            t3 = invf(f(0) + 0.015 * (f(ymax) - f(ymin)) * ticks_in)
 
-        push!(spine_segs, (xmin,ymin), (xmax,ymin)) # bottom spine
-        # push!(spine_segs, (xmin,ymax), (xmax,ymax)) # top spine
-        for xtick in xticks[1]
-            push!(spine_segs, (xtick, ymin), (xtick, t1)) # bottom tick
-            push!(grid_segs,  (xtick, t1),   (xtick, t2)) # vertical grid
-            # push!(spine_segs, (xtick, ymax), (xtick, t2)) # top tick
+            for xtick in xticks[1]
+                if xaxis[:showaxis]
+                    tick_start, tick_stop = if sp[:framestyle] == :origin
+                        (0, t3)
+                    else
+                        xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, t2) : (ymin, t1)
+                    end
+                    push!(xtick_segs, (xtick, tick_start), (xtick, tick_stop)) # bottom tick
+                end
+                # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
+                xaxis[:grid] && push!(xgrid_segs, (xtick, ymin), (xtick, ymax)) # vertical grid
+            end
+        end
+
+        # yaxis
+        if yaxis[:showaxis]
+            if sp[:framestyle] != :grid
+                x1, x2 = if sp[:framestyle] in (:origin, :zerolines)
+                    0.0, 0.0
+                else
+                    xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, xmin) : (xmin, xmax)
+                end
+                push!(yaxis_segs, (x1, ymin), (x1, ymax))
+                # don't show the 0 tick label for the origin framestyle
+                if sp[:framestyle] == :origin && !(yticks in (nothing,false)) && length(yticks) > 1
+                    showticks = yticks[1] .!= 0
+                    yticks = (yticks[1][showticks], yticks[2][showticks])
+                end
+            end
+            sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (x2, ymin), (x2, ymax)) # right spine
+        end
+        if !(yaxis[:ticks] in (nothing, false))
+            f = scalefunc(xaxis[:scale])
+            invf = invscalefunc(xaxis[:scale])
+            ticks_in = yaxis[:tick_direction] == :out ? -1 : 1
+            t1 = invf(f(xmin) + 0.015 * (f(xmax) - f(xmin)) * ticks_in)
+            t2 = invf(f(xmax) - 0.015 * (f(xmax) - f(xmin)) * ticks_in)
+            t3 = invf(f(0) + 0.015 * (f(xmax) - f(xmin)) * ticks_in)
+
+            for ytick in yticks[1]
+                if yaxis[:showaxis]
+                    tick_start, tick_stop = if sp[:framestyle] == :origin
+                        (0, t3)
+                    else
+                        xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, t2) : (xmin, t1)
+                    end
+                    push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
+                end
+                # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
+                yaxis[:grid] && push!(ygrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
+            end
         end
     end
 
-    if !(yaxis[:ticks] in (nothing, false))
-        f = scalefunc(xaxis[:scale])
-        invf = invscalefunc(xaxis[:scale])
-        t1 = invf(f(xmin) + 0.015*(f(xmax)-f(xmin)))
-        t2 = invf(f(xmax) - 0.015*(f(xmax)-f(xmin)))
-
-        push!(spine_segs, (xmin,ymin), (xmin,ymax)) # left spine
-        # push!(spine_segs, (xmax,ymin), (xmax,ymax)) # right spine
-        for ytick in yticks[1]
-            push!(spine_segs, (xmin, ytick), (t1, ytick)) # left tick
-            push!(grid_segs,  (t1, ytick),   (t2, ytick)) # horizontal grid
-            # push!(spine_segs, (xmax, ytick), (t2, ytick)) # right tick
-        end
-    end
-
-    xticks, yticks, spine_segs, grid_segs
+    xticks, yticks, xaxis_segs, yaxis_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xborder_segs, yborder_segs
 end

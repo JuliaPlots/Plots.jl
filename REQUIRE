@@ -1,9 +1,16 @@
-julia 0.5
+julia 0.6
 
-RecipesBase
-PlotUtils
-PlotThemes
+RecipesBase 0.2.3
+PlotUtils 0.4.1
+PlotThemes 0.1.3
 Reexport
-FixedSizeArrays
+StaticArrays 0.5
+FixedPointNumbers 0.3
 Measures
 Showoff
+StatsBase 0.14.0
+JSON
+NaNMath
+Requires
+Contour
+GR 0.31.0

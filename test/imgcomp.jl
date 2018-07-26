@@ -15,8 +15,7 @@ end
 
 using Plots
 using StatPlots
-using FactCheck
-using Glob
+using Base.Test
 
 default(size=(500,300))
 
@@ -24,7 +23,7 @@ default(size=(500,300))
 # TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
-const _current_plots_version = v"0.9.6"
+const _current_plots_version = v"0.17.4"
 
 
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], eps = 1e-2)
@@ -43,11 +42,8 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
     fn = "ref$idx.png"
 
     # firgure out version info
-    G = glob(joinpath(relpath(refdir), "*"))
-    # @show refdir fn G
-    slash = (@static is_windows() ? "\\" : "/")
-    versions = map(fn -> VersionNumber(split(fn, slash)[end]), G)
-    versions = reverse(sort(versions))
+    vns = filter(x->x[1] != '.', readdir(refdir))
+    versions = sort(VersionNumber.(vns), rev = true)
     versions = filter(v -> v <= _current_plots_version, versions)
     # @show refdir fn versions
 
@@ -99,7 +95,7 @@ function image_comparison_facts(pkg::Symbol;
   for i in 1:length(Plots._examples)
     i in skip && continue
     if only == nothing || i in only
-      @fact image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) |> success --> true
+      @test image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) |> success == true
     end
   end
 end

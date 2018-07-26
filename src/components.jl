@@ -1,7 +1,7 @@
 
 
-typealias P2 FixedSizeArrays.Vec{2,Float64}
-typealias P3 FixedSizeArrays.Vec{3,Float64}
+const P2 = FixedSizeArrays.Vec{2,Float64}
+const P3 = FixedSizeArrays.Vec{3,Float64}
 
 nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
 nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
@@ -11,7 +11,7 @@ compute_angle(v::P2) = (angle = atan2(v[2], v[1]); angle < 0 ? 2π - angle : ang
 
 # -------------------------------------------------------------
 
-immutable Shape
+struct Shape
     x::Vector{Float64}
     y::Vector{Float64}
     # function Shape(x::AVec, y::AVec)
@@ -22,6 +22,13 @@ immutable Shape
     #     end
     # end
 end
+
+"""
+    Shape(x, y)
+    Shape(vertices)
+
+Construct a polygon to be plotted
+"""
 Shape(verts::AVec) = Shape(unzip(verts)...)
 Shape(s::Shape) = deepcopy(s)
 
@@ -32,6 +39,7 @@ vertices(shape::Shape) = collect(zip(shape.x, shape.y))
 #deprecated
 @deprecate shape_coords coords
 
+"return the vertex points from a Shape or Segments object"
 function coords(shape::Shape)
     shape.x, shape.y
 end
@@ -156,6 +164,7 @@ Shape(k::Symbol) = deepcopy(_shapes[k])
 
 
 # uses the centroid calculation from https://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
+"return the centroid of a Shape"
 function center(shape::Shape)
     x, y = coords(shape)
     n = length(x)
@@ -174,7 +183,7 @@ function center(shape::Shape)
     Cx / 6A, Cy / 6A
 end
 
-function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
+function scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     sx, sy = coords(shape)
     cx, cy = c
     for i=1:length(sx)
@@ -184,11 +193,12 @@ function Base.scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     shape
 end
 
-function Base.scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
+function scale(shape::Shape, x::Real, y::Real = x, c = center(shape))
     shapecopy = deepcopy(shape)
     scale!(shapecopy, x, y, c)
 end
 
+"translate a Shape in space"
 function translate!(shape::Shape, x::Real, y::Real = x)
     sx, sy = coords(shape)
     for i=1:length(sx)
@@ -227,6 +237,7 @@ function rotate!(shape::Shape, Θ::Real, c = center(shape))
     shape
 end
 
+"rotate an object in space"
 function rotate(shape::Shape, Θ::Real, c = center(shape))
     shapecopy = deepcopy(shape)
     rotate!(shapecopy, Θ, c)
@@ -235,7 +246,7 @@ end
 # -----------------------------------------------------------------------
 
 
-type Font
+mutable struct Font
   family::AbstractString
   pointsize::Int
   halign::Symbol
@@ -294,23 +305,50 @@ end
 
 function scalefontsize(k::Symbol, factor::Number)
     f = default(k)
-    f.pointsize = round(Int, factor * f.pointsize)
+    f = round(Int, factor * f)
     default(k, f)
 end
+
+"""
+    scalefontsizes(factor::Number)
+
+Scales all **current** font sizes by `factor`. For example `scalefontsizes(1.1)` increases all current font sizes by 10%. To reset to initial sizes, use `scalefontsizes()`
+"""
 function scalefontsizes(factor::Number)
-    for k in (:titlefont, :guidefont, :tickfont, :legendfont)
+    for k in (:titlefontsize, :guidefontsize, :tickfontsize, :legendfontsize)
         scalefontsize(k, factor)
     end
 end
 
+"""
+    scalefontsizes()
+
+Resets font sizes to initial default values.
+"""
+function scalefontsizes()
+  for k in (:titlefontsize, :guidefontsize, :tickfontsize, :legendfontsize)
+      f = default(k)
+      if k in keys(_initial_fontsizes)
+        factor = f / _initial_fontsizes[k]
+        scalefontsize(k, 1.0/factor)
+      end
+  end
+end
+
 "Wrap a string with font info"
-immutable PlotText
+struct PlotText
   str::AbstractString
   font::Font
 end
 PlotText(str) = PlotText(string(str), font())
 
+"""
+    text(string, args...)
+
+Create a PlotText object wrapping a string with font info, for plot annotations
+"""
 text(t::PlotText) = t
+text(t::PlotText, font::Font) = PlotText(t.str, font)
 text(str::AbstractString, f::Font) = PlotText(str, f)
 function text(str, args...)
   PlotText(string(str), font(args...))
@@ -322,13 +360,18 @@ Base.length(t::PlotText) = length(t.str)
 
 # -----------------------------------------------------------------------
 
-immutable Stroke
+struct Stroke
   width
   color
   alpha
   style
 end
 
+"""
+    stroke(args...; alpha = nothing)
+
+Define the properties of the stroke used in plotting lines
+"""
 function stroke(args...; alpha = nothing)
   width = 1
   color = :black
@@ -359,7 +402,7 @@ function stroke(args...; alpha = nothing)
 end
 
 
-immutable Brush
+struct Brush
   size  # fillrange, markersize, or any other sizey attribute
   color
   alpha
@@ -392,7 +435,7 @@ end
 
 # -----------------------------------------------------------------------
 
-type SeriesAnnotations
+mutable struct SeriesAnnotations
     strs::AbstractVector  # the labels/names
     font::Font
     baseshape::Nullable
@@ -446,7 +489,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         msw,msh = anns.scalefactor
         msize = Float64[]
         shapes = Shape[begin
-            str = cycle(anns.strs,i)
+            str = _cycle(anns.strs,i)
 
             # get the width and height of the string (in mm)
             sw, sh = text_size(str, anns.font.pointsize)
@@ -462,7 +505,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             # and then re-scale a copy of baseshape to match the w/h ratio
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
-            baseshape = cycle(get(anns.baseshape),i)
+            baseshape = _cycle(get(anns.baseshape),i)
             shape = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
         end for i=1:length(anns.strs)]
         series[:markershape] = shapes
@@ -471,7 +514,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     return
 end
 
-type EachAnn
+mutable struct EachAnn
     anns
     x
     y
@@ -479,13 +522,13 @@ end
 Base.start(ea::EachAnn) = 1
 Base.done(ea::EachAnn, i) = ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
 function Base.next(ea::EachAnn, i)
-    tmp = cycle(ea.anns.strs,i)
+    tmp = _cycle(ea.anns.strs,i)
     str,fnt = if isa(tmp, PlotText)
         tmp.str, tmp.font
     else
         tmp, ea.anns.font
     end
-    ((cycle(ea.x,i), cycle(ea.y,i), str, fnt), i+1)
+    ((_cycle(ea.x,i), _cycle(ea.y,i), str, fnt), i+1)
 end
 
 annotations(::Void) = []
@@ -493,24 +536,72 @@ annotations(anns::AVec) = anns
 annotations(anns) = Any[anns]
 annotations(sa::SeriesAnnotations) = sa
 
+# Expand arrays of coordinates, positions and labels into induvidual annotations
+# and make sure labels are of type PlotText
+function process_annotation(sp::Subplot, xs, ys, labs, font = font())
+    anns = []
+    labs = makevec(labs)
+    for i in 1:max(length(xs), length(ys), length(labs))
+        x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
+        if lab == :auto
+            alphabet = "abcdefghijklmnopqrstuvwxyz"
+            push!(anns, (x, y, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
+        else
+            push!(anns, (x, y, isa(lab, PlotText) ? lab : text(lab, font)))
+        end
+    end
+    anns
+end
+function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, labs, font = font())
+    anns = []
+    positions, labs = makevec(positions), makevec(labs)
+    for i in 1:max(length(positions), length(labs))
+        pos, lab = _cycle(positions, i), _cycle(labs, i)
+        pos = get(_positionAliases, pos, pos)
+        if lab == :auto
+            alphabet = "abcdefghijklmnopqrstuvwxyz"
+            push!(anns, (pos, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
+        else
+            push!(anns, (pos, isa(lab, PlotText) ? lab : text(lab, font)))
+        end
+    end
+    anns
+end
+
+# Give each annotation coordinates based on specified position
+function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
+    position_multiplier = Dict{Symbol, Tuple{Float64,Float64}}(
+        :topleft       => (0.1, 0.9),
+        :topcenter     => (0.5, 0.9),
+        :topright      => (0.9, 0.9),
+        :bottomleft    => (0.1, 0.1),
+        :bottomcenter  => (0.5, 0.1),
+        :bottomright   => (0.9, 0.1),
+    )
+    xmin, xmax = ignorenan_extrema(sp[:xaxis])
+    ymin, ymax = ignorenan_extrema(sp[:yaxis])
+    x, y = (xmin, ymin).+ position_multiplier[pos].* (xmax - xmin, ymax - ymin)
+    (x, y, lab)
+end
+locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
 # -----------------------------------------------------------------------
 
 "type which represents z-values for colors and sizes (and anything else that might come up)"
-immutable ZValues
+struct ZValues
   values::Vector{Float64}
   zrange::Tuple{Float64,Float64}
 end
 
-function zvalues{T<:Real}(values::AVec{T}, zrange::Tuple{T,T} = (minimum(values), maximum(values)))
+function zvalues(values::AVec{T}, zrange::Tuple{T,T} = (ignorenan_minimum(values), ignorenan_maximum(values))) where T<:Real
   ZValues(collect(float(values)), map(Float64, zrange))
 end
 
 # -----------------------------------------------------------------------
 
-abstract AbstractSurface
+abstract type AbstractSurface end
 
 "represents a contour or surface mesh"
-immutable Surface{M<:AMat} <: AbstractSurface
+struct Surface{M<:AMat} <: AbstractSurface
   surf::M
 end
 
@@ -521,8 +612,8 @@ Base.Array(surf::Surface) = surf.surf
 for f in (:length, :size)
   @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
 end
-Base.copy(surf::Surface) = Surface{typeof(surf.surf)}(copy(surf.surf))
-Base.eltype{T}(surf::Surface{T}) = eltype(T)
+Base.copy(surf::Surface) = Surface(copy(surf.surf))
+Base.eltype(surf::Surface{T}) where {T} = eltype(T)
 
 function expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]
@@ -533,7 +624,7 @@ function expand_extrema!(a::Axis, surf::Surface)
 end
 
 "For the case of representing a surface as a function of x/y... can possibly avoid allocations."
-immutable SurfaceFunction <: AbstractSurface
+struct SurfaceFunction <: AbstractSurface
     f::Function
 end
 
@@ -543,19 +634,19 @@ end
 # # I don't want to clash with ValidatedNumerics, but this would be nice:
 # ..(a::T, b::T) = (a,b)
 
-immutable Volume{T}
+struct Volume{T}
     v::Array{T,3}
     x_extents::Tuple{T,T}
     y_extents::Tuple{T,T}
     z_extents::Tuple{T,T}
 end
 
-default_extents{T}(::Type{T}) = (zero(T), one(T))
+default_extents(::Type{T}) where {T} = (zero(T), one(T))
 
-function Volume{T}(v::Array{T,3},
-                   x_extents = default_extents(T),
-                   y_extents = default_extents(T),
-                   z_extents = default_extents(T))
+function Volume(v::Array{T,3},
+                x_extents = default_extents(T),
+                y_extents = default_extents(T),
+                z_extents = default_extents(T)) where T
     Volume(v, x_extents, y_extents, z_extents)
 end
 
@@ -563,19 +654,25 @@ Base.Array(vol::Volume) = vol.v
 for f in (:length, :size)
   @eval Base.$f(vol::Volume, args...) = $f(vol.v, args...)
 end
-Base.copy{T}(vol::Volume{T}) = Volume{T}(copy(vol.v), vol.x_extents, vol.y_extents, vol.z_extents)
-Base.eltype{T}(vol::Volume{T}) = T
+Base.copy(vol::Volume{T}) where {T} = Volume{T}(copy(vol.v), vol.x_extents, vol.y_extents, vol.z_extents)
+Base.eltype(vol::Volume{T}) where {T} = T
 
 # -----------------------------------------------------------------------
 
 # style is :open or :closed (for now)
-immutable Arrow
+struct Arrow
     style::Symbol
     side::Symbol  # :head (default), :tail, or :both
     headlength::Float64
     headwidth::Float64
 end
 
+"""
+    arrow(args...)
+
+Define arrowheads to apply to lines - args are `style` (`:open` or `:closed`),
+`side` (`:head`, `:tail` or `:both`), `headlength` and `headwidth`
+"""
 function arrow(args...)
     style = :simple
     side = :head
@@ -625,14 +722,14 @@ end
 # -----------------------------------------------------------------------
 
 "Represents data values with formatting that should apply to the tick labels."
-immutable Formatted{T}
+struct Formatted{T}
     data::T
     formatter::Function
 end
 
 # -----------------------------------------------------------------------
-
-type BezierCurve{T <: FixedSizeArrays.Vec}
+"create a BezierCurve for plotting"
+mutable struct BezierCurve{T <: FixedSizeArrays.Vec}
     control_points::Vector{T}
 end
 
@@ -645,8 +742,8 @@ function (bc::BezierCurve)(t::Real)
     p
 end
 
-Base.mean(x::Real, y::Real) = 0.5*(x+y)
-Base.mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps)
+# mean(x::Real, y::Real) = 0.5*(x+y) #commented out as I cannot see this used anywhere and it overwrites a Base method with different functionality
+# mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps) # I also could not see this used anywhere, and it's type piracy - implementing a NaNMath version for this would just involve converting to a standard array
 
 @deprecate curve_points coords
 
@@ -659,7 +756,7 @@ function directed_curve(args...; kw...)
 end
 
 function extrema_plus_buffer(v, buffmult = 0.2)
-    vmin,vmax = extrema(v)
+    vmin,vmax = ignorenan_extrema(v)
     vdiff = vmax-vmin
     buffer = vdiff * buffmult
     vmin - buffer, vmax + buffer

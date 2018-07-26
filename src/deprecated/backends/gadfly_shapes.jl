@@ -2,7 +2,7 @@
 
 # Geometry which displays arbitrary shapes at given (x, y) positions.
 # note: vertices is a list of shapes
-immutable ShapeGeometry <: Gadfly.GeometryElement
+struct ShapeGeometry <: Gadfly.GeometryElement
     vertices::AbstractVector #{Tuple{Float64,Float64}}
     tag::Symbol
 
@@ -84,7 +84,7 @@ function make_polygon(geom::ShapeGeometry, xs::AbstractArray, ys::AbstractArray,
     x = Compose.x_measure(xs[mod1(i, length(xs))])
     y = Compose.y_measure(ys[mod1(i, length(ys))])
     r = rs[mod1(i, length(rs))]
-    polys[i] = T[(x + r * sx, y + r * sy) for (sx,sy) in cycle(geom.vertices, i)]
+    polys[i] = T[(x + r * sx, y + r * sy) for (sx,sy) in _cycle(geom.vertices, i)]
   end
   Gadfly.polygon(polys, geom.tag)
 end

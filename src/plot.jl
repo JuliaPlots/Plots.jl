@@ -1,11 +1,15 @@
 
-type CurrentPlot
+mutable struct CurrentPlot
     nullableplot::Nullable{AbstractPlot}
 end
 const CURRENT_PLOT = CurrentPlot(Nullable{AbstractPlot}())
 
 isplotnull() = isnull(CURRENT_PLOT.nullableplot)
 
+"""
+    current()
+Returns the Plot object for the current plot
+"""
 function current()
     if isplotnull()
         error("No current plot/subplot")
@@ -29,7 +33,7 @@ convertSeriesIndex(plt::Plot, n::Int) = n
 
 
 """
-The main plot command.  Use `plot` to create a new plot object, and `plot!` to add to an existing one:
+The main plot command. Use `plot` to create a new plot object, and `plot!` to add to an existing one:
 
 ```
     plot(args...; kw...)                  # creates a new plot window, and sets it to be the current
@@ -38,7 +42,9 @@ The main plot command.  Use `plot` to create a new plot object, and `plot!` to a
 ```
 
 There are lots of ways to pass in data, and lots of keyword arguments... just try it and it will likely work as expected.
-When you pass in matrices, it splits by columns.  See the documentation for more info.
+When you pass in matrices, it splits by columns. To see the list of available attributes, use the `plotattr([attr])`
+function, where `attr` is the symbol `:Series:`, `:Subplot:`, `:Plot` or `:Axis`. Pass any attribute to `plotattr`
+as a String to look up its docstring; e.g. `plotattr("seriestype")`.
 """
 
 # this creates a new plot with args/kw and sets it to be the current plot
@@ -60,7 +66,7 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
 
     # build our plot vector from the args
     n = length(plts_tail) + 1
-    plts = Array(Plot, n)
+    plts = Array{Plot}(n)
     plts[1] = plt1
     for (i,plt) in enumerate(plts_tail)
         plts[i+1] = plt
@@ -80,7 +86,7 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     # TODO: replace this with proper processing from a merged user_attr KW
     # update plot args, first with existing plots, then override with d
     for p in plts
-        _update_plot_args(plt, p.attr)
+        _update_plot_args(plt, copy(p.attr))
         plt.n += p.n
     end
     _update_plot_args(plt, d)
@@ -96,8 +102,13 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         end
     end
 
-    # create the layout and initialize the subplots
+    # create the layout
     plt.layout, plt.subplots, plt.spmap = build_layout(layout, num_sp, copy(plts))
+
+    # do we need to link any axes together?
+    link_axes!(plt.layout, plt[:link])
+
+    # initialize the subplots
     cmdidx = 1
     for (idx, sp) in enumerate(plt.subplots)
         _initialize_subplot(plt, sp)
@@ -120,9 +131,6 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     for (idx,sp) in enumerate(plt.subplots)
         _update_subplot_args(plt, sp, d, idx, false)
     end
-
-    # do we need to link any axes together?
-    link_axes!(plt.layout, plt[:link])
 
     # finish up
     current(plt)

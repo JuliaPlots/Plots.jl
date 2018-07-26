@@ -61,7 +61,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _add_annotations{X,Y,V}(plt::Plot{ImmerseBackend}, anns::AVec{Tuple{X,Y,V}})
+function _add_annotations(plt::Plot{ImmerseBackend}, anns::AVec{Tuple{X,Y,V}}) where {X,Y,V}
   for ann in anns
     push!(getGadflyContext(plt).guides, createGadflyAnnotationObject(ann...))
   end
@@ -76,7 +76,7 @@ function getxy(plt::Plot{ImmerseBackend}, i::Integer)
   mapping[:x], mapping[:y]
 end
 
-function setxy!{X,Y}(plt::Plot{ImmerseBackend}, xy::Tuple{X,Y}, i::Integer)
+function setxy!(plt::Plot{ImmerseBackend}, xy::Tuple{X,Y}, i::Integer) where {X,Y}
   for mapping in getGadflyMappings(plt, i)
     mapping[:x], mapping[:y] = xy
   end

@@ -3,14 +3,261 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-- All new development should target 0.9!
-- Minor version 0.8 is the last one to support Julia 0.4!!
+- Minor version 0.17 is the last one to support Julia 0.6!!
+- Minor version 0.11 is the last one to support Julia 0.5!!
 	- Critical bugfixes only
-    - `backports` branch is for Julia 0.4
+    - `backports` branch is for Julia 0.5
 
 ---
+## (current master)
+- All new development should target Julia 0.7!
 
-## 0.9 (current master/dev)
+## 0.17.4
+- fix thickness_scaling for pyplot
+
+## 0.17.3
+- Log-scale heatmap edge computation
+- Fix size and dpi for GR and PyPlot
+- Fix fillrange with line segments on PyPlot and Plotly
+- fix flip for heatmap and image on GR
+- New attributes for PGFPlots
+- Widen axes for most series types and log scales
+- Plotly: fix log scale with no ticks
+- Fix axis flip on Plotly
+- Fix hover and zcolor interaction in Plotly
+- WebIO integration for PlotlyJS backend
+
+## 0.17.2
+- fix single subplot in plotly
+- implement `(xyz)lims = :round`
+- PyPlot: fix bg_legend = invisible()
+- set fallback tick specification for axes with discrete values
+- restructure of show methods
+
+## 0.17.1
+- Fix contour for PGFPlots
+- 32Bit fix: Int64 -> Int
+- Make series of shapes and segments toggle together in Plotly(JS)
+- Fix marker arguments
+- Fix processing order of series recipes
+- Fix Plotly(JS) ribbon
+- Contour plots with x,y in grid form on PyPlot
+
+## 0.17.0
+- Add GR dependency to make it the default backend
+- Improve histogram2d bin estimation
+- Allow vector arguments for certain series attributes and support line_z and fill_z on GR, PyPlot, Plotly(JS) and PGFPlots
+- Automatic scientific notation for tick labels
+- Allow to set the theme in PLOTS_DEFAULTS
+- Implement plots_heatmap seriestype providing a Plots recipe for heatmaps
+
+## 0.16.0
+- fix 3D plotting in PyPlot
+- Infinite objects
+
+## 0.15.1
+
+- fix scientific notation for labels in GR
+- fix labels with logscale
+- fix image cropping with GR
+- fix grouping of annotations
+- fix annotations in Plotly
+- allow saving notebook with plots as pdf from IJulia
+- fix fillrange and ribbon for step recipes
+- implement native ticks that respond to zoom
+- fix bar plot with one bar
+- contour labels and colorbar fixes
+- interactive linked axis for PyPlot
+- add `NamedTuple` syntax to group with named legend
+- use bar recipe in Plotly
+- implement categorical ticks
+
+## 0.15.0
+
+- improve resolution of png output of GR with savefig()
+- add check for ticks=nothing
+- allow transparency in heatmaps
+- fix line_z for GR
+- fix legendcolor for pyplot
+- fix pyplot ignoring alpha values of images
+- don't let `abline!` change subplot limits
+- update showtheme recipe
+
+## 0.14.2
+
+- fix plotly bar lines bug
+- allow passing multiple series to `ribbon`
+- add a new example for `line_z`
+
+## 0.14.1
+
+- Add linestyle argument to the legend
+- Plotly: bar_width and stroke_width support for bar plots
+- abline! does not change axis limits
+- Fix default log scale ticks in GR backend
+- Use the :fontsize keys so the scalefontsizes command works
+- Prepare support for new PlotTheme type in PlotThemes
+
+## 0.14.0
+
+- remove use of imagemagick; saving gifs now requires ffmpeg
+- improvements to ffmpeg gif quality and speed
+- overhaul of fonts, allows setting fonts in recipes and with magic arguments
+- added `camera` attribute to control camera position for 3d plots
+- added `showaxis` attribute to control which axes to display
+- improvements of polar plots axes, and better backend consistency
+- changed the 'spy' recipe back to using heatmap
+- added `scatterpath` seriestype
+- allow plotlyjs to save svg
+- add `reset_defaults()` function to reset plot defaults
+- update syntax to 0.6
+- make `fill = true` fill to 0 rather than to 1
+- use new `@df` syntax in StatPlots examples
+- allow changing the color of legend box
+- implement `title_location` for gr
+- add `hline` marker to pgfplots - fixes errorbars
+- pyplot legends now show marker types
+- pyplot colorbars take font style from y axis
+- pyplot tickmarks color the same as axis color
+- allow setting linewidth for contour in gr
+- allow legend to be outside plot area for pgfplots
+- expand axis extrema for heatmap
+- extendg grid lines to axis limits
+- fix `line_z` for pyplot and gr
+- fixed colorbar problem for flipped axes with gr
+- fix marker_z for 3d plots in gr
+- fix `weights` functionality for histograms
+- fix gr annotations with colorbar
+- fix aspect ratio in gr
+- fix "hidden window" problem after savefig in gr
+- fix pgfplots logscale ticks error
+- fix pgfplots legends symbols
+- fix axis linking for plotlyjs
+- fix plotting of grayscale images
+
+## 0.13.1
+
+- fix a bug when passing a vector of functions with no bounds (e.g. `plot([sin, cos])`)
+- export `pct` and `px` from Plots.PlotMeasures
+
+## 0.13.0
+
+- support `plotattributes` rather than `d` in recipes
+- no longer export `w`, `h` and names from Measures.jl; use `using Plots.PlotMeasures` to get these names back
+- `bar_width` now depends on the minimum distance between bars, not the mean
+- better automatic x axis limits for plotting Functions
+- `tick_direction` attribute now allows ticks to be on the inside of the plot border
+- removed a bug where `p1 = plot(randn(10)); plot(p1, p2)` made `display(p1)` impossible
+- allow `plot([])` to generate an empty plot
+- add `origin` framestyle
+- ensure finite bin number on histograms with only one unique value
+- better automatic histogram bins for 2d histograms
+- more informative error message on passing unsupported seriestype in a recipe
+- allow grouping in user recipes
+- GR now has `line_z` and `fill_z` attributes for determining the color of shapes and lines
+- change GR default view angle for 3D plots to match that of PyPlot
+- fix `clims` on GR
+- fix `marker_z` for plotly backend
+- implement `framestyle` for plotly
+- fix logscale bug error for values < 1e-16 on pyplot
+- fix an issue on pyplot where >1 colorbar would be shown if there was >1 series
+- fix `writemime` for eps
+
+## 0.12.4
+
+- added a new `framestyle` argument with choices: :box, :semi, :axes, :grid and :none
+- changed the default bar width to 0.8
+- added working ribbon to plotly backend
+- ensure that automatic ticks always generate 4 to 8 ticks
+- group now groups keyword arguments of the same length as the input
+- allow passing DateTime objects as ticks
+- allow specifying the number of ticks as an integre
+- fix bug on errorbars in gr
+- fixed some but not all world age issues
+- better margin with room for text
+- added a `match` option for linecolor
+- better error message un unsupported series types
+- add a 'stride' keyword for the pyplot backend
+
+## 0.12.3
+
+- new grid line style defaults
+- `grid` is now an axis attribute and a magic argument: it is now possible to modify the grid line style, alpha and line width
+- Enforce plot order in user recipes
+- import `plot!` from RecipesBase
+- GR no longer automatically handles _ and ^ in texts
+- fix GR colorbar for scatter plots
+
+#### 0.12.2
+
+- fix an issue with Juno/PlotlyJS compatibility on new installations
+- fix markers not showing up in seriesrecipes using :scatter
+- don't use pywrap in the pyplot backend
+- improve the bottom margin for the gr backend
+
+#### 0.12.1
+
+- fix deprecation warnings
+- switch from FixedSizeArrays to StaticArrays.FixedSizeArrays
+- drop FactCheck in tests
+- remove julia 0.5 compliant uses of transpose operator
+- fix GR heatmap bugs
+- fix GR guide padding
+- improve legend markers in GR
+- add surface alpha for Plotly(JS)
+- add fillrange to Plotly(JS)
+- allow usage of Matplotlib 1.5 with PyPlot
+- fix GLVisualize for julia 0.6
+- conform to changes in InspectDR
+
+#### 0.12.0
+
+- 0.6 only
+
+#### 0.11.3
+
+- add HDF5 backend
+- GR replaces PyPlot as first-choice backend
+- support for legend position in GR
+- smaller markers in GR
+- better viewport size in GR
+- fix glvisualize support
+- remove bug with three-argument method of `text`
+- `legendtitle` attribute added
+- add test for `spy`
+
+#### 0.11.0
+
+- julia 0.6 compatibility
+- matplotlib 2.0 compatibility
+- add inspectdr backend
+- improved histogram functionality:
+- added a `:stephist` and `:scatterhist` series type as well as ``:barhist` (the default)
+- support for log scale axes with histograms
+- support for plotting `StatsBase.Histogram`
+- allowing bins to be specified as `:sturges`, `:rice`, `:scott` or :fd
+- allow `normalization` to be specified as :density (for unequal bins) or :pdf (sum to 1)
+- add a `plotattr` function to access documentation for Plots attribute
+- add `fill_z` attribute for pyplot
+- add colorbar_title to plotlyjs
+- enable standalone window for plotlyjs
+- improved support for pgfplots, ticks rotation, clims, series_annotations
+- restore colorbars for GR
+- better axis labels for heatmap in GR
+- better marker sizes in GR
+- fix color representation in GR
+- update GR legend
+- fix image bug on GR
+- fix glvisualize dependencies
+- set dotted grid lines for pyplot
+- several improvements to inspectdr
+- improved tick positions for TimeType x axes
+- support for improved color gradient capability in PlotUtils
+- add a showlibrary recipe to display color libraries
+- add a showgradient recipe to display color gradients
+- add `vectorfield` as an alias for `quiver`
+- use `PlotUtils.adaptedgrid` for functions
+
 
 #### 0.9.5
 
@@ -331,7 +578,7 @@
 - z-axis keywords
 - 3D indexing overhaul: `push!`, `append!` support
 - matplotlib colormap constants (`:inferno` is the new default colormap for Plots)
-- `typealias KW Dict{Symbol,Any}` used in place of splatting in many places
+- `const KW = Dict{Symbol,Any}` used in place of splatting in many places
 - png generation for plotly backend using wkhtmltoimage
 - `normalize` and `weights` keywords
 - background/foreground subcategories for fine-tuning of looks

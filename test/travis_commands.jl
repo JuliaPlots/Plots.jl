@@ -1,5 +1,5 @@
-# Pkg.clone("ImageMagick")
-# Pkg.build("ImageMagick")
+Pkg.add("ImageMagick")
+Pkg.build("ImageMagick")
 
 # Pkg.clone("GR")
 # Pkg.build("GR")
@@ -9,13 +9,14 @@ Pkg.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git")
 # Pkg.clone("https://github.com/JuliaStats/KernelDensity.jl.git")
 
 Pkg.clone("StatPlots")
-Pkg.checkout("PlotUtils")
+# Pkg.checkout("PlotUtils")
 
-# Pkg.clone("https://github.com/JunoLab/Blink.jl.git")
+# Pkg.clone("Blink")
 # Pkg.build("Blink")
 # import Blink
 # Blink.AtomShell.install()
-# Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")
+# Pkg.add("Rsvg")
+# Pkg.add("PlotlyJS")
 
 # Pkg.checkout("RecipesBase")
 # Pkg.clone("VisualRegressionTests")
@@ -24,5 +25,7 @@ Pkg.checkout("PlotUtils")
 ENV["PYTHON"] = ""
 Pkg.add("PyPlot")
 Pkg.build("PyPlot")
+
+# Pkg.add("InspectDR")
 
 Pkg.test("Plots"; coverage=false)

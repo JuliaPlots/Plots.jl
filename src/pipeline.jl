@@ -60,29 +60,26 @@ function _process_userrecipes(plt::Plot, d::KW, args)
     args = _preprocess_args(d, args, still_to_process)
 
     # for plotting recipes, swap out the args and update the parameter dictionary
-    # we are keeping a queue of series that still need to be processed.
+    # we are keeping a stack of series that still need to be processed.
     # each pass through the loop, we pop one off and apply the recipe.
     # the recipe will return a list a Series objects... the ones that are
-    # finished (no more args) get added to the kw_list, and the rest go into the queue
-    # for processing.
+    # finished (no more args) get added to the kw_list, the ones that are not
+    # are placed on top of the stack and are then processed further.
     kw_list = KW[]
     while !isempty(still_to_process)
-        # grab the first in line to be processed and pass it through apply_recipe
-        # to generate a list of RecipeData objects (data + attributes)
+        # grab the first in line to be processed and either add it to the kw_list or
+        # pass it through apply_recipe to generate a list of RecipeData objects (data + attributes)
+        # for further processing.
         next_series = shift!(still_to_process)
-        rd_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
-        for recipedata in rd_list
-            # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
-            if !(typeof(recipedata) <: RecipeData)
-                error("Inputs couldn't be processed... expected RecipeData but got: $recipedata")
-            end
-
-            if isempty(recipedata.args)
-                _process_userrecipe(plt, kw_list, recipedata)
-            else
-                # args are non-empty, so there's still processing to do... add it back to the queue
-                push!(still_to_process, recipedata)
-            end
+        # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
+        if !(typeof(next_series) <: RecipeData)
+            error("Inputs couldn't be processed... expected RecipeData but got: $next_series")
+        end
+        if isempty(next_series.args)
+            _process_userrecipe(plt, kw_list, next_series)
+        else
+            rd_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
+            prepend!(still_to_process,rd_list)
         end
     end
 
@@ -153,7 +150,7 @@ function _add_smooth_kw(kw_list::Vector{KW}, kw::KW)
     if get(kw, :smooth, false)
         x, y = kw[:x], kw[:y]
         β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
-        sx = [minimum(x), maximum(x)]
+        sx = [ignorenan_minimum(x), ignorenan_maximum(x)]
         sy = β * sx + α
         push!(kw_list, merge(copy(kw), KW(
             :seriestype => :path,
@@ -213,7 +210,7 @@ function _plot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
     # TODO: init subplots here
     _update_plot_args(plt, d)
     if !plt.init
-        plt.o = _create_backend_figure(plt)
+        plt.o = Base.invokelatest(_create_backend_figure, plt)
 
         # create the layout and subplots from the inputs
         plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
@@ -262,12 +259,12 @@ function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
     for kw in kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
-        sp = get_subplot(plt, cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
+        sp = get_subplot(plt, _cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
         kw[:subplot] = sp
 
         # extract subplot/axis attributes from kw and add to sp_attr
         attr = KW()
-        for (k,v) in kw
+        for (k,v) in collect(kw)
             if haskey(_subplot_defaults, k) || haskey(_axis_defaults_byletter, k)
                 attr[k] = pop!(kw, k)
             end
@@ -275,6 +272,13 @@ function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
                 v = pop!(kw, k)
                 for letter in (:x,:y,:z)
                     attr[Symbol(letter,k)] = v
+                end
+            end
+            for k in (:scale,), letter in (:x,:y,:z)
+                # Series recipes may need access to this information
+                lk = Symbol(letter,k)
+                if haskey(attr, lk)
+                    kw[lk] = attr[lk]
                 end
             end
         end
@@ -297,7 +301,7 @@ end
 
 # getting ready to add the series... last update to subplot from anything
 # that might have been added during series recipes
-function _prepare_subplot{T}(plt::Plot{T}, d::KW)
+function _prepare_subplot(plt::Plot{T}, d::KW) where T
     st::Symbol = d[:seriestype]
     sp::Subplot{T} = d[:subplot]
     sp_idx = get_subplot_index(plt, sp)
@@ -323,7 +327,7 @@ end
 
 function _override_seriestype_check(d::KW, st::Symbol)
     # do we want to override the series type?
-    if !is3d(st)
+    if !is3d(st) && !(st in (:contour,:contour3d))
         z = d[:z]
         if !isa(z, Void) && (size(d[:x]) == size(d[:y]) == size(z))
             st = (st == :scatter ? :scatter3d : :path3d)
@@ -353,12 +357,16 @@ end
 function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
     # adjust extrema and discrete info
     if st == :image
-        w, h = size(d[:z])
-        expand_extrema!(sp[:xaxis], (0,w))
-        expand_extrema!(sp[:yaxis], (0,h))
-        sp[:yaxis].d[:flip] = true
-    elseif !(st in (:pie, :histogram, :histogram2d))
+        xmin, xmax = ignorenan_extrema(d[:x]); ymin, ymax = ignorenan_extrema(d[:y])
+        expand_extrema!(sp[:xaxis], (xmin, xmax))
+        expand_extrema!(sp[:yaxis], (ymin, ymax))
+    elseif !(st in (:pie, :histogram, :bins2d, :histogram2d))
         expand_extrema!(sp, d)
+    end
+    # expand for zerolines (axes through origin)
+    if sp[:framestyle] in (:origin, :zerolines)
+        expand_extrema!(sp[:xaxis], 0.0)
+        expand_extrema!(sp[:yaxis], 0.0)
     end
 end
 
@@ -390,6 +398,7 @@ function _process_seriesrecipe(plt::Plot, d::KW)
         sp = _prepare_subplot(plt, d)
         _prepare_annotations(sp, d)
         _expand_subplot_extrema(sp, d, st)
+        _update_series_attributes!(d, plt, sp)
         _add_the_series(plt, sp, d)
 
     else

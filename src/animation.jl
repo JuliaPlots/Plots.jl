@@ -1,5 +1,5 @@
-
-immutable Animation
+"Represents an animation object"
+struct Animation
     dir::String
     frames::Vector{String}
 end
@@ -9,7 +9,12 @@ function Animation()
     Animation(tmpdir, String[])
 end
 
-function frame{P<:AbstractPlot}(anim::Animation, plt::P=current())
+"""
+    frame(animation[, plot])
+
+Add a plot (the current plot if not specified) to an existing animation
+"""
+function frame(anim::Animation, plt::P=current()) where P<:AbstractPlot
     i = length(anim.frames) + 1
     filename = @sprintf("%06d.png", i)
     png(plt, joinpath(anim.dir, filename))
@@ -20,7 +25,7 @@ giffn() = (isijulia() ? "tmp.gif" : tempname()*".gif")
 movfn() = (isijulia() ? "tmp.mov" : tempname()*".mov")
 mp4fn() = (isijulia() ? "tmp.mp4" : tempname()*".mp4")
 
-type FrameIterator
+mutable struct FrameIterator
     itr
     every::Int
     kw
@@ -49,46 +54,40 @@ end
 # -----------------------------------------------
 
 "Wraps the location of an animated gif so that it can be displayed"
-immutable AnimatedGif
+struct AnimatedGif
     filename::String
 end
 
 file_extension(fn) = Base.Filesystem.splitext(fn)[2][2:end]
 
 gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim.dir, fn; kw...)
-mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim.dir, fn; kw...)
-mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim.dir, fn; kw...)
+mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim.dir, fn, false; kw...)
+mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim.dir, fn, false; kw...)
 
-const _imagemagick_initialized = Ref(false)
 
-function buildanimation(animdir::AbstractString, fn::AbstractString;
-                        fps::Integer = 20, loop::Integer = 0)
+function buildanimation(animdir::AbstractString, fn::AbstractString,
+                        is_animated_gif::Bool=true;
+                        fps::Integer = 20, loop::Integer = 0,
+                        variable_palette::Bool=false,
+                        show_msg::Bool=true)
     fn = abspath(fn)
-    try
-        if !_imagemagick_initialized[]
-            file = joinpath(Pkg.dir("ImageMagick"), "deps","deps.jl")
-            if isfile(file) && !haskey(ENV, "MAGICK_CONFIGURE_PATH")
-                include(file)
-            end
-            _imagemagick_initialized[] = true
+
+    if is_animated_gif
+        if variable_palette
+            # generate a colorpalette for each frame for highest quality, but larger filesize
+            palette="palettegen=stats_mode=single[pal],[0:v][pal]paletteuse=new=1"
+            run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -lavfi "$palette" -y $fn`)
+        else
+            # generate a colorpalette first so ffmpeg does not have to guess it
+            run(`ffmpeg -v 0 -i $(animdir)/%06d.png -vf "palettegen=stats_mode=diff" -y "$(animdir)/palette.bmp"`)
+            # then apply the palette to get better results
+            run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -y $fn`)
         end
-
-        # prefix = get(ENV, "MAGICK_CONFIGURE_PATH", "")
-        # high quality
-        speed = round(Int, 100 / fps)
-        run(`convert -delay $speed -loop $loop $(joinpath(animdir, "*.png")) -alpha off $fn`)
-
-    catch err
-        warn("""Tried to create gif using convert (ImageMagick), but got error: $err
-            ImageMagick can be installed by executing `Pkg.add("ImageMagick")`
-            Will try ffmpeg, but it's lower quality...)""")
-
-        # low quality
-        run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -y $fn`)
-        # run(`ffmpeg -v warning -i  "fps=$fps,scale=320:-1:flags=lanczos"`)
+    else
+        run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
     end
 
-    info("Saved animation to ", fn)
+    show_msg && info("Saved animation to ", fn)
     AnimatedGif(fn)
 end
 
@@ -117,6 +116,7 @@ function _animate(forloop::Expr, args...; callgif = false)
   # add the call to frame to the end of each iteration
   animsym = gensym("anim")
   countersym = gensym("counter")
+  freqassert = :()
   block = forloop.args[2]
 
   # create filter
@@ -129,7 +129,7 @@ function _animate(forloop::Expr, args...; callgif = false)
     # filter every `freq` frames (starting with the first frame)
     @assert n == 2
     freq = args[2]
-    @assert isa(freq, Integer) && freq > 0
+    freqassert = :(@assert isa($freq, Integer) && $freq > 0)
     :(mod1($countersym, $freq) == 1)
 
   elseif args[1] == :when
@@ -149,6 +149,7 @@ function _animate(forloop::Expr, args...; callgif = false)
 
   # full expression:
   esc(quote
+    $freqassert             # if filtering, check frequency is an Integer > 0
     $animsym = Animation()  # init animation object
     $countersym = 1         # init iteration counter
     $forloop                # for loop, saving a frame after each iteration

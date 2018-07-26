@@ -218,7 +218,7 @@ function createQwtAnnotation(plt::Plot, x, y, val::AbstractString)
   marker[:attach](plt.o.widget)
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{QwtBackend}, anns::AVec{Tuple{X,Y,V}})
+function _add_annotations(plt::Plot{QwtBackend}, anns::AVec{Tuple{X,Y,V}}) where {X,Y,V}
   for ann in anns
     createQwtAnnotation(plt, ann...)
   end
@@ -233,7 +233,7 @@ function getxy(plt::Plot{QwtBackend}, i::Int)
   series.x, series.y
 end
 
-function setxy!{X,Y}(plt::Plot{QwtBackend}, xy::Tuple{X,Y}, i::Integer)
+function setxy!(plt::Plot{QwtBackend}, xy::Tuple{X,Y}, i::Integer) where {X,Y}
   series = plt.o.lines[i]
   series.x, series.y = xy
   plt

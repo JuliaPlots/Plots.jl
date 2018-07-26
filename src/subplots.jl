@@ -1,6 +1,6 @@
 
 
-function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
+function Subplot(::T; parent = RootLayout()) where T<:AbstractBackend
     Subplot{T}(
         parent,
         Series[],
@@ -13,6 +13,11 @@ function Subplot{T<:AbstractBackend}(::T; parent = RootLayout())
     )
 end
 
+"""
+    plotarea(subplot)
+
+Return the bounding box of a subplot
+"""
 plotarea(sp::Subplot) = sp.plotarea
 plotarea!(sp::Subplot, bbox::BoundingBox) = (sp.plotarea = bbox)
 
@@ -32,14 +37,14 @@ get_subplot(plt::Plot, k) = plt.spmap[k]
 get_subplot(series::Series) = series.d[:subplot]
 
 get_subplot_index(plt::Plot, idx::Integer) = Int(idx)
-get_subplot_index(plt::Plot, sp::Subplot) = findfirst(_ -> _ === sp, plt.subplots)
+get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplots)
 
 series_list(sp::Subplot) = sp.series_list # filter(series -> series.d[:subplot] === sp, sp.plt.series_list)
 
 function should_add_to_legend(series::Series)
     series.d[:primary] && series.d[:label] != "" &&
         !(series.d[:seriestype] in (
-            :hexbin,:histogram2d,:hline,:vline,
+            :hexbin,:bins2d,:histogram2d,:hline,:vline,
             :contour,:contourf,:contour3d,:surface,:wireframe,
             :heatmap, :pie, :image
         ))

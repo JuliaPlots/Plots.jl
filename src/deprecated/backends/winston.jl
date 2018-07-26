@@ -217,7 +217,7 @@ function createWinstonAnnotationObject(plt::Plot{WinstonBackend}, x, y, val::Abs
   Winston.text(x, y, val)
 end
 
-function _add_annotations{X,Y,V}(plt::Plot{WinstonBackend}, anns::AVec{Tuple{X,Y,V}})
+function _add_annotations(plt::Plot{WinstonBackend}, anns::AVec{Tuple{X,Y,V}}) where {X,Y,V}
   for ann in anns
     createWinstonAnnotationObject(plt, ann...)
   end
