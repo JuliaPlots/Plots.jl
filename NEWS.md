@@ -12,6 +12,9 @@
 ## (current master)
 - All new development should target Julia 0.7!
 
+## 0.17.4
+- fix thickness_scaling for pyplot
+
 ## 0.17.3
 - Log-scale heatmap edge computation
 - Fix size and dpi for GR and PyPlot
