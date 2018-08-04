@@ -624,7 +624,7 @@ end
 function _update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
     if !haskey(ENV, "GKSwstype")
-        if isijulia() || (isdefined(Main, :Juno) && Juno.isactive())
+        if isijulia()
             ENV["GKSwstype"] = "svg"
         end
     end

@@ -199,8 +199,12 @@ for mime in ("text/plain", "text/html", "image/png", "image/eps", "image/svg+xml
              "application/eps", "application/pdf", "application/postscript",
              "application/x-tex")
     @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
-        prepare_output(plt)
-        _show(io, m, plt)
+        if haskey(io, :juno_plotsize)
+          showjuno(io, m, plt)
+        else
+          prepare_output(plt)
+          _show(io, m, plt)
+        end
     end
 end
 
@@ -311,52 +315,22 @@ end
 # ---------------------------------------------------------
 # Atom PlotPane
 # ---------------------------------------------------------
-@require Juno = "e5e0dc1b-0480-54bc-9374-aad01c23163d" begin
-    import Hiccup, Media
+function showjuno(io::IO, m, plt)
+    sz = plt[:size]
+    dpi = plt[:dpi]
+    thickness_scaling = plt[:thickness_scaling]
 
-    if Juno.isactive()
-        Media.media(Plot, Media.Plot)
+    jsize = get(io, :juno_plotsize, [400, 500])
 
-        function Juno.render(e::Juno.Editor, plt::Plot)
-            Juno.render(e, nothing)
-        end
+    scale = minimum(jsize[i] / sz[i] for i in 1:2)
+    plt[:size] = (s * scale for s in sz)
+    plt[:dpi] = Plots.DPI
+    plt[:thickness_scaling] *= scale
 
-        if get(ENV, "PLOTS_USE_ATOM_PLOTPANE", true) in (true, 1, "1", "true", "yes")
-            function Juno.render(pane::Juno.PlotPane, plt::Plot)
-                # temporarily overwrite size to be Atom.plotsize
-                sz = plt[:size]
-                dpi = plt[:dpi]
-                thickness_scaling = plt[:thickness_scaling]
-                jsize = Juno.plotsize()
-                jsize[1] == 0 && (jsize[1] = 400)
-                jsize[2] == 0 && (jsize[2] = 500)
+    prepare_output(plt)
+    _show(io, m, plt)
 
-                scale = minimum(jsize[i] / sz[i] for i in 1:2)
-                plt[:size] = (s * scale for s in sz)
-                plt[:dpi] = Plots.DPI
-                plt[:thickness_scaling] *= scale
-                Juno.render(pane, HTML(stringmime(MIME("text/html"), plt)))
-                plt[:size] = sz
-                plt[:dpi] = dpi
-                plt[:thickness_scaling] = thickness_scaling
-            end
-            # special handling for PlotlyJS
-            function Juno.render(pane::Juno.PlotPane, plt::Plot{PlotlyJSBackend})
-                display(Plots.PlotsDisplay(), plt)
-            end
-        else
-            function Juno.render(pane::Juno.PlotPane, plt::Plot)
-                display(Plots.PlotsDisplay(), plt)
-                s = "PlotPane turned off.  Unset ENV[\"PLOTS_USE_ATOM_PLOTPANE\"] and restart Julia to enable it."
-                Juno.render(pane, HTML(s))
-            end
-        end
-
-        # special handling for plotly... use PlotsDisplay
-        function Juno.render(pane::Juno.PlotPane, plt::Plot{PlotlyBackend})
-            display(Plots.PlotsDisplay(), plt)
-            s = "PlotPane turned off.  The plotly backend cannot render in the PlotPane due to javascript issues. Plotlyjs is similar to plotly and is compatible with the plot pane."
-            Juno.render(pane, HTML(s))
-        end
-    end
+    plt[:size] = sz
+    plt[:dpi] = dpi
+    plt[:thickness_scaling] = thickness_scaling
 end
