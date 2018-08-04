@@ -6,6 +6,7 @@ const _backendType = Dict{Symbol, DataType}(:none => NoBackend)
 const _backendSymbol = Dict{DataType, Symbol}(NoBackend => :none)
 const _backends = Symbol[]
 const _initialized_backends = Set{Symbol}()
+const _default_backends = (:gr, :plotly)
 
 "Returns a list of supported backends"
 backends() = _backends
@@ -23,10 +24,11 @@ macro init_backend(s)
         export $sym
         $sym(; kw...) = (default(; kw...); backend(Symbol($str)))
         backend_name(::$T) = Symbol($str)
+        backend_package_name(pkg::$T) = backend_name(pkg) in _default_backends ? :Plots : Symbol("Plots", $(string(s)))
         push!(_backends, Symbol($str))
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
-        include("backends/" * $str * ".jl")
+        # include("backends/" * $str * ".jl")
     end)
 end
 
@@ -135,30 +137,16 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 function pickDefaultBackend()
     env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
     if env_default != ""
-        if env_default in keys(Pkg.installed())
-            sym = Symbol(lowercase(env_default))
-            if haskey(_backendType, sym)
-                return backend(sym)
-            else
-                warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t",
-                     join(sort(_backends), "\n\t"))
-            end
+        sym = Symbol(lowercase(env_default))
+        if sym in _default_backends
+            return backend(sym)
         else
-            warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not installed.")
-        end
-    end
-
-    # the ordering/inclusion of this package list is my semi-arbitrary guess at
-    # which one someone will want to use if they have the package installed...accounting for
-    # features, speed, and robustness
-    for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR", "GLVisualize")
-        if pkgstr in keys(Pkg.installed())
-            return backend(Symbol(lowercase(pkgstr)))
+            @warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not supported.")
         end
     end
 
     # the default if nothing else is installed
-    backend(:plotly)
+    backend(:gr)
 end
 
 
@@ -174,24 +162,24 @@ function backend()
     pickDefaultBackend()
   end
 
-  sym = CURRENT_BACKEND.sym
-  if !(sym in _initialized_backends)
-
-    # # initialize
-    # println("[Plots.jl] Initializing backend: ", sym)
-
-    inst = _backend_instance(sym)
-    try
-      _initialize_backend(inst)
-    catch err
-      warn("Couldn't initialize $sym.  (might need to install it?)")
-      add_backend(sym)
-      rethrow(err)
-    end
-
-    push!(_initialized_backends, sym)
-
-  end
+  # sym = CURRENT_BACKEND.sym
+  # if !(sym in _initialized_backends)
+  #
+  #   # # initialize
+  #   # println("[Plots.jl] Initializing backend: ", sym)
+  #
+  #   inst = _backend_instance(sym)
+  #   try
+  #     _initialize_backend(inst)
+  #   catch err
+  #     warn("Couldn't initialize $sym.  (might need to install it?)")
+  #     add_backend(sym)
+  #     rethrow(err)
+  #   end
+  #
+  #   push!(_initialized_backends, sym)
+  #
+  # end
   CURRENT_BACKEND.pkg
 end
 
@@ -199,16 +187,29 @@ end
 Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
-    CURRENT_BACKEND.sym = backend_name(pkg)
-    warn_on_deprecated_backend(CURRENT_BACKEND.sym)
-    CURRENT_BACKEND.pkg = pkg
+    if backend_package_name(pkg) in nameof.(collect(values(Base.loaded_modules)))
+        CURRENT_BACKEND.sym = backend_name(pkg)
+        warn_on_deprecated_backend(CURRENT_BACKEND.sym)
+        CURRENT_BACKEND.pkg = pkg
+    else
+        @warn("To use the `:$(backend_name(pkg))` backend, run `using $(backend_package_name(pkg))`.")
+    end
     backend()
 end
 
 function backend(modname::Symbol)
-    warn_on_deprecated_backend(modname)
-    CURRENT_BACKEND.sym = modname
-    CURRENT_BACKEND.pkg = _backend_instance(modname)
+    if modname in _backends
+        bpn = backend_package_name(_backend_instance(modname))
+        if bpn in nameof.(collect(values(Base.loaded_modules)))
+            warn_on_deprecated_backend(modname)
+            CURRENT_BACKEND.sym = modname
+            CURRENT_BACKEND.pkg = _backend_instance(modname)
+        else
+            @warn("To use the `:$modname` backend, run `using $bpn`.")
+        end
+    else
+        @warn("`:$modname` is not a supported Plots backend.")
+    end
     backend()
 end
 
@@ -216,7 +217,7 @@ const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse]
 
 function warn_on_deprecated_backend(bsym::Symbol)
     if bsym in _deprecated_backends
-        warn("Backend $bsym has been deprecated.  It may not work as originally intended.")
+        @warn("Backend $bsym has been deprecated.  It may not work as originally intended.")
     end
 end
 
@@ -282,6 +283,15 @@ end
 @init_backend InspectDR
 @init_backend HDF5
 
+_attr = KW()
+_seriestype = KW()
+_marker = KW()
+_style = KW()
+_scale = KW()
+
+include("backends/gr.jl")
+include("backends/plotly.jl")
+
 # ---------------------------------------------------------
 
 # create the various `is_xxx_supported` and `supported_xxxs` methods
@@ -298,10 +308,12 @@ for s in (:attr, :seriestype, :marker, :style, :scale)
 
     for bend in backends()
         bend_type = typeof(_backend_instance(bend))
-        v = Symbol("_", bend, "_", s)
+
+        d = Symbol("_", s)
+        str = string(bend)
         @eval begin
-            $f(::$bend_type, $s::Symbol) = $s in $v
-            $f2(::$bend_type) = $v
+            $f(::$bend_type, $s::Symbol) = $s in $d[$Symbol($str)]
+            $f2(::$bend_type) = $d[$Symbol($str)]
         end
     end
 end

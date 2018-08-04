@@ -5,7 +5,9 @@
     Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl"))
 end
 
-const _plotly_attr = merge_with_base_supported([
+using UUIDs
+
+_attr[:plotly] = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
     :foreground_color_legend, :foreground_color_guide,
@@ -48,17 +50,17 @@ const _plotly_attr = merge_with_base_supported([
     :contour_labels,
   ])
 
-const _plotly_seriestype = [
+_seriestype[:plotly] = [
     :path, :scatter, :pie, :heatmap,
     :contour, :surface, :wireframe, :path3d, :scatter3d, :shape, :scattergl,
     :straightline
 ]
-const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _plotly_marker = [
+_style[:plotly] = [:auto, :solid, :dash, :dot, :dashdot]
+_marker[:plotly] = [
     :none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle,
     :cross, :xcross, :pentagon, :hexagon, :octagon, :vline, :hline
 ]
-const _plotly_scale = [:identity, :log10]
+_scale[:plotly] = [:identity, :log10]
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
 const _plotly_framestyles = [:box, :axes, :zerolines, :grid, :none]
@@ -720,7 +722,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     segments = iter_segments(series)
-    d_outs = Vector{KW}((hasfillrange ? 2 : 1 ) * length(segments))
+    d_outs = Vector{KW}(undef, (hasfillrange ? 2 : 1 ) * length(segments))
 
     for (i,rng) in enumerate(segments)
         !isscatter && length(rng) < 2 && continue
@@ -906,7 +908,7 @@ function html_body(plt::Plot{PlotlyBackend}, style = nothing)
         w, h = plt[:size]
         style = "width:$(w)px;height:$(h)px;"
     end
-    uuid = Base.Random.uuid4()
+    uuid = UUIDs.uuid4()
     html = """
         <div id=\"$(uuid)\" style=\"$(style)\"></div>
         <script>
