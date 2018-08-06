@@ -254,6 +254,7 @@ end
 # end
 #
 # html_output_format("svg")
+<<<<<<< HEAD
 
 
 # ---------------------------------------------------------
@@ -278,3 +279,5 @@ function showjuno(io::IO, m, plt)
     plt[:dpi] = dpi
     plt[:thickness_scaling] = thickness_scaling
 end
+=======
+>>>>>>> 85b3aefd677c8c3adf6797cb2d85c1249cf631b8
