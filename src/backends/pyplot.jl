@@ -253,10 +253,12 @@ function labelfunc(scale::Symbol, backend::PyPlotBackend)
     end
 end
 
-function py_mask_nans(z)
-    # pynp["ma"][:masked_invalid](z)))
-    PyCall.pycall(pynp["ma"][:masked_invalid], Any, z)
-    # pynp["ma"][:masked_where](pynp["isnan"](z),z)
+@require PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0" begin
+    function py_mask_nans(z)
+        # pynp["ma"][:masked_invalid](z)))
+        PyCall.pycall(pynp["ma"][:masked_invalid], Any, z)
+        # pynp["ma"][:masked_where](pynp["isnan"](z),z)
+    end
 end
 
 # ---------------------------------------------------------------------------
