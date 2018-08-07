@@ -108,12 +108,35 @@ const _hdf5_marker = vcat(_allMarkers, :pixel)
 const _hdf5_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::HDF5Backend, shape::Shape) = true
 
-function add_backend_string(::HDF5Backend)
-    """
-    if !Plots.is_installed("HDF5")
-        Pkg.add("HDF5")
-    end
-    """
+if length(HDF5PLOT_MAP_TELEM2STR) < 1
+    #Possible element types of high-level data types:
+    telem2str = Dict{String, Type}(
+        "NATIVE" => HDF5PlotNative,
+        "VOID" => Nothing,
+        "BOOL" => Bool,
+        "SYMBOL" => Symbol,
+        "TUPLE" => Tuple,
+        "CTUPLE" => HDF5CTuple, #Tuple of complex structures
+        "RGBA" => ARGB{N0f8},
+        "EXTREMA" => Extrema,
+        "LENGTH" => Length,
+        "ARRAY" => Array, #Dict won't allow Array to be key in HDF5PLOT_MAP_TELEM2STR
+
+        #Sub-structure types:
+        "FONT" => Font,
+        "BOUNDINGBOX" => BoundingBox,
+        "GRIDLAYOUT" => GridLayout,
+        "ROOTLAYOUT" => RootLayout,
+        "SERIESANNOTATIONS" => SeriesAnnotations,
+#                "PLOTTEXT" => PlotText,
+        "COLORGRADIENT" => ColorGradient,
+        "AXIS" => Axis,
+        "SURFACE" => Surface,
+        "SUBPLOT" => Subplot,
+        "NULLABLE" => Nullable,
+    )
+    merge!(HDF5PLOT_MAP_STR2TELEM, telem2str)
+    merge!(HDF5PLOT_MAP_TELEM2STR, Dict{Type, String}(v=>k for (k,v) in HDF5PLOT_MAP_STR2TELEM))
 end
 
 
@@ -140,44 +163,6 @@ end
 #==
 ===============================================================================#
 
-function _initialize_backend(::HDF5Backend)
-    @eval begin
-        import HDF5
-        export HDF5
-        if length(HDF5PLOT_MAP_TELEM2STR) < 1
-            #Possible element types of high-level data types:
-            telem2str = Dict{String, Type}(
-                "NATIVE" => HDF5PlotNative,
-                "VOID" => Nothing,
-                "BOOL" => Bool,
-                "SYMBOL" => Symbol,
-                "TUPLE" => Tuple,
-                "CTUPLE" => HDF5CTuple, #Tuple of complex structures
-                "RGBA" => ARGB{N0f8},
-                "EXTREMA" => Extrema,
-                "LENGTH" => Length,
-                "ARRAY" => Array, #Dict won't allow Array to be key in HDF5PLOT_MAP_TELEM2STR
-
-                #Sub-structure types:
-                "FONT" => Font,
-                "BOUNDINGBOX" => BoundingBox,
-                "GRIDLAYOUT" => GridLayout,
-                "ROOTLAYOUT" => RootLayout,
-                "SERIESANNOTATIONS" => SeriesAnnotations,
-#                "PLOTTEXT" => PlotText,
-                "COLORGRADIENT" => ColorGradient,
-                "AXIS" => Axis,
-                "SURFACE" => Surface,
-                "SUBPLOT" => Subplot,
-                "NULLABLE" => Nullable,
-            )
-            merge!(HDF5PLOT_MAP_STR2TELEM, telem2str)
-            merge!(HDF5PLOT_MAP_TELEM2STR, Dict{Type, String}(v=>k for (k,v) in HDF5PLOT_MAP_STR2TELEM))
-        end
-    end
-end
-
-# ---------------------------------------------------------------------------
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{HDF5Backend})

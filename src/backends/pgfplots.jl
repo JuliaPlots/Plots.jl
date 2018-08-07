@@ -49,23 +49,6 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 # --------------------------------------------------------------------------------------
 
-function add_backend_string(::PGFPlotsBackend)
-    """
-    Pkg.add("PGFPlots")
-    Pkg.build("PGFPlots")
-    """
-end
-
-function _initialize_backend(::PGFPlotsBackend; kw...)
-    @eval begin
-        import PGFPlots
-        export PGFPlots
-    end
-end
-
-
-# --------------------------------------------------------------------------------------
-
 const _pgfplots_linestyles = KW(
     :solid => "solid",
     :dash => "dashed",
