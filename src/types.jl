@@ -5,6 +5,7 @@
 const AVec = AbstractVector
 const AMat = AbstractMatrix
 const KW = Dict{Symbol,Any}
+const TicksArgs = Union{AVec{T}, Tuple{AVec{T}, AVec{S}}, Symbol} where {T<:Real, S<:AbstractString}
 
 struct PlotsDisplay <: AbstractDisplay end
 

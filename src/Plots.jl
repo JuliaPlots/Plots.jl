@@ -237,10 +237,10 @@ zlims!(zmin::Real, zmax::Real; kw...)                     = plot!(; zlims = (zmi
 
 
 "Set xticks for an existing plot"
-xticks!(v::AVec{T}; kw...) where {T<:Real}                       = plot!(; xticks = v, kw...)
+xticks!(v::TicksArgs; kw...) where {T<:Real}                       = plot!(; xticks = v, kw...)
 
 "Set yticks for an existing plot"
-yticks!(v::AVec{T}; kw...) where {T<:Real}                       = plot!(; yticks = v, kw...)
+yticks!(v::TicksArgs; kw...) where {T<:Real}                       = plot!(; yticks = v, kw...)
 
 xticks!(
 ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(; xticks = (ticks,labels), kw...)
@@ -275,8 +275,8 @@ let PlotOrSubplot = Union{Plot, Subplot}
     global xlims!(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...)             = plot!(plt; xlims = (xmin,xmax), kw...)
     global ylims!(plt::PlotOrSubplot, ymin::Real, ymax::Real; kw...)             = plot!(plt; ylims = (ymin,ymax), kw...)
     global zlims!(plt::PlotOrSubplot, zmin::Real, zmax::Real; kw...)             = plot!(plt; zlims = (zmin,zmax), kw...)
-    global xticks!(plt::PlotOrSubplot, ticks::AVec{T}; kw...) where {T<:Real}           = plot!(plt; xticks = ticks, kw...)
-    global yticks!(plt::PlotOrSubplot, ticks::AVec{T}; kw...) where {T<:Real}           = plot!(plt; yticks = ticks, kw...)
+    global xticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...) where {T<:Real}           = plot!(plt; xticks = ticks, kw...)
+    global yticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...) where {T<:Real}           = plot!(plt; yticks = ticks, kw...)
     global xticks!(plt::PlotOrSubplot,
    ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(plt; xticks = (ticks,labels), kw...)
     global yticks!(plt::PlotOrSubplot,
