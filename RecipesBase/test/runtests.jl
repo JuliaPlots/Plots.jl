@@ -22,7 +22,7 @@ function check_apply_recipe(T::DataType, expect)
     d = KW(:customcolor => :red)
 
     data_list = RecipesBase.apply_recipe(d, T(), 2)
-    @test data_list[1].args == (srand(1); (rand(10,2),))
+    @test data_list[1].args == (Random.seed!(1); (rand(10,2),))
     @test d == expect
 end
 
@@ -38,7 +38,7 @@ end
         rand(10, n)
     end
 
-    srand(1)
+    Random.seed!(1)
     check_apply_recipe(T1, KW(
         :customcolor => :red,
         :markershape => :auto,
@@ -59,7 +59,7 @@ end
         rand(10, n)
     end
 
-    srand(1)
+    Random.seed!(1)
     check_apply_recipe(T2, KW(
         :customcolor => :red,
         :markershape => :auto,
@@ -81,7 +81,7 @@ end
         rand(10, n)
     end
 
-    srand(1)
+    Random.seed!(1)
     check_apply_recipe(T3, KW(
         :customcolor => :red,
         :markershape => :auto,
@@ -101,7 +101,7 @@ end
         d[:world] = "world"
         rand(10,n)
     end
-    srand(1)
+    Random.seed!(1)
     check_apply_recipe(T4, KW(
     :customcolor => :red,
     :markershape => :auto,
