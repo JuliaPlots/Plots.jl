@@ -523,9 +523,12 @@ mutable struct EachAnn
     x
     y
 end
-Base.start(ea::EachAnn) = 1
-Base.done(ea::EachAnn, i) = ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
-function Base.next(ea::EachAnn, i)
+
+function Base.iterate(ea::EachAnn, i = 1)
+    if ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
+        return nothing
+    end
+
     tmp = _cycle(ea.anns.strs,i)
     str,fnt = if isa(tmp, PlotText)
         tmp.str, tmp.font
