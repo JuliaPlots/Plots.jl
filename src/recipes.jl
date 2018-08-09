@@ -619,7 +619,7 @@ _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) where {
 _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) where {N} = _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
 _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) where {N} = binning
 
-_hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N}) where {N} =
+_hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N, Any}) where {N} =
     map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...,))
 
 _hist_edges(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, AbstractVector}) where {N} =
