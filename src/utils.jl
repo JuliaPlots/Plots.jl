@@ -215,8 +215,7 @@ anynan(i::Int, args::Tuple) = any(a -> try isnan(_cycle(a,i)) catch MethodError 
 anynan(istart::Int, iend::Int, args::Tuple) = any(i -> anynan(i, args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(i -> anynan(i, args), istart:iend)
 
-Base.iterate(itr::SegmentsIterator, nextidx::Int) =
-function Base.next(itr::SegmentsIterator, nextidx::Int = 1)
+function Base.iterate(itr::SegmentsIterator, nextidx::Int = 1)
     nextidx > itr.n && return nothing
     if nextidx == 1 && !any(isempty,itr.args) && anynan(1, itr.args)
         nextidx = 2
