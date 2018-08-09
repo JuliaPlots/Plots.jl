@@ -2,10 +2,6 @@
 
 # significant contributions by: @pkofod
 
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pgfplots.jl"))
-end
-
 const _pgfplots_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend,
