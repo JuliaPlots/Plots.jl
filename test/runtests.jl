@@ -3,7 +3,7 @@ module PlotsTests
 include("imgcomp.jl")
 
 # don't actually show the plots
-srand(1234)
+Random.seed!(1234)
 default(show=false, reuse=true)
 img_eps = isinteractive() ? 1e-2 : 10e-2
 
