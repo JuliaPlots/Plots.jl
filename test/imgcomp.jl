@@ -34,7 +34,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
     backend()
 
     # ensure consistent results
-    srand(1234)
+    Random.seed!(1234)
 
     # reference image directory setup
     # refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))

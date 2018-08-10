@@ -215,15 +215,12 @@ anynan(i::Int, args::Tuple) = any(a -> try isnan(_cycle(a,i)) catch MethodError 
 anynan(istart::Int, iend::Int, args::Tuple) = any(i -> anynan(i, args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(i -> anynan(i, args), istart:iend)
 
-function Base.start(itr::SegmentsIterator)
-    nextidx = 1
-    if !any(isempty,itr.args) && anynan(1, itr.args)
-        _, nextidx = next(itr, 1)
+function Base.iterate(itr::SegmentsIterator, nextidx::Int = 1)
+    nextidx > itr.n && return nothing
+    if nextidx == 1 && !any(isempty,itr.args) && anynan(1, itr.args)
+        nextidx = 2
     end
-    nextidx
-end
-Base.done(itr::SegmentsIterator, nextidx::Int) = nextidx > itr.n
-function Base.next(itr::SegmentsIterator, nextidx::Int)
+
     i = istart = iend = nextidx
 
     # find the next NaN, and iend is the one before
@@ -306,7 +303,7 @@ function _expand_limits(lims, x)
     lims[1] = NaNMath.min(lims[1], e1)
     lims[2] = NaNMath.max(lims[2], e2)
   # catch err
-  #   warn(err)
+  #   @warn(err)
   catch
   end
   nothing
@@ -412,8 +409,8 @@ function fakedata(sz...)
   y
 end
 
-isijulia() = isdefined(Main, :IJulia) && Main.IJulia.inited
-isatom() = isdefined(Main, :Atom) && Main.Atom.isconnected()
+isijulia() = :IJulia in nameof.(collect(values(Base.loaded_modules)))
+isatom() = :Atom in nameof.(collect(values(Base.loaded_modules)))
 
 function is_installed(pkgstr::AbstractString)
     try
@@ -933,7 +930,7 @@ function attr!(series::Series; kw...)
         if haskey(_series_defaults, k)
             series[k] = v
         else
-            warn("unused key $k in series attr")
+            @warn("unused key $k in series attr")
         end
     end
     _series_updated(series[:subplot].plt, series)
@@ -947,7 +944,7 @@ function attr!(sp::Subplot; kw...)
         if haskey(_subplot_defaults, k)
             sp[k] = v
         else
-            warn("unused key $k in subplot attr")
+            @warn("unused key $k in subplot attr")
         end
     end
     sp

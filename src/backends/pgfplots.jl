@@ -2,10 +2,6 @@
 
 # significant contributions by: @pkofod
 
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pgfplots.jl"))
-end
-
 const _pgfplots_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend,
@@ -45,23 +41,6 @@ const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :ste
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon, :hline] #vcat(_allMarkers, Shape)
 const _pgfplots_scale = [:identity, :ln, :log2, :log10]
-
-
-# --------------------------------------------------------------------------------------
-
-function add_backend_string(::PGFPlotsBackend)
-    """
-    Pkg.add("PGFPlots")
-    Pkg.build("PGFPlots")
-    """
-end
-
-function _initialize_backend(::PGFPlotsBackend; kw...)
-    @eval begin
-        import PGFPlots
-        export PGFPlots
-    end
-end
 
 
 # --------------------------------------------------------------------------------------
@@ -124,7 +103,7 @@ function pgf_framestyle(style::Symbol)
         return style
     else
         default_style = get(_pgf_framestyle_defaults, style, :axes)
-        warn("Framestyle :$style is not (yet) supported by the PGFPlots backend. :$default_style was cosen instead.")
+        @warn("Framestyle :$style is not (yet) supported by the PGFPlots backend. :$default_style was cosen instead.")
         default_style
     end
 end

@@ -13,10 +13,6 @@ Add in functionality to Plots.jl:
     :aspect_ratio,
 =#
 
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "inspectdr.jl"))
-end
-
 # ---------------------------------------------------------------------------
 #TODO: remove features
 const _inspectdr_attr = merge_with_base_supported([
@@ -152,37 +148,23 @@ end
 
 # ---------------------------------------------------------------------------
 
-function add_backend_string(::InspectDRBackend)
-    """
-    if !Plots.is_installed("InspectDR")
-        Pkg.add("InspectDR")
-    end
-    """
+#Glyph used when plotting "Shape"s:
+INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
+    2*InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y
+)
+
+mutable struct InspecDRPlotRef
+    mplot::Union{Nothing, InspectDR.Multiplot}
+    gui::Union{Nothing, InspectDR.GtkPlot}
 end
 
-function _initialize_backend(::InspectDRBackend; kw...)
-    @eval begin
-        import InspectDR
-        export InspectDR
+_inspectdr_getmplot(::Any) = nothing
+_inspectdr_getmplot(r::InspecDRPlotRef) = r.mplot
 
-        #Glyph used when plotting "Shape"s:
-        INSPECTDR_GLYPH_SHAPE = InspectDR.GlyphPolyline(
-            2*InspectDR.GLYPH_SQUARE.x, InspectDR.GLYPH_SQUARE.y
-        )
-
-        mutable struct InspecDRPlotRef
-            mplot::Union{Nothing, InspectDR.Multiplot}
-            gui::Union{Nothing, InspectDR.GtkPlot}
-        end
-
-        _inspectdr_getmplot(::Any) = nothing
-        _inspectdr_getmplot(r::InspecDRPlotRef) = r.mplot
-
-        _inspectdr_getgui(::Any) = nothing
-        _inspectdr_getgui(gplot::InspectDR.GtkPlot) = (gplot.destroyed ? nothing : gplot)
-        _inspectdr_getgui(r::InspecDRPlotRef) = _inspectdr_getgui(r.gui)
-    end
-end
+_inspectdr_getgui(::Any) = nothing
+_inspectdr_getgui(gplot::InspectDR.GtkPlot) = (gplot.destroyed ? nothing : gplot)
+_inspectdr_getgui(r::InspecDRPlotRef) = _inspectdr_getgui(r.gui)
+push!(_initialized_backends, :inspectdr)
 
 # ---------------------------------------------------------------------------
 

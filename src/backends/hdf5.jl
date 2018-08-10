@@ -28,10 +28,6 @@ Read from .hdf5 file using:
     - Should be reliable for archival purposes.
 ==#
 
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "hdf5.jl"))
-end
-
 import FixedPointNumbers: N0f8 #In core Julia
 
 #Dispatch types:
@@ -108,12 +104,35 @@ const _hdf5_marker = vcat(_allMarkers, :pixel)
 const _hdf5_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::HDF5Backend, shape::Shape) = true
 
-function add_backend_string(::HDF5Backend)
-    """
-    if !Plots.is_installed("HDF5")
-        Pkg.add("HDF5")
-    end
-    """
+if length(HDF5PLOT_MAP_TELEM2STR) < 1
+    #Possible element types of high-level data types:
+    telem2str = Dict{String, Type}(
+        "NATIVE" => HDF5PlotNative,
+        "VOID" => Nothing,
+        "BOOL" => Bool,
+        "SYMBOL" => Symbol,
+        "TUPLE" => Tuple,
+        "CTUPLE" => HDF5CTuple, #Tuple of complex structures
+        "RGBA" => ARGB{N0f8},
+        "EXTREMA" => Extrema,
+        "LENGTH" => Length,
+        "ARRAY" => Array, #Dict won't allow Array to be key in HDF5PLOT_MAP_TELEM2STR
+
+        #Sub-structure types:
+        "FONT" => Font,
+        "BOUNDINGBOX" => BoundingBox,
+        "GRIDLAYOUT" => GridLayout,
+        "ROOTLAYOUT" => RootLayout,
+        "SERIESANNOTATIONS" => SeriesAnnotations,
+#                "PLOTTEXT" => PlotText,
+        "COLORGRADIENT" => ColorGradient,
+        "AXIS" => Axis,
+        "SURFACE" => Surface,
+        "SUBPLOT" => Subplot,
+        "NULLABLE" => Nullable,
+    )
+    merge!(HDF5PLOT_MAP_STR2TELEM, telem2str)
+    merge!(HDF5PLOT_MAP_TELEM2STR, Dict{Type, String}(v=>k for (k,v) in HDF5PLOT_MAP_STR2TELEM))
 end
 
 
@@ -140,44 +159,6 @@ end
 #==
 ===============================================================================#
 
-function _initialize_backend(::HDF5Backend)
-    @eval begin
-        import HDF5
-        export HDF5
-        if length(HDF5PLOT_MAP_TELEM2STR) < 1
-            #Possible element types of high-level data types:
-            telem2str = Dict{String, Type}(
-                "NATIVE" => HDF5PlotNative,
-                "VOID" => Nothing,
-                "BOOL" => Bool,
-                "SYMBOL" => Symbol,
-                "TUPLE" => Tuple,
-                "CTUPLE" => HDF5CTuple, #Tuple of complex structures
-                "RGBA" => ARGB{N0f8},
-                "EXTREMA" => Extrema,
-                "LENGTH" => Length,
-                "ARRAY" => Array, #Dict won't allow Array to be key in HDF5PLOT_MAP_TELEM2STR
-
-                #Sub-structure types:
-                "FONT" => Font,
-                "BOUNDINGBOX" => BoundingBox,
-                "GRIDLAYOUT" => GridLayout,
-                "ROOTLAYOUT" => RootLayout,
-                "SERIESANNOTATIONS" => SeriesAnnotations,
-#                "PLOTTEXT" => PlotText,
-                "COLORGRADIENT" => ColorGradient,
-                "AXIS" => Axis,
-                "SURFACE" => Surface,
-                "SUBPLOT" => Subplot,
-                "NULLABLE" => Nullable,
-            )
-            merge!(HDF5PLOT_MAP_STR2TELEM, telem2str)
-            merge!(HDF5PLOT_MAP_TELEM2STR, Dict{Type, String}(v=>k for (k,v) in HDF5PLOT_MAP_STR2TELEM))
-        end
-    end
-end
-
-# ---------------------------------------------------------------------------
 
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{HDF5Backend})
@@ -244,7 +225,7 @@ end
 function _display(plt::Plot{HDF5Backend})
     msg = "HDF5 interface does not support `display()` function."
     msg *= "\nUse `Plots.hdf5plot_write(::String)` method to write to .HDF5 \"plot\" file instead."
-    warn(msg)
+    @warn(msg)
     return
 end
 
@@ -312,7 +293,7 @@ end
 #=
 function _hdf5plot_gwrite(grp, k::String, v::Array{Any})
 #    @show grp, k
-    warn("Cannot write Array: $k=$v")
+    @warn("Cannot write Array: $k=$v")
 end
 =#
 function _hdf5plot_gwrite(grp, k::String, v::Nothing)
@@ -342,7 +323,7 @@ function _hdf5plot_gwrite(grp, k::String, v::Tuple)
     #NOTE: _hdf5plot_overwritetype overwrites "Array" type with "Tuple".
 end
 function _hdf5plot_gwrite(grp, k::String, d::Dict)
-#    warn("Cannot write dict: $k=$d")
+#    @warn("Cannot write dict: $k=$d")
 end
 function _hdf5plot_gwrite(grp, k::String, v::AbstractRange)
     _hdf5plot_gwrite(grp, k, collect(v)) #For now
@@ -605,7 +586,7 @@ function _hdf5plot_read(grp, d::Dict)
         catch e
             @show e
             @show grp
-            warn("Could not read field $k")
+            @warn("Could not read field $k")
         end
     end
     return

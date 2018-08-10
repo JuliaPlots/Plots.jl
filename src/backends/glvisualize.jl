@@ -9,10 +9,6 @@ TODO
     * fix units in all visuals (e.g dotted lines, marker scale, surfaces)
 =#
 
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "glvisualize.jl"))
-end
-
 const _glvisualize_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
@@ -61,36 +57,11 @@ const _glvisualize_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _glvisualize_marker = _allMarkers
 const _glvisualize_scale = [:identity, :ln, :log2, :log10]
 
-
-
-# --------------------------------------------------------------------------------------
-
-function _initialize_backend(::GLVisualizeBackend; kw...)
-    @eval begin
-        import GLVisualize, GeometryTypes, Reactive, GLAbstraction, GLWindow, Contour
-        import GeometryTypes: Point2f0, Point3f0, Vec2f0, Vec3f0, GLNormalMesh, SimpleRectangle, Point, Vec
-        import FileIO, Images
-        export GLVisualize
-        import Reactive: Signal
-        import GLAbstraction: Style
-        import GLVisualize: visualize
-        import Plots.GL
-        import UnicodeFun
-        Plots.slice_arg(img::Matrix{C}, idx::Int) where {C<:Colorant} = img
-        is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
-        is_marker_supported(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) where {C<:Colorant} = true
-        is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
-        GL = Plots
-    end
-end
-
-function add_backend_string(b::GLVisualizeBackend)
-    """
-    if !Plots.is_installed("GLVisualize")
-        Pkg.add("GLVisualize")
-    end
-    """
-end
+slice_arg(img::Matrix{C}, idx::Int) where {C<:Colorant} = img
+is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
+is_marker_supported(::GLVisualizeBackend, shape::Union{Vector{Matrix{C}}, Matrix{C}}) where {C<:Colorant} = true
+is_marker_supported(::GLVisualizeBackend, shape::Shape) = true
+GL = Plots
 
 # ---------------------------------------------------------------------------
 
@@ -1329,7 +1300,7 @@ function gl_poly(points, kw_args)
         if !isempty(GeometryTypes.faces(mesh)) # check if polygonation has any faces
             push!(result, GLVisualize.visualize(mesh, Style(:default), kw_args))
         else
-            warn("Couldn't draw the polygon: $points")
+            @warn("Couldn't draw the polygon: $points")
         end
     end
     result

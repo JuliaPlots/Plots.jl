@@ -197,7 +197,7 @@ function getGadflyMarkerTheme(d::KW, attr::KW)
 
     ms = d[:markersize]
     ms = if typeof(ms) <: AVec
-        warn("Gadfly doesn't support variable marker sizes... using the average: $(mean(ms))")
+        @warn("Gadfly doesn't support variable marker sizes... using the average: $(mean(ms))")
         mean(ms) * Gadfly.px
     else
         ms * Gadfly.px

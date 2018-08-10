@@ -3,10 +3,6 @@
 
 # significant contributions by @jheinen
 
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "gr.jl"))
-end
-
 const _gr_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
@@ -65,12 +61,8 @@ function add_backend_string(::GRBackend)
     """
 end
 
-function _initialize_backend(::GRBackend; kw...)
-    @eval begin
-        import GR
-        export GR
-    end
-end
+import GR
+export GR
 
 # --------------------------------------------------------------------------------------
 
@@ -624,7 +616,7 @@ end
 function _update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
     if !haskey(ENV, "GKSwstype")
-        if isijulia() || (isdefined(Main, :Juno) && Juno.isactive())
+        if isijulia()
             ENV["GKSwstype"] = "svg"
         end
     end

@@ -5,6 +5,7 @@
 const AVec = AbstractVector
 const AMat = AbstractMatrix
 const KW = Dict{Symbol,Any}
+const TicksArgs = Union{AVec{T}, Tuple{AVec{T}, AVec{S}}, Symbol} where {T<:Real, S<:AbstractString}
 
 struct PlotsDisplay <: AbstractDisplay end
 
@@ -87,7 +88,7 @@ end
 
 Base.getindex(plt::Plot, i::Integer) = plt.subplots[i]
 Base.length(plt::Plot) = length(plt.subplots)
-Base.endof(plt::Plot) = length(plt)
+Base.lastindex(plt::Plot) = length(plt)
 
 Base.getindex(plt::Plot, r::Integer, c::Integer) = plt.layout[r,c]
 Base.size(plt::Plot) = size(plt.layout)
@@ -98,6 +99,6 @@ Base.ndims(plt::Plot) = 2
 # attr!(plt::Plot, v, k::Symbol) = (plt.attr[k] = v)
 
 Base.getindex(sp::Subplot, i::Integer) = series_list(sp)[i]
-Base.endof(sp::Subplot) = length(series_list(sp))
+Base.lastindex(sp::Subplot) = length(series_list(sp))
 
 # -----------------------------------------------------------------------

@@ -1,10 +1,6 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "unicodeplots.jl"))
-end
-
 const _unicodeplots_attr = merge_with_base_supported([
     :label,
     :legend,
@@ -32,22 +28,6 @@ const _unicodeplots_scale = [:identity]
 warnOnUnsupported_args(::UnicodePlotsBackend, d::KW) = nothing
 
 # --------------------------------------------------------------------------------------
-
-function add_backend_string(::UnicodePlotsBackend)
-    """
-    Pkg.add("UnicodePlots")
-    Pkg.build("UnicodePlots")
-    """
-end
-
-function _initialize_backend(::UnicodePlotsBackend; kw...)
-    @eval begin
-        import UnicodePlots
-        export UnicodePlots
-    end
-end
-
-# -------------------------------
 
 const _canvas_type = Ref(:auto)
 

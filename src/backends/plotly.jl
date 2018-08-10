@@ -1,10 +1,6 @@
 
 # https://plot.ly/javascript/getting-started
 
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotly.jl"))
-end
-
 const _plotly_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
@@ -68,7 +64,7 @@ function _plotly_framestyle(style::Symbol)
         return style
     else
         default_style = get(_plotly_framestyle_defaults, style, :axes)
-        warn("Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was cosen instead.")
+        @warn("Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was cosen instead.")
         default_style
     end
 end
@@ -76,45 +72,36 @@ end
 
 # --------------------------------------------------------------------------------------
 
-function add_backend_string(::PlotlyBackend)
-    """
-    Pkg.build("Plots")
-    """
-end
-
 
 const _plotly_js_path = joinpath(dirname(@__FILE__), "..", "..", "deps", "plotly-latest.min.js")
 const _plotly_js_path_remote = "https://cdn.plot.ly/plotly-latest.min.js"
 
-function _initialize_backend(::PlotlyBackend; kw...)
-  @eval begin
-    _js_code = open(readstring, _plotly_js_path, "r")
+_js_code = open(read, _plotly_js_path, "r")
 
-    # borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
-    _js_script = """
-        <script type='text/javascript'>
-            define('plotly', function(require, exports, module) {
-                $(_js_code)
-            });
-            require(['plotly'], function(Plotly) {
-                window.Plotly = Plotly;
-            });
-        </script>
-    """
+# borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
+_js_script = """
+    <script type='text/javascript'>
+        define('plotly', function(require, exports, module) {
+            $(_js_code)
+        });
+        require(['plotly'], function(Plotly) {
+            window.Plotly = Plotly;
+        });
+    </script>
+"""
 
-    # if we're in IJulia call setupnotebook to load js and css
-    if isijulia()
-        display("text/html", _js_script)
-    end
-
-    # if isatom()
-    #     import Atom
-    #     Atom.@msg evaljs(_js_code)
-    # end
-
-  end
-  # TODO: other initialization
+# if we're in IJulia call setupnotebook to load js and css
+if isijulia()
+    display("text/html", _js_script)
 end
+
+# if isatom()
+#     import Atom
+#     Atom.@msg evaljs(_js_code)
+# end
+using UUIDs
+
+push!(_initialized_backends, :plotly)
 
 
 # ----------------------------------------------------------------
@@ -631,7 +618,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:hoverinfo] = "label+percent+name"
 
     else
-        warn("Plotly: seriestype $st isn't supported.")
+        @warn("Plotly: seriestype $st isn't supported.")
         return KW()
     end
 
@@ -744,7 +731,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
                 d_out[:fill] = "tonexty"
                 d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, i), get_fillalpha(series, i)))
             elseif !(series[:fillrange] in (false, nothing))
-                warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
+                @warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
             end
             d_out[:x], d_out[:y] = x[rng], y[rng]
 
@@ -906,7 +893,7 @@ function html_body(plt::Plot{PlotlyBackend}, style = nothing)
         w, h = plt[:size]
         style = "width:$(w)px;height:$(h)px;"
     end
-    uuid = Base.Random.uuid4()
+    uuid = UUIDs.uuid4()
     html = """
         <div id=\"$(uuid)\" style=\"$(style)\"></div>
         <script>

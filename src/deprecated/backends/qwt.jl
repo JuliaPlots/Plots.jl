@@ -150,7 +150,7 @@ function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
     end
     w[:setAxisScale](axisid, float(minimum(ticks)), float(maximum(ticks)), float(step(ticks)))
   elseif !(ticks in (nothing, :none, :auto))
-    warn("Only Range types are supported for Qwt xticks/yticks. typeof(ticks)=$(typeof(ticks))")
+    @warn("Only Range types are supported for Qwt xticks/yticks. typeof(ticks)=$(typeof(ticks))")
   end
 
   # change the scale
@@ -161,7 +161,7 @@ function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
     # scaletype == :log       && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLogScaleEngine(e))
     # scaletype == :log2      && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLogScaleEngine(2))
     scaletype == :log10     && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLog10ScaleEngine())
-    scaletype in supported_scales() || warn("Unsupported scale type: ", scaletype)
+    scaletype in supported_scales() || @warn("Unsupported scale type: ", scaletype)
   end
 
 end

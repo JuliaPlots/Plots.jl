@@ -1,6 +1,3 @@
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "plotlyjs.jl"))
-end
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 
@@ -11,35 +8,6 @@ const _plotlyjs_marker      = _plotly_marker
 const _plotlyjs_scale       = _plotly_scale
 
 # --------------------------------------------------------------------------------------
-
-
-function add_backend_string(::PlotlyJSBackend)
-    """
-    if !Plots.is_installed("PlotlyJS")
-        Pkg.add("PlotlyJS")
-    end
-    if !Plots.is_installed("Rsvg")
-        Pkg.add("Rsvg")
-    end
-    import Blink
-    Blink.AtomShell.install()
-    """
-end
-
-
-function _initialize_backend(::PlotlyJSBackend; kw...)
-    @eval begin
-        import PlotlyJS
-        export PlotlyJS
-    end
-
-    # # override IJulia inline display
-    # if isijulia()
-    #     IJulia.display_dict(plt::AbstractPlot{PlotlyJSBackend}) = IJulia.display_dict(plt.o)
-    # end
-end
-
-# ---------------------------------------------------------------------------
 
 
 function _create_backend_figure(plt::Plot{PlotlyJSBackend})

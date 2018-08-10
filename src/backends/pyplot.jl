@@ -1,10 +1,6 @@
 
 # https://github.com/stevengj/PyPlot.jl
 
-@require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" begin
-    Revise.track(Plots, joinpath(Pkg.dir("Plots"), "src", "backends", "pyplot.jl"))
-end
-
 const _pyplot_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend, :background_color_inside, :background_color_outside,
@@ -59,57 +55,31 @@ is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
 # --------------------------------------------------------------------------------------
 
-function add_backend_string(::PyPlotBackend)
-    """
-    if !Plots.is_installed("PyPlot")
-        Pkg.add("PyPlot")
-    end
-    withenv("PYTHON" => "") do
-        Pkg.build("PyPlot")
-    end
+# problem: https://github.com/tbreloff/Plots.jl/issues/308
+# solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
+otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
+append!(Base.Multimedia.displays, otherdisplays)
+pycolors = PyPlot.pyimport("matplotlib.colors")
+pypath = PyPlot.pyimport("matplotlib.path")
+mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
+pypatches = PyPlot.pyimport("matplotlib.patches")
+pyfont = PyPlot.pyimport("matplotlib.font_manager")
+pyticker = PyPlot.pyimport("matplotlib.ticker")
+pycmap = PyPlot.pyimport("matplotlib.cm")
+pynp = PyPlot.pyimport("numpy")
+pynp["seterr"](invalid="ignore")
+pytransforms = PyPlot.pyimport("matplotlib.transforms")
+pycollections = PyPlot.pyimport("matplotlib.collections")
+pyart3d = PyPlot.art3D
 
-    # now restart julia!
-    """
+# "support" matplotlib v1.5
+set_facecolor_sym = if PyPlot.version < v"2"
+    @warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
+    :set_axis_bgcolor
+else
+    :set_facecolor
 end
 
-function _initialize_backend(::PyPlotBackend)
-    @eval begin
-        # problem: https://github.com/tbreloff/Plots.jl/issues/308
-        # solution: hack from @stevengj: https://github.com/stevengj/PyPlot.jl/pull/223#issuecomment-229747768
-        otherdisplays = splice!(Base.Multimedia.displays, 2:length(Base.Multimedia.displays))
-        import PyPlot, PyCall
-        import LaTeXStrings: latexstring
-        append!(Base.Multimedia.displays, otherdisplays)
-
-        export PyPlot
-        pycolors = PyPlot.pyimport("matplotlib.colors")
-        pypath = PyPlot.pyimport("matplotlib.path")
-        mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
-        pypatches = PyPlot.pyimport("matplotlib.patches")
-        pyfont = PyPlot.pyimport("matplotlib.font_manager")
-        pyticker = PyPlot.pyimport("matplotlib.ticker")
-        pycmap = PyPlot.pyimport("matplotlib.cm")
-        pynp = PyPlot.pyimport("numpy")
-        pynp["seterr"](invalid="ignore")
-        pytransforms = PyPlot.pyimport("matplotlib.transforms")
-        pycollections = PyPlot.pyimport("matplotlib.collections")
-        pyart3d = PyPlot.art3D
-
-        # "support" matplotlib v1.5
-        set_facecolor_sym = if PyPlot.version < v"2"
-            warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
-            :set_axis_bgcolor
-        else
-            :set_facecolor
-        end
-
-        # we don't want every command to update the figure
-        PyPlot.ioff()
-    end
-end
-
-# --------------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------------
 
 # # convert colorant to 4-tuple RGBA
 # py_color(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
@@ -160,7 +130,7 @@ function py_linestyle(seriestype::Symbol, linestyle::Symbol)
     linestyle == :dash && return "--"
     linestyle == :dot && return ":"
     linestyle == :dashdot && return "-."
-    warn("Unknown linestyle $linestyle")
+    @warn("Unknown linestyle $linestyle")
     return "-"
 end
 
@@ -221,13 +191,13 @@ function py_marker(marker::Symbol)
     marker == :vline && return "|"
     haskey(_shapes, marker) && return py_marker(_shapes[marker])
 
-    warn("Unknown marker $marker")
+    @warn("Unknown marker $marker")
     return "o"
 end
 
 # py_marker(markers::AVec) = map(py_marker, markers)
 function py_marker(markers::AVec)
-    warn("Vectors of markers are currently unsupported in PyPlot: $markers")
+    @warn("Vectors of markers are currently unsupported in PyPlot: $markers")
     py_marker(markers[1])
 end
 
@@ -279,10 +249,12 @@ function labelfunc(scale::Symbol, backend::PyPlotBackend)
     end
 end
 
-function py_mask_nans(z)
-    # pynp["ma"][:masked_invalid](z)))
-    PyCall.pycall(pynp["ma"][:masked_invalid], Any, z)
-    # pynp["ma"][:masked_where](pynp["isnan"](z),z)
+@require PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0" begin
+    function py_mask_nans(z)
+        # pynp["ma"][:masked_invalid](z)))
+        PyCall.pycall(pynp["ma"][:masked_invalid], Any, z)
+        # pynp["ma"][:masked_where](pynp["isnan"](z),z)
+    end
 end
 
 # ---------------------------------------------------------------------------
@@ -542,7 +514,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             a = series[:arrow]
             if a != nothing && !is3d(st)  # TODO: handle 3d later
                 if typeof(a) != Arrow
-                    warn("Unexpected type for arrow: $(typeof(a))")
+                    @warn("Unexpected type for arrow: $(typeof(a))")
                 else
                     arrowprops = KW(
                         :arrowstyle => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
@@ -912,7 +884,7 @@ end
 function py_set_scale(ax, axis::Axis)
     scale = axis[:scale]
     letter = axis[:letter]
-    scale in supported_scales() || return warn("Unhandled scale value in pyplot: $scale")
+    scale in supported_scales() || return @warn("Unhandled scale value in pyplot: $scale")
     func = ax[Symbol("set_", letter, "scale")]
     kw = KW()
     arg = if scale == :identity

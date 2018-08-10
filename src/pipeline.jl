@@ -416,7 +416,7 @@ function _process_seriesrecipe(plt::Plot, d::KW)
                 end
                 _process_seriesrecipe(plt, data.d)
             else
-                warn("Unhandled recipe: $(data)")
+                @warn("Unhandled recipe: $(data)")
                 break
             end
         end
