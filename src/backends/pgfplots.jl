@@ -103,7 +103,7 @@ function pgf_framestyle(style::Symbol)
         return style
     else
         default_style = get(_pgf_framestyle_defaults, style, :axes)
-        warn("Framestyle :$style is not (yet) supported by the PGFPlots backend. :$default_style was cosen instead.")
+        @warn("Framestyle :$style is not (yet) supported by the PGFPlots backend. :$default_style was cosen instead.")
         default_style
     end
 end

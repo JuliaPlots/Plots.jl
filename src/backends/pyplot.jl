@@ -74,7 +74,7 @@ pyart3d = PyPlot.art3D
 
 # "support" matplotlib v1.5
 set_facecolor_sym = if PyPlot.version < v"2"
-    warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
+    @warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
     :set_axis_bgcolor
 else
     :set_facecolor
@@ -130,7 +130,7 @@ function py_linestyle(seriestype::Symbol, linestyle::Symbol)
     linestyle == :dash && return "--"
     linestyle == :dot && return ":"
     linestyle == :dashdot && return "-."
-    warn("Unknown linestyle $linestyle")
+    @warn("Unknown linestyle $linestyle")
     return "-"
 end
 
@@ -191,13 +191,13 @@ function py_marker(marker::Symbol)
     marker == :vline && return "|"
     haskey(_shapes, marker) && return py_marker(_shapes[marker])
 
-    warn("Unknown marker $marker")
+    @warn("Unknown marker $marker")
     return "o"
 end
 
 # py_marker(markers::AVec) = map(py_marker, markers)
 function py_marker(markers::AVec)
-    warn("Vectors of markers are currently unsupported in PyPlot: $markers")
+    @warn("Vectors of markers are currently unsupported in PyPlot: $markers")
     py_marker(markers[1])
 end
 
@@ -514,7 +514,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             a = series[:arrow]
             if a != nothing && !is3d(st)  # TODO: handle 3d later
                 if typeof(a) != Arrow
-                    warn("Unexpected type for arrow: $(typeof(a))")
+                    @warn("Unexpected type for arrow: $(typeof(a))")
                 else
                     arrowprops = KW(
                         :arrowstyle => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
@@ -884,7 +884,7 @@ end
 function py_set_scale(ax, axis::Axis)
     scale = axis[:scale]
     letter = axis[:letter]
-    scale in supported_scales() || return warn("Unhandled scale value in pyplot: $scale")
+    scale in supported_scales() || return @warn("Unhandled scale value in pyplot: $scale")
     func = ax[Symbol("set_", letter, "scale")]
     kw = KW()
     arg = if scale == :identity

@@ -1300,7 +1300,7 @@ function gl_poly(points, kw_args)
         if !isempty(GeometryTypes.faces(mesh)) # check if polygonation has any faces
             push!(result, GLVisualize.visualize(mesh, Style(:default), kw_args))
         else
-            warn("Couldn't draw the polygon: $points")
+            @warn("Couldn't draw the polygon: $points")
         end
     end
     result
