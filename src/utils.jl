@@ -215,15 +215,12 @@ anynan(i::Int, args::Tuple) = any(a -> try isnan(_cycle(a,i)) catch MethodError 
 anynan(istart::Int, iend::Int, args::Tuple) = any(i -> anynan(i, args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(i -> anynan(i, args), istart:iend)
 
-function Base.start(itr::SegmentsIterator)
-    nextidx = 1
-    if !any(isempty,itr.args) && anynan(1, itr.args)
-        _, nextidx = next(itr, 1)
+function Base.iterate(itr::SegmentsIterator, nextidx::Int = 1)
+    nextidx > itr.n && return nothing
+    if nextidx == 1 && !any(isempty,itr.args) && anynan(1, itr.args)
+        nextidx = 2
     end
-    nextidx
-end
-Base.done(itr::SegmentsIterator, nextidx::Int) = nextidx > itr.n
-function Base.next(itr::SegmentsIterator, nextidx::Int)
+
     i = istart = iend = nextidx
 
     # find the next NaN, and iend is the one before

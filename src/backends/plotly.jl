@@ -76,7 +76,7 @@ end
 const _plotly_js_path = joinpath(dirname(@__FILE__), "..", "..", "deps", "plotly-latest.min.js")
 const _plotly_js_path_remote = "https://cdn.plot.ly/plotly-latest.min.js"
 
-_js_code = open(readstring, _plotly_js_path, "r")
+_js_code = open(read, _plotly_js_path, "r")
 
 # borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
 _js_script = """

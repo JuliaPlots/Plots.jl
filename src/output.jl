@@ -185,8 +185,8 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
     end
 end
 
-# delegate mimewritable (showable on julia 0.7) to _show instead
-function Base.mimewritable(m::M, plt::P) where {M<:MIME, P<:Plot}
+# delegate showable to _show instead
+function Base.showable(m::M, plt::P) where {M<:MIME, P<:Plot}
     return hasmethod(_show, Tuple{IO, M, P})
 end
 
