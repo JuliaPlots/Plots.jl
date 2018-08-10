@@ -303,7 +303,7 @@ function _expand_limits(lims, x)
     lims[1] = NaNMath.min(lims[1], e1)
     lims[2] = NaNMath.max(lims[2], e2)
   # catch err
-  #   warn(err)
+  #   @warn(err)
   catch
   end
   nothing
@@ -930,7 +930,7 @@ function attr!(series::Series; kw...)
         if haskey(_series_defaults, k)
             series[k] = v
         else
-            warn("unused key $k in series attr")
+            @warn("unused key $k in series attr")
         end
     end
     _series_updated(series[:subplot].plt, series)
@@ -944,7 +944,7 @@ function attr!(sp::Subplot; kw...)
         if haskey(_subplot_defaults, k)
             sp[k] = v
         else
-            warn("unused key $k in subplot attr")
+            @warn("unused key $k in subplot attr")
         end
     end
     sp

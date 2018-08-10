@@ -80,7 +80,7 @@ function process_axis_arg!(d::KW, arg, letter = "")
         d[Symbol(letter,:formatter)] = arg
 
     elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_axis))
-        warn("Skipped $(letter)axis arg $arg")
+        @warn("Skipped $(letter)axis arg $arg")
 
     end
 end

@@ -297,7 +297,7 @@ function font(args...)
     elseif typeof(arg) <: Real
       rotation = convert(Float64, arg)
     else
-      warn("Unused font arg: $arg ($(typeof(arg)))")
+      @warn("Unused font arg: $arg ($(typeof(arg)))")
     end
   end
 
@@ -396,7 +396,7 @@ function stroke(args...; alpha = nothing)
     elseif allReals(arg)
       width = arg
     else
-      warn("Unused stroke arg: $arg ($(typeof(arg)))")
+      @warn("Unused stroke arg: $arg ($(typeof(arg)))")
     end
   end
 
@@ -429,7 +429,7 @@ function brush(args...; alpha = nothing)
     elseif allReals(arg)
       size = arg
     else
-      warn("Unused brush arg: $arg ($(typeof(arg)))")
+      @warn("Unused brush arg: $arg ($(typeof(arg)))")
     end
   end
 
@@ -460,7 +460,7 @@ function series_annotations(strs::AbstractVector, args...)
         elseif is_2tuple(arg)
             scalefactor = arg
         else
-            warn("Unused SeriesAnnotations arg: $arg ($(typeof(arg)))")
+            @warn("Unused SeriesAnnotations arg: $arg ($(typeof(arg)))")
         end
     end
     # if scalefactor != 1
@@ -704,7 +704,7 @@ function arrow(args...)
         elseif T <: Tuple && length(arg) == 2
             headlength, headwidth = Float64(arg[1]), Float64(arg[2])
         else
-            warn("Skipped arrow arg $arg")
+            @warn("Skipped arrow arg $arg")
         end
     end
     Arrow(style, side, headlength, headwidth)

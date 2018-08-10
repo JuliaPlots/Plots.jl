@@ -64,7 +64,7 @@ function _plotly_framestyle(style::Symbol)
         return style
     else
         default_style = get(_plotly_framestyle_defaults, style, :axes)
-        warn("Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was cosen instead.")
+        @warn("Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was cosen instead.")
         default_style
     end
 end
@@ -618,7 +618,7 @@ function plotly_series(plt::Plot, series::Series)
         d_out[:hoverinfo] = "label+percent+name"
 
     else
-        warn("Plotly: seriestype $st isn't supported.")
+        @warn("Plotly: seriestype $st isn't supported.")
         return KW()
     end
 
@@ -731,7 +731,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
                 d_out[:fill] = "tonexty"
                 d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, i), get_fillalpha(series, i)))
             elseif !(series[:fillrange] in (false, nothing))
-                warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
+                @warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
             end
             d_out[:x], d_out[:y] = x[rng], y[rng]
 

@@ -579,7 +579,7 @@ end
 end
 Plots.@deps stepbins path
 
-wand_edges(x...) = (warn("Load the StatPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
+wand_edges(x...) = (@warn("Load the StatPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
 
 function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto) where N
     _cl(x) = ceil(Int, NaNMath.max(x, one(x)))

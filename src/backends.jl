@@ -217,7 +217,7 @@ const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse]
 
 function warn_on_deprecated_backend(bsym::Symbol)
     if bsym in _deprecated_backends
-        warn("Backend $bsym has been deprecated.  It may not work as originally intended.")
+        @warn("Backend $bsym has been deprecated.  It may not work as originally intended.")
     end
 end
 

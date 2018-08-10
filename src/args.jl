@@ -194,7 +194,7 @@ function hasgrid(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
-        warn("Unknown grid argument $arg; $(Symbol(letter, :grid)) was set to `true` instead.")
+        @warn("Unknown grid argument $arg; $(Symbol(letter, :grid)) was set to `true` instead.")
         true
     end
 end
@@ -212,7 +212,7 @@ function showaxis(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
-        warn("Unknown showaxis argument $arg; $(Symbol(letter, :showaxis)) was set to `true` instead.")
+        @warn("Unknown showaxis argument $arg; $(Symbol(letter, :showaxis)) was set to `true` instead.")
         true
     end
 end
@@ -704,7 +704,7 @@ function processLineArg(d::KW, arg)
 
     # color
     elseif !handleColors!(d, arg, :linecolor)
-        warn("Skipped line arg $arg.")
+        @warn("Skipped line arg $arg.")
 
     end
 end
@@ -740,7 +740,7 @@ function processMarkerArg(d::KW, arg)
 
     # markercolor
     elseif !handleColors!(d, arg, :markercolor)
-        warn("Skipped marker arg $arg.")
+        @warn("Skipped marker arg $arg.")
 
     end
 end
@@ -800,7 +800,7 @@ function processGridArg!(d::KW, arg, letter)
 
     # color
     elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_grid))
-        warn("Skipped grid arg $arg.")
+        @warn("Skipped grid arg $arg.")
 
     end
 end
@@ -834,7 +834,7 @@ function processMinorGridArg!(d::KW, arg, letter)
     elseif handleColors!(d, arg, Symbol(letter, :foreground_color_minor_grid))
         d[Symbol(letter, :minorgrid)] = true
     else
-        warn("Skipped grid arg $arg.")
+        @warn("Skipped grid arg $arg.")
     end
 end
 
@@ -867,7 +867,7 @@ function processFontArg!(d::KW, fontname::Symbol, arg)
     elseif typeof(arg) <: Real
         d[Symbol(fontname, :rotation)] = convert(Float64, arg)
     else
-        warn("Skipped font arg: $arg ($(typeof(arg)))")
+        @warn("Skipped font arg: $arg ($(typeof(arg)))")
     end
 end
 
@@ -1050,7 +1050,7 @@ function preprocessArgs!(d::KW)
     # warnings for moved recipes
     st = get(d, :seriestype, :path)
     if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatPlots)
-        warn("seriestype $st has been moved to StatPlots.  To use: \`Pkg.add(\"StatPlots\"); using StatPlots\`")
+        @warn("seriestype $st has been moved to StatPlots.  To use: \`Pkg.add(\"StatPlots\"); using StatPlots\`")
     end
 
     return
@@ -1070,7 +1070,7 @@ function extractGroupArgs(v::AVec, args...; legendEntry = string)
     groupLabels = sort(collect(unique(v)))
     n = length(groupLabels)
     if n > 100
-        warn("You created n=$n groups... Is that intended?")
+        @warn("You created n=$n groups... Is that intended?")
     end
     groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
     GroupBy(map(legendEntry, groupLabels), groupIds)
@@ -1142,7 +1142,7 @@ function warnOnUnsupported_args(pkg::AbstractBackend, d::KW)
     if !isempty(_to_warn)
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
-            warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_attrs(pkg))")
+            @warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_attrs(pkg))")
         end
     end
 end
@@ -1153,13 +1153,13 @@ end
 
 function warnOnUnsupported(pkg::AbstractBackend, d::KW)
     if !is_seriestype_supported(pkg, d[:seriestype])
-        warn("seriestype $(d[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))")
+        @warn("seriestype $(d[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))")
     end
     if !is_style_supported(pkg, d[:linestyle])
-        warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))")
+        @warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))")
     end
     if !is_marker_supported(pkg, d[:markershape])
-        warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))")
+        @warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))")
     end
 end
 
@@ -1168,7 +1168,7 @@ function warnOnUnsupported_scales(pkg::AbstractBackend, d::KW)
         if haskey(d, k)
             v = d[k]
             if !is_scale_supported(pkg, v)
-                warn("scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
+                @warn("scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
             end
         end
     end

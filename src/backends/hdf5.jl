@@ -225,7 +225,7 @@ end
 function _display(plt::Plot{HDF5Backend})
     msg = "HDF5 interface does not support `display()` function."
     msg *= "\nUse `Plots.hdf5plot_write(::String)` method to write to .HDF5 \"plot\" file instead."
-    warn(msg)
+    @warn(msg)
     return
 end
 
@@ -293,7 +293,7 @@ end
 #=
 function _hdf5plot_gwrite(grp, k::String, v::Array{Any})
 #    @show grp, k
-    warn("Cannot write Array: $k=$v")
+    @warn("Cannot write Array: $k=$v")
 end
 =#
 function _hdf5plot_gwrite(grp, k::String, v::Nothing)
@@ -323,7 +323,7 @@ function _hdf5plot_gwrite(grp, k::String, v::Tuple)
     #NOTE: _hdf5plot_overwritetype overwrites "Array" type with "Tuple".
 end
 function _hdf5plot_gwrite(grp, k::String, d::Dict)
-#    warn("Cannot write dict: $k=$d")
+#    @warn("Cannot write dict: $k=$d")
 end
 function _hdf5plot_gwrite(grp, k::String, v::AbstractRange)
     _hdf5plot_gwrite(grp, k, collect(v)) #For now
@@ -586,7 +586,7 @@ function _hdf5plot_read(grp, d::Dict)
         catch e
             @show e
             @show grp
-            warn("Could not read field $k")
+            @warn("Could not read field $k")
         end
     end
     return
