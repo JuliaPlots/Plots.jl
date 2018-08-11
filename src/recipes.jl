@@ -498,8 +498,8 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
     log_scale_x = xscale in _logScales
     log_scale_y = yscale in _logScales
 
-    nbins = length(linearindices(weights))
-    if length(linearindices(edge)) != nbins + 1
+    nbins = length(eachindex(weights))
+    if length(eachindex(edge)) != nbins + 1
         error("Edge vector must be 1 longer than weight vector")
     end
 
