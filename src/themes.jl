@@ -10,7 +10,7 @@ end
 
 function _get_defaults(s::Symbol)
     thm = PlotThemes._themes[s]
-    if :defaults in fieldnames(thm)
+    if :defaults in fieldnames(typeof(thm))
         return thm.defaults
     else # old PlotTheme type
         defaults = KW(
