@@ -506,13 +506,17 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
     x = eltype(edge)[]
     y = eltype(weights)[]
 
-    it_e, it_w = start(edge), start(weights)
-    a, it_e = next(edge, it_e)
+    it_tuple_e = iterate(edge)
+    a, it_state_e = it_tuple_e
+    it_tuple_e = iterate(edge, it_state_e)
+
+    it_tuple_w = iterate(weights)
+
     last_w = eltype(weights)(NaN)
-    i = 1
-    while (!done(edge, it_e) && !done(edge, it_e))
-        b, it_e = next(edge, it_e)
-        w, it_w = next(weights, it_w)
+
+    while it_tuple_e != nothing && it_tuple_w != nothing
+        b, it_state_e = it_tuple_e
+        w, it_state_w = it_tuple_w
 
         if (log_scale_x && a ≈ 0)
             a = b/_logScaleBases[xscale]^3
@@ -536,6 +540,9 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
 
         a = b
         last_w = w
+
+        it_tuple_e = iterate(edge, it_state_e)
+        it_tuple_w = iterate(weights, it_state_w)
     end
     if (last_w != baseline)
         push!(x, a)
