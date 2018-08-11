@@ -21,7 +21,7 @@ const _arg_desc = KW(
 :markerstrokewidth 	=> "Number. Width of the marker stroke (border. in pixels)",
 :markerstrokecolor 	=> "Color Type. Color of the marker stroke (border).  `:match` will take the value from `:foreground_color_subplot`.",
 :markerstrokealpha 	=> "Number in [0,1]. The alpha/opacity override for the marker stroke (border).  `nothing` (the default) means it will take the alpha value of markerstrokecolor.",
-:bins              	=> "Integer, NTuple{2,Integer}, AbstractVector or Symbol. Default is :auto (the Freedman-Diaconis rule). For histogram-types, defines the approximate number of bins to aim for, or the auto-binning algorithm to use (:sturges, :sqrt, :rice, :scott or :fd). For fine-grained control pass a Vector of break values, e.g. `linspace(extrema(x)..., 25)`",
+:bins              	=> "Integer, NTuple{2,Integer}, AbstractVector or Symbol. Default is :auto (the Freedman-Diaconis rule). For histogram-types, defines the approximate number of bins to aim for, or the auto-binning algorithm to use (:sturges, :sqrt, :rice, :scott or :fd). For fine-grained control pass a Vector of break values, e.g. `range(min(x), stop = extrema(x), length = 25)`",
 :smooth            	=> "Bool.  Add a regression line?",
 :group             	=> "AbstractVector. Data is split into a separate series, one for each unique value in `group`.",
 :x                 	=> "Various. Input data. First Dimension",

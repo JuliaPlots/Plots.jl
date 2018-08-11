@@ -270,7 +270,7 @@ function _hdf5plot_writecount(grp, n::Int) #Write directly to group
 end
 function _hdf5plot_gwritefields(grp, k::String, v)
     grp = HDF5.g_create(grp, k)
-    for _k in fieldnames(v)
+    for _k in fieldnames(typeof(v))
         _v = getfield(v, _k)
         kstr = string(_k)
         _hdf5plot_gwrite(grp, kstr, _v)

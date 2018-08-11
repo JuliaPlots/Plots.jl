@@ -120,7 +120,7 @@ struct ColorGradient <: ColorScheme
 
     # # otherwise interpolate evenly between the minval and maxval
     # minval, maxval = minimum(vals), maximum(vals)
-    # vs = Float64[interpolate(minval, maxval, w) for w in linspace(0, 1, length(cs))]
+    # vs = Float64[interpolate(minval, maxval, w) for w in range(0, stop = 1, length = length(cs))]
     # new(convertColor(cs,alpha), vs)
 
     # interpolate the colors for each value
@@ -147,7 +147,7 @@ function ColorGradient(s::Symbol, vals::AVec{T} = 0:0; kw...) where T<:Real
   ColorGradient(cs, vals; kw...)
 end
 
-# function ColorGradient{T<:Real}(cs::AVec, vals::AVec{T} = linspace(0, 1, length(cs)); kw...)
+# function ColorGradient{T<:Real}(cs::AVec, vals::AVec{T} = range(0, stop = 1, length = length(cs)); kw...)
 #   ColorGradient(map(convertColor, cs), vals; kw...)
 # end
 
