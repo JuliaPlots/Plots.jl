@@ -518,7 +518,7 @@ end
     xs, fs
 end
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function}  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
-@recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) where {F<:Function,G<:Function} = fx, fy, linspace(umin, umax, n)
+@recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) where {F<:Function,G<:Function} = fx, fy, range(umin, stop = umax, length = n)
 
 #
 # # special handling... 3D parametric function(s)
@@ -526,7 +526,7 @@ end
     mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
 end
 @recipe function f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, umin::Number, umax::Number, numPoints = 200) where {F<:Function,G<:Function,H<:Function}
-    fx, fy, fz, linspace(umin, umax, numPoints)
+    fx, fy, fz, range(umin, stop = umax, length = numPoints)
 end
 
 #

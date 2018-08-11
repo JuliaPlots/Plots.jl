@@ -284,7 +284,7 @@ end
     # where the points are the control points of the curve
     for rng in iter_segments(args...)
         length(rng) < 2 && continue
-        ts = linspace(0, 1, npoints)
+        ts = range(0, stop = 1, length = npoints)
         nanappend!(newx, map(t -> bezier_value(_cycle(x,rng), t), ts))
         nanappend!(newy, map(t -> bezier_value(_cycle(y,rng), t), ts))
         if z != nothing
