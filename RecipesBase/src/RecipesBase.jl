@@ -72,8 +72,11 @@ end
 function _equals_symbol(arg::Symbol, sym::Symbol)
     arg == sym
 end
-function _equals_symbol(arg::Expr, sym::Symbol)
+function _equals_symbol(arg::Expr, sym::Symbol) #not sure this method is necessary anymore on 0.7
     arg.head == :quote && arg.args[1] == sym
+end
+function _equals_symbol(arg::QuoteNode, sym::Symbol)
+    rg.value == sym
 end
 _equals_symbol(x, sym::Symbol) = false
 
