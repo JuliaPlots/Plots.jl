@@ -10,7 +10,14 @@
 
 ---
 ## (current master)
-- All new development should target Julia 0.7!
+- All new development should target Julia 1.x!
+
+## 0.19.0
+- Refactor conditional loading to use Requires
+- Many fixes for 1.0 compatibility
+
+## 0.18.0
+- update minor version to 0.7
 
 ## 0.17.4
 - fix thickness_scaling for pyplot
