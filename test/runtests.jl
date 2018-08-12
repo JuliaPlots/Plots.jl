@@ -134,6 +134,13 @@ end
     histogram([1, 0, 0, 0, 0, 0])
 end
 
+@testset "Callable Functions" begin
+    struct MyFun end
+    (::MyFun)(x) = sin(x)
+    A = MyFun()
+    plot(A, -pi, pi, markershape = :circle)
+end
+
 # tests for preprocessing recipes
 
 # @testset "recipes" begin

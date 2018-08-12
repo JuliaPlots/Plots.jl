@@ -11,7 +11,21 @@ const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
 all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(d, :seriestype, :none))
 
 # unknown
-convertToAnyVector(x, d::KW) = error("No user recipe defined for $(typeof(x))")
+# in this case, check if it's actually a callable type and use as a function
+# otherwise it's unsupported and throw an error.
+function convertToAnyVector(x, d::KW)
+    try
+        x(0.0)
+    catch
+        try
+            x(0.0,0.0)
+        catch
+            error("No user recipe defined for $(typeof(x))")
+        end
+    end
+    @show "here!"
+    Any[(v...)->x(v...)]
+end
 
 # missing
 convertToAnyVector(v::Nothing, d::KW) = Any[nothing], nothing
