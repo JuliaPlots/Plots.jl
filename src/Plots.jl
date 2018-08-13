@@ -5,6 +5,7 @@ using Reexport
 import StaticArrays
 using StaticArrays.FixedSizeArrays
 using Dates, Printf, Statistics, Base64, LinearAlgebra
+import SparseArrays: findnz
 
 @reexport using RecipesBase
 import RecipesBase: plot, plot!, animate
