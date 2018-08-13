@@ -1569,13 +1569,13 @@ function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
         d[csym] = if d[csym] == :auto
-            plot_color.(if has_black_border_for_default(d[:seriestype]) && s == :line
+            plot_color(if has_black_border_for_default(d[:seriestype]) && s == :line
                 sp[:foreground_color_subplot]
             else
                 d[:seriescolor]
             end)
         elseif d[csym] == :match
-            plot_color.(d[:seriescolor])
+            plot_color(d[:seriescolor])
         else
             getSeriesRGBColor.(d[csym], Ref(sp), plotIndex)
         end
