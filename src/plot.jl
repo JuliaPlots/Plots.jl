@@ -283,11 +283,11 @@ end
 
 function plot(sp::Subplot, args...; kw...)
     plt = sp.plt
-    plot(plt, args...; kw..., subplot = findfirst(plt.subplots, sp))
+    plot(plt, args...; kw..., subplot = findfirst(isequal(sp), plt.subplots))
 end
 function plot!(sp::Subplot, args...; kw...)
     plt = sp.plt
-    plot!(plt, args...; kw..., subplot = findfirst(plt.subplots, sp))
+    plot!(plt, args...; kw..., subplot = findfirst(isequal(sp), plt.subplots))
 end
 
 # --------------------------------------------------------------------
