@@ -41,6 +41,7 @@ end
 
 #==Useful constants
 ===============================================================================#
+const _hdf5_nullable{T} = Union{T, Nothing}
 const _hdf5_plotroot = "plot"
 const _hdf5_dataroot = "data" #TODO: Eventually move data to different root (easier to locate)?
 const _hdf5plot_datatypeid = "TYPE" #Attribute identifying type
@@ -129,7 +130,7 @@ if length(HDF5PLOT_MAP_TELEM2STR) < 1
         "AXIS" => Axis,
         "SURFACE" => Surface,
         "SUBPLOT" => Subplot,
-        "NULLABLE" => Nullable,
+        "NULLABLE" => _hdf5_nullable,
     )
     merge!(HDF5PLOT_MAP_STR2TELEM, telem2str)
     merge!(HDF5PLOT_MAP_TELEM2STR, Dict{Type, String}(v=>k for (k,v) in HDF5PLOT_MAP_STR2TELEM))
@@ -344,9 +345,10 @@ function _hdf5plot_gwritearray(grp, k::String, v::Array{T}) where T
     vgrp = HDF5.g_create(grp, k)
     _hdf5plot_writetype(vgrp, Array) #ANY
     sz = size(v)
+    lidx = LinearIndices(sz)
 
     for iter in eachindex(v)
-        coord = LinearIndices(sz, iter)
+        coord = lidx[iter]
         elem = v[iter]
         idxstr = join(coord, "_")
         _hdf5plot_gwrite(vgrp, "v$idxstr", v[iter])
@@ -391,7 +393,7 @@ function _hdf5plot_gwrite(grp, k::String, v::Surface)
 	_hdf5plot_writetype(grp, Surface)
 end
 # #TODO: "Properly" support Nullable using _hdf5plot_writetype?
-# function _hdf5plot_gwrite(grp, k::String, v::Nullable)
+# function _hdf5plot_gwrite(grp, k::String, v::_hdf5_nullable)
 #     if isnull(v)
 #         _hdf5plot_gwrite(grp, k, nothing)
 #     else
@@ -508,10 +510,11 @@ function _hdf5plot_read(grp, k::String, T::Type{Array}, dtid) #ANY
     sz = _hdf5plot_read(grp, "dim")
     if [0] == sz; return []; end
     sz = tuple(sz...)
-    result = Array{Any}(sz)
+    result = Array{Any}(undef, sz)
+    lidx = LinearIndices(sz)
 
     for iter in eachindex(result)
-        coord = LinearIndices(sz, iter)
+        coord = lidx[iter]
         idxstr = join(coord, "_")
         result[iter] = _hdf5plot_read(grp, "v$idxstr")
     end
