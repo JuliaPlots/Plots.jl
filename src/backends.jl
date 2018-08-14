@@ -400,7 +400,10 @@ function add_backend_string(::PyPlotBackend)
     """
     using Pkg
     Pkg.add("PyPlot")
+    Pkg.add("PyCall")
+    Pkg.add("LaTeXStrings")
     withenv("PYTHON" => "") do
+        Pkg.build("PyCall")
         Pkg.build("PyPlot")
     end
     """
