@@ -87,7 +87,7 @@ function buildanimation(animdir::AbstractString, fn::AbstractString,
         run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
     end
 
-    show_msg && info("Saved animation to ", fn)
+    show_msg && @info("Saved animation to ", fn)
     AnimatedGif(fn)
 end
 
