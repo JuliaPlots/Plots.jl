@@ -142,7 +142,7 @@ function _animate(forloop::Expr, args...; callgif = false)
   end
 
   push!(block.args, :(if $filterexpr; frame($animsym); end))
-  push!(block.args, :($countersym += 1))
+  push!(block.args, :(global $countersym += 1))
 
   # add a final call to `gif(anim)`?
   retval = callgif ? :(gif($animsym)) : animsym
@@ -151,7 +151,7 @@ function _animate(forloop::Expr, args...; callgif = false)
   esc(quote
     $freqassert             # if filtering, check frequency is an Integer > 0
     $animsym = Animation()  # init animation object
-    $countersym = 1         # init iteration counter
+    global $countersym = 1         # init iteration counter
     $forloop                # for loop, saving a frame after each iteration
     $retval                 # return the animation object, or the gif
   end)
