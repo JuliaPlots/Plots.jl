@@ -645,7 +645,7 @@ end
 
 function plotly_series_shapes(plt::Plot, series::Series)
     segments = iter_segments(series)
-    d_outs = Vector{KW}(length(segments))
+    d_outs = Vector{KW}(undef, length(segments))
 
     # TODO: create a d_out for each polygon
     # x, y = series[:x], series[:y]
@@ -707,7 +707,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     segments = iter_segments(series)
-    d_outs = Vector{KW}((hasfillrange ? 2 : 1 ) * length(segments))
+    d_outs = Vector{KW}(undef, (hasfillrange ? 2 : 1 ) * length(segments))
 
     for (i,rng) in enumerate(segments)
         !isscatter && length(rng) < 2 && continue
