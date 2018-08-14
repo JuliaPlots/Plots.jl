@@ -43,7 +43,7 @@ end
 # ---------------------------------------------------------
 
 function add_backend(pkg::Symbol)
-    info("To do a standard install of $pkg, copy and run this:\n\n")
+    @info("To do a standard install of $pkg, copy and run this:\n\n")
     println(add_backend_string(_backend_instance(pkg)))
     println()
 end

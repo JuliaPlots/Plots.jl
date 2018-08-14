@@ -177,7 +177,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
 
     kw_list = _process_userrecipes(plt, d, args)
 
-    # info(1)
+    # @info(1)
     # map(DD, kw_list)
 
 
@@ -196,7 +196,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
         _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
     end
 
-    # info(2)
+    # @info(2)
     # map(DD, kw_list)
 
     # --------------------------------
@@ -212,7 +212,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
     # "SERIES RECIPES"
     # --------------------------------
 
-    # info(3)
+    # @info(3)
     # map(DD, kw_list)
 
     for kw in kw_list
