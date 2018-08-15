@@ -387,7 +387,7 @@ end
 function _initialize_backend(::PyPlotBackend)
     @eval Main begin
         import PyPlot, PyCall
-        import LaTeXStrings: latexstring
+        import LaTeXStrings
 
         export PyPlot
 
