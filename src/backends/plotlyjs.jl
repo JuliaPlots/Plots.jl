@@ -38,7 +38,7 @@ function _series_updated(plt::Plot{PlotlyJSBackend}, series::Series)
     end
     PlotlyJS.restyle!(
         plt.o,
-        findfirst(plt.series_list, series),
+        findfirst(isequal(series), plt.series_list),
         kw
     )
 end

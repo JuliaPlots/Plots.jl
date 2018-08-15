@@ -12,6 +12,12 @@
 ## (current master)
 - All new development should target Julia 1.x!
 
+## 0.19.2
+- several small fixes for 1.0 compatibility
+
+## 0.19.1
+- don't broadcast plot_color
+
 ## 0.19.0
 - Refactor conditional loading to use Requires
 - Many fixes for 1.0 compatibility

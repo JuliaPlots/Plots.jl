@@ -46,7 +46,7 @@ function plotattr(attrtype::Symbol, attribute::AbstractString)
     attribute = Symbol(lookup_aliases(attrtype, attribute))
 
     desc = get(_arg_desc, attribute, "")
-    first_period_idx = findfirst(desc, '.')
+    first_period_idx = findfirst(isequal('.'), desc)
     typedesc = desc[1:first_period_idx-1]
     desc = strip(desc[first_period_idx+1:end])
     als = keys(filter((_,v)->v==attribute, _keyAliases)) |> collect |> sort
