@@ -236,16 +236,17 @@ function add_pyfixedformatter(cbar, vals::AVec)
     cbar[:update_ticks]()
 end
 
-
-function labelfunc(scale::Symbol, backend::PyPlotBackend)
-    if scale == :log10
-        x -> latexstring("10^{$x}")
-    elseif scale == :log2
-        x -> latexstring("2^{$x}")
-    elseif scale == :ln
-        x -> latexstring("e^{$x}")
-    else
-        string
+@require LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f" begin
+    function labelfunc(scale::Symbol, backend::PyPlotBackend)
+        if scale == :log10
+            x -> LaTeXStrings.latexstring("10^{$x}")
+        elseif scale == :log2
+            x -> LaTeXStrings.latexstring("2^{$x}")
+        elseif scale == :ln
+            x -> LaTeXStrings.latexstring("e^{$x}")
+        else
+            string
+        end
     end
 end
 
