@@ -1,4 +1,14 @@
 function __init__()
+    if isdefined(Main, :PLOTS_DEFAULTS)
+        if haskey(Main.PLOTS_DEFAULTS, :theme)
+            theme(Main.PLOTS_DEFAULTS[:theme])
+        end
+        for (k,v) in Main.PLOTS_DEFAULTS
+            k == :theme || default(k, v)
+        end
+    end
+    pushdisplay(PlotsDisplay())
+
     include(joinpath(@__DIR__, "backends", "plotly.jl"))
     include(joinpath(@__DIR__, "backends", "gr.jl"))
     include(joinpath(@__DIR__, "backends", "web.jl"))

@@ -294,19 +294,4 @@ end
 
 const CURRENT_BACKEND = CurrentBackend(:none)
 
-# for compatibility with Requires.jl:
-@init begin
-    if isdefined(Main, :PLOTS_DEFAULTS)
-        if haskey(Main.PLOTS_DEFAULTS, :theme)
-            theme(Main.PLOTS_DEFAULTS[:theme])
-        end
-        for (k,v) in Main.PLOTS_DEFAULTS
-            k == :theme || default(k, v)
-        end
-    end
-    pushdisplay(PlotsDisplay())
-end
-
-# ---------------------------------------------------------
-
 end # module
