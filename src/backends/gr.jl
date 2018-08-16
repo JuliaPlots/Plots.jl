@@ -487,7 +487,7 @@ function gr_colorbar(sp::Subplot, clims)
     GR.axes(0, ztick, xmax, clims[1], 0, 1, 0.005)
 
     gr_set_font(guidefont(sp[:yaxis]))
-    GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
+    GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
     gr_text(viewport_plotarea[2] + gr_colorbar_ratio,
             gr_view_ycenter(), sp[:colorbar_title])
