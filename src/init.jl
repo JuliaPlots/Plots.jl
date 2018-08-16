@@ -9,6 +9,13 @@ function __init__()
     end
     pushdisplay(PlotsDisplay())
 
+    atreplinit(i -> begin
+        if PlotDisplay() in Base.Multimedia.displays
+            popdisplay(PlotsDisplay())
+        end
+        pushdisplay(PlotsDisplay())
+    end)
+
     include(joinpath(@__DIR__, "backends", "plotly.jl"))
     include(joinpath(@__DIR__, "backends", "gr.jl"))
     include(joinpath(@__DIR__, "backends", "web.jl"))
