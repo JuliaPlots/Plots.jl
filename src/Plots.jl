@@ -304,6 +304,7 @@ const CURRENT_BACKEND = CurrentBackend(:none)
             k == :theme || default(k, v)
         end
     end
+    pushdisplay(PlotsDisplay())
 end
 
 # ---------------------------------------------------------
