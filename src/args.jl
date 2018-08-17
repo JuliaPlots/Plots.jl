@@ -1521,6 +1521,11 @@ function getSeriesRGBColor(c, sp::Subplot, n::Int)
     plot_color(c)
 end
 
+function getSeriesRGBColor(c::AbstractArray, sp::Subplot, n::Int)
+    @info "it is surprising that this function is called - please report a use case as a Plots issue"
+    map(x->getSeriesRGBColor(x, sp, n), c)
+end
+
 function ensure_gradient!(d::KW, csym::Symbol, asym::Symbol)
     if !isa(d[csym], ColorGradient)
         d[csym] = typeof(d[asym]) <: AbstractVector ? cgrad() : cgrad(alpha = d[asym])
