@@ -1563,7 +1563,7 @@ function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
     end
 
     # update series color
-    d[:seriescolor] = getSeriesRGBColor.(d[:seriescolor], Ref(sp), plotIndex)
+    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], sp, plotIndex)
 
     # update other colors
     for s in (:line, :marker, :fill)
@@ -1577,7 +1577,7 @@ function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
         elseif d[csym] == :match
             plot_color(d[:seriescolor])
         else
-            getSeriesRGBColor.(d[csym], Ref(sp), plotIndex)
+            getSeriesRGBColor(d[csym], sp, plotIndex)
         end
     end
 
@@ -1585,9 +1585,9 @@ function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
     d[:markerstrokecolor] = if d[:markerstrokecolor] == :match
         plot_color(sp[:foreground_color_subplot])
     elseif d[:markerstrokecolor] == :auto
-        getSeriesRGBColor.(d[:markercolor], Ref(sp), plotIndex)
+        getSeriesRGBColor(d[:markercolor], sp, plotIndex)
     else
-        getSeriesRGBColor.(d[:markerstrokecolor], Ref(sp), plotIndex)
+        getSeriesRGBColor(d[:markerstrokecolor], sp, plotIndex)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
