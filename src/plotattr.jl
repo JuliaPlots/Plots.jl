@@ -40,6 +40,9 @@ function plotattr(attribute::AbstractString)
     error("There is no attribute named $attribute")
 end
 
+printnothing(x) = x
+printnothing(x::Nothing) = "nothing"
+
 function plotattr(attrtype::Symbol, attribute::AbstractString)
     in(attrtype, keys(_attribute_defaults)) || ArgumentError("`attrtype` must match one of $(attrtypes())")
 
@@ -49,14 +52,14 @@ function plotattr(attrtype::Symbol, attribute::AbstractString)
     first_period_idx = findfirst(isequal('.'), desc)
     typedesc = desc[1:first_period_idx-1]
     desc = strip(desc[first_period_idx+1:end])
-    als = keys(filter((_,v)->v==attribute, _keyAliases)) |> collect |> sort
+    als = keys(filter(x->x[2]==attribute, _keyAliases)) |> collect |> sort
     als = join(map(string,als), ", ")
     def = _attribute_defaults[attrtype][attribute]
 
 
     # Looks up the different elements and plots them
-    println("$attribute ", typedesc == "" ? "" : "{$typedesc}", "\n",
-        als == "" ? "" : "$als\n",
-        "\n$desc\n",
-        "$(attrtype) attribute, ", def == "" ? "" : " default: $def")
+    println("$(printnothing(attribute)) ", typedesc == "" ? "" : "{$(printnothing(typedesc))}", "\n",
+        als == "" ? "" : "$(printnothing(als))\n",
+        "\n$(printnothing(desc))\n",
+        "$(printnothing(attrtype)) attribute, ", def == "" ? "" : " default: $(printnothing(def))")
 end
