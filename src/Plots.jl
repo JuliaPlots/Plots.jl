@@ -104,8 +104,6 @@ export
     rotate,
     rotate!,
     center,
-    P2,
-    P3,
     BezierCurve,
 
     plotattr
