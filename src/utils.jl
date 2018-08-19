@@ -130,7 +130,7 @@ function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     # newz, ColorGradient(colors)
 end
 
-function imageHack(d::KW)
+function imageHack(plotattributes::KW)
     is_seriestype_supported(:heatmap) || error("Neither :image or :heatmap are supported!")
     d[:seriestype] = :heatmap
     d[:z], d[:fillcolor] = replace_image_with_heatmap(d[:z].surf)
@@ -328,13 +328,13 @@ function replaceType(vec, val)
   push!(vec, val)
 end
 
-function replaceAlias!(d::KW, k::Symbol, aliases::Dict{Symbol,Symbol})
+function replaceAlias!(plotattributes::KW, k::Symbol, aliases::Dict{Symbol,Symbol})
   if haskey(aliases, k)
     d[aliases[k]] = pop!(d, k)
   end
 end
 
-function replaceAliases!(d::KW, aliases::Dict{Symbol,Symbol})
+function replaceAliases!(plotattributes::KW, aliases::Dict{Symbol,Symbol})
   ks = collect(keys(d))
   for k in ks
       replaceAlias!(d, k, aliases)
@@ -432,7 +432,7 @@ isscalar(::Any)  = false
 is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
 
-isvertical(d::KW) = get(d, :orientation, :vertical) in (:vertical, :v, :vert)
+isvertical(plotattributes::KW) = get(d, :orientation, :vertical) in (:vertical, :v, :vert)
 isvertical(series::Series) = isvertical(series.d)
 
 
@@ -806,7 +806,7 @@ end
 debugshow(x) = show(x)
 debugshow(x::AbstractArray) = print(summary(x))
 
-function dumpdict(d::KW, prefix = "", alwaysshow = false)
+function dumpdict(plotattributes::KW, prefix = "", alwaysshow = false)
   _debugMode.on || alwaysshow || return
   println()
   if prefix != ""
@@ -819,7 +819,7 @@ function dumpdict(d::KW, prefix = "", alwaysshow = false)
   end
   println()
 end
-DD(d::KW, prefix = "") = dumpdict(d, prefix, true)
+DD(plotattributes::KW, prefix = "") = dumpdict(d, prefix, true)
 
 
 function dumpcallstack()

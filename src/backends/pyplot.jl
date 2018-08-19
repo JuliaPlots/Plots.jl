@@ -263,7 +263,7 @@ end
 function fix_xy_lengths!(plt::Plot{PyPlotBackend}, series::Series)
     x, y = series[:x], series[:y]
     nx, ny = length(x), length(y)
-    if !isa(get(series.d, :z, nothing), Surface) && nx != ny
+    if !isa(get(series.plotattributes, :z, nothing), Surface) && nx != ny
         if nx < ny
             series[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
         else
@@ -299,7 +299,7 @@ py_fillcolormap(series::Series)       = py_colormap(series[:fillcolor])
 # getAxis(sp::Subplot) = sp.o
 
 # function getAxis(plt::Plot{PyPlotBackend}, series::Series)
-#     sp = get_subplot(plt, get(series.d, :subplot, 1))
+#     sp = get_subplot(plt, get(series.plotattributes, :subplot, 1))
 #     getAxis(sp)
 # end
 
@@ -412,12 +412,12 @@ end
 # ---------------------------------------------------------------------------
 
 
-# function _series_added(pkg::PyPlotBackend, plt::Plot, d::KW)
+# function _series_added(pkg::PyPlotBackend, plt::Plot, plotattributes::KW)
 # TODO: change this to accept Subplot??
 # function _series_added(plt::Plot{PyPlotBackend}, series::Series)
 
 function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
-    # d = series.d
+    # plotattributes = series.plotattributes
     st = series[:seriestype]
     sp = series[:subplot]
     ax = sp.o
@@ -862,7 +862,7 @@ function py_compute_axis_minval(axis::Axis)
     sps = axis.sps
     for sp in sps
         for series in series_list(sp)
-            v = series.d[axis[:letter]]
+            v = series.plotattributes[axis[:letter]]
             if !isempty(v)
                 minval = NaNMath.min(minval, ignorenan_minimum(abs.(v)))
             end
@@ -1066,7 +1066,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             axis[:ticks] != :native ? py_set_ticks(ax, ticks, letter) : nothing
             pyaxis[:set_tick_params](direction = axis[:tick_direction] == :out ? "out" : "in")
             ax[Symbol("set_", letter, "label")](axis[:guide])
-            if get(axis.d, :flip, false)
+            if get(axis.plotattributes, :flip, false)
                 ax[Symbol("invert_", letter, "axis")]()
             end
             pyaxis[:label][:set_fontsize](py_thickness_scale(plt, axis[:guidefontsize]))

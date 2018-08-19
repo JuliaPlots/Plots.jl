@@ -133,9 +133,9 @@ pgf_thickness_scaling(plt::Plot) = plt[:thickness_scaling]
 pgf_thickness_scaling(sp::Subplot) = pgf_thickness_scaling(sp.plt)
 pgf_thickness_scaling(series) = pgf_thickness_scaling(series[:subplot])
 
-function pgf_fillstyle(d, i = 1)
-    cstr,a = pgf_color(get_fillcolor(d, i))
-    fa = get_fillalpha(d, i)
+function pgf_fillstyle(plotattributes, i = 1)
+    cstr,a = pgf_color(get_fillcolor(plotattributes, i))
+    fa = get_fillalpha(plotattributes, i)
     if fa != nothing
         a = fa
     end
@@ -151,11 +151,11 @@ function pgf_linestyle(linewidth::Real, color, α = 1, linestyle = "solid")
     $(get(_pgfplots_linestyles, linestyle, "solid"))"""
 end
 
-function pgf_linestyle(d, i = 1)
-    lw = pgf_thickness_scaling(d) * get_linewidth(d, i)
-    lc = get_linecolor(d, i)
-    la = get_linealpha(d, i)
-    ls = get_linestyle(d, i)
+function pgf_linestyle(plotattributes, i = 1)
+    lw = pgf_thickness_scaling(plotattributes) * get_linewidth(plotattributes, i)
+    lc = get_linecolor(plotattributes, i)
+    la = get_linealpha(plotattributes, i)
+    ls = get_linestyle(plotattributes, i)
     return pgf_linestyle(lw, lc, la, ls)
 end
 
@@ -164,19 +164,19 @@ function pgf_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
     return string("{\\fontsize{", fs, " pt}{", 1.3fs, " pt}", font, "}")
 end
 
-function pgf_marker(d, i = 1)
-    shape = _cycle(d[:markershape], i)
-    cstr, a = pgf_color(plot_color(get_markercolor(d, i), get_markeralpha(d, i)))
-    cstr_stroke, a_stroke = pgf_color(plot_color(get_markerstrokecolor(d, i), get_markerstrokealpha(d, i)))
+function pgf_marker(plotattributes, i = 1)
+    shape = _cycle(plotattributes[:markershape], i)
+    cstr, a = pgf_color(plot_color(get_markercolor(plotattributes, i), get_markeralpha(plotattributes, i)))
+    cstr_stroke, a_stroke = pgf_color(plot_color(get_markerstrokecolor(plotattributes, i), get_markerstrokealpha(plotattributes, i)))
     """
     mark = $(get(_pgfplots_markers, shape, "*")),
-    mark size = $(pgf_thickness_scaling(d) * 0.5 * _cycle(d[:markersize], i)),
+    mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)),
     mark options = {
         color = $cstr_stroke, draw opacity = $a_stroke,
         fill = $cstr, fill opacity = $a,
-        line width = $(pgf_thickness_scaling(d) * _cycle(d[:markerstrokewidth], i)),
+        line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:markerstrokewidth], i)),
         rotate = $(shape == :dtriangle ? 180 : 0),
-        $(get(_pgfplots_linestyles, _cycle(d[:markerstrokestyle], i), "solid"))
+        $(get(_pgfplots_linestyles, _cycle(plotattributes[:markerstrokestyle], i), "solid"))
     }"""
 end
 
@@ -197,24 +197,24 @@ end
 # --------------------------------------------------------------------------------------
 
 function pgf_series(sp::Subplot, series::Series)
-    d = series.d
-    st = d[:seriestype]
+    plotattributes = series.plotattributes
+    st = plotattributes[:seriestype]
     series_collection = PGFPlots.Plot[]
 
     # function args
     args = if st == :contour
-        d[:z].surf, d[:x], d[:y]
+        plotattributes[:z].surf, plotattributes[:x], plotattributes[:y]
     elseif is3d(st)
-        d[:x], d[:y], d[:z]
+        plotattributes[:x], plotattributes[:y], plotattributes[:z]
     elseif st == :straightline
         straightline_data(series)
     elseif st == :shape
         shape_data(series)
     elseif ispolar(sp)
-        theta, r = filter_radial_data(d[:x], d[:y], axis_limits(sp[:yaxis]))
+        theta, r = filter_radial_data(plotattributes[:x], plotattributes[:y], axis_limits(sp[:yaxis]))
         rad2deg.(theta), r
     else
-        d[:x], d[:y]
+        plotattributes[:x], plotattributes[:y]
     end
 
     # PGFPlots can't handle non-Vector?
@@ -227,8 +227,8 @@ function pgf_series(sp::Subplot, series::Series)
     if st in (:contour, :histogram2d)
         style = []
         kw = KW()
-        push!(style, pgf_linestyle(d))
-        push!(style, pgf_marker(d))
+        push!(style, pgf_linestyle(plotattributes))
+        push!(style, pgf_marker(plotattributes))
         push!(style, "forget plot")
 
         kw[:style] = join(style, ',')
@@ -247,21 +247,21 @@ function pgf_series(sp::Subplot, series::Series)
         for (i, rng) in enumerate(segments)
             style = []
             kw = KW()
-            push!(style, pgf_linestyle(d, i))
-            push!(style, pgf_marker(d, i))
+            push!(style, pgf_linestyle(plotattributes, i))
+            push!(style, pgf_marker(plotattributes, i))
 
             if st == :shape
-                push!(style, pgf_fillstyle(d, i))
+                push!(style, pgf_fillstyle(plotattributes, i))
             end
 
             # add to legend?
             if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
-                if d[:fillrange] != nothing
+                if plotattributes[:fillrange] != nothing
                     push!(style, "forget plot")
-                    push!(series_collection, pgf_fill_legend_hack(d, args))
+                    push!(series_collection, pgf_fill_legend_hack(plotattributes, args))
                 else
-                    kw[:legendentry] = d[:label]
-                    if st == :shape # || d[:fillrange] != nothing
+                    kw[:legendentry] = plotattributes[:label]
+                    if st == :shape # || plotattributes[:fillrange] != nothing
                         push!(style, "area legend")
                     end
                 end
@@ -328,16 +328,16 @@ function pgf_fillrange_args(fillrange, x, y, z)
     return x_fill, y_fill, z_fill
 end
 
-function pgf_fill_legend_hack(d, args)
+function pgf_fill_legend_hack(plotattributes, args)
     style = []
     kw = KW()
-    push!(style, pgf_linestyle(d, 1))
-    push!(style, pgf_marker(d, 1))
-    push!(style, pgf_fillstyle(d, 1))
+    push!(style, pgf_linestyle(plotattributes, 1))
+    push!(style, pgf_marker(plotattributes, 1))
+    push!(style, pgf_fillstyle(plotattributes, 1))
     push!(style, "area legend")
-    kw[:legendentry] = d[:label]
+    kw[:legendentry] = plotattributes[:label]
     kw[:style] = join(style, ',')
-    st = d[:seriestype]
+    st = plotattributes[:seriestype]
     func = if st == :path3d
         PGFPlots.Linear3
     elseif st == :scatter
@@ -535,8 +535,8 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         # colormap this should not cause any problem.
         for series in series_list(sp)
             for col in (:markercolor, :fillcolor, :linecolor)
-                if typeof(series.d[col]) == ColorGradient
-                    push!(style,"colormap={plots}{$(pgf_colormap(series.d[col]))}")
+                if typeof(series.plotattributes[col]) == ColorGradient
+                    push!(style,"colormap={plots}{$(pgf_colormap(series.plotattributes[col]))}")
 
                     if sp[:colorbar] == :none
                         kw[:colorbar] = "false"

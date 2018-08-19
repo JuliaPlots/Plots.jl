@@ -18,9 +18,9 @@ function _initialize_backend(::ImmerseBackend; kw...)
   end
 end
 
-function createImmerseFigure(d::KW)
-  w,h = d[:size]
-  figidx = Immerse.figure(; name = d[:window_title], width = w, height = h)
+function createImmerseFigure(plotattributes::KW)
+  w,h = plotattributes[:size]
+  figidx = Immerse.figure(; name = plotattributes[:window_title], width = w, height = h)
   Immerse.Figure(figidx)
 end
 
@@ -28,12 +28,12 @@ end
 
 
 # create a blank Gadfly.Plot object
-# function _create_plot(pkg::ImmerseBackend, d::KW)
+# function _create_plot(pkg::ImmerseBackend, plotattributes::KW)
 #   # create the underlying Gadfly.Plot object
-#   gplt = createGadflyPlotObject(d)
+#   gplt = createGadflyPlotObject(plotattributes)
 #
 #   # save both the Immerse.Figure and the Gadfly.Plot
-#   Plot((nothing,gplt), pkg, 0, d, KW[])
+#   Plot((nothing,gplt), pkg, 0, plotattributes, KW[])
 # end
 function _create_backend_figure(plt::Plot{ImmerseBackend})
     (nothing, createGadflyPlotObject(plt.attr))
@@ -41,20 +41,20 @@ end
 
 
 # # plot one data series
-# function _series_added(::ImmerseBackend, plt::Plot, d::KW)
-#   addGadflySeries!(plt, d)
-#   push!(plt.seriesargs, d)
+# function _series_added(::ImmerseBackend, plt::Plot, plotattributes::KW)
+#   addGadflySeries!(plt, plotattributes)
+#   push!(plt.seriesargs, plotattributes)
 #   plt
 # end
 
 function _series_added(plt::Plot{ImmerseBackend}, series::Series)
-    addGadflySeries!(plt, series.d)
+    addGadflySeries!(plt, series.plotattributes)
 end
 
 
-function _update_plot_object(plt::Plot{ImmerseBackend}, d::KW)
-  updateGadflyGuides(plt, d)
-  updateGadflyPlotTheme(plt, d)
+function _update_plot_object(plt::Plot{ImmerseBackend}, plotattributes::KW)
+  updateGadflyGuides(plt, plotattributes)
+  updateGadflyPlotTheme(plt, plotattributes)
 end
 
 
@@ -94,10 +94,10 @@ end
 #
 # function showSubplotObject(subplt::Subplot{ImmerseBackend})
 #   # create the Gtk window with vertical box vsep
-#   d = getattr(subplt,1)
-#   w,h = d[:size]
+#   plotattributes = getattr(subplt,1)
+#   w,h = plotattributes[:size]
 #   vsep = Gtk.GtkBoxLeaf(:v)
-#   win = Gtk.GtkWindowLeaf(vsep, d[:window_title], w, h)
+#   win = Gtk.GtkWindowLeaf(vsep, plotattributes[:window_title], w, h)
 #
 #   figindices = []
 #   row = Gtk.GtkBoxLeaf(:h)

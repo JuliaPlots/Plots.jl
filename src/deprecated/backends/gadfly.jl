@@ -51,32 +51,32 @@ end
 # Base.size(v::MissingVec) = (1,)
 # Base.getindex(v::MissingVec, i::Integer) = 0.0
 
-function createGadflyPlotObject(d::KW)
+function createGadflyPlotObject(plotattributes::KW)
     gplt = Gadfly.Plot()
     gplt.mapping = Dict()
     gplt.data_source = Gadfly.DataFrames.DataFrame()
     # gplt.layers = gplt.layers[1:0]
     gplt.layers = [Gadfly.layer(Gadfly.Geom.point(tag=:remove), x=zeros(1), y=zeros(1));] # x=MissingVec(), y=MissingVec());]
-    gplt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(d[:xguide]),
-                                   Gadfly.Guide.ylabel(d[:yguide]),
-                                   Gadfly.Guide.title(d[:title])]
+    gplt.guides = Gadfly.GuideElement[Gadfly.Guide.xlabel(plotattributes[:xguide]),
+                                   Gadfly.Guide.ylabel(plotattributes[:yguide]),
+                                   Gadfly.Guide.title(plotattributes[:title])]
     gplt
 end
 
 # ---------------------------------------------------------------------------
 
 
-function getLineGeom(d::KW)
-    st = d[:seriestype]
-    xbins, ybins = maketuple(d[:bins])
+function getLineGeom(plotattributes::KW)
+    st = plotattributes[:seriestype]
+    xbins, ybins = maketuple(plotattributes[:bins])
     if st == :hexb
         Gadfly.Geom.hexbin(xbincount = xbins, ybincount = ybins)
     elseif st == :histogram2d
         Gadfly.Geom.histogram2d(xbincount = xbins, ybincount = ybins)
     elseif st == :histogram
         Gadfly.Geom.histogram(bincount = xbins,
-                              orientation = isvertical(d) ? :vertical : :horizontal,
-                              position = d[:bar_position] == :stack ? :stack : :dodge)
+                              orientation = isvertical(plotattributes) ? :vertical : :horizontal,
+                              position = plotattributes[:bar_position] == :stack ? :stack : :dodge)
     elseif st == :path
         Gadfly.Geom.path
     elseif st in (:bar, :sticks)
@@ -90,7 +90,7 @@ function getLineGeom(d::KW)
     elseif st == :vline
         Gadfly.Geom.vline
     elseif st == :contour
-        Gadfly.Geom.contour(levels = d[:levels])
+        Gadfly.Geom.contour(levels = plotattributes[:levels])
     # elseif st == :shape
     #     Gadfly.Geom.polygon(fill = true, preserve_order = true)
     else
@@ -98,11 +98,11 @@ function getLineGeom(d::KW)
     end
 end
 
-function get_extra_theme_args(d::KW, k::Symbol)
+function get_extra_theme_args(plotattributes::KW, k::Symbol)
     # gracefully handles old Gadfly versions
     extra_theme_args = KW()
     try
-        extra_theme_args[:line_style] = Gadfly.get_stroke_vector(d[k])
+        extra_theme_args[:line_style] = Gadfly.get_stroke_vector(plotattributes[k])
     catch err
         if string(err) == "UndefVarError(:get_stroke_vector)"
             Base.warn_once("Gadfly.get_stroke_vector failed... do you have an old version of Gadfly?")
@@ -113,53 +113,53 @@ function get_extra_theme_args(d::KW, k::Symbol)
     extra_theme_args
 end
 
-function getGadflyLineTheme(d::KW)
-    st = d[:seriestype]
-    lc = convertColor(getColor(d[:linecolor]), d[:linealpha])
-    fc = convertColor(getColor(d[:fillcolor]), d[:fillalpha])
+function getGadflyLineTheme(plotattributes::KW)
+    st = plotattributes[:seriestype]
+    lc = convertColor(getColor(plotattributes[:linecolor]), plotattributes[:linealpha])
+    fc = convertColor(getColor(plotattributes[:fillcolor]), plotattributes[:fillalpha])
 
     Gadfly.Theme(;
         default_color = (st in (:histogram,:histogram2d,:hexbin,:bar,:sticks) ? fc : lc),
-        line_width = (st == :sticks ? 1 : d[:linewidth]) * Gadfly.px,
-        # line_style = Gadfly.get_stroke_vector(d[:linestyle]),
+        line_width = (st == :sticks ? 1 : plotattributes[:linewidth]) * Gadfly.px,
+        # line_style = Gadfly.get_stroke_vector(plotattributes[:linestyle]),
         lowlight_color = x->RGB(fc),  # fill/ribbon
         lowlight_opacity = alpha(fc), # fill/ribbon
         bar_highlight = RGB(lc),      # bars
-        get_extra_theme_args(d, :linestyle)...
+        get_extra_theme_args(plotattributes, :linestyle)...
     )
 end
 
 # add a line as a new layer
-function addGadflyLine!(plt::Plot, numlayers::Int, d::KW, geoms...)
+function addGadflyLine!(plt::Plot, numlayers::Int, plotattributes::KW, geoms...)
     gplt = getGadflyContext(plt)
-    gfargs = vcat(geoms..., getGadflyLineTheme(d))
+    gfargs = vcat(geoms..., getGadflyLineTheme(plotattributes))
     kwargs = KW()
-    st = d[:seriestype]
+    st = plotattributes[:seriestype]
 
     # add a fill?
-    if d[:fillrange] != nothing && st != :contour
-        fillmin, fillmax = map(makevec, maketuple(d[:fillrange]))
+    if plotattributes[:fillrange] != nothing && st != :contour
+        fillmin, fillmax = map(makevec, maketuple(plotattributes[:fillrange]))
         nmin, nmax = length(fillmin), length(fillmax)
-        kwargs[:ymin] = Float64[min(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]
-        kwargs[:ymax] = Float64[max(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(d[:y])]
+        kwargs[:ymin] = Float64[min(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(plotattributes[:y])]
+        kwargs[:ymax] = Float64[max(y, fillmin[mod1(i, nmin)], fillmax[mod1(i, nmax)]) for (i,y) in enumerate(plotattributes[:y])]
         push!(gfargs, Gadfly.Geom.ribbon)
     end
 
     if st in (:hline, :vline)
-        kwargs[st == :hline ? :yintercept : :xintercept] = d[:y]
+        kwargs[st == :hline ? :yintercept : :xintercept] = plotattributes[:y]
 
     else
         if st == :sticks
-            w = 0.01 * mean(diff(d[:x]))
-            kwargs[:xmin] = d[:x] - w
-            kwargs[:xmax] = d[:x] + w
+            w = 0.01 * mean(diff(plotattributes[:x]))
+            kwargs[:xmin] = plotattributes[:x] - w
+            kwargs[:xmax] = plotattributes[:x] + w
         elseif st == :contour
-            kwargs[:z] = d[:z].surf
-            addGadflyContColorScale(plt, d[:linecolor])
+            kwargs[:z] = plotattributes[:z].surf
+            addGadflyContColorScale(plt, plotattributes[:linecolor])
         end
 
-        kwargs[:x] = d[st == :histogram ? :y : :x]
-        kwargs[:y] = d[:y]
+        kwargs[:x] = plotattributes[st == :histogram ? :y : :x]
+        kwargs[:y] = plotattributes[:y]
 
     end
 
@@ -180,22 +180,22 @@ getMarkerGeom(other) = gadflyshape(get_shape(other))
 # getMarkerGeom(shape::Shape) = gadflyshape(shape)
 # getMarkerGeom(shape::Symbol) = gadflyshape(_shapes[shape])
 # getMarkerGeom(shapes::AVec) = gadflyshape(map(gadflyshape, shapes)) # map(getMarkerGeom, shapes)
-function getMarkerGeom(d::KW)
-    if d[:seriestype] == :shape
+function getMarkerGeom(plotattributes::KW)
+    if plotattributes[:seriestype] == :shape
         Gadfly.Geom.polygon(fill = true, preserve_order = true)
     else
-        getMarkerGeom(d[:markershape])
+        getMarkerGeom(plotattributes[:markershape])
     end
 end
 
-function getGadflyMarkerTheme(d::KW, attr::KW)
-    c = getColor(d[:markercolor])
-    α = d[:markeralpha]
+function getGadflyMarkerTheme(plotattributes::KW, attr::KW)
+    c = getColor(plotattributes[:markercolor])
+    α = plotattributes[:markeralpha]
     if α != nothing
         c = RGBA(RGB(c), α)
     end
 
-    ms = d[:markersize]
+    ms = plotattributes[:markersize]
     ms = if typeof(ms) <: AVec
         @warn("Gadfly doesn't support variable marker sizes... using the average: $(mean(ms))")
         mean(ms) * Gadfly.px
@@ -206,10 +206,10 @@ function getGadflyMarkerTheme(d::KW, attr::KW)
     Gadfly.Theme(;
         default_color = c,
         default_point_size = ms,
-        discrete_highlight_color = c -> RGB(getColor(d[:markerstrokecolor])),
-        highlight_width = d[:markerstrokewidth] * Gadfly.px,
-        line_width = d[:markerstrokewidth] * Gadfly.px,
-        # get_extra_theme_args(d, :markerstrokestyle)...
+        discrete_highlight_color = c -> RGB(getColor(plotattributes[:markerstrokecolor])),
+        highlight_width = plotattributes[:markerstrokewidth] * Gadfly.px,
+        line_width = plotattributes[:markerstrokewidth] * Gadfly.px,
+        # get_extra_theme_args(plotattributes, :markerstrokestyle)...
     )
 end
 
@@ -221,25 +221,25 @@ function addGadflyContColorScale(plt::Plot{GadflyBackend}, c)
     push!(getGadflyContext(plt).scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(c, p))))
 end
 
-function addGadflyMarker!(plt::Plot, numlayers::Int, d::KW, attr::KW, geoms...)
-    gfargs = vcat(geoms..., getGadflyMarkerTheme(d, attr), getMarkerGeom(d))
+function addGadflyMarker!(plt::Plot, numlayers::Int, plotattributes::KW, attr::KW, geoms...)
+    gfargs = vcat(geoms..., getGadflyMarkerTheme(plotattributes, attr), getMarkerGeom(plotattributes))
     kwargs = KW()
 
     # handle continuous color scales for the markers
-    zcolor = d[:marker_z]
+    zcolor = plotattributes[:marker_z]
     if zcolor != nothing && typeof(zcolor) <: AVec
         kwargs[:color] = zcolor
-        addGadflyContColorScale(plt, d[:markercolor])
+        addGadflyContColorScale(plt, plotattributes[:markercolor])
     end
 
-    Gadfly.layer(gfargs...; x = d[:x], y = d[:y], order=numlayers, kwargs...)
+    Gadfly.layer(gfargs...; x = plotattributes[:x], y = plotattributes[:y], order=numlayers, kwargs...)
 end
 
 
 # ---------------------------------------------------------------------------
 
-function addToGadflyLegend(plt::Plot, d::KW)
-    if plt.attr[:legend] != :none && d[:label] != ""
+function addToGadflyLegend(plt::Plot, plotattributes::KW)
+    if plt.attr[:legend] != :none && plotattributes[:label] != ""
         gplt = getGadflyContext(plt)
 
         # add the legend if needed
@@ -254,20 +254,20 @@ function addToGadflyLegend(plt::Plot, d::KW)
                 # since gadfly will call unique(colors), but doesn't also merge the rows that match
                 # Should ensure from this side that colors which are the same are merged together
 
-                c = getColor(d[d[:markershape] == :none ? :linecolor : :markercolor])
+                c = getColor(plotattributes[plotattributes[:markershape] == :none ? :linecolor : :markercolor])
                 foundit = false
 
                 # extend the label if we found this color
                 for i in 1:length(guide.colors)
                     if RGB(c) == guide.colors[i]
-                        guide.labels[i] *= ", " * d[:label]
+                        guide.labels[i] *= ", " * plotattributes[:label]
                         foundit = true
                     end
                 end
 
                 # didn't find the color, so add a new entry into the legend
                 if !foundit
-                    push!(guide.labels, d[:label])
+                    push!(guide.labels, plotattributes[:label])
                     push!(guide.colors, c)
                 end
             end
@@ -279,40 +279,40 @@ getGadflySmoothing(smooth::Bool) = smooth ? [Gadfly.Geom.smooth(method=:lm)] : A
 getGadflySmoothing(smooth::Real) = [Gadfly.Geom.smooth(method=:loess, smoothing=float(smooth))]
 
 
-function addGadflySeries!(plt::Plot, d::KW)
+function addGadflySeries!(plt::Plot, plotattributes::KW)
     layers = Gadfly.Layer[]
     gplt = getGadflyContext(plt)
 
     # add a regression line?
     # TODO: make more flexible
-    smooth = getGadflySmoothing(d[:smooth])
+    smooth = getGadflySmoothing(plotattributes[:smooth])
 
     # lines
-    geom = getLineGeom(d)
+    geom = getLineGeom(plotattributes)
     if geom != nothing
-        prepend!(layers, addGadflyLine!(plt, length(gplt.layers), d, geom, smooth...))
+        prepend!(layers, addGadflyLine!(plt, length(gplt.layers), plotattributes, geom, smooth...))
         smooth = Any[] # don't add a regression for markers too
     end
 
     # special handling for ohlc and scatter
-    st = d[:seriestype]
+    st = plotattributes[:seriestype]
     # if st == :ohlc
     #     error("Haven't re-implemented after refactoring")
-    if st in (:histogram2d, :hexbin) && (isa(d[:fillcolor], ColorGradient) || isa(d[:fillcolor], ColorFunction))
-        push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(d[:fillcolor], p))))
-    elseif st == :scatter && d[:markershape] == :none
-        d[:markershape] = :circle
+    if st in (:histogram2d, :hexbin) && (isa(plotattributes[:fillcolor], ColorGradient) || isa(plotattributes[:fillcolor], ColorFunction))
+        push!(gplt.scales, Gadfly.Scale.ContinuousColorScale(p -> RGB(getColorZ(plotattributes[:fillcolor], p))))
+    elseif st == :scatter && plotattributes[:markershape] == :none
+        plotattributes[:markershape] = :circle
     end
 
     # markers
-    if d[:markershape] != :none || st == :shape
-        prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), d, plt.attr, smooth...))
+    if plotattributes[:markershape] != :none || st == :shape
+        prepend!(layers, addGadflyMarker!(plt, length(gplt.layers), plotattributes, plt.attr, smooth...))
     end
 
-    st in (:histogram2d, :hexbin, :contour) || addToGadflyLegend(plt, d)
+    st in (:histogram2d, :hexbin, :contour) || addToGadflyLegend(plt, plotattributes)
 
     # now save the layers that apply to this series
-    d[:gadflylayers] = layers
+    plotattributes[:gadflylayers] = layers
     prepend!(gplt.layers, layers)
 end
 
@@ -322,10 +322,10 @@ end
 # NOTE: I'm leaving this here and commented out just in case I want to implement again... it was hacky code to create multi-colored line segments
 
 #   # colorgroup
-#   z = d[:z]
+#   z = plotattributes[:z]
 
 #   # handle line segments of different colors
-#   cscheme = d[:linecolor]
+#   cscheme = plotattributes[:linecolor]
 #   if isa(cscheme, ColorVector)
 #     # create a color scale, and set the color group to the index of the color
 #     push!(gplt.scales, Gadfly.Scale.color_discrete_manual(cscheme.v...))
@@ -333,10 +333,10 @@ end
 #     # this is super weird, but... oh well... for some reason this creates n separate line segments...
 #     # create a list of vertices that go: [x1,x2,x2,x3,x3, ... ,xi,xi, ... xn,xn] (same for y)
 #     # then the vector passed to the "color" keyword should be a vector: [1,1,2,2,3,3,4,4, ..., i,i, ... , n,n]
-#     csindices = Int[mod1(i,length(cscheme.v)) for i in 1:length(d[:y])]
+#     csindices = Int[mod1(i,length(cscheme.v)) for i in 1:length(plotattributes[:y])]
 #     cs = collect(repeat(csindices', 2, 1))[1:end-1]
-#     grp = collect(repeat((1:length(d[:y]))', 2, 1))[1:end-1]
-#     d[:x], d[:y] = map(createSegments, (d[:x], d[:y]))
+#     grp = collect(repeat((1:length(plotattributes[:y]))', 2, 1))[1:end-1]
+#     plotattributes[:x], plotattributes[:y] = map(createSegments, (plotattributes[:x], plotattributes[:y]))
 #     colorgroup = [(:linecolor, cs), (:group, grp)]
 
 
@@ -388,11 +388,11 @@ continuousAndSameAxis(scale, isx::Bool) = isa(scale, Gadfly.Scale.ContinuousScal
 filterGadflyScale(gplt, isx::Bool) = filter!(scale -> !continuousAndSameAxis(scale, isx), gplt.scales)
 
 
-function getGadflyScaleFunction(d::KW, isx::Bool)
+function getGadflyScaleFunction(plotattributes::KW, isx::Bool)
     scalekey = isx ? :xscale : :yscale
-    hasScaleKey = haskey(d, scalekey)
+    hasScaleKey = haskey(plotattributes, scalekey)
     if hasScaleKey
-        scale = d[scalekey]
+        scale = plotattributes[scalekey]
         scale == :ln && return isx ? Gadfly.Scale.x_log : Gadfly.Scale.y_log, hasScaleKey, log
         scale == :log2 && return isx ? Gadfly.Scale.x_log2 : Gadfly.Scale.y_log2, hasScaleKey, log2
         scale == :log10 && return isx ? Gadfly.Scale.x_log10 : Gadfly.Scale.y_log10, hasScaleKey, log10
@@ -403,15 +403,15 @@ function getGadflyScaleFunction(d::KW, isx::Bool)
 end
 
 
-function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
-    gfunc, hasScaleKey, func = getGadflyScaleFunction(d, isx)
+function addGadflyLimitsScale(gplt, plotattributes::KW, isx::Bool)
+    gfunc, hasScaleKey, func = getGadflyScaleFunction(plotattributes, isx)
 
     # do we want to add min/max limits for the axis?
     limsym = isx ? :xlims : :ylims
     limargs = Any[]
 
     # map :auto to nothing, otherwise add to limargs
-    lims = get(d, limsym, :auto)
+    lims = get(plotattributes, limsym, :auto)
     if lims == :auto
         lims = nothing
     else
@@ -432,7 +432,7 @@ function addGadflyLimitsScale(gplt, d::KW, isx::Bool)
     lims, func
 end
 
-function updateGadflyAxisFlips(gplt, d::KW, xlims, ylims, xfunc, yfunc)
+function updateGadflyAxisFlips(gplt, plotattributes::KW, xlims, ylims, xfunc, yfunc)
     if isa(gplt.coord, Gadfly.Coord.Cartesian)
         gplt.coord = Gadfly.Coord.cartesian(
             gplt.coord.xvars,
@@ -441,16 +441,16 @@ function updateGadflyAxisFlips(gplt, d::KW, xlims, ylims, xfunc, yfunc)
             xmax = xlims == nothing ? gplt.coord.xmax : xfunc(maximum(xlims)),
             ymin = ylims == nothing ? gplt.coord.ymin : yfunc(minimum(ylims)),
             ymax = ylims == nothing ? gplt.coord.ymax : yfunc(maximum(ylims)),
-            xflip = get(d, :xflip, gplt.coord.xflip),
-            yflip = get(d, :yflip, gplt.coord.yflip),
+            xflip = get(plotattributes, :xflip, gplt.coord.xflip),
+            yflip = get(plotattributes, :yflip, gplt.coord.yflip),
             fixed = gplt.coord.fixed,
             aspect_ratio = gplt.coord.aspect_ratio,
             raster = gplt.coord.raster
         )
     else
         gplt.coord = Gadfly.Coord.Cartesian(
-            xflip = get(d, :xflip, false),
-            yflip = get(d, :yflip, false)
+            xflip = get(plotattributes, :xflip, false),
+            yflip = get(plotattributes, :yflip, false)
         )
     end
 end
@@ -464,37 +464,37 @@ function findGuideAndSet(gplt, t::DataType, args...; kw...)
     end
 end
 
-function updateGadflyGuides(plt::Plot, d::KW)
+function updateGadflyGuides(plt::Plot, plotattributes::KW)
     gplt = getGadflyContext(plt)
-    haskey(d, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, string(d[:title]))
-    haskey(d, :xguide) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, string(d[:xguide]))
-    haskey(d, :yguide) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, string(d[:yguide]))
+    haskey(plotattributes, :title) && findGuideAndSet(gplt, Gadfly.Guide.title, string(plotattributes[:title]))
+    haskey(plotattributes, :xguide) && findGuideAndSet(gplt, Gadfly.Guide.xlabel, string(plotattributes[:xguide]))
+    haskey(plotattributes, :yguide) && findGuideAndSet(gplt, Gadfly.Guide.ylabel, string(plotattributes[:yguide]))
 
-    xlims, xfunc = addGadflyLimitsScale(gplt, d, true)
-    ylims, yfunc = addGadflyLimitsScale(gplt, d, false)
+    xlims, xfunc = addGadflyLimitsScale(gplt, plotattributes, true)
+    ylims, yfunc = addGadflyLimitsScale(gplt, plotattributes, false)
 
-    ticks = get(d, :xticks, :auto)
+    ticks = get(plotattributes, :xticks, :auto)
     if ticks == :none
         _remove_axis(plt, true)
     else
         addGadflyTicksGuide(gplt, ticks, true)
     end
-    ticks = get(d, :yticks, :auto)
+    ticks = get(plotattributes, :yticks, :auto)
     if ticks == :none
         _remove_axis(plt, false)
     else
         addGadflyTicksGuide(gplt, ticks, false)
     end
 
-    updateGadflyAxisFlips(gplt, d, xlims, ylims, xfunc, yfunc)
+    updateGadflyAxisFlips(gplt, plotattributes, xlims, ylims, xfunc, yfunc)
 end
 
-function updateGadflyPlotTheme(plt::Plot, d::KW)
+function updateGadflyPlotTheme(plt::Plot, plotattributes::KW)
     kwargs = KW()
 
     # colors
     insidecolor, gridcolor, textcolor, guidecolor, legendcolor =
-        map(s -> getColor(d[s]), (
+        map(s -> getColor(plotattributes[s]), (
             :background_color_inside,
             :foreground_color_grid,
             :foreground_color_text,
@@ -503,17 +503,17 @@ function updateGadflyPlotTheme(plt::Plot, d::KW)
         ))
 
     # # hide the legend?
-    leg = d[d[:legend] == :none ? :colorbar : :legend]
+    leg = plotattributes[plotattributes[:legend] == :none ? :colorbar : :legend]
     if leg != :best
         kwargs[:key_position] = leg == :inside ? :right : leg
     end
 
-    if !get(d, :grid, true)
+    if !get(plotattributes, :grid, true)
         kwargs[:grid_color] = gridcolor
     end
 
     # fonts
-    tfont, gfont, lfont = d[:tickfont], d[:guidefont], d[:legendfont]
+    tfont, gfont, lfont = plotattributes[:tickfont], plotattributes[:guidefont], plotattributes[:legendfont]
 
     getGadflyContext(plt).theme = Gadfly.Theme(;
         background_color = insidecolor,
@@ -568,9 +568,9 @@ end
 # ---------------------------------------------------------------------------
 
 # create a blank Gadfly.Plot object
-# function _create_plot(pkg::GadflyBackend, d::KW)
-#     gplt = createGadflyPlotObject(d)
-#     Plot(gplt, pkg, 0, d, KW[])
+# function _create_plot(pkg::GadflyBackend, plotattributes::KW)
+#     gplt = createGadflyPlotObject(plotattributes)
+#     Plot(gplt, pkg, 0, plotattributes, KW[])
 # end
 function _create_backend_figure(plt::Plot{GadflyBackend})
     createGadflyPlotObject(plt.attr)
@@ -578,7 +578,7 @@ end
 
 
 # plot one data series
-# function _series_added(::GadflyBackend, plt::Plot, d::KW)
+# function _series_added(::GadflyBackend, plt::Plot, plotattributes::KW)
 function _series_added(plt::Plot{GadflyBackend}, series::Series)
     # first clear out the temporary layer
     gplt = getGadflyContext(plt)
@@ -586,16 +586,16 @@ function _series_added(plt::Plot{GadflyBackend}, series::Series)
         gplt.layers = gplt.layers[2:end]
     end
 
-    addGadflySeries!(plt, series.d)
-    # push!(plt.seriesargs, d)
+    addGadflySeries!(plt, series.plotattributes)
+    # push!(plt.seriesargs, plotattributes)
     # plt
 end
 
 
 
-function _update_plot_object(plt::Plot{GadflyBackend}, d::KW)
-    updateGadflyGuides(plt, d)
-    updateGadflyPlotTheme(plt, d)
+function _update_plot_object(plt::Plot{GadflyBackend}, plotattributes::KW)
+    updateGadflyGuides(plt, plotattributes)
+    updateGadflyPlotTheme(plt, plotattributes)
 end
 
 

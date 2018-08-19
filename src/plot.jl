@@ -163,7 +163,7 @@ end
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
-function _plot!(plt::Plot, d::KW, args::Tuple)
+function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
     d[:plot_object] = plt
 
     if !isempty(args) && !isdefined(Main, :StatPlots) &&
