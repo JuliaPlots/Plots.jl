@@ -48,20 +48,20 @@ as a String to look up its docstring; e.g. `plotattr("seriestype")`.
 """
 function plot(args...; kw...)
     # this creates a new plot with args/kw and sets it to be the current plot
-    d = KW(kw)
-    preprocessArgs!(d)
+    plotattributes = KW(kw)
+    preprocessArgs!(plotattributes)
 
     # create an empty Plot then process
     plt = Plot()
-    # plt.user_attr = d
-    _plot!(plt, d, args)
+    # plt.user_attr = plotattributes
+    _plot!(plt, plotattributes, args)
 end
 
 # build a new plot from existing plots
 # note: we split into plt1 and plts_tail so we can dispatch correctly
 function plot(plt1::Plot, plts_tail::Plot...; kw...)
-    d = KW(kw)
-    preprocessArgs!(d)
+    plotattributes = KW(kw)
+    preprocessArgs!(plotattributes)
 
     # build our plot vector from the args
     n = length(plts_tail) + 1
@@ -72,7 +72,7 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     end
 
     # compute the layout
-    layout = layout_args(d, n)[1]
+    layout = layout_args(plotattributes, n)[1]
     num_sp = sum([length(p.subplots) for p in plts])
 
     # create a new plot object, with subplot list/map made of existing subplots.
@@ -83,21 +83,21 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     # TODO: build the user_attr dict by creating "Any matrices" for the args of each subplot
 
     # TODO: replace this with proper processing from a merged user_attr KW
-    # update plot args, first with existing plots, then override with d
+    # update plot args, first with existing plots, then override with plotattributes
     for p in plts
         _update_plot_args(plt, copy(p.attr))
         plt.n += p.n
     end
-    _update_plot_args(plt, d)
+    _update_plot_args(plt, plotattributes)
 
     # pass new plot to the backend
     plt.o = _create_backend_figure(plt)
     plt.init = true
 
     series_attr = KW()
-    for (k,v) in d
+    for (k,v) in plotattributes
         if haskey(_series_defaults, k)
-            series_attr[k] = pop!(d,k)
+            series_attr[k] = pop!(plotattributes,k)
         end
     end
 
@@ -118,8 +118,8 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         sp.plt = plt
         sp.attr[:subplot_index] = idx
         for series in serieslist
-            merge!(series.d, series_attr)
-            _add_defaults!(series.d, plt, sp, cmdidx)
+            merge!(series.plotattributes, series_attr)
+            _add_defaults!(series.plotattributes, plt, sp, cmdidx)
             push!(plt.series_list, series)
             _series_added(plt, series)
             cmdidx += 1
@@ -128,12 +128,12 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
 
     # first apply any args for the subplots
     for (idx,sp) in enumerate(plt.subplots)
-        _update_subplot_args(plt, sp, d, idx, false)
+        _update_subplot_args(plt, sp, plotattributes, idx, false)
     end
 
     # finish up
     current(plt)
-    _do_plot_show(plt, get(d, :show, default(:show)))
+    _do_plot_show(plt, get(plotattributes, :show, default(:show)))
     plt
 end
 
@@ -152,10 +152,10 @@ end
 
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
-    d = KW(kw)
-    preprocessArgs!(d)
-    # merge!(plt.user_attr, d)
-    _plot!(plt, d, args)
+    plotattributes = KW(kw)
+    preprocessArgs!(plotattributes)
+    # merge!(plt.user_attr, plotattributes)
+    _plot!(plt, plotattributes, args)
 end
 
 # -------------------------------------------------------------------------------
@@ -164,7 +164,7 @@ end
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
 function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
-    d[:plot_object] = plt
+    plotattributes[:plot_object] = plt
 
     if !isempty(args) && !isdefined(Main, :StatPlots) &&
             first(split(string(typeof(args[1])), ".")) == "DataFrames"
@@ -175,7 +175,7 @@ function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
     # "USER RECIPES"
     # --------------------------------
 
-    kw_list = _process_userrecipes(plt, d, args)
+    kw_list = _process_userrecipes(plt, plotattributes, args)
 
     # @info(1)
     # map(DD, kw_list)
@@ -202,8 +202,8 @@ function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
     # --------------------------------
     # Plot/Subplot/Layout setup
     # --------------------------------
-    _plot_setup(plt, d, kw_list)
-    _subplot_setup(plt, d, kw_list)
+    _plot_setup(plt, plotattributes, kw_list)
+    _subplot_setup(plt, plotattributes, kw_list)
 
     # !!! note: At this point, kw_list is fully decomposed into individual series... one KW per series.          !!!
     # !!!       The next step is to recursively apply series recipes until the backend supports that series type !!!

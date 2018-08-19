@@ -465,11 +465,11 @@ end
 
 # pass the layout arg through
 function layout_args(plotattributes::KW)
-    layout_args(get(d, :layout, default(:layout)))
+    layout_args(get(plotattributes, :layout, default(:layout)))
 end
 
 function layout_args(plotattributes::KW, n_override::Integer)
-    layout, n = layout_args(get(d, :layout, n_override))
+    layout, n = layout_args(get(plotattributes, :layout, n_override))
     if n != n_override
         error("When doing layout, n ($n) != n_override ($(n_override)).  You're probably trying to force existing plots into a layout that doesn't fit them.")
     end
