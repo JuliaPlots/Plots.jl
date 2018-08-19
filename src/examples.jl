@@ -427,7 +427,7 @@ each line segment or marker in the plot.
         x = t .* cos.(θ)
         y = t .* sin.(θ)
         p1 = plot(x, y, line_z=t, linewidth=3, legend=false)
-        p2 = scatter(x, y, marker_z=t, color=:bluesreds, legend=false)
+        p2 = scatter(x, y, marker_z=(x,y)->x+y, color=:bluesreds, legend=false)
         plot(p1, p2)
     end)]
 ),
