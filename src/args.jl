@@ -604,7 +604,7 @@ end
 `default(key)` returns the current default value for that key
 `default(key, value)` sets the current default value for that key
 `default(; kw...)` will set the current default value for each key/value pair
-`default(plotattributes, key)` returns the key fromplotattributesif it exists, otherwise `default(key)`
+`default(plotattributes, key)` returns the key from  plotattributes if it exists, otherwise `default(key)`
 """
 function default(k::Symbol)
     k = get(_keyAliases, k, k)
@@ -1208,9 +1208,9 @@ slice_arg(v, idx) = v
 # given an argument key (k), we want to extract the argument value for this index.
 # matrices are sliced by column, otherwise we
 # if nothing is set (or container is empty), return the default or the existing value.
-function slice_arg!(plotattributes_in::KW,plotattributesout::KW, k::Symbol, default_value, idx::Int, remove_pair::Bool)
+function slice_arg!(plotattributes_in::KW,plotattributes_out::KW, k::Symbol, default_value, idx::Int, remove_pair::Bool)
     v = get(plotattributes_in, k, get(plotattributes_out, k, default_value))
-   plotattributesout[k] = if haskey(plotattributes_in, k) && typeof(v) <: AMat && !isempty(v)
+   plotattributes_out[k] = if haskey(plotattributes_in, k) && typeof(v) <: AMat && !isempty(v)
         slice_arg(v, idx)
     else
         v
@@ -1542,7 +1542,8 @@ function _add_defaults!(plotattributes::KW, plt::Plot, sp::Subplot, commandIndex
         slice_arg!(plotattributes, plotattributes, k, v, commandIndex, false)
     end
 
-    returnplotattributesend
+    return plotattributes
+end
 
 
 function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
@@ -1616,7 +1617,8 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     plotattributes[:label] = label
 
     _replace_linewidth(plotattributes)
-   plotattributesend
+   plotattributes
+end
 
 function _series_index(plotattributes, sp)
     idx = 0
@@ -1624,7 +1626,8 @@ function _series_index(plotattributes, sp)
         if series[:primary]
             idx += 1
         end
-        if series ==plotattributes            return idx
+        if series == plotattributes
+            return idx
         end
     end
     if get(plotattributes, :primary, true)
