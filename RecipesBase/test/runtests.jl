@@ -19,11 +19,11 @@ and the returned arguments are as expected
 """
 function check_apply_recipe(T::DataType, expect)
     # this is similar to how Plots would call the method
-    d = KW(:customcolor => :red)
+    plotattributes = KW(:customcolor => :red)
 
-    data_list = RecipesBase.apply_recipe(d, T(), 2)
+    data_list = RecipesBase.apply_recipe(plotattributes, T(), 2)
     @test data_list[1].args == (Random.seed!(1); (rand(10,2),))
-    @test d == expect
+    @test plotattributes == expect
 end
 
 
@@ -98,7 +98,7 @@ end
         :xrotation --> 5
         :zrotation --> 6, :quiet
         plotattributes[:hello] = "hi"
-        d[:world] = "world"
+        plotattributes[:world] = "world"
         rand(10,n)
     end
     Random.seed!(1)
