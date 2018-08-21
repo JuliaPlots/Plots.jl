@@ -1042,7 +1042,7 @@ end
         markershape := :circle
     end
     if plotattributes[:markersize] == default(:markersize)
-        markersize := 1
+        markersize := 1.5
     end
     markerstrokewidth := 0
     marker_z := zs
