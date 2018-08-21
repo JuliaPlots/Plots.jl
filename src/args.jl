@@ -1086,16 +1086,13 @@ function extractGroupArgs(vs::Tuple, args...)
 end
 
 # allow passing NamedTuples for a named legend entry
-@require NamedTuples = "73a701b4-84e1-5df0-88ff-1968ee2ee8dc" begin
-    legendEntryFromTuple(ns::NamedTuples.NamedTuple) =
-        join(["$k = $v" for (k, v) in zip(keys(ns), values(ns))], ", ")
+legendEntryFromTuple(ns::NamedTuple) =
+    join(["$k = $v" for (k, v) in pairs(ns)], ", ")
 
-    function extractGroupArgs(vs::NamedTuples.NamedTuple, args...)
-        isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
-        NT = eval(:(NamedTuples.@NT($(keys(vs)...)))){map(eltype, vs)...}
-        v = map(NT, vs...)
-        extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
-    end
+function extractGroupArgs(vs::NamedTuple, args...)
+    isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
+    v = map(NamedTuple{keys(vs)}∘tuple, values(vs)...)
+    extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
 end
 
 # expecting a mapping of "group label" to "group indices"
