@@ -1035,21 +1035,23 @@ end
 @recipe function f(::Type{Val{:spy}}, x,y,z)
     yflip := true
     aspect_ratio := 1
-
     rs, cs, zs = findnz(z.surf)
-    newz = fill(NaN, size(z)...)
-
-    for i in eachindex(zs)
-        newz[rs[i],cs[i]] = zs[i]
+    xlim := ignorenan_extrema(cs)
+    ylim := ignorenan_extrema(rs)
+    if plotattributes[:markershape] == :none
+        markershape := :circle
     end
-
-    seriestype := :heatmap
+    if plotattributes[:markersize] == default(:markersize)
+        markersize := 1
+    end
+    markerstrokewidth := 0
+    marker_z := zs
+    label := ""
+    x := cs
+    y := rs
+    z := nothing
+    seriestype := :scatter
     grid --> false
-    framestyle --> :box
-
-    x := x
-    y := y
-    z := Surface(newz)
     ()
 end
 
