@@ -27,7 +27,7 @@ const _gr_attr = merge_with_base_supported([
     :guidefontfamily, :guidefontsize, :guidefonthalign, :guidefontvalign,
     :guidefontrotation, :guidefontcolor,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
-    :legend, :legendtitle, :colorbar,
+    :legend, :legendtitle, :colorbar, :colorbar_title,
     :fill_z, :line_z, :marker_z, :levels,
     :ribbon, :quiver,
     :orientation,
@@ -421,6 +421,8 @@ const viewport_plotarea = zeros(4)
 # the size of the current plot in pixels
 const gr_plot_size = [600.0, 400.0]
 
+const gr_colorbar_ratio = 0.1
+
 function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, viewport_canvas)
     viewport = zeros(4)
     viewport[1] = viewport_canvas[2] * (left(bb) / w)
@@ -436,7 +438,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
         viewport[4] = 0.5 * (vp[3] + vp[4] + extent)
     end
     if hascolorbar(sp)
-        viewport[2] -= 0.1
+        viewport[2] -= gr_colorbar_ratio
     end
     viewport
 end
@@ -483,6 +485,13 @@ function gr_colorbar(sp::Subplot, clims)
     GR.cellarray(xmin, xmax, clims[2], clims[1], 1, length(l), l)
     ztick = 0.5 * GR.tick(clims[1], clims[2])
     GR.axes(0, ztick, xmax, clims[1], 0, 1, 0.005)
+
+    gr_set_font(guidefont(sp[:yaxis]))
+    GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+    GR.setcharup(-1, 0)
+    gr_text(viewport_plotarea[2] + gr_colorbar_ratio,
+            gr_view_ycenter(), sp[:colorbar_title])
+
     gr_set_viewport_plotarea()
 end
 
@@ -656,6 +665,9 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     # Add margin for y label
     if sp[:yaxis][:guide] != ""
         leftpad += 4mm
+    end
+    if sp[:colorbar_title] != ""
+        rightpad += 4mm
     end
     sp.minpad = Tuple(dpi * [leftpad, toppad, rightpad, bottompad])
 end
