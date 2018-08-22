@@ -27,7 +27,7 @@ const _gr_attr = merge_with_base_supported([
     :guidefontfamily, :guidefontsize, :guidefonthalign, :guidefontvalign,
     :guidefontrotation, :guidefontcolor,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
-    :legend, :legendtitle, :colorbar,
+    :legend, :legendtitle, :colorbar, :colorbar_title,
     :fill_z, :line_z, :marker_z, :levels,
     :ribbon, :quiver,
     :orientation,
@@ -421,6 +421,8 @@ const viewport_plotarea = zeros(4)
 # the size of the current plot in pixels
 const gr_plot_size = [600.0, 400.0]
 
+const gr_colorbar_ratio = 0.1
+
 function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, viewport_canvas)
     viewport = zeros(4)
     viewport[1] = viewport_canvas[2] * (left(bb) / w)
@@ -436,7 +438,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
         viewport[4] = 0.5 * (vp[3] + vp[4] + extent)
     end
     if hascolorbar(sp)
-        viewport[2] -= 0.1
+        viewport[2] -= gr_colorbar_ratio
     end
     viewport
 end
@@ -483,6 +485,13 @@ function gr_colorbar(sp::Subplot, clims)
     GR.cellarray(xmin, xmax, clims[2], clims[1], 1, length(l), l)
     ztick = 0.5 * GR.tick(clims[1], clims[2])
     GR.axes(0, ztick, xmax, clims[1], 0, 1, 0.005)
+
+    gr_set_font(guidefont(sp[:yaxis]))
+    GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+    GR.setcharup(-1, 0)
+    gr_text(viewport_plotarea[2] + gr_colorbar_ratio,
+            gr_view_ycenter(), sp[:colorbar_title])
+
     gr_set_viewport_plotarea()
 end
 
@@ -656,6 +665,9 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     # Add margin for y label
     if sp[:yaxis][:guide] != ""
         leftpad += 4mm
+    end
+    if sp[:colorbar_title] != ""
+        rightpad += 4mm
     end
     sp.minpad = Tuple(dpi * [leftpad, toppad, rightpad, bottompad])
 end
@@ -1103,10 +1115,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setspace(zmin, zmax, 0, 90)
             grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
             colors = [plot_color(grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)], series[:fillalpha]) for zi=z]
-            rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
-                                    round(Int,  blue(c) * 255) << 16 +
-                                    round(Int, green(c) * 255) << 8  +
-                                    round(Int,   red(c) * 255) ), colors)
+            rgba = map(c -> UInt32( round(UInt, alpha(c) * 255) << 24 +
+                                    round(UInt,  blue(c) * 255) << 16 +
+                                    round(UInt, green(c) * 255) << 8  +
+                                    round(UInt,   red(c) * 255) ), colors)
             w, h = length(x), length(y)
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
 
@@ -1210,12 +1222,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             xmin, xmax = ignorenan_extrema(series[:x]); ymin, ymax = ignorenan_extrema(series[:y])
             if eltype(z) <: Colors.AbstractGray
                 grey = round.(UInt8, float(z) * 255)
-                rgba = map(c -> UInt32( 0xff000000 + Int(c)<<16 + Int(c)<<8 + Int(c) ), grey)
+                rgba = map(c -> UInt32( 0xff000000 + UInt(c)<<16 + UInt(c)<<8 + UInt(c) ), grey)
             else
-                rgba = map(c -> UInt32( round(Int, alpha(c) * 255) << 24 +
-                                        round(Int,  blue(c) * 255) << 16 +
-                                        round(Int, green(c) * 255) << 8  +
-                                        round(Int,   red(c) * 255) ), z)
+                rgba = map(c -> UInt32( round(UInt, alpha(c) * 255) << 24 +
+                                        round(UInt,  blue(c) * 255) << 16 +
+                                        round(UInt, green(c) * 255) << 8  +
+                                        round(UInt,   red(c) * 255) ), z)
             end
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
         end
@@ -1227,16 +1239,18 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             gr_text(GR.wctondc(xi, yi)..., str)
         end
 
-        # draw the colorbar
-        if cmap && st != :contour # special colorbar with steps is drawn for contours
-            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-            gr_set_transparency(1)
-            gr_colorbar(sp, clims)
-        end
-
         GR.restorestate()
     end
 
+    # draw the colorbar
+    GR.savestate()
+    # special colorbar with steps is drawn for contours
+    if cmap && any(series[:seriestype] != :contour for series in series_list(sp))
+        gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+        gr_set_transparency(1)
+        gr_colorbar(sp, clims)
+    end
+    GR.restorestate()
 
     # add the legend
     if sp[:legend] != :none

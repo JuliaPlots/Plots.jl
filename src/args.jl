@@ -1086,16 +1086,13 @@ function extractGroupArgs(vs::Tuple, args...)
 end
 
 # allow passing NamedTuples for a named legend entry
-@require NamedTuples = "73a701b4-84e1-5df0-88ff-1968ee2ee8dc" begin
-    legendEntryFromTuple(ns::NamedTuples.NamedTuple) =
-        join(["$k = $v" for (k, v) in zip(keys(ns), values(ns))], ", ")
+legendEntryFromTuple(ns::NamedTuple) =
+    join(["$k = $v" for (k, v) in pairs(ns)], ", ")
 
-    function extractGroupArgs(vs::NamedTuples.NamedTuple, args...)
-        isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
-        NT = eval(:(NamedTuples.@NT($(keys(vs)...)))){map(eltype, vs)...}
-        v = map(NT, vs...)
-        extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
-    end
+function extractGroupArgs(vs::NamedTuple, args...)
+    isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
+    v = map(NamedTuple{keys(vs)}∘tuple, values(vs)...)
+    extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
 end
 
 # expecting a mapping of "group label" to "group indices"
@@ -1521,6 +1518,11 @@ function getSeriesRGBColor(c, sp::Subplot, n::Int)
     plot_color(c)
 end
 
+function getSeriesRGBColor(c::AbstractArray, sp::Subplot, n::Int)
+    @info "it is surprising that this function is called - please report a use case as a Plots issue"
+    map(x->getSeriesRGBColor(x, sp, n), c)
+end
+
 function ensure_gradient!(d::KW, csym::Symbol, asym::Symbol)
     if !isa(d[csym], ColorGradient)
         d[csym] = typeof(d[asym]) <: AbstractVector ? cgrad() : cgrad(alpha = d[asym])
@@ -1563,7 +1565,7 @@ function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
     end
 
     # update series color
-    d[:seriescolor] = getSeriesRGBColor.(d[:seriescolor], Ref(sp), plotIndex)
+    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], sp, plotIndex)
 
     # update other colors
     for s in (:line, :marker, :fill)
@@ -1577,7 +1579,7 @@ function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
         elseif d[csym] == :match
             plot_color(d[:seriescolor])
         else
-            getSeriesRGBColor.(d[csym], Ref(sp), plotIndex)
+            getSeriesRGBColor(d[csym], sp, plotIndex)
         end
     end
 
@@ -1585,9 +1587,9 @@ function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
     d[:markerstrokecolor] = if d[:markerstrokecolor] == :match
         plot_color(sp[:foreground_color_subplot])
     elseif d[:markerstrokecolor] == :auto
-        getSeriesRGBColor.(d[:markercolor], Ref(sp), plotIndex)
+        getSeriesRGBColor(d[:markercolor], sp, plotIndex)
     else
-        getSeriesRGBColor.(d[:markerstrokecolor], Ref(sp), plotIndex)
+        getSeriesRGBColor(d[:markerstrokecolor], sp, plotIndex)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient

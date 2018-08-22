@@ -23,7 +23,7 @@ const _pgfplots_attr = merge_with_base_supported([
     :guide, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend,
-    :colorbar,
+    :colorbar, :colorbar_title,
     :fill_z, :line_z, :marker_z, :levels,
     # :ribbon, :quiver, :arrow,
     # :orientation,
@@ -550,6 +550,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         end
         @label colorbar_end
 
+        push!(style, "colorbar style={title=$(sp[:colorbar_title])}")
         o = axisf(; style = join(style, ","), kw...)
 
         # add the series object to the PGFPlots.Axis
