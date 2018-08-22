@@ -1239,16 +1239,18 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             gr_text(GR.wctondc(xi, yi)..., str)
         end
 
-        # draw the colorbar
-        if cmap && st != :contour # special colorbar with steps is drawn for contours
-            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
-            gr_set_transparency(1)
-            gr_colorbar(sp, clims)
-        end
-
         GR.restorestate()
     end
 
+    # draw the colorbar
+    GR.savestate()
+    # special colorbar with steps is drawn for contours
+    if cmap && any(series[:seriestype] != :contour for series in series_list(sp))
+        gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+        gr_set_transparency(1)
+        gr_colorbar(sp, clims)
+    end
+    GR.restorestate()
 
     # add the legend
     if sp[:legend] != :none
