@@ -599,7 +599,7 @@ function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
     for i in 1:length(groupby.groupLabels)
         xi = x[groupby.groupIds[i]]
         yi = y[groupby.groupIds[i]]
-        y_mat[getindex.(x_ind, xi), i] = yi
+        y_mat[getindex.(Ref(x_ind), xi), i] = yi
     end
     return y_mat
 end
