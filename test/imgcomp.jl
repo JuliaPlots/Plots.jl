@@ -15,6 +15,7 @@ using VisualRegressionTests
 
 using Plots
 # using StatPlots
+using Pkg
 using Random
 using Test
 
