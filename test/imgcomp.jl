@@ -15,6 +15,7 @@ using VisualRegressionTests
 
 using Plots
 # using StatPlots
+using Random
 using Test
 
 default(size=(500,300))
