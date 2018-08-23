@@ -837,7 +837,7 @@ function gl_bar(d, kw_args)
         fillto = 0
     end
     # create the bar shapes by adding x/y segments
-    positions, scales = Array{Point2f0}(ny), Array{Vec2f0}(ny)
+    positions, scales = Array{Point2f0}(undef, ny), Array{Vec2f0}(undef, ny)
     m = Reactive.value(kw_args[:model])
     sx, sy = m[1,1], m[2,2]
     for i=1:ny
@@ -988,7 +988,7 @@ function scale_for_annotations!(series::Series, scaletype::Symbol = :pixels)
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
         msw, msh = anns.scalefactor
-        offsets = Array{Vec2f0}(length(anns.strs))
+        offsets = Array{Vec2f0}(undef, length(anns.strs))
         series[:markersize] = map(1:length(anns.strs)) do i
             str = _cycle(anns.strs, i)
             # get the width and height of the string (in mm)
