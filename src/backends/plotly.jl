@@ -530,11 +530,14 @@ as_gradient(grad, α) = cgrad(alpha = α)
 # get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
-    if st == :shape
-        return plotly_series_shapes(plt, series)
-    end
 
     sp = series[:subplot]
+    clims = get_clims(sp)
+
+    if st == :shape
+        return plotly_series_shapes(plt, series, clims)
+    end
+
     d_out = KW()
 
     # these are the axes that the series should be mapped to
@@ -564,14 +567,13 @@ function plotly_series(plt::Plot, series::Series)
 
     d_out[:colorbar] = KW(:title => sp[:colorbar_title])
 
-    clims = sp[:clims]
     if is_2tuple(clims)
         d_out[:zmin], d_out[:zmax] = clims
     end
 
     # set the "type"
     if st in (:path, :scatter, :scattergl, :straightline, :path3d, :scatter3d)
-        return plotly_series_segments(series, d_out, x, y, z)
+        return plotly_series_segments(series, d_out, x, y, z, clims)
 
     elseif st == :heatmap
         x = heatmap_edges(x, sp[:xaxis][:scale])
@@ -643,7 +645,7 @@ function plotly_series(plt::Plot, series::Series)
     return [d_out]
 end
 
-function plotly_series_shapes(plt::Plot, series::Series)
+function plotly_series_shapes(plt::Plot, series::Series, clims)
     segments = iter_segments(series)
     d_outs = Vector{KW}(undef, length(segments))
 
@@ -673,11 +675,11 @@ function plotly_series_shapes(plt::Plot, series::Series)
             :x => vcat(x[rng], x[rng[1]]),
             :y => vcat(y[rng], y[rng[1]]),
             :fill => "tozeroy",
-            :fillcolor => rgba_string(plot_color(get_fillcolor(series, i), get_fillalpha(series, i))),
+            :fillcolor => rgba_string(plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i))),
         ))
         if series[:markerstrokewidth] > 0
             d_out[:line] = KW(
-                :color => rgba_string(plot_color(get_linecolor(series, i), get_linealpha(series, i))),
+                :color => rgba_string(plot_color(get_linecolor(series, clims, i), get_linealpha(series, i))),
                 :width => get_linewidth(series, i),
                 :dash => string(get_linestyle(series, i)),
             )
@@ -697,7 +699,7 @@ function plotly_series_shapes(plt::Plot, series::Series)
     d_outs
 end
 
-function plotly_series_segments(series::Series, d_base::KW, x, y, z)
+function plotly_series_segments(series::Series, d_base::KW, x, y, z, clims)
     st = series[:seriestype]
     sp = series[:subplot]
     isscatter = st in (:scatter, :scatter3d, :scattergl)
@@ -726,10 +728,10 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
             end
             if series[:fillrange] == true || series[:fillrange] == 0 || isa(series[:fillrange], Tuple)
                 d_out[:fill] = "tozeroy"
-                d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, i), get_fillalpha(series, i)))
+                d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)))
             elseif typeof(series[:fillrange]) <: Union{AbstractVector{<:Real}, Real}
                 d_out[:fill] = "tonexty"
-                d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, i), get_fillalpha(series, i)))
+                d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)))
             elseif !(series[:fillrange] in (false, nothing))
                 @warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
             end
@@ -751,7 +753,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
                 :symbol => get(_plotly_markers, _cycle(series[:markershape], i), string(_cycle(series[:markershape], i))),
                 # :opacity => series[:markeralpha],
                 :size => 2 * _cycle(series[:markersize], i),
-                :color => rgba_string(plot_color(get_markercolor(series, i), get_markeralpha(series, i))),
+                :color => rgba_string(plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i))),
                 :line => KW(
                     :color => rgba_string(plot_color(get_markerstrokecolor(series, i), get_markerstrokealpha(series, i))),
                     :width => _cycle(series[:markerstrokewidth], i),
@@ -762,7 +764,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z)
         # add "line"
         if hasline
             d_out[:line] = KW(
-                :color => rgba_string(plot_color(get_linecolor(series, i), get_linealpha(series, i))),
+                :color => rgba_string(plot_color(get_linecolor(series, clims, i), get_linealpha(series, i))),
                 :width => get_linewidth(series, i),
                 :shape => if st == :steppre
                     "vh"
