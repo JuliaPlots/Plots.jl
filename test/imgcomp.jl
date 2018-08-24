@@ -15,7 +15,7 @@ using VisualRegressionTests
 
 using Plots
 # using StatPlots
-using Pkg
+using PlotReferenceImages
 using Random
 using Test
 
@@ -40,7 +40,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
 
     # reference image directory setup
     # refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))
-    refdir = Pkg.dir("PlotReferenceImages", "Plots", string(pkg))
+    refdir = joinpath(dirname(pathof(PlotReferenceImages)), "..", "Plots", string(pkg))
     fn = "ref$idx.png"
 
     # firgure out version info
