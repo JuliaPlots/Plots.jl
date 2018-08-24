@@ -4,10 +4,7 @@ using Pkg
 # ENV["PYTHON"] = ""
 
 Pkg.add([
-    PackageSpec("ImageMagick"),
-    # PackageSpec("GR"),
     PackageSpec(url="https://github.com/JuliaPlots/PlotReferenceImages.jl.git"),
-    PackageSpec("StatPlots"),
     # PackageSpec(url="https://github.com/JuliaStats/KernelDensity.jl.git"),
     PackageSpec(name="PlotUtils", rev="master"),
     PackageSpec(name="RecipesBase", rev="master"),
@@ -25,5 +22,3 @@ Pkg.build("ImageMagick")
 # import Blink
 # Blink.AtomShell.install()
 # Pkg.build("PyPlot")
-
-Pkg.test("Plots"; coverage=false)

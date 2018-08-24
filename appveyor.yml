@@ -38,5 +38,4 @@ build_script:
     Pkg.build(\"Plots\")"
 
 test_script:
-  # - C:\projects\julia\bin\julia -e "Pkg.test(\"Plots\")"
-  - C:\projects\julia\bin\julia test\travis_commands.jl
+  - C:\projects\julia\bin\julia -e "using Pkg; Pkg.test(\"Plots\")"

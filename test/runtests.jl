@@ -1,5 +1,6 @@
 module PlotsTests
 
+include("add_packages.jl")
 include("imgcomp.jl")
 
 # don't actually show the plots
