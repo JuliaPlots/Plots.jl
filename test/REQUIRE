@@ -2,6 +2,7 @@ StatPlots
 Images
 ImageMagick
 @osx QuartzImageIO
+FileIO
 GR 0.31.0
 RDatasets
 VisualRegressionTests
