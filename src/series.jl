@@ -594,12 +594,12 @@ function split_kw(key, val::SeriesAnnotations, indices)
 end
 
 function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
-    y_mat = Array{promote_type(eltype(y), typeof(def_val))}(length(keys(x_ind)), length(groupby.groupLabels))
+    y_mat = Array{promote_type(eltype(y), typeof(def_val))}(undef, length(keys(x_ind)), length(groupby.groupLabels))
     fill!(y_mat, def_val)
     for i in 1:length(groupby.groupLabels)
         xi = x[groupby.groupIds[i]]
         yi = y[groupby.groupIds[i]]
-        y_mat[getindex.(x_ind, xi), i] = yi
+        y_mat[getindex.(Ref(x_ind), xi), i] = yi
     end
     return y_mat
 end
