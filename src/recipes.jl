@@ -1024,14 +1024,6 @@ end
     @assert length(g.args) == 1 && typeof(g.args[1]) <: AbstractMatrix
     seriestype := :spy
     mat = g.args[1]
-    lunique = length(unique(mat[mat .!= 0]))
-    if lunique == 2
-        legend --> nothing
-        seriescolor --> cgrad([invisible(), fg_color(plotattributes)])
-    elseif lunique < 2
-        legend --> nothing
-        seriescolor --> fg_color(plotattributes)
-    end
     n,m = size(mat)
     Plots.SliceIt, 1:m, 1:n, Surface(mat)
 end
@@ -1046,7 +1038,7 @@ end
         markershape := :circle
     end
     if plotattributes[:markersize] == default(:markersize)
-        markersize := 1.5
+        markersize := 1
     end
     markerstrokewidth := 0
     #marker_z := zs
