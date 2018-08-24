@@ -1,7 +1,7 @@
 module PlotsTests
 
 using Pkg
-Pkg.add(PackageSpec(url="https://github.com/tkf/PlotReferenceImages.jl", rev="pkg3"))
+Pkg.add(PackageSpec(url="https://github.com/tkf/PlotReferenceImages.jl"))
 
 include("imgcomp.jl")
 
