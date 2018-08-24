@@ -116,7 +116,7 @@ ignorenan_minimum(x) = Base.minimum(x)
 ignorenan_maximum(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.maximum(x)
 ignorenan_maximum(x) = Base.maximum(x)
 ignorenan_mean(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.mean(x)
-ignorenan_mean(x) = Base.mean(x)
+ignorenan_mean(x) = mean(x)
 ignorenan_extrema(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.extrema(x)
 ignorenan_extrema(x) = Base.extrema(x)
 
