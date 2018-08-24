@@ -4,6 +4,7 @@ ImageMagick
 @osx QuartzImageIO
 GR 0.31.0
 RDatasets
-VisualRegressionTests
+VisualRegressionTests 0.2
 UnicodePlots
 LaTeXStrings
+Gtk
