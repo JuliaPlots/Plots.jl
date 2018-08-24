@@ -619,18 +619,18 @@ end
 
 for comp in (:line, :fill, :marker)
 
-    compcolor = Symbol(comp, :color)
+    compcolor = string(comp, :color)
     get_compcolor = Symbol(:get_, compcolor)
-    comp_z = Symbol(comp, :_z)
+    comp_z = string(comp, :_z)
 
-    compalpha = Symbol(comp, :alpha)
+    compalpha = string(comp, :alpha)
     get_compalpha = Symbol(:get_, compalpha)
 
     @eval begin
 
         function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
-            c = series[$Symbol(compcolor)]
-            z = series[$Symbol(comp_z)]
+            c = series[$Symbol($compcolor)]
+            z = series[$Symbol($comp_z)]
             if z == nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
@@ -639,17 +639,17 @@ for comp in (:line, :fill, :marker)
             end
         end
 
-        $get_compcolor(series, clims, i::Int = i) = $get_compcolor(series, clims[1], clims[2], i)
+        $get_compcolor(series, clims, i::Int = 1) = $get_compcolor(series, clims[1], clims[2], i)
 
         function $get_compcolor(series, i::Int = 1)
-            if series[$Symbol(comp_z)] == nothing
+            if series[$Symbol($comp_z)] == nothing
                 $get_compcolor(series, 0, 1, i)
             else
                 $get_compcolor(series, get_clims(series[:subplot]), i)
             end
         end
 
-        $get_compalpha(series, i::Int = 1) = _cycle(series[$compalpha], i)
+        $get_compalpha(series, i::Int = 1) = _cycle(series[$Symbol($compalpha)], i)
     end
 end
 
