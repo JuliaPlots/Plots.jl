@@ -617,20 +617,40 @@ function hascolorbar(sp::Subplot)
     hascbar
 end
 
-function get_linecolor(series, i::Int = 1)
-    lc = series[:linecolor]
-    lz = series[:line_z]
-    if lz == nothing
-        isa(lc, ColorGradient) ? lc : plot_color(_cycle(lc, i))
-    else
-        cmin, cmax = get_clims(series[:subplot])
-        grad = isa(lc, ColorGradient) ? lc : cgrad()
-        grad[clamp((_cycle(lz, i) - cmin) / (cmax - cmin), 0, 1)]
-    end
-end
+for comp in (:line, :fill, :marker)
 
-function get_linealpha(series, i::Int = 1)
-    _cycle(series[:linealpha], i)
+    compcolor = Symbol(comp, :color)
+    get_compcolor = Symbol(:get_, compcolor)
+    comp_z = Symbol(comp, :_z)
+
+    compalpha = Symbol(comp, :alpha)
+    get_compalpha = Symbol(:get_, compalpha)
+
+    @eval begin
+
+        function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
+            c = series[$Symbol(compcolor)]
+            z = series[$Symbol(comp_z)]
+            if z == nothing
+                isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
+            else
+                grad = isa(c, ColorGradient) ? c : cgrad()
+                grad[clamp((_cycle(z, i) - cmin) / (cmax - cmin), 0, 1)]
+            end
+        end
+
+        $get_compcolor(series, clims, i::Int = i) = $get_compcolor(series, clims[1], clims[2], i)
+
+        function $get_compcolor(series, i::Int = 1)
+            if series[$Symbol(comp_z)] == nothing
+                $get_compcolor(series, 0, 1, i)
+            else
+                $get_compcolor(series, get_clims(series[:subplot]), i)
+            end
+        end
+
+        $get_compalpha(series, i::Int = 1) = _cycle(series[$compalpha], i)
+    end
 end
 
 function get_linewidth(series, i::Int = 1)
@@ -639,38 +659,6 @@ end
 
 function get_linestyle(series, i::Int = 1)
     _cycle(series[:linestyle], i)
-end
-
-function get_fillcolor(series, i::Int = 1)
-    fc = series[:fillcolor]
-    fz = series[:fill_z]
-    if fz == nothing
-        isa(fc, ColorGradient) ? fc : plot_color(_cycle(fc, i))
-    else
-        cmin, cmax = get_clims(series[:subplot])
-        grad = isa(fc, ColorGradient) ? fc : cgrad()
-        grad[clamp((_cycle(fz, i) - cmin) / (cmax - cmin), 0, 1)]
-    end
-end
-
-function get_fillalpha(series, i::Int = 1)
-    _cycle(series[:fillalpha], i)
-end
-
-function get_markercolor(series, i::Int = 1)
-    mc = series[:markercolor]
-    mz = series[:marker_z]
-    if mz == nothing
-        isa(mc, ColorGradient) ? mc : plot_color(_cycle(mc, i))
-    else
-        cmin, cmax = get_clims(series[:subplot])
-        grad = isa(mc, ColorGradient) ? mc : cgrad()
-        grad[clamp((_cycle(mz, i) - cmin) / (cmax - cmin), 0, 1)]
-    end
-end
-
-function get_markeralpha(series, i::Int = 1)
-    _cycle(series[:markeralpha], i)
 end
 
 function get_markerstrokecolor(series, i::Int = 1)
