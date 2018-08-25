@@ -2,6 +2,10 @@
 using VisualRegressionTests
 # using ExamplePlots
 
+if isinteractive()
+    @eval Main import Gtk
+end
+
 # import DataFrames, RDatasets
 
 # don't let pyplot use a gui... it'll crash
