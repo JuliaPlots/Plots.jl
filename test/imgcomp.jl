@@ -19,7 +19,7 @@ end
 
 using Plots
 # using StatPlots
-using PlotReferenceImages
+import PlotReferenceImages
 using Random
 using Test
 
