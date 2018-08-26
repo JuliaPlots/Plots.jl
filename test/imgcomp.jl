@@ -2,6 +2,10 @@
 using VisualRegressionTests
 # using ExamplePlots
 
+if isinteractive()
+    @eval Main import Gtk
+end
+
 # import DataFrames, RDatasets
 
 # don't let pyplot use a gui... it'll crash
@@ -15,6 +19,8 @@ using VisualRegressionTests
 
 using Plots
 # using StatPlots
+import PlotReferenceImages
+using Random
 using Test
 
 default(size=(500,300))
@@ -38,7 +44,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
 
     # reference image directory setup
     # refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))
-    refdir = Pkg.dir("PlotReferenceImages", "Plots", string(pkg))
+    refdir = joinpath(dirname(pathof(PlotReferenceImages)), "..", "Plots", string(pkg))
     fn = "ref$idx.png"
 
     # firgure out version info
