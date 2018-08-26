@@ -145,11 +145,6 @@ function Base.display(::PlotsDisplay, plt::Plot)
     _display(plt)
 end
 
-# override the REPL display to open a gui window
-using REPL
-Base.display(::REPL.REPLDisplay, ::MIME"text/plain", plt::Plot) = gui(plt)
-
-
 _do_plot_show(plt, showval::Bool) = showval && gui(plt)
 function _do_plot_show(plt, showval::Symbol)
     showval == :gui && gui(plt)
