@@ -18,6 +18,7 @@ const _gr_attr = merge_with_base_supported([
     :layout,
     :title, :window_title,
     :guide, :lims, :ticks, :scale, :flip,
+    :match_dimensions,
     :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
     :titlefontrotation, :titlefontcolor,
     :legendfontfamily, :legendfontsize, :legendfonthalign, :legendfontvalign,
