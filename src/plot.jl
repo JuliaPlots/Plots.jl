@@ -119,7 +119,7 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         sp.attr[:subplot_index] = idx
         for series in serieslist
             merge!(series.d, series_attr)
-            _add_defaults!(series.d, plt, sp, cmdidx)
+            _add_defaults!(series.d, cmdidx)
             push!(plt.series_list, series)
             _series_added(plt, series)
             cmdidx += 1
@@ -216,14 +216,13 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
     # map(DD, kw_list)
 
     for kw in kw_list
-        sp::Subplot = kw[:subplot]
         # idx = get_subplot_index(plt, sp)
 
         # # we update subplot args in case something like the color palatte is part of the recipe
         # _update_subplot_args(plt, sp, kw, idx, true)
-
-        # set default values, select from attribute cycles, and generally set the final attributes
-        _add_defaults!(kw, plt, sp, command_idx(kw_list,kw))
+        
+        # select from attribute cycles
+        _slice_kw!(kw, command_idx(kw_list,kw))
 
         # now we have a fully specified series, with colors chosen.   we must recursively handle
         # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,
@@ -231,7 +230,17 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
         # For example, a histogram is just a bar plot with binned data, a bar plot is really a filled step plot,
         # and a step plot is really just a path.  So any backend that supports drawing a path will implicitly
         # be able to support step, bar, and histogram plots (and any recipes that use those components).
-        _process_seriesrecipe(plt, kw)
+        _process_seriesrecipe(kw)
+        
+        # set default values, select from attribute cycles, and generally set the final attributes
+        _add_defaults!(kw, command_idx(kw_list,kw))
+
+        # finalize processing
+        sp = _prepare_subplot(plt, kw)
+        _prepare_annotations(sp, kw)
+        _expand_subplot_extrema(sp, kw, kw[:seriestype])
+        _update_series_attributes!(kw, plt, sp)
+        _add_the_series(plt, sp, kw)
     end
 
     # --------------------------------

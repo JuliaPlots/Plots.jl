@@ -385,9 +385,9 @@ end
 
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
-function _process_seriesrecipe(plt::Plot, d::KW)
+function _process_seriesrecipe(d::KW)
     # replace seriestype aliases
-    st = Symbol(d[:seriestype])
+    st = Symbol(get(d, :seriestype, _series_defaults[:seriestype]))
     st = d[:seriestype] = get(_typeAliases, st, st)
 
     # shapes shouldn't have fillrange set
@@ -395,14 +395,8 @@ function _process_seriesrecipe(plt::Plot, d::KW)
         d[:fillrange] = nothing
     end
 
-    # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
     if is_seriestype_supported(st)
-        sp = _prepare_subplot(plt, d)
-        _prepare_annotations(sp, d)
-        _expand_subplot_extrema(sp, d, st)
-        _update_series_attributes!(d, plt, sp)
-        _add_the_series(plt, sp, d)
-
+        return nothing
     else
         # get a sub list of series for this seriestype
         datalist = RecipesBase.apply_recipe(d, Val{st}, d[:x], d[:y], d[:z])
@@ -414,7 +408,7 @@ function _process_seriesrecipe(plt::Plot, d::KW)
                 if data.d[:seriestype] == st
                     error("The seriestype didn't change in series recipe $st.  This will cause a StackOverflow.")
                 end
-                _process_seriesrecipe(plt, data.d)
+                _process_seriesrecipe(data.d)
             else
                 @warn("Unhandled recipe: $(data)")
                 break

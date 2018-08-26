@@ -1536,7 +1536,13 @@ function _replace_linewidth(d::KW)
     end
 end
 
-function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
+function _slice_kw!(d::KW, commandIndex::Int)
+    for (k,v) in d
+        slice_arg!(d, d, k, v, commandIndex, false)
+    end
+end
+
+function _add_defaults!(d::KW, commandIndex::Int)
     # add default values to our dictionary, being careful not to delete what we just added!
     for (k,v) in _series_defaults
         slice_arg!(d, d, k, v, commandIndex, false)
