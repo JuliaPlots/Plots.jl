@@ -32,7 +32,7 @@ default(size=(500,300))
 const _current_plots_version = v"0.17.4"
 
 
-function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], eps = 1e-2)
+function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], tol = 1e-2)
     Plots._debugMode.on = debug
     example = Plots._examples[idx]
     @info("Testing plot: $pkg:$idx:$(example.header)")
@@ -89,7 +89,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
 
     # the test
     vtest = VisualTest(func, reffn, idx)
-    test_images(vtest, popup=popup, sigma=sigma, eps=eps, newfn = newfn)
+    test_images(vtest, popup=popup, sigma=sigma, tol=tol, newfn = newfn)
 end
 
 function image_comparison_facts(pkg::Symbol;
@@ -97,11 +97,11 @@ function image_comparison_facts(pkg::Symbol;
                                 only = nothing, # limit to these examples (int index)
                                 debug = false,  # print debug information?
                                 sigma = [1,1],  # number of pixels to "blur"
-                                eps = 1e-2)     # acceptable error (percent)
+                                tol = 1e-2)     # acceptable error (percent)
   for i in 1:length(Plots._examples)
     i in skip && continue
     if only == nothing || i in only
-      @test image_comparison_tests(pkg, i, debug=debug, sigma=sigma, eps=eps) |> success == true
+      @test image_comparison_tests(pkg, i, debug=debug, sigma=sigma, tol=tol) |> success == true
     end
   end
 end
