@@ -116,7 +116,7 @@ ignorenan_minimum(x) = Base.minimum(x)
 ignorenan_maximum(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.maximum(x)
 ignorenan_maximum(x) = Base.maximum(x)
 ignorenan_mean(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.mean(x)
-ignorenan_mean(x) = Base.mean(x)
+ignorenan_mean(x) = Statistics.mean(x)
 ignorenan_extrema(x::AbstractArray{F}) where {F<:AbstractFloat} = NaNMath.extrema(x)
 ignorenan_extrema(x) = Base.extrema(x)
 
@@ -292,19 +292,5 @@ end
 # ---------------------------------------------------------
 
 const CURRENT_BACKEND = CurrentBackend(:none)
-
-# for compatibility with Requires.jl:
-@init begin
-    if isdefined(Main, :PLOTS_DEFAULTS)
-        if haskey(Main.PLOTS_DEFAULTS, :theme)
-            theme(Main.PLOTS_DEFAULTS[:theme])
-        end
-        for (k,v) in Main.PLOTS_DEFAULTS
-            k == :theme || default(k, v)
-        end
-    end
-end
-
-# ---------------------------------------------------------
 
 end # module

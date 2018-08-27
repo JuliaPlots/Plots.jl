@@ -436,12 +436,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # handle zcolor and get c/cmap
     needs_colorbar = hascolorbar(sp)
-    extrakw = if needs_colorbar || is_2tuple(sp[:clims])
-        vmin, vmax = get_clims(sp)
-        KW(:vmin => vmin, :vmax => vmax)
-    else
-        KW()
-    end
+    vmin, vmax = clims = get_clims(sp)
+
+    # Dict to store extra kwargs
+    extrakw = KW(:vmin => vmin, :vmax => vmax)
 
     # holds references to any python object representing the matplotlib series
     handles = []
@@ -502,7 +500,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     handle = ax[:plot]((arg[rng] for arg in xyargs)...;
                         label = i == 1 ? series[:label] : "",
                         zorder = series[:series_plotindex],
-                        color = py_color(get_linecolor(series, i), get_linealpha(series, i)),
+                        color = py_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
                         linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
                         linestyle = py_linestyle(st, get_linestyle(series, i)),
                         solid_capstyle = "round",
@@ -544,7 +542,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                                           :scatter3d, :steppre, :steppost,
                                           :bar)
         markercolor = if any(typeof(series[arg]) <: AVec for arg in (:markercolor, :markeralpha)) || series[:marker_z] != nothing
-            py_color(plot_color.(get_markercolor.(series, eachindex(x)), get_markeralpha.(series, eachindex(x))))
+            # py_color(plot_color.(get_markercolor.(series, clims, eachindex(x)), get_markeralpha.(series, eachindex(x))))
+            [py_color(plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i))) for i in eachindex(x)]
         else
             py_color(plot_color(series[:markercolor], series[:markeralpha]))
         end
@@ -692,11 +691,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
         elseif typeof(z) <: AbstractVector
             # tri-surface plot (http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
-            clims = sp[:clims]
-            if is_2tuple(clims)
-                isfinite(clims[1]) && (extrakw[:vmin] = clims[1])
-                isfinite(clims[2]) && (extrakw[:vmax] = clims[2])
-            end
             handle = ax[:plot_trisurf](x, y, z;
                 label = series[:label],
                 zorder = series[:series_plotindex],
@@ -767,8 +761,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     path;
                     label = series[:label],
                     zorder = series[:series_plotindex],
-                    edgecolor = py_color(get_linecolor(series, i), get_linealpha(series, i)),
-                    facecolor = py_color(get_fillcolor(series, i), get_fillalpha(series, i)),
+                    edgecolor = py_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
+                    facecolor = py_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                     linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
                     linestyle = py_linestyle(st, get_linestyle(series, i)),
                     fill = true
@@ -817,7 +811,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
             handle = ax[f](args..., trues(n), false, py_fillstepstyle(st);
                 zorder = series[:series_plotindex],
-                facecolor = py_color(get_fillcolor(series, i), get_fillalpha(series, i)),
+                facecolor = py_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
                 linewidths = 0
             )
             push!(handles, handle)
@@ -1227,6 +1221,7 @@ const _pyplot_legend_pos = KW(
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
     leg = sp[:legend]
+    clims = get_clims(sp)
     if leg != :none
         # gotta do this to ensure both axes are included
         labels = []
@@ -1236,19 +1231,19 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 # add a line/marker and a label
                 push!(handles, if series[:seriestype] == :shape || series[:fillrange] != nothing
                     pypatches[:Patch](
-                        edgecolor = py_color(get_linecolor(series), get_linealpha(series)),
-                        facecolor = py_color(get_fillcolor(series), get_fillalpha(series)),
+                        edgecolor = py_color(get_linecolor(series, clims), get_linealpha(series)),
+                        facecolor = py_color(get_fillcolor(series, clims), get_fillalpha(series)),
                         linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(series[:seriestype], get_linestyle(series))
                     )
                 elseif series[:seriestype] in (:path, :straightline)
                     PyPlot.plt[:Line2D]((0,1),(0,0),
-                        color = py_color(get_linecolor(series), get_linealpha(series)),
+                        color = py_color(get_linecolor(series, clims), get_linealpha(series)),
                         linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(:path, get_linestyle(series)),
                         marker = py_marker(series[:markershape]),
                         markeredgecolor = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
-                        markerfacecolor = series[:marker_z] == nothing ? py_color(get_markercolor(series), get_markeralpha(series)) : py_color(series[:markercolor][0.5])
+                        markerfacecolor = series[:marker_z] == nothing ? py_color(get_markercolor(series, clims), get_markeralpha(series)) : py_color(series[:markercolor][0.5])
                     )
                 else
                     series[:serieshandle][1]

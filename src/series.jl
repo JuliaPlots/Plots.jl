@@ -636,7 +636,7 @@ group_as_matrix(t) = false
             x = g.args[1]
             last_args = g.args[2:end]
         end
-        x_u = unique(x)
+        x_u = unique(sort(x))
         x_ind = Dict(zip(x_u, 1:length(x_u)))
         for (key,val) in plotattributes
             if splittable_kw(key, val, lengthGroup)

@@ -18,6 +18,7 @@ const _gr_attr = merge_with_base_supported([
     :layout,
     :title, :window_title,
     :guide, :lims, :ticks, :scale, :flip,
+    :match_dimensions,
     :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
     :titlefontrotation, :titlefontcolor,
     :legendfontfamily, :legendfontsize, :legendfonthalign, :legendfontvalign,
@@ -338,7 +339,11 @@ end
 
 
 # draw the markers, one at a time
-function gr_draw_markers(series::Series, x, y, msize, mz)
+function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize])
+
+    isempty(x) && return
+    GR.setfillintstyle(GR.INTSTYLE_SOLID)
+
     shapes = series[:markershape]
     if shapes != :none
         for i=1:length(x)
@@ -355,19 +360,12 @@ function gr_draw_markers(series::Series, x, y, msize, mz)
 
             # draw the shape - don't draw filled area if marker shape is 1D
             if !(shape in (:hline, :vline, :+, :x))
-                cfunc(get_markercolor(series, i))
+                cfunc(get_markercolor(series, clims, i))
                 gr_set_transparency(get_markeralpha(series, i))
                 gr_draw_marker(x[i], y[i], msi, shape)
             end
         end
     end
-end
-
-function gr_draw_markers(series::Series, x, y, clims)
-    isempty(x) && return
-    mz = normalize_zvals(series[:marker_z], clims)
-    GR.setfillintstyle(GR.INTSTYLE_SOLID)
-    gr_draw_markers(series, x, y, series[:markersize], mz)
 end
 
 # ---------------------------------------------------------
@@ -1038,7 +1036,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
                     fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
                     for (i, rng) in enumerate(segments)
-                        gr_set_fillcolor(get_fillcolor(series, i))
+                        gr_set_fillcolor(get_fillcolor(series, clims, i))
                         fx = _cycle(x, vcat(rng, reverse(rng)))
                         fy = vcat(_cycle(fr_from,rng), _cycle(fr_to,reverse(rng)))
                         gr_set_transparency(get_fillalpha(series, i))
@@ -1049,7 +1047,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # draw the line(s)
                 if st in (:path, :straightline)
                     for (i, rng) in enumerate(segments)
-                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, i)) #, series[:linealpha])
+                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, clims, i)) #, series[:linealpha])
                         gr_set_transparency(get_linealpha(series, i))
                         arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
                         gr_polyline(x[rng], y[rng]; arrowside = arrowside)
@@ -1129,7 +1127,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     lz = series[:line_z]
                     segments = iter_segments(series)
                     for (i, rng) in enumerate(segments)
-                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, i)) #, series[:linealpha])
+                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, clims, i)) #, series[:linealpha])
                         gr_set_transparency(get_linealpha(series, i))
                         GR.polyline3d(x[rng], y[rng], z[rng])
                     end
@@ -1201,12 +1199,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     xseg, yseg = x[rng], y[rng]
 
                     # draw the interior
-                    gr_set_fill(get_fillcolor(series, i))
+                    gr_set_fill(get_fillcolor(series, clims, i))
                     gr_set_transparency(get_fillalpha(series, i))
                     GR.fillarea(xseg, yseg)
 
                     # draw the shapes
-                    gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, i))
+                    gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, clims, i))
                     gr_set_transparency(get_linealpha(series, i))
                     GR.polyline(xseg, yseg)
                 end
@@ -1298,10 +1296,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for series in series_list(sp)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
-                gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series)) #, series[:linealpha])
+                gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series, clims)) #, series[:linealpha])
 
                 if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
-                    gr_set_fill(get_fillcolor(series)) #, series[:fillalpha])
+                    gr_set_fill(get_fillcolor(series, clims)) #, series[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
                     b, t = ypos-0.4dy, ypos+0.4dy
                     x = [l, r, r, l, l]
@@ -1309,7 +1307,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     gr_set_transparency(get_fillalpha(series))
                     gr_polyline(x, y, GR.fillarea)
                     gr_set_transparency(get_linealpha(series))
-                    gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series))
+                    gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series, clims))
                     st == :shape && gr_polyline(x, y)
                 end
 
@@ -1323,7 +1321,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 end
 
                 if series[:markershape] != :none
-                    gr_draw_markers(series, xpos - .035, ypos, 6, nothing)
+                    gr_draw_markers(series, xpos - .035, ypos, clims, 6)
                 end
 
                 if typeof(series[:label]) <: Array

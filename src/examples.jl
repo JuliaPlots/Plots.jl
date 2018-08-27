@@ -52,7 +52,7 @@ the `z` argument to turn on series gradients.
     [:(begin
 y = rand(100)
 plot(0:10:100,rand(11,4),lab="lines",w=3,palette=:grays,fill=0, α=0.6)
-scatter!(y, zcolor=abs.(y.-0.5), m=(:heat,0.8,stroke(1,:green)), ms=10*abs.(y.-0.5).+4,
+scatter!(y, zcolor=abs.(y.-0.5), m=(:heat,0.8,Plots.stroke(1,:green)), ms=10*abs.(y.-0.5).+4,
          lab="grad")
     end)]
 ),
@@ -66,6 +66,7 @@ the preprocessing step. You can also use shorthand functions: `title!`, `xaxis!`
 `yaxis!`, `xlabel!`, `ylabel!`, `xlims!`, `ylims!`, `xticks!`, `yticks!`
 """,
     [:(begin
+using Statistics
 y = rand(20,3)
 plot(y, xaxis=("XLABEL",(-5,30),0:2:20,:flip), background_color = RGB(0.2,0.2,0.2),
      leg=false)
@@ -85,8 +86,8 @@ yaxis!("YLABEL", :log10)
 PlotExample("Images",
     "Plot an image.  y-axis is set to flipped",
     [:(begin
-        import FileIO
-        img = FileIO.load(Pkg.dir("PlotReferenceImages","Plots","pyplot","0.7.0","ref1.png"))
+    import FileIO, PlotReferenceImages
+    img = FileIO.load(joinpath(dirname(pathof(PlotReferenceImages)), "..", "Plots","pyplot","0.7.0","ref1.png"))
         plot(img)
     end)]
 ),
@@ -102,7 +103,7 @@ series.
 """,
     [:(begin
         ys = Vector[rand(10), rand(20)]
-        plot(ys, color=[:black :orange], line=(:dot,4), marker=([:hex :d],12,0.8,stroke(3,:gray)))
+        plot(ys, color=[:black :orange], line=(:dot,4), marker=([:hex :d],12,0.8,Plots.stroke(3,:gray)))
     end)]
 ),
 
@@ -202,7 +203,8 @@ plot(Plots.fakedata(100,10), layout=4, palette=[:grays :blues :heat :lightrainbo
 PlotExample("",
     "",
     [:(begin
-        Random.srand(111)
+        using Random
+        Random.seed!(111)
         plot!(Plots.fakedata(100,10))
     end)]
 ),
@@ -295,7 +297,7 @@ PlotExample("3D",
         x = ts .* map(cos,ts)
         y = 0.1ts .* map(sin,ts)
         z = 1:n
-        plot(x, y, z, zcolor=reverse(z), m=(10,0.8,:blues,stroke(0)), leg=false, cbar=true, w=5)
+        plot(x, y, z, zcolor=reverse(z), m=(10,0.8,:blues,Plots.stroke(0)), leg=false, cbar=true, w=5)
         plot!(zeros(n),zeros(n),1:n, w=10)
     end)]
 ),
@@ -382,8 +384,9 @@ various different nonzero values, a colorbar is added. The colorbar can be disab
 `legend = nothing`.
 """,
     [:(begin
-    a = spdiagm((ones(50), ones(49), ones(49), ones(40), ones(40)),(0, 1, -1, 10, -10))
-    b = spdiagm((1:50, 1:49, 1:49, 1:40, 1:40),(0, 1, -1, 10, -10))
+    using SparseArrays
+    a = spdiagm(0 => ones(50), 1 => ones(49), -1 => ones(49), 10 => ones(40), -10 => ones(40))
+    b = spdiagm(0 => 1:50, 1 => 1:49, -1 => 1:49, 10 => 1:40, -10 => 1:40)
     plot(spy(a), spy(b), title = ["Unique nonzeros" "Different nonzeros"])
     end)]
 ),
@@ -411,7 +414,7 @@ attribute. The default framestyle is `:axes`.
     scatter(fill(randn(10), 6), fill(randn(10), 6),
         framestyle = [:box :semi :origin :zerolines :grid :none],
         title = [":box" ":semi" ":origin" ":zerolines" ":grid" ":none"],
-        color = RowVector(1:6), layout = 6, label = "", markerstrokewidth = 0,
+        color = permutedims(1:6), layout = 6, label = "", markerstrokewidth = 0,
         ticks = -2:2)
     end)]
 ),
