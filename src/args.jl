@@ -1536,7 +1536,7 @@ function _replace_linewidth(d::KW)
     end
 end
 
-function _slice_kw!(d::KW, commandIndex::Int)
+function _slice_attribute_cycles!(d::KW, commandIndex::Int)
     for (k,v) in d
         slice_arg!(d, d, k, v, commandIndex, false)
     end

@@ -221,8 +221,7 @@ function _plot!(plt::Plot, d::KW, args::Tuple)
         # # we update subplot args in case something like the color palatte is part of the recipe
         # _update_subplot_args(plt, sp, kw, idx, true)
         
-        # select from attribute cycles
-        _slice_kw!(kw, command_idx(kw_list,kw))
+        _slice_attribute_cycles!(kw, command_idx(kw_list,kw))
 
         # now we have a fully specified series, with colors chosen.   we must recursively handle
         # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,
