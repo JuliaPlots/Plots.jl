@@ -52,11 +52,13 @@ include("orange.jl")
 include("wong.jl")
 include("juno.jl")
 
-@init begin
+function __init__()
     # need to do this here so PlotUtils picks up the change
     for (s,thm) in _themes
         add_theme(s, thm)
     end
+
+    @require Juno = "e5e0dc1b-0480-54bc-9374-aad01c23163d" include("juno_smart.jl")
 end
 
 end # module
