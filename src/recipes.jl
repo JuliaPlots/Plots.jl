@@ -1041,7 +1041,7 @@ end
         markersize := 1
     end
     markerstrokewidth := 0
-    #marker_z := zs
+    marker_z := zs
     label := ""
     x := cs
     y := rs
