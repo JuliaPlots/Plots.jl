@@ -95,9 +95,9 @@ const _glyphtypes = KW(
   )
 
 
-function bokeh_glyph_type(d::KW)
-  st = d[:seriestype]
-  mt = d[:markershape]
+function bokeh_glyph_type(plotattributes::KW)
+  st = plotattributes[:seriestype]
+  mt = plotattributes[:markershape]
   if st == :scatter && mt == :none
     mt = :circle
   end
@@ -125,7 +125,7 @@ end
 
 # ---------------------------------------------------------------------------
 
-# function _create_plot(pkg::BokehBackend, d::KW)
+# function _create_plot(pkg::BokehBackend, plotattributes::KW)
 function _create_backend_figure(plt::Plot{BokehBackend})
   # TODO: create the window/canvas/context that is the plot within the backend (call it `o`)
   # TODO: initialize the plot... title, xlabel, bgcolor, etc
@@ -142,34 +142,34 @@ function _create_backend_figure(plt::Plot{BokehBackend})
   extra_args = KW()  # TODO: we'll put extra settings (xlim, etc) here
   Bokeh.Plot(datacolumns, tools, filename, title, w, h, xaxis_type, yaxis_type, legend) #, extra_args)
 
-  # Plot(bplt, pkg, 0, d, KW[])
+  # Plot(bplt, pkg, 0, plotattributes, KW[])
 end
 
 
-# function _series_added(::BokehBackend, plt::Plot, d::KW)
+# function _series_added(::BokehBackend, plt::Plot, plotattributes::KW)
 function _series_added(plt::Plot{BokehBackend}, series::Series)
-  bdata = Dict{Symbol, Vector}(:x => collect(series.d[:x]), :y => collect(series.d[:y]))
+  bdata = Dict{Symbol, Vector}(:x => collect(series.plotattributes[:x]), :y => collect(series.plotattributes[:y]))
 
   glyph = Bokeh.Bokehjs.Glyph(
-      glyphtype = bokeh_glyph_type(d),
-      linecolor = webcolor(d[:linecolor]),  # shape's stroke or line color
-      linewidth = d[:linewidth],          # shape's stroke width or line width
-      fillcolor = webcolor(d[:markercolor]),
-      size      = ceil(Int, d[:markersize] * 2.5),  # magic number 2.5 to keep in same scale as other backends
-      dash      = get_stroke_vector(d[:linestyle])
+      glyphtype = bokeh_glyph_type(plotattributes),
+      linecolor = webcolor(plotattributes[:linecolor]),  # shape's stroke or line color
+      linewidth = plotattributes[:linewidth],          # shape's stroke width or line width
+      fillcolor = webcolor(plotattributes[:markercolor]),
+      size      = ceil(Int, plotattributes[:markersize] * 2.5),  # magic number 2.5 to keep in same scale as other backends
+      dash      = get_stroke_vector(plotattributes[:linestyle])
     )
 
   legend = nothing  # TODO
   push!(plt.o.datacolumns, Bokeh.BokehDataSet(bdata, glyph, legend))
 
-  # push!(plt.seriesargs, d)
+  # push!(plt.seriesargs, plotattributes)
   # plt
 end
 
 # ----------------------------------------------------------------
 
 # TODO: override this to update plot items (title, xlabel, etc) after creation
-function _update_plot_object(plt::Plot{BokehBackend}, d::KW)
+function _update_plot_object(plt::Plot{BokehBackend}, plotattributes::KW)
 end
 
 # ----------------------------------------------------------------

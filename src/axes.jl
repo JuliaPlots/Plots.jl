@@ -8,7 +8,7 @@
 
 function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     # init with values from _plot_defaults
-    d = KW(
+    plotattributes = KW(
         :letter => letter,
         # :extrema => (Inf, -Inf),
         :extrema => Extrema(),
@@ -22,14 +22,14 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
     for (k,v) in _axis_defaults
         lk = Symbol(letter, k)
         lv = _axis_defaults_byletter[lk]
-        d[k] = (lv == :match ? v : lv)
+        plotattributes[k] = (lv == :match ? v : lv)
     end
 
-    # merge!(d, _axis_defaults)
-    d[:discrete_values] = []
+    # merge!(plotattributes, _axis_defaults)
+    plotattributes[:discrete_values] = []
 
     # update the defaults
-    attr!(Axis([sp], d), args...; kw...)
+    attr!(Axis([sp], plotattributes), args...; kw...)
 end
 
 function get_axis(sp::Subplot, letter::Symbol)
@@ -41,45 +41,45 @@ function get_axis(sp::Subplot, letter::Symbol)
     end::Axis
 end
 
-function process_axis_arg!(d::KW, arg, letter = "")
+function process_axis_arg!(plotattributes::KW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scaleAliases, arg, arg)
 
     if typeof(arg) <: Font
-        d[Symbol(letter,:tickfont)] = arg
-        d[Symbol(letter,:guidefont)] = arg
+        plotattributes[Symbol(letter,:tickfont)] = arg
+        plotattributes[Symbol(letter,:guidefont)] = arg
 
     elseif arg in _allScales
-        d[Symbol(letter,:scale)] = arg
+        plotattributes[Symbol(letter,:scale)] = arg
 
     elseif arg in (:flip, :invert, :inverted)
-        d[Symbol(letter,:flip)] = true
+        plotattributes[Symbol(letter,:flip)] = true
 
     elseif T <: AbstractString
-        d[Symbol(letter,:guide)] = arg
+        plotattributes[Symbol(letter,:guide)] = arg
 
     # xlims/ylims
     elseif (T <: Tuple || T <: AVec) && length(arg) == 2
         sym = typeof(arg[1]) <: Number ? :lims : :ticks
-        d[Symbol(letter,sym)] = arg
+        plotattributes[Symbol(letter,sym)] = arg
 
     # xticks/yticks
     elseif T <: AVec
-        d[Symbol(letter,:ticks)] = arg
+        plotattributes[Symbol(letter,:ticks)] = arg
 
     elseif arg == nothing
-        d[Symbol(letter,:ticks)] = []
+        plotattributes[Symbol(letter,:ticks)] = []
 
     elseif T <: Bool || arg in _allShowaxisArgs
-        d[Symbol(letter,:showaxis)] = showaxis(arg, letter)
+        plotattributes[Symbol(letter,:showaxis)] = showaxis(arg, letter)
 
     elseif typeof(arg) <: Number
-        d[Symbol(letter,:rotation)] = arg
+        plotattributes[Symbol(letter,:rotation)] = arg
 
     elseif typeof(arg) <: Function
-        d[Symbol(letter,:formatter)] = arg
+        plotattributes[Symbol(letter,:formatter)] = arg
 
-    elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_axis))
+    elseif !handleColors!(plotattributes, arg, Symbol(letter, :foreground_color_axis))
         @warn("Skipped $(letter)axis arg $arg")
 
     end
@@ -88,28 +88,28 @@ end
 # update an Axis object with magic args and keywords
 function attr!(axis::Axis, args...; kw...)
     # first process args
-    d = axis.d
+    plotattributes = axis.plotattributes
     for arg in args
-        process_axis_arg!(d, arg)
+        process_axis_arg!(plotattributes, arg)
     end
 
-    # then override for any keywords... only those keywords that already exists in d
+    # then override for any keywords... only those keywords that already exists in plotattributes
     for (k,v) in kw
-        if haskey(d, k)
+        if haskey(plotattributes, k)
             if k == :discrete_values
                 # add these discrete values to the axis
                 for vi in v
                     discrete_value!(axis, vi)
                 end
             else
-                d[k] = v
+                plotattributes[k] = v
             end
         end
     end
 
     # replace scale aliases
-    if haskey(_scaleAliases, d[:scale])
-        d[:scale] = _scaleAliases[d[:scale]]
+    if haskey(_scaleAliases, plotattributes[:scale])
+        plotattributes[:scale] = _scaleAliases[plotattributes[:scale]]
     end
 
     axis
@@ -117,10 +117,10 @@ end
 
 # -------------------------------------------------------------------------
 
-Base.show(io::IO, axis::Axis) = dumpdict(axis.d, "Axis", true)
-# Base.getindex(axis::Axis, k::Symbol) = getindex(axis.d, k)
-Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.d, v, ks...)
-Base.haskey(axis::Axis, k::Symbol) = haskey(axis.d, k)
+Base.show(io::IO, axis::Axis) = dumpdict(axis.plotattributes, "Axis", true)
+# Base.getindex(axis::Axis, k::Symbol) = getindex(axis.plotattributes, k)
+Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.plotattributes, v, ks...)
+Base.haskey(axis::Axis, k::Symbol) = haskey(axis.plotattributes, k)
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
 
@@ -290,9 +290,9 @@ function get_minor_ticks(axis,ticks)
     axis[:minorticks] in (nothing, false) && !axis[:minorgrid] && return nothing
     ticks = ticks[1]
     length(ticks) < 2 && return nothing
-    
+
     amin, amax = axis_limits(axis)
-    #Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits 
+    #Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
     if length(ticks) > 2
         ratio = (ticks[3] - ticks[2])/(ticks[2] - ticks[1])
     elseif axis[:scale] == :none
@@ -322,7 +322,7 @@ function reset_extrema!(sp::Subplot)
         sp[Symbol(asym,:axis)][:extrema] = Extrema()
     end
     for series in sp.series_list
-        expand_extrema!(sp, series.d)
+        expand_extrema!(sp, series.plotattributes)
     end
 end
 
@@ -357,17 +357,17 @@ function expand_extrema!(axis::Axis, v::AVec{N}) where N<:Number
 end
 
 
-function expand_extrema!(sp::Subplot, d::KW)
-    vert = isvertical(d)
+function expand_extrema!(sp::Subplot, plotattributes::KW)
+    vert = isvertical(plotattributes)
 
     # first expand for the data
     for letter in (:x, :y, :z)
-        data = d[if vert
+        data = plotattributes[if vert
             letter
         else
             letter == :x ? :y : letter == :y ? :x : :z
         end]
-        if letter != :z && d[:seriestype] == :straightline && any(series[:seriestype] != :straightline for series in series_list(sp)) && data[1] != data[2]
+        if letter != :z && plotattributes[:seriestype] == :straightline && any(series[:seriestype] != :straightline for series in series_list(sp)) && data[1] != data[2]
             data = [NaN]
         end
         axis = sp[Symbol(letter, "axis")]
@@ -379,30 +379,30 @@ function expand_extrema!(sp::Subplot, d::KW)
         elseif eltype(data) <: Number || (isa(data, Surface) && all(di -> isa(di, Number), data.surf))
             if !(eltype(data) <: Number)
                 # huh... must have been a mis-typed surface? lets swap it out
-                data = d[letter] = Surface(Matrix{Float64}(data.surf))
+                data = plotattributes[letter] = Surface(Matrix{Float64}(data.surf))
             end
             expand_extrema!(axis, data)
         elseif data != nothing
             # TODO: need more here... gotta track the discrete reference value
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
-            d[letter], d[Symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
-            expand_extrema!(axis, d[letter])
+            plotattributes[letter], plotattributes[Symbol(letter,"_discrete_indices")] = discrete_value!(axis, data)
+            expand_extrema!(axis, plotattributes[letter])
         end
     end
 
     # # expand for fillrange/bar_width
     # fillaxis, baraxis = sp.attr[:yaxis], sp.attr[:xaxis]
-    # if isvertical(d)
+    # if isvertical(plotattributes)
     #     fillaxis, baraxis = baraxis, fillaxis
     # end
 
     # expand for fillrange
-    fr = d[:fillrange]
-    if fr == nothing && d[:seriestype] == :bar
+    fr = plotattributes[:fillrange]
+    if fr == nothing && plotattributes[:seriestype] == :bar
         fr = 0.0
     end
-    if fr != nothing && !all3D(d)
+    if fr != nothing && !all3D(plotattributes)
         axis = sp.attr[vert ? :yaxis : :xaxis]
         if typeof(fr) <: Tuple
             for fri in fr
@@ -414,13 +414,13 @@ function expand_extrema!(sp::Subplot, d::KW)
     end
 
     # expand for bar_width
-    if d[:seriestype] == :bar
+    if plotattributes[:seriestype] == :bar
         dsym = vert ? :x : :y
-        data = d[dsym]
+        data = plotattributes[dsym]
 
-        bw = d[:bar_width]
+        bw = plotattributes[:bar_width]
         if bw == nothing
-            bw = d[:bar_width] = _bar_width * ignorenan_minimum(filter(x->x>0,diff(sort(data))))
+            bw = plotattributes[:bar_width] = _bar_width * ignorenan_minimum(filter(x->x>0,diff(sort(data))))
         end
         axis = sp.attr[Symbol(dsym, :axis)]
         expand_extrema!(axis, ignorenan_maximum(data) + 0.5maximum(bw))
@@ -428,11 +428,11 @@ function expand_extrema!(sp::Subplot, d::KW)
     end
 
     # expand for heatmaps
-    if d[:seriestype] == :heatmap
+    if plotattributes[:seriestype] == :heatmap
         for letter in (:x, :y)
-            data = d[letter]
+            data = plotattributes[letter]
             axis = sp[Symbol(letter, "axis")]
-            scale = get(d, Symbol(letter, "scale"), :identity)
+            scale = get(plotattributes, Symbol(letter, "scale"), :identity)
             expand_extrema!(axis, heatmap_edges(data, scale))
         end
     end
@@ -462,7 +462,7 @@ function default_should_widen(axis::Axis)
     if !is_2tuple(axis[:lims])
         for sp in axis.sps
             for series in series_list(sp)
-                if series.d[:seriestype] in _widen_seriestypes
+                if series.plotattributes[:seriestype] in _widen_seriestypes
                     should_widen = true
                 end
             end
@@ -572,12 +572,12 @@ end
 # -------------------------------------------------------------------------
 
 function pie_labels(sp::Subplot, series::Series)
-    d = series.d
-    if haskey(d,:x_discrete_indices)
-        dvals = sp.attr[:xaxis].d[:discrete_values]
-        [dvals[idx] for idx in d[:x_discrete_indices]]
+    plotattributes = series.plotattributes
+    if haskey(plotattributes,:x_discrete_indices)
+        dvals = sp.attr[:xaxis].plotattributes[:discrete_values]
+        [dvals[idx] for idx in plotattributes[:x_discrete_indices]]
     else
-        d[:x]
+        plotattributes[:x]
     end
 end
 

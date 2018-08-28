@@ -25,7 +25,7 @@ const _unicodeplots_scale = [:identity]
 
 
 # don't warn on unsupported... there's just too many warnings!!
-warnOnUnsupported_args(::UnicodePlotsBackend, d::KW) = nothing
+warnOnUnsupported_args(::UnicodePlotsBackend, plotattributes::KW) = nothing
 
 # --------------------------------------------------------------------------------------
 
@@ -104,7 +104,7 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
 
         # now use the ! functions to add to the plot
         for series in series_list(sp)
-            addUnicodeSeries!(o, series.d, sp[:legend] != :none, xlim, ylim)
+            addUnicodeSeries!(o, series.plotattributes, sp[:legend] != :none, xlim, ylim)
         end
 
         # save the object
@@ -114,17 +114,17 @@ end
 
 
 # add a single series
-function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
+function addUnicodeSeries!(o, plotattributes::KW, addlegend::Bool, xlim, ylim)
     # get the function, or special handling for step/bar/hist
-    st = d[:seriestype]
+    st = plotattributes[:seriestype]
     if st == :histogram2d
-        UnicodePlots.densityplot!(o, d[:x], d[:y])
+        UnicodePlots.densityplot!(o, plotattributes[:x], plotattributes[:y])
         return
     end
 
     if st in (:path, :straightline)
         func = UnicodePlots.lineplot!
-    elseif st == :scatter || d[:markershape] != :none
+    elseif st == :scatter || plotattributes[:markershape] != :none
         func = UnicodePlots.scatterplot!
     # elseif st == :bar
     #     func = UnicodePlots.barplot!
@@ -136,16 +136,16 @@ function addUnicodeSeries!(o, d::KW, addlegend::Bool, xlim, ylim)
 
     # get the series data and label
     x, y = if st == :straightline
-        straightline_data(d)
+        straightline_data(plotattributes)
     elseif st == :shape
         shape_data(series)
     else
-        [collect(float(d[s])) for s in (:x, :y)]
+        [collect(float(plotattributes[s])) for s in (:x, :y)]
     end
-    label = addlegend ? d[:label] : ""
+    label = addlegend ? plotattributes[:label] : ""
 
     # if we happen to pass in allowed color symbols, great... otherwise let UnicodePlots decide
-    color = d[:linecolor] in UnicodePlots.color_cycle ? d[:linecolor] : :auto
+    color = plotattributes[:linecolor] in UnicodePlots.color_cycle ? plotattributes[:linecolor] : :auto
 
     # add the series
     x, y = Plots.unzip(collect(Base.Iterators.filter(xy->isfinite(xy[1])&&isfinite(xy[2]), zip(x,y))))

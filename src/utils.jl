@@ -19,15 +19,15 @@ A hacky replacement for a histogram when the backend doesn't support histograms 
 Convert it into a bar chart with the appropriate x/y values.
 """
 function histogramHack(; kw...)
-  d = KW(kw)
+  plotattributes = KW(kw)
 
   # we assume that the y kwarg is set with the data to be binned, and nbins is also defined
-  edges, midpoints, buckets, counts = binData(d[:y], d[:bins])
-  d[:x] = midpoints
-  d[:y] = float(counts)
-  d[:seriestype] = :bar
-  d[:fillrange] = d[:fillrange] == nothing ? 0.0 : d[:fillrange]
-  d
+  edges, midpoints, buckets, counts = binData(plotattributes[:y], plotattributes[:bins])
+  plotattributes[:x] = midpoints
+  plotattributes[:y] = float(counts)
+  plotattributes[:seriestype] = :bar
+  plotattributes[:fillrange] = plotattributes[:fillrange] == nothing ? 0.0 : plotattributes[:fillrange]
+  plotattributes
 end
 
 """
@@ -35,10 +35,10 @@ A hacky replacement for a bar graph when the backend doesn't support bars direct
 Convert it into a line chart with fillrange set.
 """
 function barHack(; kw...)
-  d = KW(kw)
-  midpoints = d[:x]
-  heights = d[:y]
-  fillrange = d[:fillrange] == nothing ? 0.0 : d[:fillrange]
+  plotattributes = KW(kw)
+  midpoints = plotattributes[:x]
+  heights = plotattributes[:y]
+  fillrange = plotattributes[:fillrange] == nothing ? 0.0 : plotattributes[:fillrange]
 
   # estimate the edges
   dists = diff(midpoints) * 0.5
@@ -62,11 +62,11 @@ function barHack(; kw...)
     append!(y, [fillrange, heights[i], heights[i], fillrange])
   end
 
-  d[:x] = x
-  d[:y] = y
-  d[:seriestype] = :path
-  d[:fillrange] = fillrange
-  d
+  plotattributes[:x] = x
+  plotattributes[:y] = y
+  plotattributes[:seriestype] = :path
+  plotattributes[:fillrange] = fillrange
+  plotattributes
 end
 
 
@@ -75,33 +75,33 @@ A hacky replacement for a sticks graph when the backend doesn't support sticks d
 Convert it into a line chart that traces the sticks, and a scatter that sets markers at the points.
 """
 function sticksHack(; kw...)
-  dLine = KW(kw)
-  dScatter = copy(dLine)
+  plotattributesLine = KW(kw)
+  plotattributesScatter = copy(plotattributesLine)
 
   # these are the line vertices
   x = Float64[]
   y = Float64[]
-  fillrange = dLine[:fillrange] == nothing ? 0.0 : dLine[:fillrange]
+  fillrange = plotattributesLine[:fillrange] == nothing ? 0.0 : plotattributesLine[:fillrange]
 
   # calculate the vertices
-  yScatter = dScatter[:y]
-  for (i,xi) in enumerate(dScatter[:x])
+  yScatter = plotattributesScatter[:y]
+  for (i,xi) in enumerate(plotattributesScatter[:x])
     yi = yScatter[i]
     for j in 1:3 push!(x, xi) end
     append!(y, [fillrange, yScatter[i], fillrange])
   end
 
   # change the line args
-  dLine[:x] = x
-  dLine[:y] = y
-  dLine[:seriestype] = :path
-  dLine[:markershape] = :none
-  dLine[:fillrange] = nothing
+  plotattributesLine[:x] = x
+  plotattributesLine[:y] = y
+  plotattributesLine[:seriestype] = :path
+  plotattributesLine[:markershape] = :none
+  plotattributesLine[:fillrange] = nothing
 
   # change the scatter args
-  dScatter[:seriestype] = :none
+  plotattributesScatter[:seriestype] = :none
 
-  dLine, dScatter
+  plotattributesLine, plotattributesScatter
 end
 
 function regressionXY(x, y)
@@ -130,10 +130,10 @@ function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     # newz, ColorGradient(colors)
 end
 
-function imageHack(d::KW)
+function imageHack(plotattributes::KW)
     is_seriestype_supported(:heatmap) || error("Neither :image or :heatmap are supported!")
-    d[:seriestype] = :heatmap
-    d[:z], d[:fillcolor] = replace_image_with_heatmap(d[:z].surf)
+    plotattributes[:seriestype] = :heatmap
+    plotattributes[:z], plotattributes[:fillcolor] = replace_image_with_heatmap(plotattributes[:z].surf)
 end
 # ---------------------------------------------------------------
 
@@ -328,16 +328,16 @@ function replaceType(vec, val)
   push!(vec, val)
 end
 
-function replaceAlias!(d::KW, k::Symbol, aliases::Dict{Symbol,Symbol})
+function replaceAlias!(plotattributes::KW, k::Symbol, aliases::Dict{Symbol,Symbol})
   if haskey(aliases, k)
-    d[aliases[k]] = pop!(d, k)
+    plotattributes[aliases[k]] = pop!(plotattributes, k)
   end
 end
 
-function replaceAliases!(d::KW, aliases::Dict{Symbol,Symbol})
-  ks = collect(keys(d))
+function replaceAliases!(plotattributes::KW, aliases::Dict{Symbol,Symbol})
+  ks = collect(keys(plotattributes))
   for k in ks
-      replaceAlias!(d, k, aliases)
+      replaceAlias!(plotattributes, k, aliases)
   end
 end
 
@@ -347,7 +347,7 @@ Base.first(c::Colorant) = c
 Base.first(x::Symbol) = x
 
 
-sortedkeys(d::Dict) = sort(collect(keys(d)))
+sortedkeys(plotattributes::Dict) = sort(collect(keys(plotattributes)))
 
 
 const _scale_base = Dict{Symbol, Real}(
@@ -432,8 +432,8 @@ isscalar(::Any)  = false
 is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
 
-isvertical(d::KW) = get(d, :orientation, :vertical) in (:vertical, :v, :vert)
-isvertical(series::Series) = isvertical(series.d)
+isvertical(plotattributes::KW) = get(plotattributes, :orientation, :vertical) in (:vertical, :v, :vert)
+isvertical(series::Series) = isvertical(series.plotattributes)
 
 
 ticksType(ticks::AVec{T}) where {T<:Real}                      = :ticks
@@ -492,8 +492,8 @@ end
 # this is a helper function to determine whether we need to transpose a surface matrix.
 # it depends on whether the backend matches rows to x (transpose_on_match == true) or vice versa
 # for example: PyPlot sends rows to y, so transpose_on_match should be true
-function transpose_z(d, z, transpose_on_match::Bool = true)
-    if d[:match_dimensions] == transpose_on_match
+function transpose_z(plotattributes, z, transpose_on_match::Bool = true)
+    if plotattributes[:match_dimensions] == transpose_on_match
         # z'
         permutedims(z, [2,1])
     else
@@ -806,20 +806,20 @@ end
 debugshow(x) = show(x)
 debugshow(x::AbstractArray) = print(summary(x))
 
-function dumpdict(d::KW, prefix = "", alwaysshow = false)
+function dumpdict(plotattributes::KW, prefix = "", alwaysshow = false)
   _debugMode.on || alwaysshow || return
   println()
   if prefix != ""
     println(prefix, ":")
   end
-  for k in sort(collect(keys(d)))
+  for k in sort(collect(keys(plotattributes)))
     @printf("%14s: ", k)
-    debugshow(d[k])
+    debugshow(plotattributes[k])
     println()
   end
   println()
 end
-DD(d::KW, prefix = "") = dumpdict(d, prefix, true)
+DD(plotattributes::KW, prefix = "") = dumpdict(plotattributes, prefix, true)
 
 
 function dumpcallstack()
@@ -845,25 +845,25 @@ tovec(v::AbstractVector) = v
 tovec(v::Nothing) = zeros(0)
 
 function getxy(plt::Plot, i::Integer)
-    d = plt.series_list[i].d
-    tovec(d[:x]), tovec(d[:y])
+    plotattributes = plt.series_list[i].plotattributes
+    tovec(plotattributes[:x]), tovec(plotattributes[:y])
 end
 function getxyz(plt::Plot, i::Integer)
-    d = plt.series_list[i].d
-    tovec(d[:x]), tovec(d[:y]), tovec(d[:z])
+    plotattributes = plt.series_list[i].plotattributes
+    tovec(plotattributes[:x]), tovec(plotattributes[:y]), tovec(plotattributes[:z])
 end
 
 function setxy!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y}
     series = plt.series_list[i]
-    series.d[:x], series.d[:y] = xy
-    sp = series.d[:subplot]
+    series.plotattributes[:x], series.plotattributes[:y] = xy
+    sp = series.plotattributes[:subplot]
     reset_extrema!(sp)
     _series_updated(plt, series)
 end
 function setxyz!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z}
     series = plt.series_list[i]
-    series.d[:x], series.d[:y], series.d[:z] = xyz
-    sp = series.d[:subplot]
+    series.plotattributes[:x], series.plotattributes[:y], series.plotattributes[:z] = xyz
+    sp = series.plotattributes[:subplot]
     reset_extrema!(sp)
     _series_updated(plt, series)
 end
@@ -912,9 +912,9 @@ Base.push!(series::Series, xi, yi, zi) = (push_x!(series,xi); push_y!(series,yi)
 # -------------------------------------------------------
 
 function attr!(series::Series; kw...)
-    d = KW(kw)
-    preprocessArgs!(d)
-    for (k,v) in d
+    plotattributes = KW(kw)
+    preprocessArgs!(plotattributes)
+    for (k,v) in plotattributes
         if haskey(_series_defaults, k)
             series[k] = v
         else
@@ -926,9 +926,9 @@ function attr!(series::Series; kw...)
 end
 
 function attr!(sp::Subplot; kw...)
-    d = KW(kw)
-    preprocessArgs!(d)
-    for (k,v) in d
+    plotattributes = KW(kw)
+    preprocessArgs!(plotattributes)
+    for (k,v) in plotattributes
         if haskey(_subplot_defaults, k)
             sp[k] = v
         else
@@ -1057,9 +1057,9 @@ mm2px(mm::Real)         = float(px / MM_PER_PX)
 
 
 "Smallest x in plot"
-xmin(plt::Plot) = ignorenan_minimum([ignorenan_minimum(series.d[:x]) for series in plt.series_list])
+xmin(plt::Plot) = ignorenan_minimum([ignorenan_minimum(series.plotattributes[:x]) for series in plt.series_list])
 "Largest x in plot"
-xmax(plt::Plot) = ignorenan_maximum([ignorenan_maximum(series.d[:x]) for series in plt.series_list])
+xmax(plt::Plot) = ignorenan_maximum([ignorenan_maximum(series.plotattributes[:x]) for series in plt.series_list])
 
 "Extrema of x-values in plot"
 ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))

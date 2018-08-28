@@ -47,7 +47,7 @@ end
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-RecipesBase.apply_recipe(d::KW, ::Type{T}, plt::AbstractPlot) where {T} = throw(MethodError("Unmatched plot recipe: $T"))
+RecipesBase.apply_recipe(plotattributes::KW, ::Type{T}, plt::AbstractPlot) where {T} = throw(MethodError("Unmatched plot recipe: $T"))
 
 # ---------------------------------------------------------------------------
 
@@ -277,7 +277,7 @@ end
     fr = plotattributes[:fillrange]
     newfr = fr != nothing ? zeros(0) : nothing
     newz = z != nothing ? zeros(0) : nothing
-    # lz = d[:line_z]
+    # lz = plotattributes[:line_z]
     # newlz = lz != nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
@@ -313,9 +313,9 @@ end
     end
     # if lz != nothing
     #     # line_z := newlz
-    #     linecolor := (isa(d[:linecolor], ColorGradient) ? d[:linecolor] : cgrad())
+    #     linecolor := (isa(plotattributes[:linecolor], ColorGradient) ? plotattributes[:linecolor] : cgrad())
     # end
-    # Plots.DD(d)
+    # Plots.DD(plotattributes)
     ()
 end
 @deps curves path
@@ -453,16 +453,16 @@ function _preprocess_binbarlike_weights(::Type{T}, w, wscale::Symbol) where T<:A
     w_adj, baseline
 end
 
-function _preprocess_barlike(d, x, y)
-    xscale = get(d, :xscale, :identity)
-    yscale = get(d, :yscale, :identity)
+function _preprocess_barlike(plotattributes, x, y)
+    xscale = get(plotattributes, :xscale, :identity)
+    yscale = get(plotattributes, :yscale, :identity)
     weights, baseline = _preprocess_binbarlike_weights(float(eltype(y)), y, yscale)
     x, weights, xscale, yscale, baseline
 end
 
-function _preprocess_binlike(d, x, y)
-    xscale = get(d, :xscale, :identity)
-    yscale = get(d, :yscale, :identity)
+function _preprocess_binlike(plotattributes, x, y)
+    xscale = get(plotattributes, :xscale, :identity)
+    yscale = get(plotattributes, :yscale, :identity)
     T = float(promote_type(eltype(x), eltype(y)))
     edge = T.(x)
     weights, baseline = _preprocess_binbarlike_weights(T, y, yscale)
@@ -781,11 +781,11 @@ end
 # ---------------------------------------------------------------------------
 # Error Bars
 
-function error_style!(d::KW)
-    d[:seriestype] = :path
-    d[:linecolor] = d[:markerstrokecolor]
-    d[:linewidth] = d[:markerstrokewidth]
-    d[:label] = ""
+function error_style!(plotattributes::KW)
+    plotattributes[:seriestype] = :path
+    plotattributes[:linecolor] = plotattributes[:markerstrokecolor]
+    plotattributes[:linewidth] = plotattributes[:markerstrokewidth]
+    plotattributes[:label] = ""
 end
 
 # if we're passed a tuple of vectors, convert to a vector of tuples
@@ -842,16 +842,16 @@ end
 # ---------------------------------------------------------------------------
 # quiver
 
-# function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
-function quiver_using_arrows(d::KW)
-    d[:label] = ""
-    d[:seriestype] = :path
-    if !isa(d[:arrow], Arrow)
-        d[:arrow] = arrow()
+# function apply_series_recipe(plotattributes::KW, ::Type{Val{:quiver}})
+function quiver_using_arrows(plotattributes::KW)
+    plotattributes[:label] = ""
+    plotattributes[:seriestype] = :path
+    if !isa(plotattributes[:arrow], Arrow)
+        plotattributes[:arrow] = arrow()
     end
 
-    velocity = error_zipit(d[:quiver])
-    xorig, yorig = d[:x], d[:y]
+    velocity = error_zipit(plotattributes[:quiver])
+    xorig, yorig = plotattributes[:x], plotattributes[:y]
 
     # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
     x, y = zeros(0), zeros(0)
@@ -877,17 +877,17 @@ function quiver_using_arrows(d::KW)
         nanappend!(y, [yi, yi+vy, NaN])
     end
 
-    d[:x], d[:y] = x, y
-    # KW[d]
+    plotattributes[:x], plotattributes[:y] = x, y
+    # KW[plotattributes]
 end
 
-# function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
-function quiver_using_hack(d::KW)
-    d[:label] = ""
-    d[:seriestype] = :shape
+# function apply_series_recipe(plotattributes::KW, ::Type{Val{:quiver}})
+function quiver_using_hack(plotattributes::KW)
+    plotattributes[:label] = ""
+    plotattributes[:seriestype] = :shape
 
-    velocity = error_zipit(d[:quiver])
-    xorig, yorig = d[:x], d[:y]
+    velocity = error_zipit(plotattributes[:quiver])
+    xorig, yorig = plotattributes[:x], plotattributes[:y]
 
     # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
     pts = P2[]
@@ -923,11 +923,11 @@ function quiver_using_hack(d::KW)
         nanappend!(pts, P2[p, ppv-U1, ppv-U1+U2, ppv, ppv-U1-U2, ppv-U1])
     end
 
-    d[:x], d[:y] = Plots.unzip(pts[2:end])
-    # KW[d]
+    plotattributes[:x], plotattributes[:y] = Plots.unzip(pts[2:end])
+    # KW[plotattributes]
 end
 
-# function apply_series_recipe(d::KW, ::Type{Val{:quiver}})
+# function apply_series_recipe(plotattributes::KW, ::Type{Val{:quiver}})
 @recipe function f(::Type{Val{:quiver}}, x, y, z)
     if :arrow in supported_attrs()
         quiver_using_arrows(plotattributes)

@@ -75,10 +75,10 @@ function _create_backend_figure(plt::Plot{WinstonBackend})
     )
 end
 
-copy_remove(d::KW, s::Symbol) = delete!(copy(d), s)
+copy_remove(plotattributes::KW, s::Symbol) = delete!(copy(plotattributes), s)
 
-function addRegressionLineWinston(d::KW, wplt)
-  xs, ys = regressionXY(d[:x], d[:y])
+function addRegressionLineWinston(plotattributes::KW, wplt)
+  xs, ys = regressionXY(plotattributes[:x], plotattributes[:y])
   Winston.add(wplt, Winston.Curve(xs, ys, kind="dotted"))
 end
 
@@ -93,22 +93,22 @@ function getWinstonItems(plt::Plot)
 end
 
 function _series_added(plt::Plot{WinstonBackend}, series::Series)
-    d = series.d
+    plotattributes = series.plotattributes
   window, canvas, wplt = getWinstonItems(plt)
 
   # until we call it normally, do the hack
-  if d[:seriestype] == :bar
-    d = barHack(;d...)
+  if plotattributes[:seriestype] == :bar
+    plotattributes = barHack(;plotattributes...)
   end
 
 
   e = KW()
-  e[:color] = getColor(d[:linecolor])
-  e[:linewidth] = d[:linewidth]
-  e[:kind] = winston_linestyle[d[:linestyle]]
-  e[:symbolkind] = winston_marker[d[:markershape]]
+  e[:color] = getColor(plotattributes[:linecolor])
+  e[:linewidth] = plotattributes[:linewidth]
+  e[:kind] = winston_linestyle[plotattributes[:linestyle]]
+  e[:symbolkind] = winston_marker[plotattributes[:markershape]]
   # markercolor     # same choices as `color`, or :match will set the color to be the same as `color`
-  e[:symbolsize] = d[:markersize] / 5
+  e[:symbolsize] = plotattributes[:markersize] / 5
 
   # pos             # (Int,Int), move the enclosing window to this position
   # screen          # Integer, move enclosing window to this screen number (for multiscreen desktops)
@@ -116,69 +116,69 @@ function _series_added(plt::Plot{WinstonBackend}, series::Series)
 
 
   ## lintype :path, :step, :stepinverted, :sticks, :dots, :none, :histogram2d, :hexbin, :histogram, :bar
-  if d[:seriestype] == :none
-    Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)..., color=getColor(d[:markercolor])))
+  if plotattributes[:seriestype] == :none
+    Winston.add(wplt, Winston.Points(plotattributes[:x], plotattributes[:y]; copy_remove(e, :kind)..., color=getColor(plotattributes[:markercolor])))
 
-  elseif d[:seriestype] == :path
-    x, y = d[:x], d[:y]
+  elseif plotattributes[:seriestype] == :path
+    x, y = plotattributes[:x], plotattributes[:y]
     Winston.add(wplt, Winston.Curve(x, y; e...))
 
-    fillrange = d[:fillrange]
+    fillrange = plotattributes[:fillrange]
     if fillrange != nothing
       if isa(fillrange, AbstractVector)
         y2 = fillrange
       else
         y2 = Float64[fillrange for yi in y]
       end
-      Winston.add(wplt, Winston.FillBetween(x, y, x, y2, fillcolor=getColor(d[:fillcolor])))
+      Winston.add(wplt, Winston.FillBetween(x, y, x, y2, fillcolor=getColor(plotattributes[:fillcolor])))
     end
 
-  elseif d[:seriestype] == :scatter
-    if d[:markershape] == :none
-      d[:markershape] = :circle
+  elseif plotattributes[:seriestype] == :scatter
+    if plotattributes[:markershape] == :none
+      plotattributes[:markershape] = :circle
     end
 
-  # elseif d[:seriestype] == :step
+  # elseif plotattributes[:seriestype] == :step
   #     fn = Winston.XXX
 
-  # elseif d[:seriestype] == :stepinverted
+  # elseif plotattributes[:seriestype] == :stepinverted
   #     fn = Winston.XXX
 
-  elseif d[:seriestype] == :sticks
-      Winston.add(wplt, Winston.Stems(d[:x], d[:y]; e...))
+  elseif plotattributes[:seriestype] == :sticks
+      Winston.add(wplt, Winston.Stems(plotattributes[:x], plotattributes[:y]; e...))
 
-  # elseif d[:seriestype] == :dots
+  # elseif plotattributes[:seriestype] == :dots
   #     fn = Winston.XXX
 
-  # elseif d[:seriestype] == :histogram2d
+  # elseif plotattributes[:seriestype] == :histogram2d
   #     fn = Winston.XXX
 
-  # elseif d[:seriestype] == :hexbin
+  # elseif plotattributes[:seriestype] == :hexbin
   #     fn = Winston.XXX
 
-  elseif d[:seriestype] == :histogram
-      hst = hist(d[:y], d[:bins])
+  elseif plotattributes[:seriestype] == :histogram
+      hst = hist(plotattributes[:y], plotattributes[:bins])
       Winston.add(wplt, Winston.Histogram(hst...; copy_remove(e, :bins)...))
 
-  # elseif d[:seriestype] == :bar
+  # elseif plotattributes[:seriestype] == :bar
   #     # fn = Winston.XXX
 
   else
-    error("seriestype $(d[:seriestype]) not supported by Winston.")
+    error("seriestype $(plotattributes[:seriestype]) not supported by Winston.")
 
   end
 
 
   # markershape
-  if d[:markershape] != :none
-    Winston.add(wplt, Winston.Points(d[:x], d[:y]; copy_remove(e, :kind)..., color=getColor(d[:markercolor])))
+  if plotattributes[:markershape] != :none
+    Winston.add(wplt, Winston.Points(plotattributes[:x], plotattributes[:y]; copy_remove(e, :kind)..., color=getColor(plotattributes[:markercolor])))
   end
 
 
   # optionally add a regression line
-  d[:smooth] && d[:seriestype] != :histogram && addRegressionLineWinston(d, wplt)
+  plotattributes[:smooth] && plotattributes[:seriestype] != :histogram && addRegressionLineWinston(plotattributes, wplt)
 
-  # push!(plt.seriesargs, d)
+  # push!(plt.seriesargs, plotattributes)
   # plt
 end
 
@@ -192,17 +192,17 @@ const _winstonNames = KW(
     :yscale => :ylog,
   )
 
-function _update_plot_object(plt::Plot{WinstonBackend}, d::KW)
+function _update_plot_object(plt::Plot{WinstonBackend}, plotattributes::KW)
   window, canvas, wplt = getWinstonItems(plt)
   for k in (:xguide, :yguide, :title, :xlims, :ylims)
-    if haskey(d, k)
-      Winston.setattr(wplt, string(get(_winstonNames, k, k)), d[k])
+    if haskey(plotattributes, k)
+      Winston.setattr(wplt, string(get(_winstonNames, k, k)), plotattributes[k])
     end
   end
 
   for k in (:xscale, :yscale)
-    if haskey(d, k)
-      islogscale = d[k] == :log10
+    if haskey(plotattributes, k)
+      islogscale = plotattributes[k] == :log10
       Winston.setattr(wplt, (k == :xscale ? :xlog : :ylog), islogscale)
     end
   end

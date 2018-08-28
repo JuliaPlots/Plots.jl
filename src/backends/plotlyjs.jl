@@ -31,7 +31,7 @@ end
 
 function _series_updated(plt::Plot{PlotlyJSBackend}, series::Series)
     xsym, ysym = (ispolar(series) ? (:t,:r) : (:x,:y))
-    kw = KW(xsym => (series.d[:x],), ysym => (series.d[:y],))
+    kw = KW(xsym => (series.plotattributes[:x],), ysym => (series.plotattributes[:y],))
     z = series[:z]
     if z != nothing
         kw[:z] = (isa(z,Surface) ? transpose_z(series, series[:z].surf, false) : z,)

@@ -148,7 +148,7 @@ _hdf5_map_str2telem(v::Vector) = HDF5PLOT_MAP_STR2TELEM[v[1]]
 function _hdf5_merge!(dest::Dict, src::Dict)
     for (k, v) in src
         if isa(v, Axis)
-            _hdf5_merge!(dest[k].d, v.d)
+            _hdf5_merge!(dest[k].plotattributes, v.plotattributes)
         else
             dest[k] = v
         end
@@ -215,7 +215,7 @@ end
 
 # ----------------------------------------------------------------
 
-# Override this to update plot items (title, xlabel, etc), and add annotations (d[:annotations])
+# Override this to update plot items (title, xlabel, etc), and add annotations (plotattributes[:annotations])
 function _update_plot_object(plt::Plot{HDF5Backend})
     #Do nothing
 end
@@ -323,8 +323,8 @@ function _hdf5plot_gwrite(grp, k::String, v::Tuple)
     end
     #NOTE: _hdf5plot_overwritetype overwrites "Array" type with "Tuple".
 end
-function _hdf5plot_gwrite(grp, k::String, d::Dict)
-#    @warn("Cannot write dict: $k=$d")
+function _hdf5plot_gwrite(grp, k::String, plotattributes::Dict)
+#    @warn("Cannot write dict: $k=$plotattributes")
 end
 function _hdf5plot_gwrite(grp, k::String, v::AbstractRange)
     _hdf5plot_gwrite(grp, k, collect(v)) #For now
@@ -380,7 +380,7 @@ function _hdf5plot_gwrite(grp, k::String, v::HDF5PLOT_SIMPLESUBSTRUCT)
 end
 function _hdf5plot_gwrite(grp, k::String, v::Axis)
     grp = HDF5.g_create(grp, k)
-    for (_k, _v) in v.d
+    for (_k, _v) in v.plotattributes
         kstr = string(_k)
         _hdf5plot_gwrite(grp, kstr, _v)
     end
@@ -412,8 +412,8 @@ function _hdf5plot_gwrite(grp, k::String, v::Subplot)
     _hdf5plot_writetype(grp, Subplot)
     return
 end
-function _hdf5plot_write(grp, d::Dict)
-    for (k, v) in d
+function _hdf5plot_write(grp, plotattributes::Dict)
+    for (k, v) in plotattributes
         kstr = string(k)
         _hdf5plot_gwrite(grp, kstr, v)
     end
@@ -431,7 +431,7 @@ function _hdf5plot_write(sp::Subplot{HDF5Backend}, subpath::String, f)
     _hdf5plot_writecount(grp, length(sp.series_list))
     for (i, series) in enumerate(sp.series_list)
         grp = HDF5.g_create(f, _hdf5_plotelempath("$subpath/series_list/series$i"))
-        _hdf5plot_write(grp, series.d)
+        _hdf5plot_write(grp, series.plotattributes)
     end
 
     return
@@ -579,13 +579,13 @@ function _hdf5plot_read(grp, k::String)
     return _hdf5plot_read(grp, k, T, dtid)
 end
 
-#Read in values in group to populate d:
-function _hdf5plot_read(grp, d::Dict)
+#Read in values in group to populate plotattributes:
+function _hdf5plot_read(grp, plotattributes::Dict)
     gnames = names(grp)
     for k in gnames
         try
             v = _hdf5plot_read(grp, k)
-            d[Symbol(k)] = v
+            plotattributes[Symbol(k)] = v
         catch e
             @show e
             @show grp
@@ -614,7 +614,7 @@ function _hdf5plot_read(sp::Subplot, subpath::String, f)
         kwlist = KW()
         _hdf5plot_read(grp, kwlist)
         plot!(sp, kwlist[:x], kwlist[:y]) #Add data & create data structures
-        _hdf5_merge!(sp.series_list[end].d, kwlist)
+        _hdf5_merge!(sp.series_list[end].plotattributes, kwlist)
     end
 
     return

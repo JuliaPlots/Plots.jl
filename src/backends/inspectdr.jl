@@ -457,7 +457,7 @@ end
 
 # ----------------------------------------------------------------
 
-# Override this to update plot items (title, xlabel, etc), and add annotations (d[:annotations])
+# Override this to update plot items (title, xlabel, etc), and add annotations (plotattributes[:annotations])
 function _update_plot_object(plt::Plot{InspectDRBackend})
     mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end

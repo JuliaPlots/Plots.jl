@@ -8,25 +8,25 @@
 
 const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
 
-all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(d, :seriestype, :none))
+all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
 
 # unknown
-convertToAnyVector(x, d::KW) = error("No user recipe defined for $(typeof(x))")
+convertToAnyVector(x, plotattributes::KW) = error("No user recipe defined for $(typeof(x))")
 
 # missing
-convertToAnyVector(v::Nothing, d::KW) = Any[nothing], nothing
+convertToAnyVector(v::Nothing, plotattributes::KW) = Any[nothing], nothing
 
 # fixed number of blank series
-convertToAnyVector(n::Integer, d::KW) = Any[zeros(0) for i in 1:n], nothing
+convertToAnyVector(n::Integer, plotattributes::KW) = Any[zeros(0) for i in 1:n], nothing
 
 # numeric vector
-convertToAnyVector(v::AVec{T}, d::KW) where {T<:Number} = Any[v], nothing
+convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Number} = Any[v], nothing
 
 # string vector
-convertToAnyVector(v::AVec{T}, d::KW) where {T<:AbstractString} = Any[v], nothing
+convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:AbstractString} = Any[v], nothing
 
-function convertToAnyVector(v::AMat, d::KW)
-    if all3D(d)
+function convertToAnyVector(v::AMat, plotattributes::KW)
+    if all3D(plotattributes)
         Any[Surface(v)]
     else
         Any[v[:,i] for i in 1:size(v,2)]
@@ -34,33 +34,33 @@ function convertToAnyVector(v::AMat, d::KW)
 end
 
 # function
-convertToAnyVector(f::Function, d::KW) = Any[f], nothing
+convertToAnyVector(f::Function, plotattributes::KW) = Any[f], nothing
 
 # surface
-convertToAnyVector(s::Surface, d::KW) = Any[s], nothing
+convertToAnyVector(s::Surface, plotattributes::KW) = Any[s], nothing
 
 # volume
-convertToAnyVector(v::Volume, d::KW) = Any[v], nothing
+convertToAnyVector(v::Volume, plotattributes::KW) = Any[v], nothing
 
 # # vector of OHLC
-# convertToAnyVector(v::AVec{OHLC}, d::KW) = Any[v], nothing
+# convertToAnyVector(v::AVec{OHLC}, plotattributes::KW) = Any[v], nothing
 
 # # dates
-convertToAnyVector(dts::AVec{D}, d::KW) where {D<:Union{Date,DateTime}} = Any[dts], nothing
+convertToAnyVector(dts::AVec{D}, plotattributes::KW) where {D<:Union{Date,DateTime}} = Any[dts], nothing
 
 # list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec, d::KW)
+function convertToAnyVector(v::AVec, plotattributes::KW)
     if all(x -> typeof(x) <: Number, v)
         # all real numbers wrap the whole vector as one item
         Any[convert(Vector{Float64}, v)], nothing
     else
         # something else... treat each element as an item
-        vcat(Any[convertToAnyVector(vi, d)[1] for vi in v]...), nothing
+        vcat(Any[convertToAnyVector(vi, plotattributes)[1] for vi in v]...), nothing
         # Any[vi for vi in v], nothing
     end
 end
 
-convertToAnyVector(t::Tuple, d::KW) = Any[t], nothing
+convertToAnyVector(t::Tuple, plotattributes::KW) = Any[t], nothing
 
 
 function convertToAnyVector(args...)
@@ -180,14 +180,14 @@ end
 # this should catch unhandled "series recipes" and error with a nice message
 @recipe f(::Type{V}, x, y, z) where {V<:Val} = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
 
-_apply_type_recipe(d, v) = RecipesBase.apply_recipe(d, typeof(v), v)[1].args[1]
+_apply_type_recipe(plotattributes, v) = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
 
 # Handle type recipes when the recipe is defined on the elements.
 # This sort of recipe should return a pair of functions... one to convert to number,
 # and one to format tick values.
-function _apply_type_recipe(d, v::AbstractArray)
+function _apply_type_recipe(plotattributes, v::AbstractArray)
     isempty(v) && return Float64[]
-    args = RecipesBase.apply_recipe(d, typeof(v[1]), v[1])[1].args
+    args = RecipesBase.apply_recipe(plotattributes, typeof(v[1]), v[1])[1].args
     if length(args) == 2 && typeof(args[1]) <: Function && typeof(args[2]) <: Function
         numfunc, formatter = args
         Formatted(map(numfunc, v), formatter)
@@ -197,13 +197,13 @@ function _apply_type_recipe(d, v::AbstractArray)
 end
 
 # # special handling for Surface... need to properly unwrap and re-wrap
-# function _apply_type_recipe(d, v::Surface)
+# function _apply_type_recipe(plotattributes, v::Surface)
 #     T = eltype(v.surf)
 #     @show T
 #     if T <: Integer || T <: AbstractFloat
 #         v
 #     else
-#         ret = _apply_type_recipe(d, v.surf)
+#         ret = _apply_type_recipe(plotattributes, v.surf)
 #         if typeof(ret) <: Formatted
 #             Formatted(Surface(ret.data), ret.formatter)
 #         else
@@ -213,7 +213,7 @@ end
 # end
 
 # don't do anything for ints or floats
-_apply_type_recipe(d, v::AbstractArray{T}) where {T<:Union{Integer,AbstractFloat}} = v
+_apply_type_recipe(plotattributes, v::AbstractArray{T}) where {T<:Union{Integer,AbstractFloat}} = v
 
 # handle "type recipes" by converting inputs, and then either re-calling or slicing
 @recipe function f(x, y, z)
@@ -274,11 +274,11 @@ end
 # # --------------------------------------------------------------------
 
 # helper function to ensure relevant attributes are wrapped by Surface
-function wrap_surfaces(d::KW)
-    if haskey(d, :fill_z)
-        v = d[:fill_z]
+function wrap_surfaces(plotattributes::KW)
+    if haskey(plotattributes, :fill_z)
+        v = plotattributes[:fill_z]
         if !isa(v, Surface)
-            d[:fill_z] = Surface(v)
+            plotattributes[:fill_z] = Surface(v)
         end
     end
 end
@@ -428,17 +428,17 @@ end
 # # 3d line or scatter
 
 @recipe function f(x::AVec, y::AVec, z::AVec)
-    # st = get(d, :seriestype, :none)
+    # st = get(plotattributes, :seriestype, :none)
     # if st == :scatter
-    #     d[:seriestype] = :scatter3d
+    #     plotattributes[:seriestype] = :scatter3d
     # elseif !is3d(st)
-    #     d[:seriestype] = :path3d
+    #     plotattributes[:seriestype] = :path3d
     # end
     SliceIt, x, y, z
 end
 
 @recipe function f(x::AMat, y::AMat, z::AMat)
-    # st = get(d, :seriestype, :none)
+    # st = get(plotattributes, :seriestype, :none)
     # if size(x) == size(y) == size(z)
     #     if !is3d(st)
     #         seriestype := :path3d
@@ -573,7 +573,7 @@ end
 #         # create a new series, with the label of the group, and an idxfilter (to be applied in slice_and_dice)
 #         # TODO: use @series instead
 #         @show i, glab, groupby.groupIds[i]
-#         di = copy(d)
+#         di = copy(plotattributes)
 #         get!(di, :label, string(glab))
 #         get!(di, :idxfilter, groupby.groupIds[i])
 #         push!(series_list, RecipeData(di, args))

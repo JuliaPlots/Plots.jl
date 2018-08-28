@@ -52,84 +52,84 @@ const _qwtAliases = KW(
     :star8 => :star2,
   )
 
-function fixcolors(d::KW)
-  for (k,v) in d
+function fixcolors(plotattributes::KW)
+  for (k,v) in plotattributes
     if typeof(v) <: ColorScheme
-      d[k] = getColor(v)
+      plotattributes[k] = getColor(v)
     end
   end
 end
 
-function replaceQwtAliases(d, s)
-  if haskey(_qwtAliases, d[s])
-    d[s] = _qwtAliases[d[s]]
+function replaceQwtAliases(plotattributes, s)
+  if haskey(_qwtAliases, plotattributes[s])
+    plotattributes[s] = _qwtAliases[plotattributes[s]]
   end
 end
 
 function adjustQwtKeywords(plt::Plot{QwtBackend}, iscreating::Bool; kw...)
-  d = KW(kw)
-  st = d[:seriestype]
+  plotattributes = KW(kw)
+  st = plotattributes[:seriestype]
   if st == :scatter
-    d[:seriestype] = :none
-    if d[:markershape] == :none
-      d[:markershape] = :circle
+    plotattributes[:seriestype] = :none
+    if plotattributes[:markershape] == :none
+      plotattributes[:markershape] = :circle
     end
 
   elseif st in (:hline, :vline)
-    addLineMarker(plt, d)
-    d[:seriestype] = :none
-    d[:markershape] = :circle
-    d[:markersize] = 1
+    addLineMarker(plt, plotattributes)
+    plotattributes[:seriestype] = :none
+    plotattributes[:markershape] = :circle
+    plotattributes[:markersize] = 1
     if st == :vline
-      d[:x], d[:y] = d[:y], d[:x]
+      plotattributes[:x], plotattributes[:y] = plotattributes[:y], plotattributes[:x]
     end
 
   elseif !iscreating && st == :bar
-    d = barHack(; kw...)
+    plotattributes = barHack(; kw...)
   elseif !iscreating && st == :histogram
-    d = barHack(; histogramHack(; kw...)...)
+    plotattributes = barHack(; histogramHack(; kw...)...)
   end
 
-  replaceQwtAliases(d, :seriestype)
-  replaceQwtAliases(d, :markershape)
+  replaceQwtAliases(plotattributes, :seriestype)
+  replaceQwtAliases(plotattributes, :markershape)
 
-  for k in keys(d)
+  for k in keys(plotattributes)
     if haskey(_qwtAliases, k)
-      d[_qwtAliases[k]] = d[k]
+      plotattributes[_qwtAliases[k]] = plotattributes[k]
     end
   end
 
-  d[:x] = collect(d[:x])
-  d[:y] = collect(d[:y])
+  plotattributes[:x] = collect(plotattributes[:x])
+  plotattributes[:y] = collect(plotattributes[:y])
 
-  d
+  plotattributes
 end
 
-# function _create_plot(pkg::QwtBackend, d::KW)
+# function _create_plot(pkg::QwtBackend, plotattributes::KW)
 function _create_backend_figure(plt::Plot{QwtBackend})
   fixcolors(plt.attr)
   dumpdict(plt.attr,"\n\n!!! plot")
   o = Qwt.plot(zeros(0,0); plt.attr..., show=false)
-  # plt = Plot(o, pkg, 0, d, KW[])
+  # plt = Plot(o, pkg, 0, plotattributes, KW[])
   # plt
 end
 
-# function _series_added(::QwtBackend, plt::Plot, d::KW)
+# function _series_added(::QwtBackend, plt::Plot, plotattributes::KW)
 function _series_added(plt::Plot{QwtBackend}, series::Series)
-  d = adjustQwtKeywords(plt, false; series.d...)
-  fixcolors(d)
-  dumpdict(d,"\n\n!!! plot!")
-  Qwt.oplot(plt.o; d...)
-  # push!(plt.seriesargs, d)
+  plotattributes = adjustQwtKeywords(plt, false; series.plotattributes...)
+  fixcolors(plotattributes)
+  dumpdict(plotattributes,"\n\n!!! plot!")
+  Qwt.oplot(plt.o; plotattributes...)
+  # push!(plt.seriesargs, plotattributes)
   # plt
 end
 
 
 # ----------------------------------------------------------------
 
-function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
-  lims = get(d, isx ? :xlims : :ylims, nothing)
-  ticks = get(d, isx ? :xticks : :yticks, nothing)
+function updateLimsAndTicks(plt::Plot{QwtBackend}, plotattributes::KW, isx::Bool)
+  lims = get(plotattributes, isx ? :xlims : :ylims, nothing)
+  ticks = get(plotattributes, isx ? :xticks : :yticks, nothing)
   w = plt.o.widget
   axisid = Qwt.QWT.QwtPlot[isx ? :xBottom : :yLeft]
 
@@ -155,8 +155,8 @@ function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
 
   # change the scale
   scalesym = isx ? :xscale : :yscale
-  if haskey(d, scalesym)
-    scaletype = d[scalesym]
+  if haskey(plotattributes, scalesym)
+    scaletype = plotattributes[scalesym]
     scaletype == :identity  && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLinearScaleEngine())
     # scaletype == :log       && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLogScaleEngine(e))
     # scaletype == :log2      && w[:setAxisScaleEngine](axisid, Qwt.QWT.QwtLogScaleEngine(2))
@@ -167,32 +167,32 @@ function updateLimsAndTicks(plt::Plot{QwtBackend}, d::KW, isx::Bool)
 end
 
 
-function _update_plot_object(plt::Plot{QwtBackend}, d::KW)
-  haskey(d, :title) && Qwt.title(plt.o, d[:title])
-  haskey(d, :xguide) && Qwt.xlabel(plt.o, d[:xguide])
-  haskey(d, :yguide) && Qwt.ylabel(plt.o, d[:yguide])
-  updateLimsAndTicks(plt, d, true)
-  updateLimsAndTicks(plt, d, false)
+function _update_plot_object(plt::Plot{QwtBackend}, plotattributes::KW)
+  haskey(plotattributes, :title) && Qwt.title(plt.o, plotattributes[:title])
+  haskey(plotattributes, :xguide) && Qwt.xlabel(plt.o, plotattributes[:xguide])
+  haskey(plotattributes, :yguide) && Qwt.ylabel(plt.o, plotattributes[:yguide])
+  updateLimsAndTicks(plt, plotattributes, true)
+  updateLimsAndTicks(plt, plotattributes, false)
 end
 
-function _update_plot_pos_size(plt::AbstractPlot{QwtBackend}, d::KW)
-  haskey(d, :size) && Qwt.resizewidget(plt.o, d[:size]...)
-  haskey(d, :pos) && Qwt.movewidget(plt.o, d[:pos]...)
+function _update_plot_pos_size(plt::AbstractPlot{QwtBackend}, plotattributes::KW)
+  haskey(plotattributes, :size) && Qwt.resizewidget(plt.o, plotattributes[:size]...)
+  haskey(plotattributes, :pos) && Qwt.movewidget(plt.o, plotattributes[:pos]...)
 end
 
 
 # ----------------------------------------------------------------
 
         # curve.setPen(Qt.QPen(Qt.QColor(color), linewidth, self.getLineStyle(linestyle)))
-function addLineMarker(plt::Plot{QwtBackend}, d::KW)
-  for yi in d[:y]
+function addLineMarker(plt::Plot{QwtBackend}, plotattributes::KW)
+  for yi in plotattributes[:y]
     marker = Qwt.QWT.QwtPlotMarker()
-    ishorizontal = (d[:seriestype] == :hline)
+    ishorizontal = (plotattributes[:seriestype] == :hline)
     marker[:setLineStyle](ishorizontal ? 1 : 2)
     marker[ishorizontal ? :setYValue : :setXValue](yi)
-    qcolor = Qwt.convertRGBToQColor(getColor(d[:linecolor]))
-    linestyle = plt.o.widget[:getLineStyle](string(d[:linestyle]))
-    marker[:setLinePen](Qwt.QT.QPen(qcolor, d[:linewidth], linestyle))
+    qcolor = Qwt.convertRGBToQColor(getColor(plotattributes[:linecolor]))
+    linestyle = plt.o.widget[:getLineStyle](string(plotattributes[:linestyle]))
+    marker[:setLinePen](Qwt.QT.QPen(qcolor, plotattributes[:linewidth], linestyle))
     marker[:attach](plt.o.widget)
   end
 

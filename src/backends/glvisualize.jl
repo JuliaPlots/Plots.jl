@@ -182,7 +182,7 @@ function gl_marker(shape::Symbol)
     end
 end
 
-function extract_limits(sp, d, kw_args)
+function extract_limits(sp, plotattributes, kw_args)
     clims = sp[:clims]
     if is_2tuple(clims)
         if isfinite(clims[1]) && isfinite(clims[2])
@@ -200,70 +200,70 @@ to_vec(::Type{T}, vec::StaticArrays.StaticVector{2}) where {T <: StaticArrays.St
 
 to_vec(::Type{T}, vecs::AbstractVector) where {T <: StaticArrays.StaticVector} = map(x-> to_vec(T, x), vecs)
 
-function extract_marker(d, kw_args)
-    dim = Plots.is3d(d) ? 3 : 2
+function extract_marker(plotattributes, kw_args)
+    dim = Plots.is3d(plotattributes) ? 3 : 2
     scaling = dim == 3 ? 0.003 : 2
-    if haskey(d, :markershape)
-        shape = d[:markershape]
+    if haskey(plotattributes, :markershape)
+        shape = plotattributes[:markershape]
         shape = gl_marker(shape)
         if shape != :none
             kw_args[:primitive] = shape
         end
     end
     dim = isa(kw_args[:primitive], GLVisualize.Sprites) ? 2 : 3
-    if haskey(d, :markersize)
-        msize = d[:markersize]
+    if haskey(plotattributes, :markersize)
+        msize = plotattributes[:markersize]
         kw_args[:scale] = to_vec(GeometryTypes.Vec{dim, Float32}, msize .* scaling)
     end
-    if haskey(d, :offset)
-        kw_args[:offset] = d[:offset]
+    if haskey(plotattributes, :offset)
+        kw_args[:offset] = plotattributes[:offset]
     end
     # get the color
     key = :markercolor
-    haskey(d, key) || return
-    c = gl_color(d[key])
-    if isa(c, AbstractVector) && d[:marker_z] != nothing
-        extract_colornorm(d, kw_args)
+    haskey(plotattributes, key) || return
+    c = gl_color(plotattributes[key])
+    if isa(c, AbstractVector) && plotattributes[:marker_z] != nothing
+        extract_colornorm(plotattributes, kw_args)
         kw_args[:color] = nothing
         kw_args[:color_map] = c
-        kw_args[:intensity] = convert(Vector{Float32}, d[:marker_z])
+        kw_args[:intensity] = convert(Vector{Float32}, plotattributes[:marker_z])
     else
         kw_args[:color] = c
     end
     key = :markerstrokecolor
-    haskey(d, key) || return
-    c = gl_color(d[key])
+    haskey(plotattributes, key) || return
+    c = gl_color(plotattributes[key])
     if c != nothing
         if !(isa(c, Colorant) || (isa(c, Vector) && eltype(c) <: Colorant))
             error("Stroke Color not supported: $c")
         end
         kw_args[:stroke_color] = c
-        kw_args[:stroke_width] = Float32(d[:markerstrokewidth])
+        kw_args[:stroke_width] = Float32(plotattributes[:markerstrokewidth])
     end
 end
 
-function _extract_surface(d::Plots.Surface)
-    d.surf
+function _extract_surface(plotattributes::Plots.Surface)
+    plotattributes.surf
 end
-function _extract_surface(d::AbstractArray)
-    d
+function _extract_surface(plotattributes::AbstractArray)
+    plotattributes
 end
 
 # TODO when to transpose??
-function extract_surface(d)
-    map(_extract_surface, (d[:x], d[:y], d[:z]))
+function extract_surface(plotattributes)
+    map(_extract_surface, (plotattributes[:x], plotattributes[:y], plotattributes[:z]))
 end
 function topoints(::Type{P}, array) where P
     [P(x) for x in zip(array...)]
 end
-function extract_points(d)
-    dim = is3d(d) ? 3 : 2
-    array = if d[:seriestype] == :straightline
-        straightline_data(d)
-    elseif d[:seriestype] == :shape
-        shape_data(d)
+function extract_points(plotattributes)
+    dim = is3d(plotattributes) ? 3 : 2
+    array = if plotattributes[:seriestype] == :straightline
+        straightline_data(plotattributes)
+    elseif plotattributes[:seriestype] == :shape
+        shape_data(plotattributes)
     else
-        (d[:x], d[:y], d[:z])[1:dim]
+        (plotattributes[:x], plotattributes[:y], plotattributes[:z])[1:dim]
     end
     topoints(Point{dim, Float32}, array)
 end
@@ -275,50 +275,50 @@ function make_gradient(grad::ColorGradient)
 end
 make_gradient(c) = make_gradient(cgrad())
 
-function extract_any_color(d, kw_args)
-    if d[:marker_z] == nothing
-        c = scalar_color(d, :fill)
-        extract_c(d, kw_args, :fill)
+function extract_any_color(plotattributes, kw_args)
+    if plotattributes[:marker_z] == nothing
+        c = scalar_color(plotattributes, :fill)
+        extract_c(plotattributes, kw_args, :fill)
         if isa(c, Colorant)
             kw_args[:color] = c
         else
             kw_args[:color] = nothing
             kw_args[:color_map] = make_gradient(c)
-            clims = d[:subplot][:clims]
+            clims = plotattributes[:subplot][:clims]
             if Plots.is_2tuple(clims)
                 if isfinite(clims[1]) && isfinite(clims[2])
                     kw_args[:color_norm] = Vec2f0(clims)
                 end
             elseif clims == :auto
-                kw_args[:color_norm] = Vec2f0(ignorenan_extrema(d[:y]))
+                kw_args[:color_norm] = Vec2f0(ignorenan_extrema(plotattributes[:y]))
             end
         end
     else
         kw_args[:color] = nothing
-        clims = d[:subplot][:clims]
+        clims = plotattributes[:subplot][:clims]
         if Plots.is_2tuple(clims)
             if isfinite(clims[1]) && isfinite(clims[2])
                 kw_args[:color_norm] = Vec2f0(clims)
             end
         elseif clims == :auto
-            kw_args[:color_norm] = Vec2f0(ignorenan_extrema(d[:y]))
+            kw_args[:color_norm] = Vec2f0(ignorenan_extrema(plotattributes[:y]))
         else
             error("Unsupported limits: $clims")
         end
-        kw_args[:intensity] = convert(Vector{Float32}, d[:marker_z])
-        kw_args[:color_map] = gl_color_map(d, :marker)
+        kw_args[:intensity] = convert(Vector{Float32}, plotattributes[:marker_z])
+        kw_args[:color_map] = gl_color_map(plotattributes, :marker)
     end
 end
 
-function extract_stroke(d, kw_args)
-    extract_c(d, kw_args, :line)
-    if haskey(d, :linewidth)
-        kw_args[:thickness] = Float32(d[:linewidth] * 3)
+function extract_stroke(plotattributes, kw_args)
+    extract_c(plotattributes, kw_args, :line)
+    if haskey(plotattributes, :linewidth)
+        kw_args[:thickness] = Float32(plotattributes[:linewidth] * 3)
     end
 end
 
-function extract_color(d, sym)
-    d[Symbol("$(sym)color")]
+function extract_color(plotattributes, sym)
+    plotattributes[Symbol("$(sym)color")]
 end
 
 gl_color(c::PlotUtils.ColorGradient) = c.colors
@@ -335,12 +335,12 @@ function gl_color(c, a)
     c = convertColor(c, a)
     RGBA{Float32}(c)
 end
-function scalar_color(d, sym)
-    gl_color(extract_color(d, sym))
+function scalar_color(plotattributes, sym)
+    gl_color(extract_color(plotattributes, sym))
 end
 
-function gl_color_map(d, sym)
-    colors = extract_color(d, sym)
+function gl_color_map(plotattributes, sym)
+    colors = extract_color(plotattributes, sym)
     _gl_color_map(colors)
 end
 function _gl_color_map(colors::PlotUtils.ColorGradient)
@@ -377,10 +377,10 @@ function insert_pattern!(points, kw_args)
     kw_args[:pattern] = tex
     kw_args[:pattern_length] = Float32(last(points))
 end
-function extract_linestyle(d, kw_args)
-    haskey(d, :linestyle) || return
-    ls = d[:linestyle]
-    lw = d[:linewidth]
+function extract_linestyle(plotattributes, kw_args)
+    haskey(plotattributes, :linestyle) || return
+    ls = plotattributes[:linestyle]
+    lw = plotattributes[:linewidth]
     kw_args[:thickness] = Float32(lw)
     if ls == :dash
         points = [0.0, lw, 2lw, 3lw, 4lw]
@@ -400,7 +400,7 @@ function extract_linestyle(d, kw_args)
         points = [0.0, dtick, dtick+dgap, dtick+dgap+ptick, dtick+dgap+ptick+pgap, dtick+dgap+ptick+pgap+ptick,  dtick+dgap+ptick+pgap+ptick+pgap]
         insert_pattern!(points, kw_args)
     end
-    extract_c(d, kw_args, :line)
+    extract_c(plotattributes, kw_args, :line)
     nothing
 end
 
@@ -467,8 +467,8 @@ function hover(to_hover, to_display, window)
     nothing
 end
 
-function extract_extrema(d, kw_args)
-    xmin, xmax = ignorenan_extrema(d[:x]); ymin, ymax = ignorenan_extrema(d[:y])
+function extract_extrema(plotattributes, kw_args)
+    xmin, xmax = ignorenan_extrema(plotattributes[:x]); ymin, ymax = ignorenan_extrema(plotattributes[:y])
     kw_args[:primitive] = GeometryTypes.SimpleRectangle{Float32}(xmin, ymin, xmax-xmin, ymax-ymin)
     nothing
 end
@@ -479,50 +479,50 @@ function extract_font(font, kw_args)
     kw_args[:color] = gl_color(font.color)
 end
 
-function extract_colornorm(d, kw_args)
-    clims = d[:subplot][:clims]
+function extract_colornorm(plotattributes, kw_args)
+    clims = plotattributes[:subplot][:clims]
     if Plots.is_2tuple(clims)
         if isfinite(clims[1]) && isfinite(clims[2])
             kw_args[:color_norm] = Vec2f0(clims)
         end
     elseif clims == :auto
-        z = if haskey(d, :marker_z) && d[:marker_z] != nothing
-            d[:marker_z]
-        elseif haskey(d, :line_z) && d[:line_z] != nothing
-            d[:line_z]
-        elseif isa(d[:z], Plots.Surface)
-            d[:z].surf
+        z = if haskey(plotattributes, :marker_z) && plotattributes[:marker_z] != nothing
+            plotattributes[:marker_z]
+        elseif haskey(plotattributes, :line_z) && plotattributes[:line_z] != nothing
+            plotattributes[:line_z]
+        elseif isa(plotattributes[:z], Plots.Surface)
+            plotattributes[:z].surf
         else
-            d[:y]
+            plotattributes[:y]
         end
         kw_args[:color_norm] = Vec2f0(ignorenan_extrema(z))
         kw_args[:intensity] = map(Float32, collect(z))
     end
 end
 
-function extract_gradient(d, kw_args, sym)
+function extract_gradient(plotattributes, kw_args, sym)
     key = Symbol("$(sym)color")
-    haskey(d, key) || return
-    c = make_gradient(d[key])
+    haskey(plotattributes, key) || return
+    c = make_gradient(plotattributes[key])
     kw_args[:color] = nothing
-    extract_colornorm(d, kw_args)
+    extract_colornorm(plotattributes, kw_args)
     kw_args[:color_map] = c
     return
 end
 
-function extract_c(d, kw_args, sym)
+function extract_c(plotattributes, kw_args, sym)
     key = Symbol("$(sym)color")
-    haskey(d, key) || return
-    c = gl_color(d[key])
+    haskey(plotattributes, key) || return
+    c = gl_color(plotattributes[key])
     kw_args[:color] = nothing
     kw_args[:color_map] = nothing
     kw_args[:color_norm] = nothing
     if (
             isa(c, AbstractVector) &&
-            ((haskey(d, :marker_z) && d[:marker_z] != nothing) ||
-            (haskey(d, :line_z) && d[:line_z] != nothing))
+            ((haskey(plotattributes, :marker_z) && plotattributes[:marker_z] != nothing) ||
+            (haskey(plotattributes, :line_z) && plotattributes[:line_z] != nothing))
         )
-        extract_colornorm(d, kw_args)
+        extract_colornorm(plotattributes, kw_args)
         kw_args[:color_map] = c
     else
         kw_args[:color] = c
@@ -530,16 +530,16 @@ function extract_c(d, kw_args, sym)
     return
 end
 
-function extract_stroke(d, kw_args, sym)
+function extract_stroke(plotattributes, kw_args, sym)
     key = Symbol("$(sym)strokecolor")
-    haskey(d, key) || return
-    c = gl_color(d[key])
+    haskey(plotattributes, key) || return
+    c = gl_color(plotattributes[key])
     if c != nothing
         if !isa(c, Colorant)
             error("Stroke Color not supported: $c")
         end
         kw_args[:stroke_color] = c
-        kw_args[:stroke_width] = Float32(d[Symbol("$(sym)strokewidth")]) * 2
+        kw_args[:stroke_width] = Float32(plotattributes[Symbol("$(sym)strokewidth")]) * 2
     end
     return
 end
@@ -551,12 +551,12 @@ function draw_grid_lines(sp, grid_segs, thickness, style, model, color)
     kw_args = Dict{Symbol, Any}(
         :model => model
     )
-    d = Dict(
+    plotattributes = Dict(
         :linestyle => style,
         :linewidth => Float32(thickness),
         :linecolor => color
     )
-    Plots.extract_linestyle(d, kw_args)
+    Plots.extract_linestyle(plotattributes, kw_args)
     GL.gl_lines(map(Point2f0, grid_segs.pts), kw_args)
 end
 
@@ -808,10 +808,10 @@ function gl_draw_axes_3d(sp, model)
     )
 end
 
-function gl_bar(d, kw_args)
-    x, y = d[:x], d[:y]
+function gl_bar(plotattributes, kw_args)
+    x, y = plotattributes[:x], plotattributes[:y]
     nx, ny = length(x), length(y)
-    axis = d[:subplot][isvertical(d) ? :xaxis : :yaxis]
+    axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
     cv = [discrete_value!(axis, xi)[1] for xi=x]
     x = if nx == ny
         cv
@@ -832,7 +832,7 @@ function gl_bar(d, kw_args)
     end
 
     # make fillto a vector... default fills to 0
-    fillto = d[:fillrange]
+    fillto = plotattributes[:fillrange]
     if fillto == nothing
         fillto = 0
     end
@@ -843,7 +843,7 @@ function gl_bar(d, kw_args)
     for i=1:ny
         center = x[i]
         hwi = abs(_cycle(hw,i)); yi = y[i]; fi = _cycle(fillto,i)
-        if Plots.isvertical(d)
+        if Plots.isvertical(plotattributes)
             sz = (hwi*sx, yi*sy)
         else
             sz = (yi*sx, hwi*2*sy)
@@ -862,10 +862,10 @@ const _box_halfwidth = 0.4
 
 notch_width(q2, q4, N) = 1.58 * (q4-q2)/sqrt(N)
 
-function gl_boxplot(d, kw_args)
+function gl_boxplot(plotattributes, kw_args)
     kwbox = copy(kw_args)
     range = 1.5; notch = false
-    x, y = d[:x], d[:y]
+    x, y = plotattributes[:x], plotattributes[:y]
     glabels = sort(collect(unique(x)))
     warning = false
     outliers_x, outliers_y = zeros(0), zeros(0)
@@ -890,8 +890,8 @@ function gl_boxplot(d, kw_args)
         end
 
         # make the shape
-        center = Plots.discrete_value!(d[:subplot][:xaxis], glabel)[1]
-        hw = d[:bar_width] == nothing ? Plots._box_halfwidth*2 : _cycle(d[:bar_width], i)
+        center = Plots.discrete_value!(plotattributes[:subplot][:xaxis], glabel)[1]
+        hw = plotattributes[:bar_width] == nothing ? Plots._box_halfwidth*2 : _cycle(plotattributes[:bar_width], i)
         l, m, r = center - hw/2, center, center + hw/2
 
         # internal nodes for notches
@@ -930,17 +930,17 @@ function gl_boxplot(d, kw_args)
         :model => kw_args[:model],
         :offset => Vec2f0(0),
     )
-    extract_marker(d, kw_args)
+    extract_marker(plotattributes, kw_args)
     outlier_kw = Dict(
         :model => kw_args[:model],
-        :color =>  scalar_color(d, :fill),
-        :stroke_width => Float32(d[:markerstrokewidth]),
-        :stroke_color => scalar_color(d, :markerstroke),
+        :color =>  scalar_color(plotattributes, :fill),
+        :stroke_width => Float32(plotattributes[:markerstrokewidth]),
+        :stroke_color => scalar_color(plotattributes, :markerstroke),
     )
     lines_kw = Dict(
         :model => kw_args[:model],
-        :stroke_width =>  d[:linewidth],
-        :stroke_color =>  scalar_color(d, :fill),
+        :stroke_width =>  plotattributes[:linewidth],
+        :stroke_color =>  scalar_color(plotattributes, :fill),
     )
     vis1 = GLVisualize.visualize((GLVisualize.RECTANGLE, box_pos), Style(:default), kwbox)
     vis2 = GLVisualize.visualize((GLVisualize.CIRCLE, outliers), Style(:default), outlier_kw)
@@ -1066,8 +1066,8 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
         end
         for series in Plots.series_list(sp)
 
-            d = series.d
-            st = d[:seriestype]; kw_args = KW() # exctract kw
+            plotattributes = series.plotattributes
+            st = plotattributes[:seriestype]; kw_args = KW() # exctract kw
 
             kw_args[:model] = model_m # add transformation
             if !_3d # 3D is treated differently, since we need boundingboxes for camera
@@ -1075,76 +1075,76 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
             end
             scale_for_annotations!(series)
             if st in (:surface, :wireframe)
-                x, y, z = extract_surface(d)
-                extract_gradient(d, kw_args, :fill)
-                z = Plots.transpose_z(d, z, false)
+                x, y, z = extract_surface(plotattributes)
+                extract_gradient(plotattributes, kw_args, :fill)
+                z = Plots.transpose_z(plotattributes, z, false)
                 if isa(x, AbstractMatrix) && isa(y, AbstractMatrix)
-                    x, y = Plots.transpose_z(d, x, false), Plots.transpose_z(d, y, false)
+                    x, y = Plots.transpose_z(plotattributes, x, false), Plots.transpose_z(plotattributes, y, false)
                 end
                 if st == :wireframe
                     kw_args[:wireframe] = true
-                    kw_args[:stroke_color] = d[:linecolor]
-                    kw_args[:stroke_width] = Float32(d[:linewidth]/100f0)
+                    kw_args[:stroke_color] = plotattributes[:linecolor]
+                    kw_args[:stroke_width] = Float32(plotattributes[:linewidth]/100f0)
                 end
                 vis = GL.gl_surface(x, y, z, kw_args)
-            elseif (st in (:path, :path3d, :straightline)) && d[:linewidth] > 0
+            elseif (st in (:path, :path3d, :straightline)) && plotattributes[:linewidth] > 0
                 kw = copy(kw_args)
-                points = Plots.extract_points(d)
-                extract_linestyle(d, kw)
+                points = Plots.extract_points(plotattributes)
+                extract_linestyle(plotattributes, kw)
                 vis = GL.gl_lines(points, kw)
-                if d[:markershape] != :none
+                if plotattributes[:markershape] != :none
                     kw = copy(kw_args)
-                    extract_stroke(d, kw)
-                    extract_marker(d, kw)
+                    extract_stroke(plotattributes, kw)
+                    extract_marker(plotattributes, kw)
                     vis2 = GL.gl_scatter(copy(points), kw)
                     vis = [vis; vis2]
                 end
-                if d[:fillrange] != nothing
+                if plotattributes[:fillrange] != nothing
                     kw = copy(kw_args)
-                    fr = d[:fillrange]
-                    ps = if all(x-> x >= 0, diff(d[:x])) # if is monotonic
+                    fr = plotattributes[:fillrange]
+                    ps = if all(x-> x >= 0, diff(plotattributes[:x])) # if is monotonic
                         vcat(points, Point2f0[(points[i][1], _cycle(fr, i)) for i=length(points):-1:1])
                     else
                         points
                     end
-                    extract_c(d, kw, :fill)
+                    extract_c(plotattributes, kw, :fill)
                     vis = [GL.gl_poly(ps, kw), vis]
                 end
-            elseif st in (:scatter, :scatter3d) #|| d[:markershape] != :none
-                extract_marker(d, kw_args)
-                points = extract_points(d)
+            elseif st in (:scatter, :scatter3d) #|| plotattributes[:markershape] != :none
+                extract_marker(plotattributes, kw_args)
+                points = extract_points(plotattributes)
                 vis = GL.gl_scatter(points, kw_args)
             elseif st == :shape
-                extract_c(d, kw_args, :fill)
-                vis = GL.gl_shape(d, kw_args)
+                extract_c(plotattributes, kw_args, :fill)
+                vis = GL.gl_shape(plotattributes, kw_args)
             elseif st == :contour
-                x,y,z = extract_surface(d)
-                z = transpose_z(d, z, false)
-                extract_extrema(d, kw_args)
-                extract_gradient(d, kw_args, :fill)
-                kw_args[:fillrange] = d[:fillrange]
-                kw_args[:levels] = d[:levels]
+                x,y,z = extract_surface(plotattributes)
+                z = transpose_z(plotattributes, z, false)
+                extract_extrema(plotattributes, kw_args)
+                extract_gradient(plotattributes, kw_args, :fill)
+                kw_args[:fillrange] = plotattributes[:fillrange]
+                kw_args[:levels] = plotattributes[:levels]
 
                 vis = GL.gl_contour(x,y,z, kw_args)
             elseif st == :heatmap
-                x,y,z = extract_surface(d)
-                extract_gradient(d, kw_args, :fill)
-                extract_extrema(d, kw_args)
-                extract_limits(sp, d, kw_args)
+                x,y,z = extract_surface(plotattributes)
+                extract_gradient(plotattributes, kw_args, :fill)
+                extract_extrema(plotattributes, kw_args)
+                extract_limits(sp, plotattributes, kw_args)
                 vis = GL.gl_heatmap(x,y,z, kw_args)
             elseif st == :bar
-                extract_c(d, kw_args, :fill)
-                extract_stroke(d, kw_args, :marker)
-                vis = gl_bar(d, kw_args)
+                extract_c(plotattributes, kw_args, :fill)
+                extract_stroke(plotattributes, kw_args, :marker)
+                vis = gl_bar(plotattributes, kw_args)
             elseif st == :image
-                extract_extrema(d, kw_args)
-                vis = GL.gl_image(d[:z].surf, kw_args)
+                extract_extrema(plotattributes, kw_args)
+                vis = GL.gl_image(plotattributes[:z].surf, kw_args)
             elseif st == :boxplot
-                 extract_c(d, kw_args, :fill)
-                 vis = gl_boxplot(d, kw_args)
+                 extract_c(plotattributes, kw_args, :fill)
+                 vis = gl_boxplot(plotattributes, kw_args)
              elseif st == :volume
-                  volume = d[:y]
-                  _d = copy(d)
+                  volume = plotattributes[:y]
+                  _d = copy(plotattributes)
                   _d[:y] = 0:1
                   _d[:x] = 0:1
                   kw_args = KW()
@@ -1157,15 +1157,15 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
             isa(vis, Array) && isempty(vis) && continue # nothing to see here
 
             GLVisualize._view(vis, sp_screen, camera=:perspective)
-            if haskey(d, :hover) && !(d[:hover] in (false, :none, nothing))
-                hover(vis, d[:hover], sp_screen)
+            if haskey(plotattributes, :hover) && !(plotattributes[:hover] in (false, :none, nothing))
+                hover(vis, plotattributes[:hover], sp_screen)
             end
             if isdefined(:GLPlot) && isdefined(Main.GLPlot, :(register_plot!))
                 del_signal = Main.GLPlot.register_plot!(vis, sp_screen, create_gizmo=false)
                 append!(_glplot_deletes, del_signal)
             end
             anns = series[:series_annotations]
-            for (x, y, str, font) in EachAnn(anns, d[:x], d[:y])
+            for (x, y, str, font) in EachAnn(anns, plotattributes[:x], plotattributes[:y])
                 txt_args = Dict{Symbol, Any}(:model => eye(GLAbstraction.Mat4f0))
                 x, y = Reactive.value(model_m) * GeometryTypes.Vec{4, Float32}(x, y, 0, 1)
                 extract_font(font, txt_args)
@@ -1241,10 +1241,10 @@ function gl_lines(points, kw_args)
     return result
 end
 
-function gl_shape(d, kw_args)
-    points = Plots.extract_points(d)
+function gl_shape(plotattributes, kw_args)
+    points = Plots.extract_points(plotattributes)
     result = []
-    for rng in iter_segments(d[:x], d[:y])
+    for rng in iter_segments(plotattributes[:x], plotattributes[:y])
         ps = points[rng]
         meshes = gl_poly(ps, kw_args)
         append!(result, meshes)
@@ -1398,10 +1398,10 @@ end
 """
 Ugh, so much special casing (╯°□°）╯︵ ┻━┻
 """
-function label_scatter(d, w, ho)
+function label_scatter(plotattributes, w, ho)
     kw = KW()
-    extract_stroke(d, kw)
-    extract_marker(d, kw)
+    extract_stroke(plotattributes, kw)
+    extract_marker(plotattributes, kw)
     kw[:scale] = Vec2f0(w/2)
     kw[:offset] = Vec2f0(-w/4)
     if haskey(kw, :intensity)
@@ -1442,21 +1442,21 @@ function make_label(sp, series, i)
     GL = Plots
     w, gap, ho = 20f0, 5f0, 5
     result = []
-    d = series.d
-    st = d[:seriestype]
+    plotattributes = series.plotattributes
+    st = plotattributes[:seriestype]
     kw_args = KW()
-    if (st in (:path, :path3d, :straightline)) && d[:linewidth] > 0
+    if (st in (:path, :path3d, :straightline)) && plotattributes[:linewidth] > 0
         points = Point2f0[(0, ho), (w, ho)]
         kw = KW()
-        extract_linestyle(d, kw)
+        extract_linestyle(plotattributes, kw)
         append!(result, GL.gl_lines(points, kw))
-        if d[:markershape] != :none
-            push!(result, label_scatter(d, w, ho))
+        if plotattributes[:markershape] != :none
+            push!(result, label_scatter(plotattributes, w, ho))
         end
-    elseif st in (:scatter, :scatter3d) #|| d[:markershape] != :none
-        push!(result, label_scatter(d, w, ho))
+    elseif st in (:scatter, :scatter3d) #|| plotattributes[:markershape] != :none
+        push!(result, label_scatter(plotattributes, w, ho))
     else
-        extract_c(d, kw_args, :fill)
+        extract_c(plotattributes, kw_args, :fill)
         if isa(kw_args[:color], AbstractVector)
             kw_args[:color] = first(kw_args[:color])
         end

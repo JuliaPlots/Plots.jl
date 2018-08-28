@@ -7,44 +7,44 @@ function command_idx(kw_list::AVec{KW}, kw::KW)
     Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
 end
 
-function _expand_seriestype_array(d::KW, args)
-    sts = get(d, :seriestype, :path)
+function _expand_seriestype_array(plotattributes::KW, args)
+    sts = get(plotattributes, :seriestype, :path)
     if typeof(sts) <: AbstractArray
-        delete!(d, :seriestype)
+        delete!(plotattributes, :seriestype)
         rd = Vector{RecipeData}(undef, size(sts, 1))
         for r in 1:size(sts, 1)
-            dc = copy(d)
+            dc = copy(plotattributes)
             dc[:seriestype] = sts[r:r,:]
             rd[r] = RecipeData(dc, args)
         end
         rd
     else
-        RecipeData[RecipeData(copy(d), args)]
+        RecipeData[RecipeData(copy(plotattributes), args)]
     end
 end
 
-function _preprocess_args(d::KW, args, still_to_process::Vector{RecipeData})
+function _preprocess_args(plotattributes::KW, args, still_to_process::Vector{RecipeData})
     # the grouping mechanism is a recipe on a GroupBy object
     # we simply add the GroupBy object to the front of the args list to allow
     # the recipe to be applied
-    if haskey(d, :group)
-        args = (extractGroupArgs(d[:group], args...), args...)
+    if haskey(plotattributes, :group)
+        args = (extractGroupArgs(plotattributes[:group], args...), args...)
     end
 
     # if we were passed a vector/matrix of seriestypes and there's more than one row,
     # we want to duplicate the inputs, once for each seriestype row.
     if !isempty(args)
-        append!(still_to_process, _expand_seriestype_array(d, args))
+        append!(still_to_process, _expand_seriestype_array(plotattributes, args))
     end
 
-    # remove subplot and axis args from d... they will be passed through in the kw_list
+    # remove subplot and axis args from plotattributes... they will be passed through in the kw_list
     if !isempty(args)
-        for (k,v) in d
+        for (k,v) in plotattributes
             for defdict in (_subplot_defaults,
                             _axis_defaults,
                             _axis_defaults_byletter)
                 if haskey(defdict, k)
-                    delete!(d, k)
+                    delete!(plotattributes, k)
                 end
             end
         end
@@ -57,9 +57,9 @@ end
 # user recipes
 
 
-function _process_userrecipes(plt::Plot, d::KW, args)
+function _process_userrecipes(plt::Plot, plotattributes::KW, args)
     still_to_process = RecipeData[]
-    args = _preprocess_args(d, args, still_to_process)
+    args = _preprocess_args(plotattributes, args, still_to_process)
 
     # for plotting recipes, swap out the args and update the parameter dictionary
     # we are keeping a stack of series that still need to be processed.
@@ -80,20 +80,20 @@ function _process_userrecipes(plt::Plot, d::KW, args)
         if isempty(next_series.args)
             _process_userrecipe(plt, kw_list, next_series)
         else
-            rd_list = RecipesBase.apply_recipe(next_series.d, next_series.args...)
+            rd_list = RecipesBase.apply_recipe(next_series.plotattributes, next_series.args...)
             prepend!(still_to_process,rd_list)
         end
     end
 
     # don't allow something else to handle it
-    d[:smooth] = false
+    plotattributes[:smooth] = false
     kw_list
 end
 
 function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeData)
     # when the arg tuple is empty, that means there's nothing left to recursively
     # process... finish up and add to the kw_list
-    kw = recipedata.d
+    kw = recipedata.plotattributes
     preprocessArgs!(kw)
     _preprocess_userrecipe(kw)
     warnOnUnsupported_scales(plt.backend, kw)
@@ -183,11 +183,11 @@ function _process_plotrecipe(plt::Plot, kw::KW, kw_list::Vector{KW}, still_to_pr
         st = kw[:seriestype] = get(_typeAliases, st, st)
         datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
         for data in datalist
-            preprocessArgs!(data.d)
-            if data.d[:seriestype] == st
-                error("Plot recipe $st returned the same seriestype: $(data.d)")
+            preprocessArgs!(data.plotattributes)
+            if data.plotattributes[:seriestype] == st
+                error("Plot recipe $st returned the same seriestype: $(data.plotattributes)")
             end
-            push!(still_to_process, data.d)
+            push!(still_to_process, data.plotattributes)
         end
     catch err
         if isa(err, MethodError)
@@ -203,14 +203,14 @@ end
 # ------------------------------------------------------------------
 # setup plot and subplot
 
-function _plot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
+function _plot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
     # merge in anything meant for the Plot
     for kw in kw_list, (k,v) in kw
-        haskey(_plot_defaults, k) && (d[k] = pop!(kw, k))
+        haskey(_plot_defaults, k) && (plotattributes[k] = pop!(kw, k))
     end
 
     # TODO: init subplots here
-    _update_plot_args(plt, d)
+    _update_plot_args(plt, plotattributes)
     if !plt.init
         plt.o = Base.invokelatest(_create_backend_figure, plt)
 
@@ -252,7 +252,7 @@ function _plot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
     plt[:inset_subplots] = nothing
 end
 
-function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
+function _subplot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
     # we'll keep a map of subplot to an attribute override dict.
     # Subplot/Axis attributes set by a user/series recipe apply only to the
     # Subplot object which they belong to.
@@ -289,8 +289,8 @@ function _subplot_setup(plt::Plot, d::KW, kw_list::Vector{KW})
 
     # override subplot/axis args.  `sp_attrs` take precendence
     for (idx,sp) in enumerate(plt.subplots)
-        attr = if !haskey(d, :subplot) || d[:subplot] == idx
-            merge(d, get(sp_attrs, sp, KW()))
+        attr = if !haskey(plotattributes, :subplot) || plotattributes[:subplot] == idx
+            merge(plotattributes, get(sp_attrs, sp, KW()))
         else
             get(sp_attrs, sp, KW())
         end
@@ -303,13 +303,13 @@ end
 
 # getting ready to add the series... last update to subplot from anything
 # that might have been added during series recipes
-function _prepare_subplot(plt::Plot{T}, d::KW) where T
-    st::Symbol = d[:seriestype]
-    sp::Subplot{T} = d[:subplot]
+function _prepare_subplot(plt::Plot{T}, plotattributes::KW) where T
+    st::Symbol = plotattributes[:seriestype]
+    sp::Subplot{T} = plotattributes[:subplot]
     sp_idx = get_subplot_index(plt, sp)
-    _update_subplot_args(plt, sp, d, sp_idx, true)
+    _update_subplot_args(plt, sp, plotattributes, sp_idx, true)
 
-    st = _override_seriestype_check(d, st)
+    st = _override_seriestype_check(plotattributes, st)
 
     # change to a 3d projection for this subplot?
     if is3d(st)
@@ -327,28 +327,28 @@ end
 # ------------------------------------------------------------------
 # series types
 
-function _override_seriestype_check(d::KW, st::Symbol)
+function _override_seriestype_check(plotattributes::KW, st::Symbol)
     # do we want to override the series type?
     if !is3d(st) && !(st in (:contour,:contour3d))
-        z = d[:z]
-        if !isa(z, Nothing) && (size(d[:x]) == size(d[:y]) == size(z))
+        z = plotattributes[:z]
+        if !isa(z, Nothing) && (size(plotattributes[:x]) == size(plotattributes[:y]) == size(z))
             st = (st == :scatter ? :scatter3d : :path3d)
-            d[:seriestype] = st
+            plotattributes[:seriestype] = st
         end
     end
     st
 end
 
-function _prepare_annotations(sp::Subplot, d::KW)
+function _prepare_annotations(sp::Subplot, plotattributes::KW)
     # strip out series annotations (those which are based on series x/y coords)
     # and add them to the subplot attr
     sp_anns = annotations(sp[:annotations])
-    # series_anns = annotations(pop!(d, :series_annotations, []))
+    # series_anns = annotations(pop!(plotattributes, :series_annotations, []))
     # if isa(series_anns, SeriesAnnotations)
-    #     series_anns.x = d[:x]
-    #     series_anns.y = d[:y]
+    #     series_anns.x = plotattributes[:x]
+    #     series_anns.y = plotattributes[:y]
     # elseif length(series_anns) > 0
-    #     x, y = d[:x], d[:y]
+    #     x, y = plotattributes[:x], plotattributes[:y]
     #     nx, ny, na = map(length, (x,y,series_anns))
     #     n = max(nx, ny, na)
     #     series_anns = [(x[mod1(i,nx)], y[mod1(i,ny)], text(series_anns[mod1(i,na)])) for i=1:n]
@@ -356,14 +356,14 @@ function _prepare_annotations(sp::Subplot, d::KW)
     # sp.attr[:annotations] = vcat(sp_anns, series_anns)
 end
 
-function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
+function _expand_subplot_extrema(sp::Subplot, plotattributes::KW, st::Symbol)
     # adjust extrema and discrete info
     if st == :image
-        xmin, xmax = ignorenan_extrema(d[:x]); ymin, ymax = ignorenan_extrema(d[:y])
+        xmin, xmax = ignorenan_extrema(plotattributes[:x]); ymin, ymax = ignorenan_extrema(plotattributes[:y])
         expand_extrema!(sp[:xaxis], (xmin, xmax))
         expand_extrema!(sp[:yaxis], (ymin, ymax))
     elseif !(st in (:pie, :histogram, :bins2d, :histogram2d))
-        expand_extrema!(sp, d)
+        expand_extrema!(sp, plotattributes)
     end
     # expand for zerolines (axes through origin)
     if sp[:framestyle] in (:origin, :zerolines)
@@ -372,10 +372,10 @@ function _expand_subplot_extrema(sp::Subplot, d::KW, st::Symbol)
     end
 end
 
-function _add_the_series(plt, sp, d)
-    warnOnUnsupported_args(plt.backend, d)
-    warnOnUnsupported(plt.backend, d)
-    series = Series(d)
+function _add_the_series(plt, sp, plotattributes)
+    warnOnUnsupported_args(plt.backend, plotattributes)
+    warnOnUnsupported(plt.backend, plotattributes)
+    series = Series(plotattributes)
     push!(plt.series_list, series)
     push!(sp.series_list, series)
     _series_added(plt, series)
@@ -385,36 +385,36 @@ end
 
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
-function _process_seriesrecipe(plt::Plot, d::KW)
+function _process_seriesrecipe(plt::Plot, plotattributes::KW)
     # replace seriestype aliases
-    st = Symbol(d[:seriestype])
-    st = d[:seriestype] = get(_typeAliases, st, st)
+    st = Symbol(plotattributes[:seriestype])
+    st = plotattributes[:seriestype] = get(_typeAliases, st, st)
 
     # shapes shouldn't have fillrange set
-    if d[:seriestype] == :shape
-        d[:fillrange] = nothing
+    if plotattributes[:seriestype] == :shape
+        plotattributes[:fillrange] = nothing
     end
 
     # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
     if is_seriestype_supported(st)
-        sp = _prepare_subplot(plt, d)
-        _prepare_annotations(sp, d)
-        _expand_subplot_extrema(sp, d, st)
-        _update_series_attributes!(d, plt, sp)
-        _add_the_series(plt, sp, d)
+        sp = _prepare_subplot(plt, plotattributes)
+        _prepare_annotations(sp, plotattributes)
+        _expand_subplot_extrema(sp, plotattributes, st)
+        _update_series_attributes!(plotattributes, plt, sp)
+        _add_the_series(plt, sp, plotattributes)
 
     else
         # get a sub list of series for this seriestype
-        datalist = RecipesBase.apply_recipe(d, Val{st}, d[:x], d[:y], d[:z])
+        datalist = RecipesBase.apply_recipe(plotattributes, Val{st}, plotattributes[:x], plotattributes[:y], plotattributes[:z])
 
         # assuming there was no error, recursively apply the series recipes
         for data in datalist
             if isa(data, RecipeData)
-                preprocessArgs!(data.d)
-                if data.d[:seriestype] == st
+                preprocessArgs!(data.plotattributes)
+                if data.plotattributes[:seriestype] == st
                     error("The seriestype didn't change in series recipe $st.  This will cause a StackOverflow.")
                 end
-                _process_seriesrecipe(plt, data.d)
+                _process_seriesrecipe(plt, data.plotattributes)
             else
                 @warn("Unhandled recipe: $(data)")
                 break
