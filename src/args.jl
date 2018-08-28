@@ -1519,7 +1519,6 @@ function getSeriesRGBColor(c, sp::Subplot, n::Int)
 end
 
 function getSeriesRGBColor(c::AbstractArray, sp::Subplot, n::Int)
-    @info "it is surprising that this function is called - please report a use case as a Plots issue"
     map(x->getSeriesRGBColor(x, sp, n), c)
 end
 
