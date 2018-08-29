@@ -1144,11 +1144,11 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
                  vis = gl_boxplot(plotattributes, kw_args)
              elseif st == :volume
                   volume = plotattributes[:y]
-                  _d = copy(plotattributes)
-                  _d[:y] = 0:1
-                  _d[:x] = 0:1
+                  _plotattributes = copy(plotattributes)
+                  _plotattributes[:y] = 0:1
+                  _plotattributes[:x] = 0:1
                   kw_args = KW()
-                  extract_gradient(_d, kw_args, :fill)
+                  extract_gradient(_plotattributes, kw_args, :fill)
                   vis = visualize(volume.v, Style(:default), kw_args)
              else
                 error("failed to display plot type $st")
