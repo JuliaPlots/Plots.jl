@@ -7,22 +7,22 @@
 
 const FuncOrFuncs = Union{Function, AVec{Function}}
 
-all3D(d::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image), get(d, :seriestype, :none))
+all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image), get(plotattributes, :seriestype, :none))
 
 # missing
-convertToAnyVector(v::Nothing, d::KW) = Any[nothing], nothing
+convertToAnyVector(v::Nothing, plotattributes::KW) = Any[nothing], nothing
 
 # fixed number of blank series
-convertToAnyVector(n::Integer, d::KW) = Any[zeros(0) for i in 1:n], nothing
+convertToAnyVector(n::Integer, plotattributes::KW) = Any[zeros(0) for i in 1:n], nothing
 
 # numeric vector
-convertToAnyVector(v::AVec{T}, d::KW) where {T<:Number} = Any[v], nothing
+convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Number} = Any[v], nothing
 
 # string vector
-convertToAnyVector(v::AVec{T}, d::KW) where {T<:AbstractString} = Any[v], nothing
+convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:AbstractString} = Any[v], nothing
 
-function convertToAnyVector(v::AMat, d::KW)
-    if all3D(d)
+function convertToAnyVector(v::AMat, plotattributes::KW)
+    if all3D(plotattributes)
         Any[Surface(v)]
     else
         Any[v[:,i] for i in 1:size(v,2)]
@@ -30,30 +30,30 @@ function convertToAnyVector(v::AMat, d::KW)
 end
 
 # function
-convertToAnyVector(f::Function, d::KW) = Any[f], nothing
+convertToAnyVector(f::Function, plotattributes::KW) = Any[f], nothing
 
 # surface
-convertToAnyVector(s::Surface, d::KW) = Any[s], nothing
+convertToAnyVector(s::Surface, plotattributes::KW) = Any[s], nothing
 
 # # vector of OHLC
-# convertToAnyVector(v::AVec{OHLC}, d::KW) = Any[v], nothing
+# convertToAnyVector(v::AVec{OHLC}, plotattributes::KW) = Any[v], nothing
 
 # dates
-convertToAnyVector(dts::AVec{D}, d::KW) where {D<:Union{Date,DateTime}} = Any[dts], nothing
+convertToAnyVector(dts::AVec{D}, plotattributes::KW) where {D<:Union{Date,DateTime}} = Any[dts], nothing
 
 # list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec, d::KW)
+function convertToAnyVector(v::AVec, plotattributes::KW)
     if all(x -> typeof(x) <: Number, v)
         # all real numbers wrap the whole vector as one item
         Any[convert(Vector{Float64}, v)], nothing
     else
         # something else... treat each element as an item
-        vcat(Any[convertToAnyVector(vi, d)[1] for vi in v]...), nothing
+        vcat(Any[convertToAnyVector(vi, plotattributes)[1] for vi in v]...), nothing
         # Any[vi for vi in v], nothing
     end
 end
 
-convertToAnyVector(t::Tuple, d::KW) = Any[t], nothing
+convertToAnyVector(t::Tuple, plotattributes::KW) = Any[t], nothing
 
 
 function convertToAnyVector(args...)

@@ -89,12 +89,12 @@ like_line(seriestype::Symbol)      = seriestype in _line_like
 like_surface(seriestype::Symbol)   = seriestype in _surface_like
 
 is3d(seriestype::Symbol) = seriestype in _3dTypes
-is3d(series::Series) = is3d(series.d)
-is3d(d::KW) = trueOrAllTrue(is3d, Symbol(d[:seriestype]))
+is3d(series::Series) = is3d(series.plotattributes)
+is3d(plotattributes::KW) = trueOrAllTrue(is3d, Symbol(plotattributes[:seriestype]))
 
 is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
-ispolar(series::Series) = ispolar(series.d[:subplot])
+ispolar(series::Series) = ispolar(series.plotattributes[:subplot])
 
 # ------------------------------------------------------------
 
@@ -463,11 +463,11 @@ autopick(notarr, idx::Integer) = notarr
 autopick_ignore_none_auto(arr::AVec, idx::Integer) = autopick(setdiff(arr, [:none, :auto]), idx)
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
-function aliasesAndAutopick(d::KW, sym::Symbol, aliases::Dict{Symbol,Symbol}, options::AVec, plotIndex::Int)
-    if d[sym] == :auto
-        d[sym] = autopick_ignore_none_auto(options, plotIndex)
-    elseif haskey(aliases, d[sym])
-        d[sym] = aliases[d[sym]]
+function aliasesAndAutopick(plotattributes::KW, sym::Symbol, aliases::Dict{Symbol,Symbol}, options::AVec, plotIndex::Int)
+    if plotattributes[sym] == :auto
+        plotattributes[sym] = autopick_ignore_none_auto(options, plotIndex)
+    elseif haskey(aliases, [sym])
+        plotattributes[sym] = aliases[plotattributes[sym]]
     end
 end
 
@@ -604,7 +604,7 @@ end
 `default(key)` returns the current default value for that key
 `default(key, value)` sets the current default value for that key
 `default(; kw...)` will set the current default value for each key/value pair
-`default(d, key)` returns the key from d if it exists, otherwise `default(key)`
+`default(plotattributes, key)` returns the key from  plotattributes if it exists, otherwise `default(key)`
 """
 function default(k::Symbol)
     k = get(_keyAliases, k, k)
@@ -642,8 +642,8 @@ function default(; kw...)
     end
 end
 
-function default(d::KW, k::Symbol)
-    get(d, k, default(k))
+function default(plotattributes::KW, k::Symbol)
+    get(plotattributes, k, default(k))
 end
 
 function reset_defaults()
@@ -653,15 +653,15 @@ end
 
 # -----------------------------------------------------------------------------
 
-# if arg is a valid color value, then set d[csym] and return true
-function handleColors!(d::KW, arg, csym::Symbol)
+# if arg is a valid color value, then set plotattributes[csym] and return true
+function handleColors!(plotattributes::KW, arg, csym::Symbol)
     try
         if arg == :auto
-            d[csym] = :auto
+            plotattributes[csym] = :auto
         else
             # c = colorscheme(arg)
             c = plot_color(arg)
-            d[csym] = c
+            plotattributes[csym] = c
         end
         return true
     catch
@@ -671,201 +671,201 @@ end
 
 
 
-function processLineArg(d::KW, arg)
+function processLineArg(plotattributes::KW, arg)
     # seriestype
     if allLineTypes(arg)
-        d[:seriestype] = arg
+        plotattributes[:seriestype] = arg
 
     # linestyle
     elseif allStyles(arg)
-        d[:linestyle] = arg
+        plotattributes[:linestyle] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (d[:linewidth] = arg.width)
-        arg.color == nothing || (d[:linecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (d[:linealpha] = arg.alpha)
-        arg.style == nothing || (d[:linestyle] = arg.style)
+        arg.width == nothing || (plotattributes[:linewidth] = arg.width)
+        arg.color == nothing || (plotattributes[:linecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha == nothing || (plotattributes[:linealpha] = arg.alpha)
+        arg.style == nothing || (plotattributes[:linestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size  == nothing || (d[:fillrange] = arg.size)
-        arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
+        arg.size  == nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color == nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha == nothing || (plotattributes[:fillalpha] = arg.alpha)
 
     elseif typeof(arg) <: Arrow || arg in (:arrow, :arrows)
-        d[:arrow] = arg
+        plotattributes[:arrow] = arg
 
     # linealpha
     elseif allAlphas(arg)
-        d[:linealpha] = arg
+        plotattributes[:linealpha] = arg
 
     # linewidth
     elseif allReals(arg)
-        d[:linewidth] = arg
+        plotattributes[:linewidth] = arg
 
     # color
-    elseif !handleColors!(d, arg, :linecolor)
+    elseif !handleColors!(plotattributes, arg, :linecolor)
         @warn("Skipped line arg $arg.")
 
     end
 end
 
 
-function processMarkerArg(d::KW, arg)
+function processMarkerArg(plotattributes::KW, arg)
     # markershape
     if allShapes(arg)
-        d[:markershape] = arg
+        plotattributes[:markershape] = arg
 
     # stroke style
     elseif allStyles(arg)
-        d[:markerstrokestyle] = arg
+        plotattributes[:markerstrokestyle] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (d[:markerstrokewidth] = arg.width)
-        arg.color == nothing || (d[:markerstrokecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (d[:markerstrokealpha] = arg.alpha)
-        arg.style == nothing || (d[:markerstrokestyle] = arg.style)
+        arg.width == nothing || (plotattributes[:markerstrokewidth] = arg.width)
+        arg.color == nothing || (plotattributes[:markerstrokecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha == nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
+        arg.style == nothing || (plotattributes[:markerstrokestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size  == nothing || (d[:markersize]  = arg.size)
-        arg.color == nothing || (d[:markercolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (d[:markeralpha] = arg.alpha)
+        arg.size  == nothing || (plotattributes[:markersize]  = arg.size)
+        arg.color == nothing || (plotattributes[:markercolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha == nothing || (plotattributes[:markeralpha] = arg.alpha)
 
     # linealpha
     elseif allAlphas(arg)
-        d[:markeralpha] = arg
+        plotattributes[:markeralpha] = arg
 
     # markersize
     elseif allReals(arg)
-        d[:markersize] = arg
+        plotattributes[:markersize] = arg
 
     # markercolor
-    elseif !handleColors!(d, arg, :markercolor)
+    elseif !handleColors!(plotattributes, arg, :markercolor)
         @warn("Skipped marker arg $arg.")
 
     end
 end
 
 
-function processFillArg(d::KW, arg)
-    # fr = get(d, :fillrange, 0)
+function processFillArg(plotattributes::KW, arg)
+    # fr = get(plotattributes, :fillrange, 0)
     if typeof(arg) <: Brush
-        arg.size  == nothing || (d[:fillrange] = arg.size)
-        arg.color == nothing || (d[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (d[:fillalpha] = arg.alpha)
+        arg.size  == nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color == nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha == nothing || (plotattributes[:fillalpha] = arg.alpha)
 
     elseif typeof(arg) <: Bool
-        d[:fillrange] = arg ? 0 : nothing
+        plotattributes[:fillrange] = arg ? 0 : nothing
 
     # fillrange function
     elseif allFunctions(arg)
-        d[:fillrange] = arg
+        plotattributes[:fillrange] = arg
 
     # fillalpha
     elseif allAlphas(arg)
-        d[:fillalpha] = arg
+        plotattributes[:fillalpha] = arg
 
     # fillrange provided as vector or number
     elseif typeof(arg) <: Union{AbstractArray{<:Real}, Real}
-        d[:fillrange] = arg
+        plotattributes[:fillrange] = arg
 
-    elseif !handleColors!(d, arg, :fillcolor)
+    elseif !handleColors!(plotattributes, arg, :fillcolor)
 
-        d[:fillrange] = arg
+        plotattributes[:fillrange] = arg
     end
-    # d[:fillrange] = fr
+    # plotattributes[:fillrange] = fr
     return
 end
 
 
-function processGridArg!(d::KW, arg, letter)
+function processGridArg!(plotattributes::KW, arg, letter)
     if arg in _allGridArgs || isa(arg, Bool)
-        d[Symbol(letter, :grid)] = hasgrid(arg, letter)
+        plotattributes[Symbol(letter, :grid)] = hasgrid(arg, letter)
 
     elseif allStyles(arg)
-        d[Symbol(letter, :gridstyle)] = arg
+        plotattributes[Symbol(letter, :gridstyle)] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (d[Symbol(letter, :gridlinewidth)] = arg.width)
-        arg.color == nothing || (d[Symbol(letter, :foreground_color_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
-        arg.alpha == nothing || (d[Symbol(letter, :gridalpha)] = arg.alpha)
-        arg.style == nothing || (d[Symbol(letter, :gridstyle)] = arg.style)
+        arg.width == nothing || (plotattributes[Symbol(letter, :gridlinewidth)] = arg.width)
+        arg.color == nothing || (plotattributes[Symbol(letter, :foreground_color_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
+        arg.alpha == nothing || (plotattributes[Symbol(letter, :gridalpha)] = arg.alpha)
+        arg.style == nothing || (plotattributes[Symbol(letter, :gridstyle)] = arg.style)
 
     # linealpha
     elseif allAlphas(arg)
-        d[Symbol(letter, :gridalpha)] = arg
+        plotattributes[Symbol(letter, :gridalpha)] = arg
 
     # linewidth
     elseif allReals(arg)
-        d[Symbol(letter, :gridlinewidth)] = arg
+        plotattributes[Symbol(letter, :gridlinewidth)] = arg
 
     # color
-    elseif !handleColors!(d, arg, Symbol(letter, :foreground_color_grid))
+    elseif !handleColors!(plotattributes, arg, Symbol(letter, :foreground_color_grid))
         @warn("Skipped grid arg $arg.")
 
     end
 end
 
-function processMinorGridArg!(d::KW, arg, letter)
+function processMinorGridArg!(plotattributes::KW, arg, letter)
     if arg in _allGridArgs || isa(arg, Bool)
-        d[Symbol(letter, :minorgrid)] = hasgrid(arg, letter)
+        plotattributes[Symbol(letter, :minorgrid)] = hasgrid(arg, letter)
 
     elseif allStyles(arg)
-        d[Symbol(letter, :minorgridstyle)] = arg
-        d[Symbol(letter, :minorgrid)] = true
+        plotattributes[Symbol(letter, :minorgridstyle)] = arg
+        plotattributes[Symbol(letter, :minorgrid)] = true
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (d[Symbol(letter, :minorgridlinewidth)] = arg.width)
-        arg.color == nothing || (d[Symbol(letter, :foreground_color_minor_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
-        arg.alpha == nothing || (d[Symbol(letter, :minorgridalpha)] = arg.alpha)
-        arg.style == nothing || (d[Symbol(letter, :minorgridstyle)] = arg.style)
-        d[Symbol(letter, :minorgrid)] = true
+        arg.width == nothing || (plotattributes[Symbol(letter, :minorgridlinewidth)] = arg.width)
+        arg.color == nothing || (plotattributes[Symbol(letter, :foreground_color_minor_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
+        arg.alpha == nothing || (plotattributes[Symbol(letter, :minorgridalpha)] = arg.alpha)
+        arg.style == nothing || (plotattributes[Symbol(letter, :minorgridstyle)] = arg.style)
+        plotattributes[Symbol(letter, :minorgrid)] = true
 
     # linealpha
     elseif allAlphas(arg)
-        d[Symbol(letter, :minorgridalpha)] = arg
-        d[Symbol(letter, :minorgrid)] = true
+        plotattributes[Symbol(letter, :minorgridalpha)] = arg
+        plotattributes[Symbol(letter, :minorgrid)] = true
 
     # linewidth
     elseif allReals(arg)
-        d[Symbol(letter, :minorgridlinewidth)] = arg
-        d[Symbol(letter, :minorgrid)] = true
+        plotattributes[Symbol(letter, :minorgridlinewidth)] = arg
+        plotattributes[Symbol(letter, :minorgrid)] = true
 
     # color
-    elseif handleColors!(d, arg, Symbol(letter, :foreground_color_minor_grid))
-        d[Symbol(letter, :minorgrid)] = true
+    elseif handleColors!(plotattributes, arg, Symbol(letter, :foreground_color_minor_grid))
+        plotattributes[Symbol(letter, :minorgrid)] = true
     else
         @warn("Skipped grid arg $arg.")
     end
 end
 
-function processFontArg!(d::KW, fontname::Symbol, arg)
+function processFontArg!(plotattributes::KW, fontname::Symbol, arg)
     T = typeof(arg)
     if T <: Font
-        d[Symbol(fontname, :family)] = arg.family
-        d[Symbol(fontname, :size)] = arg.pointsize
-        d[Symbol(fontname, :halign)] = arg.halign
-        d[Symbol(fontname, :valign)] = arg.valign
-        d[Symbol(fontname, :rotation)] = arg.rotation
-        d[Symbol(fontname, :color)] = arg.color
+        plotattributes[Symbol(fontname, :family)] = arg.family
+        plotattributes[Symbol(fontname, :size)] = arg.pointsize
+        plotattributes[Symbol(fontname, :halign)] = arg.halign
+        plotattributes[Symbol(fontname, :valign)] = arg.valign
+        plotattributes[Symbol(fontname, :rotation)] = arg.rotation
+        plotattributes[Symbol(fontname, :color)] = arg.color
     elseif arg == :center
-        d[Symbol(fontname, :halign)] = :hcenter
-        d[Symbol(fontname, :valign)] = :vcenter
+        plotattributes[Symbol(fontname, :halign)] = :hcenter
+        plotattributes[Symbol(fontname, :valign)] = :vcenter
     elseif arg in (:hcenter, :left, :right)
-        d[Symbol(fontname, :halign)] = arg
+        plotattributes[Symbol(fontname, :halign)] = arg
     elseif arg in (:vcenter, :top, :bottom)
-        d[Symbol(fontname, :valign)] = arg
+        plotattributes[Symbol(fontname, :valign)] = arg
     elseif T <: Colorant
-        d[Symbol(fontname, :color)] = arg
+        plotattributes[Symbol(fontname, :color)] = arg
     elseif T <: Symbol || T <: AbstractString
         try
-            d[Symbol(fontname, :color)] = parse(Colorant, string(arg))
+            plotattributes[Symbol(fontname, :color)] = parse(Colorant, string(arg))
         catch
-            d[Symbol(fontname, :family)] = string(arg)
+            plotattributes[Symbol(fontname, :family)] = string(arg)
         end
     elseif typeof(arg) <: Integer
-        d[Symbol(fontname, :size)] = arg
+        plotattributes[Symbol(fontname, :size)] = arg
     elseif typeof(arg) <: Real
-        d[Symbol(fontname, :rotation)] = convert(Float64, arg)
+        plotattributes[Symbol(fontname, :rotation)] = convert(Float64, arg)
     else
         @warn("Skipped font arg: $arg ($(typeof(arg)))")
     end
@@ -875,150 +875,150 @@ _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
 _replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
 _replace_markershape(shape) = shape
 
-function _add_markershape(d::KW)
+function _add_markershape(plotattributes::KW)
     # add the markershape if it needs to be added... hack to allow "m=10" to add a shape,
     # and still allow overriding in _apply_recipe
-    ms = pop!(d, :markershape_to_add, :none)
-    if !haskey(d, :markershape) && ms != :none
-        d[:markershape] = ms
+    ms = pop!(plotattributes, :markershape_to_add, :none)
+    if !haskey(plotattributes, :markershape) && ms != :none
+        plotattributes[:markershape] = ms
     end
 end
 
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
-function preprocessArgs!(d::KW)
-    replaceAliases!(d, _keyAliases)
+function preprocessArgs!(plotattributes::KW)
+    replaceAliases!(plotattributes, _keyAliases)
 
     # clear all axis stuff
-    # if haskey(d, :axis) && d[:axis] in (:none, nothing, false)
-    #     d[:ticks] = nothing
-    #     d[:foreground_color_border] = RGBA(0,0,0,0)
-    #     d[:foreground_color_axis] = RGBA(0,0,0,0)
-    #     d[:grid] = false
-    #     delete!(d, :axis)
+    # if haskey(plotattributes, :axis) && plotattributes[:axis] in (:none, nothing, false)
+    #     plotattributes[:ticks] = nothing
+    #     plotattributes[:foreground_color_border] = RGBA(0,0,0,0)
+    #     plotattributes[:foreground_color_axis] = RGBA(0,0,0,0)
+    #     plotattributes[:grid] = false
+    #     delete!(plotattributes, :axis)
     # end
     # for letter in (:x, :y, :z)
     #     asym = Symbol(letter, :axis)
-    #     if haskey(d, asym) || d[asym] in (:none, nothing, false)
-    #         d[Symbol(letter, :ticks)] = nothing
-    #         d[Symbol(letter, :foreground_color_border)] = RGBA(0,0,0,0)
+    #     if haskey(plotattributes, asym) || plotattributes[asym] in (:none, nothing, false)
+    #         plotattributes[Symbol(letter, :ticks)] = nothing
+    #         plotattributes[Symbol(letter, :foreground_color_border)] = RGBA(0,0,0,0)
     #     end
     # end
 
     # handle axis args common to all axis
-    args = pop!(d, :axis, ())
+    args = pop!(plotattributes, :axis, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
-            process_axis_arg!(d, arg, letter)
+            process_axis_arg!(plotattributes, arg, letter)
         end
     end
     # handle axis args
     for letter in (:x, :y, :z)
         asym = Symbol(letter, :axis)
-        args = pop!(d, asym, ())
+        args = pop!(plotattributes, asym, ())
         if !(typeof(args) <: Axis)
             for arg in wraptuple(args)
-                process_axis_arg!(d, arg, letter)
+                process_axis_arg!(plotattributes, arg, letter)
             end
         end
     end
 
     # handle grid args common to all axes
-    args = pop!(d, :grid, ())
+    args = pop!(plotattributes, :grid, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
-            processGridArg!(d, arg, letter)
+            processGridArg!(plotattributes, arg, letter)
         end
     end
     # handle individual axes grid args
     for letter in (:x, :y, :z)
         gridsym = Symbol(letter, :grid)
-        args = pop!(d, gridsym, ())
+        args = pop!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
-            processGridArg!(d, arg, letter)
+            processGridArg!(plotattributes, arg, letter)
         end
     end
     # handle minor grid args common to all axes
-    args = pop!(d, :minorgrid, ())
+    args = pop!(plotattributes, :minorgrid, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
-            processMinorGridArg!(d, arg, letter)
+            processMinorGridArg!(plotattributes, arg, letter)
         end
     end
     # handle individual axes grid args
     for letter in (:x, :y, :z)
         gridsym = Symbol(letter, :minorgrid)
-        args = pop!(d, gridsym, ())
+        args = pop!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
-            processMinorGridArg!(d, arg, letter)
+            processMinorGridArg!(plotattributes, arg, letter)
         end
     end
     # fonts
     for fontname in (:titlefont, :legendfont)
-        args = pop!(d, fontname, ())
+        args = pop!(plotattributes, fontname, ())
         for arg in wraptuple(args)
-            processFontArg!(d, fontname, arg)
+            processFontArg!(plotattributes, fontname, arg)
         end
     end
     # handle font args common to all axes
     for fontname in (:tickfont, :guidefont)
-        args = pop!(d, fontname, ())
+        args = pop!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             for letter in (:x, :y, :z)
-                processFontArg!(d, Symbol(letter, fontname), arg)
+                processFontArg!(plotattributes, Symbol(letter, fontname), arg)
             end
         end
     end
     # handle individual axes font args
     for letter in (:x, :y, :z)
         for fontname in (:tickfont, :guidefont)
-            args = pop!(d, Symbol(letter, fontname), ())
+            args = pop!(plotattributes, Symbol(letter, fontname), ())
             for arg in wraptuple(args)
-                processFontArg!(d, Symbol(letter, fontname), arg)
+                processFontArg!(plotattributes, Symbol(letter, fontname), arg)
             end
         end
     end
 
     # handle line args
-    for arg in wraptuple(pop!(d, :line, ()))
-        processLineArg(d, arg)
+    for arg in wraptuple(pop!(plotattributes, :line, ()))
+        processLineArg(plotattributes, arg)
     end
 
-    if haskey(d, :seriestype) && haskey(_typeAliases, d[:seriestype])
-        d[:seriestype] = _typeAliases[d[:seriestype]]
+    if haskey(plotattributes, :seriestype) && haskey(_typeAliases, plotattributes[:seriestype])
+        plotattributes[:seriestype] = _typeAliases[plotattributes[:seriestype]]
     end
 
     # handle marker args... default to ellipse if shape not set
     anymarker = false
-    for arg in wraptuple(get(d, :marker, ()))
-        processMarkerArg(d, arg)
+    for arg in wraptuple(get(plotattributes, :marker, ()))
+        processMarkerArg(plotattributes, arg)
         anymarker = true
     end
-    delete!(d, :marker)
-    if haskey(d, :markershape)
-        d[:markershape] = _replace_markershape(d[:markershape])
-        if d[:markershape] == :none && d[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
-            d[:markershape] = :circle
+    delete!(plotattributes, :marker)
+    if haskey(plotattributes, :markershape)
+        plotattributes[:markershape] = _replace_markershape(plotattributes[:markershape])
+        if plotattributes[:markershape] == :none && plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
+            plotattributes[:markershape] = :circle
         end
     elseif anymarker
-        d[:markershape_to_add] = :circle  # add it after _apply_recipe
+        plotattributes[:markershape_to_add] = :circle  # add it after _apply_recipe
     end
 
     # handle fill
-    for arg in wraptuple(get(d, :fill, ()))
-        processFillArg(d, arg)
+    for arg in wraptuple(get(plotattributes, :fill, ()))
+        processFillArg(plotattributes, arg)
     end
-    delete!(d, :fill)
+    delete!(plotattributes, :fill)
 
     # handle series annotations
-    if haskey(d, :series_annotations)
-        d[:series_annotations] = series_annotations(wraptuple(d[:series_annotations])...)
+    if haskey(plotattributes, :series_annotations)
+        plotattributes[:series_annotations] = series_annotations(wraptuple(plotattributes[:series_annotations])...)
     end
 
   # convert into strokes and brushes
 
-    if haskey(d, :arrow)
-        a = d[:arrow]
-        d[:arrow] = if a == true
+    if haskey(plotattributes, :arrow)
+        a = plotattributes[:arrow]
+        plotattributes[:arrow] = if a == true
             arrow()
         elseif a in (false, nothing, :none)
             nothing
@@ -1030,25 +1030,25 @@ function preprocessArgs!(d::KW)
     end
 
 
-    # if get(d, :arrow, false) == true
-    #     d[:arrow] = arrow()
+    # if get(plotattributes, :arrow, false) == true
+    #     plotattributes[:arrow] = arrow()
     # end
 
     # legends
-    if haskey(d, :legend)
-        d[:legend] = convertLegendValue(d[:legend])
+    if haskey(plotattributes, :legend)
+        plotattributes[:legend] = convertLegendValue(plotattributes[:legend])
     end
-    if haskey(d, :colorbar)
-        d[:colorbar] = convertLegendValue(d[:colorbar])
+    if haskey(plotattributes, :colorbar)
+        plotattributes[:colorbar] = convertLegendValue(plotattributes[:colorbar])
     end
 
     # framestyle
-    if haskey(d, :framestyle) && haskey(_framestyleAliases, d[:framestyle])
-        d[:framestyle] = _framestyleAliases[d[:framestyle]]
+    if haskey(plotattributes, :framestyle) && haskey(_framestyleAliases, plotattributes[:framestyle])
+        plotattributes[:framestyle] = _framestyleAliases[plotattributes[:framestyle]]
     end
 
     # warnings for moved recipes
-    st = get(d, :seriestype, :path)
+    st = get(plotattributes, :seriestype, :path)
     if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatPlots)
         @warn("seriestype $st has been moved to StatPlots.  To use: \`Pkg.add(\"StatPlots\"); using StatPlots\`")
     end
@@ -1105,16 +1105,16 @@ end
 filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
 filter_data(v, idxfilter) = v
 
-function filter_data!(d::KW, idxfilter)
+function filter_data!(plotattributes::KW, idxfilter)
     for s in (:x, :y, :z)
-        d[s] = filter_data(get(d, s, nothing), idxfilter)
+        plotattributes[s] = filter_data(get(plotattributes, s, nothing), idxfilter)
     end
 end
 
-function _filter_input_data!(d::KW)
-    idxfilter = pop!(d, :idxfilter, nothing)
+function _filter_input_data!(plotattributes::KW)
+    idxfilter = pop!(plotattributes, :idxfilter, nothing)
     if idxfilter != nothing
-        filter_data!(d, idxfilter)
+        filter_data!(plotattributes, idxfilter)
     end
 end
 
@@ -1124,14 +1124,14 @@ end
 const _already_warned = Dict{Symbol,Set{Symbol}}()
 const _to_warn = Set{Symbol}()
 
-function warnOnUnsupported_args(pkg::AbstractBackend, d::KW)
+function warnOnUnsupported_args(pkg::AbstractBackend, plotattributes::KW)
     empty!(_to_warn)
     bend = backend_name(pkg)
     already_warned = get!(_already_warned, bend, Set{Symbol}())
-    for k in keys(d)
+    for k in keys(plotattributes)
         is_attr_supported(pkg, k) && continue
         k in _suppress_warnings && continue
-        if d[k] != default(k)
+        if plotattributes[k] != default(k)
             k in already_warned || push!(_to_warn, k)
         end
     end
@@ -1148,22 +1148,22 @@ end
 # _markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supported_markers(pkg)
 # _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
-function warnOnUnsupported(pkg::AbstractBackend, d::KW)
-    if !is_seriestype_supported(pkg, d[:seriestype])
-        @warn("seriestype $(d[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))")
+function warnOnUnsupported(pkg::AbstractBackend, plotattributes::KW)
+    if !is_seriestype_supported(pkg, plotattributes[:seriestype])
+        @warn("seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))")
     end
-    if !is_style_supported(pkg, d[:linestyle])
-        @warn("linestyle $(d[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))")
+    if !is_style_supported(pkg, plotattributes[:linestyle])
+        @warn("linestyle $(plotattributes[:linestyle]) is unsupported with $pkg.  Choose from: $(supported_styles(pkg))")
     end
-    if !is_marker_supported(pkg, d[:markershape])
-        @warn("markershape $(d[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))")
+    if !is_marker_supported(pkg, plotattributes[:markershape])
+        @warn("markershape $(plotattributes[:markershape]) is unsupported with $pkg.  Choose from: $(supported_markers(pkg))")
     end
 end
 
-function warnOnUnsupported_scales(pkg::AbstractBackend, d::KW)
+function warnOnUnsupported_scales(pkg::AbstractBackend, plotattributes::KW)
     for k in (:xscale, :yscale, :zscale, :scale)
-        if haskey(d, k)
-            v = d[k]
+        if haskey(plotattributes, k)
+            v = plotattributes[k]
             if !is_scale_supported(pkg, v)
                 @warn("scale $v is unsupported with $pkg.  Choose from: $(supported_scales(pkg))")
             end
@@ -1208,15 +1208,15 @@ slice_arg(v, idx) = v
 # given an argument key (k), we want to extract the argument value for this index.
 # matrices are sliced by column, otherwise we
 # if nothing is set (or container is empty), return the default or the existing value.
-function slice_arg!(d_in::KW, d_out::KW, k::Symbol, default_value, idx::Int, remove_pair::Bool)
-    v = get(d_in, k, get(d_out, k, default_value))
-    d_out[k] = if haskey(d_in, k) && typeof(v) <: AMat && !isempty(v)
+function slice_arg!(plotattributes_in::KW,plotattributes_out::KW, k::Symbol, default_value, idx::Int, remove_pair::Bool)
+    v = get(plotattributes_in, k, get(plotattributes_out, k, default_value))
+   plotattributes_out[k] = if haskey(plotattributes_in, k) && typeof(v) <: AMat && !isempty(v)
         slice_arg(v, idx)
     else
         v
     end
     if remove_pair
-        delete!(d_in, k)
+        delete!(plotattributes_in, k)
     end
     return
 end
@@ -1225,9 +1225,9 @@ end
 
 # # if the value is `:match` then we take whatever match_color is.
 # # this is mainly used for cascading defaults for foreground and background colors
-# function color_or_match!(d::KW, k::Symbol, match_color)
-#     v = d[k]
-#     d[k] = if v == :match
+# function color_or_match!(plotattributes::KW, k::Symbol, match_color)
+#     v = plotattributes[k]
+#     plotattributes[k] = if v == :match
 #         match_color
 #     elseif v == nothing
 #         plot_color(RGBA(0,0,0,0))
@@ -1236,9 +1236,9 @@ end
 #     end
 # end
 
-function color_or_nothing!(d::KW, k::Symbol)
-    v = d[k]
-    d[k] = if v == nothing || v == false
+function color_or_nothing!(plotattributes::KW, k::Symbol)
+    v = plotattributes[k]
+    plotattributes[k] = if v == nothing || v == false
         RGBA{Float64}(0,0,0,0)
     elseif v != :match
         plot_color(v)
@@ -1312,7 +1312,7 @@ end
 
 # properly retrieve from axis.attr, passing `:match` to the correct key
 function Base.getindex(axis::Axis, k::Symbol)
-    v = axis.d[k]
+    v = axis.plotattributes[k]
     if v == :match
         if haskey(_match_map2, k)
             axis.sps[1][_match_map2[k]]
@@ -1325,36 +1325,36 @@ function Base.getindex(axis::Axis, k::Symbol)
 end
 
 function Base.getindex(series::Series, k::Symbol)
-    series.d[k]
+    series.plotattributes[k]
 end
 
 Base.setindex!(plt::Plot, v, k::Symbol)      = (plt.attr[k] = v)
 Base.setindex!(sp::Subplot, v, k::Symbol)    = (sp.attr[k] = v)
-Base.setindex!(axis::Axis, v, k::Symbol)     = (axis.d[k] = v)
-Base.setindex!(series::Series, v, k::Symbol) = (series.d[k] = v)
+Base.setindex!(axis::Axis, v, k::Symbol)     = (axis.plotattributes[k] = v)
+Base.setindex!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 
 Base.get(plt::Plot, k::Symbol, v)      = get(plt.attr, k, v)
 Base.get(sp::Subplot, k::Symbol, v)    = get(sp.attr, k, v)
-Base.get(axis::Axis, k::Symbol, v)     = get(axis.d, k, v)
-Base.get(series::Series, k::Symbol, v) = get(series.d, k, v)
+Base.get(axis::Axis, k::Symbol, v)     = get(axis.plotattributes, k, v)
+Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 
 
 # -----------------------------------------------------------------------------
 
-function fg_color(d::KW)
-    fg = default(d, :foreground_color)
+function fg_color(plotattributes::KW)
+    fg = default(plotattributes, :foreground_color)
     if fg == :auto
-        bg = plot_color(default(d, :background_color))
+        bg = plot_color(default(plotattributes, :background_color))
         fg = isdark(bg) ? colorant"white" : colorant"black"
     else
         plot_color(fg)
     end
 end
 
-function fg_color_sp(d::KW)
-    fgsp = default(d, :foreground_color_subplot)
+function fg_color_sp(plotattributes::KW)
+    fgsp = default(plotattributes, :foreground_color_subplot)
     if fg == :match
-        fg_color(d)
+        fg_color(plotattributes)
     else
         plot_color(fgsp)
     end
@@ -1363,15 +1363,15 @@ end
 
 
 # update attr from an input dictionary
-function _update_plot_args(plt::Plot, d_in::KW)
+function _update_plot_args(plt::Plot, plotattributes_in::KW)
     for (k,v) in _plot_defaults
-        slice_arg!(d_in, plt.attr, k, v, 1, true)
+        slice_arg!(plotattributes_in, plt.attr, k, v, 1, true)
     end
 
     # handle colors
-    d = plt.attr
-    plt[:background_color] = plot_color(d[:background_color])
-    plt[:foreground_color] = fg_color(d)
+   plotattributes= plt.attr
+    plt[:background_color] = plot_color(plotattributes[:background_color])
+    plt[:foreground_color] = fg_color(plotattributes)
     # bg = plot_color(plt.attr[:background_color])
     # fg = plt.attr[:foreground_color]
     # if fg == :auto
@@ -1416,11 +1416,11 @@ function _update_subplot_colors(sp::Subplot)
     return
 end
 
-function _update_axis(plt::Plot, sp::Subplot, d_in::KW, letter::Symbol, subplot_index::Int)
+function _update_axis(plt::Plot, sp::Subplot, plotattributes_in::KW, letter::Symbol, subplot_index::Int)
     # get (maybe initialize) the axis
     axis = get_axis(sp, letter)
 
-    _update_axis(axis, d_in, letter, subplot_index)
+    _update_axis(axis, plotattributes_in, letter, subplot_index)
 
     # convert a bool into auto or nothing
     if isa(axis[:ticks], Bool)
@@ -1432,23 +1432,23 @@ function _update_axis(plt::Plot, sp::Subplot, d_in::KW, letter::Symbol, subplot_
     return
 end
 
-function _update_axis(axis::Axis, d_in::KW, letter::Symbol, subplot_index::Int)
+function _update_axis(axis::Axis, plotattributes_in::KW, letter::Symbol, subplot_index::Int)
     # grab magic args (for example `xaxis = (:flip, :log)`)
-    args = wraptuple(get(d_in, Symbol(letter, :axis), ()))
+    args = wraptuple(get(plotattributes_in, Symbol(letter, :axis), ()))
 
     # build the KW of arguments from the letter version (i.e. xticks --> ticks)
     kw = KW()
     for (k,v) in _axis_defaults
         # first get the args without the letter: `tickfont = font(10)`
         # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
-        if haskey(d_in, k)
-            kw[k] = slice_arg(d_in[k], subplot_index)
+        if haskey(plotattributes_in, k)
+            kw[k] = slice_arg(plotattributes_in[k], subplot_index)
         end
 
         # then get those args that were passed with a leading letter: `xlabel = "X"`
         lk = Symbol(letter, k)
-        if haskey(d_in, lk)
-            kw[k] = slice_arg(d_in[lk], subplot_index)
+        if haskey(plotattributes_in, lk)
+            kw[k] = slice_arg(plotattributes_in[lk], subplot_index)
         end
     end
 
@@ -1459,12 +1459,12 @@ end
 
 function _update_axis_colors(axis::Axis)
     # # update the axis colors
-    color_or_nothing!(axis.d, :foreground_color_axis)
-    color_or_nothing!(axis.d, :foreground_color_border)
-    color_or_nothing!(axis.d, :foreground_color_guide)
-    color_or_nothing!(axis.d, :foreground_color_text)
-    color_or_nothing!(axis.d, :foreground_color_grid)
-    color_or_nothing!(axis.d, :foreground_color_minor_grid)
+    color_or_nothing!(axis.plotattributes, :foreground_color_axis)
+    color_or_nothing!(axis.plotattributes, :foreground_color_border)
+    color_or_nothing!(axis.plotattributes, :foreground_color_guide)
+    color_or_nothing!(axis.plotattributes, :foreground_color_text)
+    color_or_nothing!(axis.plotattributes, :foreground_color_grid)
+    color_or_nothing!(axis.plotattributes, :foreground_color_minor_grid)
     return
 end
 
@@ -1477,25 +1477,25 @@ function _update_axis_links(plt::Plot, axis::Axis, letter::Symbol)
             other_sp = get_subplot(plt, other_sp)
             link_axes!(axis, get_axis(other_sp, letter))
         end
-        axis.d[:link] = []
+        axis.plotattributes[:link] = []
     end
     return
 end
 
 # update a subplots args and axes
-function _update_subplot_args(plt::Plot, sp::Subplot, d_in::KW, subplot_index::Int, remove_pair::Bool)
+function _update_subplot_args(plt::Plot, sp::Subplot, plotattributes_in::KW, subplot_index::Int, remove_pair::Bool)
     anns = pop!(sp.attr, :annotations, [])
 
     # grab those args which apply to this subplot
     for (k,v) in _subplot_defaults
-        slice_arg!(d_in, sp.attr, k, v, subplot_index, remove_pair)
+        slice_arg!(plotattributes_in, sp.attr, k, v, subplot_index, remove_pair)
     end
 
     _update_subplot_periphery(sp, anns)
     _update_subplot_colors(sp)
 
     for letter in (:x, :y, :z)
-        _update_axis(plt, sp, d_in, letter, subplot_index)
+        _update_axis(plt, sp, plotattributes_in, letter, subplot_index)
     end
 end
 
@@ -1519,118 +1519,117 @@ function getSeriesRGBColor(c, sp::Subplot, n::Int)
 end
 
 function getSeriesRGBColor(c::AbstractArray, sp::Subplot, n::Int)
-    @info "it is surprising that this function is called - please report a use case as a Plots issue"
     map(x->getSeriesRGBColor(x, sp, n), c)
 end
 
-function ensure_gradient!(d::KW, csym::Symbol, asym::Symbol)
-    if !isa(d[csym], ColorGradient)
-        d[csym] = typeof(d[asym]) <: AbstractVector ? cgrad() : cgrad(alpha = d[asym])
+function ensure_gradient!(plotattributes::KW, csym::Symbol, asym::Symbol)
+    if !isa(plotattributes[csym], ColorGradient)
+        plotattributes[csym] = typeof(plotattributes[asym]) <: AbstractVector ? cgrad() : cgrad(alpha = plotattributes[asym])
     end
 end
 
-function _replace_linewidth(d::KW)
+function _replace_linewidth(plotattributes::KW)
     # get a good default linewidth... 0 for surface and heatmaps
-    if get(d, :linewidth, :auto) == :auto
-        d[:linewidth] = (get(d, :seriestype, :path) in (:surface,:heatmap,:image) ? 0 : 1)
+    if get(plotattributes, :linewidth, :auto) == :auto
+        plotattributes[:linewidth] = (get(plotattributes, :seriestype, :path) in (:surface,:heatmap,:image) ? 0 : 1)
     end
 end
 
-function _add_defaults!(d::KW, plt::Plot, sp::Subplot, commandIndex::Int)
+function _add_defaults!(plotattributes::KW, plt::Plot, sp::Subplot, commandIndex::Int)
     # add default values to our dictionary, being careful not to delete what we just added!
     for (k,v) in _series_defaults
-        slice_arg!(d, d, k, v, commandIndex, false)
+        slice_arg!(plotattributes, plotattributes, k, v, commandIndex, false)
     end
 
-    return d
+    return plotattributes
 end
 
 
-function _update_series_attributes!(d::KW, plt::Plot, sp::Subplot)
+function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     pkg = plt.backend
-    globalIndex = d[:series_plotindex]
-    plotIndex = _series_index(d, sp)
+    globalIndex = plotattributes[:series_plotindex]
+    plotIndex = _series_index(plotattributes, sp)
 
-    aliasesAndAutopick(d, :linestyle, _styleAliases, supported_styles(pkg), plotIndex)
-    aliasesAndAutopick(d, :markershape, _markerAliases, supported_markers(pkg), plotIndex)
+    aliasesAndAutopick(plotattributes, :linestyle, _styleAliases, supported_styles(pkg), plotIndex)
+    aliasesAndAutopick(plotattributes, :markershape, _markerAliases, supported_markers(pkg), plotIndex)
 
     # update alphas
     for asym in (:linealpha, :markeralpha, :fillalpha)
-        if d[asym] == nothing
-            d[asym] = d[:seriesalpha]
+        if plotattributes[asym] == nothing
+            plotattributes[asym] = plotattributes[:seriesalpha]
         end
     end
-    if d[:markerstrokealpha] == nothing
-        d[:markerstrokealpha] = d[:markeralpha]
+    if plotattributes[:markerstrokealpha] == nothing
+        plotattributes[:markerstrokealpha] = plotattributes[:markeralpha]
     end
 
     # update series color
-    d[:seriescolor] = getSeriesRGBColor(d[:seriescolor], sp, plotIndex)
+    plotattributes[:seriescolor] = getSeriesRGBColor(plotattributes[:seriescolor], sp, plotIndex)
 
     # update other colors
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
-        d[csym] = if d[csym] == :auto
-            plot_color(if has_black_border_for_default(d[:seriestype]) && s == :line
+        plotattributes[csym] = if plotattributes[csym] == :auto
+            plot_color(if has_black_border_for_default(plotattributes[:seriestype]) && s == :line
                 sp[:foreground_color_subplot]
             else
-                d[:seriescolor]
+                plotattributes[:seriescolor]
             end)
-        elseif d[csym] == :match
-            plot_color(d[:seriescolor])
+        elseif plotattributes[csym] == :match
+            plot_color(plotattributes[:seriescolor])
         else
-            getSeriesRGBColor(d[csym], sp, plotIndex)
+            getSeriesRGBColor(plotattributes[csym], sp, plotIndex)
         end
     end
 
     # update markerstrokecolor
-    d[:markerstrokecolor] = if d[:markerstrokecolor] == :match
+    plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] == :match
         plot_color(sp[:foreground_color_subplot])
-    elseif d[:markerstrokecolor] == :auto
-        getSeriesRGBColor(d[:markercolor], sp, plotIndex)
+    elseif plotattributes[:markerstrokecolor] == :auto
+        getSeriesRGBColor(plotattributes[:markercolor], sp, plotIndex)
     else
-        getSeriesRGBColor(d[:markerstrokecolor], sp, plotIndex)
+        getSeriesRGBColor(plotattributes[:markerstrokecolor], sp, plotIndex)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
-    if d[:marker_z] != nothing
-        ensure_gradient!(d, :markercolor, :markeralpha)
+    if plotattributes[:marker_z] != nothing
+        ensure_gradient!(plotattributes, :markercolor, :markeralpha)
     end
-    if d[:line_z] != nothing
-        ensure_gradient!(d, :linecolor, :linealpha)
+    if plotattributes[:line_z] != nothing
+        ensure_gradient!(plotattributes, :linecolor, :linealpha)
     end
-    if d[:fill_z] != nothing
-        ensure_gradient!(d, :fillcolor, :fillalpha)
+    if plotattributes[:fill_z] != nothing
+        ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
     end
 
     # scatter plots don't have a line, but must have a shape
-    if d[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
-        d[:linewidth] = 0
-        if d[:markershape] == :none
-            d[:markershape] = :circle
+    if plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d)
+        plotattributes[:linewidth] = 0
+        if plotattributes[:markershape] == :none
+            plotattributes[:markershape] = :circle
         end
     end
 
     # set label
-    label = d[:label]
+    label = plotattributes[:label]
     label = (label == "AUTO" ? "y$globalIndex" : label)
-    d[:label] = label
+    plotattributes[:label] = label
 
-    _replace_linewidth(d)
-    d
+    _replace_linewidth(plotattributes)
+   plotattributes
 end
 
-function _series_index(d, sp)
+function _series_index(plotattributes, sp)
     idx = 0
     for series in series_list(sp)
         if series[:primary]
             idx += 1
         end
-        if series == d
+        if series == plotattributes
             return idx
         end
     end
-    if get(d, :primary, true)
+    if get(plotattributes, :primary, true)
         idx += 1
     end
     return idx

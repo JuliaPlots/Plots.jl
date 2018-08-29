@@ -149,7 +149,7 @@ function plotly_annotation_dict(x, y, ptxt::PlotText; xref="paper", yref="paper"
     ))
 end
 
-# function get_annotation_dict_for_arrow(d::KW, xyprev::Tuple, xy::Tuple, a::Arrow)
+# function get_annotation_dict_for_arrow(plotattributes::KW, xyprev::Tuple, xy::Tuple, a::Arrow)
 #     xdiff = xyprev[1] - xy[1]
 #     ydiff = xyprev[2] - xy[2]
 #     dist = sqrt(xdiff^2 + ydiff^2)
@@ -163,7 +163,7 @@ end
 #         # :ay => -40,
 #         :ax => 10xdiff / dist,
 #         :ay => -10ydiff / dist,
-#         :arrowcolor => rgba_string(d[:linecolor]),
+#         :arrowcolor => rgba_string(plotattributes[:linecolor]),
 #         :xref => "x",
 #         :yref => "y",
 #         :arrowsize => 10a.headwidth,
@@ -306,14 +306,14 @@ function plotly_polaraxis(axis::Axis)
 end
 
 function plotly_layout(plt::Plot)
-    d_out = KW()
+    plotattributes_out = KW()
 
     w, h = plt[:size]
-    d_out[:width], d_out[:height] = w, h
-    d_out[:paper_bgcolor] = rgba_string(plt[:background_color_outside])
-    d_out[:margin] = KW(:l=>0, :b=>20, :r=>0, :t=>20)
+    plotattributes_out[:width], plotattributes_out[:height] = w, h
+    plotattributes_out[:paper_bgcolor] = rgba_string(plt[:background_color_outside])
+    plotattributes_out[:margin] = KW(:l=>0, :b=>20, :r=>0, :t=>20)
 
-    d_out[:annotations] = KW[]
+    plotattributes_out[:annotations] = KW[]
 
     multiple_subplots = length(plt.subplots) > 1
 
@@ -334,10 +334,10 @@ function plotly_layout(plt::Plot)
             end
             titlex, titley = xy_mm_to_pcts(xmm, top(bbox(sp)), w*px, h*px)
             title_font = font(titlefont(sp), :top)
-            push!(d_out[:annotations], plotly_annotation_dict(titlex, titley, text(sp[:title], title_font)))
+            push!(plotattributes_out[:annotations], plotly_annotation_dict(titlex, titley, text(sp[:title], title_font)))
         end
 
-        d_out[:plot_bgcolor] = rgba_string(sp[:background_color_inside])
+        plotattributes_out[:plot_bgcolor] = rgba_string(sp[:background_color_inside])
 
         # set to supported framestyle
         sp[:framestyle] = _plotly_framestyle(sp[:framestyle])
@@ -346,7 +346,7 @@ function plotly_layout(plt::Plot)
         if is3d(sp)
             azim = sp[:camera][1] - 90 #convert azimuthal to match GR behaviour
             theta = 90 - sp[:camera][2] #spherical coordinate angle from z axis
-            d_out[:scene] = KW(
+            plotattributes_out[:scene] = KW(
                 Symbol("xaxis$(spidx)") => plotly_axis(plt, sp[:xaxis], sp),
                 Symbol("yaxis$(spidx)") => plotly_axis(plt, sp[:yaxis], sp),
                 Symbol("zaxis$(spidx)") => plotly_axis(plt, sp[:zaxis], sp),
@@ -361,19 +361,19 @@ function plotly_layout(plt::Plot)
                 ),
             )
         elseif ispolar(sp)
-            d_out[Symbol("angularaxis$(spidx)")] = plotly_polaraxis(sp[:xaxis])
-            d_out[Symbol("radialaxis$(spidx)")] = plotly_polaraxis(sp[:yaxis])
+            plotattributes_out[Symbol("angularaxis$(spidx)")] = plotly_polaraxis(sp[:xaxis])
+            plotattributes_out[Symbol("radialaxis$(spidx)")] = plotly_polaraxis(sp[:yaxis])
         else
-            d_out[Symbol("xaxis$(x_idx)")] = plotly_axis(plt, sp[:xaxis], sp)
+            plotattributes_out[Symbol("xaxis$(x_idx)")] = plotly_axis(plt, sp[:xaxis], sp)
             # don't allow yaxis to be reupdated/reanchored in a linked subplot
-            spidx == y_idx ? d_out[Symbol("yaxis$(y_idx)")] = plotly_axis(plt, sp[:yaxis], sp) : nothing
+            spidx == y_idx ? plotattributes_out[Symbol("yaxis$(y_idx)")] = plotly_axis(plt, sp[:yaxis], sp) : nothing
         end
 
         # legend
-        d_out[:showlegend] = sp[:legend] != :none
+        plotattributes_out[:showlegend] = sp[:legend] != :none
         xpos,ypos = plotly_legend_pos(sp[:legend])
         if sp[:legend] != :none
-            d_out[:legend] = KW(
+            plotattributes_out[:legend] = KW(
                 :bgcolor  => rgba_string(sp[:background_color_legend]),
                 :bordercolor => rgba_string(sp[:foreground_color_legend]),
                 :font     => plotly_font(legendfont(sp)),
@@ -385,13 +385,13 @@ function plotly_layout(plt::Plot)
 
         # annotations
         for ann in sp[:annotations]
-            append!(d_out[:annotations], KW[plotly_annotation_dict(locate_annotation(sp, ann...)...; xref = "x$(x_idx)", yref = "y$(y_idx)")])
+            append!(plotattributes_out[:annotations], KW[plotly_annotation_dict(locate_annotation(sp, ann...)...; xref = "x$(x_idx)", yref = "y$(y_idx)")])
         end
         # series_annotations
         for series in series_list(sp)
             anns = series[:series_annotations]
             for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
-                push!(d_out[:annotations], plotly_annotation_dict(
+                push!(plotattributes_out[:annotations], plotly_annotation_dict(
                     xi,
                     yi,
                     PlotText(str,fnt); xref = "x$(x_idx)", yref = "y$(y_idx)")
@@ -404,24 +404,24 @@ function plotly_layout(plt::Plot)
         #     a = sargs[:arrow]
         #     if sargs[:seriestype] in (:path, :line) && typeof(a) <: Arrow
         #         add_arrows(sargs[:x], sargs[:y]) do xyprev, xy
-        #             push!(d_out[:annotations], get_annotation_dict_for_arrow(sargs, xyprev, xy, a))
+        #             push!(plotattributes_out[:annotations], get_annotation_dict_for_arrow(sargs, xyprev, xy, a))
         #         end
         #     end
         # end
 
         if ispolar(sp)
-            d_out[:direction] = "counterclockwise"
+            plotattributes_out[:direction] = "counterclockwise"
         end
 
-        d_out
+        plotattributes_out
     end
 
     # turn off hover if nothing's using it
-    if all(series -> series.d[:hover] in (false,:none), plt.series_list)
-        d_out[:hovermode] = "none"
+    if all(series -> series.plotattributes[:hover] in (false,:none), plt.series_list)
+        plotattributes_out[:hovermode] = "none"
     end
 
-    d_out
+    plotattributes_out
 end
 
 function plotly_layout_json(plt::Plot)
@@ -527,7 +527,7 @@ end
 as_gradient(grad::ColorGradient, α) = grad
 as_gradient(grad, α) = cgrad(alpha = α)
 
-# get a dictionary representing the series params (d is the Plots-dict, d_out is the Plotly-dict)
+# get a dictionary representing the series params (plotattributes is the Plots-dict, plotattributes_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
 
@@ -538,13 +538,13 @@ function plotly_series(plt::Plot, series::Series)
         return plotly_series_shapes(plt, series, clims)
     end
 
-    d_out = KW()
+    plotattributes_out = KW()
 
     # these are the axes that the series should be mapped to
     x_idx, y_idx = plotly_link_indicies(plt, sp)
-    d_out[:xaxis] = "x$(x_idx)"
-    d_out[:yaxis] = "y$(y_idx)"
-    d_out[:showlegend] = should_add_to_legend(series)
+    plotattributes_out[:xaxis] = "x$(x_idx)"
+    plotattributes_out[:yaxis] = "y$(y_idx)"
+    plotattributes_out[:showlegend] = should_add_to_legend(series)
 
     if st == :straightline
         x, y = straightline_data(series)
@@ -557,7 +557,7 @@ function plotly_series(plt::Plot, series::Series)
         for (letter, data) in zip((:x, :y, :z), (x, y, z))
     )
 
-    d_out[:name] = series[:label]
+    plotattributes_out[:name] = series[:label]
 
     isscatter = st in (:scatter, :scatter3d, :scattergl)
     hasmarker = isscatter || series[:markershape] != :none
@@ -565,59 +565,59 @@ function plotly_series(plt::Plot, series::Series)
     hasfillrange = st in (:path, :scatter, :scattergl, :straightline) &&
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
-    d_out[:colorbar] = KW(:title => sp[:colorbar_title])
+    plotattributes_out[:colorbar] = KW(:title => sp[:colorbar_title])
 
     if is_2tuple(clims)
-        d_out[:zmin], d_out[:zmax] = clims
+        plotattributes_out[:zmin], plotattributes_out[:zmax] = clims
     end
 
     # set the "type"
     if st in (:path, :scatter, :scattergl, :straightline, :path3d, :scatter3d)
-        return plotly_series_segments(series, d_out, x, y, z, clims)
+        return plotly_series_segments(series, plotattributes, x, y, z, clims)
 
     elseif st == :heatmap
         x = heatmap_edges(x, sp[:xaxis][:scale])
         y = heatmap_edges(y, sp[:yaxis][:scale])
-        d_out[:type] = "heatmap"
-        d_out[:x], d_out[:y], d_out[:z] = x, y, z
-        d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
-        d_out[:showscale] = hascolorbar(sp)
+        plotattributes_out[:type] = "heatmap"
+        plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
+        plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+        plotattributes_out[:showscale] = hascolorbar(sp)
 
     elseif st == :contour
-        d_out[:type] = "contour"
-        d_out[:x], d_out[:y], d_out[:z] = x, y, z
-        # d_out[:showscale] = series[:colorbar] != :none
-        d_out[:ncontours] = series[:levels]
-        d_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines", :showlabels => series[:contour_labels] == true)
-        d_out[:colorscale] = plotly_colorscale(series[:linecolor], series[:linealpha])
-        d_out[:showscale] = hascolorbar(sp)
+        plotattributes_out[:type] = "contour"
+        plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
+        # plotattributes_out[:showscale] = series[:colorbar] != :none
+        plotattributes_out[:ncontours] = series[:levels]
+        plotattributes_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines", :showlabels => series[:contour_labels] == true)
+        plotattributes_out[:colorscale] = plotly_colorscale(series[:linecolor], series[:linealpha])
+        plotattributes_out[:showscale] = hascolorbar(sp)
 
     elseif st in (:surface, :wireframe)
-        d_out[:type] = "surface"
-        d_out[:x], d_out[:y], d_out[:z] = x, y, z
+        plotattributes_out[:type] = "surface"
+        plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
         if st == :wireframe
-            d_out[:hidesurface] = true
+            plotattributes_out[:hidesurface] = true
             wirelines = KW(
                 :show => true,
                 :color => rgba_string(plot_color(series[:linecolor], series[:linealpha])),
                 :highlightwidth => series[:linewidth],
             )
-            d_out[:contours] = KW(:x => wirelines, :y => wirelines, :z => wirelines)
-            d_out[:showscale] = false
+            plotattributes_out[:contours] = KW(:x => wirelines, :y => wirelines, :z => wirelines)
+            plotattributes_out[:showscale] = false
         else
-            d_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
-            d_out[:opacity] = series[:fillalpha]
+            plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+            plotattributes_out[:opacity] = series[:fillalpha]
             if series[:fill_z] != nothing
-                d_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
+                plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
             end
-            d_out[:showscale] = hascolorbar(sp)
+            plotattributes_out[:showscale] = hascolorbar(sp)
         end
 
     elseif st == :pie
-        d_out[:type] = "pie"
-        d_out[:labels] = pie_labels(sp, series)
-        d_out[:values] = y
-        d_out[:hoverinfo] = "label+percent+name"
+        plotattributes_out[:type] = "pie"
+        plotattributes_out[:labels] = pie_labels(sp, series)
+        plotattributes_out[:values] = y
+        plotattributes_out[:hoverinfo] = "label+percent+name"
 
     else
         @warn("Plotly: seriestype $st isn't supported.")
@@ -627,7 +627,7 @@ function plotly_series(plt::Plot, series::Series)
     # add "marker"
     if hasmarker
         inds = eachindex(x)
-        d_out[:marker] = KW(
+        plotattributes_out[:marker] = KW(
             :symbol => get(_plotly_markers, series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
             :size => 2 * _cycle(series[:markersize], inds),
@@ -639,22 +639,22 @@ function plotly_series(plt::Plot, series::Series)
         )
     end
 
-    plotly_polar!(d_out, series)
-    plotly_hover!(d_out, series[:hover])
+    plotly_polar!(plotattributes_out, series)
+    plotly_hover!(plotattributes_out, series[:hover])
 
-    return [d_out]
+    return [plotattributes_out]
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
     segments = iter_segments(series)
-    d_outs = Vector{KW}(undef, length(segments))
+    plotattributes_outs = Vector{KW}(undef, length(segments))
 
-    # TODO: create a d_out for each polygon
+    # TODO: create a plotattributes_out for each polygon
     # x, y = series[:x], series[:y]
 
     # these are the axes that the series should be mapped to
     x_idx, y_idx = plotly_link_indicies(plt, series[:subplot])
-    d_base = KW(
+    plotattributes_base = KW(
         :xaxis => "x$(x_idx)",
         :yaxis => "y$(y_idx)",
         :name => series[:label],
@@ -669,7 +669,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         length(rng) < 2 && continue
 
         # to draw polygons, we actually draw lines with fill
-        d_out = merge(d_base, KW(
+        plotattributes_out = merge(plotattributes_base, KW(
             :type => "scatter",
             :mode => "lines",
             :x => vcat(x[rng], x[rng[1]]),
@@ -678,28 +678,28 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
             :fillcolor => rgba_string(plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i))),
         ))
         if series[:markerstrokewidth] > 0
-            d_out[:line] = KW(
+            plotattributes[:line] = KW(
                 :color => rgba_string(plot_color(get_linecolor(series, clims, i), get_linealpha(series, i))),
                 :width => get_linewidth(series, i),
                 :dash => string(get_linestyle(series, i)),
             )
         end
-        d_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
-        plotly_polar!(d_out, series)
-        plotly_hover!(d_out, _cycle(series[:hover], i))
-        d_outs[i] = d_out
+        plotattributes_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
+        plotly_polar!(plotattributes_out, series)
+        plotly_hover!(plotattributes_out, _cycle(series[:hover], i))
+        plotattributes_outs[i] = plotattributes_out
     end
     if series[:fill_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, d_base, :fill))
+        push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :fill))
     elseif series[:line_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, d_base, :line))
+        push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :line))
     elseif series[:marker_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, d_base, :marker))
+        push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :marker))
     end
-    d_outs
+    plotattributes_outs
 end
 
-function plotly_series_segments(series::Series, d_base::KW, x, y, z, clims)
+function plotly_series_segments(series::Series, ploattributes_base::KW, x, y, z, clims)
     st = series[:seriestype]
     sp = series[:subplot]
     isscatter = st in (:scatter, :scatter3d, :scattergl)
@@ -709,47 +709,47 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z, clims)
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     segments = iter_segments(series)
-    d_outs = Vector{KW}(undef, (hasfillrange ? 2 : 1 ) * length(segments))
+    plotattributes_outs = Vector{KW}(undef, (hasfillrange ? 2 : 1 ) * length(segments))
 
     for (i,rng) in enumerate(segments)
         !isscatter && length(rng) < 2 && continue
 
-        d_out = deepcopy(d_base)
-        d_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
-        d_out[:legendgroup] = series[:label]
+        plotattributes_out = deepcopy(plotattributes_base)
+        plotattributes_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
+        plotattributes_out[:legendgroup] = series[:label]
 
         # set the type
         if st in (:path, :scatter, :scattergl, :straightline)
-            d_out[:type] = st==:scattergl ? "scattergl" : "scatter"
-            d_out[:mode] = if hasmarker
+            plotattributes_out[:type] = st==:scattergl ? "scattergl" : "scatter"
+            plotattributes_out[:mode] = if hasmarker
                 hasline ? "lines+markers" : "markers"
             else
                 hasline ? "lines" : "none"
             end
             if series[:fillrange] == true || series[:fillrange] == 0 || isa(series[:fillrange], Tuple)
-                d_out[:fill] = "tozeroy"
-                d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)))
+                plotattributes[:fill] = "tozeroy"
+                plotattributes[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)))
             elseif typeof(series[:fillrange]) <: Union{AbstractVector{<:Real}, Real}
-                d_out[:fill] = "tonexty"
-                d_out[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)))
+                plotattributes[:fill] = "tonexty"
+                plotattributes[:fillcolor] = rgba_string(plot_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)))
             elseif !(series[:fillrange] in (false, nothing))
                 @warn("fillrange ignored... plotly only supports filling to zero and to a vector of values. fillrange: $(series[:fillrange])")
             end
-            d_out[:x], d_out[:y] = x[rng], y[rng]
+            plotattributes_out[:x], plotattributes_out[:y] = x[rng], y[rng]
 
         elseif st in (:path3d, :scatter3d)
-            d_out[:type] = "scatter3d"
-            d_out[:mode] = if hasmarker
+            plotattributes_out[:type] = "scatter3d"
+            plotattributes_out[:mode] = if hasmarker
                 hasline ? "lines+markers" : "markers"
             else
                 hasline ? "lines" : "none"
             end
-            d_out[:x], d_out[:y], d_out[:z] = x[rng], y[rng], z[rng]
+            plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x[rng], y[rng], z[rng]
         end
 
         # add "marker"
         if hasmarker
-            d_out[:marker] = KW(
+            plotattributes_out[:marker] = KW(
                 :symbol => get(_plotly_markers, _cycle(series[:markershape], i), string(_cycle(series[:markershape], i))),
                 # :opacity => series[:markeralpha],
                 :size => 2 * _cycle(series[:markersize], i),
@@ -763,7 +763,7 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z, clims)
 
         # add "line"
         if hasline
-            d_out[:line] = KW(
+            plotattributes[:line] = KW(
                 :color => rgba_string(plot_color(get_linecolor(series, clims, i), get_linealpha(series, i))),
                 :width => get_linewidth(series, i),
                 :shape => if st == :steppre
@@ -777,14 +777,14 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z, clims)
             )
         end
 
-        plotly_polar!(d_out, series)
-        plotly_hover!(d_out, _cycle(series[:hover], rng))
+        plotly_polar!(plotattributes_out, series)
+        plotly_hover!(plotattributes_out, _cycle(series[:hover], rng))
 
         if hasfillrange
             # if hasfillrange is true, return two dictionaries (one for original
             # series, one for series being filled to) instead of one
-            d_out_fillrange = deepcopy(d_out)
-            d_out_fillrange[:showlegend] = false
+            plotattributes_out_fillrange = deepcopy(plotattributes_out)
+            plotattributes_out_fillrange[:showlegend] = false
             # if fillrange is provided as real or tuple of real, expand to array
             if typeof(series[:fillrange]) <: Real
                 series[:fillrange] = fill(series[:fillrange], length(rng))
@@ -794,49 +794,49 @@ function plotly_series_segments(series::Series, d_base::KW, x, y, z, clims)
                 series[:fillrange] = (f1, f2)
             end
             if isa(series[:fillrange], AbstractVector)
-                d_out_fillrange[:y] = series[:fillrange][rng]
-                delete!(d_out_fillrange, :fill)
-                delete!(d_out_fillrange, :fillcolor)
+                plotattributes_out_fillrange[:y] = series[:fillrange][rng]
+                delete!(plotattributes_out_fillrange, :fill)
+                delete!(plotattributes_out_fillrange, :fillcolor)
             else
-                # if fillrange is a tuple with upper and lower limit, d_out_fillrange
+                # if fillrange is a tuple with upper and lower limit, plotattributes_out_fillrange
                 # is the series that will do the filling
                 fillrng = Tuple(series[:fillrange][i][rng] for i in 1:2)
-                d_out_fillrange[:x], d_out_fillrange[:y] = concatenate_fillrange(x[rng], fillrng)
-                d_out_fillrange[:line][:width] = 0
-                delete!(d_out, :fill)
-                delete!(d_out, :fillcolor)
+                plotattributes_out_fillrange[:x], plotattributes_out_fillrange[:y] = concatenate_fillrange(x[rng], fillrng)
+                plotattributes_out_fillrange[:line][:width] = 0
+                delete!(plotattributes_out, :fill)
+                delete!(plotattributes_out, :fillcolor)
             end
 
-            d_outs[(2 * i - 1):(2 * i)] = [d_out_fillrange, d_out]
+            plotattributes_outs[(2 * i - 1):(2 * i)] = [plotattributes_out_fillrange, plotattributes_out]
         else
-            d_outs[i] = d_out
+            plotattributes_outs[i] = plotattributes_out
         end
     end
 
     if series[:line_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, d_base, :line))
+        push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :line))
     elseif series[:fill_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, d_base, :fill))
+        push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :fill))
     elseif series[:marker_z] != nothing
-        push!(d_outs, plotly_colorbar_hack(series, d_base, :marker))
+        push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :marker))
     end
 
-    d_outs
+    plotattributes_outs
 end
 
-function plotly_colorbar_hack(series::Series, d_base::KW, sym::Symbol)
-    d_out = deepcopy(d_base)
+function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symbol)
+    plotattributes_out = deepcopy(plotattributes_base)
     cmin, cmax = get_clims(series[:subplot])
-    d_out[:showlegend] = false
-    d_out[:type] = is3d(series) ? :scatter3d : :scatter
-    d_out[:hoverinfo] = :none
-    d_out[:mode] = :markers
-    d_out[:x], d_out[:y] = [series[:x][1]], [series[:y][1]]
+    plotattributes_out[:showlegend] = false
+    plotattributes_out[:type] = is3d(series) ? :scatter3d : :scatter
+    plotattributes_out[:hoverinfo] = :none
+    plotattributes_out[:mode] = :markers
+    plotattributes_out[:x], plotattributes_out[:y] = [series[:x][1]], [series[:y][1]]
     if is3d(series)
-        d_out[:z] = [series[:z][1]]
+        plotattributes_out[:z] = [series[:z][1]]
     end
     # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
-    d_out[:marker] = KW(
+    plotattributes_out[:marker] = KW(
         :size => 0,
         :opacity => 0,
         :color => [0.5],
@@ -845,26 +845,26 @@ function plotly_colorbar_hack(series::Series, d_base::KW, sym::Symbol)
         :colorscale => plotly_colorscale(series[Symbol("$(sym)color")], 1),
         :showscale => hascolorbar(series[:subplot]),
     )
-    return d_out
+    return plotattributes_out
 end
 
 
-function plotly_polar!(d_out::KW, series::Series)
+function plotly_polar!(plotattributes_out::KW, series::Series)
     # convert polar plots x/y to theta/radius
     if ispolar(series[:subplot])
-        theta, r = filter_radial_data(pop!(d_out, :x), pop!(d_out, :y), axis_limits(series[:subplot][:yaxis]))
-        d_out[:t] = rad2deg.(theta)
-        d_out[:r] = r
+        theta, r = filter_radial_data(pop!(plotattributes_out, :x), pop!(plotattributes_out, :y), axis_limits(series[:subplot][:yaxis]))
+        plotattributes_out[:t] = rad2deg.(theta)
+        plotattributes_out[:r] = r
     end
 end
 
-function plotly_hover!(d_out::KW, hover)
+function plotly_hover!(plotattributes_out::KW, hover)
     # hover text
     if hover in (:none, false)
-        d_out[:hoverinfo] = "none"
+        plotattributes_out[:hoverinfo] = "none"
     elseif hover != nothing
-        d_out[:hoverinfo] = "text"
-        d_out[:text] = hover
+        plotattributes_out[:hoverinfo] = "text"
+        plotattributes_out[:text] = hover
     end
 end
 

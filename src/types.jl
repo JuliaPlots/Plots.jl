@@ -21,11 +21,11 @@ Base.isempty(wrapper::InputWrapper) = false
 # -----------------------------------------------------------
 
 mutable struct Series
-    d::KW
+    plotattributes::KW
 end
 
-attr(series::Series, k::Symbol) = series.d[k]
-attr!(series::Series, v, k::Symbol) = (series.d[k] = v)
+attr(series::Series, k::Symbol) = series.plotattributes[k]
+attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 
 # -----------------------------------------------------------
 
@@ -48,7 +48,7 @@ Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
 mutable struct Axis
     sps::Vector{Subplot}
-    d::KW
+    plotattributes::KW
 end
 
 mutable struct Extrema

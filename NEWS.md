@@ -12,6 +12,27 @@
 ## (current master)
 - All new development should target Julia 1.x!
 
+## 0.20.0
+Many updates, min julia 1.0
+- change display type to use PlotsDisplay (fixes Juno integration)
+- change all internal uses of `d` to `plotattributes` (no user change)
+- change spy implementation to use `scatter` not `heatmap`
+- sort x axes when passing a vector of strings as x
+- improve performance of marker_z
+- update CI to 1.0
+- minor depwarn ifixes
+- only draw one colorbar with GR
+- add colorbar_title to GR and pgfplots
+- fix savefig with latexstrings for PyPlot
+- fix NamedTuple integration
+- don't export `P2` and `P3`
+- make it possible to use 2-argument function as argument to marker_z
+- make `plotattr` work again
+
+## 0.19.3
+- fix some julia 0.7 deprecations
+- fix 32-bit OS functionality
+
 ## 0.19.2
 - several small fixes for 1.0 compatibility
 
