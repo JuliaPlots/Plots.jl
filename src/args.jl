@@ -466,7 +466,7 @@ autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 function aliasesAndAutopick(plotattributes::KW, sym::Symbol, aliases::Dict{Symbol,Symbol}, options::AVec, plotIndex::Int)
     if plotattributes[sym] == :auto
         plotattributes[sym] = autopick_ignore_none_auto(options, plotIndex)
-    elseif haskey(aliases, [sym])
+    elseif haskey(aliases, plotattributes[sym])
         plotattributes[sym] = aliases[plotattributes[sym]]
     end
 end
