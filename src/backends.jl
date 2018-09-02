@@ -348,16 +348,6 @@ function _initialize_backend(::GLVisualizeBackend; kw...)
 end
 
 # ------------------------------------------------------------------------------
-# hdf5
-
-function _initialize_backend(::HDF5Backend)
-    @eval Main begin
-        import HDF5
-        export HDF5
-    end
-end
-
-# ------------------------------------------------------------------------------
 # PGFPLOTS
 
 function add_backend_string(::PGFPlotsBackend)
@@ -371,11 +361,19 @@ end
 # ------------------------------------------------------------------------------
 # plotlyjs
 
+function _initialize_backend(pkg::PlotlyJSBackend)
+    sym = backend_package_name(pkg)
+    @eval Main begin
+        import PlotlyJS, ORCA
+        export PlotlyJS
+    end
+end
+
 function add_backend_string(::PlotlyJSBackend)
     """
     using Pkg
-    Pkg.add("PlotlyJS")
-    Pkg.add("Rsvg")
+    Pkg.add(["PlotlyJS", "Blink"])
+    Pkg.add(PackageSpec(url="https://github.com/sglyon/ORCA.jl.git", rev="master"))
     import Blink
     Blink.AtomShell.install()
     """

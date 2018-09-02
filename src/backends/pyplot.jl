@@ -1064,7 +1064,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             ticks = sp[:framestyle] == :none ? nothing : get_ticks(axis)
             # don't show the 0 tick label for the origin framestyle
             if sp[:framestyle] == :origin && length(ticks) > 1
-                ticks[2][ticks[1] .== 0] = ""
+                ticks[2][ticks[1] .== 0] .= ""
             end
             axis[:ticks] != :native ? py_set_ticks(ax, ticks, letter) : nothing
             pyaxis[:set_tick_params](direction = axis[:tick_direction] == :out ? "out" : "in")
