@@ -17,40 +17,42 @@ img_tol = isinteractive() ? 1e-2 : 10e-2
     image_comparison_facts(:gr, tol=img_tol, skip = [25, 30])
 end
 
-
-#@testset "PyPlot" begin
-#    @test pyplot() == Plots.PyPlotBackend()
-#    @test backend() == Plots.PyPlotBackend()
+# @static if isinteractive()
+#     @testset "PyPlot" begin
+#         @test pyplot() == Plots.PyPlotBackend()
+#         @test backend() == Plots.PyPlotBackend()
 #
-#    image_comparison_facts(:pyplot, tol=img_tol)
-#end
+#         image_comparison_facts(:pyplot, tol=img_tol, skip = [25, 30])
+#     end
+# end
 
-@testset "UnicodePlots" begin
-    @test unicodeplots() == Plots.UnicodePlotsBackend()
-    @test backend() == Plots.UnicodePlotsBackend()
-
-    # lets just make sure it runs without error
-    @test isa(plot(rand(10)), Plots.Plot) == true
-end
+# @testset "UnicodePlots" begin
+#     @test unicodeplots() == Plots.UnicodePlotsBackend()
+#     @test backend() == Plots.UnicodePlotsBackend()
+#
+#     # lets just make sure it runs without error
+#     @test isa(plot(rand(10)), Plots.Plot) == true
+# end
 
 # The plotlyjs testimages return a connection error on travis:
 # connect: connection refused (ECONNREFUSED)
 
-# @testset "PlotlyJS" begin
-#     @test plotlyjs() == Plots.PlotlyJSBackend()
-#     @test backend() == Plots.PlotlyJSBackend()
-#
-#     if Sys.islinux() && isinteractive()
-#         image_comparison_facts(:plotlyjs,
-#             skip=[
-#                 2,  # animation (skipped for speed)
-#                 27, # (polar plots) takes very long / not working
-#                 31, # animation (skipped for speed)
-#             ],
-#             tol=img_tol)
-#     end
-# end
+@static if isinteractive()
+    @testset "PlotlyJS" begin
+        @test plotlyjs() == Plots.PlotlyJSBackend()
+        @test backend() == Plots.PlotlyJSBackend()
 
+        image_comparison_facts(:plotlyjs,
+            skip=[
+                2,  # animation (skipped for speed)
+                25,
+                27, # (polar plots) takes very long / not working
+                30,
+                31, # animation (skipped for speed)
+            ],
+            tol=img_tol)
+    end
+end
 
 # InspectDR returns that error on travis:
 # ERROR: LoadError: InitError: Cannot open display:
