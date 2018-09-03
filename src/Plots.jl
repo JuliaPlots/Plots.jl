@@ -1,5 +1,7 @@
 module Plots
 
+_current_plots_version = v"0.20.1"
+
 using Reexport
 
 import StaticArrays
