@@ -29,7 +29,11 @@ default(size=(500,300))
 # TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that
 #       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
 
+<<<<<<< HEAD
 const _current_plots_version = v"0.20.3"
+=======
+import Plots._current_plots_version
+>>>>>>> move _current_plots_version from PlotDocs to Plots
 
 
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], tol = 1e-2)
