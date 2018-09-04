@@ -14,25 +14,25 @@ img_tol = isinteractive() ? 1e-2 : 10e-2
     @test gr() == Plots.GRBackend()
     @test backend() == Plots.GRBackend()
 
-    image_comparison_facts(:gr, tol=img_tol, skip = [25, 30])
+    # image_comparison_facts(:gr, tol=img_tol, skip = [25, 30])
 end
 
-# @static if isinteractive()
-#     @testset "PyPlot" begin
-#         @test pyplot() == Plots.PyPlotBackend()
-#         @test backend() == Plots.PyPlotBackend()
-#
-#         image_comparison_facts(:pyplot, tol=img_tol, skip = [25, 30])
-#     end
-# end
+@static if isinteractive()
+    @testset "PyPlot" begin
+        @test pyplot() == Plots.PyPlotBackend()
+        @test backend() == Plots.PyPlotBackend()
 
-# @testset "UnicodePlots" begin
-#     @test unicodeplots() == Plots.UnicodePlotsBackend()
-#     @test backend() == Plots.UnicodePlotsBackend()
-#
-#     # lets just make sure it runs without error
-#     @test isa(plot(rand(10)), Plots.Plot) == true
-# end
+        image_comparison_facts(:pyplot, tol=img_tol, skip = [2, 25, 30, 31])
+    end
+end
+
+@testset "UnicodePlots" begin
+    @test unicodeplots() == Plots.UnicodePlotsBackend()
+    @test backend() == Plots.UnicodePlotsBackend()
+
+    # lets just make sure it runs without error
+    @test isa(plot(rand(10)), Plots.Plot) == true
+end
 
 # The plotlyjs testimages return a connection error on travis:
 # connect: connection refused (ECONNREFUSED)
