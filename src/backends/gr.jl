@@ -3,65 +3,6 @@
 
 # significant contributions by @jheinen
 
-const _gr_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
-    :foreground_color_text, :foreground_color_border,
-    :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins,
-    :layout,
-    :title, :window_title,
-    :guide, :lims, :ticks, :scale, :flip,
-    :match_dimensions,
-    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
-    :titlefontrotation, :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfonthalign, :legendfontvalign,
-    :legendfontrotation, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfonthalign, :tickfontvalign,
-    :tickfontrotation, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefonthalign, :guidefontvalign,
-    :guidefontrotation, :guidefontcolor,
-    :grid, :gridalpha, :gridstyle, :gridlinewidth,
-    :legend, :legendtitle, :colorbar, :colorbar_title,
-    :fill_z, :line_z, :marker_z, :levels,
-    :ribbon, :quiver,
-    :orientation,
-    :overwrite_figure,
-    :polar,
-    :aspect_ratio,
-    :normalize, :weights,
-    :inset_subplots,
-    :bar_width,
-    :arrow,
-    :framestyle,
-    :tick_direction,
-    :camera,
-    :contour_labels,
-])
-const _gr_seriestype = [
-    :path, :scatter, :straightline,
-    :heatmap, :pie, :image,
-    :contour, :path3d, :scatter3d, :surface, :wireframe,
-    :shape
-]
-const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _gr_marker = _allMarkers
-const _gr_scale = [:identity, :log10]
-is_marker_supported(::GRBackend, shape::Shape) = true
-
-function add_backend_string(::GRBackend)
-    """
-    Pkg.add("GR")
-    Pkg.build("GR")
-    """
-end
-
 import GR
 export GR
 

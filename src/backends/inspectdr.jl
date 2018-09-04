@@ -14,59 +14,6 @@ Add in functionality to Plots.jl:
 =#
 
 # ---------------------------------------------------------------------------
-#TODO: remove features
-const _inspectdr_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    # :foreground_color_grid,
-    :foreground_color_legend, :foreground_color_title,
-    :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
-    :label,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :markerstrokestyle, #Causes warning not to have it... what is this?
-    :fillcolor, :fillalpha, #:fillrange,
-#    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :title_location,
-    :window_title,
-    :guide, :lims, :scale, #:ticks, :flip, :rotation,
-    :titlefontfamily, :titlefontsize, :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefontcolor,
-    :grid, :legend, #:colorbar,
-#    :marker_z,
-#    :line_z,
-#    :levels,
- #   :ribbon, :quiver, :arrow,
-#    :orientation,
-    :overwrite_figure,
-    :polar,
-#    :normalize, :weights,
-#    :contours, :aspect_ratio,
-    :match_dimensions,
-#    :clims,
-#    :inset_subplots,
-    :dpi,
-#    :colorbar_title,
-  ])
-const _inspectdr_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _inspectdr_seriestype = [
-        :path, :scatter, :shape, :straightline, #, :steppre, :steppost
-    ]
-#see: _allMarkers, _shape_keys
-const _inspectdr_marker = Symbol[
-    :none, :auto,
-    :circle, :rect, :diamond,
-    :cross, :xcross,
-    :utriangle, :dtriangle, :rtriangle, :ltriangle,
-    :pentagon, :hexagon, :heptagon, :octagon,
-    :star4, :star5, :star6, :star7, :star8,
-    :vline, :hline, :+, :x,
-]
-
-const _inspectdr_scale = [:identity, :ln, :log2, :log10]
 
 is_marker_supported(::InspectDRBackend, shape::Shape) = true
 

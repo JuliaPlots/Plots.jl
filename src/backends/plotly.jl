@@ -1,60 +1,6 @@
 
 # https://plot.ly/javascript/getting-started
 
-const _plotly_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_legend, :foreground_color_guide,
-    :foreground_color_grid, :foreground_color_axis,
-    :foreground_color_text, :foreground_color_border,
-    :foreground_color_title,
-    :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins,
-    :title, :title_location,
-    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
-    :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefontcolor,
-    :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
-    :grid, :gridalpha, :gridlinewidth,
-    :legend, :colorbar, :colorbar_title,
-    :marker_z, :fill_z, :line_z, :levels,
-    :ribbon, :quiver,
-    :orientation,
-    # :overwrite_figure,
-    :polar,
-    :normalize, :weights,
-    # :contours,
-    :aspect_ratio,
-    :hover,
-    :inset_subplots,
-    :bar_width,
-    :clims,
-    :framestyle,
-    :tick_direction,
-    :camera,
-    :contour_labels,
-  ])
-
-const _plotly_seriestype = [
-    :path, :scatter, :pie, :heatmap,
-    :contour, :surface, :wireframe, :path3d, :scatter3d, :shape, :scattergl,
-    :straightline
-]
-const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _plotly_marker = [
-    :none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle,
-    :cross, :xcross, :pentagon, :hexagon, :octagon, :vline, :hline
-]
-const _plotly_scale = [:identity, :log10]
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
 const _plotly_framestyles = [:box, :axes, :zerolines, :grid, :none]

@@ -24,13 +24,13 @@ if isinteractive()
         PackageSpec(name="VisualRegressionTests"),
         PackageSpec(name="Gtk"),
         # PlotlyJS:
-        # PackageSpec(name="PlotlyJS", rev="master"),
-        # PackageSpec(name="Blink"),
-        # PackageSpec(url="https://github.com/sglyon/ORCA.jl.git", rev="master"),
+        PackageSpec(name="PlotlyJS", rev="master"),
+        PackageSpec(name="Blink"),
+        PackageSpec(url="https://github.com/sglyon/ORCA.jl.git", rev="master"),
         # PyPlot:
-        # PackageSpec(name="PyPlot"),
-        # PackageSpec(name="PyCall"),
-        # PackageSpec(name="LaTeXStrings"),
+        PackageSpec(name="PyPlot"),
+        PackageSpec(name="PyCall"),
+        PackageSpec(name="LaTeXStrings"),
     ])
 else
     push!(to_add, PackageSpec(url="https://github.com/JuliaPlots/PlotReferenceImages.jl.git"))

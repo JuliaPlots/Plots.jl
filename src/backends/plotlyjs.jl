@@ -1,12 +1,6 @@
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 
-const _plotlyjs_attr        = _plotly_attr
-const _plotlyjs_seriestype  = _plotly_seriestype
-const _plotlyjs_style       = _plotly_style
-const _plotlyjs_marker      = _plotly_marker
-const _plotlyjs_scale       = _plotly_scale
-
 # --------------------------------------------------------------------------------------
 
 
