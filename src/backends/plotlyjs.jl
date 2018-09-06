@@ -6,10 +6,7 @@
 
 function _create_backend_figure(plt::Plot{PlotlyJSBackend})
     if !isplotnull() && plt[:overwrite_figure] && isa(current().o, PlotlyJS.SyncPlot)
-        PlotlyJS.SyncPlot(PlotlyJS.Plot(),
-            events = current().o.events,
-            options = current().o.options,
-        )
+        PlotlyJS.SyncPlot(PlotlyJS.Plot(), options = current().o.options)
     else
         PlotlyJS.plot()
     end
