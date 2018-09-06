@@ -579,8 +579,7 @@ end
 function add_backend_string(::PlotlyJSBackend)
     """
     using Pkg
-    Pkg.add(["PlotlyJS", "Blink"])
-    Pkg.add(PackageSpec(url="https://github.com/sglyon/ORCA.jl.git", rev="master"))
+    Pkg.add(["PlotlyJS", "Blink", "ORCA"])
     import Blink
     Blink.AtomShell.install()
     """
