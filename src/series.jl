@@ -28,7 +28,7 @@ convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:AbstractString} = A
 convertToAnyVector(v::AVec{Union{Missing, T}}, plotattributes::KW) where {T<:AbstractString} = Any[replace(v, missing => "")], nothing
 
 function convertToAnyVector(v::AMat, plotattributes::KW)
-    v = handlemissingsinmatrix(v)
+    v = handlemissings(v)
     if all3D(plotattributes)
         Any[Surface(v)]
     else
@@ -36,9 +36,9 @@ function convertToAnyVector(v::AMat, plotattributes::KW)
     end, nothing
 end
 
-handlemissingsinmatrix(v::AMat) = v
-handlemissingsinmatrix(v::AMat{T}) where T <: Number = replace(v, missing => NaN)
-handlemissingsinmatrix(v::AMat{T}) where T <: String = replace(v, missing => "")
+handlemissings(v::AMat) = v
+handlemissings(v::AMat{T}) where T <: Number = replace(v, missing => NaN)
+handlemissings(v::AMat{T}) where T <: String = replace(v, missing => "")
 
 # function
 convertToAnyVector(f::Function, plotattributes::KW) = Any[f], nothing
