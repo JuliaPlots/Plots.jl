@@ -21,17 +21,24 @@ convertToAnyVector(n::Integer, plotattributes::KW) = Any[zeros(0) for i in 1:n],
 
 # numeric vector
 convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Number} = Any[v], nothing
+convertToAnyVector(v::AVec{Union{Missing, T}}, plotattributes::KW) where {T<:Number} = Any[replace(v, missing => NaN)], nothing
 
 # string vector
 convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:AbstractString} = Any[v], nothing
+convertToAnyVector(v::AVec{Union{Missing, T}}, plotattributes::KW) where {T<:AbstractString} = Any[replace(v, missing => "")], nothing
 
 function convertToAnyVector(v::AMat, plotattributes::KW)
+    v = handlemissings(v)
     if all3D(plotattributes)
         Any[Surface(v)]
     else
         Any[v[:,i] for i in 1:size(v,2)]
     end, nothing
 end
+
+handlemissings(v::AMat) = v
+handlemissings(v::AMat{T}) where T <: Number = replace(v, missing => NaN)
+handlemissings(v::AMat{T}) where T <: String = replace(v, missing => "")
 
 # function
 convertToAnyVector(f::Function, plotattributes::KW) = Any[f], nothing
