@@ -24,6 +24,7 @@ convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Number} = Any[v], n
 convertToAnyVector(v::AVec{Union{Missing, T}}, plotattributes::KW) where {T<:Number} = Any[replace(v, missing => NaN)], nothing
 
 # string vector
+convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:AbstractString} = Any[v], nothing
 convertToAnyVector(v::AVec{Union{Missing, T}}, plotattributes::KW) where {T<:AbstractString} = Any[replace(v, missing => "")], nothing
 
 function convertToAnyVector(v::AMat, plotattributes::KW)
@@ -61,6 +62,7 @@ function convertToAnyVector(v::AVec, plotattributes::KW)
         Any[convert(Vector{Float64}, v)], nothing
     else
         # something else... treat each element as an item
+        @show v
         vcat(Any[convertToAnyVector(vi, plotattributes)[1] for vi in v]...), nothing
         # Any[vi for vi in v], nothing
     end
