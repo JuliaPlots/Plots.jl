@@ -62,7 +62,6 @@ function convertToAnyVector(v::AVec, plotattributes::KW)
         Any[convert(Vector{Float64}, v)], nothing
     else
         # something else... treat each element as an item
-        @show v
         vcat(Any[convertToAnyVector(vi, plotattributes)[1] for vi in v]...), nothing
         # Any[vi for vi in v], nothing
     end
