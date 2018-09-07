@@ -544,7 +544,7 @@ function gr_display(plt::Plot, fmt="")
 
     _gr_thickness_scaling[1] = plt[:thickness_scaling]
     dpi_factor = plt[:dpi] / Plots.DPI
-    if fmt == "svg" then
+    if fmt == "svg"
         dpi_factor *= 4
     end
 
