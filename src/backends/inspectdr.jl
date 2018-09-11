@@ -22,6 +22,7 @@ const _inspectdr_attr = merge_with_base_supported([
     :foreground_color_legend, :foreground_color_title,
     :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
     :label,
+#    :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
@@ -35,7 +36,8 @@ const _inspectdr_attr = merge_with_base_supported([
     :legendfontfamily, :legendfontsize, :legendfontcolor,
     :tickfontfamily, :tickfontsize, :tickfontcolor,
     :guidefontfamily, :guidefontsize, :guidefontcolor,
-    :grid, :legend, #:colorbar,
+    :grid, #:gridalpha, :gridstyle, :gridlinewidth, #alhpa & linewidth are per plot - not per subplot
+    :legend, #:legendtitle, :colorbar,
 #    :marker_z,
 #    :line_z,
 #    :levels,
@@ -305,8 +307,8 @@ For st in :shape:
         wfrm.glyph = InspectDR.glyph(
             shape = _inspectdr_mapglyph(series[:markershape]),
             size = _inspectdr_mapglyphsize(series[:markersize]),
-            color = _inspectdr_mapcolor(series[:markerstrokecolor]),
-            fillcolor = _inspectdr_mapcolor(series[:markercolor]),
+            color = _inspectdr_mapcolor(plot_color(series[:markerstrokecolor], series[:markerstrokealpha])),
+            fillcolor = _inspectdr_mapcolor(plot_color(series[:markercolor], series[:markeralpha])),
         )
     end
 
