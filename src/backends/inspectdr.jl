@@ -22,7 +22,7 @@ const _inspectdr_attr = merge_with_base_supported([
     :foreground_color_legend, :foreground_color_title,
     :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
     :label,
-#    :seriescolor, :seriesalpha,
+    :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
