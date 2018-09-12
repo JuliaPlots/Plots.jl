@@ -22,6 +22,7 @@ const _inspectdr_attr = merge_with_base_supported([
     :foreground_color_legend, :foreground_color_title,
     :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
     :label,
+    :seriescolor, :seriesalpha,
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
@@ -35,7 +36,8 @@ const _inspectdr_attr = merge_with_base_supported([
     :legendfontfamily, :legendfontsize, :legendfontcolor,
     :tickfontfamily, :tickfontsize, :tickfontcolor,
     :guidefontfamily, :guidefontsize, :guidefontcolor,
-    :grid, :legend, #:colorbar,
+    :grid, #:gridalpha, :gridstyle, :gridlinewidth, #alhpa & linewidth are per plot - not per subplot
+    :legend, #:legendtitle, :colorbar,
 #    :marker_z,
 #    :line_z,
 #    :levels,
@@ -260,8 +262,10 @@ For st in :shape:
             nmax = i
             if length(rng) > 1
                 linewidth = series[:linewidth]
-                linecolor = _inspectdr_mapcolor(_cycle(series[:linecolor], i))
-                fillcolor = _inspectdr_mapcolor(_cycle(series[:fillcolor], i))
+                c = plot_color(get_linecolor(series), get_linealpha(series))
+                linecolor = _inspectdr_mapcolor(_cycle(c, i))
+                c = plot_color(get_fillcolor(series), get_fillalpha(series))
+                fillcolor = _inspectdr_mapcolor(_cycle(c, i))
                 line = InspectDR.line(
                     style=:solid, width=linewidth, color=linecolor
                 )
@@ -275,8 +279,10 @@ For st in :shape:
         i = (nmax >= 2 ? div(nmax, 2) : nmax) #Must pick one set of colors for legend
         if i > 1 #Add dummy waveform for legend entry:
             linewidth = series[:linewidth]
-            linecolor = _inspectdr_mapcolor(_cycle(series[:linecolor], i))
-            fillcolor = _inspectdr_mapcolor(_cycle(series[:fillcolor], i))
+            c = plot_color(get_linecolor(series), get_linealpha(series))
+            linecolor = _inspectdr_mapcolor(_cycle(c, i))
+            c = plot_color(get_fillcolor(series), get_fillalpha(series))
+            fillcolor = _inspectdr_mapcolor(_cycle(c, i))
             wfrm = InspectDR.add(plot, Float64[], Float64[], id=series[:label])
             wfrm.line = InspectDR.line(
                 style=:none, width=linewidth, #linewidth affects glyph
@@ -295,7 +301,7 @@ For st in :shape:
         wfrm.line = InspectDR.line(
             style = _style,
             width = series[:linewidth],
-            color = series[:linecolor],
+            color = plot_color(get_linecolor(series), get_linealpha(series)),
         )
         #InspectDR does not control markerstrokewidth independently.
         if :none == _style
@@ -305,8 +311,8 @@ For st in :shape:
         wfrm.glyph = InspectDR.glyph(
             shape = _inspectdr_mapglyph(series[:markershape]),
             size = _inspectdr_mapglyphsize(series[:markersize]),
-            color = _inspectdr_mapcolor(series[:markerstrokecolor]),
-            fillcolor = _inspectdr_mapcolor(series[:markercolor]),
+            color = _inspectdr_mapcolor(plot_color(series[:markerstrokecolor], series[:markerstrokealpha])),
+            fillcolor = _inspectdr_mapcolor(plot_color(series[:markercolor], series[:markeralpha])),
         )
     end
 
