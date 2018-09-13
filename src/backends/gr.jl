@@ -17,7 +17,7 @@ const _gr_attr = merge_with_base_supported([
     :bins,
     :layout,
     :title, :window_title,
-    :guide, :lims, :ticks, :scale, :flip,
+    :guide, :guide_position, :lims, :ticks, :scale, :flip,
     :match_dimensions,
     :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
     :titlefontrotation, :titlefontcolor,
@@ -962,15 +962,25 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     if xaxis[:guide] != ""
         gr_set_font(guidefont(xaxis))
-        GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-        gr_text(gr_view_xcenter(), viewport_subplot[3], xaxis[:guide])
+        if xaxis[:guide_position] == :top
+            GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+            gr_text(gr_view_xcenter(), viewport_subplot[4], xaxis[:guide])
+        else
+            GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
+            gr_text(gr_view_xcenter(), viewport_subplot[3], xaxis[:guide])
+        end
     end
 
     if yaxis[:guide] != ""
         gr_set_font(guidefont(yaxis))
-        GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
         GR.setcharup(-1, 0)
-        gr_text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
+        if yaxis[:guide_position] == :left
+            GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
+            gr_text(viewport_subplot[2], gr_view_ycenter(), yaxis[:guide])
+        else
+            GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+            gr_text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
+        end
     end
     GR.restorestate()
 
