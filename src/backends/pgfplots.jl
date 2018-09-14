@@ -424,7 +424,7 @@ function pgf_axis(sp::Subplot, letter)
             tick_labels = ispolar(sp) && letter == :x ? [ticks[2][3:end]..., "0", "45"] : ticks[2]
             if axis[:formatter] in (:scientific, :auto)
                 tick_labels = string.("\$", convert_sci_unicode.(tick_labels), "\$")
-                tick_labels = replace.(tick_labels, "×", "\\times")
+                tick_labels = replace.(tick_labels, Ref("×" => "\\times"))
             end
             push!(style, string(letter, "ticklabels = {", join(tick_labels,","), "}"))
         else
@@ -563,7 +563,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # add the series object to the PGFPlots.Axis
         for series in series_list(sp)
-            push!.(o, pgf_series(sp, series))
+            push!.(Ref(o), pgf_series(sp, series))
 
             # add series annotations
             anns = series[:series_annotations]
