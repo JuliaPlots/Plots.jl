@@ -413,7 +413,7 @@ function pgf_axis(sp::Subplot, letter)
         push!(style, string(letter, "tick = {", join(tick_values,","), "}"))
         if axis[:showaxis] && axis[:scale] in (:ln, :log2, :log10) && axis[:ticks] == :auto
             # wrap the power part of label with }
-            tick_labels = Vector{String}(length(ticks[2]))
+            tick_labels = Vector{String}(undef, length(ticks[2]))
             for (i, label) in enumerate(ticks[2])
                 base, power = split(label, "^")
                 power = string("{", power, "}")
