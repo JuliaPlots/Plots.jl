@@ -111,6 +111,7 @@ const _arg_desc = KW(
 
 # axis args
 :guide     				  => "String. Axis guide (label).",
+:guide_position		  => "Symbol. Position of axis guides: :top, :bottom, :left or :right",
 :lims      				  => "NTuple{2,Number} or Symbol. Force axis limits.  Only finite values are used (you can set only the right limit with `xlims = (-Inf, 2)` for example). `:round` widens the limit to the nearest round number ie. [0.1,3.6]=>[0.0,4.0]",
 :ticks     				  => "Vector of numbers (set the tick values), Tuple of (tickvalues, ticklabels), or `:auto`",
 :scale     				  => "Symbol. Scale of the axis: `:none`, `:ln`, `:log2`, `:log10`",
