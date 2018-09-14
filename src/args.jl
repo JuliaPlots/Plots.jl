@@ -350,6 +350,7 @@ const _subplot_defaults = KW(
 
 const _axis_defaults = KW(
     :guide     => "",
+    :guide_position => :auto,
     :lims      => :auto,
     :ticks     => :auto,
     :scale     => :identity,

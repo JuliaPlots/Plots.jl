@@ -20,7 +20,7 @@ const _pgfplots_attr = merge_with_base_supported([
     # :bar_width, :bar_edges,
     :title,
     # :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
+    :guide, :guide_position, :lims, :ticks, :scale, :flip, :rotation,
     :tickfont, :guidefont, :legendfont,
     :grid, :legend,
     :colorbar, :colorbar_title,
@@ -364,9 +364,17 @@ function pgf_axis(sp::Subplot, letter)
     # axis guide
     kw[Symbol(letter,:label)] = axis[:guide]
 
+    # axis label position
+    labelpos = ""
+    if letter == :x && axis[:guide_position] == :top
+        labelpos = "at={(0.5,1)},above,"
+    elseif letter == :y && axis[:guide_position] == :right
+        labelpos = "at={(1,0.5)},below,"
+    end
+
     # Add label font
     cstr, α = pgf_color(plot_color(axis[:guidefontcolor]))
-    push!(style, string(letter, "label style = {font = ", pgf_font(axis[:guidefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, ", rotate = ", axis[:guidefontrotation], "}"))
+    push!(style, string(letter, "label style = {", labelpos ,"font = ", pgf_font(axis[:guidefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, ", rotate = ", axis[:guidefontrotation], "}"))
 
     # flip/reverse?
     axis[:flip] && push!(style, "$letter dir=reverse")

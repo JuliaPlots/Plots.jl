@@ -14,7 +14,7 @@ const _pyplot_attr = merge_with_base_supported([
     :bins, :bar_width, :bar_edges, :bar_position,
     :title, :title_location, :titlefont,
     :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
+    :guide, :guide_position, :lims, :ticks, :scale, :flip, :rotation,
     :titlefontfamily, :titlefontsize, :titlefontcolor,
     :legendfontfamily, :legendfontsize, :legendfontcolor,
     :tickfontfamily, :tickfontsize, :tickfontcolor,
@@ -1052,6 +1052,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis[:set_label_position](pos)     # the guides
                 pyaxis[:set_ticks_position]("both")  # the hash marks
                 pyaxis[Symbol(:tick_, pos)]()        # the tick labels
+            end
+            if axis[:guide_position] != :auto && letter != :z
+                pyaxis[:set_label_position](axis[:guide_position])
             end
             py_set_scale(ax, axis)
             axis[:ticks] != :native ? py_set_lims(ax, axis) : nothing
