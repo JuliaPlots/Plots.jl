@@ -1,3 +1,12 @@
+using GLWindow
+using GeometryTypes
+import GeometryTypes.Vec3f0, GeometryTypes.Point2f0, GeometryTypes.Vec2f0, GeometryTypes.Point
+using Reactive
+using GLAbstraction
+using GLVisualize
+using FixedPointNumbers
+using FileIO
+using Contour
 #=
 TODO
     * move all gl_ methods to GLPlot
@@ -663,7 +672,7 @@ function text_model(font, pivot)
         rotm = GLAbstraction.rotationmatrix_z(rot)
         return GLAbstraction.translationmatrix(pv)*rotm*GLAbstraction.translationmatrix(-pv)
     else
-        eye(GeometryTypes.Mat4f0)
+        GeometryTypes.Mat4f0(1.0I)
     end
 end
 function gl_draw_axes_2d(sp::Plots.Subplot{Plots.GLVisualizeBackend}, model, area)
@@ -1166,7 +1175,7 @@ function _display(plt::Plot{GLVisualizeBackend}, visible = true)
             end
             anns = series[:series_annotations]
             for (x, y, str, font) in EachAnn(anns, plotattributes[:x], plotattributes[:y])
-                txt_args = Dict{Symbol, Any}(:model => eye(GLAbstraction.Mat4f0))
+                txt_args = Dict{Symbol, Any}(:model => GLAbstraction.Mat4f0(1.0I))
                 x, y = Reactive.value(model_m) * GeometryTypes.Vec{4, Float32}(x, y, 0, 1)
                 extract_font(font, txt_args)
                 t = glvisualize_text(Point2f0(x, y), PlotText(str, font), txt_args)
@@ -1193,7 +1202,7 @@ function _show(io::IO, ::MIME"image/png", plt::Plot{GLVisualizeBackend})
     GLWindow.render_frame(GLWindow.rootscreen(plt.o))
     GLWindow.swapbuffers(plt.o)
     buff = GLWindow.screenbuffer(plt.o)
-    png = map(RGB{U8}, buff)
+    png = map(RGB{N0f8}, buff)
     FileIO.save(FileIO.Stream(FileIO.DataFormat{:PNG}, io), png)
 end
 
@@ -1258,7 +1267,7 @@ function gl_scatter(points, kw_args)
     prim = get(kw_args, :primitive, GeometryTypes.Circle)
     if isa(prim, GLNormalMesh)
         if haskey(kw_args, :model)
-            p = get(kw_args, :perspective, eye(GeometryTypes.Mat4f0))
+            p = get(kw_args, :perspective, GeometryTypes.Mat4f0(1.0I))
             kw_args[:scale] = GLAbstraction.const_lift(kw_args[:model], kw_args[:scale], p) do m, sc, p
                 s  = Vec3f0(m[1,1], m[2,2], m[3,3])
                 ps = Vec3f0(p[1,1], p[2,2], p[3,3])
@@ -1385,7 +1394,7 @@ function gl_heatmap(x,y,z, kw_args)
     get!(kw_args, :color_map, Plots.make_gradient(cgrad()))
     delete!(kw_args, :intensity)
     I = GLVisualize.Intensity{Float32}
-    heatmap = I[z[j,i] for i=1:size(z, 2), j=1:size(z, 1)]
+    heatmap = [I(z[j,i]) for i=1:size(z, 2), j=1:size(z, 1)]
     tex = GLAbstraction.Texture(heatmap, minfilter=:nearest)
     kw_args[:stroke_width] = 0f0
     kw_args[:levels] = 1f0
