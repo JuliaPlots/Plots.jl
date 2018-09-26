@@ -278,7 +278,7 @@ end
 
 function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
   if Symbol(plt.attr[:html_output_format]) ≠ :svg
-    throw(MethodError(show, (typeof(plt),)))
+    throw(MethodError(show, (typeof(m), typeof(plt))))
   else
     _show(io, m, plt)
   end
