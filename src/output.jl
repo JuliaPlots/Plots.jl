@@ -267,9 +267,21 @@ function showjuno(io::IO, m, plt)
     plt[:thickness_scaling] *= scale
 
     prepare_output(plt)
-    _show(io, m, plt)
-
-    plt[:size] = sz
-    plt[:dpi] = dpi
-    plt[:thickness_scaling] = thickness_scaling
+    try
+      _showjuno(io, m, plt)
+    finally
+      plt[:size] = sz
+      plt[:dpi] = dpi
+      plt[:thickness_scaling] = thickness_scaling
+    end
 end
+
+function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
+  if Symbol(plt.attr[:html_output_format]) ≠ :svg
+    throw(MethodError(show, (typeof(plt),)))
+  else
+    _show(io, m, plt)
+  end
+end
+
+_showjuno(io::IO, m, plt) = _show(io, m, plt)
