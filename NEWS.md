@@ -12,6 +12,13 @@
 ## (current master)
 - All new development should target Julia 1.x!
 
+## 0.20.3
+- implement guide position in gr, pyplot and pgfplots
+- inspectdr fixes
+- default appveyor
+- rudimentary missings support
+- deprecation fixes for PGFPlots
+
 ## 0.20.0
 Many updates, min julia 1.0
 - change display type to use PlotsDisplay (fixes Juno integration)
