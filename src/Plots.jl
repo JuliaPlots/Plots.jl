@@ -170,6 +170,10 @@ include("backends.jl")
 include("output.jl")
 include("init.jl")
 
+include("backends/plotly.jl")
+include("backends/gr.jl")
+include("backends/web.jl")
+
 # ---------------------------------------------------------
 
 @shorthands scatter
