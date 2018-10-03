@@ -309,7 +309,6 @@ function plotly_layout(plt::Plot)
     plotattributes_out = KW()
 
     w, h = plt[:size]
-    plotattributes_out[:width], plotattributes_out[:height] = w, h
     plotattributes_out[:paper_bgcolor] = rgba_string(plt[:background_color_outside])
     plotattributes_out[:margin] = KW(:l=>0, :b=>20, :r=>0, :t=>20)
 
@@ -892,27 +891,41 @@ end
 
 function html_body(plt::Plot{PlotlyBackend}, style = nothing)
     if style == nothing
-        w, h = plt[:size]
-        style = "width:$(w)px;height:$(h)px;"
+        style = "width:100%;height:100%;"
     end
     uuid = UUIDs.uuid4()
-    html = """
-        <div id=\"$(uuid)\" style=\"$(style)\"></div>
-        <script>
-        PLOT = document.getElementById('$(uuid)');
-        Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
-        </script>
     """
-    html
-end
-
-function js_body(plt::Plot{PlotlyBackend}, uuid)
-    js = """
-          PLOT = document.getElementById('$(uuid)');
-          Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
+    <div id=\"$(uuid)\" style=\"$(style)\"></div>
+    <script>
+        $(js_body(plt, uuid))
+     </script>
     """
 end
 
+function js_body(plt::Plot{PlotlyBackend}, divid)
+    """
+    gd = (function() {
+      var WIDTH_IN_PERCENT_OF_PARENT = 100;
+      var HEIGHT_IN_PERCENT_OF_PARENT = 100;
+      var gd = Plotly.d3.select('body')
+        .append('div').attr("id", "$(divid)")
+        .style({
+          width: WIDTH_IN_PERCENT_OF_PARENT + '%',
+          'margin-left': (100 - WIDTH_IN_PERCENT_OF_PARENT) / 2 + '%',
+          height: HEIGHT_IN_PERCENT_OF_PARENT + 'vh',
+          'margin-top': (100 - HEIGHT_IN_PERCENT_OF_PARENT) / 2 + 'vh'
+        })
+        .node();
+      var data = $(plotly_series_json(plt));
+      var layout = $(plotly_layout_json(plt));
+      Plotly.newPlot(gd, data, layout);
+      window.onresize = function() {
+        Plotly.Plots.resize(gd);
+      };
+      return gd;
+    })();
+    """
+end
 
 # ----------------------------------------------------------------
 
