@@ -73,22 +73,6 @@ end
 # --------------------------------------------------------------------------------------
 const plotly_remote_file_path = "https://cdn.plot.ly/plotly-latest.min.js"
 
-if isfile(plotly_local_file_path) && isijulia()
-    _js_code = open(read, plotly_local_file_path, "r")
-    # borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
-    _js_script = """
-        <script type='text/javascript'>
-            define('plotly', function(require, exports, module) {
-                $(_js_code)
-            });
-            require(['plotly'], function(Plotly) {
-                window.Plotly = Plotly;
-            });
-        </script>
-    """
-    # if we're in IJulia call setupnotebook to load js and css
-    display("text/html", _js_script)
-end
 
 # if isatom()
 #     import Atom
@@ -875,7 +859,26 @@ plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt))
 
 # ----------------------------------------------------------------
 
+const ijulia_initialized = Ref(false)
+
 function html_head(plt::Plot{PlotlyBackend})
+    if isfile(plotly_local_file_path) && isijulia() && !ijulia_initialized[]
+        js_code = read(plotly_local_file_path, String)
+        # borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
+        js_script = """
+            <script type='text/javascript'>
+                define('plotly', function(require, exports, module) {
+                    $(js_code)
+                });
+                require(['plotly'], function(Plotly) {
+                    window.Plotly = Plotly;
+                });
+            </script>
+        """
+        # if we're in IJulia call setupnotebook to load js and css
+        display("text/html", js_script)
+        ijulia_initialized[] = true
+    end
     local_file = ("file://" * plotly_local_file_path)
     jsfilename = use_local_dependencies[] ? local_file : plotly_remote_file_path
     "<script src=\"$jsfilename\"></script>"
