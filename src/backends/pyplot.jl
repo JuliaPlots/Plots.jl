@@ -622,13 +622,15 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             for i=1:length(y)
                 cur_marker = py_marker(_cycle(shapes,i))
 
-                push!(cur_x_list, _cycle(x,i))
-                push!(cur_y_list, _cycle(y,i))
+                if ( cur_marker == prev_marker )
+                  push!(cur_x_list, _cycle(x,i))
+                  push!(cur_y_list, _cycle(y,i))
 
-                push!(cur_color_list, _cycle(markercolor, i))
-                push!(cur_scale_list, py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2))
+                  push!(cur_color_list, _cycle(markercolor, i))
+                  push!(cur_scale_list, py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2))
 
-                ( cur_marker == prev_marker ) && continue
+                  continue
+                end
 
                 push!(handle, ax[:scatter](cur_x_list, cur_y_list;
                   label = series[:label],
@@ -641,11 +643,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                   extrakw...
                 ))
 
-                cur_x_list = []
-                cur_y_list = []
+                cur_x_list = [_cycle(x,i)]
+                cur_y_list = [_cycle(y,i)]
 
-                cur_color_list = []
-                cur_scale_list = []
+                cur_color_list = [_cycle(markercolor, i)]
+                cur_scale_list = [py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2)]
 
                 prev_marker = cur_marker
             end
