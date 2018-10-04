@@ -604,6 +604,66 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 ))
             end
             push!(handles, handle)
+        elseif isa(series[:markershape], AbstractVector{Symbol})
+            handle = []
+            x,y = xyargs
+            shapes = series[:markershape]
+
+            prev_marker = py_marker(_cycle(shapes,1))
+
+            cur_x_list = []
+            cur_y_list = []
+
+            cur_color_list = []
+            cur_scale_list = []
+
+            delete!(extrakw, :c)
+
+            for i=1:length(y)
+                cur_marker = py_marker(_cycle(shapes,i))
+
+                push!(cur_x_list, _cycle(x,i))
+                push!(cur_y_list, _cycle(y,i))
+
+                push!(cur_color_list, _cycle(markercolor, i))
+                push!(cur_scale_list, py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2))
+
+                ( cur_marker == prev_marker ) && continue
+
+                push!(handle, ax[:scatter](cur_x_list, cur_y_list;
+                  label = series[:label],
+                  zorder = series[:series_plotindex] + 0.5,
+                  marker = prev_marker,
+                  s = cur_scale_list,
+                  edgecolors = py_markerstrokecolor(series),
+                  linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
+                  facecolors = cur_color_list,
+                  extrakw...
+                ))
+
+                cur_x_list = []
+                cur_y_list = []
+
+                cur_color_list = []
+                cur_scale_list = []
+
+                prev_marker = cur_marker
+            end
+
+            if !isempty(cur_color_list)
+              push!(handle, ax[:scatter](cur_x_list, cur_y_list;
+                label = series[:label],
+                zorder = series[:series_plotindex] + 0.5,
+                marker = prev_marker,
+                s = cur_scale_list,
+                edgecolors = py_markerstrokecolor(series),
+                linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
+                facecolors = cur_color_list,
+                extrakw...
+              ))
+            end
+
+            push!(handles, handle)
         else
             # do a normal scatter plot
             handle = ax[:scatter](xyargs...;
