@@ -1,4 +1,7 @@
+const use_local_dependencies = Ref(false)
+
 function __init__()
+
     if isdefined(Main, :PLOTS_DEFAULTS)
         if haskey(Main.PLOTS_DEFAULTS, :theme)
             theme(Main.PLOTS_DEFAULTS[:theme])
@@ -27,10 +30,11 @@ function __init__()
     # ---------------------------------------------------------
     # IJulia
     # ---------------------------------------------------------
-
+    use_local = false
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
-
+            # IJulia is more stable with local file
+            use_local = isfile(plotly_local_file_path)
             """
             Add extra jupyter mimetypes to display_dict based on the plot backed.
 
@@ -79,5 +83,14 @@ function __init__()
 
             ENV["MPLBACKEND"] = "Agg"
         end
+    end
+    if haskey(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL")
+        use_local = ENV["PLOTS_HOST_DEPENDENCY_LOCAL"] == "true"
+        use_local_dependencies[] = isfile(plotly_local_file_path) && use_local
+        if use_local && !isfile(plotly_local_file_path)
+            @warn("PLOTS_HOST_DEPENDENCY_LOCAL is set to true, but no local plotly file found. run Pkg.build(\"Plots\") and make sure PLOTS_HOST_DEPENDENCY_LOCAL is set to true")
+        end
+    else
+        use_local_dependencies[] = use_local
     end
 end

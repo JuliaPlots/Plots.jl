@@ -71,27 +71,22 @@ end
 
 
 # --------------------------------------------------------------------------------------
+const plotly_remote_file_path = "https://cdn.plot.ly/plotly-latest.min.js"
 
-
-const _plotly_js_path = joinpath(dirname(@__FILE__), "..", "..", "deps", "plotly-latest.min.js")
-const _plotly_js_path_remote = "https://cdn.plot.ly/plotly-latest.min.js"
-
-_js_code = open(read, _plotly_js_path, "r")
-
-# borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
-_js_script = """
-    <script type='text/javascript'>
-        define('plotly', function(require, exports, module) {
-            $(_js_code)
-        });
-        require(['plotly'], function(Plotly) {
-            window.Plotly = Plotly;
-        });
-    </script>
-"""
-
-# if we're in IJulia call setupnotebook to load js and css
-if isijulia()
+if isfile(plotly_local_file_path) && isijulia()
+    _js_code = open(read, plotly_local_file_path, "r")
+    # borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
+    _js_script = """
+        <script type='text/javascript'>
+            define('plotly', function(require, exports, module) {
+                $(_js_code)
+            });
+            require(['plotly'], function(Plotly) {
+                window.Plotly = Plotly;
+            });
+        </script>
+    """
+    # if we're in IJulia call setupnotebook to load js and css
     display("text/html", _js_script)
 end
 
@@ -102,8 +97,6 @@ end
 using UUIDs
 
 push!(_initialized_backends, :plotly)
-
-
 # ----------------------------------------------------------------
 
 const _plotly_legend_pos = KW(
@@ -115,7 +108,7 @@ const _plotly_legend_pos = KW(
     :bottomright => [1., 0.],
     :topright => [1., 1.],
     :topleft => [0., 1.]
-    )
+)
 
 plotly_legend_pos(pos::Symbol) = get(_plotly_legend_pos, pos, [1.,1.])
 plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
@@ -882,11 +875,9 @@ plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt))
 
 # ----------------------------------------------------------------
 
-const _use_remote = Ref(false)
-
 function html_head(plt::Plot{PlotlyBackend})
-    jsfilename = _use_remote[] ? _plotly_js_path_remote : ("file://" * _plotly_js_path)
-    # "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
+    local_file = ("file://" * plotly_local_file_path)
+    jsfilename = use_local_dependencies[] ? local_file : plotly_remote_file_path
     "<script src=\"$jsfilename\"></script>"
 end
 
@@ -908,8 +899,8 @@ end
 
 function js_body(plt::Plot{PlotlyBackend}, uuid)
     js = """
-          PLOT = document.getElementById('$(uuid)');
-          Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
+        PLOT = document.getElementById('$(uuid)');
+        Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
     """
 end
 

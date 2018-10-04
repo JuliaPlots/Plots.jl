@@ -18,6 +18,12 @@ import JSON
 
 using Requires
 
+if isfile(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+    include(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+else
+    error("Plots not build, please run Pkg.build(\"Plots\")")
+end
+
 export
     grid,
     bbox,
