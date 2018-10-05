@@ -21,7 +21,11 @@ using Requires
 if isfile(joinpath(@__DIR__, "..", "deps", "deps.jl"))
     include(joinpath(@__DIR__, "..", "deps", "deps.jl"))
 else
-    error("Plots not build, please run Pkg.build(\"Plots\")")
+    # This is a bit dirty, but I don't really see why anyone should be forced
+    # to build Plots, while it will just include exactly the below line
+    # as long as now ENV["PLOTS_HOST_DEPENDENCY_LOCAL"] = "true" is given
+    # If the above env is set + plotly_local_file_path = "", it will warn in the __init__ functtion
+    const plotly_local_file_path = ""
 end
 
 export
