@@ -23,8 +23,9 @@ if isfile(joinpath(@__DIR__, "..", "deps", "deps.jl"))
 else
     # This is a bit dirty, but I don't really see why anyone should be forced
     # to build Plots, while it will just include exactly the below line
-    # as long as now ENV["PLOTS_HOST_DEPENDENCY_LOCAL"] = "true" is given
-    # If the above env is set + plotly_local_file_path = "", it will warn in the __init__ functtion
+    # as long as `ENV["PLOTS_HOST_DEPENDENCY_LOCAL"] = "true"` is not set.
+    # If the above env is set + `plotly_local_file_path == ""``,
+    # it will warn in the __init__ function to run build
     const plotly_local_file_path = ""
 end
 

@@ -43,7 +43,7 @@ end
 
 function standalone_html_window(plt::AbstractPlot)
     old = use_local_dependencies[] # save state to restore afterwards
-    # if we open a browser ourself, we can host local files, so we
+    # if we open a browser ourself, we can host local files, so
     # when we have a local plotly downloaded this is the way to go!
     use_local_dependencies[] = isfile(plotly_local_file_path)
     filename = write_temp_html(plt)
