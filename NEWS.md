@@ -12,6 +12,12 @@
 ## (current master)
 - All new development should target Julia 1.x!
 
+## 0.20.5
+- fix precompilation issue when depending on Plots
+
+## 0.20.4
+- honour `html_output_format` in Juno
+
 ## 0.20.3
 - implement guide position in gr, pyplot and pgfplots
 - inspectdr fixes
