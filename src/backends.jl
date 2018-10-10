@@ -277,6 +277,7 @@ end
 # @init_backend Bokeh
 @init_backend Plotly
 @init_backend PlotlyJS
+@init_backend PlotlyWebIO
 @init_backend GR
 @init_backend GLVisualize
 @init_backend PGFPlots
