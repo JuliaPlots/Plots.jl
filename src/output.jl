@@ -210,30 +210,6 @@ _show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot) = show(io, plt)
 closeall() = closeall(backend())
 
 
-# ---------------------------------------------------------
-# A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
-
-const PDFBackends = Union{PGFPlotsBackend,PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}
-if is_installed("FileIO")
-    @eval import FileIO
-    function _show(io::IO, ::MIME"image/png", plt::Plot{<:PDFBackends})
-        fn = tempname()
-
-        # first save a pdf file
-        pdf(plt, fn)
-
-        # load that pdf into a FileIO Stream
-        s = FileIO.load(fn * ".pdf")
-
-        # save a png
-        pngfn = fn * ".png"
-        FileIO.save(pngfn, s)
-
-        # now write from the file
-        write(io, read(open(pngfn), String))
-    end
-end
-
 # function html_output_format(fmt)
 #     if fmt == "png"
 #         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
