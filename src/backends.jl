@@ -544,11 +544,7 @@ const _pgfplots_attr = merge_with_base_supported([
     # :bar_width, :bar_edges,
     :title,
     # :window_title,
-<<<<<<< HEAD
     :guide, :guide_position, :lims, :ticks, :scale, :flip, :rotation,
-=======
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
->>>>>>> fc51c355a5c1db860ae18146a33f17f784031a4b
     :tickfont, :guidefont, :legendfont,
     :grid, :legend,
     :colorbar, :colorbar_title,
@@ -564,11 +560,7 @@ const _pgfplots_attr = merge_with_base_supported([
     :framestyle,
     :camera,
     :contour_labels,
-<<<<<<< HEAD
 ])
-=======
-  ])
->>>>>>> fc51c355a5c1db860ae18146a33f17f784031a4b
 const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
 const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon, :hline] #vcat(_allMarkers, Shape)
@@ -641,11 +633,7 @@ const _pyplot_attr = merge_with_base_supported([
     :bins, :bar_width, :bar_edges, :bar_position,
     :title, :title_location, :titlefont,
     :window_title,
-<<<<<<< HEAD
     :guide, :guide_position, :lims, :ticks, :scale, :flip, :rotation,
-=======
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
->>>>>>> fc51c355a5c1db860ae18146a33f17f784031a4b
     :titlefontfamily, :titlefontsize, :titlefontcolor,
     :legendfontfamily, :legendfontsize, :legendfontcolor,
     :tickfontfamily, :tickfontsize, :tickfontcolor,
@@ -769,10 +757,7 @@ const _inspectdr_attr = merge_with_base_supported([
     :foreground_color_legend, :foreground_color_title,
     :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
     :label,
-<<<<<<< HEAD
     :seriescolor, :seriesalpha,
-=======
->>>>>>> fc51c355a5c1db860ae18146a33f17f784031a4b
     :linecolor, :linestyle, :linewidth, :linealpha,
     :markershape, :markercolor, :markersize, :markeralpha,
     :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
@@ -786,12 +771,7 @@ const _inspectdr_attr = merge_with_base_supported([
     :legendfontfamily, :legendfontsize, :legendfontcolor,
     :tickfontfamily, :tickfontsize, :tickfontcolor,
     :guidefontfamily, :guidefontsize, :guidefontcolor,
-<<<<<<< HEAD
-    :grid, #:gridalpha, :gridstyle, :gridlinewidth, #alhpa & linewidth are per plot - not per subplot
-    :legend, #:legendtitle, :colorbar,
-=======
     :grid, :legend, #:colorbar,
->>>>>>> fc51c355a5c1db860ae18146a33f17f784031a4b
 #    :marker_z,
 #    :line_z,
 #    :levels,
