@@ -9,53 +9,7 @@ TODO
     * fix units in all visuals (e.g dotted lines, marker scale, surfaces)
 =#
 
-const _glvisualize_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
-    :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
-    :label,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :title_location,
-    :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :titlefontsize, :titlefontcolor,
-    :legendfontsize, :legendfontcolor,
-    :tickfontsize,
-    :guidefontsize, :guidefontcolor,
-    :grid, :gridalpha, :gridstyle, :gridlinewidth,
-    :legend, :colorbar,
-    :marker_z,
-    :line_z,
-    :levels,
-    :ribbon, :quiver, :arrow,
-    :orientation,
-    :overwrite_figure,
-    #:polar,
-    :normalize, :weights,
-    :contours, :aspect_ratio,
-    :match_dimensions,
-    :clims,
-    :inset_subplots,
-    :dpi,
-    :hover,
-    :framestyle,
-    :tick_direction,
-])
-const _glvisualize_seriestype = [
-    :path, :shape, :straightline,
-    :scatter, :hexbin,
-    :bar, :boxplot,
-    :heatmap, :image, :volume,
-    :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
-]
-const _glvisualize_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _glvisualize_marker = _allMarkers
-const _glvisualize_scale = [:identity, :ln, :log2, :log10]
+
 
 slice_arg(img::Matrix{C}, idx::Int) where {C<:Colorant} = img
 is_marker_supported(::GLVisualizeBackend, shape::GLVisualize.AllPrimitives) = true
