@@ -437,6 +437,15 @@ each line segment or marker in the plot.
 
 ]
 
+# Some constants for PlotDocs and PlotReferenceImages
+_animation_examples = [2, 30]
+_backend_skips = Dict(
+    :gr => [25, 30],
+    :pyplot => [25, 30],
+    :plotlyjs => [2, 21, 25, 30, 31],
+    :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30],
+)
+
 # ---------------------------------------------------------------------------------
 
 # make and display one plot

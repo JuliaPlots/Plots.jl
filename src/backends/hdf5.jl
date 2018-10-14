@@ -62,47 +62,6 @@ const HDF5PLOT_SIMPLESUBSTRUCT = Union{Font, BoundingBox,
 
 #==
 ===============================================================================#
-
-const _hdf5_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
-    :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
-    :label,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :title_location, :titlefont,
-    :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
-    :grid, :legend, :colorbar,
-    :marker_z, :line_z, :fill_z,
-    :levels,
-    :ribbon, :quiver, :arrow,
-    :orientation,
-    :overwrite_figure,
-    :polar,
-    :normalize, :weights,
-    :contours, :aspect_ratio,
-    :match_dimensions,
-    :clims,
-    :inset_subplots,
-    :dpi,
-    :colorbar_title,
-  ])
-const _hdf5_seriestype = [
-        :path, :steppre, :steppost, :shape, :straightline,
-        :scatter, :hexbin, #:histogram2d, :histogram,
-        # :bar,
-        :heatmap, :pie, :image,
-        :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
-    ]
-const _hdf5_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _hdf5_marker = vcat(_allMarkers, :pixel)
-const _hdf5_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::HDF5Backend, shape::Shape) = true
 
 if length(HDF5PLOT_MAP_TELEM2STR) < 1

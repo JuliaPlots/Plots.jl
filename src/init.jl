@@ -84,6 +84,7 @@ function __init__()
             ENV["MPLBACKEND"] = "Agg"
         end
     end
+
     if haskey(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL")
         use_local = ENV["PLOTS_HOST_DEPENDENCY_LOCAL"] == "true"
         use_local_dependencies[] = isfile(plotly_local_file_path) && use_local
@@ -92,5 +93,29 @@ function __init__()
         end
     else
         use_local_dependencies[] = use_local
+    end
+
+
+
+    # ---------------------------------------------------------
+    # A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
+    @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
+        PDFBackends = Union{PGFPlotsBackend,PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}
+        function _show(io::IO, ::MIME"image/png", plt::Plot{<:PDFBackends})
+            fn = tempname()
+
+            # first save a pdf file
+            pdf(plt, fn)
+
+            # load that pdf into a FileIO Stream
+            s = FileIO.load(fn * ".pdf")
+
+            # save a png
+            pngfn = fn * ".png"
+            FileIO.save(pngfn, s)
+
+            # now write from the file
+            write(io, read(open(pngfn), String))
+        end
     end
 end
