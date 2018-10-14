@@ -12,6 +12,12 @@
 ## (current master)
 - All new development should target Julia 1.x!
 
+## 0.20.6
+- fixes for PlotDocs.jl
+- fix gr axis color argument
+- Shapes for inspectdr
+- don't load plotly js file by default
+
 ## 0.20.5
 - fix precompilation issue when depending on Plots
 
