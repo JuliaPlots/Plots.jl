@@ -412,14 +412,6 @@ end
 isijulia() = :IJulia in nameof.(collect(values(Base.loaded_modules)))
 isatom() = :Atom in nameof.(collect(values(Base.loaded_modules)))
 
-function is_installed(pkgstr::AbstractString)
-    try
-        Pkg.installed(pkgstr) === nothing ? false : true
-    catch
-        false
-    end
-end
-
 istuple(::Tuple) = true
 istuple(::Any)   = false
 isvector(::AVec) = true

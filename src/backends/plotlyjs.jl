@@ -1,18 +1,12 @@
 
 # https://github.com/spencerlyon2/PlotlyJS.jl
 
-const _plotlyjs_attr        = _plotly_attr
-const _plotlyjs_seriestype  = _plotly_seriestype
-const _plotlyjs_style       = _plotly_style
-const _plotlyjs_marker      = _plotly_marker
-const _plotlyjs_scale       = _plotly_scale
-
 # --------------------------------------------------------------------------------------
 
 
 function _create_backend_figure(plt::Plot{PlotlyJSBackend})
     if !isplotnull() && plt[:overwrite_figure] && isa(current().o, PlotlyJS.SyncPlot)
-        PlotlyJS.SyncPlot(PlotlyJS.Plot(), current().o.view)
+        PlotlyJS.SyncPlot(PlotlyJS.Plot(), options = current().o.options)
     else
         PlotlyJS.plot()
     end
