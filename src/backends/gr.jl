@@ -796,12 +796,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # axis lines
         if xaxis[:showaxis]
-            gr_set_line(1, :solid, xaxis[:foreground_color_axis])
+            gr_set_line(1, :solid, xaxis[:foreground_color_border])
             GR.setclip(0)
             gr_polyline(coords(xspine_segs)...)
         end
         if yaxis[:showaxis]
-            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+            gr_set_line(1, :solid, yaxis[:foreground_color_border])
             GR.setclip(0)
             gr_polyline(coords(yspine_segs)...)
         end
