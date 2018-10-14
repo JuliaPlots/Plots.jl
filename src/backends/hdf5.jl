@@ -16,16 +16,19 @@ Read from .hdf5 file using:
 
 #==TODO
 ===============================================================================
- 1. Support more features
-    - SeriesAnnotations & GridLayout known to be missing.
- 3. Improve error handling.
+ 1. Support more features.
+    - GridLayout known not to be working.
+ 2. Improve error handling.
     - Will likely crash if file format is off.
- 2. Save data in a folder parallel to "plot".
+ 3. Save data in a folder parallel to "plot".
     - Will make it easier for users to locate data.
     - Use HDF5 reference to link data?
- 3. Develop an actual versioned file format.
+ 4. Develop an actual versioned file format.
     - Should have some form of backward compatibility.
     - Should be reliable for archival purposes.
+ 5. Fix construction of plot object with hdf5plot_read.
+    - Not building object correctly when backends do not natively support
+      a certain feature (ex: :steppre)
 ==#
 
 import FixedPointNumbers: N0f8 #In core Julia
@@ -56,7 +59,8 @@ const HDF5PLOT_PLOTREF = HDF5Plot_PlotRef(nothing)
 
 #Simple sub-structures that can just be written out using _hdf5plot_gwritefields:
 const HDF5PLOT_SIMPLESUBSTRUCT = Union{Font, BoundingBox,
-	GridLayout, RootLayout, ColorGradient, SeriesAnnotations, PlotText
+	GridLayout, RootLayout, ColorGradient, SeriesAnnotations, PlotText,
+	Shape,
 }
 
 
@@ -84,7 +88,8 @@ if length(HDF5PLOT_MAP_TELEM2STR) < 1
         "GRIDLAYOUT" => GridLayout,
         "ROOTLAYOUT" => RootLayout,
         "SERIESANNOTATIONS" => SeriesAnnotations,
-#                "PLOTTEXT" => PlotText,
+        "PLOTTEXT" => PlotText,
+        "SHAPE" => Shape,
         "COLORGRADIENT" => ColorGradient,
         "AXIS" => Axis,
         "SURFACE" => Surface,
@@ -243,6 +248,14 @@ end
 # ----------------------------------------------------------------
 
 function _hdf5plot_gwrite(grp, k::String, v) #Default
+    T = typeof(v)
+    if !(T <: Number || T <: String)
+        tstr = string(T)
+        path = HDF5.name(grp) * "/" * k
+        @info("Type not supported: $tstr\npath: $path")
+#        @show v
+        return
+    end
     grp[k] = v
     _hdf5plot_writetype(grp, k, HDF5PlotNative)
 end
@@ -297,10 +310,6 @@ function _hdf5plot_gwrite(grp, k::String, v::Colorant)
 end
 #Custom vector (when not using simple numeric type):
 function _hdf5plot_gwritearray(grp, k::String, v::Array{T}) where T
-    if "annotations" == k;
-        return #Hack.  Does not yet support annotations.
-    end
-
     vgrp = HDF5.g_create(grp, k)
     _hdf5plot_writetype(vgrp, Array) #ANY
     sz = size(v)
@@ -310,7 +319,7 @@ function _hdf5plot_gwritearray(grp, k::String, v::Array{T}) where T
         coord = lidx[iter]
         elem = v[iter]
         idxstr = join(coord, "_")
-        _hdf5plot_gwrite(vgrp, "v$idxstr", v[iter])
+        _hdf5plot_gwrite(vgrp, "v$idxstr", elem)
     end
 
     _hdf5plot_gwrite(vgrp, "dim", [sz...])
@@ -361,10 +370,6 @@ end
 #     return
 # end
 
-function _hdf5plot_gwrite(grp, k::String, v::SeriesAnnotations)
-    #Currently no support for SeriesAnnotations
-    return
-end
 function _hdf5plot_gwrite(grp, k::String, v::Subplot)
     grp = HDF5.g_create(grp, k)
     _hdf5plot_gwrite(grp, "index", v[:subplot_index])
@@ -487,6 +492,29 @@ function _hdf5plot_read(grp, k::String, T::Type{HDF5CTuple}, dtid)
     v = _hdf5plot_read(grp, k, Array, dtid)
     return tuple(v...)
 end
+function _hdf5plot_read(grp, k::String, T::Type{PlotText}, dtid)
+    grp = HDF5.g_open(grp, k)
+
+    str = _hdf5plot_read(grp, "str")
+    font = _hdf5plot_read(grp, "font")
+    return PlotText(str, font)
+end
+function _hdf5plot_read(grp, k::String, T::Type{SeriesAnnotations}, dtid)
+    grp = HDF5.g_open(grp, k)
+
+    strs = _hdf5plot_read(grp, "strs")
+    font = _hdf5plot_read(grp, "font")
+    baseshape = _hdf5plot_read(grp, "baseshape")
+    scalefactor = _hdf5plot_read(grp, "scalefactor")
+    return SeriesAnnotations(strs, font, baseshape, scalefactor)
+end
+function _hdf5plot_read(grp, k::String, T::Type{Shape}, dtid)
+    grp = HDF5.g_open(grp, k)
+
+    x = _hdf5plot_read(grp, "x")
+    y = _hdf5plot_read(grp, "y")
+    return Shape(x, y)
+end
 function _hdf5plot_read(grp, k::String, T::Type{ColorGradient}, dtid)
     grp = HDF5.g_open(grp, k)
 
@@ -560,11 +588,6 @@ end
 function _hdf5plot_read(sp::Subplot, subpath::String, f)
     f = f::HDF5.HDF5File #Assert
 
-    grp = HDF5.g_open(f, _hdf5_plotelempath("$subpath/attr"))
-    kwlist = KW()
-    _hdf5plot_read(grp, kwlist)
-    _hdf5_merge!(sp.attr, kwlist)
-
     grp = HDF5.g_open(f, _hdf5_plotelempath("$subpath/series_list"))
     nseries = _hdf5plot_readcount(grp)
 
@@ -575,6 +598,12 @@ function _hdf5plot_read(sp::Subplot, subpath::String, f)
         plot!(sp, kwlist[:x], kwlist[:y]) #Add data & create data structures
         _hdf5_merge!(sp.series_list[end].plotattributes, kwlist)
     end
+
+    #Perform after adding series... otherwise values get overwritten:
+    grp = HDF5.g_open(f, _hdf5_plotelempath("$subpath/attr"))
+    kwlist = KW()
+    _hdf5plot_read(grp, kwlist)
+    _hdf5_merge!(sp.attr, kwlist)
 
     return
 end
