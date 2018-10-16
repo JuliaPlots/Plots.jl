@@ -598,6 +598,8 @@ function axis_drawing_info(sp::Subplot)
     ytick_segs = Segments(2)
     xgrid_segs = Segments(2)
     ygrid_segs = Segments(2)
+    xminortick_segs = Segments(2)
+    yminortick_segs = Segments(2)
     xminorgrid_segs = Segments(2)
     yminorgrid_segs = Segments(2)
     xborder_segs = Segments(2)
@@ -657,7 +659,7 @@ function axis_drawing_info(sp::Subplot)
                     else
                         xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, t2) : (ymin, t1)
                     end
-                    push!(xtick_segs, (xminortick, tick_start), (xminortick, tick_stop)) # bottom tick
+                    push!(xminortick_segs, (xminortick, tick_start), (xminortick, tick_stop)) # bottom tick
                 end
                 # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
                 xaxis[:minorgrid] && push!(xminorgrid_segs, (xminortick, ymin), (xminortick, ymax)) # vertical grid
@@ -718,7 +720,7 @@ function axis_drawing_info(sp::Subplot)
                     else
                         xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, t2) : (xmin, t1)
                     end
-                    push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
+                    push!(yminortick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
                 end
                 # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
                 yaxis[:minorgrid] && push!(yminorgrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
@@ -726,5 +728,5 @@ function axis_drawing_info(sp::Subplot)
         end
     end
 
-    xticks, yticks, xaxis_segs, yaxis_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs
+    xticks, yticks, xaxis_segs, yaxis_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs, xminortick_segs, yminortick_segs
 end

@@ -764,7 +764,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setwindow(xmin, xmax, ymin, ymax)
         end
 
-        xticks, yticks, xspine_segs, yspine_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs = axis_drawing_info(sp)
+        xticks, yticks, xspine_segs, yspine_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs, xminortick_segs, yminortick_segs = axis_drawing_info(sp)
         # @show xticks yticks #spine_segs grid_segs
 
         # draw the grid lines
@@ -810,23 +810,46 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         # axis ticks
         if xaxis[:showaxis]
             if sp[:framestyle] in (:zerolines, :grid)
-                gr_set_line(1, :solid, xaxis[:foreground_color_grid])
+                gr_set_line(1, :solid, xaxis[:foreground_color_tick])
                 gr_set_transparency(xaxis[:gridalpha])
             else
-                gr_set_line(1, :solid, xaxis[:foreground_color_axis])
+                gr_set_line(1, :solid, xaxis[:foreground_color_tick])
             end
             GR.setclip(0)
             gr_polyline(coords(xtick_segs)...)
         end
         if  yaxis[:showaxis]
             if sp[:framestyle] in (:zerolines, :grid)
-                gr_set_line(1, :solid, yaxis[:foreground_color_grid])
+                gr_set_line(1, :solid, yaxis[:foreground_color_tick])
                 gr_set_transparency(yaxis[:gridalpha])
             else
-                gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+                gr_set_line(1, :solid, yaxis[:foreground_color_tick])
             end
             GR.setclip(0)
             gr_polyline(coords(ytick_segs)...)
+        end
+        GR.setclip(1)
+
+        # axis minor ticks
+        if xaxis[:showaxis]
+            if sp[:framestyle] in (:zerolines, :grid)
+                gr_set_line(1, :solid, xaxis[:foreground_color_minortick])
+                gr_set_transparency(xaxis[:minorgridalpha])
+            else
+                gr_set_line(1, :solid, xaxis[:foreground_color_minortick])
+            end
+            GR.setclip(0)
+            gr_polyline(coords(xminortick_segs)...)
+        end
+        if  yaxis[:showaxis]
+            if sp[:framestyle] in (:zerolines, :grid)
+                gr_set_line(1, :solid, yaxis[:foreground_color_minortick])
+                gr_set_transparency(yaxis[:minorgridalpha])
+            else
+                gr_set_line(1, :solid, yaxis[:foreground_color_minortick])
+            end
+            GR.setclip(0)
+            gr_polyline(coords(yminortick_segs)...)
         end
         GR.setclip(1)
 
