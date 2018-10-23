@@ -539,7 +539,7 @@ end
 #
 #
 # # --------------------------------------------------------------------
-# # Lists of tuples and FixedSizeArrays
+# # Lists of tuples and StaticArrays
 # # --------------------------------------------------------------------
 #
 # # if we get an unhandled tuple, just splat it in
@@ -561,14 +561,14 @@ end
 
 
 #
-# # 2D FixedSizeArrays
-@recipe f(xy::AVec{FixedSizeArrays.Vec{2,T}}) where {T<:Number} = unzip(xy)
-@recipe f(xy::FixedSizeArrays.Vec{2,T}) where {T<:Number}       = [xy[1]], [xy[2]]
+# # 2D StaticArrays
+@recipe f(xy::AVec{StaticArrays.SVector{2,T}}) where {T<:Number} = unzip(xy)
+@recipe f(xy::StaticArrays.SVector{2,T}) where {T<:Number}       = [xy[1]], [xy[2]]
 
 #
-# # 3D FixedSizeArrays
-@recipe f(xyz::AVec{FixedSizeArrays.Vec{3,T}}) where {T<:Number} = unzip(xyz)
-@recipe f(xyz::FixedSizeArrays.Vec{3,T}) where {T<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
+# # 3D StaticArrays
+@recipe f(xyz::AVec{StaticArrays.SVector{3,T}}) where {T<:Number} = unzip(xyz)
+@recipe f(xyz::StaticArrays.SVector{3,T}) where {T<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
 
 #
 # # --------------------------------------------------------------------
