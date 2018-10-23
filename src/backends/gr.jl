@@ -602,11 +602,19 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     # Add margin for x label
     if sp[:xaxis][:guide] != ""
-        bottompad += 4mm
+        if sp[:xaxis][:guide_position] == :top || (sp[:xaxis][:guide_position] == :auto && sp[:xaxis][:mirror] == true)
+            toppad += 4mm
+        else
+            bottompad += 4mm
+        end
     end
     # Add margin for y label
     if sp[:yaxis][:guide] != ""
-        leftpad += 4mm
+        if sp[:yaxis][:guide_position] == :right || (sp[:yaxis][:guide_position] == :auto && sp[:yaxis][:mirror] == true)
+            rightpad += 4mm
+        else
+            leftpad += 4mm
+        end 
     end
     if sp[:colorbar_title] != ""
         rightpad += 4mm
@@ -903,7 +911,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     if xaxis[:guide] != ""
         gr_set_font(guidefont(xaxis))
-        if xaxis[:guide_position] == :top
+        if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
             GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
             gr_text(gr_view_xcenter(), viewport_subplot[4], xaxis[:guide])
         else
@@ -915,7 +923,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     if yaxis[:guide] != ""
         gr_set_font(guidefont(yaxis))
         GR.setcharup(-1, 0)
-        if yaxis[:guide_position] == :left
+        if yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
             GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
             gr_text(viewport_subplot[2], gr_view_ycenter(), yaxis[:guide])
         else
