@@ -602,11 +602,19 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     # Add margin for x label
     if sp[:xaxis][:guide] != ""
-        bottompad += 4mm
+        if sp[:xaxis][:guide_position] == :top || (sp[:xaxis][:guide_position] == :auto && sp[:xaxis][:mirror] == true)
+            toppad += 4mm
+        else
+            bottompad += 4mm
+        end
     end
     # Add margin for y label
     if sp[:yaxis][:guide] != ""
-        leftpad += 4mm
+        if sp[:yaxis][:guide_position] == :right || (sp[:yaxis][:guide_position] == :auto && sp[:yaxis][:mirror] == true)
+            rightpad += 4mm
+        else
+            leftpad += 4mm
+        end 
     end
     if sp[:colorbar_title] != ""
         rightpad += 4mm
