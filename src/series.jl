@@ -386,8 +386,9 @@ end
     xmin, xmax = try
         axis_limits(plt[1][:xaxis])
     catch
-        xm = tryrange(f, [-5,-1,0,0.01])
-        xm, tryrange(f, filter(x->x>xm, [5,1,0.99, 0, -0.01]))
+        xinv = invscalefunc(get(plotattributes, :xscale, :identity))
+        xm = tryrange(f, xinv.([-5,-1,0,0.01]))
+        xm, tryrange(f, filter(x->x>xm, xinv.([5,1,0.99, 0, -0.01])))
     end
 
     f, xmin, xmax
@@ -517,15 +518,22 @@ end
 #
 # # special handling... xmin/xmax with parametric function(s)
 @recipe function f(f::Function, xmin::Number, xmax::Number)
-    xs = adapted_grid(f, (xmin, xmax))
+    xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
+    xs = _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
     xs, f
 end
 @recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where F<:Function
-    xs = Any[adapted_grid(f, (xmin, xmax)) for f in fs]
+    xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
+    xs = Any[_scaled_adapted_grid(f, xscale, yscale, xmin, xmax) for f in fs]
     xs, fs
 end
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function}  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) where {F<:Function,G<:Function} = fx, fy, range(umin, stop = umax, length = n)
+
+function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
+    (xf, xinv), (yf, yinv) =  ((scalefunc(s),invscalefunc(s)) for s in (xscale,yscale))
+    xinv.(adapted_grid(yf∘f∘xinv, xf.((xmin, xmax))))
+end
 
 #
 # # special handling... 3D parametric function(s)
