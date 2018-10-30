@@ -444,7 +444,7 @@ see: http://stackoverflow.com/a/37732384/5075246
     N = 10
     D = length(tickers)
     weights = rand(N,D)
-    weights ./= sum(weights, 2)
+    weights ./= sum(weights, dims = 2)
     returns = sort!((1:N) + D*randn(N))
 
     portfoliocomposition(weights, returns, labels = permutedims(tickers))

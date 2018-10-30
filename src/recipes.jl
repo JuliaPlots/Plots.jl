@@ -1143,7 +1143,7 @@ end
 @recipe function f(pc::PortfolioComposition)
     weights, returns = pc.args
     n = length(returns)
-    weights = cumsum(weights,2)
+    weights = cumsum(weights, dims = 2)
     seriestype := :shape
 
 	# create a filled polygon for each item
