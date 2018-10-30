@@ -614,7 +614,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             rightpad += 4mm
         else
             leftpad += 4mm
-        end 
+        end
     end
     if sp[:colorbar_title] != ""
         rightpad += 4mm
@@ -671,7 +671,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             outside_ticks = true
             for ax in (sp[:xaxis], sp[:yaxis])
                 v = series[ax[:letter]]
-                if diff(collect(extrema(diff(v))))[1] > 1e-6*std(v)
+                if length(v) > 1 && diff(collect(extrema(diff(v))))[1] > 1e-6*std(v)
                     @warn("GR: heatmap only supported with equally spaced data.")
                 end
             end

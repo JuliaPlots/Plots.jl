@@ -357,6 +357,7 @@ const _scale_base = Dict{Symbol, Real}(
 )
 
 function _heatmap_edges(v::AVec)
+  length(v) == 1 && return v[1] .+ [-0.5, 0.5]
   vmin, vmax = ignorenan_extrema(v)
   extra_min = (v[2] - v[1]) / 2
   extra_max = (v[end] - v[end - 1]) / 2
