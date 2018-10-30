@@ -435,24 +435,6 @@ each line segment or marker in the plot.
     end)]
 ),
 
-PlotExample("Portfolio Composition maps",
-"""
-see: http://stackoverflow.com/a/37732384/5075246
-""",
-    [:(begin
-    using Random
-    Random.seed!(111)
-    tickers = ["IBM", "Google", "Apple", "Intel"]
-    N = 10
-    D = length(tickers)
-    weights = rand(N,D)
-    weights ./= sum(weights, dims = 2)
-    returns = sort!((1:N) + D*randn(N))
-
-    portfoliocomposition(weights, returns, labels = permutedims(tickers))
-    end)]
-),
-
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -463,8 +445,6 @@ _backend_skips = Dict(
     :plotlyjs => [2, 21, 25, 30, 31],
     :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30],
 )
-
-
 
 # ---------------------------------------------------------------------------------
 
