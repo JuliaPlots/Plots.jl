@@ -217,7 +217,7 @@ const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse]
 
 function warn_on_deprecated_backend(bsym::Symbol)
     if bsym in _deprecated_backends
-        @warn("Backend $bsym has been deprecated.  It may not work as originally intended.")
+        @warn("Backend $bsym has been deprecated.")
     end
 end
 
@@ -268,13 +268,8 @@ end
 
 
 
-# @init_backend Immerse
-# @init_backend Gadfly
 @init_backend PyPlot
-# @init_backend Qwt
 @init_backend UnicodePlots
-# @init_backend Winston
-# @init_backend Bokeh
 @init_backend Plotly
 @init_backend PlotlyJS
 @init_backend GR

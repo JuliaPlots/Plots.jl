@@ -737,7 +737,7 @@ function with(f::Function, args...; kw...)
     end
 
     # # TODO: generalize this strategy to allow args as much as possible
-    # #       as in:  with(:gadfly, :scatter, :legend, :grid) do; ...; end
+    # #       as in:  with(:gr, :scatter, :legend, :grid) do; ...; end
     # # TODO: can we generalize this enough to also do something similar in the plot commands??
 
     # k = :seriestype
