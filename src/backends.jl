@@ -157,7 +157,7 @@ function pickDefaultBackend()
     # the ordering/inclusion of this package list is my semi-arbitrary guess at
     # which one someone will want to use if they have the package installed...accounting for
     # features, speed, and robustness
-    # for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR", "GLVisualize")
+    # for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR")
     #     if pkgstr in keys(Pkg.installed())
     #         return backend(Symbol(lowercase(pkgstr)))
     #     end
@@ -213,11 +213,11 @@ function backend(sym::Symbol)
     backend()
 end
 
-const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse]
+const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize]
 
 function warn_on_deprecated_backend(bsym::Symbol)
     if bsym in _deprecated_backends
-        @warn("Backend $bsym has been deprecated.  It may not work as originally intended.")
+        @warn("Backend $bsym has been deprecated.")
     end
 end
 
@@ -268,17 +268,11 @@ end
 
 
 
-# @init_backend Immerse
-# @init_backend Gadfly
 @init_backend PyPlot
-# @init_backend Qwt
 @init_backend UnicodePlots
-# @init_backend Winston
-# @init_backend Bokeh
 @init_backend Plotly
 @init_backend PlotlyJS
 @init_backend GR
-@init_backend GLVisualize
 @init_backend PGFPlots
 @init_backend InspectDR
 @init_backend HDF5
@@ -449,71 +443,6 @@ const _plotly_marker = [
     :cross, :xcross, :pentagon, :hexagon, :octagon, :vline, :hline
 ]
 const _plotly_scale = [:identity, :log10]
-
-# ------------------------------------------------------------------------------
-# glvisualize
-
-function _initialize_backend(::GLVisualizeBackend; kw...)
-    @eval Main begin
-        import GLVisualize, GeometryTypes, Reactive, GLAbstraction, GLWindow, Contour
-        import GeometryTypes: Point2f0, Point3f0, Vec2f0, Vec3f0, GLNormalMesh, SimpleRectangle, Point, Vec
-        import FileIO, Images
-        export GLVisualize
-        import Reactive: Signal
-        import GLAbstraction: Style
-        import GLVisualize: visualize
-        import Plots.GL
-        import UnicodeFun
-    end
-end
-
-const _glvisualize_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
-    :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
-    :label,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :title_location,
-    :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :titlefontsize, :titlefontcolor,
-    :legendfontsize, :legendfontcolor,
-    :tickfontsize,
-    :guidefontsize, :guidefontcolor,
-    :grid, :gridalpha, :gridstyle, :gridlinewidth,
-    :legend, :colorbar,
-    :marker_z,
-    :line_z,
-    :levels,
-    :ribbon, :quiver, :arrow,
-    :orientation,
-    :overwrite_figure,
-    #:polar,
-    :normalize, :weights,
-    :contours, :aspect_ratio,
-    :match_dimensions,
-    :clims,
-    :inset_subplots,
-    :dpi,
-    :hover,
-    :framestyle,
-    :tick_direction,
-])
-const _glvisualize_seriestype = [
-    :path, :shape, :straightline,
-    :scatter, :hexbin,
-    :bar, :boxplot,
-    :heatmap, :image, :volume,
-    :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
-]
-const _glvisualize_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _glvisualize_marker = _allMarkers
-const _glvisualize_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
 # pgfplots

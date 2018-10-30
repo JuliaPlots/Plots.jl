@@ -10,7 +10,7 @@
 
 ---
 ## (current master)
-- All new development should target Julia 1.x!
+- deprecate GLVisualize
 
 ## 0.20.6
 - fixes for PlotDocs.jl
