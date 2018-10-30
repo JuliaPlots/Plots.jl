@@ -440,6 +440,8 @@ PlotExample("Portfolio Composition maps",
 see: http://stackoverflow.com/a/37732384/5075246
 """,
     [:(begin
+    using Random
+    Random.seed!(111)
     tickers = ["IBM", "Google", "Apple", "Intel"]
     N = 10
     D = length(tickers)
