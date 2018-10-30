@@ -491,7 +491,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         # with a list of custom shapes for each
         msw,msh = anns.scalefactor
         msize = Float64[]
-        shapes = Vector{Shape}(length(anns.strs))
+        shapes = Vector{Shape}(undef, length(anns.strs))
         for i in eachindex(anns.strs)
             str = _cycle(anns.strs,i)
 
@@ -509,7 +509,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             # and then re-scale a copy of baseshape to match the w/h ratio
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
-            baseshape = _cycle(get(anns.baseshape),i)
+            baseshape = _cycle(anns.baseshape, i)
             shapes[i] = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
         end
         series[:markershape] = shapes
