@@ -156,7 +156,6 @@ end
 const _best_html_output_type = KW(
     :pyplot => :png,
     :unicodeplots => :txt,
-    :glvisualize => :png,
     :plotlyjs => :html,
     :plotly => :html
 )
