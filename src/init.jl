@@ -19,7 +19,6 @@ function __init__()
         pushdisplay(PlotsDisplay())
     end)
 
-    @require GLVisualize = "4086de5b-f4b6-55f3-abb0-b8c73827585f" include(joinpath(@__DIR__, "backends", "glvisualize.jl"))
     @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" include(joinpath(@__DIR__, "backends", "hdf5.jl"))
     @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" include(joinpath(@__DIR__, "backends", "inspectdr.jl"))
     @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" include(joinpath(@__DIR__, "backends", "pgfplots.jl"))
