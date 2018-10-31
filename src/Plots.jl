@@ -180,6 +180,8 @@ include("arg_desc.jl")
 include("plotattr.jl")
 include("backends.jl")
 include("output.jl")
+include("ijulia.jl")
+include("fileio.jl")
 include("init.jl")
 
 include("backends/plotly.jl")
