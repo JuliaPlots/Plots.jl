@@ -18,7 +18,7 @@ end
     plotattr([attr])
 
 Look up the properties of a Plots attribute, or specify an attribute type. Call `plotattr()` for options.
-The information is the same as that given on https://juliaplots.github.io/attributes/.
+The information is the same as that given on https://docs.juliaplots.org/latest/attributes/.
 """
 function plotattr()
     println("Specify an attribute type to get a list of supported attributes. Options are $(attrtypes())")
