@@ -188,20 +188,13 @@ Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
     sym = backend_name(pkg)
-    if sym in _initialized_backends
-        CURRENT_BACKEND.sym = backend_name(pkg)
-        CURRENT_BACKEND.pkg = pkg
-    else
-        # try
-            _initialize_backend(pkg)
-            push!(_initialized_backends, sym)
-            CURRENT_BACKEND.sym = backend_name(pkg)
-            CURRENT_BACKEND.pkg = pkg
-        # catch
-        #     add_backend(sym)
-        # end
+    if !(sym in _initialized_backends)
+        _initialize_backend(pkg)
+        push!(_initialized_backends, sym)
     end
-    backend()
+    CURRENT_BACKEND.sym = sym
+    CURRENT_BACKEND.pkg = pkg
+    pkg
 end
 
 function backend(sym::Symbol)
