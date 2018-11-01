@@ -15,7 +15,11 @@ backends() = _backends
 
 "Returns the name of the current backend"
 backend_name() = CURRENT_BACKEND.sym
-_backend_instance(sym::Symbol)::AbstractBackend = haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
+
+function _backend_instance(sym::Symbol)::AbstractBackend
+    haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
+end
+
 backend_package_name(sym::Symbol) = _backend_packages[sym]
 
 macro init_backend(s)
