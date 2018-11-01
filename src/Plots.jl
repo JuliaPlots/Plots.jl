@@ -84,7 +84,6 @@ export
     backends,
     backend_name,
     backend_object,
-    add_backend,
     aliases,
 
     Shape,

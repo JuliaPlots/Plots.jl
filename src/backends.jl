@@ -42,12 +42,6 @@ end
 
 # ---------------------------------------------------------
 
-function add_backend(pkg::Symbol)
-    @info("To do a standard install of $pkg, copy and run this:\n\n")
-    println(add_backend_string(_backend_instance(pkg)))
-    println()
-end
-
 # don't do anything as a default
 _create_backend_figure(plt::Plot) = nothing
 _prepare_plot_object(plt::Plot) = nothing
@@ -314,14 +308,6 @@ _initialize_backend(pkg::GRBackend) = nothing
 _initialize_backend(pkg::PlotlyBackend) = nothing
 
 
-function add_backend_string(pkg::AbstractBackend)
-    sym = backend_package_name(pkg)
-    """
-    using Pkg
-    Pkg.add("$sym")
-    """
-end
-
 # ------------------------------------------------------------------------------
 # gr
 
@@ -376,13 +362,6 @@ const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _gr_marker = _allMarkers
 const _gr_scale = [:identity, :log10]
 is_marker_supported(::GRBackend, shape::Shape) = true
-
-function add_backend_string(::GRBackend)
-    """
-    Pkg.add("GR")
-    Pkg.build("GR")
-    """
-end
 
 # ------------------------------------------------------------------------------
 # plotly
@@ -445,14 +424,6 @@ const _plotly_scale = [:identity, :log10]
 # ------------------------------------------------------------------------------
 # pgfplots
 
-function add_backend_string(::PGFPlotsBackend)
-    """
-    using Pkg
-    Pkg.add("PGFPlots")
-    Pkg.build("PGFPlots")
-    """
-end
-
 const _pgfplots_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend,
@@ -504,15 +475,6 @@ function _initialize_backend(pkg::PlotlyJSBackend)
     end
 end
 
-function add_backend_string(::PlotlyJSBackend)
-    """
-    using Pkg
-    Pkg.add(["PlotlyJS", "Blink", "ORCA"])
-    import Blink
-    Blink.AtomShell.install()
-    """
-end
-
 const _plotlyjs_attr        = _plotly_attr
 const _plotlyjs_seriestype  = _plotly_seriestype
 const _plotlyjs_style       = _plotly_style
@@ -531,16 +493,6 @@ function _initialize_backend(::PyPlotBackend)
         # we don't want every command to update the figure
         PyPlot.ioff()
     end
-end
-
-function add_backend_string(::PyPlotBackend)
-    """
-    using Pkg
-    withenv("PYTHON" => "") do
-        Pkg.add("PyPlot")
-        Pkg.build("PyPlot")
-    end
-    """
 end
 
 const _pyplot_attr = merge_with_base_supported([
@@ -595,14 +547,6 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
 # unicodeplots
-
-function add_backend_string(::UnicodePlotsBackend)
-    """
-    using Pkg
-    Pkg.add("UnicodePlots")
-    Pkg.build("UnicodePlots")
-    """
-end
 
 const _unicodeplots_attr = merge_with_base_supported([
     :label,
