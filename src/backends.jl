@@ -318,6 +318,8 @@ end
 
 _initialize_backend(pkg::GRBackend) = nothing
 
+_initialize_backend(pkg::PlotlyBackend) = nothing
+
 
 function add_backend_string(pkg::AbstractBackend)
     sym = backend_package_name(pkg)
