@@ -136,24 +136,27 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
 
-function pickDefaultBackend()
+_fallback_default_backend() = backend(GRBackend())
+
+function _pick_default_backend()
     env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
     if env_default != ""
         sym = Symbol(lowercase(env_default))
         if sym in _backends
             if sym in _initialized_backends
-                return backend(sym)
+                backend(sym)
             else
                 @warn("You have set `PLOTS_DEFAULT_BACKEND=$env_default` but `$(backend_package_name(sym))` is not loaded.")
+                _fallback_default_backend()
             end
         else
             @warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t" *
                  join(sort(_backends), "\n\t"))
+            _fallback_default_backend()
         end
+    else
+        _fallback_default_backend()
     end
-
-    # the default if nothing else is installed
-    backend(:gr)
 end
 
 
@@ -163,13 +166,11 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
+    if CURRENT_BACKEND.sym == :none
+        _pick_default_backend()
+    end
 
-  global CURRENT_BACKEND
-  if CURRENT_BACKEND.sym == :none
-    pickDefaultBackend()
-  end
-
-  CURRENT_BACKEND.pkg
+    CURRENT_BACKEND.pkg
 end
 
 """
