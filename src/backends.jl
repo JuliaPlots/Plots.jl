@@ -7,16 +7,16 @@ const _backendSymbol = Dict{DataType, Symbol}(NoBackend => :none)
 const _backends = Symbol[]
 const _initialized_backends = Set{Symbol}()
 const _default_backends = (:none, :gr, :plotly)
-const _backendPackage = Dict{Symbol, Symbol}()
+
+const _backend_packages = Dict{Symbol, Symbol}()
 
 "Returns a list of supported backends"
 backends() = _backends
 
 "Returns the name of the current backend"
 backend_name() = CURRENT_BACKEND.sym
-_backend_instance(sym::Symbol) = haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
-backend_package(pkg::Symbol) = pkg in _default_backends ? :Plots : Symbol("Plots", _backendPackage[pkg])
-backend_package_name(sym::Symbol) = sym in _default_backends ? :Plots : _backendPackage[sym]
+_backend_instance(sym::Symbol)::AbstractBackend = haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
+backend_package_name(sym::Symbol) = _backend_packages[sym]
 
 macro init_backend(s)
     package_str = string(s)
@@ -32,7 +32,7 @@ macro init_backend(s)
         push!(_backends, Symbol($str))
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
-        _backendPackage[Symbol($str)] = Symbol($package_str)
+        _backend_packages[Symbol($str)] = Symbol($package_str)
         # include("backends/" * $str * ".jl")
     end)
 end
@@ -148,15 +148,6 @@ function pickDefaultBackend()
         end
     end
 
-    # the ordering/inclusion of this package list is my semi-arbitrary guess at
-    # which one someone will want to use if they have the package installed...accounting for
-    # features, speed, and robustness
-    # for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR")
-    #     if pkgstr in keys(Pkg.installed())
-    #         return backend(Symbol(lowercase(pkgstr)))
-    #     end
-    # end
-
     # the default if nothing else is installed
     backend(:gr)
 end
@@ -196,8 +187,8 @@ function backend(sym::Symbol)
         backend(_backend_instance(sym))
     else
         @warn("`:$sym` is not a supported backend.")
+        backend()
     end
-    backend()
 end
 
 const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize]
@@ -468,7 +459,6 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 # plotlyjs
 
 function _initialize_backend(pkg::PlotlyJSBackend)
-    sym = backend_package_name(pkg)
     @eval Main begin
         import PlotlyJS, ORCA
         export PlotlyJS
