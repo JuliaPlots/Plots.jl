@@ -1058,7 +1058,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if length(x) == length(y) == length(z)
                     GR.trisurface(x, y, z)
                 else
-                    GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
+                    try
+                        GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
+                    catch
+                        GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
+                    end
                 end
             else
                 GR.setfillcolorind(0)
