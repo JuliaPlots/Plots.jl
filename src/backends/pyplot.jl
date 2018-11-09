@@ -1,3 +1,6 @@
+# Do "using PyPlot: PyCall, LaTeXStrings" without dependency warning:
+const PyCall = PyPlot.PyCall
+const LaTeXStrings = PyPlot.LaTeXStrings
 
 # https://github.com/stevengj/PyPlot.jl
 
@@ -187,26 +190,22 @@ function add_pyfixedformatter(cbar, vals::AVec)
     cbar[:update_ticks]()
 end
 
-@require LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f" begin
-    function labelfunc(scale::Symbol, backend::PyPlotBackend)
-        if scale == :log10
-            x -> LaTeXStrings.latexstring("10^{$x}")
-        elseif scale == :log2
-            x -> LaTeXStrings.latexstring("2^{$x}")
-        elseif scale == :ln
-            x -> LaTeXStrings.latexstring("e^{$x}")
-        else
-            string
-        end
+function labelfunc(scale::Symbol, backend::PyPlotBackend)
+    if scale == :log10
+        x -> LaTeXStrings.latexstring("10^{$x}")
+    elseif scale == :log2
+        x -> LaTeXStrings.latexstring("2^{$x}")
+    elseif scale == :ln
+        x -> LaTeXStrings.latexstring("e^{$x}")
+    else
+        string
     end
 end
 
-@require PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0" begin
-    function py_mask_nans(z)
-        # pynp["ma"][:masked_invalid](z)))
-        PyCall.pycall(pynp["ma"][:masked_invalid], Any, z)
-        # pynp["ma"][:masked_where](pynp["isnan"](z),z)
-    end
+function py_mask_nans(z)
+    # pynp["ma"][:masked_invalid](z)))
+    PyCall.pycall(pynp["ma"][:masked_invalid], Any, z)
+    # pynp["ma"][:masked_where](pynp["isnan"](z),z)
 end
 
 # ---------------------------------------------------------------------------
