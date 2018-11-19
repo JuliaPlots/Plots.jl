@@ -405,7 +405,7 @@ function pgf_axis(sp::Subplot, letter)
     if framestyle == :zerolines
         push!(style, string("extra ", letter, " ticks = 0"))
         push!(style, string("extra ", letter, " tick labels = "))
-        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_axis], 1.0), "}}"))
+        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_border], 1.0), "}}"))
     end
 
     if !axis[:showaxis]
@@ -414,7 +414,7 @@ function pgf_axis(sp::Subplot, letter)
     if !axis[:showaxis] || framestyle in (:zerolines, :grid, :none)
         push!(style, string(letter, " axis line style = {draw opacity = 0}"))
     else
-        push!(style, string(letter, " axis line style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_axis], 1.0), "}"))
+        push!(style, string(letter, " axis line style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_border], 1.0), "}"))
     end
 
     # return the style list and KW args
