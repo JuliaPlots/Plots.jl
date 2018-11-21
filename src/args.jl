@@ -279,6 +279,7 @@ const _series_defaults = KW(
     :series_annotations => nothing,       # a list of annotations which apply to the coordinates of this series
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
                                      #     one logical series to be broken up (path and markers, for example)
+    :showlegend         => true,     # when false, this series will be left out of the generated legend.
     :hover              => nothing,  # text to display when hovering over the data points
     :stride             => (1,1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
 )

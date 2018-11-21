@@ -47,7 +47,7 @@ function should_add_to_legend(series::Series)
             :hexbin,:bins2d,:histogram2d,:hline,:vline,
             :contour,:contourf,:contour3d,:surface,:wireframe,
             :heatmap, :pie, :image
-        ))
+        )) && series.plotattributes[:showlegend] == true
 end
 
 # ----------------------------------------------------------------------
