@@ -222,17 +222,6 @@ function fix_xy_lengths!(plt::Plot{PyPlotBackend}, series::Series)
     end
 end
 
-# total hack due to PyPlot bug (see issue #145).
-# hack: duplicate the color vector when the total rgba fields is the same as the series length
-function py_color_fix(c, x)
-    if (typeof(c) <: AbstractArray && length(c)*4 == length(x)) ||
-                    (typeof(c) <: Tuple && length(x) == 4)
-        vcat(c, c)
-    else
-        c
-    end
-end
-
 py_linecolor(series::Series)          = py_color(series[:linecolor])
 py_markercolor(series::Series)        = py_color(series[:markercolor])
 py_markerstrokecolor(series::Series)  = py_color(series[:markerstrokecolor])
@@ -497,7 +486,13 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         else
             py_color(plot_color(series[:markercolor], series[:markeralpha]))
         end
-        extrakw[:c] = py_color_fix(markercolor, x)
+        extrakw[:c] = if markercolor isa Array
+            permutedims(hcat([[m...] for m in markercolor]...),[2,1])
+        elseif markercolor isa Tuple
+            reshape([markercolor...], 1, length(markercolor))
+        else
+            error("This case is not handled.  Please file an issue.")
+        end
         xyargs = if st == :bar && !isvertical(series)
             (y, x)
         else
@@ -505,7 +500,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
 
         if isa(series[:markershape], AbstractVector{Shape})
-            # this section will create one scatter per data point to accomodate the
+            # this section will create one scatter per data point to accommodate the
             # vector of shapes
             handle = []
             x,y = xyargs
@@ -789,7 +784,7 @@ function py_set_ticks(ax, ticks, letter)
     if ticks == :none || ticks == nothing || ticks == false
         kw = KW()
         for dir in (:top,:bottom,:left,:right)
-            kw[dir] = kw[Symbol(:label,dir)] = "off"
+            kw[dir] = kw[Symbol(:label,dir)] = false
         end
         axis[:set_tick_params](;which="both", kw...)
         return
@@ -1052,7 +1047,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 else
                     ax[:spines][string(dir)][:set_visible](false)
                 end
-                kw[dir] = kw[Symbol(:label,dir)] = "off"
+                kw[dir] = kw[Symbol(:label,dir)] = false
             end
             ax[:xaxis][:set_tick_params](; which="both", kw...)
         end
@@ -1062,7 +1057,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 if !ispolar(sp)
                     ax[:spines][string(dir)][:set_visible](false)
                 end
-                kw[dir] = kw[Symbol(:label,dir)] = "off"
+                kw[dir] = kw[Symbol(:label,dir)] = false
             end
             ax[:yaxis][:set_tick_params](; which="both", kw...)
         end
