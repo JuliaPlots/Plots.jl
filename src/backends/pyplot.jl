@@ -390,7 +390,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     vmin, vmax = clims = get_clims(sp)
 
     # Dict to store extra kwargs
-    extrakw = KW(:vmin => vmin, :vmax => vmax)
+    if st == :wireframe
+        extrakw = KW()          # vmin, vmax cause an error for wireframe plot
+    else
+        extrakw = KW(:vmin => vmin, :vmax => vmax)
+    end
 
     # holds references to any python object representing the matplotlib series
     handles = []
