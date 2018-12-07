@@ -502,7 +502,7 @@ function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = noth
       plts[i] = plt
     catch ex
       # TODO: put error info into markdown?
-      warn("Example $pkgname:$i:$(_examples[i].header) failed with: $ex")
+      @warn("Example $pkgname:$i:$(_examples[i].header) failed with: $ex")
     end
     if sleep != nothing
         Base.sleep(sleep)
