@@ -47,7 +47,7 @@ end
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-RecipesBase.apply_recipe(plotattributes::KW, ::Type{T}, plt::AbstractPlot) where {T} = throw(ArgumentError("Unmatched plot recipe: $T"))
+RecipesBase.apply_recipe(plotattributes::KW, ::Type{T}, plt::AbstractPlot) where {T} = throw(MethodError("Unmatched plot recipe: $T"))
 
 # ---------------------------------------------------------------------------
 
