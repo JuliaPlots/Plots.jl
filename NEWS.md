@@ -10,7 +10,21 @@
 
 ---
 ## (current master)
+
+## 0.22.0
 - deprecate GLVisualize
+- allow 1-row and 1-column heatmaps
+- add portfoliodecomposition recipe from PlotRecipes
+- solve Shape bug
+- simplify PyPlot backend installation
+- fix wireframe bug in PyPlot
+- fix color bug in PyPlot
+- minor bug fixes in gr and pyplot
+
+## 0.21.0
+- Compatibility with StaticArrays 0.9.0
+- Up GR min version to 0.35
+- fix :mirror
 
 ## 0.20.6
 - fixes for PlotDocs.jl
