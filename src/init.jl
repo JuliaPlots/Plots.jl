@@ -1,3 +1,5 @@
+using REPL
+
 const use_local_dependencies = Ref(false)
 
 function __init__()
@@ -10,13 +12,14 @@ function __init__()
             k == :theme || default(k, v)
         end
     end
-    pushdisplay(PlotsDisplay())
+
+    insert!(Base.Multimedia.displays, findlast(x -> x isa Base.TextDisplay || x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1, PlotsDisplay())
 
     atreplinit(i -> begin
-        if PlotDisplay() in Base.Multimedia.displays
+        while PlotDisplay() in Base.Multimedia.displays
             popdisplay(PlotsDisplay())
         end
-        pushdisplay(PlotsDisplay())
+        insert!(Base.Multimedia.displays, findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1, PlotsDisplay())
     end)
 
     @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" include(joinpath(@__DIR__, "backends", "hdf5.jl"))
