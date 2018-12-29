@@ -11,6 +11,9 @@
 ---
 ## (current master)
 
+## 0.22.1
+- push PlotsDisplay just after REPLDisplay
+
 ## 0.22.0
 - deprecate GLVisualize
 - allow 1-row and 1-column heatmaps
