@@ -16,7 +16,7 @@ function __init__()
     insert!(Base.Multimedia.displays, findlast(x -> x isa Base.TextDisplay || x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1, PlotsDisplay())
 
     atreplinit(i -> begin
-        while PlotDisplay() in Base.Multimedia.displays
+        while PlotsDisplay() in Base.Multimedia.displays
             popdisplay(PlotsDisplay())
         end
         insert!(Base.Multimedia.displays, findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1, PlotsDisplay())
