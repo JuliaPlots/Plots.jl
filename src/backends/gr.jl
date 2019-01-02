@@ -3,65 +3,6 @@
 
 # significant contributions by @jheinen
 
-const _gr_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
-    :foreground_color_text, :foreground_color_border,
-    :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins,
-    :layout,
-    :title, :window_title,
-    :guide, :guide_position, :lims, :ticks, :scale, :flip,
-    :match_dimensions,
-    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
-    :titlefontrotation, :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfonthalign, :legendfontvalign,
-    :legendfontrotation, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfonthalign, :tickfontvalign,
-    :tickfontrotation, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefonthalign, :guidefontvalign,
-    :guidefontrotation, :guidefontcolor,
-    :grid, :gridalpha, :gridstyle, :gridlinewidth,
-    :legend, :legendtitle, :colorbar, :colorbar_title,
-    :fill_z, :line_z, :marker_z, :levels,
-    :ribbon, :quiver,
-    :orientation,
-    :overwrite_figure,
-    :polar,
-    :aspect_ratio,
-    :normalize, :weights,
-    :inset_subplots,
-    :bar_width,
-    :arrow,
-    :framestyle,
-    :tick_direction,
-    :camera,
-    :contour_labels,
-])
-const _gr_seriestype = [
-    :path, :scatter, :straightline,
-    :heatmap, :pie, :image,
-    :contour, :path3d, :scatter3d, :surface, :wireframe,
-    :shape
-]
-const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _gr_marker = _allMarkers
-const _gr_scale = [:identity, :log10]
-is_marker_supported(::GRBackend, shape::Shape) = true
-
-function add_backend_string(::GRBackend)
-    """
-    Pkg.add("GR")
-    Pkg.build("GR")
-    """
-end
-
 import GR
 export GR
 
@@ -661,11 +602,19 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     # Add margin for x label
     if sp[:xaxis][:guide] != ""
-        bottompad += 4mm
+        if sp[:xaxis][:guide_position] == :top || (sp[:xaxis][:guide_position] == :auto && sp[:xaxis][:mirror] == true)
+            toppad += 4mm
+        else
+            bottompad += 4mm
+        end
     end
     # Add margin for y label
     if sp[:yaxis][:guide] != ""
-        leftpad += 4mm
+        if sp[:yaxis][:guide_position] == :right || (sp[:yaxis][:guide_position] == :auto && sp[:yaxis][:mirror] == true)
+            rightpad += 4mm
+        else
+            leftpad += 4mm
+        end
     end
     if sp[:colorbar_title] != ""
         rightpad += 4mm
@@ -722,7 +671,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             outside_ticks = true
             for ax in (sp[:xaxis], sp[:yaxis])
                 v = series[ax[:letter]]
-                if diff(collect(extrema(diff(v))))[1] > 1e-6*std(v)
+                if length(v) > 1 && diff(collect(extrema(diff(v))))[1] > 1e-6*std(v)
                     @warn("GR: heatmap only supported with equally spaced data.")
                 end
             end
@@ -855,12 +804,12 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # axis lines
         if xaxis[:showaxis]
-            gr_set_line(1, :solid, xaxis[:foreground_color_axis])
+            gr_set_line(1, :solid, xaxis[:foreground_color_border])
             GR.setclip(0)
             gr_polyline(coords(xspine_segs)...)
         end
         if yaxis[:showaxis]
-            gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+            gr_set_line(1, :solid, yaxis[:foreground_color_border])
             GR.setclip(0)
             gr_polyline(coords(yspine_segs)...)
         end
@@ -962,7 +911,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     if xaxis[:guide] != ""
         gr_set_font(guidefont(xaxis))
-        if xaxis[:guide_position] == :top
+        if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
             GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
             gr_text(gr_view_xcenter(), viewport_subplot[4], xaxis[:guide])
         else
@@ -974,7 +923,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     if yaxis[:guide] != ""
         gr_set_font(guidefont(yaxis))
         GR.setcharup(-1, 0)
-        if yaxis[:guide_position] == :left
+        if yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
             GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
             gr_text(viewport_subplot[2], gr_view_ycenter(), yaxis[:guide])
         else
@@ -1109,7 +1058,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if length(x) == length(y) == length(z)
                     GR.trisurface(x, y, z)
                 else
-                    GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
+                    try
+                        GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
+                    catch
+                        GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
+                    end
                 end
             else
                 GR.setfillcolorind(0)

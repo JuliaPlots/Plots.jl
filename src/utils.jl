@@ -287,14 +287,14 @@ unzip(xy::AVec{Tuple{X,Y}}) where {X,Y}              = [t[1] for t in xy], [t[2]
 unzip(xyz::AVec{Tuple{X,Y,Z}}) where {X,Y,Z}         = [t[1] for t in xyz], [t[2] for t in xyz], [t[3] for t in xyz]
 unzip(xyuv::AVec{Tuple{X,Y,U,V}}) where {X,Y,U,V}    = [t[1] for t in xyuv], [t[2] for t in xyuv], [t[3] for t in xyuv], [t[4] for t in xyuv]
 
-unzip(xy::AVec{FixedSizeArrays.Vec{2,T}}) where {T}  = T[t[1] for t in xy], T[t[2] for t in xy]
-unzip(xy::FixedSizeArrays.Vec{2,T}) where {T}        = T[xy[1]], T[xy[2]]
+unzip(xy::AVec{StaticArrays.SVector{2,T}}) where {T}  = T[t[1] for t in xy], T[t[2] for t in xy]
+unzip(xy::StaticArrays.SVector{2,T}) where {T}        = T[xy[1]], T[xy[2]]
 
-unzip(xyz::AVec{FixedSizeArrays.Vec{3,T}}) where {T} = T[t[1] for t in xyz], T[t[2] for t in xyz], T[t[3] for t in xyz]
-unzip(xyz::FixedSizeArrays.Vec{3,T}) where {T}       = T[xyz[1]], T[xyz[2]], T[xyz[3]]
+unzip(xyz::AVec{StaticArrays.SVector{3,T}}) where {T} = T[t[1] for t in xyz], T[t[2] for t in xyz], T[t[3] for t in xyz]
+unzip(xyz::StaticArrays.SVector{3,T}) where {T}       = T[xyz[1]], T[xyz[2]], T[xyz[3]]
 
-unzip(xyuv::AVec{FixedSizeArrays.Vec{4,T}}) where {T} = T[t[1] for t in xyuv], T[t[2] for t in xyuv], T[t[3] for t in xyuv], T[t[4] for t in xyuv]
-unzip(xyuv::FixedSizeArrays.Vec{4,T}) where {T}       = T[xyuv[1]], T[xyuv[2]], T[xyuv[3]], T[xyuv[4]]
+unzip(xyuv::AVec{StaticArrays.SVector{4,T}}) where {T} = T[t[1] for t in xyuv], T[t[2] for t in xyuv], T[t[3] for t in xyuv], T[t[4] for t in xyuv]
+unzip(xyuv::StaticArrays.SVector{4,T}) where {T}       = T[xyuv[1]], T[xyuv[2]], T[xyuv[3]], T[xyuv[4]]
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
@@ -357,6 +357,7 @@ const _scale_base = Dict{Symbol, Real}(
 )
 
 function _heatmap_edges(v::AVec)
+  length(v) == 1 && return v[1] .+ [-0.5, 0.5]
   vmin, vmax = ignorenan_extrema(v)
   extra_min = (v[2] - v[1]) / 2
   extra_max = (v[end] - v[end - 1]) / 2
@@ -411,14 +412,6 @@ end
 
 isijulia() = :IJulia in nameof.(collect(values(Base.loaded_modules)))
 isatom() = :Atom in nameof.(collect(values(Base.loaded_modules)))
-
-function is_installed(pkgstr::AbstractString)
-    try
-        Pkg.installed(pkgstr) === nothing ? false : true
-    catch
-        false
-    end
-end
 
 istuple(::Tuple) = true
 istuple(::Any)   = false
@@ -745,7 +738,7 @@ function with(f::Function, args...; kw...)
     end
 
     # # TODO: generalize this strategy to allow args as much as possible
-    # #       as in:  with(:gadfly, :scatter, :legend, :grid) do; ...; end
+    # #       as in:  with(:gr, :scatter, :legend, :grid) do; ...; end
     # # TODO: can we generalize this enough to also do something similar in the plot commands??
 
     # k = :seriestype

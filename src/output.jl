@@ -156,7 +156,6 @@ end
 const _best_html_output_type = KW(
     :pyplot => :png,
     :unicodeplots => :txt,
-    :glvisualize => :png,
     :plotlyjs => :html,
     :plotly => :html
 )
@@ -210,30 +209,6 @@ _show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot) = show(io, plt)
 closeall() = closeall(backend())
 
 
-# ---------------------------------------------------------
-# A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
-
-const PDFBackends = Union{PGFPlotsBackend,PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}
-if is_installed("FileIO")
-    @eval import FileIO
-    function _show(io::IO, ::MIME"image/png", plt::Plot{<:PDFBackends})
-        fn = tempname()
-
-        # first save a pdf file
-        pdf(plt, fn)
-
-        # load that pdf into a FileIO Stream
-        s = FileIO.load(fn * ".pdf")
-
-        # save a png
-        pngfn = fn * ".png"
-        FileIO.save(pngfn, s)
-
-        # now write from the file
-        write(io, read(open(pngfn), String))
-    end
-end
-
 # function html_output_format(fmt)
 #     if fmt == "png"
 #         @eval function Base.show(io::IO, ::MIME"text/html", plt::Plot)
@@ -267,9 +242,21 @@ function showjuno(io::IO, m, plt)
     plt[:thickness_scaling] *= scale
 
     prepare_output(plt)
-    _show(io, m, plt)
-
-    plt[:size] = sz
-    plt[:dpi] = dpi
-    plt[:thickness_scaling] = thickness_scaling
+    try
+      _showjuno(io, m, plt)
+    finally
+      plt[:size] = sz
+      plt[:dpi] = dpi
+      plt[:thickness_scaling] = thickness_scaling
+    end
 end
+
+function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
+  if Symbol(plt.attr[:html_output_format]) ≠ :svg
+    throw(MethodError(show, (typeof(m), typeof(plt))))
+  else
+    _show(io, m, plt)
+  end
+end
+
+_showjuno(io::IO, m, plt) = _show(io, m, plt)

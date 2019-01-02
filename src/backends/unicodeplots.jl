@@ -1,28 +1,6 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
-const _unicodeplots_attr = merge_with_base_supported([
-    :label,
-    :legend,
-    :seriescolor,
-    :seriesalpha,
-    :linestyle,
-    :markershape,
-    :bins,
-    :title,
-    :guide, :lims,
-  ])
-const _unicodeplots_seriestype = [
-    :path, :scatter, :straightline,
-    # :bar,
-    :shape,
-    :histogram2d,
-    :spy
-]
-const _unicodeplots_style = [:auto, :solid]
-const _unicodeplots_marker = [:none, :auto, :circle]
-const _unicodeplots_scale = [:identity]
-
 
 # don't warn on unsupported... there's just too many warnings!!
 warnOnUnsupported_args(::UnicodePlotsBackend, plotattributes::KW) = nothing

@@ -1,60 +1,6 @@
 
 # https://plot.ly/javascript/getting-started
 
-const _plotly_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_legend, :foreground_color_guide,
-    :foreground_color_grid, :foreground_color_axis,
-    :foreground_color_text, :foreground_color_border,
-    :foreground_color_title,
-    :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins,
-    :title, :title_location,
-    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
-    :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefontcolor,
-    :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
-    :grid, :gridalpha, :gridlinewidth,
-    :legend, :colorbar, :colorbar_title,
-    :marker_z, :fill_z, :line_z, :levels,
-    :ribbon, :quiver,
-    :orientation,
-    # :overwrite_figure,
-    :polar,
-    :normalize, :weights,
-    # :contours,
-    :aspect_ratio,
-    :hover,
-    :inset_subplots,
-    :bar_width,
-    :clims,
-    :framestyle,
-    :tick_direction,
-    :camera,
-    :contour_labels,
-  ])
-
-const _plotly_seriestype = [
-    :path, :scatter, :pie, :heatmap,
-    :contour, :surface, :wireframe, :path3d, :scatter3d, :shape, :scattergl,
-    :straightline
-]
-const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _plotly_marker = [
-    :none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle,
-    :cross, :xcross, :pentagon, :hexagon, :octagon, :vline, :hline
-]
-const _plotly_scale = [:identity, :log10]
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
 const _plotly_framestyles = [:box, :axes, :zerolines, :grid, :none]
@@ -71,29 +17,8 @@ end
 
 
 # --------------------------------------------------------------------------------------
+const plotly_remote_file_path = "https://cdn.plot.ly/plotly-latest.min.js"
 
-
-const _plotly_js_path = joinpath(dirname(@__FILE__), "..", "..", "deps", "plotly-latest.min.js")
-const _plotly_js_path_remote = "https://cdn.plot.ly/plotly-latest.min.js"
-
-_js_code = open(read, _plotly_js_path, "r")
-
-# borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
-_js_script = """
-    <script type='text/javascript'>
-        define('plotly', function(require, exports, module) {
-            $(_js_code)
-        });
-        require(['plotly'], function(Plotly) {
-            window.Plotly = Plotly;
-        });
-    </script>
-"""
-
-# if we're in IJulia call setupnotebook to load js and css
-if isijulia()
-    display("text/html", _js_script)
-end
 
 # if isatom()
 #     import Atom
@@ -102,8 +27,6 @@ end
 using UUIDs
 
 push!(_initialized_backends, :plotly)
-
-
 # ----------------------------------------------------------------
 
 const _plotly_legend_pos = KW(
@@ -115,7 +38,7 @@ const _plotly_legend_pos = KW(
     :bottomright => [1., 0.],
     :topright => [1., 1.],
     :topleft => [0., 1.]
-    )
+)
 
 plotly_legend_pos(pos::Symbol) = get(_plotly_legend_pos, pos, [1.,1.])
 plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
@@ -882,12 +805,27 @@ plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt))
 
 # ----------------------------------------------------------------
 
-const _use_remote = Ref(false)
+const ijulia_initialized = Ref(false)
 
 function html_head(plt::Plot{PlotlyBackend})
-    jsfilename = _use_remote[] ? _plotly_js_path_remote : ("file://" * _plotly_js_path)
-    # "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
-    "<script src=\"$jsfilename\"></script>"
+    local_file = ("file://" * plotly_local_file_path)
+    plotly = use_local_dependencies[] ? local_file : plotly_remote_file_path
+    if isijulia() && !ijulia_initialized[]
+        # using requirejs seems to be key to load a js depency in IJulia!
+        # https://requirejs.org/docs/start.html
+        # https://github.com/JuliaLang/IJulia.jl/issues/345
+        display("text/html", """
+            <script type="text/javascript">
+                requirejs([$(repr(plotly))], function(p) {
+                    window.Plotly = p
+                });
+            </script>
+        """)
+        ijulia_initialized[] = true
+    end
+    # IJulia just needs one initialization
+    isijulia() && return ""
+    return "<script src=$(repr(plotly))></script>"
 end
 
 function html_body(plt::Plot{PlotlyBackend}, style = nothing)
@@ -908,8 +846,8 @@ end
 
 function js_body(plt::Plot{PlotlyBackend}, uuid)
     js = """
-          PLOT = document.getElementById('$(uuid)');
-          Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
+        PLOT = document.getElementById('$(uuid)');
+        Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
     """
 end
 

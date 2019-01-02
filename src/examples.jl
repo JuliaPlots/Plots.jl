@@ -435,7 +435,36 @@ each line segment or marker in the plot.
     end)]
 ),
 
+PlotExample("Portfolio Composition maps",
+"""
+see: http://stackoverflow.com/a/37732384/5075246
+""",
+    [:(begin
+    using Random
+    Random.seed!(111)
+    tickers = ["IBM", "Google", "Apple", "Intel"]
+    N = 10
+    D = length(tickers)
+    weights = rand(N,D)
+    weights ./= sum(weights, dims = 2)
+    returns = sort!((1:N) + D*randn(N))
+
+    portfoliocomposition(weights, returns, labels = permutedims(tickers))
+    end)]
+),
+
 ]
+
+# Some constants for PlotDocs and PlotReferenceImages
+_animation_examples = [2, 30]
+_backend_skips = Dict(
+    :gr => [25, 30],
+    :pyplot => [25, 30],
+    :plotlyjs => [2, 21, 25, 30, 31],
+    :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30],
+)
+
+
 
 # ---------------------------------------------------------------------------------
 
@@ -473,7 +502,7 @@ function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = noth
       plts[i] = plt
     catch ex
       # TODO: put error info into markdown?
-      warn("Example $pkgname:$i:$(_examples[i].header) failed with: $ex")
+      @warn("Example $pkgname:$i:$(_examples[i].header) failed with: $ex")
     end
     if sleep != nothing
         Base.sleep(sleep)

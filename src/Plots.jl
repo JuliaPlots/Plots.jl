@@ -1,9 +1,10 @@
 module Plots
 
+_current_plots_version = v"0.20.6"
+
 using Reexport
 
 import StaticArrays
-using StaticArrays.FixedSizeArrays
 using Dates, Printf, Statistics, Base64, LinearAlgebra
 import SparseArrays: findnz
 
@@ -17,6 +18,17 @@ import StatsBase
 import JSON
 
 using Requires
+
+if isfile(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+    include(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+else
+    # This is a bit dirty, but I don't really see why anyone should be forced
+    # to build Plots, while it will just include exactly the below line
+    # as long as `ENV["PLOTS_HOST_DEPENDENCY_LOCAL"] = "true"` is not set.
+    # If the above env is set + `plotly_local_file_path == ""``,
+    # it will warn in the __init__ function to run build
+    const plotly_local_file_path = ""
+end
 
 export
     grid,
@@ -169,6 +181,10 @@ include("plotattr.jl")
 include("backends.jl")
 include("output.jl")
 include("init.jl")
+
+include("backends/plotly.jl")
+include("backends/gr.jl")
+include("backends/web.jl")
 
 # ---------------------------------------------------------
 

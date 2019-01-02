@@ -1,7 +1,7 @@
 
 
-const P2 = FixedSizeArrays.Vec{2,Float64}
-const P3 = FixedSizeArrays.Vec{3,Float64}
+const P2 = StaticArrays.SVector{2,Float64}
+const P3 = StaticArrays.SVector{3,Float64}
 
 nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
 nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
@@ -491,7 +491,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         # with a list of custom shapes for each
         msw,msh = anns.scalefactor
         msize = Float64[]
-        shapes = Vector{Shape}(length(anns.strs))
+        shapes = Vector{Shape}(undef, length(anns.strs))
         for i in eachindex(anns.strs)
             str = _cycle(anns.strs,i)
 
@@ -509,7 +509,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             # and then re-scale a copy of baseshape to match the w/h ratio
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
-            baseshape = _cycle(get(anns.baseshape),i)
+            baseshape = _cycle(anns.baseshape, i)
             shapes[i] = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
         end
         series[:markershape] = shapes
@@ -736,7 +736,7 @@ end
 
 # -----------------------------------------------------------------------
 "create a BezierCurve for plotting"
-mutable struct BezierCurve{T <: FixedSizeArrays.Vec}
+mutable struct BezierCurve{T <: StaticArrays.SVector}
     control_points::Vector{T}
 end
 
@@ -750,7 +750,7 @@ function (bc::BezierCurve)(t::Real)
 end
 
 # mean(x::Real, y::Real) = 0.5*(x+y) #commented out as I cannot see this used anywhere and it overwrites a Base method with different functionality
-# mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps) # I also could not see this used anywhere, and it's type piracy - implementing a NaNMath version for this would just involve converting to a standard array
+# mean{N,T<:Real}(ps::StaticArrays.SVector{N,T}...) = sum(ps) / length(ps) # I also could not see this used anywhere, and it's type piracy - implementing a NaNMath version for this would just involve converting to a standard array
 
 @deprecate curve_points coords
 

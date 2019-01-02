@@ -14,16 +14,19 @@ img_tol = isinteractive() ? 1e-2 : 10e-2
     @test gr() == Plots.GRBackend()
     @test backend() == Plots.GRBackend()
 
-    image_comparison_facts(:gr, tol=img_tol, skip = [25, 30])
+    @static if Sys.islinux()
+        image_comparison_facts(:gr, tol=img_tol, skip = [25, 30])
+    end
 end
 
-
-#@testset "PyPlot" begin
-#    @test pyplot() == Plots.PyPlotBackend()
-#    @test backend() == Plots.PyPlotBackend()
+# @static if isinteractive()
+#     @testset "PyPlot" begin
+#         @test pyplot() == Plots.PyPlotBackend()
+#         @test backend() == Plots.PyPlotBackend()
 #
-#    image_comparison_facts(:pyplot, tol=img_tol)
-#end
+#         image_comparison_facts(:pyplot, tol=img_tol, skip = [2, 25, 30, 31])
+#     end
+# end
 
 @testset "UnicodePlots" begin
     @test unicodeplots() == Plots.UnicodePlotsBackend()
@@ -36,21 +39,22 @@ end
 # The plotlyjs testimages return a connection error on travis:
 # connect: connection refused (ECONNREFUSED)
 
-# @testset "PlotlyJS" begin
-#     @test plotlyjs() == Plots.PlotlyJSBackend()
-#     @test backend() == Plots.PlotlyJSBackend()
+# @static if isinteractive()
+#     @testset "PlotlyJS" begin
+#         @test plotlyjs() == Plots.PlotlyJSBackend()
+#         @test backend() == Plots.PlotlyJSBackend()
 #
-#     if Sys.islinux() && isinteractive()
 #         image_comparison_facts(:plotlyjs,
 #             skip=[
 #                 2,  # animation (skipped for speed)
+#                 25,
 #                 27, # (polar plots) takes very long / not working
+#                 30,
 #                 31, # animation (skipped for speed)
 #             ],
 #             tol=img_tol)
 #     end
 # end
-
 
 # InspectDR returns that error on travis:
 # ERROR: LoadError: InitError: Cannot open display:
@@ -83,35 +87,12 @@ end
 #     # @static Sys.islinux() && image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], tol=img_tol)
 # end
 
-
-# @testset "Immerse" begin
-#     @test immerse() == Plots.ImmerseBackend()
-#     @test backend() == Plots.ImmerseBackend()
-#
-#     # as long as we can plot anything without error, it should be the same as Gadfly
-#     image_comparison_facts(:immerse, only=[1], tol=img_tol)
-# end
-
-
 # @testset "PlotlyJS" begin
 #     @test plotlyjs() == Plots.PlotlyJSBackend()
 #     @test backend() == Plots.PlotlyJSBackend()
 #
 #     # as long as we can plot anything without error, it should be the same as Plotly
 #     image_comparison_facts(:plotlyjs, only=[1], tol=img_tol)
-# end
-
-
-# @testset "Gadfly" begin
-#     @test gadfly() == Plots.GadflyBackend()
-#     @test backend() == Plots.GadflyBackend()
-#
-#     @test typeof(plot(1:10)) == Plots.Plot{Plots.GadflyBackend}
-#     @test plot(Int[1,2,3], rand(3)) == not(nothing)
-#     @test plot(sort(rand(10)), rand(Int, 10, 3)) == not(nothing)
-#     @test plot!(rand(10,3), rand(10,3)) == not(nothing)
-#
-#     image_comparison_facts(:gadfly, skip=[4,6,23,24,27], tol=img_tol)
 # end
 
 

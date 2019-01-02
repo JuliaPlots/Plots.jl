@@ -1,55 +1,9 @@
+# Do "using PyPlot: PyCall, LaTeXStrings" without dependency warning:
+const PyCall = PyPlot.PyCall
+const LaTeXStrings = PyPlot.LaTeXStrings
 
 # https://github.com/stevengj/PyPlot.jl
 
-const _pyplot_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_grid, :foreground_color_legend, :foreground_color_title,
-    :foreground_color_axis, :foreground_color_border, :foreground_color_guide, :foreground_color_text,
-    :label,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins, :bar_width, :bar_edges, :bar_position,
-    :title, :title_location, :titlefont,
-    :window_title,
-    :guide, :guide_position, :lims, :ticks, :scale, :flip, :rotation,
-    :titlefontfamily, :titlefontsize, :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefontcolor,
-    :grid, :gridalpha, :gridstyle, :gridlinewidth,
-    :legend, :legendtitle, :colorbar,
-    :marker_z, :line_z, :fill_z,
-    :levels,
-    :ribbon, :quiver, :arrow,
-    :orientation,
-    :overwrite_figure,
-    :polar,
-    :normalize, :weights,
-    :contours, :aspect_ratio,
-    :match_dimensions,
-    :clims,
-    :inset_subplots,
-    :dpi,
-    :colorbar_title,
-    :stride,
-    :framestyle,
-    :tick_direction,
-    :camera,
-    :contour_labels,
-  ])
-const _pyplot_seriestype = [
-        :path, :steppre, :steppost, :shape, :straightline,
-        :scatter, :hexbin, #:histogram2d, :histogram,
-        # :bar,
-        :heatmap, :pie, :image,
-        :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
-    ]
-const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _pyplot_marker = vcat(_allMarkers, :pixel)
-const _pyplot_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::PyPlotBackend, shape::Shape) = true
 
 
@@ -236,26 +190,22 @@ function add_pyfixedformatter(cbar, vals::AVec)
     cbar[:update_ticks]()
 end
 
-@require LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f" begin
-    function labelfunc(scale::Symbol, backend::PyPlotBackend)
-        if scale == :log10
-            x -> LaTeXStrings.latexstring("10^{$x}")
-        elseif scale == :log2
-            x -> LaTeXStrings.latexstring("2^{$x}")
-        elseif scale == :ln
-            x -> LaTeXStrings.latexstring("e^{$x}")
-        else
-            string
-        end
+function labelfunc(scale::Symbol, backend::PyPlotBackend)
+    if scale == :log10
+        x -> LaTeXStrings.latexstring("10^{$x}")
+    elseif scale == :log2
+        x -> LaTeXStrings.latexstring("2^{$x}")
+    elseif scale == :ln
+        x -> LaTeXStrings.latexstring("e^{$x}")
+    else
+        string
     end
 end
 
-@require PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0" begin
-    function py_mask_nans(z)
-        # pynp["ma"][:masked_invalid](z)))
-        PyCall.pycall(pynp["ma"][:masked_invalid], Any, z)
-        # pynp["ma"][:masked_where](pynp["isnan"](z),z)
-    end
+function py_mask_nans(z)
+    # pynp["ma"][:masked_invalid](z)))
+    PyCall.pycall(pynp["ma"][:masked_invalid], Any, z)
+    # pynp["ma"][:masked_where](pynp["isnan"](z),z)
 end
 
 # ---------------------------------------------------------------------------
@@ -269,17 +219,6 @@ function fix_xy_lengths!(plt::Plot{PyPlotBackend}, series::Series)
         else
             series[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
         end
-    end
-end
-
-# total hack due to PyPlot bug (see issue #145).
-# hack: duplicate the color vector when the total rgba fields is the same as the series length
-function py_color_fix(c, x)
-    if (typeof(c) <: AbstractArray && length(c)*4 == length(x)) ||
-                    (typeof(c) <: Tuple && length(x) == 4)
-        vcat(c, c)
-    else
-        c
     end
 end
 
@@ -439,7 +378,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     vmin, vmax = clims = get_clims(sp)
 
     # Dict to store extra kwargs
-    extrakw = KW(:vmin => vmin, :vmax => vmax)
+    if st == :wireframe
+        extrakw = KW()          # vmin, vmax cause an error for wireframe plot
+    else
+        extrakw = KW(:vmin => vmin, :vmax => vmax)
+    end
 
     # holds references to any python object representing the matplotlib series
     handles = []
@@ -547,7 +490,13 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         else
             py_color(plot_color(series[:markercolor], series[:markeralpha]))
         end
-        extrakw[:c] = py_color_fix(markercolor, x)
+        extrakw[:c] = if markercolor isa Array
+            permutedims(hcat([[m...] for m in markercolor]...),[2,1])
+        elseif markercolor isa Tuple
+            reshape([markercolor...], 1, length(markercolor))
+        else
+            error("This case is not handled.  Please file an issue.")
+        end
         xyargs = if st == :bar && !isvertical(series)
             (y, x)
         else
@@ -555,7 +504,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
 
         if isa(series[:markershape], AbstractVector{Shape})
-            # this section will create one scatter per data point to accomodate the
+            # this section will create one scatter per data point to accommodate the
             # vector of shapes
             handle = []
             x,y = xyargs
@@ -839,7 +788,7 @@ function py_set_ticks(ax, ticks, letter)
     if ticks == :none || ticks == nothing || ticks == false
         kw = KW()
         for dir in (:top,:bottom,:left,:right)
-            kw[dir] = kw[Symbol(:label,dir)] = "off"
+            kw[dir] = kw[Symbol(:label,dir)] = false
         end
         axis[:set_tick_params](;which="both", kw...)
         return
@@ -1064,7 +1013,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             ticks = sp[:framestyle] == :none ? nothing : get_ticks(axis)
             # don't show the 0 tick label for the origin framestyle
             if sp[:framestyle] == :origin && length(ticks) > 1
-                ticks[2][ticks[1] .== 0] = ""
+                ticks[2][ticks[1] .== 0] .= ""
             end
             axis[:ticks] != :native ? py_set_ticks(ax, ticks, letter) : nothing
             pyaxis[:set_tick_params](direction = axis[:tick_direction] == :out ? "out" : "in")
@@ -1102,7 +1051,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 else
                     ax[:spines][string(dir)][:set_visible](false)
                 end
-                kw[dir] = kw[Symbol(:label,dir)] = "off"
+                kw[dir] = kw[Symbol(:label,dir)] = false
             end
             ax[:xaxis][:set_tick_params](; which="both", kw...)
         end
@@ -1112,7 +1061,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 if !ispolar(sp)
                     ax[:spines][string(dir)][:set_visible](false)
                 end
-                kw[dir] = kw[Symbol(:label,dir)] = "off"
+                kw[dir] = kw[Symbol(:label,dir)] = false
             end
             ax[:yaxis][:set_tick_params](; which="both", kw...)
         end

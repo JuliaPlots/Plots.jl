@@ -10,7 +10,43 @@
 
 ---
 ## (current master)
-- All new development should target Julia 1.x!
+
+## 0.22.1
+- push PlotsDisplay just after REPLDisplay
+
+## 0.22.0
+- deprecate GLVisualize
+- allow 1-row and 1-column heatmaps
+- add portfoliodecomposition recipe from PlotRecipes
+- solve Shape bug
+- simplify PyPlot backend installation
+- fix wireframe bug in PyPlot
+- fix color bug in PyPlot
+- minor bug fixes in gr and pyplot
+
+## 0.21.0
+- Compatibility with StaticArrays 0.9.0
+- Up GR min version to 0.35
+- fix :mirror
+
+## 0.20.6
+- fixes for PlotDocs.jl
+- fix gr axis color argument
+- Shapes for inspectdr
+- don't load plotly js file by default
+
+## 0.20.5
+- fix precompilation issue when depending on Plots
+
+## 0.20.4
+- honour `html_output_format` in Juno
+
+## 0.20.3
+- implement guide position in gr, pyplot and pgfplots
+- inspectdr fixes
+- default appveyor
+- rudimentary missings support
+- deprecation fixes for PGFPlots
 
 ## 0.20.0
 Many updates, min julia 1.0
