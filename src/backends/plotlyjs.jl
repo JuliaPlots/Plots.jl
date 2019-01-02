@@ -12,7 +12,9 @@ const _plotlyjs_scale       = _plotly_scale
 
 function _create_backend_figure(plt::Plot{PlotlyJSBackend})
     if !isplotnull() && plt[:overwrite_figure] && isa(current().o, PlotlyJS.SyncPlot)
-        PlotlyJS.SyncPlot(PlotlyJS.Plot(), current().o.view)
+       p = PlotlyJS.plot()
+       p.window = current().o.window
+       p
     else
         PlotlyJS.plot()
     end
@@ -57,11 +59,7 @@ end
 # ----------------------------------------------------------------
 
 function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend})
-    if isijulia() && !_use_remote[]
-        write(io, PlotlyJS.html_body(PlotlyJS.JupyterPlot(plt.o)))
-    else
         show(io, MIME("text/html"), plt.o)
-    end
 end
 
 function plotlyjs_save_hack(io::IO, plt::Plot{PlotlyJSBackend}, ext::String)
