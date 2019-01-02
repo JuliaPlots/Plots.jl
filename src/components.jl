@@ -554,7 +554,7 @@ function process_annotation(sp::Subplot, xs, ys, labs, font = font())
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (x, y, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
         else
-            push!(anns, (x, y, isa(lab, PlotText) ? lab : text(lab, font)))
+            push!(anns, (x, y, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab...) : text(lab, font)))
         end
     end
     anns
@@ -569,7 +569,7 @@ function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, 
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (pos, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
         else
-            push!(anns, (pos, isa(lab, PlotText) ? lab : text(lab, font)))
+            push!(anns, (pos, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab...) : text(lab, font)))
         end
     end
     anns
