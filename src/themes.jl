@@ -100,7 +100,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
         end
     end
 
-    srand(1)
+    Random.seed!(1)
 
     label := ""
     colorbar := false
