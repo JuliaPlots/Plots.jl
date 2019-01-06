@@ -459,7 +459,7 @@ const _widen_seriestypes = (:line, :path, :steppre, :steppost, :sticks, :scatter
 
 function default_should_widen(axis::Axis)
     should_widen = false
-    if !is_2tuple(axis[:lims])
+    if !(is_2tuple(axis[:lims]) || axis[:lims] == :round)
         for sp in axis.sps
             for series in series_list(sp)
                 if series.plotattributes[:seriestype] in _widen_seriestypes
