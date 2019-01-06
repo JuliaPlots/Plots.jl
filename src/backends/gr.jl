@@ -1029,16 +1029,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             else
                 h = series[:levels] > 1 ? range(zmin, stop=zmax, length=series[:levels]) : [(zmin + zmax) / 2]
             end
+            GR.setlinetype(gr_linetype[get_linestyle(series)])
+            GR.setlinewidth(max(0, get_linewidth(series) / (sum(gr_plot_size) * 0.001)))
             if series[:fillrange] != nothing
-                GR.surface(x, y, z, GR.OPTION_CELL_ARRAY)
+                GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
             else
-                GR.setlinetype(gr_linetype[get_linestyle(series)])
-                GR.setlinewidth(max(0, get_linewidth(series) / (sum(gr_plot_size) * 0.001)))
-                if plot_color(series[:linecolor]) == [plot_color(:black)]
-                    GR.contour(x, y, h, z, 0 + (series[:contour_labels] == true ? 1 : 0))
-                else
-                    GR.contour(x, y, h, z, 1000 + (series[:contour_labels] == true ? 1 : 0))
-                end
+                coff = plot_color(series[:linecolor]) == [plot_color(:black)] ? 0 : 1000
+                GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
             end
 
             # create the colorbar of contour levels
