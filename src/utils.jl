@@ -1199,3 +1199,40 @@ end
 function construct_categorical_data(x::AbstractArray, axis::Axis)
     map(xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)], x)
 end
+
+_fmt_paragraph(paragraph::AbstractString;kwargs...) = _fmt_paragraph(IOBuffer(),paragraph,0;kwargs...)
+
+function _fmt_paragraph(io::IOBuffer,
+                        remaining_text::AbstractString,
+                        column_count::Integer;
+                        fillwidth=60,
+                        leadingspaces=0)
+
+    kwargs = (fillwidth = fillwidth, leadingspaces = leadingspaces) 
+    
+    m = match(r"(.*?) (.*)",remaining_text)
+    if isa(m,Nothing)
+        if column_count + length(remaining_text) ≤ fillwidth
+            print(io,remaining_text)
+            String(take!(io))
+        else
+            print(io,"\n"*" "^leadingspaces*remaining_text)
+            String(take!(io))
+        end
+    else
+        if column_count + length(m[1]) ≤ fillwidth
+            print(io,"$(m[1]) ")
+            _fmt_paragraph(io,m[2],column_count + length(m[1]) + 1;kwargs...)
+        else
+            print(io,"\n"*" "^leadingspaces*"$(m[1]) ")
+            _fmt_paragraph(io,m[2],leadingspaces;kwargs...)
+        end
+    end
+end
+
+function _document_argument(S::AbstractString)
+    _fmt_paragraph("`$S`: "*_arg_desc[Symbol(S)],leadingspaces = 6 + length(S))
+end
+
+
+

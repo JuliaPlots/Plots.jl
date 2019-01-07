@@ -1152,7 +1152,7 @@ function py_add_annotations(sp::Subplot{PyPlotBackend}, x, y, val::PlotText)
         color = py_color(val.font.color),
         horizontalalignment = val.font.halign == :hcenter ? "center" : string(val.font.halign),
         verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
-        rotation = val.font.rotation * 180 / π,
+        rotation = val.font.rotation, 
         size = py_thickness_scale(sp.plt, val.font.pointsize),
         zorder = 999
     )

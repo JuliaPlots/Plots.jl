@@ -256,8 +256,28 @@ mutable struct Font
   color::Colorant
 end
 
-"Create a Font from a list of unordered features"
-function font(args...)
+"""
+    font(args...)
+
+Create a Font from a list of features. Values may be specified either as 
+arguments (which are distinguished by type/value) or as keyword arguments. 
+
+# Arguments
+
+- `family`: AbstractString. "serif" or "sans-serif" or "monospace" 
+- `pointsize`: Integer. Size of font in points
+- `halign`: Symbol. Horizontal alignment (:hcenter, :left, or :right)
+- `valign`: Symbol. Vertical aligment (:vcenter, :top, or :bottom)
+- `rotation`: Real. Angle of rotation for text in degrees (use a non-integer type)
+- `color`: Colorant or Symbol
+
+# Examples 
+```julia-repl
+julia> text(8) 
+julia> text(family="serif",halign=:center,rotation=45.0)
+```
+"""
+function font(args...;kwargs...)
 
   # defaults
   family = "sans-serif"
@@ -301,6 +321,32 @@ function font(args...)
     end
   end
 
+  for symbol in keys(kwargs)
+    if symbol == :family
+      family = kwargs[:family]
+    elseif symbol == :pointsize
+      pointsize = kwargs[:pointsize]
+    elseif symbol == :halign
+      halign = kwargs[:halign]
+      if halign == :center
+        halign = :hcenter
+      end
+      @assert halign in (:hcenter, :left, :right)   
+    elseif symbol == :valign
+      valign = kwargs[:valign]
+      if valign == :center
+        valign = :vcenter
+      end
+      @assert valign in (:vcenter, :top, :bottom)
+    elseif symbol == :rotation
+      rotation = kwargs[:rotation]
+    elseif symbol == :color
+      color = kwargs[:color]
+    else
+      @warn("Unused font kwarg: $symbol")
+    end      
+  end
+      
   Font(family, pointsize, halign, valign, rotation, color)
 end
 
@@ -351,8 +397,8 @@ Create a PlotText object wrapping a string with font info, for plot annotations
 text(t::PlotText) = t
 text(t::PlotText, font::Font) = PlotText(t.str, font)
 text(str::AbstractString, f::Font) = PlotText(str, f)
-function text(str, args...)
-  PlotText(string(str), font(args...))
+function text(str, args...;kwargs...)
+  PlotText(string(str), font(args...;kwargs...))
 end
 
 Base.length(t::PlotText) = length(t.str)
