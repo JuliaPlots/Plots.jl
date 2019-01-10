@@ -300,7 +300,8 @@ $xyzdoc
 
 # Example
 ```julia-repl 
-julia> surface(1:10,1:10,randn(10,10))
+julia> x = y = range(-3, 3, length = 100)
+julia> surface(x, y, (x, y) -> sinc(norm([x, y])))
 ```
 """
 @shorthands surface
