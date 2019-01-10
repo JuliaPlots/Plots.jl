@@ -278,7 +278,8 @@ $xyzdoc
 
 # Example 
 ```julia-repl
-julia> contour(-20:20,-20:20,(x,y)->x^2+y^2)
+julia> x = y = range(-20, 20, length = 100)
+julia> contour(x, y, (x, y) -> x^2 + y^2)
 ```
 """
 @shorthands contour
