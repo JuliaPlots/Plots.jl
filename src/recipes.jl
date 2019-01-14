@@ -635,10 +635,10 @@ _hist_edges(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, Abstra
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
-_filternans(vs::NTuple{1,AbstractVector}) = filter!.(!isnan, vs)
+_filternans(vs::NTuple{1,AbstractVector}) = filter!.(isfinite, vs)
 function _filternans(vs::NTuple{N,AbstractVector}) where N
     _invertedindex(v, not) = [j for (i,j) in enumerate(v) if !(i ∈ not)]
-    nots = union(Set.(findall.(isnan, vs))...)
+    nots = union(Set.(findall.(!isfinite, vs))...)
     _invertedindex.(vs, Ref(nots))
 end
 
