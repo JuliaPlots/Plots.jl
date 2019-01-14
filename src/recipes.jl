@@ -589,9 +589,9 @@ Plots.@deps stepbins path
 wand_edges(x...) = (@warn("Load the StatPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
 
 function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto) where N
-    _cl(x) = ceil(Int, NaNMath.max(x, one(x)))
+    _cl(x) = ceil(Int, max(x, one(x)))
     _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
-    _span(v) = ignorenan_maximum(v) - ignorenan_minimum(v)
+    _span(v) = maximum(v) - minimum(v)
 
     n_samples = length(LinearIndices(first(vs)))
 
@@ -635,11 +635,19 @@ _hist_edges(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, Abstra
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
+_filternans(vs::NTuple{1,AbstractVector}) = filter!.(!isnan, vs)
+function _filternans(vs::NTuple{N,AbstractVector}) where N
+    _invertedindex(v, not) = [j for (i,j) in enumerate(v) if !(i ∈ not)]
+    nots = union(Set.(findall.(isnan, vs))...)
+    _invertedindex.(vs, Ref(nots))
+end
+
 function _make_hist(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing) where N
-    edges = _hist_edges(vs, binning)
+    localvs = _filternans(vs)
+    edges = _hist_edges(localvs, binning)
     h = float( weights == nothing ?
-        StatsBase.fit(StatsBase.Histogram, vs, edges, closed = :left) :
-        StatsBase.fit(StatsBase.Histogram, vs, StatsBase.Weights(weights), edges, closed = :left)
+        StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
+        StatsBase.fit(StatsBase.Histogram, localvs, StatsBase.Weights(weights), edges, closed = :left)
     )
     normalize!(h, mode = _hist_norm_mode(normed))
 end
