@@ -589,9 +589,9 @@ Plots.@deps stepbins path
 wand_edges(x...) = (@warn("Load the StatPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
 
 function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto) where N
-    _cl(x) = ceil(Int, NaNMath.max(x, one(x)))
-    _iqr(v) = (q = quantile(filter(!isnan,v), 0.75) - quantile(filter(!isnan,v), 0.25); q > 0 ? q : oftype(q, 1))
-    _span(v) = ignorenan_maximum(v) - ignorenan_minimum(v)
+    _cl(x) = ceil(Int, max(x, one(x)))
+    _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
+    _span(v) = maximum(v) - minimum(v)
 
     n_samples = length(LinearIndices(first(vs)))
 
@@ -622,7 +622,7 @@ function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::S
     end
 end
 
-_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) where {N} = StatsBase.histrange(filter(!isnan,vs[dim]), binning, :left)
+_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) where {N} = StatsBase.histrange(vs[dim], binning, :left)
 _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) where {N} = _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
 _hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) where {N} = binning
 
@@ -643,10 +643,11 @@ function _filternans(vs::NTuple{N,AbstractVector}) where N
 end
 
 function _make_hist(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing) where N
+    vs = _filternans(vs)
     edges = _hist_edges(vs, binning)
     h = float( weights == nothing ?
-        StatsBase.fit(StatsBase.Histogram, _filternans(vs), edges, closed = :left) :
-        StatsBase.fit(StatsBase.Histogram, _filternans(vs), StatsBase.Weights(weights), edges, closed = :left)
+        StatsBase.fit(StatsBase.Histogram, vs, edges, closed = :left) :
+        StatsBase.fit(StatsBase.Histogram, vs, StatsBase.Weights(weights), edges, closed = :left)
     )
     normalize!(h, mode = _hist_norm_mode(normed))
 end
