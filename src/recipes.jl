@@ -643,11 +643,11 @@ function _filternans(vs::NTuple{N,AbstractVector}) where N
 end
 
 function _make_hist(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing) where N
-    vs = _filternans(vs)
-    edges = _hist_edges(vs, binning)
+    localvs = _filternans(vs)
+    edges = _hist_edges(localvs, binning)
     h = float( weights == nothing ?
-        StatsBase.fit(StatsBase.Histogram, vs, edges, closed = :left) :
-        StatsBase.fit(StatsBase.Histogram, vs, StatsBase.Weights(weights), edges, closed = :left)
+        StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
+        StatsBase.fit(StatsBase.Histogram, localvs, StatsBase.Weights(weights), edges, closed = :left)
     )
     normalize!(h, mode = _hist_norm_mode(normed))
 end
