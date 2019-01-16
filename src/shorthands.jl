@@ -1,25 +1,8 @@
-xydoc = """
-- `x`: AbstractVector of x values. 
-- `y`: AbstractVector of y values. 
-"""
-
-xyzdoc = """
-- `x`: x-coordinates. Either a vector of length `size(z,1)` or a rectangular 
-       array with the same dimensions as `z`. `1:size(z,1)` by default. 
-- `y`: y-coordinates. Either a vector of length `size(z,2)` or a rectangular 
-       array with the same dimensions as `z`. `1:size(z,2)` by default. 
-- `z`: Rectangular array of height values for the contour lines, or a function to 
-       apply to `x` and `y` to obtain such an array. 
-"""
-
 """
     scatter(x,y)
     scatter!(x,y)
 
 Make a scatter plot of y vs x. 
-
-# Arguments 
-$xydoc 
 
 # Examples
 ```julia-repl 
@@ -37,7 +20,6 @@ Make a bar plot of y vs x.
 
 # Arguments 
 
-$xydoc 
 - $(_document_argument("bar_position"))
 - $(_document_argument("bar_width"))
 - $(_document_argument("bar_edges"))
@@ -111,7 +93,6 @@ Plot a two-dimensional histogram.
 
 # Arguments 
 
-$xydoc 
 - `bins`: Number of bins (if an `Integer`) or bin edges (if an `AbtractVector`) 
 - `weights`: Vector of weights for the values in `x`. Each entry of x contributes 
              its weight to the height of its bin. 
@@ -127,7 +108,7 @@ julia> histogram2d(randn(10_000),randn(10_000))
     density(x)
     density!(x)
 
-Make a line plot of a kernel density estimate of x
+Make a line plot of a kernel density estimate of x. 
 
 # Arguments
 
@@ -145,11 +126,7 @@ julia> density(randn(100_000))
     heatmap(x,y,z)
     heatmap!(x,y,z)
 
-Plot a heatmap of the rectangular array `z`
-
-# Arguments
-$xyzdoc
-
+Plot a heatmap of the rectangular array `z`. 
 
 # Example
 ```julia-repl 
@@ -178,9 +155,6 @@ julia> hexbin(randn(10_000), randn(10_000))
     sticks!(x,y)
 
 Draw a stick plot of y vs x. 
-
-# Arguments 
-$xydoc 
 
 # Example
 ```julia-repl
@@ -272,7 +246,6 @@ julia> ohlc(y)
 Draw contour lines of the `Surface` z. 
 
 # Arguments
-$xyzdoc
 - `levels`: Contour levels (if `AbstractVector`) or number of levels (if `Integer`)
 - `fill`: Bool. Fill area between contours or draw contours only (false by default)
 
@@ -295,9 +268,6 @@ julia> contour(-20:20,-20:20,(x,y)->x^2+y^2)
 
 Draw a 3D surface plot. 
 
-# Arguments 
-$xyzdoc
-
 # Example
 ```julia-repl 
 julia> surface(1:10,1:10,randn(10,10))
@@ -310,9 +280,6 @@ julia> surface(1:10,1:10,randn(10,10))
     wireframe!(x,y,z)
 
 Draw a 3D wireframe plot. 
-
-# Arguments 
-$xyzdoc
 
 # Example
 ```julia-repl 
@@ -353,9 +320,6 @@ julia> scatter3d([0,1,2,3],[0,1,4,9],[0,1,8,27])
     boxplot!(x, y)
 
 Make a box and whisker plot. 
-
-# Arguments
-$xydoc 
 
 # Keyword arguments
 - `notch`: Bool. Notch the box plot? (false)
