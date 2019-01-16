@@ -1,5 +1,4 @@
-
-# https://github.com/spencerlyon2/PlotlyJS.jl
+# https://github.com/sglyon/PlotlyJS.jl
 
 # --------------------------------------------------------------------------------------
 
@@ -50,23 +49,11 @@ end
 
 # ----------------------------------------------------------------
 
-function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend})
-    if isijulia() && !_use_remote[]
-        write(io, PlotlyJS.html_body(PlotlyJS.JupyterPlot(plt.o)))
-    else
-        show(io, MIME("text/html"), plt.o)
-    end
-end
-
-function plotlyjs_save_hack(io::IO, plt::Plot{PlotlyJSBackend}, ext::String)
-    tmpfn = tempname() * "." * ext
-    PlotlyJS.savefig(plt.o, tmpfn)
-    write(io, read(open(tmpfn)))
-end
-_show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "svg")
-_show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "png")
-_show(io::IO, ::MIME"application/pdf", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "pdf")
-_show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "eps")
+_show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) = show(io, MIME("text/html"), plt.o)
+_show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="svg")
+_show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="png")
+_show(io::IO, ::MIME"application/pdf", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="pdf")
+_show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="eps")
 
 function write_temp_html(plt::Plot{PlotlyJSBackend})
     filename = string(tempname(), ".html")
