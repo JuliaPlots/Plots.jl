@@ -1233,6 +1233,3 @@ end
 function _document_argument(S::AbstractString)
     _fmt_paragraph("`$S`: "*_arg_desc[Symbol(S)],leadingspaces = 6 + length(S))
 end
-
-
-
