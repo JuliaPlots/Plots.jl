@@ -93,13 +93,13 @@ end
 
 
 
-# write out html to view the gif... note the rand call which is a hack so the image doesn't get cached
+# write out html to view the gif
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     ext = file_extension(agif.filename)
     write(io, if ext == "gif"
-        "<img src=\"$(relpath(agif.filename))?$(rand())>\" />"
+        "<img src=\"$(relpath(agif.filename))\" />"
     elseif ext in ("mov", "mp4")
-        "<video controls><source src=\"$(relpath(agif.filename))?$(rand())>\" type=\"video/$ext\"></video>"
+        "<video controls><source src=\"$(relpath(agif.filename)) type=\"video/$ext\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
     end)
