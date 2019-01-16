@@ -10,7 +10,7 @@
 
 ---
 ## (current master)
-- changed behaviour of Vectors of length-2 and length-3 StaticVectors
+- Removed StaticArrays dependency and changed behaviour of Vectors of length-2 and length-3 StaticVectors
 
 ## 0.22.1
 - push PlotsDisplay just after REPLDisplay

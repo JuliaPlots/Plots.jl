@@ -1,12 +1,12 @@
 
 
-const P2 = StaticArrays.SVector{2,Float64}
-const P3 = StaticArrays.SVector{3,Float64}
+const P2 = NTuple{2,Float64}
+const P3 = NTuple{3,Float64}
 
-nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
-nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
-nanpush!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN,NaN,NaN)); push!(a, b))
-nanappend!(a::AbstractVector{P3}, b) = (push!(a, P3(NaN,NaN,NaN)); append!(a, b))
+nanpush!(a::AbstractVector{P2}, b) = (push!(a, (NaN,NaN)); push!(a, b))
+nanappend!(a::AbstractVector{P2}, b) = (push!(a, (NaN,NaN)); append!(a, b))
+nanpush!(a::AbstractVector{P3}, b) = (push!(a, (NaN,NaN,NaN)); push!(a, b))
+nanappend!(a::AbstractVector{P3}, b) = (push!(a, (NaN,NaN,NaN)); append!(a, b))
 compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angle)
 
 # -------------------------------------------------------------
@@ -104,7 +104,7 @@ function makecross(; offset = -0.5, radius = 1.0)
 end
 
 
-from_polar(angle, dist) = P2(dist*cos(angle), dist*sin(angle))
+from_polar(angle, dist) = (dist*cos(angle), dist*sin(angle))
 
 function makearrowhead(angle; h = 2.0, w = 0.4)
     tip = from_polar(angle, h)
@@ -754,17 +754,17 @@ end
 
 # -----------------------------------------------------------------------
 "create a BezierCurve for plotting"
-mutable struct BezierCurve{T <: StaticArrays.SVector}
+mutable struct BezierCurve{T <: Tuple}
     control_points::Vector{T}
 end
 
 function (bc::BezierCurve)(t::Real)
-    p = zero(P2)
+    p = zeros(2)
     n = length(bc.control_points)-1
     for i in 0:n
-        p += bc.control_points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
+        @. p += bc.control_points[i+1] * binomial(n, i) * (1-t)^(n-i) * t^i
     end
-    p
+    (p...,)
 end
 
 # mean(x::Real, y::Real) = 0.5*(x+y) #commented out as I cannot see this used anywhere and it overwrites a Base method with different functionality
