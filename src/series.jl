@@ -547,7 +547,7 @@ end
 #
 #
 # # --------------------------------------------------------------------
-# # Lists of tuples and StaticArrays
+# # Lists of tuples
 # # --------------------------------------------------------------------
 #
 # # if we get an unhandled tuple, just splat it in
@@ -566,17 +566,6 @@ end
 # these might be points+velocity, or OHLC or something else
 @recipe f(xyuv::AVec{Tuple{R1,R2,R3,R4}}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = get(plotattributes,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
 @recipe f(xyuv::Tuple{R1,R2,R3,R4}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number}       = [xyuv[1]], [xyuv[2]], [xyuv[3]], [xyuv[4]]
-
-
-#
-# # 2D StaticArrays
-@recipe f(xy::AVec{StaticArrays.SVector{2,T}}) where {T<:Number} = unzip(xy)
-@recipe f(xy::StaticArrays.SVector{2,T}) where {T<:Number}       = [xy[1]], [xy[2]]
-
-#
-# # 3D StaticArrays
-@recipe f(xyz::AVec{StaticArrays.SVector{3,T}}) where {T<:Number} = unzip(xyz)
-@recipe f(xyz::StaticArrays.SVector{3,T}) where {T<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
 
 #
 # # --------------------------------------------------------------------
