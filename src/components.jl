@@ -256,7 +256,25 @@ mutable struct Font
   color::Colorant
 end
 
-"Create a Font from a list of unordered features"
+"""
+    font(args...)
+
+Create a Font from an unordered list of features. 
+
+# Arguments
+
+- `family`: AbstractString. "serif" or "sans-serif" or "monospace" 
+- `pointsize`: Integer. Size of font in points
+- `halign`: Symbol. Horizontal alignment (:hcenter, :left, or :right)
+- `valign`: Symbol. Vertical aligment (:vcenter, :top, or :bottom)
+- `rotation`: Real. Angle of rotation for text in degrees (use a non-integer type)
+- `color`: Colorant or Symbol
+
+# Examples 
+```julia-repl
+julia> text("sans-serif",8,:hcenter,45.0,:blue)
+```
+"""
 function font(args...)
 
   # defaults
