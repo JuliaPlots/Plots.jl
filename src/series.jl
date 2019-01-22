@@ -335,7 +335,7 @@ end
         yflip --> true
         cbar --> false
         fillcolor --> ColorGradient([:black, :white])
-        SliceIt, 1:m, 1:n, Surface(convert(Matrix{Float64}, mat))
+        SliceIt, 1:m, 1:n, Surface(clamp!(convert(Matrix{Float64}, mat), 0., 1.))
     end
 end
 
