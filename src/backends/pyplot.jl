@@ -667,7 +667,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
         handle = ax[:imshow](z;
             zorder = series[:series_plotindex],
-            cmap = py_colormap([:black, :white]),
+            cmap = py_colormap(cgrad([:black, :white])),
             vmin = 0.0,
             vmax = 1.0,
             extent = (xmin, xmax, ymax, ymin)
