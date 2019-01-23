@@ -525,6 +525,68 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 ))
             end
             push!(handles, handle)
+        elseif isa(series[:markershape], AbstractVector{Symbol})
+            handle = []
+            x,y = xyargs
+            shapes = series[:markershape]
+
+            prev_marker = py_marker(_cycle(shapes,1))
+
+            cur_x_list = []
+            cur_y_list = []
+
+            cur_color_list = []
+            cur_scale_list = []
+
+            delete!(extrakw, :c)
+
+            for i=1:length(y)
+                cur_marker = py_marker(_cycle(shapes,i))
+
+                if ( cur_marker == prev_marker )
+                  push!(cur_x_list, _cycle(x,i))
+                  push!(cur_y_list, _cycle(y,i))
+
+                  push!(cur_color_list, _cycle(markercolor, i))
+                  push!(cur_scale_list, py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2))
+
+                  continue
+                end
+
+                push!(handle, ax[:scatter](cur_x_list, cur_y_list;
+                  label = series[:label],
+                  zorder = series[:series_plotindex] + 0.5,
+                  marker = prev_marker,
+                  s = cur_scale_list,
+                  edgecolors = py_markerstrokecolor(series),
+                  linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
+                  facecolors = cur_color_list,
+                  extrakw...
+                ))
+
+                cur_x_list = [_cycle(x,i)]
+                cur_y_list = [_cycle(y,i)]
+
+                cur_color_list = [_cycle(markercolor, i)]
+                cur_scale_list = [py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2)]
+
+                prev_marker = cur_marker
+            end
+
+            if !isempty(cur_color_list)
+              push!(handle, ax[:scatter](cur_x_list, cur_y_list;
+                label = series[:label],
+                zorder = series[:series_plotindex] + 0.5,
+                marker = prev_marker,
+                s = cur_scale_list,
+                edgecolors = py_markerstrokecolor(series),
+                linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
+                facecolors = cur_color_list,
+                extrakw...
+              ))
+            end
+
+            push!(handles, handle)
         else
             # do a normal scatter plot
             handle = ax[:scatter](xyargs...;
@@ -1188,12 +1250,12 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(series[:seriestype], get_linestyle(series))
                     )
-                elseif series[:seriestype] in (:path, :straightline)
+                elseif series[:seriestype] in (:path, :straightline, :scatter)
                     PyPlot.plt[:Line2D]((0,1),(0,0),
                         color = py_color(get_linecolor(series, clims), get_linealpha(series)),
                         linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(:path, get_linestyle(series)),
-                        marker = py_marker(series[:markershape]),
+                        marker = py_marker(first(series[:markershape])),
                         markeredgecolor = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
                         markerfacecolor = series[:marker_z] == nothing ? py_color(get_markercolor(series, clims), get_markeralpha(series)) : py_color(series[:markercolor][0.5])
                     )
