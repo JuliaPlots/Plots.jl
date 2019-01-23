@@ -323,15 +323,20 @@ end
 
 
 # # images - grays
-clamp_greys(mat::AMat{T}) where T<:Gray = Gray.(clamp!([m.val for m in mat], 0, 1))
+function clamp_greys!(mat::AMat{T}) where T<:Gray
+    for i in eachindex(mat)
+        mat[i].val < 0 && (mat[i] = Gray(0))
+        mat[i].val > 1 && (mat[i] = Gray(1))
+    end
+    mat
+end
 
 @recipe function f(mat::AMat{T}) where T<:Gray
     n, m = size(mat)
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
-        any(x-> x.val<0 || x.val >1, mat) && (mat = clamp_greys(mat))
-        SliceIt, 1:m, 1:n, Surface(mat)
+        SliceIt, 1:m, 1:n, Surface(clamp_greys!(mat))
     else
         seriestype := :heatmap
         yflip --> true
