@@ -1182,13 +1182,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             z = z[xinds, yinds]
             xmin, xmax = ignorenan_extrema(series[:x]); ymin, ymax = ignorenan_extrema(series[:y])
             if eltype(z) <: Colors.AbstractGray
-                grey = round.(UInt8, float(z) * 255)
+                grey = round.(UInt8, clamp.(float(z) * 255, 0, 255))
                 rgba = map(c -> UInt32( 0xff000000 + UInt(c)<<16 + UInt(c)<<8 + UInt(c) ), grey)
             else
-                rgba = map(c -> UInt32( round(UInt, alpha(c) * 255) << 24 +
-                                        round(UInt,  blue(c) * 255) << 16 +
-                                        round(UInt, green(c) * 255) << 8  +
-                                        round(UInt,   red(c) * 255) ), z)
+                rgba = map(c -> UInt32( round(UInt, clamp(alpha(c) * 255, 0, 255)) << 24 +
+                                        round(UInt,  clamp(blue(c) * 255, 0, 255)) << 16 +
+                                        round(UInt, clamp(green(c) * 255, 0, 255)) << 8  +
+                                        round(UInt,   clamp(red(c) * 255, 0, 255)) ), z)
             end
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
         end
