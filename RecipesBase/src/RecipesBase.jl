@@ -372,7 +372,7 @@ end
 
 #----------------------------------------------------------------------------
 
-# allow usage of type recipes without depending on StatPlots
+# allow usage of type recipes without depending on StatsPlots
 
 """
 `recipetype(s, args...)`
@@ -389,14 +389,14 @@ recipetype(:groupedbar, 1:10, rand(10, 2))
 instead of
 
 ```julia
-import StatPlots: GroupedBar
+import StatsPlots: GroupedBar
 GroupedBar((1:10, rand(10, 2)))
 ```
 """
 recipetype(s, args...) = recipetype(Val(s), args...)
 
 function recipetype(s::Val{T}, args...) where T
-    error("No type recipe defined for type $T. You may need to load StatPlots")
+    error("No type recipe defined for type $T. You may need to load StatsPlots")
 end
 
 
