@@ -116,7 +116,7 @@ Make a line plot of a kernel density estimate of x.
 
 # Example
 ```julia-repl 
-julia> using StatPlots
+julia> using StatsPlots
 julia> density(randn(100_000))
 ```
 """
@@ -332,7 +332,7 @@ Make a box and whisker plot.
 
 # Example
 ```julia-repl 
-julia> using StatPlots
+julia> using StatsPlots
 julia> boxplot(repeat([1,2,3],outer=100),randn(300))
 ```
 """

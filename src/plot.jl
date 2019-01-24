@@ -166,9 +166,9 @@ end
 function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
     plotattributes[:plot_object] = plt
 
-    if !isempty(args) && !isdefined(Main, :StatPlots) &&
+    if !isempty(args) && !isdefined(Main, :StatsPlots) &&
             first(split(string(typeof(args[1])), ".")) == "DataFrames"
-        @warn("You're trying to plot a DataFrame, but this functionality is provided by StatPlots")
+        @warn("You're trying to plot a DataFrame, but this functionality is provided by StatsPlots")
     end
 
     # --------------------------------

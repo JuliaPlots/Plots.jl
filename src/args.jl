@@ -1050,8 +1050,8 @@ function preprocessArgs!(plotattributes::KW)
 
     # warnings for moved recipes
     st = get(plotattributes, :seriestype, :path)
-    if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatPlots)
-        @warn("seriestype $st has been moved to StatPlots.  To use: \`Pkg.add(\"StatPlots\"); using StatPlots\`")
+    if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatsPlots)
+        @warn("seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`")
     end
 
     return
