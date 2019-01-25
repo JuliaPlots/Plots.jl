@@ -182,7 +182,7 @@ Many updates, min julia 1.0
 - add `reset_defaults()` function to reset plot defaults
 - update syntax to 0.6
 - make `fill = true` fill to 0 rather than to 1
-- use new `@df` syntax in StatPlots examples
+- use new `@df` syntax in StatsPlots examples
 - allow changing the color of legend box
 - implement `title_location` for gr
 - add `hline` marker to pgfplots - fixes errorbars
@@ -334,7 +334,7 @@ Many updates, min julia 1.0
 - added dependency on PlotThemes
 - set_theme --> theme
 - remove Compat from REQUIRE
-- warning for DataFrames without StatPlots
+- warning for DataFrames without StatsPlots
 - closeall exported and implemented for gr/pyplot
 - fix DateTime recipe
 - reset theme with theme(:none)
@@ -456,8 +456,8 @@ Many updates, min julia 1.0
 #### 0.8.0
 
 - added dependency on PlotUtils
-- BREAKING: removed DataFrames support (now in StatPlots.jl)
-- BREAKING: removed boxplot/violin/density recipes (now in StatPlots.jl)
+- BREAKING: removed DataFrames support (now in StatsPlots.jl)
+- BREAKING: removed boxplot/violin/density recipes (now in StatsPlots.jl)
 - GR:
     - inline iterm2 support
     - trisurface support

@@ -18,7 +18,7 @@ end
 
 
 using Plots
-# using StatPlots
+# using StatsPlots
 import PlotReferenceImages
 using Random
 using Test
