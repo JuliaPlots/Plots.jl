@@ -7,16 +7,20 @@ const _backendSymbol = Dict{DataType, Symbol}(NoBackend => :none)
 const _backends = Symbol[]
 const _initialized_backends = Set{Symbol}()
 const _default_backends = (:none, :gr, :plotly)
-const _backendPackage = Dict{Symbol, Symbol}()
+
+const _backend_packages = Dict{Symbol, Symbol}()
 
 "Returns a list of supported backends"
 backends() = _backends
 
 "Returns the name of the current backend"
 backend_name() = CURRENT_BACKEND.sym
-_backend_instance(sym::Symbol) = haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
-backend_package(pkg::Symbol) = pkg in _default_backends ? :Plots : Symbol("Plots", _backendPackage[pkg])
-backend_package_name(sym::Symbol) = sym in _default_backends ? :Plots : _backendPackage[sym]
+
+function _backend_instance(sym::Symbol)::AbstractBackend
+    haskey(_backendType, sym) ? _backendType[sym]() : error("Unsupported backend $sym")
+end
+
+backend_package_name(sym::Symbol) = _backend_packages[sym]
 
 macro init_backend(s)
     package_str = string(s)
@@ -26,13 +30,13 @@ macro init_backend(s)
     esc(quote
         struct $T <: AbstractBackend end
         export $sym
-        $sym(; kw...) = (default(; kw...); backend(Symbol($str)))
+        $sym(; kw...) = (default(; kw...); backend($T()))
         backend_name(::$T) = Symbol($str)
         backend_package_name(pkg::$T) = backend_package_name(Symbol($str))
         push!(_backends, Symbol($str))
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
-        _backendPackage[Symbol($str)] = Symbol($package_str)
+        _backend_packages[Symbol($str)] = Symbol($package_str)
         # include("backends/" * $str * ".jl")
     end)
 end
@@ -41,12 +45,6 @@ end
 # include("backends/supported.jl")
 
 # ---------------------------------------------------------
-
-function add_backend(pkg::Symbol)
-    @info("To do a standard install of $pkg, copy and run this:\n\n")
-    println(add_backend_string(_backend_instance(pkg)))
-    println()
-end
 
 # don't do anything as a default
 _create_backend_figure(plt::Plot) = nothing
@@ -138,33 +136,27 @@ CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
 
 # ---------------------------------------------------------
 
-function pickDefaultBackend()
+_fallback_default_backend() = backend(GRBackend())
+
+function _pick_default_backend()
     env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
     if env_default != ""
         sym = Symbol(lowercase(env_default))
         if sym in _backends
             if sym in _initialized_backends
-                return backend(sym)
+                backend(sym)
             else
                 @warn("You have set `PLOTS_DEFAULT_BACKEND=$env_default` but `$(backend_package_name(sym))` is not loaded.")
+                _fallback_default_backend()
             end
         else
             @warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t" *
                  join(sort(_backends), "\n\t"))
+            _fallback_default_backend()
         end
+    else
+        _fallback_default_backend()
     end
-
-    # the ordering/inclusion of this package list is my semi-arbitrary guess at
-    # which one someone will want to use if they have the package installed...accounting for
-    # features, speed, and robustness
-    # for pkgstr in ("GR", "PyPlot", "PlotlyJS", "PGFPlots", "UnicodePlots", "InspectDR")
-    #     if pkgstr in keys(Pkg.installed())
-    #         return backend(Symbol(lowercase(pkgstr)))
-    #     end
-    # end
-
-    # the default if nothing else is installed
-    backend(:gr)
 end
 
 
@@ -174,13 +166,11 @@ end
 Returns the current plotting package name.  Initializes package on first call.
 """
 function backend()
+    if CURRENT_BACKEND.sym == :none
+        _pick_default_backend()
+    end
 
-  global CURRENT_BACKEND
-  if CURRENT_BACKEND.sym == :none
-    pickDefaultBackend()
-  end
-
-  CURRENT_BACKEND.pkg
+    CURRENT_BACKEND.pkg
 end
 
 """
@@ -188,20 +178,13 @@ Set the plot backend.
 """
 function backend(pkg::AbstractBackend)
     sym = backend_name(pkg)
-    if sym in _initialized_backends
-        CURRENT_BACKEND.sym = backend_name(pkg)
-        CURRENT_BACKEND.pkg = pkg
-    else
-        # try
-            _initialize_backend(pkg)
-            push!(_initialized_backends, sym)
-            CURRENT_BACKEND.sym = backend_name(pkg)
-            CURRENT_BACKEND.pkg = pkg
-        # catch
-        #     add_backend(sym)
-        # end
+    if !(sym in _initialized_backends)
+        _initialize_backend(pkg)
+        push!(_initialized_backends, sym)
     end
-    backend()
+    CURRENT_BACKEND.sym = sym
+    CURRENT_BACKEND.pkg = pkg
+    pkg
 end
 
 function backend(sym::Symbol)
@@ -209,8 +192,8 @@ function backend(sym::Symbol)
         backend(_backend_instance(sym))
     else
         @warn("`:$sym` is not a supported backend.")
+        backend()
     end
-    backend()
 end
 
 const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisualize]
@@ -316,13 +299,10 @@ function _initialize_backend(pkg::AbstractBackend)
     end
 end
 
-function add_backend_string(pkg::AbstractBackend)
-    sym = backend_package_name(pkg)
-    """
-    using Pkg
-    Pkg.add("$sym")
-    """
-end
+_initialize_backend(pkg::GRBackend) = nothing
+
+_initialize_backend(pkg::PlotlyBackend) = nothing
+
 
 # ------------------------------------------------------------------------------
 # gr
@@ -378,13 +358,6 @@ const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _gr_marker = _allMarkers
 const _gr_scale = [:identity, :log10]
 is_marker_supported(::GRBackend, shape::Shape) = true
-
-function add_backend_string(::GRBackend)
-    """
-    Pkg.add("GR")
-    Pkg.build("GR")
-    """
-end
 
 # ------------------------------------------------------------------------------
 # plotly
@@ -447,14 +420,6 @@ const _plotly_scale = [:identity, :log10]
 # ------------------------------------------------------------------------------
 # pgfplots
 
-function add_backend_string(::PGFPlotsBackend)
-    """
-    using Pkg
-    Pkg.add("PGFPlots")
-    Pkg.build("PGFPlots")
-    """
-end
-
 const _pgfplots_attr = merge_with_base_supported([
     :annotations,
     :background_color_legend,
@@ -499,20 +464,10 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 # plotlyjs
 
 function _initialize_backend(pkg::PlotlyJSBackend)
-    sym = backend_package_name(pkg)
     @eval Main begin
         import PlotlyJS, ORCA
         export PlotlyJS
     end
-end
-
-function add_backend_string(::PlotlyJSBackend)
-    """
-    using Pkg
-    Pkg.add(["PlotlyJS", "Blink", "ORCA"])
-    import Blink
-    Blink.AtomShell.install()
-    """
 end
 
 const _plotlyjs_attr        = _plotly_attr
@@ -533,16 +488,6 @@ function _initialize_backend(::PyPlotBackend)
         # we don't want every command to update the figure
         PyPlot.ioff()
     end
-end
-
-function add_backend_string(::PyPlotBackend)
-    """
-    using Pkg
-    withenv("PYTHON" => "") do
-        Pkg.add("PyPlot")
-        Pkg.build("PyPlot")
-    end
-    """
 end
 
 const _pyplot_attr = merge_with_base_supported([
@@ -597,14 +542,6 @@ const _pyplot_scale = [:identity, :ln, :log2, :log10]
 
 # ------------------------------------------------------------------------------
 # unicodeplots
-
-function add_backend_string(::UnicodePlotsBackend)
-    """
-    using Pkg
-    Pkg.add("UnicodePlots")
-    Pkg.build("UnicodePlots")
-    """
-end
 
 const _unicodeplots_attr = merge_with_base_supported([
     :label,

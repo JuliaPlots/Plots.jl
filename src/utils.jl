@@ -726,7 +726,7 @@ function with(f::Function, args...; kw...)
 
   # save the backend
   if CURRENT_BACKEND.sym == :none
-    pickDefaultBackend()
+    _pick_default_backend()
   end
   oldbackend = CURRENT_BACKEND.sym
 
