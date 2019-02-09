@@ -33,7 +33,12 @@ end
     @test backend() == Plots.UnicodePlotsBackend()
 
     # lets just make sure it runs without error
-    @test isa(plot(rand(10)), Plots.Plot) == true
+    p = plot(rand(10))
+    @test isa(p, Plots.Plot) == true
+    @test isa(display(p), Nothing) == true
+    p = bar(randn(10))
+    @test isa(p, Plots.Plot) == true
+    @test isa(display(p), Nothing) == true
 end
 
 # The plotlyjs testimages return a connection error on travis:

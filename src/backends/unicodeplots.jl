@@ -116,7 +116,7 @@ function addUnicodeSeries!(o, plotattributes::KW, addlegend::Bool, xlim, ylim)
     x, y = if st == :straightline
         straightline_data(plotattributes)
     elseif st == :shape
-        shape_data(series)
+        shape_data(plotattributes)
     else
         [collect(float(plotattributes[s])) for s in (:x, :y)]
     end
