@@ -1067,6 +1067,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 GR.surface(x, y, z, GR.OPTION_FILLED_MESH)
             end
 
+        elseif st == :volume
+            sp[:legend] = :none
+            GR.gr3.clear()
+            dmin, dmax = GR.gr3.volume(y.v, 0)
+
         elseif st == :heatmap
             xmin, xmax, ymin, ymax = xy_lims
             zmin, zmax = clims

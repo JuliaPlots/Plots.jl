@@ -351,7 +351,7 @@ const _gr_attr = merge_with_base_supported([
 const _gr_seriestype = [
     :path, :scatter, :straightline,
     :heatmap, :pie, :image,
-    :contour, :path3d, :scatter3d, :surface, :wireframe,
+    :contour, :path3d, :scatter3d, :surface, :wireframe, :volume,
     :shape
 ]
 const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
