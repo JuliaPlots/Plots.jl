@@ -610,6 +610,22 @@ function hascolorbar(sp::Subplot)
     hascbar
 end
 
+function colorbar_levels(series::Series, clims)
+    if series[:seriestype] == :contour
+        zmin, zmax = clims
+        levels = series[:levels]
+        levels isa AbstractArray ?
+            levels :
+            levels > 1 ?
+                range(zmin, stop=zmax, length=levels) : 
+                [(zmin + zmax) / 2]
+    else # including heatmap, surface
+        nothing
+    end
+end
+
+  
+
 for comp in (:line, :fill, :marker)
 
     compcolor = string(comp, :color)
