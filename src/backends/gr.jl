@@ -478,11 +478,8 @@ end
 
 const _gr_gradient_alpha = ones(256)
 
-function gr_set_gradient(c; ignore_colorant = true)
-    @show c
-    gradient(g::ColorGradient) = g
-    gradient(c::Colorant) = ignore_colorant ? cgrad() : ColorGradient([c,c])
-    grad = gradient(c)
+function gr_set_gradient(c)
+    grad = c isa ColorGradient ? c : cgrad()
     for (i,z) in enumerate(range(0, stop=1, length=256))
         c = grad[z]
         GR.setcolorrep(999+i, red(c), green(c), blue(c))
@@ -962,10 +959,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         st = series[:seriestype]
 
         # update the current stored gradient
-        if st in (:surface, :heatmap)
+        if st in (:surface, :heatmap) || 
+                (st == :contour && series[:fillrange] !== nothing)
             gr_set_gradient(series[:fillcolor]) #, series[:fillalpha])
         elseif st in (:contour, :wireframe)
-            gr_set_gradient(series[:linecolor])#, ignore_colorant=false)
+            gr_set_gradient(series[:linecolor])
         elseif series[:marker_z] != nothing
             series[:markercolor] = gr_set_gradient(series[:markercolor])
         elseif series[:line_z] !=  nothing
