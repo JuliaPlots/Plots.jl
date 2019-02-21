@@ -431,7 +431,7 @@ isvertical(series::Series) = isvertical(series.plotattributes)
 
 ticksType(ticks::AVec{T}) where {T<:Real}                      = :ticks
 ticksType(ticks::AVec{T}) where {T<:AbstractString}            = :labels
-ticksType(ticks::Tuple{T,S}) where {T<:AVec,S<:AVec}  = :ticks_and_labels
+ticksType(ticks::Tuple{T,S}) where {T<:Union{AVec,Tuple},S<:Union{AVec,Tuple}} = :ticks_and_labels
 ticksType(ticks)                                        = :invalid
 
 limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real}    = :limits
@@ -1224,8 +1224,8 @@ function _fmt_paragraph(io::IOBuffer,
                         fillwidth=60,
                         leadingspaces=0)
 
-    kwargs = (fillwidth = fillwidth, leadingspaces = leadingspaces) 
-    
+    kwargs = (fillwidth = fillwidth, leadingspaces = leadingspaces)
+
     m = match(r"(.*?) (.*)",remaining_text)
     if isa(m,Nothing)
         if column_count + length(remaining_text) ≤ fillwidth
