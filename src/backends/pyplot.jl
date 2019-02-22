@@ -1332,7 +1332,8 @@ const _pyplot_mimeformats = Dict(
     "application/pdf"         => "pdf",
     "image/png"               => "png",
     "application/postscript"  => "ps",
-    "image/svg+xml"           => "svg"
+    "image/svg+xml"           => "svg",
+    "application/x-tex"       => "pgf"
 )
 
 
