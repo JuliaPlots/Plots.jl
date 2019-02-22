@@ -26,7 +26,8 @@ const _pgfplots_markers = KW(
     :star6 => "asterisk",
     :diamond => "diamond*",
     :pentagon => "pentagon*",
-    :hline => "-"
+    :hline => "-",
+    :vline => "|"
 )
 
 const _pgfplots_legend_pos = KW(
