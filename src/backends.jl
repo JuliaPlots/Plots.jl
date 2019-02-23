@@ -417,6 +417,8 @@ const _plotly_marker = [
 ]
 const _plotly_scale = [:identity, :log10]
 
+defaultOutputFormat(plt::Plot{Plots.PlotlyBackend}) = "html"
+
 # ------------------------------------------------------------------------------
 # pgfplots
 
