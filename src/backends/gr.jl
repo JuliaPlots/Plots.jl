@@ -925,27 +925,31 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
         gr_text(xpos, viewport_subplot[4], sp[:title])
     end
-
-    if xaxis[:guide] != ""
+    if is3d(sp)
         gr_set_font(guidefont(xaxis))
-        if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
-            GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-            gr_text(gr_view_xcenter(), viewport_subplot[4], xaxis[:guide])
-        else
-            GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-            gr_text(gr_view_xcenter(), viewport_subplot[3], xaxis[:guide])
+        GR.titles3d(xaxis[:guide], yaxis[:guide], zaxis[:guide])
+    else
+        if xaxis[:guide] != ""
+            gr_set_font(guidefont(xaxis))
+            if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
+                GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+                gr_text(gr_view_xcenter(), viewport_subplot[4], xaxis[:guide])
+            else
+                GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
+                gr_text(gr_view_xcenter(), viewport_subplot[3], xaxis[:guide])
+            end
         end
-    end
 
-    if yaxis[:guide] != ""
-        gr_set_font(guidefont(yaxis))
-        GR.setcharup(-1, 0)
-        if yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
-            GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-            gr_text(viewport_subplot[2], gr_view_ycenter(), yaxis[:guide])
-        else
-            GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-            gr_text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
+        if yaxis[:guide] != ""
+            gr_set_font(guidefont(yaxis))
+            GR.setcharup(-1, 0)
+            if yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
+                GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
+                gr_text(viewport_subplot[2], gr_view_ycenter(), yaxis[:guide])
+            else
+                GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
+                gr_text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
+            end
         end
     end
     GR.restorestate()
