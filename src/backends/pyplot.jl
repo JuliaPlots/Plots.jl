@@ -1321,7 +1321,7 @@ end
 # display/output
 
 function _display(plt::Plot{PyPlotBackend})
-    plt.o[:show]()
+    plt.o.show()
 end
 
 
