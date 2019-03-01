@@ -1321,7 +1321,7 @@ end
 # display/output
 
 function _display(plt::Plot{PyPlotBackend})
-    plt.o[:show]()
+    isdefined(PyCall, :_setproperty!) ? plt.o.show() : plot.o[:show]()
 end
 
 
