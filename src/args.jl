@@ -298,6 +298,7 @@ const _plot_defaults = KW(
     :link                        => :none,
     :overwrite_figure            => true,
     :html_output_format          => :auto,
+    :tex_output_standalone       => false,
     :inset_subplots              => nothing,   # optionally pass a vector of (parent,bbox) tuples which are
                                                # the parent layout and the relative bounding box of inset subplots
     :dpi                         => DPI,        # dots per inch for images, etc
