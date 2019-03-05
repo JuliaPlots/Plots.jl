@@ -240,7 +240,7 @@ end
 # return (continuous_values, discrete_values) for the ticks on this axis
 function get_ticks(axis::Axis)
     ticks = _transform_ticks(axis[:ticks])
-    ticks in (nothing, false) && return nothing
+    ticks in (:none, nothing, false) && return nothing
 
     # treat :native ticks as :auto
     ticks = ticks == :native ? :auto : ticks
@@ -287,7 +287,7 @@ _transform_ticks(ticks::AbstractArray{T}) where T <: Dates.TimeType = Dates.valu
 _transform_ticks(ticks::NTuple{2, Any}) = (_transform_ticks(ticks[1]), ticks[2])
 
 function get_minor_ticks(axis,ticks)
-    axis[:minorticks] in (nothing, false) && !axis[:minorgrid] && return nothing
+    axis[:minorticks] in (:none, nothing, false) && !axis[:minorgrid] && return nothing
     ticks = ticks[1]
     length(ticks) < 2 && return nothing
 
