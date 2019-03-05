@@ -240,7 +240,7 @@ end
 # return (continuous_values, discrete_values) for the ticks on this axis
 function get_ticks(axis::Axis)
     ticks = _transform_ticks(axis[:ticks])
-    ticks in (nothing, false) && return nothing
+    ticks in (:none, nothing, false) && return nothing
 
     # treat :native ticks as :auto
     ticks = ticks == :native ? :auto : ticks
@@ -287,7 +287,7 @@ _transform_ticks(ticks::AbstractArray{T}) where T <: Dates.TimeType = Dates.valu
 _transform_ticks(ticks::NTuple{2, Any}) = (_transform_ticks(ticks[1]), ticks[2])
 
 function get_minor_ticks(axis,ticks)
-    axis[:minorticks] in (nothing, false) && !axis[:minorgrid] && return nothing
+    axis[:minorticks] in (:none, nothing, false) && !axis[:minorgrid] && return nothing
     ticks = ticks[1]
     length(ticks) < 2 && return nothing
 
@@ -614,14 +614,14 @@ function axis_drawing_info(sp::Subplot)
                 end
                 push!(xaxis_segs, (xmin, y1), (xmax, y1))
                 # don't show the 0 tick label for the origin framestyle
-                if sp[:framestyle] == :origin && !(xticks in (nothing,false)) && length(xticks) > 1
+                if sp[:framestyle] == :origin && !(xticks in (:none, nothing, false)) && length(xticks) > 1
                     showticks = xticks[1] .!= 0
                     xticks = (xticks[1][showticks], xticks[2][showticks])
                 end
             end
             sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin, y2), (xmax, y2)) # top spine
         end
-        if !(xaxis[:ticks] in (nothing, false))
+        if !(xaxis[:ticks] in (:none, nothing, false))
             f = scalefunc(yaxis[:scale])
             invf = invscalefunc(yaxis[:scale])
             ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
@@ -642,7 +642,7 @@ function axis_drawing_info(sp::Subplot)
                 xaxis[:grid] && push!(xgrid_segs, (xtick, ymin), (xtick, ymax)) # vertical grid
             end
         end
-        if !(xaxis[:minorticks] in (nothing, false)) || xaxis[:minorgrid]
+        if !(xaxis[:minorticks] in (:none, nothing, false)) || xaxis[:minorgrid]
             f = scalefunc(yaxis[:scale])
             invf = invscalefunc(yaxis[:scale])
             ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
@@ -675,14 +675,14 @@ function axis_drawing_info(sp::Subplot)
                 end
                 push!(yaxis_segs, (x1, ymin), (x1, ymax))
                 # don't show the 0 tick label for the origin framestyle
-                if sp[:framestyle] == :origin && !(yticks in (nothing,false)) && length(yticks) > 1
+                if sp[:framestyle] == :origin && !(yticks in (:none, nothing,false)) && length(yticks) > 1
                     showticks = yticks[1] .!= 0
                     yticks = (yticks[1][showticks], yticks[2][showticks])
                 end
             end
             sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (x2, ymin), (x2, ymax)) # right spine
         end
-        if !(yaxis[:ticks] in (nothing, false))
+        if !(yaxis[:ticks] in (:none, nothing, false))
             f = scalefunc(xaxis[:scale])
             invf = invscalefunc(xaxis[:scale])
             ticks_in = yaxis[:tick_direction] == :out ? -1 : 1
@@ -703,7 +703,7 @@ function axis_drawing_info(sp::Subplot)
                 yaxis[:grid] && push!(ygrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
             end
         end
-        if !(yaxis[:minorticks] in (nothing, false)) || yaxis[:minorgrid]
+        if !(yaxis[:minorticks] in (:none, nothing, false)) || yaxis[:minorgrid]
             f = scalefunc(xaxis[:scale])
             invf = invscalefunc(xaxis[:scale])
             ticks_in = yaxis[:tick_direction] == :out ? -1 : 1
