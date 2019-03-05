@@ -564,7 +564,7 @@ end
 
 function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsBackend})
     fn = tempname()*".tex"
-    PGFPlots.save(fn, backend_object(plt), include_preamble=false)
+    PGFPlots.save(fn, backend_object(plt), include_preamble=plt.attr[:tex_output_standalone])
     write(io, read(open(fn), String))
 end
 
