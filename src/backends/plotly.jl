@@ -186,11 +186,6 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
         ax[:tickcolor] = framestyle in (:zerolines, :grid) || !axis[:showaxis] ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
-        # flip
-        if axis[:flip]
-            ax[:range] = reverse(ax[:range])
-        end
-
         # ticks
         if axis[:ticks] != :native
             ticks = get_ticks(axis)
@@ -208,6 +203,10 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
         ax[:showgrid] = false
     end
 
+    # flip
+    if axis[:flip]
+        ax[:range] = reverse(ax[:range])
+    end
 
     ax
 end
