@@ -55,6 +55,11 @@ _show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(
 _show(io::IO, ::MIME"application/pdf", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="pdf")
 _show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="eps")
 
+function _show(io::IO, m::MIME"application/vnd.plotly.v1+json", plt::Plot{PlotlyJSBackend})
+    show(io, m, plt.o)
+end
+
+
 function write_temp_html(plt::Plot{PlotlyJSBackend})
     filename = string(tempname(), ".html")
     savefig(plt, filename)
