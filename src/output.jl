@@ -189,7 +189,7 @@ end
 # for writing to io streams... first prepare, then callback
 for mime in ("text/plain", "text/html", "image/png", "image/eps", "image/svg+xml",
              "application/eps", "application/pdf", "application/postscript",
-             "application/x-tex")
+             "application/x-tex", "application/vnd.plotly.v1+json")
     @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         if haskey(io, :juno_plotsize)
           showjuno(io, m, plt)
