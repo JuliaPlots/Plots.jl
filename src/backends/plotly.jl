@@ -853,10 +853,15 @@ end
 
 # ----------------------------------------------------------------
 
-
-function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
-    write(io, html_head(plt) * html_body(plt))
+function _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend})
+    data = []
+    for series in plot.series_list
+        append!(data, plotly_series(plot, series))
+    end
+    layout = plotly_layout(plot)
+    JSON.print(io, Dict(:data => data, :layout => layout))
 end
+
 
 function _display(plt::Plot{PlotlyBackend})
     standalone_html_window(plt)
