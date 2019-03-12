@@ -424,8 +424,8 @@ function gr_colorbar(sp::Subplot, clims, levels)
        (1000:1255)'
     elseif length(levels) > 1
         min_level, max_level = ignorenan_minimum(levels), ignorenan_maximum(levels)
-        round.(Int32, 1000 .+ (levels .- min_level) ./ (max_level - min_level) .* 255) 
-    else 
+        round.(Int32, 1000 .+ (levels .- min_level) ./ (max_level - min_level) .* 255)
+    else
         Int32[1000, 1255]
     end
     GR.setscale(0)
@@ -671,7 +671,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # calculate the colorbar limits once for a subplot
     clims = get_clims(sp)
     clevels = nothing
-    
+
     draw_axes = sp[:framestyle] != :none
     # axes_2d = true
     for series in series_list(sp)
@@ -693,7 +693,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             expand_extrema!(sp[:yaxis], y)
             data_lims = gr_xy_axislims(sp)
         end
-        
+
         # color levels overwritten by the last relevant series
         hascolorbar(series) && (clevels = colorbar_levels(series, clims))
     end
@@ -744,7 +744,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     GR.setlinewidth(sp.plt[:thickness_scaling])
 
     if is3d(sp)
-        # TODO do we really need a different clims computation here from the one 
+        # TODO do we really need a different clims computation here from the one
         #      computed above using get_clims(sp)?
         zmin, zmax = gr_lims(zaxis, true)
         clims3d = sp[:clims]
@@ -963,7 +963,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         st = series[:seriestype]
 
         # update the current stored gradient
-        if st in (:surface, :heatmap) || 
+        if st in (:surface, :heatmap) ||
                 (st == :contour && series[:fillrange] !== nothing)
             gr_set_gradient(series[:fillcolor]) #, series[:fillalpha])
         elseif st in (:contour, :wireframe)
@@ -1048,7 +1048,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setlinetype(gr_linetype[get_linestyle(series)])
             GR.setlinewidth(max(0, get_linewidth(series) / (sum(gr_plot_size) * 0.001)))
             is_lc_black = let black=plot_color(:black)
-                plot_color(series[:linecolor]) in (black,[black]) 
+                plot_color(series[:linecolor]) in (black,[black])
             end
             if series[:fillrange] != nothing
                 if series[:fillcolor] != series[:linecolor] && !is_lc_black
@@ -1191,7 +1191,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :image
             z = transpose_z(series, series[:z].surf, true)'
-            w, h = length(x), length(y)
+            w, h = size(z)
             xinds = sort(1:w, rev = xaxis[:flip])
             yinds = sort(1:h, rev = yaxis[:flip])
             z = z[xinds, yinds]
