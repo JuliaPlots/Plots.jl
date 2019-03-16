@@ -34,6 +34,11 @@ else
     :set_facecolor
 end
 
+# PyCall API changes in v1.90.0
+if !isdefined(PyCall, :_setproperty!)
+    @warn "Plots no longer supports PyCall < 1.90.0 and PyPlot < 2.8.0. Either update PyCall and PyPlot or pin Plots to a version <= 0.23.2."
+end
+
 
 # # convert colorant to 4-tuple RGBA
 # py_color(c::Colorant, α=nothing) = map(f->float(f(convertColor(c,α))), (red, green, blue, alpha))
