@@ -110,7 +110,7 @@ end
 Base.showable(::MIME"image/gif", agif::AnimatedGif) = file_extension(agif.filename) == "gif"
 
 function Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif)
-    write(io, read(agif.filename))
+    open(fio-> write(io, fio), agif.filename)
 end
 
 
