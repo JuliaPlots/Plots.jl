@@ -236,6 +236,7 @@ end
 function gr_fill_viewport(vp::AVec{Float64}, c)
     GR.savestate()
     GR.selntran(0)
+    GR.setscale(0)
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
     gr_set_fillcolor(c)
     GR.fillrect(vp...)
