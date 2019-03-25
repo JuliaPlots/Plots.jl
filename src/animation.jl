@@ -106,6 +106,14 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
 end
 
 
+# Only gifs can be shown via image/gif
+Base.showable(::MIME"image/gif", agif::AnimatedGif) = file_extension(agif.filename) == "gif"
+
+function Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif)
+    open(fio-> write(io, fio), agif.filename)
+end
+
+
 # -----------------------------------------------
 
 function _animate(forloop::Expr, args...; callgif = false)
