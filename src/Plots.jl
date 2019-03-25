@@ -1,6 +1,6 @@
 module Plots
 
-_current_plots_version = v"0.20.6"
+_current_plots_version = v"0.24.0"
 
 using Reexport
 
@@ -187,7 +187,7 @@ include("backends/plotly.jl")
 include("backends/gr.jl")
 include("backends/web.jl")
 
-include("shorthands.jl") 
+include("shorthands.jl")
 
 let PlotOrSubplot = Union{Plot, Subplot}
     global title!(plt::PlotOrSubplot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)

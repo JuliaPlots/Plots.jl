@@ -11,6 +11,51 @@
 ---
 ## (current master)
 
+## 0.24.0
+- Update to the new PyCall and PyPlot API
+
+## 0.23.2
+- pyplot fixes
+- Add option :tex_output_standalone to set the 'include_preamble' argument in the PGFPlots backend.
+- fix ticks
+- support plotly json mime
+- fix image axis limits
+- default to radius 0 at center for polar plots
+
+## 0.23.1
+- slightly faster load time
+- fixed errant MethodError
+- fix bar plots with unicodeplots
+- better colorbars for contour
+- add volume seriestype for GR
+- fix passing a tuple to custom ticks
+- add vline to pgfplots
+- add tex output for pyplot
+- better 3d axis labels for GR
+
+## 0.23.0
+- compatible with StatPlots -> StatsPlots name shift
+- fix histograms for vectors with NaN and Inf
+- change gif behaviour (remove cache-busting)
+- improved docstrings for shorthands functions
+- fix font rotation for pyplot
+- fix greyscale images for pyplot
+- clamp greyscale images with values outside 0,1
+- support keyword argument for font options
+- allow vector of markers for pyplot scatter
+
+## 0.22.5
+- improve behaviour of plotlyjs backend
+
+## 0.22.4
+- Add support for discrete contourf plots with GR
+
+## 0.22.3
+- Fix the `showtheme` function
+
+## 0.22.2
+- Allow annotations to accept a Tuple instead of the result of a text call (making it possible to specify font characteristics in recipes). E.g. `annotations = (2, 4, ("test", :right, 8, :red))` is the same as `annotations = (2, 4, text("test", :right, 8, :red))`
+
 ## 0.22.1
 - push PlotsDisplay just after REPLDisplay
 
