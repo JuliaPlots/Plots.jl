@@ -3,7 +3,7 @@ using REPL
 
 function _plots_defaults()
     if isdefined(Main, :PLOTS_DEFAULTS)
-        Main.PLOTS_DEFAULTS::Dict{Symbol,Any}
+        Dict{Symbol,Any}(Main.PLOTS_DEFAULTS)
     else
         Dict{Symbol,Any}()
     end
