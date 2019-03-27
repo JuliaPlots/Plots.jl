@@ -251,7 +251,7 @@ function get_ticks(axis::Axis)
             # discrete ticks...
             n = length(dvals)
             rng = if ticks == :auto
-                Int[round(Int,i) for i in range(1, stop=n, length=15)]
+                Int[round(Int,i) for i in range(1, stop=n, length=min(n,15))]
             else # if ticks == :all
                 1:n
             end
