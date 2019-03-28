@@ -944,13 +944,20 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if yaxis[:guide] != ""
             gr_set_font(guidefont(yaxis))
             GR.setcharup(-1, 0)
-            x_margin = 0.075 * (viewport_subplot[2] - viewport_subplot[1])
             if yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-                gr_text(viewport_plotarea[2] + x_margin, gr_view_ycenter(), yaxis[:guide])
+                if viewport_plotarea[1] - viewport_subplot[1] > 0.1
+                    gr_text(viewport_plotarea[2] + 0.025, gr_view_ycenter(), yaxis[:guide])
+                else
+                    gr_text(viewport_subplot[2], gr_view_ycenter(), yaxis[:guide])
+                end
             else
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-                gr_text(viewport_plotarea[1] - x_margin, gr_view_ycenter(), yaxis[:guide])
+                if viewport_plotarea[1] - viewport_subplot[1] > 0.1
+                    gr_text(viewport_plotarea[1] - 0.075, gr_view_ycenter(), yaxis[:guide])
+                else
+                    gr_text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
+                end
             end
         end
     end
