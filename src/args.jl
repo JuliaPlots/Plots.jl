@@ -232,6 +232,7 @@ const _bar_width = 0.8
 
 const _series_defaults = KW(
     :label             => "AUTO",
+    :colorbar_entry    => true,
     :seriescolor       => :auto,
     :seriesalpha       => nothing,
     :seriestype        => :path,

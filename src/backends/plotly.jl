@@ -506,13 +506,13 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:showscale] = hascolorbar(sp)
 
     elseif st == :contour
+        filled = isfilledcontour(series)
         plotattributes_out[:type] = "contour"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
-        # plotattributes_out[:showscale] = series[:colorbar] != :none
-        plotattributes_out[:ncontours] = series[:levels]
-        plotattributes_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines", :showlabels => series[:contour_labels] == true)
+        plotattributes_out[:ncontours] = series[:levels] + 2
+        plotattributes_out[:contours] = KW(:coloring => filled ? "fill" : "lines", :showlabels => series[:contour_labels] == true)
         plotattributes_out[:colorscale] = plotly_colorscale(series[:linecolor], series[:linealpha])
-        plotattributes_out[:showscale] = hascolorbar(sp)
+        plotattributes_out[:showscale] = hascolorbar(sp) && hascolorbar(series)
 
     elseif st in (:surface, :wireframe)
         plotattributes_out[:type] = "surface"

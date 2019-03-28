@@ -582,6 +582,9 @@ end
 _update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
 
 function hascolorbar(series::Series)
+    if get(series, :colorbar_entry, true) == false
+      return false
+    end
     st = series[:seriestype]
     hascbar = st == :heatmap
     if st == :contour
@@ -610,15 +613,20 @@ function hascolorbar(sp::Subplot)
     hascbar
 end
 
-function colorbar_levels(series::Series, clims)
-    if series[:seriestype] == :contour
+iscontour(series::Series) = series[:seriestype] == :contour
+isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
+
+function contour_levels(series::Series, clims)
+    if iscontour(series) 
         zmin, zmax = clims
         levels = series[:levels]
-        levels isa AbstractArray ?
-            levels :
-            levels > 1 ?
-                range(zmin, stop=zmax, length=levels) : 
-                [(zmin + zmax) / 2]
+        if levels isa Integer
+            levels = range(zmin, stop=zmax, length=levels+2)
+            if !isfilledcontour(series)
+                levels = levels[2:end-1]
+            end
+        end
+        levels
     else # including heatmap, surface
         nothing
     end
