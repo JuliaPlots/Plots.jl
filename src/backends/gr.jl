@@ -548,7 +548,7 @@ end
 const _gr_gradient_alpha = ones(256)
 
 function gr_set_gradient(c)
-    grad = c isa ColorGradient ? c : cgrad()
+    grad = _as_gradient(c)
     for (i,z) in enumerate(range(0, stop=1, length=256))
         c = grad[z]
         GR.setcolorrep(999+i, red(c), green(c), blue(c))

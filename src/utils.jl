@@ -273,6 +273,9 @@ _cycle(v, indices::AVec{Int})       = fill(v, length(indices))
 _cycle(grad::ColorGradient, idx::Int) = _cycle(grad.colors, idx)
 _cycle(grad::ColorGradient, indices::AVec{Int}) = _cycle(grad.colors, indices)
 
+_as_gradient(grad::ColorGradient) = grad
+_as_gradient(c::Colorant) = ColorGradient([c,c])
+
 makevec(v::AVec) = v
 makevec(v::T) where {T} = T[v]
 

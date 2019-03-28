@@ -354,7 +354,7 @@ end
 function plotly_colorscale(grad::ColorGradient, α)
     [[grad.values[i], rgba_string(plot_color(grad.colors[i], α))] for i in 1:length(grad.colors)]
 end
-plotly_colorscale(c, α) = plotly_colorscale(cgrad(alpha=α), α)
+plotly_colorscale(c::Colorant,α) = plotly_colorscale(_as_gradient(c),α)
 function plotly_colorscale(c::AbstractVector{<:RGBA}, α)
     if length(c) == 1
         return [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
