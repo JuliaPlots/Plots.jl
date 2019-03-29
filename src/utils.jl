@@ -584,55 +584,46 @@ end
 
 _update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
 
-function hascolorbar(series::Series)
-    if get(series, :colorbar_entry, true) == false
-      return false
+@enum ColorbarStyle cbar_gradient cbar_fill cbar_lines
+
+function colorbar_style(series::Series)
+    colorbar_entry = series[:colorbar_entry]
+    if !(colorbar_entry isa Bool)
+        @warn "Non-boolean colorbar_entry ignored."
+        colorbar_entry = true
     end
-    st = series[:seriestype]
-    hascbar = st == :heatmap
-    if st == :contour
-        hascbar = (isscalar(series[:levels]) ? (series[:levels] > 1) : (length(series[:levels]) > 1)) && (length(unique(Array(series[:z]))) > 1)
+    
+    if !colorbar_entry
+        nothing
+    elseif isfilledcontour(series) 
+        cbar_fill
+    elseif iscontour(series)
+        cbar_lines
+    elseif series[:seriestype] ∈ (:heatmap,:surface) || 
+            any(series[z] !== nothing for z ∈ [:marker_z,:line_z,:fill_z]) 
+        cbar_gradient
+    else
+        nothing
     end
-    if series[:marker_z] != nothing || series[:line_z] != nothing || series[:fill_z] != nothing
-        hascbar = true
-    end
-    # no colorbar if we are creating a surface LightSource
-    if xor(st == :surface, series[:fill_z] != nothing)
-        hascbar = true
-    end
-    return hascbar
 end
 
-function hascolorbar(sp::Subplot)
-    cbar = sp[:colorbar]
-    hascbar = false
-    if cbar != :none
-        for series in series_list(sp)
-            if hascolorbar(series)
-                hascbar = true
-            end
-        end
-    end
-    hascbar
-end
+hascolorbar(series::Series) = colorbar_style(series) !== nothing
+hascolorbar(sp::Subplot) = sp[:colorbar] != :none && any(hascolorbar(s) for s in series_list(sp))
 
 iscontour(series::Series) = series[:seriestype] == :contour
 isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
 
 function contour_levels(series::Series, clims)
-    if iscontour(series) 
-        zmin, zmax = clims
-        levels = series[:levels]
-        if levels isa Integer
-            levels = range(zmin, stop=zmax, length=levels+2)
-            if !isfilledcontour(series)
-                levels = levels[2:end-1]
-            end
+    iscontour(series) || error("Not a contour series")
+    zmin, zmax = clims
+    levels = series[:levels]
+    if levels isa Integer
+        levels = range(zmin, stop=zmax, length=levels+2)
+        if !isfilledcontour(series)
+            levels = levels[2:end-1]
         end
-        levels
-    else # including heatmap, surface
-        nothing
     end
+    levels
 end
 
   

@@ -415,32 +415,30 @@ function gr_set_viewport_polar()
     r
 end
 
-mutable struct GRColorbar
-    heatmapseries::Union{Series,Nothing}
-    fillseries::Union{Series,Nothing}
-    linesseries::Union{Series,Nothing}
+struct GRColorbar
+    gradient::Ref{Union{Series,Nothing}}
+    fill::Ref{Union{Series,Nothing}}
+    lines::Ref{Union{Series,Nothing}}
     GRColorbar() = new(nothing,nothing,nothing)
 end
 
 function gr_update_colorbar!(cbar::GRColorbar, series::Series)
-    if iscontour(series)
-        if isfilledcontour(series)
-            cbar.fillseries = series
-        else
-            cbar.linesseries = series
-        end
-    elseif series[:seriestype] == :heatmap
-        cbar.heatmapseries = series
+    style = colorbar_style(series)
+    style === nothing && return
+    ref = style == cbar_gradient ? cbar.gradient :
+          style == cbar_fill ? cbar.fill :
+          style == cbar_lines ? cbar.lines :
+          error("Unknown colorbar style: $style.")
+    if ref[] !== nothing
+        @warn "Overwriting colorbar entry"
     end
+    ref[] = series
 end
 
 function gr_contour_levels(series::Series, clims)
     levels = contour_levels(series, clims)
     if isfilledcontour(series)
         # GR implicitly uses the maximal z value as the highest level
-        if levels[end] < clims[2]
-            @warn("GR: highest contour level less than maximal z value is not supported.")
-        end
         levels = levels[1:end-1]
     end
     levels
@@ -471,16 +469,22 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
     gr_set_viewport_cmap(sp)
     GR.setscale(0)
     GR.setwindow(xmin, xmax, zmin, zmax)
-    if (hm = cbar.heatmapseries) !== nothing
-        gr_set_gradient!(hm)
-        # TODO should use z limits of the specific series
+    if (series = cbar.gradient[]) !== nothing
+        gr_set_gradient(series)
         GR.cellarray(xmin, xmax, zmax, zmin, 1, 256, 1000:1255)
     end
 
-    if (series = cbar.fillseries) !== nothing
-        gr_set_gradient!(cbar.fillseries)
+    if (series = cbar.fill[]) !== nothing
+        gr_set_gradient(series)
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
         levels = contour_levels(series, clims)
+        # GR implicitly uses the maximal z value as the highest level
+        if levels[end] < clims[2]
+            @warn("GR: highest contour level less than maximal z value is not supported.")
+            # replace levels, rather than assign to levels[end], to ensure type
+            # promotion in case levels is an integer array
+            levels = [levels[1:end-1]; clims[2]]
+        end
         colors = gr_colorbar_colors(series, clims)
         for (from, to, color) in zip(levels[1:end-1], levels[2:end], colors)
             GR.setfillcolorind(color)
@@ -488,8 +492,8 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
         end
     end
 
-    if (series = cbar.linesseries) !== nothing
-        gr_set_gradient!(series)
+    if (series = cbar.lines[]) !== nothing
+        gr_set_gradient(series)
         gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series, clims))
         levels = contour_levels(series, clims)
         colors = gr_colorbar_colors(series, clims)
@@ -557,18 +561,18 @@ function gr_set_gradient(c)
     grad
 end
 
-function gr_set_gradient!(series::Series)
+function gr_set_gradient(series::Series)
     st = series[:seriestype]
     if st in (:surface, :heatmap) || isfilledcontour(series)
         gr_set_gradient(series[:fillcolor])
     elseif st in (:contour, :wireframe)
         gr_set_gradient(series[:linecolor])
     elseif series[:marker_z] != nothing
-        series[:markercolor] = gr_set_gradient(series[:markercolor])
+        gr_set_gradient(series[:markercolor])
     elseif series[:line_z] !=  nothing
-        series[:linecolor] = gr_set_gradient(series[:linecolor])
+        gr_set_gradient(series[:linecolor])
     elseif series[:fill_z] != nothing
-        series[:fillcolor] = gr_set_gradient(series[:fillcolor])
+        gr_set_gradient(series[:fillcolor])
     end
 end
 
@@ -778,7 +782,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             data_lims = gr_xy_axislims(sp)
         end
 
-        hascolorbar(series) && gr_update_colorbar!(cbar,series)
+        gr_update_colorbar!(cbar,series)
     end
 
     # set our plot area view
@@ -1046,8 +1050,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     for (idx, series) in enumerate(series_list(sp))
         st = series[:seriestype]
         
-        # update the current stored gradient and the series
-        gr_set_gradient!(series)
+        # update the current stored gradient
+        gr_set_gradient(series)
 
         GR.savestate()
 
