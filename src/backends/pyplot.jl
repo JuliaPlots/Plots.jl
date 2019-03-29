@@ -1013,6 +1013,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 cmap."set_array"([])
                 handle = cmap
             end
+            kw[:spacing] = "proportional"
 
             # create and store the colorbar object (handle) and the axis that it is drawn on.
             # note: the colorbar axis is positioned independently from the subplot axis
