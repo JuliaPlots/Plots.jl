@@ -1061,7 +1061,7 @@ end
 
 # -------------------------------------------------
 
-"Adds a+bx... straight line over the current plot, without changing the axis limits"
+"Adds ax+b... straight line over the current plot, without changing the axis limits"
 abline!(plt::Plot, a, b; kw...) = plot!(plt, [0, 1], [b, b+a]; seriestype = :straightline, kw...)
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
