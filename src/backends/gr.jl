@@ -1428,16 +1428,7 @@ const _gr_mimeformats = Dict(
     "image/svg+xml"           => "svg",
 )
 
-const _gr_wstype_default = @static if Sys.islinux()
-    "x11"
-    # "cairox11"
-elseif Sys.isapple()
-    "quartz"
-else
-    "use_default"
-end
-
-const _gr_wstype = Ref(get(ENV, "GKSwstype", _gr_wstype_default))
+const _gr_wstype = Ref(get(ENV, "GKSwstype", ""))
 gr_set_output(wstype::String) = (_gr_wstype[] = wstype)
 
 for (mime, fmt) in _gr_mimeformats
@@ -1472,7 +1463,7 @@ function _display(plt::Plot{GRBackend})
         rm(filepath)
     else
         ENV["GKS_DOUBLE_BUF"] = true
-        if _gr_wstype[] != "use_default"
+        if _gr_wstype[] != ""
             ENV["GKSwstype"] = _gr_wstype[]
         end
         gr_display(plt)
