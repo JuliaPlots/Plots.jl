@@ -449,7 +449,7 @@ yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip
 "Specify x axis attributes for an existing plot"
 xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
 
-"Specify x axis attributes for an existing plot"
+"Specify y axis attributes for an existing plot"
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
 xgrid!(args...; kw...)                                    = plot!(; xgrid = args, kw...)
 ygrid!(args...; kw...)                                    = plot!(; ygrid = args, kw...)
