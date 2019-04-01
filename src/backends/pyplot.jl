@@ -73,7 +73,7 @@ function py_colormap(grad::ColorGradient)
     cm."set_bad"(color=(0,0,0,0.0), alpha=0.0)
     cm
 end
-py_colormap(c) = py_colormap(cgrad())
+py_colormap(c::Colorant) = py_colormap(_as_gradient(c))
 
 
 function py_shading(c, z)
@@ -1013,6 +1013,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 cmap."set_array"([])
                 handle = cmap
             end
+            kw[:spacing] = "proportional"
 
             # create and store the colorbar object (handle) and the axis that it is drawn on.
             # note: the colorbar axis is positioned independently from the subplot axis

@@ -232,6 +232,7 @@ const _bar_width = 0.8
 
 const _series_defaults = KW(
     :label             => "AUTO",
+    :colorbar_entry    => true,
     :seriescolor       => :auto,
     :seriesalpha       => nothing,
     :seriestype        => :path,
@@ -1509,19 +1510,19 @@ function has_black_border_for_default(st::Symbol)
     like_histogram(st) || st in (:hexbin, :bar, :shape)
 end
 
-
-# converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
-function getSeriesRGBColor(c, sp::Subplot, n::Int)
+# converts a symbol or string into a Colorant or ColorGradient
+# and assigns a color automatically
+function get_series_color(c, sp::Subplot, n::Int, seriestype)
     if c == :auto
-        c = autopick(sp[:color_palette], n)
+        c = like_surface(seriestype) ? cgrad() : autopick(sp[:color_palette], n)
     elseif isa(c, Int)
         c = autopick(sp[:color_palette], c)
     end
     plot_color(c)
 end
 
-function getSeriesRGBColor(c::AbstractArray, sp::Subplot, n::Int)
-    map(x->getSeriesRGBColor(x, sp, n), c)
+function get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype)
+    map(x->get_series_color(x, sp, n), c, seriestype)
 end
 
 function ensure_gradient!(plotattributes::KW, csym::Symbol, asym::Symbol)
@@ -1566,21 +1567,23 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     end
 
     # update series color
-    plotattributes[:seriescolor] = getSeriesRGBColor(plotattributes[:seriescolor], sp, plotIndex)
+    scolor = plotattributes[:seriescolor] 
+    stype = plotattributes[:seriestype]
+    plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
     # update other colors
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
         plotattributes[csym] = if plotattributes[csym] == :auto
-            plot_color(if has_black_border_for_default(plotattributes[:seriestype]) && s == :line
+            plot_color(if has_black_border_for_default(stype) && s == :line
                 sp[:foreground_color_subplot]
             else
-                plotattributes[:seriescolor]
+                scolor
             end)
         elseif plotattributes[csym] == :match
-            plot_color(plotattributes[:seriescolor])
+            plot_color(scolor)
         else
-            getSeriesRGBColor(plotattributes[csym], sp, plotIndex)
+            get_series_color(plotattributes[csym], sp, plotIndex, stype)
         end
     end
 
@@ -1588,9 +1591,9 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] == :match
         plot_color(sp[:foreground_color_subplot])
     elseif plotattributes[:markerstrokecolor] == :auto
-        getSeriesRGBColor(plotattributes[:markercolor], sp, plotIndex)
+        get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
     else
-        getSeriesRGBColor(plotattributes[:markerstrokecolor], sp, plotIndex)
+        get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient

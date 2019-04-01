@@ -273,6 +273,9 @@ _cycle(v, indices::AVec{Int})       = fill(v, length(indices))
 _cycle(grad::ColorGradient, idx::Int) = _cycle(grad.colors, idx)
 _cycle(grad::ColorGradient, indices::AVec{Int}) = _cycle(grad.colors, indices)
 
+_as_gradient(grad::ColorGradient) = grad
+_as_gradient(c::Colorant) = ColorGradient([c,c])
+
 makevec(v::AVec) = v
 makevec(v::T) where {T} = T[v]
 
@@ -581,47 +584,46 @@ end
 
 _update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
 
-function hascolorbar(series::Series)
-    st = series[:seriestype]
-    hascbar = st == :heatmap
-    if st == :contour
-        hascbar = (isscalar(series[:levels]) ? (series[:levels] > 1) : (length(series[:levels]) > 1)) && (length(unique(Array(series[:z]))) > 1)
-    end
-    if series[:marker_z] != nothing || series[:line_z] != nothing || series[:fill_z] != nothing
-        hascbar = true
-    end
-    # no colorbar if we are creating a surface LightSource
-    if xor(st == :surface, series[:fill_z] != nothing)
-        hascbar = true
-    end
-    return hascbar
-end
+@enum ColorbarStyle cbar_gradient cbar_fill cbar_lines
 
-function hascolorbar(sp::Subplot)
-    cbar = sp[:colorbar]
-    hascbar = false
-    if cbar != :none
-        for series in series_list(sp)
-            if hascolorbar(series)
-                hascbar = true
-            end
-        end
+function colorbar_style(series::Series)
+    colorbar_entry = series[:colorbar_entry]
+    if !(colorbar_entry isa Bool)
+        @warn "Non-boolean colorbar_entry ignored."
+        colorbar_entry = true
     end
-    hascbar
-end
-
-function colorbar_levels(series::Series, clims)
-    if series[:seriestype] == :contour
-        zmin, zmax = clims
-        levels = series[:levels]
-        levels isa AbstractArray ?
-            levels :
-            levels > 1 ?
-                range(zmin, stop=zmax, length=levels) : 
-                [(zmin + zmax) / 2]
-    else # including heatmap, surface
+    
+    if !colorbar_entry
+        nothing
+    elseif isfilledcontour(series) 
+        cbar_fill
+    elseif iscontour(series)
+        cbar_lines
+    elseif series[:seriestype] ∈ (:heatmap,:surface) || 
+            any(series[z] !== nothing for z ∈ [:marker_z,:line_z,:fill_z]) 
+        cbar_gradient
+    else
         nothing
     end
+end
+
+hascolorbar(series::Series) = colorbar_style(series) !== nothing
+hascolorbar(sp::Subplot) = sp[:colorbar] != :none && any(hascolorbar(s) for s in series_list(sp))
+
+iscontour(series::Series) = series[:seriestype] == :contour
+isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
+
+function contour_levels(series::Series, clims)
+    iscontour(series) || error("Not a contour series")
+    zmin, zmax = clims
+    levels = series[:levels]
+    if levels isa Integer
+        levels = range(zmin, stop=zmax, length=levels+2)
+        if !isfilledcontour(series)
+            levels = levels[2:end-1]
+        end
+    end
+    levels
 end
 
   
