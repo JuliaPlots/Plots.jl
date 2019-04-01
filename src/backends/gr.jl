@@ -923,7 +923,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if xaxis[:showaxis]
             if sp[:framestyle] in (:zerolines, :grid)
                 gr_set_line(1, :solid, xaxis[:foreground_color_grid])
-                gr_set_transparency(xaxis[:gridalpha])
+                gr_set_transparency(xaxis[:tick_direction] == :out ? xaxis[:gridalpha] : 0)
             else
                 gr_set_line(1, :solid, xaxis[:foreground_color_axis])
             end
@@ -933,7 +933,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if  yaxis[:showaxis]
             if sp[:framestyle] in (:zerolines, :grid)
                 gr_set_line(1, :solid, yaxis[:foreground_color_grid])
-                gr_set_transparency(yaxis[:gridalpha])
+                gr_set_transparency(yaxis[:tick_direction] == :out ? yaxis[:gridalpha] : 0)
             else
                 gr_set_line(1, :solid, yaxis[:foreground_color_axis])
             end
