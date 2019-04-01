@@ -79,7 +79,7 @@ gr_set_fillcolor(c)   = GR.setfillcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
-function gr_set_transparency(::Nothing) end
+gr_set_transparency(::Nothing) = GR.settransparency(1)
 
 # --------------------------------------------------------------------------------------
 
@@ -442,8 +442,8 @@ function gr_contour_levels(series::Series, clims)
         levels = levels[1:end-1]
     end
     levels
-end    
-    
+end
+
 function gr_colorbar_colors(series::Series, clims)
     if iscontour(series)
         levels = gr_contour_levels(series, clims)
@@ -471,6 +471,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
     GR.setwindow(xmin, xmax, zmin, zmax)
     if (series = cbar.gradient[]) !== nothing
         gr_set_gradient(series)
+        gr_set_transparency(get_fillalpha(series))
         GR.cellarray(xmin, xmax, zmax, zmin, 1, 256, 1000:1255)
     end
 
@@ -488,6 +489,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
         colors = gr_colorbar_colors(series, clims)
         for (from, to, color) in zip(levels[1:end-1], levels[2:end], colors)
             GR.setfillcolorind(color)
+            gr_set_transparency(get_fillalpha(series))
             GR.fillrect( xmin, xmax, from, to )
         end
     end
@@ -495,6 +497,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
     if (series = cbar.lines[]) !== nothing
         gr_set_gradient(series)
         gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series, clims))
+        gr_set_transparency(get_linealpha(series))
         levels = contour_levels(series, clims)
         colors = gr_colorbar_colors(series, clims)
         for (line, color) in zip(levels, colors)
@@ -502,7 +505,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
             GR.polyline([xmin,xmax], [line,line] )
         end
     end
-    
+
     ztick = 0.5 * GR.tick(zmin, zmax)
     gr_set_line(1, :solid, plot_color(:black))
     GR.axes(0, ztick, xmax, zmin, 0, 1, 0.005)
@@ -1056,7 +1059,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     for (idx, series) in enumerate(series_list(sp))
         st = series[:seriestype]
-        
+
         # update the current stored gradient
         gr_set_gradient(series)
 
