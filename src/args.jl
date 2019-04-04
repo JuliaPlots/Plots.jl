@@ -1522,7 +1522,7 @@ function get_series_color(c, sp::Subplot, n::Int, seriestype)
 end
 
 function get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype)
-    map(x->get_series_color(x, sp, n), c, seriestype)
+    map(x->get_series_color(x, sp, n, seriestype), c)
 end
 
 function ensure_gradient!(plotattributes::KW, csym::Symbol, asym::Symbol)
@@ -1567,7 +1567,7 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     end
 
     # update series color
-    scolor = plotattributes[:seriescolor] 
+    scolor = plotattributes[:seriescolor]
     stype = plotattributes[:seriestype]
     plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
