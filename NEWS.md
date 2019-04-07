@@ -11,8 +11,14 @@
 ---
 ## (current master)
 
+## 0.25.0
+- Replace StaticArrays with GeometryTypes
+- Contour fixes for GR
+
 ## 0.24.0
 - Update to the new PyCall and PyPlot API
+- fix drawing of ticks
+- fix y label position with GR
 
 ## 0.23.2
 - pyplot fixes
