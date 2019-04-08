@@ -1,10 +1,10 @@
 module Plots
 
-_current_plots_version = v"0.24.0"
+_current_plots_version = v"0.25.0"
 
 using Reexport
 
-import StaticArrays
+import GeometryTypes
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
 import SparseArrays: findnz
 

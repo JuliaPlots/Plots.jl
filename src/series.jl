@@ -554,7 +554,7 @@ end
 #
 #
 # # --------------------------------------------------------------------
-# # Lists of tuples and StaticArrays
+# # Lists of tuples and GeometryTypes.Points
 # # --------------------------------------------------------------------
 #
 # # if we get an unhandled tuple, just splat it in
@@ -576,14 +576,14 @@ end
 
 
 #
-# # 2D StaticArrays
-@recipe f(xy::AVec{StaticArrays.SVector{2,T}}) where {T<:Number} = unzip(xy)
-@recipe f(xy::StaticArrays.SVector{2,T}) where {T<:Number}       = [xy[1]], [xy[2]]
+# # 2D Points
+@recipe f(xy::AVec{GeometryTypes.Point{2,T}}) where {T<:Number} = unzip(xy)
+@recipe f(xy::GeometryTypes.Point{2,T}) where {T<:Number}       = [xy[1]], [xy[2]]
 
 #
-# # 3D StaticArrays
-@recipe f(xyz::AVec{StaticArrays.SVector{3,T}}) where {T<:Number} = unzip(xyz)
-@recipe f(xyz::StaticArrays.SVector{3,T}) where {T<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
+# # 3D Points
+@recipe f(xyz::AVec{GeometryTypes.Point{3,T}}) where {T<:Number} = unzip(xyz)
+@recipe f(xyz::GeometryTypes.Point{3,T}) where {T<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
 
 #
 # # --------------------------------------------------------------------

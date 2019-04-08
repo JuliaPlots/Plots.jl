@@ -1,7 +1,7 @@
 
 
-const P2 = StaticArrays.SVector{2,Float64}
-const P3 = StaticArrays.SVector{3,Float64}
+const P2 = GeometryTypes.Point2{Float64}
+const P3 = GeometryTypes.Point3{Float64}
 
 nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
 nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
@@ -261,13 +261,13 @@ end
 Create a Font from a list of features. Values may be specified either as
 arguments (which are distinguished by type/value) or as keyword arguments.
 # Arguments
-- `family`: AbstractString. "serif" or "sans-serif" or "monospace" 
+- `family`: AbstractString. "serif" or "sans-serif" or "monospace"
 - `pointsize`: Integer. Size of font in points
 - `halign`: Symbol. Horizontal alignment (:hcenter, :left, or :right)
 - `valign`: Symbol. Vertical aligment (:vcenter, :top, or :bottom)
 - `rotation`: Real. Angle of rotation for text in degrees (use a non-integer type)
 - `color`: Colorant or Symbol
-# Examples 
+# Examples
 ```julia-repl
 julia> font(8)
 julia> font(family="serif",halign=:center,rotation=45.0)
@@ -388,8 +388,8 @@ PlotText(str) = PlotText(string(str), font())
 """
     text(string, args...; kw...)
 
-Create a PlotText object wrapping a string with font info, for plot annotations. 
-`args` and `kw` are passed to `font`. 
+Create a PlotText object wrapping a string with font info, for plot annotations.
+`args` and `kw` are passed to `font`.
 """
 text(t::PlotText) = t
 text(t::PlotText, font::Font) = PlotText(t.str, font)
@@ -779,7 +779,7 @@ end
 
 # -----------------------------------------------------------------------
 "create a BezierCurve for plotting"
-mutable struct BezierCurve{T <: StaticArrays.SVector}
+mutable struct BezierCurve{T <: GeometryTypes.Point}
     control_points::Vector{T}
 end
 
@@ -791,9 +791,6 @@ function (bc::BezierCurve)(t::Real)
     end
     p
 end
-
-# mean(x::Real, y::Real) = 0.5*(x+y) #commented out as I cannot see this used anywhere and it overwrites a Base method with different functionality
-# mean{N,T<:Real}(ps::StaticArrays.SVector{N,T}...) = sum(ps) / length(ps) # I also could not see this used anywhere, and it's type piracy - implementing a NaNMath version for this would just involve converting to a standard array
 
 @deprecate curve_points coords
 
