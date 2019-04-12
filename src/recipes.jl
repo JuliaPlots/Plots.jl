@@ -76,7 +76,7 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
         end
     end
 
-    # a tuple as fillrange has to be handed differently
+    # a tuple as fillrange has to be handled differently
     if typeof(plotattributes[:fillrange]) <: Tuple
         lower, upper = plotattributes[:fillrange]
         if typeof(lower) <: AVec
