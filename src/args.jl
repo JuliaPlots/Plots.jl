@@ -737,6 +737,10 @@ function processMarkerArg(plotattributes::KW, arg)
     elseif allAlphas(arg)
         plotattributes[:markeralpha] = arg
 
+    # bool
+    elseif typeof(arg) <: Bool
+        plotattributes[:markershape] = arg ? :auto : :none
+
     # markersize
     elseif allReals(arg)
         plotattributes[:markersize] = arg
