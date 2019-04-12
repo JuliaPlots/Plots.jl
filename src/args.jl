@@ -739,7 +739,7 @@ function processMarkerArg(plotattributes::KW, arg)
 
     # bool
     elseif typeof(arg) <: Bool
-        plotattributes[:markershape] = arg ? :auto : :none
+        plotattributes[:markershape] = arg ? :circle : :none
 
     # markersize
     elseif allReals(arg)
