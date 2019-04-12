@@ -53,10 +53,41 @@ RecipesBase.apply_recipe(plotattributes::KW, ::Type{T}, plt::AbstractPlot) where
 
 
 # for seriestype `line`, need to sort by x values
+
+const POTENTIAL_VECTOR_ARGUMENTS = [
+    :seriescolor, :seriesalpha,
+    :linecolor, :linealpha, :linewidth, :linestyle, :line_z,
+    :fillcolor, :fillalpha, :fill_z,
+    :markercolor, :markeralpha, :markershape, :marker_z,
+    :markerstrokecolor, :markerstrokealpha,
+    :yerror, :yerror,
+    :series_annotations, :fillrange
+]
+
 @recipe function f(::Type{Val{:line}}, x, y, z)
     indices = sortperm(x)
     x := x[indices]
     y := y[indices]
+
+    # sort vector arguments
+    for arg in POTENTIAL_VECTOR_ARGUMENTS
+        if typeof(plotattributes[arg]) <: AVec
+            plotattributes[arg] = _cycle(plotattributes[arg], indices)
+        end
+    end
+
+    # a tuple as fillrange has to be handled differently
+    if typeof(plotattributes[:fillrange]) <: Tuple
+        lower, upper = plotattributes[:fillrange]
+        if typeof(lower) <: AVec
+            lower = _cycle(lower, indices)
+        end
+        if typeof(upper) <: AVec
+            upper = _cycle(upper, indices)
+        end
+        plotattributes[:fillrange] = (lower, upper)
+    end
+
     if typeof(z) <: AVec
         z := z[indices]
     end
