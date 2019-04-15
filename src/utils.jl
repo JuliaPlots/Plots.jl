@@ -814,24 +814,24 @@ function debugplots(on = true)
   _debugMode.on = on
 end
 
-debugshow(x) = show(x)
-debugshow(x::AbstractArray) = print(summary(x))
+debugshow(io, x) = show(io, x)
+debugshow(io, x::AbstractArray) = print(io, summary(x))
 
-function dumpdict(plotattributes::KW, prefix = "", alwaysshow = false)
+function dumpdict(io::IO, plotattributes::KW, prefix = "", alwaysshow = false)
   _debugMode.on || alwaysshow || return
-  println()
+  println(io)
   if prefix != ""
-    println(prefix, ":")
+    println(io, prefix, ":")
   end
   for k in sort(collect(keys(plotattributes)))
     @printf("%14s: ", k)
-    debugshow(plotattributes[k])
-    println()
+    debugshow(io, plotattributes[k])
+    println(io)
   end
-  println()
+  println(io)
 end
-DD(plotattributes::KW, prefix = "") = dumpdict(plotattributes, prefix, true)
-
+DD(io::IO, plotattributes::KW, prefix = "") = dumpdict(io, plotattributes, prefix, true)
+DD(plotattributes::KW, prefix = "") = DD(stdout, plotattributes, prefix)
 
 function dumpcallstack()
   error()  # well... you wanted the stacktrace, didn't you?!?

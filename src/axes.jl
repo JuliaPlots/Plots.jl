@@ -117,7 +117,7 @@ end
 
 # -------------------------------------------------------------------------
 
-Base.show(io::IO, axis::Axis) = dumpdict(axis.plotattributes, "Axis", true)
+Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis", true)
 # Base.getindex(axis::Axis, k::Symbol) = getindex(axis.plotattributes, k)
 Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.plotattributes, v, ks...)
 Base.haskey(axis::Axis, k::Symbol) = haskey(axis.plotattributes, k)
