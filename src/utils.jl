@@ -819,16 +819,16 @@ debugshow(io, x::AbstractArray) = print(io, summary(x))
 
 function dumpdict(io::IO, plotattributes::KW, prefix = "", alwaysshow = false)
   _debugMode.on || alwaysshow || return
-  println()
+  println(io)
   if prefix != ""
-    println(prefix, ":")
+    println(io, prefix, ":")
   end
   for k in sort(collect(keys(plotattributes)))
     @printf("%14s: ", k)
     debugshow(io, plotattributes[k])
-    println()
+    println(io)
   end
-  println()
+  println(io)
 end
 DD(io::IO, plotattributes::KW, prefix = "") = dumpdict(io, plotattributes, prefix, true)
 DD(plotattributes::KW, prefix = "") = DD(stdout, plotattributes, prefix)
