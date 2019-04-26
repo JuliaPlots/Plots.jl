@@ -171,7 +171,7 @@ function pgf_series(sp::Subplot, series::Series)
     elseif st == :shape
         shape_data(series)
     elseif ispolar(sp)
-        theta, r = filter_radial_data(plotattributes[:x], plotattributes[:y], axis_limits(sp[:yaxis]))
+        theta, r = plotattributes[:x], plotattributes[:y]
         rad2deg.(theta), r
     else
         plotattributes[:x], plotattributes[:y]
