@@ -376,6 +376,18 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     elseif st == :shape
         x, y = shape_data(series)
     end
+
+    if ispolar(series)
+        # make negative radii positive and flip the angle
+        # (PyPlot ignores negative radii)
+        for i in eachindex(y)
+            if y[i] < 0
+                y[i] = -y[i]
+                x[i] -= π
+            end
+        end
+    end
+
     xyargs = (st in _3dTypes ? (x,y,z) : (x,y))
 
     # handle zcolor and get c/cmap
