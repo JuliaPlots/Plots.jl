@@ -528,7 +528,12 @@ function gr_legend_pos(s::Symbol,w,h)
         str = "topright"
     end
     if occursin("right", str)
-        xpos = viewport_plotarea[2] - 0.05 - w
+        if occursin("outer", str)
+            # As per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
+            xpos = viewport_plotarea[2] + 0.11
+        else
+            xpos = viewport_plotarea[2] - 0.05 - w
+        end
     elseif occursin("left", str)
         xpos = viewport_plotarea[1] + 0.11
     else
@@ -750,6 +755,43 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             viewport_plotarea[3] = viewport_center - 0.5 * viewport_size
             viewport_plotarea[4] = viewport_center + 0.5 * viewport_size
         end
+    end
+
+    # calculate legend size
+    # has to be done now due to a potential adjustment to the plotarea given an outer legend.
+    legendn = 0
+    legendw = 0
+    legendi = 0
+    if sp[:legend] != :none
+        GR.savestate()
+        GR.selntran(0)
+        GR.setscale(0)
+        gr_set_font(legendfont(sp))
+        if sp[:legendtitle] != nothing
+            tbx, tby = gr_inqtext(0, 0, string(sp[:legendtitle]))
+            legendw = tbx[3] - tbx[1]
+            legendn += 1
+        end
+        for series in series_list(sp)
+            should_add_to_legend(series) || continue
+            legendn += 1
+            if typeof(series[:label]) <: Array
+                legendi += 1
+                lab = series[:label][i]
+            else
+                lab = series[:label]
+            end
+            tbx, tby = gr_inqtext(0, 0, string(lab))
+            legendw = max(legendw, tbx[3] - tbx[1])
+        end
+        
+        GR.setscale(1)
+        GR.selntran(1)
+        GR.restorestate()
+    end
+
+    if occursin("outer", string(sp[:legend]))
+        viewport_plotarea[2] -= legendw + 0.1
     end
 
     # fill in the plot area background
@@ -1313,26 +1355,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.selntran(0)
         GR.setscale(0)
         gr_set_font(legendfont(sp))
-        w = 0
-        i = 0
-        n = 0
-        if sp[:legendtitle] != nothing
-            tbx, tby = gr_inqtext(0, 0, string(sp[:legendtitle]))
-            w = tbx[3] - tbx[1]
-            n += 1
-        end
-        for series in series_list(sp)
-            should_add_to_legend(series) || continue
-            n += 1
-            if typeof(series[:label]) <: Array
-                i += 1
-                lab = series[:label][i]
-            else
-                lab = series[:label]
-            end
-            tbx, tby = gr_inqtext(0, 0, string(lab))
-            w = max(w, tbx[3] - tbx[1])
-        end
+        w = legendw
+        i = legendi
+        n = legendn
         if w > 0
             dy = _gr_point_mult[1] * sp[:legendfontsize] * 1.75
             h = dy*n
