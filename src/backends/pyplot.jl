@@ -1251,6 +1251,12 @@ const _pyplot_legend_pos = KW(
     :topleft => "upper left"
   )
 
+py_legend_pos(pos::Symbol) = get(_pyplot_legend_pos, pos, "best")
+py_legend_pos(pos) = "lower left"
+
+py_legend_bbox(pos::Symbol) = (0, 0, 1, 1)
+py_legend_bbox(pos) = pos
+
 function py_add_legend(plt::Plot, sp::Subplot, ax)
     leg = sp[:legend]
     clims = get_clims(sp)
@@ -1288,7 +1294,8 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
         if !isempty(handles)
             leg = ax."legend"(handles,
                 labels,
-                loc = get(_pyplot_legend_pos, leg, "best"),
+                loc = py_legend_pos(leg),
+                bbox_to_anchor = py_legend_bbox(leg),
                 scatterpoints = 1,
                 fontsize = py_thickness_scale(plt, sp[:legendfontsize]),
                 facecolor = py_color(sp[:background_color_legend]),

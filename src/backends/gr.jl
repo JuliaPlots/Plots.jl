@@ -784,7 +784,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             tbx, tby = gr_inqtext(0, 0, string(lab))
             legendw = max(legendw, tbx[3] - tbx[1])
         end
-        
+
         GR.setscale(1)
         GR.selntran(1)
         GR.restorestate()
