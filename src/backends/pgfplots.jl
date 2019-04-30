@@ -399,8 +399,12 @@ function pgf_axis(sp::Subplot, letter)
     # framestyle
     if framestyle in (:axes, :origin)
         axispos = framestyle == :axes ? "left" : "middle"
-        # the * after lines disables the arrows at the axes
-        push!(style, string("axis lines* = ", axispos))
+        if axis[:draw_arrow]
+            push!(style, string("axis ", letter, " line = ", axispos))
+        else
+            # the * after line disables the arrow at the axis
+            push!(style, string("axis ", letter, " line* = ", axispos))
+        end
     end
 
     if framestyle == :zerolines

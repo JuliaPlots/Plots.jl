@@ -392,6 +392,7 @@ const _axis_defaults = KW(
     :minorgrid                => false,
     :showaxis                 => true,
     :widen                    => true,
+    :draw_arrow               => false,
 )
 
 const _suppress_warnings = Set{Symbol}([
