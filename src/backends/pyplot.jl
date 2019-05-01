@@ -1268,29 +1268,19 @@ const _pyplot_legend_pos_outer = KW(
 py_legend_pos(pos::Symbol) = get(_pyplot_legend_pos, pos, get(_pyplot_legend_pos_outer, pos, "best"))
 py_legend_pos(pos) = "lower left"
 
-function py_legend_bbox_outer(pos, ax)
-    pos_str = string(pos)
-    hor = if occursin("left", pos_str)
-        -0.15
-    elseif occursin("right", pos_str)
-        1.0
-    else
-        0.5
-    end
-    ver = if pos == :outerbottom
-        -0.15
-    elseif occursin("bottom", pos_str)
-        0.0
-    elseif occursin("top", pos_str)
-        1.0
-    else
-        0.5
-    end
-    return hor, ver, 0.0, 0.0
-end
+const _pyplot_legend_bbox_outer = KW(
+    :outerright => (1.0, 0.5, 0.0, 0.0),
+    :outerleft => (-0.15, 0.5, 0.0, 0.0),
+    :outertop => (0.5, 1.0, 0.0, 0.0),
+    :outerbottom => (0.5, -0.15, 0.0, 0.0),
+    :outerbottomleft => (-0.15, 0.0, 0.0, 0.0),
+    :outerbottomright => (1.0, 0.0, 0.0, 0.0),
+    :outertopright => (1.0, 1.0, 0.0, 0.0),
+    :outertopleft => (-0.15, 1.0, 0.0, 0.0)
+)
 
-py_legend_bbox(pos::Symbol, ax) = pos in keys(_pyplot_legend_pos_outer) ? py_legend_bbox_outer(pos, ax) : (0.0, 0.0, 1.0, 1.0)
-py_legend_bbox(pos, ax) = pos
+py_legend_bbox(pos::Symbol) = get(_pyplot_legend_bbox_outer, pos, (0.0, 0.0, 1.0, 1.0))
+py_legend_bbox(pos) = pos
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
     leg = sp[:legend]
@@ -1330,7 +1320,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             leg = ax."legend"(handles,
                 labels,
                 loc = py_legend_pos(leg),
-                bbox_to_anchor = py_legend_bbox(leg, ax),
+                bbox_to_anchor = py_legend_bbox(leg),
                 scatterpoints = 1,
                 fontsize = py_thickness_scale(plt, sp[:legendfontsize]),
                 facecolor = py_color(sp[:background_color_legend]),
