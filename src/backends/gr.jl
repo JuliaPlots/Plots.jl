@@ -715,18 +715,18 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         flip, mirror = gr_set_xticks_font(sp)
         l = last(gr_get_ticks_size(xticks, sp[:xaxis][:rotation]))
         if mirror
-            toppad += 1mm + gr_plot_size[2] * l * px
+            toppad += 1mm + gr_plot_size[2] * l * px / 2
         else
-            bottompad += 1mm + gr_plot_size[2] * l * px
+            bottompad += 1mm + gr_plot_size[2] * l * px / 2
         end
     end
     if !(yticks in (nothing, false, :none))
         flip, mirror = gr_set_yticks_font(sp)
         l = first(gr_get_ticks_size(yticks, sp[:yaxis][:rotation]))
         if mirror
-            rightpad += 1mm + gr_plot_size[1] * l * px
+            rightpad += 1mm + gr_plot_size[1] * l * px / 2
         else
-            leftpad += 1mm + gr_plot_size[1] * l * px
+            leftpad += 1mm + gr_plot_size[1] * l * px / 2
         end
     end
     # Add margin for x label
