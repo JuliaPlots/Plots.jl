@@ -216,13 +216,15 @@ end
 # ---------------------------------------------------------------------------
 
 function fix_xy_lengths!(plt::Plot{PyPlotBackend}, series::Series)
-    x, y = series[:x], series[:y]
-    nx, ny = length(x), length(y)
-    if !isa(get(series.plotattributes, :z, nothing), Surface) && nx != ny
-        if nx < ny
-            series[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
-        else
-            series[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
+    if series[:x] != nothing
+        x, y = series[:x], series[:y]
+        nx, ny = length(x), length(y)
+        if !isa(get(series.plotattributes, :z, nothing), Surface) && nx != ny
+            if nx < ny
+                series[:x] = Float64[x[mod1(i,nx)] for i=1:ny]
+            else
+                series[:y] = Float64[y[mod1(i,ny)] for i=1:nx]
+            end
         end
     end
 end

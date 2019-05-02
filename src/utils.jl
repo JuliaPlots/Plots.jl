@@ -194,7 +194,9 @@ end
 
 function iter_segments(series::Series)
     x, y, z = series[:x], series[:y], series[:z]
-    if has_attribute_segments(series)
+    if x == nothing
+        return UnitRange{Int}[]
+    elseif has_attribute_segments(series)
         if series[:seriestype] in (:scatter, :scatter3d)
             return [[i] for i in 1:length(y)]
         else

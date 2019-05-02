@@ -784,7 +784,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             tbx, tby = gr_inqtext(0, 0, string(lab))
             legendw = max(legendw, tbx[3] - tbx[1])
         end
-        
+
         GR.setscale(1)
         GR.selntran(1)
         GR.restorestate()
@@ -1139,7 +1139,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
 
         if st in (:path, :scatter, :straightline)
-            if length(x) > 1
+            if x != nothing && length(x) > 1
                 lz = series[:line_z]
                 segments = iter_segments(series)
                 # do area fill
