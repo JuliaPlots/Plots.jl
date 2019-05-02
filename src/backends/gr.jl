@@ -535,14 +535,26 @@ function gr_legend_pos(s::Symbol,w,h)
             xpos = viewport_plotarea[2] - 0.05 - w
         end
     elseif occursin("left", str)
-        xpos = viewport_plotarea[1] + 0.11
+        if occursin("outer", str)
+            xpos = viewport_plotarea[1] - 0.11 - w
+        else
+            xpos = viewport_plotarea[1] + 0.11
+        end
     else
         xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 +.04
     end
     if occursin("top", str)
-        ypos = viewport_plotarea[4] - 0.06
+        if s == :outertop
+            ypos = viewport_plotarea[4] + h + 0.01
+        else
+            ypos = viewport_plotarea[4] - 0.06
+        end
     elseif occursin("bottom", str)
-        ypos = viewport_plotarea[3] + h + 0.06
+        if s == :outerbottom
+            ypos = viewport_plotarea[3] - 0.11
+        else
+            ypos = viewport_plotarea[3] + h + 0.06
+        end
     else
         ypos = (viewport_plotarea[4]-viewport_plotarea[3])/2 + h/2
     end
@@ -790,8 +802,19 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.restorestate()
     end
 
-    if occursin("outer", string(sp[:legend]))
-        viewport_plotarea[2] -= legendw + 0.1
+    dy = _gr_point_mult[1] * sp[:legendfontsize] * 1.75
+    legendh = dy * legendn
+    leg_str = string(sp[:legend])
+    if occursin("outer", leg_str)
+        if occursin("right", leg_str)
+            viewport_plotarea[2] -= legendw + 0.1
+        elseif occursin("left", leg_str)
+            viewport_plotarea[1] += legendw + 0.13
+        elseif occursin("top", leg_str)
+            viewport_plotarea[4] -= legendh + 0.06
+        elseif occursin("bottom", leg_str)
+            viewport_plotarea[3] += legendh + 0.09
+        end
     end
 
     # fill in the plot area background
