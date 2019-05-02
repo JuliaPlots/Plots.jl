@@ -668,17 +668,29 @@ function gr_set_yticks_font(sp)
     return flip, mirror
 end
 
-function gr_get_ticks_size(ticks, i)
+text_box_width(w, h, rot) = abs(cosd(rot)) * w + abs(cosd(rot + 90)) * h
+text_box_height(w, h, rot) = abs(sind(rot)) * w + abs(sind(rot + 90)) * h
+
+function gr_text_size(str, rot)
     GR.savestate()
     GR.selntran(0)
-    l = 0.0
-    for (cv, dv) in zip(ticks...)
-        tb = gr_inqtext(0, 0, string(dv))[i]
-        tb_min, tb_max = extrema(tb)
-        l = max(l, tb_max - tb_min)
-    end
+    xs, ys = gr_inqtext(0, 0, string(str))
+    l, r = extrema(xs)
+    b, t = extrema(ys)
+    w = text_box_width(r - l, t - b, rot)
+    h = text_box_height(r - l, t - b, rot)
     GR.restorestate()
-    return l
+    return w, h
+end
+
+function gr_get_ticks_size(ticks, rot)
+    w, h = 0.0, 0.0
+    for (cv, dv) in zip(ticks...)
+        wi, hi = gr_text_size(dv, rot)
+        w = max(w, wi)
+        h = max(h, hi)
+    end
+    return w, h
 end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
@@ -701,7 +713,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     xticks, yticks = axis_drawing_info(sp)[1:2]
     if !(xticks in (nothing, false, :none))
         flip, mirror = gr_set_xticks_font(sp)
-        l = gr_get_ticks_size(xticks, 2)
+        l = last(gr_get_ticks_size(xticks, sp[:xaxis][:rotation]))
         if mirror
             toppad += 1mm + gr_plot_size[2] * l * px
         else
@@ -710,7 +722,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     end
     if !(yticks in (nothing, false, :none))
         flip, mirror = gr_set_yticks_font(sp)
-        l = gr_get_ticks_size(yticks, 1)
+        l = first(gr_get_ticks_size(yticks, sp[:yaxis][:rotation]))
         if mirror
             rightpad += 1mm + gr_plot_size[1] * l * px
         else
