@@ -522,21 +522,28 @@ end
 gr_view_xcenter() = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
 gr_view_ycenter() = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
 
-function gr_legend_pos(s::Symbol,w,h)
+function gr_legend_pos(sp::Subplot, w, h)
+    s = sp[:legend]
+    typeof(s) <: Symbol || return gr_legend_pos(s, w, h)
     str = string(s)
     if str == "best"
         str = "topright"
     end
+    if occursin("outer", str)
+        xaxis, yaxis = sp[:xaxis], sp[:yaxis]
+        xmirror = xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
+        ymirror = yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
+    end
     if occursin("right", str)
         if occursin("outer", str)
             # As per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
-            xpos = viewport_plotarea[2] + 0.11
+            xpos = viewport_plotarea[2] + 0.11 + ymirror * gr_yaxis_width(sp)
         else
             xpos = viewport_plotarea[2] - 0.05 - w
         end
     elseif occursin("left", str)
         if occursin("outer", str)
-            xpos = viewport_plotarea[1] - 0.11 - w
+            xpos = viewport_plotarea[1] - 0.05 - w - !ymirror * gr_yaxis_width(sp)
         else
             xpos = viewport_plotarea[1] + 0.11
         end
@@ -545,13 +552,13 @@ function gr_legend_pos(s::Symbol,w,h)
     end
     if occursin("top", str)
         if s == :outertop
-            ypos = viewport_plotarea[4] + h + 0.01
+            ypos = viewport_plotarea[4] + 0.02 + h + xmirror * gr_xaxis_height(sp)
         else
             ypos = viewport_plotarea[4] - 0.06
         end
     elseif occursin("bottom", str)
         if s == :outerbottom
-            ypos = viewport_plotarea[3] - 0.11
+            ypos = viewport_plotarea[3] - 0.05 - !xmirror * gr_xaxis_height(sp)
         else
             ypos = viewport_plotarea[3] + h + 0.06
         end
@@ -668,8 +675,17 @@ function gr_set_yticks_font(sp)
     return flip, mirror
 end
 
-text_box_width(w, h, rot) = abs(cosd(rot)) * w + abs(cosd(rot + 90)) * h
-text_box_height(w, h, rot) = abs(sind(rot)) * w + abs(sind(rot + 90)) * h
+function gr_text_size(str)
+    GR.savestate()
+    GR.selntran(0)
+    xs, ys = gr_inqtext(0, 0, string(str))
+    l, r = extrema(xs)
+    b, t = extrema(ys)
+    w = r - l
+    h = t - b
+    GR.restorestate()
+    return w, h
+end
 
 function gr_text_size(str, rot)
     GR.savestate()
@@ -683,6 +699,9 @@ function gr_text_size(str, rot)
     return w, h
 end
 
+text_box_width(w, h, rot) = abs(cosd(rot)) * w + abs(cosd(rot + 90)) * h
+text_box_height(w, h, rot) = abs(sind(rot)) * w + abs(sind(rot + 90)) * h
+
 function gr_get_ticks_size(ticks, rot)
     w, h = 0.0, 0.0
     for (cv, dv) in zip(ticks...)
@@ -693,6 +712,30 @@ function gr_get_ticks_size(ticks, rot)
     return w, h
 end
 
+function gr_xaxis_height(sp)
+    xaxis = sp[:xaxis]
+    xticks, yticks = axis_drawing_info(sp)[1:2]
+    gr_set_font(tickfont(xaxis))
+    h = (xticks in (nothing, false, :none) ? 0 : last(gr_get_ticks_size(xticks, xaxis[:rotation])))
+    if xaxis[:guide] != ""
+        gr_set_font(guidefont(xaxis))
+        h += last(gr_text_size(xaxis[:guide]))
+    end
+    return h
+end
+
+function gr_yaxis_width(sp)
+    yaxis = sp[:yaxis]
+    xticks, yticks = axis_drawing_info(sp)[1:2]
+    gr_set_font(tickfont(yaxis))
+    w = (xticks in (nothing, false, :none) ? 0 : first(gr_get_ticks_size(yticks, yaxis[:rotation])))
+    if yaxis[:guide] != ""
+        gr_set_font(guidefont(yaxis))
+        w += last(gr_text_size(yaxis[:guide]))
+    end
+    return w
+end
+
 function _update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
     if !haskey(ENV, "GKSwstype")
@@ -701,48 +744,59 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         end
     end
     # Add margin given by the user
-    leftpad   = 4mm  + sp[:left_margin]
+    leftpad   = 2mm  + sp[:left_margin]
     toppad    = 2mm  + sp[:top_margin]
-    rightpad  = 4mm  + sp[:right_margin]
+    rightpad  = 2mm  + sp[:right_margin]
     bottompad = 2mm  + sp[:bottom_margin]
     # Add margin for title
     if sp[:title] != ""
-        toppad += 5mm
+        gr_set_font(titlefont(sp))
+        l = last(last(gr_text_size(sp[:title])))
+        h = 1mm + gr_plot_size[2] * l * px
+        toppad += h
     end
     # Add margin for x and y ticks
     xticks, yticks = axis_drawing_info(sp)[1:2]
     if !(xticks in (nothing, false, :none))
         flip, mirror = gr_set_xticks_font(sp)
-        l = last(gr_get_ticks_size(xticks, sp[:xaxis][:rotation]))
+        l = 0.01 + last(gr_get_ticks_size(xticks, sp[:xaxis][:rotation]))
+        h = 1mm + gr_plot_size[2] * l * px
         if mirror
-            toppad += 1mm + gr_plot_size[2] * l * px / 2
+            toppad += h
         else
-            bottompad += 1mm + gr_plot_size[2] * l * px / 2
+            bottompad += h
         end
     end
     if !(yticks in (nothing, false, :none))
         flip, mirror = gr_set_yticks_font(sp)
-        l = first(gr_get_ticks_size(yticks, sp[:yaxis][:rotation]))
+        l = 0.01 + first(gr_get_ticks_size(yticks, sp[:yaxis][:rotation]))
+        w = 1mm + gr_plot_size[1] * l * px
         if mirror
-            rightpad += 1mm + gr_plot_size[1] * l * px / 2
+            rightpad += w
         else
-            leftpad += 1mm + gr_plot_size[1] * l * px / 2
+            leftpad += w
         end
     end
     # Add margin for x label
     if sp[:xaxis][:guide] != ""
+        gr_set_font(guidefont(sp[:xaxis]))
+        l = last(gr_text_size(sp[:xaxis][:guide]))
+        h = 1mm + gr_plot_size[2] * l * px
         if sp[:xaxis][:guide_position] == :top || (sp[:xaxis][:guide_position] == :auto && sp[:xaxis][:mirror] == true)
-            toppad += 4mm
+            toppad += h
         else
-            bottompad += 4mm
+            bottompad += h
         end
     end
     # Add margin for y label
     if sp[:yaxis][:guide] != ""
+        gr_set_font(guidefont(sp[:yaxis]))
+        l = last(gr_text_size(sp[:yaxis][:guide]))
+        w = 1mm + gr_plot_size[2] * l * px
         if sp[:yaxis][:guide_position] == :right || (sp[:yaxis][:guide_position] == :auto && sp[:yaxis][:mirror] == true)
-            rightpad += 4mm
+            rightpad += w
         else
-            leftpad += 4mm
+            leftpad += w
         end
     end
     if sp[:colorbar_title] != ""
@@ -819,13 +873,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     leg_str = string(sp[:legend])
     if occursin("outer", leg_str)
         if occursin("right", leg_str)
-            viewport_plotarea[2] -= legendw + 0.1
+            viewport_plotarea[2] -= legendw + 0.11
         elseif occursin("left", leg_str)
-            viewport_plotarea[1] += legendw + 0.13
+            viewport_plotarea[1] += legendw + 0.11
         elseif occursin("top", leg_str)
-            viewport_plotarea[4] -= legendh + 0.06
+            viewport_plotarea[4] -= legendh + 0.03
         elseif occursin("bottom", leg_str)
-            viewport_plotarea[3] += legendh + 0.09
+            viewport_plotarea[3] += legendh + 0.04
         end
     end
 
@@ -1096,34 +1150,29 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_set_font(guidefont(xaxis))
         GR.titles3d(xaxis[:guide], yaxis[:guide], zaxis[:guide])
     else
+        xticks, yticks = axis_drawing_info(sp)[1:2]
         if xaxis[:guide] != ""
+            h = 0.01 + gr_xaxis_height(sp)
             gr_set_font(guidefont(xaxis))
             if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-                gr_text(gr_view_xcenter(), viewport_subplot[4], xaxis[:guide])
+                gr_text(gr_view_xcenter(), viewport_plotarea[4] + h, xaxis[:guide])
             else
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-                gr_text(gr_view_xcenter(), viewport_subplot[3], xaxis[:guide])
+                gr_text(gr_view_xcenter(), viewport_plotarea[3] - h, xaxis[:guide])
             end
         end
 
         if yaxis[:guide] != ""
+            w = 0.02 + gr_yaxis_width(sp)
             gr_set_font(guidefont(yaxis))
             GR.setcharup(-1, 0)
             if yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-                if viewport_plotarea[1] - viewport_subplot[1] > 0.1
-                    gr_text(viewport_plotarea[2] + 0.025, gr_view_ycenter(), yaxis[:guide])
-                else
-                    gr_text(viewport_subplot[2], gr_view_ycenter(), yaxis[:guide])
-                end
+                gr_text(viewport_plotarea[2] + w, gr_view_ycenter(), yaxis[:guide])
             else
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-                if viewport_plotarea[1] - viewport_subplot[1] > 0.1
-                    gr_text(viewport_plotarea[1] - 0.075, gr_view_ycenter(), yaxis[:guide])
-                else
-                    gr_text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
-                end
+                gr_text(viewport_plotarea[1] - w, gr_view_ycenter(), yaxis[:guide])
             end
         end
     end
@@ -1396,7 +1445,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if w > 0
             dy = _gr_point_mult[1] * sp[:legendfontsize] * 1.75
             h = dy*n
-            (xpos,ypos) = gr_legend_pos(sp[:legend],w,h)
+            xpos, ypos = gr_legend_pos(sp, w, h)
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             gr_set_fillcolor(sp[:background_color_legend])
             GR.fillrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
