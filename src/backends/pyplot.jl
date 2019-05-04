@@ -273,6 +273,8 @@ function py_bbox(obj)
     BoundingBox(l*px, (ft-t)*px, (r-l)*px, (t-b)*px)
 end
 
+py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
+
 # get the bounding box of the union of the objects
 function py_bbox(v::AVec)
     bbox_union = defaultbox
