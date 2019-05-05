@@ -80,6 +80,8 @@ gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
 gr_set_transparency(::Nothing) = GR.settransparency(1)
+gr_set_transparency(c, α) = gr_set_transparency(α)
+gr_set_transparency(c::Colorant, ::Nothing) = GR.settransparency(alpha(c))
 
 # --------------------------------------------------------------------------------------
 
@@ -167,7 +169,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     #draw angular grid
     if xaxis[:grid]
         gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
-        gr_set_transparency(xaxis[:gridalpha])
+        gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:gridalpha])
         for i in 1:length(α)
             GR.polyline([sinf[i], 0], [cosf[i], 0])
         end
@@ -176,7 +178,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     #draw radial grid
     if yaxis[:grid]
         gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
-        gr_set_transparency(yaxis[:gridalpha])
+        gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:gridalpha])
         for i in 1:length(rtick_values)
             r = (rtick_values[i] - rmin) / (rmax - rmin)
             if r <= 1.0 && r >= 0.0
@@ -296,15 +298,17 @@ function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize
 
             # draw a filled in shape, slightly bigger, to estimate a stroke
             if series[:markerstrokewidth] > 0
-                cfunc(get_markerstrokecolor(series, i))
-                gr_set_transparency(get_markerstrokealpha(series, i))
+                c = get_markerstrokecolor(series, i)
+                cfunc(c)
+                gr_set_transparency(c, get_markerstrokealpha(series, i))
                 gr_draw_marker(x[i], y[i], msi + series[:markerstrokewidth], shape)
             end
 
             # draw the shape - don't draw filled area if marker shape is 1D
             if !(shape in (:hline, :vline, :+, :x))
-                cfunc(get_markercolor(series, clims, i))
-                gr_set_transparency(get_markeralpha(series, i))
+                c = get_markercolor(series, clims, i)
+                cfunc(c)
+                gr_set_transparency(c, get_markeralpha(series, i))
                 gr_draw_marker(x[i], y[i], msi, shape)
             end
         end
@@ -981,21 +985,21 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if xaxis[:grid]
             gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
-            gr_set_transparency(xaxis[:gridalpha])
+            gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:gridalpha])
             GR.grid3d(xtick, 0, 0, xmin, ymax, zmin, 2, 0, 0)
         end
         if yaxis[:grid]
             gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
-            gr_set_transparency(yaxis[:gridalpha])
+            gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:gridalpha])
             GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
         end
         if zaxis[:grid]
             gr_set_line(zaxis[:gridlinewidth], zaxis[:gridstyle], zaxis[:foreground_color_grid])
-            gr_set_transparency(zaxis[:gridalpha])
+            gr_set_transparency(zaxis[:foreground_color_grid], zaxis[:gridalpha])
             GR.grid3d(0, 0, ztick, xmin, ymax, zmin, 0, 0, 2)
         end
         gr_set_line(1, :solid, xaxis[:foreground_color_axis])
-        gr_set_transparency(1)
+        gr_set_transparency(xaxis[:foreground_color_axis])
         GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
         GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
 
@@ -1018,24 +1022,24 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # gr_set_linecolor(sp[:foreground_color_grid])
             # GR.grid(xtick, ytick, 0, 0, majorx, majory)
             gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
-            gr_set_transparency(xaxis[:gridalpha])
+            gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:gridalpha])
             gr_polyline(coords(xgrid_segs)...)
         end
         if yaxis[:grid]
             gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
-            gr_set_transparency(yaxis[:gridalpha])
+            gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:gridalpha])
             gr_polyline(coords(ygrid_segs)...)
         end
         if xaxis[:minorgrid]
             # gr_set_linecolor(sp[:foreground_color_grid])
             # GR.grid(xtick, ytick, 0, 0, majorx, majory)
             gr_set_line(xaxis[:minorgridlinewidth], xaxis[:minorgridstyle], xaxis[:foreground_color_minor_grid])
-            gr_set_transparency(xaxis[:minorgridalpha])
+            gr_set_transparency(xaxis[:foreground_color_minor_grid], xaxis[:minorgridalpha])
             gr_polyline(coords(xminorgrid_segs)...)
         end
         if yaxis[:minorgrid]
             gr_set_line(yaxis[:minorgridlinewidth], yaxis[:minorgridstyle], yaxis[:foreground_color_minor_grid])
-            gr_set_transparency(yaxis[:minorgridalpha])
+            gr_set_transparency(yaxis[:foreground_color_minor_grid], yaxis[:minorgridalpha])
             gr_polyline(coords(yminorgrid_segs)...)
         end
         gr_set_transparency(1.0)
@@ -1057,7 +1061,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if xaxis[:showaxis]
             if sp[:framestyle] in (:zerolines, :grid)
                 gr_set_line(1, :solid, xaxis[:foreground_color_grid])
-                gr_set_transparency(xaxis[:tick_direction] == :out ? xaxis[:gridalpha] : 0)
+                gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:tick_direction] == :out ? xaxis[:gridalpha] : 0)
             else
                 gr_set_line(1, :solid, xaxis[:foreground_color_axis])
             end
@@ -1067,7 +1071,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if  yaxis[:showaxis]
             if sp[:framestyle] in (:zerolines, :grid)
                 gr_set_line(1, :solid, yaxis[:foreground_color_grid])
-                gr_set_transparency(yaxis[:tick_direction] == :out ? yaxis[:gridalpha] : 0)
+                gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:tick_direction] == :out ? yaxis[:gridalpha] : 0)
             else
                 gr_set_line(1, :solid, yaxis[:foreground_color_axis])
             end
@@ -1119,10 +1123,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         intensity = sp[:framestyle] == :semi ? 0.5 : 1.0
         if sp[:framestyle] in (:box, :semi)
             gr_set_line(intensity, :solid, xaxis[:foreground_color_border])
-            gr_set_transparency(intensity)
+            gr_set_transparency(xaxis[:foreground_color_border], intensity)
             gr_polyline(coords(xborder_segs)...)
             gr_set_line(intensity, :solid, yaxis[:foreground_color_border])
-            gr_set_transparency(intensity)
+            gr_set_transparency(yaxis[:foreground_color_border], intensity)
             gr_polyline(coords(yborder_segs)...)
         end
     end
@@ -1231,10 +1235,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
                     fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
                     for (i, rng) in enumerate(segments)
-                        gr_set_fillcolor(get_fillcolor(series, clims, i))
+                        fc = get_fillcolor(series, clims, i)
+                        gr_set_fillcolor(fc)
                         fx = _cycle(x, vcat(rng, reverse(rng)))
                         fy = vcat(_cycle(fr_from,rng), _cycle(fr_to,reverse(rng)))
-                        gr_set_transparency(get_fillalpha(series, i))
+                        gr_set_transparency(fc, get_fillalpha(series, i))
                         GR.fillarea(fx, fy)
                     end
                 end
@@ -1242,8 +1247,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # draw the line(s)
                 if st in (:path, :straightline)
                     for (i, rng) in enumerate(segments)
-                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, clims, i)) #, series[:linealpha])
-                        gr_set_transparency(get_linealpha(series, i))
+                        lc = get_linecolor(series, clims, i)
+                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc) #, series[:linealpha])
+                        gr_set_transparency(lc, get_linealpha(series, i))
                         arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
                         gr_polyline(x[rng], y[rng]; arrowside = arrowside)
                     end
@@ -1317,8 +1323,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     lz = series[:line_z]
                     segments = iter_segments(series)
                     for (i, rng) in enumerate(segments)
-                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, clims, i)) #, series[:linealpha])
-                        gr_set_transparency(get_linealpha(series, i))
+                        lc = get_linecolor(series, clims, i)
+                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc) #, series[:linealpha])
+                        gr_set_transparency(lc, get_linealpha(series, i))
                         GR.polyline3d(x[rng], y[rng], z[rng])
                     end
                 end
@@ -1389,13 +1396,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     xseg, yseg = x[rng], y[rng]
 
                     # draw the interior
-                    gr_set_fill(get_fillcolor(series, clims, i))
-                    gr_set_transparency(get_fillalpha(series, i))
+                    fc = get_fillcolor(series, clims, i)
+                    gr_set_fill(fc)
+                    gr_set_transparency(fc, get_fillalpha(series, i))
                     GR.fillarea(xseg, yseg)
 
                     # draw the shapes
-                    gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, clims, i))
-                    gr_set_transparency(get_linealpha(series, i))
+                    lc = get_linecolor(series, clims, i)
+                    gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc)
+                    gr_set_transparency(lc, get_linealpha(series, i))
                     GR.polyline(xseg, yseg)
                 end
             end
@@ -1455,30 +1464,33 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if sp[:legendtitle] != nothing
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
                 gr_set_textcolor(sp[:legendfontcolor])
-                gr_set_transparency(1)
+                gr_set_transparency(sp[:legendfontcolor])
                 gr_text(xpos - 0.03 + 0.5*w, ypos, string(sp[:legendtitle]))
                 ypos -= dy
             end
             for series in series_list(sp)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
-                gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series, clims)) #, series[:linealpha])
+                lc = get_linecolor(series, clims)
+                gr_set_line(get_linewidth(series), get_linestyle(series), lc) #, series[:linealpha])
 
                 if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
-                    gr_set_fill(get_fillcolor(series, clims)) #, series[:fillalpha])
+                    fc = get_fillcolor(series, clims)
+                    gr_set_fill(fc) #, series[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
                     b, t = ypos-0.4dy, ypos+0.4dy
                     x = [l, r, r, l, l]
                     y = [b, b, t, t, b]
-                    gr_set_transparency(get_fillalpha(series))
+                    gr_set_transparency(fc, get_fillalpha(series))
                     gr_polyline(x, y, GR.fillarea)
-                    gr_set_transparency(get_linealpha(series))
-                    gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series, clims))
+                    lc = get_linecolor(series, clims)
+                    gr_set_transparency(lc, get_linealpha(series))
+                    gr_set_line(get_linewidth(series), get_linestyle(series), lc)
                     st == :shape && gr_polyline(x, y)
                 end
 
                 if st in (:path, :straightline)
-                    gr_set_transparency(get_linealpha(series))
+                    gr_set_transparency(lc, get_linealpha(series))
                     if series[:fillrange] == nothing || series[:ribbon] != nothing
                         GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
                     else
