@@ -81,7 +81,8 @@ gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
 gr_set_transparency(::Nothing) = GR.settransparency(1)
 gr_set_transparency(c, α) = gr_set_transparency(α)
-gr_set_transparency(c::Colorant, ::Nothing) = GR.settransparency(alpha(c))
+gr_set_transparency(c::Colorant, ::Nothing) = gr_set_transparency(c)
+gr_set_transparency(c::Colorant) = GR.settransparency(alpha(c))
 
 # --------------------------------------------------------------------------------------
 
