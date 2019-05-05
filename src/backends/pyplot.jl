@@ -275,6 +275,8 @@ function py_bbox(obj)
     BoundingBox(l*px, (ft-t)*px, (r-l)*px, (t-b)*px)
 end
 
+py_bbox(::Nothing) = BoundingBox(0mm, 0mm)
+
 # get the bounding box of the union of the objects
 function py_bbox(v::AVec)
     bbox_union = defaultbox
@@ -312,6 +314,9 @@ function py_bbox_title(ax)
     end
     bb
 end
+
+# bounding box: legend
+py_bbox_legend(ax) = py_bbox(ax."get_legend"())
 
 function py_thickness_scale(plt::Plot{PyPlotBackend}, ptsz)
     ptsz * plt[:thickness_scaling]
@@ -1190,7 +1195,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     toppad    = 0mm
     rightpad  = 0mm
     bottompad = 0mm
-    for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax))
+    for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax), py_bbox_legend(ax))
         if ispositive(width(bb)) && ispositive(height(bb))
             leftpad   = max(leftpad,   left(plotbb) - left(bb))
             toppad    = max(toppad,    top(plotbb)  - top(bb))
@@ -1253,6 +1258,34 @@ const _pyplot_legend_pos = KW(
     :topleft => "upper left"
   )
 
+const _pyplot_legend_pos_outer = KW(
+    :outerright => "center left",
+    :outerleft => "right",
+    :outertop => "lower center",
+    :outerbottom => "upper center",
+    :outerbottomleft => "lower right",
+    :outerbottomright => "lower left",
+    :outertopright => "upper left",
+    :outertopleft => "upper right"
+)
+
+py_legend_pos(pos::Symbol) = get(_pyplot_legend_pos, pos, get(_pyplot_legend_pos_outer, pos, "best"))
+py_legend_pos(pos) = "lower left"
+
+const _pyplot_legend_bbox_outer = KW(
+    :outerright => (1.0, 0.5, 0.0, 0.0),
+    :outerleft => (-0.15, 0.5, 0.0, 0.0),
+    :outertop => (0.5, 1.0, 0.0, 0.0),
+    :outerbottom => (0.5, -0.15, 0.0, 0.0),
+    :outerbottomleft => (-0.15, 0.0, 0.0, 0.0),
+    :outerbottomright => (1.0, 0.0, 0.0, 0.0),
+    :outertopright => (1.0, 1.0, 0.0, 0.0),
+    :outertopleft => (-0.15, 1.0, 0.0, 0.0)
+)
+
+py_legend_bbox(pos::Symbol) = get(_pyplot_legend_bbox_outer, pos, (0.0, 0.0, 1.0, 1.0))
+py_legend_bbox(pos) = pos
+
 function py_add_legend(plt::Plot, sp::Subplot, ax)
     leg = sp[:legend]
     clims = get_clims(sp)
@@ -1290,7 +1323,8 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
         if !isempty(handles)
             leg = ax."legend"(handles,
                 labels,
-                loc = get(_pyplot_legend_pos, leg, "best"),
+                loc = py_legend_pos(leg),
+                bbox_to_anchor = py_legend_bbox(leg),
                 scatterpoints = 1,
                 fontsize = py_thickness_scale(plt, sp[:legendfontsize]),
                 facecolor = py_color(sp[:background_color_legend]),

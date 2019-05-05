@@ -80,6 +80,9 @@ gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
 gr_set_transparency(::Nothing) = GR.settransparency(1)
+gr_set_transparency(c, α) = gr_set_transparency(α)
+gr_set_transparency(c::Colorant, ::Nothing) = gr_set_transparency(c)
+gr_set_transparency(c::Colorant) = GR.settransparency(alpha(c))
 
 # --------------------------------------------------------------------------------------
 
@@ -167,7 +170,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     #draw angular grid
     if xaxis[:grid]
         gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
-        gr_set_transparency(xaxis[:gridalpha])
+        gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:gridalpha])
         for i in 1:length(α)
             GR.polyline([sinf[i], 0], [cosf[i], 0])
         end
@@ -176,7 +179,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     #draw radial grid
     if yaxis[:grid]
         gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
-        gr_set_transparency(yaxis[:gridalpha])
+        gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:gridalpha])
         for i in 1:length(rtick_values)
             r = (rtick_values[i] - rmin) / (rmax - rmin)
             if r <= 1.0 && r >= 0.0
@@ -296,15 +299,17 @@ function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize
 
             # draw a filled in shape, slightly bigger, to estimate a stroke
             if series[:markerstrokewidth] > 0
-                cfunc(get_markerstrokecolor(series, i))
-                gr_set_transparency(get_markerstrokealpha(series, i))
+                c = get_markerstrokecolor(series, i)
+                cfunc(c)
+                gr_set_transparency(c, get_markerstrokealpha(series, i))
                 gr_draw_marker(x[i], y[i], msi + series[:markerstrokewidth], shape)
             end
 
             # draw the shape - don't draw filled area if marker shape is 1D
             if !(shape in (:hline, :vline, :+, :x))
-                cfunc(get_markercolor(series, clims, i))
-                gr_set_transparency(get_markeralpha(series, i))
+                c = get_markercolor(series, clims, i)
+                cfunc(c)
+                gr_set_transparency(c, get_markeralpha(series, i))
                 gr_draw_marker(x[i], y[i], msi, shape)
             end
         end
@@ -522,27 +527,46 @@ end
 gr_view_xcenter() = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
 gr_view_ycenter() = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
 
-function gr_legend_pos(s::Symbol,w,h)
+function gr_legend_pos(sp::Subplot, w, h)
+    s = sp[:legend]
+    typeof(s) <: Symbol || return gr_legend_pos(s, w, h)
     str = string(s)
     if str == "best"
         str = "topright"
     end
+    if occursin("outer", str)
+        xaxis, yaxis = sp[:xaxis], sp[:yaxis]
+        xmirror = xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
+        ymirror = yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
+    end
     if occursin("right", str)
         if occursin("outer", str)
             # As per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
-            xpos = viewport_plotarea[2] + 0.11
+            xpos = viewport_plotarea[2] + 0.11 + ymirror * gr_yaxis_width(sp)
         else
             xpos = viewport_plotarea[2] - 0.05 - w
         end
     elseif occursin("left", str)
-        xpos = viewport_plotarea[1] + 0.11
+        if occursin("outer", str)
+            xpos = viewport_plotarea[1] - 0.05 - w - !ymirror * gr_yaxis_width(sp)
+        else
+            xpos = viewport_plotarea[1] + 0.11
+        end
     else
         xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 +.04
     end
     if occursin("top", str)
-        ypos = viewport_plotarea[4] - 0.06
+        if s == :outertop
+            ypos = viewport_plotarea[4] + 0.02 + h + xmirror * gr_xaxis_height(sp)
+        else
+            ypos = viewport_plotarea[4] - 0.06
+        end
     elseif occursin("bottom", str)
-        ypos = viewport_plotarea[3] + h + 0.06
+        if s == :outerbottom
+            ypos = viewport_plotarea[3] - 0.05 - !xmirror * gr_xaxis_height(sp)
+        else
+            ypos = viewport_plotarea[3] + h + 0.06
+        end
     else
         ypos = (viewport_plotarea[4]-viewport_plotarea[3])/2 + h/2
     end
@@ -656,17 +680,65 @@ function gr_set_yticks_font(sp)
     return flip, mirror
 end
 
-function gr_get_ticks_size(ticks, i)
+function gr_text_size(str)
     GR.savestate()
     GR.selntran(0)
-    l = 0.0
-    for (cv, dv) in zip(ticks...)
-        tb = gr_inqtext(0, 0, string(dv))[i]
-        tb_min, tb_max = extrema(tb)
-        l = max(l, tb_max - tb_min)
-    end
+    xs, ys = gr_inqtext(0, 0, string(str))
+    l, r = extrema(xs)
+    b, t = extrema(ys)
+    w = r - l
+    h = t - b
     GR.restorestate()
-    return l
+    return w, h
+end
+
+function gr_text_size(str, rot)
+    GR.savestate()
+    GR.selntran(0)
+    xs, ys = gr_inqtext(0, 0, string(str))
+    l, r = extrema(xs)
+    b, t = extrema(ys)
+    w = text_box_width(r - l, t - b, rot)
+    h = text_box_height(r - l, t - b, rot)
+    GR.restorestate()
+    return w, h
+end
+
+text_box_width(w, h, rot) = abs(cosd(rot)) * w + abs(cosd(rot + 90)) * h
+text_box_height(w, h, rot) = abs(sind(rot)) * w + abs(sind(rot + 90)) * h
+
+function gr_get_ticks_size(ticks, rot)
+    w, h = 0.0, 0.0
+    for (cv, dv) in zip(ticks...)
+        wi, hi = gr_text_size(dv, rot)
+        w = max(w, wi)
+        h = max(h, hi)
+    end
+    return w, h
+end
+
+function gr_xaxis_height(sp)
+    xaxis = sp[:xaxis]
+    xticks, yticks = axis_drawing_info(sp)[1:2]
+    gr_set_font(tickfont(xaxis))
+    h = (xticks in (nothing, false, :none) ? 0 : last(gr_get_ticks_size(xticks, xaxis[:rotation])))
+    if xaxis[:guide] != ""
+        gr_set_font(guidefont(xaxis))
+        h += last(gr_text_size(xaxis[:guide]))
+    end
+    return h
+end
+
+function gr_yaxis_width(sp)
+    yaxis = sp[:yaxis]
+    xticks, yticks = axis_drawing_info(sp)[1:2]
+    gr_set_font(tickfont(yaxis))
+    w = (xticks in (nothing, false, :none) ? 0 : first(gr_get_ticks_size(yticks, yaxis[:rotation])))
+    if yaxis[:guide] != ""
+        gr_set_font(guidefont(yaxis))
+        w += last(gr_text_size(yaxis[:guide]))
+    end
+    return w
 end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
@@ -677,48 +749,59 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         end
     end
     # Add margin given by the user
-    leftpad   = 4mm  + sp[:left_margin]
+    leftpad   = 2mm  + sp[:left_margin]
     toppad    = 2mm  + sp[:top_margin]
-    rightpad  = 4mm  + sp[:right_margin]
+    rightpad  = 2mm  + sp[:right_margin]
     bottompad = 2mm  + sp[:bottom_margin]
     # Add margin for title
     if sp[:title] != ""
-        toppad += 5mm
+        gr_set_font(titlefont(sp))
+        l = last(last(gr_text_size(sp[:title])))
+        h = 1mm + gr_plot_size[2] * l * px
+        toppad += h
     end
     # Add margin for x and y ticks
     xticks, yticks = axis_drawing_info(sp)[1:2]
     if !(xticks in (nothing, false, :none))
         flip, mirror = gr_set_xticks_font(sp)
-        l = gr_get_ticks_size(xticks, 2)
+        l = 0.01 + last(gr_get_ticks_size(xticks, sp[:xaxis][:rotation]))
+        h = 1mm + gr_plot_size[2] * l * px
         if mirror
-            toppad += 1mm + gr_plot_size[2] * l * px
+            toppad += h
         else
-            bottompad += 1mm + gr_plot_size[2] * l * px
+            bottompad += h
         end
     end
     if !(yticks in (nothing, false, :none))
         flip, mirror = gr_set_yticks_font(sp)
-        l = gr_get_ticks_size(yticks, 1)
+        l = 0.01 + first(gr_get_ticks_size(yticks, sp[:yaxis][:rotation]))
+        w = 1mm + gr_plot_size[1] * l * px
         if mirror
-            rightpad += 1mm + gr_plot_size[1] * l * px
+            rightpad += w
         else
-            leftpad += 1mm + gr_plot_size[1] * l * px
+            leftpad += w
         end
     end
     # Add margin for x label
     if sp[:xaxis][:guide] != ""
+        gr_set_font(guidefont(sp[:xaxis]))
+        l = last(gr_text_size(sp[:xaxis][:guide]))
+        h = 1mm + gr_plot_size[2] * l * px
         if sp[:xaxis][:guide_position] == :top || (sp[:xaxis][:guide_position] == :auto && sp[:xaxis][:mirror] == true)
-            toppad += 4mm
+            toppad += h
         else
-            bottompad += 4mm
+            bottompad += h
         end
     end
     # Add margin for y label
     if sp[:yaxis][:guide] != ""
+        gr_set_font(guidefont(sp[:yaxis]))
+        l = last(gr_text_size(sp[:yaxis][:guide]))
+        w = 1mm + gr_plot_size[2] * l * px
         if sp[:yaxis][:guide_position] == :right || (sp[:yaxis][:guide_position] == :auto && sp[:yaxis][:mirror] == true)
-            rightpad += 4mm
+            rightpad += w
         else
-            leftpad += 4mm
+            leftpad += w
         end
     end
     if sp[:colorbar_title] != ""
@@ -790,8 +873,19 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.restorestate()
     end
 
-    if occursin("outer", string(sp[:legend]))
-        viewport_plotarea[2] -= legendw + 0.1
+    dy = _gr_point_mult[1] * sp[:legendfontsize] * 1.75
+    legendh = dy * legendn
+    leg_str = string(sp[:legend])
+    if occursin("outer", leg_str)
+        if occursin("right", leg_str)
+            viewport_plotarea[2] -= legendw + 0.11
+        elseif occursin("left", leg_str)
+            viewport_plotarea[1] += legendw + 0.11
+        elseif occursin("top", leg_str)
+            viewport_plotarea[4] -= legendh + 0.03
+        elseif occursin("bottom", leg_str)
+            viewport_plotarea[3] += legendh + 0.04
+        end
     end
 
     # fill in the plot area background
@@ -892,21 +986,21 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if xaxis[:grid]
             gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
-            gr_set_transparency(xaxis[:gridalpha])
+            gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:gridalpha])
             GR.grid3d(xtick, 0, 0, xmin, ymax, zmin, 2, 0, 0)
         end
         if yaxis[:grid]
             gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
-            gr_set_transparency(yaxis[:gridalpha])
+            gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:gridalpha])
             GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
         end
         if zaxis[:grid]
             gr_set_line(zaxis[:gridlinewidth], zaxis[:gridstyle], zaxis[:foreground_color_grid])
-            gr_set_transparency(zaxis[:gridalpha])
+            gr_set_transparency(zaxis[:foreground_color_grid], zaxis[:gridalpha])
             GR.grid3d(0, 0, ztick, xmin, ymax, zmin, 0, 0, 2)
         end
         gr_set_line(1, :solid, xaxis[:foreground_color_axis])
-        gr_set_transparency(1)
+        gr_set_transparency(xaxis[:foreground_color_axis])
         GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
         GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
 
@@ -929,24 +1023,24 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # gr_set_linecolor(sp[:foreground_color_grid])
             # GR.grid(xtick, ytick, 0, 0, majorx, majory)
             gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
-            gr_set_transparency(xaxis[:gridalpha])
+            gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:gridalpha])
             gr_polyline(coords(xgrid_segs)...)
         end
         if yaxis[:grid]
             gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
-            gr_set_transparency(yaxis[:gridalpha])
+            gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:gridalpha])
             gr_polyline(coords(ygrid_segs)...)
         end
         if xaxis[:minorgrid]
             # gr_set_linecolor(sp[:foreground_color_grid])
             # GR.grid(xtick, ytick, 0, 0, majorx, majory)
             gr_set_line(xaxis[:minorgridlinewidth], xaxis[:minorgridstyle], xaxis[:foreground_color_minor_grid])
-            gr_set_transparency(xaxis[:minorgridalpha])
+            gr_set_transparency(xaxis[:foreground_color_minor_grid], xaxis[:minorgridalpha])
             gr_polyline(coords(xminorgrid_segs)...)
         end
         if yaxis[:minorgrid]
             gr_set_line(yaxis[:minorgridlinewidth], yaxis[:minorgridstyle], yaxis[:foreground_color_minor_grid])
-            gr_set_transparency(yaxis[:minorgridalpha])
+            gr_set_transparency(yaxis[:foreground_color_minor_grid], yaxis[:minorgridalpha])
             gr_polyline(coords(yminorgrid_segs)...)
         end
         gr_set_transparency(1.0)
@@ -968,7 +1062,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if xaxis[:showaxis]
             if sp[:framestyle] in (:zerolines, :grid)
                 gr_set_line(1, :solid, xaxis[:foreground_color_grid])
-                gr_set_transparency(xaxis[:tick_direction] == :out ? xaxis[:gridalpha] : 0)
+                gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:tick_direction] == :out ? xaxis[:gridalpha] : 0)
             else
                 gr_set_line(1, :solid, xaxis[:foreground_color_axis])
             end
@@ -978,7 +1072,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if  yaxis[:showaxis]
             if sp[:framestyle] in (:zerolines, :grid)
                 gr_set_line(1, :solid, yaxis[:foreground_color_grid])
-                gr_set_transparency(yaxis[:tick_direction] == :out ? yaxis[:gridalpha] : 0)
+                gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:tick_direction] == :out ? yaxis[:gridalpha] : 0)
             else
                 gr_set_line(1, :solid, yaxis[:foreground_color_axis])
             end
@@ -1030,10 +1124,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         intensity = sp[:framestyle] == :semi ? 0.5 : 1.0
         if sp[:framestyle] in (:box, :semi)
             gr_set_line(intensity, :solid, xaxis[:foreground_color_border])
-            gr_set_transparency(intensity)
+            gr_set_transparency(xaxis[:foreground_color_border], intensity)
             gr_polyline(coords(xborder_segs)...)
             gr_set_line(intensity, :solid, yaxis[:foreground_color_border])
-            gr_set_transparency(intensity)
+            gr_set_transparency(yaxis[:foreground_color_border], intensity)
             gr_polyline(coords(yborder_segs)...)
         end
     end
@@ -1061,34 +1155,29 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_set_font(guidefont(xaxis))
         GR.titles3d(xaxis[:guide], yaxis[:guide], zaxis[:guide])
     else
+        xticks, yticks = axis_drawing_info(sp)[1:2]
         if xaxis[:guide] != ""
+            h = 0.01 + gr_xaxis_height(sp)
             gr_set_font(guidefont(xaxis))
             if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-                gr_text(gr_view_xcenter(), viewport_subplot[4], xaxis[:guide])
+                gr_text(gr_view_xcenter(), viewport_plotarea[4] + h, xaxis[:guide])
             else
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-                gr_text(gr_view_xcenter(), viewport_subplot[3], xaxis[:guide])
+                gr_text(gr_view_xcenter(), viewport_plotarea[3] - h, xaxis[:guide])
             end
         end
 
         if yaxis[:guide] != ""
+            w = 0.02 + gr_yaxis_width(sp)
             gr_set_font(guidefont(yaxis))
             GR.setcharup(-1, 0)
             if yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-                if viewport_plotarea[1] - viewport_subplot[1] > 0.1
-                    gr_text(viewport_plotarea[2] + 0.025, gr_view_ycenter(), yaxis[:guide])
-                else
-                    gr_text(viewport_subplot[2], gr_view_ycenter(), yaxis[:guide])
-                end
+                gr_text(viewport_plotarea[2] + w, gr_view_ycenter(), yaxis[:guide])
             else
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-                if viewport_plotarea[1] - viewport_subplot[1] > 0.1
-                    gr_text(viewport_plotarea[1] - 0.075, gr_view_ycenter(), yaxis[:guide])
-                else
-                    gr_text(viewport_subplot[1], gr_view_ycenter(), yaxis[:guide])
-                end
+                gr_text(viewport_plotarea[1] - w, gr_view_ycenter(), yaxis[:guide])
             end
         end
     end
@@ -1147,10 +1236,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
                     fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
                     for (i, rng) in enumerate(segments)
-                        gr_set_fillcolor(get_fillcolor(series, clims, i))
+                        fc = get_fillcolor(series, clims, i)
+                        gr_set_fillcolor(fc)
                         fx = _cycle(x, vcat(rng, reverse(rng)))
                         fy = vcat(_cycle(fr_from,rng), _cycle(fr_to,reverse(rng)))
-                        gr_set_transparency(get_fillalpha(series, i))
+                        gr_set_transparency(fc, get_fillalpha(series, i))
                         GR.fillarea(fx, fy)
                     end
                 end
@@ -1158,8 +1248,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # draw the line(s)
                 if st in (:path, :straightline)
                     for (i, rng) in enumerate(segments)
-                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, clims, i)) #, series[:linealpha])
-                        gr_set_transparency(get_linealpha(series, i))
+                        lc = get_linecolor(series, clims, i)
+                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc) #, series[:linealpha])
+                        gr_set_transparency(lc, get_linealpha(series, i))
                         arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
                         gr_polyline(x[rng], y[rng]; arrowside = arrowside)
                     end
@@ -1233,8 +1324,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     lz = series[:line_z]
                     segments = iter_segments(series)
                     for (i, rng) in enumerate(segments)
-                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, clims, i)) #, series[:linealpha])
-                        gr_set_transparency(get_linealpha(series, i))
+                        lc = get_linecolor(series, clims, i)
+                        gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc) #, series[:linealpha])
+                        gr_set_transparency(lc, get_linealpha(series, i))
                         GR.polyline3d(x[rng], y[rng], z[rng])
                     end
                 end
@@ -1305,13 +1397,15 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     xseg, yseg = x[rng], y[rng]
 
                     # draw the interior
-                    gr_set_fill(get_fillcolor(series, clims, i))
-                    gr_set_transparency(get_fillalpha(series, i))
+                    fc = get_fillcolor(series, clims, i)
+                    gr_set_fill(fc)
+                    gr_set_transparency(fc, get_fillalpha(series, i))
                     GR.fillarea(xseg, yseg)
 
                     # draw the shapes
-                    gr_set_line(get_linewidth(series, i), get_linestyle(series, i), get_linecolor(series, clims, i))
-                    gr_set_transparency(get_linealpha(series, i))
+                    lc = get_linecolor(series, clims, i)
+                    gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc)
+                    gr_set_transparency(lc, get_linealpha(series, i))
                     GR.polyline(xseg, yseg)
                 end
             end
@@ -1361,7 +1455,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if w > 0
             dy = _gr_point_mult[1] * sp[:legendfontsize] * 1.75
             h = dy*n
-            (xpos,ypos) = gr_legend_pos(sp[:legend],w,h)
+            xpos, ypos = gr_legend_pos(sp, w, h)
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             gr_set_fillcolor(sp[:background_color_legend])
             GR.fillrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
@@ -1371,30 +1465,33 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if sp[:legendtitle] != nothing
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
                 gr_set_textcolor(sp[:legendfontcolor])
-                gr_set_transparency(1)
+                gr_set_transparency(sp[:legendfontcolor])
                 gr_text(xpos - 0.03 + 0.5*w, ypos, string(sp[:legendtitle]))
                 ypos -= dy
             end
             for series in series_list(sp)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
-                gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series, clims)) #, series[:linealpha])
+                lc = get_linecolor(series, clims)
+                gr_set_line(get_linewidth(series), get_linestyle(series), lc) #, series[:linealpha])
 
                 if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
-                    gr_set_fill(get_fillcolor(series, clims)) #, series[:fillalpha])
+                    fc = get_fillcolor(series, clims)
+                    gr_set_fill(fc) #, series[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
                     b, t = ypos-0.4dy, ypos+0.4dy
                     x = [l, r, r, l, l]
                     y = [b, b, t, t, b]
-                    gr_set_transparency(get_fillalpha(series))
+                    gr_set_transparency(fc, get_fillalpha(series))
                     gr_polyline(x, y, GR.fillarea)
-                    gr_set_transparency(get_linealpha(series))
-                    gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series, clims))
+                    lc = get_linecolor(series, clims)
+                    gr_set_transparency(lc, get_linealpha(series))
+                    gr_set_line(get_linewidth(series), get_linestyle(series), lc)
                     st == :shape && gr_polyline(x, y)
                 end
 
                 if st in (:path, :straightline)
-                    gr_set_transparency(get_linealpha(series))
+                    gr_set_transparency(lc, get_linealpha(series))
                     if series[:fillrange] == nothing || series[:ribbon] != nothing
                         GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
                     else
