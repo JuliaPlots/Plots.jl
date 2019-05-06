@@ -150,4 +150,5 @@ const _arg_desc = KW(
 :tick_direction           => "Symbol.  Direction of the ticks. `:in` or `:out`",
 :showaxis                 => "Bool, Symbol or String.  Show the axis. `true`, `false`, `:show`, `:hide`, `:yes`, `:no`, `:x`, `:y`, `:z`, `:xy`, ..., `:all`, `:off`",
 :widen                    => "Bool. Widen the axis limits by a small factor to avoid cut-off markers and lines at the borders. Defaults to `true`.",
+:draw_arrow               => "Bool. Draw arrow at the end of the axis.",
 )
