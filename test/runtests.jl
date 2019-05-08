@@ -1,7 +1,12 @@
 module PlotsTests
 
-include("add_packages.jl")
+using Pkg
+
+# This should be fine since it's run in it's own test env?
+pkg"add https://github.com/JuliaPlots/PlotReferenceImages.jl.git"
+
 include("imgcomp.jl")
+
 
 # don't actually show the plots
 Random.seed!(1234)
