@@ -1,15 +1,3 @@
-using VisualRegressionTests
-using Plots
-using Random
-using BinaryProvider
-using Test
-
-default(size=(500,300))
-
-
-# TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that
-#       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
-
 import Plots._current_plots_version
 
 # Taken from MakieGallery
@@ -43,10 +31,11 @@ const ref_image_dir = download_reference()
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], tol = 1e-2)
     Plots._debugMode.on = debug
     example = Plots._examples[idx]
+    Plots.theme(:default)
     @info("Testing plot: $pkg:$idx:$(example.header)")
     backend(pkg)
     backend()
-
+    default(size=(500,300))
     # ensure consistent results
     Random.seed!(1234)
 
@@ -83,7 +72,10 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
 
     # test function
     func = (fn, idx) -> begin
-        map(eval, example.exprs)
+        expr = Expr(:block)
+        append!(expr.args, example.exprs)
+        eval(expr)
+        png(joinpath(@__DIR__, "testimgs", "test$idx.png"))
         png(fn)
     end
 

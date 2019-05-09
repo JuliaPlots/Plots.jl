@@ -1,10 +1,11 @@
-module PlotsTests
-
-using Pkg
+using VisualRegressionTests
+using Plots
+using Random
+using BinaryProvider
+using Test
+using FileIO
 
 include("imgcomp.jl")
-
-
 # don't actually show the plots
 Random.seed!(1234)
 default(show=false, reuse=true)
@@ -21,14 +22,6 @@ img_tol = isinteractive() ? 1e-2 : 10e-2
     end
 end
 
-# @static if isinteractive()
-#     @testset "PyPlot" begin
-#         @test pyplot() == Plots.PyPlotBackend()
-#         @test backend() == Plots.PyPlotBackend()
-#
-#         image_comparison_facts(:pyplot, tol=img_tol, skip = [2, 25, 30, 31])
-#     end
-# end
 
 @testset "UnicodePlots" begin
     @test unicodeplots() == Plots.UnicodePlotsBackend()
@@ -42,68 +35,6 @@ end
     @test isa(p, Plots.Plot) == true
     @test isa(display(p), Nothing) == true
 end
-
-# The plotlyjs testimages return a connection error on travis:
-# connect: connection refused (ECONNREFUSED)
-
-# @static if isinteractive()
-#     @testset "PlotlyJS" begin
-#         @test plotlyjs() == Plots.PlotlyJSBackend()
-#         @test backend() == Plots.PlotlyJSBackend()
-#
-#         image_comparison_facts(:plotlyjs,
-#             skip=[
-#                 2,  # animation (skipped for speed)
-#                 25,
-#                 27, # (polar plots) takes very long / not working
-#                 30,
-#                 31, # animation (skipped for speed)
-#             ],
-#             tol=img_tol)
-#     end
-# end
-
-# InspectDR returns that error on travis:
-# ERROR: LoadError: InitError: Cannot open display:
-#  in Gtk.GLib.GError(::Gtk.##229#230) at /home/travis/.julia/v0.5/Gtk/src/GLib/gerror.jl:17
-
-# @testset "InspectDR" begin
-#     @test inspectdr() == Plots.InspectDRBackend()
-#     @test backend() == Plots.InspectDRBackend()
-#
-#     image_comparison_facts(:inspectdr,
-#         skip=[
-#             2,  # animation
-#             6,  # heatmap not defined
-#             10, # heatmap not defined
-#             22, # contour not defined
-#             23, # pie not defined
-#             27, # polar plot not working
-#             28, # heatmap not defined
-#             31, # animation
-#         ],
-#         tol=img_tol)
-# end
-
-
-# @testset "Plotly" begin
-#     @test plotly() == Plots.PlotlyBackend()
-#     @test backend() == Plots.PlotlyBackend()
-#
-#     # # until png generation is reliable on OSX, just test on linux
-#     # @static Sys.islinux() && image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], tol=img_tol)
-# end
-
-# @testset "PlotlyJS" begin
-#     @test plotlyjs() == Plots.PlotlyJSBackend()
-#     @test backend() == Plots.PlotlyJSBackend()
-#
-#     # as long as we can plot anything without error, it should be the same as Plotly
-#     image_comparison_facts(:plotlyjs, only=[1], tol=img_tol)
-# end
-
-
-
 
 @testset "Axes" begin
     p = plot()
@@ -122,44 +53,3 @@ end
 @testset "NoFail" begin
     histogram([1, 0, 0, 0, 0, 0])
 end
-
-# tests for preprocessing recipes
-
-# @testset "recipes" begin
-
-    # user recipe
-
-    # type T end
-    # @recipe function f(::T)
-    #     line := (3,0.3,:red)
-    #     marker := (20,0.5,:blue,:o)
-    #     bg := :yellow
-    #     rand(10)
-    # end
-    # plot(T())
-
-    # plot recipe
-
-    # @recipe function f(::Type{Val{:hiplt}},plt::Plot)
-    #     line := (3,0.3,:red)
-    #     marker := (20,0.5,:blue,:o)
-    #     t := :path
-    #     bg:=:green
-    #     ()
-    # end
-    # plot(rand(10),t=:hiplt)
-
-    # series recipe
-
-    # @recipe function f(::Type{Val{:hi}},x,y,z)
-    #     line := (3,0.3,:red)
-    #     marker := (20,0.5,:blue,:o)
-    #     t := :path
-    #     ()
-    # end
-    # plot(rand(10),t=:hiplt)
-
-# end
-
-
-end # module
