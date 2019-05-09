@@ -75,7 +75,6 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
         expr = Expr(:block)
         append!(expr.args, example.exprs)
         eval(expr)
-        png(joinpath(@__DIR__, "testimgs", "test$idx.png"))
         png(fn)
     end
 
