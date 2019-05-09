@@ -2,9 +2,6 @@ module PlotsTests
 
 using Pkg
 
-# This should be fine since it's run in it's own test env?
-pkg"add https://github.com/JuliaPlots/PlotReferenceImages.jl.git"
-
 include("imgcomp.jl")
 
 

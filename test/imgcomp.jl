@@ -1,26 +1,7 @@
-
 using VisualRegressionTests
-# using ExamplePlots
-
-if isinteractive()
-    @eval Main import Gtk
-end
-
-# import DataFrames, RDatasets
-
-# don't let pyplot use a gui... it'll crash
-# note: Agg will set gui -> :none in PyPlot
-# ENV["MPLBACKEND"] = "Agg"
-# try
-#   @eval import PyPlot
-#   @info("Matplotlib version: $(PyPlot.matplotlib[:__version__])")
-# end
-
-
 using Plots
-# using StatsPlots
-import PlotReferenceImages
 using Random
+using BinaryProvider
 using Test
 
 default(size=(500,300))
@@ -31,6 +12,33 @@ default(size=(500,300))
 
 import Plots._current_plots_version
 
+# Taken from MakieGallery
+"""
+Downloads the reference images from ReferenceImages for a specific version
+"""
+function download_reference(version = v"0.0.1")
+    download_dir = abspath(@__DIR__, "reference_images")
+    isdir(download_dir) || mkpath(download_dir)
+    tarfile = joinpath(download_dir, "reference_images.zip")
+    url = "https://github.com/JuliaPlots/PlotReferenceImages.jl/archive/v$(version).tar.gz"
+    refpath = joinpath(download_dir, "PlotReferenceImages.jl-$(version)")
+    if !isdir(refpath) # if not yet downloaded
+        @info "downloading reference images for version $version"
+        download(url, tarfile)
+        BinaryProvider.unpack(tarfile, download_dir)
+        # check again after download
+        if !isdir(refpath)
+            error("Something went wrong while downloading reference images. Plots can't be compared to references")
+        else
+            rm(tarfile, force = true)
+        end
+    else
+        @info "using reference images for version $version (already downloaded)"
+    end
+    refpath
+end
+
+const ref_image_dir = download_reference()
 
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], tol = 1e-2)
     Plots._debugMode.on = debug
@@ -43,8 +51,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
     Random.seed!(1234)
 
     # reference image directory setup
-    # refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))
-    refdir = joinpath(dirname(pathof(PlotReferenceImages)), "..", "Plots", string(pkg))
+    refdir = joinpath(ref_image_dir, "Plots", string(pkg))
     fn = "ref$idx.png"
 
     # firgure out version info
