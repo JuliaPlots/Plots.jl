@@ -86,8 +86,9 @@ yaxis!("YLABEL", :log10)
 PlotExample("Images",
     "Plot an image.  y-axis is set to flipped",
     [:(begin
-    import FileIO, PlotReferenceImages
-    img = FileIO.load(joinpath(dirname(pathof(PlotReferenceImages)), "..", "Plots","pyplot","0.7.0","ref1.png"))
+    import FileIO
+    path = download("http://juliaplots.org/PlotReferenceImages.jl/Plots/pyplot/0.7.0/ref1.png")
+    img = FileIO.load(path)
         plot(img)
     end)]
 ),
