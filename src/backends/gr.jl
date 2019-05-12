@@ -860,7 +860,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             legendn += 1
             if typeof(series[:label]) <: Array
                 legendi += 1
-                lab = series[:label][i]
+                lab = series[:label][legendi]
             else
                 lab = series[:label]
             end
