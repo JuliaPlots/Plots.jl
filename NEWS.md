@@ -11,6 +11,9 @@
 ---
 ## (current master)
 
+## 0.25.1
+- fix gr_display
+
 ## 0.25.0
 - Replace StaticArrays with GeometryTypes
 - Contour fixes for GR
