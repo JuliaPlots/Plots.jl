@@ -197,6 +197,7 @@ for mime in ("text/plain", "text/html", "image/png", "image/eps", "image/svg+xml
           prepare_output(plt)
           _show(io, m, plt)
         end
+        return nothing
     end
 end
 

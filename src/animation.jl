@@ -103,6 +103,7 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     else
         error("Cannot show animation with extension $ext: $agif")
     end)
+    return nothing
 end
 
 
