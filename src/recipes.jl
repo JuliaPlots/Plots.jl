@@ -1095,10 +1095,21 @@ abline!(args...; kw...) = abline!(current(), args...; kw...)
 dateformatter(dt) = string(Date(Dates.UTD(dt)))
 datetimeformatter(dt) = string(DateTime(Dates.UTM(dt)))
 timeformatter(t) = string(Dates.Time(Dates.Nanosecond(t)))
+periodformatter(t) = string(t)
 
 @recipe f(::Type{Date}, dt::Date) = (dt -> Dates.value(dt), dateformatter)
 @recipe f(::Type{DateTime}, dt::DateTime) = (dt -> Dates.value(dt), datetimeformatter)
 @recipe f(::Type{Dates.Time}, t::Dates.Time) = (t -> Dates.value(t), timeformatter)
+@recipe f(::Type{Dates.Nanosecond}, t::Dates.Nanosecond) = (t -> Dates.value(t), periodformatter)
+@recipe f(::Type{Dates.Microsecond}, t::Dates.Microsecond) = (t -> Dates.value(t), periodformatter)
+@recipe f(::Type{Dates.Millisecond}, t::Dates.Millisecond) = (t -> Dates.value(t), periodformatter)
+@recipe f(::Type{Dates.Second}, t::Dates.Second) = (t -> Dates.value(t), periodformatter)
+@recipe f(::Type{Dates.Minute}, t::Dates.Minute) = (t -> Dates.value(t), periodformatter)
+@recipe f(::Type{Dates.Hour}, t::Dates.Hour) = (t -> Dates.value(t), periodformatter)
+@recipe f(::Type{Dates.Day}, t::Dates.Day) = (t -> Dates.value(t), periodformatter)
+@recipe f(::Type{Dates.Week}, t::Dates.Week) = (t -> Dates.value(t), periodformatter)
+@recipe f(::Type{Dates.Month}, t::Dates.Month) = (t -> Dates.value(t), periodformatter)
+@recipe f(::Type{Dates.Year}, t::Dates.Year) = (t -> Dates.value(t), periodformatter)
 
 # -------------------------------------------------
 # Complex Numbers
