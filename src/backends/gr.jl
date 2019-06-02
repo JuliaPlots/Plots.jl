@@ -421,23 +421,20 @@ function gr_set_viewport_polar()
 end
 
 struct GRColorbar
-    gradient::Ref{Union{Series,Nothing}}
-    fill::Ref{Union{Series,Nothing}}
-    lines::Ref{Union{Series,Nothing}}
-    GRColorbar() = new(nothing,nothing,nothing)
+    gradients
+    fills
+    lines
+    GRColorbar() = new([],[],[])
 end
 
 function gr_update_colorbar!(cbar::GRColorbar, series::Series)
     style = colorbar_style(series)
     style === nothing && return
-    ref = style == cbar_gradient ? cbar.gradient :
-          style == cbar_fill ? cbar.fill :
+    list = style == cbar_gradient ? cbar.gradients :
+          style == cbar_fill ? cbar.fills :
           style == cbar_lines ? cbar.lines :
           error("Unknown colorbar style: $style.")
-    if ref[] !== nothing
-        @warn "Overwriting colorbar entry"
-    end
-    ref[] = series
+    push!(list, series)
 end
 
 function gr_contour_levels(series::Series, clims)
@@ -466,6 +463,16 @@ function gr_colorbar_colors(series::Series, clims)
     round.(Int,colors)
 end
 
+
+function _cbar_unique(values, propname)
+    out = last(values)
+    if any(x != out for x in values)
+        @warn "Multiple series with different $propname share a colorbar. " *
+              "Colorbar may not refelct all series correctly."
+    end
+    out
+end
+
 # add the colorbar
 function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
     GR.savestate()
@@ -474,16 +481,19 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
     gr_set_viewport_cmap(sp)
     GR.setscale(0)
     GR.setwindow(xmin, xmax, zmin, zmax)
-    if (series = cbar.gradient[]) !== nothing
-        gr_set_gradient(series)
-        gr_set_transparency(get_fillalpha(series))
+    if !isempty(cbar.gradients)
+        series = cbar.gradients
+        gr_set_gradient(_cbar_unique(gr_get_color.(series),"color"))
+        gr_set_transparency(_cbar_unique(get_fillalpha.(series), "fill alpha"))
         GR.cellarray(xmin, xmax, zmax, zmin, 1, 256, 1000:1255)
     end
 
-    if (series = cbar.fill[]) !== nothing
-        gr_set_gradient(series)
+    if !isempty(cbar.fills)
+        series = cbar.fills
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
-        levels = contour_levels(series, clims)
+        gr_set_gradient(_cbar_unique(gr_get_color.(series), "color"))
+        gr_set_transparency(_cbar_unique(get_fillalpha.(series), "fill alpha"))
+        levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
         # GR implicitly uses the maximal z value as the highest level
         if levels[end] < clims[2]
             @warn("GR: highest contour level less than maximal z value is not supported.")
@@ -491,20 +501,22 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
             # promotion in case levels is an integer array
             levels = [levels[1:end-1]; clims[2]]
         end
-        colors = gr_colorbar_colors(series, clims)
+        colors = gr_colorbar_colors(last(series), clims)
         for (from, to, color) in zip(levels[1:end-1], levels[2:end], colors)
             GR.setfillcolorind(color)
-            gr_set_transparency(get_fillalpha(series))
             GR.fillrect( xmin, xmax, from, to )
         end
     end
 
-    if (series = cbar.lines[]) !== nothing
-        gr_set_gradient(series)
-        gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series, clims))
-        gr_set_transparency(get_linealpha(series))
-        levels = contour_levels(series, clims)
-        colors = gr_colorbar_colors(series, clims)
+    if !isempty(cbar.lines)
+        series = cbar.lines
+        gr_set_gradient(_cbar_unique(gr_get_color.(series),"color"))
+        gr_set_line(_cbar_unique(get_linewidth.(series), "line width"),
+                    _cbar_unique(get_linestyle.(series), "line style"),
+                    _cbar_unique(get_linecolor.(series, Ref(clims)), "line color"))
+        gr_set_transparency(_cbar_unique(get_linealpha.(series), "line alpha"))
+        levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
+        colors = gr_colorbar_colors(last(series), clims)
         for (line, color) in zip(levels, colors)
             GR.setlinecolorind(color)
             GR.polyline([xmin,xmax], [line,line] )
@@ -594,17 +606,22 @@ function gr_set_gradient(c)
 end
 
 function gr_set_gradient(series::Series)
+    color = gr_get_color(series)
+    color !== nothing && gr_set_gradient(color)
+end
+
+function gr_get_color(series::Series)
     st = series[:seriestype]
     if st in (:surface, :heatmap) || isfilledcontour(series)
-        gr_set_gradient(series[:fillcolor])
+        series[:fillcolor]
     elseif st in (:contour, :wireframe)
-        gr_set_gradient(series[:linecolor])
+        series[:linecolor]
     elseif series[:marker_z] != nothing
-        gr_set_gradient(series[:markercolor])
+        series[:markercolor]
     elseif series[:line_z] !=  nothing
-        gr_set_gradient(series[:linecolor])
+        series[:linecolor]
     elseif series[:fill_z] != nothing
-        gr_set_gradient(series[:fillcolor])
+        series[:fillcolor]
     end
 end
 
