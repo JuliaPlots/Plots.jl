@@ -605,7 +605,10 @@ function gr_set_gradient(c)
     grad
 end
 
-gr_set_gradient(series::Series) = gr_set_gradient(gr_get_color(series))
+function gr_set_gradient(series::Series)
+    color = gr_get_color(series)
+    color !== nothing && gr_set_gradient(color)
+end
 
 function gr_get_color(series::Series)
     st = series[:seriestype]
