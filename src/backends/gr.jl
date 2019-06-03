@@ -1318,21 +1318,29 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             dmin, dmax = GR.gr3.volume(y.v, 0)
 
         elseif st == :heatmap
-            xmin, xmax, ymin, ymax = xy_lims
             zmin, zmax = clims
-            m, n = length(x), length(y)
-            xinds = sort(1:m, rev = xaxis[:flip])
-            yinds = sort(1:n, rev = yaxis[:flip])
-            z = reshape(reshape(z, m, n)[xinds, yinds], m*n)
-            GR.setspace(zmin, zmax, 0, 90)
-            grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
-            colors = [plot_color(grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)], series[:fillalpha]) for zi=z]
-            rgba = map(c -> UInt32( round(UInt, alpha(c) * 255) << 24 +
-                                    round(UInt,  blue(c) * 255) << 16 +
-                                    round(UInt, green(c) * 255) << 8  +
-                                    round(UInt,   red(c) * 255) ), colors)
-            w, h = length(x), length(y)
-            GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
+            if !ispolar(sp)
+                xmin, xmax, ymin, ymax = xy_lims
+                m, n = length(x), length(y)
+                xinds = sort(1:m, rev = xaxis[:flip])
+                yinds = sort(1:n, rev = yaxis[:flip])
+                z = reshape(reshape(z, m, n)[xinds, yinds], m*n)
+                GR.setspace(zmin, zmax, 0, 90)
+                grad = isa(series[:fillcolor], ColorGradient) ? series[:fillcolor] : cgrad()
+                colors = [plot_color(grad[clamp((zi-zmin) / (zmax-zmin), 0, 1)], series[:fillalpha]) for zi=z]
+                rgba = map(c -> UInt32( round(UInt, alpha(c) * 255) << 24 +
+                                        round(UInt,  blue(c) * 255) << 16 +
+                                        round(UInt, green(c) * 255) << 8  +
+                                        round(UInt,   red(c) * 255) ), colors)
+                w, h = length(x), length(y)
+                GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
+            else
+                h, w = length(x), length(y)
+                z = reshape(z, h, w)
+                colors = Int32[round(Int32, 1000 + _i * 255) for _i in z']
+                GR.setwindow(-1, 1, -1, 1)
+                GR.polarcellarray(0, 0, 0, 360, 0, 1, w, h, colors)
+            end
 
         elseif st in (:path3d, :scatter3d)
             # draw path
