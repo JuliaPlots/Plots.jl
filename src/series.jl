@@ -194,7 +194,8 @@ _apply_type_recipe(plotattributes, v) = RecipesBase.apply_recipe(plotattributes,
 # and one to format tick values.
 function _apply_type_recipe(plotattributes, v::AbstractArray)
     isempty(v) && return Float64[]
-    args = RecipesBase.apply_recipe(plotattributes, typeof(v[1]), v[1])[1].args
+    x = first(skipmissing(v))
+    args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
     if length(args) == 2 && typeof(args[1]) <: Function && typeof(args[2]) <: Function
         numfunc, formatter = args
         Formatted(map(numfunc, v), formatter)
