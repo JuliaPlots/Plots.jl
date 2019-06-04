@@ -1,0 +1,14 @@
+name = "RecipesBase"
+uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+author = ["Tom Breloff (@tbreloff)"]
+version = "0.7.0"
+
+[compat]
+julia = "≥ 1.0.0"
+
+[extras]
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test", "Random"]
