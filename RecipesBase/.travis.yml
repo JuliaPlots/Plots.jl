@@ -9,6 +9,6 @@ julia:
 notifications:
   email: false
 # uncomment the following lines to override the default test script
-script:
- - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'import Pkg; Pkg.clone(pwd()); Pkg.build("RecipesBase"); Pkg.test("RecipesBase"; coverage=true)'
+# script:
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#  - julia -e 'import Pkg; Pkg.clone(pwd()); Pkg.build("RecipesBase"); Pkg.test("RecipesBase"; coverage=true)'
