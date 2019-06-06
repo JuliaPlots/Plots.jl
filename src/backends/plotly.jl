@@ -436,7 +436,7 @@ plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.
 
 function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
     if formatter == datetimeformatter
-        map(xi -> replace(formatter(xi), "T", " "), x)
+        map(xi -> replace(formatter(xi), "T" => " "), x)
     elseif formatter == dateformatter
         map(xi -> string(formatter(xi), " 00:00:00"), x)
     elseif formatter == timeformatter
