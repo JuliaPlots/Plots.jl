@@ -84,12 +84,21 @@ gr_set_transparency(c, α) = gr_set_transparency(α)
 gr_set_transparency(c::Colorant, ::Nothing) = gr_set_transparency(c)
 gr_set_transparency(c::Colorant) = GR.settransparency(alpha(c))
 
+const _gr_arrow_map = Dict(
+    :simple => 1,
+    :hollow => 3,
+    :filled => 4,
+    :triangle => 5,
+    :filledtriangle => 6,
+)
+gr_set_arrowstyle(s::Symbol) = GR.setarrowstyle(get(_gr_arrow_map, s, 1))
+
 # --------------------------------------------------------------------------------------
 
 
 # draw line segments, splitting x/y into contiguous/finite segments
 # note: this can be used for shapes by passing func `GR.fillarea`
-function gr_polyline(x, y, func = GR.polyline; arrowside=:none)
+function gr_polyline(x, y, func = GR.polyline; arrowside = :none, arrowstyle = :simple)
     iend = 0
     n = length(x)
     while iend < n-1
@@ -118,9 +127,11 @@ function gr_polyline(x, y, func = GR.polyline; arrowside=:none)
         if istart > 0 && iend > 0
             func(x[istart:iend], y[istart:iend])
             if arrowside in (:head,:both)
+                gr_set_arrowstyle(arrowstyle)
                 GR.drawarrow(x[iend-1], y[iend-1], x[iend], y[iend])
             end
             if arrowside in (:tail,:both)
+                gr_set_arrowstyle(arrowstyle)
                 GR.drawarrow(x[istart+1], y[istart+1], x[istart], y[istart])
             end
         else
@@ -1269,7 +1280,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                         gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc) #, series[:linealpha])
                         gr_set_transparency(lc, get_linealpha(series, i))
                         arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
-                        gr_polyline(x[rng], y[rng]; arrowside = arrowside)
+                        arrowstyle = isa(series[:arrow], Arrow) ? series[:arrow].style : :simple
+                        gr_set_fillcolor(lc)
+                        gr_polyline(x[rng], y[rng]; arrowside = arrowside, arrowstyle = arrowstyle)
                     end
                 end
             end
