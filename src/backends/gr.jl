@@ -90,6 +90,8 @@ const _gr_arrow_map = Dict(
     :filled => 4,
     :triangle => 5,
     :filledtriangle => 6,
+    :closed => 6,
+    :open => 5,
 )
 gr_set_arrowstyle(s::Symbol) = GR.setarrowstyle(get(_gr_arrow_map, s, 1))
 
