@@ -75,8 +75,8 @@ end
 text_size(lab::AbstractString, sz::Number, rot::Number = 0) = text_size(length(lab), sz, rot)
 
 # account for the size/length/rotation of tick labels
-function tick_padding(axis::Axis)
-    ticks = get_ticks(axis)
+function tick_padding(sp::Subplot, axis::Axis)
+    ticks = get_ticks(sp, axis)
     if ticks == nothing
         0mm
     else
@@ -106,10 +106,10 @@ end
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot)
     # TODO: something different when `is3d(sp) == true`
-    leftpad   = tick_padding(sp[:yaxis]) + sp[:left_margin]   + guide_padding(sp[:yaxis])
+    leftpad   = tick_padding(sp, sp[:yaxis]) + sp[:left_margin]   + guide_padding(sp[:yaxis])
     toppad    = sp[:top_margin]    + title_padding(sp)
     rightpad  = sp[:right_margin]
-    bottompad = tick_padding(sp[:xaxis]) + sp[:bottom_margin] + guide_padding(sp[:xaxis])
+    bottompad = tick_padding(sp, sp[:xaxis]) + sp[:bottom_margin] + guide_padding(sp[:xaxis])
 
     # switch them?
     if sp[:xaxis][:mirror]

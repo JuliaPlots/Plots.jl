@@ -508,7 +508,7 @@ function concatenate_fillrange(x,y::Tuple)
 end
 
 function get_sp_lims(sp::Subplot, letter::Symbol)
-    axis_limits(sp[Symbol(letter, :axis)])
+    axis_limits(sp, letter)
 end
 
 """

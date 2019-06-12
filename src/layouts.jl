@@ -111,7 +111,7 @@ function resolve_mixed(mix::MixedMeasures, sp::Subplot, letter::Symbol)
         pct += mix.len / totlen
     end
     if pct != 0
-        amin, amax = axis_limits(sp[Symbol(letter,:axis)])
+        amin, amax = axis_limits(sp, letter)
         xy += pct * (amax-amin)
     end
     xy

@@ -96,19 +96,6 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
 end
 @deps line path
 
-
-function hvline_limits(axis::Axis)
-    vmin, vmax = axis_limits(axis)
-    if vmin >= vmax
-        if isfinite(vmin)
-            vmax = vmin + 1
-        else
-            vmin, vmax = 0.0, 1.1
-        end
-    end
-    vmin, vmax
-end
-
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     n = length(y)
     newx = repeat(Float64[-1, 1, NaN], n)
@@ -253,11 +240,12 @@ end
     n = length(x)
     fr = plotattributes[:fillrange]
     if fr == nothing
-        yaxis = plotattributes[:subplot][:yaxis]
+        sp = plotattributes[:subplot]
+        yaxis = sp[:yaxis]
         fr = if yaxis[:scale] == :identity
             0.0
         else
-            NaNMath.min(axis_limits(yaxis)[1], ignorenan_minimum(y))
+            NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
         end
     end
     newx, newy = zeros(3n), zeros(3n)

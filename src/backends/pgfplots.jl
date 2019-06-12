@@ -361,13 +361,13 @@ function pgf_axis(sp::Subplot, letter)
     # limits
     # TODO: support zlims
     if letter != :z
-        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(axis)) : axis_limits(axis)
+        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(sp, :x)) : axis_limits(sp, :x)
         kw[Symbol(letter,:min)] = lims[1]
         kw[Symbol(letter,:max)] = lims[2]
     end
 
     if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
-        ticks = get_ticks(axis)
+        ticks = get_ticks(sp, axis)
         #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
         tick_values = ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 405] : ticks[1]
         push!(style, string(letter, "tick = {", join(tick_values,","), "}"))

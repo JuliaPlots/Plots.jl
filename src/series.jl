@@ -392,7 +392,7 @@ end
 @recipe function f(f::FuncOrFuncs{F}) where F<:Function
     plt = plotattributes[:plot_object]
     xmin, xmax = try
-        axis_limits(plt[1][:xaxis])
+        axis_limits(plt[1], :x)
     catch
         xinv = invscalefunc(get(plotattributes, :xscale, :identity))
         xm = tryrange(f, xinv.([-5,-1,0,0.01]))
