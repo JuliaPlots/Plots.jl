@@ -1030,7 +1030,7 @@ function preprocessArgs!(plotattributes::KW)
             arrow()
         elseif a in (false, nothing, :none)
             nothing
-        elseif !(typeof(a) <: Arrow)
+        elseif !(typeof(a) <: Arrow || typeof(a) <: AbstractArray{Arrow})
             arrow(wraptuple(a)...)
         else
             a
