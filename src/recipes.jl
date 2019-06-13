@@ -755,12 +755,14 @@ end
     edge_x, edge_y, weights = x, y, z.surf
 
     float_weights = float(weights)
-    if float_weights === weights
-        float_weights = deepcopy(float_weights)
-    end
-    for (i, c) in enumerate(float_weights)
-        if c == 0
-            float_weights[i] = NaN
+    if !plotattributes[:show_empty_bins]
+        if float_weights === weights
+            float_weights = deepcopy(float_weights)
+        end
+        for (i, c) in enumerate(float_weights)
+            if c == 0
+                float_weights[i] = NaN
+            end
         end
     end
 

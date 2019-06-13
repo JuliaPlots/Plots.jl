@@ -129,6 +129,16 @@ PlotExample("Histogram2D",
     end)]
 ),
 
+PlotExample("Histogram2D (complex values)",
+    "",
+    [:(begin
+        n = 10_000
+        x = exp.(0.1randn(n) .+ randn(n).*(im))
+        histogram2d(x, nbins=(20,40), show_empty_bins=true,
+                    normed=true, aspect_ratio=1)
+    end)]
+),
+
 PlotExample("Line types",
     "",
     [:(begin

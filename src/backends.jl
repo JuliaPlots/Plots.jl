@@ -234,7 +234,7 @@ const _base_supported_args = [
     :subplot_index,
     :discrete_values,
     :projection,
-
+    :show_empty_bins
 ]
 
 function merge_with_base_supported(v::AVec)
