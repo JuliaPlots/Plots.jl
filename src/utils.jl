@@ -214,36 +214,19 @@ end
 
 # helpers to figure out if there are NaN values in a list of array types
 anynan(i::Int, args::Tuple) = any(a -> try isnan(_cycle(a,i)) catch MethodError false end, args)
-anynan(istart::Int, iend::Int, args::Tuple) = any(i -> anynan(i, args), istart:iend)
-allnan(istart::Int, iend::Int, args::Tuple) = all(i -> anynan(i, args), istart:iend)
+anynan(args::Tuple) = i -> anynan(i,args)
+anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
+allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
 function Base.iterate(itr::SegmentsIterator, nextidx::Int = 1)
-    nextidx > itr.n && return nothing
-    if nextidx == 1 && !any(isempty,itr.args) && anynan(1, itr.args)
-        nextidx = 2
-    end
+    i = findfirst(!anynan(itr.args), nextidx:itr.n)
+    i === nothing && return nothing
+    nextval = nextidx + i - 1
 
-    i = istart = iend = nextidx
+    j = findfirst(anynan(itr.args), nextval:itr.n)
+    nextnan = j === nothing ? itr.n + 1 : nextval + j - 1
 
-    # find the next NaN, and iend is the one before
-    while i <= itr.n + 1
-        if i > itr.n || anynan(i, itr.args)
-            # done... array end or found NaN
-            iend = i-1
-            break
-        end
-        i += 1
-    end
-
-    # find the next non-NaN, and set nextidx
-    while i <= itr.n
-        if !anynan(i, itr.args)
-            break
-        end
-        i += 1
-    end
-
-    istart:iend, i
+    nextval:nextnan-1, nextnan
 end
 
 # Find minimal type that can contain NaN and x

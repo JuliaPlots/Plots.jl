@@ -51,5 +51,31 @@ end
 end
 
 @testset "NoFail" begin
-    histogram([1, 0, 0, 0, 0, 0])
+    plots = [histogram([1, 0, 0, 0, 0, 0]),
+             plot([missing]),
+             plot([missing; 1:4]),
+             plot([fill(missing,10); 1:4])]
+    for plt in plots
+        display(plt)
+    end
+end
+
+@testset "Segments" begin
+    function segments(args...)
+        segs = UnitRange{Int}[]
+        for seg in iter_segments(args...)
+            push!(segs,seg)
+        end
+        segs
+    end
+
+    nan10 = fill(NaN,10)
+    @test segments(11:20) == [1:10]
+    @test segments([NaN]) == []
+    @test segments(nan10) == []
+    @test segments([nan10; 1:5]) == [11:15]
+    @test segments([1:5;nan10]) == [1:5]
+    @test segments([nan10; 1:5; nan10; 1:5; nan10]) == [11:15, 26:30]
+    @test segments([NaN; 1], 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
+    @test segments([nan10; 1:15], [1:15; nan10]) == [11:15]
 end
