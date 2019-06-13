@@ -484,7 +484,8 @@ function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(l
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
     lims = axis[:lims]
-    if (isa(lims, Tuple) || isa(lims, AVec)) && length(lims) == 2
+    has_user_lims = (isa(lims, Tuple) || isa(lims, AVec)) && length(lims) == 2
+    if has_user_lims
         if isfinite(lims[1])
             amin = lims[1]
         end
@@ -515,7 +516,7 @@ function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(l
         amin, amax
     end
 
-    if consider_aspect && letter in (:x, :y) && !(sp[:aspect_ratio] in (:none, :auto) || is3d(:sp))
+    if !has_user_lims && consider_aspect && letter in (:x, :y) && !(sp[:aspect_ratio] in (:none, :auto) || is3d(:sp))
         aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
         plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
         dist = amax - amin
