@@ -361,7 +361,7 @@ function pgf_axis(sp::Subplot, letter)
     # limits
     # TODO: support zlims
     if letter != :z
-        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(sp, :x)) : axis_limits(sp, :x)
+        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(sp, :x)) : axis_limits(sp, letter)
         kw[Symbol(letter,:min)] = lims[1]
         kw[Symbol(letter,:max)] = lims[2]
     end
