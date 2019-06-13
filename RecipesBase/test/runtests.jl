@@ -1,4 +1,7 @@
-using RecipesBase
+# Run tests with `import RecipesBase` instead of `using RecipesBase` to test
+# that objects like `AbstractPlot` are properly prefixed with `RecipesBase.` in
+# the macros.
+import RecipesBase
 using Test, Random
 
 const KW = Dict{Symbol, Any}
@@ -30,7 +33,7 @@ end
 @testset "simple parametric type" begin
     @test_throws MethodError RecipesBase.apply_recipe(KW(), T1())
 
-    @recipe function plot(t::T1, n::N = 1; customcolor = :green) where N <: Integer
+    RecipesBase.@recipe function plot(t::T1, n::N = 1; customcolor = :green) where N <: Integer
         :markershape --> :auto, :require
         :markercolor --> customcolor, :force
         :xrotation --> 5
@@ -51,7 +54,7 @@ end
 @testset "parametric type with where" begin
     @test_throws MethodError RecipesBase.apply_recipe(KW(), T2())
 
-    @recipe function plot(t::T2, n::N = 1; customcolor = :green) where {N <: Integer}
+    RecipesBase.@recipe function plot(t::T2, n::N = 1; customcolor = :green) where {N <: Integer}
         :markershape --> :auto, :require
         :markercolor --> customcolor, :force
         :xrotation --> 5
@@ -72,8 +75,9 @@ end
 @testset "parametric type with double where" begin
     @test_throws MethodError RecipesBase.apply_recipe(KW(), T3())
 
-    @recipe function plot(t::T3, n::N = 1, m::M = 0.0;
-                          customcolor = :green) where {N <: Integer} where {M <: Float64}
+    RecipesBase.@recipe function plot(
+            t::T3, n::N = 1, m::M = 0.0; customcolor = :green
+    ) where {N <: Integer} where {M <: Float64}
         :markershape --> :auto, :require
         :markercolor --> customcolor, :force
         :xrotation --> 5
@@ -92,7 +96,7 @@ end
 
 
 @testset "manual access of plotattributes" begin
-    @recipe function plot(t::T4, n = 1; customcolor = :green)
+    RecipesBase.@recipe function plot(t::T4, n = 1; customcolor = :green)
         :markershape --> :auto, :require
         :markercolor --> customcolor, :force
         :xrotation --> 5
@@ -114,3 +118,15 @@ end
 end
 
 end  # @testset "@recipe"
+
+# Can't do this inside a test-set, because it creates a struct.
+RecipesBase.@userplot MyPlot
+
+@testset "@userplot" begin
+    @test typeof(myplot) <: Function
+    @test length(methods(myplot)) == 1
+    @test typeof(myplot!) <: Function
+    @test length(methods(myplot!)) == 2
+    m = MyPlot(:my_arg)
+    @test m.args == :my_arg
+end

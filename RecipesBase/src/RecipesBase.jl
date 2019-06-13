@@ -349,7 +349,7 @@ function _userplot(expr::Expr)
         export $funcname, $funcname2
         Core.@__doc__ $funcname(args...; kw...) = RecipesBase.plot($typename(args); kw...)
         Core.@__doc__ $funcname2(args...; kw...) = RecipesBase.plot!($typename(args); kw...)
-        Core.@__doc__ $funcname2(plt::AbstractPlot, args...; kw...) = RecipesBase.plot!(plt, $typename(args); kw...)
+        Core.@__doc__ $funcname2(plt::RecipesBase.AbstractPlot, args...; kw...) = RecipesBase.plot!(plt, $typename(args); kw...)
     end)
 end
 
