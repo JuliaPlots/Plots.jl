@@ -518,7 +518,6 @@ function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(l
     if consider_aspect && letter in (:x, :y) && !(sp[:aspect_ratio] in (:none, :auto) || is3d(:sp))
         aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
         plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
-        bbox_ratio = height(sp.bbox) / width(sp.bbox)
         dist = amax - amin
 
         if letter == :x
