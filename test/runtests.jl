@@ -1,15 +1,18 @@
 using VisualRegressionTests
 using Plots
 using Random
-using BinaryProvider
 using Test
 using FileIO
+using PlotReferenceImages
+using Gtk
+
 
 include("imgcomp.jl")
 # don't actually show the plots
 Random.seed!(1234)
 default(show=false, reuse=true)
-img_tol = isinteractive() ? 1e-2 : 10e-2
+is_ci() = get(ENV, "CI", false)
+img_tol = is_ci() ? 10e-2 : 1e-2
 
 @testset "GR" begin
     ENV["PLOTS_TEST"] = "true"
