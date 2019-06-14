@@ -114,8 +114,8 @@ function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
         if aspect_ratio == :equal
             aspect_ratio = 1.0
         end
-        xmin,xmax = axis_limits(sp[:xaxis])
-        ymin,ymax = axis_limits(sp[:yaxis])
+        xmin,xmax = axis_limits(sp, :x)
+        ymin,ymax = axis_limits(sp, :y)
         want_ratio = ((xmax-xmin) / (ymax-ymin)) / aspect_ratio
         parea_ratio = width(plotarea) / height(plotarea)
         if want_ratio > parea_ratio
@@ -174,7 +174,7 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
 
     ax[:tickangle] = -axis[:rotation]
     ax[:type] = plotly_scale(axis[:scale])
-    lims = axis_limits(axis)
+    lims = axis_limits(sp, letter)
 
     if axis[:ticks] != :native || axis[:lims] != :auto
         ax[:range] = map(scalefunc(axis[:scale]), lims)
@@ -188,7 +188,7 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
 
         # ticks
         if axis[:ticks] != :native
-            ticks = get_ticks(axis)
+            ticks = get_ticks(sp, axis)
             ttype = ticksType(ticks)
             if ttype == :ticks
                 ax[:tickmode] = "array"
@@ -211,16 +211,16 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
     ax
 end
 
-function plotly_polaraxis(axis::Axis)
+function plotly_polaraxis(sp::Subplot, axis::Axis)
     ax = KW(
         :visible => axis[:showaxis],
         :showline => axis[:grid],
     )
 
     if axis[:letter] == :x
-        ax[:range] = rad2deg.(axis_limits(axis))
+        ax[:range] = rad2deg.(axis_limits(sp, :x))
     else
-        ax[:range] = axis_limits(axis)
+        ax[:range] = axis_limits(sp, :y)
         ax[:orientation] = -90
     end
 
@@ -283,8 +283,8 @@ function plotly_layout(plt::Plot)
                 ),
             )
         elseif ispolar(sp)
-            plotattributes_out[Symbol("angularaxis$(spidx)")] = plotly_polaraxis(sp[:xaxis])
-            plotattributes_out[Symbol("radialaxis$(spidx)")] = plotly_polaraxis(sp[:yaxis])
+            plotattributes_out[Symbol("angularaxis$(spidx)")] = plotly_polaraxis(sp, sp[:xaxis])
+            plotattributes_out[Symbol("radialaxis$(spidx)")] = plotly_polaraxis(sp, sp[:yaxis])
         else
             plotattributes_out[Symbol("xaxis$(x_idx)")] = plotly_axis(plt, sp[:xaxis], sp)
             # don't allow yaxis to be reupdated/reanchored in a linked subplot

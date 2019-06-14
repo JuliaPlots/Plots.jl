@@ -27,8 +27,8 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
     for sp in plt.subplots
         xaxis = sp[:xaxis]
         yaxis = sp[:yaxis]
-        xlim =  axis_limits(xaxis)
-        ylim =  axis_limits(yaxis)
+        xlim =  axis_limits(sp, :x)
+        ylim =  axis_limits(sp, :y)
 
         # make vectors
         xlim = [xlim[1], xlim[2]]
