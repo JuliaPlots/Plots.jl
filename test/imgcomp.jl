@@ -14,6 +14,7 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = !i
     fn = "ref$idx.png"
     reffn = reference_file(pkg, idx, _current_plots_version)
     newfn = joinpath(reference_path(pkg, _current_plots_version), fn)
+>>>>>>> use PlotReferenceImages Julia Package for tests
 
     # test function
     func = (fn, idx) -> begin

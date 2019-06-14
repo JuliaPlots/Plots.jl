@@ -6,6 +6,7 @@ using FileIO
 using PlotReferenceImages
 using Gtk
 
+>>>>>>> use PlotReferenceImages Julia Package for tests
 
 include("imgcomp.jl")
 # don't actually show the plots
