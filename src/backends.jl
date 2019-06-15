@@ -143,12 +143,7 @@ function _pick_default_backend()
     if env_default != ""
         sym = Symbol(lowercase(env_default))
         if sym in _backends
-            if sym in _initialized_backends
-                backend(sym)
-            else
-                @warn("You have set `PLOTS_DEFAULT_BACKEND=$env_default` but `$(backend_package_name(sym))` is not loaded.")
-                _fallback_default_backend()
-            end
+            backend(sym)
         else
             @warn("You have set PLOTS_DEFAULT_BACKEND=$env_default but it is not a valid backend package.  Choose from:\n\t" *
                  join(sort(_backends), "\n\t"))
