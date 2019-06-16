@@ -129,16 +129,6 @@ PlotExample("Histogram2D",
     end)]
 ),
 
-PlotExample("Histogram2D (complex values)",
-    "",
-    [:(begin
-        n = 10_000
-        x = exp.(0.1randn(n) .+ randn(n).*(im))
-        histogram2d(x, nbins=(20,40), show_empty_bins=true,
-                    normed=true, aspect_ratio=1)
-    end)]
-),
-
 PlotExample("Line types",
     "",
     [:(begin
@@ -461,6 +451,16 @@ see: http://stackoverflow.com/a/37732384/5075246
     returns = sort!((1:N) + D*randn(N))
 
     portfoliocomposition(weights, returns, labels = permutedims(tickers))
+    end)]
+),
+
+PlotExample("Histogram2D (complex values)",
+    "",
+    [:(begin
+        n = 10_000
+        x = exp.(0.1randn(n) .+ randn(n).*(im))
+        histogram2d(x, nbins=(20,40), show_empty_bins=true,
+                    normed=true, aspect_ratio=1)
     end)]
 ),
 
