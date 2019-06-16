@@ -608,7 +608,8 @@ Plots.@deps stepbins path
 wand_edges(x...) = (@warn("Load the StatsPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
 
 function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto) where N
-    _cl(x) = ceil(Int, max(x, one(x)))
+    max_bins = 10_000
+    _cl(x) = min(ceil(Int, max(x, one(x))), max_bins)
     _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
     _span(v) = maximum(v) - minimum(v)
 
@@ -635,7 +636,7 @@ function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::S
     elseif mode == :fd  # Freedman–Diaconis rule
         _cl(_span(v) / (2 * _iqr(v) / nd))
     elseif mode == :wand
-        wand_edges(v)  # this makes this function not type stable, but the type instability does not propagate
+        _cl(wand_edges(v))  # this makes this function not type stable, but the type instability does not propagate
     else
         error("Unknown auto-binning mode $mode")
     end
