@@ -22,8 +22,7 @@ addons:
       - xvfb
 
 env:
-  - PYTHON = ""
-  - MPLBACKEND = "agg"
+  - PYTHON = "" MPLBACKEND = "agg"
 
 notifications:
   email: true
