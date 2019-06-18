@@ -19,8 +19,11 @@ before_install:
 addons:
   apt:
     packages:
-      - python3-matplotlib
       - xvfb
+
+env:
+  - PYTHON = ""
+  - MPLBACKEND = "agg"
 
 notifications:
   email: true
