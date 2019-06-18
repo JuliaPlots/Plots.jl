@@ -20,6 +20,7 @@ addons:
   apt:
     packages:
       - python3-matplotlib
+      - xvfb
 
 notifications:
   email: true
