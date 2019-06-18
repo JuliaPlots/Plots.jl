@@ -16,8 +16,10 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pwd ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./test/install_wkhtmltoimage.sh ; fi
 
-env:
-  - PYTHON = ""
+addons:
+  apt:
+    packages:
+      - python3-matplotlib
 
 notifications:
   email: true
