@@ -20,14 +20,13 @@ addons:
   apt:
     packages:
       - xvfb
-      - python3-matplotlib
 
 env:
-  - PYTHON = python3 MPLBACKEND = "agg"
+  - PYTHON = "" MPLBACKEND = "agg"
 
 notifications:
   email: true
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - xvfb-run julia -e 'using Pkg; Pkg.build(); Pkg.test(coverage=true)'
+  - xvfb-run julia -e 'using Pkg; Pkg.build("PyPlot"); Pkg.build(); Pkg.test(coverage=true)'
