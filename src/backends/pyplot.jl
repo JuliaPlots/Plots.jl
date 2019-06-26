@@ -1296,10 +1296,6 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
         handles = []
         for series in series_list(sp)
             if should_add_to_legend(series)
-
-                lc = get_linecolor(series, clims)
-                lc = isa(lc, ColorGradient) ? lc[0.5] : lc
-
                 # add a line/marker and a label
                 push!(handles, if series[:seriestype] == :shape || series[:fillrange] != nothing
                     pypatches."Patch"(
