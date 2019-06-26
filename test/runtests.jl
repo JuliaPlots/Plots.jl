@@ -57,7 +57,9 @@ end
     plots = [histogram([1, 0, 0, 0, 0, 0]),
              plot([missing]),
              plot([missing; 1:4]),
-             plot([fill(missing,10); 1:4])]
+             plot([fill(missing,10); 1:4]),
+             plot([1 1; 1 missing]),
+             plot(["a" "b"; missing "d"], [1 2; 3 4])]
     for plt in plots
         display(plt)
     end
