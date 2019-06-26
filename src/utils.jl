@@ -625,6 +625,9 @@ for comp in (:line, :fill, :marker)
     end
 end
 
+single_color(c, v = 0.5) = c
+single_color(grad::ColorGradient, v = 0.5) = grad[v]
+
 function get_linewidth(series, i::Int = 1)
     _cycle(series[:linewidth], i)
 end

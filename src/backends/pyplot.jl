@@ -467,7 +467,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     handle = ax."plot"((arg[rng] for arg in xyargs)...;
                         label = i == 1 ? series[:label] : "",
                         zorder = series[:series_plotindex],
-                        color = py_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
+                        color = py_color(single_color(get_linecolor(series, clims, i)), get_linealpha(series, i)),
                         linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
                         linestyle = py_linestyle(st, get_linestyle(series, i)),
                         solid_capstyle = "round",
@@ -1299,19 +1299,19 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 # add a line/marker and a label
                 push!(handles, if series[:seriestype] == :shape || series[:fillrange] != nothing
                     pypatches."Patch"(
-                        edgecolor = py_color(get_linecolor(series, clims), get_linealpha(series)),
-                        facecolor = py_color(get_fillcolor(series, clims), get_fillalpha(series)),
+                        edgecolor = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
+                        facecolor = py_color(single_color(get_fillcolor(series, clims)), get_fillalpha(series)),
                         linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(series[:seriestype], get_linestyle(series))
                     )
                 elseif series[:seriestype] in (:path, :straightline, :scatter)
                     PyPlot.plt."Line2D"((0,1),(0,0),
-                        color = py_color(get_linecolor(series, clims), get_linealpha(series)),
+                        color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
                         linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(:path, get_linestyle(series)),
                         marker = py_marker(first(series[:markershape])),
-                        markeredgecolor = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
-                        markerfacecolor = series[:marker_z] == nothing ? py_color(get_markercolor(series, clims), get_markeralpha(series)) : py_color(series[:markercolor][0.5])
+                        markeredgecolor = py_color(single_color(get_markerstrokecolor(series)), get_markerstrokealpha(series)),
+                        markerfacecolor = py_color(single_color(get_markercolor(series, clims)), get_markeralpha(series))
                     )
                 else
                     series[:serieshandle][1]
