@@ -19,13 +19,8 @@ convertToAnyVector(v::Nothing, plotattributes::KW) = Any[nothing], nothing
 # fixed number of blank series
 convertToAnyVector(n::Integer, plotattributes::KW) = Any[zeros(0) for i in 1:n], nothing
 
-# numeric vector
-convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Number} = Any[v], nothing
-convertToAnyVector(v::AVec{Union{Missing, T}}, plotattributes::KW) where {T<:Number} = Any[replace(v, missing => NaN)], nothing
-
-# string vector
-convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:AbstractString} = Any[v], nothing
-convertToAnyVector(v::AVec{Union{Missing, T}}, plotattributes::KW) where {T<:AbstractString} = Any[replace(v, missing => "")], nothing
+# numeric/string vector
+convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Union{Number,String,Missing}} = Any[handlemissings(v)], nothing
 
 function convertToAnyVector(v::AMat, plotattributes::KW)
     v = handlemissings(v)
@@ -36,9 +31,9 @@ function convertToAnyVector(v::AMat, plotattributes::KW)
     end, nothing
 end
 
-handlemissings(v::AMat) = v
-handlemissings(v::AMat{T}) where T <: Number = replace(v, missing => NaN)
-handlemissings(v::AMat{T}) where T <: String = replace(v, missing => "")
+handlemissings(v) = v
+handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: Number = replace(v, missing => NaN)
+handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: String = replace(v, missing => "")
 
 # function
 convertToAnyVector(f::Function, plotattributes::KW) = Any[f], nothing
