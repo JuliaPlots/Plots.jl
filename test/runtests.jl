@@ -4,6 +4,7 @@ using Random
 using BinaryProvider
 using Test
 using FileIO
+using GeometryTypes
 
 include("imgcomp.jl")
 # don't actually show the plots
@@ -80,4 +81,15 @@ end
     @test segments([nan10; 1:5; nan10; 1:5; nan10]) == [11:15, 26:30]
     @test segments([NaN; 1], 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
     @test segments([nan10; 1:15], [1:15; nan10]) == [11:15]
+end
+
+@testset "Utils" begin
+    zipped = ([(1,2)], [("a","b")], [(1,"a"),(2,"b")],
+              [(1,2),(3,4)], [(1,2,3),(3,4,5)], [(1,2,3,4),(3,4,5,6)],
+              [(1,2.0),(missing,missing)], [(1,missing),(missing,"a")],
+              [(missing,missing)], [(missing,missing,missing),("a","b","c")])
+    for z in zipped
+        @test isequal(collect(zip(Plots.unzip(z)...)), z)
+        @test isequal(collect(zip(Plots.unzip(Point.(z))...)), z)
+    end
 end
