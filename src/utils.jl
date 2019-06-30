@@ -271,18 +271,17 @@ maketuple(x::Tuple{T,S}) where {T,S} = x
 mapFuncOrFuncs(f::Function, u::AVec)        = map(f, u)
 mapFuncOrFuncs(fs::AVec{F}, u::AVec) where {F<:Function} = [map(f, u) for f in fs]
 
-unzip(xy::AVec{Tuple{X,Y}}) where {X,Y}              = [t[1] for t in xy], [t[2] for t in xy]
-unzip(xyz::AVec{Tuple{X,Y,Z}}) where {X,Y,Z}         = [t[1] for t in xyz], [t[2] for t in xyz], [t[3] for t in xyz]
-unzip(xyuv::AVec{Tuple{X,Y,U,V}}) where {X,Y,U,V}    = [t[1] for t in xyuv], [t[2] for t in xyuv], [t[3] for t in xyuv], [t[4] for t in xyuv]
+for i in 2:4
+  @eval begin
+    unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
+                   AVec{<:GeometryTypes.Point{$i}}}) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
+  end
+end
 
-unzip(xy::AVec{GeometryTypes.Point{2,T}}) where {T}  = T[t[1] for t in xy], T[t[2] for t in xy]
-unzip(xy::GeometryTypes.Point{2,T}) where {T}        = T[xy[1]], T[xy[2]]
-
-unzip(xyz::AVec{GeometryTypes.Point{3,T}}) where {T} = T[t[1] for t in xyz], T[t[2] for t in xyz], T[t[3] for t in xyz]
-unzip(xyz::GeometryTypes.Point{3,T}) where {T}       = T[xyz[1]], T[xyz[2]], T[xyz[3]]
-
-unzip(xyuv::AVec{GeometryTypes.Point{4,T}}) where {T} = T[t[1] for t in xyuv], T[t[2] for t in xyuv], T[t[3] for t in xyuv], T[t[4] for t in xyuv]
-unzip(xyuv::GeometryTypes.Point{4,T}) where {T}       = T[xyuv[1]], T[xyuv[2]], T[xyuv[3]], T[xyuv[4]]
+unzip(v::Union{AVec{<:GeometryTypes.Point{N}},
+               AVec{<:Tuple{Vararg{T,N} where T}}}) where N = error("$N-dimensional unzip not implemented.")
+unzip(v::Union{AVec{<:GeometryTypes.Point},
+               AVec{<:Tuple}}) = error("Can't unzip points of different dimensions.")
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
