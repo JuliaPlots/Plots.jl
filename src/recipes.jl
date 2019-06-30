@@ -545,6 +545,8 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
             if !isnan(last_w)
                 push!(x, a)
                 push!(y, baseline)
+                push!(x, NaN)
+                push!(y, NaN)
             end
         else
             if isnan(last_w)
