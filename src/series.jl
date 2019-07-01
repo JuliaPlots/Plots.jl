@@ -553,33 +553,14 @@ end
 # # Lists of tuples and GeometryTypes.Points
 # # --------------------------------------------------------------------
 #
-# # if we get an unhandled tuple, just splat it in
-@recipe f(tup::Tuple) = tup
 
-#
-# # (x,y) tuples
-@recipe f(xy::AVec{Tuple{R1,R2}}) where {R1<:Number,R2<:Number} = unzip(xy)
-@recipe f(xy::Tuple{R1,R2}) where {R1<:Number,R2<:Number}       = [xy[1]], [xy[2]]
+@recipe f(v::AVec{<:Tuple})               = unzip(v)
+@recipe f(v::AVec{<:GeometryTypes.Point}) = unzip(v)
+@recipe f(tup::Tuple)             = [tup]
+@recipe f(p::GeometryTypes.Point) = [p]
 
-#
-# # (x,y,z) tuples
-@recipe f(xyz::AVec{Tuple{R1,R2,R3}}) where {R1<:Number,R2<:Number,R3<:Number} = unzip(xyz)
-@recipe f(xyz::Tuple{R1,R2,R3}) where {R1<:Number,R2<:Number,R3<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
-
-# these might be points+velocity, or OHLC or something else
-@recipe f(xyuv::AVec{Tuple{R1,R2,R3,R4}}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = get(plotattributes,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
-@recipe f(xyuv::Tuple{R1,R2,R3,R4}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number}       = [xyuv[1]], [xyuv[2]], [xyuv[3]], [xyuv[4]]
-
-
-#
-# # 2D Points
-@recipe f(xy::AVec{GeometryTypes.Point{2,T}}) where {T<:Number} = unzip(xy)
-@recipe f(xy::GeometryTypes.Point{2,T}) where {T<:Number}       = [xy[1]], [xy[2]]
-
-#
-# # 3D Points
-@recipe f(xyz::AVec{GeometryTypes.Point{3,T}}) where {T<:Number} = unzip(xyz)
-@recipe f(xyz::GeometryTypes.Point{3,T}) where {T<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
+# Special case for 4-tuples in :ohlc series
+@recipe f(xyuv::AVec{<:Tuple{R1,R2,R3,R4}}) where {R1,R2,R3,R4} = get(plotattributes,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
 
 #
 # # --------------------------------------------------------------------
