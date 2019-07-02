@@ -1280,10 +1280,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     for (i, rng) in enumerate(segments)
                         lc = get_linecolor(series, clims, i)
                         gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc) #, series[:linealpha])
-                        gr_set_transparency(lc, get_linealpha(series, i))
                         arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
                         arrowstyle = isa(series[:arrow], Arrow) ? series[:arrow].style : :simple
                         gr_set_fillcolor(lc)
+                        gr_set_transparency(lc, get_linealpha(series, i))
                         gr_polyline(x[rng], y[rng]; arrowside = arrowside, arrowstyle = arrowstyle)
                     end
                 end
