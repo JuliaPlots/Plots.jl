@@ -538,13 +538,15 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
         w, it_state_w = it_tuple_w
 
         if (log_scale_x && a ≈ 0)
-            a = b/_logScaleBases[xscale]^3
+            a = oftype(a, b/_logScaleBases[xscale]^3)
         end
 
         if isnan(w)
             if !isnan(last_w)
                 push!(x, a)
                 push!(y, baseline)
+                push!(x, NaN)
+                push!(y, NaN)
             end
         else
             if isnan(last_w)
@@ -557,8 +559,8 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
             push!(y, w)
         end
 
-        a = b
-        last_w = w
+        a = oftype(a, b)
+        last_w = oftype(last_w, w)
 
         it_tuple_e = iterate(edge, it_state_e)
         it_tuple_w = iterate(weights, it_state_w)
