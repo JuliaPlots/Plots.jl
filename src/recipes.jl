@@ -1200,13 +1200,9 @@ julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], f
     data = cumsum(a.args[end], dims=2)
     x = length(a.args) == 1 ? (1:size(data, 1)) : a.args[1]
     seriestype := :line
-    @series begin
-        fillrange := 0
-        x, data[:,1]
-    end
-    for i in 2:size(data, 2)
+    for i in 1:size(data, 2)
         @series begin
-            fillrange := data[:,i-1]
+            fillrange := i > 1 ? data[:,i-1] : 0
             x, data[:,i]
         end
     end
