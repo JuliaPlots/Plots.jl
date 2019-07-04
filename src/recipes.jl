@@ -1183,3 +1183,27 @@ end
         @series Plots.isvertical(plotattributes) ? (sx, sy) : (sy, sx)
     end
 end
+
+"""
+    areaplot([x,] y)
+    areaplot!([x,] y)
+
+Draw a stacked area plot of the matrix y.
+# Examples
+```julia-repl
+julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], fillalpha = [0.2 0.3 0.4])
+```
+"""
+@userplot AreaPlot
+
+@recipe function f(a::AreaPlot)
+    data = cumsum(a.args[end], dims=2)
+    x = length(a.args) == 1 ? (1:size(data, 1)) : a.args[1]
+    seriestype := :line
+    for i in 1:size(data, 2)
+        @series begin
+            fillrange := i > 1 ? data[:,i-1] : 0
+            x, data[:,i]
+        end
+    end
+end

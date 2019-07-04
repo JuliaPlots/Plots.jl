@@ -2,10 +2,10 @@
     scatter(x,y)
     scatter!(x,y)
 
-Make a scatter plot of y vs x. 
+Make a scatter plot of y vs x.
 
 # Examples
-```julia-repl 
+```julia-repl
 julia> scatter([1,2,3],[4,5,6],markersize=[3,4,5],markercolor=[:red,:green,:blue])
 julia> scatter([(1,4),(2,5),(3,6)])
 ```
@@ -16,9 +16,9 @@ julia> scatter([(1,4),(2,5),(3,6)])
     bar(x,y)
     bar!(x,y)
 
-Make a bar plot of y vs x. 
+Make a bar plot of y vs x.
 
-# Arguments 
+# Arguments
 
 - $(_document_argument("bar_position"))
 - $(_document_argument("bar_width"))
@@ -26,7 +26,7 @@ Make a bar plot of y vs x.
 - $(_document_argument("orientation"))
 
 # Examples
-```julia-repl 
+```julia-repl
 julia> bar([1,2,3],[4,5,6],fillcolor=[:red,:green,:blue],fillalpha=[0.2,0.4,0.6])
 julia> bar([(1,4),(2,5),(3,6)])
 ```
@@ -41,7 +41,7 @@ julia> bar([(1,4),(2,5),(3,6)])
 
 Plot a histogram.
 
-# Arguments 
+# Arguments
 
 - `x`: AbstractVector of values to be binned
 - $(_document_argument("bins"))
@@ -53,7 +53,7 @@ Plot a histogram.
 - $(_document_argument("orientation"))
 
 # Example
-```julia-repl 
+```julia-repl
 julia> histogram([1,2,1,1,4,3,8],bins=0:8)
 ```
 """
@@ -63,7 +63,7 @@ julia> histogram([1,2,1,1,4,3,8],bins=0:8)
     barhist(x)
     barhist!(x)
 
-Make a histogram bar plot. See `histogram`. 
+Make a histogram bar plot. See `histogram`.
 """
 @shorthands barhist
 
@@ -72,7 +72,7 @@ Make a histogram bar plot. See `histogram`.
     stephist(x)
 
 Make a histogram step plot (bin counts are represented using horizontal lines
-instead of bars). See `histogram`. 
+instead of bars). See `histogram`.
 """
 @shorthands stephist
 
@@ -80,8 +80,8 @@ instead of bars). See `histogram`.
     scatterhist(x)
     scatterhist!(x)
 
-Make a histogram scatter plot (bin counts are represented using points 
-instead of bars). See `histogram`. 
+Make a histogram scatter plot (bin counts are represented using points
+instead of bars). See `histogram`.
 """
 @shorthands scatterhist
 
@@ -91,14 +91,14 @@ instead of bars). See `histogram`.
 
 Plot a two-dimensional histogram.
 
-# Arguments 
+# Arguments
 
-- `bins`: Number of bins (if an `Integer`) or bin edges (if an `AbtractVector`) 
-- `weights`: Vector of weights for the values in `x`. Each entry of x contributes 
-             its weight to the height of its bin. 
+- `bins`: Number of bins (if an `Integer`) or bin edges (if an `AbtractVector`)
+- `weights`: Vector of weights for the values in `x`. Each entry of x contributes
+             its weight to the height of its bin.
 
 # Example
-```julia-repl 
+```julia-repl
 julia> histogram2d(randn(10_000),randn(10_000))
 ```
 """
@@ -108,14 +108,14 @@ julia> histogram2d(randn(10_000),randn(10_000))
     density(x)
     density!(x)
 
-Make a line plot of a kernel density estimate of x. 
+Make a line plot of a kernel density estimate of x.
 
 # Arguments
 
-- `x`: AbstractVector of samples for probability density estimation 
+- `x`: AbstractVector of samples for probability density estimation
 
 # Example
-```julia-repl 
+```julia-repl
 julia> using StatsPlots
 julia> density(randn(100_000))
 ```
@@ -126,10 +126,10 @@ julia> density(randn(100_000))
     heatmap(x,y,z)
     heatmap!(x,y,z)
 
-Plot a heatmap of the rectangular array `z`. 
+Plot a heatmap of the rectangular array `z`.
 
 # Example
-```julia-repl 
+```julia-repl
 julia> heatmap(randn(10,10))
 ```
 """
@@ -140,7 +140,7 @@ julia> heatmap(randn(10,10))
     hexbin(x,y)
     hexbin!(x,y)
 
-Make a hexagonal binning plot (a histogram of the observations `(x[i],y[i])` 
+Make a hexagonal binning plot (a histogram of the observations `(x[i],y[i])`
 with hexagonal bins)
 
 # Example
@@ -154,11 +154,11 @@ julia> hexbin(randn(10_000), randn(10_000))
     sticks(x,y)
     sticks!(x,y)
 
-Draw a stick plot of y vs x. 
+Draw a stick plot of y vs x.
 
 # Example
 ```julia-repl
-julia> sticks(1:10) 
+julia> sticks(1:10)
 ```
 """
 @shorthands sticks
@@ -167,11 +167,11 @@ julia> sticks(1:10)
     hline(y)
     hline!(y)
 
-Draw horizontal lines at positions specified by the values in 
+Draw horizontal lines at positions specified by the values in
 the AbstractVector `y`
 
 # Example
-```julia-repl 
+```julia-repl
 julia> hline([-1,0,2])
 ```
 """
@@ -181,11 +181,11 @@ julia> hline([-1,0,2])
     vline(x)
     vline!(x)
 
-Draw vertical lines at positions specified by the values in 
+Draw vertical lines at positions specified by the values in
 the AbstractVector `x`
 
 # Example
-```julia-repl 
+```julia-repl
 julia> vline([-1,0,2])
 ```
 """
@@ -194,13 +194,13 @@ julia> vline([-1,0,2])
 """
     hspan(y)
 
-Draw a rectangle between the horizontal line at position `y[1]` 
-and the horizontal line at position `y[2]`. If `length(y) ≥ 4`, 
-then further rectangles are drawn between `y[3]` and `y[4]`, 
-`y[5]` and `y[6]`, and so on. If `length(y)` is odd, then the 
-last entry of `y` is ignored. 
+Draw a rectangle between the horizontal line at position `y[1]`
+and the horizontal line at position `y[2]`. If `length(y) ≥ 4`,
+then further rectangles are drawn between `y[3]` and `y[4]`,
+`y[5]` and `y[6]`, and so on. If `length(y)` is odd, then the
+last entry of `y` is ignored.
 # Example
-```julia-repl 
+```julia-repl
 julia> hspan(1:6)
 ```
 """
@@ -209,13 +209,13 @@ julia> hspan(1:6)
 """
     vspan(x)
 
-Draw a rectangle between the vertical line at position `x[1]` 
-and the vertical line at position `x[2]`. If `length(x) ≥ 4`, 
-then further rectangles are drawn between `x[3]` and `x[4]`, 
-`x[5]` and `x[6]`, and so on. If `length(x)` is odd, then the 
-last entry of `x` is ignored. 
+Draw a rectangle between the vertical line at position `x[1]`
+and the vertical line at position `x[2]`. If `length(x) ≥ 4`,
+then further rectangles are drawn between `x[3]` and `x[4]`,
+`x[5]` and `x[6]`, and so on. If `length(x)` is odd, then the
+last entry of `x` is ignored.
 # Example
-```julia-repl 
+```julia-repl
 julia> vspan(1:6)
 ```
 """
@@ -225,9 +225,9 @@ julia> vspan(1:6)
     ohlc(x,y::Vector{OHLC})
     ohlc!(x,y::Vector{OHLC})
 
-Make open-high-low-close plot. Each entry of y is represented by a vertical 
-segment extending from the low value to the high value, with short horizontal 
-segments on the left and right indicating the open and close values, respectively. 
+Make open-high-low-close plot. Each entry of y is represented by a vertical
+segment extending from the low value to the high value, with short horizontal
+segments on the left and right indicating the open and close values, respectively.
 
 # Example
 ```julia-repl
@@ -240,16 +240,16 @@ julia> ohlc(y)
 
 
 """
-    contour(x,y,z) 
-    contour!(x,y,z) 
+    contour(x,y,z)
+    contour!(x,y,z)
 
-Draw contour lines of the `Surface` z. 
+Draw contour lines of the `Surface` z.
 
 # Arguments
 - `levels`: Contour levels (if `AbstractVector`) or number of levels (if `Integer`)
 - `fill`: Bool. Fill area between contours or draw contours only (false by default)
 
-# Example 
+# Example
 ```julia-repl
 julia> x = y = range(-20, 20, length = 100)
 julia> contour(x, y, (x, y) -> x^2 + y^2)
@@ -267,10 +267,10 @@ julia> contour(x, y, (x, y) -> x^2 + y^2)
     surface(x,y,z)
     surface!(x,y,z)
 
-Draw a 3D surface plot. 
+Draw a 3D surface plot.
 
 # Example
-```julia-repl 
+```julia-repl
 julia> x = y = range(-3, 3, length = 100)
 julia> surface(x, y, (x, y) -> sinc(norm([x, y])))
 ```
@@ -281,10 +281,10 @@ julia> surface(x, y, (x, y) -> sinc(norm([x, y])))
     wireframe(x,y,z)
     wireframe!(x,y,z)
 
-Draw a 3D wireframe plot. 
+Draw a 3D wireframe plot.
 
 # Example
-```julia-repl 
+```julia-repl
 julia> wireframe(1:10,1:10,randn(10,10))
 ```
 """
@@ -295,10 +295,10 @@ julia> wireframe(1:10,1:10,randn(10,10))
     path3d!(x,y,z)
 
 Plot a 3D path from `(x[1],y[1],z[1])` to `(x[2],y[2],z[2])`,
-..., to `(x[end],y[end],z[end])`. 
+..., to `(x[end],y[end],z[end])`.
 
 # Example
-```julia-repl 
+```julia-repl
 julia> path3d([0,1,2,3],[0,1,4,9],[0,1,8,27])
 ```
 """
@@ -308,10 +308,10 @@ julia> path3d([0,1,2,3],[0,1,4,9],[0,1,8,27])
     scatter3d(x,y,z)
     scatter3d!(x,y,z)
 
-Make a 3D scatter plot. 
+Make a 3D scatter plot.
 
 # Example
-```julia-repl 
+```julia-repl
 julia> scatter3d([0,1,2,3],[0,1,4,9],[0,1,8,27])
 ```
 """
@@ -321,17 +321,17 @@ julia> scatter3d([0,1,2,3],[0,1,4,9],[0,1,8,27])
     boxplot(x, y)
     boxplot!(x, y)
 
-Make a box and whisker plot. 
+Make a box and whisker plot.
 
 # Keyword arguments
 - `notch`: Bool. Notch the box plot? (false)
 - `range`: Real. Values more than range*IQR below the first quartile
-           or above the third quartile are shown as outliers (1.5) 
-- `outliers`: Bool. Show outliers? (true) 
-- `whisker_width`: Real or Symbol. Length of whiskers (:match) 
+           or above the third quartile are shown as outliers (1.5)
+- `outliers`: Bool. Show outliers? (true)
+- `whisker_width`: Real or Symbol. Length of whiskers (:match)
 
 # Example
-```julia-repl 
+```julia-repl
 julia> using StatsPlots
 julia> boxplot(repeat([1,2,3],outer=100),randn(300))
 ```
@@ -342,10 +342,10 @@ julia> boxplot(repeat([1,2,3],outer=100),randn(300))
     violin(x,y,z)
     violin!(x,y,z)
 
-Make a violin plot. 
+Make a violin plot.
 
 # Example
-```julia-repl 
+```julia-repl
 julia> violin(repeat([1,2,3],outer=100),randn(300))
 ```
 """
@@ -355,11 +355,11 @@ julia> violin(repeat([1,2,3],outer=100),randn(300))
     quiver(x,y,quiver=(u,v))
     quiver!(x,y,quiver=(u,v))
 
-Make a quiver (vector field) plot. The `i`th vector extends 
-from `(x[i],y[i])` to `(x[i] + u[i], y[i] + v[i])`. 
+Make a quiver (vector field) plot. The `i`th vector extends
+from `(x[i],y[i])` to `(x[i] + u[i], y[i] + v[i])`.
 
 # Example
-```julia-repl 
+```julia-repl
 julia> quiver([1,2,3],[3,2,1],quiver=([1,1,1],[1,2,3]))
 ```
 """
@@ -369,11 +369,11 @@ julia> quiver([1,2,3],[3,2,1],quiver=([1,1,1],[1,2,3]))
     curves(x,y)
     curves!(x,y)
 
-Draw a Bezier curve from `(x[1],y[1])` to `(x[end],y[end])` 
+Draw a Bezier curve from `(x[1],y[1])` to `(x[end],y[end])`
 with control points `(x[2],y[2]), ..., (x[end-1],y[end]-1)`
 
 # Example
-```julia-repl 
+```julia-repl
 julia> curves([1,2,3,4],[1,1,2,4])
 ```
 """
@@ -424,9 +424,9 @@ ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = 
 """
     annotate!(anns...)
 
-Add annotations to an existing plot. 
+Add annotations to an existing plot.
 
-# Arguments 
+# Arguments
 
 - `anns`: An `AbstractVector` of tuples of the form (x,y,text). The text object
           can be an String or PlotText
