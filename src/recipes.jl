@@ -1183,3 +1183,22 @@ end
         @series Plots.isvertical(plotattributes) ? (sx, sy) : (sy, sx)
     end
 end
+
+
+@userplot AreaPlot
+
+@recipe function f(a::AreaPlot)
+    data = cumsum(a.args[end], dims=2)
+    x = length(a.args) == 1 ? (1:size(data, 1)) : a.args[1]
+    seriestype := :line
+    @series begin
+        fillrange := 0
+        x, data[:,1]
+    end
+    for i in 2:size(data, 2)
+        @series begin
+            fillrange := data[:,i-1]
+            x, data[:,i]
+        end
+    end
+end
