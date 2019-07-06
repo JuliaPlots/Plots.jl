@@ -20,7 +20,7 @@ convertToAnyVector(v::Nothing, plotattributes::KW) = Any[nothing], nothing
 convertToAnyVector(n::Integer, plotattributes::KW) = Any[zeros(0) for i in 1:n], nothing
 
 # numeric/string vector
-convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Union{Number,String,Missing}} = Any[handlemissings(v)], nothing
+convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Union{Number,AbstractString,Missing}} = Any[handlemissings(v)], nothing
 
 function convertToAnyVector(v::AMat, plotattributes::KW)
     v = handlemissings(v)
@@ -33,7 +33,7 @@ end
 
 handlemissings(v) = v
 handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: Number = replace(v, missing => NaN)
-handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: String = replace(v, missing => "")
+handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: AbstractString = replace(v, missing => "")
 
 # function
 convertToAnyVector(f::Function, plotattributes::KW) = Any[f], nothing
