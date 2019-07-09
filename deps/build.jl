@@ -65,7 +65,11 @@ if use_bp
 else
     @info("Using system `ffmpeg`. If you run into `ffmpeg`-related trouble, trying running `ENV[\"PLOTS_INSTALL_FFMPEG\"]=\"true\"; using Pkg; Pkg.build(\"Plots\")` to use `BinaryProvider`-provided `ffmpeg` instead.")
 
-    
+    # if we're using the system `ffmpeg`, remove `binary_provider_deps.jl`,
+    # so the existence of that file is equivalent to using BinaryProvider. 
+    # This lets us check if the file exists to know whether or not to 
+    # call `check_deps` in `__init__()`, and to set the system fallback
+    # `const ffmpeg = "ffmpeg"` in Plots.jl.
     if isfile("binary_provider_deps.jl")
         rm("binary_provider_deps.jl")
     end
