@@ -10,6 +10,7 @@
 
 ---
 ## (current master)
+- Optionally use BinaryProvider for `ffmpeg`
 
 ## 0.25.1
 - fix gr_display
