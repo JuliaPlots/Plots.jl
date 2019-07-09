@@ -30,6 +30,12 @@ else
     const plotly_local_file_path = ""
 end
 
+if isfile(joinpath(@__DIR__, "..", "deps", "binary_provider_deps.jl"))
+    include(joinpath(@__DIR__, "..", "deps", "binary_provider_deps.jl"))
+else
+    const ffmpeg = "ffmpeg"
+end
+
 export
     grid,
     bbox,

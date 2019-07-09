@@ -11,6 +11,12 @@ end
 
 
 function __init__()
+
+    # for BinaryProvider
+    if isfile(joinpath(@__DIR__, "..", "deps", "binary_provider_deps.jl"))
+        check_deps() 
+    end
+
     user_defaults = _plots_defaults()
     if haskey(user_defaults, :theme)
         theme(user_defaults[:theme])

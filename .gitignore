@@ -7,4 +7,7 @@ examples/meetup/.ipynb_checkpoints/*
 deps/plotly-latest.min.js
 deps/build.log
 deps/deps.jl
+deps/binary_provider_deps.jl
+deps/usr
+deps/build_*.jl
 Manifest.toml
