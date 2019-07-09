@@ -32,6 +32,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [compat]
+BinaryProvider = "≥ 0.3.0"
 FixedPointNumbers = "≥ 0.3.0"
 GR = "≥ 0.31.0"
 PlotThemes = "≥ 0.1.3"
