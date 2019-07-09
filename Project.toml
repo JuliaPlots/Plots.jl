@@ -41,7 +41,6 @@ StatsBase = "≥ 0.14.0"
 julia = "≥ 1.0.0"
 
 [extras]
-BinaryProvider = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
@@ -55,4 +54,4 @@ UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["BinaryProvider", "Pkg", "Test", "Random", "StatsPlots", "VisualRegressionTests", "LaTeXStrings", "Images", "ImageMagick", "RDatasets", "FileIO", "UnicodePlots"]
+test = ["Pkg", "Test", "Random", "StatsPlots", "VisualRegressionTests", "LaTeXStrings", "Images", "ImageMagick", "RDatasets", "FileIO", "UnicodePlots"]
