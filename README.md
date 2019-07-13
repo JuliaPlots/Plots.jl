@@ -11,7 +11,7 @@
 
 #### Created by Tom Breloff (@tbreloff)
 
-#### Maintained by the [JuliaPlot members](https://github.com/orgs/JuliaPlots/people)
+#### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
 
 Plots is a plotting API and toolset.  My goals with the package are:
 
