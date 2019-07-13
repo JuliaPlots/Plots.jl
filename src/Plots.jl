@@ -8,6 +8,8 @@ import GeometryTypes
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
 import SparseArrays: findnz
 
+using FFMPEG
+
 @reexport using RecipesBase
 import RecipesBase: plot, plot!, animate
 using Base.Meta
