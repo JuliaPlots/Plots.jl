@@ -11,6 +11,29 @@
 ---
 ## (current master)
 
+## 0.26.0
+- use FFMPEG.jl
+- add missing method for convertToAnyVector
+
+## 0.25.3
+- add areaplot
+- allow missing in z_color arguments
+- more general tuple recipe
+- stephist logscale improvements
+
+## 0.25.2
+- improvements to handle missings
+- pyplot: allow setting the color gradient for z values
+- document :colorbar_entry
+- limit number of automatic bins
+- fix ENV['PLOTS_DEFAULT_BACKEND']
+- don't let aspect_ratio impact subplot size
+- implement arrowstyle for GR
+- fix bug in plotly_convert_to_datetime
+- improve missing support
+- gr: polar heatmaps
+- make sure show returns nothing
+
 ## 0.25.1
 - fix gr_display
 
