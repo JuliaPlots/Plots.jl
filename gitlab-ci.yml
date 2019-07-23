@@ -1,0 +1,48 @@
+stages:
+  - test
+  - deploy
+
+variables:
+  JULIA_DEPOT_PATH: "$CI_PROJECT_DIR/.julia/"
+
+# Root job that other jobs extend
+.root:
+  image: "julia:1.2"
+  only:
+    variables:
+      - $CI_IMAGE_TAG
+      - $CI_VERSION_TAG
+
+test:
+  extends: .root
+  stage: test
+  script:
+    - julia -e 'using InteractiveUtils;
+                versioninfo()'
+    - mkdir $JULIA_DEPOT_PATH # Pkg.jl#325
+    - julia -e 'using Pkg;
+                Pkg.develop([PackageSpec(path=pwd());
+                             [PackageSpec(name=pkg)
+                              for pkg in split(get(ENV,"CI_DEV_PKGS",""))]])'
+    - julia -e "using Pkg;
+                pkg\"build ${CI_PROJECT_NAME}\";
+                pkg\"test --coverage ${CI_PROJECT_NAME}\""
+  artifacts:
+    when: always
+    paths:
+      - Manifest.toml
+      test/
+
+updaterefimages:
+  stage: deploy
+  extends: .root
+  when: manual
+  script:
+    - julia --project=docs/ -e 'using Pkg;
+                                Pkg.dev([PackageSpec(path=pwd());
+                                         [PackageSpec(name=pkg)
+                                          for pkg in split(get(ENV,"CI_DEV_PKGS",""))]])'
+    - julia --project=docs/ docs/make.jl
+  artifacts:
+    paths:
+    - docs/build
