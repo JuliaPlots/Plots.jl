@@ -30,7 +30,7 @@ convertToAnyVector(n::Integer) = Any[zeros(0) for i in 1:n]
 convertToAnyVector(v::AVec{<:DataPoint}) = Any[prepareSeriesData(v)]
 
 # list of things (maybe other vectors, functions, or something else)
-convertToAnyVector(v::AVec) = vcat((convertToAnyVector(vi, plotattributes) for vi in v)...)
+convertToAnyVector(v::AVec) = vcat((convertToAnyVector(vi) for vi in v)...)
 
 # Matrix is split into columns
 convertToAnyVector(v::AMat{<:DataPoint}) = Any[prepareSeriesData(v[:,i]) for i in 1:size(v,2)]
