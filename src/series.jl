@@ -10,8 +10,6 @@ const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
 const DataPoint = Union{Number, AbstractString, Missing}
 const SeriesData = Union{AVec{<:DataPoint}, Function, Surface, Volume}
 
-all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
-
 prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
 prepareSeriesData(::Nothing) = nothing
 prepareSeriesData(s::SeriesData) = handlemissings(s)
@@ -34,7 +32,7 @@ convertToAnyVector(v::AVec{<:DataPoint}) = Any[prepareSeriesData(v)]
 # list of things (maybe other vectors, functions, or something else)
 convertToAnyVector(v::AVec) = vcat((convertToAnyVector(vi, plotattributes) for vi in v)...)
 
-# Matrix is split into rows
+# Matrix is split into columns
 convertToAnyVector(v::AMat{<:DataPoint}) = Any[prepareSeriesData(v[:,i]) for i in 1:size(v,2)]
 
 # --------------------------------------------------------------------
@@ -256,6 +254,8 @@ function wrap_surfaces(plotattributes::KW)
 end
 
 @recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
+
+all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
 @recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat,Missing}
