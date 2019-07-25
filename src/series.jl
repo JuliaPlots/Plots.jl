@@ -7,67 +7,35 @@
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
 const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
+const DataPoint = Union{Number, AbstractString, Missing}
+const SeriesData = Union{AVec{<:DataPoint}, Function, Surface, Volume}
 
 all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
 
-# unknown
-convertToAnyVector(x, plotattributes::KW) = error("No user recipe defined for $(typeof(x))")
-
-# missing
-convertToAnyVector(v::Nothing, plotattributes::KW) = Any[nothing], nothing
-
-# fixed number of blank series
-convertToAnyVector(n::Integer, plotattributes::KW) = Any[zeros(0) for i in 1:n], nothing
-
-# numeric/string vector
-convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Union{Number,AbstractString,Missing}} = Any[handlemissings(v)], nothing
-
-function convertToAnyVector(v::AMat, plotattributes::KW)
-    v = handlemissings(v)
-    if all3D(plotattributes)
-        Any[Surface(v)]
-    else
-        Any[v[:,i] for i in 1:size(v,2)]
-    end, nothing
-end
+prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
+prepareSeriesData(::Nothing) = nothing
+prepareSeriesData(s::SeriesData) = handlemissings(s)
 
 handlemissings(v) = v
 handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: Number = replace(v, missing => NaN)
 handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: AbstractString = replace(v, missing => "")
+handlemissings(s::Surface) = Surface(handlemissings(s.surf))
+handlemissings(v::Volume) = Volume(handlemissings(v.v), v.x_extents, v.y_extents, v.z_extents)
 
-# function
-convertToAnyVector(f::Function, plotattributes::KW) = Any[f], nothing
+# default: assume x represents a single series
+convertToAnyVector(x) = Any[prepareSeriesData(x)]
 
-# surface
-convertToAnyVector(s::Surface, plotattributes::KW) = Any[s], nothing
+# fixed number of blank series
+convertToAnyVector(n::Integer) = Any[zeros(0) for i in 1:n]
 
-# volume
-convertToAnyVector(v::Volume, plotattributes::KW) = Any[v], nothing
-
-# # vector of OHLC
-# convertToAnyVector(v::AVec{OHLC}, plotattributes::KW) = Any[v], nothing
-
-# # dates
-convertToAnyVector(dts::AVec{D}, plotattributes::KW) where {D<:Union{Date,DateTime}} = Any[dts], nothing
+# vector of data points is a single series
+convertToAnyVector(v::AVec{<:DataPoint}) = Any[prepareSeriesData(v)]
 
 # list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec, plotattributes::KW)
-    if all(x -> typeof(x) <: Number, v)
-        # all real numbers wrap the whole vector as one item
-        Any[convert(Vector{Float64}, v)], nothing
-    else
-        # something else... treat each element as an item
-        vcat(Any[convertToAnyVector(vi, plotattributes)[1] for vi in v]...), nothing
-        # Any[vi for vi in v], nothing
-    end
-end
+convertToAnyVector(v::AVec) = vcat((convertToAnyVector(vi, plotattributes) for vi in v)...)
 
-convertToAnyVector(t::Tuple, plotattributes::KW) = Any[t], nothing
-
-
-function convertToAnyVector(args...)
-    error("In convertToAnyVector, could not handle the argument types: $(map(typeof, args[1:end-1]))")
-end
+# Matrix is split into rows
+convertToAnyVector(v::AMat{<:DataPoint}) = Any[prepareSeriesData(v[:,i]) for i in 1:size(v,2)]
 
 # --------------------------------------------------------------------
 
@@ -130,23 +98,24 @@ struct SliceIt end
         z = z.data
     end
 
-    xs, _ = convertToAnyVector(x, plotattributes)
-    ys, _ = convertToAnyVector(y, plotattributes)
-    zs, _ = convertToAnyVector(z, plotattributes)
+    xs = convertToAnyVector(x)
+    ys = convertToAnyVector(y)
+    zs = convertToAnyVector(z)
+
 
     fr = pop!(plotattributes, :fillrange, nothing)
-    fillranges, _ = if typeof(fr) <: Number
-        ([fr],nothing)
+    fillranges = if typeof(fr) <: Number
+        [fr]
     else
-        convertToAnyVector(fr, plotattributes)
+        convertToAnyVector(fr)
     end
     mf = length(fillranges)
 
     rib = pop!(plotattributes, :ribbon, nothing)
-    ribbons, _ = if typeof(rib) <: Number
-        ([fr],nothing)
+    ribbons = if typeof(rib) <: Number
+        [rib]
     else
-        convertToAnyVector(rib, plotattributes)
+        convertToAnyVector(rib)
     end
     mr = length(ribbons)
 
@@ -289,7 +258,7 @@ end
 @recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
-@recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat}
+@recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat,Missing}
     if all3D(plotattributes)
         n,m = size(mat)
         wrap_surfaces(plotattributes)
@@ -312,7 +281,7 @@ end
 end
 
 # assume this is a Volume, so construct one
-@recipe function f(vol::AbstractArray{T,3}, args...) where T<:Number
+@recipe function f(vol::AbstractArray{T,3}, args...) where T<:Union{Number,Missing}
     seriestype := :volume
     SliceIt, nothing, Volume(vol, args...), nothing
 end
