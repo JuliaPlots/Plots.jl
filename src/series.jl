@@ -550,7 +550,7 @@ end
 # end
 
 splittable_kw(key, val, lengthGroup) = false
-splittable_kw(key, val::AbstractArray, lengthGroup) = (key != :group) && size(val,1) == lengthGroup
+splittable_kw(key, val::AbstractArray, lengthGroup) = !(key in (:group, :color_palette)) && size(val,1) == lengthGroup
 splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengthGroup))
 splittable_kw(key, val::SeriesAnnotations, lengthGroup) = splittable_kw(key, val.strs, lengthGroup)
 
