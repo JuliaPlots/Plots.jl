@@ -1,7 +1,7 @@
 
 
-const P2 = FixedSizeArrays.Vec{2,Float64}
-const P3 = FixedSizeArrays.Vec{3,Float64}
+const P2 = GeometryTypes.Point2{Float64}
+const P3 = GeometryTypes.Point3{Float64}
 
 nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
 nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
@@ -256,8 +256,24 @@ mutable struct Font
   color::Colorant
 end
 
-"Create a Font from a list of unordered features"
-function font(args...)
+"""
+    font(args...)
+Create a Font from a list of features. Values may be specified either as
+arguments (which are distinguished by type/value) or as keyword arguments.
+# Arguments
+- `family`: AbstractString. "serif" or "sans-serif" or "monospace"
+- `pointsize`: Integer. Size of font in points
+- `halign`: Symbol. Horizontal alignment (:hcenter, :left, or :right)
+- `valign`: Symbol. Vertical aligment (:vcenter, :top, or :bottom)
+- `rotation`: Real. Angle of rotation for text in degrees (use a non-integer type)
+- `color`: Colorant or Symbol
+# Examples
+```julia-repl
+julia> font(8)
+julia> font(family="serif",halign=:center,rotation=45.0)
+```
+"""
+function font(args...;kw...)
 
   # defaults
   family = "sans-serif"
@@ -298,6 +314,32 @@ function font(args...)
       rotation = convert(Float64, arg)
     else
       @warn("Unused font arg: $arg ($(typeof(arg)))")
+    end
+  end
+
+  for symbol in keys(kw)
+    if symbol == :family
+      family = kw[:family]
+    elseif symbol == :pointsize
+      pointsize = kw[:pointsize]
+    elseif symbol == :halign
+      halign = kw[:halign]
+      if halign == :center
+        halign = :hcenter
+      end
+      @assert halign in (:hcenter, :left, :right)
+    elseif symbol == :valign
+      valign = kw[:valign]
+      if valign == :center
+        valign = :vcenter
+      end
+      @assert valign in (:vcenter, :top, :bottom)
+    elseif symbol == :rotation
+      rotation = kw[:rotation]
+    elseif symbol == :color
+      color = parse(Colorant, kw[:color])
+    else
+      @warn("Unused font kwarg: $symbol")
     end
   end
 
@@ -344,15 +386,16 @@ end
 PlotText(str) = PlotText(string(str), font())
 
 """
-    text(string, args...)
+    text(string, args...; kw...)
 
-Create a PlotText object wrapping a string with font info, for plot annotations
+Create a PlotText object wrapping a string with font info, for plot annotations.
+`args` and `kw` are passed to `font`.
 """
 text(t::PlotText) = t
 text(t::PlotText, font::Font) = PlotText(t.str, font)
 text(str::AbstractString, f::Font) = PlotText(str, f)
-function text(str, args...)
-  PlotText(string(str), font(args...))
+function text(str, args...;kw...)
+  PlotText(string(str), font(args...;kw...))
 end
 
 Base.length(t::PlotText) = length(t.str)
@@ -491,7 +534,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
         # with a list of custom shapes for each
         msw,msh = anns.scalefactor
         msize = Float64[]
-        shapes = Vector{Shape}(length(anns.strs))
+        shapes = Vector{Shape}(undef, length(anns.strs))
         for i in eachindex(anns.strs)
             str = _cycle(anns.strs,i)
 
@@ -509,7 +552,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
             # and then re-scale a copy of baseshape to match the w/h ratio
             maxscale = max(xscale, yscale)
             push!(msize, maxscale)
-            baseshape = _cycle(get(anns.baseshape),i)
+            baseshape = _cycle(anns.baseshape, i)
             shapes[i] = scale(baseshape, msw*xscale/maxscale, msh*yscale/maxscale, (0,0))
         end
         series[:markershape] = shapes
@@ -554,7 +597,7 @@ function process_annotation(sp::Subplot, xs, ys, labs, font = font())
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (x, y, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
         else
-            push!(anns, (x, y, isa(lab, PlotText) ? lab : text(lab, font)))
+            push!(anns, (x, y, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab...) : text(lab, font)))
         end
     end
     anns
@@ -569,7 +612,7 @@ function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, 
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (pos, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
         else
-            push!(anns, (pos, isa(lab, PlotText) ? lab : text(lab, font)))
+            push!(anns, (pos, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab...) : text(lab, font)))
         end
     end
     anns
@@ -736,7 +779,7 @@ end
 
 # -----------------------------------------------------------------------
 "create a BezierCurve for plotting"
-mutable struct BezierCurve{T <: FixedSizeArrays.Vec}
+mutable struct BezierCurve{T <: GeometryTypes.Point}
     control_points::Vector{T}
 end
 
@@ -748,9 +791,6 @@ function (bc::BezierCurve)(t::Real)
     end
     p
 end
-
-# mean(x::Real, y::Real) = 0.5*(x+y) #commented out as I cannot see this used anywhere and it overwrites a Base method with different functionality
-# mean{N,T<:Real}(ps::FixedSizeArrays.Vec{N,T}...) = sum(ps) / length(ps) # I also could not see this used anywhere, and it's type piracy - implementing a NaNMath version for this would just involve converting to a standard array
 
 @deprecate curve_points coords
 

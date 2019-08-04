@@ -2,47 +2,6 @@
 
 # significant contributions by: @pkofod
 
-const _pgfplots_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend,
-    :background_color_inside,
-    # :background_color_outside,
-    # :foreground_color_legend,
-    :foreground_color_grid, :foreground_color_axis,
-    :foreground_color_text, :foreground_color_border,
-    :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins,
-    # :bar_width, :bar_edges,
-    :title,
-    # :window_title,
-    :guide, :guide_position, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
-    :grid, :legend,
-    :colorbar, :colorbar_title,
-    :fill_z, :line_z, :marker_z, :levels,
-    # :ribbon, :quiver, :arrow,
-    # :orientation,
-    # :overwrite_figure,
-    :polar,
-    # :normalize, :weights, :contours,
-    :aspect_ratio,
-    # :match_dimensions,
-    :tick_direction,
-    :framestyle,
-    :camera,
-    :contour_labels,
-  ])
-const _pgfplots_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
-const _pgfplots_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _pgfplots_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon, :hline] #vcat(_allMarkers, Shape)
-const _pgfplots_scale = [:identity, :ln, :log2, :log10]
-
-
 # --------------------------------------------------------------------------------------
 
 const _pgfplots_linestyles = KW(
@@ -67,7 +26,8 @@ const _pgfplots_markers = KW(
     :star6 => "asterisk",
     :diamond => "diamond*",
     :pentagon => "pentagon*",
-    :hline => "-"
+    :hline => "-",
+    :vline => "|"
 )
 
 const _pgfplots_legend_pos = KW(
@@ -211,7 +171,7 @@ function pgf_series(sp::Subplot, series::Series)
     elseif st == :shape
         shape_data(series)
     elseif ispolar(sp)
-        theta, r = filter_radial_data(plotattributes[:x], plotattributes[:y], axis_limits(sp[:yaxis]))
+        theta, r = plotattributes[:x], plotattributes[:y]
         rad2deg.(theta), r
     else
         plotattributes[:x], plotattributes[:y]
@@ -401,13 +361,13 @@ function pgf_axis(sp::Subplot, letter)
     # limits
     # TODO: support zlims
     if letter != :z
-        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(axis)) : axis_limits(axis)
+        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(sp, :x)) : axis_limits(sp, letter)
         kw[Symbol(letter,:min)] = lims[1]
         kw[Symbol(letter,:max)] = lims[2]
     end
 
     if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
-        ticks = get_ticks(axis)
+        ticks = get_ticks(sp, axis)
         #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
         tick_values = ispolar(sp) && letter == :x ? [rad2deg.(ticks[1])[3:end]..., 360, 405] : ticks[1]
         push!(style, string(letter, "tick = {", join(tick_values,","), "}"))
@@ -439,14 +399,18 @@ function pgf_axis(sp::Subplot, letter)
     # framestyle
     if framestyle in (:axes, :origin)
         axispos = framestyle == :axes ? "left" : "middle"
-        # the * after lines disables the arrows at the axes
-        push!(style, string("axis lines* = ", axispos))
+        if axis[:draw_arrow]
+            push!(style, string("axis ", letter, " line = ", axispos))
+        else
+            # the * after line disables the arrow at the axis
+            push!(style, string("axis ", letter, " line* = ", axispos))
+        end
     end
 
     if framestyle == :zerolines
         push!(style, string("extra ", letter, " ticks = 0"))
         push!(style, string("extra ", letter, " tick labels = "))
-        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_axis], 1.0), "}}"))
+        push!(style, string("extra ", letter, " tick style = {grid = major, major grid style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_border], 1.0), "}}"))
     end
 
     if !axis[:showaxis]
@@ -455,7 +419,7 @@ function pgf_axis(sp::Subplot, letter)
     if !axis[:showaxis] || framestyle in (:zerolines, :grid, :none)
         push!(style, string(letter, " axis line style = {draw opacity = 0}"))
     else
-        push!(style, string(letter, " axis line style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_axis], 1.0), "}"))
+        push!(style, string(letter, " axis line style = {", pgf_linestyle(pgf_thickness_scaling(sp), axis[:foreground_color_border], 1.0), "}"))
     end
 
     # return the style list and KW args
@@ -604,7 +568,7 @@ end
 
 function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsBackend})
     fn = tempname()*".tex"
-    PGFPlots.save(fn, backend_object(plt), include_preamble=false)
+    PGFPlots.save(fn, backend_object(plt), include_preamble=plt.attr[:tex_output_standalone])
     write(io, read(open(fn), String))
 end
 

@@ -232,6 +232,7 @@ const _bar_width = 0.8
 
 const _series_defaults = KW(
     :label             => "AUTO",
+    :colorbar_entry    => true,
     :seriescolor       => :auto,
     :seriesalpha       => nothing,
     :seriestype        => :path,
@@ -298,6 +299,7 @@ const _plot_defaults = KW(
     :link                        => :none,
     :overwrite_figure            => true,
     :html_output_format          => :auto,
+    :tex_output_standalone       => false,
     :inset_subplots              => nothing,   # optionally pass a vector of (parent,bbox) tuples which are
                                                # the parent layout and the relative bounding box of inset subplots
     :dpi                         => DPI,        # dots per inch for images, etc
@@ -390,6 +392,7 @@ const _axis_defaults = KW(
     :minorgrid                => false,
     :showaxis                 => true,
     :widen                    => true,
+    :draw_arrow               => false,
 )
 
 const _suppress_warnings = Set{Symbol}([
@@ -735,6 +738,10 @@ function processMarkerArg(plotattributes::KW, arg)
     elseif allAlphas(arg)
         plotattributes[:markeralpha] = arg
 
+    # bool
+    elseif typeof(arg) <: Bool
+        plotattributes[:markershape] = arg ? :circle : :none
+
     # markersize
     elseif allReals(arg)
         plotattributes[:markersize] = arg
@@ -1023,7 +1030,7 @@ function preprocessArgs!(plotattributes::KW)
             arrow()
         elseif a in (false, nothing, :none)
             nothing
-        elseif !(typeof(a) <: Arrow)
+        elseif !(typeof(a) <: Arrow || typeof(a) <: AbstractArray{Arrow})
             arrow(wraptuple(a)...)
         else
             a
@@ -1050,8 +1057,8 @@ function preprocessArgs!(plotattributes::KW)
 
     # warnings for moved recipes
     st = get(plotattributes, :seriestype, :path)
-    if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatPlots)
-        @warn("seriestype $st has been moved to StatPlots.  To use: \`Pkg.add(\"StatPlots\"); using StatPlots\`")
+    if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatsPlots)
+        @warn("seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`")
     end
 
     return
@@ -1180,7 +1187,7 @@ function convertLegendValue(val::Symbol)
         :best
     elseif val in (:no, :none)
         :none
-    elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend, :topright, :topleft, :bottomleft, :bottomright, :outertopright)
+    elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend, :topright, :topleft, :bottomleft, :bottomright, :outertopright, :outertopleft, :outertop, :outerright, :outerleft, :outerbottomright, :outerbottomleft, :outerbottom)
         val
     else
         error("Invalid symbol for legend: $val")
@@ -1508,19 +1515,19 @@ function has_black_border_for_default(st::Symbol)
     like_histogram(st) || st in (:hexbin, :bar, :shape)
 end
 
-
-# converts a symbol or string into a colorant (Colors.RGB), and assigns a color automatically
-function getSeriesRGBColor(c, sp::Subplot, n::Int)
+# converts a symbol or string into a Colorant or ColorGradient
+# and assigns a color automatically
+function get_series_color(c, sp::Subplot, n::Int, seriestype)
     if c == :auto
-        c = autopick(sp[:color_palette], n)
+        c = like_surface(seriestype) ? cgrad() : autopick(sp[:color_palette], n)
     elseif isa(c, Int)
         c = autopick(sp[:color_palette], c)
     end
     plot_color(c)
 end
 
-function getSeriesRGBColor(c::AbstractArray, sp::Subplot, n::Int)
-    map(x->getSeriesRGBColor(x, sp, n), c)
+function get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype)
+    map(x->get_series_color(x, sp, n, seriestype), c)
 end
 
 function ensure_gradient!(plotattributes::KW, csym::Symbol, asym::Symbol)
@@ -1565,21 +1572,23 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     end
 
     # update series color
-    plotattributes[:seriescolor] = getSeriesRGBColor(plotattributes[:seriescolor], sp, plotIndex)
+    scolor = plotattributes[:seriescolor]
+    stype = plotattributes[:seriestype]
+    plotattributes[:seriescolor] = scolor = get_series_color(scolor, sp, plotIndex, stype)
 
     # update other colors
     for s in (:line, :marker, :fill)
         csym, asym = Symbol(s,:color), Symbol(s,:alpha)
         plotattributes[csym] = if plotattributes[csym] == :auto
-            plot_color(if has_black_border_for_default(plotattributes[:seriestype]) && s == :line
+            plot_color(if has_black_border_for_default(stype) && s == :line
                 sp[:foreground_color_subplot]
             else
-                plotattributes[:seriescolor]
+                scolor
             end)
         elseif plotattributes[csym] == :match
-            plot_color(plotattributes[:seriescolor])
+            plot_color(scolor)
         else
-            getSeriesRGBColor(plotattributes[csym], sp, plotIndex)
+            get_series_color(plotattributes[csym], sp, plotIndex, stype)
         end
     end
 
@@ -1587,9 +1596,9 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     plotattributes[:markerstrokecolor] = if plotattributes[:markerstrokecolor] == :match
         plot_color(sp[:foreground_color_subplot])
     elseif plotattributes[:markerstrokecolor] == :auto
-        getSeriesRGBColor(plotattributes[:markercolor], sp, plotIndex)
+        get_series_color(plotattributes[:markercolor], sp, plotIndex, stype)
     else
-        getSeriesRGBColor(plotattributes[:markerstrokecolor], sp, plotIndex)
+        get_series_color(plotattributes[:markerstrokecolor], sp, plotIndex, stype)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient

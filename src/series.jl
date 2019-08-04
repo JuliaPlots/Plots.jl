@@ -7,72 +7,33 @@
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
 const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
+const DataPoint = Union{Number, AbstractString, Missing}
+const SeriesData = Union{AVec{<:DataPoint}, Function, Surface, Volume}
 
-all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
+prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
+prepareSeriesData(::Nothing) = nothing
+prepareSeriesData(s::SeriesData) = handlemissings(s)
 
-# unknown
-convertToAnyVector(x, plotattributes::KW) = error("No user recipe defined for $(typeof(x))")
+handlemissings(v) = v
+handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: Number = replace(v, missing => NaN)
+handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: AbstractString = replace(v, missing => "")
+handlemissings(s::Surface) = Surface(handlemissings(s.surf))
+handlemissings(v::Volume) = Volume(handlemissings(v.v), v.x_extents, v.y_extents, v.z_extents)
 
-# missing
-convertToAnyVector(v::Nothing, plotattributes::KW) = Any[nothing], nothing
+# default: assume x represents a single series
+convertToAnyVector(x) = Any[prepareSeriesData(x)]
 
 # fixed number of blank series
-convertToAnyVector(n::Integer, plotattributes::KW) = Any[zeros(0) for i in 1:n], nothing
+convertToAnyVector(n::Integer) = Any[zeros(0) for i in 1:n]
 
-# numeric vector
-convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:Number} = Any[v], nothing
-convertToAnyVector(v::AVec{Union{Missing, T}}, plotattributes::KW) where {T<:Number} = Any[replace(v, missing => NaN)], nothing
-
-# string vector
-convertToAnyVector(v::AVec{T}, plotattributes::KW) where {T<:AbstractString} = Any[v], nothing
-convertToAnyVector(v::AVec{Union{Missing, T}}, plotattributes::KW) where {T<:AbstractString} = Any[replace(v, missing => "")], nothing
-
-function convertToAnyVector(v::AMat, plotattributes::KW)
-    v = handlemissings(v)
-    if all3D(plotattributes)
-        Any[Surface(v)]
-    else
-        Any[v[:,i] for i in 1:size(v,2)]
-    end, nothing
-end
-
-handlemissings(v::AMat) = v
-handlemissings(v::AMat{T}) where T <: Number = replace(v, missing => NaN)
-handlemissings(v::AMat{T}) where T <: String = replace(v, missing => "")
-
-# function
-convertToAnyVector(f::Function, plotattributes::KW) = Any[f], nothing
-
-# surface
-convertToAnyVector(s::Surface, plotattributes::KW) = Any[s], nothing
-
-# volume
-convertToAnyVector(v::Volume, plotattributes::KW) = Any[v], nothing
-
-# # vector of OHLC
-# convertToAnyVector(v::AVec{OHLC}, plotattributes::KW) = Any[v], nothing
-
-# # dates
-convertToAnyVector(dts::AVec{D}, plotattributes::KW) where {D<:Union{Date,DateTime}} = Any[dts], nothing
+# vector of data points is a single series
+convertToAnyVector(v::AVec{<:DataPoint}) = Any[prepareSeriesData(v)]
 
 # list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec, plotattributes::KW)
-    if all(x -> typeof(x) <: Number, v)
-        # all real numbers wrap the whole vector as one item
-        Any[convert(Vector{Float64}, v)], nothing
-    else
-        # something else... treat each element as an item
-        vcat(Any[convertToAnyVector(vi, plotattributes)[1] for vi in v]...), nothing
-        # Any[vi for vi in v], nothing
-    end
-end
+convertToAnyVector(v::AVec) = vcat((convertToAnyVector(vi) for vi in v)...)
 
-convertToAnyVector(t::Tuple, plotattributes::KW) = Any[t], nothing
-
-
-function convertToAnyVector(args...)
-    error("In convertToAnyVector, could not handle the argument types: $(map(typeof, args[1:end-1]))")
-end
+# Matrix is split into columns
+convertToAnyVector(v::AMat{<:DataPoint}) = Any[prepareSeriesData(v[:,i]) for i in 1:size(v,2)]
 
 # --------------------------------------------------------------------
 
@@ -135,23 +96,24 @@ struct SliceIt end
         z = z.data
     end
 
-    xs, _ = convertToAnyVector(x, plotattributes)
-    ys, _ = convertToAnyVector(y, plotattributes)
-    zs, _ = convertToAnyVector(z, plotattributes)
+    xs = convertToAnyVector(x)
+    ys = convertToAnyVector(y)
+    zs = convertToAnyVector(z)
+
 
     fr = pop!(plotattributes, :fillrange, nothing)
-    fillranges, _ = if typeof(fr) <: Number
-        ([fr],nothing)
+    fillranges = if typeof(fr) <: Number
+        [fr]
     else
-        convertToAnyVector(fr, plotattributes)
+        convertToAnyVector(fr)
     end
     mf = length(fillranges)
 
     rib = pop!(plotattributes, :ribbon, nothing)
-    ribbons, _ = if typeof(rib) <: Number
-        ([fr],nothing)
+    ribbons = if typeof(rib) <: Number
+        [rib]
     else
-        convertToAnyVector(rib, plotattributes)
+        convertToAnyVector(rib)
     end
     mr = length(ribbons)
 
@@ -193,8 +155,9 @@ _apply_type_recipe(plotattributes, v) = RecipesBase.apply_recipe(plotattributes,
 # This sort of recipe should return a pair of functions... one to convert to number,
 # and one to format tick values.
 function _apply_type_recipe(plotattributes, v::AbstractArray)
-    isempty(v) && return Float64[]
-    args = RecipesBase.apply_recipe(plotattributes, typeof(v[1]), v[1])[1].args
+    isempty(skipmissing(v)) && return Float64[]
+    x = first(skipmissing(v))
+    args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
     if length(args) == 2 && typeof(args[1]) <: Function && typeof(args[2]) <: Function
         numfunc, formatter = args
         Formatted(map(numfunc, v), formatter)
@@ -292,8 +255,10 @@ end
 
 @recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
+all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
+
 # return a surface if this is a 3d plot, otherwise let it be sliced up
-@recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat}
+@recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat,Missing}
     if all3D(plotattributes)
         n,m = size(mat)
         wrap_surfaces(plotattributes)
@@ -316,26 +281,33 @@ end
 end
 
 # assume this is a Volume, so construct one
-@recipe function f(vol::AbstractArray{T,3}, args...) where T<:Number
+@recipe function f(vol::AbstractArray{T,3}, args...) where T<:Union{Number,Missing}
     seriestype := :volume
     SliceIt, nothing, Volume(vol, args...), nothing
 end
 
 
 # # images - grays
+function clamp_greys!(mat::AMat{T}) where T<:Gray
+    for i in eachindex(mat)
+        mat[i].val < 0 && (mat[i] = Gray(0))
+        mat[i].val > 1 && (mat[i] = Gray(1))
+    end
+    mat
+end
 
 @recipe function f(mat::AMat{T}) where T<:Gray
     n, m = size(mat)
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
-        SliceIt, 1:m, 1:n, Surface(mat)
+        SliceIt, 1:m, 1:n, Surface(clamp_greys!(mat))
     else
         seriestype := :heatmap
         yflip --> true
         cbar --> false
         fillcolor --> ColorGradient([:black, :white])
-        SliceIt, 1:m, 1:n, Surface(convert(Matrix{Float64}, mat))
+        SliceIt, 1:m, 1:n, Surface(clamp!(convert(Matrix{Float64}, mat), 0., 1.))
     end
 end
 
@@ -384,10 +356,11 @@ end
 @recipe function f(f::FuncOrFuncs{F}) where F<:Function
     plt = plotattributes[:plot_object]
     xmin, xmax = try
-        axis_limits(plt[1][:xaxis])
+        axis_limits(plt[1], :x)
     catch
-        xm = tryrange(f, [-5,-1,0,0.01])
-        xm, tryrange(f, filter(x->x>xm, [5,1,0.99, 0, -0.01]))
+        xinv = invscalefunc(get(plotattributes, :xscale, :identity))
+        xm = tryrange(f, xinv.([-5,-1,0,0.01]))
+        xm, tryrange(f, filter(x->x>xm, xinv.([5,1,0.99, 0, -0.01])))
     end
 
     f, xmin, xmax
@@ -517,15 +490,22 @@ end
 #
 # # special handling... xmin/xmax with parametric function(s)
 @recipe function f(f::Function, xmin::Number, xmax::Number)
-    xs = adapted_grid(f, (xmin, xmax))
+    xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
+    xs = _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
     xs, f
 end
 @recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where F<:Function
-    xs = Any[adapted_grid(f, (xmin, xmax)) for f in fs]
+    xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
+    xs = Any[_scaled_adapted_grid(f, xscale, yscale, xmin, xmax) for f in fs]
     xs, fs
 end
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function}  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) where {F<:Function,G<:Function} = fx, fy, range(umin, stop = umax, length = n)
+
+function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
+    (xf, xinv), (yf, yinv) =  ((scalefunc(s),invscalefunc(s)) for s in (xscale,yscale))
+    xinv.(adapted_grid(yf∘f∘xinv, xf.((xmin, xmax))))
+end
 
 #
 # # special handling... 3D parametric function(s)
@@ -539,36 +519,17 @@ end
 #
 #
 # # --------------------------------------------------------------------
-# # Lists of tuples and FixedSizeArrays
+# # Lists of tuples and GeometryTypes.Points
 # # --------------------------------------------------------------------
 #
-# # if we get an unhandled tuple, just splat it in
-@recipe f(tup::Tuple) = tup
 
-#
-# # (x,y) tuples
-@recipe f(xy::AVec{Tuple{R1,R2}}) where {R1<:Number,R2<:Number} = unzip(xy)
-@recipe f(xy::Tuple{R1,R2}) where {R1<:Number,R2<:Number}       = [xy[1]], [xy[2]]
+@recipe f(v::AVec{<:Tuple})               = unzip(v)
+@recipe f(v::AVec{<:GeometryTypes.Point}) = unzip(v)
+@recipe f(tup::Tuple)             = [tup]
+@recipe f(p::GeometryTypes.Point) = [p]
 
-#
-# # (x,y,z) tuples
-@recipe f(xyz::AVec{Tuple{R1,R2,R3}}) where {R1<:Number,R2<:Number,R3<:Number} = unzip(xyz)
-@recipe f(xyz::Tuple{R1,R2,R3}) where {R1<:Number,R2<:Number,R3<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
-
-# these might be points+velocity, or OHLC or something else
-@recipe f(xyuv::AVec{Tuple{R1,R2,R3,R4}}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = get(plotattributes,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
-@recipe f(xyuv::Tuple{R1,R2,R3,R4}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number}       = [xyuv[1]], [xyuv[2]], [xyuv[3]], [xyuv[4]]
-
-
-#
-# # 2D FixedSizeArrays
-@recipe f(xy::AVec{FixedSizeArrays.Vec{2,T}}) where {T<:Number} = unzip(xy)
-@recipe f(xy::FixedSizeArrays.Vec{2,T}) where {T<:Number}       = [xy[1]], [xy[2]]
-
-#
-# # 3D FixedSizeArrays
-@recipe f(xyz::AVec{FixedSizeArrays.Vec{3,T}}) where {T<:Number} = unzip(xyz)
-@recipe f(xyz::FixedSizeArrays.Vec{3,T}) where {T<:Number}       = [xyz[1]], [xyz[2]], [xyz[3]]
+# Special case for 4-tuples in :ohlc series
+@recipe f(xyuv::AVec{<:Tuple{R1,R2,R3,R4}}) where {R1,R2,R3,R4} = get(plotattributes,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
 
 #
 # # --------------------------------------------------------------------
@@ -589,7 +550,7 @@ end
 # end
 
 splittable_kw(key, val, lengthGroup) = false
-splittable_kw(key, val::AbstractArray, lengthGroup) = (key != :group) && size(val,1) == lengthGroup
+splittable_kw(key, val::AbstractArray, lengthGroup) = !(key in (:group, :color_palette)) && size(val,1) == lengthGroup
 splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengthGroup))
 splittable_kw(key, val::SeriesAnnotations, lengthGroup) = splittable_kw(key, val.strs, lengthGroup)
 

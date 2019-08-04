@@ -1,60 +1,6 @@
 
 # https://plot.ly/javascript/getting-started
 
-const _plotly_attr = merge_with_base_supported([
-    :annotations,
-    :background_color_legend, :background_color_inside, :background_color_outside,
-    :foreground_color_legend, :foreground_color_guide,
-    :foreground_color_grid, :foreground_color_axis,
-    :foreground_color_text, :foreground_color_border,
-    :foreground_color_title,
-    :label,
-    :seriescolor, :seriesalpha,
-    :linecolor, :linestyle, :linewidth, :linealpha,
-    :markershape, :markercolor, :markersize, :markeralpha,
-    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha, :markerstrokestyle,
-    :fillrange, :fillcolor, :fillalpha,
-    :bins,
-    :title, :title_location,
-    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
-    :titlefontcolor,
-    :legendfontfamily, :legendfontsize, :legendfontcolor,
-    :tickfontfamily, :tickfontsize, :tickfontcolor,
-    :guidefontfamily, :guidefontsize, :guidefontcolor,
-    :window_title,
-    :guide, :lims, :ticks, :scale, :flip, :rotation,
-    :tickfont, :guidefont, :legendfont,
-    :grid, :gridalpha, :gridlinewidth,
-    :legend, :colorbar, :colorbar_title,
-    :marker_z, :fill_z, :line_z, :levels,
-    :ribbon, :quiver,
-    :orientation,
-    # :overwrite_figure,
-    :polar,
-    :normalize, :weights,
-    # :contours,
-    :aspect_ratio,
-    :hover,
-    :inset_subplots,
-    :bar_width,
-    :clims,
-    :framestyle,
-    :tick_direction,
-    :camera,
-    :contour_labels,
-  ])
-
-const _plotly_seriestype = [
-    :path, :scatter, :pie, :heatmap,
-    :contour, :surface, :wireframe, :path3d, :scatter3d, :shape, :scattergl,
-    :straightline
-]
-const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
-const _plotly_marker = [
-    :none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle,
-    :cross, :xcross, :pentagon, :hexagon, :octagon, :vline, :hline
-]
-const _plotly_scale = [:identity, :log10]
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
 const _plotly_framestyles = [:box, :axes, :zerolines, :grid, :none]
@@ -71,29 +17,8 @@ end
 
 
 # --------------------------------------------------------------------------------------
+const plotly_remote_file_path = "https://cdn.plot.ly/plotly-latest.min.js"
 
-
-const _plotly_js_path = joinpath(dirname(@__FILE__), "..", "..", "deps", "plotly-latest.min.js")
-const _plotly_js_path_remote = "https://cdn.plot.ly/plotly-latest.min.js"
-
-_js_code = open(read, _plotly_js_path, "r")
-
-# borrowed from https://github.com/plotly/plotly.py/blob/2594076e29584ede2d09f2aa40a8a195b3f3fc66/plotly/offline/offline.py#L64-L71 c/o @spencerlyon2
-_js_script = """
-    <script type='text/javascript'>
-        define('plotly', function(require, exports, module) {
-            $(_js_code)
-        });
-        require(['plotly'], function(Plotly) {
-            window.Plotly = Plotly;
-        });
-    </script>
-"""
-
-# if we're in IJulia call setupnotebook to load js and css
-if isijulia()
-    display("text/html", _js_script)
-end
 
 # if isatom()
 #     import Atom
@@ -102,8 +27,6 @@ end
 using UUIDs
 
 push!(_initialized_backends, :plotly)
-
-
 # ----------------------------------------------------------------
 
 const _plotly_legend_pos = KW(
@@ -115,7 +38,7 @@ const _plotly_legend_pos = KW(
     :bottomright => [1., 0.],
     :topright => [1., 1.],
     :topleft => [0., 1.]
-    )
+)
 
 plotly_legend_pos(pos::Symbol) = get(_plotly_legend_pos, pos, [1.,1.])
 plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
@@ -191,8 +114,8 @@ function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
         if aspect_ratio == :equal
             aspect_ratio = 1.0
         end
-        xmin,xmax = axis_limits(sp[:xaxis])
-        ymin,ymax = axis_limits(sp[:yaxis])
+        xmin,xmax = axis_limits(sp, :x)
+        ymin,ymax = axis_limits(sp, :y)
         want_ratio = ((xmax-xmin) / (ymax-ymin)) / aspect_ratio
         parea_ratio = width(plotarea) / height(plotarea)
         if want_ratio > parea_ratio
@@ -251,7 +174,7 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
 
     ax[:tickangle] = -axis[:rotation]
     ax[:type] = plotly_scale(axis[:scale])
-    lims = axis_limits(axis)
+    lims = axis_limits(sp, letter)
 
     if axis[:ticks] != :native || axis[:lims] != :auto
         ax[:range] = map(scalefunc(axis[:scale]), lims)
@@ -263,14 +186,9 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
         ax[:tickcolor] = framestyle in (:zerolines, :grid) || !axis[:showaxis] ? rgba_string(invisible()) : rgb_string(axis[:foreground_color_axis])
         ax[:linecolor] = rgba_string(axis[:foreground_color_axis])
 
-        # flip
-        if axis[:flip]
-            ax[:range] = reverse(ax[:range])
-        end
-
         # ticks
         if axis[:ticks] != :native
-            ticks = get_ticks(axis)
+            ticks = get_ticks(sp, axis)
             ttype = ticksType(ticks)
             if ttype == :ticks
                 ax[:tickmode] = "array"
@@ -285,20 +203,24 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
         ax[:showgrid] = false
     end
 
+    # flip
+    if axis[:flip]
+        ax[:range] = reverse(ax[:range])
+    end
 
     ax
 end
 
-function plotly_polaraxis(axis::Axis)
+function plotly_polaraxis(sp::Subplot, axis::Axis)
     ax = KW(
         :visible => axis[:showaxis],
         :showline => axis[:grid],
     )
 
     if axis[:letter] == :x
-        ax[:range] = rad2deg.(axis_limits(axis))
+        ax[:range] = rad2deg.(axis_limits(sp, :x))
     else
-        ax[:range] = axis_limits(axis)
+        ax[:range] = axis_limits(sp, :y)
         ax[:orientation] = -90
     end
 
@@ -360,8 +282,8 @@ function plotly_layout(plt::Plot)
                 ),
             )
         elseif ispolar(sp)
-            plotattributes_out[Symbol("angularaxis$(spidx)")] = plotly_polaraxis(sp[:xaxis])
-            plotattributes_out[Symbol("radialaxis$(spidx)")] = plotly_polaraxis(sp[:yaxis])
+            plotattributes_out[Symbol("angularaxis$(spidx)")] = plotly_polaraxis(sp, sp[:xaxis])
+            plotattributes_out[Symbol("radialaxis$(spidx)")] = plotly_polaraxis(sp, sp[:yaxis])
         else
             plotattributes_out[Symbol("xaxis$(x_idx)")] = plotly_axis(plt, sp[:xaxis], sp)
             # don't allow yaxis to be reupdated/reanchored in a linked subplot
@@ -431,7 +353,7 @@ end
 function plotly_colorscale(grad::ColorGradient, α)
     [[grad.values[i], rgba_string(plot_color(grad.colors[i], α))] for i in 1:length(grad.colors)]
 end
-plotly_colorscale(c, α) = plotly_colorscale(cgrad(alpha=α), α)
+plotly_colorscale(c::Colorant,α) = plotly_colorscale(_as_gradient(c),α)
 function plotly_colorscale(c::AbstractVector{<:RGBA}, α)
     if length(c) == 1
         return [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
@@ -513,7 +435,7 @@ plotly_native_data(axis::Axis, a::Surface) = Surface(plotly_native_data(axis, a.
 
 function plotly_convert_to_datetime(x::AbstractArray, formatter::Function)
     if formatter == datetimeformatter
-        map(xi -> replace(formatter(xi), "T", " "), x)
+        map(xi -> replace(formatter(xi), "T" => " "), x)
     elseif formatter == dateformatter
         map(xi -> string(formatter(xi), " 00:00:00"), x)
     elseif formatter == timeformatter
@@ -583,13 +505,13 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:showscale] = hascolorbar(sp)
 
     elseif st == :contour
+        filled = isfilledcontour(series)
         plotattributes_out[:type] = "contour"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
-        # plotattributes_out[:showscale] = series[:colorbar] != :none
-        plotattributes_out[:ncontours] = series[:levels]
-        plotattributes_out[:contours] = KW(:coloring => series[:fillrange] != nothing ? "fill" : "lines", :showlabels => series[:contour_labels] == true)
+        plotattributes_out[:ncontours] = series[:levels] + 2
+        plotattributes_out[:contours] = KW(:coloring => filled ? "fill" : "lines", :showlabels => series[:contour_labels] == true)
         plotattributes_out[:colorscale] = plotly_colorscale(series[:linecolor], series[:linealpha])
-        plotattributes_out[:showscale] = hascolorbar(sp)
+        plotattributes_out[:showscale] = hascolorbar(sp) && hascolorbar(series)
 
     elseif st in (:surface, :wireframe)
         plotattributes_out[:type] = "surface"
@@ -851,7 +773,7 @@ end
 function plotly_polar!(plotattributes_out::KW, series::Series)
     # convert polar plots x/y to theta/radius
     if ispolar(series[:subplot])
-        theta, r = filter_radial_data(pop!(plotattributes_out, :x), pop!(plotattributes_out, :y), axis_limits(series[:subplot][:yaxis]))
+        theta, r = pop!(plotattributes_out, :x), pop!(plotattributes_out, :y)
         plotattributes_out[:t] = rad2deg.(theta)
         plotattributes_out[:r] = r
     end
@@ -881,12 +803,27 @@ plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt))
 
 # ----------------------------------------------------------------
 
-const _use_remote = Ref(false)
+const ijulia_initialized = Ref(false)
 
 function html_head(plt::Plot{PlotlyBackend})
-    jsfilename = _use_remote[] ? _plotly_js_path_remote : ("file://" * _plotly_js_path)
-    # "<script src=\"$(joinpath(dirname(@__FILE__),"..","..","deps","plotly-latest.min.js"))\"></script>"
-    "<script src=\"$jsfilename\"></script>"
+    local_file = ("file://" * plotly_local_file_path)
+    plotly = use_local_dependencies[] ? local_file : plotly_remote_file_path
+    if isijulia() && !ijulia_initialized[]
+        # using requirejs seems to be key to load a js depency in IJulia!
+        # https://requirejs.org/docs/start.html
+        # https://github.com/JuliaLang/IJulia.jl/issues/345
+        display("text/html", """
+            <script type="text/javascript">
+                requirejs([$(repr(plotly))], function(p) {
+                    window.Plotly = p
+                });
+            </script>
+        """)
+        ijulia_initialized[] = true
+    end
+    # IJulia just needs one initialization
+    isijulia() && return ""
+    return "<script src=$(repr(plotly))></script>"
 end
 
 function html_body(plt::Plot{PlotlyBackend}, style = nothing)
@@ -929,10 +866,15 @@ end
 
 # ----------------------------------------------------------------
 
-
-function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
-    write(io, html_head(plt) * html_body(plt))
+function _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend})
+    data = []
+    for series in plot.series_list
+        append!(data, plotly_series(plot, series))
+    end
+    layout = plotly_layout(plot)
+    JSON.print(io, Dict(:data => data, :layout => layout))
 end
+
 
 function _display(plt::Plot{PlotlyBackend})
     standalone_html_window(plt)

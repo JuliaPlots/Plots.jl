@@ -1,11 +1,14 @@
 module Plots
 
+_current_plots_version = v"0.25.0"
+
 using Reexport
 
-import StaticArrays
-using StaticArrays.FixedSizeArrays
-using Dates, Printf, Statistics, Base64, LinearAlgebra
+import GeometryTypes
+using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
 import SparseArrays: findnz
+
+using FFMPEG
 
 @reexport using RecipesBase
 import RecipesBase: plot, plot!, animate
@@ -17,6 +20,17 @@ import StatsBase
 import JSON
 
 using Requires
+
+if isfile(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+    include(joinpath(@__DIR__, "..", "deps", "deps.jl"))
+else
+    # This is a bit dirty, but I don't really see why anyone should be forced
+    # to build Plots, while it will just include exactly the below line
+    # as long as `ENV["PLOTS_HOST_DEPENDENCY_LOCAL"] = "true"` is not set.
+    # If the above env is set + `plotly_local_file_path == ""``,
+    # it will warn in the __init__ function to run build
+    const plotly_local_file_path = ""
+end
 
 export
     grid,
@@ -72,7 +86,6 @@ export
     backends,
     backend_name,
     backend_object,
-    add_backend,
     aliases,
 
     Shape,
@@ -168,103 +181,15 @@ include("arg_desc.jl")
 include("plotattr.jl")
 include("backends.jl")
 include("output.jl")
+include("ijulia.jl")
+include("fileio.jl")
 include("init.jl")
 
 include("backends/plotly.jl")
 include("backends/gr.jl")
 include("backends/web.jl")
 
-# ---------------------------------------------------------
-
-@shorthands scatter
-@shorthands bar
-@shorthands barh
-@shorthands histogram
-@shorthands barhist
-@shorthands stephist
-@shorthands scatterhist
-@shorthands histogram2d
-@shorthands density
-@shorthands heatmap
-@shorthands plots_heatmap
-@shorthands hexbin
-@shorthands sticks
-@shorthands hline
-@shorthands vline
-@shorthands hspan
-@shorthands vspan
-@shorthands ohlc
-@shorthands contour
-@shorthands contourf
-@shorthands contour3d
-@shorthands surface
-@shorthands wireframe
-@shorthands path3d
-@shorthands scatter3d
-@shorthands boxplot
-@shorthands violin
-@shorthands quiver
-@shorthands curves
-
-"Plot a pie diagram"
-pie(args...; kw...)        = plot(args...; kw...,  seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
-pie!(args...; kw...)       = plot!(args...; kw..., seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
-
-"Plot with seriestype :path3d"
-plot3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)
-plot3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
-
-"Add title to an existing plot"
-title!(s::AbstractString; kw...)                 = plot!(; title = s, kw...)
-
-"Add xlabel to an existing plot"
-xlabel!(s::AbstractString; kw...)                = plot!(; xlabel = s, kw...)
-
-"Add ylabel to an existing plot"
-ylabel!(s::AbstractString; kw...)                = plot!(; ylabel = s, kw...)
-
-"Set xlims for an existing plot"
-xlims!(lims::Tuple{T,S}; kw...) where {T<:Real,S<:Real} = plot!(; xlims = lims, kw...)
-
-"Set ylims for an existing plot"
-ylims!(lims::Tuple{T,S}; kw...) where {T<:Real,S<:Real} = plot!(; ylims = lims, kw...)
-
-"Set zlims for an existing plot"
-zlims!(lims::Tuple{T,S}; kw...) where {T<:Real,S<:Real} = plot!(; zlims = lims, kw...)
-
-xlims!(xmin::Real, xmax::Real; kw...)                     = plot!(; xlims = (xmin,xmax), kw...)
-ylims!(ymin::Real, ymax::Real; kw...)                     = plot!(; ylims = (ymin,ymax), kw...)
-zlims!(zmin::Real, zmax::Real; kw...)                     = plot!(; zlims = (zmin,zmax), kw...)
-
-
-"Set xticks for an existing plot"
-xticks!(v::TicksArgs; kw...) where {T<:Real}                       = plot!(; xticks = v, kw...)
-
-"Set yticks for an existing plot"
-yticks!(v::TicksArgs; kw...) where {T<:Real}                       = plot!(; yticks = v, kw...)
-
-xticks!(
-ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(; xticks = (ticks,labels), kw...)
-yticks!(
-ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(; yticks = (ticks,labels), kw...)
-
-"Add annotations to an existing plot"
-annotate!(anns...; kw...)                                 = plot!(; annotation = anns, kw...)
-annotate!(anns::AVec{T}; kw...) where {T<:Tuple}                 = plot!(; annotation = anns, kw...)
-
-"Flip the current plots' x axis"
-xflip!(flip::Bool = true; kw...)                          = plot!(; xflip = flip, kw...)
-
-"Flip the current plots' y axis"
-yflip!(flip::Bool = true; kw...)                          = plot!(; yflip = flip, kw...)
-
-"Specify x axis attributes for an existing plot"
-xaxis!(args...; kw...)                                    = plot!(; xaxis = args, kw...)
-
-"Specify x axis attributes for an existing plot"
-yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
-xgrid!(args...; kw...)                                    = plot!(; xgrid = args, kw...)
-ygrid!(args...; kw...)                                    = plot!(; ygrid = args, kw...)
+include("shorthands.jl")
 
 let PlotOrSubplot = Union{Plot, Subplot}
     global title!(plt::PlotOrSubplot, s::AbstractString; kw...)                  = plot!(plt; title = s, kw...)

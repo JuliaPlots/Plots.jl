@@ -47,16 +47,47 @@ end
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-RecipesBase.apply_recipe(plotattributes::KW, ::Type{T}, plt::AbstractPlot) where {T} = throw(MethodError("Unmatched plot recipe: $T"))
+RecipesBase.apply_recipe(plotattributes::KW, ::Type{T}, plt::AbstractPlot) where {T} = throw(MethodError(T, "Unmatched plot recipe: $T"))
 
 # ---------------------------------------------------------------------------
 
 
 # for seriestype `line`, need to sort by x values
+
+const POTENTIAL_VECTOR_ARGUMENTS = [
+    :seriescolor, :seriesalpha,
+    :linecolor, :linealpha, :linewidth, :linestyle, :line_z,
+    :fillcolor, :fillalpha, :fill_z,
+    :markercolor, :markeralpha, :markershape, :marker_z,
+    :markerstrokecolor, :markerstrokealpha,
+    :yerror, :yerror,
+    :series_annotations, :fillrange
+]
+
 @recipe function f(::Type{Val{:line}}, x, y, z)
     indices = sortperm(x)
     x := x[indices]
     y := y[indices]
+
+    # sort vector arguments
+    for arg in POTENTIAL_VECTOR_ARGUMENTS
+        if typeof(plotattributes[arg]) <: AVec
+            plotattributes[arg] = _cycle(plotattributes[arg], indices)
+        end
+    end
+
+    # a tuple as fillrange has to be handled differently
+    if typeof(plotattributes[:fillrange]) <: Tuple
+        lower, upper = plotattributes[:fillrange]
+        if typeof(lower) <: AVec
+            lower = _cycle(lower, indices)
+        end
+        if typeof(upper) <: AVec
+            upper = _cycle(upper, indices)
+        end
+        plotattributes[:fillrange] = (lower, upper)
+    end
+
     if typeof(z) <: AVec
         z := z[indices]
     end
@@ -64,19 +95,6 @@ RecipesBase.apply_recipe(plotattributes::KW, ::Type{T}, plt::AbstractPlot) where
     ()
 end
 @deps line path
-
-
-function hvline_limits(axis::Axis)
-    vmin, vmax = axis_limits(axis)
-    if vmin >= vmax
-        if isfinite(vmin)
-            vmax = vmin + 1
-        else
-            vmin, vmax = 0.0, 1.1
-        end
-    end
-    vmin, vmax
-end
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     n = length(y)
@@ -222,11 +240,12 @@ end
     n = length(x)
     fr = plotattributes[:fillrange]
     if fr == nothing
-        yaxis = plotattributes[:subplot][:yaxis]
+        sp = plotattributes[:subplot]
+        yaxis = sp[:yaxis]
         fr = if yaxis[:scale] == :identity
             0.0
         else
-            NaNMath.min(axis_limits(yaxis)[1], ignorenan_minimum(y))
+            NaNMath.min(axis_limits(sp, :y)[1], ignorenan_minimum(y))
         end
     end
     newx, newy = zeros(3n), zeros(3n)
@@ -519,13 +538,15 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
         w, it_state_w = it_tuple_w
 
         if (log_scale_x && a ≈ 0)
-            a = b/_logScaleBases[xscale]^3
+            a = oftype(a, b/_logScaleBases[xscale]^3)
         end
 
         if isnan(w)
             if !isnan(last_w)
                 push!(x, a)
                 push!(y, baseline)
+                push!(x, NaN)
+                push!(y, NaN)
             end
         else
             if isnan(last_w)
@@ -538,8 +559,8 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
             push!(y, w)
         end
 
-        a = b
-        last_w = w
+        a = oftype(a, b)
+        last_w = oftype(last_w, w)
 
         it_tuple_e = iterate(edge, it_state_e)
         it_tuple_w = iterate(weights, it_state_w)
@@ -586,12 +607,13 @@ end
 end
 Plots.@deps stepbins path
 
-wand_edges(x...) = (@warn("Load the StatPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
+wand_edges(x...) = (@warn("Load the StatsPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
 
 function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto) where N
-    _cl(x) = ceil(Int, NaNMath.max(x, one(x)))
+    max_bins = 10_000
+    _cl(x) = min(ceil(Int, max(x, one(x))), max_bins)
     _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
-    _span(v) = ignorenan_maximum(v) - ignorenan_minimum(v)
+    _span(v) = maximum(v) - minimum(v)
 
     n_samples = length(LinearIndices(first(vs)))
 
@@ -616,7 +638,7 @@ function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::S
     elseif mode == :fd  # Freedman–Diaconis rule
         _cl(_span(v) / (2 * _iqr(v) / nd))
     elseif mode == :wand
-        wand_edges(v)  # this makes this function not type stable, but the type instability does not propagate
+        _cl(wand_edges(v))  # this makes this function not type stable, but the type instability does not propagate
     else
         error("Unknown auto-binning mode $mode")
     end
@@ -635,11 +657,19 @@ _hist_edges(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, Abstra
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
+_filternans(vs::NTuple{1,AbstractVector}) = filter!.(isfinite, vs)
+function _filternans(vs::NTuple{N,AbstractVector}) where N
+    _invertedindex(v, not) = [j for (i,j) in enumerate(v) if !(i ∈ not)]
+    nots = union(Set.(findall.(!isfinite, vs))...)
+    _invertedindex.(vs, Ref(nots))
+end
+
 function _make_hist(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing) where N
-    edges = _hist_edges(vs, binning)
+    localvs = _filternans(vs)
+    edges = _hist_edges(localvs, binning)
     h = float( weights == nothing ?
-        StatsBase.fit(StatsBase.Histogram, vs, edges, closed = :left) :
-        StatsBase.fit(StatsBase.Histogram, vs, StatsBase.Weights(weights), edges, closed = :left)
+        StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
+        StatsBase.fit(StatsBase.Histogram, localvs, StatsBase.Weights(weights), edges, closed = :left)
     )
     normalize!(h, mode = _hist_norm_mode(normed))
 end
@@ -1053,7 +1083,7 @@ end
 
 # -------------------------------------------------
 
-"Adds a+bx... straight line over the current plot, without changing the axis limits"
+"Adds ax+b... straight line over the current plot, without changing the axis limits"
 abline!(plt::Plot, a, b; kw...) = plot!(plt, [0, 1], [b, b+a]; seriestype = :straightline, kw...)
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
@@ -1069,6 +1099,7 @@ timeformatter(t) = string(Dates.Time(Dates.Nanosecond(t)))
 @recipe f(::Type{Date}, dt::Date) = (dt -> Dates.value(dt), dateformatter)
 @recipe f(::Type{DateTime}, dt::DateTime) = (dt -> Dates.value(dt), datetimeformatter)
 @recipe f(::Type{Dates.Time}, t::Dates.Time) = (t -> Dates.value(t), timeformatter)
+@recipe f(::Type{P}, t::P) where P <: Dates.Period = (t -> Dates.value(t), t -> string(P(t)))
 
 # -------------------------------------------------
 # Complex Numbers
@@ -1130,4 +1161,50 @@ end
     seriescolor := grad.args[1]
     title := string(grad.args[1])
     z
+end
+
+
+# Moved in from PlotRecipes - see: http://stackoverflow.com/a/37732384/5075246
+@userplot PortfolioComposition
+
+# this shows the shifting composition of a basket of something over a variable
+# - "returns" are the dependent variable
+# - "weights" are a matrix where the ith column is the composition for returns[i]
+# - since each polygon is its own series, you can assign labels easily
+@recipe function f(pc::PortfolioComposition)
+    weights, returns = pc.args
+    n = length(returns)
+    weights = cumsum(weights, dims = 2)
+    seriestype := :shape
+
+	# create a filled polygon for each item
+    for c=1:size(weights,2)
+        sx = vcat(weights[:,c], c==1 ? zeros(n) : reverse(weights[:,c-1]))
+        sy = vcat(returns, reverse(returns))
+        @series Plots.isvertical(plotattributes) ? (sx, sy) : (sy, sx)
+    end
+end
+
+"""
+    areaplot([x,] y)
+    areaplot!([x,] y)
+
+Draw a stacked area plot of the matrix y.
+# Examples
+```julia-repl
+julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], fillalpha = [0.2 0.3 0.4])
+```
+"""
+@userplot AreaPlot
+
+@recipe function f(a::AreaPlot)
+    data = cumsum(a.args[end], dims=2)
+    x = length(a.args) == 1 ? (1:size(data, 1)) : a.args[1]
+    seriestype := :line
+    for i in 1:size(data, 2)
+        @series begin
+            fillrange := i > 1 ? data[:,i-1] : 0
+            x, data[:,i]
+        end
+    end
 end

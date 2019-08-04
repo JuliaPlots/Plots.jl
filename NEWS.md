@@ -10,7 +10,113 @@
 
 ---
 ## (current master)
-- All new development should target Julia 1.x!
+
+## 0.26.0
+- use FFMPEG.jl
+- add missing method for convertToAnyVector
+
+## 0.25.3
+- add areaplot
+- allow missing in z_color arguments
+- more general tuple recipe
+- stephist logscale improvements
+
+## 0.25.2
+- improvements to handle missings
+- pyplot: allow setting the color gradient for z values
+- document :colorbar_entry
+- limit number of automatic bins
+- fix ENV['PLOTS_DEFAULT_BACKEND']
+- don't let aspect_ratio impact subplot size
+- implement arrowstyle for GR
+- fix bug in plotly_convert_to_datetime
+- improve missing support
+- gr: polar heatmaps
+- make sure show returns nothing
+
+## 0.25.1
+- fix gr_display
+
+## 0.25.0
+- Replace StaticArrays with GeometryTypes
+- Contour fixes for GR
+
+## 0.24.0
+- Update to the new PyCall and PyPlot API
+- fix drawing of ticks
+- fix y label position with GR
+
+## 0.23.2
+- pyplot fixes
+- Add option :tex_output_standalone to set the 'include_preamble' argument in the PGFPlots backend.
+- fix ticks
+- support plotly json mime
+- fix image axis limits
+- default to radius 0 at center for polar plots
+
+## 0.23.1
+- slightly faster load time
+- fixed errant MethodError
+- fix bar plots with unicodeplots
+- better colorbars for contour
+- add volume seriestype for GR
+- fix passing a tuple to custom ticks
+- add vline to pgfplots
+- add tex output for pyplot
+- better 3d axis labels for GR
+
+## 0.23.0
+- compatible with StatPlots -> StatsPlots name shift
+- fix histograms for vectors with NaN and Inf
+- change gif behaviour (remove cache-busting)
+- improved docstrings for shorthands functions
+- fix font rotation for pyplot
+- fix greyscale images for pyplot
+- clamp greyscale images with values outside 0,1
+- support keyword argument for font options
+- allow vector of markers for pyplot scatter
+
+## 0.22.5
+- improve behaviour of plotlyjs backend
+
+## 0.22.4
+- Add support for discrete contourf plots with GR
+
+## 0.22.3
+- Fix the `showtheme` function
+
+## 0.22.2
+- Allow annotations to accept a Tuple instead of the result of a text call (making it possible to specify font characteristics in recipes). E.g. `annotations = (2, 4, ("test", :right, 8, :red))` is the same as `annotations = (2, 4, text("test", :right, 8, :red))`
+
+## 0.22.1
+- push PlotsDisplay just after REPLDisplay
+
+## 0.22.0
+- deprecate GLVisualize
+- allow 1-row and 1-column heatmaps
+- add portfoliodecomposition recipe from PlotRecipes
+- solve Shape bug
+- simplify PyPlot backend installation
+- fix wireframe bug in PyPlot
+- fix color bug in PyPlot
+- minor bug fixes in gr and pyplot
+
+## 0.21.0
+- Compatibility with StaticArrays 0.9.0
+- Up GR min version to 0.35
+- fix :mirror
+
+## 0.20.6
+- fixes for PlotDocs.jl
+- fix gr axis color argument
+- Shapes for inspectdr
+- don't load plotly js file by default
+
+## 0.20.5
+- fix precompilation issue when depending on Plots
+
+## 0.20.4
+- honour `html_output_format` in Juno
 
 ## 0.20.3
 - implement guide position in gr, pyplot and pgfplots
@@ -153,7 +259,7 @@ Many updates, min julia 1.0
 - add `reset_defaults()` function to reset plot defaults
 - update syntax to 0.6
 - make `fill = true` fill to 0 rather than to 1
-- use new `@df` syntax in StatPlots examples
+- use new `@df` syntax in StatsPlots examples
 - allow changing the color of legend box
 - implement `title_location` for gr
 - add `hline` marker to pgfplots - fixes errorbars
@@ -305,7 +411,7 @@ Many updates, min julia 1.0
 - added dependency on PlotThemes
 - set_theme --> theme
 - remove Compat from REQUIRE
-- warning for DataFrames without StatPlots
+- warning for DataFrames without StatsPlots
 - closeall exported and implemented for gr/pyplot
 - fix DateTime recipe
 - reset theme with theme(:none)
@@ -427,8 +533,8 @@ Many updates, min julia 1.0
 #### 0.8.0
 
 - added dependency on PlotUtils
-- BREAKING: removed DataFrames support (now in StatPlots.jl)
-- BREAKING: removed boxplot/violin/density recipes (now in StatPlots.jl)
+- BREAKING: removed DataFrames support (now in StatsPlots.jl)
+- BREAKING: removed boxplot/violin/density recipes (now in StatsPlots.jl)
 - GR:
     - inline iterm2 support
     - trisurface support

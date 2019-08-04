@@ -76,15 +76,15 @@ function buildanimation(animdir::AbstractString, fn::AbstractString,
         if variable_palette
             # generate a colorpalette for each frame for highest quality, but larger filesize
             palette="palettegen=stats_mode=single[pal],[0:v][pal]paletteuse=new=1"
-            run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -lavfi "$palette" -y $fn`)
+            ffmpeg_exe(`-v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -lavfi "$palette" -y $fn`)
         else
             # generate a colorpalette first so ffmpeg does not have to guess it
-            run(`ffmpeg -v 0 -i $(animdir)/%06d.png -vf "palettegen=stats_mode=diff" -y "$(animdir)/palette.bmp"`)
+            ffmpeg_exe(`-v 0 -i $(animdir)/%06d.png -vf "palettegen=stats_mode=diff" -y "$(animdir)/palette.bmp"`)
             # then apply the palette to get better results
-            run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -y $fn`)
+            ffmpeg_exe(` -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -y $fn`)
         end
     else
-        run(`ffmpeg -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
+        ffmpeg_exe(`-v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
     end
 
     show_msg && @info("Saved animation to ", fn)
@@ -93,16 +93,25 @@ end
 
 
 
-# write out html to view the gif... note the rand call which is a hack so the image doesn't get cached
+# write out html to view the gif
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     ext = file_extension(agif.filename)
     write(io, if ext == "gif"
-        "<img src=\"$(relpath(agif.filename))?$(rand())>\" />"
+        "<img src=\"$(relpath(agif.filename))\" />"
     elseif ext in ("mov", "mp4")
-        "<video controls><source src=\"$(relpath(agif.filename))?$(rand())>\" type=\"video/$ext\"></video>"
+        "<video controls><source src=\"$(relpath(agif.filename)) type=\"video/$ext\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
     end)
+    return nothing
+end
+
+
+# Only gifs can be shown via image/gif
+Base.showable(::MIME"image/gif", agif::AnimatedGif) = file_extension(agif.filename) == "gif"
+
+function Base.show(io::IO, ::MIME"image/gif", agif::AnimatedGif)
+    open(fio-> write(io, fio), agif.filename)
 end
 
 

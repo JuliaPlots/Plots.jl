@@ -1,50 +1,46 @@
+import Plots._current_plots_version
 
-using VisualRegressionTests
-# using ExamplePlots
-
-if isinteractive()
-    @eval Main import Gtk
+# Taken from MakieGallery
+"""
+Downloads the reference images from ReferenceImages for a specific version
+"""
+function download_reference(version = v"0.0.1")
+    download_dir = abspath(@__DIR__, "reference_images")
+    isdir(download_dir) || mkpath(download_dir)
+    tarfile = joinpath(download_dir, "reference_images.zip")
+    url = "https://github.com/JuliaPlots/PlotReferenceImages.jl/archive/v$(version).tar.gz"
+    refpath = joinpath(download_dir, "PlotReferenceImages.jl-$(version)")
+    if !isdir(refpath) # if not yet downloaded
+        @info "downloading reference images for version $version"
+        download(url, tarfile)
+        BinaryProvider.unpack(tarfile, download_dir)
+        # check again after download
+        if !isdir(refpath)
+            error("Something went wrong while downloading reference images. Plots can't be compared to references")
+        else
+            rm(tarfile, force = true)
+        end
+    else
+        @info "using reference images for version $version (already downloaded)"
+    end
+    refpath
 end
 
-# import DataFrames, RDatasets
-
-# don't let pyplot use a gui... it'll crash
-# note: Agg will set gui -> :none in PyPlot
-# ENV["MPLBACKEND"] = "Agg"
-# try
-#   @eval import PyPlot
-#   @info("Matplotlib version: $(PyPlot.matplotlib[:__version__])")
-# end
-
-
-using Plots
-# using StatPlots
-import PlotReferenceImages
-using Random
-using Test
-
-default(size=(500,300))
-
-
-# TODO: use julia's Condition type and the wait() and notify() functions to initialize a Window, then wait() on a condition that
-#       is referenced in a button press callback (the button clicked callback will call notify() on that condition)
-
-const _current_plots_version = v"0.20.3"
-
+const ref_image_dir = download_reference()
 
 function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = isinteractive(), sigma = [1,1], tol = 1e-2)
     Plots._debugMode.on = debug
     example = Plots._examples[idx]
+    Plots.theme(:default)
     @info("Testing plot: $pkg:$idx:$(example.header)")
     backend(pkg)
     backend()
-
+    default(size=(500,300))
     # ensure consistent results
     Random.seed!(1234)
 
     # reference image directory setup
-    # refdir = joinpath(Pkg.dir("ExamplePlots"), "test", "refimg", string(pkg))
-    refdir = joinpath(dirname(pathof(PlotReferenceImages)), "..", "Plots", string(pkg))
+    refdir = joinpath(ref_image_dir, "Plots", string(pkg))
     fn = "ref$idx.png"
 
     # firgure out version info
@@ -76,7 +72,9 @@ function image_comparison_tests(pkg::Symbol, idx::Int; debug = false, popup = is
 
     # test function
     func = (fn, idx) -> begin
-        map(eval, example.exprs)
+        expr = Expr(:block)
+        append!(expr.args, example.exprs)
+        eval(expr)
         png(fn)
     end
 

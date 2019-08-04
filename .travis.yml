@@ -4,57 +4,17 @@ os:
   - linux
   # - osx
 julia:
-  # - 1.0
+  - 1.1
   - nightly
-# matrix:
-#   allow_failures:
-#     - julia: nightly
-
-# # before install:
-# #   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-# #   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install wkhtmltopdf; fi
-
-# ref: http://askubuntu.com/a/556672 for the wkhtmltopdf apt repository info
+  
+matrix:
+  allow_failures:
+    - julia: nightly
 
 sudo: required
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pwd ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./test/install_wkhtmltoimage.sh ; fi
-#   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  sudo add-apt-repository -y ppa:pov/wkhtmltopdf  ; fi
-#   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  sudo apt-get -qq update                      ; fi
-#   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  sudo apt-get install -y wkhtmltopdf          ; fi
-#   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  wkhtmltopdf -V                               ; fi
-#   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  wkhtmltoimage -V                             ; fi
-#   echo 'exec xvfb-run -a -s "-screen 0 640x480x16" wkhtmltopdf "$@"' | sudo tee /usr/local/bin/wkhtmltopdf.sh >/dev/null
-# sudo chmod a+x /usr/local/bin/wkhtmltopdf.sh
-
-# # borrowed from Blink.jl's travis file
-# matrix:
-#   include:
-#     - os: linux
-#       julia: 0.4
-#       env: TESTCMD="xvfb-run julia"
-#     - os: osx
-#       julia: 0.4
-#       env: TESTCMD="julia"
-
-
 
 notifications:
   email: true
-# uncomment the following lines to override the default test script
-# script:
- # - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- # - julia -e 'import Pkg; Pkg.add(Pkg.PackageSpec(path=pwd())); Pkg.build("Plots")'
- # - julia test/travis_commands.jl
- # - julia -e 'Pkg.clone("ImageMagick"); Pkg.build("ImageMagick")'
- # - julia -e 'Pkg.clone("GR"); Pkg.build("GR")'
- # # - julia -e 'Pkg.clone("https://github.com/tbreloff/ImageMagick.jl.git"); Pkg.checkout("ImageMagick","tb_write"); Pkg.build("ImageMagick")'
- # - julia -e 'Pkg.clone("https://github.com/tbreloff/ExamplePlots.jl.git");'
- # # - julia -e 'Pkg.clone("https://github.com/JunoLab/Blink.jl.git"); Pkg.build("Blink"); import Blink; Blink.AtomShell.install()'
- # # - julia -e 'Pkg.clone("https://github.com/spencerlyon2/PlotlyJS.jl.git")'
- # - julia -e 'ENV["PYTHON"] = ""; Pkg.add("PyPlot"); Pkg.build("PyPlot")'
- #
- # # - $TESTCMD -e 'Pkg.test("Plots"; coverage=false)'
- # - julia -e 'Pkg.test("Plots"; coverage=false)'
- # # - julia -e 'cd(Pkg.dir("Plots")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'

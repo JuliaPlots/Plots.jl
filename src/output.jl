@@ -55,9 +55,7 @@ tex(fn::AbstractString) = tex(current(), fn)
 function html(plt::Plot, fn::AbstractString)
     fn = addExtension(fn, "html")
     io = open(fn, "w")
-    _use_remote[] = true
     show(io, MIME("text/html"), plt)
-    _use_remote[] = false
     close(io)
 end
 html(fn::AbstractString) = html(current(), fn)
@@ -156,7 +154,6 @@ end
 const _best_html_output_type = KW(
     :pyplot => :png,
     :unicodeplots => :txt,
-    :glvisualize => :png,
     :plotlyjs => :html,
     :plotly => :html
 )
@@ -192,7 +189,7 @@ end
 # for writing to io streams... first prepare, then callback
 for mime in ("text/plain", "text/html", "image/png", "image/eps", "image/svg+xml",
              "application/eps", "application/pdf", "application/postscript",
-             "application/x-tex")
+             "application/x-tex", "application/vnd.plotly.v1+json")
     @eval function Base.show(io::IO, m::MIME{Symbol($mime)}, plt::Plot)
         if haskey(io, :juno_plotsize)
           showjuno(io, m, plt)
@@ -200,6 +197,7 @@ for mime in ("text/plain", "text/html", "image/png", "image/eps", "image/svg+xml
           prepare_output(plt)
           _show(io, m, plt)
         end
+        return nothing
     end
 end
 
@@ -209,30 +207,6 @@ _show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot) = show(io, plt)
 "Close all open gui windows of the current backend"
 closeall() = closeall(backend())
 
-
-# ---------------------------------------------------------
-# A backup, if no PNG generation is defined, is to try to make a PDF and use FileIO to convert
-
-const PDFBackends = Union{PGFPlotsBackend,PlotlyJSBackend,PyPlotBackend,InspectDRBackend,GRBackend}
-if is_installed("FileIO")
-    @eval import FileIO
-    function _show(io::IO, ::MIME"image/png", plt::Plot{<:PDFBackends})
-        fn = tempname()
-
-        # first save a pdf file
-        pdf(plt, fn)
-
-        # load that pdf into a FileIO Stream
-        s = FileIO.load(fn * ".pdf")
-
-        # save a png
-        pngfn = fn * ".png"
-        FileIO.save(pngfn, s)
-
-        # now write from the file
-        write(io, read(open(pngfn), String))
-    end
-end
 
 # function html_output_format(fmt)
 #     if fmt == "png"

@@ -18,7 +18,7 @@ end
     plotattr([attr])
 
 Look up the properties of a Plots attribute, or specify an attribute type. Call `plotattr()` for options.
-The information is the same as that given on https://juliaplots.github.io/attributes/.
+The information is the same as that given on https://docs.juliaplots.org/latest/attributes/.
 """
 function plotattr()
     println("Specify an attribute type to get a list of supported attributes. Options are $(attrtypes())")
@@ -50,8 +50,13 @@ function plotattr(attrtype::Symbol, attribute::AbstractString)
 
     desc = get(_arg_desc, attribute, "")
     first_period_idx = findfirst(isequal('.'), desc)
-    typedesc = desc[1:first_period_idx-1]
-    desc = strip(desc[first_period_idx+1:end])
+    if isnothing(first_period_idx) 
+        typedesc = ""
+        desc = strip(desc)
+    else
+        typedesc = desc[1:first_period_idx-1]
+        desc = strip(desc[first_period_idx+1:end])
+    end
     als = keys(filter(x->x[2]==attribute, _keyAliases)) |> collect |> sort
     als = join(map(string,als), ", ")
     def = _attribute_defaults[attrtype][attribute]

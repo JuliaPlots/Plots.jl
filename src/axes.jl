@@ -117,7 +117,7 @@ end
 
 # -------------------------------------------------------------------------
 
-Base.show(io::IO, axis::Axis) = dumpdict(axis.plotattributes, "Axis", true)
+Base.show(io::IO, axis::Axis) = dumpdict(io, axis.plotattributes, "Axis", true)
 # Base.getindex(axis::Axis, k::Symbol) = getindex(axis.plotattributes, k)
 Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.plotattributes, v, ks...)
 Base.haskey(axis::Axis, k::Symbol) = haskey(axis.plotattributes, k)
@@ -152,8 +152,8 @@ scalefunc(scale::Symbol) = x -> get(_scale_funcs, scale, identity)(Float64(x))
 invscalefunc(scale::Symbol) = x -> get(_inv_scale_funcs, scale, identity)(Float64(x))
 labelfunc(scale::Symbol, backend::AbstractBackend) = get(_label_func, scale, string)
 
-function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
-    amin,amax = axis_limits(axis)
+function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
+    amin, amax = axis_limits(sp, axis[:letter])
 
     # scale the limits
     scale = axis[:scale]
@@ -238,9 +238,9 @@ function optimal_ticks_and_labels(axis::Axis, ticks = nothing)
 end
 
 # return (continuous_values, discrete_values) for the ticks on this axis
-function get_ticks(axis::Axis)
+function get_ticks(sp::Subplot, axis::Axis)
     ticks = _transform_ticks(axis[:ticks])
-    ticks in (nothing, false) && return nothing
+    ticks in (:none, nothing, false) && return nothing
 
     # treat :native ticks as :auto
     ticks = ticks == :native ? :auto : ticks
@@ -251,7 +251,7 @@ function get_ticks(axis::Axis)
             # discrete ticks...
             n = length(dvals)
             rng = if ticks == :auto
-                Int[round(Int,i) for i in range(1, stop=n, length=15)]
+                Int[round(Int,i) for i in range(1, stop=n, length=min(n,15))]
             else # if ticks == :all
                 1:n
             end
@@ -261,7 +261,7 @@ function get_ticks(axis::Axis)
             (collect(0:pi/4:7pi/4), string.(0:45:315))
         else
             # compute optimal ticks and labels
-            optimal_ticks_and_labels(axis)
+            optimal_ticks_and_labels(sp, axis)
         end
     elseif typeof(ticks) <: Union{AVec, Int}
         if !isempty(dvals) && typeof(ticks) <: Int
@@ -269,7 +269,7 @@ function get_ticks(axis::Axis)
             axis[:continuous_values][rng], dvals[rng]
         else
             # override ticks, but get the labels
-            optimal_ticks_and_labels(axis, ticks)
+            optimal_ticks_and_labels(sp, axis, ticks)
         end
     elseif typeof(ticks) <: NTuple{2, Any}
         # assuming we're passed (ticks, labels)
@@ -286,12 +286,12 @@ _transform_ticks(ticks) = ticks
 _transform_ticks(ticks::AbstractArray{T}) where T <: Dates.TimeType = Dates.value.(ticks)
 _transform_ticks(ticks::NTuple{2, Any}) = (_transform_ticks(ticks[1]), ticks[2])
 
-function get_minor_ticks(axis,ticks)
-    axis[:minorticks] in (nothing, false) && !axis[:minorgrid] && return nothing
+function get_minor_ticks(sp, axis, ticks)
+    axis[:minorticks] in (:none, nothing, false) && !axis[:minorgrid] && return nothing
     ticks = ticks[1]
     length(ticks) < 2 && return nothing
 
-    amin, amax = axis_limits(axis)
+    amin, amax = axis_limits(sp, axis[:letter])
     #Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
     if length(ticks) > 2
         ratio = (ticks[3] - ticks[2])/(ticks[2] - ticks[1])
@@ -459,7 +459,7 @@ const _widen_seriestypes = (:line, :path, :steppre, :steppost, :sticks, :scatter
 
 function default_should_widen(axis::Axis)
     should_widen = false
-    if !is_2tuple(axis[:lims])
+    if !(is_2tuple(axis[:lims]) || axis[:lims] == :round)
         for sp in axis.sps
             for series in series_list(sp)
                 if series.plotattributes[:seriestype] in _widen_seriestypes
@@ -479,11 +479,13 @@ function round_limits(amin,amax)
 end
 
 # using the axis extrema and limit overrides, return the min/max value for this axis
-function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis))
+function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(letter, :axis)]), consider_aspect = true)
+    axis = sp[Symbol(letter, :axis)]
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
     lims = axis[:lims]
-    if (isa(lims, Tuple) || isa(lims, AVec)) && length(lims) == 2
+    has_user_lims = (isa(lims, Tuple) || isa(lims, AVec)) && length(lims) == 2
+    if has_user_lims
         if isfinite(lims[1])
             amin = lims[1]
         end
@@ -497,12 +499,12 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
     if !isfinite(amin) && !isfinite(amax)
         amin, amax = 0.0, 1.0
     end
-    if ispolar(axis.sps[1])
+    amin, amax = if ispolar(axis.sps[1])
         if axis[:letter] == :x
             amin, amax = 0, 2pi
         elseif lims == :auto
             #widen max radius so ticks dont overlap with theta axis
-            amin, amax + 0.1 * abs(amax - amin)
+            0, amax + 0.1 * abs(amax - amin)
         else
             amin, amax
         end
@@ -513,6 +515,32 @@ function axis_limits(axis::Axis, should_widen::Bool = default_should_widen(axis)
     else
         amin, amax
     end
+
+    if !has_user_lims && consider_aspect && letter in (:x, :y) && !(sp[:aspect_ratio] in (:none, :auto) || is3d(:sp))
+        aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
+        plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
+        dist = amax - amin
+
+        if letter == :x
+            yamin, yamax = axis_limits(sp, :y, default_should_widen(sp[:yaxis]), false)
+            ydist = yamax - yamin
+            axis_ratio = aspect_ratio * ydist / dist
+            factor = axis_ratio / plot_ratio
+        else
+            xamin, xamax = axis_limits(sp, :x, default_should_widen(sp[:xaxis]), false)
+            xdist = xamax - xamin
+            axis_ratio = aspect_ratio * dist / xdist
+            factor = plot_ratio / axis_ratio
+        end
+
+        if factor > 1
+            center = (amin + amax) / 2
+            amin = center + factor * (amin - center)
+            amax = center + factor * (amax - center)
+        end
+    end
+
+    return amin, amax
 end
 
 # -------------------------------------------------------------------------
@@ -586,12 +614,12 @@ end
 # compute the line segments which should be drawn for this axis
 function axis_drawing_info(sp::Subplot)
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]
-    xmin, xmax = axis_limits(xaxis)
-    ymin, ymax = axis_limits(yaxis)
-    xticks = get_ticks(xaxis)
-    yticks = get_ticks(yaxis)
-    xminorticks = get_minor_ticks(xaxis,xticks)
-    yminorticks = get_minor_ticks(yaxis,yticks)
+    xmin, xmax = axis_limits(sp, :x)
+    ymin, ymax = axis_limits(sp, :y)
+    xticks = get_ticks(sp, xaxis)
+    yticks = get_ticks(sp, yaxis)
+    xminorticks = get_minor_ticks(sp, xaxis, xticks)
+    yminorticks = get_minor_ticks(sp, yaxis, yticks)
     xaxis_segs = Segments(2)
     yaxis_segs = Segments(2)
     xtick_segs = Segments(2)
@@ -614,14 +642,14 @@ function axis_drawing_info(sp::Subplot)
                 end
                 push!(xaxis_segs, (xmin, y1), (xmax, y1))
                 # don't show the 0 tick label for the origin framestyle
-                if sp[:framestyle] == :origin && !(xticks in (nothing,false)) && length(xticks) > 1
+                if sp[:framestyle] == :origin && !(xticks in (:none, nothing, false)) && length(xticks) > 1
                     showticks = xticks[1] .!= 0
                     xticks = (xticks[1][showticks], xticks[2][showticks])
                 end
             end
             sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin, y2), (xmax, y2)) # top spine
         end
-        if !(xaxis[:ticks] in (nothing, false))
+        if !(xaxis[:ticks] in (:none, nothing, false))
             f = scalefunc(yaxis[:scale])
             invf = invscalefunc(yaxis[:scale])
             ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
@@ -642,7 +670,7 @@ function axis_drawing_info(sp::Subplot)
                 xaxis[:grid] && push!(xgrid_segs, (xtick, ymin), (xtick, ymax)) # vertical grid
             end
         end
-        if !(xaxis[:minorticks] in (nothing, false)) || xaxis[:minorgrid]
+        if !(xaxis[:minorticks] in (:none, nothing, false)) || xaxis[:minorgrid]
             f = scalefunc(yaxis[:scale])
             invf = invscalefunc(yaxis[:scale])
             ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
@@ -675,14 +703,14 @@ function axis_drawing_info(sp::Subplot)
                 end
                 push!(yaxis_segs, (x1, ymin), (x1, ymax))
                 # don't show the 0 tick label for the origin framestyle
-                if sp[:framestyle] == :origin && !(yticks in (nothing,false)) && length(yticks) > 1
+                if sp[:framestyle] == :origin && !(yticks in (:none, nothing,false)) && length(yticks) > 1
                     showticks = yticks[1] .!= 0
                     yticks = (yticks[1][showticks], yticks[2][showticks])
                 end
             end
             sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (x2, ymin), (x2, ymax)) # right spine
         end
-        if !(yaxis[:ticks] in (nothing, false))
+        if !(yaxis[:ticks] in (:none, nothing, false))
             f = scalefunc(xaxis[:scale])
             invf = invscalefunc(xaxis[:scale])
             ticks_in = yaxis[:tick_direction] == :out ? -1 : 1
@@ -703,7 +731,7 @@ function axis_drawing_info(sp::Subplot)
                 yaxis[:grid] && push!(ygrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
             end
         end
-        if !(yaxis[:minorticks] in (nothing, false)) || yaxis[:minorgrid]
+        if !(yaxis[:minorticks] in (:none, nothing, false)) || yaxis[:minorgrid]
             f = scalefunc(xaxis[:scale])
             invf = invscalefunc(xaxis[:scale])
             ticks_in = yaxis[:tick_direction] == :out ? -1 : 1

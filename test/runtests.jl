@@ -1,8 +1,12 @@
-module PlotsTests
+using VisualRegressionTests
+using Plots
+using Random
+using BinaryProvider
+using Test
+using FileIO
+using GeometryTypes
 
-include("add_packages.jl")
 include("imgcomp.jl")
-
 # don't actually show the plots
 Random.seed!(1234)
 default(show=false, reuse=true)
@@ -14,108 +18,24 @@ img_tol = isinteractive() ? 1e-2 : 10e-2
     @test gr() == Plots.GRBackend()
     @test backend() == Plots.GRBackend()
 
-    image_comparison_facts(:gr, tol=img_tol, skip = [25, 30])
+    @static if Sys.islinux()
+        image_comparison_facts(:gr, tol=img_tol, skip = [25, 30])
+    end
 end
 
-
-#@testset "PyPlot" begin
-#    @test pyplot() == Plots.PyPlotBackend()
-#    @test backend() == Plots.PyPlotBackend()
-#
-#    image_comparison_facts(:pyplot, tol=img_tol)
-#end
 
 @testset "UnicodePlots" begin
     @test unicodeplots() == Plots.UnicodePlotsBackend()
     @test backend() == Plots.UnicodePlotsBackend()
 
     # lets just make sure it runs without error
-    @test isa(plot(rand(10)), Plots.Plot) == true
+    p = plot(rand(10))
+    @test isa(p, Plots.Plot) == true
+    @test isa(display(p), Nothing) == true
+    p = bar(randn(10))
+    @test isa(p, Plots.Plot) == true
+    @test isa(display(p), Nothing) == true
 end
-
-# The plotlyjs testimages return a connection error on travis:
-# connect: connection refused (ECONNREFUSED)
-
-# @testset "PlotlyJS" begin
-#     @test plotlyjs() == Plots.PlotlyJSBackend()
-#     @test backend() == Plots.PlotlyJSBackend()
-#
-#     if Sys.islinux() && isinteractive()
-#         image_comparison_facts(:plotlyjs,
-#             skip=[
-#                 2,  # animation (skipped for speed)
-#                 27, # (polar plots) takes very long / not working
-#                 31, # animation (skipped for speed)
-#             ],
-#             tol=img_tol)
-#     end
-# end
-
-
-# InspectDR returns that error on travis:
-# ERROR: LoadError: InitError: Cannot open display:
-#  in Gtk.GLib.GError(::Gtk.##229#230) at /home/travis/.julia/v0.5/Gtk/src/GLib/gerror.jl:17
-
-# @testset "InspectDR" begin
-#     @test inspectdr() == Plots.InspectDRBackend()
-#     @test backend() == Plots.InspectDRBackend()
-#
-#     image_comparison_facts(:inspectdr,
-#         skip=[
-#             2,  # animation
-#             6,  # heatmap not defined
-#             10, # heatmap not defined
-#             22, # contour not defined
-#             23, # pie not defined
-#             27, # polar plot not working
-#             28, # heatmap not defined
-#             31, # animation
-#         ],
-#         tol=img_tol)
-# end
-
-
-# @testset "Plotly" begin
-#     @test plotly() == Plots.PlotlyBackend()
-#     @test backend() == Plots.PlotlyBackend()
-#
-#     # # until png generation is reliable on OSX, just test on linux
-#     # @static Sys.islinux() && image_comparison_facts(:plotly, only=[1,3,4,7,8,9,10,11,12,14,15,20,22,23,27], tol=img_tol)
-# end
-
-
-# @testset "Immerse" begin
-#     @test immerse() == Plots.ImmerseBackend()
-#     @test backend() == Plots.ImmerseBackend()
-#
-#     # as long as we can plot anything without error, it should be the same as Gadfly
-#     image_comparison_facts(:immerse, only=[1], tol=img_tol)
-# end
-
-
-# @testset "PlotlyJS" begin
-#     @test plotlyjs() == Plots.PlotlyJSBackend()
-#     @test backend() == Plots.PlotlyJSBackend()
-#
-#     # as long as we can plot anything without error, it should be the same as Plotly
-#     image_comparison_facts(:plotlyjs, only=[1], tol=img_tol)
-# end
-
-
-# @testset "Gadfly" begin
-#     @test gadfly() == Plots.GadflyBackend()
-#     @test backend() == Plots.GadflyBackend()
-#
-#     @test typeof(plot(1:10)) == Plots.Plot{Plots.GadflyBackend}
-#     @test plot(Int[1,2,3], rand(3)) == not(nothing)
-#     @test plot(sort(rand(10)), rand(Int, 10, 3)) == not(nothing)
-#     @test plot!(rand(10,3), rand(10,3)) == not(nothing)
-#
-#     image_comparison_facts(:gadfly, skip=[4,6,23,24,27], tol=img_tol)
-# end
-
-
-
 
 @testset "Axes" begin
     p = plot()
@@ -132,46 +52,44 @@ end
 end
 
 @testset "NoFail" begin
-    histogram([1, 0, 0, 0, 0, 0])
+    plots = [histogram([1, 0, 0, 0, 0, 0]),
+             plot([missing]),
+             plot([missing; 1:4]),
+             plot([fill(missing,10); 1:4]),
+             plot([1 1; 1 missing]),
+             plot(["a" "b"; missing "d"], [1 2; 3 4])]
+    for plt in plots
+        display(plt)
+    end
 end
 
-# tests for preprocessing recipes
+@testset "Segments" begin
+    function segments(args...)
+        segs = UnitRange{Int}[]
+        for seg in iter_segments(args...)
+            push!(segs,seg)
+        end
+        segs
+    end
 
-# @testset "recipes" begin
+    nan10 = fill(NaN,10)
+    @test segments(11:20) == [1:10]
+    @test segments([NaN]) == []
+    @test segments(nan10) == []
+    @test segments([nan10; 1:5]) == [11:15]
+    @test segments([1:5;nan10]) == [1:5]
+    @test segments([nan10; 1:5; nan10; 1:5; nan10]) == [11:15, 26:30]
+    @test segments([NaN; 1], 1:10) == [2:2, 4:4, 6:6, 8:8, 10:10]
+    @test segments([nan10; 1:15], [1:15; nan10]) == [11:15]
+end
 
-    # user recipe
-
-    # type T end
-    # @recipe function f(::T)
-    #     line := (3,0.3,:red)
-    #     marker := (20,0.5,:blue,:o)
-    #     bg := :yellow
-    #     rand(10)
-    # end
-    # plot(T())
-
-    # plot recipe
-
-    # @recipe function f(::Type{Val{:hiplt}},plt::Plot)
-    #     line := (3,0.3,:red)
-    #     marker := (20,0.5,:blue,:o)
-    #     t := :path
-    #     bg:=:green
-    #     ()
-    # end
-    # plot(rand(10),t=:hiplt)
-
-    # series recipe
-
-    # @recipe function f(::Type{Val{:hi}},x,y,z)
-    #     line := (3,0.3,:red)
-    #     marker := (20,0.5,:blue,:o)
-    #     t := :path
-    #     ()
-    # end
-    # plot(rand(10),t=:hiplt)
-
-# end
-
-
-end # module
+@testset "Utils" begin
+    zipped = ([(1,2)], [("a","b")], [(1,"a"),(2,"b")],
+              [(1,2),(3,4)], [(1,2,3),(3,4,5)], [(1,2,3,4),(3,4,5,6)],
+              [(1,2.0),(missing,missing)], [(1,missing),(missing,"a")],
+              [(missing,missing)], [(missing,missing,missing),("a","b","c")])
+    for z in zipped
+        @test isequal(collect(zip(Plots.unzip(z)...)), z)
+        @test isequal(collect(zip(Plots.unzip(Point.(z))...)), z)
+    end
+end

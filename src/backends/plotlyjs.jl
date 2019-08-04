@@ -1,18 +1,11 @@
-
-# https://github.com/spencerlyon2/PlotlyJS.jl
-
-const _plotlyjs_attr        = _plotly_attr
-const _plotlyjs_seriestype  = _plotly_seriestype
-const _plotlyjs_style       = _plotly_style
-const _plotlyjs_marker      = _plotly_marker
-const _plotlyjs_scale       = _plotly_scale
+# https://github.com/sglyon/PlotlyJS.jl
 
 # --------------------------------------------------------------------------------------
 
 
 function _create_backend_figure(plt::Plot{PlotlyJSBackend})
     if !isplotnull() && plt[:overwrite_figure] && isa(current().o, PlotlyJS.SyncPlot)
-        PlotlyJS.SyncPlot(PlotlyJS.Plot(), current().o.view)
+        PlotlyJS.SyncPlot(PlotlyJS.Plot(), options = current().o.options)
     else
         PlotlyJS.plot()
     end
@@ -56,23 +49,16 @@ end
 
 # ----------------------------------------------------------------
 
-function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend})
-    if isijulia() && !_use_remote[]
-        write(io, PlotlyJS.html_body(PlotlyJS.JupyterPlot(plt.o)))
-    else
-        show(io, MIME("text/html"), plt.o)
-    end
+_show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) = show(io, MIME("text/html"), plt.o)
+_show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="svg")
+_show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="png")
+_show(io::IO, ::MIME"application/pdf", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="pdf")
+_show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="eps")
+
+function _show(io::IO, m::MIME"application/vnd.plotly.v1+json", plt::Plot{PlotlyJSBackend})
+    show(io, m, plt.o)
 end
 
-function plotlyjs_save_hack(io::IO, plt::Plot{PlotlyJSBackend}, ext::String)
-    tmpfn = tempname() * "." * ext
-    PlotlyJS.savefig(plt.o, tmpfn)
-    write(io, read(open(tmpfn)))
-end
-_show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "svg")
-_show(io::IO, ::MIME"image/png", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "png")
-_show(io::IO, ::MIME"application/pdf", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "pdf")
-_show(io::IO, ::MIME"image/eps", plt::Plot{PlotlyJSBackend}) = plotlyjs_save_hack(io, plt, "eps")
 
 function write_temp_html(plt::Plot{PlotlyJSBackend})
     filename = string(tempname(), ".html")

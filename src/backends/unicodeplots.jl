@@ -1,28 +1,6 @@
 
 # https://github.com/Evizero/UnicodePlots.jl
 
-const _unicodeplots_attr = merge_with_base_supported([
-    :label,
-    :legend,
-    :seriescolor,
-    :seriesalpha,
-    :linestyle,
-    :markershape,
-    :bins,
-    :title,
-    :guide, :lims,
-  ])
-const _unicodeplots_seriestype = [
-    :path, :scatter, :straightline,
-    # :bar,
-    :shape,
-    :histogram2d,
-    :spy
-]
-const _unicodeplots_style = [:auto, :solid]
-const _unicodeplots_marker = [:none, :auto, :circle]
-const _unicodeplots_scale = [:identity]
-
 
 # don't warn on unsupported... there's just too many warnings!!
 warnOnUnsupported_args(::UnicodePlotsBackend, plotattributes::KW) = nothing
@@ -49,8 +27,8 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
     for sp in plt.subplots
         xaxis = sp[:xaxis]
         yaxis = sp[:yaxis]
-        xlim =  axis_limits(xaxis)
-        ylim =  axis_limits(yaxis)
+        xlim =  axis_limits(sp, :x)
+        ylim =  axis_limits(sp, :y)
 
         # make vectors
         xlim = [xlim[1], xlim[2]]
@@ -138,7 +116,7 @@ function addUnicodeSeries!(o, plotattributes::KW, addlegend::Bool, xlim, ylim)
     x, y = if st == :straightline
         straightline_data(plotattributes)
     elseif st == :shape
-        shape_data(series)
+        shape_data(plotattributes)
     else
         [collect(float(plotattributes[s])) for s in (:x, :y)]
     end

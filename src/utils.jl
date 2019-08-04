@@ -194,7 +194,9 @@ end
 
 function iter_segments(series::Series)
     x, y, z = series[:x], series[:y], series[:z]
-    if has_attribute_segments(series)
+    if x == nothing
+        return UnitRange{Int}[]
+    elseif has_attribute_segments(series)
         if series[:seriestype] in (:scatter, :scatter3d)
             return [[i] for i in 1:length(y)]
         else
@@ -212,36 +214,19 @@ end
 
 # helpers to figure out if there are NaN values in a list of array types
 anynan(i::Int, args::Tuple) = any(a -> try isnan(_cycle(a,i)) catch MethodError false end, args)
-anynan(istart::Int, iend::Int, args::Tuple) = any(i -> anynan(i, args), istart:iend)
-allnan(istart::Int, iend::Int, args::Tuple) = all(i -> anynan(i, args), istart:iend)
+anynan(args::Tuple) = i -> anynan(i,args)
+anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
+allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
 function Base.iterate(itr::SegmentsIterator, nextidx::Int = 1)
-    nextidx > itr.n && return nothing
-    if nextidx == 1 && !any(isempty,itr.args) && anynan(1, itr.args)
-        nextidx = 2
-    end
+    i = findfirst(!anynan(itr.args), nextidx:itr.n)
+    i === nothing && return nothing
+    nextval = nextidx + i - 1
 
-    i = istart = iend = nextidx
+    j = findfirst(anynan(itr.args), nextval:itr.n)
+    nextnan = j === nothing ? itr.n + 1 : nextval + j - 1
 
-    # find the next NaN, and iend is the one before
-    while i <= itr.n + 1
-        if i > itr.n || anynan(i, itr.args)
-            # done... array end or found NaN
-            iend = i-1
-            break
-        end
-        i += 1
-    end
-
-    # find the next non-NaN, and set nextidx
-    while i <= itr.n
-        if !anynan(i, itr.args)
-            break
-        end
-        i += 1
-    end
-
-    istart:iend, i
+    nextval:nextnan-1, nextnan
 end
 
 # Find minimal type that can contain NaN and x
@@ -273,6 +258,9 @@ _cycle(v, indices::AVec{Int})       = fill(v, length(indices))
 _cycle(grad::ColorGradient, idx::Int) = _cycle(grad.colors, idx)
 _cycle(grad::ColorGradient, indices::AVec{Int}) = _cycle(grad.colors, indices)
 
+_as_gradient(grad::ColorGradient) = grad
+_as_gradient(c::Colorant) = ColorGradient([c,c])
+
 makevec(v::AVec) = v
 makevec(v::T) where {T} = T[v]
 
@@ -283,18 +271,17 @@ maketuple(x::Tuple{T,S}) where {T,S} = x
 mapFuncOrFuncs(f::Function, u::AVec)        = map(f, u)
 mapFuncOrFuncs(fs::AVec{F}, u::AVec) where {F<:Function} = [map(f, u) for f in fs]
 
-unzip(xy::AVec{Tuple{X,Y}}) where {X,Y}              = [t[1] for t in xy], [t[2] for t in xy]
-unzip(xyz::AVec{Tuple{X,Y,Z}}) where {X,Y,Z}         = [t[1] for t in xyz], [t[2] for t in xyz], [t[3] for t in xyz]
-unzip(xyuv::AVec{Tuple{X,Y,U,V}}) where {X,Y,U,V}    = [t[1] for t in xyuv], [t[2] for t in xyuv], [t[3] for t in xyuv], [t[4] for t in xyuv]
+for i in 2:4
+  @eval begin
+    unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
+                   AVec{<:GeometryTypes.Point{$i}}}) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
+  end
+end
 
-unzip(xy::AVec{FixedSizeArrays.Vec{2,T}}) where {T}  = T[t[1] for t in xy], T[t[2] for t in xy]
-unzip(xy::FixedSizeArrays.Vec{2,T}) where {T}        = T[xy[1]], T[xy[2]]
-
-unzip(xyz::AVec{FixedSizeArrays.Vec{3,T}}) where {T} = T[t[1] for t in xyz], T[t[2] for t in xyz], T[t[3] for t in xyz]
-unzip(xyz::FixedSizeArrays.Vec{3,T}) where {T}       = T[xyz[1]], T[xyz[2]], T[xyz[3]]
-
-unzip(xyuv::AVec{FixedSizeArrays.Vec{4,T}}) where {T} = T[t[1] for t in xyuv], T[t[2] for t in xyuv], T[t[3] for t in xyuv], T[t[4] for t in xyuv]
-unzip(xyuv::FixedSizeArrays.Vec{4,T}) where {T}       = T[xyuv[1]], T[xyuv[2]], T[xyuv[3]], T[xyuv[4]]
+unzip(v::Union{AVec{<:GeometryTypes.Point{N}},
+               AVec{<:Tuple{Vararg{T,N} where T}}}) where N = error("$N-dimensional unzip not implemented.")
+unzip(v::Union{AVec{<:GeometryTypes.Point},
+               AVec{<:Tuple}}) = error("Can't unzip points of different dimensions.")
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
@@ -357,6 +344,7 @@ const _scale_base = Dict{Symbol, Real}(
 )
 
 function _heatmap_edges(v::AVec)
+  length(v) == 1 && return v[1] .+ [-0.5, 0.5]
   vmin, vmax = ignorenan_extrema(v)
   extra_min = (v[2] - v[1]) / 2
   extra_max = (v[end] - v[end - 1]) / 2
@@ -369,35 +357,11 @@ function heatmap_edges(v::AVec, scale::Symbol = :identity)
   map(invf, _heatmap_edges(map(f,v)))
 end
 
-function calc_r_extrema(x, y)
-    xmin, xmax = ignorenan_extrema(x)
-    ymin, ymax = ignorenan_extrema(y)
-    r = 0.5 * NaNMath.min(xmax - xmin, ymax - ymin)
-    ignorenan_extrema(r)
-end
-
-function convert_to_polar(x, y, r_extrema = calc_r_extrema(x, y))
+function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     rmin, rmax = r_extrema
-    theta, r = filter_radial_data(x, y, r_extrema)
     r = (r .- rmin) ./ (rmax .- rmin)
     x = r.*cos.(theta)
     y = r.*sin.(theta)
-    x, y
-end
-
-# Filters radial data for points within the axis limits
-function filter_radial_data(theta, r, r_extrema::Tuple{Real, Real})
-    n = max(length(theta), length(r))
-    rmin, rmax = r_extrema
-    x, y = zeros(n), zeros(n)
-    for i in 1:n
-        x[i] = _cycle(theta, i)
-        y[i] = _cycle(r, i)
-    end
-    points = map((a, b) -> (a, b), x, y)
-    filter!(a -> a[2] >= rmin && a[2] <= rmax, points)
-    x = map(a -> a[1], points)
-    y = map(a -> a[2], points)
     x, y
 end
 
@@ -411,14 +375,6 @@ end
 
 isijulia() = :IJulia in nameof.(collect(values(Base.loaded_modules)))
 isatom() = :Atom in nameof.(collect(values(Base.loaded_modules)))
-
-function is_installed(pkgstr::AbstractString)
-    try
-        Pkg.installed(pkgstr) === nothing ? false : true
-    catch
-        false
-    end
-end
 
 istuple(::Tuple) = true
 istuple(::Any)   = false
@@ -438,7 +394,7 @@ isvertical(series::Series) = isvertical(series.plotattributes)
 
 ticksType(ticks::AVec{T}) where {T<:Real}                      = :ticks
 ticksType(ticks::AVec{T}) where {T<:AbstractString}            = :labels
-ticksType(ticks::Tuple{T,S}) where {T<:AVec,S<:AVec}  = :ticks_and_labels
+ticksType(ticks::Tuple{T,S}) where {T<:Union{AVec,Tuple},S<:Union{AVec,Tuple}} = :ticks_and_labels
 ticksType(ticks)                                        = :invalid
 
 limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real}    = :limits
@@ -534,7 +490,7 @@ function concatenate_fillrange(x,y::Tuple)
 end
 
 function get_sp_lims(sp::Subplot, letter::Symbol)
-    axis_limits(sp[Symbol(letter, :axis)])
+    axis_limits(sp, letter)
 end
 
 """
@@ -571,9 +527,9 @@ function get_clims(sp::Subplot)
     z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
     for series in series_list(sp)
         for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
-            if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Real)
+            if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
                 zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
-            elseif (vals != nothing) && (eltype(vals) <: Real)
+            elseif (vals != nothing) && (eltype(vals) <: Union{Missing, Real})
                 zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
             end
         end
@@ -588,34 +544,49 @@ end
 
 _update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
 
-function hascolorbar(series::Series)
-    st = series[:seriestype]
-    hascbar = st == :heatmap
-    if st == :contour
-        hascbar = (isscalar(series[:levels]) ? (series[:levels] > 1) : (length(series[:levels]) > 1)) && (length(unique(Array(series[:z]))) > 1)
+@enum ColorbarStyle cbar_gradient cbar_fill cbar_lines
+
+function colorbar_style(series::Series)
+    colorbar_entry = series[:colorbar_entry]
+    if !(colorbar_entry isa Bool)
+        @warn "Non-boolean colorbar_entry ignored."
+        colorbar_entry = true
     end
-    if series[:marker_z] != nothing || series[:line_z] != nothing || series[:fill_z] != nothing
-        hascbar = true
+
+    if !colorbar_entry
+        nothing
+    elseif isfilledcontour(series)
+        cbar_fill
+    elseif iscontour(series)
+        cbar_lines
+    elseif series[:seriestype] ∈ (:heatmap,:surface) ||
+            any(series[z] !== nothing for z ∈ [:marker_z,:line_z,:fill_z])
+        cbar_gradient
+    else
+        nothing
     end
-    # no colorbar if we are creating a surface LightSource
-    if xor(st == :surface, series[:fill_z] != nothing)
-        hascbar = true
-    end
-    return hascbar
 end
 
-function hascolorbar(sp::Subplot)
-    cbar = sp[:colorbar]
-    hascbar = false
-    if cbar != :none
-        for series in series_list(sp)
-            if hascolorbar(series)
-                hascbar = true
-            end
+hascolorbar(series::Series) = colorbar_style(series) !== nothing
+hascolorbar(sp::Subplot) = sp[:colorbar] != :none && any(hascolorbar(s) for s in series_list(sp))
+
+iscontour(series::Series) = series[:seriestype] == :contour
+isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
+
+function contour_levels(series::Series, clims)
+    iscontour(series) || error("Not a contour series")
+    zmin, zmax = clims
+    levels = series[:levels]
+    if levels isa Integer
+        levels = range(zmin, stop=zmax, length=levels+2)
+        if !isfilledcontour(series)
+            levels = levels[2:end-1]
         end
     end
-    hascbar
+    levels
 end
+
+
 
 for comp in (:line, :fill, :marker)
 
@@ -653,6 +624,9 @@ for comp in (:line, :fill, :marker)
     end
 end
 
+single_color(c, v = 0.5) = c
+single_color(grad::ColorGradient, v = 0.5) = grad[v]
+
 function get_linewidth(series, i::Int = 1)
     _cycle(series[:linewidth], i)
 end
@@ -680,7 +654,7 @@ function has_attribute_segments(series::Series)
     end
     series[:seriestype] == :shape && return false
     # ... else we check relevant attributes if they have multiple inputs
-    return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha, :markercolor, :markeralpha, :markerstrokecolor, :markerstrokealpha]) || any(typeof(series[attr]) <: AbstractArray{<:Real} for attr in (:line_z, :fill_z, :marker_z))
+    return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha, :markercolor, :markeralpha, :markerstrokecolor, :markerstrokealpha]) || any(typeof(series[attr]) <: AbstractArray for attr in (:line_z, :fill_z, :marker_z))
 end
 
 # ---------------------------------------------------------------
@@ -733,7 +707,7 @@ function with(f::Function, args...; kw...)
 
   # save the backend
   if CURRENT_BACKEND.sym == :none
-    pickDefaultBackend()
+    _pick_default_backend()
   end
   oldbackend = CURRENT_BACKEND.sym
 
@@ -745,7 +719,7 @@ function with(f::Function, args...; kw...)
     end
 
     # # TODO: generalize this strategy to allow args as much as possible
-    # #       as in:  with(:gadfly, :scatter, :legend, :grid) do; ...; end
+    # #       as in:  with(:gr, :scatter, :legend, :grid) do; ...; end
     # # TODO: can we generalize this enough to also do something similar in the plot commands??
 
     # k = :seriestype
@@ -803,24 +777,24 @@ function debugplots(on = true)
   _debugMode.on = on
 end
 
-debugshow(x) = show(x)
-debugshow(x::AbstractArray) = print(summary(x))
+debugshow(io, x) = show(io, x)
+debugshow(io, x::AbstractArray) = print(io, summary(x))
 
-function dumpdict(plotattributes::KW, prefix = "", alwaysshow = false)
+function dumpdict(io::IO, plotattributes::KW, prefix = "", alwaysshow = false)
   _debugMode.on || alwaysshow || return
-  println()
+  println(io)
   if prefix != ""
-    println(prefix, ":")
+    println(io, prefix, ":")
   end
   for k in sort(collect(keys(plotattributes)))
     @printf("%14s: ", k)
-    debugshow(plotattributes[k])
-    println()
+    debugshow(io, plotattributes[k])
+    println(io)
   end
-  println()
+  println(io)
 end
-DD(plotattributes::KW, prefix = "") = dumpdict(plotattributes, prefix, true)
-
+DD(io::IO, plotattributes::KW, prefix = "") = dumpdict(io, plotattributes, prefix, true)
+DD(plotattributes::KW, prefix = "") = DD(stdout, plotattributes, prefix)
 
 function dumpcallstack()
   error()  # well... you wanted the stacktrace, didn't you?!?
@@ -1205,4 +1179,38 @@ end
 
 function construct_categorical_data(x::AbstractArray, axis::Axis)
     map(xi -> axis[:discrete_values][searchsortedfirst(axis[:continuous_values], xi)], x)
+end
+
+_fmt_paragraph(paragraph::AbstractString;kwargs...) = _fmt_paragraph(IOBuffer(),paragraph,0;kwargs...)
+
+function _fmt_paragraph(io::IOBuffer,
+                        remaining_text::AbstractString,
+                        column_count::Integer;
+                        fillwidth=60,
+                        leadingspaces=0)
+
+    kwargs = (fillwidth = fillwidth, leadingspaces = leadingspaces)
+
+    m = match(r"(.*?) (.*)",remaining_text)
+    if isa(m,Nothing)
+        if column_count + length(remaining_text) ≤ fillwidth
+            print(io,remaining_text)
+            String(take!(io))
+        else
+            print(io,"\n"*" "^leadingspaces*remaining_text)
+            String(take!(io))
+        end
+    else
+        if column_count + length(m[1]) ≤ fillwidth
+            print(io,"$(m[1]) ")
+            _fmt_paragraph(io,m[2],column_count + length(m[1]) + 1;kwargs...)
+        else
+            print(io,"\n"*" "^leadingspaces*"$(m[1]) ")
+            _fmt_paragraph(io,m[2],leadingspaces;kwargs...)
+        end
+    end
+end
+
+function _document_argument(S::AbstractString)
+    _fmt_paragraph("`$S`: "*_arg_desc[Symbol(S)],leadingspaces = 6 + length(S))
 end
