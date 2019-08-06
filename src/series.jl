@@ -7,18 +7,21 @@
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
 const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
-const DataPoint = Union{Number, AbstractString, Missing}
+const DataPoint = Union{Number, AbstractString, AbstractChar, Missing}
 const SeriesData = Union{AVec{<:DataPoint}, Function, Surface, Volume}
 
 prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
 prepareSeriesData(::Nothing) = nothing
-prepareSeriesData(s::SeriesData) = handlemissings(s)
+prepareSeriesData(s::SeriesData) = handlemissings(handlechars(s))
 
 handlemissings(v) = v
 handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: Number = replace(v, missing => NaN)
 handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: AbstractString = replace(v, missing => "")
 handlemissings(s::Surface) = Surface(handlemissings(s.surf))
 handlemissings(v::Volume) = Volume(handlemissings(v.v), v.x_extents, v.y_extents, v.z_extents)
+
+handlechars(x) = x
+handlechars(c::AVec{<:AbstractChar}) = string.(c)
 
 # default: assume x represents a single series
 convertToAnyVector(x) = Any[prepareSeriesData(x)]
