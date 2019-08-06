@@ -70,7 +70,7 @@ function buildanimation(animdir::AbstractString, fn::AbstractString,
                         fps::Integer = 20, loop::Integer = 0,
                         variable_palette::Bool=false,
                         show_msg::Bool=true)
-    fn = abspath(fn)
+    fn = abspath(expanduser(fn))
 
     if is_animated_gif
         if variable_palette
