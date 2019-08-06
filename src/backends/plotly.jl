@@ -347,7 +347,7 @@ function plotly_layout(plt::Plot)
 end
 
 function plotly_layout_json(plt::Plot)
-    JSON.json(plotly_layout(plt))
+    JSON.json(plotly_layout(plt), 4)
 end
 
 
@@ -800,7 +800,7 @@ function plotly_series(plt::Plot)
 end
 
 # get json string for a list of dictionaries, each representing the series params
-plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt))
+plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt), 4)
 
 # ----------------------------------------------------------------
 
