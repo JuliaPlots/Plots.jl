@@ -1,6 +1,6 @@
 # https://github.com/sglyon/PlotlyJS.jl
 
-# --------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     plt[:overwrite_figure] && closeall()
@@ -17,7 +17,7 @@ function plotlyjs_syncplot(plt::Plot{PlotlyJSBackend})
     return plt.o
 end
 
-# ----------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 const _plotlyjs_mimeformats = Dict(
     "application/pdf" => "pdf",
