@@ -347,7 +347,7 @@ function plotly_layout(plt::Plot)
 end
 
 function plotly_layout_json(plt::Plot)
-    JSON.json(plotly_layout(plt))
+    JSON.json(plotly_layout(plt), 4)
 end
 
 
@@ -800,7 +800,7 @@ function plotly_series(plt::Plot)
 end
 
 # get json string for a list of dictionaries, each representing the series params
-plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt))
+plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt), 4)
 
 # ----------------------------------------------------------------
 
@@ -822,8 +822,6 @@ function html_head(plt::Plot{PlotlyBackend})
         """)
         ijulia_initialized[] = true
     end
-    # IJulia just needs one initialization
-    isijulia() && return ""
     return "<script src=$(repr(plotly))></script>"
 end
 
@@ -860,6 +858,11 @@ function _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{Plotly
     end
     layout = plotly_layout(plot)
     JSON.print(io, Dict(:data => data, :layout => layout))
+end
+
+
+function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
+    write(io, standalone_html(plt))
 end
 
 
