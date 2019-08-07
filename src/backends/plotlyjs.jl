@@ -77,9 +77,17 @@ end
 
 const _plotlyjs_showformats = ["text/html", "application/vnd.plotly.v1+json"]
 
-for mime in ["text/html", "application/vnd.plotly.v1+json"]
-    @eval _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{PlotlyJSBackend}) = show(io, mime, plotlyjs_syncplot(plt))
-end
+# for mime in ["text/html", "application/vnd.plotly.v1+json"]
+#     @eval _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{PlotlyJSBackend}) = show(io, mime, plotlyjs_syncplot(plt))
+# end
+
+# Use the Plotly implementation for json and html:
+_show(io::IO, mime::MIME"application/vnd.plotly.v1+json", plt::Plot{PlotlyJSBackend}) = plotly_show_js(io, plot)
+
+html_head(plt::Plot{PlotlyJSBackend}) = plotly_html_head(plt)
+html_body(plt::Plot{PlotlyJSBackend}) = plotly_html_body(plt)
+
+_show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) = write(io, standalone_html(plt))
 
 # _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) = show(io, ::MIME"text/html", plt.o)
 # _show(io::IO, ::MIME"image/svg+xml", plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plt.o, format="svg")
