@@ -1,6 +1,6 @@
 module Plots
 
-_current_plots_version = v"0.25.0"
+_current_plots_version = v"0.26.1"
 
 using Reexport
 

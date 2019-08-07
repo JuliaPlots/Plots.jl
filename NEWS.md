@@ -11,6 +11,13 @@
 ---
 ## (current master)
 
+## 0.26.1
+- handle `Char`s as input data
+- fix html saving for Plotly
+- expand ~ in paths on UNIX systems
+- convertToAnyVector clean-up
+- fix color_palette grouping issue
+
 ## 0.26.0
 - use FFMPEG.jl
 - add missing method for convertToAnyVector
