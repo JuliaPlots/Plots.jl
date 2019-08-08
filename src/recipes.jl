@@ -1102,6 +1102,11 @@ timeformatter(t) = string(Dates.Time(Dates.Nanosecond(t)))
 @recipe f(::Type{P}, t::P) where P <: Dates.Period = (t -> Dates.value(t), t -> string(P(t)))
 
 # -------------------------------------------------
+# Characters
+
+@recipe f(::Type{<:AbstractChar}, ::AbstractChar) = (string, string)
+
+# -------------------------------------------------
 # Complex Numbers
 
 @recipe function f(A::Array{Complex{T}}) where T<:Number
