@@ -756,3 +756,47 @@ function axis_drawing_info(sp::Subplot)
 
     xticks, yticks, xaxis_segs, yaxis_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs
 end
+
+# -------------------------------------------------------------------------
+# Axis permutations
+
+const axis_letters = [:x, :y, :z]
+function _extend_axis_permutation!(perm::AVec{<:Integer})
+    while length(perm) < 3
+        push!(perm, findfirst(!in(perm), 1:3))
+    end
+    perm
+end
+
+_axis_permutation(tup::Tuple) = _axis_permutation([tup...])
+_axis_permutation(perm::AVec{<:Integer}) = _extend_axis_permutation!(copy(perm))
+function _axis_permutation(perm::AVec{<:Symbol})
+    p = indexin(perm, axis_letters)
+    any(isnothing.(p)) && error(":$(first(filter(!in(axis_letters),perm))) is not an axis letter.")
+    _axis_permutation(something.(p))
+end
+
+function _permutekeys!(dict, keys, perm)
+    values = getindex.(Ref(dict), keys)
+    setindex!.(Ref(dict), permute!(values, perm), keys)
+    dict
+end
+
+_permuteaxes!(series::Series, perm) = _permutekeys!(series, axis_letters, perm)
+function _permuteaxes!(sp::Subplot, perm)
+    axis_keys = [:xaxis, :yaxis, :zaxis]
+    _permutekeys!(sp, axis_keys, perm)
+    for i in 1:3
+        sp[axis_keys[i]][:letter] = axis_letters[i]
+    end
+    for series in sp.series_list
+        _permuteaxes!(series, perm)
+    end
+    sp
+end
+function _permuteaxes!(p::Plot, perm)
+    for sp in p.subplots
+        _permuteaxes!(sp, perm)
+    end
+    p
+end

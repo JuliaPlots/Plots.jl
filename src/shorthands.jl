@@ -453,3 +453,34 @@ xaxis!(args...; kw...)                                    = plot!(; xaxis = args
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
 xgrid!(args...; kw...)                                    = plot!(; xgrid = args, kw...)
 ygrid!(args...; kw...)                                    = plot!(; ygrid = args, kw...)
+
+
+"""
+    permuteaxes!([plt], axes...)
+
+Permute the axes of an existing plot.
+Axes may be specified by letter (`:x`, `:y`, `:z`) or number (1,2,3).
+`plt` defaults to the current plot. `axes` default to `(2,1,3)`.
+
+# Examples
+## Permuting axes by letters
+```julia-repl
+julia> x = range(0, 5π; length=100)
+julia> plot(x, cos.(x), sin.(2x))
+julia> permuteaxes!(:z,:x,:y)
+```
+## Bar plot with horizontal bars
+```julia-repl
+julia> bar(rand(4))
+julia> permuteaxes!()
+```
+See also: [`swapxy!`](@ref), [`swapxz!`](@ref), [`swapyz!`](@ref)
+"""
+permuteaxes!(axes...) = permuteaxes!(current(), axes...)
+
+"Swap the x and y axes of the current plot"
+swapxy!() = swapxy!(current())
+"Swap the x and z axes of the current plot"
+swapxz!() = swapxz!(current())
+"Swap the y and z axes of the current plot"
+swapyz!() = swapyz!(current())

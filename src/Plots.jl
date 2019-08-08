@@ -72,6 +72,11 @@ export
     xgrid!,
     ygrid!,
 
+    permuteaxes!,
+    swapxy!,
+    swapxz!,
+    swapyz!,
+
     xlims,
     ylims,
     zlims,
@@ -211,10 +216,15 @@ let PlotOrSubplot = Union{Plot, Subplot}
     global ygrid!(plt::PlotOrSubplot, args...; kw...)                  = plot!(plt; ygrid = args, kw...)
     global annotate!(plt::PlotOrSubplot, anns...; kw...)                         = plot!(plt; annotation = anns, kw...)
     global annotate!(plt::PlotOrSubplot, anns::AVec{T}; kw...) where {T<:Tuple}         = plot!(plt; annotation = anns, kw...)
-    global xflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)                  = plot!(plt; xflip = flip, kw...)
-    global yflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)                  = plot!(plt; yflip = flip, kw...)
-    global xaxis!(plt::PlotOrSubplot, args...; kw...)                            = plot!(plt; xaxis = args, kw...)
-    global yaxis!(plt::PlotOrSubplot, args...; kw...)                            = plot!(plt; yaxis = args, kw...)
+    global xflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)        = plot!(plt; xflip = flip, kw...)
+    global yflip!(plt::PlotOrSubplot, flip::Bool = true; kw...)        = plot!(plt; yflip = flip, kw...)
+    global xaxis!(plt::PlotOrSubplot, args...; kw...)                  = plot!(plt; xaxis = args, kw...)
+    global yaxis!(plt::PlotOrSubplot, args...; kw...)                  = plot!(plt; yaxis = args, kw...)
+    global permuteaxes!(plt::PlotOrSubplot, perm...)    = _permuteaxes!(plt, _axis_permutation(perm))
+    global permuteaxes!(plt::PlotOrSubplot)             = _permuteaxes!(plt, [2,1,3])
+    global swapxy!(plt::PlotOrSubplot) = permuteaxes!(plt,2,1,3)
+    global swapxz!(plt::PlotOrSubplot) = permuteaxes!(plt,3,2,1)
+    global swapyz!(plt::PlotOrSubplot) = permuteaxes!(plt,1,3,2)
 end
 
 
