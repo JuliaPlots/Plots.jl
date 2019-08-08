@@ -20,7 +20,10 @@ frontends like jupyterlab and nteract.
 _ijulia__extra_mime_info!(plt::Plot, out::Dict) = out
 
 function _ijulia__extra_mime_info!(plt::Plot{PlotlyJSBackend}, out::Dict)
-    out["application/vnd.plotly.v1+json"] = JSON.lower(plt.o)
+    out["application/vnd.plotly.v1+json"] = Dict(
+        :data => plotly_series(plt),
+        :layout => plotly_layout(plt)
+    )
     out
 end
 
