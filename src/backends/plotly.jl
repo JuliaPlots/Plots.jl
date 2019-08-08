@@ -631,11 +631,9 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     segments = iter_segments(series)
-    plotattributes_outs = Vector{KW}(undef, (hasfillrange ? 2 : 1 ) * length(segments))
+    plotattributes_outs = fill(KW(), (hasfillrange ? 2 : 1 ) * length(segments))
 
     for (i,rng) in enumerate(segments)
-        !isscatter && length(rng) < 2 && continue
-
         plotattributes_out = deepcopy(plotattributes_base)
         plotattributes_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
         plotattributes_out[:legendgroup] = series[:label]
