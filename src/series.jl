@@ -352,7 +352,12 @@ end
     end
 end
 
+# Dicts with Real values are plotted as bars
 
+@recipe function f(d::AbstractDict{T,<:Real}) where T
+    seriestype --> :bar
+    x, y = collect(keys(d)), collect(values(d))
+end
 
 # function without range... use the current range of the x-axis
 
