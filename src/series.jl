@@ -352,12 +352,9 @@ end
     end
 end
 
-# Dicts with Real values are plotted as bars
+# Dicts: each entry is a data point (x,y)=(key,value)
 
-@recipe function f(d::AbstractDict{T,<:Real}) where T
-    seriestype --> :bar
-    x, y = collect(keys(d)), collect(values(d))
-end
+@recipe f(d::AbstractDict) = collect(keys(d)), collect(values(d))
 
 # function without range... use the current range of the x-axis
 
