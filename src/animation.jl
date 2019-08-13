@@ -60,17 +60,22 @@ end
 
 file_extension(fn) = Base.Filesystem.splitext(fn)[2][2:end]
 
-gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim.dir, fn; kw...)
-mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim.dir, fn, false; kw...)
-mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim.dir, fn, false; kw...)
+gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim, fn; kw...)
+mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim, fn, false; kw...)
+mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim, fn, false; kw...)
 
 
-function buildanimation(animdir::AbstractString, fn::AbstractString,
+function buildanimation(anim::Animation, fn::AbstractString,
                         is_animated_gif::Bool=true;
                         fps::Integer = 20, loop::Integer = 0,
                         variable_palette::Bool=false,
                         show_msg::Bool=true)
+    if length(anim.frames) == 0
+        throw(ArgumentError("Cannot build empty animations"))
+    end
+
     fn = abspath(expanduser(fn))
+    animdir = anim.dir
 
     if is_animated_gif
         if variable_palette
