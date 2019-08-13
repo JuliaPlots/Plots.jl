@@ -36,7 +36,7 @@ convertToAnyVector(v::AVec) = vcat((convertToAnyVector(vi) for vi in v)...)
 convertToAnyVector(v::AMat{<:DataPoint}) = Any[prepareSeriesData(v[:,i]) for i in 1:size(v,2)]
 
 # --------------------------------------------------------------------
-# Fillrane & ribbons
+# Fillranges & ribbons
 
 
 process_fillrange(range::Number) = [range]
