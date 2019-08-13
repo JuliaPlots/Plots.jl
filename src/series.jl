@@ -36,6 +36,20 @@ convertToAnyVector(v::AVec) = vcat((convertToAnyVector(vi) for vi in v)...)
 convertToAnyVector(v::AMat{<:DataPoint}) = Any[prepareSeriesData(v[:,i]) for i in 1:size(v,2)]
 
 # --------------------------------------------------------------------
+# Fillrane & ribbons
+
+
+process_fillrange(range::Number) = [range]
+process_fillrange(range) = convertToAnyVector(range)
+
+process_ribbon(ribbon::Number) = [ribbon]
+process_ribbon(ribbon) = convertToAnyVector(ribbon)
+# ribbon as a tuple: (lower_ribbons, upper_ribbons)
+process_ribbon(ribbon::Tuple{Any,Any}) = collect(zip(convertToAnyVector(ribbon[1]),
+                                                     convertToAnyVector(ribbon[2])))
+
+
+# --------------------------------------------------------------------
 
 # TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array
 #       result in that array being shared.  push!, etc will add too many items to that array
@@ -102,19 +116,11 @@ struct SliceIt end
 
 
     fr = pop!(plotattributes, :fillrange, nothing)
-    fillranges = if typeof(fr) <: Number
-        [fr]
-    else
-        convertToAnyVector(fr)
-    end
+    fillranges = process_fillrange(fr)
     mf = length(fillranges)
 
     rib = pop!(plotattributes, :ribbon, nothing)
-    ribbons = if typeof(rib) <: Number
-        [rib]
-    else
-        convertToAnyVector(rib)
-    end
+    ribbons = process_ribbon(rib)
     mr = length(ribbons)
 
     # @show zs
