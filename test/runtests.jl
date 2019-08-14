@@ -63,6 +63,13 @@ end
     end
 end
 
+@testset "EmptyAnim" begin
+    anim = @animate for i in []
+    end
+
+    @test_throws ArgumentError gif(anim)
+end
+
 @testset "Segments" begin
     function segments(args...)
         segs = UnitRange{Int}[]
