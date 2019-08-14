@@ -11,6 +11,14 @@
 ---
 ## (current master)
 
+## 0.26.2
+- improve empty animation build error
+- fix GR axis flip for heatmaps and images
+- fix ribbons specified as tuples
+- add Char recipe
+- fix Plotly plots with single-element series
+- rewrite PlotlyJS backend
+
 ## 0.26.1
 - handle `Char`s as input data
 - fix html saving for Plotly
