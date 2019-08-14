@@ -355,7 +355,9 @@ end
     end
 end
 
+# Dicts: each entry is a data point (x,y)=(key,value)
 
+@recipe f(d::AbstractDict) = collect(keys(d)), collect(values(d))
 
 # function without range... use the current range of the x-axis
 
