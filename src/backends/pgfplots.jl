@@ -96,7 +96,7 @@ pgf_thickness_scaling(series) = pgf_thickness_scaling(series[:subplot])
 function pgf_fillstyle(plotattributes, i = 1)
     cstr,a = pgf_color(get_fillcolor(plotattributes, i))
     fa = get_fillalpha(plotattributes, i)
-    if fa != nothing
+    if fa !== nothing
         a = fa
     end
     "fill = $cstr, fill opacity=$a"
@@ -216,12 +216,12 @@ function pgf_series(sp::Subplot, series::Series)
 
             # add to legend?
             if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
-                if plotattributes[:fillrange] != nothing
+                if plotattributes[:fillrange] !== nothing
                     push!(style, "forget plot")
                     push!(series_collection, pgf_fill_legend_hack(plotattributes, args))
                 else
                     kw[:legendentry] = plotattributes[:label]
-                    if st == :shape # || plotattributes[:fillrange] != nothing
+                    if st == :shape # || plotattributes[:fillrange] !== nothing
                         push!(style, "area legend")
                     end
                 end
@@ -238,7 +238,7 @@ function pgf_series(sp::Subplot, series::Series)
             kw[:style] = join(style, ',')
 
             # add fillrange
-            if series[:fillrange] != nothing && st != :shape
+            if series[:fillrange] !== nothing && st != :shape
                 push!(series_collection, pgf_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
             end
 

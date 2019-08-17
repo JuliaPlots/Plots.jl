@@ -403,7 +403,7 @@ end
 function plotly_data(series::Series, letter::Symbol, data)
     axis = series[:subplot][Symbol(letter, :axis)]
 
-    data = if axis[:ticks] == :native && data != nothing
+    data = if axis[:ticks] == :native && data !== nothing
         plotly_native_data(axis, data)
     else
        data
@@ -415,7 +415,7 @@ function plotly_data(series::Series, letter::Symbol, data)
         plotly_data(data)
     end
 end
-plotly_data(v) = v != nothing ? collect(v) : v
+plotly_data(v) = v !== nothing ? collect(v) : v
 plotly_data(surf::Surface) = surf.surf
 plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 
@@ -529,7 +529,7 @@ function plotly_series(plt::Plot, series::Series)
         else
             plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
             plotattributes_out[:opacity] = series[:fillalpha]
-            if series[:fill_z] != nothing
+            if series[:fill_z] !== nothing
                 plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
             end
             plotattributes_out[:showscale] = hascolorbar(sp)
@@ -611,11 +611,11 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         plotly_hover!(plotattributes_out, _cycle(series[:hover], i))
         plotattributes_outs[i] = plotattributes_out
     end
-    if series[:fill_z] != nothing
+    if series[:fill_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :fill))
-    elseif series[:line_z] != nothing
+    elseif series[:line_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :line))
-    elseif series[:marker_z] != nothing
+    elseif series[:marker_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :marker))
     end
     plotattributes_outs
@@ -733,11 +733,11 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         end
     end
 
-    if series[:line_z] != nothing
+    if series[:line_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :line))
-    elseif series[:fill_z] != nothing
+    elseif series[:fill_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :fill))
-    elseif series[:marker_z] != nothing
+    elseif series[:marker_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :marker))
     end
 
@@ -782,7 +782,7 @@ function plotly_hover!(plotattributes_out::KW, hover)
     # hover text
     if hover in (:none, false)
         plotattributes_out[:hoverinfo] = "none"
-    elseif hover != nothing
+    elseif hover !== nothing
         plotattributes_out[:hoverinfo] = "text"
         plotattributes_out[:text] = hover
     end

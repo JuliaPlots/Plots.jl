@@ -291,13 +291,13 @@ end
 
 # create segmented bezier curves in place of line segments
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)
-    args = z != nothing ? (x,y,z) : (x,y)
+    args = z !== nothing ? (x,y,z) : (x,y)
     newx, newy = zeros(0), zeros(0)
     fr = plotattributes[:fillrange]
-    newfr = fr != nothing ? zeros(0) : nothing
-    newz = z != nothing ? zeros(0) : nothing
+    newfr = fr !== nothing ? zeros(0) : nothing
+    newz = z !== nothing ? zeros(0) : nothing
     # lz = plotattributes[:line_z]
-    # newlz = lz != nothing ? zeros(0) : nothing
+    # newlz = lz !== nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
@@ -306,13 +306,13 @@ end
         ts = range(0, stop = 1, length = npoints)
         nanappend!(newx, map(t -> bezier_value(_cycle(x,rng), t), ts))
         nanappend!(newy, map(t -> bezier_value(_cycle(y,rng), t), ts))
-        if z != nothing
+        if z !== nothing
             nanappend!(newz, map(t -> bezier_value(_cycle(z,rng), t), ts))
         end
-        if fr != nothing
+        if fr !== nothing
             nanappend!(newfr, map(t -> bezier_value(_cycle(fr,rng), t), ts))
         end
-        # if lz != nothing
+        # if lz !== nothing
         #     lzrng = _cycle(lz, rng) # the line_z's for this segment
         #     push!(newlz, 0.0)
         #     append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
@@ -327,10 +327,10 @@ end
         seriestype := :path3d
         z := newz
     end
-    if fr != nothing
+    if fr !== nothing
         fillrange := newfr
     end
-    # if lz != nothing
+    # if lz !== nothing
     #     # line_z := newlz
     #     linecolor := (isa(plotattributes[:linecolor], ColorGradient) ? plotattributes[:linecolor] : cgrad())
     # end
@@ -533,7 +533,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
 
     last_w = eltype(weights)(NaN)
 
-    while it_tuple_e != nothing && it_tuple_w != nothing
+    while it_tuple_e !== nothing && it_tuple_w !== nothing
         b, it_state_e = it_tuple_e
         w, it_state_w = it_tuple_w
 

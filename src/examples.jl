@@ -496,7 +496,7 @@ function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = noth
   Plots._debugMode.on = debug
   plts = Dict()
   for i in 1:length(_examples)
-    only != nothing && !(i in only) && continue
+    only !== nothing && !(i in only) && continue
     i in skip && continue
     try
       plt = test_examples(pkgname, i, debug=debug, disp=disp)
@@ -505,7 +505,7 @@ function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = noth
       # TODO: put error info into markdown?
       @warn("Example $pkgname:$i:$(_examples[i].header) failed with: $ex")
     end
-    if sleep != nothing
+    if sleep !== nothing
         Base.sleep(sleep)
     end
   end
