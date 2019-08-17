@@ -529,7 +529,7 @@ function get_clims(sp::Subplot)
         for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
             if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
                 zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
-            elseif (vals != nothing) && (eltype(vals) <: Union{Missing, Real})
+            elseif (vals !== nothing) && (eltype(vals) <: Union{Missing, Real})
                 zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
             end
         end
@@ -650,7 +650,7 @@ function has_attribute_segments(series::Series)
     for letter in (:x, :y, :z)
         # If we have NaNs in the data they define the segments and
         # SegmentsIterator is used
-        series[letter] != nothing && NaN in collect(series[letter]) && return false
+        series[letter] !== nothing && NaN in collect(series[letter]) && return false
     end
     series[:seriestype] == :shape && return false
     # ... else we check relevant attributes if they have multiple inputs

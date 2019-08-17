@@ -22,7 +22,7 @@ function _get_defaults(s::Symbol)
             :fglegend => thm.text,
             :palette  => thm.palette,
         )
-        if thm.gradient != nothing
+        if thm.gradient !== nothing
             push!(defaults, :gradient => thm.gradient)
         end
         return defaults

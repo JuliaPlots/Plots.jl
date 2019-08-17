@@ -382,7 +382,7 @@ function expand_extrema!(sp::Subplot, plotattributes::KW)
                 data = plotattributes[letter] = Surface(Matrix{Float64}(data.surf))
             end
             expand_extrema!(axis, data)
-        elseif data != nothing
+        elseif data !== nothing
             # TODO: need more here... gotta track the discrete reference value
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
@@ -402,7 +402,7 @@ function expand_extrema!(sp::Subplot, plotattributes::KW)
     if fr === nothing && plotattributes[:seriestype] == :bar
         fr = 0.0
     end
-    if fr != nothing && !all3D(plotattributes)
+    if fr !== nothing && !all3D(plotattributes)
         axis = sp.attr[vert ? :yaxis : :xaxis]
         if typeof(fr) <: Tuple
             for fri in fr

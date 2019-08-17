@@ -1121,7 +1121,7 @@ end
 
 function _filter_input_data!(plotattributes::KW)
     idxfilter = pop!(plotattributes, :idxfilter, nothing)
-    if idxfilter != nothing
+    if idxfilter !== nothing
         filter_data!(plotattributes, idxfilter)
     end
 end
@@ -1602,13 +1602,13 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
-    if plotattributes[:marker_z] != nothing
+    if plotattributes[:marker_z] !== nothing
         ensure_gradient!(plotattributes, :markercolor, :markeralpha)
     end
-    if plotattributes[:line_z] != nothing
+    if plotattributes[:line_z] !== nothing
         ensure_gradient!(plotattributes, :linecolor, :linealpha)
     end
-    if plotattributes[:fill_z] != nothing
+    if plotattributes[:fill_z] !== nothing
         ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
     end
 
