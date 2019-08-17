@@ -67,7 +67,7 @@ function process_axis_arg!(plotattributes::KW, arg, letter = "")
     elseif T <: AVec
         plotattributes[Symbol(letter,:ticks)] = arg
 
-    elseif arg == nothing
+    elseif arg === nothing
         plotattributes[Symbol(letter,:ticks)] = []
 
     elseif T <: Bool || arg in _allShowaxisArgs
@@ -166,7 +166,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
     # or DateTime) is chosen based on the time span between amin and amax
     # rather than on the input format
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
-    if ticks == nothing && scale == :identity
+    if ticks === nothing && scale == :identity
         if axis[:formatter] == dateformatter
             # optimize_datetime_ticks returns ticks and labels(!) based on
             # integers/floats corresponding to the DateTime type. Thus, the axes
@@ -184,7 +184,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
     end
 
     # get a list of well-laid-out ticks
-    if ticks == nothing
+    if ticks === nothing
         scaled_ticks = optimize_ticks(
             sf(amin),
             sf(amax);
@@ -399,7 +399,7 @@ function expand_extrema!(sp::Subplot, plotattributes::KW)
 
     # expand for fillrange
     fr = plotattributes[:fillrange]
-    if fr == nothing && plotattributes[:seriestype] == :bar
+    if fr === nothing && plotattributes[:seriestype] == :bar
         fr = 0.0
     end
     if fr != nothing && !all3D(plotattributes)
@@ -419,7 +419,7 @@ function expand_extrema!(sp::Subplot, plotattributes::KW)
         data = plotattributes[dsym]
 
         bw = plotattributes[:bar_width]
-        if bw == nothing
+        if bw === nothing
             bw = plotattributes[:bar_width] = _bar_width * ignorenan_minimum(filter(x->x>0,diff(sort(data))))
         end
         axis = sp.attr[Symbol(dsym, :axis)]

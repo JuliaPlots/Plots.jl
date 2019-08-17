@@ -4,7 +4,7 @@ mutable struct CurrentPlot
 end
 const CURRENT_PLOT = CurrentPlot(nothing)
 
-isplotnull() = CURRENT_PLOT.nullableplot == nothing
+isplotnull() = CURRENT_PLOT.nullableplot === nothing
 
 """
     current()

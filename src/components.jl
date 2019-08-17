@@ -568,7 +568,7 @@ mutable struct EachAnn
 end
 
 function Base.iterate(ea::EachAnn, i = 1)
-    if ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
+    if ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)
         return nothing
     end
 

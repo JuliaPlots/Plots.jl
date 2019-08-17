@@ -36,7 +36,7 @@ function image_comparison_facts(pkg::Symbol;
                                 tol = 1e-2)     # acceptable error (percent)
   for i in 1:length(Plots._examples)
     i in skip && continue
-    if only == nothing || i in only
+    if only === nothing || i in only
       @test image_comparison_tests(pkg, i, debug=debug, sigma=sigma, tol=tol) |> success == true
     end
   end

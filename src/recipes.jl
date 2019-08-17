@@ -239,7 +239,7 @@ end
 @recipe function f(::Type{Val{:sticks}}, x, y, z)
     n = length(x)
     fr = plotattributes[:fillrange]
-    if fr == nothing
+    if fr === nothing
         sp = plotattributes[:subplot]
         yaxis = sp[:yaxis]
         fr = if yaxis[:scale] == :identity
@@ -321,7 +321,7 @@ end
 
     x := newx
     y := newy
-    if z == nothing
+    if z === nothing
         seriestype := :path
     else
         seriestype := :path3d
@@ -357,7 +357,7 @@ end
 
     # compute half-width of bars
     bw = plotattributes[:bar_width]
-    hw = if bw == nothing
+    hw = if bw === nothing
         if nx > 1
             0.5*_bar_width*ignorenan_minimum(filter(x->x>0, diff(procx)))
         else
@@ -369,7 +369,7 @@ end
 
     # make fillto a vector... default fills to 0
     fillto = plotattributes[:fillrange]
-    if fillto == nothing
+    if fillto === nothing
         fillto = 0
     end
     if (yscale in _logScales) && !all(_is_positive, fillto)
@@ -491,7 +491,7 @@ end
 
 @recipe function f(::Type{Val{:barbins}}, x, y, z)
     edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
-    if (plotattributes[:bar_width] == nothing)
+    if (plotattributes[:bar_width] === nothing)
         bar_width := diff(edge)
     end
     x := _bin_centers(edge)
@@ -667,7 +667,7 @@ end
 function _make_hist(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing) where N
     localvs = _filternans(vs)
     edges = _hist_edges(localvs, binning)
-    h = float( weights == nothing ?
+    h = float( weights === nothing ?
         StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
         StatsBase.fit(StatsBase.Histogram, localvs, StatsBase.Weights(weights), edges, closed = :left)
     )
