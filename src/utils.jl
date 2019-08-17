@@ -560,18 +560,18 @@ function colorbar_style(series::Series)
     elseif iscontour(series)
         cbar_lines
     elseif series[:seriestype] ∈ (:heatmap,:surface) ||
-            any(series[z] !=== nothing for z ∈ [:marker_z,:line_z,:fill_z])
+            any(series[z] !== nothing for z ∈ [:marker_z,:line_z,:fill_z])
         cbar_gradient
     else
         nothing
     end
 end
 
-hascolorbar(series::Series) = colorbar_style(series) !=== nothing
+hascolorbar(series::Series) = colorbar_style(series) !== nothing
 hascolorbar(sp::Subplot) = sp[:colorbar] != :none && any(hascolorbar(s) for s in series_list(sp))
 
 iscontour(series::Series) = series[:seriestype] == :contour
-isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !=== nothing
+isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
 
 function contour_levels(series::Series, clims)
     iscontour(series) || error("Not a contour series")
