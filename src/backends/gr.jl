@@ -620,7 +620,7 @@ end
 
 function gr_set_gradient(series::Series)
     color = gr_get_color(series)
-    color !=== nothing && gr_set_gradient(color)
+    color !== nothing && gr_set_gradient(color)
 end
 
 function gr_get_color(series::Series)
