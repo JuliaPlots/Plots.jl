@@ -685,15 +685,15 @@ function processLineArg(plotattributes::KW, arg)
         plotattributes[:linestyle] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (plotattributes[:linewidth] = arg.width)
-        arg.color == nothing || (plotattributes[:linecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:linealpha] = arg.alpha)
-        arg.style == nothing || (plotattributes[:linestyle] = arg.style)
+        arg.width === nothing || (plotattributes[:linewidth] = arg.width)
+        arg.color === nothing || (plotattributes[:linecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:linealpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:linestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size  == nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color == nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.size  === nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color === nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
 
     elseif typeof(arg) <: Arrow || arg in (:arrow, :arrows)
         plotattributes[:arrow] = arg
@@ -724,15 +724,15 @@ function processMarkerArg(plotattributes::KW, arg)
         plotattributes[:markerstrokestyle] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (plotattributes[:markerstrokewidth] = arg.width)
-        arg.color == nothing || (plotattributes[:markerstrokecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
-        arg.style == nothing || (plotattributes[:markerstrokestyle] = arg.style)
+        arg.width === nothing || (plotattributes[:markerstrokewidth] = arg.width)
+        arg.color === nothing || (plotattributes[:markerstrokecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:markerstrokestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size  == nothing || (plotattributes[:markersize]  = arg.size)
-        arg.color == nothing || (plotattributes[:markercolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:markeralpha] = arg.alpha)
+        arg.size  === nothing || (plotattributes[:markersize]  = arg.size)
+        arg.color === nothing || (plotattributes[:markercolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:markeralpha] = arg.alpha)
 
     # linealpha
     elseif allAlphas(arg)
@@ -757,9 +757,9 @@ end
 function processFillArg(plotattributes::KW, arg)
     # fr = get(plotattributes, :fillrange, 0)
     if typeof(arg) <: Brush
-        arg.size  == nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color == nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.size  === nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color === nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
 
     elseif typeof(arg) <: Bool
         plotattributes[:fillrange] = arg ? 0 : nothing
@@ -793,10 +793,10 @@ function processGridArg!(plotattributes::KW, arg, letter)
         plotattributes[Symbol(letter, :gridstyle)] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (plotattributes[Symbol(letter, :gridlinewidth)] = arg.width)
-        arg.color == nothing || (plotattributes[Symbol(letter, :foreground_color_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[Symbol(letter, :gridalpha)] = arg.alpha)
-        arg.style == nothing || (plotattributes[Symbol(letter, :gridstyle)] = arg.style)
+        arg.width === nothing || (plotattributes[Symbol(letter, :gridlinewidth)] = arg.width)
+        arg.color === nothing || (plotattributes[Symbol(letter, :foreground_color_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[Symbol(letter, :gridalpha)] = arg.alpha)
+        arg.style === nothing || (plotattributes[Symbol(letter, :gridstyle)] = arg.style)
 
     # linealpha
     elseif allAlphas(arg)
@@ -822,10 +822,10 @@ function processMinorGridArg!(plotattributes::KW, arg, letter)
         plotattributes[Symbol(letter, :minorgrid)] = true
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (plotattributes[Symbol(letter, :minorgridlinewidth)] = arg.width)
-        arg.color == nothing || (plotattributes[Symbol(letter, :foreground_color_minor_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[Symbol(letter, :minorgridalpha)] = arg.alpha)
-        arg.style == nothing || (plotattributes[Symbol(letter, :minorgridstyle)] = arg.style)
+        arg.width === nothing || (plotattributes[Symbol(letter, :minorgridlinewidth)] = arg.width)
+        arg.color === nothing || (plotattributes[Symbol(letter, :foreground_color_minor_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[Symbol(letter, :minorgridalpha)] = arg.alpha)
+        arg.style === nothing || (plotattributes[Symbol(letter, :minorgridstyle)] = arg.style)
         plotattributes[Symbol(letter, :minorgrid)] = true
 
     # linealpha
@@ -1237,7 +1237,7 @@ end
 #     v = plotattributes[k]
 #     plotattributes[k] = if v == :match
 #         match_color
-#     elseif v == nothing
+#     elseif v === nothing
 #         plot_color(RGBA(0,0,0,0))
 #     else
 #         v
@@ -1246,7 +1246,7 @@ end
 
 function color_or_nothing!(plotattributes::KW, k::Symbol)
     v = plotattributes[k]
-    plotattributes[k] = if v == nothing || v == false
+    plotattributes[k] = if v === nothing || v == false
         RGBA{Float64}(0,0,0,0)
     elseif v != :match
         plot_color(v)
@@ -1563,11 +1563,11 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
 
     # update alphas
     for asym in (:linealpha, :markeralpha, :fillalpha)
-        if plotattributes[asym] == nothing
+        if plotattributes[asym] === nothing
             plotattributes[asym] = plotattributes[:seriesalpha]
         end
     end
-    if plotattributes[:markerstrokealpha] == nothing
+    if plotattributes[:markerstrokealpha] === nothing
         plotattributes[:markerstrokealpha] = plotattributes[:markeralpha]
     end
 

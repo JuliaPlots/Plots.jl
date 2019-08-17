@@ -620,7 +620,7 @@ end
 
 function gr_set_gradient(series::Series)
     color = gr_get_color(series)
-    color !== nothing && gr_set_gradient(color)
+    color !=== nothing && gr_set_gradient(color)
 end
 
 function gr_get_color(series::Series)
@@ -1509,7 +1509,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 lc = get_linecolor(series, clims)
                 gr_set_line(get_linewidth(series), get_linestyle(series), lc) #, series[:linealpha])
 
-                if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
+                if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] === nothing
                     fc = get_fillcolor(series, clims)
                     gr_set_fill(fc) #, series[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
@@ -1526,7 +1526,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                 if st in (:path, :straightline)
                     gr_set_transparency(lc, get_linealpha(series))
-                    if series[:fillrange] == nothing || series[:ribbon] != nothing
+                    if series[:fillrange] === nothing || series[:ribbon] != nothing
                         GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
                     else
                         GR.polyline([xpos - 0.07, xpos - 0.01], [ypos+0.4dy, ypos+0.4dy])

@@ -77,7 +77,7 @@ text_size(lab::AbstractString, sz::Number, rot::Number = 0) = text_size(length(l
 # account for the size/length/rotation of tick labels
 function tick_padding(sp::Subplot, axis::Axis)
     ticks = get_ticks(sp, axis)
-    if ticks == nothing
+    if ticks === nothing
         0mm
     else
         vals, labs = ticks

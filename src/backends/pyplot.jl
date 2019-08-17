@@ -871,7 +871,7 @@ end
 function py_set_ticks(ax, ticks, letter)
     ticks == :auto && return
     axis = getproperty(ax, Symbol(letter,"axis"))
-    if ticks == :none || ticks == nothing || ticks == false
+    if ticks == :none || ticks === nothing || ticks == false
         kw = KW()
         for dir in (:top,:bottom,:left,:right)
             kw[dir] = kw[Symbol(:label,dir)] = false
@@ -978,7 +978,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     # update subplots
     for sp in plt.subplots
         ax = sp.o
-        if ax == nothing
+        if ax === nothing
             continue
         end
 
@@ -1186,7 +1186,7 @@ end
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PyPlotBackend})
     ax = sp.o
-    ax == nothing && return sp.minpad
+    ax === nothing && return sp.minpad
     plotbb = py_bbox(ax)
 
     # TODO: this should initialize to the margin from sp.attr
@@ -1352,7 +1352,7 @@ end
 function _update_plot_object(plt::Plot{PyPlotBackend})
     for sp in plt.subplots
         ax = sp.o
-        ax == nothing && return
+        ax === nothing && return
         figw, figh = sp.plt[:size]
         figw, figh = figw*px, figh*px
         pcts = bbox_to_pcts(sp.plotarea, figw, figh)

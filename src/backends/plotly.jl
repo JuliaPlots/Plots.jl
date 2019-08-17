@@ -827,7 +827,7 @@ function plotly_html_head(plt::Plot)
 end
 
 function plotly_html_body(plt, style = nothing)
-    if style == nothing
+    if style === nothing
         w, h = plt[:size]
         style = "width:$(w)px;height:$(h)px;"
     end
