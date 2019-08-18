@@ -631,7 +631,7 @@ function gr_get_color(series::Series)
         series[:linecolor]
     elseif series[:marker_z] !== nothing
         series[:markercolor]
-    elseif series[:line_z] !=  nothing
+    elseif series[:line_z] !==  nothing
         series[:linecolor]
     elseif series[:fill_z] !== nothing
         series[:fillcolor]
