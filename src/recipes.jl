@@ -239,7 +239,7 @@ end
 @recipe function f(::Type{Val{:sticks}}, x, y, z)
     n = length(x)
     fr = plotattributes[:fillrange]
-    if fr == nothing
+    if fr === nothing
         sp = plotattributes[:subplot]
         yaxis = sp[:yaxis]
         fr = if yaxis[:scale] == :identity
@@ -291,13 +291,13 @@ end
 
 # create segmented bezier curves in place of line segments
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)
-    args = z != nothing ? (x,y,z) : (x,y)
+    args = z !== nothing ? (x,y,z) : (x,y)
     newx, newy = zeros(0), zeros(0)
     fr = plotattributes[:fillrange]
-    newfr = fr != nothing ? zeros(0) : nothing
-    newz = z != nothing ? zeros(0) : nothing
+    newfr = fr !== nothing ? zeros(0) : nothing
+    newz = z !== nothing ? zeros(0) : nothing
     # lz = plotattributes[:line_z]
-    # newlz = lz != nothing ? zeros(0) : nothing
+    # newlz = lz !== nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
@@ -306,13 +306,13 @@ end
         ts = range(0, stop = 1, length = npoints)
         nanappend!(newx, map(t -> bezier_value(_cycle(x,rng), t), ts))
         nanappend!(newy, map(t -> bezier_value(_cycle(y,rng), t), ts))
-        if z != nothing
+        if z !== nothing
             nanappend!(newz, map(t -> bezier_value(_cycle(z,rng), t), ts))
         end
-        if fr != nothing
+        if fr !== nothing
             nanappend!(newfr, map(t -> bezier_value(_cycle(fr,rng), t), ts))
         end
-        # if lz != nothing
+        # if lz !== nothing
         #     lzrng = _cycle(lz, rng) # the line_z's for this segment
         #     push!(newlz, 0.0)
         #     append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
@@ -321,16 +321,16 @@ end
 
     x := newx
     y := newy
-    if z == nothing
+    if z === nothing
         seriestype := :path
     else
         seriestype := :path3d
         z := newz
     end
-    if fr != nothing
+    if fr !== nothing
         fillrange := newfr
     end
-    # if lz != nothing
+    # if lz !== nothing
     #     # line_z := newlz
     #     linecolor := (isa(plotattributes[:linecolor], ColorGradient) ? plotattributes[:linecolor] : cgrad())
     # end
@@ -357,7 +357,7 @@ end
 
     # compute half-width of bars
     bw = plotattributes[:bar_width]
-    hw = if bw == nothing
+    hw = if bw === nothing
         if nx > 1
             0.5*_bar_width*ignorenan_minimum(filter(x->x>0, diff(procx)))
         else
@@ -369,7 +369,7 @@ end
 
     # make fillto a vector... default fills to 0
     fillto = plotattributes[:fillrange]
-    if fillto == nothing
+    if fillto === nothing
         fillto = 0
     end
     if (yscale in _logScales) && !all(_is_positive, fillto)
@@ -491,7 +491,7 @@ end
 
 @recipe function f(::Type{Val{:barbins}}, x, y, z)
     edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
-    if (plotattributes[:bar_width] == nothing)
+    if (plotattributes[:bar_width] === nothing)
         bar_width := diff(edge)
     end
     x := _bin_centers(edge)
@@ -533,7 +533,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
 
     last_w = eltype(weights)(NaN)
 
-    while it_tuple_e != nothing && it_tuple_w != nothing
+    while it_tuple_e !== nothing && it_tuple_w !== nothing
         b, it_state_e = it_tuple_e
         w, it_state_w = it_tuple_w
 
@@ -667,7 +667,7 @@ end
 function _make_hist(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing) where N
     localvs = _filternans(vs)
     edges = _hist_edges(localvs, binning)
-    h = float( weights == nothing ?
+    h = float( weights === nothing ?
         StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
         StatsBase.fit(StatsBase.Histogram, localvs, StatsBase.Weights(weights), edges, closed = :left)
     )

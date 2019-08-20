@@ -147,7 +147,7 @@ gr_inqtext(x, y, s::Symbol) = gr_inqtext(x, y, string(s))
 function gr_inqtext(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.inqmathtex(x, y, s[2:end-1])
-    elseif findfirst(isequal('\\'), s) != nothing || occursin("10^{", s)
+    elseif findfirst(isequal('\\'), s) !== nothing || occursin("10^{", s)
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
@@ -159,7 +159,7 @@ gr_text(x, y, s::Symbol) = gr_text(x, y, string(s))
 function gr_text(x, y, s)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.mathtex(x, y, s[2:end-1])
-    elseif findfirst(isequal('\\'), s) != nothing || occursin("10^{", s)
+    elseif findfirst(isequal('\\'), s) !== nothing || occursin("10^{", s)
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
@@ -237,7 +237,7 @@ gr_z_axislims(sp::Subplot) = axis_limits(sp, :z)
 gr_xy_axislims(sp::Subplot) = gr_x_axislims(sp)..., gr_y_axislims(sp)...
 
 function gr_lims(sp::Subplot, axis::Axis, adjust::Bool, expand = nothing)
-    if expand != nothing
+    if expand !== nothing
         expand_extrema!(axis, expand)
     end
     lims = axis_limits(sp, axis[:letter])
@@ -629,11 +629,11 @@ function gr_get_color(series::Series)
         series[:fillcolor]
     elseif st in (:contour, :wireframe)
         series[:linecolor]
-    elseif series[:marker_z] != nothing
+    elseif series[:marker_z] !== nothing
         series[:markercolor]
-    elseif series[:line_z] !=  nothing
+    elseif series[:line_z] !==  nothing
         series[:linecolor]
-    elseif series[:fill_z] != nothing
+    elseif series[:fill_z] !== nothing
         series[:fillcolor]
     end
 end
@@ -880,7 +880,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.selntran(0)
         GR.setscale(0)
         gr_set_font(legendfont(sp))
-        if sp[:legendtitle] != nothing
+        if sp[:legendtitle] !== nothing
             tbx, tby = gr_inqtext(0, 0, string(sp[:legendtitle]))
             legendw = tbx[3] - tbx[1]
             legendn += 1
@@ -1247,7 +1247,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if typeof(z) <: Surface
             z = vec(transpose_z(series, z.surf, false))
         elseif ispolar(sp)
-            if frng != nothing
+            if frng !== nothing
                 _, frng = convert_to_polar(x, frng, (rmin, rmax))
             end
             x, y = convert_to_polar(x, y, (rmin, rmax))
@@ -1258,11 +1258,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
 
         if st in (:path, :scatter, :straightline)
-            if x != nothing && length(x) > 1
+            if x !== nothing && length(x) > 1
                 lz = series[:line_z]
                 segments = iter_segments(series)
                 # do area fill
-                if frng != nothing
+                if frng !== nothing
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
                     fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
                     for (i, rng) in enumerate(segments)
@@ -1301,7 +1301,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 plot_color(series[:linecolor]) in (black,[black])
             end
             h = gr_contour_levels(series, clims)
-            if series[:fillrange] != nothing
+            if series[:fillrange] !== nothing
                 if series[:fillcolor] != series[:linecolor] && !is_lc_black
                     @warn("GR: filled contour only supported with black contour lines")
                 end
@@ -1496,7 +1496,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             gr_set_line(1, :solid, sp[:foreground_color_legend])
             GR.drawrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
             i = 0
-            if sp[:legendtitle] != nothing
+            if sp[:legendtitle] !== nothing
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
                 gr_set_textcolor(sp[:legendfontcolor])
                 gr_set_transparency(sp[:legendfontcolor])
@@ -1509,7 +1509,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 lc = get_linecolor(series, clims)
                 gr_set_line(get_linewidth(series), get_linestyle(series), lc) #, series[:linealpha])
 
-                if (st == :shape || series[:fillrange] != nothing) && series[:ribbon] == nothing
+                if (st == :shape || series[:fillrange] !== nothing) && series[:ribbon] === nothing
                     fc = get_fillcolor(series, clims)
                     gr_set_fill(fc) #, series[:fillalpha])
                     l, r = xpos-0.07, xpos-0.01
@@ -1526,7 +1526,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                 if st in (:path, :straightline)
                     gr_set_transparency(lc, get_linealpha(series))
-                    if series[:fillrange] == nothing || series[:ribbon] != nothing
+                    if series[:fillrange] === nothing || series[:ribbon] !== nothing
                         GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
                     else
                         GR.polyline([xpos - 0.07, xpos - 0.01], [ypos+0.4dy, ypos+0.4dy])

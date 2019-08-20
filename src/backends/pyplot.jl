@@ -216,7 +216,7 @@ end
 # ---------------------------------------------------------------------------
 
 function fix_xy_lengths!(plt::Plot{PyPlotBackend}, series::Series)
-    if series[:x] != nothing
+    if series[:x] !== nothing
         x, y = series[:x], series[:y]
         nx, ny = length(x), length(y)
         if !isa(get(series.plotattributes, :z, nothing), Surface) && nx != ny
@@ -434,7 +434,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         if maximum(series[:linewidth]) > 0
             segments = iter_segments(series)
             # TODO: check LineCollection alternative for speed
-            # if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] != nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
+            # if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] !== nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
             #     # multicolored line segments
             #     n = length(segments)
             #     # segments = Array(Any,n)
@@ -478,7 +478,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             # end
 
             a = series[:arrow]
-            if a != nothing && !is3d(st)  # TODO: handle 3d later
+            if a !== nothing && !is3d(st)  # TODO: handle 3d later
                 if typeof(a) != Arrow
                     @warn("Unexpected type for arrow: $(typeof(a))")
                 else
@@ -508,7 +508,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     if series[:markershape] != :none && st in (:path, :scatter, :path3d,
                                           :scatter3d, :steppre, :steppost,
                                           :bar)
-        markercolor = if any(typeof(series[arg]) <: AVec for arg in (:markercolor, :markeralpha)) || series[:marker_z] != nothing
+        markercolor = if any(typeof(series[arg]) <: AVec for arg in (:markercolor, :markeralpha)) || series[:marker_z] !== nothing
             # py_color(plot_color.(get_markercolor.(series, clims, eachindex(x)), get_markeralpha.(series, eachindex(x))))
             [py_color(plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i))) for i in eachindex(x)]
         else
@@ -672,7 +672,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
 
         # contour fills
-        if series[:fillrange] != nothing
+        if series[:fillrange] !== nothing
             handle = ax."contourf"(x, y, z, levelargs...;
                 label = series[:label],
                 zorder = series[:series_plotindex] + 0.5,
@@ -691,7 +691,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             end
             z = transpose_z(series, z)
             if st == :surface
-                if series[:fill_z] != nothing
+                if series[:fill_z] !== nothing
                     # the surface colors are different than z-value
                     extrakw[:facecolors] = py_shading(series[:fillcolor], transpose_z(series, series[:fill_z].surf))
                     extrakw[:shade] = false
@@ -830,7 +830,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # handle area filling
     fillrange = series[:fillrange]
-    if fillrange != nothing && st != :contour
+    if fillrange !== nothing && st != :contour
         for (i, rng) in enumerate(iter_segments(series))
             f, dim1, dim2 = if isvertical(series)
                 :fill_between, x[rng], y[rng]
@@ -871,7 +871,7 @@ end
 function py_set_ticks(ax, ticks, letter)
     ticks == :auto && return
     axis = getproperty(ax, Symbol(letter,"axis"))
-    if ticks == :none || ticks == nothing || ticks == false
+    if ticks == :none || ticks === nothing || ticks == false
         kw = KW()
         for dir in (:top,:bottom,:left,:right)
             kw[dir] = kw[Symbol(:label,dir)] = false
@@ -978,7 +978,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     # update subplots
     for sp in plt.subplots
         ax = sp.o
-        if ax == nothing
+        if ax === nothing
             continue
         end
 
@@ -1018,12 +1018,12 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 kw[:ticks] = locator
                 kw[:format] = formatter
                 kw[:boundaries] = vcat(0, kw[:values] + 0.5)
-            elseif any(colorbar_series[attr] != nothing for attr in (:line_z, :fill_z, :marker_z))
+            elseif any(colorbar_series[attr] !== nothing for attr in (:line_z, :fill_z, :marker_z))
                 cmin, cmax = get_clims(sp)
                 norm = pycolors."Normalize"(vmin = cmin, vmax = cmax)
-                f = if colorbar_series[:line_z] != nothing
+                f = if colorbar_series[:line_z] !== nothing
                     py_linecolormap
-                elseif colorbar_series[:fill_z] != nothing
+                elseif colorbar_series[:fill_z] !== nothing
                     py_fillcolormap
                 else
                     py_markercolormap
@@ -1186,7 +1186,7 @@ end
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PyPlotBackend})
     ax = sp.o
-    ax == nothing && return sp.minpad
+    ax === nothing && return sp.minpad
     plotbb = py_bbox(ax)
 
     # TODO: this should initialize to the margin from sp.attr
@@ -1297,7 +1297,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
         for series in series_list(sp)
             if should_add_to_legend(series)
                 # add a line/marker and a label
-                push!(handles, if series[:seriestype] == :shape || series[:fillrange] != nothing
+                push!(handles, if series[:seriestype] == :shape || series[:fillrange] !== nothing
                     pypatches."Patch"(
                         edgecolor = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
                         facecolor = py_color(single_color(get_fillcolor(series, clims)), get_fillalpha(series)),
@@ -1335,7 +1335,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
             frame = leg."get_frame"()
             frame."set_linewidth"(py_thickness_scale(plt, 1))
             leg."set_zorder"(1000)
-            sp[:legendtitle] != nothing && leg."set_title"(sp[:legendtitle])
+            sp[:legendtitle] !== nothing && leg."set_title"(sp[:legendtitle])
 
             for txt in leg."get_texts"()
                 PyPlot.plt."setp"(txt, color = py_color(sp[:legendfontcolor]), family = sp[:legendfontfamily])
@@ -1352,7 +1352,7 @@ end
 function _update_plot_object(plt::Plot{PyPlotBackend})
     for sp in plt.subplots
         ax = sp.o
-        ax == nothing && return
+        ax === nothing && return
         figw, figh = sp.plt[:size]
         figw, figh = figw*px, figh*px
         pcts = bbox_to_pcts(sp.plotarea, figw, figh)

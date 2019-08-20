@@ -529,7 +529,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     # end
 
     # @show msw msh
-    if anns != nothing && anns.baseshape != nothing
+    if anns !== nothing && anns.baseshape !== nothing
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
         msw,msh = anns.scalefactor
@@ -568,7 +568,7 @@ mutable struct EachAnn
 end
 
 function Base.iterate(ea::EachAnn, i = 1)
-    if ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
+    if ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)
         return nothing
     end
 

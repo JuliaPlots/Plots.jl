@@ -26,7 +26,7 @@ function histogramHack(; kw...)
   plotattributes[:x] = midpoints
   plotattributes[:y] = float(counts)
   plotattributes[:seriestype] = :bar
-  plotattributes[:fillrange] = plotattributes[:fillrange] == nothing ? 0.0 : plotattributes[:fillrange]
+  plotattributes[:fillrange] = plotattributes[:fillrange] === nothing ? 0.0 : plotattributes[:fillrange]
   plotattributes
 end
 
@@ -38,7 +38,7 @@ function barHack(; kw...)
   plotattributes = KW(kw)
   midpoints = plotattributes[:x]
   heights = plotattributes[:y]
-  fillrange = plotattributes[:fillrange] == nothing ? 0.0 : plotattributes[:fillrange]
+  fillrange = plotattributes[:fillrange] === nothing ? 0.0 : plotattributes[:fillrange]
 
   # estimate the edges
   dists = diff(midpoints) * 0.5
@@ -81,7 +81,7 @@ function sticksHack(; kw...)
   # these are the line vertices
   x = Float64[]
   y = Float64[]
-  fillrange = plotattributesLine[:fillrange] == nothing ? 0.0 : plotattributesLine[:fillrange]
+  fillrange = plotattributesLine[:fillrange] === nothing ? 0.0 : plotattributesLine[:fillrange]
 
   # calculate the vertices
   yScatter = plotattributesScatter[:y]
@@ -194,7 +194,7 @@ end
 
 function iter_segments(series::Series)
     x, y, z = series[:x], series[:y], series[:z]
-    if x == nothing
+    if x === nothing
         return UnitRange{Int}[]
     elseif has_attribute_segments(series)
         if series[:seriestype] in (:scatter, :scatter3d)
@@ -478,7 +478,7 @@ function make_fillrange_from_ribbon(kw::KW)
     rib1, rib2 = -first(rib), last(rib)
     # kw[:ribbon] = nothing
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
-    (get(kw, :fillalpha, nothing) == nothing) && (kw[:fillalpha] = 0.5)
+    (get(kw, :fillalpha, nothing) === nothing) && (kw[:fillalpha] = 0.5)
 end
 
 #turn tuple of fillranges to one path
@@ -529,7 +529,7 @@ function get_clims(sp::Subplot)
         for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
             if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
                 zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
-            elseif (vals != nothing) && (eltype(vals) <: Union{Missing, Real})
+            elseif (vals !== nothing) && (eltype(vals) <: Union{Missing, Real})
                 zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
             end
         end
@@ -602,7 +602,7 @@ for comp in (:line, :fill, :marker)
         function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
             c = series[$Symbol($compcolor)]
             z = series[$Symbol($comp_z)]
-            if z == nothing
+            if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
                 grad = isa(c, ColorGradient) ? c : cgrad()
@@ -613,7 +613,7 @@ for comp in (:line, :fill, :marker)
         $get_compcolor(series, clims, i::Int = 1) = $get_compcolor(series, clims[1], clims[2], i)
 
         function $get_compcolor(series, i::Int = 1)
-            if series[$Symbol($comp_z)] == nothing
+            if series[$Symbol($comp_z)] === nothing
                 $get_compcolor(series, 0, 1, i)
             else
                 $get_compcolor(series, get_clims(series[:subplot]), i)
@@ -650,7 +650,7 @@ function has_attribute_segments(series::Series)
     for letter in (:x, :y, :z)
         # If we have NaNs in the data they define the segments and
         # SegmentsIterator is used
-        series[letter] != nothing && NaN in collect(series[letter]) && return false
+        series[letter] !== nothing && NaN in collect(series[letter]) && return false
     end
     series[:seriestype] == :shape && return false
     # ... else we check relevant attributes if they have multiple inputs
