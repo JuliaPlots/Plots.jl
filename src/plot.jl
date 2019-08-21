@@ -53,7 +53,7 @@ function plot(args...; kw...)
     # create an empty Plot then process
     plt = Plot()
     # plt.user_attr = plotattributes
-    _plot!(plt, plotattributes, args)
+    _plot!(plt, plotattributes, Any[args...])
 end
 
 # build a new plot from existing plots
@@ -154,7 +154,7 @@ function plot!(plt::Plot, args...; kw...)
     plotattributes = KW(kw)
     preprocessArgs!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
-    _plot!(plt, plotattributes, args)
+    _plot!(plt, plotattributes, Any[args...])
 end
 
 # -------------------------------------------------------------------------------
@@ -162,8 +162,9 @@ end
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
-function _plot!(plt::Plot{T}, plotattributes::KW, args::Tuple) where {T}
+function _plot!(plt::Plot{T}, plotattributes::KW, args::Vector{Any}) where {T}
     plotattributes[:plot_object] = plt
+
 
     if !isempty(args) && !isdefined(Main, :StatsPlots) &&
             first(split(string(typeof(args[1])), ".")) == "DataFrames"

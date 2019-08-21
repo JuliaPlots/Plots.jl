@@ -30,10 +30,11 @@ attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 # -----------------------------------------------------------
 
 # a single subplot
+const StandardPad = Measures.Length{:mm,Float64}
 mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     parent::AbstractLayout
     series_list::Vector{Series}  # arguments for each series
-    minpad::Tuple # leftpad, toppad, rightpad, bottompad
+    minpad::Tuple{StandardPad,StandardPad,StandardPad,StandardPad} # leftpad, toppad, rightpad, bottompad
     bbox::BoundingBox  # the canvas area which is available to this subplot
     plotarea::BoundingBox  # the part where the data goes
     attr::KW  # args specific to this subplot

@@ -143,7 +143,7 @@ struct SliceIt end
             rib = ribbons[mod1(i,mr)]
             di[:ribbon] = isa(rib, Function) ? map(rib, di[:x]) : rib
 
-            push!(series_list, RecipeData(di, ()))
+            push!(series_list, RecipeData(di, Any[]))
         end
     end
     nothing  # don't add a series for the main block
