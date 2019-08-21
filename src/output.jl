@@ -140,7 +140,7 @@ end
 
 function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)
-    _display(plt)
+    #_display(plt)
 end
 
 _do_plot_show(plt, showval::Bool) = showval && gui(plt)

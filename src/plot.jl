@@ -50,7 +50,6 @@ function plot(args...; kw...)
     # this creates a new plot with args/kw and sets it to be the current plot
     plotattributes = KW(kw)
     preprocessArgs!(plotattributes)
-
     # create an empty Plot then process
     plt = Plot()
     # plt.user_attr = plotattributes
@@ -163,7 +162,7 @@ end
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
-function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
+function _plot!(plt::Plot{T}, plotattributes::KW, args::Tuple) where {T}
     plotattributes[:plot_object] = plt
 
     if !isempty(args) && !isdefined(Main, :StatsPlots) &&
@@ -202,7 +201,10 @@ function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
     # --------------------------------
     # Plot/Subplot/Layout setup
     # --------------------------------
+
     _plot_setup(plt, plotattributes, kw_list)
+
+    # 6 seconds
     _subplot_setup(plt, plotattributes, kw_list)
 
     # !!! note: At this point, kw_list is fully decomposed into individual series... one KW per series.          !!!
@@ -216,7 +218,7 @@ function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
     # map(DD, kw_list)
 
     for kw in kw_list
-        sp::Subplot = kw[:subplot]
+        sp::Subplot{T} = kw[:subplot]
         # idx = get_subplot_index(plt, sp)
 
         # # we update subplot args in case something like the color palatte is part of the recipe
@@ -233,7 +235,6 @@ function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
         # be able to support step, bar, and histogram plots (and any recipes that use those components).
         _process_seriesrecipe(plt, kw)
     end
-
     # --------------------------------
 
     current(plt)
@@ -243,7 +244,6 @@ function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
     #     gui(plt)
     # end
     _do_plot_show(plt, plt[:show])
-
     plt
 end
 

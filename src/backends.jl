@@ -128,11 +128,23 @@ _update_plot_object(plt::Plot) = nothing
 # ---------------------------------------------------------
 
 
-mutable struct CurrentBackend
-  sym::Symbol
-  pkg::AbstractBackend
+mutable struct CurrentBackend{sym,T}
+  pkg::T
 end
-CurrentBackend(sym::Symbol) = CurrentBackend(sym, _backend_instance(sym))
+function CurrentBackend(sym::Symbol)
+    bkend = _backend_instance(sym)
+    CurrentBackend{sym,typeof(bkend)}(bkend)
+end
+
+function Base.getproperty(bkend::CurrentBackend{sym,T},x::Symbol) where {sym,T}
+    if x === :sym
+        return sym
+    elseif x === :pkg
+        return getfield(bkend,:pkg)
+    else
+        error("Must be sym or pkg")
+    end
+end
 
 # ---------------------------------------------------------
 
@@ -177,8 +189,7 @@ function backend(pkg::AbstractBackend)
         _initialize_backend(pkg)
         push!(_initialized_backends, sym)
     end
-    CURRENT_BACKEND.sym = sym
-    CURRENT_BACKEND.pkg = pkg
+    CURRENT_BACKEND = Plots.CurrentBackend(sym)
     pkg
 end
 

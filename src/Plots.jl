@@ -220,6 +220,7 @@ end
 
 # ---------------------------------------------------------
 
-const CURRENT_BACKEND = CurrentBackend(:none)
+const CURRENT_BACKEND = Plots.CurrentBackend(:gr)
+gr()
 
 end # module

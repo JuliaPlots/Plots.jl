@@ -71,17 +71,17 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     user_attr::KW                # raw arg inputs (after aliases).  these are used as the input dict in `_plot!`
     series_list::Vector{Series}  # arguments for each series
     o                            # the backend's plot object
-    subplots::Vector{Subplot}
+    subplots::Vector{Subplot{T}}
     spmap::SubplotMap            # provide any label as a map to a subplot
     layout::AbstractLayout
-    inset_subplots::Vector{Subplot}  # list of inset subplots
+    inset_subplots::Vector{Subplot{T}}  # list of inset subplots
     init::Bool
 end
 
-function Plot()
-    Plot(backend(), 0, KW(), KW(), Series[], nothing,
-         Subplot[], SubplotMap(), EmptyLayout(),
-         Subplot[], false)
+function Plot(_backend = CURRENT_BACKEND)
+    Plot(_backend.pkg, 0, KW(), KW(), Series[], nothing,
+         Subplot{typeof(_backend.pkg)}[], SubplotMap(), EmptyLayout(),
+         Subplot{typeof(_backend.pkg)}[], false)
 end
 
 # -----------------------------------------------------------------------

@@ -203,7 +203,7 @@ end
 # ------------------------------------------------------------------
 # setup plot and subplot
 
-function _plot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
+function _plot_setup(plt::Plot{T}, plotattributes::KW, kw_list::Vector{KW}) where {T}
     # merge in anything meant for the Plot
     for kw in kw_list, (k,v) in kw
         haskey(_plot_defaults, k) && (plotattributes[k] = pop!(kw, k))
@@ -252,18 +252,17 @@ function _plot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
     plt[:inset_subplots] = nothing
 end
 
-function _subplot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
+function _subplot_setup(plt::Plot{T}, plotattributes::KW, kw_list::Vector{KW}) where T
     # we'll keep a map of subplot to an attribute override dict.
     # Subplot/Axis attributes set by a user/series recipe apply only to the
     # Subplot object which they belong to.
     # TODO: allow matrices to still apply to all subplots
-    sp_attrs = Dict{Subplot,Any}()
+    sp_attrs = Dict{Subplot{T},Any}()
     for kw in kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
-        sp = get_subplot(plt, _cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
+        sp::Subplot{T} = get_subplot(plt, _cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
         kw[:subplot] = sp
-
         # extract subplot/axis attributes from kw and add to sp_attr
         attr = KW()
         for (k,v) in collect(kw)
