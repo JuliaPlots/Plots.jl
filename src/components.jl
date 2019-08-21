@@ -137,7 +137,7 @@ const _shape_keys = Symbol[
   :x,
 ]
 
-const _shapes = KW(
+const _shapes = Dict{Symbol,Shape}(
     :circle    => makeshape(20),
     :rect       => makeshape(4, offset=-0.25),
     :diamond    => makeshape(4),

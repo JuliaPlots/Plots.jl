@@ -1,5 +1,5 @@
 
-const _arg_desc = KW(
+const _arg_desc = Dict{Symbol,String}(
 
 # series args
 :label 			=> "String type. The label for a series, which appears in a legend.  If empty, no legend entry is added.",
@@ -50,7 +50,7 @@ const _arg_desc = KW(
 :primary                => "Bool.  Does this count as a 'real series'?  For example, you could have a path (primary), and a scatter (secondary) as 2 separate series, maybe with different data (see sticks recipe for an example).  The secondary series will get the same color, etc as the primary.",
 :hover 	        	=> "nothing or vector of strings. Text to display when hovering over each data point.",
 :colorbar_entry   => "Bool.  Include this series in the color bar?  Set to `false` to exclude.",
-  
+
 # plot args
 :plot_title               => "String. Title for the whole plot (not the subplots) (Note: Not currently implemented)",
 :background_color         => "Color Type.  Base color for all backgrounds.",

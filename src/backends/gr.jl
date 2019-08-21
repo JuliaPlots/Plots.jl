@@ -9,7 +9,7 @@ export GR
 
 # --------------------------------------------------------------------------------------
 
-const gr_linetype = KW(
+const gr_linetype = Dict{Symbol,Int}(
     :auto => 1,
     :solid => 1,
     :dash => 2,
@@ -18,7 +18,7 @@ const gr_linetype = KW(
     :dashdotdot => -1
 )
 
-const gr_markertype = KW(
+const gr_markertype = Dict{Symbol,Int}(
     :auto => 1,
     :none => -1,
     :circle => -1,
@@ -45,19 +45,19 @@ const gr_markertype = KW(
     :hline => -31
 )
 
-const gr_halign = KW(
+const gr_halign = Dict{Symbol,Int}(
     :left => 1,
     :hcenter => 2,
     :right => 3
 )
 
-const gr_valign = KW(
+const gr_valign = Dict{Symbol,Int}(
     :top => 1,
     :vcenter => 3,
     :bottom => 5
 )
 
-const gr_font_family = Dict(
+const gr_font_family = Dict{String,Int}(
     "times" => 1,
     "helvetica" => 5,
     "courier" => 9,
@@ -84,7 +84,7 @@ gr_set_transparency(c, α) = gr_set_transparency(α)
 gr_set_transparency(c::Colorant, ::Nothing) = gr_set_transparency(c)
 gr_set_transparency(c::Colorant) = GR.settransparency(alpha(c))
 
-const _gr_arrow_map = Dict(
+const _gr_arrow_map = Dict{Symbol,Int}(
     :simple => 1,
     :hollow => 3,
     :filled => 4,
@@ -1580,7 +1580,7 @@ end
 
 # ----------------------------------------------------------------
 
-const _gr_mimeformats = Dict(
+const _gr_mimeformats = Dict{String,String}(
     "application/pdf"         => "pdf",
     "image/png"               => "png",
     "application/postscript"  => "ps",
