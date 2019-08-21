@@ -129,29 +129,29 @@ savefig(fn::AbstractString) = savefig(current(), fn)
 
 Display a plot using the backends' gui window
 """
-gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
+@noinline gui(plt::Plot = current()) = display(PlotsDisplay(), plt)
 
 # IJulia only... inline display
-function inline(plt::Plot = current())
+@noinline function inline(plt::Plot = current())
     isijulia() || error("inline() is IJulia-only")
     Main.IJulia.clear_output(true)
     display(Main.IJulia.InlineDisplay(), plt)
 end
 
-function Base.display(::PlotsDisplay, plt::Plot)
+@noinline function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)
-    #_display(plt)
+    _display(plt)
 end
 
-_do_plot_show(plt, showval::Bool) = showval && gui(plt)
-function _do_plot_show(plt, showval::Symbol)
+@noinline _do_plot_show(plt, showval::Bool) = showval && gui(plt)
+@noinline function _do_plot_show(plt, showval::Symbol)
     showval == :gui && gui(plt)
     showval in (:inline,:ijulia) && inline(plt)
 end
 
 # ---------------------------------------------------------
 
-const _best_html_output_type = KW(
+const _best_html_output_type = Dict{Symbol,Symbol}(
     :pyplot => :png,
     :unicodeplots => :txt,
     :plotlyjs => :html,
@@ -159,7 +159,7 @@ const _best_html_output_type = KW(
 )
 
 # a backup for html... passes to svg or png depending on the html_output_format arg
-function _show(io::IO, ::MIME"text/html", plt::Plot)
+@noinline function _show(io::IO, ::MIME"text/html", plt::Plot)
     output_type = Symbol(plt.attr[:html_output_format])
     if output_type == :auto
         output_type = get(_best_html_output_type, backend_name(plt.backend), :svg)
@@ -178,11 +178,11 @@ function _show(io::IO, ::MIME"text/html", plt::Plot)
 end
 
 # delegate showable to _show instead
-function Base.showable(m::M, plt::P) where {M<:MIME, P<:Plot}
+@noinline function Base.showable(m::M, plt::P) where {M<:MIME, P<:Plot}
     return hasmethod(_show, Tuple{IO, M, P})
 end
 
-function _display(plt::Plot)
+@noinline function _display(plt::Plot)
     @warn("_display is not defined for this backend.")
 end
 
@@ -202,7 +202,7 @@ for mime in ("text/plain", "text/html", "image/png", "image/eps", "image/svg+xml
 end
 
 # default text/plain for all backends
-_show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot) = show(io, plt)
+@noinline _show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot) = show(io, plt)
 
 "Close all open gui windows of the current backend"
 closeall() = closeall(backend())
