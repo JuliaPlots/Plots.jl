@@ -16,7 +16,7 @@ Returns the Plot object for the current plot
     end
     CURRENT_PLOT.nullableplot
 end
-current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = plot)
+@noinline current(plot::AbstractPlot) = (CURRENT_PLOT.nullableplot = plot)
 
 # ---------------------------------------------------------
 
@@ -175,6 +175,7 @@ function _plot!(plt::Plot{T}, plotattributes::KW, args::Vector{Any}) where {T}
     # "USER RECIPES"
     # --------------------------------
 
+    # 1 second
     kw_list = _process_userrecipes(plt, plotattributes, args)
 
     # @info(1)
@@ -189,6 +190,7 @@ function _plot!(plt::Plot{T}, plotattributes::KW, args::Vector{Any}) where {T}
     # the plot layout is created, which allows for setting layouts and other plot-wide attributes.
     # we get inputs which have been fully processed by "user recipes" and "type recipes",
     # so we can expect standard vectors, surfaces, etc.  No defaults have been set yet.
+
     still_to_process = kw_list
     kw_list = KW[]
     while !isempty(still_to_process)
@@ -203,11 +205,12 @@ function _plot!(plt::Plot{T}, plotattributes::KW, args::Vector{Any}) where {T}
     # Plot/Subplot/Layout setup
     # --------------------------------
 
+    # 2.5 seconds
     _plot_setup(plt, plotattributes, kw_list)
 
     # 6 seconds
     _subplot_setup(plt, plotattributes, kw_list)
-    #=
+
     # !!! note: At this point, kw_list is fully decomposed into individual series... one KW per series.          !!!
     # !!!       The next step is to recursively apply series recipes until the backend supports that series type !!!
 
@@ -238,6 +241,7 @@ function _plot!(plt::Plot{T}, plotattributes::KW, args::Vector{Any}) where {T}
     end
     # --------------------------------
 
+    # 7 seconds
     current(plt)
 
     # do we want to force display?
@@ -246,13 +250,13 @@ function _plot!(plt::Plot{T}, plotattributes::KW, args::Vector{Any}) where {T}
     # end
     _do_plot_show(plt, plt[:show])
     plt
-    =#
 end
 
 
 # we're getting ready to display/output.  prep for layout calcs, then update
 # the plot object after
-function prepare_output(plt::Plot)
+@noinline function prepare_output(plt::Plot)
+
     _before_layout_calcs(plt)
 
     w, h = plt.attr[:size]
@@ -273,9 +277,10 @@ function prepare_output(plt::Plot)
 
     # the backend callback, to reposition subplots, etc
     _update_plot_object(plt)
+
 end
 
-function backend_object(plt::Plot)
+@noinline function backend_object(plt::Plot)
     prepare_output(plt)
     plt.o
 end

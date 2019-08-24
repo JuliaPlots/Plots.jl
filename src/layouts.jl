@@ -188,29 +188,29 @@ parent_bbox(layout::AbstractLayout) = bbox(parent(layout))
 # padding_h(layout::AbstractLayout) = bottom_padding(layout) + top_padding(layout)
 # padding(layout::AbstractLayout) = (padding_w(layout), padding_h(layout))
 
-update_position!(layout::AbstractLayout) = nothing
-update_child_bboxes!(layout::AbstractLayout, minimum_perimeter = [0mm,0mm,0mm,0mm]) = nothing
+@noinline update_position!(layout::AbstractLayout) = nothing
+@noinline update_child_bboxes!(layout::AbstractLayout, minimum_perimeter = [0mm,0mm,0mm,0mm]) = nothing
 
-left(layout::AbstractLayout) = left(bbox(layout))
-top(layout::AbstractLayout) = top(bbox(layout))
-right(layout::AbstractLayout) = right(bbox(layout))
-bottom(layout::AbstractLayout) = bottom(bbox(layout))
-width(layout::AbstractLayout) = width(bbox(layout))
-height(layout::AbstractLayout) = height(bbox(layout))
+@noinline left(layout::AbstractLayout) = left(bbox(layout))
+@noinline top(layout::AbstractLayout) = top(bbox(layout))
+@noinline right(layout::AbstractLayout) = right(bbox(layout))
+@noinline bottom(layout::AbstractLayout) = bottom(bbox(layout))
+@noinline width(layout::AbstractLayout) = width(bbox(layout))
+@noinline height(layout::AbstractLayout) = height(bbox(layout))
 
 # pass these through to the bbox methods if there's no plotarea
-plotarea(layout::AbstractLayout) = bbox(layout)
-plotarea!(layout::AbstractLayout, bb::BoundingBox) = bbox!(layout, bb)
+@noinline plotarea(layout::AbstractLayout) = bbox(layout)
+@noinline plotarea!(layout::AbstractLayout, bb::BoundingBox) = bbox!(layout, bb)
 
-attr(layout::AbstractLayout, k::Symbol) = layout.attr[k]
-attr(layout::AbstractLayout, k::Symbol, v) = get(layout.attr, k, v)
-attr!(layout::AbstractLayout, v, k::Symbol) = (layout.attr[k] = v)
-hasattr(layout::AbstractLayout, k::Symbol) = haskey(layout.attr, k)
+@noinline attr(layout::AbstractLayout, k::Symbol) = layout.attr[k]
+@noinline attr(layout::AbstractLayout, k::Symbol, v) = get(layout.attr, k, v)
+@noinline attr!(layout::AbstractLayout, v, k::Symbol) = (layout.attr[k] = v)
+@noinline hasattr(layout::AbstractLayout, k::Symbol) = haskey(layout.attr, k)
 
-leftpad(layout::AbstractLayout)   = 0mm
-toppad(layout::AbstractLayout)    = 0mm
-rightpad(layout::AbstractLayout)  = 0mm
-bottompad(layout::AbstractLayout) = 0mm
+@noinline leftpad(layout::AbstractLayout)   = 0mm
+@noinline toppad(layout::AbstractLayout)    = 0mm
+@noinline rightpad(layout::AbstractLayout)  = 0mm
+@noinline bottompad(layout::AbstractLayout) = 0mm
 
 # -----------------------------------------------------------
 # RootLayout
@@ -349,18 +349,18 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
     # # create a matrix for each minimum padding direction
     # _update_min_padding!(layout)
 
-    minpad_left   = map(leftpad,   layout.grid)
-    minpad_top    = map(toppad,    layout.grid)
-    minpad_right  = map(rightpad,  layout.grid)
-    minpad_bottom = map(bottompad, layout.grid)
+    minpad_left::Matrix{AbsoluteLength}   = map(leftpad,   layout.grid)
+    minpad_top::Matrix{AbsoluteLength}    = map(toppad,    layout.grid)
+    minpad_right::Matrix{AbsoluteLength}  = map(rightpad,  layout.grid)
+    minpad_bottom::Matrix{AbsoluteLength} = map(bottompad, layout.grid)
 
     # get the max horizontal (left and right) padding over columns,
     # and max vertical (bottom and top) padding over rows
     # TODO: add extra padding here
-    pad_left   = maximum(minpad_left,   dims = 1)
-    pad_top    = maximum(minpad_top,    dims = 2)
-    pad_right  = maximum(minpad_right,  dims = 1)
-    pad_bottom = maximum(minpad_bottom, dims = 2)
+    pad_left::Matrix{AbsoluteLength}   = maximum(minpad_left,   dims = 1)
+    pad_top::Matrix{AbsoluteLength}    = maximum(minpad_top,    dims = 2)
+    pad_right::Matrix{AbsoluteLength}  = maximum(minpad_right,  dims = 1)
+    pad_bottom::Matrix{AbsoluteLength} = maximum(minpad_bottom, dims = 2)
 
     # make sure the perimeter match the parent
     pad_left[1]     = max(pad_left[1], minimum_perimeter[1])
@@ -389,14 +389,14 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
         child = layout[r,c]
 
         # get the top-left corner of this child... the first one is top-left of the parent (i.e. layout)
-        child_left = (c == 1 ? left(layout.bbox) : right(layout[r, c-1].bbox))
-        child_top  = (r == 1 ? top(layout.bbox) : bottom(layout[r-1, c].bbox))
+        child_left::AbsoluteLength  = (c == 1 ? left(layout.bbox) : right(layout[r, c-1].bbox))
+        child_top::AbsoluteLength   = (r == 1 ? top(layout.bbox) : bottom(layout[r-1, c].bbox))
 
         # compute plot area
-        plotarea_left   = child_left + pad_left[c]
-        plotarea_top    = child_top + pad_top[r]
-        plotarea_width  = total_plotarea_horizontal * layout.widths[c]
-        plotarea_height = total_plotarea_vertical * layout.heights[r]
+        plotarea_left::AbsoluteLength    = child_left + pad_left[c]
+        plotarea_top::AbsoluteLength     = child_top + pad_top[r]
+        plotarea_width::AbsoluteLength   = total_plotarea_horizontal * layout.widths[c]
+        plotarea_height::AbsoluteLength  = total_plotarea_vertical * layout.heights[r]
         plotarea!(child, BoundingBox(plotarea_left, plotarea_top, plotarea_width, plotarea_height))
 
         # compute child bbox

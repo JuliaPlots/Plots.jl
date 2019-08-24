@@ -879,9 +879,9 @@ function processFontArg!(plotattributes::KW, fontname::Symbol, arg)
     end
 end
 
-_replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
-_replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
-_replace_markershape(shape) = shape
+@noinline _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
+@noinline _replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
+@noinline _replace_markershape(shape) = shape
 
 function _add_markershape(plotattributes::KW)
     # add the markershape if it needs to be added... hack to allow "m=10" to add a shape,

@@ -47,17 +47,17 @@ end
 # ---------------------------------------------------------
 
 # don't do anything as a default
-_create_backend_figure(plt::Plot) = nothing
-_prepare_plot_object(plt::Plot) = nothing
-_initialize_subplot(plt::Plot, sp::Subplot) = nothing
+@noinline _create_backend_figure(plt::Plot) = nothing
+@noinline _prepare_plot_object(plt::Plot) = nothing
+@noinline _initialize_subplot(plt::Plot, sp::Subplot) = nothing
 
-_series_added(plt::Plot, series::Series) = nothing
-_series_updated(plt::Plot, series::Series) = nothing
+@noinline _series_added(plt::Plot, series::Series) = nothing
+@noinline _series_updated(plt::Plot, series::Series) = nothing
 
-_before_layout_calcs(plt::Plot) = nothing
+@noinline _before_layout_calcs(plt::Plot) = nothing
 
-title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefontsize] * pt
-guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefontsize] * pt
+@noinline title_padding(sp::Subplot) = sp[:title] == "" ? 0mm : sp[:titlefontsize] * pt
+@noinline guide_padding(axis::Axis) = axis[:guide] == "" ? 0mm : axis[:guidefontsize] * pt
 
 "Returns the (width,height) of a text label."
 function text_size(lablen::Int, sz::Number, rot::Number = 0)
@@ -123,7 +123,7 @@ function _update_min_padding!(sp::Subplot)
     sp.minpad = (leftpad, toppad, rightpad, bottompad)
 end
 
-_update_plot_object(plt::Plot) = nothing
+@noinline _update_plot_object(plt::Plot) = nothing
 
 # ---------------------------------------------------------
 
@@ -148,7 +148,7 @@ end
 
 # ---------------------------------------------------------
 
-_fallback_default_backend() = backend(GRBackend())
+@noinline _fallback_default_backend() = backend(GRBackend())
 
 function _pick_default_backend()
     env_default = get(ENV, "PLOTS_DEFAULT_BACKEND", "")
@@ -305,9 +305,8 @@ function _initialize_backend(pkg::AbstractBackend)
     end
 end
 
-_initialize_backend(pkg::GRBackend) = nothing
-
-_initialize_backend(pkg::PlotlyBackend) = nothing
+@noinline _initialize_backend(pkg::GRBackend) = nothing
+@noinline _initialize_backend(pkg::PlotlyBackend) = nothing
 
 
 # ------------------------------------------------------------------------------

@@ -228,7 +228,7 @@ closeall() = closeall(backend())
 # ---------------------------------------------------------
 # Atom PlotPane
 # ---------------------------------------------------------
-function showjuno(io::IO, m, plt)
+@noinline function showjuno(io::IO, m, plt)
     sz = plt[:size]
     dpi = plt[:dpi]
     thickness_scaling = plt[:thickness_scaling]
@@ -250,7 +250,7 @@ function showjuno(io::IO, m, plt)
     end
 end
 
-function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
+@noinline function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
   if Symbol(plt.attr[:html_output_format]) ≠ :svg
     throw(MethodError(show, (typeof(m), typeof(plt))))
   else
@@ -258,4 +258,4 @@ function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
   end
 end
 
-_showjuno(io::IO, m, plt) = _show(io, m, plt)
+@noinline _showjuno(io::IO, m, plt) = _show(io, m, plt)

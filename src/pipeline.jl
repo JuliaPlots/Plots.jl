@@ -23,7 +23,7 @@ end
     end
 end
 
-function _preprocess_args(plotattributes::KW, args, still_to_process::Vector{RecipeData})
+@noinline function _preprocess_args(plotattributes::KW, args, still_to_process::Vector{RecipeData})
     # the grouping mechanism is a recipe on a GroupBy object
     # we simply add the GroupBy object to the front of the args list to allow
     # the recipe to be applied
@@ -57,7 +57,7 @@ end
 # user recipes
 
 
-function _process_userrecipes(plt::Plot, plotattributes::KW, args)
+@noinline function _process_userrecipes(plt::Plot, plotattributes::KW, args)
     still_to_process = RecipeData[]
     args = _preprocess_args(plotattributes, args, still_to_process)
 
@@ -90,7 +90,7 @@ function _process_userrecipes(plt::Plot, plotattributes::KW, args)
     kw_list
 end
 
-function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeData)
+@noinline function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeData)
     # when the arg tuple is empty, that means there's nothing left to recursively
     # process... finish up and add to the kw_list
     kw = recipedata.plotattributes
@@ -108,7 +108,7 @@ function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeD
     return
 end
 
-function _preprocess_userrecipe(kw::KW)
+@noinline function _preprocess_userrecipe(kw::KW)
     _add_markershape(kw)
 
     # if there was a grouping, filter the data here
@@ -302,7 +302,7 @@ end
 
 # getting ready to add the series... last update to subplot from anything
 # that might have been added during series recipes
-function _prepare_subplot(plt::Plot{T}, plotattributes::KW) where T
+@noinline function _prepare_subplot(plt::Plot{T}, plotattributes::KW) where T
     st::Symbol = plotattributes[:seriestype]
     sp::Subplot{T} = plotattributes[:subplot]
     sp_idx = get_subplot_index(plt, sp)
