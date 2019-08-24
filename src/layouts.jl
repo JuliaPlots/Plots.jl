@@ -227,8 +227,8 @@ bbox(::RootLayout) = defaultbox
 
 # contains blank space
 mutable struct EmptyLayout <: AbstractLayout
-    parent::AbstractLayout
-    bbox::BoundingBox
+    parent
+    bbox#::BoundingBox
     attr::KW  # store label, width, and height for initialization
     # label  # this is the label that the subplot will take (since we create a layout before initialization)
 end
@@ -245,12 +245,12 @@ _update_min_padding!(layout::EmptyLayout) = nothing
 
 # nested, gridded layout with optional size percentages
 mutable struct GridLayout <: AbstractLayout
-    parent::AbstractLayout
-    minpad::Tuple # leftpad, toppad, rightpad, bottompad
-    bbox::BoundingBox
-    grid::Matrix{AbstractLayout} # Nested layouts. Each position is a AbstractLayout, which allows for arbitrary recursion
-    widths::Vector{Measure}
-    heights::Vector{Measure}
+    parent
+    minpad::Tuple{AbsoluteLength,AbsoluteLength,AbsoluteLength,AbsoluteLength} # leftpad, toppad, rightpad, bottompad
+    bbox#::BoundingBox
+    grid::Matrix{Any} # Nested layouts. Each position is a AbstractLayout, which allows for arbitrary recursion
+    widths::Vector{Any}
+    heights::Vector{Any}
     attr::KW
 end
 
@@ -268,14 +268,14 @@ function GridLayout(dims...;
                     widths = zeros(dims[2]),
                     heights = zeros(dims[1]),
                     kw...)
-    grid = Matrix{AbstractLayout}(undef, dims...)
+    grid = Matrix{Any}(undef, dims...)
     layout = GridLayout(
         parent,
         (20mm, 5mm, 2mm, 10mm),
         defaultbox,
         grid,
-        Measure[w*pct for w in widths],
-        Measure[h*pct for h in heights],
+        Any[w*pct for w in widths],
+        Any[h*pct for h in heights],
         # convert(Vector{Float64}, widths),
         # convert(Vector{Float64}, heights),
         KW(kw))
@@ -512,14 +512,14 @@ end
 
 # # just a single subplot
 # function build_layout(sp::Subplot, n::Integer)
-#     sp, Subplot[sp], SubplotMap(gensym() => sp)
+#     sp, Subplot[sp], KW(gensym() => sp)
 # end
 
 # n is the number of subplots... build a grid and initialize the inner subplots recursively
 function build_layout(layout::GridLayout, n::Integer)
     nr, nc = size(layout)
-    subplots = Subplot[]
-    spmap = SubplotMap()
+    subplots = Any[]
+    spmap = KW()
     i = 0
     for r=1:nr, c=1:nc
         l = layout[r,c]
@@ -560,8 +560,8 @@ end
 # TODO... much of the logic overlaps with the method above... can we merge?
 function build_layout(layout::GridLayout, numsp::Integer, plts::AVec{Plot})
     nr, nc = size(layout)
-    subplots = Subplot[]
-    spmap = SubplotMap()
+    subplots = Any[]
+    spmap = KW()
     i = 0
     for r=1:nr, c=1:nc
         l = layout[r,c]

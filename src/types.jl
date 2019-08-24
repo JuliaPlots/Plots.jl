@@ -30,13 +30,12 @@ attr!(series::Series, v, k::Symbol) = (series.plotattributes[k] = v)
 # -----------------------------------------------------------
 
 # a single subplot
-const StandardPad = Measures.Length{:mm,Float64}
 mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
-    parent::AbstractLayout
+    parent
     series_list::Vector{Series}  # arguments for each series
-    minpad::Tuple{StandardPad,StandardPad,StandardPad,StandardPad} # leftpad, toppad, rightpad, bottompad
-    bbox::BoundingBox  # the canvas area which is available to this subplot
-    plotarea::BoundingBox  # the part where the data goes
+    minpad::Tuple{AbsoluteLength,AbsoluteLength,AbsoluteLength,AbsoluteLength} # leftpad, toppad, rightpad, bottompad
+    bbox#::BoundingBox  # the canvas area which is available to this subplot
+    plotarea#::BoundingBox  # the part where the data goes
     attr::KW  # args specific to this subplot
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
@@ -60,10 +59,6 @@ Extrema() = Extrema(Inf, -Inf)
 
 # -----------------------------------------------------------
 
-const SubplotMap = Dict{Any, Subplot}
-
-# -----------------------------------------------------------
-
 
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
@@ -73,15 +68,15 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     series_list::Vector{Series}  # arguments for each series
     o                            # the backend's plot object
     subplots::Vector{Subplot{T}}
-    spmap::SubplotMap            # provide any label as a map to a subplot
-    layout::AbstractLayout
+    spmap::KW            # provide any label as a map to a subplot
+    layout
     inset_subplots::Vector{Subplot{T}}  # list of inset subplots
     init::Bool
 end
 
 function Plot(_backend = CURRENT_BACKEND)
     Plot(_backend.pkg, 0, KW(), KW(), Series[], nothing,
-         Subplot{typeof(_backend.pkg)}[], SubplotMap(), EmptyLayout(),
+         Subplot{typeof(_backend.pkg)}[], KW(), EmptyLayout(),
          Subplot{typeof(_backend.pkg)}[], false)
 end
 
