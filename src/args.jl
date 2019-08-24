@@ -2,7 +2,7 @@
 
 const _keyAliases = Dict{Symbol,Symbol}()
 
-function add_aliases(sym::Symbol, aliases::Symbol...)
+@noinline function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
         if haskey(_keyAliases, alias)
             error("Already an alias $alias => $(_keyAliases[alias])... can't also alias $sym")
@@ -11,7 +11,7 @@ function add_aliases(sym::Symbol, aliases::Symbol...)
     end
 end
 
-function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
+@noinline function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k,v) in aliases
         s = string(k)
         if '_' in s
@@ -84,17 +84,17 @@ const _histogram_like = [:histogram, :barhist, :barbins]
 const _line_like = [:line, :path, :steppre, :steppost]
 const _surface_like = [:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image]
 
-like_histogram(seriestype::Symbol) = seriestype in _histogram_like
-like_line(seriestype::Symbol)      = seriestype in _line_like
-like_surface(seriestype::Symbol)   = seriestype in _surface_like
+@noinline like_histogram(seriestype::Symbol) = seriestype in _histogram_like
+@noinline like_line(seriestype::Symbol)      = seriestype in _line_like
+@noinline like_surface(seriestype::Symbol)   = seriestype in _surface_like
 
-is3d(seriestype::Symbol) = seriestype in _3dTypes
-is3d(series::Series) = is3d(series.plotattributes)
-is3d(plotattributes::KW) = trueOrAllTrue(is3d, Symbol(plotattributes[:seriestype]))
+@noinline is3d(seriestype::Symbol) = seriestype in _3dTypes
+@noinline is3d(series::Series) = is3d(series.plotattributes)
+@noinline is3d(plotattributes::KW) = trueOrAllTrue(is3d, Symbol(plotattributes[:seriestype]))
 
-is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
-ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
-ispolar(series::Series) = ispolar(series.plotattributes[:subplot])
+@noinline is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
+@noinline ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
+@noinline ispolar(series::Series) = ispolar(series.plotattributes[:subplot])
 
 # ------------------------------------------------------------
 
@@ -188,9 +188,9 @@ const _allGridSyms = [:x, :y, :z,
                     :all, :both, :on, :yes, :show,
                     :none, :off, :no, :hide]
 const _allGridArgs = [_allGridSyms; string.(_allGridSyms); nothing]
-hasgrid(arg::Nothing, letter) = false
-hasgrid(arg::Bool, letter) = arg
-function hasgrid(arg::Symbol, letter)
+@noinline hasgrid(arg::Nothing, letter) = false
+@noinline hasgrid(arg::Bool, letter) = arg
+@noinline function hasgrid(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on) || occursin(string(letter), string(arg))
     else
@@ -198,7 +198,7 @@ function hasgrid(arg::Symbol, letter)
         true
     end
 end
-hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
+@noinline hasgrid(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
 const _allShowaxisSyms = [:x, :y, :z,
                     :xy, :xz, :yx, :yz, :zx, :zy,
@@ -206,9 +206,9 @@ const _allShowaxisSyms = [:x, :y, :z,
                     :all, :both, :on, :yes, :show,
                     :off, :no, :hide]
 const _allShowaxisArgs = [_allGridSyms; string.(_allGridSyms)]
-showaxis(arg::Nothing, letter) = false
-showaxis(arg::Bool, letter) = arg
-function showaxis(arg::Symbol, letter)
+@noinline showaxis(arg::Nothing, letter) = false
+@noinline showaxis(arg::Bool, letter) = arg
+@noinline function showaxis(arg::Symbol, letter)
     if arg in _allGridSyms
         arg in (:all, :both, :on, :yes) || occursin(string(letter), string(arg))
     else
@@ -216,7 +216,7 @@ function showaxis(arg::Symbol, letter)
         true
     end
 end
-showaxis(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
+@noinline showaxis(arg::AbstractString, letter) = hasgrid(Symbol(arg), letter)
 
 const _allFramestyles = [:box, :semi, :axes, :origin, :zerolines, :grid, :none]
 const _framestyleAliases = Dict{Symbol, Symbol}(
@@ -448,7 +448,7 @@ const _initial_defaults = deepcopy(_all_defaults)
 const _initial_axis_defaults = deepcopy(_axis_defaults)
 
 # to be able to reset font sizes to initial values
-const _initial_fontsizes = Dict(:titlefontsize  => _subplot_defaults[:titlefontsize],
+const _initial_fontsizes = Dict{Any,Any}(:titlefontsize  => _subplot_defaults[:titlefontsize],
                                 :legendfontsize => _subplot_defaults[:legendfontsize],
                                 :tickfontsize   => _axis_defaults[:tickfontsize],
                                 :guidefontsize  => _axis_defaults[:guidefontsize])
@@ -459,15 +459,15 @@ RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
 
 # -----------------------------------------------------------------------------
 
-makeplural(s::Symbol) = Symbol(string(s,"s"))
+@noinline makeplural(s::Symbol) = Symbol(string(s,"s"))
 
-autopick(arr::AVec, idx::Integer) = arr[mod1(idx,length(arr))]
-autopick(notarr, idx::Integer) = notarr
+@noinline autopick(arr::AVec, idx::Integer) = arr[mod1(idx,length(arr))]
+@noinline autopick(notarr, idx::Integer) = notarr
 
-autopick_ignore_none_auto(arr::AVec, idx::Integer) = autopick(setdiff(arr, [:none, :auto]), idx)
-autopick_ignore_none_auto(notarr, idx::Integer) = notarr
+@noinline autopick_ignore_none_auto(arr::AVec, idx::Integer) = autopick(setdiff(arr, [:none, :auto]), idx)
+@noinline autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
-function aliasesAndAutopick(plotattributes::KW, sym::Symbol, aliases::Dict{Symbol,Symbol}, options::AVec, plotIndex::Int)
+@noinline function aliasesAndAutopick(plotattributes::KW, sym::Symbol, aliases::Dict{Symbol,Symbol}, options::AVec, plotIndex::Int)
     if plotattributes[sym] == :auto
         plotattributes[sym] = autopick_ignore_none_auto(options, plotIndex)
     elseif haskey(aliases, plotattributes[sym])
@@ -475,7 +475,7 @@ function aliasesAndAutopick(plotattributes::KW, sym::Symbol, aliases::Dict{Symbo
     end
 end
 
-function aliases(aliasMap::Dict{Symbol,Symbol}, val)
+@noinline function aliases(aliasMap::Dict{Symbol,Symbol}, val)
     sortedkeys(filter((k,v)-> v==val, aliasMap))
 end
 
@@ -1074,7 +1074,7 @@ end
 
 
 # this is when given a vector-type of values to group by
-function extractGroupArgs(v::AVec, args...; legendEntry = string)
+@noinline function extractGroupArgs(v::AVec, args...; legendEntry = string)
     groupLabels = sort(collect(unique(v)))
     n = length(groupLabels)
     if n > 100
@@ -1084,17 +1084,17 @@ function extractGroupArgs(v::AVec, args...; legendEntry = string)
     GroupBy(map(legendEntry, groupLabels), groupIds)
 end
 
-legendEntryFromTuple(ns::Tuple) = join(ns, ' ')
+@noinline legendEntryFromTuple(ns::Tuple) = join(ns, ' ')
 
 # this is when given a tuple of vectors of values to group by
-function extractGroupArgs(vs::Tuple, args...)
+@noinline function extractGroupArgs(vs::Tuple, args...)
     isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
     v = map(tuple, vs...)
     extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
 end
 
 # allow passing NamedTuples for a named legend entry
-legendEntryFromTuple(ns::NamedTuple) =
+@noinline legendEntryFromTuple(ns::NamedTuple) =
     join(["$k = $v" for (k, v) in pairs(ns)], ", ")
 
 function extractGroupArgs(vs::NamedTuple, args...)
@@ -1104,22 +1104,22 @@ function extractGroupArgs(vs::NamedTuple, args...)
 end
 
 # expecting a mapping of "group label" to "group indices"
-function extractGroupArgs(idxmap::Dict{T,V}, args...) where {T, V<:AVec{Int}}
+@noinline function extractGroupArgs(idxmap::Dict{T,V}, args...) where {T, V<:AVec{Int}}
     groupLabels = sortedkeys(idxmap)
     groupIds = Vector{Int}[collect(idxmap[k]) for k in groupLabels]
     GroupBy(groupLabels, groupIds)
 end
 
-filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
-filter_data(v, idxfilter) = v
+@noinline filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
+@noinline filter_data(v, idxfilter) = v
 
-function filter_data!(plotattributes::KW, idxfilter)
+@noinline function filter_data!(plotattributes::KW, idxfilter)
     for s in (:x, :y, :z)
         plotattributes[s] = filter_data(get(plotattributes, s, nothing), idxfilter)
     end
 end
 
-function _filter_input_data!(plotattributes::KW)
+@noinline function _filter_input_data!(plotattributes::KW)
     idxfilter = pop!(plotattributes, :idxfilter, nothing)
     if idxfilter !== nothing
         filter_data!(plotattributes, idxfilter)
@@ -1182,7 +1182,7 @@ end
 
 # -----------------------------------------------------------------------------
 
-function convertLegendValue(val::Symbol)
+@noinline function convertLegendValue(val::Symbol)
     if val in (:both, :all, :yes)
         :best
     elseif val in (:no, :none)
@@ -1193,10 +1193,10 @@ function convertLegendValue(val::Symbol)
         error("Invalid symbol for legend: $val")
     end
 end
-convertLegendValue(val::Bool) = val ? :best : :none
-convertLegendValue(val::Nothing) = :none
-convertLegendValue(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
-convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
+@noinline convertLegendValue(val::Bool) = val ? :best : :none
+@noinline convertLegendValue(val::Nothing) = :none
+@noinline convertLegendValue(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
+@noinline convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
 # -----------------------------------------------------------------------------
 
@@ -1205,12 +1205,12 @@ convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 # multi-row matrices will give a column
 # InputWrapper just gives the contents
 # anything else is returned as-is
-function slice_arg(v::AMat, idx::Int)
+@noinline function slice_arg(v::AMat, idx::Int)
     c = mod1(idx, size(v,2))
     size(v,1) == 1 ? v[1,c] : v[:,c]
 end
-slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
-slice_arg(v, idx) = v
+@noinline slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
+@noinline slice_arg(v, idx) = v
 
 
 # given an argument key (k), we want to extract the argument value for this index.
@@ -1509,9 +1509,9 @@ end
 
 # -----------------------------------------------------------------------------
 
-has_black_border_for_default(st) = error("The seriestype attribute only accepts Symbols, you passed the $(typeof(st)) $st.")
-has_black_border_for_default(st::Function) = error("The seriestype attribute only accepts Symbols, you passed the function $st.")
-function has_black_border_for_default(st::Symbol)
+@noinline has_black_border_for_default(st) = error("The seriestype attribute only accepts Symbols, you passed the $(typeof(st)) $st.")
+@noinline has_black_border_for_default(st::Function) = error("The seriestype attribute only accepts Symbols, you passed the function $st.")
+@noinline function has_black_border_for_default(st::Symbol)
     like_histogram(st) || st in (:hexbin, :bar, :shape)
 end
 
