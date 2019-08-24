@@ -4,13 +4,13 @@ mutable struct CurrentPlot
 end
 const CURRENT_PLOT = CurrentPlot(nothing)
 
-isplotnull() = CURRENT_PLOT.nullableplot === nothing
+@noinline isplotnull() = CURRENT_PLOT.nullableplot === nothing
 
 """
     current()
 Returns the Plot object for the current plot
 """
-function current()
+@noinline function current()
     if isplotnull()
         error("No current plot/subplot")
     end
@@ -25,9 +25,9 @@ Base.string(plt::Plot) = "Plot{$(plt.backend) n=$(plt.n)}"
 Base.print(io::IO, plt::Plot) = print(io, string(plt))
 Base.show(io::IO, plt::Plot) = print(io, string(plt))
 
-getplot(plt::Plot) = plt
-getattr(plt::Plot, idx::Int = 1) = plt.attr
-convertSeriesIndex(plt::Plot, n::Int) = n
+@noinline getplot(plt::Plot) = plt
+@noinline getattr(plt::Plot, idx::Int = 1) = plt.attr
+@noinline convertSeriesIndex(plt::Plot, n::Int) = n
 
 # ---------------------------------------------------------
 
@@ -207,7 +207,7 @@ function _plot!(plt::Plot{T}, plotattributes::KW, args::Vector{Any}) where {T}
 
     # 6 seconds
     _subplot_setup(plt, plotattributes, kw_list)
-
+    #=
     # !!! note: At this point, kw_list is fully decomposed into individual series... one KW per series.          !!!
     # !!!       The next step is to recursively apply series recipes until the backend supports that series type !!!
 
@@ -246,6 +246,7 @@ function _plot!(plt::Plot{T}, plotattributes::KW, args::Vector{Any}) where {T}
     # end
     _do_plot_show(plt, plt[:show])
     plt
+    =#
 end
 
 

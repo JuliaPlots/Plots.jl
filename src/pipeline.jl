@@ -3,11 +3,11 @@
 # ------------------------------------------------------------------
 # preprocessing
 
-function command_idx(kw_list::AVec{KW}, kw::KW)
+@noinline function command_idx(kw_list::AVec{KW}, kw::KW)
     Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
 end
 
-function _expand_seriestype_array(plotattributes::KW, args)
+@noinline function _expand_seriestype_array(plotattributes::KW, args)
     sts = get(plotattributes, :seriestype, :path)
     if typeof(sts) <: AbstractArray
         delete!(plotattributes, :seriestype)
@@ -132,7 +132,7 @@ function _preprocess_userrecipe(kw::KW)
     return
 end
 
-function _add_errorbar_kw(kw_list::Vector{KW}, kw::KW)
+@noinline function _add_errorbar_kw(kw_list::Vector{KW}, kw::KW)
     # handle error bars by creating new recipedata data... these will have
     # the same recipedata index as the recipedata they are copied from
     for esym in (:xerror, :yerror)
@@ -147,7 +147,7 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::KW)
     end
 end
 
-function _add_smooth_kw(kw_list::Vector{KW}, kw::KW)
+@noinline function _add_smooth_kw(kw_list::Vector{KW}, kw::KW)
     # handle smoothing by adding a new series
     if get(kw, :smooth, false)
         x, y = kw[:x], kw[:y]
@@ -257,11 +257,11 @@ function _subplot_setup(plt::Plot{T}, plotattributes::KW, kw_list::Vector{KW}) w
     # Subplot/Axis attributes set by a user/series recipe apply only to the
     # Subplot object which they belong to.
     # TODO: allow matrices to still apply to all subplots
-    sp_attrs = Dict{Subplot{T},Any}()
+    sp_attrs = Dict{Any,Any}()
     for kw in kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
-        sp::Subplot{T} = get_subplot(plt, _cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
+        sp = get_subplot(plt, _cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
         kw[:subplot] = sp
         # extract subplot/axis attributes from kw and add to sp_attr
         attr = KW()
@@ -326,7 +326,7 @@ end
 # ------------------------------------------------------------------
 # series types
 
-function _override_seriestype_check(plotattributes::KW, st::Symbol)
+@noinline function _override_seriestype_check(plotattributes::KW, st::Symbol)
     # do we want to override the series type?
     if !is3d(st) && !(st in (:contour,:contour3d))
         z = plotattributes[:z]
@@ -338,7 +338,7 @@ function _override_seriestype_check(plotattributes::KW, st::Symbol)
     st
 end
 
-function _prepare_annotations(sp::Subplot, plotattributes::KW)
+@noinline function _prepare_annotations(sp::Subplot, plotattributes::KW)
     # strip out series annotations (those which are based on series x/y coords)
     # and add them to the subplot attr
     sp_anns = annotations(sp[:annotations])
@@ -371,7 +371,7 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::KW, st::Symbol)
     end
 end
 
-function _add_the_series(plt, sp, plotattributes)
+@noinline function _add_the_series(plt, sp, plotattributes)
     warnOnUnsupported_args(plt.backend, plotattributes)
     warnOnUnsupported(plt.backend, plotattributes)
     series = Series(plotattributes)
