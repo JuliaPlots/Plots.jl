@@ -879,12 +879,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
-        gr_set_font(legendfont(sp))
         if sp[:legendtitle] !== nothing
+            gr_set_font(legendtitlefont(sp))
             tbx, tby = gr_inqtext(0, 0, string(sp[:legendtitle]))
             legendw = tbx[3] - tbx[1]
             legendn += 1
         end
+        gr_set_font(legendfont(sp))
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             legendn += 1
@@ -1498,10 +1499,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             i = 0
             if sp[:legendtitle] !== nothing
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_HALF)
-                gr_set_textcolor(sp[:legendfontcolor])
-                gr_set_transparency(sp[:legendfontcolor])
+                gr_set_font(legendtitlefont(sp))
                 gr_text(xpos - 0.03 + 0.5*w, ypos, string(sp[:legendtitle]))
                 ypos -= dy
+                gr_set_font(legendfont(sp))
             end
             for series in series_list(sp)
                 should_add_to_legend(series) || continue
