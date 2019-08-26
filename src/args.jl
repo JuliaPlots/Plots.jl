@@ -336,6 +336,12 @@ const _subplot_defaults = KW(
     :legendfontvalign         => :vcenter,
     :legendfontrotation       => 0.0,
     :legendfontcolor          => :match,
+    :legendtitlefontfamily    => :match,
+    :legendtitlefontsize      => 11,
+    :legendtitlefonthalign    => :hcenter,
+    :legendtitlefontvalign    => :vcenter,
+    :legendtitlefontrotation  => 0.0,
+    :legendtitlefontcolor     => :match,
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :none,             # choose from :none or :equal
@@ -450,6 +456,7 @@ const _initial_axis_defaults = deepcopy(_axis_defaults)
 # to be able to reset font sizes to initial values
 const _initial_fontsizes = Dict(:titlefontsize  => _subplot_defaults[:titlefontsize],
                                 :legendfontsize => _subplot_defaults[:legendfontsize],
+                                :legendtitlefontsize => _subplot_defaults[:legendtitlefontsize],
                                 :tickfontsize   => _axis_defaults[:tickfontsize],
                                 :guidefontsize  => _axis_defaults[:guidefontsize])
 
@@ -961,7 +968,7 @@ function preprocessArgs!(plotattributes::KW)
         end
     end
     # fonts
-    for fontname in (:titlefont, :legendfont)
+    for fontname in (:titlefont, :legendfont, :legendtitlefont)
         args = pop!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
@@ -1271,8 +1278,10 @@ const _match_map = KW(
     :bottom_margin => :margin,
     :titlefontfamily          => :fontfamily_subplot,
     :legendfontfamily         => :fontfamily_subplot,
+    :legendtitlefontfamily    => :fontfamily_subplot,
     :titlefontcolor           => :foreground_color_subplot,
     :legendfontcolor          => :foreground_color_subplot,
+    :legendtitlefontcolor     => :foreground_color_subplot,
     :tickfontcolor            => :foreground_color_text,
     :guidefontcolor           => :foreground_color_guide,
 )
