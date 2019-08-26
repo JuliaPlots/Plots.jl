@@ -1060,6 +1060,15 @@ legendfont(sp::Subplot) = font(
     sp[:legendfontcolor],
 )
 
+legendtitlefont(sp::Subplot) = font(
+    sp[:legendtitlefontfamily],
+    sp[:legendtitlefontsize],
+    sp[:legendtitlefontvalign],
+    sp[:legendtitlefonthalign],
+    sp[:legendtitlefontrotation],
+    sp[:legendtitlefontcolor],
+)
+
 tickfont(ax::Axis) = font(
     ax[:tickfontfamily],
     ax[:tickfontsize],
