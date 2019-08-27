@@ -34,7 +34,7 @@ function convertToAnyVector(v::AVec)
     if all(x -> isa(x, Number) || ismissing(x), v) || all(x -> isa(x, AbstractString) || ismissing(x), v)
         convertToAnyVector(convert.(DataPoint, v))
     else
-        Any[prepareSeriesData(v)] : vcat((convertToAnyVector(vi) for vi in v)...)
+        vcat((convertToAnyVector(vi) for vi in v)...)
     end
 end
 
