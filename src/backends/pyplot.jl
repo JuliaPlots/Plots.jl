@@ -726,6 +726,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
         elseif typeof(z) <: AbstractVector
             # tri-surface plot (http://matplotlib.org/mpl_toolkits/mplot3d/tutorial.html#tri-surface-plots)
+            @show x, y, z
             handle = ax."plot_trisurf"(x, y, z;
                 label = series[:label],
                 zorder = series[:series_plotindex],

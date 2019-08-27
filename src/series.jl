@@ -21,38 +21,44 @@ handlemissings(s::Surface) = Surface(handlemissings(s.surf))
 handlemissings(v::Volume) = Volume(handlemissings(v.v), v.x_extents, v.y_extents, v.z_extents)
 
 # default: assume x represents a single series
-convertToAnyVector(x) = Any[prepareSeriesData(x)]
+convertToAnyVector(x, plotattributes) = Any[prepareSeriesData(x)]
 
 # fixed number of blank series
-convertToAnyVector(n::Integer) = Any[zeros(0) for i in 1:n]
+convertToAnyVector(n::Integer, plotattributes) = Any[zeros(0) for i in 1:n]
 
 # vector of data points is a single series
-convertToAnyVector(v::AVec{<:DataPoint}) = Any[prepareSeriesData(v)]
+convertToAnyVector(v::AVec{<:DataPoint}, plotattributes) = Any[prepareSeriesData(v)]
 
 # list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec)
+function convertToAnyVector(v::AVec, plotattributes)
     if all(x -> isa(x, Number) || ismissing(x), v) || all(x -> isa(x, AbstractString) || ismissing(x), v)
-        convertToAnyVector(convert.(DataPoint, v))
+        convertToAnyVector(convert.(DataPoint, v), plotattributes)
     else
-        vcat((convertToAnyVector(vi) for vi in v)...)
+        vcat((convertToAnyVector(vi, plotattributes) for vi in v)...)
     end
 end
 
 # Matrix is split into columns
-convertToAnyVector(v::AMat{<:DataPoint}) = Any[prepareSeriesData(v[:,i]) for i in 1:size(v,2)]
+function convertToAnyVector(v::AMat{<:DataPoint}, plotattributes)
+    if all3D(plotattributes)
+        Any[prepareSeriesData(Surface(v))]
+    else
+        Any[prepareSeriesData(v[:, i]) for i in 1:size(v, 2)]
+    end
+end
 
 # --------------------------------------------------------------------
 # Fillranges & ribbons
 
 
-process_fillrange(range::Number) = [range]
-process_fillrange(range) = convertToAnyVector(range)
+process_fillrange(range::Number, plotattributes) = [range]
+process_fillrange(range, plotattributes) = convertToAnyVector(range, plotattributes)
 
-process_ribbon(ribbon::Number) = [ribbon]
-process_ribbon(ribbon) = convertToAnyVector(ribbon)
+process_ribbon(ribbon::Number, plotattributes) = [ribbon]
+process_ribbon(ribbon, plotattributes) = convertToAnyVector(ribbon, plotattributes)
 # ribbon as a tuple: (lower_ribbons, upper_ribbons)
-process_ribbon(ribbon::Tuple{Any,Any}) = collect(zip(convertToAnyVector(ribbon[1]),
-                                                     convertToAnyVector(ribbon[2])))
+process_ribbon(ribbon::Tuple{Any,Any}) = collect(zip(convertToAnyVector(ribbon[1], plotattributes),
+                                                     convertToAnyVector(ribbon[2], plotattributes)))
 
 
 # --------------------------------------------------------------------
@@ -116,17 +122,17 @@ struct SliceIt end
         z = z.data
     end
 
-    xs = convertToAnyVector(x)
-    ys = convertToAnyVector(y)
-    zs = convertToAnyVector(z)
+    xs = convertToAnyVector(x, plotattributes)
+    ys = convertToAnyVector(y, plotattributes)
+    zs = convertToAnyVector(z, plotattributes)
 
 
     fr = pop!(plotattributes, :fillrange, nothing)
-    fillranges = process_fillrange(fr)
+    fillranges = process_fillrange(fr, plotattributes)
     mf = length(fillranges)
 
     rib = pop!(plotattributes, :ribbon, nothing)
-    ribbons = process_ribbon(rib)
+    ribbons = process_ribbon(rib, plotattributes)
     mr = length(ribbons)
 
     # @show zs
