@@ -1229,7 +1229,7 @@ end
 
 function py_add_annotations(sp::Subplot{PyPlotBackend}, x, y, val)
     ax = sp.o
-    ax."annotate"(val, xy = (x,y), zorder = 999)
+    ax."annotate"(val, xy = (x,y), zorder = 999, annotation_clip = false)
 end
 
 
@@ -1243,7 +1243,8 @@ function py_add_annotations(sp::Subplot{PyPlotBackend}, x, y, val::PlotText)
         verticalalignment = val.font.valign == :vcenter ? "center" : string(val.font.valign),
         rotation = val.font.rotation,
         size = py_thickness_scale(sp.plt, val.font.pointsize),
-        zorder = 999
+        zorder = 999,
+        annotation_clip = false
     )
 end
 
