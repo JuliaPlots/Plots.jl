@@ -927,7 +927,7 @@ function py_set_scale(ax, sp::Subplot, axis::Axis)
         elseif scale == :log10
             10
         end
-        kw[Symbol(:linthresh,letter)] = NaNMath.min(1e-16, py_compute_axis_minval(sp, axis))
+        kw[Symbol(:linthresh,letter)] = NaNMath.max(1e-16, py_compute_axis_minval(sp, axis))
         "symlog"
     end
     func(arg; kw...)
