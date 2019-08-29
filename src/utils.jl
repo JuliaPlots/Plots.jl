@@ -115,7 +115,6 @@ function regressionXY(x, y)
 end
 
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
-    @show T, size(z)
     n, m = size(z)
     # idx = 0
     colors = ColorGradient(vec(z))
