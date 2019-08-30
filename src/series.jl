@@ -7,7 +7,9 @@
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
 const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
-const DataPoint = Union{Number, AbstractString, Missing}
+const MaybeNumber = Union{Number, Missing}
+const MaybeString = Union{AbstractString, Missing}
+const DataPoint = Union{MaybeNumber, MaybeString}
 const SeriesData = Union{AVec{<:DataPoint}, Function, Surface, Volume}
 
 prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
@@ -15,8 +17,8 @@ prepareSeriesData(::Nothing) = nothing
 prepareSeriesData(s::SeriesData) = handlemissings(s)
 
 handlemissings(v) = v
-handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: Number = replace(v, missing => NaN)
-handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: AbstractString = replace(v, missing => "")
+handlemissings(v::AbstractArray{<:MaybeNumber}) = replace(v, missing => NaN)
+handlemissings(v::AbstractArray{<:MaybeString}) = replace(v, missing => "")
 handlemissings(s::Surface) = Surface(handlemissings(s.surf))
 handlemissings(v::Volume) = Volume(handlemissings(v.v), v.x_extents, v.y_extents, v.z_extents)
 
@@ -31,8 +33,10 @@ convertToAnyVector(v::AVec{<:DataPoint}, plotattributes) = Any[prepareSeriesData
 
 # list of things (maybe other vectors, functions, or something else)
 function convertToAnyVector(v::AVec, plotattributes)
-    if all(x -> isa(x, Number) || ismissing(x), v) || all(x -> isa(x, AbstractString) || ismissing(x), v)
-        convertToAnyVector(convert.(DataPoint, v), plotattributes)
+    if all(x -> x isa MaybeNumber, v)
+        convertToAnyVector(Vector{MaybeNumber}(v), plotattributes)
+    elseif all(x -> x isa MaybeString, v)
+        convertToAnyVector(Vector{MaybeString}(v), plotattributes)
     else
         vcat((convertToAnyVector(vi, plotattributes) for vi in v)...)
     end
