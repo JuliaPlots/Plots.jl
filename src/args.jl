@@ -937,6 +937,15 @@ function preprocessArgs!(plotattributes::KW)
         end
     end
 
+    # vline accesses the y argument but actually maps it to the x axis.
+    # Hence, we have to swap formatters
+    if get(plotattributes, :seriestype, :path) == :vline
+        xformatter = get(plotattributes, :xformatter, :auto)
+        yformatter = get(plotattributes, :yformatter, :auto)
+        plotattributes[:xformatter] = yformatter
+        plotattributes[:yformatter] = xformatter
+    end
+
     # handle grid args common to all axes
     args = pop!(plotattributes, :grid, ())
     for arg in wraptuple(args)
