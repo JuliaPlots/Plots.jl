@@ -11,6 +11,15 @@
 ---
 ## (current master)
 
+## 0.26.3
+- fix `vline` with dates
+- fix PyPlot logscale bug
+- avoid annotation clipping for PyPlot
+- allow plotting of Any vectors and 3D plotting again in convertToAnyVector
+- specify legend title font in GR and PyPlot
+- delete `pushtomaster.sh`
+- use `=== nothing`
+
 ## 0.26.2
 - improve empty animation build error
 - fix GR axis flip for heatmaps and images
