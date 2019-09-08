@@ -217,6 +217,7 @@ bottompad(layout::AbstractLayout) = 0mm
 # this is the parent of the top-level layout
 struct RootLayout <: AbstractLayout end
 
+Base.show(io::IO, layout::RootLayout) = Base.show_default(io, layout)
 Base.parent(::RootLayout) = nothing
 parent_bbox(::RootLayout) = defaultbox
 bbox(::RootLayout) = defaultbox
