@@ -3,10 +3,32 @@ using Plots
 using Random
 using Test
 using FileIO
-using PlotReferenceImages
 using Gtk
 
->>>>>>> use PlotReferenceImages Julia Package for tests
+reference_dir(args...) = joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+
+function reference_file(backend, i, version)
+    refdir = reference_dir("Plots", string(backend))
+    fn = "ref$i.png"
+    versions = sort(VersionNumber.(readdir(refdir)), rev = true)
+
+    reffn = joinpath(refdir, string(version), fn)
+    for v in versions
+        tmpfn = joinpath(refdir, string(v), fn)
+        if isfile(tmpfn)
+            reffn = tmpfn
+            break
+        end
+    end
+
+    return reffn
+end
+
+reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
+
+if !isdir(reference_dir())
+    LibGit2.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git", reference_dir())
+end
 
 include("imgcomp.jl")
 # don't actually show the plots
