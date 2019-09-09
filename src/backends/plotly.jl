@@ -469,7 +469,7 @@ function plotly_series(plt::Plot, series::Series)
     plotattributes_out[:showlegend] = should_add_to_legend(series)
 
     if st == :straightline
-        x, y = straightline_data(series)
+        x, y = straightline_data(series, 100)
         z = series[:z]
     else
         x, y, z  = series[:x], series[:y], series[:z]
