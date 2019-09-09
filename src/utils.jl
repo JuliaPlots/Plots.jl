@@ -1162,23 +1162,23 @@ function straightline_data(xl, yl, x, y, expansion_factor = 1)
     return x_vals, y_vals
 end
 
-function shape_data(series)
+function shape_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
     x, y = series[:x], series[:y]
     factor = 100
     for i in eachindex(x)
         if x[i] == -Inf
-            x[i] = xl[1] - factor * (xl[2] - xl[1])
+            x[i] = xl[1] - expansion_factor * (xl[2] - xl[1])
         elseif x[i] == Inf
-            x[i] = xl[2] + factor * (xl[2] - xl[1])
+            x[i] = xl[2] + expansion_factor * (xl[2] - xl[1])
         end
     end
     for i in eachindex(y)
         if y[i] == -Inf
-            y[i] = yl[1] - factor * (yl[2] - yl[1])
+            y[i] = yl[1] - expansion_factor * (yl[2] - yl[1])
         elseif y[i] == Inf
-            y[i] = yl[2] + factor * (yl[2] - yl[1])
+            y[i] = yl[2] + expansion_factor * (yl[2] - yl[1])
         end
     end
     return x, y

@@ -584,7 +584,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
     )
 
     x, y = (plotly_data(series, letter, data)
-        for (letter, data) in zip((:x, :y), shape_data(series))
+        for (letter, data) in zip((:x, :y), shape_data(series, 100))
     )
 
     for (i,rng) in enumerate(segments)
