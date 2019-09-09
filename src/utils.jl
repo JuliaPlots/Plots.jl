@@ -1114,20 +1114,20 @@ function convert_sci_unicode(label::AbstractString)
     label
 end
 
-function straightline_data(series)
+function straightline_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
     x, y = series[:x], series[:y]
     n = length(x)
     if n == 2
-        return straightline_data(xl, yl, x, y)
+        return straightline_data(xl, yl, x, y, expansion_factor)
     else
         k, r = divrem(n, 3)
         if r == 0
             xdata, ydata = fill(NaN, n), fill(NaN, n)
             for i in 1:k
                 inds = (3 * i - 2):(3 * i - 1)
-                xdata[inds], ydata[inds] = straightline_data(xl, yl, x[inds], y[inds])
+                xdata[inds], ydata[inds] = straightline_data(xl, yl, x[inds], y[inds], expansion_factor)
             end
             return xdata, ydata
         else
@@ -1136,7 +1136,7 @@ function straightline_data(series)
     end
 end
 
-function straightline_data(xl, yl, x, y)
+function straightline_data(xl, yl, x, y, expansion_factor = 1)
     x_vals, y_vals = if y[1] == y[2]
         if x[1] == x[2]
             error("Two identical points cannot be used to describe a straight line.")
@@ -1157,29 +1157,28 @@ function straightline_data(xl, yl, x, y)
     end
     # expand the data outside the axis limits, by a certain factor too improve
     # plotly(js) and interactive behaviour
-    factor = 100
-    x_vals = x_vals .+ (x_vals[2] - x_vals[1]) .* factor .* [-1, 1]
-    y_vals = y_vals .+ (y_vals[2] - y_vals[1]) .* factor .* [-1, 1]
+    x_vals = x_vals .+ (x_vals[2] - x_vals[1]) .* expansion_factor .* [-1, 1]
+    y_vals = y_vals .+ (y_vals[2] - y_vals[1]) .* expansion_factor .* [-1, 1]
     return x_vals, y_vals
 end
 
-function shape_data(series)
+function shape_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
     x, y = series[:x], series[:y]
     factor = 100
     for i in eachindex(x)
         if x[i] == -Inf
-            x[i] = xl[1] - factor * (xl[2] - xl[1])
+            x[i] = xl[1] - expansion_factor * (xl[2] - xl[1])
         elseif x[i] == Inf
-            x[i] = xl[2] + factor * (xl[2] - xl[1])
+            x[i] = xl[2] + expansion_factor * (xl[2] - xl[1])
         end
     end
     for i in eachindex(y)
         if y[i] == -Inf
-            y[i] = yl[1] - factor * (yl[2] - yl[1])
+            y[i] = yl[1] - expansion_factor * (yl[2] - yl[1])
         elseif y[i] == Inf
-            y[i] = yl[2] + factor * (yl[2] - yl[1])
+            y[i] = yl[2] + expansion_factor * (yl[2] - yl[1])
         end
     end
     return x, y

@@ -469,7 +469,7 @@ function plotly_series(plt::Plot, series::Series)
     plotattributes_out[:showlegend] = should_add_to_legend(series)
 
     if st == :straightline
-        x, y = straightline_data(series)
+        x, y = straightline_data(series, 100)
         z = series[:z]
     else
         x, y, z  = series[:x], series[:y], series[:z]
@@ -584,7 +584,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
     )
 
     x, y = (plotly_data(series, letter, data)
-        for (letter, data) in zip((:x, :y), shape_data(series))
+        for (letter, data) in zip((:x, :y), shape_data(series, 100))
     )
 
     for (i,rng) in enumerate(segments)
