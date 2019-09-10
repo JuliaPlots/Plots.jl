@@ -653,7 +653,7 @@ function has_attribute_segments(series::Series)
     end
     series[:seriestype] == :shape && return false
     # ... else we check relevant attributes if they have multiple inputs
-    return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha, :markercolor, :markeralpha, :markerstrokecolor, :markerstrokealpha]) || any(typeof(series[attr]) <: AbstractArray for attr in (:line_z, :fill_z, :marker_z))
+    return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :linestyle, :fillcolor, :fillalpha, :markercolor, :markeralpha, :markerstrokecolor, :markerstrokealpha]) || any(typeof(series[attr]) <: AbstractArray for attr in (:line_z, :fill_z, :marker_z))
 end
 
 # ---------------------------------------------------------------
