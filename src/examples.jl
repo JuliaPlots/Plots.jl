@@ -152,6 +152,23 @@ plot(y, line = (5, styles), label = map(string,styles), legendtitle = "linestyle
              end)]
 ),
 
+PlotExample("Ribbons",
+    """
+    Ribbons can be added to lines via the `ribbon` keyword;
+    you can pass a tuple of arrays (upper and lower bounds),
+    a single Array (for symmetric ribbons), a Function, or a number.
+    """,
+    [:(begin
+        plot(
+            plot(0:10; ribbon = (LinRange(0, 2, 10), LinRange(0, 1, 10))),
+            plot(0:10; ribbon = 0:0.5:5),
+            plot(0:10; ribbon = sqrt),
+            plot(0:10; ribbon = 1),
+        )
+    end)
+    ]
+),
+
 PlotExample("Marker types",
     "",
     [:(begin
@@ -165,7 +182,7 @@ PlotExample("Marker types",
 ),
 
 PlotExample("Bar",
-    "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
+    "`x` is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
     [:(begin
         bar(randn(99))
     end)]
