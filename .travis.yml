@@ -16,27 +16,5 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pwd ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./test/install_wkhtmltoimage.sh ; fi
 
-addons:
-  apt:
-    packages:
-        - qt5-default
-        # pgfplots
-        - pdf2svg
-        - texlive-latex-base
-        - texlive-binaries
-        - texlive-pictures
-        - texlive-latex-extra
-        - texlive-luatex
-        - ghostscript-x
-        # orca
-        - libgconf2-4
-
-env:
-  - PYTHON = "" MPLBACKEND = "agg"
-
 notifications:
   email: true
-
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - xvfb-run julia -e 'using Pkg; Pkg.build(); Pkg.test(coverage=true)'
