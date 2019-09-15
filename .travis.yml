@@ -7,9 +7,12 @@ julia:
   - 1.1
   - nightly
 
-matrix:
-  allow_failures:
-    - julia: nightly
+addons:
+  apt:
+    packages:
+      - xvfb
+      - xauth
+      - libgtk-3-dev
 
 sudo: required
 before_install:
@@ -18,3 +21,8 @@ before_install:
 
 notifications:
   email: true
+
+script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - if [[ `uname` = "Linux" ]]; then TESTCMD="xvfb-run julia"; else TESTCMD="julia"; fi
+  - $TESTCMD -e 'using Pkg; Pkg.build(); Pkg.test(coverage=true)'
