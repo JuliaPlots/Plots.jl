@@ -1,40 +1,68 @@
 using VisualRegressionTests
 using Plots
 using Random
-using BinaryProvider
 using Test
 using FileIO
-using GeometryTypes
+using Gtk
+
+reference_dir(args...) = joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
+
+function reference_file(backend, i, version)
+    refdir = reference_dir("Plots", string(backend))
+    fn = "ref$i.png"
+    versions = sort(VersionNumber.(readdir(refdir)), rev = true)
+
+    reffn = joinpath(refdir, string(version), fn)
+    for v in versions
+        tmpfn = joinpath(refdir, string(v), fn)
+        if isfile(tmpfn)
+            reffn = tmpfn
+            break
+        end
+    end
+
+    return reffn
+end
+
+reference_path(backend, version) = reference_dir("Plots", string(backend), string(version))
+
+if !isdir(reference_dir())
+    LibGit2.clone("https://github.com/JuliaPlots/PlotReferenceImages.jl.git", reference_dir())
+end
 
 include("imgcomp.jl")
 # don't actually show the plots
 Random.seed!(1234)
 default(show=false, reuse=true)
-img_tol = isinteractive() ? 1e-2 : 10e-2
+is_ci() = get(ENV, "CI", false)
+img_tol = is_ci() ? 10e-2 : 10e-2
 
-@testset "GR" begin
-    ENV["PLOTS_TEST"] = "true"
-    ENV["GKSwstype"] = "100"
-    @test gr() == Plots.GRBackend()
-    @test backend() == Plots.GRBackend()
+@testset "Backends" begin
 
-    @static if Sys.islinux()
-        image_comparison_facts(:gr, tol=img_tol, skip = [25, 30])
+    @testset "GR" begin
+        ENV["PLOTS_TEST"] = "true"
+        ENV["GKSwstype"] = "100"
+        @test gr() == Plots.GRBackend()
+        @test backend() == Plots.GRBackend()
+
+        @static if Sys.islinux()
+            image_comparison_facts(:gr, tol=img_tol, skip = Plots._backend_skips[:gr])
+        end
     end
-end
 
+    @testset "UnicodePlots" begin
+        @test unicodeplots() == Plots.UnicodePlotsBackend()
+        @test backend() == Plots.UnicodePlotsBackend()
 
-@testset "UnicodePlots" begin
-    @test unicodeplots() == Plots.UnicodePlotsBackend()
-    @test backend() == Plots.UnicodePlotsBackend()
+        # lets just make sure it runs without error
+        p = plot(rand(10))
+        @test isa(p, Plots.Plot) == true
+        @test isa(display(p), Nothing) == true
+        p = bar(randn(10))
+        @test isa(p, Plots.Plot) == true
+        @test isa(display(p), Nothing) == true
+    end
 
-    # lets just make sure it runs without error
-    p = plot(rand(10))
-    @test isa(p, Plots.Plot) == true
-    @test isa(display(p), Nothing) == true
-    p = bar(randn(10))
-    @test isa(p, Plots.Plot) == true
-    @test isa(display(p), Nothing) == true
 end
 
 @testset "Axes" begin
