@@ -4,6 +4,7 @@ using Random
 using Test
 using FileIO
 using Gtk
+using LibGit2
 
 reference_dir(args...) = joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
 
