@@ -234,10 +234,11 @@ function showjuno(io::IO, m, plt)
     thickness_scaling = plt[:thickness_scaling]
 
     jsize = get(io, :juno_plotsize, [400, 500])
+    jdpi = get(io, :juno_dpi_ratio, 1)*Plots.DPI
 
     scale = minimum(jsize[i] / sz[i] for i in 1:2)
     plt[:size] = (s * scale for s in sz)
-    plt[:dpi] = Plots.DPI
+    plt[:dpi] = jdpi
     plt[:thickness_scaling] *= scale
 
     prepare_output(plt)
