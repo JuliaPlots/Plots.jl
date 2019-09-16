@@ -201,6 +201,8 @@ for mime in ("text/plain", "text/html", "image/png", "image/eps", "image/svg+xml
     end
 end
 
+Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) = showjuno(io, MIME("text/html"), plt)
+
 # default text/plain for all backends
 _show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot) = show(io, plt)
 
@@ -229,7 +231,7 @@ closeall() = closeall(backend())
 # Atom PlotPane
 # ---------------------------------------------------------
 function showjuno(io::IO, m, plt)
-    sz = plt[:size]
+    sz = collect(plt[:size])
     dpi = plt[:dpi]
     thickness_scaling = plt[:thickness_scaling]
 
@@ -256,6 +258,10 @@ function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
   else
     _show(io, m, plt)
   end
+end
+
+function Base.showable(m::MIME"application/prs.juno.plotpane+html", plt::P) where P <: Plot
+    return showable(MIME("text/html"), plt)
 end
 
 _showjuno(io::IO, m, plt) = _show(io, m, plt)
