@@ -35,7 +35,7 @@ include("imgcomp.jl")
 # don't actually show the plots
 Random.seed!(1234)
 default(show=false, reuse=true)
-is_ci() = get(ENV, "CI", false)
+is_ci() = get(ENV, "CI", "false") == "true"
 img_tol = is_ci() ? 10e-2 : 10e-2
 
 @testset "Backends" begin
