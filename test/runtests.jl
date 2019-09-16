@@ -1,3 +1,4 @@
+import ImageMagick
 using VisualRegressionTests
 using Plots
 using Random
