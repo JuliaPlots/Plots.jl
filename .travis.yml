@@ -10,9 +10,10 @@ julia:
 addons:
   apt:
     packages:
-      - xvfb
-      - xauth
+      - at-spi2-core
       - libgtk-3-dev
+      - xauth
+      - xvfb
 
 sudo: required
 before_install:
