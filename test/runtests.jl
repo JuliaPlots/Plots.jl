@@ -128,6 +128,6 @@ end
               [(missing,missing)], [(missing,missing,missing),("a","b","c")])
     for z in zipped
         @test isequal(collect(zip(Plots.unzip(z)...)), z)
-        @test isequal(collect(zip(Plots.unzip(Point.(z))...)), z)
+        @test isequal(collect(zip(Plots.unzip(GeometryTypes.Point.(z))...)), z)
     end
 end
