@@ -6,6 +6,7 @@ using Test
 using FileIO
 using Gtk
 using LibGit2
+using GeometryTypes
 
 reference_dir(args...) = joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
 
