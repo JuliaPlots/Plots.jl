@@ -238,12 +238,12 @@ build with the method `text(string, attr...)`, which wraps font and color attrib
 """,
     [:(begin
 y = rand(10)
-plot(y, annotations = (3,y[3],text("this is #3",:left)), leg=false)
-annotate!([(5, y[5], text("this is #5",16,:red,:center)),
-          (10, y[10], text("this is #10",:right,20,"courier"))])
+plot(y, annotations = (3,y[3], Plots.text("this is #3",:left)), leg=false)
+annotate!([(5, y[5], Plots.text("this is #5",16,:red,:center)),
+          (10, y[10], Plots.text("this is #10",:right,20,"courier"))])
 scatter!(range(2, stop=8, length=6), rand(6), marker=(50,0.2,:orange),
          series_annotations = ["series","annotations","map","to","series",
-                               text("data",:green)])
+                               Plots.text("data",:green)])
     end)]
 ),
 
@@ -461,7 +461,7 @@ _animation_examples = [2, 30]
 _backend_skips = Dict(
     :gr => [25, 30],
     :pyplot => [25, 30],
-    :plotlyjs => [2, 21, 25, 30, 31],
+    :plotlyjs => [2, 21, 24, 25, 30, 31],
     :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30],
 )
 
