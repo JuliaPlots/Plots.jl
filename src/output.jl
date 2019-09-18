@@ -72,6 +72,7 @@ const _savemap = Dict(
     "eps" => eps,
     "tex" => tex,
     "html" => html,
+    "tikz" => tex,
   )
 
 function getExtension(fn::AbstractString)
