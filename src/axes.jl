@@ -218,6 +218,8 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
             map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :plain))
         elseif formatter == :scientific
             Showoff.showoff(unscaled_ticks, :scientific)
+	elseif formatter == :latex
+	    map(x -> string("\$", replace(convert_sci_unicode(x), '×' => "\\times"), "\$"), Showoff.showoff(unscaled_ticks, :auto))
         else
             # there was an override for the formatter... use that on the unscaled ticks
             map(formatter, unscaled_ticks)
