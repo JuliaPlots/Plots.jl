@@ -1127,10 +1127,14 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     empty!(_to_warn)
     bend = backend_name(pkg)
     already_warned = get!(_already_warned, bend, Set{Symbol}())
+    extra_kwargs = Dict{Symbol,Any}()
     for k in keys(plotattributes)
         is_attr_supported(pkg, k) && continue
         k in _suppress_warnings && continue
-        if plotattributes[k] != default(k)
+        default_value = default(k)
+        if ismissing(default_value)
+            extra_kwargs[k] = pop!(plotattributes, k)
+        elseif plotattributes[k] != default(k)
             k in already_warned || push!(_to_warn, k)
         end
     end
@@ -1141,6 +1145,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
             @warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_attrs(pkg))")
         end
     end
+    return extra_kwargs
 end
 
 # _markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supported_markers(pkg)

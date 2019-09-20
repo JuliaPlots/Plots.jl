@@ -341,8 +341,8 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
 end
 
 function _add_the_series(plt, sp, plotattributes)
-    warn_on_unsupported_args(plt.backend, plotattributes)
-    warn_on_unsupported(plt.backend, plotattributes)
+    plt.attr[:extra_kwargs] = warnOnUnsupported_args(plt.backend, plotattributes)
+    warnOnUnsupported(plt.backend, plotattributes)
     series = Series(plotattributes)
     push!(plt.series_list, series)
     push!(sp.series_list, series)
