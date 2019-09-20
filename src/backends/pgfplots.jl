@@ -252,7 +252,7 @@ function pgf_series(sp::Subplot, series::Series)
             else
                 PGFPlots.Linear
             end
-            push!(series_collection, func(seg_args...; kw...))
+            push!(series_collection, func(seg_args...; kw..., plotattributes[:extra_kwargs]...))
         end
     end
     series_collection
@@ -307,7 +307,7 @@ function pgf_fill_legend_hack(plotattributes, args)
     else
         PGFPlots.Linear
     end
-    return func(([arg[1]] for arg in args)...; kw...)
+    return func(([arg[1]] for arg in args)...; kw..., plotattributes[:extra_kwargs]...)
 end
 
 # ----------------------------------------------------------------
