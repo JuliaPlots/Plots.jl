@@ -240,7 +240,7 @@ function showjuno(io::IO, m, plt)
     jratio = get(io, :juno_dpi_ratio, 1)
 
     scale = minimum(jsize[i] / sz[i] for i in 1:2)
-    plt[:size] = [s * scale for s in sz]./jratio
+    plt[:size] = [s * scale for s in sz]
     plt[:dpi] = jratio*Plots.DPI
     plt[:thickness_scaling] *= scale
 
