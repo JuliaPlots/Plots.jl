@@ -281,6 +281,7 @@ const _series_defaults = KW(
                                      #     one logical series to be broken up (path and markers, for example)
     :hover              => nothing,  # text to display when hovering over the data points
     :stride             => (1,1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
+    :extra_kwargs       => KW(),
 )
 
 
