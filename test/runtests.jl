@@ -93,6 +93,7 @@ end
     for plt in plots
         display(plt)
     end
+    @test_nowarn plot(x->x^2,0,2)
 end
 
 @testset "EmptyAnim" begin
