@@ -515,20 +515,24 @@ end
 # # special handling... xmin/xmax with parametric function(s)
 @recipe function f(f::Function, xmin::Number, xmax::Number)
     xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
-    xs = _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
-    xs, f
+    _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
 end
 @recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where F<:Function
     xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
-    xs = Any[_scaled_adapted_grid(f, xscale, yscale, xmin, xmax) for f in fs]
-    xs, fs
+    xs = ys = Array{Any}(undef, length(fs))
+    for (i, (x, y)) in enumerate(_scaled_adapted_grid(f, xscale, yscale, xmin, xmax) for f in fs)
+        xs[i] = x
+	ys[i] = y
+    end
+    xs, ys
 end
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function}  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) where {F<:Function,G<:Function} = fx, fy, range(umin, stop = umax, length = n)
 
 function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
     (xf, xinv), (yf, yinv) =  ((scalefunc(s),invscalefunc(s)) for s in (xscale,yscale))
-    xinv.(adapted_grid(yf∘f∘xinv, xf.((xmin, xmax))))
+    xs, ys = adapted_grid(yf∘f∘xinv, xf.((xmin, xmax)))
+    xinv.(xs), yinv.(ys)
 end
 
 #
