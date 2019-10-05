@@ -792,7 +792,7 @@ end
     ()
 end
 @shorthands histogram2d_log10
-@deps histogram2d_log bins2d
+@deps histogram2d_log10 bins2d
 
 
 @recipe function f(h::StatsBase.Histogram{T, 2, E}) where {T, E}
