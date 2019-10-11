@@ -104,7 +104,7 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     write(io, if ext == "gif"
         "<img src=\"$(relpath(agif.filename))\" />"
     elseif ext in ("mov", "mp4")
-        "<video controls><source src=\"$(relpath(agif.filename)) type=\"video/$ext\"></video>"
+        "<video controls><source src=\"$(relpath(agif.filename))\" type=\"video/$ext\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
     end)
