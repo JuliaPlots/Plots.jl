@@ -42,6 +42,7 @@ const _arg_desc = KW(
 :arrow             	=> "nothing (no arrows), Bool (if true, default arrows), Arrow object, or arg(s) that could be style or head length/widths.  Defines arrowheads that should be displayed at the end of path line segments (just before a NaN and the last non-NaN point).  Used in quiverplot, streamplot, or similar.",
 :normalize         	=> "Bool or Symbol. Histogram normalization mode. Possible values are: false/:none (no normalization, default), true/:pdf (normalize to a discrete Probability Density Function, where the total area of the bins is 1), :probability (bin heights sum to 1) and :density (the area of each bin, rather than the height, is equal to the counts - useful for uneven bin sizes).",
 :weights           	=> "AbstractVector. Used in histogram types for weighted counts.",
+:show_empty_bins    => "Bool. Whether empty bins in a 2D histogram are colored as 0 (true), or transparent (the default).",
 :contours          	=> "Bool. Add contours to the side-grids of 3D plots?  Used in surface/wireframe.",
 :contour_labels         => "Bool. Show labels at the contour lines?",
 :match_dimensions  	=> "Bool. For heatmap types... should the first dimension of a matrix (rows) correspond to the first dimension of the plot (x-axis)?  The default is false, which matches the behavior of Matplotlib, Plotly, and others.  Note: when passing a function for z, the function should still map `(x,y) -> z`.",
