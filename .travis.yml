@@ -4,8 +4,13 @@ os:
   - linux
   # - osx
 julia:
-  - 1.1
+  - 1
+  - 1.2
   - nightly
+
+matrix:
+  allow_failures:
+  - julia: nightly
 
 addons:
   apt:
