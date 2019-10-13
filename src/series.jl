@@ -61,7 +61,7 @@ process_fillrange(range, plotattributes) = convertToAnyVector(range, plotattribu
 process_ribbon(ribbon::Number, plotattributes) = [ribbon]
 process_ribbon(ribbon, plotattributes) = convertToAnyVector(ribbon, plotattributes)
 # ribbon as a tuple: (lower_ribbons, upper_ribbons)
-process_ribbon(ribbon::Tuple{Any,Any}) = collect(zip(convertToAnyVector(ribbon[1], plotattributes),
+process_ribbon(ribbon::Tuple{Any,Any}, plotattributes) = collect(zip(convertToAnyVector(ribbon[1], plotattributes),
                                                      convertToAnyVector(ribbon[2], plotattributes)))
 
 
