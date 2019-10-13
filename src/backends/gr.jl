@@ -874,7 +874,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # has to be done now due to a potential adjustment to the plotarea given an outer legend.
     legendn = 0
     legendw = 0
-    legendi = 0
     if sp[:legend] != :none
         GR.savestate()
         GR.selntran(0)
@@ -889,12 +888,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         for series in series_list(sp)
             should_add_to_legend(series) || continue
             legendn += 1
-            if typeof(series[:label]) <: Array
-                legendi += 1
-                lab = series[:label][legendi]
-            else
-                lab = series[:label]
-            end
+            lab = series[:label]
             tbx, tby = gr_inqtext(0, 0, string(lab))
             legendw = max(legendw, tbx[3] - tbx[1])
         end
@@ -1485,7 +1479,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.setscale(0)
         gr_set_font(legendfont(sp))
         w = legendw
-        i = legendi
         n = legendn
         if w > 0
             dy = _gr_point_mult[1] * sp[:legendfontsize] * 1.75
@@ -1538,12 +1531,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     gr_draw_markers(series, xpos - .035, ypos, clims, 6)
                 end
 
-                if typeof(series[:label]) <: Array
-                    i += 1
-                    lab = series[:label][i]
-                else
-                    lab = series[:label]
-                end
+                lab = series[:label]
                 GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
                 gr_set_textcolor(sp[:legendfontcolor])
                 gr_text(xpos, ypos, string(lab))
