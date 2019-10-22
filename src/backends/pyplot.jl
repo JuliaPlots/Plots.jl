@@ -756,7 +756,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             cmap = py_colormap(cgrad([:black, :white])),
             vmin = 0.0,
             vmax = 1.0,
-            extent = (xmin, xmax, ymax, ymin)
+            extent = (xmin-0.5, xmax+0.5, ymax+0.5, ymin-0.5)
         )
         push!(handles, handle)
 
