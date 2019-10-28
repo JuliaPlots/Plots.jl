@@ -454,7 +454,7 @@ function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
 
     sp = series[:subplot]
-    clims = get_clims(sp)
+    clims = get_clims(sp, series)
 
     if st == :shape
         return plotly_series_shapes(plt, series, clims)
