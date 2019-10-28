@@ -980,6 +980,14 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     GR.setlinewidth(sp.plt[:thickness_scaling])
 
     if is3d(sp)
+        # TODO do we really need a different clims computation here from the one
+        #      computed above using get_clims(sp)?
+        zmin, zmax = gr_lims(sp, zaxis, true)
+        clims3d = sp[:clims]
+        if is_2tuple(clims3d)
+            isfinite(clims3d[1]) && (zmin = clims3d[1])
+            isfinite(clims3d[2]) && (zmax = clims3d[2])
+        end
         GR.setspace(zmin, zmax, round.(Int, sp[:camera])...)
         xtick = GR.tick(xmin, xmax) / 2
         ytick = GR.tick(ymin, ymax) / 2
