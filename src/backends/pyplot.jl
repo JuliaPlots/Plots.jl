@@ -399,7 +399,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # handle zcolor and get c/cmap
     needs_colorbar = hascolorbar(sp)
-    vmin, vmax = clims = get_clims(sp)
+    vmin, vmax = clims = get_clims(sp, series)
 
     # Dict to store extra kwargs
     if st == :wireframe
@@ -1290,13 +1290,13 @@ py_legend_bbox(pos) = pos
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
     leg = sp[:legend]
-    clims = get_clims(sp)
     if leg != :none
         # gotta do this to ensure both axes are included
         labels = []
         handles = []
         for series in series_list(sp)
             if should_add_to_legend(series)
+                clims = get_clims(sp, series)
                 # add a line/marker and a label
                 push!(handles, if series[:seriestype] == :shape || series[:fillrange] !== nothing
                     pypatches."Patch"(
