@@ -523,22 +523,42 @@ zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
 function get_clims(sp::Subplot)
     zmin, zmax = Inf, -Inf
-    z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
     for series in series_list(sp)
         if series[:colorbar_entry]
-            for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
-                if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
-                    zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
-                elseif (vals !== nothing) && (eltype(vals) <: Union{Missing, Real})
-                    zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
-                end
-            end
+            zmin, zmax = _update_clims(zmin, zmax, get_clims(series)...)
         end
     end
     clims = sp[:clims]
     if is_2tuple(clims)
         isfinite(clims[1]) && (zmin = clims[1])
         isfinite(clims[2]) && (zmax = clims[2])
+    end
+    return zmin < zmax ? (zmin, zmax) : (-0.1, 0.1)
+end
+
+function get_clims(sp::Subplot, series::Series)
+    zmin, zmax = if series[:colorbar_entry]
+        get_clims(sp)
+    else
+        get_clims(series)
+    end
+    clims = sp[:clims]
+    if is_2tuple(clims)
+        isfinite(clims[1]) && (zmin = clims[1])
+        isfinite(clims[2]) && (zmax = clims[2])
+    end
+    return zmin < zmax ? (zmin, zmax) : (-0.1, 0.1)
+end
+
+function get_clims(series::Series)
+    zmin, zmax = Inf, -Inf
+    z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
+    for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
+        if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
+            zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
+        elseif (vals !== nothing) && (eltype(vals) <: Union{Missing, Real})
+            zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
+        end
     end
     return zmin < zmax ? (zmin, zmax) : (-0.1, 0.1)
 end

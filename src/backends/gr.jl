@@ -260,19 +260,6 @@ function gr_fill_viewport(vp::AVec{Float64}, c)
     GR.restorestate()
 end
 
-
-normalize_zvals(args...) = nothing
-function normalize_zvals(zv::AVec, clims::NTuple{2, <:Real})
-    vmin, vmax = ignorenan_extrema(zv)
-    isfinite(clims[1]) && (vmin = clims[1])
-    isfinite(clims[2]) && (vmax = clims[2])
-    if vmin == vmax
-        zeros(length(zv))
-    else
-        clamp.((zv .- vmin) ./ (vmax .- vmin), 0, 1)
-    end
-end
-
 # ---------------------------------------------------------
 
 # draw ONE Shape
@@ -920,8 +907,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # reduced from before... set some flags based on the series in this subplot
     # TODO: can these be generic flags?
     outside_ticks = false
-    # calculate the colorbar limits once for a subplot
-    clims = get_clims(sp)
     cbar = GRColorbar()
 
     draw_axes = sp[:framestyle] != :none
@@ -995,14 +980,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     GR.setlinewidth(sp.plt[:thickness_scaling])
 
     if is3d(sp)
-        # TODO do we really need a different clims computation here from the one
-        #      computed above using get_clims(sp)?
-        zmin, zmax = gr_lims(sp, zaxis, true)
-        clims3d = sp[:clims]
-        if is_2tuple(clims3d)
-            isfinite(clims3d[1]) && (zmin = clims3d[1])
-            isfinite(clims3d[2]) && (zmax = clims3d[2])
-        end
         GR.setspace(zmin, zmax, round.(Int, sp[:camera])...)
         xtick = GR.tick(xmin, xmax) / 2
         ytick = GR.tick(ymin, ymax) / 2
@@ -1233,6 +1210,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         x, y, z = series[:x], series[:y], series[:z]
         frng = series[:fillrange]
+
+        clims = get_clims(sp, series)
 
         # add custom frame shapes to markershape?
         series_annotations_shapes!(series)
@@ -1470,7 +1449,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     end
 
     # draw the colorbar
-    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, clims)
+    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, get_clims(sp))
 
     # add the legend
     if sp[:legend] != :none
@@ -1498,6 +1477,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 gr_set_font(legendfont(sp))
             end
             for series in series_list(sp)
+                clims = get_clims(sp, series)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
                 lc = get_linecolor(series, clims)
