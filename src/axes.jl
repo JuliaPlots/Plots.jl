@@ -297,7 +297,7 @@ function get_minor_ticks(sp, axis, ticks)
     #Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
     if length(ticks) > 2
         ratio = (ticks[3] - ticks[2])/(ticks[2] - ticks[1])
-    elseif axis[:scale] == :none
+    elseif axis[:scale] in (:none, :identity)
         ratio = 1
     else
         return nothing
