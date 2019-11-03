@@ -14,7 +14,10 @@ const SeriesData = Union{AVec{<:DataPoint}, Function, Surface, Volume}
 
 prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
 prepareSeriesData(::Nothing) = nothing
-prepareSeriesData(s::SeriesData) = handlemissings(s)
+prepareSeriesData(s::SeriesData) = handleinfinites(handlemissings(s))
+
+handleinfinites(s) = s
+handleinfinites(s::AbstractArray{<:MaybeNumber}) = [isinf(x) ? NaN : x for x in s]
 
 handlemissings(v) = v
 handlemissings(v::AbstractArray{<:MaybeNumber}) = replace(v, missing => NaN)
