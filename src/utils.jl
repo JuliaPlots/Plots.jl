@@ -342,8 +342,9 @@ const _scale_base = Dict{Symbol, Real}(
     :ln => ℯ,
 )
 
-function _heatmap_edges(v::AVec)
+function _heatmap_edges(v::AVec, isedges::Bool = false)
   length(v) == 1 && return v[1] .+ [-0.5, 0.5]
+  if isedges return v end
   vmin, vmax = ignorenan_extrema(v)
   extra_min = (v[2] - v[1]) / 2
   extra_max = (v[end] - v[end - 1]) / 2
@@ -351,9 +352,9 @@ function _heatmap_edges(v::AVec)
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(v::AVec, scale::Symbol = :identity)
+function heatmap_edges(v::AVec, scale::Symbol = :identity; isedges::Bool = false)
   f, invf = scalefunc(scale), invscalefunc(scale)
-  map(invf, _heatmap_edges(map(f,v)))
+  map(invf, _heatmap_edges(map(f,v), isedges))
 end
 
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
