@@ -357,6 +357,22 @@ function heatmap_edges(v::AVec, scale::Symbol = :identity; isedges::Bool = false
   map(invf, _heatmap_edges(map(f,v), isedges))
 end
 
+function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size::Tuple{Int, Int})
+    nx, ny = length(x), length(y)
+    # use_midpoints = z_size == (ny, nx) # This fails some tests, but would actually be 
+    # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
+    use_midpoints = prod(z_size) == (ny * nx) 
+    use_edges = z_size == (ny - 1, nx - 1)
+    if !use_midpoints && !use_edges
+        error("""Length of x & y does not match the size of z. 
+                Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
+                or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
+    end
+    x, y = heatmap_edges(x, xscale; isedges = use_edges), 
+           heatmap_edges(y, yscale; isedges = use_edges)
+    return x, y
+end
+
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     rmin, rmax = r_extrema
     r = (r .- rmin) ./ (rmax .- rmin)

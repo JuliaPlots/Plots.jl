@@ -921,17 +921,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for ax in (sp[:xaxis], sp[:yaxis])
                 v = series[ax[:letter]]
             end
-            nx, ny = length(series[:x]), length(series[:y])
-            z = series[:z]
-            use_midpoints = size(z) == (ny, nx)
-            use_edges = size(z) == (ny - 1, nx - 1)
-            if !use_midpoints && !use_edges
-                error("""Length of x & y does not match the size of z. 
-                        Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
-                        or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
-            end
-            x, y = heatmap_edges(series[:x], sp[:xaxis][:scale]; isedges = use_edges), 
-                   heatmap_edges(series[:y], sp[:yaxis][:scale]; isedges = use_edges)
+            x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
             xy_lims = x[1], x[end], y[1], y[end]
             expand_extrema!(sp[:xaxis], x)
             expand_extrema!(sp[:yaxis], y)
@@ -1323,18 +1313,17 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :heatmap
             zmin, zmax = clims
-            nx, ny = length(series[:x]), length(series[:y])
-            use_midpoints = length(z) == ny * nx
             if !ispolar(sp)
                 GR.setspace(zmin, zmax, 0, 90)
-                x, y = heatmap_edges(series[:x], sp[:xaxis][:scale]; isedges = !use_midpoints), 
-                       heatmap_edges(series[:y], sp[:yaxis][:scale]; isedges = !use_midpoints)
+                x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
                 w, h = length(x) - 1, length(y) - 1
                 z_normalized = map(x -> GR.jlgr.normalize_color(x, zmin, zmax), z)
+                z_normalized = map(x -> isnan(x) ? 256/255 : x, z_normalized) # results in color index = 1256 -> transparent
                 colors = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
                 GR.nonuniformcellarray(x, y, w, h, colors)
             else
                 phimin, phimax = 0.0, 360.0 # nonuniform polar array is not yet supported in GR.jl
+                nx, ny = length(series[:x]), length(series[:y])
                 z_normalized = map(x -> GR.jlgr.normalize_color(x, zmin, zmax), z)
                 colors = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
                 xmin, xmax, ymin, ymax = xy_lims 
