@@ -480,16 +480,16 @@ PlotExample("Histogram2D (complex values)",
     end)]
 ),
 
-PlotExample("Unconnected lines using NaN values",
+PlotExample("Unconnected lines using `missing` or `NaN`",
 """
-Non-finite values, including `NaN`, are not plotted.
+Missing values and non-finite values, including `NaN`, are not plotted.
 Instead, lines are separated into segments at these values.
 """,
     [:(begin
         x,y = [1,2,2,1,1], [1,2,1,2,1]
         plot(
               plot([rand(5); NaN; rand(5); NaN; rand(5)]),
-              plot([1,Inf,2,3], marker=true),
+              plot([1,missing,2,3], marker=true),
               plot([x; NaN; x.+2], [y; NaN; y.+1], arrow=2),
               plot([1, 2+3im, Inf, 4im, 3, -Inf*im, 0, 3+3im], marker=true),
               legend=false
