@@ -921,7 +921,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for ax in (sp[:xaxis], sp[:yaxis])
                 v = series[ax[:letter]]
             end
-            fx, fy = scalefunc(sp[:xaxis][:scale]), scalefunc(sp[:yaxis][:scale])
             nx, ny = length(series[:x]), length(series[:y])
             z = series[:z]
             use_midpoints = size(z) == (ny, nx)
@@ -931,15 +930,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                         Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
                         or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
             end
-            x, y = if use_midpoints
-                x_diff, y_diff = diff(series[:x]) ./ 2, diff(series[:y]) ./ 2
-                x = [ series[:x][1] - x_diff[1], (series[:x][1:end-1] .+ x_diff)..., series[:x][end] + x_diff[end]  ]
-                y = [ series[:y][1] - y_diff[1], (series[:y][1:end-1] .+ y_diff)..., series[:y][end] + y_diff[end]  ]
-                x, y
-            else
-                series[:x], series[:y]
-            end
-            x, y = map(fx, series[:x]), map(fy, series[:y])
+            x, y = heatmap_edges(series[:x], sp[:xaxis][:scale]; isedges = use_edges), 
+                   heatmap_edges(series[:y], sp[:yaxis][:scale]; isedges = use_edges)
             xy_lims = x[1], x[end], y[1], y[end]
             expand_extrema!(sp[:xaxis], x)
             expand_extrema!(sp[:yaxis], y)
@@ -1335,14 +1327,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             use_midpoints = length(z) == ny * nx
             if !ispolar(sp)
                 GR.setspace(zmin, zmax, 0, 90)
-                x, y = if use_midpoints
-                    x_diff, y_diff = diff(series[:x]) ./ 2, diff(series[:y]) ./ 2
-                    x = [ series[:x][1] - x_diff[1], (series[:x][1:end-1] .+ x_diff)..., series[:x][end] + x_diff[end] ]
-                    y = [ series[:y][1] - y_diff[1], (series[:y][1:end-1] .+ y_diff)..., series[:y][end] + y_diff[end] ]
-                    x, y
-                else
-                    series[:x], series[:y]
-                end
+                x, y = heatmap_edges(series[:x], sp[:xaxis][:scale]; isedges = !use_midpoints), 
+                       heatmap_edges(series[:y], sp[:yaxis][:scale]; isedges = !use_midpoints)
                 w, h = length(x) - 1, length(y) - 1
                 z_normalized = map(x -> GR.jlgr.normalize_color(x, zmin, zmax), z)
                 colors = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
