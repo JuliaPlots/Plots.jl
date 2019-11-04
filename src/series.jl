@@ -22,8 +22,6 @@ prepareSeriesData(s::Surface{<:AMat{<:MaybeNumber}}) = Surface(prepareSeriesData
 prepareSeriesData(s::Surface) = s  # non-numeric Surface, such as an image
 prepareSeriesData(v::Volume) = Volume(prepareSeriesData(v.v), v.x_extents, v.y_extents, v.z_extents)
 
-prepareSeriesArray(a::AbstractArray{<:MaybeNumber}) = [ismissing(x) || isinf(x) ? NaN : x for x in a]
-
 # default: assume x represents a single series
 convertToAnyVector(x, plotattributes) = Any[prepareSeriesData(x)]
 
