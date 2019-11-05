@@ -1332,7 +1332,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if ymin > 0 
                     @warn "'ymin[1] > 0' (rmin) is not yet supported."
                 end
-                @show series[:y][end]
                 if series[:y][end] != ny
                     @warn "Right now only the maximum value of y (r) is taken into account."
                 end
