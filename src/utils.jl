@@ -342,8 +342,11 @@ const _scale_base = Dict{Symbol, Real}(
     :ln => ℯ,
 )
 
-function _heatmap_edges(v::AVec)
+function _heatmap_edges(v::AVec, isedges::Bool = false)
   length(v) == 1 && return v[1] .+ [-0.5, 0.5]
+  if isedges return v end 
+  # `isedges = true` means that v is a vector which already describes edges 
+  # and does not need to be extended.
   vmin, vmax = ignorenan_extrema(v)
   extra_min = (v[2] - v[1]) / 2
   extra_max = (v[end] - v[end - 1]) / 2
@@ -351,9 +354,25 @@ function _heatmap_edges(v::AVec)
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(v::AVec, scale::Symbol = :identity)
+function heatmap_edges(v::AVec, scale::Symbol = :identity, isedges::Bool = false)
   f, invf = scalefunc(scale), invscalefunc(scale)
-  map(invf, _heatmap_edges(map(f,v)))
+  map(invf, _heatmap_edges(map(f,v), isedges))
+end
+
+function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size::Tuple{Int, Int})
+    nx, ny = length(x), length(y)
+    # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be 
+    # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
+    ismidpoints = prod(z_size) == (ny * nx) 
+    isedges = z_size == (ny - 1, nx - 1)
+    if !ismidpoints && !isedges
+        error("""Length of x & y does not match the size of z. 
+                Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
+                or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
+    end
+    x, y = heatmap_edges(x, xscale, isedges), 
+           heatmap_edges(y, yscale, isedges)
+    return x, y
 end
 
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
