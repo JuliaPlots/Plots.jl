@@ -21,9 +21,9 @@ function frame(anim::Animation, plt::P=current()) where P<:AbstractPlot
     push!(anim.frames, filename)
 end
 
-giffn() = (isijulia() ? "tmp.gif" : tempname()*".gif")
-movfn() = (isijulia() ? "tmp.mov" : tempname()*".mov")
-mp4fn() = (isijulia() ? "tmp.mp4" : tempname()*".mp4")
+giffn() = (isijulia() ? "tmp_"*randstring()*".gif" : tempname()*".gif")
+movfn() = (isijulia() ? "tmp_"*randstring()*".mov" : tempname()*".mov")
+mp4fn() = (isijulia() ? "tmp_"*randstring()*".mp4" : tempname()*".mp4")
 
 mutable struct FrameIterator
     itr
