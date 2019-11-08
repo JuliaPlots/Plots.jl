@@ -519,10 +519,11 @@ end
 end
 @recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where F<:Function
     xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
-    xs = ys = Array{Any}(undef, length(fs))
+    xs = Array{Any}(undef, length(fs))
+    ys = Array{Any}(undef, length(fs))
     for (i, (x, y)) in enumerate(_scaled_adapted_grid(f, xscale, yscale, xmin, xmax) for f in fs)
         xs[i] = x
-	ys[i] = y
+    	ys[i] = y
     end
     xs, ys
 end
