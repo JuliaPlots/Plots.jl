@@ -21,9 +21,9 @@ function frame(anim::Animation, plt::P=current()) where P<:AbstractPlot
     push!(anim.frames, filename)
 end
 
-giffn() = (isijulia() ? "tmp_"*randstring()*".gif" : tempname()*".gif")
-movfn() = (isijulia() ? "tmp_"*randstring()*".mov" : tempname()*".mov")
-mp4fn() = (isijulia() ? "tmp_"*randstring()*".mp4" : tempname()*".mp4")
+giffn() = (isijulia() ? "tmp.gif" : tempname()*".gif")
+movfn() = (isijulia() ? "tmp.mov" : tempname()*".mov")
+mp4fn() = (isijulia() ? "tmp.mp4" : tempname()*".mp4")
 
 mutable struct FrameIterator
     itr
@@ -104,10 +104,12 @@ end
 # write out html to view the gif
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     ext = file_extension(agif.filename)
+    link = relpath(agif.filename)
+    link *= "?"*randstring() #to foil browser cache, see https://github.com/JuliaPlots/Plots.jl/issues/2239
     write(io, if ext == "gif"
-        "<img src=\"$(relpath(agif.filename))\" />"
+        "<img src=\"$link\" />"
     elseif ext in ("mov", "mp4")
-        "<video controls><source src=\"$(relpath(agif.filename))\" type=\"video/$ext\"></video>"
+        "<video controls><source src=\"$link\" type=\"video/$ext\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
     end)
