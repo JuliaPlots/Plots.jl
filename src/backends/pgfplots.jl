@@ -200,7 +200,11 @@ function pgf_series(sp::Subplot, series::Series)
             PGFPlots.Contour
         end
         push!(series_collection, func(args...; kw...))
-
+    elseif series[:arrow] isa Arrow
+        u, v = series[:quiver]
+        x = series[:x][2:4:end]
+        y = series[:y][2:4:end]
+        push!( series_collection, PGFPlots.Quiver(x,y,u,v, style="-stealth'") )
     else
         # series segments
         segments = iter_segments(series)
