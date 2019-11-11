@@ -104,12 +104,12 @@ end
 # write out html to view the gif
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     ext = file_extension(agif.filename)
-    link = relpath(agif.filename)
-    link *= "?"*randstring() #to foil browser cache, see https://github.com/JuliaPlots/Plots.jl/issues/2239
     write(io, if ext == "gif"
-        "<img src=\"$link\" />"
+        "<img src=\"data:image/gif;base64," * base64encode(read(agif.filename)) * "\" />"
     elseif ext in ("mov", "mp4")
-        "<video controls><source src=\"$link\" type=\"video/$ext\"></video>"
+          "<video controls><source src=\"data:video/$ext;base64," *
+          base64encode(read(agif.filename)) *
+          "\" type = \"video/$ext\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
     end)
