@@ -10,17 +10,17 @@ const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
 const MaybeNumber = Union{Number, Missing}
 const MaybeString = Union{AbstractString, Missing}
 const DataPoint = Union{MaybeNumber, MaybeString}
-const SeriesData = Union{AVec{<:DataPoint}, Function, Surface, Volume}
 
 prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
 prepareSeriesData(::Nothing) = nothing
-prepareSeriesData(s::SeriesData) = handlemissings(s)
-
-handlemissings(v) = v
-handlemissings(v::AbstractArray{<:MaybeNumber}) = replace(v, missing => NaN)
-handlemissings(v::AbstractArray{<:MaybeString}) = replace(v, missing => "")
-handlemissings(s::Surface) = Surface(handlemissings(s.surf))
-handlemissings(v::Volume) = Volume(handlemissings(v.v), v.x_extents, v.y_extents, v.z_extents)
+prepareSeriesData(f::Function) = f
+prepareSeriesData(a::AbstractArray{<:MaybeNumber}) = replace!(
+                                    x -> ismissing(x) || isinf(x) ? NaN : x,
+                                    map(float,a))
+prepareSeriesData(a::AbstractArray{<:MaybeString}) = replace(x -> ismissing(x) ? "" : x, a)
+prepareSeriesData(s::Surface{<:AMat{<:MaybeNumber}}) = Surface(prepareSeriesData(s.surf))
+prepareSeriesData(s::Surface) = s  # non-numeric Surface, such as an image
+prepareSeriesData(v::Volume) = Volume(prepareSeriesData(v.v), v.x_extents, v.y_extents, v.z_extents)
 
 # default: assume x represents a single series
 convertToAnyVector(x, plotattributes) = Any[prepareSeriesData(x)]
