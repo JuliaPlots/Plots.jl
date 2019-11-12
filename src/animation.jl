@@ -104,15 +104,18 @@ end
 # write out html to view the gif
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     ext = file_extension(agif.filename)
-    write(io, if ext == "gif"
-        "<img src=\"data:image/gif;base64," * base64encode(read(agif.filename)) * "\" />"
+    if ext == "gif"
+        html = "<img src=\"data:image/gif;base64," * base64encode(read(agif.filename)) * "\" />"
     elseif ext in ("mov", "mp4")
-          "<video controls><source src=\"data:video/$ext;base64," *
-          base64encode(read(agif.filename)) *
-          "\" type = \"video/$ext\"></video>"
+        mimetype = ext == "mov" ? "video/quicktime" : "video/mp4"
+        html = "<video controls><source src=\"data:$mimetype;base64," *
+               base64encode(read(agif.filename)) *
+               "\" type = \"video/$ext\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
-    end)
+    end
+
+    write(io, html)
     return nothing
 end
 
