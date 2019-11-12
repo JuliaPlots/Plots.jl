@@ -110,7 +110,7 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
         mimetype = ext == "mov" ? "video/quicktime" : "video/mp4"
         html = "<video controls><source src=\"data:$mimetype;base64," *
                base64encode(read(agif.filename)) *
-               "\" type = \"video/$ext\"></video>"
+               "\" type = \"$mimetype\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
     end
