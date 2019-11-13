@@ -21,9 +21,9 @@ function frame(anim::Animation, plt::P=current()) where P<:AbstractPlot
     push!(anim.frames, filename)
 end
 
-giffn() = (isijulia() ? "tmp_"*randstring()*".gif" : tempname()*".gif")
-movfn() = (isijulia() ? "tmp_"*randstring()*".mov" : tempname()*".mov")
-mp4fn() = (isijulia() ? "tmp_"*randstring()*".mp4" : tempname()*".mp4")
+giffn() = (isijulia() ? "tmp.gif" : tempname()*".gif")
+movfn() = (isijulia() ? "tmp.mov" : tempname()*".mov")
+mp4fn() = (isijulia() ? "tmp.mp4" : tempname()*".mp4")
 
 mutable struct FrameIterator
     itr
@@ -104,13 +104,18 @@ end
 # write out html to view the gif
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     ext = file_extension(agif.filename)
-    write(io, if ext == "gif"
-        "<img src=\"$(relpath(agif.filename))\" />"
+    if ext == "gif"
+        html = "<img src=\"data:image/gif;base64," * base64encode(read(agif.filename)) * "\" />"
     elseif ext in ("mov", "mp4")
-        "<video controls><source src=\"$(relpath(agif.filename))\" type=\"video/$ext\"></video>"
+        mimetype = ext == "mov" ? "video/quicktime" : "video/mp4"
+        html = "<video controls><source src=\"data:$mimetype;base64," *
+               base64encode(read(agif.filename)) *
+               "\" type = \"$mimetype\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
-    end)
+    end
+
+    write(io, html)
     return nothing
 end
 
