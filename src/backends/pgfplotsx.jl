@@ -56,8 +56,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                 {
                     color = opt[:linecolor],
                     mark = _pgfplotsx_markers[opt[:markershape]],
-                    # TODO: how to do nested options?
-                    # "mark options" = "{color = $(opt[:markercolor])}",
+                    mark_options = {color = opt[:markercolor]},
                 },
                 PGFPlotsX.Coordinates(series[:x],series[:y])
                 )
