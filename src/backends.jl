@@ -37,7 +37,6 @@ macro init_backend(s)
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
         _backend_packages[Symbol($str)] = Symbol($package_str)
-        # include("backends/" * $str * ".jl")
     end)
 end
 
