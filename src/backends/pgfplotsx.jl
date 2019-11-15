@@ -413,10 +413,21 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
 
     for sp in plt.subplots
         bb = bbox(sp)
+        legpos = sp[:legend]
+        if haskey(_pgfplotsx_legend_pos, legpos)
+            legpos = _pgfplotsx_legend_pos[legpos]
+        end
+        cstr = plot_color(sp[:background_color_legend])
+        a = alpha(cstr)
         axis_opt = PGFPlotsX.Options(
             "height" => string(height(bb)),
             "width" => string(width(bb)),
             "title" => sp[:title],
+            "legend style" => PGFPlotsX.Options(
+            pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid") => nothing,
+            "fill" => cstr,
+            "font" => pgfx_font(sp[:legendfontsize], pgfx_thickness_scaling(sp))
+            )
         )
         for letter in (:x, :y, :z)
             if letter != :z || is3d(sp)
