@@ -451,18 +451,29 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
         for series in series_list(sp)
             opt = series.plotattributes
             segments = iter_segments(series)
+            segment_opt = PGFPlotsX.Options()
             for (i, rng) in enumerate(segments)
-                # TODO: make segmented series
+                segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
             end
             # TODO: different seriestypes, histogramms, contours, etc.
-            series_plot = PGFPlotsX.Plot(
+            # TODO: colorbars
+            # TOOD: gradients
+            if is3d(series)
+                series_func = opt -> PGFPlotsX.Plot3(opt,
+                    PGFPlotsX.Coordinates(series[:x],series[:y],series[:z])
+                )
+            else
+                series_func = opt -> PGFPlotsX.Plot(opt,
+                    PGFPlotsX.Coordinates(series[:x],series[:y])
+                )
+            end
+            series_plot = series_func(
                 merge(
                     PGFPlotsX.Options(
                     "color" => opt[:linecolor]
                     ),
-                    pgfx_marker(opt, i)
+                    segment_opt
                 ),
-                PGFPlotsX.Coordinates(series[:x],series[:y])
             )
             # add series annotations
             anns = series[:series_annotations]
