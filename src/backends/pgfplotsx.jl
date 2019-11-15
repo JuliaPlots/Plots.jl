@@ -32,6 +32,15 @@ const _pgfplotsx_legend_pos = KW(
     :outertopright => "outer north east",
 )
 
+const _pgfx_series_extrastyle = KW(
+    :steppre => "const plot mark right",
+    :stepmid => "const plot mark mid",
+    :steppost => "const plot",
+    :sticks => "ycomb",
+    :ysticks => "ycomb",
+    :xsticks => "xcomb",
+)
+
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
 const _pgfx_framestyle_defaults = Dict(:semi => :box)
 
@@ -64,7 +73,7 @@ function pgfx_fillstyle(plotattributes, i = 1)
     if fa !== nothing
         a = fa
     end
-    fill => cstr, fill_opacity => a
+    PGFPlotsX.Options("fill" => cstr, "fill opacity" => a)
 end
 
 function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = "solid")
@@ -232,21 +241,18 @@ function pgf_series(sp::Subplot, series::Series)
     series_collection
 end
 
-function pgf_fillrange_series(series, i, fillrange, args...)
+function pgfx_fillrange_series!(opt, series, i, fillrange, args...)
     st = series[:seriestype]
-    style = []
-    kw = KW()
-    push!(style, "line width = 0")
-    push!(style, "draw opacity = 0")
-    push!(style, pgf_fillstyle(series, i))
-    push!(style, pgf_marker(series, i))
-    push!(style, "forget plot")
-    if haskey(_pgf_series_extrastyle, st)
-        push!(style, _pgf_series_extrastyle[st])
+    push!(opt, "line width" => 0)
+    push!(opt, "draw opacity" => 0)
+    push!(opt, pgfx_fillopt(series, i))
+    push!(opt, pgfx_marker(series, i))
+    push!(opt, "forget plot" => nothing)
+    if haskey(_pgfx_series_extraopt, st)
+        push!(opt, _pgfx_series_extrastyle[st] => nothing)
     end
-    kw[:style] = join(style, ',')
-    func = is3d(series) ? PGFPlots.Linear3 : PGFPlots.Linear
-    return func(pgf_fillrange_args(fillrange, args...)...; kw...)
+    # TODO: what are those fillrange_args about?
+    # return func(pgf_fillrange_args(fillrange, args...)...; kw...)
 end
 
 function pgf_fillrange_args(fillrange, x, y)
@@ -450,14 +456,33 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
         )
         for series in series_list(sp)
             opt = series.plotattributes
+            st = series[:seriestype]
+            series_opt = PGFPlotsX.Options(
+                            "color" => opt[:linecolor]
+                        )
             segments = iter_segments(series)
             segment_opt = PGFPlotsX.Options()
             for (i, rng) in enumerate(segments)
+                segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
                 segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
+                if st == :shape
+                    segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
+                end
+                # TODO: is this necessary?
+                # seg_args = (arg[rng] for arg in args)
+                # TODO: translate this
+                # # add fillrange
+                # if series[:fillrange] !== nothing && st != :shape
+                #     push!(series_collection, pgf_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
+                # end
+            end
+            #include additional style
+            if haskey(_pgfx_series_extrastyle, st)
+                push!(series_opt, _pgfx_series_extrastyle[st] => nothing)
             end
             # TODO: different seriestypes, histogramms, contours, etc.
             # TODO: colorbars
-            # TOOD: gradients
+            # TODO: gradients
             if is3d(series)
                 series_func = opt -> PGFPlotsX.Plot3(opt,
                     PGFPlotsX.Coordinates(series[:x],series[:y],series[:z])
@@ -468,12 +493,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                 )
             end
             series_plot = series_func(
-                merge(
-                    PGFPlotsX.Options(
-                    "color" => opt[:linecolor]
-                    ),
-                    segment_opt
-                ),
+                merge(series_opt, segment_opt),
             )
             # add series annotations
             anns = series[:series_annotations]
