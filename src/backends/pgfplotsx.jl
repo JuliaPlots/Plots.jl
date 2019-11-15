@@ -425,7 +425,13 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 end
 # --------------------------------------------------------------------------------------
 # display calls this and then _display, its called 3 times for plot(1:5)
+let n_calls = 0
+function _series_updated(plt::Plot{PGFPlotsXBackend}, series::Series)
+    n_calls = 0
+end
+
 function _update_plot_object(plt::Plot{PGFPlotsXBackend})
+if n_calls === 0
     plt.o = PGFPlotsX.GroupPlot()
 
     for sp in plt.subplots
@@ -508,6 +514,8 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
         end
         push!( plt.o, axis )
     end
+end
+n_calls += 1
 end
 
 function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsXBackend})
