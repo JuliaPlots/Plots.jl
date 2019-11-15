@@ -135,7 +135,7 @@ end
 function pgf_series(sp::Subplot, series::Series)
     plotattributes = series.plotattributes
     st = plotattributes[:seriestype]
-    series_collection = PGFPlots.Plot[]
+    series_collection = PGFPlotsX.Plot[]
 
     # function args
     args = if st == :contour
@@ -154,11 +154,11 @@ function pgf_series(sp::Subplot, series::Series)
     end
 
     # PGFPlots can't handle non-Vector?
-    args = map(a -> if typeof(a) <: AbstractVector && typeof(a) != Vector
-            collect(a)
-        else
-            a
-        end, args)
+    # args = map(a -> if typeof(a) <: AbstractVector && typeof(a) != Vector
+    #         collect(a)
+    #     else
+    #         a
+    #     end, args)
 
     if st in (:contour, :histogram2d)
         style = []
@@ -452,17 +452,24 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
             opt = series.plotattributes
             segments = iter_segments(series)
             for (i, rng) in enumerate(segments)
-                series_plot = PGFPlotsX.Plot(
-                    merge(
-                        PGFPlotsX.Options(
-                        "color" => opt[:linecolor]
-                        ),
-                        pgfx_marker(opt, i)
-                    ),
-                    PGFPlotsX.Coordinates(series[:x],series[:y])
-                )
-                push!( axis, series_plot )
+                # TODO: make segmented series
             end
+            # TODO: different seriestypes, histogramms, contours, etc.
+            series_plot = PGFPlotsX.Plot(
+                merge(
+                    PGFPlotsX.Options(
+                    "color" => opt[:linecolor]
+                    ),
+                    pgfx_marker(opt, i)
+                ),
+                PGFPlotsX.Coordinates(series[:x],series[:y])
+            )
+            # add series annotations
+            anns = series[:series_annotations]
+            for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
+                pgfx_add_annotation!(series_plot, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
+            end
+            push!( axis, series_plot )
             if opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
                 push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
                 )
