@@ -34,6 +34,14 @@ const _pgfplotsx_legend_pos = KW(
 
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
 const _pgfx_framestyle_defaults = Dict(:semi => :box)
+
+# we use the anchors to define orientations for example to align left
+# one needs to use the right edge as anchor
+const _pgfx_annotation_halign = KW(
+    :center => "",
+    :left => "right",
+    :right => "left"
+)
 ## --------------------------------------------------------------------------------------
 function pgfx_framestyle(style::Symbol)
     if style in _pgfx_framestyles
@@ -109,15 +117,18 @@ function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1)
     # Currently supports color and orientation
     cstr = val.font.color
     a = alpha(cstr)
-    #TODO: translate this
-    push!(o, PGFPlots.Plots.Node(val.str, # Annotation Text
-        x, y,
-        style="""
-        $(get(_pgfx_annotation_halign,val.font.halign,"")),
-        color=$cstr, draw opacity=$(convert(Float16,a)),
-        rotate=$(val.font.rotation),
-        font=$(pgfx_font(val.font.pointsize, thickness_scaling))
-        """))
+    push!(o, ["\\node",
+        PGFPlotsX.Options(
+            get(_pgfx_annotation_halign,val.font.halign,"") => nothing,
+            "color" => cstr,
+            "draw opacity" => convert(Float16, a),
+            "rotate" => val.font.rotation,
+            "font" => pgfx_font(val.font.pointsize, thickness_scaling)
+        ),
+        " at ",
+        PGFPlotsX.Coordinate(x, y),
+        "{$(val.str).};"
+    ])
 end
 ## --------------------------------------------------------------------------------------
 # TODO: translate these if needed
