@@ -57,7 +57,7 @@ const _pgfx_annotation_halign = KW(
 function pgfx_colormap(grad::ColorGradient)
     join(map(grad.colors) do c
         @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c),blue(c))
-    end,", ")
+    end,"\n")
 end
 
 function pgfx_framestyle(style::Symbol)
@@ -441,6 +441,8 @@ end
 function _update_plot_object(plt::Plot{PGFPlotsXBackend})
     plt.o = PGFPlotsX.GroupPlot()
 
+    pushed_colormap = false
+    empty!(PGFPlotsX.CUSTOM_PREAMBLE)
     for sp in plt.subplots
         bb = bbox(sp)
         legpos = sp[:legend]
@@ -477,8 +479,15 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
         for series in series_list(sp)
             for col in (:markercolor, :fillcolor, :linecolor)
                 if typeof(series.plotattributes[col]) == ColorGradient
+                    # TODO: fix this
+                    # pushed_colormap || push!(PGFPlotsX.CUSTOM_PREAMBLE, """\\pgfplotsset{
+                        # colormap={plots}{$(pgfx_colormap(series.plotattributes[col]))},
+                    # }""")
+                    pushed_colormap = true
                     push!(axis_opt,
-                        "colormap" => "{plots}{$(pgfx_colormap(series.plotattributes[col]))}")
+                        # "colormap" => nothing,
+                        # "colormap name" => "plots",
+                    )
 
                     # TODO: is this needed?
                     # if sp[:colorbar] == :none
