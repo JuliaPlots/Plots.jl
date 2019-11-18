@@ -28,12 +28,41 @@ function __init__()
         insert!(Base.Multimedia.displays, findlast(x -> x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1, PlotsDisplay())
     end)
 
-    @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" include(joinpath(@__DIR__, "backends", "hdf5.jl"))
-    @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" include(joinpath(@__DIR__, "backends", "inspectdr.jl"))
-    @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" include(joinpath(@__DIR__, "backends", "pgfplots.jl"))
-    @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" include(joinpath(@__DIR__, "backends", "plotlyjs.jl"))
-    @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" include(joinpath(@__DIR__, "backends", "pyplot.jl"))
-    @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" include(joinpath(@__DIR__, "backends", "unicodeplots.jl"))
+    @require HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f" begin
+        fn = joinpath(@__DIR__, "backends", "hdf5.jl")
+        include(fn)
+        @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
+    end
+
+    @require InspectDR = "d0351b0e-4b05-5898-87b3-e2a8edfddd1d" begin
+        fn = joinpath(@__DIR__, "backends", "inspectdr.jl")
+        include(fn)
+        @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
+    end
+
+    @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
+        fn = joinpath(@__DIR__, "backends", "pgfplots.jl")
+        include(fn)
+        @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
+    end
+
+    @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
+        fn = joinpath(@__DIR__, "backends", "plotlyjs.jl")
+        include(fn)
+        @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
+    end
+
+    @require PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee" begin
+        fn = joinpath(@__DIR__, "backends", "pyplot.jl")
+        include(fn)
+        @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
+    end
+
+    @require UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228" begin
+        fn = joinpath(@__DIR__, "backends", "unicodeplots.jl")
+        include(fn)
+        @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
+    end
 
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
