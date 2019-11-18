@@ -52,6 +52,14 @@ const _pgfx_annotation_halign = KW(
     :right => "left"
 )
 ## --------------------------------------------------------------------------------------
+# Generates a colormap for pgfplots based on a ColorGradient
+# TODO: maybe obsolete
+function pgfx_colormap(grad::ColorGradient)
+    join(map(grad.colors) do c
+        @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c),blue(c))
+    end,", ")
+end
+
 function pgfx_framestyle(style::Symbol)
     if style in _pgfx_framestyles
         return style
@@ -426,13 +434,11 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 end
 # --------------------------------------------------------------------------------------
 # display calls this and then _display, its called 3 times for plot(1:5)
-let n_calls = 0
 function _series_updated(plt::Plot{PGFPlotsXBackend}, series::Series)
-    n_calls = 0
+    # TODO: don't rebuild plots so often
 end
 
 function _update_plot_object(plt::Plot{PGFPlotsXBackend})
-if n_calls === 0
     plt.o = PGFPlotsX.GroupPlot()
 
     for sp in plt.subplots
@@ -458,12 +464,60 @@ if n_calls === 0
                 pgfx_axis!(axis_opt, sp, letter)
             end
         end
+        # Search series for any gradient. In case one series uses a gradient set
+        # the colorbar and colomap.
+        # The reasoning behind doing this on the axis level is that pgfplots
+        # colorbar seems to only works on axis level and needs the proper colormap for
+        # correctly displaying it.
+        # It's also possible to assign the colormap to the series itself but
+        # then the colormap needs to be added twice, once for the axis and once for the
+        # series.
+        # As it is likely that all series within the same axis use the same
+        # colormap this should not cause any problem.
+        for series in series_list(sp)
+            for col in (:markercolor, :fillcolor, :linecolor)
+                if typeof(series.plotattributes[col]) == ColorGradient
+                    push!(axis_opt,
+                        "colormap" => "{plots}{$(pgfx_colormap(series.plotattributes[col]))}")
+
+                    # TODO: is this needed?
+                    # if sp[:colorbar] == :none
+                    #     kw[:colorbar] = "false"
+                    # else
+                    #     kw[:colorbar] = "true"
+                    # end
+                    # goto is needed to break out of col and series for
+                    @goto colorbar_end
+                end
+            end
+        end
+        @label colorbar_end
+
+        push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
+            "title" => sp[:colorbar_title]
+            )
+        )
         axis = PGFPlotsX.Axis(
             axis_opt
         )
         for series in series_list(sp)
             opt = series.plotattributes
             st = series[:seriestype]
+            # function args
+            args = if st == :contour
+                opt[:z].surf, opt[:x], opt[:y]
+            elseif is3d(st)
+                opt[:x], opt[:y], opt[:z]
+            elseif st == :straightline
+                straightline_data(series)
+            elseif st == :shape
+                shape_data(series)
+            elseif ispolar(sp)
+                theta, r = opt[:x], opt[:y]
+                rad2deg.(theta), r
+            else
+                opt[:x], opt[:y]
+            end
             series_opt = PGFPlotsX.Options(
                             "color" => opt[:linecolor]
                         )
@@ -475,13 +529,11 @@ if n_calls === 0
                 if st == :shape
                     segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
                 end
-                # TODO: is this necessary?
-                # seg_args = (arg[rng] for arg in args)
-                # TODO: translate this
-                # # add fillrange
-                # if series[:fillrange] !== nothing && st != :shape
-                #     push!(series_collection, pgf_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
-                # end
+                seg_args = (arg[rng] for arg in args)
+                # add fillrange
+                if series[:fillrange] !== nothing && st != :shape
+                    push!(axis, pgfx_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
+                end
             end
             #include additional style
             if haskey(_pgfx_series_extrastyle, st)
@@ -491,16 +543,13 @@ if n_calls === 0
             # TODO: colorbars
             # TODO: gradients
             if is3d(series)
-                series_func = opt -> PGFPlotsX.Plot3(opt,
-                    PGFPlotsX.Coordinates(series[:x],series[:y],series[:z])
-                )
+                series_func = PGFPlotsX.Plot3
             else
-                series_func = opt -> PGFPlotsX.Plot(opt,
-                    PGFPlotsX.Coordinates(series[:x],series[:y])
-                )
+                series_func = PGFPlotsX.Plot
             end
             series_plot = series_func(
                 merge(series_opt, segment_opt),
+                PGFPlotsX.Coordinates(args...)
             )
             # add series annotations
             anns = series[:series_annotations]
@@ -515,8 +564,6 @@ if n_calls === 0
         end
         push!( plt.o, axis )
     end
-end
-n_calls += 1
 end
 
 function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsXBackend})
