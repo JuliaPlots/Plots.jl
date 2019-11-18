@@ -47,6 +47,7 @@ ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LibGit2 = "76f85450-5226-5b5a-8eaa-529ad045b433"
+PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
@@ -55,4 +56,4 @@ UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["FileIO", "GeometryTypes", "Gtk", "ImageMagick", "Images", "LaTeXStrings", "LibGit2", "Random", "RDatasets", "StatsPlots", "Test", "UnicodePlots", "VisualRegressionTests"]
+test = ["FileIO", "GeometryTypes", "Gtk", "ImageMagick", "Images", "LaTeXStrings", "LibGit2", "PGFPlotsX", "Random", "RDatasets", "StatsPlots", "Test", "UnicodePlots", "VisualRegressionTests"]
