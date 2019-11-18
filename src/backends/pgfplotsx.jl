@@ -241,8 +241,9 @@ function pgf_series(sp::Subplot, series::Series)
     series_collection
 end
 
-function pgfx_fillrange_series!(opt, series, i, fillrange, args...)
+function pgfx_fillrange_series(series, i, fillrange, args...)
     st = series[:seriestype]
+    opt = PGFPlotsX.Options()
     push!(opt, "line width" => 0)
     push!(opt, "draw opacity" => 0)
     push!(opt, pgfx_fillopt(series, i))
@@ -251,18 +252,18 @@ function pgfx_fillrange_series!(opt, series, i, fillrange, args...)
     if haskey(_pgfx_series_extraopt, st)
         push!(opt, _pgfx_series_extrastyle[st] => nothing)
     end
-    # TODO: what are those fillrange_args about?
-    # return func(pgf_fillrange_args(fillrange, args...)...; kw...)
+    func = is3d(series) ? PGFPlotsX.Plot3 : PGFPlotsX.Plot
+    return func(opt, pgfx_fillrange_args(fillrange, args...)...)
 end
 
-function pgf_fillrange_args(fillrange, x, y)
+function pgfx_fillrange_args(fillrange, x, y)
     n = length(x)
     x_fill = [x; x[n:-1:1]; x[1]]
     y_fill = [y; _cycle(fillrange, n:-1:1); y[1]]
     return x_fill, y_fill
 end
 
-function pgf_fillrange_args(fillrange, x, y, z)
+function pgfx_fillrange_args(fillrange, x, y, z)
     n = length(x)
     x_fill = [x; x[n:-1:1]; x[1]]
     y_fill = [y; y[n:-1:1]; x[1]]
