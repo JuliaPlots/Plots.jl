@@ -1326,10 +1326,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 nx, ny = length(series[:x]), length(series[:y])
                 z_normalized = map(x -> GR.jlgr.normalize_color(x, zmin, zmax), z)
                 colors = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
-                xmin, xmax, ymin, ymax = xy_lims 
+                xmin, xmax, ymin, ymax = xy_lims
                 rmax = data_lims[4]
                 GR.setwindow(-rmax, rmax, -rmax, rmax)
-                if ymin > 0 
+                if ymin > 0
                     @warn "'ymin[1] > 0' (rmin) is not yet supported."
                 end
                 if series[:y][end] != ny
@@ -1337,7 +1337,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 end
                 # GR.polarcellarray(0, 0, phimin, phimax, ymin, ymax, nx, ny, colors)
                 GR.polarcellarray(0, 0, phimin, phimax, 0, ymax, nx, ny, colors)
-                # Right now only the maximum value of y (r) is taken into account. 
+                # Right now only the maximum value of y (r) is taken into account.
                 # This is certainly not perfect but nonuniform polar array is not yet supported in GR.jl
             end
 
@@ -1526,7 +1526,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
                 lab = series[:label]
                 GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-                gr_set_textcolor(sp[:legendfontcolor])
+                gr_set_textcolor(plot_color(sp[:legendfontcolor]))
                 gr_text(xpos, ypos, string(lab))
                 ypos -= dy
             end
