@@ -256,14 +256,14 @@ function pgfx_fillrange_series(series, i, fillrange, args...)
     opt = PGFPlotsX.Options()
     push!(opt, "line width" => 0)
     push!(opt, "draw opacity" => 0)
-    push!(opt, pgfx_fillopt(series, i))
-    push!(opt, pgfx_marker(series, i))
+    opt = merge(opt, pgfx_fillstyle(series, i))
+    opt = merge(opt, pgfx_marker(series, i))
     push!(opt, "forget plot" => nothing)
-    if haskey(_pgfx_series_extraopt, st)
+    if haskey(_pgfx_series_extrastyle, st)
         push!(opt, _pgfx_series_extrastyle[st] => nothing)
     end
     func = is3d(series) ? PGFPlotsX.Plot3 : PGFPlotsX.Plot
-    return func(opt, pgfx_fillrange_args(fillrange, args...)...)
+    return func(opt, PGFPlotsX.Coordinates(pgfx_fillrange_args(fillrange, args...)...))
 end
 
 function pgfx_fillrange_args(fillrange, x, y)
