@@ -22,11 +22,9 @@ end
         y = (0.1ts) .* map(sin, ts)
         z = 1:n
         pl = plot(x, y, z, zcolor=reverse(z), m=(10, 0.8, :blues, Plots.stroke(0)), leg=false, cbar=true, w=5)
-                    @show PGFPlotsX.CUSTOM_PREAMBLE
-                    @show PGFPlotsX.CUSTOM_PREAMBLE_PATH
         pgfx_plot, pgfx_tex = create_plot!(pl, zeros(n), zeros(n), 1:n, w=10)
         if @test_nowarn(haskey(pgfx_plot.o.contents[1].options.dict, "colormap") == true)
-            @test pgfx_plot.o.contents[1]["colormap"] === nothing
+            @test pgfx_plot.o.contents[1]["colorbar"] === nothing
         end
      end # testset
 end # testset
