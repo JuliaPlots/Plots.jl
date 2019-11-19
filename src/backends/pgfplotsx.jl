@@ -537,6 +537,9 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                             "color" => opt[:linecolor],
                             "scatter" => nothing,
                         )
+            if st == :shape
+                push!(series_opt, "area legend" => nothing)
+            end
             if opt[:marker_z] !== nothing
                 push!(series_opt, "point meta" => "explicit")
             end
