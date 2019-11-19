@@ -492,14 +492,16 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
             for col in (:markercolor, :fillcolor, :linecolor)
                 if typeof(series.plotattributes[col]) == ColorGradient
                     # TODO: fix this
-                    # pushed_colormap || push!(PGFPlotsX.CUSTOM_PREAMBLE, """\\pgfplotsset{
-                        # colormap={plots}{$(pgfx_colormap(series.plotattributes[col]))},
-                    # }""")
-                    pushed_colormap = true
-                    push!(axis_opt,
-                        # "colormap" => nothing,
-                        # "colormap name" => "plots",
-                    )
+                    if !pushed_colormap
+                        push!(PGFPlotsX.CUSTOM_PREAMBLE, """\\pgfplotsset{
+                            colormap={plots}{$(pgfx_colormap(series.plotattributes[col]))},
+                        }""")
+                        pushed_colormap = true
+                        push!(axis_opt,
+                            "colorbar" => nothing,
+                            "colormap name" => "plots",
+                        )
+                    end
 
                     # TODO: is this needed?
                     # if sp[:colorbar] == :none
