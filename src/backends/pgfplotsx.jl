@@ -524,7 +524,15 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
             "title" => sp[:colorbar_title]
             )
         )
-        axis = PGFPlotsX.Axis(
+        axisf = if sp[:projection] == :polar
+                    # TODO: this errors for some reason
+                    # push!(axis_opt, "xmin" => 90)
+                    # push!(axis_opt, "xmax" => 450)
+                    PGFPlotsX.PolarAxis
+                else
+                    PGFPlotsX.Axis
+                end
+        axis = axisf(
             axis_opt
         )
         for series in series_list(sp)
