@@ -535,13 +535,13 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
             end
             series_opt = PGFPlotsX.Options(
                             "color" => opt[:linecolor],
-                            "scatter" => nothing,
                         )
             if st == :shape
                 push!(series_opt, "area legend" => nothing)
             end
             if opt[:marker_z] !== nothing
                 push!(series_opt, "point meta" => "explicit")
+                push!(series_opt, "scatter" => nothing)
             end
             segments = iter_segments(series)
             segment_opt = PGFPlotsX.Options()
@@ -568,6 +568,9 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                 series_func = PGFPlotsX.Plot3
             else
                 series_func = PGFPlotsX.Plot
+            end
+            if st == :scatter
+                push!(series_opt, "only marks" => nothing)
             end
             series_plot = series_func(
                 merge(series_opt, segment_opt),
