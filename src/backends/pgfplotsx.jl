@@ -56,7 +56,7 @@ const _pgfx_annotation_halign = KW(
 # TODO: maybe obsolete
 function pgfx_colormap(grad::ColorGradient)
     join(map(grad.colors) do c
-        @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c),blue(c))
+        @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
     end,"\n")
 end
 
@@ -451,14 +451,26 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
         end
         cstr = plot_color(sp[:background_color_legend])
         a = alpha(cstr)
+        title_cstr = plot_color(sp[:titlefontcolor])
+        title_a = alpha(cstr)
+        # TODO: aspect ratio, legend position
         axis_opt = PGFPlotsX.Options(
             "height" => string(height(bb)),
             "width" => string(width(bb)),
             "title" => sp[:title],
+            "title style" => PGFPlotsX.Options(
+                "font" => pgfx_font(sp[:titlefontsize], pgfx_thickness_scaling(sp)),
+                "color" => title_cstr,
+                "draw opacity" => title_a,
+                "rotate" => sp[:titlefontrotation]
+            ),
             "legend style" => PGFPlotsX.Options(
-            pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid") => nothing,
-            "fill" => cstr,
-            "font" => pgfx_font(sp[:legendfontsize], pgfx_thickness_scaling(sp))
+                pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid") => nothing,
+                "fill" => cstr,
+                "font" => pgfx_font(sp[:legendfontsize], pgfx_thickness_scaling(sp))
+            ),
+            "axis background/.style" => PGFPlotsX.Options(
+                "fill" => sp[:background_color_inside]
             )
         )
         for letter in (:x, :y, :z)
