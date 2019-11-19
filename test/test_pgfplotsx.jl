@@ -54,12 +54,30 @@ end
      end # testset
      @testset "Layout" begin
         plot(Plots.fakedata(100, 10), layout=4, palette=[:grays :blues :heat :lightrainbow], bg_inside=[:orange :pink :darkblue :black])
-        # TODO: add layouting
+        # TODO: no extra space for outer legends
      end # testset
      @testset "Polar plots" begin
         Θ = range(0, stop=1.5π, length=100)
         r = abs.(0.1 * randn(100) + sin.(3Θ))
         plot(Θ, r, proj=:polar, m=2)
         # TODO: handle polar plots
+     end # testset
+     @testset "Histogram 2D" begin
+        histogram2d(randn(10000), randn(10000), nbins=20)
+        # TODO: totally broken, errors also for pgfplots
+     end # testset
+     @testset "Contours" begin
+        x = 1:0.5:20
+        y = 1:0.5:10
+        f(x, y) = begin
+           (3x + y ^ 2) * abs(sin(x) + cos(y))
+        end
+        X = repeat(reshape(x, 1, :), length(y), 1)
+        Y = repeat(y, 1, length(x))
+        Z = map(f, X, Y)
+        p1 = contour(x, y, f, fill=true)
+        p2 = contour(x, y, Z)
+        plot(p1, p2)
+        # TODO: totally broken, also errors for pgfplots
      end # testset
 end # testset

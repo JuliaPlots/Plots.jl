@@ -447,7 +447,14 @@ end
 # IDEA: use functor to only build plot once
 function _update_plot_object(plt::Plot{PGFPlotsXBackend})
     plt.o = PGFPlotsX.TikzDocument()
-    push!(plt.o, PGFPlotsX.TikzPicture(PGFPlotsX.GroupPlot()))
+    cols, rows = size(plt.layout.grid)
+    push!(plt.o, PGFPlotsX.TikzPicture(PGFPlotsX.GroupPlot(
+        PGFPlotsX.Options(
+            "group style" => PGFPlotsX.Options(
+                "group size" => string(cols)*" by "*string(rows)
+            )
+        )
+    )))
 
     pushed_colormap = false
     for sp in plt.subplots
