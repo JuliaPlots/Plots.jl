@@ -1,3 +1,5 @@
+PGFPlotsX.print_tex(io::IO, data::Symbol) = PGFPlotsX.print_tex(io, string(data))
+
 const _pgfplotsx_linestyles = KW(
     :solid => "solid",
     :dash => "dashed",
@@ -445,10 +447,6 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
     empty!(PGFPlotsX.CUSTOM_PREAMBLE)
     for sp in plt.subplots
         bb = bbox(sp)
-        legpos = sp[:legend]
-        if haskey(_pgfplotsx_legend_pos, legpos)
-            legpos = _pgfplotsx_legend_pos[legpos]
-        end
         cstr = plot_color(sp[:background_color_legend])
         a = alpha(cstr)
         title_cstr = plot_color(sp[:titlefontcolor])
@@ -464,7 +462,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                 "draw opacity" => title_a,
                 "rotate" => sp[:titlefontrotation]
             ),
-            "legend pos" => _pgfplotsx_legend_pos[sp[:legend]],
+            "legend pos" => get(_pgfplotsx_legend_pos, sp[:legend], "outer north east"),
             "legend style" => PGFPlotsX.Options(
                 pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid") => nothing,
                 "fill" => cstr,
@@ -492,7 +490,6 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
         for series in series_list(sp)
             for col in (:markercolor, :fillcolor, :linecolor)
                 if typeof(series.plotattributes[col]) == ColorGradient
-                    # TODO: fix this
                     if !pushed_colormap
                         push!(PGFPlotsX.CUSTOM_PREAMBLE, """\\pgfplotsset{
                             colormap={plots}{$(pgfx_colormap(series.plotattributes[col]))},
@@ -504,12 +501,6 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                         )
                     end
 
-                    # TODO: is this needed?
-                    # if sp[:colorbar] == :none
-                    #     kw[:colorbar] = "false"
-                    # else
-                    #     kw[:colorbar] = "true"
-                    # end
                     # goto is needed to break out of col and series for
                     @goto colorbar_end
                 end
@@ -543,8 +534,12 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                 opt[:x], opt[:y]
             end
             series_opt = PGFPlotsX.Options(
-                            "color" => opt[:linecolor]
+                            "color" => opt[:linecolor],
+                            "scatter" => nothing,
                         )
+            if opt[:marker_z] !== nothing
+                push!(series_opt, "point meta" => "explicit")
+            end
             segments = iter_segments(series)
             segment_opt = PGFPlotsX.Options()
             for (i, rng) in enumerate(segments)
@@ -573,7 +568,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
             end
             series_plot = series_func(
                 merge(series_opt, segment_opt),
-                PGFPlotsX.Coordinates(args...)
+                PGFPlotsX.Coordinates(args..., meta = opt[:marker_z])
             )
             # add series annotations
             anns = series[:series_annotations]
