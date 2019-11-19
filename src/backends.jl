@@ -713,7 +713,6 @@ const _pgfplotsx_attr = merge_with_base_supported([
 # ]
 const _pgfplotsx_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
 const _pgfplotsx_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _pgfplotsx_marker = vcat(_allMarkers, Shape)
-    # [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon, :hline, :vline] #
+const _pgfplotsx_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :ltriangle, :rtriangle, :cross, :xcross, :star5, :pentagon, :hline, :vline, Shape]
 const _pgfplotsx_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true

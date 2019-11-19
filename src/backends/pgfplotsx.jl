@@ -16,6 +16,8 @@ const _pgfplotsx_markers = KW(
     :x => "x",
     :utriangle => "triangle*",
     :dtriangle => "triangle*",
+    :rtriangle => "triangle*",
+    :ltriangle => "triangle*",
     :circle => "*",
     :rect => "square*",
     :star5 => "star",
@@ -125,7 +127,15 @@ function pgfx_marker(plotattributes, i = 1)
             "fill" => cstr,
             "fill opacity" => a,
             "line width" => pgfx_thickness_scaling(plotattributes) * _cycle(plotattributes[:markerstrokewidth], i),
-            "rotate" => (shape == :dtriangle ? 180 : 0),
+            "rotate" => if shape == :dtriangle
+                            180
+                        elseif shape == :rtriangle
+                            270
+                        elseif shape == :ltriangle
+                            90
+                        else
+                            0
+                        end,
             get(_pgfplotsx_linestyles, _cycle(plotattributes[:markerstrokestyle], i), "solid") => nothing
             )
     )
