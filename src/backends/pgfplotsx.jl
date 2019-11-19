@@ -436,15 +436,20 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 end
 # --------------------------------------------------------------------------------------
 # display calls this and then _display, its called 3 times for plot(1:5)
-function _series_updated(plt::Plot{PGFPlotsXBackend}, series::Series)
-    # TODO: don't rebuild plots so often
+function _create_backend_figure(plt::Plot{PGFPlotsXBackend})
+
 end
 
+function _series_updated(plt::Plot{PGFPlotsXBackend}, series::Series)
+end
+
+# TODO: don't rebuild plots so often
+# IDEA: use functor to only build plot once
 function _update_plot_object(plt::Plot{PGFPlotsXBackend})
-    plt.o = PGFPlotsX.GroupPlot()
+    plt.o = PGFPlotsX.TikzDocument()
+    push!(plt.o, PGFPlotsX.TikzPicture(PGFPlotsX.GroupPlot()))
 
     pushed_colormap = false
-    empty!(PGFPlotsX.CUSTOM_PREAMBLE)
     for sp in plt.subplots
         bb = bbox(sp)
         cstr = plot_color(sp[:background_color_legend])
@@ -491,7 +496,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
             for col in (:markercolor, :fillcolor, :linecolor)
                 if typeof(series.plotattributes[col]) == ColorGradient
                     if !pushed_colormap
-                        push!(PGFPlotsX.CUSTOM_PREAMBLE, """\\pgfplotsset{
+                        PGFPlotsX.push_preamble!(plt.o, """\\pgfplotsset{
                             colormap={plots}{$(pgfx_colormap(series.plotattributes[col]))},
                         }""")
                         pushed_colormap = true
@@ -587,7 +592,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                 )
             end
         end
-        push!( plt.o, axis )
+        push!( plt.o.elements[1].elements[1], axis )
     end
 end
 
