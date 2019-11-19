@@ -705,12 +705,12 @@ const _pgfplotsx_attr = merge_with_base_supported([
     :camera,
     :contour_labels,
 ])
-const _pgfplotsx_seriestype = [
-    :path, :scatter, :straightline,
-    :heatmap, :pie, :image,
-    :contour, :path3d, :scatter3d, :surface, :wireframe, :volume,
-    :shape
-]
+# const _pgfplotsx_seriestype = [
+#     :path, :scatter, :straightline,
+#     :heatmap, :pie, :image,
+#     :contour, :path3d, :scatter3d, :surface, :wireframe, :volume,
+#     :shape
+# ]
 const _pgfplotsx_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
 const _pgfplotsx_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplotsx_marker = vcat(_allMarkers, Shape)
