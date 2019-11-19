@@ -477,7 +477,15 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
         cstr, a = pgf_color(plot_color(sp[:background_color_legend]))
-        push!(style, string("legend style = {", pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid"), ",", "fill = $cstr,", "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)), "}"))
+        a == 0 && (cstr = "none") 
+
+        if hasfield(typeof(sp[:foreground_color_legend]), :alpha) && sp[:foreground_color_legend].alpha == 0
+            legend_linestyle = "draw = none"
+        else
+            legend_linestyle = pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid", )
+        end
+
+        push!(style, string("legend style = {", legend_linestyle, ",", "fill = $cstr,", "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)), "}"))
 
         if any(s[:seriestype] == :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"
