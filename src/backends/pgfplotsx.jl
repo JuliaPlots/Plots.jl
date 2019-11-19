@@ -453,7 +453,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
         a = alpha(cstr)
         title_cstr = plot_color(sp[:titlefontcolor])
         title_a = alpha(cstr)
-        # TODO: aspect ratio, legend position
+        # TODO: aspect ratio
         axis_opt = PGFPlotsX.Options(
             "height" => string(height(bb)),
             "width" => string(width(bb)),
@@ -464,6 +464,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                 "draw opacity" => title_a,
                 "rotate" => sp[:titlefontrotation]
             ),
+            "legend pos" => _pgfplotsx_legend_pos[sp[:legend]],
             "legend style" => PGFPlotsX.Options(
                 pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid") => nothing,
                 "fill" => cstr,
