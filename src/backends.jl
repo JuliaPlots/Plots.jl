@@ -711,7 +711,9 @@ const _pgfplotsx_seriestype = [
     :contour, :path3d, :scatter3d, :surface, :wireframe, :volume,
     :shape
 ]
+const _pgfplotsx_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
 const _pgfplotsx_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
-const _pgfplotsx_marker = _allMarkers
-const _pgfplotsx_scale = [:identity, :log10]
-is_marker_supported(::PGFPlotsXBackend, shape::Shape) = false
+const _pgfplotsx_marker = vcat(_allMarkers, Shape)
+    # [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :cross, :xcross, :star5, :pentagon, :hline, :vline] #
+const _pgfplotsx_scale = [:identity, :ln, :log2, :log10]
+is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
