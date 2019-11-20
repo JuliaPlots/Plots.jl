@@ -145,7 +145,7 @@ end
 
 Segments() = Segments(Float64)
 Segments(::Type{T}) where {T} = Segments(T[])
-Segments(p::Int) = Segments(NTuple{2,Float64}[])
+Segments(p::Int) = Segments(NTuple{p, Float64}[])
 
 
 # Segments() = Segments(zeros(0))
