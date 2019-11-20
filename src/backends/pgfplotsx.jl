@@ -161,106 +161,6 @@ function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1)
 end
 ## --------------------------------------------------------------------------------------
 # TODO: translate these if needed
-function pgf_series(sp::Subplot, series::Series)
-    plotattributes = series.plotattributes
-    st = plotattributes[:seriestype]
-    series_collection = PGFPlotsX.Plot[]
-
-    # function args
-    args = if st == :contour
-        plotattributes[:z].surf, plotattributes[:x], plotattributes[:y]
-    elseif is3d(st)
-        plotattributes[:x], plotattributes[:y], plotattributes[:z]
-    elseif st == :straightline
-        straightline_data(series)
-    elseif st == :shape
-        shape_data(series)
-    elseif ispolar(sp)
-        theta, r = plotattributes[:x], plotattributes[:y]
-        rad2deg.(theta), r
-    else
-        plotattributes[:x], plotattributes[:y]
-    end
-
-    # PGFPlots can't handle non-Vector?
-    # args = map(a -> if typeof(a) <: AbstractVector && typeof(a) != Vector
-    #         collect(a)
-    #     else
-    #         a
-    #     end, args)
-
-    if st in (:contour, :histogram2d)
-        style = []
-        kw = KW()
-        push!(style, pgf_linestyle(plotattributes))
-        push!(style, pgf_marker(plotattributes))
-        push!(style, "forget plot")
-
-        kw[:style] = join(style, ',')
-        func = if st == :histogram2d
-            PGFPlots.Histogram2
-        else
-            kw[:labels] = series[:contour_labels]
-            kw[:levels] = series[:levels]
-            PGFPlots.Contour
-        end
-        push!(series_collection, func(args...; kw...))
-
-    else
-        # series segments
-        segments = iter_segments(series)
-        for (i, rng) in enumerate(segments)
-            style = []
-            kw = KW()
-            push!(style, pgf_linestyle(plotattributes, i))
-            push!(style, pgf_marker(plotattributes, i))
-
-            if st == :shape
-                push!(style, pgf_fillstyle(plotattributes, i))
-            end
-
-            # add to legend?
-            if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
-                if plotattributes[:fillrange] !== nothing
-                    push!(style, "forget plot")
-                    push!(series_collection, pgf_fill_legend_hack(plotattributes, args))
-                else
-                    kw[:legendentry] = plotattributes[:label]
-                    if st == :shape # || plotattributes[:fillrange] !== nothing
-                        push!(style, "area legend")
-                    end
-                end
-            else
-                push!(style, "forget plot")
-            end
-
-            seg_args = (arg[rng] for arg in args)
-
-            # include additional style, then add to the kw
-            if haskey(_pgf_series_extrastyle, st)
-                push!(style, _pgf_series_extrastyle[st])
-            end
-            kw[:style] = join(style, ',')
-
-            # add fillrange
-            if series[:fillrange] !== nothing && st != :shape
-                push!(series_collection, pgf_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
-            end
-
-            # build/return the series object
-            func = if st == :path3d
-                PGFPlots.Linear3
-            elseif st == :scatter
-                PGFPlots.Scatter
-            else
-                PGFPlots.Linear
-            end
-            push!(series_collection, func(seg_args...; kw...))
-        end
-    end
-    series_collection
-end
-
 function pgfx_fillrange_series(series, i, fillrange, args...)
     st = series[:seriestype]
     opt = PGFPlotsX.Options()
@@ -291,24 +191,21 @@ function pgfx_fillrange_args(fillrange, x, y, z)
     return x_fill, y_fill, z_fill
 end
 
-function pgf_fill_legend_hack(plotattributes, args)
-    style = []
-    kw = KW()
-    push!(style, pgf_linestyle(plotattributes, 1))
-    push!(style, pgf_marker(plotattributes, 1))
-    push!(style, pgf_fillstyle(plotattributes, 1))
-    push!(style, "area legend")
-    kw[:legendentry] = plotattributes[:label]
-    kw[:style] = join(style, ',')
+function pgfx_fill_legend_hack(plotattributes, args)
+    opt = PGFPlotsX.Options("area legend" => nothing)
+    opt = merge(opt, pgfx_linestyle(plotattributes, 1))
+    opt = merge(opt, pgfx_marker(plotattributes, 1))
+    opt = merge(opt, pgfx_fillstyle(plotattributes, 1))
     st = plotattributes[:seriestype]
     func = if st == :path3d
-        PGFPlots.Linear3
-    elseif st == :scatter
-        PGFPlots.Scatter
+        PGFPlotsX.Plot3
     else
-        PGFPlots.Linear
+        PGFPlotsX.Plot
     end
-    return func(([arg[1]] for arg in args)...; kw...)
+    if st == :scatter
+        push!(opt, "only marks" => nothing)
+    end
+    return func(opt, PGFPlotsX.Coordinates(([arg[1]] for arg in args)...))
 end
 
 # --------------------------------------------------------------------------------------
@@ -585,6 +482,21 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
                 # add fillrange
                 if series[:fillrange] !== nothing && st != :shape
                     push!(axis, pgfx_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
+                end
+
+                # add to legend?
+                if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
+                    if opt[:fillrange] !== nothing
+                        push!(segment_opt, "forget plot" => nothing)
+                        push!(axis, pgfx_fill_legend_hack(opt, args))
+                    else
+                        if st == :shape
+                            push!(segment_opt, "area legend" => nothing)
+                        end
+                    end
+                    push!( axis, PGFPlotsX.LegendEntry( opt[:label] ))
+                else
+                    push!(segment_opt, "forget plot" => nothing)
                 end
             end
             #include additional style
