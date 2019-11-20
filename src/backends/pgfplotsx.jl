@@ -1,4 +1,207 @@
-PGFPlotsX.print_tex(io::IO, data::Symbol) = PGFPlotsX.print_tex(io, string(data))
+# PGFPlotsX.print_tex(io::IO, data::Symbol) = PGFPlotsX.print_tex(io, string(data))
+Base.@kwdef mutable struct PGFPlotsXPlot
+    is_created::Bool = false
+    was_shown::Bool = false
+    the_plot::PGFPlotsX.TikzDocument = PGFPlotsX.TikzDocument()
+end
+
+function Base.show(io::IO, mime::MIME, pgfx_plot::PGFPlotsXPlot)
+    show(io::IO, mime, pgfx_plot.the_plot)
+end
+
+function Base.push!(pgfx_plot::PGFPlotsXPlot, item)
+    push!(pgfx_plot.the_plot, item)
+end
+
+function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
+    if !pgfx_plot.is_created
+        cols, rows = size(plt.layout.grid)
+        the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.GroupPlot(
+            PGFPlotsX.Options(
+                "group style" => PGFPlotsX.Options(
+                    "group size" => string(cols)*" by "*string(rows)
+                )
+            )
+        ))
+
+        pushed_colormap = false
+        for sp in plt.subplots
+            bb = bbox(sp)
+            cstr = plot_color(sp[:background_color_legend])
+            a = alpha(cstr)
+            title_cstr = plot_color(sp[:titlefontcolor])
+            title_a = alpha(cstr)
+            # TODO: aspect ratio
+            axis_opt = PGFPlotsX.Options(
+                "height" => string(height(bb)),
+                "width" => string(width(bb)),
+                "title" => sp[:title],
+                "title style" => PGFPlotsX.Options(
+                    "font" => pgfx_font(sp[:titlefontsize], pgfx_thickness_scaling(sp)),
+                    "color" => title_cstr,
+                    "draw opacity" => title_a,
+                    "rotate" => sp[:titlefontrotation]
+                ),
+                "legend pos" => get(_pgfplotsx_legend_pos, sp[:legend], "outer north east"),
+                "legend style" => PGFPlotsX.Options(
+                    pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid") => nothing,
+                    "fill" => cstr,
+                    "font" => pgfx_font(sp[:legendfontsize], pgfx_thickness_scaling(sp))
+                ),
+                "axis background/.style" => PGFPlotsX.Options(
+                    "fill" => sp[:background_color_inside]
+                )
+            )
+            for letter in (:x, :y, :z)
+                if letter != :z || is3d(sp)
+                    pgfx_axis!(axis_opt, sp, letter)
+                end
+            end
+            # Search series for any gradient. In case one series uses a gradient set
+            # the colorbar and colomap.
+            # The reasoning behind doing this on the axis level is that pgfplots
+            # colorbar seems to only works on axis level and needs the proper colormap for
+            # correctly displaying it.
+            # It's also possible to assign the colormap to the series itself but
+            # then the colormap needs to be added twice, once for the axis and once for the
+            # series.
+            # As it is likely that all series within the same axis use the same
+            # colormap this should not cause any problem.
+            for series in series_list(sp)
+                for col in (:markercolor, :fillcolor, :linecolor)
+                    if typeof(series.plotattributes[col]) == ColorGradient
+                        if !pushed_colormap
+                            PGFPlotsX.push_preamble!(pgfx_plot.the_plot, """\\pgfplotsset{
+                                colormap={plots}{$(pgfx_colormap(series.plotattributes[col]))},
+                            }""")
+                            pushed_colormap = true
+                            push!(axis_opt,
+                                "colorbar" => nothing,
+                                "colormap name" => "plots",
+                            )
+                        end
+
+                        # goto is needed to break out of col and series for
+                        @goto colorbar_end
+                    end
+                end
+            end
+            @label colorbar_end
+
+            push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
+                "title" => sp[:colorbar_title]
+                )
+            )
+            axisf = if sp[:projection] == :polar
+                        # TODO: this errors for some reason
+                        # push!(axis_opt, "xmin" => 90)
+                        # push!(axis_opt, "xmax" => 450)
+                        PGFPlotsX.PolarAxis
+                    else
+                        PGFPlotsX.Axis
+                    end
+            axis = axisf(
+                axis_opt
+            )
+            for series in series_list(sp)
+                opt = series.plotattributes
+                st = series[:seriestype]
+                # function args
+                args = if st == :contour
+                    opt[:z].surf, opt[:x], opt[:y]
+                elseif is3d(st)
+                    opt[:x], opt[:y], opt[:z]
+                elseif st == :straightline
+                    straightline_data(series)
+                elseif st == :shape
+                    shape_data(series)
+                elseif ispolar(sp)
+                    theta, r = opt[:x], opt[:y]
+                    rad2deg.(theta), r
+                else
+                    opt[:x], opt[:y]
+                end
+                series_opt = PGFPlotsX.Options(
+                                "color" => opt[:linecolor],
+                            )
+                if st == :shape
+                    push!(series_opt, "area legend" => nothing)
+                end
+                if opt[:marker_z] !== nothing
+                    push!(series_opt, "point meta" => "explicit")
+                    push!(series_opt, "scatter" => nothing)
+                end
+                segments = iter_segments(series)
+                segment_opt = PGFPlotsX.Options()
+                for (i, rng) in enumerate(segments)
+                    segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
+                    segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
+                    if st == :shape
+                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
+                    end
+                    seg_args = (arg[rng] for arg in args)
+                    # add fillrange
+                    if series[:fillrange] !== nothing && st != :shape
+                        push!(axis, pgfx_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
+                    end
+
+                    # add to legend?
+                    if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
+                        if opt[:fillrange] !== nothing
+                            push!(segment_opt, "forget plot" => nothing)
+                            push!(axis, pgfx_fill_legend_hack(opt, args))
+                        else
+                            if st == :shape
+                                push!(segment_opt, "area legend" => nothing)
+                            end
+                        end
+                        push!( axis, PGFPlotsX.LegendEntry( opt[:label] ))
+                    else
+                        push!(segment_opt, "forget plot" => nothing)
+                    end
+                end
+                #include additional style
+                if haskey(_pgfx_series_extrastyle, st)
+                    push!(series_opt, _pgfx_series_extrastyle[st] => nothing)
+                end
+                # TODO: different seriestypes, histogramms, contours, etc.
+                # TODO: colorbars
+                # TODO: gradients
+                if is3d(series)
+                    series_func = PGFPlotsX.Plot3
+                else
+                    series_func = PGFPlotsX.Plot
+                end
+                if st == :scatter
+                    push!(series_opt, "only marks" => nothing)
+                end
+                series_plot = series_func(
+                    merge(series_opt, segment_opt),
+                    PGFPlotsX.Coordinates(args..., meta = opt[:marker_z])
+                )
+                # add series annotations
+                anns = series[:series_annotations]
+                for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
+                    pgfx_add_annotation!(series_plot, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
+                end
+                push!( axis, series_plot )
+                if opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
+                    push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
+                    )
+                end
+            end
+            push!( the_plot.elements[1], axis )
+            if length(plt.o.the_plot.elements) > 0
+                plt.o.the_plot.elements[1] = the_plot
+            else
+                push!(plt.o, the_plot)
+            end
+        end
+        pgfx_plot.is_created = true
+    end
+end
+
+##
 
 const _pgfplotsx_linestyles = KW(
     :solid => "solid",
@@ -344,193 +547,15 @@ end
 # --------------------------------------------------------------------------------------
 # display calls this and then _display, its called 3 times for plot(1:5)
 function _create_backend_figure(plt::Plot{PGFPlotsXBackend})
-
+    plt.o = PGFPlotsXPlot()
 end
 
-function _series_updated(plt::Plot{PGFPlotsXBackend}, series::Series)
+function _series_added(plt::Plot{PGFPlotsXBackend}, series::Series)
+    plt.o.is_created = false
 end
 
-# TODO: don't rebuild plots so often
-# IDEA: use functor to only build plot once
 function _update_plot_object(plt::Plot{PGFPlotsXBackend})
-    plt.o = PGFPlotsX.TikzDocument()
-    cols, rows = size(plt.layout.grid)
-    push!(plt.o, PGFPlotsX.TikzPicture(PGFPlotsX.GroupPlot(
-        PGFPlotsX.Options(
-            "group style" => PGFPlotsX.Options(
-                "group size" => string(cols)*" by "*string(rows)
-            )
-        )
-    )))
-
-    pushed_colormap = false
-    for sp in plt.subplots
-        bb = bbox(sp)
-        cstr = plot_color(sp[:background_color_legend])
-        a = alpha(cstr)
-        title_cstr = plot_color(sp[:titlefontcolor])
-        title_a = alpha(cstr)
-        # TODO: aspect ratio
-        axis_opt = PGFPlotsX.Options(
-            "height" => string(height(bb)),
-            "width" => string(width(bb)),
-            "title" => sp[:title],
-            "title style" => PGFPlotsX.Options(
-                "font" => pgfx_font(sp[:titlefontsize], pgfx_thickness_scaling(sp)),
-                "color" => title_cstr,
-                "draw opacity" => title_a,
-                "rotate" => sp[:titlefontrotation]
-            ),
-            "legend pos" => get(_pgfplotsx_legend_pos, sp[:legend], "outer north east"),
-            "legend style" => PGFPlotsX.Options(
-                pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid") => nothing,
-                "fill" => cstr,
-                "font" => pgfx_font(sp[:legendfontsize], pgfx_thickness_scaling(sp))
-            ),
-            "axis background/.style" => PGFPlotsX.Options(
-                "fill" => sp[:background_color_inside]
-            )
-        )
-        for letter in (:x, :y, :z)
-            if letter != :z || is3d(sp)
-                pgfx_axis!(axis_opt, sp, letter)
-            end
-        end
-        # Search series for any gradient. In case one series uses a gradient set
-        # the colorbar and colomap.
-        # The reasoning behind doing this on the axis level is that pgfplots
-        # colorbar seems to only works on axis level and needs the proper colormap for
-        # correctly displaying it.
-        # It's also possible to assign the colormap to the series itself but
-        # then the colormap needs to be added twice, once for the axis and once for the
-        # series.
-        # As it is likely that all series within the same axis use the same
-        # colormap this should not cause any problem.
-        for series in series_list(sp)
-            for col in (:markercolor, :fillcolor, :linecolor)
-                if typeof(series.plotattributes[col]) == ColorGradient
-                    if !pushed_colormap
-                        PGFPlotsX.push_preamble!(plt.o, """\\pgfplotsset{
-                            colormap={plots}{$(pgfx_colormap(series.plotattributes[col]))},
-                        }""")
-                        pushed_colormap = true
-                        push!(axis_opt,
-                            "colorbar" => nothing,
-                            "colormap name" => "plots",
-                        )
-                    end
-
-                    # goto is needed to break out of col and series for
-                    @goto colorbar_end
-                end
-            end
-        end
-        @label colorbar_end
-
-        push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
-            "title" => sp[:colorbar_title]
-            )
-        )
-        axisf = if sp[:projection] == :polar
-                    # TODO: this errors for some reason
-                    # push!(axis_opt, "xmin" => 90)
-                    # push!(axis_opt, "xmax" => 450)
-                    PGFPlotsX.PolarAxis
-                else
-                    PGFPlotsX.Axis
-                end
-        axis = axisf(
-            axis_opt
-        )
-        for series in series_list(sp)
-            opt = series.plotattributes
-            st = series[:seriestype]
-            # function args
-            args = if st == :contour
-                opt[:z].surf, opt[:x], opt[:y]
-            elseif is3d(st)
-                opt[:x], opt[:y], opt[:z]
-            elseif st == :straightline
-                straightline_data(series)
-            elseif st == :shape
-                shape_data(series)
-            elseif ispolar(sp)
-                theta, r = opt[:x], opt[:y]
-                rad2deg.(theta), r
-            else
-                opt[:x], opt[:y]
-            end
-            series_opt = PGFPlotsX.Options(
-                            "color" => opt[:linecolor],
-                        )
-            if st == :shape
-                push!(series_opt, "area legend" => nothing)
-            end
-            if opt[:marker_z] !== nothing
-                push!(series_opt, "point meta" => "explicit")
-                push!(series_opt, "scatter" => nothing)
-            end
-            segments = iter_segments(series)
-            segment_opt = PGFPlotsX.Options()
-            for (i, rng) in enumerate(segments)
-                segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
-                segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
-                if st == :shape
-                    segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
-                end
-                seg_args = (arg[rng] for arg in args)
-                # add fillrange
-                if series[:fillrange] !== nothing && st != :shape
-                    push!(axis, pgfx_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
-                end
-
-                # add to legend?
-                if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
-                    if opt[:fillrange] !== nothing
-                        push!(segment_opt, "forget plot" => nothing)
-                        push!(axis, pgfx_fill_legend_hack(opt, args))
-                    else
-                        if st == :shape
-                            push!(segment_opt, "area legend" => nothing)
-                        end
-                    end
-                    push!( axis, PGFPlotsX.LegendEntry( opt[:label] ))
-                else
-                    push!(segment_opt, "forget plot" => nothing)
-                end
-            end
-            #include additional style
-            if haskey(_pgfx_series_extrastyle, st)
-                push!(series_opt, _pgfx_series_extrastyle[st] => nothing)
-            end
-            # TODO: different seriestypes, histogramms, contours, etc.
-            # TODO: colorbars
-            # TODO: gradients
-            if is3d(series)
-                series_func = PGFPlotsX.Plot3
-            else
-                series_func = PGFPlotsX.Plot
-            end
-            if st == :scatter
-                push!(series_opt, "only marks" => nothing)
-            end
-            series_plot = series_func(
-                merge(series_opt, segment_opt),
-                PGFPlotsX.Coordinates(args..., meta = opt[:marker_z])
-            )
-            # add series annotations
-            anns = series[:series_annotations]
-            for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
-                pgfx_add_annotation!(series_plot, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
-            end
-            push!( axis, series_plot )
-            if opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
-                )
-            end
-        end
-        push!( plt.o.elements[1].elements[1], axis )
-    end
+    plt.o(plt)
 end
 
 function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsXBackend})
