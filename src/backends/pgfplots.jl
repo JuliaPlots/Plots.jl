@@ -128,16 +128,18 @@ function pgf_marker(plotattributes, i = 1)
     shape = _cycle(plotattributes[:markershape], i)
     cstr, a = pgf_color(plot_color(get_markercolor(plotattributes, i), get_markeralpha(plotattributes, i)))
     cstr_stroke, a_stroke = pgf_color(plot_color(get_markerstrokecolor(plotattributes, i), get_markerstrokealpha(plotattributes, i)))
-    """
-    mark = $(get(_pgfplots_markers, shape, "*")),
-    mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)),
-    mark options = {
-        color = $cstr_stroke, draw opacity = $a_stroke,
-        fill = $cstr, fill opacity = $a,
-        line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:markerstrokewidth], i)),
-        rotate = $(shape == :dtriangle ? 180 : 0),
-        $(get(_pgfplots_linestyles, _cycle(plotattributes[:markerstrokestyle], i), "solid"))
-    }"""
+    return string(
+        "mark = $(get(_pgfplots_markers, shape, "*")),\n",
+        "mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)),\n",
+        plotattributes[:seriestype] == :scatter ? "only marks,\n" : "",
+        "mark options = {
+            color = $cstr_stroke, draw opacity = $a_stroke,
+            fill = $cstr, fill opacity = $a,
+            line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:markerstrokewidth], i)),
+            rotate = $(shape == :dtriangle ? 180 : 0),
+            $(get(_pgfplots_linestyles, _cycle(plotattributes[:markerstrokestyle], i), "solid"))
+        }"
+        )
 end
 
 function pgf_add_annotation!(o, x, y, val, thickness_scaling = 1)
