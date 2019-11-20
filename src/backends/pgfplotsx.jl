@@ -149,8 +149,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 # treat segments
                 segments = iter_segments(series)
                 segment_opt = PGFPlotsX.Options()
-                # @show get_markerstrokecolor(opt, 1)
-                # @show get_markercolor(opt,1)
                 for (i, rng) in enumerate(segments)
                     seg_args = (arg[rng] for arg in args)
                     segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )

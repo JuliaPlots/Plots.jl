@@ -37,11 +37,10 @@ end
         axis = Plots.pgfx_axes(pl.o)[1]
         @test count( x->x isa PGFPlotsX.LegendEntry, axis.contents ) == 5
         @test count( x->x isa PGFPlotsX.Plot, axis.contents ) == 104 # each marker is its own plot
-        marker = axis.contents[5]
+        marker = axis.contents[14]
         @test marker isa PGFPlotsX.Plot
-        @show marker.options.dict |> keys
-        @test marker.options["mark"] == "none"
-        @test marker.options["mark options"]["color"] == convert(RGBA{Float64}, colorant"green")
+        @test marker.options["mark"] == "*"
+        @test marker.options["mark options"]["color"] == RGBA{Float64}( colorant"green", 0.8)
         @test marker.options["mark options"]["line width"] == 1
 
         # TODO: marker stroke color is incorrect
