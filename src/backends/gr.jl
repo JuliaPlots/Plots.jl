@@ -749,7 +749,7 @@ end
 
 function gr_xaxis_height(sp)
     xaxis = sp[:xaxis]
-    xticks, yticks = axis_drawing_info(sp)[1:2]
+    xticks, yticks = get_ticks(sp, xaxis), get_ticks(sp, sp[:yaxis])
     gr_set_font(tickfont(xaxis))
     h = (xticks in (nothing, false, :none) ? 0 : last(gr_get_ticks_size(xticks, xaxis[:rotation])))
     if xaxis[:guide] != ""
@@ -761,7 +761,7 @@ end
 
 function gr_yaxis_width(sp)
     yaxis = sp[:yaxis]
-    xticks, yticks = axis_drawing_info(sp)[1:2]
+    xticks, yticks = get_ticks(sp, sp[:xaxis]), get_ticks(sp, yaxis)
     gr_set_font(tickfont(yaxis))
     w = (xticks in (nothing, false, :none) ? 0 : first(gr_get_ticks_size(yticks, yaxis[:rotation])))
     if yaxis[:guide] != ""
@@ -791,7 +791,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         toppad += h
     end
     # Add margin for x and y ticks
-    xticks, yticks = axis_drawing_info(sp)[1:2]
+    xticks, yticks = get_ticks(sp, sp[:xaxis]), get_ticks(sp, sp[:yaxis])
     if !(xticks in (nothing, false, :none))
         flip, mirror = gr_set_xticks_font(sp)
         l = 0.01 + last(gr_get_ticks_size(xticks, sp[:xaxis][:rotation]))
@@ -1182,7 +1182,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_set_font(guidefont(xaxis))
         GR.titles3d(xaxis[:guide], yaxis[:guide], zaxis[:guide])
     else
-        xticks, yticks = axis_drawing_info(sp)[1:2]
+        xticks, yticks = get_ticks(sp, sp[:xaxis]), get_ticks(sp, sp[:yaxis])
         if xaxis[:guide] != ""
             h = 0.01 + gr_xaxis_height(sp)
             gr_set_font(guidefont(xaxis))
