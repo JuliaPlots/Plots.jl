@@ -36,9 +36,15 @@ end
         Plots._update_plot_object(pl)
         axis = Plots.pgfx_axes(pl.o)[1]
         @test count( x->x isa PGFPlotsX.LegendEntry, axis.contents ) == 5
-        @test count( x->x isa PGFPlotsX.Plot, axis.contents ) == 5
-        # TODO: marker size does not adjust
-        # TODO: marker stroke is incorrect
+        @test count( x->x isa PGFPlotsX.Plot, axis.contents ) == 104 # each marker is its own plot
+        marker = axis.contents[5]
+        @test marker isa PGFPlotsX.Plot
+        @show marker.options.dict |> keys
+        @test marker.options["mark"] == "none"
+        @test marker.options["mark options"]["color"] == convert(RGBA{Float64}, colorant"green")
+        @test marker.options["mark options"]["line width"] == 1
+
+        # TODO: marker stroke color is incorrect
      end # testset
      @testset "Plot in pieces" begin
         plot(rand(100) / 3, reg=true, fill=(0, :green))
