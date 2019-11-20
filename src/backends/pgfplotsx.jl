@@ -5,6 +5,8 @@ Base.@kwdef mutable struct PGFPlotsXPlot
     the_plot::PGFPlotsX.TikzDocument = PGFPlotsX.TikzDocument()
 end
 
+pgfx_axes(pgfx_plot::PGFPlotsXPlot) = pgfx_plot.the_plot.elements[1].elements[1].contents
+
 function Base.show(io::IO, mime::MIME, pgfx_plot::PGFPlotsXPlot)
     show(io::IO, mime, pgfx_plot.the_plot)
 end
@@ -31,7 +33,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             a = alpha(cstr)
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(cstr)
-            # TODO: aspect ratio
             axis_opt = PGFPlotsX.Options(
                 "height" => string(height(bb)),
                 "width" => string(width(bb)),
@@ -575,7 +576,7 @@ end
 
 function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsXBackend})
     _update_plot_object(plt)
-    PGFPlotsX.print_tex(plt.o)
+    PGFPlotsX.print_tex(plt.o.the_plot)
 end
 
 function _display(plt::Plot{PGFPlotsXBackend})
