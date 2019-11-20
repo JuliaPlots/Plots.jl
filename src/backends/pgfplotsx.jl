@@ -88,6 +88,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 end
             end
             @label colorbar_end
+            # detect fillranges
+            # if any(series->series[:fillrange] != nothing, series_list(sp))
+            #         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{fillbetween},\n")
+            # end
 
             push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
                 "title" => sp[:colorbar_title]
@@ -125,70 +129,60 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 series_opt = PGFPlotsX.Options(
                                 "color" => opt[:linecolor],
                             )
-                if st == :shape
-                    push!(series_opt, "area legend" => nothing)
-                end
                 if opt[:marker_z] !== nothing
                     push!(series_opt, "point meta" => "explicit")
                     push!(series_opt, "scatter" => nothing)
                 end
-                segments = iter_segments(series)
-                segment_opt = PGFPlotsX.Options()
-                for (i, rng) in enumerate(segments)
-                    segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
-                    segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
-                    if st == :shape
-                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
-                    end
-                    seg_args = (arg[rng] for arg in args)
-                    # add fillrange
-                    if series[:fillrange] !== nothing && st != :shape
-                        push!(axis, pgfx_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
-                    end
-
-                    # add to legend?
-                    if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
-                        if opt[:fillrange] !== nothing
-                            push!(segment_opt, "forget plot" => nothing)
-                            push!(axis, pgfx_fill_legend_hack(opt, args))
-                        else
-                            if st == :shape
-                                push!(segment_opt, "area legend" => nothing)
-                            end
-                        end
-                        push!( axis, PGFPlotsX.LegendEntry( opt[:label] ))
-                    else
-                        push!(segment_opt, "forget plot" => nothing)
-                    end
-                end
-                #include additional style
-                if haskey(_pgfx_series_extrastyle, st)
-                    push!(series_opt, _pgfx_series_extrastyle[st] => nothing)
-                end
-                # TODO: different seriestypes, histogramms, contours, etc.
-                # TODO: colorbars
-                # TODO: gradients
                 if is3d(series)
                     series_func = PGFPlotsX.Plot3
                 else
                     series_func = PGFPlotsX.Plot
                 end
-                if st == :scatter
-                    push!(series_opt, "only marks" => nothing)
+                if series[:fillrange] !== nothing
+                    series_opt = merge(series_opt, pgfx_fillstyle(opt))
+                    push!(series_opt, "area legend" => nothing)
                 end
-                series_plot = series_func(
-                    merge(series_opt, segment_opt),
-                    PGFPlotsX.Coordinates(args..., meta = opt[:marker_z])
-                )
+                # include additional style
+                if haskey(_pgfx_series_extrastyle, st)
+                    push!(series_opt, _pgfx_series_extrastyle[st] => nothing)
+                end
+                # treat segments
+                segments = iter_segments(series)
+                segment_opt = PGFPlotsX.Options()
+                # @show get_markerstrokecolor(opt, 1)
+                # @show get_markercolor(opt,1)
+                for (i, rng) in enumerate(segments)
+                    seg_args = (arg[rng] for arg in args)
+                    segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
+                    segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
+                    if st == :shape || series[:fillrange] !== nothing
+                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
+                    end
+                    segment_plot = series_func(
+                        merge(series_opt, segment_opt),
+                        PGFPlotsX.Coordinates(seg_args...,
+                            meta = if !isnothing(opt[:marker_z])
+                                        opt[:marker_z][rng]
+                                    else
+                                        nothing
+                                    end
+                        ),
+                        series[:fillrange] !== nothing ? "\\closedcycle" : "{}"
+                    )
+                    push!(axis, segment_plot)
+                    # add to legend?
+                    if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
+                        push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
+                        )
+                    end
+                end
+                # TODO: different seriestypes, histogramms, contours, etc.
+                # TODO: colorbars
+                # TODO: gradients
                 # add series annotations
                 anns = series[:series_annotations]
                 for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
                     pgfx_add_annotation!(series_plot, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
-                end
-                push!( axis, series_plot )
-                if opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                    push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
-                    )
                 end
             end
             push!( the_plot.elements[1], axis )
@@ -247,6 +241,8 @@ const _pgfx_series_extrastyle = KW(
     :sticks => "ycomb",
     :ysticks => "ycomb",
     :xsticks => "xcomb",
+    :scatter => "only marks",
+    :shape => "area legends"
 )
 
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
