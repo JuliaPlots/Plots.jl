@@ -9,6 +9,19 @@ end
 
 pgfx_axes(pgfx_plot::PGFPlotsXPlot) = pgfx_plot.the_plot.elements[1].elements[1].contents
 
+function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat, Surface})
+    a = Array(s)
+    xn = Vector{eltype(x)}(undef, length(a))
+    yn = Vector{eltype(y)}(undef, length(a))
+    zn = Vector{eltype(s)}(undef, length(a))
+    for (n, (i, j)) in enumerate(Tuple.(CartesianIndices(a)))
+        xn[n] = x[j]
+        yn[n] = y[i]
+        zn[n] = a[i,j]
+    end
+    return xn, yn, zn
+end
+
 function Base.show(io::IO, mime::MIME, pgfx_plot::PGFPlotsXPlot)
     show(io::IO, mime, pgfx_plot.the_plot)
 end
@@ -69,16 +82,32 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     pgfx_axis!(axis_opt, sp, letter)
                 end
             end
-            if hascolorbar(sp)
-                PGFPlotsX.push_preamble!(pgfx_plot.the_plot, """\\pgfplotsset{
-                    colormap={plots$(sp.attr[:subplot_index])}{$(pgfx_colormap(series.plotattributes[col]))},
-                }""")
-                pushed_colormap = true
-                push!(axis_opt,
-                    "colorbar" => nothing,
-                    "colormap name" => "plots$(sp.attr[:subplot_index])",
-                )
-            end
+            # Search series for any gradient. In case one series uses a gradient set
+               # the colorbar and colomap.
+               # The reasoning behind doing this on the axis level is that pgfplots
+               # colorbar seems to only works on axis level and needs the proper colormap for
+               # correctly displaying it.
+               # It's also possible to assign the colormap to the series itself but
+               # then the colormap needs to be added twice, once for the axis and once for the
+               # series.
+               # As it is likely that all series within the same axis use the same
+               # colormap this should not cause any problem.
+               for series in series_list(sp)
+                   for col in (:markercolor, :fillcolor, :linecolor)
+                       if typeof(series.plotattributes[col]) == ColorGradient
+                            PGFPlotsX.push_preamble!(pgfx_plot.the_plot, """\\pgfplotsset{
+                                colormap={plots$(sp.attr[:subplot_index])}{$(pgfx_colormap(series.plotattributes[col]))},
+                            }""")
+                            push!(axis_opt,
+                                "colorbar" => nothing,
+                                "colormap name" => "plots$(sp.attr[:subplot_index])",
+                            )
+                           # goto is needed to break out of col and series for
+                           @goto colorbar_end
+                       end
+                   end
+               end
+               @label colorbar_end
 
             push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
                 "title" => sp[:colorbar_title],
@@ -101,11 +130,13 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 opt = series.plotattributes
                 st = series[:seriestype]
                 series_opt = PGFPlotsX.Options(
-                                "color" => opt[:linecolor],
+                                "color" => single_color(opt[:linecolor]),
                             )
                 # function args
                 args = if st == :contour
                     opt[:x], opt[:y], opt[:z].surf'
+                elseif st == :heatmap
+                    surface_to_vecs(opt[:x], opt[:y], opt[:z])
                 elseif is3d(st)
                     opt[:x], opt[:y], opt[:z]
                 elseif st == :straightline
@@ -153,8 +184,21 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         PGFPlotsX.Table(Contour.contours(args..., opt[:levels]))
                     )
                     push!(axis, surface_plot)
-                elseif st == :histogram2d
-                    hist_
+                elseif st == :heatmap
+                    # TODO: global view setting
+                    push!(axis.options,
+                        "view" => "{0}{90}",
+                        "shader" => "flat corner",
+                    )
+                    heatmap_opt = PGFPlotsX.Options(
+                        "surf" => nothing,
+                        "mesh/rows" => length(opt[:x])
+                     )
+                    heatmap_plot = PGFPlotsX.Plot3(
+                        merge(series_opt, heatmap_opt),
+                        PGFPlotsX.Table(args)
+                    )
+                    push!(axis, heatmap_plot)
                 else
                     # treat segments
                     segments = iter_segments(series)
@@ -270,6 +314,11 @@ const _pgfx_annotation_halign = KW(
 # TODO: maybe obsolete
 function pgfx_colormap(grad::ColorGradient)
     join(map(grad.colors) do c
+        @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
+    end,"\n")
+end
+function pgfx_colormap(grad::Vector{<:Colorant})
+    join(map(grad) do c
         @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
     end,"\n")
 end

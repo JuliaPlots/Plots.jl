@@ -74,7 +74,20 @@ end
      end # testset
      @testset "Histogram 2D" begin
         histogram2d(randn(10000), randn(10000), nbins=20)
-        # TODO: totally broken, errors also for pgfplots
+        # TODO: should work, when heatmaps works?
+     end # testset
+     @testset "Heatmap" begin
+        xs = [string("x", i) for i = 1:10]
+        ys = [string("y", i) for i = 1:4]
+        z = float((1:4) * reshape(1:10, 1, :))
+        pgfx_plot = heatmap(xs, ys, z, aspect_ratio=1)
+        Plots._update_plot_object(pgfx_plot)
+        if @test_nowarn(haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar") == true)
+           @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
+           @test Plots.pgfx_axes(pgfx_plot.o)[1]["colormap name"] == "plots1"
+        end
+        # TODO: wrong colors
+        # TODO: lines instead of patches
      end # testset
      @testset "Contours" begin
         x = 1:0.5:20
