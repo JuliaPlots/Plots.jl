@@ -151,7 +151,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 else
                     series_func = PGFPlotsX.Plot
                 end
-                if series[:fillrange] !== nothing
+                if series[:fillrange] !== nothing && st != :contour
                     series_opt = merge(series_opt, pgfx_fillstyle(opt))
                     push!(series_opt, "area legend" => nothing)
                 end
@@ -160,13 +160,25 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     push!(series_opt, _pgfx_series_extrastyle[st] => nothing)
                 end
                 if st == :contour
+                    if !isfilledcontour(series)
                         surface_opt = PGFPlotsX.Options(
-                        "contour prepared" => nothing
-                    )
+                            "contour prepared" => PGFPlotsX.Options(
+                                "labels" => opt[:contour_labels],
+                            )
+                        )
+                    else
+                        error("PGFPlotsX backend does not support filled contours at the moment.")
+                        surface_opt = PGFPlotsX.Options(
+                            "contour filled" => PGFPlotsX.Options(
+                                # "levels" => opt[:levels],
+                                # "labels" => opt[:contour_labels],
+                            )
+                        )
+                    end
                     surface_plot = series_func(
                         # merge(series_opt, surface_opt),
                         surface_opt,
-                        PGFPlotsX.Table(Contour.contours(args...))
+                        PGFPlotsX.Table(Contour.contours(args..., opt[:levels]))
                     )
                     push!(axis, surface_plot)
                 else
