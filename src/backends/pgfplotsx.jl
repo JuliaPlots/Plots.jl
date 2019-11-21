@@ -18,14 +18,18 @@ end
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created
         cols, rows = size(plt.layout.grid)
-        the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.GroupPlot(
-            PGFPlotsX.Options(
-                "group style" => PGFPlotsX.Options(
-                    "group size" => string(cols)*" by "*string(rows)
+        the_plot = PGFPlotsX.TikzPicture()
+        # the combination of groupplot and polaraxis is broken in pgfplots
+        if !any( sp -> ispolar(sp), plt.subplots )
+            push!( the_plot, PGFPlotsX.GroupPlot(
+                    PGFPlotsX.Options(
+                        "group style" => PGFPlotsX.Options(
+                            "group size" => string(cols)*" by "*string(rows)
+                        )
+                    )
                 )
             )
-        ))
-
+        end
         pushed_colormap = false
         for sp in plt.subplots
             bb = bbox(sp)
@@ -121,6 +125,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     end
                 end
                 st = series[:seriestype]
+                series_opt = PGFPlotsX.Options(
+                                "color" => opt[:linecolor],
+                            )
                 # function args
                 args = if st == :contour
                     opt[:z].surf, opt[:x], opt[:y]
@@ -136,9 +143,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 else
                     opt[:x], opt[:y]
                 end
-                series_opt = PGFPlotsX.Options(
-                                "color" => opt[:linecolor],
-                            )
                 if is3d(series)
                     series_func = PGFPlotsX.Plot3
                 else
@@ -183,7 +187,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     pgfx_add_annotation!(series_plot, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
                 end
             end
-            push!( the_plot.elements[1], axis )
+            if ispolar(sp)
+                axes = the_plot
+            else
+                axes = the_plot.elements[1]
+            end
+            push!( axes, axis )
             if length(plt.o.the_plot.elements) > 0
                 plt.o.the_plot.elements[1] = the_plot
             else
@@ -570,7 +579,7 @@ end
 
 function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsXBackend})
     _update_plot_object(plt)
-    PGFPlotsX.print_tex(plt.o.the_plot)
+    PGFPlotsX.print_tex(io, plt.o.the_plot)
 end
 
 function _display(plt::Plot{PGFPlotsXBackend})

@@ -65,7 +65,6 @@ end
         Θ = range(0, stop=1.5π, length=100)
         r = abs.(0.1 * randn(100) + sin.(3Θ))
         plot(Θ, r, proj=:polar, m=2)
-        # TODO: handle polar plots
      end # testset
      @testset "Histogram 2D" begin
         histogram2d(randn(10000), randn(10000), nbins=20)
