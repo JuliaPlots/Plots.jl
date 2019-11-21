@@ -88,6 +88,6 @@ end
         p2 = contour(x, y, Z)
         p1 = contour(x, y, f, fill=true)
         plot(p1, p2)
-        # TODO: totally broken, also errors for pgfplots
+        # TODO: filled contours
      end # testset
 end # testset
