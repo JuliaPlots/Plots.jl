@@ -336,7 +336,7 @@ const _pgfx_annotation_halign = KW(
 ## --------------------------------------------------------------------------------------
 # Generates a colormap for pgfplots based on a ColorGradient
 # TODO: maybe obsolete
-pgfx_arrow(::Nothing) = "-"
+pgfx_arrow(::Nothing) = "every arrow/.append style={-}"
 function pgfx_arrow( arr::Arrow )
     components = String[]
     head = String[]
