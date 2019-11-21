@@ -1,4 +1,5 @@
-# PGFPlotsX.print_tex(io::IO, data::Symbol) = PGFPlotsX.print_tex(io, string(data))
+using Contour: Contour
+# PGFPlotsX.print_tex(io::IO, data::ColorGradient) = write(io, pgfx_colormap(data))
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
@@ -132,7 +133,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             )
                 # function args
                 args = if st == :contour
-                    opt[:z].surf, opt[:x], opt[:y]
+                    opt[:x], opt[:y], opt[:z].surf'
                 elseif is3d(st)
                     opt[:x], opt[:y], opt[:z]
                 elseif st == :straightline
@@ -158,35 +159,44 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 if haskey(_pgfx_series_extrastyle, st)
                     push!(series_opt, _pgfx_series_extrastyle[st] => nothing)
                 end
-                # treat segments
-                segments = iter_segments(series)
-                segment_opt = PGFPlotsX.Options()
-                for (i, rng) in enumerate(segments)
-                    seg_args = (arg[rng] for arg in args)
-                    segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
-                    segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
-                    if st == :shape || series[:fillrange] !== nothing
-                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
-                    end
-                    segment_plot = series_func(
-                        merge(series_opt, segment_opt),
-                        PGFPlotsX.Coordinates(seg_args...),
-                        series[:fillrange] !== nothing ? "\\closedcycle" : "{}"
+                if st == :contour
+                        surface_opt = PGFPlotsX.Options(
+                        "contour prepared" => nothing
                     )
-                    push!(axis, segment_plot)
-                    # add to legend?
-                    if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                        push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
+                    surface_plot = series_func(
+                        # merge(series_opt, surface_opt),
+                        surface_opt,
+                        PGFPlotsX.Table(Contour.contours(args...))
+                    )
+                    push!(axis, surface_plot)
+                else
+                    # treat segments
+                    segments = iter_segments(series)
+                    segment_opt = PGFPlotsX.Options()
+                    for (i, rng) in enumerate(segments)
+                        seg_args = (arg[rng] for arg in args)
+                        segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
+                        segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
+                        if st == :shape || series[:fillrange] !== nothing
+                            segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
+                        end
+                        segment_plot = series_func(
+                            merge(series_opt, segment_opt),
+                            PGFPlotsX.Coordinates(seg_args...),
+                            series[:fillrange] !== nothing ? "\\closedcycle" : "{}"
                         )
+                        push!(axis, segment_plot)
+                        # add to legend?
+                        if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
+                            push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
+                            )
+                        end
                     end
-                end
-                # TODO: different seriestypes, histogramms, contours, etc.
-                # TODO: colorbars
-                # TODO: gradients
-                # add series annotations
-                anns = series[:series_annotations]
-                for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
-                    pgfx_add_annotation!(series_plot, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
+                    # add series annotations
+                    anns = series[:series_annotations]
+                    for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
+                        pgfx_add_annotation!(axis, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
+                    end
                 end
             end
             if ispolar(sp)
