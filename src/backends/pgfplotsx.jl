@@ -24,7 +24,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             push!( the_plot, PGFPlotsX.GroupPlot(
                     PGFPlotsX.Options(
                         "group style" => PGFPlotsX.Options(
-                            "group size" => string(cols)*" by "*string(rows)
+                            "group size" => string(cols)*" by "*string(rows),
+                            "horizontal sep" => string(maximum(sp -> sp.minpad[1], plt.subplots)),
+                            "vertical sep" => string(maximum(sp -> sp.minpad[2], plt.subplots)),
                         )
                     )
                 )
@@ -550,6 +552,13 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 end
 # --------------------------------------------------------------------------------------
 # display calls this and then _display, its called 3 times for plot(1:5)
+# Set the (left, top, right, bottom) minimum padding around the plot area
+# to fit ticks, tick labels, guides, colorbars, etc.
+function _update_min_padding!(sp::Subplot{PGFPlotsXBackend})
+    # TODO: make padding more intelligent
+    sp.minpad = (20mm, 5mm, 2mm, 10mm)
+end
+
 function _create_backend_figure(plt::Plot{PGFPlotsXBackend})
     plt.o = PGFPlotsXPlot()
 end
