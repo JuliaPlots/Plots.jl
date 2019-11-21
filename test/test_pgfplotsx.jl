@@ -86,8 +86,6 @@ end
            @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
            @test Plots.pgfx_axes(pgfx_plot.o)[1]["colormap name"] == "plots1"
         end
-        # TODO: wrong colors
-        # TODO: lines instead of patches
      end # testset
      @testset "Contours" begin
         x = 1:0.5:20
