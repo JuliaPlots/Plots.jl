@@ -430,16 +430,8 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
     viewport[2] = viewport_canvas[2] * (right(bb) / w)
     viewport[3] = viewport_canvas[4] * (1.0 - bottom(bb) / h)
     viewport[4] = viewport_canvas[4] * (1.0 - top(bb) / h)
-    if is3d(sp)
-        vp = viewport[:]
-        extent = min(vp[2] - vp[1], vp[4] - vp[3])
-        viewport[1] = 0.5 * (vp[1] + vp[2] - extent)
-        viewport[2] = 0.5 * (vp[1] + vp[2] + extent)
-        viewport[3] = 0.5 * (vp[3] + vp[4] - extent)
-        viewport[4] = 0.5 * (vp[3] + vp[4] + extent)
-    end
     if hascolorbar(sp)
-        viewport[2] -= gr_colorbar_ratio
+        viewport[2] -= gr_colorbar_ratio * (1 + is3d(sp) / 2)
     end
     viewport
 end
