@@ -78,6 +78,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
 
             push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
                 "title" => sp[:colorbar_title],
+                "point meta max" => get_clims(sp)[2],
+                "point meta min" => get_clims(sp)[1]
                 )
             )
             axisf = if sp[:projection] == :polar
@@ -93,20 +95,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             )
             for series in series_list(sp)
                 opt = series.plotattributes
-                if opt[:marker_z] !== nothing
-                    cbar_style = axis_opt["colorbar style"]
-                    if !haskey( cbar_style.dict, "point meta max" )
-                        append!( axis_opt["colorbar style"],
-                            (
-                            "point meta max" => maximum(opt[:marker_z]),
-                            "point meta min" => minimum(opt[:marker_z])
-                            )
-                        )
-                    else
-                        cbar_style["point meta max"] =  maximum(opt[:marker_z])
-                        cbar_style["point meta min"] = minimum(opt[:marker_z])
-                    end
-                end
                 st = series[:seriestype]
                 series_opt = PGFPlotsX.Options(
                                 "color" => opt[:linecolor],
@@ -147,7 +135,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             )
                         )
                     else
-                        error("PGFPlotsX backend does not support filled contours at the moment.")
+                        notimpl()
                         surface_opt = PGFPlotsX.Options(
                             "contour filled" => PGFPlotsX.Options(
                                 # "levels" => opt[:levels],
