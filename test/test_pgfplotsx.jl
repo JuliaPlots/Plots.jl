@@ -59,7 +59,6 @@ end
      end # testset
      @testset "Layout" begin
         plot(Plots.fakedata(100, 10), layout=4, palette=[:grays :blues :heat :lightrainbow], bg_inside=[:orange :pink :darkblue :black])
-        # TODO: no extra space for outer legends
      end # testset
      @testset "Polar plots" begin
         Θ = range(0, stop=1.5π, length=100)
