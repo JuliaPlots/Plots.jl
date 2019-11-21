@@ -8,6 +8,7 @@ Base.@kwdef mutable struct PGFPlotsXPlot
     function PGFPlotsXPlot(is_created, was_shown, the_plot)
         pgfx_plot = new(is_created, was_shown, the_plot)
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{arrows.meta}")
+        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{patchplots}")
         pgfx_plot
     end
 end
