@@ -113,4 +113,16 @@ end
          plot(p1, p2)
          # TODO: questionable tiling
      end # testset
+     @testset "Framestyles" begin
+        scatter(fill(randn(10), 6), fill(randn(10), 6), framestyle=[:box :semi :origin :zerolines :grid :none], title=[":box" ":semi" ":origin" ":zerolines" ":grid" ":none"], color=permutedims(1:6), layout=6, label="", markerstrokewidth=0, ticks=-2:2)
+        # TODO: support :semi
+     end # testset
+     @testset "Quiver" begin
+        x = -2pi:0.2:2*pi
+        y = sin.(x)
+
+        u = ones(length(x))
+        v = cos.(x)
+        plot( x, y, quiver = (u, v), arrow = true )
+     end # testset
 end # testset

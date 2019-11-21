@@ -5,6 +5,11 @@ Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
     the_plot::PGFPlotsX.TikzDocument = PGFPlotsX.TikzDocument()
+    function PGFPlotsXPlot(is_created, was_shown, the_plot)
+        pgfx_plot = new(is_created, was_shown, the_plot)
+        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{arrows.meta}")
+        pgfx_plot
+    end
 end
 
 pgfx_axes(pgfx_plot::PGFPlotsXPlot) = pgfx_plot.the_plot.elements[1].elements[1].contents
@@ -214,9 +219,21 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         if st == :shape || series[:fillrange] !== nothing
                             segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
                         end
+                        x, y = collect(seg_args)
+                        coordinates = if opt[:quiver] !== nothing
+                                          push!(segment_opt, "quiver" => PGFPlotsX.Options(
+                                                "u" => "\\thisrow{u}",
+                                                "v" => "\\thisrow{v}",
+                                                pgfx_arrow(opt[:arrow]) => nothing
+                                              ),
+                                          )
+                                          PGFPlotsX.Table([:x => x, :y => y, :u => opt[:quiver][1], :v => opt[:quiver][2]])
+                                      else
+                                          PGFPlotsX.Coordinates(seg_args...)
+                                      end
                         segment_plot = series_func(
                             merge(series_opt, segment_opt),
-                            PGFPlotsX.Coordinates(seg_args...),
+                            coordinates,
                             series[:fillrange] !== nothing ? "\\closedcycle" : "{}"
                         )
                         push!(axis, segment_plot)
@@ -255,7 +272,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
 end
 
 ##
-
 const _pgfplotsx_linestyles = KW(
     :solid => "solid",
     :dash => "dashed",
@@ -316,6 +332,27 @@ const _pgfx_annotation_halign = KW(
 ## --------------------------------------------------------------------------------------
 # Generates a colormap for pgfplots based on a ColorGradient
 # TODO: maybe obsolete
+pgfx_arrow(::Nothing) = "-"
+function pgfx_arrow( arr::Arrow )
+    components = String[]
+    head = String[]
+    push!(head, "{stealth[length = $(arr.headlength)pt, width = $(arr.headwidth)pt")
+    if arr.style == :open
+        push!(head, ", open")
+    end
+    push!(head, "]}")
+    head = join(head, "")
+    if arr.side == :both || arr.side == :tail
+        push!( components,  head )
+    end
+    push!(components, "-")
+    if arr.side == :both || arr.side == :head
+        push!( components, head )
+    end
+    components = join( components, "" )
+    return "every arrow/.append style={$(components)}"
+end
+
 function pgfx_colormap(grad::ColorGradient)
     join(map(grad.colors) do c
         @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
@@ -561,7 +598,8 @@ end
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PGFPlotsXBackend})
     # TODO: make padding more intelligent
-    sp.minpad = (20mm, 5mm, 2mm, 10mm)
+    # order: right, top, left, bottom
+    sp.minpad = (20mm, 12mm, 2mm, 10mm)
 end
 
 function _create_backend_figure(plt::Plot{PGFPlotsXBackend})
