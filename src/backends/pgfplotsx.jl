@@ -18,6 +18,7 @@ function Base.push!(pgfx_plot::PGFPlotsXPlot, item)
 end
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
+    # TODO: annotations! does not trigger _series_added ...
     if !pgfx_plot.is_created
         cols, rows = size(plt.layout.grid)
         the_plot = PGFPlotsX.TikzPicture()
@@ -179,6 +180,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
                         pgfx_add_annotation!(axis, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
                     end
+                end
+                # add subplot annotations
+                anns = sp.attr[:annotations]
+                for (xi,yi,txt) in anns
+                    pgfx_add_annotation!(axis, xi, yi, txt)
                 end
             end
             if ispolar(sp)
