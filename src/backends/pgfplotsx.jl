@@ -1,4 +1,5 @@
 using Contour: Contour
+using StatsBase: Histogram, fit
 # PGFPlotsX.print_tex(io::IO, data::ColorGradient) = write(io, pgfx_colormap(data))
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
@@ -33,7 +34,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 )
             )
         end
-        pushed_colormap = false
         for sp in plt.subplots
             bb = bbox(sp)
             cstr = plot_color(sp[:background_color_legend])
@@ -65,36 +65,16 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     pgfx_axis!(axis_opt, sp, letter)
                 end
             end
-            # Search series for any gradient. In case one series uses a gradient set
-            # the colorbar and colomap.
-            # The reasoning behind doing this on the axis level is that pgfplots
-            # colorbar seems to only works on axis level and needs the proper colormap for
-            # correctly displaying it.
-            # It's also possible to assign the colormap to the series itself but
-            # then the colormap needs to be added twice, once for the axis and once for the
-            # series.
-            # As it is likely that all series within the same axis use the same
-            # colormap this should not cause any problem.
-            for series in series_list(sp)
-                for col in (:markercolor, :fillcolor, :linecolor)
-                    if typeof(series.plotattributes[col]) == ColorGradient
-                        if !pushed_colormap
-                            PGFPlotsX.push_preamble!(pgfx_plot.the_plot, """\\pgfplotsset{
-                                colormap={plots}{$(pgfx_colormap(series.plotattributes[col]))},
-                            }""")
-                            pushed_colormap = true
-                            push!(axis_opt,
-                                "colorbar" => nothing,
-                                "colormap name" => "plots",
-                            )
-                        end
-
-                        # goto is needed to break out of col and series for
-                        @goto colorbar_end
-                    end
-                end
+            if hascolorbar(sp)
+                PGFPlotsX.push_preamble!(pgfx_plot.the_plot, """\\pgfplotsset{
+                    colormap={plots$(sp.attr[:subplot_index])}{$(pgfx_colormap(series.plotattributes[col]))},
+                }""")
+                pushed_colormap = true
+                push!(axis_opt,
+                    "colorbar" => nothing,
+                    "colormap name" => "plots$(sp.attr[:subplot_index])",
+                )
             end
-            @label colorbar_end
 
             push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
                 "title" => sp[:colorbar_title],
@@ -181,6 +161,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         PGFPlotsX.Table(Contour.contours(args..., opt[:levels]))
                     )
                     push!(axis, surface_plot)
+                elseif st == :histogram2d
+                    hist_
                 else
                     # treat segments
                     segments = iter_segments(series)
