@@ -129,10 +129,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 series_opt = PGFPlotsX.Options(
                                 "color" => opt[:linecolor],
                             )
-                if opt[:marker_z] !== nothing
-                    push!(series_opt, "point meta" => "explicit")
-                    push!(series_opt, "scatter" => nothing)
-                end
                 if is3d(series)
                     series_func = PGFPlotsX.Plot3
                 else
@@ -158,13 +154,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     end
                     segment_plot = series_func(
                         merge(series_opt, segment_opt),
-                        PGFPlotsX.Coordinates(seg_args...,
-                            meta = if !isnothing(opt[:marker_z])
-                                        opt[:marker_z][rng]
-                                    else
-                                        nothing
-                                    end
-                        ),
+                        PGFPlotsX.Coordinates(seg_args...),
                         series[:fillrange] !== nothing ? "\\closedcycle" : "{}"
                     )
                     push!(axis, segment_plot)
