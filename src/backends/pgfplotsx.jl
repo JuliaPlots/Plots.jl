@@ -364,7 +364,7 @@ end
 
 function pgfx_linestyle(plotattributes, i = 1)
     lw = pgfx_thickness_scaling(plotattributes) * get_linewidth(plotattributes, i)
-    lc = get_linecolor(plotattributes, i)
+    lc = single_color(get_linecolor(plotattributes, i))
     la = get_linealpha(plotattributes, i)
     ls = get_linestyle(plotattributes, i)
     return pgfx_linestyle(lw, lc, la, ls)

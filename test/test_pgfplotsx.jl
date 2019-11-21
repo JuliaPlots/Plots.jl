@@ -111,6 +111,6 @@ end
                              x + y
                          end), color=:bluesreds, legend=false)
          plot(p1, p2)
-         # TODO: handle gradients as color
+         # TODO: questionable tiling
      end # testset
 end # testset
