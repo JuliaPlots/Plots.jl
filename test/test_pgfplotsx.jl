@@ -65,6 +65,13 @@ end
         r = abs.(0.1 * randn(100) + sin.(3Θ))
         plot(Θ, r, proj=:polar, m=2)
      end # testset
+     @testset "Drawing shapes" begin
+        verts = [(-1.0, 1.0), (-1.28, 0.6), (-0.2, -1.4), (0.2, -1.4), (1.28, 0.6), (1.0, 1.0), (-1.0, 1.0), (-0.2, -0.6), (0.0, -0.2), (-0.4, 0.6), (1.28, 0.6), (0.2, -1.4), (-0.2, -1.4), (0.6, 0.2), (-0.2, 0.2), (0.0, -0.2), (0.2, 0.2), (-0.2, -0.6)]
+         x = 0.1:0.2:0.9
+         y = 0.7 * rand(5) .+ 0.15
+         plot(x, y, line=(3, :dash, :lightblue), marker=(Shape(verts), 30, RGBA(0, 0, 0, 0.2)), bg=:pink, fg=:darkblue, xlim=(0, 1), ylim=(0, 1), leg=false)
+         # TODO: draw those polygons
+     end # testset
      @testset "Histogram 2D" begin
         histogram2d(randn(10000), randn(10000), nbins=20)
         # TODO: totally broken, errors also for pgfplots
@@ -78,8 +85,8 @@ end
         X = repeat(reshape(x, 1, :), length(y), 1)
         Y = repeat(y, 1, length(x))
         Z = map(f, X, Y)
-        p1 = contour(x, y, f, fill=true)
         p2 = contour(x, y, Z)
+        p1 = contour(x, y, f, fill=true)
         plot(p1, p2)
         # TODO: totally broken, also errors for pgfplots
      end # testset
