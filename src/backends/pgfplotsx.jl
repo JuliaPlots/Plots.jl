@@ -24,13 +24,16 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         the_plot = PGFPlotsX.TikzPicture()
         # the combination of groupplot and polaraxis is broken in pgfplots
         if !any( sp -> ispolar(sp), plt.subplots )
+            pl_height, pl_width = plt.attr[:size]
             push!( the_plot, PGFPlotsX.GroupPlot(
                     PGFPlotsX.Options(
                         "group style" => PGFPlotsX.Options(
                             "group size" => string(cols)*" by "*string(rows),
                             "horizontal sep" => string(maximum(sp -> sp.minpad[1], plt.subplots)),
                             "vertical sep" => string(maximum(sp -> sp.minpad[2], plt.subplots)),
-                        )
+                        ),
+                    "height" => pl_height > 0 ? string(pl_height)*"px" : "{}",
+                    "width" => pl_width > 0 ? string(pl_width)*"px" : "{}",
                     )
                 )
             )
