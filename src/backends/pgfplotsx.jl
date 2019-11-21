@@ -115,6 +115,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "point meta min" => get_clims(sp)[1]
                 )
             )
+            if is3d(sp)
+                azim, elev = sp[:camera]
+                push!( axis_opt, "view" => (azim, elev) )
+            end
             axisf = if sp[:projection] == :polar
                         # TODO: this errors for some reason
                         # push!(axis_opt, "xmin" => 90)
