@@ -368,55 +368,6 @@ function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1)
         "{$(val.str).};"
     ])
 end
-## --------------------------------------------------------------------------------------
-# TODO: translate these if needed
-function pgfx_fillrange_series(series, i, fillrange, args...)
-    st = series[:seriestype]
-    opt = PGFPlotsX.Options()
-    push!(opt, "line width" => 0)
-    push!(opt, "draw opacity" => 0)
-    opt = merge(opt, pgfx_fillstyle(series, i))
-    opt = merge(opt, pgfx_marker(series, i))
-    push!(opt, "forget plot" => nothing)
-    if haskey(_pgfx_series_extrastyle, st)
-        push!(opt, _pgfx_series_extrastyle[st] => nothing)
-    end
-    func = is3d(series) ? PGFPlotsX.Plot3 : PGFPlotsX.Plot
-    return func(opt, PGFPlotsX.Coordinates(pgfx_fillrange_args(fillrange, args...)...))
-end
-
-function pgfx_fillrange_args(fillrange, x, y)
-    n = length(x)
-    x_fill = [x; x[n:-1:1]; x[1]]
-    y_fill = [y; _cycle(fillrange, n:-1:1); y[1]]
-    return x_fill, y_fill
-end
-
-function pgfx_fillrange_args(fillrange, x, y, z)
-    n = length(x)
-    x_fill = [x; x[n:-1:1]; x[1]]
-    y_fill = [y; y[n:-1:1]; x[1]]
-    z_fill = [z; _cycle(fillrange, n:-1:1); z[1]]
-    return x_fill, y_fill, z_fill
-end
-
-function pgfx_fill_legend_hack(plotattributes, args)
-    opt = PGFPlotsX.Options("area legend" => nothing)
-    opt = merge(opt, pgfx_linestyle(plotattributes, 1))
-    opt = merge(opt, pgfx_marker(plotattributes, 1))
-    opt = merge(opt, pgfx_fillstyle(plotattributes, 1))
-    st = plotattributes[:seriestype]
-    func = if st == :path3d
-        PGFPlotsX.Plot3
-    else
-        PGFPlotsX.Plot
-    end
-    if st == :scatter
-        push!(opt, "only marks" => nothing)
-    end
-    return func(opt, PGFPlotsX.Coordinates(([arg[1]] for arg in args)...))
-end
-
 # --------------------------------------------------------------------------------------
 function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     axis = sp[Symbol(letter,:axis)]
