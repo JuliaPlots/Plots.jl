@@ -478,8 +478,18 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         if haskey(_pgfplots_legend_pos, legpos)
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
-        cstr, a = pgf_color(plot_color(sp[:background_color_legend]))
-        push!(style, string("legend style = {", pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid"), ",", "fill = $cstr,", "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)), "}"))
+        cstr, bg_alpha = pgf_color(plot_color(sp[:background_color_legend]))
+        fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
+
+        push!(style, string(
+            "legend style = {", 
+                pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], fg_alpha, "solid", ), ",", 
+                "fill = $cstr,", 
+                "fill opacity = $bg_alpha,", 
+                "text opacity = $(alpha(plot_color(sp[:legendfontcolor]))),", 
+                "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)), 
+            "}",
+        ))
 
         if any(s[:seriestype] == :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"
