@@ -42,8 +42,6 @@ end
         @test marker.options["mark"] == "*"
         @test marker.options["mark options"]["color"] == RGBA{Float64}( colorant"green", 0.8)
         @test marker.options["mark options"]["line width"] == 1
-
-        # TODO: marker stroke color is incorrect
      end # testset
      @testset "Plot in pieces" begin
         plot(rand(100) / 3, reg=true, fill=(0, :green))

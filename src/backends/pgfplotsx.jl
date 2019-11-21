@@ -88,13 +88,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 end
             end
             @label colorbar_end
-            # detect fillranges
-            # if any(series->series[:fillrange] != nothing, series_list(sp))
-            #         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{fillbetween},\n")
-            # end
 
             push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
-                "title" => sp[:colorbar_title]
+                "title" => sp[:colorbar_title],
                 )
             )
             axisf = if sp[:projection] == :polar
@@ -110,6 +106,20 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             )
             for series in series_list(sp)
                 opt = series.plotattributes
+                if opt[:marker_z] !== nothing
+                    cbar_style = axis_opt["colorbar style"]
+                    if !haskey( cbar_style.dict, "point meta max" )
+                        append!( axis_opt["colorbar style"],
+                            (
+                            "point meta max" => maximum(opt[:marker_z]),
+                            "point meta min" => minimum(opt[:marker_z])
+                            )
+                        )
+                    else
+                        cbar_style["point meta max"] =  maximum(opt[:marker_z])
+                        cbar_style["point meta min"] = minimum(opt[:marker_z])
+                    end
+                end
                 st = series[:seriestype]
                 # function args
                 args = if st == :contour
