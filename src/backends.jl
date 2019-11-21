@@ -711,7 +711,7 @@ const _pgfplotsx_attr = merge_with_base_supported([
 #     :contour, :path3d, :scatter3d, :surface, :wireframe, :volume,
 #     :shape
 # ]
-const _pgfplotsx_seriestype = [:path, :path3d, :scatter, :steppre, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
+const _pgfplotsx_seriestype = [:path, :path3d, :scatter, :steppre, :heatmap, :stepmid, :steppost, :histogram2d, :ysticks, :xsticks, :contour, :shape, :straightline,]
 const _pgfplotsx_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _pgfplotsx_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :ltriangle, :rtriangle, :cross, :xcross, :star5, :pentagon, :hline, :vline, Shape]
 const _pgfplotsx_scale = [:identity, :ln, :log2, :log10]
