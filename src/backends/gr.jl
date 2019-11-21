@@ -155,6 +155,48 @@ function gr_polyline(x, y, func = GR.polyline; arrowside = :none, arrowstyle = :
     end
 end
 
+function gr_polyline3d(x, y, z, func = GR.polyline3d; arrowside = :none, arrowstyle = :simple)
+    iend = 0
+    n = length(x)
+    while iend < n-1
+        # set istart to the first index that is finite
+        istart = -1
+        for j = iend+1:n
+            if isfinite(x[j]) && isfinite(y[j]) && isfinite(z[j])
+                istart = j
+                break
+            end
+        end
+
+        if istart > 0
+            # iend is the last finite index
+            iend = -1
+            for j = istart+1:n
+                if isfinite(x[j]) && isfinite(y[j]) && isfinite(z[j])
+                    iend = j
+                else
+                    break
+                end
+            end
+        end
+
+        # if we found a start and end, draw the line segment, otherwise we're done
+        if istart > 0 && iend > 0
+            func(x[istart:iend], y[istart:iend], z[istart:iend])
+            if arrowside in (:head,:both)
+                gr_set_arrowstyle(arrowstyle)
+                GR.drawarrow(x[iend-1], y[iend-1], z[iend-1], x[iend], y[iend], z[iend])
+            end
+            if arrowside in (:tail,:both)
+                gr_set_arrowstyle(arrowstyle)
+                GR.drawarrow(x[istart+1], y[istart+1], z[istart+1], x[istart], y[istart], z[istart])
+            end
+        else
+            break
+        end
+    end
+end
+
 gr_inqtext(x, y, s::Symbol) = gr_inqtext(x, y, string(s))
 
 function gr_inqtext(x, y, s)
@@ -1004,30 +1046,163 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             isfinite(clims3d[2]) && (zmax = clims3d[2])
         end
         GR.setspace(zmin, zmax, round.(Int, sp[:camera])...)
-        xtick = GR.tick(xmin, xmax) / 2
-        ytick = GR.tick(ymin, ymax) / 2
-        ztick = GR.tick(zmin, zmax) / 2
-        ticksize = 0.01 * (viewport_plotarea[2] - viewport_plotarea[1])
 
+        xticks, yticks, zticks, xaxis_segs, yaxis_segs, zaxis_segs, xtick_segs, ytick_segs, ztick_segs, xgrid_segs, ygrid_segs, zgrid_segs, xminorgrid_segs, yminorgrid_segs, zminorgrid_segs, xborder_segs, yborder_segs, zborder_segs = axis_drawing_info_3d(sp)
+
+        # draw the grid lines
         if xaxis[:grid]
             gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
             gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:gridalpha])
-            GR.grid3d(xtick, 0, 0, xmin, ymax, zmin, 2, 0, 0)
+            gr_polyline3d(coords(xgrid_segs)...)
         end
         if yaxis[:grid]
             gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
             gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:gridalpha])
-            GR.grid3d(0, ytick, 0, xmin, ymax, zmin, 0, 2, 0)
+            gr_polyline3d(coords(ygrid_segs)...)
         end
         if zaxis[:grid]
             gr_set_line(zaxis[:gridlinewidth], zaxis[:gridstyle], zaxis[:foreground_color_grid])
             gr_set_transparency(zaxis[:foreground_color_grid], zaxis[:gridalpha])
-            GR.grid3d(0, 0, ztick, xmin, ymax, zmin, 0, 0, 2)
+            gr_polyline3d(coords(zgrid_segs)...)
         end
-        gr_set_line(1, :solid, xaxis[:foreground_color_axis])
-        gr_set_transparency(xaxis[:foreground_color_axis])
-        GR.axes3d(xtick, 0, ztick, xmin, ymin, zmin, 2, 0, 2, -ticksize)
-        GR.axes3d(0, ytick, 0, xmax, ymin, zmin, 0, 2, 0, ticksize)
+
+        if xaxis[:minorgrid]
+            gr_set_line(xaxis[:minorgridlinewidth], xaxis[:minorgridstyle], xaxis[:foreground_color_minor_grid])
+            gr_set_transparency(xaxis[:foreground_color_minor_grid], xaxis[:minorgridalpha])
+            gr_polyline3d(coords(xminorgrid_segs)...)
+        end
+        if yaxis[:minorgrid]
+            gr_set_line(yaxis[:minorgridlinewidth], yaxis[:minorgridstyle], yaxis[:foreground_color_minor_grid])
+            gr_set_transparency(yaxis[:foreground_color_minor_grid], yaxis[:minorgridalpha])
+            gr_polyline3d(coords(yminorgrid_segs)...)
+        end
+        if zaxis[:minorgrid]
+            gr_set_line(zaxis[:minorgridlinewidth], zaxis[:minorgridstyle], zaxis[:foreground_color_minor_grid])
+            gr_set_transparency(zaxis[:foreground_color_minor_grid], zaxis[:minorgridalpha])
+            gr_polyline3d(coords(zminorgrid_segs)...)
+        end
+        gr_set_transparency(1.0)
+
+        # axis lines
+        if xaxis[:showaxis]
+            gr_set_line(1, :solid, xaxis[:foreground_color_border])
+            GR.setclip(0)
+            gr_polyline3d(coords(xaxis_segs)...)
+        end
+        if yaxis[:showaxis]
+            gr_set_line(1, :solid, yaxis[:foreground_color_border])
+            GR.setclip(0)
+            gr_polyline3d(coords(yaxis_segs)...)
+        end
+        if zaxis[:showaxis]
+            gr_set_line(1, :solid, zaxis[:foreground_color_border])
+            GR.setclip(0)
+            gr_polyline3d(coords(zaxis_segs)...)
+        end
+        GR.setclip(1)
+
+        # axis ticks
+        if xaxis[:showaxis]
+            if sp[:framestyle] in (:zerolines, :grid)
+                gr_set_line(1, :solid, xaxis[:foreground_color_grid])
+                gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:tick_direction] == :out ? xaxis[:gridalpha] : 0)
+            else
+                gr_set_line(1, :solid, xaxis[:foreground_color_axis])
+            end
+            GR.setclip(0)
+            gr_polyline3d(coords(xtick_segs)...)
+        end
+        if  yaxis[:showaxis]
+            if sp[:framestyle] in (:zerolines, :grid)
+                gr_set_line(1, :solid, yaxis[:foreground_color_grid])
+                gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:tick_direction] == :out ? yaxis[:gridalpha] : 0)
+            else
+                gr_set_line(1, :solid, yaxis[:foreground_color_axis])
+            end
+            GR.setclip(0)
+            gr_polyline3d(coords(ytick_segs)...)
+        end
+        if  zaxis[:showaxis]
+            if sp[:framestyle] in (:zerolines, :grid)
+                gr_set_line(1, :solid, zaxis[:foreground_color_grid])
+                gr_set_transparency(zaxis[:foreground_color_grid], zaxis[:tick_direction] == :out ? zaxis[:gridalpha] : 0)
+            else
+                gr_set_line(1, :solid, zaxis[:foreground_color_axis])
+            end
+            GR.setclip(0)
+            gr_polyline3d(coords(ztick_segs)...)
+        end
+        GR.setclip(1)
+
+        # TODO: tick labels
+
+        # # tick marks
+        # if !(xticks in (:none, nothing, false)) && xaxis[:showaxis]
+        #     # x labels
+        #     flip, mirror = gr_set_xticks_font(sp)
+        #     for (cv, dv) in zip(xticks...)
+        #         # use xor ($) to get the right y coords
+        #         xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
+        #         if xaxis[:ticks] in (:auto, :native)
+        #             # ensure correct dispatch in gr_text for automatic log ticks
+        #             if xaxis[:scale] in _logScales
+        #                 dv = string(dv, "\\ ")
+        #             elseif xaxis[:formatter] in (:scientific, :auto)
+        #                 dv = convert_sci_unicode(dv)
+        #             end
+        #         end
+        #         gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), string(dv))
+        #     end
+        # end
+        #
+        # if !(yticks in (:none, nothing, false)) && yaxis[:showaxis]
+        #     # y labels
+        #     flip, mirror = gr_set_yticks_font(sp)
+        #     for (cv, dv) in zip(yticks...)
+        #         # use xor ($) to get the right y coords
+        #         xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
+        #         # @show cv dv xmin xi yi
+        #         if yaxis[:ticks] in (:auto, :native)
+        #             # ensure correct dispatch in gr_text for automatic log ticks
+        #             if yaxis[:scale] in _logScales
+        #                 dv = string(dv, "\\ ")
+        #             elseif yaxis[:formatter] in (:scientific, :auto)
+        #                 dv = convert_sci_unicode(dv)
+        #             end
+        #         end
+        #         gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
+        #     end
+        # end
+        #
+        # if !(zticks in (:none, nothing, false)) && zaxis[:showaxis]
+        #     # y labels
+        #     flip, mirror = gr_set_yticks_font(sp) # TODO for z
+        #     for (cv, dv) in zip(zticks...)
+        #         # use xor ($) to get the right y coords
+        #         xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
+        #         # @show cv dv xmin xi yi
+        #         if yaxis[:ticks] in (:auto, :native)
+        #             # ensure correct dispatch in gr_text for automatic log ticks
+        #             if yaxis[:scale] in _logScales
+        #                 dv = string(dv, "\\ ")
+        #             elseif yaxis[:formatter] in (:scientific, :auto)
+        #                 dv = convert_sci_unicode(dv)
+        #             end
+        #         end
+        #         gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
+        #     end
+        # end
+        #
+        # # border
+        # intensity = sp[:framestyle] == :semi ? 0.5 : 1.0
+        # if sp[:framestyle] in (:box, :semi)
+        #     gr_set_line(intensity, :solid, xaxis[:foreground_color_border])
+        #     gr_set_transparency(xaxis[:foreground_color_border], intensity)
+        #     gr_polyline3d(coords(xborder_segs)...)
+        #     gr_set_line(intensity, :solid, yaxis[:foreground_color_border])
+        #     gr_set_transparency(yaxis[:foreground_color_border], intensity)
+        #     gr_polyline3d(coords(yborder_segs)...)
+        # end
 
     elseif ispolar(sp)
         r = gr_set_viewport_polar()

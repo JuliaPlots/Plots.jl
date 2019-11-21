@@ -152,9 +152,11 @@ Segments(p::Int) = Segments(NTuple{p, Float64}[])
 
 to_nan(::Type{Float64}) = NaN
 to_nan(::Type{NTuple{2,Float64}}) = (NaN, NaN)
+to_nan(::Type{NTuple{3,Float64}}) = (NaN, NaN, NaN)
 
 coords(segs::Segments{Float64}) = segs.pts
 coords(segs::Segments{NTuple{2,Float64}}) = Float64[p[1] for p in segs.pts], Float64[p[2] for p in segs.pts]
+coords(segs::Segments{NTuple{3,Float64}}) = Float64[p[1] for p in segs.pts], Float64[p[2] for p in segs.pts], Float64[p[3] for p in segs.pts]
 
 function Base.push!(segments::Segments{T}, vs...) where T
     if !isempty(segments.pts)

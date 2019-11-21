@@ -806,6 +806,7 @@ function axis_drawing_info_3d(sp::Subplot)
                 t = invf(f(0) + 0.012 * (f(ymax) - f(ymin)))
                 (-t, t)
             else
+                ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
                 t = invf(f(y1) + 0.012 * (f(y2) - f(y1)) * ticks_in)
                 (y1, t)
             end
@@ -830,13 +831,12 @@ function axis_drawing_info_3d(sp::Subplot)
                     t = invf(f(0) + 0.006 * (f(ymax) - f(ymin)))
                     (-t, t)
                 else
-                    ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
                     t = invf(f(y1) + 0.006 * (f(y2) - f(y1)) * ticks_in)
                     (y1, t)
                 end
                 for xtick in xminorticks
                     if xaxis[:showaxis]
-                        push!(xtick_segs, (xtick, tick_start), (xtick, tick_stop)) # bottom tick
+                        push!(xtick_segs, (xtick, tick_start, z1), (xtick, tick_stop, z1)) # bottom tick
                     end
                     if xaxis[:minorgrid]
                         if sp[:framestyle] in (:origin, :zerolines)
@@ -856,8 +856,7 @@ function axis_drawing_info_3d(sp::Subplot)
         x1, x2 = if sp[:framestyle] in (:origin, :zerolines)
             0.0, 0.0
         else
-            # TODO: probably flip here
-            xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, xmin) : (xmin, xmax)
+            xor(yaxis[:mirror], xaxis[:flip]) ? (xmin, xmax) : (xmax, xmin)
         end
         z1, z2 = if sp[:framestyle] in (:origin, :zerolines)
             0.0, 0.0
@@ -932,14 +931,12 @@ function axis_drawing_info_3d(sp::Subplot)
         x1, x2 = if sp[:framestyle] in (:origin, :zerolines)
             0.0, 0.0
         else
-            # TODO: probably flip here
-            xor(zaxis[:mirror], xaxis[:flip]) ? (xmax, xmin) : (xmin, xmax)
+            xor(zaxis[:mirror], xaxis[:flip]) ? (xmin, xmax) : (xmax, xmin)
         end
         y1, y2 = if sp[:framestyle] in (:origin, :zerolines)
             0.0, 0.0
         else
-            # TODO: probably flip here
-            xor(zaxis[:mirror], yaxis[:flip]) ? (ymax, ymin) : (ymin, ymax)
+            xor(zaxis[:mirror], yaxis[:flip]) ? (ymin, ymax) : (ymax, ymin)
         end
         if zaxis[:showaxis]
             if sp[:framestyle] != :grid
