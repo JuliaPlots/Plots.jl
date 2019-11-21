@@ -316,7 +316,11 @@ const _pgfx_series_extrastyle = KW(
     :ysticks => "ycomb",
     :xsticks => "xcomb",
     :scatter => "only marks",
-    :shape => "area legends"
+    :shape => "area legends",
+    :scatter3D => "only marks"
+    :surface => "surf",
+    :wireframe => "mesh",
+    :volume => "patch"
 )
 
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]

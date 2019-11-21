@@ -124,5 +124,6 @@ end
         u = ones(length(x))
         v = cos.(x)
         plot( x, y, quiver = (u, v), arrow = true )
+        # TODO: could adjust limits to fit arrows if too long, but how?
      end # testset
 end # testset
