@@ -90,4 +90,16 @@ end
         plot(p1, p2)
         # TODO: filled contours
      end # testset
+     @testset "Varying colors" begin
+        t = range(0, stop=1, length=100)
+         θ = (6π) .* t
+         x = t .* cos.(θ)
+         y = t .* sin.(θ)
+         p1 = plot(x, y, line_z=t, linewidth=3, legend=false)
+         p2 = scatter(x, y, marker_z=((x, y)->begin
+                             x + y
+                         end), color=:bluesreds, legend=false)
+         plot(p1, p2)
+         # TODO: handle gradients as color
+     end # testset
 end # testset
