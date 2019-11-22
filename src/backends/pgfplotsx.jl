@@ -233,10 +233,7 @@ end
     # function args
     args = if st == :contour
         opt[:x], opt[:y], opt[:z].surf'
-    elseif st == :heatmap || st == :surface
-        @show opt[:x]
-        @show opt[:y]
-        @show opt[:z]
+    elseif st in (:heatmap, :surface, :wireframe)
         surface_to_vecs(opt[:x], opt[:y], opt[:z])
     elseif is3d(st)
         opt[:x], opt[:y], opt[:z]
@@ -313,7 +310,9 @@ function pgfx_series_coordinates!(st_val::Val{:volume}, segment_opt, opt, args)
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:wireframe}, segment_opt, opt, args)
-    push!( segment_opt, "mesh" => nothing )
+    push!( segment_opt, "mesh" => nothing,
+        "mesh/rows" => length(opt[:x])
+    )
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:shape}, segment_opt, opt, args)

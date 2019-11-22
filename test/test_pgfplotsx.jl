@@ -76,7 +76,7 @@ end
         histogram2d(randn(10000), randn(10000), nbins=20)
         # TODO: should work, when heatmaps works?
      end # testset
-     @testset "Heatmap" begin
+     @testset "Heatmap-like" begin
         xs = [string("x", i) for i = 1:10]
         ys = [string("y", i) for i = 1:4]
         z = float((1:4) * reshape(1:10, 1, :))
@@ -86,6 +86,9 @@ end
            @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
            @test Plots.pgfx_axes(pgfx_plot.o)[1]["colormap name"] == "plots1"
         end
+
+        pgfx_plot = wireframe(xs, ys, z, aspect_ratio=1)
+        # TODO: clims are wrong
      end # testset
      @testset "Contours" begin
         x = 1:0.5:20
