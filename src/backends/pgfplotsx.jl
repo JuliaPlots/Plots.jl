@@ -166,7 +166,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 segment_opt = PGFPlotsX.Options()
                 for (i, rng) in enumerate(segments)
                     segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
-                    if !iscontour(series) && !(st == :heatmap)
+                    if opt[:markershape] != :none #|| !iscontour(series) && !(st == :heatmap)
                         segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
                     end
                     if st == :shape || series[:fillrange] !== nothing
@@ -233,7 +233,10 @@ end
     # function args
     args = if st == :contour
         opt[:x], opt[:y], opt[:z].surf'
-    elseif st == :heatmap
+    elseif st == :heatmap || st == :surface
+        @show opt[:x]
+        @show opt[:y]
+        @show opt[:z]
         surface_to_vecs(opt[:x], opt[:y], opt[:z])
     elseif is3d(st)
         opt[:x], opt[:y], opt[:z]
@@ -300,7 +303,9 @@ function pgfx_series_coordinates!(st_val::Val{:xsticks}, segment_opt, opt, args)
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:surface}, segment_opt, opt, args)
-    push!( segment_opt, "surf" => nothing )
+    push!( segment_opt, "surf" => nothing,
+        "mesh/rows" => length(opt[:x])
+    )
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:volume}, segment_opt, opt, args)
