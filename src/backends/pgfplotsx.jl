@@ -142,24 +142,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 series_opt = PGFPlotsX.Options(
                                 "color" => single_color(opt[:linecolor]),
                             )
-                # function args
-                args = if st == :contour
-                    opt[:x], opt[:y], opt[:z].surf'
-                elseif st == :heatmap
-                    surface_to_vecs(opt[:x], opt[:y], opt[:z])
-                elseif is3d(st)
-                    opt[:x], opt[:y], opt[:z]
-                elseif st == :straightline
-                    straightline_data(series)
-                elseif st == :shape
-                    shape_data(series)
-                elseif ispolar(sp)
-                    theta, r = opt[:x], opt[:y]
-                    rad2deg.(theta), r
-                else
-                    opt[:x], opt[:y]
-                end
-                if is3d(series)
+                if is3d(series) || st == :heatmap
                     series_func = PGFPlotsX.Plot3
                 else
                     series_func = PGFPlotsX.Plot
@@ -168,81 +151,55 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     series_opt = merge(series_opt, pgfx_fillstyle(opt))
                     push!(series_opt, "area legend" => nothing)
                 end
-                # include additional style
-                if haskey(_pgfx_series_extrastyle, st)
-                    push!(series_opt, _pgfx_series_extrastyle[st] => nothing)
-                end
-                if st == :contour
-                    if !isfilledcontour(series)
-                        surface_opt = PGFPlotsX.Options(
-                            "contour prepared" => PGFPlotsX.Options(
-                                "labels" => opt[:contour_labels],
-                            )
-                        )
-                    else
-                        notimpl()
-                        surface_opt = PGFPlotsX.Options(
-                            "contour filled" => PGFPlotsX.Options(
-                                # "levels" => opt[:levels],
-                                # "labels" => opt[:contour_labels],
-                            )
-                        )
-                    end
-                    surface_plot = series_func(
-                        # merge(series_opt, surface_opt),
-                        surface_opt,
-                        PGFPlotsX.Table(Contour.contours(args..., opt[:levels]))
-                    )
-                    push!(axis, surface_plot)
-                elseif st == :heatmap
-                    # TODO: global view setting
+                if st == :heatmap
                     push!(axis.options,
                         "view" => "{0}{90}",
                         "shader" => "flat corner",
                     )
-                    heatmap_opt = PGFPlotsX.Options(
-                        "surf" => nothing,
-                        "mesh/rows" => length(opt[:x])
-                     )
-                    heatmap_plot = PGFPlotsX.Plot3(
-                        merge(series_opt, heatmap_opt),
-                        PGFPlotsX.Table(args)
-                    )
-                    push!(axis, heatmap_plot)
-                else
-                    # treat segments
-                    segments = iter_segments(series)
-                    segment_opt = PGFPlotsX.Options()
-                    for (i, rng) in enumerate(segments)
-                        seg_args = (arg[rng] for arg in args)
-                        segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
+                end
+                # treat segments
+                segments = if iscontour(series) || st == :heatmap
+                        iter_segments(series[:x], series[:y])
+                    else
+                        iter_segments(series)
+                    end
+                segment_opt = PGFPlotsX.Options()
+                for (i, rng) in enumerate(segments)
+                    segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
+                    if !iscontour(series) && !(st == :heatmap)
                         segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
-                        if st == :shape || series[:fillrange] !== nothing
-                            segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
-                        end
-                        x, y = collect(seg_args)
-                        coordinates = if opt[:quiver] !== nothing
-                                          push!(segment_opt, "quiver" => PGFPlotsX.Options(
-                                                "u" => "\\thisrow{u}",
-                                                "v" => "\\thisrow{v}",
-                                                pgfx_arrow(opt[:arrow]) => nothing
-                                              ),
-                                          )
-                                          PGFPlotsX.Table([:x => x, :y => y, :u => opt[:quiver][1], :v => opt[:quiver][2]])
-                                      else
-                                          PGFPlotsX.Coordinates(seg_args...)
-                                      end
-                        segment_plot = series_func(
-                            merge(series_opt, segment_opt),
-                            coordinates,
-                            series[:fillrange] !== nothing ? "\\closedcycle" : "{}"
+                    end
+                    if st == :shape || series[:fillrange] !== nothing
+                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
+                    end
+                    if  iscontour(series)
+                        if !isfilledcontour(series)
+                        push!(series_opt,
+                            "contour prepared" => PGFPlotsX.Options(
+                                "labels" => opt[:contour_labels],
+                            )
                         )
-                        push!(axis, segment_plot)
-                        # add to legend?
-                        if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                            push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
+                        else
+                            notimpl()
+                            push!(series_opt,
+                                "contour filled" => PGFPlotsX.Options(
+                                    # "levels" => opt[:levels],
+                                    # "labels" => opt[:contour_labels],
+                                )
                             )
                         end
+                    end
+                    coordinates = pgfx_series_coordinates!( sp, st, segment_opt, opt, rng )
+                    segment_plot = series_func(
+                        merge(series_opt, segment_opt),
+                        coordinates,
+                        series[:fillrange] !== nothing ? "\\closedcycle" : "{}"
+                    )
+                    push!(axis, segment_plot)
+                    # add to legend?
+                    if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
+                        push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
+                        )
                     end
                     # add series annotations
                     anns = series[:series_annotations]
@@ -270,6 +227,96 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
         pgfx_plot.is_created = true
     end
+end
+## seriestype specifics
+@inline function pgfx_series_coordinates!(sp, st, segment_opt, opt, rng)
+    # function args
+    args = if st == :contour
+        opt[:x], opt[:y], opt[:z].surf'
+    elseif st == :heatmap
+        surface_to_vecs(opt[:x], opt[:y], opt[:z])
+    elseif is3d(st)
+        opt[:x], opt[:y], opt[:z]
+    elseif st == :straightline
+        straightline_data(series)
+    elseif st == :shape
+        shape_data(series)
+    elseif ispolar(sp)
+        theta, r = opt[:x], opt[:y]
+        rad2deg.(theta), r
+    else
+        opt[:x], opt[:y]
+    end
+    seg_args = if st == :contour || st == :heatmap
+            args
+        else
+            (arg[rng] for arg in args)
+        end
+    if opt[:quiver] !== nothing
+        push!(segment_opt, "quiver" => PGFPlotsX.Options(
+            "u" => "\\thisrow{u}",
+            "v" => "\\thisrow{v}",
+            pgfx_arrow(opt[:arrow]) => nothing
+            ),
+        )
+        x, y = collect(seg_args)
+        return PGFPlotsX.Table([:x => x, :y => y, :u => opt[:quiver][1], :v => opt[:quiver][2]])
+    else
+        pgfx_series_coordinates!(Val(st), segment_opt, opt, seg_args)
+    end
+end
+function pgfx_series_coordinates!(st_val::Union{Val{:path}, Val{:path3d}}, segment_opt, opt, args)
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Union{Val{:scatter}, Val{:scatter3d}}, segment_opt, opt, args)
+    push!( segment_opt, "only marks" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:heatmap}, segment_opt, opt, args)
+    push!(segment_opt,
+        "surf" => nothing,
+        "mesh/rows" => length(opt[:x])
+    )
+    return PGFPlotsX.Table(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:stepre}, segment_opt, opt, args)
+    push!( segment_opt, "const plot mark right" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:stepmid}, segment_opt, opt, args)
+    push!( segment_opt, "const plot mark mid" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:steppost}, segment_opt, opt, args)
+    push!( segment_opt, "const plot" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Union{Val{:ysticks},Val{:sticks}}, segment_opt, opt, args)
+    push!( segment_opt, "ycomb" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:xsticks}, segment_opt, opt, args)
+    push!( segment_opt, "xcomb" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:surface}, segment_opt, opt, args)
+    push!( segment_opt, "surf" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:volume}, segment_opt, opt, args)
+    push!( segment_opt, "patch" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:wireframe}, segment_opt, opt, args)
+    push!( segment_opt, "mesh" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:shape}, segment_opt, opt, args)
+    push!( segment_opt, "area legends" => nothing, "patch" => nothing )
+    return PGFPlotsX.Coordinates(args...)
+end
+function pgfx_series_coordinates!(st_val::Val{:contour}, segment_opt, opt, args)
+    return PGFPlotsX.Table(Contour.contours(args..., opt[:levels]))
 end
 
 ##
@@ -307,21 +354,6 @@ const _pgfplotsx_legend_pos = KW(
     :topright => "north east",
     :topleft => "north west",
     :outertopright => "outer north east",
-)
-
-const _pgfx_series_extrastyle = KW(
-    :steppre => "const plot mark right",
-    :stepmid => "const plot mark mid",
-    :steppost => "const plot",
-    :sticks => "ycomb",
-    :ysticks => "ycomb",
-    :xsticks => "xcomb",
-    :scatter => "only marks",
-    :shape => "area legends",
-    :scatter3D => "only marks"
-    :surface => "surf",
-    :wireframe => "mesh",
-    :volume => "patch"
 )
 
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
