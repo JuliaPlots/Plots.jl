@@ -265,7 +265,7 @@ end
         pgfx_series_coordinates!(Val(st), segment_opt, opt, seg_args)
     end
 end
-function pgfx_series_coordinates!(st_val::Union{Val{:path}, Val{:path3d}}, segment_opt, opt, args)
+function pgfx_series_coordinates!(st_val::Union{Val{:path}, Val{:path3d}, Val{:straightline}}, segment_opt, opt, args)
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Union{Val{:scatter}, Val{:scatter3d}}, segment_opt, opt, args)
