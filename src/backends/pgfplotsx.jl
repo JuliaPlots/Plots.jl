@@ -37,7 +37,6 @@ function Base.push!(pgfx_plot::PGFPlotsXPlot, item)
 end
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
-    # TODO: annotations! does not trigger _series_added ...
     if !pgfx_plot.is_created
         cols, rows = size(plt.layout.grid)
         the_plot = PGFPlotsX.TikzPicture()
@@ -126,7 +125,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 push!( axis_opt, "view" => (azim, elev) )
             end
             axisf = if sp[:projection] == :polar
-                        # TODO: this errors for some reason
                         # push!(axis_opt, "xmin" => 90)
                         # push!(axis_opt, "xmax" => 450)
                         PGFPlotsX.PolarAxis
@@ -194,14 +192,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                                 "labels" => opt[:contour_labels],
                             )
                         )
-                        else
-                            notimpl()
-                            push!(series_opt,
-                                "contour filled" => PGFPlotsX.Options(
-                                    # "levels" => opt[:levels],
-                                    # "labels" => opt[:contour_labels],
-                                )
-                            )
                         end
                     end
                     coordinates = pgfx_series_coordinates!( sp, st, segment_opt, opt, rng )
@@ -390,7 +380,6 @@ const _pgfx_annotation_halign = KW(
 )
 ## --------------------------------------------------------------------------------------
 # Generates a colormap for pgfplots based on a ColorGradient
-# TODO: maybe obsolete
 pgfx_arrow(::Nothing) = "every arrow/.append style={-}"
 function pgfx_arrow( arr::Arrow )
     components = String[]

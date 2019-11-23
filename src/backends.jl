@@ -707,7 +707,7 @@ const _pgfplotsx_attr = merge_with_base_supported([
 ])
 const _pgfplotsx_seriestype =
         [:path,  :scatter, :straightline,
-        :path3d, :scatter3d, :surface, :wireframe, :volume,
+        :path3d, :scatter3d, :surface, :wireframe, 
         :heatmap, :contour, :histogram2d,
         :shape,
         :steppre, :stepmid, :steppost,  :ysticks, :xsticks]

@@ -70,11 +70,9 @@ end
          x = 0.1:0.2:0.9
          y = 0.7 * rand(5) .+ 0.15
          plot(x, y, line=(3, :dash, :lightblue), marker=(Shape(verts), 30, RGBA(0, 0, 0, 0.2)), bg=:pink, fg=:darkblue, xlim=(0, 1), ylim=(0, 1), leg=false)
-         # TODO: draw those polygons
      end # testset
      @testset "Histogram 2D" begin
         histogram2d(randn(10000), randn(10000), nbins=20)
-        # TODO: should work, when heatmaps works?
      end # testset
      @testset "Heatmap-like" begin
         xs = [string("x", i) for i = 1:10]
@@ -102,7 +100,6 @@ end
         p2 = contour(x, y, Z)
         p1 = contour(x, y, f, fill=true)
         plot(p1, p2)
-        # TODO: filled contours
      end # testset
      @testset "Varying colors" begin
         t = range(0, stop=1, length=100)
