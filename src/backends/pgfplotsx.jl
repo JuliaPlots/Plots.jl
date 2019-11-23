@@ -89,31 +89,31 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 end
             end
             # Search series for any gradient. In case one series uses a gradient set
-               # the colorbar and colomap.
-               # The reasoning behind doing this on the axis level is that pgfplots
-               # colorbar seems to only works on axis level and needs the proper colormap for
-               # correctly displaying it.
-               # It's also possible to assign the colormap to the series itself but
-               # then the colormap needs to be added twice, once for the axis and once for the
-               # series.
-               # As it is likely that all series within the same axis use the same
-               # colormap this should not cause any problem.
-               for series in series_list(sp)
-                   for col in (:markercolor, :fillcolor, :linecolor)
-                       if typeof(series.plotattributes[col]) == ColorGradient
-                            PGFPlotsX.push_preamble!(pgfx_plot.the_plot, """\\pgfplotsset{
-                                colormap={plots$(sp.attr[:subplot_index])}{$(pgfx_colormap(series.plotattributes[col]))},
-                            }""")
-                            push!(axis_opt,
-                                "colorbar" => nothing,
-                                "colormap name" => "plots$(sp.attr[:subplot_index])",
-                            )
-                           # goto is needed to break out of col and series for
-                           @goto colorbar_end
-                       end
+           # the colorbar and colomap.
+           # The reasoning behind doing this on the axis level is that pgfplots
+           # colorbar seems to only works on axis level and needs the proper colormap for
+           # correctly displaying it.
+           # It's also possible to assign the colormap to the series itself but
+           # then the colormap needs to be added twice, once for the axis and once for the
+           # series.
+           # As it is likely that all series within the same axis use the same
+           # colormap this should not cause any problem.
+           for series in series_list(sp)
+               for col in (:markercolor, :fillcolor, :linecolor)
+                   if typeof(series.plotattributes[col]) == ColorGradient
+                        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, """\\pgfplotsset{
+                            colormap={plots$(sp.attr[:subplot_index])}{$(pgfx_colormap(series.plotattributes[col]))},
+                        }""")
+                        push!(axis_opt,
+                            "colorbar" => nothing,
+                            "colormap name" => "plots$(sp.attr[:subplot_index])",
+                        )
+                       # goto is needed to break out of col and series for
+                       @goto colorbar_end
                    end
                end
-               @label colorbar_end
+           end
+           @label colorbar_end
 
             push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
                 "title" => sp[:colorbar_title],
@@ -158,8 +158,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     )
                 end
                 # treat segments
-                segments = if iscontour(series) || st == :heatmap
-                        iter_segments(series[:x], series[:y])
+                segments = if st in (:wireframe, :heatmap, :contour, :surface)
+                        iter_segments(surface_to_vecs(series[:x], series[:y], series[:z])...)
                     else
                         iter_segments(series)
                     end
@@ -167,6 +167,21 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 for (i, rng) in enumerate(segments)
                     segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
                     if opt[:markershape] != :none #|| !iscontour(series) && !(st == :heatmap)
+                        marker = opt[:markershape]
+                        if marker isa Shape
+                            x = marker.x
+                            y = marker.y
+                            scale_factor = 0.025
+                            mark_size = opt[:markersize] * scale_factor
+                            path = join(["($(x[i] * mark_size), $(y[i] * mark_size))" for i in eachindex(x)], " -- ")
+                            PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
+                                """
+                                \\pgfdeclareplotmark{PlotsShape}{
+                                    \\draw $path;
+                                }
+                                """
+                            )
+                        end
                         segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
                     end
                     if st == :shape || series[:fillrange] !== nothing
@@ -300,8 +315,11 @@ function pgfx_series_coordinates!(st_val::Val{:xsticks}, segment_opt, opt, args)
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:surface}, segment_opt, opt, args)
+    @show collect(args)[3] |> length
+    @show args
     push!( segment_opt, "surf" => nothing,
-        "mesh/rows" => length(opt[:x])
+        "mesh/rows" => length(opt[:x]),
+        "mesh/cols" => length(opt[:y]),
     )
     return PGFPlotsX.Coordinates(args...)
 end
@@ -316,7 +334,7 @@ function pgfx_series_coordinates!(st_val::Val{:wireframe}, segment_opt, opt, arg
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:shape}, segment_opt, opt, args)
-    push!( segment_opt, "area legends" => nothing, "patch" => nothing )
+    push!( segment_opt, "area legends" => nothing )
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:contour}, segment_opt, opt, args)
@@ -459,9 +477,10 @@ function pgfx_marker(plotattributes, i = 1)
     a = alpha(cstr)
     cstr_stroke = plot_color(get_markerstrokecolor(plotattributes, i), get_markerstrokealpha(plotattributes, i))
     a_stroke = alpha(cstr_stroke)
+    mark_size = pgfx_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)
     return PGFPlotsX.Options(
-        "mark" => get(_pgfplotsx_markers, shape, "*"),
-        "mark size" => pgfx_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i),
+        "mark" => shape isa Shape ? "PlotsShape" : get(_pgfplotsx_markers, shape, "*"),
+        "mark size" => "$mark_size pt",
         "mark options" => PGFPlotsX.Options(
             "color" => cstr_stroke,
             "draw opacity" => a_stroke,
