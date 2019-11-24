@@ -26,6 +26,7 @@ function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat, Surface})
     return xn, yn, zn
 end
 
+Base.display(pgfx_plot::PGFPlotsXPlot) = display(pgfx_plot.the_plot)
 function Base.show(io::IO, mime::MIME, pgfx_plot::PGFPlotsXPlot)
     show(io::IO, mime, pgfx_plot.the_plot)
 end
@@ -705,8 +706,5 @@ function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsXBackend
 end
 
 function _display(plt::Plot{PGFPlotsXBackend})
-    # fn = string(tempname(),".svg")
-    # PGFPlotsX.pgfsave(fn, plt.o)
-    # open_browser_window(fn)
     plt.o
 end
