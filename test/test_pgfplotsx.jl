@@ -100,6 +100,7 @@ end
         p2 = contour(x, y, Z)
         p1 = contour(x, y, f, fill=true)
         plot(p1, p2)
+        # TODO: colorbar for filled contours
      end # testset
      @testset "Varying colors" begin
         t = range(0, stop=1, length=100)

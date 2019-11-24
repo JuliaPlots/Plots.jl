@@ -1,5 +1,4 @@
 using Contour: Contour
-using StatsBase: Histogram, fit
 # PGFPlotsX.print_tex(io::IO, data::ColorGradient) = write(io, pgfx_colormap(data))
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
@@ -140,13 +139,18 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 series_opt = PGFPlotsX.Options(
                                 "color" => single_color(opt[:linecolor]),
                             )
-                if is3d(series) || st == :heatmap
+                if is3d(series) || st == :heatmap #|| isfilledcontour(series)
                     series_func = PGFPlotsX.Plot3
                 else
                     series_func = PGFPlotsX.Plot
                 end
-                if series[:fillrange] !== nothing && st != :contour
-                    series_opt = merge(series_opt, pgfx_fillstyle(opt))
+                if isfilledcontour(series)
+                    # push!(series_opt, "contour filled" => nothing)
+                    # st = :surface
+                #     axis_opt["view"] = (0, 90)
+                #     push!(series_opt, "shader" => "interp")
+                end
+                if series[:fillrange] !== nothing && !isfilledcontour(series)
                     push!(series_opt, "area legend" => nothing)
                 end
                 if st == :heatmap
@@ -156,7 +160,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     )
                 end
                 # treat segments
-                segments = if st in (:wireframe, :heatmap, :contour, :surface)
+                segments = if st in (:wireframe, :heatmap, :contour, :surface, :contour3d)
                         iter_segments(surface_to_vecs(series[:x], series[:y], series[:z])...)
                     else
                         iter_segments(series)
@@ -164,7 +168,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 segment_opt = PGFPlotsX.Options()
                 for (i, rng) in enumerate(segments)
                     segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
-                    if opt[:markershape] != :none #|| !iscontour(series) && !(st == :heatmap)
+                    if opt[:markershape] != :none
                         marker = opt[:markershape]
                         if marker isa Shape
                             x = marker.x
@@ -182,23 +186,17 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         end
                         segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
                     end
-                    if st == :shape || series[:fillrange] !== nothing
+                    if st == :shape ||
+                        (series[:fillrange] !== nothing && !isfilledcontour(series))
                         segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
                     end
-                    if  iscontour(series)
-                        if !isfilledcontour(series)
-                        push!(series_opt,
-                            "contour prepared" => PGFPlotsX.Options(
-                                "labels" => opt[:contour_labels],
-                            )
-                        )
-                        end
-                    end
-                    coordinates = pgfx_series_coordinates!( sp, st, segment_opt, opt, rng )
+                    coordinates = pgfx_series_coordinates!( sp,
+                        isfilledcontour(series) ? :filledcontour : st,
+                        segment_opt, opt, rng )
                     segment_plot = series_func(
                         merge(series_opt, segment_opt),
                         coordinates,
-                        series[:fillrange] !== nothing ? "\\closedcycle" : "{}"
+                        (series[:fillrange] !== nothing && !isfilledcontour(series)) ? "\\closedcycle" : "{}"
                     )
                     push!(axis, segment_plot)
                     # add to legend?
@@ -236,10 +234,10 @@ end
 ## seriestype specifics
 @inline function pgfx_series_coordinates!(sp, st, segment_opt, opt, rng)
     # function args
-    args = if st == :contour
-        opt[:x], opt[:y], opt[:z].surf'
+    args =  if st in (:contour, :contour3d, :filledcontour)
+        opt[:x], opt[:y], Array(opt[:z])'
     elseif st in (:heatmap, :surface, :wireframe)
-        surface_to_vecs(opt[:x], opt[:y], opt[:z])
+            surface_to_vecs(opt[:x], opt[:y], opt[:z])
     elseif is3d(st)
         opt[:x], opt[:y], opt[:z]
     elseif st == :straightline
@@ -252,7 +250,7 @@ end
     else
         opt[:x], opt[:y]
     end
-    seg_args = if st == :contour || st == :heatmap
+    seg_args = if st in (:contour, :contour3d, :heatmap, :filledcontour)
             args
         else
             (arg[rng] for arg in args)
@@ -305,8 +303,6 @@ function pgfx_series_coordinates!(st_val::Val{:xsticks}, segment_opt, opt, args)
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:surface}, segment_opt, opt, args)
-    @show collect(args)[3] |> length
-    @show args
     push!( segment_opt, "surf" => nothing,
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
@@ -327,10 +323,42 @@ function pgfx_series_coordinates!(st_val::Val{:shape}, segment_opt, opt, args)
     push!( segment_opt, "area legends" => nothing )
     return PGFPlotsX.Coordinates(args...)
 end
-function pgfx_series_coordinates!(st_val::Val{:contour}, segment_opt, opt, args)
+function pgfx_series_coordinates!(st_val::Union{Val{:contour}, Val{:contour3d}}, segment_opt, opt, args)
+    push!(segment_opt,
+        "contour prepared" => PGFPlotsX.Options(
+            "labels" => opt[:contour_labels],
+        ),
+    )
     return PGFPlotsX.Table(Contour.contours(args..., opt[:levels]))
 end
+function pgfx_series_coordinates!(st_val::Val{:filledcontour}, segment_opt, opt, args)
+    xs, ys, zs = collect(args)
+    push!(segment_opt,
+        "contour filled" => PGFPlotsX.Options(
+            "labels" => opt[:contour_labels],
+        ),
+        "point meta" => "explicit",
+        "shader" => "flat"
+    )
+    if opt[:levels] isa Number
+        push!(segment_opt["contour filled"],
+            "number" => opt[:levels],
+        )
+    elseif opt[:levels] isa AVec
+        push!(segment_opt["contour filled"],
+            "levels" => opt[:levels],
+        )
+    end
 
+    cs = join([
+            join(["($x, $y) [$(zs[j, i])]" for (j, x) in enumerate(xs)], " ") for (i, y) in enumerate(ys)], "\n\n"
+        )
+    """
+coordinates {
+$cs
+};
+    """
+end
 ##
 const _pgfplotsx_linestyles = KW(
     :solid => "solid",
@@ -428,10 +456,9 @@ pgfx_thickness_scaling(series) = pgfx_thickness_scaling(series[:subplot])
 
 function pgfx_fillstyle(plotattributes, i = 1)
     cstr = get_fillcolor(plotattributes, i)
-    a = alpha(cstr)
-    fa = get_fillalpha(plotattributes, i)
-    if fa !== nothing
-        a = fa
+    a = get_fillalpha(plotattributes, i)
+    if a === nothing
+        a = alpha(single_color(cstr))
     end
     PGFPlotsX.Options("fill" => cstr, "fill opacity" => a)
 end
