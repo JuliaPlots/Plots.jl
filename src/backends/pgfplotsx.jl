@@ -133,7 +133,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             axis = axisf(
                 axis_opt
             )
-            for series in series_list(sp)
+            for (series_index, series) in enumerate(series_list(sp))
                 opt = series.plotattributes
                 st = series[:seriestype]
                 series_opt = PGFPlotsX.Options(
@@ -170,10 +170,13 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             scale_factor = 0.025
                             mark_size = opt[:markersize] * scale_factor
                             path = join(["($(x[i] * mark_size), $(y[i] * mark_size))" for i in eachindex(x)], " -- ")
+                            c = get_markercolor(series, i)
+                            a = get_markeralpha(series, i)
                             PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
                                 """
-                                \\pgfdeclareplotmark{PlotsShape}{
-                                    \\draw $path;
+                                \\pgfdeclareplotmark{PlotsShape$(series_index)}{
+                                    \\filldraw
+                                    $path;
                                 }
                                 """
                             )
@@ -493,7 +496,7 @@ function pgfx_marker(plotattributes, i = 1)
     a_stroke = alpha(cstr_stroke)
     mark_size = pgfx_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)
     return PGFPlotsX.Options(
-        "mark" => shape isa Shape ? "PlotsShape" : get(_pgfplotsx_markers, shape, "*"),
+        "mark" => shape isa Shape ? "PlotsShape$i" : get(_pgfplotsx_markers, shape, "*"),
         "mark size" => "$mark_size pt",
         "mark options" => PGFPlotsX.Options(
             "color" => cstr_stroke,
