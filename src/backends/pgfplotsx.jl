@@ -143,12 +143,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 else
                     series_func = PGFPlotsX.Plot
                 end
-                if isfilledcontour(series)
-                    # push!(series_opt, "contour filled" => nothing)
-                    # st = :surface
-                #     axis_opt["view"] = (0, 90)
-                #     push!(series_opt, "shader" => "interp")
-                end
                 if series[:fillrange] !== nothing && !isfilledcontour(series)
                     push!(series_opt, "area legend" => nothing)
                 end
@@ -189,9 +183,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         (series[:fillrange] !== nothing && !isfilledcontour(series))
                         segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
                     end
-                    coordinates = pgfx_series_coordinates!( sp,
-                        isfilledcontour(series) ? :filledcontour : st,
-                        segment_opt, opt, rng )
+                    coordinates = pgfx_series_coordinates!( sp, series, segment_opt, opt, rng )
                     segment_plot = series_func(
                         merge(series_opt, segment_opt),
                         coordinates,
@@ -231,9 +223,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     end
 end
 ## seriestype specifics
-@inline function pgfx_series_coordinates!(sp, st, segment_opt, opt, rng)
+@inline function pgfx_series_coordinates!(sp, series, segment_opt, opt, rng)
+    st = series[:seriestype]
     # function args
-    args =  if st in (:contour, :contour3d, :filledcontour)
+    args =  if st in (:contour, :contour3d)
         opt[:x], opt[:y], Array(opt[:z])'
     elseif st in (:heatmap, :surface, :wireframe)
             surface_to_vecs(opt[:x], opt[:y], opt[:z])
@@ -249,8 +242,7 @@ end
     else
         opt[:x], opt[:y]
     end
-    seg_args = if st in (:contour, :contour3d, :filledcontour)
-
+    seg_args = if st in (:contour, :contour3d)
             args
         else
             (arg[rng] for arg in args)
@@ -265,6 +257,9 @@ end
         x, y = collect(seg_args)
         return PGFPlotsX.Table([:x => x, :y => y, :u => opt[:quiver][1], :v => opt[:quiver][2]])
     else
+        if isfilledcontour(series)
+            st = :filledcontour
+        end
         pgfx_series_coordinates!(Val(st), segment_opt, opt, seg_args)
     end
 end
@@ -322,7 +317,7 @@ function pgfx_series_coordinates!(st_val::Val{:wireframe}, segment_opt, opt, arg
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:shape}, segment_opt, opt, args)
-    push!( segment_opt, "area legends" => nothing )
+    # push!( segment_opt, "area legend" => nothing )
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Union{Val{:contour}, Val{:contour3d}}, segment_opt, opt, args)
