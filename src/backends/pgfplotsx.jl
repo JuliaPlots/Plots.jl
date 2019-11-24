@@ -317,7 +317,7 @@ function pgfx_series_coordinates!(st_val::Val{:wireframe}, segment_opt, opt, arg
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Val{:shape}, segment_opt, opt, args)
-    # push!( segment_opt, "area legend" => nothing )
+    push!( segment_opt, "area legend" => nothing )
     return PGFPlotsX.Coordinates(args...)
 end
 function pgfx_series_coordinates!(st_val::Union{Val{:contour}, Val{:contour3d}}, segment_opt, opt, args)
