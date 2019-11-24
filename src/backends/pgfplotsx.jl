@@ -284,7 +284,7 @@ function pgfx_series_coordinates!(st_val::Val{:heatmap}, segment_opt, opt, args)
     return PGFPlotsX.Table(args...)
 end
 
-function pgfx_series_coordinates!(st_val::Val{:stepre}, segment_opt, opt, args)
+function pgfx_series_coordinates!(st_val::Val{:steppre}, segment_opt, opt, args)
     push!( segment_opt, "const plot mark right" => nothing )
     return PGFPlotsX.Coordinates(args...)
 end
