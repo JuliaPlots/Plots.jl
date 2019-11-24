@@ -1,5 +1,4 @@
 using Contour: Contour
-# PGFPlotsX.print_tex(io::IO, data::ColorGradient) = write(io, pgfx_colormap(data))
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
@@ -250,7 +249,8 @@ end
     else
         opt[:x], opt[:y]
     end
-    seg_args = if st in (:contour, :contour3d, :heatmap, :filledcontour)
+    seg_args = if st in (:contour, :contour3d, :filledcontour)
+
             args
         else
             (arg[rng] for arg in args)
@@ -278,10 +278,12 @@ end
 function pgfx_series_coordinates!(st_val::Val{:heatmap}, segment_opt, opt, args)
     push!(segment_opt,
         "surf" => nothing,
-        "mesh/rows" => length(opt[:x])
+        "mesh/rows" => length(opt[:x]),
+        "mesh/cols" => length(opt[:y])
     )
     return PGFPlotsX.Table(args...)
 end
+
 function pgfx_series_coordinates!(st_val::Val{:stepre}, segment_opt, opt, args)
     push!( segment_opt, "const plot mark right" => nothing )
     return PGFPlotsX.Coordinates(args...)
@@ -354,9 +356,9 @@ function pgfx_series_coordinates!(st_val::Val{:filledcontour}, segment_opt, opt,
             join(["($x, $y) [$(zs[j, i])]" for (j, x) in enumerate(xs)], " ") for (i, y) in enumerate(ys)], "\n\n"
         )
     """
-coordinates {
-$cs
-};
+        coordinates {
+        $cs
+        };
     """
 end
 ##
@@ -590,14 +592,11 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     end
 
     # limits
-    # TODO: support zlims
-    if letter != :z
-        lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(sp, :x)) : axis_limits(sp, letter)
-        push!( opt,
-            string(letter,:min) => lims[1],
-            string(letter,:max) => lims[2]
-        )
-    end
+    lims = ispolar(sp) && letter == :x ? rad2deg.(axis_limits(sp, :x)) : axis_limits(sp, letter)
+    push!( opt,
+        string(letter,:min) => lims[1],
+        string(letter,:max) => lims[2]
+    )
 
     if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
         ticks = get_ticks(sp, axis)
