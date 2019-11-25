@@ -646,7 +646,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     )
 
     # set to supported framestyle
-    framestyle = pgfx_framestyle(sp[:framestyle])
+    framestyle = pgfx_framestyle(sp[:framestyle] == false ? :none : sp[:framestyle])
 
     # axis label position
     labelpos = ""
