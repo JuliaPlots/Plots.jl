@@ -579,10 +579,12 @@ function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1)
 end
 
 function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_index )
-    ribbon = series[:ribbon]
+    ribbon_y = series[:ribbon]
     opt = series.plotattributes
-    ribbon_n = length(opt[:y]) ÷ length(ribbon)
-    ribbon_y = repeat(ribbon, outer = ribbon_n)
+    if ribbon_y isa AVec
+        ribbon_n = length(opt[:y]) ÷ length(ribbon)
+        ribbon_y = repeat(ribbon, outer = ribbon_n)
+    end
     # upper ribbon
     ribbon_name_plus = "plots_rib_p$series_index"
     ribbon_opt_plus = merge(segment_plot.options, PGFPlotsX.Options(
@@ -590,7 +592,7 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
         "color" => opt[:fillcolor],
         "draw opacity" => opt[:fillalpha]
     ))
-    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] + ribbon_y)
+    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .+ ribbon_y)
     ribbon_plot_plus = series_func(
         ribbon_opt_plus,
         coordinates_plus
@@ -603,7 +605,7 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
         "color" => opt[:fillcolor],
         "draw opacity" => opt[:fillalpha]
     ))
-    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] - ribbon_y)
+    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .- ribbon_y)
     ribbon_plot_plus = series_func(
         ribbon_opt_minus,
         coordinates_plus
