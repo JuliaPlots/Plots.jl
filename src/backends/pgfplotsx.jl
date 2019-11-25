@@ -194,7 +194,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                else
                    series_func = PGFPlotsX.Plot
                end
-               if series[:fillrange] !== nothing && !isfilledcontour(series)
+               if series[:fillrange] !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
                    push!(series_opt, "area legend" => nothing)
                end
                if st == :heatmap
@@ -252,8 +252,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    end
                    # add to legend?
                    if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                       push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
-                       )
+                       push!( axis, PGFPlotsX.LegendEntry(opt[:label]) )
                    end
                    # add series annotations
                    anns = series[:series_annotations]
