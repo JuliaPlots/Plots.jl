@@ -36,6 +36,14 @@ function pgfx_axes(pgfx_plot::PGFPlotsXPlot)
     return gp isa PGFPlotsX.GroupPlot ? gp.elements[1].contents : gp
 end
 
+function pgfx_preample(pgfx_plot::Plots.Plot{Plots.PGFPlotsXBackend})
+    old_flag = pgfx_plot.attr[:tex_output_standalone]
+    pgfx_plot.attr[:tex_output_standalone] = true
+    fulltext = String(repr("application/x-tex", pgfx_plot))
+    preamble = fulltext[1:first(findfirst("\\begin{document}", fulltext)) - 1]
+    pgfx_plot.attr[:tex_output_standalone] = old_flag
+    preamble
+end
 
 function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat, Surface})
     a = Array(s)
@@ -797,7 +805,7 @@ end
 
 function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsXBackend})
     _update_plot_object(plt)
-    PGFPlotsX.print_tex(io, plt.o.the_plot)
+    PGFPlotsX.print_tex(io, plt.o.the_plot, include_preamble = plt.attr[:tex_output_standalone])
 end
 
 function _display(plt::Plot{PGFPlotsXBackend})
