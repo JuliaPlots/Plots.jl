@@ -762,7 +762,10 @@ end
 function _update_min_padding!(sp::Subplot{PGFPlotsXBackend})
     # TODO: make padding more intelligent
     # order: right, top, left, bottom
-    sp.minpad = (22mm, 12mm, 2mm, 10mm)
+    sp.minpad = (22mm + sp[:right_margin],
+                 12mm + sp[:top_margin],
+                 2mm + sp[:left_margin],
+                 10mm + sp[:bottom_margin])
 end
 
 function _create_backend_figure(plt::Plot{PGFPlotsXBackend})
