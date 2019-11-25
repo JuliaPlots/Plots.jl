@@ -32,8 +32,8 @@ Base.@kwdef mutable struct PGFPlotsXPlot
 end
 
 function pgfx_axes(pgfx_plot::PGFPlotsXPlot)
-    gp =  pgfx_plot.the_plot.elements[1]
-    return gp isa PGFPlotsX.GroupPlot ? gp.elements[1].contents : gp
+    gp =  pgfx_plot.the_plot.elements[1].elements[1]
+    return gp isa PGFPlotsX.GroupPlot ? gp.contents : gp
 end
 
 function pgfx_preample(pgfx_plot::Plots.Plot{Plots.PGFPlotsXBackend})
