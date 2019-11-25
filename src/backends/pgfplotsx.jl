@@ -11,7 +11,11 @@ Base.@kwdef mutable struct PGFPlotsXPlot
     end
 end
 
-pgfx_axes(pgfx_plot::PGFPlotsXPlot) = pgfx_plot.the_plot.elements[1].elements[1].contents
+function pgfx_axes(pgfx_plot::PGFPlotsXPlot)
+    gp =  pgfx_plot.the_plot.elements[1]
+    return gp isa PGFPlotsX.GroupPlot ? gp.elements[1].contents : gp
+end
+
 
 function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat, Surface})
     a = Array(s)
