@@ -106,7 +106,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "draw opacity" => title_a,
                     "rotate" => sp[:titlefontrotation]
                 ),
-                "legend pos" => get(_pgfplotsx_legend_pos, sp[:legend], "outer north east"),
                 "legend style" => PGFPlotsX.Options(
                     pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid") => nothing,
                     "fill" => cstr,
@@ -116,6 +115,14 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "fill" => sp[:background_color_inside]
                 )
             )
+            # legend position
+            if sp[:legend] isa Tuple
+                x, y = sp[:legend]
+                push!(axis_opt["legend style"], "at={($x, $y)}" )
+            else
+                push!(axis_opt, "legend pos" => get(_pgfplotsx_legend_pos, sp[:legend], "outer north east"),
+                )
+            end
             for letter in (:x, :y, :z)
                 if letter != :z || is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
