@@ -291,18 +291,6 @@ gr_y_axislims(sp::Subplot) = axis_limits(sp, :y)
 gr_z_axislims(sp::Subplot) = axis_limits(sp, :z)
 gr_xy_axislims(sp::Subplot) = gr_x_axislims(sp)..., gr_y_axislims(sp)...
 
-function gr_lims(sp::Subplot, axis::Axis, adjust::Bool, expand = nothing)
-    if expand !== nothing
-        expand_extrema!(axis, expand)
-    end
-    lims = axis_limits(sp, axis[:letter])
-    if adjust
-        GR.adjustrange(lims...)
-    else
-        lims
-    end
-end
-
 
 function gr_fill_viewport(vp::AVec{Float64}, c)
     GR.savestate()
@@ -1029,14 +1017,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     GR.setlinewidth(sp.plt[:thickness_scaling])
 
     if is3d(sp)
-        # TODO do we really need a different clims computation here from the one
-        #      computed above using get_clims(sp)?
-        zmin, zmax = gr_lims(sp, zaxis, true)
-        clims3d = sp[:clims]
-        if is_2tuple(clims3d)
-            isfinite(clims3d[1]) && (zmin = clims3d[1])
-            isfinite(clims3d[2]) && (zmax = clims3d[2])
-        end
+        zmin, zmax = axis_limits(sp, :z)
         GR.setspace(zmin, zmax, round.(Int, sp[:camera])...)
 
         xticks, yticks, zticks, xaxis_segs, yaxis_segs, zaxis_segs, xtick_segs, ytick_segs, ztick_segs, xgrid_segs, ygrid_segs, zgrid_segs, xminorgrid_segs, yminorgrid_segs, zminorgrid_segs, xborder_segs, yborder_segs, zborder_segs = axis_drawing_info_3d(sp)
@@ -1128,62 +1109,121 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # TODO: tick labels
 
-        # # tick marks
-        # if !(xticks in (:none, nothing, false)) && xaxis[:showaxis]
-        #     # x labels
-        #     flip, mirror = gr_set_xticks_font(sp)
-        #     for (cv, dv) in zip(xticks...)
-        #         # use xor ($) to get the right y coords
-        #         xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
-        #         if xaxis[:ticks] in (:auto, :native)
-        #             # ensure correct dispatch in gr_text for automatic log ticks
-        #             if xaxis[:scale] in _logScales
-        #                 dv = string(dv, "\\ ")
-        #             elseif xaxis[:formatter] in (:scientific, :auto)
-        #                 dv = convert_sci_unicode(dv)
-        #             end
-        #         end
-        #         gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), string(dv))
-        #     end
-        # end
-        #
-        # if !(yticks in (:none, nothing, false)) && yaxis[:showaxis]
-        #     # y labels
-        #     flip, mirror = gr_set_yticks_font(sp)
-        #     for (cv, dv) in zip(yticks...)
-        #         # use xor ($) to get the right y coords
-        #         xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
-        #         # @show cv dv xmin xi yi
-        #         if yaxis[:ticks] in (:auto, :native)
-        #             # ensure correct dispatch in gr_text for automatic log ticks
-        #             if yaxis[:scale] in _logScales
-        #                 dv = string(dv, "\\ ")
-        #             elseif yaxis[:formatter] in (:scientific, :auto)
-        #                 dv = convert_sci_unicode(dv)
-        #             end
-        #         end
-        #         gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
-        #     end
-        # end
-        #
-        # if !(zticks in (:none, nothing, false)) && zaxis[:showaxis]
-        #     # y labels
-        #     flip, mirror = gr_set_yticks_font(sp) # TODO for z
-        #     for (cv, dv) in zip(zticks...)
-        #         # use xor ($) to get the right y coords
-        #         xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
-        #         # @show cv dv xmin xi yi
-        #         if yaxis[:ticks] in (:auto, :native)
-        #             # ensure correct dispatch in gr_text for automatic log ticks
-        #             if yaxis[:scale] in _logScales
-        #                 dv = string(dv, "\\ ")
-        #             elseif yaxis[:formatter] in (:scientific, :auto)
-        #                 dv = convert_sci_unicode(dv)
-        #             end
-        #         end
-        #         gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
-        #     end
-        # end
+        # tick marks
+        if !(xticks in (:none, nothing, false)) && xaxis[:showaxis]
+            # x labels
+            gr_set_font(
+                tickfont(xaxis),
+                halign = (:left, :hcenter, :right)[sign(xaxis[:rotation]) + 2],
+                valign = (xaxis[:mirror] ? :bottom : :top),
+                rotation = xaxis[:rotation]
+            )
+            yt = if sp[:framestyle] == :origin
+                0
+            elseif xor(xaxis[:mirror], yaxis[:flip])
+                ymax
+            else
+                ymin
+            end
+            zt = if sp[:framestyle] == :origin
+                0
+            elseif xor(xaxis[:mirror], zaxis[:flip])
+                zmax
+            else
+                zmin
+            end
+            for (cv, dv) in zip(xticks...)
+                xi, yi, zi = GR.wc3towc(cv, yt, zt)
+                xi, yi = GR.wctondc(xi, yi)
+                @show xi, yi
+                if xaxis[:ticks] in (:auto, :native)
+                    # ensure correct dispatch in gr_text for automatic log ticks
+                    if xaxis[:scale] in _logScales
+                        dv = string(dv, "\\ ")
+                    elseif xaxis[:formatter] in (:scientific, :auto)
+                        dv = convert_sci_unicode(dv)
+                    end
+                end
+                xi += (yaxis[:mirror] ? 1 : -1) * 1e-2 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
+                yi += (xaxis[:mirror] ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
+                @show xi, yi
+                gr_text(xi, yi, string(dv))
+            end
+        end
+
+        if !(yticks in (:none, nothing, false)) && yaxis[:showaxis]
+            # y labels
+            gr_set_font(
+                tickfont(yaxis),
+                halign = (:left, :hcenter, :right)[sign(yaxis[:rotation]) + 2],
+                valign = (yaxis[:mirror] ? :bottom : :top),
+                rotation = yaxis[:rotation]
+            )
+            xt = if sp[:framestyle] == :origin
+                0
+            elseif xor(yaxis[:mirror], xaxis[:flip])
+                xmin
+            else
+                xmax
+            end
+            zt = if sp[:framestyle] == :origin
+                0
+            elseif xor(yaxis[:mirror], zaxis[:flip])
+                zmax
+            else
+                zmin
+            end
+            for (cv, dv) in zip(yticks...)
+                xi, yi, zi = GR.wc3towc(xt, cv, zt)
+                xi, yi = GR.wctondc(xi, yi)
+                if yaxis[:ticks] in (:auto, :native)
+                    # ensure correct dispatch in gr_text for automatic log ticks
+                    if yaxis[:scale] in _logScales
+                        dv = string(dv, "\\ ")
+                    elseif xaxis[:formatter] in (:scientific, :auto)
+                        dv = convert_sci_unicode(dv)
+                    end
+                end
+                gr_text(xi + (yaxis[:mirror] ? -1 : 1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi + (yaxis[:mirror] ? 1 : -1) * 5e-3 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), string(dv))
+            end
+        end
+
+        if !(zticks in (:none, nothing, false)) && zaxis[:showaxis]
+            # z labels
+            gr_set_font(
+                tickfont(zaxis),
+                halign = (zaxis[:mirror] ? :right : :left),
+                valign = (:top, :vcenter, :bottom)[sign(zaxis[:rotation]) + 2],
+                rotation = zaxis[:rotation]
+            )
+            xt = if sp[:framestyle] == :origin
+                0
+            elseif xor(zaxis[:mirror], xaxis[:flip])
+                xmin
+            else
+                xmax
+            end
+            yt = if sp[:framestyle] == :origin
+                0
+            elseif xor(zaxis[:mirror], yaxis[:flip])
+                ymin
+            else
+                ymax
+            end
+            for (cv, dv) in zip(zticks...)
+                xi, yi, zi = GR.wc3towc(xt, yt, cv)
+                xi, yi = GR.wctondc(xi, yi)
+                if zaxis[:ticks] in (:auto, :native)
+                    # ensure correct dispatch in gr_text for automatic log ticks
+                    if zaxis[:scale] in _logScales
+                        dv = string(dv, "\\ ")
+                    elseif zaxis[:formatter] in (:scientific, :auto)
+                        dv = convert_sci_unicode(dv)
+                    end
+                end
+                gr_text(xi + (zaxis[:mirror] ? -1 : 1) * 1e-2 * (zaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
+            end
+        end
         #
         # # border
         # intensity = sp[:framestyle] == :semi ? 0.5 : 1.0
