@@ -5,7 +5,26 @@ Base.@kwdef mutable struct PGFPlotsXPlot
     the_plot::PGFPlotsX.TikzDocument = PGFPlotsX.TikzDocument()
     function PGFPlotsXPlot(is_created, was_shown, the_plot)
         pgfx_plot = new(is_created, was_shown, the_plot)
+        # tikz libraries
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{arrows.meta}")
+        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{backgrounds}")
+        PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
+        """
+        \\pgfkeys{/tikz/.cd,
+          background color/.initial=white,
+          background color/.get=\\backcol,
+          background color/.store in=\\backcol,
+        }
+        \\tikzset{background rectangle/.style={
+            fill=\\backcol,
+          },
+          use background/.style={
+            show background rectangle
+          }
+        }
+        """
+        )
+        # pgfplots libraries
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{patchplots}")
         pgfx_plot
     end
@@ -41,8 +60,19 @@ end
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created
+        the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options())
         cols, rows = size(plt.layout.grid)
-        the_plot = PGFPlotsX.TikzPicture()
+        bgc = plt.attr[:background_color_outside]
+        if bgc isa Colors.Colorant
+            cstr = plot_color(bgc)
+            a = alpha(cstr)
+            push!(the_plot.options,
+                "draw opacity" => a,
+                "background color" => cstr,
+                "use background" => nothing,
+            )
+        end
+
         # the combination of groupplot and polaraxis is broken in pgfplots
         if !any( sp -> ispolar(sp), plt.subplots )
             pl_height, pl_width = plt.attr[:size]
