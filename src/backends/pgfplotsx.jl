@@ -102,8 +102,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             bb = bbox(sp)
             cstr = plot_color(sp[:background_color_legend])
             a = alpha(cstr)
+            fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
-            title_a = alpha(cstr)
+            title_a = alpha(title_cstr)
             axis_opt = PGFPlotsX.Options(
                 "height" => string(height(bb)),
                 "width" => string(width(bb)),
@@ -115,8 +116,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "rotate" => sp[:titlefontrotation]
                 ),
                 "legend style" => PGFPlotsX.Options(
-                    pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid") => nothing,
+                    pgfx_linestyle(pgfx_thickness_scaling(sp), sp[:foreground_color_legend], fg_alpha, "solid") => nothing,
                     "fill" => cstr,
+                    "fill opacity" => a,
+                    "text opacity" => alpha(plot_color(sp[:legendfontcolor])),
                     "font" => pgfx_font(sp[:legendfontsize], pgfx_thickness_scaling(sp))
                 ),
                 "axis background/.style" => PGFPlotsX.Options(
