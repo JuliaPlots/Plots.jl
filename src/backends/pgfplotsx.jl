@@ -26,6 +26,7 @@ Base.@kwdef mutable struct PGFPlotsXPlot
         )
         # pgfplots libraries
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{patchplots}")
+        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{fillbetween}")
         pgfx_plot
     end
 end
@@ -147,116 +148,122 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
            end
            @label colorbar_end
 
-            push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
-                "title" => sp[:colorbar_title],
-                "point meta max" => get_clims(sp)[2],
-                "point meta min" => get_clims(sp)[1]
-                )
-            )
-            if is3d(sp)
-                azim, elev = sp[:camera]
-                push!( axis_opt, "view" => (azim, elev) )
-            end
-            axisf = if sp[:projection] == :polar
-                        # push!(axis_opt, "xmin" => 90)
-                        # push!(axis_opt, "xmax" => 450)
-                        PGFPlotsX.PolarAxis
-                    else
-                        PGFPlotsX.Axis
-                    end
-            axis = axisf(
-                axis_opt
-            )
-            for (series_index, series) in enumerate(series_list(sp))
-                opt = series.plotattributes
-                st = series[:seriestype]
-                series_opt = PGFPlotsX.Options(
-                                "color" => single_color(opt[:linecolor]),
-                            )
-                if is3d(series) || st == :heatmap #|| isfilledcontour(series)
-                    series_func = PGFPlotsX.Plot3
-                else
-                    series_func = PGFPlotsX.Plot
-                end
-                if series[:fillrange] !== nothing && !isfilledcontour(series)
-                    push!(series_opt, "area legend" => nothing)
-                end
-                if st == :heatmap
-                    push!(axis.options,
-                        "view" => "{0}{90}",
-                        "shader" => "flat corner",
-                    )
-                end
-                # treat segments
-                segments = if st in (:wireframe, :heatmap, :contour, :surface, :contour3d)
-                        iter_segments(surface_to_vecs(series[:x], series[:y], series[:z])...)
-                    else
-                        iter_segments(series)
-                    end
-                segment_opt = PGFPlotsX.Options()
-                for (i, rng) in enumerate(segments)
-                    segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
-                    if opt[:markershape] != :none
-                        marker = opt[:markershape]
-                        if marker isa Shape
-                            x = marker.x
-                            y = marker.y
-                            scale_factor = 0.025
-                            mark_size = opt[:markersize] * scale_factor
-                            path = join(["($(x[i] * mark_size), $(y[i] * mark_size))" for i in eachindex(x)], " -- ")
-                            c = get_markercolor(series, i)
-                            a = get_markeralpha(series, i)
-                            PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
-                                """
-                                \\pgfdeclareplotmark{PlotsShape$(series_index)}{
-                                    \\filldraw
-                                    $path;
-                                }
-                                """
-                            )
-                        end
-                        segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
-                    end
-                    if st == :shape ||
-                        (series[:fillrange] !== nothing && !isfilledcontour(series))
-                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
-                    end
-                    coordinates = pgfx_series_coordinates!( sp, series, segment_opt, opt, rng )
-                    segment_plot = series_func(
-                        merge(series_opt, segment_opt),
-                        coordinates,
-                        (series[:fillrange] !== nothing && !isfilledcontour(series)) ? "\\closedcycle" : "{}"
-                    )
-                    push!(axis, segment_plot)
-                    # add to legend?
-                    if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                        push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
-                        )
-                    end
-                    # add series annotations
-                    anns = series[:series_annotations]
-                    for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
-                        pgfx_add_annotation!(axis, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
-                    end
-                end
-                # add subplot annotations
-                anns = sp.attr[:annotations]
-                for (xi,yi,txt) in anns
-                    pgfx_add_annotation!(axis, xi, yi, txt)
-                end
-            end
-            if ispolar(sp)
-                axes = the_plot
-            else
-                axes = the_plot.elements[1]
-            end
-            push!( axes, axis )
-            if length(plt.o.the_plot.elements) > 0
-                plt.o.the_plot.elements[1] = the_plot
-            else
-                push!(plt.o, the_plot)
-            end
-        end
+           push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
+           "title" => sp[:colorbar_title],
+           "point meta max" => get_clims(sp)[2],
+           "point meta min" => get_clims(sp)[1]
+           )
+           )
+           if is3d(sp)
+               azim, elev = sp[:camera]
+               push!( axis_opt, "view" => (azim, elev) )
+           end
+           axisf = if sp[:projection] == :polar
+               # push!(axis_opt, "xmin" => 90)
+               # push!(axis_opt, "xmax" => 450)
+               PGFPlotsX.PolarAxis
+           else
+               PGFPlotsX.Axis
+           end
+           axis = axisf(
+           axis_opt
+           )
+           for (series_index, series) in enumerate(series_list(sp))
+               opt = series.plotattributes
+               st = series[:seriestype]
+               series_opt = PGFPlotsX.Options(
+               "color" => single_color(opt[:linecolor]),
+               )
+               if is3d(series) || st == :heatmap #|| isfilledcontour(series)
+                   series_func = PGFPlotsX.Plot3
+               else
+                   series_func = PGFPlotsX.Plot
+               end
+               if series[:fillrange] !== nothing && !isfilledcontour(series)
+                   push!(series_opt, "area legend" => nothing)
+               end
+               if st == :heatmap
+                   push!(axis.options,
+                   "view" => "{0}{90}",
+                   "shader" => "flat corner",
+                   )
+               end
+               # treat segments
+               segments = if st in (:wireframe, :heatmap, :contour, :surface, :contour3d)
+                   iter_segments(surface_to_vecs(series[:x], series[:y], series[:z])...)
+               else
+                   iter_segments(series)
+               end
+               segment_opt = PGFPlotsX.Options()
+               for (i, rng) in enumerate(segments)
+                   segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
+                   if opt[:markershape] != :none
+                       marker = opt[:markershape]
+                       if marker isa Shape
+                           x = marker.x
+                           y = marker.y
+                           scale_factor = 0.025
+                           mark_size = opt[:markersize] * scale_factor
+                           path = join(["($(x[i] * mark_size), $(y[i] * mark_size))" for i in eachindex(x)], " -- ")
+                           c = get_markercolor(series, i)
+                           a = get_markeralpha(series, i)
+                           PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
+                           """
+                           \\pgfdeclareplotmark{PlotsShape$(series_index)}{
+                           \\filldraw
+                           $path;
+                           }
+                           """
+                           )
+                       end
+                       segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
+                   end
+                   if st == :shape ||
+                       (series[:fillrange] !== nothing && !isfilledcontour(series)) &&
+                       series[:ribbon] === nothing
+                       segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
+                   end
+                   coordinates = pgfx_series_coordinates!( sp, series, segment_opt, opt, rng )
+                   segment_plot = series_func(
+                   merge(series_opt, segment_opt),
+                   coordinates,
+                   (series[:fillrange] !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing) ? "\\closedcycle" : "{}"
+                   )
+                   push!(axis, segment_plot)
+                   # add ribbons?
+                   ribbon = series[:ribbon]
+                   if ribbon !== nothing
+                       pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_index )
+                   end
+                   # add to legend?
+                   if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
+                       push!( axis, PGFPlotsX.LegendEntry( opt[:label] )
+                       )
+                   end
+                   # add series annotations
+                   anns = series[:series_annotations]
+                   for (xi,yi,str,fnt) in EachAnn(anns, series[:x], series[:y])
+                       pgfx_add_annotation!(axis, xi, yi, PlotText(str, fnt), pgfx_thickness_scaling(series))
+                   end
+               end
+               # add subplot annotations
+               anns = sp.attr[:annotations]
+               for (xi,yi,txt) in anns
+                   pgfx_add_annotation!(axis, xi, yi, txt)
+               end
+           end
+           if ispolar(sp)
+               axes = the_plot
+           else
+               axes = the_plot.elements[1]
+           end
+           push!( axes, axis )
+           if length(plt.o.the_plot.elements) > 0
+               plt.o.the_plot.elements[1] = the_plot
+           else
+               push!(plt.o, the_plot)
+           end
+       end
         pgfx_plot.is_created = true
     end
 end
@@ -569,6 +576,45 @@ function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1)
         PGFPlotsX.Coordinate(x, y),
         "{$(val.str).};"
     ])
+end
+
+function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_index )
+    ribbon = series[:ribbon]
+    opt = series.plotattributes
+    ribbon_n = length(opt[:y]) ÷ length(ribbon)
+    ribbon_y = repeat(ribbon, outer = ribbon_n)
+    # upper ribbon
+    ribbon_name_plus = "plots_rib_p$series_index"
+    ribbon_opt_plus = merge(segment_plot.options, PGFPlotsX.Options(
+        "name path" => ribbon_name_plus,
+        "color" => opt[:fillcolor],
+        "draw opacity" => opt[:fillalpha]
+    ))
+    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] + ribbon_y)
+    ribbon_plot_plus = series_func(
+        ribbon_opt_plus,
+        coordinates_plus
+    )
+    push!(axis, ribbon_plot_plus)
+    # lower ribbon
+    ribbon_name_minus = "plots_rib_m$series_index"
+    ribbon_opt_minus = merge(segment_plot.options, PGFPlotsX.Options(
+        "name path" => ribbon_name_minus,
+        "color" => opt[:fillcolor],
+        "draw opacity" => opt[:fillalpha]
+    ))
+    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] - ribbon_y)
+    ribbon_plot_plus = series_func(
+        ribbon_opt_minus,
+        coordinates_plus
+    )
+    push!(axis, ribbon_plot_plus)
+    # fill
+    push!(axis, series_func(
+        pgfx_fillstyle(opt, series_index),
+        "fill between [of=$(ribbon_name_plus) and $(ribbon_name_minus)]"
+    ))
+    return axis
 end
 # --------------------------------------------------------------------------------------
 function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
