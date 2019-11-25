@@ -158,6 +158,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         push!(axis_opt,
                             "colorbar" => nothing,
                             "colormap name" => "plots$(sp.attr[:subplot_index])",
+                            "colormap access" => "direct",
                         )
                        # goto is needed to break out of col and series for
                        @goto colorbar_end
@@ -167,10 +168,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
            @label colorbar_end
 
            push!(axis_opt, "colorbar style" => PGFPlotsX.Options(
-           "title" => sp[:colorbar_title],
-           "point meta max" => get_clims(sp)[2],
-           "point meta min" => get_clims(sp)[1]
-           )
+                   "title" => sp[:colorbar_title],
+                   "point meta max" => get_clims(sp)[2],
+                   "point meta min" => get_clims(sp)[1]
+               )
            )
            if is3d(sp)
                azim, elev = sp[:camera]
@@ -192,7 +193,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                series_opt = PGFPlotsX.Options(
                "color" => single_color(opt[:linecolor]),
                )
-               if is3d(series) || st == :heatmap #|| isfilledcontour(series)
+               if is3d(series) || st == :heatmap
                    series_func = PGFPlotsX.Plot3
                else
                    series_func = PGFPlotsX.Plot
@@ -336,7 +337,7 @@ function pgfx_series_coordinates!(st_val::Val{:heatmap}, segment_opt, opt, args)
     push!(segment_opt,
         "surf" => nothing,
         "mesh/rows" => length(opt[:x]),
-        "mesh/cols" => length(opt[:y])
+        "mesh/cols" => length(opt[:y]),
     )
     return PGFPlotsX.Table(args...)
 end

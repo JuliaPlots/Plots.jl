@@ -80,7 +80,8 @@ end
         z = float((1:4) * reshape(1:10, 1, :))
         pgfx_plot = heatmap(xs, ys, z, aspect_ratio=1)
         Plots._update_plot_object(pgfx_plot)
-        if @test_nowarn(haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar") == true)
+        if
+           @test_nowarn(haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar") == true)
            @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
            @test Plots.pgfx_axes(pgfx_plot.o)[1]["colormap name"] == "plots1"
         end
