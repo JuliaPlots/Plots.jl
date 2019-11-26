@@ -31,6 +31,7 @@ Base.@kwdef mutable struct PGFPlotsXPlot
     end
 end
 
+## end user utility functions
 function pgfx_axes(pgfx_plot::PGFPlotsXPlot)
     gp =  pgfx_plot.the_plot.elements[1].elements[1]
     return gp isa PGFPlotsX.GroupPlot ? gp.contents : gp
@@ -44,6 +45,7 @@ function pgfx_preamble(pgfx_plot::Plot{PGFPlotsXBackend})
     pgfx_plot.attr[:tex_output_standalone] = old_flag
     preamble
 end
+##
 
 function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat, Surface})
     a = Array(s)
@@ -56,12 +58,6 @@ function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat, Surface})
         zn[n] = a[i,j]
     end
     return xn, yn, zn
-end
-
-Base.display(pgfx_plot::PGFPlotsXPlot) = display(pgfx_plot.the_plot)
-
-function Base.show(io::IO, mime::MIME, pgfx_plot::PGFPlotsXPlot)
-    show(io::IO, mime, pgfx_plot.the_plot)
 end
 
 function Base.push!(pgfx_plot::PGFPlotsXPlot, item)
@@ -801,11 +797,6 @@ end
 
 function _show(io::IO, mime::MIME{Symbol("application/x-tex")}, plt::Plot{PGFPlotsXBackend})
     PGFPlotsX.print_tex(io, plt.o.the_plot, include_preamble = plt.attr[:tex_output_standalone])
-end
-
-Base.show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot{PGFPlotsXBackend}) = show(io, plt)
-
-function Base.show(io::IO, plt::Plot{PGFPlotsXBackend}) display(PGFPlotsX.PGFPlotsXDisplay(), plt.o.the_plot)
 end
 
 function _display(plt::Plot{PGFPlotsXBackend})
