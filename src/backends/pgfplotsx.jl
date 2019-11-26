@@ -278,7 +278,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                # add subplot annotations
                anns = sp.attr[:annotations]
                for (xi,yi,txt) in anns
-                   pgfx_add_annotation!(axis, xi, yi, txt)
+                   pgfx_add_annotation!(axis, xi, yi, txt, pgfx_thickness_scaling(sp))
                end
            end
            if ispolar(sp)
@@ -604,7 +604,7 @@ function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1)
         ),
         " at ",
         PGFPlotsX.Coordinate(x, y),
-        "{$(val.str).};"
+        "{$(val.str)};"
     ])
 end
 
