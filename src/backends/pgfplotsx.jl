@@ -59,6 +59,7 @@ function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat, Surface})
 end
 
 Base.display(pgfx_plot::PGFPlotsXPlot) = display(pgfx_plot.the_plot)
+
 function Base.show(io::IO, mime::MIME, pgfx_plot::PGFPlotsXPlot)
     show(io::IO, mime, pgfx_plot.the_plot)
 end
@@ -284,6 +285,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
        end
         pgfx_plot.is_created = true
     end
+    return pgfx_plot
 end
 ## seriestype specifics
 @inline function pgfx_series_coordinates!(sp, series, segment_opt, opt, rng)
@@ -791,26 +793,21 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
     plt.o(plt)
 end
 
-function _show(io::IO, mime::MIME"image/svg+xml", plt::Plot{PGFPlotsXBackend})
-    _update_plot_object(plt)
-    show(io, mime, plt.o)
+for mime in ("application/pdf", "image/png", "image/svg+xml")
+    @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{PGFPlotsXBackend})
+        show(io, mime, plt.o.the_plot)
+    end
 end
 
-function _show(io::IO, mime::MIME"application/pdf", plt::Plot{PGFPlotsXBackend})
-    _update_plot_object(plt)
-    show(io, mime, plt.o)
-end
-
-function _show(io::IO, mime::MIME"image/png", plt::Plot{PGFPlotsXBackend})
-    _update_plot_object(plt)
-    show(io, mime, plt.o)
-end
-
-function _show(io::IO, mime::MIME"application/x-tex", plt::Plot{PGFPlotsXBackend})
-    _update_plot_object(plt)
+function _show(io::IO, mime::MIME{Symbol("application/x-tex")}, plt::Plot{PGFPlotsXBackend})
     PGFPlotsX.print_tex(io, plt.o.the_plot, include_preamble = plt.attr[:tex_output_standalone])
 end
 
+Base.show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot{PGFPlotsXBackend}) = show(io, plt)
+
+function Base.show(io::IO, plt::Plot{PGFPlotsXBackend}) display(PGFPlotsX.PGFPlotsXDisplay(), plt.o.the_plot)
+end
+
 function _display(plt::Plot{PGFPlotsXBackend})
-    plt.o
+    display(PGFPlotsX.PGFPlotsXDisplay(), plt.o.the_plot)
 end
