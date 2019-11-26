@@ -113,7 +113,6 @@ end
                              x + y
                          end), color=:bluesreds, legend=false)
          plot(p1, p2)
-         # TODO: questionable tiling
      end # testset
      @testset "Framestyles" begin
         scatter(fill(randn(10), 6), fill(randn(10), 6), framestyle=[:box :semi :origin :zerolines :grid :none], title=[":box" ":semi" ":origin" ":zerolines" ":grid" ":none"], color=permutedims(1:6), layout=6, label="", markerstrokewidth=0, ticks=-2:2)
