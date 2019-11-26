@@ -15,6 +15,7 @@ end
     pgfx_plot = plot(1:5)
     Plots._update_plot_object(pgfx_plot)
     @test pgfx_plot.o.the_plot isa PGFPlotsX.TikzDocument
+    @test pgfx_plot.series_list[1].plotattributes[:quiver] === nothing
 
     @testset "3D docs example" begin
         n = 100
@@ -80,8 +81,7 @@ end
         z = float((1:4) * reshape(1:10, 1, :))
         pgfx_plot = heatmap(xs, ys, z, aspect_ratio=1)
         Plots._update_plot_object(pgfx_plot)
-        if
-           @test_nowarn(haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar") == true)
+        if @test_nowarn(haskey(Plots.pgfx_axes(pgfx_plot.o)[1].options.dict, "colorbar") == true)
            @test Plots.pgfx_axes(pgfx_plot.o)[1]["colorbar"] === nothing
            @test Plots.pgfx_axes(pgfx_plot.o)[1]["colormap name"] == "plots1"
         end
