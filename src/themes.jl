@@ -4,29 +4,8 @@
 Specify the colour theme for plots.
 """
 function theme(s::Symbol; kw...)
-    defaults = _get_defaults(s)
+    defaults = PlotThemes._themes[s].defaults
     _theme(s, defaults; kw...)
-end
-
-function _get_defaults(s::Symbol)
-    thm = PlotThemes._themes[s]
-    if :defaults in fieldnames(typeof(thm))
-        return thm.defaults
-    else # old PlotTheme type
-        defaults = KW(
-            :bg       => thm.bg_secondary,
-            :bginside => thm.bg_primary,
-            :fg       => thm.lines,
-            :fgtext   => thm.text,
-            :fgguide  => thm.text,
-            :fglegend => thm.text,
-            :palette  => thm.palette,
-        )
-        if thm.gradient !== nothing
-            push!(defaults, :gradient => thm.gradient)
-        end
-        return defaults
-    end
 end
 
 function _theme(s::Symbol, defaults::KW; kw...)
@@ -34,7 +13,7 @@ function _theme(s::Symbol, defaults::KW; kw...)
     reset_defaults()
 
     # Set the theme's gradient as default
-    if haskey(defaults, :gradient)
+    if haskey(defaults, :colorgradient)
         PlotUtils.clibrary(:misc)
         PlotUtils.default_cgrad(default = :sequential, sequential = PlotThemes.gradient_name(s))
     else
@@ -44,8 +23,8 @@ function _theme(s::Symbol, defaults::KW; kw...)
 
     # maybe overwrite the theme's gradient
     kw = KW(kw)
-    if haskey(kw, :gradient)
-        kwgrad = pop!(kw, :gradient)
+    if haskey(kw, :colorgradient)
+        kwgrad = pop!(kw, :colorgradient)
         for clib in clibraries()
             if kwgrad in cgradients(clib)
                 PlotUtils.clibrary(clib)
@@ -74,11 +53,11 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
 
 @recipe function showtheme(st::ShowTheme)
     thm, cfunc = _get_showtheme_args(st.args...)
-    defaults = _get_defaults(thm)
+    defaults = PlotThemes._themes[thm].defaults
 
     # get the gradient
-    gradient_colors = get(defaults, :gradient, cgrad(:inferno).colors)
-    gradient = cgrad(cfunc.(RGB.(gradient_colors)))
+    gradient_colors = get(defaults, :colorgradient, cgrad(:inferno).colors)
+    colorgradient = cgrad(cfunc.(RGB.(gradient_colors)))
 
     # get the palette
     palette = get(defaults, :palette, get_color_palette(:auto, plot_color(:white), 17))
@@ -86,7 +65,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
 
     # apply the theme
     for k in keys(defaults)
-        k in (:gradient, :palette) && continue
+        k in (:colorgradient, :palette) && continue
         def = defaults[k]
         arg = get(_keyAliases, k, k)
         plotattributes[arg] = if typeof(def) <: Colorant
@@ -139,7 +118,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
     @series begin
         subplot := 4
         seriestype := :heatmap
-        seriescolor := gradient
+        seriescolor := colorgradient
         ticks := -5:5:5
         x, y, z
     end
@@ -147,7 +126,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
     @series begin
         subplot := 5
         seriestype := :surface
-        seriescolor := gradient
+        seriescolor := colorgradient
         x, y, z
     end
 
@@ -159,7 +138,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
 
     @series begin
         subplot := 6
-        seriescolor := gradient
+        seriescolor := colorgradient
         linewidth := 3
         line_z := z
         x, y, z
