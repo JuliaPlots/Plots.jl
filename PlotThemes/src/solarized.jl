@@ -28,7 +28,7 @@ _themes[:solarized] = PlotTheme(
     fgguide = _solarized_colors[:base01],
     fglegend = _solarized_colors[:base01],
     palette = expand_palette(_solarized_colors[:base03], [_solarized_colors[c] for c in _solarized_palette]),
-    gradient = cgrad(:YlOrRd_r).colors
+    colorgradient = cgrad(:YlOrRd_r).colors
 )
 
 _themes[:solarized_light] = PlotTheme(
@@ -39,5 +39,5 @@ _themes[:solarized_light] = PlotTheme(
     fgguide = _solarized_colors[:base1],
     fglegend = _solarized_colors[:base1],
     palette = expand_palette(_solarized_colors[:base3], [_solarized_colors[c] for c in _solarized_palette]),
-    gradient = cgrad(:YlOrRd_r).colors
+    colorgradient = cgrad(:YlOrRd_r).colors
 )
