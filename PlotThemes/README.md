@@ -69,9 +69,9 @@ Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 
 ## Contributing
 A theme specifies default values for different Plots [attributes](http://docs.juliaplots.org/attributes/).
-At the moment these are typically colors, palettes and gradients, but any Plots attribute can be controlled by a theme in general.
+At the moment these are typically colors, palettes and colorgradients, but any Plots attribute can be controlled by a theme in general.
 PRs for new themes very welcome! Adding a new theme (e.g. `mytheme`) is as easy as adding a new file (mytheme.jl) that contains at least the following line:
 ```julia
 _themes[:mytheme] = PlotTheme(; kwargs...)
 ```
-The keyword arguments can be any collection of Plots attributes.
+The keyword arguments can be any collection of Plots attributes plus a colorgradient keyword argument.
