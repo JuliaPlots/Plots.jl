@@ -210,8 +210,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                else
                    iter_segments(series)
                end
-               segment_opt = PGFPlotsX.Options()
                for (i, rng) in enumerate(segments)
+                   segment_opt = PGFPlotsX.Options()
                    segment_opt = merge( segment_opt, pgfx_linestyle(opt, i) )
                    if opt[:markershape] != :none
                        marker = opt[:markershape]
@@ -235,15 +235,28 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                        segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
                    end
                    if st == :shape ||
-                       (series[:fillrange] !== nothing && !isfilledcontour(series)) &&
-                       series[:ribbon] === nothing
+                       isfilledcontour(series) ||
+                       series[:ribbon] !== nothing
                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
                    end
+                   # add fillrange
+                   if series[:fillrange] !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
+                       pgfx_fillrange_series!( axis, series, series_func, i, _cycle(series[:fillrange], rng), rng)
+                       # add to legend?
+                       if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
+                           io = IOBuffer()
+                           PGFPlotsX.print_tex(io, pgfx_fillstyle(opt, i))
+                           style = strip(String(take!(io)),['[',']', ' '])
+                           push!( segment_opt, "legend image code/.code" => """{
+                           \\draw[##1,/tikz/.cd, $style] (0cm,-0.1cm) rectangle (0.6cm,0.1cm);
+                           }""" )
+                       end
+                   end
+                   # series
                    coordinates = pgfx_series_coordinates!( sp, series, segment_opt, opt, rng )
                    segment_plot = series_func(
-                   merge(series_opt, segment_opt),
-                   coordinates,
-                   (series[:fillrange] !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing) ? "\\closedcycle" : "{}"
+                       merge(series_opt, segment_opt),
+                       coordinates,
                    )
                    push!(axis, segment_plot)
                    # add ribbons?
@@ -253,7 +266,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    end
                    # add to legend?
                    if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                       push!( axis, PGFPlotsX.LegendEntry(opt[:label]) )
+                       legend = PGFPlotsX.LegendEntry(PGFPlotsX.Options(), opt[:label], true)
+                       push!( axis, legend )
                    end
                    # add series annotations
                    anns = series[:series_annotations]
@@ -633,6 +647,35 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
         "fill between [of=$(ribbon_name_plus) and $(ribbon_name_minus)]"
     ))
     return axis
+end
+
+function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
+    fillrange_opt = PGFPlotsX.Options(
+        "line width" => "0",
+        "draw opacity" => "0",
+    )
+    fillrange_opt = merge( fillrange_opt, pgfx_fillstyle(series, i) )
+    fillrange_opt = merge( fillrange_opt, pgfx_marker(series, i) )
+    push!( fillrange_opt, "forget plot" => nothing )
+    opt = series.plotattributes
+    args = is3d(series) ? (opt[:x][rng], opt[:y][rng], opt[:z][rng]) : (opt[:x][rng], opt[:y][rng])
+    push!(axis, PGFPlotsX.PlotInc(fillrange_opt, pgfx_fillrange_args(fillrange, args...)))
+    return axis
+end
+
+function pgfx_fillrange_args(fillrange, x, y)
+    n = length(x)
+    x_fill = [x; x[n:-1:1]; x[1]]
+    y_fill = [y; _cycle(fillrange, n:-1:1); y[1]]
+    return PGFPlotsX.Coordinates(x_fill, y_fill)
+end
+
+function pgfx_fillrange_args(fillrange, x, y, z)
+    n = length(x)
+    x_fill = [x; x[n:-1:1]; x[1]]
+    y_fill = [y; y[n:-1:1]; x[1]]
+    z_fill = [z; _cycle(fillrange, n:-1:1); z[1]]
+    return PGFPlotsX.Coordiantes(x_fill, y_fill, z_fill)
 end
 # --------------------------------------------------------------------------------------
 function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
