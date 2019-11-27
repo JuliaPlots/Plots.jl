@@ -591,20 +591,17 @@ end
 
 function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1)
     # Construct the style string.
-    # Currently supports color and orientation
     cstr = val.font.color
     a = alpha(cstr)
     push!(o, ["\\node",
         PGFPlotsX.Options(
-            get(_pgfx_annotation_halign,val.font.halign,"") => nothing,
+            get(_pgfx_annotation_halign, val.font.halign, "") => nothing,
             "color" => cstr,
             "draw opacity" => convert(Float16, a),
             "rotate" => val.font.rotation,
             "font" => pgfx_font(val.font.pointsize, thickness_scaling)
         ),
-        " at ",
-        PGFPlotsX.Coordinate(x, y),
-        "{$(val.str)};"
+        " at (axis cs:$x, $y) {$(val.str)};"
     ])
 end
 
