@@ -36,6 +36,7 @@ GR = "≥ 0.31.0"
 PlotThemes = "≥ 0.1.3"
 PlotUtils = "≥ 0.6.1"
 RecipesBase = "≥ 0.6.0"
+Requires = "0.5"
 StatsBase = "≥ 0.14.0"
 julia = "≥ 1.0.0"
 
