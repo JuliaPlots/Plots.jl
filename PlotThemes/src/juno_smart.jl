@@ -22,6 +22,6 @@ if Juno.isactive()
         fgguide = colors["variable"],
         fglegend = colors["variable"],
         palette = expand_palette(colors["background"], juno_palette; lchoices = [57], cchoices = [100]),
-        gradient = grad
+        colorgradient = grad
     )
 end

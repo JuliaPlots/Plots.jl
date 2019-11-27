@@ -15,5 +15,5 @@ _themes[:dark] = PlotTheme(
     fgguide = colorant"#FFFFFF",
     fglegend = colorant"#FFFFFF",
     palette = expand_palette(dark_bg, dark_palette; lchoices = [57], cchoices = [100]),
-    gradient = cgrad(:fire).colors
+    colorgradient = cgrad(:fire).colors
 )

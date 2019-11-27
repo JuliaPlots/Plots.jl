@@ -36,8 +36,8 @@ const _themes = Dict{Symbol, PlotTheme}(:default => PlotTheme())
 gradient_name(s::Symbol) = s == :default ? :inferno : Symbol(s, "_grad")
 
 function add_theme(s::Symbol, thm::PlotTheme)
-    if haskey(thm.defaults, :gradient)
-        PlotUtils.register_gradient_colors(gradient_name(s), thm.defaults[:gradient], :misc)
+    if haskey(thm.defaults, :colorgradient)
+        PlotUtils.register_gradient_colors(gradient_name(s), thm.defaults[:colorgradient], :misc)
     end
     _themes[s] = thm
 end

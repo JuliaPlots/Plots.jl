@@ -1,6 +1,6 @@
 name = "PlotThemes"
 uuid = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
-version = "0.4.0"
+version = "1.0.0"
 
 [deps]
 PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
@@ -8,8 +8,9 @@ Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-PlotUtils = "≥ 0.5.0"
-julia = "≥ 0.7.0"
+PlotUtils = "0.5, 0.6"
+Requires = "0.5"
+julia = "0.7, 1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

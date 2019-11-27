@@ -16,5 +16,5 @@ _themes[:lime] = PlotTheme(
     fgguide = lime_palette[2],
     fglegend = lime_palette[2],
     palette = expand_palette(black, lime_palette[1:4]),
-    gradient = cgrad(:viridis).colors
+    colorgradient = cgrad(:viridis).colors
 )
