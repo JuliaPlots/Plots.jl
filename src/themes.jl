@@ -17,6 +17,7 @@ function _theme(s::Symbol, defaults::KW; kw...)
     if haskey(defaults, :colorgradient)
         PlotUtils.clibrary(:misc)
         PlotUtils.default_cgrad(default = :sequential, sequential = PlotThemes.gradient_name(s))
+        pop!(defaults, :colorgradient)
     else
         PlotUtils.clibrary(:Plots)
         PlotUtils.default_cgrad(default = :sequential, sequential = :inferno)
