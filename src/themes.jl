@@ -13,6 +13,7 @@ function _theme(s::Symbol, defaults::KW; kw...)
     reset_defaults()
 
     # Set the theme's gradient as default
+    fix_colorgradient!(defaults)
     if haskey(defaults, :colorgradient)
         PlotUtils.clibrary(:misc)
         PlotUtils.default_cgrad(default = :sequential, sequential = PlotThemes.gradient_name(s))
@@ -39,6 +40,13 @@ function _theme(s::Symbol, defaults::KW; kw...)
     return
 end
 
+# be compatible with old PlotThemes specifying the colorgradient with `:gradient`
+function fix_colorgradient!(defaults)
+    if haskey(defaults, :gradient) && !haskey(defaults, :colorgradient)
+        defaults[:colorgradient] = pop!(defaults, :gradient)
+    end
+end
+
 @deprecate set_theme(s) theme(s)
 
 @userplot ShowTheme
@@ -56,6 +64,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
     defaults = PlotThemes._themes[thm].defaults
 
     # get the gradient
+    fix_colorgradient!(defaults)
     gradient_colors = get(defaults, :colorgradient, cgrad(:inferno).colors)
     colorgradient = cgrad(cfunc.(RGB.(gradient_colors)))
 
