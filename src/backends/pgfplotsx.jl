@@ -68,7 +68,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created
         the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options())
         rows, cols = size(plt.layout.grid)
-        bgc = plt.attr[:background_color_outside] == :match ? plt.attr[:background_color] : plt.attr[:background_color]
+        bgc = plt.attr[:background_color_outside] == :match ? plt.attr[:background_color] : plt.attr[:background_color_outside]
         if bgc isa Colors.Colorant
             cstr = plot_color(bgc)
             a = alpha(cstr)
