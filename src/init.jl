@@ -46,6 +46,12 @@ function __init__()
         @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
     end
 
+    @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
+        fn = joinpath(@__DIR__, "backends", "pgfplotsx.jl")
+        include(fn)
+        @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
+    end
+
     @require PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a" begin
         fn = joinpath(@__DIR__, "backends", "plotlyjs.jl")
         include(fn)
