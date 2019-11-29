@@ -8,6 +8,8 @@ using Gtk
 using LibGit2
 using GeometryTypes
 
+include("test_pgfplotsx.jl")
+
 reference_dir(args...) = joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
 
 function reference_file(backend, i, version)

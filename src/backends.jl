@@ -37,7 +37,6 @@ macro init_backend(s)
         _backendType[Symbol($str)] = $T
         _backendSymbol[$T] = Symbol($str)
         _backend_packages[Symbol($str)] = Symbol($package_str)
-        # include("backends/" * $str * ".jl")
     end)
 end
 
@@ -252,6 +251,7 @@ end
 @init_backend PlotlyJS
 @init_backend GR
 @init_backend PGFPlots
+@init_backend PGFPlotsX
 @init_backend InspectDR
 @init_backend HDF5
 
@@ -661,3 +661,57 @@ const _inspectdr_marker = Symbol[
 ]
 
 const _inspectdr_scale = [:identity, :ln, :log2, :log10]
+# ------------------------------------------------------------------------------
+# pgfplotsx
+
+const _pgfplotsx_attr = merge_with_base_supported([
+    :annotations,
+    :background_color_legend, :background_color_inside, :background_color_outside,
+    :foreground_color_legend, :foreground_color_grid, :foreground_color_axis,
+    :foreground_color_text, :foreground_color_border,
+    :label,
+    :seriescolor, :seriesalpha,
+    :linecolor, :linestyle, :linewidth, :linealpha,
+    :markershape, :markercolor, :markersize, :markeralpha,
+    :markerstrokewidth, :markerstrokecolor, :markerstrokealpha,
+    :fillrange, :fillcolor, :fillalpha,
+    :bins,
+    :layout,
+    :title, :window_title,
+    :guide, :lims, :ticks, :scale, :flip,
+    :match_dimensions,
+    :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
+    :titlefontrotation, :titlefontcolor,
+    :legendfontfamily, :legendfontsize, :legendfonthalign, :legendfontvalign,
+    :legendfontrotation, :legendfontcolor,
+    :tickfontfamily, :tickfontsize, :tickfonthalign, :tickfontvalign,
+    :tickfontrotation, :tickfontcolor,
+    :guidefontfamily, :guidefontsize, :guidefonthalign, :guidefontvalign,
+    :guidefontrotation, :guidefontcolor,
+    :grid, :gridalpha, :gridstyle, :gridlinewidth,
+    :legend, :legendtitle, :colorbar, :colorbar_title, :colorbar_entry,
+    :fill_z, :line_z, :marker_z, :levels,
+    :ribbon, :quiver,
+    :orientation,
+    :overwrite_figure,
+    :polar,
+    :aspect_ratio,
+    :normalize, :weights,
+    :inset_subplots,
+    :bar_width,
+    :arrow,
+    :framestyle,
+    :tick_direction,
+    :camera,
+    :contour_labels,
+])
+const _pgfplotsx_seriestype =
+        [:path,  :scatter, :straightline,
+        :path3d, :scatter3d, :surface, :wireframe,
+        :heatmap, :contour, :contour3d, 
+        :shape,
+        :steppre, :stepmid, :steppost,  :ysticks, :xsticks]
+const _pgfplotsx_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
+const _pgfplotsx_marker = [:none, :auto, :circle, :rect, :diamond, :utriangle, :dtriangle, :ltriangle, :rtriangle, :cross, :xcross, :star5, :pentagon, :hline, :vline, Shape]
+const _pgfplotsx_scale = [:identity, :ln, :log2, :log10]
+is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
