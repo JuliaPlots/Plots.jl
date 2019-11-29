@@ -42,7 +42,8 @@ blacklist = [
     # the following are not visible to Plots, only its dependencies
     "CategoricalArrays",
     "FixedPointNumbers",
-    "SparseArrays"
+    "SparseArrays",
+    r"#{1,2}[^\"#]+#{1,2}\d+",
 ]
 
 data = SnoopCompile.read(log_path)
