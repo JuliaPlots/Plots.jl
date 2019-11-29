@@ -37,8 +37,8 @@ end
         Plots._update_plot_object(pl)
         axis = Plots.pgfx_axes(pl.o)[1]
         @test count( x->x isa PGFPlotsX.LegendEntry, axis.contents ) == 5
-        @test count( x->x isa PGFPlotsX.Plot, axis.contents ) == 104 # each marker is its own plot
-        marker = axis.contents[14]
+        @test count( x->x isa PGFPlotsX.Plot, axis.contents ) == 108 # each marker is its own plot, fillranges create 2 plot-objects
+        marker = axis.contents[15]
         @test marker isa PGFPlotsX.Plot
         @test marker.options["mark"] == "*"
         @test marker.options["mark options"]["color"] == RGBA{Float64}( colorant"green", 0.8)
