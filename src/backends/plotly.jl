@@ -26,7 +26,6 @@ const plotly_remote_file_path = "https://cdn.plot.ly/plotly-latest.min.js"
 # end
 using UUIDs
 
-push!(_initialized_backends, :plotly)
 # ----------------------------------------------------------------
 
 const _plotly_legend_pos = KW(

@@ -46,6 +46,12 @@ function __init__()
         @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
     end
 
+    @require ORCA = "47be7bcc-f1a6-5447-8b36-7eeeff7534fd" begin
+        fn = joinpath(@__DIR__, "backends", "orca.jl")
+        include(fn)
+        @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
+    end
+
     @require PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925" begin
         fn = joinpath(@__DIR__, "backends", "pgfplotsx.jl")
         include(fn)

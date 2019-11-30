@@ -296,9 +296,6 @@ end
 
 _initialize_backend(pkg::GRBackend) = nothing
 
-_initialize_backend(pkg::PlotlyBackend) = nothing
-
-
 # ------------------------------------------------------------------------------
 # gr
 
@@ -356,6 +353,16 @@ is_marker_supported(::GRBackend, shape::Shape) = true
 
 # ------------------------------------------------------------------------------
 # plotly
+
+function _initialize_backend(pkg::PlotlyBackend)
+    try
+        @eval Main begin
+            import ORCA
+        end
+    catch
+        @info "For saving to png with the Plotly backend ORCA has to be installed."
+    end
+end
 
 const _plotly_attr = merge_with_base_supported([
     :annotations,
@@ -708,7 +715,7 @@ const _pgfplotsx_attr = merge_with_base_supported([
 const _pgfplotsx_seriestype =
         [:path,  :scatter, :straightline,
         :path3d, :scatter3d, :surface, :wireframe,
-        :heatmap, :contour, :contour3d, 
+        :heatmap, :contour, :contour3d,
         :shape,
         :steppre, :stepmid, :steppost,  :ysticks, :xsticks]
 const _pgfplotsx_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
