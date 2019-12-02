@@ -156,7 +156,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         push!(axis_opt,
                             "colorbar" => nothing,
                             "colormap name" => "plots$(sp.attr[:subplot_index])",
-                            "colormap access" => "direct",
                         )
                        # goto is needed to break out of col and series for
                        @goto colorbar_end
@@ -202,7 +201,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                if st == :heatmap
                    push!(axis.options,
                    "view" => "{0}{90}",
-                   "shader" => "flat corner",
                    )
                end
                # treat segments
@@ -348,7 +346,7 @@ function pgfx_series_coordinates!(st_val::Union{Val{:scatter}, Val{:scatter3d}},
 end
 function pgfx_series_coordinates!(st_val::Val{:heatmap}, segment_opt, opt, args)
     push!(segment_opt,
-        "surf" => nothing,
+        "matrix plot*" => nothing,
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
     )
