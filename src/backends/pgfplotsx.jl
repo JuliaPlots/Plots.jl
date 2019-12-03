@@ -1,5 +1,4 @@
 using Contour: Contour
-
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
@@ -249,7 +248,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                            PGFPlotsX.print_tex(io, pgfx_fillstyle(opt, i))
                            style = strip(String(take!(io)),['[',']', ' '])
                            push!( segment_opt, "legend image code/.code" => """{
-                           \\draw[##1,/tikz/.cd, $style] (0cm,-0.1cm) rectangle (0.6cm,0.1cm);
+                           \\draw[$style] (0cm,-0.1cm) rectangle (0.6cm,0.1cm);
                            }""" )
                        end
                    end
