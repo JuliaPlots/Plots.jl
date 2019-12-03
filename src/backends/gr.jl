@@ -69,6 +69,19 @@ const gr_font_family = Dict(
 
 # --------------------------------------------------------------------------------------
 
+gr_color(c) = gr_color(c, color_type(c))
+
+gr_color(c, ::Type{<:AbstractRGB}) = UInt32( round(UInt, clamp(alpha(c) * 255, 0, 255)) << 24 +
+                                   round(UInt,  clamp(blue(c) * 255, 0, 255)) << 16 +
+                                   round(UInt, clamp(green(c) * 255, 0, 255)) << 8  +
+                                   round(UInt,   clamp(red(c) * 255, 0, 255)) )
+function gr_color(c, ::Type{<:AbstractGray})
+    g = round(UInt, clamp(gray(c) * 255, 0, 255))
+    α = round(UInt, clamp(alpha(c) * 255, 0, 255))
+    rgba = UInt32( α<<24 + g<<16 + g<<8 + g )
+end
+gr_color(c, ::Type) = gr_color(RGBA(c), RGB)
+
 function gr_getcolorind(c)
     gr_set_transparency(float(alpha(c)))
     convert(Int, GR.inqcolorfromrgb(red(c), green(c), blue(c)))
@@ -1323,11 +1336,21 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
                 w, h = length(x) - 1, length(y) - 1
                 z_normalized = map(x -> GR.jlgr.normalize_color(x, zmin, zmax), z)
-                z_normalized = map(x -> isnan(x) ? 256/255 : x, z_normalized) # results in color index = 1256 -> transparent
-                colors = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
-                if is_equally_spaced(x) && is_equally_spaced(y)
-                    GR.cellarray(x[1], x[end], y[1], y[end], w, h, colors)
+                if is_uniformly_spaced(x) && is_uniformly_spaced(y)
+                    # For uniformly spaced data use GR.drawimage, which can be
+                    # much faster than GR.nonuniformcellarray, especially for
+                    # pdf output, and also supports alpha values.
+                    # Note that drawimage draws uniformly spaced data correctly
+                    # even on log scales, where it is visually non-uniform.
+                    colors = plot_color.(series[:fillcolor][z_normalized], series[:fillalpha])
+                    colors[isnan.(z_normalized)] .= RGBA(0,0,0,0)
+                    rgba = gr_color.(colors)
+                    GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
                 else
+                    (something(series[:fillalpha],1) < 1 || any(_gr_gradient_alpha .< 1)) && @warn(
+                            "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored.")
+                    z_normalized = map(x -> isnan(x) ? 256/255 : x, z_normalized) # results in color index = 1256 -> transparent
+                    colors = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
                     GR.nonuniformcellarray(x, y, w, h, colors)
                 end
             else
@@ -1448,15 +1471,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             z = transpose_z(series, series[:z].surf, true)'
             w, h = size(z)
             xmin, xmax = ignorenan_extrema(series[:x]); ymin, ymax = ignorenan_extrema(series[:y])
-            if eltype(z) <: Colors.AbstractGray
-                grey = round.(UInt8, clamp.(float(z) * 255, 0, 255))
-                rgba = map(c -> UInt32( 0xff000000 + UInt(c)<<16 + UInt(c)<<8 + UInt(c) ), grey)
-            else
-                rgba = map(c -> UInt32( round(UInt, clamp(alpha(c) * 255, 0, 255)) << 24 +
-                                        round(UInt,  clamp(blue(c) * 255, 0, 255)) << 16 +
-                                        round(UInt, clamp(green(c) * 255, 0, 255)) << 8  +
-                                        round(UInt,   clamp(red(c) * 255, 0, 255)) ), z)
-            end
+            rgba = gr_color.(z)
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
         end
 
