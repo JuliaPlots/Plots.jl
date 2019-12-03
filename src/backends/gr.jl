@@ -827,6 +827,11 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     sp.minpad = Tuple(dpi * [leftpad, toppad, rightpad, bottompad])
 end
 
+function is_equally_spaced(v)
+    d = collect(v[2:end] .- v[1:end-1])
+    all(d .≈ d[1])
+end
+
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     _update_min_padding!(sp)
 
@@ -1320,7 +1325,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 z_normalized = map(x -> GR.jlgr.normalize_color(x, zmin, zmax), z)
                 z_normalized = map(x -> isnan(x) ? 256/255 : x, z_normalized) # results in color index = 1256 -> transparent
                 colors = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
-                GR.nonuniformcellarray(x, y, w, h, colors)
+                if is_equally_spaced(x) && is_equally_spaced(y)
+                    GR.cellarray(x[1], x[end], y[1], y[end], w, h, colors)
+                else
+                    GR.nonuniformcellarray(x, y, w, h, colors)
+                end
             else
                 phimin, phimax = 0.0, 360.0 # nonuniform polar array is not yet supported in GR.jl
                 nx, ny = length(series[:x]), length(series[:y])
