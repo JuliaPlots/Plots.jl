@@ -375,6 +375,11 @@ function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size:
     return x, y
 end
 
+function is_uniformly_spaced(v; tol=1e-6)
+  dv = diff(v)
+  maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+end
+
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
     rmin, rmax = r_extrema
     r = (r .- rmin) ./ (rmax .- rmin)
