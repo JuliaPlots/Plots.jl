@@ -311,7 +311,9 @@ function get_minor_ticks(sp, axis, ticks)
     minorticks = typeof(ticks[1])[]
     for (i,hi) in enumerate(ticks[2:end])
         lo = ticks[i]
-        append!(minorticks,collect(lo + (hi-lo)/n :(hi-lo)/n: hi - (hi-lo)/2n))
+        if isfinite(lo) && hi > lo
+            append!(minorticks,collect(lo + (hi-lo)/n :(hi-lo)/n: hi - (hi-lo)/2n))
+        end
     end
     minorticks[amin .<= minorticks .<= amax]
 end
