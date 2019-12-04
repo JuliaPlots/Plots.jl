@@ -344,8 +344,8 @@ const _scale_base = Dict{Symbol, Real}(
 
 function _heatmap_edges(v::AVec, isedges::Bool = false)
   length(v) == 1 && return v[1] .+ [-0.5, 0.5]
-  if isedges return v end 
-  # `isedges = true` means that v is a vector which already describes edges 
+  if isedges return v end
+  # `isedges = true` means that v is a vector which already describes edges
   # and does not need to be extended.
   vmin, vmax = ignorenan_extrema(v)
   extra_min = (v[2] - v[1]) / 2
@@ -361,16 +361,16 @@ end
 
 function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size::Tuple{Int, Int})
     nx, ny = length(x), length(y)
-    # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be 
+    # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be
     # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
-    ismidpoints = prod(z_size) == (ny * nx) 
+    ismidpoints = prod(z_size) == (ny * nx)
     isedges = z_size == (ny - 1, nx - 1)
     if !ismidpoints && !isedges
-        error("""Length of x & y does not match the size of z. 
+        error("""Length of x & y does not match the size of z.
                 Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
                 or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
     end
-    x, y = heatmap_edges(x, xscale, isedges), 
+    x, y = heatmap_edges(x, xscale, isedges),
            heatmap_edges(y, yscale, isedges)
     return x, y
 end
@@ -552,7 +552,7 @@ function get_clims(sp::Subplot)
         isfinite(clims[1]) && (zmin = clims[1])
         isfinite(clims[2]) && (zmax = clims[2])
     end
-    return zmin < zmax ? (zmin, zmax) : (-0.1, 0.1)
+    return zmin < zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 function get_clims(sp::Subplot, series::Series)
@@ -566,7 +566,7 @@ function get_clims(sp::Subplot, series::Series)
         isfinite(clims[1]) && (zmin = clims[1])
         isfinite(clims[2]) && (zmax = clims[2])
     end
-    return zmin < zmax ? (zmin, zmax) : (-0.1, 0.1)
+    return zmin < zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 function get_clims(series::Series)
@@ -579,10 +579,10 @@ function get_clims(series::Series)
             zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
         end
     end
-    return zmin < zmax ? (zmin, zmax) : (-0.1, 0.1)
+    return zmin < zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
-_update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
+_update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zmax, emax)
 
 @enum ColorbarStyle cbar_gradient cbar_fill cbar_lines
 
