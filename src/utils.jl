@@ -43,7 +43,7 @@ function barHack(; kw...)
   # estimate the edges
   dists = diff(midpoints) * 0.5
   edges = zeros(length(midpoints)+1)
-  for i in 1:length(edges)
+  for i in eachindex(edges)
     if i == 1
       edge = midpoints[1] - dists[1]
     elseif i == length(edges)
@@ -56,7 +56,7 @@ function barHack(; kw...)
 
   x = Float64[]
   y = Float64[]
-  for i in 1:length(heights)
+  for i in eachindex(heights)
     e1, e2 = edges[i:i+1]
     append!(x, [e1, e1, e2, e2])
     append!(y, [fillrange, heights[i], heights[i], fillrange])
@@ -197,7 +197,7 @@ function iter_segments(series::Series)
         return UnitRange{Int}[]
     elseif has_attribute_segments(series)
         if series[:seriestype] in (:scatter, :scatter3d)
-            return [[i] for i in 1:length(y)]
+            return [[i] for i in eachindex(y)]
         else
             return [i:(i + 1) for i in 1:(length(y) - 1)]
         end

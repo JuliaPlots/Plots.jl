@@ -197,7 +197,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     if xaxis[:grid]
         gr_set_line(xaxis[:gridlinewidth], xaxis[:gridstyle], xaxis[:foreground_color_grid])
         gr_set_transparency(xaxis[:foreground_color_grid], xaxis[:gridalpha])
-        for i in 1:length(α)
+        for i in eachindex(α)
             GR.polyline([sinf[i], 0], [cosf[i], 0])
         end
     end
@@ -206,7 +206,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     if yaxis[:grid]
         gr_set_line(yaxis[:gridlinewidth], yaxis[:gridstyle], yaxis[:foreground_color_grid])
         gr_set_transparency(yaxis[:foreground_color_grid], yaxis[:gridalpha])
-        for i in 1:length(rtick_values)
+        for i in eachindex(rtick_values)
             r = (rtick_values[i] - rmin) / (rmax - rmin)
             if r <= 1.0 && r >= 0.0
                 GR.drawarc(-r, r, -r, r, 0, 359)
@@ -223,7 +223,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     #draw angular ticks
     if xaxis[:showaxis]
         GR.drawarc(-1, 1, -1, 1, 0, 359)
-        for i in 1:length(α)
+        for i in eachindex(α)
             x, y = GR.wctondc(1.1 * sinf[i], 1.1 * cosf[i])
             GR.textext(x, y, string((360-α[i])%360, "^o"))
         end
@@ -231,7 +231,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
 
     #draw radial ticks
     if yaxis[:showaxis]
-        for i in 1:length(rtick_values)
+        for i in eachindex(rtick_values)
             r = (rtick_values[i] - rmin) / (rmax - rmin)
             if r <= 1.0 && r >= 0.0
                 x, y = GR.wctondc(0.05, r)
@@ -305,7 +305,7 @@ function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize
 
     shapes = series[:markershape]
     if shapes != :none
-        for i=1:length(x)
+        for i=eachindex(x)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
             cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor

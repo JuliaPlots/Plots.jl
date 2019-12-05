@@ -577,10 +577,10 @@ end
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AVec)
-    n = length(v)
-    cvec = zeros(n)
-    discrete_indices = zeros(Int, n)
-    for i=1:n
+    n = eachindex(v)
+    cvec = zeros(axes(v))
+    discrete_indices = similar(Array{Int}, axes(v))
+    for i in n
         cvec[i], discrete_indices[i] = discrete_value!(axis, v[i])
     end
     cvec, discrete_indices
@@ -588,10 +588,10 @@ end
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AMat)
-    n,m = size(v)
-    cmat = zeros(n,m)
-    discrete_indices = zeros(Int, n, m)
-    for i=1:n, j=1:m
+    n,m = axes(v)
+    cmat = zeros(axes(v))
+    discrete_indices = similar(Array{Int}, axes(v))
+    for i in n, j in m
         cmat[i,j], discrete_indices[i,j] = discrete_value!(axis, v[i,j])
     end
     cmat, discrete_indices

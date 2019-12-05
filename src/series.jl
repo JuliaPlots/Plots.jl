@@ -47,7 +47,7 @@ function convertToAnyVector(v::AMat{<:DataPoint}, plotattributes)
     if all3D(plotattributes)
         Any[prepareSeriesData(Surface(v))]
     else
-        Any[prepareSeriesData(v[:, i]) for i in 1:size(v, 2)]
+        Any[prepareSeriesData(v[:, i]) for i in axes(v, 2)]
     end
 end
 
@@ -70,13 +70,13 @@ process_ribbon(ribbon::Tuple{Any,Any}, plotattributes) = collect(zip(convertToAn
 # TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array
 #       result in that array being shared.  push!, etc will add too many items to that array
 
-compute_x(x::Nothing, y::Nothing, z)      = 1:size(z,1)
-compute_x(x::Nothing, y, z)            = 1:size(y,1)
+compute_x(x::Nothing, y::Nothing, z)      = axes(z,1)
+compute_x(x::Nothing, y, z)            = axes(y,1)
 compute_x(x::Function, y, z)        = map(x, y)
 compute_x(x, y, z)                  = copy(x)
 
 # compute_y(x::Void, y::Function, z)  = error()
-compute_y(x::Nothing, y::Nothing, z)      = 1:size(z,2)
+compute_y(x::Nothing, y::Nothing, z)      = axes(z,2)
 compute_y(x, y::Function, z)        = map(y, x)
 compute_y(x, y, z)                  = copy(y)
 
@@ -282,9 +282,9 @@ all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :hea
 # return a surface if this is a 3d plot, otherwise let it be sliced up
 @recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat,Missing}
     if all3D(plotattributes)
-        n,m = size(mat)
+        n,m = axes(mat)
         wrap_surfaces(plotattributes)
-        SliceIt, 1:m, 1:n, Surface(mat)
+        SliceIt, m, n, Surface(mat)
     else
         SliceIt, nothing, mat, nothing
     end
@@ -294,9 +294,9 @@ end
 @recipe function f(fmt::Formatted{T}) where T<:AbstractMatrix
     if all3D(plotattributes)
         mat = fmt.data
-        n,m = size(mat)
+        n,m = axes(mat)
         wrap_surfaces(plotattributes)
-        SliceIt, 1:m, 1:n, Formatted(Surface(mat), fmt.formatter)
+        SliceIt, m, n, Formatted(Surface(mat), fmt.formatter)
     else
         SliceIt, nothing, fmt, nothing
     end
@@ -319,35 +319,35 @@ function clamp_greys!(mat::AMat{T}) where T<:Gray
 end
 
 @recipe function f(mat::AMat{T}) where T<:Gray
-    n, m = size(mat)
+    n, m = axes(mat)
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
-        SliceIt, 1:m, 1:n, Surface(clamp_greys!(mat))
+        SliceIt, m, n, Surface(clamp_greys!(mat))
     else
         seriestype := :heatmap
         yflip --> true
         cbar --> false
         fillcolor --> ColorGradient([:black, :white])
-        SliceIt, 1:m, 1:n, Surface(clamp!(convert(Matrix{Float64}, mat), 0., 1.))
+        SliceIt, m, n, Surface(clamp!(convert(Matrix{Float64}, mat), 0., 1.))
     end
 end
 
 # # images - colors
 
 @recipe function f(mat::AMat{T}) where T<:Colorant
-	n, m = size(mat)
+	n, m = axes(mat)
 
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
-        SliceIt, 1:m, 1:n, Surface(mat)
+        SliceIt, m, n, Surface(mat)
     else
         seriestype := :heatmap
         yflip --> true
         cbar --> false
         z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
-        SliceIt, 1:m, 1:n, Surface(z)
+        SliceIt, m, n, Surface(z)
     end
 end
 
@@ -366,7 +366,7 @@ end
 
 @recipe function f(shapes::AMat{Shape})
     seriestype --> :shape
-    for j in 1:size(shapes,2)
+    for j in axes(shapes,2)
         @series coords(vec(shapes[:,j]))
     end
 end
@@ -583,7 +583,7 @@ end
 # end
 
 splittable_kw(key, val, lengthGroup) = false
-splittable_kw(key, val::AbstractArray, lengthGroup) = !(key in (:group, :color_palette)) && size(val,1) == lengthGroup
+splittable_kw(key, val::AbstractArray, lengthGroup) = !(key in (:group, :color_palette)) && length(axes(val,1)) == lengthGroup
 splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengthGroup))
 splittable_kw(key, val::SeriesAnnotations, lengthGroup) = splittable_kw(key, val.strs, lengthGroup)
 
@@ -597,7 +597,7 @@ end
 function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
     y_mat = Array{promote_type(eltype(y), typeof(def_val))}(undef, length(keys(x_ind)), length(groupby.groupLabels))
     fill!(y_mat, def_val)
-    for i in 1:length(groupby.groupLabels)
+    for i in eachindex(groupby.groupLabels)
         xi = x[groupby.groupIds[i]]
         yi = y[groupby.groupIds[i]]
         y_mat[getindex.(Ref(x_ind), xi), i] = yi
@@ -630,7 +630,7 @@ group_as_matrix(t) = false
         if length(g.args) == 1
             x = zeros(Int, lengthGroup)
             for indexes in groupby.groupIds
-                x[indexes] = 1:length(indexes)
+                x[indexes] = eachindex(indexes)
             end
             last_args = g.args
         else
@@ -638,7 +638,7 @@ group_as_matrix(t) = false
             last_args = g.args[2:end]
         end
         x_u = unique(sort(x))
-        x_ind = Dict(zip(x_u, 1:length(x_u)))
+        x_ind = Dict(zip(x_u, eachindex(x_u)))
         for (key,val) in plotattributes
             if splittable_kw(key, val, lengthGroup)
                 :($key) := groupedvec2mat(x_ind, x, val, groupby)
