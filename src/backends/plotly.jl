@@ -415,6 +415,7 @@ function plotly_data(series::Series, letter::Symbol, data)
     end
 end
 plotly_data(v) = v !== nothing ? collect(v) : v
+plotly_data(v::AbstractArray) = v
 plotly_data(surf::Surface) = surf.surf
 plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 

@@ -182,13 +182,15 @@ end
 
 mutable struct SegmentsIterator
     args::Tuple
-    n::Int
+    n1::Int
+    n2::Int
 end
 
 function iter_segments(args...)
     tup = Plots.wraptuple(args)
-    n = maximum(map(length, tup))
-    SegmentsIterator(tup, n)
+    n1 = minimum(map(firstindex, tup))
+    n2 = maximum(map(lastindex, tup))
+    SegmentsIterator(tup, n1, n2)
 end
 
 function iter_segments(series::Series)
@@ -199,7 +201,7 @@ function iter_segments(series::Series)
         if series[:seriestype] in (:scatter, :scatter3d)
             return [[i] for i in eachindex(y)]
         else
-            return [i:(i + 1) for i in 1:(length(y) - 1)]
+            return [i:(i + 1) for i in firstindex(y):lastindex(y)-1]
         end
     else
         segs = UnitRange{Int}[]
@@ -217,13 +219,13 @@ anynan(args::Tuple) = i -> anynan(i,args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
-function Base.iterate(itr::SegmentsIterator, nextidx::Int = 1)
-    i = findfirst(!anynan(itr.args), nextidx:itr.n)
+function Base.iterate(itr::SegmentsIterator, nextidx::Int = itr.n1)
+    i = findfirst(!anynan(itr.args), nextidx:itr.n2)
     i === nothing && return nothing
     nextval = nextidx + i - 1
 
-    j = findfirst(anynan(itr.args), nextval:itr.n)
-    nextnan = j === nothing ? itr.n + 1 : nextval + j - 1
+    j = findfirst(anynan(itr.args), nextval:itr.n2)
+    nextnan = j === nothing ? itr.n2 + 1 : nextval + j - 1
 
     nextval:nextnan-1, nextnan
 end
