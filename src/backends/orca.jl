@@ -12,4 +12,13 @@ function plotlybase_syncplot(plt::Plot)
     return plt.o
 end
 
-_show(io::IO, ::MIME{Symbol("image/png")}, plt::Plot{PlotlyBackend}) = ORCA.PlotlyBase.savefig(io, plotlybase_syncplot(plt), format = "png")
+const _orca_mimeformats = Dict(
+    "application/pdf" => "pdf",
+    "image/png"       => "png",
+    "image/svg+xml"   => "svg",
+    "image/eps"       => "eps",
+)
+
+for (mime, fmt) in _orca_mimeformats
+    @eval _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyBackend}) = ORCA.PlotlyBase.savefig(io, plotlybase_syncplot(plt), format = $fmt)
+end
