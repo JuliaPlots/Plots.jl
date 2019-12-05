@@ -557,7 +557,7 @@ function get_clims(sp::Subplot)
         isfinite(clims[1]) && (zmin = clims[1])
         isfinite(clims[2]) && (zmax = clims[2])
     end
-    return zmin < zmax ? (zmin, zmax) : (NaN, NaN)
+    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 function get_clims(sp::Subplot, series::Series)
@@ -571,7 +571,7 @@ function get_clims(sp::Subplot, series::Series)
         isfinite(clims[1]) && (zmin = clims[1])
         isfinite(clims[2]) && (zmax = clims[2])
     end
-    return zmin < zmax ? (zmin, zmax) : (NaN, NaN)
+    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 function get_clims(series::Series)
@@ -584,7 +584,7 @@ function get_clims(series::Series)
             zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
         end
     end
-    return zmin < zmax ? (zmin, zmax) : (NaN, NaN)
+    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
 _update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zmax, emax)
