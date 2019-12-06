@@ -133,4 +133,11 @@ end
         annotate!([(5, y[5], Plots.text("this is \\#5", 16, :red, :center)), (10, y[10], Plots.text("this is \\#10", :right, 20, "courier"))])
         scatter!(range(2, stop=8, length=6), rand(6), marker=(50, 0.2, :orange), series_annotations=["series", "annotations", "map", "to", "series", Plots.text("data", :green)])
      end # testset
-end # testset
+     @testset "Ribbon" begin
+        aa = rand(10)
+        bb = rand(10)
+        cc = rand(10)
+        conf = [aa-cc bb-cc]
+        p = plot(collect(1:10),fill(1,10), ribbon=conf)
+     end # testset
+  end # testset
