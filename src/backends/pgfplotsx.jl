@@ -233,7 +233,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    end
                    if st == :shape ||
                        isfilledcontour(series) ||
-                       series[:ribbon] !== nothing
+                       series[:ribbon] === nothing
                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
                    end
                    # add fillrange
@@ -606,10 +606,11 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
     ribbon_y = series[:ribbon]
     opt = series.plotattributes
     if ribbon_y isa AVec
-        ribbon_n = length(opt[:y]) ÷ length(ribbon)
-        ribbon_y = repeat(ribbon, outer = ribbon_n)
+        ribbon_n = length(opt[:y]) ÷ length(ribbon_y)
+        ribbon_y = repeat(ribbon_y, outer = ribbon_n)
     end
     # upper ribbon
+    # TODO: use UUIDs
     ribbon_name_plus = "plots_rib_p$series_index"
     ribbon_opt_plus = merge(segment_plot.options, PGFPlotsX.Options(
         "name path" => ribbon_name_plus,
