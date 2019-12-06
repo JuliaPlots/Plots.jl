@@ -1,4 +1,5 @@
 using Contour: Contour
+using UUIDs
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
@@ -610,8 +611,8 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
         ribbon_y = repeat(ribbon_y, outer = ribbon_n)
     end
     # upper ribbon
-    # TODO: use UUIDs
-    ribbon_name_plus = "plots_rib_p$series_index"
+    rib_uuid = uuid4()
+    ribbon_name_plus = "plots_rib_p$rib_uuid"
     ribbon_opt_plus = merge(segment_plot.options, PGFPlotsX.Options(
         "name path" => ribbon_name_plus,
         "color" => opt[:fillcolor],
@@ -624,7 +625,7 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
     )
     push!(axis, ribbon_plot_plus)
     # lower ribbon
-    ribbon_name_minus = "plots_rib_m$series_index"
+    ribbon_name_minus = "plots_rib_m$rib_uuid"
     ribbon_opt_minus = merge(segment_plot.options, PGFPlotsX.Options(
         "name path" => ribbon_name_minus,
         "color" => opt[:fillcolor],
