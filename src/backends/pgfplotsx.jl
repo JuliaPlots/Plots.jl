@@ -8,25 +8,21 @@ Base.@kwdef mutable struct PGFPlotsXPlot
         # tikz libraries
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{arrows.meta}")
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{backgrounds}")
-        PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
-        """
-        \\pgfkeys{/tikz/.cd,
-          background color/.initial=white,
-          background color/.get=\\backcol,
-          background color/.store in=\\backcol,
-        }
-        \\tikzset{background rectangle/.style={
-            fill=\\backcol,
-          },
-          use background/.style={
-            show background rectangle
-          }
-        }
-        """
-        )
         # pgfplots libraries
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{patchplots}")
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{fillbetween}")
+        # compatibility fixes
+        # add background layer to standard layers
+        PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
+        raw"""
+        \pgfplotsset{
+        /pgfplots/layers/axis on top/.define layer set={
+        background, axis background,pre main,main,axis grid,axis ticks,axis lines,axis tick labels,
+        axis descriptions,axis foreground
+        }{/pgfplots/layers/standard},
+        }
+        """
+        )
         pgfx_plot
     end
 end
@@ -73,9 +69,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             cstr = plot_color(bgc)
             a = alpha(cstr)
             push!(the_plot.options,
-                "draw opacity" => a,
-                "background color" => cstr,
-                "use background" => nothing,
+                "/tikz/background rectangle/.style" => PGFPlotsX.Options(
+                    "fill" => cstr,
+                    "draw opacity" => a,
+                ),
+                "show background rectangle" => nothing,
             )
         end
 
@@ -121,7 +119,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 ),
                 "axis background/.style" => PGFPlotsX.Options(
                     "fill" => sp[:background_color_inside]
-                )
+                ),
+                "axis on top" => nothing,
             )
             # legend position
             if sp[:legend] isa Tuple
