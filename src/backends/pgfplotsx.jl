@@ -88,22 +88,22 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             "horizontal sep" => string(maximum(sp -> sp.minpad[1], plt.subplots)),
                             "vertical sep" => string(maximum(sp -> sp.minpad[2], plt.subplots)),
                         ),
-                    "height" => pl_height > 0 ? string(pl_height)*"px" : "{}",
-                    "width" => pl_width > 0 ? string(pl_width)*"px" : "{}",
+                    "height" => pl_height > 0 ? string(pl_height * px) : "{}",
+                    "width" => pl_width > 0 ? string(pl_width * px) : "{}",
                     )
                 )
             )
         end
         for sp in plt.subplots
             bb = bbox(sp)
+            sp_width = width(bb)
+            sp_height = height(bb)
             cstr = plot_color(sp[:background_color_legend])
             a = alpha(cstr)
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
             axis_opt = PGFPlotsX.Options(
-                "height" => string(height(bb)),
-                "width" => string(width(bb)),
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
                     "font" => pgfx_font(sp[:titlefontsize], pgfx_thickness_scaling(sp)),
@@ -123,6 +123,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 ),
                 "axis on top" => nothing,
             )
+            sp_width > 0*mm ? push!(axis_opt, "width" => string(sp_width)) : nothing
+            sp_height > 0*mm ? push!(axis_opt, "height" => string(sp_height)) : nothing
             # legend position
             if sp[:legend] isa Tuple
                 x, y = sp[:legend]
@@ -613,7 +615,6 @@ end
 
 function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_index )
     ribbon_y = series[:ribbon]
-    @show ribbon_y
     opt = series.plotattributes
     if ribbon_y isa AVec
         ribbon_n = length(opt[:y]) ÷ length(ribbon_y)
