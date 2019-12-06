@@ -139,5 +139,13 @@ end
         cc = rand(10)
         conf = [aa-cc bb-cc]
         p = plot(collect(1:10),fill(1,10), ribbon=conf)
+        Plots._update_plot_object(p)
+        axis = Plots.pgfx_axes(p.o)[1]
+        plots = filter(x->x isa PGFPlotsX.Plot, axis.contents)
+        @test length(plots) == 4
+        @test !haskey(plots[1].options.dict, "fill")
+        @test !haskey(plots[2].options.dict, "fill")
+        @test !haskey(plots[3].options.dict, "fill")
+        @test haskey(plots[4].options.dict, "fill")
      end # testset
   end # testset
