@@ -613,10 +613,17 @@ end
 
 function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_index )
     ribbon_y = series[:ribbon]
+    @show ribbon_y
     opt = series.plotattributes
     if ribbon_y isa AVec
         ribbon_n = length(opt[:y]) ÷ length(ribbon_y)
-        ribbon_y = repeat(ribbon_y, outer = ribbon_n)
+        ribbon_yp = ribbon_ym = repeat(ribbon_y, outer = ribbon_n)
+    elseif ribbon_y isa Tuple
+        ribbon_ym, ribbon_yp = ribbon_y
+        ribbon_nm = length(opt[:y]) ÷ length(ribbon_ym)
+        ribbon_ym = repeat(ribbon_ym, outer = ribbon_nm)
+        ribbon_np = length(opt[:y]) ÷ length(ribbon_yp)
+        ribbon_yp = repeat(ribbon_yp, outer = ribbon_np)
     end
     # upper ribbon
     rib_uuid = uuid4()
@@ -626,7 +633,7 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
         "color" => opt[:fillcolor],
         "draw opacity" => opt[:fillalpha]
     ))
-    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .+ ribbon_y)
+    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .+ ribbon_yp)
     ribbon_plot_plus = series_func(
         ribbon_opt_plus,
         coordinates_plus
@@ -639,7 +646,7 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
         "color" => opt[:fillcolor],
         "draw opacity" => opt[:fillalpha]
     ))
-    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .- ribbon_y)
+    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .- ribbon_ym)
     ribbon_plot_plus = series_func(
         ribbon_opt_minus,
         coordinates_plus
