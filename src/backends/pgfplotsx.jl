@@ -240,17 +240,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    # add fillrange
                    if series[:fillrange] !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
                        pgfx_fillrange_series!( axis, series, series_func, i, _cycle(series[:fillrange], rng), rng)
-                       # add to legend?
                        if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                           io = IOBuffer()
-                           PGFPlotsX.print_tex(io, pgfx_fillstyle(opt, i))
-                           style = strip(String(take!(io)),['[',']', ' '])
-                           push!( segment_opt, "legend image code/.code" => """{
-                           \\draw[$style] (0cm,-0.1cm) rectangle (0.6cm,0.1cm);
-                           }""" )
+                           pgfx_filllegend!(series_opt, opt)
                        end
                    end
                    # series
+                   #
                    coordinates = pgfx_series_coordinates!( sp, series, segment_opt, opt, rng )
                    segment_plot = series_func(
                        merge(series_opt, segment_opt),
@@ -264,7 +259,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    end
                    # add to legend?
                    if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                       legend = PGFPlotsX.LegendEntry(PGFPlotsX.Options(), opt[:label], true)
+                       leg_opt = PGFPlotsX.Options()
+                       if ribbon !== nothing
+                           pgfx_filllegend!(axis.contents[end-3].options, opt)
+                       end
+                       legend = PGFPlotsX.LegendEntry(leg_opt, opt[:label], false)
                        push!( axis, legend )
                    end
                    # add series annotations
@@ -497,6 +496,15 @@ function pgfx_arrow( arr::Arrow )
     end
     components = join( components, "" )
     return "every arrow/.append style={$(components)}"
+end
+
+function pgfx_filllegend!( series_opt, opt )
+    io = IOBuffer()
+    PGFPlotsX.print_tex(io, pgfx_fillstyle(opt))
+    style = strip(String(take!(io)),['[',']', ' '])
+    push!( series_opt, "legend image code/.code" => """{
+    \\draw[$style] (0cm,-0.1cm) rectangle (0.6cm,0.1cm);
+    }""" )
 end
 
 function pgfx_colormap(grad::ColorGradient)
