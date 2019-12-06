@@ -614,7 +614,6 @@ end
 
 function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_index )
     ribbon_y = series[:ribbon]
-    @show ribbon_y
     opt = series.plotattributes
     if ribbon_y isa AVec
         ribbon_n = length(opt[:y]) ÷ length(ribbon_y)
