@@ -35,6 +35,8 @@ notifications:
   email: true
 
 script:
+  - echo "**** running Docker"
+  - docker run --env-file travis_docker_env.list -t -a STDOUT -a STDIN -a STDERR -v $PWD:/mnt tkpapp/texlive-julia-minimal /mnt/travis_docker_test_script.sh $TRAVIS_JULIA_VERSION
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - if [[ `uname` = "Linux" ]]; then TESTCMD="xvfb-run julia"; else TESTCMD="julia"; fi
   - $TESTCMD -e 'using Pkg; Pkg.build(); Pkg.test(coverage=true)'
