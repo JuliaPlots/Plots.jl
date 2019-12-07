@@ -21,7 +21,13 @@ addons:
       - xvfb
 
 sudo: required
+
+services:
+  - docker
+  
 before_install:
+  - echo "**** pulling Docker image"
+  - docker pull tkpapp/texlive-julia-minimal
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pwd ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./test/install_wkhtmltoimage.sh ; fi
 
