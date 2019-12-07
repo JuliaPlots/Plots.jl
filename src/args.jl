@@ -1098,7 +1098,7 @@ function extractGroupArgs(v::AVec, args...; legendEntry = string)
     if n > 100
         @warn("You created n=$n groups... Is that intended?")
     end
-    groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
+    groupIds = Vector{Int}[filter(i -> v[i] == glab, eachindex(v)) for glab in groupLabels]
     GroupBy(map(legendEntry, groupLabels), groupIds)
 end
 
@@ -1106,7 +1106,7 @@ legendEntryFromTuple(ns::Tuple) = join(ns, ' ')
 
 # this is when given a tuple of vectors of values to group by
 function extractGroupArgs(vs::Tuple, args...)
-    isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
+    isempty(vs) && return GroupBy([""], [axes(args[1],1)])
     v = map(tuple, vs...)
     extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
 end
@@ -1116,7 +1116,7 @@ legendEntryFromTuple(ns::NamedTuple) =
     join(["$k = $v" for (k, v) in pairs(ns)], ", ")
 
 function extractGroupArgs(vs::NamedTuple, args...)
-    isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
+    isempty(vs) && return GroupBy([""], [axes(args[1],1)])
     v = map(NamedTuple{keys(vs)}∘tuple, values(vs)...)
     extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
 end
@@ -1225,7 +1225,8 @@ convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 # anything else is returned as-is
 function slice_arg(v::AMat, idx::Int)
     c = mod1(idx, size(v,2))
-    size(v,1) == 1 ? v[1,c] : v[:,c]
+    m,n = axes(v)
+    size(v,1) == 1 ? v[first(m),n[c]] : v[:,n[c]]
 end
 slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v, idx) = v

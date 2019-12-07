@@ -364,7 +364,7 @@ end
             0.5 * _bar_width
         end
     else
-        Float64[0.5_cycle(bw,i) for i=1:length(procx)]
+        Float64[0.5_cycle(bw,i) for i=eachindex(procx)]
     end
 
     # make fillto a vector... default fills to 0
@@ -998,7 +998,7 @@ function get_xy(o::OHLC, x, xdiff)
 end
 
 # get the joined vector
-function get_xy(v::AVec{OHLC}, x = 1:length(v))
+function get_xy(v::AVec{OHLC}, x = eachindex(v))
     xdiff = 0.3ignorenan_mean(abs.(diff(x)))
     x_out, y_out = zeros(0), zeros(0)
     for (i,ohlc) in enumerate(v)
@@ -1056,8 +1056,8 @@ end
     @assert length(g.args) == 1 && typeof(g.args[1]) <: AbstractMatrix
     seriestype := :spy
     mat = g.args[1]
-    n,m = size(mat)
-    Plots.SliceIt, 1:m, 1:n, Surface(mat)
+    n,m = axes(mat)
+    Plots.SliceIt, m, n, Surface(mat)
 end
 
 @recipe function f(::Type{Val{:spy}}, x,y,z)
@@ -1185,7 +1185,7 @@ end
     seriestype := :shape
 
 	# create a filled polygon for each item
-    for c=1:size(weights,2)
+    for c=axes(weights,2)
         sx = vcat(weights[:,c], c==1 ? zeros(n) : reverse(weights[:,c-1]))
         sy = vcat(returns, reverse(returns))
         @series Plots.isvertical(plotattributes) ? (sx, sy) : (sy, sx)
@@ -1206,9 +1206,9 @@ julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], f
 
 @recipe function f(a::AreaPlot)
     data = cumsum(a.args[end], dims=2)
-    x = length(a.args) == 1 ? (1:size(data, 1)) : a.args[1]
+    x = length(a.args) == 1 ? (axes(data, 1)) : a.args[1]
     seriestype := :line
-    for i in 1:size(data, 2)
+    for i in axes(data, 2)
         @series begin
             fillrange := i > 1 ? data[:,i-1] : 0
             x, data[:,i]

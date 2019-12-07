@@ -187,7 +187,7 @@ end
 # end
 
 function get_locator_and_formatter(vals::AVec)
-    pyticker."FixedLocator"(1:length(vals)), pyticker."FixedFormatter"(vals)
+    pyticker."FixedLocator"(eachindex(vals)), pyticker."FixedFormatter"(vals)
 end
 
 function add_pyfixedformatter(cbar, vals::AVec)
@@ -535,7 +535,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             shapes = series[:markershape]
             msc = py_markerstrokecolor(series)
             lw = py_thickness_scale(plt, series[:markerstrokewidth])
-            for i=1:length(y)
+            for i=eachindex(y)
                 extrakw[:c] = _cycle(markercolor, i)
 
                 push!(handle, ax."scatter"(_cycle(x,i), _cycle(y,i);
@@ -564,7 +564,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
             delete!(extrakw, :c)
 
-            for i=1:length(y)
+            for i=eachindex(y)
                 cur_marker = py_marker(_cycle(shapes,i))
 
                 if ( cur_marker == prev_marker )
@@ -1013,7 +1013,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             kw = KW()
             if !isempty(sp[:zaxis][:discrete_values]) && colorbar_series[:seriestype] == :heatmap
                 locator, formatter = get_locator_and_formatter(sp[:zaxis][:discrete_values])
-                # kw[:values] = 1:length(sp[:zaxis][:discrete_values])
+                # kw[:values] = eachindex(sp[:zaxis][:discrete_values])
                 kw[:values] = sp[:zaxis][:continuous_values]
                 kw[:ticks] = locator
                 kw[:format] = formatter

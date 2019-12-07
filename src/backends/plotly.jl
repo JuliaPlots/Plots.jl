@@ -351,7 +351,7 @@ end
 
 
 function plotly_colorscale(grad::ColorGradient, α)
-    [[grad.values[i], rgba_string(plot_color(grad.colors[i], α))] for i in 1:length(grad.colors)]
+    [[grad.values[i], rgba_string(plot_color(grad.colors[i], α))] for i in eachindex(grad.colors)]
 end
 plotly_colorscale(c::Colorant,α) = plotly_colorscale(_as_gradient(c),α)
 function plotly_colorscale(c::AbstractVector{<:RGBA}, α)
@@ -392,7 +392,7 @@ end
 # we split by NaNs and then construct/destruct the shapes to get the closed coords
 function plotly_close_shapes(x, y)
     xs, ys = nansplit(x), nansplit(y)
-    for i=1:length(xs)
+    for i=eachindex(xs)
         shape = Shape(xs[i], ys[i])
         xs[i], ys[i] = coords(shape)
     end
@@ -415,6 +415,7 @@ function plotly_data(series::Series, letter::Symbol, data)
     end
 end
 plotly_data(v) = v !== nothing ? collect(v) : v
+plotly_data(v::AbstractArray) = v
 plotly_data(surf::Surface) = surf.surf
 plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 

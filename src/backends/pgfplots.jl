@@ -180,11 +180,11 @@ function pgf_series(sp::Subplot, series::Series)
     end
 
     # PGFPlots can't handle non-Vector?
-    args = map(a -> if typeof(a) <: AbstractVector && typeof(a) != Vector
-            collect(a)
-        else
-            a
-        end, args)
+    # args = map(a -> if typeof(a) <: AbstractVector && typeof(a) != Vector
+    #         collect(a)
+    #     else
+    #         a
+    #     end, args)
 
     if st in (:contour, :histogram2d)
         style = []

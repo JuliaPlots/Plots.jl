@@ -12,7 +12,7 @@ function _expand_seriestype_array(plotattributes::KW, args)
     if typeof(sts) <: AbstractArray
         delete!(plotattributes, :seriestype)
         rd = Vector{RecipeData}(undef, size(sts, 1))
-        for r in 1:size(sts, 1)
+        for r in axes(sts, 1)
             dc = copy(plotattributes)
             dc[:seriestype] = sts[r:r,:]
             rd[r] = RecipeData(dc, args)
