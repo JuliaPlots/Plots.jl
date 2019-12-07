@@ -235,8 +235,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                        segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
                    end
                    if st == :shape ||
-                       isfilledcontour(series) ||
-                       series[:ribbon] === nothing
+                       isfilledcontour(series)
                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
                    end
                    # add fillrange

@@ -16,6 +16,9 @@ end
     Plots._update_plot_object(pgfx_plot)
     @test pgfx_plot.o.the_plot isa PGFPlotsX.TikzDocument
     @test pgfx_plot.series_list[1].plotattributes[:quiver] === nothing
+    axis = Plots.pgfx_axes(pgfx_plot.o)[1]
+    @test count( x-> x isa PGFPlotsX.Plot, axis.contents ) == 1
+    @test !haskey(axis.contents[1].options.dict, "fill")
 
     @testset "3D docs example" begin
         n = 100
