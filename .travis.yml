@@ -19,6 +19,8 @@ addons:
       - libgtk-3-dev
       - xauth
       - xvfb
+      
+dist: trusty
 
 sudo: required
 
