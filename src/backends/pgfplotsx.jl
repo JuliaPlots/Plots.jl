@@ -633,7 +633,8 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
     ribbon_opt_plus = merge(segment_plot.options, PGFPlotsX.Options(
         "name path" => ribbon_name_plus,
         "color" => opt[:fillcolor],
-        "draw opacity" => opt[:fillalpha]
+        "draw opacity" => opt[:fillalpha],
+        "forget plot" => nothing
     ))
     coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .+ ribbon_yp)
     ribbon_plot_plus = series_func(
@@ -646,7 +647,8 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
     ribbon_opt_minus = merge(segment_plot.options, PGFPlotsX.Options(
         "name path" => ribbon_name_minus,
         "color" => opt[:fillcolor],
-        "draw opacity" => opt[:fillalpha]
+        "draw opacity" => opt[:fillalpha],
+        "forget plot" => nothing
     ))
     coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .- ribbon_ym)
     ribbon_plot_plus = series_func(
@@ -656,7 +658,7 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
     push!(axis, ribbon_plot_plus)
     # fill
     push!(axis, series_func(
-        pgfx_fillstyle(opt, series_index),
+        merge(pgfx_fillstyle(opt, series_index), PGFPlotsX.Options("forget plot" => nothing)),
         "fill between [of=$(ribbon_name_plus) and $(ribbon_name_minus)]"
     ))
     return axis
