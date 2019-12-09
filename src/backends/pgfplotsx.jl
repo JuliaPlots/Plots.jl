@@ -624,6 +624,8 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
         ribbon_ym = repeat(ribbon_ym, outer = ribbon_nm)
         ribbon_np = length(opt[:y]) ÷ length(ribbon_yp)
         ribbon_yp = repeat(ribbon_yp, outer = ribbon_np)
+    else
+        ribbon_yp = ribbon_ym = ribbon_y
     end
     # upper ribbon
     rib_uuid = uuid4()
