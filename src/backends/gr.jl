@@ -589,13 +589,13 @@ function gr_legend_pos(sp::Subplot, w, h)
     if occursin("right", str)
         if occursin("outer", str)
             # As per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
-            xpos = viewport_plotarea[2] + 0.11 + ymirror * gr_yaxis_width(sp)
+            xpos = viewport_plotarea[2] + 0.11 + ymirror * gr_axis_width(sp, sp[:yaxis])
         else
             xpos = viewport_plotarea[2] - 0.05 - w
         end
     elseif occursin("left", str)
         if occursin("outer", str)
-            xpos = viewport_plotarea[1] - 0.05 - w - !ymirror * gr_yaxis_width(sp)
+            xpos = viewport_plotarea[1] - 0.05 - w - !ymirror * gr_axis_width(sp, sp[:yaxis])
         else
             xpos = viewport_plotarea[1] + 0.11
         end
@@ -604,13 +604,13 @@ function gr_legend_pos(sp::Subplot, w, h)
     end
     if occursin("top", str)
         if s == :outertop
-            ypos = viewport_plotarea[4] + 0.02 + h + xmirror * gr_xaxis_height(sp)
+            ypos = viewport_plotarea[4] + 0.02 + h + xmirror * gr_axis_height(sp, sp[:xaxis])
         else
             ypos = viewport_plotarea[4] - 0.06
         end
     elseif occursin("bottom", str)
         if s == :outerbottom
-            ypos = viewport_plotarea[3] - 0.05 - !xmirror * gr_xaxis_height(sp)
+            ypos = viewport_plotarea[3] - 0.05 - !xmirror * gr_axis_height(sp, sp[:xaxis])
         else
             ypos = viewport_plotarea[3] + h + 0.06
         end
@@ -769,26 +769,24 @@ function gr_get_ticks_size(ticks, rot)
     return w, h
 end
 
-function gr_xaxis_height(sp)
-    xaxis = sp[:xaxis]
-    xticks, yticks = get_ticks(sp, xaxis), get_ticks(sp, sp[:yaxis])
-    gr_set_font(tickfont(xaxis))
-    h = (xticks in (nothing, false, :none) ? 0 : last(gr_get_ticks_size(xticks, xaxis[:rotation])))
-    if xaxis[:guide] != ""
-        gr_set_font(guidefont(xaxis))
-        h += last(gr_text_size(xaxis[:guide]))
+function gr_axis_height(sp, axis)
+    ticks = get_ticks(sp, axis)
+    gr_set_font(tickfont(axis))
+    h = (ticks in (nothing, false, :none) ? 0 : last(gr_get_ticks_size(ticks, axis[:rotation])))
+    if axis[:guide] != ""
+        gr_set_font(guidefont(axis))
+        h += last(gr_text_size(axis[:guide]))
     end
     return h
 end
 
-function gr_yaxis_width(sp)
-    yaxis = sp[:yaxis]
-    xticks, yticks = get_ticks(sp, sp[:xaxis]), get_ticks(sp, yaxis)
-    gr_set_font(tickfont(yaxis))
-    w = (xticks in (nothing, false, :none) ? 0 : first(gr_get_ticks_size(yticks, yaxis[:rotation])))
-    if yaxis[:guide] != ""
-        gr_set_font(guidefont(yaxis))
-        w += last(gr_text_size(yaxis[:guide]))
+function gr_axis_width(sp, axis)
+    ticks = get_ticks(sp, axis)
+    gr_set_font(tickfont(axis))
+    w = (ticks in (nothing, false, :none) ? 0 : first(gr_get_ticks_size(ticks, axis[:rotation])))
+    if axis[:guide] != ""
+        gr_set_font(guidefont(axis))
+        w += last(gr_text_size(axis[:guide]))
     end
     return w
 end
@@ -1107,8 +1105,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
         GR.setclip(1)
 
-        # TODO: tick labels
-
         # tick marks
         if !(xticks in (:none, nothing, false)) && xaxis[:showaxis]
             # x labels
@@ -1135,18 +1131,17 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for (cv, dv) in zip(xticks...)
                 xi, yi, zi = GR.wc3towc(cv, yt, zt)
                 xi, yi = GR.wctondc(xi, yi)
-                @show xi, yi
                 if xaxis[:ticks] in (:auto, :native)
-                    # ensure correct dispatch in gr_text for automatic log ticks
-                    if xaxis[:scale] in _logScales
-                        dv = string(dv, "\\ ")
-                    elseif xaxis[:formatter] in (:scientific, :auto)
+                    if xaxis[:formatter] in (:scientific, :auto)
+                        # ensure correct dispatch in gr_text for automatic log ticks
+                        if xaxis[:scale] in _logScales
+                            dv = string(dv, "\\ ")
+                        end
                         dv = convert_sci_unicode(dv)
                     end
                 end
                 xi += (yaxis[:mirror] ? 1 : -1) * 1e-2 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
                 yi += (xaxis[:mirror] ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
-                @show xi, yi
                 gr_text(xi, yi, string(dv))
             end
         end
@@ -1177,10 +1172,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 xi, yi, zi = GR.wc3towc(xt, cv, zt)
                 xi, yi = GR.wctondc(xi, yi)
                 if yaxis[:ticks] in (:auto, :native)
-                    # ensure correct dispatch in gr_text for automatic log ticks
-                    if yaxis[:scale] in _logScales
-                        dv = string(dv, "\\ ")
-                    elseif xaxis[:formatter] in (:scientific, :auto)
+                    if xaxis[:formatter] in (:scientific, :auto)
+                        # ensure correct dispatch in gr_text for automatic log ticks
+                        if yaxis[:scale] in _logScales
+                            dv = string(dv, "\\ ")
+                        end
                         dv = convert_sci_unicode(dv)
                     end
                 end
@@ -1214,10 +1210,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 xi, yi, zi = GR.wc3towc(xt, yt, cv)
                 xi, yi = GR.wctondc(xi, yi)
                 if zaxis[:ticks] in (:auto, :native)
-                    # ensure correct dispatch in gr_text for automatic log ticks
-                    if zaxis[:scale] in _logScales
-                        dv = string(dv, "\\ ")
-                    elseif zaxis[:formatter] in (:scientific, :auto)
+                    if zaxis[:formatter] in (:scientific, :auto)
+                        # ensure correct dispatch in gr_text for automatic log ticks
+                        if zaxis[:scale] in _logScales
+                            dv = string(dv, "\\ ")
+                        end
                         dv = convert_sci_unicode(dv)
                     end
                 end
@@ -1389,9 +1386,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_set_font(guidefont(xaxis))
         GR.titles3d(xaxis[:guide], yaxis[:guide], zaxis[:guide])
     else
-        xticks, yticks = get_ticks(sp, sp[:xaxis]), get_ticks(sp, sp[:yaxis])
         if xaxis[:guide] != ""
-            h = 0.01 + gr_xaxis_height(sp)
+            h = 0.01 + gr_axis_height(sp, xaxis)
             gr_set_font(guidefont(xaxis))
             if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
@@ -1403,7 +1399,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
 
         if yaxis[:guide] != ""
-            w = 0.02 + gr_yaxis_width(sp)
+            w = 0.02 + gr_axis_width(sp, yaxis)
             gr_set_font(guidefont(yaxis))
             GR.setcharup(-1, 0)
             if yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
