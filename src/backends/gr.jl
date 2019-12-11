@@ -928,7 +928,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     leg_str = string(sp[:legend])
     if occursin("outer", leg_str)
         if occursin("right", leg_str)
-            viewport_plotarea[2] -= legendw + 0.11
+            viewport_plotarea[2] -= legendw + 0.12
         elseif occursin("left", leg_str)
             viewport_plotarea[1] += legendw + 0.11
         elseif occursin("top", leg_str)
