@@ -487,6 +487,7 @@ function layout_args(sztup::NTuple{2, Integer})
 end
 
 layout_args(n_override::Integer, n::Integer) = layout_args(n)
+layout_args(n, sztup::NTuple{2, Integer}) = layout_args(sztup)
 
 function layout_args(n, sztup::Tuple{Colon, Integer})
     nc = sztup[2]
