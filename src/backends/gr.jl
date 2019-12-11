@@ -1116,9 +1116,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # @show cv dv ymin xi yi flip mirror (flip $ mirror)
                 if xaxis[:ticks] in (:auto, :native)
                     # ensure correct dispatch in gr_text for automatic log ticks
-                    if xaxis[:scale] in _logScales
-                        dv = string(dv, "\\ ")
-                    elseif xaxis[:formatter] in (:scientific, :auto)
+                    if xaxis[:formatter] in (:scientific, :auto)
+                        if xaxis[:scale] in _logScales
+                            dv = string(dv, "\\ ")
+                        end
                         dv = convert_sci_unicode(dv)
                     end
                 end
@@ -1135,9 +1136,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 # @show cv dv xmin xi yi
                 if yaxis[:ticks] in (:auto, :native)
                     # ensure correct dispatch in gr_text for automatic log ticks
-                    if yaxis[:scale] in _logScales
-                        dv = string(dv, "\\ ")
-                    elseif yaxis[:formatter] in (:scientific, :auto)
+                    if yaxis[:formatter] in (:scientific, :auto)
+                        if yaxis[:scale] in _logScales
+                            dv = string(dv, "\\ ")
+                        end
                         dv = convert_sci_unicode(dv)
                     end
                 end
