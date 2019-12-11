@@ -162,5 +162,5 @@ end
      #    mktempdir() do path
      #       @test_nowarn savefig(ribbon_plot, path*"ribbon.svg")
      #    end
-     # end # testset
+     end # testset
   end # testset
