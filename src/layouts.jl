@@ -514,6 +514,8 @@ function layout_args(layout::GridLayout)
     layout, n
 end
 
+layout_args(n_override::Integer, layout::GridLayout) = layout_args(layout)
+
 layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
 
 
