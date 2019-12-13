@@ -10,6 +10,7 @@ julia:
 
 matrix:
   allow_failures:
+  - julia: 1
   - julia: nightly
 
 addons:
