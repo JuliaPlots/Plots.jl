@@ -4,7 +4,7 @@
 Specify the colour theme for plots.
 """
 function theme(s::Symbol; kw...)
-    defaults = PlotThemes._themes[s].defaults
+    defaults = copy(PlotThemes._themes[s].defaults)
     _theme(s, defaults; kw...)
 end
 
