@@ -120,7 +120,8 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
         subplot := 4
         seriestype := :heatmap
         seriescolor := colorgradient
-        ticks := -5:5:5
+        xticks := (-2π:2π:2π, string.(-2:2:2, "π"))
+        yticks := (-2π:2π:2π, string.(-2:2:2, "π"))
         x, y, z
     end
 
@@ -128,12 +129,14 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
         subplot := 5
         seriestype := :surface
         seriescolor := colorgradient
+        xticks := (-2π:2π:2π, string.(-2:2:2, "π"))
+        yticks := (-2π:2π:2π, string.(-2:2:2, "π"))
         x, y, z
     end
 
     n = 100
     ts = range(0, stop = 10π, length = n)
-    x = ts .* cos.(ts)
+    x = (0.1ts) .* cos.(ts)
     y = (0.1ts) .* sin.(ts)
     z = 1:n
 
