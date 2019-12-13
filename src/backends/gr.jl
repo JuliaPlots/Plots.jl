@@ -1188,23 +1188,23 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # z labels
             gr_set_font(
                 tickfont(zaxis),
-                halign = (zaxis[:mirror] ? :right : :left),
+                halign = (zaxis[:mirror] ? :left : :right),
                 valign = (:top, :vcenter, :bottom)[sign(zaxis[:rotation]) + 2],
                 rotation = zaxis[:rotation]
             )
             xt = if sp[:framestyle] == :origin
                 0
             elseif xor(zaxis[:mirror], xaxis[:flip])
-                xmin
-            else
                 xmax
+            else
+                xmin
             end
             yt = if sp[:framestyle] == :origin
                 0
             elseif xor(zaxis[:mirror], yaxis[:flip])
-                ymin
-            else
                 ymax
+            else
+                ymin
             end
             for (cv, dv) in zip(zticks...)
                 xi, yi, zi = GR.wc3towc(xt, yt, cv)
@@ -1218,7 +1218,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                         dv = convert_sci_unicode(dv)
                     end
                 end
-                gr_text(xi + (zaxis[:mirror] ? -1 : 1) * 1e-2 * (zaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
+                gr_text(xi + (zaxis[:mirror] ? 1 : -1) * 1e-2 * (zaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
             end
         end
         #
