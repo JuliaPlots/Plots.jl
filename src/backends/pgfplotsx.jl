@@ -6,10 +6,15 @@ Base.@kwdef mutable struct PGFPlotsXPlot
     function PGFPlotsXPlot(is_created, was_shown, the_plot)
         pgfx_plot = new(is_created, was_shown, the_plot)
         # tikz libraries
-        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{arrows.meta}")
-        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{backgrounds}")
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
         """
+        % Load TikZ libraries
+        \\usetikzlibrary{arrows.meta, backgrounds}
+            
+        % Load PGFPlots libraries
+        \\usepgfplotslibrary{patchplots, fillbetween}
+            
+        % Set some useful keys
         \\pgfkeys{/tikz/.cd,
           background color/.initial=white,
           background color/.get=\\backcol,
@@ -25,8 +30,7 @@ Base.@kwdef mutable struct PGFPlotsXPlot
         """
         )
         # pgfplots libraries
-        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{patchplots}")
-        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{fillbetween}")
+        PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "")
         pgfx_plot
     end
 end
