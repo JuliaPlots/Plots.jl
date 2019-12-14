@@ -75,6 +75,16 @@ Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 ### `:gruvbox_light`
 ![theme_gruvbox_light](https://user-images.githubusercontent.com/16589944/70847885-fb048c00-1e69-11ea-9546-4dc0d9e4154c.png)
 
+### `:bright`
+![theme_bright](https://user-images.githubusercontent.com/16589944/70848065-8ed75780-1e6c-11ea-8e59-9882b3c4a4db.png)
+
+### `:vibrant`
+![theme_vibrant](https://user-images.githubusercontent.com/16589944/70848066-926ade80-1e6c-11ea-91ba-fd08d14e6963.png)
+
+### `:mute`
+![theme_mute](https://user-images.githubusercontent.com/16589944/70848069-9860bf80-1e6c-11ea-9cac-8a797d526835.png)
+
+
 ## Contributing
 A theme specifies default values for different Plots [attributes](http://docs.juliaplots.org/attributes/).
 At the moment these are typically colors, palettes and colorgradients, but any Plots attribute can be controlled by a theme in general.
