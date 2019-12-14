@@ -24,6 +24,8 @@ Currently the following themes are available:
 - `:solarized_light`
 - `:wong`
 - `:wong2`
+- `:gruvbox_dark`
+- `:gruvbox_light`
 
 When using Plots, a theme can be set using the `theme` function:
 ```julia
