@@ -1,6 +1,6 @@
 name = "PlotThemes"
 uuid = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
