@@ -16,6 +16,9 @@ end
     Plots._update_plot_object(pgfx_plot)
     @test pgfx_plot.o.the_plot isa PGFPlotsX.TikzDocument
     @test pgfx_plot.series_list[1].plotattributes[:quiver] === nothing
+    axis = Plots.pgfx_axes(pgfx_plot.o)[1]
+    @test count( x-> x isa PGFPlotsX.Plot, axis.contents ) == 1
+    @test !haskey(axis.contents[1].options.dict, "fill")
 
     @testset "3D docs example" begin
         n = 100
@@ -124,13 +127,40 @@ end
 
         u = ones(length(x))
         v = cos.(x)
-        plot( x, y, quiver = (u, v), arrow = true )
+        arrow_plot = plot( x, y, quiver = (u, v), arrow = true )
         # TODO: could adjust limits to fit arrows if too long, but how?
+        # TODO: get latex available on CI
+        # mktempdir() do path
+        #    @test_nowarn savefig(arrow_plot, path*"arrow.pdf")
+        # end
      end # testset
      @testset "Annotations" begin
         y = rand(10)
         plot(y, annotations=(3, y[3], Plots.text("this is \\#3", :left)), leg=false)
         annotate!([(5, y[5], Plots.text("this is \\#5", 16, :red, :center)), (10, y[10], Plots.text("this is \\#10", :right, 20, "courier"))])
-        scatter!(range(2, stop=8, length=6), rand(6), marker=(50, 0.2, :orange), series_annotations=["series", "annotations", "map", "to", "series", Plots.text("data", :green)])
+        annotation_plot = scatter!(range(2, stop=8, length=6), rand(6), marker=(50, 0.2, :orange), series_annotations=["series", "annotations", "map", "to", "series", Plots.text("data", :green)])
+        # mktempdir() do path
+        #    @test_nowarn savefig(annotation_plot, path*"annotation.pdf")
+        # end
      end # testset
-end # testset
+     @testset "Ribbon" begin
+        aa = rand(10)
+        bb = rand(10)
+        cc = rand(10)
+        conf = [aa-cc bb-cc]
+        ribbon_plot = plot(collect(1:10),fill(1,10), ribbon=(conf[:,1],conf[:,2]))
+        Plots._update_plot_object(ribbon_plot)
+        axis = Plots.pgfx_axes(ribbon_plot.o)[1]
+        plots = filter(x->x isa PGFPlotsX.Plot, axis.contents)
+        @test length(plots) == 4
+        @test !haskey(plots[1].options.dict, "fill")
+        @test !haskey(plots[2].options.dict, "fill")
+        @test !haskey(plots[3].options.dict, "fill")
+        @test haskey(plots[4].options.dict, "fill")
+        @test ribbon_plot.o !== nothing
+        @test ribbon_plot.o.the_plot !== nothing
+     #    mktempdir() do path
+     #       @test_nowarn savefig(ribbon_plot, path*"ribbon.svg")
+     #    end
+     end # testset
+  end # testset

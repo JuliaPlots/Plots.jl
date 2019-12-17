@@ -1,4 +1,5 @@
 using Contour: Contour
+using UUIDs
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
@@ -8,25 +9,21 @@ Base.@kwdef mutable struct PGFPlotsXPlot
         # tikz libraries
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{arrows.meta}")
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usetikzlibrary{backgrounds}")
-        PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
-        """
-        \\pgfkeys{/tikz/.cd,
-          background color/.initial=white,
-          background color/.get=\\backcol,
-          background color/.store in=\\backcol,
-        }
-        \\tikzset{background rectangle/.style={
-            fill=\\backcol,
-          },
-          use background/.style={
-            show background rectangle
-          }
-        }
-        """
-        )
         # pgfplots libraries
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{patchplots}")
         PGFPlotsX.push_preamble!(pgfx_plot.the_plot, "\\usepgfplotslibrary{fillbetween}")
+        # compatibility fixes
+        # add background layer to standard layers
+        PGFPlotsX.push_preamble!(pgfx_plot.the_plot,
+        raw"""
+        \pgfplotsset{
+        /pgfplots/layers/axis on top/.define layer set={
+        background, axis background,pre main,main,axis grid,axis ticks,axis lines,axis tick labels,
+        axis descriptions,axis foreground
+        }{/pgfplots/layers/standard},
+        }
+        """
+        )
         pgfx_plot
     end
 end
@@ -73,9 +70,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             cstr = plot_color(bgc)
             a = alpha(cstr)
             push!(the_plot.options,
-                "draw opacity" => a,
-                "background color" => cstr,
-                "use background" => nothing,
+                "/tikz/background rectangle/.style" => PGFPlotsX.Options(
+                    "fill" => cstr,
+                    "draw opacity" => a,
+                ),
+                "show background rectangle" => nothing,
             )
         end
 
@@ -89,22 +88,22 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             "horizontal sep" => string(maximum(sp -> sp.minpad[1], plt.subplots)),
                             "vertical sep" => string(maximum(sp -> sp.minpad[2], plt.subplots)),
                         ),
-                    "height" => pl_height > 0 ? string(pl_height)*"px" : "{}",
-                    "width" => pl_width > 0 ? string(pl_width)*"px" : "{}",
+                    "height" => pl_height > 0 ? string(pl_height * px) : "{}",
+                    "width" => pl_width > 0 ? string(pl_width * px) : "{}",
                     )
                 )
             )
         end
         for sp in plt.subplots
             bb = bbox(sp)
+            sp_width = width(bb)
+            sp_height = height(bb)
             cstr = plot_color(sp[:background_color_legend])
             a = alpha(cstr)
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
             axis_opt = PGFPlotsX.Options(
-                "height" => string(height(bb)),
-                "width" => string(width(bb)),
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
                     "font" => pgfx_font(sp[:titlefontsize], pgfx_thickness_scaling(sp)),
@@ -121,8 +120,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 ),
                 "axis background/.style" => PGFPlotsX.Options(
                     "fill" => sp[:background_color_inside]
-                )
+                ),
+                "axis on top" => nothing,
             )
+            sp_width > 0*mm ? push!(axis_opt, "width" => string(sp_width)) : nothing
+            sp_height > 0*mm ? push!(axis_opt, "height" => string(sp_height)) : nothing
             # legend position
             if sp[:legend] isa Tuple
                 x, y = sp[:legend]
@@ -233,24 +235,18 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                        segment_opt = merge( segment_opt, pgfx_marker(opt, i) )
                    end
                    if st == :shape ||
-                       isfilledcontour(series) ||
-                       series[:ribbon] !== nothing
+                       isfilledcontour(series)
                        segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
                    end
                    # add fillrange
                    if series[:fillrange] !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
                        pgfx_fillrange_series!( axis, series, series_func, i, _cycle(series[:fillrange], rng), rng)
-                       # add to legend?
                        if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                           io = IOBuffer()
-                           PGFPlotsX.print_tex(io, pgfx_fillstyle(opt, i))
-                           style = strip(String(take!(io)),['[',']', ' '])
-                           push!( segment_opt, "legend image code/.code" => """{
-                           \\draw[$style] (0cm,-0.1cm) rectangle (0.6cm,0.1cm);
-                           }""" )
+                           pgfx_filllegend!(series_opt, opt)
                        end
                    end
                    # series
+                   #
                    coordinates = pgfx_series_coordinates!( sp, series, segment_opt, opt, rng )
                    segment_plot = series_func(
                        merge(series_opt, segment_opt),
@@ -264,7 +260,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    end
                    # add to legend?
                    if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
-                       legend = PGFPlotsX.LegendEntry(PGFPlotsX.Options(), opt[:label], true)
+                       leg_opt = PGFPlotsX.Options()
+                       if ribbon !== nothing
+                           pgfx_filllegend!(axis.contents[end-3].options, opt)
+                       end
+                       legend = PGFPlotsX.LegendEntry(leg_opt, opt[:label], false)
                        push!( axis, legend )
                    end
                    # add series annotations
@@ -499,6 +499,15 @@ function pgfx_arrow( arr::Arrow )
     return "every arrow/.append style={$(components)}"
 end
 
+function pgfx_filllegend!( series_opt, opt )
+    io = IOBuffer()
+    PGFPlotsX.print_tex(io, pgfx_fillstyle(opt))
+    style = strip(String(take!(io)),['[',']', ' '])
+    push!( series_opt, "legend image code/.code" => """{
+    \\draw[$style] (0cm,-0.1cm) rectangle (0.6cm,0.1cm);
+    }""" )
+end
+
 function pgfx_colormap(grad::ColorGradient)
     join(map(grad.colors) do c
         @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
@@ -607,30 +616,41 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
     ribbon_y = series[:ribbon]
     opt = series.plotattributes
     if ribbon_y isa AVec
-        ribbon_n = length(opt[:y]) ÷ length(ribbon)
-        ribbon_y = repeat(ribbon, outer = ribbon_n)
+        ribbon_n = length(opt[:y]) ÷ length(ribbon_y)
+        ribbon_yp = ribbon_ym = repeat(ribbon_y, outer = ribbon_n)
+    elseif ribbon_y isa Tuple
+        ribbon_ym, ribbon_yp = ribbon_y
+        ribbon_nm = length(opt[:y]) ÷ length(ribbon_ym)
+        ribbon_ym = repeat(ribbon_ym, outer = ribbon_nm)
+        ribbon_np = length(opt[:y]) ÷ length(ribbon_yp)
+        ribbon_yp = repeat(ribbon_yp, outer = ribbon_np)
+    else
+        ribbon_yp = ribbon_ym = ribbon_y
     end
     # upper ribbon
-    ribbon_name_plus = "plots_rib_p$series_index"
+    rib_uuid = uuid4()
+    ribbon_name_plus = "plots_rib_p$rib_uuid"
     ribbon_opt_plus = merge(segment_plot.options, PGFPlotsX.Options(
         "name path" => ribbon_name_plus,
         "color" => opt[:fillcolor],
-        "draw opacity" => opt[:fillalpha]
+        "draw opacity" => opt[:fillalpha],
+        "forget plot" => nothing
     ))
-    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .+ ribbon_y)
+    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .+ ribbon_yp)
     ribbon_plot_plus = series_func(
         ribbon_opt_plus,
         coordinates_plus
     )
     push!(axis, ribbon_plot_plus)
     # lower ribbon
-    ribbon_name_minus = "plots_rib_m$series_index"
+    ribbon_name_minus = "plots_rib_m$rib_uuid"
     ribbon_opt_minus = merge(segment_plot.options, PGFPlotsX.Options(
         "name path" => ribbon_name_minus,
         "color" => opt[:fillcolor],
-        "draw opacity" => opt[:fillalpha]
+        "draw opacity" => opt[:fillalpha],
+        "forget plot" => nothing
     ))
-    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .- ribbon_y)
+    coordinates_plus = PGFPlotsX.Coordinates(opt[:x], opt[:y] .- ribbon_ym)
     ribbon_plot_plus = series_func(
         ribbon_opt_minus,
         coordinates_plus
@@ -638,7 +658,7 @@ function pgfx_add_ribbons!( axis, series, segment_plot, series_func, series_inde
     push!(axis, ribbon_plot_plus)
     # fill
     push!(axis, series_func(
-        pgfx_fillstyle(opt, series_index),
+        merge(pgfx_fillstyle(opt, series_index), PGFPlotsX.Options("forget plot" => nothing)),
         "fill between [of=$(ribbon_name_plus) and $(ribbon_name_minus)]"
     ))
     return axis
