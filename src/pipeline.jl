@@ -12,7 +12,7 @@ function _expand_seriestype_array(plotattributes::KW, args)
     if typeof(sts) <: AbstractArray
         delete!(plotattributes, :seriestype)
         rd = Vector{RecipeData}(undef, size(sts, 1))
-        for r in 1:size(sts, 1)
+        for r in axes(sts, 1)
             dc = copy(plotattributes)
             dc[:seriestype] = sts[r:r,:]
             rd[r] = RecipeData(dc, args)
@@ -126,7 +126,7 @@ function _preprocess_userrecipe(kw::KW)
     end
 
     # convert a ribbon into a fillrange
-    if get(kw, :ribbon, nothing) != nothing
+    if get(kw, :ribbon, nothing) !== nothing
         make_fillrange_from_ribbon(kw)
     end
     return
@@ -136,7 +136,7 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::KW)
     # handle error bars by creating new recipedata data... these will have
     # the same recipedata index as the recipedata they are copied from
     for esym in (:xerror, :yerror)
-        if get(kw, esym, nothing) != nothing
+        if get(kw, esym, nothing) !== nothing
             # we make a copy of the KW and apply an errorbar recipe
             errkw = copy(kw)
             errkw[:seriestype] = esym
@@ -227,7 +227,7 @@ function _plot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
 
     # handle inset subplots
     insets = plt[:inset_subplots]
-    if insets != nothing
+    if insets !== nothing
         if !(typeof(insets) <: AVec)
             insets = [insets]
         end

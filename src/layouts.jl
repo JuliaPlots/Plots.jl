@@ -107,7 +107,6 @@ function resolve_mixed(mix::MixedMeasures, sp::Subplot, letter::Symbol)
     if mix.len != 0mm
         f = (letter == :x ? width : height)
         totlen = f(plotarea(sp))
-        @show totlen
         pct += mix.len / totlen
     end
     if pct != 0
@@ -218,6 +217,7 @@ bottompad(layout::AbstractLayout) = 0mm
 # this is the parent of the top-level layout
 struct RootLayout <: AbstractLayout end
 
+Base.show(io::IO, layout::RootLayout) = Base.show_default(io, layout)
 Base.parent(::RootLayout) = nothing
 parent_bbox(::RootLayout) = defaultbox
 bbox(::RootLayout) = defaultbox
@@ -469,7 +469,7 @@ function layout_args(plotattributes::KW)
 end
 
 function layout_args(plotattributes::KW, n_override::Integer)
-    layout, n = layout_args(get(plotattributes, :layout, n_override))
+    layout, n = layout_args(n_override, get(plotattributes, :layout, n_override))
     if n != n_override
         error("When doing layout, n ($n) != n_override ($(n_override)).  You're probably trying to force existing plots into a layout that doesn't fit them.")
     end
@@ -481,12 +481,27 @@ function layout_args(n::Integer)
     GridLayout(nr, nc), n
 end
 
-function layout_args(sztup::NTuple{2,I}) where I<:Integer
+function layout_args(sztup::NTuple{2, Integer})
     nr, nc = sztup
     GridLayout(nr, nc), nr*nc
 end
 
-function layout_args(sztup::NTuple{3,I}) where I<:Integer
+layout_args(n_override::Integer, n::Integer) = layout_args(n)
+layout_args(n, sztup::NTuple{2, Integer}) = layout_args(sztup)
+
+function layout_args(n, sztup::Tuple{Colon, Integer})
+    nc = sztup[2]
+    nr = ceil(Int, n / nc)
+    GridLayout(nr, nc), n
+end
+
+function layout_args(n, sztup::Tuple{Integer, Colon})
+    nr = sztup[1]
+    nc = ceil(Int, n / nr)
+    GridLayout(nr, nc), n
+end
+
+function layout_args(sztup::NTuple{3, Integer})
     n, nr, nc = sztup
     nr, nc = compute_gridsize(n, nr, nc)
     GridLayout(nr, nc), n
@@ -498,6 +513,8 @@ function layout_args(layout::GridLayout)
     n = calc_num_subplots(layout)
     layout, n
 end
+
+layout_args(n_override::Integer, layout::GridLayout) = layout_args(layout)
 
 layout_args(huh) = error("unhandled layout type $(typeof(huh)): $huh")
 

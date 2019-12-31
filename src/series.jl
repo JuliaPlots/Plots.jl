@@ -7,46 +7,76 @@
 # note: returns meta information... mainly for use with automatic labeling from DataFrames for now
 
 const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
-const DataPoint = Union{Number, AbstractString, Missing}
-const SeriesData = Union{AVec{<:DataPoint}, Function, Surface, Volume}
+const MaybeNumber = Union{Number, Missing}
+const MaybeString = Union{AbstractString, Missing}
+const DataPoint = Union{MaybeNumber, MaybeString}
 
 prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
 prepareSeriesData(::Nothing) = nothing
-prepareSeriesData(s::SeriesData) = handlemissings(s)
-
-handlemissings(v) = v
-handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: Number = replace(v, missing => NaN)
-handlemissings(v::AbstractArray{Union{T,Missing}}) where T <: AbstractString = replace(v, missing => "")
-handlemissings(s::Surface) = Surface(handlemissings(s.surf))
-handlemissings(v::Volume) = Volume(handlemissings(v.v), v.x_extents, v.y_extents, v.z_extents)
+prepareSeriesData(f::Function) = f
+prepareSeriesData(a::AbstractArray{<:MaybeNumber}) = replace!(
+                                    x -> ismissing(x) || isinf(x) ? NaN : x,
+                                    map(float,a))
+prepareSeriesData(a::AbstractArray{<:MaybeString}) = replace(x -> ismissing(x) ? "" : x, a)
+prepareSeriesData(s::Surface{<:AMat{<:MaybeNumber}}) = Surface(prepareSeriesData(s.surf))
+prepareSeriesData(s::Surface) = s  # non-numeric Surface, such as an image
+prepareSeriesData(v::Volume) = Volume(prepareSeriesData(v.v), v.x_extents, v.y_extents, v.z_extents)
 
 # default: assume x represents a single series
-convertToAnyVector(x) = Any[prepareSeriesData(x)]
+convertToAnyVector(x, plotattributes) = Any[prepareSeriesData(x)]
 
 # fixed number of blank series
-convertToAnyVector(n::Integer) = Any[zeros(0) for i in 1:n]
+convertToAnyVector(n::Integer, plotattributes) = Any[zeros(0) for i in 1:n]
 
 # vector of data points is a single series
-convertToAnyVector(v::AVec{<:DataPoint}) = Any[prepareSeriesData(v)]
+convertToAnyVector(v::AVec{<:DataPoint}, plotattributes) = Any[prepareSeriesData(v)]
 
 # list of things (maybe other vectors, functions, or something else)
-convertToAnyVector(v::AVec) = vcat((convertToAnyVector(vi) for vi in v)...)
+function convertToAnyVector(v::AVec, plotattributes)
+    if all(x -> x isa MaybeNumber, v)
+        convertToAnyVector(Vector{MaybeNumber}(v), plotattributes)
+    elseif all(x -> x isa MaybeString, v)
+        convertToAnyVector(Vector{MaybeString}(v), plotattributes)
+    else
+        vcat((convertToAnyVector(vi, plotattributes) for vi in v)...)
+    end
+end
 
 # Matrix is split into columns
-convertToAnyVector(v::AMat{<:DataPoint}) = Any[prepareSeriesData(v[:,i]) for i in 1:size(v,2)]
+function convertToAnyVector(v::AMat{<:DataPoint}, plotattributes)
+    if all3D(plotattributes)
+        Any[prepareSeriesData(Surface(v))]
+    else
+        Any[prepareSeriesData(v[:, i]) for i in axes(v, 2)]
+    end
+end
+
+# --------------------------------------------------------------------
+# Fillranges & ribbons
+
+
+process_fillrange(range::Number, plotattributes) = [range]
+process_fillrange(range, plotattributes) = convertToAnyVector(range, plotattributes)
+
+process_ribbon(ribbon::Number, plotattributes) = [ribbon]
+process_ribbon(ribbon, plotattributes) = convertToAnyVector(ribbon, plotattributes)
+# ribbon as a tuple: (lower_ribbons, upper_ribbons)
+process_ribbon(ribbon::Tuple{Any,Any}, plotattributes) = collect(zip(convertToAnyVector(ribbon[1], plotattributes),
+                                                     convertToAnyVector(ribbon[2], plotattributes)))
+
 
 # --------------------------------------------------------------------
 
 # TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array
 #       result in that array being shared.  push!, etc will add too many items to that array
 
-compute_x(x::Nothing, y::Nothing, z)      = 1:size(z,1)
-compute_x(x::Nothing, y, z)            = 1:size(y,1)
+compute_x(x::Nothing, y::Nothing, z)      = axes(z,1)
+compute_x(x::Nothing, y, z)            = axes(y,1)
 compute_x(x::Function, y, z)        = map(x, y)
 compute_x(x, y, z)                  = copy(x)
 
 # compute_y(x::Void, y::Function, z)  = error()
-compute_y(x::Nothing, y::Nothing, z)      = 1:size(z,2)
+compute_y(x::Nothing, y::Nothing, z)      = axes(z,2)
 compute_y(x, y::Function, z)        = map(y, x)
 compute_y(x, y, z)                  = copy(y)
 
@@ -96,25 +126,17 @@ struct SliceIt end
         z = z.data
     end
 
-    xs = convertToAnyVector(x)
-    ys = convertToAnyVector(y)
-    zs = convertToAnyVector(z)
+    xs = convertToAnyVector(x, plotattributes)
+    ys = convertToAnyVector(y, plotattributes)
+    zs = convertToAnyVector(z, plotattributes)
 
 
     fr = pop!(plotattributes, :fillrange, nothing)
-    fillranges = if typeof(fr) <: Number
-        [fr]
-    else
-        convertToAnyVector(fr)
-    end
+    fillranges = process_fillrange(fr, plotattributes)
     mf = length(fillranges)
 
     rib = pop!(plotattributes, :ribbon, nothing)
-    ribbons = if typeof(rib) <: Number
-        [rib]
-    else
-        convertToAnyVector(rib)
-    end
+    ribbons = process_ribbon(rib, plotattributes)
     mr = length(ribbons)
 
     # @show zs
@@ -260,9 +282,9 @@ all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :hea
 # return a surface if this is a 3d plot, otherwise let it be sliced up
 @recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat,Missing}
     if all3D(plotattributes)
-        n,m = size(mat)
+        n,m = axes(mat)
         wrap_surfaces(plotattributes)
-        SliceIt, 1:m, 1:n, Surface(mat)
+        SliceIt, m, n, Surface(mat)
     else
         SliceIt, nothing, mat, nothing
     end
@@ -272,9 +294,9 @@ end
 @recipe function f(fmt::Formatted{T}) where T<:AbstractMatrix
     if all3D(plotattributes)
         mat = fmt.data
-        n,m = size(mat)
+        n,m = axes(mat)
         wrap_surfaces(plotattributes)
-        SliceIt, 1:m, 1:n, Formatted(Surface(mat), fmt.formatter)
+        SliceIt, m, n, Formatted(Surface(mat), fmt.formatter)
     else
         SliceIt, nothing, fmt, nothing
     end
@@ -297,35 +319,35 @@ function clamp_greys!(mat::AMat{T}) where T<:Gray
 end
 
 @recipe function f(mat::AMat{T}) where T<:Gray
-    n, m = size(mat)
+    n, m = axes(mat)
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
-        SliceIt, 1:m, 1:n, Surface(clamp_greys!(mat))
+        SliceIt, m, n, Surface(clamp_greys!(mat))
     else
         seriestype := :heatmap
         yflip --> true
         cbar --> false
         fillcolor --> ColorGradient([:black, :white])
-        SliceIt, 1:m, 1:n, Surface(clamp!(convert(Matrix{Float64}, mat), 0., 1.))
+        SliceIt, m, n, Surface(clamp!(convert(Matrix{Float64}, mat), 0., 1.))
     end
 end
 
 # # images - colors
 
 @recipe function f(mat::AMat{T}) where T<:Colorant
-	n, m = size(mat)
+	n, m = axes(mat)
 
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
-        SliceIt, 1:m, 1:n, Surface(mat)
+        SliceIt, m, n, Surface(mat)
     else
         seriestype := :heatmap
         yflip --> true
         cbar --> false
         z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
-        SliceIt, 1:m, 1:n, Surface(z)
+        SliceIt, m, n, Surface(z)
     end
 end
 
@@ -344,23 +366,29 @@ end
 
 @recipe function f(shapes::AMat{Shape})
     seriestype --> :shape
-    for j in 1:size(shapes,2)
+    for j in axes(shapes,2)
         @series coords(vec(shapes[:,j]))
     end
 end
 
+# Dicts: each entry is a data point (x,y)=(key,value)
 
+@recipe f(d::AbstractDict) = collect(keys(d)), collect(values(d))
 
 # function without range... use the current range of the x-axis
 
 @recipe function f(f::FuncOrFuncs{F}) where F<:Function
     plt = plotattributes[:plot_object]
-    xmin, xmax = try
-        axis_limits(plt[1], :x)
-    catch
-        xinv = invscalefunc(get(plotattributes, :xscale, :identity))
-        xm = tryrange(f, xinv.([-5,-1,0,0.01]))
-        xm, tryrange(f, filter(x->x>xm, xinv.([5,1,0.99, 0, -0.01])))
+    xmin, xmax = if haskey(plotattributes, :xlims)
+        plotattributes[:xlims]
+    else
+        try
+            axis_limits(plt[1], :x)
+        catch
+            xinv = invscalefunc(get(plotattributes, :xscale, :identity))
+            xm = tryrange(f, xinv.([-5,-1,0,0.01]))
+            xm, tryrange(f, filter(x->x>xm, xinv.([5,1,0.99, 0, -0.01])))
+        end
     end
 
     f, xmin, xmax
@@ -491,20 +519,25 @@ end
 # # special handling... xmin/xmax with parametric function(s)
 @recipe function f(f::Function, xmin::Number, xmax::Number)
     xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
-    xs = _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
-    xs, f
+    _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
 end
 @recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where F<:Function
     xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
-    xs = Any[_scaled_adapted_grid(f, xscale, yscale, xmin, xmax) for f in fs]
-    xs, fs
+    xs = Array{Any}(undef, length(fs))
+    ys = Array{Any}(undef, length(fs))
+    for (i, (x, y)) in enumerate(_scaled_adapted_grid(f, xscale, yscale, xmin, xmax) for f in fs)
+        xs[i] = x
+    	ys[i] = y
+    end
+    xs, ys
 end
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function}  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) where {F<:Function,G<:Function} = fx, fy, range(umin, stop = umax, length = n)
 
 function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
     (xf, xinv), (yf, yinv) =  ((scalefunc(s),invscalefunc(s)) for s in (xscale,yscale))
-    xinv.(adapted_grid(yf∘f∘xinv, xf.((xmin, xmax))))
+    xs, ys = adapted_grid(yf∘f∘xinv, xf.((xmin, xmax)))
+    xinv.(xs), yinv.(ys)
 end
 
 #
@@ -550,7 +583,7 @@ end
 # end
 
 splittable_kw(key, val, lengthGroup) = false
-splittable_kw(key, val::AbstractArray, lengthGroup) = !(key in (:group, :color_palette)) && size(val,1) == lengthGroup
+splittable_kw(key, val::AbstractArray, lengthGroup) = !(key in (:group, :color_palette)) && length(axes(val,1)) == lengthGroup
 splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengthGroup))
 splittable_kw(key, val::SeriesAnnotations, lengthGroup) = splittable_kw(key, val.strs, lengthGroup)
 
@@ -564,7 +597,7 @@ end
 function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
     y_mat = Array{promote_type(eltype(y), typeof(def_val))}(undef, length(keys(x_ind)), length(groupby.groupLabels))
     fill!(y_mat, def_val)
-    for i in 1:length(groupby.groupLabels)
+    for i in eachindex(groupby.groupLabels)
         xi = x[groupby.groupIds[i]]
         yi = y[groupby.groupIds[i]]
         y_mat[getindex.(Ref(x_ind), xi), i] = yi
@@ -597,7 +630,7 @@ group_as_matrix(t) = false
         if length(g.args) == 1
             x = zeros(Int, lengthGroup)
             for indexes in groupby.groupIds
-                x[indexes] = 1:length(indexes)
+                x[indexes] = eachindex(indexes)
             end
             last_args = g.args
         else
@@ -605,7 +638,7 @@ group_as_matrix(t) = false
             last_args = g.args[2:end]
         end
         x_u = unique(sort(x))
-        x_ind = Dict(zip(x_u, 1:length(x_u)))
+        x_ind = Dict(zip(x_u, eachindex(x_u)))
         for (key,val) in plotattributes
             if splittable_kw(key, val, lengthGroup)
                 :($key) := groupedvec2mat(x_ind, x, val, groupby)

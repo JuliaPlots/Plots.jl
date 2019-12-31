@@ -60,31 +60,39 @@ end
 
 file_extension(fn) = Base.Filesystem.splitext(fn)[2][2:end]
 
-gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim.dir, fn; kw...)
-mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim.dir, fn, false; kw...)
-mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim.dir, fn, false; kw...)
+gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim, fn; kw...)
+mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim, fn, false; kw...)
+mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim, fn, false; kw...)
 
+ffmpeg_framerate(fps) = "$fps"
+ffmpeg_framerate(fps::Rational) = "$(fps.num)/$(fps.den)"
 
-function buildanimation(animdir::AbstractString, fn::AbstractString,
+function buildanimation(anim::Animation, fn::AbstractString,
                         is_animated_gif::Bool=true;
-                        fps::Integer = 20, loop::Integer = 0,
+                        fps::Real = 20, loop::Integer = 0,
                         variable_palette::Bool=false,
                         show_msg::Bool=true)
-    fn = abspath(fn)
+    if length(anim.frames) == 0
+        throw(ArgumentError("Cannot build empty animations"))
+    end
+
+    fn = abspath(expanduser(fn))
+    animdir = anim.dir
+    framerate = ffmpeg_framerate(fps)
 
     if is_animated_gif
         if variable_palette
             # generate a colorpalette for each frame for highest quality, but larger filesize
             palette="palettegen=stats_mode=single[pal],[0:v][pal]paletteuse=new=1"
-            ffmpeg_exe(`-v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -lavfi "$palette" -y $fn`)
+            ffmpeg_exe(`-v 0 -framerate $framerate -loop $loop -i $(animdir)/%06d.png -lavfi "$palette" -y $fn`)
         else
             # generate a colorpalette first so ffmpeg does not have to guess it
             ffmpeg_exe(`-v 0 -i $(animdir)/%06d.png -vf "palettegen=stats_mode=diff" -y "$(animdir)/palette.bmp"`)
             # then apply the palette to get better results
-            ffmpeg_exe(` -v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -y $fn`)
+            ffmpeg_exe(` -v 0 -framerate $framerate -loop $loop -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -y $fn`)
         end
     else
-        ffmpeg_exe(`-v 0 -framerate $fps -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
+        ffmpeg_exe(`-v 0 -framerate $framerate -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
     end
 
     show_msg && @info("Saved animation to ", fn)
@@ -96,13 +104,18 @@ end
 # write out html to view the gif
 function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     ext = file_extension(agif.filename)
-    write(io, if ext == "gif"
-        "<img src=\"$(relpath(agif.filename))\" />"
+    if ext == "gif"
+        html = "<img src=\"data:image/gif;base64," * base64encode(read(agif.filename)) * "\" />"
     elseif ext in ("mov", "mp4")
-        "<video controls><source src=\"$(relpath(agif.filename)) type=\"video/$ext\"></video>"
+        mimetype = ext == "mov" ? "video/quicktime" : "video/mp4"
+        html = "<video controls><source src=\"data:$mimetype;base64," *
+               base64encode(read(agif.filename)) *
+               "\" type = \"$mimetype\"></video>"
     else
         error("Cannot show animation with extension $ext: $agif")
-    end)
+    end
+
+    write(io, html)
     return nothing
 end
 

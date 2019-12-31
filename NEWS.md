@@ -3,13 +3,37 @@
 
 #### notes on release changes, ongoing development, and future planned work
 
-- Minor version 0.17 is the last one to support Julia 0.6!!
-- Minor version 0.11 is the last one to support Julia 0.5!!
-	- Critical bugfixes only
-    - `backports` branch is for Julia 0.5
-
----
 ## (current master)
+
+## 0.28.3
+- support generalized array interface
+- save to pdf, svg and eps in plotlyjs
+- fix for clims in line_z
+- optimize heatmap logic in gr
+
+## 0.26.3
+- fix `vline` with dates
+- fix PyPlot logscale bug
+- avoid annotation clipping for PyPlot
+- allow plotting of Any vectors and 3D plotting again in convertToAnyVector
+- specify legend title font in GR and PyPlot
+- delete `pushtomaster.sh`
+- use `=== nothing`
+
+## 0.26.2
+- improve empty animation build error
+- fix GR axis flip for heatmaps and images
+- fix ribbons specified as tuples
+- add Char recipe
+- fix Plotly plots with single-element series
+- rewrite PlotlyJS backend
+
+## 0.26.1
+- handle `Char`s as input data
+- fix html saving for Plotly
+- expand ~ in paths on UNIX systems
+- convertToAnyVector clean-up
+- fix color_palette grouping issue
 
 ## 0.26.0
 - use FFMPEG.jl

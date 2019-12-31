@@ -1,6 +1,6 @@
 module Plots
 
-_current_plots_version = v"0.25.0"
+const _current_plots_version = VersionNumber(split(first(filter(line -> occursin("version", line), readlines(normpath(@__DIR__, "..", "Project.toml")))), "\"")[2])
 
 using Reexport
 
@@ -221,5 +221,8 @@ end
 # ---------------------------------------------------------
 
 const CURRENT_BACKEND = CurrentBackend(:none)
+
+include("precompile.jl")
+_precompile_()
 
 end # module

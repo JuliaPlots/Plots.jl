@@ -272,6 +272,7 @@ const _series_defaults = KW(
     :arrow             => nothing,   # allows for adding arrows to line/path... call `arrow(args...)`
     :normalize         => false,     # do we want a normalized histogram?
     :weights           => nothing,   # optional weights for histograms (1D and 2D)
+    :show_empty_bins   => false,     # should empty bins in 2D histogram be colored as zero (otherwise they are transparent)
     :contours          => false,     # add contours to 3d surface and wireframe plots
     :contour_labels    => false,
     :match_dimensions  => false,     # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
@@ -336,6 +337,12 @@ const _subplot_defaults = KW(
     :legendfontvalign         => :vcenter,
     :legendfontrotation       => 0.0,
     :legendfontcolor          => :match,
+    :legendtitlefontfamily    => :match,
+    :legendtitlefontsize      => 11,
+    :legendtitlefonthalign    => :hcenter,
+    :legendtitlefontvalign    => :vcenter,
+    :legendtitlefontrotation  => 0.0,
+    :legendtitlefontcolor     => :match,
     :annotations              => [],                # annotation tuples... list of (x,y,annotation)
     :projection               => :none,             # can also be :polar or :3d
     :aspect_ratio             => :none,             # choose from :none or :equal
@@ -450,6 +457,7 @@ const _initial_axis_defaults = deepcopy(_axis_defaults)
 # to be able to reset font sizes to initial values
 const _initial_fontsizes = Dict(:titlefontsize  => _subplot_defaults[:titlefontsize],
                                 :legendfontsize => _subplot_defaults[:legendfontsize],
+                                :legendtitlefontsize => _subplot_defaults[:legendtitlefontsize],
                                 :tickfontsize   => _axis_defaults[:tickfontsize],
                                 :guidefontsize  => _axis_defaults[:guidefontsize])
 
@@ -574,6 +582,7 @@ add_aliases(:xerror, :xerr, :xerrorbar)
 add_aliases(:yerror, :yerr, :yerrorbar, :err, :errorbar)
 add_aliases(:quiver, :velocity, :quiver2d, :gradient, :vectorfield)
 add_aliases(:normalize, :norm, :normed, :normalized)
+add_aliases(:show_empty_bins, :showemptybins, :showempty, :show_empty)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:match_dimensions, :transpose, :transpose_z)
 add_aliases(:subplot, :sp, :subplt, :splt)
@@ -685,15 +694,15 @@ function processLineArg(plotattributes::KW, arg)
         plotattributes[:linestyle] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (plotattributes[:linewidth] = arg.width)
-        arg.color == nothing || (plotattributes[:linecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:linealpha] = arg.alpha)
-        arg.style == nothing || (plotattributes[:linestyle] = arg.style)
+        arg.width === nothing || (plotattributes[:linewidth] = arg.width)
+        arg.color === nothing || (plotattributes[:linecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:linealpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:linestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size  == nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color == nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.size  === nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color === nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
 
     elseif typeof(arg) <: Arrow || arg in (:arrow, :arrows)
         plotattributes[:arrow] = arg
@@ -724,15 +733,15 @@ function processMarkerArg(plotattributes::KW, arg)
         plotattributes[:markerstrokestyle] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (plotattributes[:markerstrokewidth] = arg.width)
-        arg.color == nothing || (plotattributes[:markerstrokecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
-        arg.style == nothing || (plotattributes[:markerstrokestyle] = arg.style)
+        arg.width === nothing || (plotattributes[:markerstrokewidth] = arg.width)
+        arg.color === nothing || (plotattributes[:markerstrokecolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:markerstrokealpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:markerstrokestyle] = arg.style)
 
     elseif typeof(arg) <: Brush
-        arg.size  == nothing || (plotattributes[:markersize]  = arg.size)
-        arg.color == nothing || (plotattributes[:markercolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:markeralpha] = arg.alpha)
+        arg.size  === nothing || (plotattributes[:markersize]  = arg.size)
+        arg.color === nothing || (plotattributes[:markercolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:markeralpha] = arg.alpha)
 
     # linealpha
     elseif allAlphas(arg)
@@ -757,9 +766,9 @@ end
 function processFillArg(plotattributes::KW, arg)
     # fr = get(plotattributes, :fillrange, 0)
     if typeof(arg) <: Brush
-        arg.size  == nothing || (plotattributes[:fillrange] = arg.size)
-        arg.color == nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.size  === nothing || (plotattributes[:fillrange] = arg.size)
+        arg.color === nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
 
     elseif typeof(arg) <: Bool
         plotattributes[:fillrange] = arg ? 0 : nothing
@@ -793,10 +802,10 @@ function processGridArg!(plotattributes::KW, arg, letter)
         plotattributes[Symbol(letter, :gridstyle)] = arg
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (plotattributes[Symbol(letter, :gridlinewidth)] = arg.width)
-        arg.color == nothing || (plotattributes[Symbol(letter, :foreground_color_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[Symbol(letter, :gridalpha)] = arg.alpha)
-        arg.style == nothing || (plotattributes[Symbol(letter, :gridstyle)] = arg.style)
+        arg.width === nothing || (plotattributes[Symbol(letter, :gridlinewidth)] = arg.width)
+        arg.color === nothing || (plotattributes[Symbol(letter, :foreground_color_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[Symbol(letter, :gridalpha)] = arg.alpha)
+        arg.style === nothing || (plotattributes[Symbol(letter, :gridstyle)] = arg.style)
 
     # linealpha
     elseif allAlphas(arg)
@@ -822,10 +831,10 @@ function processMinorGridArg!(plotattributes::KW, arg, letter)
         plotattributes[Symbol(letter, :minorgrid)] = true
 
     elseif typeof(arg) <: Stroke
-        arg.width == nothing || (plotattributes[Symbol(letter, :minorgridlinewidth)] = arg.width)
-        arg.color == nothing || (plotattributes[Symbol(letter, :foreground_color_minor_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
-        arg.alpha == nothing || (plotattributes[Symbol(letter, :minorgridalpha)] = arg.alpha)
-        arg.style == nothing || (plotattributes[Symbol(letter, :minorgridstyle)] = arg.style)
+        arg.width === nothing || (plotattributes[Symbol(letter, :minorgridlinewidth)] = arg.width)
+        arg.color === nothing || (plotattributes[Symbol(letter, :foreground_color_minor_grid)] = arg.color in (:auto, :match) ? :match : plot_color(arg.color))
+        arg.alpha === nothing || (plotattributes[Symbol(letter, :minorgridalpha)] = arg.alpha)
+        arg.style === nothing || (plotattributes[Symbol(letter, :minorgridstyle)] = arg.style)
         plotattributes[Symbol(letter, :minorgrid)] = true
 
     # linealpha
@@ -930,6 +939,15 @@ function preprocessArgs!(plotattributes::KW)
         end
     end
 
+    # vline accesses the y argument but actually maps it to the x axis.
+    # Hence, we have to swap formatters
+    if get(plotattributes, :seriestype, :path) == :vline
+        xformatter = get(plotattributes, :xformatter, :auto)
+        yformatter = get(plotattributes, :yformatter, :auto)
+        plotattributes[:xformatter] = yformatter
+        plotattributes[:yformatter] = xformatter
+    end
+
     # handle grid args common to all axes
     args = pop!(plotattributes, :grid, ())
     for arg in wraptuple(args)
@@ -961,7 +979,7 @@ function preprocessArgs!(plotattributes::KW)
         end
     end
     # fonts
-    for fontname in (:titlefont, :legendfont)
+    for fontname in (:titlefont, :legendfont, :legendtitlefont)
         args = pop!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
@@ -1080,7 +1098,7 @@ function extractGroupArgs(v::AVec, args...; legendEntry = string)
     if n > 100
         @warn("You created n=$n groups... Is that intended?")
     end
-    groupIds = Vector{Int}[filter(i -> v[i] == glab, 1:length(v)) for glab in groupLabels]
+    groupIds = Vector{Int}[filter(i -> v[i] == glab, eachindex(v)) for glab in groupLabels]
     GroupBy(map(legendEntry, groupLabels), groupIds)
 end
 
@@ -1088,7 +1106,7 @@ legendEntryFromTuple(ns::Tuple) = join(ns, ' ')
 
 # this is when given a tuple of vectors of values to group by
 function extractGroupArgs(vs::Tuple, args...)
-    isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
+    isempty(vs) && return GroupBy([""], [axes(args[1],1)])
     v = map(tuple, vs...)
     extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
 end
@@ -1098,7 +1116,7 @@ legendEntryFromTuple(ns::NamedTuple) =
     join(["$k = $v" for (k, v) in pairs(ns)], ", ")
 
 function extractGroupArgs(vs::NamedTuple, args...)
-    isempty(vs) && return GroupBy([""], [1:size(args[1],1)])
+    isempty(vs) && return GroupBy([""], [axes(args[1],1)])
     v = map(NamedTuple{keys(vs)}∘tuple, values(vs)...)
     extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
 end
@@ -1121,7 +1139,7 @@ end
 
 function _filter_input_data!(plotattributes::KW)
     idxfilter = pop!(plotattributes, :idxfilter, nothing)
-    if idxfilter != nothing
+    if idxfilter !== nothing
         filter_data!(plotattributes, idxfilter)
     end
 end
@@ -1207,7 +1225,8 @@ convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 # anything else is returned as-is
 function slice_arg(v::AMat, idx::Int)
     c = mod1(idx, size(v,2))
-    size(v,1) == 1 ? v[1,c] : v[:,c]
+    m,n = axes(v)
+    size(v,1) == 1 ? v[first(m),n[c]] : v[:,n[c]]
 end
 slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
 slice_arg(v, idx) = v
@@ -1237,7 +1256,7 @@ end
 #     v = plotattributes[k]
 #     plotattributes[k] = if v == :match
 #         match_color
-#     elseif v == nothing
+#     elseif v === nothing
 #         plot_color(RGBA(0,0,0,0))
 #     else
 #         v
@@ -1246,7 +1265,7 @@ end
 
 function color_or_nothing!(plotattributes::KW, k::Symbol)
     v = plotattributes[k]
-    plotattributes[k] = if v == nothing || v == false
+    plotattributes[k] = if v === nothing || v == false
         RGBA{Float64}(0,0,0,0)
     elseif v != :match
         plot_color(v)
@@ -1271,8 +1290,10 @@ const _match_map = KW(
     :bottom_margin => :margin,
     :titlefontfamily          => :fontfamily_subplot,
     :legendfontfamily         => :fontfamily_subplot,
+    :legendtitlefontfamily    => :fontfamily_subplot,
     :titlefontcolor           => :foreground_color_subplot,
     :legendfontcolor          => :foreground_color_subplot,
+    :legendtitlefontcolor     => :foreground_color_subplot,
     :tickfontcolor            => :foreground_color_text,
     :guidefontcolor           => :foreground_color_guide,
 )
@@ -1563,11 +1584,11 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
 
     # update alphas
     for asym in (:linealpha, :markeralpha, :fillalpha)
-        if plotattributes[asym] == nothing
+        if plotattributes[asym] === nothing
             plotattributes[asym] = plotattributes[:seriesalpha]
         end
     end
-    if plotattributes[:markerstrokealpha] == nothing
+    if plotattributes[:markerstrokealpha] === nothing
         plotattributes[:markerstrokealpha] = plotattributes[:markeralpha]
     end
 
@@ -1602,13 +1623,13 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     end
 
     # if marker_z, fill_z or line_z are set, ensure we have a gradient
-    if plotattributes[:marker_z] != nothing
+    if plotattributes[:marker_z] !== nothing
         ensure_gradient!(plotattributes, :markercolor, :markeralpha)
     end
-    if plotattributes[:line_z] != nothing
+    if plotattributes[:line_z] !== nothing
         ensure_gradient!(plotattributes, :linecolor, :linealpha)
     end
-    if plotattributes[:fill_z] != nothing
+    if plotattributes[:fill_z] !== nothing
         ensure_gradient!(plotattributes, :fillcolor, :fillalpha)
     end
 

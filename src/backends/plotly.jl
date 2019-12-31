@@ -26,7 +26,6 @@ const plotly_remote_file_path = "https://cdn.plot.ly/plotly-latest.min.js"
 # end
 using UUIDs
 
-push!(_initialized_backends, :plotly)
 # ----------------------------------------------------------------
 
 const _plotly_legend_pos = KW(
@@ -346,12 +345,12 @@ function plotly_layout(plt::Plot)
 end
 
 function plotly_layout_json(plt::Plot)
-    JSON.json(plotly_layout(plt))
+    JSON.json(plotly_layout(plt), 4)
 end
 
 
 function plotly_colorscale(grad::ColorGradient, α)
-    [[grad.values[i], rgba_string(plot_color(grad.colors[i], α))] for i in 1:length(grad.colors)]
+    [[grad.values[i], rgba_string(plot_color(grad.colors[i], α))] for i in eachindex(grad.colors)]
 end
 plotly_colorscale(c::Colorant,α) = plotly_colorscale(_as_gradient(c),α)
 function plotly_colorscale(c::AbstractVector{<:RGBA}, α)
@@ -392,7 +391,7 @@ end
 # we split by NaNs and then construct/destruct the shapes to get the closed coords
 function plotly_close_shapes(x, y)
     xs, ys = nansplit(x), nansplit(y)
-    for i=1:length(xs)
+    for i=eachindex(xs)
         shape = Shape(xs[i], ys[i])
         xs[i], ys[i] = coords(shape)
     end
@@ -402,7 +401,7 @@ end
 function plotly_data(series::Series, letter::Symbol, data)
     axis = series[:subplot][Symbol(letter, :axis)]
 
-    data = if axis[:ticks] == :native && data != nothing
+    data = if axis[:ticks] == :native && data !== nothing
         plotly_native_data(axis, data)
     else
        data
@@ -414,7 +413,8 @@ function plotly_data(series::Series, letter::Symbol, data)
         plotly_data(data)
     end
 end
-plotly_data(v) = v != nothing ? collect(v) : v
+plotly_data(v) = v !== nothing ? collect(v) : v
+plotly_data(v::AbstractArray) = v
 plotly_data(surf::Surface) = surf.surf
 plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
 
@@ -453,7 +453,7 @@ function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
 
     sp = series[:subplot]
-    clims = get_clims(sp)
+    clims = get_clims(sp, series)
 
     if st == :shape
         return plotly_series_shapes(plt, series, clims)
@@ -468,7 +468,7 @@ function plotly_series(plt::Plot, series::Series)
     plotattributes_out[:showlegend] = should_add_to_legend(series)
 
     if st == :straightline
-        x, y = straightline_data(series)
+        x, y = straightline_data(series, 100)
         z = series[:z]
     else
         x, y, z  = series[:x], series[:y], series[:z]
@@ -528,7 +528,7 @@ function plotly_series(plt::Plot, series::Series)
         else
             plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
             plotattributes_out[:opacity] = series[:fillalpha]
-            if series[:fill_z] != nothing
+            if series[:fill_z] !== nothing
                 plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
             end
             plotattributes_out[:showscale] = hascolorbar(sp)
@@ -583,7 +583,7 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
     )
 
     x, y = (plotly_data(series, letter, data)
-        for (letter, data) in zip((:x, :y), shape_data(series))
+        for (letter, data) in zip((:x, :y), shape_data(series, 100))
     )
 
     for (i,rng) in enumerate(segments)
@@ -610,11 +610,11 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         plotly_hover!(plotattributes_out, _cycle(series[:hover], i))
         plotattributes_outs[i] = plotattributes_out
     end
-    if series[:fill_z] != nothing
+    if series[:fill_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :fill))
-    elseif series[:line_z] != nothing
+    elseif series[:line_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :line))
-    elseif series[:marker_z] != nothing
+    elseif series[:marker_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :marker))
     end
     plotattributes_outs
@@ -630,11 +630,9 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
     segments = iter_segments(series)
-    plotattributes_outs = Vector{KW}(undef, (hasfillrange ? 2 : 1 ) * length(segments))
+    plotattributes_outs = fill(KW(), (hasfillrange ? 2 : 1 ) * length(segments))
 
     for (i,rng) in enumerate(segments)
-        !isscatter && length(rng) < 2 && continue
-
         plotattributes_out = deepcopy(plotattributes_base)
         plotattributes_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
         plotattributes_out[:legendgroup] = series[:label]
@@ -734,11 +732,11 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         end
     end
 
-    if series[:line_z] != nothing
+    if series[:line_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :line))
-    elseif series[:fill_z] != nothing
+    elseif series[:fill_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :fill))
-    elseif series[:marker_z] != nothing
+    elseif series[:marker_z] !== nothing
         push!(plotattributes_outs, plotly_colorbar_hack(series, plotattributes_base, :marker))
     end
 
@@ -783,7 +781,7 @@ function plotly_hover!(plotattributes_out::KW, hover)
     # hover text
     if hover in (:none, false)
         plotattributes_out[:hoverinfo] = "none"
-    elseif hover != nothing
+    elseif hover !== nothing
         plotattributes_out[:hoverinfo] = "text"
         plotattributes_out[:text] = hover
     end
@@ -799,13 +797,16 @@ function plotly_series(plt::Plot)
 end
 
 # get json string for a list of dictionaries, each representing the series params
-plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt))
+plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt), 4)
 
 # ----------------------------------------------------------------
 
+html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
+html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
+
 const ijulia_initialized = Ref(false)
 
-function html_head(plt::Plot{PlotlyBackend})
+function plotly_html_head(plt::Plot)
     local_file = ("file://" * plotly_local_file_path)
     plotly = use_local_dependencies[] ? local_file : plotly_remote_file_path
     if isijulia() && !ijulia_initialized[]
@@ -821,12 +822,10 @@ function html_head(plt::Plot{PlotlyBackend})
         """)
         ijulia_initialized[] = true
     end
-    # IJulia just needs one initialization
-    isijulia() && return ""
     return "<script src=$(repr(plotly))></script>"
 end
 
-function html_body(plt::Plot{PlotlyBackend}, style = nothing)
+function plotly_html_body(plt, style = nothing)
     if style == nothing
         style = "width:100%;height:100%;"
     end
@@ -839,7 +838,7 @@ function html_body(plt::Plot{PlotlyBackend}, style = nothing)
     """
 end
 
-function js_body(plt::Plot{PlotlyBackend}, divid)
+function js_body(plt::Plot, divid)
     """
     gd = (function() {
       var WIDTH_IN_PERCENT_OF_PARENT = 100;
@@ -866,7 +865,7 @@ end
 
 # ----------------------------------------------------------------
 
-function _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend})
+function plotly_show_js(io::IO, plot::Plot)
     data = []
     for series in plot.series_list
         append!(data, plotly_series(plot, series))
@@ -875,7 +874,19 @@ function _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{Plotly
     JSON.print(io, Dict(:data => data, :layout => layout))
 end
 
+# ----------------------------------------------------------------
+
+function _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend})
+    plotly_show_js(io, plot)
+end
+
+
+function _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyBackend})
+    write(io, standalone_html(plt))
+end
+
 
 function _display(plt::Plot{PlotlyBackend})
     standalone_html_window(plt)
 end
+

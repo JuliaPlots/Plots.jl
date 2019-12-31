@@ -121,9 +121,9 @@ function _create_backend_figure(plt::Plot{InspectDRBackend})
     gplot = _inspectdr_getgui(plt.o)
 
     #:overwrite_figure: want to reuse current figure
-    if plt[:overwrite_figure] && mplot != nothing
+    if plt[:overwrite_figure] && mplot !== nothing
         mplot.subplots = [] #Reset
-        if gplot != nothing #Ensure still references current plot
+        if gplot !== nothing #Ensure still references current plot
             gplot.src = mplot
         end
     else #want new one:

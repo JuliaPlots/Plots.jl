@@ -67,7 +67,7 @@ function process_axis_arg!(plotattributes::KW, arg, letter = "")
     elseif T <: AVec
         plotattributes[Symbol(letter,:ticks)] = arg
 
-    elseif arg == nothing
+    elseif arg === nothing
         plotattributes[Symbol(letter,:ticks)] = []
 
     elseif T <: Bool || arg in _allShowaxisArgs
@@ -166,7 +166,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
     # or DateTime) is chosen based on the time span between amin and amax
     # rather than on the input format
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
-    if ticks == nothing && scale == :identity
+    if ticks === nothing && scale == :identity
         if axis[:formatter] == dateformatter
             # optimize_datetime_ticks returns ticks and labels(!) based on
             # integers/floats corresponding to the DateTime type. Thus, the axes
@@ -184,7 +184,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
     end
 
     # get a list of well-laid-out ticks
-    if ticks == nothing
+    if ticks === nothing
         scaled_ticks = optimize_ticks(
             sf(amin),
             sf(amax);
@@ -218,6 +218,8 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
             map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :plain))
         elseif formatter == :scientific
             Showoff.showoff(unscaled_ticks, :scientific)
+	elseif formatter == :latex
+	    map(x -> string("\$", replace(convert_sci_unicode(x), '×' => "\\times"), "\$"), Showoff.showoff(unscaled_ticks, :auto))
         else
             # there was an override for the formatter... use that on the unscaled ticks
             map(formatter, unscaled_ticks)
@@ -295,7 +297,7 @@ function get_minor_ticks(sp, axis, ticks)
     #Add one phantom tick either side of the ticks to ensure minor ticks extend to the axis limits
     if length(ticks) > 2
         ratio = (ticks[3] - ticks[2])/(ticks[2] - ticks[1])
-    elseif axis[:scale] == :none
+    elseif axis[:scale] in (:none, :identity)
         ratio = 1
     else
         return nothing
@@ -309,7 +311,9 @@ function get_minor_ticks(sp, axis, ticks)
     minorticks = typeof(ticks[1])[]
     for (i,hi) in enumerate(ticks[2:end])
         lo = ticks[i]
-        append!(minorticks,collect(lo + (hi-lo)/n :(hi-lo)/n: hi - (hi-lo)/2n))
+        if isfinite(lo) && hi > lo
+            append!(minorticks,collect(lo + (hi-lo)/n :(hi-lo)/n: hi - (hi-lo)/2n))
+        end
     end
     minorticks[amin .<= minorticks .<= amax]
 end
@@ -382,7 +386,7 @@ function expand_extrema!(sp::Subplot, plotattributes::KW)
                 data = plotattributes[letter] = Surface(Matrix{Float64}(data.surf))
             end
             expand_extrema!(axis, data)
-        elseif data != nothing
+        elseif data !== nothing
             # TODO: need more here... gotta track the discrete reference value
             #       as well as any coord offset (think of boxplot shape coords... they all
             #       correspond to the same x-value)
@@ -399,10 +403,10 @@ function expand_extrema!(sp::Subplot, plotattributes::KW)
 
     # expand for fillrange
     fr = plotattributes[:fillrange]
-    if fr == nothing && plotattributes[:seriestype] == :bar
+    if fr === nothing && plotattributes[:seriestype] == :bar
         fr = 0.0
     end
-    if fr != nothing && !all3D(plotattributes)
+    if fr !== nothing && !all3D(plotattributes)
         axis = sp.attr[vert ? :yaxis : :xaxis]
         if typeof(fr) <: Tuple
             for fri in fr
@@ -419,7 +423,7 @@ function expand_extrema!(sp::Subplot, plotattributes::KW)
         data = plotattributes[dsym]
 
         bw = plotattributes[:bar_width]
-        if bw == nothing
+        if bw === nothing
             bw = plotattributes[:bar_width] = _bar_width * ignorenan_minimum(filter(x->x>0,diff(sort(data))))
         end
         axis = sp.attr[Symbol(dsym, :axis)]
@@ -573,10 +577,10 @@ end
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AVec)
-    n = length(v)
-    cvec = zeros(n)
-    discrete_indices = zeros(Int, n)
-    for i=1:n
+    n = eachindex(v)
+    cvec = zeros(axes(v))
+    discrete_indices = similar(Array{Int}, axes(v))
+    for i in n
         cvec[i], discrete_indices[i] = discrete_value!(axis, v[i])
     end
     cvec, discrete_indices
@@ -584,10 +588,10 @@ end
 
 # add the discrete value for each item.  return the continuous values and the indices
 function discrete_value!(axis::Axis, v::AMat)
-    n,m = size(v)
-    cmat = zeros(n,m)
-    discrete_indices = zeros(Int, n, m)
-    for i=1:n, j=1:m
+    n,m = axes(v)
+    cmat = zeros(axes(v))
+    discrete_indices = similar(Array{Int}, axes(v))
+    for i in n, j in m
         cmat[i,j], discrete_indices[i,j] = discrete_value!(axis, v[i,j])
     end
     cmat, discrete_indices
@@ -633,13 +637,13 @@ function axis_drawing_info(sp::Subplot)
 
     if sp[:framestyle] != :none
         # xaxis
+        y1, y2 = if sp[:framestyle] in (:origin, :zerolines)
+            0.0, 0.0
+        else
+            xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, ymin) : (ymin, ymax)
+        end
         if xaxis[:showaxis]
             if sp[:framestyle] != :grid
-                y1, y2 = if sp[:framestyle] in (:origin, :zerolines)
-                    0.0, 0.0
-                else
-                    xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, ymin) : (ymin, ymax)
-                end
                 push!(xaxis_segs, (xmin, y1), (xmax, y1))
                 # don't show the 0 tick label for the origin framestyle
                 if sp[:framestyle] == :origin && !(xticks in (:none, nothing, false)) && length(xticks) > 1
@@ -652,55 +656,48 @@ function axis_drawing_info(sp::Subplot)
         if !(xaxis[:ticks] in (:none, nothing, false))
             f = scalefunc(yaxis[:scale])
             invf = invscalefunc(yaxis[:scale])
-            ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
-            t1 = invf(f(ymin) + 0.015 * (f(ymax) - f(ymin)) * ticks_in)
-            t2 = invf(f(ymax) - 0.015 * (f(ymax) - f(ymin)) * ticks_in)
-            t3 = invf(f(0) + 0.015 * (f(ymax) - f(ymin)) * ticks_in)
+            tick_start, tick_stop = if sp[:framestyle] == :origin
+                t = invf(f(0) + 0.012 * (f(ymax) - f(ymin)))
+                (-t, t)
+            else
+                ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
+                t = invf(f(y1) + 0.012 * (f(y2) - f(y1)) * ticks_in)
+                (y1, t)
+            end
 
             for xtick in xticks[1]
                 if xaxis[:showaxis]
-                    tick_start, tick_stop = if sp[:framestyle] == :origin
-                        (0, t3)
-                    else
-                        xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, t2) : (ymin, t1)
-                    end
                     push!(xtick_segs, (xtick, tick_start), (xtick, tick_stop)) # bottom tick
                 end
-                # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
                 xaxis[:grid] && push!(xgrid_segs, (xtick, ymin), (xtick, ymax)) # vertical grid
             end
-        end
-        if !(xaxis[:minorticks] in (:none, nothing, false)) || xaxis[:minorgrid]
-            f = scalefunc(yaxis[:scale])
-            invf = invscalefunc(yaxis[:scale])
-            ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
-            t1 = invf(f(ymin) + 0.01 * (f(ymax) - f(ymin)) * ticks_in)
-            t2 = invf(f(ymax) - 0.01 * (f(ymax) - f(ymin)) * ticks_in)
-            t3 = invf(f(0) + 0.01 * (f(ymax) - f(ymin)) * ticks_in)
 
-            for xminortick in xminorticks
-                if xaxis[:showaxis]
-                    tick_start, tick_stop = if sp[:framestyle] == :origin
-                        (0, t3)
-                    else
-                        xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, t2) : (ymin, t1)
-                    end
-                    push!(xtick_segs, (xminortick, tick_start), (xminortick, tick_stop)) # bottom tick
+            if !(xaxis[:minorticks] in (:none, nothing, false)) || xaxis[:minorgrid]
+                tick_start, tick_stop = if sp[:framestyle] == :origin
+                    t = invf(f(0) + 0.006 * (f(ymax) - f(ymin)))
+                    (-t, t)
+                else
+                    t = invf(f(y1) + 0.006 * (f(y2) - f(y1)) * ticks_in)
+                    (y1, t)
                 end
-                # sp[:draw_axes_border] && push!(xaxis_segs, (xtick, ymax), (xtick, t2)) # top tick
-                xaxis[:minorgrid] && push!(xminorgrid_segs, (xminortick, ymin), (xminortick, ymax)) # vertical grid
+                for xtick in xminorticks
+                    if xaxis[:showaxis]
+                        push!(xtick_segs, (xtick, tick_start), (xtick, tick_stop)) # bottom tick
+                    end
+                    xaxis[:minorgrid] && push!(xminorgrid_segs, (xtick, ymin), (xtick, ymax)) # vertical grid
+                end
             end
         end
 
 
         # yaxis
+        x1, x2 = if sp[:framestyle] in (:origin, :zerolines)
+            0.0, 0.0
+        else
+            xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, xmin) : (xmin, xmax)
+        end
         if yaxis[:showaxis]
             if sp[:framestyle] != :grid
-                x1, x2 = if sp[:framestyle] in (:origin, :zerolines)
-                    0.0, 0.0
-                else
-                    xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, xmin) : (xmin, xmax)
-                end
                 push!(yaxis_segs, (x1, ymin), (x1, ymax))
                 # don't show the 0 tick label for the origin framestyle
                 if sp[:framestyle] == :origin && !(yticks in (:none, nothing,false)) && length(yticks) > 1
@@ -713,46 +710,297 @@ function axis_drawing_info(sp::Subplot)
         if !(yaxis[:ticks] in (:none, nothing, false))
             f = scalefunc(xaxis[:scale])
             invf = invscalefunc(xaxis[:scale])
-            ticks_in = yaxis[:tick_direction] == :out ? -1 : 1
-            t1 = invf(f(xmin) + 0.015 * (f(xmax) - f(xmin)) * ticks_in)
-            t2 = invf(f(xmax) - 0.015 * (f(xmax) - f(xmin)) * ticks_in)
-            t3 = invf(f(0) + 0.015 * (f(xmax) - f(xmin)) * ticks_in)
+            tick_start, tick_stop = if sp[:framestyle] == :origin
+                t = invf(f(0) + 0.012 * (f(xmax) - f(xmin)))
+                (-t, t)
+            else
+                ticks_in = yaxis[:tick_direction] == :out ? -1 : 1
+                t = invf(f(x1) + 0.012 * (f(x2) - f(x1)) * ticks_in)
+                (x1, t)
+            end
 
             for ytick in yticks[1]
                 if yaxis[:showaxis]
-                    tick_start, tick_stop = if sp[:framestyle] == :origin
-                        (0, t3)
-                    else
-                        xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, t2) : (xmin, t1)
-                    end
                     push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
                 end
-                # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
                 yaxis[:grid] && push!(ygrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
             end
-        end
-        if !(yaxis[:minorticks] in (:none, nothing, false)) || yaxis[:minorgrid]
-            f = scalefunc(xaxis[:scale])
-            invf = invscalefunc(xaxis[:scale])
-            ticks_in = yaxis[:tick_direction] == :out ? -1 : 1
-            t1 = invf(f(xmin) + 0.01 * (f(xmax) - f(xmin)) * ticks_in)
-            t2 = invf(f(xmax) - 0.01 * (f(xmax) - f(xmin)) * ticks_in)
-            t3 = invf(f(0) + 0.01 * (f(xmax) - f(xmin)) * ticks_in)
 
-            for ytick in yminorticks
-                if yaxis[:showaxis]
-                    tick_start, tick_stop = if sp[:framestyle] == :origin
-                        (0, t3)
-                    else
-                        xor(yaxis[:mirror], xaxis[:flip]) ? (xmax, t2) : (xmin, t1)
-                    end
-                    push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
+            if !(yaxis[:minorticks] in (:none, nothing, false)) || yaxis[:minorgrid]
+                tick_start, tick_stop = if sp[:framestyle] == :origin
+                    t = invf(f(0) + 0.006 * (f(xmax) - f(xmin)))
+                    (-t, t)
+                else
+                    t = invf(f(x1) + 0.006 * (f(x2) - f(x1)) * ticks_in)
+                    (x1, t)
                 end
-                # sp[:draw_axes_border] && push!(yaxis_segs, (xmax, ytick), (t2, ytick)) # right tick
-                yaxis[:minorgrid] && push!(yminorgrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
+                for ytick in yminorticks
+                    if yaxis[:showaxis]
+                        push!(ytick_segs, (tick_start, ytick), (tick_stop, ytick)) # left tick
+                    end
+                    yaxis[:minorgrid] && push!(yminorgrid_segs, (xmin, ytick), (xmax, ytick)) # horizontal grid
+                end
             end
         end
     end
 
     xticks, yticks, xaxis_segs, yaxis_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs
+end
+
+
+function axis_drawing_info_3d(sp::Subplot)
+    xaxis, yaxis, zaxis = sp[:xaxis], sp[:yaxis], sp[:zaxis]
+    xmin, xmax = axis_limits(sp, :x)
+    ymin, ymax = axis_limits(sp, :y)
+    zmin, zmax = axis_limits(sp, :z)
+    xticks = get_ticks(sp, xaxis)
+    yticks = get_ticks(sp, yaxis)
+    zticks = get_ticks(sp, zaxis)
+    xminorticks = get_minor_ticks(sp, xaxis, xticks)
+    yminorticks = get_minor_ticks(sp, yaxis, yticks)
+    zminorticks = get_minor_ticks(sp, zaxis, zticks)
+    xaxis_segs = Segments(3)
+    yaxis_segs = Segments(3)
+    zaxis_segs = Segments(3)
+    xtick_segs = Segments(3)
+    ytick_segs = Segments(3)
+    ztick_segs = Segments(3)
+    xgrid_segs = Segments(3)
+    ygrid_segs = Segments(3)
+    zgrid_segs = Segments(3)
+    xminorgrid_segs = Segments(3)
+    yminorgrid_segs = Segments(3)
+    zminorgrid_segs = Segments(3)
+    xborder_segs = Segments(3)
+    yborder_segs = Segments(3)
+    zborder_segs = Segments(3)
+
+    if sp[:framestyle] != :none
+
+        # xaxis
+        y1, y2 = if sp[:framestyle] in (:origin, :zerolines)
+            0.0, 0.0
+        else
+            xor(xaxis[:mirror], yaxis[:flip]) ? (ymax, ymin) : (ymin, ymax)
+        end
+        z1, z2 = if sp[:framestyle] in (:origin, :zerolines)
+            0.0, 0.0
+        else
+            xor(xaxis[:mirror], zaxis[:flip]) ? (zmax, zmin) : (zmin, zmax)
+        end
+        if xaxis[:showaxis]
+            if sp[:framestyle] != :grid
+                push!(xaxis_segs, (xmin, y1, z1), (xmax, y1, z1))
+                # don't show the 0 tick label for the origin framestyle
+                if sp[:framestyle] == :origin && !(xticks in (:none, nothing, false)) && length(xticks) > 1
+                    showticks = xticks[1] .!= 0
+                    xticks = (xticks[1][showticks], xticks[2][showticks])
+                end
+            end
+            sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin, y2, z2), (xmax, y2, z2)) # top spine
+        end
+        if !(xaxis[:ticks] in (:none, nothing, false))
+            f = scalefunc(yaxis[:scale])
+            invf = invscalefunc(yaxis[:scale])
+            tick_start, tick_stop = if sp[:framestyle] == :origin
+                t = invf(f(0) + 0.012 * (f(ymax) - f(ymin)))
+                (-t, t)
+            else
+                ticks_in = xaxis[:tick_direction] == :out ? -1 : 1
+                t = invf(f(y1) + 0.012 * (f(y2) - f(y1)) * ticks_in)
+                (y1, t)
+            end
+
+            for xtick in xticks[1]
+                if xaxis[:showaxis]
+                    push!(xtick_segs, (xtick, tick_start, z1), (xtick, tick_stop, z1)) # bottom tick
+                end
+                if xaxis[:grid]
+                    if sp[:framestyle] in (:origin, :zerolines)
+                        push!(xgrid_segs, (xtick, ymin, 0.0), (xtick, ymax, 0.0))
+                        push!(xgrid_segs, (xtick, 0.0, zmin), (xtick, 0.0, zmax))
+                    else
+                        push!(xgrid_segs, (xtick, y1, z1), (xtick, y2, z1))
+                        push!(xgrid_segs, (xtick, y2, z1), (xtick, y2, z2))
+                    end
+                end
+            end
+
+            if !(xaxis[:minorticks] in (:none, nothing, false)) || xaxis[:minorgrid]
+                tick_start, tick_stop = if sp[:framestyle] == :origin
+                    t = invf(f(0) + 0.006 * (f(ymax) - f(ymin)))
+                    (-t, t)
+                else
+                    t = invf(f(y1) + 0.006 * (f(y2) - f(y1)) * ticks_in)
+                    (y1, t)
+                end
+                for xtick in xminorticks
+                    if xaxis[:showaxis]
+                        push!(xtick_segs, (xtick, tick_start, z1), (xtick, tick_stop, z1)) # bottom tick
+                    end
+                    if xaxis[:minorgrid]
+                        if sp[:framestyle] in (:origin, :zerolines)
+                            push!(xminorgrid_segs, (xtick, ymin, 0.0), (xtick, ymax, 0.0))
+                            push!(xminorgrid_segs, (xtick, 0.0, zmin), (xtick, 0.0, zmax))
+                        else
+                            push!(xminorgrid_segs, (xtick, y1, z1), (xtick, y2, z1))
+                            push!(xminorgrid_segs, (xtick, y2, z1), (xtick, y2, z2))
+                        end
+                    end
+                end
+            end
+        end
+
+
+        # yaxis
+        x1, x2 = if sp[:framestyle] in (:origin, :zerolines)
+            0.0, 0.0
+        else
+            xor(yaxis[:mirror], xaxis[:flip]) ? (xmin, xmax) : (xmax, xmin)
+        end
+        z1, z2 = if sp[:framestyle] in (:origin, :zerolines)
+            0.0, 0.0
+        else
+            xor(yaxis[:mirror], zaxis[:flip]) ? (zmax, zmin) : (zmin, zmax)
+        end
+        if yaxis[:showaxis]
+            if sp[:framestyle] != :grid
+                push!(yaxis_segs, (x1, ymin, z1), (x1, ymax, z1))
+                # don't show the 0 tick label for the origin framestyle
+                if sp[:framestyle] == :origin && !(yticks in (:none, nothing,false)) && length(yticks) > 1
+                    showticks = yticks[1] .!= 0
+                    yticks = (yticks[1][showticks], yticks[2][showticks])
+                end
+            end
+            sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (x2, ymin, z2), (x2, ymax, z2)) # right spine
+        end
+        if !(yaxis[:ticks] in (:none, nothing, false))
+            f = scalefunc(xaxis[:scale])
+            invf = invscalefunc(xaxis[:scale])
+            tick_start, tick_stop = if sp[:framestyle] == :origin
+                t = invf(f(0) + 0.012 * (f(xmax) - f(xmin)))
+                (-t, t)
+            else
+                ticks_in = yaxis[:tick_direction] == :out ? -1 : 1
+                t = invf(f(x1) + 0.012 * (f(x2) - f(x1)) * ticks_in)
+                (x1, t)
+            end
+
+            for ytick in yticks[1]
+                if yaxis[:showaxis]
+                    push!(ytick_segs, (tick_start, ytick, z1), (tick_stop, ytick, z1)) # left tick
+                end
+                if yaxis[:grid]
+                    if sp[:framestyle] in (:origin, :zerolines)
+                        push!(ygrid_segs, (xmin, ytick, 0.0), (xmax, ytick, 0.0))
+                        push!(ygrid_segs, (0.0, ytick, zmin), (0.0, ytick, zmax))
+                    else
+                        push!(ygrid_segs, (x1, ytick, z1), (x2, ytick, z1))
+                        push!(ygrid_segs, (x2, ytick, z1), (x2, ytick, z2))
+                    end
+                end
+            end
+
+            if !(yaxis[:minorticks] in (:none, nothing, false)) || yaxis[:minorgrid]
+                tick_start, tick_stop = if sp[:framestyle] == :origin
+                    t = invf(f(0) + 0.006 * (f(xmax) - f(xmin)))
+                    (-t, t)
+                else
+                    t = invf(f(x1) + 0.006 * (f(x2) - f(x1)) * ticks_in)
+                    (x1, t)
+                end
+                for ytick in yminorticks
+                    if yaxis[:showaxis]
+                        push!(ytick_segs, (tick_start, ytick, z1), (tick_stop, ytick, z1)) # left tick
+                    end
+                    if yaxis[:minorgrid]
+                        if sp[:framestyle] in (:origin, :zerolines)
+                            push!(yminorgrid_segs, (xmin, ytick, 0.0), (xmax, ytick, 0.0))
+                            push!(yminorgrid_segs, (0.0, ytick, zmin), (0.0, ytick, zmax))
+                        else
+                            push!(yminorgrid_segs, (x1, ytick, z1), (x2, ytick, z1))
+                            push!(yminorgrid_segs, (x2, ytick, z1), (x2, ytick, z2))
+                        end
+                    end
+                end
+            end
+        end
+
+
+        # zaxis
+        x1, x2 = if sp[:framestyle] in (:origin, :zerolines)
+            0.0, 0.0
+        else
+            xor(zaxis[:mirror], xaxis[:flip]) ? (xmax, xmin) : (xmin, xmax)
+        end
+        y1, y2 = if sp[:framestyle] in (:origin, :zerolines)
+            0.0, 0.0
+        else
+            xor(zaxis[:mirror], yaxis[:flip]) ? (ymax, ymin) : (ymin, ymax)
+        end
+        if zaxis[:showaxis]
+            if sp[:framestyle] != :grid
+                push!(zaxis_segs, (x1, y1, zmin), (x1, y1, zmax))
+                # don't show the 0 tick label for the origin framestyle
+                if sp[:framestyle] == :origin && !(zticks in (:none, nothing,false)) && length(zticks) > 1
+                    showticks = zticks[1] .!= 0
+                    zticks = (zticks[1][showticks], zticks[2][showticks])
+                end
+            end
+            sp[:framestyle] in (:semi, :box) && push!(zborder_segs, (x2, y2, zmin), (x2, y2, zmax))
+        end
+        if !(zaxis[:ticks] in (:none, nothing, false))
+            f = scalefunc(xaxis[:scale])
+            invf = invscalefunc(xaxis[:scale])
+            tick_start, tick_stop = if sp[:framestyle] == :origin
+                t = invf(f(0) + 0.012 * (f(ymax) - f(ymin)))
+                (-t, t)
+            else
+                ticks_in = zaxis[:tick_direction] == :out ? -1 : 1
+                t = invf(f(y1) + 0.012 * (f(y2) - f(y1)) * ticks_in)
+                (y1, t)
+            end
+
+            for ztick in zticks[1]
+                if zaxis[:showaxis]
+                    push!(ztick_segs, (x1, tick_start, ztick), (x1, tick_stop, ztick)) # left tick
+                end
+                if zaxis[:grid]
+                    if sp[:framestyle] in (:origin, :zerolines)
+                        push!(zgrid_segs, (xmin, 0.0, ztick), (xmax, 0.0, ztick))
+                        push!(ygrid_segs, (0.0, ymin, ztick), (0.0, ymax, ztick))
+                    else
+                        push!(ygrid_segs, (x1, y1, ztick), (x1, y2, ztick))
+                        push!(ygrid_segs, (x1, y2, ztick), (x2, y2, ztick))
+                    end
+                end
+            end
+
+            if !(zaxis[:minorticks] in (:none, nothing, false)) || zaxis[:minorgrid]
+                tick_start, tick_stop = if sp[:framestyle] == :origin
+                    t = invf(f(0) + 0.006 * (f(ymax) - f(ymin)))
+                    (-t, t)
+                else
+                    t = invf(f(y1) + 0.006 * (f(y2) - f(y1)) * ticks_in)
+                    (y1, t)
+                end
+                for ztick in zminorticks
+                    if zaxis[:showaxis]
+                        push!(ztick_segs, (x1, tick_start, ztick), (x1, tick_stop, ztick)) # left tick
+                    end
+                    if zaxis[:minorgrid]
+                        if sp[:framestyle] in (:origin, :zerolines)
+                            push!(zminorgrid_segs, (xmin, 0.0, ztick), (xmax, 0.0, ztick))
+                            push!(zminorgrid_segs, (0.0, ymin, ztick), (0.0, ymax, ztick))
+                        else
+                            push!(zminorgrid_segs, (x1, y1, ztick), (x1, y2, ztick))
+                            push!(zminorgrid_segs, (x1, y2, ztick), (x2, y2, ztick))
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    xticks, yticks, zticks, xaxis_segs, yaxis_segs, zaxis_segs, xtick_segs, ytick_segs, ztick_segs, xgrid_segs, ygrid_segs, zgrid_segs, xminorgrid_segs, yminorgrid_segs, zminorgrid_segs, xborder_segs, yborder_segs, zborder_segs
 end

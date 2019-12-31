@@ -96,7 +96,7 @@ pgf_thickness_scaling(series) = pgf_thickness_scaling(series[:subplot])
 function pgf_fillstyle(plotattributes, i = 1)
     cstr,a = pgf_color(get_fillcolor(plotattributes, i))
     fa = get_fillalpha(plotattributes, i)
-    if fa != nothing
+    if fa !== nothing
         a = fa
     end
     "fill = $cstr, fill opacity=$a"
@@ -128,16 +128,18 @@ function pgf_marker(plotattributes, i = 1)
     shape = _cycle(plotattributes[:markershape], i)
     cstr, a = pgf_color(plot_color(get_markercolor(plotattributes, i), get_markeralpha(plotattributes, i)))
     cstr_stroke, a_stroke = pgf_color(plot_color(get_markerstrokecolor(plotattributes, i), get_markerstrokealpha(plotattributes, i)))
-    """
-    mark = $(get(_pgfplots_markers, shape, "*")),
-    mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)),
-    mark options = {
-        color = $cstr_stroke, draw opacity = $a_stroke,
-        fill = $cstr, fill opacity = $a,
-        line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:markerstrokewidth], i)),
-        rotate = $(shape == :dtriangle ? 180 : 0),
-        $(get(_pgfplots_linestyles, _cycle(plotattributes[:markerstrokestyle], i), "solid"))
-    }"""
+    return string(
+        "mark = $(get(_pgfplots_markers, shape, "*")),\n",
+        "mark size = $(pgf_thickness_scaling(plotattributes) * 0.5 * _cycle(plotattributes[:markersize], i)),\n",
+        plotattributes[:seriestype] == :scatter ? "only marks,\n" : "",
+        "mark options = {
+            color = $cstr_stroke, draw opacity = $a_stroke,
+            fill = $cstr, fill opacity = $a,
+            line width = $(pgf_thickness_scaling(plotattributes) * _cycle(plotattributes[:markerstrokewidth], i)),
+            rotate = $(shape == :dtriangle ? 180 : 0),
+            $(get(_pgfplots_linestyles, _cycle(plotattributes[:markerstrokestyle], i), "solid"))
+        }"
+        )
 end
 
 function pgf_add_annotation!(o, x, y, val, thickness_scaling = 1)
@@ -178,11 +180,11 @@ function pgf_series(sp::Subplot, series::Series)
     end
 
     # PGFPlots can't handle non-Vector?
-    args = map(a -> if typeof(a) <: AbstractVector && typeof(a) != Vector
-            collect(a)
-        else
-            a
-        end, args)
+    # args = map(a -> if typeof(a) <: AbstractVector && typeof(a) != Vector
+    #         collect(a)
+    #     else
+    #         a
+    #     end, args)
 
     if st in (:contour, :histogram2d)
         style = []
@@ -216,12 +218,12 @@ function pgf_series(sp::Subplot, series::Series)
 
             # add to legend?
             if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
-                if plotattributes[:fillrange] != nothing
+                if plotattributes[:fillrange] !== nothing
                     push!(style, "forget plot")
                     push!(series_collection, pgf_fill_legend_hack(plotattributes, args))
                 else
                     kw[:legendentry] = plotattributes[:label]
-                    if st == :shape # || plotattributes[:fillrange] != nothing
+                    if st == :shape # || plotattributes[:fillrange] !== nothing
                         push!(style, "area legend")
                     end
                 end
@@ -238,7 +240,7 @@ function pgf_series(sp::Subplot, series::Series)
             kw[:style] = join(style, ',')
 
             # add fillrange
-            if series[:fillrange] != nothing && st != :shape
+            if series[:fillrange] !== nothing && st != :shape
                 push!(series_collection, pgf_fillrange_series(series, i, _cycle(series[:fillrange], rng), seg_args...))
             end
 
@@ -476,8 +478,18 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         if haskey(_pgfplots_legend_pos, legpos)
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
-        cstr, a = pgf_color(plot_color(sp[:background_color_legend]))
-        push!(style, string("legend style = {", pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], 1.0, "solid"), ",", "fill = $cstr,", "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)), "}"))
+        cstr, bg_alpha = pgf_color(plot_color(sp[:background_color_legend]))
+        fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
+
+        push!(style, string(
+            "legend style = {", 
+                pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], fg_alpha, "solid", ), ",", 
+                "fill = $cstr,", 
+                "fill opacity = $bg_alpha,", 
+                "text opacity = $(alpha(plot_color(sp[:legendfontcolor]))),", 
+                "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)), 
+            "}",
+        ))
 
         if any(s[:seriestype] == :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"

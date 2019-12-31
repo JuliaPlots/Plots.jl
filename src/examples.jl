@@ -165,7 +165,7 @@ PlotExample("Marker types",
 ),
 
 PlotExample("Bar",
-    "x is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
+    "`x` is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
     [:(begin
         bar(randn(99))
     end)]
@@ -238,12 +238,12 @@ build with the method `text(string, attr...)`, which wraps font and color attrib
 """,
     [:(begin
 y = rand(10)
-plot(y, annotations = (3,y[3],text("this is #3",:left)), leg=false)
-annotate!([(5, y[5], text("this is #5",16,:red,:center)),
-          (10, y[10], text("this is #10",:right,20,"courier"))])
+plot(y, annotations = (3,y[3], Plots.text("this is #3",:left)), leg=false)
+annotate!([(5, y[5], Plots.text("this is #5",16,:red,:center)),
+          (10, y[10], Plots.text("this is #10",:right,20,"courier"))])
 scatter!(range(2, stop=8, length=6), rand(6), marker=(50,0.2,:orange),
          series_annotations = ["series","annotations","map","to","series",
-                               text("data",:green)])
+                               Plots.text("data",:green)])
     end)]
 ),
 
@@ -305,7 +305,8 @@ PlotExample("3D",
 
 PlotExample("DataFrames",
     "Plot using DataFrame column symbols.",
-    [:(begin
+    [:(using StatsPlots), # can't be inside begin block because @df gets expanded first
+     :(begin
         import RDatasets
         iris = RDatasets.dataset("datasets", "iris")
         @df iris scatter(:SepalLength, :SepalWidth, group=:Species,
@@ -354,7 +355,8 @@ PlotExample("Layouts, margins, label rotation, title location",
 
 PlotExample("Boxplot and Violin series recipes",
     "",
-    [:(begin
+    [:(using StatsPlots), # can't be inside begin block because @df gets expanded first
+     :(begin
         import RDatasets
         singers = RDatasets.dataset("lattice", "singer")
         @df singers violin(:VoicePart, :Height, line = 0, fill = (0.2, :blue))
@@ -454,6 +456,49 @@ see: http://stackoverflow.com/a/37732384/5075246
     end)]
 ),
 
+PlotExample("Ribbons",
+    """
+    Ribbons can be added to lines via the `ribbon` keyword;
+    you can pass a tuple of arrays (upper and lower bounds),
+    a single Array (for symmetric ribbons), a Function, or a number.
+    """,
+    [:(begin
+        plot(
+            plot(0:10; ribbon = (LinRange(0, 2, 10), LinRange(0, 1, 10))),
+            plot(0:10; ribbon = 0:0.5:5),
+            plot(0:10; ribbon = sqrt),
+            plot(0:10; ribbon = 1),
+        )
+    end)]
+),
+
+PlotExample("Histogram2D (complex values)",
+    "",
+    [:(begin
+        n = 10_000
+        x = exp.(0.1randn(n) .+ randn(n).*(im))
+        histogram2d(x, nbins=(20,40), show_empty_bins=true,
+                    normed=true, aspect_ratio=1)
+    end)]
+),
+
+PlotExample("Unconnected lines using `missing` or `NaN`",
+"""
+Missing values and non-finite values, including `NaN`, are not plotted.
+Instead, lines are separated into segments at these values.
+""",
+    [:(begin
+        x,y = [1,2,2,1,1], [1,2,1,2,1]
+        plot(
+              plot([rand(5); NaN; rand(5); NaN; rand(5)]),
+              plot([1,missing,2,3], marker=true),
+              plot([x; NaN; x.+2], [y; NaN; y.+1], arrow=2),
+              plot([1, 2+3im, Inf, 4im, 3, -Inf*im, 0, 3+3im], marker=true),
+              legend=false
+        )
+    end)]
+),
+
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -461,7 +506,7 @@ _animation_examples = [2, 30]
 _backend_skips = Dict(
     :gr => [25, 30],
     :pyplot => [25, 30],
-    :plotlyjs => [2, 21, 25, 30, 31],
+    :plotlyjs => [2, 21, 24, 25, 30, 31],
     :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30],
 )
 
@@ -475,7 +520,12 @@ function test_examples(pkgname::Symbol, idx::Int; debug = false, disp = true)
   @info("Testing plot: $pkgname:$idx:$(_examples[idx].header)")
   backend(pkgname)
   backend()
-  map(eval, _examples[idx].exprs)
+
+  # prevent leaking variables (esp. functions) directly into Plots namespace
+  m = Module(:PlotExampleModule)
+  Base.eval(m, :(using Plots))
+  map(exprs -> Base.eval(m, exprs), _examples[idx].exprs)
+
   plt = current()
   if disp
     gui(plt)
@@ -495,8 +545,8 @@ function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = noth
                                         skip = [], only = nothing)
   Plots._debugMode.on = debug
   plts = Dict()
-  for i in 1:length(_examples)
-    only != nothing && !(i in only) && continue
+  for i in eachindex(_examples)
+    only !== nothing && !(i in only) && continue
     i in skip && continue
     try
       plt = test_examples(pkgname, i, debug=debug, disp=disp)
@@ -505,7 +555,7 @@ function test_examples(pkgname::Symbol; debug = false, disp = true, sleep = noth
       # TODO: put error info into markdown?
       @warn("Example $pkgname:$i:$(_examples[i].header) failed with: $ex")
     end
-    if sleep != nothing
+    if sleep !== nothing
         Base.sleep(sleep)
     end
   end

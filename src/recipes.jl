@@ -239,7 +239,7 @@ end
 @recipe function f(::Type{Val{:sticks}}, x, y, z)
     n = length(x)
     fr = plotattributes[:fillrange]
-    if fr == nothing
+    if fr === nothing
         sp = plotattributes[:subplot]
         yaxis = sp[:yaxis]
         fr = if yaxis[:scale] == :identity
@@ -291,13 +291,13 @@ end
 
 # create segmented bezier curves in place of line segments
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)
-    args = z != nothing ? (x,y,z) : (x,y)
+    args = z !== nothing ? (x,y,z) : (x,y)
     newx, newy = zeros(0), zeros(0)
     fr = plotattributes[:fillrange]
-    newfr = fr != nothing ? zeros(0) : nothing
-    newz = z != nothing ? zeros(0) : nothing
+    newfr = fr !== nothing ? zeros(0) : nothing
+    newz = z !== nothing ? zeros(0) : nothing
     # lz = plotattributes[:line_z]
-    # newlz = lz != nothing ? zeros(0) : nothing
+    # newlz = lz !== nothing ? zeros(0) : nothing
 
     # for each line segment (point series with no NaNs), convert it into a bezier curve
     # where the points are the control points of the curve
@@ -306,13 +306,13 @@ end
         ts = range(0, stop = 1, length = npoints)
         nanappend!(newx, map(t -> bezier_value(_cycle(x,rng), t), ts))
         nanappend!(newy, map(t -> bezier_value(_cycle(y,rng), t), ts))
-        if z != nothing
+        if z !== nothing
             nanappend!(newz, map(t -> bezier_value(_cycle(z,rng), t), ts))
         end
-        if fr != nothing
+        if fr !== nothing
             nanappend!(newfr, map(t -> bezier_value(_cycle(fr,rng), t), ts))
         end
-        # if lz != nothing
+        # if lz !== nothing
         #     lzrng = _cycle(lz, rng) # the line_z's for this segment
         #     push!(newlz, 0.0)
         #     append!(newlz, map(t -> lzrng[1+floor(Int, t * (length(rng)-1))], ts))
@@ -321,16 +321,16 @@ end
 
     x := newx
     y := newy
-    if z == nothing
+    if z === nothing
         seriestype := :path
     else
         seriestype := :path3d
         z := newz
     end
-    if fr != nothing
+    if fr !== nothing
         fillrange := newfr
     end
-    # if lz != nothing
+    # if lz !== nothing
     #     # line_z := newlz
     #     linecolor := (isa(plotattributes[:linecolor], ColorGradient) ? plotattributes[:linecolor] : cgrad())
     # end
@@ -357,19 +357,19 @@ end
 
     # compute half-width of bars
     bw = plotattributes[:bar_width]
-    hw = if bw == nothing
+    hw = if bw === nothing
         if nx > 1
             0.5*_bar_width*ignorenan_minimum(filter(x->x>0, diff(procx)))
         else
             0.5 * _bar_width
         end
     else
-        Float64[0.5_cycle(bw,i) for i=1:length(procx)]
+        Float64[0.5_cycle(bw,i) for i=eachindex(procx)]
     end
 
     # make fillto a vector... default fills to 0
     fillto = plotattributes[:fillrange]
-    if fillto == nothing
+    if fillto === nothing
         fillto = 0
     end
     if (yscale in _logScales) && !all(_is_positive, fillto)
@@ -491,7 +491,7 @@ end
 
 @recipe function f(::Type{Val{:barbins}}, x, y, z)
     edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
-    if (plotattributes[:bar_width] == nothing)
+    if (plotattributes[:bar_width] === nothing)
         bar_width := diff(edge)
     end
     x := _bin_centers(edge)
@@ -533,7 +533,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
 
     last_w = eltype(weights)(NaN)
 
-    while it_tuple_e != nothing && it_tuple_w != nothing
+    while it_tuple_e !== nothing && it_tuple_w !== nothing
         b, it_state_e = it_tuple_e
         w, it_state_w = it_tuple_w
 
@@ -667,7 +667,7 @@ end
 function _make_hist(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing) where N
     localvs = _filternans(vs)
     edges = _hist_edges(localvs, binning)
-    h = float( weights == nothing ?
+    h = float( weights === nothing ?
         StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
         StatsBase.fit(StatsBase.Histogram, localvs, StatsBase.Weights(weights), edges, closed = :left)
     )
@@ -746,12 +746,14 @@ end
     edge_x, edge_y, weights = x, y, z.surf
 
     float_weights = float(weights)
-    if float_weights === weights
-        float_weights = deepcopy(float_weights)
-    end
-    for (i, c) in enumerate(float_weights)
-        if c == 0
-            float_weights[i] = NaN
+    if !plotattributes[:show_empty_bins]
+        if float_weights === weights
+            float_weights = deepcopy(float_weights)
+        end
+        for (i, c) in enumerate(float_weights)
+            if c == 0
+                float_weights[i] = NaN
+            end
         end
     end
 
@@ -996,7 +998,7 @@ function get_xy(o::OHLC, x, xdiff)
 end
 
 # get the joined vector
-function get_xy(v::AVec{OHLC}, x = 1:length(v))
+function get_xy(v::AVec{OHLC}, x = eachindex(v))
     xdiff = 0.3ignorenan_mean(abs.(diff(x)))
     x_out, y_out = zeros(0), zeros(0)
     for (i,ohlc) in enumerate(v)
@@ -1054,8 +1056,8 @@ end
     @assert length(g.args) == 1 && typeof(g.args[1]) <: AbstractMatrix
     seriestype := :spy
     mat = g.args[1]
-    n,m = size(mat)
-    Plots.SliceIt, 1:m, 1:n, Surface(mat)
+    n,m = axes(mat)
+    Plots.SliceIt, m, n, Surface(mat)
 end
 
 @recipe function f(::Type{Val{:spy}}, x,y,z)
@@ -1100,6 +1102,11 @@ timeformatter(t) = string(Dates.Time(Dates.Nanosecond(t)))
 @recipe f(::Type{DateTime}, dt::DateTime) = (dt -> Dates.value(dt), datetimeformatter)
 @recipe f(::Type{Dates.Time}, t::Dates.Time) = (t -> Dates.value(t), timeformatter)
 @recipe f(::Type{P}, t::P) where P <: Dates.Period = (t -> Dates.value(t), t -> string(P(t)))
+
+# -------------------------------------------------
+# Characters
+
+@recipe f(::Type{<:AbstractChar}, ::AbstractChar) = (string, string)
 
 # -------------------------------------------------
 # Complex Numbers
@@ -1178,7 +1185,7 @@ end
     seriestype := :shape
 
 	# create a filled polygon for each item
-    for c=1:size(weights,2)
+    for c=axes(weights,2)
         sx = vcat(weights[:,c], c==1 ? zeros(n) : reverse(weights[:,c-1]))
         sy = vcat(returns, reverse(returns))
         @series Plots.isvertical(plotattributes) ? (sx, sy) : (sy, sx)
@@ -1199,9 +1206,9 @@ julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], f
 
 @recipe function f(a::AreaPlot)
     data = cumsum(a.args[end], dims=2)
-    x = length(a.args) == 1 ? (1:size(data, 1)) : a.args[1]
+    x = length(a.args) == 1 ? (axes(data, 1)) : a.args[1]
     seriestype := :line
-    for i in 1:size(data, 2)
+    for i in axes(data, 2)
         @series begin
             fillrange := i > 1 ? data[:,i-1] : 0
             x, data[:,i]

@@ -26,7 +26,7 @@ function histogramHack(; kw...)
   plotattributes[:x] = midpoints
   plotattributes[:y] = float(counts)
   plotattributes[:seriestype] = :bar
-  plotattributes[:fillrange] = plotattributes[:fillrange] == nothing ? 0.0 : plotattributes[:fillrange]
+  plotattributes[:fillrange] = plotattributes[:fillrange] === nothing ? 0.0 : plotattributes[:fillrange]
   plotattributes
 end
 
@@ -38,12 +38,12 @@ function barHack(; kw...)
   plotattributes = KW(kw)
   midpoints = plotattributes[:x]
   heights = plotattributes[:y]
-  fillrange = plotattributes[:fillrange] == nothing ? 0.0 : plotattributes[:fillrange]
+  fillrange = plotattributes[:fillrange] === nothing ? 0.0 : plotattributes[:fillrange]
 
   # estimate the edges
   dists = diff(midpoints) * 0.5
   edges = zeros(length(midpoints)+1)
-  for i in 1:length(edges)
+  for i in eachindex(edges)
     if i == 1
       edge = midpoints[1] - dists[1]
     elseif i == length(edges)
@@ -56,7 +56,7 @@ function barHack(; kw...)
 
   x = Float64[]
   y = Float64[]
-  for i in 1:length(heights)
+  for i in eachindex(heights)
     e1, e2 = edges[i:i+1]
     append!(x, [e1, e1, e2, e2])
     append!(y, [fillrange, heights[i], heights[i], fillrange])
@@ -81,7 +81,7 @@ function sticksHack(; kw...)
   # these are the line vertices
   x = Float64[]
   y = Float64[]
-  fillrange = plotattributesLine[:fillrange] == nothing ? 0.0 : plotattributesLine[:fillrange]
+  fillrange = plotattributesLine[:fillrange] === nothing ? 0.0 : plotattributesLine[:fillrange]
 
   # calculate the vertices
   yScatter = plotattributesScatter[:y]
@@ -115,7 +115,6 @@ function regressionXY(x, y)
 end
 
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
-    @show T, size(z)
     n, m = size(z)
     # idx = 0
     colors = ColorGradient(vec(z))
@@ -146,16 +145,18 @@ end
 
 Segments() = Segments(Float64)
 Segments(::Type{T}) where {T} = Segments(T[])
-Segments(p::Int) = Segments(NTuple{2,Float64}[])
+Segments(p::Int) = Segments(NTuple{p, Float64}[])
 
 
 # Segments() = Segments(zeros(0))
 
 to_nan(::Type{Float64}) = NaN
 to_nan(::Type{NTuple{2,Float64}}) = (NaN, NaN)
+to_nan(::Type{NTuple{3,Float64}}) = (NaN, NaN, NaN)
 
 coords(segs::Segments{Float64}) = segs.pts
 coords(segs::Segments{NTuple{2,Float64}}) = Float64[p[1] for p in segs.pts], Float64[p[2] for p in segs.pts]
+coords(segs::Segments{NTuple{3,Float64}}) = Float64[p[1] for p in segs.pts], Float64[p[2] for p in segs.pts], Float64[p[3] for p in segs.pts]
 
 function Base.push!(segments::Segments{T}, vs...) where T
     if !isempty(segments.pts)
@@ -183,24 +184,26 @@ end
 
 mutable struct SegmentsIterator
     args::Tuple
-    n::Int
+    n1::Int
+    n2::Int
 end
 
 function iter_segments(args...)
     tup = Plots.wraptuple(args)
-    n = maximum(map(length, tup))
-    SegmentsIterator(tup, n)
+    n1 = minimum(map(firstindex, tup))
+    n2 = maximum(map(lastindex, tup))
+    SegmentsIterator(tup, n1, n2)
 end
 
 function iter_segments(series::Series)
     x, y, z = series[:x], series[:y], series[:z]
-    if x == nothing
+    if x === nothing
         return UnitRange{Int}[]
     elseif has_attribute_segments(series)
         if series[:seriestype] in (:scatter, :scatter3d)
-            return [[i] for i in 1:length(y)]
+            return [[i] for i in eachindex(y)]
         else
-            return [i:(i + 1) for i in 1:(length(y) - 1)]
+            return [i:(i + 1) for i in firstindex(y):lastindex(y)-1]
         end
     else
         segs = UnitRange{Int}[]
@@ -218,13 +221,13 @@ anynan(args::Tuple) = i -> anynan(i,args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
-function Base.iterate(itr::SegmentsIterator, nextidx::Int = 1)
-    i = findfirst(!anynan(itr.args), nextidx:itr.n)
+function Base.iterate(itr::SegmentsIterator, nextidx::Int = itr.n1)
+    i = findfirst(!anynan(itr.args), nextidx:itr.n2)
     i === nothing && return nothing
     nextval = nextidx + i - 1
 
-    j = findfirst(anynan(itr.args), nextval:itr.n)
-    nextnan = j === nothing ? itr.n + 1 : nextval + j - 1
+    j = findfirst(anynan(itr.args), nextval:itr.n2)
+    nextnan = j === nothing ? itr.n2 + 1 : nextval + j - 1
 
     nextval:nextnan-1, nextnan
 end
@@ -343,8 +346,11 @@ const _scale_base = Dict{Symbol, Real}(
     :ln => ℯ,
 )
 
-function _heatmap_edges(v::AVec)
+function _heatmap_edges(v::AVec, isedges::Bool = false)
   length(v) == 1 && return v[1] .+ [-0.5, 0.5]
+  if isedges return v end
+  # `isedges = true` means that v is a vector which already describes edges
+  # and does not need to be extended.
   vmin, vmax = ignorenan_extrema(v)
   extra_min = (v[2] - v[1]) / 2
   extra_max = (v[end] - v[end - 1]) / 2
@@ -352,9 +358,30 @@ function _heatmap_edges(v::AVec)
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(v::AVec, scale::Symbol = :identity)
+function heatmap_edges(v::AVec, scale::Symbol = :identity, isedges::Bool = false)
   f, invf = scalefunc(scale), invscalefunc(scale)
-  map(invf, _heatmap_edges(map(f,v)))
+  map(invf, _heatmap_edges(map(f,v), isedges))
+end
+
+function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size::Tuple{Int, Int})
+    nx, ny = length(x), length(y)
+    # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be
+    # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
+    ismidpoints = prod(z_size) == (ny * nx)
+    isedges = z_size == (ny - 1, nx - 1)
+    if !ismidpoints && !isedges
+        error("""Length of x & y does not match the size of z.
+                Must be either `size(z) == (length(y), length(x))` (x & y define midpoints)
+                or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
+    end
+    x, y = heatmap_edges(x, xscale, isedges),
+           heatmap_edges(y, yscale, isedges)
+    return x, y
+end
+
+function is_uniformly_spaced(v; tol=1e-6)
+  dv = diff(v)
+  maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
 end
 
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
@@ -478,7 +505,7 @@ function make_fillrange_from_ribbon(kw::KW)
     rib1, rib2 = -first(rib), last(rib)
     # kw[:ribbon] = nothing
     kw[:fillrange] = make_fillrange_side(y, rib1), make_fillrange_side(y, rib2)
-    (get(kw, :fillalpha, nothing) == nothing) && (kw[:fillalpha] = 0.5)
+    (get(kw, :fillalpha, nothing) === nothing) && (kw[:fillalpha] = 0.5)
 end
 
 #turn tuple of fillranges to one path
@@ -524,14 +551,9 @@ zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
 function get_clims(sp::Subplot)
     zmin, zmax = Inf, -Inf
-    z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
     for series in series_list(sp)
-        for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
-            if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
-                zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
-            elseif (vals != nothing) && (eltype(vals) <: Union{Missing, Real})
-                zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
-            end
+        if series[:colorbar_entry]
+            zmin, zmax = _update_clims(zmin, zmax, get_clims(series)...)
         end
     end
     clims = sp[:clims]
@@ -539,10 +561,37 @@ function get_clims(sp::Subplot)
         isfinite(clims[1]) && (zmin = clims[1])
         isfinite(clims[2]) && (zmax = clims[2])
     end
-    return zmin < zmax ? (zmin, zmax) : (-0.1, 0.1)
+    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
-_update_clims(zmin, zmax, emin, emax) = min(zmin, emin), max(zmax, emax)
+function get_clims(sp::Subplot, series::Series)
+    zmin, zmax = if series[:colorbar_entry]
+        get_clims(sp)
+    else
+        get_clims(series)
+    end
+    clims = sp[:clims]
+    if is_2tuple(clims)
+        isfinite(clims[1]) && (zmin = clims[1])
+        isfinite(clims[2]) && (zmax = clims[2])
+    end
+    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+end
+
+function get_clims(series::Series)
+    zmin, zmax = Inf, -Inf
+    z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
+    for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
+        if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
+            zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
+        elseif (vals !== nothing) && (eltype(vals) <: Union{Missing, Real})
+            zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
+        end
+    end
+    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
+end
+
+_update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zmax, emax)
 
 @enum ColorbarStyle cbar_gradient cbar_fill cbar_lines
 
@@ -602,7 +651,7 @@ for comp in (:line, :fill, :marker)
         function $get_compcolor(series, cmin::Real, cmax::Real, i::Int = 1)
             c = series[$Symbol($compcolor)]
             z = series[$Symbol($comp_z)]
-            if z == nothing
+            if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
                 grad = isa(c, ColorGradient) ? c : cgrad()
@@ -613,7 +662,7 @@ for comp in (:line, :fill, :marker)
         $get_compcolor(series, clims, i::Int = 1) = $get_compcolor(series, clims[1], clims[2], i)
 
         function $get_compcolor(series, i::Int = 1)
-            if series[$Symbol($comp_z)] == nothing
+            if series[$Symbol($comp_z)] === nothing
                 $get_compcolor(series, 0, 1, i)
             else
                 $get_compcolor(series, get_clims(series[:subplot]), i)
@@ -650,11 +699,11 @@ function has_attribute_segments(series::Series)
     for letter in (:x, :y, :z)
         # If we have NaNs in the data they define the segments and
         # SegmentsIterator is used
-        series[letter] != nothing && NaN in collect(series[letter]) && return false
+        series[letter] !== nothing && NaN in collect(series[letter]) && return false
     end
     series[:seriestype] == :shape && return false
     # ... else we check relevant attributes if they have multiple inputs
-    return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :fillcolor, :fillalpha, :markercolor, :markeralpha, :markerstrokecolor, :markerstrokealpha]) || any(typeof(series[attr]) <: AbstractArray for attr in (:line_z, :fill_z, :marker_z))
+    return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :linestyle, :fillcolor, :fillalpha, :markercolor, :markeralpha, :markerstrokecolor, :markerstrokealpha]) || any(typeof(series[attr]) <: AbstractArray for attr in (:line_z, :fill_z, :marker_z))
 end
 
 # ---------------------------------------------------------------
@@ -1060,6 +1109,15 @@ legendfont(sp::Subplot) = font(
     sp[:legendfontcolor],
 )
 
+legendtitlefont(sp::Subplot) = font(
+    sp[:legendtitlefontfamily],
+    sp[:legendtitlefontsize],
+    sp[:legendtitlefontvalign],
+    sp[:legendtitlefonthalign],
+    sp[:legendtitlefontrotation],
+    sp[:legendtitlefontcolor],
+)
+
 tickfont(ax::Axis) = font(
     ax[:tickfontfamily],
     ax[:tickfontsize],
@@ -1106,20 +1164,20 @@ function convert_sci_unicode(label::AbstractString)
     label
 end
 
-function straightline_data(series)
+function straightline_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
     x, y = series[:x], series[:y]
     n = length(x)
     if n == 2
-        return straightline_data(xl, yl, x, y)
+        return straightline_data(xl, yl, x, y, expansion_factor)
     else
         k, r = divrem(n, 3)
         if r == 0
             xdata, ydata = fill(NaN, n), fill(NaN, n)
             for i in 1:k
                 inds = (3 * i - 2):(3 * i - 1)
-                xdata[inds], ydata[inds] = straightline_data(xl, yl, x[inds], y[inds])
+                xdata[inds], ydata[inds] = straightline_data(xl, yl, x[inds], y[inds], expansion_factor)
             end
             return xdata, ydata
         else
@@ -1128,7 +1186,7 @@ function straightline_data(series)
     end
 end
 
-function straightline_data(xl, yl, x, y)
+function straightline_data(xl, yl, x, y, expansion_factor = 1)
     x_vals, y_vals = if y[1] == y[2]
         if x[1] == x[2]
             error("Two identical points cannot be used to describe a straight line.")
@@ -1149,29 +1207,28 @@ function straightline_data(xl, yl, x, y)
     end
     # expand the data outside the axis limits, by a certain factor too improve
     # plotly(js) and interactive behaviour
-    factor = 100
-    x_vals = x_vals .+ (x_vals[2] - x_vals[1]) .* factor .* [-1, 1]
-    y_vals = y_vals .+ (y_vals[2] - y_vals[1]) .* factor .* [-1, 1]
+    x_vals = x_vals .+ (x_vals[2] - x_vals[1]) .* expansion_factor .* [-1, 1]
+    y_vals = y_vals .+ (y_vals[2] - y_vals[1]) .* expansion_factor .* [-1, 1]
     return x_vals, y_vals
 end
 
-function shape_data(series)
+function shape_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
     x, y = series[:x], series[:y]
     factor = 100
     for i in eachindex(x)
         if x[i] == -Inf
-            x[i] = xl[1] - factor * (xl[2] - xl[1])
+            x[i] = xl[1] - expansion_factor * (xl[2] - xl[1])
         elseif x[i] == Inf
-            x[i] = xl[2] + factor * (xl[2] - xl[1])
+            x[i] = xl[2] + expansion_factor * (xl[2] - xl[1])
         end
     end
     for i in eachindex(y)
         if y[i] == -Inf
-            y[i] = yl[1] - factor * (yl[2] - yl[1])
+            y[i] = yl[1] - expansion_factor * (yl[2] - yl[1])
         elseif y[i] == Inf
-            y[i] = yl[2] + factor * (yl[2] - yl[1])
+            y[i] = yl[2] + expansion_factor * (yl[2] - yl[1])
         end
     end
     return x, y

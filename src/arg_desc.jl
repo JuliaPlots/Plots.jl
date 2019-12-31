@@ -42,6 +42,7 @@ const _arg_desc = KW(
 :arrow             	=> "nothing (no arrows), Bool (if true, default arrows), Arrow object, or arg(s) that could be style or head length/widths.  Defines arrowheads that should be displayed at the end of path line segments (just before a NaN and the last non-NaN point).  Used in quiverplot, streamplot, or similar.",
 :normalize         	=> "Bool or Symbol. Histogram normalization mode. Possible values are: false/:none (no normalization, default), true/:pdf (normalize to a discrete Probability Density Function, where the total area of the bins is 1), :probability (bin heights sum to 1) and :density (the area of each bin, rather than the height, is equal to the counts - useful for uneven bin sizes).",
 :weights           	=> "AbstractVector. Used in histogram types for weighted counts.",
+:show_empty_bins    => "Bool. Whether empty bins in a 2D histogram are colored as 0 (true), or transparent (the default).",
 :contours          	=> "Bool. Add contours to the side-grids of 3D plots?  Used in surface/wireframe.",
 :contour_labels         => "Bool. Show labels at the contour lines?",
 :match_dimensions  	=> "Bool. For heatmap types... should the first dimension of a matrix (rows) correspond to the first dimension of the plot (x-axis)?  The default is false, which matches the behavior of Matplotlib, Plotly, and others.  Note: when passing a function for z, the function should still map `(x,y) -> z`.",
@@ -50,7 +51,7 @@ const _arg_desc = KW(
 :primary                => "Bool.  Does this count as a 'real series'?  For example, you could have a path (primary), and a scatter (secondary) as 2 separate series, maybe with different data (see sticks recipe for an example).  The secondary series will get the same color, etc as the primary.",
 :hover 	        	=> "nothing or vector of strings. Text to display when hovering over each data point.",
 :colorbar_entry   => "Bool.  Include this series in the color bar?  Set to `false` to exclude.",
-  
+
 # plot args
 :plot_title               => "String. Title for the whole plot (not the subplots) (Note: Not currently implemented)",
 :background_color         => "Color Type.  Base color for all backgrounds.",
@@ -95,9 +96,16 @@ const _arg_desc = KW(
 :legendfontvalign         => "Symbol. Font vertical alignment of legend entries: :vcenter, :top, :bottom or :center",
 :legendfontrotation       => "Real. Font rotation of legend entries",
 :legendfontcolor          => "Color Type. Font color of legend entries",
+:legendtitlefontfamily    => "String or Symbol. Font family of the legend title.",
+:legendtitlefontsize           => "Integer. Font pointsize the legend title.",
+:legendtitlefonthalign         => "Symbol. Font horizontal alignment of the legend title: :hcenter, :left, :right or :center",
+:legendtitlefontvalign         => "Symbol. Font vertical alignment of the legend title: :vcenter, :top, :bottom or :center",
+:legendtitlefontrotation       => "Real. Font rotation of the legend title",
+:legendtitlefontcolor          => "Color Type. Font color of the legend title",
 :colorbar                 => "Bool (show the colorbar?) or Symbol (colorbar position).  Symbol values: `:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:legend` (matches legend value) (note: only some may be supported in each backend)",
 :clims 					  => "`:auto` or NTuple{2,Number}.  Fixes the limits of the colorbar.",
 :legendfont               => "Font. Font of legend items.",
+:legendtitlefont          => "Font. Font of the legend title.",
 :annotations              => "(x,y,text) tuple(s).  Can be a single tuple or a list of them.  Text can be String or PlotText (created with `text(args...)`)  Add one-off text annotations at the x,y coordinates.",
 :projection               => "Symbol or String.  '3d' or 'polar'",
 :aspect_ratio             => "Symbol (:equal) or Number. Plot area is resized so that 1 y-unit is the same size as `aspect_ratio` x-units.",

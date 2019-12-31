@@ -187,7 +187,7 @@ end
 function scale!(shape::Shape, x::Real, y::Real = x, c = center(shape))
     sx, sy = coords(shape)
     cx, cy = c
-    for i=1:length(sx)
+    for i=eachindex(sx)
         sx[i] = (sx[i] - cx) * x + cx
         sy[i] = (sy[i] - cy) * y + cy
     end
@@ -202,7 +202,7 @@ end
 "translate a Shape in space"
 function translate!(shape::Shape, x::Real, y::Real = x)
     sx, sy = coords(shape)
-    for i=1:length(sx)
+    for i=eachindex(sx)
         sx[i] += x
         sy[i] += y
     end
@@ -230,7 +230,7 @@ end
 function rotate!(shape::Shape, Θ::Real, c = center(shape))
     x, y = coords(shape)
     cx, cy = c
-    for i=1:length(x)
+    for i=eachindex(x)
         xi = rotate_x(x[i], y[i], Θ, cx, cy)
         yi = rotate_y(x[i], y[i], Θ, cx, cy)
         x[i], y[i] = xi, yi
@@ -529,7 +529,7 @@ function series_annotations_shapes!(series::Series, scaletype::Symbol = :pixels)
     # end
 
     # @show msw msh
-    if anns != nothing && anns.baseshape != nothing
+    if anns !== nothing && anns.baseshape !== nothing
         # we use baseshape to overwrite the markershape attribute
         # with a list of custom shapes for each
         msw,msh = anns.scalefactor
@@ -568,7 +568,7 @@ mutable struct EachAnn
 end
 
 function Base.iterate(ea::EachAnn, i = 1)
-    if ea.anns == nothing || isempty(ea.anns.strs) || i > length(ea.y)
+    if ea.anns === nothing || isempty(ea.anns.strs) || i > length(ea.y)
         return nothing
     end
 
@@ -794,7 +794,7 @@ end
 
 @deprecate curve_points coords
 
-coords(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, range(range..., stop=n, length=50))
+coords(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, Base.range(range..., length=n))
 
 # build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
 # may create a loop if necessary.  Assumes the view is [0,1]
