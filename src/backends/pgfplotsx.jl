@@ -34,6 +34,7 @@ function pgfx_axes(pgfx_plot::PGFPlotsXPlot)
     return gp isa PGFPlotsX.GroupPlot ? gp.contents : gp
 end
 
+pgfx_preamble() = pgfx_preamble(current())
 function pgfx_preamble(pgfx_plot::Plot{PGFPlotsXBackend})
     old_flag = pgfx_plot.attr[:tex_output_standalone]
     pgfx_plot.attr[:tex_output_standalone] = true
