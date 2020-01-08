@@ -13,6 +13,7 @@ const DataPoint = Union{MaybeNumber, MaybeString}
 
 prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
 prepareSeriesData(::Nothing) = nothing
+prepareSeriesData(t::Tuple{T, T}) where {T<:Number} = t
 prepareSeriesData(f::Function) = f
 prepareSeriesData(a::AbstractArray{<:MaybeNumber}) = replace!(
                                     x -> ismissing(x) || isinf(x) ? NaN : x,

@@ -191,6 +191,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 _pgfplotsx_series_ids[Symbol("$series_index")] = series_id
                 opt = series.plotattributes
                 st = series[:seriestype]
+                sf = series[:fillrange]
                 series_opt = PGFPlotsX.Options(
                     "color" => single_color(opt[:linecolor]),
                     "name path" => string(series_id)
@@ -200,7 +201,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 else
                     series_func = PGFPlotsX.Plot
                 end
-                if series[:fillrange] !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
+                if sf !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
                     push!(series_opt, "area legend" => nothing)
                 end
                 if st == :heatmap
@@ -243,9 +244,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         segment_opt = merge( segment_opt, pgfx_fillstyle(opt, i) )
                     end
                     # add fillrange
-                    if series[:fillrange] !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
-                        if series[:fillrange] == 0
-                            pgfx_fillrange_series!( axis, series, series_func, i, _cycle(series[:fillrange], rng), rng)
+                    if sf !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
+                        if sf isa Number
+                            pgfx_fillrange_series!( axis, series, series_func, i, _cycle(sf, rng), rng)
                         end
                         if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
                             pgfx_filllegend!(series_opt, opt)
@@ -260,10 +261,14 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     )
                     push!(axis, segment_plot)
                     # fill between functions
-                    if series[:fillrange] !== nothing && series[:fillrange] != 0
+                    @show sf
+                    @show series[:fillcolor]
+                    if sf isa Tuple
+                        sf1, sf2 = sf
+                        @assert sf1 == series_index
                         push!(axis, series_func(
                             merge(pgfx_fillstyle(opt, series_index), PGFPlotsX.Options("forget plot" => nothing)),
-                            "fill between [of=$series_id and $(_pgfplotsx_series_ids[Symbol(string(series[:fillrange]))])]"
+                            "fill between [of=$series_id and $(_pgfplotsx_series_ids[Symbol(string(sf2))])]"
                         ))
                     end
                     # add ribbons?

@@ -786,7 +786,6 @@ function processFillArg(plotattributes::KW, arg)
         plotattributes[:fillrange] = arg
 
     elseif !handleColors!(plotattributes, arg, :fillcolor)
-
         plotattributes[:fillrange] = arg
     end
     # plotattributes[:fillrange] = fr
