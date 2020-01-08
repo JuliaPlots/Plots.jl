@@ -261,7 +261,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     )
                     push!(axis, segment_plot)
                     # fill between functions
-                    if sf isa Tuple
+                    if sf isa Tuple && series[:ribbon] === nothing
                         sf1, sf2 = sf
                         @assert sf1 == series_index
                         push!(axis, series_func(
