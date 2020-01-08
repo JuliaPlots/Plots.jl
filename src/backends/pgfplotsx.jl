@@ -263,7 +263,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     # fill between functions
                     if sf isa Tuple && series[:ribbon] === nothing
                         sf1, sf2 = sf
-                        @assert sf1 == series_index
+                        @assert sf1 == series_index "First index of the tuple has to match the current series index."
                         push!(axis, series_func(
                             merge(pgfx_fillstyle(opt, series_index), PGFPlotsX.Options("forget plot" => nothing)),
                             "fill between [of=$series_id and $(_pgfplotsx_series_ids[Symbol(string(sf2))])]"
