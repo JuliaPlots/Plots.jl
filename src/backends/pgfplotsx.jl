@@ -77,8 +77,8 @@ end
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created
         the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options())
-        bgc = plt.attr[:background_color_outside] == :match ?
-              plt.attr[:background_color] : plt.attr[:background_color_outside]
+        # rows, cols = size(plt.layout.grid)
+        bgc = plt.attr[:background_color_outside] == :match ? plt.attr[:background_color] : plt.attr[:background_color_outside]
         if bgc isa Colors.Colorant
             cstr = plot_color(bgc)
             a = alpha(cstr)
@@ -354,7 +354,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
            if sp in inset_subplots
                dx, dy = sp.bbox.x0
                push!(axis.options,
-                    "at" => "($(_pgfplotsx_subplot_ids[Symbol(string(sp.parent[:subplot_index]))]).north west)",
+                   "at" => sp.parent isa Subplot ?
+                       "($(_pgfplotsx_subplot_ids[Symbol(string(sp.parent[:subplot_index]))]).north west)"
+                   :
+                       "(current bounding box.north west)",
                     "anchor" => "outer north west",
                     "xshift" => string(dx),
                     "yshift" => string(-dy)
