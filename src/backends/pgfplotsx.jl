@@ -98,6 +98,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         inset_subplots = plt.inset_subplots
         parents = getproperty.(inset_subplots, :parent)
         for sp in plt.subplots
+           sp_id = uuid4()
+           _pgfplotsx_subplot_ids[Symbol("$(sp[:subplot_index])")] = sp_id
             bb = bbox(sp)
             sp_width = width(bb)
             sp_height = height(bb)
@@ -106,6 +108,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
+            bgc_inside = plot_color(sp[:background_color_inside])
+            bgc_inside_a = alpha(bgc_inside)
             axis_opt = PGFPlotsX.Options(
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
@@ -122,9 +126,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "font" => pgfx_font(sp[:legendfontsize], pgfx_thickness_scaling(sp))
                 ),
                 "axis background/.style" => PGFPlotsX.Options(
-                    "fill" => sp[:background_color_inside]
+                    "fill" => bgc_inside,
+                    "opacity" => bgc_inside_a,
                 ),
                 "axis on top" => nothing,
+                "name" => string(sp_id),
             )
             sp_width > 0*mm ? push!(axis_opt, "width" => string(sp_width)) : nothing
             sp_height > 0*mm ? push!(axis_opt, "height" => string(sp_height)) : nothing
@@ -283,16 +289,14 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                end
            end
            ##< handle insets
-           # TODO: build id map for subplots like for series
-           if sp in parents
-               sp_id = uuid4()
-               push!(axis, "\\coordinate ($sp_id) at (rel axis cs:$())") # TODO: compute rel coordinates from bboxes
-           end
            if sp in inset_subplots
-               push!(axis.options, PGFPlotsX.Options(
-                    "at" => "($())", # TODO: insert correct ID here
-                    "anchor" => "outer south west", # TODO: check this
-               ))
+               dx, dy = sp.bbox.x0
+               push!(axis.options,
+                    "at" => "($(_pgfplotsx_subplot_ids[Symbol(string(sp.parent[:subplot_index]))]).north west)",
+                    "anchor" => "outer north west",
+                    "xshift" => string(dx),
+                    "yshift" => string(-dy)
+               )
            end
            ##>
            push!( the_plot, axis )
@@ -441,6 +445,8 @@ function pgfx_series_coordinates!(st_val::Val{:filledcontour}, segment_opt, opt,
     """
 end
 ##
+const _pgfplotsx_subplot_ids = KW()
+
 const _pgfplotsx_linestyles = KW(
     :solid => "solid",
     :dash => "dashed",
