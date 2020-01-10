@@ -112,6 +112,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         inset_subplots = plt.inset_subplots
         parents = getproperty.(inset_subplots, :parent)
         for sp in plt.subplots
+           sp_id = uuid4()
+           _pgfplotsx_subplot_ids[Symbol("$(sp[:subplot_index])")] = sp_id
             bb = bbox(sp)
             sp_width = width(bb)
             sp_height = height(bb)
@@ -158,11 +160,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "opacity" => bgc_inside_a,
                 ),
                 "axis on top" => nothing,
-                # "framed" => nothing,
-                # These are for layouting
-                "anchor" => "north west",
-                "xshift" => string(dx),
-                "yshift" => string(-dy),
+                "name" => string(sp_id),
             )
             sp_width > 0 * mm ? push!(axis_opt, "width" => string(sp_width)) :
             nothing
@@ -353,16 +351,14 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                end
            end
            ##< handle insets
-           # TODO: build id map for subplots like for series
-           if sp in parents
-               sp_id = uuid4()
-               push!(axis, "\\coordinate ($sp_id) at (rel axis cs:$())") # TODO: compute rel coordinates from bboxes
-           end
            if sp in inset_subplots
-               push!(axis.options, PGFPlotsX.Options(
-                    "at" => "($())", # TODO: insert correct ID here
-                    "anchor" => "outer south west", # TODO: check this
-               ))
+               dx, dy = sp.bbox.x0
+               push!(axis.options,
+                    "at" => "($(_pgfplotsx_subplot_ids[Symbol(string(sp.parent[:subplot_index]))]).north west)",
+                    "anchor" => "outer north west",
+                    "xshift" => string(dx),
+                    "yshift" => string(-dy)
+               )
            end
            ##>
            push!( the_plot, axis )
@@ -542,6 +538,8 @@ function pgfx_series_coordinates!(
     """
 end
 ##
+const _pgfplotsx_subplot_ids = KW()
+
 const _pgfplotsx_linestyles = KW(
     :solid => "solid",
     :dash => "dashed",
