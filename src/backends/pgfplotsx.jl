@@ -80,20 +80,21 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
 
         # the combination of groupplot and polaraxis is broken in pgfplots
-        if !any( sp -> ispolar(sp), plt.subplots )
-            pl_height, pl_width = plt.attr[:size]
-            push!( the_plot, PGFPlotsX.GroupPlot(
-                PGFPlotsX.Options(
-                    "group style" => PGFPlotsX.Options(
-                        "group size" => string(cols)*" by "*string(rows),
-                        "horizontal sep" => string(maximum(sp -> sp.minpad[1], plt.subplots)),
-                        "vertical sep" => string(maximum(sp -> sp.minpad[2], plt.subplots)),
-                    ),
-                    "height" => pl_height > 0 ? string(pl_height * px) : "{}",
-                    "width" => pl_width > 0 ? string(pl_width * px) : "{}",
-                )
-            ))
-        end
+        # if !any( sp -> ispolar(sp), plt.subplots )
+        #     pl_height, pl_width = plt.attr[:size]
+        #     push!( the_plot, PGFPlotsX.GroupPlot(
+        #             PGFPlotsX.Options(
+        #                 "group style" => PGFPlotsX.Options(
+        #                     "group size" => string(cols)*" by "*string(rows),
+        #                     "horizontal sep" => string(maximum(sp -> sp.minpad[1], plt.subplots)),
+        #                     "vertical sep" => string(maximum(sp -> sp.minpad[2], plt.subplots)),
+        #                 ),
+        #             "height" => pl_height > 0 ? string(pl_height * px) : "{}",
+        #             "width" => pl_width > 0 ? string(pl_width * px) : "{}",
+        #             )
+        #         )
+        #     )
+        # end
         inset_subplots = plt.inset_subplots
         parents = getproperty.(inset_subplots, :parent)
         for sp in plt.subplots
@@ -281,11 +282,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    pgfx_add_annotation!(axis, xi, yi, txt, pgfx_thickness_scaling(sp))
                end
            end
-           if ispolar(sp)
-               axes = the_plot
-           else
-               axes = the_plot.elements[1]
-           end
            ##< handle insets
            # TODO: build id map for subplots like for series
            if sp in parents
@@ -299,7 +295,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                ))
            end
            ##>
-           push!( axes, axis )
+           push!( the_plot, axis )
            if length(plt.o.the_plot.elements) > 0
                plt.o.the_plot.elements[1] = the_plot
            else
