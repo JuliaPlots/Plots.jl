@@ -30,8 +30,7 @@ end
 
 ## end user utility functions
 function pgfx_axes(pgfx_plot::PGFPlotsXPlot)
-    gp =  pgfx_plot.the_plot.elements[1].elements[1]
-    return gp isa PGFPlotsX.GroupPlot ? gp.contents : gp
+    return pgfx_plot.the_plot.elements[1].elements
 end
 
 pgfx_preamble() = pgfx_preamble(current())
