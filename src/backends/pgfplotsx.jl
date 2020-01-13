@@ -64,13 +64,13 @@ end
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created
         the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options())
-        # rows, cols = size(plt.layout.grid)
         bgc = plt.attr[:background_color_outside] == :match ? plt.attr[:background_color] : plt.attr[:background_color_outside]
         if bgc isa Colors.Colorant
             cstr = plot_color(bgc)
             a = alpha(cstr)
             push!(the_plot.options,
                 "/tikz/background rectangle/.style" => PGFPlotsX.Options(
+                    "draw" => "black",
                     "fill" => cstr,
                     "draw opacity" => a,
                 ),
@@ -78,32 +78,15 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             )
         end
 
-        # the combination of groupplot and polaraxis is broken in pgfplots
-        # if !any( sp -> ispolar(sp), plt.subplots )
-        #     pl_height, pl_width = plt.attr[:size]
-        #     push!( the_plot, PGFPlotsX.GroupPlot(
-        #             PGFPlotsX.Options(
-        #                 "group style" => PGFPlotsX.Options(
-        #                     "group size" => string(cols)*" by "*string(rows),
-        #                     "horizontal sep" => string(maximum(sp -> sp.minpad[1], plt.subplots)),
-        #                     "vertical sep" => string(maximum(sp -> sp.minpad[2], plt.subplots)),
-        #                 ),
-        #             "height" => pl_height > 0 ? string(pl_height * px) : "{}",
-        #             "width" => pl_width > 0 ? string(pl_width * px) : "{}",
-        #             )
-        #         )
-        #     )
-        # end
-        inset_subplots = plt.inset_subplots
-        parents = getproperty.(inset_subplots, :parent)
-        total_height = bottom(bbox(plt.layout))
         for sp in plt.subplots
-           sp_id = uuid4()
-           _pgfplotsx_subplot_ids[Symbol("$(sp[:subplot_index])")] = sp_id
            bb = bbox(sp)
            sp_width = width(bb)
            sp_height = height(bb)
            dx, dy = bb.x0
+           # TODO: does this hold at every scale?
+           if sp[:legend] in (:outertopright, nothing)
+               dx *= 1.2
+           end
             cstr = plot_color(sp[:background_color_legend])
             a = alpha(cstr)
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
@@ -131,10 +114,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "opacity" => bgc_inside_a,
                 ),
                 "axis on top" => nothing,
-                "name" => string(sp_id),
-                "anchor" => "outer north west",
+                "framed" => nothing,
+                # These are for layouting
+                "anchor" => "north west",
                 "xshift" => string(dx),
-                "yshift" => string(-dy)
+                "yshift" => string(-dy),
             )
             sp_width > 0*mm ? push!(axis_opt, "width" => string(sp_width)) : nothing
             sp_height > 0*mm ? push!(axis_opt, "height" => string(sp_height)) : nothing
@@ -438,8 +422,6 @@ function pgfx_series_coordinates!(st_val::Val{:filledcontour}, segment_opt, opt,
     """
 end
 ##
-const _pgfplotsx_subplot_ids = KW()
-
 const _pgfplotsx_linestyles = KW(
     :solid => "solid",
     :dash => "dashed",
@@ -840,11 +822,11 @@ end
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PGFPlotsXBackend})
     # TODO: make padding more intelligent
-    # order: right, top, left, bottom
-    sp.minpad = (22mm + sp[:right_margin],
-                 12mm + sp[:top_margin],
-                 2mm + sp[:left_margin],
-                 10mm + sp[:bottom_margin])
+    # TODO: currently padding does not apply
+    sp.minpad = (50mm + sp[:left_margin],
+                 0mm + sp[:top_margin],
+                 50mm + sp[:right_margin],
+                 0mm + sp[:bottom_margin])
 end
 
 function _create_backend_figure(plt::Plot{PGFPlotsXBackend})
