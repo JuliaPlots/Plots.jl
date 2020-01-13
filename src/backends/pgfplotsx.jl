@@ -84,7 +84,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             push!(
                 the_plot.options,
                 "/tikz/background rectangle/.style" => PGFPlotsX.Options(
-                    "draw" => "black",
+                    # "draw" => "black",
                     "fill" => cstr,
                     "draw opacity" => a,
                 ),
@@ -139,7 +139,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "opacity" => bgc_inside_a,
                 ),
                 "axis on top" => nothing,
-                "framed" => nothing,
+                # "framed" => nothing,
                 # These are for layouting
                 "anchor" => "north west",
                 "xshift" => string(dx),
