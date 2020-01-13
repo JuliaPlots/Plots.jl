@@ -111,17 +111,14 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         # end
         inset_subplots = plt.inset_subplots
         parents = getproperty.(inset_subplots, :parent)
+        total_height = bottom(bbox(plt.layout))
         for sp in plt.subplots
            sp_id = uuid4()
            _pgfplotsx_subplot_ids[Symbol("$(sp[:subplot_index])")] = sp_id
-            bb = bbox(sp)
-            sp_width = width(bb)
-            sp_height = height(bb)
-            dx, dy = bb.x0
-           # TODO: does this hold at every scale?
-            if sp[:legend] in (:outertopright, nothing)
-                dx *= 1.2
-            end
+           bb = bbox(sp)
+           sp_width = width(bb)
+           sp_height = height(bb)
+           dx, dy = bb.x0
             cstr = plot_color(sp[:background_color_legend])
             a = alpha(cstr)
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
@@ -161,6 +158,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 ),
                 "axis on top" => nothing,
                 "name" => string(sp_id),
+                "anchor" => "outer north west",
+                "xshift" => string(dx),
+                "yshift" => string(-dy)
             )
             sp_width > 0 * mm ? push!(axis_opt, "width" => string(sp_width)) :
             nothing
@@ -350,20 +350,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    pgfx_add_annotation!(axis, xi, yi, txt, pgfx_thickness_scaling(sp))
                end
            end
-           ##< handle insets
-           if sp in inset_subplots
-               dx, dy = sp.bbox.x0
-               push!(axis.options,
-                   "at" => sp.parent isa Subplot ?
-                       "($(_pgfplotsx_subplot_ids[Symbol(string(sp.parent[:subplot_index]))]).north west)"
-                   :
-                       "(current bounding box.north west)",
-                    "anchor" => "outer north west",
-                    "xshift" => string(dx),
-                    "yshift" => string(-dy)
-               )
-           end
-           ##>
            push!( the_plot, axis )
            if length(plt.o.the_plot.elements) > 0
                plt.o.the_plot.elements[1] = the_plot
