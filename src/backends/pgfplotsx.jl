@@ -822,11 +822,11 @@ end
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PGFPlotsXBackend})
     # TODO: make padding more intelligent
-    # TODO: currently padding does not apply
-    sp.minpad = (50mm + sp[:left_margin],
-                 0mm + sp[:top_margin],
-                 50mm + sp[:right_margin],
-                 0mm + sp[:bottom_margin])
+    # TODO: how to include margins properly?
+    # sp.minpad = (50mm + sp[:left_margin],
+    #              0mm + sp[:top_margin],
+    #              50mm + sp[:right_margin],
+    #              0mm + sp[:bottom_margin])
 end
 
 function _create_backend_figure(plt::Plot{PGFPlotsXBackend})
