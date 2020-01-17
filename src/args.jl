@@ -293,7 +293,15 @@ const _series_defaults = KW(
 
 
 const _plot_defaults = KW(
-    :plot_title                  => text("", pointsize = 16),
+    :plot_title                  => "",
+    :plot_titlefontsize          => 16,
+    :plot_title_location         => :center,           # also :left or :right
+    :plot_fontfamily             => :match,
+    :plot_titlefontfamily        => :match,
+    :plot_titlefonthalign        => :hcenter,
+    :plot_titlefontvalign        => :vcenter,
+    :plot_titlefontrotation      => 0.0,
+    :plot_titlefontcolor         => :match,
     :background_color            => colorant"white",   # default for all backgrounds,
     :background_color_outside    => :match,            # background outside grid,
     :foreground_color            => :auto,             # default for all foregrounds, and title color,
@@ -301,6 +309,14 @@ const _plot_defaults = KW(
     :size                        => (600,400),
     :pos                         => (0,0),
     :window_title                => "Plots.jl",
+    :window_titlefontsize        => 14,
+    :window_title_location       => :center,           # also :left or :right
+    :window_fontfamily           => :match,
+    :window_titlefontfamily      => :match,
+    :window_titlefonthalign      => :hcenter,
+    :window_titlefontvalign      => :vcenter,
+    :window_titlefontrotation    => 0.0,
+    :window_titlefontcolor       => :match,
     :show                        => false,
     :layout                      => 1,
     :link                        => :none,
@@ -360,10 +376,17 @@ const _subplot_defaults = KW(
     :right_margin             => :match,
     :bottom_margin            => :match,
     :subplot_index            => -1,
-    :colorbar_title           => "",
-    :framestyle               => :axes,
-    :camera                   => (30,30),
-    :extra_kwargs             => Dict()
+    :colorbar_title                  => "",
+    :colorbar_titlefontsize          => 16,
+    :colorbar_title_location         => :center,           # also :left or :right
+    :colorbar_fontfamily             => :match,
+    :colorbar_titlefontfamily        => :match,
+    :colorbar_titlefonthalign        => :hcenter,
+    :colorbar_titlefontvalign        => :vcenter,
+    :colorbar_titlefontrotation      => 0.0,
+    :colorbar_titlefontcolor         => :match,
+    :framestyle                      => :axes,
+    :camera                          => (30,30),
 )
 
 const _axis_defaults = KW(
