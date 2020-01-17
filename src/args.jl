@@ -293,7 +293,7 @@ const _series_defaults = KW(
 
 
 const _plot_defaults = KW(
-    :plot_title                  => "",
+    :plot_title                  => text("", pointsize = 16),
     :background_color            => colorant"white",   # default for all backgrounds,
     :background_color_outside    => :match,            # background outside grid,
     :foreground_color            => :auto,             # default for all foregrounds, and title color,
