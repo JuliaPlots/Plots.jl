@@ -591,7 +591,9 @@ annotations(sa::SeriesAnnotations) = sa
 function process_annotation(sp::Subplot, xs, ys, labs, font = font())
     anns = []
     labs = makevec(labs)
-    for i in 1:max(length(xs), length(ys), length(labs))
+    xlength = length(methods(length, (typeof(xs),))) == 0 ? 1 : length(xs)
+    ylength = length(methods(length, (typeof(ys),))) == 0 ? 1 : length(ys)
+    for i in 1:max(xlength, ylength, length(labs))
         x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
         if lab == :auto
             alphabet = "abcdefghijklmnopqrstuvwxyz"
