@@ -7,6 +7,7 @@ using FileIO
 using Gtk
 using LibGit2
 using GeometryTypes
+using Dates
 
 include("test_pgfplotsx.jl")
 
@@ -65,6 +66,21 @@ img_tol = is_ci() ? 10e-2 : 10e-2
         @test isa(p, Plots.Plot) == true
         @test isa(display(p), Nothing) == true
         p = bar(randn(10))
+        @test isa(p, Plots.Plot) == true
+        @test isa(display(p), Nothing) == true
+        p = plot([1, 2], [3, 4])
+        annotate!(p, [(1.5, 3.2, Plots.text("Test", :red, :center))])
+        hline!(p, [3.1])
+        @test isa(p, Plots.Plot) == true
+        @test isa(display(p), Nothing) == true
+        p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
+        hline!(p, [3.1])
+        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
+        @test isa(p, Plots.Plot) == true
+        @test isa(display(p), Nothing) == true
+        p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
+        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
+        hline!(p, [3.1])
         @test isa(p, Plots.Plot) == true
         @test isa(display(p), Nothing) == true
     end
