@@ -1685,7 +1685,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     # pdf output, and also supports alpha values.
                     # Note that drawimage draws uniformly spaced data correctly
                     # even on log scales, where it is visually non-uniform.
-                    colors = plot_color.(series[:fillcolor][z_normalized], series[:fillalpha])
+                    fillgrad = _as_gradient(series[:fillcolor])
+                    colors = plot_color.(fillgrad[z_normalized], series[:fillalpha])
                     colors[isnan.(z_normalized)] .= RGBA(0,0,0,0)
                     rgba = gr_color.(colors)
                     GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
