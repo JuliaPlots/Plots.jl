@@ -1013,15 +1013,6 @@ plottitlefont(p::Plot) = font(
     p[:plot_titlefontcolor],
 )
 
-windowtitlefont(p::Plot) = font(
-    p[:window_titlefontfamily],
-    p[:window_titlefontsize],
-    p[:window_titlefontvalign],
-    p[:window_titlefonthalign],
-    p[:window_titlefontrotation],
-    p[:window_titlefontcolor],
-)
-
 colorbartitlefont(sp::Subplot) = font(
     sp[:colorbar_titlefontfamily],
     sp[:colorbar_titlefontsize],
