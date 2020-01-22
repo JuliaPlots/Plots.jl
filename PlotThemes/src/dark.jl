@@ -14,6 +14,9 @@ _themes[:dark] = PlotTheme(
     fgtext = colorant"#FFFFFF",
     fgguide = colorant"#FFFFFF",
     fglegend = colorant"#FFFFFF",
+    legendfontcolor = colorant"#FFFFFF",
+    legendtitlefontcolor = colorant"#FFFFFF",
+    titlefontcolor = colorant"#FFFFFF",
     palette = expand_palette(dark_bg, dark_palette; lchoices = [57], cchoices = [100]),
     colorgradient = cgrad(:fire).colors
 )
