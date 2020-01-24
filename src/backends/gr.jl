@@ -322,8 +322,7 @@ end
 # draw ONE symbol marker
 function gr_draw_marker(xi, yi, msize::Number, shape::Symbol)
     GR.setmarkertype(gr_markertype[shape])
-    w, h = gr_plot_size
-    GR.setmarkersize(0.3msize / ((w + h) * 0.001))
+    GR.setmarkersize(0.3msize)
     GR.polymarker([xi], [yi])
 end
 
@@ -354,8 +353,7 @@ end
 
 function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
-    w, h = gr_plot_size
-    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw / ((w + h) * 0.001)))
+    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw))
     gr_set_linecolor(c) #, a)
 end
 
@@ -663,7 +661,7 @@ function gr_display(plt::Plot, fmt="")
 
     _gr_thickness_scaling[1] = plt[:thickness_scaling]
     dpi_factor = plt[:dpi] / Plots.DPI
-    if fmt == "svg"
+    if fmt == "svg" || fmt == "png"
         dpi_factor *= 4
     end
 
