@@ -90,6 +90,7 @@ end
 gr_set_linecolor(c)   = GR.setlinecolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_fillcolor(c)   = GR.setfillcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_cycle(c,1)))
+gr_set_bordercolor(c) = GR.setbordercolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
 gr_set_transparency(::Nothing) = GR.settransparency(1)
@@ -321,8 +322,8 @@ end
 # draw ONE symbol marker
 function gr_draw_marker(xi, yi, msize::Number, shape::Symbol)
     GR.setmarkertype(gr_markertype[shape])
-    GR.setmarkersize(0.3msize)
-    GR.setborderwidth(0)
+    w, h = gr_plot_size
+    GR.setmarkersize(0.3msize / ((w + h) * 0.001))
     GR.polymarker([xi], [yi])
 end
 
@@ -338,23 +339,13 @@ function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize
         for i=eachindex(x)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
-            cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
 
-            # draw a filled in shape, slightly bigger, to estimate a stroke
-            if series[:markerstrokewidth] > 0
-                c = get_markerstrokecolor(series, i)
-                cfunc(c)
-                gr_set_transparency(c, get_markerstrokealpha(series, i))
-                gr_draw_marker(x[i], y[i], msi + series[:markerstrokewidth], shape)
-            end
+            GR.setborderwidth(series[:markerstrokewidth]);
+            gr_set_bordercolor(get_markerstrokecolor(series, i));
+            gr_set_markercolor(get_markercolor(series, clims, i));
+            gr_set_transparency(get_markeralpha(series, i))
 
-            # draw the shape - don't draw filled area if marker shape is 1D
-            if !(shape in (:hline, :vline, :+, :x))
-                c = get_markercolor(series, clims, i)
-                cfunc(c)
-                gr_set_transparency(c, get_markeralpha(series, i))
-                gr_draw_marker(x[i], y[i], msi, shape)
-            end
+            gr_draw_marker(x[i], y[i], msi, shape)
         end
     end
 end
@@ -363,7 +354,8 @@ end
 
 function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
-    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw))
+    w, h = gr_plot_size
+    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw / ((w + h) * 0.001)))
     gr_set_linecolor(c) #, a)
 end
 
