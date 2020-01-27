@@ -319,10 +319,15 @@ function gr_draw_marker(xi, yi, msize, shape::Shape)
     GR.selntran(1)
 end
 
+function nominal_size()
+    w, h = gr_plot_size
+    min(w, h) / 500
+end
+
 # draw ONE symbol marker
 function gr_draw_marker(xi, yi, msize::Number, shape::Symbol)
     GR.setmarkertype(gr_markertype[shape])
-    GR.setmarkersize(0.3msize)
+    GR.setmarkersize(0.3msize / nominal_size())
     GR.polymarker([xi], [yi])
 end
 
@@ -338,7 +343,7 @@ function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize
         for i=eachindex(x)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
-
+i
             GR.setborderwidth(series[:markerstrokewidth]);
             gr_set_bordercolor(get_markerstrokecolor(series, i));
             gr_set_markercolor(get_markercolor(series, clims, i));
@@ -353,7 +358,8 @@ end
 
 function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
-    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw))
+    w, h = gr_plot_size
+    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw / nominal_size()))
     gr_set_linecolor(c) #, a)
 end
 
@@ -661,7 +667,7 @@ function gr_display(plt::Plot, fmt="")
 
     _gr_thickness_scaling[1] = plt[:thickness_scaling]
     dpi_factor = plt[:dpi] / Plots.DPI
-    if fmt == "svg" || fmt == "png"
+    if fmt == "svg"
         dpi_factor *= 4
     end
 
@@ -1625,7 +1631,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st == :contour
             GR.setspace(clims[1], clims[2], 0, 90)
             GR.setlinetype(gr_linetype[get_linestyle(series)])
-            GR.setlinewidth(max(0, get_linewidth(series) / (sum(gr_plot_size) * 0.001)))
+            GR.setlinewidth(max(0, get_linewidth(series)) / nominal_size())
             is_lc_black = let black=plot_color(:black)
                 plot_color(series[:linecolor]) in (black,[black])
             end
