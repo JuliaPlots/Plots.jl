@@ -90,6 +90,7 @@ end
 gr_set_linecolor(c)   = GR.setlinecolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_fillcolor(c)   = GR.setfillcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_markercolor(c) = GR.setmarkercolorind(gr_getcolorind(_cycle(c,1)))
+gr_set_bordercolor(c) = GR.setbordercolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_textcolor(c)   = GR.settextcolorind(gr_getcolorind(_cycle(c,1)))
 gr_set_transparency(α::Real) = GR.settransparency(clamp(α, 0, 1))
 gr_set_transparency(::Nothing) = GR.settransparency(1)
@@ -318,11 +319,15 @@ function gr_draw_marker(xi, yi, msize, shape::Shape)
     GR.selntran(1)
 end
 
+function nominal_size()
+    w, h = gr_plot_size
+    min(w, h) / 500
+end
+
 # draw ONE symbol marker
 function gr_draw_marker(xi, yi, msize::Number, shape::Symbol)
     GR.setmarkertype(gr_markertype[shape])
-    w, h = gr_plot_size
-    GR.setmarkersize(0.3msize / ((w + h) * 0.001))
+    GR.setmarkersize(0.3msize / nominal_size())
     GR.polymarker([xi], [yi])
 end
 
@@ -338,23 +343,13 @@ function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize
         for i=eachindex(x)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
-            cfunc = isa(shape, Shape) ? gr_set_fillcolor : gr_set_markercolor
+i
+            GR.setborderwidth(series[:markerstrokewidth]);
+            gr_set_bordercolor(get_markerstrokecolor(series, i));
+            gr_set_markercolor(get_markercolor(series, clims, i));
+            gr_set_transparency(get_markeralpha(series, i))
 
-            # draw a filled in shape, slightly bigger, to estimate a stroke
-            if series[:markerstrokewidth] > 0
-                c = get_markerstrokecolor(series, i)
-                cfunc(c)
-                gr_set_transparency(c, get_markerstrokealpha(series, i))
-                gr_draw_marker(x[i], y[i], msi + series[:markerstrokewidth], shape)
-            end
-
-            # draw the shape - don't draw filled area if marker shape is 1D
-            if !(shape in (:hline, :vline, :+, :x))
-                c = get_markercolor(series, clims, i)
-                cfunc(c)
-                gr_set_transparency(c, get_markeralpha(series, i))
-                gr_draw_marker(x[i], y[i], msi, shape)
-            end
+            gr_draw_marker(x[i], y[i], msi, shape)
         end
     end
 end
@@ -364,7 +359,7 @@ end
 function gr_set_line(lw, style, c) #, a)
     GR.setlinetype(gr_linetype[style])
     w, h = gr_plot_size
-    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw / ((w + h) * 0.001)))
+    GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw / nominal_size()))
     gr_set_linecolor(c) #, a)
 end
 
@@ -1636,7 +1631,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st == :contour
             GR.setspace(clims[1], clims[2], 0, 90)
             GR.setlinetype(gr_linetype[get_linestyle(series)])
-            GR.setlinewidth(max(0, get_linewidth(series) / (sum(gr_plot_size) * 0.001)))
+            GR.setlinewidth(max(0, get_linewidth(series)) / nominal_size())
             is_lc_black = let black=plot_color(:black)
                 plot_color(series[:linecolor]) in (black,[black])
             end
