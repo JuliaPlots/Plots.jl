@@ -1643,6 +1643,7 @@ function _update_series_attributes!(plotattributes::KW, plt::Plot, sp::Subplot)
     # set label
     label = plotattributes[:label]
     label = (label == "AUTO" ? "y$globalIndex" : label)
+    label = label in (:none, nothing, false) ? "" : label
     plotattributes[:label] = label
 
     _replace_linewidth(plotattributes)
