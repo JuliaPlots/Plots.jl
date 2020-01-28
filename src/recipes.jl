@@ -900,6 +900,30 @@ end
 
 
 # ---------------------------------------------------------------------------
+# lens! - magnify a region of a plot
+@recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
+    # TODO: validate input
+    @show plt.series_list[end][:seriestype]
+    @show plotattributes
+    x1, x2 = plotattributes[:x]
+    y1, y2 = plotattributes[:y]
+    # TODO: add subplot
+    # TODO: add lines
+    seriestype := :path
+    label := ""
+    linecolor := :lightgray
+    @series begin
+        plotattributes[:x] = [x2, 4]
+        plotattributes[:y] = [y2, 10]
+        ()
+    end
+    # add magnification shape
+    # seriestype := plt.series_list[end][:seriestype]
+    plotattributes[:x] = [x1, x1, x2, x2, x1]
+    plotattributes[:y] = [y1, y2, y2, y1, y1]
+    ()
+end
+# ---------------------------------------------------------------------------
 # contourf - filled contours
 
 @recipe function f(::Type{Val{:contourf}}, x, y, z)
