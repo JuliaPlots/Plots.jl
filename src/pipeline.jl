@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------
 # preprocessing
 
-function command_idx(kw_list::AVec{KW}, kw::KW)
+function series_idx(kw_list::AVec{KW}, kw::KW)
     Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
 end
 
@@ -42,7 +42,9 @@ function _preprocess_args(plotattributes::KW, args, still_to_process::Vector{Rec
         for (k,v) in plotattributes
             for defdict in (_subplot_defaults,
                             _axis_defaults,
-                            _axis_defaults_byletter)
+                            _axis_defaults_byletter[:x],
+                            _axis_defaults_byletter[:y],
+                            _axis_defaults_byletter[:z])
                 if haskey(defdict, k)
                     delete!(plotattributes, k)
                 end
@@ -261,16 +263,16 @@ function _subplot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
     for kw in kw_list
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
-        sp = get_subplot(plt, _cycle(sps == :auto ? plt.subplots : plt.subplots[sps], command_idx(kw_list,kw)))
+        sp = get_subplot(plt, _cycle(sps == :auto ? plt.subplots : plt.subplots[sps], series_idx(kw_list,kw)))
         kw[:subplot] = sp
 
         # extract subplot/axis attributes from kw and add to sp_attr
         attr = KW()
         for (k,v) in collect(kw)
-            if haskey(_subplot_defaults, k) || haskey(_axis_defaults_byletter, k)
+            if is_subplot_attr(k) || is_axis_attr(k)
                 attr[k] = pop!(kw, k)
             end
-            if haskey(_axis_defaults, k)
+            if is_axis_attr_noletter(k)
                 v = pop!(kw, k)
                 for letter in (:x,:y,:z)
                     attr[Symbol(letter,k)] = v
@@ -303,7 +305,7 @@ end
 
 # getting ready to add the series... last update to subplot from anything
 # that might have been added during series recipes
-function _prepare_subplot(plt::Plot{T}, plotattributes::KW) where T
+function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where T
     st::Symbol = plotattributes[:seriestype]
     sp::Subplot{T} = plotattributes[:subplot]
     sp_idx = get_subplot_index(plt, sp)
@@ -327,7 +329,7 @@ end
 # ------------------------------------------------------------------
 # series types
 
-function _override_seriestype_check(plotattributes::KW, st::Symbol)
+function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
     if !is3d(st) && !(st in (:contour,:contour3d))
         z = plotattributes[:z]
@@ -339,7 +341,7 @@ function _override_seriestype_check(plotattributes::KW, st::Symbol)
     st
 end
 
-function _prepare_annotations(sp::Subplot, plotattributes::KW)
+function _prepare_annotations(sp::Subplot, plotattributes::AKW)
     # strip out series annotations (those which are based on series x/y coords)
     # and add them to the subplot attr
     sp_anns = annotations(sp[:annotations])
@@ -356,7 +358,7 @@ function _prepare_annotations(sp::Subplot, plotattributes::KW)
     # sp.attr[:annotations] = vcat(sp_anns, series_anns)
 end
 
-function _expand_subplot_extrema(sp::Subplot, plotattributes::KW, st::Symbol)
+function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
     # adjust extrema and discrete info
     if st == :image
         xmin, xmax = ignorenan_extrema(plotattributes[:x]); ymin, ymax = ignorenan_extrema(plotattributes[:y])
@@ -385,7 +387,8 @@ end
 
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
-function _process_seriesrecipe(plt::Plot, plotattributes::KW)
+function _process_seriesrecipe(plt::Plot, plotattributes::AKW)
+    #println("process $(typeof(plotattributes))")
     # replace seriestype aliases
     st = Symbol(plotattributes[:seriestype])
     st = plotattributes[:seriestype] = get(_typeAliases, st, st)
