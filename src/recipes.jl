@@ -903,30 +903,38 @@ end
 # lens! - magnify a region of a plot
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
     # TODO: validate input
-    @show plt.series_list[end][:seriestype]
-    @show plotattributes[:inset_subplots]
+    sp_index, sp_bbox = plotattributes[:inset_subplots]
+    xl1, xl2 = xlims(plt.subplots[sp_index])
+    bbx1 = xl1 + left(sp_bbox).value * (xl2 - xl1)
+    bbx2 = bbx1 + width(sp_bbox).value * (xl2 - xl1)
+    yl1, yl2 = ylims(plt.subplots[sp_index])
+    bby1 = yl1 + bottom(sp_bbox).value * (yl2 - yl1)
+    bby2 = bby1 + height(sp_bbox).value * (yl2 - yl1)
+    bbx = bbx1 + width(sp_bbox).value * (xl2 - xl1) / 2
     @show plotattributes
     x1, x2 = plotattributes[:x]
     y1, y2 = plotattributes[:y]
-    # TODO: add subplot
+    # add subplot
     for series in plt.series_list
         @series begin
+            inset_index = plotattributes[:series_plotindex]
             plotattributes = copy(series.plotattributes)
-            subplot := 2
+            subplot := inset_index
             label := ""
             xlims := (x1, x2)
             ylims := (y1, y2)
             ()
         end
     end
-    # TODO: add lines
+    # add lines
+    # TODO: compute better linking
     seriestype := :path
     label := ""
     linecolor := :lightgray
     subplot := 1
     @series begin
-        plotattributes[:x] = [x2, 4]
-        plotattributes[:y] = [y2, 10]
+        plotattributes[:x] = [(x1 + x2) / 2, bbx]
+        plotattributes[:y] = [y2, bby1]
         ()
     end
     # add magnification shape
