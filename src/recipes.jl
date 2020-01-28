@@ -904,14 +904,26 @@ end
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
     # TODO: validate input
     @show plt.series_list[end][:seriestype]
+    @show plotattributes[:inset_subplots]
     @show plotattributes
     x1, x2 = plotattributes[:x]
     y1, y2 = plotattributes[:y]
     # TODO: add subplot
+    for series in plt.series_list
+        @series begin
+            plotattributes = copy(series.plotattributes)
+            subplot := 2
+            label := ""
+            xlims := (x1, x2)
+            ylims := (y1, y2)
+            ()
+        end
+    end
     # TODO: add lines
     seriestype := :path
     label := ""
     linecolor := :lightgray
+    subplot := 1
     @series begin
         plotattributes[:x] = [x2, 4]
         plotattributes[:y] = [y2, 10]
