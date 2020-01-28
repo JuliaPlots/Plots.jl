@@ -39,7 +39,11 @@ group_as_matrix(t) = false
 # This holds the recipe definitions to be dispatched on
 # the function takes in an attribute dict `d` and a list of args.
 # This default definition specifies the "no-arg" case.
-apply_recipe(plotattributes::Dict{Symbol,Any}) = ()
+apply_recipe(plotattributes::AbstractDict{Symbol,Any}) = ()
+
+# Is a key explicitly provided by the user?
+# Should be overridden for subtypes representing plot attributes.
+is_explicit(d::AbstractDict{Symbol,Any}, k) = haskey(d, k)
 
 const _debug_recipes = Bool[false]
 function debug(v::Bool = true)
@@ -50,7 +54,7 @@ end
 
 # this holds the data and attributes of one series, and is returned from apply_recipe
 struct RecipeData
-    plotattributes::Dict{Symbol,Any}
+    plotattributes::AbstractDict{Symbol,Any}
     args::Tuple
 end
 
@@ -86,7 +90,7 @@ function get_function_def(func_signature::Expr, args::Vector)
     if func_signature.head == :where
         Expr(:where, get_function_def(front, args), esc.(func_signature.args[2:end])...)
     elseif func_signature.head == :call
-        func = Expr(:call, :(RecipesBase.apply_recipe), esc.([:(plotattributes::Dict{Symbol, Any}); args])...)
+        func = Expr(:call, :(RecipesBase.apply_recipe), esc.([:(plotattributes::AbstractDict{Symbol, Any}); args])...)
         if isa(front, Expr) && front.head == :curly
             Expr(:where, func, esc.(front.args[2:end])...)
         else
@@ -168,7 +172,7 @@ function process_recipe_body!(expr::Expr)
                     :(plotattributes[$k] = $v)
                 else
                     # if the user has set this keyword, use theirs
-                    :(get!(plotattributes, $k, $v))
+                    :(RecipesBase.is_explicit(plotattributes, $k) || (plotattributes[$k] = $v))
                 end
 
                 expr.args[i] = if quiet
