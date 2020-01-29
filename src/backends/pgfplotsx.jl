@@ -221,16 +221,22 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end
             axis = axisf(axis_opt)
             for (series_index, series) in enumerate(series_list(sp))
+                # give each series a uuid for fillbetween
+                series_id = uuid4()
+                _pgfplotsx_series_ids[Symbol("$series_index")] = series_id
                 opt = series.plotattributes
                 st = series[:seriestype]
-                series_opt = PGFPlotsX.Options("color" => single_color(opt[:linecolor]),)
+                sf = series[:fillrange]
+                series_opt = PGFPlotsX.Options(
+                    "color" => single_color(opt[:linecolor]),
+                    "name path" => string(series_id)
+                )
                 if is3d(series) || st == :heatmap
                     series_func = PGFPlotsX.Plot3
                 else
                     series_func = PGFPlotsX.Plot
                 end
-                if series[:fillrange] !== nothing &&
-                   !isfilledcontour(series) && series[:ribbon] === nothing
+                if sf !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
                     push!(series_opt, "area legend" => nothing)
                 end
                 if st == :heatmap
@@ -278,20 +284,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     if st == :shape || isfilledcontour(series)
                         segment_opt = merge(segment_opt, pgfx_fillstyle(opt, i))
                     end
-                   # add fillrange
-                    if series[:fillrange] !== nothing &&
-                       !isfilledcontour(series) && series[:ribbon] === nothing
-                        pgfx_fillrange_series!(
-                            axis,
-                            series,
-                            series_func,
-                            i,
-                            _cycle(series[:fillrange], rng),
-                            rng,
-                        )
-                        if i == 1 &&
-                           opt[:label] != "" &&
-                           sp[:legend] != :none && should_add_to_legend(series)
+                    # add fillrange
+                    if sf !== nothing && !isfilledcontour(series) && series[:ribbon] === nothing
+                        if sf isa Number || sf isa AVec
+                            pgfx_fillrange_series!( axis, series, series_func, i, _cycle(sf, rng), rng)
+                        end
+                        if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
                             pgfx_filllegend!(series_opt, opt)
                         end
                     end
@@ -309,6 +307,15 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         coordinates,
                     )
                     push!(axis, segment_plot)
+                    # fill between functions
+                    if sf isa Tuple && series[:ribbon] === nothing
+                        sf1, sf2 = sf
+                        @assert sf1 == series_index "First index of the tuple has to match the current series index."
+                        push!(axis, series_func(
+                            merge(pgfx_fillstyle(opt, series_index), PGFPlotsX.Options("forget plot" => nothing)),
+                            "fill between [of=$series_id and $(_pgfplotsx_series_ids[Symbol(string(sf2))])]"
+                        ))
+                    end
                    # add ribbons?
                     ribbon = series[:ribbon]
                     if ribbon !== nothing
@@ -343,25 +350,18 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         )
                     end
                 end
-               # add subplot annotations
-                anns = sp.attr[:annotations]
-                for (xi, yi, txt) in anns
-                    pgfx_add_annotation!(
-                        axis,
-                        xi,
-                        yi,
-                        txt,
-                        pgfx_thickness_scaling(sp),
-                    )
+                # add subplot annotations
+                for ann in sp[:annotations]
+                    pgfx_add_annotation!(axis, locate_annotation(sp, ann...)..., pgfx_thickness_scaling(sp))
                 end
-            end
+            end # for series
             push!(the_plot, axis)
             if length(plt.o.the_plot.elements) > 0
                 plt.o.the_plot.elements[1] = the_plot
             else
                 push!(plt.o, the_plot)
             end
-        end
+        end # for subplots
         pgfx_plot.is_created = true
     end # if
     return pgfx_plot
