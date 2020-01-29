@@ -200,15 +200,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end
             @label colorbar_end
 
-                    # fill between functions
-                    if sf isa Tuple && series[:ribbon] === nothing
-                        sf1, sf2 = sf
-                        @assert sf1 == series_index "First index of the tuple has to match the current series index."
-                        push!(axis, series_func(
-                            merge(pgfx_fillstyle(opt, series_index), PGFPlotsX.Options("forget plot" => nothing)),
-                            "fill between [of=$series_id and $(_pgfplotsx_series_ids[Symbol(string(sf2))])]"
-                        ))
-                    end
             push!(
                 axis_opt,
                 "colorbar style" => PGFPlotsX.Options(
@@ -316,6 +307,15 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         coordinates,
                     )
                     push!(axis, segment_plot)
+                    # fill between functions
+                    if sf isa Tuple && series[:ribbon] === nothing
+                        sf1, sf2 = sf
+                        @assert sf1 == series_index "First index of the tuple has to match the current series index."
+                        push!(axis, series_func(
+                            merge(pgfx_fillstyle(opt, series_index), PGFPlotsX.Options("forget plot" => nothing)),
+                            "fill between [of=$series_id and $(_pgfplotsx_series_ids[Symbol(string(sf2))])]"
+                        ))
+                    end
                    # add ribbons?
                     ribbon = series[:ribbon]
                     if ribbon !== nothing
