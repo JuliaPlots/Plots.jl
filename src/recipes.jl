@@ -904,6 +904,7 @@ end
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
     # TODO: validate input
     sp_index, sp_bbox = plotattributes[:inset_subplots]
+    sp = plt.subplots[sp_index]
     xl1, xl2 = xlims(plt.subplots[sp_index])
     bbx1 = xl1 + left(sp_bbox).value * (xl2 - xl1)
     bbx2 = bbx1 + width(sp_bbox).value * (xl2 - xl1)
@@ -911,37 +912,56 @@ end
     bby1 = yl1 + bottom(sp_bbox).value * (yl2 - yl1)
     bby2 = bby1 + height(sp_bbox).value * (yl2 - yl1)
     bbx = bbx1 + width(sp_bbox).value * (xl2 - xl1) / 2
-    @show plotattributes
+    ghost_index = last(plt.subplots)[:subplot_index] + 1
+    lens_index = ghost_index + 1
+    ghost_sp = Subplot{typeof(backend())}(sp, Series[], sp.minpad, defaultbox, sp.plotarea,
+        merge(sp.attr, KW(
+            :subplot_index => ghost_index,
+            :relative_bbox => bbox(0.0,0.0,1.0,1.0),
+            :background_color_subplot => RGBA(1.,0.,1.,0.),
+        )),
+        nothing, plt
+    )
+    push!(plt.inset_subplots, ghost_sp)
+    push!(plt.subplots, ghost_sp)
+    @show plotattributes[:plot_object].subplots
+    @show plt.subplots[1].plotarea
     x1, x2 = plotattributes[:x]
     y1, y2 = plotattributes[:y]
     # add subplot
-    for series in plt.series_list
+    for series in sp.series_list
         @series begin
-            inset_index = plotattributes[:series_plotindex]
             plotattributes = copy(series.plotattributes)
-            subplot := inset_index
+            subplot := lens_index
             label := ""
             xlims := (x1, x2)
             ylims := (y1, y2)
             ()
         end
     end
-    # add lines
     # TODO: compute better linking
     seriestype := :path
     label := ""
     linecolor := :lightgray
-    subplot := 1
+    # add lines
     @series begin
-        plotattributes[:x] = [(x1 + x2) / 2, bbx]
-        plotattributes[:y] = [y2, bby1]
+        # inset_subplots := (sp_index, bbox(0., 0., 1.0,1.0))
+        grid := :none
+        framestyle := :none
+        subplot := ghost_index
+        x := [(x1 + x2) / 2, bbx]
+        y := [y2, bby1]
         ()
     end
     # add magnification shape
-    # seriestype := plt.series_list[end][:seriestype]
-    plotattributes[:x] = [x1, x1, x2, x2, x1]
-    plotattributes[:y] = [y1, y2, y2, y1, y1]
-    ()
+    @series begin
+        subplot := sp_index
+        grid := true
+        framestyle := :box
+        x := [x1, x1, x2, x2, x1]
+        y := [y1, y2, y2, y1, y1]
+        ()
+    end
 end
 # ---------------------------------------------------------------------------
 # contourf - filled contours
