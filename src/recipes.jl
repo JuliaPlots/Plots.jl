@@ -903,18 +903,19 @@ end
 # lens! - magnify a region of a plot
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
     # TODO: validate input
-    sp_index, sp_bbox = plotattributes[:inset_subplots]
+    sp_index, inset_bbox = plotattributes[:inset_subplots]
     sp = plt.subplots[sp_index]
     xl1, xl2 = xlims(plt.subplots[sp_index])
-    bbx1 = xl1 + left(sp_bbox).value * (xl2 - xl1)
-    bbx2 = bbx1 + width(sp_bbox).value * (xl2 - xl1)
+    bbx1 = xl1 + left(inset_bbox).value * (xl2 - xl1)
+    bbx2 = bbx1 + width(inset_bbox).value * (xl2 - xl1)
     yl1, yl2 = ylims(plt.subplots[sp_index])
-    bby1 = yl1 + bottom(sp_bbox).value * (yl2 - yl1)
-    bby2 = bby1 + height(sp_bbox).value * (yl2 - yl1)
-    bbx = bbx1 + width(sp_bbox).value * (xl2 - xl1) / 2
+    bby1 = yl1 + bottom(inset_bbox).value * (yl2 - yl1)
+    bby2 = bby1 + height(inset_bbox).value * (yl2 - yl1)
+    bbx = bbx1 + width(inset_bbox).value * (xl2 - xl1) / 2
     lens_index = last(plt.subplots)[:subplot_index] + 1
     @show plotattributes[:plot_object].subplots
-    @show plt.subplots[1].plotarea
+    @show inset_bbox
+    @show sp[:left_margin]
     x1, x2 = plotattributes[:x]
     y1, y2 = plotattributes[:y]
     # add subplot
