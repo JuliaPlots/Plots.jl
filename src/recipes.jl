@@ -901,6 +901,8 @@ end
 
 # ---------------------------------------------------------------------------
 # lens! - magnify a region of a plot
+lens!(args...;kwargs...) = plot!(args...; seriestype=:lens, kwargs...)
+export lens!
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
     # TODO: validate input
     sp_index, inset_bbox = plotattributes[:inset_subplots]
@@ -955,28 +957,23 @@ end
 
 function intersection_point(xA, yA, xB, yB, h, w)
     s = (yA - yB) / (xA - xB)
-    @show s, xA, yA, xB, yB, h, w
     hh = h / 2
     hw = w / 2
     # left or right?
     if -hh <= s * hw <= hh
         if xA > xB
             # right
-            println("right")
             return xB + hw, yB + s * hw
         else # left
-            println("left")
             return xB - hw, yB - s * hw
         end
     # top or bot?
     elseif -hw <= hh/s <= hw
         if yA > yB
             # top
-            println("top")
             return xB + hh/s, yB + hh
         else
             # bottom
-            println("bottom")
             return xB - hh/s, yB - hh
         end
     end
