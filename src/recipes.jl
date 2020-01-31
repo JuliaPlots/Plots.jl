@@ -912,18 +912,7 @@ end
     bby1 = yl1 + bottom(sp_bbox).value * (yl2 - yl1)
     bby2 = bby1 + height(sp_bbox).value * (yl2 - yl1)
     bbx = bbx1 + width(sp_bbox).value * (xl2 - xl1) / 2
-    ghost_index = last(plt.subplots)[:subplot_index] + 1
-    lens_index = ghost_index + 1
-    ghost_sp = Subplot{typeof(backend())}(sp, Series[], sp.minpad, defaultbox, sp.plotarea,
-        merge(sp.attr, KW(
-            :subplot_index => ghost_index,
-            :relative_bbox => bbox(0.0,0.0,1.0,1.0),
-            :background_color_subplot => RGBA(1.,0.,1.,0.),
-        )),
-        nothing, plt
-    )
-    push!(plt.inset_subplots, ghost_sp)
-    push!(plt.subplots, ghost_sp)
+    lens_index = last(plt.subplots)[:subplot_index] + 1
     @show plotattributes[:plot_object].subplots
     @show plt.subplots[1].plotarea
     x1, x2 = plotattributes[:x]
@@ -944,20 +933,18 @@ end
     label := ""
     linecolor := :lightgray
     # add lines
-    @series begin
-        # inset_subplots := (sp_index, bbox(0., 0., 1.0,1.0))
-        grid := :none
-        framestyle := :none
-        subplot := ghost_index
-        x := [(x1 + x2) / 2, bbx]
-        y := [y2, bby1]
-        ()
+    if xl1 < bbx < xl2 &&
+        yl1 < bby1 < yl2
+        @series begin
+            subplot := sp_index
+            x := [(x1 + x2) / 2, bbx]
+            y := [y2, bby1]
+            ()
+        end
     end
     # add magnification shape
     @series begin
         subplot := sp_index
-        grid := true
-        framestyle := :box
         x := [x1, x1, x2, x2, x1]
         y := [y1, y2, y2, y1, y1]
         ()
