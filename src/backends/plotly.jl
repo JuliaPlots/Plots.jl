@@ -780,9 +780,9 @@ end
 
 function plotly_hover!(plotattributes_out::KW, hover)
     # hover text
-    if hover in (:none, false)
+    if all(in([:none, false]), hover)
         plotattributes_out[:hoverinfo] = "none"
-    elseif hover !== nothing
+    elseif any(!isnothing, hover)
         plotattributes_out[:hoverinfo] = "text"
         plotattributes_out[:text] = hover
     end
