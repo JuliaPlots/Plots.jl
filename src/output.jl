@@ -262,6 +262,6 @@ function _showjuno(io::IO, m::MIME"image/svg+xml", plt)
   end
 end
 
-Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot) = showable(MIME"text/html"(), plt)
+Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot) = false
 
 _showjuno(io::IO, m, plt) = _show(io, m, plt)

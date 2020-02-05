@@ -52,3 +52,5 @@ function closeall(::PlotlyJSBackend)
         close(current().o)
     end
 end
+
+Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot{PlotlyJSBackend}) = true

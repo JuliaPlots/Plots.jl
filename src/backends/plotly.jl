@@ -860,6 +860,8 @@ end
 
 # ----------------------------------------------------------------
 
+Base.showable(::MIME"application/prs.juno.plotpane+html", plt::Plot{PlotlyBackend}) = true
+
 function _show(io::IO, ::MIME"application/vnd.plotly.v1+json", plot::Plot{PlotlyBackend})
     plotly_show_js(io, plot)
 end
