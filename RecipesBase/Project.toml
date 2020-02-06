@@ -4,7 +4,7 @@ author = ["Tom Breloff (@tbreloff)"]
 version = "0.8.0"
 
 [compat]
-julia = "≥ 1.0.0"
+julia = "1"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
