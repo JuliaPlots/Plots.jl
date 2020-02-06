@@ -1,7 +1,7 @@
 name = "RecipesBase"
 uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 author = ["Tom Breloff (@tbreloff)"]
-version = "0.7.0"
+version = "0.8.0"
 
 [compat]
 julia = "≥ 1.0.0"
