@@ -7,29 +7,20 @@
 # -------------------------------------------------------------------------
 
 function Axis(sp::Subplot, letter::Symbol, args...; kw...)
-    # init with values from _plot_defaults
-    plotattributes = KW(
+    explicit = KW(
         :letter => letter,
-        # :extrema => (Inf, -Inf),
         :extrema => Extrema(),
         :discrete_map => Dict(),   # map discrete values to discrete indices
         :continuous_values => zeros(0),
+        :discrete_values => [],
         :use_minor => false,
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
 
-    # get defaults from letter version, unless match
-    for (k,v) in _axis_defaults
-        lk = Symbol(letter, k)
-        lv = _axis_defaults_byletter[lk]
-        plotattributes[k] = (lv == :match ? v : lv)
-    end
-
-    # merge!(plotattributes, _axis_defaults)
-    plotattributes[:discrete_values] = []
+    attr = Attr(explicit, _axis_defaults_byletter[letter])
 
     # update the defaults
-    attr!(Axis([sp], plotattributes), args...; kw...)
+    attr!(Axis([sp], attr), args...; kw...)
 end
 
 function get_axis(sp::Subplot, letter::Symbol)
@@ -361,7 +352,7 @@ function expand_extrema!(axis::Axis, v::AVec{N}) where N<:Number
 end
 
 
-function expand_extrema!(sp::Subplot, plotattributes::KW)
+function expand_extrema!(sp::Subplot, plotattributes::AKW)
     vert = isvertical(plotattributes)
 
     # first expand for the data

@@ -278,7 +278,7 @@ end
 
 @recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
-all3D(plotattributes::KW) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
+all3D(plotattributes) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
 @recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat,Missing}

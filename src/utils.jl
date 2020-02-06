@@ -318,13 +318,13 @@ function replaceType(vec, val)
   push!(vec, val)
 end
 
-function replaceAlias!(plotattributes::KW, k::Symbol, aliases::Dict{Symbol,Symbol})
+function replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol})
   if haskey(aliases, k)
-    plotattributes[aliases[k]] = pop!(plotattributes, k)
+    plotattributes[aliases[k]] = pop_kw!(plotattributes, k)
   end
 end
 
-function replaceAliases!(plotattributes::KW, aliases::Dict{Symbol,Symbol})
+function replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol})
   ks = collect(keys(plotattributes))
   for k in ks
       replaceAlias!(plotattributes, k, aliases)
@@ -415,7 +415,7 @@ isscalar(::Any)  = false
 is_2tuple(v) = typeof(v) <: Tuple && length(v) == 2
 
 
-isvertical(plotattributes::KW) = get(plotattributes, :orientation, :vertical) in (:vertical, :v, :vert)
+isvertical(plotattributes::AKW) = get(plotattributes, :orientation, :vertical) in (:vertical, :v, :vert)
 isvertical(series::Series) = isvertical(series.plotattributes)
 
 
@@ -829,7 +829,7 @@ end
 debugshow(io, x) = show(io, x)
 debugshow(io, x::AbstractArray) = print(io, summary(x))
 
-function dumpdict(io::IO, plotattributes::KW, prefix = "", alwaysshow = false)
+function dumpdict(io::IO, plotattributes::AKW, prefix = "", alwaysshow = false)
   _debugMode.on || alwaysshow || return
   println(io)
   if prefix != ""

@@ -96,7 +96,7 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
 
     series_attr = KW()
     for (k,v) in plotattributes
-        if haskey(_series_defaults, k)
+        if is_series_attr(k)
             series_attr[k] = pop!(plotattributes,k)
         end
     end
@@ -119,7 +119,7 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         sp.attr[:subplot_index] = idx
         for series in serieslist
             merge!(series.plotattributes, series_attr)
-            _add_defaults!(series.plotattributes, plt, sp, cmdidx)
+            _slice_series_args!(series.plotattributes, plt, sp, cmdidx)
             push!(plt.series_list, series)
             _series_added(plt, series)
             cmdidx += 1
@@ -217,21 +217,20 @@ function _plot!(plt::Plot, plotattributes::KW, args::Tuple)
 
     for kw in kw_list
         sp::Subplot = kw[:subplot]
-        # idx = get_subplot_index(plt, sp)
 
-        # # we update subplot args in case something like the color palatte is part of the recipe
-        # _update_subplot_args(plt, sp, kw, idx, true)
+        # in series attributes given as vector with one element per series,
+        # select the value for current series
+        _slice_series_args!(kw, plt, sp, series_idx(kw_list,kw))
 
-        # set default values, select from attribute cycles, and generally set the final attributes
-        _add_defaults!(kw, plt, sp, command_idx(kw_list,kw))
 
+        series_attr = Attr(kw, _series_defaults)
         # now we have a fully specified series, with colors chosen.   we must recursively handle
         # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,
         # we check for a recipe that will convert that series type into one made up of lower-level components.
         # For example, a histogram is just a bar plot with binned data, a bar plot is really a filled step plot,
         # and a step plot is really just a path.  So any backend that supports drawing a path will implicitly
         # be able to support step, bar, and histogram plots (and any recipes that use those components).
-        _process_seriesrecipe(plt, kw)
+        _process_seriesrecipe(plt, series_attr)
     end
 
     # --------------------------------

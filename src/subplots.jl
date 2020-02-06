@@ -7,7 +7,7 @@ function Subplot(::T; parent = RootLayout()) where T<:AbstractBackend
         (20mm, 5mm, 2mm, 10mm),
         defaultbox,
         defaultbox,
-        KW(),
+        Attr(KW(), _subplot_defaults),
         nothing,
         nothing
     )

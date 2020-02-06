@@ -11,7 +11,7 @@ import SparseArrays: findnz
 using FFMPEG
 
 @reexport using RecipesBase
-import RecipesBase: plot, plot!, animate
+import RecipesBase: plot, plot!, animate, is_explicit
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes

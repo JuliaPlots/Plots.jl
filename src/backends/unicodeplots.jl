@@ -92,7 +92,7 @@ end
 
 
 # add a single series
-function addUnicodeSeries!(o, plotattributes::KW, addlegend::Bool, xlim, ylim)
+function addUnicodeSeries!(o, plotattributes, addlegend::Bool, xlim, ylim)
     # get the function, or special handling for step/bar/hist
     st = plotattributes[:seriestype]
     if st == :histogram2d
