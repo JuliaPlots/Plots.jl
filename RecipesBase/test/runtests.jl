@@ -8,7 +8,7 @@ const KW = Dict{Symbol, Any}
 
 RecipesBase.is_key_supported(k::Symbol) = true
 
-for t in [Symbol(:T, i) for i in 1:4]
+for t in [Symbol(:T, i) for i in 1:5]
     @eval struct $t end
 end
 
@@ -96,6 +96,8 @@ end
 
 
 @testset "manual access of plotattributes" begin
+    @test_throws MethodError RecipesBase.apply_recipe(KW(), T4())
+
     RecipesBase.@recipe function plot(t::T4, n = 1; customcolor = :green)
         :markershape --> :auto, :require
         :markercolor --> customcolor, :force
@@ -116,6 +118,19 @@ end
     :world => "world"
    ))
 end
+
+@testset "no force" begin
+    @test_throws MethodError RecipesBase.apply_recipe(KW(), T5())
+
+    RecipesBase.@recipe function plot(t::T5, n::Integer = 1)
+        customcolor --> :notred
+        rand(10, n)
+    end
+
+    Random.seed!(1)
+    check_apply_recipe(T5, KW(:customcolor => :red))
+end
+
 
 end  # @testset "@recipe"
 
