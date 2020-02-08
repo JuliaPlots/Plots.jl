@@ -10,7 +10,7 @@ end
 function _expand_seriestype_array(plotattributes::AKW, args)
     sts = get(plotattributes, :seriestype, :path)
     if typeof(sts) <: AbstractArray
-        delete!(plotattributes, :seriestype)
+        reset_kw!(plotattributes, :seriestype)
         rd = Vector{RecipeData}(undef, size(sts, 1))
         for r in axes(sts, 1)
             dc = copy(plotattributes)
@@ -46,7 +46,7 @@ function _preprocess_args(plotattributes::AKW, args, still_to_process::Vector{Re
                             _axis_defaults_byletter[:y],
                             _axis_defaults_byletter[:z])
                 if haskey(defdict, k)
-                    delete!(plotattributes, k)
+                    reset_kw!(plotattributes, k)
                 end
             end
         end
