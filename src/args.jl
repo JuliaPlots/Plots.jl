@@ -1379,18 +1379,18 @@ Base.get(series::Series, k::Symbol, v) = get(series.plotattributes, k, v)
 
 # -----------------------------------------------------------------------------
 
-function fg_color(plotattributes::Attr)
-    fg = plotattributes[:foreground_color]
+function fg_color(plotattributes::AKW)
+    fg = get(plotattributes, :foreground_color, :auto)
     if fg == :auto
-        bg = plot_color(plotattributes[:background_color])
+        bg = plot_color(get(plotattributes, :background_color, :white))
         fg = isdark(bg) ? colorant"white" : colorant"black"
     else
         plot_color(fg)
     end
 end
 
-function fg_color_sp(plotattributes::Attr)
-    fgsp = plotattributes[:foreground_color_subplot]
+function fg_color_sp(plotattributes::AWK)
+    fgsp = get(plotattributes, :foreground_color_subplot, :match)
     if fg == :match
         fg_color(plotattributes)
     else
@@ -1402,11 +1402,9 @@ end
 
 # update attr from an input dictionary
 function _update_plot_args(plt::Plot, plotattributes_in::AKW)
-    # TODO do merged kws need to be removed from plotattributes_in?
-    merge!(plt.attr, plotattributes_in)
-    # for (k,v) in _plot_defaults
-    #     slice_arg!(plotattributes_in, plt.attr, k, v, 1, true)
-    # end
+    for (k,v) in _plot_defaults
+        slice_arg!(plotattributes_in, plt.attr, k, 1, true)
+    end
 
     # handle colors
     plotattributes= plt.attr
