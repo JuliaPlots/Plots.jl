@@ -30,6 +30,18 @@ Base.getindex(attr::Attr, k) = haskey(attr.explicit,k) ?
                                      attr.explicit[k] : attr.defaults[k]
 Base.haskey(attr::Attr, k) = haskey(attr.explicit,k) || haskey(attr.defaults,k)
 Base.get(attr::Attr, k, default) = haskey(attr, k) ? attr[k] : default
+function Base.get!(attr::Attr, k, default)
+    v = if haskey(attr, k)
+        attr[k]
+    else
+        attr.defaults[k] = default
+    end
+    return v
+end
+function Base.delete!(attr::Attr, k)
+    haskey(attr.explicit, k) && delete!(attr.explicit, k)
+    haskey(attr.defaults, k) && delete!(attr.defaults, k)
+end 
 Base.length(attr::Attr) = length(union(keys(attr.explicit), keys(attr.defaults)))
 function Base.iterate(attr::Attr)
     exp_keys = keys(attr.explicit)
