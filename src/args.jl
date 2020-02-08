@@ -1389,7 +1389,7 @@ function fg_color(plotattributes::AKW)
     end
 end
 
-function fg_color_sp(plotattributes::AWK)
+function fg_color_sp(plotattributes::AKW)
     fgsp = get(plotattributes, :foreground_color_subplot, :match)
     if fg == :match
         fg_color(plotattributes)
