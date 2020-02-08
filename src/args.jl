@@ -906,7 +906,7 @@ _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
 _replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
 _replace_markershape(shape) = shape
 
-function _add_markershape(plotattributes::KW)
+function _add_markershape(plotattributes::AKW)
     # add the markershape if it needs to be added... hack to allow "m=10" to add a shape,
     # and still allow overriding in _apply_recipe
     ms = pop!(plotattributes, :markershape_to_add, :none)
@@ -1145,13 +1145,13 @@ end
 filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
 filter_data(v, idxfilter) = v
 
-function filter_data!(plotattributes::KW, idxfilter)
+function filter_data!(plotattributes::AKW, idxfilter)
     for s in (:x, :y, :z)
         plotattributes[s] = filter_data(get(plotattributes, s, nothing), idxfilter)
     end
 end
 
-function _filter_input_data!(plotattributes::KW)
+function _filter_input_data!(plotattributes::AKW)
     idxfilter = pop!(plotattributes, :idxfilter, nothing)
     if idxfilter !== nothing
         filter_data!(plotattributes, idxfilter)
@@ -1200,7 +1200,7 @@ function warnOnUnsupported(pkg::AbstractBackend, plotattributes)
     end
 end
 
-function warnOnUnsupported_scales(pkg::AbstractBackend, plotattributes::KW)
+function warnOnUnsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
     for k in (:xscale, :yscale, :zscale, :scale)
         if haskey(plotattributes, k)
             v = plotattributes[k]
@@ -1267,7 +1267,7 @@ end
 
 # # if the value is `:match` then we take whatever match_color is.
 # # this is mainly used for cascading defaults for foreground and background colors
-# function color_or_match!(plotattributes::KW, k::Symbol, match_color)
+# function color_or_match!(plotattributes::AKW, k::Symbol, match_color)
 #     v = plotattributes[k]
 #     plotattributes[k] = if v == :match
 #         match_color

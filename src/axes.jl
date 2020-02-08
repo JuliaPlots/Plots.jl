@@ -32,7 +32,7 @@ function get_axis(sp::Subplot, letter::Symbol)
     end::Axis
 end
 
-function process_axis_arg!(plotattributes::KW, arg, letter = "")
+function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scaleAliases, arg, arg)
 

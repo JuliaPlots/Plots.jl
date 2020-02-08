@@ -129,7 +129,7 @@ function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     # newz, ColorGradient(colors)
 end
 
-function imageHack(plotattributes::KW)
+function imageHack(plotattributes::AKW)
     is_seriestype_supported(:heatmap) || error("Neither :image or :heatmap are supported!")
     plotattributes[:seriestype] = :heatmap
     plotattributes[:z], plotattributes[:fillcolor] = replace_image_with_heatmap(plotattributes[:z].surf)
@@ -499,7 +499,7 @@ function make_fillrange_side(y, rib)
 end
 
 # turn a ribbon into a fillrange
-function make_fillrange_from_ribbon(kw::KW)
+function make_fillrange_from_ribbon(kw::AKW)
     y, rib = kw[:y], kw[:ribbon]
     rib = wraptuple(rib)
     rib1, rib2 = -first(rib), last(rib)
@@ -842,8 +842,8 @@ function dumpdict(io::IO, plotattributes::AKW, prefix = "", alwaysshow = false)
   end
   println(io)
 end
-DD(io::IO, plotattributes::KW, prefix = "") = dumpdict(io, plotattributes, prefix, true)
-DD(plotattributes::KW, prefix = "") = DD(stdout, plotattributes, prefix)
+DD(io::IO, plotattributes::AKW, prefix = "") = dumpdict(io, plotattributes, prefix, true)
+DD(plotattributes::AKW, prefix = "") = DD(stdout, plotattributes, prefix)
 
 function dumpcallstack()
   error()  # well... you wanted the stacktrace, didn't you?!?

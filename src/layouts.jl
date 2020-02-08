@@ -616,7 +616,7 @@ end
 # ----------------------------------------------------------------------
 # @layout macro
 
-function add_layout_pct!(kw::KW, v::Expr, idx::Integer, nidx::Integer)
+function add_layout_pct!(kw::AKW, v::Expr, idx::Integer, nidx::Integer)
     # dump(v)
     # something like {0.2w}?
     if v.head == :call && v.args[1] == :*
@@ -637,7 +637,7 @@ function add_layout_pct!(kw::KW, v::Expr, idx::Integer, nidx::Integer)
     error("Couldn't match layout curly (idx=$idx): $v")
 end
 
-function add_layout_pct!(kw::KW, v::Number, idx::Integer)
+function add_layout_pct!(kw::AKW, v::Number, idx::Integer)
     # kw[idx == 1 ? :w : :h] = v*pct
     idx == 1 && (kw[:w] = v*pct)
     (idx == 2 || nidx == 1) && (kw[:h] = v*pct)

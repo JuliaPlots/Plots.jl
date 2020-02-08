@@ -47,7 +47,7 @@ end
 num_series(x::AMat) = size(x,2)
 num_series(x) = 1
 
-RecipesBase.apply_recipe(plotattributes::KW, ::Type{T}, plt::AbstractPlot) where {T} = throw(MethodError(T, "Unmatched plot recipe: $T"))
+RecipesBase.apply_recipe(plotattributes::AKW, ::Type{T}, plt::AbstractPlot) where {T} = throw(MethodError(T, "Unmatched plot recipe: $T"))
 
 # ---------------------------------------------------------------------------
 
@@ -813,7 +813,7 @@ end
 # ---------------------------------------------------------------------------
 # Error Bars
 
-function error_style!(plotattributes::KW)
+function error_style!(plotattributes::AKW)
     plotattributes[:seriestype] = :path
     plotattributes[:linecolor] = plotattributes[:markerstrokecolor]
     plotattributes[:linewidth] = plotattributes[:markerstrokewidth]
@@ -874,8 +874,8 @@ end
 # ---------------------------------------------------------------------------
 # quiver
 
-# function apply_series_recipe(plotattributes::KW, ::Type{Val{:quiver}})
-function quiver_using_arrows(plotattributes::KW)
+# function apply_series_recipe(plotattributes::AKW, ::Type{Val{:quiver}})
+function quiver_using_arrows(plotattributes::AKW)
     plotattributes[:label] = ""
     plotattributes[:seriestype] = :path
     if !isa(plotattributes[:arrow], Arrow)
@@ -913,8 +913,8 @@ function quiver_using_arrows(plotattributes::KW)
     # KW[plotattributes]
 end
 
-# function apply_series_recipe(plotattributes::KW, ::Type{Val{:quiver}})
-function quiver_using_hack(plotattributes::KW)
+# function apply_series_recipe(plotattributes::AKW, ::Type{Val{:quiver}})
+function quiver_using_hack(plotattributes::AKW)
     plotattributes[:label] = ""
     plotattributes[:seriestype] = :shape
 
@@ -959,7 +959,7 @@ function quiver_using_hack(plotattributes::KW)
     # KW[plotattributes]
 end
 
-# function apply_series_recipe(plotattributes::KW, ::Type{Val{:quiver}})
+# function apply_series_recipe(plotattributes::AKW, ::Type{Val{:quiver}})
 @recipe function f(::Type{Val{:quiver}}, x, y, z)
     if :arrow in supported_attrs()
         quiver_using_arrows(plotattributes)
