@@ -3,14 +3,14 @@
 # ------------------------------------------------------------------
 # preprocessing
 
-function series_idx(kw_list::AVec{KW}, kw::KW)
+function series_idx(kw_list::AVec{KW}, kw::AKW)
     Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
 end
 
-function _expand_seriestype_array(plotattributes::KW, args)
+function _expand_seriestype_array(plotattributes::AKW, args)
     sts = get(plotattributes, :seriestype, :path)
     if typeof(sts) <: AbstractArray
-        delete!(plotattributes, :seriestype)
+        reset_kw!(plotattributes, :seriestype)
         rd = Vector{RecipeData}(undef, size(sts, 1))
         for r in axes(sts, 1)
             dc = copy(plotattributes)
@@ -23,7 +23,7 @@ function _expand_seriestype_array(plotattributes::KW, args)
     end
 end
 
-function _preprocess_args(plotattributes::KW, args, still_to_process::Vector{RecipeData})
+function _preprocess_args(plotattributes::AKW, args, still_to_process::Vector{RecipeData})
     # the grouping mechanism is a recipe on a GroupBy object
     # we simply add the GroupBy object to the front of the args list to allow
     # the recipe to be applied
@@ -46,7 +46,7 @@ function _preprocess_args(plotattributes::KW, args, still_to_process::Vector{Rec
                             _axis_defaults_byletter[:y],
                             _axis_defaults_byletter[:z])
                 if haskey(defdict, k)
-                    delete!(plotattributes, k)
+                    reset_kw!(plotattributes, k)
                 end
             end
         end
@@ -59,7 +59,7 @@ end
 # user recipes
 
 
-function _process_userrecipes(plt::Plot, plotattributes::KW, args)
+function _process_userrecipes(plt::Plot, plotattributes::AKW, args)
     still_to_process = RecipeData[]
     args = _preprocess_args(plotattributes, args, still_to_process)
 
@@ -110,7 +110,7 @@ function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeD
     return
 end
 
-function _preprocess_userrecipe(kw::KW)
+function _preprocess_userrecipe(kw::AKW)
     _add_markershape(kw)
 
     # if there was a grouping, filter the data here
@@ -134,7 +134,7 @@ function _preprocess_userrecipe(kw::KW)
     return
 end
 
-function _add_errorbar_kw(kw_list::Vector{KW}, kw::KW)
+function _add_errorbar_kw(kw_list::Vector{KW}, kw::AKW)
     # handle error bars by creating new recipedata data... these will have
     # the same recipedata index as the recipedata they are copied from
     for esym in (:xerror, :yerror)
@@ -149,7 +149,7 @@ function _add_errorbar_kw(kw_list::Vector{KW}, kw::KW)
     end
 end
 
-function _add_smooth_kw(kw_list::Vector{KW}, kw::KW)
+function _add_smooth_kw(kw_list::Vector{KW}, kw::AKW)
     # handle smoothing by adding a new series
     if get(kw, :smooth, false)
         x, y = kw[:x], kw[:y]
@@ -174,7 +174,7 @@ end
 # to generate a list of RecipeData objects (data + attributes).
 # If we applied a "plot recipe" without error, then add the returned datalist's KWs,
 # otherwise we just add the original KW.
-function _process_plotrecipe(plt::Plot, kw::KW, kw_list::Vector{KW}, still_to_process::Vector{KW})
+function _process_plotrecipe(plt::Plot, kw::AKW, kw_list::Vector{KW}, still_to_process::Vector{KW})
     if !isa(get(kw, :seriestype, nothing), Symbol)
         # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
         push!(kw_list, kw)
@@ -205,7 +205,7 @@ end
 # ------------------------------------------------------------------
 # setup plot and subplot
 
-function _plot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
+function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # merge in anything meant for the Plot
     for kw in kw_list, (k,v) in kw
         haskey(_plot_defaults, k) && (plotattributes[k] = pop!(kw, k))
@@ -254,7 +254,7 @@ function _plot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
     plt[:inset_subplots] = nothing
 end
 
-function _subplot_setup(plt::Plot, plotattributes::KW, kw_list::Vector{KW})
+function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # we'll keep a map of subplot to an attribute override dict.
     # Subplot/Axis attributes set by a user/series recipe apply only to the
     # Subplot object which they belong to.

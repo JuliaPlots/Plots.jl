@@ -8,7 +8,7 @@ function theme(s::Symbol; kw...)
     _theme(s, defaults; kw...)
 end
 
-function _theme(s::Symbol, defaults::KW; kw...)
+function _theme(s::Symbol, defaults::AKW; kw...)
     # Reset to defaults to overwrite active theme
     reset_defaults()
 

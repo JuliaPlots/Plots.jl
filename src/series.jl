@@ -267,7 +267,7 @@ end
 # # --------------------------------------------------------------------
 
 # helper function to ensure relevant attributes are wrapped by Surface
-function wrap_surfaces(plotattributes::KW)
+function wrap_surfaces(plotattributes::AKW)
     if haskey(plotattributes, :fill_z)
         v = plotattributes[:fill_z]
         if !isa(v, Surface)
