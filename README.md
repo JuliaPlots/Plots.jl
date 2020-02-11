@@ -1,13 +1,25 @@
 # Plots
 
-[![Build Status](https://travis-ci.org/JuliaPlots/Plots.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/Plots.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/github/juliaplots/plots.jl?branch=master&svg=true)](https://ci.appveyor.com/project/mkborregaard/plots-jl)
-[![Join the chat at https://gitter.im/tbreloff/Plots.jl](https://badges.gitter.im/tbreloff/Plots.jl.svg)](https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-<a href="http://docs.juliaplots.org/latest/" target="_blank"><img src="https://img.shields.io/badge/docs-latest-blue.svg" alt="Latest documentation"></a>
-<!-- [![Plots](http://pkg.julialang.org/badges/Plots_0.3.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.3) -->
-<!-- [![Plots](http://pkg.julialang.org/badges/Plots_0.4.svg)](http://pkg.julialang.org/?pkg=Plots&ver=0.4) -->
-<!-- [![Coverage Status](https://coveralls.io/repos/tbreloff/Plots.jl/badge.svg?branch=master)](https://coveralls.io/r/tbreloff/Plots.jl?branch=master) -->
-<!-- [![codecov.io](http://codecov.io/github/tbreloff/Plots.jl/coverage.svg?branch=master)](http://codecov.io/github/tbreloff/Plots.jl?branch=master) -->
+[travis-img]: https://img.shields.io/travis/JuliaPlots/Plots.jl?logo=travis
+[travis-url]: https://travis-ci.org/JuliaPlots/Plots.jl
+
+[appveyor-img]: https://ci.appveyor.com/api/projects/status/github/juliaplots/plots.jl?branch=master&svg=true
+[appveyor-url]: https://ci.appveyor.com/project/mkborregaard/plots-jl
+
+[pkgeval-img]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/P/Plots.svg
+[pkgeval-url]: https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html
+
+[gitter-img]: https://badges.gitter.im/tbreloff/Plots.jl.svg
+[gitter-url]: https://gitter.im/tbreloff/Plots.jl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
+[docs-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-url]: http://docs.juliaplots.org/latest/
+
+[![][travis-img]](travis-url)
+[![][appveyor-img]](appveyor-url)
+[![][pkgeval-img]][pkgeval-url]
+[![][gitter-img]][gitter-url]
+[![][docs-img]][docs-url]
 
 #### Created by Tom Breloff (@tbreloff)
 
