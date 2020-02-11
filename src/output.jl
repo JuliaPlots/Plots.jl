@@ -60,6 +60,13 @@ function html(plt::Plot, fn::AbstractString)
 end
 html(fn::AbstractString) = html(current(), fn)
 
+function txt(plt::Plot, fn::AbstractString)
+  fn = addExtension(fn, "txt")
+  io = open(fn, "w")
+  show(io, MIME("text/plain"), plt)
+  close(io)
+end
+txt(fn::AbstractString) = txt(current(), fn)
 
 # ----------------------------------------------------------------
 
@@ -73,6 +80,7 @@ const _savemap = Dict(
     "tex" => tex,
     "html" => html,
     "tikz" => tex,
+    "txt" => txt,
   )
 
 function getExtension(fn::AbstractString)
