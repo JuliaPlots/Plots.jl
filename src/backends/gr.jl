@@ -232,9 +232,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     sinf = sind.(a)
     cosf = cosd.(a)
     rtick_values, rtick_labels = get_ticks(sp, yaxis)
-    if yaxis[:formatter] in (:scientific, :auto) && yaxis[:ticks] in (:auto, :native)
-        rtick_labels = convert_sci_unicode.(rtick_labels)
-    end
+    rtick_labels = gr_tick_label.((yaxis,), rtick_labels)
 
     #draw angular grid
     if xaxis[:grid]
@@ -770,6 +768,19 @@ function gr_get_ticks_size(ticks, rot)
     return w, h
 end
 
+gr_tick_label(axis,label) = (axis[:formatter] in (:scientific, :auto)) ?
+                                gr_convert_sci_tick_label(label) :
+                                label
+
+function gr_convert_sci_tick_label(label)
+    caret_split = split(label,'^')
+    if length(caret_split) == 2
+        base, exponent = caret_split
+        label = "$base^{$exponent}"
+    end
+    convert_sci_unicode(label)
+end
+
 function gr_axis_height(sp, axis)
     ticks = get_ticks(sp, axis)
     gr_set_font(tickfont(axis))
@@ -1223,18 +1234,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
             for (cv, dv) in zip(xticks...)
                 xi, yi = gr_w3tondc(cv, yt, zt)
-                if xaxis[:ticks] in (:auto, :native)
-                    if xaxis[:formatter] in (:scientific, :auto)
-                        # ensure correct dispatch in gr_text for automatic log ticks
-                        if xaxis[:scale] in _logScales
-                            dv = string(dv, "\\ ")
-                        end
-                        dv = convert_sci_unicode(dv)
-                    end
-                end
                 xi += (yaxis[:mirror] ? 1 : -1) * 1e-2 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
                 yi += (xaxis[:mirror] ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
-                gr_text(xi, yi, string(dv))
+                gr_text(xi, yi, gr_tick_label(xaxis, dv))
             end
         end
 
@@ -1262,16 +1264,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
             for (cv, dv) in zip(yticks...)
                 xi, yi = gr_w3tondc(xt, cv, zt)
-                if yaxis[:ticks] in (:auto, :native)
-                    if xaxis[:formatter] in (:scientific, :auto)
-                        # ensure correct dispatch in gr_text for automatic log ticks
-                        if yaxis[:scale] in _logScales
-                            dv = string(dv, "\\ ")
-                        end
-                        dv = convert_sci_unicode(dv)
-                    end
-                end
-                gr_text(xi + (yaxis[:mirror] ? -1 : 1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi + (yaxis[:mirror] ? 1 : -1) * 5e-3 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), string(dv))
+                gr_text(xi + (yaxis[:mirror] ? -1 : 1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
+                        yi + (yaxis[:mirror] ? 1 : -1) * 5e-3 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
+                        gr_tick_label(yaxis, dv))
             end
         end
 
@@ -1299,16 +1294,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
             for (cv, dv) in zip(zticks...)
                 xi, yi = gr_w3tondc(xt, yt, cv)
-                if zaxis[:ticks] in (:auto, :native)
-                    if zaxis[:formatter] in (:scientific, :auto)
-                        # ensure correct dispatch in gr_text for automatic log ticks
-                        if zaxis[:scale] in _logScales
-                            dv = string(dv, "\\ ")
-                        end
-                        dv = convert_sci_unicode(dv)
-                    end
-                end
-                gr_text(xi + (zaxis[:mirror] ? 1 : -1) * 1e-2 * (zaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
+                gr_text(xi + (zaxis[:mirror] ? 1 : -1) * 1e-2 * (zaxis[:tick_direction] == :out ? 1.5 : 1.0),
+                        yi, gr_tick_label(zaxis, dv))
             end
         end
         #
@@ -1405,19 +1392,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # x labels
             flip, mirror = gr_set_xticks_font(sp)
             for (cv, dv) in zip(xticks...)
-                # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
-                # @show cv dv ymin xi yi flip mirror (flip $ mirror)
-                if xaxis[:ticks] in (:auto, :native)
-                    # ensure correct dispatch in gr_text for automatic log ticks
-                    if xaxis[:formatter] in (:scientific, :auto)
-                        if xaxis[:scale] in _logScales
-                            dv = string(dv, "\\ ")
-                        end
-                        dv = convert_sci_unicode(dv)
-                    end
-                end
-                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), string(dv))
+                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0),
+                        gr_tick_label(xaxis, dv))
             end
         end
 
@@ -1425,19 +1402,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             # y labels
             flip, mirror = gr_set_yticks_font(sp)
             for (cv, dv) in zip(yticks...)
-                # use xor ($) to get the right y coords
                 xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
-                # @show cv dv xmin xi yi
-                if yaxis[:ticks] in (:auto, :native)
-                    # ensure correct dispatch in gr_text for automatic log ticks
-                    if yaxis[:formatter] in (:scientific, :auto)
-                        if yaxis[:scale] in _logScales
-                            dv = string(dv, "\\ ")
-                        end
-                        dv = convert_sci_unicode(dv)
-                    end
-                end
-                gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0), yi, string(dv))
+                gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
+                        yi,
+                        gr_tick_label(yaxis, dv))
             end
         end
 
