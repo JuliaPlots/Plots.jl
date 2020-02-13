@@ -433,7 +433,7 @@ each line segment or marker in the plot.
         x = t .* cos.(θ)
         y = t .* sin.(θ)
         p1 = plot(x, y, line_z=t, linewidth=3, legend=false)
-        p2 = scatter(x, y, marker_z=(x,y)->x+y, color=:bluesreds, legend=false)
+        p2 = scatter(x, y, marker_z=+, color=:bluesreds, legend=false)
         plot(p1, p2)
     end)]
 ),
@@ -507,7 +507,8 @@ _backend_skips = Dict(
     :gr => [25, 30],
     :pyplot => [25, 30],
     :plotlyjs => [2, 21, 24, 25, 30, 31],
-    :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30],
+    :plotly => [2, 21, 24, 25, 30, 31],
+    :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30, 31, 34, 37, 38, 39],
 )
 
 

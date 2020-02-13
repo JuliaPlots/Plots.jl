@@ -482,12 +482,12 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
 
         push!(style, string(
-            "legend style = {", 
-                pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], fg_alpha, "solid", ), ",", 
-                "fill = $cstr,", 
-                "fill opacity = $bg_alpha,", 
-                "text opacity = $(alpha(plot_color(sp[:legendfontcolor]))),", 
-                "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)), 
+            "legend style = {",
+                pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], fg_alpha, "solid", ), ",",
+                "fill = $cstr,",
+                "fill opacity = $bg_alpha,",
+                "text opacity = $(alpha(plot_color(sp[:legendfontcolor]))),",
+                "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)),
             "}",
         ))
 
