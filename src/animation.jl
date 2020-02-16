@@ -163,7 +163,7 @@ function _animate(forloop::Expr, args...; callgif = false)
     error("Unsupported animate filter: $args")
   end
 
-  push!(block.args, :(if $filterexpr; frame($animsym); end))
+  push!(block.args, :(if $filterexpr; Plots.frame($animsym); end))
   push!(block.args, :(global $countersym += 1))
 
   # add a final call to `gif(anim)`?
@@ -172,7 +172,7 @@ function _animate(forloop::Expr, args...; callgif = false)
   # full expression:
   esc(quote
     $freqassert             # if filtering, check frequency is an Integer > 0
-    $animsym = Animation()  # init animation object
+    $animsym = Plots.Animation()  # init animation object
     global $countersym = 1         # init iteration counter
     $forloop                # for loop, saving a frame after each iteration
     $retval                 # return the animation object, or the gif
