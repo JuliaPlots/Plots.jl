@@ -167,7 +167,7 @@ function _animate(forloop::Expr, args...; callgif = false)
   push!(block.args, :(global $countersym += 1))
 
   # add a final call to `gif(anim)`?
-  retval = callgif ? :(gif($animsym)) : animsym
+  retval = callgif ? :(Plots.gif($animsym)) : animsym
 
   # full expression:
   esc(quote
