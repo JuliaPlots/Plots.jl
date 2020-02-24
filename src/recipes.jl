@@ -779,6 +779,24 @@ end
 @deps histogram2d bins2d
 
 
+@recipe function f(::Type{Val{:histogram2d_log10}}, x, y, z)
+    h = _make_hist((x, y), plotattributes[:bins], normed = plotattributes[:normalize], weights = plotattributes[:weights])
+    x := h.edges[1]
+    y := h.edges[2]
+
+    transform(x) = x == 0 ? NaN : log10(x)
+
+    z := Surface(transform.(h.weights))
+
+    # TODO: doc
+    legend := false
+    seriestype := :bins2d
+    ()
+end
+@shorthands histogram2d_log10
+@deps histogram2d_log10 bins2d
+
+
 @recipe function f(h::StatsBase.Histogram{T, 2, E}) where {T, E}
     seriestype --> :bins2d
     (h.edges[1], h.edges[2], Surface(h.weights))
