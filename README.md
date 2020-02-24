@@ -15,8 +15,8 @@
 [docs-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-url]: http://docs.juliaplots.org/latest/
 
-[![][travis-img]](travis-url)
-[![][appveyor-img]](appveyor-url)
+[![][travis-img]][travis-url]
+[![][appveyor-img]][appveyor-url]
 [![][pkgeval-img]][pkgeval-url]
 [![][gitter-img]][gitter-url]
 [![][docs-img]][docs-url]
