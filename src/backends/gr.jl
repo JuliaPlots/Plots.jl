@@ -305,15 +305,27 @@ end
 # ---------------------------------------------------------
 
 # draw ONE Shape
-function gr_draw_marker(xi, yi, msize, shape::Shape)
+function gr_draw_marker(series, xi, yi, clims, i, msize, shape::Shape)
     sx, sy = coords(shape)
     # convert to ndc coords (percentages of window)
     GR.selntran(0)
     w, h = gr_plot_size
     f = msize / (w + h)
     xi, yi = GR.wctondc(xi, yi)
-    GR.fillarea(xi .+ sx .* f,
-                yi .+ sy .* f)
+    xs = xi .+ sx .* f
+    ys = yi .+ sy .* f
+
+    # draw the interior
+    mc = get_markercolor(series, clims, i)
+    gr_set_fill(mc)
+    gr_set_transparency(mc, get_markeralpha(series, i))
+    GR.fillarea(xs, ys)
+
+    # draw the shapes
+    msc = get_markerstrokecolor(series, i)
+    gr_set_line(get_markerstrokewidth(series, i), :solid, msc)
+    gr_set_transparency(msc, get_markerstrokealpha(series, i))
+    GR.polyline(xs, ys)
     GR.selntran(1)
 end
 
@@ -323,7 +335,11 @@ function nominal_size()
 end
 
 # draw ONE symbol marker
-function gr_draw_marker(xi, yi, msize::Number, shape::Symbol)
+function gr_draw_marker(series, xi, yi, clims, i, msize::Number, shape::Symbol)
+    GR.setborderwidth(series[:markerstrokewidth]);
+    gr_set_bordercolor(get_markerstrokecolor(series, i));
+    gr_set_markercolor(get_markercolor(series, clims, i));
+    gr_set_transparency(get_markeralpha(series, i))
     GR.setmarkertype(gr_markertype[shape])
     GR.setmarkersize(0.3msize / nominal_size())
     GR.polymarker([xi], [yi])
@@ -341,13 +357,7 @@ function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize
         for i=eachindex(x)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
-i
-            GR.setborderwidth(series[:markerstrokewidth]);
-            gr_set_bordercolor(get_markerstrokecolor(series, i));
-            gr_set_markercolor(get_markercolor(series, clims, i));
-            gr_set_transparency(get_markeralpha(series, i))
-
-            gr_draw_marker(x[i], y[i], msi, shape)
+            gr_draw_marker(series, x[i], y[i], clims, i, msi, shape)
         end
     end
 end
