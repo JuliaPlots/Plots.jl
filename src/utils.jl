@@ -693,6 +693,10 @@ function get_markerstrokealpha(series, i::Int = 1)
     _cycle(series[:markerstrokealpha], i)
 end
 
+function get_markerstrokewidth(series, i::Int = 1)
+    _cycle(series[:markerstrokewidth], i)
+end
+
 function has_attribute_segments(series::Series)
     # we want to check if a series needs to be split into segments just because
     # of its attributes

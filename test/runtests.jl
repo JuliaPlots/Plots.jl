@@ -42,7 +42,7 @@ include("imgcomp.jl")
 Random.seed!(1234)
 default(show=false, reuse=true)
 is_ci() = get(ENV, "CI", "false") == "true"
-img_tol = is_ci() ? 10e-2 : 10e-2
+img_tol = is_ci() ? 1e-2 : 1e-3
 
 @testset "Backends" begin
 
