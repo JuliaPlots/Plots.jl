@@ -109,7 +109,7 @@ _hdf5_datapath(subpath::String) = "$_hdf5_dataroot/$subpath"
 _hdf5_map_str2telem(k::String) = HDF5PLOT_MAP_STR2TELEM[k]
 _hdf5_map_str2telem(v::Vector) = HDF5PLOT_MAP_STR2TELEM[v[1]]
 
-function _hdf5_merge!(dest::Dict, src::Dict)
+function _hdf5_merge!(dest, src)
     for (k, v) in src
         if isa(v, Axis)
             _hdf5_merge!(dest[k].plotattributes, v.plotattributes)
@@ -295,7 +295,7 @@ function _hdf5plot_gwrite(grp, k::String, v::Tuple)
     end
     #NOTE: _hdf5plot_overwritetype overwrites "Array" type with "Tuple".
 end
-function _hdf5plot_gwrite(grp, k::String, plotattributes::Dict)
+function _hdf5plot_gwrite(grp, k::String, plotattributes::AKW)
 #    @warn("Cannot write dict: $k=$plotattributes")
 end
 function _hdf5plot_gwrite(grp, k::String, v::AbstractRange)
@@ -376,7 +376,7 @@ function _hdf5plot_gwrite(grp, k::String, v::Subplot)
     _hdf5plot_writetype(grp, Subplot)
     return
 end
-function _hdf5plot_write(grp, plotattributes::Dict)
+function _hdf5plot_write(grp, plotattributes::AKW)
     for (k, v) in plotattributes
         kstr = string(k)
         _hdf5plot_gwrite(grp, kstr, v)
@@ -567,7 +567,7 @@ function _hdf5plot_read(grp, k::String)
 end
 
 #Read in values in group to populate plotattributes:
-function _hdf5plot_read(grp, plotattributes::Dict)
+function _hdf5plot_read(grp, plotattributes::AKW)
     gnames = names(grp)
     for k in gnames
         try
