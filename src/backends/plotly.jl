@@ -108,7 +108,7 @@ function shrink_by(lo, sz, ratio)
 end
 
 function plotly_apply_aspect_ratio(sp::Subplot, plotarea, pcts)
-    aspect_ratio = sp[:aspect_ratio]
+    aspect_ratio = get_aspect_ratio(sp)
     if aspect_ratio != :none
         if aspect_ratio == :equal
             aspect_ratio = 1.0
