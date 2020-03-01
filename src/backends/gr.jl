@@ -981,7 +981,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     data_lims = gr_xy_axislims(sp)
     xy_lims = data_lims
 
-    ratio = sp[:aspect_ratio]
+    ratio = get_aspect_ratio(sp)
     if ratio != :none
         if ratio == :equal
             ratio = 1

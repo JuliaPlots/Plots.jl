@@ -470,7 +470,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             push!(style, string("title style = {font = ", pgf_font(sp[:titlefontsize], pgf_thickness_scaling(sp)), ", color = ", cstr, ", draw opacity = ", α, ", rotate = ", sp[:titlefontrotation], "}"))
         end
 
-        if sp[:aspect_ratio] in (1, :equal)
+        if get_aspect_ratio(sp) in (1, :equal)
             kw[:axisEqual] = "true"
         end
 

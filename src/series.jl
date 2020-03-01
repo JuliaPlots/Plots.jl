@@ -347,6 +347,7 @@ end
         seriestype := :heatmap
         yflip --> true
         cbar --> false
+        aspect_ratio --> :equal
         z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
         SliceIt, m, n, Surface(z)
     end
