@@ -904,8 +904,10 @@ end
 lens!(args...;kwargs...) = plot!(args...; seriestype=:lens, kwargs...)
 export lens!
 @recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
-    # TODO: validate input
     sp_index, inset_bbox = plotattributes[:inset_subplots]
+    if !(width(inset_bbox) isa Measures.Length{:w,<:Real})
+        throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
+    end
     sp = plt.subplots[sp_index]
     xl1, xl2 = xlims(plt.subplots[sp_index])
     bbx1 = xl1 + left(inset_bbox).value * (xl2 - xl1)
