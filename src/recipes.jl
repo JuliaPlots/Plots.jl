@@ -945,7 +945,7 @@ export lens!
     # add subplot
     for series in sp.series_list
         @series begin
-            plotattributes = copy(series.plotattributes)
+            plotattributes = merge(plotattributes, copy(series.plotattributes))
             subplot := lens_index
             label := ""
             xlims := (x1, x2)
@@ -953,6 +953,10 @@ export lens!
             ()
         end
     end
+    backup = copy(plotattributes)
+    empty!(plotattributes)
+    seriestype := :path
+    series_plotindex := backup[:series_plotindex]
 end
 
 function intersection_point(xA, yA, xB, yB, h, w)
