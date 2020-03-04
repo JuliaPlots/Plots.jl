@@ -20,6 +20,10 @@ addons:
       - xauth
       - xvfb
 
+cache:
+  directories:
+  - $HOME/.julia/artifacts
+
 sudo: required
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pwd ; fi
