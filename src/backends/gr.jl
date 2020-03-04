@@ -1060,11 +1060,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if st == :pie
             draw_axes = false
         end
-        if st == :heatmap
+        if st in (:heatmap, :image)
             outside_ticks = true
-            for ax in (sp[:xaxis], sp[:yaxis])
-                v = series[ax[:letter]]
-            end
             x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
             xy_lims = x[1], x[end], y[1], y[end]
             expand_extrema!(sp[:xaxis], x)
@@ -1786,8 +1783,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :image
             z = transpose_z(series, series[:z].surf, true)'
+            x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(z))
             w, h = size(z)
-            xmin, xmax = ignorenan_extrema(series[:x]); ymin, ymax = ignorenan_extrema(series[:y])
+            xmin, xmax = ignorenan_extrema(x)
+            ymin, ymax = ignorenan_extrema(y)
             rgba = gr_color.(z)
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
         end
