@@ -255,6 +255,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     end
                 for (i, rng) in enumerate(segments)
                     segment_opt = PGFPlotsX.Options()
+                    if opt[:label] == ""
+                        push!(segment_opt, "forget plot" => nothing)
+                    end
                     segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
                     if opt[:markershape] != :none
                         marker = opt[:markershape]
