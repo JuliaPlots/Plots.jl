@@ -853,6 +853,28 @@ const _examples = PlotExample[
             ),
         ],
     ),
+    PlotExample(
+        "Lens",
+        "A lens lets you easily magnify a region of a plot. x and y coordinates refer to the to be magnified region and the via the `inset` keyword the subplot index and the bounding box (in relative coordinates) of the inset plot with the magnified plot can be specified. Additional attributes count for the inset plot.",
+        [
+            quote
+                begin
+                    plot(
+                        [(0, 0), (0, 0.9), (1, 0.9), (2, 1), (3, 0.9), (80, 0)],
+                        legend = :outertopright,
+                    )
+                    plot!([(0, 0), (0, 0.9), (2, 0.9), (3, 1), (4, 0.9), (80, 0)])
+                    plot!([(0, 0), (0, 0.9), (3, 0.9), (4, 1), (5, 0.9), (80, 0)])
+                    plot!([(0, 0), (0, 0.9), (4, 0.9), (5, 1), (6, 0.9), (80, 0)])
+                    lens!(
+                        [1, 6],
+                        [0.9, 1.1],
+                        inset = (1, bbox(0.5, 0.0, 0.4, 0.4)),
+                    )
+                end
+            end,
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages

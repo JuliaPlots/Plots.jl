@@ -900,6 +900,91 @@ end
 
 
 # ---------------------------------------------------------------------------
+# lens! - magnify a region of a plot
+lens!(args...;kwargs...) = plot!(args...; seriestype=:lens, kwargs...)
+export lens!
+@recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
+    sp_index, inset_bbox = plotattributes[:inset_subplots]
+    if !(width(inset_bbox) isa Measures.Length{:w,<:Real})
+        throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
+    end
+    sp = plt.subplots[sp_index]
+    xl1, xl2 = xlims(plt.subplots[sp_index])
+    bbx1 = xl1 + left(inset_bbox).value * (xl2 - xl1)
+    bbx2 = bbx1 + width(inset_bbox).value * (xl2 - xl1)
+    yl1, yl2 = ylims(plt.subplots[sp_index])
+    bby1 = yl1 + (1 - bottom(inset_bbox).value) * (yl2 - yl1)
+    bby2 = bby1 + height(inset_bbox).value * (yl2 - yl1)
+    bbx = bbx1 + width(inset_bbox).value * (xl2 - xl1) / 2
+    bby = bby1 + height(inset_bbox).value * (yl2 - yl1) / 2
+    lens_index = last(plt.subplots)[:subplot_index] + 1
+    x1, x2 = plotattributes[:x]
+    y1, y2 = plotattributes[:y]
+    seriestype := :path
+    label := ""
+    linecolor := :lightgray
+    bbx_mag = (x1 + x2) / 2
+    bby_mag = (y1 + y2) / 2
+    xi_lens, yi_lens = intersection_point(bbx_mag, bby_mag, bbx, bby, abs(bby2 - bby1), abs(bbx2 - bbx1))
+    xi_mag, yi_mag = intersection_point(bbx, bby, bbx_mag, bby_mag, abs(y2 - y1), abs(x2 - x1))
+    # add lines
+    if xl1 < xi_lens < xl2 &&
+        yl1 < yi_lens < yl2
+        @series begin
+            subplot := sp_index
+            x := [xi_mag, xi_lens]
+            y := [yi_mag, yi_lens]
+            ()
+        end
+    end
+    # add magnification shape
+    @series begin
+        subplot := sp_index
+        x := [x1, x1, x2, x2, x1]
+        y := [y1, y2, y2, y1, y1]
+        ()
+    end
+    # add subplot
+    for series in sp.series_list
+        @series begin
+            plotattributes = merge(plotattributes, copy(series.plotattributes))
+            subplot := lens_index
+            label := ""
+            xlims := (x1, x2)
+            ylims := (y1, y2)
+            ()
+        end
+    end
+    backup = copy(plotattributes)
+    empty!(plotattributes)
+    seriestype := :path
+    series_plotindex := backup[:series_plotindex]
+end
+
+function intersection_point(xA, yA, xB, yB, h, w)
+    s = (yA - yB) / (xA - xB)
+    hh = h / 2
+    hw = w / 2
+    # left or right?
+    if -hh <= s * hw <= hh
+        if xA > xB
+            # right
+            return xB + hw, yB + s * hw
+        else # left
+            return xB - hw, yB - s * hw
+        end
+    # top or bot?
+    elseif -hw <= hh/s <= hw
+        if yA > yB
+            # top
+            return xB + hh/s, yB + hh
+        else
+            # bottom
+            return xB - hh/s, yB - hh
+        end
+    end
+end
+# ---------------------------------------------------------------------------
 # contourf - filled contours
 
 @recipe function f(::Type{Val{:contourf}}, x, y, z)
