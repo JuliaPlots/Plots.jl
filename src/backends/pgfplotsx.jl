@@ -988,7 +988,9 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 
     # framestyle
     if framestyle in (:axes, :origin)
-        axispos = framestyle == :axes ? "left" : "middle"
+        axispos = axis[:mirror] ? "right" :
+                  framestyle == :axes ? "left" : "middle"
+
         if axis[:draw_arrow]
             push!(opt, string("axis ", letter, " line") => axispos)
         else
