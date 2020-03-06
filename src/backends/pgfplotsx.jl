@@ -292,7 +292,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         if sf isa Number || sf isa AVec
                             pgfx_fillrange_series!( axis, series, series_func, i, _cycle(sf, rng), rng)
                         end
-                        if sp[:legend] != :none && pgfx_should_add_to_legend(series)
+                        if i == 1 && sp[:legend] != :none && pgfx_should_add_to_legend(series)
                             pgfx_filllegend!(series_opt, opt)
                         end
                     end
@@ -331,7 +331,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         )
                     end
                     # add to legend?
-                    if sp[:legend] != :none && pgfx_should_add_to_legend(series)
+                    if i == 1 && sp[:legend] != :none && pgfx_should_add_to_legend(series)
                         leg_opt = PGFPlotsX.Options()
                         if ribbon !== nothing
                             pgfx_filllegend!(axis.contents[end-3].options, opt)
