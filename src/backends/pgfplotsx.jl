@@ -292,7 +292,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         if sf isa Number || sf isa AVec
                             pgfx_fillrange_series!( axis, series, series_func, i, _cycle(sf, rng), rng)
                         end
-                        if i == 1 && opt[:label] != "" && sp[:legend] != :none && should_add_to_legend(series)
+                        if i == 1 && sp[:legend] != :none && pgfx_should_add_to_legend(series)
                             pgfx_filllegend!(series_opt, opt)
                         end
                     end
@@ -330,10 +330,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             series_index,
                         )
                     end
-                   # add to legend?
-                    if i == 1 &&
-                       opt[:label] != "" &&
-                       sp[:legend] != :none && should_add_to_legend(series)
+                    # add to legend?
+                    if i == 1 && sp[:legend] != :none && pgfx_should_add_to_legend(series)
                         leg_opt = PGFPlotsX.Options()
                         if ribbon !== nothing
                             pgfx_filllegend!(axis.contents[end-3].options, opt)
@@ -676,6 +674,25 @@ end
 function pgfx_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
     fs = fontsize * thickness_scaling
     return string("{\\fontsize{", fs, " pt}{", 1.3fs, " pt}", font, "}")
+end
+
+function pgfx_should_add_to_legend(series::Series)
+    series.plotattributes[:primary] && series.plotattributes[:label] != "" &&
+    !(
+        series.plotattributes[:seriestype] in (
+            :hexbin,
+            :bins2d,
+            :histogram2d,
+            :hline,
+            :vline,
+            :contour,
+            :contourf,
+            :contour3d,
+            :heatmap,
+            :pie,
+            :image,
+        )
+    )
 end
 
 function pgfx_marker(plotattributes, i = 1)
