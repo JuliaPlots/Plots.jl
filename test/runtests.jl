@@ -42,7 +42,31 @@ include("imgcomp.jl")
 Random.seed!(1234)
 default(show=false, reuse=true)
 is_ci() = get(ENV, "CI", "false") == "true"
-img_tol = is_ci() ? 10e-2 : 10e-2
+img_tol = is_ci() ? 1e-2 : 1e-3
+
+## Uncomment the following lines to update reference images for different backends
+
+#=
+@testset "GR" begin
+    image_comparison_facts(:gr, tol=img_tol, skip = Plots._backend_skips[:gr])
+end
+
+plotly()
+@testset "Plotly" begin
+    image_comparison_facts(:plotly, tol=img_tol, skip = Plots._backend_skips[:plotlyjs])
+end
+
+pyplot()
+@testset "PyPlot" begin
+    image_comparison_facts(:pyplot, tol=img_tol, skip = Plots._backend_skips[:pyplot])
+end
+
+pgfplots()
+@testset "PGFPlots" begin
+    image_comparison_facts(:pgfplots, tol=img_tol, skip = Plots._backend_skips[:pgfplots])
+end
+=#
+##
 
 @testset "Backends" begin
 

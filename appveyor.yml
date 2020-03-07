@@ -20,6 +20,9 @@ branches:
     - master
     - /release-.*/
 
+cache:
+  - '%USERPROFILE%\.julia\artifacts'
+
 notifications:
   - provider: Email
     on_build_success: false

@@ -1155,7 +1155,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         end
 
         # aspect ratio
-        aratio = sp[:aspect_ratio]
+        aratio = get_aspect_ratio(sp)
         if aratio != :none
             ax."set_aspect"(isa(aratio, Symbol) ? string(aratio) : aratio, anchor = "C")
         end

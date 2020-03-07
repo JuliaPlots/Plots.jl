@@ -116,24 +116,11 @@ end
 
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     n, m = size(z)
-    # idx = 0
     colors = ColorGradient(vec(z))
     newz = reshape(range(0, stop=1, length=n*m), n, m)
     newz, colors
-    # newz = zeros(n, m)
-    # for i=1:n, j=1:m
-    #     push!(colors, T(z[i,j]...))
-    #     newz[i,j] = idx / (n*m-1)
-    #     idx += 1
-    # end
-    # newz, ColorGradient(colors)
 end
 
-function imageHack(plotattributes::AKW)
-    is_seriestype_supported(:heatmap) || error("Neither :image or :heatmap are supported!")
-    plotattributes[:seriestype] = :heatmap
-    plotattributes[:z], plotattributes[:fillcolor] = replace_image_with_heatmap(plotattributes[:z].surf)
-end
 # ---------------------------------------------------------------
 
 "Build line segments for plotting"
@@ -693,6 +680,10 @@ function get_markerstrokealpha(series, i::Int = 1)
     _cycle(series[:markerstrokealpha], i)
 end
 
+function get_markerstrokewidth(series, i::Int = 1)
+    _cycle(series[:markerstrokewidth], i)
+end
+
 function has_attribute_segments(series::Series)
     # we want to check if a series needs to be split into segments just because
     # of its attributes
@@ -704,6 +695,19 @@ function has_attribute_segments(series::Series)
     series[:seriestype] == :shape && return false
     # ... else we check relevant attributes if they have multiple inputs
     return any((typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1) for attr in [:seriescolor, :seriesalpha, :linecolor, :linealpha, :linewidth, :linestyle, :fillcolor, :fillalpha, :markercolor, :markeralpha, :markerstrokecolor, :markerstrokealpha]) || any(typeof(series[attr]) <: AbstractArray for attr in (:line_z, :fill_z, :marker_z))
+end
+
+function get_aspect_ratio(sp)
+    aspect_ratio = sp[:aspect_ratio]
+    if aspect_ratio == :auto
+        aspect_ratio = :none
+        for series in series_list(sp)
+            if series[:seriestype] == :image
+                aspect_ratio = :equal
+            end
+        end
+    end
+    return aspect_ratio
 end
 
 # ---------------------------------------------------------------

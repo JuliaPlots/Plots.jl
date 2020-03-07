@@ -305,15 +305,27 @@ end
 # ---------------------------------------------------------
 
 # draw ONE Shape
-function gr_draw_marker(xi, yi, msize, shape::Shape)
+function gr_draw_marker(series, xi, yi, clims, i, msize, shape::Shape)
     sx, sy = coords(shape)
     # convert to ndc coords (percentages of window)
     GR.selntran(0)
     w, h = gr_plot_size
     f = msize / (w + h)
     xi, yi = GR.wctondc(xi, yi)
-    GR.fillarea(xi .+ sx .* f,
-                yi .+ sy .* f)
+    xs = xi .+ sx .* f
+    ys = yi .+ sy .* f
+
+    # draw the interior
+    mc = get_markercolor(series, clims, i)
+    gr_set_fill(mc)
+    gr_set_transparency(mc, get_markeralpha(series, i))
+    GR.fillarea(xs, ys)
+
+    # draw the shapes
+    msc = get_markerstrokecolor(series, i)
+    gr_set_line(get_markerstrokewidth(series, i), :solid, msc)
+    gr_set_transparency(msc, get_markerstrokealpha(series, i))
+    GR.polyline(xs, ys)
     GR.selntran(1)
 end
 
@@ -323,7 +335,11 @@ function nominal_size()
 end
 
 # draw ONE symbol marker
-function gr_draw_marker(xi, yi, msize::Number, shape::Symbol)
+function gr_draw_marker(series, xi, yi, clims, i, msize::Number, shape::Symbol)
+    GR.setborderwidth(series[:markerstrokewidth]);
+    gr_set_bordercolor(get_markerstrokecolor(series, i));
+    gr_set_markercolor(get_markercolor(series, clims, i));
+    gr_set_transparency(get_markeralpha(series, i))
     GR.setmarkertype(gr_markertype[shape])
     GR.setmarkersize(0.3msize / nominal_size())
     GR.polymarker([xi], [yi])
@@ -341,13 +357,7 @@ function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize
         for i=eachindex(x)
             msi = _cycle(msize, i)
             shape = _cycle(shapes, i)
-i
-            GR.setborderwidth(series[:markerstrokewidth]);
-            gr_set_bordercolor(get_markerstrokecolor(series, i));
-            gr_set_markercolor(get_markercolor(series, clims, i));
-            gr_set_transparency(get_markeralpha(series, i))
-
-            gr_draw_marker(x[i], y[i], msi, shape)
+            gr_draw_marker(series, x[i], y[i], clims, i, msi, shape)
         end
     end
 end
@@ -971,7 +981,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     data_lims = gr_xy_axislims(sp)
     xy_lims = data_lims
 
-    ratio = sp[:aspect_ratio]
+    ratio = get_aspect_ratio(sp)
     if ratio != :none
         if ratio == :equal
             ratio = 1
@@ -1050,11 +1060,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if st == :pie
             draw_axes = false
         end
-        if st == :heatmap
+        if st in (:heatmap, :image)
             outside_ticks = true
-            for ax in (sp[:xaxis], sp[:yaxis])
-                v = series[ax[:letter]]
-            end
             x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
             xy_lims = x[1], x[end], y[1], y[end]
             expand_extrema!(sp[:xaxis], x)
@@ -1776,8 +1783,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :image
             z = transpose_z(series, series[:z].surf, true)'
+            x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(z))
             w, h = size(z)
-            xmin, xmax = ignorenan_extrema(series[:x]); ymin, ymax = ignorenan_extrema(series[:y])
+            xmin, xmax = ignorenan_extrema(x)
+            ymin, ymax = ignorenan_extrema(y)
             rgba = gr_color.(z)
             GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
         end

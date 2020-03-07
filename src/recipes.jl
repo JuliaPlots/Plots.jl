@@ -44,7 +44,7 @@ end
 
 # ----------------------------------------------------------------------------------
 
-num_series(x::AMat) = size(x,2)
+num_series(x::AMat) = size(x, 2)
 num_series(x) = 1
 
 RecipesBase.apply_recipe(plotattributes::AKW, ::Type{T}, plt::AbstractPlot) where {T} = throw(MethodError(T, "Unmatched plot recipe: $T"))
@@ -55,13 +55,26 @@ RecipesBase.apply_recipe(plotattributes::AKW, ::Type{T}, plt::AbstractPlot) wher
 # for seriestype `line`, need to sort by x values
 
 const POTENTIAL_VECTOR_ARGUMENTS = [
-    :seriescolor, :seriesalpha,
-    :linecolor, :linealpha, :linewidth, :linestyle, :line_z,
-    :fillcolor, :fillalpha, :fill_z,
-    :markercolor, :markeralpha, :markershape, :marker_z,
-    :markerstrokecolor, :markerstrokealpha,
-    :yerror, :yerror,
-    :series_annotations, :fillrange
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linealpha,
+    :linewidth,
+    :linestyle,
+    :line_z,
+    :fillcolor,
+    :fillalpha,
+    :fill_z,
+    :markercolor,
+    :markeralpha,
+    :markershape,
+    :marker_z,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :yerror,
+    :yerror,
+    :series_annotations,
+    :fillrange,
 ]
 
 @recipe function f(::Type{Val{:line}}, x, y, z)
@@ -99,7 +112,7 @@ end
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     n = length(y)
     newx = repeat(Float64[-1, 1, NaN], n)
-    newy = vec(Float64[yi for i=1:3,yi=y])
+    newy = vec(Float64[yi for i = 1:3, yi in y])
     x := newx
     y := newy
     seriestype := :straightline
@@ -109,7 +122,7 @@ end
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
     n = length(y)
-    newx = vec(Float64[yi for i=1:3,yi=y])
+    newx = vec(Float64[yi for i = 1:3, yi in y])
     newy = repeat(Float64[-1, 1, NaN], n)
     x := newx
     y := newy
@@ -121,7 +134,7 @@ end
 @recipe function f(::Type{Val{:hspan}}, x, y, z)
     n = div(length(y), 2)
     newx = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
-    newy = vcat([[y[2i-1], y[2i-1], y[2i], y[2i], NaN] for i in 1:n]...)
+    newy = vcat([[y[2i - 1], y[2i - 1], y[2i], y[2i], NaN] for i = 1:n]...)
     linewidth --> 0
     x := newx
     y := newy
@@ -132,7 +145,7 @@ end
 
 @recipe function f(::Type{Val{:vspan}}, x, y, z)
     n = div(length(y), 2)
-    newx = vcat([[y[2i-1], y[2i-1], y[2i], y[2i], NaN] for i in 1:n]...)
+    newx = vcat([[y[2i - 1], y[2i - 1], y[2i], y[2i], NaN] for i = 1:n]...)
     newy = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
     linewidth --> 0
     x := newx
@@ -156,7 +169,7 @@ end
         primary := false
         ()
     end
-()
+    ()
 end
 @deps scatterpath path scatter
 
@@ -169,7 +182,7 @@ function make_steps(x::AbstractArray, st)
     n = length(x)
     n == 0 && return zeros(0)
     newx = zeros(2n - 1)
-    for i in 1:n
+    for i = 1:n
         idx = 2i - 1
         newx[idx] = x[i]
         if i > 1
@@ -249,10 +262,10 @@ end
         end
     end
     newx, newy = zeros(3n), zeros(3n)
-    for i=1:n
-        rng = 3i-2:3i
+    for i = 1:n
+        rng = (3i - 2):(3i)
         newx[rng] = [x[i], x[i], NaN]
-        newy[rng] = [_cycle(fr,i), y[i], NaN]
+        newy[rng] = [_cycle(fr, i), y[i], NaN]
     end
     x := newx
     y := newy
@@ -282,16 +295,16 @@ end
 # get the value of the curve point at position t
 function bezier_value(pts::AVec, t::Real)
     val = 0.0
-    n = length(pts)-1
-    for (i,p) in enumerate(pts)
-        val += p * binomial(n, i-1) * (1-t)^(n-i+1) * t^(i-1)
+    n = length(pts) - 1
+    for (i, p) in enumerate(pts)
+        val += p * binomial(n, i - 1) * (1 - t)^(n - i + 1) * t^(i - 1)
     end
     val
 end
 
 # create segmented bezier curves in place of line segments
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)
-    args = z !== nothing ? (x,y,z) : (x,y)
+    args = z !== nothing ? (x, y, z) : (x, y)
     newx, newy = zeros(0), zeros(0)
     fr = plotattributes[:fillrange]
     newfr = fr !== nothing ? zeros(0) : nothing
@@ -304,13 +317,13 @@ end
     for rng in iter_segments(args...)
         length(rng) < 2 && continue
         ts = range(0, stop = 1, length = npoints)
-        nanappend!(newx, map(t -> bezier_value(_cycle(x,rng), t), ts))
-        nanappend!(newy, map(t -> bezier_value(_cycle(y,rng), t), ts))
+        nanappend!(newx, map(t -> bezier_value(_cycle(x, rng), t), ts))
+        nanappend!(newy, map(t -> bezier_value(_cycle(y, rng), t), ts))
         if z !== nothing
-            nanappend!(newz, map(t -> bezier_value(_cycle(z,rng), t), ts))
+            nanappend!(newz, map(t -> bezier_value(_cycle(z, rng), t), ts))
         end
         if fr !== nothing
-            nanappend!(newfr, map(t -> bezier_value(_cycle(fr,rng), t), ts))
+            nanappend!(newfr, map(t -> bezier_value(_cycle(fr, rng), t), ts))
         end
         # if lz !== nothing
         #     lzrng = _cycle(lz, rng) # the line_z's for this segment
@@ -343,14 +356,15 @@ end
 
 # create a bar plot as a filled step function
 @recipe function f(::Type{Val{:bar}}, x, y, z)
-    procx, procy, xscale, yscale, baseline = _preprocess_barlike(plotattributes, x, y)
+    procx, procy, xscale, yscale, baseline =
+        _preprocess_barlike(plotattributes, x, y)
     nx, ny = length(procx), length(procy)
     axis = plotattributes[:subplot][isvertical(plotattributes) ? :xaxis : :yaxis]
-    cv = [discrete_value!(axis, xi)[1] for xi=procx]
+    cv = [discrete_value!(axis, xi)[1] for xi in procx]
     procx = if nx == ny
         cv
     elseif nx == ny + 1
-        0.5diff(cv) + cv[1:end-1]
+        0.5 * diff(cv) + cv[1:(end - 1)]
     else
         error("bar recipe: x must be same length as y (centers), or one more than y (edges).\n\t\tlength(x)=$(length(x)), length(y)=$(length(y))")
     end
@@ -359,12 +373,12 @@ end
     bw = plotattributes[:bar_width]
     hw = if bw === nothing
         if nx > 1
-            0.5*_bar_width*ignorenan_minimum(filter(x->x>0, diff(procx)))
+            0.5 * _bar_width * ignorenan_minimum(filter(x -> x > 0, diff(procx)))
         else
             0.5 * _bar_width
         end
     else
-        Float64[0.5_cycle(bw,i) for i=eachindex(procx)]
+        Float64[0.5 * _cycle(bw, i) for i in eachindex(procx)]
     end
 
     # make fillto a vector... default fills to 0
@@ -378,13 +392,20 @@ end
 
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
-    for i=1:ny
+    for i = 1:ny
         yi = procy[i]
         if !isnan(yi)
             center = procx[i]
-            hwi = _cycle(hw,i)
-            fi = _cycle(fillto,i)
-            push!(xseg, center-hwi, center-hwi, center+hwi, center+hwi, center-hwi)
+            hwi = _cycle(hw, i)
+            fi = _cycle(fillto, i)
+            push!(
+                xseg,
+                center - hwi,
+                center - hwi,
+                center + hwi,
+                center + hwi,
+                center - hwi,
+            )
             push!(yseg, yi, fi, fi, yi, yi)
         end
     end
@@ -415,8 +436,8 @@ end
     m, n = size(z.surf)
     x_pts, y_pts = fill(NaN, 6 * m * n), fill(NaN, 6 * m * n)
     fz = zeros(m * n)
-    for i in 1:m # y
-        for j in 1:n # x
+    for i = 1:m # y
+        for j = 1:n # x
             k = (j - 1) * m + i
             inds = (6 * (k - 1) + 1):(6 * k - 1)
             x_pts[inds] .= [xe[j], xe[j + 1], xe[j + 1], xe[j], xe[j]]
@@ -440,13 +461,17 @@ end
 # ---------------------------------------------------------------------------
 # Histograms
 
-_bin_centers(v::AVec) = (v[1:end-1] + v[2:end]) / 2
+_bin_centers(v::AVec) = (v[1:(end - 1)] + v[2:end]) / 2
 
 _is_positive(x) = (x > 0) && !(x ≈ 0)
 
 _positive_else_nan(::Type{T}, x::Real) where {T} = _is_positive(x) ? T(x) : T(NaN)
 
-function _scale_adjusted_values(::Type{T}, V::AbstractVector, scale::Symbol) where T<:AbstractFloat
+function _scale_adjusted_values(
+    ::Type{T},
+    V::AbstractVector,
+    scale::Symbol,
+) where {T<:AbstractFloat}
     if scale in _logScales
         [_positive_else_nan(T, x) for x in V]
     else
@@ -455,7 +480,7 @@ function _scale_adjusted_values(::Type{T}, V::AbstractVector, scale::Symbol) whe
 end
 
 
-function _binbarlike_baseline(min_value::T, scale::Symbol) where T<:Real
+function _binbarlike_baseline(min_value::T, scale::Symbol) where {T<:Real}
     if (scale in _logScales)
         !isnan(min_value) ? min_value / T(_logScaleBases[scale]^log10(2)) : T(1E-3)
     else
@@ -464,7 +489,11 @@ function _binbarlike_baseline(min_value::T, scale::Symbol) where T<:Real
 end
 
 
-function _preprocess_binbarlike_weights(::Type{T}, w, wscale::Symbol) where T<:AbstractFloat
+function _preprocess_binbarlike_weights(
+    ::Type{T},
+    w,
+    wscale::Symbol,
+) where {T<:AbstractFloat}
     w_adj = _scale_adjusted_values(T, w, wscale)
     w_min = ignorenan_minimum(w_adj)
     w_max = ignorenan_maximum(w_adj)
@@ -490,7 +519,8 @@ end
 
 
 @recipe function f(::Type{Val{:barbins}}, x, y, z)
-    edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
+    edge, weights, xscale, yscale, baseline =
+        _preprocess_binlike(plotattributes, x, y)
     if (plotattributes[:bar_width] === nothing)
         bar_width := diff(edge)
     end
@@ -503,8 +533,9 @@ end
 
 
 @recipe function f(::Type{Val{:scatterbins}}, x, y, z)
-    edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
-    xerror := diff(edge)/2
+    edge, weights, xscale, yscale, baseline =
+        _preprocess_binlike(plotattributes, x, y)
+    xerror := diff(edge) / 2
     x := _bin_centers(edge)
     y := weights
     seriestype := :scatter
@@ -513,7 +544,13 @@ end
 @deps scatterbins scatter
 
 
-function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::Symbol)
+function _stepbins_path(
+    edge,
+    weights,
+    baseline::Real,
+    xscale::Symbol,
+    yscale::Symbol,
+)
     log_scale_x = xscale in _logScales
     log_scale_y = yscale in _logScales
 
@@ -538,7 +575,7 @@ function _stepbins_path(edge, weights, baseline::Real, xscale::Symbol, yscale::S
         w, it_state_w = it_tuple_w
 
         if (log_scale_x && a ≈ 0)
-            a = oftype(a, b/_logScaleBases[xscale]^3)
+            a = oftype(a, b / _logScaleBases[xscale]^3)
         end
 
         if isnan(w)
@@ -575,9 +612,11 @@ end
 
 
 @recipe function f(::Type{Val{:stepbins}}, x, y, z)
-    axis = plotattributes[:subplot][Plots.isvertical(plotattributes) ? :xaxis : :yaxis]
+    axis =
+        plotattributes[:subplot][Plots.isvertical(plotattributes) ? :xaxis : :yaxis]
 
-    edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, x, y)
+    edge, weights, xscale, yscale, baseline =
+        _preprocess_binlike(plotattributes, x, y)
 
     xpts, ypts = _stepbins_path(edge, weights, baseline, xscale, yscale)
     if !isvertical(plotattributes)
@@ -607,9 +646,19 @@ end
 end
 Plots.@deps stepbins path
 
-wand_edges(x...) = (@warn("Load the StatsPlots package in order to use :wand bins. Defaulting to :auto", once = true); :auto)
+wand_edges(x...) = (
+    @warn(
+        "Load the StatsPlots package in order to use :wand bins. Defaulting to :auto",
+        once = true
+    );
+    :auto
+)
 
-function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::Symbol = :auto) where N
+function _auto_binning_nbins(
+    vs::NTuple{N,AbstractVector},
+    dim::Integer;
+    mode::Symbol = :auto,
+) where {N}
     max_bins = 10_000
     _cl(x) = min(ceil(Int, max(x, one(x))), max_bins)
     _iqr(v) = (q = quantile(v, 0.75) - quantile(v, 0.25); q > 0 ? q : oftype(q, 1))
@@ -618,8 +667,13 @@ function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::S
     n_samples = length(LinearIndices(first(vs)))
 
     # The nd estimator is the key to most automatic binning methods, and is modified for twodimensional histograms to include correlation
-    nd = n_samples^(1/(2+N))
-    nd = N == 2 ? min(n_samples^(1/(2+N)), nd / (1-cor(first(vs), last(vs))^2)^(3//8)) : nd # the >2-dimensional case does not have a nice solution to correlations
+    nd = n_samples^(1 / (2 + N))
+    nd = N == 2 ?
+        min(
+        n_samples^(1 / (2 + N)),
+        nd / (1 - cor(first(vs), last(vs))^2)^(3 // 8),
+    ) :
+        nd # the >2-dimensional case does not have a nice solution to correlations
 
     v = vs[dim]
 
@@ -644,32 +698,52 @@ function _auto_binning_nbins(vs::NTuple{N,AbstractVector}, dim::Integer; mode::S
     end
 end
 
-_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) where {N} = StatsBase.histrange(vs[dim], binning, :left)
-_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) where {N} = _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
-_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::AbstractVector) where {N} = binning
+_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Integer) where {N} =
+    StatsBase.histrange(vs[dim], binning, :left)
+_hist_edge(vs::NTuple{N,AbstractVector}, dim::Integer, binning::Symbol) where {N} =
+    _hist_edge(vs, dim, _auto_binning_nbins(vs, dim, mode = binning))
+_hist_edge(
+    vs::NTuple{N,AbstractVector},
+    dim::Integer,
+    binning::AbstractVector,
+) where {N} = binning
 
-_hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N, Any}) where {N} =
+_hist_edges(vs::NTuple{N,AbstractVector}, binning::NTuple{N,Any}) where {N} =
     map(dim -> _hist_edge(vs, dim, binning[dim]), (1:N...,))
 
-_hist_edges(vs::NTuple{N,AbstractVector}, binning::Union{Integer, Symbol, AbstractVector}) where {N} =
-    map(dim -> _hist_edge(vs, dim, binning), (1:N...,))
+_hist_edges(
+    vs::NTuple{N,AbstractVector},
+    binning::Union{Integer,Symbol,AbstractVector},
+) where {N} = map(dim -> _hist_edge(vs, dim, binning), (1:N...,))
 
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
 _filternans(vs::NTuple{1,AbstractVector}) = filter!.(isfinite, vs)
-function _filternans(vs::NTuple{N,AbstractVector}) where N
-    _invertedindex(v, not) = [j for (i,j) in enumerate(v) if !(i ∈ not)]
+function _filternans(vs::NTuple{N,AbstractVector}) where {N}
+    _invertedindex(v, not) = [j for (i, j) in enumerate(v) if !(i ∈ not)]
     nots = union(Set.(findall.(!isfinite, vs))...)
     _invertedindex.(vs, Ref(nots))
 end
 
-function _make_hist(vs::NTuple{N,AbstractVector}, binning; normed = false, weights = nothing) where N
+function _make_hist(
+    vs::NTuple{N,AbstractVector},
+    binning;
+    normed = false,
+    weights = nothing,
+) where {N}
     localvs = _filternans(vs)
     edges = _hist_edges(localvs, binning)
-    h = float( weights === nothing ?
-        StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
-        StatsBase.fit(StatsBase.Histogram, localvs, StatsBase.Weights(weights), edges, closed = :left)
+    h = float(
+        weights === nothing ?
+            StatsBase.fit(StatsBase.Histogram, localvs, edges, closed = :left) :
+            StatsBase.fit(
+            StatsBase.Histogram,
+            localvs,
+            StatsBase.Weights(weights),
+            edges,
+            closed = :left,
+        ),
     )
     normalize!(h, mode = _hist_norm_mode(normed))
 end
@@ -682,7 +756,12 @@ end
 @deps histogram barhist
 
 @recipe function f(::Type{Val{:barhist}}, x, y, z)
-    h = _make_hist((y,), plotattributes[:bins], normed = plotattributes[:normalize], weights = plotattributes[:weights])
+    h = _make_hist(
+        (y,),
+        plotattributes[:bins],
+        normed = plotattributes[:normalize],
+        weights = plotattributes[:weights],
+    )
     x := h.edges[1]
     y := h.weights
     seriestype := :barbins
@@ -691,7 +770,12 @@ end
 @deps barhist barbins
 
 @recipe function f(::Type{Val{:stephist}}, x, y, z)
-    h = _make_hist((y,), plotattributes[:bins], normed = plotattributes[:normalize], weights = plotattributes[:weights])
+    h = _make_hist(
+        (y,),
+        plotattributes[:bins],
+        normed = plotattributes[:normalize],
+        weights = plotattributes[:weights],
+    )
     x := h.edges[1]
     y := h.weights
     seriestype := :stepbins
@@ -700,7 +784,12 @@ end
 @deps stephist stepbins
 
 @recipe function f(::Type{Val{:scatterhist}}, x, y, z)
-    h = _make_hist((y,), plotattributes[:bins], normed = plotattributes[:normalize], weights = plotattributes[:weights])
+    h = _make_hist(
+        (y,),
+        plotattributes[:bins],
+        normed = plotattributes[:normalize],
+        weights = plotattributes[:weights],
+    )
     x := h.edges[1]
     y := h.weights
     seriestype := :scatterbins
@@ -709,19 +798,23 @@ end
 @deps scatterhist scatterbins
 
 
-@recipe function f(h::StatsBase.Histogram{T, 1, E}) where {T, E}
+@recipe function f(h::StatsBase.Histogram{T,1,E}) where {T,E}
     seriestype --> :barbins
 
     st_map = Dict(
-        :bar => :barbins, :scatter => :scatterbins, :step => :stepbins,
-        :steppost => :stepbins # :step can be mapped to :steppost in pre-processing
+        :bar => :barbins,
+        :scatter => :scatterbins,
+        :step => :stepbins,
+        :steppost => :stepbins, # :step can be mapped to :steppost in pre-processing
     )
-    seriestype := get(st_map, plotattributes[:seriestype], plotattributes[:seriestype])
+    seriestype :=
+        get(st_map, plotattributes[:seriestype], plotattributes[:seriestype])
 
     if plotattributes[:seriestype] == :scatterbins
         # Workaround, error bars currently not set correctly by scatterbins
-        edge, weights, xscale, yscale, baseline = _preprocess_binlike(plotattributes, h.edges[1], h.weights)
-        xerror --> diff(h.edges[1])/2
+        edge, weights, xscale, yscale, baseline =
+            _preprocess_binlike(plotattributes, h.edges[1], h.weights)
+        xerror --> diff(h.edges[1]) / 2
         seriestype := :scatter
         (Plots._bin_centers(edge), weights)
     else
@@ -730,7 +823,7 @@ end
 end
 
 
-@recipe function f(hv::AbstractVector{H}) where H <: StatsBase.Histogram
+@recipe function f(hv::AbstractVector{H}) where {H<:StatsBase.Histogram}
     for h in hv
         @series begin
             h
@@ -769,7 +862,12 @@ Plots.@deps bins2d heatmap
 
 
 @recipe function f(::Type{Val{:histogram2d}}, x, y, z)
-    h = _make_hist((x, y), plotattributes[:bins], normed = plotattributes[:normalize], weights = plotattributes[:weights])
+    h = _make_hist(
+        (x, y),
+        plotattributes[:bins],
+        normed = plotattributes[:normalize],
+        weights = plotattributes[:weights],
+    )
     x := h.edges[1]
     y := h.edges[2]
     z := Surface(h.weights)
@@ -779,7 +877,7 @@ end
 @deps histogram2d bins2d
 
 
-@recipe function f(h::StatsBase.Histogram{T, 2, E}) where {T, E}
+@recipe function f(h::StatsBase.Histogram{T,2,E}) where {T,E}
     seriestype --> :bins2d
     (h.edges[1], h.edges[2], Surface(h.weights))
 end
@@ -801,6 +899,91 @@ end
 # note: don't add dependencies because this really isn't a drop-in replacement
 
 
+# ---------------------------------------------------------------------------
+# lens! - magnify a region of a plot
+lens!(args...;kwargs...) = plot!(args...; seriestype=:lens, kwargs...)
+export lens!
+@recipe function f(::Type{Val{:lens}}, plt::AbstractPlot)
+    sp_index, inset_bbox = plotattributes[:inset_subplots]
+    if !(width(inset_bbox) isa Measures.Length{:w,<:Real})
+        throw(ArgumentError("Inset bounding box needs to in relative coordinates."))
+    end
+    sp = plt.subplots[sp_index]
+    xl1, xl2 = xlims(plt.subplots[sp_index])
+    bbx1 = xl1 + left(inset_bbox).value * (xl2 - xl1)
+    bbx2 = bbx1 + width(inset_bbox).value * (xl2 - xl1)
+    yl1, yl2 = ylims(plt.subplots[sp_index])
+    bby1 = yl1 + (1 - bottom(inset_bbox).value) * (yl2 - yl1)
+    bby2 = bby1 + height(inset_bbox).value * (yl2 - yl1)
+    bbx = bbx1 + width(inset_bbox).value * (xl2 - xl1) / 2
+    bby = bby1 + height(inset_bbox).value * (yl2 - yl1) / 2
+    lens_index = last(plt.subplots)[:subplot_index] + 1
+    x1, x2 = plotattributes[:x]
+    y1, y2 = plotattributes[:y]
+    seriestype := :path
+    label := ""
+    linecolor := :lightgray
+    bbx_mag = (x1 + x2) / 2
+    bby_mag = (y1 + y2) / 2
+    xi_lens, yi_lens = intersection_point(bbx_mag, bby_mag, bbx, bby, abs(bby2 - bby1), abs(bbx2 - bbx1))
+    xi_mag, yi_mag = intersection_point(bbx, bby, bbx_mag, bby_mag, abs(y2 - y1), abs(x2 - x1))
+    # add lines
+    if xl1 < xi_lens < xl2 &&
+        yl1 < yi_lens < yl2
+        @series begin
+            subplot := sp_index
+            x := [xi_mag, xi_lens]
+            y := [yi_mag, yi_lens]
+            ()
+        end
+    end
+    # add magnification shape
+    @series begin
+        subplot := sp_index
+        x := [x1, x1, x2, x2, x1]
+        y := [y1, y2, y2, y1, y1]
+        ()
+    end
+    # add subplot
+    for series in sp.series_list
+        @series begin
+            plotattributes = merge(plotattributes, copy(series.plotattributes))
+            subplot := lens_index
+            label := ""
+            xlims := (x1, x2)
+            ylims := (y1, y2)
+            ()
+        end
+    end
+    backup = copy(plotattributes)
+    empty!(plotattributes)
+    seriestype := :path
+    series_plotindex := backup[:series_plotindex]
+end
+
+function intersection_point(xA, yA, xB, yB, h, w)
+    s = (yA - yB) / (xA - xB)
+    hh = h / 2
+    hw = w / 2
+    # left or right?
+    if -hh <= s * hw <= hh
+        if xA > xB
+            # right
+            return xB + hw, yB + s * hw
+        else # left
+            return xB - hw, yB - s * hw
+        end
+    # top or bot?
+    elseif -hw <= hh/s <= hw
+        if yA > yB
+            # top
+            return xB + hh/s, yB + hh
+        else
+            # bottom
+            return xB - hh/s, yB - hh
+        end
+    end
+end
 # ---------------------------------------------------------------------------
 # contourf - filled contours
 
@@ -855,7 +1038,11 @@ end
 @recipe function f(::Type{Val{:yerror}}, x, y, z)
     error_style!(plotattributes)
     markershape := :hline
-    plotattributes[:x], plotattributes[:y] = error_coords(plotattributes[:x], plotattributes[:y], error_zipit(plotattributes[:yerror]))
+    plotattributes[:x], plotattributes[:y] = error_coords(
+        plotattributes[:x],
+        plotattributes[:y],
+        error_zipit(plotattributes[:yerror]),
+    )
     ()
 end
 @deps yerror path
@@ -863,7 +1050,11 @@ end
 @recipe function f(::Type{Val{:xerror}}, x, y, z)
     error_style!(plotattributes)
     markershape := :vline
-    plotattributes[:y], plotattributes[:x] = error_coords(plotattributes[:y], plotattributes[:x], error_zipit(plotattributes[:xerror]))
+    plotattributes[:y], plotattributes[:x] = error_coords(
+        plotattributes[:y],
+        plotattributes[:x],
+        error_zipit(plotattributes[:xerror]),
+    )
     ()
 end
 @deps xerror path
@@ -898,15 +1089,15 @@ function quiver_using_arrows(plotattributes::AKW)
             first(vi), last(vi)
         elseif isscalar(vi)
             vi, vi
-        elseif isa(vi,Function)
+        elseif isa(vi, Function)
             vi(xi, yi)
         else
             error("unexpected vi type $(typeof(vi)) for quiver: $vi")
         end
 
         # add the points
-        nanappend!(x, [xi, xi+vx, NaN])
-        nanappend!(y, [yi, yi+vy, NaN])
+        nanappend!(x, [xi, xi + vx, NaN])
+        nanappend!(y, [yi, yi + vy, NaN])
     end
 
     plotattributes[:x], plotattributes[:y] = x, y
@@ -936,7 +1127,7 @@ function quiver_using_hack(plotattributes::AKW)
             first(vi), last(vi)
         elseif isscalar(vi)
             vi, vi
-        elseif isa(vi,Function)
+        elseif isa(vi, Function)
             vi(xi, yi)
         else
             error("unexpected vi type $(typeof(vi)) for quiver: $vi")
@@ -951,8 +1142,11 @@ function quiver_using_hack(plotattributes::AKW)
         U1 *= arrow_h
         U2 *= arrow_w
 
-        ppv = p+v
-        nanappend!(pts, P2[p, ppv-U1, ppv-U1+U2, ppv, ppv-U1-U2, ppv-U1])
+        ppv = p + v
+        nanappend!(
+            pts,
+            P2[p, ppv - U1, ppv - U1 + U2, ppv, ppv - U1 - U2, ppv - U1],
+        )
     end
 
     plotattributes[:x], plotattributes[:y] = Plots.unzip(pts[2:end])
@@ -977,32 +1171,28 @@ end
 
 "Represent Open High Low Close data (used in finance)"
 mutable struct OHLC{T<:Real}
-  open::T
-  high::T
-  low::T
-  close::T
+    open::T
+    high::T
+    low::T
+    close::T
 end
 Base.convert(::Type{OHLC}, tup::Tuple) = OHLC(tup...)
 # Base.tuple(ohlc::OHLC) = (ohlc.open, ohlc.high, ohlc.low, ohlc.close)
 
 # get one OHLC path
 function get_xy(o::OHLC, x, xdiff)
-    xl, xm, xr = x-xdiff, x, x+xdiff
-    ox = [xl, xm, NaN,
-          xm, xm, NaN,
-          xm, xr]
-    oy = [o.open, o.open, NaN,
-          o.low, o.high, NaN,
-          o.close, o.close]
+    xl, xm, xr = x - xdiff, x, x + xdiff
+    ox = [xl, xm, NaN, xm, xm, NaN, xm, xr]
+    oy = [o.open, o.open, NaN, o.low, o.high, NaN, o.close, o.close]
     ox, oy
 end
 
 # get the joined vector
 function get_xy(v::AVec{OHLC}, x = eachindex(v))
-    xdiff = 0.3ignorenan_mean(abs.(diff(x)))
+    xdiff = 0.3 * ignorenan_mean(abs.(diff(x)))
     x_out, y_out = zeros(0), zeros(0)
-    for (i,ohlc) in enumerate(v)
-        ox,oy = get_xy(ohlc, x[i], xdiff)
+    for (i, ohlc) in enumerate(v)
+        ox, oy = get_xy(ohlc, x[i], xdiff)
         nanappend!(x_out, ox)
         nanappend!(y_out, oy)
     end
@@ -1015,10 +1205,17 @@ end
 
 # to squash ambiguity warnings...
 @recipe f(x::AVec{Function}, v::AVec{OHLC}) = error()
-@recipe f(x::AVec{Function}, v::AVec{Tuple{R1,R2,R3,R4}}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = error()
+@recipe f(
+    x::AVec{Function},
+    v::AVec{Tuple{R1,R2,R3,R4}},
+) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = error()
 
 # this must be OHLC?
-@recipe f(x::AVec, ohlc::AVec{Tuple{R1,R2,R3,R4}}) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} = x, OHLC[OHLC(t...) for t in ohlc]
+@recipe f(
+    x::AVec,
+    ohlc::AVec{Tuple{R1,R2,R3,R4}},
+) where {R1<:Number,R2<:Number,R3<:Number,R4<:Number} =
+    x, OHLC[OHLC(t...) for t in ohlc]
 
 @recipe function f(x::AVec, v::AVec{OHLC})
     seriestype := :path
@@ -1056,11 +1253,11 @@ end
     @assert length(g.args) == 1 && typeof(g.args[1]) <: AbstractMatrix
     seriestype := :spy
     mat = g.args[1]
-    n,m = axes(mat)
+    n, m = axes(mat)
     Plots.SliceIt, m, n, Surface(mat)
 end
 
-@recipe function f(::Type{Val{:spy}}, x,y,z)
+@recipe function f(::Type{Val{:spy}}, x, y, z)
     yflip := true
     aspect_ratio := 1
     rs, cs, zs = findnz(z.surf)
@@ -1086,7 +1283,8 @@ end
 # -------------------------------------------------
 
 "Adds ax+b... straight line over the current plot, without changing the axis limits"
-abline!(plt::Plot, a, b; kw...) = plot!(plt, [0, 1], [b, b+a]; seriestype = :straightline, kw...)
+abline!(plt::Plot, a, b; kw...) =
+    plot!(plt, [0, 1], [b, b + a]; seriestype = :straightline, kw...)
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
 
@@ -1099,9 +1297,11 @@ datetimeformatter(dt) = string(DateTime(Dates.UTM(dt)))
 timeformatter(t) = string(Dates.Time(Dates.Nanosecond(t)))
 
 @recipe f(::Type{Date}, dt::Date) = (dt -> Dates.value(dt), dateformatter)
-@recipe f(::Type{DateTime}, dt::DateTime) = (dt -> Dates.value(dt), datetimeformatter)
+@recipe f(::Type{DateTime}, dt::DateTime) =
+    (dt -> Dates.value(dt), datetimeformatter)
 @recipe f(::Type{Dates.Time}, t::Dates.Time) = (t -> Dates.value(t), timeformatter)
-@recipe f(::Type{P}, t::P) where P <: Dates.Period = (t -> Dates.value(t), t -> string(P(t)))
+@recipe f(::Type{P}, t::P) where {P<:Dates.Period} =
+    (t -> Dates.value(t), t -> string(P(t)))
 
 # -------------------------------------------------
 # Characters
@@ -1111,7 +1311,7 @@ timeformatter(t) = string(Dates.Time(Dates.Nanosecond(t)))
 # -------------------------------------------------
 # Complex Numbers
 
-@recipe function f(A::Array{Complex{T}}) where T<:Number
+@recipe function f(A::Array{Complex{T}}) where {T<:Number}
     xguide --> "Re(x)"
     yguide --> "Im(x)"
     real.(A), imag.(A)
@@ -1120,10 +1320,10 @@ end
 # Splits a complex matrix to its real and complex parts
 # Reals defaults solid, imaginary defaults dashed
 # Label defaults are changed to match the real-imaginary reference / indexing
-@recipe function f(x::AbstractArray{T},y::Array{Complex{T2}}) where {T<:Real,T2}
-  ylabel --> "Re(y)"
-  zlabel --> "Im(y)"
-  x,real.(y),imag.(y)
+@recipe function f(x::AbstractArray{T}, y::Array{Complex{T2}}) where {T<:Real,T2}
+    ylabel --> "Re(y)"
+    zlabel --> "Im(y)"
+    x, real.(y), imag.(y)
 end
 
 
@@ -1137,7 +1337,7 @@ end
     end
 
     library = PlotUtils.color_libraries[cl.args[1]]
-    z = sqrt.((1:15)*reshape(1:20,1,:))
+    z = sqrt.((1:15) * reshape(1:20, 1, :))
 
     seriestype := :heatmap
     ticks := nothing
@@ -1161,7 +1361,7 @@ end
     if !(length(grad.args) == 1 && isa(grad.args[1], Symbol))
         error("showgradient takes the name of a color gradient as a Symbol")
     end
-    z = sqrt.((1:15)*reshape(1:20,1,:))
+    z = sqrt.((1:15) * reshape(1:20, 1, :))
     seriestype := :heatmap
     ticks := nothing
     legend := false
@@ -1184,9 +1384,9 @@ end
     weights = cumsum(weights, dims = 2)
     seriestype := :shape
 
-	# create a filled polygon for each item
-    for c=axes(weights,2)
-        sx = vcat(weights[:,c], c==1 ? zeros(n) : reverse(weights[:,c-1]))
+    # create a filled polygon for each item
+    for c in axes(weights, 2)
+        sx = vcat(weights[:, c], c == 1 ? zeros(n) : reverse(weights[:, c - 1]))
         sy = vcat(returns, reverse(returns))
         @series Plots.isvertical(plotattributes) ? (sx, sy) : (sy, sx)
     end
@@ -1205,13 +1405,13 @@ julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], f
 @userplot AreaPlot
 
 @recipe function f(a::AreaPlot)
-    data = cumsum(a.args[end], dims=2)
+    data = cumsum(a.args[end], dims = 2)
     x = length(a.args) == 1 ? (axes(data, 1)) : a.args[1]
     seriestype := :line
     for i in axes(data, 2)
         @series begin
-            fillrange := i > 1 ? data[:,i-1] : 0
-            x, data[:,i]
+            fillrange := i > 1 ? data[:, i - 1] : 0
+            x, data[:, i]
         end
     end
 end
