@@ -42,7 +42,7 @@ include("imgcomp.jl")
 Random.seed!(1234)
 default(show=false, reuse=true)
 is_ci() = get(ENV, "CI", "false") == "true"
-img_tol = is_ci() ? 1e-2 : 1e-3
+img_tol = is_ci() ? 1e-2 : Sys.islinux() ? 1e-3 : 0.1
 
 ## Uncomment the following lines to update reference images for different backends
 
@@ -76,7 +76,9 @@ end
         @test gr() == Plots.GRBackend()
         @test backend() == Plots.GRBackend()
 
-        @static if Sys.islinux()
+        @static if haskey(ENV, "APPVEYOR")
+            @info "Skipping GR image comparison tests on AppVeyor"
+        else
             image_comparison_facts(:gr, tol=img_tol, skip = Plots._backend_skips[:gr])
         end
     end
