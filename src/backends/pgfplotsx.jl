@@ -254,9 +254,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     end
                 for (i, rng) in enumerate(segments)
                     segment_opt = PGFPlotsX.Options()
-                    if opt[:label] == ""
-                        push!(segment_opt, "forget plot" => nothing)
-                    end
                     segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
                     if opt[:markershape] != :none
                         marker = opt[:markershape]
@@ -306,8 +303,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             pgfx_filllegend!(series_opt, opt)
                         end
                     end
-                    # series
-                    #
                     coordinates =
                         pgfx_series_coordinates!(sp, series, segment_opt, opt, rng)
                     segment_plot =
@@ -339,15 +334,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             series_index,
                         )
                     end
-                    # add to legend?
-                    if i == 1 && sp[:legend] != :none && pgfx_should_add_to_legend(series)
-                        leg_opt = PGFPlotsX.Options()
-                        if ribbon !== nothing
-                            pgfx_filllegend!(axis.contents[end - 3].options, opt)
-                        end
-                        legend = PGFPlotsX.LegendEntry(leg_opt, opt[:label], false)
-                        push!(axis, legend)
-                    end
                     # add series annotations
                     anns = series[:series_annotations]
                     for (xi, yi, str, fnt) in EachAnn(anns, series[:x], series[:y])
@@ -359,7 +345,28 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             pgfx_thickness_scaling(series),
                         )
                     end
-                end
+                    # add to legend?
+                    if sp[:legend] != :none && pgfx_should_add_to_legend(series)
+                        leg_entry = if opt[:label] isa AVec
+                                opt[:label][i]
+                            elseif opt[:label] isa AbstractString
+                                if i == 1 && opt[:label] != ""
+                                    opt[:label]
+                                else
+                                    push!(segment_plot.options, "forget plot" => nothing)
+                                    continue
+                                end
+                            else
+                                throw(ArgumentError("Malformed label. label = $(opt[:label])"))
+                            end
+                        leg_opt = PGFPlotsX.Options()
+                        if ribbon !== nothing
+                            pgfx_filllegend!(axis.contents[end - 3].options, opt)
+                        end
+                        legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
+                        push!(axis, legend)
+                    end
+                end # for segments
                 # add subplot annotations
                 for ann in sp[:annotations]
                     pgfx_add_annotation!(
