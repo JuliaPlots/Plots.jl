@@ -36,10 +36,10 @@ end
      @testset "Color docs example" begin
         y = rand(100)
         plot(0:10:100, rand(11, 4), lab="lines", w=3, palette=:grays, fill=0, α=0.6)
-        pl = scatter!(y, zcolor=abs.(y .- 0.5), m=(:heat, 0.8, Plots.stroke(1, :green)), ms=10 * abs.(y .- 0.5) .+ 4, lab="grad")
+        pl = scatter!(y, zcolor=abs.(y .- 0.5), m=(:heat, 0.8, Plots.stroke(1, :green)), ms=10 * abs.(y .- 0.5) .+ 4, lab=["grad", "", "ient"])
         Plots._update_plot_object(pl)
         axis = Plots.pgfx_axes(pl.o)[1]
-        @test count( x->x isa PGFPlotsX.LegendEntry, axis.contents ) == 5
+        @test count( x->x isa PGFPlotsX.LegendEntry, axis.contents ) == 6
         @test count( x->x isa PGFPlotsX.Plot, axis.contents ) == 108 # each marker is its own plot, fillranges create 2 plot-objects
         marker = axis.contents[15]
         @test marker isa PGFPlotsX.Plot
