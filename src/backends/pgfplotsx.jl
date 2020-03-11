@@ -348,16 +348,19 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     # add to legend?
                     if sp[:legend] != :none && pgfx_should_add_to_legend(series)
                         leg_entry = if opt[:label] isa AVec
-                            opt[:label][i]
+                            get(opt[:label], i, "")
                         elseif opt[:label] isa AbstractString
-                            if i == 1 && opt[:label] != ""
+                            if i == 1
                                 opt[:label]
                             else
-                                push!(segment_plot.options, "forget plot" => nothing)
-                                continue
+                                ""
                             end
                         else
                             throw(ArgumentError("Malformed label. label = $(opt[:label])"))
+                        end
+                        if leg_entry == ""
+                            push!(segment_plot.options, "forget plot" => nothing)
+                            continue
                         end
                         leg_opt = PGFPlotsX.Options()
                         if ribbon !== nothing
