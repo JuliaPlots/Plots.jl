@@ -42,7 +42,7 @@ end
 # to generate a list of RecipeData objects (data + attributes).
 # If we applied a "plot recipe" without error, then add the returned datalist's KWs,
 # otherwise we just add the original KW.
-function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{Dict{Symbol,Any}}, still_to_process::Vector{Dict{Symbol,Any}}; _typeAliases::AbstractDict{Symbol,Symbol}=Dict())
+function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{Dict{Symbol,Any}}, still_to_process::Vector{Dict{Symbol,Any}}; type_aliases::AbstractDict{Symbol,Symbol}=Dict())
     if !isa(get(kw, :seriestype, nothing), Symbol)
         # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
         push!(kw_list, kw)
@@ -77,7 +77,7 @@ function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; ty
     #println("process $(typeof(plotattributes))")
     # replace seriestype aliases
     st = Symbol(plotattributes[:seriestype])
-    st = plotattributes[:seriestype] = get(_typeAliases, st, st)
+    st = plotattributes[:seriestype] = get(type_aliases, st, st)
 
     # shapes shouldn't have fillrange set
     if plotattributes[:seriestype] == :shape
@@ -85,7 +85,7 @@ function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; ty
     end
 
     # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
-    if is_seriestype_supported(st)
+    if is_st_supported(st)
         finalize_subplot!(plt, plotattributes)
 
     else
