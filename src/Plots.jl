@@ -18,7 +18,10 @@ using Base.Meta
 import Showoff
 import StatsBase
 import JSON
-import RecipeUtils: _process_userrecipes, _process_plotrecipe, _process_seriesrecipe
+import RecipeUtils: _process_userrecipes, _process_plotrecipe,
+                    _process_seriesrecipe, _preprocess_args,
+                    preprocessArgs!, is_st_supported,
+                    finalize_subplot!
 
 using Requires
 

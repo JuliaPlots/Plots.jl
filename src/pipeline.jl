@@ -1,5 +1,13 @@
 
+function finalize_subplot!(plt, plotattributes::AKW)
+    sp = _prepare_subplot(plt, plotattributes)
+    _prepare_annotations(sp, plotattributes)
+    _expand_subplot_extrema(sp, plotattributes, st)
+    _update_series_attributes!(plotattributes, plt, sp)
+    _add_the_series(plt, sp, plotattributes)
+end
 
+is_st_supported(st::Symbol) = is_seriestype_supported(st)
 # ------------------------------------------------------------------
 # preprocessing
 
