@@ -1,5 +1,5 @@
 module RecipeUtils
 
-greet() = print("Hello World!")
+include("pipeline.jl")
 
 end # module
