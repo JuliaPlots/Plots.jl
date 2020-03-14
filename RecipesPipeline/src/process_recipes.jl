@@ -32,8 +32,6 @@ function _process_userrecipes(plt, plotattributes::AbstractDict{Symbol,Any}, arg
         end
     end
 
-    # don't allow something else to handle it
-    plotattributes[:smooth] = false
     kw_list
 end
 
