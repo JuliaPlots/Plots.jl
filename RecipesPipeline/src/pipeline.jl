@@ -1,6 +1,8 @@
 
+_preprocess_args(p, args, s) = args
+
 function _process_userrecipes(plt, plotattributes::AKW, args)
-    still_to_process = RecipeData[]
+    still_to_process = RecipesBase.RecipeData[]
     args = _preprocess_args(plotattributes, args, still_to_process)
 
     # for plotting recipes, swap out the args and update the parameter dictionary
@@ -16,7 +18,7 @@ function _process_userrecipes(plt, plotattributes::AKW, args)
         # for further processing.
         next_series = popfirst!(still_to_process)
         # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
-        if !(typeof(next_series) <: RecipeData)
+        if !(typeof(next_series) <: RecipesBase.RecipeData)
             error("Inputs couldn't be processed... expected RecipeData but got: $next_series")
         end
         if isempty(next_series.args)
@@ -94,7 +96,7 @@ function _process_seriesrecipe(plt::Plot, plotattributes::AKW)
 
         # assuming there was no error, recursively apply the series recipes
         for data in datalist
-            if isa(data, RecipeData)
+            if isa(data, RecipesBase.RecipeData)
                 preprocessArgs!(data.plotattributes)
                 if data.plotattributes[:seriestype] == st
                     error("The seriestype didn't change in series recipe $st.  This will cause a StackOverflow.")
