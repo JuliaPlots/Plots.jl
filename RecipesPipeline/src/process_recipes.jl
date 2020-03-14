@@ -1,7 +1,7 @@
 
 _preprocess_args(p, args, s) = args
 
-function _process_userrecipes(plt, plotattributes::AKW, args)
+function _process_userrecipes(plt, plotattributes::AbstractDict{Symbol,Any}, args)
     still_to_process = RecipesBase.RecipeData[]
     args = _preprocess_args(plotattributes, args, still_to_process)
 
@@ -11,7 +11,7 @@ function _process_userrecipes(plt, plotattributes::AKW, args)
     # the recipe will return a list a Series objects... the ones that are
     # finished (no more args) get added to the kw_list, the ones that are not
     # are placed on top of the stack and are then processed further.
-    kw_list = KW[]
+    kw_list = Dict{Symbol,Any}[]
     while !isempty(still_to_process)
         # grab the first in line to be processed and either add it to the kw_list or
         # pass it through apply_recipe to generate a list of RecipeData objects (data + attributes)
@@ -40,7 +40,7 @@ end
 # to generate a list of RecipeData objects (data + attributes).
 # If we applied a "plot recipe" without error, then add the returned datalist's KWs,
 # otherwise we just add the original KW.
-function _process_plotrecipe(plt::Plot, kw::AKW, kw_list::Vector{KW}, still_to_process::Vector{KW})
+function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{Dict{Symbol,Any}}, still_to_process::Vector{Dict{Symbol,Any}})
     if !isa(get(kw, :seriestype, nothing), Symbol)
         # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
         push!(kw_list, kw)
@@ -71,7 +71,7 @@ end
 
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
-function _process_seriesrecipe(plt::Plot, plotattributes::AKW)
+function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any})
     #println("process $(typeof(plotattributes))")
     # replace seriestype aliases
     st = Symbol(plotattributes[:seriestype])
