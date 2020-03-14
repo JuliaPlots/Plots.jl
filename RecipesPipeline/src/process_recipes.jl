@@ -1,5 +1,7 @@
 
-_preprocess_args(p, args, s) = args
+_preprocess_args(p, args, s) = args #needs to modify still_to_process
+preprocessArgs!(p) = p
+is_seriestype_supported(st) = true
 
 function _process_userrecipes(plt, plotattributes::AbstractDict{Symbol,Any}, args)
     still_to_process = RecipesBase.RecipeData[]
@@ -48,7 +50,7 @@ function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{
     end
     try
         st = kw[:seriestype]
-        st = kw[:seriestype] = get(_typeAliases, st, st)
+        st = kw[:seriestype] = get(_typeAliases, st, st) #TODO this requires access to the const_typeAliases
         datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
         for data in datalist
             preprocessArgs!(data.plotattributes)
@@ -75,7 +77,7 @@ function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any})
     #println("process $(typeof(plotattributes))")
     # replace seriestype aliases
     st = Symbol(plotattributes[:seriestype])
-    st = plotattributes[:seriestype] = get(_typeAliases, st, st)
+    st = plotattributes[:seriestype] = get(_typeAliases, st, st) #TODO here again
 
     # shapes shouldn't have fillrange set
     if plotattributes[:seriestype] == :shape
