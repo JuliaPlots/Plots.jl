@@ -23,7 +23,8 @@ import RecipeUtils: _process_userrecipes, _process_plotrecipe,
                     preprocessArgs!, is_st_supported,
                     recipe_pipeline!,
                     _recipe_init!, _recipe_after_user!,
-                    _recipe_after_plot!, _recipe_finish!
+                    _recipe_after_plot!, _recipe_before_series!,
+                    _recipe_finish!
 
 using Requires
 
