@@ -15,5 +15,5 @@ function recipe_pipeline(plt,             # frontend specific representation of 
     kw_list = _process_seriesrecipe(plt, plotattributes)
     _recipe_after_series(plt, plotattributes, series_ind)
   end
-  _recipe
+  _recipe_finish((plt, plotattributes, args)
 end
