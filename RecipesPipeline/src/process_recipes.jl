@@ -43,7 +43,7 @@ end
 # to generate a list of RecipeData objects (data + attributes).
 # If we applied a "plot recipe" without error, then add the returned datalist's KWs,
 # otherwise we just add the original KW.
-function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{Dict{Symbol,Any}}, still_to_process::Vector{Dict{Symbol,Any}})
+function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{Dict{Symbol,Any}}, still_to_process::Vector{Dict{Symbol,Any}}; _typeAliases::AbstractDict{Symbol,Symbol}=Dict())
     if !isa(get(kw, :seriestype, nothing), Symbol)
         # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
         push!(kw_list, kw)
@@ -51,7 +51,7 @@ function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{
     end
     try
         st = kw[:seriestype]
-        st = kw[:seriestype] = get(_typeAliases, st, st) #TODO this requires access to the const_typeAliases
+        st = kw[:seriestype] = get(_typeAliases, st, st)
         datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
         for data in datalist
             preprocessArgs!(data.plotattributes)
@@ -74,11 +74,11 @@ end
 
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
-function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any})
+function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; _typeAliases::AbstractDict{Symbol,Symbol}=Dict())
     #println("process $(typeof(plotattributes))")
     # replace seriestype aliases
     st = Symbol(plotattributes[:seriestype])
-    st = plotattributes[:seriestype] = get(_typeAliases, st, st) #TODO here again
+    st = plotattributes[:seriestype] = get(_typeAliases, st, st)
 
     # shapes shouldn't have fillrange set
     if plotattributes[:seriestype] == :shape
