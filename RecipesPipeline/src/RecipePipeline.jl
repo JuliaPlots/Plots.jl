@@ -1,4 +1,4 @@
-module RecipeUtils
+module RecipePipeline
 
 import RecipesBase
 include("pipeline.jl")
