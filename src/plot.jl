@@ -54,7 +54,7 @@ function plot(args...; kw...)
     # create an empty Plot then process
     plt = Plot()
     # plt.user_attr = plotattributes
-    recipe_pipeline(plt, plotattributes, args)
+    recipe_pipeline!(plt, plotattributes, args)
 end
 
 # build a new plot from existing plots
@@ -155,7 +155,7 @@ function plot!(plt::Plot, args...; kw...)
     plotattributes = KW(kw)
     preprocessArgs!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
-    recipe_pipeline(plt, plotattributes, args)
+    recipe_pipeline!(plt, plotattributes, args)
 end
 
 # -------------------------------------------------------------------------------
@@ -165,7 +165,7 @@ end
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
 
 ## here we implement the recipe interface
-function _recipe_init(plt::Plot, plotattributes::AKW, args::Tuple)
+function _recipe_init!(plt::Plot, plotattributes::AKW, args::Tuple)
     plotattributes[:plot_object] = plt
 
     if !isempty(args) && !isdefined(Main, :StatsPlots) &&
@@ -174,7 +174,7 @@ function _recipe_init(plt::Plot, plotattributes::AKW, args::Tuple)
     end
 end
 
-function _recipe_after_plot(plt::Plot, plotattributes::AKW, args::Tuple)
+function _recipe_after_plot!(plt::Plot, plotattributes::AKW, args::Tuple)
     # --------------------------------
     # Plot/Subplot/Layout setup
     # --------------------------------
@@ -182,7 +182,7 @@ function _recipe_after_plot(plt::Plot, plotattributes::AKW, args::Tuple)
     _subplot_setup(plt, plotattributes, kw_list)
 end
 
-function _recipe_finish(plt::Plot, plotattributes::AKW, args::Tuple)
+function _recipe_finish!(plt::Plot, plotattributes::AKW, args::Tuple)
     current(plt)
 
     # do we want to force display?
