@@ -12,7 +12,7 @@ function _recipe_finish!(plt, plotattributes, args) end
 function recipe_pipeline!(plt,              # frontend specific representation of a plot
                          plotattributes,    # current state of recipe keywords
                          args;              # set of arguments passed by the user
-                         _typeAliases=Dict())
+                         type_aliases)
 
     _recipe_init!(plt, plotattributes, args)
 
@@ -35,7 +35,7 @@ function recipe_pipeline!(plt,              # frontend specific representation o
     kw_list = Dict{Symbol,Any}[]
     while !isempty(still_to_process)
         next_kw = popfirst!(still_to_process)
-        _process_plotrecipe(plt, next_kw, kw_list, still_to_process; _typeAliases=_typeAliases)
+        _process_plotrecipe(plt, next_kw, kw_list, still_to_process; type_aliases=type_aliases)
     end
 
     _recipe_after_plot!(plt, plotattributes, kw_list)
