@@ -54,7 +54,7 @@ function plot(args...; kw...)
     # create an empty Plot then process
     plt = Plot()
     # plt.user_attr = plotattributes
-    recipe_pipeline!(plt, plotattributes, args)
+    recipe_pipeline!(plt, plotattributes, args, type_aliases=_typeAliases)
 end
 
 # build a new plot from existing plots
@@ -155,7 +155,7 @@ function plot!(plt::Plot, args...; kw...)
     plotattributes = KW(kw)
     preprocessArgs!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
-    recipe_pipeline!(plt, plotattributes, args)
+    recipe_pipeline!(plt, plotattributes, args, type_aliases=_typeAliases)
 end
 
 # -------------------------------------------------------------------------------
@@ -174,12 +174,22 @@ function _recipe_init!(plt::Plot, plotattributes::AKW, args::Tuple)
     end
 end
 
-function _recipe_after_plot!(plt::Plot, plotattributes::AKW, args::Tuple)
+function _recipe_after_plot!(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # --------------------------------
     # Plot/Subplot/Layout setup
     # --------------------------------
     _plot_setup(plt, plotattributes, kw_list)
     _subplot_setup(plt, plotattributes, kw_list)
+end
+
+function _recipe_before_series!(plt::Plot, kw, kw_list)
+    sp::Subplot = kw[:subplot]
+
+    # in series attributes given as vector with one element per series,
+    # select the value for current series
+    _slice_series_args!(kw, plt, sp, series_idx(kw_list,kw))
+
+    series_attr = Attr(kw, _series_defaults)
 end
 
 function _recipe_finish!(plt::Plot, plotattributes::AKW, args::Tuple)

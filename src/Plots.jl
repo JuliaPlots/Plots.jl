@@ -18,12 +18,13 @@ using Base.Meta
 import Showoff
 import StatsBase
 import JSON
-import RecipeUtils: _process_userrecipes, _process_plotrecipe,
+import RecipePipeline: _process_userrecipes, _process_plotrecipe,
                     _process_seriesrecipe, _preprocess_args,
                     preprocessArgs!, is_st_supported,
                     recipe_pipeline!,
                     _recipe_init!, _recipe_after_user!,
-                    _recipe_after_plot!, _recipe_finish!
+                    _recipe_after_plot!, _recipe_before_series!,
+                    _recipe_finish!
 
 using Requires
 
@@ -228,7 +229,7 @@ end
 
 const CURRENT_BACKEND = CurrentBackend(:none)
 
-include("precompile.jl")
-_precompile_()
+# include("precompile.jl")
+# _precompile_()
 
 end # module
