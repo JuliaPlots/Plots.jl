@@ -1,5 +1,6 @@
 
 _preprocess_args(p, args, s) = args #needs to modify still_to_process
+_process_userrecipe(plt, kw_list, next_series) = nothing
 preprocessArgs!(p) = p
 is_st_supported(st) = true
 finalize_subplot!(plt, att) = nothing
@@ -72,7 +73,7 @@ end
 
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
-function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; _typeAliases::AbstractDict{Symbol,Symbol}=Dict())
+function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; type_aliases::AbstractDict{Symbol,Symbol})
     #println("process $(typeof(plotattributes))")
     # replace seriestype aliases
     st = Symbol(plotattributes[:seriestype])
