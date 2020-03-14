@@ -54,7 +54,7 @@ function plot(args...; kw...)
     # create an empty Plot then process
     plt = Plot()
     # plt.user_attr = plotattributes
-    recipe_pipeline!(plt, plotattributes, args)
+    recipe_pipeline!(plt, plotattributes, args, type_aliases=_typeAliases)
 end
 
 # build a new plot from existing plots
@@ -155,7 +155,7 @@ function plot!(plt::Plot, args...; kw...)
     plotattributes = KW(kw)
     preprocessArgs!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
-    recipe_pipeline!(plt, plotattributes, args, _typeAliases=_typeAliases)
+    recipe_pipeline!(plt, plotattributes, args, type_aliases=_typeAliases)
 end
 
 # -------------------------------------------------------------------------------
