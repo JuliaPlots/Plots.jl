@@ -1,7 +1,7 @@
 
 _preprocess_args(p, args, s) = args #needs to modify still_to_process
 preprocessArgs!(p) = p
-is_seriestype_supported(st) = true
+is_st_supported(st) = true
 finalize_subplot!(plt, att) = nothing
 
 function _process_userrecipes(plt, plotattributes::AbstractDict{Symbol,Any}, args)
