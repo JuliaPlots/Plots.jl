@@ -1,5 +1,5 @@
 
-function _process_userrecipes(plt::Plot, plotattributes::AKW, args)
+function _process_userrecipes(plt, plotattributes::AKW, args)
     still_to_process = RecipeData[]
     args = _preprocess_args(plotattributes, args, still_to_process)
 
