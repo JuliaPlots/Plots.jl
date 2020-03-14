@@ -2,6 +2,7 @@
 _preprocess_args(p, args, s) = args #needs to modify still_to_process
 preprocessArgs!(p) = p
 is_seriestype_supported(st) = true
+finalize_subplot!(plt, att) = nothing
 
 function _process_userrecipes(plt, plotattributes::AbstractDict{Symbol,Any}, args)
     still_to_process = RecipesBase.RecipeData[]
@@ -86,11 +87,7 @@ function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any})
 
     # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
     if is_seriestype_supported(st)
-        sp = _prepare_subplot(plt, plotattributes)
-        _prepare_annotations(sp, plotattributes)
-        _expand_subplot_extrema(sp, plotattributes, st)
-        _update_series_attributes!(plotattributes, plt, sp)
-        _add_the_series(plt, sp, plotattributes)
+        finalize_subplot!(plt, plotattributes)
 
     else
         # get a sub list of series for this seriestype
