@@ -1,5 +1,6 @@
 
 _preprocess_args(p, args, s) = args #needs to modify still_to_process
+_process_userrecipe(plt, kw_list, next_series) = nothing
 preprocessArgs!(p) = p
 is_st_supported(st) = true
 finalize_subplot!(plt, att) = nothing
