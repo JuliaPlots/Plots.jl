@@ -189,12 +189,7 @@ function _plot!(plt::Plot, plotattributes::AKW, args::Tuple)
     # the plot layout is created, which allows for setting layouts and other plot-wide attributes.
     # we get inputs which have been fully processed by "user recipes" and "type recipes",
     # so we can expect standard vectors, surfaces, etc.  No defaults have been set yet.
-    still_to_process = kw_list
-    kw_list = KW[]
-    while !isempty(still_to_process)
-        next_kw = popfirst!(still_to_process)
-        _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
-    end
+    _process_plotrecipes(plt, kw_list, _typeAliases)
 
     # @info(2)
     # map(DD, kw_list)
