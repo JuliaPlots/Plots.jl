@@ -18,6 +18,7 @@ using Base.Meta
 import Showoff
 import StatsBase
 import JSON
+import RecipeUtils: _process_userrecipes, _process_plotrecipe, _process_seriesrecipe
 
 using Requires
 
