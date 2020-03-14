@@ -54,7 +54,7 @@ function plot(args...; kw...)
     # create an empty Plot then process
     plt = Plot()
     # plt.user_attr = plotattributes
-    _plot!(plt, plotattributes, args)
+    recipe_pipeline(plt, plotattributes, args)
 end
 
 # build a new plot from existing plots
@@ -155,7 +155,7 @@ function plot!(plt::Plot, args...; kw...)
     plotattributes = KW(kw)
     preprocessArgs!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
-    _plot!(plt, plotattributes, args)
+    recipe_pipeline(plt, plotattributes, args)
 end
 
 # -------------------------------------------------------------------------------
@@ -163,78 +163,26 @@ end
 # this is the core plotting function.  recursively apply recipes to build
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
-function _plot!(plt::Plot, plotattributes::AKW, args::Tuple)
+
+## here we implement the recipe interface
+function _recipe_init(plt::Plot, plotattributes::AKW, args::Tuple)
     plotattributes[:plot_object] = plt
 
     if !isempty(args) && !isdefined(Main, :StatsPlots) &&
             first(split(string(typeof(args[1])), ".")) == "DataFrames"
         @warn("You're trying to plot a DataFrame, but this functionality is provided by StatsPlots")
     end
+end
 
-    # --------------------------------
-    # "USER RECIPES"
-    # --------------------------------
-
-    kw_list = _process_userrecipes(plt, plotattributes, args)
-
-    # @info(1)
-    # map(DD, kw_list)
-
-
-    # --------------------------------
-    # "PLOT RECIPES"
-    # --------------------------------
-
-    # "plot recipe", which acts like a series type, and is processed before
-    # the plot layout is created, which allows for setting layouts and other plot-wide attributes.
-    # we get inputs which have been fully processed by "user recipes" and "type recipes",
-    # so we can expect standard vectors, surfaces, etc.  No defaults have been set yet.
-    still_to_process = kw_list
-    kw_list = KW[]
-    while !isempty(still_to_process)
-        next_kw = popfirst!(still_to_process)
-        _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
-    end
-
-    # @info(2)
-    # map(DD, kw_list)
-
+function _recipe_after_plot(plt::Plot, plotattributes::AKW, args::Tuple)
     # --------------------------------
     # Plot/Subplot/Layout setup
     # --------------------------------
     _plot_setup(plt, plotattributes, kw_list)
     _subplot_setup(plt, plotattributes, kw_list)
+end
 
-    # !!! note: At this point, kw_list is fully decomposed into individual series... one KW per series.          !!!
-    # !!!       The next step is to recursively apply series recipes until the backend supports that series type !!!
-
-    # --------------------------------
-    # "SERIES RECIPES"
-    # --------------------------------
-
-    # @info(3)
-    # map(DD, kw_list)
-
-    for kw in kw_list
-        sp::Subplot = kw[:subplot]
-
-        # in series attributes given as vector with one element per series,
-        # select the value for current series
-        _slice_series_args!(kw, plt, sp, series_idx(kw_list,kw))
-
-
-        series_attr = Attr(kw, _series_defaults)
-        # now we have a fully specified series, with colors chosen.   we must recursively handle
-        # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,
-        # we check for a recipe that will convert that series type into one made up of lower-level components.
-        # For example, a histogram is just a bar plot with binned data, a bar plot is really a filled step plot,
-        # and a step plot is really just a path.  So any backend that supports drawing a path will implicitly
-        # be able to support step, bar, and histogram plots (and any recipes that use those components).
-        _process_seriesrecipe(plt, series_attr)
-    end
-
-    # --------------------------------
-
+function _recipe_finish(plt::Plot, plotattributes::AKW, args::Tuple)
     current(plt)
 
     # do we want to force display?
@@ -244,6 +192,68 @@ function _plot!(plt::Plot, plotattributes::AKW, args::Tuple)
     _do_plot_show(plt, plt[:show])
 
     plt
+end
+# function _plot!(plt::Plot, plotattributes::AKW, args::Tuple)
+#
+#     # --------------------------------
+#     # "USER RECIPES"
+#     # --------------------------------
+#
+#     kw_list = _process_userrecipes(plt, plotattributes, args)
+#
+#     # @info(1)
+#     # map(DD, kw_list)
+#
+#
+#     # --------------------------------
+#     # "PLOT RECIPES"
+#     # --------------------------------
+#
+#     # "plot recipe", which acts like a series type, and is processed before
+#     # the plot layout is created, which allows for setting layouts and other plot-wide attributes.
+#     # we get inputs which have been fully processed by "user recipes" and "type recipes",
+#     # so we can expect standard vectors, surfaces, etc.  No defaults have been set yet.
+#     still_to_process = kw_list
+#     kw_list = KW[]
+#     while !isempty(still_to_process)
+#         next_kw = popfirst!(still_to_process)
+#         _process_plotrecipe(plt, next_kw, kw_list, still_to_process)
+#     end
+#
+#     # @info(2)
+#     # map(DD, kw_list)
+#
+#
+#     # !!! note: At this point, kw_list is fully decomposed into individual series... one KW per series.          !!!
+#     # !!!       The next step is to recursively apply series recipes until the backend supports that series type !!!
+#
+#     # --------------------------------
+#     # "SERIES RECIPES"
+#     # --------------------------------
+#
+#     # @info(3)
+#     # map(DD, kw_list)
+#
+#     for kw in kw_list
+#         sp::Subplot = kw[:subplot]
+#
+#         # in series attributes given as vector with one element per series,
+#         # select the value for current series
+#         _slice_series_args!(kw, plt, sp, series_idx(kw_list,kw))
+#
+#
+#         series_attr = Attr(kw, _series_defaults)
+#         # now we have a fully specified series, with colors chosen.   we must recursively handle
+#         # series recipes, which dispatch on seriestype.  If a backend does not natively support a seriestype,
+#         # we check for a recipe that will convert that series type into one made up of lower-level components.
+#         # For example, a histogram is just a bar plot with binned data, a bar plot is really a filled step plot,
+#         # and a step plot is really just a path.  So any backend that supports drawing a path will implicitly
+#         # be able to support step, bar, and histogram plots (and any recipes that use those components).
+#         _process_seriesrecipe(plt, series_attr)
+#     end
+
+    # --------------------------------
+
 end
 
 

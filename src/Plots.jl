@@ -21,7 +21,9 @@ import JSON
 import RecipeUtils: _process_userrecipes, _process_plotrecipe,
                     _process_seriesrecipe, _preprocess_args,
                     preprocessArgs!, is_st_supported,
-                    finalize_subplot!
+                    finalize_subplot!, recipe_pipeline,
+                    _recipe_init, _recipe_after_user,
+                    _recipe_after_plot, _recipe_finish
 
 using Requires
 
