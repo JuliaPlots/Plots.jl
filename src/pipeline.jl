@@ -1,4 +1,3 @@
-
 function finalize_subplot!(plt::Plot, st, plotattributes::AKW)
     sp = _prepare_subplot(plt, plotattributes)
     _prepare_annotations(sp, plotattributes)
@@ -8,7 +7,7 @@ function finalize_subplot!(plt::Plot, st, plotattributes::AKW)
 end
 
 # Override the RecipesPipeline `is_st_supported` for Plots.
-RecipePipeline.is_st_supported(::Plot, st::Symbol) = is_seriestype_supported(st)
+is_st_supported(::Plot, st::Symbol) = is_seriestype_supported(st)
 # ------------------------------------------------------------------
 # preprocessing
 

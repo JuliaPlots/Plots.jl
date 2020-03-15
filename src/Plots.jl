@@ -24,7 +24,7 @@ import RecipePipeline: _process_userrecipe, _process_plotrecipe,
                     finalize_subplot!, recipe_pipeline!,
                     _recipe_init!, _recipe_after_user!,
                     _recipe_after_plot!, _recipe_before_series!,
-                    _recipe_finish!
+                    _recipe_finish!, is_st_supported
 
 using Requires
 
