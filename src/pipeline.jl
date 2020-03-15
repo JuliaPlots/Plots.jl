@@ -7,7 +7,8 @@ function finalize_subplot!(plt::Plot, st, plotattributes::AKW)
     _add_the_series(plt, sp, plotattributes)
 end
 
-is_st_supported(st::Symbol) = is_seriestype_supported(st)
+# Override the RecipesPipeline `is_st_supported` for Plots.
+RecipePipeline.is_st_supported(::Plot, st::Symbol) = is_seriestype_supported(st)
 # ------------------------------------------------------------------
 # preprocessing
 
