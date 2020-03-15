@@ -28,7 +28,7 @@ end
 Base.copy(surf::Surface) = Surface(copy(surf.surf))
 Base.eltype(surf::Surface{T}) where {T} = eltype(T)
 # the catch-all recipes
-@recipe function f(::Type{SliceIt}, x, y, z)
+RecipesBase.@recipe function f(::Type{SliceIt}, x, y, z)
 
     # handle data with formatting attached
     if typeof(x) <: Formatted
@@ -84,10 +84,10 @@ Base.eltype(surf::Surface{T}) where {T} = eltype(T)
 end
 
 # this is the default "type recipe"... just pass the object through
-@recipe f(::Type{T}, v::T) where {T<:Any} = v
+RecipesBase.@recipe f(::Type{T}, v::T) where {T<:Any} = v
 
 # this should catch unhandled "series recipes" and error with a nice message
-@recipe f(::Type{V}, x, y, z) where {V<:Val} = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
+RecipesBase.@recipe f(::Type{V}, x, y, z) where {V<:Val} = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
 
 # create a new "build_series_args" which converts all inputs into xs = Any[xitems], ys = Any[yitems].
 # Special handling for: no args, xmin/xmax, parametric, dataframes
