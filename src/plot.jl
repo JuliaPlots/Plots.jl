@@ -182,6 +182,11 @@ function _recipe_after_plot!(plt::Plot, plotattributes::AKW, kw_list::Vector{KW}
     _subplot_setup(plt, plotattributes, kw_list)
 end
 
+function _recipe_after_user!(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
+    # don't allow something else to handle it
+    plotattributes[:smooth] = false
+end
+
 function _recipe_before_series!(plt::Plot, kw, kw_list)
     sp::Subplot = kw[:subplot]
 
