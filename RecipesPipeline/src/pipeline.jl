@@ -3,7 +3,7 @@ function _recipe_init!(plt, plotattributes, args) end
 function _recipe_after_user!(plt, plotattributes, args) end
 function _recipe_after_plot!(plt, plotattributes, kw_list) end
 function _recipe_before_series!(plt, kw, kw_list) end
-function _recipe_finish!(plt, plotattributes, args) end
+function _recipe_finish!(plt, plotattributes, args) plt end
 
 ##
 # Here comes the specification of when which recipe is processed.
