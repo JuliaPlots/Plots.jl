@@ -1,8 +1,31 @@
+# # The Recipe Consumer Interface
+# To consume RecipesBase recipes, we allow plotting packages to overload the following
+# hooks into the main Recipe pipeline.  The docstrings should eventually describe all
+# necessary functionality.
+# All these methods have the first parameter as the plot object which is being acted on.
+# This allows for a dispatch overload by any consumer of these recipes.
 
-_preprocess_args(p, args, s) = args #needs to modify still_to_process
+"""
+    _preprocess_args(p, args, s)
+
+Take in a Vector of RecipeData (`s`) and fill in default attributes.
+"""
+_preprocess_args(p, args, s) = args # needs to modify still_to_process
+
+"""
+"""
 _process_userrecipe(plt, kw_list, next_series) = nothing
+
+"""
+"""
 preprocessArgs!(p) = p
-is_st_supported(st) = true
+
+"""
+"""
+is_st_supported(plt, st) = true
+
+"""
+"""
 finalize_subplot!(plt, st, att) = nothing
 
 function _process_userrecipes(plt, plotattributes::AbstractDict{Symbol,Any}, args)
@@ -23,7 +46,7 @@ function _process_userrecipes(plt, plotattributes::AbstractDict{Symbol,Any}, arg
         next_series = popfirst!(still_to_process)
         # recipedata should be of type RecipeData.  if it's not then the inputs must not have been fully processed by recipes
         if !(typeof(next_series) <: RecipesBase.RecipeData)
-            error("Inputs couldn't be processed... expected RecipeData but got: $next_series")
+            @error("Inputs couldn't be processed. Expected RecipeData but got: $next_series")
         end
         if isempty(next_series.args)
             _process_userrecipe(plt, kw_list, next_series)
@@ -55,7 +78,7 @@ function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{
         for data in datalist
             preprocessArgs!(data.plotattributes)
             if data.plotattributes[:seriestype] == st
-                error("Plot recipe $st returned the same seriestype: $(data.plotattributes)")
+                @error("Plot recipe $st returned the same seriestype: $(data.plotattributes)")
             end
             push!(still_to_process, data.plotattributes)
         end
@@ -73,7 +96,7 @@ end
 
 # this method recursively applies series recipes when the seriestype is not supported
 # natively by the backend
-function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; type_aliases::AbstractDict{Symbol,Symbol})
+function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; type_aliases::AbstractDict{Symbol,Symbol} = Dict{Symbol,Symbol}())
     #println("process $(typeof(plotattributes))")
     # replace seriestype aliases
     st = Symbol(plotattributes[:seriestype])
@@ -85,7 +108,7 @@ function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; ty
     end
 
     # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
-    if is_st_supported(st)
+    if is_st_supported(plt, st)
         finalize_subplot!(plt, st, plotattributes)
 
     else
@@ -97,7 +120,7 @@ function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; ty
             if isa(data, RecipesBase.RecipeData)
                 preprocessArgs!(data.plotattributes)
                 if data.plotattributes[:seriestype] == st
-                    error("The seriestype didn't change in series recipe $st.  This will cause a StackOverflow.")
+                    @error("The seriestype didn't change in series recipe $st.  This will cause a StackOverflow.")
                 end
                 _process_seriesrecipe(plt, data.plotattributes)
             else
@@ -106,5 +129,5 @@ function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; ty
             end
         end
     end
-    nothing
+    return nothing
 end
