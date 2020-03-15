@@ -3,7 +3,7 @@ _preprocess_args(p, args, s) = args #needs to modify still_to_process
 _process_userrecipe(plt, kw_list, next_series) = nothing
 preprocessArgs!(p) = p
 is_st_supported(st) = true
-finalize_subplot!(plt, att) = nothing
+finalize_subplot!(plt, st, att) = nothing
 
 function _process_userrecipes(plt, plotattributes::AbstractDict{Symbol,Any}, args)
     still_to_process = RecipesBase.RecipeData[]
@@ -42,7 +42,7 @@ end
 # to generate a list of RecipeData objects (data + attributes).
 # If we applied a "plot recipe" without error, then add the returned datalist's KWs,
 # otherwise we just add the original KW.
-function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{Dict{Symbol,Any}}, still_to_process::Vector{Dict{Symbol,Any}}; _typeAliases::AbstractDict{Symbol,Symbol}=Dict())
+function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{Dict{Symbol,Any}}, still_to_process::Vector{Dict{Symbol,Any}}; type_aliases::AbstractDict{Symbol,Symbol}=Dict())
     if !isa(get(kw, :seriestype, nothing), Symbol)
         # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
         push!(kw_list, kw)
@@ -50,7 +50,7 @@ function _process_plotrecipe(plt, kw::AbstractDict{Symbol,Any}, kw_list::Vector{
     end
     try
         st = kw[:seriestype]
-        st = kw[:seriestype] = get(_typeAliases, st, st)
+        st = kw[:seriestype] = get(type_aliases, st, st)
         datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
         for data in datalist
             preprocessArgs!(data.plotattributes)
@@ -77,7 +77,7 @@ function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; ty
     #println("process $(typeof(plotattributes))")
     # replace seriestype aliases
     st = Symbol(plotattributes[:seriestype])
-    st = plotattributes[:seriestype] = get(_typeAliases, st, st)
+    st = plotattributes[:seriestype] = get(type_aliases, st, st)
 
     # shapes shouldn't have fillrange set
     if plotattributes[:seriestype] == :shape
@@ -85,8 +85,8 @@ function _process_seriesrecipe(plt, plotattributes::AbstractDict{Symbol,Any}; ty
     end
 
     # if it's natively supported, finalize processing and pass along to the backend, otherwise recurse
-    if is_seriestype_supported(st)
-        finalize_subplot!(plt, plotattributes)
+    if is_st_supported(st)
+        finalize_subplot!(plt, st, plotattributes)
 
     else
         # get a sub list of series for this seriestype
