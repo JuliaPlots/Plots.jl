@@ -650,23 +650,6 @@ end
 
 # -----------------------------------------------------------------------
 
-abstract type AbstractSurface end
-
-"represents a contour or surface mesh"
-struct Surface{M<:AMat} <: AbstractSurface
-  surf::M
-end
-
-Surface(f::Function, x, y) = Surface(Float64[f(xi,yi) for yi in y, xi in x])
-
-Base.Array(surf::Surface) = surf.surf
-
-for f in (:length, :size)
-  @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
-end
-Base.copy(surf::Surface) = Surface(copy(surf.surf))
-Base.eltype(surf::Surface{T}) where {T} = eltype(T)
-
 function expand_extrema!(a::Axis, surf::Surface)
     ex = a[:extrema]
     for vi in surf.surf

@@ -717,9 +717,6 @@ makekw(; kw...) = KW(kw)
 wraptuple(x::Tuple) = x
 wraptuple(x) = (x,)
 
-trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
-trueOrAllTrue(f::Function, x) = f(x)
-
 allLineTypes(arg)   = trueOrAllTrue(a -> get(_typeAliases, a, a) in _allTypes, arg)
 allStyles(arg)      = trueOrAllTrue(a -> get(_styleAliases, a, a) in _allStyles, arg)
 allShapes(arg)      = trueOrAllTrue(a -> is_marker_supported(get(_markerAliases, a, a)), arg) ||
