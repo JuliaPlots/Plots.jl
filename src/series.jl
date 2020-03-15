@@ -1,71 +1,4 @@
 
-
-# create a new "build_series_args" which converts all inputs into xs = Any[xitems], ys = Any[yitems].
-# Special handling for: no args, xmin/xmax, parametric, dataframes
-# Then once inputs have been converted, build the series args, map functions, etc.
-# This should cut down on boilerplate code and allow more focused dispatch on type
-# note: returns meta information... mainly for use with automatic labeling from DataFrames for now
-
-const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
-const MaybeNumber = Union{Number, Missing}
-const MaybeString = Union{AbstractString, Missing}
-const DataPoint = Union{MaybeNumber, MaybeString}
-
-prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
-prepareSeriesData(::Nothing) = nothing
-prepareSeriesData(t::Tuple{T, T}) where {T<:Number} = t
-prepareSeriesData(f::Function) = f
-prepareSeriesData(a::AbstractArray{<:MaybeNumber}) = replace!(
-                                    x -> ismissing(x) || isinf(x) ? NaN : x,
-                                    map(float,a))
-prepareSeriesData(a::AbstractArray{<:MaybeString}) = replace(x -> ismissing(x) ? "" : x, a)
-prepareSeriesData(s::Surface{<:AMat{<:MaybeNumber}}) = Surface(prepareSeriesData(s.surf))
-prepareSeriesData(s::Surface) = s  # non-numeric Surface, such as an image
-prepareSeriesData(v::Volume) = Volume(prepareSeriesData(v.v), v.x_extents, v.y_extents, v.z_extents)
-
-# default: assume x represents a single series
-convertToAnyVector(x, plotattributes) = Any[prepareSeriesData(x)]
-
-# fixed number of blank series
-convertToAnyVector(n::Integer, plotattributes) = Any[zeros(0) for i in 1:n]
-
-# vector of data points is a single series
-convertToAnyVector(v::AVec{<:DataPoint}, plotattributes) = Any[prepareSeriesData(v)]
-
-# list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec, plotattributes)
-    if all(x -> x isa MaybeNumber, v)
-        convertToAnyVector(Vector{MaybeNumber}(v), plotattributes)
-    elseif all(x -> x isa MaybeString, v)
-        convertToAnyVector(Vector{MaybeString}(v), plotattributes)
-    else
-        vcat((convertToAnyVector(vi, plotattributes) for vi in v)...)
-    end
-end
-
-# Matrix is split into columns
-function convertToAnyVector(v::AMat{<:DataPoint}, plotattributes)
-    if all3D(plotattributes)
-        Any[prepareSeriesData(Surface(v))]
-    else
-        Any[prepareSeriesData(v[:, i]) for i in axes(v, 2)]
-    end
-end
-
-# --------------------------------------------------------------------
-# Fillranges & ribbons
-
-
-process_fillrange(range::Number, plotattributes) = [range]
-process_fillrange(range, plotattributes) = convertToAnyVector(range, plotattributes)
-
-process_ribbon(ribbon::Number, plotattributes) = [ribbon]
-process_ribbon(ribbon, plotattributes) = convertToAnyVector(ribbon, plotattributes)
-# ribbon as a tuple: (lower_ribbons, upper_ribbons)
-process_ribbon(ribbon::Tuple{Any,Any}, plotattributes) = collect(zip(convertToAnyVector(ribbon[1], plotattributes),
-                                                     convertToAnyVector(ribbon[2], plotattributes)))
-
-
 # --------------------------------------------------------------------
 
 # TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array
@@ -214,7 +147,6 @@ end
 
 @recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
-all3D(plotattributes) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
 @recipe function f(mat::AMat{T}) where T<:Union{Integer,AbstractFloat,Missing}
