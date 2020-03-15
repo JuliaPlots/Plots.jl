@@ -1,6 +1,12 @@
 # ensure we dispatch to the slicer
 struct SliceIt end
 
+"Represents data values with formatting that should apply to the tick labels."
+struct Formatted{T}
+    data::T
+    formatter::Function
+end
+
 # the catch-all recipes
 @recipe function f(::Type{SliceIt}, x, y, z)
 
