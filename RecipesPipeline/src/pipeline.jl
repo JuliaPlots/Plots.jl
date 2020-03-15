@@ -3,6 +3,7 @@ function _recipe_init!(plt, plotattributes, args) end
 function _recipe_after_user!(plt, plotattributes, args) end
 function _recipe_after_plot!(plt, plotattributes, kw_list) end
 function _recipe_before_series!(plt, kw, kw_list) kw end # this must always return the kwargs
+function _recipe_after_series!(plt, kw, series_ind) end
 function _recipe_finish!(plt, plotattributes, args) plt end
 
 ##
@@ -45,9 +46,10 @@ function recipe_pipeline!(plt,              # frontend specific representation o
     # --------------------------------
     # "SERIES RECIPES"
     # --------------------------------
-    for kw in kw_list
+    for (series_ind, kw) in enumerate(kw_list)
         series_attr = _recipe_before_series!(plt, kw, kw_list)
         _process_seriesrecipe(plt, series_attr, type_aliases=type_aliases)
+        _recipe_after_series!(plt, kw, series_ind)
     end
 
     _recipe_finish!(plt, plotattributes, args)
