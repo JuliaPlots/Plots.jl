@@ -1,5 +1,5 @@
 
-function finalize_subplot!(plt, plotattributes::AKW)
+function finalize_subplot!(plt::Plot, st, plotattributes::AKW)
     sp = _prepare_subplot(plt, plotattributes)
     _prepare_annotations(sp, plotattributes)
     _expand_subplot_extrema(sp, plotattributes, st)
