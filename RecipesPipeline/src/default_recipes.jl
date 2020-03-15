@@ -7,6 +7,22 @@ struct Formatted{T}
     formatter::Function
 end
 
+abstract type AbstractSurface end
+
+"represents a contour or surface mesh"
+struct Surface{M<:AMat} <: AbstractSurface
+  surf::M
+end
+
+Surface(f::Function, x, y) = Surface(Float64[f(xi,yi) for yi in y, xi in x])
+
+Base.Array(surf::Surface) = surf.surf
+
+for f in (:length, :size)
+  @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
+end
+Base.copy(surf::Surface) = Surface(copy(surf.surf))
+Base.eltype(surf::Surface{T}) where {T} = eltype(T)
 # the catch-all recipes
 @recipe function f(::Type{SliceIt}, x, y, z)
 
@@ -136,3 +152,6 @@ process_ribbon(ribbon::Tuple{Any,Any}, plotattributes) = collect(zip(convertToAn
 
 
 all3D(plotattributes) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
+
+trueOrAllTrue(f::Function, x::AbstractArray) = all(f, x)
+trueOrAllTrue(f::Function, x) = f(x)
