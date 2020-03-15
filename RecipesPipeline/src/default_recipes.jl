@@ -1,3 +1,7 @@
+# aliases
+const AVec = AbstractVector
+const AMat = AbstractMatrix
+
 # ensure we dispatch to the slicer
 struct SliceIt end
 
