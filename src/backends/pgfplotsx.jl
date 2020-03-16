@@ -872,6 +872,13 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         "scaled $(letter) ticks" => "false",
         string(letter, :label) => axis[:guide],
     )
+    tick_color = plot_color(axis[:foreground_color_axis])
+    push!(opt,
+        "$(letter) tick style" => PGFPlotsX.Options(
+            "color" => color(tick_color),
+            "opacity" => alpha(tick_color),
+        ),
+    )
 
     # set to supported framestyle
     framestyle = pgfx_framestyle(sp[:framestyle] == false ? :none : sp[:framestyle])
