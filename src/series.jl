@@ -15,6 +15,7 @@ prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plo
 prepareSeriesData(::Nothing) = nothing
 prepareSeriesData(t::Tuple{T, T}) where {T<:Number} = t
 prepareSeriesData(f::Function) = f
+prepareSeriesData(ar::AbstractRange{<:Number}) = ar
 function prepareSeriesData(a::AbstractArray{<:MaybeNumber})
     f = isimmutable(a) ? replace : replace!
     a = f(x -> ismissing(x) || isinf(x) ? NaN : x, map(float, a))
