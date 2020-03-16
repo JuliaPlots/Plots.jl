@@ -875,6 +875,20 @@ const _examples = PlotExample[
             end,
         ],
     ),
+    PlotExample(
+        "Array Types",
+        "Plots supports different `Array` types that follow the `AbstractArray` interface, like `StaticArrays` and `OffsetArrays.`",
+        [
+            quote
+                begin
+                    using StaticArrays, OffsetArrays
+                    sv = SVector{10}(rand(10))
+                    ov = OffsetVector(rand(10), -2)
+                    plot([sv, ov], label = ["StaticArray" "OffsetArray"])
+                end
+            end,
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
