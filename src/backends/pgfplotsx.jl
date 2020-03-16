@@ -259,7 +259,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         if marker isa Shape
                             x = marker.x
                             y = marker.y
-                            scale_factor = 0.025
+                            scale_factor = 0.00125
                             mark_size = opt[:markersize] * scale_factor
                             path = join(
                                 [
