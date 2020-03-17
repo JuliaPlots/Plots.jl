@@ -346,28 +346,28 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         )
                     end
                     # add to legend?
-                    if sp[:legend] != :none && pgfx_should_add_to_legend(series)
+                    if sp[:legend] != :none
                         leg_entry = if opt[:label] isa AVec
                             get(opt[:label], i, "")
                         elseif opt[:label] isa AbstractString
                             if i == 1
-                                opt[:label]
+                                get(opt, :label, "")
                             else
                                 ""
                             end
                         else
                             throw(ArgumentError("Malformed label. label = $(opt[:label])"))
                         end
-                        if leg_entry == ""
-                            push!(segment_plot.options, "forget plot" => nothing)
-                            continue
+                        if leg_entry == "" || !pgfx_should_add_to_legend(series)
+                            push!(axis.contents[end].options, "forget plot" => nothing)
+                        else
+                            leg_opt = PGFPlotsX.Options()
+                            if ribbon !== nothing
+                                pgfx_filllegend!(axis.contents[end - 3].options, opt)
+                            end
+                            legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
+                            push!(axis, legend)
                         end
-                        leg_opt = PGFPlotsX.Options()
-                        if ribbon !== nothing
-                            pgfx_filllegend!(axis.contents[end - 3].options, opt)
-                        end
-                        legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
-                        push!(axis, legend)
                     end
                 end # for segments
                 # add subplot annotations
@@ -691,7 +691,7 @@ function pgfx_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
 end
 
 function pgfx_should_add_to_legend(series::Series)
-    series.plotattributes[:primary] && series.plotattributes[:label] != "" &&
+    series.plotattributes[:primary] &&
     !(
         series.plotattributes[:seriestype] in (
             :hexbin,
