@@ -181,11 +181,11 @@ function _apply_type_recipe(plotattributes, v::AbstractArray)
     isempty(skipmissing(v)) && return Float64[]
     x = first(skipmissing(v))
     args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
-    if length(args) == 2 && typeof(args[1]) <: Function && typeof(args[2]) <: Function
+    if length(args) == 2 && all(arg -> arg isa Function, args)
         numfunc, formatter = args
         Formatted(map(numfunc, v), formatter)
     else
-        v
+        RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
     end
 end
 
