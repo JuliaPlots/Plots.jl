@@ -35,6 +35,7 @@ install:
 build_script:
   - echo "%JL_BUILD_SCRIPT%"
   - C:\julia\bin\julia -e "%JL_BUILD_SCRIPT%"
+  - C:\julia\bin\julia -e "using Pkg; Pkg.pin(PackageSpec(name="FixedPointNumbers", version="0.7"))"
 
 test_script:
   - echo "%JL_TEST_SCRIPT%"
