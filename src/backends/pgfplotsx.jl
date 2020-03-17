@@ -76,6 +76,7 @@ end
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
+        pgfx_sanitize_plot!(plt)
         the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options())
         bgc = plt.attr[:background_color_outside] == :match ?
             plt.attr[:background_color] : plt.attr[:background_color_outside]
@@ -861,6 +862,48 @@ function pgfx_fillrange_args(fillrange, x, y, z)
     y_fill = [y; y[n:-1:1]; x[1]]
     z_fill = [z; _cycle(fillrange, n:-1:1); z[1]]
     return PGFPlotsX.Coordiantes(x_fill, y_fill, z_fill)
+end
+
+function pgfx_sanitize_string(p::PlotText)
+    PlotText(pgfx_sanitize_string(p.str), p.font)
+end
+function pgfx_sanitize_string(s::AbstractString)
+    s = replace(s, r"\\?\#" => "\\#")
+    s = replace(s, r"\\?\%" => "\\%")
+    s = replace(s, r"\\?\_" => "\\_")
+    s = replace(s, r"\\?\&" => "\\&")
+end
+function pgfx_sanitize_plot!(plt)
+        for (key, value) in plt.attr
+            if value isa Union{AbstractString, AbstractVector{<:AbstractString}}
+                plt.attr[key] = pgfx_sanitize_string.(value)
+            end
+        end
+        for subplot in plt.subplots
+            for (key, value) in subplot.attr
+                if key == :annotations && subplot.attr[:annotations] !== nothing
+                    old_ann = subplot.attr[key]
+                    for i in eachindex(old_ann)
+                        subplot.attr[key][i] = (old_ann[i][1], old_ann[i][2], pgfx_sanitize_string(old_ann[i][3]))
+                    end
+                elseif value isa Union{AbstractString, AbstractVector{<:AbstractString}}
+                    subplot.attr[key] = pgfx_sanitize_string.(value)
+                end
+            end
+        end
+        for series in plt.series_list
+            for (key, value) in series.plotattributes
+                if key == :series_annotations && series.plotattributes[:series_annotations] !== nothing
+                    old_ann = series.plotattributes[key].strs
+                    for i in eachindex(old_ann)
+                        series.plotattributes[key].strs[i] = pgfx_sanitize_string(old_ann[i])
+                    end
+                elseif value isa Union{AbstractString, AbstractVector{<:AbstractString}}
+                    series.plotattributes[key] = pgfx_sanitize_string.(value)
+                end
+            end
+        end
+        ##
 end
 # --------------------------------------------------------------------------------------
 function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
