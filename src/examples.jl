@@ -887,7 +887,6 @@ _backend_skips = Dict(
     :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30, 31, 34, 37, 38, 39],
     :pgfplotsx => [ 6, # images
                     10, # histogram2d
-                    20, # annotations due to missing sanitation
                     22, # contourf
                     23, # pie
                     32, # spy
