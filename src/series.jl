@@ -178,15 +178,19 @@ _apply_type_recipe(plotattributes, v) = RecipesBase.apply_recipe(plotattributes,
 # This sort of recipe should return a pair of functions... one to convert to number,
 # and one to format tick values.
 function _apply_type_recipe(plotattributes, v::AbstractArray)
-    isempty(skipmissing(v)) && return Float64[]
-    x = first(skipmissing(v))
-    args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
-    if length(args) == 2 && all(arg -> arg isa Function, args)
-        numfunc, formatter = args
-        Formatted(map(numfunc, v), formatter)
-    else
-        RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
+    # First we try to apply an array type recipe.
+    w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
+    # If the type did not change try it element-wise
+    if v == w
+        isempty(skipmissing(v)) && return Float64[]
+        x = first(skipmissing(v))
+        args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
+        if length(args) == 2 && all(arg -> arg isa Function, args)
+            numfunc, formatter = args
+             return Formatted(map(numfunc, v), formatter)
+        end
     end
+    return w
 end
 
 # # special handling for Surface... need to properly unwrap and re-wrap
