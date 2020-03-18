@@ -180,14 +180,16 @@ _apply_type_recipe(plotattributes, v) = RecipesBase.apply_recipe(plotattributes,
 function _apply_type_recipe(plotattributes, v::AbstractArray)
     # First we try to apply an array type recipe.
     w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
-    # If it did not change try it element-wise
-    if v == w
+    # If the type did not change try it element-wise
+    if typeof(v) == typeof(w)
         isempty(skipmissing(v)) && return Float64[]
         x = first(skipmissing(v))
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
         if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args
              return Formatted(map(numfunc, v), formatter)
+         else
+             return v
         end
     end
     return w
