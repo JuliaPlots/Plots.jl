@@ -75,7 +75,8 @@ function Base.push!(pgfx_plot::PGFPlotsXPlot, item)
 end
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
-    if !pgfx_plot.is_created
+    if !pgfx_plot.is_created || pgfx_plot.was_shown
+        pgfx_sanitize_plot!(plt)
         the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options())
         bgc = plt.attr[:background_color_outside] == :match ?
             plt.attr[:background_color] : plt.attr[:background_color_outside]
@@ -129,8 +130,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     ) => nothing,
                     "fill" => cstr,
                     "fill opacity" => a,
-                    "text opacity" =>
-                                alpha(plot_color(sp[:legendfontcolor])),
+                    "text opacity" =>     alpha(plot_color(sp[:legendfontcolor])),
                     "font" => pgfx_font(
                         sp[:legendfontsize],
                         pgfx_thickness_scaling(sp),
@@ -254,16 +254,13 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     end
                 for (i, rng) in enumerate(segments)
                     segment_opt = PGFPlotsX.Options()
-                    if opt[:label] == ""
-                        push!(segment_opt, "forget plot" => nothing)
-                    end
                     segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
                     if opt[:markershape] != :none
                         marker = opt[:markershape]
                         if marker isa Shape
                             x = marker.x
                             y = marker.y
-                            scale_factor = 0.025
+                            scale_factor = 0.00125
                             mark_size = opt[:markersize] * scale_factor
                             path = join(
                                 [
@@ -302,12 +299,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                                 rng,
                             )
                         end
-                        if i == 1 && sp[:legend] != :none && pgfx_should_add_to_legend(series)
+                        if i == 1 &&
+                           sp[:legend] != :none && pgfx_should_add_to_legend(series)
                             pgfx_filllegend!(series_opt, opt)
                         end
                     end
-                    # series
-                    #
                     coordinates =
                         pgfx_series_coordinates!(sp, series, segment_opt, opt, rng)
                     segment_plot =
@@ -339,15 +335,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             series_index,
                         )
                     end
-                    # add to legend?
-                    if i == 1 && sp[:legend] != :none && pgfx_should_add_to_legend(series)
-                        leg_opt = PGFPlotsX.Options()
-                        if ribbon !== nothing
-                            pgfx_filllegend!(axis.contents[end - 3].options, opt)
-                        end
-                        legend = PGFPlotsX.LegendEntry(leg_opt, opt[:label], false)
-                        push!(axis, legend)
-                    end
                     # add series annotations
                     anns = series[:series_annotations]
                     for (xi, yi, str, fnt) in EachAnn(anns, series[:x], series[:y])
@@ -359,7 +346,31 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             pgfx_thickness_scaling(series),
                         )
                     end
-                end
+                    # add to legend?
+                    if sp[:legend] != :none
+                        leg_entry = if opt[:label] isa AVec
+                            get(opt[:label], i, "")
+                        elseif opt[:label] isa AbstractString
+                            if i == 1
+                                get(opt, :label, "")
+                            else
+                                ""
+                            end
+                        else
+                            throw(ArgumentError("Malformed label. label = $(opt[:label])"))
+                        end
+                        if leg_entry == "" || !pgfx_should_add_to_legend(series)
+                            push!(axis.contents[end].options, "forget plot" => nothing)
+                        else
+                            leg_opt = PGFPlotsX.Options()
+                            if ribbon !== nothing
+                                pgfx_filllegend!(axis.contents[end - 3].options, opt)
+                            end
+                            legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
+                            push!(axis, legend)
+                        end
+                    end
+                end # for segments
                 # add subplot annotations
                 for ann in sp[:annotations]
                     pgfx_add_annotation!(
@@ -534,8 +545,7 @@ function pgfx_series_coordinates!(
 
     cs = join(
         [
-            join(["($x, $y) [$(zs[j, i])]" for (j, x) in enumerate(xs)], " ")
-            for (i, y) in enumerate(ys)
+            join(["($x, $y) [$(zs[j, i])]" for (j, x) in enumerate(xs)], " ") for (i, y) in enumerate(ys)
         ],
         "\n\n",
     )
@@ -682,7 +692,7 @@ function pgfx_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
 end
 
 function pgfx_should_add_to_legend(series::Series)
-    series.plotattributes[:primary] && series.plotattributes[:label] != "" &&
+    series.plotattributes[:primary] &&
     !(
         series.plotattributes[:seriestype] in (
             :hexbin,
@@ -726,8 +736,8 @@ function pgfx_marker(plotattributes, i = 1)
             "fill" => cstr,
             "fill opacity" => a,
             "line width" =>
-                    pgfx_thickness_scaling(plotattributes) *
-                    _cycle(plotattributes[:markerstrokewidth], i),
+                pgfx_thickness_scaling(plotattributes) *
+                _cycle(plotattributes[:markerstrokewidth], i),
             "rotate" => if shape == :dtriangle
                 180
             elseif shape == :rtriangle
@@ -853,6 +863,48 @@ function pgfx_fillrange_args(fillrange, x, y, z)
     z_fill = [z; _cycle(fillrange, n:-1:1); z[1]]
     return PGFPlotsX.Coordiantes(x_fill, y_fill, z_fill)
 end
+
+function pgfx_sanitize_string(p::PlotText)
+    PlotText(pgfx_sanitize_string(p.str), p.font)
+end
+function pgfx_sanitize_string(s::AbstractString)
+    s = replace(s, r"\\?\#" => "\\#")
+    s = replace(s, r"\\?\%" => "\\%")
+    s = replace(s, r"\\?\_" => "\\_")
+    s = replace(s, r"\\?\&" => "\\&")
+end
+function pgfx_sanitize_plot!(plt)
+        for (key, value) in plt.attr
+            if value isa Union{AbstractString, AbstractVector{<:AbstractString}}
+                plt.attr[key] = pgfx_sanitize_string.(value)
+            end
+        end
+        for subplot in plt.subplots
+            for (key, value) in subplot.attr
+                if key == :annotations && subplot.attr[:annotations] !== nothing
+                    old_ann = subplot.attr[key]
+                    for i in eachindex(old_ann)
+                        subplot.attr[key][i] = (old_ann[i][1], old_ann[i][2], pgfx_sanitize_string(old_ann[i][3]))
+                    end
+                elseif value isa Union{AbstractString, AbstractVector{<:AbstractString}}
+                    subplot.attr[key] = pgfx_sanitize_string.(value)
+                end
+            end
+        end
+        for series in plt.series_list
+            for (key, value) in series.plotattributes
+                if key == :series_annotations && series.plotattributes[:series_annotations] !== nothing
+                    old_ann = series.plotattributes[key].strs
+                    for i in eachindex(old_ann)
+                        series.plotattributes[key].strs[i] = pgfx_sanitize_string(old_ann[i])
+                    end
+                elseif value isa Union{AbstractString, AbstractVector{<:AbstractString}}
+                    series.plotattributes[key] = pgfx_sanitize_string.(value)
+                end
+            end
+        end
+        ##
+end
 # --------------------------------------------------------------------------------------
 function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     axis = sp[Symbol(letter, :axis)]
@@ -862,6 +914,13 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         opt,
         "scaled $(letter) ticks" => "false",
         string(letter, :label) => axis[:guide],
+    )
+    tick_color = plot_color(axis[:foreground_color_axis])
+    push!(opt,
+        "$(letter) tick style" => PGFPlotsX.Options(
+            "color" => color(tick_color),
+            "opacity" => alpha(tick_color),
+        ),
     )
 
     # set to supported framestyle
@@ -882,8 +941,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         opt,
         string(letter, "label style") => PGFPlotsX.Options(
             labelpos => nothing,
-            "font" =>
-                    pgfx_font(axis[:guidefontsize], pgfx_thickness_scaling(sp)),
+            "font" =>     pgfx_font(axis[:guidefontsize], pgfx_thickness_scaling(sp)),
             "color" => cstr,
             "draw opacity" => α,
             "rotate" => axis[:guidefontrotation],
@@ -969,7 +1027,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
             opt,
             string(letter, "ticklabel style") => PGFPlotsX.Options(
                 "font" =>
-                        pgfx_font(axis[:tickfontsize], pgfx_thickness_scaling(sp)),
+                    pgfx_font(axis[:tickfontsize], pgfx_thickness_scaling(sp)),
                 "color" => cstr,
                 "draw opacity" => α,
                 "rotate" => axis[:tickfontrotation],
@@ -988,8 +1046,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 
     # framestyle
     if framestyle in (:axes, :origin)
-        axispos = axis[:mirror] ? "right" :
-                  framestyle == :axes ? "left" : "middle"
+        axispos = axis[:mirror] ? "right" : framestyle == :axes ? "left" : "middle"
 
         if axis[:draw_arrow]
             push!(opt, string("axis ", letter, " line") => axispos)
@@ -1062,6 +1119,7 @@ for mime in ("application/pdf", "image/png", "image/svg+xml")
         mime::MIME{Symbol($mime)},
         plt::Plot{PGFPlotsXBackend},
     )
+        plt.o.was_shown = true
         show(io, mime, plt.o.the_plot)
     end
 end
@@ -1071,6 +1129,7 @@ function _show(
     mime::MIME{Symbol("application/x-tex")},
     plt::Plot{PGFPlotsXBackend},
 )
+    plt.o.was_shown = true
     PGFPlotsX.print_tex(
         io,
         plt.o.the_plot,
@@ -1079,5 +1138,6 @@ function _show(
 end
 
 function _display(plt::Plot{PGFPlotsXBackend})
+    plt.o.was_shown = true
     display(PGFPlotsX.PGFPlotsXDisplay(), plt.o.the_plot)
 end
