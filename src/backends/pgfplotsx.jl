@@ -929,6 +929,14 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
             "opacity" => alpha(tick_color),
         ),
     )
+    tick_label_color = plot_color(axis[:tickfontcolor])
+    push!(opt,
+        "$(letter) tick label style" => PGFPlotsX.Options(
+            "color" => color(tick_color),
+            "opacity" => alpha(tick_color),
+            "rotate" => axis[:rotation]
+        ),
+    )
 
     # set to supported framestyle
     framestyle = pgfx_framestyle(sp[:framestyle] == false ? :none : sp[:framestyle])
