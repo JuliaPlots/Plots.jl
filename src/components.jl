@@ -640,6 +640,9 @@ function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, 
     anns
 end
 
+function process_any_label(lab, font=Font())
+    lab isa Tuple ? text(lab...) : text( lab, font )
+end
 # Give each annotation coordinates based on specified position
 function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
     position_multiplier = Dict{Symbol, Tuple{Float64,Float64}}(
