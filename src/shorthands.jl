@@ -428,8 +428,8 @@ Add annotations to an existing plot.
 
 # Arguments
 
-- `anns`: An `AbstractVector` of tuples of the form (x,y,text). The text object
-          can be an String or PlotText
+- `anns`: An `AbstractVector` of tuples of the form `(x,y,text)`. The `text` object
+          can be a `String` or `PlotText`.
 
 # Example
 ```julia-repl
