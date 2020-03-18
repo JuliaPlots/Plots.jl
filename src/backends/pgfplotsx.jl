@@ -104,7 +104,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
 
         for sp in plt.subplots
-            bb = bbox(sp)
+            bb = sp.plotarea
             sp_width = width(bb)
             sp_height = height(bb)
             dx, dy = bb.x0
@@ -117,14 +117,24 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
+            title_loc = sp[:title_location]
             bgc_inside = plot_color(sp[:background_color_inside])
             bgc_inside_a = alpha(bgc_inside)
             axis_opt = PGFPlotsX.Options(
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
-                    "font" => pgfx_font(
-                        sp[:titlefontsize],
-                        pgfx_thickness_scaling(sp),
+                        "at" => if title_loc == :left
+                            "{(0,1)}"
+                        elseif title_loc == :right
+                            "{(1,1)}"
+                        elseif title_loc isa Tuple
+                            "{$(string(title_loc))}"
+                        else
+                            "{(0.5,1)}"
+                        end,
+                        "font" => pgfx_font(
+                            sp[:titlefontsize],
+                            pgfx_thickness_scaling(sp),
                     ),
                     "color" => title_cstr,
                     "draw opacity" => title_a,
