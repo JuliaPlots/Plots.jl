@@ -158,10 +158,9 @@ end
 
 # --------------------------------------------------------------------------------------
 
-function pgf_series(sp::Subplot, series::Series)
+function pgf_series(sp::Subplot, series::Series, extra_series_kwargs)
     plotattributes = series.plotattributes
     st = plotattributes[:seriestype]
-    extra_kwargs = plotattributes[:extra_kwargs]
     series_collection = PGFPlots.Plot[]
 
     # function args
@@ -540,7 +539,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # add the series object to the PGFPlots.Axis
         for series in series_list(sp)
-            push!.(Ref(o), pgf_series(sp, series))
+            push!.(Ref(o), pgf_series(sp, series, plt[:extra_kwargs][:series]))
 
             # add series annotations
             anns = series[:series_annotations]
