@@ -140,7 +140,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "fill" => bgc_inside,
                     "opacity" => bgc_inside_a,
                 ),
-                # "axis on top" => nothing,
+                "axis on top" => nothing,
                 # "framed" => nothing,
                 # These are for layouting
                 "anchor" => "north west",
@@ -1035,11 +1035,15 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         )
         push!(
             opt,
-            string(letter, " grid style") => pgfx_linestyle(
-                pgfx_thickness_scaling(sp) * axis[:gridlinewidth],
-                axis[:foreground_color_grid],
-                axis[:gridalpha],
-                axis[:gridstyle],
+            "set layers" => nothing,
+            string(letter, " grid style") => push!(
+                pgfx_linestyle(
+                    pgfx_thickness_scaling(sp) * axis[:gridlinewidth],
+                    axis[:foreground_color_grid],
+                    axis[:gridalpha],
+                    axis[:gridstyle],
+                ),
+                "/pgfplots/on layer" => "axis grid"
             ),
         )
     end
