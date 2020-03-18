@@ -31,7 +31,7 @@ Base.@kwdef mutable struct PGFPlotsXPlot
             raw"""
             \pgfplotsset{
             /pgfplots/layers/axis on top/.define layer set={
-            background, axis background,pre main,main,axis grid,axis ticks,axis lines,axis tick labels,
+            background, axis background,axis grid,pre main,main,axis ticks,axis lines,axis tick labels,
             axis descriptions,axis foreground
             }{/pgfplots/layers/standard},
             }
@@ -140,7 +140,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "fill" => bgc_inside,
                     "opacity" => bgc_inside_a,
                 ),
-                "axis on top" => nothing,
+                # "axis on top" => nothing,
                 # "framed" => nothing,
                 # These are for layouting
                 "anchor" => "north west",
