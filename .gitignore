@@ -8,3 +8,4 @@ deps/plotly-latest.min.js
 deps/build.log
 deps/deps.jl
 Manifest.toml
+dev/
