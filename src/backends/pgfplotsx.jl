@@ -107,11 +107,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             bb = bbox(sp)
             sp_width = width(bb)
             sp_height = height(bb)
-            dx, dy = bb.x0
+            dx, dy = bbox(sp).x0
             # TODO: does this hold at every scale?
-            if sp[:legend] in (:outertopright, nothing)
-                dx *= 1.2
-            end
+            # if sp[:legend] in (:outertopright, nothing)
+            #     dx *= 1.2
+            # end
             cstr = plot_color(sp[:background_color_legend])
             a = alpha(cstr)
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
