@@ -1,119 +1,4 @@
 
-calcMidpoints(edges::AbstractVector) = Float64[0.5 * (edges[i] + edges[i+1]) for i in 1:length(edges)-1]
-
-"Make histogram-like bins of data"
-function binData(data, nbins)
-  lo, hi = ignorenan_extrema(data)
-  edges = collect(range(lo, stop=hi, length=nbins+1))
-  midpoints = calcMidpoints(edges)
-  buckets = Int[max(2, min(searchsortedfirst(edges, x), length(edges)))-1 for x in data]
-  counts = zeros(Int, length(midpoints))
-  for b in buckets
-    counts[b] += 1
-  end
-  edges, midpoints, buckets, counts
-end
-
-"""
-A hacky replacement for a histogram when the backend doesn't support histograms directly.
-Convert it into a bar chart with the appropriate x/y values.
-"""
-function histogramHack(; kw...)
-  plotattributes = KW(kw)
-
-  # we assume that the y kwarg is set with the data to be binned, and nbins is also defined
-  edges, midpoints, buckets, counts = binData(plotattributes[:y], plotattributes[:bins])
-  plotattributes[:x] = midpoints
-  plotattributes[:y] = float(counts)
-  plotattributes[:seriestype] = :bar
-  plotattributes[:fillrange] = plotattributes[:fillrange] === nothing ? 0.0 : plotattributes[:fillrange]
-  plotattributes
-end
-
-"""
-A hacky replacement for a bar graph when the backend doesn't support bars directly.
-Convert it into a line chart with fillrange set.
-"""
-function barHack(; kw...)
-  plotattributes = KW(kw)
-  midpoints = plotattributes[:x]
-  heights = plotattributes[:y]
-  fillrange = plotattributes[:fillrange] === nothing ? 0.0 : plotattributes[:fillrange]
-
-  # estimate the edges
-  dists = diff(midpoints) * 0.5
-  edges = zeros(length(midpoints)+1)
-  for i in eachindex(edges)
-    if i == 1
-      edge = midpoints[1] - dists[1]
-    elseif i == length(edges)
-      edge = midpoints[i-1] + dists[i-2]
-    else
-      edge = midpoints[i-1] + dists[i-1]
-    end
-    edges[i] = edge
-  end
-
-  x = Float64[]
-  y = Float64[]
-  for i in eachindex(heights)
-    e1, e2 = edges[i:i+1]
-    append!(x, [e1, e1, e2, e2])
-    append!(y, [fillrange, heights[i], heights[i], fillrange])
-  end
-
-  plotattributes[:x] = x
-  plotattributes[:y] = y
-  plotattributes[:seriestype] = :path
-  plotattributes[:fillrange] = fillrange
-  plotattributes
-end
-
-
-"""
-A hacky replacement for a sticks graph when the backend doesn't support sticks directly.
-Convert it into a line chart that traces the sticks, and a scatter that sets markers at the points.
-"""
-function sticksHack(; kw...)
-  plotattributesLine = KW(kw)
-  plotattributesScatter = copy(plotattributesLine)
-
-  # these are the line vertices
-  x = Float64[]
-  y = Float64[]
-  fillrange = plotattributesLine[:fillrange] === nothing ? 0.0 : plotattributesLine[:fillrange]
-
-  # calculate the vertices
-  yScatter = plotattributesScatter[:y]
-  for (i,xi) in enumerate(plotattributesScatter[:x])
-    yi = yScatter[i]
-    for j in 1:3 push!(x, xi) end
-    append!(y, [fillrange, yScatter[i], fillrange])
-  end
-
-  # change the line args
-  plotattributesLine[:x] = x
-  plotattributesLine[:y] = y
-  plotattributesLine[:seriestype] = :path
-  plotattributesLine[:markershape] = :none
-  plotattributesLine[:fillrange] = nothing
-
-  # change the scatter args
-  plotattributesScatter[:seriestype] = :none
-
-  plotattributesLine, plotattributesScatter
-end
-
-function regressionXY(x, y)
-  # regress
-  β, α = convert(Matrix{Float64}, [x ones(length(x))]) \ convert(Vector{Float64}, y)
-
-  # make a line segment
-  regx = [ignorenan_minimum(x), ignorenan_maximum(x)]
-  regy = β * regx + α
-  regx, regy
-end
-
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     n, m = size(z)
     colors = ColorGradient(vec(z))
@@ -262,10 +147,10 @@ mapFuncOrFuncs(f::Function, u::AVec)        = map(f, u)
 mapFuncOrFuncs(fs::AVec{F}, u::AVec) where {F<:Function} = [map(f, u) for f in fs]
 
 for i in 2:4
-  @eval begin
-    unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
+    @eval begin
+        unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
                    AVec{<:GeometryTypes.Point{$i}}}) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
-  end
+    end
 end
 
 unzip(v::Union{AVec{<:GeometryTypes.Point{N}},
@@ -275,15 +160,13 @@ unzip(v::Union{AVec{<:GeometryTypes.Point},
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
-  try
-    e1, e2 = ignorenan_extrema(x)
-    lims[1] = NaNMath.min(lims[1], e1)
-    lims[2] = NaNMath.max(lims[2], e2)
-  # catch err
-  #   @warn(err)
-  catch
-  end
-  nothing
+    try
+        e1, e2 = ignorenan_extrema(x)
+        lims[1] = NaNMath.min(lims[1], e1)
+        lims[2] = NaNMath.max(lims[2], e2)
+    catch
+    end
+    nothing
 end
 
 expand_data(v, n::Integer) = [_cycle(v, i) for i=1:n]
@@ -301,21 +184,21 @@ function addOrReplace(v::AbstractVector, t::DataType, args...; kw...)
 end
 
 function replaceType(vec, val)
-  filter!(x -> !isa(x, typeof(val)), vec)
-  push!(vec, val)
+    filter!(x -> !isa(x, typeof(val)), vec)
+    push!(vec, val)
 end
 
 function replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol})
-  if haskey(aliases, k)
-    plotattributes[aliases[k]] = pop_kw!(plotattributes, k)
-  end
+    if haskey(aliases, k)
+        plotattributes[aliases[k]] = pop_kw!(plotattributes, k)
+    end
 end
 
 function replaceAliases!(plotattributes::AKW, aliases::Dict{Symbol,Symbol})
-  ks = collect(keys(plotattributes))
-  for k in ks
-      replaceAlias!(plotattributes, k, aliases)
-  end
+    ks = collect(keys(plotattributes))
+    for k in ks
+        replaceAlias!(plotattributes, k, aliases)
+    end
 end
 
 createSegments(z) = collect(repeat(reshape(z,1,:),2,1))[2:end]
@@ -334,20 +217,20 @@ const _scale_base = Dict{Symbol, Real}(
 )
 
 function _heatmap_edges(v::AVec, isedges::Bool = false)
-  length(v) == 1 && return v[1] .+ [-0.5, 0.5]
-  if isedges return v end
-  # `isedges = true` means that v is a vector which already describes edges
-  # and does not need to be extended.
-  vmin, vmax = ignorenan_extrema(v)
-  extra_min = (v[2] - v[1]) / 2
-  extra_max = (v[end] - v[end - 1]) / 2
-  vcat(vmin-extra_min, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra_max)
+    length(v) == 1 && return v[1] .+ [-0.5, 0.5]
+    if isedges return v end
+    # `isedges = true` means that v is a vector which already describes edges
+    # and does not need to be extended.
+    vmin, vmax = ignorenan_extrema(v)
+    extra_min = (v[2] - v[1]) / 2
+    extra_max = (v[end] - v[end - 1]) / 2
+    vcat(vmin-extra_min, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra_max)
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
 function heatmap_edges(v::AVec, scale::Symbol = :identity, isedges::Bool = false)
-  f, invf = scalefunc(scale), invscalefunc(scale)
-  map(invf, _heatmap_edges(map(f,v), isedges))
+    f, invf = scalefunc(scale), invscalefunc(scale)
+    map(invf, _heatmap_edges(map(f,v), isedges))
 end
 
 function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size::Tuple{Int, Int})
@@ -367,8 +250,8 @@ function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size:
 end
 
 function is_uniformly_spaced(v; tol=1e-6)
-  dv = diff(v)
-  maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
+    dv = diff(v)
+    maximum(dv) - minimum(dv) < tol * mean(abs.(dv))
 end
 
 function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
@@ -380,11 +263,11 @@ function convert_to_polar(theta, r, r_extrema = ignorenan_extrema(r))
 end
 
 function fakedata(sz...)
-  y = zeros(sz...)
-  for r in 2:size(y,1)
-    y[r,:] = 0.95 * vec(y[r-1,:]) + randn(size(y,2))
-  end
-  y
+    y = zeros(sz...)
+    for r in 2:size(y,1)
+        y[r,:] = 0.95 * vec(y[r-1,:]) + randn(size(y,2))
+    end
+    y
 end
 
 isijulia() = :IJulia in nameof.(collect(values(Base.loaded_modules)))
@@ -752,105 +635,105 @@ function with(f::Function, args...; kw...)
         newdefs[:legend] = false
     end
 
-  # dict to store old and new keyword args for anything that changes
-  olddefs = KW()
-  for k in keys(newdefs)
-    olddefs[k] = default(k)
-  end
-
-  # save the backend
-  if CURRENT_BACKEND.sym == :none
-    _pick_default_backend()
-  end
-  oldbackend = CURRENT_BACKEND.sym
-
-  for arg in args
-
-    # change backend?
-    if arg in backends()
-      backend(arg)
+    # dict to store old and new keyword args for anything that changes
+    olddefs = KW()
+    for k in keys(newdefs)
+        olddefs[k] = default(k)
     end
 
-    # # TODO: generalize this strategy to allow args as much as possible
-    # #       as in:  with(:gr, :scatter, :legend, :grid) do; ...; end
-    # # TODO: can we generalize this enough to also do something similar in the plot commands??
+    # save the backend
+    if CURRENT_BACKEND.sym == :none
+        _pick_default_backend()
+    end
+    oldbackend = CURRENT_BACKEND.sym
 
-    # k = :seriestype
-    # if arg in _allTypes
-    #   olddefs[k] = default(k)
-    #   newdefs[k] = arg
-    # elseif haskey(_typeAliases, arg)
-    #   olddefs[k] = default(k)
-    #   newdefs[k] = _typeAliases[arg]
-    # end
+    for arg in args
 
-    k = :legend
-    if arg in (k, :leg)
-      olddefs[k] = default(k)
-      newdefs[k] = true
+        # change backend?
+        if arg in backends()
+            backend(arg)
+        end
+
+        # TODO: generalize this strategy to allow args as much as possible
+        #       as in:  with(:gr, :scatter, :legend, :grid) do; ...; end
+        # TODO: can we generalize this enough to also do something similar in the plot commands??
+
+        # k = :seriestype
+        # if arg in _allTypes
+        #     olddefs[k] = default(k)
+        #     newdefs[k] = arg
+        # elseif haskey(_typeAliases, arg)
+        #     olddefs[k] = default(k)
+        #     newdefs[k] = _typeAliases[arg]
+        # end
+
+        k = :legend
+        if arg in (k, :leg)
+            olddefs[k] = default(k)
+            newdefs[k] = true
+        end
+
+        k = :grid
+        if arg == k
+            olddefs[k] = default(k)
+            newdefs[k] = true
+        end
     end
 
-    k = :grid
-    if arg == k
-      olddefs[k] = default(k)
-      newdefs[k] = true
+    # display(olddefs)
+    # display(newdefs)
+
+    # now set all those defaults
+    default(; newdefs...)
+
+    # call the function
+    ret = f()
+
+    # put the defaults back
+    default(; olddefs...)
+
+    # revert the backend
+    if CURRENT_BACKEND.sym != oldbackend
+        backend(oldbackend)
     end
-  end
 
-  # display(olddefs)
-  # display(newdefs)
-
-  # now set all those defaults
-  default(; newdefs...)
-
-  # call the function
-  ret = f()
-
-  # put the defaults back
-  default(; olddefs...)
-
-  # revert the backend
-  if CURRENT_BACKEND.sym != oldbackend
-    backend(oldbackend)
-  end
-
-  # return the result of the function
-  ret
+    # return the result of the function
+    ret
 end
 
 # ---------------------------------------------------------------
 # ---------------------------------------------------------------
 
 mutable struct DebugMode
-  on::Bool
+    on::Bool
 end
 const _debugMode = DebugMode(false)
 
 function debugplots(on = true)
-  _debugMode.on = on
+    _debugMode.on = on
 end
 
 debugshow(io, x) = show(io, x)
 debugshow(io, x::AbstractArray) = print(io, summary(x))
 
 function dumpdict(io::IO, plotattributes::AKW, prefix = "", alwaysshow = false)
-  _debugMode.on || alwaysshow || return
-  println(io)
-  if prefix != ""
-    println(io, prefix, ":")
-  end
-  for k in sort(collect(keys(plotattributes)))
-    @printf("%14s: ", k)
-    debugshow(io, plotattributes[k])
+    _debugMode.on || alwaysshow || return
     println(io)
-  end
-  println(io)
+    if prefix != ""
+        println(io, prefix, ":")
+    end
+    for k in sort(collect(keys(plotattributes)))
+        @printf("%14s: ", k)
+        debugshow(io, plotattributes[k])
+        println(io)
+    end
+    println(io)
 end
 DD(io::IO, plotattributes::AKW, prefix = "") = dumpdict(io, plotattributes, prefix, true)
 DD(plotattributes::AKW, prefix = "") = DD(stdout, plotattributes, prefix)
 
 function dumpcallstack()
-  error()  # well... you wanted the stacktrace, didn't you?!?
+    error()  # well... you wanted the stacktrace, didn't you?!?
 end
 
 # ---------------------------------------------------------------
@@ -858,12 +741,11 @@ end
 # used in updating an existing series
 
 extendSeriesByOne(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
-extendSeriesByOne(v::AVec, n::Integer = 1)       = isempty(v) ? (1:n) : vcat(v, (1:n) + ignorenan_maximum(v))
+extendSeriesByOne(v::AVec, n::Integer = 1)       = isempty(v) ? (1:n) : vcat(v, (1:n) .+ ignorenan_maximum(v))
 extendSeriesData(v::AbstractRange{T}, z::Real) where {T}        = extendSeriesData(float(collect(v)), z)
 extendSeriesData(v::AbstractRange{T}, z::AVec) where {T}        = extendSeriesData(float(collect(v)), z)
 extendSeriesData(v::AVec{T}, z::Real) where {T}         = (push!(v, convert(T, z)); v)
 extendSeriesData(v::AVec{T}, z::AVec) where {T}         = (append!(v, convert(Vector{T}, z)); v)
-
 
 # -------------------------------------------------------
 # NOTE: backends should implement the following methods to get/set the x/y/z data objects
