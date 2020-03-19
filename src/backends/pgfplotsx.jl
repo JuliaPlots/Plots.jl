@@ -29,11 +29,20 @@ Base.@kwdef mutable struct PGFPlotsXPlot
         PGFPlotsX.push_preamble!(
             pgfx_plot.the_plot,
             raw"""
-            \pgfplotsset{
-            /pgfplots/layers/axis on top/.define layer set={
-            background, axis background,pre main,main,axis grid,axis ticks,axis lines,axis tick labels,
-            axis descriptions,axis foreground
-            }{/pgfplots/layers/standard},
+            \pgfplotsset{%
+            layers/standard/.define layer set={%
+                background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+            }{grid style= {/pgfplots/on layer=axis grid},%
+                tick style= {/pgfplots/on layer=axis ticks},%
+                axis line style= {/pgfplots/on layer=axis lines},%
+                label style= {/pgfplots/on layer=axis descriptions},%
+                legend style= {/pgfplots/on layer=axis descriptions},%
+                title style= {/pgfplots/on layer=axis descriptions},%
+                colorbar style= {/pgfplots/on layer=axis descriptions},%
+                ticklabel style= {/pgfplots/on layer=axis tick labels},%
+                axis background@ style={/pgfplots/on layer=axis background},%
+                3d box foreground style={/pgfplots/on layer=axis foreground},%
+                },
             }
             """,
         )
@@ -140,8 +149,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "fill" => bgc_inside,
                     "opacity" => bgc_inside_a,
                 ),
-                "axis on top" => nothing,
-                # "framed" => nothing,
                 # These are for layouting
                 "anchor" => "north west",
                 "xshift" => string(dx),
