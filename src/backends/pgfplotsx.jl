@@ -104,7 +104,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
 
         for sp in plt.subplots
-            bb = sp.plotarea
+            bb = bbox(sp)
             sp_width = width(bb)
             sp_height = height(bb)
             dx, dy = bb.x0
@@ -604,11 +604,22 @@ const _pgfplotsx_markers = KW(
 )
 
 const _pgfplotsx_legend_pos = KW(
+    :top => "north",
+    :bottom => "south",
+    :left => "west",
+    :right => "east"
     :bottomleft => "south west",
     :bottomright => "south east",
     :topright => "north east",
     :topleft => "north west",
+    :outertop => "north",
+    :outerbottom => "outer south",
+    :outerleft => "outer west",
+    :outerright => "outer east"
+    :outerbottomleft => "outer south west",
+    :outerbottomright => "outer south east",
     :outertopright => "outer north east",
+    :outertopleft => "outer north west",
 )
 
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
