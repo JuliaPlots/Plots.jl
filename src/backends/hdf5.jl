@@ -83,6 +83,7 @@ if length(HDF5PLOT_MAP_TELEM2STR) < 1
         "ARRAY" => Array, #Dict won't allow Array to be key in HDF5PLOT_MAP_TELEM2STR
 
         #Sub-structure types:
+        "ATTR" => Attr,
         "FONT" => Font,
         "BOUNDINGBOX" => BoundingBox,
         "GRIDLAYOUT" => GridLayout,
@@ -109,7 +110,7 @@ _hdf5_datapath(subpath::String) = "$_hdf5_dataroot/$subpath"
 _hdf5_map_str2telem(k::String) = HDF5PLOT_MAP_STR2TELEM[k]
 _hdf5_map_str2telem(v::Vector) = HDF5PLOT_MAP_STR2TELEM[v[1]]
 
-function _hdf5_merge!(dest, src)
+function _hdf5_merge!(dest::AKW, src::AKW)
     for (k, v) in src
         if isa(v, Axis)
             _hdf5_merge!(dest[k].plotattributes, v.plotattributes)
@@ -263,6 +264,15 @@ function _hdf5plot_gwrite(grp, k::String, v::Array{T}) where T<:Number #Default 
     grp[k] = v
     _hdf5plot_writetype(grp, k, HDF5PlotNative)
 end
+function _hdf5plot_gwrite(grp, k::String, v::Dict)
+#=
+	tstr = string(Dict)
+	path = HDF5.name(grp) * "/" * k
+	@info("Type not supported: $tstr\npath: $path")
+=#
+	#No support for structures with Dicts different than KW (plotattributes)
+end
+
 #=
 function _hdf5plot_gwrite(grp, k::String, v::Array{Any})
 #    @show grp, k
@@ -295,7 +305,8 @@ function _hdf5plot_gwrite(grp, k::String, v::Tuple)
     end
     #NOTE: _hdf5plot_overwritetype overwrites "Array" type with "Tuple".
 end
-function _hdf5plot_gwrite(grp, k::String, plotattributes::AKW)
+function _hdf5plot_gwrite(grp, k::String, plotattributes::KW)
+	#NOTE: Can only write directly to group, not a subi-item
 #    @warn("Cannot write dict: $k=$plotattributes")
 end
 function _hdf5plot_gwrite(grp, k::String, v::AbstractRange)
@@ -376,13 +387,22 @@ function _hdf5plot_gwrite(grp, k::String, v::Subplot)
     _hdf5plot_writetype(grp, Subplot)
     return
 end
-function _hdf5plot_write(grp, plotattributes::AKW)
+
+function _hdf5plot_write(grp, plotattributes::KW)
     for (k, v) in plotattributes
         kstr = string(k)
         _hdf5plot_gwrite(grp, kstr, v)
     end
     return
 end
+function _hdf5plot_write(grp, plotattributes::Attr)
+    for (k, v) in plotattributes
+        kstr = string(k)
+        _hdf5plot_gwrite(grp, kstr, v)
+    end
+	_hdf5plot_writetype(grp, Attr)
+end
+
 
 # Write main plot structures:
 # ----------------------------------------------------------------
@@ -445,20 +465,14 @@ _hdf5plot_convert(T::Type{Extrema}, v) = Extrema(v[1], v[2])
 # Read data structures:
 # ----------------------------------------------------------------
 
-function _hdf5plot_read(grp, k::String, T::Type, dtid)
+function _hdf5plot_read(grp, k::String, T::Type)
     v = HDF5.d_read(grp, k)
     return _hdf5plot_convert(T, v)
-end
-function _hdf5plot_read(grp, k::String, T::Type{Length}, dtid::Vector)
-    v = HDF5.d_read(grp, k)
-    TU = Symbol(dtid[2])
-    T = typeof(v)
-    return Length{TU,T}(v)
 end
 
 # Read more complex data structures:
 # ----------------------------------------------------------------
-function _hdf5plot_read(grp, k::String, T::Type{Font}, dtid)
+function _hdf5plot_read(grp, k::String, T::Type{Font})
     grp = HDF5.g_open(grp, k)
 
     family = _hdf5plot_read(grp, "family")
@@ -469,7 +483,7 @@ function _hdf5plot_read(grp, k::String, T::Type{Font}, dtid)
     color = _hdf5plot_read(grp, "color")
     return Font(family, pointsize, halign, valign, rotation, color)
 end
-function _hdf5plot_read(grp, k::String, T::Type{Array}, dtid) #ANY
+function _hdf5plot_read(grp, k::String, T::Type{Array}) #ANY
     grp = HDF5.g_open(grp, k)
     sz = _hdf5plot_read(grp, "dim")
     if [0] == sz; return []; end
@@ -488,18 +502,18 @@ function _hdf5plot_read(grp, k::String, T::Type{Array}, dtid) #ANY
     result = [result[iter] for iter in eachindex(result)] #Potentially make more specific
     return reshape(result, sz)
 end
-function _hdf5plot_read(grp, k::String, T::Type{HDF5CTuple}, dtid)
-    v = _hdf5plot_read(grp, k, Array, dtid)
+function _hdf5plot_read(grp, k::String, T::Type{HDF5CTuple})
+    v = _hdf5plot_read(grp, k, Array)
     return tuple(v...)
 end
-function _hdf5plot_read(grp, k::String, T::Type{PlotText}, dtid)
+function _hdf5plot_read(grp, k::String, T::Type{PlotText})
     grp = HDF5.g_open(grp, k)
 
     str = _hdf5plot_read(grp, "str")
     font = _hdf5plot_read(grp, "font")
     return PlotText(str, font)
 end
-function _hdf5plot_read(grp, k::String, T::Type{SeriesAnnotations}, dtid)
+function _hdf5plot_read(grp, k::String, T::Type{SeriesAnnotations})
     grp = HDF5.g_open(grp, k)
 
     strs = _hdf5plot_read(grp, "strs")
@@ -508,29 +522,29 @@ function _hdf5plot_read(grp, k::String, T::Type{SeriesAnnotations}, dtid)
     scalefactor = _hdf5plot_read(grp, "scalefactor")
     return SeriesAnnotations(strs, font, baseshape, scalefactor)
 end
-function _hdf5plot_read(grp, k::String, T::Type{Shape}, dtid)
+function _hdf5plot_read(grp, k::String, T::Type{Shape})
     grp = HDF5.g_open(grp, k)
 
     x = _hdf5plot_read(grp, "x")
     y = _hdf5plot_read(grp, "y")
     return Shape(x, y)
 end
-function _hdf5plot_read(grp, k::String, T::Type{ColorGradient}, dtid)
+function _hdf5plot_read(grp, k::String, T::Type{ColorGradient})
     grp = HDF5.g_open(grp, k)
 
     colors = _hdf5plot_read(grp, "colors")
     values = _hdf5plot_read(grp, "values")
     return ColorGradient(colors, values)
 end
-function _hdf5plot_read(grp, k::String, T::Type{BoundingBox}, dtid)
+function _hdf5plot_read(grp, k::String, T::Type{BoundingBox})
     grp = HDF5.g_open(grp, k)
 
     x0 = _hdf5plot_read(grp, "x0")
     a = _hdf5plot_read(grp, "a")
     return BoundingBox(x0, a)
 end
-_hdf5plot_read(grp, k::String, T::Type{RootLayout}, dtid) = RootLayout()
-function _hdf5plot_read(grp, k::String, T::Type{GridLayout}, dtid)
+_hdf5plot_read(grp, k::String, T::Type{RootLayout}) = RootLayout()
+function _hdf5plot_read(grp, k::String, T::Type{GridLayout})
     grp = HDF5.g_open(grp, k)
 
 #    parent = _hdf5plot_read(grp, "parent")
@@ -544,21 +558,35 @@ parent = RootLayout()
 
     return GridLayout(parent, minpad, bbox, grid, widths, heights, attr)
 end
-function _hdf5plot_read(grp, k::String, T::Type{Axis}, dtid)
-    grp = HDF5.g_open(grp, k)
-    kwlist = KW()
-    _hdf5plot_read(grp, kwlist)
-    return Axis([], kwlist)
+function _hdf5plot_read(grp, T::Type{Attr})
+    attr = Attr(KW(), _plot_defaults)
+    v = _hdf5plot_read(grp, attr)
+    return attr
 end
-function _hdf5plot_read(grp, k::String, T::Type{Surface}, dtid)
+function _hdf5plot_read(grp, k::String, T::Type{Axis})
+    grp = HDF5.g_open(grp, k)
+    plotattributes = Attr(KW(), _plot_defaults)
+    _hdf5plot_read(grp, plotattributes)
+    return Axis([], plotattributes)
+end
+function _hdf5plot_read(grp, k::String, T::Type{Surface})
     grp = HDF5.g_open(grp, k)
     data2d = _hdf5plot_read(grp, "data2d")
     return Surface(data2d)
 end
-function _hdf5plot_read(grp, k::String, T::Type{Subplot}, dtid)
+function _hdf5plot_read(grp, k::String, T::Type{Subplot})
     grp = HDF5.g_open(grp, k)
     idx = _hdf5plot_read(grp, "index")
     return HDF5PLOT_PLOTREF.ref.subplots[idx]
+end
+
+#Most types don't need dtid for read!!:
+_hdf5plot_read(grp, k::String, T::Type, dtid) = _hdf5plot_read(grp, k, T)
+function _hdf5plot_read(grp, k::String, T::Type{Length}, dtid::Vector)
+    v = HDF5.d_read(grp, k)
+    TU = Symbol(dtid[2])
+    T = typeof(v)
+    return Length{TU,T}(v)
 end
 function _hdf5plot_read(grp, k::String)
     dtid = HDF5.a_read(grp[k], _hdf5plot_datatypeid)
@@ -567,7 +595,7 @@ function _hdf5plot_read(grp, k::String)
 end
 
 #Read in values in group to populate plotattributes:
-function _hdf5plot_read(grp, plotattributes::AKW)
+function _hdf5plot_readattr(grp, plotattributes::AbstractDict)
     gnames = names(grp)
     for k in gnames
         try
@@ -581,6 +609,8 @@ function _hdf5plot_read(grp, plotattributes::AKW)
     end
     return
 end
+_hdf5plot_read(grp, plotattributes::KW) = _hdf5plot_readattr(grp, plotattributes)
+_hdf5plot_read(grp, plotattributes::Attr) = _hdf5plot_readattr(grp, plotattributes)
 
 # Read main plot structures:
 # ----------------------------------------------------------------
@@ -593,17 +623,17 @@ function _hdf5plot_read(sp::Subplot, subpath::String, f)
 
     for i in 1:nseries
         grp = HDF5.g_open(f, _hdf5_plotelempath("$subpath/series_list/series$i"))
-        kwlist = KW()
-        _hdf5plot_read(grp, kwlist)
-        plot!(sp, kwlist[:x], kwlist[:y]) #Add data & create data structures
-        _hdf5_merge!(sp.series_list[end].plotattributes, kwlist)
+        seriesinfo = Attr(KW(), _plot_defaults)
+        _hdf5plot_read(grp, seriesinfo)
+        plot!(sp, seriesinfo[:x], seriesinfo[:y]) #Add data & create data structures
+        _hdf5_merge!(sp.series_list[end].plotattributes, seriesinfo)
     end
 
     #Perform after adding series... otherwise values get overwritten:
     grp = HDF5.g_open(f, _hdf5_plotelempath("$subpath/attr"))
-    kwlist = KW()
-    _hdf5plot_read(grp, kwlist)
-    _hdf5_merge!(sp.attr, kwlist)
+    attr = Attr(KW(), _plot_defaults)
+    _hdf5plot_read(grp, attr)
+    _hdf5_merge!(sp.attr, attr)
 
     return
 end
