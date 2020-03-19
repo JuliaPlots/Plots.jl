@@ -117,14 +117,24 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
+            title_loc = sp[:title_location]
             bgc_inside = plot_color(sp[:background_color_inside])
             bgc_inside_a = alpha(bgc_inside)
             axis_opt = PGFPlotsX.Options(
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
-                    "font" => pgfx_font(
-                        sp[:titlefontsize],
-                        pgfx_thickness_scaling(sp),
+                        "at" => if title_loc == :left
+                            "{(0,1)}"
+                        elseif title_loc == :right
+                            "{(1,1)}"
+                        elseif title_loc isa Tuple
+                            "{$(string(title_loc))}"
+                        else
+                            "{(0.5,1)}"
+                        end,
+                        "font" => pgfx_font(
+                            sp[:titlefontsize],
+                            pgfx_thickness_scaling(sp),
                     ),
                     "color" => title_cstr,
                     "draw opacity" => title_a,
@@ -594,11 +604,22 @@ const _pgfplotsx_markers = KW(
 )
 
 const _pgfplotsx_legend_pos = KW(
+    :top => "north",
+    :bottom => "south",
+    :left => "west",
+    :right => "east",
     :bottomleft => "south west",
     :bottomright => "south east",
     :topright => "north east",
     :topleft => "north west",
+    :outertop => "north",
+    :outerbottom => "outer south",
+    :outerleft => "outer west",
+    :outerright => "outer east",
+    :outerbottomleft => "outer south west",
+    :outerbottomright => "outer south east",
     :outertopright => "outer north east",
+    :outertopleft => "outer north west",
 )
 
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
@@ -927,6 +948,14 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         "$(letter) tick style" => PGFPlotsX.Options(
             "color" => color(tick_color),
             "opacity" => alpha(tick_color),
+        ),
+    )
+    tick_label_color = plot_color(axis[:tickfontcolor])
+    push!(opt,
+        "$(letter) tick label style" => PGFPlotsX.Options(
+            "color" => color(tick_color),
+            "opacity" => alpha(tick_color),
+            "rotate" => axis[:rotation]
         ),
     )
 
