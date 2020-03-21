@@ -736,17 +736,6 @@ function dumpcallstack()
     error()  # well... you wanted the stacktrace, didn't you?!?
 end
 
-# ---------------------------------------------------------------
-# ---------------------------------------------------------------
-# used in updating an existing series
-
-extendSeriesByOne(v::UnitRange{Int}, n::Int = 1) = isempty(v) ? (1:n) : (minimum(v):maximum(v)+n)
-extendSeriesByOne(v::AVec, n::Integer = 1)       = isempty(v) ? (1:n) : vcat(v, (1:n) .+ ignorenan_maximum(v))
-extendSeriesData(v::AbstractRange{T}, z::Real) where {T}        = extendSeriesData(float(collect(v)), z)
-extendSeriesData(v::AbstractRange{T}, z::AVec) where {T}        = extendSeriesData(float(collect(v)), z)
-extendSeriesData(v::AVec{T}, z::Real) where {T}         = (push!(v, convert(T, z)); v)
-extendSeriesData(v::AVec{T}, z::AVec) where {T}         = (append!(v, convert(Vector{T}, z)); v)
-
 # -------------------------------------------------------
 # NOTE: backends should implement the following methods to get/set the x/y/z data objects
 
@@ -790,33 +779,60 @@ Base.setindex!(plt::Plot, xy::Tuple{X,Y}, i::Integer) where {X,Y} = (setxy!(plt,
 Base.setindex!(plt::Plot, xyz::Tuple{X,Y,Z}, i::Integer) where {X,Y,Z} = (setxyz!(plt, xyz, i); plt)
 
 # -------------------------------------------------------
-
 # operate on individual series
 
-function push_x!(series::Series, xi)
-    push!(series[:x], xi)
-    expand_extrema!(series[:subplot][:xaxis], xi)
-    return
-end
-function push_y!(series::Series, yi)
-    push!(series[:y], yi)
-    expand_extrema!(series[:subplot][:yaxis], yi)
-    return
-end
-function push_z!(series::Series, zi)
-    push!(series[:z], zi)
-    expand_extrema!(series[:subplot][:zaxis], zi)
-    return
+Base.push!(series::Series, args...) = extend_series!(series, args...)
+Base.append!(series::Series, args...) = extend_series!(series, args...)
+
+function extend_series!(series::Series, yi)
+    y = extend_series_data!(series, yi, :y)
+    x = extend_to_length!(series[:x], length(y))
+    expand_extrema!(series[:subplot][:xaxis], x)
+    return x, y
 end
 
-function Base.push!(series::Series, yi)
-    x = extendSeriesByOne(series[:x])
-    expand_extrema!(series[:subplot][:xaxis], x[end])
-    series[:x] = x
-    push_y!(series, yi)
+function extend_series!(series::Series, xi, yi)
+    x = extend_series_data!(series, xi, :x)
+    y = extend_series_data!(series, yi, :y)
+    return x, y
 end
-Base.push!(series::Series, xi, yi) = (push_x!(series,xi); push_y!(series,yi))
-Base.push!(series::Series, xi, yi, zi) = (push_x!(series,xi); push_y!(series,yi); push_z!(series,zi))
+
+function extend_series!(series::Series, xi, yi, zi)
+    x = extend_series_data!(series, xi, :x)
+    y = extend_series_data!(series, yi, :y)
+    z = extend_series_data!(series, zi, :z)
+    return x, y, z
+end
+
+function extend_series_data!(series::Series, v, letter)
+    copy_series!(series, letter)
+    d = extend_by_data!(series[letter], v)
+    expand_extrema!(series[:subplot][Symbol(letter, :axis)], d)
+    return d
+end
+
+function copy_series!(series, letter)
+    plt = series[:plot_object]
+    for s in plt.series_list
+        for l in (:x, :y, :z)
+            if s !== series || l !== letter
+                if s[l] === series[letter]
+                    series[letter] = copy(series[letter])
+                end
+            end
+        end
+    end
+end
+
+extend_to_length!(v::AbstractRange, n) = range(first(v), step = step(v), length = n)
+function extend_to_length!(v::AbstractVector, n)
+    vmax = isempy(v) ? 0 : ignorenan_maximum(v)
+    extend_by_data!(v, vmax .+ (1:(n - length(v))))
+end
+extend_by_data!(v::AbstractVector, x) = isimmutable(v) ? vcat(v, x) : push!(v, x)
+function extend_by_data!(v::AbstractVector, x::AbstractVector)
+    isimmutable(v) ? vcat(v, x) : append!(v, x)
+end
 
 # -------------------------------------------------------
 
@@ -850,59 +866,16 @@ end
 # -------------------------------------------------------
 # push/append for one series
 
-# push value to first series
-Base.push!(plt::Plot, y::Real) = push!(plt, 1, y)
-Base.push!(plt::Plot, x::Real, y::Real) = push!(plt, 1, x, y)
-Base.push!(plt::Plot, x::Real, y::Real, z::Real) = push!(plt, 1, x, y, z)
-
-# y only
-function Base.push!(plt::Plot, i::Integer, y::Real)
-    xdata, ydata = getxy(plt, i)
-    setxy!(plt, (extendSeriesByOne(xdata), extendSeriesData(ydata, y)), i)
-    plt
-end
-function Base.append!(plt::Plot, i::Integer, y::AVec)
-    xdata, ydata = plt[i]
-    if !isa(xdata, UnitRange{Int})
-        error("Expected x is a UnitRange since you're trying to push a y value only")
-    end
-    plt[i] = (extendSeriesByOne(xdata, length(y)), extendSeriesData(ydata, y))
-    plt
-end
-
-# x and y
-function Base.push!(plt::Plot, i::Integer, x::Real, y::Real)
-    xdata, ydata = getxy(plt, i)
-    setxy!(plt, (extendSeriesData(xdata, x), extendSeriesData(ydata, y)), i)
-    plt
-end
-function Base.append!(plt::Plot, i::Integer, x::AVec, y::AVec)
-    @assert length(x) == length(y)
-    xdata, ydata = getxy(plt, i)
-    setxy!(plt, (extendSeriesData(xdata, x), extendSeriesData(ydata, y)), i)
-    plt
-end
-
-# x, y, and z
-function Base.push!(plt::Plot, i::Integer, x::Real, y::Real, z::Real)
-    # @show i, x, y, z
-    xdata, ydata, zdata = getxyz(plt, i)
-    # @show xdata, ydata, zdata
-    setxyz!(plt, (extendSeriesData(xdata, x), extendSeriesData(ydata, y), extendSeriesData(zdata, z)), i)
-    plt
-end
-function Base.append!(plt::Plot, i::Integer, x::AVec, y::AVec, z::AVec)
-    @assert length(x) == length(y) == length(z)
-    xdata, ydata, zdata = getxyz(plt, i)
-    setxyz!(plt, (extendSeriesData(xdata, x), extendSeriesData(ydata, y), extendSeriesData(zdata, z)), i)
-    plt
-end
+Base.push!(plt::Plot, args::Real...) = push!(plt, 1, args...)
+Base.push!(plt::Plot, i::Integer, args::Real...) = push!(plt.series_list[i], args...)
+Base.append!(plt::Plot, args::AbstractVector...) = append!(plt, 1, args...)
+Base.append!(plt::Plot, i::Integer, args::Real...) = append!(plt.series_list[i], args...)
 
 # tuples
-Base.push!(plt::Plot, xy::Tuple{X,Y}) where {X,Y}                  = push!(plt, 1, xy...)
-Base.push!(plt::Plot, xyz::Tuple{X,Y,Z}) where {X,Y,Z}             = push!(plt, 1, xyz...)
-Base.push!(plt::Plot, i::Integer, xy::Tuple{X,Y}) where {X,Y}      = push!(plt, i, xy...)
-Base.push!(plt::Plot, i::Integer, xyz::Tuple{X,Y,Z}) where {X,Y,Z} = push!(plt, i, xyz...)
+Base.push!(plt::Plot, t::Tuple) = push!(plt, 1, t...)
+Base.push!(plt::Plot, i::Integer, t::Tuple) = push!(plt, i, t...)
+Base.append!(plt::Plot, t::Tuple) = append!(plt, 1, t...)
+Base.append!(plt::Plot, i::Integer, t::Tuple) = append!(plt, i, t...)
 
 # -------------------------------------------------------
 # push/append for all series
