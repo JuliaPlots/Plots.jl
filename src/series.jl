@@ -70,23 +70,19 @@ process_ribbon(ribbon::Tuple{Any,Any}, plotattributes) = collect(zip(convertToAn
 
 # --------------------------------------------------------------------
 
-# TODO: can we avoid the copy here?  one error that crops up is that mapping functions over the same array
-#       result in that array being shared.  push!, etc will add too many items to that array
+compute_x(x::Nothing, y::Nothing, z)    = axes(z,1)
+compute_x(x::Nothing, y, z)             = axes(y,1)
+compute_x(x::Function, y, z)            = map(x, y)
+compute_x(x, y, z)                      = x
 
-compute_x(x::Nothing, y::Nothing, z)      = axes(z,1)
-compute_x(x::Nothing, y, z)            = axes(y,1)
-compute_x(x::Function, y, z)        = map(x, y)
-compute_x(x, y, z)                  = copy(x)
+compute_y(x::Nothing, y::Nothing, z)    = axes(z,2)
+compute_y(x, y::Function, z)            = map(y, x)
+compute_y(x, y, z)                      = y
 
-# compute_y(x::Void, y::Function, z)  = error()
-compute_y(x::Nothing, y::Nothing, z)      = axes(z,2)
-compute_y(x, y::Function, z)        = map(y, x)
-compute_y(x, y, z)                  = copy(y)
-
-compute_z(x, y, z::Function)        = map(z, x, y)
-compute_z(x, y, z::AbstractMatrix)  = Surface(z)
-compute_z(x, y, z::Nothing)            = nothing
-compute_z(x, y, z)                  = copy(z)
+compute_z(x, y, z::Function)            = map(z, x, y)
+compute_z(x, y, z::AbstractMatrix)      = Surface(z)
+compute_z(x, y, z::Nothing)             = nothing
+compute_z(x, y, z)                      = z
 
 nobigs(v::AVec{BigFloat}) = map(Float64, v)
 nobigs(v::AVec{BigInt}) = map(Int64, v)
