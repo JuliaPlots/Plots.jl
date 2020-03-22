@@ -2,7 +2,7 @@ environment:
   matrix:
   # - julia_version: 0.7
   - julia_version: 1
-  - julia_version: 1.3
+  - julia_version: 1.4
   - julia_version: nightly
 
 platform:
@@ -36,7 +36,7 @@ build_script:
   - C:\julia\bin\julia --project=C:\projects\plots-jl -e "using Pkg; Pkg.pin(PackageSpec(name="""FixedPointNumbers""", version="""0.7"""))"
   - echo "%JL_BUILD_SCRIPT%"
   - C:\julia\bin\julia -e "%JL_BUILD_SCRIPT%"
- 
+
 test_script:
   - echo "%JL_TEST_SCRIPT%"
   - C:\julia\bin\julia -e "%JL_TEST_SCRIPT%"
