@@ -26,13 +26,15 @@
 
 using SnoopCompile
 
+project_flag = string("--project=", joinpath(homedir(), ".julia", "dev", "Plots"))
 log_path = joinpath(tempdir(), "compiles.log")
 precompiles_path = joinpath(tempdir(), "precompile")
 
 # run examples with GR backend, logging what needs to be compiled
-SnoopCompile.@snoopc log_path begin
+SnoopCompile.@snoopc project_flag log_path begin
     using Plots
-    Plots.test_examples(:gr, disp=true)
+    Plots.test_examples(:gr)
+    Plots.test_examples(:plotly, skip = Plots._backend_skips[:plotly])
 end
 
 # precompile calls containing the following strings are dropped
