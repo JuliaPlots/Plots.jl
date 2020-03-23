@@ -175,9 +175,9 @@ end
 @recipe f(::Type{V}, x, y, z) where {V<:Val} = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
 
 function _apply_type_recipe(plotattributes, v, letter)
-    _handle_axis_args!(plotattributes)
+    _preprocess_axis_args!(plotattributes, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
-    _handle_axis_args!(plotattributes, letter)
+    _postprocess_axis_args!(plotattributes, letter)
     return rdvec[1].args[1]
 end
 
@@ -185,7 +185,7 @@ end
 # This sort of recipe should return a pair of functions... one to convert to number,
 # and one to format tick values.
 function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
-    _handle_axis_args!(plotattributes)
+    _preprocess_axis_args!(plotattributes, letter)
     # First we try to apply an array type recipe.
     w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
     # If the type did not change try it element-wise
@@ -193,7 +193,7 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
         isempty(skipmissing(v)) && return Float64[]
         x = first(skipmissing(v))
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
-        _handle_axis_args!(plotattributes, letter)
+        _postprocess_axis_args!(plotattributes, letter)
         if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args
              return Formatted(map(numfunc, v), formatter)
@@ -201,7 +201,7 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
              return v
         end
     end
-    _handle_axis_args!(plotattributes, letter)
+    _postprocess_axis_args!(plotattributes, letter)
     return w
 end
 
@@ -225,7 +225,8 @@ end
 _apply_type_recipe(plotattributes, v::AbstractArray{T}, letter) where {T<:Union{Integer,AbstractFloat}} = v
 
 # axis args in type recipes should only be applied to the current axis
-function _handle_axis_args!(plotattributes, letter)
+function _postprocess_axis_args!(plotattributes, letter)
+    pop!(plotattributes, :letter)
     if letter in (:x, :y, :z)
         replaceAliases!(plotattributes, _keyAliases)
         for (k, v) in plotattributes
@@ -239,13 +240,14 @@ function _handle_axis_args!(plotattributes, letter)
 end
 
 # axis args before type recipes should still be mapped to all axes
-function _handle_axis_args!(plotattributes)
+function _preprocess_axis_args!(plotattributes, letter)
     replaceAliases!(plotattributes, _keyAliases)
+    plotattributes[:letter] = letter
     for (k, v) in plotattributes
         if haskey(_axis_defaults, k)
             pop!(plotattributes, k)
-            for letter in (:x, :y, :z)
-                lk = Symbol(letter, k)
+            for l in (:x, :y, :z)
+                lk = Symbol(l, k)
                 haskey(plotattributes, lk) || (plotattributes[lk] = v)
             end
         end
