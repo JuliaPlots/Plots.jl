@@ -27,31 +27,31 @@ prepareSeriesData(s::Surface) = s  # non-numeric Surface, such as an image
 prepareSeriesData(v::Volume) = Volume(prepareSeriesData(v.v), v.x_extents, v.y_extents, v.z_extents)
 
 # default: assume x represents a single series
-convertToAnyVector(x, plotattributes) = Any[prepareSeriesData(x)]
+series_vector(x, plotattributes) = [prepareSeriesData(x)]
 
 # fixed number of blank series
-convertToAnyVector(n::Integer, plotattributes) = Any[zeros(0) for i in 1:n]
+series_vector(n::Integer, plotattributes) = [zeros(0) for i in 1:n]
 
 # vector of data points is a single series
-convertToAnyVector(v::AVec{<:DataPoint}, plotattributes) = Any[prepareSeriesData(v)]
+series_vector(v::AVec{<:DataPoint}, plotattributes) = [prepareSeriesData(v)]
 
 # list of things (maybe other vectors, functions, or something else)
-function convertToAnyVector(v::AVec, plotattributes)
+function series_vector(v::AVec, plotattributes)
     if all(x -> x isa MaybeNumber, v)
-        convertToAnyVector(Vector{MaybeNumber}(v), plotattributes)
+        series_vector(Vector{MaybeNumber}(v), plotattributes)
     elseif all(x -> x isa MaybeString, v)
-        convertToAnyVector(Vector{MaybeString}(v), plotattributes)
+        series_vector(Vector{MaybeString}(v), plotattributes)
     else
-        vcat((convertToAnyVector(vi, plotattributes) for vi in v)...)
+        vcat((series_vector(vi, plotattributes) for vi in v)...)
     end
 end
 
 # Matrix is split into columns
-function convertToAnyVector(v::AMat{<:DataPoint}, plotattributes)
+function series_vector(v::AMat{<:DataPoint}, plotattributes)
     if all3D(plotattributes)
-        Any[prepareSeriesData(Surface(v))]
+        [prepareSeriesData(Surface(v))]
     else
-        Any[prepareSeriesData(v[:, i]) for i in axes(v, 2)]
+        [prepareSeriesData(v[:, i]) for i in axes(v, 2)]
     end
 end
 
@@ -60,13 +60,13 @@ end
 
 
 process_fillrange(range::Number, plotattributes) = [range]
-process_fillrange(range, plotattributes) = convertToAnyVector(range, plotattributes)
+process_fillrange(range, plotattributes) = series_vector(range, plotattributes)
 
 process_ribbon(ribbon::Number, plotattributes) = [ribbon]
-process_ribbon(ribbon, plotattributes) = convertToAnyVector(ribbon, plotattributes)
+process_ribbon(ribbon, plotattributes) = series_vector(ribbon, plotattributes)
 # ribbon as a tuple: (lower_ribbons, upper_ribbons)
-process_ribbon(ribbon::Tuple{Any,Any}, plotattributes) = collect(zip(convertToAnyVector(ribbon[1], plotattributes),
-                                                     convertToAnyVector(ribbon[2], plotattributes)))
+process_ribbon(ribbon::Tuple{Any,Any}, plotattributes) = collect(zip(series_vector(ribbon[1], plotattributes),
+                                                     series_vector(ribbon[2], plotattributes)))
 
 
 # --------------------------------------------------------------------
@@ -126,9 +126,9 @@ struct SliceIt end
         z = z.data
     end
 
-    xs = convertToAnyVector(x, plotattributes)
-    ys = convertToAnyVector(y, plotattributes)
-    zs = convertToAnyVector(z, plotattributes)
+    xs = series_vector(x, plotattributes)
+    ys = series_vector(y, plotattributes)
+    zs = series_vector(z, plotattributes)
 
 
     fr = pop!(plotattributes, :fillrange, nothing)
