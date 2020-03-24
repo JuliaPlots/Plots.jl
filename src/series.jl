@@ -174,21 +174,35 @@ end
 # this should catch unhandled "series recipes" and error with a nice message
 @recipe f(::Type{V}, x, y, z) where {V<:Val} = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
 
-_apply_type_recipe(plotattributes, v) = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
+function _apply_type_recipe(plotattributes, v, letter)
+    _handle_axis_args!(plotattributes)
+    rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
+    _handle_axis_args!(plotattributes, letter)
+    return rdvec[1].args[1]
+end
 
 # Handle type recipes when the recipe is defined on the elements.
 # This sort of recipe should return a pair of functions... one to convert to number,
 # and one to format tick values.
-function _apply_type_recipe(plotattributes, v::AbstractArray)
-    isempty(skipmissing(v)) && return Float64[]
-    x = first(skipmissing(v))
-    args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
-    if length(args) == 2 && typeof(args[1]) <: Function && typeof(args[2]) <: Function
-        numfunc, formatter = args
-        Formatted(map(numfunc, v), formatter)
-    else
-        v
+function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
+    _handle_axis_args!(plotattributes)
+    # First we try to apply an array type recipe.
+    w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
+    # If the type did not change try it element-wise
+    if typeof(v) == typeof(w)
+        isempty(skipmissing(v)) && return Float64[]
+        x = first(skipmissing(v))
+        args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
+        _handle_axis_args!(plotattributes, letter)
+        if length(args) == 2 && all(arg -> arg isa Function, args)
+            numfunc, formatter = args
+             return Formatted(map(numfunc, v), formatter)
+         else
+             return v
+        end
     end
+    _handle_axis_args!(plotattributes, letter)
+    return w
 end
 
 # # special handling for Surface... need to properly unwrap and re-wrap
@@ -208,16 +222,44 @@ end
 # end
 
 # don't do anything for ints or floats
-_apply_type_recipe(plotattributes, v::AbstractArray{T}) where {T<:Union{Integer,AbstractFloat}} = v
+_apply_type_recipe(plotattributes, v::AbstractArray{T}, letter) where {T<:Union{Integer,AbstractFloat}} = v
+
+# axis args in type recipes should only be applied to the current axis
+function _handle_axis_args!(plotattributes, letter)
+    if letter in (:x, :y, :z)
+        replaceAliases!(plotattributes, _keyAliases)
+        for (k, v) in plotattributes
+            if haskey(_axis_defaults, k)
+                pop!(plotattributes, k)
+                lk = Symbol(letter, k)
+                haskey(plotattributes, lk) || (plotattributes[lk] = v)
+            end
+        end
+    end
+end
+
+# axis args before type recipes should still be mapped to all axes
+function _handle_axis_args!(plotattributes)
+    replaceAliases!(plotattributes, _keyAliases)
+    for (k, v) in plotattributes
+        if haskey(_axis_defaults, k)
+            pop!(plotattributes, k)
+            for letter in (:x, :y, :z)
+                lk = Symbol(letter, k)
+                haskey(plotattributes, lk) || (plotattributes[lk] = v)
+            end
+        end
+    end
+end
 
 # handle "type recipes" by converting inputs, and then either re-calling or slicing
 @recipe function f(x, y, z)
     did_replace = false
-    newx = _apply_type_recipe(plotattributes, x)
+    newx = _apply_type_recipe(plotattributes, x, :x)
     x === newx || (did_replace = true)
-    newy = _apply_type_recipe(plotattributes, y)
+    newy = _apply_type_recipe(plotattributes, y, :y)
     y === newy || (did_replace = true)
-    newz = _apply_type_recipe(plotattributes, z)
+    newz = _apply_type_recipe(plotattributes, z, :z)
     z === newz || (did_replace = true)
     if did_replace
         newx, newy, newz
@@ -227,9 +269,9 @@ _apply_type_recipe(plotattributes, v::AbstractArray{T}) where {T<:Union{Integer,
 end
 @recipe function f(x, y)
     did_replace = false
-    newx = _apply_type_recipe(plotattributes, x)
+    newx = _apply_type_recipe(plotattributes, x, :x)
     x === newx || (did_replace = true)
-    newy = _apply_type_recipe(plotattributes, y)
+    newy = _apply_type_recipe(plotattributes, y, :y)
     y === newy || (did_replace = true)
     if did_replace
         newx, newy
@@ -238,7 +280,7 @@ end
     end
 end
 @recipe function f(y)
-    newy = _apply_type_recipe(plotattributes, y)
+    newy = _apply_type_recipe(plotattributes, y, :y)
     if y !== newy
         newy
     else
@@ -251,7 +293,7 @@ end
 @recipe function f(v1, v2, v3, v4, vrest...)
     did_replace = false
     newargs = map(v -> begin
-        newv = _apply_type_recipe(plotattributes, v)
+        newv = _apply_type_recipe(plotattributes, v, :unknown)
         if newv !== v
             did_replace = true
         end

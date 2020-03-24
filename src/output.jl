@@ -52,6 +52,14 @@ function tex(plt::Plot, fn::AbstractString)
 end
 tex(fn::AbstractString) = tex(current(), fn)
 
+function json(plt::Plot, fn::AbstractString)
+    fn = addExtension(fn, "json")
+    io = open(fn, "w")
+    show(io, MIME("application/vnd.plotly.v1+json"), plt)
+    close(io)
+end
+json(fn::AbstractString) = json(current(), fn)
+
 function html(plt::Plot, fn::AbstractString)
     fn = addExtension(fn, "html")
     io = open(fn, "w")
@@ -78,6 +86,7 @@ const _savemap = Dict(
     "ps"  => ps,
     "eps" => eps,
     "tex" => tex,
+    "json" => json,
     "html" => html,
     "tikz" => tex,
     "txt" => txt,
