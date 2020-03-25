@@ -20,6 +20,7 @@ function prepareSeriesData(a::AbstractArray{<:MaybeNumber})
     f = isimmutable(a) ? replace : replace!
     a = f(x -> ismissing(x) || isinf(x) ? NaN : x, map(float, a))
 end
+prepareSeriesData(a::AbstractArray{<:Missing}) = fill(NaN, axes(a))
 prepareSeriesData(a::AbstractArray{<:MaybeString}) = replace(x -> ismissing(x) ? "" : x, a)
 prepareSeriesData(s::Surface{<:AMat{<:MaybeNumber}}) = Surface(prepareSeriesData(s.surf))
 prepareSeriesData(s::Surface) = s  # non-numeric Surface, such as an image
@@ -222,7 +223,7 @@ end
 # end
 
 # don't do anything for ints or floats
-_apply_type_recipe(plotattributes, v::AbstractArray{T}, letter) where {T<:Union{Integer,AbstractFloat}} = v
+_apply_type_recipe(plotattributes, v::AbstractArray{<:DataPoint}, letter) = v
 
 # axis args before type recipes should still be mapped to all axes
 function _preprocess_axis_args!(plotattributes)
