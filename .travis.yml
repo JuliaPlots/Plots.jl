@@ -35,4 +35,4 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - if [[ `uname` = "Linux" ]]; then TESTCMD="xvfb-run julia"; else TESTCMD="julia"; fi
-  - $TESTCMD -e 'using Pkg; VERSION == v"1.4" ? Pkg.resolve() : nothing; Pkg.pin(PackageSpec(name="FixedPointNumbers", version="0.7")); Pkg.build(); Pkg.test(coverage=true)'
+  - $TESTCMD -e 'using Pkg; if VERSION == v"1.4"; Pkg.resolve(); end; Pkg.pin(PackageSpec(name="FixedPointNumbers", version="0.7")); Pkg.build(); Pkg.test(coverage=true)'
