@@ -224,6 +224,24 @@ end
 # don't do anything for ints or floats
 _apply_type_recipe(plotattributes, v::AbstractArray{T}, letter) where {T<:Union{Integer,AbstractFloat}} = v
 
+# axis args before type recipes should still be mapped to all axes
+function _preprocess_axis_args!(plotattributes)
+    replaceAliases!(plotattributes, _keyAliases)
+    for (k, v) in plotattributes
+        if haskey(_axis_defaults, k)
+            pop!(plotattributes, k)
+            for l in (:x, :y, :z)
+                lk = Symbol(l, k)
+                haskey(plotattributes, lk) || (plotattributes[lk] = v)
+            end
+        end
+    end
+end
+function _preprocess_axis_args!(plotattributes, letter)
+    plotattributes[:letter] = letter
+    _preprocess_axis_args!(plotattributes)
+end
+
 # axis args in type recipes should only be applied to the current axis
 function _postprocess_axis_args!(plotattributes, letter)
     pop!(plotattributes, :letter)
@@ -233,21 +251,6 @@ function _postprocess_axis_args!(plotattributes, letter)
             if haskey(_axis_defaults, k)
                 pop!(plotattributes, k)
                 lk = Symbol(letter, k)
-                haskey(plotattributes, lk) || (plotattributes[lk] = v)
-            end
-        end
-    end
-end
-
-# axis args before type recipes should still be mapped to all axes
-function _preprocess_axis_args!(plotattributes, letter)
-    replaceAliases!(plotattributes, _keyAliases)
-    plotattributes[:letter] = letter
-    for (k, v) in plotattributes
-        if haskey(_axis_defaults, k)
-            pop!(plotattributes, k)
-            for l in (:x, :y, :z)
-                lk = Symbol(l, k)
                 haskey(plotattributes, lk) || (plotattributes[lk] = v)
             end
         end
