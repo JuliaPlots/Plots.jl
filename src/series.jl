@@ -227,7 +227,6 @@ _apply_type_recipe(plotattributes, v::AbstractArray{<:DataPoint}, letter) = v
 
 # axis args before type recipes should still be mapped to all axes
 function _preprocess_axis_args!(plotattributes)
-    replaceAliases!(plotattributes, _keyAliases)
     for (k, v) in plotattributes
         if haskey(_axis_defaults, k)
             pop!(plotattributes, k)
@@ -247,7 +246,6 @@ end
 function _postprocess_axis_args!(plotattributes, letter)
     pop!(plotattributes, :letter)
     if letter in (:x, :y, :z)
-        replaceAliases!(plotattributes, _keyAliases)
         for (k, v) in plotattributes
             if haskey(_axis_defaults, k)
                 pop!(plotattributes, k)
