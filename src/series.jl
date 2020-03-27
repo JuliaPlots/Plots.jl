@@ -174,6 +174,7 @@ end
 function _apply_type_recipe(plotattributes, v, letter)
     _preprocess_axis_args!(plotattributes, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
+    warn_on_recipe_aliases!(plotattributes, :type, typeof(v))
     _postprocess_axis_args!(plotattributes, letter)
     return rdvec[1].args[1]
 end
@@ -185,11 +186,13 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
     _preprocess_axis_args!(plotattributes, letter)
     # First we try to apply an array type recipe.
     w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
+    warn_on_recipe_aliases!(plotattributes, :type, typeof(v))
     # If the type did not change try it element-wise
     if typeof(v) == typeof(w)
         isempty(skipmissing(v)) && return Float64[]
         x = first(skipmissing(v))
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
+        warn_on_recipe_aliases!(plotattributes, :type, typeof(x))
         _postprocess_axis_args!(plotattributes, letter)
         if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args
@@ -223,9 +226,8 @@ _apply_type_recipe(plotattributes, v::AbstractArray{<:DataPoint}, letter) = v
 
 # axis args before type recipes should still be mapped to all axes
 function _preprocess_axis_args!(plotattributes)
-    replaceAliases!(plotattributes, _keyAliases)
     for (k, v) in plotattributes
-        if haskey(_axis_defaults, k)
+        if is_noletter_attribute(k)
             pop!(plotattributes, k)
             for l in (:x, :y, :z)
                 lk = Symbol(l, k)
@@ -243,9 +245,8 @@ end
 function _postprocess_axis_args!(plotattributes, letter)
     pop!(plotattributes, :letter)
     if letter in (:x, :y, :z)
-        replaceAliases!(plotattributes, _keyAliases)
         for (k, v) in plotattributes
-            if haskey(_axis_defaults, k)
+            if is_noletter_attribute(k)
                 pop!(plotattributes, k)
                 lk = Symbol(letter, k)
                 haskey(plotattributes, lk) || (plotattributes[lk] = v)
