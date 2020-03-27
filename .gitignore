@@ -9,3 +9,4 @@ deps/build.log
 deps/deps.jl
 Manifest.toml
 dev/
+test/tmpplotsave.hdf5
