@@ -934,8 +934,8 @@ function _add_markershape(plotattributes::AKW)
 end
 
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
-function preprocessArgs!(plotattributes::AKW, replace_aliases = true)
-    replace_aliases && replaceAliases!(plotattributes, _keyAliases)
+function preprocessArgs!(plotattributes::AKW)
+    replaceAliases!(plotattributes, _keyAliases)
 
     # clear all axis stuff
     # if haskey(plotattributes, :axis) && plotattributes[:axis] in (:none, nothing, false)
