@@ -178,6 +178,7 @@ end
 function _apply_type_recipe(plotattributes, v, letter)
     _preprocess_axis_args!(plotattributes, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
+    warn_on_recipe_aliases!(plotattributes, :type, typeof(v))
     _postprocess_axis_args!(plotattributes, letter)
     return rdvec[1].args[1]
 end
@@ -189,11 +190,13 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
     _preprocess_axis_args!(plotattributes, letter)
     # First we try to apply an array type recipe.
     w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
+    warn_on_recipe_aliases!(plotattributes, :type, typeof(v))
     # If the type did not change try it element-wise
     if typeof(v) == typeof(w)
         isempty(skipmissing(v)) && return Float64[]
         x = first(skipmissing(v))
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
+        warn_on_recipe_aliases!(plotattributes, :type, typeof(x))
         _postprocess_axis_args!(plotattributes, letter)
         if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args

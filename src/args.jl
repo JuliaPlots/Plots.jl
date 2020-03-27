@@ -460,6 +460,24 @@ is_axis_attr_noletter(k) = haskey(_axis_defaults, k)
 
 RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
 
+const _internal_args =
+    [:plot_object, :series_plotindex, :markershape_to_add, :letter, :idxfilter]
+const _magic_axis_args = [:axis, :tickfont, :guidefont]
+const _magic_subplot_args = [:titlefont, :legendfont, :legendtitlefont, ]
+const _magic_series_args = [:line, :marker, :fill]
+
+function is_default_attribute(k::Symbol)
+    k in _internal_args && return true
+    k in _all_args && return true
+    is_axis_attr(k) && return true
+    is_axis_attr_noletter(k) && return true
+    k in _magic_axis_args && return true
+    k in _magic_subplot_args && return true
+    k in _magic_series_args && return true
+    Symbol(chop(string(k); head = 1, tail = 0)) in _magic_axis_args && return true
+    return false
+end
+
 # -----------------------------------------------------------------------------
 
 makeplural(s::Symbol) = Symbol(string(s,"s"))
@@ -1014,6 +1032,16 @@ function preprocessArgs!(plotattributes::AKW, replace_aliases = true)
             args = pop_kw!(plotattributes, Symbol(letter, fontname), ())
             for arg in wraptuple(args)
                 processFontArg!(plotattributes, Symbol(letter, fontname), arg)
+            end
+        end
+    end
+    # handle axes guides
+    if haskey(plotattributes, :guide)
+        guide = pop!(plotattributes, :guide)
+        for letter in (:x, :y, :z)
+            guide_sym = Symbol(letter, :guide)
+            if !is_explicit(plotattributes, guide_sym)
+                plotattributes[guide_sym] = guide
             end
         end
     end

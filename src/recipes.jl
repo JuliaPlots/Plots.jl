@@ -1261,8 +1261,8 @@ end
     yflip := true
     aspect_ratio := 1
     rs, cs, zs = findnz(z.surf)
-    xlim := ignorenan_extrema(cs)
-    ylim := ignorenan_extrema(rs)
+    xlims := ignorenan_extrema(cs)
+    ylims := ignorenan_extrema(rs)
     if plotattributes[:markershape] == :none
         markershape := :circle
     end
