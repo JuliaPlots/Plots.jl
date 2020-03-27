@@ -20,6 +20,7 @@ function prepareSeriesData(a::AbstractArray{<:MaybeNumber})
     f = isimmutable(a) ? replace : replace!
     a = f(x -> ismissing(x) || isinf(x) ? NaN : x, map(float, a))
 end
+prepareSeriesData(a::AbstractArray{<:Missing}) = fill(NaN, axes(a))
 prepareSeriesData(a::AbstractArray{<:MaybeString}) = replace(x -> ismissing(x) ? "" : x, a)
 prepareSeriesData(s::Surface{<:AMat{<:MaybeNumber}}) = Surface(prepareSeriesData(s.surf))
 prepareSeriesData(s::Surface) = s  # non-numeric Surface, such as an image
@@ -171,9 +172,9 @@ end
 @recipe f(::Type{V}, x, y, z) where {V<:Val} = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
 
 function _apply_type_recipe(plotattributes, v, letter)
-    _handle_axis_args!(plotattributes)
+    _preprocess_axis_args!(plotattributes, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
-    _handle_axis_args!(plotattributes, letter)
+    _postprocess_axis_args!(plotattributes, letter)
     return rdvec[1].args[1]
 end
 
@@ -181,7 +182,7 @@ end
 # This sort of recipe should return a pair of functions... one to convert to number,
 # and one to format tick values.
 function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
-    _handle_axis_args!(plotattributes)
+    _preprocess_axis_args!(plotattributes, letter)
     # First we try to apply an array type recipe.
     w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
     # If the type did not change try it element-wise
@@ -189,7 +190,7 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
         isempty(skipmissing(v)) && return Float64[]
         x = first(skipmissing(v))
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
-        _handle_axis_args!(plotattributes, letter)
+        _postprocess_axis_args!(plotattributes, letter)
         if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args
              return Formatted(map(numfunc, v), formatter)
@@ -197,7 +198,7 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
              return v
         end
     end
-    _handle_axis_args!(plotattributes, letter)
+    _postprocess_axis_args!(plotattributes, letter)
     return w
 end
 
@@ -218,29 +219,34 @@ end
 # end
 
 # don't do anything for ints or floats
-_apply_type_recipe(plotattributes, v::AbstractArray{T}, letter) where {T<:Union{Integer,AbstractFloat}} = v
+_apply_type_recipe(plotattributes, v::AbstractArray{<:DataPoint}, letter) = v
 
-# axis args in type recipes should only be applied to the current axis
-function _handle_axis_args!(plotattributes, letter)
-    if letter in (:x, :y, :z)
-        replaceAliases!(plotattributes, _keyAliases)
-        for (k, v) in plotattributes
-            if haskey(_axis_defaults, k)
-                pop!(plotattributes, k)
-                lk = Symbol(letter, k)
+# axis args before type recipes should still be mapped to all axes
+function _preprocess_axis_args!(plotattributes)
+    replaceAliases!(plotattributes, _keyAliases)
+    for (k, v) in plotattributes
+        if haskey(_axis_defaults, k)
+            pop!(plotattributes, k)
+            for l in (:x, :y, :z)
+                lk = Symbol(l, k)
                 haskey(plotattributes, lk) || (plotattributes[lk] = v)
             end
         end
     end
 end
+function _preprocess_axis_args!(plotattributes, letter)
+    plotattributes[:letter] = letter
+    _preprocess_axis_args!(plotattributes)
+end
 
-# axis args before type recipes should still be mapped to all axes
-function _handle_axis_args!(plotattributes)
-    replaceAliases!(plotattributes, _keyAliases)
-    for (k, v) in plotattributes
-        if haskey(_axis_defaults, k)
-            pop!(plotattributes, k)
-            for letter in (:x, :y, :z)
+# axis args in type recipes should only be applied to the current axis
+function _postprocess_axis_args!(plotattributes, letter)
+    pop!(plotattributes, :letter)
+    if letter in (:x, :y, :z)
+        replaceAliases!(plotattributes, _keyAliases)
+        for (k, v) in plotattributes
+            if haskey(_axis_defaults, k)
+                pop!(plotattributes, k)
                 lk = Symbol(letter, k)
                 haskey(plotattributes, lk) || (plotattributes[lk] = v)
             end
