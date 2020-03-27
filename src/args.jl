@@ -466,12 +466,17 @@ const _magic_axis_args = [:axis, :tickfont, :guidefont]
 const _magic_subplot_args = [:titlefont, :legendfont, :legendtitlefont, ]
 const _magic_series_args = [:line, :marker, :fill]
 
-function is_default_attribute(k::Symbol)
+function is_noletter_attribute(k)
+    is_axis_attr_noletter(k) && return true
+    k in _magic_axis_args && return true
+    return false
+end
+
+function is_default_attribute(k)
     k in _internal_args && return true
     k in _all_args && return true
     is_axis_attr(k) && return true
-    is_axis_attr_noletter(k) && return true
-    k in _magic_axis_args && return true
+    is_noletter_attribute(k) && return true
     k in _magic_subplot_args && return true
     k in _magic_series_args && return true
     Symbol(chop(string(k); head = 1, tail = 0)) in _magic_axis_args && return true
