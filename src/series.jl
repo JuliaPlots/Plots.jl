@@ -35,14 +35,22 @@ series_vector(n::Integer, plotattributes) = [zeros(0) for i in 1:n]
 # vector of data points is a single series
 series_vector(v::AVec{<:DataPoint}, plotattributes) = [prepareSeriesData(v)]
 
+# vector of arrays
+series_vector(v::AVec{<:AbstractArray}, plotattributes) =
+    vcat((series_vector(vi, plotattributes) for vi in v)...)
+
 # list of things (maybe other vectors, functions, or something else)
 function series_vector(v::AVec, plotattributes)
     if all(x -> x isa MaybeNumber, v)
-        series_vector(Vector{MaybeNumber}(v), plotattributes)
+        return series_vector(Vector{MaybeNumber}(v), plotattributes)
     elseif all(x -> x isa MaybeString, v)
-        series_vector(Vector{MaybeString}(v), plotattributes)
+        return series_vector(Vector{MaybeString}(v), plotattributes)
     else
-        vcat((series_vector(vi, plotattributes) for vi in v)...)
+        try
+            series_vector(string.(v), plotattributes)
+        catch
+            vcat((series_vector(vi, plotattributes) for vi in v)...)
+        end
     end
 end
 
