@@ -1,0 +1,10 @@
+ignore:
+  - "src/backends/inspectdr.jl"
+  - "src/backends/orca.jl"
+  - "src/backends/pgfplots.jl"
+  - "src/backends/plotly.jl"
+  - "src/backends/plotlyjs.jl"
+  - "src/backends/pyplot.jl"
+  - "src/backends/web.jl"
+  - "src/fileio.jl"
+  - "src/ijulia.jl"
