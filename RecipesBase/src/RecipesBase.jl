@@ -185,7 +185,9 @@ function process_recipe_body!(expr::Expr)
                     set_expr
                 end
 
-            # TODO elseif it's a @series macrocall, add a series block and push to the `series` list
+            elseif e.head == :return
+                # To allow `return` in recipes just extract the returned arguments.
+                expr.args[i] = first(e.args)
 
             elseif e.head != :call
                 # we want to recursively replace the arrows, but not inside function calls
