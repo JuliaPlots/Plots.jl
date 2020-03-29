@@ -17,6 +17,7 @@ addons:
     packages:
       - at-spi2-core
       - libgtk-3-dev
+      - texlive-base
       - xauth
       - xvfb
 
