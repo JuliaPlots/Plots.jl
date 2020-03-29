@@ -889,6 +889,36 @@ const _examples = PlotExample[
             end,
         ],
     ),
+    PlotExample(
+        "Setting defaults and font arguments",
+        "",
+        [
+            quote
+                begin
+                    using Plots, LaTeXStrings
+                    default(
+                        titlefont = (20, "times"),
+                        legendfontsize = 18,
+                        guidefont = (18, :darkgreen),
+                        tickfont = (12, :orange),
+                        guide = L"x",
+                        framestyle = :zerolines,
+                        yminorgrid = true
+                    )
+                    plot(
+                        [sin, cos],
+                        -2π,
+                        2π,
+                        label = [L"sin(\theta)" L"cos(\theta)"],
+                        title = "Trigonometric Functions",
+                        xlabel = L"\theta",
+                        linewidth = 2,
+                        legend = :outertopleft,
+                    )
+                end
+            end,
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages

@@ -8,6 +8,7 @@ using Gtk
 using LibGit2
 using GeometryTypes
 using Dates
+using LaTeXStrings
 
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
