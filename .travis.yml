@@ -20,6 +20,9 @@ addons:
       - xauth
       - xvfb
 
+env:
+  - GKS_ENCODING="utf8"
+
 cache:
   directories:
   - $HOME/.julia/artifacts
