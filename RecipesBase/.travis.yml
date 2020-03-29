@@ -4,7 +4,8 @@ os:
   - linux
   - osx
 julia:
-  - 1.1
+  - 1.0
+  - 1.4
   - nightly
 notifications:
   email: false
@@ -12,3 +13,18 @@ notifications:
 # script:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 #  - julia -e 'import Pkg; Pkg.clone(pwd()); Pkg.build("RecipesBase"); Pkg.test("RecipesBase"; coverage=true)'
+
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1.4
+      os: linux
+      addons:
+        apt:
+          packages:
+            - qt5-default
+      script:
+        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
+                                               Pkg.instantiate()'
+        - xvfb-run julia --project=docs/ docs/make.jl
+      after_success: skip
