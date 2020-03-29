@@ -895,13 +895,13 @@ const _examples = PlotExample[
         [
             quote
                 begin
-                    using Plots, LaTeXStrings
+                    using Plots
                     default(
                         titlefont = (20, "times"),
                         legendfontsize = 18,
                         guidefont = (18, :darkgreen),
                         tickfont = (12, :orange),
-                        guide = L"x",
+                        guide = "x",
                         framestyle = :zerolines,
                         yminorgrid = true
                     )
@@ -909,9 +909,9 @@ const _examples = PlotExample[
                         [sin, cos],
                         -2π,
                         2π,
-                        label = [L"sin(\theta)" L"cos(\theta)"],
+                        label = ["sin(θ)" "cos(θ)"],
                         title = "Trigonometric Functions",
-                        xlabel = L"\theta",
+                        xlabel = "θ",
                         linewidth = 2,
                         legend = :outertopleft,
                     )
