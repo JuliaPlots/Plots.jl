@@ -42,9 +42,9 @@ series_vector(v::AVec{<:AbstractArray}, plotattributes) =
 # list of things (maybe other vectors, functions, or something else)
 function series_vector(v::AVec, plotattributes)
     if all(x -> x isa MaybeNumber, v)
-        return series_vector(Vector{MaybeNumber}(v), plotattributes)
+        series_vector(Vector{MaybeNumber}(v), plotattributes)
     elseif all(x -> x isa MaybeString, v)
-        return series_vector(Vector{MaybeString}(v), plotattributes)
+        series_vector(Vector{MaybeString}(v), plotattributes)
     else
         try
             series_vector(string.(v), plotattributes)
