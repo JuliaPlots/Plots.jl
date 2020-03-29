@@ -26,8 +26,9 @@ struct Attr <: AbstractDict{Symbol,Any}
     defaults::KW
 end
 
-Base.getindex(attr::Attr, k) = haskey(attr.explicit,k) ?
-                                     attr.explicit[k] : attr.defaults[k]
+function Base.getindex(attr::Attr, k)
+    return haskey(attr.explicit, k) ? attr.explicit[k] : attr.defaults[k]
+end
 Base.haskey(attr::Attr, k) = haskey(attr.explicit,k) || haskey(attr.defaults,k)
 Base.get(attr::Attr, k, default) = haskey(attr, k) ? attr[k] : default
 function Base.get!(attr::Attr, k, default)
@@ -41,7 +42,7 @@ end
 function Base.delete!(attr::Attr, k)
     haskey(attr.explicit, k) && delete!(attr.explicit, k)
     haskey(attr.defaults, k) && delete!(attr.defaults, k)
-end 
+end
 Base.length(attr::Attr) = length(union(keys(attr.explicit), keys(attr.defaults)))
 function Base.iterate(attr::Attr)
     exp_keys = keys(attr.explicit)
