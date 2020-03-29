@@ -62,14 +62,8 @@ function _preprocess_args(plotattributes::AKW, args, still_to_process::Vector{Re
     # remove subplot and axis args from plotattributes... they will be passed through in the kw_list
     if !isempty(args)
         for (k,v) in plotattributes
-            for defdict in (_subplot_defaults,
-                            _axis_defaults,
-                            _axis_defaults_byletter[:x],
-                            _axis_defaults_byletter[:y],
-                            _axis_defaults_byletter[:z])
-                if haskey(defdict, k)
-                    reset_kw!(plotattributes, k)
-                end
+            if k in _all_subplot_args || k in _all_axis_args
+                reset_kw!(plotattributes, k)
             end
         end
     end
