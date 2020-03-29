@@ -15,7 +15,7 @@ makedocs(
     modules = [RecipesBase]
 )
 
-# deploydocs(
-#     repo = "github.com/JuliaPlots/RecipesBase.jl.git",
-#     push_preview = true,
-# )
+deploydocs(
+    repo = "github.com/JuliaPlots/RecipesBase.jl.git",
+    push_preview = true,
+)
