@@ -1,6 +1,6 @@
 
 
-# create a new "build_series_args" which converts all inputs into xs = Any[xitems], ys = Any[yitems].
+# create a new "build_series_args" which converts all inputs into xs = [xitems], ys = [yitems].
 # Special handling for: no args, xmin/xmax, parametric, dataframes
 # Then once inputs have been converted, build the series args, map functions, etc.
 # This should cut down on boilerplate code and allow more focused dispatch on type
@@ -47,6 +47,7 @@ function series_vector(v::AVec, plotattributes)
         series_vector(Vector{MaybeString}(v), plotattributes)
     else
         try
+            @show typeof(v)
             series_vector(string.(v), plotattributes)
         catch
             vcat((series_vector(vi, plotattributes) for vi in v)...)
@@ -73,8 +74,10 @@ process_fillrange(range, plotattributes) = series_vector(range, plotattributes)
 process_ribbon(ribbon::Number, plotattributes) = [ribbon]
 process_ribbon(ribbon, plotattributes) = series_vector(ribbon, plotattributes)
 # ribbon as a tuple: (lower_ribbons, upper_ribbons)
-process_ribbon(ribbon::Tuple{Any,Any}, plotattributes) = collect(zip(series_vector(ribbon[1], plotattributes),
-                                                     series_vector(ribbon[2], plotattributes)))
+process_ribbon(ribbon::Tuple{S, T}, plotattributes) where {S, T} = collect(zip(
+    series_vector(ribbon[1], plotattributes),
+    series_vector(ribbon[2], plotattributes),
+))
 
 
 # --------------------------------------------------------------------
@@ -174,7 +177,7 @@ struct SliceIt end
 end
 
 # this is the default "type recipe"... just pass the object through
-@recipe f(::Type{T}, v::T) where {T<:Any} = v
+@recipe f(::Type{T}, v::T) where T = v
 
 # this should catch unhandled "series recipes" and error with a nice message
 @recipe f(::Type{V}, x, y, z) where {V<:Val} = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
@@ -580,13 +583,7 @@ end
 end
 @recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where F<:Function
     xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
-    xs = Array{Any}(undef, length(fs))
-    ys = Array{Any}(undef, length(fs))
-    for (i, (x, y)) in enumerate(_scaled_adapted_grid(f, xscale, yscale, xmin, xmax) for f in fs)
-        xs[i] = x
-    	ys[i] = y
-    end
-    xs, ys
+    unzip(_scaled_adapted_grid.(fs, xscale, yscale, xmin, xmax))
 end
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function}  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
 @recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) where {F<:Function,G<:Function} = fx, fy, range(umin, stop = umax, length = n)
