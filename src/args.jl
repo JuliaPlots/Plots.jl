@@ -450,38 +450,33 @@ const _initial_fontsizes = Dict(:titlefontsize  => _subplot_defaults[:titlefonts
                                 :tickfontsize   => _axis_defaults[:tickfontsize],
                                 :guidefontsize  => _axis_defaults[:guidefontsize])
 
-const _all_args = sort(collect(union(map(keys, _all_defaults)...)))
-
-is_subplot_attr(k) = haskey(_subplot_defaults, k)
-is_series_attr(k) = haskey(_series_defaults, k)
-#is_axis_attr(k) = haskey(_axis_defaults_byletter, k)
-is_axis_attr(k) = haskey(_axis_defaults, Symbol(chop(string(k); head=1, tail=0)))
-is_axis_attr_noletter(k) = haskey(_axis_defaults, k)
-
-RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
-
 const _internal_args =
     [:plot_object, :series_plotindex, :markershape_to_add, :letter, :idxfilter]
-const _magic_axis_args = [:axis, :tickfont, :guidefont]
+
+const _axis_args = sort(union(collect(keys(_axis_defaults))))
+const _series_args = sort(union(collect(keys(_series_defaults))))
+const _subplot_args = sort(union(collect(keys(_subplot_defaults))))
+const _plot_args = sort(union(collect(keys(_plot_defaults))))
+
+const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
 const _magic_subplot_args = [:titlefont, :legendfont, :legendtitlefont, ]
 const _magic_series_args = [:line, :marker, :fill]
 
-function is_noletter_attribute(k)
-    is_axis_attr_noletter(k) && return true
-    k in _magic_axis_args && return true
-    return false
-end
+const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
+const _all_subplot_args = sort(union([_subplot_args; _magic_subplot_args]))
+const _all_series_args = sort(union([_series_args; _magic_series_args]))
+const _all_plot_args = _plot_args
 
-function is_default_attribute(k)
-    k in _internal_args && return true
-    k in _all_args && return true
-    is_axis_attr(k) && return true
-    is_noletter_attribute(k) && return true
-    k in _magic_subplot_args && return true
-    k in _magic_series_args && return true
-    Symbol(chop(string(k); head = 1, tail = 0)) in _magic_axis_args && return true
-    return false
-end
+const _all_args =
+    sort([_all_axis_args; _all_subplot_args; _all_series_args; _all_plot_args])
+
+is_subplot_attr(k) = k in _all_subplot_args
+is_series_attr(k) = k in _all_series_args
+is_axis_attr(k) = Symbol(chop(string(k); head=1, tail=0)) in _all_axis_args
+is_axis_attr_noletter(k) = k in _all_axis_args
+
+RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
+is_default_attribute(k) = k in _internal_args || k in _all_args || is_axis_attr_noletter(k)
 
 # -----------------------------------------------------------------------------
 
@@ -942,22 +937,6 @@ end
 function preprocessArgs!(plotattributes::AKW)
     replaceAliases!(plotattributes, _keyAliases)
 
-    # clear all axis stuff
-    # if haskey(plotattributes, :axis) && plotattributes[:axis] in (:none, nothing, false)
-    #     plotattributes[:ticks] = nothing
-    #     plotattributes[:foreground_color_border] = RGBA(0,0,0,0)
-    #     plotattributes[:foreground_color_axis] = RGBA(0,0,0,0)
-    #     plotattributes[:grid] = false
-    #     delete!(plotattributes, :axis)
-    # end
-    # for letter in (:x, :y, :z)
-    #     asym = Symbol(letter, :axis)
-    #     if haskey(plotattributes, asym) || plotattributes[asym] in (:none, nothing, false)
-    #         plotattributes[Symbol(letter, :ticks)] = nothing
-    #         plotattributes[Symbol(letter, :foreground_color_border)] = RGBA(0,0,0,0)
-    #     end
-    # end
-
     # handle axis args common to all axis
     args = pop_kw!(plotattributes, :axis, ())
     for arg in wraptuple(args)
@@ -1015,13 +994,6 @@ function preprocessArgs!(plotattributes::AKW)
             processMinorGridArg!(plotattributes, arg, letter)
         end
     end
-    # fonts
-    for fontname in (:titlefont, :legendfont, :legendtitlefont)
-        args = pop_kw!(plotattributes, fontname, ())
-        for arg in wraptuple(args)
-            processFontArg!(plotattributes, fontname, arg)
-        end
-    end
     # handle font args common to all axes
     for fontname in (:tickfont, :guidefont)
         args = pop_kw!(plotattributes, fontname, ())
@@ -1040,14 +1012,24 @@ function preprocessArgs!(plotattributes::AKW)
             end
         end
     end
-    # handle axes guides
-    if haskey(plotattributes, :guide)
-        guide = pop!(plotattributes, :guide)
-        for letter in (:x, :y, :z)
-            guide_sym = Symbol(letter, :guide)
-            if !is_explicit(plotattributes, guide_sym)
-                plotattributes[guide_sym] = guide
+    # handle axes args
+    for k in _axis_args
+        if haskey(plotattributes, k)
+            v = plotattributes[k]
+            for letter in (:x, :y, :z)
+                lk = Symbol(letter, k)
+                if !is_explicit(plotattributes, lk)
+                    plotattributes[lk] = v
+                end
             end
+        end
+    end
+
+    # fonts
+    for fontname in (:titlefont, :legendfont, :legendtitlefont)
+        args = pop_kw!(plotattributes, fontname, ())
+        for arg in wraptuple(args)
+            processFontArg!(plotattributes, fontname, arg)
         end
     end
 
@@ -1504,12 +1486,9 @@ function _update_axis(plt::Plot, sp::Subplot, plotattributes_in::AKW, letter::Sy
 end
 
 function _update_axis(axis::Axis, plotattributes_in::AKW, letter::Symbol, subplot_index::Int)
-    # grab magic args (for example `xaxis = (:flip, :log)`)
-    args = wraptuple(get(plotattributes_in, Symbol(letter, :axis), ()))
-
     # build the KW of arguments from the letter version (i.e. xticks --> ticks)
     kw = KW()
-    for k in keys(_axis_defaults)
+    for k in _all_axis_args
         # first get the args without the letter: `tickfont = font(10)`
         # note: we don't pop because we want this to apply to all axes! (delete after all have finished)
         if haskey(plotattributes_in, k)
@@ -1524,7 +1503,7 @@ function _update_axis(axis::Axis, plotattributes_in::AKW, letter::Symbol, subplo
     end
 
     # update the axis
-    attr!(axis, args...; kw...)
+    attr!(axis; kw...)
     return
 end
 

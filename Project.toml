@@ -55,7 +55,6 @@ GeometryTypes = "4d00f742-c7ba-57c2-abde-4428a4b178cb"
 Gtk = "4c0ca9eb-093a-5379-98c5-f87ac0bbbf44"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
-LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LibGit2 = "76f85450-5226-5b5a-8eaa-529ad045b433"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925"
@@ -69,4 +68,4 @@ UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["FileIO", "GeometryTypes", "Gtk", "ImageMagick", "Images", "LaTeXStrings", "LibGit2", "OffsetArrays", "PGFPlotsX", "HDF5", "Random", "RDatasets", "StaticArrays", "StatsPlots", "Test", "UnicodePlots", "VisualRegressionTests"]
+test = ["FileIO", "GeometryTypes", "Gtk", "ImageMagick", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "HDF5", "Random", "RDatasets", "StaticArrays", "StatsPlots", "Test", "UnicodePlots", "VisualRegressionTests"]
