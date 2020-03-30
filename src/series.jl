@@ -47,7 +47,6 @@ function series_vector(v::AVec, plotattributes)
         series_vector(Vector{MaybeString}(v), plotattributes)
     else
         try
-            @show typeof(v)
             series_vector(string.(v), plotattributes)
         catch
             vcat((series_vector(vi, plotattributes) for vi in v)...)
