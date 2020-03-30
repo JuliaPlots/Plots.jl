@@ -32,8 +32,7 @@ install:
   - ps: iex ((new-object net.webclient).DownloadString("https://raw.githubusercontent.com/JuliaCI/Appveyor.jl/version-1/bin/install.ps1"))
 
 build_script:
-  - C:\julia\bin\julia --project=C:\projects\plots-jl -e "using Pkg;  if VERSION == v"""1.4"""; Pkg.resolve(); end; Pkg.pin(PackageSpec(name="""FixedPointNumbers""", version="""0.7"""))"
-  - echo "%JL_BUILD_SCRIPT%"
+  - echo "%JL_TEST_SCRIPT%"
   - C:\julia\bin\julia -e "%JL_BUILD_SCRIPT%"
 
 test_script:
