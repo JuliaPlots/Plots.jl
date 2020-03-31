@@ -594,7 +594,9 @@ function process_annotation(sp::Subplot, xs, ys, labs, font = font())
     xlength = length(methods(length, (typeof(xs),))) == 0 ? 1 : length(xs)
     ylength = length(methods(length, (typeof(ys),))) == 0 ? 1 : length(ys)
     for i in 1:max(xlength, ylength, length(labs))
-        x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
+      x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
+        x = typeof(x) <: TimeType ? Dates.value(x) : x  
+        y = typeof(y) <: TimeType ? Dates.value(y) : y  
         if lab == :auto
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (x, y, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
