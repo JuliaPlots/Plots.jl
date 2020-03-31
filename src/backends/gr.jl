@@ -1043,6 +1043,13 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             viewport_plotarea[3] += legendh + 0.04
         end
     end
+    if sp[:legend] == :inline
+        if sp[:yaxis][:mirror]
+            viewport_plotarea[1] += legendw
+        else
+            viewport_plotarea[2] -= legendw
+        end
+    end
 
     # fill in the plot area background
     bg = plot_color(sp[:background_color_inside])
@@ -1798,6 +1805,21 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             gr_text(GR.wctondc(xi, yi)..., str)
         end
 
+        if sp[:legend] == :inline && should_add_to_legend(series)
+            gr_set_font(legendfont(sp))
+            gr_set_textcolor(plot_color(sp[:legendfontcolor]))
+            if sp[:yaxis][:mirror] 
+                (_,i) = sp[:xaxis][:flip] ? findmax(x) : findmin(x)
+                GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
+                offset = -0.01
+            else
+                (_,i) = sp[:xaxis][:flip] ? findmin(x) : findmax(x)
+                GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
+                offset = 0.01
+            end
+            (x_l,y_l) = GR.wctondc(x[i],y[i])
+            gr_text(x_l+offset,y_l,series[:label])
+        end
         GR.restorestate()
     end
 
@@ -1805,7 +1827,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     hascolorbar(sp) && gr_draw_colorbar(cbar, sp, get_clims(sp))
 
     # add the legend
-    if sp[:legend] != :none
+    if !(sp[:legend] in(:none, :inline)) 
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
