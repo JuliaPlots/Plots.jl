@@ -1044,7 +1044,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
     end
     if sp[:legend] == :inline
-        viewport_plotarea[2] -= legendw
+        if sp[:yaxis][:mirror]
+            viewport_plotarea[1] += legendw
+        else
+            viewport_plotarea[2] -= legendw
+        end
     end
 
     # fill in the plot area background
@@ -1803,10 +1807,18 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         if sp[:legend] == :inline && should_add_to_legend(series)
             gr_set_font(legendfont(sp))
-            GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
             gr_set_textcolor(plot_color(sp[:legendfontcolor]))
-            (x_l,y_l) = GR.wctondc(x[end],y[end])
-            gr_text(x_l+.01,y_l,series[:label])
+            if sp[:yaxis][:mirror] 
+                (_,i) = sp[:xaxis][:flip] ? findmax(x) : findmin(x)
+                GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
+                offset = -0.01
+            else
+                (_,i) = sp[:xaxis][:flip] ? findmin(x) : findmax(x)
+                GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
+                offset = 0.01
+            end
+            (x_l,y_l) = GR.wctondc(x[i],y[i])
+            gr_text(x_l+offset,y_l,series[:label])
         end
         GR.restorestate()
     end
