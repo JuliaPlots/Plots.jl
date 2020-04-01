@@ -10,10 +10,12 @@ function warn_on_recipe_aliases!(plotattributes, recipe_type, args...)
         end
     end
 end
-warn_on_recipe_aliases!(v::AbstractVector, recipe_type, args) =
-    foreach(x -> warn_on_recipe_aliases!(x, recipe_type, args), v)
-warn_on_recipe_aliases!(rd::RecipeData, recipe_type, args) =
-    warn_on_recipe_aliases!(rd.plotattributes, recipe_type, args)
+function warn_on_recipe_aliases!(v::AbstractVector, recipe_type, args...)
+    foreach(x -> warn_on_recipe_aliases!(x, recipe_type, args...), v)
+end
+function warn_on_recipe_aliases!(rd::RecipeData, recipe_type, args...)
+    warn_on_recipe_aliases!(rd.plotattributes, recipe_type, args...)
+end
 
 function signature_string(::Type{Val{:user}}, args...)
     return string("(::", join(string.(typeof.(args)), ", ::"), ")")
@@ -102,7 +104,7 @@ function _process_userrecipes(plt::Plot, plotattributes::AKW, args)
                 next_series.plotattributes,
                 next_series.args...
             )
-            warn_on_recipe_aliases!(rd_list, :user, next_series.args)
+            warn_on_recipe_aliases!(rd_list, :user, next_series.args...)
             prepend!(still_to_process,rd_list)
         end
     end
