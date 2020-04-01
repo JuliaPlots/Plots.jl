@@ -661,8 +661,8 @@ Surface(f::Function, x, y) = Surface(Float64[f(xi,yi) for yi in y, xi in x])
 
 Base.Array(surf::Surface) = surf.surf
 
-for f in (:length, :size)
-  @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
+for f in (:length, :size, :axes)
+    @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
 end
 Base.copy(surf::Surface) = Surface(copy(surf.surf))
 Base.eltype(surf::Surface{T}) where {T} = eltype(T)

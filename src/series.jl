@@ -344,7 +344,7 @@ end
 
 @recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
-all3D(plotattributes) = all(
+all3D(plotattributes) = trueOrAllTrue(
     st -> st in (
         :contour,
         :contourf,
