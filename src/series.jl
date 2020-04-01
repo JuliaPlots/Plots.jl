@@ -464,31 +464,12 @@ end
             axis_limits(plt[1], :x)
         catch
             xinv = invscalefunc(get(plotattributes, :xscale, :identity))
-            xm = tryrange(f, xinv.([-5,-1,0,0.01]))
-            xm, tryrange(f, filter(x->x>xm, xinv.([5,1,0.99, 0, -0.01])))
+            xm = PlotUtils.tryrange(f, xinv.([-5,-1,0,0.01]))
+            xm, PlotUtils.tryrange(f, filter(x->x>xm, xinv.([5,1,0.99, 0, -0.01])))
         end
     end
 
     f, xmin, xmax
-end
-
-# try some intervals over which the function may be defined
-function tryrange(F::AbstractArray, vec)
-    rets = [tryrange(f, vec) for f in F] # get the preferred for each
-    maxind = maximum(indexin(rets, vec)) # get the last attempt that succeeded (most likely to fit all)
-    rets .= [tryrange(f, vec[maxind:maxind]) for f in F] # ensure that all functions compute there
-    rets[1]
-end
-
-function tryrange(F, vec)
-    for v in vec
-        try
-            tmp = F(v)
-            return v
-        catch
-        end
-    end
-    error("$F is not a Function, or is not defined at any of the values $vec")
 end
 
 
