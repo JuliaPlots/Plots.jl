@@ -294,7 +294,7 @@ end
     end
 end
 @recipe function f(y)
-    wrap_surfaces!(plotattribute, y)
+    wrap_surfaces!(plotattributes, y)
     newy = _apply_type_recipe(plotattributes, y, :y)
     if y !== newy
         newy
