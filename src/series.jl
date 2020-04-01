@@ -106,10 +106,16 @@ compute_xyz(x::Nothing, y::Nothing, z::Nothing)        = error("x/y/z are all no
 
 # we are going to build recipes to do the processing and splitting of the args
 
+# --------------------------------------------------------------------
+# The catch-all SliceIt recipe
+# --------------------------------------------------------------------
+
 # ensure we dispatch to the slicer
 struct SliceIt end
 
-# the catch-all recipes
+# The `SliceIt` recipe finishes user and type recipe processing.
+# It splits processed data into individual series data, stores in copied `plotattributes`
+# for each series and returns no arguments.
 @recipe function f(::Type{SliceIt}, x, y, z)
 
     # handle data with formatting attached
@@ -130,7 +136,6 @@ struct SliceIt end
     ys = series_vector(y, plotattributes)
     zs = series_vector(z, plotattributes)
 
-
     fr = pop!(plotattributes, :fillrange, nothing)
     fillranges = process_fillrange(fr, plotattributes)
     mf = length(fillranges)
@@ -138,8 +143,6 @@ struct SliceIt end
     rib = pop!(plotattributes, :ribbon, nothing)
     ribbons = process_ribbon(rib, plotattributes)
     mr = length(ribbons)
-
-    # @show zs
 
     mx = length(xs)
     my = length(ys)
@@ -164,6 +167,11 @@ struct SliceIt end
     end
     nothing  # don't add a series for the main block
 end
+
+
+# --------------------------------------------------------------------
+# Apply type recipes
+# --------------------------------------------------------------------
 
 # this is the default "type recipe"... just pass the object through
 @recipe f(::Type{T}, v::T) where {T<:Any} = v
@@ -216,8 +224,9 @@ function _apply_type_recipe(plotattributes, v::Surface)
     end
 end
 
-# don't do anything for ints or floats
+# don't do anything for datapoints or nothing
 _apply_type_recipe(plotattributes, v::AbstractArray{<:DataPoint}, letter) = v
+_apply_type_recipe(plotattributes, v::Nothing, leter) = v
 
 # axis args before type recipes should still be mapped to all axes
 function _preprocess_axis_args!(plotattributes)
@@ -250,8 +259,14 @@ function _postprocess_axis_args!(plotattributes, letter)
     end
 end
 
+
+# --------------------------------------------------------------------
+# Fallback user recipes calling type recipes
+# --------------------------------------------------------------------
+
 # handle "type recipes" by converting inputs, and then either re-calling or slicing
 @recipe function f(x, y, z)
+    wrap_surfaces!(plotattributes, x, y, z)
     did_replace = false
     newx = _apply_type_recipe(plotattributes, x, :x)
     x === newx || (did_replace = true)
@@ -266,6 +281,7 @@ end
     end
 end
 @recipe function f(x, y)
+    wrap_surfaces!(plotattributes, x, y)
     did_replace = false
     newx = _apply_type_recipe(plotattributes, x, :x)
     x === newx || (did_replace = true)
@@ -278,6 +294,7 @@ end
     end
 end
 @recipe function f(y)
+    wrap_surfaces!(plotattribute, y)
     newy = _apply_type_recipe(plotattributes, y, :y)
     if y !== newy
         newy
@@ -304,12 +321,14 @@ end
 end
 
 
-# --------------------------------------------------------------------
-# 1 argument
-# --------------------------------------------------------------------
-
 # helper function to ensure relevant attributes are wrapped by Surface
-function wrap_surfaces(plotattributes::AKW)
+function wrap_surfaces!(plotattributes, args...) end
+wrap_surfaces!(plotattributes, x::AMat, y::AMat, z::AMat) = wrap_surfaces!(plotattributes)
+wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::AMat) = wrap_surfaces!(plotattributes)
+function wrap_surfaces!(plotattributes, x::AVec, y::AVec, z::Surface)
+    wrap_surfaces!(plotattributes)
+end
+function wrap_surfaces!(plotattributes)
     if haskey(plotattributes, :fill_z)
         v = plotattributes[:fill_z]
         if !isa(v, Surface)
@@ -318,18 +337,34 @@ function wrap_surfaces(plotattributes::AKW)
     end
 end
 
+
+# --------------------------------------------------------------------
+# 1 argument
+# --------------------------------------------------------------------
+
 @recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
 
-all3D(plotattributes) = trueOrAllTrue(st -> st in (:contour, :contourf, :heatmap, :surface, :wireframe, :contour3d, :image, :plots_heatmap), get(plotattributes, :seriestype, :none))
+all3D(plotattributes) = all(
+    st -> st in (
+        :contour,
+        :contourf,
+        :heatmap,
+        :surface,
+        :wireframe,
+        :contour3d,
+        :image,
+        :plots_heatmap,
+    ),
+    get(plotattributes, :seriestype, :none),
+)
 
 # return a surface if this is a 3d plot, otherwise let it be sliced up
-@recipe function f(mat::AMat{<:MaybeNumber})
+@recipe function f(mat::AMat)
     if all3D(plotattributes)
-        n,m = axes(mat)
-        wrap_surfaces(plotattributes)
-        SliceIt, m, n, Surface(mat)
+        n, m = axes(mat)
+        m, n, Surface(mat)
     else
-        SliceIt, nothing, mat, nothing
+        nothing, mat, nothing
     end
 end
 
@@ -337,16 +372,15 @@ end
 @recipe function f(fmt::Formatted{<:AMat})
     if all3D(plotattributes)
         mat = fmt.data
-        n,m = axes(mat)
-        wrap_surfaces(plotattributes)
-        SliceIt, m, n, Formatted(Surface(mat), fmt.formatter)
+        n, m = axes(mat)
+        m, n, Formatted(Surface(mat), fmt.formatter)
     else
-        SliceIt, nothing, fmt, nothing
+        nothing, fmt, nothing
     end
 end
 
 # assume this is a Volume, so construct one
-@recipe function f(vol::AbstractArray{T, 3}, args...) where T<:Union{Number,Missing}
+@recipe function f(vol::AbstractArray{<:MaybeNumber, 3}, args...)
     seriestype := :volume
     SliceIt, nothing, Volume(vol, args...), nothing
 end
@@ -393,7 +427,6 @@ end
         SliceIt, m, n, Surface(z)
     end
 end
-
 
 # plotting arbitrary shapes/polygons
 
@@ -456,10 +489,10 @@ function tryrange(F, vec)
     error("$F is not a Function, or is not defined at any of the values $vec")
 end
 
+
 # --------------------------------------------------------------------
 # 2 arguments
 # --------------------------------------------------------------------
-
 
 # if functions come first, just swap the order (not to be confused with parametric
 # functions... as there would be more than one function passed in)
@@ -475,39 +508,20 @@ end
 # 3 arguments
 # --------------------------------------------------------------------
 
-
-# 3d line or scatter
-
-@recipe function f(x::AVec, y::AVec, z::AVec)
-    SliceIt, x, y, z
-end
-
-@recipe function f(x::AMat, y::AMat, z::AMat)
-    wrap_surfaces(plotattributes)
-    SliceIt, x, y, z
-end
-
-
 # surface-like... function
-
 @recipe function f(x::AVec, y::AVec, zf::Function)
-    wrap_surfaces(plotattributes)
-    SliceIt, x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
+    x, y, Surface(zf, x, y)  # TODO: replace with SurfaceFunction when supported
 end
-
 
 # surface-like... matrix grid
-
 @recipe function f(x::AVec, y::AVec, z::AMat)
     if !like_surface(get(plotattributes, :seriestype, :none))
         plotattributes[:seriestype] = :contour
     end
-    wrap_surfaces(plotattributes)
-    SliceIt, x, y, Surface(z)
+    x, y, Surface(z)
 end
 
 # images - grays
-
 @recipe function f(x::AVec, y::AVec, mat::AMat{T}) where T<:Gray
     if is_seriestype_supported(:image)
         seriestype := :image
@@ -523,7 +537,6 @@ end
 end
 
 # images - colors
-
 @recipe function f(x::AVec, y::AVec, mat::AMat{T}) where T<:Colorant
     if is_seriestype_supported(:image)
         seriestype := :image
@@ -567,7 +580,6 @@ function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
     xinv.(xs), yinv.(ys)
 end
 
-
 # special handling... 3D parametric function(s)
 @recipe function f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, u::AVec) where {F<:Function,G<:Function,H<:Function}
     mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
@@ -577,11 +589,9 @@ end
 end
 
 
-
 # --------------------------------------------------------------------
 # Lists of tuples and GeometryTypes.Points
 # --------------------------------------------------------------------
-
 
 @recipe f(v::AVec{<:Tuple})               = unzip(v)
 @recipe f(v::AVec{<:GeometryTypes.Point}) = unzip(v)
