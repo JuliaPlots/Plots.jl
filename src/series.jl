@@ -226,7 +226,7 @@ end
 
 # don't do anything for datapoints or nothing
 _apply_type_recipe(plotattributes, v::AbstractArray{<:DataPoint}, letter) = v
-_apply_type_recipe(plotattributes, v::Nothing, leter) = v
+_apply_type_recipe(plotattributes, v::Nothing, letter) = v
 
 # axis args before type recipes should still be mapped to all axes
 function _preprocess_axis_args!(plotattributes)
