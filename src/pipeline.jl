@@ -1,4 +1,28 @@
+# Error for aliases used in recipes
+function warn_on_recipe_aliases!(plotattributes, recipe_type, args...)
+    for k in keys(plotattributes)
+        if !is_default_attribute(k)
+            dk = get(_keyAliases, k, k)
+            if k !== dk
+                @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $(signature_string(Val{recipe_type}, args...)). To ensure expected behavior it is recommended to use the default attribute `$dk`."
+            end
+            plotattributes[dk] = pop_kw!(plotattributes, k)
+        end
+    end
+end
+function warn_on_recipe_aliases!(v::AbstractVector, recipe_type, args...)
+    foreach(x -> warn_on_recipe_aliases!(x, recipe_type, args...), v)
+end
+function warn_on_recipe_aliases!(rd::RecipeData, recipe_type, args...)
+    warn_on_recipe_aliases!(rd.plotattributes, recipe_type, args...)
+end
 
+function signature_string(::Type{Val{:user}}, args...)
+    return string("(::", join(string.(typeof.(args)), ", ::"), ")")
+end
+signature_string(::Type{Val{:type}}, T) = "(::Type{$T}, ::$T)"
+signature_string(::Type{Val{:plot}}, st) = "(::Type{Val{:$st}}, ::AbstractPlot)"
+signature_string(::Type{Val{:series}}, st) = "(::Type{Val{:$st}}, x, y, z)"
 
 # ------------------------------------------------------------------
 # preprocessing
@@ -40,14 +64,8 @@ function _preprocess_args(plotattributes::AKW, args, still_to_process::Vector{Re
     # remove subplot and axis args from plotattributes... they will be passed through in the kw_list
     if !isempty(args)
         for (k,v) in plotattributes
-            for defdict in (_subplot_defaults,
-                            _axis_defaults,
-                            _axis_defaults_byletter[:x],
-                            _axis_defaults_byletter[:y],
-                            _axis_defaults_byletter[:z])
-                if haskey(defdict, k)
-                    reset_kw!(plotattributes, k)
-                end
+            if k in _all_subplot_args || k in _all_axis_args
+                reset_kw!(plotattributes, k)
             end
         end
     end
@@ -82,7 +100,11 @@ function _process_userrecipes(plt::Plot, plotattributes::AKW, args)
         if isempty(next_series.args)
             _process_userrecipe(plt, kw_list, next_series)
         else
-            rd_list = RecipesBase.apply_recipe(next_series.plotattributes, next_series.args...)
+            rd_list = RecipesBase.apply_recipe(
+                next_series.plotattributes,
+                next_series.args...
+            )
+            warn_on_recipe_aliases!(rd_list, :user, next_series.args...)
             prepend!(still_to_process,rd_list)
         end
     end
@@ -184,6 +206,7 @@ function _process_plotrecipe(plt::Plot, kw::AKW, kw_list::Vector{KW}, still_to_p
         st = kw[:seriestype]
         st = kw[:seriestype] = get(_typeAliases, st, st)
         datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
+        warn_on_recipe_aliases!(datalist, :plot, st)
         for data in datalist
             preprocessArgs!(data.plotattributes)
             if data.plotattributes[:seriestype] == st
@@ -408,7 +431,9 @@ function _process_seriesrecipe(plt::Plot, plotattributes::AKW)
 
     else
         # get a sub list of series for this seriestype
-        datalist = RecipesBase.apply_recipe(plotattributes, Val{st}, plotattributes[:x], plotattributes[:y], plotattributes[:z])
+        x, y, z = plotattributes[:x], plotattributes[:y], plotattributes[:z]
+        datalist = RecipesBase.apply_recipe(plotattributes, Val{st}, x, y, z)
+        warn_on_recipe_aliases!(datalist, :series, st)
 
         # assuming there was no error, recursively apply the series recipes
         for data in datalist

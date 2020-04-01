@@ -271,6 +271,7 @@ Draw a 3D surface plot.
 
 # Example
 ```julia-repl
+julia> using LinearAlgebra
 julia> x = y = range(-3, 3, length = 100)
 julia> surface(x, y, (x, y) -> sinc(norm([x, y])))
 ```
@@ -428,8 +429,8 @@ Add annotations to an existing plot.
 
 # Arguments
 
-- `anns`: An `AbstractVector` of tuples of the form (x,y,text). The text object
-          can be an String or PlotText
+- `anns`: An `AbstractVector` of tuples of the form `(x,y,text)`. The `text` object
+          can be a `String` or `PlotText`.
 
 # Example
 ```julia-repl

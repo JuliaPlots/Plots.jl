@@ -29,11 +29,20 @@ Base.@kwdef mutable struct PGFPlotsXPlot
         PGFPlotsX.push_preamble!(
             pgfx_plot.the_plot,
             raw"""
-            \pgfplotsset{
-            /pgfplots/layers/axis on top/.define layer set={
-            background, axis background,pre main,main,axis grid,axis ticks,axis lines,axis tick labels,
-            axis descriptions,axis foreground
-            }{/pgfplots/layers/standard},
+            \pgfplotsset{%
+            layers/standard/.define layer set={%
+                background,axis background,axis grid,axis ticks,axis lines,axis tick labels,pre main,main,axis descriptions,axis foreground%
+            }{grid style= {/pgfplots/on layer=axis grid},%
+                tick style= {/pgfplots/on layer=axis ticks},%
+                axis line style= {/pgfplots/on layer=axis lines},%
+                label style= {/pgfplots/on layer=axis descriptions},%
+                legend style= {/pgfplots/on layer=axis descriptions},%
+                title style= {/pgfplots/on layer=axis descriptions},%
+                colorbar style= {/pgfplots/on layer=axis descriptions},%
+                ticklabel style= {/pgfplots/on layer=axis tick labels},%
+                axis background@ style={/pgfplots/on layer=axis background},%
+                3d box foreground style={/pgfplots/on layer=axis foreground},%
+                },
             }
             """,
         )
@@ -76,6 +85,7 @@ end
 
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
+        pgfx_sanitize_plot!(plt)
         the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options())
         bgc = plt.attr[:background_color_outside] == :match ?
             plt.attr[:background_color] : plt.attr[:background_color_outside]
@@ -107,14 +117,24 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
+            title_loc = sp[:title_location]
             bgc_inside = plot_color(sp[:background_color_inside])
             bgc_inside_a = alpha(bgc_inside)
             axis_opt = PGFPlotsX.Options(
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
-                    "font" => pgfx_font(
-                        sp[:titlefontsize],
-                        pgfx_thickness_scaling(sp),
+                        "at" => if title_loc == :left
+                            "{(0,1)}"
+                        elseif title_loc == :right
+                            "{(1,1)}"
+                        elseif title_loc isa Tuple
+                            "{$(string(title_loc))}"
+                        else
+                            "{(0.5,1)}"
+                        end,
+                        "font" => pgfx_font(
+                            sp[:titlefontsize],
+                            pgfx_thickness_scaling(sp),
                     ),
                     "color" => title_cstr,
                     "draw opacity" => title_a,
@@ -139,8 +159,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "fill" => bgc_inside,
                     "opacity" => bgc_inside_a,
                 ),
-                "axis on top" => nothing,
-                # "framed" => nothing,
                 # These are for layouting
                 "anchor" => "north west",
                 "xshift" => string(dx),
@@ -259,7 +277,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         if marker isa Shape
                             x = marker.x
                             y = marker.y
-                            scale_factor = 0.025
+                            scale_factor = 0.00125
                             mark_size = opt[:markersize] * scale_factor
                             path = join(
                                 [
@@ -346,28 +364,28 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         )
                     end
                     # add to legend?
-                    if sp[:legend] != :none && pgfx_should_add_to_legend(series)
+                    if sp[:legend] != :none
                         leg_entry = if opt[:label] isa AVec
                             get(opt[:label], i, "")
                         elseif opt[:label] isa AbstractString
                             if i == 1
-                                opt[:label]
+                                get(opt, :label, "")
                             else
                                 ""
                             end
                         else
                             throw(ArgumentError("Malformed label. label = $(opt[:label])"))
                         end
-                        if leg_entry == ""
-                            push!(segment_plot.options, "forget plot" => nothing)
-                            continue
+                        if leg_entry == "" || !pgfx_should_add_to_legend(series)
+                            push!(axis.contents[end].options, "forget plot" => nothing)
+                        else
+                            leg_opt = PGFPlotsX.Options()
+                            if ribbon !== nothing
+                                pgfx_filllegend!(axis.contents[end - 3].options, opt)
+                            end
+                            legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
+                            push!(axis, legend)
                         end
-                        leg_opt = PGFPlotsX.Options()
-                        if ribbon !== nothing
-                            pgfx_filllegend!(axis.contents[end - 3].options, opt)
-                        end
-                        legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
-                        push!(axis, legend)
                     end
                 end # for segments
                 # add subplot annotations
@@ -586,11 +604,22 @@ const _pgfplotsx_markers = KW(
 )
 
 const _pgfplotsx_legend_pos = KW(
+    :top => "north",
+    :bottom => "south",
+    :left => "west",
+    :right => "east",
     :bottomleft => "south west",
     :bottomright => "south east",
     :topright => "north east",
     :topleft => "north west",
+    :outertop => "north",
+    :outerbottom => "outer south",
+    :outerleft => "outer west",
+    :outerright => "outer east",
+    :outerbottomleft => "outer south west",
+    :outerbottomright => "outer south east",
     :outertopright => "outer north east",
+    :outertopleft => "outer north west",
 )
 
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
@@ -691,7 +720,7 @@ function pgfx_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
 end
 
 function pgfx_should_add_to_legend(series::Series)
-    series.plotattributes[:primary] && series.plotattributes[:label] != "" &&
+    series.plotattributes[:primary] &&
     !(
         series.plotattributes[:seriestype] in (
             :hexbin,
@@ -862,6 +891,48 @@ function pgfx_fillrange_args(fillrange, x, y, z)
     z_fill = [z; _cycle(fillrange, n:-1:1); z[1]]
     return PGFPlotsX.Coordiantes(x_fill, y_fill, z_fill)
 end
+
+function pgfx_sanitize_string(p::PlotText)
+    PlotText(pgfx_sanitize_string(p.str), p.font)
+end
+function pgfx_sanitize_string(s::AbstractString)
+    s = replace(s, r"\\?\#" => "\\#")
+    s = replace(s, r"\\?\%" => "\\%")
+    s = replace(s, r"\\?\_" => "\\_")
+    s = replace(s, r"\\?\&" => "\\&")
+end
+function pgfx_sanitize_plot!(plt)
+        for (key, value) in plt.attr
+            if value isa Union{AbstractString, AbstractVector{<:AbstractString}}
+                plt.attr[key] = pgfx_sanitize_string.(value)
+            end
+        end
+        for subplot in plt.subplots
+            for (key, value) in subplot.attr
+                if key == :annotations && subplot.attr[:annotations] !== nothing
+                    old_ann = subplot.attr[key]
+                    for i in eachindex(old_ann)
+                        subplot.attr[key][i] = (old_ann[i][1], old_ann[i][2], pgfx_sanitize_string(old_ann[i][3]))
+                    end
+                elseif value isa Union{AbstractString, AbstractVector{<:AbstractString}}
+                    subplot.attr[key] = pgfx_sanitize_string.(value)
+                end
+            end
+        end
+        for series in plt.series_list
+            for (key, value) in series.plotattributes
+                if key == :series_annotations && series.plotattributes[:series_annotations] !== nothing
+                    old_ann = series.plotattributes[key].strs
+                    for i in eachindex(old_ann)
+                        series.plotattributes[key].strs[i] = pgfx_sanitize_string(old_ann[i])
+                    end
+                elseif value isa Union{AbstractString, AbstractVector{<:AbstractString}}
+                    series.plotattributes[key] = pgfx_sanitize_string.(value)
+                end
+            end
+        end
+        ##
+end
 # --------------------------------------------------------------------------------------
 function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     axis = sp[Symbol(letter, :axis)]
@@ -871,6 +942,21 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         opt,
         "scaled $(letter) ticks" => "false",
         string(letter, :label) => axis[:guide],
+    )
+    tick_color = plot_color(axis[:foreground_color_axis])
+    push!(opt,
+        "$(letter) tick style" => PGFPlotsX.Options(
+            "color" => color(tick_color),
+            "opacity" => alpha(tick_color),
+        ),
+    )
+    tick_label_color = plot_color(axis[:tickfontcolor])
+    push!(opt,
+        "$(letter) tick label style" => PGFPlotsX.Options(
+            "color" => color(tick_color),
+            "opacity" => alpha(tick_color),
+            "rotate" => axis[:rotation]
+        ),
     )
 
     # set to supported framestyle

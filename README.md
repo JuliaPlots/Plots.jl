@@ -20,6 +20,7 @@
 [![][pkgeval-img]][pkgeval-url]
 [![][gitter-img]][gitter-url]
 [![][docs-img]][docs-url]
+[![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl)
 
 #### Created by Tom Breloff (@tbreloff)
 

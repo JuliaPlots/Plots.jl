@@ -875,6 +875,65 @@ const _examples = PlotExample[
             end,
         ],
     ),
+    PlotExample(
+        "Array Types",
+        "Plots supports different `Array` types that follow the `AbstractArray` interface, like `StaticArrays` and `OffsetArrays.`",
+        [
+            quote
+                begin
+                    using StaticArrays, OffsetArrays
+                    sv = SVector{10}(rand(10))
+                    ov = OffsetVector(rand(10), -2)
+                    plot([sv, ov], label = ["StaticArray" "OffsetArray"])
+                end
+            end,
+        ],
+    ),
+    PlotExample(
+        "Setting defaults and font arguments",
+        "",
+        [
+            quote
+                begin
+                    using Plots
+                    default(
+                        titlefont = (20, "times"),
+                        legendfontsize = 18,
+                        guidefont = (18, :darkgreen),
+                        tickfont = (12, :orange),
+                        guide = "x",
+                        framestyle = :zerolines,
+                        yminorgrid = true
+                    )
+                    plot(
+                        [sin, cos],
+                        -2π,
+                        2π,
+                        label = ["sin(θ)" "cos(θ)"],
+                        title = "Trigonometric Functions",
+                        xlabel = "θ",
+                        linewidth = 2,
+                        legend = :outertopleft,
+                    )
+                end
+            end,
+        ],
+    ),
+    PlotExample(
+        "Heatmap with DateTime axis",
+        "",
+        [
+            quote
+                begin
+                    using Dates
+                    z = rand(5, 5)
+                    x = DateTime.(2016:2020)
+                    y = 1:5
+                    heatmap(x, y, z)
+                end
+            end,
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -887,7 +946,6 @@ _backend_skips = Dict(
     :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30, 31, 34, 37, 38, 39],
     :pgfplotsx => [ 6, # images
                     10, # histogram2d
-                    20, # annotations due to missing sanitation
                     22, # contourf
                     23, # pie
                     32, # spy
