@@ -919,6 +919,21 @@ const _examples = PlotExample[
             end,
         ],
     ),
+    PlotExample(
+        "Heatmap with DateTime axis",
+        "",
+        [
+            quote
+                begin
+                    using Dates
+                    z = rand(5, 5)
+                    x = DateTime.(2016:2020)
+                    y = 1:5
+                    heatmap(x, y, z)
+                end
+            end,
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
