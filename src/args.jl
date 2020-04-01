@@ -656,6 +656,7 @@ function default(k::Symbol)
         letter, key = axis_k
         return _axis_defaults_byletter[letter][key]
     end
+    k == :letter && return k # for type recipe processing
     k in _suppress_warnings || error("Unknown key: ", k)
 end
 
