@@ -49,7 +49,7 @@ as a String to look up its docstring; e.g. `plotattr("seriestype")`.
 function plot(args...; kw...)
     # this creates a new plot with args/kw and sets it to be the current plot
     plotattributes = KW(kw)
-    preprocessArgs!(plotattributes)
+    preprocess_attributes!(plotattributes)
 
     # create an empty Plot then process
     plt = Plot()
@@ -61,7 +61,7 @@ end
 # note: we split into plt1 and plts_tail so we can dispatch correctly
 function plot(plt1::Plot, plts_tail::Plot...; kw...)
     plotattributes = KW(kw)
-    preprocessArgs!(plotattributes)
+    preprocess_attributes!(plotattributes)
 
     # build our plot vector from the args
     n = length(plts_tail) + 1
@@ -153,7 +153,7 @@ end
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
     plotattributes = KW(kw)
-    preprocessArgs!(plotattributes)
+    preprocess_attributes!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
     _plot!(plt, plotattributes, args)
 end

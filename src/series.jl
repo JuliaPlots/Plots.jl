@@ -11,29 +11,32 @@ const MaybeNumber = Union{Number, Missing}
 const MaybeString = Union{AbstractString, Missing}
 const DataPoint = Union{MaybeNumber, MaybeString}
 
-prepareSeriesData(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
-prepareSeriesData(::Nothing) = nothing
-prepareSeriesData(t::Tuple{T, T}) where {T<:Number} = t
-prepareSeriesData(f::Function) = f
-prepareSeriesData(ar::AbstractRange{<:Number}) = ar
-function prepareSeriesData(a::AbstractArray{<:MaybeNumber})
+prepare_series_data(x) = error("Cannot convert $(typeof(x)) to series data for plotting")
+prepare_series_data(::Nothing) = nothing
+prepare_series_data(t::Tuple{T, T}) where {T <: Number} = t
+prepare_series_data(f::Function) = f
+prepare_series_data(ar::AbstractRange{<:Number}) = ar
+function prepare_series_data(a::AbstractArray{<:MaybeNumber})
     f = isimmutable(a) ? replace : replace!
     a = f(x -> ismissing(x) || isinf(x) ? NaN : x, map(float, a))
 end
-prepareSeriesData(a::AbstractArray{<:Missing}) = fill(NaN, axes(a))
-prepareSeriesData(a::AbstractArray{<:MaybeString}) = replace(x -> ismissing(x) ? "" : x, a)
-prepareSeriesData(s::Surface{<:AMat{<:MaybeNumber}}) = Surface(prepareSeriesData(s.surf))
-prepareSeriesData(s::Surface) = s  # non-numeric Surface, such as an image
-prepareSeriesData(v::Volume) = Volume(prepareSeriesData(v.v), v.x_extents, v.y_extents, v.z_extents)
+prepare_series_data(a::AbstractArray{<:Missing}) = fill(NaN, axes(a))
+prepare_series_data(a::AbstractArray{<:MaybeString}) =
+    replace(x -> ismissing(x) ? "" : x, a)
+prepare_series_data(s::Surface{<:AMat{<:MaybeNumber}}) =
+    Surface(prepare_series_data(s.surf))
+prepare_series_data(s::Surface) = s  # non-numeric Surface, such as an image
+prepare_series_data(v::Volume) =
+    Volume(prepare_series_data(v.v), v.x_extents, v.y_extents, v.z_extents)
 
 # default: assume x represents a single series
-series_vector(x, plotattributes) = [prepareSeriesData(x)]
+series_vector(x, plotattributes) = [prepare_series_data(x)]
 
 # fixed number of blank series
 series_vector(n::Integer, plotattributes) = [zeros(0) for i in 1:n]
 
 # vector of data points is a single series
-series_vector(v::AVec{<:DataPoint}, plotattributes) = [prepareSeriesData(v)]
+series_vector(v::AVec{<:DataPoint}, plotattributes) = [prepare_series_data(v)]
 
 # list of things (maybe other vectors, functions, or something else)
 function series_vector(v::AVec, plotattributes)
@@ -49,9 +52,9 @@ end
 # Matrix is split into columns
 function series_vector(v::AMat{<:DataPoint}, plotattributes)
     if all3D(plotattributes)
-        [prepareSeriesData(Surface(v))]
+        [prepare_series_data(Surface(v))]
     else
-        [prepareSeriesData(v[:, i]) for i in axes(v, 2)]
+        [prepare_series_data(v[:, i]) for i in axes(v, 2)]
     end
 end
 
@@ -73,35 +76,37 @@ process_ribbon(ribbon::Tuple{S, T}, plotattributes) where {S, T} = collect(zip(
 
 # --------------------------------------------------------------------
 
-compute_x(x::Nothing, y::Nothing, z)    = axes(z,1)
-compute_x(x::Nothing, y, z)             = axes(y,1)
-compute_x(x::Function, y, z)            = map(x, y)
-compute_x(x, y, z)                      = x
+compute_x(x::Nothing, y::Nothing, z) = axes(z, 1)
+compute_x(x::Nothing, y, z) = axes(y, 1)
+compute_x(x::Function, y, z) = map(x, y)
+compute_x(x, y, z) = x
 
-compute_y(x::Nothing, y::Nothing, z)    = axes(z,2)
-compute_y(x, y::Function, z)            = map(y, x)
-compute_y(x, y, z)                      = y
+compute_y(x::Nothing, y::Nothing, z) = axes(z, 2)
+compute_y(x, y::Function, z) = map(y, x)
+compute_y(x, y, z) = y
 
-compute_z(x, y, z::Function)            = map(z, x, y)
-compute_z(x, y, z::AbstractMatrix)      = Surface(z)
-compute_z(x, y, z::Nothing)             = nothing
-compute_z(x, y, z)                      = z
+compute_z(x, y, z::Function) = map(z, x, y)
+compute_z(x, y, z::AbstractMatrix) = Surface(z)
+compute_z(x, y, z::Nothing) = nothing
+compute_z(x, y, z) = z
 
 nobigs(v::AVec{BigFloat}) = map(Float64, v)
 nobigs(v::AVec{BigInt}) = map(Int64, v)
 nobigs(v) = v
 
 @noinline function compute_xyz(x, y, z)
-    x = compute_x(x,y,z)
-    y = compute_y(x,y,z)
-    z = compute_z(x,y,z)
+    x = compute_x(x, y, z)
+    y = compute_y(x, y, z)
+    z = compute_z(x, y, z)
     nobigs(x), nobigs(y), nobigs(z)
 end
 
 # not allowed
-compute_xyz(x::Nothing, y::FuncOrFuncs{F}, z) where {F<:Function}       = error("If you want to plot the function `$y`, you need to define the x values!")
-compute_xyz(x::Nothing, y::Nothing, z::FuncOrFuncs{F}) where {F<:Function} = error("If you want to plot the function `$z`, you need to define x and y values!")
-compute_xyz(x::Nothing, y::Nothing, z::Nothing)        = error("x/y/z are all nothing!")
+compute_xyz(x::Nothing, y::FuncOrFuncs{F}, z) where {F <: Function} =
+    error("If you want to plot the function `$y`, you need to define the x values!")
+compute_xyz(x::Nothing, y::Nothing, z::FuncOrFuncs{F}) where {F <: Function} =
+    error("If you want to plot the function `$z`, you need to define x and y values!")
+compute_xyz(x::Nothing, y::Nothing, z::Nothing) = error("x/y/z are all nothing!")
 
 # --------------------------------------------------------------------
 
@@ -153,15 +158,15 @@ struct SliceIt end
         for i in 1:max(mx, my, mz)
             # add a new series
             di = copy(plotattributes)
-            xi, yi, zi = xs[mod1(i,mx)], ys[mod1(i,my)], zs[mod1(i,mz)]
+            xi, yi, zi = xs[mod1(i, mx)], ys[mod1(i, my)], zs[mod1(i, mz)]
             di[:x], di[:y], di[:z] = compute_xyz(xi, yi, zi)
 
             # handle fillrange
-            fr = fillranges[mod1(i,mf)]
+            fr = fillranges[mod1(i, mf)]
             di[:fillrange] = isa(fr, Function) ? map(fr, di[:x]) : fr
 
             # handle ribbons
-            rib = ribbons[mod1(i,mr)]
+            rib = ribbons[mod1(i, mr)]
             di[:ribbon] = isa(rib, Function) ? map(rib, di[:x]) : rib
 
             push!(series_list, RecipeData(di, ()))
@@ -176,10 +181,11 @@ end
 # --------------------------------------------------------------------
 
 # this is the default "type recipe"... just pass the object through
-@recipe f(::Type{T}, v::T) where T = v
+@recipe f(::Type{T}, v::T) where {T} = v
 
 # this should catch unhandled "series recipes" and error with a nice message
-@recipe f(::Type{V}, x, y, z) where {V<:Val} = error("The backend must not support the series type $V, and there isn't a series recipe defined.")
+@recipe f(::Type{V}, x, y, z) where {V <: Val} =
+    error("The backend must not support the series type $V, and there isn't a series recipe defined.")
 
 function _apply_type_recipe(plotattributes, v, letter)
     _preprocess_axis_args!(plotattributes, letter)
@@ -206,9 +212,9 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
         _postprocess_axis_args!(plotattributes, letter)
         if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args
-             return Formatted(map(numfunc, v), formatter)
-         else
-             return v
+            return Formatted(map(numfunc, v), formatter)
+        else
+            return v
         end
     end
     _postprocess_axis_args!(plotattributes, letter)
@@ -309,13 +315,16 @@ end
 # so we'll apply_type_recipe to all of them
 @recipe function f(v1, v2, v3, v4, vrest...)
     did_replace = false
-    newargs = map(v -> begin
-        newv = _apply_type_recipe(plotattributes, v, :unknown)
-        if newv !== v
-            did_replace = true
-        end
-        newv
-    end, (v1, v2, v3, v4, vrest...))
+    newargs = map(
+        v -> begin
+            newv = _apply_type_recipe(plotattributes, v, :unknown)
+            if newv !== v
+                did_replace = true
+            end
+            newv
+        end,
+        (v1, v2, v3, v4, vrest...),
+    )
     if !did_replace
         error("Couldn't process recipe args: $(map(typeof, (v1, v2, v3, v4, vrest...)))")
     end
@@ -344,7 +353,8 @@ end
 # 1 argument
 # --------------------------------------------------------------------
 
-@recipe f(n::Integer) = is3d(get(plotattributes,:seriestype,:path)) ? (SliceIt, n, n, n) : (SliceIt, n, n, nothing)
+@recipe f(n::Integer) = is3d(get(plotattributes, :seriestype, :path)) ? (SliceIt, n, n, n) :
+    (SliceIt, n, n, nothing)
 
 all3D(plotattributes) = trueOrAllTrue(
     st -> st in (
@@ -408,13 +418,13 @@ end
         yflip --> true
         cbar --> false
         fillcolor --> ColorGradient([:black, :white])
-        SliceIt, m, n, Surface(clamp!(convert(Matrix{Float64}, mat), 0., 1.))
+        SliceIt, m, n, Surface(clamp!(convert(Matrix{Float64}, mat), 0.0, 1.0))
     end
 end
 
 # images - colors
-@recipe function f(mat::AMat{T}) where T<:Colorant
-	n, m = axes(mat)
+@recipe function f(mat::AMat{T}) where {T <: Colorant}
+    n, m = axes(mat)
 
     if is_seriestype_supported(:image)
         seriestype := :image
@@ -444,8 +454,8 @@ end
 
 @recipe function f(shapes::AMat{Shape})
     seriestype --> :shape
-    for j in axes(shapes,2)
-        @series coords(vec(shapes[:,j]))
+    for j in axes(shapes, 2)
+        @series coords(vec(shapes[:, j]))
     end
 end
 
@@ -455,7 +465,7 @@ end
 
 # function without range... use the current range of the x-axis
 
-@recipe function f(f::FuncOrFuncs{F}) where F<:Function
+@recipe function f(f::FuncOrFuncs{F}) where {F <: Function}
     plt = plotattributes[:plot_object]
     xmin, xmax = if haskey(plotattributes, :xlims)
         plotattributes[:xlims]
@@ -464,8 +474,8 @@ end
             axis_limits(plt[1], :x)
         catch
             xinv = invscalefunc(get(plotattributes, :xscale, :identity))
-            xm = PlotUtils.tryrange(f, xinv.([-5,-1,0,0.01]))
-            xm, PlotUtils.tryrange(f, filter(x->x>xm, xinv.([5,1,0.99, 0, -0.01])))
+            xm = PlotUtils.tryrange(f, xinv.([-5, -1, 0, 0.01]))
+            xm, PlotUtils.tryrange(f, filter(x -> x > xm, xinv.([5, 1, 0.99, 0, -0.01])))
         end
     end
 
@@ -480,7 +490,7 @@ end
 # if functions come first, just swap the order (not to be confused with parametric
 # functions... as there would be more than one function passed in)
 
-@recipe function f(f::FuncOrFuncs{F}, x) where F<:Function
+@recipe function f(f::FuncOrFuncs{F}, x) where {F <: Function}
     F2 = typeof(x)
     @assert !(F2 <: Function || (F2 <: AbstractArray && F2.parameters[1] <: Function))  # otherwise we'd hit infinite recursion here
     x, f
@@ -505,7 +515,7 @@ end
 end
 
 # images - grays
-@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where T<:Gray
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T <: Gray}
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
@@ -520,7 +530,7 @@ end
 end
 
 # images - colors
-@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where T<:Colorant
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T <: Colorant}
     if is_seriestype_supported(:image)
         seriestype := :image
         yflip --> true
@@ -541,27 +551,49 @@ end
 
 # special handling... xmin/xmax with parametric function(s)
 @recipe function f(f::Function, xmin::Number, xmax::Number)
-    xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
+    xscale, yscale = [get(plotattributes, sym, :identity) for sym in (:xscale, :yscale)]
     _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
 end
-@recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where F<:Function
-    xscale, yscale = [get(plotattributes, sym, :identity) for sym=(:xscale,:yscale)]
+@recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where {F <: Function}
+    xscale, yscale = [get(plotattributes, sym, :identity) for sym in (:xscale, :yscale)]
     unzip(_scaled_adapted_grid.(fs, xscale, yscale, xmin, xmax))
 end
-@recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, u::AVec) where {F<:Function,G<:Function}  = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
-@recipe f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, umin::Number, umax::Number, n = 200) where {F<:Function,G<:Function} = fx, fy, range(umin, stop = umax, length = n)
+@recipe f(
+    fx::FuncOrFuncs{F},
+    fy::FuncOrFuncs{G},
+    u::AVec,
+) where {F <: Function, G <: Function} = mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u)
+@recipe f(
+    fx::FuncOrFuncs{F},
+    fy::FuncOrFuncs{G},
+    umin::Number,
+    umax::Number,
+    n = 200,
+) where {F <: Function, G <: Function} = fx, fy, range(umin, stop = umax, length = n)
 
 function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
-    (xf, xinv), (yf, yinv) =  ((scalefunc(s),invscalefunc(s)) for s in (xscale,yscale))
-    xs, ys = adapted_grid(yf∘f∘xinv, xf.((xmin, xmax)))
+    (xf, xinv), (yf, yinv) = ((scalefunc(s), invscalefunc(s)) for s in (xscale, yscale))
+    xs, ys = adapted_grid(yf ∘ f ∘ xinv, xf.((xmin, xmax)))
     xinv.(xs), yinv.(ys)
 end
 
 # special handling... 3D parametric function(s)
-@recipe function f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, u::AVec) where {F<:Function,G<:Function,H<:Function}
+@recipe function f(
+    fx::FuncOrFuncs{F},
+    fy::FuncOrFuncs{G},
+    fz::FuncOrFuncs{H},
+    u::AVec,
+) where {F <: Function, G <: Function, H <: Function}
     mapFuncOrFuncs(fx, u), mapFuncOrFuncs(fy, u), mapFuncOrFuncs(fz, u)
 end
-@recipe function f(fx::FuncOrFuncs{F}, fy::FuncOrFuncs{G}, fz::FuncOrFuncs{H}, umin::Number, umax::Number, numPoints = 200) where {F<:Function,G<:Function,H<:Function}
+@recipe function f(
+    fx::FuncOrFuncs{F},
+    fy::FuncOrFuncs{G},
+    fz::FuncOrFuncs{H},
+    umin::Number,
+    umax::Number,
+    numPoints = 200,
+) where {F <: Function, G <: Function, H <: Function}
     fx, fy, fz, range(umin, stop = umax, length = numPoints)
 end
 
@@ -570,13 +602,15 @@ end
 # Lists of tuples and GeometryTypes.Points
 # --------------------------------------------------------------------
 
-@recipe f(v::AVec{<:Tuple})               = unzip(v)
+@recipe f(v::AVec{<:Tuple}) = unzip(v)
 @recipe f(v::AVec{<:GeometryTypes.Point}) = unzip(v)
-@recipe f(tup::Tuple)             = [tup]
+@recipe f(tup::Tuple) = [tup]
 @recipe f(p::GeometryTypes.Point) = [p]
 
 # Special case for 4-tuples in :ohlc series
-@recipe f(xyuv::AVec{<:Tuple{R1,R2,R3,R4}}) where {R1,R2,R3,R4} = get(plotattributes,:seriestype,:path)==:ohlc ? OHLC[OHLC(t...) for t in xyuv] : unzip(xyuv)
+@recipe f(xyuv::AVec{<:Tuple{R1, R2, R3, R4}}) where {R1, R2, R3, R4} =
+    get(plotattributes, :seriestype, :path) == :ohlc ? OHLC[OHLC(t...) for t in xyuv] :
+    unzip(xyuv)
 
 
 # --------------------------------------------------------------------
@@ -584,11 +618,13 @@ end
 # --------------------------------------------------------------------
 
 splittable_kw(key, val, lengthGroup) = false
-splittable_kw(key, val::AbstractArray, lengthGroup) = !(key in (:group, :color_palette)) && length(axes(val,1)) == lengthGroup
+splittable_kw(key, val::AbstractArray, lengthGroup) =
+    !(key in (:group, :color_palette)) && length(axes(val, 1)) == lengthGroup
 splittable_kw(key, val::Tuple, lengthGroup) = all(splittable_kw.(key, val, lengthGroup))
-splittable_kw(key, val::SeriesAnnotations, lengthGroup) = splittable_kw(key, val.strs, lengthGroup)
+splittable_kw(key, val::SeriesAnnotations, lengthGroup) =
+    splittable_kw(key, val.strs, lengthGroup)
 
-split_kw(key, val::AbstractArray, indices) = val[indices, fill(Colon(), ndims(val)-1)...]
+split_kw(key, val::AbstractArray, indices) = val[indices, fill(Colon(), ndims(val) - 1)...]
 split_kw(key, val::Tuple, indices) = Tuple(split_kw(key, v, indices) for v in val)
 function split_kw(key, val::SeriesAnnotations, indices)
     split_strs = split_kw(key, val.strs, indices)
@@ -596,7 +632,11 @@ function split_kw(key, val::SeriesAnnotations, indices)
 end
 
 function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
-    y_mat = Array{promote_type(eltype(y), typeof(def_val))}(undef, length(keys(x_ind)), length(groupby.groupLabels))
+    y_mat = Array{promote_type(eltype(y), typeof(def_val))}(
+        undef,
+        length(keys(x_ind)),
+        length(groupby.groupLabels),
+    )
     fill!(y_mat, def_val)
     for i in eachindex(groupby.groupLabels)
         xi = x[groupby.groupIds[i]]
@@ -606,7 +646,8 @@ function groupedvec2mat(x_ind, x, y::AbstractArray, groupby, def_val = y[1])
     return y_mat
 end
 
-groupedvec2mat(x_ind, x, y::Tuple, groupby) = Tuple(groupedvec2mat(x_ind, x, v, groupby) for v in y)
+groupedvec2mat(x_ind, x, y::Tuple, groupby) =
+    Tuple(groupedvec2mat(x_ind, x, v, groupby) for v in y)
 
 group_as_matrix(t) = false
 
@@ -614,11 +655,11 @@ group_as_matrix(t) = false
 @recipe function f(groupby::GroupBy, args...)
     lengthGroup = maximum(union(groupby.groupIds...))
     if !(group_as_matrix(args[1]))
-        for (i,glab) in enumerate(groupby.groupLabels)
+        for (i, glab) in enumerate(groupby.groupLabels)
             @series begin
-                label     --> string(glab)
+                label --> string(glab)
                 idxfilter --> groupby.groupIds[i]
-                for (key,val) in plotattributes
+                for (key, val) in plotattributes
                     if splittable_kw(key, val, lengthGroup)
                         :($key) := split_kw(key, val, groupby.groupIds[i])
                     end
@@ -640,12 +681,15 @@ group_as_matrix(t) = false
         end
         x_u = unique(sort(x))
         x_ind = Dict(zip(x_u, eachindex(x_u)))
-        for (key,val) in plotattributes
+        for (key, val) in plotattributes
             if splittable_kw(key, val, lengthGroup)
                 :($key) := groupedvec2mat(x_ind, x, val, groupby)
             end
         end
         label --> reshape(groupby.groupLabels, 1, :)
-        typeof(g)((x_u, (groupedvec2mat(x_ind, x, arg, groupby, NaN) for arg in last_args)...))
+        typeof(g)((
+            x_u,
+            (groupedvec2mat(x_ind, x, arg, groupby, NaN) for arg in last_args)...,
+        ))
     end
 end

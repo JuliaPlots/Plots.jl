@@ -85,7 +85,7 @@ function attr!(axis::Axis, args...; kw...)
     end
 
     # then preprocess keyword arguments
-    preprocessArgs!(KW(kw))
+    preprocess_attributes!(KW(kw))
 
     # then override for any keywords... only those keywords that already exists in plotattributes
     for (k,v) in kw
