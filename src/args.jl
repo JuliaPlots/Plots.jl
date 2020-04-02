@@ -685,7 +685,7 @@ end
 
 function default(; kw...)
     kw = KW(kw)
-    preprocessArgs!(kw)
+    preprocess_attributes!(kw)
     for (k,v) in kw
         default(k, v)
     end
@@ -938,7 +938,7 @@ function _add_markershape(plotattributes::AKW)
 end
 
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
-function preprocessArgs!(plotattributes::AKW)
+function preprocess_attributes!(plotattributes::AKW)
     replaceAliases!(plotattributes, _keyAliases)
 
     # handle axis args common to all axis
@@ -1125,7 +1125,7 @@ end
 
 
 # this is when given a vector-type of values to group by
-function extractGroupArgs(v::AVec, args...; legendEntry = string)
+function _extract_group_attributes(v::AVec, args...; legendEntry = string)
     groupLabels = sort(collect(unique(v)))
     n = length(groupLabels)
     if n > 100
@@ -1138,24 +1138,24 @@ end
 legendEntryFromTuple(ns::Tuple) = join(ns, ' ')
 
 # this is when given a tuple of vectors of values to group by
-function extractGroupArgs(vs::Tuple, args...)
+function _extract_group_attributes(vs::Tuple, args...)
     isempty(vs) && return GroupBy([""], [axes(args[1],1)])
     v = map(tuple, vs...)
-    extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
+    _extract_group_attributes(v, args...; legendEntry = legendEntryFromTuple)
 end
 
 # allow passing NamedTuples for a named legend entry
 legendEntryFromTuple(ns::NamedTuple) =
     join(["$k = $v" for (k, v) in pairs(ns)], ", ")
 
-function extractGroupArgs(vs::NamedTuple, args...)
+function _extract_group_attributes(vs::NamedTuple, args...)
     isempty(vs) && return GroupBy([""], [axes(args[1],1)])
     v = map(NamedTuple{keys(vs)}∘tuple, values(vs)...)
-    extractGroupArgs(v, args...; legendEntry = legendEntryFromTuple)
+    _extract_group_attributes(v, args...; legendEntry = legendEntryFromTuple)
 end
 
 # expecting a mapping of "group label" to "group indices"
-function extractGroupArgs(idxmap::Dict{T,V}, args...) where {T, V<:AVec{Int}}
+function _extract_group_attributes(idxmap::Dict{T,V}, args...) where {T, V<:AVec{Int}}
     groupLabels = sortedkeys(idxmap)
     groupIds = Vector{Int}[collect(idxmap[k]) for k in groupLabels]
     GroupBy(groupLabels, groupIds)
@@ -1183,7 +1183,7 @@ end
 const _already_warned = Dict{Symbol,Set{Symbol}}()
 const _to_warn = Set{Symbol}()
 
-function warnOnUnsupported_args(pkg::AbstractBackend, plotattributes)
+function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
     empty!(_to_warn)
     bend = backend_name(pkg)
     already_warned = get!(_already_warned, bend, Set{Symbol}())
@@ -1207,7 +1207,7 @@ end
 # _markershape_supported(pkg::AbstractBackend, shape::Shape) = Shape in supported_markers(pkg)
 # _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
-function warnOnUnsupported(pkg::AbstractBackend, plotattributes)
+function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
     if !is_seriestype_supported(pkg, plotattributes[:seriestype])
         @warn("seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))")
     end
@@ -1219,7 +1219,7 @@ function warnOnUnsupported(pkg::AbstractBackend, plotattributes)
     end
 end
 
-function warnOnUnsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
+function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
     for k in (:xscale, :yscale, :zscale, :scale)
         if haskey(plotattributes, k)
             v = plotattributes[k]

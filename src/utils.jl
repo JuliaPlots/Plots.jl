@@ -838,7 +838,7 @@ end
 
 function attr!(series::Series; kw...)
     plotattributes = KW(kw)
-    preprocessArgs!(plotattributes)
+    preprocess_attributes!(plotattributes)
     for (k,v) in plotattributes
         if haskey(_series_defaults, k)
             series[k] = v
@@ -852,7 +852,7 @@ end
 
 function attr!(sp::Subplot; kw...)
     plotattributes = KW(kw)
-    preprocessArgs!(plotattributes)
+    preprocess_attributes!(plotattributes)
     for (k,v) in plotattributes
         if haskey(_subplot_defaults, k)
             sp[k] = v
