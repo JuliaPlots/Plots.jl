@@ -656,6 +656,7 @@ function default(k::Symbol)
         letter, key = axis_k
         return _axis_defaults_byletter[letter][key]
     end
+    k == :letter && return k # for type recipe processing
     k in _suppress_warnings || error("Unknown key: ", k)
 end
 
@@ -1234,7 +1235,7 @@ function convertLegendValue(val::Symbol)
         :best
     elseif val in (:no, :none)
         :none
-    elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend, :topright, :topleft, :bottomleft, :bottomright, :outertopright, :outertopleft, :outertop, :outerright, :outerleft, :outerbottomright, :outerbottomleft, :outerbottom)
+    elseif val in (:right, :left, :top, :bottom, :inside, :best, :legend, :topright, :topleft, :bottomleft, :bottomright, :outertopright, :outertopleft, :outertop, :outerright, :outerleft, :outerbottomright, :outerbottomleft, :outerbottom, :inline)
         val
     else
         error("Invalid symbol for legend: $val")
