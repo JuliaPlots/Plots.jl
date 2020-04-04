@@ -143,9 +143,6 @@ makevec(v::T) where {T} = T[v]
 maketuple(x::Real)                     = (x,x)
 maketuple(x::Tuple{T,S}) where {T,S} = x
 
-mapFuncOrFuncs(f::Function, u::AVec)        = map(f, u)
-mapFuncOrFuncs(fs::AVec{F}, u::AVec) where {F<:Function} = [map(f, u) for f in fs]
-
 for i in 2:4
     @eval begin
         unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
@@ -229,7 +226,7 @@ end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
 function heatmap_edges(v::AVec, scale::Symbol = :identity, isedges::Bool = false)
-    f, invf = scalefunc(scale), invscalefunc(scale)
+    f, invf = scale_func(scale), inverse_scale_func(scale)
     map(invf, _heatmap_edges(map(f,v), isedges))
 end
 
