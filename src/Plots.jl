@@ -167,6 +167,24 @@ using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
 
+include("RecipePipeline/RecipePipeline.jl")
+import .RecipePipeline
+import .RecipePipeline: SliceIt,
+    DefaultsDict,
+    Formatted,
+    AbstractSurface,
+    Surface,
+    Volume,
+    is3d,
+    is_surface,
+    needs_3d_axes,
+    group_as_matrix,
+    reset_kw!,
+    pop_kw!,
+    scale_func,
+    inverse_scale_func,
+    unzip
+
 include("types.jl")
 include("utils.jl")
 include("components.jl")

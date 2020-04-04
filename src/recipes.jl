@@ -457,6 +457,8 @@ end
     ()
 end
 @deps plots_heatmap shape
+is_3d(::Type{Val{:plots_heatmap}}) = true
+is_surface(::Type{Val{:plots_heatmap}}) = true
 
 # ---------------------------------------------------------------------------
 # Histograms

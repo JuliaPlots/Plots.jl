@@ -1,127 +1,74 @@
-# Error for aliases used in recipes
-function warn_on_recipe_aliases!(plotattributes, recipe_type, args...)
+# RecipePipeline API
+
+## Warnings
+
+function RecipePipeline.warn_on_recipe_aliases!(
+    plt::Plot,
+    plotattributes,
+    recipe_type,
+    args...,
+)
     for k in keys(plotattributes)
         if !is_default_attribute(k)
             dk = get(_keyAliases, k, k)
             if k !== dk
-                @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $(signature_string(Val{recipe_type}, args...)). To ensure expected behavior it is recommended to use the default attribute `$dk`."
+                @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $(_signature_string(Val{recipe_type}, args...)). To ensure expected behavior it is recommended to use the default attribute `$dk`."
             end
             plotattributes[dk] = pop_kw!(plotattributes, k)
         end
     end
 end
-function warn_on_recipe_aliases!(v::AbstractVector, recipe_type, args...)
-    foreach(x -> warn_on_recipe_aliases!(x, recipe_type, args...), v)
+function RecipePipeline.warn_on_recipe_aliases!(
+    plt::Plot,
+    v::AbstractVector,
+    recipe_type,
+    args...,
+)
+    foreach(x -> RecipePipeline.warn_on_recipe_aliases!(plt, x, recipe_type, args...), v)
 end
-function warn_on_recipe_aliases!(rd::RecipeData, recipe_type, args...)
-    warn_on_recipe_aliases!(rd.plotattributes, recipe_type, args...)
+function RecipePipeline.warn_on_recipe_aliases!(
+    plt::Plot,
+    rd::RecipeData,
+    recipe_type,
+    args...,
+)
+    RecipePipeline.warn_on_recipe_aliases!(plt, rd.plotattributes, recipe_type, args...)
 end
 
-function signature_string(::Type{Val{:user}}, args...)
+function _signature_string(::Type{Val{:user}}, args...)
     return string("(::", join(string.(typeof.(args)), ", ::"), ")")
 end
-signature_string(::Type{Val{:type}}, T) = "(::Type{$T}, ::$T)"
-signature_string(::Type{Val{:plot}}, st) = "(::Type{Val{:$st}}, ::AbstractPlot)"
-signature_string(::Type{Val{:series}}, st) = "(::Type{Val{:$st}}, x, y, z)"
+_signature_string(::Type{Val{:type}}, T) = "(::Type{$T}, ::$T)"
+_signature_string(::Type{Val{:plot}}, st) = "(::Type{Val{:$st}}, ::AbstractPlot)"
+_signature_string(::Type{Val{:series}}, st) = "(::Type{Val{:$st}}, x, y, z)"
 
-# ------------------------------------------------------------------
-# preprocessing
 
-function series_idx(kw_list::AVec{KW}, kw::AKW)
-    Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
+## Grouping
+
+RecipePipeline.splittable_attribute(plt::Plot, key, val::SeriesAnnotations, len) =
+    RecipePipeline.splittable_attribute(plt, key, val.strs, len)
+
+function RecipePipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
+    split_strs = _RecipePipeline.split_attribute(key, val.strs, indices)
+    return SeriesAnnotations(split_strs, val.font, val.baseshape, val.scalefactor)
 end
 
-function _expand_seriestype_array(plotattributes::AKW, args)
-    sts = get(plotattributes, :seriestype, :path)
-    if typeof(sts) <: AbstractArray
-        reset_kw!(plotattributes, :seriestype)
-        rd = Vector{RecipeData}(undef, size(sts, 1))
-        for r in axes(sts, 1)
-            dc = copy(plotattributes)
-            dc[:seriestype] = sts[r:r, :]
-            rd[r] = RecipeData(dc, args)
-        end
-        rd
-    else
-        RecipeData[RecipeData(copy(plotattributes), args)]
-    end
-end
 
-function _preprocess_args(plotattributes::AKW, args, still_to_process::Vector{RecipeData})
-    # the grouping mechanism is a recipe on a GroupBy object
-    # we simply add the GroupBy object to the front of the args list to allow
-    # the recipe to be applied
-    if haskey(plotattributes, :group)
-        args = (_extract_group_attributes(plotattributes[:group], args...), args...)
-    end
+## Preprocessing attributes
 
-    # if we were passed a vector/matrix of seriestypes and there's more than one row,
-    # we want to duplicate the inputs, once for each seriestype row.
-    if !isempty(args)
-        append!(still_to_process, _expand_seriestype_array(plotattributes, args))
-    end
+RecipePipeline.preprocess_attributes!(plt::Plot, plotattributes) =
+    preprocess_attributes!(plotattributes) # in src/args.jl
 
-    # remove subplot and axis args from plotattributes...
-    # they will be passed through in the kw_list
-    if !isempty(args)
-        for (k, v) in plotattributes
-            if k in _all_subplot_args || k in _all_axis_args
-                reset_kw!(plotattributes, k)
-            end
-        end
-    end
+RecipePipeline.is_axis_attribute(plt::Plot, attr) = is_axis_attr_noletter(attr) # in src/args.jl
 
-    args
-end
-
-# ------------------------------------------------------------------
-# user recipes
+RecipePipeline.is_subplot_attribute(plt::Plot, attr) = is_subplot_attr(attr) # in src/args.jl
 
 
-function _process_userrecipes(plt::Plot, plotattributes::AKW, args)
-    still_to_process = RecipeData[]
-    args = _preprocess_args(plotattributes, args, still_to_process)
+## User recipes
 
-    # for plotting recipes, swap out the args and update the parameter dictionary
-    # we are keeping a stack of series that still need to be processed.
-    # each pass through the loop, we pop one off and apply the recipe.
-    # the recipe will return a list a Series objects... the ones that are
-    # finished (no more args) get added to the kw_list, the ones that are not
-    # are placed on top of the stack and are then processed further.
-    kw_list = KW[]
-    while !isempty(still_to_process)
-        # grab the first in line to be processed and either add it to the kw_list or
-        # pass it through apply_recipe to generate a list of RecipeData objects
-        # (data + attributes) for further processing.
-        next_series = popfirst!(still_to_process)
-        # recipedata should be of type RecipeData.
-        # if it's not then the inputs must not have been fully processed by recipes
-        if !(typeof(next_series) <: RecipeData)
-            error("Inputs couldn't be processed... expected RecipeData but got: $next_series")
-        end
-        if isempty(next_series.args)
-            _process_userrecipe(plt, kw_list, next_series)
-        else
-            rd_list =
-                RecipesBase.apply_recipe(next_series.plotattributes, next_series.args...)
-            warn_on_recipe_aliases!(rd_list, :user, next_series.args...)
-            prepend!(still_to_process, rd_list)
-        end
-    end
-
-    # don't allow something else to handle it
-    plotattributes[:smooth] = false
-    kw_list
-end
-
-function _process_userrecipe(plt::Plot, kw_list::Vector{KW}, recipedata::RecipeData)
-    # when the arg tuple is empty, that means there's nothing left to recursively
-    # process... finish up and add to the kw_list
-    kw = recipedata.plotattributes
-    preprocess_attributes!(kw)
+function RecipePipeline.process_userrecipe!(plt::Plot, kw_list, kw)
     _preprocess_userrecipe(kw)
     warn_on_unsupported_scales(plt.backend, kw)
-
     # add the plot index
     plt.n += 1
     kw[:series_plotindex] = plt.n
@@ -134,9 +81,6 @@ end
 
 function _preprocess_userrecipe(kw::AKW)
     _add_markershape(kw)
-
-    # if there was a grouping, filter the data here
-    _filter_input_data!(kw)
 
     # map marker_z if it's a Function
     if isa(get(kw, :marker_z, nothing), Function)
@@ -197,50 +141,23 @@ function _add_smooth_kw(kw_list::Vector{KW}, kw::AKW)
     end
 end
 
-# ------------------------------------------------------------------
-# plot recipes
 
-# Grab the first in line to be processed and pass it through apply_recipe
-# to generate a list of RecipeData objects (data + attributes).
-# If we applied a "plot recipe" without error, then add the returned datalist's KWs,
-# otherwise we just add the original KW.
-function _process_plotrecipe(
-    plt::Plot,
-    kw::AKW,
-    kw_list::Vector{KW},
-    still_to_process::Vector{KW},
-)
-    if !isa(get(kw, :seriestype, nothing), Symbol)
-        # seriestype was never set, or it's not a Symbol, so it can't be a plot recipe
-        push!(kw_list, kw)
-        return
-    end
-    try
-        st = kw[:seriestype]
-        st = kw[:seriestype] = get(_typeAliases, st, st)
-        datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
-        warn_on_recipe_aliases!(datalist, :plot, st)
-        for data in datalist
-            preprocess_attributes!(data.plotattributes)
-            if data.plotattributes[:seriestype] == st
-                error("Plot recipe $st returned the same seriestype: $(data.plotattributes)")
-            end
-            push!(still_to_process, data.plotattributes)
-        end
-    catch err
-        if isa(err, MethodError)
-            push!(kw_list, kw)
-        else
-            rethrow()
-        end
-    end
-    return
+RecipePipeline.get_axis_limits(plt::Plot, f, letter) = axis_limits(plt[1], :x)
+
+
+## Plot recipes
+
+RecipePipeline.type_alias(plt::Plot) = get(_typeAliases, st, st)
+
+
+## Plot setup
+
+function RecipePipeline.plot_setup!(plt::Plot, plotattributes, kw_list)
+    _plot_setup(plt, plotattributes, kw_list)
+    _subplot_setup(plt, plotattributes, kw_list)
 end
 
-
-# ------------------------------------------------------------------
-# setup plot and subplot
-
+# TODO: Should some of this logic be moved to RecipePipeline?
 function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # merge in anything meant for the Plot
     for kw in kw_list, (k, v) in kw
@@ -345,6 +262,31 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     link_axes!(plt.layout, plt[:link])
 end
 
+function series_idx(kw_list::AVec{KW}, kw::AKW)
+    Int(kw[:series_plotindex]) - Int(kw_list[1][:series_plotindex]) + 1
+end
+
+
+## Series recipes
+
+function RecipePipeline.slice_series_attributes!(plt::Plot, kw_list, kw)
+    sp::Subplot = kw[:subplot]
+    # in series attributes given as vector with one element per series,
+    # select the value for current series
+    _slice_series_args!(kw, plt, sp, series_idx(kw_list, kw))
+end
+
+RecipePipeline.series_defaults(plt::Plot) = _series_defaults # in args.jl
+
+RecipePipeline.is_seriestype_supported(plt::Plot, st) = is_seriestype_supported(st)
+
+function RecipePipeline.add_series!(plt::Plot, plotattributes)
+    sp = _prepare_subplot(plt, plotattributes)
+    _expand_subplot_extrema(sp, plotattributes, plotattributes[:seriestype])
+    _update_series_attributes!(plotattributes, plt, sp)
+    _add_the_series(plt, sp, plotattributes)
+end
+
 # getting ready to add the series... last update to subplot from anything
 # that might have been added during series recipes
 function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
@@ -356,7 +298,7 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     st = _override_seriestype_check(plotattributes, st)
 
     # change to a 3d projection for this subplot?
-    if is3d(st)
+    if needs_3d_axes(st)
         sp.attr[:projection] = "3d"
     end
 
@@ -367,9 +309,6 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     end
     sp
 end
-
-# ------------------------------------------------------------------
-# series types
 
 function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
@@ -408,49 +347,4 @@ function _add_the_series(plt, sp, plotattributes)
     push!(plt.series_list, series)
     push!(sp.series_list, series)
     _series_added(plt, series)
-end
-
-# -------------------------------------------------------------------------------
-
-# this method recursively applies series recipes when the seriestype is not supported
-# natively by the backend
-function _process_seriesrecipe(plt::Plot, plotattributes::AKW)
-    # replace seriestype aliases
-    st = Symbol(plotattributes[:seriestype])
-    st = plotattributes[:seriestype] = get(_typeAliases, st, st)
-
-    # shapes shouldn't have fillrange set
-    if plotattributes[:seriestype] == :shape
-        plotattributes[:fillrange] = nothing
-    end
-
-    # if it's natively supported, finalize processing and pass along to the backend,
-    # otherwise recurse
-    if is_seriestype_supported(st)
-        sp = _prepare_subplot(plt, plotattributes)
-        _expand_subplot_extrema(sp, plotattributes, st)
-        _update_series_attributes!(plotattributes, plt, sp)
-        _add_the_series(plt, sp, plotattributes)
-
-    else
-        # get a sub list of series for this seriestype
-        x, y, z = plotattributes[:x], plotattributes[:y], plotattributes[:z]
-        datalist = RecipesBase.apply_recipe(plotattributes, Val{st}, x, y, z)
-        warn_on_recipe_aliases!(datalist, :series, st)
-
-        # assuming there was no error, recursively apply the series recipes
-        for data in datalist
-            if isa(data, RecipeData)
-                preprocess_attributes!(data.plotattributes)
-                if data.plotattributes[:seriestype] == st
-                    error("The seriestype didn't change in series recipe $st.  This will cause a StackOverflow.")
-                end
-                _process_seriesrecipe(plt, data.plotattributes)
-            else
-                @warn("Unhandled recipe: $(data)")
-                break
-            end
-        end
-    end
-    nothing
 end

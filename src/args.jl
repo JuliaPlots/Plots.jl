@@ -86,12 +86,9 @@ const _surface_like = [:contour, :contourf, :contour3d, :heatmap, :surface, :wir
 
 like_histogram(seriestype::Symbol) = seriestype in _histogram_like
 like_line(seriestype::Symbol)      = seriestype in _line_like
-like_surface(seriestype::Symbol)   = seriestype in _surface_like
+like_surface(seriestype::Symbol)   = is_surface(seriestype)
 
-is3d(seriestype::Symbol) = seriestype in _3dTypes
 is3d(series::Series) = is3d(series.plotattributes)
-is3d(plotattributes::AKW) = trueOrAllTrue(is3d, Symbol(plotattributes[:seriestype]))
-
 is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
 ispolar(series::Series) = ispolar(series.plotattributes[:subplot])
@@ -1113,68 +1110,6 @@ function preprocess_attributes!(plotattributes::AKW)
     end
 
     return
-end
-
-# -----------------------------------------------------------------------------
-
-"A special type that will break up incoming data into groups, and allow for easier creation of grouped plots"
-mutable struct GroupBy
-    groupLabels::Vector           # length == numGroups
-    groupIds::Vector{Vector{Int}} # list of indices for each group
-end
-
-
-# this is when given a vector-type of values to group by
-function _extract_group_attributes(v::AVec, args...; legendEntry = string)
-    groupLabels = sort(collect(unique(v)))
-    n = length(groupLabels)
-    if n > 100
-        @warn("You created n=$n groups... Is that intended?")
-    end
-    groupIds = Vector{Int}[filter(i -> v[i] == glab, eachindex(v)) for glab in groupLabels]
-    GroupBy(map(legendEntry, groupLabels), groupIds)
-end
-
-legendEntryFromTuple(ns::Tuple) = join(ns, ' ')
-
-# this is when given a tuple of vectors of values to group by
-function _extract_group_attributes(vs::Tuple, args...)
-    isempty(vs) && return GroupBy([""], [axes(args[1],1)])
-    v = map(tuple, vs...)
-    _extract_group_attributes(v, args...; legendEntry = legendEntryFromTuple)
-end
-
-# allow passing NamedTuples for a named legend entry
-legendEntryFromTuple(ns::NamedTuple) =
-    join(["$k = $v" for (k, v) in pairs(ns)], ", ")
-
-function _extract_group_attributes(vs::NamedTuple, args...)
-    isempty(vs) && return GroupBy([""], [axes(args[1],1)])
-    v = map(NamedTuple{keys(vs)}∘tuple, values(vs)...)
-    _extract_group_attributes(v, args...; legendEntry = legendEntryFromTuple)
-end
-
-# expecting a mapping of "group label" to "group indices"
-function _extract_group_attributes(idxmap::Dict{T,V}, args...) where {T, V<:AVec{Int}}
-    groupLabels = sortedkeys(idxmap)
-    groupIds = Vector{Int}[collect(idxmap[k]) for k in groupLabels]
-    GroupBy(groupLabels, groupIds)
-end
-
-filter_data(v::AVec, idxfilter::AVec{Int}) = v[idxfilter]
-filter_data(v, idxfilter) = v
-
-function filter_data!(plotattributes::AKW, idxfilter)
-    for s in (:x, :y, :z)
-        plotattributes[s] = filter_data(get(plotattributes, s, nothing), idxfilter)
-    end
-end
-
-function _filter_input_data!(plotattributes::AKW)
-    idxfilter = pop!(plotattributes, :idxfilter, nothing)
-    if idxfilter !== nothing
-        filter_data!(plotattributes, idxfilter)
-    end
 end
 
 
