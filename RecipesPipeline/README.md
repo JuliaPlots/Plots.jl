@@ -6,7 +6,7 @@
 #### [WIP] An implementation of the recipe pipeline from Plots
 This package was factored out of Plots.jl to allow any other plotting package to use the recipe pipeline. In short, the extremely lightweight RecipesBase.jl package can be depended on by any package to define "recipes": plot specifications of user-defined types, as well as custom plot types. RecipePipeline.jl contains the machinery to translate these recipes to full specifications for a plot.
 
-The package is intended to be used by consumer plotting packages, and is currently used by Plots.jl (v.1.1.0 and above) and MakieRecipes.jl, a package that bridges RecipesBase recipes to Makie.jl.
+The package is intended to be used by consumer plotting packages, and is currently used by [Plots.jl](https://github.com/JuliaPlots/Plots.jl) (v.1.1.0 and above) and [MakieRecipes.jl](https://github.com/JuliaPlots/MakieRecipes.jl), a package that bridges RecipesBase recipes to [Makie.jl](https://github.com/JuliaPlots/Makie.jl).
 
 Current functionality:
 ```julia
