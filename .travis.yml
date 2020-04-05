@@ -41,4 +41,4 @@ after_success:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - if [[ `uname` = "Linux" ]]; then TESTCMD="xvfb-run julia"; else TESTCMD="julia"; fi
-  - $TESTCMD -e 'using Pkg; Pkg.build(); Pkg.test(coverage=true)'
+  - $TESTCMD -e 'using Pkg; pkg"add https://github.com/JuliaPlots/RecipeUtils.jl"; Pkg.build(); Pkg.test(coverage=true)'
