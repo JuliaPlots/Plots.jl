@@ -27,11 +27,6 @@ cache:
   - $HOME/.julia/artifacts
 
 sudo: required
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pwd ; fi
-  - julia -e 'using Pkg; pkg"add Plots"';
-  - PLOTSPATH=`julia -e 'using Plots; pathof(Plots)'`
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then .$PLOTSPATH/test/install_wkhtmltoimage.sh ; fi
 
 notifications:
   email: true
@@ -39,4 +34,4 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - if [[ `uname` = "Linux" ]]; then TESTCMD="xvfb-run julia"; else TESTCMD="julia"; fi
-  - $TESTCMD -e 'using Pkg; Pkg.build(); Pkg.test(Plots)'
+  - $TESTCMD -e 'using Pkg; pkg"add Plots"; Pkg.build(); Pkg.test(Plots)'
