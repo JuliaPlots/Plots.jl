@@ -15,7 +15,8 @@ using RecipesBase
 # Our user-defined data type
 struct T end
 
-@recipe function plot(::T, n = 1; customcolor = :green)
+RecipesBase.@recipe function plot(::T, n = 1; customcolor = :green)
+    seriestype --> :scatter
     markershape --> :auto        # if markershape is unset, make it :auto
     markercolor :=  customcolor  # force markercolor to be customcolor
     xrotation   --> 45           # if xrotation is unset, make it 45
@@ -24,6 +25,7 @@ struct T end
 end
 
 using Makie, MakieRecipes
-recipeplot(T(), 3; markersize = 5)
+recipeplot(T(), 3; markersize = 3)
 
 ```
+<img width="639" alt="Screenshot 2020-04-05 at 16 36 46" src="https://user-images.githubusercontent.com/8429802/78501571-3ea63d00-775c-11ea-9f6e-0c3651553bca.png">
