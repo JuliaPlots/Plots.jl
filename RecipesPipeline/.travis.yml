@@ -38,4 +38,4 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - if [[ `uname` = "Linux" ]]; then TESTCMD="xvfb-run julia"; else TESTCMD="julia"; fi
-  - $TESTCMD -e 'using Pkg; pkg"add Plots"; Pkg.build(); Pkg.test("Plots")'
+  - $TESTCMD -e 'using Pkg; pkg"add Plots#ds/rewrite"; Pkg.build(); Pkg.test("Plots")'
