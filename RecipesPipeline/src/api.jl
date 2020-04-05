@@ -44,7 +44,7 @@ For example, Plots replaces aliases and expands magic arguments.
 """
 function preprocess_attributes!(plt, plotattributes) end
 
-# TODO: should the Plots version be defined as fallback in RecipePipeline?
+# TODO: should the Plots version be defined as fallback in RecipesPipeline?
 """
     is_subplot_attribute(plt, attr)
 
@@ -52,7 +52,7 @@ Returns `true` if `attr` is a subplot attribute, otherwise `false`.
 """
 is_subplot_attribute(plt, attr) = false
 
-# TODO: should the Plots version be defined as fallback in RecipePipeline?
+# TODO: should the Plots version be defined as fallback in RecipesPipeline?
 """
     is_axis_attribute(plt, attr)
 
