@@ -4,13 +4,14 @@ authors = ["Michael Krabbe Borregaard <mkborregaard@snm.ku.dk>"]
 version = "0.1.0"
 
 [deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [compat]
-julia = "1"
 PlotUtils = "0.6.5"
 RecipesBase = "0.8"
+julia = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
