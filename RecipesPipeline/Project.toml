@@ -10,7 +10,7 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [compat]
 PlotUtils = "0.6.5"
-RecipesBase = "0.8"
+RecipesBase = "0.8, 1.0"
 julia = "1"
 
 [extras]
