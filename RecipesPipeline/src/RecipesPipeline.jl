@@ -3,6 +3,7 @@ module RecipesPipeline
 import RecipesBase
 import RecipesBase: @recipe, @series, RecipeData, is_explicit
 import PlotUtils # tryrange and adapted_grid
+using Dates
 
 export recipe_pipeline!
 # Plots relies on these:
