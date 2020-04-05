@@ -139,7 +139,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
     # rather than on the input format
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
     if ticks === nothing && scale == :identity
-        if axis[:formatter] == dateformatter
+        if axis[:formatter] == RecipesPipeline.dateformatter
             # optimize_datetime_ticks returns ticks and labels(!) based on
             # integers/floats corresponding to the DateTime type. Thus, the axes
             # limits, which resulted from converting the Date type to integers,
@@ -150,7 +150,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
                 k_min = 2, k_max = 4)
             # Now the ticks are converted back to floats corresponding to Dates.
             return ticks / 864e5, labels
-        elseif axis[:formatter] == datetimeformatter
+        elseif axis[:formatter] == RecipesPipeline.datetimeformatter
             return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
         end
     end
