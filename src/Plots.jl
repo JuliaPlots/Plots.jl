@@ -163,9 +163,8 @@ using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
 
-include("RecipePipeline/RecipePipeline.jl")
-import .RecipePipeline
-import .RecipePipeline: SliceIt,
+import RecipePipeline
+import RecipePipeline: SliceIt,
     DefaultsDict,
     Formatted,
     AbstractSurface,
