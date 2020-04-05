@@ -182,7 +182,10 @@ import RecipesPipeline: SliceIt,
     pop_kw!,
     scale_func,
     inverse_scale_func,
-    unzip
+    unzip,
+    dateformatter,
+    datetimeformatter,
+    timeformatter
 
 include("types.jl")
 include("utils.jl")
