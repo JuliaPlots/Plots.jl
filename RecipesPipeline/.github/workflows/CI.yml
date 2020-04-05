@@ -14,14 +14,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1.0.0
-      
+
       - name: Set up Julia
         uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.julia-version }}
 
       - name: Add package versions
-        run: julia --project=. -e 'using Pkg; pkg"add Plots#mkb/recipeutils AbstractPlotting CairoMakie#master"'
+        run: julia --project=. -e 'using Pkg; pkg"add https://github.com/JuliaPlots/MakieRecipes.jl AbstractPlotting CairoMakie#master"'
 
       - name: Run tests
         uses: julia-actions/julia-runtest@master
@@ -39,7 +39,7 @@ jobs:
           name: Recordings
           path: ./test/tested_different
         if: always()
-          
+
       - name: Cache artifacts
         uses: actions/cache@v1
         env:
