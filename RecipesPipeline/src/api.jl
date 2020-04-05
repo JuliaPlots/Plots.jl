@@ -133,6 +133,13 @@ Check if the plotting package natively supports the seriestype `st`.
 is_seriestype_supported(plt, st) = false
 
 """
+    is_key_supported(key)
+
+Check if the plotting package natively supports the attribute `key`
+"""
+RecipesBase.is_key_supported(key) = true
+
+"""
     add_series!(plt, kw)
 
 Adds the series defined by `kw` to the plot object.
