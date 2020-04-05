@@ -20,7 +20,10 @@ export SliceIt,
     pop_kw!,
     scale_func,
     inverse_scale_func,
-    unzip
+    unzip,
+    dateformatter,
+    datetimeformatter,
+    timeformatter
 # API
 export warn_on_recipe_aliases,
     splittable_attribute,
@@ -40,6 +43,7 @@ include("user_recipe.jl")
 include("type_recipe.jl")
 include("plot_recipe.jl")
 include("series_recipe.jl")
+include("recipes.jl")
 
 
 """
