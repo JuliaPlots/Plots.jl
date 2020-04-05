@@ -1,7 +1,7 @@
 # RecipesPipeline
 
-[![Build Status](https://travis-ci.com/mkborregaard/RecipeUtils.jl.svg?branch=master)](https://travis-ci.com/mkborregaard/RecipeUtils.jl)
-[![Codecov](https://codecov.io/gh/mkborregaard/RecipeUtils.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/mkborregaard/RecipeUtils.jl)
+[![Build Status](https://travis-ci.com/JuliaPlots/RecipesPipeline.jl.svg?branch=master)](https://travis-ci.com/JuliaPlots/RecipesPipeline.jl)
+[![Codecov](https://codecov.io/gh/JuliaPlots/RecipesPipeline.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/RecipesPipeline.jl)
 
 #### [WIP] An implementation of the recipe pipeline from Plots
 This package was factored out of Plots.jl to allow any other plotting package to use the recipe pipeline. In short, the extremely lightweight RecipesBase.jl package can be depended on by any package to define "recipes": plot specifications of user-defined types, as well as custom plot types. RecipePipeline.jl contains the machinery to translate these recipes to full specifications for a plot.
