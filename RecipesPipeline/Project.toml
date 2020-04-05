@@ -14,7 +14,14 @@ RecipesBase = "0.8, 1.0"
 julia = "1"
 
 [extras]
+AbstractPlotting = "537997a7-5e4e-5d89-9595-2241ea00577e"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+MakieRecipes = "3c562d8e-4afa-4f1c-99bf-ad54af2b207f"
+MarketData = "945b72a4-3b13-509d-9b46-1525bb5c06de"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TimeSeries = "9e3dc215-6440-5c97-bce1-76c03772f85e"
 
 [targets]
-test = ["Test"]
+test = ["Test", "AbstractPlotting", "CairoMakie", "DifferentialEquations",
+        "MakieRecipes", "MarketData", "TimeSeries"]
