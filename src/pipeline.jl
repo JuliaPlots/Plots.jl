@@ -1,8 +1,8 @@
-# RecipePipeline API
+# RecipesPipeline API
 
 ## Warnings
 
-function RecipePipeline.warn_on_recipe_aliases!(
+function RecipesPipeline.warn_on_recipe_aliases!(
     plt::Plot,
     plotattributes,
     recipe_type,
@@ -18,21 +18,21 @@ function RecipePipeline.warn_on_recipe_aliases!(
         end
     end
 end
-function RecipePipeline.warn_on_recipe_aliases!(
+function RecipesPipeline.warn_on_recipe_aliases!(
     plt::Plot,
     v::AbstractVector,
     recipe_type,
     args...,
 )
-    foreach(x -> RecipePipeline.warn_on_recipe_aliases!(plt, x, recipe_type, args...), v)
+    foreach(x -> RecipesPipeline.warn_on_recipe_aliases!(plt, x, recipe_type, args...), v)
 end
-function RecipePipeline.warn_on_recipe_aliases!(
+function RecipesPipeline.warn_on_recipe_aliases!(
     plt::Plot,
     rd::RecipeData,
     recipe_type,
     args...,
 )
-    RecipePipeline.warn_on_recipe_aliases!(plt, rd.plotattributes, recipe_type, args...)
+    RecipesPipeline.warn_on_recipe_aliases!(plt, rd.plotattributes, recipe_type, args...)
 end
 
 function _signature_string(::Type{Val{:user}}, args...)
@@ -45,28 +45,28 @@ _signature_string(::Type{Val{:series}}, st) = "(::Type{Val{:$st}}, x, y, z)"
 
 ## Grouping
 
-RecipePipeline.splittable_attribute(plt::Plot, key, val::SeriesAnnotations, len) =
-    RecipePipeline.splittable_attribute(plt, key, val.strs, len)
+RecipesPipeline.splittable_attribute(plt::Plot, key, val::SeriesAnnotations, len) =
+    RecipesPipeline.splittable_attribute(plt, key, val.strs, len)
 
-function RecipePipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
-    split_strs = _RecipePipeline.split_attribute(key, val.strs, indices)
+function RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
+    split_strs = _RecipesPipeline.split_attribute(key, val.strs, indices)
     return SeriesAnnotations(split_strs, val.font, val.baseshape, val.scalefactor)
 end
 
 
 ## Preprocessing attributes
 
-RecipePipeline.preprocess_attributes!(plt::Plot, plotattributes) =
+RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes) =
     preprocess_attributes!(plotattributes) # in src/args.jl
 
-RecipePipeline.is_axis_attribute(plt::Plot, attr) = is_axis_attr_noletter(attr) # in src/args.jl
+RecipesPipeline.is_axis_attribute(plt::Plot, attr) = is_axis_attr_noletter(attr) # in src/args.jl
 
-RecipePipeline.is_subplot_attribute(plt::Plot, attr) = is_subplot_attr(attr) # in src/args.jl
+RecipesPipeline.is_subplot_attribute(plt::Plot, attr) = is_subplot_attr(attr) # in src/args.jl
 
 
 ## User recipes
 
-function RecipePipeline.process_userrecipe!(plt::Plot, kw_list, kw)
+function RecipesPipeline.process_userrecipe!(plt::Plot, kw_list, kw)
     _preprocess_userrecipe(kw)
     warn_on_unsupported_scales(plt.backend, kw)
     # add the plot index
@@ -142,22 +142,22 @@ function _add_smooth_kw(kw_list::Vector{KW}, kw::AKW)
 end
 
 
-RecipePipeline.get_axis_limits(plt::Plot, f, letter) = axis_limits(plt[1], letter)
+RecipesPipeline.get_axis_limits(plt::Plot, f, letter) = axis_limits(plt[1], letter)
 
 
 ## Plot recipes
 
-RecipePipeline.type_alias(plt::Plot) = get(_typeAliases, st, st)
+RecipesPipeline.type_alias(plt::Plot) = get(_typeAliases, st, st)
 
 
 ## Plot setup
 
-function RecipePipeline.plot_setup!(plt::Plot, plotattributes, kw_list)
+function RecipesPipeline.plot_setup!(plt::Plot, plotattributes, kw_list)
     _plot_setup(plt, plotattributes, kw_list)
     _subplot_setup(plt, plotattributes, kw_list)
 end
 
-# TODO: Should some of this logic be moved to RecipePipeline?
+# TODO: Should some of this logic be moved to RecipesPipeline?
 function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # merge in anything meant for the Plot
     for kw in kw_list, (k, v) in kw
@@ -269,18 +269,18 @@ end
 
 ## Series recipes
 
-function RecipePipeline.slice_series_attributes!(plt::Plot, kw_list, kw)
+function RecipesPipeline.slice_series_attributes!(plt::Plot, kw_list, kw)
     sp::Subplot = kw[:subplot]
     # in series attributes given as vector with one element per series,
     # select the value for current series
     _slice_series_args!(kw, plt, sp, series_idx(kw_list, kw))
 end
 
-RecipePipeline.series_defaults(plt::Plot) = _series_defaults # in args.jl
+RecipesPipeline.series_defaults(plt::Plot) = _series_defaults # in args.jl
 
-RecipePipeline.is_seriestype_supported(plt::Plot, st) = is_seriestype_supported(st)
+RecipesPipeline.is_seriestype_supported(plt::Plot, st) = is_seriestype_supported(st)
 
-function RecipePipeline.add_series!(plt::Plot, plotattributes)
+function RecipesPipeline.add_series!(plt::Plot, plotattributes)
     sp = _prepare_subplot(plt, plotattributes)
     _expand_subplot_extrema(sp, plotattributes, plotattributes[:seriestype])
     _update_series_attributes!(plotattributes, plt, sp)
