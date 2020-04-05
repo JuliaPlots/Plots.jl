@@ -1,7 +1,7 @@
 ### API
 
 ```@autodocs
-Modules = [RecipePipeline]
+Modules = [RecipesPipeline]
 Pages = [
   "api.jl"
 ]
@@ -11,7 +11,7 @@ Private = false
 ### Utility functions
 
 ```@autodocs
-Modules = [RecipePipeline]
+Modules = [RecipesPipeline]
 Pages = [
   "utils.jl"
 ]

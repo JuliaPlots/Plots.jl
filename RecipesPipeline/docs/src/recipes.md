@@ -1,7 +1,7 @@
 ## Recipes processing
 
 ```@autodocs
-Modules = [RecipePipeline]
+Modules = [RecipesPipeline]
 Pages = [
   "user_recipe.jl",
   "plot_recipe.jl",

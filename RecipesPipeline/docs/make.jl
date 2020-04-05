@@ -1,8 +1,8 @@
 using Documenter
-using RecipePipeline
+using RecipesPipeline
 
 makedocs(
-    sitename = "RecipePipeline",
+    sitename = "RecipesPipeline",
     format = format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true"
     ),
@@ -14,7 +14,7 @@ makedocs(
             ],
         "Reference" => "reference.md"
     ],
-    modules = [RecipePipeline]
+    modules = [RecipesPipeline]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.

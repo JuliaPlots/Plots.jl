@@ -1,4 +1,4 @@
-module RecipePipeline
+module RecipesPipeline
 
 import RecipesBase
 import RecipesBase: @recipe, @series, RecipeData, is_explicit

@@ -1,6 +1,6 @@
-using RecipePipeline
+using RecipesPipeline
 using Test
 
-@testset "RecipePipeline.jl" begin
+@testset "RecipesPipeline.jl" begin
     # Write your own tests here.
 end
