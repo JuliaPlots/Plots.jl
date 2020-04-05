@@ -24,6 +24,6 @@ struct T end
 end
 
 using Makie, MakieRecipes
-plot(T(), 3)
+recipeplot(T(), 3; markersize = 5)
 
 ```
