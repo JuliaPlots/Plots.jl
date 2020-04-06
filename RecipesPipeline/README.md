@@ -1,6 +1,12 @@
 # RecipesPipeline
+[travis-img]: https://img.shields.io/travis/JuliaPlots/RecipesPipeline.jl?logo=travis
+[travis-url]: https://travis-ci.org/JuliaPlots/RecipesPipeline.jl
 
-[![Build Status](https://travis-ci.com/JuliaPlots/RecipesPipeline.jl.svg?branch=master)](https://travis-ci.com/JuliaPlots/RecipesPipeline.jl)
+[docs-img]: https://img.shields.io/badge/docs-dev-blue.svg
+[docs-url]: http://docs.juliaplots.org/RecipesPipeline,jl/dev/
+
+[![][travis-img]][travis-url]
+[![][docs-img]][docs-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/RecipesPipeline.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/RecipesPipeline.jl)
 
 #### [WIP] An implementation of the recipe pipeline from Plots
