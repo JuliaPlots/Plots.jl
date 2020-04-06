@@ -216,6 +216,7 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
 end
 
 # special handling for Surface... need to properly unwrap and re-wrap
+_apply_type_recipe(plotattributes, v::Surface{<:AMat{MaybeString}}, letter) = v
 _apply_type_recipe(
     plotattributes,
     v::Surface{<:AMat{<:Union{AbstractFloat, Integer, Missing}}},
