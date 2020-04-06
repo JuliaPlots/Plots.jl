@@ -228,6 +228,8 @@ end
 
 # don't do anything for nothing
 _apply_type_recipe(plotattributes, v::Nothing, letter) = v
+_apply_type_recipe(plotattributes, v::AbstractArray{<:MaybeString}, letter) = v
+_apply_type_recipe(plotattributes, v::AbstractArray{<:Union{Real, Nothing}}, letter) = v
 
 # axis args before type recipes should still be mapped to all axes
 function _preprocess_axis_args!(plotattributes)
