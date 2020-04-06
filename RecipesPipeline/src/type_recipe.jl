@@ -46,10 +46,9 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
 end
 
 # special handling for Surface... need to properly unwrap and re-wrap
-_apply_type_recipe(plotattributes, v::Surface{<:AMat{<:MaybeString}}) = v
 _apply_type_recipe(
     plotattributes,
-    v::Surface{<:AMat{<:Union{AbstractFloat, Integer, Missing}}},
+    v::Surface{<:AMat{<:Union{AbstractFloat, Integer, AbstractString, Missing}}},
 ) = v
 function _apply_type_recipe(plotattributes, v::Surface)
     ret = _apply_type_recipe(plotattributes, v.surf)
@@ -61,10 +60,9 @@ function _apply_type_recipe(plotattributes, v::Surface)
 end
 
 # don't do anything for datapoints or nothing
-_apply_type_recipe(plotattributes, v::AbstractArray{<:MaybeString}, letter) = v
 _apply_type_recipe(
     plotattributes,
-    v::AbstractArray{<:Union{AbstractFloat, Integer, Missing}},
+    v::AbstractArray{<:Union{AbstractFloat, Integer, AbstractString, Missing}},
     letter,
 ) = v
 _apply_type_recipe(plotattributes, v::Nothing, letter) = v
