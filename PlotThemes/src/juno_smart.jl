@@ -2,7 +2,7 @@ using Statistics
 
 if Juno.isactive()
     colors = Juno.syntaxcolors()
-    colors = Dict(k => parse(Colorant, "#"*hex(colors[k], 6, false)) for (k, v) in colors)
+    colors = Dict(k => parse(Colorant, "#"*Base.hex(v, 6, false)) for (k, v) in colors)
 
     juno_palette = unique([colors[k] for k in keys(colors) if k ∉ ["background", "variable"]])
 
