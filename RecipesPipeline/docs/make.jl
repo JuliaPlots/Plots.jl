@@ -30,7 +30,7 @@ makedocs(
                 "series_recipe.md",
                 "group.md",
                 "recipes.md",
-                "series.md"
+                "series.md",
                 "group.md",
                 "utils.md"
             ]
