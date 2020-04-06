@@ -1,6 +1,6 @@
 # RecipesPipeline
-[travis-img]: https://img.shields.io/travis/JuliaPlots/RecipesPipeline.jl?logo=travis
-[travis-url]: https://travis-ci.org/JuliaPlots/RecipesPipeline.jl
+[travis-img]: https://img.shields.io/travis/com/JuliaPlots/RecipesPipeline.jl?style=flat
+[travis-url]: https://travis-ci.com/JuliaPlots/RecipesPipeline.jl
 
 [docs-img]: https://img.shields.io/badge/docs-dev-blue.svg
 [docs-url]: http://docs.juliaplots.org/RecipesPipeline,jl/dev/
