@@ -438,7 +438,7 @@ julia> plot(1:10)
 julia> annotate!([(7,3,"(7,3)"),(3,7,text("hey", 14, :left, :top, :green))])
 ```
 """
-annotate!(anns...; kw...)                                        = plot!(; annotation = anns, kw...)
+annotate!(anns...; kw...)                                        = plot!(; annotation = collect(anns), kw...)
 annotate!(anns::AVec{T}; kw...) where {T<:Tuple}                 = plot!(; annotation = anns, kw...)
 
 "Flip the current plots' x axis"
