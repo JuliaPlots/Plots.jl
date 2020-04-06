@@ -11,12 +11,13 @@ processed series. When all arguments are processed return the series `Dict`.
 function _process_userrecipes!(plt, plotattributes, args)
     still_to_process = _recipedata_vector(plt, plotattributes, args)
 
-    # for plotting recipes, swap out the args and update the parameter dictionary
-    # we are keeping a stack of series that still need to be processed.
-    # each pass through the loop, we pop one off and apply the recipe.
-    # the recipe will return a list a Series objects... the ones that are
-    # finished (no more args) get added to the kw_list, the ones that are not
+    # For plotting recipes, we swap out the args and update the parameter dictionary.  We are keeping a stack of series that still need to be processed.
+    #
+    # On each pass through the loop, we pop one off and apply the recipe.
+    # the recipe will return a list a Series objects. The ones that are
+    # finished (no more args) get added to the `kw_list`, and the ones that are not
     # are placed on top of the stack and are then processed further.
+
     kw_list = KW[]
     while !isempty(still_to_process)
         # grab the first in line to be processed and either add it to the kw_list or
