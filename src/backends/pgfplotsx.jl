@@ -1,4 +1,5 @@
 using Contour: Contour
+using LaTeXStrings
 using UUIDs
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
@@ -900,6 +901,12 @@ function pgfx_sanitize_string(s::AbstractString)
     s = replace(s, r"\\?\%" => "\\%")
     s = replace(s, r"\\?\_" => "\\_")
     s = replace(s, r"\\?\&" => "\\&")
+    s = replace(s, r"\\?\{" => "\\{")
+    s = replace(s, r"\\?\}" => "\\}")
+end
+function pgfx_sanitize_string(s::LaTeXString)
+    s = replace(s, r"\\?\#" => "\\#")
+    s = replace(s, r"\\?\%" => "\\%")
 end
 function pgfx_sanitize_plot!(plt)
         for (key, value) in plt.attr
