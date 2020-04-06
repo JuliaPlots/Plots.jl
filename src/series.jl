@@ -216,7 +216,10 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
 end
 
 # special handling for Surface... need to properly unwrap and re-wrap
-_apply_type_recipe(plotattributes, v::Surface{<:AMat{<:DataPoint}}) = v
+_apply_type_recipe(
+    plotattributes,
+    v::Surface{<:AMat{<:Union{AbstractFloat, Integer, AbstractString, Missing}}},
+) = v
 function _apply_type_recipe(plotattributes, v::Surface)
     ret = _apply_type_recipe(plotattributes, v.surf)
     if typeof(ret) <: Formatted
@@ -228,8 +231,11 @@ end
 
 # don't do anything vectors of datapoints and for nothing
 _apply_type_recipe(plotattributes, v::Nothing, letter) = v
-_apply_type_recipe(plotattributes, v::AbstractArray{<:MaybeString}, letter) = v
-_apply_type_recipe(plotattributes, v::AbstractArray{<:Union{Real, Nothing}}, letter) = v
+_apply_type_recipe(
+    plotattributes,
+    v::AbstractArray{<:Union{AbstractFloat, Integer, AbstractString, Missing}},
+    letter,
+) = v
 
 # axis args before type recipes should still be mapped to all axes
 function _preprocess_axis_args!(plotattributes)
