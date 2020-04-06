@@ -16,12 +16,17 @@ julia = "1"
 [extras]
 AbstractPlotting = "537997a7-5e4e-5d89-9595-2241ea00577e"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+StochasticDiffEq = "789caeaf-c7a9-5a7d-9973-96adeb23e2a0"
+DiffEqNoiseProcess = "77a26b50-5914-5dd7-bc55-306e6241c503"
 MakieRecipes = "3c562d8e-4afa-4f1c-99bf-ad54af2b207f"
 MarketData = "945b72a4-3b13-509d-9b46-1525bb5c06de"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TimeSeries = "9e3dc215-6440-5c97-bce1-76c03772f85e"
+Phylo = "aea672f4-3940-5932-aa44-993d1c3ff149"
+GraphRecipes = "bd48cda9-67a9-57be-86fa-5b3c104eda73"
 
 [targets]
-test = ["Test", "AbstractPlotting", "CairoMakie", "DifferentialEquations",
-        "MakieRecipes", "MarketData", "TimeSeries"]
+test = ["Test", "AbstractPlotting", "CairoMakie", "OrdinaryDiffEq",
+        "StochasticDiffEq", "DiffEqNoiseProcess",
+        "MakieRecipes", "MarketData", "TimeSeries", "Phylo", "GraphRecipes"]
