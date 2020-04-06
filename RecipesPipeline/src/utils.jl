@@ -1,10 +1,12 @@
+# # Utilities
+
 const AVec = AbstractVector
 const AMat = AbstractMatrix
 const KW = Dict{Symbol, Any}
 const AKW = AbstractDict{Symbol, Any}
 
 # --------------------------------
-# DefaultsDict
+# ## DefaultsDict
 # --------------------------------
 
 struct DefaultsDict <: AbstractDict{Symbol, Any}
@@ -62,7 +64,7 @@ pop_kw!(d::AKW, k, default) = pop!(d, k, default)
 
 
 # --------------------------------
-# 3D types
+# ## 3D types
 # --------------------------------
 
 abstract type AbstractSurface end
@@ -111,7 +113,7 @@ Base.eltype(vol::Volume{T}) where {T} = T
 
 
 # --------------------------------
-# Formatting
+# ## Formatting
 # --------------------------------
 
 "Represents data values with formatting that should apply to the tick labels."
@@ -121,7 +123,7 @@ struct Formatted{T}
 end
 
 # -------------------------------
-# 3D seriestypes
+# ## 3D seriestypes
 # -------------------------------
 
 # TODO: Move to RecipesBase?
@@ -188,7 +190,7 @@ needs_3d_axes(plotattributes::AbstractDict) =
 
 
 # --------------------------------
-# Scales
+# ## Scales
 # --------------------------------
 
 const SCALE_FUNCTIONS = Dict{Symbol, Function}(:log10 => log10, :log2 => log2, :ln => log)
@@ -201,7 +203,7 @@ inverse_scale_func(scale::Symbol) =
 
 
 # --------------------------------
-# Unzip
+# ## Unzip
 # --------------------------------
 
 for i in 2:4
@@ -213,7 +215,7 @@ end
 
 
 # --------------------------------
-# Map functions on vectors
+# ## Map functions on vectors
 # --------------------------------
 
 _map_funcs(f::Function, u::AVec) = map(f, u)
