@@ -1,3 +1,5 @@
+# # Series handling
+
 const FuncOrFuncs{F} = Union{F, Vector{F}, Matrix{F}}
 const MaybeNumber = Union{Number, Missing}
 const MaybeString = Union{AbstractString, Missing}

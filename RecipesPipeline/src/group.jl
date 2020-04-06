@@ -1,3 +1,5 @@
+# # Grouping
+
 "A special type that will break up incoming data into groups, and allow for easier creation of grouped plots"
 mutable struct GroupBy
     group_labels::Vector                # length == numGroups

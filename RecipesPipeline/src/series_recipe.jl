@@ -1,3 +1,5 @@
+# # Series Recipes
+
 """
     _process_seriesrecipes!(plt, kw_list)
 
