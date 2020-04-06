@@ -43,6 +43,6 @@ makedocs(
 # See "Hosting Documentation" and deploydocs() in the Documenter manual
 # for more information.
 deploydocs(
-    repo = "https://github.com/JuliaPlots/RecipesPipeline.jl",
+    repo = "github.com/JuliaPlots/RecipesPipeline.jl",
     push_preview = true
 )
