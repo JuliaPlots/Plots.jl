@@ -352,17 +352,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             series_index,
                         )
                     end
-                    # add series annotations
-                    anns = series[:series_annotations]
-                    for (xi, yi, str, fnt) in EachAnn(anns, series[:x], series[:y])
-                        pgfx_add_annotation!(
-                            axis,
-                            xi,
-                            yi,
-                            PlotText(str, fnt),
-                            pgfx_thickness_scaling(series),
-                        )
-                    end
                     # add to legend?
                     if sp[:legend] != :none
                         leg_entry = if opt[:label] isa AVec
@@ -388,15 +377,26 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         end
                     end
                 end # for segments
-                # add subplot annotations
-                for ann in sp[:annotations]
+                # add series annotations
+                anns = series[:series_annotations]
+                for (xi, yi, str, fnt) in EachAnn(anns, series[:x], series[:y])
                     pgfx_add_annotation!(
                         axis,
-                        locate_annotation(sp, ann...)...,
-                        pgfx_thickness_scaling(sp),
+                        xi,
+                        yi,
+                        PlotText(str, fnt),
+                        pgfx_thickness_scaling(series),
                     )
                 end
             end # for series
+            # add subplot annotations
+            for ann in sp[:annotations]
+                pgfx_add_annotation!(
+                    axis,
+                    locate_annotation(sp, ann...)...,
+                    pgfx_thickness_scaling(sp),
+                )
+            end
             push!(the_plot, axis)
             if length(plt.o.the_plot.elements) > 0
                 plt.o.the_plot.elements[1] = the_plot
@@ -405,6 +405,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end
         end # for subplots
         pgfx_plot.is_created = true
+        pgfx_plot.was_shown = false
     end # if
     return pgfx_plot
 end
