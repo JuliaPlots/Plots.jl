@@ -1,5 +1,5 @@
 # RecipesPipeline
-[travis-img]: https://img.shields.io/travis/com/JuliaPlots/RecipesPipeline.jl?style=flat
+[travis-img]: https://travis-ci.com/JuliaPlots/RecipesPipeline.jl.svg?branch=master
 [travis-url]: https://travis-ci.com/JuliaPlots/RecipesPipeline.jl
 
 [docs-img]: https://img.shields.io/badge/docs-dev-blue.svg
