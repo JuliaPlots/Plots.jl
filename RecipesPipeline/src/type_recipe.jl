@@ -1,3 +1,5 @@
+# # Type Recipes
+
 # this is the default "type recipe"... just pass the object through
 @recipe f(::Type{T}, v::T) where {T} = v
 

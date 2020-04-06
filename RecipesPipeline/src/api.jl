@@ -1,4 +1,6 @@
-## Warnings
+# # API
+
+# ## Warnings
 
 """
     warn_on_recipe_aliases!(plt, plotattributes, recipe_type, args...)
@@ -9,7 +11,7 @@ applied to 'args'. `recipe_type` is either `:user`, `:type`, `:plot` or `:series
 function warn_on_recipe_aliases!(plt, plotattributes, recipe_type, args...) end
 
 
-## Grouping
+# ## Grouping
 
 """
     splittable_attribute(plt, key, val, len)
@@ -34,7 +36,7 @@ split_attribute(plt, key, val::Tuple, indices) =
     Tuple(split_attribute(key, v, indices) for v in val)
 
 
-## Preprocessing attributes
+# ## Preprocessing attributes
 
 """
     preprocess_attributes!(plt, plotattributes)
@@ -62,7 +64,7 @@ Returns `true` if `attr` is an axis attribute, i.e. it applies to `xattr`, `yatt
 is_axis_attribute(plt, attr) = false
 
 
-## User recipes
+# ## User recipes
 
 """
     process_userrecipe!(plt, attributes_list, attributes)
@@ -84,7 +86,7 @@ errors, `tryrange` from PlotUtils is used.
 get_axis_limits(plt, letter) = ErrorException("Axis limits not defined.")
 
 
-## Plot recipes
+# ## Plot recipes
 
 """
     type_alias(plt, st)
@@ -94,7 +96,7 @@ Return the seriestype alias for `st`.
 type_alias(plt, st) = st
 
 
-## Plot setup
+# ## Plot setup
 
 """
     plot_setup!(plt, plotattributes, kw_list)
@@ -106,7 +108,7 @@ links subplot axes.
 function plot_setup!(plt, plotattributes, kw_list) end
 
 
-## Series recipes
+# ## Series recipes
 
 """
     slice_series_attributes!(plt, kw_list, kw)
@@ -125,6 +127,7 @@ Returns a `Dict` storing the defaults for series attributes.
 series_defaults(plt) = Dict{Symbol, Any}()
 
 # TODO: Add a more sensible fallback including e.g. path, scatter, ...
+
 """
     is_seriestype_supported(plt, st)
 
@@ -138,6 +141,8 @@ is_seriestype_supported(plt, st) = false
 Check if the plotting package natively supports the attribute `key`
 """
 RecipesBase.is_key_supported(key) = true
+
+# ## Finalizer
 
 """
     add_series!(plt, kw)

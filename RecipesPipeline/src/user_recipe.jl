@@ -1,3 +1,5 @@
+# # User Recipes
+
 """
     _process_userrecipes(plt, plotattributes, args)
 
