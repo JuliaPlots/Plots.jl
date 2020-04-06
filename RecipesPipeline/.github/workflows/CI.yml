@@ -24,7 +24,8 @@ jobs:
         run: julia --project=temp_for_test -e 'using Pkg; pkg"dev .; add https://github.com/JuliaPlots/MakieRecipes.jl; add CairoMakie#master"'
 
       - name: Run tests
-        uses: julia-actions/julia-runtest@master
+#        uses: julia-actions/julia-runtest@master
+      - run: julia --project=temp_for_test -e 'using Pkg; pkg"test"'
 
 #       - name: Upload recordings
 #         uses: actions/upload-artifact@v1.0.0
