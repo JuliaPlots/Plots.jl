@@ -20,7 +20,7 @@ makedocs(
             "Recipes" => "recipes.md"
             ],
         "Reference" => "reference.md",
-        "Source code" => joinpath.(generated,
+        "Source code" => joinpath.("generated",
                 [
                 "RecipesPipeline.md",
                 "api.md",
