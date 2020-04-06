@@ -14,3 +14,28 @@ jobs:
   allow_failures:
     - julia: nightly
   fast_finish: true
+
+addons:
+  apt:
+    packages:
+      - at-spi2-core
+      - libgtk-3-dev
+      - xauth
+      - xvfb
+
+env:
+  - GKS_ENCODING="utf8"
+
+cache:
+  directories:
+  - $HOME/.julia/artifacts
+
+sudo: required
+
+notifications:
+  email: true
+
+script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - if [[ `uname` = "Linux" ]]; then TESTCMD="xvfb-run julia"; else TESTCMD="julia"; fi
+  - $TESTCMD -e 'using Pkg; pkg"add Plots"; Pkg.build(); Pkg.test(Plots)'
