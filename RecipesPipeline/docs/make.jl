@@ -9,7 +9,7 @@ files = joinpath.(filepath, readdir(filepath))
 Literate.markdown.(files, joinpath(@__DIR__, "src", "generated"); documenter = false)
 
 makedocs(
-    sitename = "RecipesPipeline",
+    sitename = "RecipesPipeline.jl",
     format = format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true"
     ),
