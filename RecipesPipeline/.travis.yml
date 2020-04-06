@@ -8,11 +8,11 @@ julia:
   - nightly
 notifications:
   email: false
-after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+
 jobs:
   allow_failures:
     - julia: nightly
+    - os: osx
   fast_finish: true
 
 addons:
