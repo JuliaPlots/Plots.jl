@@ -1,4 +1,4 @@
 documentation:
-- "**/*.md"
+  - "**/*.md"
 enhancement:
-- "**/*.jl"
+  - "**/*.jl"
