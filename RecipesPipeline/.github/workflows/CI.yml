@@ -25,7 +25,7 @@ jobs:
 
       - name: Run tests
 #        uses: julia-actions/julia-runtest@master
-      - run: julia --project=temp_for_test -e 'using Pkg; pkg"test"'
+        run: julia --project=temp_for_test -e 'using Pkg; pkg"test"'
 
 #       - name: Upload recordings
 #         uses: actions/upload-artifact@v1.0.0
