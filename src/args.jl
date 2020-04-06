@@ -1015,7 +1015,7 @@ function preprocessArgs!(plotattributes::AKW)
     end
     # handle axes args
     for k in _axis_args
-        if haskey(plotattributes, k)
+        if haskey(plotattributes, k) && k !== :link
             v = plotattributes[k]
             for letter in (:x, :y, :z)
                 lk = Symbol(letter, k)
