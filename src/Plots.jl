@@ -1,5 +1,9 @@
 module Plots
 
+if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@optlevel"))
+    @eval Base.Experimental.@optlevel 1
+end
+
 const _current_plots_version = VersionNumber(split(first(filter(line -> occursin("version", line), readlines(normpath(@__DIR__, "..", "Project.toml")))), "\"")[2])
 
 using Reexport
