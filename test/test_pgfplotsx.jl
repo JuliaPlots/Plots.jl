@@ -245,15 +245,39 @@ end
    end # testset
    @testset "Annotations" begin
       y = rand(10)
-      plot(
+      pgfx_plot = plot(
          y,
          annotations = (3, y[3], Plots.text("this is \\#3", :left)),
          leg = false,
       )
+      Plots._update_plot_object(pgfx_plot)
+      axis_content = Plots.pgfx_axes(pgfx_plot.o)[1].contents
+      nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
+      @test length(nodes) == 1
+      mktempdir() do path
+         file_path =joinpath(path,"annotations.tex")
+         @test_nowarn savefig(pgfx_plot, file_path)
+         open(file_path) do io
+            lines = readlines(io)
+            @test count(s -> occursin("node", s), lines) == 1
+         end
+      end
       annotate!([
          (5, y[5], Plots.text("this is \\#5", 16, :red, :center)),
          (10, y[10], Plots.text("this is \\#10", :right, 20, "courier")),
       ])
+      Plots._update_plot_object(pgfx_plot)
+      axis_content = Plots.pgfx_axes(pgfx_plot.o)[1].contents
+      nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
+      @test length(nodes) == 3
+      mktempdir() do path
+         file_path =joinpath(path,"annotations.tex")
+         @test_nowarn savefig(pgfx_plot, file_path)
+         open(file_path) do io
+            lines = readlines(io)
+            @test count(s -> occursin("node", s), lines) == 3
+         end
+      end
       annotation_plot = scatter!(
          range(2, stop = 8, length = 6),
          rand(6),
@@ -267,9 +291,18 @@ end
             Plots.text("data", :green),
          ],
       )
-      # mktempdir() do path
-      #    @test_nowarn savefig(annotation_plot, path*"annotation.pdf")
-      # end
+      Plots._update_plot_object(annotation_plot)
+      axis_content = Plots.pgfx_axes(annotation_plot.o)[1].contents
+      nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
+      @test length(nodes) == 9
+      mktempdir() do path
+         file_path =joinpath(path,"annotations.tex")
+         @test_nowarn savefig(annotation_plot, file_path)
+         open(file_path) do io
+            lines = readlines(io)
+            @test count(s -> occursin("node", s), lines) == 9
+         end
+      end
    end # testset
    @testset "Ribbon" begin
       aa = rand(10)

@@ -934,6 +934,18 @@ const _examples = PlotExample[
             end,
         ],
     ),
+    PlotExample(
+        "Linked axes",
+        "",
+        [
+            quote
+                begin
+                    x = -5:0.1:5
+                    plot(plot(x, x->x^2), plot(x, x->sin(x)), layout = 2, link = :y)
+                end
+            end,
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
