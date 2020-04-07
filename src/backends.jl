@@ -211,7 +211,7 @@ const _base_supported_args = [
     :seriestype,
     :seriescolor, :seriesalpha,
     :smooth,
-    :xerror, :yerror,
+    :xerror, :yerror, :zerror,
     :subplot,
     :x, :y, :z,
     :show, :size,
