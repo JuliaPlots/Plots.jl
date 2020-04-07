@@ -104,14 +104,20 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
 
         for sp in plt.subplots
-            bb = bbox(sp)
-            sp_width = width(bb)
-            sp_height = height(bb)
-            dx, dy = bb.x0
-            # TODO: does this hold at every scale?
-            if sp[:legend] in (:outertopright, nothing)
-                dx *= 1.2
-            end
+            bb1 = sp.plotarea
+            bb2 = bbox(sp)
+            sp_width = width(bb2)
+            sp_height = height(bb2)
+            dx, dy = bb2.x0
+            lpad = leftpad(sp) + sp[:left_margin]
+            rpad = rightpad(sp) + sp[:right_margin]
+            tpad = toppad(sp) + sp[:top_margin]
+            bpad = bottompad(sp) + sp[:bottom_margin]
+            dx += lpad
+            dy += tpad
+            axis_height = sp_height - (tpad + bpad)
+            axis_width = sp_width - (rpad + lpad)
+
             cstr = plot_color(sp[:background_color_legend])
             a = alpha(cstr)
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
@@ -164,9 +170,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "xshift" => string(dx),
                 "yshift" => string(-dy),
             )
-            sp_width > 0 * mm ? push!(axis_opt, "width" => string(sp_width)) :
+            sp_width > 0 * mm ? push!(axis_opt, "width" => string(axis_width)) :
             nothing
-            sp_height > 0 * mm ? push!(axis_opt, "height" => string(sp_height)) :
+            sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) :
             nothing
             # legend position
             if sp[:legend] isa Tuple
@@ -1139,12 +1145,12 @@ end
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PGFPlotsXBackend})
-    # TODO: make padding more intelligent
-    # TODO: how to include margins properly?
-    # sp.minpad = (50mm + sp[:left_margin],
-    #              0mm + sp[:top_margin],
-    #              50mm + sp[:right_margin],
-    #              0mm + sp[:bottom_margin])
+    leg = sp[:legend]
+    if leg in (:best, :outertopright, :outerright, :outerbottomright) || (leg isa Tuple && leg[1] >= 1)
+        sp.minpad = (0mm, 0mm, 5mm, 0mm)
+    else
+        sp.minpad = (0mm, 0mm, 0mm, 0mm)
+    end
 end
 
 function _create_backend_figure(plt::Plot{PGFPlotsXBackend})
