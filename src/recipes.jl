@@ -1012,49 +1012,62 @@ function error_zipit(ebar)
     end
 end
 
-function error_coords(xorig, yorig, ebar)
-    # init empty x/y, and zip errors if passed Tuple{Vector,Vector}
-    x, y = Array{float_extended_type(xorig)}(undef, 0), Array{Float64}(undef, 0)
-    # for each point, create a line segment from the bottom to the top of the errorbar
-    for i = 1:max(length(xorig), length(yorig))
-        xi = _cycle(xorig, i)
-        yi = _cycle(yorig, i)
-        ebi = _cycle(ebar, i)
-        nanappend!(x, [xi, xi])
-        e1, e2 = if istuple(ebi)
-            first(ebi), last(ebi)
-        elseif isscalar(ebi)
-            ebi, ebi
-        else
-            error("unexpected ebi type $(typeof(ebi)) for errorbar: $ebi")
+error_tuple(x) = x, x
+error_tuple(x::Tuple) = x
+
+function error_coords(errorbar, errordata, otherdata...)
+    ed = Vector{float_extended_type(errordata)}(undef, 0)
+    od = [Float64[] for _ in otherdata]
+    for (i, edi) in enumerate(errordata)
+        for (j, odj) in enumerate(otherdata)
+            odi = _cycle(odj, i)
+            nanappend!(od[j], [odi, odi])
         end
-        nanappend!(y, [yi - e1, yi + e2])
+        e1, e2 = error_tuple(_cycle(errorbar, i))
+        nanappend!(ed, [edi - e1, edi + e2])
     end
-    x, y
+    return (ed, od...)
 end
 
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
-@recipe function f(::Type{Val{:yerror}}, x, y, z)
-    error_style!(plotattributes)
-    markershape := :hline
-    plotattributes[:x], plotattributes[:y] = error_coords(
-        plotattributes[:x],
-        plotattributes[:y],
-        error_zipit(plotattributes[:yerror]),
-    )
-    ()
-end
-@deps yerror path
 
 @recipe function f(::Type{Val{:xerror}}, x, y, z)
     error_style!(plotattributes)
     markershape := :vline
-    plotattributes[:y], plotattributes[:x] = error_coords(
-        plotattributes[:y],
-        plotattributes[:x],
-        error_zipit(plotattributes[:xerror]),
-    )
+    xerr = error_zipit(plotattributes[:xerror])
+    if z === nothing
+        plotattributes[:x], plotattributes[:y] = error_coords(xerr, x, y)
+    else
+        plotattributes[:x], plotattributes[:y], plotattributes[:z] =
+            error_coords(xerr, x, y, z)
+    end
+    ()
+end
+@deps xerror path
+
+@recipe function f(::Type{Val{:yerror}}, x, y, z)
+    error_style!(plotattributes)
+    markershape := :hline
+    yerr = error_zipit(plotattributes[:yerror])
+    if z === nothing
+        plotattributes[:y], plotattributes[:x] = error_coords(yerr, y, x)
+    else
+        plotattributes[:y], plotattributes[:x], plotattributes[:z] =
+            error_coords(yerr, y, x, z)
+    end
+    ()
+end
+@deps yerror path
+
+@recipe function f(::Type{Val{:zerror}}, x, y, z)
+    error_style!(plotattributes)
+    markershape := :hline
+    if z !== nothing
+        zerr = error_zipit(plotattributes[:zerror])
+        plotattributes[:z], plotattributes[:x], plotattributes[:y] =
+            error_coords(zerr, z, x, y)
+    end
     ()
 end
 @deps xerror path
