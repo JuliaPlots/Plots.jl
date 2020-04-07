@@ -3,7 +3,7 @@
 [travis-url]: https://travis-ci.com/JuliaPlots/RecipesPipeline.jl
 
 [docs-img]: https://img.shields.io/badge/docs-dev-blue.svg
-[docs-url]: http://docs.juliaplots.org/RecipesPipeline,jl/dev/
+[docs-url]: http://docs.juliaplots.org/RecipesPipeline.jl/dev/
 
 [![][travis-img]][travis-url]
 [![][docs-img]][docs-url]
