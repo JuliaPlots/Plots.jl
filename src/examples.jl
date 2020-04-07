@@ -946,6 +946,43 @@ const _examples = PlotExample[
             end,
         ],
     ),
+    PlotExample(
+        "Error bars and array type recipes",
+        "",
+        [
+            quote
+                begin
+                    struct Measurement <: Number
+                        val::Float64
+                        err::Float64
+                    end
+                    value(m::Measurement) = m.val
+                    uncertainty(m::Measurement) = m.err
+
+                    @recipe function f(::Type{T}, m::T) where T <: AbstractArray{<:Measurement}
+                        if !(get(plotattributes, :seriestype, :path) in [:contour, :contourf, :contour3d, :heatmap, :surface, :wireframe, :image])
+                            error_sym = Symbol(plotattributes[:letter], :error)
+                            plotattributes[error_sym] = uncertainty.(m)
+                        end
+                        value.(m)
+                    end
+
+                    x = Measurement.(10sort(rand(10)), rand(10))
+                    y = Measurement.(10sort(rand(10)), rand(10))
+                    z = Measurement.(10sort(rand(10)), rand(10))
+                    surf = Measurement.((1:10) .* (1:10)', rand(10,10))
+
+                    plot(
+                        scatter(x, [x y], msw = 0),
+                        scatter(x, y, z, msw = 0),
+                        heatmap(x, y, surf),
+                        wireframe(x, y, surf),
+                        legend = :topleft
+                    )
+                end
+            end,
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
