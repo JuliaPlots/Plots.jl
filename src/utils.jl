@@ -826,7 +826,7 @@ end
 
 extend_to_length!(v::AbstractRange, n) = range(first(v), step = step(v), length = n)
 function extend_to_length!(v::AbstractVector, n)
-    vmax = isempy(v) ? 0 : ignorenan_maximum(v)
+    vmax = isempty(v) ? 0 : ignorenan_maximum(v)
     extend_by_data!(v, vmax .+ (1:(n - length(v))))
 end
 extend_by_data!(v::AbstractVector, x) = isimmutable(v) ? vcat(v, x) : push!(v, x)
