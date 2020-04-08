@@ -181,7 +181,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             else
                 push!(
                     axis_opt["legend style"],
-                        get(_pgfplotsx_legend_pos, sp[:legend], "outer north east")...
+                        get(_pgfplotsx_legend_pos, sp[:legend], ("at" => string((1.02, 1)), "anchor" => "north west"))...
                 )
             end
             for letter in (:x, :y, :z)
