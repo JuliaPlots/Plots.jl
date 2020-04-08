@@ -911,7 +911,7 @@ function pgfx_sanitize_string(s::AbstractString)
     s = replace(s, r"\\?\}" => "\\}")
 end
 @require LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f" begin
-    using LaTeXStrings
+    using .LaTeXStrings
     function pgfx_sanitize_string(s::LaTeXString)
         s = replace(s, r"\\?\#" => "\\#")
         s = replace(s, r"\\?\%" => "\\%")
