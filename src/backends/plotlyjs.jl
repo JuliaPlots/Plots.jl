@@ -43,7 +43,7 @@ _display(plt::Plot{PlotlyJSBackend}) = display(plotlyjs_syncplot(plt))
 @require WebIO = "0f1e0344-ec1d-5b48-a673-e5cf874b6c29" begin
     function WebIO.render(plt::Plot{PlotlyJSBackend})
         plt_html = sprint(show, MIME("text/html"), plt)
-        return WebIO.render(dom"div"(innerHTML=plt_html))
+        return WebIO.render(WebIO.dom"div"(innerHTML=plt_html))
     end
 end
 
