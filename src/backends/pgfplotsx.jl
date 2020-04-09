@@ -180,9 +180,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 push!(axis_opt["legend style"], "at={($x, $y)}")
             else
                 push!(
-                    axis_opt,
-                    "legend pos" =>
-                        get(_pgfplotsx_legend_pos, sp[:legend], "outer north east"),
+                    axis_opt["legend style"],
+                        get(_pgfplotsx_legend_pos, sp[:legend], ("at" => string((1.02, 1)), "anchor" => "north west"))...
                 )
             end
             for letter in (:x, :y, :z)
@@ -611,22 +610,22 @@ const _pgfplotsx_markers = KW(
 )
 
 const _pgfplotsx_legend_pos = KW(
-    :top => "north",
-    :bottom => "south",
-    :left => "west",
-    :right => "east",
-    :bottomleft => "south west",
-    :bottomright => "south east",
-    :topright => "north east",
-    :topleft => "north west",
-    :outertop => "north",
-    :outerbottom => "outer south",
-    :outerleft => "outer west",
-    :outerright => "outer east",
-    :outerbottomleft => "outer south west",
-    :outerbottomright => "outer south east",
-    :outertopright => "outer north east",
-    :outertopleft => "outer north west",
+    :top => ("at" => string((0.5, 0.98)), "anchor" => "north"),
+    :bottom => ("at" => string((0.5, 0.02)), "anchor" => "south"),
+    :left => ("at" => string((0.02, 0.5)), "anchor" => "west"),
+    :right => ("at" => string((0.98, 0.5)), "anchor" => "east"),
+    :bottomleft => ("at" => string((0.02, 0.02)), "anchor" => "south west"),
+    :bottomright => ("at" => string((0.98, 0.02)), "anchor" => "south east"),
+    :topright => ("at" => string((0.98, 0.98)), "anchor" => "north east"),
+    :topleft => ("at" => string((-1.02, 0.98)), "anchor" => "north west"),
+    :outertop => ("at" => string((0.5, 1.02)), "anchor" => "south"),
+    :outerbottom => ("at" => string((0.5, -0.02)), "anchor" => "north"),
+    :outerleft => ("at" => string((-0.02, 0.5)), "anchor" => "east"),
+    :outerright => ("at" => string((1.02, 0.5)), "anchor" => "west"),
+    :outerbottomleft => ("at" => string((-0.02, -0.02)), "anchor" => "north east"),
+    :outerbottomright => ("at" => string((1.02, -0.02)), "anchor" => "north west"),
+    :outertopright => ("at" => string((1.02, 1)), "anchor" => "north west"),
+    :outertopleft => ("at" => string((-0.02, 1)), "anchor" => "north east"),
 )
 
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
