@@ -1013,6 +1013,8 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     # ticks on or off
     if axis[:ticks] in (nothing, false, :none) || framestyle == :none
         push!(opt, "$(letter)majorticks" => "false")
+    elseif framestyle in (:grid, :zerolines)
+        push!(opt, "$letter tick style" => PGFPlotsX.Options("draw" => "none"))
     end
 
     # grid on or off
@@ -1028,6 +1030,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     push!(opt, string(letter, :min) => lims[1], string(letter, :max) => lims[2])
 
     if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
+        # ticks
         ticks = get_ticks(sp, axis)
         #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
         tick_values =
@@ -1093,6 +1096,37 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
                 axis[:gridstyle],
             ),
         )
+
+        # minor ticks
+        # NOTE: PGFPlots would provide "minor x ticks num", but this only places minor ticks
+        #       between major ticks and not outside first and last tick to the axis limits.
+        #       Hence, we hack around with extra ticks. Unfortunately this conflicts with
+        #       `:zerolines` framestyle hack. So minor ticks are not working with
+        #       `:zerolines`.
+        minor_ticks = get_minor_ticks(sp, axis, ticks)
+        if minor_ticks !== nothing
+            minor_ticks =
+                ispolar(sp) && letter == :x ? [rad2deg.(minor_ticks)[3:end]..., 360, 405] :
+                minor_ticks
+            push!(
+                opt,
+                string("extra ", letter, " ticks") => string("{", join(minor_ticks, ","), "}"),
+            )
+            push!(opt, string("extra ", letter, " tick labels") => "")
+            push!(
+                opt,
+                string("extra ", letter, " tick style") => PGFPlotsX.Options(
+                    "grid" => axis[:minorgrid] ? "major" : "none",
+                    string(letter, " grid style") => pgfx_linestyle(
+                        pgfx_thickness_scaling(sp) * axis[:minorgridlinewidth],
+                        axis[:foreground_color_minor_grid],
+                        axis[:minorgridalpha],
+                        axis[:minorgridstyle],
+                    ),
+                    "major tick length" => axis[:minorticks] ? "0.1cm" : "0"
+                ),
+            )
+        end
     end
 
     # framestyle
@@ -1114,7 +1148,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
             opt,
             string("extra ", letter, " tick style") => PGFPlotsX.Options(
                 "grid" => "major",
-                "major grid style" => pgfx_linestyle(
+                string(letter, " grid style") => pgfx_linestyle(
                     pgfx_thickness_scaling(sp),
                     axis[:foreground_color_border],
                     1.0,
