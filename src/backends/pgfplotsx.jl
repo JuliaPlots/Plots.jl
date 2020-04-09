@@ -1013,6 +1013,8 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     # ticks on or off
     if axis[:ticks] in (nothing, false, :none) || framestyle == :none
         push!(opt, "$(letter)majorticks" => "false")
+    elseif framestyle in (:grid, :zerolines)
+        push!(opt, "$letter tick style" => PGFPlotsX.Options("draw" => "none"))
     end
 
     # grid on or off
@@ -1098,7 +1100,9 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         # minor ticks
         # NOTE: PGFPlots would provide "minor x ticks num", but this only places minor ticks
         #       between major ticks and not outside first and last tick to the axis limits.
-        #       Hence, we hack around with extra ticks.
+        #       Hence, we hack around with extra ticks. Unfortunately this conflicts with
+        #       `:zerolines` framestyle hack. So minor ticks are not working with
+        #       `:zerolines`.
         minor_ticks = get_minor_ticks(sp, axis, ticks)
         if minor_ticks !== nothing
             minor_ticks =
@@ -1144,7 +1148,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
             opt,
             string("extra ", letter, " tick style") => PGFPlotsX.Options(
                 "grid" => "major",
-                "major grid style" => pgfx_linestyle(
+                string(letter, " grid style") => pgfx_linestyle(
                     pgfx_thickness_scaling(sp),
                     axis[:foreground_color_border],
                     1.0,
