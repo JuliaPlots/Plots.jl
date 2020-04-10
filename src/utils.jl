@@ -79,7 +79,7 @@ function iter_segments(series::Series)
         end
     else
         segs = UnitRange{Int}[]
-        args = is3d(series) ? (x, y, z) : (x, y)
+        args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
         for seg in iter_segments(args...)
             push!(segs, seg)
         end
@@ -145,14 +145,14 @@ maketuple(x::Tuple{T,S}) where {T,S} = x
 
 for i in 2:4
     @eval begin
-        unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
+        RecipesPipeline.unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
                    AVec{<:GeometryTypes.Point{$i}}}) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
     end
 end
 
-unzip(v::Union{AVec{<:GeometryTypes.Point{N}},
+RecipesPipeline.unzip(v::Union{AVec{<:GeometryTypes.Point{N}},
                AVec{<:Tuple{Vararg{T,N} where T}}}) where N = error("$N-dimensional unzip not implemented.")
-unzip(v::Union{AVec{<:GeometryTypes.Point},
+RecipesPipeline.unzip(v::Union{AVec{<:GeometryTypes.Point},
                AVec{<:Tuple}}) = error("Can't unzip points of different dimensions.")
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
@@ -187,7 +187,7 @@ end
 
 function replaceAlias!(plotattributes::AKW, k::Symbol, aliases::Dict{Symbol,Symbol})
     if haskey(aliases, k)
-        plotattributes[aliases[k]] = pop_kw!(plotattributes, k)
+        plotattributes[aliases[k]] = RecipesPipeline.pop_kw!(plotattributes, k)
     end
 end
 
@@ -226,7 +226,7 @@ end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
 function heatmap_edges(v::AVec, scale::Symbol = :identity, isedges::Bool = false)
-    f, invf = scale_func(scale), inverse_scale_func(scale)
+    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
     map(invf, _heatmap_edges(map(f,v), isedges))
 end
 
@@ -835,7 +835,7 @@ end
 
 function attr!(series::Series; kw...)
     plotattributes = KW(kw)
-    preprocess_attributes!(plotattributes)
+    RecipesPipeline.preprocess_attributes!(plotattributes)
     for (k,v) in plotattributes
         if haskey(_series_defaults, k)
             series[k] = v
@@ -849,7 +849,7 @@ end
 
 function attr!(sp::Subplot; kw...)
     plotattributes = KW(kw)
-    preprocess_attributes!(plotattributes)
+    RecipesPipeline.preprocess_attributes!(plotattributes)
     for (k,v) in plotattributes
         if haskey(_subplot_defaults, k)
             sp[k] = v

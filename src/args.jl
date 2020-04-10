@@ -86,10 +86,10 @@ const _surface_like = [:contour, :contourf, :contour3d, :heatmap, :surface, :wir
 
 like_histogram(seriestype::Symbol) = seriestype in _histogram_like
 like_line(seriestype::Symbol)      = seriestype in _line_like
-like_surface(seriestype::Symbol)   = is_surface(seriestype)
+like_surface(seriestype::Symbol)   = RecipesPipeline.is_surface(seriestype)
 
-is3d(series::Series) = is3d(series.plotattributes)
-is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
+RecipesPipeline.is3d(series::Series) = RecipesPipeline.is3d(series.plotattributes)
+RecipesPipeline.is3d(sp::Subplot) = string(sp.attr[:projection]) == "3d"
 ispolar(sp::Subplot) = string(sp.attr[:projection]) == "polar"
 ispolar(series::Series) = ispolar(series.plotattributes[:subplot])
 
@@ -682,7 +682,7 @@ end
 
 function default(; kw...)
     kw = KW(kw)
-    preprocess_attributes!(kw)
+    RecipesPipeline.preprocess_attributes!(kw)
     for (k,v) in kw
         default(k, v)
     end
@@ -935,11 +935,11 @@ function _add_markershape(plotattributes::AKW)
 end
 
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
-function preprocess_attributes!(plotattributes::AKW)
+function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     replaceAliases!(plotattributes, _keyAliases)
 
     # handle axis args common to all axis
-    args = pop_kw!(plotattributes, :axis, ())
+    args = RecipesPipeline.pop_kw!(plotattributes, :axis, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
             process_axis_arg!(plotattributes, arg, letter)
@@ -948,7 +948,7 @@ function preprocess_attributes!(plotattributes::AKW)
     # handle axis args
     for letter in (:x, :y, :z)
         asym = Symbol(letter, :axis)
-        args = pop_kw!(plotattributes, asym, ())
+        args = RecipesPipeline.pop_kw!(plotattributes, asym, ())
         if !(typeof(args) <: Axis)
             for arg in wraptuple(args)
                 process_axis_arg!(plotattributes, arg, letter)
@@ -966,7 +966,7 @@ function preprocess_attributes!(plotattributes::AKW)
     end
 
     # handle grid args common to all axes
-    args = pop_kw!(plotattributes, :grid, ())
+    args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
             processGridArg!(plotattributes, arg, letter)
@@ -975,13 +975,13 @@ function preprocess_attributes!(plotattributes::AKW)
     # handle individual axes grid args
     for letter in (:x, :y, :z)
         gridsym = Symbol(letter, :grid)
-        args = pop_kw!(plotattributes, gridsym, ())
+        args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
             processGridArg!(plotattributes, arg, letter)
         end
     end
     # handle minor grid args common to all axes
-    args = pop_kw!(plotattributes, :minorgrid, ())
+    args = RecipesPipeline.pop_kw!(plotattributes, :minorgrid, ())
     for arg in wraptuple(args)
         for letter in (:x, :y, :z)
             processMinorGridArg!(plotattributes, arg, letter)
@@ -990,14 +990,14 @@ function preprocess_attributes!(plotattributes::AKW)
     # handle individual axes grid args
     for letter in (:x, :y, :z)
         gridsym = Symbol(letter, :minorgrid)
-        args = pop_kw!(plotattributes, gridsym, ())
+        args = RecipesPipeline.pop_kw!(plotattributes, gridsym, ())
         for arg in wraptuple(args)
             processMinorGridArg!(plotattributes, arg, letter)
         end
     end
     # handle font args common to all axes
     for fontname in (:tickfont, :guidefont)
-        args = pop_kw!(plotattributes, fontname, ())
+        args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             for letter in (:x, :y, :z)
                 processFontArg!(plotattributes, Symbol(letter, fontname), arg)
@@ -1007,7 +1007,7 @@ function preprocess_attributes!(plotattributes::AKW)
     # handle individual axes font args
     for letter in (:x, :y, :z)
         for fontname in (:tickfont, :guidefont)
-            args = pop_kw!(plotattributes, Symbol(letter, fontname), ())
+            args = RecipesPipeline.pop_kw!(plotattributes, Symbol(letter, fontname), ())
             for arg in wraptuple(args)
                 processFontArg!(plotattributes, Symbol(letter, fontname), arg)
             end
@@ -1028,14 +1028,14 @@ function preprocess_attributes!(plotattributes::AKW)
 
     # fonts
     for fontname in (:titlefont, :legendfont, :legendtitlefont)
-        args = pop_kw!(plotattributes, fontname, ())
+        args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
         end
     end
 
     # handle line args
-    for arg in wraptuple(pop_kw!(plotattributes, :line, ()))
+    for arg in wraptuple(RecipesPipeline.pop_kw!(plotattributes, :line, ()))
         processLineArg(plotattributes, arg)
     end
 
@@ -1049,7 +1049,7 @@ function preprocess_attributes!(plotattributes::AKW)
         processMarkerArg(plotattributes, arg)
         anymarker = true
     end
-    reset_kw!(plotattributes, :marker)
+    RecipesPipeline.reset_kw!(plotattributes, :marker)
     if haskey(plotattributes, :markershape)
         plotattributes[:markershape] = _replace_markershape(plotattributes[:markershape])
         if plotattributes[:markershape] == :none && plotattributes[:seriestype] in (:scatter, :scatterbins, :scatterhist, :scatter3d) #the default should be :auto, not :none, so that :none can be set explicitly and would be respected
@@ -1063,7 +1063,7 @@ function preprocess_attributes!(plotattributes::AKW)
     for arg in wraptuple(get(plotattributes, :fill, ()))
         processFillArg(plotattributes, arg)
     end
-    reset_kw!(plotattributes, :fill)
+    RecipesPipeline.reset_kw!(plotattributes, :fill)
 
     # handle series annotations
     if haskey(plotattributes, :series_annotations)
@@ -1212,7 +1212,7 @@ function slice_arg!(plotattributes_in, plotattributes_out,
         v
     end
     if remove_pair
-        reset_kw!(plotattributes_in, k)
+        RecipesPipeline.reset_kw!(plotattributes_in, k)
     end
     return
 end
@@ -1473,7 +1473,7 @@ end
 
 # update a subplots args and axes
 function _update_subplot_args(plt::Plot, sp::Subplot, plotattributes_in, subplot_index::Int, remove_pair::Bool)
-    anns = pop_kw!(sp.attr, :annotations)
+    anns = RecipesPipeline.pop_kw!(sp.attr, :annotations)
 
     # # grab those args which apply to this subplot
     for k in keys(_subplot_defaults)

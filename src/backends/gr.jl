@@ -428,7 +428,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
     viewport[3] = viewport_canvas[4] * (1.0 - bottom(bb) / h)
     viewport[4] = viewport_canvas[4] * (1.0 - top(bb) / h)
     if hascolorbar(sp)
-        viewport[2] -= gr_colorbar_ratio * (1 + is3d(sp) / 2)
+        viewport[2] -= gr_colorbar_ratio * (1 + RecipesPipeline.is3d(sp) / 2)
     end
     viewport
 end
@@ -436,8 +436,8 @@ end
 # change so we're focused on the viewport area
 function gr_set_viewport_cmap(sp::Subplot)
     GR.setviewport(
-        viewport_plotarea[2] + (is3d(sp) ? 0.07 : 0.02),
-        viewport_plotarea[2] + (is3d(sp) ? 0.10 : 0.05),
+        viewport_plotarea[2] + (RecipesPipeline.is3d(sp) ? 0.07 : 0.02),
+        viewport_plotarea[2] + (RecipesPipeline.is3d(sp) ? 0.10 : 0.05),
         viewport_plotarea[3],
         viewport_plotarea[4]
     )
@@ -833,7 +833,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         toppad += h
     end
 
-    if is3d(sp)
+    if RecipesPipeline.is3d(sp)
         xaxis, yaxis, zaxis = sp[:xaxis], sp[:yaxis], sp[:zaxis]
         xticks, yticks, zticks = get_ticks(sp, xaxis), get_ticks(sp, yaxis), get_ticks(sp, zaxis)
         # Add margin for x and y ticks
@@ -1053,7 +1053,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # fill in the plot area background
     bg = plot_color(sp[:background_color_inside])
-    is3d(sp) || gr_fill_viewport(viewport_plotarea, bg)
+    RecipesPipeline.is3d(sp) || gr_fill_viewport(viewport_plotarea, bg)
 
     # reduced from before... set some flags based on the series in this subplot
     # TODO: can these be generic flags?
@@ -1124,7 +1124,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     gr_set_font(tickfont(xaxis))
     GR.setlinewidth(sp.plt[:thickness_scaling])
 
-    if is3d(sp)
+    if RecipesPipeline.is3d(sp)
         zmin, zmax = axis_limits(sp, :z)
         GR.setspace(zmin, zmax, round.(Int, sp[:camera])...)
 
@@ -1135,7 +1135,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         plot_area_x = [xmin, xmin, xmin, xmax, xmax, xmax, xmin]
         plot_area_y = [ymin, ymin, ymax, ymax, ymax, ymin, ymin]
         plot_area_z = [zmin, zmax, zmax, zmax, zmin, zmin, zmin]
-        x_bg, y_bg = unzip(GR.wc3towc.(plot_area_x, plot_area_y, plot_area_z))
+        x_bg, y_bg = RecipesPipeline.unzip(GR.wc3towc.(plot_area_x, plot_area_y, plot_area_z))
         GR.fillarea(x_bg, y_bg)
 
         # draw the grid lines
@@ -1456,7 +1456,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
         gr_text(xpos, viewport_subplot[4], sp[:title])
     end
-    if is3d(sp)
+    if RecipesPipeline.is3d(sp)
         if xaxis[:guide] != ""
             gr_set_font(
                 guidefont(xaxis),
@@ -1713,7 +1713,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
             # draw markers
             if st == :scatter3d || series[:markershape] != :none
-                x2, y2 = unzip(map(GR.wc3towc, x, y, z))
+                x2, y2 = RecipesPipeline.unzip(map(GR.wc3towc, x, y, z))
                 gr_draw_markers(series, x2, y2, clims)
             end
 
@@ -1912,7 +1912,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     end
     for ann in sp[:annotations]
         x, y, val = locate_annotation(sp, ann...)
-        x, y = if is3d(sp)
+        x, y = if RecipesPipeline.is3d(sp)
             gr_w3tondc(x, y, z)
         else
             GR.wctondc(x, y)

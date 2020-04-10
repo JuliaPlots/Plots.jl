@@ -177,7 +177,7 @@ import RecipesPipeline: SliceIt,
     is3d,
     is_surface,
     needs_3d_axes,
-    group_as_matrix,
+    group_as_matrix, # for StatsPlots
     reset_kw!,
     pop_kw!,
     scale_func,

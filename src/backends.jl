@@ -104,7 +104,7 @@ end
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot)
-    # TODO: something different when `is3d(sp) == true`
+    # TODO: something different when `RecipesPipeline.is3d(sp) == true`
     leftpad   = tick_padding(sp, sp[:yaxis]) + sp[:left_margin]   + guide_padding(sp[:yaxis])
     toppad    = sp[:top_margin]    + title_padding(sp)
     rightpad  = sp[:right_margin]

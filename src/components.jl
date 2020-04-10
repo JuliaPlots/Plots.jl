@@ -29,7 +29,7 @@ end
 
 Construct a polygon to be plotted
 """
-Shape(verts::AVec) = Shape(unzip(verts)...)
+Shape(verts::AVec) = Shape(RecipesPipeline.unzip(verts)...)
 Shape(s::Shape) = deepcopy(s)
 
 get_xs(shape::Shape) = shape.x

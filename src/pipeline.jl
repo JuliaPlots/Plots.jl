@@ -14,7 +14,7 @@ function RecipesPipeline.warn_on_recipe_aliases!(
             if k !== dk
                 @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $(_signature_string(Val{recipe_type}, args...)). To ensure expected behavior it is recommended to use the default attribute `$dk`."
             end
-            plotattributes[dk] = pop_kw!(plotattributes, k)
+            plotattributes[dk] = RecipesPipeline.pop_kw!(plotattributes, k)
         end
     end
 end
@@ -57,7 +57,7 @@ end
 ## Preprocessing attributes
 
 RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes) =
-    preprocess_attributes!(plotattributes) # in src/args.jl
+    RecipesPipeline.preprocess_attributes!(plotattributes) # in src/args.jl
 
 RecipesPipeline.is_axis_attribute(plt::Plot, attr) = is_axis_attr_noletter(attr) # in src/args.jl
 
@@ -298,7 +298,7 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     st = _override_seriestype_check(plotattributes, st)
 
     # change to a 3d projection for this subplot?
-    if needs_3d_axes(st)
+    if RecipesPipeline.is_surface(st)
         sp.attr[:projection] = "3d"
     end
 
@@ -312,7 +312,7 @@ end
 
 function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
-    if !is3d(st) && !(st in (:contour, :contour3d))
+    if !RecipesPipeline.is3d(st) && !(st in (:contour, :contour3d))
         z = plotattributes[:z]
         if !isa(z, Nothing) &&
            (size(plotattributes[:x]) == size(plotattributes[:y]) == size(z))

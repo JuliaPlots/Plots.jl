@@ -458,7 +458,7 @@ end
 end
 @deps plots_heatmap shape
 is_3d(::Type{Val{:plots_heatmap}}) = true
-is_surface(::Type{Val{:plots_heatmap}}) = true
+RecipesPipeline.is_surface(::Type{Val{:plots_heatmap}}) = true
 
 # ---------------------------------------------------------------------------
 # Histograms
@@ -1164,7 +1164,7 @@ function quiver_using_hack(plotattributes::AKW)
         )
     end
 
-    plotattributes[:x], plotattributes[:y] = Plots.unzip(pts[2:end])
+    plotattributes[:x], plotattributes[:y] = RecipesPipeline.unzip(pts[2:end])
     # KW[plotattributes]
 end
 
@@ -1283,13 +1283,13 @@ end
 # --------------------------------------------------------------------
 # Lists of tuples and GeometryTypes.Points
 # --------------------------------------------------------------------
-@recipe f(v::AVec{<:GeometryTypes.Point}) = unzip(v)
+@recipe f(v::AVec{<:GeometryTypes.Point}) = RecipesPipeline.unzip(v)
 @recipe f(p::GeometryTypes.Point) = [p]
 
 # Special case for 4-tuples in :ohlc series
 @recipe f(xyuv::AVec{<:Tuple{R1, R2, R3, R4}}) where {R1, R2, R3, R4} =
     get(plotattributes, :seriestype, :path) == :ohlc ? OHLC[OHLC(t...) for t in xyuv] :
-    unzip(xyuv)
+    RecipesPipeline.unzip(xyuv)
 
 
 # -------------------------------------------------
