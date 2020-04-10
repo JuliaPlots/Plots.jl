@@ -1,7 +1,7 @@
 name = "RecipesPipeline"
 uuid = "01d81517-befc-4cb6-b9ec-a95719d0359c"
 authors = ["Michael Krabbe Borregaard <mkborregaard@snm.ku.dk>"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
