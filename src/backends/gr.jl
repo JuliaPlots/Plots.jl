@@ -1433,6 +1433,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             gr_set_line(intensity, :solid, yaxis[:foreground_color_border])
             gr_set_transparency(yaxis[:foreground_color_border], intensity)
             gr_polyline(coords(yborder_segs)...)
+            GR.setclip(1)
         end
     end
     # end
