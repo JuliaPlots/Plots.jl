@@ -298,7 +298,7 @@ function _prepare_subplot(plt::Plot{T}, plotattributes::AKW) where {T}
     st = _override_seriestype_check(plotattributes, st)
 
     # change to a 3d projection for this subplot?
-    if RecipesPipeline.is_surface(st)
+    if RecipesPipeline.needs_3d_axes(st)
         sp.attr[:projection] = "3d"
     end
 
