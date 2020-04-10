@@ -1123,7 +1123,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
                         axis[:minorgridalpha],
                         axis[:minorgridstyle],
                     ),
-                    "major tick length" => axis[:minorticks] ? "0.1cm" : "0"
+                    "major tick length" => typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 || axis[:minorticks] ? "0.1cm" : "0"
                 ),
             )
         end
