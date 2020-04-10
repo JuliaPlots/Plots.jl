@@ -3,7 +3,7 @@ using REPL
 
 function _plots_defaults()
     if isdefined(Main, :PLOTS_DEFAULTS)
-        Dict{Symbol,Any}(Main.PLOTS_DEFAULTS)
+        copy(Dict{Symbol,Any}(Main.PLOTS_DEFAULTS))
     else
         Dict{Symbol,Any}()
     end
@@ -13,11 +13,9 @@ end
 function __init__()
     user_defaults = _plots_defaults()
     if haskey(user_defaults, :theme)
-        theme(user_defaults[:theme])
+        theme(pop!(user_defaults, :theme))
     end
-    for (k,v) in user_defaults
-        k == :theme || default(k, v)
-    end
+    default(; user_defaults...)
 
     insert!(Base.Multimedia.displays, findlast(x -> x isa Base.TextDisplay || x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1, PlotsDisplay())
 
