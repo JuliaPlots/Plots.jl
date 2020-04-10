@@ -14,25 +14,15 @@ function _theme(s::Symbol, defaults::AKW; kw...)
 
     # Set the theme's gradient as default
     if haskey(defaults, :colorgradient)
-        PlotUtils.clibrary(:misc)
-        PlotUtils.default_cgrad(default = :sequential, sequential = PlotThemes.gradient_name(s))
-        pop!(defaults, :colorgradient)
+        PlotUtils.default_cgrad(pop!(defaults, :colorgradient))
     else
-        PlotUtils.clibrary(:Plots)
-        PlotUtils.default_cgrad(default = :sequential, sequential = :inferno)
+        PlotUtils.default_cgrad(:default)
     end
 
     # maybe overwrite the theme's gradient
     kw = KW(kw)
     if haskey(kw, :colorgradient)
-        kwgrad = pop!(kw, :colorgradient)
-        for clib in clibraries()
-            if kwgrad in cgradients(clib)
-                PlotUtils.clibrary(clib)
-                PlotUtils.default_cgrad(default = :sequential, sequential = kwgrad)
-                break
-            end
-        end
+        PlotUtils.default_cgrad(pop!(kw, :colorgradient))
     end
 
     # Set the theme's defaults
@@ -57,12 +47,12 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
     defaults = PlotThemes._themes[thm].defaults
 
     # get the gradient
-    gradient_colors = get(defaults, :colorgradient, cgrad(:inferno).colors)
+    gradient_colors = color_list(cgrad(get(defaults, :colorgradient, :default)))
     colorgradient = cgrad(cfunc.(RGB.(gradient_colors)))
 
     # get the palette
-    palette = get(defaults, :palette, get_color_palette(:auto, plot_color(:white), 17))
-    palette = cfunc.(RGB.(palette))
+    cp = color_list(palette(get(defaults, :palette, :default)))
+    cp = cfunc.(RGB.(cp))
 
     # apply the theme
     for k in keys(defaults)
@@ -89,7 +79,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
     for j in 1:4
         @series begin
             subplot := 1
-            palette := palette
+            color_palette := cp
             seriestype := :path
             cumsum(randn(50))
         end
@@ -97,7 +87,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
         @series begin
             subplot := 2
             seriestype := :scatter
-            palette := palette
+            color_palette := cp
             marker := (:circle, :diamond, :star5, :square)[j]
             randn(10), randn(10)
         end
@@ -106,7 +96,7 @@ _get_showtheme_args(thm::Symbol, func::Symbol) = thm, get(_color_functions, func
     @series begin
         subplot := 3
         seriestype := :histogram
-        palette := palette
+        color_palette := cp
         randn(1000) .+ (0:2:4)'
     end
 

@@ -481,10 +481,7 @@ is_default_attribute(k) = k in _internal_args || k in _all_args || is_axis_attr_
 
 makeplural(s::Symbol) = Symbol(string(s,"s"))
 
-autopick(arr::AVec, idx::Integer) = arr[mod1(idx,length(arr))]
-autopick(notarr, idx::Integer) = notarr
-
-autopick_ignore_none_auto(arr::AVec, idx::Integer) = autopick(setdiff(arr, [:none, :auto]), idx)
+autopick_ignore_none_auto(arr::AVec, idx::Integer) = _cycle(setdiff(arr, [:none, :auto]), idx)
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
 function aliasesAndAutopick(plotattributes::AKW, sym::Symbol, aliases::Dict{Symbol,Symbol}, options::AVec, plotIndex::Int)
@@ -1410,8 +1407,7 @@ end
 function _update_subplot_colors(sp::Subplot)
     # background colors
     color_or_nothing!(sp.attr, :background_color_subplot)
-    bg = plot_color(sp[:background_color_subplot])
-    sp.attr[:color_palette] = get_color_palette(sp.attr[:color_palette], bg, 30)
+    sp.attr[:color_palette] = get_color_palette(sp.attr[:color_palette], 30)
     color_or_nothing!(sp.attr, :background_color_legend)
     color_or_nothing!(sp.attr, :background_color_inside)
 
@@ -1514,9 +1510,9 @@ end
 # and assigns a color automatically
 function get_series_color(c, sp::Subplot, n::Int, seriestype)
     if c == :auto
-        c = like_surface(seriestype) ? cgrad() : autopick(sp[:color_palette], n)
+        c = like_surface(seriestype) ? cgrad() : _cycle(sp[:color_palette], n)
     elseif isa(c, Int)
-        c = autopick(sp[:color_palette], c)
+        c = _cycle(sp[:color_palette], c)
     end
     plot_color(c)
 end
@@ -1526,7 +1522,7 @@ function get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype)
 end
 
 function ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol)
-    if !isa(plotattributes[csym], ColorGradient)
+    if typeof(plotattributes[csym]) ∉ (ColorGradient, ColorPalette)
         plotattributes[csym] = typeof(plotattributes[asym]) <: AbstractVector ? cgrad() : cgrad(alpha = plotattributes[asym])
     end
 end

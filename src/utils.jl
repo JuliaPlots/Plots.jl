@@ -130,10 +130,12 @@ _cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
 _cycle(v::AMat, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
 _cycle(v, indices::AVec{Int})       = fill(v, length(indices))
 
-_cycle(grad::ColorGradient, idx::Int) = _cycle(grad.colors, idx)
-_cycle(grad::ColorGradient, indices::AVec{Int}) = _cycle(grad.colors, indices)
+_cycle(cg::ColorGradient, idx::Int) = cg[mod1(idx, end)]
+_cycle(cg::ColorGradient, idx::AVec{Int}) = cg[mod1.(idx, end)]
+_cycle(cp::ColorPalette, idx::Int) = cp[mod1(idx, end)]
+_cycle(cp::ColorPalette, idx::AVec{Int}) = cp[mod1.(idx, end)]
 
-_as_gradient(grad::ColorGradient) = grad
+_as_gradient(grad) = grad
 _as_gradient(c::Colorant) = ColorGradient([c,c])
 
 makevec(v::AVec) = v
@@ -521,8 +523,7 @@ for comp in (:line, :fill, :marker)
             if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
-                grad = isa(c, ColorGradient) ? c : cgrad()
-                grad[clamp((_cycle(z, i) - cmin) / (cmax - cmin), 0, 1)]
+                nan_get(get_gradient(c), z[i], (cmin, cmax))
             end
         end
 
@@ -542,6 +543,21 @@ end
 
 single_color(c, v = 0.5) = c
 single_color(grad::ColorGradient, v = 0.5) = grad[v]
+
+get_gradient(c) = cgrad()
+get_gradient(cg::ColorGradient) = cg
+get_gradient(cp::ColorPalette) = cp
+
+nan_get(cs, x, range) = isfinite(x) ? plot_color(get(cs, x, range)) : invisible()
+function nan_get(cs, v::AbstractVector, range)
+    colors = fill(invisible(), length(v))
+    for (i, x) in enumerate(v)
+        if isfinite(x)
+            colors[i] = get(cs, x, range)
+        end
+    end
+    return colors
+end
 
 function get_linewidth(series, i::Int = 1)
     _cycle(series[:linewidth], i)

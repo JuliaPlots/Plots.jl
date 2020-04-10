@@ -677,8 +677,8 @@ function pgfx_filllegend!(series_opt, opt)
               }""")
 end
 
-function pgfx_colormap(grad::ColorGradient)
-    join(map(grad.colors) do c
+function pgfx_colormap(grad::Union{ColorGradient, ColorPalette})
+    join(map(color_list(grad)) do c
         @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
     end, "\n")
 end
