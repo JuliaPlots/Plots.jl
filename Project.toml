@@ -1,7 +1,7 @@
 name = "Plots"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 author = ["Tom Breloff (@tbreloff)"]
-version = "1.1.0"
+version = "1.0.8"
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -49,7 +49,7 @@ Reexport = "0.2"
 Requires = "0.5, 1"
 Showoff = "0.3.1"
 StatsBase = "0.32, 0.33"
-julia = "1.1"
+julia = "1"
 
 [extras]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
