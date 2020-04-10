@@ -185,7 +185,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 )
             end
             for letter in (:x, :y, :z)
-                if letter != :z || is3d(sp)
+                if letter != :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
                 end
             end
@@ -228,7 +228,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "point meta min" => get_clims(sp)[1],
                 ),
             )
-            if is3d(sp)
+            if RecipesPipeline.is3d(sp)
                 azim, elev = sp[:camera]
                 push!(axis_opt, "view" => (azim, elev))
             end
@@ -251,7 +251,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "color" => single_color(opt[:linecolor]),
                     "name path" => string(series_id),
                 )
-                if is3d(series) || st == :heatmap
+                if RecipesPipeline.is3d(series) || st == :heatmap
                     series_func = PGFPlotsX.Plot3
                 else
                     series_func = PGFPlotsX.Plot
@@ -422,7 +422,7 @@ end
         opt[:x], opt[:y], Array(opt[:z])'
     elseif st in (:heatmap, :surface, :wireframe)
         surface_to_vecs(opt[:x], opt[:y], opt[:z])
-    elseif is3d(st)
+    elseif RecipesPipeline.is3d(st)
         opt[:x], opt[:y], opt[:z]
     elseif st == :straightline
         straightline_data(series)
@@ -874,7 +874,7 @@ function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
     fillrange_opt = merge(fillrange_opt, pgfx_marker(series, i))
     push!(fillrange_opt, "forget plot" => nothing)
     opt = series.plotattributes
-    args = is3d(series) ? (opt[:x][rng], opt[:y][rng], opt[:z][rng]) :
+    args = RecipesPipeline.is3d(series) ? (opt[:x][rng], opt[:y][rng], opt[:z][rng]) :
         (opt[:x][rng], opt[:y][rng])
     push!(
         axis,

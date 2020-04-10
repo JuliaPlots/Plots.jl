@@ -126,7 +126,7 @@ function addUnicodeSeries!(o, plotattributes, addlegend::Bool, xlim, ylim)
     color = plotattributes[:linecolor] in UnicodePlots.color_cycle ? plotattributes[:linecolor] : :auto
 
     # add the series
-    x, y = Plots.unzip(collect(Base.Iterators.filter(xy->isfinite(xy[1])&&isfinite(xy[2]), zip(x,y))))
+    x, y = RecipesPipeline.unzip(collect(Base.Iterators.filter(xy->isfinite(xy[1])&&isfinite(xy[2]), zip(x,y))))
     func(o, x, y; color = color, name = label)
 end
 

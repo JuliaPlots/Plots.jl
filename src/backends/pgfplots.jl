@@ -166,7 +166,7 @@ function pgf_series(sp::Subplot, series::Series)
     # function args
     args = if st == :contour
         plotattributes[:z].surf, plotattributes[:x], plotattributes[:y]
-    elseif is3d(st)
+    elseif RecipesPipeline.is3d(st)
         plotattributes[:x], plotattributes[:y], plotattributes[:z]
     elseif st == :straightline
         straightline_data(series)
@@ -271,7 +271,7 @@ function pgf_fillrange_series(series, i, fillrange, args...)
         push!(style, _pgf_series_extrastyle[st])
     end
     kw[:style] = join(style, ',')
-    func = is3d(series) ? PGFPlots.Linear3 : PGFPlots.Linear
+    func = RecipesPipeline.is3d(series) ? PGFPlots.Linear3 : PGFPlots.Linear
     return func(pgf_fillrange_args(fillrange, args...)...; kw...)
 end
 
@@ -444,7 +444,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # add to style/kw for each axis
         for letter in (:x, :y, :z)
-            if letter != :z || is3d(sp)
+            if letter != :z || RecipesPipeline.is3d(sp)
                 axisstyle, axiskw = pgf_axis(sp, letter)
                 append!(style, axisstyle)
                 merge!(kw, axiskw)
@@ -494,7 +494,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
         if any(s[:seriestype] == :contour for s in series_list(sp))
             kw[:view] = "{0}{90}"
             kw[:colorbar] = !(sp[:colorbar] in (:none, :off, :hide, false))
-        elseif is3d(sp)
+        elseif RecipesPipeline.is3d(sp)
             azim, elev = sp[:camera]
             kw[:view] = "{$(azim)}{$(elev)}"
         end

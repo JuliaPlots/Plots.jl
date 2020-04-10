@@ -17,7 +17,7 @@ function Axis(sp::Subplot, letter::Symbol, args...; kw...)
         :show => true,  # show or hide the axis? (useful for linked subplots)
     )
 
-    attr = Attr(explicit, _axis_defaults_byletter[letter])
+    attr = DefaultsDict(explicit, _axis_defaults_byletter[letter])
 
     # update the defaults
     attr!(Axis([sp], attr), args...; kw...)
@@ -85,7 +85,7 @@ function attr!(axis::Axis, args...; kw...)
     end
 
     # then preprocess keyword arguments
-    preprocessArgs!(KW(kw))
+    RecipesPipeline.preprocess_attributes!(KW(kw))
 
     # then override for any keywords... only those keywords that already exists in plotattributes
     for (k,v) in kw
@@ -117,33 +117,11 @@ Base.setindex!(axis::Axis, v, ks::Symbol...) = setindex!(axis.plotattributes, v,
 Base.haskey(axis::Axis, k::Symbol) = haskey(axis.plotattributes, k)
 ignorenan_extrema(axis::Axis) = (ex = axis[:extrema]; (ex.emin, ex.emax))
 
-
-const _scale_funcs = Dict{Symbol,Function}(
-    :log10 => log10,
-    :log2 => log2,
-    :ln => log,
-)
-const _inv_scale_funcs = Dict{Symbol,Function}(
-    :log10 => exp10,
-    :log2 => exp2,
-    :ln => exp,
-)
-
-# const _label_func = Dict{Symbol,Function}(
-#     :log10 => x -> "10^$x",
-#     :log2 => x -> "2^$x",
-#     :ln => x -> "e^$x",
-# )
-
 const _label_func = Dict{Symbol,Function}(
     :log10 => x -> "10^$x",
     :log2 => x -> "2^$x",
     :ln => x -> "e^$x",
 )
-
-
-scalefunc(scale::Symbol) = x -> get(_scale_funcs, scale, identity)(Float64(x))
-invscalefunc(scale::Symbol) = x -> get(_inv_scale_funcs, scale, identity)(Float64(x))
 labelfunc(scale::Symbol, backend::AbstractBackend) = get(_label_func, scale, string)
 
 function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
@@ -151,7 +129,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
 
     # scale the limits
     scale = axis[:scale]
-    sf = scalefunc(scale)
+    sf = RecipesPipeline.scale_func(scale)
 
     # If the axis input was a Date or DateTime use a special logic to find
     # "round" Date(Time)s as ticks
@@ -161,7 +139,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
     # rather than on the input format
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
     if ticks === nothing && scale == :identity
-        if axis[:formatter] == dateformatter
+        if axis[:formatter] == RecipesPipeline.dateformatter
             # optimize_datetime_ticks returns ticks and labels(!) based on
             # integers/floats corresponding to the DateTime type. Thus, the axes
             # limits, which resulted from converting the Date type to integers,
@@ -172,7 +150,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
                 k_min = 2, k_max = 4)
             # Now the ticks are converted back to floats corresponding to Dates.
             return ticks / 864e5, labels
-        elseif axis[:formatter] == datetimeformatter
+        elseif axis[:formatter] == RecipesPipeline.datetimeformatter
             return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
         end
     end
@@ -196,11 +174,11 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
         )
-        axis[:lims] = map(invscalefunc(scale), (viewmin, viewmax))
+        axis[:lims] = map(RecipesPipeline.inverse_scale_func(scale), (viewmin, viewmax))
     else
         scaled_ticks = map(sf, (filter(t -> amin <= t <= amax, ticks)))
     end
-    unscaled_ticks = map(invscalefunc(scale), scaled_ticks)
+    unscaled_ticks = map(RecipesPipeline.inverse_scale_func(scale), scaled_ticks)
 
     labels = if any(isfinite, unscaled_ticks)
         formatter = axis[:formatter]
@@ -400,7 +378,7 @@ function expand_extrema!(sp::Subplot, plotattributes::AKW)
     if fr === nothing && plotattributes[:seriestype] == :bar
         fr = 0.0
     end
-    if fr !== nothing && !all3D(plotattributes)
+    if fr !== nothing && !RecipesPipeline.is3d(plotattributes)
         axis = sp.attr[vert ? :yaxis : :xaxis]
         if typeof(fr) <: Tuple
             for fri in fr
@@ -445,7 +423,7 @@ end
 
 # push the limits out slightly
 function widen(lmin, lmax, scale = :identity)
-    f, invf = scalefunc(scale), invscalefunc(scale)
+    f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
     span = f(lmax) - f(lmin)
     # eps = NaNMath.max(1e-16, min(1e-2span, 1e-10))
     eps = NaNMath.max(1e-16, 0.03span)
@@ -514,7 +492,7 @@ function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(l
         amin, amax
     end
 
-    if !has_user_lims && consider_aspect && letter in (:x, :y) && !(sp[:aspect_ratio] in (:none, :auto) || is3d(:sp))
+    if !has_user_lims && consider_aspect && letter in (:x, :y) && !(sp[:aspect_ratio] in (:none, :auto) || RecipesPipeline.is3d(:sp))
         aspect_ratio = isa(sp[:aspect_ratio], Number) ? sp[:aspect_ratio] : 1
         plot_ratio = height(plotarea(sp)) / width(plotarea(sp))
         dist = amax - amin
@@ -648,8 +626,8 @@ function axis_drawing_info(sp::Subplot)
             sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin, y2), (xmax, y2)) # top spine
         end
         if !(xaxis[:ticks] in (:none, nothing, false))
-            f = scalefunc(yaxis[:scale])
-            invf = invscalefunc(yaxis[:scale])
+            f = RecipesPipeline.scale_func(yaxis[:scale])
+            invf = RecipesPipeline.inverse_scale_func(yaxis[:scale])
             tick_start, tick_stop = if sp[:framestyle] == :origin
                 t = invf(f(0) + 0.012 * (f(ymax) - f(ymin)))
                 (-t, t)
@@ -702,8 +680,8 @@ function axis_drawing_info(sp::Subplot)
             sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (x2, ymin), (x2, ymax)) # right spine
         end
         if !(yaxis[:ticks] in (:none, nothing, false))
-            f = scalefunc(xaxis[:scale])
-            invf = invscalefunc(xaxis[:scale])
+            f = RecipesPipeline.scale_func(xaxis[:scale])
+            invf = RecipesPipeline.inverse_scale_func(xaxis[:scale])
             tick_start, tick_stop = if sp[:framestyle] == :origin
                 t = invf(f(0) + 0.012 * (f(xmax) - f(xmin)))
                 (-t, t)
@@ -794,8 +772,8 @@ function axis_drawing_info_3d(sp::Subplot)
             sp[:framestyle] in (:semi, :box) && push!(xborder_segs, (xmin, y2, z2), (xmax, y2, z2)) # top spine
         end
         if !(xaxis[:ticks] in (:none, nothing, false))
-            f = scalefunc(yaxis[:scale])
-            invf = invscalefunc(yaxis[:scale])
+            f = RecipesPipeline.scale_func(yaxis[:scale])
+            invf = RecipesPipeline.inverse_scale_func(yaxis[:scale])
             tick_start, tick_stop = if sp[:framestyle] == :origin
                 t = invf(f(0) + 0.012 * (f(ymax) - f(ymin)))
                 (-t, t)
@@ -869,8 +847,8 @@ function axis_drawing_info_3d(sp::Subplot)
             sp[:framestyle] in (:semi, :box) && push!(yborder_segs, (x2, ymin, z2), (x2, ymax, z2)) # right spine
         end
         if !(yaxis[:ticks] in (:none, nothing, false))
-            f = scalefunc(xaxis[:scale])
-            invf = invscalefunc(xaxis[:scale])
+            f = RecipesPipeline.scale_func(xaxis[:scale])
+            invf = RecipesPipeline.inverse_scale_func(xaxis[:scale])
             tick_start, tick_stop = if sp[:framestyle] == :origin
                 t = invf(f(0) + 0.012 * (f(xmax) - f(xmin)))
                 (-t, t)
@@ -944,8 +922,8 @@ function axis_drawing_info_3d(sp::Subplot)
             sp[:framestyle] in (:semi, :box) && push!(zborder_segs, (x2, y2, zmin), (x2, y2, zmax))
         end
         if !(zaxis[:ticks] in (:none, nothing, false))
-            f = scalefunc(xaxis[:scale])
-            invf = invscalefunc(xaxis[:scale])
+            f = RecipesPipeline.scale_func(xaxis[:scale])
+            invf = RecipesPipeline.inverse_scale_func(xaxis[:scale])
             tick_start, tick_stop = if sp[:framestyle] == :origin
                 t = invf(f(0) + 0.012 * (f(ymax) - f(ymin)))
                 (-t, t)

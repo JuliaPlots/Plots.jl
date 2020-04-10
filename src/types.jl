@@ -18,65 +18,10 @@ end
 wrap(obj::T) where {T} = InputWrapper{T}(obj)
 Base.isempty(wrapper::InputWrapper) = false
 
-
-# -----------------------------------------------------------
-
-struct Attr <: AbstractDict{Symbol,Any}
-    explicit::KW
-    defaults::KW
-end
-
-function Base.getindex(attr::Attr, k)
-    return haskey(attr.explicit, k) ? attr.explicit[k] : attr.defaults[k]
-end
-Base.haskey(attr::Attr, k) = haskey(attr.explicit,k) || haskey(attr.defaults,k)
-Base.get(attr::Attr, k, default) = haskey(attr, k) ? attr[k] : default
-function Base.get!(attr::Attr, k, default)
-    v = if haskey(attr, k)
-        attr[k]
-    else
-        attr.defaults[k] = default
-    end
-    return v
-end
-function Base.delete!(attr::Attr, k)
-    haskey(attr.explicit, k) && delete!(attr.explicit, k)
-    haskey(attr.defaults, k) && delete!(attr.defaults, k)
-end
-Base.length(attr::Attr) = length(union(keys(attr.explicit), keys(attr.defaults)))
-function Base.iterate(attr::Attr)
-    exp_keys = keys(attr.explicit)
-    def_keys = setdiff(keys(attr.defaults), exp_keys)
-    key_list = collect(Iterators.flatten((exp_keys, def_keys)))
-    iterate(attr, (key_list, 1))
-end
-function Base.iterate(attr::Attr, (key_list, i))
-    i > length(key_list) && return nothing
-    k = key_list[i]
-    (k=>attr[k], (key_list, i+1))
-end
-
-Base.copy(attr::Attr) = Attr(copy(attr.explicit), attr.defaults)
-
-RecipesBase.is_explicit(attr::Attr, k) = haskey(attr.explicit,k)
-isdefault(attr::Attr, k) = !is_explicit(attr,k) && haskey(attr.defaults,k)
-
-Base.setindex!(attr::Attr, v, k) = attr.explicit[k] = v
-
-# Reset to default value and return dict
-reset_kw!(attr::Attr, k) = is_explicit(attr, k) ? delete!(attr.explicit, k) : attr
-# Reset to default value and return old value
-pop_kw!(attr::Attr, k) = is_explicit(attr, k) ? pop!(attr.explicit, k) : attr.defaults[k]
-pop_kw!(attr::Attr, k, default) = is_explicit(attr, k) ? pop!(attr.explicit, k) : get(attr.defaults, k, default)
-# Fallbacks for dicts without defaults
-reset_kw!(d::AKW, k) = delete!(d, k)
-pop_kw!(d::AKW, k) = pop!(d, k)
-pop_kw!(d::AKW, k, default) = pop!(d, k, default)
-
 # -----------------------------------------------------------
 
 mutable struct Series
-    plotattributes::Attr
+    plotattributes::DefaultsDict
 end
 
 attr(series::Series, k::Symbol) = series.plotattributes[k]
@@ -91,7 +36,7 @@ mutable struct Subplot{T<:AbstractBackend} <: AbstractLayout
     minpad::Tuple # leftpad, toppad, rightpad, bottompad
     bbox::BoundingBox  # the canvas area which is available to this subplot
     plotarea::BoundingBox  # the part where the data goes
-    attr::Attr  # args specific to this subplot
+    attr::DefaultsDict  # args specific to this subplot
     o  # can store backend-specific data... like a pyplot ax
     plt  # the enclosing Plot object (can't give it a type because of no forward declarations)
 end
@@ -103,7 +48,7 @@ Base.show(io::IO, sp::Subplot) = print(io, "Subplot{$(sp[:subplot_index])}")
 # simple wrapper around a KW so we can hold all attributes pertaining to the axis in one place
 mutable struct Axis
     sps::Vector{Subplot}
-    plotattributes::Attr
+    plotattributes::DefaultsDict
 end
 
 mutable struct Extrema
@@ -122,7 +67,7 @@ const SubplotMap = Dict{Any, Subplot}
 mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
     backend::T                   # the backend type
     n::Int                       # number of series
-    attr::Attr            # arguments for the whole plot
+    attr::DefaultsDict            # arguments for the whole plot
     series_list::Vector{Series}  # arguments for each series
     o                            # the backend's plot object
     subplots::Vector{Subplot}
@@ -133,7 +78,7 @@ mutable struct Plot{T<:AbstractBackend} <: AbstractPlot{T}
 end
 
 function Plot()
-    Plot(backend(), 0, Attr(KW(), _plot_defaults), Series[], nothing,
+    Plot(backend(), 0, DefaultsDict(KW(), _plot_defaults), Series[], nothing,
          Subplot[], SubplotMap(), EmptyLayout(),
          Subplot[], false)
 end
