@@ -51,13 +51,14 @@ end
 _apply_type_recipe(
     plotattributes,
     v::Surface{<:AMat{<:Union{AbstractFloat, Integer, AbstractString, Missing}}},
+    letter,
 ) = v
-function _apply_type_recipe(plotattributes, v::Surface)
-    ret = _apply_type_recipe(plotattributes, v.surf)
+function _apply_type_recipe(plotattributes, v::Surface, letter)
+    ret = _apply_type_recipe(plotattributes, v.surf, letter)
     if typeof(ret) <: Formatted
         Formatted(Surface(ret.data), ret.formatter)
     else
-        Surface(ret.data)
+        Surface(ret)
     end
 end
 
