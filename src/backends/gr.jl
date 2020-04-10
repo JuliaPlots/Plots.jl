@@ -1424,8 +1424,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
 
         # border
-        intensity = sp[:framestyle] == :semi ? 0.5 : 1.0
+        intensity = sp[:framestyle] == :semi ? 0.5 : 1
         if sp[:framestyle] in (:box, :semi)
+            GR.setclip(0)
             gr_set_line(intensity, :solid, xaxis[:foreground_color_border])
             gr_set_transparency(xaxis[:foreground_color_border], intensity)
             gr_polyline(coords(xborder_segs)...)
@@ -1808,7 +1809,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if sp[:legend] == :inline && should_add_to_legend(series)
             gr_set_font(legendfont(sp))
             gr_set_textcolor(plot_color(sp[:legendfontcolor]))
-            if sp[:yaxis][:mirror] 
+            if sp[:yaxis][:mirror]
                 (_,i) = sp[:xaxis][:flip] ? findmax(x) : findmin(x)
                 GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
                 offset = -0.01
@@ -1827,7 +1828,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     hascolorbar(sp) && gr_draw_colorbar(cbar, sp, get_clims(sp))
 
     # add the legend
-    if !(sp[:legend] in(:none, :inline)) 
+    if !(sp[:legend] in(:none, :inline))
         GR.savestate()
         GR.selntran(0)
         GR.setscale(0)
