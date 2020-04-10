@@ -22,7 +22,7 @@ group provided as a vector of length `len`, `false` otherwise.
 splittable_attribute(plt, key, val, len) = false
 splittable_attribute(plt, key, val::AbstractArray, len) =
     !(key in (:group, :color_palette)) && length(axes(val, 1)) == len
-splittable_attribute(plt, key, val::Tuple, n) = all(splittable_attribute.(key, val, len))
+splittable_attribute(plt, key, val::Tuple, len) = all(splittable_attribute.(key, val, len))
 
 
 """
