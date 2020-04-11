@@ -5,6 +5,7 @@ version = "1.0.14"
 
 [deps]
 Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
 Contour = "d38c429a-6771-53c6-b99e-75d170b6e991"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 FFMPEG = "c87230d0-a227-11e9-1b43-d7ebe4e7570a"
@@ -32,6 +33,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [compat]
+ColorSchemes = "3.6"
 Contour = "0.5"
 FFMPEG = "0.2, 0.3"
 FixedPointNumbers = "0.6, 0.7, 0.8"

@@ -74,7 +74,7 @@ const _examples = PlotExample[
                         rand(11, 4),
                         lab = "lines",
                         w = 3,
-                        palette = :grays,
+                        palette = cgrad(:grays),
                         fill = 0,
                         α = 0.6,
                     )
@@ -322,7 +322,7 @@ const _examples = PlotExample[
                     plot(
                         Plots.fakedata(100, 10),
                         layout = 4,
-                        palette = [:grays :blues :heat :lightrainbow],
+                        palette = cgrad.([:grays :blues :heat :lightrainbow]),
                         bg_inside = [:orange :pink :darkblue :black],
                     )
                 end

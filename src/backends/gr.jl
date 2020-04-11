@@ -880,7 +880,8 @@ function _update_min_padding!(sp::Subplot{GRBackend})
                 tickfont(zaxis),
                 halign = (zaxis[:mirror] ? :left : :right),
                 valign = (:top, :vcenter, :bottom)[sign(zaxis[:rotation]) + 2],
-                rotation = zaxis[:rotation]
+                rotation = zaxis[:rotation],
+                color = zaxis[:tickfontcolor],
             )
             l = 0.01 + first(gr_get_ticks_size(zticks, zaxis[:rotation]))
             w = 1mm + gr_plot_size[1] * l * px
@@ -1238,7 +1239,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 tickfont(xaxis),
                 halign = (:left, :hcenter, :right)[sign(xaxis[:rotation]) + 2],
                 valign = (xaxis[:mirror] ? :bottom : :top),
-                rotation = xaxis[:rotation]
+                rotation = xaxis[:rotation],
+                color = xaxis[:tickfontcolor],
             )
             yt = if sp[:framestyle] == :origin
                 0
@@ -1268,7 +1270,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 tickfont(yaxis),
                 halign = (:left, :hcenter, :right)[sign(yaxis[:rotation]) + 2],
                 valign = (yaxis[:mirror] ? :bottom : :top),
-                rotation = yaxis[:rotation]
+                rotation = yaxis[:rotation],
+                color = yaxis[:tickfontcolor],
             )
             xt = if sp[:framestyle] == :origin
                 0
@@ -1298,7 +1301,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 tickfont(zaxis),
                 halign = (zaxis[:mirror] ? :left : :right),
                 valign = (:top, :vcenter, :bottom)[sign(zaxis[:rotation]) + 2],
-                rotation = zaxis[:rotation]
+                rotation = zaxis[:rotation],
+                color = zaxis[:tickfontcolor],
             )
             xt = if sp[:framestyle] == :origin
                 0
@@ -1662,8 +1666,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif st == :heatmap
             zmin, zmax = clims
             fillgrad = _as_gradient(series[:fillcolor])
-            colors = plot_color.(nan_get(fillgrad, z, clims), series[:fillalpha])
-            rgba = gr_color.(colors)
             if !ispolar(sp)
                 GR.setspace(clims..., 0, 90)
                 x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
@@ -1674,11 +1676,16 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     # pdf output, and also supports alpha values.
                     # Note that drawimage draws uniformly spaced data correctly
                     # even on log scales, where it is visually non-uniform.
+                    colors = plot_color.(nan_get(fillgrad, z, clims), series[:fillalpha])
+                    rgba = gr_color.(colors)
                     GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
                 else
                     if something(series[:fillalpha],1) < 1 || any(_gr_gradient_alpha .< 1)
                         @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
                     end
+                    colors = nan_get(fillgrad, z, clims)
+                    z_normalized = map(c -> c == invisible() ? 256/255 : getinverse(fillgrad, c), colors)
+                    rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
                     GR.nonuniformcellarray(x, y, w, h, rgba)
                 end
             else
@@ -1693,8 +1700,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if series[:y][end] != ny
                     @warn "Right now only the maximum value of y (r) is taken into account."
                 end
+                colors = nan_get(fillgrad, z, clims)
+                z_normalized = map(c -> c == invisible() ? 256/255 : getinverse(fillgrad.colors, c), colors)
+                rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
                 # GR.polarcellarray(0, 0, phimin, phimax, ymin, ymax, nx, ny, colors)
-                GR.polarcellarray(0, 0, phimin, phimax, 0, ymax, nx, ny, colors)
+                GR.polarcellarray(0, 0, phimin, phimax, 0, ymax, nx, ny, rgba)
                 # Right now only the maximum value of y (r) is taken into account.
                 # This is certainly not perfect but nonuniform polar array is not yet supported in GR.jl
             end
