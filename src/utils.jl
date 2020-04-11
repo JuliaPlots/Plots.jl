@@ -130,10 +130,8 @@ _cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
 _cycle(v::AMat, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
 _cycle(v, indices::AVec{Int})       = fill(v, length(indices))
 
-_cycle(cg::ColorGradient, idx::Int) = cg[mod1(idx, end)]
-_cycle(cg::ColorGradient, idx::AVec{Int}) = cg[mod1.(idx, end)]
-_cycle(cp::ColorPalette, idx::Int) = cp[mod1(idx, end)]
-_cycle(cp::ColorPalette, idx::AVec{Int}) = cp[mod1.(idx, end)]
+_cycle(cl::PlotUtils.AbstractColorList, idx::Int) = cl[mod1(idx, end)]
+_cycle(cl::PlotUtils.AbstractColorList, idx::AVec{Int}) = cl[mod1.(idx, end)]
 
 _as_gradient(grad) = grad
 _as_gradient(c::Colorant) = ColorGradient([c,c])
