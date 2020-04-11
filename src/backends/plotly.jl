@@ -350,11 +350,9 @@ function plotly_layout_json(plt::Plot)
 end
 
 
-function plotly_colorscale(grad::ColorGradient, α)
-    [[grad.values[i], rgba_string(plot_color(grad.colors[i], α))] for i in eachindex(grad.colors)]
-end
-plotly_colorscale(c::Colorant,α) = plotly_colorscale(_as_gradient(c),α)
-function plotly_colorscale(c::AbstractVector{<:RGBA}, α)
+plotly_colorscale(grad::PlotUtils.AbstractColorList, α = nothing) = plotly_colorscale(PlotUtils.color_list(grad), α)
+plotly_colorscale(c::Colorant,α) = plotly_colorscale(_as_gradient(c), α = nothing)
+function plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing)
     if length(c) == 1
         return [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
     else

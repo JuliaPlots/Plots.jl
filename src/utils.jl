@@ -1,8 +1,8 @@
 
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     n, m = size(z)
-    colors = ColorGradient(vec(z))
-    newz = reshape(range(0, stop=1, length=n*m), n, m)
+    colors = palette(vec(z))
+    newz = reshape(1:n*m, n, m)
     newz, colors
 end
 
@@ -548,7 +548,15 @@ get_gradient(c) = cgrad()
 get_gradient(cg::ColorGradient) = cg
 get_gradient(cp::ColorPalette) = cp
 
-nan_get(cs, x, range) = isfinite(x) ? plot_color(get(cs, x, range)) : invisible()
+function nan_get(cs, x, range)
+    if !isfinite(x)
+        return invisible()
+    elseif range isa Tuple && range[1] == range[2]
+        return plot_color(cs[1])
+    else
+        plot_color(get(cs, x, range))
+    end
+end
 function nan_get(cs, v::AbstractVector, range)
     colors = fill(invisible(), length(v))
     for (i, x) in enumerate(v)
