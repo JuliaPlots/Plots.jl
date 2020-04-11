@@ -111,7 +111,7 @@ group_as_matrix(t) = false
         x_u = unique(sort(x))
         x_ind = Dict(zip(x_u, eachindex(x_u)))
         for (key, val) in plotattributes
-            if splittable_kw(key, val, group_length)
+            if splittable_kw(plt, key, val, group_length)
                 :($key) := groupedvec2mat(x_ind, x, val, groupby)
             end
         end
