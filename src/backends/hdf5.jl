@@ -83,7 +83,7 @@ if length(HDF5PLOT_MAP_TELEM2STR) < 1
         "ARRAY" => Array, #Dict won't allow Array to be key in HDF5PLOT_MAP_TELEM2STR
 
         #Sub-structure types:
-        "ATTR" => Attr,
+        "DEFAULTSDICT" => DefaultsDict,
         "FONT" => Font,
         "BOUNDINGBOX" => BoundingBox,
         "GRIDLAYOUT" => GridLayout,
@@ -395,12 +395,12 @@ function _hdf5plot_write(grp, plotattributes::KW)
     end
     return
 end
-function _hdf5plot_write(grp, plotattributes::Attr)
+function _hdf5plot_write(grp, plotattributes::DefaultsDict)
     for (k, v) in plotattributes
         kstr = string(k)
         _hdf5plot_gwrite(grp, kstr, v)
     end
-	_hdf5plot_writetype(grp, Attr)
+	_hdf5plot_writetype(grp, DefaultsDict)
 end
 
 
@@ -558,14 +558,14 @@ parent = RootLayout()
 
     return GridLayout(parent, minpad, bbox, grid, widths, heights, attr)
 end
-function _hdf5plot_read(grp, T::Type{Attr})
-    attr = Attr(KW(), _plot_defaults)
+function _hdf5plot_read(grp, T::Type{DefaultsDict})
+    attr = DefaultsDict(KW(), _plot_defaults)
     v = _hdf5plot_read(grp, attr)
     return attr
 end
 function _hdf5plot_read(grp, k::String, T::Type{Axis})
     grp = HDF5.g_open(grp, k)
-    plotattributes = Attr(KW(), _plot_defaults)
+    plotattributes = DefaultsDict(KW(), _plot_defaults)
     _hdf5plot_read(grp, plotattributes)
     return Axis([], plotattributes)
 end
@@ -610,7 +610,7 @@ function _hdf5plot_readattr(grp, plotattributes::AbstractDict)
     return
 end
 _hdf5plot_read(grp, plotattributes::KW) = _hdf5plot_readattr(grp, plotattributes)
-_hdf5plot_read(grp, plotattributes::Attr) = _hdf5plot_readattr(grp, plotattributes)
+_hdf5plot_read(grp, plotattributes::DefaultsDict) = _hdf5plot_readattr(grp, plotattributes)
 
 # Read main plot structures:
 # ----------------------------------------------------------------
@@ -623,7 +623,7 @@ function _hdf5plot_read(sp::Subplot, subpath::String, f)
 
     for i in 1:nseries
         grp = HDF5.g_open(f, _hdf5_plotelempath("$subpath/series_list/series$i"))
-        seriesinfo = Attr(KW(), _plot_defaults)
+        seriesinfo = DefaultsDict(KW(), _plot_defaults)
         _hdf5plot_read(grp, seriesinfo)
         plot!(sp, seriesinfo[:x], seriesinfo[:y]) #Add data & create data structures
         _hdf5_merge!(sp.series_list[end].plotattributes, seriesinfo)
@@ -631,7 +631,7 @@ function _hdf5plot_read(sp::Subplot, subpath::String, f)
 
     #Perform after adding series... otherwise values get overwritten:
     grp = HDF5.g_open(f, _hdf5_plotelempath("$subpath/attr"))
-    attr = Attr(KW(), _plot_defaults)
+    attr = DefaultsDict(KW(), _plot_defaults)
     _hdf5plot_read(grp, attr)
     _hdf5_merge!(sp.attr, attr)
 

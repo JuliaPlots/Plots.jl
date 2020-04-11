@@ -162,7 +162,7 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
 
     if letter in (:x,:y)
         ax[:domain] = plotly_domain(sp, letter)
-        if is3d(sp)
+        if RecipesPipeline.is3d(sp)
             # don't link 3d axes for synchronized interactivity
             x_idx = y_idx = sp[:subplot_index]
         else
@@ -263,8 +263,8 @@ function plotly_layout(plt::Plot)
         # set to supported framestyle
         sp[:framestyle] = _plotly_framestyle(sp[:framestyle])
 
-        # if any(is3d, seriesargs)
-        if is3d(sp)
+        # if any(RecipesPipeline.is3d, seriesargs)
+        if RecipesPipeline.is3d(sp)
             azim = sp[:camera][1] - 90 #convert azimuthal to match GR behaviour
             theta = 90 - sp[:camera][2] #spherical coordinate angle from z axis
             plotattributes_out[:scene] = KW(
@@ -748,11 +748,11 @@ function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symb
     plotattributes_out = deepcopy(plotattributes_base)
     cmin, cmax = get_clims(series[:subplot])
     plotattributes_out[:showlegend] = false
-    plotattributes_out[:type] = is3d(series) ? :scatter3d : :scatter
+    plotattributes_out[:type] = RecipesPipeline.is3d(series) ? :scatter3d : :scatter
     plotattributes_out[:hoverinfo] = :none
     plotattributes_out[:mode] = :markers
     plotattributes_out[:x], plotattributes_out[:y] = [series[:x][1]], [series[:y][1]]
-    if is3d(series)
+    if RecipesPipeline.is3d(series)
         plotattributes_out[:z] = [series[:z][1]]
     end
     # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)

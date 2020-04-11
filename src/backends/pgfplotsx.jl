@@ -104,14 +104,20 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         end
 
         for sp in plt.subplots
-            bb = bbox(sp)
-            sp_width = width(bb)
-            sp_height = height(bb)
-            dx, dy = bb.x0
-            # TODO: does this hold at every scale?
-            if sp[:legend] in (:outertopright, nothing)
-                dx *= 1.2
-            end
+            bb1 = sp.plotarea
+            bb2 = bbox(sp)
+            sp_width = width(bb2)
+            sp_height = height(bb2)
+            dx, dy = bb2.x0
+            lpad = leftpad(sp) + sp[:left_margin]
+            rpad = rightpad(sp) + sp[:right_margin]
+            tpad = toppad(sp) + sp[:top_margin]
+            bpad = bottompad(sp) + sp[:bottom_margin]
+            dx += lpad
+            dy += tpad
+            axis_height = sp_height - (tpad + bpad)
+            axis_width = sp_width - (rpad + lpad)
+
             cstr = plot_color(sp[:background_color_legend])
             a = alpha(cstr)
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
@@ -164,9 +170,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "xshift" => string(dx),
                 "yshift" => string(-dy),
             )
-            sp_width > 0 * mm ? push!(axis_opt, "width" => string(sp_width)) :
+            sp_width > 0 * mm ? push!(axis_opt, "width" => string(axis_width)) :
             nothing
-            sp_height > 0 * mm ? push!(axis_opt, "height" => string(sp_height)) :
+            sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) :
             nothing
             # legend position
             if sp[:legend] isa Tuple
@@ -174,13 +180,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 push!(axis_opt["legend style"], "at={($x, $y)}")
             else
                 push!(
-                    axis_opt,
-                    "legend pos" =>
-                        get(_pgfplotsx_legend_pos, sp[:legend], "outer north east"),
+                    axis_opt["legend style"],
+                        get(_pgfplotsx_legend_pos, sp[:legend], ("at" => string((1.02, 1)), "anchor" => "north west"))...
                 )
             end
             for letter in (:x, :y, :z)
-                if letter != :z || is3d(sp)
+                if letter != :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
                 end
             end
@@ -223,7 +228,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "point meta min" => get_clims(sp)[1],
                 ),
             )
-            if is3d(sp)
+            if RecipesPipeline.is3d(sp)
                 azim, elev = sp[:camera]
                 push!(axis_opt, "view" => (azim, elev))
             end
@@ -246,7 +251,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "color" => single_color(opt[:linecolor]),
                     "name path" => string(series_id),
                 )
-                if is3d(series) || st == :heatmap
+                if RecipesPipeline.is3d(series) || st == :heatmap
                     series_func = PGFPlotsX.Plot3
                 else
                     series_func = PGFPlotsX.Plot
@@ -417,7 +422,7 @@ end
         opt[:x], opt[:y], Array(opt[:z])'
     elseif st in (:heatmap, :surface, :wireframe)
         surface_to_vecs(opt[:x], opt[:y], opt[:z])
-    elseif is3d(st)
+    elseif RecipesPipeline.is3d(st)
         opt[:x], opt[:y], opt[:z]
     elseif st == :straightline
         straightline_data(series)
@@ -605,22 +610,22 @@ const _pgfplotsx_markers = KW(
 )
 
 const _pgfplotsx_legend_pos = KW(
-    :top => "north",
-    :bottom => "south",
-    :left => "west",
-    :right => "east",
-    :bottomleft => "south west",
-    :bottomright => "south east",
-    :topright => "north east",
-    :topleft => "north west",
-    :outertop => "north",
-    :outerbottom => "outer south",
-    :outerleft => "outer west",
-    :outerright => "outer east",
-    :outerbottomleft => "outer south west",
-    :outerbottomright => "outer south east",
-    :outertopright => "outer north east",
-    :outertopleft => "outer north west",
+    :top => ("at" => string((0.5, 0.98)), "anchor" => "north"),
+    :bottom => ("at" => string((0.5, 0.02)), "anchor" => "south"),
+    :left => ("at" => string((0.02, 0.5)), "anchor" => "west"),
+    :right => ("at" => string((0.98, 0.5)), "anchor" => "east"),
+    :bottomleft => ("at" => string((0.02, 0.02)), "anchor" => "south west"),
+    :bottomright => ("at" => string((0.98, 0.02)), "anchor" => "south east"),
+    :topright => ("at" => string((0.98, 0.98)), "anchor" => "north east"),
+    :topleft => ("at" => string((-0.02, 0.98)), "anchor" => "north west"),
+    :outertop => ("at" => string((0.5, 1.02)), "anchor" => "south"),
+    :outerbottom => ("at" => string((0.5, -0.02)), "anchor" => "north"),
+    :outerleft => ("at" => string((-0.02, 0.5)), "anchor" => "east"),
+    :outerright => ("at" => string((1.02, 0.5)), "anchor" => "west"),
+    :outerbottomleft => ("at" => string((-0.02, -0.02)), "anchor" => "north east"),
+    :outerbottomright => ("at" => string((1.02, -0.02)), "anchor" => "north west"),
+    :outertopright => ("at" => string((1.02, 1)), "anchor" => "north west"),
+    :outertopleft => ("at" => string((-0.02, 1)), "anchor" => "north east"),
 )
 
 const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
@@ -869,7 +874,7 @@ function pgfx_fillrange_series!(axis, series, series_func, i, fillrange, rng)
     fillrange_opt = merge(fillrange_opt, pgfx_marker(series, i))
     push!(fillrange_opt, "forget plot" => nothing)
     opt = series.plotattributes
-    args = is3d(series) ? (opt[:x][rng], opt[:y][rng], opt[:z][rng]) :
+    args = RecipesPipeline.is3d(series) ? (opt[:x][rng], opt[:y][rng], opt[:z][rng]) :
         (opt[:x][rng], opt[:y][rng])
     push!(
         axis,
@@ -905,7 +910,7 @@ function pgfx_sanitize_string(s::AbstractString)
     s = replace(s, r"\\?\}" => "\\}")
 end
 @require LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f" begin
-    using LaTeXStrings
+    using .LaTeXStrings
     function pgfx_sanitize_string(s::LaTeXString)
         s = replace(s, r"\\?\#" => "\\#")
         s = replace(s, r"\\?\%" => "\\%")
@@ -1008,6 +1013,8 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     # ticks on or off
     if axis[:ticks] in (nothing, false, :none) || framestyle == :none
         push!(opt, "$(letter)majorticks" => "false")
+    elseif framestyle in (:grid, :zerolines)
+        push!(opt, "$letter tick style" => PGFPlotsX.Options("draw" => "none"))
     end
 
     # grid on or off
@@ -1023,6 +1030,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
     push!(opt, string(letter, :min) => lims[1], string(letter, :max) => lims[2])
 
     if !(axis[:ticks] in (nothing, false, :none, :native)) && framestyle != :none
+        # ticks
         ticks = get_ticks(sp, axis)
         #pgf plot ignores ticks with angle below 90 when xmin = 90 so shift values
         tick_values =
@@ -1088,6 +1096,37 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
                 axis[:gridstyle],
             ),
         )
+
+        # minor ticks
+        # NOTE: PGFPlots would provide "minor x ticks num", but this only places minor ticks
+        #       between major ticks and not outside first and last tick to the axis limits.
+        #       Hence, we hack around with extra ticks. Unfortunately this conflicts with
+        #       `:zerolines` framestyle hack. So minor ticks are not working with
+        #       `:zerolines`.
+        minor_ticks = get_minor_ticks(sp, axis, ticks)
+        if minor_ticks !== nothing
+            minor_ticks =
+                ispolar(sp) && letter == :x ? [rad2deg.(minor_ticks)[3:end]..., 360, 405] :
+                minor_ticks
+            push!(
+                opt,
+                string("extra ", letter, " ticks") => string("{", join(minor_ticks, ","), "}"),
+            )
+            push!(opt, string("extra ", letter, " tick labels") => "")
+            push!(
+                opt,
+                string("extra ", letter, " tick style") => PGFPlotsX.Options(
+                    "grid" => axis[:minorgrid] ? "major" : "none",
+                    string(letter, " grid style") => pgfx_linestyle(
+                        pgfx_thickness_scaling(sp) * axis[:minorgridlinewidth],
+                        axis[:foreground_color_minor_grid],
+                        axis[:minorgridalpha],
+                        axis[:minorgridstyle],
+                    ),
+                    "major tick length" => typeof(axis[:minorticks]) <: Integer && axis[:minorticks] > 1 || axis[:minorticks] ? "0.1cm" : "0"
+                ),
+            )
+        end
     end
 
     # framestyle
@@ -1109,7 +1148,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
             opt,
             string("extra ", letter, " tick style") => PGFPlotsX.Options(
                 "grid" => "major",
-                "major grid style" => pgfx_linestyle(
+                string(letter, " grid style") => pgfx_linestyle(
                     pgfx_thickness_scaling(sp),
                     axis[:foreground_color_border],
                     1.0,
@@ -1139,12 +1178,12 @@ end
 # Set the (left, top, right, bottom) minimum padding around the plot area
 # to fit ticks, tick labels, guides, colorbars, etc.
 function _update_min_padding!(sp::Subplot{PGFPlotsXBackend})
-    # TODO: make padding more intelligent
-    # TODO: how to include margins properly?
-    # sp.minpad = (50mm + sp[:left_margin],
-    #              0mm + sp[:top_margin],
-    #              50mm + sp[:right_margin],
-    #              0mm + sp[:bottom_margin])
+    leg = sp[:legend]
+    if leg in (:best, :outertopright, :outerright, :outerbottomright) || (leg isa Tuple && leg[1] >= 1)
+        sp.minpad = (0mm, 0mm, 5mm, 0mm)
+    else
+        sp.minpad = (0mm, 0mm, 0mm, 0mm)
+    end
 end
 
 function _create_backend_figure(plt::Plot{PGFPlotsXBackend})

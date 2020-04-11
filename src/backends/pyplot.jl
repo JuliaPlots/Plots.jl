@@ -448,7 +448,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             #         :norm => pycolors["Normalize"](; extrakw...)
             #     )
             #     lz = _cycle(series[:line_z], 1:n)
-            #     handle = if is3d(st)
+            #     handle = if RecipesPipeline.is3d(st)
             #         line_segments = [[(x[j], y[j], z[j]) for j in rng] for rng in segments]
             #         lc = pyart3d["Line3DCollection"](line_segments; kw...)
             #         lc[:set_array](lz)
@@ -478,7 +478,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             # end
 
             a = series[:arrow]
-            if a !== nothing && !is3d(st)  # TODO: handle 3d later
+            if a !== nothing && !RecipesPipeline.is3d(st)  # TODO: handle 3d later
                 if typeof(a) != Arrow
                     @warn("Unexpected type for arrow: $(typeof(a))")
                 else
@@ -1050,7 +1050,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         end
 
         # framestyle
-        if !ispolar(sp) && !is3d(sp)
+        if !ispolar(sp) && !RecipesPipeline.is3d(sp)
             ax.spines["left"]."set_linewidth"(py_thickness_scale(plt, 1))
             ax.spines["bottom"]."set_linewidth"(py_thickness_scale(plt, 1))
             if sp[:framestyle] == :semi
@@ -1161,7 +1161,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         end
 
         #camera/view angle
-        if is3d(sp)
+        if RecipesPipeline.is3d(sp)
             #convert azimuthal to match GR behaviour
             #view_init(elevation, azimuthal) so reverse :camera args
             ax."view_init"((sp[:camera].-(90,0))[end:-1:1]...)

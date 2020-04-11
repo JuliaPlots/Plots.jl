@@ -167,6 +167,26 @@ using .PlotMeasures
 import .PlotMeasures: Length, AbsoluteLength, Measure, width, height
 # ---------------------------------------------------------
 
+import RecipesPipeline
+import RecipesPipeline: SliceIt,
+    DefaultsDict,
+    Formatted,
+    AbstractSurface,
+    Surface,
+    Volume,
+    is3d,
+    is_surface,
+    needs_3d_axes,
+    group_as_matrix, # for StatsPlots
+    reset_kw!,
+    pop_kw!,
+    scale_func,
+    inverse_scale_func,
+    unzip,
+    dateformatter,
+    datetimeformatter,
+    timeformatter
+
 include("types.jl")
 include("utils.jl")
 include("components.jl")
@@ -175,7 +195,6 @@ include("args.jl")
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
-include("series.jl")
 include("layouts.jl")
 include("subplots.jl")
 include("recipes.jl")

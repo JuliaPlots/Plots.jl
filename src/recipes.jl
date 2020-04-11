@@ -457,6 +457,8 @@ end
     ()
 end
 @deps plots_heatmap shape
+is_3d(::Type{Val{:plots_heatmap}}) = true
+RecipesPipeline.is_surface(::Type{Val{:plots_heatmap}}) = true
 
 # ---------------------------------------------------------------------------
 # Histograms
@@ -1012,49 +1014,62 @@ function error_zipit(ebar)
     end
 end
 
-function error_coords(xorig, yorig, ebar)
-    # init empty x/y, and zip errors if passed Tuple{Vector,Vector}
-    x, y = Array{float_extended_type(xorig)}(undef, 0), Array{Float64}(undef, 0)
-    # for each point, create a line segment from the bottom to the top of the errorbar
-    for i = 1:max(length(xorig), length(yorig))
-        xi = _cycle(xorig, i)
-        yi = _cycle(yorig, i)
-        ebi = _cycle(ebar, i)
-        nanappend!(x, [xi, xi])
-        e1, e2 = if istuple(ebi)
-            first(ebi), last(ebi)
-        elseif isscalar(ebi)
-            ebi, ebi
-        else
-            error("unexpected ebi type $(typeof(ebi)) for errorbar: $ebi")
+error_tuple(x) = x, x
+error_tuple(x::Tuple) = x
+
+function error_coords(errorbar, errordata, otherdata...)
+    ed = Vector{float_extended_type(errordata)}(undef, 0)
+    od = [Float64[] for _ in otherdata]
+    for (i, edi) in enumerate(errordata)
+        for (j, odj) in enumerate(otherdata)
+            odi = _cycle(odj, i)
+            nanappend!(od[j], [odi, odi])
         end
-        nanappend!(y, [yi - e1, yi + e2])
+        e1, e2 = error_tuple(_cycle(errorbar, i))
+        nanappend!(ed, [edi - e1, edi + e2])
     end
-    x, y
+    return (ed, od...)
 end
 
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
-@recipe function f(::Type{Val{:yerror}}, x, y, z)
-    error_style!(plotattributes)
-    markershape := :hline
-    plotattributes[:x], plotattributes[:y] = error_coords(
-        plotattributes[:x],
-        plotattributes[:y],
-        error_zipit(plotattributes[:yerror]),
-    )
-    ()
-end
-@deps yerror path
 
 @recipe function f(::Type{Val{:xerror}}, x, y, z)
     error_style!(plotattributes)
     markershape := :vline
-    plotattributes[:y], plotattributes[:x] = error_coords(
-        plotattributes[:y],
-        plotattributes[:x],
-        error_zipit(plotattributes[:xerror]),
-    )
+    xerr = error_zipit(plotattributes[:xerror])
+    if z === nothing
+        plotattributes[:x], plotattributes[:y] = error_coords(xerr, x, y)
+    else
+        plotattributes[:x], plotattributes[:y], plotattributes[:z] =
+            error_coords(xerr, x, y, z)
+    end
+    ()
+end
+@deps xerror path
+
+@recipe function f(::Type{Val{:yerror}}, x, y, z)
+    error_style!(plotattributes)
+    markershape := :hline
+    yerr = error_zipit(plotattributes[:yerror])
+    if z === nothing
+        plotattributes[:y], plotattributes[:x] = error_coords(yerr, y, x)
+    else
+        plotattributes[:y], plotattributes[:x], plotattributes[:z] =
+            error_coords(yerr, y, x, z)
+    end
+    ()
+end
+@deps yerror path
+
+@recipe function f(::Type{Val{:zerror}}, x, y, z)
+    error_style!(plotattributes)
+    markershape := :hline
+    if z !== nothing
+        zerr = error_zipit(plotattributes[:zerror])
+        plotattributes[:z], plotattributes[:x], plotattributes[:y] =
+            error_coords(zerr, z, x, y)
+    end
     ()
 end
 @deps xerror path
@@ -1149,7 +1164,7 @@ function quiver_using_hack(plotattributes::AKW)
         )
     end
 
-    plotattributes[:x], plotattributes[:y] = Plots.unzip(pts[2:end])
+    plotattributes[:x], plotattributes[:y] = RecipesPipeline.unzip(pts[2:end])
     # KW[plotattributes]
 end
 
@@ -1163,6 +1178,118 @@ end
     ()
 end
 @deps quiver shape path
+
+
+# --------------------------------------------------------------------
+# 1 argument
+# --------------------------------------------------------------------
+
+# images - grays
+function clamp_greys!(mat::AMat{<:Gray})
+    for i in eachindex(mat)
+        mat[i].val < 0 && (mat[i] = Gray(0))
+        mat[i].val > 1 && (mat[i] = Gray(1))
+    end
+    mat
+end
+
+@recipe function f(mat::AMat{<:Gray})
+    n, m = axes(mat)
+    if is_seriestype_supported(:image)
+        seriestype := :image
+        yflip --> true
+        SliceIt, m, n, Surface(clamp_greys!(mat))
+    else
+        seriestype := :heatmap
+        yflip --> true
+        cbar --> false
+        fillcolor --> ColorGradient([:black, :white])
+        SliceIt, m, n, Surface(clamp!(convert(Matrix{Float64}, mat), 0.0, 1.0))
+    end
+end
+
+# images - colors
+@recipe function f(mat::AMat{T}) where {T <: Colorant}
+    n, m = axes(mat)
+
+    if is_seriestype_supported(:image)
+        seriestype := :image
+        yflip --> true
+        SliceIt, m, n, Surface(mat)
+    else
+        seriestype := :heatmap
+        yflip --> true
+        cbar --> false
+        aspect_ratio --> :equal
+        z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
+        SliceIt, m, n, Surface(z)
+    end
+end
+
+# plotting arbitrary shapes/polygons
+
+@recipe function f(shape::Shape)
+    seriestype --> :shape
+    coords(shape)
+end
+
+@recipe function f(shapes::AVec{Shape})
+    seriestype --> :shape
+    coords(shapes)
+end
+
+@recipe function f(shapes::AMat{Shape})
+    seriestype --> :shape
+    for j in axes(shapes, 2)
+        @series coords(vec(shapes[:, j]))
+    end
+end
+
+
+# --------------------------------------------------------------------
+# 3 arguments
+# --------------------------------------------------------------------
+
+# images - grays
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T <: Gray}
+    if is_seriestype_supported(:image)
+        seriestype := :image
+        yflip --> true
+        SliceIt, x, y, Surface(mat)
+    else
+        seriestype := :heatmap
+        yflip --> true
+        cbar --> false
+        fillcolor --> ColorGradient([:black, :white])
+        SliceIt, x, y, Surface(convert(Matrix{Float64}, mat))
+    end
+end
+
+# images - colors
+@recipe function f(x::AVec, y::AVec, mat::AMat{T}) where {T <: Colorant}
+    if is_seriestype_supported(:image)
+        seriestype := :image
+        yflip --> true
+        SliceIt, x, y, Surface(mat)
+    else
+        seriestype := :heatmap
+        yflip --> true
+        cbar --> false
+        z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
+        SliceIt, x, y, Surface(z)
+    end
+end
+
+# --------------------------------------------------------------------
+# Lists of tuples and GeometryTypes.Points
+# --------------------------------------------------------------------
+@recipe f(v::AVec{<:GeometryTypes.Point}) = RecipesPipeline.unzip(v)
+@recipe f(p::GeometryTypes.Point) = [p]
+
+# Special case for 4-tuples in :ohlc series
+@recipe f(xyuv::AVec{<:Tuple{R1, R2, R3, R4}}) where {R1, R2, R3, R4} =
+    get(plotattributes, :seriestype, :path) == :ohlc ? OHLC[OHLC(t...) for t in xyuv] :
+    RecipesPipeline.unzip(xyuv)
 
 
 # -------------------------------------------------
@@ -1287,26 +1414,6 @@ abline!(plt::Plot, a, b; kw...) =
     plot!(plt, [0, 1], [b, b + a]; seriestype = :straightline, kw...)
 
 abline!(args...; kw...) = abline!(current(), args...; kw...)
-
-
-# -------------------------------------------------
-# Dates & Times
-
-dateformatter(dt) = string(Date(Dates.UTD(dt)))
-datetimeformatter(dt) = string(DateTime(Dates.UTM(dt)))
-timeformatter(t) = string(Dates.Time(Dates.Nanosecond(t)))
-
-@recipe f(::Type{Date}, dt::Date) = (dt -> Dates.value(dt), dateformatter)
-@recipe f(::Type{DateTime}, dt::DateTime) =
-    (dt -> Dates.value(dt), datetimeformatter)
-@recipe f(::Type{Dates.Time}, t::Dates.Time) = (t -> Dates.value(t), timeformatter)
-@recipe f(::Type{P}, t::P) where {P<:Dates.Period} =
-    (t -> Dates.value(t), t -> string(P(t)))
-
-# -------------------------------------------------
-# Characters
-
-@recipe f(::Type{<:AbstractChar}, ::AbstractChar) = (string, string)
 
 # -------------------------------------------------
 # Complex Numbers
