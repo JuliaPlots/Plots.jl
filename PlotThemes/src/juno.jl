@@ -16,5 +16,5 @@ _themes[:juno] = PlotTheme(
     fgguide = colorant"#9EB1BE",
     fglegend = colorant"#9EB1BE",
     palette = expand_palette(juno_bg, juno_palette; lchoices = [57], cchoices = [100]),
-    colorgradient = cgrad(:fire).colors
+    colorgradient = :fire
 )

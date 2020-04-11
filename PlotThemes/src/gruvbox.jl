@@ -53,7 +53,7 @@ _themes[:gruvbox_dark] = PlotTheme(
 	fgguide = _gruvbox_colors[:dark1],
 	fglegend = _gruvbox_colors[:light3],
 	palette = expand_palette(_gruvbox_colors[:dark3], [_gruvbox_colors[c] for c in _gruvbox_dark_palette]),
-    colorgradient = cgrad(:YlOrRd_r).colors
+    colorgradient = cgrad(:YlOrRd, rev = true)
 )
 
 _themes[:gruvbox_light] = PlotTheme(
@@ -64,5 +64,5 @@ _themes[:gruvbox_light] = PlotTheme(
 	fgguide = _gruvbox_colors[:dark1],
 	fglegend = _gruvbox_colors[:dark1],
 	palette = expand_palette(_gruvbox_colors[:light3], [_gruvbox_colors[c] for c in _gruvbox_light_palette]),
-    colorgradient = cgrad(:YlOrRd_r).colors
+    colorgradient = cgrad(:YlOrRd, rev = true)
 )

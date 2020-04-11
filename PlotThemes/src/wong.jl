@@ -17,5 +17,5 @@ _themes[:wong] = PlotTheme(
 
 _themes[:wong2] = PlotTheme(
     palette = expand_palette(colorant"white", [RGB(0,0,0); wong_palette]; lchoices = [57], cchoices = [100]),
-    colorgradient = cgrad(:viridis).colors,
+    colorgradient = :viridis,
 )
