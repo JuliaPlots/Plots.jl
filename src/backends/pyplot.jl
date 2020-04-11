@@ -64,12 +64,20 @@ end
 py_color(s) = py_color(parse(Colorant, string(s)))
 py_color(c::Colorant) = (red(c), green(c), blue(c), alpha(c))
 py_color(cs::AVec) = map(py_color, cs)
-py_color(grad::ColorGradient) = py_color(grad.colors)
+py_color(grad::PlotUtils.AbstractColorList) = py_color(color_list(grad))
 py_color(c::Colorant, α) = py_color(plot_color(c, α))
 
-function py_colormap(grad::ColorGradient)
-    pyvals = [(z, py_color(grad[z])) for z in grad.values]
+function py_colormap(cg::ColorGradient)
+    n = length(cg)
+    pyvals = collect(zip(range(0, 1, length = n), py_color(PlotUtils.color_list(cg))))
     cm = pycolors."LinearSegmentedColormap"."from_list"("tmp", pyvals)
+    cm."set_bad"(color=(0,0,0,0.0), alpha=0.0)
+    cm
+end
+function py_colormap(cp::ColorPalette)
+    n = length(cp)
+    pyvals = collect(zip(range(0, 1, length = n), py_color(PlotUtils.color_list(cp))))
+    cm = pycolors."LinearSegmentedColormap"."from_list"("tmp", pyvals, n)
     cm."set_bad"(color=(0,0,0,0.0), alpha=0.0)
     cm
 end
@@ -751,7 +759,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
         handle = ax."imshow"(z;
             zorder = series[:series_plotindex],
-            cmap = py_colormap(cgrad([:black, :white])),
+            cmap = py_colormap(cgrad(plot_color([:black, :white]))),
             vmin = 0.0,
             vmax = 1.0,
             extent = (xmin-0.5, xmax+0.5, ymax+0.5, ymin-0.5)
