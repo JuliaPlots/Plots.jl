@@ -176,7 +176,7 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
     lims = axis_limits(sp, letter)
 
     if axis[:ticks] != :native || axis[:lims] != :auto
-        ax[:range] = map(scalefunc(axis[:scale]), lims)
+        ax[:range] = map(RecipesPipeline.scale_func(axis[:scale]), lims)
     end
 
     if !(axis[:ticks] in (nothing, :none, false))

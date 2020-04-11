@@ -986,21 +986,26 @@ const _examples = PlotExample[
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
-_animation_examples = [2, 30]
+_animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [25, 30],
-    :pyplot => [25, 30],
+    :pyplot => [2, 25, 30, 31],
     :plotlyjs => [2, 21, 24, 25, 30, 31],
     :plotly => [2, 21, 24, 25, 30, 31],
     :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30, 31, 34, 37, 38, 39],
-    :pgfplotsx => [ 6, # images
-                    10, # histogram2d
-                    16, # pgfplots thinks the upper panel is too small
-                    22, # contourf
-                    23, # pie
-                    32, # spy
-                    38, # histogram2d
-                  ] )
+    :pgfplotsx => [
+        2, # animation
+        6, # images
+        10, # histogram2d
+        16, # pgfplots thinks the upper panel is too small
+        22, # contourf
+        23, # pie
+        31, # animation
+        32, # spy
+        38, # histogram2d
+        45, # wireframe
+    ],
+)
 
 
 

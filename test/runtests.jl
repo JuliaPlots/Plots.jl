@@ -62,9 +62,9 @@ pyplot()
     image_comparison_facts(:pyplot, tol=img_tol, skip = Plots._backend_skips[:pyplot])
 end
 
-pgfplots()
-@testset "PGFPlots" begin
-    image_comparison_facts(:pgfplots, tol=img_tol, skip = Plots._backend_skips[:pgfplots])
+pgfplotsx()
+@testset "PGFPlotsX" begin
+    image_comparison_facts(:pgfplotsx, tol=img_tol, skip = Plots._backend_skips[:pgfplotsx])
 end
 =#
 ##
