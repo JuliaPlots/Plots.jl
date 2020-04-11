@@ -84,7 +84,7 @@ end
 Get the limits for the axis specified by `letter` (`:x`, `:y` or `:z`) in `plt`. If it
 errors, `tryrange` from PlotUtils is used.
 """
-get_axis_limits(plt, letter) = ErrorException("Axis limits not defined.")
+get_axis_limits(plt, letter) = throw(ErrorException("Axis limits not defined."))
 
 
 # ## Plot recipes
