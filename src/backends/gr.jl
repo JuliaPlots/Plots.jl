@@ -67,6 +67,11 @@ const gr_font_family = Dict(
     "palatino" => 26
 )
 
+const gr_vector_font = Dict(
+    "serif-roman" => 232,
+    "sans-serif" => 233
+)
+
 # --------------------------------------------------------------------------------------
 
 gr_color(c) = gr_color(c, color_type(c))
@@ -390,6 +395,8 @@ function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
     GR.setcharup(sind(-rotation), cosd(-rotation))
     if haskey(gr_font_family, family)
         GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
+    elseif haskey(gr_vector_font, family)
+        GR.settextfontprec(gr_vector_font[family], 3)
     end
     gr_set_textcolor(color)
     GR.settextalign(gr_halign[halign], gr_valign[valign])
