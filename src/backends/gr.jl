@@ -534,7 +534,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
     GR.setwindow(xmin, xmax, zmin, zmax)
     if !isempty(cbar.gradients)
         series = cbar.gradients
-        gr_set_gradient(_cbar_unique(gr_get_color.(series),"color"))
+        gr_set_gradient(_cbar_unique(get_colorgradient.(series),"color"))
         gr_set_transparency(_cbar_unique(get_fillalpha.(series), "fill alpha"))
         GR.cellarray(xmin, xmax, zmax, zmin, 1, 256, 1000:1255)
     end
@@ -542,7 +542,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
     if !isempty(cbar.fills)
         series = cbar.fills
         GR.setfillintstyle(GR.INTSTYLE_SOLID)
-        gr_set_gradient(_cbar_unique(gr_get_color.(series), "color"))
+        gr_set_gradient(_cbar_unique(get_colorgradient.(series), "color"))
         gr_set_transparency(_cbar_unique(get_fillalpha.(series), "fill alpha"))
         levels = _cbar_unique(contour_levels.(series, Ref(clims)), "levels")
         # GR implicitly uses the maximal z value as the highest level
@@ -561,7 +561,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
 
     if !isempty(cbar.lines)
         series = cbar.lines
-        gr_set_gradient(_cbar_unique(gr_get_color.(series),"color"))
+        gr_set_gradient(_cbar_unique(get_colorgradient.(series),"color"))
         gr_set_line(_cbar_unique(get_linewidth.(series), "line width"),
                     _cbar_unique(get_linestyle.(series), "line style"),
                     _cbar_unique(get_linecolor.(series, Ref(clims)), "line color"))
@@ -657,23 +657,8 @@ function gr_set_gradient(c)
 end
 
 function gr_set_gradient(series::Series)
-    color = gr_get_color(series)
+    color = get_colorgradient(series)
     color !== nothing && gr_set_gradient(color)
-end
-
-function gr_get_color(series::Series)
-    st = series[:seriestype]
-    if st in (:surface, :heatmap) || isfilledcontour(series)
-        series[:fillcolor]
-    elseif st in (:contour, :wireframe)
-        series[:linecolor]
-    elseif series[:marker_z] !== nothing
-        series[:markercolor]
-    elseif series[:line_z] !==  nothing
-        series[:linecolor]
-    elseif series[:fill_z] !== nothing
-        series[:fillcolor]
-    end
 end
 
 # this is our new display func... set up the viewport_canvas, compute bounding boxes, and display each subplot

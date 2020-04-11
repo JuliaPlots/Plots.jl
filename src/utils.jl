@@ -541,6 +541,21 @@ for comp in (:line, :fill, :marker)
     end
 end
 
+function get_colorgradient(series::Series)
+    st = series[:seriestype]
+    if st in (:surface, :heatmap) || isfilledcontour(series)
+        series[:fillcolor]
+    elseif st in (:contour, :wireframe)
+        series[:linecolor]
+    elseif series[:marker_z] !== nothing
+        series[:markercolor]
+    elseif series[:line_z] !==  nothing
+        series[:linecolor]
+    elseif series[:fill_z] !== nothing
+        series[:fillcolor]
+    end
+end
+
 single_color(c, v = 0.5) = c
 single_color(grad::ColorGradient, v = 0.5) = grad[v]
 
