@@ -1110,6 +1110,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             pyaxis."label"."set_fontsize"(py_thickness_scale(plt, axis[:guidefontsize]))
             pyaxis."label"."set_family"(axis[:guidefontfamily])
+            pyaxis."label"."set_rotation"(axis[:guidefontrotation])
             for lab in getproperty(ax, Symbol("get_", letter, "ticklabels"))()
                 lab."set_fontsize"(py_thickness_scale(plt, axis[:tickfontsize]))
                 lab."set_family"(axis[:tickfontfamily])
