@@ -536,13 +536,16 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             msc = py_markerstrokecolor(series)
             lw = py_thickness_scale(plt, series[:markerstrokewidth])
             for i=eachindex(y)
-                extrakw[:c] = _cycle(markercolor, i)
+                if series[:marker_z] !== nothing
+                    extrakw[:c] = [py_color(get_markercolor(series, i))]
+                end
 
                 push!(handle, ax."scatter"(_cycle(x,i), _cycle(y,i);
                     label = series[:label],
                     zorder = series[:series_plotindex] + 0.5,
                     marker = py_marker(_cycle(shapes,i)),
                     s =  py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2),
+                    facecolors = get_markercolor(series, i),
                     edgecolors = msc,
                     linewidths = lw,
                     extrakw...
@@ -1311,7 +1314,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
                         linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(:path, get_linestyle(series)),
-                        marker = py_marker(first(series[:markershape])),
+                        marker = py_marker(_cycle(series[:markershape], 1)),
                         markeredgecolor = py_color(single_color(get_markerstrokecolor(series)), get_markerstrokealpha(series)),
                         markerfacecolor = py_color(single_color(get_markercolor(series, clims)), get_markeralpha(series))
                     )
