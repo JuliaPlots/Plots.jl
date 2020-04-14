@@ -350,23 +350,29 @@ function plotly_layout_json(plt::Plot)
 end
 
 
-plotly_colorscale(cg::ColorGradient, α = nothing) = plotly_colorscale(PlotUtils.color_list(cg), α)
-plotly_colorscale(c::Colorant,α) = plotly_colorscale(_as_gradient(c), α = nothing)
+plotly_colorscale(cg::ColorGradient, α = nothing) =
+    [[v, rgba_string(plot_color(cg.colors[v], α))] for v in cg.values]
 function plotly_colorscale(c::AbstractVector{<:Colorant}, α = nothing)
     if length(c) == 1
-        return [[0.0, rgba_string(plot_color(c[1], α))], [1.0, rgba_string(plot_color(c[1], α))]]
+        return [
+            [0.0, rgba_string(plot_color(c[1], α))],
+            [1.0, rgba_string(plot_color(c[1], α))],
+        ]
     else
-        vals = range(0.0, stop=1.0, length=length(c))
+        vals = range(0.0, stop = 1.0, length = length(c))
         return [[vals[i], rgba_string(plot_color(c[i], α))] for i in eachindex(c)]
     end
 end
-function plotly_colorscale(cp::ColorPalette, α = nothing)
-    n = length(cp)
-    inds = repeat(1:n, inner = 2)
-    vals = vcat((i-1:i for i in 1:n)...) ./ n
-    return [[vals[i], rgba_string(plot_color(cp[ind], α))] for (i, ind) in enumerate(inds)]
+function plotly_colorscale(cg::PlotUtils.CategoricalColorGradient, α = nothing)
+    n = length(cg)
+    cinds = repeat(1:n, inner = 2)
+    vinds = vcat((i:(i + 1) for i in 1:n)...)
+    return [
+        [cg.values[vinds[i]], rgba_string(plot_color(color_list(cg)[cinds[i]], α))]
+        for i in eachindex(cinds)
+    ]
 end
-# plotly_colorscale(c, alpha = nothing) = plotly_colorscale(cgrad(), alpha)
+plotly_colorscale(c, α = nothing) = plotly_colorscale(_as_gradient(c), α)
 
 
 const _plotly_markers = KW(

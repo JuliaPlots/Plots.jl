@@ -1522,7 +1522,13 @@ function get_series_color(c::AbstractArray, sp::Subplot, n::Int, seriestype)
 end
 
 function ensure_gradient!(plotattributes::AKW, csym::Symbol, asym::Symbol)
-    if typeof(plotattributes[csym]) ∉ (ColorGradient, ColorPalette)
+    if plotattributes[csym] isa ColorPalette
+        α = nothing
+        if !(plotattributes[asym] isa AbstractVector)
+            α = plotattributes[asym]
+        end
+        plotattributes[csym] = cgrad(plotattributes[csym], categorical = true, alpha = α)
+    elseif !(plotattributes[csym] isa ColorGradient)
         plotattributes[csym] = typeof(plotattributes[asym]) <: AbstractVector ? cgrad() : cgrad(alpha = plotattributes[asym])
     end
 end

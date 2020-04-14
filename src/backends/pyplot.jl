@@ -68,20 +68,19 @@ py_color(grad::PlotUtils.AbstractColorList) = py_color(color_list(grad))
 py_color(c::Colorant, α) = py_color(plot_color(c, α))
 
 function py_colormap(cg::ColorGradient)
-    n = length(cg)
-    pyvals = collect(zip(range(0, 1, length = n), py_color(PlotUtils.color_list(cg))))
+    pyvals = collect(zip(cg.values, py_color(PlotUtils.color_list(cg))))
     cm = pycolors."LinearSegmentedColormap"."from_list"("tmp", pyvals)
     cm."set_bad"(color=(0,0,0,0.0), alpha=0.0)
     cm
 end
-function py_colormap(cp::ColorPalette)
-    n = length(cp)
-    pyvals = collect(zip(range(0, 1, length = n), py_color(PlotUtils.color_list(cp))))
-    cm = pycolors."LinearSegmentedColormap"."from_list"("tmp", pyvals, n)
+function py_colormap(cg::PlotUtils.CategoricalColorGradient)
+    r = range(0, 1, length = 256)
+    pyvals = collect(zip(r, py_color(cg[r])))
+    cm = pycolors."LinearSegmentedColormap"."from_list"("tmp", pyvals)
     cm."set_bad"(color=(0,0,0,0.0), alpha=0.0)
     cm
 end
-py_colormap(c::Colorant) = py_colormap(_as_gradient(c))
+py_colormap(c) = py_colormap(_as_gradient(c))
 
 
 function py_shading(c, z)

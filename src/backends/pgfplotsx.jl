@@ -214,7 +214,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             "colorbar" => nothing,
                             "colormap name" => "plots$(sp.attr[:subplot_index])",
                         )
-                        if cg isa ColorPalette
+                        if cg isa PlotUtils.CategoricalColorGradient
                             push!(
                                 axis_opt,
                                 "colormap access" => "piecewise const",
@@ -690,6 +690,12 @@ function pgfx_colormap(v::Vector{<:Colorant})
         @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
     end, "\n")
 end
+function pgfx_colormap(cg::ColorGradient)
+    join(map(1:length(cg)) do i
+        @sprintf("rgb(%.8fcm)=(%.8f,%.8f,%.8f)", cg.values[i], red(cg.colors[i]), green(cg.colors[i]), blue(cg.colors[i]))
+    end, "\n")
+end
+
 
 function pgfx_framestyle(style::Symbol)
     if style in _pgfx_framestyles

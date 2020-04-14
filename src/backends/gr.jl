@@ -1333,7 +1333,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         end
 
         xticks, yticks, xspine_segs, yspine_segs, xtick_segs, ytick_segs, xgrid_segs, ygrid_segs, xminorgrid_segs, yminorgrid_segs, xborder_segs, yborder_segs = axis_drawing_info(sp)
-        # @show xticks yticks #spine_segs grid_segs
 
         # draw the grid lines
         if xaxis[:grid]
@@ -1661,14 +1660,14 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     # pdf output, and also supports alpha values.
                     # Note that drawimage draws uniformly spaced data correctly
                     # even on log scales, where it is visually non-uniform.
-                    colors = plot_color.(nan_get(fillgrad, z, clims), series[:fillalpha])
+                    colors = plot_color.(get(fillgrad, z, clims), series[:fillalpha])
                     rgba = gr_color.(colors)
                     GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
                 else
                     if something(series[:fillalpha],1) < 1 || any(_gr_gradient_alpha .< 1)
                         @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
                     end
-                    colors = nan_get(fillgrad, z, clims)
+                    colors = get(fillgrad, z, clims)
                     z_normalized = map(c -> c == invisible() ? 256/255 : getinverse(fillgrad, c), colors)
                     rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
                     GR.nonuniformcellarray(x, y, w, h, rgba)
@@ -1685,7 +1684,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if series[:y][end] != ny
                     @warn "Right now only the maximum value of y (r) is taken into account."
                 end
-                colors = nan_get(fillgrad, z, clims)
+                colors = get(fillgrad, z, clims)
                 z_normalized = map(c -> c == invisible() ? 256/255 : getinverse(fillgrad.colors, c), colors)
                 rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
                 # GR.polarcellarray(0, 0, phimin, phimax, ymin, ymax, nx, ny, colors)

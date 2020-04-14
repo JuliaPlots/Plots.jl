@@ -134,6 +134,7 @@ _cycle(cl::PlotUtils.AbstractColorList, idx::Int) = cl[mod1(idx, end)]
 _cycle(cl::PlotUtils.AbstractColorList, idx::AVec{Int}) = cl[mod1.(idx, end)]
 
 _as_gradient(grad) = grad
+_as_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
 _as_gradient(c::Colorant) = ColorGradient([c,c])
 
 makevec(v::AVec) = v
@@ -521,7 +522,7 @@ for comp in (:line, :fill, :marker)
             if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
-                nan_get(get_gradient(c), z[i], (cmin, cmax))
+                get(get_gradient(c), z[i], (cmin, cmax))
             end
         end
 
@@ -559,26 +560,7 @@ single_color(grad::ColorGradient, v = 0.5) = grad[v]
 
 get_gradient(c) = cgrad()
 get_gradient(cg::ColorGradient) = cg
-get_gradient(cp::ColorPalette) = cp
-
-function nan_get(cs, x, range)
-    if !isfinite(x)
-        return invisible()
-    elseif range isa Tuple && range[1] == range[2]
-        return plot_color(cs[1])
-    else
-        plot_color(get(cs, x, range))
-    end
-end
-function nan_get(cs, v::AbstractVector, range)
-    colors = fill(invisible(), length(v))
-    for (i, x) in enumerate(v)
-        if isfinite(x)
-            colors[i] = get(cs, x, range)
-        end
-    end
-    return colors
-end
+get_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
 
 function get_linewidth(series, i::Int = 1)
     _cycle(series[:linewidth], i)

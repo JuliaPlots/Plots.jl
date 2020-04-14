@@ -47,7 +47,6 @@ img_tol = is_ci() ? 1e-2 : Sys.islinux() ? 1e-3 : 0.1
 
 ## Uncomment the following lines to update reference images for different backends
 
-#=
 @testset "GR" begin
     image_comparison_facts(:gr, tol=img_tol, skip = Plots._backend_skips[:gr])
 end
@@ -66,7 +65,9 @@ pgfplotsx()
 @testset "PGFPlotsX" begin
     image_comparison_facts(:pgfplotsx, tol=img_tol, skip = Plots._backend_skips[:pgfplotsx])
 end
-=#
+
+# 10 Histogram2D
+
 ##
 
 @testset "Backends" begin
