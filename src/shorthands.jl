@@ -251,7 +251,7 @@ Draw contour lines of the `Surface` z.
 
 # Example
 ```julia-repl
-julia> x = y = range(-20, 20, length = 100)
+julia> x = y = range(-20, stop = 20, length = 100)
 julia> contour(x, y, (x, y) -> x^2 + y^2)
 ```
 """
@@ -272,7 +272,7 @@ Draw a 3D surface plot.
 # Example
 ```julia-repl
 julia> using LinearAlgebra
-julia> x = y = range(-3, 3, length = 100)
+julia> x = y = range(-3, stop = 3, length = 100)
 julia> surface(x, y, (x, y) -> sinc(norm([x, y])))
 ```
 """

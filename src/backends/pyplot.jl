@@ -74,7 +74,7 @@ function py_colormap(cg::ColorGradient)
     cm
 end
 function py_colormap(cg::PlotUtils.CategoricalColorGradient)
-    r = range(0, 1, length = 256)
+    r = range(0, stop = 1, length = 256)
     pyvals = collect(zip(r, py_color(cg[r])))
     cm = pycolors."LinearSegmentedColormap"."from_list"("tmp", pyvals)
     cm."set_bad"(color=(0,0,0,0.0), alpha=0.0)
