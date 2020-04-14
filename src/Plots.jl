@@ -19,7 +19,6 @@ import RecipesBase: plot, plot!, animate, is_explicit
 using Base.Meta
 @reexport using PlotUtils
 @reexport using PlotThemes
-@reexport using ColorSchemes
 import Showoff
 import StatsBase
 import JSON
