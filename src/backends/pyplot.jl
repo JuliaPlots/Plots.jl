@@ -540,7 +540,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     zorder = series[:series_plotindex] + 0.5,
                     marker = py_marker(_cycle(shapes,i)),
                     s =  py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2),
-                    facecolors = get_markercolor(series, i),  # Not sure if we need  get_markercoloralpha(series, i) here
+                    facecolors = py_color(get_markercolor(series, i), get_markercoloralpha(series, i)),
                     edgecolors = msc,
                     linewidths = lw,
                     extrakw...
