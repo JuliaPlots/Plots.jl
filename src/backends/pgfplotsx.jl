@@ -240,6 +240,16 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 PGFPlotsX.Axis
             end
             axis = axisf(axis_opt)
+            if sp[:legendtitle] !== nothing
+                push!(axis, PGFPlotsX.Options("\\addlegendimage{empty legend}" => nothing))
+                push!(
+                    axis,
+                    PGFPlotsX.LegendEntry(
+                        string("\\hspace{-.6cm}{\\textbf{", sp[:legendtitle], "}}"),
+                        false,
+                    ),
+                )
+            end
             for (series_index, series) in enumerate(series_list(sp))
                 # give each series a uuid for fillbetween
                 series_id = uuid4()
