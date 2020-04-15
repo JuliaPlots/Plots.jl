@@ -1071,7 +1071,7 @@ end
 function shape_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
-    x, y = series[:x], series[:y]
+    x, y = copy(series[:x]), copy(series[:y])
     factor = 100
     for i in eachindex(x)
         if x[i] == -Inf
