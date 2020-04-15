@@ -224,9 +224,9 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 axis_opt,
                 "colorbar style" => PGFPlotsX.Options(
                     "title" => sp[:colorbar_title],
-                    "point meta max" => get_clims(sp)[2],
-                    "point meta min" => get_clims(sp)[1],
                 ),
+                "point meta max" => get_clims(sp)[2],
+                "point meta min" => get_clims(sp)[1],
             )
             if RecipesPipeline.is3d(sp)
                 azim, elev = sp[:camera]
