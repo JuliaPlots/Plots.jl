@@ -822,6 +822,7 @@ end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
     dpi = sp.plt[:thickness_scaling]
+    ENV["GKS_ENCODING"] = "utf8"
     if !haskey(ENV, "GKSwstype")
         if isijulia()
             ENV["GKSwstype"] = "svg"
@@ -1945,6 +1946,7 @@ gr_set_output(wstype::String) = (_gr_wstype[] = wstype)
 
 for (mime, fmt) in _gr_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
+        ENV["GKS_ENCODING"] = "utf8"
         GR.emergencyclosegks()
         filepath = tempname() * "." * $fmt
         env = get(ENV, "GKSwstype", "0")
@@ -1963,6 +1965,7 @@ for (mime, fmt) in _gr_mimeformats
 end
 
 function _display(plt::Plot{GRBackend})
+    ENV["GKS_ENCODING"] = "utf8"
     if plt[:display_type] == :inline
         GR.emergencyclosegks()
         filepath = tempname() * ".pdf"
