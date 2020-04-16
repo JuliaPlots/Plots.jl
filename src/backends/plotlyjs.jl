@@ -40,11 +40,9 @@ _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) = write(io, standal
 
 _display(plt::Plot{PlotlyJSBackend}) = display(plotlyjs_syncplot(plt))
 
-@require WebIO = "0f1e0344-ec1d-5b48-a673-e5cf874b6c29" begin
-    function WebIO.render(plt::Plot{PlotlyJSBackend})
-        plt_html = sprint(show, MIME("text/html"), plt)
-        return WebIO.render(WebIO.dom"div"(innerHTML=plt_html))
-    end
+function PlotlyJS.WebIO.render(plt::Plot{PlotlyJSBackend})
+    plt_html = sprint(show, MIME("text/html"), plt)
+    return PlotlyJS.WebIO.render(PlotlyJS.WebIO.dom"div"(innerHTML=plt_html))
 end
 
 function closeall(::PlotlyJSBackend)
