@@ -229,11 +229,6 @@ function fix_xy_lengths!(plt::Plot{PyPlotBackend}, series::Series)
     end
 end
 
-py_linecolor(series::Series)          = py_color(series[:linecolor])
-py_markercolor(series::Series)        = py_color(series[:markercolor])
-py_markerstrokecolor(series::Series)  = py_color(series[:markerstrokecolor])
-py_fillcolor(series::Series)          = py_color(series[:fillcolor])
-
 py_linecolormap(series::Series)       = py_colormap(series[:linecolor])
 py_markercolormap(series::Series)     = py_colormap(series[:markercolor])
 py_fillcolormap(series::Series)       = py_colormap(series[:fillcolor])
@@ -486,8 +481,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                         :arrowstyle => "simple,head_length=$(a.headlength),head_width=$(a.headwidth)",
                         :shrinkA => 0,
                         :shrinkB => 0,
-                        :edgecolor => py_linecolor(series),
-                        :facecolor => py_linecolor(series),
+                        :edgecolor => py_color(get_linecolor(series)),
+                        :facecolor => py_color(get_linecolor(series)),
                         :linewidth => py_thickness_scale(plt, get_linewidth(series)),
                         :linestyle => py_linestyle(st, get_linestyle(series)),
                     )
@@ -533,11 +528,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             handle = []
             x,y = xyargs
             shapes = series[:markershape]
-            msc = py_markerstrokecolor(series)
+            msc = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series))
             lw = py_thickness_scale(plt, series[:markerstrokewidth])
             for i=eachindex(y)
                 if series[:marker_z] !== nothing
-                    extrakw[:c] = [py_color(get_markercolor(series, i))]
+                    extrakw[:c] = [py_color(get_markercolor(series, i), get_markercoloralpha(series, i))]
                 end
 
                 push!(handle, ax."scatter"(_cycle(x,i), _cycle(y,i);
@@ -545,7 +540,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     zorder = series[:series_plotindex] + 0.5,
                     marker = py_marker(_cycle(shapes,i)),
                     s =  py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2),
-                    facecolors = get_markercolor(series, i),
+                    facecolors = py_color(get_markercolor(series, i), get_markercoloralpha(series, i)),
                     edgecolors = msc,
                     linewidths = lw,
                     extrakw...
@@ -585,7 +580,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                   zorder = series[:series_plotindex] + 0.5,
                   marker = prev_marker,
                   s = cur_scale_list,
-                  edgecolors = py_markerstrokecolor(series),
+                  edgecolors = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),  # Do we need include i?
                   linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
                   facecolors = cur_color_list,
                   extrakw...
@@ -606,7 +601,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 zorder = series[:series_plotindex] + 0.5,
                 marker = prev_marker,
                 s = cur_scale_list,
-                edgecolors = py_markerstrokecolor(series),
+                edgecolors = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
                 linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
                 facecolors = cur_color_list,
                 extrakw...
@@ -621,7 +616,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 zorder = series[:series_plotindex] + 0.5,
                 marker = py_marker(series[:markershape]),
                 s = py_thickness_scale(plt, series[:markersize] .^ 2),
-                edgecolors = py_markerstrokecolor(series),
+                edgecolors = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
                 linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
                 extrakw...
             )
@@ -635,7 +630,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             zorder = series[:series_plotindex],
             gridsize = series[:bins],
             linewidths = py_thickness_scale(plt, series[:linewidth]),
-            edgecolors = py_linecolor(series),
+            edgecolors = py_color(get_linecolor(series)),
             cmap = py_fillcolormap(series),  # applies to the pcolorfast object
             extrakw...
         )
@@ -708,7 +703,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 rstride = series[:stride][1],
                 cstride = series[:stride][2],
                 linewidth = py_thickness_scale(plt, series[:linewidth]),
-                edgecolor = py_linecolor(series),
+                edgecolor = py_color(get_linecolor(series)),
                 extrakw...
             )
             push!(handles, handle)
@@ -734,7 +729,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 zorder = series[:series_plotindex],
                 cmap = py_fillcolormap(series),
                 linewidth = py_thickness_scale(plt, series[:linewidth]),
-                edgecolor = py_linecolor(series),
+                edgecolor = py_color(get_linecolor(series)),
                 extrakw...
             )
             push!(handles, handle)
@@ -1320,7 +1315,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
                         linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                         linestyle = py_linestyle(:path, get_linestyle(series)),
-                        marker = py_marker(_cycle(series[:markershape], 1)),
+                        marker = py_marker(_cycle(series[:markershape], 1)),  # Need to adjust markersize to match the legend box size
                         markeredgecolor = py_color(single_color(get_markerstrokecolor(series)), get_markerstrokealpha(series)),
                         markerfacecolor = py_color(single_color(get_markercolor(series, clims)), get_markeralpha(series))
                     )
