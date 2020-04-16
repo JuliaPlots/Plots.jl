@@ -84,7 +84,7 @@ end
       @test marker.options["mark"] == "*"
       @test marker.options["mark options"]["color"] ==
             RGBA{Float64}(colorant"green", 0.8)
-      @test marker.options["mark options"]["line width"] == 1
+      @test marker.options["mark options"]["line width"] == 0.75 # 1px is 0.75pt
    end # testset
    @testset "Plot in pieces" begin
       pic = plot(rand(100) / 3, reg = true, fill = (0, :green))

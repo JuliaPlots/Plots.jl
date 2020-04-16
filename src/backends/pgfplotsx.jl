@@ -768,7 +768,7 @@ function pgfx_marker(plotattributes, i = 1)
     a_stroke = alpha(cstr_stroke)
     mark_size =
         pgfx_thickness_scaling(plotattributes) *
-        0.5 *
+        0.75 *
         _cycle(plotattributes[:markersize], i)
     return PGFPlotsX.Options(
         "mark" =>
@@ -780,7 +780,7 @@ function pgfx_marker(plotattributes, i = 1)
             "fill" => cstr,
             "fill opacity" => a,
             "line width" =>
-                pgfx_thickness_scaling(plotattributes) *
+                pgfx_thickness_scaling(plotattributes) * 0.75 *
                 _cycle(plotattributes[:markerstrokewidth], i),
             "rotate" => if shape == :dtriangle
                 180
