@@ -9,7 +9,7 @@ PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [compat]
-PlotUtils = "0.6.5"
+PlotUtils = "0.6.5, 1"
 RecipesBase = "0.8, 1.0"
 julia = "1"
 
