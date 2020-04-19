@@ -530,7 +530,6 @@ function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(l
     ex = axis[:extrema]
     amin, amax = ex.emin, ex.emax
     lims = axis[:lims]
-    @show lims
     has_user_lims = (isa(lims, Tuple) || isa(lims, AVec)) && length(lims) == 2
     if has_user_lims
         lmin, lmax = lims
