@@ -287,7 +287,7 @@ end
 end
 @recipe function f(fs::AbstractArray{F}, xmin::Number, xmax::Number) where {F <: Function}
     xscale, yscale = [get(plotattributes, sym, :identity) for sym in (:xscale, :yscale)]
-    unzip(_scaled_adapted_grid.(fs, xscale, yscale, xmin, xmax))
+    unzip(_scaled_adapted_grid.(vec(fs), xscale, yscale, xmin, xmax))
 end
 @recipe f(
     fx::FuncOrFuncs{F},
