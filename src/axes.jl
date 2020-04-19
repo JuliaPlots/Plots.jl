@@ -462,11 +462,12 @@ function axis_limits(sp, letter, should_widen = default_should_widen(sp[Symbol(l
     lims = axis[:lims]
     has_user_lims = (isa(lims, Tuple) || isa(lims, AVec)) && length(lims) == 2
     if has_user_lims
-        if isfinite(lims[1])
-            amin = lims[1]
+        lmin, lmax = lims
+        if lmin != :auto && isfinite(lmin)
+            amin = lmin
         end
-        if isfinite(lims[2])
-            amax = lims[2]
+        if lmax != :auto && isfinite(lmax)
+            amax = lmax
         end
     end
     if amax <= amin && isfinite(amin)
