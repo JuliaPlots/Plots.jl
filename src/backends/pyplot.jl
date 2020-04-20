@@ -1101,7 +1101,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ticks[2][ticks[1] .== 0] .= ""
             end
             axis[:ticks] != :native ? py_set_ticks(ax, ticks, letter) : nothing
-            pyaxis."set_tick_params"(direction = axis[:tick_direction] == :out ? "out" : "in")
+
+            intensity = 0.5  # This value corresponds to scaling of other grid elements
+            pyaxis."set_tick_params"(direction = axis[:tick_direction] == :out ? "out" : "in", width=py_thickness_scale(plt, intensity))
+
             getproperty(ax, Symbol("set_", letter, "label"))(axis[:guide])
             if get(axis.plotattributes, :flip, false)
                 getproperty(ax, Symbol("invert_", letter, "axis"))()
