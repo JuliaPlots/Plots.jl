@@ -1134,6 +1134,22 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             else
                 pyaxis."grid"(false)
             end
+            #
+            if axis[:minorgrid]
+                ax."minorticks_on"()  # PyPlot requires this to be on
+                pyaxis."set_tick_params"(
+                    which = "minor",
+                    direction = axis[:tick_direction] == :out ? "out" : "in",
+                    width=py_thickness_scale(plt, intensity))
+
+                ax."grid"(true,
+                    which = "minor",
+                    color = fgcolor,
+                    linestyle = py_linestyle(:line, axis[:minorgridstyle]),
+                    linewidth = py_thickness_scale(plt, axis[:minorgridlinewidth]),
+                    alpha = axis[:minorgridalpha])
+
+            end
             py_set_axis_colors(sp, ax, axis)
         end
 
