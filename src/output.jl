@@ -45,6 +45,7 @@ end
 eps(fn::AbstractString) = eps(current(), fn)
 
 function tex(plt::Plot, fn::AbstractString)
+  fn = addExtension(fn, "tex")
   io = open(fn, "w")
   show(io, MIME("application/x-tex"), plt)
   close(io)
@@ -102,7 +103,7 @@ end
 function addExtension(fn::AbstractString, ext::AbstractString)
   try
     oldext = getExtension(fn)
-    if oldext == ext
+    if _savemap[oldext] == ext
       return fn
     else
       return "$fn.$ext"
