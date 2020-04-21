@@ -1344,6 +1344,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 facecolor = py_color(sp[:background_color_legend]),
                 edgecolor = py_color(sp[:foreground_color_legend]),
                 framealpha = alpha(plot_color(sp[:background_color_legend])),
+                fancybox = false  # makes the legend box square
             )
             frame = leg."get_frame"()
             frame."set_linewidth"(py_thickness_scale(plt, 1))
