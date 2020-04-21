@@ -45,7 +45,6 @@ end
 eps(fn::AbstractString) = eps(current(), fn)
 
 function tex(plt::Plot, fn::AbstractString)
-  fn = addExtension(fn, "tex")
   io = open(fn, "w")
   show(io, MIME("application/x-tex"), plt)
   close(io)
