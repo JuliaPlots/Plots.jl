@@ -103,7 +103,7 @@ end
 function addExtension(fn::AbstractString, ext::AbstractString)
   try
     oldext = getExtension(fn)
-    if _savemap[oldext] == ext
+    if string(_savemap[oldext]) == ext
       return fn
     else
       return "$fn.$ext"
