@@ -88,6 +88,7 @@ const _savemap = Dict(
     "tex" => tex,
     "json" => json,
     "html" => html,
+    "tex" => tex,
     "tikz" => tex,
     "txt" => txt,
   )
