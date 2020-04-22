@@ -681,10 +681,14 @@ function default(k::Symbol, v)
 end
 
 function default(; kw...)
-    kw = KW(kw)
-    RecipesPipeline.preprocess_attributes!(kw)
-    for (k,v) in kw
-        default(k, v)
+    if isempty(kw)
+        reset_defaults()
+    else
+        kw = KW(kw)
+        RecipesPipeline.preprocess_attributes!(kw)
+        for (k,v) in kw
+            default(k, v)
+        end
     end
 end
 
