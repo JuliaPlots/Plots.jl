@@ -88,7 +88,6 @@ const _savemap = Dict(
     "tex" => tex,
     "json" => json,
     "html" => html,
-    "tex" => tex,
     "tikz" => tex,
     "txt" => txt,
   )
@@ -104,15 +103,12 @@ function getExtension(fn::AbstractString)
 end
 
 function addExtension(fn::AbstractString, ext::AbstractString)
-  try
-    oldext = getExtension(fn)
-    if get(_extesion_map, oldext, oldext) == ext
-      return fn
-    else
-      return "$fn.$ext"
-    end
-  catch
-    return "$fn.$ext"
+  oldfn, oldext = splitext(fn)
+  oldext = chop(oldext, head = 1, tail = 0)
+  if get(_extension_map, oldext, oldext) == ext
+    return fn
+  else
+    return string(fn, ".", ext)
   end
 end
 
@@ -125,21 +121,21 @@ file types, some also support svg, ps, eps, html and tex.
 """
 function savefig(plt::Plot, fn::AbstractString)
   fn = abspath(expanduser(fn))
+
   # get the extension
-  local ext
-  try
-    ext = getExtension(fn)
-  catch
-    # if we couldn't extract the extension, add the default
+  fn, ext = splitext(fn)
+  ext = chop(ext, head = 1, tail = 0)
+  if isempty(ext)
     ext = defaultOutputFormat(plt)
-    fn = addExtension(fn, ext)
   end
 
   # save it
-  func = get(_savemap, ext) do
-    error("Unsupported extension $ext with filename ", fn)
+  if haskey(_savemap, ext)
+    func = _savemap[ext]
+    return func(plt, fn)
+  else
+    error("Invalid file extension: ", fn)
   end
-  func(plt, fn)
 end
 savefig(fn::AbstractString) = savefig(current(), fn)
 
