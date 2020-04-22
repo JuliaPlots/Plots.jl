@@ -93,6 +93,8 @@ const _savemap = Dict(
     "txt" => txt,
   )
 
+const _extension_map = Dict("tikz" => "tex")
+
 function getExtension(fn::AbstractString)
   pieces = split(fn, ".")
   length(pieces) > 1 || error("Can't extract file extension: ", fn)
@@ -104,7 +106,7 @@ end
 function addExtension(fn::AbstractString, ext::AbstractString)
   try
     oldext = getExtension(fn)
-    if string(_savemap[oldext]) == ext
+    if get(_extesion_map, oldext, oldext) == ext
       return fn
     else
       return "$fn.$ext"
