@@ -345,7 +345,7 @@ function _userplot(expr::Expr)
         error("Must call userplot on a [mutable] struct expression.  Got: $expr")
     end
 
-    typename = expr.args[2]
+    typename = gettypename(expr.args[2])
     funcname = Symbol(lowercase(string(typename)))
     funcname2 = Symbol(funcname, "!")
 
@@ -363,6 +363,13 @@ function _userplot(sym::Symbol)
     _userplot(:(mutable struct $sym
             args
     end))
+end
+
+gettypename(sym::Symbol) = sym
+
+function gettypename(expr::Expr)
+    expr.head == :curly || @error "Unexpected struct name: $expr"
+    expr.args[1]
 end
 
 #----------------------------------------------------------------------------
