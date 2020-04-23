@@ -359,11 +359,22 @@ end # testset
 end # testset
 
 @testset "Titlefonts" begin
-   pl = plot(1:5, title = ("Test me", 2, :left))
+   pl = plot(1:5, title = "Test me", titlefont = (2, :left))
+   @test pl[1][:title] == "Test me"
+   @test pl[1][:titlefontsize] == 2
+   @test pl[1][:titlefonthalign] == :left
    Plots._update_plot_object(pl)
    ax_opt = Plots.pgfx_axes(pl.o)[1].options
    @test ax_opt["title"] == "Test me"
    if @test(haskey(ax_opt.dict, "title_style")) isa Test.Pass
       @test ax_opt["title style"]["at"] == "{(0,1)}"
    end
+   pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
+   @test pl[:plot_title] == "Test me"
+   @test pl[:plot_titlefontsize] == 2
+   @test pl[:plot_titlefonthalign] == :left
+   pl = heatmap(rand(3,3), colorbar_title = "Test me", colorbar_titlefont = (12, :right))
+   @test pl[1][:colorbar_title] == "Test me"
+   @test pl[1][:colorbar_titlefontsize] == 12
+   @test pl[1][:colorbar_titlefonthalign] == :right
 end # testset

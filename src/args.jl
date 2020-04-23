@@ -482,7 +482,7 @@ const _subplot_args = sort(union(collect(keys(_subplot_defaults))))
 const _plot_args = sort(union(collect(keys(_plot_defaults))))
 
 const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
-const _magic_subplot_args = [:titlefont, :legendfont, :legendtitlefont, ]
+const _magic_subplot_args = [:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont]
 const _magic_series_args = [:line, :marker, :fill]
 
 const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
@@ -1062,7 +1062,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
 
     # fonts
-    for fontname in (:titlefont, :legendfont, :legendtitlefont)
+    for fontname in (:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
