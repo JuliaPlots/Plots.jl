@@ -3,7 +3,7 @@
 
 
 # don't warn on unsupported... there's just too many warnings!!
-warnOnUnsupported_args(::UnicodePlotsBackend, plotattributes::KW) = nothing
+warn_on_unsupported_args(::UnicodePlotsBackend, plotattributes::KW) = nothing
 
 # --------------------------------------------------------------------------------------
 
