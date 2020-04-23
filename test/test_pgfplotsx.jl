@@ -366,9 +366,7 @@ end # testset
    Plots._update_plot_object(pl)
    ax_opt = Plots.pgfx_axes(pl.o)[1].options
    @test ax_opt["title"] == "Test me"
-   if @test(haskey(ax_opt.dict, "title_style")) isa Test.Pass
-      @test ax_opt["title style"]["at"] == "{(0,1)}"
-   end
+   @test(haskey(ax_opt.dict, "title style")) isa Test.Pass
    pl = plot(1:5, plot_title = "Test me", plot_titlefont = (2, :left))
    @test pl[:plot_title] == "Test me"
    @test pl[:plot_titlefontsize] == 2
