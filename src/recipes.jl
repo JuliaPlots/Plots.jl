@@ -1019,7 +1019,8 @@ error_tuple(x::Tuple) = x
 
 function error_coords(errorbar, errordata, otherdata...)
     ed = Vector{float_extended_type(errordata)}(undef, 0)
-    od = [Float64[] for _ in otherdata]
+    od = [Vector{float_extended_type(odi)}(undef, 0) for odi in otherdata]
+    @show eltype(od)
     for (i, edi) in enumerate(errordata)
         for (j, odj) in enumerate(otherdata)
             odi = _cycle(odj, i)
