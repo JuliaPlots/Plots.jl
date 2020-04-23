@@ -1450,7 +1450,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     GR.savestate()
     if sp[:title] != ""
         gr_set_font(titlefont(sp))
-        loc = sp[:title_location]
+        loc = sp[:titlelocation]
         if loc == :left
             xpos = viewport_plotarea[1]
             halign = GR.TEXT_HALIGN_LEFT

@@ -987,7 +987,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
         # title
         if sp[:title] != ""
-            loc = lowercase(string(sp[:title_location]))
+            loc = lowercase(string(sp[:titlelocation]))
             func = if loc == "left"
                 :_left_title
             elseif loc == "right"

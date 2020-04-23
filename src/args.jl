@@ -310,7 +310,7 @@ const _plot_defaults = KW(
 
 const _subplot_defaults = KW(
     :title                    => "",
-    :title_location           => :center,           # also :left or :right
+    :titlelocation            => :center,           # also :left or :right
     :fontfamily_subplot       => :match,
     :titlefontfamily          => :match,
     :titlefontsize            => 14,
@@ -600,7 +600,7 @@ add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
 add_aliases(:match_dimensions, :transpose, :transpose_z)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
-add_aliases(:title_location, :title_loc, :titleloc, :title_position, :title_pos, :titlepos, :titleposition, :title_align, :title_alignment)
+add_aliases(:titlelocation, :title_location, :title_loc, :titleloc, :title_position, :title_pos, :titlepos, :titleposition, :title_align, :title_alignment)
 add_aliases(:series_annotations, :series_ann, :seriesann, :series_anns, :seriesanns, :series_annotation, :text, :txt, :texts, :txts)
 add_aliases(:html_output_format, :format, :fmt, :html_format)
 add_aliases(:orientation, :direction, :dir)

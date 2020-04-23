@@ -123,7 +123,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
-            title_loc = sp[:title_location]
+            title_loc = sp[:titlelocation]
             bgc_inside = plot_color(sp[:background_color_inside])
             bgc_inside_a = alpha(bgc_inside)
             axis_opt = PGFPlotsX.Options(
