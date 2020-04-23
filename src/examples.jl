@@ -586,7 +586,7 @@ const _examples = PlotExample[
                         rand(100, 6),
                         layout = @layout([a b; c]),
                         title = ["A" "B" "C"],
-                        title_location = :left,
+                        titlelocation = :left,
                         left_margin = [20mm 0mm],
                         bottom_margin = 10px,
                         xrotation = 60,

@@ -75,7 +75,7 @@ const _arg_desc = KW(
 
 # subplot args
 :title                    => "String. Subplot title.",
-:title_location           => "Symbol. Position of subplot title. Values: `:left`, `:center`, `:right`",
+:titlelocation           => "Symbol. Position of subplot title. Values: `:left`, `:center`, `:right`",
 :titlefontfamily          => "String or Symbol. Font family of subplot title.",
 :titlefontsize            => "Integer. Font pointsize of subplot title.",
 :titlefonthalign          => "Symbol. Font horizontal alignment of subplot title: :hcenter, :left, :right or :center",
