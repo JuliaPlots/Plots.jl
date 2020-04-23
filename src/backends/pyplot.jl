@@ -1323,7 +1323,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                             markersize = py_thickness_scale(plt, 6), # 6 looks same the default, do not put ^2
                             markeredgecolor = py_color(single_color(get_markerstrokecolor(series)), get_markerstrokealpha(series)),
                             markerfacecolor = py_color(single_color(get_markercolor(series, clims)), get_markeralpha(series)),
-                            markeredgewidth = py_thickness_scale(plt, 1.1)  # scales better
+                            markeredgewidth = py_thickness_scale(plt, series[:markerstrokewidth] * 6 / series[:markersize])   # retain the markersize/markerstroke ratio from the markers on the plot
                         )
                     else
                         series[:serieshandle][1]
