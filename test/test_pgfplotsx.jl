@@ -357,3 +357,13 @@ end # testset
    axes = Plots.pgfx_axes(pl.o)
    @test filter(x->x isa String, axes[1].contents)[1] == raw"\node at (0,0.5) {\huge hi};"
 end # testset
+
+@testset "Titlefonts" begin
+   pl = plot(1:5, title = ("Test me", 2, :left))
+   Plots._update_plot_object(pl)
+   ax_opt = Plots.pgfx_axes(pl.o)[1].options
+   @test ax_opt["title"] == "Test me"
+   if @test(haskey(ax_opt.dict, "title_style")) isa Test.Pass
+      @test ax_opt["title style"]["at"] == "{(0,1)}"
+   end
+end # testset
