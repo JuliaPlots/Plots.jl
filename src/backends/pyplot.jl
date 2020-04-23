@@ -1320,10 +1320,10 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                             linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                             linestyle = py_linestyle(:path, get_linestyle(series)),
                             marker = py_marker(_cycle(series[:markershape], 1)),
-                            # markersize = py_thickness_scale(plt, series[:markersize]), # In case we decide that markersize needs to be scaled in the legend too
+                            markersize = py_thickness_scale(plt, 6), # 6 looks same the default
                             markeredgecolor = py_color(single_color(get_markerstrokecolor(series)), get_markerstrokealpha(series)),
                             markerfacecolor = py_color(single_color(get_markercolor(series, clims)), get_markeralpha(series)),
-                            markeredgewidth = py_thickness_scale(plt, series[:markerstrokewidth])
+                            markeredgewidth = py_thickness_scale(plt, 1)
                         )
                     else
                         series[:serieshandle][1]
