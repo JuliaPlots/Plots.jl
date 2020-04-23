@@ -116,6 +116,15 @@ export myplot, myplot!
 myplot(args...; kw...) = plot(MyPlot(args); kw...)
 myplot!(args...; kw...) = plot!(MyPlot(args); kw...)
 ```
+
+To check `args` type, define a struct with type parameters.
+
+```
+@userplot struct MyPlot{T<:Tuple{AbstractVector}}
+    args::T
+end
+```
+
 We can use this to define a user recipe for a pie plot.
 ```@example types
 # defines mutable struct `UserPie` and sets shorthands `userpie` and `userpie!`
