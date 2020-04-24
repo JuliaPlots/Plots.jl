@@ -245,7 +245,7 @@ function plotly_layout(plt::Plot)
         # but vertically just below the top of the subplot bounding box
         if sp[:title] != ""
             bb = plotarea(sp)
-            tpos = sp[:title_location]
+            tpos = sp[:titlelocation]
             xmm = if tpos == :left
                 left(bb)
             elseif tpos == :right

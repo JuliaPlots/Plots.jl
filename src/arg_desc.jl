@@ -75,7 +75,7 @@ const _arg_desc = KW(
 
 # subplot args
 :title                    => "String. Subplot title.",
-:title_location           => "Symbol. Position of subplot title. Values: `:left`, `:center`, `:right`",
+:titlelocation           => "Symbol. Position of subplot title. Values: `:left`, `:center`, `:right`",
 :titlefontfamily          => "String or Symbol. Font family of subplot title.",
 :titlefontsize            => "Integer. Font pointsize of subplot title.",
 :titlefonthalign          => "Symbol. Font horizontal alignment of subplot title: :hcenter, :left, :right or :center",
@@ -89,7 +89,7 @@ const _arg_desc = KW(
 :foreground_color_legend  => "Color Type or `:match` (matches `:foreground_color_subplot`).  Foreground color of the legend.",
 :foreground_color_title   => "Color Type or `:match` (matches `:foreground_color_subplot`). Color of subplot title.",
 :color_palette            => "Vector of colors (cycle through) or color gradient (generate list from gradient) or `:auto` (generate a color list using `Colors.distiguishable_colors` and custom seed colors chosen to contrast with the background).  The color palette is a color list from which series colors are automatically chosen.",
-:legend                   => "Bool (show the legend?) or Symbol (legend position).  Symbol values: `:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:inside`, `:legend`, `:topright`, `:topleft`, `:bottomleft`, `:bottomright` , `:inline` (note: only some may be supported in each backend)",
+:legend                   => "Bool (show the legend?) or (x,y) tuple or Symbol (legend position). Bottom left corner of legend is placed at (x,y).  Symbol values: `:none`, `:best`, `:right`, `:left`, `:top`, `:bottom`, `:inside`, `:legend`, `:topright`, `:topleft`, `:bottomleft`, `:bottomright` , `:inline` (note: only some may be supported in each backend)",
 :legendfontfamily         => "String or Symbol. Font family of legend entries.",
 :legendfontsize           => "Integer. Font pointsize of legend entries.",
 :legendfonthalign         => "Symbol. Font horizontal alignment of legend entries: :hcenter, :left, :right or :center",
