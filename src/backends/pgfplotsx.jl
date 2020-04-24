@@ -86,7 +86,9 @@ end
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
         pgfx_sanitize_plot!(plt)
-        the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options())
+        # extract extra kwargs
+        extra_plot_opt = PGFPlotsX.Options(plt[:extra_kwargs][:plot]...)
+        the_plot = PGFPlotsX.TikzPicture(extra_plot_opt)
         bgc = plt.attr[:background_color_outside] == :match ?
             plt.attr[:background_color] : plt.attr[:background_color_outside]
         if bgc isa Colors.Colorant
@@ -126,6 +128,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             title_loc = sp[:titlelocation]
             bgc_inside = plot_color(sp[:background_color_inside])
             bgc_inside_a = alpha(bgc_inside)
+            extra_sp_opt = PGFPlotsX.Options(plt[:extra_kwargs][:subplot]...)
             axis_opt = PGFPlotsX.Options(
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
@@ -261,9 +264,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 opt = series.plotattributes
                 st = series[:seriestype]
                 sf = series[:fillrange]
+                extra_series_opt = PGFPlotsX.Options(plt[:extra_kwargs][:series]...)
                 series_opt = PGFPlotsX.Options(
                     "color" => single_color(opt[:linecolor]),
                     "name path" => string(series_id),
+                    extra_series_opt...
                 )
                 if RecipesPipeline.is3d(series) || st == :heatmap
                     series_func = PGFPlotsX.Plot3
