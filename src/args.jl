@@ -305,6 +305,7 @@ const _plot_defaults = KW(
     :thickness_scaling           => 1,
     :display_type                => :auto,
     :extra_kwargs                => KW(),
+    :warn_on_unsupported         => true,
 )
 
 
@@ -614,6 +615,7 @@ add_aliases(:framestyle, :frame_style, :frame, :axesstyle, :axes_style, :boxstyl
 add_aliases(:tick_direction, :tickdirection, :tick_dir, :tickdir, :tick_orientation, :tickorientation, :tick_or, :tickor)
 add_aliases(:camera, :cam, :viewangle, :view_angle)
 add_aliases(:contour_labels, :contourlabels, :clabels, :clabs)
+add_aliases(:warn_on_unsupported, :warn)
 
 # add all pluralized forms to the _keyAliases dict
 for arg in keys(_series_defaults)
@@ -1122,6 +1124,9 @@ const _already_warned = Dict{Symbol,Set{Symbol}}()
 const _to_warn = Set{Symbol}()
 
 function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
+    if !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
+        return
+    end
     empty!(_to_warn)
     bend = backend_name(pkg)
     already_warned = get!(_already_warned, bend, Set{Symbol}())
@@ -1146,6 +1151,9 @@ end
 # _markershape_supported(pkg::AbstractBackend, shapes::AVec) = all([_markershape_supported(pkg, shape) for shape in shapes])
 
 function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
+    if !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
+        return
+    end
     if !is_seriestype_supported(pkg, plotattributes[:seriestype])
         @warn("seriestype $(plotattributes[:seriestype]) is unsupported with $pkg.  Choose from: $(supported_seriestypes(pkg))")
     end
@@ -1158,6 +1166,9 @@ function warn_on_unsupported(pkg::AbstractBackend, plotattributes)
 end
 
 function warn_on_unsupported_scales(pkg::AbstractBackend, plotattributes::AKW)
+    if !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
+        return
+    end
     for k in (:xscale, :yscale, :zscale, :scale)
         if haskey(plotattributes, k)
             v = plotattributes[k]
