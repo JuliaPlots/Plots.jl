@@ -30,7 +30,7 @@ macro init_backend(s)
     esc(quote
         struct $T <: AbstractBackend end
         export $sym
-        $sym(; kw...) = (default(; kw...); backend($T()))
+        $sym(; kw...) = (default(; reset = false, kw...); backend($T()))
         backend_name(::$T) = Symbol($str)
         backend_package_name(pkg::$T) = backend_package_name(Symbol($str))
         push!(_backends, Symbol($str))

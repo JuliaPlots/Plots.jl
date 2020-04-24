@@ -680,15 +680,14 @@ function default(k::Symbol, v)
     k in _suppress_warnings || error("Unknown key: ", k)
 end
 
-function default(; kw...)
-    if isempty(kw)
+function default(; reset = true, kw...)
+    if reset && isempty(kw)
         reset_defaults()
-    else
-        kw = KW(kw)
-        RecipesPipeline.preprocess_attributes!(kw)
-        for (k,v) in kw
-            default(k, v)
-        end
+    end
+    kw = KW(kw)
+    RecipesPipeline.preprocess_attributes!(kw)
+    for (k,v) in kw
+        default(k, v)
     end
 end
 
