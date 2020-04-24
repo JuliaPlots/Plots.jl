@@ -4,12 +4,16 @@ module PlotThemes
 
 using PlotUtils, Requires
 
-export
-    add_theme, palette
+export add_theme, theme_palette
 
 _255_to_1(c::Symbol, colors) = RGBA(map(x-> x/255,colors[c])...)
 RGB255(r,g,b) = RGB(r/255, g/255, b/255)
-expand_palette(bg, palette; kwargs...) = [convert(RGBA,c) for c in  distinguishable_colors(20, vcat(bg, palette); kwargs...)][2:end]
+
+function expand_palette(bg, cs; kwargs...)
+    colors = palette(cs).colors.colors
+    c = convert.(RGBA, distinguishable_colors(20, vcat(bg, colors); kwargs...))[2:end]
+    return palette(c)
+end
 
 const KW = Dict{Symbol, Any}
 
@@ -23,22 +27,17 @@ PlotTheme(; kw...) = PlotTheme(KW(kw))
 PlotTheme(base::PlotTheme; kw...) = PlotTheme(KW(base.defaults..., KW(kw)...))
 
 "Get the palette of a PlotTheme"
-function palette(s::Symbol)
+function theme_palette(s::Symbol)
     if haskey(_themes, s) && haskey(_themes[s].defaults, :palette)
         return _themes[s].defaults[:palette]
     else
-        return get_color_palette(:auto, plot_color(:white), 17)
+        return palette(:default)
     end
 end
 
 const _themes = Dict{Symbol, PlotTheme}(:default => PlotTheme())
 
-gradient_name(s::Symbol) = s == :default ? :inferno : Symbol(s, "_grad")
-
 function add_theme(s::Symbol, thm::PlotTheme)
-    if haskey(thm.defaults, :colorgradient)
-        PlotUtils.register_gradient_colors(gradient_name(s), thm.defaults[:colorgradient], :misc)
-    end
     _themes[s] = thm
 end
 

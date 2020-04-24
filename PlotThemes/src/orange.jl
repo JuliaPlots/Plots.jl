@@ -17,5 +17,5 @@ _themes[:orange] = PlotTheme(
     fgguide = orange_palette[2],
     fglegend = orange_palette[2],
     palette = expand_palette(black, orange_palette[1:4]),
-    colorgradient = cgrad(:viridis).colors
+    colorgradient = :viridis
 )
