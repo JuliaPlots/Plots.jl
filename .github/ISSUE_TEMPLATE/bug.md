@@ -23,6 +23,7 @@ pyplot       |     |     |
 plotly       |     |     |
 plotlyjs     |     |     |
 pgfplotsx    |     |     |
+inspectdr    |     |     |
 
 ### Versions
 
