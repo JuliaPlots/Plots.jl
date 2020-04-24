@@ -72,6 +72,7 @@ const _arg_desc = KW(
 :display_type             => "Symbol (`:auto`, `:gui`, or `:inline`).  When supported, `display` will either open a GUI window or plot inline.",
 :extra_kwargs 	          => "KW (Dict{Symbol,Any}).  Pass a map of extra keyword args which may be specific to a backend.",
 :fontfamily               => "String or Symbol.  Default font family for title, legend entries, tick labels and guides",
+:warn_on_unsupported      => "Bool. Warn on unsupported attributes, series types and marker shapes",
 
 # subplot args
 :title                    => "String. Subplot title.",
