@@ -200,12 +200,13 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             # As it is likely that all series within the same axis use the same
             # colormap this should not cause any problem.
             for series in series_list(sp)
-                for col in (:markercolor, :fillcolor, :linecolor)
-                    if typeof(series.plotattributes[col]) == ColorGradient
+                    if hascolorbar(series)
+                        cg = get_colorgradient(series)
+                        cm = pgfx_colormap(get_colorgradient(series))
                         PGFPlotsX.push_preamble!(
                             pgfx_plot.the_plot,
                             """\\pgfplotsset{
-                            colormap={plots$(sp.attr[:subplot_index])}{$(pgfx_colormap(series.plotattributes[col]))},
+                            colormap={plots$(sp.attr[:subplot_index])}{$cm},
                             }""",
                         )
                         push!(
@@ -213,10 +214,16 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             "colorbar" => nothing,
                             "colormap name" => "plots$(sp.attr[:subplot_index])",
                         )
+                        if cg isa PlotUtils.CategoricalColorGradient
+                            push!(
+                                axis_opt,
+                                "colormap access" => "piecewise const",
+                                "colorbar sampled" => nothing,
+                            )
+                        end
                         # goto is needed to break out of col and series for
                         @goto colorbar_end
                     end
-                end
             end
             @label colorbar_end
 
@@ -677,16 +684,18 @@ function pgfx_filllegend!(series_opt, opt)
               }""")
 end
 
-function pgfx_colormap(grad::ColorGradient)
-    join(map(grad.colors) do c
+pgfx_colormap(cl::PlotUtils.AbstractColorList) = pgfx_colormap(color_list(cl))
+function pgfx_colormap(v::Vector{<:Colorant})
+    join(map(v) do c
         @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
     end, "\n")
 end
-function pgfx_colormap(grad::Vector{<:Colorant})
-    join(map(grad) do c
-        @sprintf("rgb=(%.8f,%.8f,%.8f)", red(c), green(c), blue(c))
+function pgfx_colormap(cg::ColorGradient)
+    join(map(1:length(cg)) do i
+        @sprintf("rgb(%.8fcm)=(%.8f,%.8f,%.8f)", cg.values[i], red(cg.colors[i]), green(cg.colors[i]), blue(cg.colors[i]))
     end, "\n")
 end
+
 
 function pgfx_framestyle(style::Symbol)
     if style in _pgfx_framestyles

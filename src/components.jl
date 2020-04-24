@@ -752,7 +752,7 @@ end
 
 @deprecate curve_points coords
 
-coords(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, Base.range(range..., length=n))
+coords(curve::BezierCurve, n::Integer = 30; range = [0,1]) = map(curve, Base.range(first(range), stop=last(range), length=n))
 
 # build a BezierCurve which leaves point p vertically upwards and arrives point q vertically upwards.
 # may create a loop if necessary.  Assumes the view is [0,1]

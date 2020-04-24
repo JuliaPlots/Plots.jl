@@ -71,7 +71,7 @@ end
       pl = scatter!(
          y,
          zcolor = abs.(y .- 0.5),
-         m = (:heat, 0.8, Plots.stroke(1, :green)),
+         m = (:hot, 0.8, Plots.stroke(1, :green)),
          ms = 10 * abs.(y .- 0.5) .+ 4,
          lab = ["grad", "", "ient"],
       )
@@ -122,7 +122,7 @@ end
       plot(
          Plots.fakedata(100, 10),
          layout = 4,
-         palette = [:grays :blues :heat :lightrainbow],
+         palette = [:grays :blues :hot :rainbow],
          bg_inside = [:orange :pink :darkblue :black],
       )
    end # testset
@@ -211,7 +211,7 @@ end
          marker_z = ((x, y) -> begin
             x + y
          end),
-         color = :bluesreds,
+         color = :bwr,
          legend = false,
       )
       plot(p1, p2)

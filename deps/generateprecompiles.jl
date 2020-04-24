@@ -44,7 +44,9 @@ blacklist = [
     # the following are not visible to Plots, only its dependencies
     "CategoricalArrays",
     "FixedPointNumbers",
+    "OffsetArrays",
     "SparseArrays",
+    "StaticArrays",
     r"#{1,2}[^\"#]+#{1,2}\d+",
 ]
 

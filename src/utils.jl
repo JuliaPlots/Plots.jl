@@ -1,8 +1,8 @@
 
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     n, m = size(z)
-    colors = ColorGradient(vec(z))
-    newz = reshape(range(0, stop=1, length=n*m), n, m)
+    colors = palette(vec(z))
+    newz = reshape(1:n*m, n, m)
     newz, colors
 end
 
@@ -130,10 +130,12 @@ _cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
 _cycle(v::AMat, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
 _cycle(v, indices::AVec{Int})       = fill(v, length(indices))
 
-_cycle(grad::ColorGradient, idx::Int) = _cycle(grad.colors, idx)
-_cycle(grad::ColorGradient, indices::AVec{Int}) = _cycle(grad.colors, indices)
+_cycle(cl::PlotUtils.AbstractColorList, idx::Int) = cl[mod1(idx, end)]
+_cycle(cl::PlotUtils.AbstractColorList, idx::AVec{Int}) = cl[mod1.(idx, end)]
 
-_as_gradient(grad::ColorGradient) = grad
+_as_gradient(grad) = grad
+_as_gradient(v::AbstractVector{<:Colorant}) = cgrad(v)
+_as_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
 _as_gradient(c::Colorant) = ColorGradient([c,c])
 
 makevec(v::AVec) = v
@@ -521,8 +523,7 @@ for comp in (:line, :fill, :marker)
             if z === nothing
                 isa(c, ColorGradient) ? c : plot_color(_cycle(c, i))
             else
-                grad = isa(c, ColorGradient) ? c : cgrad()
-                grad[clamp((_cycle(z, i) - cmin) / (cmax - cmin), 0, 1)]
+                get(get_gradient(c), z[i], (cmin, cmax))
             end
         end
 
@@ -540,8 +541,27 @@ for comp in (:line, :fill, :marker)
     end
 end
 
+function get_colorgradient(series::Series)
+    st = series[:seriestype]
+    if st in (:surface, :heatmap) || isfilledcontour(series)
+        series[:fillcolor]
+    elseif st in (:contour, :wireframe)
+        series[:linecolor]
+    elseif series[:marker_z] !== nothing
+        series[:markercolor]
+    elseif series[:line_z] !==  nothing
+        series[:linecolor]
+    elseif series[:fill_z] !== nothing
+        series[:fillcolor]
+    end
+end
+
 single_color(c, v = 0.5) = c
 single_color(grad::ColorGradient, v = 0.5) = grad[v]
+
+get_gradient(c) = cgrad()
+get_gradient(cg::ColorGradient) = cg
+get_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
 
 function get_linewidth(series, i::Int = 1)
     _cycle(series[:linewidth], i)
