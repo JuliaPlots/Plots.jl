@@ -1134,6 +1134,35 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             else
                 pyaxis."grid"(false)
             end
+            #
+
+            if axis[:minorticks] > 1
+                pyaxis."set_minor_locator"(PyPlot.matplotlib.ticker.AutoMinorLocator(axis[:minorticks]))
+                pyaxis."set_tick_params"(
+                    which = "minor",
+                    direction = axis[:tick_direction] == :out ? "out" : "in",
+                    width=py_thickness_scale(plt, intensity))
+            end
+
+            if axis[:minorgrid]
+                if !(axis[:minorticks] > 1)  # Check if ticks were already configured
+                    ax."minorticks_on"()
+                end
+                pyaxis."set_tick_params"(
+                    which = "minor",
+                    direction = axis[:tick_direction] == :out ? "out" : "in",
+                    width=py_thickness_scale(plt, intensity))
+
+                pyaxis."grid"(true,
+                    which = "minor",
+                    color = fgcolor,
+                    linestyle = py_linestyle(:line, axis[:minorgridstyle]),
+                    linewidth = py_thickness_scale(plt, axis[:minorgridlinewidth]),
+                    alpha = axis[:minorgridalpha])
+            end
+
+
+
             py_set_axis_colors(sp, ax, axis)
         end
 
