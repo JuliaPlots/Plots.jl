@@ -136,7 +136,7 @@ _cycle(cl::PlotUtils.AbstractColorList, idx::AVec{Int}) = cl[mod1.(idx, end)]
 _as_gradient(grad) = grad
 _as_gradient(v::AbstractVector{<:Colorant}) = cgrad(v)
 _as_gradient(cp::ColorPalette) = cgrad(cp, categorical = true)
-_as_gradient(c::Colorant) = ColorGradient([c,c])
+_as_gradient(c::Colorant) = cgrad([c, c])
 
 makevec(v::AVec) = v
 makevec(v::T) where {T} = T[v]
