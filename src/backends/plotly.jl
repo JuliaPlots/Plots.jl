@@ -3,13 +3,11 @@
 
 is_subplot_supported(::PlotlyBackend) = true
 # is_string_supported(::PlotlyBackend) = true
-const _plotly_framestyles = [:box, :axes, :zerolines, :grid, :none]
-const _plotly_framestyle_defaults = Dict(:semi => :box, :origin => :zerolines)
 function _plotly_framestyle(style::Symbol)
-    if style in _plotly_framestyles
+    if style in (:box, :axes, :zerolines, :grid, :none)
         return style
     else
-        default_style = get(_plotly_framestyle_defaults, style, :axes)
+        default_style = get((semi = :box, origin = :zerolines), style, :axes)
         @warn("Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was cosen instead.")
         default_style
     end
@@ -17,29 +15,25 @@ end
 
 
 # --------------------------------------------------------------------------------------
-const plotly_remote_file_path = "https://cdn.plot.ly/plotly-latest.min.js"
 
-
-# if isatom()
-#     import Atom
-#     Atom.@msg evaljs(_js_code)
-# end
 using UUIDs
 
 # ----------------------------------------------------------------
 
-const _plotly_legend_pos = KW(
-    :right => [1., 0.5],
-    :left => [0., 0.5],
-    :top => [0.5, 1.],
-    :bottom => [0.5, 0.],
-    :bottomleft => [0., 0.],
-    :bottomright => [1., 0.],
-    :topright => [1., 1.],
-    :topleft => [0., 1.]
+plotly_legend_pos(pos::Symbol) = get(
+    (
+        right = [1.0, 0.5],
+        left = [0.0, 0.5],
+        top = [0.5, 1.0],
+        bottom = [0.5, 0.0],
+        bottomleft = [0.0, 0.0],
+        bottomright = [1.0, 0.0],
+        topright = [1.0, 1.0],
+        topleft = [0.0, 1.0],
+    ),
+    pos,
+    [1.0, 1.0],
 )
-
-plotly_legend_pos(pos::Symbol) = get(_plotly_legend_pos, pos, [1.,1.])
 plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
 
 function plotly_font(font::Font, color = font.color)
@@ -375,15 +369,19 @@ end
 plotly_colorscale(c, α = nothing) = plotly_colorscale(_as_gradient(c), α)
 
 
-const _plotly_markers = KW(
-    :rect       => "square",
-    :xcross     => "x",
-    :x          => "x",
-    :utriangle  => "triangle-up",
-    :dtriangle  => "triangle-down",
-    :star5      => "star-triangle-up",
-    :vline      => "line-ns",
-    :hline      => "line-ew",
+get_plotly_marker(k, def) = get(
+    (
+        rect = "square",
+        xcross = "x",
+        x = "x",
+        utriangle = "triangle-up",
+        dtriangle = "triangle-down",
+        star5 = "star-triangle-up",
+        vline = "line-ns",
+        hline = "line-ew",
+    ),
+    k,
+    def,
 )
 
 # find indicies of axes to which the supblot links to
@@ -560,7 +558,7 @@ function plotly_series(plt::Plot, series::Series)
     if hasmarker
         inds = eachindex(x)
         plotattributes_out[:marker] = KW(
-            :symbol => get(_plotly_markers, series[:markershape], string(series[:markershape])),
+            :symbol => get_plotly_marker(series[:markershape], string(series[:markershape])),
             # :opacity => series[:markeralpha],
             :size => 2 * _cycle(series[:markersize], inds),
             :color => rgba_string.(plot_color.(get_markercolor.(series, inds), get_markeralpha.(series, inds))),
@@ -680,7 +678,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
         # add "marker"
         if hasmarker
             plotattributes_out[:marker] = KW(
-                :symbol => get(_plotly_markers, _cycle(series[:markershape], i), string(_cycle(series[:markershape], i))),
+                :symbol => get_plotly_marker(_cycle(series[:markershape], i), string(_cycle(series[:markershape], i))),
                 # :opacity => series[:markeralpha],
                 :size => 2 * _cycle(series[:markersize], i),
                 :color => rgba_string(plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i))),
@@ -819,7 +817,8 @@ const ijulia_initialized = Ref(false)
 
 function plotly_html_head(plt::Plot)
     local_file = ("file://" * plotly_local_file_path)
-    plotly = use_local_dependencies[] ? local_file : plotly_remote_file_path
+    plotly =
+        use_local_dependencies[] ? local_file : "https://cdn.plot.ly/plotly-latest.min.js"
     if isijulia() && !ijulia_initialized[]
         # using requirejs seems to be key to load a js depency in IJulia!
         # https://requirejs.org/docs/start.html
