@@ -9,53 +9,37 @@ export GR
 
 # --------------------------------------------------------------------------------------
 
-const gr_linetype = KW(
-    :auto => 1,
-    :solid => 1,
-    :dash => 2,
-    :dot => 3,
-    :dashdot => 4,
-    :dashdotdot => -1
-)
+gr_linetype(k) = (auto = 1, solid = 1, dash = 2, dot = 3, dashdot = 4, dashdotdot = -1)[k]
 
-const gr_markertype = KW(
-    :auto => 1,
-    :none => -1,
-    :circle => -1,
-    :rect => -7,
-    :diamond => -13,
-    :utriangle => -3,
-    :dtriangle => -5,
-    :ltriangle => -18,
-    :rtriangle => -17,
-    :pentagon => -21,
-    :hexagon => -22,
-    :heptagon => -23,
-    :octagon => -24,
-    :cross => 2,
-    :xcross => 5,
-    :+ => 2,
-    :x => 5,
-    :star4 => -25,
-    :star5 => -26,
-    :star6 => -27,
-    :star7 => -28,
-    :star8 => -29,
-    :vline => -30,
-    :hline => -31
-)
+gr_markertype(k) = (
+    auto = 1,
+    none = -1,
+    circle = -1,
+    rect = -7,
+    diamond = -13,
+    utriangle = -3,
+    dtriangle = -5,
+    ltriangle = -18,
+    rtriangle = -17,
+    pentagon = -21,
+    hexagon = -22,
+    heptagon = -23,
+    octagon = -24,
+    cross = 2,
+    xcross = 5,
+    + = 2,
+    x = 5,
+    star4 = -25,
+    star5 = -26,
+    star6 = -27,
+    star7 = -28,
+    star8 = -29,
+    vline = -30,
+    hline = -31,
+)[k]
 
-const gr_halign = KW(
-    :left => 1,
-    :hcenter => 2,
-    :right => 3
-)
-
-const gr_valign = KW(
-    :top => 1,
-    :vcenter => 3,
-    :bottom => 5
-)
+gr_halign(k) = (left = 1, hcenter = 2, right = 3)[k]
+gr_valign(k) = (top = 1, vcenter = 3, bottom = 5)[k]
 
 const gr_font_family = Dict(
     "times" => 1,
@@ -103,16 +87,19 @@ gr_set_transparency(c, α) = gr_set_transparency(α)
 gr_set_transparency(c::Colorant, ::Nothing) = gr_set_transparency(c)
 gr_set_transparency(c::Colorant) = GR.settransparency(alpha(c))
 
-const _gr_arrow_map = Dict(
-    :simple => 1,
-    :hollow => 3,
-    :filled => 4,
-    :triangle => 5,
-    :filledtriangle => 6,
-    :closed => 6,
-    :open => 5,
-)
-gr_set_arrowstyle(s::Symbol) = GR.setarrowstyle(get(_gr_arrow_map, s, 1))
+gr_set_arrowstyle(s::Symbol) = GR.setarrowstyle(get(
+    (
+        simple = 1,
+        hollow = 3,
+        filled = 4,
+        triangle = 5,
+        filledtriangle = 6,
+        closed = 6,
+        open = 5,
+    ),
+    s,
+    1,
+))
 
 # --------------------------------------------------------------------------------------
 
@@ -345,7 +332,7 @@ function gr_draw_marker(series, xi, yi, clims, i, msize::Number, shape::Symbol)
     gr_set_bordercolor(get_markerstrokecolor(series, i));
     gr_set_markercolor(get_markercolor(series, clims, i));
     gr_set_transparency(get_markeralpha(series, i))
-    GR.setmarkertype(gr_markertype[shape])
+    GR.setmarkertype(gr_markertype(shape))
     GR.setmarkersize(0.3msize / nominal_size())
     GR.polymarker([xi], [yi])
 end
@@ -370,7 +357,7 @@ end
 # ---------------------------------------------------------
 
 function gr_set_line(lw, style, c) #, a)
-    GR.setlinetype(gr_linetype[style])
+    GR.setlinetype(gr_linetype(style))
     w, h = gr_plot_size
     GR.setlinewidth(_gr_thickness_scaling[1] * max(0, lw / nominal_size()))
     gr_set_linecolor(c) #, a)
@@ -399,7 +386,7 @@ function gr_set_font(f::Font; halign = f.halign, valign = f.valign,
         GR.settextfontprec(gr_vector_font[family], 3)
     end
     gr_set_textcolor(color)
-    GR.settextalign(gr_halign[halign], gr_valign[valign])
+    GR.settextalign(gr_halign(halign), gr_valign(valign))
 end
 
 function gr_nans_to_infs!(z)
@@ -426,8 +413,6 @@ const viewport_plotarea = zeros(4)
 # the size of the current plot in pixels
 const gr_plot_size = [600.0, 400.0]
 
-const gr_colorbar_ratio = 0.1
-
 function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, viewport_canvas)
     viewport = zeros(4)
     viewport[1] = viewport_canvas[2] * (left(bb) / w)
@@ -435,7 +420,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
     viewport[3] = viewport_canvas[4] * (1.0 - bottom(bb) / h)
     viewport[4] = viewport_canvas[4] * (1.0 - top(bb) / h)
     if hascolorbar(sp)
-        viewport[2] -= gr_colorbar_ratio * (1 + RecipesPipeline.is3d(sp) / 2)
+        viewport[2] -= 0.1 * (1 + RecipesPipeline.is3d(sp) / 2)
     end
     viewport
 end
@@ -581,7 +566,7 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
     gr_set_font(guidefont(sp[:yaxis]))
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
-    gr_text(viewport_plotarea[2] + gr_colorbar_ratio,
+    gr_text(viewport_plotarea[2] + 0.1,
             gr_view_ycenter(), sp[:colorbar_title])
 
     GR.restorestate()
@@ -644,14 +629,11 @@ end
 
 # --------------------------------------------------------------------------------------
 
-const _gr_gradient_alpha = ones(256)
-
 function gr_set_gradient(c)
     grad = _as_gradient(c)
     for (i,z) in enumerate(range(0, stop=1, length=256))
         c = grad[z]
         GR.setcolorrep(999+i, red(c), green(c), blue(c))
-        _gr_gradient_alpha[i] = alpha(c)
     end
     grad
 end
@@ -1610,7 +1592,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :contour
             GR.setspace(clims[1], clims[2], 0, 90)
-            GR.setlinetype(gr_linetype[get_linestyle(series)])
+            GR.setlinetype(gr_linetype(get_linestyle(series)))
             GR.setlinewidth(max(0, get_linewidth(series)) / nominal_size())
             is_lc_black = let black=plot_color(:black)
                 plot_color(series[:linecolor]) in (black,[black])
@@ -1664,7 +1646,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     rgba = gr_color.(colors)
                     GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
                 else
-                    if something(series[:fillalpha],1) < 1 || any(_gr_gradient_alpha .< 1)
+                    if something(series[:fillalpha],1) < 1
                         @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
                     end
                     colors = get(fillgrad, z, clims)
@@ -1923,17 +1905,12 @@ end
 
 # ----------------------------------------------------------------
 
-const _gr_mimeformats = Dict(
-    "application/pdf"         => "pdf",
-    "image/png"               => "png",
-    "application/postscript"  => "ps",
-    "image/svg+xml"           => "svg",
+for (mime, fmt) in (
+    "application/pdf" => "pdf",
+    "image/png" => "png",
+    "application/postscript" => "ps",
+    "image/svg+xml" => "svg",
 )
-
-const _gr_wstype = Ref(get(ENV, "GKSwstype", ""))
-gr_set_output(wstype::String) = (_gr_wstype[] = wstype)
-
-for (mime, fmt) in _gr_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
         ENV["GKS_ENCODING"] = "utf8"
         GR.emergencyclosegks()
@@ -1948,7 +1925,7 @@ for (mime, fmt) in _gr_mimeformats
         if env != "0"
             ENV["GKSwstype"] = env
         else
-            pop!(ENV,"GKSwstype")
+            pop!(ENV, "GKSwstype")
         end
     end
 end
@@ -1967,9 +1944,6 @@ function _display(plt::Plot{GRBackend})
         rm(filepath)
     else
         ENV["GKS_DOUBLE_BUF"] = true
-        if _gr_wstype[] != ""
-            ENV["GKSwstype"] = _gr_wstype[]
-        end
         gr_display(plt)
     end
 end

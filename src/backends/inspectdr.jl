@@ -429,29 +429,23 @@ end
 
 # ----------------------------------------------------------------
 
-const _inspectdr_mimeformats_dpi = Dict(
-    "image/png"               => "png"
-)
-const _inspectdr_mimeformats_nodpi = Dict(
-    "image/svg+xml"           => "svg",
-    "application/eps"         => "eps",
-    "image/eps"               => "eps",
-#    "application/postscript"  => "ps", #TODO: support once Cairo supports PSSurface
-    "application/pdf"         => "pdf"
-)
 _inspectdr_show(io::IO, mime::MIME, ::Nothing, w, h) =
     throw(ErrorException("Cannot show(::IO, ...) plot - not yet generated"))
 function _inspectdr_show(io::IO, mime::MIME, mplot, w, h)
     InspectDR._show(io, mime, mplot, Float64(w), Float64(h))
 end
 
-for (mime, fmt) in _inspectdr_mimeformats_dpi
-    @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{InspectDRBackend})
-        dpi = plt[:dpi]#TODO: support
-        _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
-    end
+function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{InspectDRBackend})
+    dpi = plt[:dpi] # TODO: support
+    _inspectdr_show(io, "image/png", _inspectdr_getmplot(plt.o), plt[:size]...)
 end
-for (mime, fmt) in _inspectdr_mimeformats_nodpi
+for (mime, fmt) in (
+    "image/svg+xml" => "svg",
+    "application/eps" => "eps",
+    "image/eps" => "eps",
+    # "application/postscript" => "ps", # TODO: support once Cairo supports PSSurface
+    "application/pdf" => "pdf",
+)
     @eval function _show(io::IO, mime::MIME{Symbol($mime)}, plt::Plot{InspectDRBackend})
         _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
     end

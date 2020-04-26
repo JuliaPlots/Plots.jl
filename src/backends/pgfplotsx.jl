@@ -179,10 +179,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 x, y = sp[:legend]
                 push!(axis_opt["legend style"], "at={($x, $y)}")
             else
-                push!(
-                    axis_opt["legend style"],
-                        get(_pgfplotsx_legend_pos, sp[:legend], ("at" => string((1.02, 1)), "anchor" => "north west"))...
-                )
+                push!(axis_opt["legend style"], pgfx_get_legend_pos(sp[:legend])...)
             end
             for letter in (:x, :y, :z)
                 if letter != :z || RecipesPipeline.is3d(sp)
@@ -596,62 +593,65 @@ function pgfx_series_coordinates!(
     """
 end
 ##
-const _pgfplotsx_linestyles = KW(
-    :solid => "solid",
-    :dash => "dashed",
-    :dot => "dotted",
-    :dashdot => "dashdotted",
-    :dashdotdot => "dashdotdotted",
+pgfx_get_linestyle(k) = get(
+    (
+        solid = "solid",
+        dash = "dashed",
+        dot = "dotted",
+        dashdot = "dashdotted",
+        dashdotdot = "dashdotdotted",
+    ),
+    Symbol(k),
+    "solid",
 )
 
-const _pgfplotsx_series_ids = KW()
-
-const _pgfplotsx_markers = KW(
-    :none => "none",
-    :cross => "+",
-    :xcross => "x",
-    :+ => "+",
-    :x => "x",
-    :utriangle => "triangle*",
-    :dtriangle => "triangle*",
-    :rtriangle => "triangle*",
-    :ltriangle => "triangle*",
-    :circle => "*",
-    :rect => "square*",
-    :star5 => "star",
-    :star6 => "asterisk",
-    :diamond => "diamond*",
-    :pentagon => "pentagon*",
-    :hline => "-",
-    :vline => "|",
+pgfx_get_marker(k) = get(
+    (
+        none = "none",
+        cross = "+",
+        xcross = "x",
+        + = "+",
+        x = "x",
+        utriangle = "triangle*",
+        dtriangle = "triangle*",
+        rtriangle = "triangle*",
+        ltriangle = "triangle*",
+        circle = "*",
+        rect = "square*",
+        star5 = "star",
+        star6 = "asterisk",
+        diamond = "diamond*",
+        pentagon = "pentagon*",
+        hline = "-",
+        vline = "|",
+    ),
+    Symbol(k),
+    "*",
 )
 
-const _pgfplotsx_legend_pos = KW(
-    :top => ("at" => string((0.5, 0.98)), "anchor" => "north"),
-    :bottom => ("at" => string((0.5, 0.02)), "anchor" => "south"),
-    :left => ("at" => string((0.02, 0.5)), "anchor" => "west"),
-    :right => ("at" => string((0.98, 0.5)), "anchor" => "east"),
-    :bottomleft => ("at" => string((0.02, 0.02)), "anchor" => "south west"),
-    :bottomright => ("at" => string((0.98, 0.02)), "anchor" => "south east"),
-    :topright => ("at" => string((0.98, 0.98)), "anchor" => "north east"),
-    :topleft => ("at" => string((0.02, 0.98)), "anchor" => "north west"),
-    :outertop => ("at" => string((0.5, 1.02)), "anchor" => "south"),
-    :outerbottom => ("at" => string((0.5, -0.02)), "anchor" => "north"),
-    :outerleft => ("at" => string((-0.02, 0.5)), "anchor" => "east"),
-    :outerright => ("at" => string((1.02, 0.5)), "anchor" => "west"),
-    :outerbottomleft => ("at" => string((-0.02, -0.02)), "anchor" => "north east"),
-    :outerbottomright => ("at" => string((1.02, -0.02)), "anchor" => "north west"),
-    :outertopright => ("at" => string((1.02, 1)), "anchor" => "north west"),
-    :outertopleft => ("at" => string((-0.02, 1)), "anchor" => "north east"),
+pgfx_get_legend_pos(k) = get(
+    (
+        top = ("at" => string((0.5, 0.98)), "anchor" => "north"),
+        bottom = ("at" => string((0.5, 0.02)), "anchor" => "south"),
+        left = ("at" => string((0.02, 0.5)), "anchor" => "west"),
+        right = ("at" => string((0.98, 0.5)), "anchor" => "east"),
+        bottomleft = ("at" => string((0.02, 0.02)), "anchor" => "south west"),
+        bottomright = ("at" => string((0.98, 0.02)), "anchor" => "south east"),
+        topright = ("at" => string((0.98, 0.98)), "anchor" => "north east"),
+        topleft = ("at" => string((0.02, 0.98)), "anchor" => "north west"),
+        outertop = ("at" => string((0.5, 1.02)), "anchor" => "south"),
+        outerbottom = ("at" => string((0.5, -0.02)), "anchor" => "north"),
+        outerleft = ("at" => string((-0.02, 0.5)), "anchor" => "east"),
+        outerright = ("at" => string((1.02, 0.5)), "anchor" => "west"),
+        outerbottomleft = ("at" => string((-0.02, -0.02)), "anchor" => "north east"),
+        outerbottomright = ("at" => string((1.02, -0.02)), "anchor" => "north west"),
+        outertopright = ("at" => string((1.02, 1)), "anchor" => "north west"),
+        outertopleft = ("at" => string((-0.02, 1)), "anchor" => "north east"),
+    ),
+    Symbol(k),
+    ("at" => string((1.02, 1)), "anchor" => "north west"),
 )
 
-const _pgfx_framestyles = [:box, :axes, :origin, :zerolines, :grid, :none]
-const _pgfx_framestyle_defaults = Dict(:semi => :box)
-
-# we use the anchors to define orientations for example to align left
-# one needs to use the right edge as anchor
-const _pgfx_annotation_halign =
-    KW(:center => "", :left => "right", :right => "left")
 ## --------------------------------------------------------------------------------------
 # Generates a colormap for pgfplots based on a ColorGradient
 pgfx_arrow(::Nothing) = "every arrow/.append style={-}"
@@ -698,10 +698,10 @@ end
 
 
 function pgfx_framestyle(style::Symbol)
-    if style in _pgfx_framestyles
+    if style in (:box, :axes, :origin, :zerolines, :grid, :none)
         return style
     else
-        default_style = get(_pgfx_framestyle_defaults, style, :axes)
+        default_style = get((semi = :box,), style, :axes)
         @warn( "Framestyle :$style is not (yet) supported by the PGFPlotsX backend. :$default_style was cosen instead.",)
         default_style
     end
@@ -720,14 +720,14 @@ function pgfx_fillstyle(plotattributes, i = 1)
     PGFPlotsX.Options("fill" => cstr, "fill opacity" => a)
 end
 
-function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = "solid")
+function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = :solid)
     cstr = plot_color(color, α)
     a = alpha(cstr)
     return PGFPlotsX.Options(
         "color" => cstr,
         "draw opacity" => a,
         "line width" => linewidth,
-        get(_pgfplotsx_linestyles, linestyle, "solid") => nothing,
+        pgfx_get_linestyle(linestyle) => nothing,
     )
 end
 
@@ -765,10 +765,8 @@ end
 
 function pgfx_marker(plotattributes, i = 1)
     shape = _cycle(plotattributes[:markershape], i)
-    cstr = plot_color(
-        get_markercolor(plotattributes, i),
-        get_markeralpha(plotattributes, i),
-    )
+    cstr =
+        plot_color(get_markercolor(plotattributes, i), get_markeralpha(plotattributes, i))
     a = alpha(cstr)
     cstr_stroke = plot_color(
         get_markerstrokecolor(plotattributes, i),
@@ -780,8 +778,7 @@ function pgfx_marker(plotattributes, i = 1)
         0.75 *
         _cycle(plotattributes[:markersize], i)
     return PGFPlotsX.Options(
-        "mark" =>
-            shape isa Shape ? "PlotsShape$i" : get(_pgfplotsx_markers, shape, "*"),
+        "mark" => shape isa Shape ? "PlotsShape$i" : pgfx_get_marker(shape),
         "mark size" => "$mark_size pt",
         "mark options" => PGFPlotsX.Options(
             "color" => cstr_stroke,
@@ -789,7 +786,8 @@ function pgfx_marker(plotattributes, i = 1)
             "fill" => cstr,
             "fill opacity" => a,
             "line width" =>
-                pgfx_thickness_scaling(plotattributes) * 0.75 *
+                pgfx_thickness_scaling(plotattributes) *
+                0.75 *
                 _cycle(plotattributes[:markerstrokewidth], i),
             "rotate" => if shape == :dtriangle
                 180
@@ -800,11 +798,7 @@ function pgfx_marker(plotattributes, i = 1)
             else
                 0
             end,
-            get(
-                _pgfplotsx_linestyles,
-                _cycle(plotattributes[:markerstrokestyle], i),
-                "solid",
-            ) => nothing,
+            pgfx_get_linestyle(_cycle(plotattributes[:markerstrokestyle], i)) => nothing,
         ),
     )
 end
@@ -818,7 +812,8 @@ function pgfx_add_annotation!(o, x, y, val, thickness_scaling = 1)
         [
             "\\node",
             PGFPlotsX.Options(
-                get(_pgfx_annotation_halign, val.font.halign, "") => nothing,
+                get((center = "", left = "right", right = "left"), val.font.halign, "") =>
+                    nothing,
                 "color" => cstr,
                 "draw opacity" => convert(Float16, a),
                 "rotate" => val.font.rotation,

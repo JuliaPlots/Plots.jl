@@ -19,14 +19,12 @@ end
 
 # ------------------------------------------------------------------------------
 
-const _plotlyjs_mimeformats = Dict(
+for (mime, fmt) in (
     "application/pdf" => "pdf",
     "image/png"       => "png",
     "image/svg+xml"   => "svg",
     "image/eps"       => "eps",
 )
-
-for (mime, fmt) in _plotlyjs_mimeformats
     @eval _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PlotlyJSBackend}) = PlotlyJS.savefig(io, plotlyjs_syncplot(plt), format = $fmt)
 end
 

@@ -7,15 +7,13 @@ warn_on_unsupported_args(::UnicodePlotsBackend, plotattributes::KW) = nothing
 
 # --------------------------------------------------------------------------------------
 
-const _canvas_type = Ref(:auto)
-
 function _canvas_map()
-    KW(
-        :braille => UnicodePlots.BrailleCanvas,
-        :ascii => UnicodePlots.AsciiCanvas,
-        :block => UnicodePlots.BlockCanvas,
-        :dot => UnicodePlots.DotCanvas,
-        :density => UnicodePlots.DensityCanvas,
+    (
+        braille = UnicodePlots.BrailleCanvas,
+        ascii = UnicodePlots.AsciiCanvas,
+        block = UnicodePlots.BlockCanvas,
+        dot = UnicodePlots.DotCanvas,
+        density = UnicodePlots.DensityCanvas,
     )
 end
 

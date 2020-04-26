@@ -37,33 +37,6 @@ import FixedPointNumbers: N0f8 #In core Julia
 struct HDF5PlotNative; end #Indentifies a data element that can natively be handled by HDF5
 struct HDF5CTuple; end #Identifies a "complex" tuple structure
 
-mutable struct HDF5Plot_PlotRef
-	ref::Union{Plot, Nothing}
-end
-
-
-#==Useful constants
-===============================================================================#
-const _hdf5_nullable{T} = Union{T, Nothing}
-const _hdf5_plotroot = "plot"
-const _hdf5_dataroot = "data" #TODO: Eventually move data to different root (easier to locate)?
-const _hdf5plot_datatypeid = "TYPE" #Attribute identifying type
-const _hdf5plot_countid = "COUNT" #Attribute for storing count
-
-#Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
-const HDF5PLOT_MAP_STR2TELEM = Dict{String, Type}()
-const HDF5PLOT_MAP_TELEM2STR = Dict{Type, String}()
-
-#Don't really like this global variable... Very hacky
-const HDF5PLOT_PLOTREF = HDF5Plot_PlotRef(nothing)
-
-#Simple sub-structures that can just be written out using _hdf5plot_gwritefields:
-const HDF5PLOT_SIMPLESUBSTRUCT = Union{Font, BoundingBox,
-	GridLayout, RootLayout, ColorGradient, SeriesAnnotations, PlotText,
-	Shape,
-}
-
-
 #==
 ===============================================================================#
 is_marker_supported(::HDF5Backend, shape::Shape) = true
@@ -95,7 +68,7 @@ if length(HDF5PLOT_MAP_TELEM2STR) < 1
         "AXIS" => Axis,
         "SURFACE" => Surface,
         "SUBPLOT" => Subplot,
-        "NULLABLE" => _hdf5_nullable,
+        "NULLABLE" => Union{Nothing, T} where T,
     )
     merge!(HDF5PLOT_MAP_STR2TELEM, telem2str)
     merge!(HDF5PLOT_MAP_TELEM2STR, Dict{Type, String}(v=>k for (k,v) in HDF5PLOT_MAP_STR2TELEM))
@@ -105,8 +78,8 @@ end
 #==Helper functions
 ===============================================================================#
 
-_hdf5_plotelempath(subpath::String) = "$_hdf5_plotroot/$subpath"
-_hdf5_datapath(subpath::String) = "$_hdf5_dataroot/$subpath"
+_hdf5_plotelempath(subpath::String) = "plot/$subpath"
+_hdf5_datapath(subpath::String) = "data/$subpath"
 _hdf5_map_str2telem(k::String) = HDF5PLOT_MAP_STR2TELEM[k]
 _hdf5_map_str2telem(v::Vector) = HDF5PLOT_MAP_STR2TELEM[v[1]]
 
@@ -201,38 +174,38 @@ end
 
 function _hdf5plot_writetype(grp, k::String, tstr::Array{String})
     d = HDF5.d_open(grp, k)
-    HDF5.a_write(d, _hdf5plot_datatypeid, tstr)
+    HDF5.a_write(d, "TYPE", tstr)
 end
 function _hdf5plot_writetype(grp, k::String, T::Type)
     tstr = HDF5PLOT_MAP_TELEM2STR[T]
     d = HDF5.d_open(grp, k)
-    HDF5.a_write(d, _hdf5plot_datatypeid, tstr)
+    HDF5.a_write(d, "TYPE", tstr)
 end
 function _hdf5plot_overwritetype(grp, k::String, T::Type)
     tstr = HDF5PLOT_MAP_TELEM2STR[T]
     d = HDF5.d_open(grp, k)
-    HDF5.a_delete(d, _hdf5plot_datatypeid)
-    HDF5.a_write(d, _hdf5plot_datatypeid, tstr)
+    HDF5.a_delete(d, "TYPE")
+    HDF5.a_write(d, "TYPE", tstr)
 end
 function _hdf5plot_writetype(grp, T::Type) #Write directly to group
     tstr = HDF5PLOT_MAP_TELEM2STR[T]
-    HDF5.a_write(grp, _hdf5plot_datatypeid, tstr)
+    HDF5.a_write(grp, "TYPE", tstr)
 end
 function _hdf5plot_overwritetype(grp, T::Type) #Write directly to group
     tstr = HDF5PLOT_MAP_TELEM2STR[T]
-    HDF5.a_delete(grp, _hdf5plot_datatypeid)
-    HDF5.a_write(grp, _hdf5plot_datatypeid, tstr)
+    HDF5.a_delete(grp, "TYPE")
+    HDF5.a_write(grp, "TYPE", tstr)
 end
 function _hdf5plot_writetype(grp, ::Type{Array{T}}) where T<:Any
     tstr = HDF5PLOT_MAP_TELEM2STR[Array] #ANY
-    HDF5.a_write(grp, _hdf5plot_datatypeid, tstr)
+    HDF5.a_write(grp, "TYPE", tstr)
 end
 function _hdf5plot_writetype(grp, ::Type{T}) where T<:BoundingBox
     tstr = HDF5PLOT_MAP_TELEM2STR[BoundingBox]
-    HDF5.a_write(grp, _hdf5plot_datatypeid, tstr)
+    HDF5.a_write(grp, "TYPE", tstr)
 end
 function _hdf5plot_writecount(grp, n::Int) #Write directly to group
-    HDF5.a_write(grp, _hdf5plot_countid, n)
+    HDF5.a_write(grp, "COUNT", n)
 end
 function _hdf5plot_gwritefields(grp, k::String, v)
     grp = HDF5.g_create(grp, k)
@@ -372,7 +345,7 @@ function _hdf5plot_gwrite(grp, k::String, v::Surface)
 	_hdf5plot_writetype(grp, Surface)
 end
 # #TODO: "Properly" support Nullable using _hdf5plot_writetype?
-# function _hdf5plot_gwrite(grp, k::String, v::_hdf5_nullable)
+# function _hdf5plot_gwrite(grp, k::String, v::Union{Nothing, T} where T)
 #     if isnull(v)
 #         _hdf5plot_gwrite(grp, k, nothing)
 #     else
@@ -448,7 +421,7 @@ hdf5plot_write(path::AbstractString) = hdf5plot_write(current(), path)
 ===============================================================================#
 
 function _hdf5plot_readcount(grp) #Read directly from group
-    return HDF5.a_read(grp, _hdf5plot_countid)
+    return HDF5.a_read(grp, "COUNT")
 end
 
 _hdf5plot_convert(T::Type{HDF5PlotNative}, v) = v
@@ -589,7 +562,7 @@ function _hdf5plot_read(grp, k::String, T::Type{Length}, dtid::Vector)
     return Length{TU,T}(v)
 end
 function _hdf5plot_read(grp, k::String)
-    dtid = HDF5.a_read(grp[k], _hdf5plot_datatypeid)
+    dtid = HDF5.a_read(grp[k], "TYPE")
     T = _hdf5_map_str2telem(dtid) #expect exception
     return _hdf5plot_read(grp, k, T, dtid)
 end
