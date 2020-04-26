@@ -1,6 +1,3 @@
-# Do "using PyPlot: PyCall, LaTeXStrings" without dependency warning:
-const PyCall = PyPlot.PyCall
-const LaTeXStrings = PyPlot.LaTeXStrings
 
 # https://github.com/stevengj/PyPlot.jl
 
@@ -35,7 +32,7 @@ else
 end
 
 # PyCall API changes in v1.90.0
-if !isdefined(PyCall, :_setproperty!)
+if !isdefined(PyPlot.PyCall, :_setproperty!)
     @warn "Plots no longer supports PyCall < 1.90.0 and PyPlot < 2.8.0. Either update PyCall and PyPlot or pin Plots to a version <= 0.23.2."
 end
 
@@ -112,32 +109,6 @@ function py_marker(marker::Shape)
     pypath."Path"(mat)
 end
 
-const _path_MOVETO = UInt8(1)
-const _path_LINETO = UInt8(2)
-const _path_CLOSEPOLY = UInt8(79)
-
-# # see http://matplotlib.org/users/path_tutorial.html
-# # and http://matplotlib.org/api/path_api.html#matplotlib.path.Path
-# function py_path(x, y)
-#     n = length(x)
-#     mat = zeros(n+1, 2)
-#     codes = zeros(UInt8, n+1)
-#     lastnan = true
-#     for i=1:n
-#         mat[i,1] = x[i]
-#         mat[i,2] = y[i]
-#         nan = !ok(x[i], y[i])
-#         codes[i] = if nan && i>1
-#             _path_CLOSEPOLY
-#         else
-#             lastnan ? _path_MOVETO : _path_LINETO
-#         end
-#         lastnan = nan
-#     end
-#     codes[n+1] = _path_CLOSEPOLY
-#     pypath["Path"](mat, codes)
-# end
-
 # get the marker shape
 function py_marker(marker::Symbol)
     marker == :none && return " "
@@ -204,11 +175,11 @@ end
 
 function labelfunc(scale::Symbol, backend::PyPlotBackend)
     if scale == :log10
-        x -> LaTeXStrings.latexstring("10^{$x}")
+        x -> PyPlot.LaTeXStrings.latexstring("10^{$x}")
     elseif scale == :log2
-        x -> LaTeXStrings.latexstring("2^{$x}")
+        x -> PyPlot.LaTeXStrings.latexstring("2^{$x}")
     elseif scale == :ln
-        x -> LaTeXStrings.latexstring("e^{$x}")
+        x -> PyPlot.LaTeXStrings.latexstring("e^{$x}")
     else
         string
     end
@@ -216,7 +187,7 @@ end
 
 function py_mask_nans(z)
     # pynp["ma"][:masked_invalid](z)))
-    PyCall.pycall(pynp."ma"."masked_invalid", Any, z)
+    PyPlot.PyCall.pycall(pynp."ma"."masked_invalid", Any, z)
     # pynp["ma"][:masked_where](pynp["isnan"](z),z)
 end
 
@@ -944,7 +915,7 @@ function py_set_axis_colors(sp, ax, a::Axis)
         spine."set_color"(py_color(a[:foreground_color_border]))
     end
     axissym = Symbol(a[:letter], :axis)
-    if PyCall.hasproperty(ax, axissym)
+    if PyPlot.PyCall.hasproperty(ax, axissym)
         tickcolor = sp[:framestyle] in (:zerolines, :grid) ? py_color(plot_color(a[:foreground_color_grid], a[:gridalpha])) : py_color(a[:foreground_color_axis])
         ax."tick_params"(axis=string(a[:letter]), which="both",
                          colors=tickcolor,
@@ -1085,7 +1056,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
         # axis attributes
         for letter in (:x, :y, :z)
             axissym = Symbol(letter, :axis)
-            PyCall.hasproperty(ax, axissym) || continue
+            PyPlot.PyCall.hasproperty(ax, axissym) || continue
             axis = sp[axissym]
             pyaxis = getproperty(ax, axissym)
             if axis[:mirror] && letter != :z
@@ -1293,43 +1264,44 @@ end
 
 # -----------------------------------------------------------------
 
-const _pyplot_legend_pos = KW(
-    :right => "right",
-    :left => "center left",
-    :top => "upper center",
-    :bottom => "lower center",
-    :bottomleft => "lower left",
-    :bottomright => "lower right",
-    :topright => "upper right",
-    :topleft => "upper left"
-  )
-
-const _pyplot_legend_pos_outer = KW(
-    :outerright => "center left",
-    :outerleft => "right",
-    :outertop => "lower center",
-    :outerbottom => "upper center",
-    :outerbottomleft => "lower right",
-    :outerbottomright => "lower left",
-    :outertopright => "upper left",
-    :outertopleft => "upper right"
+py_legend_pos(pos::Symbol) = get(
+    (
+        right = "right",
+        left = "center left",
+        top = "upper center",
+        bottom = "lower center",
+        bottomleft = "lower left",
+        bottomright = "lower right",
+        topright = "upper right",
+        topleft = "upper left",
+        outerright = "center left",
+        outerleft = "right",
+        outertop = "lower center",
+        outerbottom = "upper center",
+        outerbottomleft = "lower right",
+        outerbottomright = "lower left",
+        outertopright = "upper left",
+        outertopleft = "upper right",
+    ),
+    pos,
+    "best",
 )
-
-py_legend_pos(pos::Symbol) = get(_pyplot_legend_pos, pos, get(_pyplot_legend_pos_outer, pos, "best"))
 py_legend_pos(pos) = "lower left"
 
-const _pyplot_legend_bbox_outer = KW(
-    :outerright => (1.0, 0.5, 0.0, 0.0),
-    :outerleft => (-0.15, 0.5, 0.0, 0.0),
-    :outertop => (0.5, 1.0, 0.0, 0.0),
-    :outerbottom => (0.5, -0.15, 0.0, 0.0),
-    :outerbottomleft => (-0.15, 0.0, 0.0, 0.0),
-    :outerbottomright => (1.0, 0.0, 0.0, 0.0),
-    :outertopright => (1.0, 1.0, 0.0, 0.0),
-    :outertopleft => (-0.15, 1.0, 0.0, 0.0)
+py_legend_bbox(pos::Symbol) = get(
+    (
+        outerright = (1.0, 0.5, 0.0, 0.0),
+        outerleft = (-0.15, 0.5, 0.0, 0.0),
+        outertop = (0.5, 1.0, 0.0, 0.0),
+        outerbottom = (0.5, -0.15, 0.0, 0.0),
+        outerbottomleft = (-0.15, 0.0, 0.0, 0.0),
+        outerbottomright = (1.0, 0.0, 0.0, 0.0),
+        outertopright = (1.0, 1.0, 0.0, 0.0),
+        outertopleft = (-0.15, 1.0, 0.0, 0.0),
+    ),
+    pos,
+    (0.0, 0.0, 1.0, 1.0),
 )
-
-py_legend_bbox(pos::Symbol) = get(_pyplot_legend_bbox_outer, pos, (0.0, 0.0, 1.0, 1.0))
 py_legend_bbox(pos) = pos
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
@@ -1431,8 +1403,7 @@ end
 _display(plt::Plot{PyPlotBackend}) = plt.o."show"()
 
 
-
-const _pyplot_mimeformats = Dict(
+for (mime, fmt) in (
     "application/eps"         => "eps",
     "image/eps"               => "eps",
     "application/pdf"         => "pdf",
@@ -1441,9 +1412,6 @@ const _pyplot_mimeformats = Dict(
     "image/svg+xml"           => "svg",
     "application/x-tex"       => "pgf"
 )
-
-
-for (mime, fmt) in _pyplot_mimeformats
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{PyPlotBackend})
         fig = plt.o
         fig."canvas"."print_figure"(
