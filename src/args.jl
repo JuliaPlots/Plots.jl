@@ -656,7 +656,7 @@ function default(k::Symbol)
         return _axis_defaults_byletter[letter][key]
     end
     k == :letter && return k # for type recipe processing
-    k in _suppress_warnings || error("Unknown key: ", k)
+    return missing
 end
 
 function default(k::Symbol, v)
@@ -1133,7 +1133,7 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
         k in _suppress_warnings && continue
         default_value = default(k)
         if ismissing(default_value)
-            extra_kwargs[k] = pop!(plotattributes, k)
+            extra_kwargs[k] = pop_kw!(plotattributes, k)
         elseif plotattributes[k] != default(k)
             k in already_warned || push!(_to_warn, k)
         end

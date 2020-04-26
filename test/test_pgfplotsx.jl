@@ -326,3 +326,9 @@ end
       #    end
    end # testset
 end # testset
+
+@testset "Extra kwargs" begin
+   pl = plot(1:5, test = "me")
+   @test pl.attr[:extra_kwargs][:series][:test] == "me"
+
+end # testset
