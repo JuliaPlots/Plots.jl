@@ -621,6 +621,9 @@ const HDF5PLOT_MAP_STR2TELEM = Dict{String, Type}()
 const HDF5PLOT_MAP_TELEM2STR = Dict{Type, String}()
 
 #Don't really like this global variable... Very hacky
+mutable struct HDF5Plot_PlotRef
+	ref::Union{Plot, Nothing}
+end
 const HDF5PLOT_PLOTREF = HDF5Plot_PlotRef(nothing)
 
 #Simple sub-structures that can just be written out using _hdf5plot_gwritefields:

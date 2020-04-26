@@ -37,10 +37,6 @@ import FixedPointNumbers: N0f8 #In core Julia
 struct HDF5PlotNative; end #Indentifies a data element that can natively be handled by HDF5
 struct HDF5CTuple; end #Identifies a "complex" tuple structure
 
-mutable struct HDF5Plot_PlotRef
-	ref::Union{Plot, Nothing}
-end
-
 #==
 ===============================================================================#
 is_marker_supported(::HDF5Backend, shape::Shape) = true
