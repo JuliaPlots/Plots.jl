@@ -208,13 +208,6 @@ Base.first(x::Symbol) = x
 
 sortedkeys(plotattributes::Dict) = sort(collect(keys(plotattributes)))
 
-
-const _scale_base = Dict{Symbol, Real}(
-    :log10 => 10,
-    :log2 => 2,
-    :ln => ℯ,
-)
-
 function _heatmap_edges(v::AVec, isedges::Bool = false)
     length(v) == 1 && return v[1] .+ [-0.5, 0.5]
     if isedges return v end
