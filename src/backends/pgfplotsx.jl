@@ -601,7 +601,7 @@ pgfx_get_linestyle(k) = get(
         dashdot = "dashdotted",
         dashdotdot = "dashdotdotted",
     ),
-    k,
+    Symbol(k),
     "solid",
 )
 
@@ -625,7 +625,7 @@ pgfx_get_marker(k) = get(
         hline = "-",
         vline = "|",
     ),
-    k,
+    Symbol(k),
     "*",
 )
 
@@ -648,7 +648,7 @@ pgfx_get_legend_pos(k) = get(
         outertopright = ("at" => string((1.02, 1)), "anchor" => "north west"),
         outertopleft = ("at" => string((-0.02, 1)), "anchor" => "north east"),
     ),
-    k,
+    Symbol(k),
     ("at" => string((1.02, 1)), "anchor" => "north west"),
 )
 
@@ -720,7 +720,7 @@ function pgfx_fillstyle(plotattributes, i = 1)
     PGFPlotsX.Options("fill" => cstr, "fill opacity" => a)
 end
 
-function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = "solid")
+function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = :solid)
     cstr = plot_color(color, α)
     a = alpha(cstr)
     return PGFPlotsX.Options(
