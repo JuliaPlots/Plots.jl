@@ -605,8 +605,6 @@ pgfx_get_linestyle(k) = get(
     "solid",
 )
 
-const _pgfplotsx_series_ids = KW()
-
 pgfx_get_marker(k) = get(
     (
         none = "none",

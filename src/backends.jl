@@ -568,6 +568,9 @@ const _unicodeplots_style = [:auto, :solid]
 const _unicodeplots_marker = [:none, :auto, :circle]
 const _unicodeplots_scale = [:identity]
 
+# Additional constants
+const _canvas_type = Ref(:auto)
+
 # ------------------------------------------------------------------------------
 # hdf5
 
@@ -611,6 +614,20 @@ const _hdf5_seriestype = [
 const _hdf5_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _hdf5_marker = vcat(_allMarkers, :pixel)
 const _hdf5_scale = [:identity, :ln, :log2, :log10]
+
+# Additional constants
+#Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
+const HDF5PLOT_MAP_STR2TELEM = Dict{String, Type}()
+const HDF5PLOT_MAP_TELEM2STR = Dict{Type, String}()
+
+#Don't really like this global variable... Very hacky
+const HDF5PLOT_PLOTREF = HDF5Plot_PlotRef(nothing)
+
+#Simple sub-structures that can just be written out using _hdf5plot_gwritefields:
+const HDF5PLOT_SIMPLESUBSTRUCT = Union{Font, BoundingBox,
+	GridLayout, RootLayout, ColorGradient, SeriesAnnotations, PlotText,
+	Shape,
+}
 
 # ------------------------------------------------------------------------------
 # inspectdr
@@ -800,3 +817,6 @@ const _pgfplotsx_marker = [
 ]
 const _pgfplotsx_scale = [:identity, :ln, :log2, :log10]
 is_marker_supported(::PGFPlotsXBackend, shape::Shape) = true
+
+# additional constants
+const _pgfplotsx_series_ids = KW()

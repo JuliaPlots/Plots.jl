@@ -41,24 +41,6 @@ mutable struct HDF5Plot_PlotRef
 	ref::Union{Plot, Nothing}
 end
 
-
-#==Useful constants
-===============================================================================#
-
-#Dict has problems using "Types" as keys.  Initialize in "_initialize_backend":
-const HDF5PLOT_MAP_STR2TELEM = Dict{String, Type}()
-const HDF5PLOT_MAP_TELEM2STR = Dict{Type, String}()
-
-#Don't really like this global variable... Very hacky
-const HDF5PLOT_PLOTREF = HDF5Plot_PlotRef(nothing)
-
-#Simple sub-structures that can just be written out using _hdf5plot_gwritefields:
-const HDF5PLOT_SIMPLESUBSTRUCT = Union{Font, BoundingBox,
-	GridLayout, RootLayout, ColorGradient, SeriesAnnotations, PlotText,
-	Shape,
-}
-
-
 #==
 ===============================================================================#
 is_marker_supported(::HDF5Backend, shape::Shape) = true
