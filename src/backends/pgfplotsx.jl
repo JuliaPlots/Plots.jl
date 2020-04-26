@@ -634,7 +634,7 @@ const _pgfplotsx_legend_pos = KW(
     :bottomleft => ("at" => string((0.02, 0.02)), "anchor" => "south west"),
     :bottomright => ("at" => string((0.98, 0.02)), "anchor" => "south east"),
     :topright => ("at" => string((0.98, 0.98)), "anchor" => "north east"),
-    :topleft => ("at" => string((-0.02, 0.98)), "anchor" => "north west"),
+    :topleft => ("at" => string((0.02, 0.98)), "anchor" => "north west"),
     :outertop => ("at" => string((0.5, 1.02)), "anchor" => "south"),
     :outerbottom => ("at" => string((0.5, -0.02)), "anchor" => "north"),
     :outerleft => ("at" => string((-0.02, 0.5)), "anchor" => "east"),
