@@ -437,7 +437,7 @@ end
 
 function _show(io::IO, mime::MIME{Symbol("image/png")}, plt::Plot{InspectDRBackend})
     dpi = plt[:dpi] # TODO: support
-    _inspectdr_show(io, "image/png", _inspectdr_getmplot(plt.o), plt[:size]...)
+    _inspectdr_show(io, mime, _inspectdr_getmplot(plt.o), plt[:size]...)
 end
 for (mime, fmt) in (
     "image/svg+xml" => "svg",
