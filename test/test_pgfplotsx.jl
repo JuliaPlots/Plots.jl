@@ -329,6 +329,13 @@ end # testset
 
 @testset "Extra kwargs" begin
    pl = plot(1:5, test = "me")
-   @test pl.attr[:extra_kwargs][:series][:test] == "me"
+   @test pl[1][1].plotattributes[:extra_kwargs][:test] == "me"
+   pl = plot(1:5, test = "me", extra_kwargs = :subplot)
+   @test pl[1].attr[:extra_kwargs][:test] == "me"
+   pl = plot(1:5, test = "me", extra_kwargs = :plot)
+   @test pl.attr[:extra_plot_kwargs][:test] == "me"
+   pl = plot(1:5, extra_kwargs = Dict(:plot => Dict(:test => "me"), :series => Dict(:and => "me too")))
+   @test pl.attr[:extra_plot_kwargs][:test] == "me"
+   @test pl[1][1].plotattributes[:extra_kwargs][:and] == "me too"
 
 end # testset

@@ -341,7 +341,21 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
 end
 
 function _add_the_series(plt, sp, plotattributes)
-    plt[:extra_kwargs][:series] = warn_on_unsupported_args(plt.backend, plotattributes)
+    extra_kwargs = warn_on_unsupported_args(plt.backend, plotattributes)
+    @show plt[:extra_kwargs]
+    if (kw = plt[:extra_kwargs]) isa AbstractDict
+        merge!(plt[:extra_plot_kwargs], get(kw,:plot,KW()))
+        merge!(sp[:extra_kwargs], get(kw,:subplot, KW()))
+        merge!(plotattributes[:extra_kwargs], get(kw,:series,KW()))
+    elseif plt[:extra_kwargs] == :plot
+        merge!(plt[:extra_plot_kwargs], extra_kwargs)
+    elseif plt[:extra_kwargs] == :subplot
+        merge!(sp[:extra_kwargs], extra_kwargs)
+    elseif plt[:extra_kwargs] == :series
+        merge!(plotattributes[:extra_kwargs], extra_kwargs)
+    else
+        ArgumentError("Unsupported type for extra keyword arguments")
+    end
     warn_on_unsupported(plt.backend, plotattributes)
     series = Series(plotattributes)
     push!(plt.series_list, series)
