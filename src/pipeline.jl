@@ -342,7 +342,6 @@ end
 
 function _add_the_series(plt, sp, plotattributes)
     extra_kwargs = warn_on_unsupported_args(plt.backend, plotattributes)
-    @show plt[:extra_kwargs]
     if (kw = plt[:extra_kwargs]) isa AbstractDict
         plt[:extra_plot_kwargs] = get(kw,:plot,KW())
         sp[:extra_kwargs] = get(kw,:subplot, KW())

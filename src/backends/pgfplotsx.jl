@@ -246,7 +246,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             else
                 PGFPlotsX.Axis
             end
-            @show extra_sp_opt
             axis = axisf(merge(axis_opt, extra_sp_opt))
             if sp[:legendtitle] !== nothing
                 push!(axis, PGFPlotsX.Options("\\addlegendimage{empty legend}" => nothing))
