@@ -297,7 +297,7 @@ end
 # ---------------------------------------------------------
 
 # draw ONE Shape
-function gr_draw_marker(series, xi, yi, clims, i, msize, shape::Shape)
+function gr_draw_marker(series, xi, yi, clims, i, msize, strokewidth, shape::Shape)
     sx, sy = coords(shape)
     # convert to ndc coords (percentages of window)
     GR.selntran(0)
@@ -315,7 +315,7 @@ function gr_draw_marker(series, xi, yi, clims, i, msize, shape::Shape)
 
     # draw the shapes
     msc = get_markerstrokecolor(series, i)
-    gr_set_line(get_markerstrokewidth(series, i), :solid, msc)
+    gr_set_line(strokewidth, :solid, msc)
     gr_set_transparency(msc, get_markerstrokealpha(series, i))
     GR.polyline(xs, ys)
     GR.selntran(1)
@@ -327,8 +327,8 @@ function nominal_size()
 end
 
 # draw ONE symbol marker
-function gr_draw_marker(series, xi, yi, clims, i, msize::Number, shape::Symbol)
-    GR.setborderwidth(series[:markerstrokewidth]);
+function gr_draw_marker(series, xi, yi, clims, i, msize, strokewidth, shape::Symbol)
+    GR.setborderwidth(strokewidth);
     gr_set_bordercolor(get_markerstrokecolor(series, i));
     gr_set_markercolor(get_markercolor(series, clims, i));
     gr_set_transparency(get_markeralpha(series, i))
@@ -339,17 +339,25 @@ end
 
 
 # draw the markers, one at a time
-function gr_draw_markers(series::Series, x, y, clims, msize = series[:markersize])
+function gr_draw_markers(
+    series::Series,
+    x,
+    y,
+    clims,
+    msize = series[:markersize],
+    strokewidth = series[:markerstrokewidth],
+)
 
     isempty(x) && return
     GR.setfillintstyle(GR.INTSTYLE_SOLID)
 
     shapes = series[:markershape]
     if shapes != :none
-        for i=eachindex(x)
-            msi = _cycle(msize, i)
+        for i in eachindex(x)
+            ms = _gr_thickness_scaling[1] * _cycle(msize, i)
+            msw = _gr_thickness_scaling[1] * _cycle(strokewidth, i)
             shape = _cycle(shapes, i)
-            gr_draw_marker(series, x[i], y[i], clims, i, msi, shape)
+            gr_draw_marker(series, x[i], y[i], clims, i, ms, msw, shape)
         end
     end
 end
@@ -1837,7 +1845,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
                 lc = get_linecolor(series, clims)
-                gr_set_line(get_linewidth(series), get_linestyle(series), lc) #, series[:linealpha])
+                gr_set_line(sp[:legendfontsize] / 8, get_linestyle(series), lc) #, series[:linealpha])
 
                 if (st == :shape || series[:fillrange] !== nothing) && series[:ribbon] === nothing
                     fc = get_fillcolor(series, clims)
@@ -1864,7 +1872,16 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 end
 
                 if series[:markershape] != :none
-                    gr_draw_markers(series, xpos - .035, ypos, clims, 6)
+                    ms = first(series[:markersize])
+                    msw = first(series[:markerstrokewidth])
+                    s, sw = if ms > 0
+                        0.8 * sp[:legendfontsize], 0.8 * sp[:legendfontsize] * msw / ms
+                    else
+                        0, 0.8 * sp[:legendfontsize] * msw / 8
+                    end
+                    gr_draw_markers(
+                        series, xpos - 0.035, ypos, clims, s, sw
+                    )
                 end
 
                 lab = series[:label]
