@@ -87,7 +87,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
         pgfx_sanitize_plot!(plt)
         # extract extra kwargs
-        extra_plot_opt = PGFPlotsX.Options(plt[:extra_kwargs][:plot]...)
+        extra_plot_opt = PGFPlotsX.Options(plt[:extra_plot_kwargs]...)
         the_plot = PGFPlotsX.TikzPicture(extra_plot_opt)
         bgc = plt.attr[:background_color_outside] == :match ?
             plt.attr[:background_color] : plt.attr[:background_color_outside]
@@ -128,7 +128,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             title_loc = sp[:titlelocation]
             bgc_inside = plot_color(sp[:background_color_inside])
             bgc_inside_a = alpha(bgc_inside)
-            extra_sp_opt = PGFPlotsX.Options(plt[:extra_kwargs][:subplot]...)
+            extra_sp_opt = PGFPlotsX.Options(sp[:extra_kwargs]...)
             axis_opt = PGFPlotsX.Options(
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
@@ -246,7 +246,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             else
                 PGFPlotsX.Axis
             end
-            axis = axisf(axis_opt)
+            @show extra_sp_opt
+            axis = axisf(merge(axis_opt, extra_sp_opt))
             if sp[:legendtitle] !== nothing
                 push!(axis, PGFPlotsX.Options("\\addlegendimage{empty legend}" => nothing))
                 push!(
@@ -264,12 +265,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 opt = series.plotattributes
                 st = series[:seriestype]
                 sf = series[:fillrange]
-                extra_series_opt = PGFPlotsX.Options(plt[:extra_kwargs][:series]...)
+                extra_series_opt = PGFPlotsX.Options(series[:extra_kwargs]...)
                 series_opt = PGFPlotsX.Options(
                     "color" => single_color(opt[:linecolor]),
                     "name path" => string(series_id),
-                    extra_series_opt...
                 )
+                series_opt = merge(series_opt, extra_series_opt)
                 if RecipesPipeline.is3d(series) || st == :heatmap
                     series_func = PGFPlotsX.Plot3
                 else

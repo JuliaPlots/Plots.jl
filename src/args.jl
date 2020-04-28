@@ -281,7 +281,7 @@ const _series_defaults = KW(
                                      #     one logical series to be broken up (path and markers, for example)
     :hover              => nothing,  # text to display when hovering over the data points
     :stride             => (1,1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
-    :extra_kwargs                => KW()
+    :extra_kwargs       => Dict()
 )
 
 
@@ -293,7 +293,7 @@ const _plot_defaults = KW(
     :fontfamily                  => "sans-serif",
     :size                        => (600,400),
     :pos                         => (0,0),
-    :window_title                 => "Plots.jl",
+    :window_title                => "Plots.jl",
     :show                        => false,
     :layout                      => 1,
     :link                        => :none,
@@ -305,7 +305,7 @@ const _plot_defaults = KW(
     :dpi                         => DPI,        # dots per inch for images, etc
     :thickness_scaling           => 1,
     :display_type                => :auto,
-    :extra_plot_kwargs           => KW(),
+    :extra_plot_kwargs           => Dict(),
     :extra_kwargs                => :series    # directs collection of extra_kwargs
 )
 
@@ -355,7 +355,7 @@ const _subplot_defaults = KW(
     :colorbar_title           => "",
     :framestyle               => :axes,
     :camera                   => (30,30),
-    :extra_kwargs                => KW()
+    :extra_kwargs             => Dict()
 )
 
 const _axis_defaults = KW(
