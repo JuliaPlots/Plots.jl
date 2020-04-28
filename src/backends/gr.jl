@@ -1845,7 +1845,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
                 lc = get_linecolor(series, clims)
-                gr_set_line(sp[:legendfontsize] / 10, get_linestyle(series), lc) #, series[:linealpha])
+                gr_set_line(sp[:legendfontsize] / 8, get_linestyle(series), lc) #, series[:linealpha])
 
                 if (st == :shape || series[:fillrange] !== nothing) && series[:ribbon] === nothing
                     fc = get_fillcolor(series, clims)
