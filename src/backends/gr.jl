@@ -1048,9 +1048,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # axes_2d = true
     for series in series_list(sp)
         st = series[:seriestype]
-        if st == :pie
-            draw_axes = false
-        end
         if st in (:heatmap, :image)
             outside_ticks = true
             x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
@@ -1703,54 +1700,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 x2, y2 = RecipesPipeline.unzip(map(GR.wc3towc, x, y, z))
                 gr_draw_markers(series, x2, y2, clims)
             end
-
-        # TODO: replace with pie recipe
-        elseif st == :pie
-            GR.selntran(0)
-            GR.setfillintstyle(GR.INTSTYLE_SOLID)
-            xmin, xmax, ymin, ymax = viewport_plotarea
-            ymax -= 0.1 * (xmax - xmin)
-            xcenter = 0.5 * (xmin + xmax)
-            ycenter = 0.5 * (ymin + ymax)
-            if xmax - xmin > ymax - ymin
-                r = 0.5 * (ymax - ymin)
-                xmin, xmax = xcenter - r, xcenter + r
-            else
-                r = 0.5 * (xmax - xmin)
-                ymin, ymax = ycenter - r, ycenter + r
-            end
-            labels = pie_labels(sp, series)
-            slices = series[:y]
-            numslices = length(slices)
-            total = sum(slices)
-            a1 = 0
-            x = zeros(3)
-            y = zeros(3)
-            for i in 1:numslices
-                a2 = round(Int, a1 + (slices[i] / total) * 360.0)
-                GR.setfillcolorind(980 + (i-1) % 20)
-                GR.fillarc(xmin, xmax, ymin, ymax, a1, a2)
-                α = 0.5 * (a1 + a2)
-                cosf = r * cos(α * pi / 180)
-                sinf = r * sin(α * pi / 180)
-                x[1] = xcenter + cosf
-                y[1] = ycenter + sinf
-                x[2] = x[1] + 0.1 * cosf
-                y[2] = y[1] + 0.1 * sinf
-                y[3] = y[2]
-                if 90 <= α < 270
-                    x[3] = x[2] - 0.05
-                    GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
-                    gr_text(x[3] - 0.01, y[3], string(labels[i]))
-                else
-                    x[3] = x[2] + 0.05
-                    GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-                    gr_text(x[3] + 0.01, y[3], string(labels[i]))
-                end
-                gr_polyline(x, y)
-                a1 = a2
-            end
-            GR.selntran(1)
 
         elseif st == :shape
             x, y = shape_data(series)

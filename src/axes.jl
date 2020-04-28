@@ -576,18 +576,6 @@ end
 
 # -------------------------------------------------------------------------
 
-function pie_labels(sp::Subplot, series::Series)
-    plotattributes = series.plotattributes
-    if haskey(plotattributes,:x_discrete_indices)
-        dvals = sp.attr[:xaxis].plotattributes[:discrete_values]
-        [dvals[idx] for idx in plotattributes[:x_discrete_indices]]
-    else
-        plotattributes[:x]
-    end
-end
-
-# -------------------------------------------------------------------------
-
 # compute the line segments which should be drawn for this axis
 function axis_drawing_info(sp::Subplot)
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]

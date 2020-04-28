@@ -341,10 +341,18 @@ const _gr_attr = merge_with_base_supported([
     :contour_labels,
 ])
 const _gr_seriestype = [
-    :path, :scatter, :straightline,
-    :heatmap, :pie, :image,
-    :contour, :path3d, :scatter3d, :surface, :wireframe, :volume,
-    :shape
+    :path,
+    :scatter,
+    :straightline,
+    :heatmap,
+    :image,
+    :contour,
+    :path3d,
+    :scatter3d,
+    :surface,
+    :wireframe,
+    :volume,
+    :shape,
 ]
 const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _gr_marker = _allMarkers
@@ -408,9 +416,17 @@ const _plotly_attr = merge_with_base_supported([
   ])
 
 const _plotly_seriestype = [
-    :path, :scatter, :pie, :heatmap,
-    :contour, :surface, :wireframe, :path3d, :scatter3d, :shape, :scattergl,
-    :straightline
+    :path,
+    :scatter,
+    :heatmap,
+    :contour,
+    :surface,
+    :wireframe,
+    :path3d,
+    :scatter3d,
+    :shape,
+    :scattergl,
+    :straightline,
 ]
 const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _plotly_marker = [
@@ -533,12 +549,22 @@ const _pyplot_attr = merge_with_base_supported([
     :contour_labels,
   ])
 const _pyplot_seriestype = [
-        :path, :steppre, :steppost, :shape, :straightline,
-        :scatter, :hexbin, #:histogram2d, :histogram,
-        # :bar,
-        :heatmap, :pie, :image,
-        :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
-    ]
+    :path,
+    :steppre,
+    :steppost,
+    :shape,
+    :straightline,
+    :scatter,
+    :hexbin,
+    :heatmap,
+    :image,
+    :contour,
+    :contour3d,
+    :path3d,
+    :scatter3d,
+    :surface,
+    :wireframe,
+]
 const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _pyplot_marker = vcat(_allMarkers, :pixel)
 const _pyplot_scale = [:identity, :ln, :log2, :log10]
@@ -605,12 +631,22 @@ const _hdf5_attr = merge_with_base_supported([
     :colorbar_title,
   ])
 const _hdf5_seriestype = [
-        :path, :steppre, :steppost, :shape, :straightline,
-        :scatter, :hexbin, #:histogram2d, :histogram,
-        # :bar,
-        :heatmap, :pie, :image,
-        :contour, :contour3d, :path3d, :scatter3d, :surface, :wireframe
-    ]
+    :path,
+    :steppre,
+    :steppost,
+    :shape,
+    :straightline,
+    :scatter,
+    :hexbin,
+    :heatmap,
+    :image,
+    :contour,
+    :contour3d,
+    :path3d,
+    :scatter3d,
+    :surface,
+    :wireframe,
+]
 const _hdf5_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _hdf5_marker = vcat(_allMarkers, :pixel)
 const _hdf5_scale = [:identity, :ln, :log2, :log10]

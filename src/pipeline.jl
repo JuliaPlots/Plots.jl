@@ -330,7 +330,7 @@ function _expand_subplot_extrema(sp::Subplot, plotattributes::AKW, st::Symbol)
         ymin, ymax = ignorenan_extrema(plotattributes[:y])
         expand_extrema!(sp[:xaxis], (xmin, xmax))
         expand_extrema!(sp[:yaxis], (ymin, ymax))
-    elseif !(st in (:pie, :histogram, :bins2d, :histogram2d))
+    elseif !(st in (:histogram, :bins2d, :histogram2d))
         expand_extrema!(sp, plotattributes)
     end
     # expand for zerolines (axes through origin)

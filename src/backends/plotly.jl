@@ -543,12 +543,6 @@ function plotly_series(plt::Plot, series::Series)
             plotattributes_out[:showscale] = hascolorbar(sp)
         end
 
-    elseif st == :pie
-        plotattributes_out[:type] = "pie"
-        plotattributes_out[:labels] = pie_labels(sp, series)
-        plotattributes_out[:values] = y
-        plotattributes_out[:hoverinfo] = "label+percent+name"
-
     else
         @warn("Plotly: seriestype $st isn't supported.")
         return KW()

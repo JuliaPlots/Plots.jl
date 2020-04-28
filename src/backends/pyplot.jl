@@ -784,21 +784,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         push!(handles, handle)
     end
 
-    if st == :pie
-        handle = ax."pie"(y;
-            # colors = # a vector of colors?
-            labels = pie_labels(sp, series)
-        )[1]
-        push!(handles, handle)
-
-        # # expand extrema... get list of Wedge objects
-        # for wedge in handle
-        #     path = wedge[:get_path]()
-        #     for
-        lim = 1.1
-        expand_extrema!(sp, -lim, lim, -lim, lim)
-    end
-
     series[:serieshandle] = handles
 
     # # smoothing
