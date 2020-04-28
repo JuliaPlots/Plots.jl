@@ -158,7 +158,7 @@ end
 
 # --------------------------------------------------------------------------------------
 
-function pgf_series(sp::Subplot, series::Series, extra_series_kwargs)
+function pgf_series(sp::Subplot, series::Series)
     plotattributes = series.plotattributes
     st = plotattributes[:seriestype]
     series_collection = PGFPlots.Plot[]
