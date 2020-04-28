@@ -42,12 +42,24 @@ get_subplot_index(plt::Plot, sp::Subplot) = findfirst(x -> x === sp, plt.subplot
 series_list(sp::Subplot) = sp.series_list # filter(series -> series.plotattributes[:subplot] === sp, sp.plt.series_list)
 
 function should_add_to_legend(series::Series)
-    series.plotattributes[:primary] && series.plotattributes[:label] != "" &&
-        !(series.plotattributes[:seriestype] in (
-            :hexbin,:bins2d,:histogram2d,:hline,:vline,
-            :contour,:contourf,:contour3d,:surface,:wireframe,
-            :heatmap, :pie, :image
-        ))
+    series.plotattributes[:primary] &&
+    series.plotattributes[:label] != "" &&
+    !(
+        series.plotattributes[:seriestype] in (
+            :hexbin,
+            :bins2d,
+            :histogram2d,
+            :hline,
+            :vline,
+            :contour,
+            :contourf,
+            :contour3d,
+            :surface,
+            :wireframe,
+            :heatmap,
+            :image,
+        )
+    )
 end
 
 # ----------------------------------------------------------------------

@@ -381,8 +381,7 @@ julia> curves([1,2,3,4],[1,1,2,4])
 @shorthands curves
 
 "Plot a pie diagram"
-pie(args...; kw...)        = plot(args...; kw...,  seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
-pie!(args...; kw...)       = plot!(args...; kw..., seriestype = :pie, aspect_ratio = :equal, grid=false, xticks=nothing, yticks=nothing)
+@shorthands pie
 
 "Plot with seriestype :path3d"
 plot3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)

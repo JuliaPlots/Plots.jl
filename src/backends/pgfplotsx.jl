@@ -757,7 +757,6 @@ function pgfx_should_add_to_legend(series::Series)
             :contourf,
             :contour3d,
             :heatmap,
-            :pie,
             :image,
         )
     )

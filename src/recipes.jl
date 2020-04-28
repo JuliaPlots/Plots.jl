@@ -886,6 +886,28 @@ end
 
 
 # ---------------------------------------------------------------------------
+# pie
+@recipe function f(::Type{Val{:pie}}, x, y, z)
+    framestyle --> :none
+    aspect_ratio --> true
+    s = sum(y)
+    θ = 0
+    for i in eachindex(y)
+        θ_new = θ + 2π * y[i] / s
+        coords = [(0.0, 0.0); partialcircle(θ, θ_new, 50)]
+        @series begin
+            seriestype := :shape
+            label --> string(x[i])
+            x := first.(coords)
+            y := last.(coords)
+        end
+        θ = θ_new
+    end
+end
+@deps pie shape
+
+
+# ---------------------------------------------------------------------------
 # scatter 3d
 
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)
