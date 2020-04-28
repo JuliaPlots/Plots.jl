@@ -252,7 +252,7 @@ function pgf_series(sp::Subplot, series::Series, extra_series_kwargs)
             else
                 PGFPlots.Linear
             end
-            push!(series_collection, func(seg_args...; kw..., plotattributes[:extra_kwargs]...))
+            push!(series_collection, func(seg_args...; kw...))
         end
     end
     series_collection
@@ -307,7 +307,7 @@ function pgf_fill_legend_hack(plotattributes, args)
     else
         PGFPlots.Linear
     end
-    return func(([arg[1]] for arg in args)...; kw..., plotattributes[:extra_kwargs]...)
+    return func(([arg[1]] for arg in args)...; kw...)
 end
 
 # ----------------------------------------------------------------
@@ -539,7 +539,7 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
 
         # add the series object to the PGFPlots.Axis
         for series in series_list(sp)
-            push!.(Ref(o), pgf_series(sp, series, plt[:extra_kwargs][:series]))
+            push!.(Ref(o), pgf_series(sp, series))
 
             # add series annotations
             anns = series[:series_annotations]
