@@ -354,8 +354,8 @@ function gr_draw_markers(
     shapes = series[:markershape]
     if shapes != :none
         for i in eachindex(x)
-            ms = _cycle(msize, i)
-            msw = _cycle(strokewidth, i)
+            ms = _gr_thickness_scaling[1] * _cycle(msize, i)
+            msw = _gr_thickness_scaling[1] * _cycle(strokewidth, i)
             shape = _cycle(shapes, i)
             gr_draw_marker(series, x[i], y[i], clims, i, ms, msw, shape)
         end
