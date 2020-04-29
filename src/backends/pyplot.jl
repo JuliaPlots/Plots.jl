@@ -517,7 +517,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     label = series[:label],
                     zorder = series[:series_plotindex] + 0.5,
                     marker = py_marker(_cycle(shapes,i)),
-                    s =  py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2),
+                    s =  py_thickness_scale(plt, _cycle(series[:markersize],i)).^ 2,
                     facecolors = py_color(get_markercolor(series, i), get_markercoloralpha(series, i)),
                     edgecolors = msc,
                     linewidths = lw,
@@ -548,7 +548,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                   push!(cur_y_list, _cycle(y,i))
 
                   push!(cur_color_list, _cycle(markercolor, i))
-                  push!(cur_scale_list, py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2))
+                  push!(cur_scale_list, py_thickness_scale(plt, _cycle(series[:markersize],i)).^ 2)
 
                   continue
                 end
@@ -558,7 +558,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                   zorder = series[:series_plotindex] + 0.5,
                   marker = prev_marker,
                   s = cur_scale_list,
-                  edgecolors = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),  # Do we need include i?
+                  edgecolors = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
                   linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
                   facecolors = cur_color_list,
                   extrakw...
@@ -568,7 +568,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 cur_y_list = [_cycle(y,i)]
 
                 cur_color_list = [_cycle(markercolor, i)]
-                cur_scale_list = [py_thickness_scale(plt, _cycle(series[:markersize],i) .^ 2)]
+                cur_scale_list = [py_thickness_scale(plt, _cycle(series[:markersize],i)) .^ 2]
 
                 prev_marker = cur_marker
             end
@@ -593,7 +593,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 label = series[:label],
                 zorder = series[:series_plotindex] + 0.5,
                 marker = py_marker(series[:markershape]),
-                s = py_thickness_scale(plt, series[:markersize] .^ 2),
+                s = py_thickness_scale(plt, series[:markersize]) .^2,
                 edgecolors = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
                 linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
                 extrakw...
@@ -1310,13 +1310,13 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                     elseif series[:seriestype] in (:path, :straightline, :scatter)
                         PyPlot.plt."Line2D"((0,1),(0,0),
                             color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
-                            linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
+                            linewidth = py_thickness_scale(plt, sp[:legendfontsize] / 8),
                             linestyle = py_linestyle(:path, get_linestyle(series)),
                             marker = py_marker(_cycle(series[:markershape], 1)),
-                            # markersize = py_thickness_scale(plt, series[:markersize]), # In case we decide that markersize needs to be scaled in the legend too
+                            markersize = py_thickness_scale(plt, 0.8 * sp[:legendfontsize]),
                             markeredgecolor = py_color(single_color(get_markerstrokecolor(series)), get_markerstrokealpha(series)),
                             markerfacecolor = py_color(single_color(get_markercolor(series, clims)), get_markeralpha(series)),
-                            markeredgewidth = py_thickness_scale(plt, series[:markerstrokewidth])
+                            markeredgewidth = py_thickness_scale(plt, 0.8 * series[:markerstrokewidth] * sp[:legendfontsize] / series[:markersize])   # retain the markersize/markerstroke ratio from the markers on the plot
                         )
                     else
                         series[:serieshandle][1]
