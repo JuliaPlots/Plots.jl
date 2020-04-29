@@ -305,8 +305,9 @@ const _plot_defaults = KW(
     :dpi                         => DPI,        # dots per inch for images, etc
     :thickness_scaling           => 1,
     :display_type                => :auto,
+    :warn_on_unsupported         => true,
     :extra_plot_kwargs           => Dict(),
-    :extra_kwargs                => :series    # directs collection of extra_kwargs
+    :extra_kwargs                => :series,    # directs collection of extra_kwargs
 )
 
 
@@ -1123,9 +1124,6 @@ const _already_warned = Dict{Symbol,Set{Symbol}}()
 const _to_warn = Set{Symbol}()
 
 function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
-    if !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
-        return
-    end
     empty!(_to_warn)
     bend = backend_name(pkg)
     already_warned = get!(_already_warned, bend, Set{Symbol}())
@@ -1141,7 +1139,8 @@ function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
         end
     end
 
-    if !isempty(_to_warn)
+    if !isempty(_to_warn) &&
+        !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
             @warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_attrs(pkg))")
