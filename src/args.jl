@@ -281,6 +281,7 @@ const _series_defaults = KW(
                                      #     one logical series to be broken up (path and markers, for example)
     :hover              => nothing,  # text to display when hovering over the data points
     :stride             => (1,1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
+    :extra_kwargs       => Dict()
 )
 
 
@@ -292,7 +293,7 @@ const _plot_defaults = KW(
     :fontfamily                  => "sans-serif",
     :size                        => (600,400),
     :pos                         => (0,0),
-    :window_title                 => "Plots.jl",
+    :window_title                => "Plots.jl",
     :show                        => false,
     :layout                      => 1,
     :link                        => :none,
@@ -304,8 +305,9 @@ const _plot_defaults = KW(
     :dpi                         => DPI,        # dots per inch for images, etc
     :thickness_scaling           => 1,
     :display_type                => :auto,
-    :extra_kwargs                => KW(),
     :warn_on_unsupported         => true,
+    :extra_plot_kwargs           => Dict(),
+    :extra_kwargs                => :series,    # directs collection of extra_kwargs
 )
 
 
@@ -354,6 +356,7 @@ const _subplot_defaults = KW(
     :colorbar_title           => "",
     :framestyle               => :axes,
     :camera                   => (30,30),
+    :extra_kwargs             => Dict()
 )
 
 const _axis_defaults = KW(
@@ -656,7 +659,7 @@ function default(k::Symbol)
         return _axis_defaults_byletter[letter][key]
     end
     k == :letter && return k # for type recipe processing
-    k in _suppress_warnings || error("Unknown key: ", k)
+    return missing
 end
 
 function default(k::Symbol, v)
@@ -1121,26 +1124,29 @@ const _already_warned = Dict{Symbol,Set{Symbol}}()
 const _to_warn = Set{Symbol}()
 
 function warn_on_unsupported_args(pkg::AbstractBackend, plotattributes)
-    if !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
-        return
-    end
     empty!(_to_warn)
     bend = backend_name(pkg)
     already_warned = get!(_already_warned, bend, Set{Symbol}())
+    extra_kwargs = Dict{Symbol,Any}()
     for k in keys(plotattributes)
         is_attr_supported(pkg, k) && continue
         k in _suppress_warnings && continue
-        if plotattributes[k] != default(k)
+        default_value = default(k)
+        if ismissing(default_value)
+            extra_kwargs[k] = pop_kw!(plotattributes, k)
+        elseif plotattributes[k] != default(k)
             k in already_warned || push!(_to_warn, k)
         end
     end
 
-    if !isempty(_to_warn)
+    if !isempty(_to_warn) &&
+        !get(plotattributes, :warn_on_unsupported, _plot_defaults[:warn_on_unsupported])
         for k in sort(collect(_to_warn))
             push!(already_warned, k)
             @warn("Keyword argument $k not supported with $pkg.  Choose from: $(supported_attrs(pkg))")
         end
     end
+    return extra_kwargs
 end
 
 # _markershape_supported(pkg::AbstractBackend, shape::Symbol) = shape in supported_markers(pkg)

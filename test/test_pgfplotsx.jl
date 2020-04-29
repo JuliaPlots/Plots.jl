@@ -326,3 +326,23 @@ end
       #    end
    end # testset
 end # testset
+
+@testset "Extra kwargs" begin
+   pl = plot(1:5, test = "me")
+   @test pl[1][1].plotattributes[:extra_kwargs][:test] == "me"
+   pl = plot(1:5, test = "me", extra_kwargs = :subplot)
+   @test pl[1].attr[:extra_kwargs][:test] == "me"
+   pl = plot(1:5, test = "me", extra_kwargs = :plot)
+   @test pl.attr[:extra_plot_kwargs][:test] == "me"
+   pl = plot(1:5, extra_kwargs = Dict(:plot => Dict(:test => "me"), :series => Dict(:and => "me too")))
+   @test pl.attr[:extra_plot_kwargs][:test] == "me"
+   @test pl[1][1].plotattributes[:extra_kwargs][:and] == "me too"
+   pl = plot(
+     plot(1:5, title="Line"),
+     scatter(1:5, title="Scatter", extra_kwargs=Dict(:subplot=>Dict("axis line shift" => "10pt")))
+   )
+   Plots._update_plot_object(pl)
+   axes = Plots.pgfx_axes(pl.o)
+   @test !haskey(axes[1].options.dict, "axis line shift")
+   @test haskey(axes[2].options.dict, "axis line shift")
+end # testset
