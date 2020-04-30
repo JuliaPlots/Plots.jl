@@ -50,7 +50,7 @@ There are four main types of recipes which are determined by the signature of th
 !!! compat
     With RecipesBase 1.0 type recipes of the form
     ```julia
-    @recipe function f(::Type{T}, val::T) where T <: AbstractArry{MyType}
+    @recipe function f(::Type{T}, val::T) where T <: AbstractArray{MyType}
     ```
     for `AbstractArray`s of custom types are supported too.
 
