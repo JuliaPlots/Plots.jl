@@ -1308,9 +1308,10 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                             linestyle = py_linestyle(series[:seriestype], get_linestyle(series))
                         )
                     elseif series[:seriestype] in (:path, :straightline, :scatter)
+                        hasline = get_linewidth(series) > 0
                         PyPlot.plt."Line2D"((0,1),(0,0),
                             color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
-                            linewidth = py_thickness_scale(plt, sp[:legendfontsize] / 8),
+                            linewidth = py_thickness_scale(plt, hasline * sp[:legendfontsize] / 8),
                             linestyle = py_linestyle(:path, get_linestyle(series)),
                             marker = py_marker(_cycle(series[:markershape], 1)),
                             markersize = py_thickness_scale(plt, 0.8 * sp[:legendfontsize]),
