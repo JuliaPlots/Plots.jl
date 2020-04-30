@@ -1307,16 +1307,17 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                             linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                             linestyle = py_linestyle(series[:seriestype], get_linestyle(series))
                         )
-                    elseif series[:seriestype] in (:path, :straightline, :scatter)
+                    elseif series[:seriestype] in (:path, :straightline, :scatter, :steppre, :steppost)
+                        hasline = get_linewidth(series) > 0
                         PyPlot.plt."Line2D"((0,1),(0,0),
                             color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
-                            linewidth = py_thickness_scale(plt, sp[:legendfontsize] / 8),
+                            linewidth = py_thickness_scale(plt, hasline * sp[:legendfontsize] / 8),
                             linestyle = py_linestyle(:path, get_linestyle(series)),
                             marker = py_marker(_cycle(series[:markershape], 1)),
                             markersize = py_thickness_scale(plt, 0.8 * sp[:legendfontsize]),
                             markeredgecolor = py_color(single_color(get_markerstrokecolor(series)), get_markerstrokealpha(series)),
                             markerfacecolor = py_color(single_color(get_markercolor(series, clims)), get_markeralpha(series)),
-                            markeredgewidth = py_thickness_scale(plt, 0.8 * series[:markerstrokewidth] * sp[:legendfontsize] / series[:markersize])   # retain the markersize/markerstroke ratio from the markers on the plot
+                            markeredgewidth = py_thickness_scale(plt, 0.8 * get_markerstrokewidth(series) * sp[:legendfontsize] / first(series[:markersize]))   # retain the markersize/markerstroke ratio from the markers on the plot
                         )
                     else
                         series[:serieshandle][1]
