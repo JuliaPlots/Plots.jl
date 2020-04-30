@@ -1307,7 +1307,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                             linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                             linestyle = py_linestyle(series[:seriestype], get_linestyle(series))
                         )
-                    elseif series[:seriestype] in (:path, :straightline, :scatter)
+                    elseif series[:seriestype] in (:path, :straightline, :scatter, :steppre, :steppost)
                         hasline = get_linewidth(series) > 0
                         PyPlot.plt."Line2D"((0,1),(0,0),
                             color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
