@@ -411,8 +411,8 @@ ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
 # These functions return an operator for use in `get_clims(::Seres, op)`
-process_clims(lims::NTuple{2}) = z -> _update_clims(z..., lims...) ∘ ignorenan_extrema
-process_clims(s::Union{Symbol, Nothing, Missing}) = ignorenan_extrema
+process_clims(lims::NTuple{2,<:Number}) = (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ ignorenan_extrema
+process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
 
@@ -439,11 +439,10 @@ end
     get_clims(::Series, op=Plots.ignoranan_extrema)
 
 Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
-which must be written to return the tuple `(zmin, zmax)`. The default op is the extrema of the finite 
+which must return the tuple `(zmin, zmax)`. The default op is the extrema of the finite 
 values of the input.
 """
 function get_clims(series::Series, op=ignorenan_extrema)
-    @show op
     zmin, zmax = Inf, -Inf
     z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
     for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
