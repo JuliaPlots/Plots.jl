@@ -416,7 +416,7 @@ process_clims(s::Union{Symbol, Nothing, Missing}) = ignorenan_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
 
-function get_clims(sp::Subplot, op = process_clims(sp[:clims]))
+function get_clims(sp::Subplot, op=process_clims(sp[:clims]))
     zmin, zmax = Inf, -Inf
     for series in series_list(sp)
         if series[:colorbar_entry]
@@ -426,7 +426,7 @@ function get_clims(sp::Subplot, op = process_clims(sp[:clims]))
     return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
-function get_clims(sp::Subplot, series::Series, op = process_clims(sp[:clims]))
+function get_clims(sp::Subplot, series::Series, op=process_clims(sp[:clims]))
     zmin, zmax = if series[:colorbar_entry]
         get_clims(sp, op)
     else
@@ -436,13 +436,14 @@ function get_clims(sp::Subplot, series::Series, op = process_clims(sp[:clims]))
 end
 
 """
-    get_clims(::Series, op=Plots.ignorana_extrema)
+    get_clims(::Series, op=Plots.ignoranan_extrema)
 
 Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
 which must be written to return the tuple `(zmin, zmax)`. The default op is the extrema of the finite 
 values of the input.
 """
 function get_clims(series::Series, op=ignorenan_extrema)
+    @show op
     zmin, zmax = Inf, -Inf
     z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
     for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
