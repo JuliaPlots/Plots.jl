@@ -414,10 +414,6 @@ end
 # --------------------------------------------------------------------------------------
 # viewport plot area
 
-# this stays constant for a given subplot while displaying that subplot.
-# values are [xmin, xmax, ymin, ymax].  they range [0,1].
-const viewport_plotarea = zeros(4)
-
 # the size of the current plot in pixels
 const gr_plot_size = [600.0, 400.0]
 
@@ -434,7 +430,7 @@ function gr_viewport_from_bbox(sp::Subplot{GRBackend}, bb::BoundingBox, w, h, vi
 end
 
 # change so we're focused on the viewport area
-function gr_set_viewport_cmap(sp::Subplot)
+function gr_set_viewport_cmap(sp::Subplot, viewport_plotarea)
     GR.setviewport(
         viewport_plotarea[2] + (RecipesPipeline.is3d(sp) ? 0.07 : 0.02),
         viewport_plotarea[2] + (RecipesPipeline.is3d(sp) ? 0.10 : 0.05),
@@ -443,17 +439,7 @@ function gr_set_viewport_cmap(sp::Subplot)
     )
 end
 
-# reset the viewport to the plot area
-function gr_set_viewport_plotarea()
-    GR.setviewport(
-        viewport_plotarea[1],
-        viewport_plotarea[2],
-        viewport_plotarea[3],
-        viewport_plotarea[4]
-    )
-end
-
-function gr_set_viewport_polar()
+function gr_set_viewport_polar(viewport_plotarea)
     xmin, xmax, ymin, ymax = viewport_plotarea
     ymax -= 0.05 * (xmax - xmin)
     xcenter = 0.5 * (xmin + xmax)
@@ -518,11 +504,11 @@ function _cbar_unique(values, propname)
 end
 
 # add the colorbar
-function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
+function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims, viewport_plotarea)
     GR.savestate()
     xmin, xmax = gr_xy_axislims(sp)[1:2]
     zmin, zmax = clims[1:2]
-    gr_set_viewport_cmap(sp)
+    gr_set_viewport_cmap(sp, viewport_plotarea)
     GR.setscale(0)
     GR.setwindow(xmin, xmax, zmin, zmax)
     if !isempty(cbar.gradients)
@@ -574,18 +560,19 @@ function gr_draw_colorbar(cbar::GRColorbar, sp::Subplot, clims)
     gr_set_font(guidefont(sp[:yaxis]))
     GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
     GR.setcharup(-1, 0)
-    gr_text(viewport_plotarea[2] + 0.1,
-            gr_view_ycenter(), sp[:colorbar_title])
+    gr_text(
+        viewport_plotarea[2] + 0.1, gr_view_ycenter(viewport_plotarea), sp[:colorbar_title]
+    )
 
     GR.restorestate()
 end
 
-gr_view_xcenter() = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
-gr_view_ycenter() = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
+gr_view_xcenter(viewport_plotarea) = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
+gr_view_ycenter(viewport_plotarea) = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
 
-function gr_legend_pos(sp::Subplot, w, h)
+function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
     s = sp[:legend]
-    typeof(s) <: Symbol || return gr_legend_pos(s, w, h)
+    typeof(s) <: Symbol || return gr_legend_pos(s, w, h, viewport_plotarea)
     str = string(s)
     if str == "best"
         str = "topright"
@@ -629,7 +616,7 @@ function gr_legend_pos(sp::Subplot, w, h)
     (xpos,ypos)
 end
 
-function gr_legend_pos(v::Tuple{S,T},w,h) where {S<:Real, T<:Real}
+function gr_legend_pos(v::Tuple{S,T}, w, h, viewport_plotarea) where {S<:Real, T<:Real}
     xpos = v[1] * (viewport_plotarea[2] - viewport_plotarea[1]) + viewport_plotarea[1]
     ypos = v[2] * (viewport_plotarea[4] - viewport_plotarea[3]) + viewport_plotarea[3]
     (xpos,ypos)
@@ -960,7 +947,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
     # the viewports for this subplot
     viewport_subplot = gr_viewport_from_bbox(sp, bbox(sp), w, h, viewport_canvas)
-    viewport_plotarea[:] = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
+    viewport_plotarea = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
     # get data limits
     data_lims = gr_xy_axislims(sp)
     xy_lims = data_lims
@@ -1061,7 +1048,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     end
 
     # set our plot area view
-    gr_set_viewport_plotarea()
+    GR.setviewport(viewport_plotarea...)
 
     # these are the Axis objects, which hold scale, lims, etc
     xaxis = sp[:xaxis]
@@ -1309,7 +1296,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         # end
 
     elseif ispolar(sp)
-        r = gr_set_viewport_polar()
+        r = gr_set_viewport_polar(viewport_plotarea)
         #rmin, rmax = GR.adjustrange(ignorenan_minimum(r), ignorenan_maximum(r))
         rmin, rmax = axis_limits(sp, :y)
         gr_polaraxes(rmin, rmax, sp)
@@ -1433,7 +1420,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             xpos = viewport_plotarea[2]
             halign = GR.TEXT_HALIGN_RIGHT
         else
-            xpos = gr_view_xcenter()
+            xpos = gr_view_xcenter(viewport_plotarea)
             halign = GR.TEXT_HALIGN_CENTER
         end
         GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
@@ -1491,10 +1478,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             gr_set_font(guidefont(xaxis))
             if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-                gr_text(gr_view_xcenter(), viewport_plotarea[4] + h, xaxis[:guide])
+                gr_text(gr_view_xcenter(viewport_plotarea), viewport_plotarea[4] + h, xaxis[:guide])
             else
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-                gr_text(gr_view_xcenter(), viewport_plotarea[3] - h, xaxis[:guide])
+                gr_text(gr_view_xcenter(viewport_plotarea), viewport_plotarea[3] - h, xaxis[:guide])
             end
         end
 
@@ -1504,10 +1491,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             GR.setcharup(-1, 0)
             if yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
-                gr_text(viewport_plotarea[2] + w, gr_view_ycenter(), yaxis[:guide])
+                gr_text(viewport_plotarea[2] + w, gr_view_ycenter(viewport_plotarea), yaxis[:guide])
             else
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
-                gr_text(viewport_plotarea[1] - w, gr_view_ycenter(), yaxis[:guide])
+                gr_text(viewport_plotarea[1] - w, gr_view_ycenter(viewport_plotarea), yaxis[:guide])
             end
         end
     end
@@ -1528,7 +1515,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         # update the bounding window
         if ispolar(sp)
-            gr_set_viewport_polar()
+            gr_set_viewport_polar(viewport_plotarea)
         else
             xmin, xmax, ymin, ymax = data_lims
             if xmax > xmin && ymax > ymin
@@ -1762,7 +1749,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     end
 
     # draw the colorbar
-    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, get_clims(sp))
+    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, get_clims(sp), viewport_plotarea)
 
     # add the legend
     if !(sp[:legend] in(:none, :inline))
@@ -1775,7 +1762,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if w > 0
             dy = _gr_point_mult[1] * sp[:legendfontsize] * 1.75
             h = dy*n
-            xpos, ypos = gr_legend_pos(sp, w, h)
+            xpos, ypos = gr_legend_pos(sp, w, h, viewport_plotarea)
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             gr_set_fillcolor(sp[:background_color_legend])
             GR.fillrect(xpos - 0.08, xpos + w + 0.02, ypos + dy, ypos - dy * n)
@@ -1848,7 +1835,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     GR.savestate()
     # update the bounding window
     if ispolar(sp)
-        gr_set_viewport_polar()
+        gr_set_viewport_polar(viewport_plotarea)
     else
         xmin, xmax, ymin, ymax = data_lims
         if xmax > xmin && ymax > ymin
