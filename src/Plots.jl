@@ -108,6 +108,7 @@ export
     gif,
     mov,
     mp4,
+    webm,
     animate,
     @animate,
     @gif,

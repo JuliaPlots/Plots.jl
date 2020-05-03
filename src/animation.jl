@@ -24,6 +24,7 @@ end
 giffn() = (isijulia() ? "tmp.gif" : tempname()*".gif")
 movfn() = (isijulia() ? "tmp.mov" : tempname()*".mov")
 mp4fn() = (isijulia() ? "tmp.mp4" : tempname()*".mp4")
+webmfn() = (isijulia() ? "tmp.webm" : tempname()*".webm")
 
 mutable struct FrameIterator
     itr
@@ -63,6 +64,7 @@ file_extension(fn) = Base.Filesystem.splitext(fn)[2][2:end]
 gif(anim::Animation, fn = giffn(); kw...) = buildanimation(anim, fn; kw...)
 mov(anim::Animation, fn = movfn(); kw...) = buildanimation(anim, fn, false; kw...)
 mp4(anim::Animation, fn = mp4fn(); kw...) = buildanimation(anim, fn, false; kw...)
+webm(anim::Animation, fn = webmfn(); kw...) = buildanimation(anim, fn, false; kw...)
 
 ffmpeg_framerate(fps) = "$fps"
 ffmpeg_framerate(fps::Rational) = "$(fps.num)/$(fps.den)"
@@ -110,8 +112,8 @@ function Base.show(io::IO, ::MIME"text/html", agif::AnimatedGif)
     ext = file_extension(agif.filename)
     if ext == "gif"
         html = "<img src=\"data:image/gif;base64," * base64encode(read(agif.filename)) * "\" />"
-    elseif ext in ("mov", "mp4")
-        mimetype = ext == "mov" ? "video/quicktime" : "video/mp4"
+    elseif ext in ("mov", "mp4","webm")
+        mimetype = ext == "mov" ? "video/quicktime" : "video/$ext"
         html = "<video controls><source src=\"data:$mimetype;base64," *
                base64encode(read(agif.filename)) *
                "\" type = \"$mimetype\"></video>"
