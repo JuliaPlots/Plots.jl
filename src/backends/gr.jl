@@ -763,6 +763,7 @@ function gr_convert_sci_tick_label(label)
 end
 
 function gr_axis_height(sp, axis)
+    GR.savestate()
     ticks = get_ticks(sp, axis)
     gr_set_font(tickfont(axis), sp)
     h = (ticks in (nothing, false, :none) ? 0 : last(gr_get_ticks_size(ticks, axis[:rotation])))
@@ -770,10 +771,12 @@ function gr_axis_height(sp, axis)
         gr_set_font(guidefont(axis), sp)
         h += last(gr_text_size(axis[:guide]))
     end
+    GR.restorestate()
     return h
 end
 
 function gr_axis_width(sp, axis)
+    GR.savestate()
     ticks = get_ticks(sp, axis)
     gr_set_font(tickfont(axis), sp)
     w = (ticks in (nothing, false, :none) ? 0 : first(gr_get_ticks_size(ticks, axis[:rotation])))
@@ -781,6 +784,7 @@ function gr_axis_width(sp, axis)
         gr_set_font(guidefont(axis), sp)
         w += last(gr_text_size(axis[:guide]))
     end
+    GR.restorestate()
     return w
 end
 
