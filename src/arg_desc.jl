@@ -70,7 +70,7 @@ const _arg_desc = KW(
 :dpi 			  => "Number.  Dots Per Inch of output figures",
 :thickness_scaling        => "Number. Scale for the thickness of all line elements like lines, borders, axes, grid lines, ... defaults to 1.",
 :display_type             => "Symbol (`:auto`, `:gui`, or `:inline`).  When supported, `display` will either open a GUI window or plot inline.",
-:extra_kwargs 	          => "Either one of (`:plot`, `:subplot`, `:series`) to specify for which element extra keyword args are collected or a KW (Dict{Symbol,Any}) to pass a map of extra keyword args which may be specific to a backend. Default: `:series`.\n Example: `pgfplotsx(); scatter(1:5, extra_kwargs=Dict(:subplot=>Dict("axis line shift" => "10pt"))`",
+:extra_kwargs 	          => "Either one of (`:plot`, `:subplot`, `:series`) to specify for which element extra keyword args are collected or a KW (Dict{Symbol,Any}) to pass a map of extra keyword args which may be specific to a backend. Default: `:series`.\n Example: `pgfplotsx(); scatter(1:5, extra_kwargs=Dict(:subplot=>Dict(\"axis line shift\" => \"10pt\"))`",
 :fontfamily               => "String or Symbol.  Default font family for title, legend entries, tick labels and guides",
 :warn_on_unsupported      => "Bool. Warn on unsupported attributes, series types and marker shapes",
 
