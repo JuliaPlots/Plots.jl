@@ -627,12 +627,13 @@ end
 get_size(kw) = get(kw, :size, default(:size))
 get_size(plt::Plot) = get_size(plt.attr)
 get_size(sp::Subplot) = get_size(sp.plt)
-get_size(series::Series) = get_size(series.plotattributes[:sp])
+get_size(series::Series) = get_size(series.plotattributes[:subplot])
 
 get_thickness_scaling(kw) = get(kw, :thickness_scaling, default(:thickness_scaling))
 get_thickness_scaling(plt::Plot) = get_thickness_scaling(plt.attr)
 get_thickness_scaling(sp::Subplot) = get_thickness_scaling(sp.plt)
-get_thickness_scaling(series::Series) = get_thickness_scaling(series.plotattributes[:sp])
+get_thickness_scaling(series::Series) =
+    get_thickness_scaling(series.plotattributes[:subplot])
 
 # ---------------------------------------------------------------
 
