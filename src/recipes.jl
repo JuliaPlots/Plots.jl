@@ -1099,7 +1099,7 @@ end
     end
     ()
 end
-@deps xerror path
+@deps zerror path
 
 
 # TODO: move quiver to PlotRecipes
