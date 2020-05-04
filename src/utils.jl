@@ -436,7 +436,7 @@ function get_clims(sp::Subplot, series::Series, op=process_clims(sp[:clims]))
 end
 
 """
-    get_clims(::Series, op=Plots.ignoranan_extrema)
+    get_clims(::Series, op=Plots.ignorenan_extrema)
 
 Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
 which must return the tuple `(zmin, zmax)`. The default op is the extrema of the finite 
