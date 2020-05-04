@@ -1074,6 +1074,10 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             pyaxis."label"."set_fontsize"(py_thickness_scale(plt, axis[:guidefontsize]))
             pyaxis."label"."set_family"(axis[:guidefontfamily])
+            
+            if (RecipesPipeline.is3d(sp))
+                pyaxis."set_rotate_label"(false)
+            end
 
             if (letter == :y && !RecipesPipeline.is3d(sp))
                 pyaxis."label"."set_rotation"(axis[:guidefontrotation] + 90)
