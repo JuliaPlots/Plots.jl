@@ -537,14 +537,19 @@ end
 @recipe function f(::Type{Val{:scatterbins}}, x, y, z)
     edge, weights, xscale, yscale, baseline =
         _preprocess_binlike(plotattributes, x, y)
-    xerror := diff(edge) / 2
+    @series begin
+        x := _bin_centers(edge)
+        xerror := diff(edge) / 2
+        primary := false
+        seriestype := :xerror
+        ()
+    end
     x := _bin_centers(edge)
     y := weights
     seriestype := :scatter
     ()
 end
-@deps scatterbins scatter
-
+@deps scatterbins xerror scatter
 
 function _stepbins_path(
     edge,
