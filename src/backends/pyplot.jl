@@ -643,7 +643,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             extrakw...
         )
         if series[:contour_labels] == true
-            PyPlot."clabel"(handle, handle.levels)
+            ax."clabel"(handle, handle.levels)
         end
         push!(handles, handle)
 
