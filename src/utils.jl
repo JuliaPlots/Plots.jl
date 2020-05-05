@@ -410,44 +410,46 @@ xlims(sp_idx::Int = 1) = xlims(current(), sp_idx)
 ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
+# These functions return an operator for use in `get_clims(::Seres, op)`
+process_clims(lims::NTuple{2,<:Number}) = (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ ignorenan_extrema
+process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
+# don't specialize on ::Function otherwise python functions won't work
+process_clims(f) = f
 
-function get_clims(sp::Subplot)
+function get_clims(sp::Subplot, op=process_clims(sp[:clims]))
     zmin, zmax = Inf, -Inf
     for series in series_list(sp)
         if series[:colorbar_entry]
-            zmin, zmax = _update_clims(zmin, zmax, get_clims(series)...)
+            zmin, zmax = _update_clims(zmin, zmax, get_clims(series, op)...)
         end
     end
-    clims = sp[:clims]
-    if is_2tuple(clims)
-        isfinite(clims[1]) && (zmin = clims[1])
-        isfinite(clims[2]) && (zmax = clims[2])
-    end
     return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
-function get_clims(sp::Subplot, series::Series)
+function get_clims(sp::Subplot, series::Series, op=process_clims(sp[:clims]))
     zmin, zmax = if series[:colorbar_entry]
-        get_clims(sp)
+        get_clims(sp, op)
     else
-        get_clims(series)
-    end
-    clims = sp[:clims]
-    if is_2tuple(clims)
-        isfinite(clims[1]) && (zmin = clims[1])
-        isfinite(clims[2]) && (zmax = clims[2])
+        get_clims(series, op)
     end
     return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
 end
 
-function get_clims(series::Series)
+"""
+    get_clims(::Series, op=Plots.ignorenan_extrema)
+
+Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
+which must return the tuple `(zmin, zmax)`. The default op is the extrema of the finite 
+values of the input.
+"""
+function get_clims(series::Series, op=ignorenan_extrema)
     zmin, zmax = Inf, -Inf
     z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
     for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
         if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
-            zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals.surf)...)
+            zmin, zmax = _update_clims(zmin, zmax, op(vals.surf)...)
         elseif (vals !== nothing) && (eltype(vals) <: Union{Missing, Real})
-            zmin, zmax = _update_clims(zmin, zmax, ignorenan_extrema(vals)...)
+            zmin, zmax = _update_clims(zmin, zmax, op(vals)...)
         end
     end
     return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
