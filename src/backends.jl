@@ -828,6 +828,7 @@ const _pgfplotsx_seriestype = [
     :heatmap,
     :contour,
     :contour3d,
+    :quiver,
     :shape,
     :steppre,
     :stepmid,
