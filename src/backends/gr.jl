@@ -148,7 +148,7 @@ function gr_polyline(x, y, func = GR.polyline; arrowside = :none, arrowstyle = :
     end
 end
 
-function gr_polyline3d(x, y, z, func = GR.polyline3d; arrowside = :none, arrowstyle = :simple)
+function gr_polyline3d(x, y, z, func = GR.polyline3d)
     iend = 0
     n = length(x)
     while iend < n-1
