@@ -176,14 +176,6 @@ function gr_polyline3d(x, y, z, func = GR.polyline3d; arrowside = :none, arrowst
         # if we found a start and end, draw the line segment, otherwise we're done
         if istart > 0 && iend > 0
             func(x[istart:iend], y[istart:iend], z[istart:iend])
-            if arrowside in (:head,:both)
-                gr_set_arrowstyle(arrowstyle)
-                GR.drawarrow(x[iend-1], y[iend-1], z[iend-1], x[iend], y[iend], z[iend])
-            end
-            if arrowside in (:tail,:both)
-                gr_set_arrowstyle(arrowstyle)
-                GR.drawarrow(x[istart+1], y[istart+1], z[istart+1], x[istart], y[istart], z[istart])
-            end
         else
             break
         end
