@@ -71,8 +71,9 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     :marker_z,
     :markerstrokecolor,
     :markerstrokealpha,
+    :xerror,
     :yerror,
-    :yerror,
+    :zerror,
     :series_annotations,
     :fillrange,
 ]
@@ -1027,7 +1028,7 @@ end
 
 function error_style!(plotattributes::AKW)
     plotattributes[:seriestype] = :path
-    plotattributes[:linecolor] = plotattributes[:markerstrokecolor]
+    plotattributes[:markercolor] = plotattributes[:markerstrokecolor] 
     plotattributes[:linewidth] = plotattributes[:markerstrokewidth]
     plotattributes[:label] = ""
 end
