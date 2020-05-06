@@ -75,7 +75,11 @@ function iter_segments(series::Series)
         if series[:seriestype] in (:scatter, :scatter3d)
             return [[i] for i in eachindex(y)]
         else
-            return [i:(i + 1) for i in firstindex(y):lastindex(y)-1]
+            if any(isnan,y)
+                return [iter_segments(y)...]
+            else
+                return [i:(i + 1) for i in firstindex(y):lastindex(y)-1]
+            end
         end
     else
         segs = UnitRange{Int}[]
@@ -439,7 +443,7 @@ end
     get_clims(::Series, op=Plots.ignorenan_extrema)
 
 Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
-which must return the tuple `(zmin, zmax)`. The default op is the extrema of the finite 
+which must return the tuple `(zmin, zmax)`. The default op is the extrema of the finite
 values of the input.
 """
 function get_clims(series::Series, op=ignorenan_extrema)
