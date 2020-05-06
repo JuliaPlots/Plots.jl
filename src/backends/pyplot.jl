@@ -603,14 +603,16 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :hexbin
-        handle = ax."hexbin"(x, y;
+        handle = ax."hexbin"(x, y,
             label = series[:label],
-            zorder = series[:series_plotindex],
-            gridsize = series[:bins],
+            C = series[:weights],
+            gridsize = series[:bins]==:auto ? 100 : series[:bins],  # 100 is the default value
             linewidths = py_thickness_scale(plt, series[:linewidth]),
             edgecolors = py_color(get_linecolor(series)),
+            alpha = series[:fillalpha],
             cmap = py_fillcolormap(series),  # applies to the pcolorfast object
-            extrakw...
+            zorder = series[:series_plotindex],
+            # extrakw...  # for some reason vmin and vmax are NaN???
         )
         push!(handles, handle)
     end
