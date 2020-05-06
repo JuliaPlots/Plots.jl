@@ -71,8 +71,9 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     :marker_z,
     :markerstrokecolor,
     :markerstrokealpha,
+    :xerror,
     :yerror,
-    :yerror,
+    :zerror,
     :series_annotations,
     :fillrange,
 ]
