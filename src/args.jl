@@ -1103,8 +1103,11 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         plotattributes[:colorbar] = convertLegendValue(plotattributes[:colorbar])
     end
 
-    if haskey(plotattributes, :label) && plotattributes[:label] isa AbstractVector
-        plotattributes[:label] = permutedims(plotattributes[:label])
+    # transpose vectors that are most certainly meant as row vector inputs
+    for k in (:label, :title)
+        if haskey(plotattributes, k) && plotattributes[k] isa AbstractVector
+            plotattributes[k] = permutedims(plotattributes[k])
+        end
     end
 
     # framestyle
