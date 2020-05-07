@@ -10,7 +10,7 @@ const i = Ref(0)
 macro test_and_save(arg)
     return quote
         i[] += 1
-        @test_nowarn save("test_$(i[])", $arg)
+        @test_nowarn save("test_$(i[]).png", $arg)
     end
 end
 
