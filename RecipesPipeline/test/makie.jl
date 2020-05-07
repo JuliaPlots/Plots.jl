@@ -9,9 +9,8 @@ const i = Ref(0)
 
 macro test_and_save(arg)
     return quote
-        @test_nowarn scene = $arg
         i[] += 1
-        save("test_$(i[])", scene)
+        @test_nowarn save("test_$(i[])", $arg)
     end
 end
 
