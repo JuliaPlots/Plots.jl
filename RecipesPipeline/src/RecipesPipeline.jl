@@ -35,7 +35,8 @@ export warn_on_recipe_aliases,
     is_axis_attribute,
     type_alias,
     plot_setup!,
-    slice_series_attributes!
+    slice_series_attributes!,
+    process_sliced_series_attributes!
 
 include("api.jl")
 include("utils.jl")
