@@ -5,6 +5,17 @@ using MarketData, TimeSeries
 
 # ## The simplest example model
 
+const i = Ref(0)
+
+macro test_and_save(arg)
+    return quote
+        @test_nowarn scene = $arg
+        i[] += 1
+        save("test_$(i[])", scene)
+    end
+end
+
+
 struct T end
 
 RecipesBase.@recipe function plot(::T, n = 1; customcolor = :green)
@@ -15,13 +26,13 @@ RecipesBase.@recipe function plot(::T, n = 1; customcolor = :green)
     rand(10,n)                   # return the arguments (input data) for the next recipe
 end
 
-@test_nowarn recipeplot(T(); seriestype = :path)
+@test_and_save recipeplot(T(); seriestype = :path)
 
 # ## Testing out series decomposition
 
 sc = Scene()
-@test_nowarn recipeplot!(sc, rand(10, 2); seriestype = :scatter)
-@test_nowarn recipeplot!(sc, 1:10, rand(10, 1); seriestype = :path)
+@test_and_save recipeplot!(sc, rand(10, 2); seriestype = :scatter)
+@test_and_save recipeplot!(sc, 1:10, rand(10, 1); seriestype = :path)
 
 # ## Distributions
 
@@ -38,7 +49,7 @@ u0 = [1/2, 1]
 tspan = (0.0,1.0)
 prob = ODEProblem(f,u0,tspan)
 sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
-@test_nowarn recipeplot(sol)
+@test_and_save recipeplot(sol)
 
 # ### Matrix DiffEq
 
@@ -51,7 +62,7 @@ tspan = (0.0,1.0)
 f(u,p,t) = A*u
 prob = ODEProblem(f,u0,tspan)
 sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
-@test_nowarn recipeplot(sol)
+@test_and_save recipeplot(sol)
 
 # ### Stochastic DiffEq
 
@@ -62,7 +73,7 @@ u0 = rand(4,2)
 W = WienerProcess(0.0,0.0,0.0)
 prob = SDEProblem(f,g,u0,(0.0,1.0),noise=W)
 sol = solve(prob,SRIW1())
-@test_nowarn recipeplot(sol)
+@test_and_save recipeplot(sol)
 
 # ## Phylogenetic tree
 using Phylo
@@ -97,11 +108,11 @@ code = quote
     end
 end
 
-@test_nowarn recipeplot(code; fontsize = 12, shorten = 0.01, axis_buffer = 0.15, nodeshape = :rect)
+@test_and_save recipeplot(code; fontsize = 12, shorten = 0.01, axis_buffer = 0.15, nodeshape = :rect)
 
 # ### Type tree with GraphRecipes
 
-@test_nowarn recipeplot(AbstractFloat; method = :tree, fontsize = 10)
+@test_and_save recipeplot(AbstractFloat; method = :tree, fontsize = 10)
 
 # Timeseries with market data
-@test_nowarn recipeplot(MarketData.ohlc; seriestype = :path)
+@test_and_save recipeplot(MarketData.ohlc; seriestype = :path)
