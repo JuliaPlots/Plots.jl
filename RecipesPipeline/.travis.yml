@@ -2,18 +2,14 @@
 language: julia
 os:
   - linux
-  - osx
+  # - osx
 julia:
   - 1
   - nightly
-notifications:
-  email: false
 
-jobs:
+matrix:
   allow_failures:
-    - julia: nightly
-    - os: osx
-  fast_finish: true
+  - julia: nightly
 
 addons:
   apt:
@@ -38,4 +34,4 @@ notifications:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - if [[ `uname` = "Linux" ]]; then TESTCMD="xvfb-run julia"; else TESTCMD="julia"; fi
-  - $TESTCMD --project=$(mktemp -d) -e 'using Pkg; pkg"dev .; add Plots#ds/rewrite"; Pkg.build(); Pkg.test("Plots")'
+  - $TESTCMD --project=$(mktemp -d) -e 'using Pkg; pkg"dev .; add Plots#master"; Pkg.build(); Pkg.test("Plots")'

@@ -1,0 +1,48 @@
+name: CI
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        julia-version: [1.4]
+        julia-arch: [x64]
+        os: [ubuntu-latest, macOS-latest]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v1.0.0
+
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.julia-version }}
+
+      - name: Add package versions
+        run: julia --project=temp_for_test -e 'using Pkg; pkg"dev .; add https://github.com/JuliaPlots/MakieRecipes.jl; add CairoMakie#master"'
+
+      - name: Run tests
+#        uses: julia-actions/julia-runtest@master
+        run: julia --project=temp_for_test -e 'using Pkg; pkg"test RecipesPipeline"'
+
+      - name: Upload test images
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: Recordings
+          path: ./test
+        if: always()
+
+      - name: Cache artifacts
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
+        if: always()
