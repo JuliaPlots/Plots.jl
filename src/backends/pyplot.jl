@@ -612,7 +612,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             alpha = series[:fillalpha],
             cmap = py_fillcolormap(series),  # applies to the pcolorfast object
             zorder = series[:series_plotindex],
-            extrakw...  # for some reason vmin and vmax are NaN??? hexbin works without passing vmin and vmax
+            # extrakw...  # We are not supporting clims for hexbin as calculation of bins is not trivial
         )
         push!(handles, handle)
     end

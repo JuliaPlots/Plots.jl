@@ -448,7 +448,7 @@ values of the input.
 """
 function get_clims(series::Series, op=ignorenan_extrema)
     zmin, zmax = Inf, -Inf
-    z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface)
+    z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin)
     for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
         if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
             zmin, zmax = _update_clims(zmin, zmax, op(vals.surf)...)

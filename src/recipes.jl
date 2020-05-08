@@ -460,7 +460,7 @@ end
 @deps plots_heatmap shape
 is_3d(::Type{Val{:plots_heatmap}}) = true
 RecipesPipeline.is_surface(::Type{Val{:plots_heatmap}}) = true
-
+RecipesPipeline.is_surface(::Type{Val{:hexbin}}) = true
 # ---------------------------------------------------------------------------
 # Histograms
 
