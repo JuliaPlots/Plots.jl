@@ -73,11 +73,11 @@ end
          zcolor = abs.(y .- 0.5),
          m = (:hot, 0.8, Plots.stroke(1, :green)),
          ms = 10 * abs.(y .- 0.5) .+ 4,
-         lab = ["grad", "", "ient"],
+         lab = "grad",
       )
       Plots._update_plot_object(pl)
       axis = Plots.pgfx_axes(pl.o)[1]
-      @test count(x -> x isa PGFPlotsX.LegendEntry, axis.contents) == 6
+      @test count(x -> x isa PGFPlotsX.LegendEntry, axis.contents) == 5
       @test count(x -> x isa PGFPlotsX.Plot, axis.contents) == 108 # each marker is its own plot, fillranges create 2 plot-objects
       marker = axis.contents[15]
       @test marker isa PGFPlotsX.Plot
