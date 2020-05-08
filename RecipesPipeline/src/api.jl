@@ -34,7 +34,7 @@ Select the proper indices from `val` for attribute `key`.
 split_attribute(plt, key, val::AbstractArray, indices) =
     val[indices, fill(Colon(), ndims(val) - 1)...]
 split_attribute(plt, key, val::Tuple, indices) =
-    Tuple(split_attribute(key, v, indices) for v in val)
+    Tuple(split_attribute(plt, key, v, indices) for v in val)
 
 
 # ## Preprocessing attributes
