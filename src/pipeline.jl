@@ -155,7 +155,22 @@ RecipesPipeline.type_alias(plt::Plot) = get(_typeAliases, st, st)
 function RecipesPipeline.plot_setup!(plt::Plot, plotattributes, kw_list)
     _plot_setup(plt, plotattributes, kw_list)
     _subplot_setup(plt, plotattributes, kw_list)
+    return nothing
 end
+
+function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_list)
+    # swap errors
+    err_inds = findall(kw -> get(kw, :seriestype, nothing) in (:xerror, :yerror, :zerror), kw_list)
+    for ind in err_inds
+        if kw_list[ind-1][:seriestype] == :scatter
+            tmp = copy(kw_list[ind])
+            kw_list[ind] = copy(kw_list[ind-1])
+            kw_list[ind-1] = tmp
+        end
+    end
+    return nothing
+end
+
 
 # TODO: Should some of this logic be moved to RecipesPipeline?
 function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
@@ -274,6 +289,7 @@ function RecipesPipeline.slice_series_attributes!(plt::Plot, kw_list, kw)
     # in series attributes given as vector with one element per series,
     # select the value for current series
     _slice_series_args!(kw, plt, sp, series_idx(kw_list, kw))
+    return nothing
 end
 
 RecipesPipeline.series_defaults(plt::Plot) = _series_defaults # in args.jl
