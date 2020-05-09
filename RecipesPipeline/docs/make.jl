@@ -10,7 +10,7 @@ Literate.markdown.(files, joinpath(@__DIR__, "src", "generated"); documenter = f
 
 makedocs(
     sitename = "RecipesPipeline.jl",
-    format = format = Documenter.HTML(
+    format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true"
     ),
     pages = [
