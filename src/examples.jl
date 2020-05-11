@@ -998,13 +998,11 @@ _backend_skips = Dict(
         6, # images
         10, # histogram2d
         16, # pgfplots thinks the upper panel is too small
-        22, # contourf
         25, # @df
         30, # @df
         31, # animation
         32, # spy
         38, # histogram2d
-        45, # wireframe
     ],
 )
 
