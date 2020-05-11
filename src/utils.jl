@@ -487,7 +487,7 @@ end
 hascolorbar(series::Series) = colorbar_style(series) !== nothing
 hascolorbar(sp::Subplot) = sp[:colorbar] != :none && any(hascolorbar(s) for s in series_list(sp))
 
-iscontour(series::Series) = series[:seriestype] == :contour
+iscontour(series::Series) = series[:seriestype] in (:contour, :contour3d)
 isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
 
 function contour_levels(series::Series, clims)
