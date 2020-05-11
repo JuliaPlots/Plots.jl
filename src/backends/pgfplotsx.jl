@@ -288,7 +288,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     extra_series = wraptuple(pop!(extra_series_opt,:add))
                 end
                 series_opt = merge(series_opt, PGFPlotsX.Options(extra_series_opt...))
-                if RecipesPipeline.is3d(series) || st == :heatmap
+                if RecipesPipeline.is3d(series) || st in (:heatmap, :contour)
                     series_func = PGFPlotsX.Plot3
                 else
                     series_func = PGFPlotsX.Plot
@@ -297,7 +297,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    !isfilledcontour(series) && series[:ribbon] === nothing
                     push!(series_opt, "area legend" => nothing)
                 end
-                if st == :heatmap
+                if st in (:heatmap, :contour)
                     push!(axis.options, "view" => "{0}{90}")
                 end
                 # treat segments
@@ -342,12 +342,13 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         end
                         segment_opt = merge(segment_opt, pgfx_marker(opt, i))
                     end
-                    if st == :shape || isfilledcontour(series)
+                    if st == :shape
                         segment_opt = merge(segment_opt, pgfx_fillstyle(opt, i))
                     end
                     # add fillrange
                     if sf !== nothing &&
-                       !isfilledcontour(series) && series[:ribbon] === nothing
+                       !isfilledcontour(series) &&
+                       series[:ribbon] === nothing
                         if sf isa Number || sf isa AVec
                             pgfx_fillrange_series!(
                                 axis,
@@ -596,8 +597,8 @@ function pgfx_series_coordinates!(
     xs, ys, zs = collect(args)
     push!(
         segment_opt,
-        "contour filled" => PGFPlotsX.Options("labels" => opt[:contour_labels]),
-        "point meta" => "explicit",
+        "contour filled" => PGFPlotsX.Options(), # labels not supported
+        "patch type" => "bilinear",
         "shader" => "flat",
     )
     if opt[:levels] isa Number
@@ -606,17 +607,7 @@ function pgfx_series_coordinates!(
         push!(segment_opt["contour filled"], "levels" => opt[:levels])
     end
 
-    cs = join(
-        [
-            join(["($x, $y) [$(zs[j, i])]" for (j, x) in enumerate(xs)], " ") for (i, y) in enumerate(ys)
-        ],
-        "\n\n",
-    )
-    """
-        coordinates {
-        $cs
-        };
-    """
+    PGFPlotsX.Coordinates(args...)
 end
 ##
 pgfx_get_linestyle(k) = get(
