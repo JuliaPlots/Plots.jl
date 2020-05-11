@@ -297,7 +297,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    !isfilledcontour(series) && series[:ribbon] === nothing
                     push!(series_opt, "area legend" => nothing)
                 end
-                if st == :heatmap
+                if st in (:heatmap, :contour)
                     push!(axis.options, "view" => "{0}{90}")
                 end
                 # treat segments
