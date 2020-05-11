@@ -160,9 +160,9 @@ end
 
 function RecipesPipeline.process_sliced_series_attributes!(plt::Plots.Plot, kw_list)
     # swap errors
-    err_inds = findall(kw -> get(kw, :seriestype, nothing) in (:xerror, :yerror, :zerror), kw_list)
+    err_inds = findall(kw -> get(kw, :seriestype, :path) in (:xerror, :yerror, :zerror), kw_list)
     for ind in err_inds
-        if kw_list[ind-1][:seriestype] == :scatter
+        if get(kw_list[ind-1],:seriestype,:path) == :scatter
             tmp = copy(kw_list[ind])
             kw_list[ind] = copy(kw_list[ind-1])
             kw_list[ind-1] = tmp
