@@ -97,6 +97,7 @@ const _arg_desc = KW(
 :legendfontvalign         => "Symbol. Font vertical alignment of legend entries: :vcenter, :top, :bottom or :center",
 :legendfontrotation       => "Real. Font rotation of legend entries",
 :legendfontcolor          => "Color Type. Font color of legend entries",
+:legendtitle              => "String. Legend title.",
 :legendtitlefontfamily    => "String or Symbol. Font family of the legend title.",
 :legendtitlefontsize           => "Integer. Font pointsize the legend title.",
 :legendtitlefonthalign         => "Symbol. Font horizontal alignment of the legend title: :hcenter, :left, :right or :center",
