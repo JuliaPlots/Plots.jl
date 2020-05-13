@@ -1942,7 +1942,7 @@ for (mime, fmt) in (
         filepath = tempname() * "." * $fmt
         withenv(
             "GKS_ENCODING" => "utf8", 
-            "GKSwstype" => fmt, 
+            "GKSwstype" => $fmt, 
             "GKS_FILEPATH" => filepath
         ) do
             gr_display(plt, $fmt)
@@ -1966,8 +1966,9 @@ function _display(plt::Plot{GRBackend})
             rm(filepath)
         end
     else
-        ENV["GKS_DOUBLE_BUF"] = true
-        gr_display(plt)
+        withenv("GKS_DOUBLE_BUF" => true) do
+            gr_display(plt)
+        end
     end
 end
 
