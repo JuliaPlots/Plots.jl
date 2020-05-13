@@ -215,9 +215,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                         colormap={plots$(sp.attr[:subplot_index])}{$cm},
                         }""",
                     )
-                    if sp[:colorbar] == true
-                        push!(axis_opt, "colorbar" => nothing)
-                    end
                     push!(axis_opt, "colormap name" => "plots$(sp.attr[:subplot_index])")
                     if cg isa PlotUtils.CategoricalColorGradient
                         push!(
@@ -232,12 +229,25 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             end
             @label colorbar_end
 
-            if sp[:colorbar] == true
+            if hascolorbar(sp)
+                xcstr = plot_color(sp[:xaxis][:tickfontcolor])
+                ycstr = plot_color(sp[:yaxis][:tickfontcolor])
+                colorbar_style = PGFPlotsX.Options(
+                    "title" => sp[:colorbar_title],
+                    "xticklabel style" => pgfx_get_ticklabel_style(sp, sp[:xaxis]),
+                    "yticklabel style" => pgfx_get_ticklabel_style(sp, sp[:yaxis]),
+                )
+                if sp[:colorbar] === :top
+                    push!(colorbar_style,
+                        "at" => string((0.5, 1.05)),
+                        "anchor" => "south",
+                        "xticklabel pos" => "upper",
+                    )
+                end
                 push!(
                     axis_opt,
-                    "colorbar style" => PGFPlotsX.Options(
-                        "title" => sp[:colorbar_title],
-                    ),
+                    string("colorbar", pgfx_get_colorbar_pos(sp[:colorbar])) => nothing,
+                    "colorbar style" => colorbar_style,
                     "point meta max" => get_clims(sp)[2],
                     "point meta min" => get_clims(sp)[1],
                 )
@@ -669,6 +679,22 @@ pgfx_get_legend_pos(k) = get(
     Symbol(k),
     ("at" => string((1.02, 1)), "anchor" => "north west"),
 )
+
+pgfx_get_colorbar_pos(s) =
+    get((left = " left", bottom = " horizontal", top = " horizontal"), s, "")
+pgfx_get_colorbar_pos(b::Bool) = ""
+
+function pgfx_get_ticklabel_style(sp, axis)
+    cstr = plot_color(axis[:tickfontcolor])
+    return PGFPlotsX.Options(
+        "font" => pgfx_font(
+            axis[:tickfontsize], pgfx_thickness_scaling(sp)
+        ),
+        "color" => cstr,
+        "draw opacity" => alpha(cstr),
+        "rotate" => axis[:tickfontrotation],
+    )
+end
 
 ## --------------------------------------------------------------------------------------
 # Generates a colormap for pgfplots based on a ColorGradient
@@ -1106,17 +1132,8 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
             string(letter, "tick align") =>
                 (axis[:tick_direction] == :out ? "outside" : "inside"),
         )
-        cstr = plot_color(axis[:tickfontcolor])
-        α = alpha(cstr)
         push!(
-            opt,
-            string(letter, "ticklabel style") => PGFPlotsX.Options(
-                "font" =>
-                    pgfx_font(axis[:tickfontsize], pgfx_thickness_scaling(sp)),
-                "color" => cstr,
-                "draw opacity" => α,
-                "rotate" => axis[:tickfontrotation],
-            ),
+            opt, string(letter, "ticklabel style") => pgfx_get_ticklabel_style(sp, axis)
         )
         push!(
             opt,
@@ -1204,6 +1221,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         )
     end
 end
+
 # --------------------------------------------------------------------------------------
 # display calls this and then _display, its called 3 times for plot(1:5)
 # Set the (left, top, right, bottom) minimum padding around the plot area
