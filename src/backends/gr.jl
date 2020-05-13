@@ -781,161 +781,161 @@ function gr_axis_width(sp, axis)
 end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
-    dpi = sp.plt[:thickness_scaling]
-    ENV["GKS_ENCODING"] = "utf8"
-    if !haskey(ENV, "GKSwstype")
-        if isijulia()
+    has_user_gkswstype = haskey(ENV, "GKSwstype")
+    withenv("GKSwstype" => 100, "GKS_ENCODING" => "utf8")
+        dpi = sp.plt[:thickness_scaling]
+        if has_user_gkswstype && isijulia()
             ENV["GKSwstype"] = "svg"
         end
-    end
-    # Add margin given by the user
-    leftpad   = 2mm  + sp[:left_margin]
-    toppad    = 2mm  + sp[:top_margin]
-    rightpad  = 2mm  + sp[:right_margin]
-    bottompad = 2mm  + sp[:bottom_margin]
-    # Add margin for title
-    if sp[:title] != ""
-        gr_set_font(titlefont(sp), sp)
-        l = last(last(gr_text_size(sp[:title])))
-        h = 1mm + get_size(sp)[2] * l * px
-        toppad += h
-    end
-
-    if RecipesPipeline.is3d(sp)
-        xaxis, yaxis, zaxis = sp[:xaxis], sp[:yaxis], sp[:zaxis]
-        xticks, yticks, zticks = get_ticks(sp, xaxis), get_ticks(sp, yaxis), get_ticks(sp, zaxis)
-        # Add margin for x and y ticks
-        h = 0mm
-        if !(xticks in (nothing, false, :none))
-            gr_set_font(
-                tickfont(xaxis),
-                halign = (:left, :hcenter, :right)[sign(xaxis[:rotation]) + 2],
-                valign = (xaxis[:mirror] ? :bottom : :top),
-                rotation = xaxis[:rotation],
-                sp
-            )
-            l = 0.01 + last(gr_get_ticks_size(xticks, xaxis[:rotation]))
-            h = max(h, 1mm + get_size(sp)[2] * l * px)
-        end
-        if !(yticks in (nothing, false, :none))
-            gr_set_font(
-                tickfont(yaxis),
-                halign = (:left, :hcenter, :right)[sign(yaxis[:rotation]) + 2],
-                valign = (yaxis[:mirror] ? :bottom : :top),
-                rotation = yaxis[:rotation],
-                sp
-            )
-            l = 0.01 + last(gr_get_ticks_size(yticks, yaxis[:rotation]))
-            h = max(h, 1mm + get_size(sp)[2] * l * px)
-        end
-        if h > 0mm
-            if xaxis[:mirror] || yaxis[:mirror]
-                toppad += h
-            end
-            if !xaxis[:mirror] || !yaxis[:mirror]
-                bottompad += h
-            end
-        end
-
-        if !(zticks in (nothing, false, :none))
-            gr_set_font(
-                tickfont(zaxis),
-                halign = (zaxis[:mirror] ? :left : :right),
-                valign = (:top, :vcenter, :bottom)[sign(zaxis[:rotation]) + 2],
-                rotation = zaxis[:rotation],
-                color = zaxis[:tickfontcolor],
-                sp
-            )
-            l = 0.01 + first(gr_get_ticks_size(zticks, zaxis[:rotation]))
-            w = 1mm + get_size(sp)[1] * l * px
-            if zaxis[:mirror]
-                rightpad += w
-            else
-                leftpad += w
-            end
-        end
-
-        # Add margin for x or y label
-        h = 0mm
-        if xaxis[:guide] != ""
-            gr_set_font(guidefont(sp[:xaxis]), sp)
-            l = last(gr_text_size(sp[:xaxis][:guide]))
-            h = max(h, 1mm + get_size(sp)[2] * l * px)
-        end
-        if yaxis[:guide] != ""
-            gr_set_font(guidefont(sp[:yaxis]), sp)
-            l = last(gr_text_size(sp[:yaxis][:guide]))
-            h = max(h, 1mm + get_size(sp)[2] * l * px)
-        end
-        if h > 0mm
-            if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
-                toppad += h
-            else
-                bottompad += h
-            end
-        end
-        # Add margin for z label
-        if zaxis[:guide] != ""
-            gr_set_font(guidefont(sp[:zaxis]), sp)
-            l = last(gr_text_size(sp[:zaxis][:guide]))
-            w = 1mm + get_size(sp)[2] * l * px
-            if zaxis[:guide_position] == :right || (zaxis[:guide_position] == :auto && zaxis[:mirror] == true)
-                rightpad += w
-            else
-                leftpad += w
-            end
-        end
-    else
-        # Add margin for x and y ticks
-        xticks, yticks = get_ticks(sp, sp[:xaxis]), get_ticks(sp, sp[:yaxis])
-        if !(xticks in (nothing, false, :none))
-            flip, mirror = gr_set_xticks_font(sp)
-            l = 0.01 + last(gr_get_ticks_size(xticks, sp[:xaxis][:rotation]))
+        # Add margin given by the user
+        leftpad   = 2mm  + sp[:left_margin]
+        toppad    = 2mm  + sp[:top_margin]
+        rightpad  = 2mm  + sp[:right_margin]
+        bottompad = 2mm  + sp[:bottom_margin]
+        # Add margin for title
+        if sp[:title] != ""
+            gr_set_font(titlefont(sp), sp)
+            l = last(last(gr_text_size(sp[:title])))
             h = 1mm + get_size(sp)[2] * l * px
-            if mirror
-                toppad += h
-            else
-                bottompad += h
-            end
-        end
-        if !(yticks in (nothing, false, :none))
-            flip, mirror = gr_set_yticks_font(sp)
-            l = 0.01 + first(gr_get_ticks_size(yticks, sp[:yaxis][:rotation]))
-            w = 1mm + get_size(sp)[1] * l * px
-            if mirror
-                rightpad += w
-            else
-                leftpad += w
-            end
+            toppad += h
         end
 
-        # Add margin for x label
-        if sp[:xaxis][:guide] != ""
-            gr_set_font(guidefont(sp[:xaxis]), sp)
-            l = last(gr_text_size(sp[:xaxis][:guide]))
-            h = 1mm + get_size(sp)[2] * l * px
-            if sp[:xaxis][:guide_position] == :top || (sp[:xaxis][:guide_position] == :auto && sp[:xaxis][:mirror] == true)
-                toppad += h
-            else
-                bottompad += h
+        if RecipesPipeline.is3d(sp)
+            xaxis, yaxis, zaxis = sp[:xaxis], sp[:yaxis], sp[:zaxis]
+            xticks, yticks, zticks = get_ticks(sp, xaxis), get_ticks(sp, yaxis), get_ticks(sp, zaxis)
+            # Add margin for x and y ticks
+            h = 0mm
+            if !(xticks in (nothing, false, :none))
+                gr_set_font(
+                    tickfont(xaxis),
+                    halign = (:left, :hcenter, :right)[sign(xaxis[:rotation]) + 2],
+                    valign = (xaxis[:mirror] ? :bottom : :top),
+                    rotation = xaxis[:rotation],
+                    sp
+                )
+                l = 0.01 + last(gr_get_ticks_size(xticks, xaxis[:rotation]))
+                h = max(h, 1mm + get_size(sp)[2] * l * px)
+            end
+            if !(yticks in (nothing, false, :none))
+                gr_set_font(
+                    tickfont(yaxis),
+                    halign = (:left, :hcenter, :right)[sign(yaxis[:rotation]) + 2],
+                    valign = (yaxis[:mirror] ? :bottom : :top),
+                    rotation = yaxis[:rotation],
+                    sp
+                )
+                l = 0.01 + last(gr_get_ticks_size(yticks, yaxis[:rotation]))
+                h = max(h, 1mm + get_size(sp)[2] * l * px)
+            end
+            if h > 0mm
+                if xaxis[:mirror] || yaxis[:mirror]
+                    toppad += h
+                end
+                if !xaxis[:mirror] || !yaxis[:mirror]
+                    bottompad += h
+                end
+            end
+
+            if !(zticks in (nothing, false, :none))
+                gr_set_font(
+                    tickfont(zaxis),
+                    halign = (zaxis[:mirror] ? :left : :right),
+                    valign = (:top, :vcenter, :bottom)[sign(zaxis[:rotation]) + 2],
+                    rotation = zaxis[:rotation],
+                    color = zaxis[:tickfontcolor],
+                    sp
+                )
+                l = 0.01 + first(gr_get_ticks_size(zticks, zaxis[:rotation]))
+                w = 1mm + get_size(sp)[1] * l * px
+                if zaxis[:mirror]
+                    rightpad += w
+                else
+                    leftpad += w
+                end
+            end
+
+            # Add margin for x or y label
+            h = 0mm
+            if xaxis[:guide] != ""
+                gr_set_font(guidefont(sp[:xaxis]), sp)
+                l = last(gr_text_size(sp[:xaxis][:guide]))
+                h = max(h, 1mm + get_size(sp)[2] * l * px)
+            end
+            if yaxis[:guide] != ""
+                gr_set_font(guidefont(sp[:yaxis]), sp)
+                l = last(gr_text_size(sp[:yaxis][:guide]))
+                h = max(h, 1mm + get_size(sp)[2] * l * px)
+            end
+            if h > 0mm
+                if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
+                    toppad += h
+                else
+                    bottompad += h
+                end
+            end
+            # Add margin for z label
+            if zaxis[:guide] != ""
+                gr_set_font(guidefont(sp[:zaxis]), sp)
+                l = last(gr_text_size(sp[:zaxis][:guide]))
+                w = 1mm + get_size(sp)[2] * l * px
+                if zaxis[:guide_position] == :right || (zaxis[:guide_position] == :auto && zaxis[:mirror] == true)
+                    rightpad += w
+                else
+                    leftpad += w
+                end
+            end
+        else
+            # Add margin for x and y ticks
+            xticks, yticks = get_ticks(sp, sp[:xaxis]), get_ticks(sp, sp[:yaxis])
+            if !(xticks in (nothing, false, :none))
+                flip, mirror = gr_set_xticks_font(sp)
+                l = 0.01 + last(gr_get_ticks_size(xticks, sp[:xaxis][:rotation]))
+                h = 1mm + get_size(sp)[2] * l * px
+                if mirror
+                    toppad += h
+                else
+                    bottompad += h
+                end
+            end
+            if !(yticks in (nothing, false, :none))
+                flip, mirror = gr_set_yticks_font(sp)
+                l = 0.01 + first(gr_get_ticks_size(yticks, sp[:yaxis][:rotation]))
+                w = 1mm + get_size(sp)[1] * l * px
+                if mirror
+                    rightpad += w
+                else
+                    leftpad += w
+                end
+            end
+
+            # Add margin for x label
+            if sp[:xaxis][:guide] != ""
+                gr_set_font(guidefont(sp[:xaxis]), sp)
+                l = last(gr_text_size(sp[:xaxis][:guide]))
+                h = 1mm + get_size(sp)[2] * l * px
+                if sp[:xaxis][:guide_position] == :top || (sp[:xaxis][:guide_position] == :auto && sp[:xaxis][:mirror] == true)
+                    toppad += h
+                else
+                    bottompad += h
+                end
+            end
+            # Add margin for y label
+            if sp[:yaxis][:guide] != ""
+                gr_set_font(guidefont(sp[:yaxis]), sp)
+                l = last(gr_text_size(sp[:yaxis][:guide]))
+                w = 1mm + get_size(sp)[2] * l * px
+                if sp[:yaxis][:guide_position] == :right || (sp[:yaxis][:guide_position] == :auto && sp[:yaxis][:mirror] == true)
+                    rightpad += w
+                else
+                    leftpad += w
+                end
             end
         end
-        # Add margin for y label
-        if sp[:yaxis][:guide] != ""
-            gr_set_font(guidefont(sp[:yaxis]), sp)
-            l = last(gr_text_size(sp[:yaxis][:guide]))
-            w = 1mm + get_size(sp)[2] * l * px
-            if sp[:yaxis][:guide_position] == :right || (sp[:yaxis][:guide_position] == :auto && sp[:yaxis][:mirror] == true)
-                rightpad += w
-            else
-                leftpad += w
-            end
+        if sp[:colorbar_title] != ""
+            rightpad += 4mm
         end
-    end
-    if sp[:colorbar_title] != ""
-        rightpad += 4mm
-    end
-    sp.minpad = Tuple(dpi * [leftpad, toppad, rightpad, bottompad])
+        sp.minpad = Tuple(dpi * [leftpad, toppad, rightpad, bottompad])
+    end # end withenv
 end
 
 function is_equally_spaced(v)
@@ -1938,20 +1938,17 @@ for (mime, fmt) in (
     "image/svg+xml" => "svg",
 )
     @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GRBackend})
-        ENV["GKS_ENCODING"] = "utf8"
         GR.emergencyclosegks()
         filepath = tempname() * "." * $fmt
-        env = get(ENV, "GKSwstype", "0")
-        ENV["GKSwstype"] = $fmt
-        ENV["GKS_FILEPATH"] = filepath
-        gr_display(plt, $fmt)
-        GR.emergencyclosegks()
-        write(io, read(filepath, String))
-        rm(filepath)
-        if env != "0"
-            ENV["GKSwstype"] = env
-        else
-            pop!(ENV, "GKSwstype")
+        withenv(
+            "GKS_ENCODING" => "utf8", 
+            "GKSwstype" => get(ENV, "GKSwstype", "0"), 
+            "GKS_FILEPATH" => filepath
+        ) do
+            gr_display(plt, $fmt)
+            GR.emergencyclosegks()
+            write(io, read(filepath, String))
+            rm(filepath)
         end
     end
 end
