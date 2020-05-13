@@ -1942,7 +1942,7 @@ for (mime, fmt) in (
         filepath = tempname() * "." * $fmt
         withenv(
             "GKS_ENCODING" => "utf8", 
-            "GKSwstype" => get(ENV, "GKSwstype", "0"), 
+            "GKSwstype" => fmt, 
             "GKS_FILEPATH" => filepath
         ) do
             gr_display(plt, $fmt)
@@ -1958,13 +1958,13 @@ function _display(plt::Plot{GRBackend})
     if plt[:display_type] == :inline
         GR.emergencyclosegks()
         filepath = tempname() * ".pdf"
-        ENV["GKSwstype"] = "pdf"
-        ENV["GKS_FILEPATH"] = filepath
-        gr_display(plt)
-        GR.emergencyclosegks()
-        content = string("\033]1337;File=inline=1;preserveAspectRatio=0:", base64encode(open(read, filepath)), "\a")
-        println(content)
-        rm(filepath)
+        withenv("GKSwstype" => "pdf", "GKS_FILEPATH" => filepath) do
+            gr_display(plt)
+            GR.emergencyclosegks()
+            content = string("\033]1337;File=inline=1;preserveAspectRatio=0:", base64encode(open(read, filepath)), "\a")
+            println(content)
+            rm(filepath)
+        end
     else
         ENV["GKS_DOUBLE_BUF"] = true
         gr_display(plt)
