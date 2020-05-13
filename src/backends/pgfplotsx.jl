@@ -230,8 +230,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             @label colorbar_end
 
             if hascolorbar(sp)
-                xcstr = plot_color(sp[:xaxis][:tickfontcolor])
-                ycstr = plot_color(sp[:yaxis][:tickfontcolor])
                 colorbar_style = PGFPlotsX.Options(
                     "title" => sp[:colorbar_title],
                     "xticklabel style" => pgfx_get_ticklabel_style(sp, sp[:xaxis]),
