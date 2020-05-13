@@ -782,7 +782,7 @@ end
 
 function _update_min_padding!(sp::Subplot{GRBackend})
     has_user_gkswstype = haskey(ENV, "GKSwstype")
-    withenv("GKSwstype" => 100, "GKS_ENCODING" => "utf8")
+    withenv("GKSwstype" => 100, "GKS_ENCODING" => "utf8") do
         dpi = sp.plt[:thickness_scaling]
         if has_user_gkswstype && isijulia()
             ENV["GKSwstype"] = "svg"
