@@ -247,7 +247,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 push!(
                     axis_opt,
                     string("colorbar", pgfx_get_colorbar_pos(sp[:colorbar])) => nothing,
-                    "colorbar/width" => "2mm",
                     "colorbar style" => colorbar_style,
                     "point meta max" => get_clims(sp)[2],
                     "point meta min" => get_clims(sp)[1],
