@@ -206,41 +206,42 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             # As it is likely that all series within the same axis use the same
             # colormap this should not cause any problem.
             for series in series_list(sp)
-                    if hascolorbar(series)
-                        cg = get_colorgradient(series)
-                        cm = pgfx_colormap(get_colorgradient(series))
-                        PGFPlotsX.push_preamble!(
-                            pgfx_plot.the_plot,
-                            """\\pgfplotsset{
-                            colormap={plots$(sp.attr[:subplot_index])}{$cm},
-                            }""",
-                        )
+                if hascolorbar(series)
+                    cg = get_colorgradient(series)
+                    cm = pgfx_colormap(get_colorgradient(series))
+                    PGFPlotsX.push_preamble!(
+                        pgfx_plot.the_plot,
+                        """\\pgfplotsset{
+                        colormap={plots$(sp.attr[:subplot_index])}{$cm},
+                        }""",
+                    )
+                    if sp[:colorbar] == true
+                        push!(axis_opt, "colorbar" => nothing)
+                    end
+                    push!(axis_opt, "colormap name" => "plots$(sp.attr[:subplot_index])")
+                    if cg isa PlotUtils.CategoricalColorGradient
                         push!(
                             axis_opt,
-                            "colorbar" => nothing,
-                            "colormap name" => "plots$(sp.attr[:subplot_index])",
+                            "colormap access" => "piecewise const",
+                            "colorbar sampled" => nothing,
                         )
-                        if cg isa PlotUtils.CategoricalColorGradient
-                            push!(
-                                axis_opt,
-                                "colormap access" => "piecewise const",
-                                "colorbar sampled" => nothing,
-                            )
-                        end
-                        # goto is needed to break out of col and series for
-                        @goto colorbar_end
                     end
+                    # goto is needed to break out of col and series for
+                    @goto colorbar_end
+                end
             end
             @label colorbar_end
 
-            push!(
-                axis_opt,
-                "colorbar style" => PGFPlotsX.Options(
-                    "title" => sp[:colorbar_title],
-                ),
-                "point meta max" => get_clims(sp)[2],
-                "point meta min" => get_clims(sp)[1],
-            )
+            if sp[:colorbar] == true
+                push!(
+                    axis_opt,
+                    "colorbar style" => PGFPlotsX.Options(
+                        "title" => sp[:colorbar_title],
+                    ),
+                    "point meta max" => get_clims(sp)[2],
+                    "point meta min" => get_clims(sp)[1],
+                )
+            end
             if RecipesPipeline.is3d(sp)
                 azim, elev = sp[:camera]
                 push!(axis_opt, "view" => (azim, elev))
