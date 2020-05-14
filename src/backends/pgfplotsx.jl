@@ -206,41 +206,50 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             # As it is likely that all series within the same axis use the same
             # colormap this should not cause any problem.
             for series in series_list(sp)
-                    if hascolorbar(series)
-                        cg = get_colorgradient(series)
-                        cm = pgfx_colormap(get_colorgradient(series))
-                        PGFPlotsX.push_preamble!(
-                            pgfx_plot.the_plot,
-                            """\\pgfplotsset{
-                            colormap={plots$(sp.attr[:subplot_index])}{$cm},
-                            }""",
-                        )
+                if hascolorbar(series)
+                    cg = get_colorgradient(series)
+                    cm = pgfx_colormap(get_colorgradient(series))
+                    PGFPlotsX.push_preamble!(
+                        pgfx_plot.the_plot,
+                        """\\pgfplotsset{
+                        colormap={plots$(sp.attr[:subplot_index])}{$cm},
+                        }""",
+                    )
+                    push!(axis_opt, "colormap name" => "plots$(sp.attr[:subplot_index])")
+                    if cg isa PlotUtils.CategoricalColorGradient
                         push!(
                             axis_opt,
-                            "colorbar" => nothing,
-                            "colormap name" => "plots$(sp.attr[:subplot_index])",
+                            "colormap access" => "piecewise const",
+                            "colorbar sampled" => nothing,
                         )
-                        if cg isa PlotUtils.CategoricalColorGradient
-                            push!(
-                                axis_opt,
-                                "colormap access" => "piecewise const",
-                                "colorbar sampled" => nothing,
-                            )
-                        end
-                        # goto is needed to break out of col and series for
-                        @goto colorbar_end
                     end
+                    # goto is needed to break out of col and series for
+                    @goto colorbar_end
+                end
             end
             @label colorbar_end
 
-            push!(
-                axis_opt,
-                "colorbar style" => PGFPlotsX.Options(
+            if hascolorbar(sp)
+                colorbar_style = PGFPlotsX.Options(
                     "title" => sp[:colorbar_title],
-                ),
-                "point meta max" => get_clims(sp)[2],
-                "point meta min" => get_clims(sp)[1],
-            )
+                    "xticklabel style" => pgfx_get_ticklabel_style(sp, sp[:xaxis]),
+                    "yticklabel style" => pgfx_get_ticklabel_style(sp, sp[:yaxis]),
+                )
+                if sp[:colorbar] === :top
+                    push!(colorbar_style,
+                        "at" => string((0.5, 1.05)),
+                        "anchor" => "south",
+                        "xticklabel pos" => "upper",
+                    )
+                end
+                push!(
+                    axis_opt,
+                    string("colorbar", pgfx_get_colorbar_pos(sp[:colorbar])) => nothing,
+                    "colorbar style" => colorbar_style,
+                    "point meta max" => get_clims(sp)[2],
+                    "point meta min" => get_clims(sp)[1],
+                )
+            end
             if RecipesPipeline.is3d(sp)
                 azim, elev = sp[:camera]
                 push!(axis_opt, "view" => (azim, elev))
@@ -668,6 +677,22 @@ pgfx_get_legend_pos(k) = get(
     Symbol(k),
     ("at" => string((1.02, 1)), "anchor" => "north west"),
 )
+
+pgfx_get_colorbar_pos(s) =
+    get((left = " left", bottom = " horizontal", top = " horizontal"), s, "")
+pgfx_get_colorbar_pos(b::Bool) = ""
+
+function pgfx_get_ticklabel_style(sp, axis)
+    cstr = plot_color(axis[:tickfontcolor])
+    return PGFPlotsX.Options(
+        "font" => pgfx_font(
+            axis[:tickfontsize], pgfx_thickness_scaling(sp)
+        ),
+        "color" => cstr,
+        "draw opacity" => alpha(cstr),
+        "rotate" => axis[:tickfontrotation],
+    )
+end
 
 ## --------------------------------------------------------------------------------------
 # Generates a colormap for pgfplots based on a ColorGradient
@@ -1105,17 +1130,8 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
             string(letter, "tick align") =>
                 (axis[:tick_direction] == :out ? "outside" : "inside"),
         )
-        cstr = plot_color(axis[:tickfontcolor])
-        α = alpha(cstr)
         push!(
-            opt,
-            string(letter, "ticklabel style") => PGFPlotsX.Options(
-                "font" =>
-                    pgfx_font(axis[:tickfontsize], pgfx_thickness_scaling(sp)),
-                "color" => cstr,
-                "draw opacity" => α,
-                "rotate" => axis[:tickfontrotation],
-            ),
+            opt, string(letter, "ticklabel style") => pgfx_get_ticklabel_style(sp, axis)
         )
         push!(
             opt,
@@ -1203,6 +1219,7 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         )
     end
 end
+
 # --------------------------------------------------------------------------------------
 # display calls this and then _display, its called 3 times for plot(1:5)
 # Set the (left, top, right, bottom) minimum padding around the plot area
