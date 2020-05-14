@@ -590,10 +590,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         else
             # do a normal scatter plot
 
+            # Add depthshade option for 3d plots
             if RecipesPipeline.is3d(sp)
                 extrakw[:depthshade] = get(series[:extra_kwargs], :depthshade, false)
             end
-
 
             handle = ax."scatter"(xyargs...;
                 label = series[:label],
