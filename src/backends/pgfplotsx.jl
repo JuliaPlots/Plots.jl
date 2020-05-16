@@ -1054,7 +1054,6 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 
     # axis label position
     labelpos = ""
-    @show axis[:guide_position]
     if letter == :x
         labelpos = pgfx_get_xguide_pos(axis[:guide_position])
     elseif letter == :y
