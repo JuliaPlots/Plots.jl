@@ -655,6 +655,26 @@ pgfx_get_marker(k) = get(
     "*",
 )
 
+pgfx_get_xguide_pos(k) = get(
+    (
+        top = "at={(0.5,1)},above,",
+        right = "at={(ticklabel* cs:1.02)}, anchor=west,",
+        left = "at={(ticklabel* cs:-0.02)}, anchor=east,",
+    ),
+    k,
+    "at={(ticklabel cs:0.5)}, anchor=near ticklabel"
+)
+
+pgfx_get_yguide_pos(k) = get(
+    (
+        top = "at={(ticklabel* cs:1.02)}, anchor=south",
+        right = "at={(1,0.5)},below,",
+        bottom = "at={(ticklabel* cs:-0.02)}, anchor=north,",
+    ),
+    k,
+    "at={(ticklabel cs:0.5)}, anchor=near ticklabel"
+)
+
 pgfx_get_legend_pos(k) = get(
     (
         top = ("at" => string((0.5, 0.98)), "anchor" => "north"),
@@ -1034,10 +1054,11 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
 
     # axis label position
     labelpos = ""
-    if letter == :x && axis[:guide_position] == :top
-        labelpos = "at={(0.5,1)},above,"
-    elseif letter == :y && axis[:guide_position] == :right
-        labelpos = "at={(1,0.5)},below,"
+    @show axis[:guide_position]
+    if letter == :x
+        labelpos = pgfx_get_xguide_pos(axis[:guide_position])
+    elseif letter == :y
+        labelpos = pgfx_get_yguide_pos(axis[:guide_position])
     end
 
     # Add label font
