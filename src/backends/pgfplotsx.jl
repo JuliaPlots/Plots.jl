@@ -136,6 +136,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             bgc_inside = plot_color(sp[:background_color_inside])
             bgc_inside_a = alpha(bgc_inside)
             axis_opt = PGFPlotsX.Options(
+                "point meta max" => get_clims(sp)[2],
+                "point meta min" => get_clims(sp)[1],
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
                         "at" => if title_loc == :left
@@ -246,8 +248,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     axis_opt,
                     string("colorbar", pgfx_get_colorbar_pos(sp[:colorbar])) => nothing,
                     "colorbar style" => colorbar_style,
-                    "point meta max" => get_clims(sp)[2],
-                    "point meta min" => get_clims(sp)[1],
                 )
             end
             if RecipesPipeline.is3d(sp)
