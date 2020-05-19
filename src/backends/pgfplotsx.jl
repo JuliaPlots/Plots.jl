@@ -138,6 +138,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             axis_opt = PGFPlotsX.Options(
                 "point meta max" => get_clims(sp)[2],
                 "point meta min" => get_clims(sp)[1],
+                "legend cell align" => "left",
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
                         "at" => if title_loc == :left
