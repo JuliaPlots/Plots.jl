@@ -194,11 +194,11 @@ const _deprecated_backends = [:qwt, :winston, :bokeh, :gadfly, :immerse, :glvisu
 
 function warn_on_deprecated_backend(bsym::Symbol)
     if bsym in _deprecated_backends
-	    if bsym == :pgfplots
+        if bsym == :pgfplots
             @warn("Backend $bsym has been deprecated. Use pgfplotsx instead.")
-	    else
-        	@warn("Backend $bsym has been deprecated.")
-	    end
+        else
+            @warn("Backend $bsym has been deprecated.")
+        end
     end
 end
 
