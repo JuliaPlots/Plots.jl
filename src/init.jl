@@ -39,7 +39,7 @@ function __init__()
     end
 
     @require PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa" begin
-        fn = joinpath(@__DIR__, "backends", "pgfplots.jl")
+        fn = joinpath(@__DIR__, "backends", "deprecated", "pgfplots.jl")
         include(fn)
         @require Revise = "295af30f-e4ad-537b-8983-00126c2a3abe" Revise.track(Plots, fn)
     end
