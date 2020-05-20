@@ -179,12 +179,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) :
             nothing
             # legend position
-            if sp[:legend] isa Tuple
-                x, y = sp[:legend]
-                push!(axis_opt["legend style"], "at={($x, $y)}")
-            else
-                push!(axis_opt["legend style"], pgfx_get_legend_pos(sp[:legend])...)
-            end
+            push!(axis_opt["legend style"], pgfx_get_legend_pos(sp[:legend])...)
             for letter in (:x, :y, :z)
                 if letter != :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
@@ -690,6 +685,8 @@ pgfx_get_legend_pos(k) = get(
     Symbol(k),
     ("at" => string((1.02, 1)), "anchor" => "north west"),
 )
+pgfx_get_legend_pos(t::Tuple) = ("at" => "{$(string(t))}", "anchor" => "north west")
+pgfx_get_legend_pos(nt::NamedTuple) = ("at" => "{$(string(nt.at))}", "anchor" => string(nt.anchor))
 
 pgfx_get_colorbar_pos(s) =
     get((left = " left", bottom = " horizontal", top = " horizontal"), s, "")
