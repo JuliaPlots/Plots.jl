@@ -810,7 +810,7 @@ html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 const ijulia_initialized = Ref(false)
 
 function plotly_html_head(plt::Plot)
-    local_file = ("file://" * plotly_local_file_path)
+    local_file = ("file:///" * plotly_local_file_path)
     plotly =
         use_local_dependencies[] ? local_file : "https://cdn.plot.ly/plotly-latest.min.js"
 
