@@ -814,9 +814,9 @@ function plotly_html_head(plt::Plot)
     plotly =
         use_local_dependencies[] ? local_file : "https://cdn.plot.ly/plotly-latest.min.js"
 
-    include_mathjax = get(plt.attr, :include_mathjax, "")
+    include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
     mathjax_file = include_mathjax != "cdn" ? ("file://" * include_mathjax) : "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"
-    mathjax_head = include_mathjax == "" ? "" : "<script async src=\"$mathjax_file\"></script>\n\t\t"
+    mathjax_head = include_mathjax == "" ? "" : "<script src=\"$mathjax_file\"></script>\n\t\t"
 
     if isijulia() && !ijulia_initialized[]
         # using requirejs seems to be key to load a js depency in IJulia!
