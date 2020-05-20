@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-Please search existing issues to avoid duplicates.
+<!-- Please search existing issues to avoid duplicates. -->
 
 ## Details
 
@@ -28,5 +28,5 @@ inspectdr    |     |     |
 ### Versions
 
 Plots.jl version:
-Backend  version:
+Backend  version (`]st -m`):
 Output of `versioninfo()`:
