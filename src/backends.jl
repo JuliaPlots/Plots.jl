@@ -374,6 +374,7 @@ function _initialize_backend(pkg::PlotlyBackend)
     catch
         @info "For saving to png with the Plotly backend ORCA has to be installed."
     end
+    push!(_plot_defaults, :include_mathjax => "")
 end
 
 const _plotly_attr = merge_with_base_supported([
@@ -417,6 +418,7 @@ const _plotly_attr = merge_with_base_supported([
     :tick_direction,
     :camera,
     :contour_labels,
+    :include_mathjax,
   ])
 
 const _plotly_seriestype = [
