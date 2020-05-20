@@ -699,7 +699,8 @@ pgfx_get_title_pos(s) =
     get((
         left = ("at" => "{(0,1)}", "anchor" => "south west"),
         right = ("at" => "{(1,1)}", "anchor" => "south east"),
-        ), s, "{(0.5,1)}")
+        ), s,
+        ("at" => "{(0.5,1)}", "anchor" => "south"))
 pgfx_get_title_pos(t::Tuple) = ("at" => "{$(string(t))}", "anchor" => "south")
 pgfx_get_title_pos(nt::NamedTuple) = ("at" => "{$(string(nt.at))}", "anchor" => string(nt.anchor))
 
