@@ -336,7 +336,7 @@ function plotly_layout(plt::Plot)
         plotattributes_out[:hovermode] = "none"
     end
 
-    plotattributes_out
+    plotattributes_out = recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
 end
 
 function plotly_layout_json(plt::Plot)
