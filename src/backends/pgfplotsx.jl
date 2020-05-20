@@ -141,15 +141,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 "legend cell align" => "left",
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
-                        "at" => if title_loc == :left
-                            "{(0,1)}"
-                        elseif title_loc == :right
-                            "{(1,1)}"
-                        elseif title_loc isa Tuple
-                            "{$(string(title_loc))}"
-                        else
-                            "{(0.5,1)}"
-                        end,
+                        pgfx_get_title_pos(title_loc)...,
                         "font" => pgfx_font(
                             sp[:titlefontsize],
                             pgfx_thickness_scaling(sp),
@@ -187,12 +179,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) :
             nothing
             # legend position
-            if sp[:legend] isa Tuple
-                x, y = sp[:legend]
-                push!(axis_opt["legend style"], "at={($x, $y)}")
-            else
-                push!(axis_opt["legend style"], pgfx_get_legend_pos(sp[:legend])...)
-            end
+            push!(axis_opt["legend style"], pgfx_get_legend_pos(sp[:legend])...)
             for letter in (:x, :y, :z)
                 if letter != :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
@@ -698,10 +685,21 @@ pgfx_get_legend_pos(k) = get(
     Symbol(k),
     ("at" => string((1.02, 1)), "anchor" => "north west"),
 )
+pgfx_get_legend_pos(t::Tuple) = ("at" => "{$(string(t))}", "anchor" => "north west")
+pgfx_get_legend_pos(nt::NamedTuple) = ("at" => "{$(string(nt.at))}", "anchor" => string(nt.anchor))
 
 pgfx_get_colorbar_pos(s) =
     get((left = " left", bottom = " horizontal", top = " horizontal"), s, "")
 pgfx_get_colorbar_pos(b::Bool) = ""
+
+pgfx_get_title_pos(s) =
+    get((
+        left = ("at" => "{(0,1)}", "anchor" => "south west"),
+        right = ("at" => "{(1,1)}", "anchor" => "south east"),
+        ), s,
+        ("at" => "{(0.5,1)}", "anchor" => "south"))
+pgfx_get_title_pos(t::Tuple) = ("at" => "{$(string(t))}", "anchor" => "south")
+pgfx_get_title_pos(nt::NamedTuple) = ("at" => "{$(string(nt.at))}", "anchor" => string(nt.anchor))
 
 function pgfx_get_ticklabel_style(sp, axis)
     cstr = plot_color(axis[:tickfontcolor])
