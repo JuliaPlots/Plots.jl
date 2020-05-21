@@ -328,7 +328,7 @@ function plotly_layout(plt::Plot)
             plotattributes_out[:direction] = "counterclockwise"
         end
 
-        plotattributes_out = recursive_merge(plotattributes_out, sp.attr[:extra_kwargs])
+        plotattributes_out
     end
 
     # turn off hover if nothing's using it
