@@ -302,6 +302,11 @@ Base.convert(::Type{Vector{T}}, rng::AbstractRange{S}) where {T<:Real,S<:Real} =
 
 Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 
+# recursively merge kw-dicts, e.g. for merging extra_kwargs / extra_plot_kwargs in plotly)
+recursive_merge(x::AbstractDict...) = merge(recursive_merge, x...)
+# if values are not AbstractDicts, take the last definition (as does merge)
+recursive_merge(x...) = x[end]
+
 nanpush!(a::AbstractVector, b) = (push!(a, NaN); push!(a, b))
 nanappend!(a::AbstractVector, b) = (push!(a, NaN); append!(a, b))
 

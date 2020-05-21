@@ -336,7 +336,7 @@ function plotly_layout(plt::Plot)
         plotattributes_out[:hovermode] = "none"
     end
 
-    plotattributes_out
+    plotattributes_out = recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
 end
 
 function plotly_layout_json(plt::Plot)
@@ -810,9 +810,14 @@ html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 const ijulia_initialized = Ref(false)
 
 function plotly_html_head(plt::Plot)
-    local_file = ("file://" * plotly_local_file_path)
+    local_file = ("file:///" * plotly_local_file_path)
     plotly =
         use_local_dependencies[] ? local_file : "https://cdn.plot.ly/plotly-latest.min.js"
+
+    include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
+    mathjax_file = include_mathjax != "cdn" ? ("file://" * include_mathjax) : "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"
+    mathjax_head = include_mathjax == "" ? "" : "<script src=\"$mathjax_file\"></script>\n\t\t"
+
     if isijulia() && !ijulia_initialized[]
         # using requirejs seems to be key to load a js depency in IJulia!
         # https://requirejs.org/docs/start.html
@@ -826,7 +831,7 @@ function plotly_html_head(plt::Plot)
         """)
         ijulia_initialized[] = true
     end
-    return "<script src=$(repr(plotly))></script>"
+    return "$mathjax_head<script src=$(repr(plotly))></script>"
 end
 
 function plotly_html_body(plt, style = nothing)
