@@ -1006,9 +1006,17 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             # create and store the colorbar object (handle) and the axis that it is drawn on.
             # note: the colorbar axis is positioned independently from the subplot axis
             fig = plt.o
-            cbax = fig."add_axes"([0.8,0.1,0.03,0.8], label = string(gensym()))
+
+            #  There is no point specifying colorbar size, hence rand(4) as it will get
+            #  updated at function _update_plot_object(plt::Plot{PyPlotBackend})
+            cbax = fig."add_axes"(rand(4), label = string(gensym()))
             cb = fig."colorbar"(handle; cax = cbax, kw...)
             cb."set_label"(sp[:colorbar_title],size=py_thickness_scale(plt, sp[:yaxis][:guidefontsize]),family=sp[:yaxis][:guidefontfamily], color = py_color(sp[:yaxis][:guidefontcolor]))
+
+            # cb."formatter".set_useOffset(false)   # This for some reason does not work, must be a pyplot bug, instead this is a workaround:
+            cb."formatter".set_powerlimits((-Inf, Inf))
+            cb."update_ticks"()
+
             for lab in cb."ax"."yaxis"."get_ticklabels"()
                   lab."set_fontsize"(py_thickness_scale(plt, sp[:yaxis][:tickfontsize]))
                   lab."set_family"(sp[:yaxis][:tickfontfamily])
@@ -1220,7 +1228,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     # optionally add the width of colorbar labels and colorbar to rightpad
     if haskey(sp.attr, :cbar_ax)
         bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
-        sp.attr[:cbar_width] = _cbar_width + width(bb) + 2.3mm + (sp[:colorbar_title] == "" ? 0px : 30px)
+        sp.attr[:cbar_width] = _cbar_width + width(bb) + 3.5mm + (sp[:colorbar_title] == "" ? 0px : 30px)
         rightpad = rightpad + sp.attr[:cbar_width]
     end
 
@@ -1384,10 +1392,14 @@ function _update_plot_object(plt::Plot{PyPlotBackend})
         # set the cbar position if there is one
         if haskey(sp.attr, :cbar_ax)
             cbw = sp.attr[:cbar_width]
-            # this is the bounding box of just the colors of the colorbar (not labels)
-            ex = sp[:zaxis][:extrema]
-            has_toplabel = !(1e-7 < max(abs(ex.emax), abs(ex.emin)) < 1e7)
-            cb_bbox = BoundingBox(right(sp.bbox)-cbw+1mm, top(sp.bbox) +  (has_toplabel ? 4mm : 2mm), _cbar_width-1mm, height(sp.bbox) - (has_toplabel ? 6mm : 4mm))
+
+            # Colorbar should be placed right to the axis with same vertical size
+            # we can extract bbox from axis object to make it match to it
+            cb_bbox = BoundingBox(right(py_bbox(ax)) + _cbar_width/2,  # Some paddding between colorbar and the ax
+                                  top(py_bbox(ax)),
+                                  _cbar_width - 1mm,
+                                  size(py_bbox(ax))[2])
+
             pcts = bbox_to_pcts(cb_bbox, figw, figh)
             sp.attr[:cbar_ax]."set_position"(pcts)
         end
