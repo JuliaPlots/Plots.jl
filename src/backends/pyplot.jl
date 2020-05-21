@@ -1007,9 +1007,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             # note: the colorbar axis is positioned independently from the subplot axis
             fig = plt.o
 
-            #  There is no point specifying colorbar size, hence rand(4) as it will get
+            #  There is no point in specifying colorbar size, hence zeros(4). It will get
             #  updated at function _update_plot_object(plt::Plot{PyPlotBackend})
-            cbax = fig."add_axes"(rand(4), label = string(gensym()))
+            cbax = fig."add_axes"(zeros(4), label = string(gensym()))
             cb = fig."colorbar"(handle; cax = cbax, kw...)
             cb."set_label"(sp[:colorbar_title],size=py_thickness_scale(plt, sp[:yaxis][:guidefontsize]),family=sp[:yaxis][:guidefontfamily], color = py_color(sp[:yaxis][:guidefontcolor]))
 
