@@ -1396,6 +1396,14 @@ function _update_plot_object(plt::Plot{PyPlotBackend})
         figw, figh = figw*px, figh*px
         pcts = bbox_to_pcts(sp.plotarea, figw, figh)
         ax."set_position"(pcts)
+
+        if haskey(sp.attr, :cbar_ax) && RecipesPipeline.is3d(sp)   # 2D plots are completely handled by axis dividers
+            cbw = sp.attr[:cbar_width]
+            # this is the bounding box of just the colors of the colorbar (not labels)
+            cb_bbox = BoundingBox(right(sp.bbox)-cbw - 2mm, top(sp.bbox) + 2mm, _cbar_width-1mm, height(sp.bbox) -  4mm)
+            pcts = bbox_to_pcts(cb_bbox, figw, figh)
+            sp.attr[:cbar_ax]."set_position"(pcts)
+        end
     end
     PyPlot.draw()
 end
