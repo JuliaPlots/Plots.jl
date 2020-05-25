@@ -1005,12 +1005,19 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             kw[:spacing] = "proportional"
 
             fig = plt.o
-            divider = axes_grid1.make_axes_locatable(ax)
-            # width = axes_grid1.axes_size.AxesY(ax, aspect=1.0 / 3.5)
-            # pad = axes_grid1.axes_size.Fraction(0.5, width)  # Colorbar is spaced 0.5 of its size away from the ax
-            # cbax = divider.append_axes("right", size=width, pad=pad)   # This approach does not work well in subplots
-            cbax = divider.append_axes("right", size="5%", pad=0.05)  # Reasonable value works most of the usecases
-            cb = fig."colorbar"(handle; cax=cbax, kw...)
+
+            if RecipesPipeline.is3d(sp)
+                cbax = fig."add_axes"([0.9, 0.1, 0.03, 0.8])
+                cb = fig."colorbar"(handle; cax=cbax, kw...)
+            else
+                # divider approach works only with 2d plots
+                divider = axes_grid1.make_axes_locatable(ax)
+                # width = axes_grid1.axes_size.AxesY(ax, aspect=1.0 / 3.5)
+                # pad = axes_grid1.axes_size.Fraction(0.5, width)  # Colorbar is spaced 0.5 of its size away from the ax
+                # cbax = divider.append_axes("right", size=width, pad=pad)   # This approach does not work well in subplots
+                cbax = divider.append_axes("right", size="5%", pad="2.5%")  # Reasonable value works most of the usecases
+                cb = fig."colorbar"(handle; cax=cbax, kw...)
+            end
 
             cb."set_label"(sp[:colorbar_title],size=py_thickness_scale(plt, sp[:yaxis][:guidefontsize]),family=sp[:yaxis][:guidefontfamily], color = py_color(sp[:yaxis][:guidefontcolor]))
 
