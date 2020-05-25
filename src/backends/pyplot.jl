@@ -13,6 +13,7 @@ append!(Base.Multimedia.displays, otherdisplays)
 pycolors = PyPlot.pyimport("matplotlib.colors")
 pypath = PyPlot.pyimport("matplotlib.path")
 mplot3d = PyPlot.pyimport("mpl_toolkits.mplot3d")
+axes_grid1 = PyPlot.pyimport("mpl_toolkits.axes_grid1")
 pypatches = PyPlot.pyimport("matplotlib.patches")
 pyfont = PyPlot.pyimport("matplotlib.font_manager")
 pyticker = PyPlot.pyimport("matplotlib.ticker")
@@ -1003,14 +1004,14 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             kw[:spacing] = "proportional"
 
-            # create and store the colorbar object (handle) and the axis that it is drawn on.
-            # note: the colorbar axis is positioned independently from the subplot axis
             fig = plt.o
+            divider = axes_grid1.make_axes_locatable(ax)
+            # width = axes_grid1.axes_size.AxesY(ax, aspect=1.0 / 3.5)
+            # pad = axes_grid1.axes_size.Fraction(0.5, width)  # Colorbar is spaced 0.5 of its size away from the ax
+            # cbax = divider.append_axes("right", size=width, pad=pad)   # This approach does not work well in subplots
+            cbax = divider.append_axes("right", size="5%", pad=0.05)  # Reasonable value works most of the usecases
+            cb = fig."colorbar"(handle; cax=cbax, kw...)
 
-            #  There is no point in specifying colorbar size, hence zeros(4). It will get
-            #  updated at function _update_plot_object(plt::Plot{PyPlotBackend})
-            cbax = fig."add_axes"(zeros(4), label = string(gensym()))
-            cb = fig."colorbar"(handle; cax = cbax, kw...)
             cb."set_label"(sp[:colorbar_title],size=py_thickness_scale(plt, sp[:yaxis][:guidefontsize]),family=sp[:yaxis][:guidefontfamily], color = py_color(sp[:yaxis][:guidefontcolor]))
 
             # cb."formatter".set_useOffset(false)   # This for some reason does not work, must be a pyplot bug, instead this is a workaround:
@@ -1228,7 +1229,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     # optionally add the width of colorbar labels and colorbar to rightpad
     if haskey(sp.attr, :cbar_ax)
         bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
-        sp.attr[:cbar_width] = _cbar_width + width(bb) + 3.5mm + (sp[:colorbar_title] == "" ? 0px : 30px)
+        sp.attr[:cbar_width] = _cbar_width + width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
         rightpad = rightpad + sp.attr[:cbar_width]
     end
 
@@ -1388,21 +1389,6 @@ function _update_plot_object(plt::Plot{PyPlotBackend})
         figw, figh = figw*px, figh*px
         pcts = bbox_to_pcts(sp.plotarea, figw, figh)
         ax."set_position"(pcts)
-
-        # set the cbar position if there is one
-        if haskey(sp.attr, :cbar_ax)
-            cbw = sp.attr[:cbar_width]
-
-            # Colorbar should be placed right to the axis with same vertical size
-            # we can extract bbox from axis object to make it match to it
-            cb_bbox = BoundingBox(right(py_bbox(ax)) + _cbar_width/2,  # Some paddding between colorbar and the ax
-                                  top(py_bbox(ax)),
-                                  _cbar_width - 1mm,
-                                  size(py_bbox(ax))[2])
-
-            pcts = bbox_to_pcts(cb_bbox, figw, figh)
-            sp.attr[:cbar_ax]."set_position"(pcts)
-        end
     end
     PyPlot.draw()
 end

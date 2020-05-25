@@ -983,7 +983,7 @@ px2inch(px::Real)       = float(px / PX_PER_INCH)
 inch2mm(inches::Real)   = float(inches * MM_PER_INCH)
 mm2inch(mm::Real)       = float(mm / MM_PER_INCH)
 px2mm(px::Real)         = float(px * MM_PER_PX)
-mm2px(mm::Real)         = float(px / MM_PER_PX)
+mm2px(mm::Real)         = float(mm / MM_PER_PX)
 
 
 "Smallest x in plot"
