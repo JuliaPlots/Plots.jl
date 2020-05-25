@@ -583,6 +583,7 @@ add_aliases(:fill_z, :fillz, :fz, :surfacecolor, :surfacecolour, :sc, :surfcolor
 add_aliases(:legend, :leg, :key)
 add_aliases(:legendtitle, :legend_title, :labeltitle, :label_title, :leg_title, :key_title)
 add_aliases(:colorbar, :cb, :cbar, :colorkey)
+add_aliases(:colorbar_title, :colorbartitle, :cb_title, :cbtitle, :cbartitle, :cbar_title, :colorkeytitle, :colorkey_title)
 add_aliases(:clims, :clim, :cbarlims, :cbar_lims, :climits, :color_limits)
 add_aliases(:smooth, :regression, :reg)
 add_aliases(:levels, :nlevels, :nlev, :levs)
