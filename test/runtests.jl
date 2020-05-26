@@ -9,6 +9,7 @@ using LibGit2
 using GeometryTypes
 using Dates
 
+include("test_axes.jl")
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
 
