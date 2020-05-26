@@ -35,7 +35,6 @@ end
 function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scaleAliases, arg, arg)
-
     if typeof(arg) <: Font
         plotattributes[Symbol(letter,:tickfont)] = arg
         plotattributes[Symbol(letter,:guidefont)] = arg
@@ -61,7 +60,7 @@ function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     elseif arg === nothing
         plotattributes[Symbol(letter,:ticks)] = []
 
-    elseif T <: Bool || arg in _allShowaxisArgs || arg in _allShowaxisSyms
+    elseif T <: Bool || arg in _allShowaxisArgs
         plotattributes[Symbol(letter,:showaxis)] = showaxis(arg, letter)
 
     elseif typeof(arg) <: Number
