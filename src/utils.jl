@@ -420,7 +420,7 @@ ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
 
 # These functions return an operator for use in `get_clims(::Seres, op)`
-process_clims(lims::NTuple{2,<:Number}) = (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ ignorenan_extrema
+process_clims(lims::Tuple{<:Number,<:Number}) = (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ ignorenan_extrema
 process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
 # don't specialize on ::Function otherwise python functions won't work
 process_clims(f) = f
