@@ -179,4 +179,9 @@ end
         @test isequal(collect(zip(Plots.unzip(z)...)), z)
         @test isequal(collect(zip(Plots.unzip(GeometryTypes.Point.(z))...)), z)
     end
+    op1 = Plots.process_clims((1.0, 2.0))
+    op2 = Plots.process_clims((1, 2.0))
+    data = randn(100, 100)
+    @test op1(data) == op2(data)
+    @test Plots.process_clims(nothing) == Plots.process_clims(missing) == Plots.process_clims(:auto)
 end
