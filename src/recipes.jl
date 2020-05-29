@@ -112,7 +112,7 @@ end
 
 @recipe function f(::Type{Val{:hline}}, x, y, z)
     n = length(y)
-    newx = repeat(Float64[-1, 1, NaN], n)
+    newx = repeat(Float64[1, 2,  NaN], n)
     newy = vec(Float64[yi for i = 1:3, yi in y])
     x := newx
     y := newy
@@ -124,7 +124,7 @@ end
 @recipe function f(::Type{Val{:vline}}, x, y, z)
     n = length(y)
     newx = vec(Float64[yi for i = 1:3, yi in y])
-    newy = repeat(Float64[-1, 1, NaN], n)
+    newy = repeat(Float64[1, 2, NaN], n)
     x := newx
     y := newy
     seriestype := :straightline
@@ -1028,7 +1028,7 @@ end
 
 function error_style!(plotattributes::AKW)
     plotattributes[:seriestype] = :path
-    plotattributes[:markercolor] = plotattributes[:markerstrokecolor] 
+    plotattributes[:markercolor] = plotattributes[:markerstrokecolor]
     plotattributes[:linewidth] = plotattributes[:markerstrokewidth]
     plotattributes[:label] = ""
 end
