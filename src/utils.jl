@@ -1079,10 +1079,21 @@ end
 function straightline_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
-    x, y = series[:x], series[:y]
+
+    # handle axes scales
+    xscale = sp[:xaxis][:scale]
+    xf = RecipesPipeline.scale_func(xscale)
+    xinvf = RecipesPipeline.inverse_scale_func(xscale)
+    yscale = sp[:yaxis][:scale]
+    yf = RecipesPipeline.scale_func(yscale)
+    yinvf = RecipesPipeline.inverse_scale_func(yscale)
+
+    xl, yl = xf.(xl), yf.(yl)
+    x, y = xf.(series[:x]), yf.(series[:y])
     n = length(x)
-    if n == 2
-        return straightline_data(xl, yl, x, y, expansion_factor)
+
+    xdata, ydata = if n == 2
+        straightline_data(xl, yl, x, y, expansion_factor)
     else
         k, r = divrem(n, 3)
         if r == 0
@@ -1091,11 +1102,13 @@ function straightline_data(series, expansion_factor = 1)
                 inds = (3 * i - 2):(3 * i - 1)
                 xdata[inds], ydata[inds] = straightline_data(xl, yl, x[inds], y[inds], expansion_factor)
             end
-            return xdata, ydata
+            xdata, ydata
         else
             error("Misformed data. `straightline_data` either accepts vectors of length 2 or 3k. The provided series has length $n")
         end
     end
+
+    return xinvf.(xdata), yinvf.(ydata)
 end
 
 function straightline_data(xl, yl, x, y, expansion_factor = 1)
@@ -1127,20 +1140,28 @@ end
 function shape_data(series, expansion_factor = 1)
     sp = series[:subplot]
     xl, yl = isvertical(series) ? (xlims(sp), ylims(sp)) : (ylims(sp), xlims(sp))
+
+    # handle axes scales
+    xscale = sp[:xaxis][:scale]
+    xf = RecipesPipeline.scale_func(xscale)
+    xinvf = RecipesPipeline.inverse_scale_func(xscale)
+    yscale = sp[:yaxis][:scale]
+    yf = RecipesPipeline.scale_func(yscale)
+    yinvf = RecipesPipeline.inverse_scale_func(yscale)
+
     x, y = copy(series[:x]), copy(series[:y])
-    factor = 100
     for i in eachindex(x)
         if x[i] == -Inf
-            x[i] = xl[1] - expansion_factor * (xl[2] - xl[1])
+            x[i] = xinvf(xf(xl[1]) - expansion_factor * (xf(xl[2]) - xf(xl[1])))
         elseif x[i] == Inf
-            x[i] = xl[2] + expansion_factor * (xl[2] - xl[1])
+            x[i] = xinvf(xf(xl[2]) + expansion_factor * (xf(xl[2]) - xf(xl[1])))
         end
     end
     for i in eachindex(y)
         if y[i] == -Inf
-            y[i] = yl[1] - expansion_factor * (yl[2] - yl[1])
+            y[i] = yinvf(yf(yl[1]) - expansion_factor * (yf(yl[2]) - yf(yl[1])))
         elseif y[i] == Inf
-            y[i] = yl[2] + expansion_factor * (yl[2] - yl[1])
+            y[i] = yinvf(yf(yl[2]) + expansion_factor * (yf(yl[2]) - yf(yl[1])))
         end
     end
     return x, y
