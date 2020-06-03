@@ -35,7 +35,7 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 Contour = "0.5"
 FFMPEG = "0.2, 0.3"
 FixedPointNumbers = "0.6, 0.7, 0.8"
-GR = "0.46, 0.47, 0.48, 0.49"
+GR = "0.46, 0.47, 0.48, 0.49, 0.50"
 GeometryTypes = "0.7, 0.8"
 JSON = "0.21"
 Measures = "0.3"
@@ -53,7 +53,6 @@ julia = "1"
 
 [extras]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-GeometryTypes = "4d00f742-c7ba-57c2-abde-4428a4b178cb"
 Gtk = "4c0ca9eb-093a-5379-98c5-f87ac0bbbf44"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
@@ -62,7 +61,6 @@ LibGit2 = "76f85450-5226-5b5a-8eaa-529ad045b433"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -70,4 +68,4 @@ UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 VisualRegressionTests = "34922c18-7c2a-561c-bac1-01e79b2c4c92"
 
 [targets]
-test = ["FileIO", "GeometryTypes", "Gtk", "ImageMagick", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "HDF5", "Random", "RDatasets", "StaticArrays", "StatsPlots", "Test", "UnicodePlots", "VisualRegressionTests"]
+test = ["FileIO", "Gtk", "ImageMagick", "Images", "LibGit2", "OffsetArrays", "PGFPlotsX", "HDF5", "RDatasets", "StaticArrays", "StatsPlots", "Test", "UnicodePlots", "VisualRegressionTests"]

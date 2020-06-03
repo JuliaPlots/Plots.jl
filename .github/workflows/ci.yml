@@ -1,0 +1,86 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  CI:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    
+    env:
+      GKS_ENCODING: "utf8"
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        julia_version:
+          - 'nightly'
+          - '1'
+          - '1.0'
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        arch:
+          - x64
+        #  - x32
+    steps:
+      
+      # Setup environment
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.julia_version }}
+      - name: Cache artifacts
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts 
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
+          
+      # OS Dependencies            
+      # - name: Ubuntu OS dependencies
+      #   if: startsWith(matrix.os,'ubuntu')
+      #   run: |
+      #    ./test/install_wkhtmltoimage.sh
+  
+      #  at-spi2-core, libgtk-3-dev,  libgtk-3-0, and xvfb  are already installed: https://github.com/actions/virtual-environments/blob/master/images/linux/scripts/installers/basic.sh  
+
+  
+      # TESTCMD
+      - name: Default TESTCMD
+        run: echo ::set-env name=TESTCMD::"julia"
+      - name: Ubuntu TESTCMD
+        if: startsWith(matrix.os,'ubuntu')
+        run: echo ::set-env name=TESTCMD::"xvfb-run julia"
+
+      # Julia Deoendencies
+      - name: Install Julia dependencies
+        uses: julia-actions/julia-buildpkg@latest
+        
+      # Run tests
+      - name: Run Graphical test
+        run:  $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true);'
+          
+      - name: Codecov
+        uses: julia-actions/julia-uploadcodecov@latest
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  Skip:
+    if: "contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip CI 🚫
+        run: echo skip ci
