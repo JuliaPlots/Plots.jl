@@ -10,7 +10,7 @@ using Reexport
 
 import GeometryTypes
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
-import SparseArrays: findnz
+import SparseArrays: AbstractSparseMatrix, findnz
 
 using FFMPEG
 

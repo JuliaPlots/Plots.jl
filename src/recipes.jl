@@ -1028,7 +1028,7 @@ end
 
 function error_style!(plotattributes::AKW)
     plotattributes[:seriestype] = :path
-    plotattributes[:markercolor] = plotattributes[:markerstrokecolor] 
+    plotattributes[:markercolor] = plotattributes[:markerstrokecolor]
     plotattributes[:linewidth] = plotattributes[:markerstrokewidth]
     plotattributes[:label] = ""
 end
@@ -1415,7 +1415,7 @@ end
 @recipe function f(::Type{Val{:spy}}, x, y, z)
     yflip := true
     aspect_ratio := 1
-    rs, cs, zs = findnz(z.surf)
+    rs, cs, zs = Plots.findnz(z.surf)
     xlims := ignorenan_extrema(cs)
     ylims := ignorenan_extrema(rs)
     if plotattributes[:markershape] == :none
@@ -1433,6 +1433,18 @@ end
     seriestype := :scatter
     grid --> false
     ()
+end
+
+
+Plots.findnz(A::AbstractSparseMatrix) = findnz(A)
+
+# fallback function for finding non-zero elements of non-sparse matrices
+function Plots.findnz(A::AbstractMatrix)
+    keysnz = findall(!iszero, A)
+    rs = [k[1] for k in keysnz]
+    cs = [k[2] for k in keysnz]
+    zs = A[keysnz]
+    rs, cs, zs
 end
 
 # -------------------------------------------------
