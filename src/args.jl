@@ -313,7 +313,7 @@ const _plot_defaults = KW(
 
 const _subplot_defaults = KW(
     :title                    => "",
-    :titlelocation            => :center,           # also :left or :right
+    :titlelocation           => :center,           # also :left or :right
     :fontfamily_subplot       => :match,
     :titlefontfamily          => :match,
     :titlefontsize            => 14,
