@@ -26,6 +26,9 @@ Currently the following themes are available:
 - `:wong2`
 - `:gruvbox_dark`
 - `:gruvbox_light`
+- `:bright`
+- `:vibrant`
+- `:mute`
 
 When using Plots, a theme can be set using the `theme` function:
 ```julia
