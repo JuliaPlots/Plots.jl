@@ -945,8 +945,9 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     replaceAliases!(plotattributes, _keyAliases)
 
     # handle axis args common to all axis
-    args = RecipesPipeline.pop_kw!(plotattributes, :axis, ())
-    for arg in wraptuple(args)
+    args = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :axis, ()))
+    showarg = wraptuple(RecipesPipeline.pop_kw!(plotattributes, :showaxis, ()))
+    for arg in wraptuple((args..., showarg...))
         for letter in (:x, :y, :z)
             process_axis_arg!(plotattributes, arg, letter)
         end

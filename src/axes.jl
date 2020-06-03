@@ -35,7 +35,6 @@ end
 function process_axis_arg!(plotattributes::AKW, arg, letter = "")
     T = typeof(arg)
     arg = get(_scaleAliases, arg, arg)
-
     if typeof(arg) <: Font
         plotattributes[Symbol(letter,:tickfont)] = arg
         plotattributes[Symbol(letter,:guidefont)] = arg
