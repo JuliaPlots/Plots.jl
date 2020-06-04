@@ -110,6 +110,7 @@ end
 Base.copy(vol::Volume{T}) where {T} =
     Volume{T}(copy(vol.v), vol.x_extents, vol.y_extents, vol.z_extents)
 Base.eltype(vol::Volume{T}) where {T} = T
+Base.axes(vol::Volume, args...) = axes(vol.v, args...)
 
 
 # --------------------------------
