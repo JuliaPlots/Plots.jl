@@ -20,22 +20,6 @@ using UUIDs
 
 # ----------------------------------------------------------------
 
-plotly_legend_pos(pos::Symbol) = get(
-    (
-        right = [1.0, 0.5],
-        left = [0.0, 0.5],
-        top = [0.5, 1.0],
-        bottom = [0.5, 0.0],
-        bottomleft = [0.0, 0.0],
-        bottomright = [1.0, 0.0],
-        topright = [1.0, 1.0],
-        topleft = [0.0, 1.0],
-    ),
-    pos,
-    [1.0, 1.0],
-)
-plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
-
 function plotly_font(font::Font, color = font.color)
     KW(
         :family => font.family,
@@ -285,18 +269,7 @@ function plotly_layout(plt::Plot)
         end
 
         # legend
-        plotattributes_out[:showlegend] = sp[:legend] != :none
-        xpos,ypos = plotly_legend_pos(sp[:legend])
-        if sp[:legend] != :none
-            plotattributes_out[:legend] = KW(
-                :bgcolor  => rgba_string(sp[:background_color_legend]),
-                :bordercolor => rgba_string(sp[:foreground_color_legend]),
-                :font     => plotly_font(legendfont(sp)),
-                :tracegroupgap => 0,
-                :x => xpos,
-                :y => ypos
-            )
-        end
+        plotly_add_legend!(plotattributes_out, sp)
 
         # annotations
         for ann in sp[:annotations]
@@ -338,6 +311,49 @@ function plotly_layout(plt::Plot)
 
     plotattributes_out = recursive_merge(plotattributes_out, plt.attr[:extra_plot_kwargs])
 end
+
+
+function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
+    plotattributes_out[:showlegend] = sp[:legend] != :none
+    legend_position = plotly_legend_pos(sp[:legend])
+    if sp[:legend] != :none
+        plotattributes_out[:legend] = KW(
+            :bgcolor  => rgba_string(sp[:background_color_legend]),
+            :bordercolor => rgba_string(sp[:foreground_color_legend]),
+            :borderwidth => 1,
+            :traceorder => "normal",
+            :xanchor => legend_position.xanchor,
+            :yanchor => legend_position.yanchor,
+            :font     => plotly_font(legendfont(sp)),
+            :tracegroupgap => 0,
+            :x => legend_position.coords[1],
+            :y => legend_position.coords[2]
+        )
+    end
+end
+
+function plotly_legend_pos(pos::Symbol)
+    xleft = 0.07
+    ybot = 0.07
+    ycenter = 0.52
+    xcenter = 0.55
+    plotly_legend_position_mapping = (
+        right       = (coords = [1.0, ycenter], xanchor = "right", yanchor = "middle"),
+        left        = (coords = [xleft, ycenter], xanchor = "left",  yanchor = "middle"),
+        top         = (coords = [xcenter, 1.0], xanchor = "center",  yanchor = "top"),
+        bottom      = (coords = [xcenter, ybot], xanchor = "center",  yanchor = "bottom"),
+        bottomleft  = (coords = [xleft, ybot], xanchor = "left",  yanchor = "bottom"),
+        bottomright = (coords = [1.0, ybot], xanchor = "right", yanchor = "bottom"),
+        topright    = (coords = [1.0, 1.0], xanchor = "right", yanchor = "top"),
+        topleft     = (coords = [xleft, 1.0], xanchor = "left",  yanchor = "top"),
+        default     = (coords = [1.02, 1.0], xanchor = "auto",  yanchor = "auto")
+    )
+
+    legend_position = get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)
+end
+
+plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = (coords=v, xanchor="left", yanchor="top")
+
 
 function plotly_layout_json(plt::Plot)
     JSON.json(plotly_layout(plt), 4)
