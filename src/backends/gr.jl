@@ -943,6 +943,12 @@ function is_equally_spaced(v)
     all(d .≈ d[1])
 end
 
+remap(x, lo, hi) = (x - lo) / (hi - lo)
+function get_z_normalized(z, clims...)
+    isnan(z) && return 256 / 255
+    return remap(clamp(z, clims...), clims...)
+end
+
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     _update_min_padding!(sp)
 
@@ -1712,8 +1718,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     if something(series[:fillalpha],1) < 1
                         @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
                     end
-                    colors = get(fillgrad, z, clims)
-                    z_normalized = map(c -> c == invisible() ? 256/255 : PlotUtils.getinverse(fillgrad, c), colors)
+                    z_normalized = get_z_normalized.(z, zmin, zmax)
                     rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
                     GR.nonuniformcellarray(x, y, w, h, rgba)
                 end
