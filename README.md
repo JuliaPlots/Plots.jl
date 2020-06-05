@@ -13,6 +13,7 @@
 [docs-url]: http://docs.juliaplots.org/latest/
 
 [![][gh-ci-img]][gh-ci-url]
+[![][pkgeval-img]][pkgeval-url]
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
 [![][docs-img]][docs-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl)
