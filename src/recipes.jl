@@ -1474,50 +1474,6 @@ end
 end
 
 
-# --------------------------------------------------
-# Color Gradients
-
-@userplot ShowLibrary
-@recipe function f(cl::ShowLibrary)
-    if !(length(cl.args) == 1 && isa(cl.args[1], Symbol))
-        error("showlibrary takes the name of a color library as a Symbol")
-    end
-
-    library = PlotUtils.color_libraries[cl.args[1]]
-    z = sqrt.((1:15) * reshape(1:20, 1, :))
-
-    seriestype := :heatmap
-    ticks := nothing
-    legend := false
-
-    layout --> length(library.lib)
-
-    i = 0
-    for grad in sort(collect(keys(library.lib)))
-        @series begin
-            seriescolor := cgrad(grad, cl.args[1])
-            title := string(grad)
-            subplot := i += 1
-            z
-        end
-    end
-end
-
-@userplot ShowGradient
-@recipe function f(grad::ShowGradient)
-    if !(length(grad.args) == 1 && isa(grad.args[1], Symbol))
-        error("showgradient takes the name of a color gradient as a Symbol")
-    end
-    z = sqrt.((1:15) * reshape(1:20, 1, :))
-    seriestype := :heatmap
-    ticks := nothing
-    legend := false
-    seriescolor := grad.args[1]
-    title := string(grad.args[1])
-    z
-end
-
-
 # Moved in from PlotRecipes - see: http://stackoverflow.com/a/37732384/5075246
 @userplot PortfolioComposition
 
