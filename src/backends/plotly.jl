@@ -345,7 +345,7 @@ function plotly_legend_pos(pos::Symbol)
         bottomleft  = (coords = [xleft, ybot], xanchor = "left",  yanchor = "bottom"),
         bottomright = (coords = [1.0, ybot], xanchor = "right", yanchor = "bottom"),
         topright    = (coords = [1.0, 1.0], xanchor = "right", yanchor = "top"),
-        topleft     = (coords = [xleft, 1.0], xanchor = "left",  yanchor = "top"),
+        topleft     = (coords = [xleft, 1.0], xanchor = "left",  yanchor = "top"),  #TODO implement outerright, outertopleft, ...
         default     = (coords = [1.02, 1.0], xanchor = "auto",  yanchor = "auto")
     )
 
