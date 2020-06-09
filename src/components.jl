@@ -358,8 +358,14 @@ end
 Scales all **current** font sizes by `factor`. For example `scalefontsizes(1.1)` increases all current font sizes by 10%. To reset to initial sizes, use `scalefontsizes()`
 """
 function scalefontsizes(factor::Number)
-    for k in (:titlefontsize, :guidefontsize, :tickfontsize, :legendfontsize)
+    for k in (:titlefontsize, :legendfontsize, :legendtitlefontsize)
         scalefontsize(k, factor)
+    end
+
+    for letter in (:x,:y,:z)
+        for k in (:guidefontsize, :tickfontsize)
+            scalefontsize(Symbol(letter, k), factor)
+        end
     end
 end
 
@@ -369,14 +375,26 @@ end
 Resets font sizes to initial default values.
 """
 function scalefontsizes()
-  for k in (:titlefontsize, :guidefontsize, :tickfontsize, :legendfontsize)
-      f = default(k)
-      if k in keys(_initial_fontsizes)
-        factor = f / _initial_fontsizes[k]
-        scalefontsize(k, 1.0/factor)
-      end
-  end
+    for k in (:titlefontsize, :legendfontsize, :legendtitlefontsize)
+        f = default(k)
+        if k in keys(_initial_fontsizes)
+            factor = f / _initial_fontsizes[k]
+            scalefontsize(k, 1.0/factor)
+        end
+    end
+
+    for letter in (:x,:y,:z)
+        for k in (:guidefontsize, :tickfontsize)
+            if k in keys(_initial_fontsizes)
+                f = default(Symbol(letter, k))
+                factor = f / _initial_fontsizes[k]
+                scalefontsize(Symbol(letter, k), 1.0/factor)
+            end
+        end
+    end
 end
+
+resetfontsizes() = scalefontsizes()
 
 "Wrap a string with font info"
 struct PlotText

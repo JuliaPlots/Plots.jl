@@ -124,7 +124,11 @@ export
     center,
     BezierCurve,
 
-    plotattr
+    plotattr,
+    scalefontsize,
+    scalefontsizes,
+    resetfontsizes
+
 
 # ---------------------------------------------------------
 
