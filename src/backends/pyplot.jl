@@ -1016,8 +1016,34 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 # width = axes_grid1.axes_size.AxesY(ax, aspect=1.0 / 3.5)
                 # pad = axes_grid1.axes_size.Fraction(0.5, width)  # Colorbar is spaced 0.5 of its size away from the ax
                 # cbax = divider.append_axes("right", size=width, pad=pad)   # This approach does not work well in subplots
-                cbax = divider.append_axes("right", size="5%", pad="2.5%")  # Reasonable value works most of the usecases
-                cb = fig."colorbar"(handle; cax=cbax, kw...)
+                colorbar_position = "right"
+                colorbar_pad = "2.5%"
+                colorbar_orientation="vertical"
+
+                if sp[:colorbar] == :left
+                    colorbar_position = string(sp[:colorbar])
+                    colorbar_pad = "5%"
+                elseif sp[:colorbar] == :top
+                    colorbar_position = string(sp[:colorbar])
+                    colorbar_pad = "2.5%"
+                    colorbar_orientation="horizontal"
+                elseif sp[:colorbar] == :bottom
+                    colorbar_position = string(sp[:colorbar])
+                    colorbar_pad = "5%"
+                    colorbar_orientation="horizontal"
+                end
+
+                cbax = divider.append_axes(colorbar_position, size="5%", pad=colorbar_pad)  # Reasonable value works most of the usecases
+                cb = fig."colorbar"(handle; cax=cbax, orientation = colorbar_orientation, kw...)
+
+                if sp[:colorbar] == :left
+                    cbax.yaxis.set_ticks_position("left")
+                elseif sp[:colorbar] == :top
+                    cbax.xaxis.set_ticks_position("top")
+                elseif sp[:colorbar] == :bottom
+                    cbax.xaxis.set_ticks_position("bottom")
+                end
+
             end
 
             cb."set_label"(sp[:colorbar_title],size=py_thickness_scale(plt, sp[:yaxis][:guidefontsize]),family=sp[:yaxis][:guidefontfamily], color = py_color(sp[:yaxis][:guidefontcolor]))
