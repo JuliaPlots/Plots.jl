@@ -1,5 +1,3 @@
-using Pkg
-
 struct NoBackend <: AbstractBackend end
 
 const _backendType = Dict{Symbol, DataType}(:none => NoBackend)
