@@ -4,7 +4,7 @@
 .DS_Store
 examples/.ipynb_checkpoints/*
 examples/meetup/.ipynb_checkpoints/*
-deps/plotly-latest.min.js
+deps/plotly-1.54.2.min.js
 deps/build.log
 deps/deps.jl
 Manifest.toml
