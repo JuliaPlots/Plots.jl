@@ -8,7 +8,7 @@ end
 
 # this is when given a vector-type of values to group by
 function _extract_group_attributes(v::AVec, args...; legend_entry = string)
-    group_labels = sort(collect(unique(v)))
+    group_labels = collect(unique(sort(v)))
     n = length(group_labels)
     if n > 100
         @warn("You created n=$n groups... Is that intended?")
