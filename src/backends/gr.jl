@@ -590,7 +590,7 @@ function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
             xpos = viewport_plotarea[1] + 0.11
         end
     else
-        xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 +.04
+        xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 +.04 + viewport_plotarea[1]
     end
     if occursin("top", str)
         if s == :outertop
