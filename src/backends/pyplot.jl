@@ -182,7 +182,7 @@ function labelfunc(scale::Symbol, backend::PyPlotBackend)
     elseif scale == :ln
         x -> PyPlot.LaTeXStrings.latexstring("e^{$x}")
     else
-        string
+        x -> PyPlot.LaTeXStrings.latexstring(convert_sci_unicode(x))
     end
 end
 
