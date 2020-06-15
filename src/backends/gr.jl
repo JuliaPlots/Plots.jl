@@ -1734,10 +1734,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if series[:y][end] != ny
                     @warn "Right now only the maximum value of y (r) is taken into account."
                 end
-                colors = get(fillgrad, z, clims)
-                z_normalized = map(c -> c == invisible() ? 256/255 : PlotUtils.getinverse(fillgrad.colors, c), colors)
-                rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
+                # colors = get(fillgrad, z, clims)
                 # GR.polarcellarray(0, 0, phimin, phimax, ymin, ymax, nx, ny, colors)
+                z_normalized = get_z_normalized.(z, zmin, zmax)
+                # z_normalized = map(c -> c == invisible() ? 256/255 : PlotUtils.getinverse(fillgrad.colors, c), colors)
+                rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
                 GR.polarcellarray(0, 0, phimin, phimax, 0, ymax, nx, ny, rgba)
                 # Right now only the maximum value of y (r) is taken into account.
                 # This is certainly not perfect but nonuniform polar array is not yet supported in GR.jl
