@@ -502,6 +502,13 @@ end
 # -----------------------------------------------------------------------------
 
 
+# margin
+add_aliases(:left_margin , :leftmargin )
+add_aliases(:top_margin , :topmargin)
+add_aliases(:bottom_margin , :bottommargin)
+add_aliases(:right_margin ,:rightmargin)
+
+
 # colors
 add_aliases(:seriescolor, :c, :color, :colour)
 add_aliases(:linecolor, :lc, :lcolor, :lcolour, :linecolour)
