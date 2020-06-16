@@ -988,6 +988,7 @@ end
     function pgfx_sanitize_string(s::LaTeXString)
         s = replace(s, r"\\?\#" => "\\#")
         s = replace(s, r"\\?\%" => "\\%")
+        return LaTeXString(s)
     end
 end
 function pgfx_sanitize_plot!(plt)
