@@ -176,6 +176,9 @@ julia> hline([-1,0,2])
 ```
 """
 @shorthands hline
+hline(x::RecipesPipeline.DataPoint; kwargs...) = hline([x]; kwargs...)
+hline!(x::RecipesPipeline.DataPoint; kwargs...) = hline!([x]; kwargs...)
+hline!(plt, x::RecipesPipeline.DataPoint; kwargs...) = hline!(plt, [x]; kwargs...)
 
 """
     vline(x)
@@ -190,6 +193,9 @@ julia> vline([-1,0,2])
 ```
 """
 @shorthands vline
+vline(x::RecipesPipeline.DataPoint; kwargs...) = vline([x]; kwargs...)
+vline!(x::RecipesPipeline.DataPoint; kwargs...) = vline!([x]; kwargs...)
+vline!(plt, x::RecipesPipeline.DataPoint; kwargs...) = vline!(plt, [x]; kwargs...)
 
 """
     hspan(y)
