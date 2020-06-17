@@ -181,16 +181,10 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
 
     labels = if any(isfinite, unscaled_ticks)
         formatter = axis[:formatter]
-        if formatter == :auto
-            # the default behavior is to make strings of the scaled values and then apply the labelfunc
-            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :auto))
-        elseif formatter == :plain
-            # Leave the numbers in plain format
-            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, :plain))
-        elseif formatter == :scientific
-            Showoff.showoff(unscaled_ticks, :scientific)
-	elseif formatter == :latex
-	    map(x -> string("\$", replace(convert_sci_unicode(x), '×' => "\\times"), "\$"), Showoff.showoff(unscaled_ticks, :auto))
+        if formatter in (:auto, :plain, :scientific, :engineering)
+            map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
+        elseif formatter == :latex
+            map(x -> string("\$", replace(convert_sci_unicode(x), '×' => "\\times"), "\$"), Showoff.showoff(unscaled_ticks, :auto))
         else
             # there was an override for the formatter... use that on the unscaled ticks
             map(formatter, unscaled_ticks)
