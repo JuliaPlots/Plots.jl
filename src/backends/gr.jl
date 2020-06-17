@@ -1878,7 +1878,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                     st == :shape && gr_polyline(x, y)
                 end
 
-                if st in (:path, :straightline)
+                if st in (:path, :straightline, :path3d)
                     gr_set_transparency(lc, get_linealpha(series))
                     if series[:fillrange] === nothing || series[:ribbon] !== nothing
                         GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
