@@ -20,7 +20,14 @@ function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     end
 end
 
-
+function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol}, args::Vector{Symbol}) 
+    for arg in args 
+        s = string(arg) 
+        if '_' in s 
+            aliases[Symbol(replace(s, "_" => ""))] = arg 
+        end 
+    end 
+end 
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
@@ -630,7 +637,7 @@ for arg in keys(_series_defaults)
     _keyAliases[makeplural(arg)] = arg
 end
 
-
+add_non_underscore_aliases!(_keyAliases)
 
 # -----------------------------------------------------------------------------
 
