@@ -6,7 +6,7 @@ using Test
 using FileIO
 using Gtk
 using LibGit2
-using GeometryTypes
+import GeometryTypes, GeometryBasics
 using Dates
 
 include("test_axes.jl")
@@ -178,6 +178,7 @@ end
     for z in zipped
         @test isequal(collect(zip(Plots.unzip(z)...)), z)
         @test isequal(collect(zip(Plots.unzip(GeometryTypes.Point.(z))...)), z)
+        @test isequal(collect(zip(Plots.unzip(GeometryBasics.Point.(z))...)), z)
     end
     op1 = Plots.process_clims((1.0, 2.0))
     op2 = Plots.process_clims((1, 2.0))

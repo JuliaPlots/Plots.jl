@@ -8,7 +8,7 @@ const _current_plots_version = VersionNumber(split(first(filter(line -> occursin
 
 using Reexport
 
-import GeometryTypes
+import GeometryTypes, GeometryBasics
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
 import SparseArrays: AbstractSparseMatrix, findnz
 
