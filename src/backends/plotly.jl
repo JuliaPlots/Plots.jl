@@ -346,7 +346,15 @@ function plotly_legend_pos(pos::Symbol)
         bottomright = (coords = [1.0, ybot], xanchor = "right", yanchor = "bottom"),
         topright    = (coords = [1.0, 1.0], xanchor = "right", yanchor = "top"),
         topleft     = (coords = [xleft, 1.0], xanchor = "left",  yanchor = "top"),
-        default     = (coords = [1.02, 1.0], xanchor = "auto",  yanchor = "auto")
+        outertop =(coords = [0.5, 1.1], xanchor = "upper",  yanchor = "middle"), 
+        outerbottom =(coords = [0.5, -0.15], xanchor = "lower",  yanchor = "middle"), 
+        outerleft =(coords = [-0.15, 0.5], xanchor = "left",  yanchor = "top"), 
+        outerright =(coords = [1.15, 0.5], xanchor = "right",  yanchor = "top"),
+        outertopleft =(coords = [-0.15, 1.1], xanchor = "upper",  yanchor = "left"),
+        outertopright = (coords = [1.05, 1.1], xanchor = "upper",  yanchor = "right"),
+        outerbottomleft =(coords = [-0.15,-0.15], xanchor = "lower",  yanchor = "left"),
+        outerbottomright =(coords = [1.05,-0.15], xanchor = "lower",  yanchor = "right"),
+        default = (coords = [1.0, 1.0], xanchor = "auto",  yanchor = "auto")
     )
 
     legend_position = get(plotly_legend_position_mapping, pos, plotly_legend_position_mapping.default)
