@@ -349,7 +349,7 @@ function plotly_legend_pos(pos::Symbol)
         top         = (coords = [xcenter, ytop], xanchor = "center",  yanchor = "top"),
         bottom      = (coords = [xcenter, ybot], xanchor = "center",  yanchor = "bottom"),
         bottomleft  = (coords = [xleft, ybot], xanchor = "left",  yanchor = "bottom"),
-        bottomrigh = (coords = [1.0, ybot], xanchor = "right", yanchor = "bottom"),
+        bottomright = (coords = [1.0, ybot], xanchor = "right", yanchor = "bottom"),
         topright    = (coords = [1.0, 1.0], xanchor = "right", yanchor = "top"),
         topleft     = (coords = [xleft, 1.0], xanchor = "left",  yanchor = "top"),
         outertop =(coords = [center, youtertop ], xanchor = "upper",  yanchor = "middle"), 
