@@ -581,28 +581,28 @@ function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
             # As per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
             xpos = viewport_plotarea[2] + 0.11 + ymirror * gr_axis_width(sp, sp[:yaxis])
         else
-            xpos = viewport_plotarea[2] - 0.05 - w
+            xpos = viewport_plotarea[2] - 0.01 - w
         end
     elseif occursin("left", str)
         if occursin("outer", str)
             xpos = viewport_plotarea[1] - 0.05 - w - !ymirror * gr_axis_width(sp, sp[:yaxis])
         else
-            xpos = viewport_plotarea[1] + 0.11
+            xpos = viewport_plotarea[1] + 0.08 + 0.01
         end
     else
-        xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 +.04 + viewport_plotarea[1]
+        xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 + 0.04 + viewport_plotarea[1]
     end
     if occursin("top", str)
         if s == :outertop
             ypos = viewport_plotarea[4] + 0.02 + h + xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            ypos = viewport_plotarea[4] - 0.06
+            ypos = viewport_plotarea[4] - 0.01
         end
     elseif occursin("bottom", str)
         if s == :outerbottom
             ypos = viewport_plotarea[3] - 0.05 - !xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            ypos = viewport_plotarea[3] + h + 0.06
+            ypos = viewport_plotarea[3] + h + 0.01
         end
     else
         # Adding min y to shift legend pos to correct graph (#2377)
