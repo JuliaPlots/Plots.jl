@@ -1148,7 +1148,6 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     linestyle = py_linestyle(:line, axis[:gridstyle]),
                     linewidth = py_thickness_scale(plt, axis[:gridlinewidth]),
                     alpha = axis[:gridalpha])
-                ax."set_axisbelow"(true)
             else
                 pyaxis."grid"(false)
             end
