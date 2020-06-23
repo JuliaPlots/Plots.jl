@@ -335,25 +335,31 @@ end
 function plotly_legend_pos(pos::Symbol)
     xleft = 0.07
     ybot = 0.07
-    ycenter = 0.52
+    ytop = 1.0
     xcenter = 0.55
+    ycenter = 0.52    
+    center = 0.5
+    youtertop = 1.1
+    youterbot = -0.15
+    xouterright = 1.05
+    xouterleft = -0.15
     plotly_legend_position_mapping = (
         right       = (coords = [1.0, ycenter], xanchor = "right", yanchor = "middle"),
         left        = (coords = [xleft, ycenter], xanchor = "left",  yanchor = "middle"),
-        top         = (coords = [xcenter, 1.0], xanchor = "center",  yanchor = "top"),
+        top         = (coords = [xcenter, ytop], xanchor = "center",  yanchor = "top"),
         bottom      = (coords = [xcenter, ybot], xanchor = "center",  yanchor = "bottom"),
         bottomleft  = (coords = [xleft, ybot], xanchor = "left",  yanchor = "bottom"),
         bottomright = (coords = [1.0, ybot], xanchor = "right", yanchor = "bottom"),
         topright    = (coords = [1.0, 1.0], xanchor = "right", yanchor = "top"),
         topleft     = (coords = [xleft, 1.0], xanchor = "left",  yanchor = "top"),
-        outertop =(coords = [0.5, 1.1], xanchor = "upper",  yanchor = "middle"), 
-        outerbottom =(coords = [0.5, -0.15], xanchor = "lower",  yanchor = "middle"), 
-        outerleft =(coords = [-0.15, 0.5], xanchor = "left",  yanchor = "top"), 
-        outerright =(coords = [1.15, 0.5], xanchor = "right",  yanchor = "top"),
-        outertopleft =(coords = [-0.15, 1.1], xanchor = "upper",  yanchor = "left"),
-        outertopright = (coords = [1.05, 1.1], xanchor = "upper",  yanchor = "right"),
-        outerbottomleft =(coords = [-0.15,-0.15], xanchor = "lower",  yanchor = "left"),
-        outerbottomright =(coords = [1.05,-0.15], xanchor = "lower",  yanchor = "right"),
+        outertop =(coords = [center, youtertop ], xanchor = "upper",  yanchor = "middle"), 
+        outerbottom =(coords = [center, youterbot], xanchor = "lower",  yanchor = "middle"), 
+        outerleft =(coords = [xouterleft, center], xanchor = "left",  yanchor = "top"), 
+        outerright =(coords = [xouterright, center], xanchor = "right",  yanchor = "top"),
+        outertopleft =(coords = [xouterleft, ytop], xanchor = "upper",  yanchor = "left"),
+        outertopright = (coords = [xouterright, ytop], xanchor = "upper",  yanchor = "right"),
+        outerbottomleft =(coords = [xouterleft, ybot], xanchor = "lower",  yanchor = "left"),
+        outerbottomright =(coords = [xouterright, ybot], xanchor = "lower",  yanchor = "right"),
         default = (coords = [1.0, 1.0], xanchor = "auto",  yanchor = "auto")
     )
 
