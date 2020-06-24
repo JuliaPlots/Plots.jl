@@ -752,7 +752,10 @@ function gr_convert_sci_tick_label(label)
         base, exponent = caret_split
         label = "$base^{$exponent}"
     end
-    convert_sci_unicode(label)
+    if occursin("×10", label)
+        label = string(replace(label, "×10" => "×10^{"), "}")
+    end
+    label
 end
 
 function gr_axis_height(sp, axis)
