@@ -437,18 +437,19 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             #     end
             #     push!(handles, handle)
             # else
-                for (i, rng) in enumerate(iter_segments(series))
-                    handle = ax."plot"((arg[rng] for arg in xyargs)...;
-                        label = i == 1 ? series[:label] : "",
-                        zorder = series[:series_plotindex],
-                        color = py_color(single_color(get_linecolor(series, clims, i)), get_linealpha(series, i)),
-                        linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
-                        linestyle = py_linestyle(st, get_linestyle(series, i)),
-                        solid_capstyle = "round",
-                        drawstyle = py_stepstyle(st)
-                    )[1]
-                    push!(handles, handle)
-                end
+            for (i, rng) in enumerate(iter_segments(series))
+                handle = ax."plot"((arg[rng] for arg in xyargs)...;
+                                   label = i == 1 ? series[:label] : "",
+                                   zorder = series[:series_plotindex],
+                                   color = py_color(single_color(get_linecolor(series, clims, i)), get_linealpha(series, i)),
+                                   linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
+                                   linestyle = py_linestyle(st, get_linestyle(series, i)),
+                                   solid_capstyle = "butt",
+                                   dash_capstyle = "butt",
+                                   drawstyle = py_stepstyle(st)
+                                   )[1]
+                push!(handles, handle)
+            end
             # end
 
             a = series[:arrow]
@@ -1360,14 +1361,17 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                             edgecolor = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
                             facecolor = py_color(single_color(get_fillcolor(series, clims)), get_fillalpha(series)),
                             linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
-                            linestyle = py_linestyle(series[:seriestype], get_linestyle(series))
+                            linestyle = py_linestyle(series[:seriestype], get_linestyle(series)),
+                            capstyle = "butt"
                         )
                     elseif series[:seriestype] in (:path, :straightline, :scatter, :steppre, :steppost)
                         hasline = get_linewidth(series) > 0
-                        PyPlot.plt."Line2D"((0,1),(0,0),
+                        PyPlot.plt."Line2D"((0, 1),(0,0),
                             color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
                             linewidth = py_thickness_scale(plt, hasline * sp[:legendfontsize] / 8),
                             linestyle = py_linestyle(:path, get_linestyle(series)),
+                            solid_capstyle = "butt", solid_joinstyle = "miter",
+                            dash_capstyle = "butt", dash_joinstyle = "miter",
                             marker = py_marker(_cycle(series[:markershape], 1)),
                             markersize = py_thickness_scale(plt, 0.8 * sp[:legendfontsize]),
                             markeredgecolor = py_color(single_color(get_markerstrokecolor(series)), get_markerstrokealpha(series)),
@@ -1393,7 +1397,8 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 facecolor = py_color(sp[:background_color_legend]),
                 edgecolor = py_color(sp[:foreground_color_legend]),
                 framealpha = alpha(plot_color(sp[:background_color_legend])),
-                fancybox = false  # makes the legend box square
+                fancybox = false,  # makes the legend box square
+                borderpad=0.8      # to match GR legendbox
             )
             frame = leg."get_frame"()
             frame."set_linewidth"(py_thickness_scale(plt, 1))
