@@ -1309,10 +1309,10 @@ end
 end
 
 # --------------------------------------------------------------------
-# Lists of tuples and GeometryTypes.Points
+# Lists of tuples and GeometryBasics.Points
 # --------------------------------------------------------------------
-@recipe f(v::AVec{<:GeometryTypes.Point}) = RecipesPipeline.unzip(v)
-@recipe f(p::GeometryTypes.Point) = [p]
+@recipe f(v::AVec{<:_Point}) = RecipesPipeline.unzip(v)
+@recipe f(p::_Point) = [p]
 
 # Special case for 4-tuples in :ohlc series
 @recipe f(xyuv::AVec{<:Tuple{R1, R2, R3, R4}}) where {R1, R2, R3, R4} =

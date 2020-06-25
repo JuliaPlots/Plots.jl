@@ -983,6 +983,17 @@ const _examples = PlotExample[
             end,
         ],
     ),
+    PlotExample(
+        "Tuples and `Point`s as data",
+        "",
+        [quote
+            using GeometryBasics
+            using Distributions
+            d = MvNormal([1.0 0.75; 0.75 2.0])
+            plot([(1,2),(3,2),(2,1),(2,3)])
+            scatter!(Point2.(eachcol(rand(d,1000))), alpha=0.25)
+        end]
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
