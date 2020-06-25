@@ -2,6 +2,7 @@ import ImageMagick
 using VisualRegressionTests
 using Plots
 using Random
+using StableRNGs
 using Test
 using FileIO
 using Gtk
