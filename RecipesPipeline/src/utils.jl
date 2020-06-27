@@ -78,7 +78,7 @@ Surface(f::Function, x, y) = Surface(Float64[f(xi, yi) for yi in y, xi in x])
 
 Base.Array(surf::Surface) = surf.surf
 
-for f in (:length, :size, :axes)
+for f in (:length, :size, :axes, :iterate)
     @eval Base.$f(surf::Surface, args...) = $f(surf.surf, args...)
 end
 Base.copy(surf::Surface) = Surface(copy(surf.surf))
@@ -104,13 +104,12 @@ function Volume(
 end
 
 Base.Array(vol::Volume) = vol.v
-for f in (:length, :size)
+for f in (:length, :size, :axes, :iterate)
     @eval Base.$f(vol::Volume, args...) = $f(vol.v, args...)
 end
 Base.copy(vol::Volume{T}) where {T} =
     Volume{T}(copy(vol.v), vol.x_extents, vol.y_extents, vol.z_extents)
 Base.eltype(vol::Volume{T}) where {T} = T
-Base.axes(vol::Volume, args...) = axes(vol.v, args...)
 
 
 # --------------------------------
