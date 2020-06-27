@@ -14,33 +14,34 @@ jobs:
     env:
       GKS_ENCODING: "utf8"
 
-    name: Julia ${{ matrix.julia_version }} - ${{ matrix.os }} - ${{ matrix.arch}}
+    name: Julia ${{ matrix.julia_version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.allow-failure }}
     strategy:
       fail-fast: false
       matrix:
         julia_version:
-          - 'nightly'
-          - '1'
           - '1.2'
+          - '1.3'
+          - '1'
+          - 'nightly'
         os:
           - ubuntu-latest
           - windows-latest
           - macos-latest
         arch:
           - x64
-          - x86
+          # - x86
         allow-failure: [false]
         include:
           - version: 'nightly'
             os: ubuntu-latest
             arch: x64
             allow-failure: true
-          - version: 'nightly'
-            os: ubuntu-latest
-            arch: x86
-            allow-failure: true
+          # - version: 'nightly'
+          #   os: ubuntu-latest
+          #   arch: x86
+          #   allow-failure: true
           - version: 'nightly'
             os: macOS-latest
             arch: x64
@@ -49,13 +50,13 @@ jobs:
             os: windows-latest
             arch: x64
             allow-failure: true
-          - version: 'nightly'
-            os: windows-latest
-            arch: x86
-            allow-failure: true
-        exclude:
-          - os: macOS-latest
-            arch: x86
+          # - version: 'nightly'
+          #   os: windows-latest
+          #   arch: x86
+          #   allow-failure: true
+        # exclude:
+        #   - os: macOS-latest
+        #     arch: x86
     steps:
 
       # Setup environment
