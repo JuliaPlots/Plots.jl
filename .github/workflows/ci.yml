@@ -14,7 +14,7 @@ jobs:
     env:
       GKS_ENCODING: "utf8"
 
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch}}
+    name: Julia ${{ matrix.julia_version }} - ${{ matrix.os }} - ${{ matrix.arch}}
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.allow-failure }}
     strategy:
