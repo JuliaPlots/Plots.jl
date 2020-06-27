@@ -11,27 +11,53 @@ defaults:
 jobs:
   CI:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    
     env:
       GKS_ENCODING: "utf8"
 
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch}}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allow-failure }}
     strategy:
       fail-fast: false
       matrix:
         julia_version:
           - 'nightly'
           - '1'
-          - '1.0'
+          - '1.2'
         os:
           - ubuntu-latest
           - windows-latest
           - macos-latest
         arch:
           - x64
-        #  - x32
+          - x86
+        allow-failure: [false]
+        include:
+          - version: 'nightly'
+            os: ubuntu-latest
+            arch: x64
+            allow-failure: true
+          - version: 'nightly'
+            os: ubuntu-latest
+            arch: x86
+            allow-failure: true
+          - version: 'nightly'
+            os: macOS-latest
+            arch: x64
+            allow-failure: true
+          - version: 'nightly'
+            os: windows-latest
+            arch: x64
+            allow-failure: true
+          - version: 'nightly'
+            os: windows-latest
+            arch: x86
+            allow-failure: true
+        exclude:
+          - os: macOS-latest
+            arch: x86
     steps:
-      
+
       # Setup environment
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
@@ -42,22 +68,22 @@ jobs:
         env:
           cache-name: cache-artifacts
         with:
-          path: ~/.julia/artifacts 
+          path: ~/.julia/artifacts
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
           restore-keys: |
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-          
-      # OS Dependencies            
+
+      # OS Dependencies
       # - name: Ubuntu OS dependencies
       #   if: startsWith(matrix.os,'ubuntu')
       #   run: |
       #    ./test/install_wkhtmltoimage.sh
-  
-      #  at-spi2-core, libgtk-3-dev,  libgtk-3-0, and xvfb  are already installed: https://github.com/actions/virtual-environments/blob/master/images/linux/scripts/installers/basic.sh  
 
-  
+      #  at-spi2-core, libgtk-3-dev,  libgtk-3-0, and xvfb  are already installed: https://github.com/actions/virtual-environments/blob/master/images/linux/scripts/installers/basic.sh
+
+
       # TESTCMD
       - name: Default TESTCMD
         run: echo ::set-env name=TESTCMD::"julia"
@@ -68,11 +94,11 @@ jobs:
       # Julia Deoendencies
       - name: Install Julia dependencies
         uses: julia-actions/julia-buildpkg@latest
-        
+
       # Run tests
       - name: Run Graphical test
         run:  $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true);'
-          
+
       - name: Codecov
         uses: julia-actions/julia-uploadcodecov@latest
         env:
