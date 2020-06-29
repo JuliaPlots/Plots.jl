@@ -65,7 +65,7 @@ jobs:
         if: startsWith(matrix.os,'ubuntu')
         run: echo ::set-env name=TESTCMD::"xvfb-run julia"
 
-      # Julia Deoendencies
+      # Julia Dependencies
       - name: Install Julia dependencies
         uses: julia-actions/julia-buildpkg@latest
 
