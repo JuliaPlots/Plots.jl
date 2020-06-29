@@ -345,10 +345,8 @@ end
 # recursively compute the bounding boxes for the layout and plotarea (relative to canvas!)
 function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0mm,0mm])
     nr, nc = size(layout)
-
     # # create a matrix for each minimum padding direction
     # _update_min_padding!(layout)
-
     minpad_left   = map(leftpad,   layout.grid)
     minpad_top    = map(toppad,    layout.grid)
     minpad_right  = map(rightpad,  layout.grid)
@@ -407,10 +405,10 @@ function update_child_bboxes!(layout::GridLayout, minimum_perimeter = [0mm,0mm,0
         # this is the minimum perimeter as decided by this child's parent, so that
         # all children on this border have the same value
         min_child_perimeter = [
-            c == 1  ? layout.minpad[1] : 0mm,
-            r == 1  ? layout.minpad[2] : 0mm,
-            c == nc ? layout.minpad[3] : 0mm,
-            r == nr ? layout.minpad[4] : 0mm
+            c == 1  ? layout.minpad[1] : pad_left[c],
+            r == 1  ? layout.minpad[2] : pad_top[r],
+            c == nc ? layout.minpad[3] : pad_right[c],
+            r == nr ? layout.minpad[4] : pad_bottom[r]
         ]
 
         # recursively update the child's children
