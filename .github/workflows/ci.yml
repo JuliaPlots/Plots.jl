@@ -14,15 +14,15 @@ jobs:
     env:
       GKS_ENCODING: "utf8"
 
-    name: Julia ${{ matrix.julia_version }} - ${{ matrix.os }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow-failure }}
+    continue-on-error: ${{ matrix.version == 'nightly' || (matrix.version == '1.3' && matrix.os == 'windows-latest')}}
     strategy:
       fail-fast: false
       matrix:
-        julia_version:
+        version:
           - '1.3'
-          # - '1' (is included automatically)
+          - '1'
           - 'nightly'
         os:
           - ubuntu-latest
@@ -31,45 +31,14 @@ jobs:
         arch:
           - x64
           # - x86
-        allow-failure: [false]
-        include:
-          ## allow failures on nightly
-          - version: 'nightly'
-            os: ubuntu-latest
-            arch: x64
-            allow-failure: true
-          - version: 'nightly'
-            os: macOS-latest
-            arch: x64
-            allow-failure: true
-          - version: 'nightly'
-            os: windows-latest
-            arch: x64
-            allow-failure: true
-          ## allow failures for julia 1.3 windows (test_images work but differ)
-          - version: '1.3'
-            os: windows-latest
-            arch: x64
-            allow-failure: true
-        ## if we want to run tests on x86:
-        #   - version: 'nightly'
-        #     os: ubuntu-latest
-        #     arch: x86
-        #     allow-failure: true
-        #   - version: 'nightly'
-        #     os: windows-latest
-        #     arch: x86
-        #     allow-failure: true
-        # exclude:
-        #   - os: macOS-latest
-        #     arch: x86
+
     steps:
 
       # Setup environment
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{ matrix.julia_version }}
+          version: ${{ matrix.version }}
       - name: Cache artifacts
         uses: actions/cache@v1
         env:
