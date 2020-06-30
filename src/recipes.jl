@@ -1230,8 +1230,8 @@ end
     else
         seriestype := :heatmap
         yflip --> true
-        cbar --> false
-        fillcolor --> ColorGradient([:black, :white])
+        colorbar --> false
+        fillcolor --> cgrad([:black, :white])
         SliceIt, m, n, Surface(clamp!(convert(Matrix{Float64}, mat), 0.0, 1.0))
     end
 end
@@ -1247,7 +1247,7 @@ end
     else
         seriestype := :heatmap
         yflip --> true
-        cbar --> false
+        colorbar --> false
         aspect_ratio --> :equal
         z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
         SliceIt, m, n, Surface(z)
@@ -1287,8 +1287,8 @@ end
     else
         seriestype := :heatmap
         yflip --> true
-        cbar --> false
-        fillcolor --> ColorGradient([:black, :white])
+        colorbar --> false
+        fillcolor --> cgrad([:black, :white])
         SliceIt, x, y, Surface(convert(Matrix{Float64}, mat))
     end
 end
@@ -1302,7 +1302,7 @@ end
     else
         seriestype := :heatmap
         yflip --> true
-        cbar --> false
+        colorbar --> false
         z, plotattributes[:fillcolor] = replace_image_with_heatmap(mat)
         SliceIt, x, y, Surface(z)
     end
