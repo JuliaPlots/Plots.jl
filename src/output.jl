@@ -249,25 +249,17 @@ closeall() = closeall(backend())
 # Atom PlotPane
 # ---------------------------------------------------------
 function showjuno(io::IO, m, plt)
-    sz = collect(plt[:size])
     dpi = plt[:dpi]
-    thickness_scaling = plt[:thickness_scaling]
 
-    jsize = get(io, :juno_plotsize, [400, 500])
     jratio = get(io, :juno_dpi_ratio, 1)
 
-    scale = minimum(jsize[i] / sz[i] for i in 1:2)
-    plt[:size] = [s * scale for s in sz]
     plt[:dpi] = jratio * Plots.DPI
-    plt[:thickness_scaling] *= scale
 
     prepare_output(plt)
     try
         _showjuno(io, m, plt)
     finally
-        plt[:size] = sz
         plt[:dpi] = dpi
-        plt[:thickness_scaling] = thickness_scaling
     end
 end
 
