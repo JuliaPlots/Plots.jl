@@ -44,8 +44,8 @@ include("imgcomp.jl")
 # don't actually show the plots
 Random.seed!(1234)
 default(show=false, reuse=true)
-const IS_CI = get(ENV, "CI", "false") == "true"
-const IMG_TOL = VERSION < v"1.4" && Sys.iswindows() ? 1e-1 : IS_CI ? 1e-2 : 1e-3
+is_ci() = get(ENV, "CI", "false") == "true"
+const IMG_TOL = VERSION < v"1.4" && Sys.iswindows() ? 1e-1 : is_ci() ? 1e-2 : 1e-3
 
 ## Uncomment the following lines to update reference images for different backends
 
