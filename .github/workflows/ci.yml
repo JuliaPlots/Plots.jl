@@ -16,7 +16,7 @@ jobs:
 
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.version == 'nightly' || (matrix.version == '1.3' && matrix.os == 'windows-latest')}}
+    continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
       fail-fast: false
       matrix:
