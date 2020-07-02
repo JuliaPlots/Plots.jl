@@ -568,6 +568,8 @@ function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
     s = sp[:legend]
     typeof(s) <: Symbol || return gr_legend_pos(s, w, h, viewport_plotarea)
     str = string(s)
+    x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
+    y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 15
     if str == "best"
         str = "topright"
     end
@@ -581,13 +583,13 @@ function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
             # As per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
             xpos = viewport_plotarea[2] + 0.11 + ymirror * gr_axis_width(sp, sp[:yaxis])
         else
-            xpos = viewport_plotarea[2] - 0.01 - w
+            xpos = viewport_plotarea[2] - x_legend_offset - w
         end
     elseif occursin("left", str)
         if occursin("outer", str)
             xpos = viewport_plotarea[1] - 0.05 - w - !ymirror * gr_axis_width(sp, sp[:yaxis])
         else
-            xpos = viewport_plotarea[1] + 0.08 + 0.01
+            xpos = viewport_plotarea[1] + 0.08 + x_legend_offset
         end
     else
         xpos = (viewport_plotarea[2]-viewport_plotarea[1])/2 - w/2 + 0.04 + viewport_plotarea[1]
@@ -596,13 +598,13 @@ function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
         if s == :outertop
             ypos = viewport_plotarea[4] + 0.02 + h + xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            ypos = viewport_plotarea[4] - 0.01
+            ypos = viewport_plotarea[4] - y_legend_offset
         end
     elseif occursin("bottom", str)
         if s == :outerbottom
             ypos = viewport_plotarea[3] - 0.05 - !xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            ypos = viewport_plotarea[3] + h + 0.01
+            ypos = viewport_plotarea[3] + h + y_legend_offset
         end
     else
         # Adding min y to shift legend pos to correct graph (#2377)
