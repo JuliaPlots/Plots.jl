@@ -1639,7 +1639,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     # set label
     label = plotattributes[:label]
     label = (label == "AUTO" ? "y$globalIndex" : label)
-    label = label == 0 ? "0" : label
+    label = label === 0 ? "0" : label
     label = label in (:none, nothing, false) ? "" : label
     plotattributes[:label] = label
 
