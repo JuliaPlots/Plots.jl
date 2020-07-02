@@ -1651,7 +1651,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     end
 
     # set label
-    plotattributes[:label] = label_to_string(plotattributes[:label], globalIndex)
+    plotattributes[:label] = label_to_string.(plotattributes[:label], globalIndex)
 
     _replace_linewidth(plotattributes)
    plotattributes
