@@ -235,7 +235,7 @@ const _bar_width = 0.8
 # -----------------------------------------------------------------------------
 
 const _series_defaults = KW(
-    :label             => "AUTO",
+    :label             => :auto,
     :colorbar_entry    => true,
     :seriescolor       => :auto,
     :seriesalpha       => nothing,
@@ -1569,6 +1569,11 @@ function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, comman
     return plotattributes
 end
 
+label_to_string(label::Bool, series_plotindex::Int) = label ? label_to_string(:auto, series_plotindex) : ""
+label_to_string(label::Nothing, series_plotindex::Int) = ""
+label_to_string(label::Missing, series_plotindex::Int) = ""
+label_to_string(label::Symbol, series_plotindex::Int) = label==:auto ?  "y$series_plotindex" : string((label==:none ? "" : label))
+label_to_string(label, series_plotindex::Int) = string(label)  # Fallback to string promotion
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend
     globalIndex = plotattributes[:series_plotindex]
@@ -1638,9 +1643,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
 
     # set label
     label = plotattributes[:label]
-    label = (label == "AUTO" ? "y$globalIndex" : label)
-    label = label === 0 ? "0" : label
-    label = label in (:none, nothing, false) ? "" : label
+    label = label_to_string(label, globalIndex)
     plotattributes[:label] = label
 
     _replace_linewidth(plotattributes)
