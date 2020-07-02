@@ -20,14 +20,14 @@ function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     end
 end
 
-function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol}, args::Vector{Symbol}) 
-    for arg in args 
-        s = string(arg) 
-        if '_' in s 
-            aliases[Symbol(replace(s, "_" => ""))] = arg 
-        end 
-    end 
-end 
+function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol}, args::Vector{Symbol})
+    for arg in args
+        s = string(arg)
+        if '_' in s
+            aliases[Symbol(replace(s, "_" => ""))] = arg
+        end
+    end
+end
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
@@ -235,7 +235,7 @@ const _bar_width = 0.8
 # -----------------------------------------------------------------------------
 
 const _series_defaults = KW(
-    :label             => "AUTO",
+    :label             => :auto,
     :colorbar_entry    => true,
     :seriescolor       => :auto,
     :seriesalpha       => nothing,
@@ -1569,6 +1569,20 @@ function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, comman
     return plotattributes
 end
 
+label_to_string(label::Bool, series_plotindex) = label ? label_to_string(:auto, series_plotindex) : ""
+label_to_string(label::Nothing, series_plotindex) = ""
+label_to_string(label::Missing, series_plotindex) = ""
+function label_to_string(label::Symbol, series_plotindex)
+    if label==:auto
+        return string("y", series_plotindex)
+    elseif label==:none
+        return ""
+    else
+        throw(ArgumentError("unsupported symbol $(label) passed to `label`"))
+    end
+end
+label_to_string(label, series_plotindex) = string(label)  # Fallback to string promotion
+
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend
     globalIndex = plotattributes[:series_plotindex]
@@ -1637,10 +1651,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     end
 
     # set label
-    label = plotattributes[:label]
-    label = (label == "AUTO" ? "y$globalIndex" : label)
-    label = label in (:none, nothing, false) ? "" : label
-    plotattributes[:label] = label
+    plotattributes[:label] = label_to_string.(plotattributes[:label], globalIndex)
 
     _replace_linewidth(plotattributes)
    plotattributes
