@@ -1569,11 +1569,11 @@ function _slice_series_args!(plotattributes::AKW, plt::Plot, sp::Subplot, comman
     return plotattributes
 end
 
-label_to_string(label::Bool, series_plotindex::Int) = label ? label_to_string(:auto, series_plotindex) : ""
-label_to_string(label::Nothing, series_plotindex::Int) = ""
-label_to_string(label::Missing, series_plotindex::Int) = ""
-label_to_string(label::Symbol, series_plotindex::Int) = label==:auto ?  "y$series_plotindex" : string((label==:none ? "" : label))
-label_to_string(label, series_plotindex::Int) = string(label)  # Fallback to string promotion
+label_to_string(label::Bool, series_plotindex) = label ? label_to_string(:auto, series_plotindex) : ""
+label_to_string(label::Nothing, series_plotindex) = ""
+label_to_string(label::Missing, series_plotindex) = ""
+label_to_string(label::Symbol, series_plotindex) = label==:auto ?  "y$series_plotindex" : string((label==:none ? "" : label))
+label_to_string(label, series_plotindex) = string(label)  # Fallback to string promotion
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend
     globalIndex = plotattributes[:series_plotindex]
