@@ -1572,8 +1572,17 @@ end
 label_to_string(label::Bool, series_plotindex) = label ? label_to_string(:auto, series_plotindex) : ""
 label_to_string(label::Nothing, series_plotindex) = ""
 label_to_string(label::Missing, series_plotindex) = ""
-label_to_string(label::Symbol, series_plotindex) = label==:auto ?  "y$series_plotindex" : string((label==:none ? "" : label))
+function label_to_string(label::Symbol, series_plotindex)
+    if label==:auto
+        return string("y", series_plotindex)
+    elseif label==:none
+        return ""
+    else
+        throw(ArgumentError("unsupported symbol $(label) passed to `label`"))
+    end
+end
 label_to_string(label, series_plotindex) = string(label)  # Fallback to string promotion
+
 function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     pkg = plt.backend
     globalIndex = plotattributes[:series_plotindex]
