@@ -20,14 +20,14 @@ function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     end
 end
 
-function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol}, args::Vector{Symbol}) 
-    for arg in args 
-        s = string(arg) 
-        if '_' in s 
-            aliases[Symbol(replace(s, "_" => ""))] = arg 
-        end 
-    end 
-end 
+function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol}, args::Vector{Symbol})
+    for arg in args
+        s = string(arg)
+        if '_' in s
+            aliases[Symbol(replace(s, "_" => ""))] = arg
+        end
+    end
+end
 # ------------------------------------------------------------
 
 const _allAxes = [:auto, :left, :right]
@@ -1639,6 +1639,7 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     # set label
     label = plotattributes[:label]
     label = (label == "AUTO" ? "y$globalIndex" : label)
+    label = label == 0 ? "0" : label
     label = label in (:none, nothing, false) ? "" : label
     plotattributes[:label] = label
 
