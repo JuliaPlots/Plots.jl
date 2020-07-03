@@ -973,8 +973,8 @@ const _examples = PlotExample[
                     surf = Measurement.((1:10) .* (1:10)', rand(10,10))
 
                     plot(
-                        scatter(x, [x y], msw = 0),
-                        scatter(x, y, z, msw = 0),
+                        scatter(x, [x y]),
+                        scatter(x, y, z),
                         heatmap(x, y, surf),
                         wireframe(x, y, surf),
                         legend = :topleft
