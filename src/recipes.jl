@@ -1027,8 +1027,23 @@ end
 # Error Bars
 
 function error_style!(plotattributes::AKW)
+    msc = plotattributes[:markerstrokecolor]
+    msc = if msc === :match
+        plotattributes[:subplot][:foreground_color_subplot]
+    elseif msc === :auto
+        get_series_color(
+            plotattributes[:linecolor],
+            plotattributes[:subplot],
+            plotattributes[:series_plotindex],
+            plotattributes[:seriestype],
+        )
+    else
+        msc
+    end
+
     plotattributes[:seriestype] = :path
-    plotattributes[:markercolor] = plotattributes[:markerstrokecolor]
+    plotattributes[:markercolor] = msc
+    plotattributes[:linecolor] = msc
     plotattributes[:linewidth] = plotattributes[:markerstrokewidth]
     plotattributes[:label] = ""
 end
