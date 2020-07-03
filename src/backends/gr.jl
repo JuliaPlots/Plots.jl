@@ -565,7 +565,8 @@ gr_view_xcenter(viewport_plotarea) = 0.5 * (viewport_plotarea[1] + viewport_plot
 gr_view_ycenter(viewport_plotarea) = 0.5 * (viewport_plotarea[3] + viewport_plotarea[4])
 
 function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
-    legend_leftw, legend_rightw, legend_textw, x_legend_offset, y_legend_offset = w
+    legend_leftw, legend_rightw, legend_textw, x_legend_offset = w
+    legend_dy, legendh, y_legend_offset = h 
     s = sp[:legend]
     typeof(s) <: Symbol || return gr_legend_pos(s, w, h, viewport_plotarea)
     str = string(s)
@@ -595,19 +596,19 @@ function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
     end
     if occursin("top", str)
         if s == :outertop
-            ypos = viewport_plotarea[4] + 0.02 + h + xmirror * gr_axis_height(sp, sp[:xaxis])
+            ypos = viewport_plotarea[4] + y_legend_offset + legendh + xmirror * gr_axis_height(sp, sp[:xaxis])
         else
             ypos = viewport_plotarea[4] - y_legend_offset
         end
     elseif occursin("bottom", str)
         if s == :outerbottom
-            ypos = viewport_plotarea[3] - 0.05 - !xmirror * gr_axis_height(sp, sp[:xaxis])
+            ypos = viewport_plotarea[3] - y_legend_offset - legendh - !xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            ypos = viewport_plotarea[3] + h + y_legend_offset
+            ypos = viewport_plotarea[3] + legendh + y_legend_offset
         end
     else
         # Adding min y to shift legend pos to correct graph (#2377)
-        ypos = (viewport_plotarea[4]-viewport_plotarea[3])/2 + h/2 + viewport_plotarea[3]
+        ypos = (viewport_plotarea[4]-viewport_plotarea[3])/2 + legendh/2 + viewport_plotarea[3]
     end
     (xpos,ypos)
 end
@@ -1014,7 +1015,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     total_legendw = legend_textw + legend_leftw + legend_rightw
 
     x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
-    y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 15
+    y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 30
 
     dy = gr_point_mult(sp) * sp[:legendfontsize] * 1.75
     legendh = dy * legendn
@@ -1025,9 +1026,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         elseif occursin("left", leg_str)
             viewport_plotarea[1] += total_legendw + x_legend_offset # Increase plot min width to make space for outer legend
         elseif occursin("top", leg_str)
-            viewport_plotarea[4] -= legendh + 0.03
+            viewport_plotarea[4] -= legendh + dy + y_legend_offset
         elseif occursin("bottom", leg_str)
-            viewport_plotarea[3] += legendh + 0.04
+            viewport_plotarea[3] += legendh + dy + y_legend_offset
         end
     end
     if sp[:legend] == :inline
@@ -1850,7 +1851,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if w > 0
             dy = gr_point_mult(sp) * sp[:legendfontsize] * 1.75
             h = dy*n
-            xpos, ypos = gr_legend_pos(sp, [legend_leftw, legend_rightw, legend_textw, x_legend_offset, y_legend_offset], h, viewport_plotarea) # Passing legend width components instead of legend text width
+            xpos, ypos = gr_legend_pos(sp, [legend_leftw, legend_rightw, legend_textw, x_legend_offset, y_legend_offset], [dy, h, y_legend_offset], viewport_plotarea) # Passing legend width components instead of legend text width
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             gr_set_fillcolor(sp[:background_color_legend])
             GR.fillrect(xpos - legend_leftw, xpos + legend_textw + legend_rightw, ypos + dy, ypos - dy * n) # Allocating white space for actual legend width here
