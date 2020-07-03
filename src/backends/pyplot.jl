@@ -931,7 +931,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
     fig."clear"()
     dpi = plt[:dpi]
     fig."set_size_inches"(w/DPI, h/DPI, forward = true)
-    getproperty(fig, set_facecolor_sym)(py_color(plt[:background_color_outside]))
+    fig."set_facecolor"(py_color(plt[:background_color_outside]))
     fig."set_dpi"(plt[:dpi])
 
     # resize the window
