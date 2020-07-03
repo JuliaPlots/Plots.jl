@@ -558,6 +558,7 @@ function pgfx_series_coordinates!(st_val::Val{:surface}, segment_opt, opt, args)
         "surf" => nothing,
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
+        "z buffer" => "sort",
     )
     return PGFPlotsX.Coordinates(args...)
 end
