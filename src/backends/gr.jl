@@ -349,11 +349,13 @@ function gr_draw_markers(
 
     shapes = series[:markershape]
     if shapes != :none
-        for i in eachindex(x)
+        for (i, rng) in enumerate(iter_segments(series))
             ms = get_thickness_scaling(series) * _cycle(msize, i)
             msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
             shape = _cycle(shapes, i)
-            gr_draw_marker(series, x[i], y[i], clims, i, ms, msw, shape)
+            for j in rng
+                gr_draw_marker(series, _cycle(x, j), _cycle(y, j), clims, i, ms, msw, shape)
+            end
         end
     end
 end

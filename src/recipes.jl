@@ -1042,6 +1042,7 @@ function error_style!(plotattributes::AKW)
     end
 
     plotattributes[:seriestype] = :path
+    plotattributes[:markerstrokecolor] = msc
     plotattributes[:markercolor] = msc
     plotattributes[:linecolor] = msc
     plotattributes[:linewidth] = plotattributes[:markerstrokewidth]
