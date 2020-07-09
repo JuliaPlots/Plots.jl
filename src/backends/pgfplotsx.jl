@@ -344,9 +344,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     end
                     # add fillrange
                     if sf !== nothing &&
-                       !isfilledcontour(series) &&
-                       series[:ribbon] === nothing
-                        if sf isa Number || sf isa AVec
+                       !isfilledcontour(series)
+                       if sf isa Number || sf isa AVec
                             pgfx_fillrange_series!(
                                 axis,
                                 series,
@@ -355,6 +354,17 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                                 _cycle(sf, rng),
                                 rng,
                             )
+                        elseif sf isa Tuple
+                            for sfi in sf
+                            pgfx_fillrange_series!(
+                                axis,
+                                series,
+                                series_func,
+                                i,
+                                _cycle(sfi, rng),
+                                rng,
+                            )
+                            end
                         end
                         if i == 1 &&
                            sp[:legend] != :none && pgfx_should_add_to_legend(series)
@@ -384,18 +394,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             ),
                         )
                     end
-                    # add ribbons?
-                    ribbon = series[:ribbon]
-                    if ribbon !== nothing
-                        pgfx_add_ribbons!(
-                            axis,
-                            series,
-                            segment_plot,
-                            series_func,
-                            series_index,
-                        )
-                    end
-                    # add to legend?
                     if sp[:legend] != :none
                         leg_entry = if opt[:label] isa AVec
                             get(opt[:label], i, "")
@@ -412,9 +410,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             push!(axis.contents[end].options, "forget plot" => nothing)
                         else
                             leg_opt = PGFPlotsX.Options()
-                            if ribbon !== nothing
-                                pgfx_filllegend!(axis.contents[end - 3].options, opt)
-                            end
                             legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
                             push!(axis, legend)
                         end
