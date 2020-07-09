@@ -394,6 +394,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             ),
                         )
                     end
+                    # add to legend?
                     if sp[:legend] != :none
                         leg_entry = if opt[:label] isa AVec
                             get(opt[:label], i, "")
