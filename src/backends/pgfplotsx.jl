@@ -354,7 +354,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                                 _cycle(sf, rng),
                                 rng,
                             )
-                        elseif sf isa Tuple
+                        elseif sf isa Tuple && series[:ribbon] !== nothing
                             for sfi in sf
                             pgfx_fillrange_series!(
                                 axis,
