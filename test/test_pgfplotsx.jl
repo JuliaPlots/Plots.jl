@@ -314,16 +314,12 @@ end
       Plots._update_plot_object(ribbon_plot)
       axis = Plots.pgfx_axes(ribbon_plot.o)[1]
       plots = filter(x -> x isa PGFPlotsX.Plot, axis.contents)
-      @test length(plots) == 4
-      @test !haskey(plots[1].options.dict, "fill")
-      @test !haskey(plots[2].options.dict, "fill")
+      @test length(plots) == 3
+      @test haskey(plots[1].options.dict, "fill")
+      @test haskey(plots[2].options.dict, "fill")
       @test !haskey(plots[3].options.dict, "fill")
-      @test haskey(plots[4].options.dict, "fill")
       @test ribbon_plot.o !== nothing
       @test ribbon_plot.o.the_plot !== nothing
-      #    mktempdir() do path
-      #       @test_nowarn savefig(ribbon_plot, path*"ribbon.svg")
-      #    end
    end # testset
 end # testset
 
