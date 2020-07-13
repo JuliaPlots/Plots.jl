@@ -5,6 +5,7 @@ import RecipesBase
 import RecipesBase: @recipe, @series, RecipeData, is_explicit
 import PlotUtils # tryrange and adapted_grid
 using Dates
+using NaNMath
 
 export recipe_pipeline!
 # Plots relies on these:

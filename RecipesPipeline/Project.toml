@@ -5,6 +5,7 @@ version = "0.1.11"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 PlotUtils = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
