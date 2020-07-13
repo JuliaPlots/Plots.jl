@@ -49,7 +49,7 @@ RecipesPipeline.splittable_attribute(plt::Plot, key, val::SeriesAnnotations, len
     RecipesPipeline.splittable_attribute(plt, key, val.strs, len)
 
 function RecipesPipeline.split_attribute(plt::Plot, key, val::SeriesAnnotations, indices)
-    split_strs = _RecipesPipeline.split_attribute(key, val.strs, indices)
+    split_strs = RecipesPipeline.split_attribute(key, val.strs, indices)
     return SeriesAnnotations(split_strs, val.font, val.baseshape, val.scalefactor)
 end
 
