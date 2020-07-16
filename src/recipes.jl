@@ -122,8 +122,8 @@ end
 @deps hline straightline
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
-    n = length(y)
-    newx = vec(Float64[yi for i = 1:3, yi in y])
+    n = length(x)
+    newx = vec(Float64[xi for i = 1:3, xi in x])
     newy = repeat(Float64[1, 2, NaN], n)
     x := newx
     y := newy
@@ -765,7 +765,7 @@ end
 
 @recipe function f(::Type{Val{:barhist}}, x, y, z)
     h = _make_hist(
-        (y,),
+        (x,),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
@@ -779,7 +779,7 @@ end
 
 @recipe function f(::Type{Val{:stephist}}, x, y, z)
     h = _make_hist(
-        (y,),
+        (x,),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
