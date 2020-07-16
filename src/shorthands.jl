@@ -58,6 +58,9 @@ julia> histogram([1,2,1,1,4,3,8],bins=0:8)
 ```
 """
 @shorthands histogram
+histogram(x; kw...) = plot(x, []; kw..., seriestype=:histogram)
+histogram!(x; kw...) = plot!(x, []; kw..., seriestype=:histogram)
+histogram!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:histogram)
 
 """
     barhist(x)
@@ -66,15 +69,21 @@ julia> histogram([1,2,1,1,4,3,8],bins=0:8)
 Make a histogram bar plot. See `histogram`.
 """
 @shorthands barhist
+barhist(x; kw...) = plot(x, []; kw..., seriestype=:barhist)
+barhist!(x; kw...) = plot!(x, []; kw..., seriestype=:barhist)
+barhist!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:barhist)
 
 """
     stephist(x)
-    stephist(x)
+    stephist!(x)
 
 Make a histogram step plot (bin counts are represented using horizontal lines
 instead of bars). See `histogram`.
 """
 @shorthands stephist
+stephist(x; kw...) = plot(x, []; kw..., seriestype=:stephist)
+stephist!(x; kw...) = plot!(x, []; kw..., seriestype=:stephist)
+stephist!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:stephist)
 
 """
     scatterhist(x)
@@ -190,6 +199,9 @@ julia> vline([-1,0,2])
 ```
 """
 @shorthands vline
+vline(x; kw...) = plot(x, []; kw..., seriestype=:vline)
+vline!(x; kw...) = plot!(x, []; kw..., seriestype=:vline)
+vline!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:vline)
 
 """
     hspan(y)
