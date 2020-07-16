@@ -729,7 +729,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     if st == :image
         # @show typeof(z)
-        xmin, xmax = ignorenan_extrema(series[:x]); ymin, ymax = ignorenan_extrema(series[:y])
+        xmin, xmax = ignorenan_extrema(series[:x])
+        ymin, ymax = ignorenan_extrema(series[:y])
+        dx = (xmax - xmin) / (length(series[:x]) - 1) / 2
+        dy = (ymax - ymin) / (length(series[:y]) - 1) / 2
         img = Array(transpose_z(series, z.surf))
         z = if eltype(img) <: Colors.AbstractGray
             float(img)
@@ -743,7 +746,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             cmap = py_colormap(cgrad(plot_color([:black, :white]))),
             vmin = 0.0,
             vmax = 1.0,
-            extent = (xmin-0.5, xmax+0.5, ymax+0.5, ymin-0.5)
+            extent = (xmin - dx, xmax + dx, ymax + dy, ymin - dy)
         )
         push!(handles, handle)
 
