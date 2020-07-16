@@ -276,7 +276,6 @@ end
 function py_bbox_axis(ax, letter)
     ticks = py_bbox_ticks(ax, letter)
     labels = py_bbox_axislabel(ax, letter)
-    # letter == "x" && @show ticks labels ticks+labels
     ticks + labels
 end
 
@@ -728,7 +727,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :image
-        # @show typeof(z)
         xmin, xmax = ignorenan_extrema(series[:x])
         ymin, ymax = ignorenan_extrema(series[:y])
         dx = (xmax - xmin) / (length(series[:x]) - 1) / 2
