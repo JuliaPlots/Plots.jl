@@ -199,9 +199,9 @@ julia> vline([-1,0,2])
 ```
 """
 @shorthands vline
-vline(x; kw...) = plot(x, []; kw..., seriestype=:vline)
-vline!(x; kw...) = plot!(x, []; kw..., seriestype=:vline)
-vline!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:vline)
+vline(x; kw...) = plot(x, repeat(Float64[1,2,NaN], length(x)); kw..., seriestype=:vline)
+vline!(x; kw...) = plot!(x, repeat(Float64[1,2,NaN], length(x)); kw..., seriestype=:vline)
+vline!(plt, x; kw...) = plot!(plt, x, repeat(Float64[1,2,NaN], length(x)); kw..., seriestype=:vline)
 
 """
     hspan(y)
@@ -232,6 +232,9 @@ julia> vspan(1:6)
 ```
 """
 @shorthands vspan
+vspan(x; kw...) = plot(x, []; kw..., seriestype=:vspan)
+vspan!(x; kw...) = plot!(x, []; kw..., seriestype=:vspan)
+vspan!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:vspan)
 
 """
     ohlc(x,y::Vector{OHLC})
