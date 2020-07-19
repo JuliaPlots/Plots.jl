@@ -98,7 +98,7 @@ function buildanimation(anim::Animation, fn::AbstractString,
             ffmpeg_exe(`-v $verbose_level -framerate $framerate -loop $loop -i $(animdir)/%06d.png -i "$(animdir)/palette.bmp" -lavfi "paletteuse=dither=sierra2_4a" -y $fn`)
         end
     else
-        ffmpeg_exe(`-v $verbose_level -framerate $framerate -loop $loop -i $(animdir)/%06d.png -pix_fmt yuv420p -y $fn`)
+        ffmpeg_exe(`-v $verbose_level -framerate $framerate -loop $loop -i $(animdir)/%06d.png -y $fn`)
     end
 
     show_msg && @info("Saved animation to ", fn)
