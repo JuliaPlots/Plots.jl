@@ -126,8 +126,8 @@ isnothing(x) = false
 _cycle(wrapper::InputWrapper, idx::Int) = wrapper.obj
 _cycle(wrapper::InputWrapper, idx::AVec{Int}) = wrapper.obj
 
-_cycle(v::AVec, idx::Int) = v[mod1(idx, length(v))]
-_cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[1, mod1(idx, size(v,2))] : v[:, mod1(idx, size(v,2))]
+_cycle(v::AVec, idx::Int) = v[mod(idx, axes(v,1))]
+_cycle(v::AMat, idx::Int) = size(v,1) == 1 ? v[end, mod(idx, axes(v,2))] : v[:, mod(idx, axes(v,2))]
 _cycle(v, idx::Int)       = v
 
 _cycle(v::AVec, indices::AVec{Int}) = map(i -> _cycle(v,i), indices)
@@ -362,10 +362,10 @@ end
 ok(tup::Tuple) = ok(tup...)
 
 # compute one side of a fill range from a ribbon
-function make_fillrange_side(y, rib)
-    frs = zeros(length(y))
-    for (i, (yi, ri)) in enumerate(zip(y, Base.Iterators.cycle(rib)))
-        frs[i] = yi + ri
+function make_fillrange_side(y::AVec, rib)
+    frs = zeros(axes(y))
+    for (i, yi) in pairs(y)
+        frs[i] = yi + _cycle(rib,i)
     end
     frs
 end
