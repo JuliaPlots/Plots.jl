@@ -1015,7 +1015,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.restorestate()
     end
 
-    legend_width_factor = (viewport_plotarea[2] - viewport_plotarea[1]) / 50 # Determines the width of legend box
+    legend_width_factor = (viewport_plotarea[2] - viewport_plotarea[1]) / 45 # Determines the width of legend box
     legend_textw = legendw
     legend_rightw = legend_width_factor
     legend_leftw = legend_width_factor * 4
@@ -1882,7 +1882,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if (st == :shape || series[:fillrange] !== nothing) && series[:ribbon] === nothing
                     fc = get_fillcolor(series, clims)
                     gr_set_fill(fc) #, series[:fillalpha])
-                    l, r = xpos-0.07, xpos-0.01
+                    l, r = xpos - legend_width_factor * 3.5, xpos - legend_width_factor / 2
                     b, t = ypos-0.4dy, ypos+0.4dy
                     x = [l, r, r, l, l]
                     y = [b, b, t, t, b]
@@ -1897,9 +1897,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if st in (:path, :straightline, :path3d)
                     gr_set_transparency(lc, get_linealpha(series))
                     if series[:fillrange] === nothing || series[:ribbon] !== nothing
-                        GR.polyline([xpos - legend_width_factor * 3, xpos - legend_width_factor], [ypos, ypos])
+                        GR.polyline([xpos - legend_width_factor * 3.5, xpos - legend_width_factor / 2], [ypos, ypos])
                     else
-                        GR.polyline([xpos - legend_width_factor * 3, xpos - legend_width_factor], [ypos+0.4dy, ypos+0.4dy])
+                        GR.polyline([xpos - legend_width_factor * 3.5, xpos - legend_width_factor / 2], [ypos+0.4dy, ypos+0.4dy])
                     end
                 end
 
