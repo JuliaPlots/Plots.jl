@@ -600,7 +600,7 @@ function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
         if s == :outertop
             ypos = viewport_plotarea[4] + y_legend_offset + legendh + xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            ypos = viewport_plotarea[4] - y_legend_offset
+            ypos = viewport_plotarea[4] - y_legend_offset - legend_dy
         end
     elseif occursin("bottom", str)
         if s == :outerbottom
