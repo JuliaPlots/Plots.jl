@@ -1014,9 +1014,11 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         GR.selntran(1)
         GR.restorestate()
     end
+
+    legend_width_factor = (viewport_plotarea[2] - viewport_plotarea[1]) / 45 # Determines the width of legend box
     legend_textw = legendw
-    legend_rightw = 0.02 # To be made dynamic in a follow up PR
-    legend_leftw = 0.08 # To be made dynamic in a follow up PR
+    legend_rightw = legend_width_factor
+    legend_leftw = legend_width_factor * 4
     total_legendw = legend_textw + legend_leftw + legend_rightw
 
     x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
@@ -1880,7 +1882,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if (st == :shape || series[:fillrange] !== nothing) && series[:ribbon] === nothing
                     fc = get_fillcolor(series, clims)
                     gr_set_fill(fc) #, series[:fillalpha])
-                    l, r = xpos-0.07, xpos-0.01
+                    l, r = xpos - legend_width_factor * 3.5, xpos - legend_width_factor / 2
                     b, t = ypos-0.4dy, ypos+0.4dy
                     x = [l, r, r, l, l]
                     y = [b, b, t, t, b]
@@ -1895,9 +1897,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 if st in (:path, :straightline, :path3d)
                     gr_set_transparency(lc, get_linealpha(series))
                     if series[:fillrange] === nothing || series[:ribbon] !== nothing
-                        GR.polyline([xpos - 0.07, xpos - 0.01], [ypos, ypos])
+                        GR.polyline([xpos - legend_width_factor * 3.5, xpos - legend_width_factor / 2], [ypos, ypos])
                     else
-                        GR.polyline([xpos - 0.07, xpos - 0.01], [ypos+0.4dy, ypos+0.4dy])
+                        GR.polyline([xpos - legend_width_factor * 3.5, xpos - legend_width_factor / 2], [ypos+0.4dy, ypos+0.4dy])
                     end
                 end
 
@@ -1910,7 +1912,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                         0, 0.8 * sp[:legendfontsize] * msw / 8
                     end
                     gr_draw_markers(
-                        series, xpos - 0.035, ypos, clims, s, sw
+                        series, xpos - legend_width_factor * 2, ypos, clims, s, sw
                     )
                 end
 
