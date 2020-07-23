@@ -57,10 +57,7 @@ Plot a histogram.
 julia> histogram([1,2,1,1,4,3,8],bins=0:8)
 ```
 """
-@shorthands histogram
-histogram(x; kw...) = plot(x, []; kw..., seriestype=:histogram)
-histogram!(x; kw...) = plot!(x, []; kw..., seriestype=:histogram)
-histogram!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:histogram)
+@one_arg_shorthands histogram
 
 """
     barhist(x)
@@ -68,10 +65,7 @@ histogram!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:histogram)
 
 Make a histogram bar plot. See `histogram`.
 """
-@shorthands barhist
-barhist(x; kw...) = plot(x, []; kw..., seriestype=:barhist)
-barhist!(x; kw...) = plot!(x, []; kw..., seriestype=:barhist)
-barhist!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:barhist)
+@one_arg_shorthands barhist
 
 """
     stephist(x)
@@ -80,10 +74,7 @@ barhist!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:barhist)
 Make a histogram step plot (bin counts are represented using horizontal lines
 instead of bars). See `histogram`.
 """
-@shorthands stephist
-stephist(x; kw...) = plot(x, []; kw..., seriestype=:stephist)
-stephist!(x; kw...) = plot!(x, []; kw..., seriestype=:stephist)
-stephist!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:stephist)
+@one_arg_shorthands stephist
 
 """
     scatterhist(x)
@@ -92,7 +83,7 @@ stephist!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:stephist)
 Make a histogram scatter plot (bin counts are represented using points
 instead of bars). See `histogram`.
 """
-@shorthands scatterhist
+@one_arg_shorthands scatterhist
 
 """
     histogram2d(x,y)

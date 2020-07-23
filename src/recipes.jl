@@ -145,7 +145,7 @@ end
 @recipe function f(::Type{Val{:vspan}}, x, y, z)
     n = div(length(x), 2)
     newx = vcat([[x[2i - 1], x[2i - 1], x[2i], x[2i], NaN] for i = 1:n]...)
-    newy = repeat([-Inf, Inf, Inf, -Inf, NaN], outer=div(length(x),2))
+    newy = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
     linewidth --> 0
     x := newx
     y := newy
@@ -763,7 +763,7 @@ end
 
 @recipe function f(::Type{Val{:barhist}}, x, y, z)
     h = _make_hist(
-        (x,),
+        tuple(plotattributes[:orientation] == :horizontal ? y : x),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
@@ -777,7 +777,7 @@ end
 
 @recipe function f(::Type{Val{:stephist}}, x, y, z)
     h = _make_hist(
-        (x,),
+        tuple(plotattributes[:orientation] == :horizontal ? y : x),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
@@ -791,7 +791,7 @@ end
 
 @recipe function f(::Type{Val{:scatterhist}}, x, y, z)
     h = _make_hist(
-        (y,),
+        tuple(plotattributes[:orientation] == :horizontal ? y : x),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
