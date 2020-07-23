@@ -23,6 +23,7 @@ pynp."seterr"(invalid="ignore")
 pytransforms = PyPlot.pyimport("matplotlib.transforms")
 pycollections = PyPlot.pyimport("matplotlib.collections")
 pyart3d = PyPlot.art3D
+pyrcparams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 
 # "support" matplotlib v1.5
 set_facecolor_sym = if PyPlot.version < v"2"
@@ -841,7 +842,9 @@ function py_set_lims(ax, sp::Subplot, axis::Axis)
     getproperty(ax, Symbol("set_", letter, "lim"))(lfrom, lto)
 end
 
-function py_set_ticks(ax, ticks, letter)
+py_surround_latextext(latexstring, env) = PyPlot.LaTeXStrings.latexstring(env, "{",latexstring[2:end-1],"}")
+
+function py_set_ticks(ax, ticks, letter, env)
     ticks == :auto && return
     axis = getproperty(ax, Symbol(letter,"axis"))
     if ticks == :none || ticks === nothing || ticks == false
@@ -858,7 +861,8 @@ function py_set_ticks(ax, ticks, letter)
         axis."set_ticks"(ticks)
     elseif ttype == :ticks_and_labels
         axis."set_ticks"(ticks[1])
-        axis."set_ticklabels"(ticks[2])
+        tick_labels = [py_surround_latextext(ticklabel, env) for ticklabel in ticks[2]]
+        axis."set_ticklabels"(tick_labels)
     else
         error("Invalid input for $(letter)ticks: $ticks")
     end
@@ -1107,7 +1111,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis."set_label_position"(axis[:guide_position])
             end
             py_set_scale(ax, sp, axis)
-            axis[:ticks] != :native ? py_set_lims(ax, sp, axis) : nothing
+            axis[:ticks] == :native ? nothing : py_set_lims(ax, sp, axis)
             if ispolar(sp) && letter == :y
                 ax."set_rlabel_position"(90)
             end
@@ -1116,10 +1120,22 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             if sp[:framestyle] == :origin && length(ticks) > 1
                 ticks[2][ticks[1] .== 0] .= ""
             end
-            axis[:ticks] != :native ? py_set_ticks(ax, ticks, letter) : nothing
 
+            # Set ticks
+            fontProperties = PyPlot.PyCall.PyDict(Dict("family" => axis[:tickfontfamily],
+                                                       "size" => py_thickness_scale(plt, axis[:tickfontsize]),
+                                                       "useTex" => false,
+                                                       "rotation" => axis[:tickfontrotation]))
+            getproperty(ax, Symbol("set_",letter,"ticklabels"))(getproperty(ax, Symbol("get_",letter,"ticks"))(), fontProperties)
+
+            # workaround to set mathtext.fontspec per Text element
+            env = "\\mathregular"  # matches the outer fonts https://matplotlib.org/tutorials/text/mathtext.html
+            axis[:ticks] == :native ? nothing : py_set_ticks(ax, ticks, letter, env)
+
+            # Tick marks
             intensity = 0.5  # This value corresponds to scaling of other grid elements
-            pyaxis."set_tick_params"(direction = axis[:tick_direction] == :out ? "out" : "in", width=py_thickness_scale(plt, intensity))
+            pyaxis."set_tick_params"(direction = axis[:tick_direction] == :out ? "out" : "in", width=py_thickness_scale(plt, intensity),
+                                     length= 5 * py_thickness_scale(plt, intensity))
 
             getproperty(ax, Symbol("set_", letter, "label"))(axis[:guide])
             if get(axis.plotattributes, :flip, false)
@@ -1138,11 +1154,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis."label"."set_rotation"(axis[:guidefontrotation])
             end
 
-            for lab in getproperty(ax, Symbol("get_", letter, "ticklabels"))()
-                lab."set_fontsize"(py_thickness_scale(plt, axis[:tickfontsize]))
-                lab."set_family"(axis[:tickfontfamily])
-                lab."set_rotation"(axis[:rotation])
-            end
+
             if axis[:grid] && !(ticks in (:none, nothing, false))
                 fgcolor = py_color(axis[:foreground_color_grid])
                 pyaxis."grid"(true,
