@@ -585,7 +585,7 @@ function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
             # As per https://github.com/jheinen/GR.jl/blob/master/src/jlgr.jl#L525
             xpos = viewport_plotarea[2] + x_legend_offset + legend_leftw + ymirror * gr_axis_width(sp, sp[:yaxis])
         else
-            xpos = viewport_plotarea[2] - legend_rightw - legend_textw
+            xpos = viewport_plotarea[2] - legend_rightw - legend_textw - x_legend_offset
         end
     elseif occursin("left", str)
         if occursin("outer", str)
@@ -600,7 +600,7 @@ function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
         if s == :outertop
             ypos = viewport_plotarea[4] + y_legend_offset + legendh + xmirror * gr_axis_height(sp, sp[:xaxis])
         else
-            ypos = viewport_plotarea[4] - y_legend_offset
+            ypos = viewport_plotarea[4] - y_legend_offset - legend_dy
         end
     elseif occursin("bottom", str)
         if s == :outerbottom
