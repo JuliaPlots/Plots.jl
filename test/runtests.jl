@@ -9,8 +9,10 @@ using Gtk
 using LibGit2
 import GeometryTypes, GeometryBasics
 using Dates
+using RecipesBase
 
 include("test_axes.jl")
+include("axis_letter.jl")
 include("test_recipes.jl")
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
