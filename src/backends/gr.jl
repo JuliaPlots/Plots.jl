@@ -1027,15 +1027,20 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     dy = gr_point_mult(sp) * sp[:legendfontsize] * 1.75
     legendh = dy * legendn
     leg_str = string(sp[:legend])
+
+    xaxis, yaxis = sp[:xaxis], sp[:yaxis]
+    xmirror = xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
+    ymirror = yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
+
     if occursin("outer", leg_str)
         if occursin("right", leg_str)
-            viewport_plotarea[2] -= total_legendw + x_legend_offset # Lessen plot max width to make space for outer legend
+            viewport_plotarea[2] -= total_legendw + x_legend_offset
         elseif occursin("left", leg_str)
-            viewport_plotarea[1] += total_legendw + x_legend_offset # Increase plot min width to make space for outer legend
+            viewport_plotarea[1] += total_legendw + x_legend_offset + !ymirror * gr_axis_width(sp, sp[:yaxis])
         elseif occursin("top", leg_str)
             viewport_plotarea[4] -= legendh + dy + y_legend_offset
         elseif occursin("bottom", leg_str)
-            viewport_plotarea[3] += legendh + dy + y_legend_offset
+            viewport_plotarea[3] += legendh + dy + y_legend_offset + !xmirror * gr_axis_height(sp, sp[:xaxis])
         end
     end
     if sp[:legend] == :inline
