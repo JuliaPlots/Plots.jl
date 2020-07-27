@@ -3,7 +3,7 @@ name: SnoopCompile
 on:
   push:
     branches:
-    #  - 'master'  # NOTE: to run the bot only on pushes to master
+      - 'master'  # NOTE: to run the bot only on pushes to master
 
 defaults:
   run:
@@ -24,7 +24,6 @@ jobs:
           - '1.3'
           - '1.4'
           - '1.5.0-rc1'
-          - 'nightly'
         os:        # NOTE: should match the os setting of your botconfig
           - ubuntu-latest
           - windows-latest
