@@ -50,8 +50,8 @@ jobs:
       - name: Generating precompile files
         run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bot.jl")'   # NOTE: must match path
       # Run benchmarks
-      #- name: Running Benchmark
-      #  run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bench.jl")' # NOTE: optional, if have benchmark file
+      - name: Running Benchmark
+        run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bench.jl")' # NOTE: optional, if have benchmark file
       - name: Upload all
         uses: actions/upload-artifact@v2
         with:
