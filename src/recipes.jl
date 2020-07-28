@@ -122,9 +122,10 @@ end
 @deps hline straightline
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
+    n = length(x)
     newx = vec(Float64[xi for i = 1:3, xi in x])
     x := newx
-    y := y
+    y := repeat(Float64[1, 2, NaN], n)
     seriestype := :straightline
     ()
 end
