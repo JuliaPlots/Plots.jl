@@ -183,7 +183,6 @@ function _plot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     _update_plot_args(plt, plotattributes)
     if !plt.init
         plt.o = Base.invokelatest(_create_backend_figure, plt)
-
         # create the layout and subplots from the inputs
         plt.layout, plt.subplots, plt.spmap = build_layout(plt.attr)
         for (idx, sp) in enumerate(plt.subplots)
@@ -263,6 +262,13 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
         sp_attrs[sp] = attr
     end
 
+    series_attr = KW()
+    for (k,v) in plotattributes
+        if is_series_attr(k)
+            series_attr[k] = pop!(plotattributes,k)
+        end
+    end
+
     # override subplot/axis args.  `sp_attrs` take precendence
     for (idx, sp) in enumerate(plt.subplots)
         attr = if !haskey(plotattributes, :subplot) || plotattributes[:subplot] == idx
@@ -271,6 +277,13 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
             get(sp_attrs, sp, KW())
         end
         _update_subplot_args(plt, sp, attr, idx, false)
+        
+        # Update series attrs
+        serieslist = series_list(sp)
+        for (cmdidx, series) in enumerate(serieslist)
+            merge!(series.plotattributes, series_attr)
+            _slice_series_args!(series.plotattributes, plt, sp, cmdidx)
+        end
     end
 
     # do we need to link any axes together?
