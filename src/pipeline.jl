@@ -226,8 +226,10 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
     # Subplot/Axis attributes set by a user/series recipe apply only to the
     # Subplot object which they belong to.
     # TODO: allow matrices to still apply to all subplots
+    new_sp_added = false
     sp_attrs = Dict{Subplot, Any}()
     for kw in kw_list
+        new_sp_added = true
         # get the Subplot object to which the series belongs.
         sps = get(kw, :subplot, :auto)
         sp = get_subplot(
@@ -277,12 +279,15 @@ function _subplot_setup(plt::Plot, plotattributes::AKW, kw_list::Vector{KW})
             get(sp_attrs, sp, KW())
         end
         _update_subplot_args(plt, sp, attr, idx, false)
-        
-        # Update series attrs
-        serieslist = series_list(sp)
-        for (cmdidx, series) in enumerate(serieslist)
-            merge!(series.plotattributes, series_attr)
-            _slice_series_args!(series.plotattributes, plt, sp, cmdidx)
+
+        if (!new_sp_added)
+            serieslist = series_list(sp)
+            for (cmdidx, series) in enumerate(serieslist)
+                merge!(series.plotattributes, series_attr)
+                _slice_series_args!(series.plotattributes, plt, sp, cmdidx)
+                push!(plt.series_list, series)
+                _series_added(plt, series)
+            end
         end
     end
 
