@@ -57,7 +57,7 @@ Plot a histogram.
 julia> histogram([1,2,1,1,4,3,8],bins=0:8)
 ```
 """
-@one_arg_shorthands histogram
+@shorthands histogram
 
 """
     barhist(x)
@@ -65,7 +65,7 @@ julia> histogram([1,2,1,1,4,3,8],bins=0:8)
 
 Make a histogram bar plot. See `histogram`.
 """
-@one_arg_shorthands barhist
+@shorthands barhist
 
 """
     stephist(x)
@@ -74,7 +74,7 @@ Make a histogram bar plot. See `histogram`.
 Make a histogram step plot (bin counts are represented using horizontal lines
 instead of bars). See `histogram`.
 """
-@one_arg_shorthands stephist
+@shorthands stephist
 
 """
     scatterhist(x)
@@ -83,7 +83,7 @@ instead of bars). See `histogram`.
 Make a histogram scatter plot (bin counts are represented using points
 instead of bars). See `histogram`.
 """
-@one_arg_shorthands scatterhist
+@shorthands scatterhist
 
 """
     histogram2d(x,y)
@@ -190,9 +190,6 @@ julia> vline([-1,0,2])
 ```
 """
 @shorthands vline
-vline(x; kw...) = plot(x, repeat(Float64[1,2,NaN], length(x)); kw..., seriestype=:vline)
-vline!(x; kw...) = plot!(x, repeat(Float64[1,2,NaN], length(x)); kw..., seriestype=:vline)
-vline!(plt, x; kw...) = plot!(plt, x, repeat(Float64[1,2,NaN], length(x)); kw..., seriestype=:vline)
 
 """
     hspan(y)
@@ -223,9 +220,6 @@ julia> vspan(1:6)
 ```
 """
 @shorthands vspan
-vspan(x; kw...) = plot(x, []; kw..., seriestype=:vspan)
-vspan!(x; kw...) = plot!(x, []; kw..., seriestype=:vspan)
-vspan!(plt, x; kw...) = plot!(plt, x, []; kw..., seriestype=:vspan)
 
 """
     ohlc(x,y::Vector{OHLC})

@@ -993,15 +993,6 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         end
     end
 
-    # vline accesses the y argument but actually maps it to the x axis.
-    # Hence, we have to swap formatters
-    if get(plotattributes, :seriestype, :path) == :vline
-        xformatter = get(plotattributes, :xformatter, :auto)
-        yformatter = get(plotattributes, :yformatter, :auto)
-        plotattributes[:xformatter] = yformatter
-        plotattributes[:yformatter] = xformatter
-    end
-
     # handle grid args common to all axes
     args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
     for arg in wraptuple(args)
@@ -1145,7 +1136,6 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     if st in (:boxplot, :violin, :density) && !isdefined(Main, :StatsPlots)
         @warn("seriestype $st has been moved to StatsPlots.  To use: \`Pkg.add(\"StatsPlots\"); using StatsPlots\`")
     end
-
     return
 end
 
