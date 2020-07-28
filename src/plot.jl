@@ -108,7 +108,6 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
     link_axes!(plt.layout, plt[:link])
 
     # initialize the subplots
-    cmdidx = 1
     for (idx, sp) in enumerate(plt.subplots)
         _initialize_subplot(plt, sp)
         serieslist = series_list(sp)
@@ -117,12 +116,11 @@ function plot(plt1::Plot, plts_tail::Plot...; kw...)
         end
         sp.plt = plt
         sp.attr[:subplot_index] = idx
-        for series in serieslist
+        for (cmdidx, series) in enumerate(serieslist)
             merge!(series.plotattributes, series_attr)
             _slice_series_args!(series.plotattributes, plt, sp, cmdidx)
             push!(plt.series_list, series)
             _series_added(plt, series)
-            cmdidx += 1
         end
     end
 
