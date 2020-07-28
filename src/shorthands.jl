@@ -383,6 +383,20 @@ julia> curves([1,2,3,4],[1,1,2,4])
 "Plot a pie diagram"
 @shorthands pie
 
+"""
+    pixel(x,y)
+    pixel!(x,y)
+
+Make a pixel plot of y vs x.
+
+# Examples
+```julia-repl
+julia> pixel([1,2,3],[4,5,6],markercolor=[:red,:green,:blue])
+julia> pixel([(1,4),(2,5),(3,6)])
+```
+"""
+@shorthands pixel
+
 "Plot with seriestype :path3d"
 plot3d(args...; kw...)     = plot(args...; kw...,  seriestype = :path3d)
 plot3d!(args...; kw...)    = plot!(args...; kw..., seriestype = :path3d)
