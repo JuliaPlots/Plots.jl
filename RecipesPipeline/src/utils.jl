@@ -193,7 +193,7 @@ needs_3d_axes(plotattributes::AbstractDict) =
 # ## Scales
 # --------------------------------
 
-const SCALE_FUNCTIONS = Dict{Symbol, Function}(:log10 => log10, :log2 => log2, :ln => log)
+const SCALE_FUNCTIONS = Dict{Symbol, Function}(:log10 => NaNMath.log10, :log2 => NaNMath.log2, :ln => NaNMath.log)
 const INVERSE_SCALE_FUNCTIONS =
     Dict{Symbol, Function}(:log10 => exp10, :log2 => exp2, :ln => exp)
 
