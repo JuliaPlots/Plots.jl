@@ -480,11 +480,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :pixel
-        handle = ax."plot"(x, y,
-            py_marker(:pixel),
+        handle = ax."plot"(x, y, py_marker(:pixel);
             label = series[:label],
-            zorder = series[:series_plotindex],
-        )
+            zorder = series[:series_plotindex] + 0.5,
+            color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
+        )[1]
         push!(handles, handle)
     end
 
