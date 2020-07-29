@@ -185,6 +185,7 @@ end
     markerstrokewidth --> 0
     ()
 end
+@deps pixel scatter
 
 # ---------------------------------------------------------------------------
 # steps
