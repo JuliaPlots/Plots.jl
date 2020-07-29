@@ -174,12 +174,15 @@ end
 end
 @deps scatterpath path scatter
 
+# ---------------------------------------------------------------------------
+# pixel
+
 @recipe function f(::Type{Val{:pixel}}, x, y, z)
     x := x
     y := y
+    seriestype := :pixel
     markersize := 1
     markerstrokewidth --> 0
-    seriestype := :scatter
     ()
 end
 

@@ -479,6 +479,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         end
     end
 
+    if st == :pixel
+        handle = ax."plot"(x, y, ",")
+        push!(handles, handle)
+    end
+
     # add markers?
     if series[:markershape] != :none && st in (:path, :scatter, :path3d,
                                           :scatter3d, :steppre, :steppost,

@@ -355,6 +355,7 @@ const _gr_seriestype = [
     :wireframe,
     :volume,
     :shape,
+    :pixel,
 ]
 const _gr_style = [:auto, :solid, :dash, :dot, :dashdot, :dashdotdot]
 const _gr_marker = _allMarkers
@@ -566,6 +567,7 @@ const _pyplot_seriestype = [
     :scatter3d,
     :surface,
     :wireframe,
+    :pixel,
 ]
 const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _pyplot_marker = vcat(_allMarkers, :pixel)
