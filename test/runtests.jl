@@ -10,6 +10,7 @@ using LibGit2
 import GeometryTypes, GeometryBasics
 using Dates
 
+include("test_plot.jl")
 include("test_axes.jl")
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
