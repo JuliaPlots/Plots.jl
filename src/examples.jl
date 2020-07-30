@@ -995,6 +995,18 @@ const _examples = PlotExample[
             scatter!(Point2.(eachcol(rand(d,1000))), alpha=0.25)
         end]
     ),
+    PlotExample(
+        "Series args update after initial plot creation",
+        "",
+        [
+            quote
+                begin
+                    plot([sin, cos], -2π, 2π, label = ["sin(θ)" "cos(θ)"], legend = :outerbottom)
+                    plot!(label=["cos(θ)" "sin(θ)"], arrow=(:closed, 2.0))
+                end
+            end,
+        ],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
