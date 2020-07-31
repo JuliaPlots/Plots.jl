@@ -342,8 +342,10 @@ end # testset
    @test !haskey(axes[1].options.dict, "axis line shift")
    @test haskey(axes[2].options.dict, "axis line shift")
    pl = plot(x->x, -1:1; add = raw"\node at (0,0.5) {\huge hi};", extra_kwargs = :subplot)
+   @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
    Plots._update_plot_object(pl)
    plot!(pl)
+   @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
    Plots._update_plot_object(pl)
    axes = Plots.pgfx_axes(pl.o)
    @test axes[1].contents[end] == raw"\node at (0,0.5) {\huge hi};"
