@@ -252,7 +252,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             extra_sp, extra_sp_opt = pgfx_split_extra_opts(sp[:extra_kwargs])
             axis = axisf(merge(axis_opt, PGFPlotsX.Options(extra_sp_opt...)))
             if extra_sp !== nothing
-                extra_sp = wraptuple(extra_sp_opt)
+                extra_sp = wraptuple(extra_sp)
                 push!(axis, extra_sp...)
             end
             if sp[:legendtitle] !== nothing
