@@ -93,6 +93,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
         extra_plot, extra_plot_opt = pgfx_split_extra_opts(plt[:extra_plot_kwargs])
         the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options(extra_plot_opt...))
         if extra_plot !== nothing
+            extra_plot = wraptuple(extra_plot)
             push!(the_plot, extra_plot...)
         end
         bgc = plt.attr[:background_color_outside] == :match ?
@@ -251,6 +252,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             extra_sp, extra_sp_opt = pgfx_split_extra_opts(sp[:extra_kwargs])
             axis = axisf(merge(axis_opt, PGFPlotsX.Options(extra_sp_opt...)))
             if extra_sp !== nothing
+                extra_sp = wraptuple(extra_sp_opt)
                 push!(axis, extra_sp...)
             end
             if sp[:legendtitle] !== nothing
@@ -367,6 +369,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     segment_plot =
                         series_func(merge(series_opt, segment_opt), coordinates)
                     if extra_series !== nothing
+                        extra_series = wraptuple(extra_series)
                         push!(segment_plot, extra_series...)
                     end
                     push!(axis, segment_plot)
