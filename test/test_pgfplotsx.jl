@@ -348,5 +348,5 @@ end # testset
    @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
    Plots._update_plot_object(pl)
    axes = Plots.pgfx_axes(pl.o)
-   @test axes[1].contents[end] == raw"\node at (0,0.5) {\huge hi};"
+   @test filter(x->x isa String, axes[1].contents)[1] == raw"\node at (0,0.5) {\huge hi};"
 end # testset
