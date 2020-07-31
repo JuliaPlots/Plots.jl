@@ -83,17 +83,17 @@ function Base.push!(pgfx_plot::PGFPlotsXPlot, item)
     push!(pgfx_plot.the_plot, item)
 end
 
+function pgfx_split_extra_opts(extra)
+    return (get(extra, :add, nothing), filter( x-> first(x) != :add, extra))
+end
 function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     if !pgfx_plot.is_created || pgfx_plot.was_shown
         pgfx_sanitize_plot!(plt)
         # extract extra kwargs
-        extra_plot_opt = plt[:extra_plot_kwargs]
-        extra_plot = nothing
-        if haskey(extra_plot_opt, :add)
-            extra_plot = wraptuple(pop!(extra_plot_opt,:add))
-        end
+        extra_plot, extra_plot_opt = pgfx_split_extra_opts(plt[:extra_plot_kwargs])
         the_plot = PGFPlotsX.TikzPicture(PGFPlotsX.Options(extra_plot_opt...))
         if extra_plot !== nothing
+            extra_plot = wraptuple(extra_plot)
             push!(the_plot, extra_plot...)
         end
         bgc = plt.attr[:background_color_outside] == :match ?
@@ -249,13 +249,10 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             else
                 PGFPlotsX.Axis
             end
-            extra_sp_opt = sp[:extra_kwargs]
-            extra_sp = nothing
-            if haskey(extra_sp_opt, :add)
-                extra_sp = wraptuple(pop!(extra_sp_opt,:add))
-            end
+            extra_sp, extra_sp_opt = pgfx_split_extra_opts(sp[:extra_kwargs])
             axis = axisf(merge(axis_opt, PGFPlotsX.Options(extra_sp_opt...)))
             if extra_sp !== nothing
+                extra_sp = wraptuple(extra_sp_opt)
                 push!(axis, extra_sp...)
             end
             if sp[:legendtitle] !== nothing
@@ -279,11 +276,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "color" => single_color(opt[:linecolor]),
                     "name path" => string(series_id),
                 )
-                extra_series_opt = series[:extra_kwargs]
-                extra_series = nothing
-                if haskey(extra_series_opt, :add)
-                    extra_series = wraptuple(pop!(extra_series_opt,:add))
-                end
+                extra_series, extra_series_opt = pgfx_split_extra_opts(series[:extra_kwargs])
                 series_opt = merge(series_opt, PGFPlotsX.Options(extra_series_opt...))
                 if RecipesPipeline.is3d(series) || st in (:heatmap, :contour)
                     series_func = PGFPlotsX.Plot3
@@ -376,6 +369,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     segment_plot =
                         series_func(merge(series_opt, segment_opt), coordinates)
                     if extra_series !== nothing
+                        extra_series = wraptuple(extra_series)
                         push!(segment_plot, extra_series...)
                     end
                     push!(axis, segment_plot)
