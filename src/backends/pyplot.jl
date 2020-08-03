@@ -438,7 +438,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             #     push!(handles, handle)
             # else
             for (i, rng) in enumerate(iter_segments(series))
-                handle = ax."plot"((arg[rng] for arg in xyargs)...,
+                handle = ax."plot"((arg[rng] for arg in xyargs)...;
                                    label = i == 1 ? series[:label] : "",
                                    zorder = series[:series_plotindex],
                                    color = py_color(single_color(get_linecolor(series, clims, i)), get_linealpha(series, i)),
