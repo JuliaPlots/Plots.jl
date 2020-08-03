@@ -180,9 +180,9 @@ end
 @recipe function f(::Type{Val{:pixel}}, x, y, z)
     x := x
     y := y
-    seriestype := :pixel
-    markersize := 1
-    markerstrokewidth --> 0
+    seriestype := :scatter
+    markersize := 0.1
+    markerstrokewidth := 0
     ()
 end
 @deps pixel scatter
