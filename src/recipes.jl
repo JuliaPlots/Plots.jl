@@ -181,7 +181,7 @@ end
     x := x
     y := y
     seriestype := :scatter
-    markersize := 0.1
+    markersize := 0.5
     markerstrokewidth := 0
     ()
 end
