@@ -568,7 +568,7 @@ gr_view_ycenter(viewport_plotarea) = 0.5 * (viewport_plotarea[3] + viewport_plot
 
 function gr_legend_pos(sp::Subplot, w, h, viewport_plotarea)
     legend_leftw, legend_rightw, legend_textw, x_legend_offset = w
-    legend_dy, legendh, y_legend_offset = h 
+    legend_dy, legendh, y_legend_offset = h
     s = sp[:legend]
     typeof(s) <: Symbol || return gr_legend_pos(s, w, h, viewport_plotarea)
     str = string(s)
@@ -1680,6 +1680,10 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if series[:markershape] != :none
                 gr_draw_markers(series, x, y, clims)
             end
+
+        elseif st == :pixel
+            GR.setmarkertype(GR.MARKERTYPE_DOT)
+            GR.polymarker(x, y)
 
         elseif st == :contour
             GR.setspace(clims[1], clims[2], 0, 90)
