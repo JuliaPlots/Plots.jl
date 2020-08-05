@@ -1683,6 +1683,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
 
         elseif st == :pixel
             GR.setmarkertype(GR.MARKERTYPE_DOT)
+            lc = get_linecolor(series, clims, 0)
+            gr_set_markercolor(lc)
             GR.polymarker(x, y)
 
         elseif st == :contour
