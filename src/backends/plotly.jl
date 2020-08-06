@@ -19,6 +19,12 @@ using UUIDs
 
 # ----------------------------------------------------------------
 
+function labelfunc(scale::Symbol, backend::PlotlyBackend)
+    f = scale == :log10 ? x->"10<sup>$x</sup>" : identity
+    # replace dash with \minus (U+2212)
+    x -> replace(f(x), "-" => "−")
+end
+
 function plotly_font(font::Font, color = font.color)
     KW(
         :family => font.family,
