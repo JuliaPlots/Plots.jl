@@ -861,7 +861,11 @@ function py_set_ticks(ax, ticks, letter, env)
         axis."set_ticks"(ticks)
     elseif ttype == :ticks_and_labels
         axis."set_ticks"(ticks[1])
-        tick_labels = [py_surround_latextext(ticklabel, env) for ticklabel in ticks[2]]
+        if pyrcparams["text.usetex"]
+            tick_labels = ticks[2]
+        else
+            tick_labels = [py_surround_latextext(ticklabel, env) for ticklabel in ticks[2]]
+        end
         axis."set_ticklabels"(tick_labels)
     else
         error("Invalid input for $(letter)ticks: $ticks")
@@ -1124,7 +1128,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             # Set ticks
             fontProperties = PyPlot.PyCall.PyDict(Dict("family" => axis[:tickfontfamily],
                                                        "size" => py_thickness_scale(plt, axis[:tickfontsize]),
-                                                       "useTex" => false,
+                                                       # "useTex" => false,
                                                        "rotation" => axis[:tickfontrotation]))
             getproperty(ax, Symbol("set_",letter,"ticklabels"))(getproperty(ax, Symbol("get_",letter,"ticks"))(), fontProperties)
 
@@ -1134,8 +1138,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
             # Tick marks
             intensity = 0.5  # This value corresponds to scaling of other grid elements
-            pyaxis."set_tick_params"(direction = axis[:tick_direction] == :out ? "out" : "in", width=py_thickness_scale(plt, intensity),
-                                     length= 5 * py_thickness_scale(plt, intensity))
+            pyaxis."set_tick_params"(
+                direction = axis[:tick_direction] == :out ? "out" : "in",
+                width=py_thickness_scale(plt, intensity),
+                length= 5 * py_thickness_scale(plt, intensity)
+                                     )
 
             getproperty(ax, Symbol("set_", letter, "label"))(axis[:guide])
             if get(axis.plotattributes, :flip, false)
