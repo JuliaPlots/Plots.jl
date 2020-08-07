@@ -112,7 +112,7 @@ function savefig(plt::Plot, fn::AbstractString)
     fn = abspath(expanduser(fn))
 
     # get the extension
-    fn, ext = splitext(fn)
+    _, ext = splitext(fn)
     ext = chop(ext, head = 1, tail = 0)
     if isempty(ext)
         ext = defaultOutputFormat(plt)

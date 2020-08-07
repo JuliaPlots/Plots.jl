@@ -302,6 +302,11 @@ end
             lines = readlines(io)
             @test count(s -> occursin("node", s), lines) == 9
          end
+         # test .tikz extension
+         file_path =joinpath(path,"annotations.tikz")
+         @test_nowarn savefig(annotation_plot, file_path)
+         @test_nowarn open(file_path) do io
+         end
       end
    end # testset
    @testset "Ribbon" begin
