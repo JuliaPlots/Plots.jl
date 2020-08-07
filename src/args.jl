@@ -378,6 +378,7 @@ const _subplot_defaults = KW(
     :colorbar_titlefontcolor         => :match,
     :framestyle                      => :axes,
     :camera                          => (30,30),
+    :extra_kwargs                    => Dict()
 )
 
 const _axis_defaults = KW(
