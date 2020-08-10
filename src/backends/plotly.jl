@@ -489,7 +489,6 @@ as_gradient(grad, α) = cgrad(alpha = α)
 # get a dictionary representing the series params (plotattributes is the Plots-dict, plotattributes_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
-    println(st)
 
     sp = series[:subplot]
     clims = get_clims(sp, series)

@@ -328,15 +328,12 @@ end
 
 function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     # do we want to override the series type?
-    println(RecipesPipeline.is3d(st))
-    println(st)
     if !RecipesPipeline.is3d(st) && !(st in (:contour, :contour3d))
         z = plotattributes[:z]
         if !isa(z, Nothing) &&
            (size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)) &&
 	   st !== :mesh3d
             st = (st == :scatter ? :scatter3d : :path3d)
-	    println("hello hello hello")
 	    plotattributes[:seriestype] = st
         end
     end
