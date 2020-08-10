@@ -1,4 +1,3 @@
-
 # https://plot.ly/javascript/getting-started
 
 is_subplot_supported(::PlotlyBackend) = true
@@ -446,7 +445,7 @@ function plotly_data(series::Series, letter::Symbol, data)
        data
     end
 
-    if series[:seriestype] in (:heatmap, :contour, :surface, :wireframe)
+    if series[:seriestype] in (:heatmap, :contour, :surface, :wireframe, :mesh3d)
         plotly_surface_data(series, data)
     else
         plotly_data(data)
@@ -490,6 +489,7 @@ as_gradient(grad, α) = cgrad(alpha = α)
 # get a dictionary representing the series params (plotattributes is the Plots-dict, plotattributes_out is the Plotly-dict)
 function plotly_series(plt::Plot, series::Series)
     st = series[:seriestype]
+    println(st)
 
     sp = series[:subplot]
     clims = get_clims(sp, series)
@@ -553,7 +553,7 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:showscale] = hascolorbar(sp) && hascolorbar(series)
 
     elseif st in (:surface, :wireframe)
-        plotattributes_out[:type] = "surface"
+	plotattributes_out[:type] = "surface"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
         if st == :wireframe
             plotattributes_out[:hidesurface] = true
@@ -572,7 +572,14 @@ function plotly_series(plt::Plot, series::Series)
             end
             plotattributes_out[:showscale] = hascolorbar(sp)
         end
-
+    elseif st == :mesh3d
+	plotattributes_out[:type] = "mesh3d"
+        plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
+        plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+        plotattributes_out[:opacity] = series[:fillalpha]
+        if series[:fill_z] !== nothing
+            plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
+        end
     else
         @warn("Plotly: seriestype $st isn't supported.")
         return KW()

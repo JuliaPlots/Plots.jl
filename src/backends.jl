@@ -429,6 +429,7 @@ const _plotly_seriestype = [
     :shape,
     :scattergl,
     :straightline,
+    :mesh3d
 ]
 const _plotly_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _plotly_marker = [
