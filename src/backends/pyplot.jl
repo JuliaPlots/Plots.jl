@@ -842,7 +842,15 @@ function py_set_lims(ax, sp::Subplot, axis::Axis)
     getproperty(ax, Symbol("set_", letter, "lim"))(lfrom, lto)
 end
 
-py_surround_latextext(latexstring, env) = PyPlot.LaTeXStrings.latexstring(env, "{",latexstring[2:end-1],"}")
+function py_surround_latextext(latexstring, env)
+    if latexstring[1] == '$' && latexstring[end] == '$'
+        unenclosed = latexstring[2:end-1]
+    else
+        unenclosed = latexstring
+    end
+    PyPlot.LaTeXStrings.latexstring(env, "{", unenclosed, "}")
+end
+
 
 function py_set_ticks(ax, ticks, letter, env)
     ticks == :auto && return
@@ -861,11 +869,13 @@ function py_set_ticks(ax, ticks, letter, env)
         axis."set_ticks"(ticks)
     elseif ttype == :ticks_and_labels
         axis."set_ticks"(ticks[1])
+
         if pyrcparams["text.usetex"]
             tick_labels = ticks[2]
         else
             tick_labels = [py_surround_latextext(ticklabel, env) for ticklabel in ticks[2]]
         end
+
         axis."set_ticklabels"(tick_labels)
     else
         error("Invalid input for $(letter)ticks: $ticks")
