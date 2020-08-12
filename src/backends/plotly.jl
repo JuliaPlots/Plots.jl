@@ -574,11 +574,19 @@ function plotly_series(plt::Plot, series::Series)
     elseif st == :mesh3d
 	plotattributes_out[:type] = "mesh3d"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
-        plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+        
+	if :i in keys(series[:extra_kwargs]) && :j in keys(series[:extra_kwargs]) && :k in keys(series[:extra_kwargs])
+		plotattributes_out[:i] = series[:extra_kwargs][:i]
+		plotattributes_out[:j] = series[:extra_kwargs][:j]
+		plotattributes_out[:k] = series[:extra_kwargs][:k]
+	end
+
+	plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
         plotattributes_out[:opacity] = series[:fillalpha]
         if series[:fill_z] !== nothing
             plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
         end
+        plotattributes_out[:showscale] = false 
     else
         @warn("Plotly: seriestype $st isn't supported.")
         return KW()
