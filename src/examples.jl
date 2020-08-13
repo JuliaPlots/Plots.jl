@@ -512,30 +512,6 @@ const _examples = PlotExample[
         ],
     ),
     PlotExample(
-	"Mesh3d",
-	"Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically. You can also specify the connections using the connections keyword. This is only supported on the Plotly backend. The connections are specified using a tuple of arrays where each array contains the index of the first, second and third vertex of a triangle.",
-	[
-		:(
-		  begin
-			# specify the vertices
-			x=[0, 1, 2, 0]
-			y=[0, 0, 1, 2]
-			z=[0, 2, 0, 1]
-
-			# specify the triangles 
-			# every column is one triangle,
-			# where the values denote the indices of the vertices of the triangle 
-			i=[0, 0, 0, 1]
-			j=[1, 2, 3, 2]
-			k=[2, 3, 1, 3]
-
-			# the four triangles gives above give a tetrahedron
-			mesh3d(x,y,z;connections=(i,j,k))
-		  end
-		),
-	],
-    ),
-    PlotExample(
         "DataFrames",
         "Plot using DataFrame column symbols.",
         [
@@ -1019,16 +995,40 @@ const _examples = PlotExample[
             scatter!(Point2.(eachcol(rand(d,1000))), alpha=0.25)
         end]
     ),
+    PlotExample(
+	"Mesh3d",
+	"Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically. You can also specify the connections using the connections keyword. This is only supported on the Plotly backend. The connections are specified using a tuple of arrays where each array contains the index of the first, second and third vertex of a triangle.",
+	[
+		:(
+		  begin
+			# specify the vertices
+			x=[0, 1, 2, 0]
+			y=[0, 0, 1, 2]
+			z=[0, 2, 0, 1]
+
+			# specify the triangles 
+			# every column is one triangle,
+			# where the values denote the indices of the vertices of the triangle 
+			i=[0, 0, 0, 1]
+			j=[1, 2, 3, 2]
+			k=[2, 3, 1, 3]
+
+			# the four triangles gives above give a tetrahedron
+			mesh3d(x,y,z;connections=(i,j,k))
+		  end
+		),
+	],
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [2, 31]
 _backend_skips = Dict(
-    :gr => [25, 30],
-    :pyplot => [2, 25, 30, 31],
+    :gr => [25, 30, 47],
+    :pyplot => [2, 25, 30, 31, 47],
     :plotlyjs => [2, 21, 24, 25, 30, 31],
     :plotly => [2, 21, 24, 25, 30, 31],
-    :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30, 31, 34, 37, 38, 39],
+    :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30, 31, 34, 37, 38, 39, 47],
     :pgfplotsx => [
         2, # animation
         6, # images
@@ -1039,6 +1039,7 @@ _backend_skips = Dict(
         31, # animation
         32, # spy
         38, # histogram2d
+	47, # mesh3d
     ],
 )
 
