@@ -588,13 +588,13 @@ function plotly_series(plt::Plot, series::Series)
 			throw(ArgumentError("Argument connections has to be a tuple of three arrays."))
 		end
 	end
-
 	plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+	plotattributes_out[:color] = rgba_string(plot_color(series[:fillcolor], series[:fillalpha]))
         plotattributes_out[:opacity] = series[:fillalpha]
         if series[:fill_z] !== nothing
             plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
         end
-        plotattributes_out[:showscale] = false 
+        plotattributes_out[:showscale] = hascolorbar(sp) 
     else
         @warn("Plotly: seriestype $st isn't supported.")
         return KW()
