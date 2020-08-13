@@ -914,6 +914,21 @@ end
 
 
 # ---------------------------------------------------------------------------
+# mesh 3d replacement for non-plotly backends
+
+@recipe function f(::Type{Val{:mesh3d}}, x, y, z; i=nothing,j=nothing,k=nothing)
+    # As long as no i,j,k are supplied this should work with PyPlot and GR
+    seriestype := :surface
+    if i != nothing || j != nothing || k != nothing
+    	throw(ArgumentError("Giving triangles using i,j,k is only supported on Plotly backend."))
+    end
+    ()
+end
+
+
+# note: don't add dependencies because this really isn't a drop-in replacement
+
+# ---------------------------------------------------------------------------
 # scatter 3d
 
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)
@@ -927,7 +942,6 @@ end
 end
 
 # note: don't add dependencies because this really isn't a drop-in replacement
-
 
 # ---------------------------------------------------------------------------
 # lens! - magnify a region of a plot
