@@ -578,7 +578,7 @@ function plotly_series(plt::Plot, series::Series)
 	if series[:connections] != nothing
 		if typeof(series[:connections]) <: Tuple{Array,Array,Array} 
 			i,j,k = series[:connections]
-			if length(i) == length(j) == length(k)
+			if !(length(i) == length(j) == length(k))
 				throw(ArgumentError("Argument connections must consist of equally sized arrays."))
 			end
 			plotattributes_out[:i] = i
