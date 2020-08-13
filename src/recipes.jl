@@ -926,8 +926,6 @@ end
 end
 
 
-# note: don't add dependencies because this really isn't a drop-in replacement
-
 # ---------------------------------------------------------------------------
 # scatter 3d
 
