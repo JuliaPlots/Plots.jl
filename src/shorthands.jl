@@ -328,13 +328,13 @@ Plot a 3d mesh. On Plotly the triangles can be specified using the i,j,k argumen
 ```Julia
 x=[0, 1, 2, 0]
 y=[0, 0, 1, 2]
-z=[2, 4, 2, 3]
+z=[0, 2, 0, 1]
 
 i=[0, 0, 0, 1]
 j=[1, 2, 3, 2]
 k=[2, 3, 1, 3]
 
-mesh3d(x,y,z;i,j,k)
+plot(x,y,z,seriestype=:mesh3d;connections=(i,j,k))
 ```
 """
 @shorthands mesh3d
