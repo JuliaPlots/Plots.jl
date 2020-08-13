@@ -294,6 +294,13 @@ const _series_defaults = KW(
 
 const _plot_defaults = KW(
     :plot_title                  => "",
+    :plot_titlefontsize          => 16,
+    :plot_title_location         => :center,           # also :left or :right
+    :plot_titlefontfamily        => :match,
+    :plot_titlefonthalign        => :hcenter,
+    :plot_titlefontvalign        => :vcenter,
+    :plot_titlefontrotation      => 0.0,
+    :plot_titlefontcolor         => :match,
     :background_color            => colorant"white",   # default for all backgrounds,
     :background_color_outside    => :match,            # background outside grid,
     :foreground_color            => :auto,             # default for all foregrounds, and title color,
@@ -360,10 +367,18 @@ const _subplot_defaults = KW(
     :right_margin             => :match,
     :bottom_margin            => :match,
     :subplot_index            => -1,
-    :colorbar_title           => "",
-    :framestyle               => :axes,
-    :camera                   => (30,30),
-    :extra_kwargs             => Dict()
+    :colorbar_title                  => "",
+    :colorbar_titlefontsize          => 10,
+    :colorbar_title_location         => :center,           # also :left or :right
+    :colorbar_fontfamily             => :match,
+    :colorbar_titlefontfamily        => :match,
+    :colorbar_titlefonthalign        => :hcenter,
+    :colorbar_titlefontvalign        => :vcenter,
+    :colorbar_titlefontrotation      => 0.0,
+    :colorbar_titlefontcolor         => :match,
+    :framestyle                      => :axes,
+    :camera                          => (30,30),
+    :extra_kwargs                    => Dict()
 )
 
 const _axis_defaults = KW(
@@ -468,7 +483,7 @@ const _subplot_args = sort(union(collect(keys(_subplot_defaults))))
 const _plot_args = sort(union(collect(keys(_plot_defaults))))
 
 const _magic_axis_args = [:axis, :tickfont, :guidefont, :grid, :minorgrid]
-const _magic_subplot_args = [:titlefont, :legendfont, :legendtitlefont, ]
+const _magic_subplot_args = [:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont]
 const _magic_series_args = [:line, :marker, :fill]
 
 const _all_axis_args = sort(union([_axis_args; _magic_axis_args]))
@@ -1048,7 +1063,7 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
     end
 
     # fonts
-    for fontname in (:titlefont, :legendfont, :legendtitlefont)
+    for fontname in (:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
         args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
         for arg in wraptuple(args)
             processFontArg!(plotattributes, fontname, arg)
@@ -1285,11 +1300,16 @@ const _match_map = KW(
     :right_margin  => :margin,
     :bottom_margin => :margin,
     :titlefontfamily          => :fontfamily_subplot,
-    :legendfontfamily         => :fontfamily_subplot,
-    :legendtitlefontfamily    => :fontfamily_subplot,
     :titlefontcolor           => :foreground_color_subplot,
+    :legendfontfamily         => :fontfamily_subplot,
     :legendfontcolor          => :foreground_color_subplot,
+    :legendtitlefontfamily    => :fontfamily_subplot,
     :legendtitlefontcolor     => :foreground_color_subplot,
+    :colorbar_fontfamily      => :fontfamily_subplot,
+    :colorbar_titlefontfamily => :fontfamily_subplot,
+    :colorbar_titlefontcolor  => :foreground_color_subplot,
+    :plot_titlefontfamily     => :fontfamily,
+    :plot_titlefontcolor      => :foreground_color,
     :tickfontcolor            => :foreground_color_text,
     :guidefontcolor           => :foreground_color_guide,
 )

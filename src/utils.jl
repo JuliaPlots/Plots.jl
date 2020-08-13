@@ -1004,6 +1004,24 @@ ignorenan_extrema(plt::Plot) = (xmin(plt), xmax(plt))
 # ---------------------------------------------------------------
 # get fonts from objects:
 
+plottitlefont(p::Plot) = font(
+    p[:plot_titlefontfamily],
+    p[:plot_titlefontsize],
+    p[:plot_titlefontvalign],
+    p[:plot_titlefonthalign],
+    p[:plot_titlefontrotation],
+    p[:plot_titlefontcolor],
+)
+
+colorbartitlefont(sp::Subplot) = font(
+    sp[:colorbar_titlefontfamily],
+    sp[:colorbar_titlefontsize],
+    sp[:colorbar_titlefontvalign],
+    sp[:colorbar_titlefonthalign],
+    sp[:colorbar_titlefontrotation],
+    sp[:colorbar_titlefontcolor],
+)
+
 titlefont(sp::Subplot) = font(
     sp[:titlefontfamily],
     sp[:titlefontsize],
