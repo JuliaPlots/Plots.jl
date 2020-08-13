@@ -512,6 +512,30 @@ const _examples = PlotExample[
         ],
     ),
     PlotExample(
+	"Mesh3d",
+	"Plot a 3d mesh",
+	[
+		:(
+		  begin
+			# specify the vertices
+			x=[0, 1, 2, 0]
+			y=[0, 0, 1, 2]
+			z=[0, 2, 0, 1]
+
+			# specify the triangles 
+			# every column is one triangle,
+			# where the values denote the indices of the vertices of the triangle 
+			i=[0, 0, 0, 1]
+			j=[1, 2, 3, 2]
+			k=[2, 3, 1, 3]
+
+			# the four triangles gives above give a tetrahedron
+			mesh3d(x,y,z;connections=(i,j,k))
+		  end
+		),
+	],
+    ),
+    PlotExample(
         "DataFrames",
         "Plot using DataFrame column symbols.",
         [
