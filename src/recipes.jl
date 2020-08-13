@@ -1547,4 +1547,3 @@ julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], f
     end
 end
 
-is_3d(::Type{Val{:mesh3d}}) = true

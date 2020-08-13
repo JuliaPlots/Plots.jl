@@ -574,11 +574,19 @@ function plotly_series(plt::Plot, series::Series)
     elseif st == :mesh3d
 	plotattributes_out[:type] = "mesh3d"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
-        
-	if :i in keys(series[:extra_kwargs]) && :j in keys(series[:extra_kwargs]) && :k in keys(series[:extra_kwargs])
-		plotattributes_out[:i] = series[:extra_kwargs][:i]
-		plotattributes_out[:j] = series[:extra_kwargs][:j]
-		plotattributes_out[:k] = series[:extra_kwargs][:k]
+       
+	if series[:connections] != nothing
+		if typeof(series[:connections]) <: Tuple{Array,Array,Array} 
+			i,j,k = series[:connections]
+			if length(i) == length(j) == length(k)
+				throw(ArgumentError("Argument connections must consist of equally sized arrays."))
+			end
+			plotattributes_out[:i] = i
+			plotattributes_out[:j] = j
+			plotattributes_out[:k] = k
+		else
+			throw(ArgumentError("Argument connections has to be a tuple of three arrays."))
+		end
 	end
 
 	plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
