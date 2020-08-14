@@ -320,9 +320,9 @@ julia> scatter3d([0,1,2,3],[0,1,4,9],[0,1,8,27])
 
 """
     mesh3d(x,y,z)
-    mesh3d(x,y,z;i,j,k)
+    mesh3d(x,y,z; connections)
 
-Plot a 3d mesh. On Plotly the triangles can be specified using the i,j,k arguments.
+Plot a 3d mesh. On Plotly the triangles can be specified using the connections argument.
 
 # Example
 ```Julia

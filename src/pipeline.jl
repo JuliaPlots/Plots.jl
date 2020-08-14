@@ -331,9 +331,9 @@ function _override_seriestype_check(plotattributes::AKW, st::Symbol)
     if !RecipesPipeline.is3d(st) && !(st in (:contour, :contour3d))
         z = plotattributes[:z]
         if !isa(z, Nothing) &&
-           (size(plotattributes[:x]) == size(plotattributes[:y]) == size(z)) 
+           (size(plotattributes[:x]) == size(plotattributes[:y]) == size(z))
             st = (st == :scatter ? :scatter3d : :path3d)
-	    plotattributes[:seriestype] = st
+            plotattributes[:seriestype] = st
         end
     end
     st
