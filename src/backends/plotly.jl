@@ -1,4 +1,3 @@
-
 # https://plot.ly/javascript/getting-started
 
 is_subplot_supported(::PlotlyBackend) = true
@@ -446,7 +445,7 @@ function plotly_data(series::Series, letter::Symbol, data)
        data
     end
 
-    if series[:seriestype] in (:heatmap, :contour, :surface, :wireframe)
+    if series[:seriestype] in (:heatmap, :contour, :surface, :wireframe, :mesh3d)
         plotly_surface_data(series, data)
     else
         plotly_data(data)
@@ -553,7 +552,7 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:showscale] = hascolorbar(sp) && hascolorbar(series)
 
     elseif st in (:surface, :wireframe)
-        plotattributes_out[:type] = "surface"
+	  plotattributes_out[:type] = "surface"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
         if st == :wireframe
             plotattributes_out[:hidesurface] = true
@@ -572,7 +571,30 @@ function plotly_series(plt::Plot, series::Series)
             end
             plotattributes_out[:showscale] = hascolorbar(sp)
         end
-
+    elseif st == :mesh3d
+	plotattributes_out[:type] = "mesh3d"
+        plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
+       
+	if series[:connections] != nothing
+		if typeof(series[:connections]) <: Tuple{Array,Array,Array} 
+			i,j,k = series[:connections]
+			if !(length(i) == length(j) == length(k))
+				throw(ArgumentError("Argument connections must consist of equally sized arrays."))
+			end
+			plotattributes_out[:i] = i
+			plotattributes_out[:j] = j
+			plotattributes_out[:k] = k
+		else
+			throw(ArgumentError("Argument connections has to be a tuple of three arrays."))
+		end
+	end
+	plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
+	plotattributes_out[:color] = rgba_string(plot_color(series[:fillcolor], series[:fillalpha]))
+        plotattributes_out[:opacity] = series[:fillalpha]
+        if series[:fill_z] !== nothing
+            plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
+        end
+        plotattributes_out[:showscale] = hascolorbar(sp) 
     else
         @warn("Plotly: seriestype $st isn't supported.")
         return KW()

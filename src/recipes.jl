@@ -914,6 +914,19 @@ end
 
 
 # ---------------------------------------------------------------------------
+# mesh 3d replacement for non-plotly backends
+
+@recipe function f(::Type{Val{:mesh3d}}, x, y, z)
+    # As long as no i,j,k are supplied this should work with PyPlot and GR
+    seriestype := :surface
+    if plotattributes[:connections] != nothing 
+    	throw(ArgumentError("Giving triangles using the connections argument is only supported on Plotly backend."))
+    end
+    ()
+end
+
+
+# ---------------------------------------------------------------------------
 # scatter 3d
 
 @recipe function f(::Type{Val{:scatter3d}}, x, y, z)
@@ -927,7 +940,6 @@ end
 end
 
 # note: don't add dependencies because this really isn't a drop-in replacement
-
 
 # ---------------------------------------------------------------------------
 # lens! - magnify a region of a plot
@@ -1534,3 +1546,4 @@ julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], f
         end
     end
 end
+
