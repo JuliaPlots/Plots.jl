@@ -552,7 +552,7 @@ function plotly_series(plt::Plot, series::Series)
         plotattributes_out[:showscale] = hascolorbar(sp) && hascolorbar(series)
 
     elseif st in (:surface, :wireframe)
-	plotattributes_out[:type] = "surface"
+	  plotattributes_out[:type] = "surface"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
         if st == :wireframe
             plotattributes_out[:hidesurface] = true
