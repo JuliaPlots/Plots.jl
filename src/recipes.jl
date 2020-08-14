@@ -916,11 +916,11 @@ end
 # ---------------------------------------------------------------------------
 # mesh 3d replacement for non-plotly backends
 
-@recipe function f(::Type{Val{:mesh3d}}, x, y, z; i=nothing,j=nothing,k=nothing)
+@recipe function f(::Type{Val{:mesh3d}}, x, y, z)
     # As long as no i,j,k are supplied this should work with PyPlot and GR
     seriestype := :surface
-    if i != nothing || j != nothing || k != nothing
-    	throw(ArgumentError("Giving triangles using i,j,k is only supported on Plotly backend."))
+    if plotattributes[:connections] != nothing 
+    	throw(ArgumentError("Giving triangles using the connections argument is only supported on Plotly backend."))
     end
     ()
 end
