@@ -1,4 +1,4 @@
-using SnoopCompile
+using SnoopCompileBot
 
 snoop_bot(
     BotConfig(

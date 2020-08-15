@@ -36,22 +36,28 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
+
       - name: Install dependencies
         run: |
           julia --project -e 'using Pkg; Pkg.instantiate();'
-          julia -e 'using Pkg; Pkg.add(PackageSpec(url = "https://github.com/timholy/SnoopCompile.jl")); Pkg.develop(PackageSpec(; path=pwd())); using SnoopCompile; SnoopCompile.addtestdep();'
+          julia -e 'using Pkg; Pkg.add( PackageSpec(name="SnoopCompileBot", version = "2") ); Pkg.develop(PackageSpec(; path=pwd())); using SnoopCompileBot; SnoopCompileBot.addtestdep();'
+
+
       # TESTCMD
       - name: Default TESTCMD
         run: echo ::set-env name=TESTCMD::"julia"
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
         run: echo ::set-env name=TESTCMD::"xvfb-run julia"
+
       # Generate precompile files
       - name: Generating precompile files
         run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bot.jl")'   # NOTE: must match path
+
       # Run benchmarks
       - name: Running Benchmark
         run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bench.jl")' # NOTE: optional, if have benchmark file
+
       - name: Upload all
         uses: actions/upload-artifact@v2
         with:
@@ -65,24 +71,15 @@ jobs:
       - uses: actions/checkout@v2
       - name: Download all
         uses: actions/download-artifact@v2
-      - name: Move the content of the directory to the root
-        run: |
-          rsync -a artifact/* ./
-          rm -d -r artifact
-      - name: Discard unrelated changes
-        run: |
-          test -f 'Project.toml' && git checkout -- 'Project.toml'
-          git ls-files 'Manifest.toml' | grep . && git checkout -- 'Manifest.toml'
-          (git diff -w --no-color || git apply --cached --ignore-whitespace && git checkout -- . && git reset && git add -p) || echo done
-      - name: Format precompile_includer.jl
-        run: julia -e 'using Pkg; Pkg.add("JuliaFormatter"); using JuliaFormatter; format_file("src/precompile_includer.jl")'
+
+      - name: SnoopCompileBot postprocess
+        run: julia -e 'using Pkg; Pkg.add( PackageSpec(name="SnoopCompileBot", version = "2") ); using SnoopCompileBot; SnoopCompileBot.postprocess();'
+
       - name: Create Pull Request
-        # https://github.com/marketplace/actions/create-pull-request
-        uses: peter-evans/create-pull-request@v2
+        uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update precompile_*.jl file
-          # committer: Daniel Schwabender <daschw@disroot.org> # NOTE: change `committer` to your name and your email.
           title: "[AUTO] Update precompiles"
           labels: SnoopCompile
           branch: "SnoopCompile_AutoPR"
