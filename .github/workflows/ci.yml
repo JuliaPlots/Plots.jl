@@ -63,7 +63,7 @@ jobs:
         run: echo ::set-env name=TESTCMD::"julia"
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
-        run: echo ::set-env name=TESTCMD::"xvfb-run julia"
+        run: echo ::set-env name=TESTCMD::"xvfb-run --auto-servernum julia"
 
       # Julia Dependencies
       - name: Install Julia dependencies
