@@ -59,7 +59,7 @@ jobs:
         run: $TESTCMD --project -e 'include("deps/SnoopCompile/snoop_bench.jl")' # NOTE: optional, if have benchmark file
 
       - name: Upload all
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.0.1
         with:
           path: ./
 
