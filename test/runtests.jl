@@ -11,6 +11,7 @@ import GeometryTypes, GeometryBasics
 using Dates
 
 include("test_axes.jl")
+include("test_recipes.jl")
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
 

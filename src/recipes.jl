@@ -919,7 +919,7 @@ end
 @recipe function f(::Type{Val{:mesh3d}}, x, y, z)
     # As long as no i,j,k are supplied this should work with PyPlot and GR
     seriestype := :surface
-    if plotattributes[:connections] != nothing 
+    if plotattributes[:connections] != nothing
     	throw(ArgumentError("Giving triangles using the connections argument is only supported on Plotly backend."))
     end
     ()
@@ -962,8 +962,12 @@ export lens!
     lens_index = last(plt.subplots)[:subplot_index] + 1
     x1, x2 = plotattributes[:x]
     y1, y2 = plotattributes[:y]
+    backup = copy(plotattributes)
+    empty!(plotattributes)
+
+    series_plotindex := backup[:series_plotindex]
     seriestype := :path
-    label := ""
+    primary := false
     linecolor := :lightgray
     bbx_mag = (x1 + x2) / 2
     bby_mag = (y1 + y2) / 2
@@ -973,6 +977,7 @@ export lens!
     if xl1 < xi_lens < xl2 &&
         yl1 < yi_lens < yl2
         @series begin
+            primary := false
             subplot := sp_index
             x := [xi_mag, xi_lens]
             y := [yi_mag, yi_lens]
@@ -981,6 +986,7 @@ export lens!
     end
     # add magnification shape
     @series begin
+        primary := false
         subplot := sp_index
         x := [x1, x1, x2, x2, x1]
         y := [y1, y2, y2, y1, y1]
@@ -991,16 +997,13 @@ export lens!
         @series begin
             plotattributes = merge(plotattributes, copy(series.plotattributes))
             subplot := lens_index
-            label := ""
+            primary := false
             xlims := (x1, x2)
             ylims := (y1, y2)
             ()
         end
     end
-    backup = copy(plotattributes)
-    empty!(plotattributes)
-    seriestype := :path
-    series_plotindex := backup[:series_plotindex]
+    nothing
 end
 
 function intersection_point(xA, yA, xB, yB, h, w)
@@ -1546,4 +1549,3 @@ julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], f
         end
     end
 end
-
