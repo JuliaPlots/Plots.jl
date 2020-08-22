@@ -176,15 +176,7 @@ function add_pyfixedformatter(cbar, vals::AVec)
 end
 
 function labelfunc(scale::Symbol, backend::PyPlotBackend)
-    if scale == :log10
-        x -> PyPlot.LaTeXStrings.latexstring("10^{$x}")
-    elseif scale == :log2
-        x -> PyPlot.LaTeXStrings.latexstring("2^{$x}")
-    elseif scale == :ln
-        x -> PyPlot.LaTeXStrings.latexstring("e^{$x}")
-    else
-        x -> PyPlot.LaTeXStrings.latexstring(convert_sci_unicode(x))
-    end
+    PyPlot.LaTeXStrings.latexstring ∘ labelfunc_tex(scale)
 end
 
 function py_mask_nans(z)

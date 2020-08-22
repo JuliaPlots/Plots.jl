@@ -123,6 +123,14 @@ const _label_func = Dict{Symbol,Function}(
 )
 labelfunc(scale::Symbol, backend::AbstractBackend) = get(_label_func, scale, string)
 
+const _label_func_tex = Dict{Symbol,Function}(
+    :log10 => x -> "10^{$x}",
+    :log2 => x -> "2^{$x}",
+    :ln => x -> "e^{$x}",
+)
+labelfunc_tex(scale::Symbol) = get(_label_func_tex, scale, convert_sci_unicode)
+
+
 function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
     amin, amax = axis_limits(sp, axis[:letter])
 

@@ -216,7 +216,6 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     sinf = sind.(a)
     cosf = cosd.(a)
     rtick_values, rtick_labels = get_ticks(sp, yaxis)
-    rtick_labels = gr_tick_label.((yaxis,), rtick_labels)
 
     #draw angular grid
     if xaxis[:grid]
@@ -746,20 +745,10 @@ function gr_get_ticks_size(ticks, rot)
     return w, h
 end
 
-gr_tick_label(axis, label) =
-    (axis[:formatter] in (:scientific, :auto)) ? gr_convert_sci_tick_label(string(label)) :
-    string(label)
-
-function gr_convert_sci_tick_label(label)
-    caret_split = split(label,'^')
-    if length(caret_split) == 2
-        base, exponent = caret_split
-        label = "$base^{$exponent}"
-    end
-    if occursin("×10", label)
-        label = string(replace(label, "×10" => "×10^{"), "}")
-    end
-    label
+function labelfunc(scale::Symbol, backend::GRBackend)
+    texfunc = labelfunc_tex(scale)
+    # replace dash with \minus (U+2212)
+    label -> replace(texfunc(label), "-" => "−")
 end
 
 function gr_axis_height(sp, axis)
@@ -1288,7 +1277,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 xi, yi = gr_w3tondc(cv, yt, zt)
                 xi += (yaxis[:mirror] ? 1 : -1) * 1e-2 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
                 yi += (xaxis[:mirror] ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
-                gr_text(xi, yi, gr_tick_label(xaxis, dv))
+                gr_text(xi, yi, dv)
             end
         end
 
@@ -1320,7 +1309,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
                 xi, yi = gr_w3tondc(xt, cv, zt)
                 gr_text(xi + (yaxis[:mirror] ? -1 : 1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
                         yi + (yaxis[:mirror] ? 1 : -1) * 5e-3 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
-                        gr_tick_label(yaxis, dv))
+                        dv)
             end
         end
 
@@ -1351,7 +1340,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for (cv, dv) in zip(zticks...)
                 xi, yi = gr_w3tondc(xt, yt, cv)
                 gr_text(xi + (zaxis[:mirror] ? 1 : -1) * 1e-2 * (zaxis[:tick_direction] == :out ? 1.5 : 1.0),
-                        yi, gr_tick_label(zaxis, dv))
+                        yi, dv)
             end
         end
         #
@@ -1471,8 +1460,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             flip, mirror = gr_set_xticks_font(sp)
             for (cv, dv) in zip(xticks...)
                 xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
-                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0),
-                        gr_tick_label(xaxis, dv))
+                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), dv)
             end
         end
 
@@ -1482,8 +1470,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             for (cv, dv) in zip(yticks...)
                 xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
                 gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
-                        yi,
-                        gr_tick_label(yaxis, dv))
+                        yi, dv)
+
             end
         end
 
