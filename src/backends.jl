@@ -665,11 +665,6 @@ mutable struct HDF5Plot_PlotRef
 end
 const HDF5PLOT_PLOTREF = HDF5Plot_PlotRef(nothing)
 
-#Simple sub-structures that can just be written out using _hdf5plot_gwritefields:
-const HDF5PLOT_SIMPLESUBSTRUCT = Union{Font, BoundingBox,
-	GridLayout, RootLayout, ColorGradient, SeriesAnnotations, PlotText,
-	Shape,
-}
 
 # ------------------------------------------------------------------------------
 # inspectdr
