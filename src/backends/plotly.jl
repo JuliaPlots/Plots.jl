@@ -19,6 +19,16 @@ using UUIDs
 
 # ----------------------------------------------------------------
 
+function labelfunc(scale::Symbol, backend::PlotlyBackend)
+    texfunc = labelfunc_tex(scale)
+    function (x)
+        tex_x = texfunc(x)
+        sup_x = replace( tex_x, r"\^{(.*)}"=>s"<sup>\1</sup>" )
+        # replace dash with \minus (U+2212)
+        replace(sup_x, "-" => "−")
+    end
+end
+
 function plotly_font(font::Font, color = font.color)
     KW(
         :family => font.family,
@@ -336,7 +346,7 @@ function plotly_legend_pos(pos::Symbol)
     ybot = 0.07
     ytop = 1.0
     xcenter = 0.55
-    ycenter = 0.52    
+    ycenter = 0.52
     center = 0.5
     youtertop = 1.1
     youterbot = -0.15
@@ -351,9 +361,9 @@ function plotly_legend_pos(pos::Symbol)
         bottomright = (coords = [1.0, ybot], xanchor = "right", yanchor = "bottom"),
         topright    = (coords = [1.0, 1.0], xanchor = "right", yanchor = "top"),
         topleft     = (coords = [xleft, 1.0], xanchor = "left",  yanchor = "top"),
-        outertop =(coords = [center, youtertop ], xanchor = "upper",  yanchor = "middle"), 
-        outerbottom =(coords = [center, youterbot], xanchor = "lower",  yanchor = "middle"), 
-        outerleft =(coords = [xouterleft, center], xanchor = "left",  yanchor = "top"), 
+        outertop =(coords = [center, youtertop ], xanchor = "upper",  yanchor = "middle"),
+        outerbottom =(coords = [center, youterbot], xanchor = "lower",  yanchor = "middle"),
+        outerleft =(coords = [xouterleft, center], xanchor = "left",  yanchor = "top"),
         outerright =(coords = [xouterright, center], xanchor = "right",  yanchor = "top"),
         outertopleft =(coords = [xouterleft, ytop], xanchor = "upper",  yanchor = "left"),
         outertopright = (coords = [xouterright, ytop], xanchor = "upper",  yanchor = "right"),
