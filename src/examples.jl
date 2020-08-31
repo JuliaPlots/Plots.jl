@@ -1024,6 +1024,21 @@ const _examples = PlotExample[
 		),
 	],
     ),
+    PlotExample(
+        "Vectors of markershapes and segments",
+        "",
+        [quote
+            yv = ones(9)
+            ys = [1; 1; NaN; ones(6)]
+            plot(
+                5 .- [yv 2ys 3yv 4ys],
+                seriestype = [:path :path :scatter :scatter],
+                markershape = [:utriangle, :rect],
+                markersize = 8,
+                color = [:red, :black],
+            )
+        end]
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
