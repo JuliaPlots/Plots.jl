@@ -299,13 +299,13 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                             series[:z],
                         )...)
                     else
-                        iter_segments(series)
+                        iter_segments(series, st)
                     end
                 for (i, rng) in enumerate(segments)
                     segment_opt = PGFPlotsX.Options()
                     segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
                     if opt[:markershape] != :none
-                        marker = opt[:markershape]
+                        marker = _cycle(opt[:markershape], i)
                         if marker isa Shape
                             x = marker.x
                             y = marker.y

@@ -67,19 +67,17 @@ function iter_segments(args...)
     SegmentsIterator(tup, n1, n2)
 end
 
-function iter_segments(series::Series)
+function iter_segments(series::Series, seriestype::Symbol = :path)
     x, y, z = series[:x], series[:y], series[:z]
     if x === nothing
         return UnitRange{Int}[]
     elseif has_attribute_segments(series)
-        if series[:seriestype] in (:scatter, :scatter3d)
+        if any(isnan,y)
+            return [iter_segments(y)...]
+        elseif seriestype in (:scatter, :scatter3d)
             return [[i] for i in eachindex(y)]
         else
-            if any(isnan,y)
-                return [iter_segments(y)...]
-            else
-                return [i:(i + 1) for i in firstindex(y):lastindex(y)-1]
-            end
+            return [i:(i + 1) for i in firstindex(y):lastindex(y)-1]
         end
     else
         segs = UnitRange{Int}[]
@@ -617,6 +615,7 @@ function has_attribute_segments(series::Series)
             :markerstrokecolor,
             :markerstrokealpha,
             :markerstrokewidth,
+            :markershape,
         ]
     ) || any(
         typeof(series[attr]) <: AbstractArray for attr in (:line_z, :fill_z, :marker_z)

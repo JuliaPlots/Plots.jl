@@ -398,7 +398,6 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # line plot
     if st in (:path, :path3d, :steppre, :steppost, :straightline)
         if maximum(series[:linewidth]) > 0
-            segments = iter_segments(series)
             # TODO: check LineCollection alternative for speed
             # if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] !== nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
             #     # multicolored line segments
@@ -429,7 +428,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             #     end
             #     push!(handles, handle)
             # else
-            for (i, rng) in enumerate(iter_segments(series))
+            for (i, rng) in enumerate(iter_segments(series, st))
                 handle = ax."plot"((arg[rng] for arg in xyargs)...;
                                    label = i == 1 ? series[:label] : "",
                                    zorder = series[:series_plotindex],
@@ -472,130 +471,24 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     # add markers?
-    if series[:markershape] != :none && st in (:path, :scatter, :path3d,
-                                          :scatter3d, :steppre, :steppost,
-                                          :bar)
-        markercolor = if any(typeof(series[arg]) <: AVec for arg in (:markercolor, :markeralpha)) || series[:marker_z] !== nothing
-            # py_color(plot_color.(get_markercolor.(series, clims, eachindex(x)), get_markeralpha.(series, eachindex(x))))
-            [py_color(plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i))) for i in eachindex(x)]
-        else
-            py_color(plot_color(series[:markercolor], series[:markeralpha]))
-        end
-        extrakw[:c] = if markercolor isa Array
-            permutedims(hcat([[m...] for m in markercolor]...),[2,1])
-        elseif markercolor isa Tuple
-            reshape([markercolor...], 1, length(markercolor))
-        else
-            error("This case is not handled.  Please file an issue.")
-        end
-        xyargs = if st == :bar && !isvertical(series)
-            (y, x)
-        else
-            xyargs
-        end
-
-        if isa(series[:markershape], AbstractVector{Shape})
-            # this section will create one scatter per data point to accommodate the
-            # vector of shapes
-            handle = []
-            x,y = xyargs
-            shapes = series[:markershape]
-            msc = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series))
-            lw = py_thickness_scale(plt, series[:markerstrokewidth])
-            for i=eachindex(y)
-                if series[:marker_z] !== nothing
-                    extrakw[:c] = [py_color(get_markercolor(series, i), get_markercoloralpha(series, i))]
-                end
-
-                push!(handle, ax."scatter"(_cycle(x,i), _cycle(y,i);
-                    label = series[:label],
-                    zorder = series[:series_plotindex] + 0.5,
-                    marker = py_marker(_cycle(shapes,i)),
-                    s =  py_thickness_scale(plt, _cycle(series[:markersize],i)).^ 2,
-                    facecolors = py_color(get_markercolor(series, i), get_markercoloralpha(series, i)),
-                    edgecolors = msc,
-                    linewidths = lw,
-                    extrakw...
-                ))
-            end
-            push!(handles, handle)
-        elseif isa(series[:markershape], AbstractVector{Symbol})
-            handle = []
-            x,y = xyargs
-            shapes = series[:markershape]
-
-            prev_marker = py_marker(_cycle(shapes,1))
-
-            cur_x_list = []
-            cur_y_list = []
-
-            cur_color_list = []
-            cur_scale_list = []
-
-            delete!(extrakw, :c)
-
-            for i=eachindex(y)
-                cur_marker = py_marker(_cycle(shapes,i))
-
-                if ( cur_marker == prev_marker )
-                  push!(cur_x_list, _cycle(x,i))
-                  push!(cur_y_list, _cycle(y,i))
-
-                  push!(cur_color_list, _cycle(markercolor, i))
-                  push!(cur_scale_list, py_thickness_scale(plt, _cycle(series[:markersize],i)).^ 2)
-
-                  continue
-                end
-
-                push!(handle, ax."scatter"(cur_x_list, cur_y_list;
-                  label = series[:label],
-                  zorder = series[:series_plotindex] + 0.5,
-                  marker = prev_marker,
-                  s = cur_scale_list,
-                  edgecolors = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
-                  linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
-                  facecolors = cur_color_list,
-                  extrakw...
-                ))
-
-                cur_x_list = [_cycle(x,i)]
-                cur_y_list = [_cycle(y,i)]
-
-                cur_color_list = [_cycle(markercolor, i)]
-                cur_scale_list = [py_thickness_scale(plt, _cycle(series[:markersize],i)) .^ 2]
-
-                prev_marker = cur_marker
-            end
-
-            if !isempty(cur_color_list)
-              push!(handle, ax."scatter"(cur_x_list, cur_y_list;
-                label = series[:label],
-                zorder = series[:series_plotindex] + 0.5,
-                marker = prev_marker,
-                s = cur_scale_list,
-                edgecolors = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
-                linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
-                facecolors = cur_color_list,
-                extrakw...
-              ))
-            end
-
-            push!(handles, handle)
-        else
-            # do a normal scatter plot
-
-            # Add depthshade option for 3d plots
-            if RecipesPipeline.is3d(sp)
-                extrakw[:depthshade] = get(series[:extra_kwargs], :depthshade, false)
+    if series[:markershape] != :none && st in (
+        :path, :scatter, :path3d, :scatter3d, :steppre, :steppost, :bar
+    )
+        for (i, rng) in enumerate(iter_segments(series, :scatter))
+            xyargs = if st == :bar && !isvertical(series)
+                y[rng], x[rng]
+            else
+                x[rng], y[rng]
             end
 
             handle = ax."scatter"(xyargs...;
                 label = series[:label],
                 zorder = series[:series_plotindex] + 0.5,
-                marker = py_marker(series[:markershape]),
-                s = py_thickness_scale(plt, series[:markersize]) .^2,
-                edgecolors = py_color(get_markerstrokecolor(series), get_markerstrokealpha(series)),
-                linewidths = py_thickness_scale(plt, series[:markerstrokewidth]),
+                marker = py_marker(_cycle(series[:markershape], i)),
+                s =  py_thickness_scale(plt, _cycle(series[:markersize], i)).^ 2,
+                facecolors = py_color(get_markercolor(series, i), get_markeralpha(series, i)),
+                edgecolors = py_color(get_markerstrokecolor(series, i), get_markerstrokealpha(series, i)),
+                linewidths = py_thickness_scale(plt, get_markerstrokewidth(series, i)),
                 extrakw...
             )
             push!(handles, handle)
