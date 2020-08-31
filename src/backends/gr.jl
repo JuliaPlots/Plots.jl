@@ -348,12 +348,15 @@ function gr_draw_markers(
 
     shapes = series[:markershape]
     if shapes != :none
-        for (i, rng) in enumerate(iter_segments(series))
-            ms = get_thickness_scaling(series) * _cycle(msize, i)
-            msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
-            shape = _cycle(shapes, i)
-            for j in rng
-                gr_draw_marker(series, _cycle(x, j), _cycle(y, j), clims, i, ms, msw, shape)
+        for (i, rng) in enumerate(iter_segments(series, :scatter))
+            rng = intersect(eachindex(x), rng)
+            if !isempty(rng)
+                ms = get_thickness_scaling(series) * _cycle(msize, i)
+                msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
+                shape = _cycle(shapes, i)
+                for j in rng
+                    gr_draw_marker(series, _cycle(x, j), _cycle(y, j), clims, i, ms, msw, shape)
+                end
             end
         end
     end
@@ -1634,7 +1637,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if st in (:path, :scatter, :straightline)
             if x !== nothing && length(x) > 1
                 lz = series[:line_z]
-                segments = iter_segments(series)
+                segments = iter_segments(series, st)
                 # do area fill
                 if frng !== nothing
                     GR.setfillintstyle(GR.INTSTYLE_SOLID)
@@ -1759,7 +1762,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             if st == :path3d
                 if length(x) > 1
                     lz = series[:line_z]
-                    segments = iter_segments(series)
+                    segments = iter_segments(series, st)
                     for (i, rng) in enumerate(segments)
                         lc = get_linecolor(series, clims, i)
                         gr_set_line(

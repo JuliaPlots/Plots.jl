@@ -694,8 +694,10 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
     hasfillrange = st in (:path, :scatter, :scattergl, :straightline) &&
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
-    segments = iter_segments(series)
+    segments = iter_segments(series, st)
     plotattributes_outs = fill(KW(), (hasfillrange ? 2 : 1 ) * length(segments))
+
+    needs_scatter_fix = !isscatter && hasmarker && !any(isnan,y)
 
     for (i,rng) in enumerate(segments)
         plotattributes_out = deepcopy(plotattributes_base)
@@ -733,13 +735,15 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
 
         # add "marker"
         if hasmarker
+            mcolor = rgba_string(plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i)))
+            lcolor = rgba_string(plot_color(get_markerstrokecolor(series, i), get_markerstrokealpha(series, i)))
             plotattributes_out[:marker] = KW(
                 :symbol => get_plotly_marker(_cycle(series[:markershape], i), string(_cycle(series[:markershape], i))),
-                # :opacity => series[:markeralpha],
+                # :opacity => needs_scatter_fix ? [1, 0] : 1,
                 :size => 2 * _cycle(series[:markersize], i),
-                :color => rgba_string(plot_color(get_markercolor(series, clims, i), get_markeralpha(series, i))),
+                :color => needs_scatter_fix ? [mcolor, "rgba(0, 0, 0, 0.000)"] : mcolor,
                 :line => KW(
-                    :color => rgba_string(plot_color(get_markerstrokecolor(series, i), get_markerstrokealpha(series, i))),
+                    :color => needs_scatter_fix ? [lcolor, "rgba(0, 0, 0, 0.000)"] : lcolor,
                     :width => _cycle(series[:markerstrokewidth], i),
                 ),
             )
