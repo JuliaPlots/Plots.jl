@@ -30,9 +30,9 @@ const _examples = PlotExample[
         """,
         [:(
             begin
-                p = plot([sin, cos], zeros(0), leg = false)
+                p = plot([sin, cos], zeros(0), leg = false, xlims = (0, 2π), ylims = (-1, 1))
                 anim = Animation()
-                for x in range(0, stop = 10π, length = 100)
+                for x in range(0, stop = 2π, length = 20)
                     push!(p, x, Float64[sin(x), cos(x)])
                     frame(anim)
                 end
@@ -628,14 +628,15 @@ const _examples = PlotExample[
                 begin
                     l = @layout([[a; b] c])
                     p = plot(
-                        plot([sin, cos], 1, leg = false),
-                        scatter([atan, cos], 1, leg = false),
-                        plot(log, 1, xlims = (1, 10π), ylims = (0, 5), leg = false),
+                        plot([sin, cos], 1, ylims = (-1, 1), leg = false),
+                        scatter([atan, cos], 1, ylims = (-1, 1.5), leg = false),
+                        plot(log, 1, ylims = (0, 2), leg = false),
                         layout = l,
+                        xlims = (1, 2π),
                     )
 
                     anim = Animation()
-                    for x in range(1, stop = 10π, length = 100)
+                    for x in range(1, stop = 2π, length = 20)
                         plot(push!(
                             p,
                             x,
