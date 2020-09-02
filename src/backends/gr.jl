@@ -182,9 +182,9 @@ function gr_polyline3d(x, y, z, func = GR.polyline3d)
     end
 end
 
-gr_inqtext(x, y, s::Symbol) = gr_inqtext(x, y, string(s))
+gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 
-function gr_inqtext(x, y, s)
+function gr_inqtext(x, y, s::AbstractString)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.inqmathtex(x, y, s[2:end-1])
     elseif findfirst(isequal('\\'), s) !== nothing || occursin("10^{", s)
@@ -194,9 +194,9 @@ function gr_inqtext(x, y, s)
     end
 end
 
-gr_text(x, y, s::Symbol) = gr_text(x, y, string(s))
+gr_text(x, y, s) = gr_text(x, y, string(s))
 
-function gr_text(x, y, s)
+function gr_text(x, y, s::AbstractString)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.mathtex(x, y, s[2:end-1])
     elseif findfirst(isequal('\\'), s) !== nothing || occursin("10^{", s)
