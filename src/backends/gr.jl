@@ -215,7 +215,7 @@ function gr_polaraxes(rmin::Real, rmax::Real, sp::Subplot)
     a = α .+ 90
     sinf = sind.(a)
     cosf = cosd.(a)
-    rtick_values, rtick_labels = get_ticks(sp, yaxis)
+    rtick_values, rtick_labels = get_ticks(sp, yaxis, update = false)
 
     #draw angular grid
     if xaxis[:grid]
@@ -692,7 +692,7 @@ end
 
 function gr_axis_height(sp, axis)
     GR.savestate()
-    ticks = get_ticks(sp, axis)
+    ticks = get_ticks(sp, axis, update = false)
     gr_set_font(tickfont(axis), sp)
     h = (ticks in (nothing, false, :none) ? 0 : last(gr_get_ticks_size(ticks, axis[:rotation])))
     if axis[:guide] != ""
@@ -705,7 +705,7 @@ end
 
 function gr_axis_width(sp, axis)
     GR.savestate()
-    ticks = get_ticks(sp, axis)
+    ticks = get_ticks(sp, axis, update = false)
     gr_set_font(tickfont(axis), sp)
     w = (ticks in (nothing, false, :none) ? 0 : first(gr_get_ticks_size(ticks, axis[:rotation])))
     if axis[:guide] != ""
@@ -896,29 +896,22 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     gr_update_viewport_ratio!(viewport_plotarea, sp)
     leg = gr_get_legend_geometry(viewport_plotarea, sp)
     gr_update_viewport_legend!(viewport_plotarea, sp, leg)
-
-    # TODO daschw is this required here?
-    data_lims = xy_lims = gr_xy_axislims(sp)
     
     # fill in the plot area background
     gr_fill_plotarea(sp, viewport_plotarea)
 
-    # reduced from before... set some flags based on the series in this subplot
-    # TODO: can these be generic flags?
-    outside_ticks = false
     cbar = GRColorbar()
 
     draw_axes = sp[:framestyle] != :none
     # axes_2d = true
     for series in series_list(sp)
-        st = series[:seriestype]
-        if st in (:heatmap, :image)
-            x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
-            xy_lims = x[1], x[end], y[1], y[end]
-            expand_extrema!(sp[:xaxis], x)
-            expand_extrema!(sp[:yaxis], y)
-            data_lims = gr_xy_axislims(sp)
-        end
+        # st = series[:seriestype]
+        # if st in (:heatmap, :image)
+        #     x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
+        #     xy_lims = x[1], x[end], y[1], y[end]
+        #     expand_extrema!(sp[:xaxis], x)
+        #     expand_extrema!(sp[:yaxis], y)
+        # end
 
         gr_update_colorbar!(cbar,series)
     end
@@ -973,7 +966,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         if ispolar(sp)
             gr_set_viewport_polar(viewport_plotarea)
         else
-            xmin, xmax, ymin, ymax = data_lims
+            xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
             if xmax > xmin && ymax > ymin
                 GR.setwindow(xmin, xmax, ymin, ymax)
             end
@@ -1107,9 +1100,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             else
                 phimin, phimax = 0.0, 360.0 # nonuniform polar array is not yet supported in GR.jl
                 nx, ny = length(series[:x]), length(series[:y])
-                xmin, xmax, ymin, ymax = xy_lims
-                rmax = data_lims[4]
-                GR.setwindow(-rmax, rmax, -rmax, rmax)
+                xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
+                GR.setwindow(-ymax, ymax, -ymax, ymax)
                 if ymin > 0
                     @warn "'ymin[1] > 0' (rmin) is not yet supported."
                 end
@@ -1221,7 +1213,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     if ispolar(sp)
         gr_set_viewport_polar(viewport_plotarea)
     else
-        xmin, xmax, ymin, ymax = data_lims
+        xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         if xmax > xmin && ymax > ymin
             GR.setwindow(xmin, xmax, ymin, ymax)
         end
@@ -1467,12 +1459,12 @@ end
 function gr_update_viewport_ratio!(viewport_plotarea, sp)
     ratio = get_aspect_ratio(sp)
     if ratio != :none
-        data_lims = gr_xy_axislims(sp)
+        xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
         if ratio == :equal
             ratio = 1
         end
         viewport_ratio = (viewport_plotarea[2] - viewport_plotarea[1]) / (viewport_plotarea[4] - viewport_plotarea[3])
-        window_ratio = (data_lims[2] - data_lims[1]) / (data_lims[4] - data_lims[3]) / ratio
+        window_ratio = (xmax - xmin) / (ymax - ymin) / ratio
         if window_ratio < viewport_ratio
             viewport_center = 0.5 * (viewport_plotarea[1] + viewport_plotarea[2])
             viewport_size = (viewport_plotarea[2] - viewport_plotarea[1]) * window_ratio / viewport_ratio

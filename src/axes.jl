@@ -213,48 +213,51 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
 end
 
 # return (continuous_values, discrete_values) for the ticks on this axis
-function get_ticks(sp::Subplot, axis::Axis)
-    ticks = _transform_ticks(axis[:ticks])
-    ticks in (:none, nothing, false) && return nothing
+function get_ticks(sp::Subplot, axis::Axis; update = true)
+    if update || !haskey(axis.plotattributes, :optimized_ticks)
+        ticks = _transform_ticks(axis[:ticks])
+        if ticks in (:none, nothing, false)
+            axis.plotattributes[:optimized_ticks] = nothing
+        else
+            # treat :native ticks as :auto
+            ticks = ticks == :native ? :auto : ticks
 
-    # treat :native ticks as :auto
-    ticks = ticks == :native ? :auto : ticks
-
-    dvals = axis[:discrete_values]
-    cv, dv = if typeof(ticks) <: Symbol
-        if !isempty(dvals)
-            # discrete ticks...
-            n = length(dvals)
-            rng = if ticks == :auto
-                Int[round(Int,i) for i in range(1, stop=n, length=min(n,15))]
-            else # if ticks == :all
-                1:n
+            dvals = axis[:discrete_values]
+            cv, dv = if typeof(ticks) <: Symbol
+                if !isempty(dvals)
+                    # discrete ticks...
+                    n = length(dvals)
+                    rng = if ticks == :auto
+                        Int[round(Int,i) for i in range(1, stop=n, length=min(n,15))]
+                    else # if ticks == :all
+                        1:n
+                    end
+                    axis[:continuous_values][rng], dvals[rng]
+                elseif ispolar(axis.sps[1]) && axis[:letter] == :x
+                    #force theta axis to be full circle
+                    (collect(0:pi/4:7pi/4), string.(0:45:315))
+                else
+                    # compute optimal ticks and labels
+                    optimal_ticks_and_labels(sp, axis)
+                end
+            elseif typeof(ticks) <: Union{AVec, Int}
+                if !isempty(dvals) && typeof(ticks) <: Int
+                    rng = Int[round(Int,i) for i in range(1, stop=length(dvals), length=ticks)]
+                    axis[:continuous_values][rng], dvals[rng]
+                else
+                    # override ticks, but get the labels
+                    optimal_ticks_and_labels(sp, axis, ticks)
+                end
+            elseif typeof(ticks) <: NTuple{2, Any}
+                # assuming we're passed (ticks, labels)
+                ticks
+            else
+                error("Unknown ticks type in get_ticks: $(typeof(ticks))")
             end
-            axis[:continuous_values][rng], dvals[rng]
-        elseif ispolar(axis.sps[1]) && axis[:letter] == :x
-            #force theta axis to be full circle
-            (collect(0:pi/4:7pi/4), string.(0:45:315))
-        else
-            # compute optimal ticks and labels
-            optimal_ticks_and_labels(sp, axis)
+            axis.plotattributes[:optimized_ticks] = (cv, dv)
         end
-    elseif typeof(ticks) <: Union{AVec, Int}
-        if !isempty(dvals) && typeof(ticks) <: Int
-            rng = Int[round(Int,i) for i in range(1, stop=length(dvals), length=ticks)]
-            axis[:continuous_values][rng], dvals[rng]
-        else
-            # override ticks, but get the labels
-            optimal_ticks_and_labels(sp, axis, ticks)
-        end
-    elseif typeof(ticks) <: NTuple{2, Any}
-        # assuming we're passed (ticks, labels)
-        ticks
-    else
-        error("Unknown ticks type in get_ticks: $(typeof(ticks))")
     end
-    # @show ticks dvals cv dv
-
-    return cv, dv
+    axis.plotattributes[:optimized_ticks]
 end
 
 _transform_ticks(ticks) = ticks
@@ -589,7 +592,7 @@ function axis_drawing_info(sp, letter)
     ax, oax = sp[asym], sp[oasym]
     amin, amax = axis_limits(sp, letter)
     oamin, oamax = axis_limits(sp, oletter)
-    ticks = get_ticks(sp, ax)
+    ticks = get_ticks(sp, ax, update = false)
     minor_ticks = get_minor_ticks(sp, ax, ticks)
 
     # initialize the segments
@@ -714,7 +717,7 @@ function axis_drawing_info_3d(sp, letter)
     namin, namax = axis_limits(sp, near_letter)
     famin, famax = axis_limits(sp, far_letter)
 
-    ticks = get_ticks(sp, ax)
+    ticks = get_ticks(sp, ax, update = false)
     minor_ticks = get_minor_ticks(sp, ax, ticks)
 
     # initialize the segments
