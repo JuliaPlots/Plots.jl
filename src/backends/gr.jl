@@ -333,35 +333,6 @@ function gr_draw_marker(series, xi, yi, clims, i, msize, strokewidth, shape::Sym
 end
 
 
-# draw the markers, one at a time
-function gr_draw_markers(
-    series::Series,
-    x,
-    y,
-    clims,
-    msize = series[:markersize],
-    strokewidth = series[:markerstrokewidth],
-)
-
-    isempty(x) && return
-    GR.setfillintstyle(GR.INTSTYLE_SOLID)
-
-    shapes = series[:markershape]
-    if shapes != :none
-        for (i, rng) in enumerate(iter_segments(series, :scatter))
-            rng = intersect(eachindex(x), rng)
-            if !isempty(rng)
-                ms = get_thickness_scaling(series) * _cycle(msize, i)
-                msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
-                shape = _cycle(shapes, i)
-                for j in rng
-                    gr_draw_marker(series, _cycle(x, j), _cycle(y, j), clims, i, ms, msw, shape)
-                end
-            end
-        end
-    end
-end
-
 # ---------------------------------------------------------
 
 function gr_set_line(lw, style, c, s) # s can be Subplot or Series
@@ -900,305 +871,25 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     # fill in the plot area background
     gr_fill_plotarea(sp, viewport_plotarea)
 
-    cbar = GRColorbar()
-
-    draw_axes = sp[:framestyle] != :none
-    # axes_2d = true
-    for series in series_list(sp)
-        # st = series[:seriestype]
-        # if st in (:heatmap, :image)
-        #     x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
-        #     xy_lims = x[1], x[end], y[1], y[end]
-        #     expand_extrema!(sp[:xaxis], x)
-        #     expand_extrema!(sp[:yaxis], y)
-        # end
-
-        gr_update_colorbar!(cbar,series)
-    end
-
     # set our plot area view
     GR.setviewport(viewport_plotarea...)
 
-    # these are the Axis objects, which hold scale, lims, etc
-    xaxis = sp[:xaxis]
-    yaxis = sp[:yaxis]
-    zaxis = sp[:zaxis]
-
     # set the scale flags and window
-    gr_set_window(sp)
+    gr_set_window(sp, viewport_plotarea)
 
     # draw the axes
     gr_draw_axes(sp, viewport_plotarea)
-
-    # add the guides
-    GR.savestate()
-    if sp[:title] != ""
-        gr_set_font(titlefont(sp), sp)
-        loc = sp[:titlelocation]
-        if loc == :left
-            xpos = viewport_plotarea[1]
-            halign = GR.TEXT_HALIGN_LEFT
-        elseif loc == :right
-            xpos = viewport_plotarea[2]
-            halign = GR.TEXT_HALIGN_RIGHT
-        else
-            xpos = gr_view_xcenter(viewport_plotarea)
-            halign = GR.TEXT_HALIGN_CENTER
-        end
-        GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
-        gr_text(xpos, viewport_subplot[4], sp[:title])
-    end
-    
-    GR.restorestate()
+    gr_add_title(sp, viewport_plotarea, viewport_subplot)
 
     # this needs to be here to point the colormap to the right indices
     GR.setcolormap(1000 + GR.COLORMAP_COOLWARM)
 
-    for (idx, series) in enumerate(series_list(sp))
-        st = series[:seriestype]
+    # init the colorbar
+    cbar = GRColorbar()
 
-        # update the current stored gradient
-        gr_set_gradient(series)
-
-        GR.savestate()
-
-        # update the bounding window
-        if ispolar(sp)
-            gr_set_viewport_polar(viewport_plotarea)
-        else
-            xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
-            if xmax > xmin && ymax > ymin
-                GR.setwindow(xmin, xmax, ymin, ymax)
-            end
-        end
-
-        x, y, z = series[:x], series[:y], series[:z]
-        frng = series[:fillrange]
-
-        clims = get_clims(sp, series)
-
-        # add custom frame shapes to markershape?
-        series_annotations_shapes!(series)
-        # -------------------------------------------------------
-
-        # recompute data
-        if typeof(z) <: Surface
-            z = vec(transpose_z(series, z.surf, false))
-        elseif ispolar(sp)
-            rmin, rmax = axis_limits(sp, :y)
-            if frng !== nothing
-                _, frng = convert_to_polar(x, frng, (rmin, rmax))
-            end
-            x, y = convert_to_polar(x, y, (rmin, rmax))
-        end
-
-        if st == :straightline
-            x, y = straightline_data(series)
-        end
-
-        if st in (:path, :scatter, :straightline)
-            if x !== nothing && length(x) > 1
-                lz = series[:line_z]
-                segments = iter_segments(series, st)
-                # do area fill
-                if frng !== nothing
-                    GR.setfillintstyle(GR.INTSTYLE_SOLID)
-                    fr_from, fr_to = (is_2tuple(frng) ? frng : (y, frng))
-                    for (i, rng) in enumerate(segments)
-                        fc = get_fillcolor(series, clims, i)
-                        gr_set_fillcolor(fc)
-                        fx = _cycle(x, vcat(rng, reverse(rng)))
-                        fy = vcat(_cycle(fr_from,rng), _cycle(fr_to,reverse(rng)))
-                        gr_set_transparency(fc, get_fillalpha(series, i))
-                        GR.fillarea(fx, fy)
-                    end
-                end
-
-                # draw the line(s)
-                if st in (:path, :straightline)
-                    for (i, rng) in enumerate(segments)
-                        lc = get_linecolor(series, clims, i)
-                        gr_set_line(
-                            get_linewidth(series, i), get_linestyle(series, i), lc, sp
-                        )
-                        arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
-                        arrowstyle = isa(series[:arrow], Arrow) ? series[:arrow].style : :simple
-                        gr_set_fillcolor(lc)
-                        gr_set_transparency(lc, get_linealpha(series, i))
-                        gr_polyline(x[rng], y[rng]; arrowside = arrowside, arrowstyle = arrowstyle)
-                    end
-                end
-            end
-
-            if series[:markershape] != :none
-                gr_draw_markers(series, x, y, clims)
-            end
-
-        elseif st == :contour
-            GR.setspace(clims[1], clims[2], 0, 90)
-            GR.setlinetype(gr_linetype(get_linestyle(series)))
-            GR.setlinewidth(max(0, get_linewidth(series)) / gr_nominal_size(sp))
-            is_lc_black = let black=plot_color(:black)
-                plot_color(series[:linecolor]) in (black,[black])
-            end
-            h = gr_contour_levels(series, clims)
-            if series[:fillrange] !== nothing
-                if series[:fillcolor] != series[:linecolor] && !is_lc_black
-                    @warn("GR: filled contour only supported with black contour lines")
-                end
-                GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
-            else
-                coff = is_lc_black ? 0 : 1000
-                GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
-            end
-
-        elseif st in [:surface, :wireframe]
-            if st == :surface
-                if length(x) == length(y) == length(z)
-                    GR.trisurface(x, y, z)
-                else
-                    try
-                        GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
-                    catch
-                        GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
-                    end
-                end
-            else
-                GR.setfillcolorind(0)
-                GR.surface(x, y, z, GR.OPTION_FILLED_MESH)
-            end
-
-        elseif st == :volume
-            sp[:legend] = :none
-            GR.gr3.clear()
-            dmin, dmax = GR.gr3.volume(y.v, 0)
-
-        elseif st == :heatmap
-            zmin, zmax = clims
-            fillgrad = _as_gradient(series[:fillcolor])
-            if !ispolar(sp)
-                GR.setspace(clims..., 0, 90)
-                x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(series[:z]))
-                w, h = length(x) - 1, length(y) - 1
-                if is_uniformly_spaced(x) && is_uniformly_spaced(y)
-                    # For uniformly spaced data use GR.drawimage, which can be
-                    # much faster than GR.nonuniformcellarray, especially for
-                    # pdf output, and also supports alpha values.
-                    # Note that drawimage draws uniformly spaced data correctly
-                    # even on log scales, where it is visually non-uniform.
-                    colors = plot_color.(get(fillgrad, z, clims), series[:fillalpha])
-                    rgba = gr_color.(colors)
-                    GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
-                else
-                    if something(series[:fillalpha],1) < 1
-                        @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
-                    end
-                    z_normalized = get_z_normalized.(z, zmin, zmax)
-                    rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
-                    GR.nonuniformcellarray(x, y, w, h, rgba)
-                end
-            else
-                phimin, phimax = 0.0, 360.0 # nonuniform polar array is not yet supported in GR.jl
-                nx, ny = length(series[:x]), length(series[:y])
-                xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
-                GR.setwindow(-ymax, ymax, -ymax, ymax)
-                if ymin > 0
-                    @warn "'ymin[1] > 0' (rmin) is not yet supported."
-                end
-                if series[:y][end] != ny
-                    @warn "Right now only the maximum value of y (r) is taken into account."
-                end
-                # colors = get(fillgrad, z, clims)
-                # GR.polarcellarray(0, 0, phimin, phimax, ymin, ymax, nx, ny, colors)
-                z_normalized = get_z_normalized.(z, zmin, zmax)
-                # z_normalized = map(c -> c == invisible() ? 256/255 : PlotUtils.getinverse(fillgrad.colors, c), colors)
-                rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
-                GR.polarcellarray(0, 0, phimin, phimax, 0, ymax, nx, ny, rgba)
-                # Right now only the maximum value of y (r) is taken into account.
-                # This is certainly not perfect but nonuniform polar array is not yet supported in GR.jl
-            end
-
-        elseif st in (:path3d, :scatter3d)
-            # draw path
-            if st == :path3d
-                if length(x) > 1
-                    lz = series[:line_z]
-                    segments = iter_segments(series, st)
-                    for (i, rng) in enumerate(segments)
-                        lc = get_linecolor(series, clims, i)
-                        gr_set_line(
-                            get_linewidth(series, i), get_linestyle(series, i), lc, sp
-                        )
-                        gr_set_transparency(lc, get_linealpha(series, i))
-                        GR.polyline3d(x[rng], y[rng], z[rng])
-                    end
-                end
-            end
-
-            # draw markers
-            if st == :scatter3d || series[:markershape] != :none
-                x2, y2 = RecipesPipeline.unzip(map(GR.wc3towc, x, y, z))
-                gr_draw_markers(series, x2, y2, clims)
-            end
-
-        elseif st == :shape
-            x, y = shape_data(series)
-            for (i,rng) in enumerate(iter_segments(x, y))
-                if length(rng) > 1
-                    # connect to the beginning
-                    rng = vcat(rng, rng[1])
-
-                    # get the segments
-                    xseg, yseg = x[rng], y[rng]
-
-                    # draw the interior
-                    fc = get_fillcolor(series, clims, i)
-                    gr_set_fill(fc)
-                    gr_set_transparency(fc, get_fillalpha(series, i))
-                    GR.fillarea(xseg, yseg)
-
-                    # draw the shapes
-                    lc = get_linecolor(series, clims, i)
-                    gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, sp)
-                    gr_set_transparency(lc, get_linealpha(series, i))
-                    GR.polyline(xseg, yseg)
-                end
-            end
-
-
-        elseif st == :image
-            z = transpose_z(series, series[:z].surf, true)'
-            x, y = heatmap_edges(series[:x], sp[:xaxis][:scale], series[:y], sp[:yaxis][:scale], size(z))
-            w, h = size(z)
-            xmin, xmax = ignorenan_extrema(x)
-            ymin, ymax = ignorenan_extrema(y)
-            rgba = gr_color.(z)
-            GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
-        end
-
-        # this is all we need to add the series_annotations text
-        anns = series[:series_annotations]
-        for (xi,yi,str,fnt) in EachAnn(anns, x, y)
-            gr_set_font(fnt, sp)
-            gr_text(GR.wctondc(xi, yi)..., str)
-        end
-
-        if sp[:legend] == :inline && should_add_to_legend(series)
-            gr_set_font(legendfont(sp), sp)
-            gr_set_textcolor(plot_color(sp[:legendfontcolor]))
-            if sp[:yaxis][:mirror]
-                (_,i) = sp[:xaxis][:flip] ? findmax(x) : findmin(x)
-                GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
-                offset = -0.01
-            else
-                (_,i) = sp[:xaxis][:flip] ? findmin(x) : findmax(x)
-                GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-                offset = 0.01
-            end
-            (x_l,y_l) = GR.wctondc(x[i],y[i])
-            gr_text(x_l+offset,y_l,series[:label])
-        end
-        GR.restorestate()
+    for series in series_list(sp)
+        gr_add_series(sp, series)
+        gr_update_colorbar!(cbar, series)
     end
 
     # draw the colorbar
@@ -1208,16 +899,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     gr_add_legend(sp, leg, viewport_plotarea)
 
     # add annotations
-    GR.savestate()
-    # update the bounding window
-    if ispolar(sp)
-        gr_set_viewport_polar(viewport_plotarea)
-    else
-        xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
-        if xmax > xmin && ymax > ymin
-            GR.setwindow(xmin, xmax, ymin, ymax)
-        end
-    end
     for ann in sp[:annotations]
         x, y, val = locate_annotation(sp, ann...)
         x, y = if RecipesPipeline.is3d(sp)
@@ -1228,7 +909,6 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
         gr_set_font(val.font, sp)
         gr_text(x, y, val.str)
     end
-    GR.restorestate()
 end
 
 
@@ -1479,17 +1159,21 @@ function gr_update_viewport_ratio!(viewport_plotarea, sp)
     end
 end
 
-function gr_set_window(sp)
-    xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
-    scaleop = 0
-    if xmax > xmin && ymax > ymin
-        sp[:xaxis][:scale] == :log10 && (scaleop |= GR.OPTION_X_LOG)
-        sp[:yaxis][:scale] == :log10 && (scaleop |= GR.OPTION_Y_LOG)
-        sp[:xaxis][:flip]            && (scaleop |= GR.OPTION_FLIP_X)
-        sp[:yaxis][:flip]            && (scaleop |= GR.OPTION_FLIP_Y)
-        # NOTE: setwindow sets the "data coordinate" limits of the current "viewport"
-        GR.setwindow(xmin, xmax, ymin, ymax)
-        GR.setscale(scaleop)
+function gr_set_window(sp, viewport_plotarea)
+    if ispolar(sp)
+        gr_set_viewport_polar(viewport_plotarea)
+    else
+        xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
+        scaleop = 0
+        if xmax > xmin && ymax > ymin
+            sp[:xaxis][:scale] == :log10 && (scaleop |= GR.OPTION_X_LOG)
+            sp[:yaxis][:scale] == :log10 && (scaleop |= GR.OPTION_Y_LOG)
+            sp[:xaxis][:flip]            && (scaleop |= GR.OPTION_FLIP_X)
+            sp[:yaxis][:flip]            && (scaleop |= GR.OPTION_FLIP_Y)
+            # NOTE: setwindow sets the "data coordinate" limits of the current "viewport"
+            GR.setwindow(xmin, xmax, ymin, ymax)
+            GR.setscale(scaleop)
+        end
     end
 end
 
@@ -1498,6 +1182,7 @@ function gr_fill_plotarea(sp, viewport_plotarea)
         gr_fill_viewport(viewport_plotarea, plot_color(sp[:background_color_inside]))
     end
 end
+
 
 ## Axes
 
@@ -1768,6 +1453,310 @@ function gr_label_axis_3d(sp, letter)
         GR.restorestate()
     end
 end
+
+function gr_add_title(sp, viewport_plotarea, viewport_subplot)
+    if sp[:title] != ""
+        GR.savestate()
+        gr_set_font(titlefont(sp), sp)
+        loc = sp[:titlelocation]
+        if loc == :left
+            xpos = viewport_plotarea[1]
+            halign = GR.TEXT_HALIGN_LEFT
+        elseif loc == :right
+            xpos = viewport_plotarea[2]
+            halign = GR.TEXT_HALIGN_RIGHT
+        else
+            xpos = gr_view_xcenter(viewport_plotarea)
+            halign = GR.TEXT_HALIGN_CENTER
+        end
+        GR.settextalign(halign, GR.TEXT_VALIGN_TOP)
+        gr_text(xpos, viewport_subplot[4], sp[:title])
+        GR.restorestate()
+    end
+end
+
+
+## Series
+
+function gr_add_series(sp, series)
+    st = series[:seriestype]
+
+    # update the current stored gradient
+    gr_set_gradient(series)
+
+    GR.savestate()
+
+    x, y, z = series[:x], series[:y], series[:z]
+    xscale, yscale = sp[:xaxis][:scale], sp[:yaxis][:scale]
+    frng = series[:fillrange]
+
+    # recompute data
+    if typeof(z) <: Surface
+        z = transpose_z(series, z.surf, false)
+    elseif ispolar(sp)
+        rmin, rmax = axis_limits(sp, :y)
+        if frng !== nothing
+            _, frng = convert_to_polar(x, frng, (rmin, rmax))
+        end
+        x, y = convert_to_polar(x, y, (rmin, rmax))
+    end
+
+    clims = get_clims(sp, series)
+
+    # add custom frame shapes to markershape?
+    series_annotations_shapes!(series)
+    # -------------------------------------------------------
+
+    # draw the series
+    if st in (:path, :scatter, :straightline)
+        if st === :straightline
+            x, y = straightline_data(series)
+        end
+        gr_draw_segments(series, x, y, frng, clims)
+        if series[:markershape] !== :none
+            gr_draw_markers(series, x, y, clims)
+        end
+    elseif st === :shape
+        gr_draw_shapes(series, x, y, clims)
+    elseif st in (:path3d, :scatter3d)
+        gr_draw_segments_3d(series, x, y, z, clims)
+        if st === :scatter3d || series[:markershape] !== :none
+            # TODO: Do we need to transform to 2d coordinates here?
+            x2, y2 = RecipesPipeline.unzip(map(GR.wc3towc, x, y, z))
+            gr_draw_markers(series, x2, y2, clims)
+        end
+    elseif st === :contour
+        gr_draw_contour(series, x, y, z, clims)
+    elseif st in (:surface, :wireframe)
+        gr_draw_surface(series, x, y, z, clims)
+    elseif st === :volume
+        sp[:legend] = :none
+        GR.gr3.clear()
+        dmin, dmax = GR.gr3.volume(y.v, 0)
+    elseif st in (:heatmap, :image)
+        if !ispolar(series)
+            x, y = heatmap_edges(x, xscale, y, yscale, size(z))
+        end
+        if st === :heatmap
+            gr_draw_heatmap(series, x, y, z, clims)
+        else
+            gr_draw_image(series, x, y, z, clims)
+        end
+    end
+
+    # this is all we need to add the series_annotations text
+    anns = series[:series_annotations]
+    for (xi,yi,str,fnt) in EachAnn(anns, x, y)
+        gr_set_font(fnt, sp)
+        gr_text(GR.wctondc(xi, yi)..., str)
+    end
+
+    if sp[:legend] == :inline && should_add_to_legend(series)
+        gr_set_font(legendfont(sp), sp)
+        gr_set_textcolor(plot_color(sp[:legendfontcolor]))
+        if sp[:yaxis][:mirror]
+            (_,i) = sp[:xaxis][:flip] ? findmax(x) : findmin(x)
+            GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
+            offset = -0.01
+        else
+            (_,i) = sp[:xaxis][:flip] ? findmin(x) : findmax(x)
+            GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
+            offset = 0.01
+        end
+        (x_l,y_l) = GR.wctondc(x[i],y[i])
+        gr_text(x_l+offset,y_l,series[:label])
+    end
+    GR.restorestate()
+end
+
+function gr_draw_segments(series, x, y, fillrange, clims)
+    st = series[:seriestype]
+    if x !== nothing && length(x) > 1
+        segments = iter_segments(series, st)
+        # do area fill
+        if fillrange !== nothing
+            GR.setfillintstyle(GR.INTSTYLE_SOLID)
+            fr_from, fr_to = (is_2tuple(fillrange) ? fillrange : (y, fillrange))
+            for (i, rng) in enumerate(segments)
+                fc = get_fillcolor(series, clims, i)
+                gr_set_fillcolor(fc)
+                fx = _cycle(x, vcat(rng, reverse(rng)))
+                fy = vcat(_cycle(fr_from, rng), _cycle(fr_to, reverse(rng)))
+                gr_set_transparency(fc, get_fillalpha(series, i))
+                GR.fillarea(fx, fy)
+            end
+        end
+
+        # draw the line(s)
+        if st in (:path, :straightline)
+            for (i, rng) in enumerate(segments)
+                lc = get_linecolor(series, clims, i)
+                gr_set_line(
+                    get_linewidth(series, i), get_linestyle(series, i), lc, series
+                )
+                arrowside = isa(series[:arrow], Arrow) ? series[:arrow].side : :none
+                arrowstyle = isa(series[:arrow], Arrow) ? series[:arrow].style : :simple
+                gr_set_fillcolor(lc)
+                gr_set_transparency(lc, get_linealpha(series, i))
+                gr_polyline(x[rng], y[rng]; arrowside = arrowside, arrowstyle = arrowstyle)
+            end
+        end
+    end
+end
+
+function gr_draw_segments_3d(series, x, y, z, clims)
+    if series[:seriestype] === :path3d && length(x) > 1
+        lz = series[:line_z]
+        segments = iter_segments(series, :path3d)
+        for (i, rng) in enumerate(segments)
+            lc = get_linecolor(series, clims, i)
+            gr_set_line(
+                get_linewidth(series, i), get_linestyle(series, i), lc, series
+            )
+            gr_set_transparency(lc, get_linealpha(series, i))
+            GR.polyline3d(x[rng], y[rng], z[rng])
+        end
+    end
+end
+
+function gr_draw_markers(
+    series::Series,
+    x,
+    y,
+    clims,
+    msize = series[:markersize],
+    strokewidth = series[:markerstrokewidth],
+)
+
+    isempty(x) && return
+    GR.setfillintstyle(GR.INTSTYLE_SOLID)
+
+    shapes = series[:markershape]
+    if shapes != :none
+        for (i, rng) in enumerate(iter_segments(series, :scatter))
+            rng = intersect(eachindex(x), rng)
+            if !isempty(rng)
+                ms = get_thickness_scaling(series) * _cycle(msize, i)
+                msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
+                shape = _cycle(shapes, i)
+                for j in rng
+                    gr_draw_marker(series, _cycle(x, j), _cycle(y, j), clims, i, ms, msw, shape)
+                end
+            end
+        end
+    end
+end
+
+function gr_draw_shapes(series, x, y, clims)
+    x, y = shape_data(series)
+    for (i,rng) in enumerate(iter_segments(x, y))
+        if length(rng) > 1
+            # connect to the beginning
+            rng = vcat(rng, rng[1])
+
+            # get the segments
+            xseg, yseg = x[rng], y[rng]
+
+            # draw the interior
+            fc = get_fillcolor(series, clims, i)
+            gr_set_fill(fc)
+            gr_set_transparency(fc, get_fillalpha(series, i))
+            GR.fillarea(xseg, yseg)
+
+            # draw the shapes
+            lc = get_linecolor(series, clims, i)
+            gr_set_line(get_linewidth(series, i), get_linestyle(series, i), lc, series)
+            gr_set_transparency(lc, get_linealpha(series, i))
+            GR.polyline(xseg, yseg)
+        end
+    end
+end
+
+function gr_draw_contour(series, x, y, z, clims)
+    GR.setspace(clims[1], clims[2], 0, 90)
+    gr_set_line(get_linewidth(series), get_linestyle(series), get_linecolor(series), series)
+    is_lc_black = let black=plot_color(:black)
+        plot_color(series[:linecolor]) in (black,[black])
+    end
+    h = gr_contour_levels(series, clims)
+    if series[:fillrange] !== nothing
+        if series[:fillcolor] != series[:linecolor] && !is_lc_black
+            @warn("GR: filled contour only supported with black contour lines")
+        end
+        GR.contourf(x, y, h, z, series[:contour_labels] == true ? 1 : 0)
+    else
+        coff = is_lc_black ? 0 : 1000
+        GR.contour(x, y, h, z, coff + (series[:contour_labels] == true ? 1 : 0))
+    end
+end
+
+function gr_draw_surface(series, x, y, z, clims)
+    if series[:seriestype] === :surface
+        if length(x) == length(y) == length(z)
+            GR.trisurface(x, y, z)
+        else
+            try
+                GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
+            catch
+                GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
+            end
+        end
+    else # wireframe
+        GR.setfillcolorind(0)
+        GR.surface(x, y, z, GR.OPTION_FILLED_MESH)
+    end
+end
+
+function gr_draw_heatmap(series, x, y, z, clims)
+    fillgrad = _as_gradient(series[:fillcolor])
+    if !ispolar(series)
+        GR.setspace(clims..., 0, 90)
+        w, h = length(x) - 1, length(y) - 1
+        if is_uniformly_spaced(x) && is_uniformly_spaced(y)
+            # For uniformly spaced data use GR.drawimage, which can be
+            # much faster than GR.nonuniformcellarray, especially for
+            # pdf output, and also supports alpha values.
+            # Note that drawimage draws uniformly spaced data correctly
+            # even on log scales, where it is visually non-uniform.
+            colors = plot_color.(get(fillgrad, z, clims), series[:fillalpha])
+            rgba = gr_color.(colors)
+            GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
+        else
+            if something(series[:fillalpha], 1) < 1
+                @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
+            end
+            z_normalized = get_z_normalized.(z, clims...)
+            rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
+            GR.nonuniformcellarray(x, y, w, h, rgba)
+        end
+    else
+        phimin, phimax = 0.0, 360.0 # nonuniform polar array is not yet supported in GR.jl
+        nx, ny = length(series[:x]), length(series[:y])
+        xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
+        GR.setwindow(-ymax, ymax, -ymax, ymax)
+        if ymin > 0
+            @warn "'ymin[1] > 0' (rmin) is not yet supported."
+        end
+        if series[:y][end] != ny
+            @warn "Right now only the maximum value of y (r) is taken into account."
+        end
+        z_normalized = get_z_normalized.(z, clims...)
+        rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
+        GR.polarcellarray(0, 0, phimin, phimax, 0, ymax, nx, ny, rgba)
+        # Right now only the maximum value of y (r) is taken into account.
+        # This is certainly not perfect but nonuniform polar array is not yet supported in GR.jl
+    end
+end
+
+function gr_draw_image(series, x, y, z, clims)
+    z = transpose_z(series, series[:z].surf, true)'
+    w, h = size(z)
+    xmin, xmax = ignorenan_extrema(x)
+    ymin, ymax = ignorenan_extrema(y)
+    rgba = gr_color.(z)
+    GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
+end
+
 
 # ----------------------------------------------------------------
 
