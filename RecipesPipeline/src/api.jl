@@ -64,6 +64,54 @@ Returns `true` if `attr` is an axis attribute, i.e. it applies to `xattr`, `yatt
 """
 is_axis_attribute(plt, attr) = false
 
+# ### processing of axis args
+# axis args before type recipes should still be mapped to all axes
+"""
+    preprocess_axis_args!(plt, plotattributes)
+
+Preprocessing of axis attributes.
+Prepends the axis letter to axis attributes by default.
+"""
+function preprocess_axis_args!(plt, plotattributes)
+    for (k, v) in plotattributes
+        if is_axis_attribute(plt, k)
+            pop!(plotattributes, k)
+            for l in (:x, :y, :z)
+                lk = Symbol(l, k)
+                haskey(plotattributes, lk) || (plotattributes[lk] = v)
+            end
+        end
+    end
+end
+
+"""
+    preprocess_axis_args!(plt, plotattributes, letter)
+
+This version additionally stores the letter name in  `plotattributes[:letter]`.
+"""
+function preprocess_axis_args!(plt, plotattributes, letter)
+    plotattributes[:letter] = letter
+    preprocess_axis_args!(plt, plotattributes)
+end
+
+# axis args in type recipes should only be applied to the current axis
+"""
+    postprocess_axis_args!(plt, plotattributes, letter)
+
+Removes the `:letter` key from `plotattributes` and does the same prepending of the letters as `preprocess_axis_args!`.
+"""
+function postprocess_axis_args!(plt, plotattributes, letter)
+    pop!(plotattributes, :letter)
+    if letter in (:x, :y, :z)
+        for (k, v) in plotattributes
+            if is_axis_attribute(plt, k)
+                pop!(plotattributes, k)
+                lk = Symbol(letter, k)
+                haskey(plotattributes, lk) || (plotattributes[lk] = v)
+            end
+        end
+    end
+end
 
 # ## User recipes
 

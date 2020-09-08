@@ -13,10 +13,11 @@
 Apply the type recipe with signature `(::Type{T}, ::T)`.
 """
 function _apply_type_recipe(plotattributes, v, letter)
-    _preprocess_axis_args!(plotattributes, letter)
+    plt = plotattributes[:plot_object]
+    preprocess_axis_args!(plt, plotattributes, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
     warn_on_recipe_aliases!(plotattributes[:plot_object], plotattributes, :type, typeof(v))
-    _postprocess_axis_args!(plotattributes, letter)
+    postprocess_axis_args!(plt, plotattributes, letter)
     return rdvec[1].args[1]
 end
 
@@ -25,7 +26,7 @@ end
 # and one to format tick values.
 function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
     plt = plotattributes[:plot_object]
-    _preprocess_axis_args!(plotattributes, letter)
+    preprocess_axis_args!(plt, plotattributes, letter)
     # First we try to apply an array type recipe.
     w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
     warn_on_recipe_aliases!(plt, plotattributes, :type, typeof(v))
@@ -35,7 +36,7 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
         x = first(skipmissing(v))
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
         warn_on_recipe_aliases!(plt, plotattributes, :type, typeof(x))
-        _postprocess_axis_args!(plotattributes, letter)
+        postprocess_axis_args!(plt, plotattributes, letter)
         if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args
             return Formatted(map(numfunc, v), formatter)
@@ -43,7 +44,7 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
             return v
         end
     end
-    _postprocess_axis_args!(plotattributes, letter)
+    postprocess_axis_args!(plt, plotattributes, letter)
     return w
 end
 
@@ -69,36 +70,3 @@ _apply_type_recipe(
     letter,
 ) = v
 _apply_type_recipe(plotattributes, v::Nothing, letter) = v
-
-# axis args before type recipes should still be mapped to all axes
-function _preprocess_axis_args!(plotattributes)
-    plt = plotattributes[:plot_object]
-    for (k, v) in plotattributes
-        if is_axis_attribute(plt, k)
-            pop!(plotattributes, k)
-            for l in (:x, :y, :z)
-                lk = Symbol(l, k)
-                haskey(plotattributes, lk) || (plotattributes[lk] = v)
-            end
-        end
-    end
-end
-function _preprocess_axis_args!(plotattributes, letter)
-    plotattributes[:letter] = letter
-    _preprocess_axis_args!(plotattributes)
-end
-
-# axis args in type recipes should only be applied to the current axis
-function _postprocess_axis_args!(plotattributes, letter)
-    plt = plotattributes[:plot_object]
-    pop!(plotattributes, :letter)
-    if letter in (:x, :y, :z)
-        for (k, v) in plotattributes
-            if is_axis_attribute(plt, k)
-                pop!(plotattributes, k)
-                lk = Symbol(letter, k)
-                haskey(plotattributes, lk) || (plotattributes[lk] = v)
-            end
-        end
-    end
-end
