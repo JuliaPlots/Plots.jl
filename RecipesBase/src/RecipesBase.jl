@@ -6,7 +6,6 @@ export
     @series,
     @userplot,
     @shorthands,
-    @one_arg_shorthands,
     RecipeData,
     AbstractBackend,
     AbstractPlot,
@@ -402,31 +401,6 @@ macro shorthands(funcname::Symbol)
         export $funcname, $funcname2
         Core.@__doc__ $funcname(args...; kw...) = RecipesBase.plot(args...; kw..., seriestype = $(Meta.quot(funcname)))
         Core.@__doc__ $funcname2(args...; kw...) = RecipesBase.plot!(args...; kw..., seriestype = $(Meta.quot(funcname)))
-    end)
-end
-
-"""
-    @one_arg_shorthands(funcname::Symbol)
-
-Similar to `@shorthands`, but for one-argument plots.
-
-The main difference with `@shorthands` is that the arguments 
-are reordered according to the `orientation` keyword
-such that the axis letter is correctly assigned.
-"""
-macro one_arg_shorthands(funcname::Symbol)
-    funcname2 = Symbol(funcname, "!")
-    esc(quote
-        export $funcname, $funcname2
-        Core.@__doc__ $funcname(x; kw...) = get(kw, :orientation, :vertical) == :vertical ?
-            RecipesBase.plot(x, []; kw..., seriestype = $(Meta.quot(funcname))) :
-            RecipesBase.plot([], x; kw..., seriestype = $(Meta.quot(funcname)))
-        Core.@__doc__ $funcname2(plt, x; kw...) = get(kw, :orientation, :vertical) == :vertical ?
-            RecipesBase.plot!(plt, x, []; kw..., seriestype = $(Meta.quot(funcname))) :
-            RecipesBase.plot!(plt, [], x; kw..., seriestype = $(Meta.quot(funcname)))
-        Core.@__doc__ $funcname2(x; kw...) = get(kw, :orientation, :vertical) == :vertical ?
-            RecipesBase.plot!(x, []; kw..., seriestype = $(Meta.quot(funcname))) :
-            RecipesBase.plot!([], x; kw..., seriestype = $(Meta.quot(funcname)))
     end)
 end
 
