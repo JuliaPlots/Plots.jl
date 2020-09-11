@@ -531,28 +531,32 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                 ),
             )
         end
-        # add to legend?
-        if series[:subplot][:legend] != :none
-            leg_entry = if opt[:label] isa AVec
-                get(opt[:label], i, "")
-            elseif opt[:label] isa AbstractString
-                if i == 1
-                    get(opt, :label, "")
-                else
-                    ""
-                end
-            else
-                throw(ArgumentError("Malformed label. label = $(opt[:label])"))
-            end
-            if leg_entry == "" || !pgfx_should_add_to_legend(series)
-                push!(axis.contents[end].options, "forget plot" => nothing)
-            else
-                leg_opt = PGFPlotsX.Options()
-                legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
-                push!(axis, legend)
-            end
-        end
+        pgfx_add_legend!(axis, series, opt, i)
     end # for segments
+end
+
+function pgfx_add_legend!(axis, series, opt, i = 1)
+    if series[:subplot][:legend] != :none
+        leg_entry = if opt[:label] isa AVec
+            get(opt[:label], i, "")
+        elseif opt[:label] isa AbstractString
+            if i == 1
+                get(opt, :label, "")
+            else
+                ""
+            end
+        else
+            throw(ArgumentError("Malformed label. label = $(opt[:label])"))
+        end
+        if leg_entry == "" || !pgfx_should_add_to_legend(series)
+            push!(axis.contents[end].options, "forget plot" => nothing)
+        else
+            leg_opt = PGFPlotsX.Options()
+            legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
+            push!(axis, legend)
+        end
+    end
+    return nothing
 end
 
 pgfx_series_arguments(series, opt, range) = (arg[range] for arg in pgfx_series_arguments(series, opt))
