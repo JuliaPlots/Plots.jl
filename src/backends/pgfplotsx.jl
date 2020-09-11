@@ -561,37 +561,39 @@ function pgfx_add_series!(::Val{:surface}, axis, series_opt, series, series_func
         "mesh/cols" => length(opt[:y]),
         "z buffer" => "sort",
     )
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    args = pgfx_series_arguments(series, opt)
+    series_plot = series_func(series_opt, PGFPlotsX.Coordinates(args...))
+    push!(axis, series_plot)
 end
 
 function pgfx_add_series!(::Val{:wireframe}, axis, series_opt, series, series_func, opt)
     push!(series_opt, "mesh" => nothing,
                       "mesh/rows" => length(opt[:x])
          )
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    args = pgfx_series_arguments(series, opt)
+    series_plot = series_func(series_opt, PGFPlotsX.Coordinates(args...))
+    push!(axis, series_plot)
 end
 
 function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func, opt)
+    push!(axis.options, "view" => "{0}{90}")
     push!(
         series_opt,
         "matrix plot*" => nothing,
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
     )
-    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+    args = pgfx_series_arguments(series, opt)
+    series_plot = series_func(series_opt, PGFPlotsX.Coordinates(args...))
+    push!(axis, series_plot)
 end
 
 function pgfx_add_series!(::Val{:contour}, axis, series_opt, series, series_func, opt)
     if isfilledcontour(series)
         pgfx_add_series!(Val(:filledcontour), axis, series_opt, series, series_func, opt)
     end
-    push!(
-        series_opt,
-        "contour prepared" => PGFPlotsX.Options("labels" => opt[:contour_labels]),
-    )
-    args = pgfx_series_arguments(series, opt)
-    series_plot = series_func(series_opt, PGFPlotsX.Table(Contour.contours(args..., opt[:levels])))
-    push!(axis, series_plot)
+    push!(axis.options, "view" => "{0}{90}")
+    pgfx_add_series!(Val(:contour3d), axis, series_opt, series, series_func, opt)
 end
 
 function pgfx_add_series!(::Val{:filledcontour}, axis, series_opt, series, series_func, opt)
@@ -613,7 +615,13 @@ function pgfx_add_series!(::Val{:filledcontour}, axis, series_opt, series, serie
 end
 
 function pgfx_add_series!(::Val{:contour3d}, axis, series_opt, series, series_func, opt)
-    pgfx_add_series!(Val(:contour), axis, series_opt, series, series_func, opt)
+    push!(
+        series_opt,
+        "contour prepared" => PGFPlotsX.Options("labels" => opt[:contour_labels]),
+    )
+    args = pgfx_series_arguments(series, opt)
+    series_plot = series_func(series_opt, PGFPlotsX.Table(Contour.contours(args..., opt[:levels])))
+    push!(axis, series_plot)
 end
 
 function pgfx_add_series!(::Val{:quiver}, axis, series_opt, series, series_func, opt)
