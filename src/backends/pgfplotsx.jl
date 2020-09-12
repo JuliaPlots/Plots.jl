@@ -356,9 +356,9 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                 c = get_markercolor(series, i)
                 a = get_markeralpha(series, i)
                 PGFPlotsX.push_preamble!(
-                    pgfx_plot.the_plot,
+                    series[:plot_object].o.the_plot,
                     """
-                    \\pgfdeclareplotmark{PlotsShape$(series_index)}{
+                    \\pgfdeclareplotmark{PlotsShape$(series[:series_plotindex])}{
                     \\filldraw
                     $path;
                     }
@@ -467,11 +467,13 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
 end
 
 function pgfx_add_series!(::Val{:contour}, axis, series_opt, series, series_func, opt)
+    push!(axis.options, "view" => "{0}{90}")
     if isfilledcontour(series)
         pgfx_add_series!(Val(:filledcontour), axis, series_opt, series, series_func, opt)
+        return nothing
     end
-    push!(axis.options, "view" => "{0}{90}")
     pgfx_add_series!(Val(:contour3d), axis, series_opt, series, series_func, opt)
+    return nothing
 end
 
 function pgfx_add_series!(::Val{:filledcontour}, axis, series_opt, series, series_func, opt)
@@ -482,9 +484,9 @@ function pgfx_add_series!(::Val{:filledcontour}, axis, series_opt, series, serie
         "shader" => "flat",
     )
     if opt[:levels] isa Number
-        push!(segment_opt["contour filled"], "number" => opt[:levels])
+        push!(series_opt["contour filled"], "number" => opt[:levels])
     elseif opt[:levels] isa AVec
-        push!(segment_opt["contour filled"], "levels" => opt[:levels])
+        push!(series_opt["contour filled"], "levels" => opt[:levels])
     end
     pgfx_add_series!(axis, series_opt, series, series_func, opt)
 end
