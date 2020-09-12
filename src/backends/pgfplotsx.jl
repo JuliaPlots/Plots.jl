@@ -334,7 +334,7 @@ end
 
 function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, opt)
     # treat segments
-    segments = iter_segments(series)
+    segments = iter_segments(series, series[:seriestype])
     sf = opt[:fillrange]
     for (i, rng) in enumerate(segments)
         segment_opt = PGFPlotsX.Options()
