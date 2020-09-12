@@ -526,6 +526,7 @@ end
 
 function pgfx_add_series!(::Val{:shape}, axis, series_opt, series, series_func, opt)
     push!(series_opt, "area legend" => nothing)
+    series_opt = merge(series_opt, pgfx_fillstyle(opt))
     pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
 end
 
