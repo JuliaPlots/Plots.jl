@@ -340,7 +340,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
         segment_opt = PGFPlotsX.Options()
         segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
         if opt[:markershape] != :none
-            marker = opt[:markershape]
+            marker = _cycle(opt[:markershape], i)
             if marker isa Shape
                 x = marker.x
                 y = marker.y
@@ -417,6 +417,11 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
         end
         pgfx_add_legend!(axis, series, opt, i)
     end # for segments
+    # get that last marker
+    if !any(isnan, opt[:y]) && opt[:markershape] isa AVec
+        additional_plot = PGFPlotsX.PlotInc(pgfx_marker(opt, length(segments) + 1), PGFPlotsX.Coordinates(tuple((last(opt[:x]), last(opt[:y])))))
+        push!(axis, additional_plot)
+    end
 end
 
 function pgfx_add_series!(::Val{:scatter}, axis, series_opt, series, series_func, opt)
@@ -832,9 +837,12 @@ function pgfx_marker(plotattributes, i = 1)
         pgfx_thickness_scaling(plotattributes) *
         0.75 *
         _cycle(plotattributes[:markersize], i)
+    mark_freq = !any(isnan, plotattributes[:y]) && plotattributes[:markershape] isa AVec ?
+                length(plotattributes[:markershape]) : 1
     return PGFPlotsX.Options(
         "mark" => shape isa Shape ? "PlotsShape$i" : pgfx_get_marker(shape),
         "mark size" => "$mark_size pt",
+        "mark repeat" => mark_freq,
         "mark options" => PGFPlotsX.Options(
             "color" => cstr_stroke,
             "draw opacity" => a_stroke,

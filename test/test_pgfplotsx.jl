@@ -326,6 +326,15 @@ end
       @test ribbon_plot.o !== nothing
       @test ribbon_plot.o.the_plot !== nothing
    end # testset
+   @testset "Markers and Paths" begin
+      pl = plot(5 .- ones(9), markershape = [:utriangle, :rect],
+                 markersize = 8,
+                 color = [:red, :black])
+      Plots._update_plot_object(pl)
+      axis = Plots.pgfx_axes(pl.o)[1]
+      plots = filter(x -> x isa PGFPlotsX.Plot, axis.contents)
+      @test length(plots) == 9
+   end # testset
 end # testset
 
 @testset "Extra kwargs" begin
