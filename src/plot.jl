@@ -164,15 +164,6 @@ end
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
 function _plot!(plt::Plot, plotattributes, args)
-    # swap x and y for seriestypes that are x only
-    if get(plotattributes, :seriestype, :path) in
-       (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
-        if get(plotattributes, :orientation, :vertical) == :vertical
-            @assert length(args) == 1
-            args = (args[1], [])
-        end
-    end
-
     RecipesPipeline.recipe_pipeline!(plt, plotattributes, args)
     current(plt)
     _do_plot_show(plt, plt[:show])

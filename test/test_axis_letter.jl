@@ -1,3 +1,4 @@
+using Plots, Test
 
 @testset "axis letter" begin
     using Plots, RecipesBase

@@ -764,7 +764,7 @@ end
 
 @recipe function f(::Type{Val{:barhist}}, x, y, z)
     h = _make_hist(
-        tuple(plotattributes[:orientation] == :horizontal ? y : x),
+        tuple(y),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
@@ -778,7 +778,7 @@ end
 
 @recipe function f(::Type{Val{:stephist}}, x, y, z)
     h = _make_hist(
-        tuple(plotattributes[:orientation] == :horizontal ? y : x),
+        tuple(y),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
@@ -792,7 +792,7 @@ end
 
 @recipe function f(::Type{Val{:scatterhist}}, x, y, z)
     h = _make_hist(
-        tuple(plotattributes[:orientation] == :horizontal ? y : x),
+        tuple(y),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
