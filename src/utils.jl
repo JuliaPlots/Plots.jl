@@ -1,4 +1,6 @@
-
+function treats_y_as_x(seriestype)
+    return seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
+end
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     n, m = size(z)
     colors = palette(vec(z))

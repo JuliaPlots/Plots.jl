@@ -993,6 +993,15 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
         end
     end
 
+    # vline and others accesses the y argument but actually maps it to the x axis.
+    # Hence, we have to swap formatters
+    if treats_y_as_x(get(plotattributes, :seriestype, :path))
+        xformatter = get(plotattributes, :xformatter, :auto)
+        yformatter = get(plotattributes, :yformatter, :auto)
+        plotattributes[:xformatter] = yformatter
+        plotattributes[:yformatter] = xformatter
+    end
+
     # handle grid args common to all axes
     args = RecipesPipeline.pop_kw!(plotattributes, :grid, ())
     for arg in wraptuple(args)

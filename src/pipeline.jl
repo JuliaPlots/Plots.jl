@@ -57,8 +57,7 @@ end
 ## Preprocessing attributes
 function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter)
     # Fix letter for seriestypes that are x only but data gets passed as y
-    if get(plotattributes, :seriestype, :path) in
-       (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
+    if treats_y_as_x(get(plotattributes, :seriestype, :path))
         if get(plotattributes, :orientation, :vertical) == :vertical
             letter = :x
         end
