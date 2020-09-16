@@ -55,6 +55,17 @@ end
 
 
 ## Preprocessing attributes
+function RecipesPipeline.preprocess_axis_args!(plt::Plot, plotattributes, letter)
+    # Fix letter for seriestypes that are x only but data gets passed as y
+    if treats_y_as_x(get(plotattributes, :seriestype, :path))
+        if get(plotattributes, :orientation, :vertical) == :vertical
+            letter = :x
+        end
+    end
+
+    plotattributes[:letter] = letter
+    RecipesPipeline.preprocess_axis_args!(plt, plotattributes)
+end
 
 RecipesPipeline.preprocess_attributes!(plt::Plot, plotattributes) =
     RecipesPipeline.preprocess_attributes!(plotattributes) # in src/args.jl
