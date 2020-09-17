@@ -6,10 +6,11 @@ using Plots, Test, Dates
 
     rx=[x[3],x[5]]
 
-    ref_ylims = (y[begin], y[end])
-    ref_xlims = (x[1].instant.periods.value, x[end].instant.periods.value)
     p = plot(x,y, widen = false)
     vspan!(p, rx, label="", alpha=0.2)
+
+    ref_ylims = (y[begin], y[end])
+    ref_xlims = (x[1].instant.periods.value, x[end].instant.periods.value)
     @test Plots.ylims(p) == ref_ylims
     @test Plots.xlims(p) == ref_xlims
 end # testset
