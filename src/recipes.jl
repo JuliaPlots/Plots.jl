@@ -122,8 +122,8 @@ end
 @deps hline straightline
 
 @recipe function f(::Type{Val{:vline}}, x, y, z)
-    n = length(x)
-    newx = vec(Float64[xi for i = 1:3, xi in x])
+    n = length(y)
+    newx = vec(Float64[yi for i = 1:3, yi in y])
     x := newx
     y := repeat(Float64[1, 2, NaN], n)
     seriestype := :straightline
@@ -133,7 +133,7 @@ end
 
 @recipe function f(::Type{Val{:hspan}}, x, y, z)
     n = div(length(y), 2)
-    newx = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
+    newx = repeat([1, 2, 2, 1, NaN], outer = n)
     newy = vcat([[y[2i - 1], y[2i - 1], y[2i], y[2i], NaN] for i = 1:n]...)
     linewidth --> 0
     x := newx
@@ -144,8 +144,8 @@ end
 @deps hspan shape
 
 @recipe function f(::Type{Val{:vspan}}, x, y, z)
-    n = div(length(x), 2)
-    newx = vcat([[x[2i - 1], x[2i - 1], x[2i], x[2i], NaN] for i = 1:n]...)
+    n = div(length(y), 2)
+    newx = vcat([[y[2i - 1], y[2i - 1], y[2i], y[2i], NaN] for i = 1:n]...)
     newy = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
     linewidth --> 0
     x := newx
