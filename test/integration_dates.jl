@@ -9,7 +9,7 @@ using Plots, Test, Dates
     p = plot(x,y, widen = false)
     vspan!(p, rx, label="", alpha=0.2)
 
-    ref_ylims = (y[begin], y[end])
+    ref_ylims = (y[1], y[end])
     ref_xlims = (x[1].instant.periods.value, x[end].instant.periods.value)
     @test Plots.ylims(p) == ref_ylims
     @test Plots.xlims(p) == ref_xlims
