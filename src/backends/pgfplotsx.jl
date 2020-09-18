@@ -404,26 +404,31 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                 PGFPlotsX.Options("quiver" => PGFPlotsX.Options(
                     "u" => "\\thisrow{u}",
                     "v" => "\\thisrow{v}",
-                    pgfx_arrow(arrow) => nothing,
+                    pgfx_arrow(arrow, :head) => nothing,
                     )
                 )
             )
-            if arrow.side in (:head, :both)
+            if arrow.side == :head
                 x_arrow = opt[:x][rng][end-1:end]
                 y_arrow = opt[:y][rng][end-1:end]
                 x_path  = opt[:x][rng][1:end-1]
                 y_path  = opt[:y][rng][1:end-1]
-            elseif arrow.side in (:tail, :both)
-                x_arrow = opt[:x][rng][1:2]
-                y_arrow = opt[:y][rng][1:2]
+            elseif arrow.side == :tail
+                x_arrow = opt[:x][rng][2:-1:1]
+                y_arrow = opt[:y][rng][2:-1:1]
                 x_path  = opt[:x][rng][2:end]
                 y_path  = opt[:y][rng][2:end]
+            elseif arrow.side == :both
+                x_arrow = opt[:x][rng][[2,1,end-1,end]]
+                y_arrow = opt[:y][rng][[2,1,end-1,end]]
+                x_path  = opt[:x][rng][2:end-1]
+                y_path  = opt[:y][rng][2:end-1]
             end
             coordinates = PGFPlotsX.Table([
-                    :x => x_arrow[end-1],
-                    :y => y_arrow[end-1],
-                    :u => diff(x_arrow),
-                    :v => diff(y_arrow),
+                    :x => x_arrow[1:2:end-1],
+                    :y => y_arrow[1:2:end-1],
+                    :u => [x_arrow[i] - x_arrow[i-1] for i in 2:2:lastindex(x_arrow)],
+                    :v => [y_arrow[i] - y_arrow[i-1] for i in 2:2:lastindex(y_arrow)],
                 ])
             arrow_plot =
                 series_func(merge(series_opt, arrow_opt), coordinates)
@@ -754,7 +759,7 @@ end
 ## --------------------------------------------------------------------------------------
 # Generates a colormap for pgfplots based on a ColorGradient
 pgfx_arrow(::Nothing) = "every arrow/.append style={-}"
-function pgfx_arrow(arr::Arrow)
+function pgfx_arrow(arr::Arrow, side = arr.side)
     components = String[]
     head = String[]
     push!(head, "{stealth[length = $(arr.headlength)pt, width = $(arr.headwidth)pt")
@@ -763,11 +768,11 @@ function pgfx_arrow(arr::Arrow)
     end
     push!(head, "]}")
     head = join(head, "")
-    if arr.side == :both || arr.side == :tail
+    if side == :both || side == :tail
         push!(components, head)
     end
     push!(components, "-")
-    if arr.side == :both || arr.side == :head
+    if side == :both || side == :head
         push!(components, head)
     end
     components = join(components, "")
