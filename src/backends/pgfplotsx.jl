@@ -396,10 +396,48 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                 pgfx_filllegend!(series_opt, opt)
             end
         end
-        coordinates = PGFPlotsX.Table(pgfx_series_arguments(series, opt, rng)...)
-        segment_plot =
-            series_func(merge(series_opt, segment_opt), coordinates)
-        push!(axis, segment_plot)
+        # handle arrows
+        arrow = opt[:arrow]
+        if arrow isa Arrow
+            arrow_opt = merge(
+                segment_opt,
+                PGFPlotsX.Options("quiver" => PGFPlotsX.Options(
+                    "u" => "\\thisrow{u}",
+                    "v" => "\\thisrow{v}",
+                    pgfx_arrow(arrow) => nothing,
+                    )
+                )
+            )
+            if arrow.side in (:head, :both)
+                x_arrow = opt[:x][rng][end-1:end]
+                y_arrow = opt[:y][rng][end-1:end]
+                x_path  = opt[:x][rng][1:end-1]
+                y_path  = opt[:y][rng][1:end-1]
+            elseif arrow.side in (:tail, :both)
+                x_arrow = opt[:x][rng][1:2]
+                y_arrow = opt[:y][rng][1:2]
+                x_path  = opt[:x][rng][2:end]
+                y_path  = opt[:y][rng][2:end]
+            end
+            coordinates = PGFPlotsX.Table([
+                    :x => x_arrow[end-1],
+                    :y => y_arrow[end-1],
+                    :u => diff(x_arrow),
+                    :v => diff(y_arrow),
+                ])
+            arrow_plot =
+                series_func(merge(series_opt, arrow_opt), coordinates)
+            push!(axis, arrow_plot)
+            coordinates = PGFPlotsX.Table(x_path, y_path)
+            segment_plot =
+                series_func(merge(series_opt, segment_opt), coordinates)
+            push!(axis, segment_plot)
+        else
+            coordinates = PGFPlotsX.Table(pgfx_series_arguments(series, opt, rng)...)
+            segment_plot =
+                series_func(merge(series_opt, segment_opt), coordinates)
+            push!(axis, segment_plot)
+        end
         # fill between functions
         if sf isa Tuple && series[:ribbon] === nothing
             sf1, sf2 = sf
