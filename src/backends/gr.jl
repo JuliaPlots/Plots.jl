@@ -1278,8 +1278,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
             for (cv, dv) in zip(xticks...)
                 xi, yi = gr_w3tondc(cv, yt, zt)
-                xi += (yaxis[:mirror] ? 1 : -1) * 1e-2 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
-                yi += (xaxis[:mirror] ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
+                xi += (yaxis[:mirror] ? 1 : -1) * 1.5e-2 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
+                yi += (xaxis[:mirror] ? 1 : -1) * 8e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0)
                 gr_text(xi, yi, dv)
             end
         end
@@ -1310,8 +1310,8 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
             for (cv, dv) in zip(yticks...)
                 xi, yi = gr_w3tondc(xt, cv, zt)
-                gr_text(xi + (yaxis[:mirror] ? -1 : 1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
-                        yi + (yaxis[:mirror] ? 1 : -1) * 5e-3 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
+                gr_text(xi + (yaxis[:mirror] ? -1 : 1) * 1.5e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
+                        yi + (yaxis[:mirror] ? 1 : -1) * 8e-3 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
                         dv)
             end
         end
@@ -1342,7 +1342,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             end
             for (cv, dv) in zip(zticks...)
                 xi, yi = gr_w3tondc(xt, yt, cv)
-                gr_text(xi + (zaxis[:mirror] ? 1 : -1) * 1e-2 * (zaxis[:tick_direction] == :out ? 1.5 : 1.0),
+                gr_text(xi + (zaxis[:mirror] ? 1 : -1) * 1.5e-2 * (zaxis[:tick_direction] == :out ? 1.5 : 1.0),
                         yi, dv)
             end
         end
@@ -1463,7 +1463,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             flip, mirror = gr_set_xticks_font(sp)
             for (cv, dv) in zip(xticks...)
                 xi, yi = GR.wctondc(cv, sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? ymax : ymin)
-                gr_text(xi, yi + (mirror ? 1 : -1) * 5e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), dv)
+                gr_text(xi, yi + (mirror ? 1 : -1) * 8e-3 * (xaxis[:tick_direction] == :out ? 1.5 : 1.0), dv)
             end
         end
 
@@ -1472,7 +1472,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
             flip, mirror = gr_set_yticks_font(sp)
             for (cv, dv) in zip(yticks...)
                 xi, yi = GR.wctondc(sp[:framestyle] == :origin ? 0 : xor(flip, mirror) ? xmax : xmin, cv)
-                gr_text(xi + (mirror ? 1 : -1) * 1e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
+                gr_text(xi + (mirror ? 1 : -1) * 1.5e-2 * (yaxis[:tick_direction] == :out ? 1.5 : 1.0),
                         yi, dv)
 
             end
