@@ -659,6 +659,7 @@ function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
     (x, y, lab)
 end
 locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
+locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
 # -----------------------------------------------------------------------
 
 "type which represents z-values for colors and sizes (and anything else that might come up)"
