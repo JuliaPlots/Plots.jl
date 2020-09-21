@@ -1332,6 +1332,8 @@ function gr_label_ticks(sp, letter, ticks)
     end
 end
 
+function gr_label_ticks(sp, letter, ticks::Nothing) end
+
 function gr_label_ticks_3d(sp, letter, ticks)
     near_letter = letter in (:x, :z) ? :y : :x
     far_letter = letter in (:x, :y) ? :z : :x
