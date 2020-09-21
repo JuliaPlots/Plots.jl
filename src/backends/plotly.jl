@@ -788,8 +788,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
             else
                 # if fillrange is a tuple with upper and lower limit, plotattributes_out_fillrange
                 # is the series that will do the filling
-                fillrng = Tuple(series[:fillrange][i][rng] for i in 1:2)
-                plotattributes_out_fillrange[:x], plotattributes_out_fillrange[:y] = concatenate_fillrange(x[rng], fillrng)
+                plotattributes_out_fillrange[:x], plotattributes_out_fillrange[:y] = concatenate_fillrange(x[rng], series[:fillrange])
                 plotattributes_out_fillrange[:line][:width] = 0
                 delete!(plotattributes_out, :fill)
                 delete!(plotattributes_out, :fillcolor)
