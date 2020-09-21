@@ -367,10 +367,10 @@ is_marker_supported(::GRBackend, shape::Shape) = true
 function _initialize_backend(pkg::PlotlyBackend)
     try
         @eval Main begin
-            import ORCA
+            import PlotlyBase
         end
     catch
-        @info "For saving to png with the Plotly backend ORCA has to be installed."
+        @info "For saving to png with the Plotly backend PlotlyBase has to be installed."
     end
 end
 
@@ -488,7 +488,7 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 function _initialize_backend(pkg::PlotlyJSBackend)
     @eval Main begin
-        import PlotlyJS, ORCA
+        import PlotlyJS
         export PlotlyJS
     end
 end

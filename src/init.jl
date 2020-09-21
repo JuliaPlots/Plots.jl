@@ -41,8 +41,8 @@ function __init__()
         include(fn)
     end
 
-    @require ORCA = "47be7bcc-f1a6-5447-8b36-7eeeff7534fd" begin
-        fn = joinpath(@__DIR__, "backends", "orca.jl")
+    @require PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5" begin
+        fn = joinpath(@__DIR__, "backends", "plotlybase.jl")
         include(fn)
     end
 
