@@ -262,13 +262,22 @@ end
         end
     end
     newx, newy = zeros(3n), zeros(3n)
+    newz = z!== nothing ? zeros(3n) : nothing
     for i = 1:n
         rng = (3i - 2):(3i)
         newx[rng] = [x[i], x[i], NaN]
-        newy[rng] = [_cycle(fr, i), y[i], NaN]
+        if z !== nothing
+            newy[rng] = [y[i], y[i], NaN]
+            newz[rng] = [_cycle(fr, i), z[i], NaN]
+        else
+            newy[rng] = [_cycle(fr, i), y[i], NaN]
+        end
     end
     x := newx
     y := newy
+    if z !== nothing
+        z := newz
+    end
     fillrange := nothing
     seriestype := :path
 
@@ -278,6 +287,9 @@ end
             seriestype := :scatter
             x := x
             y := y
+            if z !== nothing
+                z := z
+            end
             label := ""
             primary := false
             ()
