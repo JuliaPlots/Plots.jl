@@ -505,7 +505,6 @@ end
 
 function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func, opt)
     push!(axis.options, "view" => "{0}{90}")
-    @show length(opt[:x]), length(opt[:y]), size(opt[:z])
     push!(
         series_opt,
         "matrix plot*" => nothing,
