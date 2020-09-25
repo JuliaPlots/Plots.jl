@@ -1101,6 +1101,12 @@ function error_coords(errorbar, errordata, otherdata...)
     return (ed, od...)
 end
 
+# clamp non-NaN values in an array to Base.eps(Float64) for log-scale plots
+function clamp_to_eps!(ary)
+    replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary)
+    nothing
+end
+
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
 
@@ -1113,6 +1119,9 @@ end
     else
         plotattributes[:x], plotattributes[:y], plotattributes[:z] =
             error_coords(xerr, x, y, z)
+    end
+    if :xscale ∈ keys(plotattributes) && plotattributes[:xscale] == :log10
+        clamp_to_eps!(plotattributes[:x])
     end
     ()
 end
@@ -1128,6 +1137,9 @@ end
         plotattributes[:y], plotattributes[:x], plotattributes[:z] =
             error_coords(yerr, y, x, z)
     end
+    if :yscale ∈ keys(plotattributes) && plotattributes[:yscale] == :log10
+        clamp_to_eps!(plotattributes[:y])
+    end
     ()
 end
 @deps yerror path
@@ -1139,6 +1151,9 @@ end
         zerr = error_zipit(plotattributes[:zerror])
         plotattributes[:z], plotattributes[:x], plotattributes[:y] =
             error_coords(zerr, z, x, y)
+    end
+    if :zscale ∈ keys(plotattributes) && plotattributes[:zscale] == :log10
+        clamp_to_eps!(plotattributes[:z])
     end
     ()
 end
