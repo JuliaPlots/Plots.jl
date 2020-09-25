@@ -327,7 +327,7 @@ end
 ## seriestype specifics
 function pgfx_add_series!(axis, series_opt, series, series_func, opt)
     args = pgfx_series_arguments(series, opt)
-    series_plot = series_func(series_opt, PGFPlotsX.Coordinates(args...))
+    series_plot = series_func(series_opt, PGFPlotsX.Table(args...))
     push!(axis, series_plot)
     pgfx_add_legend!(axis, series, opt)
 end
@@ -510,8 +510,17 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
         "matrix plot*" => nothing,
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
+        "point meta" => "\\thisrow{meta}",
     )
-    pgfx_add_series!(axis, series_opt, series, series_func, opt)
+    args = pgfx_series_arguments(series, opt)
+    meta = [any(!isfinite, r) ? NaN : r[3] for r in zip(args...)]
+    for arg in args
+        arg[(!isfinite).(arg)] .= 0
+    end
+    t = PGFPlotsX.Table(["x" => args[1], "y" => args[2], "z" => args[3], "meta" => meta])
+    series_plot = series_func(series_opt, t)
+    push!(axis, series_plot)
+    pgfx_add_legend!(axis, series, opt)
 end
 
 function pgfx_add_series!(::Val{:contour}, axis, series_opt, series, series_func, opt)
