@@ -1002,7 +1002,7 @@ const _examples = PlotExample[
 	Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically.
 	You can also specify the connections using the connections keyword. This is only supported on the Plotly backend.
 	The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
-	such that elements at the same position of these vectors form a triangle. 
+	such that elements at the same position of these vectors form a triangle.
 	""",
 	[
 		:(
@@ -1012,9 +1012,9 @@ const _examples = PlotExample[
 			y=[0, 0, 1, 2]
 			z=[0, 2, 0, 1]
 
-			# specify the triangles 
+			# specify the triangles
 			# every column is one triangle,
-			# where the values denote the indices of the vertices of the triangle 
+			# where the values denote the indices of the vertices of the triangle
 			i=[0, 0, 0, 1]
 			j=[1, 2, 3, 2]
 			k=[2, 3, 1, 3]
@@ -1053,14 +1053,12 @@ _backend_skips = Dict(
     :pgfplotsx => [
         2, # animation
         6, # images
-        10, # histogram2d
         16, # pgfplots thinks the upper panel is too small
         25, # @df
         30, # @df
         31, # animation
         32, # spy
-        38, # histogram2d
-	 47, # mesh3d
+    	47, # mesh3
     ],
 )
 

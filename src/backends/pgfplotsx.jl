@@ -72,8 +72,8 @@ function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat,Surface})
     yn = Vector{eltype(y)}(undef, length(a))
     zn = Vector{eltype(s)}(undef, length(a))
     for (n, (i, j)) in enumerate(Tuple.(CartesianIndices(a)))
-        xn[n] = x[j]
-        yn[n] = y[i]
+        xn[n] = x[i]
+        yn[n] = y[j]
         zn[n] = a[i, j]
     end
     return xn, yn, zn
@@ -505,6 +505,7 @@ end
 
 function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func, opt)
     push!(axis.options, "view" => "{0}{90}")
+    @show length(opt[:x]), length(opt[:y]), size(opt[:z])
     push!(
         series_opt,
         "matrix plot*" => nothing,
