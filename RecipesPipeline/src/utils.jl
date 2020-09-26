@@ -221,3 +221,15 @@ end
 
 _map_funcs(f::Function, u::AVec) = map(f, u)
 _map_funcs(fs::AVec{F}, u::AVec) where {F <: Function} = [map(f, u) for f in fs]
+
+
+# --------------------------------
+# ## Signature strings
+# --------------------------------
+
+function userrecipe_signature_string(args...)
+    return string("(::", join(string.(typeof.(args)), ", ::"), ")")
+end
+typerecipe_signature_string(::T) where T = "(::Type{$T}, ::$T)"
+plotrecipe_signature_string(st) = "(::Type{Val{:$st}}, ::AbstractPlot)"
+seriesrecipe_signature_string(st) = "(::Type{Val{:$st}}, x, y, z)"
