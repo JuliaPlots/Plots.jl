@@ -154,12 +154,6 @@ const BBox = Measures.Absolute2DBox
 # allow pixels and percentages
 const px = AbsoluteLength(0.254)
 const pct = Length{:pct, Float64}(1.0)
-
-Base.:*(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
-Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
-Base.:/(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
-Base.:/(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
-
 export BBox, BoundingBox, mm, cm, inch, px, pct, pt, w, h
 end
 
