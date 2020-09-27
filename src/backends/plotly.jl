@@ -595,9 +595,9 @@ function plotly_series(plt::Plot, series::Series)
     elseif st == :mesh3d
 	plotattributes_out[:type] = "mesh3d"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
-
-	if series[:connections] != nothing
-		if typeof(series[:connections]) <: Tuple{Array,Array,Array}
+       
+	if series[:connections] !== nothing
+		if typeof(series[:connections]) <: Tuple{Array,Array,Array} 
 			i,j,k = series[:connections]
 			if !(length(i) == length(j) == length(k))
 				throw(ArgumentError("Argument connections must consist of equally sized arrays."))
