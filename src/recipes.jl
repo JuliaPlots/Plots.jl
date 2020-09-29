@@ -133,7 +133,7 @@ end
 
 @recipe function f(::Type{Val{:hspan}}, x, y, z)
     n = div(length(y), 2)
-    newx = repeat([1, 2, 2, 1, NaN], outer = n)
+    newx = repeat([-Inf, Inf, Inf, -Inf, NaN], outer = n)
     newy = vcat([[y[2i - 1], y[2i - 1], y[2i], y[2i], NaN] for i = 1:n]...)
     linewidth --> 0
     x := newx
