@@ -280,11 +280,15 @@ end
     end
     fillrange := nothing
     seriestype := :path
+    if plotattributes[:marker_z] !== nothing && plotattributes[:line_z] == nothing
+        line_z := plotattributes[:marker_z]
+    end
 
-    # create a secondary series for the markers
+    # create a primary series for the markers
     if plotattributes[:markershape] != :none
         tmplabel = deepcopy(plotattributes[:label])
         label := ""
+        primary := false
         @series begin
             seriestype := :scatter
             x := x
