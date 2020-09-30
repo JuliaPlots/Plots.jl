@@ -283,6 +283,8 @@ end
 
     # create a secondary series for the markers
     if plotattributes[:markershape] != :none
+        tmplabel = deepcopy(plotattributes[:label])
+        label := ""
         @series begin
             seriestype := :scatter
             x := x
@@ -290,8 +292,8 @@ end
             if z !== nothing
                 z := z
             end
-            label := ""
-            primary := false
+            label := tmplabel
+            primary := true
             ()
         end
         markershape := :none
