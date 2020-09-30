@@ -584,9 +584,9 @@ function plotly_series(plt::Plot, series::Series)
     elseif st == :mesh3d
 	plotattributes_out[:type] = "mesh3d"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
-       
+
 	if series[:connections] != nothing
-		if typeof(series[:connections]) <: Tuple{Array,Array,Array} 
+		if typeof(series[:connections]) <: Tuple{Array,Array,Array}
 			i,j,k = series[:connections]
 			if !(length(i) == length(j) == length(k))
 				throw(ArgumentError("Argument connections must consist of equally sized arrays."))
@@ -604,7 +604,7 @@ function plotly_series(plt::Plot, series::Series)
         if series[:fill_z] !== nothing
             plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
         end
-        plotattributes_out[:showscale] = hascolorbar(sp) 
+        plotattributes_out[:showscale] = hascolorbar(sp)
     else
         @warn("Plotly: seriestype $st isn't supported.")
         return KW()
@@ -824,8 +824,8 @@ function plotly_colorbar_hack(series::Series, plotattributes_base::KW, sym::Symb
     end
     # zrange = zmax == zmin ? 1 : zmax - zmin # if all marker_z values are the same, plot all markers same color (avoids division by zero in next line)
     plotattributes_out[:marker] = KW(
-        :size => 0,
-        :opacity => 0,
+        :size => 1e-10,
+        :opacity => 1e-10,
         :color => [0.5],
         :cmin => cmin,
         :cmax => cmax,
