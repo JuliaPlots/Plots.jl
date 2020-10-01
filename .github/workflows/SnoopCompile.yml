@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           julia --project -e 'using Pkg; Pkg.instantiate();'
-          julia -e 'using Pkg; Pkg.add( PackageSpec(url="https://github.com/aminya/SnoopCompileBot.jl", rev = "master") ); Pkg.develop(PackageSpec(; path=pwd())); using SnoopCompileBot; SnoopCompileBot.addtestdep();'
+          julia -e 'using Pkg; Pkg.add( PackageSpec(url="https://github.com/aminya/CompileBot.jl", rev = "master") ); Pkg.develop(PackageSpec(; path=pwd())); using CompileBot; CompileBot.addtestdep();'
 
 
       # TESTCMD
@@ -72,8 +72,8 @@ jobs:
       - name: Download all
         uses: actions/download-artifact@v2
 
-      - name: SnoopCompileBot postprocess
-        run: julia -e 'using Pkg; Pkg.add( PackageSpec(url="https://github.com/aminya/SnoopCompileBot.jl", rev = "master") ); using SnoopCompileBot; SnoopCompileBot.postprocess();'
+      - name: CompileBot postprocess
+        run: julia -e 'using Pkg; Pkg.add( PackageSpec(url="https://github.com/aminya/CompileBot.jl", rev = "master") ); using CompileBot; CompileBot.postprocess();'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
