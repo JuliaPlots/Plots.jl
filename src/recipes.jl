@@ -280,7 +280,6 @@ end
     end
     fillrange := nothing
     seriestype := :path
-    println(plotattributes[:linecolor])
     if plotattributes[:linecolor] == :auto && plotattributes[:marker_z] !== nothing && plotattributes[:line_z] == nothing
         line_z := plotattributes[:marker_z]
     end
