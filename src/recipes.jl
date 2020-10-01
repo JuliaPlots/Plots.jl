@@ -280,9 +280,13 @@ end
     end
     fillrange := nothing
     seriestype := :path
+    if plotattributes[:linecolor] == :auto && plotattributes[:marker_z] !== nothing && plotattributes[:line_z] == nothing
+        line_z := plotattributes[:marker_z]
+    end
 
-    # create a secondary series for the markers
+    # create a primary series for the markers
     if plotattributes[:markershape] != :none
+        primary := false
         @series begin
             seriestype := :scatter
             x := x
@@ -290,8 +294,7 @@ end
             if z !== nothing
                 z := z
             end
-            label := ""
-            primary := false
+            primary := true
             ()
         end
         markershape := :none
