@@ -286,8 +286,6 @@ end
 
     # create a primary series for the markers
     if plotattributes[:markershape] != :none
-        tmplabel = deepcopy(plotattributes[:label])
-        label := ""
         primary := false
         @series begin
             seriestype := :scatter
@@ -296,7 +294,6 @@ end
             if z !== nothing
                 z := z
             end
-            label := tmplabel
             primary := true
             ()
         end
