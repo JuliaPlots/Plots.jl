@@ -77,7 +77,7 @@ function __init__()
         end
     end
 
-    if get(ENV["PLOTS_HOST_DEPENDENCY_LOCAL"], false) == true
+    if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == true
         artifact_toml = joinpath(@__DIR__, "Artifacts.toml")
 
         plotly_sha = artifact_hash("plotly", artifact_toml)
