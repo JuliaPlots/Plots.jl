@@ -1,5 +1,7 @@
 using REPL
+using Pkg.Artifacts
 
+const plotly_local_file_path = Ref("")
 
 function _plots_defaults()
     if isdefined(Main, :PLOTS_DEFAULTS)
@@ -74,15 +76,18 @@ function __init__()
         end
     end
 
-    if haskey(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL")
-        use_local_plotlyjs[] = ENV["PLOTS_HOST_DEPENDENCY_LOCAL"] == "true"
-        use_local_dependencies[] = isfile(plotly_local_file_path) && use_local_plotlyjs[]
-        if use_local_plotlyjs[] && !isfile(plotly_local_file_path)
-            @warn("PLOTS_HOST_DEPENDENCY_LOCAL is set to true, but no local plotly file found. run Pkg.build(\"Plots\") and make sure PLOTS_HOST_DEPENDENCY_LOCAL is set to true")
+    artifact_toml = joinpath(@__DIR__, "Artifacts.toml")
+
+    plotly_sha = artifact_hash("plotly", artifact_toml)
+    if plotly_sha == nothing || !artifact_exists(plotly_sha)
+        plotly_sha = create_artifact() do artifact_dir
+            download("https://cdn.plot.ly/plotly-1.54.2.min.js", joinpath(artifact_dir, "plotly-1.54.2.min.js"))
         end
-    else
-        use_local_dependencies[] = use_local_plotlyjs[]
     end
+
+    plotly_local_file_path[] = joinpath(artifact_path(plotly_sha), "plotly-1.54.2.min.js")
+
+    use_local_dependencies[] = use_local_plotlyjs[]
 
 
     @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
