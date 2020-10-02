@@ -1,5 +1,6 @@
 using Contour: Contour
 using UUIDs
+using Latexify
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
@@ -1040,6 +1041,9 @@ function pgfx_sanitize_string(s::AbstractString)
     s = replace(s, r"\\?\&" => "\\&")
     s = replace(s, r"\\?\{" => "\\{")
     s = replace(s, r"\\?\}" => "\\}")
+    s = map(split(s, "")) do s
+            isascii(s) ? s : latexify(s)
+            end |> join
 end
 @require LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f" begin
     using .LaTeXStrings
