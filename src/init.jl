@@ -77,19 +77,16 @@ function __init__()
         end
     end
 
-    if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == true
-        artifact_toml = joinpath(@__DIR__, "Artifacts.toml")
+    artifact_toml = joinpath(@__DIR__, "Artifacts.toml")
 
-        plotly_sha = artifact_hash("plotly", artifact_toml)
-        if plotly_sha === nothing || !artifact_exists(plotly_sha)
-            plotly_sha = create_artifact() do artifact_dir
-                download("https://cdn.plot.ly/plotly-1.54.2.min.js", joinpath(artifact_dir, "plotly-1.54.2.min.js"))
-            end
+    plotly_sha = artifact_hash("plotly", artifact_toml)
+    if plotly_sha == nothing || !artifact_exists(plotly_sha)
+        plotly_sha = create_artifact() do artifact_dir
+            download("https://cdn.plot.ly/plotly-1.54.2.min.js", joinpath(artifact_dir, "plotly-1.54.2.min.js"))
         end
-
-        plotly_local_file_path[] = joinpath(artifact_path(plotly_sha), "plotly-1.54.2.min.js")
-        use_local_plotlyjs[] = true
     end
+
+    plotly_local_file_path[] = joinpath(artifact_path(plotly_sha), "plotly-1.54.2.min.js")
 
     use_local_dependencies[] = use_local_plotlyjs[]
 
