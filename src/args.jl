@@ -1238,7 +1238,6 @@ convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 # 1-row matrices will give an element
 # multi-row matrices will give a column
 # InputWrapper just gives the contents
-# AbstractRange gives (first, last) tuple
 # anything else is returned as-is
 function slice_arg(v::AMat, idx::Int)
     c = mod1(idx, size(v,2))
@@ -1246,7 +1245,6 @@ function slice_arg(v::AMat, idx::Int)
     size(v,1) == 1 ? v[first(m),n[c]] : v[:,n[c]]
 end
 slice_arg(wrapper::InputWrapper, idx) = wrapper.obj
-slice_arg(v::AbstractRange, idx) = (first(v), last(v))
 slice_arg(v, idx) = v
 
 
@@ -1491,6 +1489,10 @@ function _update_axis(axis::Axis, plotattributes_in::AKW, letter::Symbol, subplo
         # then get those args that were passed with a leading letter: `xlabel = "X"`
         lk = Symbol(letter, k)
         if haskey(plotattributes_in, lk)
+            # warn against using range in x,y,z lims
+            if k==:lims && plotattributes_in[lk] isa AbstractRange
+                @warn("$lk should be a Tuple")
+            end
             kw[k] = slice_arg(plotattributes_in[lk], subplot_index)
         end
     end
