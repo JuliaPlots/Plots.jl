@@ -120,16 +120,17 @@ end
 
 
 # this method gets the start/end in percentage of the canvas for this axis direction
-function plotly_domain(sp::Subplot, letter)
+function plotly_domain(sp::Subplot)
     figw, figh = sp.plt[:size]
     pcts = bbox_to_pcts(sp.plotarea, figw*px, figh*px)
     pcts = plotly_apply_aspect_ratio(sp, sp.plotarea, pcts)
-    i1,i2 = (letter == :x ? (1,3) : (2,4))
-    [pcts[i1], pcts[i1]+pcts[i2]]
+    x_domain = [pcts[1], pcts[1] + pcts[3]]
+    y_domain = [pcts[2], pcts[2] + pcts[4]]
+    return x_domain, y_domain
 end
 
 
-function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
+function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
     letter = axis[:letter]
     framestyle = sp[:framestyle]
     ax = KW(
@@ -146,16 +147,11 @@ function plotly_axis(plt::Plot, axis::Axis, sp::Subplot)
         :mirror     => framestyle == :box,
         :showticklabels => axis[:showaxis],
     )
-
-    if letter in (:x,:y)
-        ax[:domain] = plotly_domain(sp, letter)
-        if RecipesPipeline.is3d(sp)
-            # don't link 3d axes for synchronized interactivity
-            x_idx = y_idx = sp[:subplot_index]
-        else
-            x_idx, y_idx = plotly_link_indicies(plt, sp)
-        end
-        ax[:anchor] = "$(letter==:x ? "y$(y_idx)" : "x$(x_idx)")"
+    if anchor !== nothing
+        ax[:anchor] = anchor
+    end
+    if domain !== nothing
+        ax[:domain] = domain
     end
 
     ax[:tickangle] = -axis[:rotation]
@@ -250,31 +246,38 @@ function plotly_layout(plt::Plot)
         # set to supported framestyle
         sp[:framestyle] = _plotly_framestyle(sp[:framestyle])
 
-        # if any(RecipesPipeline.is3d, seriesargs)
-        if RecipesPipeline.is3d(sp)
-            azim = sp[:camera][1] - 90 #convert azimuthal to match GR behaviour
-            theta = 90 - sp[:camera][2] #spherical coordinate angle from z axis
-            plotattributes_out[:scene] = KW(
-                Symbol("xaxis$(spidx)") => plotly_axis(plt, sp[:xaxis], sp),
-                Symbol("yaxis$(spidx)") => plotly_axis(plt, sp[:yaxis], sp),
-                Symbol("zaxis$(spidx)") => plotly_axis(plt, sp[:zaxis], sp),
-
-                #2.6 multiplier set camera eye such that whole plot can be seen
-                :camera => KW(
-                    :eye => KW(
-                        :x => cosd(azim)*sind(theta)*2.6,
-                        :y => sind(azim)*sind(theta)*2.6,
-                        :z => cosd(theta)*2.6,
-                    ),
-                ),
-            )
-        elseif ispolar(sp)
+        if ispolar(sp)
             plotattributes_out[Symbol("angularaxis$(spidx)")] = plotly_polaraxis(sp, sp[:xaxis])
             plotattributes_out[Symbol("radialaxis$(spidx)")] = plotly_polaraxis(sp, sp[:yaxis])
         else
-            plotattributes_out[Symbol("xaxis$(x_idx)")] = plotly_axis(plt, sp[:xaxis], sp)
-            # don't allow yaxis to be reupdated/reanchored in a linked subplot
-            spidx == y_idx ? plotattributes_out[Symbol("yaxis$(y_idx)")] = plotly_axis(plt, sp[:yaxis], sp) : nothing
+            x_domain, y_domain = plotly_domain(sp)
+            if RecipesPipeline.is3d(sp)
+                azim = sp[:camera][1] - 90 #convert azimuthal to match GR behaviour
+                theta = 90 - sp[:camera][2] #spherical coordinate angle from z axis
+                plotattributes_out[Symbol(:scene, spidx)] = KW(
+                    :domain => KW(:x => x_domain, :y => y_domain),
+                    Symbol("xaxis$(spidx)") => plotly_axis(sp[:xaxis], sp),
+                    Symbol("yaxis$(spidx)") => plotly_axis(sp[:yaxis], sp),
+                    Symbol("zaxis$(spidx)") => plotly_axis(sp[:zaxis], sp),
+
+                    #2.6 multiplier set camera eye such that whole plot can be seen
+                    :camera => KW(
+                        :eye => KW(
+                            :x => cosd(azim)*sind(theta)*2.6,
+                            :y => sind(azim)*sind(theta)*2.6,
+                            :z => cosd(theta)*2.6,
+                        ),
+                    ),
+                )
+            else
+                plotattributes_out[Symbol("xaxis$(x_idx)")] =
+                    plotly_axis(sp[:xaxis], sp, string("y", y_idx) , x_domain)
+                # don't allow yaxis to be reupdated/reanchored in a linked subplot
+                if spidx == y_idx
+                    plotattributes_out[Symbol("yaxis$(y_idx)")] =
+                        plotly_axis(sp[:yaxis], sp, string("x", x_idx), y_domain)
+                end
+            end
         end
 
         # legend
@@ -510,9 +513,17 @@ function plotly_series(plt::Plot, series::Series)
     plotattributes_out = KW()
 
     # these are the axes that the series should be mapped to
-    x_idx, y_idx = plotly_link_indicies(plt, sp)
-    plotattributes_out[:xaxis] = "x$(x_idx)"
-    plotattributes_out[:yaxis] = "y$(y_idx)"
+    if RecipesPipeline.is3d(sp)
+        spidx = length(plt.subplots) > 1 ? sp[:subplot_index] : ""
+        plotattributes_out[:xaxis] = "x$spidx"
+        plotattributes_out[:yaxis] = "y$spidx"
+        plotattributes_out[:zaxis] = "z$spidx"
+        plotattributes_out[:scene] = "scene$spidx"
+    else
+        x_idx, y_idx = length(plt.subplots) > 1 ? plotly_link_indicies(plt, sp) : ("", "")
+        plotattributes_out[:xaxis] = "x$(x_idx)"
+        plotattributes_out[:yaxis] = "y$(y_idx)"
+    end
     plotattributes_out[:showlegend] = should_add_to_legend(series)
 
     if st == :straightline
