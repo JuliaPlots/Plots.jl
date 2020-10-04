@@ -207,9 +207,6 @@ end
 
 createSegments(z) = collect(repeat(reshape(z,1,:),2,1))[2:end]
 
-Base.first(c::Colorant) = c
-Base.first(x::Symbol) = x
-
 
 sortedkeys(plotattributes::Dict) = sort(collect(keys(plotattributes)))
 
@@ -295,13 +292,6 @@ limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real}    = :limits
 limsType(lims::Symbol)                                  = lims == :auto ? :auto : :invalid
 limsType(lims)                                          = :invalid
 
-# axis_Symbol(letter, postfix) = Symbol(letter * postfix)
-# axis_symbols(letter, postfix...) = map(s -> axis_Symbol(letter, s), postfix)
-
-Base.convert(::Type{Vector{T}}, rng::AbstractRange{T}) where {T<:Real}         = T[x for x in rng]
-Base.convert(::Type{Vector{T}}, rng::AbstractRange{S}) where {T<:Real,S<:Real} = T[x for x in rng]
-
-Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 
 # recursively merge kw-dicts, e.g. for merging extra_kwargs / extra_plot_kwargs in plotly)
 recursive_merge(x::AbstractDict...) = merge(recursive_merge, x...)

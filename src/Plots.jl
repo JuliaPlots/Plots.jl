@@ -10,7 +10,7 @@ using Reexport
 
 import GeometryTypes, GeometryBasics
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
-import SparseArrays: AbstractSparseMatrix, findnz
+using SparseArrays
 
 using FFMPEG
 
@@ -224,8 +224,8 @@ let PlotOrSubplot = Union{Plot, Subplot}
     global xlims!(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...)             = plot!(plt; xlims = (xmin,xmax), kw...)
     global ylims!(plt::PlotOrSubplot, ymin::Real, ymax::Real; kw...)             = plot!(plt; ylims = (ymin,ymax), kw...)
     global zlims!(plt::PlotOrSubplot, zmin::Real, zmax::Real; kw...)             = plot!(plt; zlims = (zmin,zmax), kw...)
-    global xticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...) where {T<:Real}           = plot!(plt; xticks = ticks, kw...)
-    global yticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...) where {T<:Real}           = plot!(plt; yticks = ticks, kw...)
+    global xticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...)             = plot!(plt; xticks = ticks, kw...)
+    global yticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...)             = plot!(plt; yticks = ticks, kw...)
     global xticks!(plt::PlotOrSubplot,
    ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(plt; xticks = (ticks,labels), kw...)
     global yticks!(plt::PlotOrSubplot,

@@ -432,10 +432,10 @@ zlims!(zmin::Real, zmax::Real; kw...)                     = plot!(; zlims = (zmi
 
 
 "Set xticks for an existing plot"
-xticks!(v::TicksArgs; kw...) where {T<:Real}                       = plot!(; xticks = v, kw...)
+xticks!(v::TicksArgs; kw...)                              = plot!(; xticks = v, kw...)
 
 "Set yticks for an existing plot"
-yticks!(v::TicksArgs; kw...) where {T<:Real}                       = plot!(; yticks = v, kw...)
+yticks!(v::TicksArgs; kw...)                              = plot!(; yticks = v, kw...)
 
 xticks!(
 ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(; xticks = (ticks,labels), kw...)
