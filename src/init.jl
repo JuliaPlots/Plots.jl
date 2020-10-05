@@ -80,7 +80,7 @@ function __init__()
         artifact_toml = joinpath(@__DIR__, "Artifacts.toml")
 
         plotly_sha = artifact_hash("plotly", artifact_toml)
-        if plotly_sha == nothing || !artifact_exists(plotly_sha)
+        if plotly_sha === nothing || !artifact_exists(plotly_sha)
             plotly_sha = create_artifact() do artifact_dir
                 download("https://cdn.plot.ly/plotly-1.54.2.min.js", joinpath(artifact_dir, "plotly-1.54.2.min.js"))
             end

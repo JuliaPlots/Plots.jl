@@ -4,34 +4,6 @@
 to_pixels(m::AbsoluteLength) = m.value / 0.254
 
 const _cbar_width = 5mm
-
-#Base.broadcast(::typeof(Base.:.*), m::Measure, n::Number) = m * n
-#Base.broadcast(::typeof(Base.:.*), m::Number, n::Measure) = m * n
-Base.:-(m::Measure, a::AbstractArray) = map(ai -> m - ai, a)
-Base.:-(a::AbstractArray, m::Measure) = map(ai -> ai - m, a)
-Base.zero(::Type{typeof(mm)}) = 0mm
-Base.one(::Type{typeof(mm)}) = 1mm
-Base.typemin(::typeof(mm)) = -Inf*mm
-Base.typemax(::typeof(mm)) = Inf*mm
-Base.convert(::Type{F}, l::AbsoluteLength) where {F<:AbstractFloat} = convert(F, l.value)
-
-# TODO: these are unintuitive and may cause tricky bugs
-# Base.:+(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 + m2.value))
-# Base.:+(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (1 + m1.value))
-# Base.:-(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * (1 - m2.value))
-# Base.:-(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * (m1.value - 1))
-
-Base.:*(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
-Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
-Base.:/(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
-Base.:/(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
-
-
-Base.zero(::Type{typeof(pct)}) = 0pct
-Base.one(::Type{typeof(pct)}) = 1pct
-Base.typemin(::typeof(pct)) = 0pct
-Base.typemax(::typeof(pct)) = 1pct
-
 const defaultbox = BoundingBox(0mm, 0mm, 0mm, 0mm)
 
 left(bbox::BoundingBox) = bbox.x0[1]

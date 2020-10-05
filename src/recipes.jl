@@ -280,7 +280,7 @@ end
     end
     fillrange := nothing
     seriestype := :path
-    if plotattributes[:linecolor] == :auto && plotattributes[:marker_z] !== nothing && plotattributes[:line_z] == nothing
+    if plotattributes[:linecolor] == :auto && plotattributes[:marker_z] !== nothing && plotattributes[:line_z] === nothing
         line_z := plotattributes[:marker_z]
     end
 
@@ -933,7 +933,7 @@ end
 @recipe function f(::Type{Val{:mesh3d}}, x, y, z)
     # As long as no i,j,k are supplied this should work with PyPlot and GR
     seriestype := :surface
-    if plotattributes[:connections] != nothing
+    if plotattributes[:connections] !== nothing
     	throw(ArgumentError("Giving triangles using the connections argument is only supported on Plotly backend."))
     end
     ()
@@ -1496,7 +1496,7 @@ end
 end
 
 
-Plots.findnz(A::AbstractSparseMatrix) = findnz(A)
+Plots.findnz(A::AbstractSparseMatrix) = SparseArrays.findnz(A)
 
 # fallback function for finding non-zero elements of non-sparse matrices
 function Plots.findnz(A::AbstractMatrix)

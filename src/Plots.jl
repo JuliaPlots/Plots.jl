@@ -10,7 +10,7 @@ using Reexport
 
 import GeometryTypes, GeometryBasics
 using Dates, Printf, Statistics, Base64, LinearAlgebra, Random
-import SparseArrays: AbstractSparseMatrix, findnz
+using SparseArrays
 
 using FFMPEG
 
@@ -154,6 +154,12 @@ const BBox = Measures.Absolute2DBox
 # allow pixels and percentages
 const px = AbsoluteLength(0.254)
 const pct = Length{:pct, Float64}(1.0)
+
+Base.:*(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value * m2.value)
+Base.:*(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value * m1.value)
+Base.:/(m1::AbsoluteLength, m2::Length{:pct}) = AbsoluteLength(m1.value / m2.value)
+Base.:/(m1::Length{:pct}, m2::AbsoluteLength) = AbsoluteLength(m2.value / m1.value)
+
 export BBox, BoundingBox, mm, cm, inch, px, pct, pt, w, h
 end
 
@@ -218,8 +224,8 @@ let PlotOrSubplot = Union{Plot, Subplot}
     global xlims!(plt::PlotOrSubplot, xmin::Real, xmax::Real; kw...)             = plot!(plt; xlims = (xmin,xmax), kw...)
     global ylims!(plt::PlotOrSubplot, ymin::Real, ymax::Real; kw...)             = plot!(plt; ylims = (ymin,ymax), kw...)
     global zlims!(plt::PlotOrSubplot, zmin::Real, zmax::Real; kw...)             = plot!(plt; zlims = (zmin,zmax), kw...)
-    global xticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...) where {T<:Real}           = plot!(plt; xticks = ticks, kw...)
-    global yticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...) where {T<:Real}           = plot!(plt; yticks = ticks, kw...)
+    global xticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...)             = plot!(plt; xticks = ticks, kw...)
+    global yticks!(plt::PlotOrSubplot, ticks::TicksArgs; kw...)             = plot!(plt; yticks = ticks, kw...)
     global xticks!(plt::PlotOrSubplot,
    ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(plt; xticks = (ticks,labels), kw...)
     global yticks!(plt::PlotOrSubplot,
