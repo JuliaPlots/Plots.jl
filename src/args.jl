@@ -1535,8 +1535,16 @@ function _update_subplot_args(plt::Plot, sp::Subplot, plotattributes_in, subplot
     _update_subplot_periphery(sp, anns)
     _update_subplot_colors(sp)
 
+    lims_warned = false
     for letter in (:x, :y, :z)
         _update_axis(plt, sp, plotattributes_in, letter, subplot_index)
+        lk = Symbol(letter, :lims)
+
+        # warn against using `Range` in x,y,z lims
+        if !lims_warned && haskey(plotattributes_in, lk) && plotattributes_in[lk] isa AbstractRange
+            @warn("lims should be a Tuple, not $(typeof(plotattributes_in[lk])).")
+            lims_warned = true
+        end
     end
 end
 
