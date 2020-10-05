@@ -25,6 +25,7 @@ pycollections = PyPlot.pyimport("matplotlib.collections")
 pyart3d = PyPlot.art3D
 pyrcparams = PyPlot.PyDict(PyPlot.matplotlib."rcParams")
 
+
 # "support" matplotlib v1.5
 set_facecolor_sym = if PyPlot.version < v"2"
     @warn("You are using Matplotlib $(PyPlot.version), which is no longer officialy supported by the Plots community. To ensure smooth Plots.jl integration update your Matplotlib library to a version >= 2.0.0")
@@ -1025,12 +1026,16 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                                                        "size" => py_thickness_scale(plt, axis[:tickfontsize]),
                                                        # "useTex" => false,
                                                        "rotation" => axis[:tickfontrotation]))
-            getproperty(ax, Symbol("set_",letter,"ticklabels"))(getproperty(ax, Symbol("get_",letter,"ticks"))(), fontProperties)
+
+
+            positions = getproperty(ax, Symbol("get_",letter,"ticks"))()
+            pyaxis.set_major_locator(pyticker.FixedLocator(positions))
+            getproperty(ax, Symbol("set_",letter,"ticklabels"))(positions, fontdict=fontProperties)
 
             # workaround to set mathtext.fontspec per Text element
             env = "\\mathregular"  # matches the outer fonts https://matplotlib.org/tutorials/text/mathtext.html
-            axis[:ticks] == :native ? nothing : py_set_ticks(ax, ticks, letter, env)
 
+            axis[:ticks] == :native ? nothing : py_set_ticks(ax, ticks, letter, env)
             # Tick marks
             intensity = 0.5  # This value corresponds to scaling of other grid elements
             pyaxis."set_tick_params"(
