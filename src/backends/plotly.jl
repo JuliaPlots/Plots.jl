@@ -708,7 +708,7 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
     segments = iter_segments(series, st)
     plotattributes_outs = fill(KW(), (hasfillrange ? 2 : 1 ) * length(segments))
 
-    needs_scatter_fix = !isscatter && hasmarker && !any(isnan,y)
+    needs_scatter_fix = !isscatter && hasmarker && !any(isnan,y) && length(segments) > 1
 
     for (i,rng) in enumerate(segments)
         plotattributes_out = deepcopy(plotattributes_base)
