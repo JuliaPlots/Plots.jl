@@ -339,7 +339,11 @@ function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
             :font     => plotly_font(legendfont(sp)),
             :tracegroupgap => 0,
             :x => legend_position.coords[1],
-            :y => legend_position.coords[2]
+            :y => legend_position.coords[2],
+            :title => KW(
+                :text => sp[:legendtitle] === nothing ? "" : string(sp[:legendtitle]),
+                :font => plotly_font(legendtitlefont(sp)),
+            ),
         )
     end
 end
