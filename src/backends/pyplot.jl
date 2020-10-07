@@ -1022,15 +1022,27 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
 
             # Set ticks
-            fontProperties = PyPlot.PyCall.PyDict(Dict("family" => axis[:tickfontfamily],
-                                                       "size" => py_thickness_scale(plt, axis[:tickfontsize]),
-                                                       # "useTex" => false,
-                                                       "rotation" => axis[:tickfontrotation]))
-
+            fontProperties = PyPlot.PyCall.PyDict(
+                Dict(
+                    "family" => axis[:tickfontfamily],
+                    "size" => py_thickness_scale(plt, axis[:tickfontsize]),
+                    "rotation" => axis[:tickfontrotation],
+                )
+            )
 
             positions = getproperty(ax, Symbol("get_",letter,"ticks"))()
             pyaxis.set_major_locator(pyticker.FixedLocator(positions))
-            getproperty(ax, Symbol("set_",letter,"ticklabels"))(positions, fontdict=fontProperties)
+            if RecipesPipeline.is3d(sp)
+                getproperty(ax, Symbol("set_",letter,"ticklabels"))(
+                    positions;
+                    (Symbol(k) => v for (k, v) in fontProperties)...
+                )
+            else
+                getproperty(ax, Symbol("set_",letter,"ticklabels"))(
+                    positions,
+                    fontdict=fontProperties,
+                )
+            end
 
             # workaround to set mathtext.fontspec per Text element
             env = "\\mathregular"  # matches the outer fonts https://matplotlib.org/tutorials/text/mathtext.html
