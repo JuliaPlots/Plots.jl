@@ -159,7 +159,7 @@ function Base.display(::PlotsDisplay, plt::Plot)
             actual_nrows = size(err.a)[1]
             @warn "length(x) == $ex_nrows, but only sees $actual_nrows in the other inputs."
         else
-            rethorw()
+            rethrow()
         end
     end
 end
