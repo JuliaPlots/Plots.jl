@@ -92,6 +92,11 @@ _nobigs(v) = v
     x = _compute_x(x, y, z)
     y = _compute_y(x, y, z)
     z = _compute_z(x, y, z)
+    if !isnothing(x)
+        n = size(x,1)
+        !isnothing(y) && size(y,1) != n && error("Expects $n elements in each col of y, found $(size(y,1)).")
+        !isnothing(z) && size(z,1) != n && error("Expects $n elements in each col of z, found $(size(z,1)).")
+    end
     _nobigs(x), _nobigs(y), _nobigs(z)
 end
 
