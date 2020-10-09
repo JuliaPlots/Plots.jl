@@ -230,8 +230,10 @@ end
 end
 
 # Dicts: each entry is a data point (x,y)=(key,value)
-@recipe f(d::AbstractDict) = collect(keys(d)), collect(values(d))
-
+@recipe function f(d::AbstractDict)
+    seriestype := :line
+    collect(keys(d)), collect(values(d))
+end
 # function without range... use the current range of the x-axis
 @recipe function f(f::FuncOrFuncs{F}) where {F <: Function}
     plt = plotattributes[:plot_object]
