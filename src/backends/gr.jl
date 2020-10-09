@@ -1545,6 +1545,8 @@ function gr_add_series(sp, series)
         else
             gr_draw_image(series, x, y, z, clims)
         end
+    elseif st == :hexbin
+        gr_draw_hexbin(series, x, y)
     end
 
     # this is all we need to add the series_annotations text
@@ -1760,6 +1762,9 @@ function gr_draw_image(series, x, y, z, clims)
     GR.drawimage(xmin, xmax, ymax, ymin, w, h, rgba)
 end
 
+function gr_draw_hexbin(series, x, y)
+    GR.hexbin(x, y)
+end
 
 # ----------------------------------------------------------------
 
