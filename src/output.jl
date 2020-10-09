@@ -147,7 +147,21 @@ end
 
 function Base.display(::PlotsDisplay, plt::Plot)
     prepare_output(plt)
-    _display(plt)
+
+    try
+        _display(plt)
+    catch err
+        # need to be careful not to supress other kinds of error
+        # could use a more general error 'teleporter'
+        # 1. handle when length(x) != size(y,1)
+        if err isa BoundsError && length(err.i)==1
+            ex_nrows = length(err.i[1])
+            actual_nrows = size(err.a)[1]
+            @warn "length(x) == $ex_nrows, but only sees $actual_nrows in the other inputs."
+        else
+            rethorw()
+        end
+    end
 end
 
 _do_plot_show(plt, showval::Bool) = showval && gui(plt)
