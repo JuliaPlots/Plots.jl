@@ -334,17 +334,6 @@ function indices_and_unique_values(z::AbstractArray)
     newz, vals
 end
 
-# this is a helper function to determine whether we need to transpose a surface matrix.
-# it depends on whether the backend matches rows to x (transpose_on_match == true) or vice versa
-# for example: PyPlot sends rows to y, so transpose_on_match should be true
-function transpose_z(plotattributes, z, transpose_on_match::Bool = true)
-    if plotattributes[:match_dimensions] == transpose_on_match
-        # z'
-        permutedims(z, [2,1])
-    else
-        z
-    end
-end
 handle_surface(z) = z
 handle_surface(z::Surface) = permutedims(z.surf)
 
