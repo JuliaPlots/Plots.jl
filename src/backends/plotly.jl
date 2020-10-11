@@ -459,7 +459,7 @@ function plotly_data(series::Series, letter::Symbol, data)
     end
 
     if series[:seriestype] in (:heatmap, :contour, :surface, :wireframe, :mesh3d)
-        plotly_surface_data(series, data)
+        handle_surface(data)
     else
         plotly_data(data)
     end
@@ -468,10 +468,6 @@ plotly_data(v) = v !== nothing ? collect(v) : v
 plotly_data(v::AbstractArray) = v
 plotly_data(surf::Surface) = surf.surf
 plotly_data(v::AbstractArray{R}) where {R<:Rational} = float(v)
-
-plotly_surface_data(series::Series, a::AbstractVector) = a
-plotly_surface_data(series::Series, a::AbstractMatrix) = transpose_z(series, a, false)
-plotly_surface_data(series::Series, a::Surface) = plotly_surface_data(series, a.surf)
 
 function plotly_native_data(axis::Axis, data::AbstractArray)
     if !isempty(axis[:discrete_values])
@@ -588,7 +584,7 @@ function plotly_series(plt::Plot, series::Series)
             plotattributes_out[:colorscale] = plotly_colorscale(series[:fillcolor], series[:fillalpha])
             plotattributes_out[:opacity] = series[:fillalpha]
             if series[:fill_z] !== nothing
-                plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
+                plotattributes_out[:surfacecolor] = handle_surface(series[:fill_z])
             end
             plotattributes_out[:showscale] = hascolorbar(sp)
         end
@@ -613,7 +609,7 @@ function plotly_series(plt::Plot, series::Series)
 	plotattributes_out[:color] = rgba_string(plot_color(series[:fillcolor], series[:fillalpha]))
         plotattributes_out[:opacity] = series[:fillalpha]
         if series[:fill_z] !== nothing
-            plotattributes_out[:surfacecolor] = plotly_surface_data(series, series[:fill_z])
+            plotattributes_out[:surfacecolor] = handle_surface(series[:fill_z])
         end
         plotattributes_out[:showscale] = hascolorbar(sp)
     else

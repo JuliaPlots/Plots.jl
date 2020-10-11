@@ -646,7 +646,7 @@ pgfx_series_arguments(series, opt, range) = (arg[range] for arg in pgfx_series_a
 function pgfx_series_arguments(series, opt)
     st = series[:seriestype]
     return if st in (:contour, :contour3d)
-        opt[:x], opt[:y], Array(opt[:z])'
+        opt[:x], opt[:y], handle_surface(opt[:z])
     elseif st in (:heatmap, :surface, :wireframe)
         surface_to_vecs(opt[:x], opt[:y], opt[:z])
     elseif RecipesPipeline.is3d(st)

@@ -345,6 +345,8 @@ function transpose_z(plotattributes, z, transpose_on_match::Bool = true)
         z
     end
 end
+handle_surface(z) = z
+handle_surface(z::Surface) = permutedims(z.surf)
 
 function ok(x::Number, y::Number, z::Number = 0)
     isfinite(x) && isfinite(y) && isfinite(z)
