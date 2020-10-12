@@ -344,7 +344,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     fix_xy_lengths!(plt, series)
 
     # ax = getAxis(plt, series)
-    x, y, z = series[:x], series[:y], series[:z]
+    x, y, z = (Array(series[letter]) for letter in (:x, :y, :z))
     if st == :straightline
         x, y = straightline_data(series)
     elseif st == :shape
@@ -512,16 +512,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st in (:contour, :contour3d)
-        z = transpose_z(series, z.surf)
-	if typeof(x)<:Plots.Surface
-            x = Plots.transpose_z(series, x.surf)
-        end
-        if typeof(y)<:Plots.Surface
-            y = Plots.transpose_z(series, y.surf)
-        end
-
         if st == :contour3d
             extrakw[:extend3d] = true
+            if !ismatrix(x) || !ismatrix(y)
+                x, y = repeat(x', length(y), 1), repeat(y, 1, length(x))
+            end
         end
 
         if typeof(series[:linecolor]) <: AbstractArray
@@ -556,17 +551,17 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st in (:surface, :wireframe)
-        if typeof(z) <: AbstractMatrix || typeof(z) <: Surface
-            x, y, z = map(Array, (x,y,z))
+        if z isa AbstractMatrix
             if !ismatrix(x) || !ismatrix(y)
-                x = repeat(x', length(y), 1)
-                y = repeat(y, 1, length(series[:x]))
+                x, y = repeat(x', length(y), 1), repeat(y, 1, length(x))
             end
-            z = transpose_z(series, z)
             if st == :surface
                 if series[:fill_z] !== nothing
                     # the surface colors are different than z-value
-                    extrakw[:facecolors] = py_shading(series[:fillcolor], transpose_z(series, series[:fill_z].surf))
+                    extrakw[:facecolors] = py_shading(
+                        series[:fillcolor],
+                        Array(series[:fill_z]),
+                    )
                     extrakw[:shade] = false
                 else
                     extrakw[:cmap] = py_fillcolormap(series)
@@ -618,15 +613,15 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         ymin, ymax = ignorenan_extrema(series[:y])
         dx = (xmax - xmin) / (length(series[:x]) - 1) / 2
         dy = (ymax - ymin) / (length(series[:y]) - 1) / 2
-        img = Array(transpose_z(series, z.surf))
-        z = if eltype(img) <: Colors.AbstractGray
-            float(img)
+        z = if eltype(z) <: Colors.AbstractGray
+            float(z)
         elseif eltype(img) <: Colorant
-            map(c -> Float64[red(c),green(c),blue(c),alpha(c)], img)
+            map(c -> Float64[red(c),green(c),blue(c),alpha(c)], z)
         else
             z  # hopefully it's in a data format that will "just work" with imshow
         end
-        handle = ax."imshow"(z;
+        handle = ax."imshow"(
+            z;
             zorder = series[:series_plotindex],
             cmap = py_colormap(cgrad(plot_color([:black, :white]))),
             vmin = 0.0,
@@ -642,7 +637,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :heatmap
-        x, y, z = heatmap_edges(x, sp[:xaxis][:scale]), heatmap_edges(y, sp[:yaxis][:scale]), transpose_z(series, z.surf)
+        x, y = heatmap_edges(x, sp[:xaxis][:scale], y, sp[:yaxis][:scale], size(z))
 
         expand_extrema!(sp[:xaxis], x)
         expand_extrema!(sp[:yaxis], y)

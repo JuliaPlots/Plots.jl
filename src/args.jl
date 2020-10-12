@@ -280,8 +280,6 @@ const _series_defaults = KW(
     :show_empty_bins   => false,     # should empty bins in 2D histogram be colored as zero (otherwise they are transparent)
     :contours          => false,     # add contours to 3d surface and wireframe plots
     :contour_labels    => false,
-    :match_dimensions  => false,     # do rows match x (true) or y (false) for heatmap/image/spy? see issue 196
-                                     # this ONLY effects whether or not the z-matrix is transposed for a heatmap display!
     :subplot           => :auto,     # which subplot(s) does this series belong to?
     :series_annotations => nothing,       # a list of annotations which apply to the coordinates of this series
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
@@ -629,7 +627,6 @@ add_aliases(:quiver, :velocity, :quiver2d, :gradient, :vectorfield)
 add_aliases(:normalize, :norm, :normed, :normalized)
 add_aliases(:show_empty_bins, :showemptybins, :showempty, :show_empty)
 add_aliases(:aspect_ratio, :aspectratio, :axis_ratio, :axisratio, :ratio)
-add_aliases(:match_dimensions, :transpose, :transpose_z)
 add_aliases(:subplot, :sp, :subplt, :splt)
 add_aliases(:projection, :proj)
 add_aliases(:titlelocation, :title_location, :title_loc, :titleloc, :title_position, :title_pos, :titlepos, :titleposition, :title_align, :title_alignment)

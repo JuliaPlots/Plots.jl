@@ -874,9 +874,7 @@ end
 
     x := Plots._bin_centers(edge_x)
     y := Plots._bin_centers(edge_y)
-    z := Surface(float_weights)
-
-    match_dimensions := true
+    z := Surface(permutedims(float_weights))
     seriestype := :heatmap
     ()
 end

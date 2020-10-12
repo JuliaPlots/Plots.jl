@@ -1488,14 +1488,12 @@ function gr_add_series(sp, series)
 
     GR.savestate()
 
-    x, y, z = series[:x], series[:y], series[:z]
+    x, y, z = (handle_surface(series[letter]) for letter in (:x, :y, :z))
     xscale, yscale = sp[:xaxis][:scale], sp[:yaxis][:scale]
     frng = series[:fillrange]
 
     # recompute data
-    if typeof(z) <: Surface
-        z = transpose_z(series, z.surf, false)
-    elseif ispolar(sp)
+    if ispolar(sp)
         rmin, rmax = axis_limits(sp, :y)
         if frng !== nothing
             _, frng = convert_to_polar(x, frng, (rmin, rmax))
@@ -1752,7 +1750,6 @@ function gr_draw_heatmap(series, x, y, z, clims)
 end
 
 function gr_draw_image(series, x, y, z, clims)
-    z = transpose_z(series, series[:z].surf, true)'
     w, h = size(z)
     xmin, xmax = ignorenan_extrema(x)
     ymin, ymax = ignorenan_extrema(y)
