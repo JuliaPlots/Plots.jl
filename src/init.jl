@@ -15,9 +15,10 @@ end
 function __init__()
     user_defaults = _plots_defaults()
     if haskey(user_defaults, :theme)
-        theme(pop!(user_defaults, :theme))
+        theme(pop!(user_defaults, :theme); user_defaults...)
+    else
+        default(; user_defaults...)
     end
-    default(; user_defaults...)
 
     insert!(Base.Multimedia.displays, findlast(x -> x isa Base.TextDisplay || x isa REPL.REPLDisplay, Base.Multimedia.displays) + 1, PlotsDisplay())
 

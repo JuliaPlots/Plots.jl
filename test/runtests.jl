@@ -11,6 +11,7 @@ import GeometryTypes, GeometryBasics
 using Dates
 using RecipesBase
 
+include("test_defaults.jl")
 include("test_axes.jl")
 include("test_axis_letter.jl")
 include("test_recipes.jl")
