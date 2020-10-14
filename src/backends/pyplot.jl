@@ -618,7 +618,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         dy = (ymax - ymin) / (length(series[:y]) - 1) / 2
         z = if eltype(z) <: Colors.AbstractGray
             float(z)
-        elseif eltype(img) <: Colorant
+        elseif eltype(z) <: Colorant
             map(c -> Float64[red(c),green(c),blue(c),alpha(c)], z)
         else
             z  # hopefully it's in a data format that will "just work" with imshow
@@ -727,7 +727,7 @@ function py_set_lims(ax, sp::Subplot, axis::Axis)
 end
 
 function py_surround_latextext(latexstring, env)
-    if latexstring[1] == '$' && latexstring[end] == '$'
+    if !isempty(latexstring) && latexstring[1] == '$' && latexstring[end] == '$'
         unenclosed = latexstring[2:end-1]
     else
         unenclosed = latexstring
