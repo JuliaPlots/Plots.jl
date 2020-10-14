@@ -61,6 +61,9 @@ end
 # # anything else just gets a bluesred gradient
 # py_colormap(c, α=nothing) = py_colormap(default_gradient(), α)
 
+py_handle_surface(v) = v
+py_handle_surface(z::Surface) = z.surf
+
 py_color(s) = py_color(parse(Colorant, string(s)))
 py_color(c::Colorant) = (red(c), green(c), blue(c), alpha(c))
 py_color(cs::AVec) = map(py_color, cs)
@@ -344,7 +347,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     fix_xy_lengths!(plt, series)
 
     # ax = getAxis(plt, series)
-    x, y, z = (Array(series[letter]) for letter in (:x, :y, :z))
+    x, y, z = (py_handle_surface(series[letter]) for letter in (:x, :y, :z))
     if st == :straightline
         x, y = straightline_data(series)
     elseif st == :shape
@@ -560,7 +563,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     # the surface colors are different than z-value
                     extrakw[:facecolors] = py_shading(
                         series[:fillcolor],
-                        Array(series[:fill_z]),
+                        py_handle_surface(series[:fill_z]),
                     )
                     extrakw[:shade] = false
                 else
