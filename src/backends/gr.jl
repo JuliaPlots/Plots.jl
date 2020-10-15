@@ -1493,7 +1493,7 @@ function gr_add_series(sp, series)
     frng = series[:fillrange]
 
     # recompute data
-    if ispolar(sp)
+    if ispolar(sp) && z === nothing
         rmin, rmax = axis_limits(sp, :y)
         if frng !== nothing
             _, frng = convert_to_polar(x, frng, (rmin, rmax))
@@ -1733,7 +1733,7 @@ function gr_draw_heatmap(series, x, y, z, clims)
     else
         phimin, phimax = 0.0, 360.0 # nonuniform polar array is not yet supported in GR.jl
         nx, ny = length(series[:x]), length(series[:y])
-        xmin, xmax, ymin, ymax = gr_xy_axislims(sp)
+        xmin, xmax, ymin, ymax = gr_xy_axislims(series[:subplot])
         GR.setwindow(-ymax, ymax, -ymax, ymax)
         if ymin > 0
             @warn "'ymin[1] > 0' (rmin) is not yet supported."
