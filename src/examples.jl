@@ -1040,15 +1040,23 @@ const _examples = PlotExample[
             )
         end]
     ),
+    PlotExample( # 49
+        "Polar heatmaps",
+        "",
+        [quote
+            z = (1:4) .+ (1:8)'
+            heatmap(z, projection = :polar)
+        end]
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [25, 30, 47],
-    :pyplot => [2, 25, 30, 31, 47],
-    :plotlyjs => [2, 21, 24, 25, 30, 31],
-    :plotly => [2, 21, 24, 25, 30, 31],
+    :pyplot => [2, 25, 30, 31, 47, 49],
+    :plotlyjs => [2, 21, 24, 25, 30, 31, 49],
+    :plotly => [2, 21, 24, 25, 30, 31, 49],
     :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30, 31, 34, 37, 38, 39, 47],
     :pgfplotsx => [
         2, # animation
@@ -1058,7 +1066,8 @@ _backend_skips = Dict(
         30, # @df
         31, # animation
         32, # spy
-    	47, # mesh3
+        47, # mesh3
+        49, # polar heatmap
     ],
 )
 
