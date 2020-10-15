@@ -15,7 +15,7 @@ macro add_attributes( level, expr )
     insert_block = Expr(:block)
     for (key, value) in zip(key_args, value_args)
         push!(insert_block.args, Expr(
-            :(=), Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(Symbol(lowercase(string(T)), key))), value
+            :(=), Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(Symbol(lowercase(string(T)), "_", key))), value
         ))
     end
     return quote
