@@ -1,3 +1,66 @@
+## inspired by Base.@kwdef
+macro add_attributes( level, expr )
+    expr = macroexpand(__module__, expr) # to expand @static
+    expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
+    T = expr.args[2]
+    if T isa Expr && T.head === :<:
+        T = T.args[1]
+    end
+
+    key_args = Any[]
+    value_args = Any[]
+
+    _splitdef!(expr.args[3], value_args, key_args)
+
+    insert_block = Expr(:block)
+    for (key, value) in zip(key_args, value_args)
+        push!(insert_block.args, Expr(
+            :(=), Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(Symbol(lowercase(string(T)), key))), value
+        ))
+    end
+    return quote
+        $expr
+        $insert_block
+    end |> esc
+end
+
+function _splitdef!(blk, value_args, key_args)
+    for i in eachindex(blk.args)
+        ei = blk.args[i]
+        if ei isa Symbol
+            #  var
+            continue
+        elseif ei isa Expr
+            if ei.head === :(=)
+                lhs = ei.args[1]
+                if lhs isa Symbol
+                    #  var = defexpr
+                    var = lhs
+                elseif lhs isa Expr && lhs.head === :(::) && lhs.args[1] isa Symbol
+                    #  var::T = defexpr
+                    var = lhs.args[1]
+                else
+                    # something else, e.g. inline inner constructor
+                    #   F(...) = ...
+                    continue
+                end
+                defexpr = ei.args[2]  # defexpr
+                push!(value_args, defexpr)
+                push!(key_args, var)
+                blk.args[i] = lhs
+            elseif ei.head === :(::) && ei.args[1] isa Symbol
+                # var::Typ
+                var = ei.args[1]
+                push!(value_args, var)
+                push!(key_args, var)
+            elseif ei.head === :block
+                # can arise with use of @static inside type decl
+                _kwdef!(ei, value_args, key_args)
+            end
+        end
+    end
+    blk
+end
 
 
 const _keyAliases = Dict{Symbol,Symbol}()
