@@ -1451,6 +1451,7 @@ function gr_label_axis_3d(sp, letter)
             x_offset = -gr_axis_width(sp, ax)
             y_offset = 0
         end
+        letter === :z && GR.setcharup(-1, 0)
         gr_text(x + x_offset, y + y_offset, ax[:guide])
         GR.restorestate()
     end
