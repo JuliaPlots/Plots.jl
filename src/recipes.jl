@@ -1007,7 +1007,7 @@ export lens!
     # add subplot
     for series in sp.series_list
         @series begin
-            plotattributes = merge(plotattributes, copy(series.plotattributes))
+            plotattributes = merge(backup, copy(series.plotattributes))
             subplot := lens_index
             primary := false
             xlims := (x1, x2)
