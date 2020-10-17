@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           julia --project -e 'using Pkg; Pkg.instantiate();'
-          julia -e 'using Pkg; Pkg.add( PackageSpec(url="https://github.com/aminya/CompileBot.jl", rev = "master") ); Pkg.develop(PackageSpec(; path=pwd())); using CompileBot; CompileBot.addtestdep();'
+          julia -e 'using Pkg; Pkg.add( PackageSpec(name = "CompileBot", version = "1") ); Pkg.develop(PackageSpec(; path=pwd())); using CompileBot; CompileBot.addtestdep();'
 
 
       # TESTCMD
@@ -73,7 +73,7 @@ jobs:
         uses: actions/download-artifact@v2
 
       - name: CompileBot postprocess
-        run: julia -e 'using Pkg; Pkg.add( PackageSpec(url="https://github.com/aminya/CompileBot.jl", rev = "master") ); using CompileBot; CompileBot.postprocess();'
+        run: julia -e 'using Pkg; Pkg.add( PackageSpec(name = "CompileBot", version = "1") ); using CompileBot; CompileBot.postprocess();'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
