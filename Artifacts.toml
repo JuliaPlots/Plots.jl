@@ -1,7 +1,0 @@
-[plotly]
-git-tree-sha1 = "f03dd0451a05a5fdbbcb3e548998a9d7a1ab6368"
-lazy = true
-
-    [[plotly.download]]
-    url = "https://cdn.plot.ly/plotly-1.54.2.min.js"
-    sha256 = "487f1da6b7a1f127de59af8a65bb3fe2c63d709f011afea82896bdce28ecc0f8"
