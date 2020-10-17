@@ -1048,6 +1048,25 @@ const _examples = PlotExample[
             heatmap(z, projection = :polar)
         end]
     ),
+    PlotExample( # 50
+        "3D surface with axis guides",
+        "",
+        [quote
+        f(x,a) = 1/x + a*x^2
+        xs = collect(0.1:0.05:2.0);
+        as = collect(0.2:0.1:2.0);
+        
+        x_grid = [x for x in xs for y in as];
+        a_grid = [y for x in xs for y in as];
+        
+        plot(x_grid, a_grid, f.(x_grid,a_grid),
+            st = :surface,
+            xlabel = "longer xlabel",
+            ylabel = "longer ylabel",
+            zlabel = "longer zlabel",
+        )
+        end]
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
