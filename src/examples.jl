@@ -1057,16 +1057,13 @@ _backend_skips = Dict(
     :pyplot => [2, 25, 30, 31, 47, 49],
     :plotlyjs => [2, 21, 24, 25, 30, 31, 49],
     :plotly => [2, 21, 24, 25, 30, 31, 49],
-    :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30, 31, 34, 37, 38, 39, 47],
     :pgfplotsx => [
         2, # animation
         6, # images
         16, # pgfplots thinks the upper panel is too small
-        25, # @df
         30, # @df
         31, # animation
         32, # spy
-        47, # mesh3
         49, # polar heatmap
     ],
 )
