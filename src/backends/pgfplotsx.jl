@@ -527,6 +527,17 @@ function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func
     pgfx_add_legend!(axis, series, opt)
 end
 
+function pgfx_add_series!(::Val{:mesh3d}, axis, series_opt, series, series_func, opt)
+    ptable = join([ string(i, " ", j, " ", k, "\\\\") for (i, j, k) in zip(opt[:connections]...) ], "\n        ")
+    push!(
+        series_opt,
+        "patch" => nothing,
+        "table/row sep" => "\\\\",
+        "patch table" => ptable
+    )
+    pgfx_add_series!(axis, series_opt, series, series_func, opt)
+end
+
 function pgfx_add_series!(::Val{:contour}, axis, series_opt, series, series_func, opt)
     push!(axis.options, "view" => "{0}{90}")
     if isfilledcontour(series)
