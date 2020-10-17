@@ -1000,8 +1000,8 @@ const _examples = PlotExample[
 	"Mesh3d",
 	"""
 	Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically.
-	You can also specify the connections using the connections keyword. This is only supported on the Plotly backend.
-	The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
+	You can also specify the connections using the connections keyword.
+    The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
 	such that elements at the same position of these vectors form a triangle.
 	""",
 	[
