@@ -1,84 +1,34 @@
-## inspired by Base.@kwdef
-macro add_attributes( level, expr )
-    expr = macroexpand(__module__, expr) # to expand @static
-    expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
-    T = expr.args[2]
-    if T isa Expr && T.head === :<:
-        T = T.args[1]
+function makeplural(s::Symbol)
+    str = string(s)
+    if last(str) != 's'
+        return Symbol(string(s,"s"))
     end
-
-    key_args = Any[]
-    value_args = Any[]
-
-    _splitdef!(expr.args[3], value_args, key_args)
-
-    insert_block = Expr(:block)
-    for (key, value) in zip(key_args, value_args)
-        push!(insert_block.args, Expr(
-            :(=), Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(Symbol(lowercase(string(T)), "_", key))), value
-        ))
-    end
-    return quote
-        $expr
-        $insert_block
-    end |> esc
+    return s
 end
 
-function _splitdef!(blk, value_args, key_args)
-    for i in eachindex(blk.args)
-        ei = blk.args[i]
-        if ei isa Symbol
-            #  var
-            continue
-        elseif ei isa Expr
-            if ei.head === :(=)
-                lhs = ei.args[1]
-                if lhs isa Symbol
-                    #  var = defexpr
-                    var = lhs
-                elseif lhs isa Expr && lhs.head === :(::) && lhs.args[1] isa Symbol
-                    #  var::T = defexpr
-                    var = lhs.args[1]
-                else
-                    # something else, e.g. inline inner constructor
-                    #   F(...) = ...
-                    continue
-                end
-                defexpr = ei.args[2]  # defexpr
-                push!(value_args, defexpr)
-                push!(key_args, var)
-                blk.args[i] = lhs
-            elseif ei.head === :(::) && ei.args[1] isa Symbol
-                # var::Typ
-                var = ei.args[1]
-                push!(value_args, var)
-                push!(key_args, var)
-            elseif ei.head === :block
-                # can arise with use of @static inside type decl
-                _kwdef!(ei, value_args, key_args)
-            end
-        end
-    end
-    blk
+function make_non_underscore(s::Symbol)
+    str = string(s)
+    str = replace(str, "_" => "")
+    return Symbol(str)
 end
-
 
 const _keyAliases = Dict{Symbol,Symbol}()
 
 function add_aliases(sym::Symbol, aliases::Symbol...)
     for alias in aliases
-        if haskey(_keyAliases, alias)
-            error("Already an alias $alias => $(_keyAliases[alias])... can't also alias $sym")
+        if haskey(_keyAliases, alias) || alias === sym
+            return nothing
         end
         _keyAliases[alias] = sym
     end
+    return nothing
 end
 
 function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol})
     for (k,v) in aliases
         s = string(k)
         if '_' in s
-            aliases[Symbol(replace(s, "_" => ""))] = v
+            aliases[make_non_underscore(k)] = v
         end
     end
 end
@@ -87,7 +37,7 @@ function add_non_underscore_aliases!(aliases::Dict{Symbol,Symbol}, args::Vector{
     for arg in args
         s = string(arg)
         if '_' in s
-            aliases[Symbol(replace(s, "_" => ""))] = arg
+            aliases[make_non_underscore(arg)] = arg
         end
     end
 end
@@ -173,6 +123,31 @@ const _styleAliases = Dict{Symbol,Symbol}(
     :dd   => :dashdot,
     :ddd  => :dashdotdot,
 )
+
+const _shape_keys = Symbol[
+  :circle,
+  :rect,
+  :star5,
+  :diamond,
+  :hexagon,
+  :cross,
+  :xcross,
+  :utriangle,
+  :dtriangle,
+  :rtriangle,
+  :ltriangle,
+  :pentagon,
+  :heptagon,
+  :octagon,
+  :star4,
+  :star6,
+  :star7,
+  :star8,
+  :vline,
+  :hline,
+  :+,
+  :x,
+]
 
 const _allMarkers = vcat(:none, :auto, _shape_keys) #sort(collect(keys(_shapes))))
 const _markerAliases = Dict{Symbol,Symbol}(
@@ -554,7 +529,7 @@ const _all_series_args = sort(union([_series_args; _magic_series_args]))
 const _all_plot_args = _plot_args
 
 const _all_args =
-    sort([_all_axis_args; _all_subplot_args; _all_series_args; _all_plot_args])
+    sort(union([_all_axis_args; _all_subplot_args; _all_series_args; _all_plot_args]))
 
 is_subplot_attr(k) = k in _all_subplot_args
 is_series_attr(k) = k in _all_series_args
@@ -565,9 +540,6 @@ RecipesBase.is_key_supported(k::Symbol) = is_attr_supported(k)
 is_default_attribute(k) = k in _internal_args || k in _all_args || is_axis_attr_noletter(k)
 
 # -----------------------------------------------------------------------------
-
-makeplural(s::Symbol) = Symbol(string(s,"s"))
-
 autopick_ignore_none_auto(arr::AVec, idx::Integer) = _cycle(setdiff(arr, [:none, :auto]), idx)
 autopick_ignore_none_auto(notarr, idx::Integer) = notarr
 
@@ -709,10 +681,10 @@ add_aliases(:contour_labels, :contourlabels, :clabels, :clabs)
 add_aliases(:warn_on_unsupported, :warn)
 
 # add all pluralized forms to the _keyAliases dict
-for arg in keys(_series_defaults)
-    _keyAliases[makeplural(arg)] = arg
+for arg in _all_args
+    add_aliases(arg, makeplural(arg))
 end
-
+# add all non_underscored forms to the _keyAliases
 add_non_underscore_aliases!(_keyAliases)
 
 # -----------------------------------------------------------------------------
@@ -1759,4 +1731,81 @@ function _series_index(plotattributes, sp)
         idx += 1
     end
     return idx
+end
+
+#--------------------------------------------------
+## inspired by Base.@kwdef
+macro add_attributes( level, expr )
+    expr = macroexpand(__module__, expr) # to expand @static
+    expr isa Expr && expr.head === :struct || error("Invalid usage of @add_attributes")
+    T = expr.args[2]
+    if T isa Expr && T.head === :<:
+        T = T.args[1]
+    end
+
+    key_args = Any[]
+    value_args = Any[]
+
+    _splitdef!(expr.args[3], value_args, key_args)
+
+    insert_block = Expr(:block)
+    for (key, value) in zip(key_args, value_args)
+        # e.g. _series_defualts[key] = value
+        exp_key = Symbol(lowercase(string(T)), "_", key)
+        pl_key = makeplural(exp_key)
+        push!(insert_block.args, Expr(
+            :(=), Expr(:ref, Symbol("_", level, "_defaults"), QuoteNode(exp_key)), value
+        ))
+        push!(insert_block.args, :(
+            add_aliases($(QuoteNode(exp_key)), $(QuoteNode(pl_key)))
+        ))
+        push!(insert_block.args, :(
+            add_aliases($(QuoteNode(exp_key)), $(QuoteNode(make_non_underscore(exp_key))))
+        ))
+        push!(insert_block.args, :(
+            add_aliases($(QuoteNode(exp_key)), $(QuoteNode(make_non_underscore(pl_key))))
+        ))
+    end
+    return quote
+        $expr
+        $insert_block
+    end |> esc
+end
+
+function _splitdef!(blk, value_args, key_args)
+    for i in eachindex(blk.args)
+        ei = blk.args[i]
+        if ei isa Symbol
+            #  var
+            continue
+        elseif ei isa Expr
+            if ei.head === :(=)
+                lhs = ei.args[1]
+                if lhs isa Symbol
+                    #  var = defexpr
+                    var = lhs
+                elseif lhs isa Expr && lhs.head === :(::) && lhs.args[1] isa Symbol
+                    #  var::T = defexpr
+                    var = lhs.args[1]
+                else
+                    # something else, e.g. inline inner constructor
+                    #   F(...) = ...
+                    continue
+                end
+                defexpr = ei.args[2]  # defexpr
+                push!(value_args, defexpr)
+                push!(key_args, var)
+                blk.args[i] = lhs
+            elseif ei.head === :(::) && ei.args[1] isa Symbol
+                # var::Typ
+                var = ei.args[1]
+                push!(value_args, var)
+                push!(key_args, var)
+            elseif ei.head === :block
+                # can arise with use of @static inside type decl
+                _kwdef!(ei, value_args, key_args)
+            end
+        end
+    end
+    blk
 end

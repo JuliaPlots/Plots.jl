@@ -1,5 +1,3 @@
-
-
 const P2 = GeometryTypes.Point2{Float64}
 const P3 = GeometryTypes.Point3{Float64}
 
@@ -77,7 +75,6 @@ function weave(x,y; ordering = Vector[x,y])
   ret
 end
 
-
 "create a star by weaving together points from an outer and inner circle.  `n` is the number of arms"
 function makestar(n; offset = -0.5, radius = 1.0)
     z1 = offset * π
@@ -93,7 +90,6 @@ function makeshape(n; offset = -0.5, radius = 1.0)
     Shape(partialcircle(z, z + 2π, n+1, radius))
 end
 
-
 function makecross(; offset = -0.5, radius = 1.0)
     z2 = offset * π
     z1 = z2 - π/8
@@ -103,7 +99,6 @@ function makecross(; offset = -0.5, radius = 1.0)
                 ordering=Vector[outercircle,innercircle,outercircle]))
 end
 
-
 from_polar(angle, dist) = P2(dist*cos(angle), dist*sin(angle))
 
 function makearrowhead(angle; h = 2.0, w = 0.4)
@@ -111,31 +106,6 @@ function makearrowhead(angle; h = 2.0, w = 0.4)
     Shape(P2[(0,0), from_polar(angle - 0.5π, w) - tip,
         from_polar(angle + 0.5π, w) - tip, (0,0)])
 end
-
-const _shape_keys = Symbol[
-  :circle,
-  :rect,
-  :star5,
-  :diamond,
-  :hexagon,
-  :cross,
-  :xcross,
-  :utriangle,
-  :dtriangle,
-  :rtriangle,
-  :ltriangle,
-  :pentagon,
-  :heptagon,
-  :octagon,
-  :star4,
-  :star6,
-  :star7,
-  :star8,
-  :vline,
-  :hline,
-  :+,
-  :x,
-]
 
 const _shapes = KW(
     :circle    => makeshape(20),
