@@ -287,6 +287,7 @@ const _series_defaults = KW(
     :hover              => nothing,  # text to display when hovering over the data points
     :stride             => (1,1),    # array stride for wireframe/surface, the first element is the row stride and the second is the column stride.
     :connections	  => nothing,  # tuple of arrays to specifiy connectivity of a 3d mesh
+    :series_projection  => :none, # allows e.g. projection to planes in a 3D plot 
     :extra_kwargs       => Dict()
 )
 

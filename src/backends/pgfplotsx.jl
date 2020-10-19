@@ -202,7 +202,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             for series in series_list(sp)
                 if hascolorbar(series)
                     cg = get_colorgradient(series)
-                    cm = pgfx_colormap(get_colorgradient(series))
+                    cm = pgfx_colormap(cg)
                     PGFPlotsX.push_preamble!(
                         pgfx_plot.the_plot,
                         """\\pgfplotsset{
@@ -564,10 +564,34 @@ function pgfx_add_series!(::Val{:filledcontour}, axis, series_opt, series, serie
 end
 
 function pgfx_add_series!(::Val{:contour3d}, axis, series_opt, series, series_func, opt)
-    push!(
-        series_opt,
-        "contour prepared" => PGFPlotsX.Options("labels" => opt[:contour_labels]),
-    )
+    isproj = opt[:series_projection] != :none
+    if isproj
+        proj_letter, lim_value = getproperty(
+            (
+                xy = (:z, zlims(opt[:subplot])[1]),
+                yx = (:z, zlims(opt[:subplot])[2]),
+                yz = (:x, xlims(opt[:subplot])[1]),
+                zy = (:x, xlims(opt[:subplot])[2]),
+                xz = (:y, ylims(opt[:subplot])[1]),
+                zx = (:y, ylims(opt[:subplot])[2]),
+            ),
+            get(opt, :series_projection, :xz),
+        )
+        push!(series_opt,
+              "mesh" => nothing,
+              "mesh/check" => false,
+              "mesh/cols"  => size(opt[:z], 1),
+              "mesh/rows"  => size(opt[:z], 2),
+              "patch type" => "line",
+              "point meta" => "rawz",
+              "$proj_letter filter/.code" => "\\def\\pgfmathresult{$lim_value}"
+              )
+    else
+        push!(
+            series_opt,
+            "contour prepared" => PGFPlotsX.Options("labels" => opt[:contour_labels]),
+        )
+    end
     args = pgfx_series_arguments(series, opt)
     series_plot = series_func(series_opt, PGFPlotsX.Table(Contour.contours(args..., opt[:levels])))
     push!(axis, series_plot)

@@ -531,7 +531,7 @@ function get_colorgradient(series::Series)
     st = series[:seriestype]
     if st in (:surface, :heatmap) || isfilledcontour(series)
         series[:fillcolor]
-    elseif st in (:contour, :wireframe)
+    elseif st in (:contour, :wireframe, :contour3d)
         series[:linecolor]
     elseif series[:marker_z] !== nothing
         series[:markercolor]
