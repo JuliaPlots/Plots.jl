@@ -1,7 +1,7 @@
 using REPL
 using Scratch
 
-const plotly_local_file_path = Ref{Nothing, String}(nothing)
+const plotly_local_file_path = Ref{Union{Nothing, String}}(nothing)
 
 
 function _plots_defaults()
