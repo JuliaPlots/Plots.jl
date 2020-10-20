@@ -189,9 +189,9 @@ import RecipesPipeline: SliceIt,
 
 include("types.jl")
 include("utils.jl")
-include("components.jl")
 include("axes.jl")
 include("args.jl")
+include("components.jl")
 include("themes.jl")
 include("plot.jl")
 include("pipeline.jl")
