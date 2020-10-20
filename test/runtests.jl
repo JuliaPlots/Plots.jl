@@ -11,9 +11,8 @@ import GeometryTypes, GeometryBasics
 using Dates
 using RecipesBase
 
-# NOTE: you can run this test only once
 @testset "Plotly standalone" begin
-    @test_throws UndefRefError Plots.plotly_local_file_path[]
+    @test Plots.plotly_local_file_path[] === nothing
     temp = Plots.use_local_dependencies[]
     withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
         Plots.__init__()
@@ -21,6 +20,7 @@ using RecipesBase
         @test isfile(Plots.plotly_local_file_path[])
         @test Plots.use_local_dependencies[] = true
     end
+    Plots.plotly_local_file_path[] = nothing
     Plots.use_local_dependencies[] = temp
 end # testset
 
