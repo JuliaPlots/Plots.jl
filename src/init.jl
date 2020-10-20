@@ -1,7 +1,8 @@
 using REPL
-using Pkg.Artifacts
+using Scratch
 
-const plotly_local_file_path = Ref("")
+const plotly_local_file_path = Ref{Union{Nothing, String}}(nothing)
+
 
 function _plots_defaults()
     if isdefined(Main, :PLOTS_DEFAULTS)
@@ -77,17 +78,12 @@ function __init__()
         end
     end
 
-    if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == true
-        artifact_toml = joinpath(@__DIR__, "Artifacts.toml")
-
-        plotly_sha = artifact_hash("plotly", artifact_toml)
-        if plotly_sha === nothing || !artifact_exists(plotly_sha)
-            plotly_sha = create_artifact() do artifact_dir
-                download("https://cdn.plot.ly/plotly-1.54.2.min.js", joinpath(artifact_dir, "plotly-1.54.2.min.js"))
-            end
+    if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == "true"
+        global plotly_local_file_path[] = joinpath(@get_scratch!("plotly"), "plotly-1.54.2.min.js")
+        if !isfile(plotly_local_file_path[])
+            download("https://cdn.plot.ly/plotly-1.54.2.min.js", plotly_local_file_path[])
         end
 
-        plotly_local_file_path[] = joinpath(artifact_path(plotly_sha), "plotly-1.54.2.min.js")
         use_local_plotlyjs[] = true
     end
 
