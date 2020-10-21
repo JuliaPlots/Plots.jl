@@ -231,7 +231,7 @@ end
 
 # Dicts: each entry is a data point (x,y)=(key,value)
 @recipe function f(d::AbstractDict)
-    seriestype := :line
+    seriestype --> :line
     collect(keys(d)), collect(values(d))
 end
 # function without range... use the current range of the x-axis
