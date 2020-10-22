@@ -13,7 +13,7 @@ using RecipesBase
 
 
 @testset "Plotly standalone" begin
-    @test_nowarn _init_ijulia_plotting()
+    @test_nowarn Plots._init_ijulia_plotting()
     @test Plots.plotly_local_file_path[] === nothing
     temp = Plots.use_local_dependencies[]
     withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
@@ -21,7 +21,7 @@ using RecipesBase
         @test Plots.plotly_local_file_path[] isa String
         @test isfile(Plots.plotly_local_file_path[])
         @test Plots.use_local_dependencies[] = true
-        @test_nowarn _init_ijulia_plotting()
+        @test_nowarn Plots._init_ijulia_plotting()
     end
     Plots.plotly_local_file_path[] = nothing
     Plots.use_local_dependencies[] = temp
