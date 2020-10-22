@@ -911,7 +911,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
             fig = plt.o
 
-            if RecipesPipeline.is3d(sp)
+            if RecipesPipeline.is3d(sp) || ispolar(sp)
                 cbax = fig."add_axes"([0.9, 0.1, 0.03, 0.8])
                 cb = fig."colorbar"(handle; cax=cbax, kw...)
             else
