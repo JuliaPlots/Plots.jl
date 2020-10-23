@@ -480,9 +480,17 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     )
         for (i, rng) in enumerate(iter_segments(series, :scatter))
             xyargs = if st == :bar && !isvertical(series)
-                y[rng], x[rng]
+                if RecipesPipeline.is3d(sp)
+                    y[rng], x[rng], z[rng]
+                else
+                    y[rng], x[rng]
+                end        
             else
-                x[rng], y[rng]
+                if RecipesPipeline.is3d(sp)
+                    x[rng], y[rng], z[rng]
+                else 
+                    x[rng], y[rng]
+                end
             end
 
             handle = ax."scatter"(xyargs...;
