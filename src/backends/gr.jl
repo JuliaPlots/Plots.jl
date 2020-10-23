@@ -860,11 +860,11 @@ function gr_clims(args...)
     lo, hi = get_clims(args...)
     if lo == hi
         if lo == 0
-            hi = 1.0
+            hi = one(hi)
         elseif lo < 0
-            hi = 0.0
+            hi = zero(hi)
         else
-            lo = 0.0
+            lo = zero(lo)
         end
     end
     return lo, hi
