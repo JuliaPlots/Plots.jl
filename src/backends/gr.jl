@@ -42,18 +42,50 @@ gr_halign(k) = (left = 1, hcenter = 2, right = 3)[k]
 gr_valign(k) = (top = 1, vcenter = 3, bottom = 5)[k]
 
 const gr_font_family = Dict(
-    "times" => 1,
-    "helvetica" => 5,
-    "courier" => 9,
-    "bookman" => 14,
-    "newcenturyschlbk" => 18,
-    "avantgarde" => 22,
-    "palatino" => 26
-)
-
-const gr_vector_font = Dict(
+    # compat:
+    "times" => 101,
+    "helvetica" => 105,
+    "courier" => 109,
+    "bookman" => 114,
+    "newcenturyschlbk" => 118,
+    "avantgarde" => 122,
+    "palatino" => 126,
     "serif-roman" => 232,
-    "sans-serif" => 233
+    "sans-serif" => 233,
+    # https://gr-framework.org/fonts.html:
+    "times roman" => 101,
+    "times italic" => 102,
+    "times bold" => 103,
+    "times bold italic" => 104,
+    "helvetica" => 105,
+    "helvetica oblique" => 106,
+    "helvetica bold" => 107,
+    "helvetica bold oblique" => 108,
+    "courier" => 109,
+    "courier oblique" => 110,
+    "courier bold" => 111,
+    "courier bold oblique" => 112,
+    "symbol" => 113,
+    "bookman light" => 114,
+    "bookman light italic" => 115,
+    "bookman demi" => 116,
+    "bookman demi italic" => 117,
+    "new century schoolbook roman" => 118,
+    "new century schoolbook italic" => 119,
+    "new century schoolbook bold" => 120,
+    "new century schoolbook bold italic" => 121,
+    "avantgarde book" => 122,
+    "avantgarde book oblique" => 123,
+    "avantgarde demi" => 124,
+    "avantgarde demi oblique" => 125,
+    "palatino roman" => 126,
+    "palatino italic" => 127,
+    "palatino bold" => 128,
+    "palatino bold italic" => 129,
+    "zapf chancery medium italic" => 130,
+    "zapf dingbats" => 131,
+    "computer modern" => 232,
+    "dejavu sans" => 233,
 )
 
 # --------------------------------------------------------------------------------------
@@ -358,9 +390,10 @@ function gr_set_font(f::Font, s; halign = f.halign, valign = f.valign,
     GR.setcharheight(gr_point_mult(s) * f.pointsize)
     GR.setcharup(sind(-rotation), cosd(-rotation))
     if haskey(gr_font_family, family)
-        GR.settextfontprec(100 + gr_font_family[family], GR.TEXT_PRECISION_STRING)
-    elseif haskey(gr_vector_font, family)
-        GR.settextfontprec(gr_vector_font[family], 3)
+        GR.settextfontprec(
+            gr_font_family[family],
+            gr_font_family[family] >= 200 ? 3 : GR.TEXT_PRECISION_STRING
+        )
     end
     gr_set_textcolor(color)
     GR.settextalign(gr_halign(halign), gr_valign(valign))
