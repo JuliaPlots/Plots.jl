@@ -1483,7 +1483,11 @@ end
         markersize := 1
     end
     markerstrokewidth := 0
-    marker_z := zs
+    if length(unique(zs)) == 1
+        seriescolor --> :black
+    else
+        marker_z := zs
+    end
     label := ""
     x := cs
     y := rs

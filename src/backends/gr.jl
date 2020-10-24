@@ -889,6 +889,20 @@ function get_z_normalized(z, clims...)
     return remap(clamp(z, clims...), clims...)
 end
 
+function gr_clims(args...)
+    lo, hi = get_clims(args...)
+    if lo == hi
+        if lo == 0
+            hi = one(hi)
+        elseif lo < 0
+            hi = zero(hi)
+        else
+            lo = zero(lo)
+        end
+    end
+    return lo, hi
+end
+
 function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     _update_min_padding!(sp)
 
@@ -926,7 +940,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     end
 
     # draw the colorbar
-    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, get_clims(sp), viewport_plotarea)
+    hascolorbar(sp) && gr_draw_colorbar(cbar, sp, gr_clims(sp), viewport_plotarea)
 
     # add the legend
     gr_add_legend(sp, leg, viewport_plotarea)
@@ -975,7 +989,7 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                 gr_set_font(legendfont(sp), sp)
             end
             for series in series_list(sp)
-                clims = get_clims(sp, series)
+                clims = gr_clims(sp, series)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
                 lc = get_linecolor(series, clims)
@@ -1535,7 +1549,7 @@ function gr_add_series(sp, series)
         x, y = convert_to_polar(x, y, (rmin, rmax))
     end
 
-    clims = get_clims(sp, series)
+    clims = gr_clims(sp, series)
 
     # add custom frame shapes to markershape?
     series_annotations_shapes!(series)
