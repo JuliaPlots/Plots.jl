@@ -813,7 +813,9 @@ const _examples = PlotExample[
     ),
     PlotExample( # 38
         "Histogram2D (complex values)",
-        "",
+        """
+	Other possible `normed` mode include `:probability`, where bin area (volumn) is not divided.
+	""",
         [
             :(
                 begin
