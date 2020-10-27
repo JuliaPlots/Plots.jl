@@ -149,18 +149,20 @@ makevec(v::T) where {T} = T[v]
 maketuple(x::Real)                     = (x,x)
 maketuple(x::Tuple{T,S}) where {T,S} = x
 
-const _Point{N,T} = Union{GeometryTypes.Point{N,T}, GeometryBasics.Point{N,T}}
 for i in 2:4
     @eval begin
-        RecipesPipeline.unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
-                   AVec{<:_Point{$i}}}) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
+        RecipesPipeline.unzip(
+            v::Union{AVec{<:Tuple{Vararg{T,$i} where T}}, AVec{<:GeometryBasics.Point{$i}}},
+        ) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
     end
 end
 
-RecipesPipeline.unzip(v::Union{AVec{<:_Point{N}},
-               AVec{<:Tuple{Vararg{T,N} where T}}}) where N = error("$N-dimensional unzip not implemented.")
-RecipesPipeline.unzip(v::Union{AVec{<:_Point},
-               AVec{<:Tuple}}) = error("Can't unzip points of different dimensions.")
+RecipesPipeline.unzip(
+    ::Union{AVec{<:GeometryBasics.Point{N}}, AVec{<:Tuple{Vararg{T,N} where T}}}
+) where N = error("$N-dimensional unzip not implemented.")
+RecipesPipeline.unzip(::Union{AVec{<:GeometryBasics.Point}, AVec{<:Tuple}}) = error(
+    "Can't unzip points of different dimensions."
+)
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
