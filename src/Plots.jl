@@ -245,6 +245,4 @@ end
 
 const CURRENT_BACKEND = CurrentBackend(:none)
 
-include("precompile_includer.jl")
-
 end # module
