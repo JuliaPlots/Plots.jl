@@ -12,3 +12,12 @@ end
     @test plot(1, axis=nothing)[1][:xaxis][:ticks] == []
     @test plot(1, axis=nothing)[1][:yaxis][:ticks] == []
 end # testset
+
+@testset "Categorical ticks" begin
+    p1 = plot('A':'M', 1:13)
+    p2 = plot('A':'Z', 1:26)
+    p3 = plot('A':'Z', 1:26, ticks = :all)
+    @test Plots.get_ticks(p1[1], p1[1][:xaxis])[2] == string.('A':'M')
+    @test Plots.get_ticks(p2[1], p2[1][:xaxis])[2] == string.('C':3:'Z')
+    @test Plots.get_ticks(p3[1], p3[1][:xaxis])[2] == string.('A':'Z')
+end
