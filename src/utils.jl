@@ -557,6 +557,10 @@ function get_linestyle(series, i::Int = 1)
     _cycle(series[:linestyle], i)
 end
 
+function get_fillstyle(series, i::Int = 1)
+    _cycle(series[:fillstyle], i)
+end
+
 function get_markerstrokecolor(series, i::Int = 1)
     msc = series[:markerstrokecolor]
     isa(msc, ColorGradient) ? msc : _cycle(msc, i)
@@ -592,6 +596,7 @@ function has_attribute_segments(series::Series)
             :linestyle,
             :fillcolor,
             :fillalpha,
+            :fillstyle,
             :markercolor,
             :markeralpha,
             :markersize,

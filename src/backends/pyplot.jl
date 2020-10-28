@@ -162,6 +162,9 @@ function py_fillstepstyle(seriestype::Symbol)
     return nothing
 end
 
+py_fillstyle(::Nothing) = nothing
+py_fillstyle(fillstyle::Symbol) = string(fillstyle)
+
 # # untested... return a FontProperties object from a Plots.Font
 # function py_font(font::Font)
 #     pyfont["FontProperties"](
@@ -484,11 +487,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     y[rng], x[rng], z[rng]
                 else
                     y[rng], x[rng]
-                end        
+                end
             else
                 if RecipesPipeline.is3d(sp)
                     x[rng], y[rng], z[rng]
-                else 
+                else
                     x[rng], y[rng]
                 end
             end
@@ -672,13 +675,19 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
         handle = []
         for (i, rng) in enumerate(iter_segments(series))
             if length(rng) > 1
+                fillstyle = get_fillstyle(series, i)
+                has_fillstyle = !isnothing(fillstyle)
+                linecolor = get_linecolor(series, clims, i)
+                fillcolor = get_fillcolor(series, clims, i)
+
                 path = pypath."Path"(hcat(x[rng], y[rng]))
                 patches = pypatches."PathPatch"(
                     path;
                     label = series[:label],
                     zorder = series[:series_plotindex],
-                    edgecolor = py_color(get_linecolor(series, clims, i), get_linealpha(series, i)),
-                    facecolor = py_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
+                    edgecolor = py_color(has_fillstyle ? fillcolor : linecolor, get_linealpha(series, i)),
+                    facecolor = py_color(fillcolor, has_fillstyle ? 0 : get_fillalpha(series, i)),
+                    hatch = py_fillstyle(fillstyle),
                     linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
                     linestyle = py_linestyle(st, get_linestyle(series, i)),
                     fill = true
@@ -710,9 +719,16 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 dim1, _cycle(fillrange[1], rng), _cycle(fillrange[2], rng)
             end
 
+            fillstyle = get_fillstyle(series, i)
+            has_fillstyle = !isnothing(fillstyle)
+            linecolor = get_linecolor(series, clims, i)
+            fillcolor = get_fillcolor(series, clims, i)
+
             handle = getproperty(ax, f)(args..., trues(n), false, py_fillstepstyle(st);
                 zorder = series[:series_plotindex],
-                facecolor = py_color(get_fillcolor(series, clims, i), get_fillalpha(series, i)),
+                edgecolor = py_color(fillcolor, get_linealpha(series, i)),
+                facecolor = py_color(fillcolor, has_fillstyle ? 0 : get_fillalpha(series, i)),
+                hatch = py_fillstyle(fillstyle),
                 linewidths = 0
             )
             push!(handles, handle)
@@ -1295,9 +1311,16 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 # add a line/marker and a label
                 push!(handles,
                     if series[:seriestype] == :shape || series[:fillrange] !== nothing
+
+                        fillstyle = get_fillstyle(series)
+                        has_fillstyle = !isnothing(fillstyle)
+                        linecolor = get_linecolor(series, clims)
+                        fillcolor = get_fillcolor(series, clims)
+
                         pypatches."Patch"(
-                            edgecolor = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
-                            facecolor = py_color(single_color(get_fillcolor(series, clims)), get_fillalpha(series)),
+                            edgecolor = py_color(single_color(has_fillstyle ? fillcolor : linecolor), get_linealpha(series)),
+                            facecolor = py_color(single_color(fillcolor), has_fillstyle ? 0 : get_fillalpha(series)),
+                            hatch = py_fillstyle(fillstyle),
                             linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                             linestyle = py_linestyle(series[:seriestype], get_linestyle(series)),
                             capstyle = "butt"

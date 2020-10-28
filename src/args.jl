@@ -285,6 +285,7 @@ const _series_defaults = KW(
     :fillrange         => nothing,   # ribbons, areas, etc
     :fillcolor         => :match,
     :fillalpha         => nothing,
+    :fillstyle         => nothing,
     :markershape       => :none,
     :markercolor       => :match,
     :markeralpha       => nothing,
@@ -805,6 +806,7 @@ function processLineArg(plotattributes::AKW, arg)
         arg.size  === nothing || (plotattributes[:fillrange] = arg.size)
         arg.color === nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
 
     elseif typeof(arg) <: Arrow || arg in (:arrow, :arrows)
         plotattributes[:arrow] = arg
@@ -871,6 +873,7 @@ function processFillArg(plotattributes::AKW, arg)
         arg.size  === nothing || (plotattributes[:fillrange] = arg.size)
         arg.color === nothing || (plotattributes[:fillcolor] = arg.color == :auto ? :auto : plot_color(arg.color))
         arg.alpha === nothing || (plotattributes[:fillalpha] = arg.alpha)
+        arg.style === nothing || (plotattributes[:fillstyle] = arg.style)
 
     elseif typeof(arg) <: Bool
         plotattributes[:fillrange] = arg ? 0 : nothing
