@@ -678,15 +678,19 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                 fs = get_fillstyle(series, i)
                 has_fs = !isnothing(fs)
                 lc = get_linecolor(series, clims, i)
+                la = get_linealpha(series, i)
                 fc = get_fillcolor(series, clims, i)
+                fa = get_fillalpha(series, i)
 
                 path = pypath."Path"(hcat(x[rng], y[rng]))
                 patches = pypatches."PathPatch"(
                     path;
                     label = series[:label],
                     zorder = series[:series_plotindex],
-                    edgecolor = py_color(has_fs ? fc : lc, get_linealpha(series, i)),
-                    facecolor = py_color(fc, has_fs ? 0 : get_fillalpha(series, i)),
+                    # hatch color/alpha controlled by edge (not face) color/alpha
+                    # if has_fs, set edge color/alpha <- fill color/alpha and face alpha <- 0
+                    edgecolor = has_fs ? py_color(fc, fa) : py_color(lc, la),
+                    facecolor = py_color(fc, has_fs ? 0 : fa),
                     hatch = py_fillstyle(fs),
                     linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
                     linestyle = py_linestyle(st, get_linestyle(series, i)),
@@ -721,12 +725,16 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
             fs = get_fillstyle(series, i)
             has_fs = !isnothing(fs)
+            la = get_linealpha(series, i)
             fc = get_fillcolor(series, clims, i)
+            fa = get_fillalpha(series, i)
 
             handle = getproperty(ax, f)(args..., trues(n), false, py_fillstepstyle(st);
                 zorder = series[:series_plotindex],
-                edgecolor = py_color(fc, get_linealpha(series, i)),
-                facecolor = py_color(fc, has_fs ? 0 : get_fillalpha(series, i)),
+                # hatch color/alpha controlled by edge (not face) color/alpha
+                # if has_fs, set edge color/alpha <- fill color/alpha and face alpha <- 0
+                edgecolor = py_color(fc, has_fs ? fa : la),
+                facecolor = py_color(fc, has_fs ? 0 : fa),
                 hatch = py_fillstyle(fs),
                 linewidths = 0
             )
@@ -1313,11 +1321,15 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         fs = get_fillstyle(series)
                         has_fs = !isnothing(fs)
                         lc = get_linecolor(series, clims)
+                        la = get_linealpha(series)
                         fc = get_fillcolor(series, clims)
+                        fa = get_fillalpha(series)
 
                         pypatches."Patch"(
-                            edgecolor = py_color(single_color(has_fs ? fc : lc), get_linealpha(series)),
-                            facecolor = py_color(single_color(fc), has_fs ? 0 : get_fillalpha(series)),
+                            # hatch color/alpha controlled by edge (not face) color/alpha
+                            # if has_fs, set edge color/alpha <- fill color/alpha and face alpha <- 0
+                            edgecolor = has_fs ? py_color(single_color(fc), fa) : py_color(single_color(lc), la),
+                            facecolor = py_color(single_color(fc), has_fs ? 0 : fa),
                             hatch = py_fillstyle(fs),
                             linewidth = py_thickness_scale(plt, clamp(get_linewidth(series), 0, 5)),
                             linestyle = py_linestyle(series[:seriestype], get_linestyle(series)),
