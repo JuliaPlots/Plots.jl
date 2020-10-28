@@ -1,4 +1,4 @@
-name: CI
+name: ci
 
 on:
   push:
@@ -25,19 +25,19 @@ jobs:
           - 'nightly'
         os:
           - ubuntu-latest
-          - macOS-latest
           - windows-latest
+          - macos-latest
         arch:
           - x64
+          # - x86
 
     steps:
+
+      # Setup environment
       - uses: actions/checkout@v2
-
-      - name: Set up Julia
-        uses: julia-actions/setup-julia@latest
+      - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{ matrix.julia-version }}
-
+          version: ${{ matrix.version }}
       - name: Cache artifacts
         uses: actions/cache@v1
         env:
