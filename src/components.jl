@@ -1,5 +1,5 @@
-const P2 = GeometryTypes.Point2{Float64}
-const P3 = GeometryTypes.Point3{Float64}
+const P2 = GeometryBasics.Point2{Float64}
+const P3 = GeometryBasics.Point3{Float64}
 
 nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
 nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
@@ -729,7 +729,7 @@ end
 
 # -----------------------------------------------------------------------
 "create a BezierCurve for plotting"
-mutable struct BezierCurve{T <: GeometryTypes.Point}
+mutable struct BezierCurve{T <: GeometryBasics.Point}
     control_points::Vector{T}
 end
 
