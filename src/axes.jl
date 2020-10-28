@@ -227,8 +227,9 @@ function get_ticks(sp::Subplot, axis::Axis; update = true)
                 if !isempty(dvals)
                     # discrete ticks...
                     n = length(dvals)
-                    rng = if ticks == :auto
-                        Int[round(Int,i) for i in range(1, stop=n, length=min(n,15))]
+                    rng = if ticks == :auto && n > 15
+                        Δ = ceil(Int, n / 10)
+                        Δ:Δ:n
                     else # if ticks == :all
                         1:n
                     end
