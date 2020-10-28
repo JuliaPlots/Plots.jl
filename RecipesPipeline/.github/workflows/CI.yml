@@ -1,39 +1,43 @@
-name: CI
+name: ci
 
-on: [push]
+on:
+  push:
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  test:
+  CI:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    env:
+      GKS_ENCODING: "utf8"
+
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.version == 'nightly' }}
     strategy:
-      matrix:
-        julia-version: [1.4]
-        julia-arch: [x64]
-        os: [ubuntu-latest, macOS-latest]
       fail-fast: false
+      matrix:
+        version:
+          - '1'
+          - 'nightly'
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        arch:
+          - x64
+          # - x86
 
     steps:
-      - uses: actions/checkout@v1.0.0
 
-      - name: Set up Julia
-        uses: julia-actions/setup-julia@latest
+      # Setup environment
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{ matrix.julia-version }}
-
-      - name: Add package versions
-        run: julia --project=temp_for_test -e 'using Pkg; pkg"dev .; add https://github.com/JuliaPlots/MakieRecipes.jl; add CairoMakie#master"'
-
-      - name: Run tests
-#        uses: julia-actions/julia-runtest@master
-        run: julia --project=temp_for_test -e 'using Pkg; pkg"test RecipesPipeline"'
-
-      - name: Upload test images
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: Recordings
-          path: ./test
-        if: always()
-
+          version: ${{ matrix.version }}
       - name: Cache artifacts
         uses: actions/cache@v1
         env:
@@ -45,4 +49,25 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-        if: always()
+
+      # TESTCMD
+      - name: Default TESTCMD
+        run: echo ::set-env name=TESTCMD::"julia"
+      - name: Ubuntu TESTCMD
+        if: startsWith(matrix.os,'ubuntu')
+        run: echo ::set-env name=TESTCMD::"xvfb-run --auto-servernum julia"
+
+      # Julia Dependencies
+      - name: Install Julia dependencies
+        uses: julia-actions/julia-buildpkg@latest
+
+      # Run tests
+      - name: Run tests
+        run:  $TESTCMD --project -e 'using Pkg; Pkg.test(coverage=true);'
+
+  Skip:
+    if: "contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip CI 🚫
+        run: echo skip ci
