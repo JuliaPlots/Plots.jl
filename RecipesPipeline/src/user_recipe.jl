@@ -352,3 +352,4 @@ function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
     (xf, xinv), (yf, yinv) = ((scale_func(s), inverse_scale_func(s)) for s in (xscale, yscale))
     xs, ys = PlotUtils.adapted_grid(yf ∘ f ∘ xinv, xf.((xmin, xmax)))
     xinv.(xs), yinv.(ys)
+end
