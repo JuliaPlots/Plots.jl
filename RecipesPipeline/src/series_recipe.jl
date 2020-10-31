@@ -1,5 +1,7 @@
 # # Series Recipes
 
+@nospecialize
+
 """
     _process_seriesrecipes!(plt, kw_list)
 
@@ -64,3 +66,5 @@ function _process_seriesrecipe(plt, plotattributes)
     end
     nothing
 end
+
+@specialize

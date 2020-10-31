@@ -9,6 +9,7 @@ empy `args` is returned pop it from the vector, finish up, and it to vector of `
 processed series. When all arguments are processed return the series `Dict`.
 """
 function _process_userrecipes!(plt, plotattributes, args)
+    @nospecialize
     still_to_process = _recipedata_vector(plt, plotattributes, args)
 
     # For plotting recipes, we swap out the args and update the parameter dictionary.  We are keeping a stack of series that still need to be processed.
@@ -48,6 +49,7 @@ end
 # TODO Move this to api.jl?
 
 function _recipedata_vector(plt, plotattributes, args)
+    @nospecialize
     still_to_process = RecipeData[]
     # the grouping mechanism is a recipe on a GroupBy object
     # we simply add the GroupBy object to the front of the args list to allow
@@ -76,6 +78,7 @@ function _recipedata_vector(plt, plotattributes, args)
 end
 
 function _expand_seriestype_array(plotattributes, args)
+    @nospecialize
     sts = get(plotattributes, :seriestype, :path)
     if typeof(sts) <: AbstractArray
         reset_kw!(plotattributes, :seriestype)
@@ -106,6 +109,8 @@ end
 # --------------------------------
 # Fallback user recipes
 # --------------------------------
+
+@nospecialize
 
 # These call `_apply_type_recipe` in type_recipe.jl and finally the `SliceIt` recipe in
 # series.jl.
@@ -304,12 +309,6 @@ end
     n = 200,
 ) where {F <: Function, G <: Function} = fx, fy, range(umin, stop = umax, length = n)
 
-function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
-    (xf, xinv), (yf, yinv) = ((scale_func(s), inverse_scale_func(s)) for s in (xscale, yscale))
-    xs, ys = PlotUtils.adapted_grid(yf ∘ f ∘ xinv, xf.((xmin, xmax)))
-    xinv.(xs), yinv.(ys)
-end
-
 # special handling... 3D parametric function(s)
 @recipe function f(
     fx::FuncOrFuncs{F},
@@ -333,3 +332,11 @@ end
 # list of tuples
 @recipe f(v::AVec{<:Tuple}) = unzip(v)
 @recipe f(tup::Tuple) = [tup]
+
+@specialize
+
+function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
+    (xf, xinv), (yf, yinv) = ((scale_func(s), inverse_scale_func(s)) for s in (xscale, yscale))
+    xs, ys = PlotUtils.adapted_grid(yf ∘ f ∘ xinv, xf.((xmin, xmax)))
+    xinv.(xs), yinv.(ys)
+end

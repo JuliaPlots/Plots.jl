@@ -1,5 +1,7 @@
 # # Type Recipes
 
+@nospecialize
+
 # this is the default "type recipe"... just pass the object through
 @recipe f(::Type{T}, v::T) where {T} = v
 
@@ -70,3 +72,5 @@ _apply_type_recipe(
     letter,
 ) = v
 _apply_type_recipe(plotattributes, v::Nothing, letter) = v
+
+@specialize

@@ -1,5 +1,7 @@
 # # Plot Recipes
 
+@nospecialize
+
 """
     _process_plotrecipes!(plt, kw_list)
 
@@ -46,3 +48,5 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
     end
     return
 end
+
+@specialize
