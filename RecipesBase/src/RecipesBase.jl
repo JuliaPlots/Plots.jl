@@ -272,6 +272,7 @@ macro recipe(funcexpr::Expr)
     # now build a function definition for apply_recipe, wrapping the return value in a tuple if needed.
     # we are creating a vector of RecipeData objects, one per series.
     funcdef = Expr(:function, func, esc(quote
+        @nospecialize
         if RecipesBase._debug_recipes[1]
             println("apply_recipe args: ", $args)
         end
@@ -433,5 +434,6 @@ function recipetype(s::Val{T}, args...) where T
     error("No type recipe defined for type $T. You may need to load StatsPlots")
 end
 
+include("precompile.jl")
 
 end # module
