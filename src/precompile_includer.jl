@@ -16,25 +16,7 @@ else
             include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
             _precompile_()
         else
-            include("../deps/SnoopCompile/precompile/linux/1.4/precompile_Plots.jl")
-            _precompile_()
-        end
-
-    elseif Sys.iswindows()
-        @static if v"1.5.0-DEV" <= VERSION <= v"1.5.9"
-            include("../deps/SnoopCompile/precompile/windows/1.5/precompile_Plots.jl")
-            _precompile_()
-        else
-            include("../deps/SnoopCompile/precompile/windows/1.4/precompile_Plots.jl")
-            _precompile_()
-        end
-
-    elseif Sys.isapple()
-        @static if v"1.5.0-DEV" <= VERSION <= v"1.5.9"
-            include("../deps/SnoopCompile/precompile/apple/1.5/precompile_Plots.jl")
-            _precompile_()
-        else
-            include("../deps/SnoopCompile/precompile/apple/1.4/precompile_Plots.jl")
+            include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
             _precompile_()
         end
 
@@ -43,7 +25,7 @@ else
             include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
             _precompile_()
         else
-            include("../deps/SnoopCompile/precompile/linux/1.4/precompile_Plots.jl")
+            include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
             _precompile_()
         end
 

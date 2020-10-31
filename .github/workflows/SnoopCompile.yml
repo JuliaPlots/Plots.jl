@@ -24,8 +24,6 @@ jobs:
           - '1.5'
         os:        # NOTE: should match the os setting of your botconfig
           - ubuntu-latest
-          - windows-latest
-          - macos-latest
         arch:
           - x64
     steps:
