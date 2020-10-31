@@ -103,7 +103,6 @@ function recipe_pipeline!(plt, plotattributes, args)
     return plt
 end
 
-include("precompile.jl")
-_precompile_()
+include("precompile_includer.jl")
 
 end
