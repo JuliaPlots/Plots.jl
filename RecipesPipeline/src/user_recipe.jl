@@ -333,10 +333,22 @@ end
 @recipe f(v::AVec{<:Tuple}) = unzip(v)
 @recipe f(tup::Tuple) = [tup]
 
+# list of NamedTuples
+@recipe function f(ntv::AVec{<:NamedTuple{K, Tuple{S, T}}}) where {K, S, T}
+    xguide --> string(K[1])
+    yguide --> string(K[2])
+    return Tuple.(ntv)
+end
+@recipe function f(ntv::AVec{<:NamedTuple{K, Tuple{R, S, T}}}) where {K, R, S, T}
+    xguide --> string(K[1])
+    yguide --> string(K[2])
+    zguide --> string(K[3])
+    return Tuple.(ntv)
+end
+
 @specialize
 
 function _scaled_adapted_grid(f, xscale, yscale, xmin, xmax)
     (xf, xinv), (yf, yinv) = ((scale_func(s), inverse_scale_func(s)) for s in (xscale, yscale))
     xs, ys = PlotUtils.adapted_grid(yf ∘ f ∘ xinv, xf.((xmin, xmax)))
     xinv.(xs), yinv.(ys)
-end
