@@ -1,3 +1,5 @@
+@nospecialize
+
 """
     scatter(x,y)
     scatter!(x,y)
@@ -475,3 +477,5 @@ xaxis!(args...; kw...)                                    = plot!(; xaxis = args
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
 xgrid!(args...; kw...)                                    = plot!(; xgrid = args, kw...)
 ygrid!(args...; kw...)                                    = plot!(; ygrid = args, kw...)
+
+@specialize

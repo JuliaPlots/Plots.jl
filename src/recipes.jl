@@ -78,6 +78,8 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     :fillrange,
 ]
 
+@nospecialize
+
 @recipe function f(::Type{Val{:line}}, x, y, z)
     indices = sortperm(x)
     x := x[indices]
@@ -173,6 +175,8 @@ end
 end
 @deps scatterpath path scatter
 
+@specialize
+
 
 # ---------------------------------------------------------------------------
 # steps
@@ -193,6 +197,8 @@ function make_steps(x::AbstractArray, st)
 end
 make_steps(t::Tuple, st) = Tuple(make_steps(ti, st) for ti in t)
 
+
+@nospecialize
 
 # create a path from steps
 @recipe function f(::Type{Val{:steppre}}, x, y, z)
@@ -303,6 +309,8 @@ end
 end
 @deps sticks path scatter
 
+@specialize
+
 
 # ---------------------------------------------------------------------------
 # bezier curves
@@ -316,6 +324,8 @@ function bezier_value(pts::AVec, t::Real)
     end
     val
 end
+
+@nospecialize
 
 # create segmented bezier curves in place of line segments
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)
@@ -472,6 +482,9 @@ end
     ()
 end
 @deps plots_heatmap shape
+
+@specialize
+
 is_3d(::Type{Val{:plots_heatmap}}) = true
 RecipesPipeline.is_surface(::Type{Val{:plots_heatmap}}) = true
 RecipesPipeline.is_surface(::Type{Val{:hexbin}}) = true
@@ -535,6 +548,8 @@ function _preprocess_binlike(plotattributes, x, y)
 end
 
 
+@nospecialize
+
 @recipe function f(::Type{Val{:barbins}}, x, y, z)
     edge, weights, xscale, yscale, baseline =
         _preprocess_binlike(plotattributes, x, y)
@@ -565,6 +580,8 @@ end
     ()
 end
 @deps scatterbins xerror scatter
+
+@specialize
 
 function _stepbins_path(
     edge,
@@ -632,8 +649,8 @@ function _stepbins_path(
     (x, y)
 end
 
-
 @recipe function f(::Type{Val{:stepbins}}, x, y, z)
+    @nospecialize
     axis =
         plotattributes[:subplot][Plots.isvertical(plotattributes) ? :xaxis : :yaxis]
 
@@ -770,6 +787,7 @@ function _make_hist(
     normalize!(h, mode = _hist_norm_mode(normed))
 end
 
+@nospecialize
 
 @recipe function f(::Type{Val{:histogram}}, x, y, z)
     seriestype := length(y) > 1e6 ? :stephist : :barhist
@@ -1018,6 +1036,8 @@ export lens!
     nothing
 end
 
+@specialize
+
 function intersection_point(xA, yA, xB, yB, h, w)
     s = (yA - yB) / (xA - xB)
     hh = h / 2
@@ -1045,6 +1065,7 @@ end
 # contourf - filled contours
 
 @recipe function f(::Type{Val{:contourf}}, x, y, z)
+    @nospecialize
     fillrange := true
     seriestype := :contour
     ()
@@ -1111,6 +1132,8 @@ end
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
 
+@nospecialize
+
 @recipe function f(::Type{Val{:xerror}}, x, y, z)
     error_style!(plotattributes)
     markershape := :vline
@@ -1160,6 +1183,7 @@ end
 end
 @deps zerror path
 
+@specialize
 
 # TODO: move quiver to PlotRecipes
 
@@ -1256,6 +1280,7 @@ end
 
 # function apply_series_recipe(plotattributes::AKW, ::Type{Val{:quiver}})
 @recipe function f(::Type{Val{:quiver}}, x, y, z)
+    @nospecialize
     if :arrow in supported_attrs()
         quiver_using_arrows(plotattributes)
     else
@@ -1293,6 +1318,8 @@ end
         SliceIt, m, n, Surface(clamp!(convert(Matrix{Float64}, mat), 0.0, 1.0))
     end
 end
+
+@nospecialize
 
 # images - colors
 @recipe function f(mat::AMat{T}) where {T <: Colorant}
@@ -1377,6 +1404,7 @@ end
     get(plotattributes, :seriestype, :path) == :ohlc ? OHLC[OHLC(t...) for t in xyuv] :
     RecipesPipeline.unzip(xyuv)
 
+@specialize
 
 # -------------------------------------------------
 
@@ -1415,6 +1443,8 @@ end
 # these are for passing in a vector of OHLC objects
 # TODO: when I allow `@recipe f(::Type{T}, v::T) = ...` definitions to replace convertToAnyVector,
 #       then I should replace these with one definition to convert to a vector of 4-tuples
+
+@nospecialize
 
 # to squash ambiguity warnings...
 @recipe f(x::AVec{Function}, v::AVec{OHLC}) = error()
@@ -1497,6 +1527,8 @@ end
     ()
 end
 
+@specialize
+
 
 Plots.findnz(A::AbstractSparseMatrix) = SparseArrays.findnz(A)
 
@@ -1510,6 +1542,8 @@ function Plots.findnz(A::AbstractMatrix)
 end
 
 # -------------------------------------------------
+
+@nospecialize
 
 "Adds ax+b... straight line over the current plot, without changing the axis limits"
 abline!(plt::Plot, a, b; kw...) =
@@ -1580,3 +1614,5 @@ julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], f
         end
     end
 end
+
+@specialize

@@ -4,43 +4,20 @@
 
 function RecipesPipeline.warn_on_recipe_aliases!(
     plt::Plot,
-    plotattributes,
+    plotattributes::AKW,
     recipe_type,
-    args...,
+    signature_string
 )
     for k in keys(plotattributes)
         if !is_default_attribute(k)
             dk = get(_keyAliases, k, k)
             if k !== dk
-                @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $(_signature_string(Val{recipe_type}, args...)). To ensure expected behavior it is recommended to use the default attribute `$dk`."
+                @warn "Attribute alias `$k` detected in the $recipe_type recipe defined for the signature $signature_string. To ensure expected behavior it is recommended to use the default attribute `$dk`."
             end
             plotattributes[dk] = RecipesPipeline.pop_kw!(plotattributes, k)
         end
     end
 end
-function RecipesPipeline.warn_on_recipe_aliases!(
-    plt::Plot,
-    v::AbstractVector,
-    recipe_type,
-    args...,
-)
-    foreach(x -> RecipesPipeline.warn_on_recipe_aliases!(plt, x, recipe_type, args...), v)
-end
-function RecipesPipeline.warn_on_recipe_aliases!(
-    plt::Plot,
-    rd::RecipeData,
-    recipe_type,
-    args...,
-)
-    RecipesPipeline.warn_on_recipe_aliases!(plt, rd.plotattributes, recipe_type, args...)
-end
-
-function _signature_string(::Type{Val{:user}}, args...)
-    return string("(::", join(string.(typeof.(args)), ", ::"), ")")
-end
-_signature_string(::Type{Val{:type}}, T) = "(::Type{$T}, ::$T)"
-_signature_string(::Type{Val{:plot}}, st) = "(::Type{Val{:$st}}, ::AbstractPlot)"
-_signature_string(::Type{Val{:series}}, st) = "(::Type{Val{:$st}}, x, y, z)"
 
 
 ## Grouping
