@@ -465,7 +465,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
         pgfx_add_legend!(axis, series, opt, i)
     end # for segments
     # get that last marker
-    if !any(isnan, opt[:y]) && opt[:markershape] isa AVec
+    if !isnothing(opt[:y]) && !any(isnan, opt[:y]) && opt[:markershape] isa AVec
         additional_plot = PGFPlotsX.PlotInc(pgfx_marker(opt, length(segments) + 1), PGFPlotsX.Coordinates(tuple((last(opt[:x]), last(opt[:y])))))
         push!(axis, additional_plot)
     end
