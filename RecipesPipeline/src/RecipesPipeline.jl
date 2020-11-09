@@ -39,8 +39,8 @@ export warn_on_recipe_aliases,
     slice_series_attributes!,
     process_sliced_series_attributes!
 
-include("api.jl")
 include("utils.jl")
+include("api.jl")
 include("series.jl")
 include("group.jl")
 include("user_recipe.jl")
@@ -59,6 +59,7 @@ contains only the keyword arguments passed in by the user. Then, add all series 
 object `plt` and return it.
 """
 function recipe_pipeline!(plt, plotattributes, args)
+    @nospecialize
     plotattributes[:plot_object] = plt
 
     # --------------------------------
@@ -101,5 +102,7 @@ function recipe_pipeline!(plt, plotattributes, args)
 
     return plt
 end
+
+include("precompile_includer.jl")
 
 end

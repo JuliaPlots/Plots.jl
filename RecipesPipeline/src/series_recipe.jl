@@ -1,5 +1,7 @@
 # # Series Recipes
 
+@nospecialize
+
 """
     _process_seriesrecipes!(plt, kw_list)
 
@@ -46,7 +48,7 @@ function _process_seriesrecipe(plt, plotattributes)
         # get a sub list of series for this seriestype
         x, y, z = plotattributes[:x], plotattributes[:y], plotattributes[:z]
         datalist = RecipesBase.apply_recipe(plotattributes, Val{st}, x, y, z)
-        warn_on_recipe_aliases!(plt, datalist, :series, st)
+        warn_on_recipe_aliases!(plt, datalist, :series, seriesrecipe_signature_string(st))
 
         # assuming there was no error, recursively apply the series recipes
         for data in datalist
@@ -64,3 +66,5 @@ function _process_seriesrecipe(plt, plotattributes)
     end
     nothing
 end
+
+@specialize

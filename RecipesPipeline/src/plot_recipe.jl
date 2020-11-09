@@ -1,5 +1,7 @@
 # # Plot Recipes
 
+@nospecialize
+
 """
     _process_plotrecipes!(plt, kw_list)
 
@@ -29,7 +31,7 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
         st = kw[:seriestype]
         st = kw[:seriestype] = type_alias(plt, st)
         datalist = RecipesBase.apply_recipe(kw, Val{st}, plt)
-        warn_on_recipe_aliases!(plt, datalist, :plot, st)
+        warn_on_recipe_aliases!(plt, datalist, :plot, plotrecipe_signature_string(st))
         for data in datalist
             preprocess_attributes!(plt, data.plotattributes)
             if data.plotattributes[:seriestype] == st
@@ -46,3 +48,5 @@ function _process_plotrecipe(plt, kw, kw_list, still_to_process)
     end
     return
 end
+
+@specialize

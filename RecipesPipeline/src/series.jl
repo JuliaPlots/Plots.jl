@@ -124,6 +124,7 @@ struct SliceIt end
 # It splits processed data into individual series data, stores in copied `plotattributes`
 # for each series and returns no arguments.
 @recipe function f(::Type{SliceIt}, x, y, z)
+    @nospecialize
 
     # handle data with formatting attached
     if typeof(x) <: Formatted

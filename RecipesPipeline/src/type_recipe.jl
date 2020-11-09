@@ -1,5 +1,7 @@
 # # Type Recipes
 
+@nospecialize
+
 # this is the default "type recipe"... just pass the object through
 @recipe f(::Type{T}, v::T) where {T} = v
 
@@ -16,7 +18,7 @@ function _apply_type_recipe(plotattributes, v, letter)
     plt = plotattributes[:plot_object]
     preprocess_axis_args!(plt, plotattributes, letter)
     rdvec = RecipesBase.apply_recipe(plotattributes, typeof(v), v)
-    warn_on_recipe_aliases!(plotattributes[:plot_object], plotattributes, :type, typeof(v))
+    warn_on_recipe_aliases!(plotattributes[:plot_object], plotattributes, :type, typerecipe_signature_string(v))
     postprocess_axis_args!(plt, plotattributes, letter)
     return rdvec[1].args[1]
 end
@@ -29,13 +31,13 @@ function _apply_type_recipe(plotattributes, v::AbstractArray, letter)
     preprocess_axis_args!(plt, plotattributes, letter)
     # First we try to apply an array type recipe.
     w = RecipesBase.apply_recipe(plotattributes, typeof(v), v)[1].args[1]
-    warn_on_recipe_aliases!(plt, plotattributes, :type, typeof(v))
+    warn_on_recipe_aliases!(plt, plotattributes, :type, typerecipe_signature_string(v))
     # If the type did not change try it element-wise
     if typeof(v) == typeof(w)
         isempty(skipmissing(v)) && return Float64[]
         x = first(skipmissing(v))
         args = RecipesBase.apply_recipe(plotattributes, typeof(x), x)[1].args
-        warn_on_recipe_aliases!(plt, plotattributes, :type, typeof(x))
+        warn_on_recipe_aliases!(plt, plotattributes, :type, typerecipe_signature_string(x))
         postprocess_axis_args!(plt, plotattributes, letter)
         if length(args) == 2 && all(arg -> arg isa Function, args)
             numfunc, formatter = args
@@ -70,3 +72,5 @@ _apply_type_recipe(
     letter,
 ) = v
 _apply_type_recipe(plotattributes, v::Nothing, letter) = v
+
+@specialize
