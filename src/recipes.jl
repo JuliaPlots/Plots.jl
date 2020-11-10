@@ -1197,35 +1197,51 @@ function quiver_using_arrows(plotattributes::AKW)
     if !isa(plotattributes[:arrow], Arrow)
         plotattributes[:arrow] = arrow()
     end
-
+    is_3d = haskey(plotattributes,:z)
     velocity = error_zipit(plotattributes[:quiver])
     xorig, yorig = plotattributes[:x], plotattributes[:y]
+    zorig = is_3d ? plotattributes[:z] : []
 
     # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
     x, y = zeros(0), zeros(0)
-    for i = 1:max(length(xorig), length(yorig))
+    is_3d && ( z = zeros(0))
+    for i = 1:max(length(xorig), length(yorig), length(zorig))
         # get the starting position
         xi = _cycle(xorig, i)
         yi = _cycle(yorig, i)
-
+        zi = is_3d ? _cycle(zorig, i) : 0
         # get the velocity
         vi = _cycle(velocity, i)
-        vx, vy = if istuple(vi)
-            first(vi), last(vi)
-        elseif isscalar(vi)
-            vi, vi
-        elseif isa(vi, Function)
-            vi(xi, yi)
-        else
-            error("unexpected vi type $(typeof(vi)) for quiver: $vi")
+        if is_3d
+            vx, vy, vz = if istuple(vi)
+                vi[1], vi[2], vi[3]
+            elseif isscalar(vi)
+                vi, vi, vi
+            elseif isa(vi, Function)
+                vi(xi, yi, zi)
+            else
+                error("unexpected vi type $(typeof(vi)) for quiver: $vi")
+            end
+        else # 2D quiver
+            vx, vy = if istuple(vi)
+                first(vi), last(vi)
+            elseif isscalar(vi)
+                vi, vi
+            elseif isa(vi, Function)
+                vi(xi, yi)
+            else
+                error("unexpected vi type $(typeof(vi)) for quiver: $vi")
+            end
         end
-
         # add the points
         nanappend!(x, [xi, xi + vx, NaN])
         nanappend!(y, [yi, yi + vy, NaN])
+        is_3d && nanappend!(z, [zi, zi + vz, NaN])
     end
-
     plotattributes[:x], plotattributes[:y] = x, y
+    if is_3d
+        plotattributes[:z] = z
+    end
     # KW[plotattributes]
 end
 
