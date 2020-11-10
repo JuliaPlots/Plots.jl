@@ -593,9 +593,6 @@ function gr_display(plt::Plot, fmt="")
     GR.clearws()
 
     dpi_factor = plt[:dpi] / Plots.DPI
-    if fmt == "svg"
-        dpi_factor *= 4
-    end
 
     # collect some monitor/display sizes in meters and pixels
     display_width_meters, display_height_meters, display_width_px, display_height_px = GR.inqdspsize()
