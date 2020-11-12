@@ -140,6 +140,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             axis_opt = PGFPlotsX.Options(
                 "point meta max" => get_clims(sp)[2],
                 "point meta min" => get_clims(sp)[1],
+                "legend cell align" => "left",
+                "legend columns" => pgfx_legend_col(sp[:legend]),
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
                         pgfx_get_title_pos(title_loc)...,
@@ -917,6 +919,15 @@ function pgfx_linestyle(linewidth::Real, color, α = 1, linestyle = :solid)
         pgfx_get_linestyle(linestyle) => nothing,
     )
 end
+
+function pgfx_legend_col(s::Symbol)
+    if s == :horizontal
+        return -1
+    end
+    return 1
+end
+pgfx_legend_col(n) = n
+
 
 function pgfx_linestyle(plotattributes, i = 1)
     lw = pgfx_thickness_scaling(plotattributes) * get_linewidth(plotattributes, i)

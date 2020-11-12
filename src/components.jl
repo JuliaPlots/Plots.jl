@@ -777,3 +777,15 @@ function extrema_plus_buffer(v, buffmult = 0.2)
     buffer = vdiff * buffmult
     vmin - buffer, vmax + buffer
 end
+
+### Legend
+
+@add_annotations subplot struct Legend
+    background_color
+    foreground_color
+    position
+    title
+    font::Font # TODO: check if macro is recursive enough
+    title_font
+    column
+end
