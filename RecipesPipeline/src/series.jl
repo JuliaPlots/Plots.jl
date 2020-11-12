@@ -94,7 +94,8 @@ _nobigs(v) = v
     z = _compute_z(x, y, z)
     if !isnothing(x) && isnothing(z)
         n = size(x,1)
-        !isnothing(y) && size(y,1) != n && error("Expects $n elements in each col of y, found $(size(y,1)).")
+        # Workaround: Allow y to be one element shorter than x to support binning edges in x, e.g. for histograms
+        !isnothing(y) && (size(y,1) != n && size(y,1) != n - 1) && error("Expects $n elements in each col of y, found $(size(y,1)).")
     end
     _nobigs(x), _nobigs(y), _nobigs(z)
 end
