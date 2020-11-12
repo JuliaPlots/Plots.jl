@@ -568,6 +568,7 @@ function pgfx_add_series!(::Val{:contour3d}, axis, series_opt, series, series_fu
         series_opt,
         "contour prepared" => PGFPlotsX.Options("labels" => opt[:contour_labels]),
     )
+    series_opt = merge( series_opt, pgfx_linestyle(opt) )
     args = pgfx_series_arguments(series, opt)
     series_plot = series_func(series_opt, PGFPlotsX.Table(Contour.contours(args..., opt[:levels])))
     push!(axis, series_plot)
