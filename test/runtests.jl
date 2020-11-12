@@ -4,6 +4,7 @@ using Plots
 using Random
 using StableRNGs
 using Test
+using TestImages
 using FileIO
 using Gtk
 using LibGit2
