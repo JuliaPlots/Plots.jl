@@ -1667,13 +1667,17 @@ function convertLegendValue(val::Symbol)
         :inline,
     )
         val
+    elseif val == :horizontal
+        -1
     else
         error("Invalid symbol for legend: $val")
     end
 end
+convertLegendValue(val::Real) = val
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Nothing) = :none
-convertLegendValue(v::Tuple{S,T}) where {S<:Real,T<:Real} = v
+convertLegendValue(v::Union{Tuple, NamedTuple}) = convertLegendValue.(v)
+convertLegendValue(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
 convertLegendValue(v::Tuple{<:Real,Symbol}) = v
 convertLegendValue(v::Real) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
