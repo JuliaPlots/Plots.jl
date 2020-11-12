@@ -1067,6 +1067,20 @@ const _examples = PlotExample[
         )
         end]
     ),
+    PlotExample( # 51
+        "Images with custom axes",
+        "",
+        [quote
+            using Plots
+            using TestImages
+            img = testimage("lighthouse")
+            
+            # plot the image reversing the first dimension and setting yflip = false
+            plot([-π, π], [-1, 1], reverse(img, dims=1), yflip=false, aspect_ratio=:none)
+            # plot other data
+            plot!(sin, -π, π, lw=3, color=:red)
+        end]
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
@@ -1074,8 +1088,8 @@ _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [25, 30, 47],
     :pyplot => [2, 25, 30, 31, 47, 49],
-    :plotlyjs => [2, 21, 24, 25, 30, 31, 49],
-    :plotly => [2, 21, 24, 25, 30, 31, 49],
+    :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51],
+    :plotly => [2, 21, 24, 25, 30, 31, 49, 51],
     :pgfplotsx => [
         2, # animation
         6, # images
@@ -1084,6 +1098,7 @@ _backend_skips = Dict(
         31, # animation
         32, # spy
         49, # polar heatmap
+        51, # image with custom axes
     ],
 )
 
