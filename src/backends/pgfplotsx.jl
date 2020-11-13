@@ -282,7 +282,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 )
                 extra_series, extra_series_opt = pgfx_split_extra_opts(series[:extra_kwargs])
                 series_opt = merge(series_opt, PGFPlotsX.Options(extra_series_opt...))
-                if RecipesPipeline.is3d(series) || st in (:heatmap, :contour)
+                if RecipesPipeline.is3d(series) || st in (:heatmap, :contour) || (st == :quiver && opt[:z] !== nothing)
                     series_func = PGFPlotsX.Plot3
                 else
                     series_func = PGFPlotsX.Plot
@@ -587,12 +587,25 @@ function pgfx_add_series!(::Val{:quiver}, axis, series_opt, series, series_func,
         )
         x = opt[:x]
         y = opt[:y]
-        table = PGFPlotsX.Table([
-            :x => x,
-            :y => y,
-            :u => opt[:quiver][1],
-            :v => opt[:quiver][2],
-        ])
+        z = opt[:z]
+        if z !== nothing
+            push!(series_opt["quiver"], "w" => "\\thisrow{w}")
+            table = PGFPlotsX.Table([
+                :x => x,
+                :y => y,
+                :z => z,
+                :u => opt[:quiver][1],
+                :v => opt[:quiver][2],
+                :w => opt[:quiver][3],
+            ])
+        else
+            table = PGFPlotsX.Table([
+                :x => x,
+                :y => y,
+                :u => opt[:quiver][1],
+                :v => opt[:quiver][2],
+            ])
+        end
     end
     series_plot = series_func(series_opt, table)
     push!(axis, series_plot)
