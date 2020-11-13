@@ -1101,7 +1101,7 @@ const _examples = PlotExample[
             
             quiver(x,y,z, quiver=(u,v,w))
         end]
-    )
+    ),
 ]
 
 # Some constants for PlotDocs and PlotReferenceImages
