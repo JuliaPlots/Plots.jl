@@ -590,6 +590,7 @@ function pgfx_add_series!(::Val{:quiver}, axis, series_opt, series, series_func,
         z = opt[:z]
         if z !== nothing
             push!(series_opt["quiver"], "w" => "\\thisrow{w}")
+            pgfx_axis!(axis.options, series[:subplot], :z)
             table = PGFPlotsX.Table([
                 :x => x,
                 :y => y,
