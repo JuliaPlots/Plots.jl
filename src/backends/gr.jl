@@ -593,9 +593,6 @@ function gr_display(plt::Plot, fmt="")
     GR.clearws()
 
     dpi_factor = plt[:dpi] / Plots.DPI
-    if fmt == "svg"
-        dpi_factor *= 4
-    end
 
     # collect some monitor/display sizes in meters and pixels
     display_width_meters, display_height_meters, display_width_px, display_height_px = GR.inqdspsize()
@@ -1581,16 +1578,14 @@ function gr_add_series(sp, series)
         sp[:legend] = :none
         GR.gr3.clear()
         dmin, dmax = GR.gr3.volume(y.v, 0)
-    elseif st in (:heatmap, :image)
+    elseif st === :heatmap
         if !ispolar(series)
             # `z` is already transposed, so we need to reverse before passing its size.
             x, y = heatmap_edges(x, xscale, y, yscale, reverse(size(z)))
         end
-        if st === :heatmap
-            gr_draw_heatmap(series, x, y, z, clims)
-        else
-            gr_draw_image(series, x, y, z, clims)
-        end
+        gr_draw_heatmap(series, x, y, z, clims)
+    elseif st === :image
+        gr_draw_image(series, x, y, z, clims)
     end
 
     # this is all we need to add the series_annotations text
