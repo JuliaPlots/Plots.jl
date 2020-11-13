@@ -1197,7 +1197,7 @@ function quiver_using_arrows(plotattributes::AKW)
     if !isa(plotattributes[:arrow], Arrow)
         plotattributes[:arrow] = arrow()
     end
-    is_3d = haskey(plotattributes,:z)
+    is_3d = haskey(plotattributes,:z) && !isnothing(plotattributes[:z])
     velocity = error_zipit(plotattributes[:quiver])
     xorig, yorig = plotattributes[:x], plotattributes[:y]
     zorig = is_3d ? plotattributes[:z] : []
@@ -1205,7 +1205,7 @@ function quiver_using_arrows(plotattributes::AKW)
     # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
     x, y = zeros(0), zeros(0)
     is_3d && ( z = zeros(0))
-    for i = 1:max(length(xorig), length(yorig), length(zorig))
+    for i = 1:max(length(xorig), length(yorig), is_3d ? 0 : length(zorig))
         # get the starting position
         xi = _cycle(xorig, i)
         yi = _cycle(yorig, i)
