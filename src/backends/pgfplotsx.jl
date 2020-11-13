@@ -587,12 +587,13 @@ function pgfx_add_series!(::Val{:quiver}, axis, series_opt, series, series_func,
         )
         x = opt[:x]
         y = opt[:y]
-        if is3d(series)
+        z = opt[:z]
+        if z !== nothing
             push!(series_opt["quiver"], "w" => "\\thisrow{w}")
             table = PGFPlotsX.Table([
                 :x => x,
                 :y => y,
-                :z => opt[:z],
+                :z => z,
                 :u => opt[:quiver][1],
                 :v => opt[:quiver][2],
                 :w => opt[:quiver][3],
