@@ -88,14 +88,13 @@ _nobigs(v::AVec{BigFloat}) = map(Float64, v)
 _nobigs(v::AVec{BigInt}) = map(Int64, v)
 _nobigs(v) = v
 
-@noinline function _compute_xyz(x, y, z)
+@noinline function _compute_xyz(x, y, z, nice_error=false)
     x = _compute_x(x, y, z)
     y = _compute_y(x, y, z)
     z = _compute_z(x, y, z)
-    if !isnothing(x) && isnothing(z)
+    if nice_error && isnothing(z) # don't touch 3D plots
         n = size(x,1)
-        # Workaround: Allow y to be one element shorter than x to support binning edges in x, e.g. for histograms
-        !isnothing(y) && (size(y,1) != n && size(y,1) != n - 1) && error("Expects $n elements in each col of y, found $(size(y,1)).")
+        !isnothing(y) && size(y,1) != n && error("Expects $n elements in each col of y, found $(size(y,1)).")
     end
     _nobigs(x), _nobigs(y), _nobigs(z)
 end
@@ -126,7 +125,7 @@ struct SliceIt end
 # for each series and returns no arguments.
 @recipe function f(::Type{SliceIt}, x, y, z)
     @nospecialize
-
+    nice_error = (x isa AbstractVector) && (y isa AbstractMatrix) # only check in the trivial case
     # handle data with formatting attached
     if typeof(x) <: Formatted
         xformatter := x.formatter
@@ -161,7 +160,7 @@ struct SliceIt end
             # add a new series
             di = copy(plotattributes)
             xi, yi, zi = xs[mod1(i, mx)], ys[mod1(i, my)], zs[mod1(i, mz)]
-            di[:x], di[:y], di[:z] = _compute_xyz(xi, yi, zi)
+            di[:x], di[:y], di[:z] = _compute_xyz(xi, yi, zi, nice_error)
 
             # handle fillrange
             fr = fillranges[mod1(i, mf)]
