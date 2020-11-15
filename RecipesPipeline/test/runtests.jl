@@ -13,6 +13,7 @@ using StaticArrays
 using Statistics
 using StatsPlots
 using Test
+using TestImages
 
 # makie_test_dir = joinpath(@__DIR__, "test_makie")
 # mkpath(makie_test_dir)
