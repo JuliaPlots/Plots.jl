@@ -887,6 +887,13 @@ function pgfx_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
     return string("{\\fontsize{", fs, " pt}{", 1.3fs, " pt}", font, "}")
 end
 
+# If a particular fontsize parameter is `nothing`, produce a figure that doesn't specify the
+# font size, and therefore uses whatever fontsize is utilised by the doc in which the
+# figure is located.
+function pgfx_font(fontsize::Nothing, thickness_scaling = 1, font = "\\selectfont")
+    return string("{", font, "}")
+end
+
 function pgfx_should_add_to_legend(series::Series)
     series.plotattributes[:primary] &&
     !(
