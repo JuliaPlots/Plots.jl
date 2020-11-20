@@ -621,7 +621,7 @@ function with(f::Function, args...; kw...)
         newdefs[:xticks] = nothing
         newdefs[:yticks] = nothing
         newdefs[:grid] = false
-        newdefs[:legend] = false
+        newdefs[:legend_position] = false
     end
 
     # dict to store old and new keyword args for anything that changes
@@ -967,21 +967,21 @@ titlefont(sp::Subplot) = font(
 )
 
 legendfont(sp::Subplot) = font(
-    sp[:legendfontfamily],
-    sp[:legendfontsize],
-    sp[:legendfontvalign],
-    sp[:legendfonthalign],
-    sp[:legendfontrotation],
-    sp[:legendfontcolor],
+    sp[:legend_font_family],
+    sp[:legend_font_pointsize],
+    sp[:legend_font_valign],
+    sp[:legend_font_halign],
+    sp[:legend_font_rotation],
+    sp[:legend_font_color],
 )
 
 legendtitlefont(sp::Subplot) = font(
-    sp[:legendtitlefontfamily],
-    sp[:legendtitlefontsize],
-    sp[:legendtitlefontvalign],
-    sp[:legendtitlefonthalign],
-    sp[:legendtitlefontrotation],
-    sp[:legendtitlefontcolor],
+    sp[:legend_title_font_family],
+    sp[:legend_title_font_pointsize],
+    sp[:legend_title_font_valign],
+    sp[:legend_title_font_halign],
+    sp[:legend_title_font_rotation],
+    sp[:legend_title_font_color],
 )
 
 tickfont(ax::Axis) = font(

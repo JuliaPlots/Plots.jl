@@ -217,7 +217,7 @@ function pgf_series(sp::Subplot, series::Series)
             end
 
             # add to legend?
-            if i == 1 && sp[:legend] != :none && should_add_to_legend(series)
+            if i == 1 && sp[:legend_position] != :none && should_add_to_legend(series)
                 if plotattributes[:fillrange] !== nothing
                     push!(style, "forget plot")
                     push!(series_collection, pgf_fill_legend_hack(plotattributes, args))
@@ -474,20 +474,20 @@ function _update_plot_object(plt::Plot{PGFPlotsBackend})
             kw[:axisEqual] = "true"
         end
 
-        legpos = sp[:legend]
+        legpos = sp[:legend_position]
         if haskey(_pgfplots_legend_pos, legpos)
             kw[:legendPos] = _pgfplots_legend_pos[legpos]
         end
-        cstr, bg_alpha = pgf_color(plot_color(sp[:background_color_legend]))
-        fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
+        cstr, bg_alpha = pgf_color(plot_color(sp[:legend_background_color]))
+        fg_alpha = alpha(plot_color(sp[:legend_foreground_color]))
 
         push!(style, string(
             "legend style = {",
-                pgf_linestyle(pgf_thickness_scaling(sp), sp[:foreground_color_legend], fg_alpha, "solid", ), ",",
+                pgf_linestyle(pgf_thickness_scaling(sp), sp[:legend_foreground_color], fg_alpha, "solid", ), ",",
                 "fill = $cstr,",
                 "fill opacity = $bg_alpha,",
-                "text opacity = $(alpha(plot_color(sp[:legendfontcolor]))),",
-                "font = ", pgf_font(sp[:legendfontsize], pgf_thickness_scaling(sp)),
+                "text opacity = $(alpha(plot_color(sp[:legend_font_color]))),",
+                "font = ", pgf_font(sp[:legend_font_pointsize], pgf_thickness_scaling(sp)),
             "}",
         ))
 

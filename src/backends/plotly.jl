@@ -327,12 +327,12 @@ end
 
 
 function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
-    plotattributes_out[:showlegend] = sp[:legend] != :none
-    legend_position = plotly_legend_pos(sp[:legend])
-    if sp[:legend] != :none
-        plotattributes_out[:legend] = KW(
-            :bgcolor  => rgba_string(sp[:background_color_legend]),
-            :bordercolor => rgba_string(sp[:foreground_color_legend]),
+    plotattributes_out[:showlegend] = sp[:legend_position] != :none
+    legend_position = plotly_legend_pos(sp[:legend_position])
+    if sp[:legend_position] != :none
+        plotattributes_out[:legend_position] = KW(
+            :bgcolor  => rgba_string(sp[:legend_background_color]),
+            :bordercolor => rgba_string(sp[:legend_foreground_color]),
             :borderwidth => 1,
             :traceorder => "normal",
             :xanchor => legend_position.xanchor,
@@ -342,7 +342,7 @@ function plotly_add_legend!(plotattributes_out::KW, sp::Subplot)
             :x => legend_position.coords[1],
             :y => legend_position.coords[2],
             :title => KW(
-                :text => sp[:legendtitle] === nothing ? "" : string(sp[:legendtitle]),
+                :text => sp[:legend_title] === nothing ? "" : string(sp[:legend_title]),
                 :font => plotly_font(legendtitlefont(sp)),
             ),
         )

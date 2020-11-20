@@ -1365,7 +1365,7 @@ end
 py_legend_bbox(pos) = pos
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
-    leg = sp[:legend]
+    leg = sp[:legend_position]
     if leg != :none
         # gotta do this to ensure both axes are included
         labels = []
@@ -1387,15 +1387,15 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                         hasline = get_linewidth(series) > 0
                         PyPlot.plt."Line2D"((0, 1),(0,0),
                             color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),
-                            linewidth = py_thickness_scale(plt, hasline * sp[:legendfontsize] / 8),
+                            linewidth = py_thickness_scale(plt, hasline * sp[:legend_font_pointsize] / 8),
                             linestyle = py_linestyle(:path, get_linestyle(series)),
                             solid_capstyle = "butt", solid_joinstyle = "miter",
                             dash_capstyle = "butt", dash_joinstyle = "miter",
                             marker = py_marker(_cycle(series[:markershape], 1)),
-                            markersize = py_thickness_scale(plt, 0.8 * sp[:legendfontsize]),
+                            markersize = py_thickness_scale(plt, 0.8 * sp[:legend_font_pointsize]),
                             markeredgecolor = py_color(single_color(get_markerstrokecolor(series)), get_markerstrokealpha(series)),
                             markerfacecolor = py_color(single_color(get_markercolor(series, clims)), get_markeralpha(series)),
-                            markeredgewidth = py_thickness_scale(plt, 0.8 * get_markerstrokewidth(series) * sp[:legendfontsize] / first(series[:markersize]))   # retain the markersize/markerstroke ratio from the markers on the plot
+                            markeredgewidth = py_thickness_scale(plt, 0.8 * get_markerstrokewidth(series) * sp[:legend_font_pointsize] / first(series[:markersize]))   # retain the markersize/markerstroke ratio from the markers on the plot
                         )
                     else
                         series[:serieshandle][1]
@@ -1413,23 +1413,23 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 loc = py_legend_pos(leg),
                 bbox_to_anchor = py_legend_bbox(leg),
                 scatterpoints = 1,
-                fontsize = py_thickness_scale(plt, sp[:legendfontsize]),
-                facecolor = py_color(sp[:background_color_legend]),
-                edgecolor = py_color(sp[:foreground_color_legend]),
-                framealpha = alpha(plot_color(sp[:background_color_legend])),
+                fontsize = py_thickness_scale(plt, sp[:legend_font_pointsize]),
+                facecolor = py_color(sp[:legend_background_color]),
+                edgecolor = py_color(sp[:legend_foreground_color]),
+                framealpha = alpha(plot_color(sp[:legend_background_color])),
                 fancybox = false,  # makes the legend box square
                 borderpad = 0.8      # to match GR legendbox
             )
             frame = leg."get_frame"()
             frame."set_linewidth"(py_thickness_scale(plt, 1))
             leg."set_zorder"(1000)
-            if sp[:legendtitle] !== nothing
-                leg."set_title"(sp[:legendtitle])
-                PyPlot.plt."setp"(leg."get_title"(), color = py_color(sp[:legendtitlefontcolor]), family = sp[:legendtitlefontfamily], fontsize = py_thickness_scale(plt, sp[:legendtitlefontsize]))
+            if sp[:legend_title] !== nothing
+                leg."set_title"(sp[:legend_title])
+                PyPlot.plt."setp"(leg."get_title"(), color = py_color(sp[:legend_title_font_color]), family = sp[:legend_title_font_family], fontsize = py_thickness_scale(plt, sp[:legend_title_font_pointsize]))
             end
 
             for txt in leg."get_texts"()
-                PyPlot.plt."setp"(txt, color = py_color(sp[:legendfontcolor]), family = sp[:legendfontfamily], fontsize = py_thickness_scale(plt, sp[:legendfontsize]))
+                PyPlot.plt."setp"(txt, color = py_color(sp[:legend_font_color]), family = sp[:legend_font_family], fontsize = py_thickness_scale(plt, sp[:legend_font_pointsize]))
             end
         end
     end

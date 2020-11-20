@@ -327,7 +327,7 @@ end
 Scales all **current** font sizes by `factor`. For example `scalefontsizes(1.1)` increases all current font sizes by 10%. To reset to initial sizes, use `scalefontsizes()`
 """
 function scalefontsizes(factor::Number)
-    for k in (:titlefontsize, :legendfontsize, :legendtitlefontsize)
+    for k in (:titlefontsize, :legend_font_pointsize, :legend_title_font_pointsize)
         scalefontsize(k, factor)
     end
 
@@ -344,7 +344,7 @@ end
 Resets font sizes to initial default values.
 """
 function scalefontsizes()
-    for k in (:titlefontsize, :legendfontsize, :legendtitlefontsize)
+    for k in (:titlefontsize, :legend_font_pointsize, :legend_title_font_pointsize)
         f = default(k)
         if k in keys(_initial_fontsizes)
             factor = f / _initial_fontsizes[k]
@@ -780,12 +780,13 @@ end
 
 ### Legend
 
-@add_annotations subplot struct Legend
-    background_color
-    foreground_color
-    position
-    title
-    font::Font # TODO: check if macro is recursive enough
-    title_font
-    column
+# TODO: what about :match for the fonts?
+@add_attributes subplot struct Legend
+    background_color = :match
+    foreground_color = :match
+    position = :best
+    title = nothing
+    font::Font = font(8)
+    title_font::Font = font(11)
+    column = 1
 end

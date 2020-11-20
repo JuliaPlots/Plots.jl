@@ -383,14 +383,13 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
             _inspectdr_mapptsize(xaxis[:tickfontsize]),
             color = _inspectdr_mapcolor(xaxis[:tickfontcolor])
         )
-        l.enable_legend = (sp[:legend] != :none)
-        #l.halloc_legend = 150 #TODO: compute???
-        l.font_legend = InspectDR.Font(sp[:legendfontfamily],
-            _inspectdr_mapptsize(sp[:legendfontsize]),
-            color = _inspectdr_mapcolor(sp[:legendfontcolor])
+        l[:enable_legend] = (sp[:legend_position] != :none)
+        #l[:halloc_legend] = 150 #TODO: compute???
+        l[:font_legend] = InspectDR.Font(sp[:legend_font_family],
+            _inspectdr_mapptsize(sp[:legend_font_pointsize]),
+            color = _inspectdr_mapcolor(sp[:legend_font_color])
         )
-        l.frame_legend.fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
-
+        l[:frame_legend].fillcolor = _inspectdr_mapcolor(sp[:legend_background_color])
         #_round!() ensures values use integer spacings (looks better on screen):
         InspectDR._round!(InspectDR.autofit2font!(l, legend_width=10.0)) #10 "em"s wide
     return

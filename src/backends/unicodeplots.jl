@@ -80,7 +80,7 @@ function rebuildUnicodePlot!(plt::Plot, width, height)
 
         # now use the ! functions to add to the plot
         for series in series_list(sp)
-            addUnicodeSeries!(o, series.plotattributes, sp[:legend] != :none, xlim, ylim)
+            addUnicodeSeries!(o, series.plotattributes, sp[:legend_position] != :none, xlim, ylim)
         end
 
         # save the object
