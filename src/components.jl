@@ -775,12 +775,13 @@ end
 
 ### Legend
 
-@add_annotations subplot struct Legend
-    background_color
-    foreground_color
-    position
-    title
-    font::Font # TODO: check if macro is recursive enough
-    title_font
-    column
+# TODO: what about :match for the fonts?
+@add_attributes subplot struct Legend
+    background_color = :match
+    foreground_color = :match
+    position = :best
+    title = nothing
+    font::Font = font(8)
+    title_font::Font = font(11)
+    column = 1
 end
