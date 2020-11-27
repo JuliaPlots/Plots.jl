@@ -8,25 +8,35 @@ ismultiversion = true
 @static if !should_precompile
     # nothing
 elseif !ismultios && !ismultiversion
-    include("../deps/SnoopCompile/precompile/precompile_Plots.jl")
-    _precompile_()
+    @static if (isfile("../deps/SnoopCompile/precompile/precompile_Plots.jl"))
+        include("../deps/SnoopCompile/precompile/precompile_Plots.jl")
+        _precompile_()
+    end
 else
     @static if Sys.islinux()
         @static if v"1.5.0-DEV" <= VERSION <= v"1.5.9"
-            include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
-            _precompile_()
+            @static if (isfile("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl"))
+                include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
+                _precompile_()
+            end
         else
-            include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
-            _precompile_()
+            @static if (isfile("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl"))
+                include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
+                _precompile_()
+            end
         end
 
     else
         @static if v"1.5.0-DEV" <= VERSION <= v"1.5.9"
-            include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
-            _precompile_()
+            @static if (isfile("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl"))
+                include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
+                _precompile_()
+            end
         else
-            include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
-            _precompile_()
+            @static if (isfile("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl"))
+                include("../deps/SnoopCompile/precompile/linux/1.5/precompile_Plots.jl")
+                _precompile_()
+            end
         end
 
     end
