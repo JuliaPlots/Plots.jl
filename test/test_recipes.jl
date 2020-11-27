@@ -1,4 +1,6 @@
 using Plots, Test
+using OffsetArrays
+
 @testset "lens!" begin
     pl = plot(1:5)
     lens!(pl, [1,2], [1,2], inset = (1, bbox(0.0,0.0,0.2,0.2)), colorbar = false)
@@ -23,3 +25,9 @@ end # testset
     vsp = vspan([1,3], ylims=(-2,5), widen = false)
     @test Plots.ylims(vsp) == (-2,5)
 end # testset
+
+@testset "offset axes" begin
+    tri = OffsetVector(vcat(1:5, 4:-1:1), 11:19)
+    sticks = plot(tri, seriestype = :sticks)
+    @test length(sticks) == 1
+end
