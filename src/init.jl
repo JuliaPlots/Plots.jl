@@ -70,6 +70,11 @@ function __init__()
         include(fn)
     end
 
+    @require Gaston = "4b11ee91-296f-5714-9832-002c20994614" begin
+        fn = joinpath(@__DIR__, "backends", "gaston.jl")
+        include(fn)
+    end
+
     @require IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a" begin
         if IJulia.inited
             _init_ijulia_plotting()

@@ -256,6 +256,7 @@ end
 @init_backend PGFPlotsX
 @init_backend InspectDR
 @init_backend HDF5
+@init_backend Gaston
 
 # ---------------------------------------------------------
 
@@ -568,6 +569,34 @@ const _pyplot_seriestype = [
 const _pyplot_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _pyplot_marker = vcat(_allMarkers, :pixel)
 const _pyplot_scale = [:identity, :ln, :log2, :log10]
+
+# ------------------------------------------------------------------------------
+# Gaston
+
+function _initialize_backend(::GastonBackend)
+    @eval Main begin
+        import Gaston
+        export Gaston
+    end
+end
+
+const _gaston_attr = merge_with_base_supported([
+    :label,
+    :legend,
+    :seriescolor,
+    :seriesalpha,
+    :linestyle,
+    :markershape,
+    :bins,
+    :title,
+    :guide, :lims,
+  ])
+const _gaston_seriestype = [
+    :path, :scatter, :shape, :straightline,
+]
+const _gaston_style = [:auto, :solid]
+const _gaston_marker = [:none, :auto, :circle]
+const _gaston_scale = [:identity]
 
 # ------------------------------------------------------------------------------
 # unicodeplots
