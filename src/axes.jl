@@ -426,6 +426,11 @@ end
 
 # -------------------------------------------------------------------------
 
+# handle widen in the case that xlims are of type Date or DateTime
+function widen(dmin::Union{Date,DateTime}, dmax::Union{Date,DateTime}, scale = :identity)
+    widen(Dates.value(dmin), Dates.value(dmax), scale)
+end
+
 # push the limits out slightly
 function widen(lmin, lmax, scale = :identity)
     f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
@@ -674,7 +679,7 @@ function axis_drawing_info(sp, letter)
                             reverse_if((tick, tick_stop), isy),
                         )
                     end
-                    if ax[:minorgrid] 
+                    if ax[:minorgrid]
                         push!(
                             minorgrid_segments,
                             reverse_if((tick, oamin), isy),
@@ -728,7 +733,7 @@ function axis_drawing_info_3d(sp, letter)
     minorgrid_segments = Segments(3)
     border_segments = Segments(3)
 
-    
+
     if sp[:framestyle] != :none# && letter === :x
         na0, na1 = if sp[:framestyle] in (:origin, :zerolines)
             0, 0
