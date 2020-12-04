@@ -54,9 +54,9 @@ function _ijulia_display_dict(plt::Plot)
     elseif output_type == :html
         mime = "text/html"
         out[mime] = sprint(show, MIME(mime), plt)
+        _ijulia__extra_mime_info!(plt, out)
     else
         error("Unsupported output type $output_type")
     end
-    _ijulia__extra_mime_info!(plt, out)
     out
 end
