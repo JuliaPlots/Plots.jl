@@ -1,11 +1,16 @@
 # https://github.com/mbaz/Gaston.
 const G = Gaston
 const GastonSubplot = G.Plot
+const GASTON_MARKER_SCALING = 1.3 / 5.0
 # --------------------------------------------
 # These functions are called by Plots
 # --------------------------------------------
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
+    xsize = plt.attr[:size][1]
+    ysize = plt.attr[:size][2]
+    G.set(termopts="""size $xsize,$ysize""")
+
     state_handle = G.nexthandle() # for now all the figures will be kept
     plt.o = G.newfigure(state_handle)
 end
@@ -14,9 +19,9 @@ end
 function _before_layout_calcs(plt::Plot{GastonBackend})
     # Initialize all the subplots first
     plt.o.subplots = G.SubPlot[]
-
     grid = size(plt.layout)
     plt.o.layout = grid
+
 
     for sp in plt.subplots
         gaston_init_subplot(plt, sp)
@@ -43,7 +48,7 @@ function _display(plt::Plot{GastonBackend})
 end
 
 # --------------------------------------------
-# These functions are called gaston specific
+# These functions are gaston specific
 # --------------------------------------------
 
 function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend})
@@ -72,8 +77,19 @@ function gaston_parse_series_args(series::Series)
     curveconf = String[]
     st = series[:seriestype]
 
-    if st == :path
-        push!(curveconf, """with lines """)
+    if st == :scatter
+        pt = gaston_marker(series[:markershape])
+        ps = series[:markersize] * GASTON_MARKER_SCALING
+        lc = gaston_color(series[:markercolor])
+        alpha = series[:markeralpha] # TODO merge alpha with rgb color
+        push!(curveconf, """with points pt $pt ps $ps lc $lc""")
+    elseif st == :path
+        lc = gaston_color(series[:linecolor])
+        dt = gaston_linestyle(series[:linestyle])
+        lw = series[:linewidth]
+        alpha = series[:linealpha] # TODO merge alpha with rgb color
+        push!(curveconf, """with lines lc $lc dt $dt lw $lw""")
+
     elseif st == :steppre
         push!(curveconf, """with steps""")
     elseif st == :steppost
@@ -81,7 +97,7 @@ function gaston_parse_series_args(series::Series)
     end
 
     # line color
-    push!(curveconf, """lc rgb "#$(hex(series[:linecolor], :rrggbb))" """)
+    # push!(curveconf, """lc rgb "#$(hex(series[:linecolor], :rrggbb))" """)
 
     # label
     push!(curveconf, """title "$(series[:label])" """)
@@ -103,18 +119,44 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
         push!(axesconf, """set $(letter)label "$(axis_attr[:guide])"  """)
         push!(axesconf, """set $(letter)label font "$(axis_attr[:guidefontfamily]), $(axis_attr[:guidefontsize])"  """)
 
-        # tick font
+        # tickfont
         push!(axesconf, """set $(letter)tics font "$(axis_attr[:tickfontfamily]), $(axis_attr[:tickfontsize])"  """)
-
         push!(axesconf, """set $(letter)tics textcolor rgb "#$(hex(axis_attr[:tickfontcolor], :rrggbb))" """)
-
         push!(axesconf, """set $(letter)tics  $(axis_attr[:tick_direction])""")
 
-        mirror = axis_attr[:mirror] ? "nomirror" : "mirror"
+        mirror = axis_attr[:mirror] ? "mirror" : "nomirror"
         push!(axesconf, """set $(letter)tics  $(mirror) """)
 
         # set xtics (1,2,5,10,20,50)
         # TODO logscale, explicit tick location, range,
     end
     return join(axesconf, "\n")
+end
+
+
+function gaston_marker(marker)
+    marker == :none && return -1
+    marker == :circle && return 7
+    marker == :rect && return 5
+    marker == :diamond && return 28
+    marker == :utriangle && return 9
+    marker == :dtriangle && return 11
+    marker == :+ && return 1
+    marker == :x && return 2
+    marker == :star5 && return 3
+    marker == :pentagon && return 15
+    marker == :pixel && return 0
+
+    @warn("Unsupported marker $marker")
+    return 1
+end
+
+gaston_color(color) = """rgb "#$(hex(color, :rrggbb))"  """
+
+function gaston_linestyle(style)
+    style == :solid && return "1"
+    style == :dash && return "2"
+    style == :dot && return "3"
+    style == :dashdot && return "4"
+    style == :dashdotdot && return "5"
 end
