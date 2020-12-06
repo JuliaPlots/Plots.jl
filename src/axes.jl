@@ -94,6 +94,11 @@ function attr!(axis::Axis, args...; kw...)
                 for vi in v
                     discrete_value!(axis, vi)
                 end
+            elseif k == :lims && isa(v, Tuple{Date,Date})
+                plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
+            elseif k == :lims && isa(v, Tuple{DateTime,DateTime})
+                println("Converting datetime")
+                plotattributes[k] = (v[1].instant.periods.value, v[2].instant.periods.value)
             else
                 plotattributes[k] = v
             end
