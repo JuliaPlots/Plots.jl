@@ -31,10 +31,10 @@ end # testset
 include("test_defaults.jl")
 include("test_axes.jl")
 include("test_axis_letter.jl")
+include("integration_dates.jl")
 include("test_recipes.jl")
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
-include("integration_dates.jl")
 
 reference_dir(args...) = joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
 
