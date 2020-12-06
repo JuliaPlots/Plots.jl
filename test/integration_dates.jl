@@ -13,7 +13,11 @@ using Plots, Test, Dates
     ref_xlims = (x[1].instant.periods.value, x[end].instant.periods.value)
     @test Plots.ylims(p) == ref_ylims
     @test Plots.xlims(p) == ref_xlims
-    @test isa(display(p), Nothing) == true
+    @static if haskey(ENV, "APPVEYOR")
+        @info "Skipping display tests on AppVeyor"
+    else
+        @test isa(display(p), Nothing) == true
+    end
 end # testset
 
 @testset "Date xlims" begin
@@ -21,8 +25,16 @@ end # testset
     x=[Date(2019,11,i) for i in 1:10]
     span = (Date(2019,10,31), Date(2019,11,11))
 
+    ref_xlims = map(date->date.instant.periods.value, span)
+
     p = plot(x,y, xlims=span, widen = false)
-    @test isa(display(p), Nothing) == true
+    
+    @test Plots.xlims(p) == ref_xlims
+    @static if haskey(ENV, "APPVEYOR")
+        @info "Skipping display tests on AppVeyor"
+    else
+        @test isa(display(p), Nothing) == true
+    end
 end # testset
 
 @testset "DateTime xlims" begin
@@ -30,6 +42,13 @@ end # testset
     x=[DateTime(2019,11,i,11) for i in 1:10]
     span = (DateTime(2019,10,31,11,59,59), DateTime(2019,11,11,12,01,15))
 
+    ref_xlims = map(date->date.instant.periods.value, span)
+
     p = plot(x,y, xlims=span, widen = false)
-    @test isa(display(p), Nothing) == true
+    @test Plots.xlims(p) == ref_xlims
+    @static if haskey(ENV, "APPVEYOR")
+        @info "Skipping display tests on AppVeyor"
+    else
+        @test isa(display(p), Nothing) == true
+    end
 end # testset
