@@ -13,7 +13,7 @@ using Plots, Test, Dates
     ref_xlims = (x[1].instant.periods.value, x[end].instant.periods.value)
     @test Plots.ylims(p) == ref_ylims
     @test Plots.xlims(p) == ref_xlims
-    @static if haskey(ENV, "APPVEYOR")
+    @static if (haskey(ENV, "APPVEYOR") || haskey(ENV, "CI"))
         @info "Skipping display tests on AppVeyor"
     else
         @test isa(display(p), Nothing) == true
@@ -28,9 +28,9 @@ end # testset
     ref_xlims = map(date->date.instant.periods.value, span)
 
     p = plot(x,y, xlims=span, widen = false)
-    
+
     @test Plots.xlims(p) == ref_xlims
-    @static if haskey(ENV, "APPVEYOR")
+    @static if (haskey(ENV, "APPVEYOR") || haskey(ENV, "CI"))
         @info "Skipping display tests on AppVeyor"
     else
         @test isa(display(p), Nothing) == true
@@ -46,7 +46,7 @@ end # testset
 
     p = plot(x,y, xlims=span, widen = false)
     @test Plots.xlims(p) == ref_xlims
-    @static if haskey(ENV, "APPVEYOR")
+    @static if (haskey(ENV, "APPVEYOR") || haskey(ENV, "CI"))
         @info "Skipping display tests on AppVeyor"
     else
         @test isa(display(p), Nothing) == true
