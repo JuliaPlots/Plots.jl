@@ -18,6 +18,7 @@ using Plots, Test, Dates
         @info "Skipping display tests on AppVeyor"
     else
         @test isa(display(p), Nothing) == true
+        closeall()
     end
 end # testset
 
@@ -36,6 +37,7 @@ end # testset
         @info "Skipping display tests on AppVeyor"
     else
         @test isa(display(p), Nothing) == true
+        closeall()
     end
 end # testset
 
@@ -53,5 +55,6 @@ end # testset
         @info "Skipping display tests on AppVeyor"
     else
         @test isa(display(p), Nothing) == true
+        closeall()
     end
 end # testset
