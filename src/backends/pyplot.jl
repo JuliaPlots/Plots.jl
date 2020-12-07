@@ -799,6 +799,9 @@ function py_set_scale(ax, sp::Subplot, axis::Axis)
     letter = axis[:letter]
     scale in supported_scales() || return @warn("Unhandled scale value in pyplot: $scale")
     func = getproperty(ax, Symbol("set_", letter, "scale"))
+    if PyPlot.version ≥ v"3.3" # https://matplotlib.org/3.3.0/api/api_changes.html
+        letter = Symbol("")
+    end
     kw = KW()
     arg = if scale == :identity
         "linear"
