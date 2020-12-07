@@ -31,6 +31,7 @@ end # testset
 include("test_defaults.jl")
 include("test_axes.jl")
 include("test_axis_letter.jl")
+include("test_components.jl")
 include("test_recipes.jl")
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
