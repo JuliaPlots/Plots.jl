@@ -44,3 +44,28 @@ end
         end
     end
 end
+
+@testset "Fonts" begin
+    @testset "Scaling" begin
+        sizesToCheck = [:titlefontsize, :legendfontsize, :legendtitlefontsize,
+            :xtickfontsize, :ytickfontsize, :ztickfontsize,
+            :xguidefontsize, :yguidefontsize, :zguidefontsize,]
+        # get inital font sizes
+        initialSizes = [Plots.default(s) for s in sizesToCheck ]
+
+        #scale up font sizes
+        scalefontsizes(2)
+
+        # get inital font sizes
+        doubledSizes = [Plots.default(s) for s in sizesToCheck ]
+
+        @test doubledSizes == initialSizes*2
+
+        # reset font sizes
+        resetfontsizes()
+
+        finalSizes = [Plots.default(s) for s in sizesToCheck ]
+
+        @test finalSizes == initialSizes
+    end
+end
