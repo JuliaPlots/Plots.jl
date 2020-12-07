@@ -70,7 +70,7 @@ function gaston_add_series(plt::Plot{GastonBackend}, series::Series)
 
     isfirst = length(g_sp.curves) == 0 ? true : false
     push!(g_sp.curves, c)
-    G.write_data(c, g_sp.dims, g_sp.datafile, append = isfirst ? false : true)  # TODO add appended series
+    G.write_data(c, g_sp.dims, g_sp.datafile, append = isfirst ? false : true)
 end
 
 function gaston_parse_series_args(series::Series)
@@ -81,15 +81,25 @@ function gaston_parse_series_args(series::Series)
         pt = gaston_marker(series[:markershape])
         ps = series[:markersize] * GASTON_MARKER_SCALING
         lc = gaston_color(series[:markercolor])
-        alpha = series[:markeralpha] # TODO merge alpha with rgb color
+        # alpha = series[:markeralpha] # TODO merge alpha with rgb color
         push!(curveconf, """with points pt $pt ps $ps lc $lc""")
     elseif st == :path
         lc = gaston_color(series[:linecolor])
         dt = gaston_linestyle(series[:linestyle])
         lw = series[:linewidth]
-        alpha = series[:linealpha] # TODO merge alpha with rgb color
-        push!(curveconf, """with lines lc $lc dt $dt lw $lw""")
-
+        # alpha = series[:linealpha] # TODO merge alpha with rgb color
+        if series[:markershape] == :none # simplepath
+            push!(curveconf, """with lines lc $lc dt $dt lw $lw""")
+        else
+            pt = gaston_marker(series[:markershape])
+            ps = series[:markersize] * GASTON_MARKER_SCALING
+            push!(curveconf, """with lp lc $lc dt $dt lw $lw pt $pt ps $ps""")
+        end
+    elseif st == :shape
+        fc = gaston_color(series[:fillcolor])
+        fs = "solid"
+        lc = gaston_color(series[:linecolor])
+        push!(curveconf, """with filledcurves fc $fc fs $fs border lc $lc""")
     elseif st == :steppre
         push!(curveconf, """with steps""")
     elseif st == :steppost
@@ -119,7 +129,8 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
         push!(axesconf, """set $(letter)label "$(axis_attr[:guide])"  """)
         push!(axesconf, """set $(letter)label font "$(axis_attr[:guidefontfamily]), $(axis_attr[:guidefontsize])"  """)
 
-        # tickfont
+        # Handle ticks
+        # ticksyle
         push!(axesconf, """set $(letter)tics font "$(axis_attr[:tickfontfamily]), $(axis_attr[:tickfontsize])"  """)
         push!(axesconf, """set $(letter)tics textcolor rgb "#$(hex(axis_attr[:tickfontcolor], :rrggbb))" """)
         push!(axesconf, """set $(letter)tics  $(axis_attr[:tick_direction])""")
@@ -127,12 +138,68 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
         mirror = axis_attr[:mirror] ? "mirror" : "nomirror"
         push!(axesconf, """set $(letter)tics  $(mirror) """)
 
-        # set xtics (1,2,5,10,20,50)
+        logscale = if axis_attr[:scale] == :identity
+            "nologscale"
+        elseif axis_attr[:scale] == :log10
+            "logscale"
+        end
+        push!(axesconf, """set $logscale $(letter)""")
+
+        # tick locations
+        if axis_attr[:ticks] != :native
+            # axis limits
+            from, to = axis_limits(sp, letter)
+            push!(axesconf, """set $(letter)range [$from:$to]""")
+
+            ticks = get_ticks(sp, axis_attr)
+            gaston_set_ticks!(axesconf, ticks, letter)
+        end
+
+
         # TODO logscale, explicit tick location, range,
     end
     return join(axesconf, "\n")
 end
 
+function gaston_set_ticks!(axesconf, ticks, letter)
+
+    ticks == :auto && return
+    if ticks == :none || ticks === nothing || ticks == false
+        push!(axesconf, """unset $(letter)tics """)
+        return
+    end
+
+    ttype = ticksType(ticks)
+    if ttype == :ticks
+        tick_locations = @view ticks[:]
+        gaston_tick_string = []
+        for i in eachindex(tick_locations)
+            lac = tick_locations[i]
+            push!(gaston_tick_string, "$loc")
+        end
+        push!(
+            axesconf,
+            "set $(letter)tics (" * join(gaston_tick_string, ", ") * ")"
+        )
+
+    elseif ttype == :ticks_and_labels
+        tick_locations = @view ticks[1][:]
+        tick_labels = @view ticks[2][:]
+        gaston_tick_string = []
+        for i in eachindex(tick_locations)
+            loc = tick_locations[i]
+            lab = gaston_enclose_tick_string(tick_labels[i])
+            push!(gaston_tick_string, "'$lab' $loc")
+        end
+        push!(
+            axesconf,
+            "set $(letter)tics (" * join(gaston_tick_string, ", ") * ")"
+        )
+
+    else
+        error("Invalid input for $(letter)ticks: $ticks")
+    end
+end
 
 function gaston_marker(marker)
     marker == :none && return -1
@@ -159,4 +226,15 @@ function gaston_linestyle(style)
     style == :dot && return "3"
     style == :dashdot && return "4"
     style == :dashdotdot && return "5"
+end
+
+function gaston_enclose_tick_string(tick_string)
+    if findfirst("^", tick_string) == nothing
+        return tick_string
+    end
+
+
+    base, power = split(tick_string, "^")
+    power = string("{", power, "}")
+    return string(base, "^", power)
 end

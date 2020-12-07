@@ -598,8 +598,11 @@ const _gaston_attr = merge_with_base_supported([
     # :bar_width, :bar_edges,
     # :title,
     # :window_title,
-    # :guide, :guide_position, :lims, :ticks, :scale, :flip, :rotation,
-    # :tickfont, :guidefont, :legendfont,
+    :guide,
+    # :guide_position,
+    :lims, :ticks, :scale, # :flip, :rotation,
+    :tickfont, :guidefont,
+    # :legendfont,
     # :grid, :legend,
     # :colorbar, :colorbar_title,
     # :fill_z, :line_z, :marker_z, :levels,
@@ -623,7 +626,7 @@ const _gaston_seriestype = [:path,
                             # :histogram2d,
                             # :ysticks, :xsticks,
                             # :contour,
-                            # :shape,
+                            :shape,
                             # :straightline,
                             ]
 
@@ -650,7 +653,7 @@ const _gaston_marker = [:none,
 const _gaston_scale = [:identity,
                        # :ln,
                        # :log2,
-                       # :log10,
+                       :log10,
                        ]
 
 # ------------------------------------------------------------------------------
