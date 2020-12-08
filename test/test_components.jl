@@ -1,26 +1,47 @@
 using Plots, Test
 
-@testset "Shape Copy" begin
-    square = Shape([(0,0),(1,0),(1,1),(0,1)])
-    square2 = Shape(square)
-    @test square2.x == square.x
-    @test square2.y == square.y
-end
+@testset "Shapes" begin
+    @testset "Copy" begin
+        square = Shape([(0,0),(1,0),(1,1),(0,1)])
+        square2 = Shape(square)
+        @test square2.x == square.x
+        @test square2.y == square.y
+    end
 
-@testset "Shape Center" begin
-    square = Shape([(0,0),(1,0),(1,1),(0,1)])
-    @test Plots.center(square) == (0.5,0.5)
-end
+    @testset "Center" begin
+        square = Shape([(0,0),(1,0),(1,1),(0,1)])
+        @test Plots.center(square) == (0.5,0.5)
+    end
 
-@testset "Shape Translate" begin
-    square = Shape([(0,0),(1,0),(1,1),(0,1)])
-    squareUp = Shape([(0,1),(1,1),(1,2),(0,2)])
-    squareUpRight = Shape([(1,1),(2,1),(2,2),(1,2)])
+    @testset "Translate" begin
+        square = Shape([(0,0),(1,0),(1,1),(0,1)])
+        squareUp = Shape([(0,1),(1,1),(1,2),(0,2)])
+        squareUpRight = Shape([(1,1),(2,1),(2,2),(1,2)])
 
-    @test Plots.translate(square,0,1).x == squareUp.x
-    @test Plots.translate(square,0,1).y == squareUp.y
+        @test Plots.translate(square,0,1).x == squareUp.x
+        @test Plots.translate(square,0,1).y == squareUp.y
 
-    @test Plots.center(translate!(square,1)) == (1.5,1.5)
+        @test Plots.center(translate!(square,1)) == (1.5,1.5)
+    end
+
+    @testset "Rotate" begin
+        # 2 radians rotation matrix
+        R2 = [cos(2) sin(2); -sin(2) cos(2)]
+        coords = [0 0; 1 0; 1 1; 0 1]'
+        coordsRotated2 = R2*(coords.-0.5).+0.5
+
+        square = Shape([(0,0),(1,0),(1,1),(0,1)])
+
+        # make a new, rotated square
+        square2 = rotate(square, -2)
+        @test square2.x ≈ coordsRotated2[1,:]
+        @test square2.y ≈ coordsRotated2[2,:]
+
+        # unrotate the new square in place
+        rotate!(square2, 2)
+        @test square2.x ≈ coords[1,:]
+        @test square2.y ≈ coords[2,:]
+    end
 end
 
 @testset "Brush" begin
