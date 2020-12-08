@@ -2,9 +2,13 @@
 const G = Gaston
 const GastonSubplot = G.Plot
 const GASTON_MARKER_SCALING = 1.3 / 5.0
+const GNUPLOT_DPI = 72  # Compensate for DPI with increased resolution
+
+#
 # --------------------------------------------
 # These functions are called by Plots
 # --------------------------------------------
+#
 # Create the window/figure for this backend.
 function _create_backend_figure(plt::Plot{GastonBackend})
     xsize = plt.attr[:size][1]
@@ -40,17 +44,69 @@ end
 function _update_plot_object(plt::Plot{GastonBackend})
 end
 
-function _show(io::IO, ::MIME"image/png", plt::Plot{GastonBackend})
+for (mime, term) in (
+    "application/eps"         => "epscairo",   # NEED fixing TODO
+    "image/eps"               => "epslatex",   # NEED fixing TODO
+    "application/pdf"         => "pdfcairo",   # NEED fixing TODO
+    "application/postscript"  => "postscript", # NEED fixing TODO
+    "image/svg+xml"           => "svg",
+    "text/latex"              => "tikz",       # NEED fixing TODO
+    "application/x-tex"       => "epslatex",   # NEED fixing TODO
+    "text/plain"              => "dumb",       # NEED fixing TODO
+)
+    @eval function _show(io::IO, ::MIME{Symbol($mime)}, plt::Plot{GastonBackend})
+        xsize = plt.attr[:size][1]
+        ysize = plt.attr[:size][2]
+        termopts="""size $xsize,$ysize"""
+
+        tmpfile = G.tempname() * "." * $term
+
+        G.save(
+            term = $term,
+            output = tmpfile,
+            handle = plt.o.handle,
+            saveopts = termopts
+        )
+        while !isfile(tmpfile) end  # avoid race condition with read in next line
+        write(io, read(tmpfile))
+        rm(tmpfile, force=true)
+        nothing
+
+    end
 end
+
+function _show(io::IO, mime::MIME{Symbol("image/png")},
+               plt::Plot{GastonBackend},)
+    scaling = plt.attr[:dpi] / GNUPLOT_DPI
+    xsize = plt.attr[:size][1] * scaling
+    ysize = plt.attr[:size][2] * scaling
+
+    # Scale all plot elements to match Plots.jl DPI standard
+    termopts="""size $xsize,$ysize fontscale $scaling lw $scaling dl $scaling ps $scaling"""
+
+    tmpfile = G.tempname()
+
+    G.save(
+        term = "pngcairo",
+        output = tmpfile,
+        handle = plt.o.handle,
+        saveopts = termopts
+    )
+    while !isfile(tmpfile) end  # avoid race condition with read in next line
+    write(io, read(tmpfile))
+    rm(tmpfile, force=true)
+    nothing
+end
+
 
 function _display(plt::Plot{GastonBackend})
     display(plt.o)
 end
-
+#
 # --------------------------------------------
 # These functions are gaston specific
 # --------------------------------------------
-
+#
 function gaston_init_subplot(plt::Plot{GastonBackend}, sp::Subplot{GastonBackend})
     dims = RecipesPipeline.is3d(sp) ? 3 : 2
 
@@ -105,9 +161,6 @@ function gaston_parse_series_args(series::Series)
     elseif st == :steppost
         push!(curveconf, """with fsteps""")  # Not sure if not the other way
     end
-
-    # line color
-    # push!(curveconf, """lc rgb "#$(hex(series[:linecolor], :rrggbb))" """)
 
     # label
     push!(curveconf, """title "$(series[:label])" """)
