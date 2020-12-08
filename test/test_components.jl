@@ -33,7 +33,7 @@ using Plots, Test
         square = Shape([(0,0),(1,0),(1,1),(0,1)])
 
         # make a new, rotated square
-        square2 = rotate(square, -2)
+        square2 = Plots.rotate(square, -2)
         @test square2.x ≈ coordsRotated2[1,:]
         @test square2.y ≈ coordsRotated2[2,:]
 
@@ -88,5 +88,24 @@ end
         finalSizes = [Plots.default(s) for s in sizesToCheck ]
 
         @test finalSizes == initialSizes
+    end
+end
+
+@testset "Series Annotations" begin
+    square = Shape([(0,0),(1,0),(1,1),(0,1)])
+    @test_logs (:warn,"Unused SeriesAnnotations arg: triangle (Symbol)") begin
+        p = plot([1,2,3],
+            series_annotations=(["a"],
+                                 2,    # pass a scale factor
+                                 (1,4), # pass two scale factors (overwrites first one)
+                                 square, # pass a shape
+                                 font(:courier), # pass an annotation font
+                                 :triangle  # pass an incorrect argument
+                            ))
+        sa = p.series_list[1].plotattributes[:series_annotations]
+        @test sa.strs == ["a"]
+        @test sa.font.family == "courier"
+        @test sa.baseshape == square
+        @test sa.scalefactor == (1,4)
     end
 end
