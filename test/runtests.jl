@@ -133,7 +133,7 @@ const IMG_TOL = VERSION < v"1.4" && Sys.iswindows() ? 1e-1 : is_ci() ? 1e-2 : 1e
         @test isa(p, Plots.Plot) == true
         @test isa(display(p), Nothing) == true
         p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
-        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
+        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, :auto)])
         hline!(p, [3.1])
         @test isa(p, Plots.Plot) == true
         @test isa(display(p), Nothing) == true
