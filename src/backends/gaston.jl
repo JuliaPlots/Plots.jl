@@ -207,10 +207,15 @@ function gaston_parse_axes_args(plt::Plot{GastonBackend}, sp::Subplot{GastonBack
             ticks = get_ticks(sp, axis_attr)
             gaston_set_ticks!(axesconf, ticks, letter)
         end
-
-
-        # TODO logscale, explicit tick location, range,
+        # set title {"<title-text>"} {offset <offset>} {font "<font>{,<size>}"}{{textcolor | tc} {<colorspec> | default}} {{no}enhanced}1
     end
+    gaston_set_legend!(axesconf, sp) # Set legend params
+
+    if sp[:title] != nothing
+        push!(axesconf, """set title '$(sp[:title])' """)
+        push!(axesconf, """set title font '$(sp[:titlefontfamily]), $(sp[:titlefontsize])' """)
+    end
+
     return join(axesconf, "\n")
 end
 
@@ -252,6 +257,39 @@ function gaston_set_ticks!(axesconf, ticks, letter)
     else
         error("Invalid input for $(letter)ticks: $ticks")
     end
+end
+
+function gaston_set_legend!(axesconf, sp)
+    leg = sp[:legend]
+    if !(sp[:legend] in(:none, :inline))
+        if leg == :best
+            leg = :topright
+        end
+
+        if occursin("outer", string(leg))
+            push!(axesconf, "set key outside")
+        else
+            push!(axesconf, "set key inside")
+        end
+        positions = ["top", "bottom", "left", "right"]
+        for position in positions
+            if occursin(position, string(leg))
+                push!(axesconf, "set key $position")
+            end
+        end
+        if sp[:legendtitle] != nothing
+            push!(axesconf, "set key title '$(sp[:legendtitle])'")
+        end
+        push!(axesconf, "set key box linewidth 1")
+        push!(axesconf, "set key opaque")
+
+        push!(axesconf, "set border back")
+        push!(axesconf, """set key font "$(sp[:legendfontfamily]), $(sp[:legendfontsize])"  """)
+    else
+        push!(axesconf, "set key off")
+
+    end
+
 end
 
 function gaston_marker(marker)
