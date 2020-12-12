@@ -33,10 +33,10 @@ include("test_axes.jl")
 include("test_axis_letter.jl")
 include("test_components.jl")
 include("test_shorthands.jl")
+include("integration_dates.jl")
 include("test_recipes.jl")
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
-include("integration_dates.jl")
 
 reference_dir(args...) = joinpath(homedir(), ".julia", "dev", "PlotReferenceImages", args...)
 
