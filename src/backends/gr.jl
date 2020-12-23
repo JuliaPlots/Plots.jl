@@ -219,7 +219,7 @@ gr_inqtext(x, y, s) = gr_inqtext(x, y, string(s))
 function gr_inqtext(x, y, s::AbstractString)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.inqmathtex(x, y, s[2:end-1])
-    elseif findfirst(isequal('\\'), s) !== nothing || occursin("10^{", s)
+    elseif occursin('\\', s) || occursin("10^{", s)
         GR.inqtextext(x, y, s)
     else
         GR.inqtext(x, y, s)
@@ -231,7 +231,7 @@ gr_text(x, y, s) = gr_text(x, y, string(s))
 function gr_text(x, y, s::AbstractString)
     if length(s) >= 2 && s[1] == '$' && s[end] == '$'
         GR.mathtex(x, y, s[2:end-1])
-    elseif findfirst(isequal('\\'), s) !== nothing || occursin("10^{", s)
+    elseif occursin('\\', s) || occursin("10^{", s)
         GR.textext(x, y, s)
     else
         GR.text(x, y, s)
