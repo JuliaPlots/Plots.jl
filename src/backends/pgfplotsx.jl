@@ -163,11 +163,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     ) => nothing,
                     "fill" => cstr,
                     "fill opacity" => a,
-                    "text opacity" =>     alpha(plot_color(sp[:legendfontcolor])),
+                    "text opacity" => alpha(plot_color(sp[:legendfontcolor])),
                     "font" => pgfx_font(
                         sp[:legendfontsize],
                         pgfx_thickness_scaling(sp),
                     ),
+                    "text" => plot_color(sp[:legendfontcolor]),
                 ),
                 "axis background/.style" => PGFPlotsX.Options(
                     "fill" => bgc_inside,
