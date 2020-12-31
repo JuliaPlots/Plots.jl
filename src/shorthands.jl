@@ -420,13 +420,13 @@ xlabel!(s::AbstractString; kw...)                = plot!(; xlabel = s, kw...)
 ylabel!(s::AbstractString; kw...)                = plot!(; ylabel = s, kw...)
 
 "Set xlims for an existing plot"
-xlims!(lims::Tuple{T,S}; kw...) where {T<:Real,S<:Real} = plot!(; xlims = lims, kw...)
+xlims!(lims::Tuple; kw...) = plot!(; xlims = lims, kw...)
 
 "Set ylims for an existing plot"
-ylims!(lims::Tuple{T,S}; kw...) where {T<:Real,S<:Real} = plot!(; ylims = lims, kw...)
+ylims!(lims::Tuple; kw...) = plot!(; ylims = lims, kw...)
 
 "Set zlims for an existing plot"
-zlims!(lims::Tuple{T,S}; kw...) where {T<:Real,S<:Real} = plot!(; zlims = lims, kw...)
+zlims!(lims::Tuple; kw...) = plot!(; zlims = lims, kw...)
 
 xlims!(xmin::Real, xmax::Real; kw...)                     = plot!(; xlims = (xmin,xmax), kw...)
 ylims!(ymin::Real, ymax::Real; kw...)                     = plot!(; ylims = (ymin,ymax), kw...)
