@@ -99,8 +99,6 @@ function buildanimation(anim::Animation, fn::AbstractString,
         end
     else
         ffmpeg_exe(`-v $verbose_level -framerate $framerate  -i $(animdir)/%06d.png -vf format=yuv420p -loop $loop -y $fn`)
-        # ffmpeg_exe(`-v $verbose_level -framerate $framerate -i $(animdir)/%06d.png -loop $loop -y $fn`)
-        # ffmpeg_exe(`-v $verbose_level -i $fn -vf format=yuv420p $fn`)
     end
 
     show_msg && @info("Saved animation to ", fn)
