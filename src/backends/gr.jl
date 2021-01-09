@@ -1437,7 +1437,7 @@ function gr_label_axis(sp, letter, viewport_plotarea)
         gr_set_font(guidefont(axis), sp)
         guide_position = axis[:guide_position]
         if isy
-            w = 0.02 + gr_axis_width(sp, axis)
+            w = 0.03 + gr_axis_width(sp, axis)
             GR.setcharup(-1, 0)
             if guide_position == :right || (guide_position == :auto && axis[:mirror])
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_BOTTOM)
@@ -1447,7 +1447,7 @@ function gr_label_axis(sp, letter, viewport_plotarea)
                 gr_text(viewport_plotarea[1] - w, gr_view_ycenter(viewport_plotarea), axis[:guide])
             end
         else
-            h = 0.01 + gr_axis_height(sp, axis)
+            h = 0.015 + gr_axis_height(sp, axis)
             if guide_position == :top || (guide_position == :auto && axis[:mirror])
                 GR.settextalign(GR.TEXT_HALIGN_CENTER, GR.TEXT_VALIGN_TOP)
                 gr_text(gr_view_xcenter(viewport_plotarea), viewport_plotarea[4] + h, axis[:guide])
@@ -1492,7 +1492,7 @@ function gr_label_axis_3d(sp, letter)
             x_offset = letter === :x ? -h : h
             y_offset = -h
         else
-            x_offset = -gr_axis_width(sp, ax)
+            x_offset = -0.03 - gr_axis_width(sp, ax)
             y_offset = 0
         end
         letter === :z && GR.setcharup(-1, 0)
