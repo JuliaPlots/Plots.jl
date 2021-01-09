@@ -1432,11 +1432,10 @@ function gr_label_axis(sp, letter, viewport_plotarea)
     axis = sp[Symbol(letter, :axis)]
     # guide
     if axis[:guide] != ""
-        isy = letter === :y
         GR.savestate()
         gr_set_font(guidefont(axis), sp)
         guide_position = axis[:guide_position]
-        if isy
+        if letter === :y
             w = 0.03 + gr_axis_width(sp, axis)
             GR.setcharup(-1, 0)
             if guide_position == :right || (guide_position == :auto && axis[:mirror])
