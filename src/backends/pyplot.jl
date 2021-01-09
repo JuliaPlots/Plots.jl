@@ -920,8 +920,6 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             end
             kw[:spacing] = "proportional"
 
-            fig = plt.o
-
             if RecipesPipeline.is3d(sp) || ispolar(sp)
                 cbax = fig."add_axes"([0.9, 0.1, 0.03, 0.8])
                 cb = fig."colorbar"(handle; cax=cbax, kw...)
@@ -967,25 +965,53 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             cb."formatter".set_powerlimits((-Inf, Inf))
             cb."update_ticks"()
 
-            for lab in cb."ax"."yaxis"."get_ticklabels"()
-                  lab."set_fontsize"(py_thickness_scale(plt, sp[:yaxis][:tickfontsize]))
-                  lab."set_family"(sp[:yaxis][:tickfontfamily])
-                  lab."set_color"(py_color(sp[:yaxis][:tickfontcolor]))
+            if sp[:colorbar] in (:top, :bottom)
+                axis = sp[:xaxis]  # colorbar inherits from x axis
+                cbar_axis = cb."ax"."xaxis"
+            else
+                axis = sp[:yaxis]  # colorbar inherits from y axis
+                cbar_axis = cb."ax"."yaxis"
             end
+
+            for lab in cbar_axis."get_ticklabels"()
+                  lab."set_fontsize"(py_thickness_scale(plt, axis[:tickfontsize]))
+                  lab."set_family"(axis[:tickfontfamily])
+                  lab."set_color"(py_color(axis[:tickfontcolor]))
+            end
+
+            # Adjust thickness of the cbar ticks
+            intensity = 0.5
+            cbar_axis."set_tick_params"(
+                direction = axis[:tick_direction] == :out ? "out" : "in",
+                width=py_thickness_scale(plt, intensity),
+                length= 5 * py_thickness_scale(plt, intensity)
+            )
+
+
+
+            cb.outline."set_linewidth"(py_thickness_scale(plt, 1))
+
             sp.attr[:cbar_handle] = cb
             sp.attr[:cbar_ax] = cbax
         end
 
         # framestyle
         if !ispolar(sp) && !RecipesPipeline.is3d(sp)
-            ax.spines["left"]."set_linewidth"(py_thickness_scale(plt, 1))
-            ax.spines["bottom"]."set_linewidth"(py_thickness_scale(plt, 1))
+            for pos in ("left", "right", "top", "bottom")
+                # Scale all axes by default first
+                ax.spines[pos]."set_linewidth"(py_thickness_scale(plt, 1))
+            end
+
+            # Then set visible some of them
             if sp[:framestyle] == :semi
                 intensity = 0.5
                 ax.spines["right"]."set_alpha"(intensity)
                 ax.spines["top"]."set_alpha"(intensity)
                 ax.spines["right"]."set_linewidth"(py_thickness_scale(plt, intensity))
                 ax.spines["top"]."set_linewidth"(py_thickness_scale(plt, intensity))
+            elseif sp[:framestyle] == :box
+                ax.tick_params(top=true)   # Add ticks too
+                ax.tick_params(right=true) # Add ticks too
             elseif sp[:framestyle] in (:axes, :origin)
                 ax.spines["right"]."set_visible"(false)
                 ax.spines["top"]."set_visible"(false)
@@ -1010,15 +1036,11 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             PyPlot.PyCall.hasproperty(ax, axissym) || continue
             axis = sp[axissym]
             pyaxis = getproperty(ax, axissym)
-            if axis[:mirror] && letter != :z
-                pos = letter == :x ? "top" : "right"
-                pyaxis."set_label_position"(pos)     # the guides
-                pyaxis."set_ticks_position"("both")  # the hash marks
-                getproperty(pyaxis, Symbol(:tick_, pos))()        # the tick labels
-            end
+
             if axis[:guide_position] != :auto && letter != :z
                 pyaxis."set_label_position"(axis[:guide_position])
             end
+
             py_set_scale(ax, sp, axis)
             axis[:ticks] == :native ? nothing : py_set_lims(ax, sp, axis)
             if ispolar(sp) && letter == :y
@@ -1193,6 +1215,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
     toppad    = 0mm
     rightpad  = 0mm
     bottompad = 0mm
+
     for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax), py_bbox_legend(ax))
         if ispositive(width(bb)) && ispositive(height(bb))
             leftpad   = max(leftpad,   left(plotbb) - left(bb))
@@ -1202,12 +1225,25 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
         end
     end
 
-    # optionally add the width of colorbar labels and colorbar to rightpad
-    if haskey(sp.attr, :cbar_ax)
-        bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
-        sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
-        rightpad = rightpad + sp.attr[:cbar_width]
+    if haskey(sp.attr, :cbar_ax) # Treat colorbar the same way
+        ax = sp.attr[:cbar_handle]."ax"
+        for bb in (py_bbox_axis(ax, "x"), py_bbox_axis(ax, "y"), py_bbox_title(ax), )
+            if ispositive(width(bb)) && ispositive(height(bb))
+                leftpad   = max(leftpad,   left(plotbb) - left(bb))
+                toppad    = max(toppad,    top(plotbb)  - top(bb))
+                rightpad  = max(rightpad,  right(bb)    - right(plotbb))
+                bottompad = max(bottompad, bottom(bb)   - bottom(plotbb))
+            end
+        end
     end
+
+
+    # optionally add the width of colorbar labels and colorbar to rightpad
+    # if haskey(sp.attr, :cbar_ax)
+    #     bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
+    #     sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
+    #     rightpad = rightpad + sp.attr[:cbar_width]
+    # end
 
     # add in the user-specified margin
     leftpad   += sp[:left_margin]
