@@ -79,7 +79,7 @@ function __init__()
     end
 
     if get(ENV, "PLOTS_HOST_DEPENDENCY_LOCAL", "false") == "true"
-        global plotly_local_file_path[] = joinpath(@get_scratch!("plotly"), "plotly-1.54.2.min.js")
+        global plotly_local_file_path[] = joinpath(@get_scratch!("plotly"), "plotly-1.57.1.min.js")
         if !isfile(plotly_local_file_path[])
             download("https://cdn.plot.ly/plotly-1.57.1.min.js", plotly_local_file_path[])
         end
