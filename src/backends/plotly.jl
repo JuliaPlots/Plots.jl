@@ -887,7 +887,7 @@ const ijulia_initialized = Ref(false)
 
 function plotly_html_head(plt::Plot)
     plotly =
-        use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) : "https://cdn.plot.ly/plotly-1.57.1.min.js"
+        use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) : "https://cdn.plot.ly/$(_plotly_min_js_filename)"
 
     include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
     mathjax_file = include_mathjax != "cdn" ? ("file://" * include_mathjax) : "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"
