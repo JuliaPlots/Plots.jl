@@ -187,6 +187,10 @@ import RecipesPipeline: SliceIt,
     datetimeformatter,
     timeformatter
 
+# Use fixed version of Plotly instead of the latest one for stable dependency
+# Ref: https://github.com/JuliaPlots/Plots.jl/pull/2779
+const _plotly_min_js_filename = "plotly-1.57.1.min.js"
+
 include("types.jl")
 include("utils.jl")
 include("axes.jl")
