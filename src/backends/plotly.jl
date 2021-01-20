@@ -907,7 +907,19 @@ function plotly_html_body(plt, style = nothing)
     requirejs_prefix = ""
     requirejs_suffix = ""
     if isijulia()
-        requirejs_prefix = "require(['Plotly'], function (Plotly) {"
+        # require.js adds .js automatically
+        plotly_no_ext =
+            use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) : "https://cdn.plot.ly/$(_plotly_min_js_filename)"
+        plotly_no_ext = plotly_no_ext[1:end-3]
+
+        requirejs_prefix = """
+            requirejs.config({
+                paths: {
+                    Plotly: '$(plotly_no_ext)'
+                }
+            });
+            require(['Plotly'], function (Plotly) {
+        """
         requirejs_suffix = "});"
     end
 

@@ -89,23 +89,6 @@ function __init__()
 
     use_local_dependencies[] = use_local_plotlyjs[]
 
-    if isijulia()
-        # require.js adds .js automatically
-        plotly_no_ext =
-            use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) : "https://cdn.plot.ly/$(_plotly_min_js_filename)"
-        plotly_no_ext = plotly_no_ext[1:end-3]
-
-        display("text/html", """
-            <script type="text/javascript">
-                requirejs.config({
-                    paths: {
-                        Plotly: '$(plotly_no_ext)'
-                    }
-                });
-            </script>
-        """)
-    end
-
 
     @require FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549" begin
         _show(io::IO, mime::MIME"image/png", plt::Plot{<:PDFBackends}) = _show_pdfbackends(io, mime, plt)
