@@ -1522,12 +1522,8 @@ end
     rs, cs, zs = Plots.findnz(z.surf)
     xlims := ignorenan_extrema(cs)
     ylims := ignorenan_extrema(rs)
-    if plotattributes[:markershape] == :none
-        markershape := :circle
-    end
-    if plotattributes[:markersize] == default(:markersize)
-        markersize := 1
-    end
+    markershape --> :circle
+    markersize --> 1
     markerstrokewidth := 0
     if length(unique(zs)) == 1
         seriescolor --> :black
