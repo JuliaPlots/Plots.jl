@@ -1520,8 +1520,8 @@ end
     yflip := true
     aspect_ratio := 1
     rs, cs, zs = Plots.findnz(z.surf)
-    xlims := ignorenan_extrema(cs)
-    ylims := ignorenan_extrema(rs)
+    xlims := widen(ignorenan_extrema(cs)..., get(plotattributes, :xscale, :identity))
+    ylims := widen(ignorenan_extrema(rs)..., get(plotattributes, :yscale, :identity))
     markershape --> :circle
     markersize --> 1
     markerstrokewidth := 0
