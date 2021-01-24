@@ -14,10 +14,7 @@ jobs:
           version: 1
 
       ## Setup
-      - name: Default TESTCMD
-        run: echo "TESTCMD=julia" >> $GITHUB_ENV
       - name: Ubuntu TESTCMD
-        if: startsWith(matrix.os,'ubuntu')
         run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
       - name: Install Plots dependencies
         uses: julia-actions/julia-buildpkg@latest
