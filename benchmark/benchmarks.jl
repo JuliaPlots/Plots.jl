@@ -1,10 +1,10 @@
 using BenchmarkTools
+using Plots
 
 const SUITE = BenchmarkGroup()
-julia_cmd = get(ENV, "TESTCMD", Base.JLOptions().julia_bin)
+julia_cmd = split(get(ENV, "TESTCMD", Base.JLOptions().julia_bin))
 
-# numbered to enforce sequence
-SUITE["1_load_plot_display"] = @benchmarkable run(`sh -c $("$julia_cmd --startup-file=no -e 'using Plots; display(plot(1:0.1:10, sin.(1:0.1:10))))'")`)
-SUITE["2_load"] = @benchmarkable run(`sh -c $("$julia_cmd --startup-file=no -e 'using Plots'")`)
-SUITE["3_plot"] = @benchmarkable p = plot(1:0.1:10, sin.(1:0.1:10)) setup(@eval(using Plots))
-SUITE["4_display"] = @benchmarkable display(p) setup=(@eval(using Plots); p = plot(1:0.1:10, sin.(1:0.1:10)))
+SUITE["load_plot_display"] = @benchmarkable run(`$julia_cmd --startup-file=no --project -e 'using Plots; display(plot(1:0.1:10, sin.(1:0.1:10)))'`)
+SUITE["load"] = @benchmarkable run(`$julia_cmd --startup-file=no --project -e 'using Plots'`)
+SUITE["plot"] = @benchmarkable p = plot(1:0.1:10, sin.(1:0.1:10))
+SUITE["display"] = @benchmarkable display(p) setup=(p = plot(1:0.1:10, sin.(1:0.1:10)))
