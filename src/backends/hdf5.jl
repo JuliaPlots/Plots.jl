@@ -440,8 +440,8 @@ end
 #Read KW from group:
 function _read(::Type{KW}, grp::Group)
     d = KW()
-    gnames = names(grp)
-    for k in gnames
+    gkeys = keys(grp)
+    for k in gkeys
         try
             v = _read_typed(grp, k)
             d[Symbol(k)] = v
