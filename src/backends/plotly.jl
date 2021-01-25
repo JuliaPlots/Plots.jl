@@ -883,30 +883,19 @@ plotly_series_json(plt::Plot) = JSON.json(plotly_series(plt), 4)
 html_head(plt::Plot{PlotlyBackend}) = plotly_html_head(plt)
 html_body(plt::Plot{PlotlyBackend}) = plotly_html_body(plt)
 
-const ijulia_initialized = Ref(false)
-
 function plotly_html_head(plt::Plot)
     plotly =
-        use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) : "https://cdn.plot.ly/plotly-1.57.1.min.js"
+        use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) : "https://cdn.plot.ly/$(_plotly_min_js_filename)"
 
     include_mathjax = get(plt[:extra_plot_kwargs], :include_mathjax, "")
     mathjax_file = include_mathjax != "cdn" ? ("file://" * include_mathjax) : "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"
     mathjax_head = include_mathjax == "" ? "" : "<script src=\"$mathjax_file\"></script>\n\t\t"
 
-    if isijulia() && !ijulia_initialized[]
-        # using requirejs seems to be key to load a js depency in IJulia!
-        # https://requirejs.org/docs/start.html
-        # https://github.com/JuliaLang/IJulia.jl/issues/345
-        display("text/html", """
-            <script type="text/javascript">
-                requirejs([$(repr(plotly))], function(p) {
-                    window.Plotly = p
-                });
-            </script>
-        """)
-        ijulia_initialized[] = true
+    if isijulia()
+        mathjax_head
+    else
+        "$mathjax_head<script src=$(repr(plotly))></script>"
     end
-    return "$mathjax_head<script src=$(repr(plotly))></script>"
 end
 
 function plotly_html_body(plt, style = nothing)
@@ -914,12 +903,34 @@ function plotly_html_body(plt, style = nothing)
         w, h = plt[:size]
         style = "width:$(w)px;height:$(h)px;"
     end
+
+    requirejs_prefix = ""
+    requirejs_suffix = ""
+    if isijulia()
+        # require.js adds .js automatically
+        plotly_no_ext =
+            use_local_dependencies[] ? ("file:///" * plotly_local_file_path[]) : "https://cdn.plot.ly/$(_plotly_min_js_filename)"
+        plotly_no_ext = plotly_no_ext[1:end-3]
+
+        requirejs_prefix = """
+            requirejs.config({
+                paths: {
+                    Plotly: '$(plotly_no_ext)'
+                }
+            });
+            require(['Plotly'], function (Plotly) {
+        """
+        requirejs_suffix = "});"
+    end
+
     uuid = UUIDs.uuid4()
     html = """
         <div id=\"$(uuid)\" style=\"$(style)\"></div>
         <script>
+        $(requirejs_prefix)
         PLOT = document.getElementById('$(uuid)');
         Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
+        $(requirejs_suffix)
         </script>
     """
     html
