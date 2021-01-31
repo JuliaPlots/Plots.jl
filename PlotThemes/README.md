@@ -29,6 +29,8 @@ Currently the following themes are available:
 - `:bright`
 - `:vibrant`
 - `:mute`
+- `:dao`
+
 
 When using Plots, a theme can be set using the `theme` function:
 ```julia
@@ -86,6 +88,10 @@ Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 
 ### `:mute`
 ![theme_mute](https://user-images.githubusercontent.com/16589944/70848069-9860bf80-1e6c-11ea-9cac-8a797d526835.png)
+
+
+### `:dao`
+![theme_dao](https://user-images.githubusercontent.com/7330605/106396174-3bbcbd00-63fe-11eb-8cb4-7bade8295b8b.png)
 
 
 ## Contributing
