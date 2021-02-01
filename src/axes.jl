@@ -815,7 +815,7 @@ function axis_drawing_info_3d(sp, letter)
                     t = invf(f(na0) + 0.006 * (f(na1) - f(na0)) * ticks_in)
                     (na0, t)
                 end
-                for tick in minorticks
+                for tick in minor_ticks
                     if ax[:showaxis]
                         push!(
                             tick_segments,
