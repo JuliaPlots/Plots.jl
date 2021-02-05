@@ -91,7 +91,7 @@ Themes can be previewed using `Plots.showtheme(thm::Symbol)`:
 
 
 ### `:dao`
-![theme_dao](https://user-images.githubusercontent.com/7330605/106396174-3bbcbd00-63fe-11eb-8cb4-7bade8295b8b.png)
+![theme_dao](https://user-images.githubusercontent.com/7330605/106512313-54de7000-64c9-11eb-98d5-2aee3603879a.png)
 
 
 ## Contributing
