@@ -52,6 +52,7 @@ include("wong.jl")
 include("juno.jl")
 include("gruvbox.jl")
 include("sheet.jl")
+include("dao.jl")
 
 function __init__()
     # need to do this here so PlotUtils picks up the change
