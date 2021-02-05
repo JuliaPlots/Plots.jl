@@ -1,17 +1,18 @@
 dao_palette = [
     colorant"#d77255",
     colorant"#009afa",
-    colorant"#888",
-    colorant"#333",
-
+    colorant"#707070",
+    colorant"#21ab74",
+    colorant"#ba3030",
+    colorant"#9467bd"
 ]
 
 _themes[:dao] = PlotTheme(
-    bg = :white,
+    background = :white,
     framestyle = :box,
     grid=true,
     gridalpha=0.4,
-    linewidth=1.2,
+    linewidth=1.4,
     markerstrokewidth=0,
     fontfamily = "Computer Modern",
     colorgradient = :magma,
@@ -24,4 +25,5 @@ _themes[:dao] = PlotTheme(
     gridlinewidth = 0.7,
     minorgridalpha=0.06,
     legend=:outertopright,
+    # marker=:auto
 )
