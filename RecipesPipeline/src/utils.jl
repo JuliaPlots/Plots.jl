@@ -229,7 +229,7 @@ _map_funcs(fs::AVec{F}, u::AVec) where {F <: Function} = [map(f, u) for f in fs]
 
 @nospecialize
 
-function userrecipe_signature_string(args...)
+function userrecipe_signature_string(args)
     return string("(::", join(string.(typeof.(args)), ", ::"), ")")
 end
 typerecipe_signature_string(::T) where T = "(::Type{$T}, ::$T)"

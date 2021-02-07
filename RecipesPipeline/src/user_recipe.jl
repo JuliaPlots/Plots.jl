@@ -35,7 +35,7 @@ function _process_userrecipes!(plt, plotattributes, args)
         else
             rd_list =
                 RecipesBase.apply_recipe(next_series.plotattributes, next_series.args...)
-                warn_on_recipe_aliases!(plt, rd_list, :user, userrecipe_signature_string(next_series.args...))
+                warn_on_recipe_aliases!(plt, rd_list, :user, next_series.args)
             prepend!(still_to_process, rd_list)
         end
     end
