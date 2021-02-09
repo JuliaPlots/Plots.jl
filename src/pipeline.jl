@@ -6,7 +6,7 @@ function RecipesPipeline.warn_on_recipe_aliases!(
     plt::Plot,
     plotattributes::AKW,
     recipe_type::Symbol,
-    args
+    @nospecialize(args)
 )
     for k in keys(plotattributes)
         if !is_default_attribute(k)
