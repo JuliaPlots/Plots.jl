@@ -8,13 +8,13 @@
 Warn if an alias is dedected in `plotattributes` after a recipe of type `recipe_type` is
 applied to 'args'. `recipe_type` is either `:user`, `:type`, `:plot` or `:series`.
 """
-function warn_on_recipe_aliases!(plt, plotattributes::AKW, recipe_type::Symbol, args) end
-function warn_on_recipe_aliases!(plt, v::AbstractVector, recipe_type::Symbol, args)
+function warn_on_recipe_aliases!(plt, plotattributes::AKW, recipe_type::Symbol, @nospecialize(args)) end
+function warn_on_recipe_aliases!(plt, v::AbstractVector, recipe_type::Symbol, @nospecialize(args))
     for x in v
         warn_on_recipe_aliases!(plt, x, recipe_type, args)
     end
 end
-function warn_on_recipe_aliases!(plt, rd::RecipeData, recipe_type::Symbol, args)
+function warn_on_recipe_aliases!(plt, rd::RecipeData, recipe_type::Symbol, @nospecialize(args))
     warn_on_recipe_aliases!(plt, rd.plotattributes, recipe_type, args)
 end
 
