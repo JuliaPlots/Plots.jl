@@ -1736,13 +1736,12 @@ end
 function gr_draw_surface(series, x, y, z, clims)
     if series[:seriestype] === :surface
         if length(x) == length(y) == length(z)
-            GR.trisurface(x, y, z)
-        else
-            try
-                GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
-            catch
-                GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
-            end
+            x, y, z = GR.gridit(x, y, z, 200, 200)
+        end
+        try
+            GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
+        catch
+            GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
         end
     else # wireframe
         GR.setfillcolorind(0)
