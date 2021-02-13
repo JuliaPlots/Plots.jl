@@ -1578,10 +1578,8 @@ function gr_add_series(sp, series)
         GR.gr3.clear()
         dmin, dmax = GR.gr3.volume(y.v, 0)
     elseif st === :heatmap
-        if !ispolar(series)
-            # `z` is already transposed, so we need to reverse before passing its size.
-            x, y = heatmap_edges(x, xscale, y, yscale, reverse(size(z)))
-        end
+        # `z` is already transposed, so we need to reverse before passing its size.
+        x, y = heatmap_edges(x, xscale, y, yscale, reverse(size(z)))
         gr_draw_heatmap(series, x, y, z, clims)
     elseif st === :image
         gr_draw_image(series, x, y, z, clims)
@@ -1751,42 +1749,33 @@ end
 
 function gr_draw_heatmap(series, x, y, z, clims)
     fillgrad = _as_gradient(series[:fillcolor])
-    if !ispolar(series)
-        GR.setspace(clims..., 0, 90)
-        w, h = length(x) - 1, length(y) - 1
-        if is_uniformly_spaced(x) && is_uniformly_spaced(y)
-            # For uniformly spaced data use GR.drawimage, which can be
-            # much faster than GR.nonuniformcellarray, especially for
-            # pdf output, and also supports alpha values.
-            # Note that drawimage draws uniformly spaced data correctly
-            # even on log scales, where it is visually non-uniform.
-            colors = plot_color.(get(fillgrad, z, clims), series[:fillalpha])
-            rgba = gr_color.(colors)
-            GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
-        else
-            if something(series[:fillalpha], 1) < 1
-                @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
-            end
-            z_normalized = get_z_normalized.(z, clims...)
-            rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
-            GR.nonuniformcellarray(x, y, w, h, rgba)
-        end
+    GR.setspace(clims..., 0, 90)
+    w, h = length(x) - 1, length(y) - 1
+    if !ispolar(series) && is_uniformly_spaced(x) && is_uniformly_spaced(y)
+        # For uniformly spaced data use GR.drawimage, which can be
+        # much faster than GR.nonuniformcellarray, especially for
+        # pdf output, and also supports alpha values.
+        # Note that drawimage draws uniformly spaced data correctly
+        # even on log scales, where it is visually non-uniform.
+        colors = plot_color.(get(fillgrad, z, clims), series[:fillalpha])
+        rgba = gr_color.(colors)
+        GR.drawimage(first(x), last(x), last(y), first(y), w, h, rgba)
     else
-        phimin, phimax = 0.0, 360.0 # nonuniform polar array is not yet supported in GR.jl
-        nx, ny = length(series[:x]), length(series[:y])
-        xmin, xmax, ymin, ymax = gr_xy_axislims(series[:subplot])
-        GR.setwindow(-ymax, ymax, -ymax, ymax)
-        if ymin > 0
-            @warn "'ymin[1] > 0' (rmin) is not yet supported."
-        end
-        if series[:y][end] != ny
-            @warn "Right now only the maximum value of y (r) is taken into account."
+        if something(series[:fillalpha], 1) < 1
+            @warn "GR: transparency not supported in non-uniform heatmaps. Alpha values ignored."
         end
         z_normalized = get_z_normalized.(z, clims...)
         rgba = Int32[round(Int32, 1000 + _i * 255) for _i in z_normalized]
-        GR.polarcellarray(0, 0, phimin, phimax, 0, ymax, nx, ny, rgba)
-        # Right now only the maximum value of y (r) is taken into account.
-        # This is certainly not perfect but nonuniform polar array is not yet supported in GR.jl
+        if !ispolar(series)
+            GR.nonuniformcellarray(x, y, w, h, rgba)
+        else
+            if y[1] < 0
+                @warn "'y[1] < 0' (rmin) is not yet supported."
+            end
+            xmin, xmax, ymin, ymax = gr_xy_axislims(series[:subplot])
+            GR.setwindow(-ymax, ymax, -ymax, ymax)
+            GR.nonuniformpolarcellarray(rad2deg.(x), y, w, h, rgba)
+        end
     end
 end
 
