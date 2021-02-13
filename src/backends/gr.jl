@@ -1579,7 +1579,7 @@ function gr_add_series(sp, series)
         dmin, dmax = GR.gr3.volume(y.v, 0)
     elseif st === :heatmap
         # `z` is already transposed, so we need to reverse before passing its size.
-        x, y = heatmap_edges(x, xscale, y, yscale, reverse(size(z)))
+        x, y = heatmap_edges(x, xscale, y, yscale, reverse(size(z)), ispolar(series))
         gr_draw_heatmap(series, x, y, z, clims)
     elseif st === :image
         gr_draw_image(series, x, y, z, clims)
