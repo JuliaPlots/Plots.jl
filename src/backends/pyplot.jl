@@ -510,12 +510,12 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :hexbin
+        extrakw[:edgecolors] = get(series[:extra_kwargs], :edgecolors, py_color(get_linecolor(series)))
         handle = ax."hexbin"(x, y;
             label = series[:label],
             C = series[:weights],
             gridsize = series[:bins]==:auto ? 100 : series[:bins],  # 100 is the default value
             linewidths = py_thickness_scale(plt, series[:linewidth]),
-            edgecolors = py_color(get_linecolor(series)),
             alpha = series[:fillalpha],
             cmap = py_fillcolormap(series),  # applies to the pcolorfast object
             zorder = series[:series_plotindex],
