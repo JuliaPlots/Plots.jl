@@ -510,7 +510,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :hexbin
-        handle = ax."hexbin"(x, y,
+        handle = ax."hexbin"(x, y;
             label = series[:label],
             C = series[:weights],
             gridsize = series[:bins]==:auto ? 100 : series[:bins],  # 100 is the default value
