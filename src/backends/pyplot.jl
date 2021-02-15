@@ -372,8 +372,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     vmin, vmax = clims = get_clims(sp, series)
 
     # Dict to store extra kwargs
-    if st == :wireframe
-        extrakw = KW()          # vmin, vmax cause an error for wireframe plot
+    if st == :wireframe || st == :hexbin
+        # vmin, vmax cause an error for wireframe plot
+        # We are not supporting clims for hexbin as calculation of bins is not trivial
+        extrakw = KW()
     else
         extrakw = KW(:vmin => vmin, :vmax => vmax)
     end
@@ -517,7 +519,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             alpha = series[:fillalpha],
             cmap = py_fillcolormap(series),  # applies to the pcolorfast object
             zorder = series[:series_plotindex],
-            # extrakw...  # We are not supporting clims for hexbin as calculation of bins is not trivial
+            extrakw...
         )
         push!(handles, handle)
     end
