@@ -510,6 +510,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     end
 
     if st == :hexbin
+        extrakw[:mincnt] = get(series[:extra_kwargs], :mincnt, nothing)
         extrakw[:edgecolors] = get(series[:extra_kwargs], :edgecolors, py_color(get_linecolor(series)))
         handle = ax."hexbin"(x, y;
             label = series[:label],
