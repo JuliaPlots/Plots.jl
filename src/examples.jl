@@ -1044,8 +1044,10 @@ const _examples = PlotExample[
         "Polar heatmaps",
         "",
         [quote
-            z = (1:4) .+ (1:8)'
-            heatmap(z, projection = :polar)
+        x = range(0, 2π, length=9)
+        y = 0:4
+        z = (1:4) .+ (1:8)'
+        heatmap(x, y, z, projection = :polar)
         end]
     ),
     PlotExample( # 50
