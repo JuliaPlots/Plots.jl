@@ -995,6 +995,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             sp.attr[:cbar_ax] = cbax
         end
 
+
         # framestyle
         if !ispolar(sp) && !RecipesPipeline.is3d(sp)
             for pos in ("left", "right", "top", "bottom")
@@ -1005,16 +1006,20 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             # Then set visible some of them
             if sp[:framestyle] == :semi
                 intensity = 0.5
-                ax.spines["right"]."set_alpha"(intensity)
-                ax.spines["top"]."set_alpha"(intensity)
-                ax.spines["right"]."set_linewidth"(py_thickness_scale(plt, intensity))
-                ax.spines["top"]."set_linewidth"(py_thickness_scale(plt, intensity))
+
+                spine = sp[:yaxis][:mirror] ? "left" : "right"
+                ax.spines[spine]."set_alpha"(intensity)
+                ax.spines[spine]."set_linewidth"(py_thickness_scale(plt, intensity))
+
+                spine = sp[:xaxis][:mirror] ? "bottom" : "top"
+                ax.spines[spine]."set_linewidth"(py_thickness_scale(plt, intensity))
+                ax.spines[spine]."set_alpha"(intensity)
             elseif sp[:framestyle] == :box
                 ax.tick_params(top=true)   # Add ticks too
                 ax.tick_params(right=true) # Add ticks too
             elseif sp[:framestyle] in (:axes, :origin)
-                ax.spines["right"]."set_visible"(false)
-                ax.spines["top"]."set_visible"(false)
+                sp[:xaxis][:mirror] ? ax.spines["bottom"]."set_visible"(false) : ax.spines["top"]."set_visible"(false)
+                sp[:yaxis][:mirror] ? ax.spines["left"]."set_visible"(false) : ax.spines["right"]."set_visible"(false)
                 if sp[:framestyle] == :origin
                     ax.spines["bottom"]."set_position"("zero")
                     ax.spines["left"]."set_position"("zero")
@@ -1027,6 +1032,16 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     ax."axhline"(y = 0, color = py_color(sp[:xaxis][:foreground_color_axis]), lw = py_thickness_scale(plt, 0.75))
                     ax."axvline"(x = 0, color = py_color(sp[:yaxis][:foreground_color_axis]), lw = py_thickness_scale(plt, 0.75))
                 end
+            end
+
+            if sp[:xaxis][:mirror]
+                ax.xaxis."set_label_position"("top")     # the guides
+                sp[:framestyle] == :box ? nothing : ax.xaxis."tick_top"()
+            end
+
+            if sp[:yaxis][:mirror]
+                ax.yaxis."set_label_position"("right")     # the guides
+                sp[:framestyle] == :box ? nothing : ax.yaxis."tick_right"()
             end
         end
 
