@@ -1732,14 +1732,18 @@ function gr_draw_contour(series, x, y, z, clims)
 end
 
 function gr_draw_surface(series, x, y, z, clims)
+    
     if series[:seriestype] === :surface
+        fillalpha = get_fillalpha(series)
+        fillcolor = get_fillcolor(series)
         if length(x) == length(y) == length(z)
             x, y, z = GR.gridit(x, y, z, 200, 200)
         end
-        try
-            GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
-        catch
+        if (!isnothing(fillalpha) && fillalpha < 1) || alpha(first(fillcolor)) < 1
+            gr_set_transparency(fillcolor, fillalpha)
             GR.surface(x, y, z, GR.OPTION_COLORED_MESH)
+        else
+            GR.gr3.surface(x, y, z, GR.OPTION_COLORED_MESH)
         end
     else # wireframe
         GR.setfillcolorind(0)
