@@ -205,9 +205,15 @@ function fix_xy_lengths!(plt::Plot{PyPlotBackend}, series::Series)
     end
 end
 
-py_linecolormap(series::Series)       = py_colormap(series[:linecolor])
-py_markercolormap(series::Series)     = py_colormap(series[:markercolor])
-py_fillcolormap(series::Series)       = py_colormap(series[:fillcolor])
+function py_linecolormap(series::Series)
+    py_colormap(cgrad(get_linecolor(series), alpha=get_linealpha(series)))
+end
+function py_markercolormap(series::Series)
+    py_colormap(cgrad(get_markercolor(series), alpha=get_markeralpha(series)))
+end
+function py_fillcolormap(series::Series)
+    py_colormap(cgrad(get_fillcolor(series), alpha=get_fillalpha(series)))
+end
 
 # ---------------------------------------------------------------------------
 
