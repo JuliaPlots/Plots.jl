@@ -924,7 +924,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             kw[:spacing] = "proportional"
 
             if RecipesPipeline.is3d(sp) || ispolar(sp)
-                cbax = fig."add_axes"([0.9, 0.1, 0.03, 0.8])
+                cbax = fig."add_axes"([0.9, 0.1, 0.03, 0.8], label=string("cbar", sp[:subplot_index]))
                 cb = fig."colorbar"(handle; cax=cbax, kw...)
             else
                 # divider approach works only with 2d plots
@@ -949,7 +949,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     colorbar_orientation="horizontal"
                 end
 
-                cbax = divider.append_axes(colorbar_position, size="5%", pad=colorbar_pad)  # Reasonable value works most of the usecases
+                cbax = divider.append_axes(colorbar_position, size="5%", pad=colorbar_pad, label=string("cbar", sp[:subplot_index]))  # Reasonable value works most of the usecases
                 cb = fig."colorbar"(handle; cax=cbax, orientation = colorbar_orientation, kw...)
 
                 if sp[:colorbar] == :left
@@ -1257,11 +1257,10 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
 
 
     # optionally add the width of colorbar labels and colorbar to rightpad
-    # if haskey(sp.attr, :cbar_ax)
-    #     bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
-    #     sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
-    #     rightpad = rightpad + sp.attr[:cbar_width]
-    # end
+    if RecipesPipeline.is3d(sp) || haskey(sp.attr, :cbar_ax)
+        bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
+        sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
+    end
 
     # add in the user-specified margin
     leftpad   += sp[:left_margin]
