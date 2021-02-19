@@ -836,7 +836,7 @@ function pgfx_colormap(v::Vector{<:Colorant})
 end
 function pgfx_colormap(cg::ColorGradient)
     join(map(1:length(cg)) do i
-        @sprintf("rgb(%.8fcm)=(%.8f,%.8f,%.8f)", cg.values[i], red(cg.colors[i]), green(cg.colors[i]), blue(cg.colors[i]))
+        @sprintf("rgb(%.8f)=(%.8f,%.8f,%.8f)", cg.values[i], red(cg.colors[i]), green(cg.colors[i]), blue(cg.colors[i]))
     end, "\n")
 end
 
