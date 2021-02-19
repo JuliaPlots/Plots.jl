@@ -497,6 +497,7 @@ function pgfx_add_series!(::Val{:surface}, axis, series_opt, series, series_func
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
         "z buffer" => "sort",
+        "opacity" => get_fillalpha(series),
     )
     pgfx_add_series!(axis, series_opt, series, series_func, opt)
 end
