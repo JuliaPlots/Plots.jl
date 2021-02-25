@@ -1081,7 +1081,7 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
         end
     elseif occursin("bottom", str)
         if s == :outerbottom
-            ypos = viewport_plotarea[3] - leg.yoffset - leg.h - !xmirror * gr_axis_height(sp, sp[:xaxis])
+            ypos = viewport_plotarea[3] - leg.yoffset  - leg.dy - !xmirror * gr_axis_height(sp, sp[:xaxis])
         else
             ypos = viewport_plotarea[3] + leg.yoffset + leg.h
         end
