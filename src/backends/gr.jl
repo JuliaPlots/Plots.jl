@@ -1561,7 +1561,7 @@ function gr_add_series(sp, series)
             gr_draw_markers(series, x, y, clims)
         end
     elseif st === :shape
-        gr_draw_shapes(series, x, y, clims)
+        gr_draw_shapes(series, clims)
     elseif st in (:path3d, :scatter3d)
         gr_draw_segments_3d(series, x, y, z, clims)
         if st === :scatter3d || series[:markershape] !== :none
@@ -1613,12 +1613,13 @@ end
 function gr_draw_segments(series, x, y, fillrange, clims)
     st = series[:seriestype]
     if x !== nothing && length(x) > 1
-        segments = iter_segments(series, st)
+        segments = series_segments(series, st)
         # do area fill
         if fillrange !== nothing
             GR.setfillintstyle(GR.INTSTYLE_SOLID)
             fr_from, fr_to = (is_2tuple(fillrange) ? fillrange : (y, fillrange))
-            for (i, rng) in enumerate(segments)
+            for segment in segments
+                i, rng = segment.attr_index, segment.range
                 fc = get_fillcolor(series, clims, i)
                 gr_set_fillcolor(fc)
                 fx = _cycle(x, vcat(rng, reverse(rng)))
@@ -1630,7 +1631,8 @@ function gr_draw_segments(series, x, y, fillrange, clims)
 
         # draw the line(s)
         if st in (:path, :straightline)
-            for (i, rng) in enumerate(segments)
+            for segment in segments
+                i, rng = segment.attr_index, segment.range
                 lc = get_linecolor(series, clims, i)
                 gr_set_line(
                     get_linewidth(series, i), get_linestyle(series, i), lc, series
@@ -1648,8 +1650,9 @@ end
 function gr_draw_segments_3d(series, x, y, z, clims)
     if series[:seriestype] === :path3d && length(x) > 1
         lz = series[:line_z]
-        segments = iter_segments(series, :path3d)
-        for (i, rng) in enumerate(segments)
+        segments = series_segments(series, :path3d)
+        for segment in segments
+            i, rng = segment.attr_index, segment.range
             lc = get_linecolor(series, clims, i)
             gr_set_line(
                 get_linewidth(series, i), get_linestyle(series, i), lc, series
@@ -1674,8 +1677,9 @@ function gr_draw_markers(
 
     shapes = series[:markershape]
     if shapes != :none
-        for (i, rng) in enumerate(iter_segments(series, :scatter))
-            rng = intersect(eachindex(x), rng)
+        for segment in series_segments(series, :scatter)
+            i = segment.attr_index
+            rng = intersect(eachindex(x), segment.range)
             if !isempty(rng)
                 ms = get_thickness_scaling(series) * _cycle(msize, i)
                 msw = get_thickness_scaling(series) * _cycle(strokewidth, i)
@@ -1688,9 +1692,10 @@ function gr_draw_markers(
     end
 end
 
-function gr_draw_shapes(series, x, y, clims)
+function gr_draw_shapes(series, clims)
     x, y = shape_data(series)
-    for (i,rng) in enumerate(iter_segments(x, y))
+    for segment in series_segments(series, :shape)
+        i, rng = segment.attr_index, segment.range
         if length(rng) > 1
             # connect to the beginning
             rng = vcat(rng, rng[1])

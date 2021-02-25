@@ -842,6 +842,7 @@ const _pgfplotsx_marker = [
     :rtriangle,
     :cross,
     :xcross,
+    :x,
     :star5,
     :pentagon,
     :hline,

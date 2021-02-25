@@ -53,10 +53,16 @@ function Base.push!(segments::Segments{T}, vs::AVec) where T
 end
 
 
+struct SeriesSegment
+    # indexes of this segement in series data vectors
+    range::UnitRange
+    # index into vector-valued attributes corresponding to this segment
+    attr_index::Int 
+end
+
 # -----------------------------------------------------
 # helper to manage NaN-separated segments
-
-mutable struct SegmentsIterator
+struct NaNSegmentsIterator
     args::Tuple
     n1::Int
     n2::Int
@@ -66,28 +72,26 @@ function iter_segments(args...)
     tup = Plots.wraptuple(args)
     n1 = minimum(map(firstindex, tup))
     n2 = maximum(map(lastindex, tup))
-    SegmentsIterator(tup, n1, n2)
+    NaNSegmentsIterator(tup, n1, n2)
 end
 
-function iter_segments(series::Series, seriestype::Symbol = :path)
+function series_segments(series::Series, seriestype::Symbol = :path)
     x, y, z = series[:x], series[:y], series[:z]
-    if x === nothing
-        return UnitRange{Int}[]
-    elseif has_attribute_segments(series)
-        if any(isnan,y)
-            return [iter_segments(y)...]
-        elseif seriestype in (:scatter, :scatter3d)
-            return [[i] for i in eachindex(y)]
-        else
-            return [i:(i + 1) for i in firstindex(y):lastindex(y)-1]
-        end
+    x === nothing && return UnitRange{Int}[]
+
+    args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
+    nan_segments = collect(iter_segments(args...))
+
+    if has_attribute_segments(series)
+        return Iterators.flatten(map(nan_segments) do r
+            if seriestype in (:scatter, :scatter3d)
+                (SeriesSegment(i:i, i) for i in r)
+            else
+                (SeriesSegment(i:i+1, i) for i in first(r):last(r)-1)
+            end 
+        end)
     else
-        segs = UnitRange{Int}[]
-        args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
-        for seg in iter_segments(args...)
-            push!(segs, seg)
-        end
-        return segs
+        return (SeriesSegment(r, 1) for r in nan_segments)
     end
 end
 
@@ -97,7 +101,7 @@ anynan(args::Tuple) = i -> anynan(i,args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
-function Base.iterate(itr::SegmentsIterator, nextidx::Int = itr.n1)
+function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
     i = findfirst(!anynan(itr.args), nextidx:itr.n2)
     i === nothing && return nothing
     nextval = nextidx + i - 1
@@ -107,6 +111,7 @@ function Base.iterate(itr::SegmentsIterator, nextidx::Int = itr.n1)
 
     nextval:nextnan-1, nextnan
 end
+Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()
 
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
@@ -575,13 +580,8 @@ end
 function has_attribute_segments(series::Series)
     # we want to check if a series needs to be split into segments just because
     # of its attributes
-    for letter in (:x, :y, :z)
-        # If we have NaNs in the data they define the segments and
-        # SegmentsIterator is used
-        series[letter] !== nothing && NaN in collect(series[letter]) && return false
-    end
     series[:seriestype] == :shape && return false
-    # ... else we check relevant attributes if they have multiple inputs
+    # check relevant attributes if they have multiple inputs
     return any(
         (typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1)
         for

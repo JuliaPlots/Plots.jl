@@ -440,9 +440,10 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
             #     end
             #     push!(handles, handle)
             # else
-            for (i, rng) in enumerate(iter_segments(series, st))
+            for (k, segment) in enumerate(series_segments(series, st))
+                i, rng = segment.attr_index, segment.range
                 handle = ax."plot"((arg[rng] for arg in xyargs)...;
-                                   label = i == 1 ? series[:label] : "",
+                                   label = k == 1 ? series[:label] : "",
                                    zorder = series[:series_plotindex],
                                    color = py_color(single_color(get_linecolor(series, clims, i)), get_linealpha(series, i)),
                                    linewidth = py_thickness_scale(plt, get_linewidth(series, i)),
@@ -486,7 +487,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     if series[:markershape] != :none && st in (
         :path, :scatter, :path3d, :scatter3d, :steppre, :steppost, :bar
     )
-        for (i, rng) in enumerate(iter_segments(series, :scatter))
+        for segment in series_segments(series, :scatter)
+            i, rng = segment.attr_index, segment.range
             xyargs = if st == :bar && !isvertical(series)
                 if RecipesPipeline.is3d(sp)
                     y[rng], x[rng], z[rng]
@@ -679,7 +681,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     if st == :shape
         handle = []
-        for (i, rng) in enumerate(iter_segments(series))
+        for segment in series_segments(series)
+            i, rng = segment.attr_index, segment.range
             if length(rng) > 1
                 path = pypath."Path"(hcat(x[rng], y[rng]))
                 patches = pypatches."PathPatch"(
@@ -706,7 +709,8 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # handle area filling
     fillrange = series[:fillrange]
     if fillrange !== nothing && st != :contour
-        for (i, rng) in enumerate(iter_segments(series))
+        for segment in series_segments(series)
+            i, rng = segment.attr_index, segment.range
             f, dim1, dim2 = if isvertical(series)
                 :fill_between, x[rng], y[rng]
             else

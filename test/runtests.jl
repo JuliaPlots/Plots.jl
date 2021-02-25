@@ -175,14 +175,8 @@ end
     @test_throws ArgumentError gif(anim)
 end
 
-@testset "Segments" begin
-    function segments(args...)
-        segs = UnitRange{Int}[]
-        for seg in iter_segments(args...)
-            push!(segs,seg)
-        end
-        segs
-    end
+@testset "NaN-separated Segments" begin
+    segments(args...) = collect(iter_segments(args...))
 
     nan10 = fill(NaN,10)
     @test segments(11:20) == [1:10]

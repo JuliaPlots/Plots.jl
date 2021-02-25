@@ -643,7 +643,7 @@ function plotly_series(plt::Plot, series::Series)
 end
 
 function plotly_series_shapes(plt::Plot, series::Series, clims)
-    segments = iter_segments(series)
+    segments = collect(series_segments(series))
     plotattributes_outs = Vector{KW}(undef, length(segments))
 
     # TODO: create a plotattributes_out for each polygon
@@ -662,7 +662,8 @@ function plotly_series_shapes(plt::Plot, series::Series, clims)
         for (letter, data) in zip((:x, :y), shape_data(series, 100))
     )
 
-    for (i,rng) in enumerate(segments)
+    for segment in segments
+        i, rng = segment.attr_index, segment.range
         length(rng) < 2 && continue
 
         # to draw polygons, we actually draw lines with fill
@@ -705,14 +706,16 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
     hasfillrange = st in (:path, :scatter, :scattergl, :straightline) &&
         (isa(series[:fillrange], AbstractVector) || isa(series[:fillrange], Tuple))
 
-    segments = iter_segments(series, st)
+    segments = collect(series_segments(series, st))
     plotattributes_outs = fill(KW(), (hasfillrange ? 2 : 1 ) * length(segments))
 
     needs_scatter_fix = !isscatter && hasmarker && !any(isnan,y) && length(segments) > 1
 
-    for (i,rng) in enumerate(segments)
+    for (k, segment) in enumerate(segments)
+        i, rng = segment.attr_index, segment.range
+        
         plotattributes_out = deepcopy(plotattributes_base)
-        plotattributes_out[:showlegend] = i==1 ? should_add_to_legend(series) : false
+        plotattributes_out[:showlegend] = k==1 ? should_add_to_legend(series) : false
         plotattributes_out[:legendgroup] = series[:label]
 
         # set the type
@@ -805,9 +808,9 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 delete!(plotattributes_out, :fillcolor)
             end
 
-            plotattributes_outs[(2 * i - 1):(2 * i)] = [plotattributes_out_fillrange, plotattributes_out]
+            plotattributes_outs[(2k-1):(2k)] = [plotattributes_out_fillrange, plotattributes_out]
         else
-            plotattributes_outs[i] = plotattributes_out
+            plotattributes_outs[k] = plotattributes_out
         end
     end
 

@@ -339,9 +339,10 @@ end
 
 function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, opt)
     # treat segments
-    segments = iter_segments(series, series[:seriestype])
+    segments = collect(series_segments(series, series[:seriestype]))
     sf = opt[:fillrange]
-    for (i, rng) in enumerate(segments)
+    for segment in segments
+        i, rng = segment.attr_index, segment.range
         segment_opt = PGFPlotsX.Options()
         segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
         if opt[:markershape] != :none
