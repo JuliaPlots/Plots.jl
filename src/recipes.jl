@@ -416,7 +416,11 @@ end
     end
 
     if !isnothing(plotattributes[:series_annotations])
-        annotations := (x,y,plotattributes[:series_annotations].strs,:bottom)
+        if isvertical(plotattributes)
+            annotations := (x,y,plotattributes[:series_annotations].strs,:bottom)
+        else
+            annotations := (y,x,plotattributes[:series_annotations].strs,:left)
+        end
         series_annotations := nothing
     end
 
