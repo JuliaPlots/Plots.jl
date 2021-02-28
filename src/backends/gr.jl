@@ -1116,52 +1116,24 @@ function gr_legend_pos(v::Tuple{S,T}, viewport_plotarea) where {S<:Real, T<:Real
 end
 
 function gr_legend_pos(theta::Real, leg, viewport_plotarea; axisclearance=nothing)
-    xmean = +(viewport_plotarea[1:2]...)/2
-    ymean = +(viewport_plotarea[3:4]...)/2
-    (s,c) = sincosd(theta)
+    xcenter = +(viewport_plotarea[1:2]...)/2
+    ycenter = +(viewport_plotarea[3:4]...)/2
 
     if isnothing(axisclearance)
         # Inner
-        # rectangle relative to midpoint where the anchor can legally be
-        rect = viewport_plotarea .+ [
-                                     - xmean + leg.xoffset + leg.leftw,
-                                     - xmean - leg.xoffset - leg.rightw - leg.textw,
-                                     - ymean + leg.yoffset + leg.h,
-                                     - ymean - leg.yoffset - leg.dy,
-                                    ]
-        x = c < 0 ? rect[1]/c : rect[2]/c
-        y = s < 0 ? rect[3]/s : rect[4]/s
-        A = min(x,y) # Biggest A  that places (Acos(theta),Asin(theta)) inside rectangle
+        # rectangle where the anchor can legally be
+        xmin = viewport_plotarea[1] + leg.xoffset + leg.leftw
+        xmax = viewport_plotarea[2] - leg.xoffset - leg.rightw - leg.textw
+        ymin = viewport_plotarea[3] + leg.yoffset + leg.h
+        ymax = viewport_plotarea[4] - leg.yoffset - leg.dy
     else
         # Outer
-        # rectangle relative to midpoint where the anchor is forbidden
-        rect = viewport_plotarea .+ [
-                                     - xmean - leg.xoffset - leg.rightw - leg.textw - axisclearance[1],
-                                     - xmean + leg.xoffset + leg.leftw + axisclearance[2],
-                                     - ymean - leg.yoffset - leg.dy - axisclearance[3],
-                                     - ymean + leg.yoffset + leg.h + axisclearance[4],
-                                    ]
-        t = tand(theta)
-        if c  < 0
-            if t < rect[4]/rect[1]
-                A = rect[4]/s
-            elseif t < rect[3]/rect[1]
-                A = rect[1]/c
-            else
-                A = rect[3]/s
-            end
-        else
-            if t < rect[3]/rect[2]
-                A = rect[3]/s
-            elseif t <rect[4]/rect[2]
-                A = rect[2]/c
-            else
-                A = rect[4]/s
-            end
-        end
+        xmin = viewport_plotarea[1] - leg.xoffset - leg.rightw - leg.textw - axisclearance[1]
+        xmax = viewport_plotarea[2] + leg.xoffset + leg.leftw + axisclearance[2]
+        ymin = viewport_plotarea[3] - leg.yoffset - leg.dy - axisclearance[3]
+        ymax = viewport_plotarea[4] + leg.yoffset + leg.h + axisclearance[4]
     end
-
-    return xmean + A*c, ymean + A*s
+    return legend_pos_from_angle(theta,xmin,xcenter,xmax,ymin,ycenter,ymax)
 end
 
 function gr_get_legend_geometry(viewport_plotarea, sp)

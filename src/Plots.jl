@@ -211,6 +211,7 @@ include("output.jl")
 include("ijulia.jl")
 include("fileio.jl")
 include("init.jl")
+include("legend.jl")
 
 include("backends/plotly.jl")
 include("backends/gr.jl")
