@@ -1364,6 +1364,16 @@ end
 
 @recipe function f(shapes::AVec{Shape})
     seriestype --> :shape
+    # For backwards compatibility, column vectors of segmenting attributes are 
+    # interpreted as having one element per shape
+    for attr in union(_segmenting_array_attributes, _segmenting_vector_attributes)
+        v = get(plotattributes, attr, nothing)
+        if v isa AVec || v isa AMat && size(v,2) == 1
+            @warn "Column vector attribute `$attr` reinterpreted as row vector (one value per shape).\n" *
+                    "Pass a row vector instead (e.g. using `permutedims`) to suppress this warning."
+            plotattributes[attr] = permutedims(v)
+        end
+    end
     coords(shapes)
 end
 
