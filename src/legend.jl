@@ -20,5 +20,7 @@ end
 Split continuous range `[-1,1]` into an integer `[1,2,3]`
 """
 function legend_anchor_index(x)
-    return ceil(Integer,2//3*(x+1))
+    x<-1//3 && return 1
+    x<1//3 && return 2
+    return 3
 end

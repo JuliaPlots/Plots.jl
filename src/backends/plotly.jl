@@ -384,7 +384,7 @@ end
 
 plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = (coords=v, xanchor="left", yanchor="top")
 
- plotly_legend_pos(theta::Real) = plotly_legend_pos((theta, :inner))
+plotly_legend_pos(theta::Real) = plotly_legend_pos((theta, :inner))
 
 function plotly_legend_pos(v::Tuple{S,Symbol}) where S<:Real
     (s,c) = sincosd(v[1])
