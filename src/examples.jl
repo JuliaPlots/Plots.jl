@@ -1029,6 +1029,8 @@ const _examples = PlotExample[
         "Vectors of markershapes and segments",
         "",
         [quote
+            using Base.Iterators: cycle, take
+
             yv = ones(9)
             ys = [1; 1; NaN; ones(6)]
             y = 5 .- [yv 2ys 3yv 4ys]
@@ -1036,9 +1038,9 @@ const _examples = PlotExample[
             plt_color_rows = plot(
                 y,
                 seriestype = [:path :path :scatter :scatter],
-                markershape = [:utriangle, :rect],
+                markershape = collect(take(cycle((:utriangle, :rect)), 9)),
                 markersize = 8,
-                color = [:red, :black],
+                color = collect(take(cycle((:red, :black)), 9))
             )
 
             plt_z_cols = plot(
