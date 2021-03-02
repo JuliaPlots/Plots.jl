@@ -775,9 +775,9 @@ pgfx_get_legend_pos(theta::Real) = pgfx_get_legend_pos((theta,:inner))
 function pgfx_get_legend_pos(v::Tuple{S,Symbol}) where S <: Real
     (s,c) = sincosd(v[1])
     anchors = [
-               "north west" "north" "north east";
-               "west" "center" "east";
                "south west" "south" "south east";
+               "west" "center" "east";
+               "north west" "north" "north east";
               ]
 
     if v[2] === :inner
