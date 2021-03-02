@@ -94,12 +94,12 @@ function series_segments(series::Series, seriestype::Symbol = :path)
         (SeriesSegment(r, 1) for r in nan_segments)
     end 
 
-    seg_attr_range = UnitRange(minimum(first(seg.range) for seg in result),
+    seg_range = UnitRange(minimum(first(seg.range) for seg in result),
                                 maximum(last(seg.range) for seg in result))
     for attr in _segmenting_vector_attributes
         v = get(series, attr, nothing)
-        if v isa AVec && eachindex(v) != seg_attr_range
-            @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_attr_range."
+        if v isa AVec && eachindex(v) != seg_range
+            @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
             if any(v -> !isnothing(v) && any(isnan, v), (x,y,z))
                 @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
                     If you intend elements of `$attr` to apply to individual NaN-separated segements in the data,
