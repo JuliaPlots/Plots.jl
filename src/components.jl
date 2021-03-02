@@ -42,15 +42,11 @@ function coords(shape::Shape)
     shape.x, shape.y
 end
 
+#coords(shapes::AVec{Shape}) = unzip(map(coords, shapes))
 function coords(shapes::AVec{Shape})
-    length(shapes) == 0 && return zeros(0), zeros(0)
-    xs = map(get_xs, shapes)
-    ys = map(get_ys, shapes)
-    x, y = map(copy, coords(shapes[1]))
-    for shape in shapes[2:end]
-        nanappend!(x, shape.x)
-        nanappend!(y, shape.y)
-    end
+    c = map(coords, shapes)
+    x = [q[1] for q in c]
+    y = [q[2] for q in c]
     x, y
 end
 
