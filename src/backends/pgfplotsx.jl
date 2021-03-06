@@ -1381,7 +1381,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
     plt.o(plt)
 end
 
-for mime in ("application/pdf", "image/png", "image/svg+xml")
+for mime in ("application/pdf", "image/svg+xml")
     @eval function _show(
         io::IO,
         mime::MIME{Symbol($mime)},
@@ -1391,6 +1391,18 @@ for mime in ("application/pdf", "image/png", "image/svg+xml")
         show(io, mime, plt.o.the_plot)
     end
 end
+
+    function _show(
+        io::IO,
+        mime::MIME{Symbol("image/png")},
+        plt::Plot{PGFPlotsXBackend},
+    )
+        plt.o.was_shown = true
+        plt_file = tempname() * ".png"
+        PGFPlotsX.pgfsave(plt_file, plt.o.the_plot; dpi=plt[:dpi])
+        write(io, read(plt_file))
+        rm(plt_file; force = true)
+    end
 
 function _show(
     io::IO,
