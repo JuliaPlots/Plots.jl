@@ -1262,6 +1262,8 @@ end
 convertLegendValue(val::Bool) = val ? :best : :none
 convertLegendValue(val::Nothing) = :none
 convertLegendValue(v::Tuple{S,T}) where {S<:Real, T<:Real} = v
+convertLegendValue(v::Tuple{<:Real,Symbol}) = v
+convertLegendValue(v::Real) = v
 convertLegendValue(v::AbstractArray) = map(convertLegendValue, v)
 
 # -----------------------------------------------------------------------------

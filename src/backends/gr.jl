@@ -911,7 +911,7 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     gr_update_viewport_ratio!(viewport_plotarea, sp)
     leg = gr_get_legend_geometry(viewport_plotarea, sp)
     gr_update_viewport_legend!(viewport_plotarea, sp, leg)
-    
+
     # fill in the plot area background
     gr_fill_plotarea(sp, viewport_plotarea)
 
@@ -1047,7 +1047,24 @@ end
 
 function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
     s = sp[:legend]
-    typeof(s) <: Symbol || return gr_legend_pos(s, viewport_plotarea)
+    s isa Real && return gr_legend_pos(s, leg, viewport_plotarea)
+    if s isa Tuple{<:Real,Symbol}
+        if s[2] !== :outer
+            return gr_legend_pos(s[1], leg, viewport_plotarea)
+        end
+
+        xaxis, yaxis = sp[:xaxis], sp[:yaxis]
+        xmirror = xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
+        ymirror = yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
+        axisclearance = [
+                         !ymirror*gr_axis_width(sp, sp[:yaxis]),
+                         ymirror*gr_axis_width(sp,sp[:yaxis]),
+                         !xmirror*gr_axis_height(sp,sp[:xaxis]),
+                         xmirror*gr_axis_height(sp,sp[:xaxis]),
+                        ]
+        return gr_legend_pos(s[1], leg, viewport_plotarea; axisclearance)
+    end
+    s isa Symbol || return gr_legend_pos(s, viewport_plotarea)
     str = string(s)
     if str == "best"
         str = "topright"
@@ -1081,7 +1098,7 @@ function gr_legend_pos(sp::Subplot, leg, viewport_plotarea)
         end
     elseif occursin("bottom", str)
         if s == :outerbottom
-            ypos = viewport_plotarea[3] - leg.yoffset - leg.h - !xmirror * gr_axis_height(sp, sp[:xaxis])
+            ypos = viewport_plotarea[3] - leg.yoffset  - leg.dy - !xmirror * gr_axis_height(sp, sp[:xaxis])
         else
             ypos = viewport_plotarea[3] + leg.yoffset + leg.h
         end
@@ -1096,6 +1113,27 @@ function gr_legend_pos(v::Tuple{S,T}, viewport_plotarea) where {S<:Real, T<:Real
     xpos = v[1] * (viewport_plotarea[2] - viewport_plotarea[1]) + viewport_plotarea[1]
     ypos = v[2] * (viewport_plotarea[4] - viewport_plotarea[3]) + viewport_plotarea[3]
     (xpos,ypos)
+end
+
+function gr_legend_pos(theta::Real, leg, viewport_plotarea; axisclearance=nothing)
+    xcenter = +(viewport_plotarea[1:2]...)/2
+    ycenter = +(viewport_plotarea[3:4]...)/2
+
+    if isnothing(axisclearance)
+        # Inner
+        # rectangle where the anchor can legally be
+        xmin = viewport_plotarea[1] + leg.xoffset + leg.leftw
+        xmax = viewport_plotarea[2] - leg.xoffset - leg.rightw - leg.textw
+        ymin = viewport_plotarea[3] + leg.yoffset + leg.h
+        ymax = viewport_plotarea[4] - leg.yoffset - leg.dy
+    else
+        # Outer
+        xmin = viewport_plotarea[1] - leg.xoffset - leg.rightw - leg.textw - axisclearance[1]
+        xmax = viewport_plotarea[2] + leg.xoffset + leg.leftw + axisclearance[2]
+        ymin = viewport_plotarea[3] - leg.yoffset - leg.dy - axisclearance[3]
+        ymax = viewport_plotarea[4] + leg.yoffset + leg.h + axisclearance[4]
+    end
+    return legend_pos_from_angle(theta,xmin,xcenter,xmax,ymin,ycenter,ymax)
 end
 
 function gr_get_legend_geometry(viewport_plotarea, sp)
@@ -1154,12 +1192,28 @@ end
 ## Viewport, window and scale
 
 function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
-    leg_str = string(sp[:legend])
+    s = sp[:legend]
 
     xaxis, yaxis = sp[:xaxis], sp[:yaxis]
     xmirror = xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
     ymirror = yaxis[:guide_position] == :right || (yaxis[:guide_position] == :auto && yaxis[:mirror] == true)
 
+    if s isa Tuple{<:Real,Symbol}
+        if s[2] === :outer
+            (x,y) = gr_legend_pos(sp, leg, viewport_plotarea) # Dry run, to figure out
+            if x < viewport_plotarea[1]
+                viewport_plotarea[1] += leg.leftw + leg.textw + leg.rightw + leg.xoffset + !ymirror * gr_axis_width(sp, sp[:yaxis])
+            elseif x > viewport_plotarea[2]
+                viewport_plotarea[2] -= leg.leftw + leg.textw + leg.rightw + leg.xoffset
+            end
+            if y < viewport_plotarea[3]
+                viewport_plotarea[3] += leg.h + leg.dy + leg.yoffset + !xmirror * gr_axis_height(sp, sp[:xaxis])
+            elseif y > viewport_plotarea[4]
+                viewport_plotarea[4] -= leg.h + leg.dy + leg.yoffset
+            end
+        end
+    end
+    leg_str = string(s)
     if occursin("outer", leg_str)
         if occursin("right", leg_str)
             viewport_plotarea[2] -= leg.leftw + leg.textw + leg.rightw + leg.xoffset
@@ -1171,7 +1225,7 @@ function gr_update_viewport_legend!(viewport_plotarea, sp, leg)
             viewport_plotarea[3] += leg.h + leg.dy + leg.yoffset + !xmirror * gr_axis_height(sp, sp[:xaxis])
         end
     end
-    if sp[:legend] == :inline
+    if s === :inline
         if sp[:yaxis][:mirror]
             viewport_plotarea[1] += leg.w
         else
@@ -1464,10 +1518,10 @@ function gr_label_axis_3d(sp, letter)
     if ax[:guide] != ""
         near_letter = letter in (:x, :z) ? :y : :x
         far_letter = letter in (:x, :y) ? :z : :x
-    
+
         nax = sp[Symbol(near_letter, :axis)]
         fax = sp[Symbol(far_letter, :axis)]
-    
+
         amin, amax = axis_limits(sp, letter)
         namin, namax = axis_limits(sp, near_letter)
         famin, famax = axis_limits(sp, far_letter)
@@ -1737,7 +1791,7 @@ function gr_draw_contour(series, x, y, z, clims)
 end
 
 function gr_draw_surface(series, x, y, z, clims)
-    
+
     if series[:seriestype] === :surface
         fillalpha = get_fillalpha(series)
         fillcolor = get_fillcolor(series)

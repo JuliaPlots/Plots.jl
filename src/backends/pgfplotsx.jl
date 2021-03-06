@@ -770,8 +770,26 @@ pgfx_get_legend_pos(k) = get(
     Symbol(k),
     ("at" => string((1.02, 1)), "anchor" => "north west"),
 )
-pgfx_get_legend_pos(t::Tuple) = ("at" => "{$(string(t))}", "anchor" => "north west")
+pgfx_get_legend_pos(t::Tuple{S,T}) where {S<:Real,T<:Real} = ("at" => "{$(string(t))}", "anchor" => "north west")
 pgfx_get_legend_pos(nt::NamedTuple) = ("at" => "{$(string(nt.at))}", "anchor" => string(nt.anchor))
+pgfx_get_legend_pos(theta::Real) = pgfx_get_legend_pos((theta,:inner))
+function pgfx_get_legend_pos(v::Tuple{S,Symbol}) where S <: Real
+    (s,c) = sincosd(v[1])
+    anchors = [
+               "south west" "south" "south east";
+               "west" "center" "east";
+               "north west" "north" "north east";
+              ]
+
+    if v[2] === :inner
+        rect = (0.07,0.5,1.0,0.07,0.52,1.0)
+        anchor = anchors[legend_anchor_index(s),legend_anchor_index(c)]
+    else
+        rect = (-0.15,0.5,1.05,-0.15,0.52,1.1)
+        anchor = anchors[4-legend_anchor_index(s),4-legend_anchor_index(c)]
+    end
+    return ("at"=>"$(string(legend_pos_from_angle(v[1],rect...)))", "anchor"=>anchor)
+end
 
 pgfx_get_colorbar_pos(s) =
     get((left = " left", bottom = " horizontal", top = " horizontal"), s, "")

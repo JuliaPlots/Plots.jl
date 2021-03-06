@@ -384,6 +384,25 @@ end
 
 plotly_legend_pos(v::Tuple{S,T}) where {S<:Real, T<:Real} = (coords=v, xanchor="left", yanchor="top")
 
+plotly_legend_pos(theta::Real) = plotly_legend_pos((theta, :inner))
+
+function plotly_legend_pos(v::Tuple{S,Symbol}) where S<:Real
+    (s,c) = sincosd(v[1])
+    xanchors = ["left", "center", "right"]
+    yanchors = ["bottom", "middle", "top"]
+
+    if v[2] === :inner
+        rect = (0.07,0.5,1.0,0.07,0.52,1.0)
+        xanchor = xanchors[legend_anchor_index(c)]
+        yanchor = yanchors[legend_anchor_index(s)]
+    else
+        rect = (-0.15,0.5,1.05,-0.15,0.52,1.1)
+        xanchor = xanchors[4-legend_anchor_index(c)]
+        yanchor = yanchors[4-legend_anchor_index(s)]
+    end
+    return (coords=legend_pos_from_angle(v[1],rect...), xanchor=xanchor, yanchor=yanchor)
+end
+
 
 function plotly_layout_json(plt::Plot)
     JSON.json(plotly_layout(plt), 4)
@@ -595,9 +614,9 @@ function plotly_series(plt::Plot, series::Series)
     elseif st == :mesh3d
 	plotattributes_out[:type] = "mesh3d"
         plotattributes_out[:x], plotattributes_out[:y], plotattributes_out[:z] = x, y, z
-       
+
 	if series[:connections] !== nothing
-		if typeof(series[:connections]) <: Tuple{Array,Array,Array} 
+		if typeof(series[:connections]) <: Tuple{Array,Array,Array}
 			i,j,k = series[:connections]
 			if !(length(i) == length(j) == length(k))
 				throw(ArgumentError("Argument connections must consist of equally sized arrays."))

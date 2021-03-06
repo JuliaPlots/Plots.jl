@@ -494,11 +494,11 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
                     y[rng], x[rng], z[rng]
                 else
                     y[rng], x[rng]
-                end        
+                end
             else
                 if RecipesPipeline.is3d(sp)
                     x[rng], y[rng], z[rng]
-                else 
+                else
                     x[rng], y[rng]
                 end
             end
@@ -1309,44 +1309,26 @@ end
 
 # -----------------------------------------------------------------
 
-py_legend_pos(pos::Symbol) = get(
-    (
-        right = "right",
-        left = "center left",
-        top = "upper center",
-        bottom = "lower center",
-        bottomleft = "lower left",
-        bottomright = "lower right",
-        topright = "upper right",
-        topleft = "upper left",
-        outerright = "center left",
-        outerleft = "right",
-        outertop = "lower center",
-        outerbottom = "upper center",
-        outerbottomleft = "lower right",
-        outerbottomright = "lower left",
-        outertopright = "upper left",
-        outertopleft = "upper right",
-    ),
-    pos,
-    "best",
-)
-py_legend_pos(pos) = "lower left"
+py_legend_pos(pos::Tuple{S,T}) where {S<:Real,T<:Real} = "lower left"
 
-py_legend_bbox(pos::Symbol) = get(
-    (
-        outerright = (1.0, 0.5, 0.0, 0.0),
-        outerleft = (-0.15, 0.5, 0.0, 0.0),
-        outertop = (0.5, 1.0, 0.0, 0.0),
-        outerbottom = (0.5, -0.15, 0.0, 0.0),
-        outerbottomleft = (-0.15, 0.0, 0.0, 0.0),
-        outerbottomright = (1.0, 0.0, 0.0, 0.0),
-        outertopright = (1.0, 1.0, 0.0, 0.0),
-        outertopleft = (-0.15, 1.0, 0.0, 0.0),
-    ),
-    pos,
-    (0.0, 0.0, 1.0, 1.0),
-)
+function py_legend_pos(pos::Tuple{<:Real,Symbol})
+    (s,c) = sincosd(pos[1])
+    if pos[2] === :outer
+        s = -s
+        c = -c
+    end
+    yanchors = ["lower","center","upper"]
+    xanchors = ["left","center","right"]
+    return join([yanchors[legend_anchor_index(s)], xanchors[legend_anchor_index(c)]], ' ')
+end
+
+function py_legend_bbox(pos::Tuple{T,Symbol}) where T<:Real
+    if pos[2] === :outer
+        return legend_pos_from_angle(pos[1],-0.15,0.5,1.0,-0.15,0.5,1.0)
+    end
+    legend_pos_from_angle(pos[1],0.0,0.5,1.0,0.0,0.5,1.0)
+end
+
 py_legend_bbox(pos) = pos
 
 function py_add_legend(plt::Plot, sp::Subplot, ax)
@@ -1392,6 +1374,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
 
         # if anything was added, call ax.legend and set the colors
         if !isempty(handles)
+            leg = legend_angle(leg)
             leg = ax."legend"(handles,
                 labels,
                 loc = py_legend_pos(leg),
@@ -1402,7 +1385,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                 edgecolor = py_color(sp[:foreground_color_legend]),
                 framealpha = alpha(plot_color(sp[:background_color_legend])),
                 fancybox = false,  # makes the legend box square
-                borderpad=0.8      # to match GR legendbox
+                borderpad = 0.8      # to match GR legendbox
             )
             frame = leg."get_frame"()
             frame."set_linewidth"(py_thickness_scale(plt, 1))
