@@ -415,6 +415,15 @@ end
         fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
     end
 
+    if !isnothing(plotattributes[:series_annotations])
+        if isvertical(plotattributes)
+            annotations := (x,y,plotattributes[:series_annotations].strs,:bottom)
+        else
+            annotations := (y,x,plotattributes[:series_annotations].strs,:left)
+        end
+        series_annotations := nothing
+    end
+
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i = 1:ny
