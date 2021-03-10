@@ -1267,7 +1267,7 @@ function _update_min_padding!(sp::Subplot{PyPlotBackend})
 
 
     # optionally add the width of colorbar labels and colorbar to rightpad
-    if RecipesPipeline.is3d(sp) || haskey(sp.attr, :cbar_ax)
+    if RecipesPipeline.is3d(sp) && haskey(sp.attr, :cbar_ax)
         bb = py_bbox(sp.attr[:cbar_handle]."ax"."get_yticklabels"())
         sp.attr[:cbar_width] = width(bb) + (sp[:colorbar_title] == "" ? 0px : 30px)
     end
