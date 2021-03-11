@@ -130,7 +130,7 @@ function optimal_colorbar_ticks_and_labels(sp::Subplot, ticks = nothing)
     unscaled_ticks = map(RecipesPipeline.inverse_scale_func(scale), scaled_ticks)
 
     labels = if any(isfinite, unscaled_ticks)
-        formatter = ap[:colorbar_formatter]
+        formatter = sp[:colorbar_formatter]
         if formatter in (:auto, :plain, :scientific, :engineering)
             map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
         elseif formatter == :latex
@@ -205,5 +205,5 @@ _transform_ticks(ticks::AbstractArray{T}) where T <: Dates.TimeType = Dates.valu
 _transform_ticks(ticks::NTuple{2, Any}) = (_transform_ticks(ticks[1]), ticks[2])
 
 function _update_subplot_colorbars(sp::Subplot)
-
+    # Dynamic callback from the pipeline if needed
 end

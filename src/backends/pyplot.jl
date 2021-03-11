@@ -978,13 +978,20 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             cb."formatter".set_powerlimits((-Inf, Inf))
             cb."update_ticks"()
 
+            env = "\\mathregular"  # matches the outer fonts https://matplotlib.org/tutorials/text/mathtext.html
+            ticks = get_colorbar_ticks(sp)
+
             if sp[:colorbar] in (:top, :bottom)
                 axis = sp[:xaxis]  # colorbar inherits from x axis
                 cbar_axis = cb."ax"."xaxis"
+                ticks_letter=:x
             else
                 axis = sp[:yaxis]  # colorbar inherits from y axis
                 cbar_axis = cb."ax"."yaxis"
+                ticks_letter=:y
             end
+
+            sp[:colorbar_ticks] == :native ? nothing : py_set_ticks(cb.ax, ticks, ticks_letter, env)
 
             for lab in cbar_axis."get_ticklabels"()
                   lab."set_fontsize"(py_thickness_scale(plt, axis[:tickfontsize]))
