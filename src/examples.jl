@@ -515,7 +515,6 @@ const _examples = PlotExample[
         "DataFrames",
         "Plot using DataFrame column symbols.",
         [
-            :(using StatsPlots), # can't be inside begin block because @df gets expanded first
             :(
                 begin
                     import RDatasets
@@ -599,7 +598,6 @@ const _examples = PlotExample[
         "Boxplot and Violin series recipes",
         "",
         [
-            :(using StatsPlots), # can't be inside begin block because @df gets expanded first
             :(
                 begin
                     import RDatasets

@@ -22,6 +22,8 @@ using Base.Meta
 import Showoff
 import StatsBase
 import JSON
+import Tables
+import TableOperations
 
 using Requires
 
@@ -116,7 +118,9 @@ export
     plotattr,
     scalefontsize,
     scalefontsizes,
-    resetfontsizes
+    resetfontsizes,
+
+    @df
 
 
 # ---------------------------------------------------------
@@ -212,6 +216,7 @@ include("ijulia.jl")
 include("fileio.jl")
 include("init.jl")
 include("legend.jl")
+include("df.jl")
 
 include("backends/plotly.jl")
 include("backends/gr.jl")
