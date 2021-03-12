@@ -77,7 +77,7 @@ end
 
 function series_segments(series::Series, seriestype::Symbol = :path)
     x, y, z = series[:x], series[:y], series[:z]
-    x === nothing && return UnitRange{Int}[]
+    (x === nothing || isempty(x)) && return UnitRange{Int}[]
 
     args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
     nan_segments = collect(iter_segments(args...))
