@@ -743,7 +743,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
         xticks, yticks, zticks = get_ticks(sp, xaxis), get_ticks(sp, yaxis), get_ticks(sp, zaxis)
         # Add margin for x and y ticks
         h = 0mm
-        if !(xticks in (nothing, false, :none))
+        if !isempty(first(xticks))
             gr_set_font(
                 tickfont(xaxis),
                 halign = (:left, :hcenter, :right)[sign(xaxis[:rotation]) + 2],
@@ -754,7 +754,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             l = 0.01 + last(gr_get_ticks_size(xticks, xaxis[:rotation]))
             h = max(h, 1mm + get_size(sp)[2] * l * px)
         end
-        if !(yticks in (nothing, false, :none))
+        if !isempty(first(yticks))
             gr_set_font(
                 tickfont(yaxis),
                 halign = (:left, :hcenter, :right)[sign(yaxis[:rotation]) + 2],
@@ -774,7 +774,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
             end
         end
 
-        if !(zticks in (nothing, false, :none))
+        if !isempty(first(zticks))
             gr_set_font(
                 tickfont(zaxis),
                 halign = (zaxis[:mirror] ? :left : :right),
@@ -825,7 +825,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
     else
         # Add margin for x and y ticks
         xticks, yticks = get_ticks(sp, sp[:xaxis]), get_ticks(sp, sp[:yaxis])
-        if !(xticks in (nothing, false, :none))
+        if !isempty(first(xticks))
             gr_set_tickfont(sp, :x)
             l = 0.01 + last(gr_get_ticks_size(xticks, sp[:xaxis][:rotation]))
             h = 1mm + get_size(sp)[2] * l * px
@@ -835,7 +835,7 @@ function _update_min_padding!(sp::Subplot{GRBackend})
                 bottompad += h
             end
         end
-        if !(yticks in (nothing, false, :none))
+        if !isempty(first(yticks))
             gr_set_tickfont(sp, :y)
             l = 0.01 + first(gr_get_ticks_size(yticks, sp[:yaxis][:rotation]))
             w = 1mm + get_size(sp)[1] * l * px
