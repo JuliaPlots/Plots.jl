@@ -807,31 +807,37 @@ function py_compute_axis_minval(sp::Subplot, axis::Axis)
     minval
 end
 
-function py_set_scale(ax, sp::Subplot, axis::Axis)
-    scale = axis[:scale]
-    letter = axis[:letter]
+function py_set_scale(ax, sp::Subplot, scale::Symbol, letter::Symbol)
     scale in supported_scales() || return @warn("Unhandled scale value in pyplot: $scale")
     func = getproperty(ax, Symbol("set_", letter, "scale"))
     if PyPlot.version ≥ v"3.3" # https://matplotlib.org/3.3.0/api/api_changes.html
-        letter = Symbol("")
+        pyletter = Symbol("")
+    else
+        pyletter = letter
     end
     kw = KW()
     arg = if scale == :identity
         "linear"
     else
-        kw[Symbol(:base,letter)] = if scale == :ln
+        kw[Symbol(:base, pyletter)] = if scale == :ln
             ℯ
         elseif scale == :log2
             2
         elseif scale == :log10
             10
         end
-        kw[Symbol(:linthresh,letter)] = NaNMath.max(1e-16, py_compute_axis_minval(sp, axis))
+        axis = sp[Symbol(letter, :axis)]
+        kw[Symbol(:linthresh, pyletter)] = NaNMath.max(1e-16, py_compute_axis_minval(sp, axis))
         "symlog"
     end
     func(arg; kw...)
 end
 
+function py_set_scale(ax, sp::Subplot, axis::Axis)
+    scale = axis[:scale]
+    letter = axis[:letter]
+    py_set_scale(ax, sp, scale, letter)
+end
 
 function py_set_axis_colors(sp, ax, a::Axis)
     for (loc, spine) in ax.spines
@@ -990,13 +996,13 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 cbar_axis = cb."ax"."yaxis"
                 ticks_letter=:y
             end
-
+            py_set_scale(cb.ax, sp, sp[:colorbar_scale], ticks_letter)
             sp[:colorbar_ticks] == :native ? nothing : py_set_ticks(cb.ax, ticks, ticks_letter, env)
 
             for lab in cbar_axis."get_ticklabels"()
-                  lab."set_fontsize"(py_thickness_scale(plt, axis[:tickfontsize]))
-                  lab."set_family"(axis[:tickfontfamily])
-                  lab."set_color"(py_color(axis[:tickfontcolor]))
+                  lab."set_fontsize"(py_thickness_scale(plt, axis[:colorbar_tickfontsize]))
+                  lab."set_family"(axis[:colorbar_tickfontfamily])
+                  lab."set_color"(py_color(axis[:colorbar_tickfontcolor]))
             end
 
             # Adjust thickness of the cbar ticks
