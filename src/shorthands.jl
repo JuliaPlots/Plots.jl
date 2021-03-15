@@ -57,6 +57,7 @@ Plot a histogram.
 # Example
 ```julia-repl
 julia> histogram([1,2,1,1,4,3,8],bins=0:8)
+julia> histogram([1,2,1,1,4,3,8],bins=0:8,weights=weights([4,7,3,9,12,2,6]))
 ```
 """
 @shorthands histogram
