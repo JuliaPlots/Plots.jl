@@ -908,9 +908,9 @@ function gr_display(sp::Subplot{GRBackend}, w, h, viewport_canvas)
     viewport_plotarea = gr_viewport_from_bbox(sp, plotarea(sp), w, h, viewport_canvas)
 
     # update viewport_plotarea
-    gr_update_viewport_ratio!(viewport_plotarea, sp)
     leg = gr_get_legend_geometry(viewport_plotarea, sp)
     gr_update_viewport_legend!(viewport_plotarea, sp, leg)
+    gr_update_viewport_ratio!(viewport_plotarea, sp)
 
     # fill in the plot area background
     gr_fill_plotarea(sp, viewport_plotarea)
