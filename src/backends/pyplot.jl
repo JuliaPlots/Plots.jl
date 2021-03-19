@@ -978,7 +978,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
 
             end
 
-            cb."set_label"(sp[:colorbar_title],size=py_thickness_scale(plt, sp[:yaxis][:guidefontsize]),family=sp[:yaxis][:guidefontfamily], color = py_color(sp[:yaxis][:guidefontcolor]))
+            cb."set_label"(sp[:colorbar_title],size=py_thickness_scale(plt, sp[:colorbar_titlefontsize]),family=sp[:colorbar_titlefontfamily], color = py_color(sp[:colorbar_titlefontcolor]))
 
             # cb."formatter".set_useOffset(false)   # This for some reason does not work, must be a pyplot bug, instead this is a workaround:
             cb."formatter".set_powerlimits((-Inf, Inf))
@@ -1000,9 +1000,9 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             sp[:colorbar_ticks] == :native ? nothing : py_set_ticks(cb.ax, ticks, ticks_letter, env)
 
             for lab in cbar_axis."get_ticklabels"()
-                  lab."set_fontsize"(py_thickness_scale(plt, axis[:colorbar_tickfontsize]))
-                  lab."set_family"(axis[:colorbar_tickfontfamily])
-                  lab."set_color"(py_color(axis[:colorbar_tickfontcolor]))
+                  lab."set_fontsize"(py_thickness_scale(plt, sp[:colorbar_tickfontsize]))
+                  lab."set_family"(sp[:colorbar_tickfontfamily])
+                  lab."set_color"(py_color(sp[:colorbar_tickfontcolor]))
             end
 
             # Adjust thickness of the cbar ticks
