@@ -49,7 +49,7 @@ RecipesPipeline = "0.3"
 Reexport = "0.2, 1.0"
 Requires = "1"
 Scratch = "1"
-Showoff = "0.3.1"
+Showoff = "0.3.1, 1.0.2"
 StatsBase = "0.32, 0.33"
 julia = "1.5"
 
