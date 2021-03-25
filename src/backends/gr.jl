@@ -1513,8 +1513,8 @@ function gr_label_axis(sp, letter, viewport_plotarea)
             w = 0.03 + gr_axis_width(sp, axis)
             GR.setcharup(-1, 0)
             #
-            yposition = gr_view_yposition(viewport_plotarea, position(yaxis[:guidefontvalign]))
-            yalign = alignment(yaxis[:guidefontvalign])
+            yposition = gr_view_yposition(viewport_plotarea, position(axis[:guidefontvalign]))
+            yalign = alignment(axis[:guidefontvalign])
             #
             if guide_position == :right || (guide_position == :auto && axis[:mirror])
                 GR.settextalign(yalign, GR.TEXT_VALIGN_BOTTOM)
@@ -1526,8 +1526,8 @@ function gr_label_axis(sp, letter, viewport_plotarea)
         else
             h = 0.015 + gr_axis_height(sp, axis)
             #
-            xposition = gr_view_xposition(viewport_plotarea, position(xaxis[:guidefonthalign]))
-            xalign = alignment(xaxis[:guidefonthalign])
+            xposition = gr_view_xposition(viewport_plotarea, position(axis[:guidefonthalign]))
+            xalign = alignment(axis[:guidefonthalign])
             #
             if guide_position == :top || (guide_position == :auto && axis[:mirror])
                 GR.settextalign(xalign, GR.TEXT_VALIGN_TOP)
