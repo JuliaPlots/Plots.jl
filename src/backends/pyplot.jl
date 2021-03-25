@@ -152,12 +152,14 @@ end
 
 function py_stepstyle(seriestype::Symbol)
     seriestype == :steppost && return "steps-post"
+    seriestype == :stepmid && return "steps-mid"
     seriestype == :steppre && return "steps-pre"
     return "default"
 end
 
 function py_fillstepstyle(seriestype::Symbol)
     seriestype == :steppost && return "post"
+    seriestype == :stepmid && return "mid"
     seriestype == :steppre && return "pre"
     return nothing
 end
@@ -408,7 +410,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
     # for each plotting command, optionally build and add a series handle to the list
 
     # line plot
-    if st in (:path, :path3d, :steppre, :steppost, :straightline)
+    if st in (:path, :path3d, :steppre, :stepmid, :steppost, :straightline)
         if maximum(series[:linewidth]) > 0
             # TODO: check LineCollection alternative for speed
             # if length(segments) > 1 && (any(typeof(series[attr]) <: AbstractVector for attr in (:fillcolor, :fillalpha)) || series[:fill_z] !== nothing) && !(typeof(series[:linestyle]) <: AbstractVector)
@@ -485,7 +487,7 @@ function py_add_series(plt::Plot{PyPlotBackend}, series::Series)
 
     # add markers?
     if series[:markershape] != :none && st in (
-        :path, :scatter, :path3d, :scatter3d, :steppre, :steppost, :bar
+        :path, :scatter, :path3d, :scatter3d, :steppre, :stepmid, :steppost, :bar
     )
         for segment in series_segments(series, :scatter)
             i, rng = segment.attr_index, segment.range
@@ -1363,7 +1365,7 @@ function py_add_legend(plt::Plot, sp::Subplot, ax)
                             linestyle = py_linestyle(series[:seriestype], get_linestyle(series)),
                             capstyle = "butt"
                         )
-                    elseif series[:seriestype] in (:path, :straightline, :scatter, :steppre, :steppost)
+                    elseif series[:seriestype] in (:path, :straightline, :scatter, :steppre, :stepmid, :steppost)
                         hasline = get_linewidth(series) > 0
                         PyPlot.plt."Line2D"((0, 1),(0,0),
                             color = py_color(single_color(get_linecolor(series, clims)), get_linealpha(series)),

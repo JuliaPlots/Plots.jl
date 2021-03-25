@@ -555,6 +555,7 @@ const _pyplot_attr = merge_with_base_supported([
 const _pyplot_seriestype = [
     :path,
     :steppre,
+    :stepmid,
     :steppost,
     :shape,
     :straightline,
@@ -636,6 +637,7 @@ const _hdf5_attr = merge_with_base_supported([
 const _hdf5_seriestype = [
     :path,
     :steppre,
+    :stepmid,
     :steppost,
     :shape,
     :straightline,
@@ -707,7 +709,7 @@ const _inspectdr_attr = merge_with_base_supported([
   ])
 const _inspectdr_style = [:auto, :solid, :dash, :dot, :dashdot]
 const _inspectdr_seriestype = [
-        :path, :scatter, :shape, :straightline, #, :steppre, :steppost
+        :path, :scatter, :shape, :straightline, #, :steppre, :stepmid, :steppost
     ]
 #see: _allMarkers, _shape_keys
 const _inspectdr_marker = Symbol[
