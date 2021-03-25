@@ -181,8 +181,8 @@ end
 # ---------------------------------------------------------------------------
 # steps
 
-make_steps(x, st) = x
-function make_steps(x::AbstractArray, st)
+make_steps(x, st, even) = x
+function make_steps(x::AbstractArray, st, even)
     n = length(x)
     n == 0 && return zeros(0)
     newx = zeros(2n - 1)
@@ -195,19 +195,19 @@ function make_steps(x::AbstractArray, st)
     end
     return newx
 end
-make_steps(t::Tuple, st) = Tuple(make_steps(ti, st) for ti in t)
+make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
 
 
 @nospecialize
 
 # create a path from steps
 @recipe function f(::Type{Val{:steppre}}, x, y, z)
-    plotattributes[:x] = make_steps(x, :post)
-    plotattributes[:y] = make_steps(y, :pre)
+    plotattributes[:x] = make_steps(x, :post, false)
+    plotattributes[:y] = make_steps(y, :pre, false)
     seriestype := :path
 
     # handle fillrange
-    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :pre)
+    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :pre, false)
 
     # create a secondary series for the markers
     if plotattributes[:markershape] != :none
@@ -227,12 +227,12 @@ end
 
 # create a path from steps
 @recipe function f(::Type{Val{:steppost}}, x, y, z)
-    plotattributes[:x] = make_steps(x, :pre)
-    plotattributes[:y] = make_steps(y, :post)
+    plotattributes[:x] = make_steps(x, :pre, false)
+    plotattributes[:y] = make_steps(y, :post, false)
     seriestype := :path
 
     # handle fillrange
-    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post)
+    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, false)
 
     # create a secondary series for the markers
     if plotattributes[:markershape] != :none
