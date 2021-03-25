@@ -1502,18 +1502,6 @@ function gr_label_ticks_3d(sp, letter, ticks)
     end
 end
 
-
-xposition = gr_view_xposition(viewport_plotarea, position(xaxis[:guidefonthalign]))
-xalign = alignment(xaxis[:guidefonthalign])
-if xaxis[:guide_position] == :top || (xaxis[:guide_position] == :auto && xaxis[:mirror] == true)
-    GR.settextalign(xalign, GR.TEXT_VALIGN_TOP)
-    gr_text(xposition, viewport_plotarea[4] + h, xaxis[:guide])
-else
-    GR.settextalign(xalign, GR.TEXT_VALIGN_BOTTOM)
-    gr_text(xposition, viewport_plotarea[3] - h, xaxis[:guide])
-end
-
-
 function gr_label_axis(sp, letter, viewport_plotarea)
     axis = sp[Symbol(letter, :axis)]
     # guide
