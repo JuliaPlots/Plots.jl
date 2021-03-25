@@ -185,13 +185,14 @@ make_steps(x, st, even) = x
 function make_steps(x::AbstractArray, st, even)
     n = length(x)
     n == 0 && return zeros(0)
-    newx = zeros(2n - 1)
+    newx = zeros(2n - (even ? 0 : 1))
     newx[1] = x[1]
     for i = 2:n
         idx = 2i - 1
         newx[idx] = x[i]
         newx[idx - 1] = x[st == :pre ? i : i - 1]
     end
+    even && (newx[end] = x[end])
     return newx
 end
 make_steps(t::Tuple, st, even) = Tuple(make_steps(ti, st, even) for ti in t)
