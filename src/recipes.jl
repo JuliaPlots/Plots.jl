@@ -189,8 +189,12 @@ function make_steps(x::AbstractArray, st, even)
     newx[1] = x[1]
     for i = 2:n
         idx = 2i - 1
-        newx[idx] = x[i]
-        newx[idx - 1] = x[st == :pre ? i : i - 1]
+        if st == :mid
+            newx[idx] = newx[idx-1] = (x[i] + x[i-1]) / 2
+        else
+            newx[idx] = x[i]
+            newx[idx - 1] = x[st == :pre ? i : i - 1]
+        end
     end
     even && (newx[end] = x[end])
     return newx
