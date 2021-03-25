@@ -193,7 +193,7 @@ const _examples = PlotExample[
         [
             :(
                 begin
-                    linetypes = [:path :steppre :steppost :sticks :scatter]
+                    linetypes = [:path :steppre :stepmid :steppost :sticks :scatter]
                     n = length(linetypes)
                     x = Vector[sort(rand(20)) for i = 1:n]
                     y = rand(20, n)
