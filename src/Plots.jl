@@ -193,6 +193,7 @@ const _plotly_min_js_filename = "plotly-1.57.1.min.js"
 
 include("types.jl")
 include("utils.jl")
+include("colorbars.jl")
 include("axes.jl")
 include("args.jl")
 include("components.jl")

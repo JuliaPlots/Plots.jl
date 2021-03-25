@@ -137,11 +137,10 @@ const _label_func_tex = Dict{Symbol,Function}(
 labelfunc_tex(scale::Symbol) = get(_label_func_tex, scale, convert_sci_unicode)
 
 
-function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
-    amin, amax = axis_limits(sp, axis[:letter])
+function optimal_ticks_and_labels(ticks, alims, scale, formatter)
+    amin, amax = alims
 
     # scale the limits
-    scale = axis[:scale]
     sf = RecipesPipeline.scale_func(scale)
 
     # If the axis input was a Date or DateTime use a special logic to find
@@ -152,7 +151,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
     # rather than on the input format
     # TODO: maybe: non-trivial scale (:ln, :log2, :log10) for date/datetime
     if ticks === nothing && scale == :identity
-        if axis[:formatter] == RecipesPipeline.dateformatter
+        if formatter == RecipesPipeline.dateformatter
             # optimize_datetime_ticks returns ticks and labels(!) based on
             # integers/floats corresponding to the DateTime type. Thus, the axes
             # limits, which resulted from converting the Date type to integers,
@@ -163,7 +162,7 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
                 k_min = 2, k_max = 4)
             # Now the ticks are converted back to floats corresponding to Dates.
             return ticks / 864e5, labels
-        elseif axis[:formatter] == RecipesPipeline.datetimeformatter
+        elseif formatter == RecipesPipeline.datetimeformatter
             return optimize_datetime_ticks(amin, amax; k_min = 2, k_max = 4)
         end
     end
@@ -187,14 +186,13 @@ function optimal_ticks_and_labels(sp::Subplot, axis::Axis, ticks = nothing)
             # chosen  ticks is not too much bigger than amin - amax:
             strict_span = false,
         )
-        axis[:lims] = map(RecipesPipeline.inverse_scale_func(scale), (viewmin, viewmax))
+        # axis[:lims] = map(RecipesPipeline.inverse_scale_func(scale), (viewmin, viewmax))
     else
         scaled_ticks = map(sf, (filter(t -> amin <= t <= amax, ticks)))
     end
     unscaled_ticks = map(RecipesPipeline.inverse_scale_func(scale), scaled_ticks)
 
     labels = if any(isfinite, unscaled_ticks)
-        formatter = axis[:formatter]
         if formatter in (:auto, :plain, :scientific, :engineering)
             map(labelfunc(scale, backend()), Showoff.showoff(scaled_ticks, formatter))
         elseif formatter == :latex
@@ -221,51 +219,52 @@ end
 # return (continuous_values, discrete_values) for the ticks on this axis
 function get_ticks(sp::Subplot, axis::Axis; update = true)
     if update || !haskey(axis.plotattributes, :optimized_ticks)
+        dvals = axis[:discrete_values]
         ticks = _transform_ticks(axis[:ticks])
-        if ticks in (:none, nothing, false)
-            axis.plotattributes[:optimized_ticks] = nothing
+        axis.plotattributes[:optimized_ticks] = if ticks isa Symbol && ticks !== :none &&
+            ispolar(sp) && axis[:letter] === :x && !isempty(dvals)
+            collect(0:pi/4:7pi/4), string.(0:45:315)
         else
-            # treat :native ticks as :auto
-            ticks = ticks == :native ? :auto : ticks
-
-            dvals = axis[:discrete_values]
-            cv, dv = if typeof(ticks) <: Symbol
-                if !isempty(dvals)
-                    # discrete ticks...
-                    n = length(dvals)
-                    rng = if ticks == :auto && n > 15
-                        Δ = ceil(Int, n / 10)
-                        Δ:Δ:n
-                    else # if ticks == :all
-                        1:n
-                    end
-                    axis[:continuous_values][rng], dvals[rng]
-                elseif ispolar(axis.sps[1]) && axis[:letter] == :x
-                    #force theta axis to be full circle
-                    (collect(0:pi/4:7pi/4), string.(0:45:315))
-                else
-                    # compute optimal ticks and labels
-                    optimal_ticks_and_labels(sp, axis)
-                end
-            elseif typeof(ticks) <: Union{AVec, Int}
-                if !isempty(dvals) && typeof(ticks) <: Int
-                    rng = Int[round(Int,i) for i in range(1, stop=length(dvals), length=ticks)]
-                    axis[:continuous_values][rng], dvals[rng]
-                else
-                    # override ticks, but get the labels
-                    optimal_ticks_and_labels(sp, axis, ticks)
-                end
-            elseif typeof(ticks) <: NTuple{2, Any}
-                # assuming we're passed (ticks, labels)
-                ticks
-            else
-                error("Unknown ticks type in get_ticks: $(typeof(ticks))")
-            end
-            axis.plotattributes[:optimized_ticks] = (cv, dv)
+            cvals = axis[:continuous_values]
+            alims = axis_limits(sp, axis[:letter])
+            scale = axis[:scale]
+            formatter = axis[:formatter]
+            get_ticks(ticks, cvals, dvals, alims, scale, formatter)
         end
     end
-    axis.plotattributes[:optimized_ticks]
+    return axis.plotattributes[:optimized_ticks]
 end
+
+function get_ticks(ticks::Symbol, cvals::T, dvals, args...) where T
+    if ticks === :none
+        return T[], String[]
+    elseif !isempty(dvals)
+        n = length(dvals)
+        if ticks === :all || n < 16
+            return cvals, string.(dvals)
+        else
+            Δ = ceil(Int, n / 10)
+            rng = Δ:Δ:n
+            return cvals[rng], string.(dvals[rng])
+        end
+    else
+        return optimal_ticks_and_labels(nothing, args...)
+    end
+end
+get_ticks(ticks::AVec, cvals, dvals, args...) = optimal_ticks_and_labels(ticks, args...)
+function get_ticks(ticks::Int, dvals, cvals, args...)
+    if !isempty(dvals)
+        rng = round.(Int, range(1, stop=length(dvals), length=ticks))
+        cvals[rng], string.(dvals[rng])
+    else
+        optimal_ticks_and_labels(ticks, args...)
+    end
+end
+get_ticks(ticks::NTuple{2, Any}, args...) = ticks
+get_ticks(::Nothing, cvals::T, args...) where T = T[], String[]
+get_ticks(ticks::Bool, args...) =
+    ticks ? get_ticks(:auto, args...) : get_ticks(nothing, args...)
+get_ticks(::T, args...) where T = error("Unknown ticks type in get_ticks: $T")
 
 _transform_ticks(ticks) = ticks
 _transform_ticks(ticks::AbstractArray{T}) where T <: Dates.TimeType = Dates.value.(ticks)
