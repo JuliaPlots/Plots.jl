@@ -230,6 +230,31 @@ end
 @deps steppre path scatter
 
 # create a path from steps
+@recipe function f(::Type{Val{:stepmid}}, x, y, z)
+    plotattributes[:x] = make_steps(x, :mid, true)
+    plotattributes[:y] = make_steps(y, :post, true)
+    seriestype := :path
+
+    # handle fillrange
+    plotattributes[:fillrange] = make_steps(plotattributes[:fillrange], :post, true)
+
+    # create a secondary series for the markers
+    if plotattributes[:markershape] != :none
+        @series begin
+            seriestype := :scatter
+            x := x
+            y := y
+            label := ""
+            primary := false
+            ()
+        end
+        markershape := :none
+    end
+    ()
+end
+@deps stepmid path scatter
+
+# create a path from steps
 @recipe function f(::Type{Val{:steppost}}, x, y, z)
     plotattributes[:x] = make_steps(x, :pre, false)
     plotattributes[:y] = make_steps(y, :post, false)
