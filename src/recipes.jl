@@ -78,6 +78,8 @@ const POTENTIAL_VECTOR_ARGUMENTS = [
     :fillrange,
 ]
 
+@nospecialize
+
 @recipe function f(::Type{Val{:line}}, x, y, z)
     indices = sortperm(x)
     x := x[indices]
@@ -124,9 +126,8 @@ end
 @recipe function f(::Type{Val{:vline}}, x, y, z)
     n = length(y)
     newx = vec(Float64[yi for i = 1:3, yi in y])
-    newy = repeat(Float64[1, 2, NaN], n)
     x := newx
-    y := newy
+    y := repeat(Float64[1, 2, NaN], n)
     seriestype := :straightline
     ()
 end
@@ -174,6 +175,8 @@ end
 end
 @deps scatterpath path scatter
 
+@specialize
+
 
 # ---------------------------------------------------------------------------
 # steps
@@ -194,6 +197,8 @@ function make_steps(x::AbstractArray, st)
 end
 make_steps(t::Tuple, st) = Tuple(make_steps(ti, st) for ti in t)
 
+
+@nospecialize
 
 # create a path from steps
 @recipe function f(::Type{Val{:steppre}}, x, y, z)
@@ -263,24 +268,39 @@ end
         end
     end
     newx, newy = zeros(3n), zeros(3n)
-    for i = 1:n
+    newz = z !== nothing ? zeros(3n) : nothing
+    for (i, (xi, yi, zi)) = enumerate(zip(x, y, z !== nothing ? z : 1:n))
         rng = (3i - 2):(3i)
-        newx[rng] = [x[i], x[i], NaN]
-        newy[rng] = [_cycle(fr, i), y[i], NaN]
+        newx[rng] = [xi, xi, NaN]
+        if z !== nothing
+            newy[rng] = [yi, yi, NaN]
+            newz[rng] = [_cycle(fr, i), zi, NaN]
+        else
+            newy[rng] = [_cycle(fr, i), yi, NaN]
+        end
     end
     x := newx
     y := newy
+    if z !== nothing
+        z := newz
+    end
     fillrange := nothing
     seriestype := :path
+    if plotattributes[:linecolor] == :auto && plotattributes[:marker_z] !== nothing && plotattributes[:line_z] === nothing
+        line_z := plotattributes[:marker_z]
+    end
 
-    # create a secondary series for the markers
+    # create a primary series for the markers
     if plotattributes[:markershape] != :none
+        primary := false
         @series begin
             seriestype := :scatter
             x := x
             y := y
-            label := ""
-            primary := false
+            if z !== nothing
+                z := z
+            end
+            primary := true
             ()
         end
         markershape := :none
@@ -288,6 +308,8 @@ end
     ()
 end
 @deps sticks path scatter
+
+@specialize
 
 
 # ---------------------------------------------------------------------------
@@ -302,6 +324,8 @@ function bezier_value(pts::AVec, t::Real)
     end
     val
 end
+
+@nospecialize
 
 # create segmented bezier curves in place of line segments
 @recipe function f(::Type{Val{:curves}}, x, y, z; npoints = 30)
@@ -391,6 +415,15 @@ end
         fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
     end
 
+    if !isnothing(plotattributes[:series_annotations])
+        if isvertical(plotattributes)
+            annotations := (x,y,plotattributes[:series_annotations].strs,:bottom)
+        else
+            annotations := (y,x,plotattributes[:series_annotations].strs,:left)
+        end
+        series_annotations := nothing
+    end
+
     # create the bar shapes by adding x/y segments
     xseg, yseg = Segments(), Segments()
     for i = 1:ny
@@ -458,6 +491,9 @@ end
     ()
 end
 @deps plots_heatmap shape
+
+@specialize
+
 is_3d(::Type{Val{:plots_heatmap}}) = true
 RecipesPipeline.is_surface(::Type{Val{:plots_heatmap}}) = true
 RecipesPipeline.is_surface(::Type{Val{:hexbin}}) = true
@@ -521,6 +557,8 @@ function _preprocess_binlike(plotattributes, x, y)
 end
 
 
+@nospecialize
+
 @recipe function f(::Type{Val{:barbins}}, x, y, z)
     edge, weights, xscale, yscale, baseline =
         _preprocess_binlike(plotattributes, x, y)
@@ -551,6 +589,8 @@ end
     ()
 end
 @deps scatterbins xerror scatter
+
+@specialize
 
 function _stepbins_path(
     edge,
@@ -618,8 +658,8 @@ function _stepbins_path(
     (x, y)
 end
 
-
 @recipe function f(::Type{Val{:stepbins}}, x, y, z)
+    @nospecialize
     axis =
         plotattributes[:subplot][Plots.isvertical(plotattributes) ? :xaxis : :yaxis]
 
@@ -756,6 +796,7 @@ function _make_hist(
     normalize!(h, mode = _hist_norm_mode(normed))
 end
 
+@nospecialize
 
 @recipe function f(::Type{Val{:histogram}}, x, y, z)
     seriestype := length(y) > 1e6 ? :stephist : :barhist
@@ -765,7 +806,7 @@ end
 
 @recipe function f(::Type{Val{:barhist}}, x, y, z)
     h = _make_hist(
-        (y,),
+        tuple(y),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
@@ -779,7 +820,7 @@ end
 
 @recipe function f(::Type{Val{:stephist}}, x, y, z)
     h = _make_hist(
-        (y,),
+        tuple(y),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
@@ -793,7 +834,7 @@ end
 
 @recipe function f(::Type{Val{:scatterhist}}, x, y, z)
     h = _make_hist(
-        (y,),
+        tuple(y),
         plotattributes[:bins],
         normed = plotattributes[:normalize],
         weights = plotattributes[:weights],
@@ -860,9 +901,7 @@ end
 
     x := Plots._bin_centers(edge_x)
     y := Plots._bin_centers(edge_y)
-    z := Surface(float_weights)
-
-    match_dimensions := true
+    z := Surface(permutedims(float_weights))
     seriestype := :heatmap
     ()
 end
@@ -919,7 +958,7 @@ end
 @recipe function f(::Type{Val{:mesh3d}}, x, y, z)
     # As long as no i,j,k are supplied this should work with PyPlot and GR
     seriestype := :surface
-    if plotattributes[:connections] != nothing
+    if plotattributes[:connections] !== nothing
     	throw(ArgumentError("Giving triangles using the connections argument is only supported on Plotly backend."))
     end
     ()
@@ -995,7 +1034,7 @@ export lens!
     # add subplot
     for series in sp.series_list
         @series begin
-            plotattributes = merge(plotattributes, copy(series.plotattributes))
+            plotattributes = merge(backup, copy(series.plotattributes))
             subplot := lens_index
             primary := false
             xlims := (x1, x2)
@@ -1005,6 +1044,8 @@ export lens!
     end
     nothing
 end
+
+@specialize
 
 function intersection_point(xA, yA, xB, yB, h, w)
     s = (yA - yB) / (xA - xB)
@@ -1033,6 +1074,7 @@ end
 # contourf - filled contours
 
 @recipe function f(::Type{Val{:contourf}}, x, y, z)
+    @nospecialize
     fillrange := true
     seriestype := :contour
     ()
@@ -1090,8 +1132,16 @@ function error_coords(errorbar, errordata, otherdata...)
     return (ed, od...)
 end
 
+# clamp non-NaN values in an array to Base.eps(Float64) for log-scale plots
+function clamp_to_eps!(ary)
+    replace!(x -> x <= 0.0 ? Base.eps(Float64) : x, ary)
+    nothing
+end
+
 # we will create a series of path segments, where each point represents one
 # side of an errorbar
+
+@nospecialize
 
 @recipe function f(::Type{Val{:xerror}}, x, y, z)
     error_style!(plotattributes)
@@ -1102,6 +1152,9 @@ end
     else
         plotattributes[:x], plotattributes[:y], plotattributes[:z] =
             error_coords(xerr, x, y, z)
+    end
+    if :xscale ∈ keys(plotattributes) && plotattributes[:xscale] == :log10
+        clamp_to_eps!(plotattributes[:x])
     end
     ()
 end
@@ -1117,6 +1170,9 @@ end
         plotattributes[:y], plotattributes[:x], plotattributes[:z] =
             error_coords(yerr, y, x, z)
     end
+    if :yscale ∈ keys(plotattributes) && plotattributes[:yscale] == :log10
+        clamp_to_eps!(plotattributes[:y])
+    end
     ()
 end
 @deps yerror path
@@ -1129,10 +1185,14 @@ end
         plotattributes[:z], plotattributes[:x], plotattributes[:y] =
             error_coords(zerr, z, x, y)
     end
+    if :zscale ∈ keys(plotattributes) && plotattributes[:zscale] == :log10
+        clamp_to_eps!(plotattributes[:z])
+    end
     ()
 end
 @deps zerror path
 
+@specialize
 
 # TODO: move quiver to PlotRecipes
 
@@ -1146,35 +1206,51 @@ function quiver_using_arrows(plotattributes::AKW)
     if !isa(plotattributes[:arrow], Arrow)
         plotattributes[:arrow] = arrow()
     end
-
+    is_3d = haskey(plotattributes,:z) && !isnothing(plotattributes[:z])
     velocity = error_zipit(plotattributes[:quiver])
     xorig, yorig = plotattributes[:x], plotattributes[:y]
+    zorig = is_3d ? plotattributes[:z] : []
 
     # for each point, we create an arrow of velocity vi, translated to the x/y coordinates
     x, y = zeros(0), zeros(0)
-    for i = 1:max(length(xorig), length(yorig))
+    is_3d && ( z = zeros(0))
+    for i = 1:max(length(xorig), length(yorig), is_3d ? 0 : length(zorig))
         # get the starting position
         xi = _cycle(xorig, i)
         yi = _cycle(yorig, i)
-
+        zi = is_3d ? _cycle(zorig, i) : 0
         # get the velocity
         vi = _cycle(velocity, i)
-        vx, vy = if istuple(vi)
-            first(vi), last(vi)
-        elseif isscalar(vi)
-            vi, vi
-        elseif isa(vi, Function)
-            vi(xi, yi)
-        else
-            error("unexpected vi type $(typeof(vi)) for quiver: $vi")
+        if is_3d
+            vx, vy, vz = if istuple(vi)
+                vi[1], vi[2], vi[3]
+            elseif isscalar(vi)
+                vi, vi, vi
+            elseif isa(vi, Function)
+                vi(xi, yi, zi)
+            else
+                error("unexpected vi type $(typeof(vi)) for quiver: $vi")
+            end
+        else # 2D quiver
+            vx, vy = if istuple(vi)
+                first(vi), last(vi)
+            elseif isscalar(vi)
+                vi, vi
+            elseif isa(vi, Function)
+                vi(xi, yi)
+            else
+                error("unexpected vi type $(typeof(vi)) for quiver: $vi")
+            end
         end
-
         # add the points
         nanappend!(x, [xi, xi + vx, NaN])
         nanappend!(y, [yi, yi + vy, NaN])
+        is_3d && nanappend!(z, [zi, zi + vz, NaN])
     end
-
     plotattributes[:x], plotattributes[:y] = x, y
+    if is_3d
+        plotattributes[:z] = z
+    end
     # KW[plotattributes]
 end
 
@@ -1229,6 +1305,7 @@ end
 
 # function apply_series_recipe(plotattributes::AKW, ::Type{Val{:quiver}})
 @recipe function f(::Type{Val{:quiver}}, x, y, z)
+    @nospecialize
     if :arrow in supported_attrs()
         quiver_using_arrows(plotattributes)
     else
@@ -1267,6 +1344,8 @@ end
     end
 end
 
+@nospecialize
+
 # images - colors
 @recipe function f(mat::AMat{T}) where {T <: Colorant}
     n, m = axes(mat)
@@ -1294,6 +1373,16 @@ end
 
 @recipe function f(shapes::AVec{Shape})
     seriestype --> :shape
+    # For backwards compatibility, column vectors of segmenting attributes are 
+    # interpreted as having one element per shape
+    for attr in union(_segmenting_array_attributes, _segmenting_vector_attributes)
+        v = get(plotattributes, attr, nothing)
+        if v isa AVec || v isa AMat && size(v,2) == 1
+            @warn "Column vector attribute `$attr` reinterpreted as row vector (one value per shape).\n" *
+                    "Pass a row vector instead (e.g. using `permutedims`) to suppress this warning."
+            plotattributes[attr] = permutedims(v)
+        end
+    end
     coords(shapes)
 end
 
@@ -1342,14 +1431,15 @@ end
 # --------------------------------------------------------------------
 # Lists of tuples and GeometryBasics.Points
 # --------------------------------------------------------------------
-@recipe f(v::AVec{<:_Point}) = RecipesPipeline.unzip(v)
-@recipe f(p::_Point) = [p]
+@recipe f(v::AVec{<:GeometryBasics.Point}) = RecipesPipeline.unzip(v)
+@recipe f(p::GeometryBasics.Point) = [p]
 
 # Special case for 4-tuples in :ohlc series
 @recipe f(xyuv::AVec{<:Tuple{R1, R2, R3, R4}}) where {R1, R2, R3, R4} =
     get(plotattributes, :seriestype, :path) == :ohlc ? OHLC[OHLC(t...) for t in xyuv] :
     RecipesPipeline.unzip(xyuv)
 
+@specialize
 
 # -------------------------------------------------
 
@@ -1388,6 +1478,8 @@ end
 # these are for passing in a vector of OHLC objects
 # TODO: when I allow `@recipe f(::Type{T}, v::T) = ...` definitions to replace convertToAnyVector,
 #       then I should replace these with one definition to convert to a vector of 4-tuples
+
+@nospecialize
 
 # to squash ambiguity warnings...
 @recipe f(x::AVec{Function}, v::AVec{OHLC}) = error()
@@ -1447,16 +1539,16 @@ end
     yflip := true
     aspect_ratio := 1
     rs, cs, zs = Plots.findnz(z.surf)
-    xlims := ignorenan_extrema(cs)
-    ylims := ignorenan_extrema(rs)
-    if plotattributes[:markershape] == :none
-        markershape := :circle
-    end
-    if plotattributes[:markersize] == default(:markersize)
-        markersize := 1
-    end
+    xlims := widen(ignorenan_extrema(cs)..., get(plotattributes, :xscale, :identity))
+    ylims := widen(ignorenan_extrema(rs)..., get(plotattributes, :yscale, :identity))
+    markershape --> :circle
+    markersize --> 1
     markerstrokewidth := 0
-    marker_z := zs
+    if length(unique(zs)) == 1
+        seriescolor --> :black
+    else
+        marker_z := zs
+    end
     label := ""
     x := cs
     y := rs
@@ -1466,8 +1558,10 @@ end
     ()
 end
 
+@specialize
 
-Plots.findnz(A::AbstractSparseMatrix) = findnz(A)
+
+Plots.findnz(A::AbstractSparseMatrix) = SparseArrays.findnz(A)
 
 # fallback function for finding non-zero elements of non-sparse matrices
 function Plots.findnz(A::AbstractMatrix)
@@ -1479,6 +1573,8 @@ function Plots.findnz(A::AbstractMatrix)
 end
 
 # -------------------------------------------------
+
+@nospecialize
 
 "Adds ax+b... straight line over the current plot, without changing the axis limits"
 abline!(plt::Plot, a, b; kw...) =
@@ -1549,3 +1645,5 @@ julia> areaplot(1:3, [1 2 3; 7 8 9; 4 5 6], seriescolor = [:red :green :blue], f
         end
     end
 end
+
+@specialize

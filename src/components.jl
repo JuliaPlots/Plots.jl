@@ -1,7 +1,5 @@
-
-
-const P2 = GeometryTypes.Point2{Float64}
-const P3 = GeometryTypes.Point3{Float64}
+const P2 = GeometryBasics.Point2{Float64}
+const P3 = GeometryBasics.Point3{Float64}
 
 nanpush!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); push!(a, b))
 nanappend!(a::AbstractVector{P2}, b) = (push!(a, P2(NaN,NaN)); append!(a, b))
@@ -44,15 +42,11 @@ function coords(shape::Shape)
     shape.x, shape.y
 end
 
+#coords(shapes::AVec{Shape}) = unzip(map(coords, shapes))
 function coords(shapes::AVec{Shape})
-    length(shapes) == 0 && return zeros(0), zeros(0)
-    xs = map(get_xs, shapes)
-    ys = map(get_ys, shapes)
-    x, y = map(copy, coords(shapes[1]))
-    for shape in shapes[2:end]
-        nanappend!(x, shape.x)
-        nanappend!(y, shape.y)
-    end
+    c = map(coords, shapes)
+    x = [q[1] for q in c]
+    y = [q[2] for q in c]
     x, y
 end
 
@@ -77,7 +71,6 @@ function weave(x,y; ordering = Vector[x,y])
   ret
 end
 
-
 "create a star by weaving together points from an outer and inner circle.  `n` is the number of arms"
 function makestar(n; offset = -0.5, radius = 1.0)
     z1 = offset * π
@@ -93,7 +86,6 @@ function makeshape(n; offset = -0.5, radius = 1.0)
     Shape(partialcircle(z, z + 2π, n+1, radius))
 end
 
-
 function makecross(; offset = -0.5, radius = 1.0)
     z2 = offset * π
     z1 = z2 - π/8
@@ -103,7 +95,6 @@ function makecross(; offset = -0.5, radius = 1.0)
                 ordering=Vector[outercircle,innercircle,outercircle]))
 end
 
-
 from_polar(angle, dist) = P2(dist*cos(angle), dist*sin(angle))
 
 function makearrowhead(angle; h = 2.0, w = 0.4)
@@ -111,31 +102,6 @@ function makearrowhead(angle; h = 2.0, w = 0.4)
     Shape(P2[(0,0), from_polar(angle - 0.5π, w) - tip,
         from_polar(angle + 0.5π, w) - tip, (0,0)])
 end
-
-const _shape_keys = Symbol[
-  :circle,
-  :rect,
-  :star5,
-  :diamond,
-  :hexagon,
-  :cross,
-  :xcross,
-  :utriangle,
-  :dtriangle,
-  :rtriangle,
-  :ltriangle,
-  :pentagon,
-  :heptagon,
-  :octagon,
-  :star4,
-  :star6,
-  :star7,
-  :star8,
-  :vline,
-  :hline,
-  :+,
-  :x,
-]
 
 const _shapes = KW(
     :circle    => makeshape(20),
@@ -659,6 +625,7 @@ function locate_annotation(sp::Subplot, pos::Symbol, lab::PlotText)
     (x, y, lab)
 end
 locate_annotation(sp::Subplot, x, y, label::PlotText) = (x, y, label)
+locate_annotation(sp::Subplot, x, y, z, label::PlotText) = (x, y, z, label)
 # -----------------------------------------------------------------------
 
 "type which represents z-values for colors and sizes (and anything else that might come up)"
@@ -758,7 +725,7 @@ end
 
 # -----------------------------------------------------------------------
 "create a BezierCurve for plotting"
-mutable struct BezierCurve{T <: GeometryTypes.Point}
+mutable struct BezierCurve{T <: GeometryBasics.Point}
     control_points::Vector{T}
 end
 

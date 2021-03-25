@@ -1,0 +1,34 @@
+name: Run benchmarks
+
+on:
+  pull_request:
+
+jobs:
+  Benchmark:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    env:
+      GKS_ENCODING: "utf8"
+      GKSwstype: "100"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: 1
+
+      ## Setup
+      - name: Ubuntu TESTCMD
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
+      - name: Install Plots dependencies
+        uses: julia-actions/julia-buildpkg@latest
+      - name: Install Benchmarking dependencies
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
+
+      - name: Run benchmarks
+        run: $TESTCMD -e 'using BenchmarkCI; BenchmarkCI.judge()'
+      - name: Print judgement
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
+      - name: Post results
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

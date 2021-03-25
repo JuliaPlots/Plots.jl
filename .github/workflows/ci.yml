@@ -13,6 +13,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     env:
       GKS_ENCODING: "utf8"
+      GKSwstype: "100"
 
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -21,7 +22,6 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.3'
           - '1'
           - 'nightly'
         os:
@@ -60,10 +60,10 @@ jobs:
 
       # TESTCMD
       - name: Default TESTCMD
-        run: echo ::set-env name=TESTCMD::"julia"
+        run: echo "TESTCMD=julia" >> $GITHUB_ENV
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
-        run: echo ::set-env name=TESTCMD::"xvfb-run --auto-servernum julia"
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
 
       # Julia Dependencies
       - name: Install Julia dependencies

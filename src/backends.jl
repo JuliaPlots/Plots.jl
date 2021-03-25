@@ -316,7 +316,6 @@ const _gr_attr = merge_with_base_supported([
     :layout,
     :title, :window_title,
     :guide, :lims, :ticks, :scale, :flip,
-    :match_dimensions,
     :titlefontfamily, :titlefontsize, :titlefonthalign, :titlefontvalign,
     :titlefontrotation, :titlefontcolor,
     :legendfontfamily, :legendfontsize, :legendfonthalign, :legendfontvalign,
@@ -367,10 +366,10 @@ is_marker_supported(::GRBackend, shape::Shape) = true
 function _initialize_backend(pkg::PlotlyBackend)
     try
         @eval Main begin
-            import ORCA
+            import PlotlyBase
         end
     catch
-        @info "For saving to png with the Plotly backend ORCA has to be installed."
+        @info "For saving to png with the Plotly backend PlotlyBase has to be installed."
     end
 end
 
@@ -472,7 +471,6 @@ const _pgfplots_attr = merge_with_base_supported([
     :polar,
     # :normalize, :weights, :contours,
     :aspect_ratio,
-    # :match_dimensions,
     :tick_direction,
     :framestyle,
     :camera,
@@ -488,7 +486,7 @@ const _pgfplots_scale = [:identity, :ln, :log2, :log10]
 
 function _initialize_backend(pkg::PlotlyJSBackend)
     @eval Main begin
-        import PlotlyJS, ORCA
+        import PlotlyJS
         export PlotlyJS
     end
 end
@@ -533,6 +531,10 @@ const _pyplot_attr = merge_with_base_supported([
     :guidefontfamily, :guidefontsize, :guidefontcolor,
     :grid, :gridalpha, :gridstyle, :gridlinewidth,
     :legend, :legendtitle, :colorbar, :colorbar_title, :colorbar_entry,
+    :colorbar_ticks, :colorbar_tickfontfamily, :colorbar_tickfontsize,
+    :colorbar_tickfonthalign, :colorbar_tickfontvalign,
+    :colorbar_tickfontrotation, :colorbar_tickfontcolor,
+    :colorbar_scale,
     :marker_z, :line_z, :fill_z,
     :levels,
     :ribbon, :quiver, :arrow,
@@ -541,7 +543,6 @@ const _pyplot_attr = merge_with_base_supported([
     :polar,
     :normalize, :weights,
     :contours, :aspect_ratio,
-    :match_dimensions,
     :clims,
     :inset_subplots,
     :dpi,
@@ -627,7 +628,6 @@ const _hdf5_attr = merge_with_base_supported([
     :polar,
     :normalize, :weights,
     :contours, :aspect_ratio,
-    :match_dimensions,
     :clims,
     :inset_subplots,
     :dpi,
@@ -700,7 +700,6 @@ const _inspectdr_attr = merge_with_base_supported([
     :polar,
 #    :normalize, :weights,
 #    :contours, :aspect_ratio,
-    :match_dimensions,
 #    :clims,
 #    :inset_subplots,
     :dpi,
@@ -761,7 +760,6 @@ const _pgfplotsx_attr = merge_with_base_supported([
     :ticks,
     :scale,
     :flip,
-    :match_dimensions,
     :titlefontfamily,
     :titlefontsize,
     :titlefonthalign,
@@ -824,6 +822,7 @@ const _pgfplotsx_seriestype = [
     :surface,
     :wireframe,
     :heatmap,
+    :mesh3d,
     :contour,
     :contour3d,
     :quiver,
@@ -847,6 +846,7 @@ const _pgfplotsx_marker = [
     :rtriangle,
     :cross,
     :xcross,
+    :x,
     :star5,
     :pentagon,
     :hline,

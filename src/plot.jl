@@ -43,10 +43,11 @@ The main plot command. Use `plot` to create a new plot object, and `plot!` to ad
 
 There are lots of ways to pass in data, and lots of keyword arguments... just try it and it will likely work as expected.
 When you pass in matrices, it splits by columns. To see the list of available attributes, use the `plotattr([attr])`
-function, where `attr` is the symbol `:Series:`, `:Subplot:`, `:Plot` or `:Axis`. Pass any attribute to `plotattr`
-as a String to look up its docstring; e.g. `plotattr("seriestype")`.
+function, where `attr` is the symbol `:Series`, `:Subplot`, `:Plot`, or `:Axis`. Pass any attribute to `plotattr`
+as a String to look up its docstring, e.g., `plotattr("seriestype")`.
 """
 function plot(args...; kw...)
+    @nospecialize
     # this creates a new plot with args/kw and sets it to be the current plot
     plotattributes = KW(kw)
     RecipesPipeline.preprocess_attributes!(plotattributes)
@@ -60,6 +61,7 @@ end
 # build a new plot from existing plots
 # note: we split into plt1 and plts_tail so we can dispatch correctly
 function plot(plt1::Plot, plts_tail::Plot...; kw...)
+    @nospecialize
     plotattributes = KW(kw)
     RecipesPipeline.preprocess_attributes!(plotattributes)
 
@@ -140,7 +142,8 @@ end
 
 
 # this adds to the current plot, or creates a new plot if none are current
-function  plot!(args...; kw...)
+function plot!(args...; kw...)
+    @nospecialize
     local plt
     try
         plt = current()
@@ -152,6 +155,7 @@ end
 
 # this adds to a specific plot... most plot commands will flow through here
 function plot!(plt::Plot, args...; kw...)
+    @nospecialize
     plotattributes = KW(kw)
     RecipesPipeline.preprocess_attributes!(plotattributes)
     # merge!(plt.user_attr, plotattributes)
@@ -164,6 +168,7 @@ end
 # a list of series KW dicts.
 # note: at entry, we only have those preprocessed args which were passed in... no default values yet
 function _plot!(plt::Plot, plotattributes, args)
+    @nospecialize
     RecipesPipeline.recipe_pipeline!(plt, plotattributes, args)
     current(plt)
     _do_plot_show(plt, plt[:show])
@@ -205,10 +210,12 @@ end
 # plot to a Subplot
 
 function plot(sp::Subplot, args...; kw...)
+    @nospecialize
     plt = sp.plt
     plot(plt, args...; kw..., subplot = findfirst(isequal(sp), plt.subplots))
 end
 function plot!(sp::Subplot, args...; kw...)
+    @nospecialize
     plt = sp.plt
     plot!(plt, args...; kw..., subplot = findfirst(isequal(sp), plt.subplots))
 end

@@ -1,5 +1,6 @@
 using Contour: Contour
 using UUIDs
+using Latexify
 Base.@kwdef mutable struct PGFPlotsXPlot
     is_created::Bool = false
     was_shown::Bool = false
@@ -72,6 +73,9 @@ function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat,Surface})
     yn = Vector{eltype(y)}(undef, length(a))
     zn = Vector{eltype(s)}(undef, length(a))
     for (n, (i, j)) in enumerate(Tuple.(CartesianIndices(a)))
+        if length(x) == size(s)[1]
+            i, j = j, i
+        end
         xn[n] = x[j]
         yn[n] = y[i]
         zn[n] = a[i, j]
@@ -159,11 +163,12 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     ) => nothing,
                     "fill" => cstr,
                     "fill opacity" => a,
-                    "text opacity" =>     alpha(plot_color(sp[:legendfontcolor])),
+                    "text opacity" => alpha(plot_color(sp[:legendfontcolor])),
                     "font" => pgfx_font(
                         sp[:legendfontsize],
                         pgfx_thickness_scaling(sp),
                     ),
+                    "text" => plot_color(sp[:legendfontcolor]),
                 ),
                 "axis background/.style" => PGFPlotsX.Options(
                     "fill" => bgc_inside,
@@ -278,7 +283,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                 )
                 extra_series, extra_series_opt = pgfx_split_extra_opts(series[:extra_kwargs])
                 series_opt = merge(series_opt, PGFPlotsX.Options(extra_series_opt...))
-                if RecipesPipeline.is3d(series) || st in (:heatmap, :contour)
+                if RecipesPipeline.is3d(series) || st in (:heatmap, :contour) || (st == :quiver && opt[:z] !== nothing)
                     series_func = PGFPlotsX.Plot3
                 else
                     series_func = PGFPlotsX.Plot
@@ -287,129 +292,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                    !isfilledcontour(series) && series[:ribbon] === nothing
                     push!(series_opt, "area legend" => nothing)
                 end
-                if st in (:heatmap, :contour)
-                    push!(axis.options, "view" => "{0}{90}")
+                pgfx_add_series!(Val(st), axis, series_opt, series, series_func, opt)
+                if extra_series !== nothing
+                    extra_series = wraptuple(extra_series)
+                    push!(axis.contents[end], extra_series...)
                 end
-                # treat segments
-                segments =
-                    if st in (:wireframe, :heatmap, :contour, :surface, :contour3d)
-                        iter_segments(surface_to_vecs(
-                            series[:x],
-                            series[:y],
-                            series[:z],
-                        )...)
-                    else
-                        iter_segments(series, st)
-                    end
-                for (i, rng) in enumerate(segments)
-                    segment_opt = PGFPlotsX.Options()
-                    segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
-                    if opt[:markershape] != :none
-                        marker = _cycle(opt[:markershape], i)
-                        if marker isa Shape
-                            x = marker.x
-                            y = marker.y
-                            scale_factor = 0.00125
-                            mark_size = opt[:markersize] * scale_factor
-                            path = join(
-                                [
-                                    "($(x[i] * mark_size), $(y[i] * mark_size))"
-                                    for i in eachindex(x)
-                                ],
-                                " -- ",
-                            )
-                            c = get_markercolor(series, i)
-                            a = get_markeralpha(series, i)
-                            PGFPlotsX.push_preamble!(
-                                pgfx_plot.the_plot,
-                                """
-                                \\pgfdeclareplotmark{PlotsShape$(series_index)}{
-                                \\filldraw
-                                $path;
-                                }
-                                """,
-                            )
-                        end
-                        segment_opt = merge(segment_opt, pgfx_marker(opt, i))
-                    end
-                    if st == :shape
-                        segment_opt = merge(segment_opt, pgfx_fillstyle(opt, i))
-                    end
-                    # add fillrange
-                    if sf !== nothing &&
-                       !isfilledcontour(series)
-                       if sf isa Number || sf isa AVec
-                            pgfx_fillrange_series!(
-                                axis,
-                                series,
-                                series_func,
-                                i,
-                                _cycle(sf, rng),
-                                rng,
-                            )
-                        elseif sf isa Tuple && series[:ribbon] !== nothing
-                            for sfi in sf
-                            pgfx_fillrange_series!(
-                                axis,
-                                series,
-                                series_func,
-                                i,
-                                _cycle(sfi, rng),
-                                rng,
-                            )
-                            end
-                        end
-                        if i == 1 &&
-                           sp[:legend] != :none && pgfx_should_add_to_legend(series)
-                            pgfx_filllegend!(series_opt, opt)
-                        end
-                    end
-                    coordinates =
-                        pgfx_series_coordinates!(sp, series, segment_opt, opt, rng)
-                    segment_plot =
-                        series_func(merge(series_opt, segment_opt), coordinates)
-                    if extra_series !== nothing
-                        extra_series = wraptuple(extra_series)
-                        push!(segment_plot, extra_series...)
-                    end
-                    push!(axis, segment_plot)
-                    # fill between functions
-                    if sf isa Tuple && series[:ribbon] === nothing
-                        sf1, sf2 = sf
-                        @assert sf1 == series_index "First index of the tuple has to match the current series index."
-                        push!(
-                            axis,
-                            series_func(
-                                merge(
-                                    pgfx_fillstyle(opt, series_index),
-                                    PGFPlotsX.Options("forget plot" => nothing),
-                                ),
-                                "fill between [of=$series_id and $(_pgfplotsx_series_ids[Symbol(string(sf2))])]",
-                            ),
-                        )
-                    end
-                    # add to legend?
-                    if sp[:legend] != :none
-                        leg_entry = if opt[:label] isa AVec
-                            get(opt[:label], i, "")
-                        elseif opt[:label] isa AbstractString
-                            if i == 1
-                                get(opt, :label, "")
-                            else
-                                ""
-                            end
-                        else
-                            throw(ArgumentError("Malformed label. label = $(opt[:label])"))
-                        end
-                        if leg_entry == "" || !pgfx_should_add_to_legend(series)
-                            push!(axis.contents[end].options, "forget plot" => nothing)
-                        else
-                            leg_opt = PGFPlotsX.Options()
-                            legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
-                            push!(axis, legend)
-                        end
-                    end
-                end # for segments
                 # add series annotations
                 anns = series[:series_annotations]
                 for (xi, yi, str, fnt) in EachAnn(anns, series[:x], series[:y])
@@ -443,11 +330,352 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
     return pgfx_plot
 end
 ## seriestype specifics
-@inline function pgfx_series_coordinates!(sp, series, segment_opt, opt, rng)
+function pgfx_add_series!(axis, series_opt, series, series_func, opt)
+    args = pgfx_series_arguments(series, opt)
+    series_plot = series_func(series_opt, PGFPlotsX.Table(args...))
+    push!(axis, series_plot)
+    pgfx_add_legend!(axis, series, opt)
+end
+
+function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, opt)
+    # treat segments
+    segments = collect(series_segments(series, series[:seriestype]))
+    sf = opt[:fillrange]
+    for segment in segments
+        i, rng = segment.attr_index, segment.range
+        segment_opt = PGFPlotsX.Options()
+        segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
+        if opt[:markershape] != :none
+            marker = _cycle(opt[:markershape], i)
+            if marker isa Shape
+                x = marker.x
+                y = marker.y
+                scale_factor = 0.00125
+                mark_size = opt[:markersize] * scale_factor
+                path = join(
+                    [
+                        "($(x[i] * mark_size), $(y[i] * mark_size))"
+                        for i in eachindex(x)
+                    ],
+                    " -- ",
+                )
+                c = get_markercolor(series, i)
+                a = get_markeralpha(series, i)
+                PGFPlotsX.push_preamble!(
+                    series[:plot_object].o.the_plot,
+                    """
+                    \\pgfdeclareplotmark{PlotsShape$(series[:series_plotindex])}{
+                    \\filldraw
+                    $path;
+                    }
+                    """,
+                )
+            end
+            segment_opt = merge(segment_opt, pgfx_marker(opt, i))
+        end
+        # add fillrange
+        if sf !== nothing &&
+           !isfilledcontour(series)
+           if sf isa Number || sf isa AVec
+                pgfx_fillrange_series!(
+                    axis,
+                    series,
+                    series_func,
+                    i,
+                    _cycle(sf, rng),
+                    rng,
+                )
+            elseif sf isa Tuple && series[:ribbon] !== nothing
+                for sfi in sf
+                pgfx_fillrange_series!(
+                    axis,
+                    series,
+                    series_func,
+                    i,
+                    _cycle(sfi, rng),
+                    rng,
+                )
+                end
+            end
+            if i == 1 &&
+               series[:subplot][:legend] != :none && pgfx_should_add_to_legend(series)
+                pgfx_filllegend!(series_opt, opt)
+            end
+        end
+        # handle arrows
+        arrow = opt[:arrow]
+        if arrow isa Arrow
+            arrow_opt = merge(
+                segment_opt,
+                PGFPlotsX.Options("quiver" => PGFPlotsX.Options(
+                    "u" => "\\thisrow{u}",
+                    "v" => "\\thisrow{v}",
+                    pgfx_arrow(arrow, :head) => nothing,
+                    )
+                )
+            )
+            if arrow.side == :head
+                x_arrow = opt[:x][rng][end-1:end]
+                y_arrow = opt[:y][rng][end-1:end]
+                x_path  = opt[:x][rng][1:end-1]
+                y_path  = opt[:y][rng][1:end-1]
+            elseif arrow.side == :tail
+                x_arrow = opt[:x][rng][2:-1:1]
+                y_arrow = opt[:y][rng][2:-1:1]
+                x_path  = opt[:x][rng][2:end]
+                y_path  = opt[:y][rng][2:end]
+            elseif arrow.side == :both
+                x_arrow = opt[:x][rng][[2,1,end-1,end]]
+                y_arrow = opt[:y][rng][[2,1,end-1,end]]
+                x_path  = opt[:x][rng][2:end-1]
+                y_path  = opt[:y][rng][2:end-1]
+            end
+            coordinates = PGFPlotsX.Table([
+                    :x => x_arrow[1:2:end-1],
+                    :y => y_arrow[1:2:end-1],
+                    :u => [x_arrow[i] - x_arrow[i-1] for i in 2:2:lastindex(x_arrow)],
+                    :v => [y_arrow[i] - y_arrow[i-1] for i in 2:2:lastindex(y_arrow)],
+                ])
+            arrow_plot =
+                series_func(merge(series_opt, arrow_opt), coordinates)
+            push!(axis, arrow_plot)
+            coordinates = PGFPlotsX.Table(x_path, y_path)
+            segment_plot =
+                series_func(merge(series_opt, segment_opt), coordinates)
+            push!(axis, segment_plot)
+        else
+            coordinates = PGFPlotsX.Table(pgfx_series_arguments(series, opt, rng)...)
+            segment_plot =
+                series_func(merge(series_opt, segment_opt), coordinates)
+            push!(axis, segment_plot)
+        end
+        # fill between functions
+        if sf isa Tuple && series[:ribbon] === nothing
+            sf1, sf2 = sf
+            @assert sf1 == series_index "First index of the tuple has to match the current series index."
+            push!(
+                axis,
+                series_func(
+                    merge(
+                        pgfx_fillstyle(opt, series_index),
+                        PGFPlotsX.Options("forget plot" => nothing),
+                    ),
+                    "fill between [of=$series_id and $(_pgfplotsx_series_ids[Symbol(string(sf2))])]",
+                ),
+            )
+        end
+        pgfx_add_legend!(axis, series, opt, i)
+    end # for segments
+    # get that last marker
+    if !isnothing(opt[:y]) && !any(isnan, opt[:y]) && opt[:markershape] isa AVec
+        additional_plot = PGFPlotsX.PlotInc(pgfx_marker(opt, length(segments) + 1), PGFPlotsX.Coordinates(tuple((last(opt[:x]), last(opt[:y])))))
+        push!(axis, additional_plot)
+    end
+end
+
+function pgfx_add_series!(::Val{:scatter}, axis, series_opt, series, series_func, opt)
+    push!(series_opt, "only marks" => nothing)
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:straightline}, axis, series_opt, series, series_func, opt)
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:path3d}, axis, series_opt, series, series_func, opt)
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:scatter3d}, axis, series_opt, series, series_func, opt)
+    push!(series_opt, "only marks" => nothing)
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:surface}, axis, series_opt, series, series_func, opt)
+    push!(
+        series_opt,
+        "surf" => nothing,
+        "mesh/rows" => length(opt[:x]),
+        "mesh/cols" => length(opt[:y]),
+        "z buffer" => "sort",
+        "opacity" => get_fillalpha(series),
+    )
+    pgfx_add_series!(axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:wireframe}, axis, series_opt, series, series_func, opt)
+    push!(series_opt, "mesh" => nothing,
+                      "mesh/rows" => length(opt[:x])
+         )
+    pgfx_add_series!(axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:heatmap}, axis, series_opt, series, series_func, opt)
+    push!(axis.options, "view" => "{0}{90}")
+    push!(
+        series_opt,
+        "matrix plot*" => nothing,
+        "mesh/rows" => length(opt[:x]),
+        "mesh/cols" => length(opt[:y]),
+        "point meta" => "\\thisrow{meta}",
+    )
+    args = pgfx_series_arguments(series, opt)
+    meta = [any(!isfinite, r) ? NaN : r[3] for r in zip(args...)]
+    for arg in args
+        arg[(!isfinite).(arg)] .= 0
+    end
+    t = PGFPlotsX.Table(["x" => args[1], "y" => args[2], "z" => args[3], "meta" => meta])
+    series_plot = series_func(series_opt, t)
+    push!(axis, series_plot)
+    pgfx_add_legend!(axis, series, opt)
+end
+
+function pgfx_add_series!(::Val{:mesh3d}, axis, series_opt, series, series_func, opt)
+    ptable = join([ string(i, " ", j, " ", k, "\\\\") for (i, j, k) in zip(opt[:connections]...) ], "\n        ")
+    push!(
+        series_opt,
+        "patch" => nothing,
+        "table/row sep" => "\\\\",
+        "patch table" => ptable
+    )
+    pgfx_add_series!(axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:contour}, axis, series_opt, series, series_func, opt)
+    push!(axis.options, "view" => "{0}{90}")
+    if isfilledcontour(series)
+        pgfx_add_series!(Val(:filledcontour), axis, series_opt, series, series_func, opt)
+        return nothing
+    end
+    pgfx_add_series!(Val(:contour3d), axis, series_opt, series, series_func, opt)
+    return nothing
+end
+
+function pgfx_add_series!(::Val{:filledcontour}, axis, series_opt, series, series_func, opt)
+    push!(
+        series_opt,
+        "contour filled" => PGFPlotsX.Options(), # labels not supported
+        "patch type" => "bilinear",
+        "shader" => "flat",
+    )
+    if opt[:levels] isa Number
+        push!(series_opt["contour filled"], "number" => opt[:levels])
+    elseif opt[:levels] isa AVec
+        push!(series_opt["contour filled"], "levels" => opt[:levels])
+    end
+    pgfx_add_series!(axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:contour3d}, axis, series_opt, series, series_func, opt)
+    push!(
+        series_opt,
+        "contour prepared" => PGFPlotsX.Options("labels" => opt[:contour_labels]),
+    )
+    series_opt = merge( series_opt, pgfx_linestyle(opt) )
+    args = pgfx_series_arguments(series, opt)
+    series_plot = series_func(series_opt, PGFPlotsX.Table(Contour.contours(args..., opt[:levels])))
+    push!(axis, series_plot)
+    pgfx_add_legend!(axis, series, opt)
+end
+
+function pgfx_add_series!(::Val{:quiver}, axis, series_opt, series, series_func, opt)
+    if opt[:quiver] !== nothing
+        push!(
+            series_opt,
+            "quiver" => PGFPlotsX.Options(
+                "u" => "\\thisrow{u}",
+                "v" => "\\thisrow{v}",
+                pgfx_arrow(opt[:arrow]) => nothing,
+            ),
+        )
+        x = opt[:x]
+        y = opt[:y]
+        z = opt[:z]
+        if z !== nothing
+            push!(series_opt["quiver"], "w" => "\\thisrow{w}")
+            pgfx_axis!(axis.options, series[:subplot], :z)
+            table = PGFPlotsX.Table([
+                :x => x,
+                :y => y,
+                :z => z,
+                :u => opt[:quiver][1],
+                :v => opt[:quiver][2],
+                :w => opt[:quiver][3],
+            ])
+        else
+            table = PGFPlotsX.Table([
+                :x => x,
+                :y => y,
+                :u => opt[:quiver][1],
+                :v => opt[:quiver][2],
+            ])
+        end
+    end
+    series_plot = series_func(series_opt, table)
+    push!(axis, series_plot)
+    pgfx_add_legend!(axis, series, opt)
+end
+
+function pgfx_add_series!(::Val{:shape}, axis, series_opt, series, series_func, opt)
+    push!(series_opt, "area legend" => nothing)
+    series_opt = merge(series_opt, pgfx_fillstyle(opt))
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:steppre}, axis, series_opt, series, series_func, opt)
+    push!(series_opt, "const plot mark right" => nothing)
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:stepmid}, axis, series_opt, series, series_func, opt)
+    push!(series_opt, "const plot mark mid" => nothing)
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:steppost}, axis, series_opt, series, series_func, opt)
+    push!(series_opt, "const plot" => nothing)
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:ysticks}, axis, series_opt, series, series_func, opt)
+    push!(series_opt, "ycomb" => nothing)
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_series!(::Val{:xsticks}, axis, series_opt, series, series_func, opt)
+    push!(series_opt, "xcomb" => nothing)
+    pgfx_add_series!(Val(:path), axis, series_opt, series, series_func, opt)
+end
+
+function pgfx_add_legend!(axis, series, opt, i = 1)
+    if series[:subplot][:legend] != :none
+        leg_entry = if opt[:label] isa AVec
+            get(opt[:label], i, "")
+        elseif opt[:label] isa AbstractString
+            if i == 1
+                get(opt, :label, "")
+            else
+                ""
+            end
+        else
+            throw(ArgumentError("Malformed label. label = $(opt[:label])"))
+        end
+        if leg_entry == "" || !pgfx_should_add_to_legend(series)
+            push!(axis.contents[end].options, "forget plot" => nothing)
+        else
+            leg_opt = PGFPlotsX.Options()
+            legend = PGFPlotsX.LegendEntry(leg_opt, leg_entry, false)
+            push!(axis, legend)
+        end
+    end
+    return nothing
+end
+
+pgfx_series_arguments(series, opt, range) = (arg[range] for arg in pgfx_series_arguments(series, opt))
+function pgfx_series_arguments(series, opt)
     st = series[:seriestype]
-    # function args
-    args = if st in (:contour, :contour3d)
-        opt[:x], opt[:y], Array(opt[:z])'
+    return if st in (:contour, :contour3d)
+        opt[:x], opt[:y], handle_surface(opt[:z])
     elseif st in (:heatmap, :surface, :wireframe)
         surface_to_vecs(opt[:x], opt[:y], opt[:z])
     elseif RecipesPipeline.is3d(st)
@@ -456,146 +684,12 @@ end
         straightline_data(series)
     elseif st == :shape
         shape_data(series)
-    elseif ispolar(sp)
+    elseif ispolar(series)
         theta, r = opt[:x], opt[:y]
         rad2deg.(theta), r
     else
         opt[:x], opt[:y]
     end
-    seg_args = if st in (:contour, :contour3d)
-        args
-    else
-        (arg[rng] for arg in args)
-    end
-    if opt[:quiver] !== nothing
-        push!(
-            segment_opt,
-            "quiver" => PGFPlotsX.Options(
-                "u" => "\\thisrow{u}",
-                "v" => "\\thisrow{v}",
-                pgfx_arrow(opt[:arrow]) => nothing,
-            ),
-        )
-        x, y = collect(seg_args)
-        return PGFPlotsX.Table([
-            :x => x,
-            :y => y,
-            :u => opt[:quiver][1],
-            :v => opt[:quiver][2],
-        ])
-    else
-        if isfilledcontour(series)
-            st = :filledcontour
-        end
-        pgfx_series_coordinates!(Val(st), segment_opt, opt, seg_args)
-    end
-end
-function pgfx_series_coordinates!(
-    st_val::Union{Val{:path},Val{:path3d},Val{:straightline}},
-    segment_opt,
-    opt,
-    args,
-)
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(
-    st_val::Union{Val{:scatter},Val{:scatter3d}},
-    segment_opt,
-    opt,
-    args,
-)
-    push!(segment_opt, "only marks" => nothing)
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(st_val::Val{:heatmap}, segment_opt, opt, args)
-    push!(
-        segment_opt,
-        "matrix plot*" => nothing,
-        "mesh/rows" => length(opt[:x]),
-        "mesh/cols" => length(opt[:y]),
-    )
-    return PGFPlotsX.Table(args...)
-end
-
-function pgfx_series_coordinates!(st_val::Val{:steppre}, segment_opt, opt, args)
-    push!(segment_opt, "const plot mark right" => nothing)
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(st_val::Val{:stepmid}, segment_opt, opt, args)
-    push!(segment_opt, "const plot mark mid" => nothing)
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(st_val::Val{:steppost}, segment_opt, opt, args)
-    push!(segment_opt, "const plot" => nothing)
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(
-    st_val::Union{Val{:ysticks},Val{:sticks}},
-    segment_opt,
-    opt,
-    args,
-)
-    push!(segment_opt, "ycomb" => nothing)
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(st_val::Val{:xsticks}, segment_opt, opt, args)
-    push!(segment_opt, "xcomb" => nothing)
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(st_val::Val{:surface}, segment_opt, opt, args)
-    push!(
-        segment_opt,
-        "surf" => nothing,
-        "mesh/rows" => length(opt[:x]),
-        "mesh/cols" => length(opt[:y]),
-        "z buffer" => "sort",
-    )
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(st_val::Val{:volume}, segment_opt, opt, args)
-    push!(segment_opt, "patch" => nothing)
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(st_val::Val{:wireframe}, segment_opt, opt, args)
-    push!(segment_opt, "mesh" => nothing, "mesh/rows" => length(opt[:x]))
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(st_val::Val{:shape}, segment_opt, opt, args)
-    push!(segment_opt, "area legend" => nothing)
-    return PGFPlotsX.Coordinates(args...)
-end
-function pgfx_series_coordinates!(
-    st_val::Union{Val{:contour},Val{:contour3d}},
-    segment_opt,
-    opt,
-    args,
-)
-    push!(
-        segment_opt,
-        "contour prepared" => PGFPlotsX.Options("labels" => opt[:contour_labels]),
-    )
-    return PGFPlotsX.Table(Contour.contours(args..., opt[:levels]))
-end
-function pgfx_series_coordinates!(
-    st_val::Val{:filledcontour},
-    segment_opt,
-    opt,
-    args,
-)
-    xs, ys, zs = collect(args)
-    push!(
-        segment_opt,
-        "contour filled" => PGFPlotsX.Options(), # labels not supported
-        "patch type" => "bilinear",
-        "shader" => "flat",
-    )
-    if opt[:levels] isa Number
-        push!(segment_opt["contour filled"], "number" => opt[:levels])
-    elseif opt[:levels] isa AVec
-        push!(segment_opt["contour filled"], "levels" => opt[:levels])
-    end
-
-    PGFPlotsX.Coordinates(args...)
 end
 ##
 pgfx_get_linestyle(k) = get(
@@ -676,8 +770,26 @@ pgfx_get_legend_pos(k) = get(
     Symbol(k),
     ("at" => string((1.02, 1)), "anchor" => "north west"),
 )
-pgfx_get_legend_pos(t::Tuple) = ("at" => "{$(string(t))}", "anchor" => "north west")
+pgfx_get_legend_pos(t::Tuple{S,T}) where {S<:Real,T<:Real} = ("at" => "{$(string(t))}", "anchor" => "north west")
 pgfx_get_legend_pos(nt::NamedTuple) = ("at" => "{$(string(nt.at))}", "anchor" => string(nt.anchor))
+pgfx_get_legend_pos(theta::Real) = pgfx_get_legend_pos((theta,:inner))
+function pgfx_get_legend_pos(v::Tuple{S,Symbol}) where S <: Real
+    (s,c) = sincosd(v[1])
+    anchors = [
+               "south west" "south" "south east";
+               "west" "center" "east";
+               "north west" "north" "north east";
+              ]
+
+    if v[2] === :inner
+        rect = (0.07,0.5,1.0,0.07,0.52,1.0)
+        anchor = anchors[legend_anchor_index(s),legend_anchor_index(c)]
+    else
+        rect = (-0.15,0.5,1.05,-0.15,0.52,1.1)
+        anchor = anchors[4-legend_anchor_index(s),4-legend_anchor_index(c)]
+    end
+    return ("at"=>"$(string(legend_pos_from_angle(v[1],rect...)))", "anchor"=>anchor)
+end
 
 pgfx_get_colorbar_pos(s) =
     get((left = " left", bottom = " horizontal", top = " horizontal"), s, "")
@@ -707,7 +819,7 @@ end
 ## --------------------------------------------------------------------------------------
 # Generates a colormap for pgfplots based on a ColorGradient
 pgfx_arrow(::Nothing) = "every arrow/.append style={-}"
-function pgfx_arrow(arr::Arrow)
+function pgfx_arrow(arr::Arrow, side = arr.side)
     components = String[]
     head = String[]
     push!(head, "{stealth[length = $(arr.headlength)pt, width = $(arr.headwidth)pt")
@@ -716,11 +828,11 @@ function pgfx_arrow(arr::Arrow)
     end
     push!(head, "]}")
     head = join(head, "")
-    if arr.side == :both || arr.side == :tail
+    if side == :both || side == :tail
         push!(components, head)
     end
     push!(components, "-")
-    if arr.side == :both || arr.side == :head
+    if side == :both || side == :head
         push!(components, head)
     end
     components = join(components, "")
@@ -744,7 +856,7 @@ function pgfx_colormap(v::Vector{<:Colorant})
 end
 function pgfx_colormap(cg::ColorGradient)
     join(map(1:length(cg)) do i
-        @sprintf("rgb(%.8fcm)=(%.8f,%.8f,%.8f)", cg.values[i], red(cg.colors[i]), green(cg.colors[i]), blue(cg.colors[i]))
+        @sprintf("rgb(%.8f)=(%.8f,%.8f,%.8f)", cg.values[i], red(cg.colors[i]), green(cg.colors[i]), blue(cg.colors[i]))
     end, "\n")
 end
 
@@ -796,6 +908,13 @@ function pgfx_font(fontsize, thickness_scaling = 1, font = "\\selectfont")
     return string("{\\fontsize{", fs, " pt}{", 1.3fs, " pt}", font, "}")
 end
 
+# If a particular fontsize parameter is `nothing`, produce a figure that doesn't specify the
+# font size, and therefore uses whatever fontsize is utilised by the doc in which the
+# figure is located.
+function pgfx_font(fontsize::Nothing, thickness_scaling = 1, font = "\\selectfont")
+    return string("{", font, "}")
+end
+
 function pgfx_should_add_to_legend(series::Series)
     series.plotattributes[:primary] &&
     !(
@@ -828,9 +947,12 @@ function pgfx_marker(plotattributes, i = 1)
         pgfx_thickness_scaling(plotattributes) *
         0.75 *
         _cycle(plotattributes[:markersize], i)
+    mark_freq = !any(isnan, plotattributes[:y]) && plotattributes[:markershape] isa AVec ?
+                length(plotattributes[:markershape]) : 1
     return PGFPlotsX.Options(
         "mark" => shape isa Shape ? "PlotsShape$i" : pgfx_get_marker(shape),
         "mark size" => "$mark_size pt",
+        "mark repeat" => mark_freq,
         "mark options" => PGFPlotsX.Options(
             "color" => cstr_stroke,
             "draw opacity" => a_stroke,
@@ -960,7 +1082,7 @@ function pgfx_fillrange_args(fillrange, x, y, z)
     x_fill = [x; x[n:-1:1]; x[1]]
     y_fill = [y; y[n:-1:1]; x[1]]
     z_fill = [z; _cycle(fillrange, n:-1:1); z[1]]
-    return PGFPlotsX.Coordiantes(x_fill, y_fill, z_fill)
+    return PGFPlotsX.Coordinates(x_fill, y_fill, z_fill)
 end
 
 function pgfx_sanitize_string(p::PlotText)
@@ -973,6 +1095,9 @@ function pgfx_sanitize_string(s::AbstractString)
     s = replace(s, r"\\?\&" => "\\&")
     s = replace(s, r"\\?\{" => "\\{")
     s = replace(s, r"\\?\}" => "\\}")
+    s = map(split(s, "")) do s
+            isascii(s) ? s : latexify(s)
+            end |> join
 end
 @require LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f" begin
     using .LaTeXStrings
@@ -1256,7 +1381,7 @@ function _update_plot_object(plt::Plot{PGFPlotsXBackend})
     plt.o(plt)
 end
 
-for mime in ("application/pdf", "image/png", "image/svg+xml")
+for mime in ("application/pdf", "image/svg+xml")
     @eval function _show(
         io::IO,
         mime::MIME{Symbol($mime)},
@@ -1266,6 +1391,18 @@ for mime in ("application/pdf", "image/png", "image/svg+xml")
         show(io, mime, plt.o.the_plot)
     end
 end
+
+    function _show(
+        io::IO,
+        mime::MIME{Symbol("image/png")},
+        plt::Plot{PGFPlotsXBackend},
+    )
+        plt.o.was_shown = true
+        plt_file = tempname() * ".png"
+        PGFPlotsX.pgfsave(plt_file, plt.o.the_plot; dpi=plt[:dpi])
+        write(io, read(plt_file))
+        rm(plt_file; force = true)
+    end
 
 function _show(
     io::IO,

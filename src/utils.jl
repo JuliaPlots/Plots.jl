@@ -1,4 +1,6 @@
-
+function treats_y_as_x(seriestype)
+    return seriestype in (:vline, :vspan, :histogram, :barhist, :stephist, :scatterhist)
+end
 function replace_image_with_heatmap(z::Array{T}) where T<:Colorant
     n, m = size(z)
     colors = palette(vec(z))
@@ -51,10 +53,16 @@ function Base.push!(segments::Segments{T}, vs::AVec) where T
 end
 
 
+struct SeriesSegment
+    # indexes of this segement in series data vectors
+    range::UnitRange
+    # index into vector-valued attributes corresponding to this segment
+    attr_index::Int 
+end
+
 # -----------------------------------------------------
 # helper to manage NaN-separated segments
-
-mutable struct SegmentsIterator
+struct NaNSegmentsIterator
     args::Tuple
     n1::Int
     n2::Int
@@ -64,29 +72,47 @@ function iter_segments(args...)
     tup = Plots.wraptuple(args)
     n1 = minimum(map(firstindex, tup))
     n2 = maximum(map(lastindex, tup))
-    SegmentsIterator(tup, n1, n2)
+    NaNSegmentsIterator(tup, n1, n2)
 end
 
-function iter_segments(series::Series, seriestype::Symbol = :path)
+function series_segments(series::Series, seriestype::Symbol = :path)
     x, y, z = series[:x], series[:y], series[:z]
-    if x === nothing
-        return UnitRange{Int}[]
-    elseif has_attribute_segments(series)
-        if any(isnan,y)
-            return [iter_segments(y)...]
-        elseif seriestype in (:scatter, :scatter3d)
-            return [[i] for i in eachindex(y)]
-        else
-            return [i:(i + 1) for i in firstindex(y):lastindex(y)-1]
-        end
+    (x === nothing || isempty(x)) && return UnitRange{Int}[]
+
+    args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
+    nan_segments = collect(iter_segments(args...))
+
+    result = if has_attribute_segments(series)
+        Iterators.flatten(map(nan_segments) do r
+            if seriestype in (:scatter, :scatter3d)
+                (SeriesSegment(i:i, i) for i in r)
+            else
+                (SeriesSegment(i:i+1, i) for i in first(r):last(r)-1)
+            end 
+        end)
     else
-        segs = UnitRange{Int}[]
-        args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
-        for seg in iter_segments(args...)
-            push!(segs, seg)
+        (SeriesSegment(r, 1) for r in nan_segments)
+    end 
+
+    seg_range = UnitRange(minimum(first(seg.range) for seg in result),
+                                maximum(last(seg.range) for seg in result))
+    for attr in _segmenting_vector_attributes
+        v = get(series, attr, nothing)
+        if v isa AVec && eachindex(v) != seg_range
+            @warn "Indices $(eachindex(v)) of attribute `$attr` does not match data indices $seg_range."
+            if any(v -> !isnothing(v) && any(isnan, v), (x,y,z))
+                @info """Data contains NaNs or missing values, and indices of `$attr` vector do not match data indices.
+                    If you intend elements of `$attr` to apply to individual NaN-separated segements in the data,
+                    pass each segment in a separate vector instead, and use a row vector for `$attr`. Legend entries 
+                    may be suppressed by passing an empty label.
+                    For example,
+                        plot([1:2,1:3], [[4,5],[3,4,5]], label=["y" ""], $attr=[1 2])
+                    """
+            end
         end
-        return segs
     end
+
+    return result
 end
 
 # helpers to figure out if there are NaN values in a list of array types
@@ -95,7 +121,7 @@ anynan(args::Tuple) = i -> anynan(i,args)
 anynan(istart::Int, iend::Int, args::Tuple) = any(anynan(args), istart:iend)
 allnan(istart::Int, iend::Int, args::Tuple) = all(anynan(args), istart:iend)
 
-function Base.iterate(itr::SegmentsIterator, nextidx::Int = itr.n1)
+function Base.iterate(itr::NaNSegmentsIterator, nextidx::Int = itr.n1)
     i = findfirst(!anynan(itr.args), nextidx:itr.n2)
     i === nothing && return nothing
     nextval = nextidx + i - 1
@@ -105,6 +131,7 @@ function Base.iterate(itr::SegmentsIterator, nextidx::Int = itr.n1)
 
     nextval:nextnan-1, nextnan
 end
+Base.IteratorSize(::NaNSegmentsIterator) = Base.SizeUnknown()
 
 # Find minimal type that can contain NaN and x
 # To allow use of NaN separated segments with categorical x axis
@@ -147,18 +174,20 @@ makevec(v::T) where {T} = T[v]
 maketuple(x::Real)                     = (x,x)
 maketuple(x::Tuple{T,S}) where {T,S} = x
 
-const _Point{N,T} = Union{GeometryTypes.Point{N,T}, GeometryBasics.Point{N,T}}
 for i in 2:4
     @eval begin
-        RecipesPipeline.unzip(v::Union{AVec{<:Tuple{Vararg{T,$i} where T}},
-                   AVec{<:_Point{$i}}}) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
+        RecipesPipeline.unzip(
+            v::Union{AVec{<:Tuple{Vararg{T,$i} where T}}, AVec{<:GeometryBasics.Point{$i}}},
+        ) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
     end
 end
 
-RecipesPipeline.unzip(v::Union{AVec{<:_Point{N}},
-               AVec{<:Tuple{Vararg{T,N} where T}}}) where N = error("$N-dimensional unzip not implemented.")
-RecipesPipeline.unzip(v::Union{AVec{<:_Point},
-               AVec{<:Tuple}}) = error("Can't unzip points of different dimensions.")
+RecipesPipeline.unzip(
+    ::Union{AVec{<:GeometryBasics.Point{N}}, AVec{<:Tuple{Vararg{T,N} where T}}}
+) where N = error("$N-dimensional unzip not implemented.")
+RecipesPipeline.unzip(::Union{AVec{<:GeometryBasics.Point}, AVec{<:Tuple}}) = error(
+    "Can't unzip points of different dimensions."
+)
 
 # given 2-element lims and a vector of data x, widen lims to account for the extrema of x
 function _expand_limits(lims, x)
@@ -205,30 +234,27 @@ end
 
 createSegments(z) = collect(repeat(reshape(z,1,:),2,1))[2:end]
 
-Base.first(c::Colorant) = c
-Base.first(x::Symbol) = x
-
 
 sortedkeys(plotattributes::Dict) = sort(collect(keys(plotattributes)))
 
-function _heatmap_edges(v::AVec, isedges::Bool = false)
-    length(v) == 1 && return v[1] .+ [-0.5, 0.5]
+function _heatmap_edges(v::AVec, isedges::Bool = false, ispolar::Bool = false)
+    length(v) == 1 && return v[1] .+ [ispolar ? max(-v[1], -0.5) : -0.5, 0.5]
     if isedges return v end
     # `isedges = true` means that v is a vector which already describes edges
     # and does not need to be extended.
     vmin, vmax = ignorenan_extrema(v)
-    extra_min = (v[2] - v[1]) / 2
+    extra_min = ispolar ? min(v[1], (v[2] - v[1]) / 2) : (v[2] - v[1]) / 2
     extra_max = (v[end] - v[end - 1]) / 2
     vcat(vmin-extra_min, 0.5 * (v[1:end-1] + v[2:end]), vmax+extra_max)
 end
 
 "create an (n+1) list of the outsides of heatmap rectangles"
-function heatmap_edges(v::AVec, scale::Symbol = :identity, isedges::Bool = false)
+function heatmap_edges(v::AVec, scale::Symbol = :identity, isedges::Bool = false, ispolar::Bool = false)
     f, invf = RecipesPipeline.scale_func(scale), RecipesPipeline.inverse_scale_func(scale)
-    map(invf, _heatmap_edges(map(f,v), isedges))
+    map(invf, _heatmap_edges(map(f,v), isedges, ispolar))
 end
 
-function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size::Tuple{Int, Int})
+function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size::Tuple{Int, Int}, ispolar::Bool = false)
     nx, ny = length(x), length(y)
     # ismidpoints = z_size == (ny, nx) # This fails some tests, but would actually be
     # the correct check, since (4, 3) != (3, 4) and a missleading plot is produced.
@@ -240,7 +266,7 @@ function heatmap_edges(x::AVec, xscale::Symbol, y::AVec, yscale::Symbol, z_size:
                 or `size(z) == (length(y)+1, length(x)+1))` (x & y define edges).""")
     end
     x, y = heatmap_edges(x, xscale, isedges),
-           heatmap_edges(y, yscale, isedges)
+           heatmap_edges(y, yscale, isedges, ispolar) # special handle for `r` in polar plots 
     return x, y
 end
 
@@ -293,13 +319,6 @@ limsType(lims::Tuple{T,S}) where {T<:Real,S<:Real}    = :limits
 limsType(lims::Symbol)                                  = lims == :auto ? :auto : :invalid
 limsType(lims)                                          = :invalid
 
-# axis_Symbol(letter, postfix) = Symbol(letter * postfix)
-# axis_symbols(letter, postfix...) = map(s -> axis_Symbol(letter, s), postfix)
-
-Base.convert(::Type{Vector{T}}, rng::AbstractRange{T}) where {T<:Real}         = T[x for x in rng]
-Base.convert(::Type{Vector{T}}, rng::AbstractRange{S}) where {T<:Real,S<:Real} = T[x for x in rng]
-
-Base.merge(a::AbstractVector, b::AbstractVector) = sort(unique(vcat(a,b)))
 
 # recursively merge kw-dicts, e.g. for merging extra_kwargs / extra_plot_kwargs in plotly)
 recursive_merge(x::AbstractDict...) = merge(recursive_merge, x...)
@@ -342,17 +361,8 @@ function indices_and_unique_values(z::AbstractArray)
     newz, vals
 end
 
-# this is a helper function to determine whether we need to transpose a surface matrix.
-# it depends on whether the backend matches rows to x (transpose_on_match == true) or vice versa
-# for example: PyPlot sends rows to y, so transpose_on_match should be true
-function transpose_z(plotattributes, z, transpose_on_match::Bool = true)
-    if plotattributes[:match_dimensions] == transpose_on_match
-        # z'
-        permutedims(z, [2,1])
-    else
-        z
-    end
-end
+handle_surface(z) = z
+handle_surface(z::Surface) = permutedims(z.surf)
 
 function ok(x::Number, y::Number, z::Number = 0)
     isfinite(x) && isfinite(y) && isfinite(z)
@@ -417,79 +427,6 @@ zlims(plt::Plot, sp_idx::Int = 1) = zlims(plt[sp_idx])
 xlims(sp_idx::Int = 1) = xlims(current(), sp_idx)
 ylims(sp_idx::Int = 1) = ylims(current(), sp_idx)
 zlims(sp_idx::Int = 1) = zlims(current(), sp_idx)
-
-# These functions return an operator for use in `get_clims(::Seres, op)`
-process_clims(lims::Tuple{<:Number,<:Number}) = (zlims -> ifelse.(isfinite.(lims), lims, zlims)) ∘ ignorenan_extrema
-process_clims(s::Union{Symbol,Nothing,Missing}) = ignorenan_extrema
-# don't specialize on ::Function otherwise python functions won't work
-process_clims(f) = f
-
-function get_clims(sp::Subplot, op=process_clims(sp[:clims]))
-    zmin, zmax = Inf, -Inf
-    for series in series_list(sp)
-        if series[:colorbar_entry]
-            zmin, zmax = _update_clims(zmin, zmax, get_clims(series, op)...)
-        end
-    end
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-function get_clims(sp::Subplot, series::Series, op=process_clims(sp[:clims]))
-    zmin, zmax = if series[:colorbar_entry]
-        get_clims(sp, op)
-    else
-        get_clims(series, op)
-    end
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-"""
-    get_clims(::Series, op=Plots.ignorenan_extrema)
-
-Finds the limits for the colorbar by taking the "z-values" for the series and passing them into `op`,
-which must return the tuple `(zmin, zmax)`. The default op is the extrema of the finite
-values of the input.
-"""
-function get_clims(series::Series, op=ignorenan_extrema)
-    zmin, zmax = Inf, -Inf
-    z_colored_series = (:contour, :contour3d, :heatmap, :histogram2d, :surface, :hexbin)
-    for vals in (series[:seriestype] in z_colored_series ? series[:z] : nothing, series[:line_z], series[:marker_z], series[:fill_z])
-        if (typeof(vals) <: AbstractSurface) && (eltype(vals.surf) <: Union{Missing, Real})
-            zmin, zmax = _update_clims(zmin, zmax, op(vals.surf)...)
-        elseif (vals !== nothing) && (eltype(vals) <: Union{Missing, Real})
-            zmin, zmax = _update_clims(zmin, zmax, op(vals)...)
-        end
-    end
-    return zmin <= zmax ? (zmin, zmax) : (NaN, NaN)
-end
-
-_update_clims(zmin, zmax, emin, emax) = NaNMath.min(zmin, emin), NaNMath.max(zmax, emax)
-
-@enum ColorbarStyle cbar_gradient cbar_fill cbar_lines
-
-function colorbar_style(series::Series)
-    colorbar_entry = series[:colorbar_entry]
-    if !(colorbar_entry isa Bool)
-        @warn "Non-boolean colorbar_entry ignored."
-        colorbar_entry = true
-    end
-
-    if !colorbar_entry
-        nothing
-    elseif isfilledcontour(series)
-        cbar_fill
-    elseif iscontour(series)
-        cbar_lines
-    elseif series[:seriestype] ∈ (:heatmap,:surface) ||
-            any(series[z] !== nothing for z ∈ [:marker_z,:line_z,:fill_z])
-        cbar_gradient
-    else
-        nothing
-    end
-end
-
-hascolorbar(series::Series) = colorbar_style(series) !== nothing
-hascolorbar(sp::Subplot) = sp[:colorbar] != :none && any(hascolorbar(s) for s in series_list(sp))
 
 iscontour(series::Series) = series[:seriestype] in (:contour, :contour3d)
 isfilledcontour(series::Series) = iscontour(series) && series[:fillrange] !== nothing
@@ -587,39 +524,34 @@ function get_markerstrokewidth(series, i::Int = 1)
     _cycle(series[:markerstrokewidth], i)
 end
 
+const _segmenting_vector_attributes = (
+    :seriescolor,
+    :seriesalpha,
+    :linecolor,
+    :linealpha,
+    :linewidth,
+    :linestyle,
+    :fillcolor,
+    :fillalpha,
+    :markercolor,
+    :markeralpha,
+    :markersize,
+    :markerstrokecolor,
+    :markerstrokealpha,
+    :markerstrokewidth,
+    :markershape,
+)
+
+const _segmenting_array_attributes = (:line_z, :fill_z, :marker_z)
+
 function has_attribute_segments(series::Series)
     # we want to check if a series needs to be split into segments just because
     # of its attributes
-    for letter in (:x, :y, :z)
-        # If we have NaNs in the data they define the segments and
-        # SegmentsIterator is used
-        series[letter] !== nothing && NaN in collect(series[letter]) && return false
-    end
     series[:seriestype] == :shape && return false
-    # ... else we check relevant attributes if they have multiple inputs
-    return any(
-        (typeof(series[attr]) <: AbstractVector && length(series[attr]) > 1)
-        for
-        attr in [
-            :seriescolor,
-            :seriesalpha,
-            :linecolor,
-            :linealpha,
-            :linewidth,
-            :linestyle,
-            :fillcolor,
-            :fillalpha,
-            :markercolor,
-            :markeralpha,
-            :markersize,
-            :markerstrokecolor,
-            :markerstrokealpha,
-            :markerstrokewidth,
-            :markershape,
-        ]
-    ) || any(
-        typeof(series[attr]) <: AbstractArray for attr in (:line_z, :fill_z, :marker_z)
-    )
+    # check relevant attributes if they have multiple inputs
+    return any(series[attr] isa AbstractVector && length(series[attr]) > 1
+                for attr in _segmenting_vector_attributes
+        ) || any(series[attr] isa AbstractArray for attr in _segmenting_array_attributes)
 end
 
 function get_aspect_ratio(sp)

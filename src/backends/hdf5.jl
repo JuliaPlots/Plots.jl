@@ -46,7 +46,7 @@ import Dates
 
 #Plots.jl imports HDF5 to main:
 import ..HDF5
-import ..HDF5: HDF5Group, HDF5Dataset
+import ..HDF5: Group, Dataset
 
 import ..Colors, ..Colorant
 import ..PlotUtils.ColorSchemes.ColorScheme
@@ -159,40 +159,40 @@ _type_for_map(::Type{T}) where T<:Surface = Surface
 
 #==Read/write things like type name in attributes
 ===============================================================================#
-function _write_datatype_attr(ds::Union{HDF5Group, HDF5Dataset}, ::Type{T}) where T
+function _write_datatype_attr(ds::Union{Group, Dataset}, ::Type{T}) where T
     typestr = HDF5PLOT_MAP_TELEM2STR[T]
-    HDF5.attrs(ds)["TYPE"] = typestr
+    HDF5.attributes(ds)["TYPE"] = typestr
 end
-function _read_datatype_attr(ds::Union{HDF5Group, HDF5Dataset})
-    if !HDF5.exists(HDF5.attrs(ds), "TYPE")
+function _read_datatype_attr(ds::Union{Group, Dataset})
+    if !Base.haskey(HDF5.attributes(ds), "TYPE")
         return HDF5_AutoDetect
     end
 
-    typestr = HDF5.read(HDF5.attrs(ds)["TYPE"])
+    typestr = HDF5.read(HDF5.attributes(ds)["TYPE"])
     return HDF5PLOT_MAP_STR2TELEM[typestr]
 end
 
 #Type parameter attributes:
-function _write_typeparam_attr(ds::HDF5Dataset, v::Length{T}) where T
-    HDF5.attrs(ds)["TYPEPARAM"] = string(T) #Need to add units for Length
+function _write_typeparam_attr(ds::Dataset, v::Length{T}) where T
+    HDF5.attributes(ds)["TYPEPARAM"] = string(T) #Need to add units for Length
 end
-_read_typeparam_attr(ds::HDF5Dataset) = HDF5.read(HDF5.attrs(ds)["TYPEPARAM"])
+_read_typeparam_attr(ds::Dataset) = HDF5.read(HDF5.attributes(ds)["TYPEPARAM"])
 
-function _write_length_attr(grp::HDF5Group, v::Vector) #of a vector
-    HDF5.attrs(grp)["LENGTH"] = length(v)
+function _write_length_attr(grp::Group, v::Vector) #of a vector
+    HDF5.attributes(grp)["LENGTH"] = length(v)
 end
-_read_length_attr(::Type{Vector}, grp::HDF5Group) = HDF5.read(HDF5.attrs(grp)["LENGTH"])
+_read_length_attr(::Type{Vector}, grp::Group) = HDF5.read(HDF5.attributes(grp)["LENGTH"])
 
-function _write_size_attr(grp::HDF5Group, v::Array) #of an array
-    HDF5.attrs(grp)["SIZE"] = [size(v)...]
+function _write_size_attr(grp::Group, v::Array) #of an array
+    HDF5.attributes(grp)["SIZE"] = [size(v)...]
 end
-_read_size_attr(::Type{Array}, grp::HDF5Group) = tuple(HDF5.read(HDF5.attrs(grp)["SIZE"])...)
+_read_size_attr(::Type{Array}, grp::Group) = tuple(HDF5.read(HDF5.attributes(grp)["SIZE"])...)
 
 
 #==_write_typed(): Simple (leaf) datatypes. (Labels with type name.)
 ===============================================================================#
 #= No: write out struct instead!
-function _write_typed(grp::HDF5Group, name::String, v::T) where T
+function _write_typed(grp::Group, name::String, v::T) where T
     tstr = string(T)
     path = HDF5.name(grp) * "/" * name
     @info("Type not supported: $tstr\npath: $path")
@@ -200,41 +200,41 @@ function _write_typed(grp::HDF5Group, name::String, v::T) where T
 end
 =#
 #Default behaviour: Assumes value is supported by HDF5 format
-function _write_typed(grp::HDF5Group, name::String, v::HDF5_SupportedTypes)
+function _write_typed(grp::Group, name::String, v::HDF5_SupportedTypes)
     grp[name] = v
     return #No need to _write_datatype_attr
 end
-function _write_typed(grp::HDF5Group, name::String, v::Nothing)
+function _write_typed(grp::Group, name::String, v::Nothing)
     grp[name] = "nothing" #Redundancy check/easier to read HDF5 file
     _write_datatype_attr(grp[name], Nothing)
 end
-function _write_typed(grp::HDF5Group, name::String, v::Symbol)
+function _write_typed(grp::Group, name::String, v::Symbol)
     grp[name] = String(v)
     _write_datatype_attr(grp[name], Symbol)
 end
-function _write_typed(grp::HDF5Group, name::String, v::Colorant)
+function _write_typed(grp::Group, name::String, v::Colorant)
     vstr = "#" * Colors.hex(v, :RRGGBBAA)
     grp[name] = vstr
     _write_datatype_attr(grp[name], Colorant)
 end
-function _write_typed(grp::HDF5Group, name::String, v::Extrema)
+function _write_typed(grp::Group, name::String, v::Extrema)
     grp[name] = [v.emin, v.emax] #More compact than writing struct
     _write_datatype_attr(grp[name], Extrema)
 end
-function _write_typed(grp::HDF5Group, name::String, v::Length)
+function _write_typed(grp::Group, name::String, v::Length)
     grp[name] = v.value
     _write_datatype_attr(grp[name], Length)
     _write_typeparam_attr(grp[name], v)
 end
-function _write_typed(grp::HDF5Group, name::String, v::typeof(datetimeformatter))
+function _write_typed(grp::Group, name::String, v::typeof(datetimeformatter))
     grp[name] = string(v) #Just write something that helps reader
    _write_datatype_attr(grp[name], typeof(datetimeformatter))
 end
-function _write_typed(grp::HDF5Group, name::String, v::Array{T}) where T<:Number #Default for arrays
+function _write_typed(grp::Group, name::String, v::Array{T}) where T<:Number #Default for arrays
     grp[name] = v
     return #No need to _write_datatype_attr
 end
-function _write_typed(grp::HDF5Group, name::String, v::AbstractRange)
+function _write_typed(grp::Group, name::String, v::AbstractRange)
     _write_typed(grp, name, collect(v)) #For now
 end
 
@@ -244,8 +244,8 @@ end
 ===============================================================================#
 
 #Write an array using HDF5 hierarchy (when not using simple numeric eltype):
-function _write_harray(grp::HDF5Group, name::String, v::Array)
-    sgrp = HDF5.g_create(grp, name)
+function _write_harray(grp::Group, name::String, v::Array)
+    sgrp = HDF5.create_group(grp, name)
     sz = size(v)
     lidx = LinearIndices(sz)
 
@@ -260,8 +260,8 @@ function _write_harray(grp::HDF5Group, name::String, v::Array)
 end
 
 #Write Dict without tagging with type:
-function _write(grp::HDF5Group, name::String, d::AbstractDict)
-    sgrp = HDF5.g_create(grp, name)
+function _write(grp::Group, name::String, d::AbstractDict)
+    sgrp = HDF5.create_group(grp, name)
     for (k, v) in d
         kstr = string(k)
         _write_typed(sgrp, kstr, v)
@@ -270,7 +270,7 @@ function _write(grp::HDF5Group, name::String, d::AbstractDict)
 end
 
 #Write out arbitrary `struct`s:
-function _writestructgeneric(grp::HDF5Group, obj::T) where T
+function _writestructgeneric(grp::Group, obj::T) where T
     for fname in fieldnames(T)
        v = getfield(obj, fname)
        _write_typed(grp, String(fname), v)
@@ -283,7 +283,7 @@ end
 ===============================================================================#
 
 #Catch-all (default behaviour for `struct`s):
-function _write_typed(grp::HDF5Group, name::String, v::T) where T
+function _write_typed(grp::Group, name::String, v::T) where T
     #NOTE: need "name" parameter so that call signature is same with built-ins
     MT = _type_for_map(T)
     try #Check to see if type is supported
@@ -294,27 +294,27 @@ function _write_typed(grp::HDF5Group, name::String, v::T) where T
     end
 
     #If attribute is supported and no writer is defined, then this should work:
-    objgrp = HDF5.g_create(grp, name)
+    objgrp = HDF5.create_group(grp, name)
     _write_datatype_attr(objgrp, MT)
     _writestructgeneric(objgrp, v)
 end
 
-function _write_typed(grp::HDF5Group, name::String, v::Array{T}) where T
+function _write_typed(grp::Group, name::String, v::Array{T}) where T
     _write_harray(grp, name, v)
     _write_datatype_attr(grp[name], Array) #{Any}
 end
 
-function _write_typed(grp::HDF5Group, name::String, v::Tuple, ::Type{ELT}) where ELT<: Number #Basic Tuple
+function _write_typed(grp::Group, name::String, v::Tuple, ::Type{ELT}) where ELT<: Number #Basic Tuple
     _write_typed(grp, name, [v...])
     _write_datatype_attr(grp[name], Tuple)
 end
-function _write_typed(grp::HDF5Group, name::String, v::Tuple, ::Type) #CplxTuple
+function _write_typed(grp::Group, name::String, v::Tuple, ::Type) #CplxTuple
     _write_harray(grp, name, [v...])
     _write_datatype_attr(grp[name], CplxTuple)
 end
-_write_typed(grp::HDF5Group, name::String, v::Tuple) = _write_typed(grp, name, v, eltype(v))
+_write_typed(grp::Group, name::String, v::Tuple) = _write_typed(grp, name, v, eltype(v))
 
-function _write_typed(grp::HDF5Group, name::String, v::Dict)
+function _write_typed(grp::Group, name::String, v::Dict)
 #=
     tstr = string(Dict)
     path = HDF5.name(grp) * "/" * name
@@ -323,27 +323,27 @@ function _write_typed(grp::HDF5Group, name::String, v::Dict)
 =#
     #No support for structures with Dicts yet
 end
-function _write_typed(grp::HDF5Group, name::String, d::DefaultsDict) #Typically for plot attributes
+function _write_typed(grp::Group, name::String, d::DefaultsDict) #Typically for plot attributes
     _write(grp, name, d)
     _write_datatype_attr(grp[name], DefaultsDict)
 end
 
-function _write_typed(grp::HDF5Group, name::String, v::Axis)
-    sgrp = HDF5.g_create(grp, name)
+function _write_typed(grp::Group, name::String, v::Axis)
+    sgrp = HDF5.create_group(grp, name)
     #Ignore: sps::Vector{Subplot}
     _write_typed(sgrp, "plotattributes", v.plotattributes)
     _write_datatype_attr(sgrp, Axis)
 end
 
-function _write_typed(grp::HDF5Group, name::String, v::Subplot)
+function _write_typed(grp::Group, name::String, v::Subplot)
     #Not for use in main "Plot.subplots[]" hierarchy.  Just establishes reference with subplot_index.
-    sgrp = HDF5.g_create(grp, name)
+    sgrp = HDF5.create_group(grp, name)
     _write_typed(sgrp, "index", v[:subplot_index])
     _write_datatype_attr(sgrp, Subplot)
     return
 end
 
-function _write_typed(grp::HDF5Group, name::String, v::Plot)
+function _write_typed(grp::Group, name::String, v::Plot)
     #Don't write plot references
 end
 
@@ -352,10 +352,10 @@ end
 NOTE: No need to write out type information (inferred from hierarchy)
 ===============================================================================#
 
-function _write(grp::HDF5Group, sp::Subplot{HDF5Backend})
+function _write(grp::Group, sp::Subplot{HDF5Backend})
     _write_typed(grp, "attr", sp.attr)
 
-    listgrp = HDF5.g_create(grp, "series_list")
+    listgrp = HDF5.create_group(grp, "series_list")
     _write_length_attr(listgrp, sp.series_list)
     for (i, series) in enumerate(sp.series_list)
         #Just write .plotattributes part:
@@ -365,13 +365,13 @@ function _write(grp::HDF5Group, sp::Subplot{HDF5Backend})
     return
 end
 
-function _write(grp::HDF5Group, plt::Plot{HDF5Backend})
+function _write(grp::Group, plt::Plot{HDF5Backend})
     _write_typed(grp, "attr", plt.attr)
 
-    listgrp = HDF5.g_create(grp, "subplots")
+    listgrp = HDF5.create_group(grp, "subplots")
     _write_length_attr(listgrp, plt.subplots)
     for (i, sp) in enumerate(plt.subplots)
-        sgrp = HDF5.g_create(listgrp, "$i")
+        sgrp = HDF5.create_group(listgrp, "$i")
         _write(sgrp, sp)
     end
 
@@ -380,8 +380,8 @@ end
 
 function hdf5plot_write(plt::Plot{HDF5Backend}, path::AbstractString; name::String="_unnamed")
     HDF5.h5open(path, "w") do file
-        HDF5.d_write(file, "VERSION_INFO", _get_Plots_versionstr())
-        grp = HDF5.g_create(file, h5plotpath(name))
+        HDF5.write_dataset(file, "VERSION_INFO", _get_Plots_versionstr())
+        grp = HDF5.create_group(file, h5plotpath(name))
         _write(grp, plt)
     end
 end
@@ -391,45 +391,45 @@ end
 ===============================================================================#
 
 #Types with built-in HDF5 support:
-_read(::Type{HDF5_AutoDetect}, ds::HDF5Dataset) = HDF5.read(ds)
+_read(::Type{HDF5_AutoDetect}, ds::Dataset) = HDF5.read(ds)
 
-function _read(::Type{Nothing}, ds::HDF5Dataset)
+function _read(::Type{Nothing}, ds::Dataset)
     nstr = "nothing"
     v = HDF5.read(ds)
     if nstr != v
         path = HDF5.name(ds)
-        throw(Meta.ParseError("_read(::Nothing, ::HDF5Group): Read $v != $nstr:\n$path"))
+        throw(Meta.ParseError("_read(::Nothing, ::Group): Read $v != $nstr:\n$path"))
     end
     return nothing
 end
-_read(::Type{Symbol}, ds::HDF5Dataset) = Symbol(HDF5.read(ds))
-_read(::Type{Colorant}, ds::HDF5Dataset) = parse(Colorant, HDF5.read(ds))
-_read(::Type{Tuple}, ds::HDF5Dataset) = tuple(HDF5.read(ds)...)
-function _read(::Type{Extrema}, ds::HDF5Dataset)
+_read(::Type{Symbol}, ds::Dataset) = Symbol(HDF5.read(ds))
+_read(::Type{Colorant}, ds::Dataset) = parse(Colorant, HDF5.read(ds))
+_read(::Type{Tuple}, ds::Dataset) = tuple(HDF5.read(ds)...)
+function _read(::Type{Extrema}, ds::Dataset)
     v = HDF5.read(ds)
     return Extrema(v[1], v[2])
 end
-function _read(::Type{Length}, ds::HDF5Dataset)
+function _read(::Type{Length}, ds::Dataset)
     TUNIT = Symbol(_read_typeparam_attr(ds))
     v = HDF5.read(ds)
     T = typeof(v)
     return Length{TUNIT,T}(v)
 end
-_read(::Type{typeof(datetimeformatter)}, ds::HDF5Dataset) = datetimeformatter
+_read(::Type{typeof(datetimeformatter)}, ds::Dataset) = datetimeformatter
 
 
 #== Helper functions for reading in complex data structures
 ===============================================================================#
 
 #When type is unknown, _read_typed() figures it out:
-function _read_typed(grp::HDF5Group, name::String)
+function _read_typed(grp::Group, name::String)
     ds = grp[name]
     t = _read_datatype_attr(ds)
     return _read(t, ds)
 end
 
 #_readstructgeneric: Needs object values to be written out with _write_typed():
-function _readstructgeneric(::Type{T}, grp::HDF5Group) where T
+function _readstructgeneric(::Type{T}, grp::Group) where T
     vlist = Array{Any}(nothing, fieldcount(T))
     for (i, fname) in enumerate(fieldnames(T))
         vlist[i] = _read_typed(grp, String(fname))
@@ -438,10 +438,10 @@ function _readstructgeneric(::Type{T}, grp::HDF5Group) where T
 end
 
 #Read KW from group:
-function _read(::Type{KW}, grp::HDF5Group)
+function _read(::Type{KW}, grp::Group)
     d = KW()
-    gnames = names(grp)
-    for k in gnames
+    gkeys = keys(grp)
+    for k in gkeys
         try
             v = _read_typed(grp, k)
             d[Symbol(k)] = v
@@ -459,9 +459,9 @@ end
 ===============================================================================#
 
 #Catch-all (default behaviour for `struct`s):
-_read(T::Type, grp::HDF5Group) = _readstructgeneric(T, grp)
+_read(T::Type, grp::Group) = _readstructgeneric(T, grp)
 
-function _read(::Type{Array}, grp::HDF5Group) #Array{Any}
+function _read(::Type{Array}, grp::Group) #Array{Any}
     sz = _read_size_attr(Array, grp)
     if tuple(0) == sz; return []; end
     result = Array{Any}(undef, sz)
@@ -479,9 +479,9 @@ function _read(::Type{Array}, grp::HDF5Group) #Array{Any}
     return reshape(result, sz)
 end
 
-_read(::Type{CplxTuple}, grp::HDF5Group) = tuple(_read(Array, grp)...)
+_read(::Type{CplxTuple}, grp::Group) = tuple(_read(Array, grp)...)
 
-function _read(::Type{GridLayout}, grp::HDF5Group)
+function _read(::Type{GridLayout}, grp::Group)
     #parent = _read_typed(grp, "parent") #Can't use generic reader
     parent = RootLayout() #TODO: support parent???
     minpad = _read_typed(grp, "minpad")
@@ -494,17 +494,17 @@ function _read(::Type{GridLayout}, grp::HDF5Group)
     return GridLayout(parent, minpad, bbox, grid, widths, heights, attr)
 end
 #Defaults depends on context. So: user must constructs with defaults, then read.
-function _read(::Type{DefaultsDict}, grp::HDF5Group)
+function _read(::Type{DefaultsDict}, grp::Group)
     #User should set DefaultsDict.defaults to one of:
     #   _plot_defaults, _subplot_defaults, _axis_defaults, _series_defaults
     path = HDF5.name(ds)
     @warn("Cannot yet read DefaultsDict using _read_typed():\n    $path\nCannot fully reconstruct plot.")
 end
-function _read(::Type{Axis}, grp::HDF5Group)
+function _read(::Type{Axis}, grp::Group)
     #1st arg appears to be ref to subplots. Seems to work without it.
     return Axis([], DefaultsDict(_read(KW, grp["plotattributes"]), _axis_defaults))
 end
-function _read(::Type{Subplot}, grp::HDF5Group)
+function _read(::Type{Subplot}, grp::Group)
     #Not for use in main "Plot.subplots[]" hierarchy.  Just establishes reference with subplot_index.
     idx = _read_typed(grp, "index")
     return HDF5PLOT_PLOTREF.ref.subplots[idx]
@@ -514,12 +514,12 @@ end
 #== _read(): Main plot structures
 ===============================================================================#
 
-function _read(grp::HDF5Group, sp::Subplot)
-    listgrp = HDF5.g_open(grp, "series_list")
+function _read(grp::Group, sp::Subplot)
+    listgrp = HDF5.open_group(grp, "series_list")
     nseries = _read_length_attr(Vector, listgrp)
 
     for i in 1:nseries
-        sgrp = HDF5.g_open(listgrp, "$i")
+        sgrp = HDF5.open_group(listgrp, "$i")
         seriesinfo = _read(KW, sgrp)
 
         plot!(sp, seriesinfo[:x], seriesinfo[:y]) #Add data & create data structures
@@ -527,25 +527,25 @@ function _read(grp::HDF5Group, sp::Subplot)
     end
 
     #Perform after adding series... otherwise values get overwritten:
-    agrp = HDF5.g_open(grp, "attr")
+    agrp = HDF5.open_group(grp, "attr")
     _hdf5_merge!(sp.attr, _read(KW, agrp))
 
     return sp
 end
 
-function _read_plot(grp::HDF5Group)
-    listgrp = HDF5.g_open(grp, "subplots")
+function _read_plot(grp::Group)
+    listgrp = HDF5.open_group(grp, "subplots")
     n = _read_length_attr(Vector, listgrp)
 
     #Construct new plot, +allocate subplots:
     plt = plot(layout=n)
     HDF5PLOT_PLOTREF.ref = plt #Used when reading "layout"
 
-    agrp = HDF5.g_open(grp, "attr")
+    agrp = HDF5.open_group(grp, "attr")
     _hdf5_merge!(plt.attr, _read(KW, agrp))
 
     for (i, sp) in enumerate(plt.subplots)
-        sgrp = HDF5.g_open(listgrp, "$i")
+        sgrp = HDF5.open_group(listgrp, "$i")
         _read(sgrp, sp)
     end
 
@@ -554,7 +554,7 @@ end
 
 function hdf5plot_read(path::AbstractString; name::String="_unnamed")
     HDF5.h5open(path, "r") do file
-        grp = HDF5.g_open(file, h5plotpath("_unnamed"))
+        grp = HDF5.open_group(file, h5plotpath("_unnamed"))
         return _read_plot(grp)
     end
 end

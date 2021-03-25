@@ -194,9 +194,9 @@ function _display(plt::Plot)
     @warn("_display is not defined for this backend.")
 end
 
+Base.show(io::IO, m::MIME"text/plain", plt::Plot) = show(io, plt)
 # for writing to io streams... first prepare, then callback
 for mime in (
-    "text/plain",
     "text/html",
     "image/png",
     "image/eps",
@@ -220,9 +220,6 @@ end
 
 Base.show(io::IO, m::MIME"application/prs.juno.plotpane+html", plt::Plot) =
     showjuno(io, MIME("text/html"), plt)
-
-# default text/plain for all backends
-_show(io::IO, ::MIME{Symbol("text/plain")}, plt::Plot) = show(io, plt)
 
 "Close all open gui windows of the current backend"
 closeall() = closeall(backend())

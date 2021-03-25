@@ -4,13 +4,36 @@ using Plots
 using Random
 using StableRNGs
 using Test
+using TestImages
 using FileIO
 using Gtk
 using LibGit2
-import GeometryTypes, GeometryBasics
+import GeometryBasics
 using Dates
+using RecipesBase
 
+
+@testset "Plotly standalone" begin
+    @test_nowarn Plots._init_ijulia_plotting()
+    @test Plots.plotly_local_file_path[] === nothing
+    temp = Plots.use_local_dependencies[]
+    withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
+        Plots.__init__()
+        @test Plots.plotly_local_file_path[] isa String
+        @test isfile(Plots.plotly_local_file_path[])
+        @test Plots.use_local_dependencies[] = true
+        @test_nowarn Plots._init_ijulia_plotting()
+    end
+    Plots.plotly_local_file_path[] = nothing
+    Plots.use_local_dependencies[] = temp
+end # testset
+
+include("test_defaults.jl")
 include("test_axes.jl")
+include("test_axis_letter.jl")
+include("test_components.jl")
+include("test_shorthands.jl")
+include("integration_dates.jl")
 include("test_recipes.jl")
 include("test_hdf5plots.jl")
 include("test_pgfplotsx.jl")
@@ -110,7 +133,7 @@ const IMG_TOL = VERSION < v"1.4" && Sys.iswindows() ? 1e-1 : is_ci() ? 1e-2 : 1e
         @test isa(p, Plots.Plot) == true
         @test isa(display(p), Nothing) == true
         p = plot([Dates.Date(2019, 1, 1), Dates.Date(2019, 2, 1)], [3, 4])
-        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, Plots.text("Test", :red, :center))])
+        annotate!(p, [(Dates.Date(2019, 1, 15), 3.2, :auto)])
         hline!(p, [3.1])
         @test isa(p, Plots.Plot) == true
         @test isa(display(p), Nothing) == true
@@ -152,14 +175,8 @@ end
     @test_throws ArgumentError gif(anim)
 end
 
-@testset "Segments" begin
-    function segments(args...)
-        segs = UnitRange{Int}[]
-        for seg in iter_segments(args...)
-            push!(segs,seg)
-        end
-        segs
-    end
+@testset "NaN-separated Segments" begin
+    segments(args...) = collect(iter_segments(args...))
 
     nan10 = fill(NaN,10)
     @test segments(11:20) == [1:10]
@@ -179,7 +196,6 @@ end
               [(missing,missing)], [(missing,missing,missing),("a","b","c")])
     for z in zipped
         @test isequal(collect(zip(Plots.unzip(z)...)), z)
-        @test isequal(collect(zip(Plots.unzip(GeometryTypes.Point.(z))...)), z)
         @test isequal(collect(zip(Plots.unzip(GeometryBasics.Point.(z))...)), z)
     end
     op1 = Plots.process_clims((1.0, 2.0))

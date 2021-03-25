@@ -9,7 +9,7 @@ end
 
 # the _examples we'll run for each
 const _examples = PlotExample[
-    PlotExample(
+    PlotExample( # 1
         "Lines",
         "A simple line plot of the columns.",
         [:(
@@ -18,7 +18,7 @@ const _examples = PlotExample[
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 2
         "Functions, adding data, and animations",
         """
         Plot multiple functions.  You can also put the function first, or use the form `plot(f,
@@ -30,16 +30,16 @@ const _examples = PlotExample[
         """,
         [:(
             begin
-                p = plot([sin, cos], zeros(0), leg = false)
+                p = plot([sin, cos], zeros(0), leg = false, xlims = (0, 2π), ylims = (-1, 1))
                 anim = Animation()
-                for x in range(0, stop = 10π, length = 100)
+                for x in range(0, stop = 2π, length = 20)
                     push!(p, x, Float64[sin(x), cos(x)])
                     frame(anim)
                 end
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 3
         "Parametric plots",
         "Plot function pair (x(u), y(u)).",
         [
@@ -58,7 +58,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 4
         "Colors",
         """
         Access predefined palettes (or build your own with the `colorscheme` method).
@@ -89,7 +89,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 5
         "Global",
         """
         Change the guides/background/limits/ticks.  Convenience args `xaxis` and `yaxis` allow
@@ -121,13 +121,7 @@ const _examples = PlotExample[
         ],
     ),
 
-    # PlotExample("Two-axis",
-    #             "Use the `axis` arguments.",
-    #             [
-    #               :(plot(Vector[randn(100), randn(100)*100], axis = [:l :r], ylabel="LEFT", yrightlabel="RIGHT", xlabel="X", title="TITLE"))
-    #             ]),
-
-    PlotExample(
+    PlotExample( # 6
         "Images",
         "Plot an image.  y-axis is set to flipped",
         [
@@ -142,7 +136,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 7
         "Arguments",
         """
         Plot multiple series with different numbers of points.  Mix arguments that apply to all
@@ -166,7 +160,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 8
         "Build plot in pieces",
         "Start with a base plot...",
         [:(
@@ -175,7 +169,7 @@ const _examples = PlotExample[
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 9
         "",
         "and add to it later.",
         [:(
@@ -184,7 +178,7 @@ const _examples = PlotExample[
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 10
         "Histogram2D",
         "",
         [:(
@@ -193,7 +187,7 @@ const _examples = PlotExample[
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 11
         "Line types",
         "",
         [
@@ -214,7 +208,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 12
         "Line styles",
         "",
         [
@@ -237,7 +231,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 13
         "Marker types",
         "",
         [
@@ -264,7 +258,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 14
         "Bar",
         "`x` is the midpoint of the bar. (todo: allow passing of edges instead of midpoints)",
         [:(
@@ -273,7 +267,7 @@ const _examples = PlotExample[
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 15
         "Histogram",
         "",
         [
@@ -288,7 +282,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 16
         "Subplots",
         """
         Use the `layout` keyword, and optionally the convenient `@layout` macro to generate
@@ -310,7 +304,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 17
         "Adding to subplots",
         """
         Note here the automatic grid layout, as well as the order in which new series are added
@@ -329,14 +323,20 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample("", "", [:(
-        begin
-            using Random
-            Random.seed!(111)
-            plot!(Plots.fakedata(100, 10))
-        end
-    )]),
-    PlotExample(
+    PlotExample( # 18
+        "",
+        "",
+        [
+            :(
+                begin
+                    using Random
+                    Random.seed!(111)
+                    plot!(Plots.fakedata(100, 10))
+                end
+            )
+        ]
+    ),
+    PlotExample( # 19
         "Open/High/Low/Close",
         """
         Create an OHLC chart.  Pass in a list of (open,high,low,close) tuples as your `y`
@@ -365,7 +365,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 20
         "Annotations",
         """
         The `annotations` keyword is used for text annotations in data-coordinates.  Pass in a
@@ -408,7 +408,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 21
         "Custom Markers",
         """A `Plots.Shape` is a light wrapper around vertices of a polygon.  For supported
         backends, pass arbitrary polygons as the marker shapes.  Note: The center is (0,0) and
@@ -454,7 +454,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 22
         "Contours",
         """
         Any value for fill works here.  We first build a filled contour from a function, then an
@@ -474,7 +474,7 @@ const _examples = PlotExample[
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 23
         "Pie",
         "",
         [:(
@@ -485,7 +485,7 @@ const _examples = PlotExample[
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 24
         "3D",
         "",
         [
@@ -511,7 +511,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 25
         "DataFrames",
         "Plot using DataFrame column symbols.",
         [
@@ -534,7 +534,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 26
         "Groups and Subplots",
         "",
         [
@@ -552,7 +552,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 27
         "Polar Plots",
         "",
         [:(
@@ -563,7 +563,7 @@ const _examples = PlotExample[
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 28
         "Heatmap, categorical axes, and aspect_ratio",
         "",
         [:(
@@ -575,7 +575,7 @@ const _examples = PlotExample[
             end
         )],
     ),
-    PlotExample(
+    PlotExample( # 29
         "Layouts, margins, label rotation, title location",
         "",
         [
@@ -595,7 +595,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 30
         "Boxplot and Violin series recipes",
         "",
         [
@@ -620,7 +620,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 31
         "Animation with subplots",
         "The `layout` macro can be used to create an animation with subplots.",
         [
@@ -628,14 +628,15 @@ const _examples = PlotExample[
                 begin
                     l = @layout([[a; b] c])
                     p = plot(
-                        plot([sin, cos], 1, leg = false),
-                        scatter([atan, cos], 1, leg = false),
-                        plot(log, 1, xlims = (1, 10π), ylims = (0, 5), leg = false),
+                        plot([sin, cos], 1, ylims = (-1, 1), leg = false),
+                        scatter([atan, cos], 1, ylims = (-1, 1.5), leg = false),
+                        plot(log, 1, ylims = (0, 2), leg = false),
                         layout = l,
+                        xlims = (1, 2π),
                     )
 
                     anim = Animation()
-                    for x in range(1, stop = 10π, length = 100)
+                    for x in range(1, stop = 2π, length = 20)
                         plot(push!(
                             p,
                             x,
@@ -647,7 +648,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 32
         "Spy",
         """
         For a matrix `mat` with unique nonzeros `spy(mat)` returns a colorless plot. If `mat` has
@@ -681,7 +682,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 33
         "Magic grid argument",
         """
         The grid lines can be modified individually for each axis with the magic `grid` argument.
@@ -711,7 +712,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 34
         "Framestyle",
         """
         The style of the frame/axes of a (sub)plot can be changed with the `framestyle`
@@ -735,7 +736,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 35
         "Lines and markers with varying colors",
         """
         You can use the `line_z` and `marker_z` properties to associate a color with
@@ -761,7 +762,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 36
         "Portfolio Composition maps",
         """
         see: http://stackoverflow.com/a/37732384/5075246
@@ -787,7 +788,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 37
         "Ribbons",
         """
         Ribbons can be added to lines via the `ribbon` keyword;
@@ -810,7 +811,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 38
         "Histogram2D (complex values)",
         "",
         [
@@ -829,7 +830,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 39
         "Unconnected lines using `missing` or `NaN`",
         """
         Missing values and non-finite values, including `NaN`, are not plotted.
@@ -853,7 +854,7 @@ const _examples = PlotExample[
             ),
         ],
     ),
-    PlotExample(
+    PlotExample( # 40
         "Lens",
         "A lens lets you easily magnify a region of a plot. x and y coordinates refer to the to be magnified region and the via the `inset` keyword the subplot index and the bounding box (in relative coordinates) of the inset plot with the magnified plot can be specified. Additional attributes count for the inset plot.",
         [
@@ -875,7 +876,7 @@ const _examples = PlotExample[
             end,
         ],
     ),
-    PlotExample(
+    PlotExample( # 41
         "Array Types",
         "Plots supports different `Array` types that follow the `AbstractArray` interface, like `StaticArrays` and `OffsetArrays.`",
         [
@@ -890,7 +891,7 @@ const _examples = PlotExample[
             end,
         ],
     ),
-    PlotExample(
+    PlotExample( # 42
         "Setting defaults and font arguments",
         "",
         [
@@ -920,7 +921,7 @@ const _examples = PlotExample[
             end,
         ],
     ),
-    PlotExample(
+    PlotExample( # 43
         "Heatmap with DateTime axis",
         "",
         [
@@ -935,7 +936,7 @@ const _examples = PlotExample[
             end,
         ],
     ),
-    PlotExample(
+    PlotExample( # 44
         "Linked axes",
         "",
         [
@@ -947,7 +948,7 @@ const _examples = PlotExample[
             end,
         ],
     ),
-    PlotExample(
+    PlotExample( # 45
         "Error bars and array type recipes",
         "",
         [
@@ -984,7 +985,7 @@ const _examples = PlotExample[
             end,
         ],
     ),
-    PlotExample(
+    PlotExample( # 46
         "Tuples and `Point`s as data",
         "",
         [quote
@@ -995,13 +996,13 @@ const _examples = PlotExample[
             scatter!(Point2.(eachcol(rand(d,1000))), alpha=0.25)
         end]
     ),
-    PlotExample(
+    PlotExample( # 47
 	"Mesh3d",
 	"""
 	Allows to plot arbitrary 3d meshes. If only x,y,z are given the mesh is generated automatically.
-	You can also specify the connections using the connections keyword. This is only supported on the Plotly backend.
-	The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
-	such that elements at the same position of these vectors form a triangle. 
+	You can also specify the connections using the connections keyword.
+    The connections are specified using a tuple of vectors. Each vector contains the 0-based indices of one point of a triangle,
+	such that elements at the same position of these vectors form a triangle.
 	""",
 	[
 		:(
@@ -1011,9 +1012,9 @@ const _examples = PlotExample[
 			y=[0, 0, 1, 2]
 			z=[0, 2, 0, 1]
 
-			# specify the triangles 
+			# specify the triangles
 			# every column is one triangle,
-			# where the values denote the indices of the vertices of the triangle 
+			# where the values denote the indices of the vertices of the triangle
 			i=[0, 0, 0, 1]
 			j=[1, 2, 3, 2]
 			k=[2, 3, 1, 3]
@@ -1024,19 +1025,98 @@ const _examples = PlotExample[
 		),
 	],
     ),
-    PlotExample(
+    PlotExample( # 48
         "Vectors of markershapes and segments",
         "",
         [quote
+            using Base.Iterators: cycle, take
+
             yv = ones(9)
             ys = [1; 1; NaN; ones(6)]
-            plot(
-                5 .- [yv 2ys 3yv 4ys],
+            y = 5 .- [yv 2ys 3yv 4ys]
+
+            plt_color_rows = plot(
+                y,
                 seriestype = [:path :path :scatter :scatter],
-                markershape = [:utriangle, :rect],
+                markershape = collect(take(cycle((:utriangle, :rect)), 9)),
                 markersize = 8,
-                color = [:red, :black],
+                color = collect(take(cycle((:red, :black)), 9))
             )
+
+            plt_z_cols = plot(
+                y,
+                markershape = [:utriangle :x :circle :square],
+                markersize = [5 10 10 5],
+                marker_z = [5 4 3 2],
+                line_z = [1 3 3 1],
+                linewidth = [1 10 5 1]
+            )
+
+            plot(plt_color_rows, plt_z_cols)
+        end]
+    ),
+    PlotExample( # 49
+        "Polar heatmaps",
+        "",
+        [quote
+        x = range(0, 2π, length=9)
+        y = 0:4
+        z = (1:4) .+ (1:8)'
+        heatmap(x, y, z, projection = :polar)
+        end]
+    ),
+    PlotExample( # 50
+        "3D surface with axis guides",
+        "",
+        [quote
+        f(x,a) = 1/x + a*x^2
+        xs = collect(0.1:0.05:2.0);
+        as = collect(0.2:0.1:2.0);
+
+        x_grid = [x for x in xs for y in as];
+        a_grid = [y for x in xs for y in as];
+
+        plot(x_grid, a_grid, f.(x_grid,a_grid),
+            st = :surface,
+            xlabel = "longer xlabel",
+            ylabel = "longer ylabel",
+            zlabel = "longer zlabel",
+        )
+        end]
+    ),
+    PlotExample( # 51
+        "Images with custom axes",
+        "",
+        [quote
+            using Plots
+            using TestImages
+            img = testimage("lighthouse")
+
+            # plot the image reversing the first dimension and setting yflip = false
+            plot([-π, π], [-1, 1], reverse(img, dims=1), yflip=false, aspect_ratio=:none)
+            # plot other data
+            plot!(sin, -π, π, lw=3, color=:red)
+        end]
+    ),
+    PlotExample(
+        "3d quiver",
+        "",
+        [quote
+            using Plots
+
+            ϕs = range(-π, π, length=50)
+            θs = range(0, π, length=25)
+            θqs = range(1, π-1, length=25)
+
+            x = vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
+            y = vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
+            z = vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θs)])
+
+            u = 0.1 * vec([sin(θ) * cos(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            v = 0.1 * vec([sin(θ) * sin(ϕ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+            w = 0.1 * vec([cos(θ) for (ϕ, θ) in Iterators.product(ϕs, θqs)])
+
+            quiver(x,y,z, quiver=(u,v,w))
         end]
     ),
 ]
@@ -1045,21 +1125,18 @@ const _examples = PlotExample[
 _animation_examples = [2, 31]
 _backend_skips = Dict(
     :gr => [25, 30, 47],
-    :pyplot => [2, 25, 30, 31, 47],
-    :plotlyjs => [2, 21, 24, 25, 30, 31],
-    :plotly => [2, 21, 24, 25, 30, 31],
-    :pgfplots => [2, 5, 6, 10, 16, 20, 22, 23, 25, 28, 30, 31, 34, 37, 38, 39, 47],
+    :pyplot => [2, 25, 30, 31, 47, 49],
+    :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51],
+    :plotly => [2, 21, 24, 25, 30, 31, 49, 51],
     :pgfplotsx => [
         2, # animation
         6, # images
-        10, # histogram2d
         16, # pgfplots thinks the upper panel is too small
-        25, # @df
         30, # @df
         31, # animation
         32, # spy
-        38, # histogram2d
-	 47, # mesh3d
+        49, # polar heatmap
+        51, # image with custom axes
     ],
 )
 

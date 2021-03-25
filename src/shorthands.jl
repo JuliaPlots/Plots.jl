@@ -1,3 +1,5 @@
+@nospecialize
+
 """
     scatter(x,y)
     scatter!(x,y)
@@ -55,6 +57,7 @@ Plot a histogram.
 # Example
 ```julia-repl
 julia> histogram([1,2,1,1,4,3,8],bins=0:8)
+julia> histogram([1,2,1,1,4,3,8],bins=0:8,weights=weights([4,7,3,9,12,2,6]))
 ```
 """
 @shorthands histogram
@@ -69,7 +72,7 @@ Make a histogram bar plot. See `histogram`.
 
 """
     stephist(x)
-    stephist(x)
+    stephist!(x)
 
 Make a histogram step plot (bin counts are represented using horizontal lines
 instead of bars). See `histogram`.
@@ -418,13 +421,13 @@ xlabel!(s::AbstractString; kw...)                = plot!(; xlabel = s, kw...)
 ylabel!(s::AbstractString; kw...)                = plot!(; ylabel = s, kw...)
 
 "Set xlims for an existing plot"
-xlims!(lims::Tuple{T,S}; kw...) where {T<:Real,S<:Real} = plot!(; xlims = lims, kw...)
+xlims!(lims::Tuple; kw...) = plot!(; xlims = lims, kw...)
 
 "Set ylims for an existing plot"
-ylims!(lims::Tuple{T,S}; kw...) where {T<:Real,S<:Real} = plot!(; ylims = lims, kw...)
+ylims!(lims::Tuple; kw...) = plot!(; ylims = lims, kw...)
 
 "Set zlims for an existing plot"
-zlims!(lims::Tuple{T,S}; kw...) where {T<:Real,S<:Real} = plot!(; zlims = lims, kw...)
+zlims!(lims::Tuple; kw...) = plot!(; zlims = lims, kw...)
 
 xlims!(xmin::Real, xmax::Real; kw...)                     = plot!(; xlims = (xmin,xmax), kw...)
 ylims!(ymin::Real, ymax::Real; kw...)                     = plot!(; ylims = (ymin,ymax), kw...)
@@ -432,10 +435,10 @@ zlims!(zmin::Real, zmax::Real; kw...)                     = plot!(; zlims = (zmi
 
 
 "Set xticks for an existing plot"
-xticks!(v::TicksArgs; kw...) where {T<:Real}                       = plot!(; xticks = v, kw...)
+xticks!(v::TicksArgs; kw...)                              = plot!(; xticks = v, kw...)
 
 "Set yticks for an existing plot"
-yticks!(v::TicksArgs; kw...) where {T<:Real}                       = plot!(; yticks = v, kw...)
+yticks!(v::TicksArgs; kw...)                              = plot!(; yticks = v, kw...)
 
 xticks!(
 ticks::AVec{T}, labels::AVec{S}; kw...) where {T<:Real,S<:AbstractString}     = plot!(; xticks = (ticks,labels), kw...)
@@ -475,3 +478,5 @@ xaxis!(args...; kw...)                                    = plot!(; xaxis = args
 yaxis!(args...; kw...)                                    = plot!(; yaxis = args, kw...)
 xgrid!(args...; kw...)                                    = plot!(; xgrid = args, kw...)
 ygrid!(args...; kw...)                                    = plot!(; ygrid = args, kw...)
+
+@specialize

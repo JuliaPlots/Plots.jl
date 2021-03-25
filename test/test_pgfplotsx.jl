@@ -21,12 +21,12 @@ end
    @test !haskey(axis.contents[1].options.dict, "fill")
 
    @testset "Legends" begin
-      legends_plot =  plot( rand(5,2), lab = ["1" ""] )
-      scatter!(legends_plot, rand(5) )
+      legends_plot = plot(rand(5, 2), lab = ["1" ""])
+      scatter!(legends_plot, rand(5))
       Plots._update_plot_object(legends_plot)
       axis_contents = Plots.pgfx_axes(legends_plot.o)[1].contents
-      leg_entries = filter( x -> x isa PGFPlotsX.LegendEntry, axis_contents )
-      series = filter( x -> x isa PGFPlotsX.Plot, axis_contents )
+      leg_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis_contents)
+      series = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
       @test length(leg_entries) == 2
       @test !haskey(series[1].options.dict, "forget plot")
       @test haskey(series[2].options.dict, "forget plot")
@@ -91,8 +91,8 @@ end
       scatter!(pic, rand(100), markersize = 6, c = :orange)
       Plots._update_plot_object(pic)
       axis_contents = Plots.pgfx_axes(pic.o)[1].contents
-      leg_entries = filter( x -> x isa PGFPlotsX.LegendEntry, axis_contents )
-      series = filter( x -> x isa PGFPlotsX.Plot, axis_contents )
+      leg_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis_contents)
+      series = filter(x -> x isa PGFPlotsX.Plot, axis_contents)
       @test length(leg_entries) == 2
       @test length(series) == 4
       @test haskey(series[1].options.dict, "forget plot")
@@ -106,7 +106,7 @@ end
       end), Plots._shape_keys)
       markers = reshape(markers, 1, length(markers))
       n = length(markers)
-      x = (range(0, stop = 10, length = n + 2))[2:(end - 1)]
+      x = (range(0, stop = 10, length = n + 2))[2:(end-1)]
       y = repeat(reshape(reverse(x), 1, :), n, 1)
       scatter(
          x,
@@ -231,7 +231,7 @@ end
       # TODO: support :semi
    end # testset
    @testset "Quiver" begin
-      x = (-2pi):0.2:(2 * pi)
+      x = (-2pi):0.2:(2*pi)
       y = sin.(x)
 
       u = ones(length(x))
@@ -255,7 +255,7 @@ end
       nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
       @test length(nodes) == 1
       mktempdir() do path
-         file_path =joinpath(path,"annotations.tex")
+         file_path = joinpath(path, "annotations.tex")
          @test_nowarn savefig(pgfx_plot, file_path)
          open(file_path) do io
             lines = readlines(io)
@@ -271,7 +271,7 @@ end
       nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
       @test length(nodes) == 3
       mktempdir() do path
-         file_path =joinpath(path,"annotations.tex")
+         file_path = joinpath(path, "annotations.tex")
          @test_nowarn savefig(pgfx_plot, file_path)
          open(file_path) do io
             lines = readlines(io)
@@ -296,14 +296,14 @@ end
       nodes = filter(x -> !isa(x, PGFPlotsX.Plot), axis_content)
       @test length(nodes) == 9
       mktempdir() do path
-         file_path =joinpath(path,"annotations.tex")
+         file_path = joinpath(path, "annotations.tex")
          @test_nowarn savefig(annotation_plot, file_path)
          open(file_path) do io
             lines = readlines(io)
             @test count(s -> occursin("node", s), lines) == 9
          end
          # test .tikz extension
-         file_path =joinpath(path,"annotations.tikz")
+         file_path = joinpath(path, "annotations.tikz")
          @test_nowarn savefig(annotation_plot, file_path)
          @test_nowarn open(file_path) do io
          end
@@ -326,6 +326,18 @@ end
       @test ribbon_plot.o !== nothing
       @test ribbon_plot.o.the_plot !== nothing
    end # testset
+   @testset "Markers and Paths" begin
+      pl = plot(
+         5 .- ones(9),
+         markershape = [:utriangle, :rect],
+         markersize = 8,
+         color = [:red, :black],
+      )
+      Plots._update_plot_object(pl)
+      axis = Plots.pgfx_axes(pl.o)[1]
+      plots = filter(x -> x isa PGFPlotsX.Plot, axis.contents)
+      @test length(plots) == 9
+   end # testset
 end # testset
 
 @testset "Extra kwargs" begin
@@ -335,27 +347,44 @@ end # testset
    @test pl[1].attr[:extra_kwargs][:test] == "me"
    pl = plot(1:5, test = "me", extra_kwargs = :plot)
    @test pl.attr[:extra_plot_kwargs][:test] == "me"
-   pl = plot(1:5, extra_kwargs = Dict(:plot => Dict(:test => "me"), :series => Dict(:and => "me too")))
+   pl = plot(
+      1:5,
+      extra_kwargs = Dict(
+         :plot => Dict(:test => "me"),
+         :series => Dict(:and => "me too"),
+      ),
+   )
    @test pl.attr[:extra_plot_kwargs][:test] == "me"
    @test pl[1][1].plotattributes[:extra_kwargs][:and] == "me too"
    pl = plot(
-     plot(1:5, title="Line"),
-     scatter(1:5, title="Scatter", extra_kwargs=Dict(:subplot=>Dict("axis line shift" => "10pt")))
+      plot(1:5, title = "Line"),
+      scatter(
+         1:5,
+         title = "Scatter",
+         extra_kwargs = Dict(:subplot => Dict("axis line shift" => "10pt")),
+      ),
    )
    Plots._update_plot_object(pl)
    axes = Plots.pgfx_axes(pl.o)
    @test !haskey(axes[1].options.dict, "axis line shift")
    @test haskey(axes[2].options.dict, "axis line shift")
-   pl = plot(x->x, -1:1; add = raw"\node at (0,0.5) {\huge hi};", extra_kwargs = :subplot)
+   pl = plot(
+      x -> x,
+      -1:1;
+      add = raw"\node at (0,0.5) {\huge hi};",
+      extra_kwargs = :subplot,
+   )
    @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
    Plots._update_plot_object(pl)
    axes = Plots.pgfx_axes(pl.o)
-   @test filter(x->x isa String, axes[1].contents)[1] == raw"\node at (0,0.5) {\huge hi};"
+   @test filter(x -> x isa String, axes[1].contents)[1] ==
+         raw"\node at (0,0.5) {\huge hi};"
    plot!(pl)
    @test pl[1][:extra_kwargs] == Dict(:add => raw"\node at (0,0.5) {\huge hi};")
    Plots._update_plot_object(pl)
    axes = Plots.pgfx_axes(pl.o)
-   @test filter(x->x isa String, axes[1].contents)[1] == raw"\node at (0,0.5) {\huge hi};"
+   @test filter(x -> x isa String, axes[1].contents)[1] ==
+         raw"\node at (0,0.5) {\huge hi};"
 end # testset
 
 @testset "Titlefonts" begin
@@ -371,7 +400,11 @@ end # testset
    @test pl[:plot_title] == "Test me"
    @test pl[:plot_titlefontsize] == 2
    @test pl[:plot_titlefonthalign] == :left
-   pl = heatmap(rand(3,3), colorbar_title = "Test me", colorbar_titlefont = (12, :right))
+   pl = heatmap(
+      rand(3, 3),
+      colorbar_title = "Test me",
+      colorbar_titlefont = (12, :right),
+   )
    @test pl[1][:colorbar_title] == "Test me"
    @test pl[1][:colorbar_titlefontsize] == 12
    @test pl[1][:colorbar_titlefonthalign] == :right

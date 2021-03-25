@@ -21,13 +21,9 @@ jobs:
       fail-fast: false
       matrix:
         version:   # NOTE: the versions below should match those in your botconfig
-          - '1.3'
-          - '1.4'
           - '1.5'
         os:        # NOTE: should match the os setting of your botconfig
           - ubuntu-latest
-          - windows-latest
-          - macos-latest
         arch:
           - x64
     steps:
@@ -40,15 +36,15 @@ jobs:
       - name: Install dependencies
         run: |
           julia --project -e 'using Pkg; Pkg.instantiate();'
-          julia -e 'using Pkg; Pkg.add( PackageSpec(url="https://github.com/aminya/SnoopCompileBot.jl", rev = "master") ); Pkg.develop(PackageSpec(; path=pwd())); using SnoopCompileBot; SnoopCompileBot.addtestdep();'
+          julia -e 'using Pkg; Pkg.add( PackageSpec(name = "CompileBot", version = "1") ); Pkg.develop(PackageSpec(; path=pwd())); using CompileBot; CompileBot.addtestdep();'
 
 
       # TESTCMD
       - name: Default TESTCMD
-        run: echo ::set-env name=TESTCMD::"julia"
+        run: echo "TESTCMD=julia" >> $GITHUB_ENV
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
-        run: echo ::set-env name=TESTCMD::"xvfb-run --auto-servernum julia"
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
 
       # Generate precompile files
       - name: Generating precompile files
@@ -72,8 +68,8 @@ jobs:
       - name: Download all
         uses: actions/download-artifact@v2
 
-      - name: SnoopCompileBot postprocess
-        run: julia -e 'using Pkg; Pkg.add( PackageSpec(url="https://github.com/aminya/SnoopCompileBot.jl", rev = "master") ); using SnoopCompileBot; SnoopCompileBot.postprocess();'
+      - name: CompileBot postprocess
+        run: julia -e 'using Pkg; Pkg.add( PackageSpec(name = "CompileBot", version = "1") ); using CompileBot; CompileBot.postprocess();'
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
@@ -82,7 +78,7 @@ jobs:
           commit-message: Update precompile_*.jl file
           title: "[AUTO] Update precompiles"
           labels: SnoopCompile
-          branch: "SnoopCompile_AutoPR"
+          branch: "Test_SnoopCompile_AutoPR_${{ github.ref }}"
 
 
   Skip:
