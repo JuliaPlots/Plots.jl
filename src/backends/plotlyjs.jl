@@ -39,8 +39,7 @@ _show(io::IO, ::MIME"text/html", plt::Plot{PlotlyJSBackend}) = write(io, standal
 _display(plt::Plot{PlotlyJSBackend}) = display(plotlyjs_syncplot(plt))
 
 function PlotlyJS.WebIO.render(plt::Plot{PlotlyJSBackend})
-    plt_html = sprint(show, MIME("text/html"), plt)
-    return PlotlyJS.WebIO.render(PlotlyJS.WebIO.dom"div"(innerHTML=plt_html))
+    return PlotlyJS.WebIO.render(plotlyjs_syncplot(plt))
 end
 
 function closeall(::PlotlyJSBackend)
