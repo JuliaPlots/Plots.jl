@@ -840,8 +840,8 @@ function py_set_scale(ax, sp::Subplot, axis::Axis)
 end
 
 function py_set_axis_colors(sp, ax, a::Axis)
-    for (loc, spine) in ax.spines
-        spine."set_color"(py_color(a[:foreground_color_border]))
+    for loc in ax.spines
+        ax.spines[loc]."set_color"(py_color(a[:foreground_color_border]))
     end
     axissym = Symbol(a[:letter], :axis)
     if PyPlot.PyCall.hasproperty(ax, axissym)
