@@ -789,6 +789,8 @@ function plotly_series_segments(series::Series, plotattributes_base::KW, x, y, z
                 :width => get_linewidth(series, i),
                 :shape => if st == :steppre
                     "vh"
+                elseif st == :stepmid
+                    "hvh"
                 elseif st == :steppost
                     "hv"
                 else

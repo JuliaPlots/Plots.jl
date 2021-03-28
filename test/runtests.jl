@@ -18,12 +18,12 @@ using RecipesBase
     @test Plots.plotly_local_file_path[] === nothing
     temp = Plots.use_local_dependencies[]
     withenv("PLOTS_HOST_DEPENDENCY_LOCAL" => true) do
-        Plots.__init__()
-        @test Plots.plotly_local_file_path[] isa String
-        @test isfile(Plots.plotly_local_file_path[])
-        @test Plots.use_local_dependencies[] = true
-        @test_nowarn Plots._init_ijulia_plotting()
-    end
+    Plots.__init__()
+    @test Plots.plotly_local_file_path[] isa String
+    @test isfile(Plots.plotly_local_file_path[])
+    @test Plots.use_local_dependencies[] = true
+    @test_nowarn Plots._init_ijulia_plotting()
+end
     Plots.plotly_local_file_path[] = nothing
     Plots.use_local_dependencies[] = temp
 end # testset
@@ -43,7 +43,7 @@ reference_dir(args...) = joinpath(homedir(), ".julia", "dev", "PlotReferenceImag
 function reference_file(backend, i, version)
     refdir = reference_dir("Plots", string(backend))
     fn = "ref$i.png"
-    versions = sort(VersionNumber.(readdir(refdir)), rev = true)
+    versions = sort(VersionNumber.(readdir(refdir)), rev=true)
 
     reffn = joinpath(refdir, string(version), fn)
     for v in versions
@@ -107,7 +107,7 @@ const IMG_TOL = VERSION < v"1.4" && Sys.iswindows() ? 1e-1 : is_ci() ? 1e-2 : 1e
         @static if haskey(ENV, "APPVEYOR")
             @info "Skipping GR image comparison tests on AppVeyor"
         else
-            image_comparison_facts(:gr, tol=IMG_TOL, skip = Plots._backend_skips[:gr])
+            image_comparison_facts(:gr, tol=IMG_TOL, skip=Plots._backend_skips[:gr])
         end
     end
 
@@ -156,11 +156,11 @@ end
     @test typeof(axis) == Plots.Axis
     @test Plots.discrete_value!(axis, "HI") == (0.5, 1)
     @test Plots.discrete_value!(axis, :yo) == (1.5, 2)
-    @test Plots.ignorenan_extrema(axis) == (0.5,1.5)
+    @test Plots.ignorenan_extrema(axis) == (0.5, 1.5)
     @test axis[:discrete_map] == Dict{Any,Any}(:yo  => 2, "HI" => 1)
 
-    Plots.discrete_value!(axis, ["x$i" for i=1:5])
-    Plots.discrete_value!(axis, ["x$i" for i=0:2])
+    Plots.discrete_value!(axis, ["x$i" for i = 1:5])
+    Plots.discrete_value!(axis, ["x$i" for i = 0:2])
     @test Plots.ignorenan_extrema(axis) == (0.5, 7.5)
 end
 
@@ -169,17 +169,26 @@ end
     @test unicodeplots() == Plots.UnicodePlotsBackend()
     @test backend() == Plots.UnicodePlotsBackend()
 
-    plots = [histogram([1, 0, 0, 0, 0, 0]),
-             plot([missing]),
-             plot([missing; 1:4]),
-             plot([fill(missing,10); 1:4]),
-             plot([1 1; 1 missing]),
-             plot(["a" "b"; missing "d"], [1 2; 3 4])]
-    for plt in plots
-        display(plt)
+    @testset "Plot" begin
+        plots = [histogram([1, 0, 0, 0, 0, 0]),
+                 plot([missing]),
+                 plot([missing; 1:4]),
+                 plot([fill(missing, 10); 1:4]),
+                 plot([1 1; 1 missing]),
+                 plot(["a" "b"; missing "d"], [1 2; 3 4])]
+        for plt in plots
+            display(plt)
+        end
+        @test_nowarn plot(x -> x^2, 0, 2)
     end
-    @test_nowarn plot(x->x^2,0,2)
+
+    @testset "Bar" begin
+       p = bar([3,2,1], [1,2,3]);
+       @test isa(p, Plots.Plot)
+       @test isa(display(p), Nothing) == true
+    end
 end
+
 
 @testset "EmptyAnim" begin
     anim = @animate for i in []
@@ -191,7 +200,7 @@ end
 @testset "NaN-separated Segments" begin
     segments(args...) = collect(iter_segments(args...))
 
-    nan10 = fill(NaN,10)
+    nan10 = fill(NaN, 10)
     @test segments(11:20) == [1:10]
     @test segments([NaN]) == []
     @test segments(nan10) == []
@@ -203,10 +212,10 @@ end
 end
 
 @testset "Utils" begin
-    zipped = ([(1,2)], [("a","b")], [(1,"a"),(2,"b")],
-              [(1,2),(3,4)], [(1,2,3),(3,4,5)], [(1,2,3,4),(3,4,5,6)],
-              [(1,2.0),(missing,missing)], [(1,missing),(missing,"a")],
-              [(missing,missing)], [(missing,missing,missing),("a","b","c")])
+    zipped = ([(1, 2)], [("a", "b")], [(1, "a"),(2, "b")],
+              [(1, 2),(3, 4)], [(1, 2, 3),(3, 4, 5)], [(1, 2, 3, 4),(3, 4, 5, 6)],
+              [(1, 2.0),(missing, missing)], [(1, missing),(missing, "a")],
+              [(missing, missing)], [(missing, missing, missing),("a", "b", "c")])
     for z in zipped
         @test isequal(collect(zip(Plots.unzip(z)...)), z)
         @test isequal(collect(zip(Plots.unzip(GeometryBasics.Point.(z))...)), z)
