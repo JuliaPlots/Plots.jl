@@ -139,6 +139,15 @@ const IMG_TOL = VERSION < v"1.4" && Sys.iswindows() ? 1e-1 : is_ci() ? 1e-2 : 1e
         @test isa(display(p), Nothing) == true
     end
 
+    @testset "PlotlyJS" begin
+        @test plotlyjs() == Plots.PlotlyJSBackend()
+        @test backend() == Plots.PlotlyJSBackend()
+
+        p = plot(rand(10))
+        @test isa(p, Plots.Plot) == true
+        @test_broken isa(display(p), Nothing) == true
+    end
+
 end
 
 @testset "Axes" begin
@@ -156,6 +165,10 @@ end
 end
 
 @testset "NoFail" begin
+    #ensure backend with tested display
+    @test unicodeplots() == Plots.UnicodePlotsBackend()
+    @test backend() == Plots.UnicodePlotsBackend()
+
     @testset "Plot" begin
         plots = [histogram([1, 0, 0, 0, 0, 0]),
                  plot([missing]),
