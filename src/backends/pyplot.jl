@@ -841,10 +841,20 @@ function py_set_scale(ax, sp::Subplot, axis::Axis)
     py_set_scale(ax, sp, scale, letter)
 end
 
-function py_set_axis_colors(sp, ax, a::Axis)
-    for (loc, spine) in ax.spines
-        spine."set_color"(py_color(a[:foreground_color_border]))
+function py_set_spine_color(spines, color)
+    for loc in spines
+        spines[loc]."set_color"(color)
     end
+end
+
+function py_set_spine_color(spines::Dict, color)
+    for (loc, spine) in spines
+        spine."set_color"(color)
+    end
+end
+
+function py_set_axis_colors(sp, ax, a::Axis)
+    py_set_spine_color(ax.spines, py_color(a[:foreground_color_border]))
     axissym = Symbol(a[:letter], :axis)
     if PyPlot.PyCall.hasproperty(ax, axissym)
         tickcolor = sp[:framestyle] in (:zerolines, :grid) ? py_color(plot_color(a[:foreground_color_grid], a[:gridalpha])) : py_color(a[:foreground_color_axis])
