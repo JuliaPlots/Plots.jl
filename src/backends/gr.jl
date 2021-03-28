@@ -1504,39 +1504,35 @@ end
 
 function gr_label_axis(sp, letter, viewport_plotarea)
     axis = sp[Symbol(letter, :axis)]
+    mirror = axis[:mirror]
     # guide
     if axis[:guide] != ""
         GR.savestate()
         gr_set_font(guidefont(axis), sp)
         guide_position = axis[:guide_position]
         if letter === :y
-            w = 0.03 + gr_axis_width(sp, axis)
             GR.setcharup(-1, 0)
-            #
-            yposition = gr_view_yposition(viewport_plotarea, position(axis[:guidefontvalign]))
+            ypos = gr_view_yposition(viewport_plotarea, position(axis[:guidefontvalign]))
             yalign = alignment(axis[:guidefontvalign])
-            #
-            if guide_position == :right || (guide_position == :auto && axis[:mirror])
+            if guide_position === :right || (guide_position == :auto && mirror)
                 GR.settextalign(yalign, GR.TEXT_VALIGN_BOTTOM)
-                gr_text(viewport_plotarea[2] + w, yposition, axis[:guide])
+                xpos = viewport_plotarea[2] + 0.03 + mirror * gr_axis_width(sp, axis)
             else
                 GR.settextalign(yalign, GR.TEXT_VALIGN_TOP)
-                gr_text(viewport_plotarea[1] - w, yposition, axis[:guide])
+                xpos = viewport_plotarea[1] - 0.03 - !mirror * gr_axis_width(sp, axis)
             end
         else
-            h = 0.015 + gr_axis_height(sp, axis)
-            #
-            xposition = gr_view_xposition(viewport_plotarea, position(axis[:guidefonthalign]))
+            xpos = gr_view_xposition(viewport_plotarea, position(axis[:guidefonthalign]))
             xalign = alignment(axis[:guidefonthalign])
-            #
-            if guide_position == :top || (guide_position == :auto && axis[:mirror])
+            if guide_position === :top || (guide_position == :auto && mirror)
                 GR.settextalign(xalign, GR.TEXT_VALIGN_TOP)
-                gr_text(xposition, viewport_plotarea[4] + h, axis[:guide])
+                ypos = viewport_plotarea[4] + 0.015 + (mirror ? gr_axis_height(sp, axis) : 0.015)
             else
                 GR.settextalign(xalign, GR.TEXT_VALIGN_BOTTOM)
-                gr_text(xposition, viewport_plotarea[3] - h, axis[:guide])
+                ypos = viewport_plotarea[3] - 0.015 - (mirror ? 0.015 : gr_axis_height(sp, axis))
             end
         end
+        gr_text(xpos, ypos, axis[:guide])
         GR.restorestate()
     end
 end
