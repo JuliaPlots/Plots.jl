@@ -287,7 +287,7 @@ For st in :shape:
                 color = linecolor, fillcolor = fillcolor
             )
         end
-   elseif st in (:path, :scatter, :straightline) #, :steppre, :steppost)
+   elseif st in (:path, :scatter, :straightline) #, :steppre, :stepmid, :steppost)
         #NOTE: In Plots.jl, :scatter plots have 0-linewidths (I think).
         linewidth = series[:linewidth]
         #More efficient & allows some support for markerstrokewidth:
