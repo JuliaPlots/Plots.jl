@@ -17,9 +17,6 @@ Add in functionality to Plots.jl:
 
 is_marker_supported(::InspectDRBackend, shape::Shape) = true
 
-_inspectdr_to_pixels(bb::BoundingBox) =
-    InspectDR.BoundingBox(to_pixels(left(bb)), to_pixels(right(bb)), to_pixels(top(bb)), to_pixels(bottom(bb)))
-
 #Do we avoid Map to avoid possible pre-comile issues?
 function _inspectdr_mapglyph(s::Symbol)
     s == :rect && return :square
@@ -476,11 +473,16 @@ end
 function _update_plot_object(plt::Plot{InspectDRBackend})
     mplot = _inspectdr_getmplot(plt.o)
     if nothing == mplot; return; end
+    mplot.bblist = InspectDR.BoundingBox[]
 
     for (i, sp) in enumerate(plt.subplots)
-        graphbb = _inspectdr_to_pixels(plotarea(sp))
-        plot = mplot.subplots[i]
-        plot.plotbb = InspectDR.plotbounds(plot.layout.values, graphbb)
+        figw, figh = sp.plt[:size]
+        pcts = bbox_to_pcts(sp.bbox, figw*px, figh*px)
+        _left, _bottom, _width, _height = pcts
+        ymax = 1.0-_bottom
+        ymin = ymax - _height
+        bb = InspectDR.BoundingBox(_left, _left+_width, ymin, ymax)
+        push!(mplot.bblist, bb)
     end
 
     gplot = _inspectdr_getgui(plt.o)
