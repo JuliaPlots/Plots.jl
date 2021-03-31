@@ -31,3 +31,19 @@ end # testset
     sticks = plot(tri, seriestype = :sticks)
     @test length(sticks) == 1
 end
+
+@testset "framestyle axes" begin
+    pl = plot(-1:1, -1:1, -1:1)
+    sp = pl.subplots[1]
+    defaultret = Plots.axis_drawing_info_3d(sp, :x)
+    for letter in [:x, :y, :z]
+        for fr in [:box :semi :origin :zerolines :grid :none]
+            prevha = UInt64(0)
+            push!(sp.attr, :framestyle => fr)
+            ret = Plots.axis_drawing_info_3d(sp, letter)
+            ha = hash(string(ret))
+            @test ha != prevha
+            prevha = ha
+        end
+    end
+end

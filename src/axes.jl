@@ -756,7 +756,7 @@ function axis_drawing_info_3d(sp, letter)
                 # don't show the 0 tick label for the origin framestyle
                 if sp[:framestyle] == :origin && !(ticks in (:none, nothing, false)) && length(ticks) > 1
                     i0 = findfirst(==(0), ticks[1])
-                    if ind !== nothing
+                    if i0 !== nothing
                         deleteat!(ticks[1], i0)
                         deleteat!(ticks[2], i0)
                     end
