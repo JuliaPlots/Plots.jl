@@ -341,7 +341,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
     # treat segments
     segments = collect(series_segments(series, series[:seriestype]))
     sf = opt[:fillrange]
-    for segment in segments
+    for (k, segment) in enumerate(segments)
         i, rng = segment.attr_index, segment.range
         segment_opt = PGFPlotsX.Options()
         segment_opt = merge(segment_opt, pgfx_linestyle(opt, i))
@@ -397,7 +397,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                 )
                 end
             end
-            if i == 1 &&
+            if k == 1 &&
                series[:subplot][:legend] != :none && pgfx_should_add_to_legend(series)
                 pgfx_filllegend!(series_opt, opt)
             end
