@@ -40,10 +40,10 @@ jobs:
 
       # TESTCMD
       - name: Default TESTCMD
-        run: echo ::set-env name=TESTCMD::"julia"
+        run: echo "TESTCMD=julia" >> $GITHUB_ENV
       - name: Ubuntu TESTCMD
         if: startsWith(matrix.os,'ubuntu')
-        run: echo ::set-env name=TESTCMD::"xvfb-run --auto-servernum julia"
+        run: echo "TESTCMD=xvfb-run --auto-servernum julia" >> $GITHUB_ENV
 
       # Generate precompile files
       - name: Generating precompile files
