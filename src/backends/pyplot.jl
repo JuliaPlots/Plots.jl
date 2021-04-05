@@ -759,7 +759,7 @@ function py_surround_latextext(latexstring, env)
 end
 
 
-function py_set_ticks(ax, ticks, letter, env)
+function py_set_ticks(sp, ax, ticks, letter, env)
     ticks == :auto && return
     axis = getproperty(ax, Symbol(letter,"axis"))
     if ticks == :none || ticks === nothing || ticks == false
@@ -777,7 +777,7 @@ function py_set_ticks(ax, ticks, letter, env)
     elseif ttype == :ticks_and_labels
         axis."set_ticks"(ticks[1])
 
-        if pyrcparams["text.usetex"]
+        if get(sp[:extra_kwargs], :rawticklabels, false)
             tick_labels = ticks[2]
         else
             tick_labels = [py_surround_latextext(ticklabel, env) for ticklabel in ticks[2]]
@@ -1009,7 +1009,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 ticks_letter=:y
             end
             py_set_scale(cb.ax, sp, sp[:colorbar_scale], ticks_letter)
-            sp[:colorbar_ticks] == :native ? nothing : py_set_ticks(cb.ax, ticks, ticks_letter, env)
+            sp[:colorbar_ticks] == :native ? nothing : py_set_ticks(sp, cb.ax, ticks, ticks_letter, env)
 
             for lab in cbar_axis."get_ticklabels"()
                   lab."set_fontsize"(py_thickness_scale(plt, sp[:colorbar_tickfontsize]))
@@ -1131,7 +1131,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             # workaround to set mathtext.fontspec per Text element
             env = "\\mathregular"  # matches the outer fonts https://matplotlib.org/tutorials/text/mathtext.html
 
-            axis[:ticks] == :native ? nothing : py_set_ticks(ax, ticks, letter, env)
+            axis[:ticks] == :native ? nothing : py_set_ticks(sp, ax, ticks, letter, env)
             # Tick marks
             intensity = 0.5  # This value corresponds to scaling of other grid elements
             pyaxis."set_tick_params"(
