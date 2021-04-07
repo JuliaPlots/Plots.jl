@@ -161,19 +161,50 @@ end
 # path and scatter
 
 # create a path from steps
+# see https://github.com/JuliaPlots/Plots.jl/issues/1495
 @recipe function f(::Type{Val{:scatterpath}}, x, y, z)
     x := x
     y := y
     seriestype := :scatter
+    @series begin
+        ()
+    end
     @series begin
         seriestype := :path
         label := ""
         primary := false
         ()
     end
+    primary := false
     ()
 end
 @deps scatterpath path scatter
+
+
+# ---------------------------------------------------------------------------
+# regression line and scatter
+
+# plots line corresponding to linear regression of y on a constant and x
+@recipe function f(::Type{Val{:linearfit}}, x, y, z)
+    seriestype := :scatter
+    x := x
+    y := y
+    @series begin
+        ()
+    end
+    X = hcat(ones(length(x)), x)
+    yhat = X * (X'X \ X'y)
+    @series begin
+        y := yhat
+        seriestype := :path
+        label := ""
+        primary := false
+        ()
+    end
+    primary := false
+    ()
+end
+
 
 @specialize
 
