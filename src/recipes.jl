@@ -191,10 +191,8 @@ end
     @series begin
         ()
     end
-    X = hcat(ones(length(x)), x)
-    yhat = X * (X'X \ X'y)
     @series begin
-        y := yhat
+        y := mean(y) .+ cov(x, y) / var(x) .* (x .- mean(x))
         seriestype := :path
         label := ""
         primary := false
