@@ -166,14 +166,42 @@ end
     y := y
     seriestype := :scatter
     @series begin
+        ()
+    end
+    @series begin
         seriestype := :path
         label := ""
         primary := false
         ()
     end
+    primary := false
     ()
 end
 @deps scatterpath path scatter
+
+
+# ---------------------------------------------------------------------------
+# regression line and scatter
+
+# plots line corresponding to linear regression of y on a constant and x
+@recipe function f(::Type{Val{:linearfit}}, x, y, z)
+    x := x
+    y := y
+    seriestype := :scatter
+    @series begin
+        ()
+    end
+    @series begin
+        y := mean(y) .+ cov(x, y) / var(x) .* (x .- mean(x))
+        seriestype := :path
+        label := ""
+        primary := false
+        ()
+    end
+    primary := false
+    ()
+end
+
 
 @specialize
 
