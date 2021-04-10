@@ -363,37 +363,37 @@ function _inspectdr_setupsubplot(sp::Subplot{InspectDRBackend})
         a.title = sp[:title]
         a.xlabel = xaxis[:guide]; a.ylabels = [yaxis[:guide]]
 
-    l = plot.layout
-        #IMPORTANT: Don't forget to actually register changes
-        #(TODO: need to find a better way to set layout properties)
-        l[:frame_canvas].fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
-            l[:frame_canvas] = l[:frame_canvas] #register changes
-        l[:frame_data].fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
-            l[:frame_data] = l[:frame_data] #register changes
-
-        l[:frame_data].line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
-            l[:frame_data] = l[:frame_data] #register changes
-        l[:font_title] = InspectDR.Font(sp[:titlefontfamily],
+    #Modify base layout of new object:
+    l = plot.layout.defaults = deepcopy(InspectDR.defaults.plotlayout)
+        #IMPORTANT: Must deepcopy to ensure we don't change layouts of other plots.
+        #Works because plot uses defaults (not user-overwritten `layout.values`)
+        l.frame_canvas.fillcolor = _inspectdr_mapcolor(sp[:background_color_subplot])
+        l.frame_data.fillcolor = _inspectdr_mapcolor(sp[:background_color_inside])
+        l.frame_data.line.color = _inspectdr_mapcolor(xaxis[:foreground_color_axis])
+        l.font_title = InspectDR.Font(sp[:titlefontfamily],
             _inspectdr_mapptsize(sp[:titlefontsize]),
             color = _inspectdr_mapcolor(sp[:titlefontcolor])
         )
         #Cannot independently control fonts of axes with InspectDR:
-        l[:font_axislabel] = InspectDR.Font(xaxis[:guidefontfamily],
+        l.font_axislabel = InspectDR.Font(xaxis[:guidefontfamily],
             _inspectdr_mapptsize(xaxis[:guidefontsize]),
             color = _inspectdr_mapcolor(xaxis[:guidefontcolor])
         )
-        l[:font_ticklabel] = InspectDR.Font(xaxis[:tickfontfamily],
+        l.font_ticklabel = InspectDR.Font(xaxis[:tickfontfamily],
             _inspectdr_mapptsize(xaxis[:tickfontsize]),
             color = _inspectdr_mapcolor(xaxis[:tickfontcolor])
         )
-        l[:enable_legend] = (sp[:legend] != :none)
-        #l[:halloc_legend] = 150 #TODO: compute???
-        l[:font_legend] = InspectDR.Font(sp[:legendfontfamily],
+        l.enable_legend = (sp[:legend] != :none)
+        #l.halloc_legend = 150 #TODO: compute???
+        l.font_legend = InspectDR.Font(sp[:legendfontfamily],
             _inspectdr_mapptsize(sp[:legendfontsize]),
             color = _inspectdr_mapcolor(sp[:legendfontcolor])
         )
-        l[:frame_legend].fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
-            l[:frame_legend] = l[:frame_legend] #register changes
+        l.frame_legend.fillcolor = _inspectdr_mapcolor(sp[:background_color_legend])
+
+        #_round!() ensures values use integer spacings (looks better on screen):
+        InspectDR._round!(InspectDR.autofit2font!(l, legend_width=10.0)) #10 "em"s wide
+    return
 end
 
 # called just before updating layout bounding boxes... in case you need to prep
