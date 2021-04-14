@@ -240,6 +240,10 @@ get_ticks(sp::Subplot, s::Symbol; kwargs...) = get_ticks(sp, sp[Symbol(s, :axis)
 xticks(sp::Subplot; kwargs...) = get_ticks(sp, :x)
 yticks(sp::Subplot; kwargs...) = get_ticks(sp, :y)
 zticks(sp::Subplot; kwargs...) = get_ticks(sp, :z)
+get_ticks(p::Plot, s::Symbol; kwargs...) = [get_ticks(sp, sp[Symbol(s, :axis)]; kwargs...) for sp in p.subplots]
+xticks(p::Plot; kwargs...) = get_ticks(p, :x)
+yticks(p::Plot; kwargs...) = get_ticks(p, :y)
+zticks(p::Plot; kwargs...) = get_ticks(p, :z)
 export xticks, yticks, zticks
 
 function get_ticks(ticks::Symbol, cvals::T, dvals, args...) where T
