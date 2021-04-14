@@ -9,9 +9,9 @@ compute_angle(v::P2) = (angle = atan(v[2], v[1]); angle < 0 ? 2π - angle : angl
 
 # -------------------------------------------------------------
 
-struct Shape
-    x::Vector{Float64}
-    y::Vector{Float64}
+struct Shape{X<:Number, Y<:Number}
+    x::Vector{X}
+    y::Vector{Y}
     # function Shape(x::AVec, y::AVec)
     #     # if x[1] != x[end] || y[1] != y[end]
     #     #     new(vcat(x, x[1]), vcat(y, y[1]))
@@ -52,7 +52,7 @@ end
 
 "get an array of tuples of points on a circle with radius `r`"
 function partialcircle(start_θ, end_θ, n = 20, r=1)
-    Tuple{Float64,Float64}[(r*cos(u),r*sin(u)) for u in range(start_θ, stop=end_θ, length=n)]
+    [(r*cos(u), r*sin(u)) for u in range(start_θ, stop=end_θ, length=n)]
 end
 
 "interleave 2 vectors into each other (like a zipper's teeth)"
@@ -205,9 +205,12 @@ function rotate!(shape::Shape, Θ::Real, c = center(shape))
 end
 
 "rotate an object in space"
-function rotate(shape::Shape, Θ::Real, c = center(shape))
-    shapecopy = deepcopy(shape)
-    rotate!(shapecopy, Θ, c)
+function rotate(shape::Shape, θ::Real, c = center(shape))
+    x, y = coords(shape)
+    cx, cy = c
+    x_new = rotate_x.(x, y, θ, cx, cy)
+    y_new = rotate_y.(x, y, θ, cx, cy)
+    Shape(x_new, y_new)
 end
 
 # -----------------------------------------------------------------------
