@@ -235,6 +235,13 @@ function get_ticks(sp::Subplot, axis::Axis; update = true)
     return axis.plotattributes[:optimized_ticks]
 end
 
+# Ticks getter functions
+get_ticks(sp::Subplot, s::Symbol; kwargs...) = get_ticks(sp, sp[Symbol(s, :axis)]; kwargs...)
+xticks(sp::Subplot; kwargs...) = get_ticks(sp, :x)
+yticks(sp::Subplot; kwargs...) = get_ticks(sp, :y)
+zticks(sp::Subplot; kwargs...) = get_ticks(sp, :z)
+export xticks, yticks, zticks
+
 function get_ticks(ticks::Symbol, cvals::T, dvals, args...) where T
     if ticks === :none
         return T[], String[]
