@@ -29,4 +29,5 @@ end
     p2 = plot(1:5, 1:5, 1:5, xticks=ticks2, yticks=ticks2, zticks=ticks2)
     p = plot(p1, p2)
     @test xticks(p) == yticks(p) == zticks(p) == [ticks1, ticks2]
+    @test xticks(p[1]) == yticks(p[1]) == zticks(p[1]) == ticks1
 end
