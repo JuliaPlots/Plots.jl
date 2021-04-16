@@ -225,16 +225,22 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             @label colorbar_end
 
             if hascolorbar(sp)
+                cticks = get_colorbar_ticks(sp)[2]
                 colorbar_style = PGFPlotsX.Options(
                     "title" => sp[:colorbar_title],
-                    "xticklabel style" => pgfx_get_ticklabel_style(sp, sp[:xaxis]),
-                    "yticklabel style" => pgfx_get_ticklabel_style(sp, sp[:yaxis]),
                 )
                 if sp[:colorbar] === :top
                     push!(colorbar_style,
                         "at" => string((0.5, 1.05)),
                         "anchor" => "south",
+                        "xtick" => string("{", join(cticks, ","), "}"),
                         "xticklabel pos" => "upper",
+                        "xticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
+                    )
+                else
+                    push!(colorbar_style,
+                        "ytick" => string("{", join(cticks, ","), "}"),
+                        "yticklabel style" => pgfx_get_colorbar_ticklabel_style(sp),
                     )
                 end
                 push!(
@@ -809,15 +815,23 @@ function pgfx_get_ticklabel_style(sp, axis)
     return PGFPlotsX.Options(
         "font" => pgfx_font(
             axis[:tickfontsize], pgfx_thickness_scaling(sp)
-        ),
-        "color" => cstr,
+        ), "color" => cstr,
         "draw opacity" => alpha(cstr),
         "rotate" => axis[:tickfontrotation],
     )
 end
 
+function pgfx_get_colorbar_ticklabel_style(sp)
+    cstr = plot_color(sp[:colorbar_tickfontcolor])
+    return PGFPlotsX.Options(
+        "font" => pgfx_font(
+            sp[:colorbar_tickfontsize], pgfx_thickness_scaling(sp)
+        ), "color" => cstr,
+        "draw opacity" => alpha(cstr),
+        "rotate" => sp[:colorbar_tickfontrotation],
+    )
+end
 ## --------------------------------------------------------------------------------------
-# Generates a colormap for pgfplots based on a ColorGradient
 pgfx_arrow(::Nothing) = "every arrow/.append style={-}"
 function pgfx_arrow(arr::Arrow, side = arr.side)
     components = String[]
@@ -848,6 +862,7 @@ function pgfx_filllegend!(series_opt, opt)
               }""")
 end
 
+# Generates a colormap for pgfplots based on a ColorGradient
 pgfx_colormap(cl::PlotUtils.AbstractColorList) = pgfx_colormap(color_list(cl))
 function pgfx_colormap(v::Vector{<:Colorant})
     join(map(v) do c
