@@ -236,15 +236,64 @@ function get_ticks(sp::Subplot, axis::Axis; update = true)
 end
 
 # Ticks getter functions
+for l in (:x, :y, :z)
+    axis = string(l, "-axis")  # "x-axis"
+    ticks = string(l, "ticks") # "xticks"
+    f = Symbol(ticks)          # :xticks
+    @eval begin
+        """
+            $($f)(p::Plot)
+
+        returns a vector of the $($axis) ticks of the subplots of `p`.
+
+        Example use:
+
+        ```jldoctest
+        julia> p = plot(1:5, $($ticks)=[1,2])
+
+        julia> $($f)(p)
+        1-element Vector{Tuple{Vector{Float64}, Vector{String}}}:
+         ([1.0, 2.0], ["1", "2"])
+        ```
+
+        If `p` consists of a single subplot, you might want to grab
+        only the first element, via
+
+        ```jldoctest
+        julia> $($f)(p)[1]
+        ([1.0, 2.0], ["1", "2"])
+        ```
+
+        or you can call $($f) on the first (only) subplot of `p` via
+
+        ```jldoctest
+        julia> $($f)(p[1])
+        ([1.0, 2.0], ["1", "2"])
+        ```
+        """
+        $f(p::Plot) = get_ticks(p, $(Meta.quot(l)))
+        """
+            $($f)(sp::Subplot)
+
+        returns the $($axis) ticks of the subplot `sp`.
+
+        Note that the ticks are returned as tuples of values and labels:
+
+        ```jldoctest
+        julia> sp = plot(1:5, $($ticks)=[1,2]).subplots[1]
+        Subplot{1}
+
+        julia> $($f)(sp)
+        ([1.0, 2.0], ["1", "2"])
+        ```
+        """
+        $f(sp::Subplot) = get_ticks(sp, $(Meta.quot(l)))
+        export $f
+    end
+end
+# get_ticks from axis symbol :x, :y, or :z
 get_ticks(sp::Subplot, s::Symbol) = get_ticks(sp, sp[Symbol(s, :axis)])
-xticks(sp::Subplot) = get_ticks(sp, :x)
-yticks(sp::Subplot) = get_ticks(sp, :y)
-zticks(sp::Subplot) = get_ticks(sp, :z)
 get_ticks(p::Plot, s::Symbol) = [get_ticks(sp, s) for sp in p.subplots]
-xticks(p::Plot) = get_ticks(p, :x)
-yticks(p::Plot) = get_ticks(p, :y)
-zticks(p::Plot) = get_ticks(p, :z)
-export xticks, yticks, zticks
 
 function get_ticks(ticks::Symbol, cvals::T, dvals, args...) where T
     if ticks === :none
