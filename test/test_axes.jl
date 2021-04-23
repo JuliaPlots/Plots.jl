@@ -21,3 +21,13 @@ end # testset
     @test Plots.get_ticks(p2[1], p2[1][:xaxis])[2] == string.('C':3:'Z')
     @test Plots.get_ticks(p3[1], p3[1][:xaxis])[2] == string.('A':'Z')
 end
+
+@testset "Ticks getter functions" begin
+    ticks1 = ([1,2,3], ("a","b","c"))
+    ticks2 = ([4,5], ("e","f"))
+    p1 = plot(1:5, 1:5, 1:5, xticks=ticks1, yticks=ticks1, zticks=ticks1)
+    p2 = plot(1:5, 1:5, 1:5, xticks=ticks2, yticks=ticks2, zticks=ticks2)
+    p = plot(p1, p2)
+    @test xticks(p) == yticks(p) == zticks(p) == [ticks1, ticks2]
+    @test xticks(p[1]) == yticks(p[1]) == zticks(p[1]) == ticks1
+end
