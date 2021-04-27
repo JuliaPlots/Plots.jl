@@ -248,6 +248,8 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     string("colorbar", pgfx_get_colorbar_pos(sp[:colorbar])) => nothing,
                     "colorbar style" => colorbar_style,
                 )
+            else
+                push!(axis_opt, "colorbar" => "false") 
             end
             if RecipesPipeline.is3d(sp)
                 azim, elev = sp[:camera]
