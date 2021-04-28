@@ -472,23 +472,13 @@ end
         fillto = map(x -> _is_positive(x) ? typeof(baseline)(x) : baseline, fillto)
     end
 
-    annotations = pop_kw!(plotattributes, :series_annotations, nothing)
-    isvert = isvertical(plotattributes)
-    if !isnothing(annotations)
-        @series begin
-            primary := false
-            seriestype := :scatter
-            markersize := 0
-            series_annotations := annotations
-            orientation := default(:orientation)
-            isvert ? (x, y) : (y, x)
+    if !isnothing(plotattributes[:series_annotations])
+        if isvertical(plotattributes)
+            annotations := (x,y,plotattributes[:series_annotations].strs,:bottom)
+        else
+            annotations := (y,x,plotattributes[:series_annotations].strs,:left)
         end
-        # if isvertical(plotattributes)
-        #     annotations := (x,y,plotattributes[:series_annotations].strs,:bottom)
-        # else
-        #     annotations := (y,x,plotattributes[:series_annotations].strs,:left)
-        # end
-        # series_annotations := nothing
+        series_annotations := nothing
     end
 
     # create the bar shapes by adding x/y segments
@@ -515,7 +505,7 @@ end
     expand_extrema!(axis, widen(ignorenan_extrema(xseg.pts)...))
 
     # switch back
-    if !isvert
+    if !isvertical(plotattributes)
         xseg, yseg = yseg, xseg
     end
 
