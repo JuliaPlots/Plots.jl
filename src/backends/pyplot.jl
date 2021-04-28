@@ -1022,7 +1022,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             cbar_axis."set_tick_params"(
                 direction = axis[:tick_direction] == :out ? "out" : "in",
                 width=py_thickness_scale(plt, intensity),
-                length= 5 * py_thickness_scale(plt, intensity)
+                length = axis[:tick_direction] == :none ? 0 : 5 * py_thickness_scale(plt, intensity)
             )
 
 
@@ -1137,7 +1137,7 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
             pyaxis."set_tick_params"(
                 direction = axis[:tick_direction] == :out ? "out" : "in",
                 width=py_thickness_scale(plt, intensity),
-                length= 5 * py_thickness_scale(plt, intensity)
+                length = axis[:tick_direction] == :none ? 0 : 5 * py_thickness_scale(plt, intensity)
                                      )
 
             getproperty(ax, Symbol("set_", letter, "label"))(axis[:guide])
@@ -1176,7 +1176,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis."set_tick_params"(
                     which = "minor",
                     direction = axis[:tick_direction] == :out ? "out" : "in",
-                    width=py_thickness_scale(plt, intensity))
+                    length = axis[:tick_direction] == :none ? 0 : py_thickness_scale(plt, intensity),
+                )
             end
 
             if axis[:minorgrid]
@@ -1186,7 +1187,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                 pyaxis."set_tick_params"(
                     which = "minor",
                     direction = axis[:tick_direction] == :out ? "out" : "in",
-                    width=py_thickness_scale(plt, intensity))
+                    length = axis[:tick_direction] == :none ? 0 : py_thickness_scale(plt, intensity)
+                )
 
                 pyaxis."grid"(true,
                     which = "minor",

@@ -697,17 +697,19 @@ function axis_drawing_info(sp, letter)
         if !(ax[:ticks] in (:none, nothing, false))
             f = RecipesPipeline.scale_func(oax[:scale])
             invf = RecipesPipeline.inverse_scale_func(oax[:scale])
-            tick_start, tick_stop = if sp[:framestyle] == :origin
-                t = invf(f(0) + 0.012 * (f(oamax) - f(oamin)))
-                (-t, t)
-            else
-                ticks_in = ax[:tick_direction] == :out ? -1 : 1
-                t = invf(f(oa1) + 0.012 * (f(oa2) - f(oa1)) * ticks_in)
-                (oa1, t)
+            if ax[:tick_direction] !== :none
+                tick_start, tick_stop = if sp[:framestyle] == :origin
+                    t = invf(f(0) + 0.012 * (f(oamax) - f(oamin)))
+                    (-t, t)
+                else
+                    ticks_in = ax[:tick_direction] == :out ? -1 : 1
+                    t = invf(f(oa1) + 0.012 * (f(oa2) - f(oa1)) * ticks_in)
+                    (oa1, t)
+                end
             end
 
             for tick in ticks[1]
-                if ax[:showaxis]
+                if ax[:showaxis] && ax[:tick_direction] !== :none
                     push!(
                         tick_segments,
                         reverse_if((tick, tick_start), isy),
@@ -834,18 +836,20 @@ function axis_drawing_info_3d(sp, letter)
         if !(ax[:ticks] in (:none, nothing, false))
             f = RecipesPipeline.scale_func(nax[:scale])
             invf = RecipesPipeline.inverse_scale_func(nax[:scale])
-            tick_start, tick_stop = if sp[:framestyle] == :origin
-                t = invf(f(0) + 0.012 * (f(namax) - f(namin)))
-                (-t, t)
-            else
-                ticks_in = ax[:tick_direction] == :out ? -1 : 1
-                t = invf(f(na0) + 0.012 * (f(na1) - f(na0)) * ticks_in)
-                (na0, t)
+            if ax[:tick_direction] !== :none
+                tick_start, tick_stop = if sp[:framestyle] == :origin
+                    t = invf(f(0) + 0.012 * (f(namax) - f(namin)))
+                    (-t, t)
+                else
+                    ticks_in = ax[:tick_direction] == :out ? -1 : 1
+                    t = invf(f(na0) + 0.012 * (f(na1) - f(na0)) * ticks_in)
+                    (na0, t)
+                end
             end
 
             ga0, ga1 = sp[:framestyle] in (:origin, :zerolines) ? (namin, namax) : (na0, na1)
             for tick in ticks[1]
-                if ax[:showaxis]
+                if ax[:showaxis] && ax[:tick_direction] !== :none
                     push!(
                         tick_segments,
                         sort_3d_axes(tick, tick_start, fa0, letter),
@@ -875,7 +879,7 @@ function axis_drawing_info_3d(sp, letter)
                     (na0, t)
                 end
                 for tick in minor_ticks
-                    if ax[:showaxis]
+                    if ax[:showaxis] && ax[:tick_direction] !== :none
                         push!(
                             tick_segments,
                             sort_3d_axes(tick, tick_start, fa0, letter),
