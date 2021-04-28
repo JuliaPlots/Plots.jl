@@ -18,6 +18,9 @@
 [![][docs-img]][docs-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725318.svg)](https://doi.org/10.5281/zenodo.4725318)
+
+
 #### Created by Tom Breloff (@tbreloff)
 
 #### Maintained by the [JuliaPlots members](https://github.com/orgs/JuliaPlots/people)
