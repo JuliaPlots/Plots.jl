@@ -1278,11 +1278,18 @@ function pgfx_axis!(opt::PGFPlotsX.Options, sp::Subplot, letter)
         else
             push!(opt, string(letter, "ticklabels") => "{}")
         end
-        push!(
-            opt,
-            string(letter, "tick align") =>
-                (axis[:tick_direction] == :out ? "outside" : "inside"),
-        )
+        if axis[:tick_direction] === :none
+            push!(
+                opt,
+                string(letter, "tick style") => "draw=none",
+            )
+        else
+            push!(
+                opt,
+                string(letter, "tick align") =>
+                    (axis[:tick_direction] == :out ? "outside" : "inside"),
+            )
+        end
         push!(
             opt, string(letter, "ticklabel style") => pgfx_get_ticklabel_style(sp, axis)
         )

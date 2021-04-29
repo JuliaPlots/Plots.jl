@@ -143,7 +143,8 @@ function plotly_axis(axis, sp, anchor = nothing, domain = nothing)
         :zerolinecolor => rgba_string(axis[:foreground_color_axis]),
         :showline   => framestyle in (:box, :axes) && axis[:showaxis],
         :linecolor  => rgba_string(plot_color(axis[:foreground_color_axis])),
-        :ticks      => axis[:tick_direction] == :out ? "outside" : "inside",
+        :ticks      => axis[:tick_direction] === :out ? "outside" : 
+                       axis[:tick_direction] === :in ? "inside" : "",
         :mirror     => framestyle == :box,
         :showticklabels => axis[:showaxis],
     )
