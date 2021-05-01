@@ -408,6 +408,12 @@ const _subplot_defaults = KW(
     :legendtitlefontrotation    => 0.0,
     :legendtitlefontcolor       => :match,
     :annotations                => [],                # annotation tuples... list of (x,y,annotation)
+    :annotationfontfamily       => :match,
+    :annotationfontsize         => 14,
+    :annotationhalign           => :hcenter,
+    :annotationvalign           => :vcenter,
+    :annotationrotation         => 0.0,
+    :annotationcolor            => :match,
     :projection                 => :none,             # can also be :polar or :3d
     :aspect_ratio               => :auto,             # choose from :none or :equal
     :margin                     => 1mm,
@@ -519,6 +525,7 @@ const _initial_axis_defaults = deepcopy(_axis_defaults)
 const _initial_fontsizes = Dict(:titlefontsize  => _subplot_defaults[:titlefontsize],
                                 :legendfontsize => _subplot_defaults[:legendfontsize],
                                 :legendtitlefontsize => _subplot_defaults[:legendtitlefontsize],
+                                :annotationfontsize => _subplot_defaults[:annotationfontsize],
                                 :tickfontsize   => _axis_defaults[:tickfontsize],
                                 :guidefontsize  => _axis_defaults[:guidefontsize])
 
@@ -1359,6 +1366,8 @@ const _match_map = KW(
     :plot_titlefontcolor      => :foreground_color,
     :tickfontcolor            => :foreground_color_text,
     :guidefontcolor           => :foreground_color_guide,
+    :annotationfontfamily     => :fontfamily_subplot,
+    :annotationcolor          => :foreground_color_subplot,
 )
 
 # these can match values from the parent container (axis --> subplot --> plot)
