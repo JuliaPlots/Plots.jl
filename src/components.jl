@@ -575,11 +575,21 @@ annotations(sa::SeriesAnnotations) = sa
 
 # Expand arrays of coordinates, positions and labels into induvidual annotations
 # and make sure labels are of type PlotText
-function process_annotation(sp::Subplot, xs, ys, labs, font = font())
+function process_annotation(sp::Subplot, xs, ys, labs, font = nothing)
     anns = []
     labs = makevec(labs)
     xlength = length(methods(length, (typeof(xs),))) == 0 ? 1 : length(xs)
     ylength = length(methods(length, (typeof(ys),))) == 0 ? 1 : length(ys)
+    if isnothing(font)
+        font = Plots.font(;
+                    family=sp[:annotationfontfamily],
+                    pointsize=sp[:annotationfontsize],
+                    halign=sp[:annotationhalign],
+                    valign=sp[:annotationvalign],
+                    rotation=sp[:annotationrotation],
+                    color=sp[:annotationcolor],
+                         )
+    end
     for i in 1:max(xlength, ylength, length(labs))
       x, y, lab = _cycle(xs, i), _cycle(ys, i), _cycle(labs, i)
         x = typeof(x) <: TimeType ? Dates.value(x) : x
@@ -588,14 +598,24 @@ function process_annotation(sp::Subplot, xs, ys, labs, font = font())
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (x, y, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
         else
-            push!(anns, (x, y, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab...) : text(lab, font)))
+            push!(anns, (x, y, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab[1], font, lab[2:end]...) : text(lab, font)))
         end
     end
     anns
 end
-function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, labs, font = font())
+function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, labs, font = nothing)
     anns = []
     positions, labs = makevec(positions), makevec(labs)
+    if isnothing(font)
+        font = Plots.font(;
+                          family=sp[:annotationfontfamily],
+                          pointsize=sp[:annotationfontsize],
+                          halign=sp[:annotationhalign],
+                          valign=sp[:annotationvalign],
+                          rotation=sp[:annotationrotation],
+                          color=sp[:annotationcolor],
+                         )
+    end
     for i in 1:max(length(positions), length(labs))
         pos, lab = _cycle(positions, i), _cycle(labs, i)
         pos = get(_positionAliases, pos, pos)
@@ -603,7 +623,7 @@ function process_annotation(sp::Subplot, positions::Union{AVec{Symbol},Symbol}, 
             alphabet = "abcdefghijklmnopqrstuvwxyz"
             push!(anns, (pos, text(string("(", alphabet[sp[:subplot_index]], ")"), font)))
         else
-            push!(anns, (pos, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab...) : text(lab, font)))
+            push!(anns, (pos, isa(lab, PlotText) ? lab : isa(lab, Tuple) ? text(lab[1], font, lab[2:end]...) : text(lab, font)))
         end
     end
     anns
