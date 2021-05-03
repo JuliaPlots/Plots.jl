@@ -178,6 +178,14 @@ makevec(v::T) where {T} = T[v]
 maketuple(x::Real)                     = (x,x)
 maketuple(x::Tuple{T,S}) where {T,S} = x
 
+for i in 2:4
+    @eval begin
+        RecipesPipeline.unzip(
+            v::Union{AVec{<:Tuple{Vararg{T,$i} where T}}, AVec{<:GeometryBasics.Point{$i}}},
+        ) = $(Expr(:tuple, (:([t[$j] for t in v]) for j=1:i)...))
+    end
+end
+
 RecipesPipeline.unzip(
     ::Union{AVec{<:GeometryBasics.Point{N}}, AVec{<:Tuple{Vararg{T,N} where T}}}
 ) where N = error("$N-dimensional unzip not implemented.")
