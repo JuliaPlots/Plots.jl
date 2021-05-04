@@ -183,8 +183,11 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             nothing
             sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) :
             nothing
-            # legend position
-            push!(axis_opt["legend style"], pgfx_get_legend_pos(sp[:legend])...)
+            # legend position / formatting
+            push!(axis_opt["legend style"],
+                pgfx_get_legend_pos(sp[:legend])...
+            )
+            merge!(axis_opt["legend style"], pgfx_get_legend_style(sp))
             for letter in (:x, :y, :z)
                 if letter != :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
@@ -797,6 +800,14 @@ function pgfx_get_legend_pos(v::Tuple{S,Symbol}) where S <: Real
         anchor = anchors[4-legend_anchor_index(s),4-legend_anchor_index(c)]
     end
     return ("at"=>"$(string(legend_pos_from_angle(v[1],rect...)))", "anchor"=>anchor)
+end
+
+function pgfx_get_legend_style(sp)
+    legfont = legendfont(sp)
+    PGFPlotsX.Options(
+        "cells" => PGFPlotsX.Options("anchor" => get((left = "west", right = "east", center = "middle"), legfont.halign, :left)),
+        "font" => pgfx_font(legfont.pointsize, pgfx_thickness_scaling(sp))
+    )
 end
 
 pgfx_get_colorbar_pos(s) =
