@@ -805,7 +805,7 @@ end
 function pgfx_get_legend_style(sp)
     legfont = legendfont(sp)
     PGFPlotsX.Options(
-        "cells" => PGFPlotsX.Options("anchor" => get((left = "west", right = "east", center = "middle"), legfont.halign, :left)),
+        "cells" => PGFPlotsX.Options("anchor" => get((left = "west", right = "east", hcenter = "center"), legfont.halign, "west")),
         "font" => pgfx_font(legfont.pointsize, pgfx_thickness_scaling(sp))
     )
 end
