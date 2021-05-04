@@ -663,8 +663,6 @@ function gr_set_tickfont(sp, letter)
         sp,
         halign = halign,
         valign = valign,
-        rotation = axis[:rotation],
-        color = axis[:tickfontcolor],
     )
 end
 
@@ -1010,7 +1008,7 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                 should_add_to_legend(series) || continue
                 st = series[:seriestype]
                 lc = get_linecolor(series, clims)
-                gr_set_line(sp[:legendfontsize] / 8, get_linestyle(series), lc, sp)
+                gr_set_line(sp[:legendfont].pointsize / 8, get_linestyle(series), lc, sp)
 
                 if (st == :shape || series[:fillrange] !== nothing) && series[:ribbon] === nothing
                     fc = get_fillcolor(series, clims)
@@ -1046,16 +1044,16 @@ function gr_add_legend(sp, leg, viewport_plotarea)
                     ms = first(series[:markersize])
                     msw = first(series[:markerstrokewidth])
                     s, sw = if ms > 0
-                        0.8 * sp[:legendfontsize], 0.8 * sp[:legendfontsize] * msw / ms
+                        0.8 * sp[:legendfont].pointsize, 0.8 * sp[:legendfont].pointsize * msw / ms
                     else
-                        0, 0.8 * sp[:legendfontsize] * msw / 8
+                        0, 0.8 * sp[:legendfont].pointsize * msw / 8
                     end
                     gr_draw_markers(series, xpos - leg.width_factor * 2, ypos, clims, s, sw)
                 end
 
                 lab = series[:label]
                 GR.settextalign(GR.TEXT_HALIGN_LEFT, GR.TEXT_VALIGN_HALF)
-                gr_set_textcolor(plot_color(sp[:legendfontcolor]))
+                gr_set_textcolor(plot_color(sp[:legendfont].color))
                 gr_text(xpos, ypos, string(lab))
                 ypos -= leg.dy
             end
@@ -1192,7 +1190,7 @@ function gr_get_legend_geometry(viewport_plotarea, sp)
     x_legend_offset = (viewport_plotarea[2] - viewport_plotarea[1]) / 30
     y_legend_offset = (viewport_plotarea[4] - viewport_plotarea[3]) / 30
 
-    dy = gr_point_mult(sp) * sp[:legendfontsize] * 1.75
+    dy = gr_point_mult(sp) * sp[:legendfont].pointsize * 1.75
     legendh = dy * legendn
 
     return (
@@ -1672,7 +1670,7 @@ function gr_add_series(sp, series)
 
     if sp[:legend] == :inline && should_add_to_legend(series)
         gr_set_font(legendfont(sp), sp)
-        gr_set_textcolor(plot_color(sp[:legendfontcolor]))
+        gr_set_textcolor(plot_color(sp[:legendfont].color))
         if sp[:yaxis][:mirror]
             (_,i) = sp[:xaxis][:flip] ? findmax(x) : findmin(x)
             GR.settextalign(GR.TEXT_HALIGN_RIGHT, GR.TEXT_VALIGN_HALF)
