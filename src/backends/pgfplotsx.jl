@@ -142,7 +142,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             axis_opt = PGFPlotsX.Options(
                 "point meta max" => get_clims(sp)[2],
                 "point meta min" => get_clims(sp)[1],
-                "legend cell align" => "left",
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
                         pgfx_get_title_pos(title_loc)...,
@@ -154,22 +153,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "draw opacity" => title_a,
                     "rotate" => sp[:titlefontrotation],
                 ),
-                "legend style" => PGFPlotsX.Options(
-                    pgfx_linestyle(
-                        pgfx_thickness_scaling(sp),
-                        sp[:foreground_color_legend],
-                        fg_alpha,
-                        "solid",
-                    ) => nothing,
-                    "fill" => cstr,
-                    "fill opacity" => a,
-                    "text opacity" => alpha(plot_color(sp[:legendfontcolor])),
-                    "font" => pgfx_font(
-                        sp[:legendfontsize],
-                        pgfx_thickness_scaling(sp),
-                    ),
-                    "text" => plot_color(sp[:legendfontcolor]),
-                ),
+                "legend style" => pgfx_get_legend_style(sp),
                 "axis background/.style" => PGFPlotsX.Options(
                     "fill" => bgc_inside,
                     "opacity" => bgc_inside_a,
@@ -183,11 +167,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             nothing
             sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) :
             nothing
-            # legend position / formatting
-            push!(axis_opt["legend style"],
-                pgfx_get_legend_pos(sp[:legend])...
-            )
-            merge!(axis_opt["legend style"], pgfx_get_legend_style(sp))
             for letter in (:x, :y, :z)
                 if letter != :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
@@ -805,8 +784,22 @@ end
 function pgfx_get_legend_style(sp)
     legfont = legendfont(sp)
     PGFPlotsX.Options(
+        pgfx_linestyle(
+            pgfx_thickness_scaling(sp),
+            sp[:foreground_color_legend],
+            fg_alpha,
+            "solid",
+        ) => nothing,
+        "fill" => cstr,
+        "fill opacity" => a,
+        "text opacity" => alpha(plot_color(sp[:legendfontcolor])),
+        "font" => pgfx_font(
+            sp[:legendfontsize],
+            pgfx_thickness_scaling(sp),
+        ),
+        "text" => plot_color(sp[:legendfontcolor]),
         "cells" => PGFPlotsX.Options("anchor" => get((left = "west", right = "east", hcenter = "center"), legfont.halign, "west")),
-        "font" => pgfx_font(legfont.pointsize, pgfx_thickness_scaling(sp))
+        pgfx_get_legend_pos(sp[:legend])...,
     )
 end
 
