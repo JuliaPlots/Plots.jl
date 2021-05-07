@@ -131,9 +131,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             axis_height = sp_height - (tpad + bpad)
             axis_width = sp_width - (rpad + lpad)
 
-            cstr = plot_color(sp[:background_color_legend])
-            a = alpha(cstr)
-            fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
             title_loc = sp[:titlelocation]
@@ -782,6 +779,9 @@ function pgfx_get_legend_pos(v::Tuple{S,Symbol}) where S <: Real
 end
 
 function pgfx_get_legend_style(sp)
+    cstr = plot_color(sp[:background_color_legend])
+    a = alpha(cstr)
+    fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
     legfont = legendfont(sp)
     PGFPlotsX.Options(
         pgfx_linestyle(
