@@ -243,76 +243,75 @@ julia> font(family="serif",halign=:center,rotation=45.0)
 ```
 """
 function font(args...;kw...)
-
-  # defaults
-  family = "sans-serif"
-  pointsize = 14
-  halign = :hcenter
-  valign = :vcenter
-  rotation = 0.0
-  color = colorant"black"
+  f = Font(
+           "sans-serif",
+           14,
+           :hcenter,
+           :vcenter,
+           0.0,
+           colorant"black",
+          )
 
   for arg in args
-    T = typeof(arg)
-
-    if T == Font
-      family = arg.family
-      pointsize = arg.pointsize
-      halign = arg.halign
-      valign = arg.valign
-      rotation = arg.rotation
-      color = arg.color
-    elseif arg == :center
-      halign = :hcenter
-      valign = :vcenter
-    elseif arg in (:hcenter, :left, :right)
-      halign = arg
-    elseif arg in (:vcenter, :top, :bottom)
-      valign = arg
-    elseif T <: Colorant
-      color = arg
-    elseif T <: Symbol || T <: AbstractString
-      try
-        color = parse(Colorant, string(arg))
-      catch
-        family = string(arg)
-      end
-    elseif typeof(arg) <: Integer
-      pointsize = arg
-    elseif typeof(arg) <: Real
-      rotation = convert(Float64, arg)
-    else
-      @warn("Unused font arg: $arg ($(typeof(arg)))")
-    end
+      prop = process_font_arg(arg)
+      isnothing(prop) && continue
+      setproperty!.(Ref(f), prop...)
   end
 
-  for symbol in keys(kw)
-    if symbol == :family
-      family = kw[:family]
-    elseif symbol == :pointsize
-      pointsize = kw[:pointsize]
-    elseif symbol == :halign
-      halign = kw[:halign]
-      if halign == :center
-        halign = :hcenter
+  for (k, v) in kw
+      if k === :halign && v === :center
+          v = :hcenter
+      elseif k === :valign && v === :center
+          v = :vcenter
+      elseif k === :color
+          v = parse(Colorant, v)
       end
-      @assert halign in (:hcenter, :left, :right)
-    elseif symbol == :valign
-      valign = kw[:valign]
-      if valign == :center
-        valign = :vcenter
-      end
-      @assert valign in (:vcenter, :top, :bottom)
-    elseif symbol == :rotation
-      rotation = kw[:rotation]
-    elseif symbol == :color
-      color = parse(Colorant, kw[:color])
-    else
-      @warn("Unused font kwarg: $symbol")
-    end
+      setproperty!(f, k, v)
   end
+  return f
+end
 
-  Font(family, pointsize, halign, valign, rotation, color)
+process_font_arg(arg::T) where T = @warn("Unused font arg: $arg")
+process_font_arg(::Nothing) = nothing
+process_font_arg(::Tuple{Vararg{Nothing}}) = nothing
+
+process_font_arg(arg::Pair) = (arg...,)
+function process_font_arg(arg::Font)
+    pn = propertynames(arg)
+    vals = getproperty.(Ref(arg), pn)
+    return (pn, vals)
+end
+process_font_arg(arg::Colorant) = (:color, arg)
+process_font_arg(arg::Integer) = (:pointsize, arg)
+process_font_arg(arg::Real) = (:rotation, arg)
+function process_font_arg(arg::T) where {T<:Union{Symbol, AbstractString}}
+    arg === :center && return ([:halign, :valign], [:hcenter, :vcenter])
+    arg in (:hcenter, :left, :right) && return (:halign, arg)
+    arg in (:vcenter, :top, :bottom) && return (:valign, arg)
+    try
+        return (:color, parse(Colorant, string(arg)))
+    catch
+        return (:family, string(arg))
+    end
+end
+function process_font_arg(arg::Tuple)
+    k = Symbol[]
+    v = Any[]
+    for a in arg
+        prop = process_font_arg(a)
+        isnothing(prop) && continue
+        if prop[1] isa Symbol
+            push!(k, prop[1])
+            push!(v, prop[2])
+        else
+            append!(k, prop[1])
+            append!(v, prop[2])
+        end
+    end
+    return (k, v)
+end
+function process_font_arg(arg::NamedTuple)
+    return (keys(arg), values(arg))
 end
 
 function scalefontsize(k::Symbol, factor::Number)

@@ -320,6 +320,7 @@ const _series_defaults = KW(
     :contour_labels     => false,
     :subplot            => :auto,     # which subplot(s) does this series belong to?
     :series_annotations => nothing,       # a list of annotations which apply to the coordinates of this series
+    :series_annotationfont => nothing,
     :primary            => true,     # when true, this "counts" as a series for color selection, etc.  the main use is to allow
                                      #     one logical series to be broken up (path and markers, for example)
     :hover              => nothing,  # text to display when hovering over the data points
@@ -331,17 +332,12 @@ const _series_defaults = KW(
 
 const _plot_defaults = KW(
     :plot_title                  => "",
-    :plot_titlefontsize          => 16,
+    :plot_titlefont              => (; pointsize=16),
     :plot_title_location         => :center,           # also :left or :right
-    :plot_titlefontfamily        => :match,
-    :plot_titlefonthalign        => :hcenter,
-    :plot_titlefontvalign        => :vcenter,
-    :plot_titlefontrotation      => 0.0,
-    :plot_titlefontcolor         => :match,
     :background_color            => colorant"white",   # default for all backgrounds,
     :background_color_outside    => :match,            # background outside grid,
     :foreground_color            => :auto,             # default for all foregrounds, and title color,
-    :fontfamily                  => "sans-serif",
+    :font                        => (; pointsize=11),
     :size                        => (600,400),
     :pos                         => (0,0),
     :window_title                => "Plots.jl",
@@ -365,13 +361,8 @@ const _plot_defaults = KW(
 const _subplot_defaults = KW(
     :title                      => "",
     :titlelocation              => :center,           # also :left or :right
-    :fontfamily_subplot         => :match,
-    :titlefontfamily            => :match,
-    :titlefontsize              => 14,
-    :titlefonthalign            => :hcenter,
-    :titlefontvalign            => :vcenter,
-    :titlefontrotation          => 0.0,
-    :titlefontcolor             => :match,
+    :subplotfont                => nothing,
+    :titlefont                  => (; pointsize=14),
     :background_color_subplot   => :match,            # default for other bg colors... match takes plot default
     :background_color_legend    => :match,            # background of legend
     :background_color_inside    => :match,            # background inside grid
@@ -383,31 +374,16 @@ const _subplot_defaults = KW(
     :legendtitle                => nothing,
     :colorbar                   => :legend,
     :clims                      => :auto,
-    :colorbar_fontfamily        => :match,
+    :colorbar_tickfont          => (; pointsize=8),
     :colorbar_ticks             => :auto,
-    :colorbar_tickfontfamily    => :match,
-    :colorbar_tickfontsize      => 8,
-    :colorbar_tickfonthalign    => :hcenter,
-    :colorbar_tickfontvalign    => :vcenter,
-    :colorbar_tickfontrotation  => 0.0,
-    :colorbar_tickfontcolor     => :match,
     :colorbar_scale             => :identity,
     :colorbar_formatter         => :auto,
     :colorbar_discrete_values   => [],
     :colorbar_continuous_values   => zeros(0),
-    :legendfontfamily           => :match,
-    :legendfontsize             => 8,
-    :legendfonthalign           => :hcenter,
-    :legendfontvalign           => :vcenter,
-    :legendfontrotation         => 0.0,
-    :legendfontcolor            => :match,
-    :legendtitlefontfamily      => :match,
-    :legendtitlefontsize        => 11,
-    :legendtitlefonthalign      => :hcenter,
-    :legendtitlefontvalign      => :vcenter,
-    :legendtitlefontrotation    => 0.0,
-    :legendtitlefontcolor       => :match,
+    :legendfont                 => (; pointsize=8),
+    :legendtitlefont            => (; pointsize=11),
     :annotations                => [],                # annotation tuples... list of (x,y,annotation)
+    :annotationfont             => (; pointsize=14),
     :projection                 => :none,             # can also be :polar or :3d
     :aspect_ratio               => :auto,             # choose from :none or :equal
     :margin                     => 1mm,
@@ -417,16 +393,11 @@ const _subplot_defaults = KW(
     :bottom_margin              => :match,
     :subplot_index              => -1,
     :colorbar_title             => "",
-    :colorbar_titlefontsize     => 10,
+    :colorbar_titlefont         => (; pointsize=10),
     :colorbar_title_location    => :center,           # also :left or :right
-    :colorbar_titlefontfamily   => :match,
-    :colorbar_titlefonthalign   => :hcenter,
-    :colorbar_titlefontvalign   => :vcenter,
-    :colorbar_titlefontrotation => 0.0,
-    :colorbar_titlefontcolor    => :match,
     :framestyle                 => :axes,
     :camera                     => (30,30),
-    :extra_kwargs               => Dict()
+    :extra_kwargs               => Dict(),
 )
 
 const _axis_defaults = KW(
@@ -438,18 +409,8 @@ const _axis_defaults = KW(
     :rotation                    => 0,
     :flip                        => false,
     :link                        => [],
-    :tickfontfamily              => :match,
-    :tickfontsize                => 8,
-    :tickfonthalign              => :hcenter,
-    :tickfontvalign              => :vcenter,
-    :tickfontrotation            => 0.0,
-    :tickfontcolor               => :match,
-    :guidefontfamily             => :match,
-    :guidefontsize               => 11,
-    :guidefonthalign             => :hcenter,
-    :guidefontvalign             => :vcenter,
-    :guidefontrotation           => 0.0,
-    :guidefontcolor              => :match,
+    :tickfont                    => (; pointsize=8),
+    :guidefont                   => (; pointsize=11),
     :foreground_color_axis       => :match,            # axis border/tick colors,
     :foreground_color_border     => :match,            # plot area border/spines,
     :foreground_color_text       => :match,            # tick text color,
@@ -516,11 +477,13 @@ const _initial_defaults = deepcopy(_all_defaults)
 const _initial_axis_defaults = deepcopy(_axis_defaults)
 
 # to be able to reset font sizes to initial values
+#=
 const _initial_fontsizes = Dict(:titlefontsize  => _subplot_defaults[:titlefontsize],
                                 :legendfontsize => _subplot_defaults[:legendfontsize],
                                 :legendtitlefontsize => _subplot_defaults[:legendtitlefontsize],
                                 :tickfontsize   => _axis_defaults[:tickfontsize],
                                 :guidefontsize  => _axis_defaults[:guidefontsize])
+                                =#
 
 const _internal_args =
     [:plot_object, :series_plotindex, :markershape_to_add, :letter, :idxfilter]
@@ -652,7 +615,7 @@ add_aliases(:zguide, :zlabel, :zlab, :zl)
 add_aliases(:zlims, :zlim, :zlimit, :zlimits)
 add_aliases(:zticks, :ztick)
 add_aliases(:zrotation, :zrot, :zr)
-add_aliases(:guidefontsize, :labelfontsize)
+add_aliases(:guidefont, :labelfont)
 add_aliases(:fill_z, :fillz, :fz, :surfacecolor, :surfacecolour, :sc, :surfcolor, :surfcolour)
 add_aliases(:legend, :leg, :key)
 add_aliases(:legendtitle, :legend_title, :labeltitle, :label_title, :leg_title, :key_title)
@@ -967,39 +930,6 @@ function processMinorGridArg!(plotattributes::AKW, arg, letter)
     end
 end
 
-function processFontArg!(plotattributes::AKW, fontname::Symbol, arg)
-    T = typeof(arg)
-    if T <: Font
-        plotattributes[Symbol(fontname, :family)] = arg.family
-        plotattributes[Symbol(fontname, :size)] = arg.pointsize
-        plotattributes[Symbol(fontname, :halign)] = arg.halign
-        plotattributes[Symbol(fontname, :valign)] = arg.valign
-        plotattributes[Symbol(fontname, :rotation)] = arg.rotation
-        plotattributes[Symbol(fontname, :color)] = arg.color
-    elseif arg == :center
-        plotattributes[Symbol(fontname, :halign)] = :hcenter
-        plotattributes[Symbol(fontname, :valign)] = :vcenter
-    elseif arg in (:hcenter, :left, :right)
-        plotattributes[Symbol(fontname, :halign)] = arg
-    elseif arg in (:vcenter, :top, :bottom)
-        plotattributes[Symbol(fontname, :valign)] = arg
-    elseif T <: Colorant
-        plotattributes[Symbol(fontname, :color)] = arg
-    elseif T <: Symbol || T <: AbstractString
-        try
-            plotattributes[Symbol(fontname, :color)] = parse(Colorant, string(arg))
-        catch
-            plotattributes[Symbol(fontname, :family)] = string(arg)
-        end
-    elseif typeof(arg) <: Integer
-        plotattributes[Symbol(fontname, :size)] = arg
-    elseif typeof(arg) <: Real
-        plotattributes[Symbol(fontname, :rotation)] = convert(Float64, arg)
-    else
-        @warn("Skipped font arg: $arg ($(typeof(arg)))")
-    end
-end
-
 _replace_markershape(shape::Symbol) = get(_markerAliases, shape, shape)
 _replace_markershape(shapes::AVec) = map(_replace_markershape, shapes)
 _replace_markershape(shape) = shape
@@ -1011,6 +941,27 @@ function _add_markershape(plotattributes::AKW)
     if !haskey(plotattributes, :markershape) && ms != :none
         plotattributes[:markershape] = ms
     end
+end
+
+"""
+```julia
+@fontdependency a b c
+```
+is equivalent to
+```julia
+fontattributes[:c] = font(
+  plotattributes[:a],
+  plotattributes[:b],
+  plotattributes[:c]
+  )
+```
+"""
+macro fontdependency(dependencies...)
+esc(
+    quote
+        fontattributes[$(QuoteNode(last(dependencies)))] = font(get.(Ref(plotattributes), $dependencies, nothing))
+    end
+   )
 end
 
 "Handle all preprocessing of args... break out colors/sizes/etc and replace aliases."
@@ -1075,24 +1026,30 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
             processMinorGridArg!(plotattributes, arg, letter)
         end
     end
-    # handle font args common to all axes
-    for fontname in (:tickfont, :guidefont)
-        args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
-        for arg in wraptuple(args)
-            for letter in (:x, :y, :z)
-                processFontArg!(plotattributes, Symbol(letter, fontname), arg)
-            end
-        end
-    end
-    # handle individual axes font args
-    for letter in (:x, :y, :z)
-        for fontname in (:tickfont, :guidefont)
-            args = RecipesPipeline.pop_kw!(plotattributes, Symbol(letter, fontname), ())
-            for arg in wraptuple(args)
-                processFontArg!(plotattributes, Symbol(letter, fontname), arg)
-            end
-        end
-    end
+
+    fontattributes = Dict{Symbol, Font}()
+
+
+    @fontdependency font
+    @fontdependency font plot_titlefont
+    @fontdependency font subplotfont
+    @fontdependency font subplotfont series_annotationfont
+    @fontdependency font subplotfont titlefont
+    @fontdependency font subplotfont legendfont
+    @fontdependency font subplotfont legendfont legendtitlefont
+    @fontdependency font subplotfont annotationfont
+    @fontdependency font subplotfont tickfont
+    @fontdependency font subplotfont guidefont
+    @fontdependency font subplotfont tickfont colorbar_tickfont
+    @fontdependency font subplotfont guidefont colorbar_titlefont
+    @fontdependency font subplotfont tickfont xtickfont
+    @fontdependency font suibplotfont guidefont xguidefont
+    @fontdependency font subplotfont tickfont ytickfont
+    @fontdependency font suibplotfont guidefont yguidefont
+    @fontdependency font subplotfont tickfont ztickfont
+    @fontdependency font suibplotfont guidefont zguidefont
+    merge!(plotattributes, fontattributes)
+
     # handle axes args
     for k in _axis_args
         if haskey(plotattributes, k) && k !== :link
@@ -1103,14 +1060,6 @@ function RecipesPipeline.preprocess_attributes!(plotattributes::AKW)
                     plotattributes[lk] = v
                 end
             end
-        end
-    end
-
-    # fonts
-    for fontname in (:titlefont, :legendfont, :legendtitlefont, :plot_titlefont, :colorbar_titlefont)
-        args = RecipesPipeline.pop_kw!(plotattributes, fontname, ())
-        for arg in wraptuple(args)
-            processFontArg!(plotattributes, fontname, arg)
         end
     end
 
@@ -1344,21 +1293,6 @@ const _match_map = KW(
     :top_margin               => :margin,
     :right_margin             => :margin,
     :bottom_margin            => :margin,
-    :titlefontfamily          => :fontfamily_subplot,
-    :titlefontcolor           => :foreground_color_subplot,
-    :legendfontfamily         => :fontfamily_subplot,
-    :legendfontcolor          => :foreground_color_subplot,
-    :legendtitlefontfamily    => :fontfamily_subplot,
-    :legendtitlefontcolor     => :foreground_color_subplot,
-    :colorbar_fontfamily      => :fontfamily_subplot,
-    :colorbar_titlefontfamily => :fontfamily_subplot,
-    :colorbar_titlefontcolor  => :foreground_color_subplot,
-    :colorbar_tickfontfamily  => :fontfamily_subplot,
-    :colorbar_tickfontcolor   => :foreground_color_subplot,
-    :plot_titlefontfamily     => :fontfamily,
-    :plot_titlefontcolor      => :foreground_color,
-    :tickfontcolor            => :foreground_color_text,
-    :guidefontcolor           => :foreground_color_guide,
 )
 
 # these can match values from the parent container (axis --> subplot --> plot)
@@ -1371,9 +1305,6 @@ const _match_map2 = KW(
     :foreground_color_minor_grid=> :foreground_color_subplot,
     :foreground_color_guide   => :foreground_color_subplot,
     :foreground_color_text    => :foreground_color_subplot,
-    :fontfamily_subplot       => :fontfamily,
-    :tickfontfamily           => :fontfamily_subplot,
-    :guidefontfamily          => :fontfamily_subplot,
 )
 
 # properly retrieve from plt.attr, passing `:match` to the correct key
