@@ -1,0 +1,82 @@
+{
+    "title": "Plots.jl",
+    "license": "MIT", 
+    "creators": [
+        {
+            "affiliation": "Elemental Cognition", 
+            "name": "Tom Breloff"
+        }, 
+        {
+            "affiliation": "TU Wien", 
+            "name": "Daniel Schwabeneder"
+        }, 
+        {
+            "affiliation": "GLOBE Institute", 
+            "name": "Michael Krabbe Borregaard"
+        }, 
+        {
+            "affiliation": "Leibniz Universit\u00e4t Hannover", 
+            "name": "Simon Christ",
+            "orcid": "0000-0002-5866-1472"
+        }, 
+        {
+            "affiliation": "Forschungszentrum J\u00fclich", 
+            "name": "Josef Heinen"
+        }, 
+        {
+            "name": "Yuval"
+        }, 
+        {
+            "name": "Andrew Palugniok"
+        }, 
+        {
+            "affiliation": "@beacon-biosignals", 
+            "name": "Simon"
+        }, 
+        {
+            "affiliation": "Veos Digital (https://veos.digital/)", 
+            "name": "Pietro Vertechi"
+        }, 
+        {
+            "name": "Zhanibek"
+        }, 
+        {
+            "name": "Thatcher Chamberlin"
+        }, 
+        {
+            "name": "ma-laforge"
+        }, 
+        {
+            "affiliation": "Massachusetts Institute of Technology", 
+            "name": "Christopher Rackauckas"
+        }, 
+        {
+            "affiliation": "Max Planck Institute for Physics", 
+            "name": "Oliver Schulz"
+        }, 
+        {
+            "affiliation": "@JuliaComputing", 
+            "name": "Sebastian Pfitzner"
+        }, 
+        {
+            "name": "Takafumi Arakaki"
+        }, 
+        {
+            "affiliation": "University of Manitoba", 
+            "name": "Amin Yahyaabadi"
+        }, 
+        {
+            "name": "Jack Devine"
+        }, 
+        {
+            "name": "Sebastian Pech"
+        }, 
+        {
+            "affiliation": "@JuliaComputing", 
+            "name": "Patrick Kofod Mogensen"
+        }, 
+        {
+            "name": "Samuel S. Watson"
+        }
+    ], 
+}
