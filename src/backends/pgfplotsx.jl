@@ -131,9 +131,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             axis_height = sp_height - (tpad + bpad)
             axis_width = sp_width - (rpad + lpad)
 
-            cstr = plot_color(sp[:background_color_legend])
-            a = alpha(cstr)
-            fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
             title_cstr = plot_color(sp[:titlefontcolor])
             title_a = alpha(title_cstr)
             title_loc = sp[:titlelocation]
@@ -142,7 +139,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             axis_opt = PGFPlotsX.Options(
                 "point meta max" => get_clims(sp)[2],
                 "point meta min" => get_clims(sp)[1],
-                "legend cell align" => "left",
                 "title" => sp[:title],
                 "title style" => PGFPlotsX.Options(
                         pgfx_get_title_pos(title_loc)...,
@@ -154,22 +150,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "draw opacity" => title_a,
                     "rotate" => sp[:titlefontrotation],
                 ),
-                "legend style" => PGFPlotsX.Options(
-                    pgfx_linestyle(
-                        pgfx_thickness_scaling(sp),
-                        sp[:foreground_color_legend],
-                        fg_alpha,
-                        "solid",
-                    ) => nothing,
-                    "fill" => cstr,
-                    "fill opacity" => a,
-                    "text opacity" => alpha(plot_color(sp[:legendfontcolor])),
-                    "font" => pgfx_font(
-                        sp[:legendfontsize],
-                        pgfx_thickness_scaling(sp),
-                    ),
-                    "text" => plot_color(sp[:legendfontcolor]),
-                ),
+                "legend style" => pgfx_get_legend_style(sp),
                 "axis background/.style" => PGFPlotsX.Options(
                     "fill" => bgc_inside,
                     "opacity" => bgc_inside_a,
@@ -183,8 +164,6 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
             nothing
             sp_height > 0 * mm ? push!(axis_opt, "height" => string(axis_height)) :
             nothing
-            # legend position
-            push!(axis_opt["legend style"], pgfx_get_legend_pos(sp[:legend])...)
             for letter in (:x, :y, :z)
                 if letter != :z || RecipesPipeline.is3d(sp)
                     pgfx_axis!(axis_opt, sp, letter)
@@ -797,6 +776,31 @@ function pgfx_get_legend_pos(v::Tuple{S,Symbol}) where S <: Real
         anchor = anchors[4-legend_anchor_index(s),4-legend_anchor_index(c)]
     end
     return ("at"=>"$(string(legend_pos_from_angle(v[1],rect...)))", "anchor"=>anchor)
+end
+
+function pgfx_get_legend_style(sp)
+    cstr = plot_color(sp[:background_color_legend])
+    a = alpha(cstr)
+    fg_alpha = alpha(plot_color(sp[:foreground_color_legend]))
+    legfont = legendfont(sp)
+    PGFPlotsX.Options(
+        pgfx_linestyle(
+            pgfx_thickness_scaling(sp),
+            sp[:foreground_color_legend],
+            fg_alpha,
+            "solid",
+        ) => nothing,
+        "fill" => cstr,
+        "fill opacity" => a,
+        "text opacity" => alpha(plot_color(sp[:legendfontcolor])),
+        "font" => pgfx_font(
+            sp[:legendfontsize],
+            pgfx_thickness_scaling(sp),
+        ),
+        "text" => plot_color(sp[:legendfontcolor]),
+        "cells" => PGFPlotsX.Options("anchor" => get((left = "west", right = "east", hcenter = "center"), legfont.halign, "west")),
+        pgfx_get_legend_pos(sp[:legend])...,
+    )
 end
 
 pgfx_get_colorbar_pos(s) =
