@@ -5,79 +5,128 @@
         {
             "affiliation": "Elemental Cognition", 
             "name": "Tom Breloff"
-        }, 
+        }
+    ],
+    "contributors":[
         {
             "affiliation": "TU Wien", 
-            "name": "Daniel Schwabeneder"
-            "orcid": "0000-0002-0412-0777"
+            "name": "Daniel Schwabeneder",
+            "orcid": "0000-0002-0412-0777",
+            "type": "ProjectLeader"
         }, 
         {
             "affiliation": "GLOBE Institute", 
-            "name": "Michael Krabbe Borregaard"
+            "name": "Michael Krabbe Borregaard",
+            "type": "ProjectLeader"
         }, 
         {
             "affiliation": "Leibniz Universit\u00e4t Hannover", 
             "name": "Simon Christ",
-            "orcid": "0000-0002-5866-1472"
+            "orcid": "0000-0002-5866-1472",
+            "type": "ProjectMember"
         }, 
         {
             "affiliation": "Forschungszentrum J\u00fclich", 
-            "name": "Josef Heinen"
+            "name": "Josef Heinen",
+            "orcid": "0000-0001-6509-1925",
+            "type": "ProjectLeader"
         }, 
         {
-            "name": "Yuval"
+            "name": "Yuval",
+            "type": "Other"
         }, 
         {
-            "name": "Andrew Palugniok"
+            "name": "Andrew Palugniok",
+            "type": "ProjectLeader"
         }, 
         {
             "affiliation": "@beacon-biosignals", 
-            "name": "Simon"
+            "name": "Simon",
+            "type": "Other"
         }, 
         {
             "affiliation": "Veos Digital (https://veos.digital/)", 
-            "name": "Pietro Vertechi"
+            "name": "Pietro Vertechi",
+            "type": "ProjectLeader"
         }, 
         {
-            "name": "Zhanibek"
+            "name": "Zhanibek",
+            "type": "Other"
         }, 
         {
-            "name": "Thatcher Chamberlin"
+            "name": "Thatcher Chamberlin",
+            "type": "Other"
         }, 
         {
-            "name": "ma-laforge"
+            "name": "ma-laforge",
+            "type": "ProjectMember"
         }, 
         {
             "affiliation": "Massachusetts Institute of Technology", 
-            "name": "Christopher Rackauckas"
+            "name": "Christopher Rackauckas",
+            "orcid": "0000-0001-5850-0663",
+            "type": "Other"
         }, 
         {
             "affiliation": "Max Planck Institute for Physics", 
-            "name": "Oliver Schulz"
+            "name": "Oliver Schulz",
+            "type": "Other"
         }, 
         {
             "affiliation": "@JuliaComputing", 
-            "name": "Sebastian Pfitzner"
+            "name": "Sebastian Pfitzner",
+            "type": "Other"
         }, 
         {
-            "name": "Takafumi Arakaki"
+            "name": "Takafumi Arakaki",
+            "type": "Other"
         }, 
         {
             "affiliation": "University of Manitoba", 
-            "name": "Amin Yahyaabadi"
+            "name": "Amin Yahyaabadi",
+            "type": "Other"
         }, 
         {
-            "name": "Jack Devine"
+            "name": "Jack Devine",
+            "type": "Other"
         }, 
         {
-            "name": "Sebastian Pech"
+            "name": "Sebastian Pech",
+            "type": "Other"
         }, 
         {
             "affiliation": "@JuliaComputing", 
-            "name": "Patrick Kofod Mogensen"
+            "name": "Patrick Kofod Mogensen",
+            "type": "Other"
         }, 
         {
-            "name": "Samuel S. Watson"
+            "name": "Samuel S. Watson",
+            "type": "Other"
+        },
+        {
+            "affiliation": "UC Davis",
+            "name": "Naoki Saito",
+            "orcid": "0000-0001-5234-4719",
+            "type": "Other"
+        },
+        {
+            "affiliation": "University of Southern California (USC)",
+            "name": "Benoit Pasquier",
+            "orcid": "0000-0002-3838-5976",
+            "type": "Other"
+        },
+        {
+            "affiliation": "NTNU Trondheim",
+            "name": "Ronny Bergmann",
+            "orcid": "0000-0001-8342-7218",
+            "type": "Other"
+        },
+        {
+            "name": "Andy Nowacki",
+            "affiliation": "University of Leeds",
+            "orcid": "0000-0001-7669-7383",
+            "type": "Other"
         }
-    ], 
+    ],
+    "resource_type": "software"
 }
