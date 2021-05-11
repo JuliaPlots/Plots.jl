@@ -172,6 +172,8 @@ end
     @testset "Plot" begin
         plots = [histogram([1, 0, 0, 0, 0, 0]),
                  plot([missing]),
+                 plot([missing, missing]),
+                 plot(fill(missing, 10)),
                  plot([missing; 1:4]),
                  plot([fill(missing, 10); 1:4]),
                  plot([1 1; 1 missing]),

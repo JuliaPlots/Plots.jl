@@ -82,7 +82,7 @@ function series_segments(series::Series, seriestype::Symbol = :path)
     args = RecipesPipeline.is3d(series) ? (x, y, z) : (x, y)
     nan_segments = collect(iter_segments(args...))
 
-    result = if has_attribute_segments(series)
+    segments = if has_attribute_segments(series)
         Iterators.flatten(map(nan_segments) do r
             if seriestype in (:scatter, :scatter3d)
                 (SeriesSegment(i:i, i) for i in r)
@@ -94,8 +94,14 @@ function series_segments(series::Series, seriestype::Symbol = :path)
         (SeriesSegment(r, 1) for r in nan_segments)
     end 
 
-    seg_range = UnitRange(minimum(first(seg.range) for seg in result),
-                                maximum(last(seg.range) for seg in result))
+    warn_on_attr_dim_mismatch(series, x, y, z, segments)
+    return segments
+end
+
+function warn_on_attr_dim_mismatch(series, x, y, z, segments)
+    isempty(segments) && return
+    seg_range = UnitRange(minimum(first(seg.range) for seg in segments),
+                          maximum(last(seg.range) for seg in segments))
     for attr in _segmenting_vector_attributes
         v = get(series, attr, nothing)
         if v isa AVec && eachindex(v) != seg_range
@@ -111,8 +117,6 @@ function series_segments(series::Series, seriestype::Symbol = :path)
             end
         end
     end
-
-    return result
 end
 
 # helpers to figure out if there are NaN values in a list of array types
