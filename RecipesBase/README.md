@@ -4,6 +4,7 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaPlots.github.io/RecipesBase.jl/dev)
 [![Build Status](https://travis-ci.org/JuliaPlots/RecipesBase.jl.svg?branch=master)](https://travis-ci.org/JuliaPlots/RecipesBase.jl)
 [![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://julialang.zulipchat.com/#narrow/stream/236493-plots)
+[![deps](https://juliahub.com/docs/RecipesBase/deps.svg)](https://juliahub.com/ui/Packages/RecipesBase/8e2Mm?t=2)
 
 ### Author: Thomas Breloff (@tbreloff)
 
