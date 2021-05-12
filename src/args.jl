@@ -1679,7 +1679,11 @@ function _update_series_attributes!(plotattributes::AKW, plt::Plot, sp::Subplot)
     # update alphas
     for asym in (:linealpha, :markeralpha, :fillalpha)
         if plotattributes[asym] === nothing
-            plotattributes[asym] = plotattributes[:seriesalpha]
+            if plotattributes[:seriesalpha] === nothing
+                plotattributes[asym] = plotattributes[:seriesalpha] = 1.0
+            else
+                plotattributes[asym] = plotattributes[:seriesalpha]
+            end
         end
     end
     if plotattributes[:markerstrokealpha] === nothing
