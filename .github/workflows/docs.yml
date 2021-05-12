@@ -2,7 +2,6 @@ name: docs
 
 on:
  push:
- pull_request:
  
 jobs:
   Build_docs:
@@ -12,7 +11,8 @@ jobs:
       - uses: julia-actions/setup-julia@v1
       - name: Install dependencies
         run: |
-          sudo apt install qt5-default \
+          sudo apt-get update -y
+          sudo apt-get install -y qt5-default \
             poppler-utils \
             pdf2svg \
             texlive-latex-base \
@@ -21,7 +21,7 @@ jobs:
             texlive-latex-extra \
             texlive-luatex \
             ghostscript-x \
-            libconf2-4
+            libgconf2-4
             
       - name: build documentation
         run: |
