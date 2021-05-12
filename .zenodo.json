@@ -23,13 +23,13 @@
             "affiliation": "Leibniz Universit\u00e4t Hannover", 
             "name": "Simon Christ",
             "orcid": "0000-0002-5866-1472",
-            "type": "ProjectMember"
+            "type": "ProjectLeader"
         }, 
         {
             "affiliation": "Forschungszentrum J\u00fclich", 
             "name": "Josef Heinen",
             "orcid": "0000-0001-6509-1925",
-            "type": "ProjectLeader"
+            "type": "ProjectMember"
         }, 
         {
             "name": "Yuval",
@@ -37,7 +37,7 @@
         }, 
         {
             "name": "Andrew Palugniok",
-            "type": "ProjectLeader"
+            "type": "ProjectMember"
         }, 
         {
             "affiliation": "@beacon-biosignals", 
@@ -47,7 +47,7 @@
         {
             "affiliation": "Veos Digital (https://veos.digital/)", 
             "name": "Pietro Vertechi",
-            "type": "ProjectLeader"
+            "type": "ProjectMember"
         }, 
         {
             "name": "Zhanibek",
