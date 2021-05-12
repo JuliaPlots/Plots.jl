@@ -7,7 +7,7 @@ function _plotly_framestyle(style::Symbol)
         return style
     else
         default_style = get((semi = :box, origin = :zerolines), style, :axes)
-        @warn("Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was cosen instead.")
+        @warn("Framestyle :$style is not supported by Plotly and PlotlyJS. :$default_style was chosen instead.")
         default_style
     end
 end
