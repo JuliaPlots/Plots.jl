@@ -5,7 +5,7 @@ on:
  
 jobs:
   Build_docs:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    if: "!contains(github.event.head_commit.message, '[skip docs]')"
     runs-on: ubuntu-18.04
     steps:
       - uses: julia-actions/setup-julia@v1
@@ -48,7 +48,7 @@ jobs:
 
     
   Skip:
-    if: "contains(github.event.head_commit.message, '[skip ci]')"
+    if: "contains(github.event.head_commit.message, '[skip docs]')"
     runs-on: ubuntu-latest
     steps:
       - name: Skip Build docs 🚫
