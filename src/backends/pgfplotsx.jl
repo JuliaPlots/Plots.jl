@@ -479,13 +479,14 @@ function pgfx_add_series!(::Val{:scatter3d}, axis, series_opt, series, series_fu
 end
 
 function pgfx_add_series!(::Val{:surface}, axis, series_opt, series, series_func, opt)
+    alpha = get_fillalpha(series)
     push!(
         series_opt,
         "surf" => nothing,
         "mesh/rows" => length(opt[:x]),
         "mesh/cols" => length(opt[:y]),
         "z buffer" => "sort",
-        "opacity" => get_fillalpha(series),
+        "opacity" => alpha === nothing ? 1.0 : alpha,
     )
     pgfx_add_series!(axis, series_opt, series, series_func, opt)
 end
