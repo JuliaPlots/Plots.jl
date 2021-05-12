@@ -25,6 +25,8 @@ jobs:
             libgconf2-4
             
       - name: build documentation
+        env: 
+          PYTHON: ""
         run: |
           echo $(pwd)
           cd ..
