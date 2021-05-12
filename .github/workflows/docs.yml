@@ -25,12 +25,13 @@ jobs:
             
       - name: build documentation
         run: |
-          pwd
+          echo $(pwd)
           cd ..
-          pwd
+          echo $(pwd)
           git clone https://github.com/JuliaPlots/PlotDocs.jl.git
+          echo $(ls)
           cd PlotsDocs.jl
-          pwd
+          echo $(pwd)
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.develop(PackageSpec(path=joinpath("..", "Plots.jl"))); Pkg.instantiate()' 
           xvfb-run julia --color=yes --project=docs/ docs/make.jl 
           
