@@ -2,6 +2,7 @@ name: docs
 
 on:
  push:
+ pull_request:
  
 jobs:
   Build_docs:
