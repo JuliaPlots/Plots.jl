@@ -8,6 +8,7 @@ jobs:
 #     if: "!contains(github.event.head_commit.message, '[skip docs]')"
     runs-on: ubuntu-18.04
     steps:
+      - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
       - name: Install dependencies
         run: |
@@ -32,7 +33,7 @@ jobs:
           echo $(ls)
           cd PlotDocs.jl
           echo $(pwd)
-          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.develop(PackageSpec(path=joinpath("..", "Plots.jl"))); Pkg.instantiate()' 
+          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.develop(PackageSpec(path=joinpath(pwd(), "..", "Plots.jl"))); Pkg.instantiate()' 
           xvfb-run julia --color=yes --project=docs/ docs/make.jl 
           
         
