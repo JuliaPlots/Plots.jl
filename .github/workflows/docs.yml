@@ -1,0 +1,51 @@
+name: docs
+
+on:
+ push:
+ 
+jobs:
+  Build docs:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: julia-actions/setup-julia@v1
+      - name: Install dependencies
+        run: |
+          sudo apt install qt5-default \
+            poppler-utils \
+            pdf2svg \
+            texlive-latex-base \
+            texlive-binaries \
+            texlive-pictures \
+            texlive-latex-extra \
+            texlive-luatex \
+            ghostscript-x \
+            libconf2-4
+            
+      - name: build documentation
+        run: |
+          cd ..
+          git clone https://github.com/JuliaPlots/PlotDocs.jl.git
+          cd PlotsDocs.jl
+          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()' 
+          xvfb-run julia --color=yes --project=docs/ docs/make.jl 
+          
+        
+      - name: Push directory to another repository
+        uses: cpina/github-action-push-to-another-repository@v1.3
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source-directory: '../PlotDocs.jl/docs/build'
+          destination-github-username: 'BeastyBlacksmith'
+          destination-repository-name: 'Plots.jl'
+          user-email: simonchrist@gmx.de
+          target-branch: gh-pages
+
+    
+  Skip:
+    if: "contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip Build docs 🚫
+        run: echo skip docs
