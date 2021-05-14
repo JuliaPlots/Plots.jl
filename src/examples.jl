@@ -7,7 +7,7 @@ mutable struct PlotExample
     exprs::Vector{Expr}
 end
 
-# the _examples we'll run for each
+# the _examples we'll run for each backend
 const _examples = PlotExample[
     PlotExample( # 1
         "Lines",
@@ -241,14 +241,15 @@ const _examples = PlotExample[
                         m -> m in Plots.supported_markers(),
                         Plots._shape_keys,
                     )
-                    markers = reshape(markers, 1, length(markers))
+                    markers = permutedims(markers)
                     n = length(markers)
                     x = range(0, stop = 10, length = n + 2)[2:(end - 1)]
                     y = repeat(reshape(reverse(x), 1, :), n, 1)
                     scatter(
                         x,
                         y,
-                        m = (8, :auto),
+                        m = markers,
+                        markersize = 8,
                         lab = map(string, markers),
                         bg = :linen,
                         xlim = (0, 10),
