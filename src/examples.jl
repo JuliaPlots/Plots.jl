@@ -1171,7 +1171,7 @@ _backend_skips = Dict(
     :gr => [25, 30, 47],
     :pyplot => [2, 25, 30, 31, 47, 49],
     :plotlyjs => [2, 21, 24, 25, 30, 31, 49, 51],
-    :plotly => [2, 21, 24, 25, 30, 31, 49, 51],
+    :plotly => [2, 21, 24, 25, 30, 31, 49, 50, 51],
     :pgfplotsx => [
         2, # animation
         6, # images
