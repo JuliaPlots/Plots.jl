@@ -41,6 +41,5 @@ jobs:
           PYTHON: ""
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
         run: |
-          echo $GITHUB_REF
-          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.develop(PackageSpec(name="Plots", rev=ENV["GITHUB_REF"])); Pkg.instantiate()' 
-          xvfb-run julia --color=yes --project=docs/ -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl", "GITHUB_REF" => "master") do; include("docs/make.jl"); end' 
+          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.develop(PackageSpec(name="Plots", rev=split(ENV["GITHUB_REF"], "/", limit=3)[3])); Pkg.instantiate()' 
+          xvfb-run julia --color=yes --project=docs/ -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl", "GITHUB_REF" => "refs/heads/master") do; include("docs/make.jl"); end' 
