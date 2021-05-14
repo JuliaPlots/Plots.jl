@@ -26,6 +26,7 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y qt5-default \
+            ttf-mscorefonts-installer \
             poppler-utils \
             pdf2svg \
             texlive-latex-base \
@@ -35,6 +36,7 @@ jobs:
             texlive-luatex \
             ghostscript-x \
             libgconf2-4
+          sudo fc-cache -vr
             
       - name: build documentation
         env: 
