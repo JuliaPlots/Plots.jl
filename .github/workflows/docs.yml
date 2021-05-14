@@ -2,6 +2,9 @@ name: docs
 
 on:
  push:
+  branches:
+    - master
+  tags: '*'
  
 jobs:
   Build_docs:
