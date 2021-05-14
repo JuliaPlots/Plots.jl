@@ -39,6 +39,7 @@ jobs:
       - name: build documentation
         env: 
           PYTHON: ""
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
         run: |
           echo $(GITHUB_REF)
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.develop(PackageSpec(name="Plots", rev=ENV["GITHUB_REF"]))); Pkg.instantiate()' 
