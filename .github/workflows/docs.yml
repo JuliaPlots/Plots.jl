@@ -37,18 +37,6 @@ jobs:
           echo $(pwd)
           xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.develop(PackageSpec(path=joinpath(pwd(), "..", "Plots.jl"))); Pkg.instantiate()' 
           xvfb-run julia --color=yes --project=docs/ docs/make.jl 
-          
-        
-      - name: Push directory to another repository
-        uses: cpina/github-action-push-to-another-repository@v1.3
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-        with:
-          source-directory: '../PlotDocs.jl/docs/build'
-          destination-github-username: 'BeastyBlacksmith'
-          destination-repository-name: 'Plots.jl'
-          user-email: simonchrist@gmx.de
-          target-branch: gh-pages
 
     
 #   Skip:
