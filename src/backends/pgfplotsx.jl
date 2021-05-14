@@ -82,6 +82,7 @@ function surface_to_vecs(x::AVec, y::AVec, s::Union{AMat,Surface})
     end
     return xn, yn, zn
 end
+surface_to_vecs(x::AVec, y::AVec, z::AVec) = x, y, z
 
 function Base.push!(pgfx_plot::PGFPlotsXPlot, item)
     push!(pgfx_plot.the_plot, item)
@@ -483,8 +484,8 @@ function pgfx_add_series!(::Val{:surface}, axis, series_opt, series, series_func
     push!(
         series_opt,
         "surf" => nothing,
-        "mesh/rows" => length(opt[:x]),
-        "mesh/cols" => length(opt[:y]),
+        "mesh/rows" => length(unique(opt[:x])), # unique if its all vectors
+        "mesh/cols" => length(unique(opt[:y])),
         "z buffer" => "sort",
         "opacity" => alpha === nothing ? 1.0 : alpha,
     )
