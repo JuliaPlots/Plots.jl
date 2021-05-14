@@ -5,11 +5,23 @@ on:
  
 jobs:
   Build_docs:
-#     if: "!contains(github.event.head_commit.message, '[skip docs]')"
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          repository: JuliaPlots/PlotDocs.jl
       - uses: julia-actions/setup-julia@v1
+      - name: Cache artifacts
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts 
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
       - name: Install dependencies
         run: |
           sudo apt-get update -y
@@ -28,20 +40,6 @@ jobs:
         env: 
           PYTHON: ""
         run: |
-          echo $(pwd)
-          cd ..
-          echo $(pwd)
-          git clone https://github.com/JuliaPlots/PlotDocs.jl.git
-          echo $(ls)
-          cd PlotDocs.jl
-          echo $(pwd)
-          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.develop(PackageSpec(path=joinpath(pwd(), "..", "Plots.jl"))); Pkg.instantiate()' 
+          echo $(GITHUB_REF)
+          xvfb-run julia --color=yes --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.develop(PackageSpec(name="Plots", rev=ENV["GITHUB_REF"]))); Pkg.instantiate()' 
           xvfb-run julia --color=yes --project=docs/ -e 'withenv("GITHUB_REPOSITORY" => "JuliaPlots/PlotDocs.jl", "GITHUB_REF" => "master") do; include("docs/make.jl"); end' 
-
-    
-#   Skip:
-#     if: "contains(github.event.head_commit.message, '[skip docs]')"
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Skip Build docs 🚫
-#         run: echo skip docs
