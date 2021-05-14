@@ -1063,8 +1063,14 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     ax.spines["left"]."set_position"("zero")
                 end
             elseif sp[:framestyle] in (:grid, :none, :zerolines)
-                for spine in ax.spines
-                    ax.spines[string(spine)]."set_visible"(false)
+                if PyPlot.version >= v"3.4.1" # that is one where it worked, the API change may have some other value
+                    for spine in ax.spines
+                        ax.spines[string(spine)]."set_visible"(false)
+                    end
+                else
+                    for (loc, spine) in ax.spines
+                        spine."set_visible"(false)
+                    end
                 end
                 if sp[:framestyle] == :zerolines
                     ax."axhline"(y = 0, color = py_color(sp[:xaxis][:foreground_color_axis]), lw = py_thickness_scale(plt, 0.75))
