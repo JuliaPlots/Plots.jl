@@ -1063,8 +1063,8 @@ function _before_layout_calcs(plt::Plot{PyPlotBackend})
                     ax.spines["left"]."set_position"("zero")
                 end
             elseif sp[:framestyle] in (:grid, :none, :zerolines)
-                for (loc, spine) in ax.spines
-                    spine."set_visible"(false)
+                for spine in ax.spines
+                    ax.spines[string(spine)]."set_visible"(false)
                 end
                 if sp[:framestyle] == :zerolines
                     ax."axhline"(y = 0, color = py_color(sp[:xaxis][:foreground_color_axis]), lw = py_thickness_scale(plt, 0.75))
