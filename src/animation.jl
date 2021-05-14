@@ -137,8 +137,8 @@ end
 # -----------------------------------------------
 
 function _animate(forloop::Expr, args...; callgif = false)
-  if forloop.head != :for
-    error("@animate macro expects a for-block. got: $(forloop.head)")
+  if forloop.head ∉ (:for, :while)
+    error("@animate macro expects a for- or while-block. got: $(forloop.head)")
   end
 
   # add the call to frame to the end of each iteration
