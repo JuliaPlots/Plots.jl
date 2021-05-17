@@ -108,6 +108,25 @@ julia> histogram2d(randn(10_000),randn(10_000))
 @shorthands histogram2d
 
 """
+    histogram3d(x,y)
+    histogram3d!(x,y)
+
+Plot a three-dimensional histogram.
+
+# Arguments
+
+- `bins`: Number of bins (if an `Integer`) or bin edges (if an `AbtractVector`)
+- `weights`: Vector of weights for the values in `x`. Each entry of x contributes
+             its weight to the height of its bin.
+
+# Example
+```julia-repl
+julia> histogram3d(randn(10_000),randn(10_000))
+```
+"""
+@shorthands histogram3d
+
+"""
     density(x)
     density!(x)
 

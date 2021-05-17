@@ -988,6 +988,74 @@ end
 
 
 # ---------------------------------------------------------------------------
+# Histogram 3D
+
+# Check if all neighbours have the same value
+# TODO: Improve this somehow
+function _allneighbours(arr, I::CartesianIndex, val = 0.0)
+    arr[I] == val &&
+    arr[I + CartesianIndex(1,0)]  == val &&
+    arr[I + CartesianIndex(0,1)]  == val &&
+    arr[I - CartesianIndex(1,0)]  == val &&
+    arr[I - CartesianIndex(0,1)]  == val &&
+    arr[I + CartesianIndex(1,1)]  == val &&
+    arr[I + CartesianIndex(1,-1)] == val &&
+    arr[I - CartesianIndex(1,1)]  == val &&
+    arr[I - CartesianIndex(1,-1)] == val
+end
+
+@recipe function f(::Type{Val{:bins3d}}, x, y, z)
+    edge_x, edge_y, weights = x, y, z.surf
+
+    if !plotattributes[:show_empty_bins]
+        edge_x = repeat(edge_x,inner=(4))[2:end-1]
+        edge_y = repeat(edge_y,inner=(4))[2:end-1]
+        float_weights = spzeros(length(edge_x),length(edge_y))
+        float_weights[2:end-1,2:end-1] = repeat(float(weights),inner=(4,4))
+        m = falses(size(float_weights))
+        for I in CartesianIndices((2:length(edge_x)-1,2:length(edge_y)-1))
+            m[I] = _allneighbours(float_weights,I,0)
+        end
+        float_weights[m] .= NaN
+    else
+        edge_x = repeat(edge_x,inner=(2))
+        edge_y = repeat(edge_y,inner=(2))
+        float_weights = spzeros(length(edge_x),length(edge_y))
+        float_weights[2:end-1,2:end-1] .= repeat(float(weights),inner=(2,2))
+    end
+
+    x := edge_x
+    y := edge_y
+    z := Surface(permutedims(float_weights))
+    #seriescolor := cgrad([:blue,:blue])
+    colorbar := false
+    seriestype := :surface
+    linealpha := 1.0
+    linecolor := :black
+
+    ()
+
+end
+Plots.@deps bins3d surface wireframe
+
+
+@recipe function f(::Type{Val{:histogram3d}}, x, y, z)
+    h = _make_hist(
+        (x, y),
+        plotattributes[:bins],
+        normed = plotattributes[:normalize],
+        weights = plotattributes[:weights],
+    )
+    x := h.edges[1]
+    y := h.edges[2]
+    z := Surface(h.weights)
+    seriestype := :bins3d
+    ()
+end
+@deps histogram3d bins3d
+
+
+# ---------------------------------------------------------------------------
 # pie
 @recipe function f(::Type{Val{:pie}}, x, y, z)
     framestyle --> :none
@@ -1430,7 +1498,7 @@ end
 
 @recipe function f(shapes::AVec{Shape})
     seriestype --> :shape
-    # For backwards compatibility, column vectors of segmenting attributes are 
+    # For backwards compatibility, column vectors of segmenting attributes are
     # interpreted as having one element per shape
     for attr in union(_segmenting_array_attributes, _segmenting_vector_attributes)
         v = get(plotattributes, attr, nothing)
