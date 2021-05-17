@@ -18,7 +18,8 @@
 [![][docs-img]][docs-url]
 [![Codecov](https://codecov.io/gh/JuliaPlots/Plots.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaPlots/Plots.jl)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725318.svg)](https://doi.org/10.5281/zenodo.4725318)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4725317.svg)](https://doi.org/10.5281/zenodo.4725317)
+This is the DOI for all Versions, please follow the link to get the DOI for a specific version.
 
 
 #### Created by Tom Breloff (@tbreloff)
