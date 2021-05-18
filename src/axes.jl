@@ -501,7 +501,7 @@ function widen(lmin, lmax, scale = :identity)
 end
 
 # figure out if widening is a good idea.
-const _widen_seriestypes = (:line, :path, :steppre, :stepmid, :steppost, :sticks, :scatter, :barbins, :barhist, :histogram, :scatterbins, :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :bar, :shape, :path3d, :scatter3d)
+const _widen_seriestypes = (:line, :path, :steppre, :stepmid, :steppost, :sticks, :scatter, :barbins, :barhist, :histogram, :scatterbins, :scatterhist, :stepbins, :stephist, :bins2d, :histogram2d, :bar, :shape, :path3d, :scatter3d, :histogram3d)
 
 function default_should_widen(axis::Axis)
     should_widen = false
