@@ -125,6 +125,7 @@ julia> histogram3d(randn(10_000),randn(10_000))
 ```
 """
 @shorthands histogram3d
+@shorthands legoplot
 
 """
     density(x)
