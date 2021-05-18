@@ -1,107 +1,107 @@
 {
     "title": "Plots.jl",
-    "license": "MIT", 
+    "license": "MIT",
     "creators": [
         {
-            "affiliation": "Elemental Cognition", 
+            "affiliation": "Elemental Cognition",
             "name": "Tom Breloff"
         }
     ],
     "contributors":[
         {
-            "affiliation": "TU Wien", 
+            "affiliation": "TU Wien",
             "name": "Daniel Schwabeneder",
             "orcid": "0000-0002-0412-0777",
             "type": "ProjectLeader"
-        }, 
+        },
         {
-            "affiliation": "GLOBE Institute", 
+            "affiliation": "GLOBE Institute",
             "name": "Michael Krabbe Borregaard",
             "type": "ProjectLeader"
-        }, 
+        },
         {
-            "affiliation": "Leibniz Universit\u00e4t Hannover", 
+            "affiliation": "Leibniz Universit\u00e4t Hannover",
             "name": "Simon Christ",
             "orcid": "0000-0002-5866-1472",
             "type": "ProjectLeader"
-        }, 
+        },
         {
-            "affiliation": "Forschungszentrum J\u00fclich", 
+            "affiliation": "Forschungszentrum J\u00fclich",
             "name": "Josef Heinen",
             "orcid": "0000-0001-6509-1925",
             "type": "ProjectMember"
-        }, 
+        },
         {
             "name": "Yuval",
             "type": "Other"
-        }, 
+        },
         {
             "name": "Andrew Palugniok",
             "type": "ProjectMember"
-        }, 
+        },
         {
-            "affiliation": "@beacon-biosignals", 
+            "affiliation": "@beacon-biosignals",
             "name": "Simon Danisch",
             "type": "Other"
-        }, 
+        },
         {
-            "affiliation": "Veos Digital (https://veos.digital/)", 
+            "affiliation": "Veos Digital (https://veos.digital/)",
             "name": "Pietro Vertechi",
             "type": "ProjectMember"
-        }, 
+        },
         {
             "affiliation": "Korea Advanced Inst. of Science and Technology (KAIST)",
             "name": "Zhanibek Omarov",
             "type": "ProjectMember",
             "orcid": "0000-0002-8783-8791"
-        }, 
+        },
         {
             "name": "Thatcher Chamberlin",
             "type": "Other"
-        }, 
+        },
         {
             "name": "@ma-laforge",
             "type": "ProjectMember"
-        }, 
+        },
         {
-            "affiliation": "Massachusetts Institute of Technology", 
+            "affiliation": "Massachusetts Institute of Technology",
             "name": "Christopher Rackauckas",
             "orcid": "0000-0001-5850-0663",
             "type": "Other"
-        }, 
+        },
         {
-            "affiliation": "Max Planck Institute for Physics", 
+            "affiliation": "Max Planck Institute for Physics",
             "name": "Oliver Schulz",
             "type": "Other"
-        }, 
+        },
         {
-            "affiliation": "@JuliaComputing", 
+            "affiliation": "@JuliaComputing",
             "name": "Sebastian Pfitzner",
             "type": "Other"
-        }, 
+        },
         {
             "name": "Takafumi Arakaki",
             "type": "Other"
-        }, 
+        },
         {
-            "affiliation": "University of Manitoba", 
+            "affiliation": "University of Manitoba",
             "name": "Amin Yahyaabadi",
             "type": "Other"
-        }, 
+        },
         {
             "name": "Jack Devine",
             "type": "Other"
-        }, 
+        },
         {
             "name": "Sebastian Pech",
             "type": "Other"
-        }, 
+        },
         {
-            "affiliation": "@JuliaComputing", 
+            "affiliation": "@JuliaComputing",
             "name": "Patrick Kofod Mogensen",
             "type": "Other",
             "orcid": "0000-0002-4910-1932"
-        }, 
+        },
         {
             "name": "Samuel S. Watson",
             "type": "Other"
@@ -421,6 +421,265 @@
         },
         {
             "name": "Asim H Dar",
+            "type": "Other"
+        },
+        {
+            "name": "@8uurg",
+            "type": "Other"
+        },
+        {
+            "name": "Abel Siqueira",
+            "type": "Other"
+        },
+        {
+            "name": "Adrian Dawid",
+            "type": "Other"
+        },
+        {
+            "name": "Alberto Lusiani",
+            "type": "Other"
+        },
+        {
+            "name": "Balázs Mezei",
+            "type": "Other"
+        },
+        {
+            "name": "Ben Ide",
+            "type": "Other"
+        },
+        {
+            "name": "Benjamin Lungwitz",
+            "type": "Other"
+        },
+        {
+            "name": "Bernd Riederer",
+            "type": "Other"
+        },
+        {
+            "name": "Christina Lee",
+            "type": "Other"
+        },
+        {
+            "name": "Christof Stocker",
+            "type": "Other"
+        },
+        {
+            "name": "Christoph Finkensiep",
+            "type": "Other"
+        },
+        {
+            "name": "@Cornelius-G",
+            "type": "Other"
+        },
+        {
+            "name": "Daniel Høegh",
+            "type": "Other"
+        },
+        {
+            "name": "Denny Biasiolli",
+            "type": "Other"
+        },
+        {
+            "name": "Dieter Castel",
+            "type": "Other"
+        },
+        {
+            "name": "Elliot Saba",
+            "type": "Other"
+        },
+        {
+            "name": "Fengyang Wang",
+            "type": "Other"
+        },
+        {
+            "name": "Fons van der Plas",
+            "type": "Other"
+        },
+        {
+            "name": "Fredrik Bagge Carlson",
+            "type": "Other"
+        },
+        {
+            "name": "Graham Smith",
+            "type": "Other"
+        },
+        {
+            "name": "Hayato Ikoma",
+            "type": "Other"
+        },
+        {
+            "name": "Hessam Mehr",
+            "type": "Other"
+        },
+        {
+            "name": "@InfiniteChai",
+            "type": "Other"
+        },
+        {
+            "name": "Jack Dunn",
+            "type": "Other"
+        },
+        {
+            "name": "Jeff Bezanson",
+            "type": "Other"
+        },
+        {
+            "name": "Jeff Eldredge",
+            "type": "Other"
+        },
+        {
+            "name": "Jinay Jain",
+            "type": "Other"
+        },
+        {
+            "name": "Johan Blåbäck",
+            "type": "Other"
+        },
+        {
+            "name": "@jmert",
+            "type": "Other"
+        },
+        {
+            "name": "Lakshya Khatri",
+            "type": "Other"
+        },
+        {
+            "name": "Lia Siegelmann",
+            "type": "Other"
+        },
+        {
+            "name": "@marekkukan-tw",
+            "type": "Other"
+        },
+        {
+            "affiliation": "ETH Zurich",
+            "name": "Mauro Werder",
+            "type": "Other",
+            "orcid": "0000-0003-0137-9377"
+        },
+        {
+            "name": "Maxim Grechkin",
+            "type": "Other"
+        },
+        {
+            "name": "Michael Cawte",
+            "type": "Other"
+        },
+        {
+            "name": "@milesfrain",
+            "type": "Other"
+        },
+        {
+            "name": "Nicholas Bauer",
+            "type": "Other"
+        },
+        {
+            "name": "Nicolau Leal Werneck",
+            "type": "Other"
+        },
+        {
+            "name": "@nilshg",
+            "type": "Other"
+        },
+        {
+            "name": "Oliver Evans",
+            "type": "Other"
+        },
+        {
+            "name": "Peter Gagarinov",
+            "type": "Other"
+        },
+        {
+            "name": "Páll Haraldsson",
+            "type": "Other"
+        },
+        {
+            "name": "Rik Huijzer",
+            "type": "Other"
+        },
+        {
+            "name": "Romain Franconville",
+            "type": "Other"
+        },
+        {
+            "name": "Ronan Pigott",
+            "type": "Other"
+        },
+        {
+            "name": "Roshan Shariff",
+            "type": "Other"
+        },
+        {
+            "name": "Scott Thomas",
+            "type": "Other"
+        },
+        {
+            "name": "Sebastian Rollén",
+            "type": "Other"
+        },
+        {
+            "name": "Seth Bromberger",
+            "type": "Other"
+        },
+        {
+            "name": "Siva Swaminathan",
+            "type": "Other"
+        },
+        {
+            "name": "Tim DuBois",
+            "type": "Other"
+        },
+        {
+            "name": "Travis DePrato",
+            "type": "Other"
+        },
+        {
+            "name": "Will Thompson",
+            "type": "Other"
+        },
+        {
+            "name": "Yakir Luc Gagnon",
+            "type": "Other"
+        },
+        {
+            "name": "Benjamin Chislett",
+            "type": "Other"
+        },
+        {
+            "name": "@hhaensel",
+            "type": "Other"
+        },
+        {
+            "name": "@improbable22",
+            "type": "Other"
+        },
+        {
+            "name": "Johannes Fleck",
+            "type": "Other"
+        },
+        {
+            "name": "Peter Czaban",
+            "type": "Other"
+        },
+        {
+            "name": "@innerlee",
+            "type": "Other"
+        },
+        {
+            "name": "Mats Cronqvist",
+            "type": "Other"
+        },
+        {
+            "name": "Shi Pengcheng",
+            "type": "Other"
+        },
+        {
+            "name": "@wg030",
+            "type": "Other"
+        },
+        {
+            "affiliation": "University of Cambridge",
+            "name": "Will Tebbutt",
             "type": "Other"
         }
     ],
