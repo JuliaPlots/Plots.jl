@@ -229,7 +229,7 @@ function (pgfx_plot::PGFPlotsXPlot)(plt::Plot{PGFPlotsXBackend})
                     "colorbar style" => colorbar_style,
                 )
             else
-                push!(axis_opt, "colorbar" => "false") 
+                push!(axis_opt, "colorbar" => "false")
             end
             if RecipesPipeline.is3d(sp)
                 azim, elev = sp[:camera]
@@ -452,7 +452,7 @@ function pgfx_add_series!(::Val{:path}, axis, series_opt, series, series_func, o
                 ),
             )
         end
-        pgfx_add_legend!(axis, series, opt, i)
+        pgfx_add_legend!(axis, series, opt, k)
     end # for segments
     # get that last marker
     if !isnothing(opt[:y]) && !any(isnan, opt[:y]) && opt[:markershape] isa AVec
