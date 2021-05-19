@@ -953,8 +953,7 @@ function plotly_html_body(plt, style = nothing)
         <div id=\"$(uuid)\" style=\"$(style)\"></div>
         <script>
         $(requirejs_prefix)
-        PLOT = document.getElementById('$(uuid)');
-        Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
+        $(js_body(plt, uuid))
         $(requirejs_suffix)
         </script>
     """
@@ -963,7 +962,7 @@ end
 
 function js_body(plt::Plot, uuid)
     js = """
-        PLOT = document.getElementById('$(uuid)');
+        var PLOT = document.getElementById('$(uuid)');
         Plotly.plot(PLOT, $(plotly_series_json(plt)), $(plotly_layout_json(plt)));
     """
 end
