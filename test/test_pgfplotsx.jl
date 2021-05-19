@@ -338,6 +338,16 @@ end
       plots = filter(x -> x isa PGFPlotsX.Plot, axis.contents)
       @test length(plots) == 9
    end # testset
+   @testset "Groups and Subplots" begin
+      group = rand(map((i->begin
+                    "group $(i)"
+                end), 1:4), 100)
+      pl = plot(rand(100), layout = @layout([a b; c]), group = group, linetype = [:bar :scatter :steppre], linecolor = :match)
+      Plots._update_plot_object(pl)
+      axis = Plots.pgfx_axes(pl.o)[1]
+      legend_entries = filter(x -> x isa PGFPlotsX.LegendEntry, axis.contents)
+      @test length(legend_entries) == 2
+   end
 end # testset
 
 @testset "Extra kwargs" begin
