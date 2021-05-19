@@ -452,8 +452,10 @@
             "type": "Other"
         },
         {
+            "affiliation": "University of Graz",
             "name": "Bernd Riederer",
-            "type": "Other"
+            "type": "Other",
+            "orcid": "0000-0001-8390-0087"
         },
         {
             "name": "Christina Lee",

@@ -401,7 +401,7 @@ end
 
 function gr_nans_to_infs!(z)
     for (i,zi) in enumerate(z)
-        if zi == NaN
+        if isnan(zi)
             z[i] = Inf
         end
     end
