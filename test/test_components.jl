@@ -4,6 +4,7 @@ using Plots, Test
     @testset "Type" begin
         square = Shape([(0,0.0),(1,0.0),(1,1.0),(0,1.0)])
         @test isa(square, Shape{Int64, Float64})
+        @test coords(square) isa Tuple{Vector{S}, Vector{T}} where {T,S}
     end
 
     @testset "Copy" begin
@@ -46,6 +47,16 @@ using Plots, Test
         rotate!(square2, 2)
         @test square2.x ≈ coords[1,:]
         @test square2.y ≈ coords[2,:]
+    end
+
+    @testset "Plot" begin
+        ang = range(0, 2π, length = 60)
+        ellipse(x, y, w, h) = Shape(w*sin.(ang).+x, h*cos.(ang).+y)
+        myshapes = [ellipse(x,rand(),rand(),rand()) for x = 1:4]
+        @test coords(myshapes) isa Tuple{Vector{Vector{S}}, Vector{Vector{T}}} where {T,S}
+        local p
+        @test_nowarn p = plot(myshapes)
+        @test p[1][1][:seriestype] == :shape
     end
 end
 
