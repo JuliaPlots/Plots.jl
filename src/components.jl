@@ -43,7 +43,7 @@ function coords(shape::Shape)
 end
 
 #coords(shapes::AVec{Shape}) = unzip(map(coords, shapes))
-function coords(shapes::AVec{Shape})
+function coords(shapes::AVec{<:Shape})
     c = map(coords, shapes)
     x = [q[1] for q in c]
     y = [q[2] for q in c]
