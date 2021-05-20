@@ -1433,9 +1433,9 @@ end
     coords(shape)
 end
 
-@recipe function f(shapes::AVec{Shape})
+@recipe function f(shapes::AVec{<:Shape})
     seriestype --> :shape
-    # For backwards compatibility, column vectors of segmenting attributes are 
+    # For backwards compatibility, column vectors of segmenting attributes are
     # interpreted as having one element per shape
     for attr in union(_segmenting_array_attributes, _segmenting_vector_attributes)
         v = get(plotattributes, attr, nothing)
@@ -1448,7 +1448,7 @@ end
     coords(shapes)
 end
 
-@recipe function f(shapes::AMat{Shape})
+@recipe function f(shapes::AMat{<:Shape})
     seriestype --> :shape
     for j in axes(shapes, 2)
         @series coords(vec(shapes[:, j]))
